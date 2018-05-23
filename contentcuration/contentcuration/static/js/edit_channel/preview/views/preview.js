@@ -6,25 +6,12 @@ import documentTemplate from '../hbtemplates/preview_templates/document.handleba
 
 export default BaseViews.BaseView.extend({
     initialize(options) {
-        // init. Can we just set them to null?
-        this.vuePreview = null;
-
-        this.setData(options);
-
-        this.listenTo(this.model, 'change:content_model', ()=>{
-          this.render();
-        });
-
-        this.render();
-    },
-    setData(options) {
-        // to bind all of these manually instead of using `model` directly
-
-        // contains parent's model
         this.content_model = this.model.get('content_model');
         this.file_model = this.model.get('file_model');
         this.encoding = this.model.get('encoding');
         this.intl_data = this.model.get('intl_data');
+
+        this.render();
     },
     previewTemplate(fileFormat) {
         const imageFormats = ['jpg','jpeg','png'];
@@ -101,19 +88,12 @@ export default BaseViews.BaseView.extend({
         return this.vuePreview.$el;
     },
     render() {
-        if (this.vuePreview) {
-            this.vuePreview.destroy();
-            this.vuePreview = null;
-        }
-
         this.$el.html(
           this.previewTemplate(
             this.model.get('file_model').file_format
           )
         );
 
-        // TODO don't have to repaint our vue compoent every time
-        // Object.assign(this.vuePreview, propsData);
         return this;
     },
 });

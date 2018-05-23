@@ -7,7 +7,7 @@ import PreviewModel from '../models/preview';
 
 import { translate } from 'edit_channel/utils/string_helper';
 
-import { min, where, pluck, defer, find } from 'underscore';
+import { min, where, pluck, find } from 'underscore';
 
 var NAMESPACE = "preview";
 var MESSAGES = {
@@ -33,17 +33,20 @@ export default BaseView.extend({
         // might be able to scope this function here
         this.prepChildModels();
 
-        this.listenTo(this.model, 'change', (event) => {
-          console.log('change detected!!!!');
-          console.log('change event', event);
+        // Reactivity is handled here. Children do _not_ listen for changes.
+        // listenTo should prevent memory leaks
+        this.listenTo(this.model, 'change', () => {
           this.prepChildModels();
           this.render();
         });
+        this.listenTo(this.previewModel, 'change:file_model', this.render);
+
         this.render();
     },
     prepChildModels() {
       // set formatPresetCollection, based on `files` collection (array of models?)
-      this.formatPresetCollection.reset(
+      // Backbone.Collection's set method handles deduping
+      this.formatPresetCollection.set(
         // array of file's presets with display=true and subtitle=false
         where(
           // array of files' presets
@@ -54,19 +57,13 @@ export default BaseView.extend({
 
       // set up model used in the preview View
       this.previewModel.set({
-        // rename this
+        // default file to display
         content_model: this.model,
         file_model: min(
           this.model.get('files').filter(file => file.preset.display),
           file => file.preset.order
         ),
-        subtitles: this.model.get('files').filter(file => {
-          var file_json = file.attribute || file;
-          var preset_id = (file_json.preset && file_json.preset.name) ? file_json.preset.name : file_json.preset;
-          var current_preset = window.formatpresets.get({ id: preset_id });
-          return current_preset && current_preset.get("subtitle");
-        }),
-        force_load: this.model.get('kind') === 'video',
+        // rename this
         encoding: this.model.get('thumbnail_encoding') && this.model.get('thumbnail_encoding').base64,
         intl_data: this.get_intl_data()
       });
@@ -77,32 +74,27 @@ export default BaseView.extend({
     },
     // do we really need to define a render function?
     render() {
+        this.previewView = new PreviewView({ model: this.previewModel });
+
         this.$el.html(this.template({
           file: true
         }, {
           data: this.get_intl_data()
         }));
 
-        this.$previewList = this.$("#preview_tabs_dropdown");
-        this.$previewListButton = this.$(".preview_format_switch");
         this.$fullscreenButton = this.$(".view_fullscreen");
-        this.$previewSection = this.$('#preview_window');
-
-        // TODO separate renders?
-        // or give the switcher its own view?
 
         // set up preview tabs + dd child elements
-        this.$previewList.html(
+        this.$("#preview_tabs_dropdown").html(
           this.tabs_template({ presets: this.formatPresetCollection.toJSON() })
         );
 
-        this.$previewListButton.text(
+        this.$(".preview_format_switch").text(
           translate(this.previewModel.get('file_model').preset.id)
         );
 
-        this.$previewSection.html(
-          new PreviewView({ model: this.previewModel }).el
-        );
+        // NOTE: replaces the entire view on render.
+        this.$('#preview_window').html(this.previewView.el);
 
         return this;
     },
@@ -116,20 +108,7 @@ export default BaseView.extend({
         this.previewModel.set({
           file_model: selected_preview
         });
-
-        this.$previewListButton.text(
-          translate(this.previewModel.get('file_model').preset.id)
-        );
-
-        this.render();
-
-        // ???
-        // var self = this;
-        // defer(function () {
-        //     self.$("iframe").prop("src", function () { return $(this).data("src"); });
-        // });
     },
-    // some wonky stuff going on with fullscreen
     toggle_fullscreen() {
         const notFullscreen = () => {
             return ((document.fullScreenElement !== undefined && document.fullScreenElement === null) ||
