@@ -19,8 +19,8 @@ function track(event_category, event_action, event_data) {
 
   ga(event_category, event_action, event_data_string);
 
-  // XXX comment this out for next PR
-  mixpanel.track(`${event_category}: ${event_action}`, event_data);
+  // TODO(davidhu): Uncomment this in the next PR that adds Mixpanel tracking
+  //mixpanel.track(`${event_category}: ${event_action}`, event_data);
 }
 
 module.exports = {
