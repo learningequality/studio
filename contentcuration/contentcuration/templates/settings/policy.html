@@ -5,9 +5,9 @@
 {% load i18n %}
 
 {% block settingscontent %}
-<h4>{% trans "Policies" %}</h4>
+<h4>{% trans "Terms of Service" %}</h4>
 <hr/>
-{% with policies=policies template_name="policies/policy_list.html" %}
-  {% include template_name %}
-{% endwith %}
+
+{% include "policies/text/terms_of_service.html" %}
+
 {% endblock settingscontent %}

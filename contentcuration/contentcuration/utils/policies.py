@@ -3,10 +3,9 @@ from django.utils.translation import ugettext as _
 
 POLICIES = {
 	"privacy_policy": {
-		"latest": "may_25_2018",
+		"latest": "2018_5_25",
 		"policies": {
-			"may_25_2018": {
-				"name": _("GDPR Privacy Policy"),
+			"2018_5_25": {
 				"date": datetime.datetime(2018, 5, 25).strftime('%m/%d/%Y'),
 				"template": "policies/text/privacy_policy_2018_5_25.html",
 			}

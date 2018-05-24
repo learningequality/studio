@@ -2,6 +2,7 @@ import datetime
 import gettext
 import pycountry
 import json
+import re
 from contentcuration.models import User, Language
 from contentcuration.utils.policies import get_latest_policies
 from django import forms
@@ -33,7 +34,9 @@ class RegistrationForm(forms.Form, ExtraFormMixin):
 
     def clean_email(self):
         email = self.cleaned_data['email'].strip()
-        if User.objects.filter(email__iexact=email, is_active=True).exists():
+        if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+            self.add_error('email', _('Email is invalid.'))
+        elif User.objects.filter(email__iexact=email, is_active=True).exists():
             self.add_error('email', _('Email already exists.'))
         return email
 
