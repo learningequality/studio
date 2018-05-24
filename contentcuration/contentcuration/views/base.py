@@ -182,7 +182,9 @@ def get_user_view_channels(request):
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def get_user_pending_channels(request):
-    pending_list = Invitation.objects.select_related('channel', 'sender').filter(invited=request.user)
+    pending_list = Invitation.objects.select_related('channel', 'sender')\
+                                    .filter(invited=request.user, channel__deleted=False)\
+                                    .exclude(channel=None) # Don't include channels that have been deleted
     invitation_serializer = InvitationSerializer(pending_list, many=True)
 
     return Response(invitation_serializer.data)

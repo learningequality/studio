@@ -1,5 +1,7 @@
 @import "global-variables.less";
 
+@delete-color: firebrick;
+
 #settings-nav{
 	min-width: 200px;
 	margin-right:20px;
@@ -25,6 +27,7 @@
 	#settings-page{
 		max-width:700px;
 		width:60vw;
+		padding-bottom: 100px;
 
 		h4, h5{ font-weight: bold; }
 		h4{ font-size:16pt; }
@@ -54,17 +57,7 @@
 		}
 
 		#delete-account {
-			color: firebrick;
-		}
-		#delete_account_btn {
-			background: white;
-			color: firebrick;
-			border: 2px solid firebrick !important;
-			font-weight: bold;
-			&:hover, &:focus {
-				background-color: firebrick;
-				color: white !important;
-			}
+			color: @delete-color;
 		}
 	}
 	.token{
@@ -89,6 +82,66 @@
 			font-size: 10pt;
 		}
 	}
+
+	.delete-account-btn {
+		.action-button;
+		background: @delete-color;
+		color: white;
+		border-color: @delete-color !important;
+		&:hover, &:focus {
+			background-color: white;
+			color: @delete-color !important;
+		}
+	}
+
+	#deleteAccountModal {
+		.modal-content {
+			width: 550px;
+			.modal-header {
+			    color: white;
+			    background-color: @delete-color;
+			    font-size: 14pt;
+			    font-weight: bold;
+			    padding: 15px;
+			}
+			.warning {
+				font-size: 12pt;
+			    text-align: center;
+			    margin-top: 10px;
+			}
+			.error {
+				display: none;
+				color: @delete-color;
+				font-weight: bold;
+				span {
+					font-size: 8pt;
+    				font-style: normal;
+    				font-weight: normal;
+				}
+				a {
+					font-weight: bold;
+				}
+			}
+			.pending-delete {
+				margin-top: 5px;
+			    margin-right: 10px;
+			    color: @delete-color;
+			    font-weight: bold;
+			    font-style: italic;
+			    display: none;
+			}
+			#email_confirm {
+				font-size: 12pt;
+			    padding: 1px 5px;
+			    width: 100%;
+			}
+			.cancel-delete {
+				color: @gray-700;
+			}
+		}
+
+	}
+
 }
 
 #policy-area {
@@ -128,3 +181,7 @@
 		}
 	}
 }
+
+
+
+

@@ -1,0 +1,9 @@
+{% load i18n %}
+
+{% autoescape off %}
+
+Account for {{user.first_name}} {{user.last_name}} ({{user.email}}) has been deleted.
+
+This user has until {{buffer_date}} to request this operation to be undone.
+
+{% endautoescape %}

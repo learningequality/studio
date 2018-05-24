@@ -1,10 +1,15 @@
 import json
 import math
+from datetime import date, timedelta
 from django.shortcuts import render, redirect
 from django.conf import settings as ccsettings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import views
+from django.contrib.sites.shortcuts import get_current_site
+from django.core.mail import send_mail
 from django.db.models import Count
+from django.http import HttpResponse, HttpResponseBadRequest
+from django.template.loader import render_to_string
 from django.utils.translation import ugettext as _
 from django.views.generic.edit import FormView
 from contentcuration.forms import ProfileSettingsForm, AccountSettingsForm, PreferencesSettingsForm, PolicyAcceptForm
@@ -121,7 +126,7 @@ def account_settings(request):
     if not request.user.is_authenticated():
         return redirect('/accounts/login')
 
-    channels = [ # Getting count on editors is always returning 1, so iterate manually
+    channels = [ # Count on editors is always returning 1, so iterate manually
         {"name": c.name, "id": c.id}
         for c in request.user.editable_channels.filter(deleted=False)
         if c.editors.count() == 1
@@ -135,9 +140,47 @@ def account_settings(request):
         extra_context={
             "current_user": request.user,
             "page": "account",
-            "channels": channels
+            "channels": channels,
+            "policy_email": ccsettings.POLICY_EMAIL,
         }
     )
+
+@login_required
+def delete_user_account(request, user_email):
+    if request.user.email != user_email:
+        return HttpResponseBadRequest(_("Cannot delete another user's account"))
+    elif request.user.is_admin or request.user.is_staff:
+        return HttpResponseBadRequest(_("Cannot delete admin accounts"))
+
+    # Send email to notify team about account being deleted
+    buffer_date  = (date.today()+timedelta(days=ccsettings.ACCOUNT_DELETION_BUFFER)).strftime('%A, %B %d %Y')
+    subject = "Kolibri Studio Account Deleted"
+    message = render_to_string('settings/account_deleted_notification_email.txt', {"user": request.user, "buffer_date": buffer_date})
+    send_mail(subject, message, ccsettings.DEFAULT_FROM_EMAIL, [ccsettings.REGISTRATION_INFORMATION_EMAIL])
+
+    # Send email to user regarding account deletion
+    site = get_current_site(request)
+    subject = _("Kolibri Studio Account Deleted")
+    message = render_to_string('settings/account_deleted_user_email.txt', {
+        "user": request.user,
+        "buffer_date": buffer_date,
+        "legal_email": ccsettings.POLICY_EMAIL,
+        "num_days": ccsettings.ACCOUNT_DELETION_BUFFER,
+        "site_name": site and site.name,
+    })
+    send_mail(subject, message, ccsettings.DEFAULT_FROM_EMAIL, [ccsettings.REGISTRATION_INFORMATION_EMAIL])
+
+    # Delete user and any previously deleted channels
+    for c in request.user.editable_channels.all():
+        if c.editors.count() == 1:
+            c.delete()
+
+    request.user.delete()
+
+    return HttpResponse({"success" : True })
+
+def account_deleted(request):
+    return render(request, "settings/account_deleted.html")
 
 
 @login_required
