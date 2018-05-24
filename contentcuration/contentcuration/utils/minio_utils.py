@@ -45,7 +45,7 @@ def ensure_storage_bucket_public(bucket=None, will_sleep=True):
         time.sleep(5)
 
     if not bucket:
-        bucketname = settings.AWS_STORAGE_BUCKET_NAME
+        bucketname = settings.AWS_S3_BUCKET_NAME
     else:
         bucketname = bucket
 

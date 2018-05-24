@@ -297,7 +297,7 @@ def generate_storage_url(filename, request=None, *args):
     # We can detect if we're running in normal kubernetes mode, if we're not running runserver.
     elif not IS_RUNSERVER:
         url = "/content/{path}".format(
-            bucket=settings.AWS_STORAGE_BUCKET_NAME,
+            bucket=settings.AWS_S3_BUCKET_NAME,
             path=path,
         )
 
@@ -306,7 +306,7 @@ def generate_storage_url(filename, request=None, *args):
         # then return the URL but have the host as the minio endpoint URL
         url = "{host}/{bucket}/{path}".format(
             host=settings.AWS_S3_ENDPOINT_URL,
-            bucket=settings.AWS_STORAGE_BUCKET_NAME,
+            bucket=settings.AWS_S3_BUCKET_NAME,
             path=path,
         )
     # likely running through plain bare metal runserver, or using nanobox
@@ -317,7 +317,7 @@ def generate_storage_url(filename, request=None, *args):
         url = "http://{host}:{port}/{bucket}/{path}".format(
             host=host,
             port=port,
-            bucket=settings.AWS_STORAGE_BUCKET_NAME,
+            bucket=settings.AWS_S3_BUCKET_NAME,
             path=path,
         )
 
