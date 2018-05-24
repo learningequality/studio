@@ -6,7 +6,7 @@
 {% block settingscontent %}
 
 <h4>{% trans "My Account" %}</h4>
-<p>{% trans "Change your password or recover your current one." %}</p>
+<p>{% trans "Manage your account details." %}</p>
 <hr/>
 <div class="container-fluid">
 	{% block accountmessage %}
@@ -22,6 +22,7 @@
 		</div>
 	{% endif %}
 	{% endblock accountmessage %}
+	<h5>Change Password</h5>
 	<form method="post" action="{% url 'account_settings' %}">
 		<div id="form-wrapper">
 			{% csrf_token %}
@@ -41,6 +42,26 @@
 		<br>
 		<input id="save" class="action-button pull-right" type="submit" value="{% trans 'SUBMIT' %}" disabled/>
 	</form>
+	<br><br><br>
+	<h5>Export My Information</h5>
+	<p>You will be sent an email with all information linked to your account.</p>
+	<br>
+	<a class="action-button">EXPORT MY DATA</a>
+	<br><br><br><br><br>
+	<h5 id="delete-account">Delete Account</h5>
+	{% if channels %}
+		<p>{% trans 'You are the only editor for the following channels:' %}</p>
+			<ul class="list-unstyled">
+				{% for channel in channels %}
+					<li><a class="action-text" href="{% url 'channel' channel.id %}">{{channel.name}}</a></li>
+				{% endfor %}
+			</ul>
+		<p>{% trans 'You must delete or invite others to these channels before you can delete your account.' %}</p>
+	{% else %}
+		<p>{% trans 'Remove your account from Kolibri Studio' %}</p>
+	{% endif %}
+	<br>
+	<a id="delete_account_btn" class="action-button {%if channels %}disabled{% endif %}" {%if channels %}disabled{% endif %}>DELETE MY ACCOUNT</a>
 </div>
 <script>
 	$(".setting_input").on("keydown", function(event){
