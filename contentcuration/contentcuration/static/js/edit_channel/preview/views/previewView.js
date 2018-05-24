@@ -6,10 +6,18 @@ import documentTemplate from '../hbtemplates/preview_templates/document.handleba
 
 export default BaseViews.BaseView.extend({
     initialize(options) {
+        this.vuePreview = null;
+
         this.content_model = this.model.get('content_model');
-        this.file_model = this.model.get('file_model');
-        this.encoding = this.model.get('encoding');
-        this.intl_data = this.model.get('intl_data');
+
+        this.listenTo(this.model, 'change:file_model', () => {
+          // indiscriminately destroys our Vue instance. Not ideal.
+          if(this.vuePreview) {
+            this.vuePreview.$destroy();
+            this.vuePreview = null;
+          }
+          this.render();
+        });
 
         this.render();
     },
@@ -21,17 +29,17 @@ export default BaseViews.BaseView.extend({
 
         if (isImage) {
             return imageTemplate({
-                source: this.model.get('encoding') || this.file_model.storage_url,
+                source: this.model.get('encoding') || this.model.get('file_model').storage_url,
             }, {
-                data: this.intl_data
+                data: this.model.get('intl_data')
             });
         }
 
         if (isSubtitle) {
             return documentTemplate({
-                source: this.file_model.storage_url,
+                source: this.model.get('file_model').storage_url,
             }, {
-                data: this.intl_data
+                data: this.model.get('intl_data')
             });
         }
 
@@ -46,8 +54,8 @@ export default BaseViews.BaseView.extend({
             kind: kind,
             // use the content model's files array?
             files: [{
-                storage_url: this.file_model.storage_url,
-                extension: this.file_model.file_format,
+                storage_url: this.model.get('file_model').storage_url,
+                extension: fileFormat,
                 available: true,
             }],
             available: true,

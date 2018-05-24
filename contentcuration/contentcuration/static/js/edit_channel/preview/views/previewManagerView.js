@@ -33,7 +33,8 @@ export default BaseView.extend({
         // might be able to scope this function here
         this.prepChildModels();
 
-        // Reactivity is handled here. Children do _not_ listen for changes.
+        this.previewView = new PreviewView({ model: this.previewModel });
+
         // listenTo should prevent memory leaks
         this.listenTo(this.model, 'change:files', () => {
           this.prepChildModels();
@@ -74,7 +75,6 @@ export default BaseView.extend({
     },
     // do we really need to define a render function?
     render() {
-        this.previewView = new PreviewView({ model: this.previewModel });
 
         this.$el.html(this.template({
           file: true
