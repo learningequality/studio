@@ -1,9 +1,9 @@
 import { BaseView } from 'edit_channel/views';
 import { FormatPresetCollection } from 'edit_channel/models';
 
-import PreviewView from './preview';
+import PreviewView from './previewView';
 
-import PreviewModel from '../models/preview';
+import PreviewModel from '../models/previewModel';
 
 import { translate } from 'edit_channel/utils/string_helper';
 
@@ -35,7 +35,7 @@ export default BaseView.extend({
 
         // Reactivity is handled here. Children do _not_ listen for changes.
         // listenTo should prevent memory leaks
-        this.listenTo(this.model, 'change', () => {
+        this.listenTo(this.model, 'change:files', () => {
           this.prepChildModels();
           this.render();
         });

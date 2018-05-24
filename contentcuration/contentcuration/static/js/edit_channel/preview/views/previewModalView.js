@@ -1,5 +1,6 @@
-import PreviewManager from './preview_manager';
 import BaseViews from 'edit_channel/views';
+
+import PreviewManager from './previewManagerView';
 
 import { bindAll } from 'underscore';
 
