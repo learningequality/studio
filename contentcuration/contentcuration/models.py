@@ -92,6 +92,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     information = JSONField(load_kwargs={'object_pairs_hook': collections.OrderedDict}, null=True)
     content_defaults = JSONField(load_kwargs={'object_pairs_hook': collections.OrderedDict}, default=DEFAULT_CONTENT_DEFAULTS)
+    policies = JSONField(load_kwargs={'object_pairs_hook': collections.OrderedDict}, default=dict)
 
     objects = UserManager()
     USERNAME_FIELD = 'email'
