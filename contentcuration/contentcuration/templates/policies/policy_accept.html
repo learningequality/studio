@@ -15,7 +15,7 @@
 		<div id="form-wrapper" class="text-right">
 			{% csrf_token %}
 			<input type="hidden" value="{% for key, value in policies.items %}{{key}},{% endfor %}" id="id_policy_names" name="policy_names">
-			{{ form.accepted }} &nbsp;<label for="id_accepted">{% trans "I have read and agree to the above Terms and Conditions" %}</label>
+			{{ form.accepted }} &nbsp;<label for="id_accepted">{% trans "I have read and agree to the above terms" %}</label>
 		</div>
 		<br>
 		<input id="submit" class="action-button pull-right disabled" type="submit" value="{% trans 'SUBMIT' %}" disabled/>
