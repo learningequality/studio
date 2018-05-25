@@ -46,7 +46,7 @@
 	<h5>{% trans "Export Information" %}</h5>
 	<p>{% trans "You will be sent an email with all information linked to your account." %}</p>
 	<br>
-	<a class="action-button">{% trans "EXPORT MY DATA" %}</a>
+	<a id="export_data" class="action-button">{% trans "EXPORT MY DATA" %}</a>
 	<br><br><br><br><br><br>
 	<h5 id="delete-account">{% trans "Delete Account" %}</h5>
 	{% if channels %}
@@ -72,7 +72,7 @@
 	        {% trans 'Deleting Account' %}
       </div>
       <div class="modal-body">
-      	<p class="warning">{% trans 'Are you sure you want to permanently delete your account? CANNOT BE UNDONE!' %}</p>
+      	<p class="warning">{% trans 'Are you sure you want to permanently delete your account?' %}<br>{% trans 'THIS CANNOT BE UNDONE' %}</p>
       	<br>
       	<p><b>{% trans 'Enter your email to confirm:' %}</b></p>
       	<p>
@@ -96,7 +96,8 @@
   </div>
 </div>
 
-<script>
+<script type="text/javascript" src="{% static 'js/bundles/channel_edit.js' %}"></script>
+<script type="text/javascript">
 	function resetDeleteModal() {
 		$(".pending-delete").css("display", "none");
 		$(".error").css("display", "none");
@@ -142,10 +143,21 @@
 		}
 	});
 
+	// Export data call
+	$("#export_data").click(function(ev) {
 
-
-
-
+		var dialog = require("channel_edit").dialog;
+        $.ajax({
+            method:"POST",
+            url: window.Urls.export_user_data("{{current_user.email}}"),
+            error: function() {
+            	dialog.alert("{% trans 'Exporting Data' %}", "{% trans 'Error exporting data. Please try again.' %}");
+            },
+            success: function(data) {
+            	dialog.alert("{% trans 'Exporting Data' %}", "{% trans 'Data export started. You\'ll receive an email with your information when it\'s done.' %}");
+            }
+        });
+	});
 
 </script>
 {% endblock settingscontent %}

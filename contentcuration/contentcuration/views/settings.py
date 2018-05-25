@@ -1,5 +1,6 @@
 import json
 import math
+import os
 from datetime import date, timedelta
 from django.shortcuts import render, redirect
 from django.conf import settings as ccsettings
@@ -8,15 +9,18 @@ from django.contrib.auth import views
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import send_mail
 from django.db.models import Count
-from django.http import HttpResponse, HttpResponseBadRequest
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext as _
 from django.views.generic.edit import FormView
 from contentcuration.forms import ProfileSettingsForm, AccountSettingsForm, PreferencesSettingsForm, PolicyAcceptForm
 from rest_framework.authtoken.models import Token
+from rest_framework.decorators import api_view
 from django.core.urlresolvers import reverse_lazy
 from contentcuration.decorators import browser_is_supported, has_accepted_policies
+from contentcuration.tasks import generateusercsv_task
 from contentcuration.utils.policies import get_latest_policies
+
 
 @login_required
 @browser_is_supported
@@ -146,9 +150,10 @@ def account_settings(request):
     )
 
 @login_required
+@api_view(['POST'])
 def delete_user_account(request, user_email):
     if request.user.email != user_email:
-        return HttpResponseBadRequest(_("Cannot delete another user's account"))
+        return HttpResponseForbidden(_("Cannot delete another user's account"))
     elif request.user.is_admin or request.user.is_staff:
         return HttpResponseBadRequest(_("Cannot delete admin accounts"))
 
@@ -170,13 +175,25 @@ def delete_user_account(request, user_email):
     })
     send_mail(subject, message, ccsettings.DEFAULT_FROM_EMAIL, [ccsettings.REGISTRATION_INFORMATION_EMAIL])
 
-    # Delete user and any previously deleted channels
+    # Delete user, any previously deleted channels, and csvs
     for c in request.user.editable_channels.all():
         if c.editors.count() == 1:
             c.delete()
 
+    csv_path = generate_user_csv_filename(request.user) # Remove any generated csvs
+    if os.path.exists(csv_path):
+        os.unlink(csv_path)
+
     request.user.delete()
 
+    return HttpResponse({"success" : True })
+
+@login_required
+@api_view(['POST'])
+def export_user_data(request, user_email):
+    if request.user.email != user_email:
+        return HttpResponseForbidden(_("Cannot export another user's data"))
+    generateusercsv_task.delay(user_email)
     return HttpResponse({"success" : True })
 
 def account_deleted(request):

@@ -1,0 +1,33 @@
+{% load i18n %}
+
+{% autoescape off %}
+{% trans "Hello" %} {{ user.first_name }},
+
+{% trans 'Here is the information for your Kolibri Studio account' %}
+
+{% trans 'Name:' %} {{user.first_name}} {{user.last_name}}
+{% trans 'Email:' %} {{user.email}}
+{% trans 'Date Joined:' %} {{user.date_joined | date:"M d, Y"}}
+{% if user.information %}{% trans 'Target Location:' %} {{user.information.location}}
+{% trans 'Intended use for Studio:' %} {{user.information.use}}
+{% trans 'Where you heard about Studio' %} {{user.information.source}}{% endif %}
+
+{% if edit_channels %}{% trans 'Here are the channels you have edit access to: ' %}
+{% for channel in edit_channels %}    {{channel.id}} - {{channel.name}}
+{% endfor %}{% endif %}
+
+{% if view_channels %}{% trans 'Here are the channels you have view access to: ' %}
+{% for channel in view_channels %}    {{channel.id}} - {{channel.name}}
+{% endfor %}{% endif %}
+
+{% trans 'Information regarding items you have uploaded has been attached in a csv.' %}
+
+
+{% blocktrans %}If you have any questions or concerns regarding your information, please email us at {{ legal_email }}.{% endblocktrans %}
+
+
+{% trans "Thanks for using our site!" %}
+
+{% trans "The Learning Equality Team" %}
+
+{% endautoescape %}
