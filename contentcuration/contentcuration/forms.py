@@ -158,7 +158,7 @@ class RegistrationInformationForm(UserCreationForm, ExtraFormMixin):
             elif source == 'other' and self.check_field('other_source', _('Please indicate how you heard about us')):
                 self.cleaned_data['source'] = self.cleaned_data['other_source']
 
-        self.check_field('accepted_policy', _('Please accept our Terms and Conditions'))
+        self.check_field('accepted_policy', _('Please accept our Terms of Service'))
 
         return self.cleaned_data
 
