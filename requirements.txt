@@ -26,7 +26,7 @@ django-postmark==0.1.6
 ddtrace==0.8.0
 jsonfield==2.0.2
 newrelic==2.86.3.70
-celery==4.1.0
+celery==4.1.1
 redis==2.10.5
 reportlab==3.4.0
 python-resize-image==1.1.11
