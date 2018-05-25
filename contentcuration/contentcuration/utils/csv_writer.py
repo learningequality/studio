@@ -108,7 +108,8 @@ def generate_user_csv_filename(user):
     directory = os.path.join(settings.CSV_ROOT, "users")
     if not os.path.exists(directory):
         os.makedirs(directory)
-    return os.path.join(directory, "{} {} Data.csv".format(user.first_name, user.last_name))
+    email = re.sub(r'([^\s\w]|_)+', '', user.email.split('.')[0])
+    return os.path.join(directory, "{}{}- {} {} Data.csv".format(email, user.id, user.first_name, user.last_name))
 
 def _write_user_row(file, writer, domain):
     if file.contentnode:

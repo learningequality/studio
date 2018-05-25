@@ -19,6 +19,7 @@ from rest_framework.decorators import api_view
 from django.core.urlresolvers import reverse_lazy
 from contentcuration.decorators import browser_is_supported, has_accepted_policies
 from contentcuration.tasks import generateusercsv_task
+from contentcuration.utils.csv_writer import generate_user_csv_filename
 from contentcuration.utils.policies import get_latest_policies
 
 
