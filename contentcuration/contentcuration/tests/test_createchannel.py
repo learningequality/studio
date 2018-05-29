@@ -1,6 +1,7 @@
 import base64
+import hashlib
 import json
-import md5
+import os
 import pytest
 import requests
 import tempfile
@@ -10,6 +11,7 @@ from django.test import Client
 from mixer.backend.django import mixer
 from contentcuration import models
 from django.core.files.storage import default_storage
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.urlresolvers import reverse_lazy
 
 from rest_framework.test import APIClient
@@ -19,49 +21,54 @@ from contentcuration import models as cc
 pytestmark = pytest.mark.django_db
 
 
-# TODO: It might be good to move some of these helpers into a file all tests can import.
-def text():
-    """
-    Create a video content kind entry.
-    """
-    return mixer.blend(cc.ContentKind, kind='text')
-
-
-def preset_text():
-    """
-    Create a video format preset.
-    """
-    return mixer.blend(cc.FormatPreset, id='txt', kind=text())
-
-
-def fileformat_txt():
-    """
-    Create an mp4 FileFormat entry.
-    """
-    return mixer.blend(cc.FileFormat, extension='txt', mimetype='text/plain')
-
-
 @pytest.fixture
 def admin_user():
     return models.User.objects.create_superuser('big_shot', 'bigshot@reallybigcompany.com', 'password')
 
 
-@pytest.fixture
-def fileobj_temp():
-    randomfilebytes = ":)"
+def create_temp_file(filebytes, kind='text', ext='txt', mimetype='text/plain'):
+    """
+    Create a file and store it in Django's object db temporarily for tests.
 
-    fileobj = StringIO(randomfilebytes)
-    digest = md5.new(randomfilebytes).hexdigest()
-    filename = "{}.txt".format(digest)
+    :param filebytes: The data to be stored in the file, as a series of bytes
+    :param kind: String identifying the kind of file
+    :param ext: File extension, omitting the initial period
+    :param mimetype: Mimetype of the file
+    :return: A dict containing the keys name (filename), data (actual bytes), file (StringIO obj) and db_file (File object in db) of the temp file.
+    """
+    fileobj = StringIO(filebytes)
+    checksum = hashlib.md5(filebytes)
+    digest = checksum.hexdigest()
+    filename = "{}.{}".format(digest, ext)
     storage_file_path = cc.generate_object_storage_name(digest, filename)
 
     # Write out the file bytes on to object storage, with a filename specified with randomfilename
     default_storage.save(storage_file_path, fileobj)
 
-    # then create a File object with that
-    db_file_obj = mixer.blend(cc.File, file_format=fileformat_txt(), preset=preset_text(), file_on_disk=storage_file_path)
+    assert default_storage.exists(storage_file_path)
 
-    return {'name': storage_file_path, 'data': randomfilebytes, 'file': fileobj, 'db_file': db_file_obj}
+    file_kind = mixer.blend(cc.ContentKind, kind=kind)
+    file_format = mixer.blend(cc.FileFormat, extension=ext, mimetype=mimetype)
+    preset = mixer.blend(cc.FormatPreset, id=ext, kind=file_kind)
+    # then create a File object with that
+    db_file_obj = mixer.blend(cc.File, file_format=file_format, preset=preset, file_on_disk=storage_file_path)
+
+    return {'name': os.path.basename(storage_file_path), 'data': filebytes, 'file': fileobj, 'db_file': db_file_obj}
+
+
+def upload_file(admin_client, url, fileobj_temp):
+    """
+    Uploads a file to the server using an authorized client.
+    """
+    name = fileobj_temp['name']
+    file_upload_url = url + str(reverse_lazy('api_file_upload'))
+    f = SimpleUploadedFile(name, fileobj_temp['data'])
+    return admin_client.post(file_upload_url, {"file": f})
+
+
+@pytest.fixture
+def fileobj_temp():
+    return create_temp_file(":)")
 
 
 @pytest.fixture
@@ -75,24 +82,8 @@ def topic():
 
 
 @pytest.fixture
-def video():
-    return mixer.blend('contentcuration.ContentKind', kind='video')
-
-
-@pytest.fixture
-def preset_video(video):
-    return mixer.blend('contentcuration.FormatPreset', id='mp4', kind=video)
-
-
-@pytest.fixture
-def fileformat_mp4():
-    return mixer.blend('contentcuration.FileFormat', extension='mp4', mimetype='application/video')
-
-
-@pytest.yield_fixture
-def fileobj_video(fileobj_temp, preset_video, fileformat_mp4):
-    db_file_obj = mixer.blend('contentcuration.File', file_format=fileformat_mp4, preset=preset_video, file_on_disk=fileobj_temp['name'])
-    yield db_file_obj
+def fileobj_video():
+    return create_temp_file("def", 'video', 'mp4', 'application/video')
 
 
 @pytest.fixture
@@ -101,66 +92,18 @@ def license():
 
 
 @pytest.fixture
-def audio():
-    return mixer.blend('contentcuration.ContentKind', kind='audio')
+def fileobj_audio():
+    return create_temp_file("abc", 'audio', 'mp3', 'application/audio')
 
 
 @pytest.fixture
-def preset_audio(audio):
-    return mixer.blend('contentcuration.FormatPreset', id='mp3', kind=audio)
+def fileobj_exercise():
+    return create_temp_file("jkl", 'exercise', 'perseus', 'application/perseus')
 
 
 @pytest.fixture
-def fileformat_mp3():
-    return mixer.blend('contentcuration.FileFormat', extension='mp3', mimetype='application/audio')
-
-
-@pytest.yield_fixture
-def fileobj_audio(fileobj_temp, preset_audio, fileformat_mp3):
-    db_file_obj = mixer.blend('contentcuration.File', file_format=fileformat_mp3, preset=preset_audio, file_on_disk=fileobj_temp['name'])
-    yield db_file_obj
-
-
-@pytest.fixture
-def exercise():
-    return mixer.blend('contentcuration.ContentKind', kind='exercise')
-
-
-@pytest.fixture
-def preset_exercise(exercise):
-    return mixer.blend('contentcuration.FormatPreset', id='perseus', kind=exercise)
-
-
-@pytest.fixture
-def fileformat_perseus():
-    return mixer.blend('contentcuration.FileFormat', extension='perseus', mimetype='application/perseus')
-
-
-@pytest.yield_fixture
-def fileobj_exercise(fileobj_temp, preset_exercise, fileformat_perseus):
-    db_file_obj = mixer.blend('contentcuration.File', file_format=fileformat_perseus, preset=preset_exercise, file_on_disk=fileobj_temp['name'])
-    yield db_file_obj
-
-
-@pytest.fixture
-def document():
-    return mixer.blend('contentcuration.ContentKind', kind='document')
-
-
-@pytest.fixture
-def preset_document(document):
-    return mixer.blend('contentcuration.FormatPreset', id='pdf', kind=document)
-
-
-@pytest.fixture
-def fileformat_pdf():
-    return mixer.blend('contentcuration.FileFormat', extension='pdf', mimetype='application/pdf')
-
-
-@pytest.yield_fixture
-def fileobj_document(fileobj_temp, preset_document, fileformat_pdf):
-    db_file_obj = mixer.blend('contentcuration.File', file_format=fileformat_pdf, preset=preset_document, file_on_disk=fileobj_temp['name'])
-    yield db_file_obj
+def fileobj_document():
+    return create_temp_file("ghi", 'document', 'pdf', 'application/pdf')
 
 
 @pytest.fixture
@@ -177,26 +120,39 @@ def channel_metadata(thumbnail):
 
 @pytest.fixture
 def topic_tree_data(fileobj_document, fileobj_video, fileobj_exercise, fileobj_audio, license, topic):
-    return [
+    def get_file_data(fileinfo):
+        fileobj = fileinfo['db_file']
+        return {
+                'filename': fileinfo['name'],
+                'size': fileobj.file_size,
+                'preset': None
+            }
+
+    data = [
         {
             "title": "Western Philosophy",
             "node_id": "deafdeafdeafdeafdeafdeafdeafdeaf",
+            "content_id": "f52d3e2e6ccc59eaaf676aa131edd6ad",
             "description": "Philosophy materials for the budding mind.",
             "kind": topic.pk,
             "license": license.license_name,
+            "author": "Bradley Smoker",
             "children": [
                 {
                     "title": "Nicomachean Ethics",
                     "node_id": "beadbeadbeadbeadbeadbeadbeadbead",
+                    "content_id": "fd373d00523b5484a5586c81e4004afb",
                     "author": "Aristotle",
                     "description": "The Nicomachean Ethics is the name normally given to ...",
-                    "files": [fileobj_document.checksum + '.' + fileobj_document.file_format.extension],
+                    "files": [get_file_data(fileobj_document)],
                     "license": license.license_name,
-                    "kind": fileobj_document.preset.kind.pk,
+                    "kind": fileobj_document['db_file'].preset.kind.pk,
                 },
                 {
                     "title": "The Critique of Pure Reason",
                     "node_id": "fadefadefadefadefadefadefadefade",
+                    "content_id": "07563644b3c059429a0b42853e83c2db",
+                    "author": "Bradley Smoker",
                     "description": "Kant saw the Critique of Pure Reason as an attempt to bridge the gap...",
                     "kind": topic.pk,
                     "license": license.license_name,
@@ -204,15 +160,17 @@ def topic_tree_data(fileobj_document, fileobj_video, fileobj_exercise, fileobj_a
                         {
                             "title": "01 - The Critique of Pure Reason",
                             "node_id": "facefacefacefacefacefacefaceface",
+                            "content_id": "9ec91b66dc175c93a4c6a599a76cbc25",
                             "related": "deaddeaddeaddeaddeaddeaddeaddead",
-                            "files": [fileobj_video.checksum + '.' + fileobj_video.file_format.extension],
+                            "files": [get_file_data(fileobj_video)],
                             "author": "Immanuel Kant",
                             "license": license.license_name,
-                            "kind": fileobj_video.preset.kind.pk,
+                            "kind": fileobj_video['db_file'].preset.kind.pk,
                         },
                         {
                             "title": "02 - Preface to the Second Edition",
                             "node_id": "deaddeaddeaddeaddeaddeaddeaddead",
+                            "content_id": "b249c05125775c479c579e57e66a0a6e",
                             "author": "Immanuel Kant",
                             "kind": topic.pk,
                             "license": license.license_name,
@@ -220,6 +178,7 @@ def topic_tree_data(fileobj_document, fileobj_video, fileobj_exercise, fileobj_a
                                 {
                                     "title": "02.1 - A Deeply Nested Thought",
                                     "node_id": "badebadebadebadebadebadebadebade",
+                                    "content_id": "aad3620a82c253ea9e8190b2989c4921",
                                     "author": "Immanuel Kant",
                                     "license": license.license_name,
                                     "kind": topic.pk,
@@ -233,30 +192,60 @@ def topic_tree_data(fileobj_document, fileobj_video, fileobj_exercise, fileobj_a
         {
             "title": "Recipes",
             "node_id": "acedacedacedacedacedacedacedaced",
+            "content_id": "aa480b60a7f4526f886e7df9f4e9b8cc",
             "description": "Recipes for various dishes.",
+            "author": "Bradley Smoker",
             "kind": topic.pk,
             "license": license.license_name,
             "children": [
                 {
                     "title": "Smoked Brisket Recipe",
                     "node_id": "beefbeefbeefbeefbeefbeefbeefbeef",
+                    "content_id": "598fc2a55ea55f86bb7ce9008f34a9d0",
                     "author": "Bradley Smoker",
-                    "files": [fileobj_audio.checksum + '.' + fileobj_audio.file_format.extension],
+                    "files": [get_file_data(fileobj_audio)],
                     "license": license.license_name,
-                    "kind": fileobj_audio.preset.kind.pk,
+                    "kind": fileobj_audio['db_file'].preset.kind.pk,
                 },
                 {
                     "title": "Food Mob Bites 10: Garlic Bread",
                     "node_id": "cafecafecafecafecafecafecafecafe",
+                    "content_id": "7fc278d7dd31577da822e525ec67ee02",
                     "author": "Revision 3",
                     "description": "Basic garlic bread recipe.",
-                    "files": [fileobj_exercise.checksum + '.' + fileobj_exercise.file_format.extension],
+                    "files": [get_file_data(fileobj_exercise)],
                     "license": license.license_name,
-                    "kind": fileobj_exercise.preset.kind.pk,
+                    "kind": fileobj_exercise['db_file'].preset.kind.pk,
                 }
             ]
         },
     ]
+
+    def add_field_defaults_to_node(node):
+        """
+        Since we test using POST, all fields must be present, even if the field will just have the default
+        value set. Rather than manually setting a bunch of default values on every node, we just assign it here.
+        """
+        node.update(
+            {
+                "license_description": None,
+                "copyright_holder": "",
+                "questions": [],
+                "extra_fields": {}
+            })
+        if not "files" in node:
+            node["files"] = []
+        if not "description" in node:
+            node["description"] = ""
+        if "children" in node:
+            for i in range(0, len(node["children"])):
+                node["children"][i] = add_field_defaults_to_node(node["children"][i])
+        return node
+
+    for i in range(0, len(data)):
+        data[i] = add_field_defaults_to_node(data[i])
+
+    return data
 
 
 @pytest.fixture
@@ -265,99 +254,46 @@ def url():
 
 
 @pytest.fixture
-def fileobj_id1():
-    return 'notarealid.pdf'
+def api_file_upload_response(admin_client, url, fileobj_temp):
+    response = upload_file(admin_client, url, fileobj_temp)
+    return response
 
 
 @pytest.fixture
-def fileobj_id2():
-    return 'notarealid.mp3'
-
-
-@pytest.fixture
-def fileobj_id3():
-    return 'notarealid.mp4'
-
-
-@pytest.fixture
-def fileobj_id4():
-    return 'notarealid.perseus'
-
-
-@pytest.fixture
-def file_list(fileobj_video, fileobj_audio, fileobj_document, fileobj_exercise, fileobj_id1, fileobj_id2, fileobj_id3, fileobj_id4):
-    return [
-        str(fileobj_video),
-        str(fileobj_audio),
-        str(fileobj_document),
-        str(fileobj_exercise),
-        fileobj_id1,
-        fileobj_id2,
-        fileobj_id3,
-        fileobj_id4,
-    ]
-
-
-@pytest.fixture
-def file_diff(fileobj_id1, fileobj_id2, fileobj_id3, fileobj_id4):
-    return [
-        fileobj_id1,
-        fileobj_id2,
-        fileobj_id3,
-        fileobj_id4,
-    ]
-
-
-@pytest.fixture
-def filename():
-    return "Filename"
-
-
-@pytest.fixture
-def source_url():
-    return "http://abc@xyz.com"
-
-
-@pytest.fixture
-def api_file_upload_response(auth_client, url, fileobj_temp, fileformat_mp4, filename, source_url):
-    name = fileobj_temp['name']
-    contenttype = fileformat_mp4.mimetype
-    file_upload_url = url + str(reverse_lazy('api_file_upload'))
-    with tempfile.NamedTemporaryFile() as temp_file:
-        payload = {
-            'file': temp_file.file,
-        }
-        response = auth_client.post(file_upload_url, payload)
-        return response
-
-
-@pytest.fixture
-def auth_client(admin_user):
+def admin_client(admin_user):
     client = APIClient()
     client.force_authenticate(admin_user)
     return client
 
 
 @pytest.fixture
-def api_create_channel_response(url, channel_metadata, auth_client):
+def api_create_channel_response(url, channel_metadata, admin_client):
     create_channel_url = url + str(reverse_lazy('api_create_channel'))
     payload = {
         'channel_data': channel_metadata,
     }
-    response = auth_client.post(create_channel_url, data=json.dumps(payload), content_type='text/json')
+    response = admin_client.post(create_channel_url, data=json.dumps(payload), content_type='text/json')
     return response
 
 
 @pytest.fixture
-def api_add_nodes_response(url, api_create_channel_response, channel_metadata, topic_tree_data, auth_client):
+def api_add_nodes_response(url, api_create_channel_response, channel_metadata, topic_tree_data, admin_client):
     root_id = json.loads(api_create_channel_response.content)['root']
-    add_nodes_url = url + str(reverse_lazy('api_add_nodes_to_tree'))
-    payload = {
-        'root_id': root_id,
-        'content_data': topic_tree_data,
-    }
-    response = auth_client.post(add_nodes_url, data=json.dumps(payload), content_type='text/json')
-    return response
+
+    def upload_nodes(root_id, nodes):
+        add_nodes_url = url + str(reverse_lazy('api_add_nodes_to_tree'))
+        payload = {
+            'root_id': root_id,
+            'content_data': nodes,
+        }
+        response = admin_client.post(add_nodes_url, data=json.dumps(payload), content_type='text/json')
+        data = json.loads(response.content)
+        for node in nodes:
+            if "children" in node:
+                upload_nodes(data["root_ids"][node["node_id"]], node["children"])
+
+        return response
+    return upload_nodes(root_id, topic_tree_data)
 
 
 
@@ -367,22 +303,17 @@ def staging_tree_root(api_create_channel_response):
     channel = models.Channel.objects.get(pk=channel_id)
     return channel.staging_tree
 
+
 @pytest.fixture
 def chef_tree_root(api_create_channel_response):
     channel_id = json.loads(api_create_channel_response.content)['channel_id']
     channel = models.Channel.objects.get(pk=channel_id)
     return channel.chef_tree
 
+
 """ FILE ENDPOINT TESTS """
-@pytest.mark.skip(reason="For test to work, need to figure out how to format file upload data for api_file_upload_response")
 def test_api_file_upload_status(api_file_upload_response):
     assert api_file_upload_response.status_code == requests.codes.ok
-
-@pytest.mark.skip(reason="For test to work, need to figure out how to format file upload data for api_file_upload_response")
-def test_api_file_upload_data(api_file_upload_response, filename, source_url):
-    response = json.loads(api_file_upload_response.content)['new_file']
-    file_hash = response['hash'].split('.')[0]
-    assert models.File.objects.filter(pk=response['file_id'], checksum=file_hash, contentnode=None, original_filename=filename, source_url=source_url).exists()
 
 
 """ TOPIC TREE CREATION TESTS """
@@ -408,33 +339,42 @@ def test_channel_create_staging_tree_is_none(staging_tree_root):
 
 def test_channel_create_chef_tree_is_set(chef_tree_root):
     """
-    Tests that chef_tree is set after channel creation and before sushi chef starts
+    Tests that chef_tree is set after channel creation and before sushi chef starts.
     """
     assert chef_tree_root is not None
 
-@pytest.mark.skip(reason="topic_tree_data creation data structures need updated with content_id and possibly other fields")
-def test_channel_create_tree_created(api_add_nodes_response, topic_tree_data, staging_tree_root):
-    assert api_add_nodes_response.status == 201
-    def check_tree_node(n):
+
+def test_channel_create_tree_created(api_add_nodes_response, topic_tree_data, staging_tree_root, channel_metadata):
+    """
+    Checks that the add_nodes API actually creates the nodes with the data passed to the function.
+    """
+    def check_tree_node(n, parent=None):
         node = models.ContentNode.objects.get(node_id=n['node_id'])
         assert node.title == n['title'] and node.description == n['description'] and node.author == n['author'] and node.kind.pk == n['kind']
         assert node.license.license_name == n['license'] if node.license else n['license'] is None
-        assert node.parent.node_id == n['parent_check'] or node.parent == staging_tree_root
+        parent_id = ''
+        if parent:
+            parent_id = parent['node_id']
+        assert node.parent.node_id == parent_id or node.parent.node_id == channel_metadata['id']
         if 'children' in n:
             for child in n['children']:
-                check_tree_node(child)
+                check_tree_node(child, n)
 
     for n in topic_tree_data:
         check_tree_node(n)
 
-@pytest.mark.skip(reason="topic_tree_data creation data structures need updated with content_id and possibly other fields")
-def test_channel_create_files_created(api_create_channel_response, topic_tree_data):
+
+def test_channel_create_files_created(fileobj_document, fileobj_exercise, fileobj_audio, fileobj_video,  api_add_nodes_response, topic_tree_data):
+    """
+    Test that add_nodes adds the files specified to the database and associates them with the correct node.
+    """
     def check_tree_files(n):
         if 'files' in n:
-            node = models.ContentNode.objects.get(node_id=n['id'])
+            node = models.ContentNode.objects.get(node_id=n['node_id'])
             assert len(n['files']) == node.files.all().count()
             for file_obj in node.files.all():
-                assert str(file_obj.checksum + '.' + file_obj.file_format.extension) in n['files']
+                for afile in n['files']:
+                    assert str(file_obj.checksum + '.' + file_obj.file_format.extension) in afile['filename']
 
         if 'children' in n:
             for child in n['children']:
