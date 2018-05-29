@@ -185,9 +185,9 @@ var ClipboardList = BaseViews.BaseWorkspaceListView.extend({
         dialog.dialog(this.get_translation("warning"), this.get_translation("delete_message"), {
             [this.get_translation("cancel")]:function(){},
             [this.get_translation("delete")]: function(){
+        self.track_event_for_nodes('Clipboard', 'Delete items', selected_items);
 				self.delete_items_permanently(self.get_translation("deleting_content"));
 				self.$(".select_all").attr("checked", false);
-				self.track_event_for_nodes('Clipboard', 'Delete items', selected_items);
             },
         }, null);
 	},
@@ -350,11 +350,11 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
         dialog.dialog(this.get_translation("warning"), this.get_translation("delete_item_warning", this.model.get("title")), {
             [self.get_translation("cancel")]:function(){},
             [self.get_translation("delete")]: function(){
+              self.track_event_for_nodes('Clipboard', 'Delete item', self.model);
             	self.remove();
             	self.destroy(null, function(){
             		self.reload_ancestors(new Models.ContentNodeCollection([self.model]), false);
             	});
-            	self.track_event_for_nodes('Clipboard', 'Delete item', this.model);
             }
         }, null);
 	},
