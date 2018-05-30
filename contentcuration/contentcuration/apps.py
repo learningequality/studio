@@ -1,11 +1,10 @@
-import os
-
 from django.apps import AppConfig
-from django.conf import settings
+
+from contentcuration.utils.minio_utils import ensure_bucket_exists
 
 
 class ContentConfig(AppConfig):
     name = 'contentcuration'
 
     def ready(self):
-        pass
+        ensure_bucket_exists()
