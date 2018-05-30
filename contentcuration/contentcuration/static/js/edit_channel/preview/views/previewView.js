@@ -1,10 +1,10 @@
-import BaseViews from 'edit_channel/views';
+import { BaseView } from 'edit_channel/views';
 
 // TODO async these? Def async the preview import
 import imageTemplate from '../hbtemplates/preview_templates/image.handlebars';
 import documentTemplate from '../hbtemplates/preview_templates/document.handlebars';
 
-export default BaseViews.BaseView.extend({
+export default BaseView.extend({
     initialize(options) {
         this.vuePreview = null;
 
@@ -49,21 +49,27 @@ export default BaseViews.BaseView.extend({
         // first use of content_model here. Passed from parent of PreviewModalView.
         // that's probably where vue file's specced
         var kind = this.content_model.get('kind');
+        const assessment = kind === 'exercise';
+        const itemId = assessment ? this.content_model.get('assessment_item_ids')[0] : null;
+
         // mock up props here
         var propsData = {
-            kind: kind,
-            // use the content model's files array?
-            files: [{
-                storage_url: this.model.get('file_model').storage_url,
-                extension: fileFormat,
+            kind,
+            assessment,
+            itemId,
+            files: this.content_model.get('files').map(file => {
+              return Object.assign({
+                extension: file.file_format,
+                lang: file.language,
+                thumbnail: file.preset.thumbnail,
+                priority: file.preset.order,
                 available: true,
-            }],
+              }, file)
+            }),
             available: true,
-            assessment: kind === 'exercise',
             interactive: false,
             // why are we using `.get` instead of accessing directly?
             // other `*_model`s are probably not Backbone.Models.
-            itemId: kind === 'exercise' ? this.content_model.get('assessment_item_ids')[0] : null
         };
 
         // TODO VUE WRAPPER - wrap up this process
