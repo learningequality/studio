@@ -9,7 +9,6 @@
 <p>{% trans "Manage your account details." %}</p>
 <hr/>
 <div class="container-fluid">
-	{% block accountmessage %}
 	{% if form.errors %}
 		<div class="alert alert-danger" role="alert">
 			<ul class="list-unstyled">
@@ -20,6 +19,8 @@
 			{% endfor %}
 			</ul>
 		</div>
+	{% elif request.method == 'POST' %}
+		<div class="alert alert-success" role="alert">{% trans "Your password has been successfully changed." %}</div>
 	{% endif %}
 	{% endblock accountmessage %}
 	<h5>Change Password</h5>

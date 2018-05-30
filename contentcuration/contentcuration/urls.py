@@ -52,7 +52,6 @@ class LicenseViewSet(viewsets.ModelViewSet):
 
     serializer_class = serializers.LicenseSerializer
 
-
 class LanguageViewSet(viewsets.ModelViewSet):
     queryset = Language.objects.all()
 
@@ -257,7 +256,6 @@ urlpatterns += [
     url(r'^settings/profile', settings_views.ProfileView.as_view(), name='profile_settings'),
     url(r'^settings/preferences', settings_views.PreferencesView.as_view(), name='preferences_settings'),
     url(r'^settings/account$', settings_views.account_settings, name='account_settings'),
-    url(r'^settings/account/success', settings_views.account_settings_success, name='account_settings_success'),
     url(r'^api/delete_user_account/(?P<user_email>[^/]+)/$', settings_views.delete_user_account, name='delete_user_account'),
     url(r'^api/export_user_data/(?P<user_email>[^/]+)/$', settings_views.export_user_data, name='export_user_data'),
     url(r'^settings/account/deleted', settings_views.account_deleted, name='account_deleted'),

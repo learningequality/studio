@@ -5,7 +5,7 @@ from datetime import date, timedelta
 from django.shortcuts import render, redirect
 from django.conf import settings as ccsettings
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import views
+from django.contrib.auth import views, update_session_auth_hash
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import send_mail
 from django.db.models import Count
@@ -108,7 +108,6 @@ class PreferencesView(FormView):
     def user(self):
         return self.request.user
 
-
 class PolicyAcceptView(FormView):
     success_url = reverse_lazy('channels')
     form_class = PolicyAcceptForm
@@ -131,6 +130,14 @@ def account_settings(request):
     if not request.user.is_authenticated():
         return redirect('/accounts/login')
 
+    if request.method == 'POST':
+        form = AccountSettingsForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)
+    else:
+        form = AccountSettingsForm(request.user)
+
     channels = [ # Count on editors is always returning 1, so iterate manually
         {"name": c.name, "id": c.id}
         for c in request.user.editable_channels.filter(deleted=False)
@@ -141,7 +148,7 @@ def account_settings(request):
         request,
         template_name='settings/account.html',
         post_change_redirect=reverse_lazy('account_settings_success'),
-        password_change_form=AccountSettingsForm,
+        password_change_form=form,
         extra_context={
             "current_user": request.user,
             "page": "account",
