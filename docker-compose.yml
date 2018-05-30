@@ -16,20 +16,57 @@ services:
       SHELL: /bin/bash
       AWS_S3_ENDPOINT_URL: http://minio:9000
       DATA_DB_HOST: studio-postgres
+      DJANGO_SETTINGS_MODULE: contentcuration.dev_settings
+      RUN_MODE: docker-compose
+      CELERY_TIMEZONE: America/Los_Angeles
+      CELERY_REDIS_DB: 0
+      CELERY_BROKER_ENDPOINT: studio-redis
+      CELERY_RESULT_BACKEND_ENDPOINT: studio-redis
+      CELERY_REDIS_PASSWORD: ""
     volumes:
       - .:/src
       - studio_virtualenv:/root/.local/share/virtualenvs/
       - pip_cache:/root/.cache/pip
+  studio-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    image: learningequality/studio-app-dev
+    command: make prodceleryworkers
+    depends_on:
+      - minio
+      - studio-postgres
+      - studio-redis
+    volumes:
+      - .:/src
+      - studio_virtualenv:/root/.local/share/virtualenvs/
+      - pip_cache:/root/.cache/pip
+    environment:
+      MPLBACKEND: ps
+      SHELL: /bin/bash
+      AWS_S3_ENDPOINT_URL: http://minio:9000
+      DATA_DB_HOST: studio-postgres
+      DJANGO_SETTINGS_MODULE: contentcuration.dev_settings
+      RUN_MODE: docker-compose
+      CELERY_TIMEZONE: America/Los_Angeles
+      CELERY_REDIS_DB: 0
+      CELERY_BROKER_ENDPOINT: studio-redis
+      CELERY_RESULT_BACKEND_ENDPOINT: studio-redis
+      CELERY_REDIS_PASSWORD: ""
   minio:
     image: minio/minio
-    entrypoint: minio server /data
-    logging:
-      driver: none
+    entrypoint: minio gateway gcs contentworkshop-159920
+    # logging:
+    #   driver: none
     environment:
       MINIO_ACCESS_KEY: development
       MINIO_SECRET_KEY: development
+      GOOGLE_APPLICATION_CREDENTIALS: /src/contentworkshop-159920-99d493a04fd5.json
     volumes:
       - minio_data:/data
+      - .:/src
+    ports:
+      - "9000:9000"
   studio-postgres:
     image: postgres:9.6
     environment:
