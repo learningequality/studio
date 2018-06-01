@@ -35,7 +35,7 @@ export default BaseView.extend({
 
         this.on('destroy', () => {
           this.stopListening();
-          this.off(); // needed?
+          this.off();
 
           this.previewView.trigger('destroy');
         });
@@ -106,6 +106,7 @@ export default BaseView.extend({
         }
     },
     toggle_fullscreen() {
+        // useful only for thumbnail previews
         const notFullscreen = () => {
             return ((document.fullScreenElement !== undefined && document.fullScreenElement === null) ||
                 (document.msFullscreenElement !== undefined && document.msFullscreenElement === null) ||

@@ -1,0 +1,22 @@
+// assumes kolibriGlobal variable is in window. Attached via Django tags
+var Vue = window.kolibriGlobal.lib.vue;
+
+// Helper function for using Kolibri Components. Returns a mounted ("initialized") vue component,
+// which includes a $el property, much like a Backbone View
+// NOTE: remember to call the component's $destroy method when done with it.
+//       Not doing so could lead to memory leaks.
+export default function(componentDefObject, props) {
+  const component = Vue.extend(componentDefObject);
+
+  // Custom, from Kolibri. No need for `Vue.use()` or `new Vuex.Store`
+  if (!window.kolibriGlobal.coreVue.vuex.store.default.__initialized) {
+    window.kolibriGlobal.coreVue.vuex.store.default.registerModule();
+  }
+
+  // IDEA add an event API
+
+  return new component({
+    propsData: props,
+    store: window.kolibriGlobal.coreVue.vuex.store.default,
+  }).$mount();
+}
