@@ -524,15 +524,16 @@ var SyncPreviewFileView = SyncPreviewModalView.extend({
     },
     create_preview: function(){
         var previewer = require('edit_channel/preview/views');
+
+        // TODO test
         previewer.ItemPreviewView({
           el: this.$("#preview_window"),
-          content_model: this.node,
-          file_model: this.model,
-          subtitles: this.subtitles,
-          force_load: true,
-          encoding: this.node.get('thumbnail_encoding') && this.node.get("thumbnail_encoding").base64,
+          model: this.node,
+          previewFile: this.model,
           intl_data: this.get_intl_data()
-        }).render();
+        });
+
+        // not sure this works anymore
         if(this.subtitles.length){
             this.$("#preview_window video").get(0).textTracks[0].mode = "showing";
         }

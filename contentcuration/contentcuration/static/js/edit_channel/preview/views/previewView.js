@@ -25,6 +25,7 @@ export default BaseView.extend({
   getTemplate({ previewFile, intl_data }) {
     const imageFormats = ['jpg', 'jpeg', 'png'];
 
+    // Needs image template (not in kolibri)
     if (imageFormats.includes(previewFile.file_format)) {
 
       const imageSource = () => {
@@ -37,9 +38,12 @@ export default BaseView.extend({
       return imageTemplate({ source: imageSource() }, { data: intl_data });
     }
 
+    // Needs subtitle template (not in kolibri)
     if (previewFile.file_format === 'srt') {
       return documentTemplate({ source: previewFile.storage_url }, { data: intl_data });
     }
+
+    // Kolibri renderable
 
     // mock up vue props here
     const kind = this.model.get('kind');
