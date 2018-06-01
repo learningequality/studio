@@ -4,8 +4,10 @@ const path = require('path');
 
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const BundleTracker = require('webpack-bundle-tracker');
-const VueLoaderPlugin = require('vue-loader/lib/plugin')
+const VueLoaderPlugin = require('vue-loader/lib/plugin');
 
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const WebpackRTLPlugin = require('webpack-rtl-plugin');
 
 const djangoProjectDir = path.resolve('contentcuration');
 const staticFilesDir = path.resolve(djangoProjectDir, 'contentcuration', 'static');
@@ -78,6 +80,7 @@ module.exports = {
         test: /\.css?$/,
         use: [
           `style-loader`,
+          MiniCssExtractPlugin.loader,
           `css-loader`,
         ],
       },
@@ -124,6 +127,11 @@ module.exports = {
       'window.jQuery': 'jquery',
       'jQuery': 'jquery',
     }),
+    new MiniCssExtractPlugin({
+      filename: "[name]-[hash].css",
+      chunkFilename: "[name]-[hash]-[id].css"
+    }),
+    new WebpackRTLPlugin(),
   ],
   // new in webpack 4. Specifies the default bundle type
   mode: 'development',
