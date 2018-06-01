@@ -22,7 +22,6 @@
 	{% elif request.method == 'POST' %}
 		<div class="alert alert-success" role="alert">{% trans "Your password has been successfully changed." %}</div>
 	{% endif %}
-	{% endblock accountmessage %}
 	<h5>Change Password</h5>
 	<form method="post" action="{% url 'account_settings' %}">
 		<div id="form-wrapper">

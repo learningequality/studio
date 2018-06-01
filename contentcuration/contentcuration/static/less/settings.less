@@ -1,6 +1,7 @@
 @import "global-variables.less";
 
 @delete-color: firebrick;
+@error-bg-color:#F7DCDC;
 
 #settings-nav{
 	min-width: 200px;
@@ -58,6 +59,78 @@
 
 		#delete-account {
 			color: @delete-color;
+		}
+		.errors li {
+			text-align: center;
+		    background-color: @error-bg-color;
+		    padding: 10px;
+		    color: @red-error-color;
+		    font-size: 10pt;
+		    width: 100%;
+		    margin: 0 auto;
+		    margin-bottom: 1px;
+		}
+		#storage_request_form {
+			p {
+				font-weight: bold;
+				margin-top: 20px;
+				margin-bottom: 2px;
+				color: @gray-700;
+			}
+			ul {
+				list-style: none;
+				padding-left: 20px;
+				&#id_license {
+					-moz-column-count: 3;
+					-moz-column-gap: 20px;
+					-webkit-column-count: 3;
+					-webkit-column-gap: 20px;
+					column-count: 3;
+					column-gap: 20px;
+				}
+			}
+			>ul>li { margin-bottom: 10px; }
+			textarea {
+				resize: none;
+				width: 100%;
+				padding: 5px;
+			}
+			.license-url {
+				font-size: 16pt;
+			    vertical-align: text-bottom;
+			    text-decoration: none;
+			    color: @blue-500;
+			}
+			#public_help {
+				color: @blue-500;
+				font-weight: bold;
+				text-decoration: none;
+			}
+			#id_public {
+				margin-top: 5px;
+				width: 100%;
+				option { padding: 2px 5px; }
+			}
+			input[type="text"] {
+				padding: 0px 2px;
+				margin-left: 10px;
+				&.short-field {
+					width: 75px;
+				}
+				&.long-field {
+					width: 100%;
+    				margin-left: 0px;
+    				margin-bottom: 10px;
+				}
+				&#id_organization {
+					margin-left: 2px;
+					width: 200px;
+				}
+			}
+			.required {
+				color: @red-error-color;
+				margin-left: 2px;
+			}
 		}
 	}
 	.token{
@@ -141,6 +214,7 @@
 		}
 
 	}
+
 
 }
 

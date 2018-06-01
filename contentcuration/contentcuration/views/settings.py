@@ -4,8 +4,10 @@ import os
 from datetime import date, timedelta
 from django.shortcuts import render, redirect
 from django.conf import settings as ccsettings
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import views, update_session_auth_hash
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import send_mail
 from django.db.models import Count
@@ -13,11 +15,12 @@ from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbid
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext as _
 from django.views.generic.edit import FormView
-from contentcuration.forms import ProfileSettingsForm, AccountSettingsForm, PreferencesSettingsForm, PolicyAcceptForm
+from contentcuration.forms import ProfileSettingsForm, AccountSettingsForm, PreferencesSettingsForm, PolicyAcceptForm, StorageRequestForm
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view
 from django.core.urlresolvers import reverse_lazy
 from contentcuration.decorators import browser_is_supported, has_accepted_policies
+from contentcuration.models import Channel, License
 from contentcuration.tasks import generateusercsv_task
 from contentcuration.utils.csv_writer import generate_user_csv_filename
 from contentcuration.utils.policies import get_latest_policies
@@ -32,18 +35,13 @@ def settings(request):
     return redirect('settings/profile')
 
 
-class ProfileView(FormView):
+class ProfileView(FormView, LoginRequiredMixin):
     """
     Base class for user settings views.
     """
     success_url = reverse_lazy('profile_settings')
     form_class = ProfileSettingsForm
     template_name = 'settings/profile.html'
-
-    def get(self, request, *args, **kwargs):
-        if not self.request.user.is_authenticated():
-            return redirect('/accounts/login')
-        return super(ProfileView, self).get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super(ProfileView, self).get_context_data(**kwargs)
@@ -68,18 +66,13 @@ class ProfileView(FormView):
         return self.request.user
 
 
-class PreferencesView(FormView):
+class PreferencesView(FormView, LoginRequiredMixin):
     """
     Base class for user settings views.
     """
     success_url = reverse_lazy('preferences_settings')
     form_class = PreferencesSettingsForm
     template_name = 'settings/preferences.html'
-
-    def get(self, request, *args, **kwargs):
-        if not self.request.user.is_authenticated():
-            return redirect('/accounts/login')
-        return super(PreferencesView, self).get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super(PreferencesView, self).get_context_data(**kwargs)
@@ -108,7 +101,7 @@ class PreferencesView(FormView):
     def user(self):
         return self.request.user
 
-class PolicyAcceptView(FormView):
+class PolicyAcceptView(FormView, LoginRequiredMixin):
     success_url = reverse_lazy('channels')
     form_class = PolicyAcceptForm
     template_name = 'policies/policy_accept.html'
@@ -127,9 +120,6 @@ class PolicyAcceptView(FormView):
 
 @login_required
 def account_settings(request):
-    if not request.user.is_authenticated():
-        return redirect('/accounts/login')
-
     if request.method == 'POST':
         form = AccountSettingsForm(request.user, request.POST)
         if form.is_valid():
@@ -144,18 +134,14 @@ def account_settings(request):
         if c.editors.count() == 1
     ]
 
-    return views.password_change(
-        request,
-        template_name='settings/account.html',
-        post_change_redirect=reverse_lazy('account_settings_success'),
-        password_change_form=form,
-        extra_context={
-            "current_user": request.user,
-            "page": "account",
-            "channels": channels,
-            "policy_email": ccsettings.POLICY_EMAIL,
-        }
-    )
+    return render(request, 'settings/account.html', {
+        "form": form,
+        "current_user": request.user,
+        "page": "account",
+        "channels": channels,
+        "policy_email": ccsettings.POLICY_EMAIL,
+    })
+
 
 @login_required
 @api_view(['POST'])
@@ -208,16 +194,6 @@ def account_deleted(request):
     return render(request, "settings/account_deleted.html")
 
 
-@login_required
-def account_settings_success(request):
-    return views.password_change(
-        request,
-        template_name='settings/account_success.html',
-        post_change_redirect=reverse_lazy('account_settings_success'),
-        password_change_form=AccountSettingsForm,
-        extra_context={"current_user": request.user, "page": "account"}
-    )
-
 
 @login_required
 def tokens_settings(request):
@@ -232,21 +208,55 @@ def policies_settings(request):
                                                     "page": "policies",
                                                     "policies": get_latest_policies()})
 
-@login_required
-def storage_settings(request):
-    storage_used = request.user.get_space_used()
-    storage_percent = (min(storage_used / float(request.user.disk_space), 1) * 100)
-    breakdown = [{
-                    "name": k.capitalize(),
-                    "size":"%.2f" % (float(v)/1048576),
-                    "percent": "%.2f" % (min(float(v) / float(request.user.disk_space), 1) * 100)
-                } for k,v in request.user.get_space_used_by_kind().items()]
-    return render(request, 'settings/storage.html', {"current_user": request.user,
-                                                    "page": "storage",
-                                                    "percent_used": "%.2f" % storage_percent,
-                                                    "used": "%.2f" % (float(storage_used) / 1048576),
-                                                    "total": "%.2f" % (float(request.user.disk_space) / 1048576),
-                                                    "available": "%.2f" % (request.user.get_available_space() / 1048576),
-                                                    "breakdown": breakdown,
-                                                    "request_email": ccsettings.SPACE_REQUEST_EMAIL,
-                                                })
+
+class StorageSettingsView(FormView, LoginRequiredMixin):
+    success_url = reverse_lazy('storage_settings')
+    template_name = 'settings/storage.html'
+    form_class = StorageRequestForm
+
+    def get_form_kwargs(self):
+        kw = super(StorageSettingsView, self).get_form_kwargs()
+        kw['channel_choices'] = [(c['id'], c['name']) for c in self.request.user.editable_channels.values("id", "name")]
+        return kw
+
+    def post(self, request):
+        form = self.get_form()
+        if form.is_valid():
+            # Send email with storage request
+            channel_ids = form.cleaned_data.get("public") or ""
+            channels = Channel.objects.filter(pk__in=channel_ids.split(',')).values('id', 'name')
+            message = render_to_string('settings/storage_request_email.txt', {"data": form.cleaned_data, "user": self.request.user, "channels": channels})
+            send_mail(_("Kolibri Studio Storage Request"), message, ccsettings.DEFAULT_FROM_EMAIL, [ccsettings.SPACE_REQUEST_EMAIL, self.request.user.email])
+
+            return self.form_valid(form)
+        else:
+            return self.form_invalid(form)
+
+    def get_context_data(self, **kwargs):
+        kwargs = super(StorageSettingsView, self).get_context_data(**kwargs)
+
+        storage_used = self.request.user.get_space_used()
+        storage_percent = (min(storage_used / float(self.request.user.disk_space), 1) * 100)
+        breakdown = [{
+                        "name": k.capitalize(),
+                        "size":"%.2f" % (float(v)/1048576),
+                        "percent": "%.2f" % (min(float(v) / float(self.request.user.disk_space), 1) * 100)
+                    } for k,v in self.request.user.get_space_used_by_kind().items()]
+
+        kwargs.update( {
+            "current_user": self.request.user,
+            "page": "storage",
+            "percent_used": "%.2f" % storage_percent,
+            "used": "%.2f" % (float(storage_used) / 1048576),
+            "total": "%.2f" % (float(self.request.user.disk_space) / 1048576),
+            "available": "%.2f" % (self.request.user.get_available_space() / 1048576),
+            "breakdown": breakdown,
+            "request_email": ccsettings.SPACE_REQUEST_EMAIL,
+            "channel_count": self.request.user.editable_channels.count(),
+            "licenses": License.objects.all(),
+        })
+        return kwargs
+
+    def form_valid(self, form):
+        messages.add_message(self.request, messages.INFO, _("Your storage request has been submitted for processing"))
+        return super(StorageSettingsView, self).form_valid(form)

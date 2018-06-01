@@ -260,7 +260,7 @@ urlpatterns += [
     url(r'^api/export_user_data/(?P<user_email>[^/]+)/$', settings_views.export_user_data, name='export_user_data'),
     url(r'^settings/account/deleted', settings_views.account_deleted, name='account_deleted'),
     url(r'^settings/tokens', settings_views.tokens_settings, name='tokens_settings'),
-    url(r'^settings/storage', settings_views.storage_settings, name='storage_settings'),
+    url(r'^settings/storage', settings_views.StorageSettingsView.as_view(), name='storage_settings'),
     url(r'^settings/policies', settings_views.policies_settings, name='policies_settings'),
     url(r'^policies/update', settings_views.PolicyAcceptView.as_view(), name='policy_update'),
 ]
