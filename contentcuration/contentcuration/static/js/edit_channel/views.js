@@ -28,7 +28,7 @@ var MESSAGES = {
 	"copy": "Copy",
 	"topic": "Topic",
 	"exercise_title": "Exercise",
-	"select_all": "Select All",
+	"select_all": "Select all",
     "preview": "Preview",
 	"deleting": "Deleting...",
 	"archiving": "Archiving Content...",
@@ -846,14 +846,22 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 		return promise;
   	},
 	add_nodes:function(collection){
+		var item_map = _.object(_.map(this.views, function(view) {
+			return [view.id(), view];
+		}));
+
 		var self = this;
-		collection.forEach(function(entry){
-			var new_view = self.create_new_view(entry);
-			self.$(self.list_selector).append(new_view.el);
+		collection.forEach(function(node) {
+			self.add_single_node(node, item_map);
 		});
+
 		this.model.set('children', this.model.get('children').concat(collection.pluck('id')));
 		this.reload_ancestors(collection, false);
 		this.handle_if_empty();
+	},
+	add_single_node:function(node) {
+		var new_view = this.create_new_view(node);
+		this.$(this.list_selector).append(new_view.el);
 	},
 	add_topic: function(){
 		var UploaderViews = require("edit_channel/uploader/views");
@@ -1080,7 +1088,7 @@ var BaseListNodeItemView = BaseListEditableItemView.extend({
 		(this.getToggler().text() === this.collapsedIcon) ? this.open_folder() : this.close_folder();
 	},
 	open_folder:function(open_speed){
-		open_speed = (open_speed)? open_speed: 200;
+		open_speed = _.isNumber(open_speed) ? open_speed: 200;
 		this.getSubdirectory().slideDown(open_speed);
 		if(!this.subcontent_view){
 			this.load_subfiles();

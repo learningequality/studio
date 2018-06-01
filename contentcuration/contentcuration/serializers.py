@@ -474,6 +474,12 @@ class SimplifiedContentNodeSerializer(BulkSerializerMixin, serializers.ModelSeri
                   'is_prerequisite_of', 'parent_title', 'ancestors', 'tree_id', 'language', 'role_visibility')
 
 
+def generate_thumbnail_url_for_channel(channel):
+    if channel.thumbnail and 'static' not in channel.thumbnail:
+        return generate_storage_url(channel.thumbnail)
+    return '/static/img/kolibri_placeholder.png'
+
+
 class RootNodeSerializer(SimplifiedContentNodeSerializer):
     channel_name = serializers.SerializerMethodField('retrieve_channel_name')
 
@@ -502,6 +508,7 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer):
     valid = serializers.SerializerMethodField('check_valid')
     associated_presets = serializers.SerializerMethodField('retrieve_associated_presets')
     original_channel = serializers.SerializerMethodField('retrieve_original_channel')
+    source_channel = serializers.SerializerMethodField('retrieve_source_channel')
 
     def retrieve_associated_presets(self, node):
         return node.get_associated_presets()
@@ -557,16 +564,41 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer):
                 "has_changed_descendant": node.changed,
             }
 
+    def retrieve_source_channel(self, node):
+        # TODO(davidhu): This incurs an extra DB query -- how can we avoid?
+        # Some ghetto command line profiling,
+        # `time for i in {1..100}; do curl http://.../api/get_nodes_by_ids/...; done`,
+        # reveals that this incurs about a 5% slowdown for that call (with
+        # about 32 nodes in the list).
+        #
+        # I also tried to get
+        # github.com/dmclain/django-debug-toolbar-line-profiler to work, but
+        # its panel page would show a 500 when I loaded up
+        # /api/get_nodes_by_ids/...
+        source_node = ContentNode.objects.filter(
+                node_id__startswith=node.source_node_id).first()
+        channel = source_node and source_node.get_channel()
+
+        return {
+            "id": channel.pk,
+            "name": channel.name,
+            "thumbnail_url": generate_thumbnail_url_for_channel(channel),
+        } if channel else None
+
     def retrieve_original_channel(self, node):
         original = node.get_original_node()
         channel = original.get_channel() if original else None
-        return {"id": channel.pk, "name": channel.name} if channel else None
+        return {
+            "id": channel.pk,
+            "name": channel.name,
+            "thumbnail_url": generate_thumbnail_url_for_channel(channel),
+        } if channel else None
 
     class Meta:
         list_serializer_class = CustomListSerializer
         model = ContentNode
         fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license','language',
-                  'license_description', 'assessment_items', 'files', 'parent_title', 'ancestors', 'modified', 'original_channel',
+                  'license_description', 'assessment_items', 'files', 'parent_title', 'ancestors', 'modified', 'original_channel', 'source_channel',
                   'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'original_source_node_id',
                   'tags', 'extra_fields', 'prerequisite', 'is_prerequisite_of', 'node_id', 'tree_id', 'publishing', 'freeze_authoring_data',
                   'role_visibility')
@@ -583,7 +615,7 @@ class ContentNodeEditSerializer(ContentNodeSerializer):
         fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license', 'language',
                   'node_id', 'license_description', 'assessment_items', 'files', 'parent_title', 'content_id', 'modified',
                   'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'ancestors', 'tree_id',
-                  'tags', 'extra_fields', 'original_channel', 'prerequisite', 'is_prerequisite_of', 'thumbnail_encoding',
+                  'tags', 'extra_fields', 'original_channel','source_channel', 'prerequisite', 'is_prerequisite_of', 'thumbnail_encoding',
                   'freeze_authoring_data', 'publishing', 'original_source_node_id', 'role_visibility')
 
 
@@ -594,7 +626,7 @@ class ContentNodeCompleteSerializer(ContentNodeEditSerializer):
         fields = (
             'title', 'changed', 'id', 'description', 'sort_order', 'author', 'node_id', 'copyright_holder', 'license',
             'license_description', 'kind', 'prerequisite', 'is_prerequisite_of', 'parent_title', 'ancestors', 'language',
-            'original_channel', 'original_source_node_id', 'source_node_id', 'content_id', 'original_channel_id',
+            'original_channel','source_channel', 'original_source_node_id', 'source_node_id', 'content_id', 'original_channel_id',
             'source_channel_id', 'source_id', 'source_domain', 'thumbnail_encoding', 'publishing',
             'children', 'parent', 'tags', 'created', 'modified', 'published', 'extra_fields', 'assessment_items',
             'files', 'valid', 'metadata', 'tree_id', 'freeze_authoring_data', 'role_visibility')

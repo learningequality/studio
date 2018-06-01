@@ -1,5 +1,7 @@
 var Backbone = require("backbone");
 var _ = require("underscore");
+var Vibrant = require('node-vibrant');
+
 require("queue.less");
 var BaseViews = require("./../views");
 var Models = require("./../models");
@@ -45,7 +47,8 @@ var Queue = BaseViews.BaseWorkspaceView.extend({
 			el: this.$(this.clipboard_selector),
 			add_controls : true,
 			container: this,
-			content_node_view:null
+			content_node_view:null,
+			is_root: true,
 		});
 		this.handle_checked();
 		DragHelper.addButtonDragDrop(this, this.drop_in_clipboard, this.get_translation_library());
@@ -85,6 +88,48 @@ var Queue = BaseViews.BaseWorkspaceView.extend({
 	}
 });
 
+function create_channel_node_for_content_items(items, sort_order) {
+	var first_item = items[0];
+	var channel_id = first_item.get_source_channel_id();
+	var channel_title = first_item.get_source_channel_title();
+	var thumbnail = first_item.get_source_channel_thumbnail();
+	var list_ids = _.pluck(items, 'id');
+
+	// We return a ContentNodeModel rather than a ChannelModel because the
+	// clipboard view code was written to expect the attribute names on
+	// a ContentNodeModel.
+	//
+	// TODO(davidhu): Create a separate NodeModel from which to base both
+	// ContentNodeModel and ChannelModel.
+	return new Models.ContentNodeModel({
+		id: channel_id,
+		title: channel_title,
+		children_collection: new Models.ContentNodeCollection(items),
+		children: list_ids,
+		kind: 'channel',
+		sort_order: sort_order,
+		thumbnail: thumbnail,
+		metadata: {
+			resource_count: items.length,
+		},
+	});
+}
+
+function group_by_channels(collection) {
+	var channel_index = 0;
+	var grouped = new Models.ContentNodeCollection(
+		collection.chain().groupBy(function(item) {
+			return item.get_source_channel_id();
+		})
+		.map(function(items) {
+			channel_index++;
+			return create_channel_node_for_content_items(items, channel_index);
+		})
+		.value()
+	);
+	grouped.sort_by_order();
+	return grouped;
+}
 
 var ClipboardList = BaseViews.BaseWorkspaceListView.extend({
 	isclipboard: true,
@@ -102,12 +147,13 @@ var ClipboardList = BaseViews.BaseWorkspaceListView.extend({
 		return "list_" + this.model.get("id");
 	},
 	initialize: function(options) {
-		_.bindAll(this, 'delete_items', 'edit_items', 'handle_drop', 'move_items', 'update_badge_count');
+		_.bindAll(this, 'delete_items', 'edit_items', 'handle_drop', 'move_items', 'update_badge_count', 'load_fetched_collection');
 		this.bind_workspace_functions();
 		this.collection = options.collection;
 		this.container = options.container;
 		this.add_controls = options.add_controls;
 		this.content_node_view = options.content_node_view;
+		this.is_root = options.is_root;
 		this.render();
 		this.container.lists.push(this);
 		this.listenTo(this.model, 'change:children', this.update_views);
@@ -123,14 +169,65 @@ var ClipboardList = BaseViews.BaseWorkspaceListView.extend({
         }));
 		window.workspace_manager.put_list(this.model.get("id"), this);
 		this.$(this.default_item).text(this.get_translation("loading"));
-		var self = this;
-		self.make_droppable();
-		this.retrieve_nodes(this.model.get("children")).then(function(fetchedCollection){
-			fetchedCollection.sort_by_order();
-			self.load_content(fetchedCollection);
-			self.$(self.default_item).text((self.add_controls)? self.get_translation("clipboard_empty") : self.get_translation("no_items"));
-			self.refresh_droppable();
-		});
+
+		// Don't make channels draggable, but do make items within channels
+		// draggable.
+		if (this.is_root) {
+			// NOTE(davidhu): Hack: Initialize jQueryUI#sortable()
+			// within this element but don't actually make anything draggable,
+			// because we have code in drag_drop.js that makes calls like
+			// $(".content-list").sortable("disable"), which expects all
+			// `.content-list` elements to have been initialized with jQueryUI#sortable.
+			this.$el.find(".content-list").sortable({items: ''});
+		} else {
+			this.make_droppable();
+		}
+
+		var children_collection = this.model.get("children_collection");
+		if (children_collection) {
+			this.load_fetched_collection(children_collection);
+		} else {
+			this.retrieve_nodes(this.model.get("children")).then(this.load_fetched_collection);
+		}
+	},
+	load_fetched_collection: function(fetched_collection) {
+		fetched_collection.sort_by_order();
+		this.load_content(fetched_collection);
+		this.$(self.default_item).text((this.add_controls)? this.get_translation("clipboard_empty") : this.get_translation("no_items"));
+		this.refresh_droppable();
+	},
+	// Overrides superclass
+	load_content: function(collection, default_text) {
+		if (this.is_root) {
+			var scroll_top = this.$('#clipboard_list').scrollTop();
+			collection = group_by_channels(collection);
+		}
+		BaseViews.BaseWorkspaceListView.prototype.load_content.call(this, collection, default_text);
+		if (this.is_root) {
+			var self = this;
+			setTimeout(function() {
+				self.$('#clipboard_list').scrollTop(scroll_top);
+			}, 0);
+		}
+	},
+	// Overrides superclass
+	add_single_node:function(node, item_map) {
+		// Add a single node! Find the right channel to append it to or create a new
+		// channel node.
+		var new_view = this.create_new_view(node);
+		var channel_id = node.get_source_channel_id();
+
+		if (item_map[channel_id]) {
+			// Append to the appropriate channel
+			var channel_list_view = item_map[channel_id].getSubcontentView();
+			channel_list_view.$el.find('.content-list').append(new_view.el);
+		} else {
+			// ... or create a new channel node, insert as the first item, and append
+			// the channel to the list of channels in the clipboard.
+			var channel_node = create_channel_node_for_content_items([node], /* sort_order = */ 1);
+			var item_view = this.create_new_view(channel_node);
+			this.$(this.list_selector).append(item_view.el);
+		}
 	},
 	drop_in_container: function(moved_item, selected_items, orders) {
 		this.track_event_for_nodes('Clipboard', 'Drag item out', moved_item);
@@ -176,6 +273,9 @@ var ClipboardList = BaseViews.BaseWorkspaceListView.extend({
 				model: model,
 				container : this.container
 			});
+			if (model.get("kind") === "channel") {
+				item_view.open_folder(0);
+			}
 		this.views.push(item_view);
 		return item_view;
 	},
@@ -203,6 +303,18 @@ var ClipboardList = BaseViews.BaseWorkspaceListView.extend({
 		this.container.move_items();
 	},
 	handle_drop:function(collection){
+		// Don't handle dropping an item from the clipboard onto nowhere.
+		// When one attempts to drag an item from the clipboard onto an empty space,
+		// the handle_drop of the item's containing ClipboardList container is
+		// invoked. Do nothing in this case by returning a Promise reject to stop
+		// further handling.
+		//
+		// TODO(davidhu): This displays an error in the console. So don't reject the
+		// promise, but send a stop signal and make sure handlers can handle that.
+		if (!this.is_root) {
+			return Promise.reject('handle_drop on child ClipboardList not supported');
+		}
+
 		var self = this;
 		this.$(this.default_item).css("display", "none");
 		return new Promise(function(resolve, reject){
@@ -232,13 +344,19 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	selectedClass: "queue-selected",
 	expandedIcon: "expand_more",
 	collapsedIcon: "expand_less",
-	className: "queue-item",
+	className: function() {
+		var kind = this.model.get("kind") === 'channel' ? 'channel' : 'content';
+		return `queue-item ${kind}`;
+	},
 	name: NAMESPACE,
     $trs: MESSAGES,
 	getToggler: function () { return this.$("#menu_toggle_" + this.model.id); },
 	getSubdirectory: function () {return this.$("#" + this.id() +"_sub"); },
 	'id': function() {
 		return this.model.get("id");
+	},
+	getSubcontentView: function() {
+		return this.subcontent_view;
 	},
 	reload:function(model){
 		this.model.set(model.attributes);
@@ -259,9 +377,13 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		this.render();
 	},
 	render: function(renderData) {
+		var kind = this.model.get("kind");
+		var is_channel = kind === "channel";
+
 		this.$el.html(this.template({
 			node:this.model.toJSON(),
-			isfolder: this.model.get("kind") === "topic",
+			isfolder: kind === "topic" || kind === "channel",
+			is_channel: is_channel,
 			is_clipboard : true,
 			checked: this.checked
 		},  {
@@ -269,8 +391,27 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
         }));
 		this.handle_checked();
 		window.workspace_manager.put_node(this.model.get("id"), this);
-		this.make_droppable();
-		this.create_popover();
+		if (!is_channel) {
+			this.make_droppable();
+			this.create_popover();
+		}
+
+		// Color channels' accent bars and their background by the dominant color of
+		// the thumbnail.
+		if (is_channel && this.model.get('thumbnail')) {
+			var self = this;
+			setTimeout(function() {
+				var v = new Vibrant(self.model.get('thumbnail'));
+				v.getPalette(function(err, palette) {
+					var colorHex = palette.Muted.getHex();
+					var color = palette.Muted.getRgb();
+					self.$('label.channel').css({
+						'border-left': `10px solid ${colorHex}`,
+						'background-color': `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.2)`,
+					});
+				});
+			}, 0);
+		}
 	},
 	create_popover:function(){
 		var self = this;
@@ -325,7 +466,13 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		this.toggle(event);
 	},
 	edit_item:function(event){
+		if (this.model.get("kind") === "channel") {
+			// Don't open channels. Allow propagation so that toggling happens.
+			return;
+		}
+
 		this.track_event_for_nodes('Clipboard', 'Edit item', this.model);
+
 		event.stopPropagation();
 		event.preventDefault();
 		this.open_edit(true);
