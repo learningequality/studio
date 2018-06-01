@@ -1,5 +1,5 @@
-{{#each presets}}
-    <li class="btn preview_btn_tab preview_file" value="{{id}}" title="{{#translate id}}{{/translate}}">
-      {{#translate id}}{{/translate}}
+{{#each previews}}
+    <li class="btn preview_btn_tab preview_file" value="{{@index}}" title="{{#translate preset.id}}{{/translate}}">
+      {{#translate preset.id}}{{/translate}}
     </li>
 {{/each}}

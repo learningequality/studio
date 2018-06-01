@@ -3,11 +3,7 @@ import { FormatPresetCollection } from 'edit_channel/models';
 
 import PreviewView from './previewView';
 
-import PreviewModel from '../models/previewModel';
-
 import { translate } from 'edit_channel/utils/string_helper';
-
-import { min, where, pluck, find } from 'underscore';
 
 var NAMESPACE = "preview";
 var MESSAGES = {
@@ -27,47 +23,44 @@ export default BaseView.extend({
     template: require("../hbtemplates/preview_manager.handlebars"),
     tabs_template: require("../hbtemplates/preview_templates/tabs.handlebars"),
     initialize() {
-        this.formatPresetCollection = new FormatPresetCollection();
-        this.previewModel = new PreviewModel();
+        this.currentPreviewIndex = 0;
+        this.previews = this.getPreviews();
 
-        // might be able to scope this function here
-        this.prepChildModels();
 
-        this.previewView = new PreviewView({ model: this.previewModel });
-
-        // listenTo should prevent memory leaks
-        this.listenTo(this.model, 'change:files', () => {
-          this.prepChildModels();
+        this.on('changeContentPreview', previewIndex => {
+          this.currentPreviewIndex = previewIndex;
           this.render();
         });
-        this.listenTo(this.previewModel, 'change:file_model', this.render);
+
+
+        this.on('destroy', () => {
+          this.stopListening();
+          this.off(); // needed?
+
+          this.previewView.trigger('destroy');
+        });
+
+        this.listenTo(this.model, 'change:files', () => {
+          this.previews = this.getPreviews();
+          this.previewView.trigger('destroy');
+          this.render();
+        });
 
         this.render();
     },
-    prepChildModels() {
-      // set formatPresetCollection, based on `files` collection (array of models?)
-      // Backbone.Collection's set method handles deduping
-      this.formatPresetCollection.set(
-        // array of file's presets with display=true and subtitle=false
-        where(
-          // array of files' presets
-          pluck(this.model.get('files'), "preset"),
-          { 'display': true, 'subtitle': false }
-        )
+    getPreviews() {
+      // array of previewabe files
+      const previewableFiles = this.model.get('files').filter(file => {
+        if(file.preset && file.preset.display && !(file.preset.subtitle)) {
+          return true;
+        }
+        return false;
+      // sort array of previewabe files by preset order
+      }).sort(
+        (file1, file2) => file1.preset.order - file2.preset.order
       );
 
-      // set up model used in the preview View
-      this.previewModel.set({
-        // default file to display
-        content_model: this.model,
-        file_model: min(
-          this.model.get('files').filter(file => file.preset.display),
-          file => file.preset.order
-        ),
-        // rename this
-        encoding: this.model.get('thumbnail_encoding') && this.model.get('thumbnail_encoding').base64,
-        intl_data: this.get_intl_data()
-      });
+      return previewableFiles;
     },
     events: {
         'click .preview_btn_tab': 'selectContentPreview',
@@ -75,6 +68,11 @@ export default BaseView.extend({
     },
     // do we really need to define a render function?
     render() {
+        this.previewView = new PreviewView({
+          model: this.model,
+          previewFile: this.previews[this.currentPreviewIndex],
+          intl_data: this.get_intl_data(),
+        });
 
         this.$el.html(this.template({
           file: true
@@ -86,11 +84,11 @@ export default BaseView.extend({
 
         // set up preview tabs + dd child elements
         this.$("#preview_tabs_dropdown").html(
-          this.tabs_template({ presets: this.formatPresetCollection.toJSON() })
+          this.tabs_template({ previews: this.previews })
         );
 
         this.$(".preview_format_switch").text(
-          translate(this.previewModel.get('file_model').preset.id)
+          translate(this.previews[this.currentPreviewIndex].preset.id)
         );
 
         // NOTE: replaces the entire view on render.
@@ -99,15 +97,13 @@ export default BaseView.extend({
         return this;
     },
     selectContentPreview(event) {
-        // can refine the "find" process.
-        var selected_preview = find(
-          this.model.get('files'),
-          file => file.preset.id === event.target.getAttribute('value')
-        );
+      // a <select> seems more appropriate
+        const selectedIndex = event.target.getAttribute('value');
 
-        this.previewModel.set({
-          file_model: selected_preview
-        });
+        // only change the preview if necessary
+        if(selectedIndex !== this.currentPreviewIndex){
+            this.trigger('changeContentPreview', selectedIndex);
+        }
     },
     toggle_fullscreen() {
         const notFullscreen = () => {
