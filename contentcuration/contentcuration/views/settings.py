@@ -253,7 +253,6 @@ class StorageSettingsView(FormView, LoginRequiredMixin):
             "breakdown": breakdown,
             "request_email": ccsettings.SPACE_REQUEST_EMAIL,
             "channel_count": self.request.user.editable_channels.count(),
-            "licenses": License.objects.all(),
         })
         return kwargs
 
