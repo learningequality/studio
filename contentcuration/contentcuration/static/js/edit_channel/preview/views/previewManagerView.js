@@ -29,6 +29,7 @@ export default BaseView.extend({
 
     this.on('changeContentPreview', previewIndex => {
       this.currentPreviewIndex = previewIndex;
+      this.previewView.trigger('destroy');
       this.render();
     });
 
@@ -36,7 +37,6 @@ export default BaseView.extend({
     this.on('destroy', () => {
       this.stopListening();
       this.off();
-
       this.previewView.trigger('destroy');
     });
 
