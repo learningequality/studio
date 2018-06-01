@@ -1,0 +1,22 @@
+version: '1.0'
+steps:
+  buildAppImage:
+    type: build
+    description: Build studio app code
+    image_name: gcr.io/${{GCR_PROJECT}}/learningequality-studio-app
+    dockerfile: k8s/images/app/Dockerfile
+    tag: ${{CF_SHORT_REVISION}}
+  buildAppNginxImage:
+    type: build
+    description: Build studio nginx code
+    image_name: gcr.io/${{GCR_PROJECT}}/learningequality-studio-nginx
+    dockerfile: k8s/images/nginx/Dockerfile
+    tag: ${{CF_SHORT_REVISION}}
+  pushAppImage:
+    type: push
+    candidate: ${{buildAppImage}}
+    tag: ${{CF_SHORT_REVISION}}
+  pushAppNginxImage:
+    type: push
+    candidate: ${{buildTestImage}}
+    tag: ${{CF_SHORT_REVISION}}
