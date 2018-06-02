@@ -26,8 +26,8 @@ Content Usage
     Intended Audience: {% if data.audience %}{{data.audience}}{% else %}Not Answered{% endif %}
     Uploading for: {% if data.org_or_personal == "Organization" %}{{data.organization}}{% else %}{{data.org_or_personal}}{% endif %}
 
-Additional Comments:
-{% if data.message %}{{data.message}}{% else %}No Comments{% endif %}
+Message
+{% if data.message %}{{data.message}}{% else %}---{% endif %}
 
 ==============================================================================
 
