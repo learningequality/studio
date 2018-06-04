@@ -18,5 +18,5 @@ steps:
     tag: ${{CF_SHORT_REVISION}}
   pushAppNginxImage:
     type: push
-    candidate: ${{buildTestImage}}
+    candidate: ${{buildAppNginxImage}}
     tag: ${{CF_SHORT_REVISION}}
