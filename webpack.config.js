@@ -6,7 +6,9 @@ const CleanWebpackPlugin = require('clean-webpack-plugin');
 const BundleTracker = require('webpack-bundle-tracker');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
 
+const UglifyJsPlugin = require("uglifyjs-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const OptimizeCSSAssetsPlugin = require("optimize-css-assets-webpack-plugin");
 const WebpackRTLPlugin = require('webpack-rtl-plugin');
 
 const djangoProjectDir = path.resolve('contentcuration');
@@ -30,6 +32,16 @@ const jsLoaders = [
   }
 ];
 
+function recursiveIssuer(m) {
+  if (m.issuer) {
+    return recursiveIssuer(m.issuer);
+  } else if (m.name) {
+    return m.name;
+  } else {
+    return false;
+  }
+}
+
 // NOTE: Lots of things are handled by webpack4. NODE_ENV, uglify, source-maps
 // see: https://medium.com/webpack/webpack-4-mode-and-optimization-5423a6bc597a
 
@@ -51,9 +63,34 @@ module.exports = {
               name: "common",
               chunks: "initial",
               minChunks: 2
-          }
+          },
+          // Chunk css by bundle, not by dynamic split points.
+          // This will add a bit to each bundle, but will mean we don't
+          // have to dynamically determine which css bundle to load
+          // if we do webpack code splitting.
+          // Modified from https://github.com/webpack-contrib/mini-css-extract-plugin#extracting-css-based-on-entry
+          baseStyles: {
+            name: 'base',
+            test: (m,c,entry = 'base') => m.constructor.name === 'CssModule' && recursiveIssuer(m) === entry,
+            chunks: 'all',
+            enforce: true
+          },
+          channelEditStyles: {
+            name: 'channel_edit',
+            test: (m,c,entry = 'channel_edit') => m.constructor.name === 'CssModule' && recursiveIssuer(m) === entry,
+            chunks: 'all',
+            enforce: true
+          },
       }
     },
+    minimizer: [
+      new UglifyJsPlugin({
+        cache: true,
+        parallel: true,
+        sourceMap: false
+      }),
+      new OptimizeCSSAssetsPlugin({})
+    ]
   },
   module: {
     rules: [
