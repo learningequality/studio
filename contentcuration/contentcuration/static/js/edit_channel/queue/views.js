@@ -27,7 +27,8 @@ var Queue = BaseViews.BaseWorkspaceView.extend({
     $trs: MESSAGES,
 
 	initialize: function(options) {
-		_.bindAll(this, 'toggle_queue', 'open_queue', 'close_queue', 'drop_in_clipboard');
+		_.bindAll(this, 'toggle_queue', 'open_queue', 'close_queue', 'add_to_clipboard',
+							'drop_in_clipboard');
 		this.clipboard_root = options.clipboard_root;
 		this.trash_root = options.trash_root;
 		this.collection = options.collection;
@@ -205,7 +206,6 @@ var ClipboardList = BaseViews.BaseWorkspaceListView.extend({
 		var self = this;
 		this.$(this.default_item).css("display", "none");
 		return new Promise(function(resolve, reject){
-			console.log('queue handle drop promise');
 			if(collection.has_related_content()){
 				dialog.dialog(self.get_translation("related_content"), self.get_translation("related_content_warning", collection.length), {
 		            [self.get_translation("cancel")]:function(){},

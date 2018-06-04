@@ -17,10 +17,10 @@ function track(event_category, event_action, event_data) {
   console.log(`Tracking analytics event "${event_category}: ${event_action}"`,
               ` ${event_data_string}`);
 
-  ga(event_category, event_action, event_data_string);
+  window.ga && ga(event_category, event_action, event_data_string);
 
   // TODO(davidhu): Uncomment this in the next PR that adds Mixpanel tracking
-  //mixpanel.track(`${event_category}: ${event_action}`, event_data);
+  //window.mixpanel && mixpanel.track(`${event_category}: ${event_action}`, event_data);
 }
 
 module.exports = {
