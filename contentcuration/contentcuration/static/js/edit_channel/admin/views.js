@@ -13,27 +13,33 @@ var AdminView = BaseViews.BaseView.extend({
     initialize: function(options) {
         this.render();
     },
+    get_users: function(){
+        let self = this;
+        this.users_collection.fetch().then(function(){
+            self.$("#user_count").text(self.users_collection.state.totalRecords);
+            self.user_list = new UserTab({
+                collection: self.users_collection,
+                el: self.$("#admin_users")
+            });
+        });
+    },
+    get_channels: function(){
+        let self = this;
+        this.channel_collection.fetch().then(function(){
+            self.$("#channel_count").text(self.channel_collection.state.totalRecords);
+            self.channel_list = new ChannelTab({
+                collection: self.channel_collection,
+                el: self.$("#admin_channels")
+            });
+        });
+    },
     render: function() {
         this.$el.html(this.template())
         this.channel_collection = new Models.ChannelCollection();
         this.users_collection = new Models.UserCollection();
 
-        var self = this;
-        this.channel_collection.get_all_channels().then(function(collection){
-            self.$("#channel_count").text(collection.length);
-            self.channel_list = new ChannelTab({
-                collection:collection,
-                el: self.$("#admin_channels")
-            });
-        });
-
-        this.users_collection.get_all_users().then(function(collection){
-            self.$("#user_count").text(collection.length);
-            self.user_list = new UserTab({
-                collection:collection,
-                el: self.$("#admin_users")
-            });
-        });
+        this.get_users();
+        this.get_channels();
     }
 });
 
@@ -48,35 +54,55 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
     initialize: function(options) {
         _.bindAll(this, "handle_removed")
         this.collection = options.collection;
-        this.extra_filters = this.get_dynamic_filters();
+        // this.extra_filters = this.get_dynamic_filters();
         this.count = this.collection.length;
-        this.total_count = this.collection.length;
+        this.total_count = this.collection.state.totalRecords;
         this.render();
-        this.listenTo(this.collection, "remove", this.handle_removed);
+        this.collection.on('sync', (e) => this.render())
     },
     events: {
-        "change .filter_input" : "apply_filter",
+        "change .filter_input" : "load_list",
         "keyup .search_input" : "apply_search",
         "paste .search_input" : "apply_search",
         "change .select_all" : "check_all",
-        "click .download_pdf": "download_pdf"
+        "click .download_pdf": "download_pdf",
+    },
+    goto_page: function(e){
+        let page = $(e.currentTarget).data('page')
+        this.collection.getPage(page);
+    },
+    goto_previous: function(){
+        this.collection.getPreviousPage();
+    },
+    goto_next: function(){
+        this.collection.getNextPage();
     },
     handle_removed: function(){
         this.update_count(this.count - 1);
     },
     update_count: function(count){
         this.count = count;
-        $(this.tab_count_selector).text(this.total_count);
-        this.$(".viewing_count").text("Displaying " + count + " of " + this.total_count + " " + this.item_name + "(s)...");
+        $(this.tab_count_selector).text(this.collection.state.totalRecords);
+        this.$(".viewing_count").text("Displaying " + count + " of " + this.collection.state.totalRecords + " " + this.item_name + "(s)...");
     },
     render: function() {
         this.$el.html(this.template({
             filters: this.filters,
             sort_filters: this.sort_filters,
             extra_filters: this.extra_filters,
-            total: this.total_count
+            total: this.collection.state.totalRecords,
+            current_page: this.collection.state.currentPage,
+            pages: Array(this.collection.state.totalPages).fill().map((_, i) => {
+                // console.log('page', i)
+                return {
+                    current_page: i+1 == this.collection.state.currentPage,
+                    page_number: i+1
+                }
+            }),
+            show_previous_page_button: this.collection.state.currentPage != 1,
+            show_next_page_button: this.collection.state.currentPage != this.collection.state.totalPages,
         }));
-        this.apply_filter();
+        this.load_list();
     },
     check_all: function(event){ this.admin_list.check_all(event); },
     get_filtered_result: function(){
@@ -114,7 +140,7 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
     },
 
     /* Implement in subclasses */
-    apply_filter: function() { },
+    load_list: function() { },
     check_search: function(item) { return false; },
     handle_checked: function() { },
     get_dynamic_filters: function() { return []; },
@@ -124,11 +150,11 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
 var BaseAdminList = BaseViews.BaseListView.extend({
     list_selector: ".admin_table",
     default_item: ".admin_table .default-item",
-
     initialize: function(options) {
         this.collection = options.collection;
         this.container = options.container;
         this.render();
+        this.collection.on('sync', (e) => this.render());
     },
     render: function() {
         this.$el.html(this.template());
@@ -184,6 +210,11 @@ var ChannelTab = BaseAdminTab.extend({
     search_selector: "#admin_channel_search",
     tab_count_selector: "#channel_count",
     item_name: "channel",
+    events: {
+        "click .page-link.channels.page": "goto_page",
+        "click .page-link.channels.previous": "goto_previous",
+        "click .page-link.channels.next": "goto_next",
+    },
     filters: [
         {
             key: "all",
@@ -303,14 +334,14 @@ var ChannelTab = BaseAdminTab.extend({
                 }
             }).value());
     },
-    apply_filter: function(){
+    load_list: function(){
         this.$("#admin_channel_search").val("");
         if(this.admin_list) {
             this.admin_list.remove();
             delete this.admin_list;
         }
-        this.admin_list = new ChannelList({
-            collection: this.get_filtered_result(),
+        this.admin_list = window.channel_list = new ChannelList({
+            collection: this.collection,
             container: this
         });
         this.$("#admin_channel_table_wrapper").html(this.admin_list.el);
@@ -493,6 +524,11 @@ var UserTab = BaseAdminTab.extend({
     search_selector: "#admin_user_search",
     tab_count_selector: "#user_count",
     item_name: "user",
+    events: {
+        "click .page-link.users.page": "goto_page",
+        "click .page-link.users.previous": "goto_previous",
+        "click .page-link.users.next": "goto_next",
+    },
     filters: [
         {
             key: "all",
@@ -561,14 +597,6 @@ var UserTab = BaseAdminTab.extend({
             }
         },
     ],
-    events: {
-        "change .filter_input" : "apply_filter",
-        "keyup .search_input" : "apply_search",
-        "paste .search_input" : "apply_search",
-        "change .select_all" : "check_all",
-        "click #email_selected" : "email_selected",
-        "change .size_limit" : "set_user_space"
-    },
     get_dynamic_filters: function() {
         var filter = [{
             key: "all",
@@ -590,15 +618,15 @@ var UserTab = BaseAdminTab.extend({
                 }
             }).value());
     },
-    apply_filter: function(){
+    load_list: function(){
         this.$("#admin_user_search").val("");
         this.selected_users = [];
         if(this.admin_list) {
             this.admin_list.remove();
             delete this.admin_list;
         }
-        this.admin_list = new UserList({
-            collection: this.get_filtered_result(),
+        this.admin_list = window.user_list = new UserList({
+            collection: this.collection,
             container: this
         });
         this.$("#admin_user_table_wrapper").html(this.admin_list.el);

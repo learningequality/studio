@@ -2,7 +2,9 @@ var Backbone = require("backbone");
 var _= require("underscore");
 var mail_helper = require("edit_channel/utils/mail");
 
+
 /**** BASE MODELS ****/
+
 var BaseModel = Backbone.Model.extend({
     root_list:null,
     model_name:"Model",
@@ -87,6 +89,102 @@ var BaseCollection = Backbone.Collection.extend({
     }
 });
 
+var PageableCollection = require("backbone.paginator");
+var BasePageableCollection = PageableCollection.extend({
+    save: function(callback) {
+        Backbone.sync("update", this, {url: this.model.prototype.urlRoot()});
+    },
+    set_comparator: function(comparator){
+        this.comparator = comparator;
+    },
+    get_all_fetch: function(ids, force_fetch){
+        force_fetch = (force_fetch)? true : false;
+        var self = this;
+        var promise = new Promise(function(resolve, reject){
+            var promises = [];
+            ids.forEach(function(id){
+                promises.push(new Promise(function(modelResolve, modelReject){
+                    var model = self.get({'id' : id});
+                    if(force_fetch || !model){
+                        model = self.add({'id': id});
+                        model.fetch({
+                            success:function(returned){
+                                modelResolve(returned);
+                            },
+                            error:function(obj, error){
+                                modelReject(error);
+                            }
+                        });
+                    } else {
+                        modelResolve(model);
+                    }
+                }));
+            });
+            Promise.all(promises).then(function(fetchedModels){
+                var to_fetch = self.clone();
+                to_fetch.reset();
+                fetchedModels.forEach(function(entry){
+                    to_fetch.add(entry);
+                });
+                resolve(to_fetch);
+            });
+        });
+        return promise;
+    },
+    destroy:function(){
+        var self = this;
+        return new Promise(function(resolve, reject){
+            var promise_list = [];
+            self.forEach(function(model){
+                promise_list.push(new Promise(function(subresolve, subreject){
+                    model.destroy({
+                        success:subresolve,
+                        error:subreject
+                    })
+                }))
+            });
+            Promise.all(promise_list).then(function(){
+                resolve(true);
+            });
+        });
+    },
+    getName:function(){
+        return this.model_name;
+    },
+    parseRecords: function (resp) {
+        // console.log('response', resp)
+        return resp.results;
+    },    
+    parseState: function (resp, queryParams, state) {
+        state.totalRecords = resp.count;
+        state.totalPages = resp.total_pages;
+
+        return state;
+    },
+    state: {
+        pageSize: 20,
+        firstPage: 1,
+        currentPage: 1,
+        sortKey: "created_at",
+        order: -1
+    },
+
+    queryParams: {
+        currentPage: "page",
+        pageSize: "page_size",
+        totalRecords: "count",
+        order: null,
+        sortKey: "ordering",
+        ordering: function () {
+            var sortKey = this.state.sortKey, order = this.state.order;
+            if (sortKey && order !== 0) {
+                return (order === 1 ? '-' : '') + sortKey;
+            }
+            return null;
+        }
+    }
+});
+Object.assign(PageableCollection.prototype, BaseCollection)
 /**** USER-CENTERED MODELS ****/
 var UserModel = BaseModel.extend({
     root_list : "user-list",
@@ -178,28 +276,16 @@ var UserModel = BaseModel.extend({
     }
 });
 
-var UserCollection = BaseCollection.extend({
+var UserCollection = BasePageableCollection.extend({
     model: UserModel,
     list_name:"user-list",
     model_name:"UserCollection",
     send_custom_email:function(subject, message){
         return mail_helper.send_custom_email(this.pluck('email'), subject, message);
     },
-    get_all_users: function(){
-        var self = this;
-        return new Promise(function(resolve, reject){
-            $.ajax({
-                method:"GET",
-                url: window.Urls.get_all_users(),
-                error:reject,
-                success: function(users) {
-                    self.reset(users);
-                    resolve(self);
-                }
-            });
-        });
-    }
+    url: window.Urls.get_users(),
 });
+
 
 var InvitationModel = BaseModel.extend({
     root_list : "invitation-list",
@@ -881,27 +967,14 @@ var ChannelModel = BaseModel.extend({
     }
 });
 
-var ChannelCollection = BaseCollection.extend({
+var ChannelCollection = BasePageableCollection.extend({
     model: ChannelModel,
     list_name:"channel-list",
     model_name:"ChannelCollection",
+    url: window.Urls.get_channels(),
     comparator:function(channel){
         return (channel.get("public"))? -channel.get('priority') : -new Date(channel.get('created'));
     },
-    get_all_channels: function(){
-        var self = this;
-        return new Promise(function(resolve, reject){
-            $.ajax({
-                method:"GET",
-                url: window.Urls.get_all_channels(),
-                error:reject,
-                success: function(channels) {
-                    self.reset(channels);
-                    resolve(self);
-                }
-            });
-        });
-    }
 });
 
 var TagModel = BaseModel.extend({

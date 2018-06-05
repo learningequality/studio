@@ -15,6 +15,8 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import SuspiciousOperation
 from django.db.models import CharField
+from django.db.models import F
+
 from django.db.models import Count
 from django.db.models import Max
 from django.db.models import Sum
@@ -27,6 +29,9 @@ from django.http import HttpResponseNotFound
 from django.http import StreamingHttpResponse
 from django.shortcuts import render
 from django.template import Context
+import django_filters
+from rest_framework import generics
+from rest_framework.pagination import PageNumberPagination
 from django.template.loader import get_template
 from django.template.loader import render_to_string
 from django.views.decorators.cache import cache_page
@@ -63,6 +68,7 @@ reload(sys)
 sys.setdefaultencoding('UTF8')
 locale.setlocale(locale.LC_TIME, '')
 
+DEFAULT_ADMIN_PAGE_SIZE = 2
 EMAIL_PLACEHOLDERS = [
     {"name": "First Name", "value": "{first_name}"},
     {"name": "Last Name", "value": "{last_name}"},
@@ -149,14 +155,147 @@ def get_channel_kind_count(request, channel_id):
 @api_view(['GET'])
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAdminUser,))
-def get_all_users(request):
+def get_userlist(request):
     if not request.user.is_admin:
         raise SuspiciousOperation("You are not authorized to access this endpoint")
 
-    user_list = User.objects.prefetch_related('editable_channels').prefetch_related('view_only_channels').distinct()
-    user_serializer = AdminUserListSerializer(user_list, many=True)
+    user_list = User.objects.all()
+    user_serializer = SimpleAdminUserListSerializer(user_list, many=True)
 
     return Response(user_serializer.data)
+
+
+class ChannelUserListPagination(PageNumberPagination):
+    page_size = DEFAULT_ADMIN_PAGE_SIZE
+    page_size_query_param = 'page_size'
+    max_page_size = 500
+
+    def get_paginated_response(self, data):
+        return Response({
+            'links': {
+                'next': self.get_next_link(),
+                'previous': self.get_previous_link()
+            },
+            'count': self.page.paginator.count,
+            'total_pages': self.page.paginator.num_pages,
+            'results': data
+        })
+
+
+class AdminChannelListFilter(django_filters.FilterSet):
+    published = django_filters.BooleanFilter(
+        name='main_tree__published',
+    )
+    staged = django_filters.BooleanFilter(
+        name='staging_tree'
+    )
+
+    class Meta:
+        model = Channel
+        fields = (
+            'name',
+            'id',
+            'editors__id',
+            'deleted',
+            'public',
+            'staging_tree',
+            'staged',
+            'ricecooker_version',
+            'deleted',
+            'published'
+        )
+
+
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import OrderingFilter
+
+
+class AdminChannelListView(generics.ListAPIView):
+    serializer_class = AdminChannelListSerializer
+    filter_backends = (DjangoFilterBackend, OrderingFilter)
+    filter_class = AdminChannelListFilter
+    pagination_class = ChannelUserListPagination
+    authentication_classes = (SessionAuthentication, BasicAuthentication, TokenAuthentication,)
+    permission_classes = (IsAdminUser,)
+
+    ordering_fields = (
+        'name',
+        'id',
+        'priority',
+        'users',
+        'items',      # not working yet!
+        'modified',       # not working yet!
+        'created',
+    )
+    ordering = ('name',)
+
+    def get_queryset(self):
+
+        # (This part requires django 1.11)
+        # descendants = ContentNode.objects\
+        #             .filter(tree_id=OuterRef('main_tree__tree_id'))\
+        #             .order_by()\
+        #             .values('tree_id')
+        # modified = descendants.aggregate(Max('modified'))
+
+        queryset = Channel.objects\
+            .annotate(created=F('main_tree__created'))\
+            .annotate(items=F("main_tree__rght")/2 - 1)
+
+        if self.request.GET.get('can_edit') == 'True':
+            return queryset.filter(editors__contains=self.request.user)
+        else:
+            return queryset.all()
+
+
+class AdminUserListFilter(django_filters.FilterSet):
+    is_chef = django_filters.BooleanFilter(
+        name='main_tree__published',
+    )
+
+    class Meta:
+        model = User
+        fields = (
+            'email',
+            'first_name',
+            'last_name',
+            'id',
+            'is_chef',
+            'is_admin',
+            'is_active',
+            'is_staff',
+            'date_joined',
+            'disk_space',
+
+        )
+
+
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import OrderingFilter
+
+
+class AdminUserListView(generics.ListAPIView):
+    serializer_class = AdminUserListSerializer
+    filter_backends = (DjangoFilterBackend, OrderingFilter)
+    filter_class = AdminUserListFilter
+    pagination_class = ChannelUserListPagination
+    authentication_classes = (SessionAuthentication, BasicAuthentication, TokenAuthentication,)
+    permission_classes = (IsAdminUser,)
+
+    ordering_fields = (
+        'first_name',
+        'last_name',
+        'date_joined',
+        'email',
+        'editable_channels_count'
+    )
+    ordering = ('email',)
+
+    def get_queryset(self):
+        queryset = User.objects\
+            .annotate(editable_channels_count=Count('editable_channels'))
+
+        return queryset.all()
 
 
 @login_required

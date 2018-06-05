@@ -33,3 +33,16 @@
 </div>
 
 <div id="admin_user_table_wrapper"></div>
+<nav aria-label="Channel list page navigation">
+  <ul class="pagination">
+	{{#if show_previous_page_button}}
+    <li class="page-item"><a class="page-link users previous">Previous</a></li>
+	{{/if}}
+	{{#each pages}}
+    <li class="page-item {{#if current_page}}active{{/if}}"><a class="page-link users page" data-page={{page_number}}>{{page_number}}</a></li>
+	{{/each}}
+	{{#if show_next_page_button}}
+    <li class="page-item"><a class="page-link users next">Next</a></li>
+	{{/if}}
+  </ul>
+</nav>
