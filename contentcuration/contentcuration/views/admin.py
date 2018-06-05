@@ -19,13 +19,14 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.exceptions import ObjectDoesNotExist, SuspiciousOperation
-from django.db.models import Q, Case, When, Value, IntegerField, Count, Sum, CharField, Max
+from django.db.models import Q, F, Case, When, Value, IntegerField, Count, Sum, CharField, Max
 from django.db.models.functions import Concat
 from django.core.urlresolvers import reverse_lazy
 from django.template.loader import render_to_string, get_template
 from django.template import Context
 from itertools import chain
 from rest_framework.renderers import JSONRenderer
+from rest_framework.pagination import PageNumberPagination
 from contentcuration.api import check_supported_browsers
 from contentcuration.models import Channel, User, Invitation, ContentNode, generate_file_on_disk_name, File, Language
 from contentcuration.utils.messages import get_messages
@@ -141,6 +142,149 @@ def get_all_users(request):
     return Response(user_serializer.data)
 
 
+class ChannelUserListPagination(PageNumberPagination):
+    page_size = 500
+    page_size_query_param = 'page_size'
+    max_page_size = 500
+
+AND_ = lambda x: 'and_'+x
+OR_ = lambda x: 'or_'+x
+
+@login_required
+@api_view(['GET'])
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAdminUser,))
+def get_users(request):
+    if not request.user.is_admin:
+        raise SuspiciousOperation("You are not authorized to access this endpoint")
+
+    params = request.GET
+    # return "hey!"
+    paginator = ChannelUserListPagination()
+    user_list = User.objects.prefetch_related('editable_channels').prefetch_related('view_only_channels').distinct()
+    if 'channel_id' in params:
+        channel = Channel.objects.get(pk=params['channel_id'])
+        user_list = user_list.filter(editable_channels__in=[channel])
+    
+    if AND_('is_chef') in params:
+        # import ipdb;ipdb.set_trace()
+        user_list = user_list.annotate(chef_channels=Count('editable_channels__ricecooker_version'))
+        if params.get(AND_('is_chef')) == 'True':
+            user_list = user_list.filter(chef_channels__gt=0)
+        else:
+            user_list = user_list.filter(chef_channels=0)
+
+    query = None
+    for prop in ['is_admin', 'is_active']:
+        if AND_(prop) in params:
+            q = Q(**{prop: True})
+            q = q if params[AND_(prop)] == 'True' else ~q
+            query = q & query if query else q
+        if OR_(prop) in params:
+            q = Q(**{prop: True})
+            q = q if params[OR_(prop)] == 'True' else ~q
+            query = q | query if query else q
+    
+    if query:
+        user_list = user_list.filter(query)
+
+    if params.get('sort_by') in ['email','fist_name','last_name','channels']:
+        if params.get('ordering') == 'desc':
+            ordering = F(params.get('sort_by')).desc()
+        else:
+            ordering = F(params.get('sort_by')).asc()
+
+        user_list = user_list\
+                    .annotate(channels=Count('editable_channels'))\
+                    .order_by(ordering)
+
+    user_list_page = paginator.paginate_queryset(user_list, request)
+    user_serializer = AdminUserListSerializer(user_list_page, many=True)
+
+    return Response(user_serializer.data)
+
+channel_filters = {
+    'all': Q(),
+    'is_live': ~Q(deleted=True),
+    'is_published': Q(published=True),
+    'is_public': Q(public=True),
+    'is_private': ~Q(public=True),
+    'can_edit': Q(can_edit=True),
+    'is_staged': ~Q(staging_tree=None),
+    'is_ricecooker': ~Q(ricecooker_version=None),
+    'is_deleted': Q(deleted=True)
+}
+
+channel_sortable_keys = [
+    'name',
+    'id',
+    'priority', 
+    'users', 
+    # 'items',      # not working yet!
+    # 'modified',       # not working yet!
+    'created'
+]
+@login_required
+@api_view(['GET'])
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAdminUser,))
+def get_channels(request):
+    if not request.user.is_admin:
+        raise SuspiciousOperation("You are not authorized to access this endpoint")
+
+    params = request.GET
+    paginator = ChannelUserListPagination()
+    channel_list = Channel.objects.select_related('main_tree').prefetch_related('editors', 'viewers').distinct()    
+
+    if params.get('user_id'):
+        user = User.objects.get(pk=params['user_id'])
+        channel_list = channel_list.filter(editors__in=[user])
+
+    query = None
+    for prop in channel_filters.keys():
+        if AND_(prop) in params:
+            q = channel_filters[prop]
+            q = q if params[AND_(prop)] == 'True' else ~q
+            query = q & query if query else q
+        if OR_(prop) in params:
+            q = channel_filters[prop]
+            q = q if params[OR_(prop)] == 'True' else ~q
+            query = q | query if query else q
+    
+    if query:
+        channel_list = channel_list.filter(query)
+
+    ###### (for reference!) ################
+
+    # 'items'
+    # def get_resource_count(self, channel):
+    #     return channel.main_tree.get_descendants().exclude(kind_id=content_kinds.TOPIC).count()
+
+    # 'created'
+    # def get_date_created(self, channel):
+    #     return channel.main_tree.created
+
+    # 'modified'
+    # def get_date_modified(self, channel):
+    #     return channel.main_tree.get_descendants(include_self=True).aggregate(last_modified=Max('modified'))['last_modified']
+    ########################################
+
+    if params.get('sort_by') in channel_sortable_keys:
+        if params.get('ordering') == 'desc':
+            ordering = F(params.get('sort_by')).desc()
+        else:
+            ordering = F(params.get('sort_by')).asc()
+
+        channel_list = channel_list\
+                    .annotate(created=F('main_tree__created'))\
+                    .order_by(ordering)
+
+    channel_list_page = paginator.paginate_queryset(channel_list, request)
+    channel_serializer = AdminChannelListSerializer(channel_list_page, many=True)
+
+    return Response(channel_serializer.data)
+
+
 @login_required
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAdminUser,))
@@ -197,7 +341,7 @@ def get_editors(request, channel_id):
     channel = Channel.objects.get(pk=channel_id)
     user_list = list(channel.editors.all().order_by("first_name"))
     user_serializer = UserChannelListSerializer(user_list, many=True)
-
+    
     return Response(user_serializer.data)
 
 
