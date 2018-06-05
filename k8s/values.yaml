@@ -1,0 +1,25 @@
+
+bucketName: kolibri-studio-storage
+settings: contentcuration.settings
+
+
+studioApp:
+  appPort: 8081
+  imageName: gcr.io/github-learningequality-studio/app:nlatest 
+  replicas: 1
+  type: NodePort
+
+
+studioNginx:
+  imageName: learningequality/contentworkshop-app-nginx-proxy:v4
+  port: 8080
+
+
+studioWorkers:
+  replicas: 1
+
+
+postgresql:
+  postgresUser: learningequality
+  postgresDatabase: devDB
+  persistence.size: 2Gi

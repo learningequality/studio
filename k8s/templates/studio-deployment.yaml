@@ -1,0 +1,173 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "studio.fullname" . }}-app
+spec:
+  ports:
+  - port: 80
+    targetPort: 8080
+  selector:
+    app: {{ template "studio.fullname" . }}
+  type: NodePort
+---
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: {{ template "studio.fullname" . }}
+spec:
+  replicas: {{ .Values.studioApp.replicas }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "studio.fullname" . }}
+    spec:
+      containers:
+      - name: app
+        image: {{ .Values.studioApp.imageName }}
+        env:
+        - name: STATICFILES_DIR
+          value: /app/contentworkshop_static/
+        - name: DJANGO_SETTINGS_MODULE
+          value: {{ .Values.settings }}
+        - name: DJANGO_LOG_FILE
+          value: /var/log/django.log
+        - name: MPLBACKEND
+          value: PS
+        - name: DATA_DB_HOST
+          value: {{ template "postgresql.fullname" . }}
+        - name: DATA_DB_NAME
+          value: {{ .Values.postgresql.postgresDatabase }}
+        - name: DATA_DB_PORT
+          value: "5432"
+        - name: DATA_DB_USER
+          value: {{ .Values.postgresql.postgresUser }}
+        - name: DATA_DB_PASS
+          valueFrom:
+            secretKeyRef:
+              key: postgres-password
+              name: {{ template "postgresql.fullname" . }}
+        - name: CELERY_TIMEZONE
+          value: America/Los_Angeles
+        - name: CELERY_REDIS_DB
+          value: "0"
+        - name: CELERY_BROKER_ENDPOINT
+          value: {{ template "redis.fullname" . }}
+        - name: CELERY_RESULT_BACKEND_ENDPOINT
+          value: {{ template "redis.fullname" . }}
+        - name: CELERY_REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: redis-password
+              name: {{ template "redis.fullname" . }}
+        - name: AWS_S3_ENDPOINT_URL
+          value: http://{{ template "minio.fullname" . }}
+        - name: AWS_BUCKET_NAME
+          value: {{ .Values.bucketName }}
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              key: accesskey
+              name: {{ template "minio.fullname" . }}
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              key: secretkey
+              name: {{ template "minio.fullname" . }}
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: {{ .Values.studioApp.appPort }}
+          initialDelaySeconds: 300
+          periodSeconds: 5
+        ports:
+        - containerPort: {{ .Values.studioApp.appPort }}
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        volumeMounts:
+        - mountPath: /app/contentworkshop_static/
+          name: staticfiles
+      - name: nginx-proxy
+        image: {{ .Values.studioNginx.imageName }}
+        env:
+        - name: AWS_S3_ENDPOINT_URL
+          value: http://{{ template "minio.fullname" . }}
+        - name: AWS_BUCKET_NAME
+          value: {{ .Values.bucketName }}
+        ports:
+        - containerPort: {{ .Values.studioNginx.port }}
+        volumeMounts:
+        - mountPath: /app/contentworkshop_static/
+          name: staticfiles
+      volumes:
+      - emptyDir: {}
+        name: staticfiles
+---
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: studio-workers
+spec:
+  replicas: {{ .Values.studioWorkers.replicas }}
+  template:
+    metadata:
+      labels:
+        app: studio-workers
+    spec:
+      containers:
+      - name: worker
+        image: gcr.io/github-learningequality-studio/app:nlatest
+        command:
+        - make
+        - prodceleryworkers
+        env:
+        - name: DJANGO_SETTINGS_MODULE
+          value: {{ .Values.settings }}
+        - name: DJANGO_LOG_FILE
+          value: /var/log/django.log
+        - name: MPLBACKEND
+          value: PS
+        - name: DATA_DB_HOST
+          value: studio-postgres
+        - name: DATA_DB_NAME
+          value: {{ .Values.postgresql.postgresDatabase }}
+        - name: DATA_DB_PORT
+          value: "5432"
+        - name: DATA_DB_USER
+          value: {{ .Values.postgresql.postgresUser }}
+        - name: DATA_DB_PASS
+          valueFrom:
+            secretKeyRef:
+              key: postgres-password
+              name: {{ template "postgresql.fullname" . }}
+        - name: CELERY_TIMEZONE
+          value: America/Los_Angeles
+        - name: CELERY_REDIS_DB
+          value: "0"
+        - name: CELERY_BROKER_ENDPOINT
+          value: {{ template "redis.fullname" . }}
+        - name: CELERY_RESULT_BACKEND_ENDPOINT
+          value: {{ template "redis.fullname" . }}
+        - name: CELERY_REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: redis-password
+              name: {{ template "redis.fullname" . }}
+        - name: AWS_S3_ENDPOINT_URL
+          value: http://{{ template "minio.fullname" . }}
+        - name: AWS_BUCKET_NAME
+          value: {{ .Values.bucketName }}
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              key: minio_access_key
+              name: {{ template "minio.fullname" . }}
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              key: minio_secret_key
+              name: {{ template "minio.fullname" . }}
