@@ -20,6 +20,8 @@ spec:
           value: {{ .Values.settings }}
         - name: DJANGO_LOG_FILE
           value: /var/log/django.log
+        - name: RUN_MODE
+          value: k8s
         - name: MPLBACKEND
           value: PS
         - name: DATA_DB_HOST
