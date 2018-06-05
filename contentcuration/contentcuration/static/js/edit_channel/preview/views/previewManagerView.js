@@ -72,7 +72,6 @@ export default BaseView.extend({
   },
   events: {
     'click .preview_btn_tab': 'selectContentPreview',
-    'click .view_fullscreen': 'toggle_fullscreen'
   },
   render() {
     this.previewView = new PreviewView({
@@ -84,8 +83,6 @@ export default BaseView.extend({
     this.$el.html(
       this.template({ file: true }, { data: this.get_intl_data() })
     );
-
-    this.$fullscreenButton = this.$(".view_fullscreen");
 
     // set up preview tabs + dd child elements
     this.$("#preview_tabs_dropdown").html(
@@ -108,57 +105,6 @@ export default BaseView.extend({
     // only change the preview if necessary
     if (selectedIndex !== this.currentPreviewIndex) {
       this.trigger('changeContentPreview', selectedIndex);
-    }
-  },
-  toggle_fullscreen() {
-    // useful only for thumbnail previews
-    const notFullscreen = () => {
-      return ((document.fullScreenElement !== undefined && document.fullScreenElement === null) ||
-        (document.msFullscreenElement !== undefined && document.msFullscreenElement === null) ||
-        (document.mozFullScreen !== undefined && !document.mozFullScreen) ||
-        (document.webkitIsFullScreen !== undefined && !document.webkitIsFullScreen));
-    }
-
-    const exit_fullscreen = () => {
-      // there must be a better way
-      if (notFullscreen()) {
-        this.$("#preview_content_main").removeClass('preview_on');
-        this.$fullscreenButton.html(this.get_translation("show_fullscreen"))
-          .attr("title", this.get_translation("show_fullscreen"));
-        $(document).off('webkitfullscreenchange');
-        $(document).off('mozfullscreenchange');
-        $(document).off('fullscreenchange');
-        $(document).off('MSFullscreenChange');
-      }
-    };
-    if (notFullscreen()) {
-      this.$("#preview_content_main").addClass('preview_on');
-      this.$fullscreenButton.html(
-        this.get_translation("hide_fullscreen")
-      ).attr("title", this.get_translation("hide_fullscreen"));
-
-      if (this.el.requestFullscreen) {
-        this.el.requestFullscreen();
-      } else if (this.el.msRequestFullscreen) {
-        this.el.msRequestFullscreen();
-      } else if (this.el.mozRequestFullScreen) {
-        this.el.mozRequestFullScreen();
-      } else if (this.el.webkitRequestFullscreen) {
-        this.el.webkitRequestFullscreen();
-      }
-      $(document).on('webkitfullscreenchange', exit_fullscreen);
-      $(document).on('mozfullscreenchange', exit_fullscreen);
-      $(document).on('fullscreenchange', exit_fullscreen);
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-      } else if (document.webkitExitFullscreen) {
-        document.webkitExitFullscreen();
-      } else if (document.mozCancelFullScreen) {
-        document.mozCancelFullScreen();
-      } else if (document.msExitFullscreen) {
-        document.msExitFullscreen();
-      }
     }
   },
 });
