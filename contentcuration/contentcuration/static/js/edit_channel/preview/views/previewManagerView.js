@@ -4,6 +4,7 @@ import { FormatPresetCollection } from 'edit_channel/models';
 import PreviewView from './previewView';
 
 import { translate } from 'edit_channel/utils/string_helper';
+import { defer } from 'underscore';
 
 var NAMESPACE = "preview";
 var MESSAGES = {
@@ -34,19 +35,26 @@ export default BaseView.extend({
     });
 
 
-    this.on('destroy', () => {
-      this.stopListening();
-      this.off();
-      this.previewView.trigger('destroy');
-    });
-
     this.listenTo(this.model, 'change:files', () => {
       this.previews = this.getPreviews();
       this.previewView.trigger('destroy');
       this.render();
     });
 
+    // Trying to keep this logic limited to the scope of preview Views.
+    // Using jquery-ui's `remove` event. Applies to widgets, unsure why getting called here
+
+    // cannot use `listenTo`, unsure why.
+    defer(() => this.$el.on("remove", function() {
+      this.previewView.trigger('destroy');
+      // call stopListening for all events
+      this.remove();
+      // unbind all `.on`s
+      this.off();
+    }));
+
     this.render();
+
   },
   getPreviews() {
     // array of previewabe files
