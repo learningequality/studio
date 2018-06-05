@@ -1,11 +1,15 @@
 
+# When changing bucket name, make sure to also edit minio.dfeaultBucket.name to reflect
+# the same values, or else the bucket won't be created for you
 bucketName: kolibri-studio-storage
+
+# The django settings for both studio-app and studio workers
 settings: contentcuration.settings
 
 
 studioApp:
   appPort: 8081
-  imageName: gcr.io/github-learningequality-studio/app:nlatest 
+  imageName: gcr.io/github-learningequality-studio/app:nlatest
   replicas: 1
   type: NodePort
 
@@ -22,4 +26,15 @@ studioWorkers:
 postgresql:
   postgresUser: learningequality
   postgresDatabase: devDB
-  persistence.size: 2Gi
+  persistence:
+    size: 2Gi
+
+minio:
+  service:
+    port: 9000
+  persistence:
+    size: 5Gi
+  defaultBucket:
+    enabled: true
+    policy: download
+    name: kolibri-studio-storage

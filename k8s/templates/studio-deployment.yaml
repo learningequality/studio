@@ -1,16 +1,4 @@
 ---
-apiVersion: v1
-kind: Service
-metadata:
-  name: {{ template "studio.fullname" . }}-app
-spec:
-  ports:
-  - port: 80
-    targetPort: 8080
-  selector:
-    app: {{ template "studio.fullname" . }}
-  type: NodePort
----
 apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
@@ -61,7 +49,7 @@ spec:
               key: redis-password
               name: {{ template "redis.fullname" . }}
         - name: AWS_S3_ENDPOINT_URL
-          value: http://{{ template "minio.fullname" . }}
+          value: {{ template "minio.url" . }}
         - name: AWS_BUCKET_NAME
           value: {{ .Values.bucketName }}
         - name: AWS_ACCESS_KEY_ID
@@ -85,7 +73,7 @@ spec:
         readinessProbe:
           httpGet:
             path: /
-            port: 8080
+            port: {{ .Values.studioNginx.port }}
           initialDelaySeconds: 10
           periodSeconds: 5
         volumeMounts:
@@ -95,7 +83,7 @@ spec:
         image: {{ .Values.studioNginx.imageName }}
         env:
         - name: AWS_S3_ENDPOINT_URL
-          value: http://{{ template "minio.fullname" . }}
+          value: {{ template "minio.url" . }}
         - name: AWS_BUCKET_NAME
           value: {{ .Values.bucketName }}
         ports:
@@ -110,17 +98,17 @@ spec:
 apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
-  name: studio-workers
+  name: {{template "studio.fullname" . }}-workers
 spec:
   replicas: {{ .Values.studioWorkers.replicas }}
   template:
     metadata:
       labels:
-        app: studio-workers
+        app: {{template "studio.fullname" . }}-workers
     spec:
       containers:
       - name: worker
-        image: gcr.io/github-learningequality-studio/app:nlatest
+        image: {{ .Values.studioApp.imageName }}
         command:
         - make
         - prodceleryworkers
@@ -158,16 +146,16 @@ spec:
               key: redis-password
               name: {{ template "redis.fullname" . }}
         - name: AWS_S3_ENDPOINT_URL
-          value: http://{{ template "minio.fullname" . }}
+          value: {{ template "minio.url" . }}
         - name: AWS_BUCKET_NAME
           value: {{ .Values.bucketName }}
         - name: AWS_ACCESS_KEY_ID
           valueFrom:
             secretKeyRef:
-              key: minio_access_key
+              key: accesskey
               name: {{ template "minio.fullname" . }}
         - name: AWS_SECRET_ACCESS_KEY
           valueFrom:
             secretKeyRef:
-              key: minio_secret_key
+              key: secretkey
               name: {{ template "minio.fullname" . }}

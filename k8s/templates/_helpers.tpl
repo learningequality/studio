@@ -32,6 +32,14 @@ If release name contains chart name it will be used as a full name.
 {{- $name := .Release.Name -}}
 {{- printf "%s-%s" $name "minio" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
+{{- define "redis.fullname" -}}
+{{- $name := .Release.Name -}}
+{{- printf "%s-%s" $name "redis" | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{- define "minio.url" -}}
+{{- printf "http://%s-%s:%v" .Release.Name "minio" .Values.minio.service.port -}}
+{{- end -}}
 
 
 {{/*
