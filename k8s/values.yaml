@@ -26,6 +26,7 @@ studioWorkers:
 postgresql:
   postgresUser: learningequality
   postgresDatabase: devDB
+  postgresPassword: notsecure
   persistence:
     size: 2Gi
 
