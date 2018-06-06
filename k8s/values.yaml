@@ -29,6 +29,9 @@ postgresql:
   postgresPassword: notsecure
   persistence:
     size: 2Gi
+  externalCloudSQL:
+    enabled: false
+    proxyHostName:
 
 minio:
   service:

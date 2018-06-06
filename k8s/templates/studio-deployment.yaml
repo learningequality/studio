@@ -25,7 +25,7 @@ spec:
         - name: MPLBACKEND
           value: PS
         - name: DATA_DB_HOST
-          value: {{ template "postgresql.fullname" . }}
+          value: {{ .Values.postgresql.externalCloudSQL.proxyHostName | default (include "postgresql.fullname" .) }}
         - name: DATA_DB_NAME
           value: {{ .Values.postgresql.postgresDatabase }}
         - name: DATA_DB_PORT
@@ -122,7 +122,7 @@ spec:
         - name: MPLBACKEND
           value: PS
         - name: DATA_DB_HOST
-          value: studio-postgres
+          value: {{ .Values.postgresql.externalCloudSQL.proxyHostName | default (include "postgresql.fullname" .) }}
         - name: DATA_DB_NAME
           value: {{ .Values.postgresql.postgresDatabase }}
         - name: DATA_DB_PORT
