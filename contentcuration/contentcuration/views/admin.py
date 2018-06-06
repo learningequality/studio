@@ -188,7 +188,7 @@ def get_users(request):
     if query:
         user_list = user_list.filter(query)
 
-    if params.get('sort_by') in ['email','fist_name','last_name','channels']:
+    if params.get('sort_by') in ['email','first_name','last_name','channels']:
         if params.get('ordering') == 'desc':
             ordering = F(params.get('sort_by')).desc()
         else:
