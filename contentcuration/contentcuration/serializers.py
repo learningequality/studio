@@ -474,18 +474,35 @@ class SimplifiedContentNodeSerializer(BulkSerializerMixin, serializers.ModelSeri
                   'is_prerequisite_of', 'parent_title', 'ancestors', 'tree_id', 'language', 'role_visibility')
 
 
-class RootNodeSerializer(SimplifiedContentNodeSerializer):
+""" Shared methods across content node serializers """
+class ContentNodeFieldMixin(object):
+
+    def get_creators(self, descendants):
+        creators = descendants.values_list('copyright_holder', 'author', 'aggregator', 'provider')
+        split_lst = zip(*creators)
+
+        return {
+            "copyright_holders": filter(lambda x: x, set(split_lst[0])) if len(split_lst) > 0 else [],
+            "authors": filter(lambda x: x, set(split_lst[1])) if len(split_lst) > 1 else [],
+            "aggregators": filter(lambda x: x, set(split_lst[2])) if len(split_lst) > 2 else [],
+            "providers": filter(lambda x: x, set(split_lst[3])) if len(split_lst) > 3 else [],
+        }
+
+
+class RootNodeSerializer(SimplifiedContentNodeSerializer, ContentNodeFieldMixin):
     channel_name = serializers.SerializerMethodField('retrieve_channel_name')
 
     def retrieve_metadata(self, node):
         descendants = node.get_descendants()
-        return {
+        data = {
             "total_count": node.get_descendant_count(),
             "resource_count": descendants.exclude(kind_id=content_kinds.TOPIC).count(),
             "max_sort_order": node.children.aggregate(max_sort_order=Max('sort_order'))['max_sort_order'] or 1,
             "resource_size": 0,
-            "has_changed_descendant": descendants.filter(changed=True).exists()
+            "has_changed_descendant": descendants.filter(changed=True).exists(),
         }
+        data.update(self.get_creators(descendants))
+        return data
 
     def retrieve_channel_name(self, node):
         channel = node.get_channel()
@@ -497,7 +514,7 @@ class RootNodeSerializer(SimplifiedContentNodeSerializer):
                   'prerequisite', 'is_prerequisite_of', 'parent_title', 'ancestors', 'tree_id', 'role_visibility')
 
 
-class ContentNodeSerializer(SimplifiedContentNodeSerializer):
+class ContentNodeSerializer(SimplifiedContentNodeSerializer, ContentNodeFieldMixin):
     ancestors = serializers.SerializerMethodField('get_node_ancestors')
     valid = serializers.SerializerMethodField('check_valid')
     associated_presets = serializers.SerializerMethodField('retrieve_associated_presets')
@@ -532,7 +549,7 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer):
     def retrieve_metadata(self, node):
         if node.kind_id == content_kinds.TOPIC:
             descendants = node.get_descendants(include_self=True)
-            return {
+            data = {
                 "total_count": node.get_descendant_count(),
                 "resource_count": descendants.exclude(kind=content_kinds.TOPIC).count(),
                 "max_sort_order": node.children.aggregate(max_sort_order=Max('sort_order'))['max_sort_order'] or 1,
@@ -540,6 +557,12 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer):
                 "has_changed_descendant": descendants.filter(changed=True).exists(),
                 "coach_count": descendants.filter(role_visibility=roles.COACH).count(),
             }
+
+            if not node.parent: # Add extra data to root node
+                data.update(self.get_creators(descendants))
+
+            return data
+
         else:
             assessment_size = node.assessment_items.values('files__checksum', 'files__file_size').distinct()\
                             .aggregate(resource_size=Sum('files__file_size')).get('resource_size') or 0

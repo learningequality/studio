@@ -666,7 +666,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   $trs: MESSAGES,
 
   initialize: function(options) {
-    _.bindAll(this, 'update_count', 'remove_tag', 'add_tag', 'loop_focus', 'select_tag', 'set_initial_focus');
+    _.bindAll(this, 'update_count', 'remove_tag', 'add_tag', 'loop_focus', 'select_tag', 'set_initial_focus', 'update_field');
     this.new_content = options.new_content;
     this.selected_items = options.selected_items;
     this.shared_data = options.shared_data;
@@ -724,6 +724,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
       }));
       this.update_count();
       this.load_language();
+      this.load_autocomplete();
       if(this.shared_data){
         // NEW FIELD: If new field is a dropdown, load here
         $("#role_select").val(this.shared_data.shared_role);
@@ -874,7 +875,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     "click #visibility_about": "load_roles",
     "focus .input-tab-control": "loop_focus",
     "change #select_language": "set_language",
-    "change #role_select": "set_selected",
+    "change #role_select": "set_selected"
     // NEW FIELD: add listener to new field and set_selected to trigger change
   },
   load_tags:function(){
@@ -908,6 +909,20 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     if(language===0) { this.$("#select_language").val(0); }
     else if (!language) { this.$("#select_language").val("inherit"); }
     else { this.$("#select_language").val(language); }
+  },
+  load_autocomplete: function() {
+    var self = this;
+    var metadata = window.current_channel.get('main_tree').metadata;
+    this.$(".autocomplete_item").each(function(index, item) {
+      var list_name = $(item).data("list");
+      if(list_name) {
+        autoCompleteHelper.addAutocomplete($(item), metadata[list_name], self.update_field, "#metadata");
+      }
+    })
+  },
+  update_field: function(value, el) {
+    el.val(value.label);
+    this.set_selected();
   },
   update_count:function(){
     if(this.selected_individual()){
