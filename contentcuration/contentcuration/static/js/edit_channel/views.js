@@ -2,9 +2,6 @@ var Backbone = require("backbone");
 var _ = require("underscore");
 var Models = require("./models");
 //var UndoManager = require("backbone-undo");
-function get_author(){
-	return window.preferences.author || "";
-}
 
 var TABINDEX = 1;
 
@@ -822,7 +819,6 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 		this.collection.create_new_node({
             "kind":"topic",
             "title": (this.model.get('parent'))? this.model.get('title') + " " + this.get_translation("topic") : this.get_translation("topic"),
-            "author": get_author(),
         }).then(function(new_topic){
         	var edit_collection = new Models.ContentNodeCollection([new_topic]);
 	        $("#main-content-area").append("<div id='dialog'></div>");
@@ -878,8 +874,10 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 		this.collection.create_new_node({
             "kind":"exercise",
             "title": (this.model.get('parent'))? this.model.get('title') + " " + this.get_translation("exercise_title") : this.get_translation("exercise_title"), // Avoid having exercises prefilled with 'email clipboard'
-            "author": get_author(),
-            "copyright_holder": (window.preferences.copyright_holder === null) ? get_author() : window.preferences.copyright_holder,
+            "author": window.preferences.author || "",
+            "aggregator": window.preferences.aggregator || "",
+            "provider": window.preferences.provider || "",
+            "copyright_holder": window.preferences.copyright_holder || "",
             "license_name": window.preferences.license,
             "license_description": window.preferences.license_description || ""
         }).then(function(new_exercise){
@@ -1193,7 +1191,6 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
             "kind":"topic",
             "title": (this.model.get('parent'))? this.model.get('title') + " " + this.get_translation("topic_title") : this.get_translation("topic_title"),
             "sort_order" : this.model.get("metadata").max_sort_order,
-            "author": get_author(),
         }).then(function(new_topic){
         	var edit_collection = new Models.ContentNodeCollection([new_topic]);
 	        $("#main-content-area").append("<div id='dialog'></div>");

@@ -86,7 +86,16 @@ def create_new_node(request):
     data = json.loads(request.body)
     license = License.objects.filter(license_name=data.get('license_name')).first()  # Use filter/first in case preference hasn't been set
     license_id = license.pk if license else settings.DEFAULT_LICENSE
-    new_node = ContentNode.objects.create(kind_id=data.get('kind'), title=data.get('title'), author=data.get('author'), copyright_holder=data.get('copyright_holder'), license_id=license_id, license_description=data.get('license_description'))
+    new_node = ContentNode.objects.create(
+        kind_id=data.get('kind'),
+        title=data.get('title'),
+        author=data.get('author'),
+        aggregator=data.get('aggregator'),
+        provider=data.get('provider'),
+        copyright_holder=data.get('copyright_holder'),
+        license_id=license_id,
+        license_description=data.get('license_description'),
+    )
     return HttpResponse(JSONRenderer().render(ContentNodeEditSerializer(new_node).data))
 
 @api_view(['GET'])

@@ -13,6 +13,8 @@ var MESSAGES = {
     "html": "HTML Apps",
     "documents": "Documents",
     "author": "Author",
+    "aggregator": "Aggregator",
+    "provider": "Provider",
     "license": "License",
     "saved": "SAVED!",
     "copyright_holder": "Copyright Holder",
@@ -28,10 +30,15 @@ var MESSAGES = {
     "exercise_criteria": "Exercise Mastery Criteria",
     "auto_thumbnail": "Automatically generate thumbnails for...",
     "author_placeholder": "Enter author name...",
+    "aggregator_placeholder": "Enter aggregator name...",
+    "provider_placeholder": "Enter provider name...",
     "license_description_placeholder": "Enter license description...",
     "copyright_holder_placeholder": "Enter copyright holder name...",
     "no_license": "No license selected",
     "randomize_question_order": "Automatically randomize question order",
+    "author_description": "Person or organization who created the content",
+    "aggregator_description": "Person or organization who gathered the content together",
+    "provider_description": "Person or organization who distributed the content"
 }
 
 var SettingsModalView = BaseViews.BaseModalView.extend({
@@ -85,6 +92,7 @@ var SettingsView = BaseViews.BaseListEditableItemView.extend({
         $("#custom_license_description").css("display", (this.check_custom_license())? "block" : "none");
         $("#mastery_custom_criterion").css("visibility", ($("#mastery_model_select").val()==="m_of_n")? "visible" : "hidden");
         $("#select_language").val(this.model.get("language") || 0);
+        this.$('[data-toggle="tooltip"]').tooltip();
     },
     create_initial: function() {
         this.image_upload = new Images.ThumbnailUploadView({
@@ -124,6 +132,8 @@ var SettingsView = BaseViews.BaseListEditableItemView.extend({
         var content_defaults = this.model.get("content_defaults");
         content_defaults.license = this.get_license_name();
         content_defaults.author = $("#author_field").val().trim();
+        content_defaults.aggregator = $("#aggregator_field").val().trim();
+        content_defaults.provider = $("#provider_field").val().trim();
         content_defaults.copyright_holder = $("#input_copyright_holder").val().trim();
         content_defaults.license_description = $("#custom_license_description").val().trim();
         content_defaults.mastery_model = $("#mastery_model_select").val();

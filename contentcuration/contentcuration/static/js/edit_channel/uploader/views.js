@@ -783,7 +783,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
         this.$("#randomize_exercise").prop("checked", randomize);
       }
     }
-    $('[data-toggle="tooltip"]').tooltip();
+    this.$('[data-toggle="tooltip"]').tooltip();
     this.first_rendered = true;
     _.defer(this.set_initial_focus, 1);
   },

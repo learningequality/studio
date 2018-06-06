@@ -17,7 +17,7 @@
 		var title = "{{ title }}";
 		var mastery = JSON.parse("{{ mastery |escapejs }}");
 		var roles = JSON.parse("{{ roles |escapejs }}");
-		var url = '{% url 'channels' %}';
+		var url = "{% url 'channels' %}";
 	</script>
 
 	{% render_bundle 'channel_edit' %}
