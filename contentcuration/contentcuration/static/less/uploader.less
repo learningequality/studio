@@ -75,6 +75,10 @@
 			color: @gray-800;
 			margin-top: 5px;
 			font-weight: bold;
+			.help_icon {
+				font-size: 12pt;
+    			font-weight: bold;
+			}
 		}
 		.detail_field{
 			font-size: 12pt;
@@ -83,6 +87,11 @@
 				color: @gray-700;
 				font-style: italic;
 			}
+		}
+		.helper_text {
+			font-style: italic;
+			margin-top: -5px;
+			font-size: 10pt;
 		}
 		#imported_from_field {
 			font-weight: bold;
@@ -112,8 +121,9 @@
 			margin-top:5px;
 			padding: 0px 2px;
 			max-width: 80%;
+			margin-bottom: 10px;
 		}
-		#license_about, #mastery_about, #visibility_about{
+		.help_icon{
 			font-size:16pt;
 			margin-left:5px;
 			cursor:pointer;
@@ -129,7 +139,7 @@
 		}
 		input[type="text"], textarea {
 			padding: 2px 0;
-			margin-bottom: 25px;
+			margin-bottom: 30px;
 			font-size: @larger-body-text;
 			width:100%;
 			.input-form;

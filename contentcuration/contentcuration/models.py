@@ -37,6 +37,8 @@ DEFAULT_CONTENT_DEFAULTS = {
     'license': None,
     'language': None,
     'author': None,
+    'aggregator': None,
+    'provider': None,
     'copyright_holder': None,
     'license_description': None,
     'mastery_model': exercises.NUM_CORRECT_IN_A_ROW_5,
@@ -624,7 +626,11 @@ class ContentNode(MPTTModel, models.Model):
 
     changed = models.BooleanField(default=True, db_index=True)
     extra_fields = models.TextField(blank=True, null=True)
-    author = models.CharField(max_length=200, blank=True, default="", help_text=_("Person who created content"),
+    author = models.CharField(max_length=200, blank=True, default="", help_text=_("Who created this content?"),
+                              null=True)
+    aggregator = models.CharField(max_length=200, blank=True, default="", help_text=_("Who gathered this content together?"),
+                              null=True)
+    provider = models.CharField(max_length=200, blank=True, default="", help_text=_("Who distributed this content?"),
                               null=True)
 
     role_visibility = models.CharField(max_length=50, choices=roles.choices, default=roles.LEARNER)
