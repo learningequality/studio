@@ -66,6 +66,15 @@ spec:
             secretKeyRef:
               key: secretkey
               name: {{ template "minio.fullname" . }}
+        - name: EMAIL_CREDENTIALS_POSTMARK_API_KEY
+          {{ if .Values.studioApp.postmarkApiKey }}
+          valueFrom:
+            secretKeyRef:
+              key: postmark-api-key
+              name: {{ template "studio.fullname" . }}
+          {{ else }}
+          value: ""
+          {{ end }}
         livenessProbe:
           httpGet:
             path: /healthz
@@ -163,3 +172,12 @@ spec:
             secretKeyRef:
               key: secretkey
               name: {{ template "minio.fullname" . }}
+        - name: EMAIL_CREDENTIALS_POSTMARK_API_KEY
+          {{ if .Values.studioApp.postmarkApiKey }}
+          valueFrom:
+            secretKeyRef:
+              key: postmark-api-key
+              name: {{ template "studio.fullname" . }}
+          {{ else }}
+          value: ""
+          {{ end }}

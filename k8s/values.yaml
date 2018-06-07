@@ -12,6 +12,9 @@ studioApp:
   imageName: gcr.io/github-learningequality-studio/app:nlatest
   replicas: 1
   type: NodePort
+  postmarkApiKey:
+  ingress:
+    enabled: true
 
 
 studioNginx:
@@ -32,6 +35,7 @@ postgresql:
   externalCloudSQL:
     enabled: false
     proxyHostName:
+
 
 minio:
   service:
