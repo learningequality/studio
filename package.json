@@ -7,7 +7,7 @@
     "lint:py": "flake8 --exit-zero",
     "makemessages": "node ./extract_frontend_messages.js ./contentcuration/contentcuration/static/js/edit_channel/**{/*,}.{js,vue}",
     "build": "webpack --config webpack.config.js",
-    "cypress:run": "wait-on -t 5000 tcp:8081 && cypress run --spec cypress/integration/login.js",
+    "cypress:run": "wait-on -t 20000 tcp:8081 && cypress run --spec cypress/integration/login.js",
     "cypress:test": "yarn run build && npm-run-all --parallel --race testserver cypress:run",
     "pytest": "cd contentcuration; pytest",
     "pytest:reusedb": "cd contentcuration; pytest --reuse-db",

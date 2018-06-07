@@ -4,9 +4,6 @@ describe("Login test", () => {
     password: "a"
   };
   before(() => {
-    // cy.exec("cd ../..");
-    // cy.exec("yarn run devserver");
-    // cy.exec("npm run flush");
   });
   it("should be able to log in", () => {
     cy.visit("/");
