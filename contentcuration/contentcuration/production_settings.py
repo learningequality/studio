@@ -7,10 +7,6 @@ SITE_ID = int(os.getenv("SITE_ID") or "1")
 
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
 
-# Use GCS in prod
-DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
-GS_BUCKET_NAME = AWS_STORAGE_BUCKET_NAME
-
 # email settings
 EMAIL_BACKEND = 'postmark.django_backend.EmailBackend'
 POSTMARK_API_KEY = os.getenv("EMAIL_CREDENTIALS_POSTMARK_API_KEY")
