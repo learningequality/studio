@@ -7,6 +7,8 @@ spec:
   replicas: {{ .Values.studioApp.replicas }}
   template:
     metadata:
+      annotations:
+        checksum: {{ include (print $.Template.BasePath "/studio-secrets.yaml") . | sha256sum }}
       labels:
         app: {{ template "studio.fullname" . }}
     spec:
