@@ -1,5 +1,6 @@
 import { BaseView } from 'edit_channel/views';
 import kVueHelper from 'utils/kVueHelper';
+import perseusJSON from '../perseustest.json';
 
 // TODO async these? Def async the preview import
 import imageTemplate from '../hbtemplates/preview_templates/image.handlebars';
@@ -46,24 +47,36 @@ export default BaseView.extend({
     // Kolibri renderable
 
     // mock up vue props here
-    const kind = this.model.get('kind');
-    const assessment = kind === 'exercise';
-    const itemId = assessment ? this.model.get('assessment_item_ids')[0] : null;
-    const files = this.model.get('files').map(file => {
-      return Object.assign({
-        extension: file.file_format,
-        lang: file.language,
-        thumbnail: file.preset.thumbnail,
-        priority: file.preset.order,
+    // const kind = this.model.get('kind');
+    // const assessment = kind === 'exercise';
+    // // const itemId = assessment ? this.model.get('assessment_item_ids')[0] : null;
+    // const files = this.model.get('files').map(file => {
+    //   return Object.assign({
+    //     extension: file.file_format,
+    //     lang: file.language,
+    //     thumbnail: file.preset.thumbnail,
+    //     priority: file.preset.order,
+    //     available: true,
+    //   }, file)
+    // });
+    const files = [{
+        extension: 'perseus',
+        lang: null,
         available: true,
-      }, file)
-    });
+    }];
+    const kind = 'exercise';
+    const assessment = kind === 'exercise';
+    // const itemId = assessment ? this.model.get('assessment_item_ids')[0] : null;
+
+    console.log(perseusJSON);
+    const item = perseusJSON;
 
     const propsData = {
       kind,
+      item,
       assessment,
-      itemId,
       files,
+      itemId: null,
       available: true,
       interactive: false,
     };
@@ -71,6 +84,9 @@ export default BaseView.extend({
     const { contentRenderer } = window.kolibriGlobal.coreVue.components;
 
     this.vuePreview = kVueHelper(contentRenderer, propsData);
+
+    console.log('present model', this.model);
+    console.log('current vue component',this.vuePreview);
 
     return this.vuePreview.$el;
 
