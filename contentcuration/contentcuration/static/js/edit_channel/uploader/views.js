@@ -252,7 +252,8 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
                       return window.formatpresets.get({id: f.preset.name || f.preset.id || f.preset}).get("display");
                     });
     this.$("#metadata_details_btn").css("display", (selected_items.length) ? "inline-block" : "none");
-    this.$("#metadata_preview_btn").css("display", (is_individual && has_files) ? "inline-block" : "none");
+    this.$("#metadata_preview_btn").css("display", "inline-block");
+    // this.$("#metadata_preview_btn").css("display", (is_individual && has_files) ? "inline-block" : "none");
     this.$("#metadata_prerequisites_btn").css("display", (is_individual && (has_files || is_exercise)) ? "inline-block" : "none");
     this.$("#metadata_questions_btn").css("display", (is_exercise) ? "inline-block" : "none");
     if(!is_individual){
@@ -1190,7 +1191,6 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
       this.preview_view.remove();
     }
     this.preview_view = new Previewer.PreviewView({
-      modal:false,
       model: this.model
     });
     formats_el.html(this.preview_view.el);
