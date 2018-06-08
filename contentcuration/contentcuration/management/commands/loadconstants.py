@@ -171,6 +171,14 @@ FILE_FORMATS = [
         "model": models.FileFormat,
         "pk": "extension",
         "fields": {
+            "extension": file_formats.EPUB,
+            "mimetype": file_formats.EPUB_MIMETYPE,
+        },
+    },
+    {
+        "model": models.FileFormat,
+        "pk": "extension",
+        "fields": {
             "extension": file_formats.MP3,
             "mimetype": file_formats.MP3_MIMETYPE,
         },
@@ -548,6 +556,22 @@ PRESETS = [
             "order": 1,
             "kind_id": content_kinds.HTML5,
             "allowed_formats": [file_formats.PNG, file_formats.JPG, file_formats.JPEG],
+        },
+    },
+    {
+        "model": models.FormatPreset,
+        "pk": "id",
+        "fields": {
+            "id": format_presets.EPUB,
+            "readable_name": format_presets.EPUB_READABLE,
+            "multi_language": False,
+            "supplementary": False,
+            "thumbnail": False,
+            "subtitle": False,
+            "display": True,
+            "order": 0,
+            "kind_id": content_kinds.DOCUMENT,
+            "allowed_formats": [file_formats.EPUB],
         },
     },
 ]
