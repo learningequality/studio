@@ -167,6 +167,10 @@ Handlebars.registerHelper( 'translate', function(text) {
     return stringHelper.translate(text);
 });
 
+Handlebars.registerHelper( 'join', function(list, delimiter) {
+    return list.join(delimiter);
+});
+
 Handlebars.registerHelper('format_date', function(date) {
   var monthNames = [
     "Jan", "Feb", "Mar",

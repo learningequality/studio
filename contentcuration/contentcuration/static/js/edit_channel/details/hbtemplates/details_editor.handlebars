@@ -1,0 +1,105 @@
+<div class="input-tab-control tab_item" data-next="#{{#if can_edit}}submit{{else}}open{{/if}}"></div>
+<div id="channel_details_dialog" class="modal-content-default">
+    <div class="row">
+        <div class="profile text-center col-xs-3">
+            {{#if can_edit}}
+                <div class="new_channel_pic" id="channel_thumbnail"></div>
+            {{else}}
+                <img class="channel_pic" alt="{{channel.name}} logo" src="{{picture}}"/>
+            {{/if}}
+        </div>
+        <div class="channel_section col-xs-9">
+            {{#if can_edit}}
+                <div class="language_wrapper container-fluid">
+                    <select id="select_language" class="tab_item input_listener pull-right">
+                        <option disabled selected value=0>{{formatMessage (intlGet 'messages.select_language')}}</option>
+                        {{#each languages}}<option value="{{id}}" title="{{readable_name}}">{{readable_name}}</option>{{/each}}
+                    </select>
+                </div>
+            {{/if}}
+            {{#if can_edit}}
+                <h4>{{formatMessage (intlGet 'messages.channel_name')}} <label class="required">*<span id="channel_error">{{formatMessage (intlGet 'messages.channel_name_error')}}</span></label></h4>
+                <input type="text" id="input_title" class="upload_input input_listener tab_item first_focus_item" placeholder="{{formatMessage (intlGet 'messages.channel_name_placeholder')}}" maxlength="200" value="{{channel.name}}" required/>
+            {{else}}
+                <h3>{{channel.name}}</h3>
+                {{#unless can_edit}}
+                <p class="channel_text">
+                    {{#if language}}{{formatMessage (intlGet 'messages.channel_language')}}: {{language.attributes.native_name}} | {{/if}}{{/unless}}
+                    {{#if channel.published}}
+                        {{formatMessage (intlGet 'messages.last_published')}}: {{formatDate channel.last_published day="numeric" month="long" year="numeric"}}
+                    {{else}}{{formatMessage (intlGet 'messages.unpublished')}}
+                    {{/if}}
+                </p>
+            {{/if}}
+            {{#if can_edit}}
+                <h4>{{formatMessage (intlGet 'messages.channel_description')}}</h4>
+                <textarea type="text" id="input_description" class="upload_input input_listener tab_item" placeholder="{{formatMessage (intlGet 'messages.description_placeholder')}}" maxlength="400" value="{{channel.description}}" rows="4">{{channel.description}}</textarea>
+            {{else}}
+                <p>{{channel.description}}</p>
+            {{/if}}
+            {{#if channel.published}}
+            <hr>
+            <p class="channel_text">{{formatMessage (intlGet 'messages.copy_text')}}</p>
+            <p class="channel_text">
+                <div class="row">
+                    <div class="col-xs-4 text-right identifier_label">
+                        {{formatMessage (intlGet 'messages.channel_id')}}:
+                    </div>
+                    <div class="col-xs-8">
+                        <input type="text" class="copy-id-text text-center" value="{{channel.id}}" readonly size='30' id="text_{{channel.id}}"/>
+                        <i class="material-icons copy-id-btn" title="{{formatMessage (intlGet 'messages.copy')}}" data-text="#text_{{channel.id}}">content_paste</i>
+                    </div>
+                </div>
+                {{#if channel.secret_tokens}}
+                <div class="row">
+                    <div class="col-xs-4 text-right identifier_label">
+                        {{formatMessage (intlGet 'messages.channel_tokens')}}:
+                    </div>
+                    <div class="col-xs-8">
+                        {{#each channel.secret_tokens}}
+                            <input type="text" class="copy-id-text text-center" value="{{display_token}}" readonly size='30' id="text_{{display_token}}"/>
+                            <i class="material-icons copy-id-btn" title="{{formatMessage (intlGet 'messages.copy_id')}}" data-text="#text_{{display_token}}">content_paste</i>
+                        {{/each}}
+                    </div>
+                </div>
+                {{/if}}
+            </p>
+            {{/if}}
+        </div>
+    </div>
+    {{#unless is_new}}
+        <hr/>
+        <div id="look-inside">
+            <div class="default-content text-center">
+                {{formatMessage (intlGet 'messages.loading_details')}}
+            </div>
+        </div>
+        {{#if can_edit}}
+        <div class="container-fluid" id="delete-section">
+            <hr/>
+            <h4>{{formatMessage (intlGet 'messages.delete_title')}}</h4>
+            <p>{{formatMessage (intlGet 'messages.delete_prompt')}}</p>
+            <a class="delete_channel">{{formatMessage (intlGet 'messages.delete_channel')}}</a>
+
+        </div>
+        {{/if}}
+    {{/unless}}
+</div>
+<div class="modal-bottom-content-default container-fluid">
+    {{#if is_new}}
+        <button disabled class="disabled action-button pull-right modal-main-action-button tab_item" id="submit" title="{{formatMessage (intlGet 'messages.invalid_channel')}}">
+            {{formatMessage (intlGet 'messages.create')}}
+        </button>
+        <a class="action-text tab_item uppercase" data-dismiss="modal">{{formatMessage (intlGet 'messages.cancel')}}</a>
+    {{else}}{{#if can_edit}}
+        <button disabled class="disabled action-button pull-right modal-main-action-button tab_item" id="submit">
+            {{formatMessage (intlGet 'messages.no_changes_detected')}}
+        </button>
+        <a class="action-text tab_item" data-dismiss="modal">{{formatMessage (intlGet 'messages.close')}}</a>
+    {{else}}
+        <button class="action-button pull-right tab_item">
+            {{formatMessage (intlGet 'messages.close')}}
+        </button>
+    {{/if}}{{/if}}
+</div>
+<div class="input-tab-control tab_item" data-next="#input_title"></div>

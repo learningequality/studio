@@ -939,7 +939,7 @@ var BaseListEditableItemView = BaseListItemView.extend({
 		var self = this;
 		return new Promise(function(resolve, reject){
 			self.originalData = data;
-			if(self.model.isNew()){
+			if(self.model.isNew() && self.containing_list_view){
 				self.containing_list_view.create_new_item(data).then(function(newView){
 					resolve(newView.model);
 				}).catch(function(error){
@@ -951,6 +951,7 @@ var BaseListEditableItemView = BaseListItemView.extend({
 					self.model.save(data,{
 						patch:true,
 						success:function(savedModel){
+							console.log(savedModel)
 							resolve(savedModel);
 							resolve_load(true);
 						},

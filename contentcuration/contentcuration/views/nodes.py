@@ -6,13 +6,15 @@ from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseNotFou
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
-from django.db.models import Q, Case, When, Value, IntegerField, Max, Sum, F
+from django.db.models import Q, Case, When, Value, IntegerField, Max, Sum, F, Count
+from django.db.models.functions import Concat
 from django.utils.translation import ugettext as _
 from rest_framework.renderers import JSONRenderer
 from contentcuration.utils.files import duplicate_file
 from contentcuration.models import File, ContentNode, ContentTag, AssessmentItem, License, Channel, PrerequisiteContentRelationship
 from contentcuration.serializers import ContentNodeSerializer, ContentNodeEditSerializer, SimplifiedContentNodeSerializer, ContentNodeCompleteSerializer
-from le_utils.constants import format_presets, content_kinds, file_formats, licenses
+from le_utils.constants import format_presets, content_kinds, file_formats, licenses, roles
+from itertools import chain
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication, BasicAuthentication
 from rest_framework.permissions import IsAuthenticated
 from contentcuration.statistics import record_node_duplication_stats
@@ -173,6 +175,50 @@ def get_nodes_by_ids_complete(request, ids):
     serializer = ContentNodeEditSerializer(nodes, many=True)
     return Response(serializer.data)
 
+@api_view(['GET'])
+def get_topic_details(request, contentnode_id):
+    node = ContentNode.objects.prefetch_related('children', 'files', 'tags').select_related('license', 'language').get(pk=contentnode_id)
+    descendants = node.get_descendants()
+    resources = descendants.exclude(kind=content_kinds.TOPIC)
+    node_languages = descendants.exclude(language=None).values_list('language__native_name', flat=True)
+    file_languages = descendants.values_list('files__language__native_name', flat=True)
+    creators = resources.values_list('copyright_holder', 'author', 'aggregator', 'provider')
+    split_lst = zip(*creators)
+
+    # Get sample pathway by getting longest path
+    max_level = descendants.aggregate(max_level=Max('level'))['max_level']
+    deepest_node = descendants.filter(level=max_level).first()
+    pathway = list(deepest_node.get_ancestors(include_self=True).exclude(parent=None).values('title', 'node_id')) if deepest_node else []
+
+    # Get original channel list
+    channel_id = node.get_channel().id
+    original_channel_ids = descendants.values_list("original_channel_id", flat=True)
+    original_channels = Channel.objects.filter(pk__in=original_channel_ids, deleted=False)\
+                                        .annotate(id_name=Concat(F('id'), F('name')))\
+                                        .values('id_name')\
+                                        .annotate(count=Count('id_name'))\
+                                        .order_by('id_name')
+
+    data = {
+        "resource_count": resources.count() or 0,
+        "resource_size": descendants.values('files__checksum', 'files__file_size').distinct().aggregate(resource_size=Sum('files__file_size'))['resource_size'] or 0,
+        "visibility_count": list(resources.values('role_visibility').annotate(count=Count('role_visibility')).order_by('role_visibility')),
+        "kind_count": list(resources.values('kind_id').annotate(count=Count('kind_id')).order_by('kind_id')),
+        "kind_sizes": list(resources.values('kind_id').annotate(count=Count('kind_id')).order_by('kind_id')),
+        "languages": list(descendants.exclude(language=None).values_list('language__native_name', flat=True)),
+        "accessible_languages": list(descendants.values_list('files__language__native_name', flat=True)),
+        "licenses": list(set(resources.exclude(license=None).values_list('license__license_name', flat=True))),
+        "tags": list(set(ContentTag.objects.filter(tagged_content__pk__in=descendants.values_list('pk', flat=True)).values_list('tag_name', flat=True))),
+        "copyright_holders": filter(lambda x: x, set(split_lst[0])) if len(split_lst) > 0 else [],
+        "authors": filter(lambda x: x, set(split_lst[1])) if len(split_lst) > 1 else [],
+        "aggregators": filter(lambda x: x, set(split_lst[2])) if len(split_lst) > 2 else [],
+        "providers": filter(lambda x: x, set(split_lst[3])) if len(split_lst) > 3 else [],
+        "sample_pathway": pathway,
+        "original_channels": list(original_channels),
+    }
+
+    return HttpResponse(json.dumps(data))
+
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
@@ -194,7 +240,6 @@ def delete_nodes(request):
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
     return HttpResponse(json.dumps({'success': True}))
-
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))

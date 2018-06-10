@@ -289,6 +289,20 @@ var ContentNodeModel = BaseModel.extend({
             });
         });
     },
+    fetch_details: function() {
+        var self = this;
+        return new Promise(function(resolve, reject){
+            $.ajax({
+                method:"GET",
+                url: window.Urls.get_topic_details(self.id),
+                success: function(result) {
+                    self.set('metadata', JSON.parse(result))
+                    resolve(self);
+                },
+                error:reject
+            });
+        });
+    },
     has_related_content: function(){
         return this.get('prerequisite').length || this.get('is_prerequisite_of').length;
     },

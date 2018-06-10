@@ -622,6 +622,19 @@ class ContentNodeCompleteSerializer(ContentNodeEditSerializer):
             'children', 'parent', 'tags', 'created', 'modified', 'published', 'extra_fields', 'assessment_items',
             'files', 'valid', 'metadata', 'tree_id', 'freeze_authoring_data', 'role_visibility', 'provider', 'aggregator')
 
+
+class TokenSerializer(serializers.ModelSerializer):
+    display_token = serializers.SerializerMethodField('generate_token')
+
+    def generate_token(self, token):
+        return "{}-{}".format(token.token[:5], token.token[5:])
+
+    class Meta:
+        model = SecretToken
+        fields = ('display_token', 'token')
+
+
+
 """ Shared methods across channel serializers """
 class ChannelFieldMixin(object):
 
@@ -737,11 +750,13 @@ class AltChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
     modified = serializers.SerializerMethodField('get_date_modified')
     primary_token = serializers.SerializerMethodField('get_channel_primary_token')
     content_defaults = JSONSerializerField()
+    secret_tokens = TokenSerializer(many=True, read_only=True)
 
     class Meta:
         model = Channel
         fields = ('id', 'created', 'name', 'published', 'pending_editors', 'editors', 'modified', 'language', 'primary_token', 'priority',
-                  'description', 'count', 'public', 'thumbnail_url', 'thumbnail', 'thumbnail_encoding', 'content_defaults', 'publishing')
+                  'description', 'count', 'public', 'thumbnail_url', 'thumbnail', 'thumbnail_encoding', 'content_defaults', 'publishing',
+                  'main_tree', 'last_published', 'secret_tokens')
 
 class PublicChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
     kind_count = serializers.SerializerMethodField('generate_kind_count')

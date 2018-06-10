@@ -223,6 +223,7 @@ urlpatterns += [
     url(r'^api/get_node_path/(?P<topic_id>[^/]+)/(?P<tree_id>[^/]+)/(?P<node_id>[^/]*)$', node_views.get_node_path, name='get_node_path'),
     url(r'^api/duplicate_node_inline$', node_views.duplicate_node_inline, name='duplicate_node_inline'),
     url(r'^api/delete_nodes$', node_views.delete_nodes, name='delete_nodes'),
+    url(r'^api/get_topic_details/(?P<contentnode_id>[^/]*)$', node_views.get_topic_details, name='get_topic_details'),
 ]
 
 # Add file api enpoints

@@ -1,0 +1,142 @@
+<div class="container-fluid section">
+    <h5 class="header collapsed" data-toggle="collapse" data-target="#collapseSummary" aria-expanded="false" aria-controls="collapseSummary">
+        <i class="material-icons pull-right toggler"></i>
+        {{formatMessage (intlGet 'messages.summary_info')}}
+    </h5>
+    <div class="collapse in" id="collapseSummary">
+        <div class="row info-row">
+            <div class="col-sm-3 title">
+                {{formatMessage (intlGet 'messages.resource_size')}}
+            </div>
+            <div class="col-sm-9 field">{{{format_file_size details.resource_size}}}</div>
+        </div>
+        <div class="row info-row">
+            <div class="col-sm-3 title">
+                {{formatMessage (intlGet 'messages.total_resources')}}
+            </div>
+            <div class="col-sm-9 field">{{formatMessage (intlGet (concat 'messages.resource_count')) count=resource_count}}</div>
+        </div>
+        <div class="row info-row">
+            <div class="col-sm-3 title">
+                {{formatMessage (intlGet 'messages.visibility_breakdown')}}
+                <i class="material-icons help_icon" data-toggle="tooltip" data-placement="top" title="{{formatMessage (intlGet 'messages.role_description')}}">help_outline</i>
+            </div>
+            <div class="col-sm-9 field visibility">
+                {{#if details.visibility_count}}
+                    {{#each details.visibility_count}}
+                        {{formatMessage (intlGet (concat 'messages.visibility_count')) count=count user=(translate role_visibility)}}<br>
+                    {{/each}}
+                {{else}} --- {{/if}}
+            </div>
+        </div>
+        <div class="row info-row">
+            <div class="col-sm-3 title">
+                {{formatMessage (intlGet 'messages.content_breakdown')}}
+            </div>
+            <div class="col-xs-9 title filler">{{#if details.kind_count}}&nbsp;{{else}} --- {{/if}}</div>
+            {{#if details.kind_count}}
+                <div class="container-fluid field content_breakdown">
+                    <div class="row">
+                        <div class="col-xs-6" id="svg_wrapper">
+                            <!-- D3 Pie chart will be inserted here -->
+                        </div>
+                        <div class="col-xs-6" id="legend_wrapper">
+                            <!-- D3 Legend will be inserted here -->
+                        </div>
+                    </div>
+
+                </div>
+            {{/if}}
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid section">
+    <h5 class="header collapsed" data-toggle="collapse" data-target="#collapseAuth" aria-expanded="false" aria-controls="collapseAuth">
+        <i class="material-icons pull-right toggler"></i>
+        {{formatMessage (intlGet 'messages.auth_info')}}
+    </h5>
+    <div class="collapse" id="collapseAuth">
+        <div class="row info-row">
+            <div class="col-sm-3 title">
+                {{formatMessage (intlGet 'messages.author')}}
+                <i class="material-icons help_icon" data-toggle="tooltip" data-placement="top" title="{{formatMessage (intlGet 'messages.author_description')}}">help_outline</i>
+            </div>
+            <div class="col-sm-9 field">{{#if details.authors}}{{{join details.authors ", "}}}{{else}} --- {{/if}}</div>
+        </div>
+        <div class="row info-row">
+            <div class="col-sm-3 title">
+                {{formatMessage (intlGet 'messages.provider')}}
+                <i class="material-icons help_icon" data-toggle="tooltip" data-placement="top" title="{{formatMessage (intlGet 'messages.provider_description')}}">help_outline</i>
+            </div>
+            <div class="col-sm-9 field">{{#if details.providers}}{{{join details.providers ", "}}}{{else}} --- {{/if}}</div>
+        </div>
+        <div class="row info-row">
+            <div class="col-sm-3 title ">
+                {{formatMessage (intlGet 'messages.aggregator')}}
+                <i class="material-icons help_icon" data-toggle="tooltip" data-placement="top" title="{{formatMessage (intlGet 'messages.aggregator_description')}}">help_outline</i>
+            </div>
+            <div class="col-sm-9 field">{{#if details.aggregators}}{{{join details.aggregators ", "}}}{{else}} --- {{/if}}</div>
+        </div>
+        <div class="row info-row">
+            <div class="col-sm-3 title">
+                {{formatMessage (intlGet 'messages.license')}}
+            </div>
+            <div class="col-sm-9 field licenses">
+                {{#if details.licenses}}
+                    {{#each details.licenses }}
+                        {{{translate this}}}
+                        <i class="material-icons help_icon" data-toggle="tooltip" data-placement="top" title="{{{translate (concat this '_description')}}}">info_outline</i>{{#unless @last}}, {{/unless}}
+                    {{/each}}
+                {{else}} --- {{/if}}
+            </div>
+        </div>
+        <div class="row info-row">
+            <div class="col-sm-3 title">
+                {{formatMessage (intlGet 'messages.copyright_holder')}}
+            </div>
+            <div class="col-sm-9 field">{{#if details.copyright_holders}}{{{join details.copyright_holders ", "}}}{{else}} --- {{/if}}</div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid section">
+    <h5 class="header collapsed" data-toggle="collapse" data-target="#collapseMetadata" aria-expanded="false" aria-controls="collapseMetadata">
+        <i class="material-icons pull-right toggler"></i>
+        {{formatMessage (intlGet 'messages.metadata_info')}}
+    </h5>
+    <div class="collapse" id="collapseMetadata">
+        <div class="row info-row">
+            <div class="col-sm-3 title">
+                {{formatMessage (intlGet 'messages.languages')}}
+            </div>
+            <div class="col-sm-9 field">
+                {{#if details.languages}}{{{join details.languages ", "}}}{{else}} --- {{/if}}</div>
+        </div>
+        <div class="row info-row">
+            <div class="col-sm-3 title">
+                {{formatMessage (intlGet 'messages.tags')}}
+            </div>
+            <div class="col-sm-9 field">
+                {{#if details.tags}}
+                    {{#each details.tags}}
+                        <div class="tag">{{this}}</div>
+                    {{/each}}
+                {{else}} --- {{/if}}
+            </div>
+        </div>
+        <div class="row info-row">
+            <div class="col-sm-3 title">
+                {{formatMessage (intlGet 'messages.sample_pathway')}}
+            </div>
+            <div class="col-sm-9 field pathway">
+                {{#if details.sample_pathway}}
+                    {{#each details.sample_pathway}}
+                        <a href="/channels/{{../channel_id}}/view/{{node_id}}" target="_blank">{{title}}</a>
+                    {{#unless @last}} <i class="material-icons">arrow_forward</i>{{/unless}}
+                    {{/each}}
+                {{else}} --- {{/if}}
+            </div>
+        </div>
+    </div>
+</div>

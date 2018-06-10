@@ -1,0 +1,243 @@
+@import "global-variables.less";
+@import "modal-styles.less";
+
+#channel_details_modal{
+	.modal-dialog{ width:650px; }
+	.modal-content{ background-color: white; }
+	.modal-header{ background-color: @blue-200; }
+	.modal-body{ padding: 15px 5px; }
+}
+
+#channel_details_dialog{
+	display: block;
+	overflow: hidden;
+	padding: 10px;
+	min-height: 200px;
+	#channel_error{ display:none; }
+	.image_dropzone{ width: 120px; }
+	.new_channel_pic{
+		.image_dropzone{ width: auto; }
+	}
+	img{
+	    width:130px;
+	    height:130px;
+	    object-fit: cover;
+	}
+	.channel_pic {
+		border: 2px solid @blue-200;
+	}
+
+	h4, .title {
+		font-size: 10pt;
+		color: @gray-800;
+		margin: 2px 0px;
+		font-weight: bold;
+	}
+	h3 {
+		margin-bottom: 5px;
+		margin-top: 0px;
+		font-weight: bold;
+	}
+
+	.channel_text {
+		color: @gray-500;
+	}
+	.identifier_label {
+		padding: 0;
+		padding-top: 5px;
+	}
+
+	input[type="text"] {
+		margin-bottom: 20px;
+	}
+
+	input[type="text"], textarea {
+		padding: 2px 0;
+		font-size: @larger-body-text;
+		width:100%;
+		.input-form;
+		&.copy-id-text {
+			display: inline-block;
+		    padding: 2px;
+		    background-color: @gray-200;
+		    border: none;
+		    font-weight: bold;
+		    color: @gray-500;
+		    width: 200px;
+		    margin-bottom: 5px;
+		    width: 250px;
+    		font-size: 10pt;
+		}
+	}
+	.copy-id-btn{
+		padding:3px;
+		font-size: 16pt;
+		vertical-align: sub;
+		cursor: pointer;
+		color: @gray-500;
+		&:hover { color:@blue-500; }
+	}
+	textarea{
+		resize:none;
+		height:auto;
+	}
+	#delete-section {
+		padding-bottom: 35px;
+		padding-top: 15px;
+		margin-top: 25px;
+		p {
+			margin-top: 5px;
+			margin-bottom: 20px;
+		}
+		.delete_channel {
+			color: @delete-color;
+			font-weight: bold;
+		}
+	}
+
+	.required{
+		margin-left:5px;
+		color:@red-error-color;
+		span{
+			font-style:italic;
+			font-size: 8pt;
+		}
+	}
+	.help_icon {
+		color: @blue-500;
+		font-size: 12pt;
+		cursor: pointer;
+		vertical-align: sub;
+		margin-left: 5px;
+    	font-weight: bold;
+	}
+	.default-content {
+		font-weight: bold;
+	    font-size: 14pt;
+	    padding-top: 60px;
+	    padding-bottom: 60px;
+	    color: @gray-500;
+	    font-style: italic;
+	}
+
+	.section {
+		margin-bottom: 15px;
+		.header {
+			font-size: 14pt;
+		    background-color: @blue-200;
+		    padding: 5px 10px;
+		    font-weight: bold;
+		    color: white;
+		    margin: 0px -15px;
+		    cursor: pointer;
+		    &.collapsed .toggler:after {
+		    	content: "keyboard_arrow_up";
+		    }
+		    .toggler:after {
+		    	content: "keyboard_arrow_down";
+		    	vertical-align: text-top;
+		    }
+		}
+		.info-row {
+			&:hover {
+				background-color: @gray-200;
+			}
+			.title {
+				padding: 5px;
+    			text-align: right;
+    			&.filler {
+					text-align: left;
+					padding-left: 15px;
+				}
+			}
+
+			.field {
+				padding: 5px 15px;
+				font-size: 12pt;
+				&.visibility {
+					text-transform: lowercase;
+				}
+				&.pathway {
+					a {
+						color: @blue-500;
+						text-decoration: none;
+						font-weight: bold;
+						cursor: pointer;
+						font-size: 10pt;
+					}
+					i {
+						font-size: 10pt;
+					    color: @gray-500;
+					    font-weight: bold;
+					    vertical-align: middle;
+					}
+				}
+				&.content_breakdown {
+					padding: 0;
+					i {
+						color: @gray-500;
+						font-size: 14pt;
+	    				vertical-align: sub;
+	    			}
+				}
+				&.licenses i {
+					font-size: 10pt;
+				    vertical-align: text-top;
+				    margin-left: 0px;
+				}
+				.tag {
+				    display: inline-block;
+				    font-size: 10pt;
+				}
+				#svg_wrapper {
+					text-align: center;
+					text{
+						font-family: inherit;
+					}
+				}
+				#legend_wrapper {
+					padding-top: 10%;
+					tr {
+						padding-bottom: 10px;
+						td:last-child {
+							padding-left: 10px;
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+path.slice{
+    stroke-width:2px;
+}
+
+polyline{
+    opacity: .3;
+    stroke: black;
+    stroke-width: 2px;
+    fill: none;
+}
+
+.labelValue
+{
+    font-size: 60%;
+    opacity: .5;
+
+}
+
+.d3-tooltip {
+  line-height: 1;
+  font-size: 12pt;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  border-radius: 2px;
+  width: fit-content;
+  z-index: 100;
+  span {
+  	font-weight: normal;
+  	font-size: 10pt;
+  }
+}
