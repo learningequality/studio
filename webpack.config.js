@@ -56,6 +56,7 @@ module.exports = {
   output: {
     filename: '[name]-[hash].js',
     path: bundleOutputDir,
+    jsonpFunction: 'studioJsonp',
   },
   optimization: {
     // builds a bundle that holds common code between the 2 entry points

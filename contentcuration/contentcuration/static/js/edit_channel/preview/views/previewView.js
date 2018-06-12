@@ -68,7 +68,6 @@ export default BaseView.extend({
     const assessment = kind === 'exercise';
     // const itemId = assessment ? this.model.get('assessment_item_ids')[0] : null;
 
-    console.log(perseusJSON);
     const item = perseusJSON;
 
     const propsData = {
@@ -83,10 +82,13 @@ export default BaseView.extend({
 
     const { contentRenderer } = window.kolibriGlobal.coreVue.components;
 
-    this.vuePreview = kVueHelper(contentRenderer, propsData);
+    contentRenderer.watch = Object.assign({
+      currentViewClass() {
+        this.$refs.contentView.renderItem();
+      },
+    }, contentRenderer.watch);
 
-    console.log('present model', this.model);
-    console.log('current vue component',this.vuePreview);
+    this.vuePreview = kVueHelper(contentRenderer, propsData);
 
     return this.vuePreview.$el;
 
