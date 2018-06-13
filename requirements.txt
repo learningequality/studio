@@ -1,4 +1,4 @@
-Django==1.11
+Django==1.11.13
 django-filter==1.1.0
 django-mptt==0.9
 django-pg-utils==0.1.5
