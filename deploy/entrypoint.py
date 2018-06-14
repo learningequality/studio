@@ -27,7 +27,9 @@ def update_pipenv_env():
     """
     Update our environment based on the latest pipfile.
     """
-    subprocess.call(["pipenv", "sync", "--dev"])
+    cmd = ["pipenv", "install", "--dev"]
+    print "Running {}".format(cmd)
+    subprocess.call(cmd)
 
 def check_postgresql_ready(postgres_checks=CONNECT_TRIES):
     import psycopg2
@@ -50,9 +52,10 @@ def check_postgresql_ready(postgres_checks=CONNECT_TRIES):
                     "Not able to connect to postgres within the allotted time!"
                 )
                 sys.exit(1)
-            logging.info("DB refused connection. Waiting...")
-            postgres_checks -= 1
-            time.sleep(2)
+
+                logging.info("DB refused connection. Waiting...")
+                postgres_checks -= 1
+                time.sleep(2)
 
 
 def check_minio_ready(minio_checks=CONNECT_TRIES):
@@ -76,9 +79,9 @@ def check_minio_ready(minio_checks=CONNECT_TRIES):
 
 
 def run_cmd():
-   cmd = sys.argv[1:]
-   sys.exit(subprocess.call(cmd))
-
+    cmd = sys.argv[1:]
+    print "Running {}".format(cmd)
+    sys.exit(subprocess.call(cmd))
 
 
 if __name__ == "__main__":
