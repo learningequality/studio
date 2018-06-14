@@ -302,10 +302,44 @@ var messages = {
 var translate = i18n.createTranslator(namespace, messages);
 
 function format_count(text, count){
-  if(Number(count) === 1){
-    return count + " " + text;
-  }
-  return count + " " + text + "s";
+  var template = require("edit_channel/utils/hbtemplates/count.handlebars");
+      var div = document.createElement("DIV");
+      div.id = "intl_wrapper";
+      var language = window.languages && window.languages.find(function(l) { return l.id && l.id.toLowerCase() === window.languageCode; });
+      $(div).html(template({
+        count: count,
+        text: text
+      }, {
+        data: {
+          intl: {
+            locales: [(language && language.id) || "en-US"],
+            messages: {"count": "{count, plural,\n =0 {text}\n =1 {# {text}}\n other {# {text}s}}"}
+          }
+        }
+      }));
+      var contents = div.innerHTML;
+      div.remove();
+      return contents;
+}
+
+function format_number(number){
+  var template = require("edit_channel/utils/hbtemplates/number.handlebars");
+      var div = document.createElement("DIV");
+      div.id = "intl_wrapper";
+      var language = window.languages && window.languages.find(function(l) { return l.id && l.id.toLowerCase() === window.languageCode; });
+      $(div).html(template({
+        number: number
+      }, {
+        data: {
+          intl: {
+            locales: [(language && language.id) || "en-US"],
+            messages: {}
+          }
+        }
+      }));
+      var contents = div.innerHTML;
+      div.remove();
+      return contents;
 }
 
 function get_translation(messages, message_id, data, data2, data3, data4){
@@ -345,5 +379,6 @@ module.exports = {
   format_count: format_count,
   translate: translate,
   unescape: unescape,
-  get_translation: get_translation
+  get_translation: get_translation,
+  format_number: format_number
 }

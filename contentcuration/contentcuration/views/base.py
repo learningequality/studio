@@ -135,10 +135,21 @@ def channel_list(request):
         return redirect(reverse_lazy('unsupported_browser'))
 
     languages = get_or_set_cached_constants(Language, LanguageSerializer)
+    fileformats = get_or_set_cached_constants(FileFormat, FileFormatSerializer)
+    licenses = get_or_set_cached_constants(License, LicenseSerializer)
+    formatpresets = get_or_set_cached_constants(FormatPreset, FormatPresetSerializer)
+    contentkinds = get_or_set_cached_constants(ContentKind, ContentKindSerializer)
+    languages = get_or_set_cached_constants(Language, LanguageSerializer)
+
 
     return render(request, 'channel_list.html', {"channel_name": False,
                                                  "current_user": JSONRenderer().render(UserChannelListSerializer(request.user).data),
                                                  "user_preferences": json.dumps(request.user.content_defaults),
+                                                 "langs_list": languages,
+                                                 "fileformat_list": fileformats,
+                                                 "license_list": licenses,
+                                                 "fpreset_list": formatpresets,
+                                                 "ckinds_list": contentkinds,
                                                  "langs_list": languages,
                                                  "messages": get_messages(),
                                                 })

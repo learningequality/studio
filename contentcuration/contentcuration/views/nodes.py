@@ -1,3 +1,4 @@
+import ast
 import copy
 import json
 import logging
@@ -11,7 +12,7 @@ from django.db.models.functions import Concat
 from django.utils.translation import ugettext as _
 from rest_framework.renderers import JSONRenderer
 from contentcuration.utils.files import duplicate_file
-from contentcuration.models import File, ContentNode, ContentTag, AssessmentItem, License, Channel, PrerequisiteContentRelationship
+from contentcuration.models import File, ContentNode, ContentTag, AssessmentItem, License, Channel, PrerequisiteContentRelationship, generate_storage_url
 from contentcuration.serializers import ContentNodeSerializer, ContentNodeEditSerializer, SimplifiedContentNodeSerializer, ContentNodeCompleteSerializer
 from le_utils.constants import format_presets, content_kinds, file_formats, licenses, roles
 from itertools import chain
@@ -175,46 +176,90 @@ def get_nodes_by_ids_complete(request, ids):
     serializer = ContentNodeEditSerializer(nodes, many=True)
     return Response(serializer.data)
 
+
+def get_channel_thumbnail(channel):
+    if channel.get("thumbnail_encoding"):
+        thumbnail_data = ast.literal_eval(channel.get("thumbnail_encoding"))
+        if thumbnail_data.get("base64"):
+            return thumbnail_data["base64"]
+
+    if channel.get("thumbnail"):
+        return generate_storage_url(channel.get("thumbnail"))
+
+def get_thumbnail(node):
+    if node.thumbnail_encoding:
+        thumbnail_data = ast.literal_eval(node.thumbnail_encoding)
+        if thumbnail_data.get("base64"):
+            return thumbnail_data["base64"]
+
+    thumbnail = node.files.filter(preset__thumbnail=True).first()
+    if thumbnail:
+        return generate_storage_url(str(thumbnail))
+
+    return "/".join([settings.STATIC_URL.rstrip("/"), "img", "{}_placeholder.png".format(node.kind_id)])
+
+
 @api_view(['GET'])
 def get_topic_details(request, contentnode_id):
     node = ContentNode.objects.prefetch_related('children', 'files', 'tags').select_related('license', 'language').get(pk=contentnode_id)
     descendants = node.get_descendants()
-    resources = descendants.exclude(kind=content_kinds.TOPIC)
+    resources = descendants.exclude(kind=content_kinds.TOPIC).prefetch_related('files')
     node_languages = descendants.exclude(language=None).values_list('language__native_name', flat=True)
-    file_languages = descendants.values_list('files__language__native_name', flat=True)
+    file_languages = descendants.filter(files__preset_id=format_presets.VIDEO_SUBTITLE).values_list('files__language__native_name', flat=True)
     creators = resources.values_list('copyright_holder', 'author', 'aggregator', 'provider')
     split_lst = zip(*creators)
 
     # Get sample pathway by getting longest path
     max_level = descendants.aggregate(max_level=Max('level'))['max_level']
     deepest_node = descendants.filter(level=max_level).first()
-    pathway = list(deepest_node.get_ancestors(include_self=True).exclude(parent=None).values('title', 'node_id')) if deepest_node else []
+    pathway = list(deepest_node.get_ancestors(include_self=True).exclude(parent=None).values('title', 'node_id', 'kind_id')) if deepest_node else []
 
     # Get original channel list
     channel_id = node.get_channel().id
-    original_channel_ids = descendants.values_list("original_channel_id", flat=True)
-    original_channels = Channel.objects.filter(pk__in=original_channel_ids, deleted=False)\
-                                        .annotate(id_name=Concat(F('id'), F('name')))\
-                                        .values('id_name')\
-                                        .annotate(count=Count('id_name'))\
-                                        .order_by('id_name')
+    originals = resources.values("original_channel_id").annotate(count=Count("original_channel_id")).order_by("original_channel_id")
+    originals = {c['original_channel_id']: c['count'] for c in originals}
+    original_channels = Channel.objects.exclude(pk=channel_id).filter(pk__in=[k for k, v in originals.items()], deleted=False).values('id', 'name', 'thumbnail', 'thumbnail_encoding')
+
+    original_channels = [{
+        "id": c["id"],
+        "name": "{}{}".format(c["name"], _(" (Original)") if channel_id == c["id"] else ""),
+        "thumbnail": get_channel_thumbnail(c),
+        "count": originals[c["id"]]
+    } for c in original_channels]
+
+    tags = ContentTag.objects.filter(tagged_content__pk__in=descendants.values_list('pk', flat=True))\
+                            .values('tag_name')\
+                            .annotate(count=Count('tag_name'))\
+                            .order_by('tag_name')
+
+    sample_nodes = [
+        {
+            "node_id": n.node_id,
+            "title": n.title,
+            "description": n.description,
+            "thumbnail": get_thumbnail(n),
+        } for n in resources[0:4]
+    ]
 
     data = {
         "resource_count": resources.count() or 0,
         "resource_size": descendants.values('files__checksum', 'files__file_size').distinct().aggregate(resource_size=Sum('files__file_size'))['resource_size'] or 0,
-        "visibility_count": list(resources.values('role_visibility').annotate(count=Count('role_visibility')).order_by('role_visibility')),
+        "includes": {
+            "coach_content": resources.filter(role_visibility=roles.COACH).exists(),
+            "exercises": resources.filter(kind_id=content_kinds.EXERCISE).exists(),
+        },
         "kind_count": list(resources.values('kind_id').annotate(count=Count('kind_id')).order_by('kind_id')),
-        "kind_sizes": list(resources.values('kind_id').annotate(count=Count('kind_id')).order_by('kind_id')),
-        "languages": list(descendants.exclude(language=None).values_list('language__native_name', flat=True)),
-        "accessible_languages": list(descendants.values_list('files__language__native_name', flat=True)),
+        "languages": list(set(node_languages)),
+        "accessible_languages": list(set(file_languages)),
         "licenses": list(set(resources.exclude(license=None).values_list('license__license_name', flat=True))),
-        "tags": list(set(ContentTag.objects.filter(tagged_content__pk__in=descendants.values_list('pk', flat=True)).values_list('tag_name', flat=True))),
+        "tags": list(tags),
         "copyright_holders": filter(lambda x: x, set(split_lst[0])) if len(split_lst) > 0 else [],
         "authors": filter(lambda x: x, set(split_lst[1])) if len(split_lst) > 1 else [],
         "aggregators": filter(lambda x: x, set(split_lst[2])) if len(split_lst) > 2 else [],
         "providers": filter(lambda x: x, set(split_lst[3])) if len(split_lst) > 3 else [],
         "sample_pathway": pathway,
-        "original_channels": list(original_channels),
+        "original_channels": original_channels,
+        "sample_nodes": sample_nodes,
     }
 
     return HttpResponse(json.dumps(data))

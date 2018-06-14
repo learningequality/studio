@@ -1,142 +1,237 @@
-<div class="container-fluid section">
-    <h5 class="header collapsed" data-toggle="collapse" data-target="#collapseSummary" aria-expanded="false" aria-controls="collapseSummary">
-        <i class="material-icons pull-right toggler"></i>
-        {{formatMessage (intlGet 'messages.summary_info')}}
-    </h5>
-    <div class="collapse in" id="collapseSummary">
-        <div class="row info-row">
-            <div class="col-sm-3 title">
-                {{formatMessage (intlGet 'messages.resource_size')}}
-            </div>
-            <div class="col-sm-9 field">{{{format_file_size details.resource_size}}}</div>
-        </div>
-        <div class="row info-row">
-            <div class="col-sm-3 title">
-                {{formatMessage (intlGet 'messages.total_resources')}}
-            </div>
-            <div class="col-sm-9 field">{{formatMessage (intlGet (concat 'messages.resource_count')) count=resource_count}}</div>
-        </div>
-        <div class="row info-row">
-            <div class="col-sm-3 title">
-                {{formatMessage (intlGet 'messages.visibility_breakdown')}}
-                <i class="material-icons help_icon" data-toggle="tooltip" data-placement="top" title="{{formatMessage (intlGet 'messages.role_description')}}">help_outline</i>
-            </div>
-            <div class="col-sm-9 field visibility">
-                {{#if details.visibility_count}}
-                    {{#each details.visibility_count}}
-                        {{formatMessage (intlGet (concat 'messages.visibility_count')) count=count user=(translate role_visibility)}}<br>
-                    {{/each}}
-                {{else}} --- {{/if}}
-            </div>
-        </div>
-        <div class="row info-row">
-            <div class="col-sm-3 title">
-                {{formatMessage (intlGet 'messages.content_breakdown')}}
-            </div>
-            <div class="col-xs-9 title filler">{{#if details.kind_count}}&nbsp;{{else}} --- {{/if}}</div>
-            {{#if details.kind_count}}
-                <div class="container-fluid field content_breakdown">
-                    <div class="row">
-                        <div class="col-xs-6" id="svg_wrapper">
-                            <!-- D3 Pie chart will be inserted here -->
-                        </div>
-                        <div class="col-xs-6" id="legend_wrapper">
-                            <!-- D3 Legend will be inserted here -->
-                        </div>
-                    </div>
-
+<div class="details_view">
+    <div class="container-fluid section" id="auth-section">
+        <h5 class="header collapsed" data-toggle="collapse" data-target="#collapseSource" aria-expanded="false" aria-controls="collapseSource">
+            <i class="material-icons pull-right toggler"></i>
+            {{formatMessage (intlGet 'messages.source')}}
+        </h5>
+        <div class="collapse information" id="collapseSource">
+            <div class="row info-row">
+                <div class="col-xs-4 text-center">
+                    {{#if details.authors}}
+                        <i class="material-icons creator_icon">edit</i>
+                        <p>
+                            {{formatMessage (intlGet 'messages.author') model=model_name}}
+                            {{#each details.authors}}
+                                <b>{{this}}</b>
+                            {{#unless @last}}, {{/unless}}
+                            {{/each}}
+                        </p>
+                    {{/if}}
                 </div>
+                <div class="col-xs-4 text-center">
+                    {{#if details.providers}}
+                        <i class="material-icons creator_icon">pan_tool</i>
+                        <p>
+                            {{formatMessage (intlGet 'messages.provider') model=model_name}}
+                            {{#each details.providers}}
+                                <b>{{this}}</b>
+                            {{#unless @last}}, {{/unless}}
+                            {{/each}}
+                        </p>
+                    {{/if}}
+                </div>
+                <div class="col-xs-4 text-center">
+                    {{#if details.aggregators}}
+                        <i class="material-icons creator_icon">inbox</i>
+                        <p>
+                            {{formatMessage (intlGet 'messages.aggregator') model=model_name}}
+                            {{#each details.aggregators}}
+                                <b>{{this}}</b>
+                            {{#unless @last}}, {{/unless}}
+                            {{/each}}
+                        </p>
+                    {{/if}}
+                </div>
+            </div>
+            <div class="row info-row licenses">
+                <div class="col-xs-2 text-right"><i class="material-icons cc_icon">copyright</i></div>
+                <div class="col-xs-10">
+                    <div class="row">
+                        {{formatMessage (intlGet 'messages.license') count=license_count}}:
+                        {{#if details.licenses}}
+                            {{#each details.licenses }}
+                                {{{translate this}}}
+                                <i class="material-icons help_icon" data-toggle="tooltip" data-placement="top" title="{{{translate (concat this '_description')}}}">info_outline</i>&nbsp;
+                            {{/each}}
+                        {{else}} --- {{/if}}
+                    </div>
+                    <div class="row">{{formatMessage (intlGet 'messages.copyright_holder') count=copyright_holder_count}}: {{#if details.copyright_holders}}{{{join details.copyright_holders ", "}}}{{else}} --- {{/if}}</div>
+                </div>
+            </div>
+            {{#if details.original_channels}}
+            <div class="row info-row channels">
+                <div class="col-xs-12" id="original_channels">
+                    <p>{{formatMessage (intlGet 'messages.original_channels')}}</p>
+                    <ul class="list-unstyled">
+                    {{#each details.original_channels}}
+                        <li class="original_channel">
+                            <a href="/channels/{{id}}/view" target="_blank" data-toggle="tooltip" data-placement="top" title="{{formatMessage (intlGet 'messages.resource_count') count=count}}">
+                                <img src="{{#if thumbnail}}{{thumbnail}}{{else}}{{/if}}">
+                                {{name}}
+                            </a>
+                        </li>
+                    {{/each}}
+                    </ul>
+                </div>
+            </div>
             {{/if}}
         </div>
     </div>
-</div>
+    <div class="container-fluid section" id="content-section">
+        <h5 class="header expanded" data-toggle="collapse" data-target="#collapseSummary" aria-expanded="false" aria-controls="collapseSummary">
+            <i class="material-icons pull-right toggler"></i>
+            {{formatMessage (intlGet 'messages.whats_inside')}}
+        </h5>
+        <div class="collapse in information" id="collapseSummary">
+            <div class="row info-row" id="count_bars">
+                <div class="col-xs-6">
+                    {{formatMessage (intlGet 'messages.resource_size')}}
+                        <span id="count_gauge" data-toggle="tooltip" data-placement="top" title="{{formatMessage (intlGet 'messages.resource_count') count=resource_count}} - {{count_bar.text}}">
+                            {{#each count_bar.filled}}
+                                <b class="count_icon {{#if this}}filled{{/if}}">▮</b>
+                            {{/each}}
+                        </span>
+                </div>
+                <div class="col-xs-6">
+                    {{formatMessage (intlGet 'messages.storage')}}
+                    <span>
+                        {{#each size_bar.filled}}<i class="material-icons size_icon" data-toggle="tooltip" data-placement="top" title="{{{format_file_size ../details.resource_size}}} - {{../size_bar.text}}">sd_storage</i>{{/each}}
+                    </span>
+                </div>
+            </div>
+            <div class="row info-row">
+                {{#if details.kind_count}}
+                    <div class="container-fluid field content_breakdown">
+                        <div class="row">
+                            <div class="col-xs-8" id="svg_wrapper">
+                                <!-- D3 Pie chart will be inserted here -->
+                            </div>
+                            <div class="col-xs-4" id="legend_wrapper">
+                                <!-- D3 Legend will be inserted here -->
+                            </div>
+                        </div>
 
-<div class="container-fluid section">
-    <h5 class="header collapsed" data-toggle="collapse" data-target="#collapseAuth" aria-expanded="false" aria-controls="collapseAuth">
-        <i class="material-icons pull-right toggler"></i>
-        {{formatMessage (intlGet 'messages.auth_info')}}
-    </h5>
-    <div class="collapse" id="collapseAuth">
-        <div class="row info-row">
-            <div class="col-sm-3 title">
-                {{formatMessage (intlGet 'messages.author')}}
-                <i class="material-icons help_icon" data-toggle="tooltip" data-placement="top" title="{{formatMessage (intlGet 'messages.author_description')}}">help_outline</i>
+                    </div>
+                {{/if}}
             </div>
-            <div class="col-sm-9 field">{{#if details.authors}}{{{join details.authors ", "}}}{{else}} --- {{/if}}</div>
-        </div>
-        <div class="row info-row">
-            <div class="col-sm-3 title">
-                {{formatMessage (intlGet 'messages.provider')}}
-                <i class="material-icons help_icon" data-toggle="tooltip" data-placement="top" title="{{formatMessage (intlGet 'messages.provider_description')}}">help_outline</i>
+            <br>
+            <div class="row info-row">
+                <div class="col-xs-12 info-box" id="include-box">
+                    <div class="label">{{formatMessage (intlGet 'messages.includes')}}</div>
+                    <div class="row">
+                        <div class="col-xs-6">
+                            <p>{{formatMessage (intlGet 'messages.languages')}}</p>
+                            {{#if details.languages}}
+                                <ul class="list-unstyled">
+                                    {{#each details.languages }}
+                                        <li class="language">{{this}}</li>
+                                    {{/each}}
+                                </ul>
+                            {{else}} ---
+                            {{/if}}
+                        </div>
+                        <div class="col-xs-6">
+                            {{#if details.accessible_languages}}
+                                <p>{{formatMessage (intlGet 'messages.accessible_languages')}}</p>
+                                <ul class="list-unstyled">
+                                    {{#each details.accessible_languages }}
+                                        <li class="language">{{this}}</li>
+                                    {{/each}}
+                                </ul>
+                            {{/if}}
+                        </div>
+                    </div>
+                    <div class="row additional_include">
+                        <label>{{formatMessage (intlGet 'messages.additional')}}</label>
+                        {{#if details.includes.coach_content}}
+                            <div class="included" data-toggle="tooltip" data-placement="top" title="{{formatMessage (intlGet 'messages.role_description')}}">
+                                {{formatMessage (intlGet 'messages.coach_content')}}
+                            </div>
+                        {{/if}}
+                        {{#if details.includes.exercises}}
+                            <div class="included">
+                                {{formatMessage (intlGet 'messages.assessments')}}
+                            </div>
+                        {{/if}}
+                    </div>
+                </div>
             </div>
-            <div class="col-sm-9 field">{{#if details.providers}}{{{join details.providers ", "}}}{{else}} --- {{/if}}</div>
-        </div>
-        <div class="row info-row">
-            <div class="col-sm-3 title ">
-                {{formatMessage (intlGet 'messages.aggregator')}}
-                <i class="material-icons help_icon" data-toggle="tooltip" data-placement="top" title="{{formatMessage (intlGet 'messages.aggregator_description')}}">help_outline</i>
+            {{#if details.sample_nodes}}
+                <br>
+                <div class="row info-row">
+                    <div class="col-xs-12 info-box" id="preview-box">
+                        <div class="label">{{formatMessage (intlGet 'messages.preview')}}</div>
+                        <div class="pathways">
+                            {{#if details.sample_pathway}}
+                            <div class="btn-group btn-group-justified pathway flat" role="group">
+                                {{#each details.sample_pathway}}
+                                    <a href="/channels/{{../channel_id}}/view/{{node_id}}" target="_blank" class="btn" title="{{title}}">
+                                        <i class="material-icons">{{{get_icon kind_id}}}</i>
+                                        <div>{{title}}</div>
+                                    </a>
+                                {{/each}}
+                            </div>
+                            {{else}} --- {{/if}}
+                        </div>
+                        <div class="sample-nodes row">
+                            {{#each details.sample_nodes}}
+                                <div class="col-xs-3 text-center preview">
+                                    <img src="{{thumbnail}}">
+                                    <h5>{{title}}</h5>
+                                </div>
+                            {{/each}}
+                        </div>
+                    </div>
+                </div>
+            {{/if}}
+            {{#if details.tags}}
+            <br>
+            <div class="row info-row">
+                <div class="col-xs-12 info-box" id="tag-box">
+                    <div class="label">{{formatMessage (intlGet 'messages.tags')}}</div>
+                    <div id="tagcloud">
+                        <!-- Tag cloud will be inserted here -->
+                    </div>
+                </div>
             </div>
-            <div class="col-sm-9 field">{{#if details.aggregators}}{{{join details.aggregators ", "}}}{{else}} --- {{/if}}</div>
-        </div>
-        <div class="row info-row">
-            <div class="col-sm-3 title">
-                {{formatMessage (intlGet 'messages.license')}}
-            </div>
-            <div class="col-sm-9 field licenses">
-                {{#if details.licenses}}
-                    {{#each details.licenses }}
-                        {{{translate this}}}
-                        <i class="material-icons help_icon" data-toggle="tooltip" data-placement="top" title="{{{translate (concat this '_description')}}}">info_outline</i>{{#unless @last}}, {{/unless}}
-                    {{/each}}
-                {{else}} --- {{/if}}
-            </div>
-        </div>
-        <div class="row info-row">
-            <div class="col-sm-3 title">
-                {{formatMessage (intlGet 'messages.copyright_holder')}}
-            </div>
-            <div class="col-sm-9 field">{{#if details.copyright_holders}}{{{join details.copyright_holders ", "}}}{{else}} --- {{/if}}</div>
+            {{/if}}
+            <br>
         </div>
     </div>
-</div>
-
-<div class="container-fluid section">
-    <h5 class="header collapsed" data-toggle="collapse" data-target="#collapseMetadata" aria-expanded="false" aria-controls="collapseMetadata">
-        <i class="material-icons pull-right toggler"></i>
-        {{formatMessage (intlGet 'messages.metadata_info')}}
-    </h5>
-    <div class="collapse" id="collapseMetadata">
-        <div class="row info-row">
-            <div class="col-sm-3 title">
-                {{formatMessage (intlGet 'messages.languages')}}
-            </div>
-            <div class="col-sm-9 field">
-                {{#if details.languages}}{{{join details.languages ", "}}}{{else}} --- {{/if}}</div>
-        </div>
-        <div class="row info-row">
-            <div class="col-sm-3 title">
-                {{formatMessage (intlGet 'messages.tags')}}
-            </div>
-            <div class="col-sm-9 field">
-                {{#if details.tags}}
-                    {{#each details.tags}}
-                        <div class="tag">{{this}}</div>
-                    {{/each}}
-                {{else}} --- {{/if}}
-            </div>
-        </div>
-        <div class="row info-row">
-            <div class="col-sm-3 title">
-                {{formatMessage (intlGet 'messages.sample_pathway')}}
-            </div>
-            <div class="col-sm-9 field pathway">
-                {{#if details.sample_pathway}}
-                    {{#each details.sample_pathway}}
-                        <a href="/channels/{{../channel_id}}/view/{{node_id}}" target="_blank">{{title}}</a>
-                    {{#unless @last}} <i class="material-icons">arrow_forward</i>{{/unless}}
-                    {{/each}}
-                {{else}} --- {{/if}}
+    {{#if channel.published}}
+    <div class="container-fluid section" id="use-section">
+        <h5 class="header collapsed" data-toggle="collapse" data-target="#collapseUse" aria-expanded="false" aria-controls="collapseUse">
+            <i class="material-icons pull-right toggler"></i>
+            {{formatMessage (intlGet 'messages.using_channel')}}
+        </h5>
+        <div class="collapse information" id="collapseUse">
+            <div class="row info-row">
+                <p>{{formatMessage (intlGet 'messages.copy_text')}}</p>
+                {{#if channel.secret_tokens}}
+                    <div class="row">
+                        <div class="col-xs-4 text-right identifier_label">
+                            <label>{{formatMessage (intlGet 'messages.channel_tokens') count=token_count}}:</label>
+                            <span>{{formatMessage (intlGet 'messages.recommended')}}</span>
+                        </div>
+                        <div class="col-xs-8">
+                            {{#each channel.secret_tokens}}
+                                <input type="text" class="copy-id-text text-center" value="{{display_token}}" readonly size='30' id="text_{{display_token}}"/>
+                                <i class="material-icons copy-id-btn" title="{{formatMessage (intlGet 'messages.copy_id')}}" data-text="#text_{{display_token}}">content_paste</i>
+                            {{/each}}
+                        </div>
+                    </div>
+                {{/if}}
+                <div class="row">
+                    <div class="col-xs-4 text-right identifier_label">
+                        <label>{{formatMessage (intlGet 'messages.channel_id')}}:</label>
+                    </div>
+                    <div class="col-xs-8">
+                        <input type="text" class="copy-id-text text-center" value="{{channel.id}}" readonly size='30' id="text_{{channel.id}}"/>
+                        <i class="material-icons copy-id-btn" title="{{formatMessage (intlGet 'messages.copy')}}" data-text="#text_{{channel.id}}">content_paste</i>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+    {{/if}}
 </div>

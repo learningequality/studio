@@ -36,6 +36,7 @@
     "browser-filesaver": "^1.1.0",
     "croppie": "^2.4.1",
     "d3": "^5.4.0",
+    "d3-cloud": "^1.2.5",
     "dropzone": "^4.0.1",
     "factor-bundle": "^2.4.1",
     "fastclick": "^1.0.6",

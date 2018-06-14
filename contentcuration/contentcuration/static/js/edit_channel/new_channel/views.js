@@ -48,7 +48,10 @@ var MESSAGES = {
 	"starred_channel": "Star Added!",
 	"unstarred_channel": "Star Removed",
 	"create": "Create",
-	"channel_title_prompt": "('CTRL' or 'CMD' + click to open in new tab)"
+	"channel_title_prompt": "('CTRL' or 'CMD' + click to open in new tab)",
+	"channel_detail_prompt": "Select a channel to view details",
+	"channel_details": "About this Channel",
+	"open_channel": "Open Channel"
 }
 
 var ChannelListPage  = BaseViews.BaseView.extend({
@@ -58,6 +61,7 @@ var ChannelListPage  = BaseViews.BaseView.extend({
 	$trs: MESSAGES,
 	initialize: function(options) {
 		_.bindAll(this, 'new_channel', 'set_all_models');
+		this.open = false;
 		this.render();
 	},
 	render: function() {
@@ -96,7 +100,8 @@ var ChannelListPage  = BaseViews.BaseView.extend({
 		});
 	},
 	events: {
-		'click .new_channel_button' : 'new_channel'
+		'click .new_channel_button' : 'new_channel',
+		"click #close_details": "close_details"
 	},
 	new_channel: function(){
 		if (this.current_channel_list.new_channel){
@@ -134,6 +139,23 @@ var ChannelListPage  = BaseViews.BaseView.extend({
 		this.current_channel_list.set_model(channel, current_page);
 		this.public_channel_list.set_model(channel, current_page);
 		this.viewonly_channel_list.set_model(channel, current_page);
+	},
+	close_details: function() {
+		this.toggle_panel(false)
+	},
+	toggle_panel: function(open) {
+		$(".active_channel").removeClass("active_channel");
+		if(open && !this.open) {
+			this.open = true;
+			this.$("#channel_list_wrapper").animate({
+      			width: $(window).width() - $("#channel_preview_wrapper").width()
+    		}, 500);
+		} else if(!open && this.open) {
+			this.open = false;
+			this.$("#channel_list_wrapper").animate({
+      			width: $(window).width()
+    		}, 500);
+		}
 	}
 });
 
@@ -145,7 +167,7 @@ var ChannelList  = BaseViews.BaseEditableListView.extend({
 	$trs: MESSAGES,
 	initialize: function(options) {
 		this.bind_edit_functions();
-		_.bindAll(this, "add_channel", "delete_channel");
+		_.bindAll(this, "add_channel", "delete_channel", "save_new_channel");
 		this.container = options.container;
 		this.collection = options.collection;
 		this.render();
@@ -173,6 +195,10 @@ var ChannelList  = BaseViews.BaseEditableListView.extend({
 	// 	(edit_mode_on)? $(".new_channel_button").addClass("disabled") : $(".new_channel_button").removeClass("disabled");
 	// 	$(".new_channel_button").prop("title", (edit_mode_on)? this.get_translation("add_channel_disbaled_title") : this.get_translation("add_channel_title"));
 	// },
+	save_new_channel: function(channel) {
+		this.container.toggle_panel(false);
+		this.add_channel(channel);
+	},
 	add_channel: function(channel){
 		if(!this.collection.findWhere({id: channel.id})) {
 			this.collection.add(channel);
@@ -211,11 +237,13 @@ var CurrentChannelList  = ChannelList.extend({
 			language: window.user_preferences.language,
 			content_defaults: preferences
 		};
+		this.container.toggle_panel(true);
 		var details = require('edit_channel/details/views');
-		new details.ChannelDetailsModalView({
+		new details.ChannelDetailsView({
+			el: $("#channel_details_panel"),
 			model: new Models.ChannelModel(data),
 			allow_edit: true,
-			onnew: this.add_channel
+			onnew: this.save_new_channel
 		});
 	}
 });
@@ -237,7 +265,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	template: require("./hbtemplates/channel_item.handlebars"),
 	initialize: function(options) {
 		this.bind_edit_functions();
-		_.bindAll(this, 'new_channel', 'delete_channel');
+		_.bindAll(this, 'delete_channel');
 		// _.bindAll(this, 'edit_channel','delete_channel','toggle_channel','save_channel','update_title', 'loop_focus', 'copy_id', 'set_indices',
 		// 				'open_channel', 'set_thumbnail', 'reset_thumbnail','enable_submit', 'disable_submit', 'remove_thumbnail', 'set_star_icon', 'refresh');
 		this.listenTo(this.model, "sync", this.render);
@@ -319,21 +347,21 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		// 'paste #new_channel_name': 'update_title',
 		// 'focus .input-tab-control': 'loop_focus',
 		'click .copy-id-btn' : 'copy_id',
-		'click .open_channel': 'open_channel',
+		// 'click .open_channel': 'open_channel',
 		'mouseover .open_channel': 'add_highlight',
 		'mouseleave .open_channel': 'remove_highlight',
-		'click .open_channel_details':'open_channel_details',
+		'click .open_channel':'open_channel_details',
 	},
 	remove_highlight:function(event){
 		event.stopPropagation();
 		event.preventDefault();
-		this.$('.channel-container-wrapper').removeClass('highlight');
+		this.$el.removeClass('highlight');
 	},
 	add_highlight:function(event){
-		this.$('.channel-container-wrapper').addClass('highlight');
+		this.$el.addClass('highlight');
 	},
 	open_channel:function(event){
-		if(this.$('.channel-container-wrapper').hasClass('highlight')){
+		if(this.$el.hasClass('highlight')){
 			var open_url = '/channels/' + this.model.get("id") + ((this.can_edit)? '/edit' : '/view');
 			if (event.metaKey || event.ctrlKey) {
 				window.open(open_url, '_blank');
@@ -379,15 +407,15 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	// 	this.render();
 	// },
 	open_channel_details: function() {
+		this.container.toggle_panel(true);
+		this.$el.addClass("active_channel");
 		var details = require('edit_channel/details/views');
-		new details.ChannelDetailsModalView({
+		new details.ChannelDetailsView({
 			model: this.model,
+			el: $("#channel_details_panel"),
 			allow_edit: this.can_edit,
 			ondelete: this.delete_channel
 		});
-	},
-	new_channel: function(model) {
-
 	},
 	// edit_channel: function(){
 	// 	this.containing_list_view.set_editing(true);

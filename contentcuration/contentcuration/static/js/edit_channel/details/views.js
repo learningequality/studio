@@ -10,9 +10,9 @@ var d3Helper = require("edit_channel/utils/d3_helper");
 
 var NAMESPACE = "details";
 var MESSAGES = {
-    "author": "Author(s)",
-    "aggregator": "Aggregator(s)",
-    "provider": "Provider(s)",
+    "author": "This {model} features resources created by",
+    "aggregator": "Material in this {model} was originally hosted at",
+    "provider": "The material in this {model} was provided by",
     "saved": "SAVED!",
     "header": "CHANNEL DETAILS",
     "save_changes": "SAVE CHANGES",
@@ -26,26 +26,27 @@ var MESSAGES = {
     "aggregator_description": "Person or organization who gathered the content together",
     "provider_description": "Person or organization who distributed the content",
     "loading_details": "Loading details...",
-    "license": "License(s)",
-    "copyright_holder": "Copyright Holder(s)",
+    "license": "{count, plural,\n =1 {License}\n other {Licenses}}",
+    "copyright_holder": "{count, plural,\n =1 {Copyright Holder}\n other {Copyright Holders}}",
     "auth_info": "Authoring Information",
     "metadata_info": "Content Metadata",
     "summary_info": "Summary",
     "total_resources": "# of Resources",
-    "resource_size": "Total Size",
+    "resource_size": "Size",
+    "storage": "Storage",
     "visibility_breakdown": "Visibility",
     "content_breakdown": "Content Summary",
-    "languages": "Included Languages",
+    "languages": "Languages",
     "tags": "Content Tags",
     "open": "OPEN CHANNEL",
     "resource_count": "{count, plural,\n =1 {# Resource}\n other {# Resources}}",
     "visibility_count": "{count, plural,\n =1 {# resource is}\n other {# resources are}} visible to {user}",
     "kind_count": "{count, plural,\n =1 {# {kind}}\n other {# {kind_plural}}}",
-    "role_description": "Visibility determines who can view the content in Kolibri",
+    "role_description": "Coach content is visible to coaches only in Kolibri",
     "sample_pathway": "Sample Pathway",
     "channel_language": "Language",
     "channel_id": "Channel ID",
-    "channel_tokens": "Channel Token(s)",
+    "channel_tokens": "{count, plural,\n =1 {Channel Token}\n other {Channel Tokens}}",
     "unpublished": "Unpublished",
     "last_published": "Last Published",
     "copy": "Copy",
@@ -60,8 +61,28 @@ var MESSAGES = {
     "keep_open": "Keep Editing",
     "total_resource_count": "{data, plural,\n =1 {Total Resource}\n other {Total Resources}}",
     "create": "CREATE",
-    "invalid_channel": "Cannot save invalid channel"
+    "invalid_channel": "Cannot save invalid channel",
+    "original_channels": "Imported Channels",
+    "created": "Created",
+    "whats_inside": "What's Inside",
+    "source": "Source",
+    "topic": "topic",
+    "using_channel": "Using this Channel",
+    "very_small": "Very Small",
+    "small": "Small",
+    "average": "Average",
+    "large": "Large",
+    "very_large": "Very Large",
+    "includes": "Includes",
+    "coach_content": "Coach Content",
+    "assessments": "Assessments",
+    "accessible_languages": "Subtitles",
+    "additional": "Additional",
+    "recommended": "(Recommended)",
+    "preview": "Preview"
 }
+
+var SCALE_TEXT = ["very_small", "very_small", "small", "small", "average", "average", "average", "large", "large", "very_large", "very_large"];
 
 var ChannelDetailsModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/details_modal.handlebars"),
@@ -155,10 +176,14 @@ var ChannelDetailsView = BaseViews.BaseListEditableItemView.extend({
                     el: self.$("#look-inside"),
                     allow_edit: true,
                     model: data,
-                    channel_id: self.model.id
+                    channel_id: self.model.id,
+                    model_name: self.get_translation("channel").toLowerCase(),
+                    channel: self.model.toJSON()
                 });
+                $(".details_view").css("display", "block");
             });
         }
+        this.create_initial();
     },
     copy_id:function(event){
         event.stopPropagation();
@@ -201,6 +226,7 @@ var ChannelDetailsView = BaseViews.BaseListEditableItemView.extend({
     init_focus: function(){
         this.set_indices();
         this.set_initial_focus();
+        window.scrollTo(0, 0);
     },
     submit_changes:function(){
         var language = $("#select_language").val();
@@ -279,58 +305,120 @@ var DetailsView = BaseViews.BaseListEditableItemView.extend({
     name: NAMESPACE,
     $trs: MESSAGES,
     initialize: function(options) {
-        _.bindAll(this, "render_breakdown");
+        _.bindAll(this, "render_visuals");
         this.allow_edit = options.allow_edit;
         this.channel_id = options.channel_id;
+        this.model_name = options.model_name || this.get_translation("topic");
+        this.channel = options.channel;
         this.render();
     },
     render: function() {
+        console.log(this.model.get("metadata"))
+        var self = this;
+        var original_channels = _.map(this.model.get("metadata").original_channels, function(item) {
+            return (item.id === self.channel_id) ? {"id": item.id, "name": "Original Content", "count": item.count} : item;
+        });
         this.$el.html(this.template({
             details: this.model.get("metadata"),
             resource_count: this.model.get("metadata").resource_count,
             channel_id: this.channel_id,
-            allow_edit: this.allow_edit
+            allow_edit: this.allow_edit,
+            original_channels:original_channels,
+            model_name: this.model_name,
+            license_count: this.model.get("metadata").licenses.length,
+            copyright_holder_count: this.model.get("metadata").copyright_holders.length,
+            token_count: this.channel && this.channel.secret_tokens.length,
+            channel: this.channel,
+            size_bar: this.get_size_bar(this.model.get("metadata").resource_size),
+            count_bar: this.get_count_bar(this.model.get("metadata").resource_count),
         },  {
             data: this.get_intl_data()
         }));
         this.$('[data-toggle="tooltip"]').tooltip();
-        _.defer(this.render_breakdown, 1000);
+        _.defer(this.render_visuals, 500);
+    },
+    render_visuals: function() {
+        this.render_breakdown();
+        this.render_tagcloud();
+    },
+    render_tagcloud: function() {
+        var self = this;
+        var tagcloud = new d3Helper.TagCloud("#tagcloud", this.model.get("metadata").tags, {
+            key: "tag_name",
+            value_key: "count"
+        });
     },
     render_breakdown: function() {
-        console.log(this.model.get("metadata"))
         var self = this;
         var total = this.model.get("metadata").resource_count;
         var data = _.map(this.model.get("metadata").kind_count, function(k) {
             return {
                 "kind_id": k.kind_id,
-                "percent": (k.count / total) * 100,
-                "count": k.count
+                "percent": ((k.count / total) * 100).toFixed(1),
+                "count": k.count,
             };
         });
+
+        var color_key = window.contentkinds.map(function(k) { return k.get("kind"); });
         var piechart = new d3Helper.PieChart("#svg_wrapper", data, {
             key: "kind_id",
-            width: 300,
-            value_key: "percent",
-            total: this.model.get("metadata").resource_count,
+            width: 350,
+            total: stringHelper.format_number(total),
+            color_key: color_key,
             center_text: this.get_translation("total_resource_count", this.model.get("metadata").resource_count),
             tooltip: function(d) {
-                console.log(d.data, self.tooltip_template(d.data, { data: self.get_intl_data() }))
                 return self.tooltip_template(d.data, { data: self.get_intl_data() });
             },
         });
 
         var legend = new d3Helper.Legend("#legend_wrapper", data, {
             key: "kind_id",
+            color_key: color_key,
             get_text: function(d) {
-                return stringHelper.translate(d.kind_id + "_plural") + " (" + d.percent.toFixed(0) + "%)";
+                return stringHelper.translate(d.kind_id + "_plural");
             }
         });
-
+    },
+    get_size_bar: function(size) {
+        var size_index = Math.min(Math.round(size/100000000), 10);
+        size_index = 2;
+        return {
+            "filled": _.range(size_index),
+            "text": this.get_translation(SCALE_TEXT[size_index])
+        };
+    },
+    get_count_bar: function(count) {
+        var size_index = Math.min(Math.round(count/100), 10);
+        var bar = [];
+        for(var i = 0; i < 10; ++ i) {
+            bar.push(i <= size_index);
+        }
+        return {
+            "filled": bar,
+            "text": this.get_translation(SCALE_TEXT[size_index])
+        };
     }
+
+    // render_channels: function() {
+    //     console.log(this.model.get("metadata"))
+    //     var data = this.model.get("metadata").original_channels;
+    //     console.log(data);
+    //     var barchart = new d3Helper.HorizontalBarChart("#channel_svg_wrapper", data, {
+    //         key: "id",
+    //         value_key: "count",
+    //         width: 500,
+    //         height: 200,
+    //         // tooltip: function(d) {
+    //         //     return self.tooltip_template(d.data, { data: self.get_intl_data() });
+    //         // },
+    //     });
+
+
+    // }
 });
 
 
 module.exports = {
-    ChannelDetailsModalView: ChannelDetailsModalView,
+    ChannelDetailsView: ChannelDetailsView,
     DetailsView:DetailsView
 }
