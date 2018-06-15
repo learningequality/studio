@@ -27,7 +27,7 @@ spec:
         - name: MPLBACKEND
           value: PS
         - name: DATA_DB_HOST
-          value: {{ .Values.postgresql.externalCloudSQL.proxyHostName | default (include "postgresql.fullname" .) }}
+          value: {{ .Values.postgresql.externalCloudSQL.proxyHostName | default (include "studio.fullname" .) }}
         - name: DATA_DB_NAME
           value: {{ .Values.postgresql.postgresDatabase }}
         - name: DATA_DB_PORT
@@ -38,20 +38,20 @@ spec:
           valueFrom:
             secretKeyRef:
               key: postgres-password
-              name: {{ template "postgresql.fullname" . }}
+              name: {{ template "studio.fullname" . }}
         - name: CELERY_TIMEZONE
           value: America/Los_Angeles
         - name: CELERY_REDIS_DB
           value: "0"
         - name: CELERY_BROKER_ENDPOINT
-          value: {{ template "redis.fullname" . }}
+          value: {{ template "redis.fullname" . }}-master
         - name: CELERY_RESULT_BACKEND_ENDPOINT
-          value: {{ template "redis.fullname" . }}
+          value: {{ template "redis.fullname" . }}-master
         - name: CELERY_REDIS_PASSWORD
           valueFrom:
             secretKeyRef:
               key: redis-password
-              name: {{ template "redis.fullname" . }}
+              name: {{ template "studio.fullname" . }}
         - name: AWS_S3_ENDPOINT_URL
           value: {{ template "minio.url" . }}
         - name: AWS_BUCKET_NAME
@@ -135,29 +135,35 @@ spec:
         - name: DATA_DB_HOST
           value: {{ .Values.postgresql.externalCloudSQL.proxyHostName | default (include "postgresql.fullname" .) }}
         - name: DATA_DB_NAME
-          value: {{ .Values.postgresql.postgresDatabase }}
+          valueFrom:
+            secretKeyRef:
+              key: postgres-database
+              name: {{ template "studio.fullname" . }}
         - name: DATA_DB_PORT
           value: "5432"
         - name: DATA_DB_USER
-          value: {{ .Values.postgresql.postgresUser }}
+          valueFrom:
+            secretKeyRef:
+              key: postgres-user
+              name: {{ template "studio.fullname" . }}
         - name: DATA_DB_PASS
           valueFrom:
             secretKeyRef:
               key: postgres-password
-              name: {{ template "postgresql.fullname" . }}
+              name: {{ template "studio.fullname" . }}
         - name: CELERY_TIMEZONE
           value: America/Los_Angeles
         - name: CELERY_REDIS_DB
           value: "0"
         - name: CELERY_BROKER_ENDPOINT
-          value: {{ template "redis.fullname" . }}
+          value: {{ template "redis.fullname" . }}-master
         - name: CELERY_RESULT_BACKEND_ENDPOINT
-          value: {{ template "redis.fullname" . }}
+          value: {{ template "redis.fullname" . }}-master
         - name: CELERY_REDIS_PASSWORD
           valueFrom:
             secretKeyRef:
               key: redis-password
-              name: {{ template "redis.fullname" . }}
+              name: {{ template "studio.fullname" . }}
         - name: AWS_S3_ENDPOINT_URL
           value: {{ template "minio.url" . }}
         - name: AWS_BUCKET_NAME

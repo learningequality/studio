@@ -27,6 +27,7 @@ studioWorkers:
 
 
 postgresql:
+  internalDBEnabled: true
   postgresUser: learningequality
   postgresDatabase: devDB
   postgresPassword: notsecure
@@ -46,3 +47,8 @@ minio:
     enabled: true
     policy: download
     name: kolibri-studio-storage
+
+
+redis:
+  internalRedisEnabled: true
+  password: notsecure
