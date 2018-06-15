@@ -50,7 +50,7 @@ SQLAlchemy = "==1.2.2"
 django-webpack-loader = "==0.6.0"
 google-cloud-error-reporting = "*"
 google-python-cloud-debugger = "*"
-google-cloud-storage = "==1.9.0"
+google-cloud-storage = "==1.10.0"
 "django-s3-storage" = "*"
 
 [dev-packages]
@@ -74,6 +74,9 @@ rope = "*"
 ptvsd = "==3.0.0"
 Faker = "==0.7.3"
 pylint-django = "*"
+jedi = ">=0.9.0"
+json-rpc = ">=1.8.1"
+service-factory = ">=0.1.5"
 
 [requires]
 python_version = "2.7"
