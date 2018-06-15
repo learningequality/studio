@@ -16,9 +16,15 @@ def ensure_bucket_exists(bucketname=None):
     exists.
     """
 
+
     bucket = bucketname if bucketname else settings.AWS_S3_BUCKET_NAME
     print "bucket is {}".format(bucket)
     host = urlparse(settings.AWS_S3_ENDPOINT_URL).netloc
+
+    if "googleapis.com" in host:
+        logging.info("Using GCS as our object hosting system; assuming that bucket is already created!")
+        return
+
     minio_client = minio.Minio(
         host,
         access_key=settings.AWS_ACCESS_KEY_ID,
