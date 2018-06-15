@@ -5,6 +5,7 @@ services:
       context: .
       dockerfile: Dockerfile.dev
     image: learningequality/studio-app-dev
+    command: npm run devserver
     depends_on:
       - minio
       - studio-postgres
