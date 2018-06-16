@@ -1235,7 +1235,17 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 		copyCollection.add(this.model);
 		var self = this;
 		this.display_load(message, function(resolve, reject){
-			self.model.make_copy(self.containing_list_view.model).then(function(collection) {
+			var target_parent = self.containing_list_view.model;
+			// If the target parent is a UI segment, go up a level to its parent to
+			// get the collection to make a copy into.
+			if (self.containing_list_view.is_segment()) {
+				target_parent = self
+					.containing_list_view
+					.content_node_view
+					.containing_list_view
+					.model;
+			}
+			self.model.make_copy(target_parent).then(function(collection) {
 				var new_view = self.containing_list_view.create_new_view(collection.at(0));
 				self.$el.after(new_view.el);
 				self.reload_ancestors(collection, true, resolve);
