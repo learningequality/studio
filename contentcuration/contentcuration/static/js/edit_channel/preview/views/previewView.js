@@ -92,13 +92,30 @@ export default BaseView.extend({
           // giving the component a $nextTick to update the DOM
           // note: binds `this` to the scope of the component
           this.$nextTick(function(){
+
+            // override loadItemData because itemId is necessary, but causes the component to look for
+            this.$refs.contentView.loadItemData = () => null;
+
             // perseus renderer is v-if'd based on itemId. Need DOM to update.
             this.$refs.contentView.$nextTick(function(){
-              // override loadItemData because itemId is necessary, but causes the component to look for
               // files that aren't being served.
-              this.loadItemData = () => null;
-              console.log('perseuscontainer', this.$refs.perseusContainer);
-              this.renderItem();
+              console.log('entering the if...');
+
+              const item = JSON.parse(propsData.perseusObject.itemData)
+
+              // copied from perseus renderer index
+              if (this.validateItemData(item)) {
+                console.log('if passed!!');
+                this.item = item;
+                if (this.$el) {
+                  // Don't try to render if our component is not mounted yet.
+                  this.renderItem();
+                } else {
+                  this.$once('mounted', this.renderItem);
+                }
+              } else {
+                console.error('Loaded item was malformed', item);
+              }
             });
           });
         },
