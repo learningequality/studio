@@ -201,6 +201,20 @@ var ClipboardList = BaseViews.BaseWorkspaceListView.extend({
 	},
 	// Overrides superclass
 	load_content: function(collection, default_text) {
+		// Save the current position, then load in the new clipboard items, then
+		// jump back to the saved scroll position.
+		//
+		// We do this because the superclass implementation of load_content clears
+		// all items and re-adds them one-by-one, and we expand each top-level
+		// segment after it gets added.
+		//
+		// Unfortunately this leads to a situation where if some segments were
+		// collapsed before this call, they'll all get re-expanded. This pretty much
+		// happens after every add or copy to the clipboard, since this method gets
+		// called each time after (by reload_ancestors()).
+		//
+		// TODO(davidhu): Also save and restore the expansion states of the top-level
+		// segments.
 		if (this.is_root) {
 			var scroll_top = this.$('#clipboard_list').scrollTop();
 			collection = group_by_channels(collection);
