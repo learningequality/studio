@@ -36,6 +36,7 @@ sphinx_rtd_theme
 sphinx-intl
 django-s3-storage==0.12.4
 boto3==1.6.5
+requests==2.19.1
 minio==3.0.3
 pathlib
 sqlalchemy==1.2.2
