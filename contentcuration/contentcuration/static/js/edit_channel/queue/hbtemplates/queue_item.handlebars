@@ -1,10 +1,10 @@
 <div> <!-- Added to make jquery sortable more robust -->
-{{#unless is_channel}}
+{{#unless is_segment}}
 	<input type="checkbox" id="queue_file_{{node.id}}" {{#if checked}}checked{{/if}}></input>
 {{/unless}}
 
-<label for="queue_file_{{node.id}}" class="queue_item tog_folder {{#if is_channel}}channel{{/if}}">
-	{{#unless is_channel}}
+<label for="queue_file_{{node.id}}" class="queue_item tog_folder {{#if is_segment}}segment{{/if}}">
+	{{#unless is_segment}}
 		<div class="queue-options pull-right">
 			<a class="btn content-options-dropdown" role="button" rel="popover">
 				<i class="material-icons">more_horiz</i>
@@ -12,25 +12,25 @@
 		</div>
   {{/unless}}
 
-	<div class="queue_item_title title truncate {{#if is_channel}}channel{{/if}}" title="{{node.title}}">
-		{{#if is_channel}}
+	<div class="queue_item_title title truncate {{#if is_segment}}segment{{/if}}" title="{{node.title}}">
+		{{#if is_segment}}
 			{{#if node.thumbnail}}
 				<img class="content-item-thumbnail" aria-hidden="true" src="{{node.thumbnail}}" />
 			{{else}}
 				<span class="content-item-thumbnail">&nbsp;</span>
 			{{/if}}
 		{{/if}}
-		{{#unless is_channel}}<i class="content-item-icon material-icons">{{{get_icon node.kind}}}</i>&nbsp;{{/unless}}
+		{{#unless is_segment}}<i class="content-item-icon material-icons">{{{get_icon node.kind}}}</i>&nbsp;{{/unless}}
 		{{node.title}}
 	</div>
 
 	{{#if isfolder}}
 		<div class="badge clipboard-topic-count">{{node.metadata.resource_count}}</div>
-		<span id="menu_toggle_{{node.id}}" class="material-icons toggle-icon {{#if is_channel}}channel{{/if}}">expand_less</span>
+		<span id="menu_toggle_{{node.id}}" class="material-icons toggle-icon {{#if is_segment}}segment{{/if}}">expand_less</span>
 	{{/if}}
 </label>
 
-{{#if isfolder}}<div id="{{node.id}}_sub" class="subdirectory wrapper {{#if is_channel}}channel{{/if}}"></div>{{/if}}
+{{#if isfolder}}<div id="{{node.id}}_sub" class="subdirectory wrapper {{#if is_segment}}segment{{/if}}"></div>{{/if}}
 
 <div class="popover content-popover" tabindex="0" role="tooltip" id="queue_option_{{node.id}}">
 	<div class="arrow"></div>

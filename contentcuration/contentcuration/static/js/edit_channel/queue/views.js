@@ -89,6 +89,9 @@ var Queue = BaseViews.BaseWorkspaceView.extend({
 });
 
 function create_channel_node_for_content_items(items, sort_order) {
+	// TODO(davidhu): We're currently grouping items by their "source channel",
+	// though it may be more ideal to group items by the channel they were
+	// directly copied from.
 	var first_item = items[0];
 	var channel_id = first_item.get_source_channel_id();
 	var channel_title = first_item.get_source_channel_title();
@@ -234,6 +237,14 @@ var ClipboardList = BaseViews.BaseWorkspaceListView.extend({
 		return BaseViews.BaseWorkspaceListView.prototype.drop_in_container.call(
 				this, moved_item, selected_items, orders);
 	},
+	// Whether this list is a top-level segment used for UI grouping purposes
+	// only, and shouldn't be treated as an actual collection for API purposes.
+	//
+	// Currently, this returns if the list represents a channel, but can be
+	// changed to support any changes on how we segment items.
+	is_segment: function() {
+		return this.model.get('kind') === 'channel';
+	},
 	events: {
 		'change .select_all' : 'check_all_items',
 		'click .delete_items' : 'delete_items',
@@ -273,7 +284,7 @@ var ClipboardList = BaseViews.BaseWorkspaceListView.extend({
 				model: model,
 				container : this.container
 			});
-			if (model.get("kind") === "channel") {
+			if (item_view.is_segment()) {
 				item_view.open_folder(0);
 			}
 		this.views.push(item_view);
@@ -345,8 +356,7 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	expandedIcon: "expand_more",
 	collapsedIcon: "expand_less",
 	className: function() {
-		var kind = this.model.get("kind") === 'channel' ? 'channel' : 'content';
-		return `queue-item ${kind}`;
+		return `queue-item ${this.is_segment() ? 'segment' : ''}`;
 	},
 	name: NAMESPACE,
     $trs: MESSAGES,
@@ -368,6 +378,14 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		(this.checked)? this.$el.addClass(this.selectedClass) : this.$el.removeClass(this.selectedClass);
 		this.container.handle_checked();
 	},
+	// Whether this item is a top-level segment used for UI grouping purposes
+	// only, and shouldn't be treated as an actual collection for API purposes.
+	//
+	// Currently, this returns if the list represents a channel, but can be
+	// changed to support any changes on how we segment items.
+	is_segment: function() {
+		return this.model.get('kind') === 'channel';
+	},
 
 	initialize: function(options) {
 		_.bindAll(this, 'delete_content');
@@ -377,13 +395,12 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		this.render();
 	},
 	render: function(renderData) {
-		var kind = this.model.get("kind");
-		var is_channel = kind === "channel";
+		var is_segment = this.is_segment();
 
 		this.$el.html(this.template({
 			node:this.model.toJSON(),
-			isfolder: kind === "topic" || kind === "channel",
-			is_channel: is_channel,
+			isfolder: (this.model.get("kind") === "topic") || is_segment,
+			is_segment: is_segment,
 			is_clipboard : true,
 			checked: this.checked
 		},  {
@@ -391,21 +408,21 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
         }));
 		this.handle_checked();
 		window.workspace_manager.put_node(this.model.get("id"), this);
-		if (!is_channel) {
+		if (!is_segment) {
 			this.make_droppable();
 			this.create_popover();
 		}
 
 		// Color channels' accent bars and their background by the dominant color of
 		// the thumbnail.
-		if (is_channel && this.model.get('thumbnail')) {
+		if (is_segment && this.model.get('thumbnail')) {
 			var self = this;
 			setTimeout(function() {
 				var v = new Vibrant(self.model.get('thumbnail'));
 				v.getPalette(function(err, palette) {
 					var colorHex = palette.Muted.getHex();
 					var color = palette.Muted.getRgb();
-					self.$('label.channel').css({
+					self.$('label.segment').css({
 						'border-left': `10px solid ${colorHex}`,
 						'background-color': `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.2)`,
 					});
@@ -466,7 +483,7 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		this.toggle(event);
 	},
 	edit_item:function(event){
-		if (this.model.get("kind") === "channel") {
+		if (this.is_segment()) {
 			// Don't open channels. Allow propagation so that toggling happens.
 			return;
 		}

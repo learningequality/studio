@@ -116,12 +116,16 @@
 						padding-top:5px;
 						min-width:@queue-width - 32px;
 						background-color: white;
-						&.queue-item.content:hover { background-color: @highlight-color; }
-						&.queue-item.content {
-							padding-left: 10px;
+						&.queue-item:hover { background-color: @highlight-color; }
+						&.queue-item {
+							padding-left: 26px;
 						}
-						&.queue-item.channel {
+						&.queue-item.segment {
+							padding-left: 0;
 							padding-top: 0;
+						}
+						&.queue-item.segment:hover {
+							background-color: transparent;
 						}
 						&.draggable .hide_on_drag{ display: none; }
 
@@ -137,7 +141,7 @@
 							font-size:16px;
 							cursor:pointer;
 							width:@queue-width - 100px;
-							&.channel {
+							&.segment {
 								border-left: 10px solid @gray-500;
 								background-color: @gray-200;
 								height: 70px;
@@ -157,7 +161,7 @@
 							.toggle-icon{
 								padding: 5px;
 
-								&.channel {
+								&.segment {
 									font-size: 40px;
 									float: right;
 									color: black;
@@ -182,7 +186,7 @@
 								margin-left:5px;
 								color: black;
 								font-weight: normal;
-								&.channel {
+								&.segment {
 									font-weight: bold;
 									display: inline;
 									vertical-align: baseline;
@@ -203,7 +207,7 @@
 				.subdirectory{
 					display:none;
 					padding-left:20px;
-					&.channel {
+					&.segment {
 						margin-bottom: 35px;
 						padding-left: 0;
 						> ul > li.queue-item.content {
