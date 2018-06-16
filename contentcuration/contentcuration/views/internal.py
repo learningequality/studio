@@ -1,4 +1,5 @@
 import json
+import traceback
 import logging
 from collections import namedtuple
 from distutils.version import LooseVersion
@@ -114,6 +115,7 @@ def api_file_upload(request):
     except KeyError:
         raise SuspiciousOperation("Invalid file upload request")
     except Exception as e:
+        traceback.print_exc()
         return HttpResponseServerError(content=str(e), reason=str(e))
 
 
