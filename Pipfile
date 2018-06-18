@@ -48,10 +48,12 @@ Sphinx = "==1.6.4"
 sphinx_rtd_theme = "*"
 SQLAlchemy = "==1.2.2"
 django-webpack-loader = "==0.6.0"
-google-cloud-error-reporting = "*"
-google-python-cloud-debugger = "*"
+google-cloud-error-reporting = "==0.30.0"
+google-python-cloud-debugger = "==2.8"
 google-cloud-storage = "==1.10.0"
 "django-s3-storage" = "*"
+requests = "*"
+google-cloud-core = ">=0.28.1"
 
 [dev-packages]
 python-language-server = "*"
@@ -76,7 +78,7 @@ Faker = "==0.7.3"
 pylint-django = "*"
 jedi = ">=0.9.0"
 json-rpc = ">=1.8.1"
-service-factory = ">=0.1.5"
+service_factory = ">=0.1.5"
 
 [requires]
 python_version = "2.7"
