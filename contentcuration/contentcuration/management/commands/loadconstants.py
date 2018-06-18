@@ -17,15 +17,9 @@ BASE_URL = "https://raw.githubusercontent.com/learningequality/le-utils/master/l
 class ConstantGenerator():
     id_field = "id"
     def generate_list(self):
-        try: # Try to get json from git repo to avoid releasing packages for every new constant
-            response = urllib.urlopen(BASE_URL.format(self.module.FILENAME))
-            data = json.loads(response.read())
-        except Exception:
-            data = self.default_list
-
         # Get constant information from local copy of le-utils
-        # with open(os.path.sep.join([os.path.dirname(le_utils.__file__), "resources", self.filename]), "rb") as fobj:
-        #     data = json.loads(fobj.read())
+        with open(os.path.sep.join([os.path.dirname(le_utils.__file__), "resources", self.filename]), "rb") as fobj:
+            data = json.loads(fobj.read())
 
         return [
             {
@@ -71,6 +65,21 @@ class LanguageGenerator(ConstantGenerator):
     filename = "languagelookup.json"
     default_list = languages.LANGUAGELIST
     model = models.Language
+
+    def generate_list(self):
+        try: # Try to get json from git repo to avoid releasing packages for every new constant
+            response = urllib.urlopen(BASE_URL.format(self.module.FILENAME))
+            data = json.loads(response.read())
+        except Exception:
+            data = self.default_list
+
+        return [
+            {
+                "model": self.model,
+                "pk": self.id_field,
+                "fields": self.get_dict(constant),
+            } for constant in self.module.generate_list(data)
+        ]
 
     def get_dict(self, constant):
         return {
