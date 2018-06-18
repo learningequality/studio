@@ -30,6 +30,10 @@ class GoogleCloudStorage(Storage):
         # present. If so, just return that.
         tmp_filename = os.path.join("/tmp", blob.md5_hash)
 
+        # it's encoded in base64, which may not be compatible
+        # as a filesystem name. Change it to hex.
+        tmp_filename = tmp_filename.decode("base64").encode("hex")
+
         if os.path.exists(tmp_filename):
             f = open(tmp_filename)
 
