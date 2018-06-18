@@ -52,10 +52,12 @@ spec:
             secretKeyRef:
               key: redis-password
               name: {{ template "studio.fullname" . }}
+        {{ if .Values.minio.externalGoogleCloudStorage.enabled }}
+        - name: AWS_S3_ENDPOINT_URL
+          value: https://storage.googleapis.com
+        {{ else }}
         - name: AWS_S3_ENDPOINT_URL
           value: {{ template "minio.url" . }}
-        - name: AWS_BUCKET_NAME
-          value: {{ .Values.bucketName }}
         - name: AWS_ACCESS_KEY_ID
           valueFrom:
             secretKeyRef:
@@ -66,6 +68,13 @@ spec:
             secretKeyRef:
               key: secretkey
               name: {{ template "minio.fullname" . }}
+        {{ end }}
+        - name: AWS_BUCKET_NAME
+          value: {{ .Values.bucketName }}
+        {{ if .Values.minio.externalGoogleCloudStorage.gcsKeyJson }}
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /secrets/gcs/gcs_key.json
+        {{ end }}
         - name: EMAIL_CREDENTIALS_POSTMARK_API_KEY
           {{ if .Values.studioApp.postmarkApiKey }}
           valueFrom:
@@ -92,11 +101,18 @@ spec:
         volumeMounts:
         - mountPath: /app/contentworkshop_static/
           name: staticfiles
+        - name: gcs-creds
+          mountPath: /secrets/gcs
       - name: nginx-proxy
         image: {{ .Values.studioNginx.imageName }}
         env:
+        {{ if .Values.minio.externalGoogleCloudStorage.enabled }}
+        - name: AWS_S3_ENDPOINT_URL
+          value: https://storage.googleapis.com
+        {{ else }}
         - name: AWS_S3_ENDPOINT_URL
           value: {{ template "minio.url" . }}
+        {{ end }}
         - name: AWS_BUCKET_NAME
           value: {{ .Values.bucketName }}
         ports:
@@ -105,8 +121,11 @@ spec:
         - mountPath: /app/contentworkshop_static/
           name: staticfiles
       volumes:
-      - emptyDir: {}
-        name: staticfiles
+        - name: gcs-creds
+          secret:
+            secretName: {{ template "studio.fullname" . }}-gcs
+        - emptyDir: {}
+          name: staticfiles
 ---
 apiVersion: apps/v1beta1
 kind: Deployment
