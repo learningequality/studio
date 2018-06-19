@@ -22,6 +22,9 @@
 		{{/if}}
 		{{#unless is_segment}}<i class="content-item-icon material-icons">{{{get_icon node.kind}}}</i>&nbsp;{{/unless}}
 		{{node.title}}
+		{{#if segment_url}}
+			<a href="{{segment_url}}" target="_blank"><i class="segment-link-icon material-icons">link</i></a>
+		{{/if}}
 	</div>
 
 	{{#if isfolder}}

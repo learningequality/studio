@@ -410,9 +410,13 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	},
 	render: function(renderData) {
 		var is_segment = this.is_segment();
+		var segment_url = is_segment && `/channels/${this.model.get("id")}/view`;
+
 
 		this.$el.html(this.template({
 			node:this.model.toJSON(),
+			segment_url: segment_url,
+			channel_id: this.model.get("kind") === "channel" && this.model.get("id"),
 			isfolder: (this.model.get("kind") === "topic") || is_segment,
 			is_segment: is_segment,
 			is_clipboard : true,
@@ -494,6 +498,10 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	  if ($target.hasClass('tog_folder') || $target.hasClass('toggle-icon')) {
       this.track_event_for_nodes('Clipboard', 'Toggle folder', this.model);
 	  }
+		// Don't toggle on click of a link.
+		if ($target.hasClass('segment-link-icon')) {
+			return;
+		}
 		this.toggle(event);
 	},
 	edit_item:function(event){
