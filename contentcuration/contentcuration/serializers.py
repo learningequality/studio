@@ -559,25 +559,22 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer):
             }
 
     def retrieve_source_channel(self, node):
-        # TODO(davidhu): This incurs an extra DB query -- how can we avoid?
-        # Some dirty / hacky command line profiling,
-        # `time for i in {1..100}; do curl http://.../api/get_nodes_by_ids/...; done`,
-        # reveals that this incurs about a 5% slowdown for that call (with
-        # about 32 nodes in the list).
-        #
-        # I also tried to get
-        # github.com/dmclain/django-debug-toolbar-line-profiler to work, but
-        # its panel page would show a 500 when I loaded up
-        # /api/get_nodes_by_ids/...
-        source_node = ContentNode.objects.filter(
-                node_id__startswith=node.source_node_id).first()
-        channel = source_node and source_node.get_channel()
+        # TODO(davidhu): This incurs an extra DB query. Use a subquery on
+        # views.nodes.get_nodes_by_ids() instead. (This is currently used by the
+        # clipboard which makes that call.)
+        # TODO(davidhu): This doesn't actually retrieve the "most recently
+        # copied from" channel -- this now retrieves the first origin channel.
+        # However the function below has a name that implies it does that too,
+        # but it returns something different. Investigate and possibly merge or
+        # rename one of these functions?
+        channel_id = node.original_channel_id
+        channel = channel_id and Channel.objects.get(pk=channel_id)
 
         return {
             "id": channel.pk,
             "name": channel.name,
             "thumbnail_url": channel.get_thumbnail(),
-        } if channel else None
+        } if (channel and not channel.deleted) else None
 
     def retrieve_original_channel(self, node):
         original = node.get_original_node()
