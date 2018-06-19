@@ -114,8 +114,7 @@ class ZipContentView(View):
         # ensure the browser knows not to try byte-range requests, as we don't support them here
         response["Accept-Ranges"] = "none"
 
-        # allow all origins so that content can be read from within zips within sandboxed iframes
-        response["Access-Control-Allow-Origin"] = "*"
+        _add_access_control_headers(request, response)
 
         # restrict CSP to only allow resources to be loaded from the Studio host, to prevent info leakage
         # (e.g. via passing user info out as GET parameters to an attacker's server), or inadvertent data usage
