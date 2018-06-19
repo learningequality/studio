@@ -16,7 +16,8 @@ var MESSAGES = {
     "upload_files": "Upload Files",
     "add_topics": "Add Topics",
     "clipboard_empty": "This is your clipboard. Use this space to save and send content to other channels",
-    "drop_text": "Drop here to add to clipboard"
+    "drop_text": "Drop here to add to clipboard",
+    "recently_added": "Recently Added",
 }
 
 /* Loaded when user clicks clipboard button below navigation bar */
@@ -410,7 +411,9 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	},
 	render: function(renderData) {
 		var is_segment = this.is_segment();
-		var segment_url = is_segment && `/channels/${this.model.get("id")}/view`;
+		var channel_id = this.model.get("id");
+		var segment_url = (is_segment && channel_id !== 'unknown_channel_id' &&
+				`/channels/${channel_id}/view`);
 
 
 		this.$el.html(this.template({

@@ -298,7 +298,7 @@ var ContentNodeModel = BaseModel.extend({
     },
     get_source_channel_title: function() {
       var source_channel = this.get('source_channel');
-      return source_channel ? source_channel['name'] : 'Unknown channel';
+      return source_channel ? source_channel['name'] : '';
     },
 		get_source_channel_thumbnail: function() {
 			var source_channel = this.get('source_channel');
