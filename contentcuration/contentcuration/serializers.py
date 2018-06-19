@@ -474,12 +474,6 @@ class SimplifiedContentNodeSerializer(BulkSerializerMixin, serializers.ModelSeri
                   'is_prerequisite_of', 'parent_title', 'ancestors', 'tree_id', 'language', 'role_visibility')
 
 
-def generate_thumbnail_url_for_channel(channel):
-    if channel.thumbnail and 'static' not in channel.thumbnail:
-        return generate_storage_url(channel.thumbnail)
-    return '/static/img/kolibri_placeholder.png'
-
-
 class RootNodeSerializer(SimplifiedContentNodeSerializer):
     channel_name = serializers.SerializerMethodField('retrieve_channel_name')
 
@@ -582,7 +576,7 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer):
         return {
             "id": channel.pk,
             "name": channel.name,
-            "thumbnail_url": generate_thumbnail_url_for_channel(channel),
+            "thumbnail_url": channel.get_thumbnail(),
         } if channel else None
 
     def retrieve_original_channel(self, node):
@@ -591,7 +585,7 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer):
         return {
             "id": channel.pk,
             "name": channel.name,
-            "thumbnail_url": generate_thumbnail_url_for_channel(channel),
+            "thumbnail_url": channel.get_thumbnail(),
         } if channel else None
 
     class Meta:
