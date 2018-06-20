@@ -1,4 +1,5 @@
 var fastclick = require('fastclick');
+window.$ = $;
 
 // side effect: binds handlebars helpers to our handlebars instance
 require('../handlebars/helpers.js');

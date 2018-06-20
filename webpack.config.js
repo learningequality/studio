@@ -122,6 +122,7 @@ module.exports = {
       $: 'jquery',
       // used in Mathquill, set in jquery
       'window.jQuery': 'jquery',
+      'jQuery': 'jquery',
     }),
   ],
   // new in webpack 4. Specifies the default bundle type
