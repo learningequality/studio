@@ -250,6 +250,8 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 					nodeCollection.add(list.models);
 				});
 				window.workspace_manager.get_queue_view().clipboard_queue.add_nodes(nodeCollection);
+        self.track_event_for_nodes('Clipboard', 'Add items from toolbar in tree view',
+                                   nodeCollection);
 				load_resolve(true);
 			}).catch(function(error){
 				console.log(error);
@@ -541,7 +543,7 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		if(this.model.has_related_content()){
 			dialog.alert(this.get_translation("warning"), this.get_translation("related_content_alert"), this.copy_item);
 		} else {
-			this.copy_item();
+			this.copy_item(null, "button in tree view");
 		}
 	},
 	make_inline_copy: function(event) {
