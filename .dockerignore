@@ -1,2 +1,8 @@
 node_modules/
 .git/
+.tox
+.coverage
+__pycache__
+*.pyc
+*.swp
+
