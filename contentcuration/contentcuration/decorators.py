@@ -11,7 +11,7 @@ ACCEPTED_BROWSERS = settings.HEALTH_CHECK_BROWSERS + settings.SUPPORTED_BROWSERS
 
 def browser_is_supported(function):
     def wrap(request, *args, **kwargs):
-        user_agent_string = request.META['HTTP_USER_AGENT'] or ""
+        user_agent_string = request.META.get('HTTP_USER_AGENT') or ""
 
         # Check if the user agent string matches the Kubernetes agents, Google Health Check agents, or an accepted browser
         for expected_agent in ACCEPTED_BROWSERS:
