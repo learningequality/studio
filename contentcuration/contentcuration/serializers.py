@@ -148,7 +148,6 @@ class FileListSerializer(serializers.ListSerializer):
 
 
 class FileSerializer(BulkSerializerMixin, serializers.ModelSerializer):
-    file_on_disk = serializers.SerializerMethodField('get_file_url')
     storage_url = serializers.SerializerMethodField('retrieve_storage_url')
     mimetype = serializers.SerializerMethodField('retrieve_extension')
     language = LanguageSerializer(many=False, required=False, allow_null=True)
@@ -158,9 +157,6 @@ class FileSerializer(BulkSerializerMixin, serializers.ModelSerializer):
 
     def get(*args, **kwargs):
         return super.get(*args, **kwargs)
-
-    def get_file_url(self, obj):
-        return obj.file_on_disk.url
 
     def retrieve_storage_url(self, obj):
         return generate_storage_url(str(obj))
