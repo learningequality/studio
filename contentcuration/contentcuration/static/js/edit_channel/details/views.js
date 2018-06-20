@@ -13,6 +13,7 @@ var MESSAGES = {
     "author": "This {model} features resources created by",
     "aggregator": "Material in this {model} was originally hosted at",
     "provider": "The material in this {model} was provided by",
+    "empty_details": "This {model} is empty",
     "saved": "SAVED!",
     "header": "CHANNEL DETAILS",
     "save_changes": "SAVE CHANGES",
@@ -77,7 +78,7 @@ var MESSAGES = {
     "coach_content": "Coach Content",
     "assessments": "Assessments",
     "accessible_languages": "Subtitles",
-    "additional": "Additional",
+    "instructor_resources": "For Educators",
     "recommended": "(Recommended)",
     "preview": "Preview"
 }

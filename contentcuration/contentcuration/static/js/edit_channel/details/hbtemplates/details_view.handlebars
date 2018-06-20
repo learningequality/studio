@@ -1,4 +1,5 @@
 <div class="details_view">
+    {{#if resource_count}}
     <div class="container-fluid section" id="auth-section">
         <h5 class="header collapsed" data-toggle="collapse" data-target="#collapseSource" aria-expanded="false" aria-controls="collapseSource">
             <i class="material-icons pull-right toggler"></i>
@@ -142,7 +143,7 @@
                         </div>
                     </div>
                     <div class="row additional_include">
-                        <label>{{formatMessage (intlGet 'messages.additional')}}</label>
+                        <label>{{formatMessage (intlGet 'messages.instructor_resources')}}</label>
                         {{#if details.includes.coach_content}}
                             <div class="included" data-toggle="tooltip" data-placement="top" title="{{formatMessage (intlGet 'messages.role_description')}}">
                                 {{formatMessage (intlGet 'messages.coach_content')}}
@@ -198,6 +199,11 @@
             <br>
         </div>
     </div>
+    {{else}}
+        <div class="container-fluid default-content text-center">
+            {{formatMessage (intlGet 'messages.empty_details') model=model_name}}
+        </div>
+    {{/if}}
     {{#if channel.published}}
     <div class="container-fluid section" id="use-section">
         <h5 class="header collapsed" data-toggle="collapse" data-target="#collapseUse" aria-expanded="false" aria-controls="collapseUse">
