@@ -27,5 +27,6 @@ helm upgrade $1 stable/traefik --namespace kube-system \
      --set acme.dnsProvider.cloudflare.CLOUDFLARE_EMAIL=$3 \
      --set acme.dnsProvider.cloudflare.CLOUDFLARE_API_KEY=$4 \
      --set acme.email='admins@learningequality.org' \
+     --set acme.staging=false \
      --set dashboard.enabled=true \
      -i
