@@ -261,7 +261,7 @@ def create_file(display_name, preset_id, ext, user=None):
             original_filename=display_name,
             preset_id=preset_id,
             uploaded_by=user,
-            language_id="mul" if FormatPreset.objects.filter(id=preset_id, multi_language=True).exists() else None,
+            language_id="en" if FormatPreset.objects.filter(id=preset_id, multi_language=True).exists() else None,
         )
         file_object.save()
         f.close()
