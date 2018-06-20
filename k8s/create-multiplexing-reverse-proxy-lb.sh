@@ -29,4 +29,5 @@ helm upgrade $1 stable/traefik --namespace kube-system \
      --set acme.email='admins@learningequality.org' \
      --set acme.staging=false \
      --set dashboard.enabled=true \
+     --set dashboard.domain=traefik-lb-ui.cd.learningequality.org \
      -i
