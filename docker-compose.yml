@@ -56,9 +56,9 @@ services:
       CELERY_REDIS_PASSWORD: ""
   minio:
     image: minio/minio
-    entrypoint: minio gateway gcs contentworkshop-159920
     # logging:
     #   driver: none
+    entrypoint: minio server /data
     environment:
       MINIO_ACCESS_KEY: development
       MINIO_SECRET_KEY: development
