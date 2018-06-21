@@ -71,7 +71,6 @@ INSTALLED_APPS = (
     'search',
     'storages',
     'webpack_loader',
-    'django_filters',
 )
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
