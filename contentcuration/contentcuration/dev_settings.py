@@ -1,7 +1,8 @@
 import logging
 import os
 
-from .local_settings import *
+from .test_settings import *
+
 
 try:
     import debug_panel
