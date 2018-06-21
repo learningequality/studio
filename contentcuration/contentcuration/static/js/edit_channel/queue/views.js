@@ -94,9 +94,9 @@ function create_channel_node_for_content_items(items, sort_order) {
 	// though it may be more ideal to group items by the channel they were
 	// directly copied from.
 	var first_item = items[0];
-	var channel_id = first_item.get_source_channel_id();
-	var channel_title = first_item.get_source_channel_title();
-	var thumbnail = first_item.get_source_channel_thumbnail();
+	var channel_id = first_item.get_original_channel_id();
+	var channel_title = first_item.get_original_channel_title();
+	var thumbnail = first_item.get_original_channel_thumbnail();
 	var list_ids = _.pluck(items, 'id');
 
 	// We return a ContentNodeModel rather than a ChannelModel because the
@@ -123,7 +123,7 @@ function group_by_channels(collection) {
 	var channel_index = 0;
 	var grouped = new Models.ContentNodeCollection(
 		collection.chain().groupBy(function(item) {
-			return item.get_source_channel_id();
+			return item.get_original_channel_id();
 		})
 		.map(function(items) {
 			channel_index++;
@@ -233,7 +233,7 @@ var ClipboardList = BaseViews.BaseWorkspaceListView.extend({
 		// Add a single node! Find the right channel to append it to or create a new
 		// channel node.
 		var new_view = this.create_new_view(node);
-		var channel_id = node.get_source_channel_id();
+		var channel_id = node.get_original_channel_id();
 
 		if (item_map[channel_id]) {
 			// Append to the appropriate channel

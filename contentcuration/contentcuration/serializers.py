@@ -502,7 +502,6 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer):
     valid = serializers.SerializerMethodField('check_valid')
     associated_presets = serializers.SerializerMethodField('retrieve_associated_presets')
     original_channel = serializers.SerializerMethodField('retrieve_original_channel')
-    source_channel = serializers.SerializerMethodField('retrieve_source_channel')
 
     def retrieve_associated_presets(self, node):
         return node.get_associated_presets()
@@ -558,15 +557,7 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer):
                 "has_changed_descendant": node.changed,
             }
 
-    def retrieve_source_channel(self, node):
-        # TODO(davidhu): This incurs an extra DB query. Use a subquery on
-        # views.nodes.get_nodes_by_ids() instead. (This is currently used by the
-        # clipboard which makes that call.)
-        # TODO(davidhu): This doesn't actually retrieve the "most recently
-        # copied from" channel -- this now retrieves the first origin channel.
-        # However the function below has a name that implies it does that too,
-        # but it returns something different. Investigate and possibly merge or
-        # rename one of these functions?
+    def retrieve_original_channel(self, node):
         channel_id = node.original_channel_id
         channel = channel_id and Channel.objects.get(pk=channel_id)
 
@@ -576,20 +567,11 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer):
             "thumbnail_url": channel.get_thumbnail(),
         } if (channel and not channel.deleted) else None
 
-    def retrieve_original_channel(self, node):
-        original = node.get_original_node()
-        channel = original.get_channel() if original else None
-        return {
-            "id": channel.pk,
-            "name": channel.name,
-            "thumbnail_url": channel.get_thumbnail(),
-        } if channel else None
-
     class Meta:
         list_serializer_class = CustomListSerializer
         model = ContentNode
         fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license','language',
-                  'license_description', 'assessment_items', 'files', 'parent_title', 'ancestors', 'modified', 'original_channel', 'source_channel',
+                  'license_description', 'assessment_items', 'files', 'parent_title', 'ancestors', 'modified', 'original_channel',
                   'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'original_source_node_id',
                   'tags', 'extra_fields', 'prerequisite', 'is_prerequisite_of', 'node_id', 'tree_id', 'publishing', 'freeze_authoring_data',
                   'role_visibility')
@@ -606,7 +588,7 @@ class ContentNodeEditSerializer(ContentNodeSerializer):
         fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license', 'language',
                   'node_id', 'license_description', 'assessment_items', 'files', 'parent_title', 'content_id', 'modified',
                   'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'ancestors', 'tree_id',
-                  'tags', 'extra_fields', 'original_channel','source_channel', 'prerequisite', 'is_prerequisite_of', 'thumbnail_encoding',
+                  'tags', 'extra_fields', 'original_channel','prerequisite', 'is_prerequisite_of', 'thumbnail_encoding',
                   'freeze_authoring_data', 'publishing', 'original_source_node_id', 'role_visibility')
 
 
@@ -617,7 +599,7 @@ class ContentNodeCompleteSerializer(ContentNodeEditSerializer):
         fields = (
             'title', 'changed', 'id', 'description', 'sort_order', 'author', 'node_id', 'copyright_holder', 'license',
             'license_description', 'kind', 'prerequisite', 'is_prerequisite_of', 'parent_title', 'ancestors', 'language',
-            'original_channel','source_channel', 'original_source_node_id', 'source_node_id', 'content_id', 'original_channel_id',
+            'original_channel', 'original_source_node_id', 'source_node_id', 'content_id', 'original_channel_id',
             'source_channel_id', 'source_id', 'source_domain', 'thumbnail_encoding', 'publishing',
             'children', 'parent', 'tags', 'created', 'modified', 'published', 'extra_fields', 'assessment_items',
             'files', 'valid', 'metadata', 'tree_id', 'freeze_authoring_data', 'role_visibility')
