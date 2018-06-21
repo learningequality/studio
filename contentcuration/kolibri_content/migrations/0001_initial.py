@@ -70,7 +70,7 @@ class Migration(migrations.Migration):
                 'ordering': ('lft',),
             },
             managers=[
-                ('_default_manager', django.db.models.manager.Manager()),
+                ('objects', django.db.models.manager.Manager()),
             ],
         ),
         migrations.CreateModel(

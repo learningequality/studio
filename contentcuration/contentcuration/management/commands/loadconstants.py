@@ -1,5 +1,6 @@
 import urllib
 import json
+import pkgutil
 from django.contrib.sites.models import Site
 from django.core.management.base import BaseCommand
 from le_utils.constants import content_kinds, file_formats, format_presets, licenses, languages
@@ -17,16 +18,13 @@ BASE_URL = "https://raw.githubusercontent.com/learningequality/le-utils/master/l
 class ConstantGenerator():
     id_field = "id"
     def generate_list(self):
-        # Get constant information from local copy of le-utils
-        with open(os.path.sep.join([os.path.dirname(le_utils.__file__), "resources", self.filename]), "rb") as fobj:
-            data = json.loads(fobj.read())
-
+        # Get constants from subclass' default_list (from le-utils pkg)
         return [
             {
                 "model": self.model,
                 "pk": self.id_field,
                 "fields": self.get_dict(constant),
-            } for constant in self.module.generate_list(data)
+            } for constant in self.default_list
         ]
 
     def get_dict(self, constant):
@@ -67,18 +65,21 @@ class LanguageGenerator(ConstantGenerator):
     model = models.Language
 
     def generate_list(self):
-        try: # Try to get json from git repo to avoid releasing packages for every new constant
-            response = urllib.urlopen(BASE_URL.format(self.module.FILENAME))
+        # Try to get json from github to avoid releasing le-utils for every new lang
+        try:
+            response = urllib.urlopen(BASE_URL.format(self.filename))
             data = json.loads(response.read())
-        except Exception:
-            data = self.default_list
+            language_list = languages.generate_list(data)
+        except Exception as e:
+            logging.warning("Failed to retrieve latest {filename} from GitHub.".format(filename=self.filename))
+            language_list = self.default_list
 
         return [
             {
                 "model": self.model,
                 "pk": self.id_field,
                 "fields": self.get_dict(constant),
-            } for constant in self.module.generate_list(data)
+            } for constant in language_list
         ]
 
     def get_dict(self, constant):
