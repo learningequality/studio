@@ -29,7 +29,7 @@ from contentcuration.utils.policies import get_latest_policies
 @csrf_exempt
 def send_invitation_email(request):
     if request.method != 'POST':
-        raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
 
     data = json.loads(request.body)
 
