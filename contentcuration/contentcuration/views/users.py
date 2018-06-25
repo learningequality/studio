@@ -15,7 +15,7 @@ from django.template.loader import render_to_string
 from django.utils.translation import ugettext as _
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic.edit import FormView
-from registration.backends.hmac.views import RegistrationView
+from registration.backends.hmac.views import RegistrationView, ActivationView
 
 from contentcuration.api import add_editor_to_channel
 from contentcuration.forms import RegistrationForm, RegistrationInformationForm, USAGES
@@ -146,10 +146,6 @@ class InformationRegistrationView(RegistrationView):
         }
 
     def register(self, form):
-        # Send email regarding new user information
-        subject = render_to_string('registration/custom_email_subject.txt', {"subject": "New Kolibri Studio Registration"})
-        message = render_to_string('registration/registration_information_email.txt', form.cleaned_data)
-        send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [settings.REGISTRATION_INFORMATION_EMAIL])
 
         # Clear session cached fields
         self.request.session["freeze_email"] = False
@@ -187,3 +183,18 @@ def new_user_redirect(request, user_id):
     request.session["freeze_email"] = True
     logout(request)
     return redirect(reverse_lazy("registration_register"))
+
+class UserActivationView(ActivationView):
+    def activate(self, *args, **kwargs):
+        user = super(UserActivationView, self).activate(*args, **kwargs)
+
+        if user:
+            # Send email regarding new user information
+            subject = render_to_string('registration/custom_email_subject.txt', {"subject": "New Kolibri Studio Registration"})
+            message = render_to_string('registration/registration_information_email.txt', {
+                "user": user,
+                "information": dict(user.information)
+            })
+            send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [settings.REGISTRATION_INFORMATION_EMAIL])
+
+        return user
