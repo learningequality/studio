@@ -20,4 +20,6 @@ steps:
 timeout: 1800s
 images:
   - 'gcr.io/$PROJECT_ID/learningequality-studio-nginx:$COMMIT_SHA'
+  - 'gcr.io/$PROJECT_ID/learningequality-studio-nginx:latest'
   - 'gcr.io/$PROJECT_ID/learningequality-studio-app:$COMMIT_SHA'
+  - 'gcr.io/$PROJECT_ID/learningequality-studio-app:latest'
