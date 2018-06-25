@@ -212,7 +212,15 @@ def get_topic_details(request, contentnode_id):
     # Get sample pathway by getting longest path
     max_level = descendants.aggregate(max_level=Max('level'))['max_level']
     deepest_node = descendants.filter(level=max_level).first()
-    pathway = list(deepest_node.get_ancestors(include_self=True).exclude(parent=None).values('title', 'node_id', 'kind_id')) if deepest_node else []
+    pathway = list(deepest_node.get_ancestors().exclude(parent=None).values('title', 'node_id', 'kind_id')) if deepest_node else []
+    sample_nodes = [
+        {
+            "node_id": n.node_id,
+            "title": n.title,
+            "description": n.description,
+            "thumbnail": get_thumbnail(n),
+        } for n in resources[0:4]
+    ]
 
     # Get original channel list
     channel_id = node.get_channel().id
@@ -232,14 +240,7 @@ def get_topic_details(request, contentnode_id):
                             .annotate(count=Count('tag_name'))\
                             .order_by('tag_name')
 
-    sample_nodes = [
-        {
-            "node_id": n.node_id,
-            "title": n.title,
-            "description": n.description,
-            "thumbnail": get_thumbnail(n),
-        } for n in resources[0:4]
-    ]
+
 
     data = {
         "resource_count": resources.count() or 0,
