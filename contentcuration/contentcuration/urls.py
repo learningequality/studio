@@ -52,7 +52,6 @@ class LicenseViewSet(viewsets.ModelViewSet):
 
     serializer_class = serializers.LicenseSerializer
 
-
 class LanguageViewSet(viewsets.ModelViewSet):
     queryset = Language.objects.all()
 
@@ -246,6 +245,7 @@ urlpatterns += [
     url(r'^accounts/register/$', registration_views.UserRegistrationView.as_view(), name='registration_register'),
     url(r'^accounts/register-information/$', registration_views.InformationRegistrationView.as_view(), name='registration_information'),
     url(r'^accounts/', include('registration.backends.hmac.urls')),
+    url(r'^activate/(?P<activation_key>[-:\w]+)/$', registration_views.UserActivationView.as_view(), name='registration_activate'),
     url(r'^api/send_invitation_email/$', registration_views.send_invitation_email, name='send_invitation_email'),
     url(r'^new/accept_invitation/(?P<user_id>[^/]+)/', registration_views.new_user_redirect, name="accept_invitation_and_registration"),
     url(r'^new/finish_registration/(?P<user_id>[^/]+)/$', registration_views.new_user_redirect, name="reset_password_registration"),
@@ -257,12 +257,11 @@ urlpatterns += [
     url(r'^settings/profile', settings_views.ProfileView.as_view(), name='profile_settings'),
     url(r'^settings/preferences', settings_views.PreferencesView.as_view(), name='preferences_settings'),
     url(r'^settings/account$', settings_views.account_settings, name='account_settings'),
-    url(r'^settings/account/success', settings_views.account_settings_success, name='account_settings_success'),
     url(r'^api/delete_user_account/(?P<user_email>[^/]+)/$', settings_views.delete_user_account, name='delete_user_account'),
     url(r'^api/export_user_data/(?P<user_email>[^/]+)/$', settings_views.export_user_data, name='export_user_data'),
     url(r'^settings/account/deleted', settings_views.account_deleted, name='account_deleted'),
     url(r'^settings/tokens', settings_views.tokens_settings, name='tokens_settings'),
-    url(r'^settings/storage', settings_views.storage_settings, name='storage_settings'),
+    url(r'^settings/storage', settings_views.StorageSettingsView.as_view(), name='storage_settings'),
     url(r'^settings/policies', settings_views.policies_settings, name='policies_settings'),
     url(r'^policies/update', settings_views.PolicyAcceptView.as_view(), name='policy_update'),
 ]

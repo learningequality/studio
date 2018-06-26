@@ -151,10 +151,12 @@ class RegistrationInformationForm(UserCreationForm, ExtraFormMixin):
         # Check "How did you hear about us?" has extra information if certain options are selected
         source = self.check_field('source', _('Please indicate how you heard about us'))
         if source:
-            if source == 'organization' and self.check_field('organization', _('Please indicate organization')):
-                self.cleaned_data['source'] = "{} (organization)".format(self.cleaned_data['organization'])
-            elif source == 'conference' and self.check_field('conference', _('Please indicate conference')):
-                self.cleaned_data['source'] = "{} (conference)".format(self.cleaned_data['conference'])
+            if source == 'organization':
+                if self.cleaned_data.get('organization'):
+                    self.cleaned_data['source'] = "{} (organization)".format(self.cleaned_data['organization'])
+            elif source == 'conference':
+                if self.cleaned_data.get('conference'):
+                    self.cleaned_data['source'] = "{} (conference)".format(self.cleaned_data['conference'])
             elif source == 'other' and self.check_field('other_source', _('Please indicate how you heard about us')):
                 self.cleaned_data['source'] = self.cleaned_data['other_source']
 
@@ -285,6 +287,56 @@ class PreferencesSettingsForm(forms.Form):
         }
         user.save()
         return user
+
+
+class StorageRequestForm(forms.Form, ExtraFormMixin):
+    # Nature of content
+    storage = forms.CharField(required=True, widget=forms.TextInput(attrs={"placeholder": _("e.g. 1GB"), "class": "short-field"}))
+    kind = forms.CharField(required=True, widget=forms.TextInput(attrs={"placeholder": _("Mostly high resolution videos, some pdfs, etc."), "class": "long-field"}))
+    resource_count = forms.CharField(required=False, widget=forms.TextInput(attrs={"class": "short-field"}))
+    resource_size = forms.CharField(required=False, widget=forms.TextInput(attrs={"placeholder": _("e.g. 10MB"), "class": "short-field"}))
+
+    # How are you using your content
+    license = forms.MultipleChoiceField(required=True, widget=forms.CheckboxSelectMultiple(), choices=licenses.choices)
+    audience = forms.CharField(required=True, widget=forms.TextInput(attrs={"placeholder": _("In-school learners, adult learners, teachers, etc."), "class":"long-field"}))
+    org_or_personal = forms.ChoiceField(required=True, widget=forms.RadioSelect, choices=[
+        ('Personal Use', _("I am using the content for personal use")),
+        ('Organization', _("I am uploading content on behalf of")),
+    ])
+    organization = forms.CharField(required=False, widget=forms.TextInput(attrs={"placeholder": _("Organization or Institution")}))
+    message = forms.CharField(required=False, widget=forms.Textarea(attrs={"rows": 4}))
+
+
+    def __init__(self, *args, **kwargs):
+        channels = kwargs.pop('channel_choices', None)
+        super(StorageRequestForm, self).__init__(*args, **kwargs)
+
+        self.fields['public'] = forms.MultipleChoiceField(required=False, widget=forms.SelectMultiple, choices=channels)
+
+
+    class Meta:
+        fields = ("storage", "kind", "video_type", "resource_count", "resource_size", "license", "public", "audience", "org_or_personal", "organization")
+
+    def clean(self):
+        cleaned_data = super(StorageRequestForm, self).clean()
+        self.errors.clear()
+
+        self.check_field('storage', _("Please indicate how much storage you need"))
+        self.check_field('kind', _("Please indicate what kind of content you are uploading"))
+
+        self.cleaned_data["license"] = ", ".join(self.cleaned_data.get('license') or [])
+        self.check_field('license', _("Please indicate the licensing for your content"))
+        self.check_field('audience', _("Please indicate your target audience"))
+        self.check_field('org_or_personal', _("Please indicate for whom you are uploading your content"))
+
+        if self.cleaned_data.get("org_or_personal") == "Organization":
+            self.check_field('organization', _("Please indicate your organization or institution"))
+
+        self.cleaned_data['public'] = ",".join(self.cleaned_data.get('public') or [])
+
+
+        return self.cleaned_data
+
 
 
 class AccountSettingsForm(PasswordChangeForm):

@@ -1,6 +1,8 @@
 <!DOCTYPE HTML>
 {% extends "settings/settings.html" %}
 {% load staticfiles %}
+{% load translation_tags %}
+{% load license_tags %}
 {% load i18n %}
 
 {% block settingscontent %}
@@ -25,6 +27,110 @@
 			{% endfor %}
 		</ul>
 	</div>
-	<p><i>* {% trans "If you need more space, please reach out to us at" %} <b><a id="email_link" href="mailto:{{request_email}}?Subject=Content%20Curation%20Storage%20Request">{{request_email}}</a></b></i></p>
+	<br><br>
+	<h5>{% trans "Request More Space" %}</h5>
+	{{message}}
+	{% if form.errors %}
+		<ul class="errors text-center list-unstyled">
+			{% for field in form %}
+				{% for error in field.errors %}
+					<li>{{ error|escape }}</li>
+				{% endfor %}
+			{% endfor %}
+		</ul>
+	{% elif messages %}
+		{% for message in messages %}
+		<div class="alert alert-success text-center" role="alert">
+			{{message}}
+		</div>
+		{% endfor %}
+	{% endif %}
+	<form action="{% url 'storage_settings' %}" method="post" id="storage_request_form">
+		{% csrf_token %}
+		<p>{% trans "What is the nature of your content?" %}</p>
+		<ul>
+			<li>{% trans "How much storage are you requesting?" %}{% if form.storage.field.required %}<b class="required">*</b>{% endif %} {{ form.storage }}</li>
+			<li>{% trans "Approximately how many resources are you planning to upload?" %}{% if form.resource_count.field.required %}<b class="required">*</b>{% endif %} {{ form.resource_count }}</li>
+			<li>{% trans "What is the average size of each resource?" %}{% if form.resource_size.field.required %}<b class="required">*</b>{% endif %} {{ form.resource_size }}</li>
+			<li>{% trans "What kind of content are you uploading?" %}{% if form.kind.field.required %}<b class="required">*</b>{% endif %}<br>{{ form.kind }}</li>
+		</ul>
+		<p>{% trans "Who can use your content?" %}</p>
+		<ul>
+			<li>{% trans "What is the licensing of the content you are uploading? (Check all that apply)" %}{% if form.license.field.required %}<b class="required">*</b>{% endif %}
+				<ul id="id_license">
+					{% for option in form.license %}
+						<li>
+							<label for="{{option.attrs.id}}">
+								<input id="{{option.attrs.id}}" name="license" type="checkbox" value="{{option.choice_value}}"{% if option.choice_value in option.value %}checked{% endif %}>
+								{{option.choice_value | get_translation}}
+								<a class="material-icons license-url" href="{{option.choice_value | get_license_url}}" target="_blank" data-toggle="tooltip" data-placement="top" title="{% trans 'Learn More' %}">link</a>
+							</label>
+
+						</li>
+					{% endfor %}
+				</ul>
+			</li>
+			{% if channel_count %}
+			<li>
+				{% blocktrans %}
+					If the content is openly licensed, would you like to make any of the following channels <a id="public_help" data-toggle="tooltip" data-placement="top" title="By making a channel public, you are allowing anyone on Kolibri Studio to access your content and use it in their own channels. Channels submitted for public use will be reviewed by the Learning Equality team.">public</a>? (Select all that apply)
+				{% endblocktrans %}
+				<br>{{ form.public }}<br>
+			</li>
+			{% endif %}
+		</ul>
+		<p>{% trans "How are you using your content?" %}</p>
+		<ul>
+			<li>
+				{% trans "Who is the intended audience for your channel?" %}
+				{% if form.audience.field.required %}<b class="required">*</b>{% endif %}
+				{{ form.audience }}
+			</li>
+			<li>
+				{% trans "For whom are you uploading content?" %}{% if form.org_or_personal.field.required %}
+				<b class="required">*</b>{% endif %}
+				<ul class="id_org_or_personal">
+					{% for option in form.org_or_personal %}
+						<li>
+							{{option}}
+							{% if option.choice_value == 'Organization' %}
+							{{ form.organization }}
+							{% endif %}
+						</li>
+					{% endfor %}
+				</ul>
+			</li>
+		</ul>
+		<p>{% trans "Message" %}</p>
+		{{ form.message }}
+		<br><br><br>
+		<input id="send" class="action-button pull-right" type="submit" value="{% trans 'SEND REQUEST' %}"/>
+	</form>
 </div>
+
+<script>
+	$('[data-toggle="tooltip"]').tooltip();
+
+	// Allow deselection if item is clicked, don't deselect everything on click
+	$("#id_public").on("mousedown", function(ev) {
+		ev.preventDefault();
+		ev.target.selected = !ev.target.selected;
+
+		// Prevent select box from jumping to the top every click
+		var st = this.scrollTop;
+		var self = this;
+		setTimeout(function() {
+			self.scrollTop = st, 0;
+		});
+		this.focus();
+	});
+	$("#id_public").on("mousemove", function(ev) {
+		ev.preventDefault();
+	});
+
+	$(".license-url").on("click", function(ev) {
+		ev.stopPropagation();
+	});
+
+</script>
 {% endblock settingscontent %}
