@@ -8,7 +8,7 @@ import uuid
 from django.core.files import File as DjFile
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
-from contentcuration.models import Channel, User, ContentNode, Invitation, ContentTag, File, AssessmentItem, License
+from contentcuration.models import Channel, User, ContentNode, Invitation, ContentTag, File, AssessmentItem, License, FormatPreset
 from contentcuration.api import write_file_to_storage
 from contentcuration.utils.files import duplicate_file
 from contentcuration.views.nodes import duplicate_node_bulk
@@ -220,6 +220,7 @@ def create_question(node, question, question_type):
         question=question,
         hints=json.dumps(hints),
         answers=json.dumps(answers),
+        order=node.assessment_items.count(),
     )
     ai.save()
 
@@ -260,6 +261,7 @@ def create_file(display_name, preset_id, ext, user=None):
             original_filename=display_name,
             preset_id=preset_id,
             uploaded_by=user,
+            language_id="mul" if FormatPreset.objects.filter(id=preset_id, multi_language=True).exists() else None,
         )
         file_object.save()
         f.close()

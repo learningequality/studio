@@ -19,7 +19,7 @@ test:
 	cd contentcuration; pytest
 
 endtoendtest:
-	# launch all studio's dependent services using docker-compose, and then run the tests
+	# launch all studio's dependent services using docker-compose, and then run the tests	
 	docker-compose run studio-app make test
 
 collectstatic: migrate
@@ -31,7 +31,7 @@ migrate:
 	python contentcuration/manage.py loadconstants
 
 ensurecrowdinclient:
-  ls -l crowdin-cli.jar || curl -L https://storage.googleapis.com/le-downloads/crowdin-cli/crowdin-cli.jar -o crowdin-cli.jar
+	ls -l crowdin-cli.jar || curl -L https://storage.googleapis.com/le-downloads/crowdin-cli/crowdin-cli.jar -o crowdin-cli.jar
 
 makemessages:
 	# generate frontend messages
