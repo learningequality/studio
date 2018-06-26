@@ -243,31 +243,66 @@ constants in the database:
     make migrate collectstatic
     cd contentcuration; python manage.py setup --settings=contentcuration.dev_settings; cd ..
 
-
-##### Run the minio server
-
-The minio server emulates an S3 object storage server on your local machine. Content you upload
-will be stored here:
-
-    minio server ~/.minio_data/
-
-
 ##### Start the dev server
 
 You're all setup now, and ready to start the Studio local development server:
 
     make devserver
 
-You should be able to login at http://127.0.0.1:8081 using email `a@a.com`, password `a`.
+This will start any of the required services (e.g. postgres, redis, minio) that are not already running.
+Once you see the following output in your terminal, the server is ready:
+
+    Starting development server at http://0.0.0.0:8080/
+    Quit the server with CONTROL-C.
+
+You should be able to login at http://127.0.0.1:8080 using email `a@a.com`, password `a`.
+
+##### Start required services manually
+
+Although calling `make devserver` will start the necessary services for you, sometimes it will be useful to start the
+services manually. To do so, you can run the following command:
+
+    yarn run services
+
+Make sure to run this command in a separate terminal from the one you run Studio on, as it will continue running until
+you force quit it. If you want to see how to start each individual service, check the services command in `package.json`
+to learn more.
 
 ##### Running tests
-Make sure you've installed the test requirements, setup a virtual environment, and started the minio server. Then, to run python tests:
+Make sure you've installed the test requirements, setup a virtual environment, and started the minio server. Then, to
+run python tests:
+
+To run all unit tests:
+
+    yarn run unittests
+
+To run all integration tests:
+
+    yarn run apptests
+
+Finally, to run all tests:
+
+    yarn run test
+
+##### Customizing Test Runs and Output
+
+If you want more control while testing, there are several options for customizing test runs.
+
+First, make sure you start services manually in a separate terminal using:
+
+    yarn run services
+
+From there, you can run the unit tests directly by calling:
 
     pytest contentcuration
 
 By default, pytest is configured to recreate a fresh database every time.  This can be painfully slow!  To speed things up, you can ask pytest to recycle table structures between runs:
 
     pytest contentcuration --reuse-db
+
+For convenience, you can also use yarn to run the tests this way with the following command:
+
+    yarn run unittests:reusedb
 
 If you do end up changing the schema (e.g. by updating a model), remember to run pytest without the `--reuse-db`.  Or, if you want to be more explicit you can use `--create-db` to ensure that the test database's table structure is up to date:
 
