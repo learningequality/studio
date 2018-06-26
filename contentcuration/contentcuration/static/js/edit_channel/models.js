@@ -292,6 +292,18 @@ var ContentNodeModel = BaseModel.extend({
     has_related_content: function(){
         return this.get('prerequisite').length || this.get('is_prerequisite_of').length;
     },
+    get_original_channel_id: function() {
+      var original_channel = this.get('original_channel');
+      return original_channel ? original_channel['id'] : 'unknown_channel_id';
+    },
+    get_original_channel_title: function() {
+      var original_channel = this.get('original_channel');
+      return original_channel ? original_channel['name'] : '';
+    },
+		get_original_channel_thumbnail: function() {
+			var original_channel = this.get('original_channel');
+			return original_channel ? original_channel['thumbnail_url'] : '';
+		},
     initialize: function () {
 		if (this.get("extra_fields") && typeof this.get("extra_fields") !== "object"){
 			this.set("extra_fields", JSON.parse(this.get("extra_fields")))

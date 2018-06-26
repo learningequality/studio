@@ -85,7 +85,7 @@ TAGS
 /.vagrant/
 
 # Ignore test files
-/contentcuration/contentcuration/test_settings.py
+/contentcuration/contentcuration/proxy_settings.py
 
 # ignore locale files
 contentcuration/locale/

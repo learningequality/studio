@@ -1,22 +1,47 @@
 <div> <!-- Added to make jquery sortable more robust -->
-<input type="checkbox" id="queue_file_{{node.id}}" {{#if checked}}checked{{/if}}></input>
-<label for="queue_file_{{node.id}}" class="queue_item tog_folder">
-	<div class="queue-options pull-right">
-		<a class="btn content-options-dropdown" role="button" rel="popover">
-			<i class="material-icons">more_horiz</i>
-		</a>
+{{#unless is_segment}}
+	<input type="checkbox" id="queue_file_{{node.id}}" {{#if checked}}checked{{/if}}></input>
+{{/unless}}
+
+<label for="queue_file_{{node.id}}" class="queue_item tog_folder {{#if is_segment}}segment{{/if}}">
+	{{#unless is_segment}}
+		<div class="queue-options pull-right">
+			<a class="btn content-options-dropdown" role="button" rel="popover">
+				<i class="material-icons">more_horiz</i>
+			</a>
+		</div>
+  {{/unless}}
+
+	<div class="queue_item_title title truncate {{#if is_segment}}segment{{/if}}" title="{{node.title}}">
+		{{#if is_segment}}
+			{{#if node.thumbnail}}
+				<img class="content-item-thumbnail" aria-hidden="true" src="{{node.thumbnail}}" />
+			{{else}}
+				<span class="content-item-thumbnail">&nbsp;</span>
+			{{/if}}
+		{{/if}}
+		{{#unless is_segment}}<i class="content-item-icon material-icons">{{{get_icon node.kind}}}</i>&nbsp;{{/unless}}
+		{{#if is_segment}}
+			{{#if node.title}}
+				{{node.title}}
+			{{else}}
+				{{formatMessage (intlGet 'messages.recently_added')}}
+			{{/if}}
+		{{else}}
+			{{node.title}}
+		{{/if}}
+		{{#if segment_url}}
+			<a href="{{segment_url}}" target="_blank"><i class="segment-link-icon material-icons">link</i></a>
+		{{/if}}
 	</div>
-	<div class="queue_item_title title truncate {{#unless isfolder}}file_item{{/unless}}" title="{{node.title}}">
-		{{#unless isfolder}}<i class="content-item-icon material-icons">{{{get_icon node.kind}}}</i>&nbsp;{{/unless}}
-		{{node.title}}
-	</div>
+
 	{{#if isfolder}}
 		<div class="badge clipboard-topic-count">{{node.metadata.resource_count}}</div>
-		<span id="menu_toggle_{{node.id}}" class="material-icons toggle-icon">expand_less</span>
+		<span id="menu_toggle_{{node.id}}" class="material-icons toggle-icon {{#if is_segment}}segment{{/if}}">expand_less</span>
 	{{/if}}
 </label>
 
-{{#if isfolder}}<div id="{{node.id}}_sub" class="subdirectory wrapper"></div>{{/if}}
+{{#if isfolder}}<div id="{{node.id}}_sub" class="subdirectory wrapper {{#if is_segment}}segment{{/if}}"></div>{{/if}}
 
 <div class="popover content-popover" tabindex="0" role="tooltip" id="queue_option_{{node.id}}">
 	<div class="arrow"></div>

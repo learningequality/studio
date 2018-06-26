@@ -63,6 +63,7 @@
     "material-design-icons": "^3.0.1",
     "mathjax": "^2.7.0",
     "mathquill": "^0.10.1-a",
+    "node-vibrant": "^3.0.0",
     "offline-js": "^0.7.19",
     "promise-polyfill": "^6.0.2",
     "summernote": "^0.8.2",
