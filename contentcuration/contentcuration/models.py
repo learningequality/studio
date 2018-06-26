@@ -1,3 +1,4 @@
+import ast
 import collections
 import functools
 import hashlib
@@ -515,6 +516,17 @@ class Channel(models.Model):
                     os.unlink(channel_db_url)
                     self.main_tree.published = False
             self.main_tree.save()
+
+    def get_thumbnail(self):
+        if self.thumbnail_encoding:
+            thumbnail_data = ast.literal_eval(self.thumbnail_encoding)
+            if thumbnail_data.get("base64"):
+                return thumbnail_data["base64"]
+
+        if self.thumbnail and 'static' not in self.thumbnail:
+            return generate_storage_url(self.thumbnail)
+
+        return '/static/img/kolibri_placeholder.png'
 
     class Meta:
         verbose_name = _("Channel")
