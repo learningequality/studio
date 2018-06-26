@@ -37,8 +37,8 @@ var MESSAGES = {
     "no_license": "No license selected",
     "randomize_question_order": "Automatically randomize question order",
     "author_description": "Person or organization who created the content",
-    "aggregator_description": "Person or organization who gathered the content together",
-    "provider_description": "Person or organization who distributed the content"
+    "aggregator_description": "Website or org hosting the content collection but not necessarily the creator or copyright holder",
+    "provider_description": "Organization that commissioned or is distributing the content"
 }
 
 var SettingsModalView = BaseViews.BaseModalView.extend({
