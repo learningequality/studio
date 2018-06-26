@@ -1,5 +1,7 @@
 steps:
   - name: 'gcr.io/cloud-builders/docker'
+    id: build-studio-app
+    waitFor: ['-']              # don't wait for previous steps
     args: [
       'build',
       '-f', 'k8s/images/app/Dockerfile',
@@ -9,6 +11,8 @@ steps:
       '.'
       ]
   - name: 'gcr.io/cloud-builders/docker'
+    id: build-studio-nginx-proxy
+    waitFor: ['-']              # don't wait for previous steps
     args: [
       'build',
      '-f', 'k8s/images/nginx/Dockerfile',
