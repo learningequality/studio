@@ -22,7 +22,7 @@ from django.dispatch import receiver
 from django.template.loader import render_to_string
 from django.utils import timezone
 from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises, languages, roles
-from jsonfield import JSONField
+from django.contrib.postgres.fields import JSONField
 from mptt.models import MPTTModel, TreeForeignKey, TreeManager, raise_if_unsaved
 from pg_utils import DistinctSum
 from rest_framework import permissions
@@ -90,9 +90,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     preferences = models.TextField(default=DEFAULT_USER_PREFERENCES)
     disk_space = models.FloatField(default=524288000, help_text=_('How many bytes a user can upload'))
 
-    information = JSONField(load_kwargs={'object_pairs_hook': collections.OrderedDict}, null=True)
-    content_defaults = JSONField(load_kwargs={'object_pairs_hook': collections.OrderedDict}, default=DEFAULT_CONTENT_DEFAULTS)
-    policies = JSONField(load_kwargs={'object_pairs_hook': collections.OrderedDict}, default=dict)
+    information = JSONField(null=True)
+    content_defaults = JSONField(default=DEFAULT_CONTENT_DEFAULTS)
+    policies = JSONField(default=dict)
 
     objects = UserManager()
     USERNAME_FIELD = 'email'
@@ -344,7 +344,7 @@ class Channel(models.Model):
     deleted = models.BooleanField(default=False, db_index=True)
     public = models.BooleanField(default=False, db_index=True)
     preferences = models.TextField(default=DEFAULT_USER_PREFERENCES)
-    content_defaults = JSONField(load_kwargs={'object_pairs_hook': collections.OrderedDict}, default=DEFAULT_CONTENT_DEFAULTS)
+    content_defaults = JSONField(default=DEFAULT_CONTENT_DEFAULTS)
     priority = models.IntegerField(default=0, help_text=_("Order to display public channels"))
     last_published = models.DateTimeField(blank=True, null=True)
     secret_tokens = models.ManyToManyField(

@@ -1,4 +1,5 @@
 import datetime
+import json
 from django.utils.translation import ugettext as _
 
 POLICIES = {
@@ -27,9 +28,11 @@ def check_policies(user):
 	"""
 
 	policies_to_accept = {}
+	# Sometimes the json gets converted to a string, so catch that case here
+	policies = json.loads(user.policies) if isinstance(user.policies, basestring) else user.policies
 	for k, v in POLICIES.items():
 		policy_name = "{}_{}".format(k, v["latest"])
-		if not user.policies.get(policy_name):
+		if not policies.get(policy_name):
 			policies_to_accept.update({ policy_name: v["policies"][v["latest"]] })
 	return policies_to_accept
 

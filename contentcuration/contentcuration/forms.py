@@ -177,7 +177,7 @@ class RegistrationInformationForm(UserCreationForm, ExtraFormMixin):
         }
 
         latest_policies = get_latest_policies()
-        user.policies = {k: datetime.datetime.now() for k, v in latest_policies.items()}
+        user.policies = {k: datetime.datetime.now().strftime("%d/%m/%y %H:%M") for k, v in latest_policies.items()}
 
         if commit:
             user.save()
@@ -200,7 +200,7 @@ class PolicyAcceptForm(forms.Form):
         user.policies = user.policies or {}
         policies = self.cleaned_data['policy_names'].rstrip(",").split(",")
         for policy in policies:
-            user.policies.update({policy: datetime.datetime.now()})
+            user.policies.update({policy: datetime.datetime.now().strftime("%d/%m/%y %H:%M")})
         user.save()
         return user
 
