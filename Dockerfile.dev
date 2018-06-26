@@ -15,6 +15,7 @@ RUN apt-get -y install nodejs python python-dev \
 RUN npm install -g yarn
 
 EXPOSE 8080
+EXPOSE 3000
 
 RUN pip install pipenv
 

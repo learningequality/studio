@@ -5,6 +5,7 @@ MEDIA_ROOT = STORAGE_ROOT
 
 SITE_ID = int(os.getenv("SITE_ID") or "1")
 
+DEFAULT_FILE_STORAGE = 'contentcuration.utils.gcs_storage.GoogleCloudStorage'
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
 
 # email settings

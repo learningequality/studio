@@ -94,3 +94,6 @@ webpack-stats\.json
 
 # remove pytest cache from the repo
 .pytest_cache/
+
+# ignore vscode directory
+.vscode/
