@@ -1,11 +1,12 @@
 @import "global-variables.less";
 
 #queue {
-	@queue-width:400px;
+	@queue-width:600px;
 	@queue-color: black;
 	@queue-background-color:@gray-300;
 	@queue-min-height: 575px;
 	@queue-list-item-height: 40px;
+	@queue-top-bar-padding: 16px;
 	@highlight-color: #E6E6E6;
 	@placeholder-color:#666666;
 
@@ -15,7 +16,6 @@
 	}
 	&.opened {
 		#main-queue, #queue-back{ display: block; }
-		.queue-button { background-color: @queue-background-color; }
 	}
 
 	.queue-button{
@@ -64,18 +64,20 @@
 	#main-queue{
 		border-radius: 0px;
 		width: @queue-width;
-		padding: 5px;
+		box-shadow: rgba(0, 0, 0, 0.2) 0 1px 2px 2px;
 		min-height: @queue-min-height;
 		background-color: @queue-background-color;
 		position: absolute;
     	z-index: 999;
     	margin-top: 40px;
-    	margin-left: 50px;
+    	margin-left: 65px;
 		.queue-interior{
 			background-color: white;
 			min-height:@queue-min-height;
-			padding: 5px;
-			hr{ margin: 10px 0px; }
+			hr{ margin: 0; }
+			.clipboard_options {
+				padding: @queue-top-bar-padding;
+			}
 			.clipboard_options a{
 				.action-text;
 				padding: 2px;
@@ -83,13 +85,16 @@
 			.select_all{
 				width:16px;
 				height:16px;
-				margin-left:7px;
+				margin-left:12px;
+				margin-right:10px;
 				cursor:pointer;
 			}
 			.select_all+label{
-				font-size:10pt;
 				cursor:pointer;
 				margin-bottom: -3px;
+			}
+			.select_all_fixed {
+				padding: @queue-top-bar-padding;
 			}
 			#queue_content{
 				overflow:hidden;
@@ -98,7 +103,6 @@
 					height:100%;
 					padding-top:20px;
 					padding-bottom:95px;
-					margin-top: 10px;
 					&#clipboard_list {
 						height: @queue-min-height;
 						overflow: auto;
@@ -110,10 +114,19 @@
 					}
 					li{
 						padding-top:5px;
-						padding-left:5px;
 						min-width:@queue-width - 32px;
 						background-color: white;
 						&.queue-item:hover { background-color: @highlight-color; }
+						&.queue-item {
+							padding-left: 26px;
+						}
+						&.queue-item.segment {
+							padding-left: 0;
+							padding-top: 0;
+						}
+						&.queue-item.segment:hover {
+							background-color: transparent;
+						}
 						&.draggable .hide_on_drag{ display: none; }
 
 						input[type=checkbox]{
@@ -127,9 +140,44 @@
 							*{ vertical-align: middle; display:inline; }
 							font-size:16px;
 							cursor:pointer;
-							width:@queue-width - 70px;
+							width:@queue-width - 100px;
+							&.segment {
+								border-left: 10px solid @gray-500;
+								background-color: @gray-200;
+								height: 70px;
+								line-height: 70px;
+								width: @queue-width;
+								margin-bottom: 0;
+							}
+
+							.segment-link-icon {
+								font-size: 22px;
+								margin-top: -5px;
+								display: inline-block;
+								&:hover {
+									color: black;
+								}
+							}
 							.content-item-icon{ padding-left:5px; }
-							.toggle-icon{ padding: 5px; }
+							.content-item-thumbnail {
+								width: 30px;
+								margin-left: 6px;
+								margin-right: 10px;
+								margin-top: -3px;  // HACK
+								display: inline-block;
+							}
+							.toggle-icon{
+								padding: 5px;
+
+								&.segment {
+									font-size: 40px;
+									float: right;
+									color: black;
+									padding-right: 0;
+									line-height: 63px;
+									height: 70px;
+								}
+							}
 							&:hover {
 								.content-options-dropdown{ visibility:visible; }
 								.popover{ display: block !important; }
@@ -145,15 +193,21 @@
 								display:inline-block;
 								margin-left:5px;
 								color: black;
-								&.file_item {
-									font-weight: normal;
-									i { color: @gray-700; }
+								font-weight: normal;
+								&.segment {
+									font-weight: bold;
+									display: inline;
+									vertical-align: baseline;
 								}
+								i { color: @gray-700; }
 							}
 							.clipboard-topic-count{
-								background-color:@blue-200;
-								padding:1px 5px;
-								margin-top:10px;
+								background-color: @blue-500;
+								color: white;
+								padding: 2px 10px;
+								margin-left: 10px;
+								margin-top: -2px;
+								display: inline-block;
 							}
 						}
 					}
@@ -161,6 +215,16 @@
 				.subdirectory{
 					display:none;
 					padding-left:20px;
+					&.segment {
+						margin-bottom: 35px;
+						padding-left: 0;
+						> ul > li.queue-item.content {
+							padding-left: 26px;
+						}
+						> ul > li.queue-item.content:nth-child(2) {
+							padding-top: 10px;
+						}
+					}
 				}
 			}
 		}
