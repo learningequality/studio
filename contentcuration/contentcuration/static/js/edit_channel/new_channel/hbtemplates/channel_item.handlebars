@@ -43,7 +43,6 @@
 			{{else}}
 				<i data-toggle="tooltip" data-placement="top" title="{{formatMessage (intlGet 'messages.star_channel')}}" class="material-icons disable-on-edit pull-right channel_option_icon star_option star_channel">star_border</i>
 			{{/if}}
-			<i data-toggle="tooltip" data-placement="top" title="{{#if can_edit}}{{formatMessage (intlGet 'messages.edit_channel')}}{{else}}{{formatMessage (intlGet 'messages.view_channel')}}{{/if}}" class="material-icons disable-on-edit pull-right channel_option_icon open_channel_details">{{#if can_edit}}mode_edit{{else}}search{{/if}}</i>
 			<p class="truncate channel_name">{{channel.name}}</p>
 		</h4>
 		<div class="description">

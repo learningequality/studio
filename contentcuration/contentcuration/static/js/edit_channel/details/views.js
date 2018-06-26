@@ -129,12 +129,15 @@ var ChannelDetailsModalView = BaseViews.BaseModalView.extend({
 
 var ChannelDetailsView = BaseViews.BaseListEditableItemView.extend({
     template: require("./hbtemplates/details_editor.handlebars"),
+    id: "channel_details_view_panel",
+    tagName: "div",
     name: NAMESPACE,
     $trs: MESSAGES,
     initialize: function(options) {
         _.bindAll(this, "set_thumbnail", "reset_thumbnail", "remove_thumbnail", "init_focus", "create_initial", "submit_changes");
         this.modal = options.modal;
         this.onnew = options.onnew;
+        this.onclose = options.onclose;
         this.ondelete = options.ondelete;
         this.thumbnail_url = this.model.get("thumbnail_url");
         this.thumbnail = this.model.get("thumbnail");
@@ -152,7 +155,8 @@ var ChannelDetailsView = BaseViews.BaseListEditableItemView.extend({
       "keyup .input_listener": "register_changes",
       "focus .input-tab-control": "loop_focus",
       "click .copy-id-btn" : "copy_id",
-      "click .delete_channel": "delete_channel"
+      "click .delete_channel": "delete_channel",
+      "click .cancel": "close_view"
     },
     render: function() {
         this.$el.html(this.template({
@@ -283,6 +287,9 @@ var ChannelDetailsView = BaseViews.BaseListEditableItemView.extend({
         this.$("#submit").attr("disabled", "disabled");
         this.$("#submit").addClass("disabled");
     },
+    close_view: function() {
+        this.onclose();
+    },
     delete_channel: function() {
         var self = this;
         dialog.dialog(this.get_translation("warning"), this.get_translation("delete_warning", this.model.get("name")), {
@@ -313,6 +320,9 @@ var DetailsView = BaseViews.BaseListEditableItemView.extend({
         this.channel = options.channel;
         this.render();
     },
+    events: {
+      "click .btn-tab": "set_tab"
+    },
     render: function() {
         console.log(this.model.get("metadata"))
         var self = this;
@@ -328,10 +338,10 @@ var DetailsView = BaseViews.BaseListEditableItemView.extend({
             model_name: this.model_name,
             license_count: this.model.get("metadata").licenses.length,
             copyright_holder_count: this.model.get("metadata").copyright_holders.length,
-            token_count: this.channel && this.channel.secret_tokens.length,
+            token_count: (this.channel && this.channel.secret_tokens)? this.channel.secret_tokens.length : 0,
             channel: this.channel,
             size_bar: this.get_size_bar(this.model.get("metadata").resource_size),
-            count_bar: this.get_count_bar(this.model.get("metadata").resource_count),
+            count_bar: this.get_count_bar(this.model.get("metadata").resource_count)
         },  {
             data: this.get_intl_data()
         }));
@@ -398,6 +408,10 @@ var DetailsView = BaseViews.BaseListEditableItemView.extend({
             "filled": bar,
             "text": this.get_translation(SCALE_TEXT[size_index])
         };
+    },
+    set_tab: function(e) {
+        this.$(".btn-tab").removeClass("active");
+        $(e.target).addClass("active");
     }
 
     // render_channels: function() {

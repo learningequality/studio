@@ -210,8 +210,8 @@ def get_topic_details(request, contentnode_id):
     split_lst = zip(*creators)
 
     # Get sample pathway by getting longest path
-    max_level = descendants.aggregate(max_level=Max('level'))['max_level']
-    deepest_node = descendants.filter(level=max_level).first()
+    max_level = resources.aggregate(max_level=Max('level'))['max_level']
+    deepest_node = resources.filter(level=max_level).first()
     pathway = list(deepest_node.get_ancestors().exclude(parent=None).values('title', 'node_id', 'kind_id')) if deepest_node else []
     sample_nodes = [
         {
@@ -219,8 +219,8 @@ def get_topic_details(request, contentnode_id):
             "title": n.title,
             "description": n.description,
             "thumbnail": get_thumbnail(n),
-        } for n in resources[0:4]
-    ]
+        } for n in deepest_node.get_siblings(include_self=True)[0:4]
+    ] if deepest_node else []
 
     # Get original channel list
     channel_id = node.get_channel().id

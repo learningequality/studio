@@ -45,10 +45,11 @@
             {{/if}}
         </div>
     </div>
-    <hr>
+    <br><br>
     {{#unless is_new}}
         <div id="look-inside">
             <div class="default-content text-center">
+                <hr>
                 {{formatMessage (intlGet 'messages.loading_details')}}
             </div>
         </div>
@@ -70,7 +71,7 @@
             <button disabled class="disabled action-button pull-right modal-main-action-button tab_item" id="submit" title="{{formatMessage (intlGet 'messages.invalid_channel')}}">
                 {{formatMessage (intlGet 'messages.create')}}
             </button>
-            <a class="action-text tab_item uppercase">{{formatMessage (intlGet 'messages.cancel')}}</a>
+            <a class="action-text tab_item uppercase cancel">{{formatMessage (intlGet 'messages.cancel')}}</a>
         {{else}}{{#if can_edit}}
             <button disabled class="disabled action-button pull-right modal-main-action-button tab_item" id="submit">
                 {{formatMessage (intlGet 'messages.no_changes_detected')}}
@@ -81,6 +82,6 @@
 </div>
 {{#unless is_new}}
 <div class="container-fluid" id="channel_details_bottom">
-    <a class="btn action-button uppercase">{{formatMessage (intlGet 'messages.open')}}</a>
+    <a class="btn action-button uppercase" href="/channels/{{channel.id}}/{{#if can_edit}}edit{{else}}view{{/if}}">{{formatMessage (intlGet 'messages.open')}}</a>
 </div>
 {{/unless}}
