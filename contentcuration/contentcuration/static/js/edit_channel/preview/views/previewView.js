@@ -8,9 +8,13 @@ import documentTemplate from '../hbtemplates/preview_templates/document.handleba
 
 export default BaseView.extend({
   initialize(options) {
-    // initialized as a side effect of getTemplate if needed.
-    this.vuePreview = null;
-    this.template = this.getTemplate(options);
+    this.template = this.getStudioTemplate(options);
+
+    // no studio-specific template available
+    if(!this.template){
+      this.vuePreview = this.getKolibriComponent();
+      this.template = this.vuePreview.$el;
+    }
 
     this.on('destroy', () => {
       if (this.vuePreview) {
@@ -23,27 +27,7 @@ export default BaseView.extend({
 
     this.render();
   },
-  getTemplate({ previewFile, intl_data }) {
-    const imageFormats = ['jpg', 'jpeg', 'png'];
-
-    // Needs image template (not in kolibri)
-    if (imageFormats.includes(previewFile.file_format)) {
-
-      const imageSource = () => {
-        if (this.model.has("thumbnail_encoding")) {
-          return this.model.get("thumbnail_encoding").base64 || previewFile.storage_url;
-        }
-        return previewFile.storage_url;
-      }
-
-      return imageTemplate({ source: imageSource() }, { data: intl_data });
-    }
-
-    // Needs subtitle template (not in kolibri)
-    if (previewFile.file_format === 'srt') {
-      return documentTemplate({ source: previewFile.storage_url }, { data: intl_data });
-    }
-
+  getKolibriComponent(){
     // Kolibri renderable
 
     // mock up vue props here
@@ -122,10 +106,30 @@ export default BaseView.extend({
       },
     });
 
-    this.vuePreview = kVueHelper(contentRenderer, propsData);
+    return kVueHelper(contentRenderer, propsData);
+  },
+  getStudioTemplate({ previewFile, intl_data }) {
+    const imageFormats = ['jpg', 'jpeg', 'png'];
 
-    return this.vuePreview.$el;
+    // Needs image template (not in kolibri)
+    if (imageFormats.includes(previewFile.file_format)) {
 
+      const imageSource = () => {
+        if (this.model.has("thumbnail_encoding")) {
+          return this.model.get("thumbnail_encoding").base64 || previewFile.storage_url;
+        }
+        return previewFile.storage_url;
+      }
+
+      return imageTemplate({ source: imageSource() }, { data: intl_data });
+    }
+
+    // Needs subtitle template (not in kolibri)
+    if (previewFile.file_format === 'srt') {
+      return documentTemplate({ source: previewFile.storage_url }, { data: intl_data });
+    }
+
+    return '';
   },
   render() {
     this.$el.html(this.template);
