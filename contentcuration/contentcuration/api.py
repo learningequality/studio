@@ -57,8 +57,7 @@ def write_file_to_storage(fobj, check_valid=False, name=None):
 
     # Write file
     storage = default_storage
-    with storage.open(file_path, 'wb') as destf:
-        shutil.copyfileobj(fobj, destf)
+    storage.save(file_path, fobj)
     return full_filename
 
 
