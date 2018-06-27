@@ -57,9 +57,6 @@ var MESSAGES = {
     "delete_warning": "All content under this channel will be permanently deleted.\nAre you sure you want to delete this channel?",
     "delete_title": "Delete this Channel",
     "delete_prompt": "Once you delete a channel, the channel will be permanently deleted.",
-    "save": "SAVE",
-    "dont_save": "Discard Changes",
-    "keep_open": "Keep Editing",
     "total_resource_count": "{data, plural,\n =1 {Total Resource}\n other {Total Resources}}",
     "create": "CREATE",
     "invalid_channel": "Cannot save invalid channel",
@@ -84,48 +81,6 @@ var MESSAGES = {
 }
 
 var SCALE_TEXT = ["very_small", "very_small", "small", "small", "average", "average", "average", "large", "large", "very_large", "very_large"];
-
-var ChannelDetailsModalView = BaseViews.BaseModalView.extend({
-    template: require("./hbtemplates/details_modal.handlebars"),
-    name: NAMESPACE,
-    $trs: MESSAGES,
-    initialize: function(options) {
-        _.bindAll(this, 'close_details');
-        this.parent_view = options.parent_view;
-        this.render(this.close_details, {});
-        this.allow_edit = options.allow_edit;
-        this.details_editor = new ChannelDetailsView({
-            el: this.$(".modal-body"),
-            modal: this,
-            model: options.model,
-            onnew: options.onnew,
-            ondelete: options.ondelete,
-            allow_edit: this.allow_edit
-        });
-        this.$("#channel_details_modal").on("shown.bs.modal", this.details_editor.create_initial);
-    },
-    close_details: function(event) {
-        if(this.allow_edit && this.details_editor.changed) {
-            var self = this;
-            dialog.dialog(this.get_translation("unsaved_changes"), this.get_translation("unsaved_changes_text"), {
-                [self.get_translation("dont_save")]: function(){
-                    self.close();
-                    $(".modal-backdrop").remove();
-                },
-                [self.get_translation("keep_open")]:function(){},
-                [self.get_translation("save")]:function(){
-                    self.details_editor.submit_changes();
-                    self.close();
-                    $(".modal-backdrop").remove();
-                },
-            }, null);
-        } else {
-            this.close();
-            $(".modal-backdrop").remove();
-        }
-    }
-});
-
 
 var ChannelDetailsView = BaseViews.BaseListEditableItemView.extend({
     template: require("./hbtemplates/details_editor.handlebars"),
@@ -156,7 +111,7 @@ var ChannelDetailsView = BaseViews.BaseListEditableItemView.extend({
       "focus .input-tab-control": "loop_focus",
       "click .copy-id-btn" : "copy_id",
       "click .delete_channel": "delete_channel",
-      "click .cancel": "close_view"
+      "click .cancel": "close"
     },
     render: function() {
         this.$el.html(this.template({
@@ -243,6 +198,7 @@ var ChannelDetailsView = BaseViews.BaseListEditableItemView.extend({
             "name": $("#input_title").val().trim(),
             "description": $("#input_description").val(),
             "thumbnail": this.model.get("thumbnail"),
+            "thumbnail_encoding": this.model.get("thumbnail_encoding"),
             "language": (language===0)? null : language
         }).then(function(data){
             self.changed = false;
@@ -287,7 +243,7 @@ var ChannelDetailsView = BaseViews.BaseListEditableItemView.extend({
         this.$("#submit").attr("disabled", "disabled");
         this.$("#submit").addClass("disabled");
     },
-    close_view: function() {
+    close: function() {
         this.onclose();
     },
     delete_channel: function() {

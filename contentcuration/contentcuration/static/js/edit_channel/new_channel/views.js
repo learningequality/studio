@@ -17,16 +17,8 @@ var MESSAGES = {
 	"header": "My Channels",
 	"starred": "Starred",
 	"public": "Public",
-	// "add_channel_disbaled_title": "Cannot create a new channel while another channel is being edited.",
 	"add_channel_title": "Create a new channel",
 	"pending_loading": "Checking for invitations...",
-	// "delete_channel": "DELETE CHANNEL",
-	// "save_channel": "SAVE",
-	// "deleting_channel": "Deleting Channel...",
-	// "delete_warning": "All content under this channel will be permanently deleted.\nAre you sure you want to delete this channel?",
-	// "channel_name_error": "Channel must have a name",
-	// "name_placeholder": "Enter channel name...",
-	// "description_placeholder": "Enter channel description...",
 	"copy_id": "Copy ID to clipboard",
 	"unpublished": "Unpublished",
 	"view_only": "View Only",
@@ -52,7 +44,10 @@ var MESSAGES = {
 	"channel_title_prompt": "('CTRL' or 'CMD' + click to open in new tab)",
 	"channel_detail_prompt": "Select a channel to view details",
 	"channel_details": "About this Channel",
-	"open_channel": "Open Channel"
+	"open_channel": "Open Channel",
+	"save": "SAVE",
+    "dont_save": "Discard Changes",
+    "keep_open": "Keep Editing",
 }
 
 var ChannelListPage  = BaseViews.BaseView.extend({
@@ -145,16 +140,37 @@ var ChannelListPage  = BaseViews.BaseView.extend({
 	close_details: function() {
 		this.toggle_panel()
 	},
-	toggle_panel: function(view) {
+	toggle_panel: function(view, channel_list_item) {
+		if(!this.current_view || !this.current_view.changed) {
+			this.set_details(view, channel_list_item);
+        } else {
+            var self = this;
+            dialog.dialog(this.get_translation("unsaved_changes"), this.get_translation("unsaved_changes_text"), {
+                [self.get_translation("dont_save")]: function(){
+                    self.set_details(view, channel_list_item);
+                },
+                [self.get_translation("keep_open")]:function(){},
+                [self.get_translation("save")]:function(){
+                    self.current_view.submit_changes();
+                    self.set_details(view, channel_list_item);
+                },
+            }, null);
+        }
+	},
+	set_details: function(view, channel_list_item) {
 		$(".active_channel").removeClass("active_channel");
 		this.current_view && this.current_view.remove();
-		if(view && !this.open) {
-			this.open = true;
+		if(view) {
+			if(!this.open) {
+				this.open = true;
+				this.$("#channel_list_wrapper").animate({
+	      			width: $(window).width() - $("#channel_preview_wrapper").width()
+	    		}, 500);
+			}
 			this.current_view = view;
-			this.$("#channel_list_wrapper").animate({
-      			width: $(window).width() - $("#channel_preview_wrapper").width()
-    		}, 500);
-		} else if(!view && this.open) {
+    		$("#channel_details_panel").html(view.el);
+    		channel_list_item && channel_list_item.addClass("active_channel");
+		} else if(this.open) {
 			this.open = false;
 			this.$("#channel_list_wrapper").animate({
       			width: $(window).width()
@@ -177,7 +193,6 @@ var ChannelList  = BaseViews.BaseEditableListView.extend({
 		this.render();
 	},
 	render: function() {
-		// this.set_editing(false);
 		this.$el.html(this.template(null, {
 			data: this.get_intl_data()
 		}));
@@ -192,13 +207,6 @@ var ChannelList  = BaseViews.BaseEditableListView.extend({
 		this.views.push(newView);
 		return newView;
 	},
-	// set_editing: function(edit_mode_on){
-	// 	$(".disable-on-edit").prop("disabled", edit_mode_on);
-	// 	$(".disable-on-edit").css("cursor", (edit_mode_on) ? "not-allowed" : "pointer");
-	// 	$(".invisible-on-edit").css('visibility', (edit_mode_on)?'hidden' : 'visible');
-	// 	(edit_mode_on)? $(".new_channel_button").addClass("disabled") : $(".new_channel_button").removeClass("disabled");
-	// 	$(".new_channel_button").prop("title", (edit_mode_on)? this.get_translation("add_channel_disbaled_title") : this.get_translation("add_channel_title"));
-	// },
 	save_new_channel: function(channel) {
 		var view = this.add_channel(channel);
 		view.open_channel();
@@ -248,7 +256,6 @@ var CurrentChannelList  = ChannelList.extend({
 			onnew: this.save_new_channel,
 			onclose: this.container.toggle_panel
 		});
-		$("#channel_details_panel").html(detail_view.el);
 		this.container.toggle_panel(detail_view);
 	}
 });
@@ -271,36 +278,16 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	initialize: function(options) {
 		this.bind_edit_functions();
 		_.bindAll(this, 'delete_channel');
-		// _.bindAll(this, 'edit_channel','delete_channel','toggle_channel','save_channel','update_title', 'loop_focus', 'copy_id', 'set_indices',
-		// 				'open_channel', 'set_thumbnail', 'reset_thumbnail','enable_submit', 'disable_submit', 'remove_thumbnail', 'set_star_icon', 'refresh');
 		this.listenTo(this.model, "sync", this.render);
-		// this.edit = false;
 		this.containing_list_view = options.containing_list_view;
 		this.container = options.container;
-		// this.original_thumbnail = this.model.get("thumbnail");
-		// this.original_thumbnail_url = this.model.get("thumbnail_url");
-		// this.original_thumbnail_encoding = this.model.get("thumbnail_encoding");
-		// this.thumbnail_encoding = this.original_thumbnail_encoding;
-		// this.thumbnail_url = this.original_thumbnail_url;
-		// this.thumbnail = this.original_thumbnail;
-		// this.originalData = (this.model)? this.model.toJSON() : null;
 		this.can_edit = this.model.get("editors").indexOf(window.current_user.id) >= 0;
-		// this.dropzone = null;
-		// this.isNew = false;
-		// this.thumbnail_success = true;
 		this.render();
 	},
 	set_is_new:function(isNew){
 		this.isNew = isNew;
-		// if (this.isNew){
-		// 	this.$(".save_channel").attr("disabled", "disabled");
-		// 	this.$(".save_channel").prop("disabled", true);
-		// 	this.$(".save_channel").css("cursor", "not-allowed");
-		// 	this.render();
-		// }
 	},
 	render: function() {
-		console.log(this.model.get("thumbnail_encoding"))
 		this.$el.html(this.template({
 			can_edit: this.can_edit,
 			// edit: this.edit,
@@ -316,42 +303,13 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		}, {
 			data: this.get_intl_data()
 		}));
-		// if(this.edit){
-		// 	this.image_upload = new ImageViews.ThumbnailUploadView({
-		// 		model: this.model,
-		// 		el: this.$(".new_channel_pic"),
-		// 		preset_id: 'channel_thumbnail',
-		// 		upload_url: window.Urls.thumbnail_upload(),
-		// 		acceptedFiles: 'image/jpeg,image/jpeg,image/ ng',
-		// 		image_url: this.thumbnail_url,
-		// 		default_url: "/static/img/kolibri_placeholder.png",
-		// 		onsuccess: this.set_thumbnail,
-		// 		onerror: this.reset_thumbnail,
-		// 		oncancel:this.enable_submit,
-		// 		onstart: this.disable_submit,
-		// 		onremove: this.remove_thumbnail,
-		// 		allow_edit: true,
-		// 		is_channel: true
-		// 	});
-		// 	this.$("#select_language").val(this.model.get("language") || 0);
-		// }
 		this.$('[data-toggle="tooltip"]').tooltip();
-		// this.set_indices();
-		// this.set_initial_focus();
 	},
 	events: {
-		// 'click .edit_channel':'edit_channel',
 		'click .star_channel': 'star_channel',
 		'click .unstar_channel': 'unstar_channel',
 		'mouseover .channel_option_icon':'remove_highlight',
 		'mouseover .copy-id-btn':'remove_highlight',
-		// 'click .delete_channel' : 'delete_channel',
-		// 'click .channel_toggle': 'toggle_channel',
-		// 'click .save_channel': 'save_channel',
-		// 'keyup #new_channel_name': 'update_title',
-		// 'keyup #new_channel_name': 'update_title',
-		// 'paste #new_channel_name': 'update_title',
-		// 'focus .input-tab-control': 'loop_focus',
 		'click .copy-id-btn' : 'copy_id',
 		'click .open_channel': 'open_channel',
 		'mouseover .open_channel': 'add_highlight',
@@ -377,9 +335,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 						allow_edit: this.can_edit,
 						ondelete: this.delete_channel
 					});
-					$("#channel_details_panel").html(detail_view.el);
-					this.container.toggle_panel(detail_view);
-					this.$el.addClass("active_channel");
+					this.container.toggle_panel(detail_view, this.$el);
 				}
 			}
 		}
@@ -400,31 +356,6 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 			self.$(".copy-id-btn").text("content_paste");
 		}, 2500);
 	},
-	// update_title:function(){
-	// 	this.show_error(!this.$("#new_channel_name").val().length);
-	// },
-	// show_error: function(is_error){
-	// 	if(is_error){
-	// 		this.$("#channel_name_error").css("visibility", "visible");
-	// 		this.$(".save_channel").attr("disabled", "disabled");
-	// 		this.$(".save_channel").prop("disabled", true);
-	// 		this.$(".save_channel").css("cursor", "not-allowed");
-	// 	}else{
-	// 		this.$("#channel_name_error").css("visibility", "hidden");
-	// 		this.$(".save_channel").removeAttr("disabled");
-	// 		this.$(".save_channel").prop("disabled", false);
-	// 		this.$(".save_channel").css("cursor", "pointer");
-	// 	}
-	// },
-	// refresh: function(model) {
-	// 	this.model.set(model.toJSON());
-	// 	this.render();
-	// },
-	// edit_channel: function(){
-	// 	this.containing_list_view.set_editing(true);
-	// 	this.edit = true;
-	// 	this.render();
-	// },
 	star_channel: function(){
 		var self = this;
 		this.model.add_bookmark(window.current_user.id).then(function() {
@@ -454,96 +385,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	},
 	delete_channel: function(model){
 		this.container.delete_channel(this.model);
-	},
-	// toggle_channel: function(event){
-	// 	event.stopPropagation();
-	// 	event.preventDefault();
-	// 	this.thumbnail = this.original_thumbnail;
-	// 	this.thumbnail_url = this.original_thumbnail_url;
-	// 	this.thumbnail_encoding = this.original_thumbnail_encoding;
-	// 	this.containing_list_view.set_editing(false);
-	// 	if(this.isNew){
-	// 		this.delete(true, " ");
-	// 		this.remove();
-	// 	}else{
-	// 		this.unset();
-	// 		this.edit = false;
-	// 		this.render();
-	// 	}
-	// },
-	// save_channel: function(event){
-	// 	if(this.validate()){
-	// 		this.containing_list_view.set_editing(false);
-	// 		this.set_is_new(false);
-	// 		var title = this.$el.find("#new_channel_name").val().trim();
-	// 		var description = this.$el.find("#new_channel_description").val();
-	// 		var language = window.languages.findWhere({id: this.$el.find("#select_language").val()});
-	// 		var preferences = this.model.get('content_defaults') || (typeof window.user_preferences === "object")? window.user_preferences : JSON.parse(window.user_preferences);
-
-	// 		var data = {
-	// 			name: title,
-	// 			description: description,
-	// 			thumbnail : this.thumbnail,
-	// 			thumbnail_encoding: this.thumbnail_encoding,
-	// 			editors: this.model.get('editors'),
-	// 			content_defaults: preferences,
-	// 			language: this.$el.find("#select_language").val(),
-	// 			pending_editors: this.model.get('pending_editors') || [],
-	// 		};
-	// 		this.original_thumbnail = this.thumbnail;
-	// 		this.original_thumbnail_url = this.thumbnail_url;
-	// 		this.edit = false;
-
-	// 		var self = this;
-	// 		this.save(data, this.get_translation("saving")).then(function(channel){
-	// 			self.model = channel;
-	// 			self.render();
-	// 		});
-	// 	}
-	// },
-	// validate:function(){
-	// 	if(!this.$("#new_channel_name").val().length){
-	// 		this.show_error(true);
-	// 		return false;
-	// 	}
-	// 	return true;
-	// },
-	// set_channel:function(){
-	// 	this.set({
-	// 		name: this.$el.find("#new_channel_name").val().trim(),
-	// 		description: this.$el.find("#new_channel_description").val(),
-	// 		thumbnail : this.thumbnail,
-	// 		thumbnail_encoding: this.thumbnail_encoding
-	// 	});
-	// },
-	// reset_thumbnail:function(){
-	// 	this.set_channel();
-	// 	this.render();
-	// 	this.enable_submit();
-	// },
-	// remove_thumbnail:function(){
-	// 	this.thumbnail = null;
-	// 	this.thumbnail_url = "/static/img/kolibri_placeholder.png";
-	// 	this.thumbnail_encoding = null;
-	// 	this.set_channel();
-	// 	this.enable_submit();
-	// },
-	// set_thumbnail:function(thumbnail, encoding, formatted_name, path){
-	// 	this.thumbnail = formatted_name;
-	// 	this.thumbnail_url = path;
-	// 	this.thumbnail_encoding = encoding;
-	// 	this.set_channel();
-	// 	this.enable_submit();
-	// },
-	// set_editing: function(edit_mode_on){
-	// 	this.containing_list_view.set_editing(edit_mode_on);
-	// },
-	// enable_submit:function(){
-	// 	this.$(".save_channel").removeAttr("disabled");
-	// },
-	// disable_submit:function(){
-	// 	this.$(".save_channel").attr("disabled", "disabled");
-	// },
+	}
 });
 
 var PendingChannelList  = ChannelList.extend({
