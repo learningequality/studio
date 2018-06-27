@@ -28,83 +28,78 @@ export default BaseView.extend({
     this.render();
   },
   getKolibriComponent(){
-    // Kolibri renderable
+    // dupe the global component. Likely to be modified.
+    const { contentRenderer } = Object.assign({}, window.kolibriGlobal.coreVue.components);
 
     // mock up vue props here
-    // const kind = this.model.get('kind');
-    // const assessment = kind === 'exercise';
-    // // const itemId = assessment ? this.model.get('assessment_item_ids')[0] : null;
-    // const files = this.model.get('files').map(file => {
-    //   return Object.assign({
-    //     extension: file.file_format,
-    //     lang: file.language,
-    //     thumbnail: file.preset.thumbnail,
-    //     priority: file.preset.order,
-    //     available: true,
-    //   }, file)
-    // });
-    // const kind = 'exercise';
-    // const assessment = kind === 'exercise';
-    // const itemId = assessment ? this.model.get('assessment_item_ids')[0] : null;
 
-
-    // const propsData = {
-    //   kind,
-    //   item,
-    //   assessment,
-    //   files,
-    //   itemId: null,
-    //   available: true,
-    //   interactive: false,
-    // };
-
-    console.log('test dummy', perseusTest);
-
-    const propsData = perseusTest;
-
-    const { contentRenderer } = window.kolibriGlobal.coreVue.components;
-
-    // currentViewClass is a `data` property set in the `created` hook via promise
-    // the component housed in currentViewClass is rendered via a `v-if`d `<component :is="">`
-    // this means that the component and its associated `ref` doesn't exist until:
-    // 1) The promise is returned, setting the correct `data` property
-    // 2) The DOM updates to reflect the changes in `data`
-    Object.assign(contentRenderer, {
-      watch: {
-        // using a watcher to listen for changes in the data field
-        currentViewClass() {
-          // giving the component a $nextTick to update the DOM
-          // note: binds `this` to the scope of the component
-          this.$nextTick(function(){
-
-            // override loadItemData because itemId is necessary, but causes the component to look for
-            this.$refs.contentView.loadItemData = () => null;
-
-            // perseus renderer is v-if'd based on itemId. Need DOM to update.
-            this.$refs.contentView.$nextTick(function(){
-              // files that aren't being served.
-              console.log('entering the if...');
-
-              const item = JSON.parse(propsData.perseusObject.itemData)
-
-              // copied from perseus renderer index
-              if (this.validateItemData(item)) {
-                console.log('if passed!!');
-                this.item = item;
-                if (this.$el) {
-                  // Don't try to render if our component is not mounted yet.
-                  this.renderItem();
-                } else {
-                  this.$once('mounted', this.renderItem);
-                }
-              } else {
-                console.error('Loaded item was malformed', item);
-              }
-            });
-          });
-        },
-      },
+    const kind = this.model.get('kind');
+    const assessment = kind === 'exercise';
+    const itemId = assessment ? this.model.get('assessment_item_ids')[0] : null;
+    const files = this.model.get('files').map(file => {
+      return Object.assign({
+        extension: file.file_format,
+        lang: file.language,
+        thumbnail: file.preset.thumbnail,
+        priority: file.preset.order,
+        available: true,
+      }, file)
     });
+
+
+    // Modify contentRenderer if assessment
+    if(assessment){
+
+      // currentViewClass is a `data` property set in the `created` hook via promise
+      // the component housed in currentViewClass is rendered via a `v-if`d `<component :is="">`
+      // this means that the component and its associated `ref` doesn't exist until:
+      // 1) The promise is returned, setting the correct `data` property
+      // 2) The DOM updates to reflect the changes in `data`
+      Object.assign(contentRenderer, {
+        watch: {
+          // using a watcher to listen for changes in the data field
+          currentViewClass() {
+            // giving the component a $nextTick to update the DOM
+            // note: binds `this` to the scope of the component
+            this.$nextTick(function(){
+
+              // override loadItemData because itemId is necessary, but causes the component to look for
+              this.$refs.contentView.loadItemData = () => null;
+
+              // perseus renderer is v-if'd based on itemId. Need DOM to update.
+              this.$refs.contentView.$nextTick(function(){
+                // files that aren't being served.
+
+                // TODO STOP USING DUMMY DATA
+                const item = JSON.parse(perseusTest.perseusObject.itemData)
+
+                // copied from perseus renderer index
+                if (this.validateItemData(item)) {
+                  this.item = item;
+                  if (this.$el) {
+                    // Don't try to render if our component is not mounted yet.
+                    this.renderItem();
+                  } else {
+                    this.$once('mounted', this.renderItem);
+                  }
+                } else {
+                  console.error('Loaded item was malformed', item);
+                }
+              });
+            });
+          },
+        },
+      });
+    }
+
+    const propsData = {
+      kind,
+      assessment,
+      files,
+      itemId,
+      available: true,
+      interactive: false,
+    };
 
     return kVueHelper(contentRenderer, propsData);
   },
