@@ -277,7 +277,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	template: require("./hbtemplates/channel_item.handlebars"),
 	initialize: function(options) {
 		this.bind_edit_functions();
-		_.bindAll(this, 'delete_channel');
+		_.bindAll(this, 'delete_channel', 'star_channel', 'unstar_channel', 'set_star_icon');
 		this.listenTo(this.model, "sync", this.render);
 		this.containing_list_view = options.containing_list_view;
 		this.container = options.container;
@@ -333,7 +333,9 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 					var detail_view = new DetailView.ChannelDetailsView({
 						model: this.model,
 						allow_edit: this.can_edit,
-						ondelete: this.delete_channel
+						ondelete: this.delete_channel,
+						onstar: this.star_channel,
+						onunstar: this.unstar_channel
 					});
 					this.container.toggle_panel(detail_view, this.$el);
 				}
@@ -352,36 +354,36 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		} catch(e) {
 			self.$(".copy-id-btn").text("clear");
 		}
-		setTimeout(function(){
+		setTimeout(function(event){
 			self.$(".copy-id-btn").text("content_paste");
 		}, 2500);
 	},
-	star_channel: function(){
+	star_channel: function(event, star_icon){
 		var self = this;
 		this.model.add_bookmark(window.current_user.id).then(function() {
 			self.model.set("is_bookmarked", true);
 			self.render();
-			self.set_star_icon(self.get_translation("starred_channel"), self.get_translation("unstar_channel"));
+			self.set_star_icon(self.get_translation("unstar_channel"), star_icon);
 			self.container.add_channel(self.model, "star");
 		});
 	},
-	unstar_channel: function(){
+	unstar_channel: function(event, star_icon){
 		var self = this;
 		this.model.remove_bookmark(window.current_user.id).then(function() {
 			self.model.set("is_bookmarked", false);
 			self.render();
-			self.set_star_icon(self.get_translation("unstarred_channel"), self.get_translation("star_channel"));
+			self.set_star_icon(self.get_translation("star_channel"), star_icon);
 			self.container.remove_star(self.model);
 		});
 	},
-	set_star_icon: function(temporary_message, new_message){
-		this.$(".star_option").attr("data-original-title", temporary_message);
-		this.$(".star_option").tooltip("show");
-		var self = this;
-		setTimeout(function(){
-			self.$(".star_option").attr("data-original-title", new_message);
-			self.$(".star_option").tooltip("hide");
-		}, 2000);
+	set_star_icon: function(new_message, star_icon){
+		star_icon = star_icon || this.$(".star_option");
+		star_icon.tooltip("hide");
+
+		// Keep channel details in sync with channel list
+		$("#channel_details_view_panel .star_icon").html(this.$(".star_option").html());
+		$("#channel_details_view_panel .star_icon").attr("data-original-title", new_message);
+		this.$(".star_option").attr("data-original-title", new_message);
 	},
 	delete_channel: function(model){
 		this.container.delete_channel(this.model);

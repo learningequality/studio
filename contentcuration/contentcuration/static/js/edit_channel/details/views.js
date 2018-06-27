@@ -77,7 +77,9 @@ var MESSAGES = {
     "accessible_languages": "Subtitles",
     "instructor_resources": "For Educators",
     "recommended": "(Recommended)",
-    "preview": "Preview"
+    "preview": "Preview",
+    "star_channel": "Star Channel",
+    "unstar_channel": "Remove Star"
 }
 
 var SCALE_TEXT = ["very_small", "very_small", "small", "small", "average", "average", "average", "large", "large", "very_large", "very_large"];
@@ -94,6 +96,8 @@ var ChannelDetailsView = BaseViews.BaseListEditableItemView.extend({
         this.onnew = options.onnew;
         this.onclose = options.onclose;
         this.ondelete = options.ondelete;
+        this.onstar = options.onstar;
+        this.onunstar = options.onunstar;
         this.thumbnail_url = this.model.get("thumbnail_url");
         this.thumbnail = this.model.get("thumbnail");
         this.allow_edit = options.allow_edit;
@@ -111,7 +115,8 @@ var ChannelDetailsView = BaseViews.BaseListEditableItemView.extend({
       "focus .input-tab-control": "loop_focus",
       "click .copy-id-btn" : "copy_id",
       "click .delete_channel": "delete_channel",
-      "click .cancel": "close"
+      "click .cancel": "close",
+      "click .star_icon": "toggle_star"
     },
     render: function() {
         this.$el.html(this.template({
@@ -252,13 +257,19 @@ var ChannelDetailsView = BaseViews.BaseListEditableItemView.extend({
             [this.get_translation("cancel")]:function(){},
             [this.get_translation("delete_channel")]: function(){
                 self.save({"deleted":true}, self.get_translation("deleting_channel")).then(function() {
-                    if (self.modal) {
-                        self.modal.close_details();
-                    }
                     self.ondelete(self.model);
                 });
             },
         }, null);
+    },
+    toggle_star: function(event) {
+        if($(event.target).html() === "star") {
+            this.onunstar(null, $(event.target));
+            $(event.target).html("star_border");
+        } else {
+            this.onstar(null, $(event.target));
+            $(event.target).html("star");
+        }
     }
 });
 

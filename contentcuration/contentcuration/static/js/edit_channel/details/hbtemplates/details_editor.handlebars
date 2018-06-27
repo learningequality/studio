@@ -1,3 +1,6 @@
+{{#unless is_new}}
+    <i data-toggle="tooltip" data-placement="right" title="{{#if channel.is_bookmarked}}{{formatMessage (intlGet 'messages.unstar_channel')}}{{else}}{{formatMessage (intlGet 'messages.star_channel')}}{{/if}}" class="material-icons star_icon">{{#if channel.is_bookmarked}}star{{else}}star_border{{/if}}</i>
+{{/unless}}
 <div id="channel_details" class="container-fluid">
     <div class="input-tab-control tab_item" data-next="#{{#if can_edit}}submit{{else}}open{{/if}}"></div>
     <div class="row channel_details_area">
