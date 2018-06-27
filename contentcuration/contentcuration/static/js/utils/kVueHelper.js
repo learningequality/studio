@@ -5,7 +5,7 @@ var Vue = window.kolibriGlobal.lib.vue;
 // which includes a $el property, much like a Backbone View
 // NOTE: remember to call the component's $destroy method when done with it.
 //       Not doing so could lead to memory leaks.
-export default function(componentDefObject, props) {
+export default function(componentDefObject, options) {
   const component = Vue.extend(componentDefObject);
 
   // Custom, from Kolibri. No need for `Vue.use()` or `new Vuex.Store`
@@ -15,8 +15,17 @@ export default function(componentDefObject, props) {
 
   // IDEA add an event API
 
-  return new component({
-    propsData: props,
-    store: window.kolibriGlobal.coreVue.vuex.store.default,
-  }).$mount();
+  // no custom store defined, use kolibri's
+  if(!options.store){
+    options.store = window.kolibriGlobal.coreVue.vuex.store.default;
+  }
+
+  const instantiatedComponent = new component(options);
+
+  // If no el is provided, must call $mount manually. Uses a dummy $el
+  if(!options.el){
+    return instantiatedComponent.$mount;
+  }
+
+  return instantiatedComponent;
 }

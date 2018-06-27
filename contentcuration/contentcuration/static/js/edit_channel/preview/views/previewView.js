@@ -8,12 +8,9 @@ import documentTemplate from '../hbtemplates/preview_templates/document.handleba
 
 export default BaseView.extend({
   initialize(options) {
-    this.template = this.getStudioTemplate(options);
-
-    // no studio-specific template available
-    if(!this.template){
-      this.vuePreview = this.getKolibriComponent();
-      this.template = this.vuePreview.$el;
+    // file is specified, get the template if kolibri renderer isn't necessary
+    if(options.previewFile){
+      this.template = this.getStudioTemplate(options);
     }
 
     this.on('destroy', () => {
@@ -27,7 +24,7 @@ export default BaseView.extend({
 
     this.render();
   },
-  getKolibriComponent(){
+  setupKolibriComponent(){
     // dupe the global component. Likely to be modified.
     const { contentRenderer } = Object.assign({}, window.kolibriGlobal.coreVue.components);
 
@@ -101,7 +98,12 @@ export default BaseView.extend({
       interactive: false,
     };
 
-    return kVueHelper(contentRenderer, propsData);
+    // passing el here so that vue has context about its parent elements.
+    // context needed to use responsiveElement properly
+    return kVueHelper(contentRenderer, {
+      propsData,
+      el: this.el,
+    });
   },
   getStudioTemplate({ previewFile, intl_data }) {
     const imageFormats = ['jpg', 'jpeg', 'png'];
@@ -127,8 +129,13 @@ export default BaseView.extend({
     return '';
   },
   render() {
-    this.$el.html(this.template);
+    if(this.template){
+      this.$el.html(this.template);
+      return this;
+    }
 
+    // Turns out kolibri renderer is necessary
+    this.vuePreview = this.setupKolibriComponent();
     return this;
   },
 });

@@ -54,7 +54,6 @@ export default BaseView.extend({
     }));
 
     this.render();
-
   },
   getPreviews() {
     // array of previewabe files
@@ -74,12 +73,6 @@ export default BaseView.extend({
     'click .preview_btn_tab': 'selectContentPreview',
   },
   render() {
-    this.previewView = new PreviewView({
-      model: this.model,
-      previewFile: this.previews[this.currentPreviewIndex],
-      intl_data: this.get_intl_data(),
-    });
-
     this.$el.html(
       this.template({ file: true }, { data: this.get_intl_data() })
     );
@@ -93,8 +86,15 @@ export default BaseView.extend({
       translate(this.previews[this.currentPreviewIndex].preset.id)
     );
 
-    // NOTE: replaces the entire view on render.
-    this.$('#preview_window').html(this.previewView.el);
+    // passing in `el` option because renderer component often uses `responsiveElement`,
+    // a mixin used in Kolibri to have the element's length and width available in JS. It requires
+    // DOM context (like its parents) to report dimensions properly.
+    this.previewView = new PreviewView({
+      el: this.$('#preview_window'),
+      model: this.model,
+      previewFile: this.previews[this.currentPreviewIndex],
+      intl_data: this.get_intl_data(),
+    });
 
     return this;
   },
