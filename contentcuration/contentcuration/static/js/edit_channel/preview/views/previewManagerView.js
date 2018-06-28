@@ -36,6 +36,7 @@ export default BaseView.extend({
 
 
     this.listenTo(this.model, 'change:files', () => {
+      this.currentPreviewIndex = 0;
       this.previews = this.getPreviews();
       this.previewView.trigger('destroy');
       this.render();
@@ -44,7 +45,7 @@ export default BaseView.extend({
     // Trying to keep this logic limited to the scope of preview Views.
     // Using jquery-ui's `remove` event. Applies to widgets, unsure why getting called here
 
-    // cannot use `listenTo`, unsure why.
+    // Using `defer` to ensure that jquery-ui has had time to bind. Can't use `listenTo`.
     defer(() => this.$el.on("remove", function() {
       this.previewView.trigger('destroy');
       // call stopListening for all events
