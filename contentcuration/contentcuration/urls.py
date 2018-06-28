@@ -37,6 +37,8 @@ import contentcuration.views.public as public_views
 import contentcuration.views.settings as settings_views
 import contentcuration.views.users as registration_views
 import contentcuration.views.zip as zip_views
+import contentcuration.views.exercises as exercise_views
+import django_js_reverse.views as django_js_reverse_views
 from contentcuration.forms import ForgotPasswordForm
 from contentcuration.forms import LoginForm
 from contentcuration.forms import ResetPasswordForm
@@ -219,6 +221,7 @@ urlpatterns = [
     url(r'^api/remove_bookmark/$', views.remove_bookmark, name='remove_bookmark'),
     url(r'^api/set_channel_priority/$', views.set_channel_priority, name='set_channel_priority'),
     url(r'^api/download_channel_content_csv/(?P<channel_id>[^/]{32})$', views.download_channel_content_csv, name='download_channel_content_csv'),
+    url(r'^api/assessment_item_json/(?P<item_id>[^/.]+)$', exercise_views.get_assessment_item_json, name='assessment_item_json'),
 ]
 
 # Add public api endpoints
