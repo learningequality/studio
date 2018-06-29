@@ -1,6 +1,6 @@
-#!/bin/sh
+#!/bin/bash
 
-set -e
+set -xe
 
 BRANCH=$1
 BUCKET=$2
@@ -21,4 +21,4 @@ helm upgrade --install $BRANCH . \
      --set postgresql.postgresDatabase=$POSTGRES_DATABASE \
      --set postgresql.postgresPassword=$POSTGRES_PASSWORD \
      --set postgresql.externalCloudSQL.proxyHostName=$GCLOUD_PROXY_HOSTNAME \
-     --set minio.externalGoogleCloudStorage.gcsKeyJson=$GCS_SERVICE_ACCOUNT_JSON
+     --set minio.externalGoogleCloudStorage.gcsKeyJson=$(base64 $GCS_SERVICE_ACCOUNT_JSON --wrap=0)
