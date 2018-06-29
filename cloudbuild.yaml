@@ -4,7 +4,7 @@ steps:
   args: ['pull', 'gcr.io/$PROJECT_ID/learningequality-studio-app:latest']
 
 - name: 'gcr.io/cloud-builders/docker'
-  id: build-studio-app
+  id: build-app-image
   waitFor: ['pull-app-image-cache']              # don't wait for previous steps
   args: [
     'build',
@@ -28,7 +28,7 @@ steps:
 
 - name: 'gcr.io/cloud-builders/docker'
   id: push-app-image
-  waitFor: ['build-studio-app']
+  waitFor: ['build-app-image']
   args: ['push', 'gcr.io/$PROJECT_ID/learningequality-studio-app:$COMMIT_SHA']
 - name: 'gcr.io/cloud-builders/docker'
   id: push-nginx-image
