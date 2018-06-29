@@ -26,8 +26,8 @@
                     </div>
                     <div class="col-xs-6">
                         {{formatMessage (intlGet 'messages.storage')}}
-                        <span>
-                            {{#each size_bar.filled}}<i class="material-icons size_icon" data-toggle="tooltip" data-placement="top" title="{{{format_file_size ../details.resource_size}}} - {{../size_bar.text}}">sd_storage</i>{{/each}}
+                        <span data-toggle="tooltip" data-placement="top" title="{{{format_file_size details.resource_size}}} - {{size_bar.text}}">
+                            {{#each size_bar.filled}}<i class="material-icons size_icon">sd_storage</i>{{/each}}
                         </span>
                     </div>
                 </div>

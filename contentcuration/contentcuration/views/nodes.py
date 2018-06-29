@@ -3,8 +3,10 @@ import copy
 import json
 import logging
 import uuid
+from datetime import datetime
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseNotFound
 from django.conf import settings
+from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import Q, Case, When, Value, IntegerField, Max, Sum, F, Count
@@ -201,11 +203,28 @@ def get_thumbnail(node):
 
 @api_view(['GET'])
 def get_topic_details(request, contentnode_id):
+    import time
+    start = time.time()
+
     node = ContentNode.objects.prefetch_related('children', 'files', 'tags').select_related('license', 'language').get(pk=contentnode_id)
     descendants = node.get_descendants()
-    resources = descendants.exclude(kind=content_kinds.TOPIC).prefetch_related('files')
+    channel = node.get_channel()
+
+    if channel and channel.ricecooker_version:
+        last_update = channel.main_tree.created
+    else:
+        last_update = descendants.filter(changed=True).aggregate(latest_update=Max('modified')).get('latest_update')
+
+    cached_data = cache.get("details_{}".format(node.node_id))
+    if cached_data and last_update:
+        if last_update.strftime("%Y-%m-%d %H:%M:%S") < json.loads(cached_data)['last_update']:
+            print "\n\n\nTotal time:", time.time() - start, "\n\n\n"
+
+            return HttpResponse(cached_data)
+
+    resources = descendants.exclude(kind=content_kinds.TOPIC)
     node_languages = descendants.exclude(language=None).values_list('language__native_name', flat=True)
-    file_languages = descendants.filter(files__preset_id=format_presets.VIDEO_SUBTITLE).values_list('files__language__native_name', flat=True)
+    file_languages = resources.filter(files__preset_id=format_presets.VIDEO_SUBTITLE).values_list('files__language__native_name', flat=True)
     creators = resources.values_list('copyright_holder', 'author', 'aggregator', 'provider')
     split_lst = zip(*creators)
 
@@ -223,7 +242,7 @@ def get_topic_details(request, contentnode_id):
     ] if deepest_node else []
 
     # Get original channel list
-    channel_id = node.get_channel().id
+    channel_id = channel and channel.id
     originals = resources.values("original_channel_id").annotate(count=Count("original_channel_id")).order_by("original_channel_id")
     originals = {c['original_channel_id']: c['count'] for c in originals}
     original_channels = Channel.objects.exclude(pk=channel_id).filter(pk__in=[k for k, v in originals.items()], deleted=False).values('id', 'name', 'thumbnail', 'thumbnail_encoding')
@@ -240,11 +259,10 @@ def get_topic_details(request, contentnode_id):
                             .annotate(count=Count('tag_name'))\
                             .order_by('tag_name')
 
-
-
-    data = {
+    data = json.dumps({
+        "last_update": last_update and datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "resource_count": resources.count() or 0,
-        "resource_size": descendants.values('files__checksum', 'files__file_size').distinct().aggregate(resource_size=Sum('files__file_size'))['resource_size'] or 0,
+        "resource_size": resources.values('files__checksum', 'files__file_size').distinct().aggregate(resource_size=Sum('files__file_size'))['resource_size'] or 0,
         "includes": {
             "coach_content": resources.filter(role_visibility=roles.COACH).exists(),
             "exercises": resources.filter(kind_id=content_kinds.EXERCISE).exists(),
@@ -261,9 +279,13 @@ def get_topic_details(request, contentnode_id):
         "sample_pathway": pathway,
         "original_channels": original_channels,
         "sample_nodes": sample_nodes,
-    }
+    })
 
-    return HttpResponse(json.dumps(data))
+    cache.set("details_{}".format(node.node_id), data, None)
+
+    print "\n\n\nTotal time:", time.time() - start, "\n\n\n"
+
+    return HttpResponse(data)
 
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))

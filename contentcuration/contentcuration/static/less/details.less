@@ -1,14 +1,18 @@
 @import "global-variables.less";
 
+#channel_details_overlay #close_details,
+#channel_details_view_panel .star_icon {
+	cursor: pointer;
+	color: @gray-800;
+	font-weight: bold;
+}
+
 #channel_details_view_panel {
 	height: inherit;
 	.star_icon {
-		cursor: pointer;
-		margin-right: 10px;
-		color: @gray-500;
 		font-size: 30px;
 		position: absolute;
-    	margin-top: -37px;
+    	margin-top: -40px;
 	}
 }
 #channel_details{
@@ -19,10 +23,11 @@
 	min-height: 350px;
 	background-color: white;
 	height: inherit;
-	padding-top: 20px;
+	padding-top: 15px;
+	border: 2px solid @gray-500;
 	position: relative;
 
-	.channel_details_area {
+	#channel_details_area {
 		width: 100%;
     	margin-left: 10px;
 		.column {
@@ -30,16 +35,13 @@
 			&.profile {
 				padding-top: 30px;
 			}
+			.description {
+				min-height: 25px;
+				word-wrap: break-word;
+			}
 		}
-	}
-	#details-bottom {
-		padding: 15px;
-		width: 100%;
-		&.fix-to-bottom {
-			position: absolute;
-			bottom: 0;
-		}
-
+		.cancel { padding-left: 0px; }
+		#submit { margin-right: 10px; }
 	}
 
 	#channel_error{ display:none; }
@@ -49,12 +51,13 @@
 		.image_dropzone{ width: auto; }
 	}
 	img{
-	    width:150px;
-	    height:150px;
+	    width:145px;
+	    height:145px;
 	    object-fit: cover;
 	}
 	.channel_pic {
-		border: 2px solid @blue-200;
+		border: 2px solid @gray-500;
+		min-height: 145px;
 	}
 
 	h4, .title {
@@ -77,6 +80,7 @@
 		padding-top: 5px;
 	}
 	.language_wrapper {
+		min-height: 25px;
 		b { font-size: 15pt; }
 		i {
 			color: @blue-200;
@@ -118,12 +122,14 @@
 	textarea{
 		resize:none;
 		height:auto;
+		margin-bottom: 15px;
 	}
 
 	.details_view {
 		display: none;
 	}
 	#delete-section {
+		border-top: 2px solid @blue-200;
 		padding: 5px 30px 35px 30px;
 		p {
 			margin-top: 5px;
@@ -142,6 +148,18 @@
 			font-style:italic;
 			font-size: 8pt;
 		}
+	}
+
+	.tab-content {
+		border: none;
+		border-top: 2px solid @blue-200;
+	}
+	#open-button {
+		padding: 5px 25px;
+	}
+	.toggle_description {
+		color: @gray-500 !important;
+		&:hover { color: @blue-500 !important; }
 	}
 }
 

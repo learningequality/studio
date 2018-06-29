@@ -56,7 +56,7 @@ var ChannelListPage  = BaseViews.BaseView.extend({
 	name: NAMESPACE,
 	$trs: MESSAGES,
 	initialize: function(options) {
-		_.bindAll(this, 'new_channel', 'set_all_models');
+		_.bindAll(this, 'new_channel', 'set_all_models', 'toggle_panel');
 		this.open = false;
 		this.render();
 	},
@@ -131,6 +131,13 @@ var ChannelListPage  = BaseViews.BaseView.extend({
 		this.starred_channel_list.remove_channel(channel);
 		this.set_all_models(channel);
 	},
+	set_active_channel(channel) {
+		this.$el.removeClass("active_channel");
+		this.starred_channel_list.set_active_channel(channel);
+		this.current_channel_list.set_active_channel(channel);
+		this.public_channel_list.set_active_channel(channel);
+		this.viewonly_channel_list.set_active_channel(channel);
+	},
 	set_all_models: function(channel, current_page){
 		this.starred_channel_list.set_model(channel, current_page);
 		this.current_channel_list.set_model(channel, current_page);
@@ -159,8 +166,9 @@ var ChannelListPage  = BaseViews.BaseView.extend({
 	},
 	set_details: function(view, channel_list_item) {
 		$(".active_channel").removeClass("active_channel");
-		this.current_view && this.current_view.remove();
 		if(view) {
+			this.current_view && this.current_view.remove();
+			view.render(); // Calling separately to make background stay the same if user selects "KEEP EDITING" option
 			if(!this.open) {
 				this.open = true;
 				this.$("#channel_list_wrapper").animate({
@@ -169,9 +177,10 @@ var ChannelListPage  = BaseViews.BaseView.extend({
 			}
 			this.current_view = view;
     		$("#channel_details_panel").html(view.el);
-    		channel_list_item && channel_list_item.addClass("active_channel");
+    		channel_list_item && this.set_active_channel(channel_list_item);
 		} else if(this.open) {
 			this.open = false;
+			var self = this;
 			this.$("#channel_list_wrapper").animate({
       			width: $(window).width()
     		}, 500);
@@ -231,6 +240,13 @@ var ChannelList  = BaseViews.BaseEditableListView.extend({
 			if(view.model.id === channel.id) {
 				view.model.set(channel.toJSON());
 				view.render();
+			}
+		});
+	},
+	set_active_channel: function(channel) {
+		_.each(this.views, function(view){
+			if(view.model.id === channel.id) {
+				view.$el.addClass("active_channel");
 			}
 		});
 	},
@@ -324,21 +340,19 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		this.$el.addClass('highlight');
 	},
 	open_channel:function(event){
-		if(this.$el.hasClass('highlight')){
+		if(!event || this.$el.hasClass('highlight')){
 			if (event && (event.metaKey || event.ctrlKey)) {
 				var open_url = '/channels/' + this.model.get("id") + ((this.can_edit)? '/edit' : '/view');
 				window.open(open_url, '_blank');
-			} else {
-				if(!this.$el.hasClass('active_channel')) {
-					var detail_view = new DetailView.ChannelDetailsView({
-						model: this.model,
-						allow_edit: this.can_edit,
-						ondelete: this.delete_channel,
-						onstar: this.star_channel,
-						onunstar: this.unstar_channel
-					});
-					this.container.toggle_panel(detail_view, this.$el);
-				}
+			} else if(!this.$el.hasClass('active_channel')) {
+				var detail_view = new DetailView.ChannelDetailsView({
+					model: this.model,
+					allow_edit: this.can_edit,
+					ondelete: this.delete_channel,
+					onstar: this.star_channel,
+					onunstar: this.unstar_channel
+				});
+				this.container.toggle_panel(detail_view, this.model);
 			}
 		}
 	},

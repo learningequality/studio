@@ -308,26 +308,34 @@
 #channel_preview_wrapper {
 	display: flex;
     flex-direction: column;
-    background-color: @details-bg-color;
     overflow: hidden;
     float:left;
     width: @channel-preview-width;
     margin-left: 2px;
-    #close_wrapper {
-    	margin: 10px 0px;
+    height: 90vh;
+    background-color: white;
+    background-size:     cover;
+    background-repeat:   no-repeat;
+    background-position: center center;
+	#channel_details_overlay {
+    	display: flex;
+    	height: inherit;
+    	flex-direction: column;
+    	background-color: rgba(240,240,240, 0.8);
     }
-    #close_details {
-		cursor: pointer;
-		margin-right: 10px;
-		color: @gray-500;
-	}
+
+    #close_wrapper {
+    	margin: 12px 0px;
+    	#close_details { margin-right: 20px; }
+    }
+
 	#channel_details_panel {
 		margin: 0px auto;
 		float: none;
 		display: table-cell;
 		vertical-align: top;
-		height: 80vh;
-		width: @channel-preview-width - 20px;
+		height: 83vh;
+		width: @channel-preview-width - 40px;
 		.default-item {
 			padding-top: 45%;
 		    font-size: 15pt;

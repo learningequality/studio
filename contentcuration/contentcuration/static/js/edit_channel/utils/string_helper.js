@@ -295,7 +295,9 @@ var messages = {
   "Sharp": "Sharp",
   "coach": "Coaches",
   "learner": "Anyone",
-  "role_visibility": "Visible to"
+  "role_visibility": "Visible to",
+  "more": "... More",
+  "less": " Less"
 };
 
 
