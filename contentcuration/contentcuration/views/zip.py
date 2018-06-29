@@ -4,6 +4,7 @@ import mimetypes
 import os
 import re
 import zipfile
+
 from django.core.files.storage import default_storage
 from django.http import Http404, HttpResponse, HttpResponseNotFound
 from django.http.response import FileResponse, HttpResponseNotModified
@@ -73,7 +74,6 @@ class ZipContentView(View):
         zf_obj = storage.open(zipped_path)
 
         with zipfile.ZipFile(zf_obj) as zf:
-
             # if no path, or a directory, is being referenced, look for an index.html file
             if not embedded_filepath or embedded_filepath.endswith("/"):
                 embedded_filepath += "index.html"
