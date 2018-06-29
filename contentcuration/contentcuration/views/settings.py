@@ -127,7 +127,7 @@ def account_settings(request):
             update_session_auth_hash(request, user)
     else:
         form = AccountSettingsForm(request.user)
-
+        
     channels = [ # Count on editors is always returning 1, so iterate manually
         {"name": c.name, "id": c.id}
         for c in request.user.editable_channels.filter(deleted=False)
@@ -192,7 +192,6 @@ def export_user_data(request, user_email):
 
 def account_deleted(request):
     return render(request, "settings/account_deleted.html")
-
 
 
 @login_required

@@ -6,8 +6,8 @@
 			<p id="share_error"></p>
 			<p id="share_success"></p>
 			<input type="text" placeholder="{{formatMessage (intlGet 'messages.email_placeholder')}}" id="share_email_address" class="tab_item first_focus_item">
-			<select id="share_mode" {{#if single_share_option}}title="{{#translate (concat share_modes.0.share_mode '_access_only')}}{{/translate}}" class="disabled" disabled{{else}}class="tab_item"{{/if}}>
-				{{#each share_modes}}<option value="{{share_mode}}">{{#translate (concat share_mode '_access')}}{{/translate}}</option>{{/each}}
+			<select id="share_mode" {{#if single_share_option}}title="{{{translate (concat share_modes.0.share_mode '_access_only')}}}" class="disabled" disabled{{else}}class="tab_item"{{/if}}>
+				{{#each share_modes}}<option value="{{share_mode}}">{{{translate (concat share_mode '_access')}}}</option>{{/each}}
 			</select>
 			<input type="submit" class="action-button tab_item" value="{{formatMessage (intlGet 'messages.invite')}}" id="share_invite_button">
 		</div>

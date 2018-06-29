@@ -7,6 +7,9 @@
 	min-height: 350px;
 	.select_item.disabled{ cursor: pointer !important; }
 	.prerequisites_header{ margin-bottom: 10px; font-weight:bold;}
+	.empty_default {
+		display: none;
+	}
 	.select_topic_img{
 		height: 15px;
 		margin-top: -10px;
@@ -16,7 +19,6 @@
 	#prerequisite_current_item{
 		font-size: 14pt;
 		font-weight: bold;
-		.glyphicon { font-size: 12pt; }
 	}
 	.cancel_selection{ margin-left: 10px; }
 	.prerequisite_help_text{
@@ -25,6 +27,8 @@
 		#prereq_about{
 			color: @blue-500;
 			cursor: pointer;
+			vertical-align: text-bottom;
+			font-size: 16pt;
 		}
 	}
 	.select_main_box {
@@ -34,6 +38,7 @@
 			color: @gray-700;
 		}
 		.prereq_row{
+			cursor: default;
 			font-size: 12pt;
 			border-bottom: 1px solid @gray-300;
 			&:hover{ background-color: @gray-200; }
@@ -79,10 +84,10 @@
 						max-width: 85%;
 						display: inline-block;
 					}
-					.glyphicon {
-						font-size: 13pt;
-						margin-right: 20px;
+					.back_button {
+						vertical-align: text-top;
 						cursor: pointer;
+						margin-right: 20px;
 					}
 				}
 				.select-list {

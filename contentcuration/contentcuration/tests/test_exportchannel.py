@@ -1,62 +1,108 @@
+import md5
 import os
-import pytest
+import random
+import string
 import tempfile
-from mixer.backend.django import mixer
-from contentcuration import models as cc
-from contentcuration.management.commands.exportchannel import create_content_database, MIN_SCHEMA_VERSION
+from cStringIO import StringIO
+
+import pytest
 from django.conf import settings
+from django.core.files.storage import default_storage
 from django.core.management import call_command
 from django.test import TestCase
 from django.test.utils import override_settings
+from mixer.backend.django import mixer
 from mock import patch
-from kolibri_content.router import using_content_database
+
+from contentcuration import models as cc
+from contentcuration.management.commands.exportchannel import (MIN_SCHEMA_VERSION,
+                                                               create_content_database)
 from kolibri_content import models
+from kolibri_content.router import using_content_database
 
 pytestmark = pytest.mark.django_db
 
 
 def video():
+    """
+    Create a video content kind entry.
+    """
     return mixer.blend(cc.ContentKind, kind='video')
 
 
 def preset_video():
+    """
+    Create a video format preset.
+    """
     return mixer.blend(cc.FormatPreset, id='mp4', kind=video())
 
 
 def topic():
+    """
+    Create a topic content kind.
+    """
     return mixer.blend(cc.ContentKind, kind='topic')
 
 
 def exercise():
+    """
+    Create a topic content kind.
+    """
     return mixer.blend(cc.ContentKind, kind='exercise')
 
 
 def preset_exercise():
+    """
+    Create an exercise format preset.
+    """
     return mixer.blend(cc.FormatPreset, id='exercise', kind=exercise())
 
 
 def fileformat_perseus():
+    """
+    Create a perseus FileFormat entry.
+    """
     return mixer.blend(cc.FileFormat, extension='perseus', mimetype='application/exercise')
 
 
 def fileformat_mp4():
+    """
+    Create an mp4 FileFormat entry.
+    """
     return mixer.blend(cc.FileFormat, extension='mp4', mimetype='application/video')
 
 
 def license_wtfpl():
+    """
+    Create a license object called WTF License.
+    """
     return mixer.blend(cc.License, license_name="WTF License")
 
 
-def fileobj_video():
-    randomfilebytes = "4"
+def fileobj_video(contents=None):
+    """
+    Create an "mp4" video file on storage, and then create a File model pointing to it.
 
-    with tempfile.NamedTemporaryFile(dir=settings.STORAGE_ROOT, delete=False) as f:
-        filename = f.name
-        f.write(randomfilebytes)
-        f.flush()
-        db_file_obj = mixer.blend(cc.File, file_format=fileformat_mp4(), preset=preset_video(), file_on_disk=filename)
+    if contents is given and is a string, then write said contents to the file. If not given,
+    a random string is generated and set as the contents of the file.
+    """
+    if contents:
+        filecontents = contents
+    else:
+        filecontents = "".join(random.sample(string.printable, 20))
 
-        yield db_file_obj
+    fileobj = StringIO(filecontents)
+    digest = md5.new(filecontents).hexdigest()
+    filename = "{}.mp4".format(digest)
+    storage_file_path = cc.generate_object_storage_name(digest, filename)
+
+    # Write out the file bytes on to object storage, with a filename specified with randomfilename
+    default_storage.save(storage_file_path, fileobj)
+
+    # then create a File object with that
+    db_file_obj = mixer.blend(cc.File, file_format=fileformat_mp4(), preset=preset_video(), file_on_disk=storage_file_path)
+
+    yield db_file_obj
 
 
 def assessment_item():

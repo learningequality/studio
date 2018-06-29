@@ -34,7 +34,11 @@ def base(request):
 
 
 def health(request):
-    return HttpResponse(Channel.objects.first().name)
+    c = Channel.objects.first()
+    if c:
+        return HttpResponse(c.name)
+    else:
+        return HttpResponse("No channels created yet!")
 
 def stealth(request):
     return HttpResponse("<3")
@@ -57,7 +61,6 @@ def redirect_to_channel(request, channel_id):
         return redirect(reverse_lazy('channel', kwargs={'channel_id': channel_id}))
     elif channel.viewers.filter(pk=request.user.pk).exists() or channel.public:
         return redirect(reverse_lazy('channel_view_only', kwargs={'channel_id': channel_id}))
-
 
 def redirect_to_channel_edit(request, channel_id):
     return redirect(reverse_lazy('channel', kwargs={'channel_id': channel_id}))
@@ -213,7 +216,6 @@ def channel(request, channel_id):
 @permission_classes((IsAuthenticated,))
 def channel_view_only(request, channel_id):
     channel = get_object_or_404(Channel, id=channel_id, deleted=False)
-
     return channel_page(request, channel)
 
 

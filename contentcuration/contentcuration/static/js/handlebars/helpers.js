@@ -1,10 +1,11 @@
-var Handlebars = require("hbsfy/runtime");
-global.HandlebarsIntl = require('handlebars-intl');
-HandlebarsIntl.registerWith(Handlebars);
+var Handlebars = require("handlebars-template-loader/runtime");
+var HandlebarsIntl = global.HandlebarsIntl = require('handlebars-intl');
 require("./locales/es.js");
 var _ = require("underscore");
 var marked = require("marked");
 var stringHelper = require("edit_channel/utils/string_helper");
+
+HandlebarsIntl.registerWith(Handlebars);
 
 marked.setOptions({
   renderer: new marked.Renderer(),
@@ -93,21 +94,21 @@ Handlebars.registerHelper('format_count', function(text, count, capitalize){
 Handlebars.registerHelper('get_icon', function(kind){
   switch (kind){
       case "topic":
-          return "glyphicon glyphicon-folder-close";
+          return "folder";
       case "video":
-          return "glyphicon glyphicon-film";
+          return "theaters";
       case "audio":
-          return "glyphicon glyphicon-headphones";
+          return "headset";
       case "image":
-          return "glyphicon glyphicon-picture";
+          return "image";
       case "exercise":
-          return "glyphicon glyphicon-star";
+          return "star";
       case "document":
-          return "glyphicon glyphicon-file";
+          return "description";
       case "html5":
-          return "glyphicon glyphicon-certificate";
+          return "widgets";
       default:
-          return "glyphicon glyphicon-exclamation-sign";
+          return "error";
   }
 });
 

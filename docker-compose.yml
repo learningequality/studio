@@ -1,0 +1,87 @@
+version: '3'
+services:
+  studio-app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    image: learningequality/studio-app-dev
+    command: npm run devserver
+    depends_on:
+      - minio
+      - studio-postgres
+      - studio-redis
+    ports:
+      - "8080:8080"
+    environment:
+      MPLBACKEND: ps
+      SHELL: /bin/bash
+      AWS_S3_ENDPOINT_URL: http://minio:9000
+      DATA_DB_HOST: studio-postgres
+      DJANGO_SETTINGS_MODULE: contentcuration.dev_settings
+      RUN_MODE: docker-compose
+      CELERY_TIMEZONE: America/Los_Angeles
+      CELERY_REDIS_DB: 0
+      CELERY_BROKER_ENDPOINT: studio-redis
+      CELERY_RESULT_BACKEND_ENDPOINT: studio-redis
+      CELERY_REDIS_PASSWORD: ""
+    volumes:
+      - .:/src
+      - studio_app_virtualenv:/root/.local/share/virtualenvs/
+      - pip_cache:/root/.cache/pip
+  studio-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    image: learningequality/studio-app-dev
+    command: make prodceleryworkers
+    depends_on:
+      - minio
+      - studio-postgres
+      - studio-redis
+    volumes:
+      - .:/src
+      - studio_worker_virtualenv:/root/.local/share/virtualenvs/
+      - pip_cache:/root/.cache/pip
+    environment:
+      MPLBACKEND: ps
+      SHELL: /bin/bash
+      AWS_S3_ENDPOINT_URL: http://minio:9000
+      DATA_DB_HOST: studio-postgres
+      DJANGO_SETTINGS_MODULE: contentcuration.dev_settings
+      RUN_MODE: docker-compose
+      CELERY_TIMEZONE: America/Los_Angeles
+      CELERY_REDIS_DB: 0
+      CELERY_BROKER_ENDPOINT: studio-redis
+      CELERY_RESULT_BACKEND_ENDPOINT: studio-redis
+      CELERY_REDIS_PASSWORD: ""
+  minio:
+    image: minio/minio
+    # logging:
+    #   driver: none
+    entrypoint: minio server /data
+    environment:
+      MINIO_ACCESS_KEY: development
+      MINIO_SECRET_KEY: development
+    volumes:
+      - minio_data:/data
+      - .:/src
+    ports:
+      - "9000:9000"
+  studio-postgres:
+    image: postgres:9.6
+    environment:
+      PGDATA: /postgres_data/pgdata
+      POSTGRES_USER: learningequality
+      POSTGRES_PASSWORD: kolibri
+      POSTGRES_DB: gonano
+    volumes:
+      - pgdata:/postgres_data/
+  studio-redis:
+    image: redis:4.0.9
+
+volumes:
+  minio_data:
+  pgdata:
+  studio_app_virtualenv:
+  studio_worker_virtualenv:
+  pip_cache:

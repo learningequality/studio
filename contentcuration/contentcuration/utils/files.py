@@ -1,28 +1,52 @@
 import copy
 import os
 import random
+import shutil
 import tempfile
 import zipfile
+
+from contentcuration.api import (write_file_to_storage,
+                                 write_raw_content_to_storage)
+from contentcuration.models import (File, generate_file_on_disk_name,
+                                    generate_object_storage_name)
 from django.core.files import File as DjFile
-from contentcuration.api import write_file_to_storage, write_raw_content_to_storage
-from contentcuration.models import File, generate_file_on_disk_name
-from le_utils.constants import format_presets, content_kinds, file_formats
-from pressurecooker.videos import extract_thumbnail_from_video, compress_video
-from pressurecooker.images import create_tiled_image, create_image_from_pdf_page, create_waveform_image
+from django.core.files.storage import default_storage
+from le_utils.constants import content_kinds, file_formats, format_presets
+from pressurecooker.images import (create_image_from_pdf_page,
+                                   create_tiled_image, create_waveform_image)
+from pressurecooker.videos import compress_video, extract_thumbnail_from_video
 
 
 def create_file_from_contents(contents, ext=None, node=None, preset_id=None, uploaded_by=None):
-    checksum, filename, path = write_raw_content_to_storage(contents, ext=ext)
-    with open(path, 'rb') as new_file:
+    checksum, _, path = write_raw_content_to_storage(contents, ext=ext)
+    with default_storage.open(path, 'rb') as new_file:
         return File.objects.create(
             file_on_disk=DjFile(new_file),
             file_format_id=ext,
-            file_size=os.path.getsize(path),
+            file_size=default_storage.size(path),
             checksum=checksum,
             preset_id=preset_id,
             contentnode=node,
             uploaded_by=uploaded_by
         )
+
+
+def get_file_diff(files):
+    """Given a list of filenames as strings, find the filenames that aren't in our
+    storage, and return.
+
+    """
+    storage = default_storage
+
+    # Try to be storage system agnostic, in case we're using either the Object Storage,
+    # or FileSystemStorage
+    ret = []
+    for f in files:
+        filepath = generate_object_storage_name(os.path.splitext(f)[0], f)
+        if not storage.exists(filepath) or storage.size(filepath) == 0:
+            ret.append(f)
+
+    return ret
 
 
 def duplicate_file(file_object, node=None, assessment_item=None, preset_id=None, save=True):
@@ -40,9 +64,11 @@ def duplicate_file(file_object, node=None, assessment_item=None, preset_id=None,
 
 def extract_thumbnail_wrapper(file_object, node=None, preset_id=None):
     ext = file_formats.PNG
-    with tempfile.NamedTemporaryFile(suffix=".{}".format(ext)) as tempf:
+    with tempfile.NamedTemporaryFile(suffix=".{}".format(ext)) as tempf, tempfile.NamedTemporaryFile(suffix=".{}".format(file_object.file_format.extension)) as localtempf:
+        shutil.copyfileobj(file_object.file_on_disk, localtempf)
+        localtempf.flush()
         tempf.close()
-        extract_thumbnail_from_video(str(file_object.file_on_disk), tempf.name, overwrite=True)
+        extract_thumbnail_from_video(localtempf.name, tempf.name, overwrite=True)
         with open(tempf.name, 'rb') as tf:
             return create_file_from_contents(tf.read(), ext=ext, node=node, preset_id=preset_id, uploaded_by=file_object.uploaded_by)
 
@@ -102,10 +128,15 @@ def get_image_from_htmlnode(htmlfile, node=None, preset_id=None):
 
 def get_image_from_pdf(document, node=None, preset_id=None):
     ext = file_formats.PNG
+    orig_ext = document.file_format.extension
 
-    with tempfile.NamedTemporaryFile(suffix=".{}".format(ext)) as tempf:
+    with tempfile.NamedTemporaryFile(suffix=".{}".format(ext)) as tempf, tempfile.NamedTemporaryFile(suffix=".{}".format(orig_ext)) as localtempf:
+        # localtempf is where we store the file in case it's in object storage
+        shutil.copyfileobj(document.file_on_disk, localtempf)
         tempf.close()
-        create_image_from_pdf_page(document.file_on_disk.name, tempf.name)
+        localtempf.flush()
+
+        create_image_from_pdf_page(localtempf.name, tempf.name)
 
         with open(tempf.name, 'rb') as tf:
             return create_file_from_contents(tf.read(), ext=ext, node=node, preset_id=preset_id, uploaded_by=document.uploaded_by)
@@ -114,9 +145,12 @@ def get_image_from_pdf(document, node=None, preset_id=None):
 def get_image_from_audio(audio, node=None, preset_id=None, max_num_of_points=None):
     ext = file_formats.PNG
     cmap_options = {'name': 'BuPu', 'vmin': 0.3, 'vmax': 0.7, 'color': 'black'}
-    with tempfile.NamedTemporaryFile(suffix=".{}".format(ext)) as tempf:
+    with tempfile.NamedTemporaryFile(suffix=".{}".format(ext)) as tempf, tempfile.NamedTemporaryFile(suffix=".{}".format(audio.file_format.extension)) as localtempf:
+        # localtempf is where we store the file in case it's in object storage
+        shutil.copyfileobj(audio.file_on_disk, localtempf)
         tempf.close()
-        create_waveform_image(audio.file_on_disk.name, tempf.name, max_num_of_points=max_num_of_points, colormap_options=cmap_options)
+        localtempf.flush()
+        create_waveform_image(localtempf.name, tempf.name, max_num_of_points=max_num_of_points, colormap_options=cmap_options)
         with open(tempf.name, 'rb') as tf:
             return create_file_from_contents(tf.read(), ext=ext, node=node, preset_id=preset_id, uploaded_by=audio.uploaded_by)
 

@@ -18,13 +18,24 @@ import pycountry
 
 
 logging.getLogger("newrelic").setLevel(logging.CRITICAL)
+logging.getLogger("botocore").setLevel(logging.WARNING)
+logging.getLogger("boto3").setLevel(logging.WARNING)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-STORAGE_ROOT = os.path.join(BASE_DIR, "storage")
+STORAGE_ROOT = "storage"
+DB_ROOT = "databases"
 
-STATIC_ROOT = os.path.join(BASE_DIR, "static")
-DB_ROOT = os.path.join(BASE_DIR, "databases")
-CSV_ROOT = os.path.join(BASE_DIR, "csvs")
+STATIC_ROOT = os.getenv("STATICFILES_DIR") or os.path.join(BASE_DIR, "static")
+CSV_ROOT = "csvs"
+
+# hardcoding all this info for now. Potential for shared reference with webpack?
+WEBPACK_LOADER = {
+    'DEFAULT': {
+        # trailing empty string to include trailing /
+        'BUNDLE_DIR_NAME': os.path.join('js', 'bundles', ''),
+        'STATS_FILE': os.path.join(BASE_DIR, 'build', 'webpack-stats.json'),
+    }
+}
 
 PERMISSION_TEMPLATE_ROOT = os.path.join(BASE_DIR, "contentcuration", "templates", "permissions")
 
@@ -32,7 +43,7 @@ PERMISSION_TEMPLATE_ROOT = os.path.join(BASE_DIR, "contentcuration", "templates"
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '_s0k@&o%m6bzg7s(0p(w6z5xbo%vy%mj+xx(w3mhs=f0ve0+h2'  # TODO(aron): generate secret key, secretly!
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY") or '_s0k@&o%m6bzg7s(0p(w6z5xbo%vy%mj+xx(w3mhs=f0ve0+h2'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # DEBUG = True
@@ -58,7 +69,8 @@ INSTALLED_APPS = (
     'le_utils',
     'rest_framework.authtoken',
     'search',
-
+    'django_s3_storage',
+    'webpack_loader',
 )
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
@@ -133,7 +145,7 @@ WSGI_APPLICATION = 'contentcuration.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',  # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'gonano',                      # Or path to database file if using sqlite3.
+        'NAME': os.getenv("DATA_DB_NAME") or 'gonano',  #  Or path to database file if using sqlite3.
         # The following settings are not used with sqlite3:
 
         # For dev purposes only
@@ -145,28 +157,40 @@ DATABASES = {
 }
 
 
+
 DATABASE_ROUTERS = [
     "kolibri_content.router.ContentDBRouter",
 ]
 
-# LOGGING = {
-#     'version': 1,
-#     'disable_existing_loggers': False,
-#     'handlers': {
-#         'file': {
-#             'level': 'DEBUG',
-#             'class': 'logging.FileHandler',
-#             'filename': '/django.log',
-#         },
-#     },
-#     'loggers': {
-#         'django': {
-#             'handlers': ['file'],
-#             'level': 'DEBUG',
-#             'propagate': True,
-#         },
-#     },
-# }
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': os.getenv('DJANGO_LOG_FILE') or 'django.log'
+        },
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+        'null': {
+            'class': 'logging.NullHandler'
+        }
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file', 'console'],
+            'level': 'DEBUG' if globals().get('DEBUG') else 'INFO',
+            'propagate': True,
+        },
+        'django.db.backends': {
+            'handlers': ['null'],
+            'propagate': False,
+            'level': 'DEBUG'
+        }
+    }
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
@@ -226,7 +250,7 @@ SITE_ID = 1
 # MAILGUN_SERVER_NAME = 'SERVER-NAME'
 
 SPACE_REQUEST_EMAIL = 'content@learningequality.org'
-REGISTRATION_INFORMATION_EMAIL = 'content@learningequality.org'
+REGISTRATION_INFORMATION_EMAIL = 'studio-registrations@learningequality.org'
 HELP_EMAIL = 'content@learningequality.org'
 DEFAULT_FROM_EMAIL = 'Kolibri Studio <noreply@learningequality.org>'
 POLICY_EMAIL = 'legal@learningequality.org'
@@ -251,13 +275,27 @@ IGNORABLE_404_URLS = [
 # CELERY CONFIGURATIONS
 BROKER_URL = 'redis://localhost:6379'
 CELERY_RESULT_BACKEND = 'redis://localhost:6379'
+BROKER_URL = "redis://:{password}@{endpoint}:/{db}".format(
+    password=os.getenv("CELERY_REDIS_PASSWORD") or "",
+    endpoint=os.getenv("CELERY_BROKER_ENDPOINT") or "localhost:6379",
+    db=os.getenv("CELERY_REDIS_DB") or "0"
+)
+CELERY_RESULT_BACKEND = "redis://:{password}@{endpoint}:/{db}".format(
+    password=os.getenv("CELERY_REDIS_PASSWORD") or "",
+    endpoint=os.getenv("CELERY_RESULT_BACKEND_ENDPOINT") or "localhost:6379",
+    db=os.getenv("CELERY_REDIS_DB") or "0"
+) or CELERY_RESULT_BACKEND
+CELERY_TIMEZONE = os.getenv("CELERY_TIMEZONE") or 'Africa/Nairobi'
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = 'Africa/Nairobi'
 
-# GOOGLE CLOUD STORAGE SETTINGS
-DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-GS_BUCKET_NAME = 'kolibri-studio-content'
-GS_PROJECT_ID = 'nanobox-194019'
-GS_CRENDENTIALS = '/app/nanobox-2e573771bb80.json'
+# CLOUD STORAGE SETTINGS
+DEFAULT_FILE_STORAGE = 'django_s3_storage.storage.S3Storage'
+AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID') or 'development'
+AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY') or 'development'
+AWS_S3_BUCKET_NAME = os.getenv('AWS_BUCKET_NAME') or 'content'
+AWS_S3_ENDPOINT_URL = os.getenv('AWS_S3_ENDPOINT_URL') or 'http://localhost:9000'
+AWS_AUTO_CREATE_BUCKET = True
+AWS_S3_FILE_OVERWRITE = True
+AWS_S3_BUCKET_AUTH = False

@@ -4,12 +4,15 @@ import mimetypes
 import os
 import re
 import zipfile
+
+from django.core.files.storage import default_storage
 from django.http import Http404, HttpResponse, HttpResponseNotFound
 from django.http.response import FileResponse, HttpResponseNotModified
 from django.utils.http import http_date
+from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.generic.base import View
 from le_utils.constants import exercises
-from contentcuration.models import generate_file_on_disk_name
+from contentcuration.models import generate_object_storage_name
 
 try:
     from urlparse import urljoin
@@ -24,33 +27,53 @@ VALID_STORAGE_FILENAME = re.compile("[0-9a-f]{32}(-data)?\.[0-9a-z]+")
 POSSIBLE_ZIPPED_FILE_EXTENSIONS = set([".perseus", ".zip", ".epub", ".epub3"])
 
 
+def _add_access_control_headers(request, response):
+    response["Access-Control-Allow-Origin"] = "*"
+    response["Access-Control-Allow-Methods"] = "GET, OPTIONS"
+    requested_headers = request.META.get("HTTP_ACCESS_CONTROL_REQUEST_HEADERS", "")
+    if requested_headers:
+        response["Access-Control-Allow-Headers"] = requested_headers
+
+
 # DISK PATHS
 
 class ZipContentView(View):
+    @xframe_options_exempt
+    def options(self, request, *args, **kwargs):
+        """
+        Handles OPTIONS requests which may be sent as "preflight CORS" requests to check permissions.
+        """
+        response = HttpResponse()
+        _add_access_control_headers(request, response)
+        return response
 
+    @xframe_options_exempt
     def get(self, request, zipped_filename, embedded_filepath):
         """
         Handles GET requests and serves a static file from within the zip file.
         """
         assert VALID_STORAGE_FILENAME.match(zipped_filename), "'{}' is not a valid content storage filename".format(zipped_filename)
 
+        storage = default_storage
+
         # calculate the local file path to the zip file
         filename, ext = os.path.splitext(zipped_filename)
-        zipped_path = generate_file_on_disk_name(filename, zipped_filename)
+        zipped_path = generate_object_storage_name(filename, zipped_filename)
 
         # file size
         file_size = 0
 
         # if the zipfile does not exist on disk, return a 404
-        if not os.path.exists(zipped_path):
-            return HttpResponseNotFound('"%(filename)s" does not exist locally' % {'filename': zipped_path})
+        if not storage.exists(zipped_path):
+            return HttpResponseNotFound('"%(filename)s" does not exist in storage' % {'filename': zipped_path})
 
         # if client has a cached version, use that (we can safely assume nothing has changed, due to MD5)
         if request.META.get('HTTP_IF_MODIFIED_SINCE'):
             return HttpResponseNotModified()
 
-        with zipfile.ZipFile(zipped_path) as zf:
+        zf_obj = storage.open(zipped_path)
 
+        with zipfile.ZipFile(zf_obj) as zf:
             # if no path, or a directory, is being referenced, look for an index.html file
             if not embedded_filepath or embedded_filepath.endswith("/"):
                 embedded_filepath += "index.html"
@@ -91,7 +114,11 @@ class ZipContentView(View):
         # ensure the browser knows not to try byte-range requests, as we don't support them here
         response["Accept-Ranges"] = "none"
 
-        # allow all origins so that content can be read from within zips within sandboxed iframes
-        response["Access-Control-Allow-Origin"] = "*"
+        _add_access_control_headers(request, response)
+
+        # restrict CSP to only allow resources to be loaded from the Studio host, to prevent info leakage
+        # (e.g. via passing user info out as GET parameters to an attacker's server), or inadvertent data usage
+        host = request.build_absolute_uri('/').strip("/")
+        response["Content-Security-Policy"] = "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: " + host
 
         return response

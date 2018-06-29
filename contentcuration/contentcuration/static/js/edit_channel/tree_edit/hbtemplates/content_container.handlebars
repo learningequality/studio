@@ -1,5 +1,5 @@
 <h2 class="text-center title-bar truncate">
-	<span class="glyphicon glyphicon-menu-left back_button pull-left" aria-hidden="true" title="{{formatMessage (intlGet 'messages.back')}}"></span>
+	<i class="back_button pull-left material-icons" title="{{formatMessage (intlGet 'messages.back')}}">keyboard_arrow_left</i>
 	<span class="container-title" title="{{title}}">{{title}}</span>
 </h2>
 <ul class="content-list list-unstyled scroll" id="container_list_{{topic.id}}">
@@ -9,7 +9,7 @@
 	<div>
 		<div class="btn-group dropup">
 		  <button type="button" class="btn btn-default action-button add_content_button uppercase" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-		  		<span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>
+		  		<i class="material-icons align-bottom">add_circle_outline</i> &nbsp;
 				{{formatMessage (intlGet 'messages.add')}}
 			</button>
 		    <span class="sr-only">{{formatMessage (intlGet 'messages.toggle_dropdown')}}</span>

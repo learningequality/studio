@@ -97,7 +97,6 @@ class RegistrationInformationForm(UserCreationForm, ExtraFormMixin):
     organization = forms.CharField(required=False, widget=forms.TextInput, label=_("Name of Organization"))
     conference = forms.CharField(required=False, widget=forms.TextInput, label=_("Name of Conference"))
     other_source = forms.CharField(required=False, widget=forms.TextInput, label=_("Please describe"))
-
     accepted_policy = forms.BooleanField(widget=forms.CheckboxInput())
 
     def __init__(self, *args, **kwargs):

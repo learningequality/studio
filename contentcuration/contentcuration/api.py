@@ -1,19 +1,32 @@
 """
 This module acts as the only interface point between other apps and the database backend for the content.
 """
+import hashlib
 import json
 import logging
 import os
-import hashlib
 import shutil
-from django.db.models import Q, Count, Sum
+from cStringIO import StringIO
+
+import contentcuration.models as models
 from django.conf import settings
 from django.core.exceptions import SuspiciousOperation
+from django.core.files.storage import default_storage
+from django.db.models import Count, Q, Sum
 from django.http import HttpResponse
 from django.utils.translation import ugettext as _
 from le_utils.constants import format_presets, content_kinds, file_formats
 import contentcuration.models as models
 from contentcuration.tasks import deletetree_task
+
+def check_health_check_browser(user_agent_string):
+    """
+    Check if the user agent string matches either the Kubernetes or
+    the Google Health Check agents.
+    """
+    for expected_agent in settings.HEALTH_CHECK_BROWSERS:
+        if expected_agent in user_agent_string:
+            return True
 
 
 def write_file_to_storage(fobj, check_valid=False, name=None):
@@ -32,11 +45,11 @@ def write_file_to_storage(fobj, check_valid=False, name=None):
         raise SuspiciousOperation("Failed to upload file {0}: hash is invalid".format(name))
 
     # Get location of file
-    file_path = models.generate_file_on_disk_name(hashed_filename, full_filename)
+    file_path = models.generate_object_storage_name(hashed_filename, full_filename)
 
     # Write file
-    with open(file_path, 'wb') as destf:
-        shutil.copyfileobj(fobj, destf)
+    storage = default_storage
+    storage.save(file_path, fobj)
     return full_filename
 
 
@@ -44,17 +57,17 @@ def write_raw_content_to_storage(contents, ext=None):
     # Check that hash is valid
     checksum = hashlib.md5()
     checksum.update(contents)
-    filename = checksum.hexdigest()
-    full_filename = "{}.{}".format(filename, ext.lower())
+    hashed_filename = checksum.hexdigest()
+    full_filename = "{}.{}".format(hashed_filename, ext.lower())
 
     # Get location of file
-    file_path = models.generate_file_on_disk_name(filename, full_filename)
+    file_path = models.generate_object_storage_name(hashed_filename, full_filename)
 
     # Write file
-    with open(file_path, 'wb') as destf:
-        destf.write(contents)
+    storage = default_storage
+    storage.save(file_path, StringIO(contents))
 
-    return filename, full_filename, file_path
+    return hashed_filename, full_filename, file_path
 
 def get_hash(fobj):
     md5 = hashlib.md5()

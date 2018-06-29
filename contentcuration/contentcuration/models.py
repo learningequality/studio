@@ -1,34 +1,38 @@
+import ast
 import collections
 import functools
 import hashlib
 import json
-import math
 import logging
+import os
+import socket
+import sys
+import urlparse
 import uuid
 
-import os
 from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
 from django.core.cache import cache
-from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, MultipleObjectsReturned
-from django.core.files.storage import FileSystemStorage
-from django.core.mail import send_mail, EmailMultiAlternatives
-from django.db import IntegrityError, connections, models, connection
-from django.db.models import Q, Sum, Max, Count, Case, When, IntegerField, F, FloatField
-from django.db.utils import ConnectionDoesNotExist
-from django.utils.translation import ugettext as _
+from django.core.exceptions import (MultipleObjectsReturned,
+                                    ObjectDoesNotExist, PermissionDenied)
+from django.core.files.storage import FileSystemStorage, default_storage
+from django.core.mail import send_mail
+from django.db import IntegrityError, connection, models
+from django.db.models import Q, Sum
 from django.dispatch import receiver
-from django.template.loader import render_to_string
 from django.utils import timezone
-from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises, languages, roles
+from django.utils.translation import ugettext as _
 from django.contrib.postgres.fields import JSONField
-from mptt.models import MPTTModel, TreeForeignKey, TreeManager, raise_if_unsaved
-from pg_utils import DistinctSum
-from rest_framework import permissions
-from rest_framework.authtoken.models import Token
-from contentcuration.statistics import record_channel_stats
+from le_utils.constants import (content_kinds, exercises, file_formats, licenses,
+                                format_presets, languages, roles)
+from mptt.models import (MPTTModel, TreeForeignKey, TreeManager,
+                         raise_if_unsaved)
 
+from pg_utils import DistinctSum
+
+from contentcuration.statistics import record_channel_stats
+from contentcuration.utils.networking import get_local_ip_address
 
 EDIT_ACCESS = "edit"
 VIEW_ACCESS = "view"
@@ -224,12 +228,10 @@ class UUIDField(models.CharField):
             result = result.hex
         return result
 
-
 def file_on_disk_name(instance, filename):
     """
     Create a name spaced file path from the File obejct's checksum property.
     This path will be used to store the content copy
-
     :param instance: File (content File model)
     :param filename: str
     :return: str
@@ -247,10 +249,72 @@ def generate_file_on_disk_name(checksum, filename):
     return os.path.join(directory, h + ext.lower())
 
 
-def generate_storage_url(filename):
-    """ Returns place where file is stored """
-    h, ext = os.path.splitext(filename)
-    return "{}/{}/{}/{}".format(settings.STORAGE_URL.rstrip('/'), h[0], h[1], h + ext.lower())
+def object_storage_name(instance, filename):
+    """
+    Create a name spaced file path from the File obejct's checksum property.
+    This path will be used to store the content copy
+
+    :param instance: File (content File model)
+    :param filename: str
+    :return: str
+    """
+    return generate_object_storage_name(instance.checksum, filename)
+
+
+def generate_object_storage_name(checksum, filename):
+    """ Separated from file_on_disk_name to allow for simple way to check if has already exists """
+    h = checksum
+    basename, ext = os.path.splitext(filename)
+    directory = os.path.join(settings.STORAGE_ROOT, h[0], h[1])
+    return os.path.join(directory, h + ext.lower())
+
+
+def generate_storage_url(filename, request=None, *args):
+    """
+    Generate a storage URL for the given content filename.
+    """
+
+    path = generate_object_storage_name(os.path.splitext(filename)[0], filename)
+
+    # There are three scenarios where Studio might be run as:
+    #
+    # 1. In normal kubernetes, nginx will proxy for us. We'll know we're in kubernetes when the
+    # environment variable RUN_MODE=k8s
+    #
+    # 2. In Docker Compose and bare metal runserver, we'll be running in runserver, and minio
+    # will be exposed in port 9000 in the host's localhost network.
+
+    # Note (aron): returning the true storage URL (e.g. https://storage.googleapis.com/storage/a.mp4)
+    # isn't too important, because we have CDN in front of our servers, so it should be cached.
+    # But change the logic here in case there is a potential for bandwidth and latency improvement.
+
+    # Detect our current state first
+    run_mode = os.getenv("RUN_MODE")
+
+    # if we're running inside k8s, then just serve the normal /content/{storage,databases} URL,
+    # and let nginx handle proper proxying.
+    if run_mode == "k8s":
+        url = "/content/{path}".format(
+            bucket=settings.AWS_S3_BUCKET_NAME,
+            path=path,
+        )
+
+    # if we're in docker-compose or in baremetal, just return the object storage URL as localhost:9000
+    elif run_mode == "docker-compose" or run_mode is None:
+        # generate the minio storage URL, so we can get the GET parameters that give everyone
+        # access even if they don't need to log in
+        params = urlparse.urlparse(default_storage.url(path)).query
+        host = "localhost"
+        port = 9000 # hardcoded to the default minio IP address
+        url = "http://{host}:{port}/{bucket}/{path}?{params}".format(
+            host=host,
+            port=port,
+            bucket=settings.AWS_S3_BUCKET_NAME,
+            path=path,
+            params=params,
+        )
+
+    return url
 
 
 class FileOnDiskStorage(FileSystemStorage):
@@ -267,6 +331,7 @@ class FileOnDiskStorage(FileSystemStorage):
             logging.warn('Content copy "%s" already exists!' % name)
             return name
         return super(FileOnDiskStorage, self)._save(name, content)
+
 
 
 class ChannelResourceSize(models.Model):
@@ -443,6 +508,17 @@ class Channel(models.Model):
                     os.unlink(channel_db_url)
                     self.main_tree.published = False
             self.main_tree.save()
+
+    def get_thumbnail(self):
+        if self.thumbnail_encoding:
+            thumbnail_data = ast.literal_eval(self.thumbnail_encoding)
+            if thumbnail_data.get("base64"):
+                return thumbnail_data["base64"]
+
+        if self.thumbnail and 'static' not in self.thumbnail:
+            return generate_storage_url(self.thumbnail)
+
+        return '/static/img/kolibri_placeholder.png'
 
     class Meta:
         verbose_name = _("Channel")
@@ -801,7 +877,7 @@ class File(models.Model):
     id = UUIDField(primary_key=True, default=uuid.uuid4)
     checksum = models.CharField(max_length=400, blank=True, db_index=True)
     file_size = models.IntegerField(blank=True, null=True)
-    file_on_disk = models.FileField(upload_to=file_on_disk_name, storage=FileOnDiskStorage(), max_length=500,
+    file_on_disk = models.FileField(upload_to=object_storage_name, storage=default_storage, max_length=500,
                                     blank=True)
     contentnode = models.ForeignKey(ContentNode, related_name='files', blank=True, null=True, db_index=True)
     assessment_item = models.ForeignKey(AssessmentItem, related_name='files', blank=True, null=True, db_index=True)

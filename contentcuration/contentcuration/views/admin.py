@@ -26,10 +26,11 @@ from django.template.loader import render_to_string, get_template
 from django.template import Context
 from itertools import chain
 from rest_framework.renderers import JSONRenderer
+
 from contentcuration.decorators import browser_is_supported, is_admin
 from contentcuration.models import Channel, User, Invitation, ContentNode, generate_file_on_disk_name, File, Language
 from contentcuration.utils.messages import get_messages
-from contentcuration.serializers import AdminChannelListSerializer, AdminUserListSerializer, CurrentUserSerializer
+from contentcuration.serializers import AdminChannelListSerializer, AdminUserListSerializer, CurrentUserSerializer, UserChannelListSerializer
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
@@ -71,11 +72,9 @@ def send_custom_email(request):
 
     return HttpResponse(json.dumps({"success": True}))
 
-
 @login_required
 @browser_is_supported
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
-@permission_classes((IsAdminUser,))
 @is_admin
 def administration(request):
     return render(request, 'administration.html', {
@@ -185,6 +184,16 @@ def remove_editor(request):
     except ObjectDoesNotExist:
         return HttpResponseNotFound('Channel with id {} not found'.format(data["channel_id"]))
 
+@login_required
+@api_view(['GET'])
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
+def get_editors(request, channel_id):
+    channel = Channel.objects.get(pk=channel_id)
+    user_list = list(channel.editors.all().order_by("first_name"))
+    user_serializer = UserChannelListSerializer(user_list, many=True)
+
+    return Response(user_serializer.data)
 
 def sizeof_fmt(num, suffix='B'):
     """ Format sizes """

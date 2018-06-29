@@ -1,16 +1,12 @@
 <input type="checkbox" id="check_{{node.id}}" class="upload_item_checkbox"/>
 <label for="check_{{node.id}}" class="uploaded_list_item">
 	{{#if new_topic}}
-	<span class="glyphicon glyphicon-remove remove_topic pull-right" aria-hidden="true" title="{{formatMessage (intlGet 'messages.remove')}}"></span>
+		<i class="material-icons remove_topic pull-right" title="{{formatMessage (intlGet 'messages.remove')}}">clear</i>
 	{{/if}}
 	<h5 class="truncate" title="{{node.title}}" >
 		<div class="content-item-icon">
-				{{#if isfolder}}
-					<img src="/static/img/topic.png"/>
-				{{else}}
-					<span class="{{#get_icon node.kind}}{{/get_icon}}" aria-hidden="true"></span>
-				{{/if}}
-			</div>
+			<i class="material-icons">{{{get_icon node.kind}}}</i>
+		</div>
 		<span class="item_name" id="{{node.id}}">{{node.title}}</span>
 		<em class="invalid_title">{{formatMessage (intlGet 'messages.no_title')}}</em>
 	</h5>

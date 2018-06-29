@@ -52,7 +52,7 @@ def send_invitation_email(request):
         }
 
         # Need to break into two steps to avoid MultipleObjectsReturned error
-        invitation = Invitation.objects.filter(**fields).first()
+        invitation = Invitation.objects.filter(channel_id=channel_id, email=user_email).first()
 
         if not invitation:
             invitation = Invitation.objects.create(**fields)
@@ -146,7 +146,6 @@ class InformationRegistrationView(RegistrationView):
         }
 
     def register(self, form):
-
         # Clear session cached fields
         self.request.session["freeze_email"] = False
         for field in RegistrationForm.Meta.fields:
@@ -198,3 +197,4 @@ class UserActivationView(ActivationView):
             send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [settings.REGISTRATION_INFORMATION_EMAIL])
 
         return user
+

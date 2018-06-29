@@ -1,6 +1,7 @@
 <!DOCTYPE HTML>
 {% load staticfiles %}
 {% load i18n %}
+{% load render_bundle from webpack_loader %}
 {% get_current_language as LANGUAGE_CODE %}
 
 <html>
@@ -24,11 +25,27 @@
         } catch (error) { /* Page does not require front-end translations */ }
       </script>
 			<script src="{% url 'js_reverse' %}" type="text/javascript"></script>
-			<script type="text/javascript" src="{% static 'js/bundles/common.js' %}"></script>
-			<script type="text/javascript" src="{% static 'js/bundles/base.js' %}"></script>
+
+			{% render_bundle 'common' %}
+			<!-- prevent more than 1 bundle per page -->
+			{% block bundle %} {% render_bundle 'base' %} {% endblock bundle %}
+
 			<script type="text/javascript" src="{% url 'javascript-catalog' %}"></script>
 			{% endblock head %}
 
+      {% block analytics %}
+        {% if not debug %}
+          <!-- Global site tag (gtag.js) - Google Analytics -->
+          <script async src="https://www.googletagmanager.com/gtag/js?id=UA-36937407-7"></script>
+          <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+
+            gtag('config', 'UA-36937407-7');
+          </script>
+        {% endif %}
+      {% endblock %}
 	</head>
   <body>
       {% block nav %}
@@ -53,7 +70,9 @@
                 <!-- <li> <a class="btn btn-main">Discover</a></li> -->
                 <li id="username_label">{% trans "Hello," %} {{ user.first_name }}</li>
                 <li class="dropdown" id="settings-dd-wrapper">
-                  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><span class="glyphicon glyphicon-user" aria-hidden="true"></span></a>
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                    <i class="material-icons">account_circle</i>
+                  </a>
                   <ul class="dropdown-menu">
                     {% if user.is_admin %}<li><a href="{% url 'administration' %}" >{% trans "Administration" %}</a></li>{% endif %}
                     <li><a href="{% url 'profile_settings' %}" >{% trans "Settings" %}</a></li>
