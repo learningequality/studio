@@ -63,14 +63,19 @@
 					{% endfor %}
 				</select>
 				<div id="source_organization" class="optional_field">
-					{{form.organization.label}}<i class="required_asterisk">*</i> &nbsp;{{form.organization}}
+					{{form.organization.label}} &nbsp;{{form.organization}}
 				</div>
 				<div id="source_conference" class="optional_field">
-					{{form.conference.label}}<i class="required_asterisk">*</i> &nbsp;{{form.conference}}
+					{{form.conference.label}} &nbsp;{{form.conference}}
 				</div>
 				<div id="source_other" class="optional_field">
 					{{form.other_source.label}}<i class="required_asterisk">*</i> &nbsp;{{form.other_source}}
 				</div>
+			</div>
+		</div>
+		<div class="row">
+			<div class="login-label col-xs-12"  id="policy_accept">
+				{% blocktrans %}I have read and agreed to the <a id="policy_link" data-toggle="modal" data-target="#policyModal">Privacy Policy</a>{% endblocktrans %}<i class="required_asterisk">*</i>&nbsp; {{form.accepted_policy}}
 			</div>
 		</div>
 		<div class="row">
@@ -89,6 +94,24 @@
 			</div>
 		</div>
 	</form>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="policyModal" tabindex="-1" role="dialog" aria-labelledby="policyModal">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+      	<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        {% trans 'Privacy Policy' %}
+      </div>
+      <div class="modal-body">
+      	{% include "policies/text/terms_of_service.html" %}
+	    <div class="container-fluid">
+	    	<button class="action-button pull-right" data-dismiss="modal">{% trans 'CLOSE' %}</button>
+	    </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>

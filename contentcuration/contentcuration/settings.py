@@ -253,6 +253,10 @@ SPACE_REQUEST_EMAIL = 'content@learningequality.org'
 REGISTRATION_INFORMATION_EMAIL = 'studio-registrations@learningequality.org'
 HELP_EMAIL = 'content@learningequality.org'
 DEFAULT_FROM_EMAIL = 'Kolibri Studio <noreply@learningequality.org>'
+POLICY_EMAIL = 'legal@learningequality.org'
+ACCOUNT_DELETION_BUFFER = 5 # Used to determine how many days a user
+                            # has to undo accidentally deleting account
+
 DEFAULT_LICENSE = 1
 
 SERVER_EMAIL = 'curation-errors@learningequality.org'
