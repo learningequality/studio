@@ -153,7 +153,7 @@ var ChannelDetailsView = BaseViews.BaseListEditableItemView.extend({
                     });
                     $(".details_view").css("display", "block");
                 })
-            }, 1000);
+            }, 500);
         }
     },
     submit_changes: function() {
