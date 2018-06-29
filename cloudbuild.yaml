@@ -15,7 +15,7 @@ steps:
     '.'
     ]
 - name: 'gcr.io/cloud-builders/docker'
-  id: build-studio-nginx-proxy
+  id: build-nginx-image
   waitFor: ['-']              # don't wait for previous steps
   args: [
     'build',
@@ -24,8 +24,20 @@ steps:
     '-t', 'gcr.io/$PROJECT_ID/learningequality-studio-nginx:$COMMIT_SHA',
     '-t', 'gcr.io/$PROJECT_ID/learningequality-studio-nginx:latest',
     '.'
-    ]
+  ]
+
+- name: 'gcr.io/cloud-builders/docker'
+  id: push-app-image
+  waitFor: ['build-studio-app']
+  args: ['push', 'gcr.io/$PROJECT_ID/learningequality-studio-app:$COMMIT_SHA']
+- name: 'gcr.io/cloud-builders/docker'
+  id: push-nginx-image
+  waitFor: ['build-nginx-image']
+  args: ['push', 'gcr.io/$PROJECT_ID/learningequality-studio-nginx:$COMMIT_SHA']
+
 - name: 'gcr.io/cloud-builders/gcloud'
+  id: decrypt-gcs-service-account
+  waitFor: ['-']
   args: [
   'kms', 'decrypt',
   '--location=global', '--keyring=builder-secrets', '--key=secret-encrypter',
@@ -34,6 +46,7 @@ steps:
   ]
 - name: 'gcr.io/$PROJECT_ID/helm'
   id: helm-deploy-studio-instance
+  waitFor: ['decrypt-gcs-service-account', 'push-app-image', 'push-nginx-image']
   dir: "k8s"
   env:
   - 'CLOUDSDK_COMPUTE_ZONE=us-central1-f'
@@ -47,7 +60,6 @@ steps:
   ]
 
 timeout: 3600s
-
 secrets:
 - kmsKeyName: projects/ops-central/locations/global/keyRings/builder-secrets/cryptoKeys/secret-encrypter
   secretEnv:
