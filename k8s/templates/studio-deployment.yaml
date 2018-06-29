@@ -26,6 +26,8 @@ spec:
           value: k8s
         - name: MPLBACKEND
           value: PS
+        - name: SEND_USER_ACTIVATION_NOTIFICATION_EMAIL
+          value: ""
         - name: DATA_DB_HOST
           value: {{ .Values.postgresql.externalCloudSQL.proxyHostName | default (include "studio.fullname" .) }}
         - name: DATA_DB_NAME
