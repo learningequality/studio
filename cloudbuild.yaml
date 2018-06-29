@@ -1,7 +1,11 @@
 steps:
 - name: 'gcr.io/cloud-builders/docker'
+  id: pull-app-image-cache
+  args: ['pull', 'gcr.io/$PROJECT_ID/learningequality-studio-app:latest']
+
+- name: 'gcr.io/cloud-builders/docker'
   id: build-studio-app
-  waitFor: ['-']              # don't wait for previous steps
+  waitFor: ['pull-app-image-cache']              # don't wait for previous steps
   args: [
     'build',
     '-f', 'k8s/images/app/Dockerfile',
