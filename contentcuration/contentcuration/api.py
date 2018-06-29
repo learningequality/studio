@@ -15,17 +15,9 @@ from django.core.files.storage import default_storage
 from django.db.models import Count, Q, Sum
 from django.http import HttpResponse
 from django.utils.translation import ugettext as _
-from le_utils.constants import content_kinds, file_formats, format_presets
-
-
-def check_supported_browsers(user_agent_string):
-    if not user_agent_string:
-        return False
-    for browser in settings.SUPPORTED_BROWSERS:
-        if browser in user_agent_string:
-            return True
-    return False
-
+from le_utils.constants import format_presets, content_kinds, file_formats
+import contentcuration.models as models
+from contentcuration.tasks import deletetree_task
 
 def check_health_check_browser(user_agent_string):
     """
@@ -219,6 +211,8 @@ def add_editor_to_channel(invitation):
 
 def activate_channel(channel, user):
     user.check_channel_space(channel)
+    if channel.previous_tree and channel.previous_tree != channel.main_tree:
+        deletetree_task.delay(channel.previous_tree.tree_id)
     channel.previous_tree = channel.main_tree
     channel.main_tree = channel.staging_tree
     channel.staging_tree = None
