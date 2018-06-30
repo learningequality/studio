@@ -55,21 +55,38 @@
                                 <p>{{formatMessage (intlGet 'messages.languages')}}</p>
                                 {{#if details.languages}}
                                     <ul class="list-unstyled">
-                                        {{#each details.languages }}
+                                        {{#each languages.short }}
                                             <li class="language">{{this}}</li>
                                         {{/each}}
                                     </ul>
+                                    {{#if languages.full }}
+                                        <ul class="list-unstyled collapse" id="collapseLanguages">
+                                            {{#each languages.full }}
+                                                <li class="language">{{this}}</li>
+                                            {{/each}}
+                                        </ul>
+                                        <p><a class="toggle-list" data-toggle="collapse" href="#collapseLanguages" data-update="{{formatMessage (intlGet 'messages.less')}}">{{formatMessage (intlGet 'messages.more')}} ({{languages.full.length}})</a></p>
+                                    {{/if}}
                                 {{else}} ---
                                 {{/if}}
                             </div>
                             <div class="col-xs-6">
+                                <p>{{formatMessage (intlGet 'messages.accessible_languages')}}</p>
                                 {{#if details.accessible_languages}}
-                                    <p>{{formatMessage (intlGet 'messages.accessible_languages')}}</p>
                                     <ul class="list-unstyled">
-                                        {{#each details.accessible_languages }}
+                                        {{#each accessible_languages.short }}
                                             <li class="language">{{this}}</li>
                                         {{/each}}
                                     </ul>
+                                    {{#if accessible_languages.full }}
+                                        <ul class="list-unstyled collapse" id="collapseAccessibleLanguages">
+                                            {{#each accessible_languages.full }}
+                                                <li class="language">{{this}}</li>
+                                            {{/each}}
+                                        </ul>
+                                        <p><a class="toggle-list" data-toggle="collapse" href="#collapseAccessibleLanguages" data-update="{{formatMessage (intlGet 'messages.less')}}">{{formatMessage (intlGet 'messages.more')}} ({{accessible_languages.full.length}})</a></p>
+                                    {{/if}}
+                                {{else}} ---
                                 {{/if}}
                             </div>
                         </div>
@@ -141,42 +158,46 @@
             <div role="tabpanel" class="tab-pane fade container-fluid section" id="auth-section">
                 <div class="information">
                     <div class="row info-row">
-                        {{#if details.authors}}
-                            <div class="col-xs-4 text-center">
-                                <i class="material-icons creator_icon">edit</i>
-                                <p>
-                                    {{formatMessage (intlGet 'messages.author') model=model_name}}
+                        <div class="col-xs-4 text-center">
+                            <i class="material-icons creator_icon">edit</i>
+                            <p>
+                                {{formatMessage (intlGet 'messages.author') model=model_name}}
+                                {{#if details.authors}}
                                     {{#each details.authors}}
                                         <b>{{this}}</b>
                                     {{#unless @last}}, {{/unless}}
                                     {{/each}}
-                                </p>
-                            </div>
-                        {{/if}}
-                        {{#if details.providers}}
-                            <div class="col-xs-4 text-center">
-                                <i class="material-icons creator_icon">pan_tool</i>
-                                <p>
-                                    {{formatMessage (intlGet 'messages.provider') model=model_name}}
+                                {{else}}<br><b>---</b>
+                                {{/if}}
+                            </p>
+                        </div>
+                        <div class="col-xs-4 text-center">
+                            <i class="material-icons creator_icon">pan_tool</i>
+                            <p>
+                                {{formatMessage (intlGet 'messages.provider') model=model_name}}
+                                {{#if details.providers}}
                                     {{#each details.providers}}
                                         <b>{{this}}</b>
                                     {{#unless @last}}, {{/unless}}
                                     {{/each}}
-                                </p>
-                            </div>
-                        {{/if}}
-                        {{#if details.aggregators}}
-                            <div class="col-xs-4 text-center">
-                                <i class="material-icons creator_icon">inbox</i>
-                                <p>
-                                    {{formatMessage (intlGet 'messages.aggregator') model=model_name}}
+                                {{else}}<br><b>---</b>
+                                {{/if}}
+                            </p>
+                        </div>
+
+                        <div class="col-xs-4 text-center">
+                            <i class="material-icons creator_icon">inbox</i>
+                            <p>
+                                {{formatMessage (intlGet 'messages.aggregator') model=model_name}}
+                                {{#if details.aggregators}}
                                     {{#each details.aggregators}}
                                         <b>{{this}}</b>
                                     {{#unless @last}}, {{/unless}}
                                     {{/each}}
-                                </p>
-                            </div>
-                        {{/if}}
+                                {{else}}<br><b>---</b>
+                                {{/if}}
+                            </p>
+                        </div>
                     </div>
                     <div class="row info-row licenses">
                         <div class="col-xs-2 text-right"><i class="material-icons cc_icon">copyright</i></div>
@@ -199,10 +220,10 @@
                             <p>{{formatMessage (intlGet 'messages.original_channels')}}</p>
                             <ul class="list-unstyled">
                             {{#each details.original_channels}}
-                                <li class="original_channel">
+                                <li class="original_channel row" >
                                     <a href="/channels/{{id}}/view" target="_blank" data-toggle="tooltip" data-placement="top" title="{{formatMessage (intlGet 'messages.resource_count') count=count}}">
-                                        <img src="{{#if thumbnail}}{{thumbnail}}{{else}}{{/if}}">
-                                        {{name}}
+                                        <div class="col-xs-2"><img src="{{#if thumbnail}}{{thumbnail}}{{else}}{{/if}}"></div>
+                                        <div class="col-xs-10">{{name}}</div>
                                     </a>
                                 </li>
                             {{/each}}
@@ -226,8 +247,10 @@
                                 </div>
                                 <div class="col-xs-8">
                                     {{#each channel.secret_tokens}}
-                                        <input type="text" class="copy-id-text text-center" value="{{display_token}}" readonly size='30' id="text_{{display_token}}"/>
-                                        <i class="material-icons copy-id-btn" title="{{formatMessage (intlGet 'messages.copy_id')}}" data-text="#text_{{display_token}}">content_paste</i>
+                                        {{#equal token ../channel.id}}{{else}}
+                                            <input type="text" class="copy-id-text text-center" value="{{display_token}}" readonly size='30' id="text_{{display_token}}"/>
+                                            <i class="material-icons copy-id-btn" title="{{formatMessage (intlGet 'messages.copy')}}" data-text="#text_{{display_token}}">content_paste</i>
+                                        {{/equal}}
                                     {{/each}}
                                 </div>
                             </div>

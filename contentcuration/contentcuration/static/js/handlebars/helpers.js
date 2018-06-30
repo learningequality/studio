@@ -130,7 +130,7 @@ Handlebars.registerHelper('substring', function(text, chars){
 });
 
 Handlebars.registerHelper('question_default_text', function(type){
-  return type === "perseus_question"? "Perseus Question" : "No text provided";
+  return type === "perseus_question"? stringHelper.translate("perseus_question") : stringHelper.translate("no_text_provided");
 });
 
 var COUNTER = 0;

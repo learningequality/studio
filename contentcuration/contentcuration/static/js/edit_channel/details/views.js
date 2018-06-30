@@ -81,7 +81,9 @@ var MESSAGES = {
     "preview": "Preview",
     "star_channel": "Star Channel",
     "unstar_channel": "Remove Star",
-    "edit_details": "Edit Details"
+    "edit_details": "Edit Details",
+    "more": "Show More",
+    "less": "Show Less"
 }
 
 var SCALE_TEXT = ["very_small", "very_small", "small", "small", "average", "average", "average", "large", "large", "very_large", "very_large"];
@@ -357,7 +359,8 @@ var DetailsView = BaseViews.BaseListEditableItemView.extend({
         this.render();
     },
     events: {
-      "click .btn-tab": "set_tab"
+      "click .btn-tab": "set_tab",
+      "click .toggle-list": "set_toggle_text"
     },
     render: function() {
         var self = this;
@@ -376,7 +379,9 @@ var DetailsView = BaseViews.BaseListEditableItemView.extend({
             token_count: (this.channel && this.channel.secret_tokens)? this.channel.secret_tokens.length : 0,
             channel: this.channel,
             size_bar: this.get_size_bar(this.model.get("metadata").resource_size),
-            count_bar: this.get_count_bar(this.model.get("metadata").resource_count)
+            count_bar: this.get_count_bar(this.model.get("metadata").resource_count),
+            languages: this.get_languages(this.model.get("metadata").languages),
+            accessible_languages: this.get_languages(this.model.get("metadata").accessible_languages)
         },  {
             data: this.get_intl_data()
         }));
@@ -426,6 +431,7 @@ var DetailsView = BaseViews.BaseListEditableItemView.extend({
         });
     },
     get_size_bar: function(size) {
+        // Run python manage.py get_channel_stats to get latest stats
         var size_index = Math.max(1, Math.min(Math.round(size/100000000), 10));
         return {
             "filled": _.range(size_index),
@@ -433,6 +439,7 @@ var DetailsView = BaseViews.BaseListEditableItemView.extend({
         };
     },
     get_count_bar: function(count) {
+        // Run python manage.py get_channel_stats to get latest stats
         var size_index = Math.min(Math.round(count/100), 10);
         var bar = [];
         for(var i = 0; i < 10; ++ i) {
@@ -443,9 +450,21 @@ var DetailsView = BaseViews.BaseListEditableItemView.extend({
             "text": this.get_translation(SCALE_TEXT[size_index])
         };
     },
+    get_languages: function(languages){
+        languages = languages.sort();
+        return {
+            "short": (languages.length <= 10)? languages : languages.slice(0, 9),
+            "full": (languages.length <= 10)? [] : languages.slice(9, languages.length)
+        }
+    },
     set_tab: function(e) {
         this.$(".btn-tab").removeClass("active");
         $(e.target).addClass("active");
+    },
+    set_toggle_text: function(e) {
+        var current_text = $(e.target).text();
+        $(e.target).text($(e.target).data("update"));
+        $(e.target).data("update", current_text);
     }
 });
 

@@ -297,9 +297,9 @@ var messages = {
   "learner": "Anyone",
   "role_visibility": "Visible to",
   "more": "... More",
-  "less": " Less"
+  "less": " Less",
+  "no_text_provided": "No text provided"
 };
-
 
 var translate = i18n.createTranslator(namespace, messages);
 

@@ -21,7 +21,7 @@
 	overflow-y: auto;
 	padding: 0px;
 	min-height: 350px;
-	background-color: white;
+	background-color: rgba(256,256,256,0.8);
 	height: inherit;
 	padding-top: 15px;
 	border: 2px solid @gray-500;
@@ -51,13 +51,13 @@
 		.image_dropzone{ width: auto; }
 	}
 	img{
-	    width:145px;
-	    height:145px;
+	    width:130px;
+	    height:130px;
 	    object-fit: cover;
 	}
 	.channel_pic {
 		border: 2px solid @gray-500;
-		min-height: 145px;
+		min-height: 130px;
 	}
 
 	h4, .title {
@@ -73,7 +73,7 @@
 	}
 
 	.channel_text {
-		color: @gray-500;
+		color: @gray-700;
 	}
 	.identifier_label {
 		padding: 0;
@@ -158,7 +158,7 @@
 		padding: 5px 25px;
 	}
 	.toggle_description {
-		color: @gray-500 !important;
+		color: @gray-700 !important;
 		&:hover { color: @blue-500 !important; }
 	}
 	.empty_default {
@@ -166,9 +166,13 @@
 	    margin-top: 0px;
 		&.loading { border-top: 2px solid @blue-200; }
 	}
+	hr {
+		border-color: @gray-300;
+	}
 }
 
 .details_view {
+	background-color: white;
 	.help_icon {
 		color: @blue-500;
 		font-size: 10pt;
@@ -182,20 +186,22 @@
 		padding: 15px 0px 30px 0px;
 	}
 
+
 	.btn-tab {
 		border-radius: 0px;
 		padding: 10px 0px;
 		font-size: 12pt;
-		background-color: @gray-200;
+		background-color: @gray-300;
 		color: black;
 		margin: 1px;
 		border: 1px solid white;
 		border-bottom: none;
+		border-top: none;
 		text-transform: uppercase;
 		&:first-child { border-left: none; }
 		&:last-child { border-right: none; }
 		&:hover {
-			background-color: @gray-300;
+			background-color: @blue-100;
 		}
 		&.active {
 			background-color: @blue-200;
@@ -236,6 +242,9 @@
     					color: @blue-100;
     					margin-top: -3px;
     				}
+    				.row {
+    					margin-bottom: 10px;
+    				}
 				}
 				&.channels {
 					p {
@@ -254,11 +263,18 @@
 						-webkit-columns: 2;
 						-moz-columns: 2;
 						padding: 0px 15px;
+						li {
+							margin: 0;
+    						margin-bottom: 15px;
+						}
 						a {
-							font-size: 16pt;
+							font-size: 12pt;
 							color: @blue-500;
 							text-decoration: none;
 							cursor: pointer;
+							div {
+								padding: 0px;
+							}
 							&:hover {
 								font-weight: bold;
 								img {
@@ -369,11 +385,23 @@
 				ul {
 					padding-left: 20px;
 				}
+				.toggle-list {
+					text-decoration: none;
+					color: @gray-500;
+					font-weight: bold;
+					margin-left: 20px;
+					&:hover { color: @blue-500; }
+				}
 
 				&#include-box {
 					border-color: @blue-200;
 					.label { color: @blue-200; }
+					ul {
+						margin-bottom: 0px;
+						&.collapse { margin-bottom: 5px !important; }
+					}
 					.additional_include {
+						margin-top: 10px;
 						border-top: 1px solid @blue-100;
 						padding: 10px;
 						padding-bottom: 0px;
