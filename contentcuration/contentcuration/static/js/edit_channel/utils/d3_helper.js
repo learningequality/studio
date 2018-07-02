@@ -186,14 +186,6 @@ class TagCloud extends Visual {
             return;
         }
 
-        // var words = "At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident, similique sunt in culpa qui officia deserunt mollitia animi, id est laborum et dolorum fuga. Et harum quidem rerum facilis est et expedita distinctio. Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus id quod maxime placeat facere possimus, omnis voluptas assumenda est, omnis dolor repellendus. Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet ut et voluptates repudiandae sint et molestiae non recusandae. Itaque earum rerum hic tenetur a sapiente delectus, ut aut reiciendis voluptatibus maiores alias consequatur aut perferendis doloribus asperiores repellat.";
-        // words = words.split(" ");
-        // for (var i = 0; i < words.length; ++i) {
-        //     data.push({"tag_name": words[i], "count": Math.floor(Math.random() * 100)});
-        // }
-
-
-
         var config = this.config;
         var svg = this.svg;
         var width = svg.attr("width");
