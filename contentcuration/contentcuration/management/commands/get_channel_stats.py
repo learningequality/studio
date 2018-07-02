@@ -20,6 +20,15 @@ logging = logmodule.getLogger(__name__)
 class Command(BaseCommand):
 
     def handle(self, *args, **options):
+        """
+            Calculates channel sizes/counts and puts in csvs/channel_stats.csv
+            and prints out max, min, mean, median, and mode
+
+            No args, returns csv path
+
+            Call with python manage.py get_channel_stats
+
+        """
 
         logging.info("Writing CSV for users")
 
