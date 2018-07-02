@@ -2,6 +2,7 @@ import ast
 import copy
 import json
 import logging
+import pytz
 import uuid
 from datetime import datetime
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseNotFound
@@ -276,7 +277,7 @@ def get_topic_details(request, contentnode_id):
 
     # Serialize data
     data = json.dumps({
-        "last_update": datetime.now().strftime(DATE_TIME_FORMAT),
+        "last_update": pytz.utc.localize(datetime.now()).strftime(DATE_TIME_FORMAT),
         "resource_count": resources.count() or 0,
         "resource_size": resources.values('files__checksum', 'files__file_size')\
                                 .distinct()\
