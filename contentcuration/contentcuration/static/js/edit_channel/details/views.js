@@ -111,6 +111,7 @@ var ChannelDetailsView = BaseViews.BaseListEditableItemView.extend({
         this.listenTo(this.model, "sync", this.set_background);
     },
     set_background: function() {
+        // Set background of channel panel to thumbnail
         $("#channel_preview_wrapper").css("background-image", "url('" + this.model.get("thumbnail_url").replace("\\", "/") + "')")
     },
     events: {
@@ -162,6 +163,7 @@ var ChannelDetailsView = BaseViews.BaseListEditableItemView.extend({
         this.editor.submit_changes();
     },
     change: function(changed) {
+        // Mark as changed to prompt user to save if closing the panel
         this.changed = changed;
     },
     copy_id:function(event){
@@ -252,6 +254,7 @@ var ChannelEditorView = BaseViews.BaseListEditableItemView.extend({
         this.create_initial();
     },
     create_initial: function() {
+        // Create thumbnail and set tab focus
         if(this.allow_edit) {
             this.image_upload = new Images.ThumbnailUploadView({
                 model: this.model,
@@ -389,6 +392,7 @@ var DetailsView = BaseViews.BaseListEditableItemView.extend({
         _.defer(this.render_visuals, 500);
     },
     render_visuals: function() {
+        // Render visualizations with tags/kind counts
         this.render_breakdown();
         this.render_tagcloud();
     },
@@ -416,7 +420,7 @@ var DetailsView = BaseViews.BaseListEditableItemView.extend({
             width: 350,
             total: stringHelper.format_number(total),
             color_key: color_key,
-            center_text: this.get_translation("total_resource_count", this.model.get("metadata").resource_count),
+            title: this.get_translation("total_resource_count", this.model.get("metadata").resource_count),
             tooltip: function(d) {
                 return self.tooltip_template(d.data, { data: self.get_intl_data() });
             },
@@ -431,6 +435,7 @@ var DetailsView = BaseViews.BaseListEditableItemView.extend({
         });
     },
     get_size_bar: function(size) {
+        // Get data for size bar indicator
         // Run python manage.py get_channel_stats to get latest stats
         var size_index = Math.max(1, Math.min(Math.round(size/100000000), 10));
         return {
@@ -439,6 +444,7 @@ var DetailsView = BaseViews.BaseListEditableItemView.extend({
         };
     },
     get_count_bar: function(count) {
+        // Get data for count bar indicator
         // Run python manage.py get_channel_stats to get latest stats
         var size_index = Math.min(Math.round(count/100), 10);
         var bar = [];
@@ -451,6 +457,7 @@ var DetailsView = BaseViews.BaseListEditableItemView.extend({
         };
     },
     get_languages: function(languages){
+        // Separate languages into short and long list to allow user to show more/less
         languages = languages.sort();
         return {
             "short": (languages.length <= 10)? languages : languages.slice(0, 9),
@@ -458,10 +465,12 @@ var DetailsView = BaseViews.BaseListEditableItemView.extend({
         }
     },
     set_tab: function(e) {
+        // Set tab as active
         this.$(".btn-tab").removeClass("active");
         $(e.target).addClass("active");
     },
     set_toggle_text: function(e) {
+        // Set show more/less text
         var current_text = $(e.target).text();
         $(e.target).text($(e.target).data("update"));
         $(e.target).data("update", current_text);

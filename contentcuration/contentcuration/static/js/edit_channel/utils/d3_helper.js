@@ -40,6 +40,37 @@ function D3Tooltip (d3, selector) {
 }
 
 class Visual {
+    /*
+        Base class for visualizations
+        config = {
+            key (str): key used for data id such as name or label [default:"id"],
+            value_key (str): key used for getting number such as percent or count [default:"percent"],
+            tooltip (function): function for text to display on tooltip [default:null],
+            get_text (function): function for text to display on sections of visualization,
+            title (str): title of the visualization,
+            total (int): total number of items [default:0],
+            width (int): width of visualization [default:300],
+            height (int): height of visualization [default:50]
+        }
+
+        For example:
+            Given: [
+                {"name": "Item 1", "count": 3},
+                {"name": "Item 2", "count": 1}
+            ]
+
+            Config = {
+                key: "name",
+                value_key: "count",
+                tooltip: function(d) {
+                    return "<b>" + d.data.key + "</b>: " + d.data.count;
+                },
+                get_text: function(d) {
+                    return d.name;
+                },
+                title: "Sample Visual"
+            }
+    */
     constructor(selector, data, config) {
         this.selector = selector || "body";
         this.config = config || {};
@@ -48,6 +79,7 @@ class Visual {
     }
 
     setConfig(config) {
+        // Set configuration for visualization
         config = config || {};
         var color_selection = config.color || COLOR_SELECTION;
         var color =  d3.scaleOrdinal(color_selection);
@@ -56,7 +88,7 @@ class Visual {
             value_key: config.value_key || "percent",
             tooltip: config.tooltip,
             get_text: config.get_text,
-            center_text: config.center_text,
+            title: config.title,
             total: config.total || 0,
             width: config.width || 300,
             height: config.height || 50,
@@ -74,6 +106,7 @@ class Visual {
 }
 
 class PieChart extends Visual {
+    /* Create pie chart from data */
     init() {
         var width = this.config.width || $(this.selector).width() || 300;
         var height = width;
@@ -101,7 +134,6 @@ class PieChart extends Visual {
     render(data) {
         var arc = this.arc;
         var config = this.config;
-
 
         var g = this.svg.selectAll(".arc")
             .data(this.pie(data))
@@ -139,7 +171,7 @@ class PieChart extends Visual {
                 }).attr("dy", ".35em").text(config.get_text);
         }
 
-        if(config.center_text) {
+        if(config.title) {
             g.append("text")
                 .attr("text-anchor", "middle")
                 .attr('font-size', '14pt')
@@ -150,12 +182,13 @@ class PieChart extends Visual {
                 .attr("text-anchor", "middle")
                 .attr('font-size', '10pt')
                 .attr("dy", "1em")
-                .text(config.center_text);
+                .text(config.title);
         }
     }
 }
 
 class Legend extends Visual {
+    /* Create legend from data */
     render(data) {
         var legend = d3.select(this.selector).append("table").attr('class','legend');
         var leg = {};
@@ -176,7 +209,7 @@ class Legend extends Visual {
 
 
 class TagCloud extends Visual {
-
+    /* Create tag cloud from data */
     init() {
         var width = $(this.selector).width();
         this.svg = d3.select(this.selector).append("svg").attr("width", width);

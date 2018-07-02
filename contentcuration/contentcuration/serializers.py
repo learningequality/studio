@@ -628,9 +628,11 @@ class ContentNodeCompleteSerializer(ContentNodeEditSerializer):
 
 
 class TokenSerializer(serializers.ModelSerializer):
+    """ Serializer for channel tokens """
     display_token = serializers.SerializerMethodField('generate_token')
 
     def generate_token(self, token):
+        # Break channel tokens into two groups for easier processing
         return "{}-{}".format(token.token[:5], token.token[5:])
 
     class Meta:

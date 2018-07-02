@@ -1,6 +1,15 @@
 var stringHelper = require("edit_channel/utils/string_helper");
 
 function Description (description, el, split_index) {
+  /*
+    Handles description show more/less logic
+
+    Args:
+      description (str): text to use
+      el ($el): element to put text in
+      split_index (int): where to split text
+    Example: var description = new Description("sample", $("#target"), 100)
+  */
   this.template = require("./hbtemplates/description.handlebars");
   description = description.trim();
   split_index = split_index || 49;

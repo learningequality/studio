@@ -148,6 +148,7 @@ var ChannelListPage  = BaseViews.BaseView.extend({
 		this.toggle_panel()
 	},
 	toggle_panel: function(view, channel_list_item) {
+		// Toggle channel details panel
 		if(!this.current_view || !this.current_view.changed) {
 			this.set_details(view, channel_list_item);
         } else {
@@ -165,6 +166,7 @@ var ChannelListPage  = BaseViews.BaseView.extend({
         }
 	},
 	set_details: function(view, channel_list_item) {
+		// Render channel details
 		$(".active_channel").removeClass("active_channel");
 		if(view) {
 			this.current_view && this.current_view.remove();
@@ -244,6 +246,7 @@ var ChannelList  = BaseViews.BaseEditableListView.extend({
 		});
 	},
 	set_active_channel: function(channel) {
+		// Show channel as being opened across lists
 		_.each(this.views, function(view){
 			if(view.model.id === channel.id) {
 				view.$el.addClass("active_channel");
