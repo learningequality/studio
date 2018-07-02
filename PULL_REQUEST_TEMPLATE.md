@@ -1,10 +1,10 @@
 ## Description
 
-*What does this PR do?*
+*What does this PR do? Briefly describe in 1-2 sentences*
 
 #### Issue Addressed (if applicable)
 
-*[Link issue here]()*
+Addresses #*PR# HERE*
 
 #### Before/After Screenshots (if applicable)
 
@@ -16,7 +16,7 @@
 - [ ] *Step 1*
 - [ ] *Step 2*
 
-## Implementation Notes
+## Implementation Notes (optional)
 
 #### At a high level, how did you implement this?
 
