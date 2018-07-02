@@ -48,6 +48,8 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY") or '_s0k@&o%m6bzg7s(0p(w6z5xbo%vy%mj
 # SECURITY WARNING: don't run with debug turned on in production!
 # DEBUG = True
 
+SESSION_COOKIE_NAME = 'kolibri_studio_sessionid'
+
 ALLOWED_HOSTS = ["*"]  # In production, we serve through a file socket, so this is OK.
 
 
