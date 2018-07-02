@@ -267,7 +267,8 @@ def generate_object_storage_name(checksum, filename):
     """ Separated from file_on_disk_name to allow for simple way to check if has already exists """
     h = checksum
     basename, ext = os.path.splitext(filename)
-    directory = os.path.join(settings.STORAGE_ROOT, h[0], h[1])
+    # Use / instead of os.path.join as Windows makes this \\
+    directory = "/".join([settings.STORAGE_ROOT, h[0], h[1]])
     return os.path.join(directory, h + ext.lower())
 
 
