@@ -205,8 +205,9 @@ def get_thumbnail(node):
 DATE_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 @api_view(['GET'])
 def get_topic_details(request, contentnode_id):
-    """
-        Generate data for topic contents. Used for look-inside previews
+    """ Generates data for topic contents. Used for look-inside previews
+        Keyword arguments:
+            contentnode_id (str): id of topic node to get details from
     """
     # Get nodes and channel
     node = ContentNode.objects.prefetch_related('children', 'files', 'tags')\
@@ -253,7 +254,7 @@ def get_topic_details(request, contentnode_id):
         } for n in deepest_node.get_siblings(include_self=True)[0:4]
     ] if deepest_node else []
 
-    # Get original channel list
+    # Get list of channels nodes were originally imported from (omitting the current channel)
     channel_id = channel and channel.id
     originals = resources.values("original_channel_id")\
                         .annotate(count=Count("original_channel_id"))\
