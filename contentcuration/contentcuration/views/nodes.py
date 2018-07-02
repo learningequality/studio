@@ -225,7 +225,8 @@ def get_topic_details(request, contentnode_id):
     cached_data = cache.get("details_{}".format(node.node_id))
 
     if cached_data and last_update:
-        if last_update.strftime(DATE_TIME_FORMAT) < json.loads(cached_data)['last_update']:
+        last_cache_update = datetime.strptime(json.loads(cached_data)['last_update'], DATE_TIME_FORMAT)
+        if last_update.replace(tzinfo=None) < last_cache_update:
             return HttpResponse(cached_data)
 
     # Get resources
