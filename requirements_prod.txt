@@ -1,3 +1,4 @@
-google-cloud-error-reporting==0.24.0
-google-python-cloud-debugger==1.17
-newrelic
+google-cloud-error-reporting==0.30.0
+google-python-cloud-debugger==2.8
+google-cloud-storage==1.10.0
+newrelic==3.2.0.91

@@ -4,11 +4,11 @@
 
 New user registration on Kolibri Studio:
 
-Name: {{first_name}} {{last_name}}
-Email: {{email}}
-Intended Use(s): {{use}}{% if storage %}
-Storage Needed: {{storage}}{% endif %}
-Location(s): {{location}}
-Heard about us from: {{source}}
+Name: {{user.first_name}} {{user.last_name}}
+Email: {{user.email}}
+Intended Use(s): {{information.uses | join:", "}}{% if information.space_needed %}
+Storage Needed: {{information.space_needed}}{% endif %}
+Location(s): {{information.locations | join:", "}}
+Heard about us from: {{information.heard_from}}
 
 {% endautoescape %}

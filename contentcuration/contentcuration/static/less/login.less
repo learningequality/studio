@@ -1,4 +1,5 @@
 @import "global-variables.less";
+@import "modal-styles.less";
 
 html, body, .login, .login-branding, .login-content{
 	// standardizing height across the app
@@ -163,10 +164,20 @@ html, body, .login, .login-branding, .login-content{
 			}
 		}
 
+		#policy_accept {
+			text-align: center;
+			margin-top: 20px;
+			margin-bottom: 15px;
+			#policy_link {
+				color: @login-btn-hover-color;
+			    font-weight: bold;
+			    &:hover { color: bisque; }
+			}
+		}
+
 		#help_footer {
 			font-size: 9pt;
-			margin-bottom: 30px;
-			margin-top: 10px;
+			margin-bottom: 20px;
 			a {
 				font-weight: bold;
 				font-size: 9pt;
@@ -198,6 +209,27 @@ html, body, .login, .login-branding, .login-content{
 			&:hover {
 				background-color: @login-btn-hover-color;
 			}
+		}
+	}
+}
+
+#policyModal {
+	color: black;
+	.modal-header {
+	    color: white;
+	    background-color: @blue-200;
+	    font-size: 14pt;
+	    font-weight: bold;
+	    padding: 15px;
+	}
+	.modal-body {
+		padding: 15px 30px;
+		h1 {
+			font-size: 20pt;
+		}
+		a {
+			color: @blue-500;
+			font-weight: bold;
 		}
 	}
 }

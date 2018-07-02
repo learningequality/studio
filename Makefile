@@ -20,7 +20,7 @@ test:
 
 endtoendtest:
 	# launch all studio's dependent services using docker-compose, and then run the tests	
-	docker-compose run studio-app make test
+	docker-compose run studio-app make test -e DJANGO_SETTINGS_MODULE=contentcuration.test_settings
 
 collectstatic: migrate
 	python contentcuration/manage.py collectstatic --noinput
