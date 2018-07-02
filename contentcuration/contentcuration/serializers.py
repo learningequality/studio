@@ -581,9 +581,14 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer, ContentNodeFieldMix
             }
 
     def retrieve_original_channel(self, node):
-        original = node.get_original_node()
-        channel = original.get_channel() if original else None
-        return {"id": channel.pk, "name": channel.name} if channel else None
+        channel_id = node.original_channel_id
+        channel = channel_id and Channel.objects.get(pk=channel_id)
+
+        return {
+            "id": channel.pk,
+            "name": channel.name,
+            "thumbnail_url": channel.get_thumbnail(),
+        } if (channel and not channel.deleted) else None
 
     class Meta:
         list_serializer_class = CustomListSerializer
@@ -608,7 +613,6 @@ class ContentNodeEditSerializer(ContentNodeSerializer):
                   'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'ancestors', 'tree_id',
                   'tags', 'extra_fields', 'original_channel', 'prerequisite', 'is_prerequisite_of', 'thumbnail_encoding',
                   'freeze_authoring_data', 'publishing', 'original_source_node_id', 'role_visibility', 'provider', 'aggregator')
-
 
 class ContentNodeCompleteSerializer(ContentNodeEditSerializer):
     class Meta:
@@ -777,7 +781,7 @@ class PublicChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('email', 'first_name', 'last_name', 'id', 'disk_space', 'is_active', 'information')
+        fields = ('email', 'first_name', 'last_name', 'id', 'disk_space', 'is_active', 'information', 'policies')
 
 
 class CurrentUserSerializer(serializers.ModelSerializer):

@@ -69,7 +69,7 @@ INSTALLED_APPS = (
     'le_utils',
     'rest_framework.authtoken',
     'search',
-    'storages',
+    'django_s3_storage',
     'webpack_loader',
 )
 
@@ -253,6 +253,10 @@ SPACE_REQUEST_EMAIL = 'content@learningequality.org'
 REGISTRATION_INFORMATION_EMAIL = 'studio-registrations@learningequality.org'
 HELP_EMAIL = 'content@learningequality.org'
 DEFAULT_FROM_EMAIL = 'Kolibri Studio <noreply@learningequality.org>'
+POLICY_EMAIL = 'legal@learningequality.org'
+ACCOUNT_DELETION_BUFFER = 5 # Used to determine how many days a user
+                            # has to undo accidentally deleting account
+
 DEFAULT_LICENSE = 1
 
 SERVER_EMAIL = 'curation-errors@learningequality.org'
@@ -287,9 +291,11 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 
 # CLOUD STORAGE SETTINGS
-DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+DEFAULT_FILE_STORAGE = 'django_s3_storage.storage.S3Storage'
 AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID') or 'development'
 AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY') or 'development'
-AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_BUCKET_NAME') or 'content'
+AWS_S3_BUCKET_NAME = os.getenv('AWS_BUCKET_NAME') or 'content'
 AWS_S3_ENDPOINT_URL = os.getenv('AWS_S3_ENDPOINT_URL') or 'http://localhost:9000'
 AWS_AUTO_CREATE_BUCKET = True
+AWS_S3_FILE_OVERWRITE = True
+AWS_S3_BUCKET_AUTH = False

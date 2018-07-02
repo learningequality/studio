@@ -17,7 +17,6 @@ else:
         'SHOW_TOOLBAR_CALLBACK': lambda x: True,
     }
 
-
 DEBUG_TOOLBAR_PANELS = [
     'debug_toolbar.panels.versions.VersionsPanel',
     'debug_toolbar.panels.timer.TimerPanel',

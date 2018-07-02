@@ -19,6 +19,7 @@ from rest_framework.permissions import IsAuthenticated
 from contentcuration import ricecooker_versions as rc
 from contentcuration.api import get_staged_diff, write_file_to_storage, activate_channel, get_hash
 from contentcuration.models import AssessmentItem, Channel, ContentNode, ContentTag, File, FormatPreset, Language, License, StagedFile, generate_object_storage_name
+from contentcuration.tasks import deletetree_task
 from contentcuration.utils.tracing import trace
 from contentcuration.utils.files import get_file_diff
 
@@ -190,7 +191,7 @@ def api_commit_channel(request):
 
         # Delete staging tree if it already exists
         if old_staging and old_staging != obj.main_tree:
-            old_staging.delete()
+            deletetree_task.delay(old_staging.tree_id)
 
         if not data.get('stage'):  # If user says to stage rather than submit, skip changing trees at this step
             try:
@@ -396,11 +397,7 @@ def get_channel_status_bulk(request):
     """ Create the channel node """
     data = json.loads(request.body)
     try:
-        statuses = {}
-        for cid in data['channel_ids']:
-            status = get_status(cid)
-            if status:
-                statuses.update({cid: status})
+        statuses = {cid: get_status(cid) for cid in data['channel_ids']}
 
         return HttpResponse(json.dumps({
             "success": True,
@@ -415,7 +412,7 @@ def get_channel_status_bulk(request):
 def get_status(channel_id):
     obj = Channel.objects.filter(pk=channel_id).first()
     if not obj:
-        return None
+        return "active"
     elif obj.deleted:
         return "deleted"
     elif obj.staging_tree:
