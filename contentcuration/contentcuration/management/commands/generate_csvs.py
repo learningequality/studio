@@ -5,7 +5,7 @@ import re
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from contentcuration.models import Channel
-from contentcuration.utils.channel_csv import write_channel_csv_file
+from contentcuration.utils.csv_writer import write_channel_csv_file
 
 import logging as logmodule
 logmodule.basicConfig()

@@ -65,11 +65,12 @@
     "material-design-icons": "^3.0.1",
     "mathjax": "^2.7.0",
     "mathquill": "^0.10.1-a",
+    "node-vibrant": "^3.0.0",
     "offline-js": "^0.7.19",
     "promise-polyfill": "^6.0.2",
     "summernote": "^0.8.2",
     "to-markdown": "^3.0.3",
-    "underscore": "^1.8.3",
+    "underscore": "^1.9.0",
     "vue": "^2.5.16",
     "vue-intl": "^2.0.0",
     "vuex": "^2.3.1"
