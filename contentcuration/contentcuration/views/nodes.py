@@ -201,37 +201,47 @@ def get_thumbnail(node):
     return "/".join([settings.STATIC_URL.rstrip("/"), "img", "{}_placeholder.png".format(node.kind_id)])
 
 
+DATE_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 @api_view(['GET'])
 def get_topic_details(request, contentnode_id):
-    import time
-    start = time.time()
-
-    node = ContentNode.objects.prefetch_related('children', 'files', 'tags').select_related('license', 'language').get(pk=contentnode_id)
+    """
+        Generate data for topic contents. Used for look-inside previews
+    """
+    # Get nodes and channel
+    node = ContentNode.objects.prefetch_related('children', 'files', 'tags')\
+                            .select_related('license', 'language')\
+                            .get(pk=contentnode_id)
     descendants = node.get_descendants()
     channel = node.get_channel()
 
-    if channel and channel.ricecooker_version:
-        last_update = channel.main_tree.created
-    else:
-        last_update = descendants.filter(changed=True).aggregate(latest_update=Max('modified')).get('latest_update')
+    # If channel is a sushi chef channel, use date created for faster query
+    # Otherwise, find the last time anything was updated in the channel
+    last_update = channel.main_tree.created if channel and channel.ricecooker_version else \
+                        descendants.filter(changed=True)\
+                                .aggregate(latest_update=Max('modified'))\
+                                .get('latest_update')
 
+    # See if the latest cached data is up to date since the last update to the channel
     cached_data = cache.get("details_{}".format(node.node_id))
-    if cached_data and last_update:
-        if last_update.strftime("%Y-%m-%d %H:%M:%S") < json.loads(cached_data)['last_update']:
-            print "\n\n\nTotal time:", time.time() - start, "\n\n\n"
 
+    if cached_data and last_update:
+        if last_update.strftime(DATE_TIME_FORMAT) < json.loads(cached_data)['last_update']:
             return HttpResponse(cached_data)
 
+    # Get resources
     resources = descendants.exclude(kind=content_kinds.TOPIC)
-    node_languages = descendants.exclude(language=None).values_list('language__native_name', flat=True)
-    file_languages = resources.filter(files__preset_id=format_presets.VIDEO_SUBTITLE).values_list('files__language__native_name', flat=True)
+
+    # Get all copyright holders, authors, aggregators, and providers and split into lists
     creators = resources.values_list('copyright_holder', 'author', 'aggregator', 'provider')
     split_lst = zip(*creators)
 
     # Get sample pathway by getting longest path
     max_level = resources.aggregate(max_level=Max('level'))['max_level']
     deepest_node = resources.filter(level=max_level).first()
-    pathway = list(deepest_node.get_ancestors().exclude(parent=None).values('title', 'node_id', 'kind_id')) if deepest_node else []
+    pathway = list(deepest_node.get_ancestors()\
+                            .exclude(parent=None)\
+                            .values('title', 'node_id', 'kind_id')
+                ) if deepest_node else []
     sample_nodes = [
         {
             "node_id": n.node_id,
@@ -243,10 +253,13 @@ def get_topic_details(request, contentnode_id):
 
     # Get original channel list
     channel_id = channel and channel.id
-    originals = resources.values("original_channel_id").annotate(count=Count("original_channel_id")).order_by("original_channel_id")
+    originals = resources.values("original_channel_id")\
+                        .annotate(count=Count("original_channel_id"))\
+                        .order_by("original_channel_id")
     originals = {c['original_channel_id']: c['count'] for c in originals}
-    original_channels = Channel.objects.exclude(pk=channel_id).filter(pk__in=[k for k, v in originals.items()], deleted=False).values('id', 'name', 'thumbnail', 'thumbnail_encoding')
-
+    original_channels = Channel.objects.exclude(pk=channel_id)\
+                                    .filter(pk__in=[k for k, v in originals.items()], deleted=False)\
+                                    .values('id', 'name', 'thumbnail', 'thumbnail_encoding')
     original_channels = [{
         "id": c["id"],
         "name": "{}{}".format(c["name"], _(" (Original)") if channel_id == c["id"] else ""),
@@ -254,22 +267,27 @@ def get_topic_details(request, contentnode_id):
         "count": originals[c["id"]]
     } for c in original_channels]
 
+    # Get tags from channel
     tags = ContentTag.objects.filter(tagged_content__pk__in=descendants.values_list('pk', flat=True))\
                             .values('tag_name')\
                             .annotate(count=Count('tag_name'))\
                             .order_by('tag_name')
 
+    # Serialize data
     data = json.dumps({
-        "last_update": last_update and datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "last_update": datetime.now().strftime(DATE_TIME_FORMAT),
         "resource_count": resources.count() or 0,
-        "resource_size": resources.values('files__checksum', 'files__file_size').distinct().aggregate(resource_size=Sum('files__file_size'))['resource_size'] or 0,
+        "resource_size": resources.values('files__checksum', 'files__file_size')\
+                                .distinct()\
+                                .aggregate(resource_size=Sum('files__file_size'))['resource_size'] or 0,
         "includes": {
             "coach_content": resources.filter(role_visibility=roles.COACH).exists(),
             "exercises": resources.filter(kind_id=content_kinds.EXERCISE).exists(),
         },
         "kind_count": list(resources.values('kind_id').annotate(count=Count('kind_id')).order_by('kind_id')),
-        "languages": list(set(node_languages)),
-        "accessible_languages": list(set(file_languages)),
+        "languages": list(set(descendants.exclude(language=None).values_list('language__native_name', flat=True))),
+        "accessible_languages": list(set(resources.filter(files__preset_id=format_presets.VIDEO_SUBTITLE)\
+                                                .values_list('files__language__native_name', flat=True))),
         "licenses": list(set(resources.exclude(license=None).values_list('license__license_name', flat=True))),
         "tags": list(tags),
         "copyright_holders": filter(lambda x: x, set(split_lst[0])) if len(split_lst) > 0 else [],
@@ -281,9 +299,8 @@ def get_topic_details(request, contentnode_id):
         "sample_nodes": sample_nodes,
     })
 
+    # Set cache with latest data
     cache.set("details_{}".format(node.node_id), data, None)
-
-    print "\n\n\nTotal time:", time.time() - start, "\n\n\n"
 
     return HttpResponse(data)
 
