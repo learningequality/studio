@@ -164,8 +164,7 @@
                                 {{formatMessage (intlGet 'messages.author') model=model_name}}
                                 {{#if details.authors}}
                                     {{#each details.authors}}
-                                        <b>{{this}}</b>
-                                    {{#unless @last}}, {{/unless}}
+                                        <b>{{this}}</b>{{#unless @last}}, {{/unless}}
                                     {{/each}}
                                 {{else}}<br><b>---</b>
                                 {{/if}}
@@ -177,8 +176,7 @@
                                 {{formatMessage (intlGet 'messages.provider') model=model_name}}
                                 {{#if details.providers}}
                                     {{#each details.providers}}
-                                        <b>{{this}}</b>
-                                    {{#unless @last}}, {{/unless}}
+                                        <b>{{this}}</b>{{#unless @last}}, {{/unless}}
                                     {{/each}}
                                 {{else}}<br><b>---</b>
                                 {{/if}}
@@ -191,8 +189,7 @@
                                 {{formatMessage (intlGet 'messages.aggregator') model=model_name}}
                                 {{#if details.aggregators}}
                                     {{#each details.aggregators}}
-                                        <b>{{this}}</b>
-                                    {{#unless @last}}, {{/unless}}
+                                        <b>{{this}}</b>{{#unless @last}}, {{/unless}}
                                     {{/each}}
                                 {{else}}<br><b>---</b>
                                 {{/if}}

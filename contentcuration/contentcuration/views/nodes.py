@@ -181,6 +181,7 @@ def get_nodes_by_ids_complete(request, ids):
 
 
 def get_channel_thumbnail(channel):
+    # Problems with json.loads, so use ast.literal_eval to get dict
     if channel.get("thumbnail_encoding"):
         thumbnail_data = ast.literal_eval(channel.get("thumbnail_encoding"))
         if thumbnail_data.get("base64"):
@@ -190,6 +191,7 @@ def get_channel_thumbnail(channel):
         return generate_storage_url(channel.get("thumbnail"))
 
 def get_thumbnail(node):
+    # Problems with json.loads, so use ast.literal_eval to get dict
     if node.thumbnail_encoding:
         thumbnail_data = ast.literal_eval(node.thumbnail_encoding)
         if thumbnail_data.get("base64"):
@@ -234,9 +236,15 @@ def get_topic_details(request, contentnode_id):
     # Get resources
     resources = descendants.exclude(kind=content_kinds.TOPIC)
 
+
     # Get all copyright holders, authors, aggregators, and providers and split into lists
     creators = resources.values_list('copyright_holder', 'author', 'aggregator', 'provider')
     split_lst = zip(*creators)
+    copyright_holders = filter(bool, set(split_lst[0])) if len(split_lst) > 0 else []
+    authors = filter(bool, set(split_lst[1])) if len(split_lst) > 1 else []
+    aggregators = filter(bool, set(split_lst[2])) if len(split_lst) > 2 else []
+    providers = filter(bool, set(split_lst[3])) if len(split_lst) > 3 else []
+
 
     # Get sample pathway by getting longest path
     max_level = resources.aggregate(max_level=Max('level'))['max_level']
@@ -276,27 +284,38 @@ def get_topic_details(request, contentnode_id):
                             .annotate(count=Count('tag_name'))\
                             .order_by('tag_name')
 
+    # Get resource variables
+    resource_count = resources.count() or 0
+    resource_size = resources.values('files__checksum', 'files__file_size')\
+                                .distinct()\
+                                .aggregate(resource_size=Sum('files__file_size'))['resource_size'] or 0
+    languages = list(set(descendants.exclude(language=None).values_list('language__native_name', flat=True)))
+    accessible_languages = list(set(resources.filter(files__preset_id=format_presets.VIDEO_SUBTITLE)\
+                                                .values_list('files__language__native_name', flat=True)))
+    licenses = list(set(resources.exclude(license=None).values_list('license__license_name', flat=True)))
+    kind_count = list(resources.values('kind_id').annotate(count=Count('kind_id')).order_by('kind_id'))
+
+    # Add "For Educators" booleans
+    for_educators = {
+        "coach_content": resources.filter(role_visibility=roles.COACH).exists(),
+        "exercises": resources.filter(kind_id=content_kinds.EXERCISE).exists(),
+    }
+
     # Serialize data
     data = json.dumps({
         "last_update": pytz.utc.localize(datetime.now()).strftime(DATE_TIME_FORMAT),
-        "resource_count": resources.count() or 0,
-        "resource_size": resources.values('files__checksum', 'files__file_size')\
-                                .distinct()\
-                                .aggregate(resource_size=Sum('files__file_size'))['resource_size'] or 0,
-        "includes": {
-            "coach_content": resources.filter(role_visibility=roles.COACH).exists(),
-            "exercises": resources.filter(kind_id=content_kinds.EXERCISE).exists(),
-        },
-        "kind_count": list(resources.values('kind_id').annotate(count=Count('kind_id')).order_by('kind_id')),
-        "languages": list(set(descendants.exclude(language=None).values_list('language__native_name', flat=True))),
-        "accessible_languages": list(set(resources.filter(files__preset_id=format_presets.VIDEO_SUBTITLE)\
-                                                .values_list('files__language__native_name', flat=True))),
-        "licenses": list(set(resources.exclude(license=None).values_list('license__license_name', flat=True))),
+        "resource_count": resource_count,
+        "resource_size": resource_size,
+        "includes": for_educators,
+        "kind_count": kind_count,
+        "languages": languages,
+        "accessible_languages": accessible_languages,
+        "licenses": licenses,
         "tags": list(tags),
-        "copyright_holders": filter(lambda x: x, set(split_lst[0])) if len(split_lst) > 0 else [],
-        "authors": filter(lambda x: x, set(split_lst[1])) if len(split_lst) > 1 else [],
-        "aggregators": filter(lambda x: x, set(split_lst[2])) if len(split_lst) > 2 else [],
-        "providers": filter(lambda x: x, set(split_lst[3])) if len(split_lst) > 3 else [],
+        "copyright_holders": fcopyright_holders,
+        "authors": authors,
+        "aggregators": aggregators,
+        "providers": providers,
         "sample_pathway": pathway,
         "original_channels": original_channels,
         "sample_nodes": sample_nodes,
