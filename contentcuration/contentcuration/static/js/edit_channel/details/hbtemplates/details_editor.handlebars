@@ -1,0 +1,25 @@
+{{#unless is_new}}
+    <i data-toggle="tooltip" data-placement="right" title="{{#if channel.is_bookmarked}}{{formatMessage (intlGet 'messages.unstar_channel')}}{{else}}{{formatMessage (intlGet 'messages.star_channel')}}{{/if}}" class="material-icons star_icon">{{#if channel.is_bookmarked}}star{{else}}star_border{{/if}}</i>
+{{/unless}}
+<div id="channel_details" class="container-fluid">
+    <div class="row" id="channel_details_area">
+        <!-- Channel editor will be inserted here -->
+    </div>
+    <br><br>
+    {{#unless is_new}}
+        <div id="look-inside">
+            <div class="empty_default loading text-center">
+                {{formatMessage (intlGet 'messages.loading_details')}}
+            </div>
+        </div>
+
+        {{#if can_edit}}
+            <div class="container-fluid" id="delete-section">
+                <br>
+                <h4>{{formatMessage (intlGet 'messages.delete_title')}}</h4>
+                <p>{{formatMessage (intlGet 'messages.delete_prompt')}}</p>
+                <a class="delete_channel">{{formatMessage (intlGet 'messages.delete_channel')}}</a>
+            </div>
+        {{/if}}
+    {{/unless}}
+</div>

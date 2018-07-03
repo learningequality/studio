@@ -251,6 +251,10 @@ SITE_ID = 1
 # MAILGUN_ACCESS_KEY = 'ACCESS-KEY'
 # MAILGUN_SERVER_NAME = 'SERVER-NAME'
 
+SEND_USER_ACTIVATION_NOTIFICATION_EMAIL = bool(
+    os.getenv("SEND_USER_ACTIVATION_NOTIFICATION_EMAIL")
+)
+
 SPACE_REQUEST_EMAIL = 'content@learningequality.org'
 REGISTRATION_INFORMATION_EMAIL = 'studio-registrations@learningequality.org'
 HELP_EMAIL = 'content@learningequality.org'

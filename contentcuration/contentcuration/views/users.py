@@ -187,7 +187,7 @@ class UserActivationView(ActivationView):
     def activate(self, *args, **kwargs):
         user = super(UserActivationView, self).activate(*args, **kwargs)
 
-        if user:
+        if settings.SEND_USER_ACTIVATION_NOTIFICATION_EMAIL and user:
             # Send email regarding new user information
             subject = render_to_string('registration/custom_email_subject.txt', {"subject": "New Kolibri Studio Registration"})
             message = render_to_string('registration/registration_information_email.txt', {
@@ -197,4 +197,3 @@ class UserActivationView(ActivationView):
             send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [settings.REGISTRATION_INFORMATION_EMAIL])
 
         return user
-

@@ -1,0 +1,22 @@
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: {{ template "studio.fullname" . }}
+  labels:
+    app: {{ template "studio.fullname" . }}
+    tier: ingress
+  annotations:
+    ingress.kubernetes.io/rewrite-target: /
+    kubernetes.io/tls-acme: "true"
+    kubernetes.io/ingress.class: "traefik"
+    kubernetes.io/ingress.allow-http: "false"
+
+spec:
+  rules:
+    - host: {{.Release.Name}}.studio.cd.learningequality.org
+      http:
+        paths:
+        - backend:
+            serviceName: {{ template "studio.fullname" . }}-app
+            servicePort: 80

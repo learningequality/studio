@@ -16,6 +16,8 @@ var NAMESPACE = "uploader";
 var MESSAGES = {
     "of": "of",
     "author": "Author",
+    "aggregator": "Aggregator",
+    "provider": "Provider",
     "details": "Details",
     "license": "License",
     "questions": "Questions",
@@ -54,7 +56,12 @@ var MESSAGES = {
     "tags_error": "Invalid characters found.",
     "tags_placeholder": "Enter tag...",
     "related_content_warning": "Related content will not be included in the copy of this content.",
-    "author_placeholder": "Enter author name...",
+    "author_placeholder": "Enter author...",
+    "author_description": "Person or organization who created this content",
+    "aggregator_placeholder": "Enter aggregator...",
+    "aggregator_description": "Website or org hosting the content collection but not necessarily the creator or copyright holder",
+    "provider_placeholder": "Enter provider...",
+    "provider_description": "Organization that commissioned or is distributing the content",
     "license_description_placeholder": "Enter license description...",
     "copyright_holder_placeholder": "Enter copyright holder name...",
     "same_as_channel": "Same as Channel",
@@ -485,6 +492,8 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
     shared_language:0,
     shared_role: 0,
     shared_source: null,
+    shared_aggregator: null,
+    shared_provider: null
   },
   list_selector: "#uploaded_list",
   default_item: "#uploaded_list .default-item",
@@ -605,6 +614,8 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
       this.shared_data.shared_language = view.model.get("language");
       this.shared_data.shared_role = view.model.get("role_visibility");
       this.shared_data.shared_source = view.model.get("original_channel");
+      this.shared_data.shared_aggregator = view.model.get("aggregator");
+      this.shared_data.shared_provider = view.model.get("provider");
       if(view.model.get("extra_fields")){
         this.shared_data.shared_exercise_data = view.model.get("extra_fields");
       }
@@ -619,6 +630,9 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
       this.shared_data.all_exercises = this.shared_data.all_exercises && view.model.get("kind")  === "exercise";
       this.shared_data.shared_role = (this.shared_data.shared_role == view.model.get("role_visibility"))? this.shared_data.shared_role : 0;
       this.shared_data.shared_source = (this.shared_data.shared_source && this.shared_data.shared_source.id == view.model.get("original_channel").id)? this.shared_data.shared_source : null;
+      this.shared_data.shared_aggregator = (this.shared_data.shared_aggregator === view.model.get("aggregator"))? this.shared_data.shared_aggregator : null;
+      this.shared_data.shared_provider = (this.shared_data.shared_provider === view.model.get("provider"))? this.shared_data.shared_provider : null;
+
 
       // NEW FIELD: see if the shared fields match, if not set to a default
 
@@ -652,7 +666,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   $trs: MESSAGES,
 
   initialize: function(options) {
-    _.bindAll(this, 'update_count', 'remove_tag', 'add_tag', 'loop_focus', 'select_tag', 'set_initial_focus');
+    _.bindAll(this, 'update_count', 'remove_tag', 'add_tag', 'loop_focus', 'select_tag', 'set_initial_focus', 'update_field');
     this.new_content = options.new_content;
     this.selected_items = options.selected_items;
     this.shared_data = options.shared_data;
@@ -674,6 +688,8 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     }
     var copyright_owner = (this.shared_data && this.shared_data.shared_copyright_owner)? this.shared_data.shared_copyright_owner: (alloriginal)? null: "---";
     var author = (this.shared_data && this.shared_data.shared_author)? this.shared_data.shared_author: (alloriginal)? null: "---";
+    var aggregator = (this.shared_data && this.shared_data.shared_aggregator)? this.shared_data.shared_aggregator: (alloriginal)? null: "---";
+    var provider = (this.shared_data && this.shared_data.shared_provider)? this.shared_data.shared_provider: (alloriginal)? null: "---";
     var all_top_level = (this.new_content)? !this.model.get("parent") : _.all(this.selected_items, function(item) { return item.model.get("ancestors").length === 1; });
     var shared_source = (this.shared_data && this.shared_data.shared_source && this.shared_data.shared_source.id !== window.current_channel.id)? this.shared_data.shared_source : null;
     if(this.allow_edit){
@@ -687,6 +703,8 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
         license: original_source_license,
         copyright_owner: copyright_owner,
         author: author,
+        aggregator: aggregator,
+        provider: provider,
         selected_count: this.selected_items.length,
         has_files: has_files,
         word_limit: this.description_limit,
@@ -700,11 +718,13 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
         language_default: this.get_language(null, all_top_level),
         channel_id: window.current_channel.id,
         source_channel: shared_source
+        // NEW FIELD: Load in renderer
       }, {
         data: this.get_intl_data()
       }));
       this.update_count();
       this.load_language();
+      this.load_autocomplete();
       if(this.shared_data){
         // NEW FIELD: If new field is a dropdown, load here
         $("#role_select").val(this.shared_data.shared_role);
@@ -730,6 +750,8 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
         none_selected: this.selected_items.length === 0,
         copyright_owner: copyright_owner,
         author: author,
+        aggregator: aggregator,
+        provider: provider,
         selected_count: this.selected_items.length,
         has_files: has_files,
         is_exercise: this.shared_data && this.shared_data.all_exercises,
@@ -737,6 +759,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
         language: this.shared_data && this.get_language(this.shared_data.shared_language, all_top_level),
         role: this.shared_data && this.shared_data.shared_role,
         source_channel: shared_source
+        // NEW FIELD: Load in renderer
       }, {
         data: this.get_intl_data()
       }));
@@ -761,6 +784,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
         this.$("#randomize_exercise").prop("checked", randomize);
       }
     }
+    this.$('[data-toggle="tooltip"]').tooltip();
     this.first_rendered = true;
     _.defer(this.set_initial_focus, 1);
   },
@@ -886,6 +910,20 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     else if (!language) { this.$("#select_language").val("inherit"); }
     else { this.$("#select_language").val(language); }
   },
+  load_autocomplete: function() {
+    var self = this;
+    var metadata = window.current_channel.get('main_tree').metadata;
+    this.$(".autocomplete_item").each(function(index, item) {
+      var list_name = $(item).data("list");
+      if(list_name) {
+        autoCompleteHelper.addAutocomplete($(item), metadata[list_name], self.update_field, "#metadata");
+      }
+    })
+  },
+  update_field: function(value, el) {
+    el.val(value.label);
+    this.set_selected();
+  },
   update_count:function(){
     if(this.selected_individual()){
       var char_length = this.description_limit - this.$("#input_description").val().length;
@@ -958,6 +996,8 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     var author = (this.$("#author_field").is(":visible") && (individual_selected || this.$("#author_field").val() !== ""))? this.$("#author_field").val().trim() : false;
     var license_description = (this.$("#custom_license_description").is(":visible") && (individual_selected || this.$("#custom_license_description").val() !== ""))? this.$("#custom_license_description").val() : false;
     var role_visibility = (this.$("#role_select").is(":visible") && this.$("#role_select").val()!=0)? this.$("#role_select").val() : false;
+    var aggregator = (this.$("#aggregator_field").is(":visible") && (individual_selected || this.$("#aggregator_field").val() !== ""))? this.$("#aggregator_field").val().trim() : false;
+    var provider = (this.$("#provider_field").is(":visible") && (individual_selected || this.$("#provider_field").val() !== ""))? this.$("#provider_field").val().trim() : false;
 
     // NEW FIELD: get the selected value, if it isn't set, skip
 
@@ -968,6 +1008,8 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
         license: (license===false)? view.model.get('license') : license,
         copyright_holder: (copyright_holder===false)? view.model.get('copyright_holder') : copyright_holder,
         author: (author===false)? view.model.get('author') : author,
+        aggregator: (aggregator===false)? view.model.get('aggregator') : aggregator,
+        provider: (provider===false)? view.model.get('provider') : provider,
         license_description: (license_description===false)? view.model.get('license_description') : license_description,
         role_visibility: (!role_visibility)? view.model.get('role_visibility') : role_visibility
       });
@@ -1082,7 +1124,8 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
   },
   set_edited:function(is_edited){
       // NEW FIELD: add listener to fields
-      var edited_data = this.model.pick("title", "description", "license", "changed", "tags", "copyright_holder", "author", "files", "assessment_items", "extra_fields", "prerequisite", "role_visibility");
+      var edited_data = this.model.pick("title", "description", "license", "changed", "tags", "copyright_holder", "author",
+        "files", "assessment_items", "extra_fields", "prerequisite", "role_visibility", "aggregator", "provider");
       // Handle unsetting node
       if(!is_edited){
           this.originalData = $.extend(true, {}, edited_data);

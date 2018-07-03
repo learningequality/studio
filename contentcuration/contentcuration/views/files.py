@@ -62,14 +62,15 @@ def file_create(request):
     presets = FormatPreset.objects.filter(allowed_formats__extension__contains=ext[1:].lower())
     kind = presets.first().kind
     preferences = json.loads(request.META.get('HTTP_PREFERENCES'))
-    author = preferences.get('author') or ""
     license = License.objects.filter(license_name=preferences.get('license')).first()  # Use filter/first in case preference hasn't been set
     license_id = license.pk if license else None
     new_node = ContentNode(
         title=original_filename,
         kind=kind,
         license_id=license_id,
-        author=author,
+        author=preferences.get('author') or "",
+        aggregator=preferences.get('aggregator') or "",
+        provider=preferences.get('provider') or "",
         copyright_holder=preferences.get('copyright_holder'),
     )
     if license and license.is_custom:

@@ -1,28 +1,40 @@
-<div id="channel_area_wrapper">
-	<nav id="manage-channel-nav"></nav>
-	<div id="channel-list-area">
-		<div id="pending_list"></div>
-		<ul class="nav nav-tabs" role="tablist" id="manage-channel-nav">
-			<li role="presentation" class="active"><a href="#channels" aria-controls="channels" role="tab" data-toggle="tab" class="channel_tab">{{formatMessage (intlGet 'messages.header')}}</a></li>
-			<li role="presentation"><a href="#starred" aria-controls="starred" role="tab" data-toggle="tab" class="channel_tab">
-				<i class="material-icons align-text-top">star</i> {{formatMessage (intlGet 'messages.starred')}}
-			</a></li>
-			<li role="presentation"><a href="#public" aria-controls="public" role="tab" data-toggle="tab" class="channel_tab">{{formatMessage (intlGet 'messages.public')}}</a></li>
-			<li role="presentation"><a href="#viewonly" aria-controls="viewonly" role="tab" data-toggle="tab" class="channel_tab">{{formatMessage (intlGet 'messages.viewonly')}}</a></li>
-		</ul>
-		<div class="tab-content">
-			<div role="tabpanel" class="tab-pane fade in active channel_list_wrapper" id="channels">
-				<div class="container-fluid add_channel_wrapper">
-					<a class="action-button pull-right disable-on-edit new_channel_button" title="{{formatMessage (intlGet 'messages.add_channel_title')}}">
-						<i class="material-icons align-text-top">add</i> {{formatMessage (intlGet 'messages.channel')}}
-					</a>
+<div class="row" id="channel_area_wrapper">
+	<div id="channel_list_wrapper">
+		<nav id="manage-channel-nav"></nav>
+		<div id="channel-list-area">
+			<div id="pending_list"></div>
+			<ul class="nav nav-tabs" role="tablist" id="manage-channel-nav">
+				<li role="presentation" class="active"><a href="#channels" aria-controls="channels" role="tab" data-toggle="tab" class="channel_tab">{{formatMessage (intlGet 'messages.header')}}</a></li>
+				<li role="presentation"><a href="#starred" aria-controls="starred" role="tab" data-toggle="tab" class="channel_tab">
+					<i class="material-icons align-text-top">star</i> {{formatMessage (intlGet 'messages.starred')}}
+				</a></li>
+				<li role="presentation"><a href="#public" aria-controls="public" role="tab" data-toggle="tab" class="channel_tab">{{formatMessage (intlGet 'messages.public')}}</a></li>
+				<li role="presentation"><a href="#viewonly" aria-controls="viewonly" role="tab" data-toggle="tab" class="channel_tab">{{formatMessage (intlGet 'messages.viewonly')}}</a></li>
+			</ul>
+			<div class="tab-content">
+				<div role="tabpanel" class="tab-pane fade active in channel_list_wrapper" id="channels">
+					<div class="container-fluid add_channel_wrapper">
+						<a class="action-button pull-right disable-on-edit new_channel_button" title="{{formatMessage (intlGet 'messages.add_channel_title')}}">
+							<i class="material-icons align-text-top">add</i> {{formatMessage (intlGet 'messages.channel')}}
+						</a>
+					</div>
+					<div id="channel_list"><div class="default-item">{{formatMessage (intlGet 'messages.loading')}}</div></div>
+				</a>
 				</div>
-				<div id="channel_list"><div class="default-item">{{formatMessage (intlGet 'messages.loading')}}</div></div>
-			</a>
+				<div role="tabpanel" class="tab-pane fade channel_list_wrapper" id="starred"><div id="starred_list"><div class="default-item">{{formatMessage (intlGet 'messages.loading')}}</div></div></div>
+				<div role="tabpanel" class="tab-pane fade channel_list_wrapper" id="public"><div id="public_list"><div class="default-item">{{formatMessage (intlGet 'messages.loading')}}</div></div></div>
+				<div role="tabpanel" class="tab-pane fade channel_list_wrapper" id="viewonly"><div id="viewonly_list"><div class="default-item">{{formatMessage (intlGet 'messages.loading')}}</div></div></div>
 			</div>
-			<div role="tabpanel" class="tab-pane fade channel_list_wrapper" id="starred"><div id="starred_list"><div class="default-item">{{formatMessage (intlGet 'messages.loading')}}</div></div></div>
-			<div role="tabpanel" class="tab-pane fade channel_list_wrapper" id="public"><div id="public_list"><div class="default-item">{{formatMessage (intlGet 'messages.loading')}}</div></div></div>
-			<div role="tabpanel" class="tab-pane fade channel_list_wrapper" id="viewonly"><div id="viewonly_list"><div class="default-item">{{formatMessage (intlGet 'messages.loading')}}</div></div></div>
+		</div>
+	</div>
+	<div id="channel_preview_wrapper">
+		<div id="channel_details_overlay">
+			<h2 id="close_wrapper">
+				<i class="material-icons pull-right" id="close_details">clear</i>
+			</h2>
+			<div id="channel_details_panel">
+				<div class="default-item">{{formatMessage (intlGet 'messages.channel_detail_prompt')}}</div>
+			</div>
 		</div>
 	</div>
 </div>
