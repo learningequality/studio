@@ -54,6 +54,8 @@ google-cloud-storage = "==1.10.0"
 "django-s3-storage" = "==0.12.4"
 requests = "==2.19.1"
 google-cloud-core = ">=0.28.1"
+gspread = "==3.0.1"
+google-api-python-client = "==1.6.4"
 
 [dev-packages]
 python-language-server = "*"
