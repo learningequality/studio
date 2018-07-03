@@ -7,20 +7,64 @@ import imageTemplate from '../hbtemplates/preview_templates/image.handlebars';
 import documentTemplate from '../hbtemplates/preview_templates/document.handlebars';
 
 export default BaseView.extend({
+  // model is required, should be a contentModel
+  // preview option can be either a file or an assessment_item
   initialize(options) {
-    this.template = this.getStudioTemplate(options);
+    const studioTemplate = this.getStudioTemplate(options.preview, options.intl_data);
 
-    this.on('destroy', () => {
-      if (this.vuePreview) {
-        console.log('destroying!');
-        // important, particularly here. Destroy clears event listeners
-        this.vuePreview.$destroy();
-        this.vuePreview = null;
+    // should probably be 2 different views.
+    if(studioTemplate) {
+      this.template = studioTemplate;
+      this.render = this.renderStudioTemplate;
+
+      this.render();
+    } else {
+      // no studio template, using kolibri component
+      this.vueProps = this.getKolibriProps(this.model, options.preview);
+      this.vueComponent = this.getKolibriComponent(this.model, options.preview);
+      this.render = this.renderKolibriComponent;
+
+      this.on('destroy', () => {
+        if (this.vuePreview) {
+          console.log('destroying!');
+          // important, particularly here. Destroy clears event listeners
+          this.vuePreview.$destroy();
+          this.vuePreview = null;
+        }
+        this.off();
+      });
+
+      this.render();
+    }
+  },
+  getStudioTemplate(previewFile, intlData) {
+    const imageFormats = ['jpg', 'jpeg', 'png'];
+
+    // only handles file types.
+    if(!previewFile || !previewFile.file_format){
+      return ''
+    }
+
+    // Needs image template (not in kolibri)
+    if (imageFormats.includes(previewFile.file_format)) {
+
+      const imageSource = () => {
+        if (this.model.has("thumbnail_encoding")) {
+          return this.model.get("thumbnail_encoding").base64 || previewFile.storage_url;
+        }
+        return previewFile.storage_url;
       }
-      this.off();
-    });
 
-    this.render(options.preview);
+      return imageTemplate({ source: imageSource() }, { data: intlData });
+    }
+
+    // Needs subtitle template (not in kolibri)
+    if (previewFile.file_format === 'srt') {
+      return documentTemplate({ source: previewFile.storage_url }, { data: intlData });
+    }
+
+    // only handles _certain_ filetypes
+    return '';
   },
   getKolibriProps(contentNodeModel, previewItem){
     const kind = contentNodeModel.get('kind');
@@ -104,43 +148,15 @@ export default BaseView.extend({
     }
     return contentRenderer;
   },
-  getStudioTemplate({ preview, intl_data }) {
-    const imageFormats = ['jpg', 'jpeg', 'png'];
-
-    // only handles file types.
-    if(!preview || !preview.file_format){
-      return ''
-    }
-
-    // Needs image template (not in kolibri)
-    if (imageFormats.includes(preview.file_format)) {
-
-      const imageSource = () => {
-        if (this.model.has("thumbnail_encoding")) {
-          return this.model.get("thumbnail_encoding").base64 || preview.storage_url;
-        }
-        return preview.storage_url;
-      }
-
-      return imageTemplate({ source: imageSource() }, { data: intl_data });
-    }
-
-    // Needs subtitle template (not in kolibri)
-    if (preview.file_format === 'srt') {
-      return documentTemplate({ source: preview.storage_url }, { data: intl_data });
-    }
-
-    // only handles _certain_ filetypes
-    return '';
+  renderStudioTemplate() {
+    this.$el.html(this.template);
+    return this;
   },
-  render() {
-    if(this.template){
-      this.$el.html(this.template);
-      return this;
-    }
-
-    // Turns out kolibri renderer is necessary
-    this.vuePreview = this.getKolibriComponent();
+  renderKolibriComponent() {
+    this.vuePreview = kVueHelper(this.vueComponent, {
+      propsData: this.vueProps,
+      el: this.el,
+    });
     return this;
   },
 });
