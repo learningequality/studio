@@ -14,11 +14,6 @@ RUN apt-get -y install nodejs python python-dev \
 
 RUN npm install -g yarn
 
-COPY ./package.json .
-COPY ./yarn.lock .
-RUN yarn install
-ENV PATH="/node_modules/.bin:$PATH"
-
 EXPOSE 8080
 
 RUN pip install pipenv
