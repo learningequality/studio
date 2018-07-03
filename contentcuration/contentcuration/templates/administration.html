@@ -14,7 +14,7 @@
 		var user = JSON.parse("{{ current_user|escapejs }}");
 		var default_sender = "{{default_sender |escapejs}}";
 		var email_placeholders = JSON.parse("{{ placeholders|escapejs }}");
-		var url = '{% url 'channels' %}';
+		var url = "{% url 'channels' %}";
 	</script>
 	<div id="admin-container"></div>
 {% endblock content %}

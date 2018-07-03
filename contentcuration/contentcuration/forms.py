@@ -251,6 +251,8 @@ except Exception:
 class PreferencesSettingsForm(forms.Form):
     # TODO: Add language, audio thumbnail, document thumbnail, exercise thumbnail, html5 thumbnail once implemented
     author = forms.CharField(required=False, label=_('Author'), widget=forms.TextInput(attrs={'class': 'form-control setting_input'}))
+    aggregator = forms.CharField(required=False, label=_('Aggregator'), widget=forms.TextInput(attrs={'class': 'form-control setting_input'}))
+    provider = forms.CharField(required=False, label=_('Provider'), widget=forms.TextInput(attrs={'class': 'form-control setting_input'}))
     copyright_holder = forms.CharField(required=False, label=_('Copyright Holder'), widget=forms.TextInput(attrs={'class': 'form-control setting_input'}))
     license_description = forms.CharField(required=False, label=_('License Description'), widget=forms.TextInput(attrs={'class': 'form-control setting_input'}))
     language = forms.ChoiceField(required=False, widget=forms.Select(attrs={'class': 'form-control setting_change'}), label=_('Language'), choices=LANGUAGES)
@@ -271,6 +273,8 @@ class PreferencesSettingsForm(forms.Form):
     def save(self, user):
         user.content_defaults = {
             'author': self.cleaned_data["author"] or "",
+            'aggregator': self.cleaned_data["aggregator"] or "",
+            'provider': self.cleaned_data["provider"] or "",
             'copyright_holder': self.cleaned_data["copyright_holder"],
             'license': self.cleaned_data["license"],
             'license_description': self.cleaned_data['license_description'] if self.cleaned_data['license'] == 'Special Permissions' else None,

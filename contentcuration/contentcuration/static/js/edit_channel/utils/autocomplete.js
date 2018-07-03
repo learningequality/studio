@@ -6,14 +6,17 @@ function addAutocomplete(element, values, callback, appendTo){
       source: values,
       minLength: 0,
       select: function( event, ui ) {
-        callback(ui.item);
+        element.blur();
+        callback(ui.item, element);
         return false;
       },
-      appendTo: appendTo,
+      appendTo: appendTo || "body",
       messages: {
           noResults: '',
           results: function() {}
       }
+    }).click(function() {
+      $(this).autocomplete("search");
     });
 }
 
