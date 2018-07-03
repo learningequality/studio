@@ -10,6 +10,10 @@ from oauth2client.service_account import ServiceAccountCredentials
 from rest_framework.views import APIView
 
 def colnum_string(n):
+    """ colnum_string: get column letter
+        Args: n (int) index of column to get letter for
+        Returns: str letter(s) of column
+    """
     string = ""
     while n > 0:
         n, remainder = divmod(n - 1, 26)
