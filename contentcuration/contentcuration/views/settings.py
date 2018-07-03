@@ -242,6 +242,7 @@ class StorageSettingsView(FormView, LoginRequiredMixin):
                 uploading_for,
                 form.cleaned_data.get('message'),
             ]
+
             # Write to storage request sheet
             # In production: https://docs.google.com/spreadsheets/d/1uC1nsJPx_5g6pQT6ay0qciUVya0zUFJ8wIwbsTEh60Y/edit#gid=0
             # Debug mode: https://docs.google.com/spreadsheets/d/16X6zcFK8FS5t5tFaGpnxbWnWTXP88h4ccpSpPbyLeA8/edit#gid=0
@@ -249,8 +250,6 @@ class StorageSettingsView(FormView, LoginRequiredMixin):
 
             message = render_to_string('settings/storage_request_email.txt', {"data": form.cleaned_data, "user": self.request.user, "channels": channels})
             send_mail(_("Kolibri Studio Storage Request"), message, ccsettings.DEFAULT_FROM_EMAIL, [ccsettings.SPACE_REQUEST_EMAIL, self.request.user.email])
-
-
 
             return self.form_valid(form)
         else:
