@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -xe
+set -e
 
 BRANCH=$1
 BUCKET=$2
