@@ -115,19 +115,10 @@ export default BaseView.extend({
       Object.assign(contentRenderer, {
         watch: {
           // using a watcher to listen for changes in the data field
-          // TODO could manipulate the component here?
-          currentViewClass() {
-            // giving the component a $nextTick to update the DOM
-            // note: binds `this` to the scope of the component
-            this.$nextTick(function(){
-
-              // override loadItemData because itemId is necessary, but causes the component to look for
-              this.$refs.contentView.loadItemData = () => null;
-
-              // perseus renderer is v-if'd based on itemId. Need DOM to update.
-              this.$refs.contentView.$nextTick(function(){
-                // files that aren't being served.
-                console.log('in component', previewItem.id);
+          currentViewClass(renderComponent) {
+            if (renderComponent.name == 'exercisePerseusRenderer') {
+              // overwrite the component's method before it's instantiated
+              renderComponent.methods.loadItemData = function mockLoadItemData(){
                 contentNodeModel.get_perseus_assessment_item(previewItem.id).then(
                   perseusJson => {
                     // copied from perseus renderer index
@@ -140,10 +131,11 @@ export default BaseView.extend({
                     }
                   }
                 );
-              });
-            });
-          },
-        },
+              }
+            }
+            return renderComponent;
+          }
+        }
       });
     }
     return contentRenderer;
