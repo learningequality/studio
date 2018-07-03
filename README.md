@@ -28,7 +28,7 @@ to control Kubernetes clusters.
 
 - [Docker](https://docs.docker.com/install/), the containerization platform LE uses.
 
-- [ksonnet](https://ksonnet.io/#get-started), an abstracting application on top
+- [Helm](https://www.helm.sh/), an abstracting application on top
   of kubectl to make deployments easier.
 
 - [Minikube](https://github.com/kubernetes/minikube#installation), an
@@ -79,22 +79,22 @@ in a cluster on your local machine:
   $ make build
   ```
 
-  1. Point ksonnet to the cluster by creating a new environment:
+  1. Initialize your Kubernetes cluster with Helm, to allow it to deploy Kubernetes manifests:
 
   ```
-  $ ks env add test
+  $ helm init
   ```
 
   1. Use the images to deploy Kolibri Studio:
 
   ```
-  $ ks apply test
+  $ helm upgrade --install mystudio .
   ```
 
   1. Once Studio is ready to use (it should take about a minute), run this command:
 
   ```
-  $ minikube service studio-app --url
+  $ minikube service mystudio-studio-app --url
   ```
 
   and open the IP address displayed, in to your browser. You should now see the Studio login page!

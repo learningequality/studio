@@ -1,30 +1,10 @@
-<div class="input-tab-control tab_item" data-next=".save_channel"></div>
-<div class="channel-container-wrapper {{#unless edit}}open_channel{{/unless}}"  title="{{channel.name}} {{formatMessage (intlGet 'messages.channel_title_prompt')}}">
+<div class="pull-right is_selected"><i class="material-icons">arrow_forward</i></div>
+<div class="channel-container-wrapper open_channel"  title="{{channel.name}} {{formatMessage (intlGet 'messages.channel_title_prompt')}}">
 	<div class="profile pull-left text-center">
-		{{#if edit}}
-			<div class="new_channel_pic"></div>
-		{{else}}
 			{{#if picture}}
 				<img class="channel_pic" alt="{{channel.name}} logo" src="{{picture}}"/>
 			{{/if}}
-		{{/if}}
 	</div>
-	{{#if edit}}
-		<div class="language-wrapper pull-right">
-			<select id="select_language" class="tab_item">
-	            <option disabled selected value=0>{{formatMessage (intlGet 'messages.select_language')}}</option>
-	            {{#each languages}}<option value="{{id}}" title="{{readable_name}}">{{readable_name}}</option>{{/each}}
-	        </select>
-        </div>
-		<p id="channel_name_error">{{formatMessage (intlGet 'messages.channel_name_error')}}</p>
-		<input type="text" id="new_channel_name" placeholder="{{formatMessage (intlGet 'messages.name_placeholder')}}" value="{{channel.name}}" maxlength="200" class="tab_item first_focus_item"></input>
-		<textarea id="new_channel_description" placeholder="{{formatMessage (intlGet 'messages.description_placeholder')}}" value="{{channel.description}}"  maxlength="400" class="tab_item">{{channel.description}}</textarea>
-		{{#if new}}<br><br>{{else}}<a class="delete_channel">{{formatMessage (intlGet 'messages.delete_channel')}}</a>{{/if}}
-		<div class="channel_options">
-			<button class="save_channel btn pull-right tab_item uppercase">{{#if new}}{{formatMessage (intlGet 'messages.create')}}{{else}}{{formatMessage (intlGet 'messages.save_channel')}}{{/if}}</button>
-			<button class="channel_toggle action-text pull-right tab_item uppercase">{{formatMessage (intlGet 'messages.cancel')}}</button>
-		</div>
-	{{else}}
 		<span class="channel_metadata">
 			{{#if language}}<div class="channel_language truncate" title="{{language.attributes.readable_name}}">{{language.attributes.readable_name}}</div>&nbsp;|&nbsp;{{/if}}
 			<span class="resource_count">{{formatMessage (intlGet 'messages.resource_count') count=resource_count}}</span>
@@ -42,9 +22,6 @@
 			{{else}}
 				<i data-toggle="tooltip" data-placement="top" title="{{formatMessage (intlGet 'messages.star_channel')}}" class="material-icons disable-on-edit pull-right channel_option_icon star_option star_channel">star_border</i>
 			{{/if}}
-			{{#if can_edit}}
-				<i data-toggle="tooltip" data-placement="top" title="{{formatMessage (intlGet 'messages.edit_channel')}}" class="material-icons disable-on-edit pull-right channel_option_icon edit_channel">mode_edit</i>
-			{{/if}}
 			<p class="truncate channel_name">{{channel.name}}</p>
 		</h4>
 		<div class="description">
@@ -53,6 +30,4 @@
 		<div class="container-fluid updated_time">
 			{{formatMessage (intlGet 'messages.last_updated') updated=(formatRelative modified)}}
 		</div>
-	{{/if}}
 </div>
-<div class="input-tab-control tab_item" data-next="#select_language"></div>
