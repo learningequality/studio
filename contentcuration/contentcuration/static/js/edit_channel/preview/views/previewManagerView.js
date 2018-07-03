@@ -129,6 +129,7 @@ export default BaseView.extend({
   selectExercisePreview(event) {
     // a <select> seems more appropriate
     const selectedIndex = event.target.getAttribute('value');
+    console.log('selectedIndex ', selectedIndex);
 
     // TODO only change the preview if necessary -- using a "change" event would help with this.
     this.trigger('setPreview', this.exercisePreviews[selectedIndex]);
