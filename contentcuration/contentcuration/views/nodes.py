@@ -312,7 +312,7 @@ def get_topic_details(request, contentnode_id):
         "accessible_languages": accessible_languages,
         "licenses": licenses,
         "tags": list(tags),
-        "copyright_holders": fcopyright_holders,
+        "copyright_holders": copyright_holders,
         "authors": authors,
         "aggregators": aggregators,
         "providers": providers,
