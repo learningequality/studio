@@ -8,6 +8,19 @@ rules:
   vue/v-bind-style: 2
   vue/v-on-style: 2
   vue/html-quotes: [2, 'double']
+  # Not sure this is valid YAML, but seems to be working?
+  # Set all valudes preceding webpackConfigPath to defaults
+  require-path-exists/exists: [
+    2, {
+      extensions: [
+        '',
+        '.js',
+        '.json',
+        '.node'
+      ],
+      webpackConfigPath: 'webpack.config.js'
+    }
+]
 env:
   browser: true
   commonjs: true
