@@ -12,15 +12,11 @@ from django.db.models import Sum
 from contentcuration.models import Channel
 from le_utils.constants import content_kinds
 
-import logging as logmodule
-logmodule.basicConfig()
-logging = logmodule.getLogger(__name__)
-
 
 class Command(BaseCommand):
 
     def handle(self, *args, **options):
-        """ Puts channel counts in csv and prints out max, min, mean, median, and mode
+        """ Puts channel counts in csv and prints out max, min, mean, median, and mode.
 
         Call with python manage.py get_channel_stats
 
@@ -28,7 +24,7 @@ class Command(BaseCommand):
         Returns str path of generated csv
         """
 
-        logging.info("Writing CSV for users")
+        print("Writing CSV for users")
 
         if not os.path.exists(settings.CSV_ROOT):
             os.makedirs(settings.CSV_ROOT)
@@ -43,10 +39,7 @@ class Command(BaseCommand):
 
             channels = Channel.objects.filter(deleted=False).select_related('main_tree')
 
-            bar = progressbar.ProgressBar(max_value=channels.count())
-
-            index = 0
-            for channel in channels:
+            for channel in progressbar.progressbar(channels):
                 try:
                     resources = channel.main_tree.get_descendants().prefetch_related('files').exclude(kind_id=content_kinds.TOPIC)
                     count = resources.count()
@@ -56,43 +49,39 @@ class Command(BaseCommand):
                 except Exception as e:
                     print(channel.id, str(e))
 
-                index += 1
-                bar.update(index)
-                sleep(0.01)
-
         counts = [ c['count'] for c in channel_stats]
         sizes = [ c['size'][0] for c in channel_stats]
-        logging.info("\nCount Stats:")
+        print("\nCount Stats:")
         print_stats(counts)
 
-        logging.info("\nSize Stats:")
+        print("\nSize Stats:")
         print_stats(sizes)
 
-        logging.info("\n\nFinished writing to CSV at {}\n\n".format(csv_path))
+        print("\n\nFinished writing to CSV at {}\n\n".format(csv_path))
 
 
 def print_stats(l):
     try:
-        logging.info("\tMean: {}".format(mean(l)))
+        print("\tMean: {}".format(mean(l)))
     except StatisticsError as e:
-        logging.info("\tMean: {}".format(str(e)))
+        print("\tMean: {}".format(str(e)))
 
     try:
-        logging.info("\tMedian: {}".format(median(l)))
+        print("\tMedian: {}".format(median(l)))
     except StatisticsError as e:
-        logging.info("\tMedian: {}".format(str(e)))
+        print("\tMedian: {}".format(str(e)))
 
     try:
-        logging.info("\tMode: {}".format(mode(l)))
+        print("\tMode: {}".format(mode(l)))
     except StatisticsError as e:
-        logging.info("\tMode: {}".format(str(e)))
+        print("\tMode: {}".format(str(e)))
 
     try:
-        logging.info("\tMax: {}".format(max(l)))
+        print("\tMax: {}".format(max(l)))
     except StatisticsError as e:
-        logging.info("\tMax: {}".format(str(e)))
+        print("\tMax: {}".format(str(e)))
 
     try:
-        logging.info("\tMin: {}".format(min(l)))
+        print("\tMin: {}".format(min(l)))
     except StatisticsError as e:
-        logging.info("\tMin: {}".format(str(e)))
+        print("\tMin: {}".format(str(e)))
