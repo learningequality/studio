@@ -34,6 +34,16 @@
 				</div>
 			</div>
 			<div class="row">
+				<div class="input-group settings_field col-xs-6">
+					<span class="input-group-addon">{% trans "Provider" %}</span>
+					{{ form.provider }}
+				</div>
+				<div class="input-group settings_field col-xs-6">
+					<span class="input-group-addon">{% trans "Aggregator" %}</span>
+					{{ form.aggregator }}
+				</div>
+			</div>
+			<div class="row">
 				<div class="input-group settings_field col-xs-5">
 					<span class="input-group-addon">{% trans "License" %}</span>
 					<select class="form-control setting_change" id="id_license" name="license">

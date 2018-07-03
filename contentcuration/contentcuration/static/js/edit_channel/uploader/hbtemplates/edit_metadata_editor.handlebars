@@ -36,7 +36,7 @@
 			<option disabled value=0>---</option>
 			{{#each mastery}}<option value="{{this}}" {{#equal this "num_correct_in_a_row_2"}}selected{{/equal}}>{{{translate this}}}</option>{{/each}}
 		</select>
-		<i class="material-icons tab_item" id="mastery_about">info</i>
+		<i class="material-icons tab_item help_icon" id="mastery_about">info</i>
 		<span id="mastery_custom_criterion">
 			<input type="number" id="m_value" min="1" max="20" value="{{m_value}}" maxlength="2" size="2" class="tab_item"/>
 			&nbsp;{{formatMessage (intlGet 'messages.of')}}&nbsp;
@@ -49,8 +49,29 @@
 		{{#if is_file}}
 		<hr/>
 		{{#unless node}}<div class="input-tab-control tab_item" data-next="#author_field"></div>{{/unless}}
-		<h4>{{formatMessage (intlGet 'messages.author')}}</h4>
-		<input type="text" id="author_field" class="upload_input input_listener tab_item" value="{{author}}" placeholder="{{formatMessage (intlGet 'messages.author_placeholder')}}"/>
+		<div class="row">
+			<div class="content_nodes_only col-sm-4">
+				<h4>
+					{{formatMessage (intlGet 'messages.author')}}
+					<i class="material-icons help_icon" data-container="body" data-toggle="tooltip" data-placement="top" title="{{formatMessage (intlGet 'messages.author_description')}}">help_outline</i>
+				</h4>
+				<input type="text" id="author_field" class="upload_input input_listener tab_item autocomplete_item" value="{{author}}" placeholder="{{formatMessage (intlGet 'messages.author_placeholder')}}" maxlength="200" data-list="authors"/>
+			</div>
+			<div class="content_nodes_only col-sm-4">
+				<h4>
+					{{formatMessage (intlGet 'messages.provider')}}
+					<i class="material-icons help_icon" data-container="body" data-toggle="tooltip" data-placement="top" title="{{formatMessage (intlGet 'messages.provider_description')}}">help_outline</i>
+				</h4>
+				<input type="text" id="provider_field" class="upload_input input_listener tab_item autocomplete_item" value="{{provider}}" placeholder="{{formatMessage (intlGet 'messages.provider_placeholder')}}" maxlength="200" data-list="providers"/>
+			</div>
+			<div class="content_nodes_only col-sm-4">
+				<h4>
+					{{formatMessage (intlGet 'messages.aggregator')}}
+					<i class="material-icons help_icon" data-container="body" data-toggle="tooltip" data-placement="top" title="{{formatMessage (intlGet 'messages.aggregator_description')}}">help_outline</i>
+				</h4>
+				<input type="text" id="aggregator_field" class="upload_input input_listener tab_item autocomplete_item" value="{{aggregator}}" placeholder="{{formatMessage (intlGet 'messages.aggregator_placeholder')}}" maxlength="200" data-list="aggregators"/>
+			</div>
+		</div>
 		<div class="row">
 			<div class="content_nodes_only col-sm-6">
 				<h4>{{formatMessage (intlGet 'messages.license')}} <label class="required">*</label></h4>
@@ -60,13 +81,13 @@
 		                <option value={{id}}>{{{translate license_name}}}</option>
 		            {{/each}}
 		        </select>
-		        <i class="material-icons tab_item" id="license_about">info</i>
+		        <i class="material-icons tab_item help_icon" id="license_about">info</i>
 		        <textarea id="custom_license_description" class="input_listener tab_item" placeholder="{{formatMessage (intlGet 'messages.license_description_placeholder')}}"></textarea>
 			</div>
 			<div class="content_nodes_only col-sm-6">
 				<div id="copyright_holder_wrapper">
 					<h4>{{formatMessage (intlGet 'messages.copyright_holder')}} <label class="required">*</label></h4>
-					<input type="text" id="input_license_owner" class="license_input input_listener tab_item" placeholder="{{formatMessage (intlGet 'messages.copyright_holder_placeholder')}}" maxlength="200" value="{{copyright_owner}}"/>
+					<input type="text" id="input_license_owner" class="license_input input_listener tab_item autocomplete_item" placeholder="{{formatMessage (intlGet 'messages.copyright_holder_placeholder')}}" maxlength="200" value="{{copyright_owner}}" data-list="copyright_holders"/>
 				</div>
 			</div>
 		</div>
@@ -78,15 +99,31 @@
 		<p class="uploader-copied-warning">{{formatMessage (intlGet 'messages.readonly_text')}}</p>
 		{{/if}}
 		<div class="row">
-			<div class="col-xs-3">
-				<h4>{{formatMessage (intlGet 'messages.author')}}</h4>
+			<div class="content_nodes_only col-sm-4">
+				<h4>
+					{{formatMessage (intlGet 'messages.author')}}
+					<i class="material-icons help_icon" data-container="body" data-toggle="tooltip" data-placement="top" title="{{formatMessage (intlGet 'messages.author_description')}}">help_outline</i>
+				</h4>
 				<p class="upload_input">{{author}}</p>
 			</div>
-			<div class="col-xs-5">
-				<h4>{{formatMessage (intlGet 'messages.license')}}</h4>
+			<div class="content_nodes_only col-sm-4">
+				<h4>
+					{{formatMessage (intlGet 'messages.provider')}}
+					<i class="material-icons help_icon" data-container="body" data-toggle="tooltip" data-placement="top" title="{{formatMessage (intlGet 'messages.provider_description')}}">help_outline</i>
+				</h4>
+				<p class="upload_input">{{provider}}</p>
+			</div>
+			<div class="content_nodes_only col-sm-4">
+				<h4>
+					{{formatMessage (intlGet 'messages.aggregator')}}
+					<i class="material-icons help_icon" data-container="body" data-toggle="tooltip" data-placement="top" title="{{formatMessage (intlGet 'messages.aggregator_description')}}">help_outline</i>
+				</h4>
+				<p class="upload_input">{{aggregator}}</p>
+			</div>
+			<div class="col-xs-4">
+				<h4>{{formatMessage (intlGet 'messages.license')}} <i class="material-icons tab_item help_icon" id="license_about">info</i></h4>
 				<p class="upload_input">
 					<span id="license_select">{{{translate license}}}</span>
-					<i class="material-icons tab_item" id="license_about">info</i>
 				</p>
 				<p id="custom_license_description" class="license_description_text">{{license_description}}</p>
 			</div>
@@ -104,7 +141,7 @@
 		<option disabled value=0>---</option>
 		{{#each roles}}<option value="{{this}}" selected>{{{translate this}}}</option>{{/each}}
 	</select>&nbsp;
-	<i class="material-icons tab_item" id="visibility_about">info</i>
+	<i class="material-icons tab_item help_icon" id="visibility_about">info</i>
 	<br/>
 	{{/if}}
 	{{#if node}}
@@ -113,7 +150,7 @@
 	{{/if}}
 		<div class="ui-widget" id="tag_area_wrapper">
 		<h4>{{formatMessage (intlGet 'messages.tags')}} {{formatMessage (intlGet 'messages.tags_text')}} <span id="tag_error">{{formatMessage (intlGet 'messages.tags_error')}}</span></h4>
-		<input type="text" id="tag_box" class="tag_input tab_item" placeholder="{{formatMessage (intlGet 'messages.tags_placeholder')}}" maxlength="30"/>
+		<input type="text" id="tag_box" class="tag_input tab_item autocomplete_item" placeholder="{{formatMessage (intlGet 'messages.tags_placeholder')}}" maxlength="30"/>
 		<div class="container-fluid">
 			<div class="row" id="tag_area"></div>
 		</div>

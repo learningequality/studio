@@ -1,18 +1,24 @@
+import ast
 import copy
 import json
 import logging
+import pytz
 import uuid
+from datetime import datetime
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseNotFound
 from django.conf import settings
+from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
-from django.db.models import Q, Case, When, Value, IntegerField, Max, Sum, F
+from django.db.models import Q, Case, When, Value, IntegerField, Max, Sum, F, Count
+from django.db.models.functions import Concat
 from django.utils.translation import ugettext as _
 from rest_framework.renderers import JSONRenderer
 from contentcuration.utils.files import duplicate_file
-from contentcuration.models import File, ContentNode, ContentTag, AssessmentItem, License, Channel, PrerequisiteContentRelationship
+from contentcuration.models import File, ContentNode, ContentTag, AssessmentItem, License, Channel, PrerequisiteContentRelationship, generate_storage_url
 from contentcuration.serializers import ContentNodeSerializer, ContentNodeEditSerializer, SimplifiedContentNodeSerializer, ContentNodeCompleteSerializer
-from le_utils.constants import format_presets, content_kinds, file_formats, licenses
+from le_utils.constants import format_presets, content_kinds, file_formats, licenses, roles
+from itertools import chain
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication, BasicAuthentication
 from rest_framework.permissions import IsAuthenticated
 from contentcuration.statistics import record_node_duplication_stats
@@ -86,7 +92,16 @@ def create_new_node(request):
     data = json.loads(request.body)
     license = License.objects.filter(license_name=data.get('license_name')).first()  # Use filter/first in case preference hasn't been set
     license_id = license.pk if license else settings.DEFAULT_LICENSE
-    new_node = ContentNode.objects.create(kind_id=data.get('kind'), title=data.get('title'), author=data.get('author'), copyright_holder=data.get('copyright_holder'), license_id=license_id, license_description=data.get('license_description'))
+    new_node = ContentNode.objects.create(
+        kind_id=data.get('kind'),
+        title=data.get('title'),
+        author=data.get('author'),
+        aggregator=data.get('aggregator'),
+        provider=data.get('provider'),
+        copyright_holder=data.get('copyright_holder'),
+        license_id=license_id,
+        license_description=data.get('license_description'),
+    )
     return HttpResponse(JSONRenderer().render(ContentNodeEditSerializer(new_node).data))
 
 @api_view(['GET'])
@@ -165,6 +180,153 @@ def get_nodes_by_ids_complete(request, ids):
     return Response(serializer.data)
 
 
+def get_channel_thumbnail(channel):
+    # Problems with json.loads, so use ast.literal_eval to get dict
+    if channel.get("thumbnail_encoding"):
+        thumbnail_data = ast.literal_eval(channel.get("thumbnail_encoding"))
+        if thumbnail_data.get("base64"):
+            return thumbnail_data["base64"]
+
+    if channel.get("thumbnail"):
+        return generate_storage_url(channel.get("thumbnail"))
+
+def get_thumbnail(node):
+    # Problems with json.loads, so use ast.literal_eval to get dict
+    if node.thumbnail_encoding:
+        thumbnail_data = ast.literal_eval(node.thumbnail_encoding)
+        if thumbnail_data.get("base64"):
+            return thumbnail_data["base64"]
+
+    thumbnail = node.files.filter(preset__thumbnail=True).first()
+    if thumbnail:
+        return generate_storage_url(str(thumbnail))
+
+    return "/".join([settings.STATIC_URL.rstrip("/"), "img", "{}_placeholder.png".format(node.kind_id)])
+
+
+DATE_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
+@api_view(['GET'])
+def get_topic_details(request, contentnode_id):
+    """ Generates data for topic contents. Used for look-inside previews
+        Keyword arguments:
+            contentnode_id (str): id of topic node to get details from
+    """
+    # Get nodes and channel
+    node = ContentNode.objects.prefetch_related('children', 'files', 'tags')\
+                            .select_related('license', 'language')\
+                            .get(pk=contentnode_id)
+    descendants = node.get_descendants()
+    channel = node.get_channel()
+
+    # If channel is a sushi chef channel, use date created for faster query
+    # Otherwise, find the last time anything was updated in the channel
+    last_update = channel.main_tree.created if channel and channel.ricecooker_version else \
+                        descendants.filter(changed=True)\
+                                .aggregate(latest_update=Max('modified'))\
+                                .get('latest_update')
+
+    # See if the latest cached data is up to date since the last update to the channel
+    cached_data = cache.get("details_{}".format(node.node_id))
+
+    if cached_data and last_update:
+        last_cache_update = datetime.strptime(json.loads(cached_data)['last_update'], DATE_TIME_FORMAT)
+        if last_update.replace(tzinfo=None) < last_cache_update:
+            return HttpResponse(cached_data)
+
+    # Get resources
+    resources = descendants.exclude(kind=content_kinds.TOPIC)
+
+
+    # Get all copyright holders, authors, aggregators, and providers and split into lists
+    creators = resources.values_list('copyright_holder', 'author', 'aggregator', 'provider')
+    split_lst = zip(*creators)
+    copyright_holders = filter(bool, set(split_lst[0])) if len(split_lst) > 0 else []
+    authors = filter(bool, set(split_lst[1])) if len(split_lst) > 1 else []
+    aggregators = filter(bool, set(split_lst[2])) if len(split_lst) > 2 else []
+    providers = filter(bool, set(split_lst[3])) if len(split_lst) > 3 else []
+
+
+    # Get sample pathway by getting longest path
+    max_level = resources.aggregate(max_level=Max('level'))['max_level']
+    deepest_node = resources.filter(level=max_level).first()
+    pathway = list(deepest_node.get_ancestors()\
+                            .exclude(parent=None)\
+                            .values('title', 'node_id', 'kind_id')
+                ) if deepest_node else []
+    sample_nodes = [
+        {
+            "node_id": n.node_id,
+            "title": n.title,
+            "description": n.description,
+            "thumbnail": get_thumbnail(n),
+        } for n in deepest_node.get_siblings(include_self=True)[0:4]
+    ] if deepest_node else []
+
+    # Get list of channels nodes were originally imported from (omitting the current channel)
+    channel_id = channel and channel.id
+    originals = resources.values("original_channel_id")\
+                        .annotate(count=Count("original_channel_id"))\
+                        .order_by("original_channel_id")
+    originals = {c['original_channel_id']: c['count'] for c in originals}
+    original_channels = Channel.objects.exclude(pk=channel_id)\
+                                    .filter(pk__in=[k for k, v in originals.items()], deleted=False)\
+                                    .values('id', 'name', 'thumbnail', 'thumbnail_encoding')
+    original_channels = [{
+        "id": c["id"],
+        "name": "{}{}".format(c["name"], _(" (Original)") if channel_id == c["id"] else ""),
+        "thumbnail": get_channel_thumbnail(c),
+        "count": originals[c["id"]]
+    } for c in original_channels]
+
+    # Get tags from channel
+    tags = ContentTag.objects.filter(tagged_content__pk__in=descendants.values_list('pk', flat=True))\
+                            .values('tag_name')\
+                            .annotate(count=Count('tag_name'))\
+                            .order_by('tag_name')
+
+    # Get resource variables
+    resource_count = resources.count() or 0
+    resource_size = resources.values('files__checksum', 'files__file_size')\
+                                .distinct()\
+                                .aggregate(resource_size=Sum('files__file_size'))['resource_size'] or 0
+    languages = list(set(descendants.exclude(language=None).values_list('language__native_name', flat=True)))
+    accessible_languages = list(set(resources.filter(files__preset_id=format_presets.VIDEO_SUBTITLE)\
+                                                .values_list('files__language__native_name', flat=True)))
+    licenses = list(set(resources.exclude(license=None).values_list('license__license_name', flat=True)))
+    kind_count = list(resources.values('kind_id').annotate(count=Count('kind_id')).order_by('kind_id'))
+
+    # Add "For Educators" booleans
+    for_educators = {
+        "coach_content": resources.filter(role_visibility=roles.COACH).exists(),
+        "exercises": resources.filter(kind_id=content_kinds.EXERCISE).exists(),
+    }
+
+    # Serialize data
+    data = json.dumps({
+        "last_update": pytz.utc.localize(datetime.now()).strftime(DATE_TIME_FORMAT),
+        "resource_count": resource_count,
+        "resource_size": resource_size,
+        "includes": for_educators,
+        "kind_count": kind_count,
+        "languages": languages,
+        "accessible_languages": accessible_languages,
+        "licenses": licenses,
+        "tags": list(tags),
+        "copyright_holders": copyright_holders,
+        "authors": authors,
+        "aggregators": aggregators,
+        "providers": providers,
+        "sample_pathway": pathway,
+        "original_channels": original_channels,
+        "sample_nodes": sample_nodes,
+    })
+
+    # Set cache with latest data
+    cache.set("details_{}".format(node.node_id), data, None)
+
+    return HttpResponse(data)
+
+
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
 def delete_nodes(request):
@@ -185,7 +347,6 @@ def delete_nodes(request):
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
     return HttpResponse(json.dumps({'success': True}))
-
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
