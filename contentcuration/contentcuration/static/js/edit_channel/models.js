@@ -488,7 +488,22 @@ var ContentNodeModel = BaseModel.extend({
                 error: reject
             });
         });
-    }
+    },
+    get_perseus_assessment_item(pk){
+      console.log('this even being called?');
+      return new Promise((resolve, reject) => {
+        $.ajax({
+          method: 'GET',
+          url: window.Urls.assessment_item_json(pk),
+          success(response) {
+            resolve(JSON.parse(response));
+          },
+          error(response) {
+            reject(JSON.parse(response));
+          },
+        });
+      });
+    },
 });
 
 var ContentNodeCollection = BaseCollection.extend({

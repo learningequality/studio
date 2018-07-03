@@ -8,10 +8,17 @@ import documentTemplate from '../hbtemplates/preview_templates/document.handleba
 
 export default BaseView.extend({
   initialize(options) {
+    // TODO 'preview' option is optional?
+    // TODO describe options
+
     // file is specified, get the template if kolibri renderer isn't necessary
-    if(options.previewFile){
+    // TODO this is a previewfile check only
+    if(options.preview && options.preview.preset) {
       this.template = this.getStudioTemplate(options);
     }
+
+    // TODO HACK
+    this.preview = options.preview;
 
     this.on('destroy', () => {
       if (this.vuePreview) {
@@ -26,14 +33,19 @@ export default BaseView.extend({
   },
   setupKolibriComponent(){
     // dupe the global component. Likely to be modified.
-    const { contentRenderer } = Object.assign({}, window.kolibriGlobal.coreVue.components);
+    const { contentRenderer } = window.kolibriGlobal.coreVue.components;
 
     // mock up vue props here
 
     const kind = this.model.get('kind');
     const assessment = kind === 'exercise';
-    const itemId = assessment ? this.model.get('assessment_item_ids')[0] : null;
-    const files = this.model.get('files').map(file => {
+    const itemId = this.preview.assessment_id ? this.preview.assessment_id : null;
+    const files = [{
+      // decoy. There's a .perseus file present in a kolibri contentNode that's not present here.
+      // Needed for render. Expected to be at position 0.
+      available: true,
+      extension: 'perseus',
+    }].concat(this.model.get('files').map(file => {
       return Object.assign({
         extension: file.file_format,
         lang: file.language,
@@ -41,11 +53,13 @@ export default BaseView.extend({
         priority: file.preset.order,
         available: true,
       }, file)
-    });
-
+    }));
 
     // Modify contentRenderer if assessment
     if(assessment){
+
+      const contentNode = this.model;
+      const assessmentPk = this.preview.id;
 
       // currentViewClass is a `data` property set in the `created` hook via promise
       // the component housed in currentViewClass is rendered via a `v-if`d `<component :is="">`
@@ -56,6 +70,7 @@ export default BaseView.extend({
         watch: {
           // using a watcher to listen for changes in the data field
           currentViewClass() {
+            console.log('watch function working');
             // giving the component a $nextTick to update the DOM
             // note: binds `this` to the scope of the component
             this.$nextTick(function(){
@@ -67,27 +82,25 @@ export default BaseView.extend({
               this.$refs.contentView.$nextTick(function(){
                 // files that aren't being served.
 
-                // TODO STOP USING DUMMY DATA
-                const item = JSON.parse(perseusTest.perseusObject.itemData)
-
-                // copied from perseus renderer index
-                if (this.validateItemData(item)) {
-                  this.item = item;
-                  if (this.$el) {
-                    // Don't try to render if our component is not mounted yet.
-                    this.renderItem();
-                  } else {
-                    this.$once('mounted', this.renderItem);
+                contentNode.get_perseus_assessment_item(assessmentPk).then(
+                  perseusJson => {
+                    // copied from perseus renderer index
+                    this.item = perseusJson;
+                    if (this.$el) {
+                      // Don't try to render if our component is not mounted yet.
+                      this.renderItem();
+                    } else {
+                      this.$once('mounted', this.renderItem);
+                    }
                   }
-                } else {
-                  console.error('Loaded item was malformed', item);
-                }
+                );
               });
             });
           },
         },
       });
     }
+
 
     const propsData = {
       kind,
@@ -105,25 +118,25 @@ export default BaseView.extend({
       el: this.el,
     });
   },
-  getStudioTemplate({ previewFile, intl_data }) {
+  getStudioTemplate({ preview, intl_data }) {
     const imageFormats = ['jpg', 'jpeg', 'png'];
 
     // Needs image template (not in kolibri)
-    if (imageFormats.includes(previewFile.file_format)) {
+    if (imageFormats.includes(preview.file_format)) {
 
       const imageSource = () => {
         if (this.model.has("thumbnail_encoding")) {
-          return this.model.get("thumbnail_encoding").base64 || previewFile.storage_url;
+          return this.model.get("thumbnail_encoding").base64 || preview.storage_url;
         }
-        return previewFile.storage_url;
+        return preview.storage_url;
       }
 
       return imageTemplate({ source: imageSource() }, { data: intl_data });
     }
 
     // Needs subtitle template (not in kolibri)
-    if (previewFile.file_format === 'srt') {
-      return documentTemplate({ source: previewFile.storage_url }, { data: intl_data });
+    if (preview.file_format === 'srt') {
+      return documentTemplate({ source: preview.storage_url }, { data: intl_data });
     }
 
     return '';

@@ -1,5 +1,4 @@
 import { BaseView } from 'edit_channel/views';
-import { FormatPresetCollection } from 'edit_channel/models';
 
 import PreviewView from './previewView';
 
@@ -24,21 +23,23 @@ export default BaseView.extend({
   template: require("../hbtemplates/preview_manager.handlebars"),
   tabs_template: require("../hbtemplates/preview_templates/tabs.handlebars"),
   initialize() {
-    this.currentPreviewIndex = 0;
-    this.previews = this.getPreviews();
+    const resetPreviews = () => {
+      // splitting for a few reasons, chiefly different translation methods
+      this.filePreviews = this.getFilePreviews();
+      this.exercisePreviews = this.getExercisePreviews();
 
+      // pick the whatever's at the top of the list
+      this.currentPreview = this.filePreviews.concat(this.exercisePreviews)[0];
+    }
 
-    this.on('changeContentPreview', previewIndex => {
-      this.currentPreviewIndex = previewIndex;
-      this.previewView.trigger('destroy');
+    this.on('setPreview', preview => {
+      this.currentPreview = preview;
       this.render();
     });
 
 
     this.listenTo(this.model, 'change:files', () => {
-      this.currentPreviewIndex = 0;
-      this.previews = this.getPreviews();
-      this.previewView.trigger('destroy');
+      resetPreviews();
       this.render();
     });
 
@@ -46,7 +47,7 @@ export default BaseView.extend({
     // Using jquery-ui's `remove` event. Applies to widgets, unsure why getting called here
 
     // Using `defer` to ensure that jquery-ui has had time to bind. Can't use `listenTo`.
-    defer(() => this.$el.on("remove", function() {
+    defer(() => this.$el.on("remove", () => {
       this.previewView.trigger('destroy');
       // call stopListening for all events
       this.remove();
@@ -54,38 +55,57 @@ export default BaseView.extend({
       this.off();
     }));
 
+    resetPreviews();
+
     this.render();
   },
-  getPreviews() {
-    // array of previewabe files
-    const previewableFiles = this.model.get('files').filter(file => {
-      if (file.preset && file.preset.display && !(file.preset.subtitle)) {
-        return true;
-      }
-      return false;
-      // sort array of previewabe files by preset order
-    }).sort(
-      (file1, file2) => file1.preset.order - file2.preset.order
-    );
+  getFilePreviews() {
+    if(this.model.has('files')){
+      // array of previewabe files
+      return this.model.get('files').filter(file => {
+        if (file.preset && file.preset.display && !(file.preset.subtitle)) {
+          return true;
+        }
+        return false;
+        // sort array of previewabe files by preset order
+      }).sort(
+        (file1, file2) => file1.preset.order - file2.preset.order
+      );
+    }
 
-    return previewableFiles;
+    return [];
+  },
+  getExercisePreviews() {
+    if(this.model.has('assessment_items')){
+      return this.model.get('assessment_items');
+    }
+
+    return [];
   },
   events: {
-    'click .preview_btn_tab': 'selectContentPreview',
+    'click .preview_btn_tab.file_preview': 'selectFilePreview',
+    'click .preview_btn_tab.exercise_preview': 'selectExercisePreview',
   },
   render() {
+    if(this.previewView){
+      this.previewView.trigger('destroy');
+    }
+
     this.$el.html(
       this.template({ file: true }, { data: this.get_intl_data() })
     );
 
     // set up preview tabs + dd child elements
     this.$("#preview_tabs_dropdown").html(
-      this.tabs_template({ previews: this.previews })
+      this.tabs_template({
+         filePreviews: this.filePreviews,
+         exercisePreviews: this.exercisePreviews,
+       })
     );
 
-    this.$(".preview_format_switch").text(
-      translate(this.previews[this.currentPreviewIndex].preset.id)
-    );
+    // this.$(".preview_format_switch").text(
+    //   translate(this.currentPreview.preset.id)
+    // );
 
     // passing in `el` option because renderer component often uses `responsiveElement`,
     // a mixin used in Kolibri to have the element's length and width available in JS. It requires
@@ -93,19 +113,24 @@ export default BaseView.extend({
     this.previewView = new PreviewView({
       el: this.$('#preview_window'),
       model: this.model,
-      previewFile: this.previews[this.currentPreviewIndex],
+      preview: this.currentPreview,
       intl_data: this.get_intl_data(),
     });
 
     return this;
   },
-  selectContentPreview(event) {
+  selectFilePreview(event) {
     // a <select> seems more appropriate
     const selectedIndex = event.target.getAttribute('value');
 
-    // only change the preview if necessary
-    if (selectedIndex !== this.currentPreviewIndex) {
-      this.trigger('changeContentPreview', selectedIndex);
-    }
+    // TODO only change the preview if necessary -- using a "change" event would help with this.
+    this.trigger('setPreview', this.filePreviews[selectedIndex]);
+  },
+  selectExercisePreview(event) {
+    // a <select> seems more appropriate
+    const selectedIndex = event.target.getAttribute('value');
+
+    // TODO only change the preview if necessary -- using a "change" event would help with this.
+    this.trigger('setPreview', this.exercisePreviews[selectedIndex]);
   },
 });
