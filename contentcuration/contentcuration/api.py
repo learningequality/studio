@@ -24,6 +24,10 @@ def check_health_check_browser(user_agent_string):
     Check if the user agent string matches either the Kubernetes or
     the Google Health Check agents.
     """
+
+    if not user_agent_string:
+        return False
+
     for expected_agent in settings.HEALTH_CHECK_BROWSERS:
         if expected_agent in user_agent_string:
             return True
