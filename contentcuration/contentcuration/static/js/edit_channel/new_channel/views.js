@@ -138,11 +138,11 @@ var ChannelListPage  = BaseViews.BaseView.extend({
 		this.public_channel_list.set_active_channel(channel);
 		this.viewonly_channel_list.set_active_channel(channel);
 	},
-	set_all_models: function(channel, current_page){
-		this.starred_channel_list.set_model(channel, current_page);
-		this.current_channel_list.set_model(channel, current_page);
-		this.public_channel_list.set_model(channel, current_page);
-		this.viewonly_channel_list.set_model(channel, current_page);
+	set_all_models: function(channel){
+		this.starred_channel_list.set_model(channel);
+		this.current_channel_list.set_model(channel);
+		this.public_channel_list.set_model(channel);
+		this.viewonly_channel_list.set_model(channel);
 	},
 	close_details: function() {
 		this.toggle_panel()
@@ -296,8 +296,8 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	template: require("./hbtemplates/channel_item.handlebars"),
 	initialize: function(options) {
 		this.bind_edit_functions();
-		_.bindAll(this, 'delete_channel', 'star_channel', 'unstar_channel', 'set_star_icon');
-		this.listenTo(this.model, "sync", this.render);
+		_.bindAll(this, 'delete_channel', 'star_channel', 'unstar_channel', 'set_star_icon', 'set_model');
+		this.listenTo(this.model, "sync", this.set_model);
 		this.containing_list_view = options.containing_list_view;
 		this.container = options.container;
 		this.can_edit = this.model.get("editors").indexOf(window.current_user.id) >= 0;
@@ -306,10 +306,12 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	set_is_new:function(isNew){
 		this.isNew = isNew;
 	},
+	set_model: function(data) {
+		this.container.set_all_models(this.model);
+	},
 	render: function() {
 		this.$el.html(this.template({
 			can_edit: this.can_edit,
-			// edit: this.edit,
 			channel: this.model.toJSON(),
 			total_file_size: this.model.get("size"),
 			resource_count: this.model.get("count"),

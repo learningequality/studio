@@ -96,3 +96,5 @@ webpack-stats\.json
 .pytest_cache/
 
 */.minio_data/*
+
+*/credentials/*
