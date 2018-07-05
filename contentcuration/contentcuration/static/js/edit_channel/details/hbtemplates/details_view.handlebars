@@ -217,10 +217,10 @@
                             <p>{{formatMessage (intlGet 'messages.original_channels')}}</p>
                             <ul class="list-unstyled">
                             {{#each details.original_channels}}
-                                <li class="original_channel row" >
-                                    <a href="/channels/{{id}}/view" target="_blank" data-toggle="tooltip" data-placement="top" title="{{formatMessage (intlGet 'messages.resource_count') count=count}}">
+                                <li class="original_channel row">
+                                    <a href="/channels/{{id}}/view" target="_blank">
                                         <div class="col-xs-2"><img src="{{#if thumbnail}}{{thumbnail}}{{else}}{{/if}}"></div>
-                                        <div class="col-xs-10">{{name}}</div>
+                                        <div class="col-xs-10"><span data-toggle="tooltip" data-placement="top" data-container="body" title="{{formatMessage (intlGet 'messages.resource_count') count=count}}">{{name}}</span></div>
                                     </a>
                                 </li>
                             {{/each}}
