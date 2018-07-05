@@ -314,6 +314,8 @@ def get_staged_diff_endpoint(request):
     if request.method == 'POST':
         return HttpResponse(json.dumps(get_staged_diff(json.loads(request.body)['channel_id'])))
 
+    return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+
 
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))

@@ -22,3 +22,5 @@ addons:
 
 script:
   - make endtoendtest
+
+cache: yarn

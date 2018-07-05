@@ -16,7 +16,7 @@ devserver:
 	yarn run devserver
 
 test:
-	cd contentcuration; pytest
+	yarn install && yarn run unittests
 
 endtoendtest:
 	# launch all studio's dependent services using docker-compose, and then run the tests	
