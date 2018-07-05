@@ -98,7 +98,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     information = JSONField(null=True)
     content_defaults = JSONField(default=DEFAULT_CONTENT_DEFAULTS)
-    policies = JSONField(default=dict)
+    policies = JSONField(default=dict, null=True)
 
     objects = UserManager()
     USERNAME_FIELD = 'email'
