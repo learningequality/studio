@@ -36,6 +36,7 @@ Addresses #*PR# HERE*
 - [ ] Are there tests for this change?
 - [ ] Are all user-facing strings translated properly (if applicable)?
 - [ ] Are there any new ways this uses user data that needs to be factored into our [Privacy Policy](https://github.com/learningequality/studio/tree/master/contentcuration/contentcuration/templates/policies/text)?
+- [ ] Are there any new interactions that need to be added to the [QA Sheet](https://docs.google.com/spreadsheets/d/1HF4Gy6rb_BLbZoNkZEWZonKFBqPyVEiQq4Ve6XgIYmQ/edit#gid=0)?
 - [ ] Are there opportunities for using Google Analytics here (if applicable)?
 
 ## Comments
