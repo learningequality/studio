@@ -14,7 +14,7 @@
     "postgres": "service postgresql start || pg_ctl -D /usr/local/var/postgresql@9.6 start || true",
     "redis": "service redis-server start || redis-server /usr/local/etc/redis.conf || true",
     "services": "npm-run-all -c --parallel --silent minio redis postgres",
-    "unittests": "npm-run-all --parallel --race services pytest",
+    "unittests": "yarn run build && npm-run-all --parallel --race services pytest",
     "unittests:reusedb": "npm-run-all --parallel --race services pytest:reusedb",
     "apptests": "npm-run-all --parallel --race services cypress:test",
     "test": "npm-run-all unittests apptests",
