@@ -11,6 +11,7 @@ POSTGRES_DATABASE=$6
 POSTGRES_PASSWORD=$7
 GCLOUD_PROXY_HOSTNAME=$8
 GCS_SERVICE_ACCOUNT_JSON=$9
+PROJECT_ID=${10}
 
 helm upgrade --install $BRANCH . \
      -f values-prod-config.yaml \
