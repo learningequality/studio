@@ -1,6 +1,7 @@
 import { BaseView } from 'edit_channel/views';
 import kVueHelper from 'utils/kVueHelper';
 import perseusTest from '../perseustest';
+import { defer } from 'underscore';
 
 // TODO async these? Def async the preview import
 import imageTemplate from '../hbtemplates/preview_templates/image.handlebars';
@@ -60,7 +61,8 @@ export default BaseView.extend({
         this.off();
       });
 
-      this.render();
+      // vue/react need this to be in DOM before it starts rendering
+      defer(() => this.render());
     }
   },
   getStudioTemplate(previewFile, intlData) {
@@ -158,6 +160,7 @@ export default BaseView.extend({
     return this;
   },
   renderKolibriComponent() {
+    console.log(this.el);
     this.trigger('set:vuePreview',
       kVueHelper(this.vueComponent, {
         propsData: this.vueProps,

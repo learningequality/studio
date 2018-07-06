@@ -1,18 +1,37 @@
 <div id="preview_content_main" allowfullscreen>
-<div class="row">
-    <div class="btn-group col-xs-12">
-      <button class="btn btn-default btn-sm dropdown-toggle truncate preview_format_switch btn-preview" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-        {{formatMessage (intlGet 'messages.no_preview')}}
-      </button>
-      <ul class="dropdown-menu" id="preview_tabs_dropdown"></ul>
-    </div>
-</div>
+  <div class="row">
+      <div class="btn-group col-xs-12">
+        <select class="preview-dropdown form-control">
 
-<div id="preview_window" class="list-unstyled text-center">
-    {{#unless file}}
+          {{#if filePreviews.length}}
+          <!-- TODO translate these labels -->
+          <optgroup class="file-previews" label="Files">
+            {{#each filePreviews}}
+            <option value="{{@index}}">
+              {{#translate preset.id}}{{/translate}}
+            </option>
+            {{/each}}
+          </optgroup>
+          {{/if}}
+
+          {{#if exercisePreviews.length}}
+          <!-- TODO translate these labels -->
+          <optgroup class="exercise-previews" label="Questions">
+            {{#each exercisePreviews}}
+            <option value="{{@index}}">
+              {{ question }}
+            </option>
+            {{/each}}
+          </optgroup>
+          {{/if}}
+
+        </select>
+      </div>
+  </div>
+
+  <div id="preview_window" class="list-unstyled text-center">
     <div class="container-fluid">
         <h5 class="default_preview_text text-center"><em>{{formatMessage (intlGet 'messages.select_file')}}</em></h5>
     </div>
-    {{/unless}}
-</div>
+  </div>
 </div>
