@@ -24,6 +24,32 @@ export default BaseView.extend({
       this.vueComponent = this.getKolibriComponent(this.model, options.preview);
       this.render = this.renderKolibriComponent;
 
+      this.on('set:vuePreview', function(vuePreview) {
+        const contentNodeModel = this.model;
+        const assessmentId = options.preview && options.preview.id;
+        // to listen for changes in currentViewClass, which is dynamicaly created
+        vuePreview.$watch( 'currentViewClass',
+          function tweakIncomingRenderComponent(renderComponent) {
+            // only do this tweak if it turns out we're using a perseus exercise
+            if (renderComponent.name == 'exercisePerseusRenderer') {
+              vuePreview.$nextTick(() =>
+                // retrieve the appropriate assessment json from our studio
+                contentNodeModel.get_perseus_assessment_item(assessmentId).then(
+                  perseusJson => {
+                    // do what loadItemData used to do
+                    vuePreview.$refs.contentView.item = perseusJson;
+                    vuePreview.$refs.contentView.renderItem();
+                  }
+                )
+              );
+            }
+            return renderComponent;
+          });
+
+          this.vuePreview = vuePreview;
+      });
+
+
       this.on('destroy', () => {
         if (this.vuePreview) {
           console.log('destroying!');
@@ -117,23 +143,10 @@ export default BaseView.extend({
           // using a watcher to listen for changes in the data field
           currentViewClass(renderComponent) {
             if (renderComponent.name == 'exercisePerseusRenderer') {
-              // overwrite the component's method before it's instantiated
-              renderComponent.methods.loadItemData = function mockLoadItemData(){
-                contentNodeModel.get_perseus_assessment_item(previewItem.id).then(
-                  perseusJson => {
-                    // copied from perseus renderer index
-                    this.item = perseusJson;
-                    if (this.$el) {
-                      // Don't try to render if our component is not mounted yet.
-                      this.renderItem();
-                    } else {
-                      this.$once('mounted', this.renderItem);
-                    }
-                  }
-                );
-              }
+              // overwrite the component's method before it's instantiated.
+              // Otherwise, it wipes out the beautiful JSON we already rendered once it returns.
+              renderComponent.methods.loadItemData = () => null;
             }
-            return renderComponent;
           }
         }
       });
@@ -145,10 +158,12 @@ export default BaseView.extend({
     return this;
   },
   renderKolibriComponent() {
-    this.vuePreview = kVueHelper(this.vueComponent, {
-      propsData: this.vueProps,
-      el: this.el,
-    });
+    this.trigger('set:vuePreview',
+      kVueHelper(this.vueComponent, {
+        propsData: this.vueProps,
+        el: this.el,
+      })
+    );
     return this;
   },
 });
