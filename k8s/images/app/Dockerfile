@@ -24,6 +24,7 @@ ENV PATH="/node_modules/.bin:$PATH"
 
 COPY ./requirements.txt .
 COPY ./requirements_prod.txt .
+RUN pip install -U pip
 RUN pip install -r requirements.txt
 RUN pip install -r requirements_prod.txt
 
