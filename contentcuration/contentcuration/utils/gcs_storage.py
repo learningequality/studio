@@ -68,6 +68,7 @@ class GoogleCloudStorage(Storage):
         """
         Return a publicly accessible URL for the given object.
         """
+        logging.debug("Getting public URL for {}".format(name))
         blob = self.bucket.get_blob(name)
         return blob.public_url
 
