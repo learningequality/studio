@@ -11,11 +11,13 @@ POSTGRES_DATABASE=$6
 POSTGRES_PASSWORD=$7
 GCLOUD_PROXY_HOSTNAME=$8
 GCS_SERVICE_ACCOUNT_JSON=$9
+PROJECT_ID=${10}
 
 helm upgrade --install $BRANCH . \
      -f values-prod-config.yaml \
-     --set studioApp.imageName=gcr.io/ops-central/learningequality-studio-app:$COMMIT \
-     --set studioNginx.imageName=gcr.io/ops-central/learningequality-studio-nginx:$COMMIT \
+     --set studioApp.imageName=gcr.io/$PROJECT_ID/learningequality-studio-app:$COMMIT \
+     --set studioNginx.imageName=gcr.io/$PROJECT_ID/learningequality-studio-nginx:$COMMIT \
+     --set bucketName=$BUCKET \
      --set studioApp.postmarkApiKey=$POSTMARK_KEY \
      --set postgresql.postgresUser=$POSTGRES_USER \
      --set postgresql.postgresDatabase=$POSTGRES_DATABASE \

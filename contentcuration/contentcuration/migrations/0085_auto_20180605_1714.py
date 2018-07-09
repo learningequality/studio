@@ -17,12 +17,12 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='contentnode',
             name='aggregator',
-            field=models.CharField(blank=True, default=b'', help_text='Who gathered this content together?', max_length=200, null=True),
+            field=models.CharField(blank=True, help_text='Who gathered this content together?', max_length=200, null=True),
         ),
         migrations.AddField(
             model_name='contentnode',
             name='provider',
-            field=models.CharField(blank=True, default=b'', help_text='Who distributed this content?', max_length=200, null=True),
+            field=models.CharField(blank=True, help_text='Who distributed this content?', max_length=200, null=True),
         ),
         migrations.AlterField(
             model_name='channel',

@@ -1,9 +1,14 @@
+import logging
 import os.path
 
 from google.cloud.storage import Client
 from google.cloud.storage.blob import Blob
+from django.conf import settings
 from django.core.files.storage import Storage
 from django.core.files import File
+
+
+OLD_STUDIO_STORAGE_PREFIX = "/contentworkshop_content/"
 
 
 class GoogleCloudStorage(Storage):
@@ -68,6 +73,15 @@ class GoogleCloudStorage(Storage):
         """
         Return a publicly accessible URL for the given object.
         """
+        logging.debug("Getting public URL for {}".format(name))
+
+        # the old studio storage had a prefix if /contentworkshop_content/
+        # before the path; remove that first before passing it in to
+        # GCS
+        # TODO (aron): remove hack once we've migrated all File models to remove the prefix
+        if name.startswith(OLD_STUDIO_STORAGE_PREFIX):
+            name = name.split(OLD_STUDIO_STORAGE_PREFIX).pop()
+
         blob = self.bucket.get_blob(name)
         return blob.public_url
 
