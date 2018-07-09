@@ -124,6 +124,11 @@ def record_node_duplication_stats(original_nodes_being_copied, target_parent, de
     :param target_parent: The parent where the nodes are being copied to.
     :param destination_channel: The channel where the nodes are being copied to.
     """
+
+    # if we're not copying anything, just return early
+    if not original_nodes_being_copied:
+        return
+
     num_resources_duplicated = 0
     num_nodes_duplicated = 0
 
