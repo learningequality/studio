@@ -421,6 +421,12 @@ def get_status(channel_id):
         return"unpublished"
     return "active"
 
+@api_view(['GET'])
+@authentication_classes((TokenAuthentication, SessionAuthentication,))
+@permission_classes((IsAuthenticated,))
+def get_full_node_diff(request, channel_id):
+    channel = Channel.objects.get(pk=channel_id)
+
 """ CHANNEL CREATE FUNCTIONS """
 
 
