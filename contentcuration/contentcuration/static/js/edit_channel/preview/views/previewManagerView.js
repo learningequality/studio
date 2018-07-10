@@ -2,7 +2,6 @@ import { BaseView } from 'edit_channel/views';
 
 import PreviewView from './previewView';
 
-import { translate } from 'edit_channel/utils/string_helper';
 import { defer } from 'underscore';
 import { contains } from 'jquery';
 
@@ -22,7 +21,6 @@ export default BaseView.extend({
   $trs: MESSAGES,
   // Template to be injected in modal, defined above.
   template: require("../hbtemplates/preview_manager.handlebars"),
-  tabs_template: require("../hbtemplates/preview_templates/tabs.handlebars"),
   initialize() {
     this.previewView = null;
     this.filePreviews = null;
