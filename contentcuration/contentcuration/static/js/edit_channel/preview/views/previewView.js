@@ -2,7 +2,6 @@ import { BaseView } from 'edit_channel/views';
 import kVueHelper from 'utils/kVueHelper';
 import { defer } from 'underscore';
 
-// TODO async these? Def async the preview import
 import imageTemplate from '../hbtemplates/preview_templates/image.handlebars';
 import documentTemplate from '../hbtemplates/preview_templates/document.handlebars';
 
@@ -21,7 +20,7 @@ export default BaseView.extend({
     } else {
       // no studio template, using kolibri component
       this.vueProps = this.getKolibriProps(this.model, options.preview);
-      this.vueComponent = this.getKolibriComponent(this.model, options.preview);
+      this.vueComponent = this.getKolibriComponent();
       this.render = this.renderKolibriComponent;
 
 
@@ -37,16 +36,16 @@ export default BaseView.extend({
 
       this.on('set:vuePreview', function(vuePreview) {
         const contentNodeModel = this.model;
-        const assessmentId = options.preview && options.preview.id;
+        const assessmentPk = this.getAssessmentPk();
 
         // to listen for changes in currentViewClass, which is dynamicaly created
         vuePreview.$watch('currentViewClass',
           function tweakIncomingRenderComponent(renderComponent) {
             // only do this tweak if it turns out we're using a perseus exercise
-            if (renderComponent.name == 'exercisePerseusRenderer') {
+            if (renderComponent.name == 'exercisePerseusRenderer' && assessmentPk) {
               vuePreview.$nextTick(() =>
                 // retrieve the appropriate assessment json from our studio
-                contentNodeModel.get_perseus_assessment_item(assessmentId).then(
+                contentNodeModel.get_perseus_assessment_item(assessmentPk).then(
                   perseusJson => {
                     // do what loadItemData used to do
                     vuePreview.$refs.contentView.item = perseusJson;
@@ -146,32 +145,43 @@ export default BaseView.extend({
       interactive: false,
     };
   },
-  getKolibriComponent(contentNodeModel, previewItem){
+  getAssessmentPk() {
+    // id(pk) could technically belong to any model, but this method is only used when we need
+    // the pk to retrieve perseus JSON from server
+    if(this.preview && this.preview.id){
+      return this.preview.id;
+    }
+
+    if(this.model.has('assessment_items') && this.model.get('assessment_items').length){
+      return this.model.get('assessment_items')[0].id;
+    }
+
+    return null
+  },
+  getKolibriComponent(){
     // dupe the global component. Likely to be modified.
     const contentRenderer = Object.assign(
       {}, window.kolibriGlobal.coreVue.components.contentRenderer
     );
 
-    // Modify contentRenderer if assessment
-    if(previewItem.assessment_id) {
-      // currentViewClass is a `data` property set in the `created` hook via promise
-      // the component housed in currentViewClass is rendered via a `v-if`d `<component :is="">`
-      // this means that the component and its associated `ref` doesn't exist until:
-      // 1) The promise is returned, setting the correct `data` property
-      // 2) The DOM updates to reflect the changes in `data`
-      Object.assign(contentRenderer, {
-        watch: {
-          // using a watcher to listen for changes in the data field
-          currentViewClass(renderComponent) {
-            if (renderComponent.name == 'exercisePerseusRenderer') {
-              // overwrite the component's method before it's instantiated.
-              // Otherwise, it wipes out the beautiful JSON we already rendered once it returns.
-              renderComponent.methods.loadItemData = () => null;
-            }
+    // currentViewClass is a `data` property set in the `created` hook via promise
+    // the component housed in currentViewClass is rendered via a `v-if`d `<component :is="">`
+    // this means that the component and its associated `ref` doesn't exist until:
+    // 1) The promise is returned, setting the correct `data` property
+    // 2) The DOM updates to reflect the changes in `data`
+    Object.assign(contentRenderer, {
+      watch: {
+        // using a watcher to listen for changes in the data field
+        currentViewClass(renderComponent) {
+          if (renderComponent.name == 'exercisePerseusRenderer') {
+            // overwrite the component's method before it's instantiated.
+            // Otherwise, it wipes out the beautiful JSON we already rendered once it returns.
+            renderComponent.methods.loadItemData = () => null;
           }
         }
-      });
-    }
+      }
+    });
+
     return contentRenderer;
   },
   renderStudioTemplate() {
@@ -179,7 +189,6 @@ export default BaseView.extend({
     return this;
   },
   renderKolibriComponent() {
-    console.log(this.el);
     this.trigger('set:vuePreview',
       kVueHelper(this.vueComponent, {
         propsData: this.vueProps,
