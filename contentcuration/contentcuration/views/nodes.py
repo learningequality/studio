@@ -10,22 +10,16 @@ from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
-from django.db.models import Q, Case, When, Value, IntegerField, Max, Sum, F, Count
-from django.db.models.functions import Concat
+from django.db.models import Q, Max, Sum, F, Count
 from django.utils.translation import ugettext as _
 from rest_framework.renderers import JSONRenderer
 from contentcuration.utils.files import duplicate_file
 from contentcuration.models import File, ContentNode, ContentTag, AssessmentItem, License, Channel, PrerequisiteContentRelationship, generate_storage_url
-from contentcuration.serializers import ContentNodeSerializer, ContentNodeEditSerializer, SimplifiedContentNodeSerializer, ContentNodeCompleteSerializer
-from le_utils.constants import format_presets, content_kinds, file_formats, licenses, roles
-from itertools import chain
-from rest_framework.authentication import TokenAuthentication, SessionAuthentication, BasicAuthentication
-from rest_framework.permissions import IsAuthenticated
-from contentcuration.statistics import record_node_duplication_stats
-from rest_framework.authentication import TokenAuthentication, SessionAuthentication, BasicAuthentication
+from contentcuration.serializers import ContentNodeSerializer, ContentNodeEditSerializer, SimplifiedContentNodeSerializer
+from le_utils.constants import format_presets, content_kinds, roles
+from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
-from contentcuration.statistics import record_node_duplication_stats
 from rest_framework.response import Response
 
 
@@ -561,13 +555,13 @@ def move_nodes(request):
         return ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
     all_ids = []
-    with transaction.atomic():
-        with ContentNode.objects.delay_mptt_updates():
-            for n in nodes:
-                min_order = min_order + float(max_order - min_order) / 2
-                node = ContentNode.objects.get(pk=n['id'])
-                _move_node(node, parent=target_parent, sort_order=min_order, channel_id=channel_id)
-                all_ids.append(n['id'])
+
+    with ContentNode.objects.delay_mptt_updates():
+        for n in nodes:
+            min_order = min_order + float(max_order - min_order) / 2
+            node = ContentNode.objects.get(pk=n['id'])
+            _move_node(node, parent=target_parent, sort_order=min_order, channel_id=channel_id)
+            all_ids.append(n['id'])
 
     serialized = ContentNodeSerializer(ContentNode.objects.filter(pk__in=all_ids), many=True).data
     return HttpResponse(JSONRenderer().render(serialized))
