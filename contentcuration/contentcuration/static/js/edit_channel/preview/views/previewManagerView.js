@@ -86,7 +86,11 @@ export default BaseView.extend({
   },
   getExercisePreviews() {
     if(this.model.has('assessment_items')){
-      return this.model.get('assessment_items');
+      return this.model.get('assessment_items').filter(
+        // don't include those that haven't been saved.
+        // Will break previewer, since there's no perseus JSON
+        item => !item.isNew
+      );
     }
 
     return [];
@@ -128,7 +132,6 @@ export default BaseView.extend({
     );
   },
   selectPreview(event) {
-    // could use this.$
     const selected = event.target.selectedOptions[0];
     const selectedIndex = selected.getAttribute('value');
     let preview = null;
