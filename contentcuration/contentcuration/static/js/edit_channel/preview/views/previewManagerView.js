@@ -135,7 +135,7 @@ export default BaseView.extend({
 
     if(contains(this.$filePreviews, selected)) {
       preview = this.filePreviews[selectedIndex];
-    } else {
+    } else if (contains(this.$exercisePreviews, selected)){
       preview = this.exercisePreviews[selectedIndex];
     }
     this.trigger('update:preview', preview);

@@ -248,12 +248,15 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   load_editor:function(selected_items){
     var is_individual = selected_items.length === 1;
     var is_exercise = is_individual && selected_items[0].model.get("kind") == "exercise";
-    var has_assessments = is_individual && selected_items[0].model.has("assessment_items");
+    var has_assessments =
+      is_individual &&
+      selected_items[0].model.has("assessment_items") &&
+      selected_items[0].model.get("assessment_items").length;
     var has_files = is_individual && selected_items[0].model.get("files").some(function(f){
                       return window.formatpresets.get({id: f.preset.name || f.preset.id || f.preset}).get("display");
                     });
     this.$("#metadata_details_btn").css("display", (selected_items.length) ? "inline-block" : "none");
-    this.$("#metadata_preview_btn").css("display", is_individual && (has_files || has_assessments) ? "inline-block" : "none");
+    this.$("#metadata_preview_btn").css("display", (is_individual && (has_files || has_assessments)) ? "inline-block" : "none");
     this.$("#metadata_prerequisites_btn").css("display", (is_individual && (has_files || is_exercise)) ? "inline-block" : "none");
     this.$("#metadata_questions_btn").css("display", (is_exercise) ? "inline-block" : "none");
     if(!is_individual){
