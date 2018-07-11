@@ -11,7 +11,6 @@ from django.conf import settings
 from django.core.files.storage import default_storage
 from django.core.management import call_command
 from django.test import TestCase
-from requests.auth import HTTPBasicAuth
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APITestCase, APIClient
 from django.test.utils import override_settings
@@ -174,7 +173,7 @@ class BaseAPITestCase(APITestCase):
         self.channel = channel()
         self.user = user()
         self.client = APIClient()
-        self.client.session.auth = HTTPBasicAuth(self.user.email, "password")
+        self.client.login(email=self.user.email, password="password")
 
     @classmethod
     def get(self, url):
