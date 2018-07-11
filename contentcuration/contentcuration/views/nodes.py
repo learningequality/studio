@@ -10,22 +10,16 @@ from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
-from django.db.models import Q, Case, When, Value, IntegerField, Max, Sum, F, Count
-from django.db.models.functions import Concat
+from django.db.models import Q, Max, Sum, F, Count
 from django.utils.translation import ugettext as _
 from rest_framework.renderers import JSONRenderer
 from contentcuration.utils.files import duplicate_file
 from contentcuration.models import File, ContentNode, ContentTag, AssessmentItem, License, Channel, PrerequisiteContentRelationship, generate_storage_url
-from contentcuration.serializers import ContentNodeSerializer, ContentNodeEditSerializer, SimplifiedContentNodeSerializer, ContentNodeCompleteSerializer
-from le_utils.constants import format_presets, content_kinds, file_formats, licenses, roles
-from itertools import chain
-from rest_framework.authentication import TokenAuthentication, SessionAuthentication, BasicAuthentication
-from rest_framework.permissions import IsAuthenticated
-from contentcuration.statistics import record_node_duplication_stats
-from rest_framework.authentication import TokenAuthentication, SessionAuthentication, BasicAuthentication
+from contentcuration.serializers import ContentNodeSerializer, ContentNodeEditSerializer, SimplifiedContentNodeSerializer
+from le_utils.constants import format_presets, content_kinds, roles
+from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
-from contentcuration.statistics import record_node_duplication_stats
 from rest_framework.response import Response
 
 
