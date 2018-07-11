@@ -13,6 +13,13 @@ GCLOUD_PROXY_HOSTNAME=$8
 GCS_SERVICE_ACCOUNT_JSON=$9
 PROJECT_ID=${10}
 
+if [ "${11}" ]
+then
+    IS_PRODUCTION=true
+else
+    IS_PRODUCTION=false
+fi
+
 helm upgrade --install $BRANCH . \
      -f values-prod-config.yaml \
      --set studioApp.imageName=gcr.io/$PROJECT_ID/learningequality-studio-app:$COMMIT \
@@ -23,4 +30,5 @@ helm upgrade --install $BRANCH . \
      --set postgresql.postgresDatabase=$POSTGRES_DATABASE \
      --set postgresql.postgresPassword=$POSTGRES_PASSWORD \
      --set postgresql.externalCloudSQL.proxyHostName=$GCLOUD_PROXY_HOSTNAME \
-     --set minio.externalGoogleCloudStorage.gcsKeyJson=$(base64 $GCS_SERVICE_ACCOUNT_JSON --wrap=0)
+     --set minio.externalGoogleCloudStorage.gcsKeyJson=$(base64 $GCS_SERVICE_ACCOUNT_JSON --wrap=0) \
+     --set productionIngress=$IS_PRODUCTION

@@ -56,7 +56,7 @@ steps:
   args: [
   '-c',
   # still run helm.bash to initialze creds, but otherwise run our own deploy script
-  '/builder/helm.bash && ./helm-deploy.sh $BRANCH_NAME $_STORAGE_BUCKET $COMMIT_SHA $$POSTMARK_API_KEY $$POSTGRES_USERNAME $$POSTGRES_DATABASE $$POSTGRES_PASSWORD studio-$_DATABASE_INSTANCE_NAME-sql-proxy-gcloud-sqlproxy.sqlproxy ../gcs-service-account.json $PROJECT_ID'
+  '/builder/helm.bash && ./helm-deploy.sh $BRANCH_NAME $_STORAGE_BUCKET $COMMIT_SHA $$POSTMARK_API_KEY $$POSTGRES_USERNAME $$POSTGRES_DATABASE $$POSTGRES_PASSWORD studio-$_DATABASE_INSTANCE_NAME-sql-proxy-gcloud-sqlproxy.sqlproxy ../gcs-service-account.json $PROJECT_ID is_production'
   ]
 
 substitutions:
