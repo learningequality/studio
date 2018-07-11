@@ -555,13 +555,13 @@ def move_nodes(request):
         return ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
     all_ids = []
-    with transaction.atomic():
-        with ContentNode.objects.delay_mptt_updates():
-            for n in nodes:
-                min_order = min_order + float(max_order - min_order) / 2
-                node = ContentNode.objects.get(pk=n['id'])
-                _move_node(node, parent=target_parent, sort_order=min_order, channel_id=channel_id)
-                all_ids.append(n['id'])
+
+    with ContentNode.objects.delay_mptt_updates():
+        for n in nodes:
+            min_order = min_order + float(max_order - min_order) / 2
+            node = ContentNode.objects.get(pk=n['id'])
+            _move_node(node, parent=target_parent, sort_order=min_order, channel_id=channel_id)
+            all_ids.append(n['id'])
 
     serialized = ContentNodeSerializer(ContentNode.objects.filter(pk__in=all_ids), many=True).data
     return HttpResponse(JSONRenderer().render(serialized))
