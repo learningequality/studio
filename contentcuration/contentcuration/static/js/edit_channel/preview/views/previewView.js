@@ -1,6 +1,5 @@
 import { BaseView } from 'edit_channel/views';
 import kVueHelper from 'utils/kVueHelper';
-import perseusTest from '../perseustest';
 import { defer } from 'underscore';
 
 // TODO async these? Def async the preview import
@@ -25,11 +24,23 @@ export default BaseView.extend({
       this.vueComponent = this.getKolibriComponent(this.model, options.preview);
       this.render = this.renderKolibriComponent;
 
+
+      // `this` is bound to vue component. handled by an window event listener
+      // needs to be out here to remove event listener
+      const pauseVideo = windowClick => {
+        if(!this.vuePreview.$el.contains(windowClick.target)) {
+          // pause video if not interacting with it
+          this.vuePreview.$refs.contentView.setPlayState(false);
+          this.vuePreview.$refs.contentView.player.pause();
+        }
+      }
+
       this.on('set:vuePreview', function(vuePreview) {
         const contentNodeModel = this.model;
         const assessmentId = options.preview && options.preview.id;
+
         // to listen for changes in currentViewClass, which is dynamicaly created
-        vuePreview.$watch( 'currentViewClass',
+        vuePreview.$watch('currentViewClass',
           function tweakIncomingRenderComponent(renderComponent) {
             // only do this tweak if it turns out we're using a perseus exercise
             if (renderComponent.name == 'exercisePerseusRenderer') {
@@ -44,6 +55,13 @@ export default BaseView.extend({
                 )
               );
             }
+
+            if(renderComponent.name === 'videoRender') {
+              // allow child to be instantiated
+              vuePreview.$nextTick(() => {
+                window.addEventListener('click', pauseVideo);
+              });
+            }
             return renderComponent;
           });
 
@@ -53,11 +71,12 @@ export default BaseView.extend({
 
       this.on('destroy', () => {
         if (this.vuePreview) {
-          console.log('destroying!');
           // important, particularly here. Destroy clears event listeners
           this.vuePreview.$destroy();
           this.vuePreview = null;
         }
+        // alternative: do it in an `ondestory` hook for the component that we register for
+        window.removeEventListener('click', pauseVideo);
         this.off();
       });
 
