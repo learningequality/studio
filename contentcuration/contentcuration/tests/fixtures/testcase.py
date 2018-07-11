@@ -11,6 +11,8 @@ from django.conf import settings
 from django.core.files.storage import default_storage
 from django.core.management import call_command
 from django.test import TestCase
+from requests.auth import HTTPBasicAuth
+from rest_framework.authtoken.models import Token
 from rest_framework.test import APITestCase, APIClient
 from django.test.utils import override_settings
 from mixer.backend.django import mixer
@@ -101,17 +103,21 @@ def fileobj_video(contents=None):
     yield db_file_obj
 
 
-def node(data):
+def node(data, parent=None):
     new_node = None
+    print(data['title'])
     # Create topics
     if data['kind_id'] == "topic":
-        new_node = mixer.blend(cc.ContentNode, kind=topic(), title=data['title'], node_id=data['node_id'])
+        new_node = cc.ContentNode(kind=topic(), parent=parent, title=data['title'], node_id=data['node_id'])
+        new_node.save()
+
         for child in data['children']:
-            new_node.children.add(node(child))
+            child_node = node(child, parent=new_node)
 
     # Create videos
     elif data['kind_id'] == "video":
-        new_node = mixer.blend(cc.ContentNode, kind=video(), title=data['title'], node_id=data['node_id'], license=license_wtfpl())
+        new_node = cc.ContentNode(kind=video(), parent=parent, title=data['title'], node_id=data['node_id'], license=license_wtfpl())
+        new_node.save()
         video_file = fileobj_video().next()
         video_file.contentnode = new_node
         video_file.save()
@@ -119,7 +125,8 @@ def node(data):
     # Create exercises
     elif data['kind_id'] == "exercise":
         extra_fields = "{{\"mastery_model\":\"{}\",\"randomize\":true}}".format(data['mastery_model'])
-        new_node = mixer.blend(cc.ContentNode, kind=exercise(), title=data['title'], node_id=data['node_id'], license=license_wtfpl(), extra_fields=extra_fields)
+        new_node = cc.ContentNode(kind=exercise(), parent=parent, title=data['title'], node_id=data['node_id'], license=license_wtfpl(), extra_fields=extra_fields)
+        new_node.save()
         for assessment_item in data['assessment_items']:
             mixer.blend(cc.AssessmentItem,
                 contentnode=new_node,
@@ -128,48 +135,22 @@ def node(data):
                 type=assessment_item['type'],
                 answers=json.dumps(assessment_item['answers'])
             )
-    new_node.save()
+
     return new_node
+
 def channel():
-    with cc.ContentNode.objects.delay_mptt_updates():
-        root = mixer.blend(cc.ContentNode, title="root", parent=None, kind=topic())
-        level1 = mixer.blend(cc.ContentNode, parent=root, kind=topic())
-        level2 = mixer.blend(cc.ContentNode, parent=level1, kind=topic())
-        leaf = mixer.blend(cc.ContentNode, parent=level2, kind=video())
-        leaf2 = mixer.blend(cc.ContentNode, parent=level2, kind=exercise(), title='EXERCISE 1', extra_fields="{\"mastery_model\":\"do_all\",\"randomize\":true}")
+    channel = cc.Channel.objects.create(name="testchannel")
+    channel.save()
 
-        video_file = fileobj_video().next()
-        video_file.contentnode = leaf
-        video_file.save()
+    # Read from json fixture
+    filepath = os.path.dirname(__file__) + os.path.sep + "tree.json"
+    with open(filepath, "rb") as jsonfile:
+        data = json.load(jsonfile)
 
-        # item = assessment_item()
-        # item.contentnode = leaf2
-        # item.save()
-
-        # item2 = assessment_item()
-        # item2.contentnode = leaf2
-        # item2.save()
-
-        # item3 = assessment_item()
-        # item3.contentnode = leaf2
-        # item3.save()
-
-        # item4 = assessment_item()
-        # item4.contentnode = leaf2
-        # item4.save()
-
-    channel = mixer.blend(cc.Channel, main_tree=root, name='testchannel', thumbnail="")
+    channel.main_tree = node(data)
+    channel.save()
 
     return channel
-
-# def channel():
-#     # Read from json fixture
-#     filepath = os.path.dirname(__file__) + os.path.sep + "tree.json"
-#     with open(filepath, "rb") as jsonfile:
-#         data = json.load(jsonfile)
-#     with cc.ContentNode.objects.delay_mptt_updates():
-#         root = node(data)
-#     return mixer.blend(cc.Channel, main_tree=root, name='testchannel', thumbnail="")
 
 def user():
     user = cc.User.objects.create(email='user@test.com')
@@ -179,18 +160,23 @@ def user():
 
 class BaseTestCase(TestCase):
     @classmethod
-    def setUpClass(cls):
-        super(BaseTestCase, cls).setUpClass()
+    def setUpClass(self):
+        super(BaseTestCase, self).setUpClass()
         call_command('loadconstants')
-        cls.channel = channel()
-        cls.user = user()
+        self.channel = channel()
+        self.user = user()
 
 class BaseAPITestCase(APITestCase):
     @classmethod
-    def setUpClass(cls):
-        super(BaseAPITestCase, cls).setUpClass()
+    def setUpClass(self):
+        super(BaseAPITestCase, self).setUpClass()
         call_command('loadconstants')
-        cls.channel = channel()
-        cls.user = user()
-        cls.client = APIClient()
-        cls.client.login(email="user@test.com", password="password")
+        self.channel = channel()
+        self.user = user()
+        self.client = APIClient()
+        self.client.session.auth = HTTPBasicAuth(self.user.email, "password")
+
+    @classmethod
+    def get(self, url):
+        token, _new = Token.objects.get_or_create(user=self.user)
+        return self.client.get(url, headers={"Authorization": "Token {0}".format(token)})

@@ -105,54 +105,43 @@ STAGED_TREE = {
 }
 
 
-class RicecookerTestCase(BaseAPITestCase):
+class NodeDiffTestCase(BaseAPITestCase):
 
     @classmethod
-    def setUpClass(cls):
-        super(RicecookerTestCase, cls).setUpClass()
-        with cc.ContentNode.objects.delay_mptt_updates():
-            cls.channel.staging_tree = node(STAGED_TREE)
-        cls.channel.save()
-        cls.channel.staging_tree.get_descendants().update(changed=True)
-        import pdb; pdb.set_trace()
+    def setUpClass(self):
+        super(NodeDiffTestCase, self).setUpClass()
+        self.channel.staging_tree = node(STAGED_TREE)
+        self.channel.save()
+        self.channel.staging_tree.get_descendants().update(changed=True)
 
         # Update file
-        updated_file_node = cls.channel.staging_tree.get_descendants().filter(node_id='00000000000000000000000000000006').first()
+        updated_file_node = self.channel.staging_tree.get_descendants().filter(node_id='00000000000000000000000000000006').first()
         updated_file_node.files.first().delete()
-        new_video_file = fileobj_video(contents="Updated")
+        new_video_file = fileobj_video(contents="Updated").next()
         new_video_file.contentnode = updated_file_node
         new_video_file.save()
 
         # Delete file
-        updated_file_node = cls.channel.staging_tree.get_descendants().filter(node_id='00000000000000000000000000000003').first()
+        updated_file_node = self.channel.staging_tree.get_descendants().filter(node_id='00000000000000000000000000000003').first()
         updated_file_node.files.first().delete()
 
         # Add file
-        updated_file_node = cls.channel.staging_tree.get_descendants().filter(node_id='00000000000000000000000000000007').first()
-        new_video_file = fileobj_video()
+        updated_file_node = self.channel.staging_tree.get_descendants().filter(node_id='00000000000000000000000000000007').first()
+        new_video_file = fileobj_video().next()
         new_video_file.contentnode = updated_file_node
         new_video_file.save()
 
-        cls.response = cls.client.get(reverse_lazy("get_full_node_diff", cls.channel.pk))
+    def test_detailed_diff_endpoint(self):
+        response = self.get(reverse_lazy("get_full_node_diff", kwargs={"channel_id": self.channel.pk}))
+        self.assertEqual(response.status_code, 200)
 
-    def test_detailed_diff_endpoint(cls):
-        cls.assertEqual(cls.response , 200)
+    # def test_diff_unchanged(cls):
+    #     # node 00000000000000000000000000000002 should be unchanged
+    #     cls.assertEqual(True, True)
 
-    def get_detailed_diff_endpoint(cls):
-        import pdb; pdb.set_trace()
-
-        response = cls.client.get(reverse_lazy("get_full_node_diff", cls.channel.pk), new_lesson, format='json')
-        cls.assertEqual(post_response.status_code, 201)
-
-
-
-    def test_diff_unchanged(cls):
-        # node 00000000000000000000000000000002 should be unchanged
-        cls.assertEqual(True, True)
-
-    def test_diff_metadata_changed(cls):
-        # node 00000000000000000000000000000001 should be changed
-        cls.assertEqual(True, True)
+    # def test_diff_metadata_changed(cls):
+    #     # node 00000000000000000000000000000001 should be changed
+    #     cls.assertEqual(True, True)
 
     # def test_diff_file_changed(self):
     #     # node 00000000000000000000000000000006 should have an updated video file
