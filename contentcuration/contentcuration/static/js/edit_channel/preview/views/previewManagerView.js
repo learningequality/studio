@@ -47,6 +47,7 @@ export default BaseView.extend({
       this.render();
     });
 
+    // TODO updates _a lot_ during new question creation
     this.listenTo(this.model, 'change:assessment_items', () => {
       resetPreviews();
       this.render();
