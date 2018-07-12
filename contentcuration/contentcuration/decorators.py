@@ -2,7 +2,7 @@ import json
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse_lazy
-from django.shortcuts import render_to_response, redirect
+from django.shortcuts import render, redirect
 from django.template import RequestContext
 from contentcuration.models import Channel
 from contentcuration.utils.policies import check_policies
@@ -18,7 +18,7 @@ def browser_is_supported(function):
             if expected_agent in user_agent_string:
                 return function(request, *args, **kwargs)
 
-        return render_to_response('unsupported_browser.html', context_instance=RequestContext(request))
+        return render(request, 'unsupported_browser.html')
 
     wrap.__doc__ = function.__doc__
     wrap.__name__ = function.__name__
@@ -41,7 +41,7 @@ def can_access_channel(function):
         try:
             channel = Channel.objects.get(pk=kwargs['channel_id'])
         except ObjectDoesNotExist:
-            return render_to_response('channel_not_found.html', context_instance=RequestContext(request))
+            return render(request, 'channel_not_found.html')
 
         if channel.public or \
             channel.editors.filter(id=request.user.id).exists() or \
@@ -65,7 +65,7 @@ def can_edit_channel(function):
 
             return function(request, *args, **kwargs)
         except ObjectDoesNotExist:
-            return render_to_response('channel_not_found.html', context_instance=RequestContext(request))
+            return render(request, 'channel_not_found.html')
 
     wrap.__doc__ = function.__doc__
     wrap.__name__ = function.__name__
