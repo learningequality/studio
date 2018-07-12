@@ -289,6 +289,7 @@ var ChannelEditorView = BaseViews.BaseListEditableItemView.extend({
         this.edit = false;
         this.model.set("thumbnail", this.original_thumbnail);
         this.model.set("thumbnail_encoding", this.original_thumbnail_encoding);
+        this.onchange(false);
         this.render();
     },
     submit_changes:function(){

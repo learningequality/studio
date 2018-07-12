@@ -149,7 +149,7 @@ var ChannelListPage  = BaseViews.BaseView.extend({
 	},
 	toggle_panel: function(view, channel_list_item) {
 		// Toggle channel details panel
-		if(!this.current_view || !this.current_view.changed) {
+		if(!this.current_view || !this.current_view.changed || !this.open) {
 			this.set_details(view, channel_list_item);
         } else {
             var self = this;
