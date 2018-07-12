@@ -105,6 +105,9 @@ spec:
           name: staticfiles
         - name: gcs-creds
           mountPath: /secrets/gcs
+        resources:
+          requests:
+            cpu: 1000m
       - name: nginx-proxy
         image: {{ .Values.studioNginx.imageName }}
         env:
