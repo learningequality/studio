@@ -2,7 +2,7 @@ import json
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse_lazy
-from django.shortcuts import render_to_response, redirect
+from django.shortcuts import render, redirect
 from django.template import RequestContext
 from contentcuration.models import Channel
 from contentcuration.utils.policies import check_policies
@@ -18,7 +18,7 @@ def browser_is_supported(function):
             if expected_agent in user_agent_string:
                 return function(request, *args, **kwargs)
 
-        return render_to_response('unsupported_browser.html', context_instance=RequestContext(request))
+        return render(request, 'unsupported_browser.html')
 
     wrap.__doc__ = function.__doc__
     wrap.__name__ = function.__name__
@@ -28,7 +28,7 @@ def browser_is_supported(function):
 def is_admin(function):
     def wrap(request, *args, **kwargs):
         if not request.user.is_admin:
-            return render_to_response('unauthorized.html', context_instance=RequestContext(request))
+            return render(request, 'unauthorized.html')
 
         return function(request, *args, **kwargs)
 
@@ -45,11 +45,11 @@ def can_access_channel(function):
                 not channel.editors.filter(id=request.user.id).exists() and \
                 not channel.viewers.filter(id=request.user.id).exists() and \
                 not request.user.is_admin:
-                return render_to_response('unauthorized.html', context_instance=RequestContext(request))
+                return render(request, 'unauthorized.html')
 
             return function(request, *args, **kwargs)
         except ObjectDoesNotExist:
-            return render_to_response('channel_not_found.html', context_instance=RequestContext(request))
+            return render(request, 'channel_not_found.html')
 
     wrap.__doc__ = function.__doc__
     wrap.__name__ = function.__name__
@@ -61,11 +61,11 @@ def can_edit_channel(function):
             channel = Channel.objects.get(pk=kwargs['channel_id'], deleted=False)
 
             if not channel.editors.filter(id=request.user.id).exists() and not request.user.is_admin:
-                return render_to_response('unauthorized.html', context_instance=RequestContext(request))
+                return render(request, 'unauthorized.html')
 
             return function(request, *args, **kwargs)
         except ObjectDoesNotExist:
-            return render_to_response('channel_not_found.html', context_instance=RequestContext(request))
+            return render(request, 'channel_not_found.html')
 
     wrap.__doc__ = function.__doc__
     wrap.__name__ = function.__name__

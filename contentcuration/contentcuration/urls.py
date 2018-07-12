@@ -236,7 +236,8 @@ urlpatterns += [
 
 # Add account/registration endpoints
 urlpatterns += [
-    url(r'^accounts/logout/$', auth_views.logout, {'template_name': 'registration/logout.html'}),
+    url(r'^accounts/login/$', auth_views.login, {'template_name': 'registration/logout.html'}, name='login'),
+    url(r'^accounts/logout/$', auth_views.logout, {'template_name': 'registration/logout.html'}, name='logout'),
     url(
         r'^accounts/password/reset/$',
         registration_views.custom_password_reset,
