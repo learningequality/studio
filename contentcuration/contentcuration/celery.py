@@ -12,7 +12,8 @@ app = Celery('contentcuration')
 # Using a string here means the worker will not have to
 # pickle the object when using Windows.
 app.config_from_object('django.conf:settings')
-app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
+import django; django.setup()
+app.autodiscover_tasks(lambda: settings.INSTALLED_APPS, force=True)
 
 
 @app.task(bind=True)

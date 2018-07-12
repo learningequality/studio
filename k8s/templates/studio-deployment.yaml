@@ -105,6 +105,9 @@ spec:
           name: staticfiles
         - name: gcs-creds
           mountPath: /secrets/gcs
+        resources:
+          requests:
+            cpu: 1000m
       - name: nginx-proxy
         image: {{ .Values.studioNginx.imageName }}
         env:
@@ -140,12 +143,19 @@ spec:
       labels:
         app: {{template "studio.fullname" . }}-workers
     spec:
+      volumes:
+      - name: gcs-creds
+        secret:
+          secretName: {{ template "studio.fullname" . }}-gcs
       containers:
       - name: worker
         image: {{ .Values.studioApp.imageName }}
         command:
         - make
         - prodceleryworkers
+        volumeMounts:
+        - name: gcs-creds
+          mountPath: /secrets/gcs
         env:
         - name: DJANGO_SETTINGS_MODULE
           value: {{ .Values.settings }}
@@ -201,6 +211,12 @@ spec:
             secretKeyRef:
               key: secretkey
               name: {{ template "minio.fullname" . }}
+        {{ end }}
+        - name: AWS_BUCKET_NAME
+          value: {{ .Values.bucketName }}
+        {{ if .Values.minio.externalGoogleCloudStorage.gcsKeyJson }}
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /secrets/gcs/gcs_key.json
         {{ end }}
         - name: EMAIL_CREDENTIALS_POSTMARK_API_KEY
           {{ if .Values.studioApp.postmarkApiKey }}

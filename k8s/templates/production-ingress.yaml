@@ -1,0 +1,20 @@
+{{- if .Values.productionIngress -}}
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: {{ template "studio.fullname" . }}-production
+  labels:
+    app: {{ template "studio.fullname" . }}
+    tier: ingress
+    type: production
+
+spec:
+  rules:
+    - host: {{.Release.Name}}.studio.learningequality.org
+      http:
+        paths:
+        - backend:
+            serviceName: {{ template "studio.fullname" . }}-app
+            servicePort: 80
+{{- end }}
