@@ -19,8 +19,9 @@ export default BaseView.extend({
       this.render();
     } else {
       // no studio template, using kolibri component
-      this.vueProps = this.getKolibriProps(this.model, options.preview);
-      this.vueComponent = this.getKolibriComponent();
+      this.preview = options.preview;
+      this.vueProps = this.getKolibriProps(this.model, this.preview);
+      this.vueComponent = this.getKolibriComponent(this.model, this.preview);
       this.render = this.renderKolibriComponent;
 
 
@@ -36,7 +37,7 @@ export default BaseView.extend({
 
       this.on('set:vuePreview', function(vuePreview) {
         const contentNodeModel = this.model;
-        const assessmentPk = this.getAssessmentPk();
+        const assessmentPk = this.getAssessmentPk(this.model, this.preview);
 
         // to listen for changes in currentViewClass, which is dynamicaly created
         vuePreview.$watch('currentViewClass',
@@ -82,6 +83,19 @@ export default BaseView.extend({
       // vue/react need this to be in DOM before it starts rendering
       defer(() => this.render());
     }
+  },
+  getAssessmentPk(model = this.model, preview = this.preview) {
+    // id(pk) could technically belong to any model, but this method is only used when we need
+    // the pk to retrieve perseus JSON from server
+    if(preview && preview.id){
+      return this.preview.id;
+    }
+
+    if(model.has('assessment_items') && model.get('assessment_items').length){
+      return model.get('assessment_items')[0].id;
+    }
+
+    return null
   },
   getStudioTemplate(previewFile, intlData) {
     const imageFormats = ['jpg', 'jpeg', 'png'];
@@ -144,19 +158,6 @@ export default BaseView.extend({
       available: true,
       interactive: false,
     };
-  },
-  getAssessmentPk() {
-    // id(pk) could technically belong to any model, but this method is only used when we need
-    // the pk to retrieve perseus JSON from server
-    if(this.preview && this.preview.id){
-      return this.preview.id;
-    }
-
-    if(this.model.has('assessment_items') && this.model.get('assessment_items').length){
-      return this.model.get('assessment_items')[0].id;
-    }
-
-    return null
   },
   getKolibriComponent(){
     // dupe the global component. Likely to be modified.
