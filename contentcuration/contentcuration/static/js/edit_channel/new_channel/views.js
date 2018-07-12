@@ -173,19 +173,16 @@ var ChannelListPage  = BaseViews.BaseView.extend({
 			view.render(); // Calling separately to make background stay the same if user selects "KEEP EDITING" option
 			if(!this.open) {
 				this.open = true;
-				this.$("#channel_list_wrapper").animate({
-	      			width: $(window).width() - $("#channel_preview_wrapper").width()
-	    		}, 500);
+	   			this.$("#channel_preview_wrapper").animate({ width: 650 }, 500);
+	   			this.$("#channel_list_wrapper").addClass("show-panel");
 			}
 			this.current_view = view;
     		$("#channel_details_panel").html(view.el);
     		channel_list_item && this.set_active_channel(channel_list_item);
 		} else if(this.open) {
 			this.open = false;
-			var self = this;
-			this.$("#channel_list_wrapper").animate({
-      			width: $(window).width()
-    		}, 500);
+   			this.$("#channel_preview_wrapper").animate({ width: 0 }, 500);
+   			this.$("#channel_list_wrapper").removeClass("show-panel");
 		}
 	}
 });
