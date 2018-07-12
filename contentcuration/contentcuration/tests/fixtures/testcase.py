@@ -17,6 +17,7 @@ from django.test.utils import override_settings
 from mixer.backend.django import mixer
 
 from contentcuration import models as cc
+from le_utils.constants import format_presets
 pytestmark = pytest.mark.django_db
 
 
@@ -104,7 +105,6 @@ def fileobj_video(contents=None):
 
 def node(data, parent=None):
     new_node = None
-    print(data['title'])
     # Create topics
     if data['kind_id'] == "topic":
         new_node = cc.ContentNode(kind=topic(), parent=parent, title=data['title'], node_id=data['node_id'])
@@ -117,13 +117,14 @@ def node(data, parent=None):
     elif data['kind_id'] == "video":
         new_node = cc.ContentNode(kind=video(), parent=parent, title=data['title'], node_id=data['node_id'], license=license_wtfpl())
         new_node.save()
-        video_file = fileobj_video().next()
+        video_file = fileobj_video(contents="Video File").next()
         video_file.contentnode = new_node
+        video_file.preset_id = format_presets.VIDEO_HIGH_RES
         video_file.save()
 
     # Create exercises
     elif data['kind_id'] == "exercise":
-        extra_fields = "{{\"mastery_model\":\"{}\",\"randomize\":true}}".format(data['mastery_model'])
+        extra_fields = "{{\"mastery_model\":\"{}\",\"randomize\":true,\"m\":{},\"n\":{}}}".format(data['mastery_model'], data.get('m') or 0, data.get('n') or 0)
         new_node = cc.ContentNode(kind=exercise(), parent=parent, title=data['title'], node_id=data['node_id'], license=license_wtfpl(), extra_fields=extra_fields)
         new_node.save()
         for assessment_item in data['assessment_items']:
@@ -164,6 +165,7 @@ class BaseTestCase(TestCase):
         call_command('loadconstants')
         self.channel = channel()
         self.user = user()
+        self.channel.main_tree.refresh_from_db()
 
 class BaseAPITestCase(APITestCase):
     @classmethod
@@ -173,7 +175,8 @@ class BaseAPITestCase(APITestCase):
         self.channel = channel()
         self.user = user()
         self.client = APIClient()
-        self.client.login(email=self.user.email, password="password")
+        self.client.force_authenticate(self.user)
+        self.channel.main_tree.refresh_from_db()
 
     @classmethod
     def get(self, url):

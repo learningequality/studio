@@ -576,6 +576,9 @@ class License(models.Model):
     def __str__(self):
         return self.license_name
 
+# Used to get diff between nodes
+CONTENT_METADATA_FIELDS = ["title", "description", "license_id", "license_description", "language_id", "copyright_holder",
+                    "extra_fields", "author", "aggregator", "provider", "role_visibility"]
 
 class ContentNode(MPTTModel, models.Model):
     """
@@ -640,6 +643,9 @@ class ContentNode(MPTTModel, models.Model):
 
     role_visibility = models.CharField(max_length=50, choices=roles.choices, default=roles.LEARNER)
     freeze_authoring_data = models.BooleanField(default=False)
+
+    # Dict to collect changes between staging/main trees
+    changed_staging_fields = JSONField(null=True)
 
     objects = TreeManager()
 

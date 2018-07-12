@@ -18,7 +18,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from contentcuration import ricecooker_versions as rc
 from contentcuration.api import get_staged_diff, write_file_to_storage, activate_channel, get_hash
-from contentcuration.models import AssessmentItem, Channel, ContentNode, ContentTag, File, FormatPreset, Language, License, StagedFile, generate_object_storage_name
+from contentcuration.models import AssessmentItem, Channel, ContentNode, ContentTag, File, FormatPreset, Language, License, StagedFile, generate_object_storage_name, CONTENT_METADATA_FIELDS
 from contentcuration.tasks import deletetree_task
 from contentcuration.utils.tracing import trace
 from contentcuration.utils.files import get_file_diff
@@ -424,8 +424,63 @@ def get_status(channel_id):
 @api_view(['GET'])
 @authentication_classes((TokenAuthentication, SessionAuthentication,))
 @permission_classes((IsAuthenticated,))
-def get_full_node_diff(request, channel_id):
+def get_full_node_diff_endpoint(request, channel_id):
     channel = Channel.objects.get(pk=channel_id)
+    return HttpResponse(json.dumps(get_full_node_diff(channel)))
+
+def get_full_node_diff(channel):
+    """ Create dict of differences between main and staging trees
+        Example: {
+            "nodes_modified": [
+                "<node_id (str)>": {
+                    "attributes": {
+                        "title": {
+                            "changed": (bool),
+                            "value": (str)
+                        },
+                        "files": ([{
+                            "filename": (str),
+                            "file_size": (int),
+                            "preset": (str)
+                        }]),
+                        "assessment_items": ([AssessmentItem]),
+                        "tags": ([Tag]),
+                        ...
+                    }
+                },
+                ...
+            ],
+            "nodes_added": [
+                "<node_id (str)>": { "new_parent": (str),  "attributes": {...}},
+                ...
+            ],
+            "nodes_deleted": [
+                "<node_id (str)>": {"old_parent": (str), "attributes": {...}},
+                ...
+            ],
+            "nodes_moved": [
+                "<node_id (str)>": {"old_parent": (str), "new_parent": (str), "attributes": {...}},
+                ...
+            ]
+        }
+    """
+    diff = {}
+    changed_nodes = channel.staging_tree.get_descendants().filter(changed=True)
+
+    # Go through all changed nodes
+    for node in changed_nodes:
+        # Get all changed fields
+        if node.changed_staging_fields:
+            diff.update({
+                node.node_id: node.changed_staging_fields
+            })
+    # Get node moves
+    # Get nodes added
+    # Get nodes deleted
+
+
+
+    return diff
 
 """ CHANNEL CREATE FUNCTIONS """
 
@@ -483,6 +538,7 @@ def convert_data_to_nodes(user, content_data, parent_node):
         parent_node = ContentNode.objects.get(pk=parent_node)
         sort_order = parent_node.children.count() + 1
         existing_node_ids = ContentNode.objects.filter(parent_id=parent_node.pk).values_list('node_id', flat=True)
+        channel = parent_node.get_channel()
         with transaction.atomic():
             for node_data in content_data:
                 # Check if node id is already in the tree to avoid duplicates
@@ -495,6 +551,10 @@ def convert_data_to_nodes(user, content_data, parent_node):
 
                     # Create questions associated with node
                     create_exercises(user, new_node, node_data['questions'])
+
+                    # Set any node differences
+                    set_node_diff(new_node, channel)
+
                     sort_order += 1
 
                     # Track mapping between newly created node and node id
@@ -785,3 +845,123 @@ def create_exercises(user, node, data):
             order += 1
             question_obj.save()
             map_files_to_assessment_item(user, question_obj, question['files'])
+
+def set_node_diff(node, channel):
+    """ Get a dict of changed fields between the main tree and the staging tree, setting changed field accordingly """
+    original_node = channel.main_tree.get_descendants().prefetch_related('files', 'tags', 'assessment_items').filter(node_id=node.node_id).first()
+    if original_node:
+        # Check for metadata field changes
+        node.changed_staging_fields = {
+            field: getattr(node, field)
+            for field in CONTENT_METADATA_FIELDS
+            if getattr(node, field) != getattr(original_node, field)
+        }
+
+        # Check for file changes
+        file_diff = get_file_diff(node, original_node)
+        if file_diff.items():
+            node.changed_staging_fields.update({"files": file_diff})
+
+        # Check for tag changes
+        tag_diff = get_tag_diff(node, original_node)
+        if tag_diff.items():
+            node.changed_staging_fields.update({"tags": tag_diff})
+
+        # Check for assessment_item changes
+        ai_diff = get_assessment_item_diff(node, original_node)
+        if ai_diff.items():
+            node.changed_staging_fields.update({"assessment_items": ai_diff})
+
+        # If there are any changes, set the changed attribute and save
+        if node.changed_staging_fields.items():
+            print "\n\n", node.node_id, node.title, node.changed_staging_fields
+            node.changed = True
+            node.save()
+
+def get_file_diff(node, original_node):
+    file_diff = {}
+
+    # Get new files
+    old_presets = original_node.files.values_list('preset_id', flat=True)
+    new_files = node.files.exclude(preset_id__in=old_presets).values("checksum", "preset_id", "language_id", "source_url", "file_format_id")
+    if new_files:
+        file_diff.update({"new": [dict(item) for item in new_files]})
+
+    # Get modified files
+    changed_files = []
+    file_fields = ["checksum", "preset_id", "language_id", "source_url"] # Fields to check diff
+
+    for f in node.files.filter(preset_id__in=old_presets):
+        original_file = original_node.files.get(preset_id=f.preset_id)
+        file_changes = {
+            field: getattr(f, field)
+            for field in file_fields
+            if getattr(f, field) != getattr(original_file, field)
+        }
+        if file_changes.items():
+            file_changes.update({"preset_id": f.preset_id})
+            changed_files.append(file_changes)
+    if changed_files:
+        file_diff.update({"modified": changed_files})
+
+    # Get deleted files
+    new_presets = node.files.values_list('preset_id', flat=True)
+    deleted_files = original_node.files.exclude(preset_id__in=new_presets).values("checksum", "preset_id", "language_id", "source_url", "file_format_id")
+    if deleted_files:
+        file_diff.update({"deleted": [dict(item) for item in deleted_files]})
+
+    return file_diff
+
+def get_tag_diff(node, original_node):
+    tag_diff = {}
+
+    # Get added tags
+    original_tag_names = original_node.tags.values_list('tag_name', flat=True)
+    new_tags = node.tags.exclude(tag_name__in=original_tag_names).values_list('tag_name', flat=True)
+    if new_tags:
+        tag_diff.update({"new": new_tags})
+
+    # Get deleted tags
+    new_tag_names = node.tags.values_list('tag_name', flat=True)
+    deleted_tags = original_node.tags.exclude(tag_name__in=new_tag_names).values_list('tag_name', flat=True)
+    if deleted_tags:
+        tag_diff.update({"deleted": deleted_tags})
+
+    return tag_diff
+
+def get_assessment_item_diff(node, original_node):
+    # Only check exercises
+    if node.kind_id != content_kinds.EXERCISE:
+        return {}
+
+    ai_diff = {}
+
+    # Get new assessment items
+    old_ais = original_node.assessment_items.values_list('assessment_id', flat=True)
+    new_ais = node.assessment_items.exclude(assessment_id__in=old_ais).values('type', 'question', 'hints', 'answers', 'order', 'raw_data', 'source_url', 'randomize')
+    if new_ais:
+        ai_diff.update({"new": [dict(item) for item in new_ais]})
+
+    # Get modified assessment_items
+    changed_ais = []
+    assessment_fields = ['type', 'question', 'hints', 'answers', 'order', 'raw_data', 'source_url', 'randomize'] # Fields to check diff
+    for ai in node.assessment_items.filter(assessment_id__in=old_ais):
+        original_ai = original_node.assessment_items.get(assessment_id=ai.assessment_id)
+        ai_changes = {
+            field: getattr(ai, field)
+            for field in assessment_fields
+            if getattr(ai, field) != getattr(original_ai, field)
+        }
+        if ai_changes.items():
+            ai_changes.update({"assessment_id": ai.assessment_id})
+            changed_ais.append(ai_changes)
+    if changed_ais:
+        ai_diff.update({"modified": changed_ais})
+
+    # Get deleted assessment_items
+    new_ais = node.assessment_items.values_list('assessment_id', flat=True)
+    deleted_ais = original_node.assessment_items.exclude(preset_id__in=new_ais).values('type', 'question', 'hints', 'answers', 'order', 'raw_data', 'source_url', 'randomize')
+    if deleted_ais:
+        ai_diff.update({"deleted": [dict(item) for item in deleted_ais]})
+
+    return ai_diff

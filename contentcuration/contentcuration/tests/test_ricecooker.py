@@ -5,6 +5,8 @@ from contentcuration.tests.fixtures.testcase import BaseAPITestCase, node, fileo
 from django.core.urlresolvers import reverse_lazy
 
 from contentcuration import models as cc
+from contentcuration.views.internal import get_full_node_diff, set_node_diff
+from le_utils.constants import format_presets
 
 pytestmark = pytest.mark.django_db
 
@@ -49,7 +51,9 @@ STAGED_TREE = {
                     "node_id": "00000000000000000000000000000005",
                     "kind_id": "exercise",
                     "title": "Exercise 1",
-                    "mastery_model": "num_correct_in_a_row_5",
+                    "mastery_model": "m_of_n",
+                    "m": 3,
+                    "n": 5,
                     "assessment_items": [
                         {
                             "type": "single_selection",
@@ -112,13 +116,13 @@ class NodeDiffTestCase(BaseAPITestCase):
         super(NodeDiffTestCase, self).setUpClass()
         self.channel.staging_tree = node(STAGED_TREE)
         self.channel.save()
-        self.channel.staging_tree.get_descendants().update(changed=True)
 
         # Update file
         updated_file_node = self.channel.staging_tree.get_descendants().filter(node_id='00000000000000000000000000000006').first()
         updated_file_node.files.first().delete()
         new_video_file = fileobj_video(contents="Updated").next()
         new_video_file.contentnode = updated_file_node
+        new_video_file.preset_id = format_presets.VIDEO_HIGH_RES
         new_video_file.save()
 
         # Delete file
@@ -129,39 +133,57 @@ class NodeDiffTestCase(BaseAPITestCase):
         updated_file_node = self.channel.staging_tree.get_descendants().filter(node_id='00000000000000000000000000000007').first()
         new_video_file = fileobj_video().next()
         new_video_file.contentnode = updated_file_node
+        new_video_file.preset_id = format_presets.VIDEO_LOW_RES
         new_video_file.save()
+
+        # Set all changed nodes as changed accordingly
+        for tree_node in self.channel.staging_tree.get_descendants().prefetch_related('files', 'tags', 'assessment_items'):
+            set_node_diff(tree_node, self.channel)
+
+        self.diff = get_full_node_diff(self.channel)
 
     def test_detailed_diff_endpoint(self):
         response = self.get(reverse_lazy("get_full_node_diff", kwargs={"channel_id": self.channel.pk}))
         self.assertEqual(response.status_code, 200)
 
-    # def test_diff_unchanged(cls):
-    #     # node 00000000000000000000000000000002 should be unchanged
-    #     cls.assertEqual(True, True)
+    def test_diff_unchanged(self):
+        # node 00000000000000000000000000000002 should be unchanged
+        node = self.diff.get('00000000000000000000000000000002')
+        self.assertEqual(node, None)
 
-    # def test_diff_metadata_changed(cls):
-    #     # node 00000000000000000000000000000001 should be changed
-    #     cls.assertEqual(True, True)
+    def test_diff_metadata_changed(self):
+        # node 00000000000000000000000000000001 should be changed
+        node = self.diff.get('00000000000000000000000000000001')
+        self.assertEqual(node['title'], "Topic A changed")
+        self.assertEqual(node.get('description'), None)
 
-    # def test_diff_file_changed(self):
-    #     # node 00000000000000000000000000000006 should have an updated video file
-    #     self.assertEqual(True, True)
+    def test_diff_file_changed(self):
+        # node 00000000000000000000000000000006 should have an updated video file
+        node = self.diff.get('00000000000000000000000000000006')
+        self.assertEqual(bool(node['files']['modified'][0].get('checksum')), True)
+        self.assertEqual(node['files'].get('new'), None)
+        self.assertEqual(node['files'].get('deleted'), None)
 
-    # def test_diff_file_added(self):
-    #     # node 00000000000000000000000000000007 should have an added file
-    #     self.assertEqual(True, True)
+    def test_diff_file_added(self):
+        # node 00000000000000000000000000000007 should have an added file
+        node = self.diff.get('00000000000000000000000000000007')
+        self.assertEqual(bool(node['files']['new']), True)
 
-    # def test_diff_file_removed(self):
-    #     # node 00000000000000000000000000000003 should have a removed file
-    #     self.assertEqual(True, True)
+    def test_diff_file_removed(self):
+        # node 00000000000000000000000000000003 should have a removed file
+        node = self.diff.get('00000000000000000000000000000003')
+        self.assertEqual(bool(node['files']['deleted']), True)
 
-    # def test_diff_exercise_mastery_changed(self):
-    #     # node 00000000000000000000000000000005 mastery model should be changed
-    #     self.assertEqual(True, True)
+    def test_diff_exercise_mastery_changed(self):
+        # node 00000000000000000000000000000005 mastery model should be changed
+        node = self.diff.get('00000000000000000000000000000005')
+        self.assertEqual(bool(node.get('extra_fields')), True)
 
-    # def test_diff_exercise_question_added(self):
-    #     # assessment 0000000000000000000000000000000d should be added
-    #     self.assertEqual(True, True)
+    def test_diff_exercise_question_added(self):
+        # assessment 0000000000000000000000000000000d should be added
+        exercise = self.diff.get('00000000000000000000000000000005')
+
+        self.assertEqual(True, True)
 
     # def test_diff_exercise_question_changed(self):
     #     # assessment 0000000000000000000000000000000a question should be changed
