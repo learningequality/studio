@@ -118,10 +118,21 @@ def channel_page(request, channel, allow_edit=False, staging=False):
 @permission_classes((IsAuthenticated,))
 def channel_list(request):
     languages = get_or_set_cached_constants(Language, LanguageSerializer)
+    fileformats = get_or_set_cached_constants(FileFormat, FileFormatSerializer)
+    licenses = get_or_set_cached_constants(License, LicenseSerializer)
+    formatpresets = get_or_set_cached_constants(FormatPreset, FormatPresetSerializer)
+    contentkinds = get_or_set_cached_constants(ContentKind, ContentKindSerializer)
+    languages = get_or_set_cached_constants(Language, LanguageSerializer)
+
 
     return render(request, 'channel_list.html', {"channel_name": False,
                                                  "current_user": JSONRenderer().render(UserChannelListSerializer(request.user).data),
                                                  "user_preferences": json.dumps(request.user.content_defaults),
+                                                 "langs_list": languages,
+                                                 "fileformat_list": fileformats,
+                                                 "license_list": licenses,
+                                                 "fpreset_list": formatpresets,
+                                                 "ckinds_list": contentkinds,
                                                  "langs_list": languages,
                                                  "messages": get_messages(),
                                                 })
@@ -261,9 +272,10 @@ def publish_channel(request):
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
 def accessible_channels(request, channel_id):
+    # Used for import modal
     accessible_list = ContentNode.objects.filter(
         pk__in=Channel.objects.select_related('main_tree')
-        .filter(Q(deleted=False) & (Q(editors=request.user) | Q(viewers=request.user)))
+        .filter(Q(deleted=False) & (Q(public=True) | Q(editors=request.user) | Q(viewers=request.user)))
         .exclude(pk=channel_id).values_list('main_tree_id', flat=True)
     )
 
@@ -279,7 +291,7 @@ def accept_channel_invite(request):
     invitation = Invitation.objects.get(pk=data['invitation_id'])
     channel = invitation.channel
     channel.is_view_only = invitation.share_mode == VIEW_ACCESS
-    channel_serializer = ChannelListSerializer(channel)
+    channel_serializer = AltChannelListSerializer(channel)
     add_editor_to_channel(invitation)
 
     return HttpResponse(JSONRenderer().render(channel_serializer.data))
@@ -302,6 +314,8 @@ def activate_channel_endpoint(request):
 def get_staged_diff_endpoint(request):
     if request.method == 'POST':
         return HttpResponse(json.dumps(get_staged_diff(json.loads(request.body)['channel_id'])))
+
+    return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
 
 
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))

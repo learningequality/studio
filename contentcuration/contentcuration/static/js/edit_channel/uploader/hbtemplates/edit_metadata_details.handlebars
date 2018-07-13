@@ -16,22 +16,38 @@
 		<p class="wordwrap">{{language}}</p>
 		<br/>
 	{{#if is_exercise}}
-		<h4>{{formatMessage (intlGet 'messages.mastery_criteria')}} <i class="material-icons tab_item" id="mastery_about">info</i></h4>
+		<h4>{{formatMessage (intlGet 'messages.mastery_criteria')}} <i class="material-icons tab_item help_icon" id="mastery_about">info</i></h4>
 		<p class="detail_field" id="mastery_detail_field">{{#if mastery}}{{{translate mastery}}}{{else}}<span class="default_detail_field">---</span>{{/if}}</p>
 	{{/if}}
 	{{#if is_file}}
 		<hr/>
 		{{#if source_channel}}<p class="uploader-copied-warning">{{formatMessage (intlGet 'messages.imported_from')}} <a href="/channels/{{source_channel.id}}/view{{#if node}}/{{node.original_source_node_id}}{{/if}}" target="_blank" title="{{source_channel.name}}" class="original_channel_link"><b>{{source_channel.name}}</b></a></p>{{/if}}
 		<div class="row">
-			<div class="col-xs-3  text-center">
-				<h4>{{formatMessage (intlGet 'messages.author')}}</h4>
+			<div class="col-xs-4  text-center">
+				<h4>
+					{{formatMessage (intlGet 'messages.author')}}
+					<i class="material-icons help_icon" data-container="body" data-toggle="tooltip" data-placement="top" title="{{formatMessage (intlGet 'messages.author_description')}}">help_outline</i>
+				</h4>
 				<p class="detail_field wordwrap text-center">{{#if author}}{{author}}{{else}}<span class="default_detail_field">---</span>{{/if}}</p>
 			</div>
-			<div class="col-xs-5  text-center">
-				<h4>{{formatMessage (intlGet 'messages.license')}}</h4>
+			<div class="col-xs-4  text-center">
+				<h4>
+					{{formatMessage (intlGet 'messages.provider')}}
+					<i class="material-icons help_icon" data-container="body" data-toggle="tooltip" data-placement="top" title="{{formatMessage (intlGet 'messages.provider_description')}}">help_outline</i>
+				</h4>
+				<p class="detail_field wordwrap text-center">{{#if provider}}{{provider}}{{else}}<span class="default_detail_field">---</span>{{/if}}</p>
+			</div>
+			<div class="col-xs-4  text-center">
+				<h4>
+					{{formatMessage (intlGet 'messages.aggregator')}}
+					<i class="material-icons help_icon" data-container="body" data-toggle="tooltip" data-placement="top" title="{{formatMessage (intlGet 'messages.aggregator_description')}}">help_outline</i>
+				</h4>
+				<p class="detail_field wordwrap text-center">{{#if aggregator}}{{aggregator}}{{else}}<span class="default_detail_field">---</span>{{/if}}</p>
+			</div>
+			<div class="col-xs-4  text-center">
+				<h4>{{formatMessage (intlGet 'messages.license')}} <i class="material-icons tab_item help_icon" id="license_about">info</i></h4>
 				<p class="detail_field">
 					<span id="license_detail_field">{{#if license}}{{{translate license}}}{{else}}<span class="default_detail_field">---</span>{{/if}}</span>
-					<i class="material-icons tab_item" id="license_about">info</i>
 				</p>
 				<p id="custom_license_description" class="license_description_text">{{license_description}}</p>
 			</div>
@@ -43,9 +59,8 @@
 		<hr/>
 		<br/>
 		<br/>
-		<h4>{{formatMessage (intlGet 'messages.role_visibility')}}</h4>
+		<h4>{{formatMessage (intlGet 'messages.role_visibility')}} <i class="material-icons tab_item help_icon" id="visibility_about">info</i></h4>
 		<span id="role_detail_field">{{#if role}}{{{translate role}}}{{else}}<span class="default_detail_field">---</span>{{/if}}</span>
-		<i class="material-icons tab_item" id="visibility_about">info</i>
 		<br/>
 		<br/>
 	{{/if}}

@@ -5,16 +5,31 @@
 
 @channel-clipboard-btn-color: #F2F2F2;
 @channel-btn-border-color:#7A7A7A;
+@details-bg-color: #EFE6EC;
 
 .default-item{
 	color:gray;
 	padding:5px 10px;
 }
 
-#channel_area_wrapper{
+#channel_area_wrapper {
+	display: -webkit-box;
+	display: -webkit-flex;
+	display: -ms-flexbox;
+	display: flex;
+	flex-wrap: wrap;
+	width: 200vw;
+}
+
+#channel_list_wrapper{
 	padding:10px;
 	overflow-y:auto;
 	height:90vh;
+	width: 100vw;
+	transition: width 500ms;
+	&.show-panel {
+		width: calc(~"100vw - 650px");
+	}
 	#manage-channel-nav.nav-tabs{
 		border-bottom: none;
 		margin-bottom: 10px;
@@ -98,6 +113,16 @@
 				margin: 10px 0px 10px 50px;
 				color: @annotation-gray;
 			}
+			.is_selected {
+				display: none;
+				padding-top: 9%;
+				i {
+					font-size: 45pt;
+    				color: @topnav-bg-color;
+    				font-weight: bold;
+				}
+			}
+
 			.channel-container-wrapper {
 				background-color: @panel-container-color;
 				width: @channel-container-width;
@@ -257,12 +282,70 @@
 				    color: gray;
 				}
 			}
-			.highlight{
-				border:4px solid @blue-500;
-				.channel_name{
-					color:@blue-500 !important;
+			.active_channel{
+				.is_selected {
+					display: block;
+				}
+				.channel-container-wrapper {
+					// background-color: beige;
+					border-color: @topnav-bg-color;
 				}
 			}
+			.highlight {
+				.is_selected i{
+					color: @blue-500 !important;
+				}
+				.channel-container-wrapper {
+					border:4px solid @blue-500 !important;
+					.channel_name{
+						color:@blue-500 !important;
+					}
+				}
+
+			}
+		}
+	}
+}
+
+@channel-preview-width: 650px;
+#channel_preview_wrapper {
+	display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    width: 0px;
+    margin-left: 2px;
+    height: 90vh;
+    background-color: white;
+    background-size:     cover;
+    background-repeat:   no-repeat;
+    background-position: center center;
+    position: absolute;
+    right: 0em;
+	#channel_details_overlay {
+    	display: flex;
+    	height: inherit;
+    	flex-direction: column;
+    	background-color: rgba(240,240,240, 0.8);
+    }
+
+    #close_wrapper {
+    	margin: 12px 0px;
+    	#close_details { margin-right: 20px; }
+    }
+
+	#channel_details_panel {
+		margin: 0px auto;
+		float: none;
+		display: table-cell;
+		vertical-align: top;
+		height: 83vh;
+		width: @channel-preview-width - 40px;
+		.default-item {
+			padding-top: 45%;
+		    font-size: 15pt;
+		    font-weight: bold;
+		    text-align: center;
+		    color: @gray-300;
 		}
 	}
 }

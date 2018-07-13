@@ -17,7 +17,7 @@ var MESSAGES = {
     "getting_prereqs": "Getting valid prerequisite options...",
     "name": "Name",
     "loading_prereqs": "Getting prerequisites...",
-    "prereq_text": "Prerequisite content items cover any immediate prior knowledge a learner should have before engaging with this content.",
+    "prerequisite_text": "Setting prerequisites will suggest relevant background or foundational content items that learners may want to visit before viewing the current concept. For learners on Kolibri, this resource will appear alongside the current content item.",
     "prereq_limit": "Limit prerequisites for a more guided learning experience (recommended: {count, plural,\n =1 {# item}\n other {# items}})"
 }
 

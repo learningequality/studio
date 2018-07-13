@@ -4,9 +4,6 @@ var Models = require("./models");
 var analytics = require("utils/analytics");
 
 //var UndoManager = require("backbone-undo");
-function get_author(){
-	return window.preferences.author || "";
-}
 
 var TABINDEX = 1;
 
@@ -571,6 +568,10 @@ var BaseListView = BaseView.extend({
 		_.bindAll(this, 'load_content', 'close', 'handle_if_empty', 'check_all', 'get_selected',
 			'set_root_model', 'update_views', 'cancel_actions');
 	},
+	is_segment: function() {
+		// Used for clipboard channel segmenting
+		return false;
+	},
 	set_root_model:function(model){
 		this.model.set(model.toJSON());
 	},
@@ -869,7 +870,6 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 		this.collection.create_new_node({
             "kind":"topic",
             "title": (this.model.get('parent'))? this.model.get('title') + " " + this.get_translation("topic") : this.get_translation("topic"),
-            "author": get_author(),
         }).then(function(new_topic){
         	var edit_collection = new Models.ContentNodeCollection([new_topic]);
 	        $("#main-content-area").append("<div id='dialog'></div>");
@@ -925,8 +925,10 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 		this.collection.create_new_node({
             "kind":"exercise",
             "title": (this.model.get('parent'))? this.model.get('title') + " " + this.get_translation("exercise_title") : this.get_translation("exercise_title"), // Avoid having exercises prefilled with 'email clipboard'
-            "author": get_author(),
-            "copyright_holder": (window.preferences.copyright_holder === null) ? get_author() : window.preferences.copyright_holder,
+            "author": window.preferences.author || "",
+            "aggregator": window.preferences.aggregator || "",
+            "provider": window.preferences.provider || "",
+            "copyright_holder": window.preferences.copyright_holder || "",
             "license_name": window.preferences.license,
             "license_description": window.preferences.license_description || ""
         }).then(function(new_exercise){
@@ -988,7 +990,7 @@ var BaseListEditableItemView = BaseListItemView.extend({
 		var self = this;
 		return new Promise(function(resolve, reject){
 			self.originalData = data;
-			if(self.model.isNew()){
+			if(self.model.isNew() && self.containing_list_view){
 				self.containing_list_view.create_new_item(data).then(function(newView){
 					resolve(newView.model);
 				}).catch(function(error){
@@ -1230,6 +1232,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 		});
 	},
 	make_copy: function(message){
+		// Makes inline copy
 		message=(message!=null)? message: this.get_translation("making_copy");
 		var copyCollection = new Models.ContentNodeCollection();
 		copyCollection.add(this.model);
@@ -1260,7 +1263,6 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
             "kind":"topic",
             "title": (this.model.get('parent'))? this.model.get('title') + " " + this.get_translation("topic_title") : this.get_translation("topic_title"),
             "sort_order" : this.model.get("metadata").max_sort_order,
-            "author": get_author(),
         }).then(function(new_topic){
         	var edit_collection = new Models.ContentNodeCollection([new_topic]);
 	        $("#main-content-area").append("<div id='dialog'></div>");

@@ -35,6 +35,12 @@ var messages = {
   "document": "Document",
   "exercise": "Exercise",
   "html5": "HTML5 App",
+  "topic_plural": "Topics",
+  "video_plural": "Videos",
+  "audio_plural": "Audio",
+  "document_plural": "Documents",
+  "exercise_plural": "Exercises",
+  "html5_plural": "HTML5 Apps",
   "do_all": "100% Correct",
   "num_correct_in_a_row_10": "10 in a row",
   "num_correct_in_a_row_2": "2 in a row",
@@ -289,17 +295,53 @@ var messages = {
   "Sharp": "Sharp",
   "coach": "Coaches",
   "learner": "Anyone",
-  "role_visibility": "Visible to"
+  "role_visibility": "Visible to",
+  "more": "... More",
+  "less": " Less",
+  "no_text_provided": "No text provided"
 };
-
 
 var translate = i18n.createTranslator(namespace, messages);
 
 function format_count(text, count){
-  if(Number(count) === 1){
-    return count + " " + text;
-  }
-  return count + " " + text + "s";
+  var template = require("edit_channel/utils/hbtemplates/count.handlebars");
+      var div = document.createElement("DIV");
+      div.id = "intl_wrapper";
+      var language = window.languages && window.languages.find(function(l) { return l.id && l.id.toLowerCase() === window.languageCode; });
+      $(div).html(template({
+        count: count,
+        text: text
+      }, {
+        data: {
+          intl: {
+            locales: [(language && language.id) || "en-US"],
+            messages: {"count": "{count, plural,\n =0 {text}\n =1 {# {text}}\n other {# {text}s}}"}
+          }
+        }
+      }));
+      var contents = div.innerHTML;
+      div.remove();
+      return contents;
+}
+
+function format_number(number){
+  var template = require("edit_channel/utils/hbtemplates/number.handlebars");
+      var div = document.createElement("DIV");
+      div.id = "intl_wrapper";
+      var language = window.languages && window.languages.find(function(l) { return l.id && l.id.toLowerCase() === window.languageCode; });
+      $(div).html(template({
+        number: number
+      }, {
+        data: {
+          intl: {
+            locales: [(language && language.id) || "en-US"],
+            messages: {}
+          }
+        }
+      }));
+      var contents = div.innerHTML;
+      div.remove();
+      return contents;
 }
 
 function get_translation(messages, message_id, data, data2, data3, data4){
@@ -339,5 +381,6 @@ module.exports = {
   format_count: format_count,
   translate: translate,
   unescape: unescape,
-  get_translation: get_translation
+  get_translation: get_translation,
+  format_number: format_number
 }

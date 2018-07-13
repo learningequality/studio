@@ -1,0 +1,229 @@
+---
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: {{ template "studio.fullname" . }}
+spec:
+  replicas: {{ .Values.studioApp.replicas }}
+  template:
+    metadata:
+      annotations:
+        checksum: {{ include (print $.Template.BasePath "/studio-secrets.yaml") . | sha256sum }}
+      labels:
+        app: {{ template "studio.fullname" . }}
+    spec:
+      containers:
+      - name: app
+        image: {{ .Values.studioApp.imageName }}
+        env:
+        - name: STATICFILES_DIR
+          value: /app/contentworkshop_static/
+        - name: DJANGO_SETTINGS_MODULE
+          value: {{ .Values.settings }}
+        - name: DJANGO_LOG_FILE
+          value: /var/log/django.log
+        - name: RUN_MODE
+          value: k8s
+        - name: MPLBACKEND
+          value: PS
+        - name: SEND_USER_ACTIVATION_NOTIFICATION_EMAIL
+          value: ""
+        - name: DATA_DB_HOST
+          value: {{ .Values.postgresql.externalCloudSQL.proxyHostName | default (include "studio.fullname" .) }}
+        - name: DATA_DB_NAME
+          value: {{ .Values.postgresql.postgresDatabase }}
+        - name: DATA_DB_PORT
+          value: "5432"
+        - name: DATA_DB_USER
+          value: {{ .Values.postgresql.postgresUser }}
+        - name: DATA_DB_PASS
+          valueFrom:
+            secretKeyRef:
+              key: postgres-password
+              name: {{ template "studio.fullname" . }}
+        - name: CELERY_TIMEZONE
+          value: America/Los_Angeles
+        - name: CELERY_REDIS_DB
+          value: "0"
+        - name: CELERY_BROKER_ENDPOINT
+          value: {{ template "redis.fullname" . }}-master
+        - name: CELERY_RESULT_BACKEND_ENDPOINT
+          value: {{ template "redis.fullname" . }}-master
+        - name: CELERY_REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: redis-password
+              name: {{ template "studio.fullname" . }}
+        {{ if .Values.minio.externalGoogleCloudStorage.enabled }}
+        - name: AWS_S3_ENDPOINT_URL
+          value: https://storage.googleapis.com
+        {{ else }}
+        - name: AWS_S3_ENDPOINT_URL
+          value: {{ template "minio.url" . }}
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              key: accesskey
+              name: {{ template "minio.fullname" . }}
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              key: secretkey
+              name: {{ template "minio.fullname" . }}
+        {{ end }}
+        - name: AWS_BUCKET_NAME
+          value: {{ .Values.bucketName }}
+        {{ if .Values.minio.externalGoogleCloudStorage.gcsKeyJson }}
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /secrets/gcs/gcs_key.json
+        {{ end }}
+        - name: EMAIL_CREDENTIALS_POSTMARK_API_KEY
+          {{ if .Values.studioApp.postmarkApiKey }}
+          valueFrom:
+            secretKeyRef:
+              key: postmark-api-key
+              name: {{ template "studio.fullname" . }}
+          {{ else }}
+          value: ""
+          {{ end }}
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: {{ .Values.studioApp.appPort }}
+          initialDelaySeconds: 300
+          periodSeconds: 5
+        ports:
+        - containerPort: {{ .Values.studioApp.appPort }}
+        readinessProbe:
+          httpGet:
+            path: /
+            port: {{ .Values.studioNginx.port }}
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        volumeMounts:
+        - mountPath: /app/contentworkshop_static/
+          name: staticfiles
+        - name: gcs-creds
+          mountPath: /secrets/gcs
+        resources:
+          requests:
+            cpu: 1000m
+      - name: nginx-proxy
+        image: {{ .Values.studioNginx.imageName }}
+        env:
+        {{ if .Values.minio.externalGoogleCloudStorage.enabled }}
+        - name: AWS_S3_ENDPOINT_URL
+          value: https://storage.googleapis.com
+        {{ else }}
+        - name: AWS_S3_ENDPOINT_URL
+          value: {{ template "minio.url" . }}
+        {{ end }}
+        - name: AWS_BUCKET_NAME
+          value: {{ .Values.bucketName }}
+        ports:
+        - containerPort: {{ .Values.studioNginx.port }}
+        volumeMounts:
+        - mountPath: /app/contentworkshop_static/
+          name: staticfiles
+      volumes:
+        - name: gcs-creds
+          secret:
+            secretName: {{ template "studio.fullname" . }}-gcs
+        - emptyDir: {}
+          name: staticfiles
+---
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: {{template "studio.fullname" . }}-workers
+spec:
+  replicas: {{ .Values.studioWorkers.replicas }}
+  template:
+    metadata:
+      labels:
+        app: {{template "studio.fullname" . }}-workers
+    spec:
+      volumes:
+      - name: gcs-creds
+        secret:
+          secretName: {{ template "studio.fullname" . }}-gcs
+      containers:
+      - name: worker
+        image: {{ .Values.studioApp.imageName }}
+        command:
+        - make
+        - prodceleryworkers
+        volumeMounts:
+        - name: gcs-creds
+          mountPath: /secrets/gcs
+        env:
+        - name: DJANGO_SETTINGS_MODULE
+          value: {{ .Values.settings }}
+        - name: DJANGO_LOG_FILE
+          value: /var/log/django.log
+        - name: MPLBACKEND
+          value: PS
+        - name: DATA_DB_HOST
+          value: {{ .Values.postgresql.externalCloudSQL.proxyHostName | default (include "postgresql.fullname" .) }}
+        - name: DATA_DB_NAME
+          valueFrom:
+            secretKeyRef:
+              key: postgres-database
+              name: {{ template "studio.fullname" . }}
+        - name: DATA_DB_PORT
+          value: "5432"
+        - name: DATA_DB_USER
+          valueFrom:
+            secretKeyRef:
+              key: postgres-user
+              name: {{ template "studio.fullname" . }}
+        - name: DATA_DB_PASS
+          valueFrom:
+            secretKeyRef:
+              key: postgres-password
+              name: {{ template "studio.fullname" . }}
+        - name: CELERY_TIMEZONE
+          value: America/Los_Angeles
+        - name: CELERY_REDIS_DB
+          value: "0"
+        - name: CELERY_BROKER_ENDPOINT
+          value: {{ template "redis.fullname" . }}-master
+        - name: CELERY_RESULT_BACKEND_ENDPOINT
+          value: {{ template "redis.fullname" . }}-master
+        - name: CELERY_REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: redis-password
+              name: {{ template "studio.fullname" . }}
+        {{ if .Values.minio.externalGoogleCloudStorage.enabled }}
+        - name: AWS_S3_ENDPOINT_URL
+          value: https://storage.googleapis.com
+        {{ else }}
+        - name: AWS_S3_ENDPOINT_URL
+          value: {{ template "minio.url" . }}
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              key: accesskey
+              name: {{ template "minio.fullname" . }}
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              key: secretkey
+              name: {{ template "minio.fullname" . }}
+        {{ end }}
+        - name: AWS_BUCKET_NAME
+          value: {{ .Values.bucketName }}
+        {{ if .Values.minio.externalGoogleCloudStorage.gcsKeyJson }}
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /secrets/gcs/gcs_key.json
+        {{ end }}
+        - name: EMAIL_CREDENTIALS_POSTMARK_API_KEY
+          {{ if .Values.studioApp.postmarkApiKey }}
+          valueFrom:
+            secretKeyRef:
+              key: postmark-api-key
+              name: {{ template "studio.fullname" . }}
+          {{ else }}
+          value: ""
+          {{ end }}

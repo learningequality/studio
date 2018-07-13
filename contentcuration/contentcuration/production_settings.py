@@ -13,3 +13,6 @@ EMAIL_BACKEND = 'postmark.django_backend.EmailBackend'
 POSTMARK_API_KEY = os.getenv("EMAIL_CREDENTIALS_POSTMARK_API_KEY")
 
 LANGUAGE_CODE = os.getenv("LANGUAGE_CODE") or "en"
+
+# Google drive settings
+GOOGLE_STORAGE_REQUEST_SHEET = "1uC1nsJPx_5g6pQT6ay0qciUVya0zUFJ8wIwbsTEh60Y"
