@@ -23,18 +23,10 @@ export default BaseView.extend({
   template: require("../hbtemplates/preview_manager.handlebars"),
   initialize() {
     this.previewView = null;
-    this.filePreviews = null;
-    this.exercisePreviews = null;
-    this.currentPreview = null;
-
-    const resetPreviews = () => {
-      // splitting for a few reasons, chiefly different translation methods
-      this.filePreviews = this.getFilePreviews();
-      this.exercisePreviews = this.getExercisePreviews();
-
-      // pick the whatever's at the top of the list
-      this.currentPreview = this.filePreviews.concat(this.exercisePreviews)[0];
-    }
+    // splitting for a few reasons, chiefly different translation methods
+    this.filePreviews = this.getFilePreviews();
+    this.exercisePreviews = this.getExercisePreviews();
+    this.currentPreview = this.getDefaultPreview();
 
     this.on('update:preview', preview => {
       this.currentPreview = preview;
@@ -43,13 +35,16 @@ export default BaseView.extend({
 
 
     this.listenTo(this.model, 'change:files', () => {
-      resetPreviews();
+      this.filePreviews = this.getFilePreviews();
+      this.currentPreview = this.getDefaultPreview();
       this.render();
     });
 
-    // TODO updates _a lot_ during new question creation
-    this.listenTo(this.model, 'change:assessment_items', () => {
-      resetPreviews();
+    // custom event, includes array of assessment item models
+    this.listenTo(this.model, 'sync:read:assessments', models => {
+      // splitting for a few reasons, chiefly different translation methods
+      this.exercisePreviews = this.getExercisePreviews(models.map(model =>  model.toJSON()));
+      this.currentPreview = this.getDefaultPreview();
       this.render();
     });
 
@@ -64,8 +59,6 @@ export default BaseView.extend({
       // unbind all `.on`s
       this.off();
     }));
-
-    resetPreviews();
 
     this.render();
   },
@@ -85,16 +78,21 @@ export default BaseView.extend({
 
     return [];
   },
-  getExercisePreviews() {
-    if(this.model.has('assessment_items')){
-      return this.model.get('assessment_items').filter(
+  getExercisePreviews(exercises = this.model.get('assessment_items')) {
+    if(exercises){
+      return exercises.filter(
         // don't include those that haven't been saved.
         // Will break previewer, since there's no perseus JSON
-        item => !item.isNew
+        item => {
+          return !item.deleted;
+        }
       );
     }
 
     return [];
+  },
+  getDefaultPreview(){
+    return this.filePreviews.concat(this.exercisePreviews)[0];
   },
   events: {
     'change .preview-dropdown': 'selectPreview',
@@ -137,9 +135,9 @@ export default BaseView.extend({
     const selectedIndex = selected.getAttribute('value');
     let preview = null;
 
-    if(contains(this.$filePreviews, selected)) {
+    if(this.$filePreviews && contains(this.$filePreviews, selected)) {
       preview = this.filePreviews[selectedIndex];
-    } else if (contains(this.$exercisePreviews, selected)){
+    } else if (this.$exercisePreviews && contains(this.$exercisePreviews, selected)){
       preview = this.exercisePreviews[selectedIndex];
     }
     this.trigger('update:preview', preview);
