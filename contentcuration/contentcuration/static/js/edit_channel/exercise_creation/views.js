@@ -412,7 +412,7 @@ var EditorView = BaseViews.BaseView.extend({
             selector: this.cid,
             disableDragAndDrop: true,
             callbacks: {
-                onChange: _.debounce(this.save, 1000),
+                onChange: _.debounce(this.save, 1),
                 onPaste: this.paste_content,
                 onCustomImageUpload: this.add_image,
                 onAddFormula: this.add_formula,
