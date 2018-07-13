@@ -129,7 +129,11 @@ var SettingsView = BaseViews.BaseListEditableItemView.extend({
         return el.val()!=0 && window.licenses.get(el.val()).get("is_custom");
     },
     submit_changes:function(){
-        var content_defaults = this.model.get("content_defaults");
+        // Set preferences so that it's a json no matter what
+        var preferences = this.model.get("content_defaults");
+        var content_defaults = (typeof preferences === "string")? JSON.parse(preferences) : preferences;
+        content_defaults = (typeof content_defaults === "string")? JSON.parse(content_defaults) : content_defaults;
+
         content_defaults.license = this.get_license_name();
         content_defaults.author = $("#author_field").val().trim();
         content_defaults.aggregator = $("#aggregator_field").val().trim();
