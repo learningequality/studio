@@ -62,6 +62,11 @@ def file_create(request):
     presets = FormatPreset.objects.filter(allowed_formats__extension__contains=ext[1:].lower())
     kind = presets.first().kind
     preferences = json.loads(request.META.get('HTTP_PREFERENCES'))
+
+    # sometimes we get a string no matter what. Try to parse it again
+    if isinstance(preferences, basestring):
+        preferences = json.loads(preferences)
+
     license = License.objects.filter(license_name=preferences.get('license')).first()  # Use filter/first in case preference hasn't been set
     license_id = license.pk if license else None
     new_node = ContentNode(

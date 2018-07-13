@@ -364,8 +364,8 @@ def duplicate_nodes(request):
         nodes_being_copied = []
         for node_data in nodes:
             nodes_being_copied.append(ContentNode.objects.get(pk=node_data['id']))
-        record_node_duplication_stats(nodes_being_copied, ContentNode.objects.get(pk=target_parent.pk),
-                                      Channel.objects.get(pk=channel_id))
+        # record_node_duplication_stats(nodes_being_copied, ContentNode.objects.get(pk=target_parent.pk),
+        #                               Channel.objects.get(pk=channel_id))
 
         with transaction.atomic():
             with ContentNode.objects.disable_mptt_updates():
@@ -398,8 +398,8 @@ def duplicate_node_inline(request):
         channel = target_parent.get_channel()
         request.user.can_edit(channel and channel.pk)
 
-        record_node_duplication_stats([node], ContentNode.objects.get(pk=target_parent.pk),
-                                      Channel.objects.get(pk=channel_id))
+        # record_node_duplication_stats([node], ContentNode.objects.get(pk=target_parent.pk),
+        #                               Channel.objects.get(pk=channel_id))
 
         new_node = None
         with transaction.atomic():
