@@ -272,9 +272,10 @@ def publish_channel(request):
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
 def accessible_channels(request, channel_id):
+    # Used for import modal
     accessible_list = ContentNode.objects.filter(
         pk__in=Channel.objects.select_related('main_tree')
-        .filter(Q(deleted=False) & (Q(editors=request.user) | Q(viewers=request.user)))
+        .filter(Q(deleted=False) & (Q(public=True) | Q(editors=request.user) | Q(viewers=request.user)))
         .exclude(pk=channel_id).values_list('main_tree_id', flat=True)
     )
 
@@ -290,7 +291,7 @@ def accept_channel_invite(request):
     invitation = Invitation.objects.get(pk=data['invitation_id'])
     channel = invitation.channel
     channel.is_view_only = invitation.share_mode == VIEW_ACCESS
-    channel_serializer = ChannelListSerializer(channel)
+    channel_serializer = AltChannelListSerializer(channel)
     add_editor_to_channel(invitation)
 
     return HttpResponse(JSONRenderer().render(channel_serializer.data))
