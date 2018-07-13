@@ -43,9 +43,9 @@ body {
 		vertical-align:middle;
 		font-size:12pt;
 	}
-	.dropdown-toggle { margin: 0px 5px; }
-	.open>a, .open>a:hover, .open>a:focus {
-		background-color: @topnav-active-color;
+	.dropdown-toggle { margin-left: 5px; }
+	.dropdown-toggle:focus, .dropdown-toggle:hover, .dropdown-toggle[aria-expanded="true"]{
+		background-color: @topnav-active-color !important;
 	}
 	.navbar-header {
 		margin: 0;

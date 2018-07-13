@@ -363,6 +363,8 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   },
   save_and_keep_open:function(){
     this.editor_view.add_tag(null);
+    this.editor_view.show_errors = true;
+
     var self = this;
     if(this.validate()) {
       this.save(this.get_translation("saving"), this.save_nodes, this.save_error).then(function(collection){
@@ -379,6 +381,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   save_and_finish: function(event){
     var self = this;
     this.editor_view.add_tag(null);
+    this.editor_view.show_errors = true;
     if(this.validate()) {
       this.save(this.get_translation("saving"), this.save_nodes, this.save_error).then(function(collection){
         self.process_updated_collection(collection);
@@ -675,6 +678,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     this.m_value = (this.shared_data && this.shared_data.shared_exercise_data && this.shared_data.shared_exercise_data.m) ? this.shared_data.shared_exercise_data.m : 1;
     this.n_value = (this.shared_data && this.shared_data.shared_exercise_data && this.shared_data.shared_exercise_data.n) ? this.shared_data.shared_exercise_data.n : 1;
     this.first_rendered = this.new_content;
+    this.show_errors = !this.new_content;
     this.render();
   },
   render: function() {
@@ -1014,7 +1018,8 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
         role_visibility: (!role_visibility)? view.model.get('role_visibility') : role_visibility
       });
     });
-    this.container.validate();
+    if(this.show_errors)
+      this.container.validate();
   },
   change_mastery_model:function(event){
     if(event.target.value === "m_of_n"){

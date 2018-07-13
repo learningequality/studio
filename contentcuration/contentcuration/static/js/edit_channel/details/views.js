@@ -289,6 +289,7 @@ var ChannelEditorView = BaseViews.BaseListEditableItemView.extend({
         this.edit = false;
         this.model.set("thumbnail", this.original_thumbnail);
         this.model.set("thumbnail_encoding", this.original_thumbnail_encoding);
+        this.onchange(false);
         this.render();
     },
     submit_changes:function(){
@@ -385,8 +386,11 @@ var DetailsView = BaseViews.BaseListEditableItemView.extend({
             channel: this.channel,
             size_bar: this.get_size_bar(this.model.get("metadata").resource_size),
             count_bar: this.get_count_bar(this.model.get("metadata").resource_count),
-            languages: this.get_languages(this.model.get("metadata").languages),
-            accessible_languages: this.get_languages(this.model.get("metadata").accessible_languages)
+            authors: this.get_split_list(this.model.get("metadata").authors),
+            aggregators: this.get_split_list(this.model.get("metadata").aggregators),
+            providers: this.get_split_list(this.model.get("metadata").providers),
+            languages: this.get_split_list(this.model.get("metadata").languages),
+            accessible_languages: this.get_split_list(this.model.get("metadata").accessible_languages)
         },  {
             data: this.get_intl_data()
         }));
@@ -458,12 +462,12 @@ var DetailsView = BaseViews.BaseListEditableItemView.extend({
             "text": this.get_translation(SCALE_TEXT[size_index])
         };
     },
-    get_languages: function(languages){
-        // Separate languages into short and long list to allow user to show more/less
-        languages = languages.sort();
+    get_split_list: function(items){
+        // Separate items into short and long list to allow user to show more/less
+        items = items.sort();
         return {
-            "short": (languages.length <= 10)? languages : languages.slice(0, 9),
-            "full": (languages.length <= 10)? [] : languages.slice(9, languages.length)
+            "short": (items.length <= 10)? items : items.slice(0, 9),
+            "full": (items.length <= 10)? [] : items.slice(9, items.length)
         }
     },
     set_tab: function(e) {
