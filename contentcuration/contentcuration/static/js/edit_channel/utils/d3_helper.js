@@ -1,9 +1,10 @@
 var d3 = require("d3");
-var cloud = require("d3-cloud");
 
 var _ = require("underscore");
+require("jqcloud2")
+require("jqcloud2/dist/jqcloud.css")
 
-const COLOR_SELECTION = ["#8dd3c7", "#bebada", "#fb8072", "#80b1d3", "#fdb462", "#b3de69", "#fccde5", "#bc80bd", "#ccebc5", "#ffed6f"];
+const COLOR_SELECTION = ["#8dd3c7", "#bebada", "#fb8072", "#80b1d3", "#fdb462", "#b3de69", "#fccde5", "#bc80bd", "#ccebc5"];
 
 var ttCounter = 0
 
@@ -210,18 +211,12 @@ class Legend extends Visual {
 
 class TagCloud extends Visual {
     /* Create tag cloud from data */
-    init() {
-        var width = $(this.selector).width();
-        this.svg = d3.select(this.selector).append("svg").attr("width", width);
-    }
     render(data) {
         if(!data.length) {
             return;
         }
 
         var config = this.config;
-        var svg = this.svg;
-        var width = svg.attr("width");
         var selector = this.selector;
 
         var weight = config.color_selection.length;
@@ -236,60 +231,38 @@ class TagCloud extends Visual {
         var tags = _.map(data, function(d) {
             return {
                 "text": d[config.key],
-                "count": _.findLastIndex(thresholds, function(n) {
+                "weight": _.findLastIndex(thresholds, function(n) {
                     return n <= d[config.value_key] ;
                 })
             };
         });
 
-        var minWidth = _.max(tags, function(d) { return d.text.length; });
-
-        function drawCloud(maxFontSize) {
-            var xScale = d3.scaleLinear().domain([0, thresholds.length]).range([10, maxFontSize]);
-
-            cloud().size([Math.min(minWidth.text.length * 30 + 60, width), 10 * Math.max(1, data.length) + 60])
-                        .words(tags)
-                        .padding(Math.max(5, 15 - (tags.length / 10).toFixed(0)))
-                        .text(function(d) { return d.text; })
-                        .rotate(function() { return ~~0; })
-                        .fontSize(function(d) { return xScale(d.count); })
-                        .on("end", function(output) {
-                            if(maxFontSize <= 10) {
-                                return;
-                            }
-                            if (tags.length !== output.length) {  // compare between input ant output
-                                   drawCloud ( maxFontSize - 2 ); // call the function recursively
-                                   return undefined;
-                              }
-                              else { draw(output, xScale); }     // when all words are included, start rendering
-                        })
-                        .start();
+        function calculateFontSize(num) {
+            return num * 3 + 15;
         }
-        drawCloud(60);
 
-        function draw(words, xScale) {
-            var maxHeight = _.max(words, function(w) { return w.y + w.height; });
-            var minHeight = _.min(words, function(w) { return w.y; });
-            var height = (maxHeight.y + maxHeight.height) - minHeight.y + 30;
+        // Calculate height based on how much space words will take
+        var width = $(selector).width() - 10;
+        var space_needed = _.reduce(tags, function(sum, word) {
+            var fontsize = calculateFontSize(word.weight);
+            var wordsize = fontsize * word.text.length + 10; // Factoring padding
+            return sum + wordsize;
+        }, 0);
 
-            svg.attr("height", height)
-                .attr("text-align", "center")
-                .append("g")
-                .attr("transform", "translate(" + [width>>1, height >> 1] + ")")
-                .selectAll("text")
-                .data(words)
-                .enter().append("text")
-                .style("font-size", function(d) { return xScale(d.count) + "px"; })
-                .style("fill", function(d) { return config.color(d.count); })
-                .attr("text-anchor", "middle")
-                .attr("transform", function(d) {
-                    return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
-                })
-                .text(function(d) { return d.text; })
-                .style("margin-left", function(d) {return xScale(d.count) + "px"});
-            $(selector).height(height + 10);
-        }
-        cloud().stop();
+        var max_text_height = calculateFontSize(thresholds.length);
+        $(selector).height(space_needed / width * max_text_height + max_text_height);
+
+
+        $(selector).jQCloud(tags, {
+            autoResize: true,
+            fontSize: function (width, height, step) {
+                return calculateFontSize(step) + 'px';
+            },
+            width: width,
+            delayedMode: true,
+            colors: config.color_selection,
+            removeOverflowing: false
+        });
     }
 }
 
