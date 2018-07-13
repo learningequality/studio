@@ -1,3 +1,4 @@
+import json
 import math
 import zlib
 from collections import OrderedDict
@@ -30,6 +31,8 @@ class JSONSerializerField(serializers.Field):
     def to_internal_value(self, data):
         return data
     def to_representation(self, value):
+        if isinstance(value, basestring):
+            value = json.loads(value)
         return value
 
 class LicenseSerializer(serializers.ModelSerializer):

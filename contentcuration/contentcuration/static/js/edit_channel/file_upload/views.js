@@ -256,7 +256,6 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
     create_dropzone: function(){
         if(this.$("#dropzone").get(0)){
             Dropzone.autoDiscover = false;
-            var preferences = window.current_channel.get('content_defaults');
             this.dropzone = new Dropzone(this.$("#dropzone").get(0), {
                 clickable: ["#dropzone", ".fileinput-button"],
                 acceptedFiles: this.acceptedFiles,
@@ -266,7 +265,7 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
                 previewsContainer: this.list_selector, // Define the container to display the previews
                 headers: {
                     "X-CSRFToken": get_cookie("csrftoken"),
-                    "Preferences": (typeof preferences=="string")? preferences : JSON.stringify(preferences)
+                    "Preferences": JSON.stringify(window.current_channel.get('content_defaults'))
                 },
                 dictInvalidFileType: this.get_translation("file_not_supported"),
                 dictFileTooBig: this.get_translation("max_size_exceeded"),
