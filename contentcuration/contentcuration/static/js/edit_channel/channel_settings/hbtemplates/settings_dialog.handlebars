@@ -17,8 +17,18 @@
     <h3>{{formatMessage (intlGet 'messages.content_defaults')}}</h3>
     <p><em>{{formatMessage (intlGet 'messages.content_defaults_prompt')}}</em></p>
     <div class="section">
-        <h4>{{formatMessage (intlGet 'messages.author')}}</h4>
+        <h4>{{formatMessage (intlGet 'messages.author')}} <i class="material-icons help_icon" data-toggle="tooltip" data-placement="top" title="{{formatMessage (intlGet 'messages.author_description')}}">help_outline</i></h4>
         <input type="text" id="author_field" class="upload_input input_listener tab_item" value="{{preferences.author}}" placeholder="{{formatMessage (intlGet 'messages.author_placeholder')}}"/>
+        <div class="row">
+            <div class="content_nodes_only col-sm-6">
+                <h4>{{formatMessage (intlGet 'messages.provider')}} <i class="material-icons help_icon" data-toggle="tooltip" data-placement="top" title="{{formatMessage (intlGet 'messages.provider_description')}}">help_outline</i></h4>
+                <input type="text" id="provider_field" class="upload_input input_listener tab_item" value="{{preferences.provider}}" placeholder="{{formatMessage (intlGet 'messages.provider_placeholder')}}"/>
+            </div>
+            <div class="content_nodes_only col-sm-6">
+                <h4>{{formatMessage (intlGet 'messages.aggregator')}} <i class="material-icons help_icon" data-toggle="tooltip" data-placement="top" title="{{formatMessage (intlGet 'messages.aggregator_description')}}">help_outline</i></h4>
+                <input type="text" id="aggregator_field" class="upload_input input_listener tab_item" value="{{preferences.aggregator}}" placeholder="{{formatMessage (intlGet 'messages.aggregator_placeholder')}}"/>
+            </div>
+        </div>
         <div class="row">
             <div class="content_nodes_only col-sm-6">
                 <h4>{{formatMessage (intlGet 'messages.license')}}</h4>

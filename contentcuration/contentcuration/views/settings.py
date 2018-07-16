@@ -1,7 +1,7 @@
 import json
 import math
 import os
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 from django.shortcuts import render, redirect
 from django.conf import settings as ccsettings
 from django.contrib import messages
@@ -23,6 +23,7 @@ from contentcuration.decorators import browser_is_supported, has_accepted_polici
 from contentcuration.models import Channel, License
 from contentcuration.tasks import generateusercsv_task
 from contentcuration.utils.csv_writer import generate_user_csv_filename
+from contentcuration.utils.google_drive import add_row_to_sheet
 from contentcuration.utils.policies import get_latest_policies
 
 
@@ -82,7 +83,7 @@ class PreferencesView(FormView, LoginRequiredMixin):
     def get_initial(self):
 
         initial = self.initial.copy()
-        initial.update(json.loads(self.request.user.preferences))
+        initial.update(json.loads(self.request.user.content_defaults))
         initial.update({
             'm_value': initial.get('m_value') or 1,
             'n_value': initial.get('n_value') or 1,
@@ -127,7 +128,7 @@ def account_settings(request):
             update_session_auth_hash(request, user)
     else:
         form = AccountSettingsForm(request.user)
-        
+
     channels = [ # Count on editors is always returning 1, so iterate manually
         {"name": c.name, "id": c.id}
         for c in request.user.editable_channels.filter(deleted=False)
@@ -208,6 +209,7 @@ def policies_settings(request):
                                                     "policies": get_latest_policies()})
 
 
+
 class StorageSettingsView(FormView, LoginRequiredMixin):
     success_url = reverse_lazy('storage_settings')
     template_name = 'settings/storage.html'
@@ -224,6 +226,28 @@ class StorageSettingsView(FormView, LoginRequiredMixin):
             # Send email with storage request
             channel_ids = form.cleaned_data.get("public") or ""
             channels = Channel.objects.filter(pk__in=channel_ids.split(',')).values('id', 'name')
+            #  name, email, storage requested, date of request, number of resources, average resource size, kind of content, licenses, potential public channels, audience, uploading for, message
+            uploading_for = "{} (organization)".format(form.cleaned_data.get('organization')) if form.cleaned_data.get('org_or_personal') == "Organization" else form.cleaned_data.get('org_or_personal')
+            values = [
+                "{} {}".format(request.user.first_name, request.user.last_name),
+                request.user.email,
+                form.cleaned_data.get('storage'),
+                datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                form.cleaned_data.get('resource_count'),
+                form.cleaned_data.get('resource_size'),
+                form.cleaned_data.get('kind'),
+                form.cleaned_data.get('license'),
+                ", ".join(["{} ({})".format(c['name'], c['id']) for c in channels]),
+                form.cleaned_data.get('audience'),
+                uploading_for,
+                form.cleaned_data.get('message'),
+            ]
+
+            # Write to storage request sheet
+            # In production: https://docs.google.com/spreadsheets/d/1uC1nsJPx_5g6pQT6ay0qciUVya0zUFJ8wIwbsTEh60Y/edit#gid=0
+            # Debug mode: https://docs.google.com/spreadsheets/d/16X6zcFK8FS5t5tFaGpnxbWnWTXP88h4ccpSpPbyLeA8/edit#gid=0
+            add_row_to_sheet(ccsettings.GOOGLE_STORAGE_REQUEST_SHEET, values)
+
             message = render_to_string('settings/storage_request_email.txt', {"data": form.cleaned_data, "user": self.request.user, "channels": channels})
             send_mail(_("Kolibri Studio Storage Request"), message, ccsettings.DEFAULT_FROM_EMAIL, [ccsettings.SPACE_REQUEST_EMAIL, self.request.user.email])
 

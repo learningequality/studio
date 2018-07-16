@@ -1,0 +1,4 @@
+apiVersion: v1
+description: Kolibri Studio, the Content Curation tool for Kolibri!
+name: studio
+version: 0.1.0

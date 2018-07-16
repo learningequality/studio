@@ -48,6 +48,8 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY") or '_s0k@&o%m6bzg7s(0p(w6z5xbo%vy%mj
 # SECURITY WARNING: don't run with debug turned on in production!
 # DEBUG = True
 
+SESSION_COOKIE_NAME = 'kolibri_studio_sessionid'
+
 ALLOWED_HOSTS = ["*"]  # In production, we serve through a file socket, so this is OK.
 
 
@@ -249,6 +251,10 @@ SITE_ID = 1
 # MAILGUN_ACCESS_KEY = 'ACCESS-KEY'
 # MAILGUN_SERVER_NAME = 'SERVER-NAME'
 
+SEND_USER_ACTIVATION_NOTIFICATION_EMAIL = bool(
+    os.getenv("SEND_USER_ACTIVATION_NOTIFICATION_EMAIL")
+)
+
 SPACE_REQUEST_EMAIL = 'content@learningequality.org'
 REGISTRATION_INFORMATION_EMAIL = 'studio-registrations@learningequality.org'
 HELP_EMAIL = 'content@learningequality.org'
@@ -299,3 +305,7 @@ AWS_S3_ENDPOINT_URL = os.getenv('AWS_S3_ENDPOINT_URL') or 'http://localhost:9000
 AWS_AUTO_CREATE_BUCKET = True
 AWS_S3_FILE_OVERWRITE = True
 AWS_S3_BUCKET_AUTH = False
+
+# GOOGLE DRIVE SETTINGS
+GOOGLE_AUTH_JSON = "credentials/client_secret.json"
+GOOGLE_STORAGE_REQUEST_SHEET = "16X6zcFK8FS5t5tFaGpnxbWnWTXP88h4ccpSpPbyLeA8"
