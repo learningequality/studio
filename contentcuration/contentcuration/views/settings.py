@@ -83,7 +83,7 @@ class PreferencesView(FormView, LoginRequiredMixin):
     def get_initial(self):
 
         initial = self.initial.copy()
-        initial.update(json.loads(self.request.user.preferences))
+        initial.update(json.loads(self.request.user.content_defaults))
         initial.update({
             'm_value': initial.get('m_value') or 1,
             'n_value': initial.get('n_value') or 1,
