@@ -258,7 +258,7 @@ var ChannelList  = BaseViews.BaseEditableListView.extend({
 
 var CurrentChannelList  = ChannelList.extend({
 	new_channel: function(){
-		var preferences = (typeof window.user_preferences === "object")? window.user_preferences : JSON.parse(window.user_preferences);
+		var preferences = (typeof window.user_preferences === "string")? JSON.parse(window.user_preferences) : window.user_preferences;
 
 		var data = {
 			editors: [window.current_user.id],

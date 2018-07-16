@@ -86,10 +86,9 @@ var MESSAGES = {
     "less": "Show Less"
 }
 
-var SCALE_TEXT = ["very_small", "very_small", "small", "small", "average", "average", "average", "large", "large", "very_large", "very_large"];
-var CHANNEL_SIZE_BASELINE = 100000000
-var CHANNEL_COUNT_BASELINE = 100
+const CHANNEL_SIZE_DIVISOR = 100000000;
 
+var SCALE_TEXT = ["very_small", "very_small", "small", "small", "average", "average", "average", "large", "large", "very_large", "very_large"];
 var ChannelDetailsView = BaseViews.BaseListEditableItemView.extend({
     template: require("./hbtemplates/details_editor.handlebars"),
     channel_template: require("./hbtemplates/channel_editor.handlebars"),
@@ -158,7 +157,7 @@ var ChannelDetailsView = BaseViews.BaseListEditableItemView.extend({
                     });
                     $(".details_view").css("display", "block");
                 })
-            }, 500);
+            });
         }
     },
     submit_changes: function() {
@@ -443,7 +442,7 @@ var DetailsView = BaseViews.BaseListEditableItemView.extend({
     get_size_bar: function(size) {
         // Get data for size bar indicator
         // Run python manage.py get_channel_stats to get latest stats
-        var size_index = Math.max(1, Math.min(Math.round(size/CHANNEL_SIZE_BASELINE), 10));
+        var size_index = Math.max(1, Math.min(Math.ceil(Math.log(size/CHANNEL_SIZE_DIVISOR)/Math.log(2)), 10));
         return {
             "filled": _.range(size_index),
             "text": this.get_translation(SCALE_TEXT[size_index])
@@ -452,10 +451,10 @@ var DetailsView = BaseViews.BaseListEditableItemView.extend({
     get_count_bar: function(count) {
         // Get data for count bar indicator
         // Run python manage.py get_channel_stats to get latest stats
-        var size_index = Math.min(Math.round(count/CHANNEL_COUNT_BASELINE), 10);
+        var size_index = Math.max(1, Math.min(Math.floor(Math.log(count)/Math.log(2.8)), 10));
         var bar = [];
         for(var i = 0; i < 10; ++ i) {
-            bar.push(i <= size_index);
+            bar.push(i < size_index);
         }
         return {
             "filled": bar,
@@ -482,7 +481,6 @@ var DetailsView = BaseViews.BaseListEditableItemView.extend({
         $(e.target).data("update", current_text);
     }
 });
-
 
 module.exports = {
     ChannelDetailsView: ChannelDetailsView,

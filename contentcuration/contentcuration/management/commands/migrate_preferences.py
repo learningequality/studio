@@ -21,21 +21,25 @@ class Command(BaseCommand):
         index = 0
         for c in channels:
             try:
-                c.content_defaults = json.loads(c.preferences.replace("\\", "").strip("\""))
+                for i in range(20):
+                    if not isinstance(c.content_defaults, basestring):
+                        break;
+                    c.content_defaults = json.loads(c.preferences.replace("\\", "").strip("\""))
                 c.save()
                 index += 1
                 bar.update(index)
-                time.sleep(0.2)
             except Exception as e:
                 failed.append("FAILED {} ({}): {}".format(c.name, c.pk, str(e)))
 
         for u in users:
             try:
-                u.content_defaults = json.loads(u.preferences.replace("\\", "").strip("\""))
+                for i in range(20):
+                    if not isinstance(u.content_defaults, basestring):
+                        break;
+                    u.content_defaults = json.loads(u.preferences.replace("\\", "").strip("\""))
                 u.save()
                 index += 1
                 bar.update(index)
-                time.sleep(0.2)
             except Exception as e:
                 failed.append("FAILED {} ({}): {}".format(u.email, c.id, str(e)))
 
