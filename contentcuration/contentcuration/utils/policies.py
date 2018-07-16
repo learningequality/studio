@@ -1,5 +1,5 @@
 import datetime
-import json
+import ast
 from django.utils.translation import ugettext as _
 
 POLICIES = {
@@ -34,7 +34,7 @@ def check_policies(user):
         policies = {}
     # sometimes user.policies is a dict. Read that as JSON.
     elif isinstance(user.policies, basestring):
-        policies = json.loads(user.policies)
+        policies = ast.literal_eval(user.policies)
     # Otherwise, just load whatever's in policies
     else:
         # Sometimes the json gets converted to a string, so catch that case here
