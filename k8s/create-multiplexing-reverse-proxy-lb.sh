@@ -20,6 +20,7 @@ helm init
 
 helm upgrade $1 stable/traefik --namespace kube-system \
      --set loadBalancerIP=$2 \
+     --set gzip.enabled=false \
      --set acme.enabled=true \
      --set ssl.enabled=true \
      --set acme.challengeType=dns-01 \
