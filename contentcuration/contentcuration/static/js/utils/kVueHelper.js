@@ -24,7 +24,7 @@ export default function(componentDefObject, options) {
 
   // If no el is provided, must call $mount manually. Uses a dummy $el
   if(!options.el){
-    return instantiatedComponent.$mount;
+    return instantiatedComponent.$mount();
   }
 
   return instantiatedComponent;
