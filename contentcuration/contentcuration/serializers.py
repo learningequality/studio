@@ -774,9 +774,11 @@ class PublicChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
                   'kind_count', 'published_size', 'last_published', 'icon_encoding', 'matching_tokens', 'public')
 
 class UserSerializer(serializers.ModelSerializer):
+    content_defaults = serializers.JSONField()
+
     class Meta:
         model = User
-        fields = ('email', 'first_name', 'last_name', 'id', 'disk_space', 'is_active', 'information', 'policies')
+        fields = ('email', 'first_name', 'last_name', 'id', 'disk_space', 'is_active', 'information', 'policies', 'content_defaults')
 
 
 class CurrentUserSerializer(serializers.ModelSerializer):
