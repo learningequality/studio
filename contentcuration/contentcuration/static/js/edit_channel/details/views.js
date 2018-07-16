@@ -87,8 +87,8 @@ var MESSAGES = {
 }
 
 var SCALE_TEXT = ["very_small", "very_small", "small", "small", "average", "average", "average", "large", "large", "very_large", "very_large"];
-var CHANNEL_SIZE_BASELINE = 100000000
-var CHANNEL_COUNT_BASELINE = 100
+var CHANNEL_SIZE_BASELINE = 1000000000
+var CHANNEL_COUNT_BASELINE = 1000
 
 var ChannelDetailsView = BaseViews.BaseListEditableItemView.extend({
     template: require("./hbtemplates/details_editor.handlebars"),
