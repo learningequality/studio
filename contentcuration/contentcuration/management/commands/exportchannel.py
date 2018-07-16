@@ -97,6 +97,11 @@ class Command(BaseCommand):
             logging.warning("Exited early due to {message}.".format(message=e.message))
             self.stdout.write("You can find your database in {path}".format(path=e.db_path))
 
+        # No matter what, make sure publishing is set to False once the run is done
+        finally:
+            channel.main_tree.publishing = False
+            channel.main_tree.save()
+
 def send_emails(channel, user_id):
     subject = render_to_string('registration/custom_email_subject.txt', {'subject': _('Kolibri Studio Channel Published')})
 
