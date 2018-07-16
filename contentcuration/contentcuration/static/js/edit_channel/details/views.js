@@ -440,7 +440,7 @@ var DetailsView = BaseViews.BaseListEditableItemView.extend({
     get_size_bar: function(size) {
         // Get data for size bar indicator
         // Run python manage.py get_channel_stats to get latest stats
-        var size_index =Math.max(1, Math.min(Math.ceil(Math.log(size/100000000)/Math.log(2)), 10));
+        var size_index = Math.max(1, Math.min(Math.ceil(Math.log(size/100000000)/Math.log(2)), 10));
         return {
             "filled": _.range(size_index),
             "text": this.get_translation(SCALE_TEXT[size_index])
@@ -449,10 +449,11 @@ var DetailsView = BaseViews.BaseListEditableItemView.extend({
     get_count_bar: function(count) {
         // Get data for count bar indicator
         // Run python manage.py get_channel_stats to get latest stats
-        var size_index = Math.min(Math.ceil(Math.log(count)/Math.log(2.85)), 10);
+
+        var size_index = Math.max(1, Math.min(Math.floor(Math.log(count)/Math.log(2.8)), 10));
         var bar = [];
         for(var i = 0; i < 10; ++ i) {
-            bar.push(i <= size_index);
+            bar.push(i < size_index);
         }
         return {
             "filled": bar,

@@ -24,7 +24,7 @@ class Command(BaseCommand):
         Returns str path of generated csv
         """
 
-        print("Writing CSV for users")
+        print("Gathering channel stats...")
 
         if not os.path.exists(settings.CSV_ROOT):
             os.makedirs(settings.CSV_ROOT)
@@ -38,14 +38,16 @@ class Command(BaseCommand):
             writer.writerow(['Channel ID', 'Name', 'Resource Count', 'Size'])
 
             channels = Channel.objects.filter(deleted=False).select_related('main_tree')
+            bar = progressbar.ProgressBar(max_value=channels.count())
 
-            for channel in progressbar.progressbar(channels):
+            for i, channel in enumerate(channels):
                 try:
                     resources = channel.main_tree.get_descendants().prefetch_related('files').exclude(kind_id=content_kinds.TOPIC)
                     count = resources.count()
                     size = resources.values('files__checksum', 'files__file_size').distinct().aggregate(resource_size=Sum('files__file_size'))['resource_size'] or 0,
                     writer.writerow([ channel.id, channel.name, count, size])
                     channel_stats.append({ "id": channel.id, "name": channel.name, "count": count, "size": size })
+                    bar.update(i)
                 except Exception as e:
                     print(channel.id, str(e))
 
