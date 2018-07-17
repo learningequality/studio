@@ -78,6 +78,7 @@ var ChannelEditRouter  = Backbone.Router.extend({
 		window.contentkinds = this.contentkinds;
 		window.contenttags = new Models.TagCollection(window.current_channel.get('tags'));
 		window.licenses = new Models.LicenseCollection(window.license_list);
+		window.preferences = (typeof window.preferences === "string")? JSON.parse(window.preferences) : window.preferences;
 
 		data.topic = data.topic || window.current_channel.get((data.is_staging)? "staging_tree" : "main_tree").node_id;
 		window.current_page = data.page;

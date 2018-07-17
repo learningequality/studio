@@ -4199,6 +4199,12 @@ jpeg-js@^0.2.0:
   version "0.2.0"
   resolved "https://registry.yarnpkg.com/jpeg-js/-/jpeg-js-0.2.0.tgz#53e448ec9d263e683266467e9442d2c5a2ef5482"
 
+jqcloud2@^2.0.3:
+  version "2.0.3"
+  resolved "https://registry.yarnpkg.com/jqcloud2/-/jqcloud2-2.0.3.tgz#9b1691f85513d2902a5ec63ead49318b85a0c478"
+  dependencies:
+    jquery ">= 1.9.0"
+
 jquery-file-download@^1.4.6:
   version "1.4.6"
   resolved "https://registry.yarnpkg.com/jquery-file-download/-/jquery-file-download-1.4.6.tgz#fe5cb45d4704f897e5b7623ece873711aa8b46ea"
@@ -4206,6 +4212,10 @@ jquery-file-download@^1.4.6:
 jquery-ui@^1.12.0:
   version "1.12.1"
   resolved "https://registry.yarnpkg.com/jquery-ui/-/jquery-ui-1.12.1.tgz#bcb4045c8dd0539c134bc1488cdd3e768a7a9e51"
+
+"jquery@>= 1.9.0":
+  version "3.3.1"
+  resolved "https://registry.yarnpkg.com/jquery/-/jquery-3.3.1.tgz#958ce29e81c9790f31be7792df5d4d95fc57fbca"
 
 jquery@^1.12.3:
   version "1.12.4"

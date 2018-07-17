@@ -163,9 +163,15 @@
                             <p>
                                 {{formatMessage (intlGet 'messages.author') model=model_name}}
                                 {{#if details.authors}}
-                                    {{#each details.authors}}
-                                        <b>{{this}}</b>{{#unless @last}}, {{/unless}}
-                                    {{/each}}
+                                    <ul class="list-unstyled">
+                                        {{#each authors.short }}<li><b>{{this}}</b></li>{{/each}}
+                                    </ul>
+                                    {{#if authors.full }}
+                                        <ul class="list-unstyled collapse" id="collapseAuthors">
+                                            {{#each authors.full }}<li><b>{{this}}</b></li>{{/each}}
+                                        </ul>
+                                        <p><a class="toggle-list" data-toggle="collapse" href="#collapseAuthors" data-update="{{formatMessage (intlGet 'messages.less')}}">{{formatMessage (intlGet 'messages.more')}} ({{authors.full.length}})</a></p>
+                                    {{/if}}
                                 {{else}}<br><b>---</b>
                                 {{/if}}
                             </p>
@@ -175,9 +181,15 @@
                             <p>
                                 {{formatMessage (intlGet 'messages.provider') model=model_name}}
                                 {{#if details.providers}}
-                                    {{#each details.providers}}
-                                        <b>{{this}}</b>{{#unless @last}}, {{/unless}}
-                                    {{/each}}
+                                    <ul class="list-unstyled">
+                                        {{#each providers.short }}<li><b>{{this}}</b></li>{{/each}}
+                                    </ul>
+                                    {{#if providers.full }}
+                                        <ul class="list-unstyled collapse" id="collapseProviders">
+                                            {{#each providers.full }}<li><b>{{this}}</b></li>{{/each}}
+                                        </ul>
+                                        <p><a class="toggle-list" data-toggle="collapse" href="#collapseProviders" data-update="{{formatMessage (intlGet 'messages.less')}}">{{formatMessage (intlGet 'messages.more')}} ({{providers.full.length}})</a></p>
+                                    {{/if}}
                                 {{else}}<br><b>---</b>
                                 {{/if}}
                             </p>
@@ -188,9 +200,15 @@
                             <p>
                                 {{formatMessage (intlGet 'messages.aggregator') model=model_name}}
                                 {{#if details.aggregators}}
-                                    {{#each details.aggregators}}
-                                        <b>{{this}}</b>{{#unless @last}}, {{/unless}}
-                                    {{/each}}
+                                    <ul class="list-unstyled">
+                                        {{#each aggregators.short }}<li><b>{{this}}</b></li>{{/each}}
+                                    </ul>
+                                    {{#if aggregators.full }}
+                                        <ul class="list-unstyled collapse" id="collapseAggregators">
+                                            {{#each aggregators.full }}<li><b>{{this}}</b></li>{{/each}}
+                                        </ul>
+                                        <p><a class="toggle-list" data-toggle="collapse" href="#collapseAggregators" data-update="{{formatMessage (intlGet 'messages.less')}}">{{formatMessage (intlGet 'messages.more')}} ({{aggregators.full.length}})</a></p>
+                                    {{/if}}
                                 {{else}}<br><b>---</b>
                                 {{/if}}
                             </p>

@@ -79,16 +79,18 @@ var SettingsView = BaseViews.BaseListEditableItemView.extend({
       "focus .input-tab-control": "loop_focus"
     },
     render: function() {
+        var preferences = this.model.get("content_defaults");
+        preferences = (typeof preferences === "string")? JSON.parse(preferences) : preferences;
         this.$el.html(this.template({
             channel: this.model.toJSON(),
             licenses: window.licenses.toJSON(),
-            preferences: this.model.get("content_defaults"),
+            preferences: preferences,
             languages: window.languages.toJSON()
         },  {
             data: this.get_intl_data()
         }));
-        $("#license_select").val(this.get_license_id(this.model.get("content_defaults").license));
-        $("#mastery_model_select").val(this.model.get("content_defaults").mastery_model);
+        $("#license_select").val(this.get_license_id(preferences.license));
+        $("#mastery_model_select").val(preferences.mastery_model);
         $("#custom_license_description").css("display", (this.check_custom_license())? "block" : "none");
         $("#mastery_custom_criterion").css("visibility", ($("#mastery_model_select").val()==="m_of_n")? "visible" : "hidden");
         $("#select_language").val(this.model.get("language") || 0);
@@ -130,6 +132,7 @@ var SettingsView = BaseViews.BaseListEditableItemView.extend({
     },
     submit_changes:function(){
         var content_defaults = this.model.get("content_defaults");
+        content_defaults = (typeof content_defaults === "string")? JSON.parse(content_defaults) : content_defaults;
         content_defaults.license = this.get_license_name();
         content_defaults.author = $("#author_field").val().trim();
         content_defaults.aggregator = $("#aggregator_field").val().trim();

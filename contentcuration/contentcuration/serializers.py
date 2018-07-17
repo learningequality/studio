@@ -1,3 +1,4 @@
+import json
 import math
 import zlib
 from collections import OrderedDict
@@ -23,14 +24,6 @@ from rest_framework_bulk import BulkSerializerMixin
 from contentcuration.models import *
 from contentcuration.statistics import record_node_addition_stats, record_action_stats
 from le_utils.constants import licenses
-
-
-class JSONSerializerField(serializers.Field):
-    """ Serializer for JSONField -- required to make field writable"""
-    def to_internal_value(self, data):
-        return data
-    def to_representation(self, value):
-        return value
 
 class LicenseSerializer(serializers.ModelSerializer):
     class Meta:
@@ -690,7 +683,7 @@ class ChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
     updated = serializers.SerializerMethodField('get_date_updated')
     tags = TagSerializer(many=True, read_only=True)
     primary_token = serializers.SerializerMethodField('get_channel_primary_token')
-    content_defaults = JSONSerializerField()
+    content_defaults = serializers.JSONField()
 
     def get_date_created(self, channel):
         return channel.main_tree.created.strftime("%X %x")
@@ -735,7 +728,7 @@ class ChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
     created = serializers.SerializerMethodField('get_date_created')
     modified = serializers.SerializerMethodField('get_date_modified')
     primary_token = serializers.SerializerMethodField('get_channel_primary_token')
-    content_defaults = JSONSerializerField()
+    content_defaults = serializers.JSONField()
 
     def generate_thumbnail_url(self, channel):
         if channel.thumbnail and 'static' not in channel.thumbnail:
@@ -755,7 +748,7 @@ class AltChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
     created = serializers.SerializerMethodField('get_date_created')
     modified = serializers.SerializerMethodField('get_date_modified')
     primary_token = serializers.SerializerMethodField('get_channel_primary_token')
-    content_defaults = JSONSerializerField()
+    content_defaults = serializers.JSONField()
     secret_tokens = TokenSerializer(many=True, read_only=True)
 
     class Meta:
@@ -781,9 +774,11 @@ class PublicChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
                   'kind_count', 'published_size', 'last_published', 'icon_encoding', 'matching_tokens', 'public')
 
 class UserSerializer(serializers.ModelSerializer):
+    content_defaults = serializers.JSONField()
+
     class Meta:
         model = User
-        fields = ('email', 'first_name', 'last_name', 'id', 'disk_space', 'is_active', 'information', 'policies')
+        fields = ('email', 'first_name', 'last_name', 'id', 'disk_space', 'is_active', 'information', 'policies', 'content_defaults')
 
 
 class CurrentUserSerializer(serializers.ModelSerializer):
