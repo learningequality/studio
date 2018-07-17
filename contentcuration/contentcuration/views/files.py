@@ -80,7 +80,12 @@ def file_create(request):
     )
     if license and license.is_custom:
         new_node.license_description = preferences.get('license_description')
-    new_node.save()
+
+    # disable mptt updates, since we attach it later to its real tree anyway
+    with ContentNode.objects.disable_mptt_updates():
+        new_node.tree_id = 0
+        new_node.save()
+
     file_object = File(
         file_on_disk=contentfile,
         checksum=checksum,
