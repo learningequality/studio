@@ -45,7 +45,7 @@ steps:
   '--plaintext-file=gcs-service-account.json'
   ]
 
-- name: 'gcr.io/$PROJECT_ID/sql'
+- name: 'gcr.io/cloud-builders/gcloud'
   id: create-new-database
   waitFor: ['-']
   args: [
