@@ -568,6 +568,10 @@ var BaseListView = BaseView.extend({
 		_.bindAll(this, 'load_content', 'close', 'handle_if_empty', 'check_all', 'get_selected',
 			'set_root_model', 'update_views', 'cancel_actions');
 	},
+	is_segment: function() {
+		// Used for clipboard channel segmenting
+		return false;
+	},
 	set_root_model:function(model){
 		this.model.set(model.toJSON());
 	},
@@ -1228,6 +1232,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 		});
 	},
 	make_copy: function(message){
+		// Makes inline copy
 		message=(message!=null)? message: this.get_translation("making_copy");
 		var copyCollection = new Models.ContentNodeCollection();
 		copyCollection.add(this.model);

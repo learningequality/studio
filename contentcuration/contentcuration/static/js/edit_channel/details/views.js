@@ -86,10 +86,9 @@ var MESSAGES = {
     "less": "Show Less"
 }
 
-var SCALE_TEXT = ["very_small", "very_small", "small", "small", "average", "average", "average", "large", "large", "very_large", "very_large"];
-var CHANNEL_SIZE_BASELINE = 100000000
-var CHANNEL_COUNT_BASELINE = 100
+const CHANNEL_SIZE_DIVISOR = 100000000;
 
+var SCALE_TEXT = ["very_small", "very_small", "small", "small", "average", "average", "average", "large", "large", "very_large", "very_large"];
 var ChannelDetailsView = BaseViews.BaseListEditableItemView.extend({
     template: require("./hbtemplates/details_editor.handlebars"),
     channel_template: require("./hbtemplates/channel_editor.handlebars"),
@@ -158,7 +157,7 @@ var ChannelDetailsView = BaseViews.BaseListEditableItemView.extend({
                     });
                     $(".details_view").css("display", "block");
                 })
-            }, 500);
+            });
         }
     },
     submit_changes: function() {
@@ -289,6 +288,7 @@ var ChannelEditorView = BaseViews.BaseListEditableItemView.extend({
         this.edit = false;
         this.model.set("thumbnail", this.original_thumbnail);
         this.model.set("thumbnail_encoding", this.original_thumbnail_encoding);
+        this.onchange(false);
         this.render();
     },
     submit_changes:function(){
@@ -385,8 +385,11 @@ var DetailsView = BaseViews.BaseListEditableItemView.extend({
             channel: this.channel,
             size_bar: this.get_size_bar(this.model.get("metadata").resource_size),
             count_bar: this.get_count_bar(this.model.get("metadata").resource_count),
-            languages: this.get_languages(this.model.get("metadata").languages),
-            accessible_languages: this.get_languages(this.model.get("metadata").accessible_languages)
+            authors: this.get_split_list(this.model.get("metadata").authors),
+            aggregators: this.get_split_list(this.model.get("metadata").aggregators),
+            providers: this.get_split_list(this.model.get("metadata").providers),
+            languages: this.get_split_list(this.model.get("metadata").languages),
+            accessible_languages: this.get_split_list(this.model.get("metadata").accessible_languages)
         },  {
             data: this.get_intl_data()
         }));
@@ -439,7 +442,7 @@ var DetailsView = BaseViews.BaseListEditableItemView.extend({
     get_size_bar: function(size) {
         // Get data for size bar indicator
         // Run python manage.py get_channel_stats to get latest stats
-        var size_index = Math.max(1, Math.min(Math.round(size/CHANNEL_SIZE_BASELINE), 10));
+        var size_index = Math.max(1, Math.min(Math.ceil(Math.log(size/CHANNEL_SIZE_DIVISOR)/Math.log(2)), 10));
         return {
             "filled": _.range(size_index),
             "text": this.get_translation(SCALE_TEXT[size_index])
@@ -448,22 +451,22 @@ var DetailsView = BaseViews.BaseListEditableItemView.extend({
     get_count_bar: function(count) {
         // Get data for count bar indicator
         // Run python manage.py get_channel_stats to get latest stats
-        var size_index = Math.min(Math.round(count/CHANNEL_COUNT_BASELINE), 10);
+        var size_index = Math.max(1, Math.min(Math.floor(Math.log(count)/Math.log(2.8)), 10));
         var bar = [];
         for(var i = 0; i < 10; ++ i) {
-            bar.push(i <= size_index);
+            bar.push(i < size_index);
         }
         return {
             "filled": bar,
             "text": this.get_translation(SCALE_TEXT[size_index])
         };
     },
-    get_languages: function(languages){
-        // Separate languages into short and long list to allow user to show more/less
-        languages = languages.sort();
+    get_split_list: function(items){
+        // Separate items into short and long list to allow user to show more/less
+        items = items.sort();
         return {
-            "short": (languages.length <= 10)? languages : languages.slice(0, 9),
-            "full": (languages.length <= 10)? [] : languages.slice(9, languages.length)
+            "short": (items.length <= 10)? items : items.slice(0, 9),
+            "full": (items.length <= 10)? [] : items.slice(9, items.length)
         }
     },
     set_tab: function(e) {
@@ -478,7 +481,6 @@ var DetailsView = BaseViews.BaseListEditableItemView.extend({
         $(e.target).data("update", current_text);
     }
 });
-
 
 module.exports = {
     ChannelDetailsView: ChannelDetailsView,

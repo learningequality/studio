@@ -149,7 +149,7 @@ var ChannelListPage  = BaseViews.BaseView.extend({
 	},
 	toggle_panel: function(view, channel_list_item) {
 		// Toggle channel details panel
-		if(!this.current_view || !this.current_view.changed) {
+		if(!this.current_view || !this.current_view.changed || !this.open) {
 			this.set_details(view, channel_list_item);
         } else {
             var self = this;
@@ -173,19 +173,16 @@ var ChannelListPage  = BaseViews.BaseView.extend({
 			view.render(); // Calling separately to make background stay the same if user selects "KEEP EDITING" option
 			if(!this.open) {
 				this.open = true;
-				this.$("#channel_list_wrapper").animate({
-	      			width: $(window).width() - $("#channel_preview_wrapper").width()
-	    		}, 500);
+	   			this.$("#channel_preview_wrapper").animate({ width: 650 }, 500);
+	   			this.$("#channel_list_wrapper").addClass("show-panel");
 			}
 			this.current_view = view;
     		$("#channel_details_panel").html(view.el);
     		channel_list_item && this.set_active_channel(channel_list_item);
 		} else if(this.open) {
 			this.open = false;
-			var self = this;
-			this.$("#channel_list_wrapper").animate({
-      			width: $(window).width()
-    		}, 500);
+   			this.$("#channel_preview_wrapper").animate({ width: 0 }, 500);
+   			this.$("#channel_list_wrapper").removeClass("show-panel");
 		}
 	}
 });
@@ -261,7 +258,7 @@ var ChannelList  = BaseViews.BaseEditableListView.extend({
 
 var CurrentChannelList  = ChannelList.extend({
 	new_channel: function(){
-		var preferences = (typeof window.user_preferences === "object")? window.user_preferences : JSON.parse(window.user_preferences);
+		var preferences = (typeof window.user_preferences === "string")? JSON.parse(window.user_preferences) : window.user_preferences;
 
 		var data = {
 			editors: [window.current_user.id],
