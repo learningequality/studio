@@ -4,8 +4,10 @@
         <select class="preview-dropdown form-control">
 
           {{#if filePreviews.length}}
-          <!-- TODO translate these labels -->
-          <optgroup class="file-previews" label="Files">
+          <optgroup
+            class="file-previews"
+            label="{{formatMessage (intlGet 'messages.files')}}"
+          >
             {{#each filePreviews}}
             <option value="{{@index}}">
               {{#translate preset.id}}{{/translate}}
@@ -15,8 +17,10 @@
           {{/if}}
 
           {{#if exercisePreviews.length}}
-          <!-- TODO translate these labels -->
-          <optgroup class="exercise-previews" label="Questions">
+          <optgroup
+            class="exercise-previews"
+            label="{{formatMessage (intlGet 'messages.questions')}}"
+          >
             {{#each exercisePreviews}}
             <option value="{{@index}}">
               {{ question }}
