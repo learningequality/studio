@@ -84,18 +84,21 @@ def process_formulas(content):
 
 
 def process_image_strings(content):
-    ''' TODO '''
     image_list = []
-    content = content.replace(exercises.CONTENT_STORAGE_PLACEHOLDER, PERSEUS_IMG_DIR)
+    # find markdown image specs
     for match in re.finditer(ur'!\[(?:[^\]]*)]\(([^\)]+)\)', content):
-        img_match = re.search(ur'(.+/images/[^\s]+)(?:\s=([0-9\.]+)x([0-9\.]+))*', match.group(1))
+        imagePattern = ur'(.+' + exercises.CONTENT_STORAGE_PLACEHOLDER + '/([^\s]+))(?:\s=([0-9\.]+)x([0-9\.]+))*'
+        img_match = re.search(imagePattern, match.group(1))
+
+        filepath = generate_storage_url(img_match.group(2))
+
         if img_match:
             # Add resizing data
             if img_match.group(2) and img_match.group(3):
-                image_data = {'name': img_match.group(1)}
+                image_data = {'name': filepath}
                 image_data.update({'width': float(img_match.group(2))})
                 image_data.update({'height': float(img_match.group(3))})
                 image_list.append(image_data)
-            content = content.replace(match.group(1), img_match.group(1))
+            content = content.replace(match.group(1), filepath)
 
     return content, image_list
