@@ -129,9 +129,20 @@ export default BaseView.extend({
   getKolibriProps(contentNodeModel, previewItem){
     const kind = contentNodeModel.get('kind');
     const assessment = kind === 'exercise';
+    const video = kind === 'video';
     // renderer handles default preview item
     const itemId = previewItem && previewItem.assessment_id;
-    const files = contentNodeModel.get('files').map(file => {
+
+    const filteredFiles = contentNodeModel.get('files').filter(
+      // HACK, makes up for kolibri not being able to choose between low + high res
+      file => !(video && (file.mimetype === previewItem.mimetype))
+    );
+    if (video) {
+      // put the desired video file back
+      filteredFiles.push(previewItem);
+    }
+
+    const files = filteredFiles.map(file => {
       return Object.assign({
         extension: file.file_format,
         lang: file.language,
@@ -141,7 +152,7 @@ export default BaseView.extend({
       }, file)
     });
 
-    // decoy. There's a .perseus file present in a kolibri contentNode that's not present here.
+    // HACK. There's a .perseus file present in a kolibri contentNode that's not present here.
     // Needed for render. Expected to be at position 0.
     if(assessment){
       files.splice(0, 0, {
