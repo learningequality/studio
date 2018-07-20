@@ -25,7 +25,7 @@ export default BaseView.extend({
       this.render = this.renderKolibriComponent;
 
 
-      // `this` is bound to vue component. handled by an window event listener
+      // HACK `this` is bound to backbone view. handled by an window event listener
       // needs to be out here to remove event listener
       const pauseVideo = windowClick => {
         if(!this.vuePreview.$el.contains(windowClick.target)) {
@@ -62,6 +62,18 @@ export default BaseView.extend({
                 window.addEventListener('click', pauseVideo);
               });
             }
+
+            if(renderComponent.name === 'pdfRender') {
+              // HACK. Gets rid of faulty progressbar. pdfJS seems to be updating it past 100%?
+              vuePreview.$nextTick(() => {
+                this.$refs.contentView.$watch('progress', function(progress){
+                  if(progress > 1){
+                    this.progress = 1;
+                  }
+                });
+              });
+            }
+
             return renderComponent;
           });
 
