@@ -1,6 +1,11 @@
 {{#if add_controls}}
 <div class="wrapper">
 	<div id="queue_content">
+		<a class="pull-right pin_clipboard" title="{{formatMessage (intlGet 'messages.pin_clipboard')}}">
+			<svg class="pin_clipboard_icon" style="width:24px;height:24px" viewBox="0 0 24 24">
+				<path d="M16,12V4H17V2H7V4H8V12L6,14V16H11.2V22H12.8V16H18V14L16,12Z" />
+			</svg>
+		</a>
 		<div class="row clipboard_options pull-right queue-disable-none-selected">
 			<a class="edit_items">{{formatMessage (intlGet 'messages.edit')}}</a>
 			<a class="move_items">{{formatMessage (intlGet 'messages.move')}}</a>
@@ -8,15 +13,21 @@
 		</div>
 		<div class="select_all_fixed">
 			<input type="checkbox" class="select_all select_all_component" id="select_all_check_{{id}}"/>
-			<label for="select_all_check_{{id}}">{{formatMessage (intlGet 'messages.select_all')}}</label>
+			<label class="select_all_label" for="select_all_check_{{id}}">{{formatMessage (intlGet 'messages.select_all')}}</label>
 		</div>
 		<hr/>
 		<div id="clipboard_list" class="list_content">
-		<div class="queue-list-wrapper">
-			<ul class="list-unstyled content-list" id="list_for_{{id}}">
-				<li class="default-item clipboard_empty text-center">{{formatMessage (intlGet 'messages.loading')}}</li>
-			</ul>
-		</div>
+			<div class="queue-list-wrapper">
+				<ul class="list-unstyled content-list" id="list_for_{{id}}">
+					<li class="default-item clipboard_empty text-center">{{formatMessage (intlGet 'messages.loading')}}</li>
+				</ul>
+			</div>
+    </div>
+	</div>
+</div>
+<div class="queue-overlay">
+	<div class="queue-overlay-text">
+		{{formatMessage (intlGet 'messages.drop_text_over_clipboard')}}
 	</div>
 </div>
 {{else}}

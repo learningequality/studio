@@ -230,11 +230,15 @@
 	padding: 0;
 	border-top: 1px solid @blue-500;
 
+	&.pinned-clipboard {
+		width: calc(100vw - @queue-width-pinned);
+	}
+
 	#container-wrapper{
 		overflow:hidden;
 		overflow-x:auto;
 		position:absolute;
-		width:100vw;
+		width:100%;
 		padding-left:40px;
 		margin-top:20px;
 	}
