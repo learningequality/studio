@@ -12,7 +12,7 @@ RUN apt-get -y install nodejs python python-dev \
     ghostscript python-tk make libjpeg-dev \
     wkhtmltopdf
 
-RUN npm install -g yarn
+RUN npm install -g yarn@1.6.0
 
 EXPOSE 8080
 
