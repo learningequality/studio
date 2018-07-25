@@ -13,12 +13,12 @@
 			<div class="panel panel-default">
 			  	<div id="settings-options-heading" class="panel-heading">{% trans "My Settings" %}</div>
 			    <div id="settings-options" class="list-group">
-				  <a href="{% url 'profile_settings' %}" class="list-group-item {% if page = 'profile' %}active-option{% endif %}" id="profile_option">{% trans "Profile" %}</a>
-				  <a href="{% url 'account_settings' %}" class="list-group-item {% if page = 'account' %}active-option{% endif %}" id="account_option">{% trans "Account" %}</a>
-				  <a href="{% url 'storage_settings' %}" class="list-group-item {% if page = 'storage' %}active-option{% endif %}" id="storage_option">{% trans "Storage" %}</a>
-				  <a href="{% url 'tokens_settings' %}" class="list-group-item {% if page = 'tokens' %}active-option{% endif %}" id="tokens_option">{% trans "Tokens" %}</a>
-				  <a href="{% url 'preferences_settings' %}" class="list-group-item {% if page = 'preferences' %}active-option{% endif %}" id="preferences_option">{% trans "Preferences" %}</a>
-				  <a href="{% url 'policies_settings' %}" class="list-group-item {% if page = 'policies' %}active-option{% endif %}" id="policies_option">{% trans "Privacy Policy" %}</a>
+				  <a href="{% url 'profile_settings' %}" class="list-group-item {% if page == 'profile' %}active-option{% endif %}" id="profile_option">{% trans "Profile" %}</a>
+				  <a href="{% url 'account_settings' %}" class="list-group-item {% if page == 'account' %}active-option{% endif %}" id="account_option">{% trans "Account" %}</a>
+				  <a href="{% url 'storage_settings' %}" class="list-group-item {% if page == 'storage' %}active-option{% endif %}" id="storage_option">{% trans "Storage" %}</a>
+				  <a href="{% url 'tokens_settings' %}" class="list-group-item {% if page == 'tokens' %}active-option{% endif %}" id="tokens_option">{% trans "Tokens" %}</a>
+				  <a href="{% url 'preferences_settings' %}" class="list-group-item {% if page == 'preferences' %}active-option{% endif %}" id="preferences_option">{% trans "Preferences" %}</a>
+				  <a href="{% url 'policies_settings' %}" class="list-group-item {% if page == 'policies' %}active-option{% endif %}" id="policies_option">{% trans "Privacy Policy" %}</a>
 				</div>
 			</div>
 		</div>
