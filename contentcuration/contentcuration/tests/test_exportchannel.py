@@ -102,7 +102,7 @@ def fileobj_video(contents=None):
     # then create a File object with that
     db_file_obj = mixer.blend(cc.File, file_format=fileformat_mp4(), preset=preset_video(), file_on_disk=storage_file_path)
 
-    yield db_file_obj
+    return db_file_obj
 
 
 def assessment_item():
@@ -133,7 +133,7 @@ def channel():
         leaf = mixer.blend(cc.ContentNode, parent=level2, kind=video())
         leaf2 = mixer.blend(cc.ContentNode, parent=level2, kind=exercise(), title='EXERCISE 1', extra_fields="{\"mastery_model\":\"do_all\",\"randomize\":true}")
 
-        video_file = fileobj_video().next()
+        video_file = fileobj_video()
         video_file.contentnode = leaf
         video_file.save()
 
