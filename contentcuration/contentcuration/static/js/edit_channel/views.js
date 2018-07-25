@@ -4,9 +4,6 @@ var Models = require("./models");
 var analytics = require("utils/analytics");
 
 //var UndoManager = require("backbone-undo");
-function get_author(){
-	return window.preferences.author || "";
-}
 
 var TABINDEX = 1;
 
@@ -28,7 +25,7 @@ var MESSAGES = {
 	"copy": "Copy",
 	"topic": "Topic",
 	"exercise_title": "Exercise",
-	"select_all": "Select All",
+	"select_all": "Select all",
     "preview": "Preview",
 	"deleting": "Deleting...",
 	"archiving": "Archiving Content...",
@@ -571,6 +568,10 @@ var BaseListView = BaseView.extend({
 		_.bindAll(this, 'load_content', 'close', 'handle_if_empty', 'check_all', 'get_selected',
 			'set_root_model', 'update_views', 'cancel_actions');
 	},
+	is_segment: function() {
+		// Used for clipboard channel segmenting
+		return false;
+	},
 	set_root_model:function(model){
 		this.model.set(model.toJSON());
 	},
@@ -846,14 +847,22 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 		return promise;
   	},
 	add_nodes:function(collection){
+		var item_map = _.object(_.map(this.views, function(view) {
+			return [view.id(), view];
+		}));
+
 		var self = this;
-		collection.forEach(function(entry){
-			var new_view = self.create_new_view(entry);
-			self.$(self.list_selector).append(new_view.el);
+		collection.forEach(function(node) {
+			self.add_single_node(node, item_map);
 		});
+
 		this.model.set('children', this.model.get('children').concat(collection.pluck('id')));
 		this.reload_ancestors(collection, false);
 		this.handle_if_empty();
+	},
+	add_single_node:function(node) {
+		var new_view = this.create_new_view(node);
+		this.$(this.list_selector).append(new_view.el);
 	},
 	add_topic: function(){
 		var UploaderViews = require("edit_channel/uploader/views");
@@ -861,7 +870,6 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 		this.collection.create_new_node({
             "kind":"topic",
             "title": (this.model.get('parent'))? this.model.get('title') + " " + this.get_translation("topic") : this.get_translation("topic"),
-            "author": get_author(),
         }).then(function(new_topic){
         	var edit_collection = new Models.ContentNodeCollection([new_topic]);
 	        $("#main-content-area").append("<div id='dialog'></div>");
@@ -917,8 +925,10 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 		this.collection.create_new_node({
             "kind":"exercise",
             "title": (this.model.get('parent'))? this.model.get('title') + " " + this.get_translation("exercise_title") : this.get_translation("exercise_title"), // Avoid having exercises prefilled with 'email clipboard'
-            "author": get_author(),
-            "copyright_holder": (window.preferences.copyright_holder === null) ? get_author() : window.preferences.copyright_holder,
+            "author": window.preferences.author || "",
+            "aggregator": window.preferences.aggregator || "",
+            "provider": window.preferences.provider || "",
+            "copyright_holder": window.preferences.copyright_holder || "",
             "license_name": window.preferences.license,
             "license_description": window.preferences.license_description || ""
         }).then(function(new_exercise){
@@ -980,7 +990,7 @@ var BaseListEditableItemView = BaseListItemView.extend({
 		var self = this;
 		return new Promise(function(resolve, reject){
 			self.originalData = data;
-			if(self.model.isNew()){
+			if(self.model.isNew() && self.containing_list_view){
 				self.containing_list_view.create_new_item(data).then(function(newView){
 					resolve(newView.model);
 				}).catch(function(error){
@@ -1080,7 +1090,7 @@ var BaseListNodeItemView = BaseListEditableItemView.extend({
 		(this.getToggler().text() === this.collapsedIcon) ? this.open_folder() : this.close_folder();
 	},
 	open_folder:function(open_speed){
-		open_speed = (open_speed)? open_speed: 200;
+		open_speed = _.isNumber(open_speed) ? open_speed: 200;
 		this.getSubdirectory().slideDown(open_speed);
 		if(!this.subcontent_view){
 			this.load_subfiles();
@@ -1222,12 +1232,23 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 		});
 	},
 	make_copy: function(message){
+		// Makes inline copy
 		message=(message!=null)? message: this.get_translation("making_copy");
 		var copyCollection = new Models.ContentNodeCollection();
 		copyCollection.add(this.model);
 		var self = this;
 		this.display_load(message, function(resolve, reject){
-			self.model.make_copy(self.containing_list_view.model).then(function(collection) {
+			var target_parent = self.containing_list_view.model;
+			// If the target parent is a UI segment, go up a level to its parent to
+			// get the collection to make a copy into.
+			if (self.containing_list_view.is_segment()) {
+				target_parent = self
+					.containing_list_view
+					.content_node_view
+					.containing_list_view
+					.model;
+			}
+			self.model.make_copy(target_parent).then(function(collection) {
 				var new_view = self.containing_list_view.create_new_view(collection.at(0));
 				self.$el.after(new_view.el);
 				self.reload_ancestors(collection, true, resolve);
@@ -1242,7 +1263,6 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
             "kind":"topic",
             "title": (this.model.get('parent'))? this.model.get('title') + " " + this.get_translation("topic_title") : this.get_translation("topic_title"),
             "sort_order" : this.model.get("metadata").max_sort_order,
-            "author": get_author(),
         }).then(function(new_topic){
         	var edit_collection = new Models.ContentNodeCollection([new_topic]);
 	        $("#main-content-area").append("<div id='dialog'></div>");

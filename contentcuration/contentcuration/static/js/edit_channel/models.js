@@ -244,16 +244,22 @@ var InvitationCollection = BaseCollection.extend({
 /**** CHANNEL AND CONTENT MODELS ****/
 function fetch_nodes(ids, url){
     return new Promise(function(resolve, reject){
-        if(ids.length === 0) {
-            resolve(new ContentNodeCollection()); // No need to make a call to the server
-        }
-        $.ajax({
-            method:"GET",
-            url: url(ids.join(",")),
-            error: reject,
-            success: function(data) {
-                resolve(new ContentNodeCollection(data));
-            }
+        // Getting "Request Line is too large" error on some channels, so chunk the requests
+        var promises = _.chain(ids).chunk(50).map(function(id_list) {
+            return new Promise(function(promise_resolve, promise_reject){
+                if(id_list.length === 0) {
+                    promise_resolve([]); // No need to make a call to the server
+                }
+                $.ajax({
+                    method:"GET",
+                    url: url(id_list.join(",")),
+                    error: promise_reject,
+                    success: promise_resolve
+                });
+            });
+        }).value();
+        Promise.all(promises).then(function(values) {
+            resolve(new ContentNodeCollection(_.flatten(values)));
         });
     });
 }
@@ -289,9 +295,35 @@ var ContentNodeModel = BaseModel.extend({
             });
         });
     },
+    fetch_details: function() {
+        var self = this;
+        return new Promise(function(resolve, reject){
+            $.ajax({
+                method:"GET",
+                url: window.Urls.get_topic_details(self.id),
+                success: function(result) {
+                    self.set('metadata', JSON.parse(result))
+                    resolve(self);
+                },
+                error:reject
+            });
+        });
+    },
     has_related_content: function(){
         return this.get('prerequisite').length || this.get('is_prerequisite_of').length;
     },
+    get_original_channel_id: function() {
+      var original_channel = this.get('original_channel');
+      return original_channel ? original_channel['id'] : 'unknown_channel_id';
+    },
+    get_original_channel_title: function() {
+      var original_channel = this.get('original_channel');
+      return original_channel ? original_channel['name'] : '';
+    },
+		get_original_channel_thumbnail: function() {
+			var original_channel = this.get('original_channel');
+			return original_channel ? original_channel['thumbnail_url'] : '';
+		},
     initialize: function () {
 		if (this.get("extra_fields") && typeof this.get("extra_fields") !== "object"){
 			this.set("extra_fields", JSON.parse(this.get("extra_fields")))

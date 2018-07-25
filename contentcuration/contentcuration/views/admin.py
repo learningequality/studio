@@ -26,7 +26,8 @@ from django.template.loader import render_to_string, get_template
 from django.template import Context
 from itertools import chain
 from rest_framework.renderers import JSONRenderer
-from contentcuration.api import check_supported_browsers
+
+from contentcuration.decorators import browser_is_supported, is_admin
 from contentcuration.models import Channel, User, Invitation, ContentNode, generate_file_on_disk_name, File, Language
 from contentcuration.utils.messages import get_messages
 from contentcuration.serializers import AdminChannelListSerializer, AdminUserListSerializer, CurrentUserSerializer, UserChannelListSerializer
@@ -72,16 +73,10 @@ def send_custom_email(request):
     return HttpResponse(json.dumps({"success": True}))
 
 @login_required
+@browser_is_supported
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
-@permission_classes((IsAdminUser,))
+@is_admin
 def administration(request):
-    # Check if browser is supported
-    if not check_supported_browsers(request.META['HTTP_USER_AGENT']):
-        return redirect(reverse_lazy('unsupported_browser'))
-
-    if not request.user.is_admin:
-        return redirect(reverse_lazy('unauthorized'))
-
     return render(request, 'administration.html', {
                                                  "current_user": JSONRenderer().render(CurrentUserSerializer(request.user).data),
                                                  "default_sender": settings.DEFAULT_FROM_EMAIL,
@@ -199,8 +194,6 @@ def get_editors(request, channel_id):
     user_serializer = UserChannelListSerializer(user_list, many=True)
 
     return Response(user_serializer.data)
-
-
 
 def sizeof_fmt(num, suffix='B'):
     """ Format sizes """

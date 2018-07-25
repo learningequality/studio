@@ -1,3 +1,4 @@
+import ast
 import collections
 import functools
 import hashlib
@@ -6,10 +7,9 @@ import logging
 import os
 import socket
 import sys
+import urlparse
 import uuid
 
-from contentcuration.statistics import record_channel_stats
-from contentcuration.utils.networking import get_local_ip_address
 from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
@@ -23,12 +23,16 @@ from django.db.models import Q, Sum
 from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.translation import ugettext as _
-from jsonfield import JSONField
-from le_utils.constants import (content_kinds, exercises, file_formats,
+from django.contrib.postgres.fields import JSONField
+from le_utils.constants import (content_kinds, exercises, file_formats, licenses,
                                 format_presets, languages, roles)
 from mptt.models import (MPTTModel, TreeForeignKey, TreeManager,
                          raise_if_unsaved)
+
 from pg_utils import DistinctSum
+
+from contentcuration.statistics import record_channel_stats
+from contentcuration.utils.networking import get_local_ip_address
 
 EDIT_ACCESS = "edit"
 VIEW_ACCESS = "view"
@@ -37,6 +41,8 @@ DEFAULT_CONTENT_DEFAULTS = {
     'license': None,
     'language': None,
     'author': None,
+    'aggregator': None,
+    'provider': None,
     'copyright_holder': None,
     'license_description': None,
     'mastery_model': exercises.NUM_CORRECT_IN_A_ROW_5,
@@ -90,8 +96,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     preferences = models.TextField(default=DEFAULT_USER_PREFERENCES)
     disk_space = models.FloatField(default=524288000, help_text=_('How many bytes a user can upload'))
 
-    information = JSONField(load_kwargs={'object_pairs_hook': collections.OrderedDict}, null=True)
-    content_defaults = JSONField(load_kwargs={'object_pairs_hook': collections.OrderedDict}, default=DEFAULT_CONTENT_DEFAULTS)
+    information = JSONField(null=True)
+    content_defaults = JSONField(default=DEFAULT_CONTENT_DEFAULTS)
+    policies = JSONField(default=dict, null=True)
 
     objects = UserManager()
     USERNAME_FIELD = 'email'
@@ -260,65 +267,54 @@ def generate_object_storage_name(checksum, filename):
     """ Separated from file_on_disk_name to allow for simple way to check if has already exists """
     h = checksum
     basename, ext = os.path.splitext(filename)
-    directory = os.path.join(settings.STORAGE_ROOT, h[0], h[1])
+    # Use / instead of os.path.join as Windows makes this \\
+    directory = "/".join([settings.STORAGE_ROOT, h[0], h[1]])
     return os.path.join(directory, h + ext.lower())
 
 
 def generate_storage_url(filename, request=None, *args):
+    """
+    Generate a storage URL for the given content filename.
+    """
 
     path = generate_object_storage_name(os.path.splitext(filename)[0], filename)
 
-    # We have to handle these cases:
-    # 1. In normal kubernetes, nginx will proxy this for us. So just return a relative path.
-    # 2. When ran through Telepresence, the cluster's DNS host is available to the host. So we should then use whatever is
-    #    defined in AWS_S3_STORAGE_URL.
-    # 3. We go through nanobox, meaning it's the same IP address as the server, but a different port.
-    # New! 4. We go through a production object storage server. In that case, just return the object storage URL
+    # There are three scenarios where Studio might be run as:
+    #
+    # 1. In normal kubernetes, nginx will proxy for us. We'll know we're in kubernetes when the
+    # environment variable RUN_MODE=k8s
+    #
+    # 2. In Docker Compose and bare metal runserver, we'll be running in runserver, and minio
+    # will be exposed in port 9000 in the host's localhost network.
 
-    # host = get_local_ip_address()
-    # # assume the port is 9000, the default of minio
-    # port = 9000
+    # Note (aron): returning the true storage URL (e.g. https://storage.googleapis.com/storage/a.mp4)
+    # isn't too important, because we have CDN in front of our servers, so it should be cached.
+    # But change the logic here in case there is a potential for bandwidth and latency improvement.
 
     # Detect our current state first
-    IS_RUNSERVER = "runserver" in sys.argv
-    HAS_MINIO_DNS_RECORD = False
-    IS_PRODUCTION_OBJECT_STORAGE_SERVER = "https://" in settings.AWS_S3_ENDPOINT_URL
+    run_mode = os.getenv("RUN_MODE")
 
-    # if we're using production, just return the real path to the prod server
-
-    try:
-        HAS_MINIO_DNS_RECORD = socket.gethostbyname("minio")
-    except socket.gaierror:
-        logging.debug("minio DNS record not detected. Assuming we're in a plain runserver command without Kubernetes.")
-
-    if IS_PRODUCTION_OBJECT_STORAGE_SERVER:
-        url = default_storage.url(path)
-
-    # We can detect if we're running in normal kubernetes mode, if we're not running runserver.
-    elif not IS_RUNSERVER:
+    # if we're running inside k8s, then just serve the normal /content/{storage,databases} URL,
+    # and let nginx handle proper proxying.
+    if run_mode == "k8s":
         url = "/content/{path}".format(
-            bucket=settings.AWS_STORAGE_BUCKET_NAME,
+            bucket=settings.AWS_S3_BUCKET_NAME,
             path=path,
         )
 
-    # If we're running runserver, but the minio DNS is available, we're likely running on Telepresence+Kubernetes
-    elif IS_RUNSERVER and HAS_MINIO_DNS_RECORD:
-        # then return the URL but have the host as the minio endpoint URL
-        url = "{host}/{bucket}/{path}".format(
-            host=settings.AWS_S3_ENDPOINT_URL,
-            bucket=settings.AWS_STORAGE_BUCKET_NAME,
-            path=path,
-        )
-    # likely running through plain bare metal runserver, or using nanobox
-    # then just serve the same IP and just change the port
-    else:
-        host = get_local_ip_address()
+    # if we're in docker-compose or in baremetal, just return the object storage URL as localhost:9000
+    elif run_mode == "docker-compose" or run_mode is None:
+        # generate the minio storage URL, so we can get the GET parameters that give everyone
+        # access even if they don't need to log in
+        params = urlparse.urlparse(default_storage.url(path)).query
+        host = "localhost"
         port = 9000 # hardcoded to the default minio IP address
-        url = "http://{host}:{port}/{bucket}/{path}".format(
+        url = "http://{host}:{port}/{bucket}/{path}?{params}".format(
             host=host,
             port=port,
-            bucket=settings.AWS_STORAGE_BUCKET_NAME,
+            bucket=settings.AWS_S3_BUCKET_NAME,
             path=path,
+            params=params,
         )
 
     return url
@@ -416,7 +412,7 @@ class Channel(models.Model):
     deleted = models.BooleanField(default=False, db_index=True)
     public = models.BooleanField(default=False, db_index=True)
     preferences = models.TextField(default=DEFAULT_USER_PREFERENCES)
-    content_defaults = JSONField(load_kwargs={'object_pairs_hook': collections.OrderedDict}, default=DEFAULT_CONTENT_DEFAULTS)
+    content_defaults = JSONField(default=DEFAULT_CONTENT_DEFAULTS)
     priority = models.IntegerField(default=0, help_text=_("Order to display public channels"))
     last_published = models.DateTimeField(blank=True, null=True)
     secret_tokens = models.ManyToManyField(
@@ -515,6 +511,17 @@ class Channel(models.Model):
                     os.unlink(channel_db_url)
                     self.main_tree.published = False
             self.main_tree.save()
+
+    def get_thumbnail(self):
+        if self.thumbnail_encoding:
+            thumbnail_data = ast.literal_eval(self.thumbnail_encoding)
+            if thumbnail_data.get("base64"):
+                return thumbnail_data["base64"]
+
+        if self.thumbnail and 'static' not in self.thumbnail:
+            return generate_storage_url(self.thumbnail)
+
+        return '/static/img/kolibri_placeholder.png'
 
     class Meta:
         verbose_name = _("Channel")
@@ -624,7 +631,11 @@ class ContentNode(MPTTModel, models.Model):
 
     changed = models.BooleanField(default=True, db_index=True)
     extra_fields = models.TextField(blank=True, null=True)
-    author = models.CharField(max_length=200, blank=True, default="", help_text=_("Person who created content"),
+    author = models.CharField(max_length=200, blank=True, default="", help_text=_("Who created this content?"),
+                              null=True)
+    aggregator = models.CharField(max_length=200, blank=True, default="", help_text=_("Who gathered this content together?"),
+                              null=True)
+    provider = models.CharField(max_length=200, blank=True, default="", help_text=_("Who distributed this content?"),
                               null=True)
 
     role_visibility = models.CharField(max_length=50, choices=roles.choices, default=roles.LEARNER)

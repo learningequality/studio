@@ -54,6 +54,7 @@
 /* ICONS AND BUTTONS */
 @topnav-active-tab-color:#564462;
 @red-error-color:#EF2121;
+@darkred-color: firebrick;
 .action-button {
   background: @blue-500;
   border: 1px solid @blue-500 !important;
@@ -61,12 +62,25 @@
   padding: 5px 16px;
   border-radius: 2px;
   cursor: pointer;
+  text-decoration: none;
   &:hover, &:focus {
     background: white;
     color: @blue-500 !important;
     font-weight:bold;
+    text-decoration: none;
   }
 }
+
+.red-action-button {
+    .action-button;
+    background: @darkred-color;
+    color: white;
+    border-color: @darkred-color !important;
+    &:hover, &:focus {
+      background-color: white;
+      color: @darkred-color !important;
+    }
+  }
 
 .action-text {
   color: @blue-500;
@@ -261,4 +275,5 @@ ul li.placeholder:before {
   font-size:14pt;
   font-weight:bold;
   font-style:italic;
+  padding-bottom: 20px;
 }

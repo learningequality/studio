@@ -178,9 +178,6 @@ urlpatterns = [
     url(r'^channels/(?P<channel_id>[^/]{32})/edit', views.channel, name='channel'),
     url(r'^channels/(?P<channel_id>[^/]{32})/view', views.channel_view_only, name='channel_view_only'),
     url(r'^channels/(?P<channel_id>[^/]{32})/staging', views.channel_staging, name='channel_staging'),
-    url(r'^unsupported_browser/$', views.unsupported_browser, name='unsupported_browser'),
-    url(r'^unauthorized/$', views.unauthorized, name='unauthorized'),
-    url(r'^staging_not_found/$', views.staging_not_found, name='staging_not_found'),
     url(r'^accessible_channels/(?P<channel_id>[^/]{32})$', views.accessible_channels, name='accessible_channels'),
     url(r'^get_user_channels/$', views.get_user_channels, name='get_user_channels'),
     url(r'^get_user_bookmarked_channels/$', views.get_user_bookmarked_channels, name='get_user_bookmarked_channels'),
@@ -223,6 +220,7 @@ urlpatterns += [
     url(r'^api/get_node_path/(?P<topic_id>[^/]+)/(?P<tree_id>[^/]+)/(?P<node_id>[^/]*)$', node_views.get_node_path, name='get_node_path'),
     url(r'^api/duplicate_node_inline$', node_views.duplicate_node_inline, name='duplicate_node_inline'),
     url(r'^api/delete_nodes$', node_views.delete_nodes, name='delete_nodes'),
+    url(r'^api/get_topic_details/(?P<contentnode_id>[^/]*)$', node_views.get_topic_details, name='get_topic_details'),
 ]
 
 # Add file api enpoints
@@ -238,8 +236,7 @@ urlpatterns += [
 
 # Add account/registration endpoints
 urlpatterns += [
-    url(r'^accounts/login/$', auth_views.login, {'template_name': 'registration/login.html'}, name='login'),
-    url(r'^accounts/logout/$', auth_views.logout, {'template_name': 'registration/logout.html'}, name='logout'),
+    url(r'^accounts/logout/$', auth_views.logout, {'template_name': 'registration/logout.html'}),
     url(
         r'^accounts/password/reset/$',
         registration_views.custom_password_reset,
@@ -249,6 +246,7 @@ urlpatterns += [
     url(r'^accounts/register/$', registration_views.UserRegistrationView.as_view(), name='registration_register'),
     url(r'^accounts/register-information/$', registration_views.InformationRegistrationView.as_view(), name='registration_information'),
     url(r'^accounts/', include('registration.backends.hmac.urls')),
+    url(r'^activate/(?P<activation_key>[-:\w]+)/$', registration_views.UserActivationView.as_view(), name='registration_activate'),
     url(r'^api/send_invitation_email/$', registration_views.send_invitation_email, name='send_invitation_email'),
     url(r'^new/accept_invitation/(?P<user_id>[^/]+)/', registration_views.new_user_redirect, name="accept_invitation_and_registration"),
     url(r'^new/finish_registration/(?P<user_id>[^/]+)/$', registration_views.new_user_redirect, name="reset_password_registration"),
@@ -260,8 +258,13 @@ urlpatterns += [
     url(r'^settings/profile', settings_views.ProfileView.as_view(), name='profile_settings'),
     url(r'^settings/preferences', settings_views.PreferencesView.as_view(), name='preferences_settings'),
     url(r'^settings/account$', settings_views.account_settings, name='account_settings'),
+    url(r'^api/delete_user_account/(?P<user_email>[^/]+)/$', settings_views.delete_user_account, name='delete_user_account'),
+    url(r'^api/export_user_data/(?P<user_email>[^/]+)/$', settings_views.export_user_data, name='export_user_data'),
+    url(r'^settings/account/deleted', settings_views.account_deleted, name='account_deleted'),
     url(r'^settings/tokens', settings_views.tokens_settings, name='tokens_settings'),
-    url(r'^settings/storage', settings_views.storage_settings, name='storage_settings'),
+    url(r'^settings/storage', settings_views.StorageSettingsView.as_view(), name='storage_settings'),
+    url(r'^settings/policies', settings_views.policies_settings, name='policies_settings'),
+    url(r'^policies/update', settings_views.PolicyAcceptView.as_view(), name='policy_update'),
 ]
 
 # Add internal endpoints

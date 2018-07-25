@@ -12,7 +12,8 @@ from django.db.models import Q, Case, When, Value, IntegerField, F, TextField
 from django.core.urlresolvers import reverse_lazy
 from django.utils.translation import ugettext as _
 from rest_framework.renderers import JSONRenderer
-from contentcuration.api import check_supported_browsers, add_editor_to_channel, activate_channel, get_staged_diff, check_health_check_browser
+from contentcuration.api import add_editor_to_channel, activate_channel, get_staged_diff
+from contentcuration.decorators import browser_is_supported, can_access_channel, can_edit_channel, has_accepted_policies
 from contentcuration.models import VIEW_ACCESS, Language, Channel, License, FileFormat, FormatPreset, ContentKind, ContentNode, Invitation, User, SecretToken, StagedFile
 from contentcuration.serializers import LanguageSerializer, AltChannelListSerializer, RootNodeSerializer, ChannelListSerializer, ChannelSerializer, PublicChannelSerializer, SimplifiedChannelListSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, CurrentUserSerializer, UserChannelListSerializer, InvitationSerializer
 from contentcuration.tasks import exportchannel_task, generatechannelcsv_task
@@ -24,12 +25,8 @@ from le_utils.constants import exercises, roles
 
 from rest_framework.response import Response
 
+@browser_is_supported
 def base(request):
-    user_agent = request.META.get('HTTP_USER_AGENT')
-    if check_health_check_browser(user_agent):
-        return health(request)
-    elif not check_supported_browsers(user_agent):
-        return redirect(reverse_lazy('unsupported_browser'))
     if request.user.is_authenticated():
         return redirect('channels')
     else:
@@ -46,18 +43,6 @@ def health(request):
 def stealth(request):
     return HttpResponse("<3")
 
-def unsupported_browser(request):
-    return render(request, 'unsupported_browser.html')
-
-
-def unauthorized(request):
-    return render(request, 'unauthorized.html')
-
-
-def staging_not_found(request):
-    return render(request, 'staging_not_found.html')
-
-
 def get_or_set_cached_constants(constant, serializer):
     cached_data = cache.get(constant.__name__)
     if cached_data:
@@ -68,15 +53,14 @@ def get_or_set_cached_constants(constant, serializer):
     cache.set(constant.__name__, constant_data, None)
     return constant_data
 
-
+@can_access_channel
+@has_accepted_policies
 def redirect_to_channel(request, channel_id):
     channel = Channel.objects.get(pk=channel_id)
     if channel.editors.filter(pk=request.user.pk).exists():
         return redirect(reverse_lazy('channel', kwargs={'channel_id': channel_id}))
     elif channel.viewers.filter(pk=request.user.pk).exists() or channel.public:
         return redirect(reverse_lazy('channel_view_only', kwargs={'channel_id': channel_id}))
-    return redirect(reverse_lazy('unauthorized'))
-
 
 def redirect_to_channel_edit(request, channel_id):
     return redirect(reverse_lazy('channel', kwargs={'channel_id': channel_id}))
@@ -128,17 +112,27 @@ def channel_page(request, channel, allow_edit=False, staging=False):
 
 
 @login_required
+@browser_is_supported
+@has_accepted_policies
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def channel_list(request):
-    if not check_supported_browsers(request.META.get('HTTP_USER_AGENT')):
-        return redirect(reverse_lazy('unsupported_browser'))
-
     languages = get_or_set_cached_constants(Language, LanguageSerializer)
+    fileformats = get_or_set_cached_constants(FileFormat, FileFormatSerializer)
+    licenses = get_or_set_cached_constants(License, LicenseSerializer)
+    formatpresets = get_or_set_cached_constants(FormatPreset, FormatPresetSerializer)
+    contentkinds = get_or_set_cached_constants(ContentKind, ContentKindSerializer)
+    languages = get_or_set_cached_constants(Language, LanguageSerializer)
+
 
     return render(request, 'channel_list.html', {"channel_name": False,
                                                  "current_user": JSONRenderer().render(UserChannelListSerializer(request.user).data),
                                                  "user_preferences": json.dumps(request.user.content_defaults),
+                                                 "langs_list": languages,
+                                                 "fileformat_list": fileformats,
+                                                 "license_list": licenses,
+                                                 "fpreset_list": formatpresets,
+                                                 "ckinds_list": contentkinds,
                                                  "langs_list": languages,
                                                  "messages": get_messages(),
                                                 })
@@ -202,20 +196,20 @@ def get_user_view_channels(request):
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def get_user_pending_channels(request):
-    pending_list = Invitation.objects.select_related('channel', 'sender').filter(invited=request.user)
+    pending_list = Invitation.objects.select_related('channel', 'sender')\
+                                    .filter(invited=request.user, channel__deleted=False)\
+                                    .exclude(channel=None) # Don't include channels that have been deleted
     invitation_serializer = InvitationSerializer(pending_list, many=True)
 
     return Response(invitation_serializer.data)
 
 
 @login_required
+@browser_is_supported
+@has_accepted_policies
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def channel(request, channel_id):
-    # Check if browser is supported
-    if not check_supported_browsers(request.META.get('HTTP_USER_AGENT')):
-        return redirect(reverse_lazy('unsupported_browser'))
-
     channel = get_object_or_404(Channel, id=channel_id, deleted=False)
 
     # Check user has permission to view channel
@@ -226,38 +220,27 @@ def channel(request, channel_id):
 
 
 @login_required
+@browser_is_supported
+@can_access_channel
+@has_accepted_policies
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def channel_view_only(request, channel_id):
-    # Check if browser is supported
-    if not check_supported_browsers(request.META.get('HTTP_USER_AGENT')):
-        return redirect(reverse_lazy('unsupported_browser'))
-
     channel = get_object_or_404(Channel, id=channel_id, deleted=False)
-
-    # Check user has permission to view channel
-    if not channel.public and not channel.editors.filter(id=request.user.id).exists() and not channel.viewers.filter(id=request.user.id).exists() and not request.user.is_admin:
-        return redirect(reverse_lazy('unauthorized'))
-
     return channel_page(request, channel)
 
 
 @login_required
+@browser_is_supported
+@can_edit_channel
+@has_accepted_policies
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def channel_staging(request, channel_id):
-    # Check if browser is supported
-    if not check_supported_browsers(request.META.get('HTTP_USER_AGENT')):
-        return redirect(reverse_lazy('unsupported_browser'))
-
-    channel = get_object_or_404(Channel, id=channel_id, deleted=False)
-
-    # Check user has permission to edit channel
-    if not channel.editors.filter(id=request.user.id).exists() and not request.user.is_admin:
-        return redirect(reverse_lazy('unauthorized'))
+    channel = Channel.objects.get(pk=channel_id)
 
     if not channel.staging_tree:
-        return redirect(reverse_lazy('staging_not_found'))
+        return render(request, 'staging_not_found.html')
 
     return channel_page(request, channel, allow_edit=True, staging=True)
 
@@ -289,9 +272,10 @@ def publish_channel(request):
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
 def accessible_channels(request, channel_id):
+    # Used for import modal
     accessible_list = ContentNode.objects.filter(
         pk__in=Channel.objects.select_related('main_tree')
-        .filter(Q(deleted=False) & (Q(editors=request.user) | Q(viewers=request.user)))
+        .filter(Q(deleted=False) & (Q(public=True) | Q(editors=request.user) | Q(viewers=request.user)))
         .exclude(pk=channel_id).values_list('main_tree_id', flat=True)
     )
 
@@ -307,7 +291,7 @@ def accept_channel_invite(request):
     invitation = Invitation.objects.get(pk=data['invitation_id'])
     channel = invitation.channel
     channel.is_view_only = invitation.share_mode == VIEW_ACCESS
-    channel_serializer = ChannelListSerializer(channel)
+    channel_serializer = AltChannelListSerializer(channel)
     add_editor_to_channel(invitation)
 
     return HttpResponse(JSONRenderer().render(channel_serializer.data))
@@ -330,6 +314,8 @@ def activate_channel_endpoint(request):
 def get_staged_diff_endpoint(request):
     if request.method == 'POST':
         return HttpResponse(json.dumps(get_staged_diff(json.loads(request.body)['channel_id'])))
+
+    return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
 
 
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))

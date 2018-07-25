@@ -15,12 +15,13 @@ from django.template.loader import render_to_string
 from django.utils.translation import ugettext as _
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic.edit import FormView
-from registration.backends.hmac.views import RegistrationView
+from registration.backends.hmac.views import RegistrationView, ActivationView
 
 from contentcuration.api import add_editor_to_channel
 from contentcuration.forms import RegistrationForm, RegistrationInformationForm, USAGES
 from contentcuration.models import Channel, User, Invitation
 from contentcuration.statistics import record_user_registration_stats
+from contentcuration.utils.policies import get_latest_policies
 
 """ REGISTRATION/INVITATION ENDPOINTS """
 
@@ -28,7 +29,7 @@ from contentcuration.statistics import record_user_registration_stats
 @csrf_exempt
 def send_invitation_email(request):
     if request.method != 'POST':
-        raise HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
 
     data = json.loads(request.body)
 
@@ -131,7 +132,7 @@ class InformationRegistrationView(RegistrationView):
 
     def get_context_data(self, **kwargs):
         kwargs = super(InformationRegistrationView, self).get_context_data(**kwargs)
-        kwargs.update({"help_email": settings.HELP_EMAIL})
+        kwargs.update({"help_email": settings.HELP_EMAIL, "policies": get_latest_policies()})
         return kwargs
 
     def get_initial(self):
@@ -145,11 +146,6 @@ class InformationRegistrationView(RegistrationView):
         }
 
     def register(self, form):
-        # Send email regarding new user information
-        subject = render_to_string('registration/custom_email_subject.txt', {"subject": "New Kolibri Studio Registration"})
-        message = render_to_string('registration/registration_information_email.txt', form.cleaned_data)
-        send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [settings.REGISTRATION_INFORMATION_EMAIL])
-
         # Clear session cached fields
         self.request.session["freeze_email"] = False
         for field in RegistrationForm.Meta.fields:
@@ -182,8 +178,22 @@ def new_user_redirect(request, user_id):
     user = User.objects.get(pk=user_id)
     if user.is_active:
         return redirect(reverse_lazy("channels"))
-    logout(request)
     request.session["email"] = user.email
     request.session["freeze_email"] = True
-
+    logout(request)
     return redirect(reverse_lazy("registration_register"))
+
+class UserActivationView(ActivationView):
+    def activate(self, *args, **kwargs):
+        user = super(UserActivationView, self).activate(*args, **kwargs)
+
+        if settings.SEND_USER_ACTIVATION_NOTIFICATION_EMAIL and user:
+            # Send email regarding new user information
+            subject = render_to_string('registration/custom_email_subject.txt', {"subject": "New Kolibri Studio Registration"})
+            message = render_to_string('registration/registration_information_email.txt', {
+                "user": user,
+                "information": dict(user.information)
+            })
+            send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [settings.REGISTRATION_INFORMATION_EMAIL])
+
+        return user

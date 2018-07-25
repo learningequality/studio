@@ -44,9 +44,12 @@ http {
         }
 
         location /content/ {
+            proxy_http_version 1.1;
             proxy_pass         {{ $aws_s3_endpoint_url }}/{{ $aws_s3_bucket_name }}/;
             proxy_set_header   Host $proxy_host;
+            proxy_set_header   Accept-Encoding Identity;
             proxy_redirect     off;
+            gzip off;
         }
     }
 }

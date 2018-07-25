@@ -1,7 +1,10 @@
+import datetime
 import gettext
 import pycountry
 import json
+import re
 from contentcuration.models import User, Language
+from contentcuration.utils.policies import get_latest_policies
 from django import forms
 from django.conf import settings
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, UserChangeForm, PasswordChangeForm, PasswordResetForm
@@ -31,7 +34,9 @@ class RegistrationForm(forms.Form, ExtraFormMixin):
 
     def clean_email(self):
         email = self.cleaned_data['email'].strip()
-        if User.objects.filter(email__iexact=email, is_active=True).exists():
+        if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+            self.add_error('email', _('Email is invalid.'))
+        elif User.objects.filter(email__iexact=email, is_active=True).exists():
             self.add_error('email', _('Email already exists.'))
         return email
 
@@ -92,6 +97,7 @@ class RegistrationInformationForm(UserCreationForm, ExtraFormMixin):
     organization = forms.CharField(required=False, widget=forms.TextInput, label=_("Name of Organization"))
     conference = forms.CharField(required=False, widget=forms.TextInput, label=_("Name of Conference"))
     other_source = forms.CharField(required=False, widget=forms.TextInput, label=_("Please describe"))
+    accepted_policy = forms.BooleanField(widget=forms.CheckboxInput())
 
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop('request', None)
@@ -144,12 +150,16 @@ class RegistrationInformationForm(UserCreationForm, ExtraFormMixin):
         # Check "How did you hear about us?" has extra information if certain options are selected
         source = self.check_field('source', _('Please indicate how you heard about us'))
         if source:
-            if source == 'organization' and self.check_field('organization', _('Please indicate organization')):
-                self.cleaned_data['source'] = "{} (organization)".format(self.cleaned_data['organization'])
-            elif source == 'conference' and self.check_field('conference', _('Please indicate conference')):
-                self.cleaned_data['source'] = "{} (conference)".format(self.cleaned_data['conference'])
+            if source == 'organization':
+                if self.cleaned_data.get('organization'):
+                    self.cleaned_data['source'] = "{} (organization)".format(self.cleaned_data['organization'])
+            elif source == 'conference':
+                if self.cleaned_data.get('conference'):
+                    self.cleaned_data['source'] = "{} (conference)".format(self.cleaned_data['conference'])
             elif source == 'other' and self.check_field('other_source', _('Please indicate how you heard about us')):
                 self.cleaned_data['source'] = self.cleaned_data['other_source']
+
+        self.check_field('accepted_policy', _('Please accept our Privacy Policy'))
 
         return self.cleaned_data
 
@@ -165,6 +175,9 @@ class RegistrationInformationForm(UserCreationForm, ExtraFormMixin):
             "heard_from": self.cleaned_data['source'],
         }
 
+        latest_policies = get_latest_policies()
+        user.policies = {k: datetime.datetime.now().strftime("%d/%m/%y %H:%M") for k, v in latest_policies.items()}
+
         if commit:
             user.save()
 
@@ -173,6 +186,23 @@ class RegistrationInformationForm(UserCreationForm, ExtraFormMixin):
     class Meta:
         model = User
         fields = ('first_name', 'last_name', 'password1', 'password2')
+
+class PolicyAcceptForm(forms.Form):
+    accepted = forms.BooleanField(widget=forms.CheckboxInput())
+    policy_names = forms.CharField(widget=forms.HiddenInput())
+
+    class Meta:
+        model = User
+        fields = ('accepted', 'policy_names')
+
+    def save(self, user):
+        user.policies = user.policies or {}
+        policies = self.cleaned_data['policy_names'].rstrip(",").split(",")
+        for policy in policies:
+            user.policies.update({policy: datetime.datetime.now().strftime("%d/%m/%y %H:%M")})
+        user.save()
+        return user
+
 
 
 class ProfileSettingsForm(UserChangeForm):
@@ -221,6 +251,8 @@ except Exception:
 class PreferencesSettingsForm(forms.Form):
     # TODO: Add language, audio thumbnail, document thumbnail, exercise thumbnail, html5 thumbnail once implemented
     author = forms.CharField(required=False, label=_('Author'), widget=forms.TextInput(attrs={'class': 'form-control setting_input'}))
+    aggregator = forms.CharField(required=False, label=_('Aggregator'), widget=forms.TextInput(attrs={'class': 'form-control setting_input'}))
+    provider = forms.CharField(required=False, label=_('Provider'), widget=forms.TextInput(attrs={'class': 'form-control setting_input'}))
     copyright_holder = forms.CharField(required=False, label=_('Copyright Holder'), widget=forms.TextInput(attrs={'class': 'form-control setting_input'}))
     license_description = forms.CharField(required=False, label=_('License Description'), widget=forms.TextInput(attrs={'class': 'form-control setting_input'}))
     language = forms.ChoiceField(required=False, widget=forms.Select(attrs={'class': 'form-control setting_change'}), label=_('Language'), choices=LANGUAGES)
@@ -241,6 +273,8 @@ class PreferencesSettingsForm(forms.Form):
     def save(self, user):
         user.content_defaults = {
             'author': self.cleaned_data["author"] or "",
+            'aggregator': self.cleaned_data["aggregator"] or "",
+            'provider': self.cleaned_data["provider"] or "",
             'copyright_holder': self.cleaned_data["copyright_holder"],
             'license': self.cleaned_data["license"],
             'license_description': self.cleaned_data['license_description'] if self.cleaned_data['license'] == 'Special Permissions' else None,
@@ -256,6 +290,56 @@ class PreferencesSettingsForm(forms.Form):
         }
         user.save()
         return user
+
+
+class StorageRequestForm(forms.Form, ExtraFormMixin):
+    # Nature of content
+    storage = forms.CharField(required=True, widget=forms.TextInput(attrs={"placeholder": _("e.g. 1GB"), "class": "short-field"}))
+    kind = forms.CharField(required=True, widget=forms.TextInput(attrs={"placeholder": _("Mostly high resolution videos, some pdfs, etc."), "class": "long-field"}))
+    resource_count = forms.CharField(required=False, widget=forms.TextInput(attrs={"class": "short-field"}))
+    resource_size = forms.CharField(required=False, widget=forms.TextInput(attrs={"placeholder": _("e.g. 10MB"), "class": "short-field"}))
+
+    # How are you using your content
+    license = forms.MultipleChoiceField(required=True, widget=forms.CheckboxSelectMultiple(), choices=licenses.choices)
+    audience = forms.CharField(required=True, widget=forms.TextInput(attrs={"placeholder": _("In-school learners, adult learners, teachers, etc."), "class":"long-field"}))
+    org_or_personal = forms.ChoiceField(required=True, widget=forms.RadioSelect, choices=[
+        ('Personal Use', _("I am using the content for personal use")),
+        ('Organization', _("I am uploading content on behalf of")),
+    ])
+    organization = forms.CharField(required=False, widget=forms.TextInput(attrs={"placeholder": _("Organization or Institution")}))
+    message = forms.CharField(required=False, widget=forms.Textarea(attrs={"rows": 4}))
+
+
+    def __init__(self, *args, **kwargs):
+        channels = kwargs.pop('channel_choices', None)
+        super(StorageRequestForm, self).__init__(*args, **kwargs)
+
+        self.fields['public'] = forms.MultipleChoiceField(required=False, widget=forms.SelectMultiple, choices=channels)
+
+
+    class Meta:
+        fields = ("storage", "kind", "video_type", "resource_count", "resource_size", "license", "public", "audience", "org_or_personal", "organization")
+
+    def clean(self):
+        cleaned_data = super(StorageRequestForm, self).clean()
+        self.errors.clear()
+
+        self.check_field('storage', _("Please indicate how much storage you need"))
+        self.check_field('kind', _("Please indicate what kind of content you are uploading"))
+
+        self.cleaned_data["license"] = ", ".join(self.cleaned_data.get('license') or [])
+        self.check_field('license', _("Please indicate the licensing for your content"))
+        self.check_field('audience', _("Please indicate your target audience"))
+        self.check_field('org_or_personal', _("Please indicate for whom you are uploading your content"))
+
+        if self.cleaned_data.get("org_or_personal") == "Organization":
+            self.check_field('organization', _("Please indicate your organization or institution"))
+
+        self.cleaned_data['public'] = ",".join(self.cleaned_data.get('public') or [])
+
+
+        return self.cleaned_data
+
 
 
 class AccountSettingsForm(PasswordChangeForm):

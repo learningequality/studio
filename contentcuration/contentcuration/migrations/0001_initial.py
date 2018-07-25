@@ -92,7 +92,7 @@ class Migration(migrations.Migration):
                 'verbose_name_plural': 'Topics',
             },
             managers=[
-                ('objects', django.db.models.manager.Manager()),
+                ('_default_manager', django.db.models.manager.Manager()),
             ],
         ),
         migrations.CreateModel(

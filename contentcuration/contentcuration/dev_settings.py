@@ -1,24 +1,8 @@
 import logging
 import os
 
-from .settings import *
+from .test_settings import *
 
-DEBUG = True
-ALLOWED_HOSTS = ["studio.local", "192.168.31.9", "127.0.0.1", "*"]
-
-ACCOUNT_ACTIVATION_DAYS = 7
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-SITE_ID = 2
-logging.basicConfig(level='DEBUG')
-
-# Allow the debug() context processor to add variables to template context.
-# Include here the IPs from which a local dev server might be accessed. See
-# https://docs.djangoproject.com/en/2.0/ref/settings/#internal-ips
-INTERNAL_IPS = (
-    '127.0.0.1',
-    'studio.local',
-    '192.168.31.9',
-)
 
 try:
     import debug_panel
@@ -32,7 +16,6 @@ else:
     DEBUG_TOOLBAR_CONFIG = {
         'SHOW_TOOLBAR_CALLBACK': lambda x: True,
     }
-
 
 DEBUG_TOOLBAR_PANELS = [
     'debug_toolbar.panels.versions.VersionsPanel',
@@ -48,3 +31,4 @@ DEBUG_TOOLBAR_PANELS = [
     'debug_toolbar.panels.logging.LoggingPanel',
     'debug_toolbar.panels.redirects.RedirectsPanel',
 ]
+

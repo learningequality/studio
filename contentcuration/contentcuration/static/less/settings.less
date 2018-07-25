@@ -1,5 +1,8 @@
 @import "global-variables.less";
 
+@delete-color: firebrick;
+@error-bg-color:#F7DCDC;
+
 #settings-nav{
 	min-width: 200px;
 	margin-right:20px;
@@ -25,6 +28,7 @@
 	#settings-page{
 		max-width:700px;
 		width:60vw;
+		padding-bottom: 100px;
 
 		h4, h5{ font-weight: bold; }
 		h4{ font-size:16pt; }
@@ -52,6 +56,82 @@
 			font-size: 12pt;
     		padding-top: 5px;
 		}
+
+		#delete-account {
+			color: @delete-color;
+		}
+		.errors li {
+			text-align: center;
+		    background-color: @error-bg-color;
+		    padding: 10px;
+		    color: @red-error-color;
+		    font-size: 10pt;
+		    width: 100%;
+		    margin: 0 auto;
+		    margin-bottom: 1px;
+		}
+		#storage_request_form {
+			p {
+				font-weight: bold;
+				margin-top: 20px;
+				margin-bottom: 2px;
+				color: @gray-700;
+			}
+			ul {
+				list-style: none;
+				padding-left: 20px;
+				&#id_license {
+					-moz-column-count: 3;
+					-moz-column-gap: 20px;
+					-webkit-column-count: 3;
+					-webkit-column-gap: 20px;
+					column-count: 3;
+					column-gap: 20px;
+				}
+			}
+			>ul>li { margin-bottom: 10px; }
+			textarea {
+				resize: none;
+				width: 100%;
+				padding: 5px;
+			}
+			.license-url {
+				font-size: 16pt;
+			    vertical-align: text-bottom;
+			    text-decoration: none;
+			    color: @blue-500;
+			}
+			#public_help {
+				color: @blue-500;
+				font-weight: bold;
+				text-decoration: none;
+			}
+			#id_public {
+				margin-top: 5px;
+				width: 100%;
+				option { padding: 2px 5px; }
+			}
+			input[type="text"] {
+				padding: 0px 2px;
+				margin-left: 10px;
+				&.short-field {
+					width: 75px;
+				}
+				&.long-field {
+					width: 100%;
+    				margin-left: 0px;
+    				margin-bottom: 10px;
+				}
+				&#id_organization {
+					margin-left: 2px;
+					width: 200px;
+				}
+			}
+			.required {
+				color: @red-error-color;
+				margin-left: 2px;
+			}
+		}
 	}
 	.token{
 		min-height:55px;
@@ -75,4 +155,107 @@
 			font-size: 10pt;
 		}
 	}
+
+	.delete-account-btn {
+		.action-button;
+		background: @delete-color;
+		color: white;
+		border-color: @delete-color !important;
+		&:hover, &:focus {
+			background-color: white;
+			color: @delete-color !important;
+		}
+	}
+
+	#deleteAccountModal {
+		.modal-content {
+			width: 550px;
+			.modal-header {
+			    color: white;
+			    background-color: @delete-color;
+			    font-size: 14pt;
+			    font-weight: bold;
+			    padding: 15px;
+			}
+			.warning {
+				font-size: 12pt;
+			    text-align: center;
+			    margin-top: 10px;
+			}
+			.error {
+				display: none;
+				color: @delete-color;
+				font-weight: bold;
+				span {
+					font-size: 8pt;
+    				font-style: normal;
+    				font-weight: normal;
+				}
+				a {
+					font-weight: bold;
+				}
+			}
+			.pending-delete {
+				margin-top: 5px;
+			    margin-right: 10px;
+			    color: @delete-color;
+			    font-weight: bold;
+			    font-style: italic;
+			    display: none;
+			}
+			#email_confirm {
+				font-size: 12pt;
+			    padding: 1px 5px;
+			    width: 100%;
+			}
+			.cancel-delete {
+				color: @gray-700;
+			}
+		}
+
+	}
+
+
 }
+
+#policy-area {
+	padding-top: 50px;
+	width: 60vw;
+	min-width: 400px;
+	margin: 0 auto;
+
+	form {
+		margin-top: 100px;
+		margin-bottom: 200px;
+	}
+
+}
+
+.policy {
+	margin-bottom: 75px;
+
+	.policy-text {
+		padding: 0px 30px;
+		h1 {
+			font-size: 15pt;
+			font-weight: bold;
+			text-align: center;
+		}
+		h2 {
+			font-size: 12pt;
+    		font-weight: bold;
+		}
+		ol, ul {
+			padding: 0px 40px;
+		}
+		a {
+			text-decoration: none;
+			font-weight: bold;
+			color: @blue-500;
+		}
+	}
+}
+
+
+
+
