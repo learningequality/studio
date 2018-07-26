@@ -230,6 +230,14 @@ class CreateChannelTestCase(TestCase):
         # it needs several db objects to generate the data, and those objects need to be available
         # outside of this data structure to ascertain that the proper values were created.
 
+        def get_file_data(fileinfo):
+            fileobj = fileinfo['db_file']
+            return {
+                'filename': fileinfo['name'],
+                'size': fileobj.file_size,
+                'preset': None
+            }
+
         data = [
             {
                 "title": "Western Philosophy",
