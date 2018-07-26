@@ -83,7 +83,12 @@ class PreferencesView(FormView, LoginRequiredMixin):
     def get_initial(self):
 
         initial = self.initial.copy()
-        initial.update(json.loads(self.request.user.content_defaults))
+
+        content_defaults = self.request.user.content_defaults
+        if isinstance(content_defaults, basestring):
+            content_defaults = json.loads(content_defaults)
+        initial.update(content_defaults)
+
         initial.update({
             'm_value': initial.get('m_value') or 1,
             'n_value': initial.get('n_value') or 1,
@@ -268,7 +273,7 @@ class StorageSettingsView(FormView, LoginRequiredMixin):
         storage_percent = (min(storage_used / float(self.request.user.disk_space), 1) * 100)
         breakdown = [{
                         "name": k.capitalize(),
-                        "size":"%.2f" % (float(v)/1048576),
+                        "size": v,
                         "percent": "%.2f" % (min(float(v) / float(self.request.user.disk_space), 1) * 100)
                     } for k,v in self.request.user.get_space_used_by_kind().items()]
 
@@ -276,9 +281,9 @@ class StorageSettingsView(FormView, LoginRequiredMixin):
             "current_user": self.request.user,
             "page": "storage",
             "percent_used": "%.2f" % storage_percent,
-            "used": "%.2f" % (float(storage_used) / 1048576),
-            "total": "%.2f" % (float(self.request.user.disk_space) / 1048576),
-            "available": "%.2f" % (self.request.user.get_available_space() / 1048576),
+            "used": storage_used,
+            "total": self.request.user.disk_space,
+            "available": self.request.user.get_available_space(),
             "breakdown": breakdown,
             "request_email": ccsettings.SPACE_REQUEST_EMAIL,
             "channel_count": self.request.user.editable_channels.count(),

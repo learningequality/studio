@@ -11,18 +11,18 @@
 <p>{% trans "Check your storage usage and request more if needed." %}</p>
 <hr/>
 <div class="container-fluid">
-	<h5>{% trans "Storage Used" %} ({{percent_used}}%)</h5>
+	<h5>{% trans "Storage Used" %} ({{used|format_size}}/{{total|format_size}})</h5>
 	<div class="progress">
 		<div class="progress-bar" role="progressbar" aria-valuenow="{{percent_used}}" aria-valuemin="0" aria-valuemax="100" style="width: {{percent_used}}%;">
-		{{used}}/{{total}}MB
+			{{percent_used}}%
 		</div>
 	</div>
 	<br/>
 	<div class="panel panel-default">
-		<div class="panel-heading usage_header"><b class="pull-right">{{available}}MB {% trans "Available" %}</b>{% trans "Usage" %}</div>
+		<div class="panel-heading usage_header"><b class="pull-right">{{available|format_size}} {% trans "Available" %}</b>{% trans "Usage" %}</div>
 		<ul class="list-group">
 			{% for item in breakdown %}
-				<li class="list-group-item">{{item.name}} - {{item.percent}}% ({{item.size}}MB)</li>
+				<li class="list-group-item">{{item.name}} - {{item.percent}}% ({{item.size|format_size}})</li>
 			{% empty %}<i>{% trans "You don't have any files uploaded" %}</i>
 			{% endfor %}
 		</ul>
