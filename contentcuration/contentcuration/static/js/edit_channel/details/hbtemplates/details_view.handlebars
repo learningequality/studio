@@ -150,7 +150,11 @@
             </div>
             {{else}}
             <div class="container-fluid empty_default text-center">
-                {{formatMessage (intlGet 'messages.empty_details') model=model_name}}
+                {{#if is_channel }}
+                    {{formatMessage (intlGet 'messages.empty_details')}}
+                {{else}}
+                    {{formatMessage (intlGet 'messages.topic_empty_details')}}
+                {{/if}}
             </div>
             {{/if}}
         </div>
@@ -161,7 +165,11 @@
                         <div class="col-xs-4 text-center">
                             <i class="material-icons creator_icon">edit</i>
                             <p>
-                                {{formatMessage (intlGet 'messages.author') model=model_name}}
+                                {{#if is_channel }}
+                                    {{formatMessage (intlGet 'messages.author')}}
+                                {{else}}
+                                    {{formatMessage (intlGet 'messages.topic_author')}}
+                                {{/if}}
                                 {{#if details.authors}}
                                     <ul class="list-unstyled">
                                         {{#each authors.short }}<li><b>{{this}}</b></li>{{/each}}
@@ -179,7 +187,11 @@
                         <div class="col-xs-4 text-center">
                             <i class="material-icons creator_icon">pan_tool</i>
                             <p>
-                                {{formatMessage (intlGet 'messages.provider') model=model_name}}
+                                {{#if is_channel }}
+                                    {{formatMessage (intlGet 'messages.provider')}}
+                                {{else}}
+                                    {{formatMessage (intlGet 'messages.topic_provider')}}
+                                {{/if}}
                                 {{#if details.providers}}
                                     <ul class="list-unstyled">
                                         {{#each providers.short }}<li><b>{{this}}</b></li>{{/each}}
@@ -198,7 +210,11 @@
                         <div class="col-xs-4 text-center">
                             <i class="material-icons creator_icon">inbox</i>
                             <p>
-                                {{formatMessage (intlGet 'messages.aggregator') model=model_name}}
+                                {{#if is_channel }}
+                                    {{formatMessage (intlGet 'messages.aggregator')}}
+                                {{else}}
+                                    {{formatMessage (intlGet 'messages.topic_aggregator')}}
+                                {{/if}}
                                 {{#if details.aggregators}}
                                     <ul class="list-unstyled">
                                         {{#each aggregators.short }}<li><b>{{this}}</b></li>{{/each}}

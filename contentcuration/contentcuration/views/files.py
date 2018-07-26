@@ -4,16 +4,18 @@ import os
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.conf import settings
 from django.core.files import File as DjFile
+from django.core.files.storage import default_storage
 from rest_framework.renderers import JSONRenderer
 from contentcuration.api import write_file_to_storage, get_hash
 from contentcuration.utils.files import generate_thumbnail_from_node
-from contentcuration.models import File, FormatPreset, ContentNode, License, generate_storage_url
+from contentcuration.models import File, FormatPreset, ContentNode, License, generate_storage_url, generate_object_storage_name
 from contentcuration.serializers import FileSerializer, ContentNodeEditSerializer
 from le_utils.constants import format_presets, content_kinds, exercises, licenses
 from pressurecooker.videos import guess_video_preset_by_resolution
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import authentication_classes, permission_classes
+from wsgiref.util import FileWrapper
 
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
@@ -80,7 +82,12 @@ def file_create(request):
     )
     if license and license.is_custom:
         new_node.license_description = preferences.get('license_description')
-    new_node.save()
+
+    # disable mptt updates, since we attach it later to its real tree anyway
+    with ContentNode.objects.disable_mptt_updates():
+        new_node.tree_id = 0
+        new_node.save()
+
     file_object = File(
         file_on_disk=contentfile,
         checksum=checksum,
@@ -207,3 +214,16 @@ def exercise_image_upload(request):
         "file_id": file_object.pk,
         "path": generate_storage_url(str(file_object)),
     }))
+
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
+def debug_serve_file(request, path):
+    # There's a problem with loading exercise images, so use this endpoint
+    # to serve the image files to the /content/storage url
+    filename = os.path.basename(path)
+    checksum, _ext = os.path.splitext(filename)
+    filepath = generate_object_storage_name(checksum, filename)
+
+    with default_storage.open(filepath, 'rb') as fobj:
+        response = HttpResponse(FileWrapper(fobj))
+        return response
