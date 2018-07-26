@@ -2,10 +2,11 @@ import importlib
 
 from django.conf import settings
 from django.core.urlresolvers import reverse
-from django.test import TestCase
+
+from base import StudioTestCase
 
 
-class AllUrlsTest(TestCase):
+class AllUrlsTest(StudioTestCase):
 
     def setUp(self):
         super(AllUrlsTest, self).setUp()

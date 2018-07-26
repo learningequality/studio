@@ -36,7 +36,7 @@ def settings(request):
     return redirect('settings/profile')
 
 
-class ProfileView(FormView, LoginRequiredMixin):
+class ProfileView(LoginRequiredMixin, FormView):
     """
     Base class for user settings views.
     """
@@ -67,7 +67,7 @@ class ProfileView(FormView, LoginRequiredMixin):
         return self.request.user
 
 
-class PreferencesView(FormView, LoginRequiredMixin):
+class PreferencesView(LoginRequiredMixin, FormView):
     """
     Base class for user settings views.
     """
@@ -107,7 +107,7 @@ class PreferencesView(FormView, LoginRequiredMixin):
     def user(self):
         return self.request.user
 
-class PolicyAcceptView(FormView, LoginRequiredMixin):
+class PolicyAcceptView(LoginRequiredMixin, FormView):
     success_url = reverse_lazy('channels')
     form_class = PolicyAcceptForm
     template_name = 'policies/policy_accept.html'
@@ -215,7 +215,7 @@ def policies_settings(request):
 
 
 
-class StorageSettingsView(FormView, LoginRequiredMixin):
+class StorageSettingsView(LoginRequiredMixin, FormView):
     success_url = reverse_lazy('storage_settings')
     template_name = 'settings/storage.html'
     form_class = StorageRequestForm
