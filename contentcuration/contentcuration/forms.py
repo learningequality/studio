@@ -363,10 +363,11 @@ class StorageRequestForm(forms.Form, ExtraFormMixin):
         self.check_field('org_or_personal', _("Please indicate for whom you are uploading your content"))
         if self.cleaned_data.get("org_or_personal") == "Organization":
             self.check_field('organization', _("Please indicate your organization or institution"))
+            self.check_field('organization_type', _("Please indicate your organization type"))
         if self.cleaned_data.get("organization_type") == "Other":
             self.check_field('organization_other', _("Please indicate the type of your organization or group"))
 
-        self.check_field('message', _("Please write a paragraph explaining your use case for Studio."))
+        self.check_field('message', _("Please write a paragraph explaining your use case for Studio"))
 
         self.cleaned_data['public'] = ",".join(self.cleaned_data.get('public') or [])
         self.cleaned_data['location'] = ",".join(self.cleaned_data.get('location') or [])

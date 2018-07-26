@@ -114,7 +114,7 @@
 				</ul>
 			</li>
 			<li>
-				{% trans "What type of organization or group is coordinating the use of Kolibri?" %}{% if form.organization_type.field.required %}
+				{% trans "What type of organization or group is coordinating the use of Kolibri (if applicable)?" %}{% if form.organization_type.field.required %}
 				<b class="required">*</b>{% endif %}
 				<ul class="id_org_or_personal">
 					{% for option in form.organization_type %}
@@ -159,6 +159,15 @@
 	$(".license-url").on("click", function(ev) {
 		ev.stopPropagation();
 	});
+
+	function setOrgTypeDisabled() {
+		$(".id_org_or_personal input[value='Organization']").is(":checked") ?
+			$("input[name='organization_type']").removeAttr('disabled') :
+			$("input[name='organization_type']").attr('disabled', 'disabled');
+	}
+
+	$("input[name='org_or_personal']").on("change", setOrgTypeDisabled);
+	setOrgTypeDisabled();
 
 </script>
 {% endblock settingscontent %}

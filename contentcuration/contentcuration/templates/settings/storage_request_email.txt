@@ -31,7 +31,7 @@ Content Usage
 
 Organization
     Organizational Affiliation: {% if data.org_or_personal == "Organization" %}{{data.organization}}{% else %}{{data.org_or_personal}}{% endif %}
-    Organization Type: {% if data.organization_type %}{{data.organization_type}}{% else %}Not Answered{% endif %}
+    Organization Type: {% if data.organization_type %}{{data.organization_type}}{% else %}{% if data.org_or_personal == "Organization" %}Not Answered{% else %}Not Applicable{% endif %}{% endif %}
 
 Use Case
 {% if data.message %}{{data.message}}{% else %}---{% endif %}
