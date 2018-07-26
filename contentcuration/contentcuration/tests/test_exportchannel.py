@@ -14,6 +14,7 @@ from django.test.utils import override_settings
 from mixer.backend.django import mixer
 from mock import patch
 
+from base import StudioTestCase
 from contentcuration import models as cc
 from contentcuration.management.commands.exportchannel import (MIN_SCHEMA_VERSION,
                                                                create_content_database)
@@ -163,7 +164,7 @@ CONTENT_DATABASE_DIR_TEMP = tempfile.mkdtemp()
 @override_settings(
     CONTENT_DATABASE_DIR=CONTENT_DATABASE_DIR_TEMP,
 )
-class ExportChannelTestCase(TestCase):
+class ExportChannelTestCase(StudioTestCase):
     @classmethod
     def setUpClass(cls):
         super(ExportChannelTestCase, cls).setUpClass()
@@ -176,13 +177,18 @@ class ExportChannelTestCase(TestCase):
 
             def __exit__(self, exc_type, exc_value, traceback):
                 return
-        call_command('loadconstants')
         cls.patch_using = patch('contentcuration.management.commands.exportchannel.using_content_database.__new__', return_value=testing_content_database('alias'))
         cls.patch_using.start()
         cls.patch_copy_db = patch('contentcuration.management.commands.exportchannel.save_export_database')
         cls.patch_copy_db.start()
+
+    def setUp(self):
+        super(ExportChannelTestCase, self).setUp()
         content_channel = channel()
         create_content_database(content_channel.id, True, None, True)
+
+    def tearDown(self):
+        super(ExportChannelTestCase, self).tearDown()
 
     def test_channel_rootnode_data(self):
         channel = models.ChannelMetadata.objects.first()

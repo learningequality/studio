@@ -19,6 +19,7 @@ from django.core.urlresolvers import reverse_lazy
 
 from rest_framework.test import APIClient
 
+from base import StudioTestCase
 from contentcuration import models as cc
 
 
@@ -83,7 +84,7 @@ def create_temp_file(filebytes, kind='text', ext='txt', mimetype='text/plain'):
 # Tests
 ###
 
-class CreateChannelTestCase(TestCase):
+class CreateChannelTestCase(StudioTestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -100,14 +101,14 @@ class CreateChannelTestCase(TestCase):
             "thumbnail": base64.b64encode(":)"),
         }
 
-        call_command('loadconstants')
-
-        cls.topic = cc.ContentKind.objects.get(kind='topic')
-        cls.license = cc.License.objects.all()[0]
-        cls.fileobj_audio = create_temp_file("abc", 'audio', 'mp3', 'application/audio')
-        cls.fileobj_video = create_temp_file("def", 'video', 'mp4', 'application/video')
-        cls.fileobj_document = create_temp_file("ghi", 'document', 'pdf', 'application/pdf')
-        cls.fileobj_exercise = create_temp_file("jkl", 'exercise', 'perseus', 'application/perseus')
+    def setUp(self):
+        super(CreateChannelTestCase, self).setUp()
+        self.topic = cc.ContentKind.objects.get(kind='topic')
+        self.license = cc.License.objects.all()[0]
+        self.fileobj_audio = create_temp_file("abc", 'audio', 'mp3', 'application/audio')
+        self.fileobj_video = create_temp_file("def", 'video', 'mp4', 'application/video')
+        self.fileobj_document = create_temp_file("ghi", 'document', 'pdf', 'application/pdf')
+        self.fileobj_exercise = create_temp_file("jkl", 'exercise', 'perseus', 'application/perseus')
 
     def admin_client(self):
         client = APIClient()
