@@ -218,6 +218,7 @@ class StorageSettingsView(FormView, LoginRequiredMixin):
     def get_form_kwargs(self):
         kw = super(StorageSettingsView, self).get_form_kwargs()
         kw['channel_choices'] = [(c['id'], c['name']) for c in self.request.user.editable_channels.values("id", "name")]
+        kw['request'] = self.request
         return kw
 
     def post(self, request):
@@ -236,10 +237,15 @@ class StorageSettingsView(FormView, LoginRequiredMixin):
                 form.cleaned_data.get('resource_count'),
                 form.cleaned_data.get('resource_size'),
                 form.cleaned_data.get('kind'),
+                form.cleaned_data.get('creators'),
+                form.cleaned_data.get('sample_link'),
                 form.cleaned_data.get('license'),
                 ", ".join(["{} ({})".format(c['name'], c['id']) for c in channels]),
                 form.cleaned_data.get('audience'),
+                form.cleaned_data.get('location'),
+                form.cleaned_data.get('import_count'),
                 uploading_for,
+                form.cleaned_data.get('organization_type'),
                 form.cleaned_data.get('message'),
             ]
 

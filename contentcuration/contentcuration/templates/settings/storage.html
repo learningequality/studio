@@ -53,7 +53,7 @@
 			<li>{% trans "Approximately how many resources are you planning to upload?" %}{% if form.resource_count.field.required %}<b class="required">*</b>{% endif %} {{ form.resource_count }}</li>
 			<li>{% trans "What is the average size of each resource?" %}{% if form.resource_size.field.required %}<b class="required">*</b>{% endif %} {{ form.resource_size }}</li>
 			<li>{% trans "What kind of content are you uploading?" %}{% if form.kind.field.required %}<b class="required">*</b>{% endif %}<br>{{ form.kind }}</li>
-			<li>{% trans "Who is the author (creator), curator (organizer) and/or aggregator (maintainer) of your content? Please specify" %}{% if form.creators.field.required %}<b class="required">*</b>{% endif %}<br>{{ form.creators }}</li>
+			<li>{% trans "Who is the author (creator), curator (organizer), and/or aggregator (maintainer) of your content? Please specify" %}{% if form.creators.field.required %}<b class="required">*</b>{% endif %}<br>{{ form.creators }}</li>
 			<li>{% trans "Link to sample content (on Studio or from source site)" %}{% if form.sample_link.field.required %}<b class="required">*</b>{% endif %}<br>{{ form.sample_link }}</li>
 		</ul>
 
