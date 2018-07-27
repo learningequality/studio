@@ -97,7 +97,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     disk_space = models.FloatField(default=524288000, help_text=_('How many bytes a user can upload'))
 
     information = JSONField(null=True)
-    content_defaults = JSONField(default=DEFAULT_CONTENT_DEFAULTS)
+    content_defaults = JSONField(default=dict)
     policies = JSONField(default=dict, null=True)
 
     objects = UserManager()
@@ -208,10 +208,19 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def save(self, *args, **kwargs):
         super(User, self).save(*args, **kwargs)
+        changed = False
+
+        if not self.content_defaults:
+            self.content_defaults = DEFAULT_CONTENT_DEFAULTS
+            changed = True
+
         if not self.clipboard_tree:
             self.clipboard_tree = ContentNode.objects.create(title=self.email + " clipboard", kind_id="topic",
                                                              sort_order=0)
             self.clipboard_tree.save()
+            changed = True
+
+        if changed:
             self.save()
 
     class Meta:
@@ -412,7 +421,7 @@ class Channel(models.Model):
     deleted = models.BooleanField(default=False, db_index=True)
     public = models.BooleanField(default=False, db_index=True)
     preferences = models.TextField(default=DEFAULT_USER_PREFERENCES)
-    content_defaults = JSONField(default=DEFAULT_CONTENT_DEFAULTS)
+    content_defaults = JSONField(default=dict)
     priority = models.IntegerField(default=0, help_text=_("Order to display public channels"))
     last_published = models.DateTimeField(blank=True, null=True)
     secret_tokens = models.ManyToManyField(
@@ -463,6 +472,9 @@ class Channel(models.Model):
         original_channel = None
         if self.pk and Channel.objects.filter(pk=self.pk).exists():
             original_channel = Channel.objects.get(pk=self.pk)
+
+        if not self.content_defaults:
+            self.content_defaults = DEFAULT_CONTENT_DEFAULTS
 
         record_channel_stats(self, original_channel)
 
@@ -793,8 +805,8 @@ class ContentNode(MPTTModel, models.Model):
             root = self.get_root()
             if self.is_prerequisite_of.exists() and (root.channel_trash.exists() or root.user_clipboard.exists()):
                 PrerequisiteContentRelationship.objects.filter(Q(prerequisite_id=self.id) | Q(target_node_id=self.id)).delete()
-        except ContentNode.DoesNotExist:
-            pass
+        except (ContentNode.DoesNotExist, MultipleObjectsReturned) as e:
+            logging.warn(str(e))
 
     class MPTTMeta:
         order_insertion_by = ['sort_order']
