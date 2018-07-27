@@ -272,16 +272,13 @@ def get_channel_data(channel, site, default_thumbnail=None):
     data["tags"] = ", ".join(channel.tags.exclude(tag_name=None).values_list('tag_name', flat=True).distinct())
 
     # Get language information
-    # languages = list(set(descendants.exclude(language=None).values_list('files__language__readable_name', flat=True)))
-    # accessible_languages = list(set(resources.filter(files__preset__multi_language=True)\
-    #                                             .values_list('files__language__readable_name', flat=True)))
-    # # node_languages = descendants.exclude(language=None).values_list('language__readable_name', flat=True).distinct()
-    # # file_languages = descendants.exclude(files__language=None).values_list('files__language__readable_name', flat=True)
-    # language_list = list(set(chain(languages, accessible_languages)))
-    # # language_list = filter(lambda l: l != None and l != data['language'], language_list)
-    # # language_list = map(lambda l: l.replace(",", " -"), language_list)
-    # # language_list = sorted(map(lambda l: l.replace(",", " -"), language_list))
-    # data["languages"] = ", ".join(language_list)
+    node_languages = descendants.exclude(language=None).values_list('language__readable_name', flat=True).distinct()
+    file_languages = descendants.exclude(files__language=None).values_list('files__language__readable_name', flat=True)
+    language_list = list(set(chain(node_languages, file_languages)))
+    language_list = filter(lambda l: l != None and l != data['language'], language_list)
+    language_list = map(lambda l: l.replace(",", " -"), language_list)
+    language_list = sorted(map(lambda l: l.replace(",", " -"), language_list))
+    data["languages"] = ", ".join(language_list)
     data["languages"] = ""
 
     # Get kind information
@@ -325,12 +322,8 @@ def stream_csv_response_generator(request):
     yield writer.writerow(['Channel', 'ID', 'Public', 'Description', 'Tokens', 'Kind Counts',\
                     'Total Size', 'Language', 'Other Languages', 'Tags', 'Editors', 'Sample Pathway'])
 
-    # pool = ThreadPool(processes=3)
-    # threads = [pool.apply_async(get_channel_data, (c, site)) for c in channels]
-
     for c in channels:
         data = get_channel_data(c, site)
-        # data = t.get()
         yield writer.writerow([data['name'], data['id'], data['public'], data['description'], data['tokens'],\
                     data['kind_counts'], data['total_size'], data['language'], data['languages'], \
                     data['tags'], data['editors'], data['sample_pathway']])
@@ -371,14 +364,6 @@ def download_channel_pdf(request):
     site = get_current_site(request)
 
     default_thumbnail = get_default_thumbnail()
-
-    # pool = ThreadPool(processes=3)
-
-
-    # threads = [pool.apply_async(get_channel_data, (c, site, default_thumbnail)) for c in channels]
-    # channel_list = []
-    # for t in threads:
-        # channel_list.append(t.get())
 
     channel_list = [get_channel_data(c, site, default_thumbnail) for c in channels]
 
