@@ -76,3 +76,37 @@ def ensure_storage_bucket_public(bucket=None, will_sleep=True):
         logger.debug("Successfully set the bucket policy to read only!")
     except ResponseError as e:
         logger.warning("Error setting bucket {} to readonly: {}".format(bucket, e))
+
+
+def ensure_bucket_deleted(bucket=None):
+
+    if not bucket:
+        bucketname = settings.AWS_S3_BUCKET_NAME
+    else:
+        bucketname = bucket
+
+    host = urlparse(settings.AWS_S3_ENDPOINT_URL).netloc
+
+    # GCS' S3 compatibility is broken, especially in bucket operations;
+    # skip bucket creation there and just bug Aron to create buckets with
+    # public-read access for you
+    if "storage.googleapis.com" in host:
+        logging.info("Skipping storage deletion on googleapis; that sounds like a production bucket!")
+        return
+
+    minio_client = minio.Minio(
+        host,
+        access_key=settings.AWS_ACCESS_KEY_ID,
+        secret_key=settings.AWS_SECRET_ACCESS_KEY,
+        secure=False
+    )
+
+    if minio_client.bucket_exists(bucketname):
+        try:
+            # We need to delete all objects first, before we can actually delete the bucket.
+            objs = (o.object_name for o in minio_client.list_objects(bucketname, recursive=True))
+            list(minio_client.remove_objects(bucketname, objs))  # evaluate the generator, or else remove_objects won't actually execute
+            minio_client.remove_bucket(bucketname)
+        except BucketAlreadyOwnedByYou:
+            pass
+

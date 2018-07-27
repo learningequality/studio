@@ -1,6 +1,7 @@
 from django import template
 from django.template.defaultfilters import stringfilter
 from django.utils.translation import ugettext_lazy as _
+from contentcuration.utils.format import format_size as fsize
 
 
 register = template.Library()
@@ -29,3 +30,7 @@ def get_translation(value):
     }
 
     return MESSAGES.get(value)
+
+@register.filter(is_safe=True)
+def format_size(value):
+    return "{} {}".format(*fsize(value))
