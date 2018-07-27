@@ -805,8 +805,8 @@ class ContentNode(MPTTModel, models.Model):
             root = self.get_root()
             if self.is_prerequisite_of.exists() and (root.channel_trash.exists() or root.user_clipboard.exists()):
                 PrerequisiteContentRelationship.objects.filter(Q(prerequisite_id=self.id) | Q(target_node_id=self.id)).delete()
-        except ContentNode.DoesNotExist:
-            pass
+        except (ContentNode.DoesNotExist, MultipleObjectsReturned) as e:
+            logging.warn(str(e))
 
     class MPTTMeta:
         order_insertion_by = ['sort_order']

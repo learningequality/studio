@@ -233,7 +233,9 @@
 	#container-wrapper{
 		overflow:hidden;
 		overflow-x:auto;
+		min-height: @container-min-height + 100;
 		position:absolute;
+		margin-bottom: 150px; // Ensure side scrollbar is visible
 		width:100vw;
 		padding-left:40px;
 		margin-top:20px;
@@ -245,6 +247,8 @@
 		cursor:pointer;
 	}
 	#container_area{
+	    width: -webkit-max-content;
+	    width: -o-max-content;
 		width: -moz-max-content;
 		width: max-content;
     	padding-right: 200px;
@@ -267,8 +271,6 @@
 		margin-right:5px;
 		width: @container-width;
 		display:inline-block;
-		height:  @container-height;
-		min-height: @container-min-height;
 		cursor:default;
 		.back_button{
 			cursor:pointer;
@@ -286,6 +288,8 @@
 			overflow-y: auto;
 			overflow-x:hidden;
 			padding: 0 0 5px 0;
+			height:  @container-height;
+			min-height: @container-min-height;
 			background-color:white;
 			margin-bottom:0px;
 			padding: 1px;
@@ -525,6 +529,7 @@
 				padding:5px;
 				font-size: 12pt;
 				border-radius:3px;
+				margin-bottom: 5px;
 			}
 			.add_content_dropdown{
 				font-size:12pt;
