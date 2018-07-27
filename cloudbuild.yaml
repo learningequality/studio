@@ -44,20 +44,40 @@ steps:
   '--ciphertext-file=k8s/build-secrets/$PROJECT_ID-gcs-service-account.json.enc',
   '--plaintext-file=gcs-service-account.json'
   ]
+- name: 'gcr.io/cloud-builders/gcloud'
+  id: decrypt-gdrive-service-account
+  waitFor: ['-']
+  args: [
+  'kms', 'decrypt',
+  '--location=global', '--keyring=builder-secrets', '--key=secret-encrypter',
+  '--ciphertext-file=k8s/build-secrets/$PROJECT_ID-gdrive-service-account.json.enc',
+  '--plaintext-file=gdrive-service-account.json'
+  ]
+
 - name: 'gcr.io/$PROJECT_ID/helm'
   id: helm-deploy-studio-instance
-  waitFor: ['decrypt-gcs-service-account', 'push-app-image', 'push-nginx-image']
+  waitFor: ['decrypt-gcs-service-account', 'decrypt-gdrive-service-account', 'push-app-image', 'push-nginx-image']
   dir: "k8s"
   env:
   - 'CLOUDSDK_COMPUTE_ZONE=us-central1-f'
   - 'CLOUDSDK_CONTAINER_CLUSTER=dev-qa-cluster'
   secretEnv: ['POSTMARK_API_KEY']
   entrypoint: 'bash'
-  args: [
-  '-c',
-  # still run helm.bash to initialze creds, but otherwise run our own deploy script
-  '/builder/helm.bash && ./helm-deploy.sh $BRANCH_NAME studio-qa-content $COMMIT_SHA $$POSTMARK_API_KEY arontest arontest arontest ops-central-studio-qa-sql-proxy-gcloud-sqlproxy.sqlproxy ../gcs-service-account.json'
-  ]
+  args:
+    - -c
+    - >
+      /builder/helm.bash &&
+      $BRANCH_NAME
+      studio-qa-content
+      $COMMIT_SHA
+      $$POSTMARK_API_KEY
+      arontest
+      arontest
+      arontest
+      ops-central-studio-qa-sql-proxy-gcloud-sqlproxy.sqlproxy
+      ../gcs-service-account.json
+      ops-central
+      ../gdrive-service-account.json
 
 timeout: 3600s
 secrets:
