@@ -49,7 +49,7 @@ steps:
   waitFor: ['-']
   args: [
   'kms', 'decrypt',
-  '--location=global', '--keyring=builder-secrets', '--key=secret-encrypter',
+  '--location=global', '--keyring=prod-secrets', '--key=google-drive',
   '--ciphertext-file=k8s/build-secrets/$PROJECT_ID-gdrive-service-account.json.enc',
   '--plaintext-file=gdrive-service-account.json'
   ]
@@ -60,23 +60,25 @@ steps:
   dir: "k8s"
   env:
   - 'CLOUDSDK_COMPUTE_ZONE=us-central1-f'
-  - 'CLOUDSDK_CONTAINER_CLUSTER=dev-qa-cluster'
-  secretEnv: ['POSTMARK_API_KEY']
+  - 'CLOUDSDK_CONTAINER_CLUSTER=contentworkshop-central'
+  secretEnv: ['POSTMARK_API_KEY', 'POSTGRES_USERNAME', 'POSTGRES_DATABASE', 'POSTGRES_PASSWORD']
   entrypoint: 'bash'
   args:
     - -c
     - >
       /builder/helm.bash &&
+      ./helm-deploy.sh
       $BRANCH_NAME
-      studio-qa-content
+      $_STORAGE_BUCKET
       $COMMIT_SHA
       $$POSTMARK_API_KEY
-      arontest
-      arontest
-      arontest
-      ops-central-studio-qa-sql-proxy-gcloud-sqlproxy.sqlproxy
+      $$POSTGRES_USERNAME
+      $$POSTGRES_DATABASE
+      $$POSTGRES_PASSWORD
+      studio-$_DATABASE_INSTANCE_NAME-sql-proxy-gcloud-sqlproxy.sqlproxy
       ../gcs-service-account.json
-      ops-central
+      $PROJECT_ID
+      is_production
       ../gdrive-service-account.json
 
 substitutions:
