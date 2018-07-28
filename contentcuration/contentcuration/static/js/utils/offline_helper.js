@@ -37,7 +37,7 @@ var languageMapping = {
 }
 
 function getOfflineLanguageName(code) {
-	var language = languageMapping[code.split("-")[0]];
+	var language = languageMapping[code.split("-")[0]] || languageMapping['en'];
 	language.load();
 	return language.language;
 }

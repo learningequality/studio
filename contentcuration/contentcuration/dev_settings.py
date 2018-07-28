@@ -11,6 +11,10 @@ EXCLUDED_DEBUG_URLS = [
 def custom_show_toolbar(request):
     return not any(request.path.startswith(url) for url in EXCLUDED_DEBUG_URLS)
 
+LANGUAGES += (
+    ('ar', ugettext('Arabic')),
+)
+
 try:
     import debug_panel
 except ImportError:
