@@ -38,6 +38,9 @@ class Command(BaseCommand):
             print "{} is not a valid email".format(email)
             sys.exit()
 
+        # create the cache table
+        call_command("createcachetable")
+
         # Run migrations
         call_command('migrate')
 

@@ -77,6 +77,13 @@ INSTALLED_APPS = (
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'studio_db_cache',
+    }
+}
+
 MIDDLEWARE_CLASSES = (
     # 'django.middleware.cache.UpdateCacheMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -218,7 +225,6 @@ LANGUAGES = (
     ('es', ugettext('Spanish')),
     ('es-es', ugettext('Spanish - Spain')),
     ('es-mx', ugettext('Spanish - Mexico')),
-    ('ar', ugettext('Arabic')),
     ('en-PT', ugettext('English - Pirate')),
 )
 

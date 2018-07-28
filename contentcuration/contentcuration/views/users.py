@@ -178,9 +178,10 @@ def new_user_redirect(request, user_id):
     user = User.objects.get(pk=user_id)
     if user.is_active:
         return redirect(reverse_lazy("channels"))
+    logout(request)
     request.session["email"] = user.email
     request.session["freeze_email"] = True
-    logout(request)
+
     return redirect(reverse_lazy("registration_register"))
 
 class UserActivationView(ActivationView):
