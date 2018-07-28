@@ -131,7 +131,7 @@ SITES = [
         "pk": "id",
         "fields": {
             "id": 1,
-            "name": "Kolibri Studio",
+            "name": "Kolibri Studio (Beta)",
             "domain": "studio.learningequality.org",
         },
     },
