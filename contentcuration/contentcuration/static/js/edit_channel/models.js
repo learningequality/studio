@@ -510,6 +510,9 @@ var ContentNodeCollection = BaseCollection.extend({
         });
     },
     create_new_node: function(data){
+        if (!data.get('parent_id')) {
+            throw ReferenceError('A parent_id is required to create a new node');
+        }
         var self = this;
         return new Promise(function(resolve, reject){
             $.ajax({

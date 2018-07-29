@@ -870,6 +870,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 		this.collection.create_new_node({
             "kind":"topic",
             "title": (this.model.get('parent'))? this.model.get('title') + " " + this.get_translation("topic") : this.get_translation("topic"),
+            "parent_id": this.model.get('id'),
         }).then(function(new_topic){
         	var edit_collection = new Models.ContentNodeCollection([new_topic]);
 	        $("#main-content-area").append("<div id='dialog'></div>");
@@ -930,7 +931,8 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
             "provider": window.preferences.provider || "",
             "copyright_holder": window.preferences.copyright_holder || "",
             "license_name": window.preferences.license,
-            "license_description": window.preferences.license_description || ""
+            "license_description": window.preferences.license_description || "",
+            "parent_id": this.model.get('id'),
         }).then(function(new_exercise){
         	var edit_collection = new Models.ContentNodeCollection([new_exercise]);
 	        $("#main-content-area").append("<div id='dialog'></div>");
@@ -1263,6 +1265,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
             "kind":"topic",
             "title": (this.model.get('parent'))? this.model.get('title') + " " + this.get_translation("topic_title") : this.get_translation("topic_title"),
             "sort_order" : this.model.get("metadata").max_sort_order,
+            "parent_id": this.model.get('id'),
         }).then(function(new_topic){
         	var edit_collection = new Models.ContentNodeCollection([new_topic]);
 	        $("#main-content-area").append("<div id='dialog'></div>");
