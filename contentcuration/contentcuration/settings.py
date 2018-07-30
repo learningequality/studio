@@ -133,6 +133,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'contentcuration.context_processors.studio_read_only',
             ],
         },
     },
@@ -250,6 +251,8 @@ SITE_ID = 1
 # EMAIL_BACKEND = 'django_mailgun.MailgunBackend'
 # MAILGUN_ACCESS_KEY = 'ACCESS-KEY'
 # MAILGUN_SERVER_NAME = 'SERVER-NAME'
+
+STUDIO_READ_ONLY = os.getenv('STUDIO_READ_ONLY')
 
 SEND_USER_ACTIVATION_NOTIFICATION_EMAIL = bool(
     os.getenv("SEND_USER_ACTIVATION_NOTIFICATION_EMAIL")

@@ -86,6 +86,11 @@
     		</div><!-- /.navbar-collapse -->
     	</div><!-- /.container-fluid -->
     </nav>
+    {% if STUDIO_READ_ONLY %}
+    <div id="emergency-banner">
+      <i class="material-icons">error</i> <b>{% trans 'EMERGENCY MAINTENANCE:' %}</b> {% trans 'Studio is currently down for maintenance. Please do not attempt to make any changes to your channels or account (you will still be able to import content into Kolibri). We apologize for the inconvenience!' %}
+    </div>
+    {% endif %}
     {% endblock nav %}
 
   	<!-- Site content gets injected here -->
