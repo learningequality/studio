@@ -2,9 +2,11 @@
 {% load staticfiles %}
 {% load i18n %}
 {% load render_bundle from webpack_loader %}
+{% load render_bundle_css from translation_tags %}
 {% get_current_language as LANGUAGE_CODE %}
+{% get_current_language_bidi as LANGUAGE_BIDI %}
 
-<html>
+<html dir="{{ LANGUAGE_BIDI|yesno:'rtl,ltr' }}" lang="{{ LANGUAGE_CODE }}">
 	<head>
 
 			{% block head %}
@@ -17,21 +19,25 @@
 			<meta name="viewport" content="width=device-width, initial-scale=1">
 
 			<title>Kolibri Studio ({% trans 'Beta' %})</title>
-			<!-- TODO work out why debug is not working here and use the static version -->
+      {% render_bundle_css 'common' %}
+      {% block css_bundle %}
+        {% render_bundle_css 'base' %}
+      {% endblock css_bundle %}
       <script>
         window.languageCode = "{{LANGUAGE_CODE}}";
         try{
           window.ALL_MESSAGES = JSON.parse("{{ messages|escapejs}}");
         } catch (error) { /* Page does not require front-end translations */ }
       </script>
-			<script src="{% url 'js_reverse' %}" type="text/javascript"></script>
+      <!-- TODO work out why debug is not working here and use the static version -->
+      <script src="{% url 'js_reverse' %}" type="text/javascript"></script>
 
-			{% render_bundle 'common' %}
-			<!-- prevent more than 1 bundle per page -->
-			{% block bundle %} {% render_bundle 'base' %} {% endblock bundle %}
+      {% render_bundle 'common' 'js' %}
+      <!-- prevent more than 1 bundle per page -->
+      {% block js_bundle %} {% render_bundle 'base' 'js' %} {% endblock js_bundle %}
 
-			<script type="text/javascript" src="{% url 'javascript-catalog' %}"></script>
-			{% endblock head %}
+      <script type="text/javascript" src="{% url 'javascript-catalog' %}"></script>
+      {% endblock head %}
 
       {% block analytics %}
         {% if not debug %}

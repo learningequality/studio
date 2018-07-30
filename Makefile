@@ -36,7 +36,7 @@ makemessages:
 	python contentcuration/manage.py makemessages
 
 uploadmessages: ensurecrowdinclient
-	java -jar /contentcuration/crowdin-cli.jar upload sources
+	java -jar crowdin-cli.jar upload sources
 
 # we need to depend on makemessages, since CrowdIn requires the en folder to be populated
 # in order for it to properly extract strings
