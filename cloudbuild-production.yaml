@@ -5,15 +5,21 @@ steps:
 
 - name: 'gcr.io/cloud-builders/docker'
   id: build-app-image
-  waitFor: ['pull-app-image-cache']              # don't wait for previous steps
-  args: [
-    'build',
-    '-f', 'k8s/images/app/Dockerfile',
-    '--cache-from', 'gcr.io/$PROJECT_ID/learningequality-studio-app:latest',
-    '-t', 'gcr.io/$PROJECT_ID/learningequality-studio-app:$COMMIT_SHA',
-    '-t', 'gcr.io/$PROJECT_ID/learningequality-studio-app:latest',
-    '.'
-    ]
+  entrypoint: bash
+  waitFor: ['pull-app-image-cache']              # wait for app image cache pull to finish
+  secretEnv: ['CROWDIN_PROJECT', 'CROWDIN_API_KEY']
+  args:
+  - -c
+  - >
+    docker build
+    -f k8s/images/app/Dockerfile
+    --cache-from gcr.io/$PROJECT_ID/learningequality-studio-app:latest
+    -t gcr.io/$PROJECT_ID/learningequality-studio-app:$COMMIT_SHA
+    -t gcr.io/$PROJECT_ID/learningequality-studio-app:latest
+    --build-arg CROWDIN_PROJECT=$$CROWDIN_PROJECT
+    --build-arg CROWDIN_API_KEY=$$CROWDIN_API_KEY
+    .
+
 - name: 'gcr.io/cloud-builders/docker'
   id: build-nginx-image
   waitFor: ['-']              # don't wait for previous steps
@@ -100,6 +106,12 @@ secrets:
 - kmsKeyName: projects/contentworkshop-159920/locations/global/keyRings/prod-secrets/cryptoKeys/postgresPassword
   secretEnv:
     POSTGRES_PASSWORD: CiQAMPmSF7yqmZpvhbSTw1eLxx+KzaZi1MUV1QrEpsRL4VnOadUSMgD2FZMP4J23KAW6xGwwwldugufqKGb3takkNo3cpBWJocGQ1T8oQfWyJrjUHFu0PMAI
+- kmsKeyName: projects/contentworkshop-159920/locations/global/keyRings/prod-secrets/cryptoKeys/crowdinProject
+  secretEnv:
+    CROWDIN_PROJECT: CiQA4GP4aWHJjKldoAx95R+RMx+I1WhYKlT5/yOKzGqT4ABZ3joSOQAdnepcOy8znHRi5BkIPc74VD/OE5iV2HtspY8GrSCSGpE/IJcizMcjIrY6KIusaBkePzEHhJKGfA==
+- kmsKeyName: projects/contentworkshop-159920/locations/global/keyRings/prod-secrets/cryptoKeys/crowdinApiKey
+  secretEnv:
+    CROWDIN_API_KEY: CiQA5yVB2KLpFiuaF4kAmNS2+I04GTIBpEl3hy4Px21xpuApka0SSQC1m2SkfC/mzvR1KhoNaKzDHQRG7SyPI69iG/NTjNwV/u56To3swMhMqsD1ErNTITgnZEloUXAPpGSJAL+LLJB0fbzhMsE4cpY=
 
 images:
   - gcr.io/$PROJECT_ID/learningequality-studio-nginx:latest

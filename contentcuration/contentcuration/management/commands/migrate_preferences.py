@@ -24,7 +24,7 @@ class Command(BaseCommand):
                 for i in range(20):
                     if not isinstance(c.content_defaults, basestring):
                         break;
-                    c.content_defaults = json.loads(c.preferences.replace("\\", "").strip("\""))
+                    c.content_defaults = json.loads(c.content_defaults.replace("'", '"').replace("\\", "").strip("\""))
                 c.save()
                 index += 1
                 bar.update(index)
@@ -36,7 +36,7 @@ class Command(BaseCommand):
                 for i in range(20):
                     if not isinstance(u.content_defaults, basestring):
                         break;
-                    u.content_defaults = json.loads(u.preferences.replace("\\", "").strip("\""))
+                    u.content_defaults = json.loads(u.content_defaults.replace("'", '"').replace("\\", "").strip("\""))
                 u.save()
                 index += 1
                 bar.update(index)
