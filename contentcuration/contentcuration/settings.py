@@ -67,6 +67,7 @@ INSTALLED_APPS = (
     'rest_framework',
     'django_js_reverse',
     'kolibri_content',
+    'readonly',
     'email_extras',
     'le_utils',
     'rest_framework.authtoken',
@@ -89,6 +90,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'contentcuration.middleware.db_readonly.DatabaseReadOnlyMiddleware',
     # 'django.middleware.cache.FetchFromCacheMiddleware',
 )
 
@@ -133,7 +135,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'contentcuration.context_processors.studio_read_only',
+                'readonly.context_processors.readonly',
             ],
         },
     },
@@ -252,7 +254,8 @@ SITE_ID = 1
 # MAILGUN_ACCESS_KEY = 'ACCESS-KEY'
 # MAILGUN_SERVER_NAME = 'SERVER-NAME'
 
-STUDIO_READ_ONLY = os.getenv('STUDIO_READ_ONLY')
+# READ-ONLY SETTINGS
+SITE_READ_ONLY = os.getenv('STUDIO_READ_ONLY')
 
 SEND_USER_ACTIVATION_NOTIFICATION_EMAIL = bool(
     os.getenv("SEND_USER_ACTIVATION_NOTIFICATION_EMAIL")

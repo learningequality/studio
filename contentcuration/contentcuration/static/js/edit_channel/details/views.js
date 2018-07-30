@@ -18,6 +18,7 @@ var MESSAGES = {
     "saved": "SAVED!",
     "header": "CHANNEL DETAILS",
     "save_changes": "SAVE CHANGES",
+    "unable_to_save": "Error Saving Channel",
     "channel_name": "Channel Name",
     "channel_name_error": "Channel name cannot be blank.",
     "channel_name_placeholder": "Enter channel name...",
@@ -312,6 +313,8 @@ var ChannelEditorView = BaseViews.BaseListEditableItemView.extend({
                 self.render();
             }
 
+        }).catch( function(error) {
+            dialog.alert(self.get_translation("unable_to_save"), error.responseText);
         });
     },
     register_changes:function(){

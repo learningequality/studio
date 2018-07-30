@@ -86,9 +86,9 @@
     		</div><!-- /.navbar-collapse -->
     	</div><!-- /.container-fluid -->
     </nav>
-    {% if STUDIO_READ_ONLY %}
-    <div id="emergency-banner">
-      <i class="material-icons">error</i> <b>{% trans 'EMERGENCY MAINTENANCE:' %}</b> {% trans 'Studio is currently down for maintenance. Please do not attempt to make any changes to your channels or account (you will still be able to import content into Kolibri). We apologize for the inconvenience!' %}
+    {% if SITE_READ_ONLY %}
+    <div id="emergency-banner" class="text-center">
+      <i class="material-icons">error</i> <b>{% trans 'EMERGENCY MAINTENANCE:' %}</b> {% trans "Kolibri Studio is operating on read-only mode for the time being in order for us to resolve some maintenance issues. This means all editing capabilities are disabled at the moment. Please know we're working very hard to fix the issue as soon as possible. If you have any questions please contact us at content@learningequality.org. We apologize for any inconvenience caused and appreciate your patience." %}
     </div>
     {% endif %}
     {% endblock nav %}
