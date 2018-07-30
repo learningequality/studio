@@ -20,5 +20,5 @@ class DatabaseReadOnlyMiddleware(MiddlewareMixin):
             return None
 
         # Handle the exception
-        if request.method == 'POST':
+        if request.method != 'GET':
             return HttpResponseBadRequest(_('The site is currently in read-only mode. Please try again later.'))
