@@ -67,6 +67,7 @@ INSTALLED_APPS = (
     'rest_framework',
     'django_js_reverse',
     'kolibri_content',
+    'readonly',
     'email_extras',
     'le_utils',
     'rest_framework.authtoken',
@@ -76,6 +77,13 @@ INSTALLED_APPS = (
 )
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'studio_db_cache',
+    }
+}
 
 MIDDLEWARE_CLASSES = (
     # 'django.middleware.cache.UpdateCacheMiddleware',
@@ -89,6 +97,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'contentcuration.middleware.db_readonly.DatabaseReadOnlyMiddleware',
     # 'django.middleware.cache.FetchFromCacheMiddleware',
 )
 
@@ -133,6 +142,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'readonly.context_processors.readonly',
             ],
         },
     },
@@ -218,7 +228,6 @@ LANGUAGES = (
     ('es', ugettext('Spanish')),
     ('es-es', ugettext('Spanish - Spain')),
     ('es-mx', ugettext('Spanish - Mexico')),
-    ('ar', ugettext('Arabic')),
     ('en-PT', ugettext('English - Pirate')),
 )
 
@@ -251,6 +260,9 @@ SITE_ID = 1
 # MAILGUN_ACCESS_KEY = 'ACCESS-KEY'
 # MAILGUN_SERVER_NAME = 'SERVER-NAME'
 
+# READ-ONLY SETTINGS
+SITE_READ_ONLY = os.getenv('STUDIO_READ_ONLY') or False
+
 SEND_USER_ACTIVATION_NOTIFICATION_EMAIL = bool(
     os.getenv("SEND_USER_ACTIVATION_NOTIFICATION_EMAIL")
 )
@@ -268,7 +280,7 @@ DEFAULT_LICENSE = 1
 SERVER_EMAIL = 'curation-errors@learningequality.org'
 ADMINS = [('Errors', SERVER_EMAIL)]
 
-DEFAULT_TITLE = "Kolibri Studio"
+DEFAULT_TITLE = "Kolibri Studio (Beta)"
 
 IGNORABLE_404_URLS = [
     re.compile(r'\.(php|cgi)$'),

@@ -8,7 +8,7 @@ from contentcuration import models
 import logging as logmodule
 from django.core.cache import cache
 logging = logmodule.getLogger(__name__)
-
+from readonly.exceptions import DatabaseWriteDenied
 
 import os
 import le_utils
@@ -131,7 +131,7 @@ SITES = [
         "pk": "id",
         "fields": {
             "id": 1,
-            "name": "Kolibri Studio",
+            "name": "Kolibri Studio (Beta)",
             "domain": "studio.learningequality.org",
         },
     },
@@ -191,6 +191,9 @@ class Command(BaseCommand):
                     obj.save()
                 self.stdout.write("{0}: {1} constants saved ({2} new)".format(str(current_model), len(constant_list), new_model_count))
             self.stdout.write("************ DONE. ************")
+
+        except DatabaseWriteDenied as e:
+            logging.warning("DB is in read-only mode, skipping loadconstants")
 
         except EarlyExit as e:
             logging.warning("Exited early due to {message}.".format(

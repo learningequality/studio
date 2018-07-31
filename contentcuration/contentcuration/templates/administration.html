@@ -2,11 +2,16 @@
 {% extends "base.html" %}
 {% load staticfiles %}
 {% load i18n %}
+{% load render_bundle_css from translation_tags %}
 {% load render_bundle from webpack_loader %}
 
-{% block bundle %}
-	{% render_bundle 'channel_edit' %}
-{% endblock bundle %}
+{% block css_bundle %}
+	{% render_bundle_css 'channel_edit' %}
+{% endblock css_bundle %}
+
+{% block js_bundle %}
+	{% render_bundle 'channel_edit' 'js' %}
+{% endblock js_bundle %}
 
 {% block content %}
 

@@ -23,6 +23,7 @@ from rest_framework_bulk import BulkSerializerMixin
 
 from contentcuration.models import *
 from contentcuration.statistics import record_node_addition_stats, record_action_stats
+from contentcuration.utils.format import format_size
 from le_utils.constants import licenses
 
 class LicenseSerializer(serializers.ModelSerializer):
@@ -837,7 +838,8 @@ class AdminUserListSerializer(serializers.ModelSerializer):
     is_chef = serializers.SerializerMethodField('check_if_chef')
 
     def calculate_space(self, user):
-        return user.disk_space / 1048576
+        size, unit = format_size(user.disk_space)
+        return {"size": round(float(size)), "unit": unit}
 
     def calculate_used_space(self, user):
         return user.get_space_used()
