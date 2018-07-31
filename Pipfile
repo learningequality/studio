@@ -55,6 +55,7 @@ requests = "==2.19.1"
 google-cloud-core = ">=0.28.1"
 gspread = "==3.0.1"
 google-api-python-client = "==1.6.4"
+django-db-readonly = "==0.5.0"
 
 [dev-packages]
 python-language-server = "*"
