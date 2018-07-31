@@ -95,6 +95,7 @@ def create_new_node(request):
         copyright_holder=data.get('copyright_holder'),
         license_id=license_id,
         license_description=data.get('license_description'),
+        parent_id=data.get('parent_id'),
     )
     return HttpResponse(JSONRenderer().render(ContentNodeEditSerializer(new_node).data))
 
