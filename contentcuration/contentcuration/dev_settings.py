@@ -3,6 +3,17 @@ import os
 
 from .test_settings import *
 
+# These endpoints will throw an error on the django debug panel
+EXCLUDED_DEBUG_URLS = [
+    "/content/storage",
+]
+
+def custom_show_toolbar(request):
+    return not any(request.path.startswith(url) for url in EXCLUDED_DEBUG_URLS)
+
+LANGUAGES += (
+    ('ar', ugettext('Arabic')),
+)
 
 try:
     import debug_panel
@@ -14,7 +25,7 @@ else:
     INSTALLED_APPS += ('debug_panel', 'debug_toolbar', 'pympler')
     MIDDLEWARE_CLASSES += ('debug_panel.middleware.DebugPanelMiddleware',)
     DEBUG_TOOLBAR_CONFIG = {
-        'SHOW_TOOLBAR_CALLBACK': lambda x: True,
+        'SHOW_TOOLBAR_CALLBACK': custom_show_toolbar,
     }
 
 DEBUG_TOOLBAR_PANELS = [
