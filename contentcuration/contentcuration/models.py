@@ -589,6 +589,8 @@ class License(models.Model):
         return self.license_name
 
 def get_next_sort_order(node=None):
+    # Get the next sort order under parent (roots if None)
+    # Based on Kevin's findings, we want to append node as prepending causes all other root sort_orders to get incremented
     max_order = ContentNode.objects.filter(parent=node).aggregate(max_order=Max('sort_order'))['max_order'] or 0
     return max_order + 1
 
