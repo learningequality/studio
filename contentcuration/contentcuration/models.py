@@ -774,25 +774,27 @@ class ContentNode(MPTTModel, models.Model):
 
         self.changed = self.changed or len(self.get_changed_fields()) > 0
 
-        # Detect if node has been moved to another tree
-        if self.pk and ContentNode.objects.filter(pk=self.pk).exists():
+        # Detect if node has been moved to another tree (if the original parent has not already been marked as changed, mark as changed)
+        # Necessary if nodes get deleted/moved to clipboard- user needs to be able to publish "changed" nodes
+        if self.pk and ContentNode.objects.filter(pk=self.pk, parent__changed=False).exclude(parent_id=self.parent_id).exists():
             original = ContentNode.objects.get(pk=self.pk)
-            if original.parent and original.parent_id != self.parent_id and not original.parent.changed:
-                original.parent.changed = True
-                original.parent.save()
+            original.parent.changed = True
+            original.parent.save()
 
         if self.original_node is None:
             self.original_node = self
         if self.cloned_source is None:
             self.cloned_source = self
 
-        # TODO: This SIGNIFICANTLY slows down the creation flow
-        #   Avoid calling get_channel() (db read)
-        channel = (self.parent and self.parent.get_channel()) or self.get_channel() # Check parent first otherwise new content won't have root
         if self.original_channel_id is None:
+            # TODO: This SIGNIFICANTLY slows down the creation flow
+            channel = (self.parent and self.parent.get_channel()) or self.get_channel() # Check parent first otherwise new content won't have root
             self.original_channel_id = channel.id if channel else None
         if self.source_channel_id is None:
+            # TODO: This SIGNIFICANTLY slows down the creation flow
+            channel = (self.parent and self.parent.get_channel()) or self.get_channel() # Check parent first otherwise new content won't have root
             self.source_channel_id = channel.id if channel else None
+
         if self.original_source_node_id is None:
             self.original_source_node_id = self.node_id
         if self.source_node_id is None:
