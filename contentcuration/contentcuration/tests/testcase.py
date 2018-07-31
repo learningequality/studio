@@ -176,12 +176,9 @@ class BaseAPITestCase(StudioAPITestCase):
         self.client.force_authenticate(self.user)
         self.channel.main_tree.refresh_from_db()
 
-
-    @classmethod
     def get(self, url):
         return self.client.get(url, headers=self.header)
 
-    @classmethod
     def create_post_request(self, url, *args, **kwargs):
         factory = APIRequestFactory()
         request = factory.post(url, headers=self.header, *args, **kwargs)
