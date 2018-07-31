@@ -10,13 +10,13 @@ import pytest
 from django.conf import settings
 from django.core.files.storage import default_storage
 from django.core.management import call_command
-from django.test import TestCase
 from rest_framework.authtoken.models import Token
-from rest_framework.test import APITestCase, APIClient, APIRequestFactory, force_authenticate
+from rest_framework.test import APIClient, APIRequestFactory, force_authenticate
 from django.test.utils import override_settings
 from mixer.backend.django import mixer
 
 from contentcuration import models as cc
+from contentcuration.tests.base import StudioTestCase, StudioAPITestCase
 from le_utils.constants import format_presets
 pytestmark = pytest.mark.django_db
 
@@ -158,20 +158,18 @@ def user():
     user.save()
     return user
 
-class BaseTestCase(TestCase):
+class BaseTestCase(StudioTestCase):
     @classmethod
     def setUpClass(self):
         super(BaseTestCase, self).setUpClass()
-        call_command('loadconstants')
         self.channel = channel()
         self.user = user()
         self.channel.main_tree.refresh_from_db()
 
-class BaseAPITestCase(APITestCase):
+class BaseAPITestCase(StudioAPITestCase):
     @classmethod
     def setUpClass(self):
         super(BaseAPITestCase, self).setUpClass()
-        call_command('loadconstants')
         self.channel = channel()
         self.user = user()
         token, _new = Token.objects.get_or_create(user=self.user)
