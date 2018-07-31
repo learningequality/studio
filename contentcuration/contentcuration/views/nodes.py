@@ -206,10 +206,9 @@ def get_topic_details(request, contentnode_id):
             contentnode_id (str): id of topic node to get details from
     """
     # Get nodes and channel
-    node = ContentNode.objects.prefetch_related('children', 'files', 'tags')\
-                            .select_related('license', 'language')\
-                            .get(pk=contentnode_id)
-    descendants = node.get_descendants()
+    node = ContentNode.objects.get(pk=contentnode_id)
+    descendants = node.get_descendants().prefetch_related('children', 'files', 'tags')\
+                            .select_related('license', 'language')
     channel = node.get_channel()
 
     # If channel is a sushi chef channel, use date created for faster query
