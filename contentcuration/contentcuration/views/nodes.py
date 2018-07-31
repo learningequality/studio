@@ -239,7 +239,7 @@ def get_topic_details(request, contentnode_id):
     providers = filter(bool, set(split_lst[3])) if len(split_lst) > 3 else []
 
     # Get sample pathway by getting longest path
-    max_level = max(resources.values_list('level', flat=True)) # Using resources.aggregate adds a lot of time, use values that have already been fetched
+    max_level = max(resources.values_list('level', flat=True).distinct() or [0])  # Using resources.aggregate adds a lot of time, use values that have already been fetched
     deepest_node = resources.filter(level=max_level).first()
     pathway = list(deepest_node.get_ancestors()\
                             .exclude(parent=None)\
