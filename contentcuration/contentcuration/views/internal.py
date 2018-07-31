@@ -19,7 +19,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from contentcuration import ricecooker_versions as rc
 from contentcuration.api import get_staged_diff, write_file_to_storage, activate_channel, get_hash
-from contentcuration.models import AssessmentItem, Channel, ContentNode, ContentTag, File, FormatPreset, Language, License, StagedFile, generate_object_storage_name
+from contentcuration.models import AssessmentItem, Channel, ContentNode, ContentTag, File, FormatPreset, Language, License, StagedFile, generate_object_storage_name, get_next_sort_order
 from contentcuration.utils.tracing import trace
 from contentcuration.utils.files import get_file_diff
 
@@ -454,7 +454,7 @@ def create_channel(channel_data, user):
     channel.chef_tree = ContentNode.objects.create(
         title=channel.name,
         kind_id=content_kinds.TOPIC,
-        sort_order=0,
+        sort_order=get_next_sort_order(),
         published=is_published,
         content_id=channel.id,
         node_id=channel.id,

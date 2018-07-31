@@ -19,7 +19,7 @@ from django.core.exceptions import (MultipleObjectsReturned,
 from django.core.files.storage import FileSystemStorage, default_storage
 from django.core.mail import send_mail
 from django.db import IntegrityError, connection, models
-from django.db.models import Q, Sum
+from django.db.models import Q, Sum, Max
 from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.translation import ugettext as _
@@ -487,7 +487,7 @@ class Channel(models.Model):
             self.main_tree = ContentNode.objects.create(
                 title=self.name,
                 kind_id=content_kinds.TOPIC,
-                sort_order=0,
+                sort_order=get_next_sort_order(),
                 content_id=self.id,
                 node_id=self.id,
             )
@@ -500,7 +500,7 @@ class Channel(models.Model):
             self.trash_tree = ContentNode.objects.create(
                 title=self.name,
                 kind_id=content_kinds.TOPIC,
-                sort_order=0,
+                sort_order=get_next_sort_order(),
                 content_id=self.id,
                 node_id=self.id,
             )
@@ -588,6 +588,9 @@ class License(models.Model):
     def __str__(self):
         return self.license_name
 
+def get_next_sort_order(node=None):
+    max_order = ContentNode.objects.filter(parent=node).aggregate(max_order=Max('sort_order'))['max_order'] or 0
+    return max_order + 1
 
 class ContentNode(MPTTModel, models.Model):
     """
