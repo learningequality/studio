@@ -188,14 +188,12 @@ class Command(BaseCommand):
                     new_model_count += 1 if isNew else 0
                     for attr, value in constant['fields'].items():
                         setattr(obj, attr, value)
-                    if obj.pk == settings.GARBAGE_COLLECTION_NODE_ID:
-                        import pdb; pdb.set_trace()
 
                     obj.save()
                 self.stdout.write("{0}: {1} constants saved ({2} new)".format(str(current_model), len(constant_list), new_model_count))
 
             # Create garbage node
-            garbage_node, _new = models.ContentNode.objects.get_or_create(pk=settings.GARBAGE_COLLECTION_NODE_ID, kind_id=content_kinds.TOPIC)
+            garbage_node, _new = models.ContentNode.objects.get_or_create(pk=settings.ORPHANAGE_ROOT_ID, kind_id=content_kinds.TOPIC)
             garbage_node.title = "Garbage Node Root"
             garbage_node.description = "This node as the default parent for nodes not associated with a channel"
             garbage_node.save()

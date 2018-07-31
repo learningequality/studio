@@ -159,17 +159,15 @@ def user():
     return user
 
 class BaseTestCase(StudioTestCase):
-    @classmethod
-    def setUpClass(self):
-        super(BaseTestCase, self).setUpClass()
+     def setUp(self):
+        super(BaseTestCase, self).setUp()
         self.channel = channel()
         self.user = user()
         self.channel.main_tree.refresh_from_db()
 
 class BaseAPITestCase(StudioAPITestCase):
-    @classmethod
-    def setUpClass(self):
-        super(BaseAPITestCase, self).setUpClass()
+    def setUp(self):
+        super(BaseAPITestCase, self).setUp()
         self.channel = channel()
         self.user = user()
         token, _new = Token.objects.get_or_create(user=self.user)
@@ -177,6 +175,7 @@ class BaseAPITestCase(StudioAPITestCase):
         self.client = APIClient()
         self.client.force_authenticate(self.user)
         self.channel.main_tree.refresh_from_db()
+
 
     @classmethod
     def get(self, url):

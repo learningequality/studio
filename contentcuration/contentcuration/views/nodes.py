@@ -95,7 +95,7 @@ def create_new_node(request):
         copyright_holder=data.get('copyright_holder'),
         license_id=license_id,
         license_description=data.get('license_description'),
-        parent_id=settings.GARBAGE_COLLECTION_NODE_ID,
+        parent_id=settings.ORPHANAGE_ROOT_ID,
     )
     return HttpResponse(JSONRenderer().render(ContentNodeEditSerializer(new_node).data))
 

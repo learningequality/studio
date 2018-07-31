@@ -17,10 +17,8 @@ pytestmark = pytest.mark.django_db
 
 
 class NodeSettingTestCase(BaseAPITestCase):
-
-    @classmethod
-    def setUpClass(self):
-        super(NodeSettingTestCase, self).setUpClass()
+    def setUp(self):
+        super(NodeSettingTestCase, self).setUp()
         # Set up ricecooker trees
         self.channel.staging_tree = cc.ContentNode(kind_id="topic", title="test", node_id="aaa")
         self.channel.staging_tree.save()
@@ -35,12 +33,12 @@ class NodeSettingTestCase(BaseAPITestCase):
 
     def test_garbage_node_created(self):
         # Make sure loadconstants created the garbage node
-        self.assertTrue(cc.ContentNode.objects.filter(pk=settings.GARBAGE_COLLECTION_NODE_ID).exists())
+        self.assertTrue(cc.ContentNode.objects.filter(pk=settings.ORPHANAGE_ROOT_ID).exists())
 
 
     def test_file_create(self):
         self.assertEqual(self.file_response.status_code, 200)
-        garbage_node = cc.ContentNode.objects.get(pk=settings.GARBAGE_COLLECTION_NODE_ID)
+        garbage_node = cc.ContentNode.objects.get(pk=settings.ORPHANAGE_ROOT_ID)
         data = json.loads(self.file_response.content)
         node = json.loads(data['node'])
         node = cc.ContentNode.objects.get(pk=node['id'])
@@ -59,7 +57,7 @@ class NodeSettingTestCase(BaseAPITestCase):
         # Move node and check if it's still in the garbage tree
         node.parent_id = self.channel.main_tree.pk
         node.save()
-        garbage_node = cc.ContentNode.objects.get(pk=settings.GARBAGE_COLLECTION_NODE_ID)
+        garbage_node = cc.ContentNode.objects.get(pk=settings.ORPHANAGE_ROOT_ID)
 
         # Node shouldn't be in garbage tree
         self.assertFalse(garbage_node.get_descendants().filter(pk=node.pk).exists())
@@ -68,7 +66,7 @@ class NodeSettingTestCase(BaseAPITestCase):
 
     def test_old_chef_tree(self):
         chef_tree = self.channel.chef_tree
-        garbage_node = cc.ContentNode.objects.get(pk=settings.GARBAGE_COLLECTION_NODE_ID)
+        garbage_node = cc.ContentNode.objects.get(pk=settings.ORPHANAGE_ROOT_ID)
 
         # Chef tree shouldn't be in garbage tree until create_channel is called
         self.assertFalse(garbage_node.get_descendants().filter(pk=chef_tree.pk).exists())
@@ -87,7 +85,7 @@ class NodeSettingTestCase(BaseAPITestCase):
 
     def test_old_staging_tree(self):
         staging_tree = self.channel.staging_tree
-        garbage_node = cc.ContentNode.objects.get(pk=settings.GARBAGE_COLLECTION_NODE_ID)
+        garbage_node = cc.ContentNode.objects.get(pk=settings.ORPHANAGE_ROOT_ID)
 
         # Staging tree shouldn't be in garbage tree until api_commit_channel is called
         self.assertFalse(garbage_node.get_descendants().filter(pk=staging_tree.pk).exists())
@@ -108,7 +106,7 @@ class NodeSettingTestCase(BaseAPITestCase):
 
     def test_activate_channel(self):
         previous_tree = self.channel.previous_tree
-        garbage_node = cc.ContentNode.objects.get(pk=settings.GARBAGE_COLLECTION_NODE_ID)
+        garbage_node = cc.ContentNode.objects.get(pk=settings.ORPHANAGE_ROOT_ID)
 
         # Previous tree shouldn't be in garbage tree until activate_channel is called
         self.assertFalse(garbage_node.get_descendants().filter(pk=previous_tree.pk).exists())
