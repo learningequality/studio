@@ -641,7 +641,7 @@ class ContentNode(MPTTModel, models.Model):
     published = models.BooleanField(default=False)
     publishing = models.BooleanField(default=False)
 
-    changed = models.BooleanField(default=True, db_index=True)
+    changed = models.BooleanField(default=True)
     extra_fields = models.TextField(blank=True, null=True)
     author = models.CharField(max_length=200, blank=True, default="", help_text=_("Who created this content?"),
                               null=True)
