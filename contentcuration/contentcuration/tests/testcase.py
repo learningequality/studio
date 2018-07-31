@@ -143,7 +143,7 @@ def channel():
     channel.save()
 
     # Read from json fixture
-    filepath = os.path.dirname(__file__) + os.path.sep + "tree.json"
+    filepath = os.path.sep.join([os.path.dirname(__file__), "fixtures", "tree.json"])
     with open(filepath, "rb") as jsonfile:
         data = json.load(jsonfile)
 

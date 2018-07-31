@@ -3,7 +3,7 @@ from cStringIO import StringIO
 import json
 import pytest
 import requests
-from contentcuration.tests.fixtures.testcase import BaseAPITestCase, node, fileobj_video
+from contentcuration.tests.testcase import BaseAPITestCase, node, fileobj_video
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.urlresolvers import reverse_lazy
