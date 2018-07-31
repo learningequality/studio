@@ -63,7 +63,7 @@ def file_create(request):
 
     presets = FormatPreset.objects.filter(allowed_formats__extension__contains=ext[1:].lower())
     kind = presets.first().kind
-    preferences = json.loads(request.META.get('HTTP_PREFERENCES'))
+    preferences = json.loads(request.META.get('HTTP_PREFERENCES') or "{}")
 
     # sometimes we get a string no matter what. Try to parse it again
     if isinstance(preferences, basestring):

@@ -191,8 +191,9 @@ def api_commit_channel(request):
 
         # Delete staging tree if it already exists
         if old_staging and old_staging != obj.main_tree:
-            old_staging.parent_id = settings.GARBAGE_COLLECTION_NODE_ID
-            old_staging.title = "Old staging tree for channel {}".format(channel.pk)
+            garbage_node = ContentNode.objects.get(pk=settings.GARBAGE_COLLECTION_NODE_ID)
+            old_staging.parent = garbage_node
+            old_staging.title = "Old staging tree for channel {}".format(obj.pk)
             old_staging.save()
 
         if not data.get('stage'):  # If user says to stage rather than submit, skip changing trees at this step
@@ -466,7 +467,8 @@ def create_channel(channel_data, user):
 
     # Delete chef tree if it already exists
     if old_chef_tree and old_chef_tree != channel.staging_tree:
-        old_chef_tree.parent_id = settings.GARBAGE_COLLECTION_NODE_ID
+        garbage_node = ContentNode.objects.get(pk=settings.GARBAGE_COLLECTION_NODE_ID)
+        old_chef_tree.parent = garbage_node
         old_chef_tree.title = "Old chef tree for channel {}".format(channel.pk)
         old_chef_tree.save()
 
