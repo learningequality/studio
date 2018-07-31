@@ -79,6 +79,7 @@ def file_create(request):
         aggregator=preferences.get('aggregator') or "",
         provider=preferences.get('provider') or "",
         copyright_holder=preferences.get('copyright_holder'),
+        parent_id=settings.GARBAGE_COLLECTION_NODE_ID,
     )
     if license and license.is_custom:
         new_node.license_description = preferences.get('license_description')

@@ -1,6 +1,7 @@
 import urllib
 import json
 import pkgutil
+from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.management.base import BaseCommand
 from le_utils.constants import content_kinds, file_formats, format_presets, licenses, languages
@@ -155,13 +156,26 @@ SITES = [
     },
 ]
 
+NODES = [
+    {
+        "model": models.ContentNode,
+        "pk": "id",
+        "fields": {
+            "id": settings.GARBAGE_COLLECTION_NODE_ID,
+            "kind_id": content_kinds.TOPIC,
+            "title": "Garbage Node Root",
+            "description": "This node as the default parent for nodes not associated with a channel",
+        }
+    }
+]
+
 LICENSES = LicenseGenerator().generate_list()
 FILE_FORMATS = FormatGenerator().generate_list()
 KINDS = KindGenerator().generate_list()
 PRESETS = PresetGenerator().generate_list()
 LANGUAGES = LanguageGenerator().generate_list()
 
-CONSTANTS = [SITES, LICENSES, KINDS, FILE_FORMATS, PRESETS, LANGUAGES]
+CONSTANTS = [SITES, LICENSES, KINDS, FILE_FORMATS, PRESETS, LANGUAGES, NODES]
 
 class EarlyExit(BaseException):
     def __init__(self, message, db_path):
