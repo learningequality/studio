@@ -19,6 +19,8 @@ studioApp:
   replicas: 3
   gcs:
     enabled: true
+  gDrive:
+    keyJson:
 
 studioNginx:
   imageName: "REPLACEME"
