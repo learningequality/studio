@@ -597,9 +597,9 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
         }
     });
     this.container.load_editor(this.selected_items);
-    this.container.load_prerequisites(this.selected_items);
     if(this.selected_individual()){
       this.container.load_preview(this.selected_items[0]);
+      this.container.load_prerequisites(this.selected_items);
       if(this.selected_items[0].model.get("kind")==="exercise"){
         this.container.load_questions(this.selected_items[0]);
       }
@@ -855,9 +855,6 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
       var view = this.selected_items[0];
       var self = this;
       view.load_file_displays(self.$("#editmetadata_format_section"));
-      if(!this.new_content && this.container.collection.length === 1){
-        this.container.load_prerequisites([view]);
-      }
       if(view.model.get("kind")==="exercise"){
         this.container.load_questions(view);
       }
