@@ -67,7 +67,7 @@ steps:
   env:
   - 'CLOUDSDK_COMPUTE_ZONE=us-central1-f'
   - 'CLOUDSDK_CONTAINER_CLUSTER=contentworkshop-central'
-  secretEnv: ['POSTMARK_API_KEY', 'POSTGRES_USERNAME', 'POSTGRES_DATABASE', 'POSTGRES_PASSWORD']
+  secretEnv: ['POSTMARK_API_KEY', 'POSTGRES_USERNAME', 'POSTGRES_DATABASE', 'POSTGRES_PASSWORD', 'SENTRY_DSN_KEY']
   entrypoint: 'bash'
   args:
     - -c
@@ -86,6 +86,7 @@ steps:
       $PROJECT_ID
       is_production
       ../gdrive-service-account.json
+      $$SENTRY_DSN_KEY
 
 substitutions:
   _DATABASE_INSTANCE_NAME: develop  # by default, connect to the develop DB
@@ -112,6 +113,9 @@ secrets:
 - kmsKeyName: projects/contentworkshop-159920/locations/global/keyRings/prod-secrets/cryptoKeys/crowdinApiKey
   secretEnv:
     CROWDIN_API_KEY: CiQA5yVB2KLpFiuaF4kAmNS2+I04GTIBpEl3hy4Px21xpuApka0SSQC1m2SkfC/mzvR1KhoNaKzDHQRG7SyPI69iG/NTjNwV/u56To3swMhMqsD1ErNTITgnZEloUXAPpGSJAL+LLJB0fbzhMsE4cpY=
+- kmsKeyName: projects/contentworkshop-159920/locations/global/keyRings/prod-secrets/cryptoKeys/sentryKey
+  secretEnv:
+    SENTRY_DSN_KEY: CiQAymGxx8tU8G23aFWKz52KLPvwY+EnKDPDMI4WZtVGtw7CJi8SagAaZGpaLvlDDdn2Nr4zJLLOxy3tpnzdteSDe8NJsQiIv8iSiULHOeA9wtZKSyzNWOv+gZrIAqgjipz7Sznm1sXC//qusnMFntzLOlRE3nJy9jp5h0XtCIY5grq/xUIW5MCeEDVf66sWO5U=
 
 images:
   - gcr.io/$PROJECT_ID/learningequality-studio-nginx:latest
