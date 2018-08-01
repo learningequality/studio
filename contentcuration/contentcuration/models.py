@@ -58,6 +58,21 @@ DEFAULT_CONTENT_DEFAULTS = {
 DEFAULT_USER_PREFERENCES = json.dumps(DEFAULT_CONTENT_DEFAULTS, ensure_ascii=False)
 
 
+# Added 7-31-2018. We can remove this once we are certain we have eliminated all cases
+# where root nodes are getting prepended rather than appended to the tree list.
+def _create_tree_space(self, target_tree_id, num_trees=1):
+    """
+    Creates space for a new tree by incrementing all tree ids
+    greater than ``target_tree_id``.
+    """
+
+    if target_tree_id == -1:
+        raise Exception("ERROR: Calling _create_tree_space with -1! Something is attempting to sort all MPTT trees root nodes!")
+
+    self._orig_create_tree_space(target_tree_id, num_trees)
+
+TreeManager._orig_create_tree_space = TreeManager._create_tree_space
+TreeManager._create_tree_space = _create_tree_space
 
 
 class UserManager(BaseUserManager):
