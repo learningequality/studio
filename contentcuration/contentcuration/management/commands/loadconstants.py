@@ -1,6 +1,7 @@
 import urllib
 import json
 import pkgutil
+from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.management.base import BaseCommand
 from le_utils.constants import content_kinds, file_formats, format_presets, licenses, languages
@@ -190,6 +191,13 @@ class Command(BaseCommand):
 
                     obj.save()
                 self.stdout.write("{0}: {1} constants saved ({2} new)".format(str(current_model), len(constant_list), new_model_count))
+
+            # Create garbage node
+            garbage_node, _new = models.ContentNode.objects.get_or_create(pk=settings.ORPHANAGE_ROOT_ID, kind_id=content_kinds.TOPIC)
+            garbage_node.title = "Garbage Node Root"
+            garbage_node.description = "This node as the default parent for nodes not associated with a channel"
+            garbage_node.save()
+
             self.stdout.write("************ DONE. ************")
 
         except DatabaseWriteDenied as e:
