@@ -851,11 +851,11 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     return this.selected_items.length === 1;
   },
   handle_if_individual:function(){
-    if(!this.new_content && this.selected_individual()){
+    if(this.selected_individual()){
       var view = this.selected_items[0];
       var self = this;
       view.load_file_displays(self.$("#editmetadata_format_section"));
-      if(this.container.collection.length === 1){
+      if(!this.new_content && this.container.collection.length === 1){
         this.container.load_prerequisites([view]);
       }
       if(view.model.get("kind")==="exercise"){
