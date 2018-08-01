@@ -321,3 +321,6 @@ AWS_S3_BUCKET_AUTH = False
 # GOOGLE DRIVE SETTINGS
 GOOGLE_AUTH_JSON = "credentials/client_secret.json"
 GOOGLE_STORAGE_REQUEST_SHEET = "16X6zcFK8FS5t5tFaGpnxbWnWTXP88h4ccpSpPbyLeA8"
+
+# Used as the default parent to collect orphan nodes
+ORPHANAGE_ROOT_ID = "00000000000000000000000000000000"
