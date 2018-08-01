@@ -216,7 +216,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
         if not self.clipboard_tree:
             self.clipboard_tree = ContentNode.objects.create(title=self.email + " clipboard", kind_id="topic",
-                                                             sort_order=0)
+                                                             sort_order=get_next_sort_order())
             self.clipboard_tree.save()
             changed = True
 
