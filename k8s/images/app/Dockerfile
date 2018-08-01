@@ -22,11 +22,10 @@ COPY ./yarn.lock .
 RUN yarn install
 ENV PATH="/node_modules/.bin:$PATH"
 
-COPY ./requirements.txt .
-COPY ./requirements_prod.txt .
-RUN pip install -U pip
-RUN pip install -r requirements.txt
-RUN pip install -r requirements_prod.txt
+COPY Pipfile .
+COPY Pipfile.lock .
+RUN pip install -U pip pipenv
+RUN pipenv install --system  # install packages from Pipfile.lock into system
 
 COPY  . /contentcuration/
 WORKDIR /contentcuration
