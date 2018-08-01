@@ -50,20 +50,42 @@ steps:
   '--ciphertext-file=k8s/build-secrets/$PROJECT_ID-gcs-service-account.json.enc',
   '--plaintext-file=gcs-service-account.json'
   ]
+- name: 'gcr.io/cloud-builders/gcloud'
+  id: decrypt-gdrive-service-account
+  waitFor: ['-']
+  args: [
+  'kms', 'decrypt',
+  '--location=global', '--keyring=prod-secrets', '--key=google-drive',
+  '--ciphertext-file=k8s/build-secrets/$PROJECT_ID-gdrive-service-account.json.enc',
+  '--plaintext-file=gdrive-service-account.json'
+  ]
+
 - name: 'gcr.io/$PROJECT_ID/helm'
   id: helm-deploy-studio-instance
-  waitFor: ['decrypt-gcs-service-account', 'push-app-image', 'push-nginx-image']
+  waitFor: ['decrypt-gcs-service-account', 'decrypt-gdrive-service-account', 'push-app-image', 'push-nginx-image']
   dir: "k8s"
   env:
   - 'CLOUDSDK_COMPUTE_ZONE=us-central1-f'
   - 'CLOUDSDK_CONTAINER_CLUSTER=contentworkshop-central'
   secretEnv: ['POSTMARK_API_KEY', 'POSTGRES_USERNAME', 'POSTGRES_DATABASE', 'POSTGRES_PASSWORD']
   entrypoint: 'bash'
-  args: [
-  '-c',
-  # still run helm.bash to initialze creds, but otherwise run our own deploy script
-  '/builder/helm.bash && ./helm-deploy.sh $BRANCH_NAME $_STORAGE_BUCKET $COMMIT_SHA $$POSTMARK_API_KEY $$POSTGRES_USERNAME $$POSTGRES_DATABASE $$POSTGRES_PASSWORD studio-$_DATABASE_INSTANCE_NAME-sql-proxy-gcloud-sqlproxy.sqlproxy ../gcs-service-account.json $PROJECT_ID is_production'
-  ]
+  args:
+    - -c
+    - >
+      /builder/helm.bash &&
+      ./helm-deploy.sh
+      $BRANCH_NAME
+      $_STORAGE_BUCKET
+      $COMMIT_SHA
+      $$POSTMARK_API_KEY
+      $$POSTGRES_USERNAME
+      $$POSTGRES_DATABASE
+      $$POSTGRES_PASSWORD
+      studio-$_DATABASE_INSTANCE_NAME-sql-proxy-gcloud-sqlproxy.sqlproxy
+      ../gcs-service-account.json
+      $PROJECT_ID
+      is_production
+      ../gdrive-service-account.json
 
 substitutions:
   _DATABASE_INSTANCE_NAME: develop  # by default, connect to the develop DB
