@@ -215,8 +215,13 @@ def add_editor_to_channel(invitation):
 
 def activate_channel(channel, user):
     user.check_channel_space(channel)
+
     if channel.previous_tree and channel.previous_tree != channel.main_tree:
-        deletetree_task.delay(channel.previous_tree.tree_id)
+        garbage_node = models.ContentNode.objects.get(pk=settings.ORPHANAGE_ROOT_ID)
+        channel.previous_tree.parent = garbage_node
+        channel.previous_tree.title = "Previous tree for channel {}".format(channel.pk)
+        channel.previous_tree.save()
+
     channel.previous_tree = channel.main_tree
     channel.main_tree = channel.staging_tree
     channel.staging_tree = None

@@ -1,0 +1,105 @@
+{
+	"node_id": "00000000000000000000000000000000",
+	"kind_id": "topic",
+	"title": "Root Node",
+	"children": [
+		{
+			"node_id": "00000000000000000000000000000001",
+			"kind_id": "topic",
+			"title": "Topic A",
+			"children": [
+				{
+					"node_id": "00000000000000000000000000000003",
+					"kind_id": "video",
+					"title": "Video 1"
+				},
+				{
+					"node_id": "00000000000000000000000000000004",
+					"kind_id": "video",
+					"title": "Video 2"
+				},
+				{
+					"node_id": "00000000000000000000000000000006",
+					"kind_id": "video",
+					"title": "Video 3"
+				},
+				{
+					"node_id": "00000000000000000000000000000007",
+					"kind_id": "video",
+					"title": "Video 4"
+				}
+			]
+		},
+		{
+			"node_id": "00000000000000000000000000000002",
+			"kind_id": "topic",
+			"title": "Topic B",
+			"children": [
+				{
+					"node_id": "00000000000000000000000000000005",
+					"kind_id": "exercise",
+					"title": "Exercise 1",
+					"mastery_model": "do_all",
+					"assessment_items": [
+						{
+							"type": "single_selection",
+							"question": "Question 1?",
+							"assessment_id": "0000000000000000000000000000000a",
+							"answers": [
+								{
+									"answer": "Answer 1",
+									"correct": true,
+									"help_text": ""
+								},
+								{
+									"answer": "Answer 2",
+									"correct": false,
+									"help_text": ""
+								}
+							]
+						},
+						{
+							"type": "multiple_selection",
+							"question": "Question 2?",
+							"assessment_id": "0000000000000000000000000000000b",
+							"answers": [
+								{
+									"answer": "Answer 1",
+									"correct": true,
+									"help_text": ""
+								},
+								{
+									"answer": "Answer 2",
+									"correct": true,
+									"help_text": ""
+								},
+								{
+									"answer": "Answer 3",
+									"correct": false,
+									"help_text": ""
+								}
+							]
+						},
+						{
+							"type": "input_question",
+							"question": "Question 3?",
+							"assessment_id": "0000000000000000000000000000000c",
+							"answers": [
+								{
+									"answer": 10,
+									"correct": true,
+									"help_text": ""
+								},
+								{
+									"answer": 1.5,
+									"correct": true,
+									"help_text": ""
+								}
+							]
+						}
+					]
+				}
+			]
+		}
+	]
+}
