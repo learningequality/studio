@@ -154,10 +154,10 @@
             method:"POST",
             url: window.Urls.export_user_data("{{current_user.email}}"),
             error: function() {
-            	window.dialog.alert("{% trans 'Exporting Data' %}", "{% trans 'Error exporting data. Please try again.' %}");
+            	window.dialog.alert("{{messages.export_error_title|safe}}", "{{messages.export_error_text|safe}}");
             },
             success: function(data) {
-            	window.dialog.alert("{% trans 'Exporting Data' %}", "{% trans 'Data export started. You\'ll receive an email with your information when it\'s done.' %}");
+            	window.dialog.alert("{{messages.export_title|safe}}", "{{messages.export_text|safe}}");
             }
         });
 	});
