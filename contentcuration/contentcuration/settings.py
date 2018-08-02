@@ -65,6 +65,7 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.staticfiles',
     'rest_framework',
+    'raven.contrib.django.raven_compat',
     'django_js_reverse',
     'kolibri_content',
     'readonly',
