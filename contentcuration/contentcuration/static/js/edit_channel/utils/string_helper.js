@@ -306,7 +306,9 @@ var messages = {
   "role_visibility": "Visible to",
   "more": "... More",
   "less": " Less",
-  "no_text_provided": "No text provided"
+  "no_text_provided": "No text provided",
+  "image": "IMAGE",
+  "formula": "FORMULA"
 };
 
 var translate = i18n.createTranslator(namespace, messages);
