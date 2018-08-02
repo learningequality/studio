@@ -16,6 +16,7 @@ class Command(BaseCommand):
         parser.add_argument('--stress-test', action='store_true', default=False)
 
     def handle(self, *args, **options):
+        objects = None
         try:
             objects = objective.Objective()
 
@@ -42,4 +43,5 @@ class Command(BaseCommand):
                     print("{}: {}".format(stat, stats[stat]))
 
         finally:
-            objects.cleanup()
+            if objects:
+                objects.cleanup()
