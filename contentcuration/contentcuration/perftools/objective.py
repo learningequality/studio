@@ -17,7 +17,8 @@ class Objective:
 
     def __init__(self):
         self.topic, topic_created = ContentKind.objects.get_or_create(kind='Topic')
-        self.root_node = ContentNode.objects.create(title='Root Node', kind=self.topic)
+        self.root_node = ContentNode.objects.create(title='test_server_perf Root Node', kind=self.topic)
+        self.root_node.save()
 
     def __del__(self):
         if self.root_node:
@@ -52,7 +53,8 @@ class Objective:
 
         start = time.time()
         for i in range(num_nodes):
-            node = ContentNode.objects.create(title="Node {}".format(i), parent=parent, kind=self.topic)
+            node = ContentNode.objects.create(title="test_server_perf Node {}".format(i), parent=parent, kind=self.topic)
+            node.save()
             # try to create a multi-level tree structure to better test tree recalc operations
             if num_nodes > 20:
                 if i % (num_nodes / 10) == 0:
@@ -75,7 +77,8 @@ class Objective:
 
         start = time.time()
         for i in range(num_files):
-            File.objects.create()
+            file_obj = File.objects.create()
+            file_obj.save()
 
         elapsed = time.time() - start
         assert File.objects.count() == current_files + num_files
