@@ -831,7 +831,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 			        		$(".content-list").sortable( "refresh" );
 				            // Revert back to original positions
 			        		self.retrieve_nodes($.unique(reload_list), true).then(function(fetched){
-								self.reload_ancestors(fetched);
+								self.reload_ancestors(fetched, true);
 								self.render();
 							});
 				        });
@@ -858,7 +858,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 		});
 
 		this.model.set('children', this.model.get('children').concat(collection.pluck('id')));
-		this.reload_ancestors(collection, false);
+		this.reload_ancestors(collection, true);
 		this.handle_if_empty();
 	},
 	add_single_node:function(node) {
