@@ -1,0 +1,56 @@
+@startuml
+
+title Kolibri Studio Production Architecture
+
+node "CloudFlare" as cloudflare
+
+cloud "Google Cloud Platform" as gcp {
+    cloud "Google Kubernetes Engine" as k8s {
+
+        node "Traefik Proxy" as traefik
+        together {
+            node "Kubernetes Node" as k8snode1 {
+                package "App" as studio1
+                package "Worker" as worker1
+            }
+            node "Kubernetes Node" as k8snode2 {
+                package "App" as studio2
+                package "Worker" as worker2
+            }
+            node "Kubernetes Node" as k8snode3 {
+                package "App" as studio3
+                package "Worker" as worker3
+            }
+        }
+        together {
+            node "Redis Primary" as redisprimary
+            node "Redis Secondary" as redissecondary
+        }
+    }
+    together {
+        storage "Google Cloud Storage" as gcs {
+            artifact "Databases" as dbs
+            artifact "Content" as content
+        }
+        database "Master DB" as masterdb
+    }
+}
+
+cloudflare --> traefik
+traefik --> k8snode1
+traefik --> k8snode2
+traefik --> k8snode3
+studio2 --> content
+studio2 --> masterdb
+studio2 --> dbs
+studio2 <--> redisprimary
+worker2 <--> redisprimary
+redisprimary <-> redissecondary
+
+' PlantUML has some dumb layouting. Assist it by adding some hidden lines
+' See this for how to suggest layouting to PlantUML:
+' https://isgb.otago.ac.nz/infosci/mark.george/templates/blob/8e98805c117c7b2e9b9f545c47b50366bb644e5e/plantuml/class-diagram-tips.md#controlling-class-layout
+cloudflare --[hidden]--> gcp
+k8s --[hidden]--> gcs
+
+@enduml
