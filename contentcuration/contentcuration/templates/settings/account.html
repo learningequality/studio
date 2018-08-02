@@ -2,6 +2,11 @@
 {% extends "settings/settings.html" %}
 {% load staticfiles %}
 {% load i18n %}
+{% load render_bundle from webpack_loader %}
+
+{% block js_bundle %}
+	{% render_bundle 'settings' 'js' %}
+{% endblock js_bundle %}
 
 {% block settingscontent %}
 
@@ -96,7 +101,7 @@
   </div>
 </div>
 
-<script type="text/javascript" src="{% static 'js/bundles/channel_edit.js' %}"></script>
+
 <script type="text/javascript">
 	function resetDeleteModal() {
 		$(".pending-delete").css("display", "none");
@@ -145,16 +150,14 @@
 
 	// Export data call
 	$("#export_data").click(function(ev) {
-
-		var dialog = require("channel_edit").dialog;
         $.ajax({
             method:"POST",
             url: window.Urls.export_user_data("{{current_user.email}}"),
             error: function() {
-            	dialog.alert("{% trans 'Exporting Data' %}", "{% trans 'Error exporting data. Please try again.' %}");
+            	window.dialog.alert("{% trans 'Exporting Data' %}", "{% trans 'Error exporting data. Please try again.' %}");
             },
             success: function(data) {
-            	dialog.alert("{% trans 'Exporting Data' %}", "{% trans 'Data export started. You\'ll receive an email with your information when it\'s done.' %}");
+            	window.dialog.alert("{% trans 'Exporting Data' %}", "{% trans 'Data export started. You\'ll receive an email with your information when it\'s done.' %}");
             }
         });
 	});
