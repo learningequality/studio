@@ -9,7 +9,7 @@
     "build": "webpack --config webpack.config.js",
     "cypress:run": "wait-on -t 20000 tcp:8081 && cypress run --spec cypress/integration/login.js",
     "cypress:test": "yarn run build && npm-run-all --parallel --race testserver cypress:run",
-    "pytest": "cd contentcuration; pytest",
+    "pytest": "cd contentcuration; pytest --cov=./",
     "pytest:reusedb": "cd contentcuration; pytest --reuse-db",
     "postgres": "service postgresql start || pg_ctl -D /usr/local/var/postgresql@9.6 start || true",
     "redis": "service redis-server start || redis-server /usr/local/etc/redis.conf || true",
