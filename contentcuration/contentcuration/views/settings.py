@@ -146,12 +146,6 @@ def account_settings(request):
         "page": "account",
         "channels": channels,
         "policy_email": ccsettings.POLICY_EMAIL,
-        "messages":  {
-            "export_error_title": _("Exporting Data"),
-            "export_error_text": _("Error exporting data. Please try again."),
-            "export_title": _("Exporting Data"),
-            "export_text": _("Data export started. You'll receive an email with your information when it's done."),
-        },
     })
 
 
