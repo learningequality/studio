@@ -621,7 +621,7 @@ var BaseListView = BaseView.extend({
 			}else if(view.subcontent_view){
 				selected_views = _.union(selected_views, view.subcontent_view.get_selected());
 			}
-		})
+		});
 		return selected_views;
 	},
 	close: function(){
