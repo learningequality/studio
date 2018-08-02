@@ -1,4 +1,0 @@
-django-debug_panel
-django-debug_toolbar
-pympler
-flake8
