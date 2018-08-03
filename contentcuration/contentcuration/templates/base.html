@@ -2,9 +2,12 @@
 {% load staticfiles %}
 {% load i18n %}
 {% load render_bundle from webpack_loader %}
+{% load render_bundle_css from translation_tags %}
+{% load render_offline_css from translation_tags %}
 {% get_current_language as LANGUAGE_CODE %}
+{% get_current_language_bidi as LANGUAGE_BIDI %}
 
-<html>
+<html dir="{{ LANGUAGE_BIDI|yesno:'rtl,ltr' }}" lang="{{ LANGUAGE_CODE }}">
 	<head>
 
 			{% block head %}
@@ -16,22 +19,28 @@
 			<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 			<meta name="viewport" content="width=device-width, initial-scale=1">
 
-			<title>Kolibri Studio</title>
-			<!-- TODO work out why debug is not working here and use the static version -->
+			<title>Kolibri Studio ({% trans 'Beta' %})</title>
+      {% render_bundle_css 'common' %}
+      {% block css_bundle %}
+        {% render_bundle_css 'base' %}
+      {% endblock css_bundle %}
+      {% render_offline_css LANGUAGE_CODE %}
       <script>
         window.languageCode = "{{LANGUAGE_CODE}}";
         try{
           window.ALL_MESSAGES = JSON.parse("{{ messages|escapejs}}");
         } catch (error) { /* Page does not require front-end translations */ }
       </script>
-			<script src="{% url 'js_reverse' %}" type="text/javascript"></script>
+      <!-- TODO work out why debug is not working here and use the static version -->
+      <script src="{% url 'js_reverse' %}" type="text/javascript"></script>
 
-			{% render_bundle 'common' %}
-			<!-- prevent more than 1 bundle per page -->
-			{% block bundle %} {% render_bundle 'base' %} {% endblock bundle %}
+      {% render_bundle 'common' 'js' %}
+      <!-- prevent more than 1 bundle per page -->
+      {% block js_bundle %} {% render_bundle 'base' 'js' %} {% endblock js_bundle %}
 
-			<script type="text/javascript" src="{% url 'javascript-catalog' %}"></script>
-			{% endblock head %}
+      <script type="text/javascript" src="{% url 'javascript-catalog' %}"></script>
+
+      {% endblock head %}
 
       {% block analytics %}
         {% if not debug %}
@@ -62,7 +71,7 @@
             </button>
             <a href="/channels" id="logo-container">
               <img class="navbar-brand" src="{% static 'img/logo.png' %}">
-              <label id="kolibri_label">Kolibri Studio</label>
+              <label id="kolibri_label">Kolibri Studio ({% trans 'Beta' %})</label>
             </a>
           </div>
             <div class="collapse navbar-collapse">
@@ -86,6 +95,11 @@
     		</div><!-- /.navbar-collapse -->
     	</div><!-- /.container-fluid -->
     </nav>
+    {% if SITE_READ_ONLY %}
+    <div id="emergency-banner" class="text-center">
+      <i class="material-icons">error</i> <b>{% trans 'EMERGENCY MAINTENANCE:' %}</b> {% trans "Kolibri Studio is operating on read-only mode for the time being in order for us to resolve some maintenance issues. This means all editing capabilities are disabled at the moment. Please know we're working very hard to fix the issue as soon as possible. If you have any questions please contact us at content@learningequality.org. We apologize for any inconvenience caused and appreciate your patience." %}
+    </div>
+    {% endif %}
     {% endblock nav %}
 
   	<!-- Site content gets injected here -->

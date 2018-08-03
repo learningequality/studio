@@ -1,9 +1,20 @@
 from django import template
+from django.conf import settings
 from django.template.defaultfilters import stringfilter
+from django.utils.safestring import mark_safe
+from django.utils.translation import get_language
+from django.utils.translation import get_language_info
 from django.utils.translation import ugettext_lazy as _
+from contentcuration.utils.format import format_size as fsize
+
+from webpack_loader import utils
 
 
 register = template.Library()
+LANGUAGES = {
+    "en": "english",
+    "es": "spanish",
+}
 
 
 @register.filter(is_safe=True)
@@ -29,3 +40,38 @@ def get_translation(value):
     }
 
     return MESSAGES.get(value)
+
+
+@register.filter(is_safe=True)
+def format_size(value):
+    return "{} {}".format(*fsize(value))
+
+
+@register.simple_tag
+def render_bundle_css(bundle_name, config='DEFAULT', attrs=''):
+    """
+    A tag to conditionally load css depending on whether the page is being rendered for
+    an LTR or RTL language. Using webpack-rtl-plugin, we now have two css files for every
+    bundle. One that just ends in .css for LTR, and the other that ends in .rtl.css for RTL.
+    This will conditionally load the correct one depending on the current language setting.
+    """
+    bidi = get_language_info(get_language())['bidi']
+    files = utils.get_files(bundle_name, extension='css', config=config)
+    if bidi:
+        files = filter(lambda x: x['name'].endswith('rtl.css'), files)
+    else:
+        files = filter(lambda x: not x['name'].endswith('rtl.css'), files)
+    tags = []
+    for chunk in files:
+        tags.append((
+            '<link type="text/css" href="{0}" rel="stylesheet" {1}/>'
+        ).format(chunk['url'], attrs))
+    return mark_safe('\n'.join(tags))
+
+@register.simple_tag
+def render_offline_css(language):
+    # Load css style for offline js
+    language = LANGUAGES.get(language.split('-')[0]) or "english"
+    filepath = "/".join([settings.STATIC_URL.rstrip("/"), "css", "offline-language-{}.css".format(language)])
+
+    return mark_safe('<link type="text/css" href="{}" rel="stylesheet"/>'.format(filepath))
