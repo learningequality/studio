@@ -145,7 +145,7 @@ Handlebars.registerHelper('to_json', function(obj){
 
 Handlebars.registerHelper('parse_question', function(str){
   if(!str){ return stringHelper.translate("question"); }
-  return str.replace(/\$\$([^\$]+)\$\$/g, " [FORMULA] ").replace(/!\[.*\]\(\${☣ CONTENTSTORAGE}\/([^)]+)\)/g, " [IMAGE] ").replace(/\\/g, "");
+  return str.replace(/\$\$([^\$]+)\$\$/g, " " + stringHelper.translate("formula") + " ").replace(/!\[.*\]\(\${☣ CONTENTSTORAGE}\/([^)]+)\)/g,  " " + stringHelper.translate("image") + " ").replace(/\\/g, "");
 });
 
 Handlebars.registerHelper('ispositive', function(num, options) {

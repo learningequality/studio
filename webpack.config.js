@@ -50,6 +50,7 @@ module.exports = {
   entry: {
     base: './base.js',
     channel_edit: './channel_edit.js',
+    settings: './settings.js',
   },
   output: {
     filename: '[name]-[hash].js',

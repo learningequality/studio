@@ -306,7 +306,12 @@ var messages = {
   "role_visibility": "Visible to",
   "more": "... More",
   "less": " Less",
-  "no_text_provided": "No text provided"
+  "no_text_provided": "No text provided",
+  "image": "IMAGE",
+  "formula": "FORMULA",
+  "export_error_text": "Error exporting data. Please try again.",
+  "export_title": "Exporting Data",
+  "export_text": "Data export started. You'll receive an email with your information when it's done."
 };
 
 var translate = i18n.createTranslator(namespace, messages);

@@ -1,4 +1,5 @@
 from django import template
+from django.conf import settings
 from django.template.defaultfilters import stringfilter
 from django.utils.safestring import mark_safe
 from django.utils.translation import get_language
@@ -10,6 +11,10 @@ from webpack_loader import utils
 
 
 register = template.Library()
+LANGUAGES = {
+    "en": "english",
+    "es": "spanish",
+}
 
 
 @register.filter(is_safe=True)
@@ -62,3 +67,11 @@ def render_bundle_css(bundle_name, config='DEFAULT', attrs=''):
             '<link type="text/css" href="{0}" rel="stylesheet" {1}/>'
         ).format(chunk['url'], attrs))
     return mark_safe('\n'.join(tags))
+
+@register.simple_tag
+def render_offline_css(language):
+    # Load css style for offline js
+    language = LANGUAGES.get(language.split('-')[0]) or "english"
+    filepath = "/".join([settings.STATIC_URL.rstrip("/"), "css", "offline-language-{}.css".format(language)])
+
+    return mark_safe('<link type="text/css" href="{}" rel="stylesheet"/>'.format(filepath))

@@ -3,6 +3,7 @@
 {% load i18n %}
 {% load render_bundle from webpack_loader %}
 {% load render_bundle_css from translation_tags %}
+{% load render_offline_css from translation_tags %}
 {% get_current_language as LANGUAGE_CODE %}
 {% get_current_language_bidi as LANGUAGE_BIDI %}
 
@@ -23,6 +24,7 @@
       {% block css_bundle %}
         {% render_bundle_css 'base' %}
       {% endblock css_bundle %}
+      {% render_offline_css LANGUAGE_CODE %}
       <script>
         window.languageCode = "{{LANGUAGE_CODE}}";
         try{
@@ -37,6 +39,7 @@
       {% block js_bundle %} {% render_bundle 'base' 'js' %} {% endblock js_bundle %}
 
       <script type="text/javascript" src="{% url 'javascript-catalog' %}"></script>
+
       {% endblock head %}
 
       {% block analytics %}
