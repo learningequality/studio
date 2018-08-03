@@ -102,4 +102,29 @@ class CleanUpContentNodesTestCase(StudioTestCase):
         assert ContentNode.objects.filter(pk=legit_tree.pk).exists()
         assert File.objects.filter(pk=f.pk).exists()
 
+    def test_doesnt_delete_old_legit_tree(self):
+        """
+        Make sure we don't delete an old content tree, as long as it's not under the
+        orphan tree.
+        """
+
+        # orphan node. This shouldn't exist anymore at the end of our test.
+        orphan_node = _create_expired_contentnode()
+
+        # our old, but not orphaned tree. This should exist at the end of our test.
+        legit_node = ContentNode.objects.create(
+            kind_id="Topic",
+        )
+        # mark the legit_node as old
+        ContentNode.objects.filter(pk=legit_node.pk).update(
+            created=THREE_MONTHS_AGO,
+            modified=THREE_MONTHS_AGO,
+        )
+
+        clean_up_contentnodes()
+
+        # is our orphan gone? :(
+        assert not ContentNode.objects.filter(pk=orphan_node.pk).exists()
+        # is our senior, legit node still around? :)
+        assert ContentNode.objects.filter(pk=legit_node.pk).exists()
 
