@@ -593,7 +593,7 @@ def add_tokens_to_channel(channel):
                 raise ValueError("Cannot generate new token")
 
         tk_human = ccmodels.SecretToken.objects.create(token=token, is_primary=True)
-        tk = ccmodels.SecretToken.objects.create(token=channel.id)
+        tk = ccmodels.SecretToken.objects.get_or_create(token=channel.id)
         channel.secret_tokens.add(tk_human, tk)
 
 def fill_published_fields(channel):
