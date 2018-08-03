@@ -20,11 +20,15 @@ def _create_expired_contentnode(creation_date=THREE_MONTHS_AGO):
         kind_id="topic",
         title="test",
         modified=creation_date,
+        created=creation_date,
         parent_id=settings.ORPHANAGE_ROOT_ID,
     )
     # Use q queryset.update() to bypass auto_now's forced setting of
     # created to now()
-    ContentNode.objects.filter(pk=c.pk).update(created=creation_date)
+    ContentNode.objects.filter(pk=c.pk).update(
+        created=creation_date,
+        modified=creation_date,
+    )
     return c
 
 
