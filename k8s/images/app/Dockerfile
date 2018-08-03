@@ -22,11 +22,10 @@ COPY ./yarn.lock .
 RUN yarn install
 ENV PATH="/node_modules/.bin:$PATH"
 
-COPY ./requirements.txt .
-COPY ./requirements_prod.txt .
-RUN pip install -U pip
-RUN pip install -r requirements.txt
-RUN pip install -r requirements_prod.txt
+COPY Pipfile .
+COPY Pipfile.lock .
+RUN pip install -U pip pipenv
+RUN pipenv install --system  # install packages from Pipfile.lock into system
 
 COPY  . /contentcuration/
 WORKDIR /contentcuration
@@ -36,8 +35,13 @@ RUN mkdir -p contentcuration/static/js/bundles #
 RUN ln -s /node_modules /contentcuration/node_modules
 RUN yarn run build -p
 
-# Download the crowdin-cli.jar file
-# RUN curl -L https://storage.googleapis.com/le-downloads/crowdin-cli/crowdin-cli.jar -o crowdin-cli.jar
+# Download the translated strings
+# Note: this only runs if CROWDIN_PROJECT and CROWDIN_API_KEY
+# env vars are defined.
+# Crowdin credentials that can be passed in during build time
+ARG CROWDIN_PROJECT
+ARG CROWDIN_API_KEY
+RUN CROWDIN_PROJECT=$CROWDIN_PROJECT CROWDIN_API_KEY=$CROWDIN_API_KEY deploy/downloadmessages.py
 
 EXPOSE 8000
 
