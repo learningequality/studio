@@ -22,6 +22,7 @@ var MESSAGES = {
     "saved": "SAVED!",
     "header": "CHANNEL DETAILS",
     "save_changes": "SAVE CHANGES",
+    "unable_to_save": "Error Saving Channel",
     "channel_name": "Channel Name",
     "channel_name_error": "Channel name cannot be blank.",
     "channel_name_placeholder": "Enter channel name...",
@@ -316,6 +317,8 @@ var ChannelEditorView = BaseViews.BaseListEditableItemView.extend({
                 self.render();
             }
 
+        }).catch( function(error) {
+            dialog.alert(self.get_translation("unable_to_save"), error.responseText);
         });
     },
     register_changes:function(){
@@ -365,6 +368,7 @@ var DetailsView = BaseViews.BaseListEditableItemView.extend({
         this.channel_id = options.channel_id;
         this.is_channel = options.is_channel;
         this.channel = options.channel;
+        window.current_channel_editor_cid = this.cid;
         this.render();
     },
     events: {
@@ -401,9 +405,11 @@ var DetailsView = BaseViews.BaseListEditableItemView.extend({
         _.defer(this.render_visuals, 500);
     },
     render_visuals: function() {
-        // Render visualizations with tags/kind counts
-        this.render_breakdown();
-        this.render_tagcloud();
+        if(this.cid === window.current_channel_editor_cid){
+            // Render visualizations with tags/kind counts
+            this.render_breakdown();
+            this.render_tagcloud();
+        }
     },
     render_tagcloud: function() {
         var self = this;

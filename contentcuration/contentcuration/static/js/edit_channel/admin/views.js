@@ -653,7 +653,8 @@ var UserItem = BaseAdminItem.extend({
         "click .activate_button": "activate_user",
         "click .delete_button": "delete_user",
         "click .deactivate_button": "deactivate_user",
-        "change .size_limit": "set_user_space"
+        "change .size_limit": "set_user_space",
+        "change .size_unit": "set_user_space",
     },
     set_attributes: function() {
         this.model.set("editable_channels", _.sortBy(this.model.get("editable_channels"), "name"));
@@ -702,8 +703,9 @@ var UserItem = BaseAdminItem.extend({
         var self = this;
         var model = this.model;
         var size = self.$(".size_limit").val() || this.model.get("disk_space");
+        var size_unit = Number(self.$(".size_unit").val());
         _.defer(function(){
-            model.save({"disk_space": Number(size) * 1048576}); // Need to convert to bytes
+            model.save({"disk_space": Number(size) * size_unit}, {patch: true}); // Need to convert to bytes
         }, 1000)
     }
 });

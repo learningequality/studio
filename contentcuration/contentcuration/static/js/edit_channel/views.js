@@ -69,7 +69,8 @@ var MESSAGES = {
     "publish_title_prompt": "Make this channel available for download into Kolibri",
     "publish_in_progress": "Your channel is currently publishing...",
     "publishing_prompt": "You will get an email once the channel finishes publishing.",
-    "topic_title": "Topic"
+    "topic_title": "Topic",
+    "problem_creating_topics": "Error Creating Topic"
 }
 
 var BaseView = Backbone.View.extend({
@@ -620,7 +621,7 @@ var BaseListView = BaseView.extend({
 			}else if(view.subcontent_view){
 				selected_views = _.union(selected_views, view.subcontent_view.get_selected());
 			}
-		})
+		});
 		return selected_views;
 	},
 	close: function(){
@@ -830,7 +831,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 			        		$(".content-list").sortable( "refresh" );
 				            // Revert back to original positions
 			        		self.retrieve_nodes($.unique(reload_list), true).then(function(fetched){
-								self.reload_ancestors(fetched);
+								self.reload_ancestors(fetched, true);
 								self.render();
 							});
 				        });
@@ -857,7 +858,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 		});
 
 		this.model.set('children', this.model.get('children').concat(collection.pluck('id')));
-		this.reload_ancestors(collection, false);
+		this.reload_ancestors(collection, true);
 		this.handle_if_empty();
 	},
 	add_single_node:function(node) {
@@ -885,6 +886,9 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 	            allow_edit: true,
 	            isclipboard: self.isclipboard
 	        });
+        }).catch(function(error) {
+        	var dialog = require("edit_channel/utils/dialog");
+			dialog.alert(self.get_translation("problem_creating_topics"), error.responseText);
         });
 	},
 	import_content:function(){
@@ -1277,6 +1281,9 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 	            onnew:self.add_nodes,
 	            allow_edit: true
 	        });
+        }).catch(function(error) {
+        	var dialog = require("edit_channel/utils/dialog");
+			dialog.alert(self.get_translation("problem_creating_topics"), error.responseText);
         });
 	},
 	add_nodes:function(collection){

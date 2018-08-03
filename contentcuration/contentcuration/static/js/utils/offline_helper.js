@@ -1,3 +1,8 @@
+/*
+	NOTE: Need to add language to contentcuration/templatetags/translation_tags.py
+	when adding a new language.
+*/
+
 var $ = require('jquery');
 require("offline-js");
 require("../../css/offline-theme-slide.css");
@@ -22,26 +27,13 @@ require("utils/snake");
 // });
 
 var languageMapping = {
-	"en": {
-		"language": "english",
-		"load": function() {
-			require("../../css/offline-language-english.css");
-		}
-	},
-	"es": {
-		"language": "spanish",
-		"load": function() {
-			require("../../css/offline-language-spanish.css");
-		}
-	}
+    "en": "english",
+    "es": "spanish"
 }
 
 function getOfflineLanguageName(code) {
-	var language = languageMapping[code.split("-")[0]];
-	language.load();
-	return language.language;
+	return languageMapping[code.split("-")[0]] || languageMapping['en'];
 }
-
 
 var disabledOverlay = document.createElement("DIV");
 disabledOverlay.className = "fade";
@@ -56,7 +48,7 @@ var language = getOfflineLanguageName(window.languageCode || "en");
 
 Offline.options = {
 	checks: {xhr: {url: window.Urls.stealth()}},
-	language: language, //getOfflineLanguageName(window.languageCode || "en"),
+	language: language,
 	theme: "slide",
 	// game:true //Enable to add snake game while waiting for server to reconnect
 }
