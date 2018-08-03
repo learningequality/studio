@@ -1,6 +1,7 @@
 import urllib
 import json
 import pkgutil
+from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.management.base import BaseCommand
 from le_utils.constants import content_kinds, file_formats, format_presets, licenses, languages
@@ -8,7 +9,7 @@ from contentcuration import models
 import logging as logmodule
 from django.core.cache import cache
 logging = logmodule.getLogger(__name__)
-
+from readonly.exceptions import DatabaseWriteDenied
 
 import os
 import le_utils
@@ -131,7 +132,7 @@ SITES = [
         "pk": "id",
         "fields": {
             "id": 1,
-            "name": "Kolibri Studio",
+            "name": "Kolibri Studio (Beta)",
             "domain": "studio.learningequality.org",
         },
     },
@@ -190,7 +191,17 @@ class Command(BaseCommand):
 
                     obj.save()
                 self.stdout.write("{0}: {1} constants saved ({2} new)".format(str(current_model), len(constant_list), new_model_count))
+
+            # Create garbage node
+            garbage_node, _new = models.ContentNode.objects.get_or_create(pk=settings.ORPHANAGE_ROOT_ID, kind_id=content_kinds.TOPIC)
+            garbage_node.title = "Garbage Node Root"
+            garbage_node.description = "This node as the default parent for nodes not associated with a channel"
+            garbage_node.save()
+
             self.stdout.write("************ DONE. ************")
+
+        except DatabaseWriteDenied as e:
+            logging.warning("DB is in read-only mode, skipping loadconstants")
 
         except EarlyExit as e:
             logging.warning("Exited early due to {message}.".format(

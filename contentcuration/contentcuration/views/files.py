@@ -63,7 +63,7 @@ def file_create(request):
 
     presets = FormatPreset.objects.filter(allowed_formats__extension__contains=ext[1:].lower())
     kind = presets.first().kind
-    preferences = json.loads(request.META.get('HTTP_PREFERENCES'))
+    preferences = json.loads(request.META.get('HTTP_PREFERENCES') or "{}")
 
     # sometimes we get a string no matter what. Try to parse it again
     if isinstance(preferences, basestring):
@@ -79,15 +79,11 @@ def file_create(request):
         aggregator=preferences.get('aggregator') or "",
         provider=preferences.get('provider') or "",
         copyright_holder=preferences.get('copyright_holder'),
+        parent_id=settings.ORPHANAGE_ROOT_ID,
     )
     if license and license.is_custom:
         new_node.license_description = preferences.get('license_description')
-
-    # disable mptt updates, since we attach it later to its real tree anyway
-    with ContentNode.objects.disable_mptt_updates():
-        new_node.tree_id = 0
-        new_node.save()
-
+    new_node.save()
     file_object = File(
         file_on_disk=contentfile,
         checksum=checksum,

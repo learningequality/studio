@@ -261,7 +261,7 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
                 acceptedFiles: this.acceptedFiles,
                 url: window.Urls.file_create(),
                 previewTemplate:this.file_upload_template(null, { data: this.get_intl_data() }),
-                parallelUploads: Math.max(1, browserHelper.get_max_parallel_uploads()),
+                parallelUploads: 1, //Math.max(1, browserHelper.get_max_parallel_uploads()),
                 previewsContainer: this.list_selector, // Define the container to display the previews
                 headers: {
                     "X-CSRFToken": get_cookie("csrftoken"),

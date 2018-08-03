@@ -178,13 +178,11 @@ On Mac OS X, you can install the corresponding packages using Homebrew:
 
 
 
-##### Set up python dependencies in a virtual environment
+##### Set up python dependencies through pipenv
 
-    virtualenv -p python2.7 venv
-    source venv/bin/activate
-    pip install -r requirements.txt
-    pip install -r requirements_dev.txt
-    pip install -r requirements_test.txt
+    pip install -U pipenv
+    pipenv install
+
 
 The file `requirements_dev.txt` contains dependencies that will be helpful for
 development and required when using the `--settings=contentcuration.dev_settings`
