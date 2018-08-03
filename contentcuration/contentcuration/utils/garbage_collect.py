@@ -2,18 +2,13 @@
 """
 Studio garbage collection utilities. Clean up all these old, unused records!
 """
-from datetime import datetime, timedelta
-
 from django.conf import settings
 from django.core.files.storage import default_storage as storage
 
 from contentcuration.models import ContentNode, File
 
 
-TWO_WEEKS_AGO = datetime.now() - timedelta(days=14)
-
-
-def clean_up_contentnodes(delete_older_than=TWO_WEEKS_AGO):
+def clean_up_contentnodes(delete_older_than=settings.ORPHAN_DATE_CLEAN_UP_THRESHOLD):
     """
     Clean up all contentnodes associated with the orphan tree with a `created`
     time older than `delete_older_than`, as well as all files (and their file
