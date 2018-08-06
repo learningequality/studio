@@ -90,7 +90,7 @@ steps:
 
 substitutions:
   _DATABASE_INSTANCE_NAME: develop  # by default, connect to the develop DB
-  _STORAGE_BUCKET: studio-content
+  _STORAGE_BUCKET: develop-studio-content
 
 timeout: 3600s
 
