@@ -15,7 +15,7 @@ import os
 import re
 import logging
 import pycountry
-
+from datetime import datetime, timedelta
 
 logging.getLogger("newrelic").setLevel(logging.CRITICAL)
 logging.getLogger("botocore").setLevel(logging.WARNING)
@@ -308,6 +308,12 @@ CELERY_TIMEZONE = os.getenv("CELERY_TIMEZONE") or 'Africa/Nairobi'
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
+
+# When cleaning up orphan nodes, only clean up any that have been last modified
+# since this date
+# our default threshold is two weeks ago
+TWO_WEEKS_AGO = datetime.now() - timedelta(days=14)
+ORPHAN_DATE_CLEAN_UP_THRESHOLD = TWO_WEEKS_AGO
 
 # CLOUD STORAGE SETTINGS
 DEFAULT_FILE_STORAGE = 'django_s3_storage.storage.S3Storage'
