@@ -164,6 +164,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     this.onclose = options.onclose;
     this.allow_edit = options.allow_edit;
     this.isclipboard = options.isclipboard;
+    this.show_errors = !this.new_content;
     this.render();
     this.render_details();
     this.adjust_list_height();
@@ -363,7 +364,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   },
   save_and_keep_open:function(){
     this.editor_view.add_tag(null);
-    this.editor_view.show_errors = true;
+    this.show_errors = true;
 
     var self = this;
     if(this.validate()) {
@@ -381,7 +382,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   save_and_finish: function(event){
     var self = this;
     this.editor_view.add_tag(null);
-    this.editor_view.show_errors = true;
+    this.show_errors = true;
     if(this.validate()) {
       this.save(this.get_translation("saving"), this.save_nodes, this.save_error).then(function(collection){
         self.process_updated_collection(collection);
@@ -596,9 +597,9 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
         }
     });
     this.container.load_editor(this.selected_items);
-    this.container.load_prerequisites(this.selected_items);
     if(this.selected_individual()){
       this.container.load_preview(this.selected_items[0]);
+      this.container.load_prerequisites(this.selected_items);
       if(this.selected_items[0].model.get("kind")==="exercise"){
         this.container.load_questions(this.selected_items[0]);
       }
@@ -678,7 +679,6 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     this.m_value = (this.shared_data && this.shared_data.shared_exercise_data && this.shared_data.shared_exercise_data.m) ? this.shared_data.shared_exercise_data.m : 1;
     this.n_value = (this.shared_data && this.shared_data.shared_exercise_data && this.shared_data.shared_exercise_data.n) ? this.shared_data.shared_exercise_data.n : 1;
     this.first_rendered = this.new_content;
-    this.show_errors = !this.new_content;
     this.render();
   },
   render: function() {
@@ -855,7 +855,6 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
       var view = this.selected_items[0];
       var self = this;
       view.load_file_displays(self.$("#editmetadata_format_section"));
-      this.container.load_prerequisites([view]);
       if(view.model.get("kind")==="exercise"){
         this.container.load_questions(view);
       }
@@ -1018,7 +1017,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
         role_visibility: (!role_visibility)? view.model.get('role_visibility') : role_visibility
       });
     });
-    if(this.show_errors)
+    if(this.container.show_errors)
       this.container.validate();
   },
   change_mastery_model:function(event){

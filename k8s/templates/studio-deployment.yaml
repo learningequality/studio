@@ -71,6 +71,16 @@ spec:
               key: secretkey
               name: {{ template "minio.fullname" . }}
         {{ end }}
+        - name: RELEASE_COMMIT_SHA
+          value: {{ .Values.studioApp.releaseCommit | default "" }}
+        - name: BRANCH_ENVIRONMENT
+          value: {{ .Release.Name }}
+        - name: SENTRY_DSN_KEY
+          valueFrom:
+            secretKeyRef:
+              key: sentry-dsn-key
+              name: {{ template "studio.fullname" . }}
+              optional: true
         - name: AWS_BUCKET_NAME
           value: {{ .Values.bucketName }}
         {{ if .Values.minio.externalGoogleCloudStorage.gcsKeyJson }}
@@ -86,6 +96,10 @@ spec:
           {{ else }}
           value: ""
           {{ end }}
+        {{ if .Values.studioApp.gDrive.keyJson }}
+        - name: GOOGLE_DRIVE_AUTH_JSON
+          value: /secrets/gdrive/gdrive_key.json
+        {{ end }}
         livenessProbe:
           httpGet:
             path: /healthz
@@ -105,6 +119,10 @@ spec:
           name: staticfiles
         - name: gcs-creds
           mountPath: /secrets/gcs
+        {{ if .Values.studioApp.gDrive.keyJson }}
+        - name: gdrive-creds
+          mountPath: /secrets/gdrive
+        {{ end }}
         resources:
           requests:
             cpu: 1000m
@@ -131,6 +149,9 @@ spec:
             secretName: {{ template "studio.fullname" . }}-gcs
         - emptyDir: {}
           name: staticfiles
+        - name: gdrive-creds
+          secret:
+            secretName: {{ template "studio.fullname" . }}-gdrive
 ---
 apiVersion: apps/v1beta1
 kind: Deployment
@@ -212,6 +233,16 @@ spec:
               key: secretkey
               name: {{ template "minio.fullname" . }}
         {{ end }}
+        - name: RELEASE_COMMIT_SHA
+          value: {{ .Values.studioApp.releaseCommit | default "" }}
+        - name: BRANCH_ENVIRONMENT
+          value: {{ .Release.Name }}
+        - name: SENTRY_DSN_KEY
+          valueFrom:
+            secretKeyRef:
+              key: sentry-dsn-key
+              name: {{ template "studio.fullname" . }}
+              optional: true
         - name: AWS_BUCKET_NAME
           value: {{ .Values.bucketName }}
         {{ if .Values.minio.externalGoogleCloudStorage.gcsKeyJson }}

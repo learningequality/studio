@@ -16,9 +16,15 @@ productionIngress: false
 studioApp:
   imageName: "REPLACEME"        
   postmarkApiKey: "REPLACEME"
+  releaseCommit:
   replicas: 3
   gcs:
     enabled: true
+  gDrive:
+    keyJson:
+
+sentry:
+  dsnKey: ""
 
 studioNginx:
   imageName: "REPLACEME"

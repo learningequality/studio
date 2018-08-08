@@ -4,10 +4,14 @@ from unittest import TestCase
 from contentcuration.models import User
 from contentcuration.utils.policies import check_policies, POLICIES
 
+from base import StudioTestCase
+
 
 class CheckPoliciesTestCase(TestCase):
 
     def setUp(self):
+        super(CheckPoliciesTestCase, self).setUp()
+
         self.unsaved_user = User(
             email="mrtest@testy.com",
             first_name="Mr.",
@@ -17,8 +21,6 @@ class CheckPoliciesTestCase(TestCase):
             date_joined=datetime.datetime.now(),
             policies=None,
         )
-
-        super(CheckPoliciesTestCase, self).setUp()
 
     def test_check_policies_handles_user_with_null_policy(self):
         """
