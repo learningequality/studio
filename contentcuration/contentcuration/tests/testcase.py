@@ -228,11 +228,11 @@ class BaseAPITestCase(APITestCase):
         self.client.force_authenticate(self.user)
         self.channel.main_tree.refresh_from_db()
 
-    def setUp(self):
-        minio_utils.ensure_storage_bucket_public()
+    # def setUp(self):
+    #     minio_utils.ensure_storage_bucket_public()
 
-    def tearDown(self):
-        minio_utils.ensure_bucket_deleted()
+    # def tearDown(self):
+    #     minio_utils.ensure_bucket_deleted()
 
     @classmethod
     def tearDownClass(self):

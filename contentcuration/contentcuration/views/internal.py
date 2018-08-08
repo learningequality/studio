@@ -493,9 +493,9 @@ def get_full_node_diff(channel):
     """
     diff = {
         "nodes_added": {},
-        "nodes_moved": {},
         "nodes_deleted": {},
-        "nodes_modified": {}
+        "nodes_modified": {},
+        "nodes_moved": {}
     }
 
     staged_descendants = channel.staging_tree.get_descendants()
@@ -518,7 +518,7 @@ def get_full_node_diff(channel):
         # Get nodes associated to the content id
         main_nodes = main_descendants.filter(content_id=content_id)
         main_node_ids = main_nodes.values_list('node_id', flat=True)
-        staged_nodes = staged_descendants.filter(content_id=content_id)
+        staged_nodes = staged_descendants.filter(content_id=content_id).order_by('changed')
 
         node_intersection = staged_nodes.filter(node_id__in=main_node_ids).values_list('node_id', flat=True)
         staged_nodes_diff = staged_nodes.exclude(node_id__in=node_intersection)
@@ -527,7 +527,7 @@ def get_full_node_diff(channel):
         count_difference = main_nodes.count() - staged_nodes.count()
         if count_difference > 0:
             # Nodes have been deleted on the staging tree
-            for deleted in main_nodes.reverse()[:count_difference]:
+            for deleted in main_nodes_diff.reverse()[:count_difference]:
                 diff['nodes_deleted'].update({
                     deleted.node_id: {
                         "old_parent": deleted.parent.node_id,
@@ -537,7 +537,7 @@ def get_full_node_diff(channel):
 
         elif count_difference < 0:
             # Nodes have been added on the staging tree
-            for added in staged_nodes.reverse()[:abs(count_difference)]:
+            for added in staged_nodes_diff.reverse()[:abs(count_difference)]:
                 diff['nodes_added'].update({
                     added.node_id: {
                         "old_parent": added.parent.node_id,
@@ -550,14 +550,16 @@ def get_full_node_diff(channel):
         for index in range(min_index - node_intersection.count()):
             main_moved_node = main_nodes_diff[index]
             staged_moved_node = staged_nodes_diff[index]
+
             diff['nodes_moved'].update({
                 staged_moved_node.node_id: {
                     "old_parent": main_moved_node.parent.node_id,
                     "new_parent": staged_moved_node.parent.node_id,
                     "old_node_id": main_moved_node.node_id,
-                    "attributes": get_node_dict(staged_moved_node)
+                    "attributes": get_node_diff(staged_moved_node, main_moved_node),
                 }
             })
+    import pdb; pdb.set_trace()
 
     return diff
 
@@ -947,32 +949,38 @@ def set_node_diff(node, channel):
         copies = descendants.filter(content_id=node.content_id).exists() # If there are copies, the node was moved
 
     if original_node:
-        # Check for metadata field changes
-        node.changed_staging_fields = {
-            field: getattr(node, field)
-            for field in CONTENT_METADATA_FIELDS
-            if getattr(node, field) != getattr(original_node, field)
-        }
-
-        # Check for file changes
-        file_diff = get_file_diff(node, original_node)
-        if file_diff.items():
-            node.changed_staging_fields.update({"files": file_diff})
-
-        # Check for tag changes
-        tag_diff = get_tag_diff(node, original_node)
-        if tag_diff.items():
-            node.changed_staging_fields.update({"tags": tag_diff})
-
-        # Check for assessment_item changes
-        ai_diff = get_assessment_item_diff(node, original_node)
-        if ai_diff.items():
-            node.changed_staging_fields.update({"assessment_items": ai_diff})
+        node.changed_staging_fields = get_node_diff(node, original_node)
 
         # If there are any changes, set the changed attribute and save
         if node.changed_staging_fields.items():
             node.changed = True
             node.save()
+
+def get_node_diff(node, original_node):
+    # Check for metadata field changes
+    changed_fields = {
+        field: getattr(node, field)
+        for field in CONTENT_METADATA_FIELDS
+        if getattr(node, field) != getattr(original_node, field)
+    }
+
+    # Check for file changes
+    file_diff = get_file_diff(node, original_node)
+    if file_diff.items():
+        changed_fields.update({"files": file_diff})
+
+    # Check for tag changes
+    tag_diff = get_tag_diff(node, original_node)
+    if tag_diff.items():
+        changed_fields.update({"tags": tag_diff})
+
+    # Check for assessment_item changes
+    ai_diff = get_assessment_item_diff(node, original_node)
+    if ai_diff.items():
+        changed_fields.update({"assessment_items": ai_diff})
+
+    return changed_fields
+
 
 def get_file_diff(node, original_node):
     file_diff = {}

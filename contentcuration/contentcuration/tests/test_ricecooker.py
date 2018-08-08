@@ -336,8 +336,17 @@ class NodeDiffTestCase(BaseAPITestCase):
     def test_diff_node_moved(self):
         # node bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb should be moved
         # node 00000000000000000000000000000008 or 00000000000000000000000000000009 should be moved
-        self.assertIsNotNone(self.diff['nodes_moved'].get('bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'), msg="Node should be moved")
-        first_test = '00000000000000000000000000000009' in self.diff['nodes_moved']
-        second_test = '00000000000000000000000000000008' in self.diff['nodes_moved']
-        self.assertTrue(first_test or second_test, msg="Node should be moved")
+        moved_node = self.diff['nodes_moved'].get('bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb')
+        self.assertIsNotNone(moved_node, msg="Node should be moved")
+        self.assertIsNotNone(moved_node.get('old_parent'), msg="Node should have old_parent")
+        self.assertIsNotNone(moved_node.get('new_parent'), msg="Node should have new_parent")
+        self.assertIsNotNone(moved_node.get('old_node_id'), msg="Node should have old_node_id")
+
+        first_test = self.diff['nodes_moved'].get('00000000000000000000000000000009')
+        second_test = self.diff['nodes_moved'].get('00000000000000000000000000000008')
+        moved_node = first_test or second_test
+        self.assertIsNotNone(moved_node, msg="Node should be moved")
         self.assertNotEqual(first_test, second_test, msg="Only one node should be moved")
+        self.assertIsNotNone(moved_node.get('old_parent'), msg="Node should have old_parent")
+        self.assertIsNotNone(moved_node.get('new_parent'), msg="Node should have new_parent")
+        self.assertIsNotNone(moved_node.get('old_node_id'), msg="Node should have old_node_id")
