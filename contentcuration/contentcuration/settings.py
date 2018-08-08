@@ -245,6 +245,8 @@ CONTENT_DATABASE_URL = '/content/databases/'
 
 CSV_URL = '/content/csvs/'
 
+JSON_URL = '/content/jsons/'
+
 LOGIN_REDIRECT_URL = '/channels/'
 
 AUTH_USER_MODEL = 'contentcuration.User'
