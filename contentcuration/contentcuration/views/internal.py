@@ -559,7 +559,6 @@ def get_full_node_diff(channel):
                     "attributes": get_node_diff(staged_moved_node, main_moved_node),
                 }
             })
-    import pdb; pdb.set_trace()
 
     return diff
 
