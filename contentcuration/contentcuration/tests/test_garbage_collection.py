@@ -17,6 +17,7 @@ pytestmark = pytest.mark.django_db
 
 
 class NodeSettingTestCase(BaseAPITestCase):
+
     def setUp(self):
         super(NodeSettingTestCase, self).setUp()
         # Set up ricecooker trees

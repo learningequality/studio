@@ -10,7 +10,9 @@ from django.core.files import File as DjFile
 from django.core.files.storage import default_storage
 from django.core.management import call_command
 from django.db import transaction
+from django.db.models import Count
 from django.http import HttpResponse, HttpResponseServerError, HttpResponseForbidden
+from itertools import chain
 from le_utils.constants import content_kinds, roles
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
@@ -28,6 +30,9 @@ VERSION_OK = VersionStatus(version=rc.VERSION_OK, status=0, message=rc.VERSION_O
 VERSION_SOFT_WARNING = VersionStatus(version=rc.VERSION_SOFT_WARNING, status=1, message=rc.VERSION_SOFT_WARNING_MESSAGE)
 VERSION_HARD_WARNING = VersionStatus(version=rc.VERSION_HARD_WARNING, status=2, message=rc.VERSION_HARD_WARNING_MESSAGE)
 VERSION_ERROR = VersionStatus(version=rc.VERSION_ERROR, status=3, message=rc.VERSION_ERROR_MESSAGE)
+
+ASSESSMENT_EDIT_FIELDS = ['assessment_id', 'type', 'question', 'hints', 'answers', 'order', 'raw_data', 'source_url', 'randomize']
+FILE_EDIT_FIELDS = ["checksum", "preset_id", "language_id", "source_url", "file_format_id"]
 
 
 @api_view(['POST'])
@@ -466,24 +471,105 @@ def get_full_node_diff(channel):
                 ...
             ]
         }
+
+
+        Determining if node is added/moved/removed:
+
+        Node id captures whether or not the (parent node_id, node_id) edge exists
+        # Main = # of times content id is in main tree
+        # Staged = # of times content id is in staging tree
+        node_id_diff = union(Main node ids, Staged node ids) - intersection(Main node ids, Staged node ids)
+
+         # Main = # Staged | # Main > # Staged       | # Main < # Staged
+        ----------------------------------------------------------------
+         All nodes in      | (# Main - # Staged)     | (# Staged - # Main)
+         node_id_diff      | have been removed,      | have been added,
+         have moved        | (# Staged -             | (# Staged -
+                           | len(node_intersection)) |    len(node_intersection))
+                           | have moved              | have moved
+
+
     """
-    diff = {}
-    changed_nodes = channel.staging_tree.get_descendants().filter(changed=True)
+    diff = {
+        "nodes_added": {},
+        "nodes_moved": {},
+        "nodes_deleted": {},
+        "nodes_modified": {}
+    }
+
+    staged_descendants = channel.staging_tree.get_descendants()
+    main_descendants = channel.main_tree.get_descendants()
+    changed_nodes = staged_descendants.filter(changed=True)
 
     # Go through all changed nodes
     for node in changed_nodes:
         # Get all changed fields
         if node.changed_staging_fields:
-            diff.update({
+            diff['nodes_modified'].update({
                 node.node_id: node.changed_staging_fields
             })
-    # Get node moves
-    # Get nodes added
-    # Get nodes deleted
 
+    # TODO: Once upgraded to Django 1.11, use difference and intersection
+    # see https://docs.djangoproject.com/en/1.11/ref/models/querysets/#django.db.models.query.QuerySet.difference
+    staged_content_ids = staged_descendants.values_list('content_id', flat=True)
+    main_content_ids = main_descendants.values_list('content_id', flat=True)
+    for content_id in list(set(chain(staged_content_ids, main_content_ids))):
+        # Get nodes associated to the content id
+        main_nodes = main_descendants.filter(content_id=content_id)
+        main_node_ids = main_nodes.values_list('node_id', flat=True)
+        staged_nodes = staged_descendants.filter(content_id=content_id)
 
+        node_intersection = staged_nodes.filter(node_id__in=main_node_ids).values_list('node_id', flat=True)
+        staged_nodes_diff = staged_nodes.exclude(node_id__in=node_intersection)
+        main_nodes_diff = main_nodes.exclude(node_id__in=node_intersection)
+
+        count_difference = main_nodes.count() - staged_nodes.count()
+        if count_difference > 0:
+            # Nodes have been deleted on the staging tree
+            for deleted in main_nodes.reverse()[:count_difference]:
+                diff['nodes_deleted'].update({
+                    deleted.node_id: {
+                        "old_parent": deleted.parent.node_id,
+                        "content_id": deleted.content_id,
+                        "attributes": get_node_dict(deleted),
+                    }
+                })
+
+        elif count_difference < 0:
+            # Nodes have been added on the staging tree
+            for added in staged_nodes.reverse()[:abs(count_difference)]:
+                diff['nodes_added'].update({
+                    added.node_id: {
+                        "old_parent": added.parent.node_id,
+                        "content_id": added.content_id,
+                        "attributes": get_node_dict(added)
+                    }
+                })
+
+        # Handle moved nodes
+        min_index = min(main_nodes.count(), staged_nodes.count())
+        for index in range(min_index - node_intersection.count()):
+            main_moved_node = main_nodes_diff[index]
+            staged_moved_node = staged_nodes_diff[index]
+            diff['nodes_moved'].update({
+                staged_moved_node.node_id: {
+                    "old_parent": main_moved_node.parent.node_id,
+                    "new_parent": staged_moved_node.parent.node_id,
+                    "old_node_id": main_moved_node.node_id,
+                    "content_id": staged_moved_node.content_id,
+                    "attributes": get_node_dict(staged_moved_node)
+                }
+            })
 
     return diff
+
+
+def get_node_dict(node):
+    data = { field: getattr(node, field) for field in CONTENT_METADATA_FIELDS }
+    data.update({"files": list(node.files.values(*FILE_EDIT_FIELDS))})
+    data.update({"assessment_items": list(node.assessment_items.values(*ASSESSMENT_EDIT_FIELDS))})
+    data.update({"tags": list(node.tags.values_list('tag_name', flat=True))})
+    return data
 
 """ CHANNEL CREATE FUNCTIONS """
 
@@ -852,9 +938,16 @@ def create_exercises(user, node, data):
             question_obj.save()
             map_files_to_assessment_item(user, question_obj, question['files'])
 
+""" Diff functions """
 def set_node_diff(node, channel):
     """ Get a dict of changed fields between the main tree and the staging tree, setting changed field accordingly """
-    original_node = channel.main_tree.get_descendants().prefetch_related('files', 'tags', 'assessment_items').filter(node_id=node.node_id).first()
+    descendants = channel.main_tree.get_descendants().prefetch_related('files', 'tags', 'assessment_items').select_related("parent")
+
+    # Determine if node is new or moved
+    original_node = descendants.filter(node_id=node.node_id).first() # If this returns something, node is just modified
+    if not original_node:
+        copies = descendants.filter(content_id=node.content_id).exists() # If there are copies, the node was moved
+
     if original_node:
         # Check for metadata field changes
         node.changed_staging_fields = {
@@ -880,7 +973,6 @@ def set_node_diff(node, channel):
 
         # If there are any changes, set the changed attribute and save
         if node.changed_staging_fields.items():
-            print "\n\n", node.node_id, node.title, node.changed_staging_fields
             node.changed = True
             node.save()
 
@@ -889,19 +981,17 @@ def get_file_diff(node, original_node):
 
     # Get new files
     old_presets = original_node.files.values_list('preset_id', flat=True)
-    new_files = node.files.exclude(preset_id__in=old_presets).values("checksum", "preset_id", "language_id", "source_url", "file_format_id")
+    new_files = node.files.exclude(preset_id__in=old_presets).values(*FILE_EDIT_FIELDS)
     if new_files:
         file_diff.update({"new": [dict(item) for item in new_files]})
 
     # Get modified files
     changed_files = []
-    file_fields = ["checksum", "preset_id", "language_id", "source_url"] # Fields to check diff
-
     for f in node.files.filter(preset_id__in=old_presets):
         original_file = original_node.files.get(preset_id=f.preset_id)
         file_changes = {
             field: getattr(f, field)
-            for field in file_fields
+            for field in FILE_EDIT_FIELDS
             if getattr(f, field) != getattr(original_file, field)
         }
         if file_changes.items():
@@ -912,7 +1002,7 @@ def get_file_diff(node, original_node):
 
     # Get deleted files
     new_presets = node.files.values_list('preset_id', flat=True)
-    deleted_files = original_node.files.exclude(preset_id__in=new_presets).values("checksum", "preset_id", "language_id", "source_url", "file_format_id")
+    deleted_files = original_node.files.exclude(preset_id__in=new_presets).values(*FILE_EDIT_FIELDS)
     if deleted_files:
         file_diff.update({"deleted": [dict(item) for item in deleted_files]})
 
@@ -925,37 +1015,36 @@ def get_tag_diff(node, original_node):
     original_tag_names = original_node.tags.values_list('tag_name', flat=True)
     new_tags = node.tags.exclude(tag_name__in=original_tag_names).values_list('tag_name', flat=True)
     if new_tags:
-        tag_diff.update({"new": new_tags})
+        tag_diff.update({"new": list(new_tags)})
 
     # Get deleted tags
     new_tag_names = node.tags.values_list('tag_name', flat=True)
     deleted_tags = original_node.tags.exclude(tag_name__in=new_tag_names).values_list('tag_name', flat=True)
     if deleted_tags:
-        tag_diff.update({"deleted": deleted_tags})
+        tag_diff.update({"deleted": list(deleted_tags)})
 
     return tag_diff
 
 def get_assessment_item_diff(node, original_node):
+    ai_diff = {}
+
     # Only check exercises
     if node.kind_id != content_kinds.EXERCISE:
-        return {}
-
-    ai_diff = {}
+        return ai_diff
 
     # Get new assessment items
     old_ais = original_node.assessment_items.values_list('assessment_id', flat=True)
-    new_ais = node.assessment_items.exclude(assessment_id__in=old_ais).values('type', 'question', 'hints', 'answers', 'order', 'raw_data', 'source_url', 'randomize')
+    new_ais = node.assessment_items.exclude(assessment_id__in=old_ais).values(*ASSESSMENT_EDIT_FIELDS)
     if new_ais:
         ai_diff.update({"new": [dict(item) for item in new_ais]})
 
     # Get modified assessment_items
     changed_ais = []
-    assessment_fields = ['type', 'question', 'hints', 'answers', 'order', 'raw_data', 'source_url', 'randomize'] # Fields to check diff
     for ai in node.assessment_items.filter(assessment_id__in=old_ais):
         original_ai = original_node.assessment_items.get(assessment_id=ai.assessment_id)
         ai_changes = {
             field: getattr(ai, field)
-            for field in assessment_fields
+            for field in ASSESSMENT_EDIT_FIELDS
             if getattr(ai, field) != getattr(original_ai, field)
         }
         if ai_changes.items():
@@ -966,7 +1055,7 @@ def get_assessment_item_diff(node, original_node):
 
     # Get deleted assessment_items
     new_ais = node.assessment_items.values_list('assessment_id', flat=True)
-    deleted_ais = original_node.assessment_items.exclude(preset_id__in=new_ais).values('type', 'question', 'hints', 'answers', 'order', 'raw_data', 'source_url', 'randomize')
+    deleted_ais = original_node.assessment_items.exclude(assessment_id__in=new_ais).values(*ASSESSMENT_EDIT_FIELDS)
     if deleted_ais:
         ai_diff.update({"deleted": [dict(item) for item in deleted_ais]})
 
