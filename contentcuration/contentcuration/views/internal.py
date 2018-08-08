@@ -21,7 +21,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from contentcuration import ricecooker_versions as rc
 from contentcuration.api import get_staged_diff, write_file_to_storage, activate_channel, get_hash
-from contentcuration.models import AssessmentItem, Channel, ContentNode, ContentTag, File, FormatPreset, Language, License, StagedFile, generate_object_storage_name, get_next_sort_order, CONTENT_METADATA_FIELDS
+from contentcuration.models import AssessmentItem, Channel, ContentNode, ContentTag, File, FormatPreset, Language, License, StagedFile, generate_object_storage_name, get_next_sort_order
 from contentcuration.utils.tracing import trace
 from contentcuration.utils.files import get_file_diff
 
@@ -31,6 +31,9 @@ VERSION_SOFT_WARNING = VersionStatus(version=rc.VERSION_SOFT_WARNING, status=1, 
 VERSION_HARD_WARNING = VersionStatus(version=rc.VERSION_HARD_WARNING, status=2, message=rc.VERSION_HARD_WARNING_MESSAGE)
 VERSION_ERROR = VersionStatus(version=rc.VERSION_ERROR, status=3, message=rc.VERSION_ERROR_MESSAGE)
 
+# Used to get diff between nodes
+CONTENT_METADATA_FIELDS = ["title", "description", "license_id", "license_description", "language_id", "copyright_holder",
+                    "extra_fields", "author", "aggregator", "provider", "role_visibility", "kind_id", "content_id"]
 ASSESSMENT_EDIT_FIELDS = ['assessment_id', 'type', 'question', 'hints', 'answers', 'order', 'raw_data', 'source_url', 'randomize']
 FILE_EDIT_FIELDS = ["checksum", "preset_id", "language_id", "source_url", "file_format_id"]
 
@@ -487,8 +490,6 @@ def get_full_node_diff(channel):
          have moved        | (# Staged -             | (# Staged -
                            | len(node_intersection)) |    len(node_intersection))
                            | have moved              | have moved
-
-
     """
     diff = {
         "nodes_added": {},
@@ -530,7 +531,6 @@ def get_full_node_diff(channel):
                 diff['nodes_deleted'].update({
                     deleted.node_id: {
                         "old_parent": deleted.parent.node_id,
-                        "content_id": deleted.content_id,
                         "attributes": get_node_dict(deleted),
                     }
                 })
@@ -541,7 +541,6 @@ def get_full_node_diff(channel):
                 diff['nodes_added'].update({
                     added.node_id: {
                         "old_parent": added.parent.node_id,
-                        "content_id": added.content_id,
                         "attributes": get_node_dict(added)
                     }
                 })
@@ -556,7 +555,6 @@ def get_full_node_diff(channel):
                     "old_parent": main_moved_node.parent.node_id,
                     "new_parent": staged_moved_node.parent.node_id,
                     "old_node_id": main_moved_node.node_id,
-                    "content_id": staged_moved_node.content_id,
                     "attributes": get_node_dict(staged_moved_node)
                 }
             })

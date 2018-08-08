@@ -27,6 +27,7 @@ DB_ROOT = "databases"
 
 STATIC_ROOT = os.getenv("STATICFILES_DIR") or os.path.join(BASE_DIR, "static")
 CSV_ROOT = "csvs"
+JSON_ROOT = "jsons"
 
 # hardcoding all this info for now. Potential for shared reference with webpack?
 WEBPACK_LOADER = {

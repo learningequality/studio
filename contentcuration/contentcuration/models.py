@@ -603,10 +603,6 @@ class License(models.Model):
     def __str__(self):
         return self.license_name
 
-# Used to get diff between nodes
-CONTENT_METADATA_FIELDS = ["title", "description", "license_id", "license_description", "language_id", "copyright_holder",
-                    "extra_fields", "author", "aggregator", "provider", "role_visibility"]
-
 def get_next_sort_order(node=None):
     # Get the next sort order under parent (roots if None)
     # Based on Kevin's findings, we want to append node as prepending causes all other root sort_orders to get incremented
