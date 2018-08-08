@@ -14,6 +14,7 @@ register = template.Library()
 LANGUAGES = {
     "en": "english",
     "es": "spanish",
+    "ar": "arabic"
 }
 
 

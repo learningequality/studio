@@ -224,7 +224,7 @@ LOGGING = {
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
 
-LANGUAGE_CODE = 'en'
+LANGUAGE_CODE = 'ar'
 
 TIME_ZONE = 'UTC'
 
@@ -243,6 +243,7 @@ ugettext = lambda s: s
 LANGUAGES = (
     ('en', ugettext('English')),
     ('es', ugettext('Spanish')),
+    ('ar', ugettext('Arabic')),
     ('es-es', ugettext('Spanish - Spain')),
     ('es-mx', ugettext('Spanish - Mexico')),
     ('en-PT', ugettext('English - Pirate')),
