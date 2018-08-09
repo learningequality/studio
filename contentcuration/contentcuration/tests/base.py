@@ -8,7 +8,31 @@ from rest_framework.test import APIClient, APIRequestFactory, APITestCase, force
 import testdata
 
 
-class StudioTestCase(TestCase):
+class BucketTestMixin:
+    """
+    Handles bucket setup and tear down for test classes. If you want your entire TestCase to share the same bucket,
+    call create_bucket in setUpClass and then set persist_bucket to True, then make sure you call self.delete_bucket()
+    in tearDownClass.
+    """
+    persist_bucket = False
+
+    def create_bucket(self):
+        minio_utils.ensure_storage_bucket_public()
+
+    def delete_bucket(self):
+        minio_utils.ensure_bucket_deleted()
+
+    def setUp(self):
+        raise Exception("Called?")
+        if not self.persist_bucket:
+            self.create_bucket()
+
+    def tearDown(self):
+        if not self.persist_bucket:
+            self.delete_bucket()
+
+
+class StudioTestCase(TestCase, BucketTestMixin):
 
     @classmethod
     def setUpClass(cls):
@@ -16,13 +40,15 @@ class StudioTestCase(TestCase):
         call_command('loadconstants')
 
     def setUp(self):
-        minio_utils.ensure_storage_bucket_public()
+        if not self.persist_bucket:
+            self.create_bucket()
 
     def tearDown(self):
-        minio_utils.ensure_bucket_deleted()
+        if not self.persist_bucket:
+            self.delete_bucket()
 
 
-class StudioAPITestCase(APITestCase):
+class StudioAPITestCase(APITestCase, BucketTestMixin):
 
     @classmethod
     def setUpClass(cls):
@@ -30,11 +56,12 @@ class StudioAPITestCase(APITestCase):
         call_command('loadconstants')
 
     def setUp(self):
-        minio_utils.ensure_storage_bucket_public()
+        if not self.persist_bucket:
+            self.create_bucket()
 
     def tearDown(self):
-        minio_utils.ensure_bucket_deleted()
-
+        if not self.persist_bucket:
+            self.delete_bucket()
 
 class BaseTestCase(StudioTestCase):
     def setUp(self):
