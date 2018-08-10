@@ -226,6 +226,21 @@
 			margin-left: 20px;
 			&:hover { color: @blue-500; }
 		}
+		.details-pill {
+			display: inline-block;
+			border-radius: 20px;
+		    padding: 0px 10px;
+		    background-color: @blue-200;
+		    color: white;
+		    font-weight: bold;
+		    margin-left: 5px;
+		    cursor: default;
+		    &[data-toggle="tooltip"] {
+		    	cursor: pointer;
+		    	text-decoration: underline;
+		    	text-decoration-style: dotted;
+		    }
+		}
 
 		&#auth-section {
 			.info-row {
@@ -394,16 +409,6 @@
 						border-top: 1px solid @blue-100;
 						padding: 10px;
 						padding-bottom: 0px;
-						.included {
-							display: inline-block;
-							border-radius: 20px;
-						    padding: 0px 10px;
-						    background-color: @blue-200;
-						    color: white;
-						    font-weight: bold;
-						    margin-left: 5px;
-						    cursor: default;
-						}
 					}
 				}
 

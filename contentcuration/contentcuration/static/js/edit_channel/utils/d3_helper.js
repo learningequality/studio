@@ -18,12 +18,15 @@ function D3Tooltip (d3, selector) {
         .style('opacity', 0)
         .style('position', 'absolute')
         .style('pointer-events', 'none')
+    this.width = 0;
     ttCounter += 1
     this.html = function(html) {
         this.$el.html(html)
     }
     this.show = function() {
         var xPos = this.d3.event.pageX - $(selector).offset().left + 10;
+        this.width = $(selector + ' .d3-tooltip').width() + 35;
+        xPos = (window.isRTL)? xPos - this.width  : xPos;
         var yPos = this.d3.event.pageY - $(selector).offset().top + 10;
         this.$el.transition().duration(200).style('opacity', .9)
         this.$el.style('left', xPos + 'px')
@@ -31,6 +34,7 @@ function D3Tooltip (d3, selector) {
     }
     this.move = function() {
         var xPos = this.d3.event.pageX - $(selector).offset().left + 10;
+        xPos = (window.isRTL)? xPos - this.width  : xPos;
         var yPos = this.d3.event.pageY - $(selector).offset().top - 28;
         this.$el.style('left', xPos + 'px')
                 .style('top', (yPos - 28) + 'px')
