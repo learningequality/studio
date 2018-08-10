@@ -20,7 +20,7 @@
     <button class="btn action-text tab_item toggle_id">{{#if get_id}}{{formatMessage (intlGet 'messages.get_token')}}{{else}}{{formatMessage (intlGet 'messages.get_id')}}{{/if}}</button>
     </p>
     <div class="container-fluid" id="published_footer">
-      <span>{{formatMessage (intlGet 'messages.published_version')}} {{channel.version}}{{#if channel.published_size}} ({{{format_file_size channel.published_size}}}){{/if}}</span>
+      <span>{{formatMessage (intlGet 'messages.published_version')}} {{channel.version}}{{#if channel.published_size}} {{formatMessage (intlGet 'messages.parenthesis') data=(format_file_size channel.published_size)}}{{/if}}</span>
     </div>
   </div>
 </div>
