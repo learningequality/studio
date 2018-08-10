@@ -175,6 +175,7 @@
     background-color: blanchedalmond;
     color: @gray-700;
     font-style: italic;
+    a { font-weight: bold; }
 }
 
 #publish-id{
@@ -542,26 +543,9 @@
 				}
 			}
 			.popover{
-				border-radius: 0;
+				.side-popover;
 				margin-top: 30px;
-				.arrow{top:40% !important;}
-				.popover-content {
-					padding:0px;
-					min-width: 200px;
-					.option{
-						width:100%;
-						padding:5px 20px;
-						border:none;
-						font-size:12pt;
-					}
-					.option:hover{
-						font-weight:bold;
-						background-color: @gray-200;
-					}
-				}
-				>.arrow {
-				    margin-top: -26px;
-				}
+				width: 200px;
 			}
 			.context-menu {
 			  display:none;

@@ -34,9 +34,11 @@
       {% block css_bundle %}
         {% render_bundle_css 'base' %}
       {% endblock css_bundle %}
+
       {% render_offline_css LANGUAGE_CODE %}
       <script>
         window.languageCode = "{{LANGUAGE_CODE}}";
+        window.isRTL = "{{ LANGUAGE_BIDI }}" === "True";
         try{
           window.ALL_MESSAGES = JSON.parse("{{ messages|escapejs}}");
         } catch (error) { /* Page does not require front-end translations */ }
