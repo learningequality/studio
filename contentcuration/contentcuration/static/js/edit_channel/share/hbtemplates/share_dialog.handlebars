@@ -17,11 +17,13 @@
 			<div id="editor_list_wrapper">
 				<ul class="list-unstyled">
 					<li id="share_item_{{user.id}}" class="share_list_item">
-						<span class="editor_name truncate" title="{{user.first_name}} {{user.last_name}}">
-							{{user.first_name}} {{user.last_name}}
-						</span>
-						<span class="editor_email">&nbsp;({{user.email}})</span>
-						<div class="pull-right" id="share_current_user_actions"></div>
+						<div class="row">
+							<span class="pull-left editor_name truncate" title="{{user.first_name}} {{user.last_name}}">
+								{{user.first_name}} {{user.last_name}}
+							</span>
+							<span class=" pull-left editor_email">&nbsp;{{formatMessage (intlGet 'messages.parenthesis') data=user.email}}</span>
+							<div class="pull-right" id="share_current_user_actions"></div>
+						</div>
 					</li>
 				</ul>
 				<div id="current_list_wrapper"><em>{{formatMessage (intlGet 'messages.loading_editors')}}</em></div>
