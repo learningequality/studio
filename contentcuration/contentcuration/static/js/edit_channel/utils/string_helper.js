@@ -3,7 +3,7 @@ var i18n = require("../../utils/i18n");
 
 function format_size(text){
   if (!text) {
-    return "0B";
+    return "0" + translate("unit_bytes");
   }
   var value = Number(text);
   var isnegative = value < 0;
@@ -15,15 +15,15 @@ function format_size(text){
   var TB = parseFloat(Math.pow(KB, 4))
 
   if(value < KB)
-      return (isnegative ? "-" : "") + Math.round(value) + "B"
+      return (isnegative ? "-" : "") + Math.round(value) + translate("unit_bytes")
   else if(KB <= value && value < MB)
-      return (isnegative ? "-" : "") + Math.round(parseFloat(value/KB)) + "KB"
+      return (isnegative ? "-" : "") + Math.round(parseFloat(value/KB)) + translate("unit_kilobytes")
   else if (MB <= value && value < GB)
-      return (isnegative ? "-" : "") + Math.round(parseFloat(value/MB)) + "MB"
+      return (isnegative ? "-" : "") + Math.round(parseFloat(value/MB)) + translate("unit_megabytes")
   else if (GB <= value && value < TB)
-      return (isnegative ? "-" : "") + Math.round(parseFloat(value/GB)) + "GB"
+      return (isnegative ? "-" : "") + Math.round(parseFloat(value/GB)) + translate("unit_gigabytes")
   else if (TB <= value)
-      return (isnegative ? "-" : "") + Math.round(parseFloat(value/TB)) + "TB"
+      return (isnegative ? "-" : "") + Math.round(parseFloat(value/TB)) + translate("unit_terabytes")
 }
 
 function escape_str(text){
@@ -312,7 +312,16 @@ var messages = {
   "formula": "FORMULA",
   "export_error_text": "Error exporting data. Please try again.",
   "export_title": "Exporting Data",
-  "export_text": "Data export started. You'll receive an email with your information when it's done."
+  "export_text": "Data export started. You'll receive an email with your information when it's done.",
+  "unit_bytes": "B",
+  "unit_kilobytes": "KB",
+  "unit_megabytes": "MB",
+  "unit_gigabytes": "GB",
+  "unit_terabytes": "TB",
+  "redo": "Redo",
+  "undo": "Undo",
+  "image": "Image",
+  "formula": "Formula"
 };
 
 var translate = i18n.createTranslator(namespace, messages);
