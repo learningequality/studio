@@ -19,6 +19,7 @@ function dialog(title, submessage, actions, onclose){
     width: (window.languageCode.startsWith("es"))? 500 : 400, // Spanish translations tend to be longer
     modal: false,
     buttons: actions,
+    zIndex: 10000,
     close:function(){
       if(onclose){
         onclose();
@@ -36,8 +37,8 @@ function dialog(title, submessage, actions, onclose){
 
   $(".modal").attr('tabindex', null);
   $("#dialog-box").dialog('open');
-  $('.ui-widget-overlay').on('click', function() { $('#dialog-box').dialog( "close" ); });
-  $('.ui-dialog').find("button").on('click', function() { $('#dialog-box').dialog( "close" ); });
+  $('.ui-widget-overlay').css('z-index', 1000000).on('click', function() { $('#dialog-box').dialog( "close" ); });
+  $('.ui-dialog').css('z-index', 1000000).find("button").on('click', function() { $('#dialog-box').dialog( "close" ); });
 
   $(document).on('keydown', function(event){
     switch(event.charCode || event.keyCode || event.which){
