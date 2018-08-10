@@ -79,7 +79,7 @@ var MESSAGES = {
     "open_settings": "Open Settings",
     "ok": "OK",
     "role_visibility": "Visible to",
-    "imported_from": "Imported from:"
+    "imported_from_channel": "Imported from {channel}"
 }
 
 var MetadataModalView = BaseViews.BaseModalView.extend({

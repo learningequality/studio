@@ -13,7 +13,7 @@
 	{{/if}}
 	<div class="row">
 		<div class="col-xs-6">
-			{{#if source_channel}}<div id="imported_from_field" class="truncate">{{formatMessage (intlGet 'messages.imported_from')}} <a href="/channels/{{source_channel.id}}/view{{#if node}}/{{node.original_source_node_id}}{{/if}}" target="_blank" title="{{source_channel.name}}" class="original_channel_link"><b>{{source_channel.name}}</b></a></div>{{/if}}
+			{{#if source_channel}}<div id="imported_from_field" class="truncate"><a href="/channels/{{source_channel.id}}/view{{#if node}}/{{node.original_source_node_id}}{{/if}}" target="_blank" title="{{source_channel.name}}" class="action-text original_channel_link">{{formatMessage (intlGet 'messages.imported_from_channel') channel=source_channel.name}}</a></div>{{/if}}
 		</div>
 		<div class="col-xs-6">
 			<div class="pull-right">
