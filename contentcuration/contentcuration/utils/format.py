@@ -1,3 +1,5 @@
+from django.utils.translation import ugettext_lazy as _
+
 def format_size(value):
     B = float(value)
     KB = float(1024)
@@ -6,12 +8,12 @@ def format_size(value):
     TB = float(KB ** 4) # 1,099,511,627,776
 
     if B < KB:
-        return '{0}'.format(B), 'B'
+        return '{0}'.format(B), _('B')
     elif KB <= B < MB:
-        return '{0:.2f}'.format(B/KB), 'KB'
+        return '{0:.2f}'.format(B/KB), _('KB')
     elif MB <= B < GB:
-        return '{0:.2f}'.format(B/MB), 'MB'
+        return '{0:.2f}'.format(B/MB), _('MB')
     elif GB <= B < TB:
-        return '{0:.2f}'.format(B/GB), 'GB'
+        return '{0:.2f}'.format(B/GB), _('GB')
     elif TB <= B:
-        return '{0:.2f}'.format(B/TB), 'TB'
+        return '{0:.2f}'.format(B/TB), _('TB')
