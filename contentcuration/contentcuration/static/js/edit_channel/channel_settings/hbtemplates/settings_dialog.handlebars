@@ -35,7 +35,7 @@
                 <select id="license_select" class="input_listener tab_item">
                     <option value=0>{{formatMessage (intlGet 'messages.no_license')}}</option>
                     {{#each licenses}}
-                        <option value={{id}}>{{#translate license_name}}{{/translate}}</option>
+                        <option value={{id}}>{{{translate license_name}}}</option>
                     {{/each}}
                 </select>
                 <textarea id="custom_license_description" class="input_listener tab_item" placeholder="{{formatMessage (intlGet 'messages.license_description_placeholder')}}" value={{preferences.license_description}}>{{preferences.license_description}}</textarea>
@@ -48,12 +48,12 @@
         <h4>{{formatMessage (intlGet 'messages.exercise_criteria')}}</h4>
         <div>
             <select id="mastery_model_select" class="input_listener tab_item">
-                <option value="num_correct_in_a_row_2" selected>{{#translate "num_correct_in_a_row_2"}}{{/translate}}</option>
-                <option value="num_correct_in_a_row_3" selected>{{#translate "num_correct_in_a_row_3"}}{{/translate}}</option>
-                <option value="num_correct_in_a_row_5">{{#translate "num_correct_in_a_row_5"}}{{/translate}}</option>
-                <option value="num_correct_in_a_row_10">{{#translate "num_correct_in_a_row_10"}}{{/translate}}</option>
-                <option value="do_all">{{#translate "do_all"}}{{/translate}}</option>
-                <option value="m_of_n">{{#translate "m_of_n"}}{{/translate}}</option>
+                <option value="num_correct_in_a_row_2" selected>{{{translate "num_correct_in_a_row_2"}}}</option>
+                <option value="num_correct_in_a_row_3" selected>{{{translate "num_correct_in_a_row_3"}}}</option>
+                <option value="num_correct_in_a_row_5">{{{translate "num_correct_in_a_row_5"}}}</option>
+                <option value="num_correct_in_a_row_10">{{{translate "num_correct_in_a_row_10"}}}</option>
+                <option value="do_all">{{{translate "do_all"}}}</option>
+                <option value="m_of_n">{{{translate "m_of_n"}}}</option>
             </select>
             <span id="mastery_custom_criterion">
                 <input type="number" class="input_listener tab_item" id="m_value" min="1" max="20" value="{{preferences.m_value}}" maxlength="2" size="2"/>
