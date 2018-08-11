@@ -36,7 +36,7 @@ const pageNameToComponentMap = {
   [PageTypes.TREE_VIEW]: 'ImportChannelList',
 };
 
-module.exports = {
+export default {
   name: 'ImportModal',
   $trs: {
     importHeader: 'Import from Other Channels',

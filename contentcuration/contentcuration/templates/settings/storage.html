@@ -1,6 +1,8 @@
 <!DOCTYPE HTML>
 {% extends "settings/settings.html" %}
 {% load staticfiles %}
+{% load translation_tags %}
+{% load license_tags %}
 {% load i18n %}
 
 {% block settingscontent %}
@@ -9,22 +11,163 @@
 <p>{% trans "Check your storage usage and request more if needed." %}</p>
 <hr/>
 <div class="container-fluid">
-	<h5>{% trans "Storage Used" %} ({{percent_used}}%)</h5>
+	<h5>{% trans "Storage Used" %} ({{used|format_size}}/{{total|format_size}})</h5>
 	<div class="progress">
 		<div class="progress-bar" role="progressbar" aria-valuenow="{{percent_used}}" aria-valuemin="0" aria-valuemax="100" style="width: {{percent_used}}%;">
-		{{used}}/{{total}}MB
+			{{percent_used}}%
 		</div>
 	</div>
 	<br/>
 	<div class="panel panel-default">
-		<div class="panel-heading usage_header"><b class="pull-right">{{available}}MB {% trans "Available" %}</b>{% trans "Usage" %}</div>
+		<div class="panel-heading usage_header"><b class="pull-right">{{available|format_size}} {% trans "Available" %}</b>{% trans "Usage" %}</div>
 		<ul class="list-group">
 			{% for item in breakdown %}
-				<li class="list-group-item">{{item.name}} - {{item.percent}}% ({{item.size}}MB)</li>
+				<li class="list-group-item">{{item.name}} - {{item.percent}}% ({{item.size|format_size}})</li>
 			{% empty %}<i>{% trans "You don't have any files uploaded" %}</i>
 			{% endfor %}
 		</ul>
 	</div>
-	<p><i>* {% trans "If you need more space, please reach out to us at" %} <b><a id="email_link" href="mailto:{{request_email}}?Subject=Content%20Curation%20Storage%20Request">{{request_email}}</a></b></i></p>
+	<br><br>
+	<h5>{% trans "Request More Space" %}</h5>
+	{{message}}
+	{% if form.errors %}
+		<ul class="errors text-center list-unstyled">
+			{% for field in form %}
+				{% for error in field.errors %}
+					<li>{{ error|escape }}</li>
+				{% endfor %}
+			{% endfor %}
+		</ul>
+	{% elif messages %}
+		{% for message in messages %}
+		<div class="alert alert-success text-center" role="alert">
+			{{message}}
+		</div>
+		{% endfor %}
+	{% endif %}
+	<form action="{% url 'storage_settings' %}" method="post" id="storage_request_form">
+		{% csrf_token %}
+		<p>{% trans "What is the nature of your content?" %}</p>
+		<ul>
+			<li>{% trans "How much storage are you requesting?" %}{% if form.storage.field.required %}<b class="required">*</b>{% endif %} {{ form.storage }}</li>
+			<li>{% trans "Approximately how many resources are you planning to upload?" %}{% if form.resource_count.field.required %}<b class="required">*</b>{% endif %} {{ form.resource_count }}</li>
+			<li>{% trans "What is the average size of each resource?" %}{% if form.resource_size.field.required %}<b class="required">*</b>{% endif %} {{ form.resource_size }}</li>
+			<li>{% trans "What kind of content are you uploading?" %}{% if form.kind.field.required %}<b class="required">*</b>{% endif %}<br>{{ form.kind }}</li>
+			<li>{% trans "Who is the author (creator), curator (organizer), and/or aggregator (maintainer) of your content? Please specify" %}{% if form.creators.field.required %}<b class="required">*</b>{% endif %}<br>{{ form.creators }}</li>
+			<li>{% trans "Link to sample content (on Studio or from source site)" %}{% if form.sample_link.field.required %}<b class="required">*</b>{% endif %}<br>{{ form.sample_link }}</li>
+		</ul>
+
+		<p>{% trans "Who can use your content?" %}</p>
+		<ul>
+			<li>{% trans "What is the licensing of the content you are uploading? (Check all that apply)" %}{% if form.license.field.required %}<b class="required">*</b>{% endif %}
+				<ul id="id_license">
+					{% for option in form.license %}
+						<li>
+							<label for="{{option.attrs.id}}">
+								<input id="{{option.attrs.id}}" name="license" type="checkbox" value="{{option.choice_value}}"{% if option.choice_value in option.value %}checked{% endif %}>
+								{{option.choice_value | get_translation}}
+								<a class="material-icons license-url" href="{{option.choice_value | get_license_url}}" target="_blank" data-toggle="tooltip" data-placement="top" title="{% trans 'Learn More' %}">link</a>
+							</label>
+
+						</li>
+					{% endfor %}
+				</ul>
+			</li>
+			{% if channel_count %}
+			<li>
+				{% blocktrans %}
+					If the content is openly licensed, would you be willing to consider making your channels <a id="public_help" data-toggle="tooltip" data-placement="top" title="By making a channel public, you are allowing anyone on Kolibri Studio to access your content and use it in their own channels. Channels submitted for public use will be reviewed by the Learning Equality team.">public</a> to other Kolibri users if requested in the future? (Select all that apply)
+				{% endblocktrans %}
+				<br>{{ form.public }}<br>
+			</li>
+			{% endif %}
+		</ul>
+
+		<p>{% trans "How are you using your content?" %}</p>
+		<ul>
+			<li>
+				{% trans "Who is the intended audience for your channel? How big is your audience?" %}
+				{% if form.audience.field.required %}<b class="required">*</b>{% endif %}
+				{{ form.audience }}
+			</li>
+			<li>
+				{% trans "What is the target region(s) for your content?" %}
+				<br>{{ form.location }}<br>
+			</li>
+			<li>{% trans "How many times will this content be imported from Studio into new Kolibri installations per month, on average?" %}{% if form.import_count.field.required %}<b class="required">*</b>{% endif %} {{ form.import_count }}</li>
+		</ul>
+
+		<p>{% trans "Tell us more about your use of Kolibri" %}</p>
+		<ul>
+			<li>
+				{% trans "Organizational affiliation" %}{% if form.org_or_personal.field.required %}
+				<b class="required">*</b>{% endif %}
+				<ul class="id_org_or_personal">
+					{% for option in form.org_or_personal %}
+						<li>
+							{{option}}
+							{% if option.choice_value == 'Organization' %}
+							{{ form.organization }}
+							{% endif %}
+						</li>
+					{% endfor %}
+				</ul>
+			</li>
+			<li>
+				{% trans "What type of organization or group is coordinating the use of Kolibri (if applicable)?" %}{% if form.organization_type.field.required %}
+				<b class="required">*</b>{% endif %}
+				<ul class="id_org_or_personal">
+					{% for option in form.organization_type %}
+						<li>
+							{{option}}
+							{% if option.choice_value == 'Other' %}
+							{{ form.organization_other }}
+							{% endif %}
+						</li>
+					{% endfor %}
+				</ul>
+			</li>
+		</ul>
+
+		<p>{% trans "Please write a paragraph explaining your needs and use case for Kolibri Studio, and how it will integrate into your programs. Include information about who is curating, deploying, and using the content. Is this work being coordinated by an organization, as part of an educational program? Include justification for the additional space being requested." %} {% if form.message.field.required %}<b class="required">*</b>{% endif %}</p>
+		{{ form.message }}
+		<br><br><br>
+		<input id="send" class="action-button pull-right" type="submit" value="{% trans 'SEND REQUEST' %}"/>
+	</form>
 </div>
+
+<script>
+	$('[data-toggle="tooltip"]').tooltip();
+
+	// Allow deselection if item is clicked, don't deselect everything on click
+	$(".multi-select-field").on("mousedown", function(ev) {
+		ev.preventDefault();
+		ev.target.selected = !ev.target.selected;
+
+		// Prevent select box from jumping to the top every click
+		var st = this.scrollTop;
+		var self = this;
+		setTimeout(function() {
+			self.scrollTop = st, 0;
+		});
+		this.focus();
+	});
+	$(".multi-select-field").on("mousemove", function(ev) {
+		ev.preventDefault();
+	});
+
+	$(".license-url").on("click", function(ev) {
+		ev.stopPropagation();
+	});
+
+	function setOrgTypeDisabled() {
+		$(".id_org_or_personal input[value='Organization']").is(":checked") ?
+			$("input[name='organization_type']").removeAttr('disabled') :
+			$("input[name='organization_type']").attr('disabled', 'disabled');
+	}
+
+	$("input[name='org_or_personal']").on("change", setOrgTypeDisabled);
+	setOrgTypeDisabled();
+
+</script>
 {% endblock settingscontent %}

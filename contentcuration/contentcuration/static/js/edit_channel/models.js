@@ -111,7 +111,7 @@ var UserModel = BaseModel.extend({
                 url: window.Urls.get_user_edit_channels(),
                 error: reject,
                 success: function(data) {
-                    var collection = new ChannelCollection(JSON.parse(data));
+                    var collection = new ChannelCollection(data);
                     collection.each(function(item) { item.set("is_bookmarked", _.contains(self.get("bookmarks"), item.id)); });
                     resolve(collection);
                 }
@@ -126,7 +126,7 @@ var UserModel = BaseModel.extend({
                 url: window.Urls.get_user_view_channels(),
                 error: reject,
                 success: function(data) {
-                    var collection = new ChannelCollection(JSON.parse(data));
+                    var collection = new ChannelCollection(data);
                     collection.each(function(item) { item.set("is_bookmarked", _.contains(self.get("bookmarks"), item.id)); });
                     resolve(collection);
                 }
@@ -141,7 +141,7 @@ var UserModel = BaseModel.extend({
                 url: window.Urls.get_user_bookmarked_channels(),
                 error: reject,
                 success: function(data) {
-                    var collection = new ChannelCollection(JSON.parse(data));
+                    var collection = new ChannelCollection(data);
                     collection.each(function(item) { item.set("is_bookmarked", true); });
                     resolve(collection);
                 }
@@ -156,7 +156,7 @@ var UserModel = BaseModel.extend({
                 url: window.Urls.get_user_public_channels(),
                 error: reject,
                 success: function(data) {
-                    var collection = new ChannelCollection(JSON.parse(data));
+                    var collection = new ChannelCollection(data);
                     collection.each(function(item) { item.set("is_bookmarked", _.contains(self.get("bookmarks"), item.id)); });
                     resolve(collection);
                 }
@@ -171,7 +171,7 @@ var UserModel = BaseModel.extend({
                 url: window.Urls.get_user_pending_channels(),
                 error: reject,
                 success: function(data) {
-                    resolve(new InvitationCollection(JSON.parse(data)));
+                    resolve(new InvitationCollection(data));
                 }
             });
         });
@@ -193,7 +193,7 @@ var UserCollection = BaseCollection.extend({
                 url: window.Urls.get_all_users(),
                 error:reject,
                 success: function(users) {
-                    self.reset(JSON.parse(users));
+                    self.reset(users);
                     resolve(self);
                 }
             });
@@ -244,22 +244,27 @@ var InvitationCollection = BaseCollection.extend({
 /**** CHANNEL AND CONTENT MODELS ****/
 function fetch_nodes(ids, url){
     return new Promise(function(resolve, reject){
-        if(ids.length === 0) {
-            resolve(new ContentNodeCollection()); // No need to make a call to the server
-        }
-        $.ajax({
-            method:"POST",
-            url: url,
-            data:  JSON.stringify(ids),
-            error: reject,
-            success: function(data) {
-                resolve(new ContentNodeCollection(JSON.parse(data)));
-            }
+        // Getting "Request Line is too large" error on some channels, so chunk the requests
+        var promises = _.chain(ids).chunk(50).map(function(id_list) {
+            return new Promise(function(promise_resolve, promise_reject){
+                if(id_list.length === 0) {
+                    promise_resolve([]); // No need to make a call to the server
+                }
+                $.ajax({
+                    method:"GET",
+                    url: url(id_list.join(",")),
+                    error: promise_reject,
+                    success: promise_resolve
+                });
+            });
+        }).value();
+        Promise.all(promises).then(function(values) {
+            resolve(new ContentNodeCollection(_.flatten(values)));
         });
     });
 }
 function fetch_nodes_by_ids(ids){
-    return fetch_nodes(ids, window.Urls.get_nodes_by_ids());
+    return fetch_nodes(ids, window.Urls.get_nodes_by_ids);
 }
 
 var ContentNodeModel = BaseModel.extend({
@@ -290,9 +295,35 @@ var ContentNodeModel = BaseModel.extend({
             });
         });
     },
+    fetch_details: function() {
+        var self = this;
+        return new Promise(function(resolve, reject){
+            $.ajax({
+                method:"GET",
+                url: window.Urls.get_topic_details(self.id),
+                success: function(result) {
+                    self.set('metadata', JSON.parse(result))
+                    resolve(self);
+                },
+                error:reject
+            });
+        });
+    },
     has_related_content: function(){
         return this.get('prerequisite').length || this.get('is_prerequisite_of').length;
     },
+    get_original_channel_id: function() {
+      var original_channel = this.get('original_channel');
+      return original_channel ? original_channel['id'] : 'unknown_channel_id';
+    },
+    get_original_channel_title: function() {
+      var original_channel = this.get('original_channel');
+      return original_channel ? original_channel['name'] : '';
+    },
+		get_original_channel_thumbnail: function() {
+			var original_channel = this.get('original_channel');
+			return original_channel ? original_channel['thumbnail_url'] : '';
+		},
     initialize: function () {
 		if (this.get("extra_fields") && typeof this.get("extra_fields") !== "object"){
 			this.set("extra_fields", JSON.parse(this.get("extra_fields")))
@@ -337,9 +368,8 @@ var ContentNodeModel = BaseModel.extend({
         var self = this;
         var promise = new Promise(function(resolve, reject){
             $.ajax({
-                method:"POST",
-                url: window.Urls.get_total_size(),
-                data:  JSON.stringify([self.id]),
+                method:"GET",
+                url: window.Urls.get_total_size(self.id),
                 error:reject,
                 success: function(data) {
                     resolve(JSON.parse(data).size);
@@ -426,9 +456,8 @@ var ContentNodeCollection = BaseCollection.extend({
         var self = this;
         return new Promise(function(resolve, reject){
             $.ajax({
-                method:"POST",
-                url: window.Urls.get_prerequisites(),
-                data:  JSON.stringify({"nodes": ids, "get_postrequisites": get_postrequisites}),
+                method:"GET",
+                url: window.Urls.get_prerequisites((get_postrequisites || false).toString(), ids.join(",")),
                 success: function(data) {
                     var nodes = JSON.parse(data);
                     resolve({
@@ -445,13 +474,8 @@ var ContentNodeCollection = BaseCollection.extend({
         var self = this;
         return new Promise(function(resolve, reject){
             $.ajax({
-                method:"POST",
-                url: window.Urls.get_node_path(),
-                data:  JSON.stringify({
-                    "topic_id" : topic_id,
-                    "tree_id": tree_id,
-                    "node_id": node_id
-                }),
+                method:"GET",
+                url: window.Urls.get_node_path(topic_id, tree_id, node_id),
                 success: function(result) {
                     var data = JSON.parse(result);
                     var returnCollection = new ContentNodeCollection(JSON.parse(data.path));
@@ -476,9 +500,8 @@ var ContentNodeCollection = BaseCollection.extend({
         var self = this;
         return new Promise(function(resolve, reject){
             $.ajax({
-                method:"POST",
-                url: window.Urls.get_total_size(),
-                data:  JSON.stringify(self.pluck('id')),
+                method:"GET",
+                url: window.Urls.get_total_size(self.pluck('id').join(",")),
                 success: function(data) {
                     resolve(JSON.parse(data).size);
                 },
@@ -514,13 +537,13 @@ var ContentNodeCollection = BaseCollection.extend({
         });
     },
     get_all_fetch: function(ids, force_fetch){
-        return this.get_fetch_nodes(ids, window.Urls.get_nodes_by_ids(), force_fetch);
+        return this.get_fetch_nodes(ids, window.Urls.get_nodes_by_ids, force_fetch);
     },
     get_all_fetch_simplified: function(ids, force_fetch){
-        return this.get_fetch_nodes(ids, window.Urls.get_nodes_by_ids_simplified(), force_fetch);
+        return this.get_fetch_nodes(ids, window.Urls.get_nodes_by_ids_simplified, force_fetch);
     },
     fetch_nodes_by_ids_complete: function(ids, force_fetch){
-        return this.get_fetch_nodes(ids, window.Urls.get_nodes_by_ids_complete(), force_fetch);
+        return this.get_fetch_nodes(ids, window.Urls.get_nodes_by_ids_complete, force_fetch);
     },
     get_fetch_nodes: function(ids, url, force_fetch){
         force_fetch = (force_fetch)? true : false;
@@ -639,17 +662,11 @@ var ChannelModel = BaseModel.extend({
         return root_node;
     },
     initialize: function () {
-        if (this.get("preferences") && typeof this.get("preferences") !== "object"){
-            this.set("preferences", JSON.parse(this.get("preferences")))
-        }
         if (this.get("thumbnail_encoding") && typeof this.get("thumbnail_encoding") !== "object"){
             this.set("thumbnail_encoding", JSON.parse(this.get("thumbnail_encoding").replace(/u*'/g, "\"")))
         }
     },
     parse: function(response) {
-        if (response !== undefined && response.preferences) {
-            response.preferences = JSON.parse(response.preferences);
-        }
         if (response.thumbnail_encoding !== undefined && response.thumbnail_encoding) {
             response.thumbnail_encoding = JSON.parse(response.thumbnail_encoding.replace(/u*'/g, "\""));
         }
@@ -657,9 +674,6 @@ var ChannelModel = BaseModel.extend({
     },
     toJSON: function() {
         var attributes = _.clone(this.attributes);
-        if (typeof attributes.preferences !== "string") {
-            attributes.preferences = JSON.stringify(attributes.preferences);
-        }
         if (attributes.thumbnail_encoding && typeof attributes.thumbnail_encoding !== "string") {
             attributes.thumbnail_encoding = JSON.stringify(attributes.thumbnail_encoding);
         }
@@ -686,11 +700,10 @@ var ChannelModel = BaseModel.extend({
         var self = this;
         return new Promise(function(resolve, reject){
             $.ajax({
-                method:"POST",
-                data: JSON.stringify({'channel_id': self.id}),
-                url: window.Urls.accessible_channels(),
+                method:"GET",
+                url: window.Urls.accessible_channels(self.id),
                 success: function(data) {
-                    resolve(new ContentNodeCollection(JSON.parse(data)));
+                    resolve(new ContentNodeCollection(data));
                 },
                 error:function(e){
                     reject(e);
@@ -702,9 +715,8 @@ var ChannelModel = BaseModel.extend({
         var self = this;
         return new Promise(function(resolve, reject){
             $.ajax({
-                method:"POST",
-                url: window.Urls.get_node_diff(),
-                data:  JSON.stringify({'channel_id': self.id}),
+                method:"GET",
+                url: window.Urls.get_node_diff(self.id),
                 success: function(data) {
                     var nodes = JSON.parse(data);
                     resolve({
@@ -851,6 +863,20 @@ var ChannelModel = BaseModel.extend({
                 error:function(error){reject(error.responseText);}
             });
         });
+    },
+    fetch_editors: function() {
+        var self = this;
+        return new Promise(function(resolve, reject){
+            $.ajax({
+                method:"GET",
+                url: window.Urls.get_editors(self.id),
+                success: function(editors) {
+                    self.set("editors", editors);
+                    resolve(self);
+                },
+                error:function(error){reject(error.responseText);}
+            });
+        });
     }
 });
 
@@ -869,7 +895,7 @@ var ChannelCollection = BaseCollection.extend({
                 url: window.Urls.get_all_channels(),
                 error:reject,
                 success: function(channels) {
-                    self.reset(JSON.parse(channels))
+                    self.reset(channels);
                     resolve(self);
                 }
             });

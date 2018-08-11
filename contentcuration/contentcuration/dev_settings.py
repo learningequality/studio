@@ -1,22 +1,32 @@
-from .settings import *
-
 import logging
+import os
 
-DEBUG = True
-ALLOWED_HOSTS = ["192.168.31.9", "127.0.0.1"]
+from .test_settings import *
 
-ACCOUNT_ACTIVATION_DAYS = 7
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-SITE_ID = 2
-logging.basicConfig(level='DEBUG')
+# These endpoints will throw an error on the django debug panel
+EXCLUDED_DEBUG_URLS = [
+    "/content/storage",
+]
 
-INSTALLED_APPS += ('debug_panel', 'debug_toolbar', 'pympler')
+def custom_show_toolbar(request):
+    return not any(request.path.startswith(url) for url in EXCLUDED_DEBUG_URLS)
 
-MIDDLEWARE_CLASSES += ('debug_panel.middleware.DebugPanelMiddleware',)
+LANGUAGES += (
+    ('ar', ugettext('Arabic')),
+)
 
-DEBUG_TOOLBAR_CONFIG = {
-    'SHOW_TOOLBAR_CALLBACK': lambda x: True,
-}
+try:
+    import debug_panel
+except ImportError:
+    # no debug panel, no use trying to add it to our middleware
+    pass
+else:
+    # if debug_panel exists, add it to our INSTALLED_APPS
+    INSTALLED_APPS += ('debug_panel', 'debug_toolbar', 'pympler')
+    MIDDLEWARE_CLASSES += ('debug_panel.middleware.DebugPanelMiddleware',)
+    DEBUG_TOOLBAR_CONFIG = {
+        'SHOW_TOOLBAR_CALLBACK': custom_show_toolbar,
+    }
 
 DEBUG_TOOLBAR_PANELS = [
     'debug_toolbar.panels.versions.VersionsPanel',
@@ -32,3 +42,4 @@ DEBUG_TOOLBAR_PANELS = [
     'debug_toolbar.panels.logging.LoggingPanel',
     'debug_toolbar.panels.redirects.RedirectsPanel',
 ]
+

@@ -1,4 +1,4 @@
-var Vue = require('vue');
+import Vue from 'vue';
 var Vuex = require('vuex');
 var importModule = require('./importModule');
 

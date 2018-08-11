@@ -26,15 +26,15 @@ from rest_framework import routers, viewsets
 from contentcuration.forms import ForgotPasswordForm
 from contentcuration.models import ContentNode, License, Channel, File, FileFormat, FormatPreset, ContentTag, AssessmentItem, ContentKind, Language, User, Invitation
 import contentcuration.serializers as serializers
-import contentcuration.views as views
-import contentcuration.view.registration_views as registration_views
-import contentcuration.view.settings_views as settings_views
-import contentcuration.view.internal_views as internal_views
-import contentcuration.view.zip_views as zip_views
-import contentcuration.view.file_views as file_views
-import contentcuration.view.node_views as node_views
-import contentcuration.view.admin_views as admin_views
-import contentcuration.view.public_views as public_views
+import contentcuration.views.base as views
+import contentcuration.views.users as registration_views
+import contentcuration.views.settings as settings_views
+import contentcuration.views.internal as internal_views
+import contentcuration.views.zip as zip_views
+import contentcuration.views.files as file_views
+import contentcuration.views.nodes as node_views
+import contentcuration.views.admin as admin_views
+import contentcuration.views.public as public_views
 import django_js_reverse.views as django_js_reverse_views
 import django.views as django_views
 
@@ -51,7 +51,6 @@ class LicenseViewSet(viewsets.ModelViewSet):
     queryset = License.objects.all()
 
     serializer_class = serializers.LicenseSerializer
-
 
 class LanguageViewSet(viewsets.ModelViewSet):
     queryset = Language.objects.all()
@@ -179,10 +178,7 @@ urlpatterns = [
     url(r'^channels/(?P<channel_id>[^/]{32})/edit', views.channel, name='channel'),
     url(r'^channels/(?P<channel_id>[^/]{32})/view', views.channel_view_only, name='channel_view_only'),
     url(r'^channels/(?P<channel_id>[^/]{32})/staging', views.channel_staging, name='channel_staging'),
-    url(r'^unsupported_browser/$', views.unsupported_browser, name='unsupported_browser'),
-    url(r'^unauthorized/$', views.unauthorized, name='unauthorized'),
-    url(r'^staging_not_found/$', views.staging_not_found, name='staging_not_found'),
-    url(r'^accessible_channels/$', views.accessible_channels, name='accessible_channels'),
+    url(r'^accessible_channels/(?P<channel_id>[^/]{32})$', views.accessible_channels, name='accessible_channels'),
     url(r'^get_user_channels/$', views.get_user_channels, name='get_user_channels'),
     url(r'^get_user_bookmarked_channels/$', views.get_user_bookmarked_channels, name='get_user_bookmarked_channels'),
     url(r'^get_user_edit_channels/$', views.get_user_edit_channels, name='get_user_edit_channels'),
@@ -198,6 +194,7 @@ urlpatterns = [
     url(r'^api/add_bookmark/$', views.add_bookmark, name='add_bookmark'),
     url(r'^api/remove_bookmark/$', views.remove_bookmark, name='remove_bookmark'),
     url(r'^api/set_channel_priority/$', views.set_channel_priority, name='set_channel_priority'),
+    url(r'^api/download_channel_content_csv/(?P<channel_id>[^/]{32})$', views.download_channel_content_csv, name='download_channel_content_csv'),
 ]
 
 # Add public api endpoints
@@ -209,20 +206,21 @@ urlpatterns += [
 
 # Add node api enpoints
 urlpatterns += [
-    url(r'^api/get_nodes_by_ids$', node_views.get_nodes_by_ids, name='get_nodes_by_ids'),
-    url(r'^api/get_total_size$', node_views.get_total_size, name='get_total_size'),
+    url(r'^api/get_nodes_by_ids/(?P<ids>[^/]*)$', node_views.get_nodes_by_ids, name='get_nodes_by_ids'),
+    url(r'^api/get_total_size/(?P<ids>[^/]*)$', node_views.get_total_size, name='get_total_size'),
     url(r'^api/duplicate_nodes/$', node_views.duplicate_nodes, name='duplicate_nodes'),
     url(r'^api/move_nodes/$', node_views.move_nodes, name='move_nodes'),
-    url(r'^api/get_nodes_by_ids_simplified$', node_views.get_nodes_by_ids_simplified, name='get_nodes_by_ids_simplified'),
-    url(r'^api/get_nodes_by_ids_complete$', node_views.get_nodes_by_ids_complete, name='get_nodes_by_ids_complete'),
+    url(r'^api/get_nodes_by_ids_simplified/(?P<ids>[^/]*)$', node_views.get_nodes_by_ids_simplified, name='get_nodes_by_ids_simplified'),
+    url(r'^api/get_nodes_by_ids_complete/(?P<ids>[^/]*)$', node_views.get_nodes_by_ids_complete, name='get_nodes_by_ids_complete'),
     url(r'^api/create_new_node$', node_views.create_new_node, name='create_new_node'),
-    url(r'^api/get_node_diff$', node_views.get_node_diff, name='get_node_diff'),
+    url(r'^api/get_node_diff/(?P<channel_id>[^/]{32})$', node_views.get_node_diff, name='get_node_diff'),
     url(r'^api/internal/sync_nodes$', node_views.sync_nodes, name='sync_nodes'),
     url(r'^api/internal/sync_channel$', node_views.sync_channel_endpoint, name='sync_channel'),
-    url(r'^api/get_prerequisites$', node_views.get_prerequisites, name='get_prerequisites'),
-    url(r'^api/get_node_path$', node_views.get_node_path, name='get_node_path'),
+    url(r'^api/get_prerequisites/(?P<get_prerequisites>[^/]+)/(?P<ids>[^/]*)$', node_views.get_prerequisites, name='get_prerequisites'),
+    url(r'^api/get_node_path/(?P<topic_id>[^/]+)/(?P<tree_id>[^/]+)/(?P<node_id>[^/]*)$', node_views.get_node_path, name='get_node_path'),
     url(r'^api/duplicate_node_inline$', node_views.duplicate_node_inline, name='duplicate_node_inline'),
     url(r'^api/delete_nodes$', node_views.delete_nodes, name='delete_nodes'),
+    url(r'^api/get_topic_details/(?P<contentnode_id>[^/]*)$', node_views.get_topic_details, name='get_topic_details'),
 ]
 
 # Add file api enpoints
@@ -246,12 +244,12 @@ urlpatterns += [
         name='auth_password_reset'
     ),
     url(r'^accounts/register/$', registration_views.UserRegistrationView.as_view(), name='registration_register'),
+    url(r'^accounts/register-information/$', registration_views.InformationRegistrationView.as_view(), name='registration_information'),
     url(r'^accounts/', include('registration.backends.hmac.urls')),
+    url(r'^activate/(?P<activation_key>[-:\w]+)/$', registration_views.UserActivationView.as_view(), name='registration_activate'),
     url(r'^api/send_invitation_email/$', registration_views.send_invitation_email, name='send_invitation_email'),
-    url(r'^accept_invitation/(?P<invitation_link>[^/]+)$', registration_views.InvitationAcceptView.as_view(), name="accept_invitation"),
-    url(r'^new/accept_invitation/(?P<user_id>[^/]+)/(?P<invitation_link>[^/]+)$', registration_views.InvitationRegisterView.as_view(), name="accept_invitation_and_registration"),
-    url(r'^decline_invitation/(?P<invitation_link>[^/]+)$', registration_views.decline_invitation, name="decline_invitation"),
-    url(r'^invitation_fail$', registration_views.fail_invitation, name="fail_invitation"),
+    url(r'^new/accept_invitation/(?P<user_id>[^/]+)/', registration_views.new_user_redirect, name="accept_invitation_and_registration"),
+    url(r'^new/finish_registration/(?P<user_id>[^/]+)/$', registration_views.new_user_redirect, name="reset_password_registration"),
 ]
 
 # Add settings endpoints
@@ -260,9 +258,13 @@ urlpatterns += [
     url(r'^settings/profile', settings_views.ProfileView.as_view(), name='profile_settings'),
     url(r'^settings/preferences', settings_views.PreferencesView.as_view(), name='preferences_settings'),
     url(r'^settings/account$', settings_views.account_settings, name='account_settings'),
-    url(r'^settings/account/success', settings_views.account_settings_success, name='account_settings_success'),
+    url(r'^api/delete_user_account/(?P<user_email>[^/]+)/$', settings_views.delete_user_account, name='delete_user_account'),
+    url(r'^api/export_user_data/(?P<user_email>[^/]+)/$', settings_views.export_user_data, name='export_user_data'),
+    url(r'^settings/account/deleted', settings_views.account_deleted, name='account_deleted'),
     url(r'^settings/tokens', settings_views.tokens_settings, name='tokens_settings'),
-    url(r'^settings/storage', settings_views.storage_settings, name='storage_settings'),
+    url(r'^settings/storage', settings_views.StorageSettingsView.as_view(), name='storage_settings'),
+    url(r'^settings/policies', settings_views.policies_settings, name='policies_settings'),
+    url(r'^policies/update', settings_views.PolicyAcceptView.as_view(), name='policy_update'),
 ]
 
 # Add internal endpoints
@@ -291,9 +293,12 @@ urlpatterns += [
     url(r'^channels/administration/', admin_views.administration, name='administration'),
     url(r'^api/make_editor/$', admin_views.make_editor, name='make_editor'),
     url(r'^api/remove_editor/$', admin_views.remove_editor, name='remove_editor'),
+    url(r'^api/get_editors/(?P<channel_id>[^/]+)$', admin_views.get_editors, name='get_editors'),
     url(r'^api/send_custom_email/$', admin_views.send_custom_email, name='send_custom_email'),
     url(r'^api/get_all_channels/$', admin_views.get_all_channels, name='get_all_channels'),
     url(r'^api/get_all_users/$', admin_views.get_all_users, name='get_all_users'),
+    url(r'^api/download_channel_csv/$', admin_views.download_channel_csv, name='download_channel_csv'),
+    url(r'^api/download_channel_pdf/$', admin_views.download_channel_pdf, name='download_channel_pdf'),
     url(r'^api/get_channel_kind_count/(?P<channel_id>[^/]+)$', admin_views.get_channel_kind_count, name='get_channel_kind_count'),
 ]
 
@@ -312,11 +317,16 @@ urlpatterns += [
 if settings.DEBUG:
     # static files (images, css, javascript, etc.)
     urlpatterns += [
-        url(r'^' + settings.STORAGE_URL[1:] + '(?P<path>.*)$', django_views.static.serve, {'document_root': settings.STORAGE_ROOT}),
-        url(r'^' + settings.CONTENT_DATABASE_URL[1:] + '(?P<path>.*)$', django_views.static.serve, {'document_root': settings.DB_ROOT})
+        url(r'^' + settings.STORAGE_URL[1:] + '(?P<path>.*)$', file_views.debug_serve_file, name='debug_serve_file'),
+        url(r'^' + settings.CONTENT_DATABASE_URL[1:] + '(?P<path>.*)$', django_views.static.serve, {'document_root': settings.DB_ROOT}),
+        url(r'^' + settings.CSV_URL[1:] + '(?P<path>.*)$', django_views.static.serve, {'document_root': settings.CSV_ROOT})
     ]
 
-    import debug_toolbar
-    urlpatterns += [
-        url(r'^__debug__/', include(debug_toolbar.urls)),
-    ]
+    try:
+        import debug_toolbar
+    except ImportError:
+        pass
+    else:
+        urlpatterns += [
+            url(r'^__debug__/', include(debug_toolbar.urls)),
+        ]

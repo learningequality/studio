@@ -23,7 +23,6 @@ var MESSAGES = {
               "to revisit key prior concepts, which may take the form of foundational skills or " +
               "immediately relevant background information. For learners on Kolibri, these items " +
               "will appear alongside the concept for recommended viewing.",
-    "published": "Channel Successfully Published!",
     "channel_publish_id": "Published Channel ID",
     "published_prompt": "Copy this channel ID into Kolibri version 0.6.0 and below:",
     "published_token_prompt": "Copy this channel token into Kolibri version 0.7.0 and above:",
@@ -32,8 +31,13 @@ var MESSAGES = {
     "older_version": "Have an older version of Kolibri?",
     "get_token": "Get Channel Token",
     "get_id": "Get Channel ID",
-    "published_version": "Published Version:"
+    "published_version": "Published Version:",
+    "coach_content": "What is content visibility?",
+    "coach_description": "This is support content and is visible only to coaches (teachers, facilitators, administrators)",
+    "anyone_description": "This content is visible to anyone",
+    "role_description": "Content visibility determines what type of Kolibri users can see this content."
 }
+
 
 var BaseInfoModalView = BaseViews.BaseModalView.extend({
   template: require("./hbtemplates/license_modal.handlebars"),
@@ -81,6 +85,12 @@ var MasteryModalView = BaseInfoModalView.extend({
   modal_id: "#mastery_modal",
 });
 
+var RolesModalView = BaseInfoModalView.extend({
+  template: require("./hbtemplates/roles_modal.handlebars"),
+  modal_id: "#roles_modal",
+});
+
+
 var PrerequisiteModalView = BaseInfoModalView.extend({
   template: require("./hbtemplates/prereq_modal.handlebars"),
   modal_id: "#prereq_modal",
@@ -90,7 +100,7 @@ var PublishedModalView = BaseInfoModalView.extend({
   template: require("./hbtemplates/published_modal.handlebars"),
   publish_template: require("./hbtemplates/published.handlebars"),
   modal_id: "#published_modal",
-  get_id: true,
+  get_id: false,
   render: function() {
       BaseInfoModalView.prototype.render.call(this);
       this.render_id();
@@ -98,8 +108,7 @@ var PublishedModalView = BaseInfoModalView.extend({
   get_render_data: function() {
     return {
       get_id: this.get_id,
-      channel: this.data.channel.toJSON(),
-      published: this.data.published
+      channel: this.data.channel.toJSON()
     };
   },
   events: {
@@ -140,5 +149,6 @@ module.exports = {
     LicenseModalView: LicenseModalView,
     MasteryModalView:MasteryModalView,
     PrerequisiteModalView: PrerequisiteModalView,
-    PublishedModalView: PublishedModalView
+    PublishedModalView: PublishedModalView,
+    RolesModalView: RolesModalView
 }

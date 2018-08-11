@@ -19,7 +19,7 @@
       :title="node.title"
       @click="handleClickLabel"
     >
-      <i v-if="!isFolder" :class="iconClass"></i>
+      <i v-if="!isFolder" class="material-icons nodeIcon">{{iconClass}}</i>
 
       <span class="ListItem__Label__Title">
         {{ node.title }}
@@ -30,7 +30,7 @@
 
       <template v-if="isFolder">
         <template v-if="node.children.length > 0">
-          <i :class="togglerClass" :style="{ cursor: 'pointer' }"></i>
+          <i class="material-icons" :style="{ cursor: 'pointer' }">{{togglerClass}}</i>
         </template>
 
         <em v-else class="ListItem__ChildCount">
@@ -130,20 +130,13 @@ export default {
   },
   computed: {
     togglerClass() {
-      return {
-        'glyphicon': true,
-        'glyphicon-triangle-right': !this.isExpanded,
-        'glyphicon-triangle-bottom': this.isExpanded,
-      };
+      return (this.isExpanded)? 'arrow_drop_down': 'arrow_drop_up';
     },
     resourceCount() {
       return this.node.metadata.resource_count;
     },
     iconClass() {
-      return {
-        glyphicon: true,
-        [getIconClassForKind(this.node.kind)]: true,
-      };
+      return getIconClassForKind(this.node.kind);
     },
     importListItemClass() {
       return {
@@ -205,6 +198,11 @@ export default {
 
   @import '../../../../less/global-variables.less';
 
+  .ListItem {
+    width: -moz-max-content;
+    width: max-content;
+  }
+
   .ListItem__SubList {
     border-left: 2px solid #2196F3;
     margin-left: 30px !important;
@@ -217,19 +215,14 @@ export default {
   }
 
   .ListItem__Label {
-    max-width: 95%;
     padding: 0px 10px;
     font-size: 16px;
+    .nodeIcon {
+      color: @gray-500;
+    }
     & > * {
       vertical-align: middle;
     }
-  }
-
-  .ListItem__Label__Title {
-    width: 95%;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
 
   .ListItem__Checkbox {

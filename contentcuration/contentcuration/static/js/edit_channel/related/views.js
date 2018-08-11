@@ -17,8 +17,8 @@ var MESSAGES = {
     "getting_prereqs": "Getting valid prerequisite options...",
     "name": "Name",
     "loading_prereqs": "Getting prerequisites...",
-    "prereq_text": "Prerequisite content items cover any immediate prior knowledge a learner should have before engaging with this content.",
-    "prereq_limit": "Limit prerequisites for a more guided learning experience (recommended: {count, plural,\n =1 {# item}\n other {# items}})",
+    "prerequisite_text": "Setting prerequisites will suggest relevant background or foundational content items that learners may want to visit before viewing the current concept. For learners on Kolibri, this resource will appear alongside the current content item.",
+    "prereq_limit": "Limit prerequisites for a more guided learning experience (recommended: {count, plural,\n =1 {# item}\n other {# items}})"
 }
 
 function PrerequisiteTree() {
@@ -335,7 +335,7 @@ var RelatedView = BasePrerequisiteView.extend({
 
 var SelectedList = BaseViews.BaseListView.extend({
     template: require("./hbtemplates/selected_list.handlebars"),
-    default_item:">.default-item",
+    default_item:".empty_default",
     list_selector: "#selected_prerequisites",
     name: NAMESPACE,
     $trs: MESSAGES,

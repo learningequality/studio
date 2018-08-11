@@ -1,0 +1,14 @@
+{% load i18n %}
+
+{% autoescape off %}
+
+New user registration on Kolibri Studio:
+
+Name: {{user.first_name}} {{user.last_name}}
+Email: {{user.email}}
+Intended Use(s): {{information.uses | join:", "}}{% if information.space_needed %}
+Storage Needed: {{information.space_needed}}{% endif %}
+Location(s): {{information.locations | join:", "}}
+Heard about us from: {{information.heard_from}}
+
+{% endautoescape %}

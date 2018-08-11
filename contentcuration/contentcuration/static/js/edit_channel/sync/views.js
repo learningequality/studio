@@ -293,7 +293,7 @@ var SyncPreviewView = BaseViews.BaseView.extend({
     },
     generate_metadata_diff: function(){
         var self = this;
-        var fields_to_check = ['title', 'description', 'license', 'language', 'license_description', 'copyright_holder', 'author', 'extra_fields'];
+        var fields_to_check = ['title', 'description', 'license', 'language', 'license_description', 'copyright_holder', 'author', 'extra_fields', 'role_visibility'];
         return _.chain(fields_to_check).filter(function(f) { return self.compare_field(f); })
             .reduce(function(a, f) { return a.concat(self.generate_diff_item(f)); }, []).value();
     },
@@ -340,6 +340,12 @@ var SyncPreviewView = BaseViews.BaseView.extend({
                     return changes;
                 }
                 return null;
+            case "role_visibility":
+                return {
+                    "field" : stringHelper.translate(field),
+                    "current": stringHelper.translate(this.model.get(field)),
+                    "source": stringHelper.translate(this.changed.get(field))
+                }
             default:
                 return {
                     "field" : stringHelper.translate(field),
@@ -607,8 +613,7 @@ var SyncItem = BaseViews.BaseListNodeItemView.extend({
     },
     render: function() {
         this.$el.html(this.template({
-            node: this.model && this.model.toJSON(),
-            isfolder: this.model && this.model.get("kind") === "topic"
+            node: this.model && this.model.toJSON()
         }, {
             data: this.get_intl_data()
         }));

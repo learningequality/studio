@@ -33,10 +33,9 @@
 	}
 	#channel_settings {
 	    margin-left: 10px;
-	    font-size: 14pt;
 	    &:hover{color:@blue-500;}
 	}
-	#channel_settings, #back_to_home { padding: 10px; }
+	#channel_settings, #back_to_home { padding: 5px 10px; }
 	.channel_edit_label{
 	    padding: 10px 5px;
 	    font-size: 12pt;
@@ -139,8 +138,9 @@
 			background: @body-background;
 			border-radius: 2px;
 			cursor: pointer;
-			span {
-				font-size: 23px;
+			i {
+				font-size: 26pt;
+    			padding-top: 3px;
 			    text-align: center;
 			    display: block;
 			    top: 8px;
@@ -233,7 +233,9 @@
 	#container-wrapper{
 		overflow:hidden;
 		overflow-x:auto;
+		min-height: @container-min-height + 100;
 		position:absolute;
+		margin-bottom: 150px; // Ensure side scrollbar is visible
 		width:100vw;
 		padding-left:40px;
 		margin-top:20px;
@@ -245,6 +247,8 @@
 		cursor:pointer;
 	}
 	#container_area{
+	    width: -webkit-max-content;
+	    width: -o-max-content;
 		width: -moz-max-content;
 		width: max-content;
     	padding-right: 200px;
@@ -267,10 +271,12 @@
 		margin-right:5px;
 		width: @container-width;
 		display:inline-block;
-		height:  @container-height;
-		min-height: @container-min-height;
 		cursor:default;
-		.back_button{ cursor:pointer; }
+		.back_button{
+			cursor:pointer;
+			font-size: 17pt;
+			color: @gray-700;
+		}
 		h2{
 			color:@container-title-color;
 			font-size: @title-size;
@@ -282,6 +288,8 @@
 			overflow-y: auto;
 			overflow-x:hidden;
 			padding: 0 0 5px 0;
+			height:  @container-height;
+			min-height: @container-min-height;
 			background-color:white;
 			margin-bottom:0px;
 			padding: 1px;
@@ -323,15 +331,25 @@
 					.title{
 						font-size: @item-title-font-size;
 					}
+					.content-item-icon{
+						height:100%;
+						margin-right:5px;
+						display: inline-block;
+						i { font-size: 16pt; }
+					}
 					.options{
 						visibility:hidden;
 						height:100%;
-						.glyphicon{
-							margin-left: 20px;
+						i{
+							margin-left: 10px;
 							cursor:pointer;
-							font-size: @item-title-font-size;
+							font-size: 16pt;
+							&.edit_item_button {
+								font-size: 18pt;
+							}
 						}
 					}
+
 					.metadata_to_hide, .description, .filler{
 						display:none;
 					}
@@ -347,12 +365,19 @@
 					.title{
 						width:73%;
 					}
+					.visibility .icon-blue {
+						font-size: @item-title-font-size;
+					}
 				}
 				.folder{
 					.title{
 						font-weight:bold;
 						margin-top: 15px;
 					}
+				}
+				.file .visibility {
+					color: black;
+					margin-left: 10px;
 				}
 			}
 			li:hover{
@@ -421,7 +446,7 @@
 					width:73%;
 				}
 				.folder_open_icon{
-					margin-top:5px;
+					font-size: 20pt;
 				}
 			}
 			.unpublished, .invalid{
@@ -436,8 +461,9 @@
 			.content_metadata_summary{
 				color: @annotation-gray;
 				margin: 8px 0 2px 25px;
-				.glyphicon{
-					font-size: 10px;
+				i {
+					vertical-align: bottom;
+					font-size: 10pt;
 					padding:0px;
 					margin:0px;
 				}
@@ -503,6 +529,7 @@
 				padding:5px;
 				font-size: 12pt;
 				border-radius:3px;
+				margin-bottom: 5px;
 			}
 			.add_content_dropdown{
 				font-size:12pt;

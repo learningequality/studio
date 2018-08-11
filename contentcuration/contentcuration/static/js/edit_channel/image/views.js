@@ -1,9 +1,10 @@
+import { Croppie } from 'croppie';
+
 var Backbone = require("backbone");
 var _ = require("underscore");
 var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
 var Dropzone = require("dropzone");
-var Croppie = require("croppie");
 var get_cookie = require("utils/get_cookie");
 require("images.less");
 require("dropzone/dist/dropzone.css");
@@ -245,7 +246,7 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
             dialog.alert(this.get_translation("image_error"), this.image_error);
             if(this.onerror){ this.onerror(); }
             this.render();
-        }else{
+        } else{
             this.thumbnail_encoding = null;
             this.render();
             this.submit_image();

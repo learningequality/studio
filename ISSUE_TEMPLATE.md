@@ -2,13 +2,13 @@
 
 *Briefly describe the issue and please DELETE the non applicable headings below. *
 
-## Cateogry
+## Category
 
 Select one: BUG | ENHANCEMENT | QUESTION | OTHER (describe)
 
 ## Usage Details
 
-*Please give details in how were you using the Content Curation Server.*
+*Please give details about how you were using Studio.*
 
  - Browser: ?
  - Channel: ?

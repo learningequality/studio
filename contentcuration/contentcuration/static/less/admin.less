@@ -6,7 +6,10 @@
 	h2{
 		margin: 0px;
 		margin-bottom: 30px;
-		.back_button { font-size: 20pt;}
+		.back_button i {
+			font-size: 30pt;
+			vertical-align: sub;
+		}
 	}
 	a{text-decoration: none;}
 	.tab_nav {
@@ -53,6 +56,10 @@
 		margin-bottom: 5px;
 		background: @gray-300;
 		padding: 5px 20px;
+		i {
+			font-size: 15pt;
+			vertical-align: bottom;
+		}
 		.action_list{
 			margin-top: 5px;
 			margin-bottom: 0px;
@@ -87,11 +94,15 @@
 		}
 		&.data_row{
 			border-bottom: 1px solid @gray-200;
+			.icon {
+				font-size: 14pt;
+    			vertical-align: sub;
+    			text-decoration: none;
+			}
 			.name_icon {
 				display:none;
 				cursor: pointer;
-				font-size: 10pt;
-				padding: 5px 8px;
+				padding: 0px 5px;
 			}
 			&:hover {
 				background-color: @gray-200;
@@ -110,7 +121,10 @@
 				color: black;
 			}
 			.deleted .channel_name { color: @red-error-color; }
-			.copy_id { cursor: pointer; }
+			.copy_id {
+				cursor: pointer;
+				padding: 0px;
+			}
 			.channel_id {
 				border: none;
 				outline: none;
@@ -129,6 +143,9 @@
 				text-align: right;
 				padding: 2px;
 				max-width: 100px;
+			}
+			.size_unit {
+				padding: 2px;
 			}
 			.popover_link{
 				padding: 0;
@@ -149,9 +166,18 @@
 				.content_icon {
 					color: @gray-400;
 					margin-right: 5px;
+					font-size: 14pt;
+					vertical-align: middle;
 				}
 			}
-			.option{ color: white; }
+			.option{
+				color: white;
+				padding: 2px 5px;
+				i {
+					font-size: 16pt;
+					vertical-align: middle;
+				}
+			}
 			.btn-red{ background-color: firebrick; }
 			.btn-green{ background-color: seagreen; }
 			.btn-blue{ background-color: @blue-500; }
@@ -196,6 +222,7 @@
     	.email_option {
     		color: @gray-700;
     		&:hover{ color: black; }
+    		i { font-size: 15pt; }
     	}
 	}
 	.email_dropdown {

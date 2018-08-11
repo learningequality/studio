@@ -8,14 +8,22 @@ function format_size(text){
   var value = Number(text);
   var isnegative = value < 0;
   value = Math.abs(value)
-  if(value > 999999999)
-    return (isnegative ? "-" : "") + Math.round(parseFloat(value/1000000000)) + "GB";
-  else if(value > 999999)
-    return (isnegative ? "-" : "") + Math.round(parseFloat(value/1000000)) + "MB";
-  else if(value > 999)
-    return (isnegative ? "-" : "") + Math.round(parseFloat(value/1000)) + "KB";
-  else
-    return (isnegative ? "-" : "") + Math.round(parseFloat(value)) + "B";
+
+  var KB = parseFloat(1024)
+  var MB = parseFloat(Math.pow(KB, 2))
+  var GB = parseFloat(Math.pow(KB, 3))
+  var TB = parseFloat(Math.pow(KB, 4))
+
+  if(value < KB)
+      return (isnegative ? "-" : "") + Math.round(value) + "B"
+  else if(KB <= value && value < MB)
+      return (isnegative ? "-" : "") + Math.round(parseFloat(value/KB)) + "KB"
+  else if (MB <= value && value < GB)
+      return (isnegative ? "-" : "") + Math.round(parseFloat(value/MB)) + "MB"
+  else if (GB <= value && value < TB)
+      return (isnegative ? "-" : "") + Math.round(parseFloat(value/GB)) + "GB"
+  else if (TB <= value)
+      return (isnegative ? "-" : "") + Math.round(parseFloat(value/TB)) + "TB"
 }
 
 function escape_str(text){
@@ -35,6 +43,12 @@ var messages = {
   "document": "Document",
   "exercise": "Exercise",
   "html5": "HTML5 App",
+  "topic_plural": "Topics",
+  "video_plural": "Videos",
+  "audio_plural": "Audio",
+  "document_plural": "Documents",
+  "exercise_plural": "Exercises",
+  "html5_plural": "HTML5 Apps",
   "do_all": "100% Correct",
   "num_correct_in_a_row_10": "10 in a row",
   "num_correct_in_a_row_2": "2 in a row",
@@ -287,16 +301,91 @@ var messages = {
   "Flat": "Flat",
   "Natural": "Natural",
   "Sharp": "Sharp",
+  "coach": "Coaches",
+  "learner": "Anyone",
+  "role_visibility": "Visible to",
+  "more": "... More",
+  "less": " Less",
+  "no_text_provided": "No text provided",
+  "image": "IMAGE",
+  "formula": "FORMULA",
+  "export_error_text": "Error exporting data. Please try again.",
+  "export_title": "Exporting Data",
+  "export_text": "Data export started. You'll receive an email with your information when it's done."
 };
-
 
 var translate = i18n.createTranslator(namespace, messages);
 
 function format_count(text, count){
-  if(Number(count) === 1){
-    return count + " " + text;
-  }
-  return count + " " + text + "s";
+  var template = require("edit_channel/utils/hbtemplates/count.handlebars");
+      var div = document.createElement("DIV");
+      div.id = "intl_wrapper";
+      var language = window.languages && window.languages.find(function(l) { return l.id && l.id.toLowerCase() === window.languageCode; });
+      $(div).html(template({
+        count: count,
+        text: text
+      }, {
+        data: {
+          intl: {
+            locales: [(language && language.id) || "en-US"],
+            messages: {"count": "{count, plural,\n =0 {text}\n =1 {# {text}}\n other {# {text}s}}"}
+          }
+        }
+      }));
+      var contents = div.innerHTML;
+      div.remove();
+      return contents;
+}
+
+function format_number(number){
+  var template = require("edit_channel/utils/hbtemplates/number.handlebars");
+      var div = document.createElement("DIV");
+      div.id = "intl_wrapper";
+      var language = window.languages && window.languages.find(function(l) { return l.id && l.id.toLowerCase() === window.languageCode; });
+      $(div).html(template({
+        number: number
+      }, {
+        data: {
+          intl: {
+            locales: [(language && language.id) || "en-US"],
+            messages: {}
+          }
+        }
+      }));
+      var contents = div.innerHTML;
+      div.remove();
+      return contents;
+}
+
+function get_translation(messages, message_id, data, data2, data3, data4){
+    // Get dynamically generated messages
+    if (data !== undefined){
+      var template = require("edit_channel/utils/hbtemplates/intl.handlebars");
+      var div = document.createElement("DIV");
+      div.id = "intl_wrapper";
+      var language = window.languages && window.languages.find(function(l) { return l.id && l.id.toLowerCase() === window.languageCode; });
+      var intl_data = {
+        intl: {
+          locales: [(language && language.id) || "en-US"],
+          messages: messages
+        }
+      };
+
+      $(div).html(template({
+        data: data,
+        data2: data2,
+        data3: data3,
+        data4: data4,
+        message_id: message_id
+      }, {
+        data: intl_data
+      }));
+      var contents = div.innerHTML;
+      div.remove();
+      return contents;
+    } else {
+      return messages[message_id];
+    }
 }
 
 module.exports = {
@@ -304,5 +393,7 @@ module.exports = {
   escape_str:escape_str,
   format_count: format_count,
   translate: translate,
-  unescape: unescape
+  unescape: unescape,
+  get_translation: get_translation,
+  format_number: format_number
 }

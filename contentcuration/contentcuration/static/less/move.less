@@ -12,23 +12,25 @@
 	    display: flex;
   		flex-wrap: wrap;
 	    width:100%;
+	    margin: 0px;
 	    .move_section{
 			min-height: 400px;
 			margin-bottom: 20px;
 			padding:0px;
-		    display: flex;
-  			flex-direction: column;
 		}
 	}
 
 	#move_arrow_indicator{
 		padding-top:20%;
-		font-size:20pt;
+		div { font-size:30pt }
 	}
 
 	.move_list_section{
 		background-color:white;
 		overflow:auto;
+		&#move_to_list_section {
+			width: 58%;
+		}
 		.move-list{
 			height:auto;
 			margin:0px;
@@ -61,9 +63,12 @@
 					height:@move-list-item-height;
 					font-weight:normal;
 					.tog_folder{
-						font-size:11pt;
+						font-size:22pt;
 						padding:5px;
 						display:inline-block;
+					}
+					.icon {
+						color: @gray-500;
 					}
 					.move_item_title{
 						margin-right:15px;

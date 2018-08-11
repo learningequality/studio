@@ -9,14 +9,14 @@
       <div class="format_metadata">
         <div class="format_editor_options_wrapper pull-right">
           {{#if file}}
-            <span class="format_editor_replace glyphicon glyphicon-file dz-clickable" title="{{formatMessage (intlGet 'messages.replace_file')}}" aria-hidden="true"></span>
-            <span class="glyphicon glyphicon-remove format_editor_remove {{#unless preset.supplementary}}main_file_remove{{/unless}}" aria-hidden="true" title="{{formatMessage (intlGet 'messages.delete_file')}}"></span>
+            <i class="material-icons format_editor_replace dz-clickable" title="{{formatMessage (intlGet 'messages.replace_file')}}">content_copy</i>
+            <i class="material-icons format_editor_remove dz-clickable {{#unless preset.supplementary}}main_file_remove{{/unless}}" title="{{formatMessage (intlGet 'messages.delete_file')}}">clear</i>
           {{/if}}
       </div>
       <div class="format_editor_file_name_wrapper">
         {{#if file}}
           <div class="format_editor_file_name truncate" title="{{file.original_filename}}">{{#if file.original_filename}}{{file.original_filename}}{{else}}{{formatMessage (intlGet 'messages.default_filename')}}{{/if}}</div>
-          <i class="format_editor_selected_size">({{#format_file_size file.file_size}}{{/format_file_size}})</i>
+          <i class="format_editor_selected_size">({{{format_file_size file.file_size}}})</i>
         {{else}}
             <a class="action-text add_format_button dz-clickable uppercase">+ {{formatMessage (intlGet 'messages.add')}}</a>
         {{/if}}

@@ -5,6 +5,7 @@ require("admin.less");
 var BaseViews = require("edit_channel/views");
 var dialog = require("edit_channel/utils/dialog");
 var stringHelper = require("edit_channel/utils/string_helper");
+var fileDownload = require("jquery-file-download");
 
 var AdminView = BaseViews.BaseView.extend({
     lists: [],
@@ -58,6 +59,7 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
         "keyup .search_input" : "apply_search",
         "paste .search_input" : "apply_search",
         "change .select_all" : "check_all",
+        "click .download_pdf": "download_pdf"
     },
     handle_removed: function(){
         this.update_count(this.count - 1);
@@ -115,7 +117,8 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
     apply_filter: function() { },
     check_search: function(item) { return false; },
     handle_checked: function() { },
-    get_dynamic_filters: function() { return []; }
+    get_dynamic_filters: function() { return []; },
+    download_pdf: function() {},
 });
 
 var BaseAdminList = BaseViews.BaseListView.extend({
@@ -256,7 +259,7 @@ var ChannelTab = BaseAdminTab.extend({
             label: "# of Items",
             filter: function(item1, asc, item2){
                 var count1 = item1.get("count");
-                var count2 = item1.get("count");
+                var count2 = item2.get("count");
                 return (asc)? count1 - count2 : count2 - count1;
             }
         }, {
@@ -315,6 +318,23 @@ var ChannelTab = BaseAdminTab.extend({
     check_search: function(item, text, re) {
         return item.get("name").match(re) || item.id.startsWith(text);
     },
+    download_pdf: function() {
+        var self = this;
+        if(!this.$(".download_pdf").hasClass("disabled")) {
+            this.$(".download_pdf").text("Generating PDF...").addClass("disabled");
+            $.fileDownload(window.Urls.download_channel_pdf(), {
+                successCallback: function(url) {
+                    self.$(".download_pdf").text("Download PDF").removeClass("disabled");
+                },
+                failCallback: function(responseHtml, url) {
+                    self.$(".download_pdf").text("Download Failed");
+                    setTimeout(function() {
+                        self.$(".download_pdf").text("Download PDF").removeClass("disabled");
+                    }, 1500);
+                }
+            });
+        }
+    }
 });
 
 
@@ -339,7 +359,7 @@ var ChannelItem = BaseAdminItem.extend({
     className: "data_row row",
     tagName:"div",
     set_attributes: function() {
-        _.bindAll(this, 'add_editor', 'remove_editor');
+        _.bindAll(this, 'fetch_editors');
         this.model.set("can_edit", _.find(this.model.get("editors"), function(editor) { return editor.id === window.current_user.id; }));
         this.model.set("editors", _.sortBy(this.model.get("editors"), "first_name"));
         this.model.set("viewers", _.sortBy(this.model.get("viewers"), "first_name"));
@@ -352,7 +372,27 @@ var ChannelItem = BaseAdminItem.extend({
         "click .delete_button": "delete_channel",
         "click .count_link": "load_counts",
         "change .channel_priority": "set_priority",
-        "click .invite_button": "open_sharing"
+        "click .invite_button": "open_sharing",
+        "click .download_csv": "download_csv"
+    },
+    download_csv: function() {
+        var self = this;
+        if(!this.$(".download_csv").hasClass("disabled")) {
+            this.$(".download_csv").attr("title", "Generating CSV...").addClass("disabled");
+            $.get({
+                url: window.Urls.download_channel_content_csv(this.model.id),
+                success: function() {
+                    dialog.alert("Generating Channel CSV", "Channel csv generation started. You'll receive an email with the csv when it's done.");
+                    self.$(".download_csv").attr("title", "Download CSV").removeClass("disabled");
+                },
+                error: function(error) {
+                    self.$(".download_csv").attr("title", "Download Failed");
+                    setTimeout(function() {
+                        self.$(".download_csv").attr("title", "Download CSV").removeClass("disabled");
+                    }, 2000);
+                }
+            });
+        }
     },
     set_priority: function() {
         var priority = this.$(".channel_priority").val();
@@ -376,29 +416,28 @@ var ChannelItem = BaseAdminItem.extend({
             model:this.model,
             current_user: window.current_user,
             allow_leave: true,
-            onjoin: this.add_editor,
-            onleave: this.remove_editor
+            onjoin: this.fetch_editors,
+            onleave: this.fetch_editors
         });
     },
-    add_editor: function(editor){
-        this.model.set("editors", this.model.get("editors").concat(editor.toJSON()));
-        this.render();
-    },
-    remove_editor: function(editor){
-        this.model.set("editors", _.reject(this.model.get("editors"), function(user) { return user.id === editor.id }));
-        this.render();
+    fetch_editors: function(editor){
+        // Fetch editors again
+        var self = this;
+        this.model.fetch_editors().then(function() {
+            self.render();
+        });
     },
     copy_id: function(){
         this.$(".channel_id").focus();
         this.$(".channel_id").select();
         try {
             document.execCommand("copy");
-            this.$(".copy_id .glyphicon").removeClass("glyphicon-copy").addClass("glyphicon-ok");
+            this.$(".copy_id i").text("check");
           } catch(e) {
-              this.$(".copy_id .glyphicon").removeClass("glyphicon-copy").addClass("glyphicon-remove");
+                this.$(".copy_id i").text("clear");
           }
           setTimeout(function(){
-            this.$(".copy_id .glyphicon").removeClass("glyphicon-ok").removeClass("glyphicon-remove").addClass("glyphicon-copy");
+            this.$(".copy_id i").text("content_paste");
         }, 2000);
     },
     submit_change: function(data, message){
@@ -614,7 +653,8 @@ var UserItem = BaseAdminItem.extend({
         "click .activate_button": "activate_user",
         "click .delete_button": "delete_user",
         "click .deactivate_button": "deactivate_user",
-        "change .size_limit": "set_user_space"
+        "change .size_limit": "set_user_space",
+        "change .size_unit": "set_user_space",
     },
     set_attributes: function() {
         this.model.set("editable_channels", _.sortBy(this.model.get("editable_channels"), "name"));
@@ -663,8 +703,9 @@ var UserItem = BaseAdminItem.extend({
         var self = this;
         var model = this.model;
         var size = self.$(".size_limit").val() || this.model.get("disk_space");
+        var size_unit = Number(self.$(".size_unit").val());
         _.defer(function(){
-            model.save({"disk_space": Number(size) * 1048576}); // Need to convert to bytes
+            model.save({"disk_space": Number(size) * size_unit}, {patch: true}); // Need to convert to bytes
         }, 1000)
     }
 });

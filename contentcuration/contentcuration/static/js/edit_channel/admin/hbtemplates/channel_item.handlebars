@@ -1,13 +1,15 @@
 <div class="col-xs-4 channel_name_wrapper {{#if deleted}}deleted{{/if}}" title="{{name}} (Created {{#format_date created }}{{/format_date}}, Last Updated {{#format_date modified }}{{/format_date}})">
 	{{#unless deleted}}<a href="/channels/{{id}}/edit" target="_blank">{{/unless}}
 		<div class="channel_name truncate">{{#if name}}{{ name }}{{else}}<i title="Channel does not have a name">[Untitled Channel]</i>{{/if}}</div>
-	{{#if ricecooker_version}}{{#if staging_tree}}<a href="/channels/{{id}}/staging" target="_blank" class="action-text" title="Review"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span></a>{{/if}}{{/if}}
-	{{#unless deleted}}<span class="glyphicon glyphicon-new-window action-text name_icon" title="Open in new tab" aria-hidden="true"></span></a>{{/unless}}
-	{{#if published}}<a href="{{download_url}}" class="action-text name_icon" title="Download" download><span class="glyphicon glyphicon-download-alt" aria-hidden="true"></span></a>{{/if}}
+	{{#if ricecooker_version}}{{#if staging_tree}}
+		<a href="/channels/{{id}}/staging" target="_blank" class="action-text" title="Review"><i class="icon material-icons">announcement</i></a>
+	{{/if}}{{/if}}
+	{{#unless deleted}}<i class="icon material-icons action-text name_icon" title="Open in new tab">open_in_new</i></a>{{/unless}}
+	<a class="action-text download_csv name_icon" title="Download CSV"><i class="icon material-icons">file_download</i></a>
 </div>
 <div class="col-xs-2" title="{{id}}">
 	<input type="text" value="{{id}}" class="channel_id" readonly/>&nbsp;
-	<a class="action-text copy_id"><span class="glyphicon glyphicon-copy" aria-hidden="true" title="Copy"></span></a>
+	<a class="action-text copy_id"><i class="icon material-icons" title="Copy">content_paste</i></a>
 </div>
 <div class="col-xs-1">
 	{{#if public}}<input type="number" value="{{priority}}" class="channel_priority" min="0"/>{{else}}<em class="channel_priority_private" title="Priority does not count for private channels">(Private)</em>{{/if}}
@@ -34,19 +36,19 @@
 	<div class="btn-group btn-group-justified" role="group">
 		{{#if deleted}}
 			<div class="btn-group" role="group">
-				<button class="btn option btn-green restore_button" title="Restore"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button>
+				<button class="btn option btn-green restore_button" title="Restore"><i class="material-icons">restore</i></button>
 			</div>
 			<div class="btn-group" role="group">
-				<button class="btn option btn-red delete_button" title="Delete Permanently"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span></button>
+				<button class="btn option btn-red delete_button" title="Delete Permanently"><i class="material-icons">delete</i></button>
 			</div>
 		{{else}}
 			<div class="btn-group" role="group">
-				<button class="btn option btn-blue invite_button" title="Join Editors"><span class="glyphicon glyphicon-user" aria-hidden="true"></span></button>
+				<button class="btn option btn-blue invite_button" title="View Editors"><i class="material-icons">person</i></button>
 			</div>
 			<div class="btn-group" role="group">
 			{{#if public}}
-				<button class="btn option btn-green public_button" title="Public (click to make private)"><span class="glyphicon glyphicon-globe" aria-hidden="true"></span></button>
-			{{else}}<button class="btn option btn-gray private_button" title="Private (click to make public)"><span class="glyphicon glyphicon-lock" aria-hidden="true"></span></button>
+				<button class="btn option btn-green public_button" title="Public (click to make private)"><i class="material-icons">public</i></button>
+			{{else}}<button class="btn option btn-gray private_button" title="Private (click to make public)"><i class="material-icons">lock</i></span></button>
 			{{/if}}
 			</div>
 		{{/if}}
@@ -58,7 +60,7 @@
 	<div class="popover-content">
 		<ul class="list-unstyled">
 			{{#each editors}}
-				<li title="{{first_name}} {{last_name}}" class="truncate"><span class="glyphicon glyphicon-user content_icon"></span> {{first_name}} {{last_name}}</li>
+				<li title="{{first_name}} {{last_name}}" class="truncate"><i class="material-icons content_icon">person</i> {{first_name}} {{last_name}}</li>
 			{{/each}}
 		</ul>
 	</div>
@@ -69,7 +71,7 @@
 	<div class="popover-content">
 		<ul class="list-unstyled">
 			{{#each viewers}}
-				<li title="{{first_name}} {{last_name}}" class="truncate"><span class="glyphicon glyphicon-user content_icon"></span> {{first_name}} {{last_name}}</li>
+				<li title="{{first_name}} {{last_name}}" class="truncate"><i class="material-icons content_icon">person</i> {{first_name}} {{last_name}}</li>
 			{{/each}}
 		</ul>
 	</div>

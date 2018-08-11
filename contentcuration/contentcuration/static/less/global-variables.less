@@ -6,9 +6,55 @@
   src: url("@{icon-font-path}NotoSans-Regular.ttf") format("truetype");
 }
 
+@font-face {
+  font-family: 'Material Icons';
+  font-style: normal;
+  font-weight: 400;
+  src: url("@{icon-font-path}MaterialIcons-Regular.eot"); /* For IE6-8 */
+  src: local('Material Icons'),
+    local('MaterialIcons-Regular'),
+    url("@{icon-font-path}MaterialIcons-Regular.woff2") format('woff2'),
+    url("@{icon-font-path}MaterialIcons-Regular.woff") format('woff'),
+    url("@{icon-font-path}MaterialIcons-Regular.ttf") format('truetype');
+}
+
+.align-bottom {
+  vertical-align: bottom !important;
+}
+.align-text-top {
+  vertical-align: text-top !important;
+}
+
+.material-icons {
+  vertical-align: middle;
+  font-family: 'Material Icons';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;  /* Preferred icon size */
+  display: inline-block;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  white-space: nowrap;
+  direction: ltr;
+
+  /* Support for all WebKit browsers. */
+  -webkit-font-smoothing: antialiased;
+  /* Support for Safari and Chrome. */
+  text-rendering: optimizeLegibility;
+
+  /* Support for Firefox. */
+  -moz-osx-font-smoothing: grayscale;
+
+  /* Support for IE. */
+  font-feature-settings: 'liga';
+}
+
 /* ICONS AND BUTTONS */
 @topnav-active-tab-color:#564462;
 @red-error-color:#EF2121;
+@darkred-color: firebrick;
 .action-button {
   background: @blue-500;
   border: 1px solid @blue-500 !important;
@@ -16,12 +62,25 @@
   padding: 5px 16px;
   border-radius: 2px;
   cursor: pointer;
+  text-decoration: none;
   &:hover, &:focus {
     background: white;
     color: @blue-500 !important;
     font-weight:bold;
+    text-decoration: none;
   }
 }
+
+.red-action-button {
+    .action-button;
+    background: @darkred-color;
+    color: white;
+    border-color: @darkred-color !important;
+    &:hover, &:focus {
+      background-color: white;
+      color: @darkred-color !important;
+    }
+  }
 
 .action-text {
   color: @blue-500;
@@ -81,6 +140,7 @@
 @panel-container-color: #EEEEEE;
 /*@topnav-bg-color: #816793;*/
 @topnav-bg-color: #915194;
+@topnav-active-color: #6D3C6F;
 @box-shadow: 0 0 2px 0px rgba(0,0,0,0.4);
 .input-form {
   color: @body-font-color;
@@ -159,6 +219,10 @@ ul li.placeholder:before {
      word-wrap: break-word;
   }
 
+.icon-blue{
+  color: @blue-500;
+  vertical-align: bottom;
+}
 
 #kolibri_load_gif{
   width: 200px;
@@ -203,3 +267,13 @@ ul li.placeholder:before {
 }
 
 .uppercase { text-transform: uppercase; }
+
+.empty_default{
+  margin-top:20%;
+  text-align: center;
+  color:@gray-400;
+  font-size:14pt;
+  font-weight:bold;
+  font-style:italic;
+  padding-bottom: 20px;
+}

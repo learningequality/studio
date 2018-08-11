@@ -1,40 +1,48 @@
+import ast
+import collections
 import functools
 import hashlib
 import json
-import math
 import logging
+import os
+import socket
+import sys
+import urlparse
 import uuid
 
-import os
 from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
 from django.core.cache import cache
-from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, MultipleObjectsReturned
-from django.core.files.storage import FileSystemStorage
-from django.core.mail import send_mail, EmailMultiAlternatives
-from django.db import IntegrityError, connections, models, connection
-from django.db.models import Q, Sum, Max, Count, Case, When, IntegerField, F, FloatField
-from django.db.utils import ConnectionDoesNotExist
-from django.utils.translation import ugettext as _
+from django.core.exceptions import (MultipleObjectsReturned,
+                                    ObjectDoesNotExist, PermissionDenied)
+from django.core.files.storage import FileSystemStorage, default_storage
+from django.core.mail import send_mail
+from django.db import IntegrityError, connection, models
+from django.db.models import Q, Sum, Max
 from django.dispatch import receiver
-from django.template.loader import render_to_string
 from django.utils import timezone
-from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises
-from mptt.models import MPTTModel, TreeForeignKey, TreeManager, raise_if_unsaved
-from pg_utils import DistinctSum
-from rest_framework import permissions
-from rest_framework.authtoken.models import Token
-from contentcuration.statistics import record_channel_stats
+from django.utils.translation import ugettext as _
+from django.contrib.postgres.fields import JSONField
+from le_utils.constants import (content_kinds, exercises, file_formats, licenses,
+                                format_presets, languages, roles)
+from mptt.models import (MPTTModel, TreeForeignKey, TreeManager,
+                         raise_if_unsaved)
 
+from pg_utils import DistinctSum
+
+from contentcuration.statistics import record_channel_stats
+from contentcuration.utils.networking import get_local_ip_address
 
 EDIT_ACCESS = "edit"
 VIEW_ACCESS = "view"
 
-DEFAULT_USER_PREFERENCES = json.dumps({
+DEFAULT_CONTENT_DEFAULTS = {
     'license': None,
     'language': None,
     'author': None,
+    'aggregator': None,
+    'provider': None,
     'copyright_holder': None,
     'license_description': None,
     'mastery_model': exercises.NUM_CORRECT_IN_A_ROW_5,
@@ -46,7 +54,25 @@ DEFAULT_USER_PREFERENCES = json.dumps({
     'auto_derive_html5_thumbnail': True,
     'auto_derive_exercise_thumbnail': True,
     'auto_randomize_questions': True,
-}, ensure_ascii=False)
+}
+DEFAULT_USER_PREFERENCES = json.dumps(DEFAULT_CONTENT_DEFAULTS, ensure_ascii=False)
+
+
+# Added 7-31-2018. We can remove this once we are certain we have eliminated all cases
+# where root nodes are getting prepended rather than appended to the tree list.
+def _create_tree_space(self, target_tree_id, num_trees=1):
+    """
+    Creates space for a new tree by incrementing all tree ids
+    greater than ``target_tree_id``.
+    """
+
+    if target_tree_id == -1:
+        raise Exception("ERROR: Calling _create_tree_space with -1! Something is attempting to sort all MPTT trees root nodes!")
+
+    self._orig_create_tree_space(target_tree_id, num_trees)
+
+TreeManager._orig_create_tree_space = TreeManager._create_tree_space
+TreeManager._create_tree_space = _create_tree_space
 
 
 class UserManager(BaseUserManager):
@@ -84,6 +110,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     clipboard_tree = models.ForeignKey('ContentNode', null=True, blank=True, related_name='user_clipboard')
     preferences = models.TextField(default=DEFAULT_USER_PREFERENCES)
     disk_space = models.FloatField(default=524288000, help_text=_('How many bytes a user can upload'))
+
+    information = JSONField(null=True)
+    content_defaults = JSONField(default=dict)
+    policies = JSONField(default=dict, null=True)
 
     objects = UserManager()
     USERNAME_FIELD = 'email'
@@ -149,8 +179,8 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def get_user_active_files(self):
         active_trees = self.get_user_active_trees()
-        return self.files.select_related('contentnode').select_related('assessment_item')\
-                            .filter(Q(contentnode__tree_id__in=active_trees) | Q(assessment_item__contentnode__tree_id__in=active_trees))\
+        return self.files.select_related('contentnode')\
+                            .filter(Q(contentnode__tree_id__in=active_trees))\
                             .values('checksum', 'file_size')\
                             .distinct()
 
@@ -193,10 +223,19 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def save(self, *args, **kwargs):
         super(User, self).save(*args, **kwargs)
+        changed = False
+
+        if not self.content_defaults:
+            self.content_defaults = DEFAULT_CONTENT_DEFAULTS
+            changed = True
+
         if not self.clipboard_tree:
             self.clipboard_tree = ContentNode.objects.create(title=self.email + " clipboard", kind_id="topic",
-                                                             sort_order=0)
+                                                             sort_order=get_next_sort_order())
             self.clipboard_tree.save()
+            changed = True
+
+        if changed:
             self.save()
 
     class Meta:
@@ -215,12 +254,10 @@ class UUIDField(models.CharField):
             result = result.hex
         return result
 
-
 def file_on_disk_name(instance, filename):
     """
     Create a name spaced file path from the File obejct's checksum property.
     This path will be used to store the content copy
-
     :param instance: File (content File model)
     :param filename: str
     :return: str
@@ -238,10 +275,73 @@ def generate_file_on_disk_name(checksum, filename):
     return os.path.join(directory, h + ext.lower())
 
 
-def generate_storage_url(filename):
-    """ Returns place where file is stored """
-    h, ext = os.path.splitext(filename)
-    return "{}/{}/{}/{}".format(settings.STORAGE_URL.rstrip('/'), h[0], h[1], h + ext.lower())
+def object_storage_name(instance, filename):
+    """
+    Create a name spaced file path from the File obejct's checksum property.
+    This path will be used to store the content copy
+
+    :param instance: File (content File model)
+    :param filename: str
+    :return: str
+    """
+    return generate_object_storage_name(instance.checksum, filename)
+
+
+def generate_object_storage_name(checksum, filename):
+    """ Separated from file_on_disk_name to allow for simple way to check if has already exists """
+    h = checksum
+    basename, ext = os.path.splitext(filename)
+    # Use / instead of os.path.join as Windows makes this \\
+    directory = "/".join([settings.STORAGE_ROOT, h[0], h[1]])
+    return os.path.join(directory, h + ext.lower())
+
+
+def generate_storage_url(filename, request=None, *args):
+    """
+    Generate a storage URL for the given content filename.
+    """
+
+    path = generate_object_storage_name(os.path.splitext(filename)[0], filename)
+
+    # There are three scenarios where Studio might be run as:
+    #
+    # 1. In normal kubernetes, nginx will proxy for us. We'll know we're in kubernetes when the
+    # environment variable RUN_MODE=k8s
+    #
+    # 2. In Docker Compose and bare metal runserver, we'll be running in runserver, and minio
+    # will be exposed in port 9000 in the host's localhost network.
+
+    # Note (aron): returning the true storage URL (e.g. https://storage.googleapis.com/storage/a.mp4)
+    # isn't too important, because we have CDN in front of our servers, so it should be cached.
+    # But change the logic here in case there is a potential for bandwidth and latency improvement.
+
+    # Detect our current state first
+    run_mode = os.getenv("RUN_MODE")
+
+    # if we're running inside k8s, then just serve the normal /content/{storage,databases} URL,
+    # and let nginx handle proper proxying.
+    if run_mode == "k8s":
+        url = "/content/{path}".format(
+            bucket=settings.AWS_S3_BUCKET_NAME,
+            path=path,
+        )
+
+    # if we're in docker-compose or in baremetal, just return the object storage URL as localhost:9000
+    elif run_mode == "docker-compose" or run_mode is None:
+        # generate the minio storage URL, so we can get the GET parameters that give everyone
+        # access even if they don't need to log in
+        params = urlparse.urlparse(default_storage.url(path)).query
+        host = "localhost"
+        port = 9000 # hardcoded to the default minio IP address
+        url = "http://{host}:{port}/{bucket}/{path}?{params}".format(
+            host=host,
+            port=port,
+            bucket=settings.AWS_S3_BUCKET_NAME,
+            path=path,
+            params=params,
+        )
+
+    return url
 
 
 class FileOnDiskStorage(FileSystemStorage):
@@ -258,6 +358,7 @@ class FileOnDiskStorage(FileSystemStorage):
             logging.warn('Content copy "%s" already exists!' % name)
             return name
         return super(FileOnDiskStorage, self)._save(name, content)
+
 
 
 class ChannelResourceSize(models.Model):
@@ -335,6 +436,7 @@ class Channel(models.Model):
     deleted = models.BooleanField(default=False, db_index=True)
     public = models.BooleanField(default=False, db_index=True)
     preferences = models.TextField(default=DEFAULT_USER_PREFERENCES)
+    content_defaults = JSONField(default=dict)
     priority = models.IntegerField(default=0, help_text=_("Order to display public channels"))
     last_published = models.DateTimeField(blank=True, null=True)
     secret_tokens = models.ManyToManyField(
@@ -386,6 +488,9 @@ class Channel(models.Model):
         if self.pk and Channel.objects.filter(pk=self.pk).exists():
             original_channel = Channel.objects.get(pk=self.pk)
 
+        if not self.content_defaults:
+            self.content_defaults = DEFAULT_CONTENT_DEFAULTS
+
         record_channel_stats(self, original_channel)
 
         # Check if original thumbnail is no longer referenced
@@ -397,7 +502,7 @@ class Channel(models.Model):
             self.main_tree = ContentNode.objects.create(
                 title=self.name,
                 kind_id=content_kinds.TOPIC,
-                sort_order=0,
+                sort_order=get_next_sort_order(),
                 content_id=self.id,
                 node_id=self.id,
             )
@@ -410,7 +515,7 @@ class Channel(models.Model):
             self.trash_tree = ContentNode.objects.create(
                 title=self.name,
                 kind_id=content_kinds.TOPIC,
-                sort_order=0,
+                sort_order=get_next_sort_order(),
                 content_id=self.id,
                 node_id=self.id,
             )
@@ -421,9 +526,37 @@ class Channel(models.Model):
 
         super(Channel, self).save(*args, **kwargs)
 
+        if original_channel and not self.main_tree.changed:
+            fields_to_check = ['description', 'language_id', 'thumbnail', 'name', 'language', 'thumbnail_encoding', 'deleted']
+            self.main_tree.changed = any([f for f in fields_to_check if getattr(self, f) != getattr(original_channel, f)])
+
+            # Delete db if channel has been deleted and mark as unpublished
+            if not original_channel.deleted and self.deleted:
+                self.pending_editors.all().delete()
+                channel_db_url = os.path.join(settings.DB_ROOT, self.id) + ".sqlite3"
+                if os.path.isfile(channel_db_url):
+                    os.unlink(channel_db_url)
+                    self.main_tree.published = False
+            self.main_tree.save()
+
+    def get_thumbnail(self):
+        if self.thumbnail_encoding:
+            thumbnail_data = ast.literal_eval(self.thumbnail_encoding)
+            if thumbnail_data.get("base64"):
+                return thumbnail_data["base64"]
+
+        if self.thumbnail and 'static' not in self.thumbnail:
+            return generate_storage_url(self.thumbnail)
+
+        return '/static/img/kolibri_placeholder.png'
+
     class Meta:
         verbose_name = _("Channel")
         verbose_name_plural = _("Channels")
+
+        index_together = [
+            ["deleted", "public"]
+        ]
 
 
 class ContentTag(models.Model):
@@ -470,6 +603,11 @@ class License(models.Model):
     def __str__(self):
         return self.license_name
 
+def get_next_sort_order(node=None):
+    # Get the next sort order under parent (roots if None)
+    # Based on Kevin's findings, we want to append node as prepending causes all other root sort_orders to get incremented
+    max_order = ContentNode.objects.filter(parent=node).aggregate(max_order=Max('sort_order'))['max_order'] or 0
+    return max_order + 1
 
 class ContentNode(MPTTModel, models.Model):
     """
@@ -521,11 +659,18 @@ class ContentNode(MPTTModel, models.Model):
     created = models.DateTimeField(auto_now_add=True, verbose_name=_("created"))
     modified = models.DateTimeField(auto_now=True, verbose_name=_("modified"))
     published = models.BooleanField(default=False)
+    publishing = models.BooleanField(default=False)
 
-    changed = models.BooleanField(default=True, db_index=True)
+    changed = models.BooleanField(default=True)
     extra_fields = models.TextField(blank=True, null=True)
-    author = models.CharField(max_length=200, blank=True, default="", help_text=_("Person who created content"),
+    author = models.CharField(max_length=200, blank=True, default="", help_text=_("Who created this content?"),
                               null=True)
+    aggregator = models.CharField(max_length=200, blank=True, default="", help_text=_("Who gathered this content together?"),
+                              null=True)
+    provider = models.CharField(max_length=200, blank=True, default="", help_text=_("Who distributed this content?"),
+                              null=True)
+
+    role_visibility = models.CharField(max_length=50, choices=roles.choices, default=roles.LEARNER)
     freeze_authoring_data = models.BooleanField(default=False)
 
     objects = TreeManager()
@@ -649,25 +794,27 @@ class ContentNode(MPTTModel, models.Model):
 
         self.changed = self.changed or len(self.get_changed_fields()) > 0
 
-        # Detect if node has been moved to another tree
-        if self.pk and ContentNode.objects.filter(pk=self.pk).exists():
+        # Detect if node has been moved to another tree (if the original parent has not already been marked as changed, mark as changed)
+        # Necessary if nodes get deleted/moved to clipboard- user needs to be able to publish "changed" nodes
+        if self.pk and ContentNode.objects.filter(pk=self.pk, parent__changed=False).exclude(parent_id=self.parent_id).exists():
             original = ContentNode.objects.get(pk=self.pk)
-            if original.parent and original.parent_id != self.parent_id and not original.parent.changed:
-                original.parent.changed = True
-                original.parent.save()
+            original.parent.changed = True
+            original.parent.save()
 
         if self.original_node is None:
             self.original_node = self
         if self.cloned_source is None:
             self.cloned_source = self
 
-        # TODO: This SIGNIFICANTLY slows down the creation flow
-        #   Avoid calling get_channel() (db read)
-        channel = (self.parent and self.parent.get_channel()) or self.get_channel() # Check parent first otherwise new content won't have root
         if self.original_channel_id is None:
+            # TODO: This SIGNIFICANTLY slows down the creation flow
+            channel = (self.parent and self.parent.get_channel()) or self.get_channel() # Check parent first otherwise new content won't have root
             self.original_channel_id = channel.id if channel else None
         if self.source_channel_id is None:
+            # TODO: This SIGNIFICANTLY slows down the creation flow
+            channel = (self.parent and self.parent.get_channel()) or self.get_channel() # Check parent first otherwise new content won't have root
             self.source_channel_id = channel.id if channel else None
+
         if self.original_source_node_id is None:
             self.original_source_node_id = self.node_id
         if self.source_node_id is None:
@@ -675,9 +822,13 @@ class ContentNode(MPTTModel, models.Model):
 
         super(ContentNode, self).save(*args, **kwargs)
 
-        root = self.get_root()
-        if self.is_prerequisite_of.exists() and (root.channel_trash.exists() or root.user_clipboard.exists()):
-            PrerequisiteContentRelationship.objects.filter(Q(prerequisite_id=self.id) | Q(target_node_id=self.id)).delete()
+        try:
+            # During saving for fixtures, this fails to find the root node
+            root = self.get_root()
+            if self.is_prerequisite_of.exists() and (root.channel_trash.exists() or root.user_clipboard.exists()):
+                PrerequisiteContentRelationship.objects.filter(Q(prerequisite_id=self.id) | Q(target_node_id=self.id)).delete()
+        except (ContentNode.DoesNotExist, MultipleObjectsReturned) as e:
+            logging.warn(str(e))
 
     class MPTTMeta:
         order_insertion_by = ['sort_order']
@@ -721,11 +872,12 @@ class FormatPreset(models.Model):
 
 
 class Language(models.Model):
-    id = models.CharField(max_length=7, primary_key=True)
+    id = models.CharField(max_length=14, primary_key=True)
     lang_code = models.CharField(max_length=3, db_index=True)
-    lang_subcode = models.CharField(max_length=3, db_index=True, blank=True, null=True)
+    lang_subcode = models.CharField(max_length=10, db_index=True, blank=True, null=True)
     readable_name = models.CharField(max_length=100, blank=True)
     native_name = models.CharField(max_length=100, blank=True)
+    lang_direction = models.CharField(max_length=3, choices=languages.LANGUAGE_DIRECTIONS, default=languages.LANGUAGE_DIRECTIONS[0][0])
 
     def ietf_name(self):
         return "{code}-{subcode}".format(code=self.lang_code,
@@ -766,7 +918,7 @@ class File(models.Model):
     id = UUIDField(primary_key=True, default=uuid.uuid4)
     checksum = models.CharField(max_length=400, blank=True, db_index=True)
     file_size = models.IntegerField(blank=True, null=True)
-    file_on_disk = models.FileField(upload_to=file_on_disk_name, storage=FileOnDiskStorage(), max_length=500,
+    file_on_disk = models.FileField(upload_to=object_storage_name, storage=default_storage, max_length=500,
                                     blank=True)
     contentnode = models.ForeignKey(ContentNode, related_name='files', blank=True, null=True, db_index=True)
     assessment_item = models.ForeignKey(AssessmentItem, related_name='files', blank=True, null=True, db_index=True)

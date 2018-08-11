@@ -8,26 +8,34 @@
 		<div class="options pull-right hide_on_drag">
 			{{#if edit_mode}}
 				<a class="btn btn-default content-options-dropdown" role="button" rel="popover">
-					<span class="glyphicon glyphicon-option-horizontal" aria-hidden="true"></span>
+					<i class="material-icons">more_horiz</i>
 				</a>
 				<br/>
-				{{#if isfolder}}<span class="folder_open_icon open_folder glyphicon glyphicon-menu-right" aria-hidden="true"></span>{{/if}}
+				{{#if isfolder}}<i class="folder_open_icon open_folder material-icons">chevron_right</i>{{/if}}
 			{{else}}
-				{{#if isfolder}}<span class="glyphicon glyphicon-new-window edit_item_button" aria-hidden="true" title="{{formatMessage (intlGet 'messages.view_topic')}}"></span>{{/if}}
-				<span class="glyphicon glyphicon-copy copy_item_button" aria-hidden="true" title="{{formatMessage (intlGet 'messages.copy_to_clipboard')}}"></span>
+				{{#if isfolder}}<i class="material-icons edit_item_button" title="{{formatMessage (intlGet 'messages.view_topic')}}">pageview</i>{{/if}}
+				<i class="material-icons copy_item_button" title="{{formatMessage (intlGet 'messages.copy_to_clipboard')}}">content_paste</i>
 			{{/if}}
 		</div>
 		<h6 class="content_metadata_summary hide_on_drag {{#unless isfolder}}open_file{{/unless}}">
 			<span class="metadata_to_hide">
-				{{#if time}}&nbsp;<span class="glyphicon glyphicon-time" aria-hidden="true"></span>{{time}}{{/if}}
+				{{#if isfolder}}
+					{{#if node.metadata.coach_count}}
+						<span class="visibility" title="{{formatMessage (intlGet 'messages.coach_topic_title')}}">
+							<i class="icon-blue material-icons">local_library</i>
+							({{node.metadata.coach_count}})
+						</span>
+					{{/if}}
+				{{/if}}
+				{{#if time}}&nbsp;<i class="material-icons">access_time</i>{{time}}{{/if}}
 				{{#if isfolder}}&nbsp;{{formatMessage (intlGet (concat 'messages.resource_count')) count=count}}&nbsp;{{/if}}
 				{{#unless isfolder}}
 					{{#if isexercise}}
-						<span class="glyphicon glyphicon-check" aria-hidden="true"></span>
+						<i class="material-icons">check_circle</i>
 						{{formatMessage (intlGet (concat 'messages.question_count')) count=count}}
 					{{else}}
-						<span class="glyphicon glyphicon-file" aria-hidden="true"></span>
-						{{#format_file_size node.metadata.resource_size}}{{/format_file_size}}
+						<i class="material-icons">insert_drive_file</i>
+						{{{format_file_size node.metadata.resource_size}}}
 					{{/if}}
 				{{/unless}}
 				&nbsp;
@@ -39,16 +47,20 @@
 				{{#unless node.valid}}
 					<em class="invalid">{{formatMessage (intlGet 'messages.incomplete')}}</em>
 				{{/unless}}
+				{{#unless isfolder}}
+					{{#equal node.role_visibility 'coach'}}
+						<b class="visibility" title="{{formatMessage (intlGet 'messages.coach_title')}}">
+							<i class="icon-blue material-icons">local_library</i>
+							{{formatMessage (intlGet 'messages.coach')}}
+						</b>
+					{{/equal}}
+				{{/unless}}
 			</span>
 		</h6>
 		<div class="{{#unless isfolder}}open_file{{/unless}} title_wrapper">
 			<div class = "title truncate">
 				<div class="content-item-icon">
-					{{#if isfolder}}
-						<img src="/static/img/topic.png"/>
-					{{else}}
-						<span class="{{#get_icon node.kind}}{{/get_icon}}" aria-hidden="true"></span>
-					{{/if}}
+					<i class="material-icons align-text-top">{{{get_icon node.kind}}}</i>
 				</div>
 				{{#if node}}{{node.title}}{{else}}<em>{{formatMessage (intlGet (concat 'messages.untitled'))}}</em>{{/if}}
 			</div>

@@ -13,6 +13,8 @@ var MESSAGES = {
     "html": "HTML Apps",
     "documents": "Documents",
     "author": "Author",
+    "aggregator": "Aggregator",
+    "provider": "Provider",
     "license": "License",
     "saved": "SAVED!",
     "copyright_holder": "Copyright Holder",
@@ -28,10 +30,15 @@ var MESSAGES = {
     "exercise_criteria": "Exercise Mastery Criteria",
     "auto_thumbnail": "Automatically generate thumbnails for...",
     "author_placeholder": "Enter author name...",
+    "aggregator_placeholder": "Enter aggregator name...",
+    "provider_placeholder": "Enter provider name...",
     "license_description_placeholder": "Enter license description...",
     "copyright_holder_placeholder": "Enter copyright holder name...",
     "no_license": "No license selected",
     "randomize_question_order": "Automatically randomize question order",
+    "author_description": "Person or organization who created the content",
+    "aggregator_description": "Website or org hosting the content collection but not necessarily the creator or copyright holder",
+    "provider_description": "Organization that commissioned or is distributing the content"
 }
 
 var SettingsModalView = BaseViews.BaseModalView.extend({
@@ -72,19 +79,22 @@ var SettingsView = BaseViews.BaseListEditableItemView.extend({
       "focus .input-tab-control": "loop_focus"
     },
     render: function() {
+        var preferences = this.model.get("content_defaults");
+        preferences = (typeof preferences === "string")? JSON.parse(preferences) : preferences;
         this.$el.html(this.template({
             channel: this.model.toJSON(),
             licenses: window.licenses.toJSON(),
-            preferences: this.model.get("preferences"),
+            preferences: preferences,
             languages: window.languages.toJSON()
         },  {
             data: this.get_intl_data()
         }));
-        $("#license_select").val(this.get_license_id(this.model.get("preferences").license));
-        $("#mastery_model_select").val(this.model.get("preferences").mastery_model);
+        $("#license_select").val(this.get_license_id(preferences.license));
+        $("#mastery_model_select").val(preferences.mastery_model);
         $("#custom_license_description").css("display", (this.check_custom_license())? "block" : "none");
         $("#mastery_custom_criterion").css("visibility", ($("#mastery_model_select").val()==="m_of_n")? "visible" : "hidden");
         $("#select_language").val(this.model.get("language") || 0);
+        this.$('[data-toggle="tooltip"]').tooltip();
     },
     create_initial: function() {
         this.image_upload = new Images.ThumbnailUploadView({
@@ -121,19 +131,22 @@ var SettingsView = BaseViews.BaseListEditableItemView.extend({
         return el.val()!=0 && window.licenses.get(el.val()).get("is_custom");
     },
     submit_changes:function(){
-        var preferences = this.model.get("preferences");
-        preferences.license = this.get_license_name();
-        preferences.author = $("#author_field").val().trim();
-        preferences.copyright_holder = $("#input_copyright_holder").val().trim();
-        preferences.license_description = $("#custom_license_description").val().trim();
-        preferences.mastery_model = $("#mastery_model_select").val();
-        preferences.m_value = $("#m_value").val();
-        preferences.n_value = $("#n_value").val();
-        preferences.auto_randomize_questions = $("#auto_randomize_questions").is(":checked");
-        preferences.auto_derive_video_thumbnail = $("#auto_video_thumbnail").is(":checked");
-        preferences.auto_derive_audio_thumbnail = $("#auto_audio_thumbnail").is(":checked");
-        preferences.auto_derive_document_thumbnail = $("#auto_document_thumbnail").is(":checked");
-        preferences.auto_derive_html5_thumbnail = $("#auto_html5_thumbnail").is(":checked");
+        var content_defaults = this.model.get("content_defaults");
+        content_defaults = (typeof content_defaults === "string")? JSON.parse(content_defaults) : content_defaults;
+        content_defaults.license = this.get_license_name();
+        content_defaults.author = $("#author_field").val().trim();
+        content_defaults.aggregator = $("#aggregator_field").val().trim();
+        content_defaults.provider = $("#provider_field").val().trim();
+        content_defaults.copyright_holder = $("#input_copyright_holder").val().trim();
+        content_defaults.license_description = $("#custom_license_description").val().trim();
+        content_defaults.mastery_model = $("#mastery_model_select").val();
+        content_defaults.m_value = $("#m_value").val();
+        content_defaults.n_value = $("#n_value").val();
+        content_defaults.auto_randomize_questions = $("#auto_randomize_questions").is(":checked");
+        content_defaults.auto_derive_video_thumbnail = $("#auto_video_thumbnail").is(":checked");
+        content_defaults.auto_derive_audio_thumbnail = $("#auto_audio_thumbnail").is(":checked");
+        content_defaults.auto_derive_document_thumbnail = $("#auto_document_thumbnail").is(":checked");
+        content_defaults.auto_derive_html5_thumbnail = $("#auto_html5_thumbnail").is(":checked");
         var language = $("#select_language").val();
         var self = this;
         $("#settings_submit").html(this.get_translation("saving"))
@@ -143,11 +156,12 @@ var SettingsView = BaseViews.BaseListEditableItemView.extend({
             "name": $("#input_title").val().trim(),
             "description": $("#input_description").val(),
             "thumbnail": this.model.get("thumbnail"),
-            "preferences": JSON.stringify(preferences),
+            "content_defaults": content_defaults,
             "language": (language===0)? null : language
         }).then(function(data){
             self.onsave(data);
             $("#settings_submit").html(self.get_translation("saved"));
+            self.check_if_published(self.model.get_root("main_tree"));
             setTimeout(function(){
                 $("#settings_submit").html(self.get_translation("no_changes_detected"));
             }, 2000);

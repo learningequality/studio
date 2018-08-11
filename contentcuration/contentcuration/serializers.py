@@ -1,15 +1,19 @@
-import zlib
+import json
 import math
+import zlib
 from collections import OrderedDict
+from itertools import chain
+
+import minio
 from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import ValidationError as DjangoValidationError, PermissionDenied
 from django.core.files import File as DjFile
 from django.db import transaction
 from django.db.models import Q, Max
-from le_utils.constants import licenses
+from le_utils.constants import licenses, roles
 from django.utils.translation import ugettext as _
-from itertools import chain
+from minio.error import ResponseError
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import set_value, SkipField
@@ -19,6 +23,8 @@ from rest_framework_bulk import BulkSerializerMixin
 
 from contentcuration.models import *
 from contentcuration.statistics import record_node_addition_stats, record_action_stats
+from contentcuration.utils.format import format_size
+from le_utils.constants import licenses
 
 class LicenseSerializer(serializers.ModelSerializer):
     class Meta:
@@ -121,11 +127,14 @@ class FileListSerializer(serializers.ListSerializer):
                     for attr, value in data.items():
                         if attr != "preset" and attr != "language":
                             setattr(file_obj, attr, value)
-                    file_path = generate_file_on_disk_name(file_obj.checksum, str(file_obj))
-                    if os.path.isfile(file_path):
-                        file_obj.file_on_disk = DjFile(open(file_path, 'rb'))
-                    else:
+                    file_path = generate_object_storage_name(file_obj.checksum, str(file_obj))
+
+                    if not default_storage.exists(file_path):
                         raise OSError("Error: file {} was not found".format(str(file_obj)))
+
+                    file = default_storage.open(file_path)
+                    file_obj.file_on_disk = file
+
                     file_obj.uploaded_by = file_obj.uploaded_by or user
                     file_obj.save()
                     ret.append(file_obj)
@@ -336,6 +345,7 @@ class SimplifiedContentNodeSerializer(BulkSerializerMixin, serializers.ModelSeri
             return {
                 "total_count": node.get_descendant_count(),
                 "resource_count": node.get_descendants().exclude(kind=content_kinds.TOPIC).count(),
+                "coach_count": node.get_descendants().filter(role_visibility=roles.COACH).count(),
                 # "resource_size" : (aggregated.get('resource_size') or 0) + (aggregated.get('assessment_size') or 0),
             }
         else:
@@ -454,21 +464,39 @@ class SimplifiedContentNodeSerializer(BulkSerializerMixin, serializers.ModelSeri
 
     class Meta:
         model = ContentNode
-        fields = ('title', 'id', 'sort_order', 'kind', 'children', 'parent', 'metadata', 'content_id', 'prerequisite', 'is_prerequisite_of', 'parent_title', 'ancestors', 'tree_id', 'language')
+        fields = ('title', 'id', 'sort_order', 'kind', 'children', 'parent', 'metadata', 'content_id', 'prerequisite',
+                  'is_prerequisite_of', 'parent_title', 'ancestors', 'tree_id', 'language', 'role_visibility')
 
 
-class RootNodeSerializer(SimplifiedContentNodeSerializer):
+""" Shared methods across content node serializers """
+class ContentNodeFieldMixin(object):
+
+    def get_creators(self, descendants):
+        creators = descendants.values_list('copyright_holder', 'author', 'aggregator', 'provider')
+        split_lst = zip(*creators)
+
+        return {
+            "copyright_holders": filter(lambda x: x, set(split_lst[0])) if len(split_lst) > 0 else [],
+            "authors": filter(lambda x: x, set(split_lst[1])) if len(split_lst) > 1 else [],
+            "aggregators": filter(lambda x: x, set(split_lst[2])) if len(split_lst) > 2 else [],
+            "providers": filter(lambda x: x, set(split_lst[3])) if len(split_lst) > 3 else [],
+        }
+
+
+class RootNodeSerializer(SimplifiedContentNodeSerializer, ContentNodeFieldMixin):
     channel_name = serializers.SerializerMethodField('retrieve_channel_name')
 
     def retrieve_metadata(self, node):
-        descendants = node.get_descendants(include_self=True)
-        return {
+        descendants = node.get_descendants()
+        data = {
             "total_count": node.get_descendant_count(),
             "resource_count": descendants.exclude(kind_id=content_kinds.TOPIC).count(),
             "max_sort_order": node.children.aggregate(max_sort_order=Max('sort_order'))['max_sort_order'] or 1,
             "resource_size": 0,
-            "has_changed_descendant": descendants.filter(changed=True).exists()
+            "has_changed_descendant": descendants.filter(changed=True).exists(),
         }
+        data.update(self.get_creators(descendants))
+        return data
 
     def retrieve_channel_name(self, node):
         channel = node.get_channel()
@@ -476,13 +504,15 @@ class RootNodeSerializer(SimplifiedContentNodeSerializer):
 
     class Meta:
         model = ContentNode
-        fields = ('title', 'id', 'kind', 'children', 'metadata', 'published', 'node_id', 'channel_name', 'prerequisite', 'is_prerequisite_of', 'parent_title', 'ancestors', 'tree_id')
+        fields = ('title', 'id', 'kind', 'children', 'metadata', 'published', 'publishing', 'node_id', 'channel_name',
+                  'prerequisite', 'is_prerequisite_of', 'parent_title', 'ancestors', 'tree_id', 'role_visibility')
 
 
-class ContentNodeSerializer(SimplifiedContentNodeSerializer):
+class ContentNodeSerializer(SimplifiedContentNodeSerializer, ContentNodeFieldMixin):
     ancestors = serializers.SerializerMethodField('get_node_ancestors')
     valid = serializers.SerializerMethodField('check_valid')
     associated_presets = serializers.SerializerMethodField('retrieve_associated_presets')
+    original_channel = serializers.SerializerMethodField('retrieve_original_channel')
 
     def retrieve_associated_presets(self, node):
         return node.get_associated_presets()
@@ -513,13 +543,20 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer):
     def retrieve_metadata(self, node):
         if node.kind_id == content_kinds.TOPIC:
             descendants = node.get_descendants(include_self=True)
-            return {
+            data = {
                 "total_count": node.get_descendant_count(),
                 "resource_count": descendants.exclude(kind=content_kinds.TOPIC).count(),
                 "max_sort_order": node.children.aggregate(max_sort_order=Max('sort_order'))['max_sort_order'] or 1,
                 "resource_size": 0,  # Make separate request
                 "has_changed_descendant": descendants.filter(changed=True).exists(),
+                "coach_count": descendants.filter(role_visibility=roles.COACH).count(),
             }
+
+            if not node.parent: # Add extra data to root node
+                data.update(self.get_creators(descendants))
+
+            return data
+
         else:
             assessment_size = node.assessment_items.values('files__checksum', 'files__file_size').distinct()\
                             .aggregate(resource_size=Sum('files__file_size')).get('resource_size') or 0
@@ -537,25 +574,30 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer):
                 "has_changed_descendant": node.changed,
             }
 
+    def retrieve_original_channel(self, node):
+        channel_id = node.original_channel_id
+        channel = channel_id and Channel.objects.get(pk=channel_id)
+
+        return {
+            "id": channel.pk,
+            "name": channel.name,
+            "thumbnail_url": channel.get_thumbnail(),
+        } if (channel and not channel.deleted) else None
+
     class Meta:
         list_serializer_class = CustomListSerializer
         model = ContentNode
         fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license','language',
-                  'license_description', 'assessment_items', 'files', 'parent_title', 'ancestors', 'modified',
-                  'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata',
-                  'tags', 'extra_fields', 'prerequisite', 'is_prerequisite_of', 'node_id', 'tree_id')
+                  'license_description', 'assessment_items', 'files', 'parent_title', 'ancestors', 'modified', 'original_channel',
+                  'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'original_source_node_id',
+                  'tags', 'extra_fields', 'prerequisite', 'is_prerequisite_of', 'node_id', 'tree_id', 'publishing', 'freeze_authoring_data',
+                  'role_visibility', 'provider', 'aggregator')
 
 
 class ContentNodeEditSerializer(ContentNodeSerializer):
-    original_channel = serializers.SerializerMethodField('retrieve_original_channel')
     files = FileSerializer(many=True, read_only=True)
     tags = TagSerializer(many=True)
     assessment_items = AssessmentItemSerializer(many=True, read_only=True)
-
-    def retrieve_original_channel(self, node):
-        original = node.get_original_node()
-        channel = original.get_channel() if original else None
-        return {"id": channel.pk, "name": channel.name} if channel else None
 
     class Meta:
         list_serializer_class = CustomListSerializer
@@ -564,8 +606,7 @@ class ContentNodeEditSerializer(ContentNodeSerializer):
                   'node_id', 'license_description', 'assessment_items', 'files', 'parent_title', 'content_id', 'modified',
                   'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'ancestors', 'tree_id',
                   'tags', 'extra_fields', 'original_channel', 'prerequisite', 'is_prerequisite_of', 'thumbnail_encoding',
-                  'freeze_authoring_data')
-
+                  'freeze_authoring_data', 'publishing', 'original_source_node_id', 'role_visibility', 'provider', 'aggregator')
 
 class ContentNodeCompleteSerializer(ContentNodeEditSerializer):
     class Meta:
@@ -575,9 +616,24 @@ class ContentNodeCompleteSerializer(ContentNodeEditSerializer):
             'title', 'changed', 'id', 'description', 'sort_order', 'author', 'node_id', 'copyright_holder', 'license',
             'license_description', 'kind', 'prerequisite', 'is_prerequisite_of', 'parent_title', 'ancestors', 'language',
             'original_channel', 'original_source_node_id', 'source_node_id', 'content_id', 'original_channel_id',
-            'source_channel_id', 'source_id', 'source_domain', 'thumbnail_encoding',
+            'source_channel_id', 'source_id', 'source_domain', 'thumbnail_encoding', 'publishing',
             'children', 'parent', 'tags', 'created', 'modified', 'published', 'extra_fields', 'assessment_items',
-            'files', 'valid', 'metadata', 'tree_id', 'freeze_authoring_data')
+            'files', 'valid', 'metadata', 'tree_id', 'freeze_authoring_data', 'role_visibility', 'provider', 'aggregator')
+
+
+class TokenSerializer(serializers.ModelSerializer):
+    """ Serializer for channel tokens """
+    display_token = serializers.SerializerMethodField('generate_token')
+
+    def generate_token(self, token):
+        # Break channel tokens into two groups for easier processing
+        return "{}-{}".format(token.token[:5], token.token[5:])
+
+    class Meta:
+        model = SecretToken
+        fields = ('display_token', 'token')
+
+
 
 """ Shared methods across channel serializers """
 class ChannelFieldMixin(object):
@@ -609,6 +665,9 @@ class ChannelFieldMixin(object):
     def check_published(self, channel):
         return channel.main_tree.published
 
+    def check_publishing(self, channel):
+        return channel.main_tree.publishing
+
     def generate_thumbnail_url(self, channel):
         if channel.thumbnail and 'static' not in channel.thumbnail:
             return generate_storage_url(channel.thumbnail)
@@ -625,6 +684,7 @@ class ChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
     updated = serializers.SerializerMethodField('get_date_updated')
     tags = TagSerializer(many=True, read_only=True)
     primary_token = serializers.SerializerMethodField('get_channel_primary_token')
+    content_defaults = serializers.JSONField()
 
     def get_date_created(self, channel):
         return channel.main_tree.created.strftime("%X %x")
@@ -643,8 +703,8 @@ class ChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
         fields = (
             'id', 'created', 'updated', 'name', 'description', 'has_changed', 'editors', 'main_tree', 'trash_tree',
             'staging_tree', 'source_id', 'source_domain', 'ricecooker_version', 'thumbnail', 'version', 'deleted',
-            'public', 'thumbnail_url','thumbnail_encoding', 'pending_editors', 'viewers', 'tags', 'preferences',
-            'language', 'primary_token', 'priority')
+            'public', 'thumbnail_url','thumbnail_encoding', 'pending_editors', 'viewers', 'tags', 'content_defaults',
+            'language', 'primary_token', 'priority', 'published_size')
 
 
 class AccessibleChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
@@ -664,10 +724,12 @@ class AccessibleChannelListSerializer(ChannelFieldMixin, serializers.ModelSerial
 class ChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
     thumbnail_url = serializers.SerializerMethodField('generate_thumbnail_url')
     published = serializers.SerializerMethodField('check_published')
+    publishing = serializers.SerializerMethodField('check_publishing')
     count = serializers.SerializerMethodField("get_resource_count")
     created = serializers.SerializerMethodField('get_date_created')
     modified = serializers.SerializerMethodField('get_date_modified')
     primary_token = serializers.SerializerMethodField('get_channel_primary_token')
+    content_defaults = serializers.JSONField()
 
     def generate_thumbnail_url(self, channel):
         if channel.thumbnail and 'static' not in channel.thumbnail:
@@ -677,20 +739,24 @@ class ChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
     class Meta:
         model = Channel
         fields = ('id', 'created', 'name', 'published', 'pending_editors', 'editors', 'viewers', 'modified', 'language', 'primary_token', 'priority',
-                  'description', 'count', 'version', 'public', 'thumbnail_url', 'thumbnail', 'thumbnail_encoding', 'deleted', 'preferences')
+                  'description', 'count', 'version', 'public', 'thumbnail_url', 'thumbnail', 'thumbnail_encoding', 'deleted', 'content_defaults', 'publishing')
 
 class AltChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
     thumbnail_url = serializers.SerializerMethodField('generate_thumbnail_url')
     published = serializers.SerializerMethodField('check_published')
+    publishing = serializers.SerializerMethodField('check_publishing')
     count = serializers.SerializerMethodField("get_resource_count")
     created = serializers.SerializerMethodField('get_date_created')
     modified = serializers.SerializerMethodField('get_date_modified')
     primary_token = serializers.SerializerMethodField('get_channel_primary_token')
+    content_defaults = serializers.JSONField()
+    secret_tokens = TokenSerializer(many=True, read_only=True)
 
     class Meta:
         model = Channel
         fields = ('id', 'created', 'name', 'published', 'pending_editors', 'editors', 'modified', 'language', 'primary_token', 'priority',
-                  'description', 'count', 'public', 'thumbnail_url', 'thumbnail', 'thumbnail_encoding', 'preferences')
+                  'description', 'count', 'public', 'thumbnail_url', 'thumbnail', 'thumbnail_encoding', 'content_defaults', 'publishing',
+                  'main_tree', 'last_published', 'secret_tokens')
 
 class PublicChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
     kind_count = serializers.SerializerMethodField('generate_kind_count')
@@ -709,9 +775,11 @@ class PublicChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
                   'kind_count', 'published_size', 'last_published', 'icon_encoding', 'matching_tokens', 'public')
 
 class UserSerializer(serializers.ModelSerializer):
+    content_defaults = serializers.JSONField()
+
     class Meta:
         model = User
-        fields = ('email', 'first_name', 'last_name', 'id', 'disk_space', 'is_active')
+        fields = ('email', 'first_name', 'last_name', 'id', 'disk_space', 'is_active', 'information', 'policies', 'content_defaults')
 
 
 class CurrentUserSerializer(serializers.ModelSerializer):
@@ -761,17 +829,17 @@ class AdminChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer)
 class SimplifiedChannelListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Channel
-        fields = ('id', 'name', 'description', 'version')
+        fields = ('id', 'name', 'description', 'version', 'public')
 
 class AdminUserListSerializer(serializers.ModelSerializer):
     editable_channels = SimplifiedChannelListSerializer(many=True, read_only=True)
     view_only_channels = SimplifiedChannelListSerializer(many=True, read_only=True)
     mb_space = serializers.SerializerMethodField('calculate_space')
-    used_space = serializers.SerializerMethodField('calculate_used_space')
     is_chef = serializers.SerializerMethodField('check_if_chef')
 
     def calculate_space(self, user):
-        return user.disk_space / 1048576
+        size, unit = format_size(user.disk_space)
+        return {"size": round(float(size)), "unit": unit}
 
     def calculate_used_space(self, user):
         return user.get_space_used()
@@ -782,7 +850,7 @@ class AdminUserListSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('email', 'first_name', 'last_name', 'id', 'editable_channels', 'view_only_channels',
-                'is_admin', 'date_joined', 'is_active', 'disk_space', 'mb_space', 'used_space', 'is_chef')
+                'is_admin', 'date_joined', 'is_active', 'disk_space', 'mb_space', 'is_chef')
 
 class InvitationSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     channel_name = serializers.SerializerMethodField('retrieve_channel_name')

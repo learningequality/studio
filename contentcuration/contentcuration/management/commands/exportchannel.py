@@ -2,6 +2,7 @@ import ast
 import collections
 import datetime
 import os
+import itertools
 import zipfile
 import shutil
 import tempfile
@@ -12,20 +13,23 @@ import uuid
 import base64
 from django.conf import settings
 from django.core.files import File
+from django.core.files.storage import default_storage as storage
+from django.core.mail import send_mass_mail
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
 from django.db.models import Q, Count, Sum
 from django.template.loader import render_to_string
-from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises
+from django.utils.translation import ugettext_lazy as _
+from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises, roles
 from pressurecooker.encodings import write_base64_to_file
 from contentcuration.utils.files import create_file_from_contents
 from contentcuration import models as ccmodels
 from contentcuration.utils.parser import extract_value
 from itertools import chain
-from kolibri.content import models as kolibrimodels
+from kolibri_content import models as kolibrimodels
 from kolibri.content.utils.search import fuzz
 from contentcuration.statistics import record_publish_stats
-from kolibri.content.content_db_router import using_content_database, THREAD_LOCAL
+from kolibri_content.router import get_active_content_database, using_content_database, THREAD_LOCAL
 from django.db import transaction, connections
 from django.db.utils import ConnectionDoesNotExist
 from le_utils import proquint
@@ -39,6 +43,7 @@ sys.setdefaultencoding('utf8')
 
 PERSEUS_IMG_DIR = exercises.IMG_PLACEHOLDER + "/images"
 THUMBNAIL_DIMENSION = 128
+MIN_SCHEMA_VERSION = "1"
 
 
 class EarlyExit(BaseException):
@@ -54,40 +59,79 @@ class Command(BaseCommand):
         parser.add_argument('--user_id', dest='user_id', default=None)
         parser.add_argument('--force-exercises', action='store_true', dest='force-exercises', default=False)
 
+        # optional argument to send an email to the user when done with exporting channel
+        parser.add_argument('--email', action='store_true', default=False)
+
     def handle(self, *args, **options):
         # license_id = options['license_id']
         channel_id = options['channel_id']
         force = options['force']
+        send_email = options['email']
         user_id = options['user_id']
         force_exercises = options['force-exercises']
+        channel = ccmodels.Channel.objects.get(pk=channel_id)
 
         # license = ccmodels.License.objects.get(pk=license_id)
         try:
-            channel = ccmodels.Channel.objects.get(pk=channel_id)
-            # increment the channel version
-            if not force:
-                raise_if_nodes_are_all_unchanged(channel)
-            fh, tempdb = tempfile.mkstemp(suffix=".sqlite3")
+            create_content_database(channel_id, force, user_id, force_exercises)
 
-            with using_content_database(tempdb):
-                prepare_export_database(tempdb)
-                map_content_tags(channel)
-                map_channel_to_kolibri_channel(channel)
-                map_content_nodes(channel.main_tree, channel.language, user_id=user_id, force_exercises=force_exercises)
-                map_prerequisites(channel.main_tree)
-                save_export_database(channel_id)
-                increment_channel_version(channel)
-                mark_all_nodes_as_changed(channel)
-                add_tokens_to_channel(channel)
-                fill_published_fields(channel)
-                # use SQLite backup API to put DB into archives folder.
-                # Then we can use the empty db name to have SQLite use a temporary DB (https://www.sqlite.org/inmemorydb.html)
+            increment_channel_version(channel)
+            mark_all_nodes_as_changed(channel)
+            add_tokens_to_channel(channel)
+            fill_published_fields(channel)
+
+            # Attributes not getting set for some reason, so just save it here
+            channel.main_tree.publishing = False
+            channel.main_tree.changed = False
+            channel.main_tree.published = True
+            channel.main_tree.save()
+
+            if send_email:
+                send_emails(channel, user_id)
+
+            # use SQLite backup API to put DB into archives folder.
+            # Then we can use the empty db name to have SQLite use a temporary DB (https://www.sqlite.org/inmemorydb.html)
 
             record_publish_stats(channel)
-
         except EarlyExit as e:
             logging.warning("Exited early due to {message}.".format(message=e.message))
             self.stdout.write("You can find your database in {path}".format(path=e.db_path))
+
+        # No matter what, make sure publishing is set to False once the run is done
+        finally:
+            channel.main_tree.publishing = False
+            channel.main_tree.save()
+
+def send_emails(channel, user_id):
+    subject = render_to_string('registration/custom_email_subject.txt', {'subject': _('Kolibri Studio Channel Published')})
+
+    if user_id:
+        user = ccmodels.User.objects.get(pk=user_id)
+        message = render_to_string('registration/channel_published_email.txt', {'channel': channel, 'user': user})
+        user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )
+    else:
+        # Email all users about updates to channel
+        for user in itertools.chain(channel.editors.all(), channel.viewers.all()):
+            message = render_to_string('registration/channel_published_email.txt', {'channel': channel, 'user': user})
+            user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )
+
+
+def create_content_database(channel_id, force, user_id, force_exercises):
+    channel = ccmodels.Channel.objects.get(pk=channel_id)
+    # increment the channel version
+    if not force:
+        raise_if_nodes_are_all_unchanged(channel)
+    fh, tempdb = tempfile.mkstemp(suffix=".sqlite3")
+
+    with using_content_database(tempdb):
+        channel.main_tree.publishing = True
+        channel.main_tree.save()
+
+        prepare_export_database(tempdb)
+        map_channel_to_kolibri_channel(channel)
+        map_content_nodes(channel.main_tree, channel.language, channel.id, user_id=user_id, force_exercises=force_exercises)
+        map_prerequisites(channel.main_tree)
+        save_export_database(channel_id)
 
 
 def create_kolibri_license_object(ccnode):
@@ -108,18 +152,7 @@ def assign_license_to_contentcuration_nodes(channel, license):
     channel.main_tree.get_family().update(license_id=license.pk)
 
 
-def map_content_tags(channel):
-    logging.debug("Creating the Kolibri content tags.")
-
-    cctags = ccmodels.ContentTag.objects.filter(
-        channel=channel).values("tag_name", "id")
-    kolibrimodels.ContentTag.objects.bulk_create(
-        [kolibrimodels.ContentTag(**vals) for vals in cctags])
-
-    logging.info("Finished creating the Kolibri content tags.")
-
-
-def map_content_nodes(root_node, default_language, user_id=None, force_exercises=False):
+def map_content_nodes(root_node, default_language, channel_id, user_id=None, force_exercises=False):
 
     # make sure we process nodes higher up in the tree first, or else when we
     # make mappings the parent nodes might not be there
@@ -144,7 +177,7 @@ def map_content_nodes(root_node, default_language, user_id=None, force_exercises
                     children = (node.children.all())
                     node_queue.extend(children)
 
-                    kolibrinode = create_bare_contentnode(node, default_language)
+                    kolibrinode = create_bare_contentnode(node, default_language, channel_id)
 
                     if node.kind.kind == content_kinds.EXERCISE:
                         exercise_data = process_assessment_metadata(node, kolibrinode)
@@ -154,8 +187,8 @@ def map_content_nodes(root_node, default_language, user_id=None, force_exercises
                     map_tags_to_node(kolibrinode, node)
 
 
-def create_bare_contentnode(ccnode, default_language):
-    logging.debug("Creating a Kolibri node for instance id {}".format(
+def create_bare_contentnode(ccnode, default_language, channel_id):
+    logging.debug("Creating a Kolibri contentnode for instance id {}".format(
         ccnode.node_id))
 
     kolibri_license = None
@@ -172,6 +205,7 @@ def create_bare_contentnode(ccnode, default_language):
             'kind': ccnode.kind.kind,
             'title': ccnode.title,
             'content_id': ccnode.content_id,
+            'channel_id': channel_id,
             'author': ccnode.author or "",
             'description': ccnode.description,
             'sort_order': ccnode.sort_order,
@@ -179,7 +213,10 @@ def create_bare_contentnode(ccnode, default_language):
             'license': kolibri_license,
             'available': ccnode.get_descendants(include_self=True).exclude(kind_id=content_kinds.TOPIC).exists(),  # Hide empty topics
             'stemmed_metaphone': ' '.join(fuzz(ccnode.title + ' ' + ccnode.description)),
-            'lang': language
+            'lang': language,
+            'license_name': kolibri_license.license_name if kolibri_license is not None else None,
+            'license_description': kolibri_license.license_description if kolibri_license is not None else None,
+            'coach_content': ccnode.role_visibility == roles.COACH,
         }
     )
 
@@ -202,19 +239,20 @@ def get_or_create_language(language):
         lang_code=language.lang_code,
         lang_subcode=language.lang_subcode,
         lang_name= language.lang_name if hasattr(language, 'lang_name') else language.native_name,
+        lang_direction= language.lang_direction
     )
 
-def create_content_thumbnail(thumbnail_string, file_format_id=file_formats.PNG, preset_id=None, uploader=None):
+def create_content_thumbnail(thumbnail_string, file_format_id=file_formats.PNG, preset_id=None, uploaded_by=None):
     thumbnail_data = ast.literal_eval(thumbnail_string)
     if thumbnail_data.get('base64'):
         with tempfile.NamedTemporaryFile(suffix=".{}".format(file_format_id), delete=False) as tempf:
             tempf.close()
             write_base64_to_file(thumbnail_data['base64'], tempf.name)
             with open(tempf.name, 'rb') as tf:
-                return create_file_from_contents(tf.read(), ext=file_format_id, preset_id=preset_id, uploader=uploader)
+                return create_file_from_contents(tf.read(), ext=file_format_id, preset_id=preset_id, uploaded_by=uploaded_by)
 
 def create_associated_file_objects(kolibrinode, ccnode):
-    logging.debug("Creating File objects for Node {}".format(kolibrinode.id))
+    logging.debug("Creating LocalFile and File objects for Node {}".format(kolibrinode.id))
     for ccfilemodel in ccnode.files.exclude(Q(preset_id=format_presets.EXERCISE_IMAGE) | Q(preset_id=format_presets.EXERCISE_GRAPHIE)):
         preset = ccfilemodel.preset
         format = ccfilemodel.file_format
@@ -222,7 +260,15 @@ def create_associated_file_objects(kolibrinode, ccnode):
             get_or_create_language(ccfilemodel.language)
 
         if preset.thumbnail and ccnode.thumbnail_encoding:
-            ccfilemodel = create_content_thumbnail(ccnode.thumbnail_encoding, uploader=ccfilemodel.uploaded_by, file_format_id=ccfilemodel.file_format_id, preset_id=ccfilemodel.preset_id)
+            ccfilemodel = create_content_thumbnail(ccnode.thumbnail_encoding, uploaded_by=ccfilemodel.uploaded_by, file_format_id=ccfilemodel.file_format_id, preset_id=ccfilemodel.preset_id)
+
+        kolibrilocalfilemodel, new = kolibrimodels.LocalFile.objects.get_or_create(
+            pk=ccfilemodel.checksum,
+            defaults={
+                'extension': format.extension,
+                'file_size': ccfilemodel.file_size,
+            }
+        )
 
         kolibrifilemodel = kolibrimodels.File.objects.create(
             pk=ccfilemodel.pk,
@@ -236,6 +282,7 @@ def create_associated_file_objects(kolibrinode, ccnode):
             lang_id=ccfilemodel.language and ccfilemodel.language.pk,
             thumbnail=preset.thumbnail,
             priority=preset.order,
+            local_file=kolibrilocalfilemodel,
         )
 
 
@@ -266,7 +313,7 @@ def process_assessment_metadata(ccnode, kolibrinode):
     assessment_items = ccnode.assessment_items.all().order_by('order')
     exercise_data = json.loads(ccnode.extra_fields) if ccnode.extra_fields else {}
 
-    randomize = exercise_data.get('randomize') or True
+    randomize = exercise_data.get('randomize') if exercise_data.get('randomize') != None else True
     assessment_item_ids = [a.assessment_id for a in assessment_items]
 
     mastery_model = {'type': exercise_data.get('mastery_model') or exercises.M_OF_N}
@@ -320,14 +367,14 @@ def create_perseus_zip(ccnode, exercise_data, write_to_path):
                     for image in question.files.filter(preset_id=format_presets.EXERCISE_IMAGE).order_by('checksum'):
                         image_name = "images/{}.{}".format(image.checksum, image.file_format_id)
                         if image_name not in zf.namelist():
-                            with open(ccmodels.generate_file_on_disk_name(image.checksum, str(image)), 'rb') as content:
+                            with storage.open(ccmodels.generate_object_storage_name(image.checksum, str(image)), 'rb') as content:
                                 write_to_zipfile(image_name, content.read(), zf)
 
                     for image in question.files.filter(preset_id=format_presets.EXERCISE_GRAPHIE).order_by('checksum'):
                         svg_name = "images/{0}.svg".format(image.original_filename)
                         json_name = "images/{0}-data.json".format(image.original_filename)
                         if svg_name not in zf.namelist() or json_name not in zf.namelist():
-                            with open(ccmodels.generate_file_on_disk_name(image.checksum, str(image)), 'rb') as content:
+                            with storage.open(ccmodels.generate_object_storage_name(image.checksum, str(image)), 'rb') as content:
                                 content = content.read()
                                 content = content.split(exercises.GRAPHIE_DELIMITER)
                                 write_to_zipfile(svg_name, content[0], zf)
@@ -412,7 +459,7 @@ def process_image_strings(content, zf):
             checksum, ext = os.path.splitext(filename)
             image_name = "images/{}.{}".format(checksum, ext[1:])
             if image_name not in zf.namelist():
-                with open(ccmodels.generate_file_on_disk_name(checksum, filename), 'rb') as imgfile:
+                with storage.open(ccmodels.generate_object_storage_name(checksum, filename), 'rb') as imgfile:
                     write_to_zipfile(image_name, imgfile.read(), zf)
 
             # Add resizing data
@@ -442,6 +489,8 @@ def map_channel_to_kolibri_channel(channel):
         version=channel.version + 1, # Need to save as version being published, not current version
         thumbnail=channel.icon_encoding,
         root_pk=channel.main_tree.node_id,
+        root_id=channel.main_tree.node_id,
+        min_schema_version=MIN_SCHEMA_VERSION, # Need to modify Kolibri so we can import this without importing models
     )
     logging.info("Generated the channel metadata.")
 
@@ -463,7 +512,7 @@ def convert_channel_thumbnail(channel):
             return thumbnail_data["base64"]
 
     checksum, ext = os.path.splitext(channel.thumbnail)
-    with open(ccmodels.generate_file_on_disk_name(checksum, channel.thumbnail), 'rb') as file_obj:
+    with storage.open(ccmodels.generate_object_storage_name(checksum, channel.thumbnail), 'rb') as file_obj:
         with Image.open(file_obj) as image, tempfile.NamedTemporaryFile(suffix=ext, delete=False) as tempf:
             cover = resizeimage.resize_cover(image, [THUMBNAIL_DIMENSION, THUMBNAIL_DIMENSION])
             cover.save(tempf.name, image.format)
@@ -482,7 +531,8 @@ def map_tags_to_node(kolibrinode, ccnode):
     tags_to_add = []
 
     for tag in ccnode.tags.all():
-        tags_to_add.append(kolibrimodels.ContentTag.objects.get(pk=tag.pk))
+        t, _new = kolibrimodels.ContentTag.objects.get_or_create(pk=tag.pk, tag_name=tag.tag_name)
+        tags_to_add.append(t)
 
     kolibrinode.tags = tags_to_add
     kolibrinode.save()
@@ -523,32 +573,10 @@ def save_export_database(channel_id):
     logging.debug("Saving export database")
     current_export_db_location = get_active_content_database()
     target_export_db_location = os.path.join(settings.DB_ROOT, "{id}.sqlite3".format(id=channel_id))
-    try:
-        os.mkdir(settings.DB_ROOT)
-    except OSError:
-        logging.debug("{} directory already exists".format(settings.DB_ROOT))
 
-    shutil.copyfile(current_export_db_location, target_export_db_location)
+    with open(current_export_db_location) as currentf:
+        storage.save(target_export_db_location, currentf)
     logging.info("Successfully copied to {}".format(target_export_db_location))
-
-
-def get_active_content_database():
-
-    # retrieve the temporary thread-local variable that `using_content_database` sets
-    alias = getattr(THREAD_LOCAL, 'ACTIVE_CONTENT_DB_ALIAS', None)
-
-    # try to connect to the content database, and if connection doesn't exist, create it
-    try:
-        connections[alias]
-    except ConnectionDoesNotExist:
-        if not os.path.isfile(alias):
-            raise KeyError("Content DB '%s' doesn't exist!!" % alias)
-        connections.databases[alias] = {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': alias,
-        }
-
-    return alias
 
 
 def add_tokens_to_channel(channel):
@@ -565,7 +593,7 @@ def add_tokens_to_channel(channel):
                 raise ValueError("Cannot generate new token")
 
         tk_human = ccmodels.SecretToken.objects.create(token=token, is_primary=True)
-        tk = ccmodels.SecretToken.objects.create(token=channel.id)
+        tk, _new = ccmodels.SecretToken.objects.get_or_create(token=channel.id)
         channel.secret_tokens.add(tk_human, tk)
 
 def fill_published_fields(channel):

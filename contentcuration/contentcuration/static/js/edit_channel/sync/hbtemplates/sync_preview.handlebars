@@ -12,8 +12,8 @@
 					<div class="col-xs-2 item_field_title">{{formatMessage (intlGet 'messages.question_deleted')}}</div>
 					<div class="col-xs-10 item_field exercise_subitem" data-model='{{#to_json model}}{{/to_json}}' title="{{formatMessage (intlGet 'messages.deleted')}}" id="question_{{id}}">
 						<div class="list_subitem original">
-							<div class="preview glyphicon glyphicon-new-window pull-right grayed" aria-hidden="true"></div>
-							<span class="glyphicon glyphicon-minus" aria-hidden="true"></span> {{#parse_question question}}{{/parse_question}}
+							<i class="material-icons pull-right grayed">launch</i>
+							<i class="material-icons">remove</i> {{{parse_question question}}}
 							<em class="file_size">&nbsp;{{ans_hint_count}}</em>
 						</div>
 					</div>
@@ -24,29 +24,29 @@
 					<div class="col-xs-2 item_field_title">{{formatMessage (intlGet 'messages.question_modified')}}</div>
 					<div class="col-xs-10 item_field exercise_subitem" data-model='{{#to_json model1}}{{/to_json}}' data-source='{{#to_json model2}}{{/to_json}}' title="{{formatMessage (intlGet 'messages.changed')}}" id="question_{{id}}">
 						<div class="list_subitem">
-							<div class="preview glyphicon glyphicon-new-window pull-right grayed" aria-hidden="true"></div>
+							<i class="preview material-icons pull-right grayed">launch</i>
 							{{#if question.changed}}
-								<div class="original"><span class="glyphicon glyphicon-minus" aria-hidden="true"></span> {{#parse_question question.current}}{{/parse_question}}</div>
-								<div class="updated"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span> {{#parse_question question.source}}{{/parse_question}}</div>
+								<div class="original"><i class="material-icons">remove</i> {{{parse_question question.current}}}</div>
+								<div class="updated"><i class="material-icons">add</i> {{{parse_question question.source}}}</div>
 							{{else}}
-								<div class="grayed">{{#parse_question question.current}}{{/parse_question}}</div>
+								<div class="grayed">{{{parse_question question.current}}}</div>
 							{{/if}}
 							<ul class="list-unstyled assessment_sublist">
 								{{#each answers.current}}
-									<li class="assessment_sublist_item original"><span class="glyphicon glyphicon-minus" aria-hidden="true"></span> {{formatMessage (intlGet 'messages.answer')}}: {{#parse_question answer}}{{/parse_question}}{{#if correct}} (Correct){{/if}}</li>
+									<li class="assessment_sublist_item original"><i class="material-icons">remove</i> {{formatMessage (intlGet 'messages.answer')}}: {{{parse_question answer}}}{{#if correct}} (Correct){{/if}}</li>
 								{{/each}}
 								{{#each answers.source}}
-									<li class="assessment_sublist_item updated"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span> {{formatMessage (intlGet 'messages.answer')}}: {{#parse_question answer}}{{/parse_question}}{{#if correct}} (Correct){{/if}}</li>
+									<li class="assessment_sublist_item updated"><i class="material-icons">add</i> {{formatMessage (intlGet 'messages.answer')}}: {{{parse_question answer}}}{{#if correct}} (Correct){{/if}}</li>
 								{{/each}}
 								{{#each hints.current}}
-									<li class="assessment_sublist_item original"><span class="glyphicon glyphicon-minus" aria-hidden="true"></span> {{formatMessage (intlGet 'messages.hint')}}: {{#parse_question hint}}{{/parse_question}}</li>
+									<li class="assessment_sublist_item original"><i class="material-icons">remove</i> {{formatMessage (intlGet 'messages.hint')}}: {{{parse_question hint}}}</li>
 								{{/each}}
 								{{#each hints.source}}
-									<li class="assessment_sublist_item updated"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span> {{formatMessage (intlGet 'messages.hint')}}: {{#parse_question hint}}{{/parse_question}}</li>
+									<li class="assessment_sublist_item updated"><i class="material-icons">add</i> {{formatMessage (intlGet 'messages.hint')}}: {{{parse_question hint}}}</li>
 								{{/each}}
 								{{#if data.changed}}
-									<li class="assessment_sublist_item original"><span class="glyphicon glyphicon-minus" aria-hidden="true"></span> {{formatMessage (intlGet 'messages.properties')}}: {{data.current}}</li>
-									<li class="assessment_sublist_item updated"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span> {{formatMessage (intlGet 'messages.properties')}}: {{data.source}}</li>
+									<li class="assessment_sublist_item original"><i class="material-icons">remove</i>{{formatMessage (intlGet 'messages.properties')}}: {{data.current}}</li>
+									<li class="assessment_sublist_item updated"><i class="material-icons">add</i> {{formatMessage (intlGet 'messages.properties')}}: {{data.source}}</li>
 								{{/if}}
 							</ul>
 						</div>
@@ -58,8 +58,8 @@
 					<div class="col-xs-2 item_field_title">{{formatMessage (intlGet 'messages.question_added')}}</div>
 					<div class="col-xs-10 item_field exercise_subitem" data-source='{{#to_json model}}{{/to_json}}' title="{{formatMessage (intlGet 'messages.added')}}" id="question_{{id}}">
 						<div class="list_subitem updated">
-							<div class="preview glyphicon glyphicon-new-window pull-right grayed" aria-hidden="true"></div>
-							<span class="glyphicon glyphicon-plus" aria-hidden="true"></span> {{#parse_question question}}{{/parse_question}}
+							<i class="preview material-icons pull-right grayed">launch</i>
+							<i class="material-icons">add</i> {{{parse_question question}}}
 							<em class="file_size">&nbsp;{{ans_hint_count}}</em>
 						</div>
 					</div>
@@ -73,22 +73,22 @@
 						<ul class="list-unstyled">
 							{{#each current}}
 								<li class="list_subitem file_subitem original" data-model='{{#to_json this}}{{/to_json}}' data-current=1 title="{{formatMessage (intlGet 'messages.deleted')}}" id="file_{{id}}">
-									<span class="glyphicon glyphicon-minus" aria-hidden="true"></span> {{#translate preset.id}}{{/translate}}
-									<em class="file_size">({{#format_file_size file_size}}{{/format_file_size}})</em>
-									<span class="preview glyphicon glyphicon-new-window" aria-hidden="true"></span>
+									<i class="material-icons">remove</i> {{{translate preset.id}}}
+									<em class="file_size">({{{format_file_size file_size}}})</em>
+									<i class="preview material-icons pull-right grayed">launch</i>
 								</li>
 							{{/each}}
 							{{#each source}}
 								<li class="list_subitem file_subitem updated" data-model='{{#to_json this}}{{/to_json}}' data-current=0 title="{{formatMessage (intlGet 'messages.added')}}" id="file_{{id}}">
-									<span class="glyphicon glyphicon-plus" aria-hidden="true"></span> {{#translate preset.id}}{{/translate}}
-									<em class="file_size">({{#format_file_size file_size}}{{/format_file_size}})</em>
-									<span class="preview glyphicon glyphicon-new-window" aria-hidden="true"></span>
+									<i class="material-icons">add</i> {{{translate preset.id}}}
+									<em class="file_size">({{{format_file_size file_size}}})</em>
+									<i class="preview material-icons pull-right grayed">launch</i>
 								</li>
 							{{/each}}
 						</ul>
 					{{else}}
-						{{#if current}}<div class="original wordwrap" title="{{current}}"><span class="glyphicon glyphicon-minus" aria-hidden="true"></span> {{current}}</div>{{/if}}
-						{{#if source}}<div class="updated wordwrap" title="{{source}}"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span> {{source}}</div>{{/if}}
+						{{#if current}}<div class="original wordwrap" title="{{current}}"><i class="material-icons">remove</i> {{current}}</div>{{/if}}
+						{{#if source}}<div class="updated wordwrap" title="{{source}}"><i class="material-icons">add</i> {{source}}</div>{{/if}}
 					{{/if}}
 				</div>
 			</div>

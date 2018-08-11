@@ -44,9 +44,9 @@ For more information about using Browserify to handle dependencies, please refer
 Building Frontend Code
 ----------------------
 
-The build script uses `node.js <https://nodejs.org/>`_ - to run the build server for production simply run ``node build.js``.
+The build script uses `node.js <https://nodejs.org/>`_ - to run the build server for production simply run ``yarn run build``.
 
-Alternatively, for development, running ``node build.js`` with the ``--watch`` flag will automatically run the build process in watch mode, recompiling Javascript as it changes, on the fly.
+Alternatively, for development, running ``yarn run build`` with the ``--watch`` flag will automatically run the build process in watch mode, recompiling Javascript as it changes, on the fly.
 
 The compilation process has the following flags::
 

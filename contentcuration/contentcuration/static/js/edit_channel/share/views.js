@@ -34,7 +34,7 @@ var MESSAGES = {
     "already_invited": "This person has already been invited.",
     "sending_invitation": "Sending invitation...",
     "invite_failed": "Failed to send invitation",
-    "invite_sent": "Invitation Sent!",
+    "sent": "Sent!",
     "uninviting_editor": "Uninviting Editor",
     "send_invite_prompt": "Send invitation to {data} again?",
     "invite_sent_to": "Invitation sent to {data}",
@@ -51,7 +51,8 @@ var MESSAGES = {
     "leaving_channel": "Leaving Channel",
     "leave_prompt": "Leaving this channel will remove it from your channel list. Continue?",
     "failed_leave": "Failed to leave editors",
-    "leave": "Leave Channel"
+    "leave": "Leave Channel",
+    "failed_leave_description": "You are not allowed to leave this channel if you are its only editor. Please delete the channel to remove it from your list."
 }
 
 var ShareModalView = BaseViews.BaseModalView.extend({
@@ -89,15 +90,19 @@ var ShareView = BaseViews.BaseView.extend({
         this.current_user = options.current_user;
         this.originalData = this.model.toJSON();
         this.show_list = this.show_list();
-        this.can_edit = options.allow_leave && _.find(this.model.get("editors"), function(u){
+        this.allow_leave = options.allow_leave;
+        this.can_edit = this.allow_leave && _.find(this.model.get("editors"), function(u){
             return u === window.current_user.id || u.id === window.current_user.id;
         });
         this.onjoin = options.onjoin;
         this.onleave = options.onleave;
         this.render();
+        this.$("#share_email_address").attr("disabled", true);
         var self = this;
         Promise.all([this.fetch_model(this.model), this.fetch_model(this.current_user)]).then(function(data){
-            self.load_lists();
+            self.load_lists(function() {
+                self.$("#share_email_address").removeAttr("disabled");
+            });
         });
     },
     events:{
@@ -123,7 +128,7 @@ var ShareView = BaseViews.BaseView.extend({
     render_user:function(){
         if(this.$("#share_current_user_actions")){
             this.$("#share_current_user_actions").html(this.current_user_template({
-                user: this.current_user.toJSON(),
+                allow_leave: this.allow_leave && this.current_user.get("is_admin"),
                 can_edit: this.can_edit
             }, {
                 data: this.get_intl_data()
@@ -146,14 +151,16 @@ var ShareView = BaseViews.BaseView.extend({
         }
         return this.share_modes;
     },
-    load_lists:function(){
+    load_lists:function(callback){
+        var self = this;
         this.editor_list = this.model.get("editors").concat(this.model.get("viewers"));
-        this.editor_list.splice(this.editor_list.indexOf(this.current_user.id), 1);
+        this.editor_list = _.reject(this.editor_list, function(user) { return user === self.current_user.id} );
+
         this.collection = new Models.UserCollection();
         this.pending_collection = new Models.InvitationCollection();
         var current_promise = this.collection.get_all_fetch(this.editor_list);
         var pending_promise = this.pending_collection.get_all_fetch(this.model.get("pending_editors"));
-        var self = this;
+
         Promise.all([current_promise, pending_promise]).then(function(collections){
             self.current_view = new ShareCurrentList({
                 collection: collections[0],
@@ -167,6 +174,7 @@ var ShareView = BaseViews.BaseView.extend({
                 el: self.$("#pending_list_wrapper"),
                 model: self.model
             });
+            callback && callback();
         });
     },
     send_invite:function(event){
@@ -298,6 +306,10 @@ var ShareView = BaseViews.BaseView.extend({
         }, null);
     },
     leave_editors: function(){
+        if(this.model.get("editors").length === 1) {
+            dialog.alert(this.get_translation("failed_leave"), this.get_translation("failed_leave_description"));
+            return;
+        }
         var self = this;
         dialog.dialog(this.get_translation("leaving_channel"), this.get_translation("leave_prompt"), {
           [this.get_translation("cancel")]:function(){},
@@ -443,7 +455,7 @@ var SharePendingItem = ShareItem.extend({
     },
     show_invitation_sent:function(){
         this.$el.addClass("adding_to_list");
-        this.$el.find(".pending_indicator").text(this.get_translation("invite_sent"));
+        this.$el.find(".pending_indicator").text(this.get_translation("sent"));
         var self = this;
         setTimeout(function(){
             self.$el.removeClass("adding_to_list").addClass("added_to_list");

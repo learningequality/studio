@@ -75,6 +75,9 @@
 			color: @gray-800;
 			margin-top: 5px;
 			font-weight: bold;
+			.help_icon {
+				font-size: 12pt;
+			}
 		}
 		.detail_field{
 			font-size: 12pt;
@@ -84,6 +87,17 @@
 				font-style: italic;
 			}
 		}
+		.helper_text {
+			font-style: italic;
+			margin-top: -5px;
+			font-size: 10pt;
+		}
+		#imported_from_field {
+			font-weight: bold;
+		    color: @gray-500;
+		    font-size: 10pt;
+		}
+		.original_channel_link { text-decoration: none; }
 		#mastery_custom_criterion{
 			margin-left:15px;
 			input{
@@ -106,12 +120,14 @@
 			margin-top:5px;
 			padding: 0px 2px;
 			max-width: 80%;
+			margin-bottom: 10px;
 		}
-		#license_about, #mastery_about{
-			font-size:14pt;
+		.help_icon{
+			font-size:16pt;
 			margin-left:5px;
 			cursor:pointer;
 			color: @blue-500;
+			vertical-align: sub;
 		}
 		#license_about{ display:none; }
 		#keywords { margin-bottom: 8px; }
@@ -122,7 +138,7 @@
 		}
 		input[type="text"], textarea {
 			padding: 2px 0;
-			margin-bottom: 25px;
+			margin-bottom: 30px;
 			font-size: @larger-body-text;
 			width:100%;
 			.input-form;
@@ -146,6 +162,9 @@
 			}
 		}
 		.invalid_field { background-color: @invalid-color !important; }
+	}
+	#metadata_questions {
+		padding: 0px;
 	}
 	#metadata_preview{
 		display:none;
@@ -177,6 +196,13 @@
 		overflow-y:auto;
 		overflow-x:none;
 		margin: 10px;
+		.content-item-icon{
+			display: inline-block;
+			i {
+				font-size: 14pt;
+				margin-left: 5px;
+			}
+		}
 		#add_topic_button{
 			margin-top:5px;
 			width:100%;
@@ -203,20 +229,21 @@
 		input[type="checkbox"] {
 			width: 15px;
 			height: 15px;
+			margin: 0px;
 		}
 		.uploaded_list_item{
 			width: 85%;
 			height: 100%;
 			cursor:pointer;
 			margin-bottom: -5px;
-			.glyphicon{ color:@gray-700; }
+			i{ color:@gray-700; }
 			h5 {
 				font-size: 14px;
 				padding-bottom:5px;
 			}
 			.remove_topic{
-				margin-top:15px;
-				font-size:10pt;
+				margin-top:10px;
+				font-size:14pt;
 			}
 		}
 		&:hover{ background-color: #E6E6E6; }
@@ -239,52 +266,16 @@
 		cursor:not-allowed;
 		background-color: @gray-200 !important;
 	}
-	.ui-autocomplete{
-		position:absolute;
-		background-color: white;
-		border: 1px solid @blue-200;
-		max-height: 100px;
-		overflow-y: auto;
-		/* prevent horizontal scrollbar */
-		overflow-x: hidden;
-		z-index:999;
-		.ui-menu {
-		    list-style:none;
-		    padding:0;
-		    margin: 0;
-		    display:block;
-		}
-		.ui-menu-item, .ui-menu-item-wrapper{
-			margin:0;
-			with:100%;
-			cursor: pointer;
-		}
-		.ui-menu-item-wrapper{
-			padding: 3px 10px;
-		    font-size: 12pt;
-		}
-		.ui-state-focus, .ui-state-hover, .ui-state-active{
-			background-color: @gray-400;
-			width:100%;
-			margin:0;
-		}
-	}
 	.view_only_tags .delete_tag{display:none;}
 	.tag{
-		background-color: @gray-300;
-		border:1px solid @gray-700;
-		margin: 3px;
 		width:auto;
 		max-width: @metadata-width / 3.2;
-		word-wrap:break-word;
-		border-radius:5px;
-		cursor:default;
 	}
 	.delete_tag{
 		cursor:pointer;
-		margin-top:3px;
-		margin-left:5px;
-		font-size:9pt;
+		margin-top:2px;
+		margin-left:10px;
+		font-size:12pt;
 	}
 	.required{
 		margin-left:5px;

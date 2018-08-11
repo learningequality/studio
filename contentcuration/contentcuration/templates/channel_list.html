@@ -2,22 +2,28 @@
 {% extends "base.html" %}
 {% load staticfiles %}
 {% load i18n %}
+{% load render_bundle_css from translation_tags %}
+{% load render_bundle from webpack_loader %}
 
-{% block content %}
-	<script type="text/javascript" src="{% static 'js/bundles/channel_edit.js' %}"></script>
+{% block css_bundle %}
+	{% render_bundle_css 'channel_edit' %}
+{% endblock css_bundle %}
 
+{% block js_bundle %}
 	<script>
 		var user = JSON.parse("{{ current_user|escapejs }}");
 		var user_preferences = JSON.parse("{{ user_preferences|escapejs }}");
 		var langs = JSON.parse("{{ langs_list|escapejs }}");
+		var license_list = JSON.parse("{{ license_list|escapejs}}");
+		var fformats = JSON.parse("{{ fileformat_list|escapejs }}");
+		var presets = JSON.parse("{{ fpreset_list|escapejs }}");
+		var kinds = JSON.parse("{{ ckinds_list |escapejs }}");
+		var url = "{% url 'channels' %}";
 	</script>
-	<script type="text/javascript">
-		var bundle = require("channel_edit");
-		bundle.$(function() {
-            window.channel_router = new bundle.ChannelEditRouter();
-			bundle.Backbone.history.start({pushState: true, root: "{% url 'channels' %}"});
-        });
 
-    </script>
-	<div id="channel-container"></div>
+	{% render_bundle 'channel_edit' 'js' %}
+{% endblock js_bundle %}
+
+{% block content %}
+	<div id="channel-container" class="container-fluid"></div>
 {% endblock content %}

@@ -49,7 +49,10 @@ var MESSAGES = {
     "related_content_alert": "Related content will not be included in the copy of this content.",
     "delete_item_warning": "Are you sure you want to delete {data}?",
     "select_content_prompt": "Must select content first",
-    "copy_to_clipboard": "Copy to Clipboard"
+    "copy_to_clipboard": "Copy to Clipboard",
+    "coach": "Coach",
+    "coach_title": "This resource is visible to coaches",
+    "coach_topic_title": "This topic contains coach-facing resources"
 }
 
 /**
@@ -175,7 +178,12 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 	},
 	remove_containers_from:function(index){
 		while(this.lists.length > index){
-			this.lists[this.lists.length -1].remove();
+			var list = this.lists[this.lists.length -1];
+			_.forEach(list.views, function(view) {
+				view.checked = false;
+				view.render();
+			});
+			list.remove();
 			this.lists.splice(this.lists.length-1);
 		}
 		var closing_list = this.lists[this.lists.length-1];
@@ -247,6 +255,8 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 					nodeCollection.add(list.models);
 				});
 				window.workspace_manager.get_queue_view().clipboard_queue.add_nodes(nodeCollection);
+        self.track_event_for_nodes('Clipboard', 'Add items from toolbar in tree view',
+                                   nodeCollection);
 				load_resolve(true);
 			}).catch(function(error){
 				console.log(error);
@@ -396,6 +406,46 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
 	},
 	get_opened_topic: function() {
 		return _.find(this.views, function(v){return v.$el.hasClass(v.openedFolderClass);});
+	},
+	load_content: function(collection, default_text){
+		collection = (collection)? collection : this.collection;
+		default_text = this.get_translation("no_items");
+
+		var default_element = this.$(this.default_item);
+		default_element.text(default_text);
+		this.$(this.list_selector).html("").append(default_element);
+
+		var new_views = [];
+
+		var self = this;
+		collection.forEach(function(item) {
+			var item_view = _.find(self.views, function(view){
+				return view.model.id === item.id;
+			});
+			if(item_view) {
+				item_view.undelegateEvents();
+				item_view.$el.detach();
+				item_view.model.set(item.toJSON());
+				item_view.$el.appendTo(self.$(self.list_selector));
+				item_view.render();
+				item_view.$el.removeClass("hidden");
+				item_view.delegateEvents();
+			} else {
+				item_view = self.create_new_view(item);
+				self.$(self.list_selector).append(item_view.el);
+			}
+
+			new_views.push(item_view);
+		});
+
+		// Remove any items that aren't in the collection anymore (e.g. in trash)
+		_.forEach(this.views, function(view) {
+			if(!self.collection.findWhere({id: view.model.id})) {
+				view.remove();
+			}
+		});
+		this.views = new_views;
+		this.handle_if_empty();
 	}
 });
 
@@ -538,12 +588,16 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		if(this.model.has_related_content()){
 			dialog.alert(this.get_translation("warning"), this.get_translation("related_content_alert"), this.copy_item);
 		} else {
-			this.copy_item();
+			this.copy_item(null, "button in tree view");
 		}
 	},
 	make_inline_copy: function(event) {
 		this.cancel_actions(event);
-		this.make_copy();
+		if(this.model.has_related_content()){
+			dialog.alert(this.get_translation("warning"), this.get_translation("related_content_alert"), this.make_copy);
+		} else {
+			this.make_copy();
+		}
 	},
 	move_node:function(event){
 		this.cancel_actions(event);
