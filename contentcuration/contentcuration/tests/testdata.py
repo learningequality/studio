@@ -1,5 +1,4 @@
-# Assert methods can be found here: https://docs.python.org/3/library/unittest.html#assert-methods
-
+import hashlib
 import json
 import md5
 import os
@@ -9,18 +8,10 @@ import tempfile
 from cStringIO import StringIO
 
 import pytest
-from django.conf import settings
 from django.core.files.storage import default_storage
-from django.core.management import call_command
-from django.test import TestCase
-from rest_framework.authtoken.models import Token
-from rest_framework.test import APIClient, APIRequestFactory, force_authenticate, APITestCase
-from django.test.utils import override_settings
 from mixer.backend.django import mixer
 
 from contentcuration import models as cc
-from contentcuration.tests.base import StudioTestCase, StudioAPITestCase
-from contentcuration.utils import minio_utils
 from le_utils.constants import format_presets
 pytestmark = pytest.mark.django_db
 
@@ -172,7 +163,6 @@ def node(data, parent=None):
 
     return new_node
 
-@pytest.fixture
 def channel():
     channel = cc.Channel.objects.create(name="testchannel")
     channel.save()
@@ -187,67 +177,38 @@ def channel():
 
     return channel
 
-@pytest.fixture
 def user():
     user = cc.User.objects.create(email='user@test.com')
     user.set_password('password')
     user.save()
     return user
 
-class BaseTestCase(TestCase):
-    @classmethod
-    def setUpClass(self):
-        super(BaseTestCase, self).setUpClass()
-        call_command('loadconstants')
-        minio_utils.ensure_storage_bucket_public()
-        self.channel = channel()
-        self.user = user()
-        self.channel.main_tree.refresh_from_db()
 
-    def setUp(self):
-        minio_utils.ensure_storage_bucket_public()
+def create_temp_file(filebytes, kind='text', ext='txt', mimetype='text/plain'):
+    """
+    Create a file and store it in Django's object db temporarily for tests.
 
-    def tearDown(self):
-        minio_utils.ensure_bucket_deleted()
+    :param filebytes: The data to be stored in the file, as a series of bytes
+    :param kind: String identifying the kind of file
+    :param ext: File extension, omitting the initial period
+    :param mimetype: Mimetype of the file
+    :return: A dict containing the keys name (filename), data (actual bytes), file (StringIO obj) and db_file (File object in db) of the temp file.
+    """
+    fileobj = StringIO(filebytes)
+    checksum = hashlib.md5(filebytes)
+    digest = checksum.hexdigest()
+    filename = "{}.{}".format(digest, ext)
+    storage_file_path = cc.generate_object_storage_name(digest, filename)
 
-    @classmethod
-    def tearDownClass(self):
-        minio_utils.ensure_bucket_deleted()
+    # Write out the file bytes on to object storage, with a filename specified with randomfilename
+    default_storage.save(storage_file_path, fileobj)
 
-class BaseAPITestCase(APITestCase):
-    @classmethod
-    def setUpClass(self):
-        super(BaseAPITestCase, self).setUpClass()
-        call_command('loadconstants')
-        minio_utils.ensure_storage_bucket_public()
-        self.channel = channel()
-        self.user = user()
-        token, _new = Token.objects.get_or_create(user=self.user)
-        self.header = {"Authorization": "Token {0}".format(token)}
-        self.client = APIClient()
-        self.client.force_authenticate(self.user)
-        self.channel.main_tree.refresh_from_db()
+    assert default_storage.exists(storage_file_path)
 
-    def setUp(self):
-        minio_utils.ensure_storage_bucket_public()
+    file_kind = mixer.blend(cc.ContentKind, kind=kind)
+    file_format = mixer.blend(cc.FileFormat, extension=ext, mimetype=mimetype)
+    preset = mixer.blend(cc.FormatPreset, id=ext, kind=file_kind)
+    # then create a File object with that
+    db_file_obj = mixer.blend(cc.File, file_format=file_format, preset=preset, file_on_disk=storage_file_path)
 
-    def tearDown(self):
-        minio_utils.ensure_bucket_deleted()
-
-    @classmethod
-    def tearDownClass(self):
-        minio_utils.ensure_bucket_deleted()
-
-    def create_get_request(self, url, *args, **kwargs):
-        factory = APIRequestFactory()
-        request = factory.get(url, headers=self.header, *args, **kwargs)
-        request.user = self.user
-        force_authenticate(request, user=self.user)
-        return request
-
-    def create_post_request(self, url, *args, **kwargs):
-        factory = APIRequestFactory()
-        request = factory.post(url, headers=self.header, *args, **kwargs)
-        request.user = self.user
-        force_authenticate(request, user=self.user)
-        return request
+    return {'name': os.path.basename(storage_file_path), 'data': filebytes, 'file': fileobj, 'db_file': db_file_obj}

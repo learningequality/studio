@@ -1,7 +1,8 @@
 from cStringIO import StringIO
 
 import pytest
-from contentcuration.tests.testcase import BaseAPITestCase, node, fileobj_video, channel
+from base import BaseAPITestCase
+from contentcuration.tests.testdata import node, fileobj_video, channel
 from django.core.urlresolvers import reverse_lazy
 
 from contentcuration import models as cc
@@ -165,6 +166,8 @@ def staging_tree():
     return staging_tree
 
 class NodeDiffTestCase(BaseAPITestCase):
+    persist_bucket = True
+
     @classmethod
     def setUpClass(self):
         super(NodeDiffTestCase, self).setUpClass()
