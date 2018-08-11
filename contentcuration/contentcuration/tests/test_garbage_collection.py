@@ -2,14 +2,14 @@ from cStringIO import StringIO
 
 import json
 import pytest
-import requests
-from contentcuration.tests.testcase import BaseAPITestCase, node, fileobj_video
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.urlresolvers import reverse_lazy
-from rest_framework.test import force_authenticate, APIRequestFactory
 from contentcuration import models as cc
 from contentcuration.api import activate_channel
+
+from base import BaseAPITestCase
+
 from contentcuration.views.files import file_create
 from contentcuration.views.internal import create_channel, api_commit_channel
 

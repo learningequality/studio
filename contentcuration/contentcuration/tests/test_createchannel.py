@@ -1,5 +1,4 @@
 import base64
-import hashlib
 import json
 import os
 import pytest
@@ -12,14 +11,13 @@ from django.test import TestCase
 from mixer.backend.django import mixer
 from contentcuration import models
 
-from django.core.files.storage import default_storage
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.core.management import call_command
 from django.core.urlresolvers import reverse_lazy
 
 from rest_framework.test import APIClient
 
 from base import StudioTestCase
+from testdata import create_temp_file
 from contentcuration import models as cc
 
 
@@ -48,36 +46,6 @@ def add_field_defaults_to_node(node):
         for i in range(0, len(node["children"])):
             node["children"][i] = add_field_defaults_to_node(node["children"][i])
     return node
-
-
-def create_temp_file(filebytes, kind='text', ext='txt', mimetype='text/plain'):
-    """
-    Create a file and store it in Django's object db temporarily for tests.
-
-    :param filebytes: The data to be stored in the file, as a series of bytes
-    :param kind: String identifying the kind of file
-    :param ext: File extension, omitting the initial period
-    :param mimetype: Mimetype of the file
-    :return: A dict containing the keys name (filename), data (actual bytes), file (StringIO obj) and db_file (File object in db) of the temp file.
-    """
-    fileobj = StringIO(filebytes)
-    checksum = hashlib.md5(filebytes)
-    digest = checksum.hexdigest()
-    filename = "{}.{}".format(digest, ext)
-    storage_file_path = cc.generate_object_storage_name(digest, filename)
-
-    # Write out the file bytes on to object storage, with a filename specified with randomfilename
-    default_storage.save(storage_file_path, fileobj)
-
-    assert default_storage.exists(storage_file_path)
-
-    file_kind = mixer.blend(cc.ContentKind, kind=kind)
-    file_format = mixer.blend(cc.FileFormat, extension=ext, mimetype=mimetype)
-    preset = mixer.blend(cc.FormatPreset, id=ext, kind=file_kind)
-    # then create a File object with that
-    db_file_obj = mixer.blend(cc.File, file_format=file_format, preset=preset, file_on_disk=storage_file_path)
-
-    return {'name': os.path.basename(storage_file_path), 'data': filebytes, 'file': fileobj, 'db_file': db_file_obj}
 
 
 ###
