@@ -161,19 +161,53 @@
 			.pin_clipboard {
 				padding: 16px;
 				margin: 0;
+
+
 				.pin_clipboard_icon {
+					display: none;
+				}
+				.unpin_clipboard_icon {
+					display: block;
+					margin-top: -1px;
+				}
+
+				.pin_clipboard_icon,
+				.unpin_clipboard_icon {
 					fill: @gray-700;
 				}
+
 				&:hover .pin_clipboard_icon {
-					fill: @gray-800;
+					display: block;
+				}
+				&:hover .unpin_clipboard_icon {
+					display: none;
+				}
+
+
+				&:hover .pin_clipboard_icon,
+				&:hover .unpin_clipboard_icon {
+					fill: @blue-500;
 				}
 				&.pinned {
 					.pin_clipboard_icon {
-						fill: @blue-500;
+						display: block;
+					}
+					.unpin_clipboard_icon {
+						display: none;
 					}
 					&:hover .pin_clipboard_icon {
-						fill: @blue-700;
+						display: none;
 					}
+					&:hover .unpin_clipboard_icon {
+						display: block;
+					}
+				}
+
+				// Creates an invisible mouseover area to show a tootip.
+				rect {
+					width: 100%;
+					height: 100%;
+					opacity: 0;
 				}
 			}
 			#queue_content{

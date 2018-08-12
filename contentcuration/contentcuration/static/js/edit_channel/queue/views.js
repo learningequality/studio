@@ -20,6 +20,7 @@ var MESSAGES = {
     "recently_added": "Recently Added",
     "drop_text_over_clipboard": "Drop items here",
     "pin_clipboard": "Pin clipboard (dock to side)",
+		"unpin_clipboard": "Unpin clipboard",
 }
 
 var storage = window.localStorage || {};
@@ -319,6 +320,7 @@ var ClipboardList = BaseViews.BaseWorkspaceListView.extend({
 	},
 	pin_clipboard: function() {
 		if (this.is_root && this.container) {
+			this.track_analytics_event('Clipboard', 'Toggle pin');
 			this.container.toggle_pinned();
 		}
 	},
