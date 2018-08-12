@@ -110,11 +110,15 @@ class CreateChannelTestCase(StudioTestCase):
         response = self.create_channel()
         assert response.status_code == requests.codes.ok
         channel_id = json.loads(response.content)['channel_id']
+
         name_check = self.channel_metadata['name']
         description_check = self.channel_metadata['description']
         thumbnail_check = self.channel_metadata['thumbnail']
-        assert models.Channel.objects.filter(pk=channel_id, name=name_check, description=description_check,
-                                             thumbnail=thumbnail_check).exists()
+        results = models.Channel.objects.filter(pk=channel_id, name=name_check, description=description_check,
+                                             thumbnail=thumbnail_check)
+        assert results.exists()
+        channel = results.first()
+        assert channel.main_tree.get_channel() == channel
 
     def test_channel_create_staging_tree_is_none(self):
         """
