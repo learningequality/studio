@@ -17,7 +17,7 @@ function addSortable(element, selected_class, callback){
     var yPosition = 0;
 
     element.$el.find(".content-list").sortable({
-        revert:100,
+        revert:false,
         placeholder: "sorting-placeholder",
         forcePlaceholderSize: true,
         scroll:true,

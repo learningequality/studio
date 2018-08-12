@@ -67,7 +67,10 @@
 	    .drop_text{
 	    	visibility: hidden;
 	    	font-size: 10pt;
-	    	color: @blue-500
+		color: @blue-500;
+		display: inline-block;
+		text-align: right;
+		width: 400px;
 	    }
 	    &.ui-droppable-active {
 	    	.drop_text{ visibility: visible; }
@@ -108,7 +111,7 @@
 				width: 100%;
 				top: 0;
 				left: 0;
-				background-color: rgba(255, 255, 255, 0.9);
+				background-color: rgba(255, 255, 255, 0.8);
 				border: 4px solid @blue-500;
 
 				.queue-overlay-text {
