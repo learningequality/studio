@@ -166,7 +166,6 @@ def staging_tree():
     return staging_tree
 
 class NodeDiffTestCase(BaseAPITestCase):
-    persist_bucket = True
 
     @classmethod
     def setUpClass(self):

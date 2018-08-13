@@ -26,7 +26,6 @@ class BucketTestMixin:
         minio_utils.ensure_bucket_deleted()
 
     def setUp(self):
-        raise Exception("Called?")
         if not self.persist_bucket:
             self.create_bucket()
 
