@@ -298,23 +298,50 @@ class StorageRequestForm(forms.Form, ExtraFormMixin):
     kind = forms.CharField(required=True, widget=forms.TextInput(attrs={"placeholder": _("Mostly high resolution videos, some pdfs, etc."), "class": "long-field"}))
     resource_count = forms.CharField(required=False, widget=forms.TextInput(attrs={"class": "short-field"}))
     resource_size = forms.CharField(required=False, widget=forms.TextInput(attrs={"placeholder": _("e.g. 10MB"), "class": "short-field"}))
+    creators = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "long-field"}))
+    sample_link = forms.CharField(required=False, widget=forms.TextInput(attrs={"class": "long-field"}))
 
     # How are you using your content
     license = forms.MultipleChoiceField(required=True, widget=forms.CheckboxSelectMultiple(), choices=licenses.choices)
     audience = forms.CharField(required=True, widget=forms.TextInput(attrs={"placeholder": _("In-school learners, adult learners, teachers, etc."), "class":"long-field"}))
+    import_count = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "short-field"}))
+
+    # Tell us more about your use of Kolibri
     org_or_personal = forms.ChoiceField(required=True, widget=forms.RadioSelect, choices=[
-        ('Personal Use', _("I am using the content for personal use")),
         ('Organization', _("I am uploading content on behalf of")),
+        ('Not Affiliated', _("I am not affiliated with an organization for this work")),
     ])
     organization = forms.CharField(required=False, widget=forms.TextInput(attrs={"placeholder": _("Organization or Institution")}))
-    message = forms.CharField(required=False, widget=forms.Textarea(attrs={"rows": 4}))
+    organization_type = forms.ChoiceField(required=False, widget=forms.RadioSelect, choices=(
+        ("Grassroots and/or volunteer initiative", _("Grassroots and/or volunteer initiative")),
+        ("Small NGO with annual budget < $25K", _("Small NGO with annual budget < $25K")),
+        ("Medium-sized NGO with budget < $500K", _("Medium-sized NGO with budget < $500K")),
+        ("Larger INGO or other international agency", _("Larger INGO or other international agency")),
+        ("For-profit or social enterprise company", _("For-profit or social enterprise company")),
+        ("Other", _("Other")),
+    ))
+    organization_other = forms.CharField(required=False, widget=forms.TextInput())
+
+    # Use case
+    message = forms.CharField(required=True, widget=forms.Textarea(attrs={"rows": 4}))
 
 
     def __init__(self, *args, **kwargs):
+        self.request = kwargs.pop('request', None)
         channels = kwargs.pop('channel_choices', None)
         super(StorageRequestForm, self).__init__(*args, **kwargs)
+        translator = gettext.translation(
+            domain='iso3166',
+            localedir=pycountry.LOCALES_DIR,
+            languages=[self.request.LANGUAGE_CODE],
+            codeset='utf-8',
+            fallback=True,
+        )
 
-        self.fields['public'] = forms.MultipleChoiceField(required=False, widget=forms.SelectMultiple, choices=channels)
+        self.fields['public'] = forms.MultipleChoiceField(required=False, widget=forms.SelectMultiple(attrs={"class": "multi-select-field"}), choices=channels)
+
+        countries = [(c.name, translator.gettext(c.name)) for c in list(pycountry.countries)]
+        self.fields['location'] = forms.ChoiceField(required=True, widget=forms.SelectMultiple(attrs={"class": "multi-select-field"}), choices=countries)
 
 
     class Meta:
@@ -326,17 +353,24 @@ class StorageRequestForm(forms.Form, ExtraFormMixin):
 
         self.check_field('storage', _("Please indicate how much storage you need"))
         self.check_field('kind', _("Please indicate what kind of content you are uploading"))
+        self.check_field('creators', _("Please indicate the author, curator, and/or aggregator of your content"))
 
         self.cleaned_data["license"] = ", ".join(self.cleaned_data.get('license') or [])
         self.check_field('license', _("Please indicate the licensing for your content"))
         self.check_field('audience', _("Please indicate your target audience"))
-        self.check_field('org_or_personal', _("Please indicate for whom you are uploading your content"))
+        self.check_field('import_count', _("Please indicate how many times this content will be imported into Kolibri per month"))
 
+        self.check_field('org_or_personal', _("Please indicate for whom you are uploading your content"))
         if self.cleaned_data.get("org_or_personal") == "Organization":
             self.check_field('organization', _("Please indicate your organization or institution"))
+            self.check_field('organization_type', _("Please indicate your organization type"))
+        if self.cleaned_data.get("organization_type") == "Other":
+            self.check_field('organization_other', _("Please indicate the type of your organization or group"))
+
+        self.check_field('message', _("Please write a paragraph explaining your use case for Studio"))
 
         self.cleaned_data['public'] = ",".join(self.cleaned_data.get('public') or [])
-
+        self.cleaned_data['location'] = ",".join(self.cleaned_data.get('location') or [])
 
         return self.cleaned_data
 

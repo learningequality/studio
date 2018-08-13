@@ -36,7 +36,7 @@ def settings(request):
     return redirect('settings/profile')
 
 
-class ProfileView(FormView, LoginRequiredMixin):
+class ProfileView(LoginRequiredMixin, FormView):
     """
     Base class for user settings views.
     """
@@ -67,7 +67,7 @@ class ProfileView(FormView, LoginRequiredMixin):
         return self.request.user
 
 
-class PreferencesView(FormView, LoginRequiredMixin):
+class PreferencesView(LoginRequiredMixin, FormView):
     """
     Base class for user settings views.
     """
@@ -83,7 +83,12 @@ class PreferencesView(FormView, LoginRequiredMixin):
     def get_initial(self):
 
         initial = self.initial.copy()
-        initial.update(json.loads(self.request.user.content_defaults))
+
+        content_defaults = self.request.user.content_defaults
+        if isinstance(content_defaults, basestring):
+            content_defaults = json.loads(content_defaults)
+        initial.update(content_defaults)
+
         initial.update({
             'm_value': initial.get('m_value') or 1,
             'n_value': initial.get('n_value') or 1,
@@ -102,7 +107,7 @@ class PreferencesView(FormView, LoginRequiredMixin):
     def user(self):
         return self.request.user
 
-class PolicyAcceptView(FormView, LoginRequiredMixin):
+class PolicyAcceptView(LoginRequiredMixin, FormView):
     success_url = reverse_lazy('channels')
     form_class = PolicyAcceptForm
     template_name = 'policies/policy_accept.html'
@@ -210,7 +215,7 @@ def policies_settings(request):
 
 
 
-class StorageSettingsView(FormView, LoginRequiredMixin):
+class StorageSettingsView(LoginRequiredMixin, FormView):
     success_url = reverse_lazy('storage_settings')
     template_name = 'settings/storage.html'
     form_class = StorageRequestForm
@@ -218,6 +223,7 @@ class StorageSettingsView(FormView, LoginRequiredMixin):
     def get_form_kwargs(self):
         kw = super(StorageSettingsView, self).get_form_kwargs()
         kw['channel_choices'] = [(c['id'], c['name']) for c in self.request.user.editable_channels.values("id", "name")]
+        kw['request'] = self.request
         return kw
 
     def post(self, request):
@@ -236,10 +242,15 @@ class StorageSettingsView(FormView, LoginRequiredMixin):
                 form.cleaned_data.get('resource_count'),
                 form.cleaned_data.get('resource_size'),
                 form.cleaned_data.get('kind'),
+                form.cleaned_data.get('creators'),
+                form.cleaned_data.get('sample_link'),
                 form.cleaned_data.get('license'),
                 ", ".join(["{} ({})".format(c['name'], c['id']) for c in channels]),
                 form.cleaned_data.get('audience'),
+                form.cleaned_data.get('location'),
+                form.cleaned_data.get('import_count'),
                 uploading_for,
+                form.cleaned_data.get('organization_type'),
                 form.cleaned_data.get('message'),
             ]
 
@@ -262,7 +273,7 @@ class StorageSettingsView(FormView, LoginRequiredMixin):
         storage_percent = (min(storage_used / float(self.request.user.disk_space), 1) * 100)
         breakdown = [{
                         "name": k.capitalize(),
-                        "size":"%.2f" % (float(v)/1048576),
+                        "size": v,
                         "percent": "%.2f" % (min(float(v) / float(self.request.user.disk_space), 1) * 100)
                     } for k,v in self.request.user.get_space_used_by_kind().items()]
 
@@ -270,9 +281,9 @@ class StorageSettingsView(FormView, LoginRequiredMixin):
             "current_user": self.request.user,
             "page": "storage",
             "percent_used": "%.2f" % storage_percent,
-            "used": "%.2f" % (float(storage_used) / 1048576),
-            "total": "%.2f" % (float(self.request.user.disk_space) / 1048576),
-            "available": "%.2f" % (self.request.user.get_available_space() / 1048576),
+            "used": storage_used,
+            "total": self.request.user.disk_space,
+            "available": self.request.user.get_available_space(),
             "breakdown": breakdown,
             "request_email": ccsettings.SPACE_REQUEST_EMAIL,
             "channel_count": self.request.user.editable_channels.count(),

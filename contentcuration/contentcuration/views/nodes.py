@@ -14,7 +14,7 @@ from django.db.models import Q, Max, Sum, F, Count
 from django.utils.translation import ugettext as _
 from rest_framework.renderers import JSONRenderer
 from contentcuration.utils.files import duplicate_file
-from contentcuration.models import File, ContentNode, ContentTag, AssessmentItem, License, Channel, PrerequisiteContentRelationship, generate_storage_url
+from contentcuration.models import File, ContentNode, ContentTag, AssessmentItem, License, Language, Channel, PrerequisiteContentRelationship, generate_storage_url
 from contentcuration.serializers import ContentNodeSerializer, ContentNodeEditSerializer, SimplifiedContentNodeSerializer
 from le_utils.constants import format_presets, content_kinds, roles
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication
@@ -95,6 +95,7 @@ def create_new_node(request):
         copyright_holder=data.get('copyright_holder'),
         license_id=license_id,
         license_description=data.get('license_description'),
+        parent_id=settings.ORPHANAGE_ROOT_ID,
     )
     return HttpResponse(JSONRenderer().render(ContentNodeEditSerializer(new_node).data))
 
@@ -206,10 +207,10 @@ def get_topic_details(request, contentnode_id):
             contentnode_id (str): id of topic node to get details from
     """
     # Get nodes and channel
-    node = ContentNode.objects.prefetch_related('children', 'files', 'tags')\
-                            .select_related('license', 'language')\
-                            .get(pk=contentnode_id)
-    descendants = node.get_descendants()
+    node = ContentNode.objects.get(pk=contentnode_id)
+    descendants = node.get_descendants().prefetch_related('children', 'files', 'tags')\
+                            .select_related('license', 'language')
+
     channel = node.get_channel()
 
     # If channel is a sushi chef channel, use date created for faster query
@@ -230,7 +231,6 @@ def get_topic_details(request, contentnode_id):
     # Get resources
     resources = descendants.exclude(kind=content_kinds.TOPIC)
 
-
     # Get all copyright holders, authors, aggregators, and providers and split into lists
     creators = resources.values_list('copyright_holder', 'author', 'aggregator', 'provider')
     split_lst = zip(*creators)
@@ -239,9 +239,8 @@ def get_topic_details(request, contentnode_id):
     aggregators = filter(bool, set(split_lst[2])) if len(split_lst) > 2 else []
     providers = filter(bool, set(split_lst[3])) if len(split_lst) > 3 else []
 
-
     # Get sample pathway by getting longest path
-    max_level = resources.aggregate(max_level=Max('level'))['max_level']
+    max_level = max(resources.values_list('level', flat=True).distinct() or [0])  # Using resources.aggregate adds a lot of time, use values that have already been fetched
     deepest_node = resources.filter(level=max_level).first()
     pathway = list(deepest_node.get_ancestors()\
                             .exclude(parent=None)\
@@ -273,19 +272,20 @@ def get_topic_details(request, contentnode_id):
     } for c in original_channels]
 
     # Get tags from channel
-    tags = ContentTag.objects.filter(tagged_content__pk__in=descendants.values_list('pk', flat=True))\
+    tags = list(ContentTag.objects.filter(tagged_content__pk__in=descendants.values_list('pk', flat=True))\
                             .values('tag_name')\
                             .annotate(count=Count('tag_name'))\
-                            .order_by('tag_name')
+                            .order_by('tag_name'))
 
     # Get resource variables
     resource_count = resources.count() or 0
-    resource_size = resources.values('files__checksum', 'files__file_size')\
-                                .distinct()\
-                                .aggregate(resource_size=Sum('files__file_size'))['resource_size'] or 0
+    resource_size = resources.values('files__checksum', 'files__file_size').distinct().aggregate(resource_size=Sum('files__file_size'))['resource_size'] or 0
+
     languages = list(set(descendants.exclude(language=None).values_list('language__native_name', flat=True)))
-    accessible_languages = list(set(resources.filter(files__preset_id=format_presets.VIDEO_SUBTITLE)\
-                                                .values_list('files__language__native_name', flat=True)))
+    accessible_languages = resources.filter(files__preset_id=format_presets.VIDEO_SUBTITLE)\
+                                                .values_list('files__language_id', flat=True)
+    accessible_languages = list(Language.objects.filter(id__in=accessible_languages).distinct().values_list('native_name', flat=True))
+
     licenses = list(set(resources.exclude(license=None).values_list('license__license_name', flat=True)))
     kind_count = list(resources.values('kind_id').annotate(count=Count('kind_id')).order_by('kind_id'))
 
@@ -305,7 +305,7 @@ def get_topic_details(request, contentnode_id):
         "languages": languages,
         "accessible_languages": accessible_languages,
         "licenses": licenses,
-        "tags": list(tags),
+        "tags": tags,
         "copyright_holders": copyright_holders,
         "authors": authors,
         "aggregators": aggregators,

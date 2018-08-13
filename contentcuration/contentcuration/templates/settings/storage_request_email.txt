@@ -16,6 +16,8 @@ Nature of Content
     Number of Resources: {% if data.resource_count %}{{data.resource_count}}{% else %}Not Answered{% endif %}
     Average Resource Size: {% if data.resource_size %}{{data.resource_size}}{% else %}Not Answered{% endif %}
     Kind of Content Uploaded: {% if data.kind %}{{data.kind}}{% else %}Not Answered{% endif %}
+    Author/Curator/Aggregator: {% if data.creators %}{{data.creators}}{% else %}Not Answered{% endif %}
+    Sample Content: {% if data.sample_link %}{{data.sample_link}}{% else %}Not Answered{% endif %}
 
 Licensing and Access
     Licenses: {% if data.license %}{{data.license}}{% else %}Not Answered{% endif %}
@@ -24,9 +26,14 @@ Licensing and Access
 
 Content Usage
     Intended Audience: {% if data.audience %}{{data.audience}}{% else %}Not Answered{% endif %}
-    Uploading for: {% if data.org_or_personal == "Organization" %}{{data.organization}}{% else %}{{data.org_or_personal}}{% endif %}
+    Target Region(s): {% if data.location %}{{data.location}}{% else %}Not Answered{% endif %}
+    Number of Imports per Month: {% if data.import_count %}{{data.import_count}}{% else %}Not Answered{% endif %}
 
-Message
+Organization
+    Organizational Affiliation: {% if data.org_or_personal == "Organization" %}{{data.organization}}{% else %}{{data.org_or_personal}}{% endif %}
+    Organization Type: {% if data.organization_type %}{{data.organization_type}}{% else %}{% if data.org_or_personal == "Organization" %}Not Answered{% else %}Not Applicable{% endif %}{% endif %}
+
+Use Case
 {% if data.message %}{{data.message}}{% else %}---{% endif %}
 
 ==============================================================================

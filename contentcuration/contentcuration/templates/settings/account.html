@@ -2,6 +2,14 @@
 {% extends "settings/settings.html" %}
 {% load staticfiles %}
 {% load i18n %}
+{% load render_bundle from webpack_loader %}
+
+{% block js_bundle %}
+	<script>
+		var email = "{{current_user.email}}";
+	</script>
+	{% render_bundle 'settings' 'js' %}
+{% endblock js_bundle %}
 
 {% block settingscontent %}
 
@@ -95,69 +103,4 @@
     </div>
   </div>
 </div>
-
-<script type="text/javascript" src="{% static 'js/bundles/channel_edit.js' %}"></script>
-<script type="text/javascript">
-	function resetDeleteModal() {
-		$(".pending-delete").css("display", "none");
-		$(".error").css("display", "none");
-		$("#email_confirm").val("");
-		$("#submit_delete_account").addClass("disabled").attr("disabled", true);
-	}
-
-	function showDeleteError() {
-		resetDeleteModal();
-		$(".error").css("display", "block");
-	}
-
-
-	// Enable
-	$(".setting_input").on("keydown", function(event){
-		$("#save").attr("disabled", false)
-	});
-
-	// Enable DELETE ACCOUNT button if email is correct
-	$("#email_confirm").keyup(function(event) {
-		$(".error").css("display", "none");
-		(event.target.value == "{{current_user.email}}") ?
-			$("#submit_delete_account").removeClass("disabled").removeAttr("disabled") :
-			$("#submit_delete_account").addClass("disabled").attr("disabled", true);
-	});
-
-	// Clear email field when modal is closed
-	$('#deleteAccountModal').on('hidden.bs.modal', resetDeleteModal);
-
-	// Delete account call
-	$("#submit_delete_account").click(function(ev) {
-		if(!$("#submit_delete_account").attr("disabled")) {
-			$("#submit_delete_account").addClass("disabled").attr("disabled", true);
-			$(".pending-delete").css("display", "inline");
-            $.ajax({
-                method:"POST",
-                url: window.Urls.delete_user_account($("#email_confirm").val()),
-                error: showDeleteError,
-                success: function(data) {
-                    window.location = "/settings/account/deleted";
-                }
-            });
-		}
-	});
-
-	// Export data call
-	$("#export_data").click(function(ev) {
-
-		var dialog = require("channel_edit").dialog;
-        $.ajax({
-            method:"POST",
-            url: window.Urls.export_user_data("{{current_user.email}}"),
-            error: function() {
-            	dialog.alert("{% trans 'Exporting Data' %}", "{% trans 'Error exporting data. Please try again.' %}");
-            },
-            success: function(data) {
-            	dialog.alert("{% trans 'Exporting Data' %}", "{% trans 'Data export started. You\'ll receive an email with your information when it\'s done.' %}");
-            }
-        });
-	});
-
-</script>
 {% endblock settingscontent %}

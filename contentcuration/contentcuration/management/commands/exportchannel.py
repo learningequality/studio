@@ -97,6 +97,11 @@ class Command(BaseCommand):
             logging.warning("Exited early due to {message}.".format(message=e.message))
             self.stdout.write("You can find your database in {path}".format(path=e.db_path))
 
+        # No matter what, make sure publishing is set to False once the run is done
+        finally:
+            channel.main_tree.publishing = False
+            channel.main_tree.save()
+
 def send_emails(channel, user_id):
     subject = render_to_string('registration/custom_email_subject.txt', {'subject': _('Kolibri Studio Channel Published')})
 
@@ -588,7 +593,7 @@ def add_tokens_to_channel(channel):
                 raise ValueError("Cannot generate new token")
 
         tk_human = ccmodels.SecretToken.objects.create(token=token, is_primary=True)
-        tk = ccmodels.SecretToken.objects.create(token=channel.id)
+        tk, _new = ccmodels.SecretToken.objects.get_or_create(token=channel.id)
         channel.secret_tokens.add(tk_human, tk)
 
 def fill_published_fields(channel):

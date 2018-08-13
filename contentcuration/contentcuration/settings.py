@@ -15,7 +15,7 @@ import os
 import re
 import logging
 import pycountry
-
+from datetime import datetime, timedelta
 
 logging.getLogger("newrelic").setLevel(logging.CRITICAL)
 logging.getLogger("botocore").setLevel(logging.WARNING)
@@ -65,8 +65,10 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.staticfiles',
     'rest_framework',
+    'raven.contrib.django.raven_compat',
     'django_js_reverse',
     'kolibri_content',
+    'readonly',
     'email_extras',
     'le_utils',
     'rest_framework.authtoken',
@@ -76,6 +78,13 @@ INSTALLED_APPS = (
 )
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'studio_db_cache',
+    }
+}
 
 MIDDLEWARE_CLASSES = (
     # 'django.middleware.cache.UpdateCacheMiddleware',
@@ -89,6 +98,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'contentcuration.middleware.db_readonly.DatabaseReadOnlyMiddleware',
     # 'django.middleware.cache.FetchFromCacheMiddleware',
 )
 
@@ -133,6 +143,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'readonly.context_processors.readonly',
             ],
         },
     },
@@ -218,7 +229,6 @@ LANGUAGES = (
     ('es', ugettext('Spanish')),
     ('es-es', ugettext('Spanish - Spain')),
     ('es-mx', ugettext('Spanish - Mexico')),
-    ('ar', ugettext('Arabic')),
     ('en-PT', ugettext('English - Pirate')),
 )
 
@@ -251,6 +261,9 @@ SITE_ID = 1
 # MAILGUN_ACCESS_KEY = 'ACCESS-KEY'
 # MAILGUN_SERVER_NAME = 'SERVER-NAME'
 
+# READ-ONLY SETTINGS
+SITE_READ_ONLY = os.getenv('STUDIO_READ_ONLY') or False
+
 SEND_USER_ACTIVATION_NOTIFICATION_EMAIL = bool(
     os.getenv("SEND_USER_ACTIVATION_NOTIFICATION_EMAIL")
 )
@@ -268,7 +281,7 @@ DEFAULT_LICENSE = 1
 SERVER_EMAIL = 'curation-errors@learningequality.org'
 ADMINS = [('Errors', SERVER_EMAIL)]
 
-DEFAULT_TITLE = "Kolibri Studio"
+DEFAULT_TITLE = "Kolibri Studio (Beta)"
 
 IGNORABLE_404_URLS = [
     re.compile(r'\.(php|cgi)$'),
@@ -296,6 +309,12 @@ CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 
+# When cleaning up orphan nodes, only clean up any that have been last modified
+# since this date
+# our default threshold is two weeks ago
+TWO_WEEKS_AGO = datetime.now() - timedelta(days=14)
+ORPHAN_DATE_CLEAN_UP_THRESHOLD = TWO_WEEKS_AGO
+
 # CLOUD STORAGE SETTINGS
 DEFAULT_FILE_STORAGE = 'django_s3_storage.storage.S3Storage'
 AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID') or 'development'
@@ -309,3 +328,6 @@ AWS_S3_BUCKET_AUTH = False
 # GOOGLE DRIVE SETTINGS
 GOOGLE_AUTH_JSON = "credentials/client_secret.json"
 GOOGLE_STORAGE_REQUEST_SHEET = "16X6zcFK8FS5t5tFaGpnxbWnWTXP88h4ccpSpPbyLeA8"
+
+# Used as the default parent to collect orphan nodes
+ORPHANAGE_ROOT_ID = "00000000000000000000000000000000"

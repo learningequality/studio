@@ -4,16 +4,18 @@ import os
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.conf import settings
 from django.core.files import File as DjFile
+from django.core.files.storage import default_storage
 from rest_framework.renderers import JSONRenderer
 from contentcuration.api import write_file_to_storage, get_hash
 from contentcuration.utils.files import generate_thumbnail_from_node
-from contentcuration.models import File, FormatPreset, ContentNode, License, generate_storage_url
+from contentcuration.models import File, FormatPreset, ContentNode, License, generate_storage_url, generate_object_storage_name
 from contentcuration.serializers import FileSerializer, ContentNodeEditSerializer
 from le_utils.constants import format_presets, content_kinds, exercises, licenses
 from pressurecooker.videos import guess_video_preset_by_resolution
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import authentication_classes, permission_classes
+from wsgiref.util import FileWrapper
 
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
@@ -61,7 +63,7 @@ def file_create(request):
 
     presets = FormatPreset.objects.filter(allowed_formats__extension__contains=ext[1:].lower())
     kind = presets.first().kind
-    preferences = json.loads(request.META.get('HTTP_PREFERENCES'))
+    preferences = json.loads(request.META.get('HTTP_PREFERENCES') or "{}")
 
     # sometimes we get a string no matter what. Try to parse it again
     if isinstance(preferences, basestring):
@@ -77,6 +79,7 @@ def file_create(request):
         aggregator=preferences.get('aggregator') or "",
         provider=preferences.get('provider') or "",
         copyright_holder=preferences.get('copyright_holder'),
+        parent_id=settings.ORPHANAGE_ROOT_ID,
     )
     if license and license.is_custom:
         new_node.license_description = preferences.get('license_description')
@@ -207,3 +210,16 @@ def exercise_image_upload(request):
         "file_id": file_object.pk,
         "path": generate_storage_url(str(file_object)),
     }))
+
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
+def debug_serve_file(request, path):
+    # There's a problem with loading exercise images, so use this endpoint
+    # to serve the image files to the /content/storage url
+    filename = os.path.basename(path)
+    checksum, _ext = os.path.splitext(filename)
+    filepath = generate_object_storage_name(checksum, filename)
+
+    with default_storage.open(filepath, 'rb') as fobj:
+        response = HttpResponse(FileWrapper(fobj))
+        return response
