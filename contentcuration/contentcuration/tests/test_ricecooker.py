@@ -140,7 +140,6 @@ STAGED_TREE = {
     ]
 }
 
-@pytest.fixture
 def staging_tree():
     staging_tree = node(STAGED_TREE)
 
@@ -166,6 +165,7 @@ def staging_tree():
     return staging_tree
 
 class NodeDiffTestCase(BaseAPITestCase):
+    persist_bucket = True
 
     @classmethod
     def setUpClass(self):

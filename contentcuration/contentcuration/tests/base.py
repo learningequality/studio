@@ -41,6 +41,11 @@ class StudioTestCase(TestCase, BucketTestMixin):
         super(StudioTestCase, cls).setUpClass()
         call_command('loadconstants')
 
+    @classmethod
+    def tearDownClass(cls):
+        # Based on comments here: https://groups.google.com/forum/#!topic/django-users/MDRcg4Fur98
+        pass
+
     def setUp(self):
         if not self.persist_bucket:
             self.create_bucket()
