@@ -684,14 +684,34 @@ class ContentNode(MPTTModel, models.Model):
 
     def __init__(self, *args, **kwargs):
         super(ContentNode, self).__init__(*args, **kwargs)
-        self._original_fields = self._as_dict() # Fast way to keep track of updates (no need to query db again)
+        self._original_fields = None
 
     def _as_dict(self):
         return dict([(f.name, getattr(self, f.name)) for f in self._meta.local_fields if not f.rel])
 
+    def _mark_unchanged(self):
+        """
+        This method sets all cached fields to current values in order to force the node into an unchanged state.
+        This is a helper method for tests that let us test the behavior of marking nodes changed, as they are only
+        set to change after a publish.
+        Please do not use this for any production code.
+        """
+        if not self._original_fields:
+            self.get_changed_fields()
+        new_state = self._as_dict()
+        for field_name in self._original_fields:
+            self._original_fields[field_name] = new_state[field_name]
+
     def get_changed_fields(self):
         """ Returns a dictionary of all of the changed (dirty) fields """
         new_state = self._as_dict()
+        # In Django 1.11, _as_dict() can trigger a refresh_from_db is called from __init__, so just load it on
+        # first call here instead. We may want to whitelist what fields to check in the future
+        if not self._original_fields:
+            self._original_fields = ContentNode.objects.get(pk=self.pk)._as_dict()
+            # don't include the changed (dirty) field in the list of fields we check to see if the object is dirty
+            del self._original_fields['changed']
+
         return dict([(key, value) for key, value in self._original_fields.iteritems() if value != new_state[key]])
 
     def get_tree_data(self, include_self=True):
