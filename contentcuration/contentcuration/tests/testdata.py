@@ -120,6 +120,7 @@ def node(data, parent=None):
     # Create topics
     if data['kind_id'] == "topic":
         new_node = cc.ContentNode(kind=topic(), parent=parent, title=data['title'], node_id=data['node_id'])
+        new_node.save()
 
         for child in data['children']:
             child_node = node(child, parent=new_node)
@@ -127,6 +128,7 @@ def node(data, parent=None):
     # Create videos
     elif data['kind_id'] == "video":
         new_node = cc.ContentNode(kind=video(), parent=parent, title=data['title'], node_id=data['node_id'], license=license_wtfpl())
+        new_node.save()
         video_file = fileobj_video(contents="Video File").next()
         video_file.contentnode = new_node
         video_file.preset_id = format_presets.VIDEO_HIGH_RES
@@ -136,6 +138,7 @@ def node(data, parent=None):
     elif data['kind_id'] == "exercise":
         extra_fields = "{{\"mastery_model\":\"{}\",\"randomize\":true,\"m\":{},\"n\":{}}}".format(data['mastery_model'], data.get('m') or 0, data.get('n') or 0)
         new_node = cc.ContentNode(kind=exercise(), parent=parent, title=data['title'], node_id=data['node_id'], license=license_wtfpl(), extra_fields=extra_fields)
+        new_node.save()
         for assessment_item in data['assessment_items']:
             mixer.blend(cc.AssessmentItem,
                 contentnode=new_node,
