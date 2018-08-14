@@ -802,15 +802,20 @@ class ContentNode(MPTTModel, models.Model):
     def get_channel(self):
         try:
             root = self.get_root()
-            return root.channel_main.first() or root.channel_chef.first() or root.channel_trash.first() or root.channel_staging.first() or root.channel_previous.first()
+            if not root:
+                return None
+            return Channel.objects.filter(Q(main_tree=root) | Q(chef_tree=root) | Q(trash_tree=root) | Q(staging_tree=root) | Q(previous_tree=root)).first()
         except (ObjectDoesNotExist, MultipleObjectsReturned, AttributeError):
             return None
 
     def save(self, *args, **kwargs):
+        import warnings
+        channel_id = None
         if kwargs.get('request'):
             request = kwargs.pop('request')
             channel = self.get_channel()
             request.user.can_edit(channel and channel.pk)
+            channel_id = channel.pk
 
         self.changed = self.changed or len(self.get_changed_fields()) > 0
 
@@ -826,14 +831,17 @@ class ContentNode(MPTTModel, models.Model):
         if self.cloned_source is None:
             self.cloned_source = self
 
-        if self.original_channel_id is None:
-            # TODO: This SIGNIFICANTLY slows down the creation flow
-            channel = (self.parent and self.parent.get_channel()) or self.get_channel() # Check parent first otherwise new content won't have root
-            self.original_channel_id = channel.id if channel else None
-        if self.source_channel_id is None:
-            # TODO: This SIGNIFICANTLY slows down the creation flow
-            channel = (self.parent and self.parent.get_channel()) or self.get_channel() # Check parent first otherwise new content won't have root
-            self.source_channel_id = channel.id if channel else None
+        # Getting the channel is an expensive call, so warn about it so that we can reduce the number of cases in which
+        # we need to do this.
+        if not channel_id:
+            warnings.warn("Determining node's channel is an expensive operation. Please set original_channel_id and source_channel_id to the parent's values when creating child nodes.", stacklevel=2)
+            channel = (self.parent and self.parent.get_channel()) or self.get_channel()
+            if channel:
+                channel_id = channel.pk
+            if self.original_channel_id is None:
+                self.original_channel_id = channel_id
+            if self.source_channel_id is None:
+                self.source_channel_id = channel_id
 
         if self.original_source_node_id is None:
             self.original_source_node_id = self.node_id
