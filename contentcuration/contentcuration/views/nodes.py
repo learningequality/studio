@@ -337,7 +337,7 @@ def delete_nodes(request):
         request.user.can_edit(channel_id)
         nodes = ContentNode.objects.filter(pk__in=nodes)
         for node in nodes:
-            if not node.parent.changed:
+            if node.parent and not node.parent.changed:
                 node.parent.changed = True
                 node.parent.save()
             node.delete()
@@ -592,7 +592,7 @@ def _move_node(node, parent=None, sort_order=None, channel_id=None):
 
     node.save()
     # we need to make sure the new parent is marked as changed as well
-    if not node.parent.changed:
+    if node.parent and not node.parent.changed:
         node.parent.changed = True
         node.parent.save()
 
