@@ -286,6 +286,7 @@ urlpatterns += [
     url(r'^api/internal/api_add_nodes_from_file$', internal_views.api_add_nodes_from_file, name="api_add_nodes_from_file"),
     url(r'^api/internal/finish_channel$', internal_views.api_commit_channel, name="api_finish_channel"),
     url(r'^api/internal/get_channel_status_bulk$', internal_views.get_channel_status_bulk, name="get_channel_status_bulk"),
+    url(r'^api/internal/get_full_node_diff/(?P<channel_id>[^/]{32})$', internal_views.get_full_node_diff_endpoint, name="get_full_node_diff"),
 ]
 
 # Add admin endpoints
@@ -319,7 +320,8 @@ if settings.DEBUG:
     urlpatterns += [
         url(r'^' + settings.STORAGE_URL[1:] + '(?P<path>.*)$', file_views.debug_serve_file, name='debug_serve_file'),
         url(r'^' + settings.CONTENT_DATABASE_URL[1:] + '(?P<path>.*)$', django_views.static.serve, {'document_root': settings.DB_ROOT}),
-        url(r'^' + settings.CSV_URL[1:] + '(?P<path>.*)$', django_views.static.serve, {'document_root': settings.CSV_ROOT})
+        url(r'^' + settings.CSV_URL[1:] + '(?P<path>.*)$', django_views.static.serve, {'document_root': settings.CSV_ROOT}),
+        url(r'^' + settings.JSON_URL[1:] + '(?P<path>.*)$', django_views.static.serve, {'document_root': settings.JSON_ROOT})
     ]
 
     try:

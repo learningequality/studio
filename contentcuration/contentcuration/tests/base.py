@@ -1,6 +1,9 @@
+# Assert methods can be found here: https://docs.python.org/3/library/unittest.html#assert-methods
+
 from django.core.management import call_command
 from django.test import TestCase
 
+from contentcuration.tests.testdata import *
 from contentcuration.utils import minio_utils
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient, APIRequestFactory, APITestCase, force_authenticate
@@ -23,7 +26,6 @@ class BucketTestMixin:
         minio_utils.ensure_bucket_deleted()
 
     def setUp(self):
-        raise Exception("Called?")
         if not self.persist_bucket:
             self.create_bucket()
 
@@ -39,21 +41,10 @@ class StudioTestCase(TestCase, BucketTestMixin):
         super(StudioTestCase, cls).setUpClass()
         call_command('loadconstants')
 
-    def setUp(self):
-        if not self.persist_bucket:
-            self.create_bucket()
-
-    def tearDown(self):
-        if not self.persist_bucket:
-            self.delete_bucket()
-
-
-class StudioAPITestCase(APITestCase, BucketTestMixin):
-
     @classmethod
-    def setUpClass(cls):
-        super(StudioAPITestCase, cls).setUpClass()
-        call_command('loadconstants')
+    def tearDownClass(cls):
+        # Based on comments here: https://groups.google.com/forum/#!topic/django-users/MDRcg4Fur98
+        pass
 
     def setUp(self):
         if not self.persist_bucket:
@@ -63,27 +54,37 @@ class StudioAPITestCase(APITestCase, BucketTestMixin):
         if not self.persist_bucket:
             self.delete_bucket()
 
-class BaseTestCase(StudioTestCase):
-    def setUp(self):
-        super(BaseTestCase, self).setUp()
-        self.channel = testdata.channel()
-        self.user = testdata.user()
+class BaseTestCase(StudioTestCase, BucketTestMixin):
+    @classmethod
+    def setUpClass(self):
+        super(BaseTestCase, self).setUpClass()
+        self.channel = channel()
+        self.user = user()
         self.channel.main_tree.refresh_from_db()
 
-
-class BaseAPITestCase(StudioAPITestCase):
-    def setUp(self):
-        super(BaseAPITestCase, self).setUp()
-        self.channel = testdata.channel()
-        self.user = testdata.user()
+class BaseAPITestCase(StudioTestCase):
+    @classmethod
+    def setUpClass(self):
+        super(BaseAPITestCase, self).setUpClass()
+        minio_utils.ensure_storage_bucket_public()
+        self.channel = channel()
+        self.user = user()
         token, _new = Token.objects.get_or_create(user=self.user)
         self.header = {"Authorization": "Token {0}".format(token)}
         self.client = APIClient()
         self.client.force_authenticate(self.user)
         self.channel.main_tree.refresh_from_db()
 
-    def get(self, url):
-        return self.client.get(url, headers=self.header)
+    @classmethod
+    def tearDownClass(self):
+        minio_utils.ensure_bucket_deleted()
+
+    def create_get_request(self, url, *args, **kwargs):
+        factory = APIRequestFactory()
+        request = factory.get(url, headers=self.header, *args, **kwargs)
+        request.user = self.user
+        force_authenticate(request, user=self.user)
+        return request
 
     def create_post_request(self, url, *args, **kwargs):
         factory = APIRequestFactory()

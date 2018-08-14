@@ -1,45 +1,10 @@
-import datetime
-
 from cStringIO import StringIO
 from django.core.files.storage import default_storage
-from django.conf import settings
 
-from unittest import TestCase
-from contentcuration.models import User, generate_object_storage_name
-from contentcuration.utils.policies import check_policies, POLICIES
+from contentcuration.models import generate_object_storage_name
 from contentcuration.utils.files import get_file_diff
 
 from base import StudioTestCase
-
-
-class CheckPoliciesTestCase(TestCase):
-
-    def setUp(self):
-        super(CheckPoliciesTestCase, self).setUp()
-
-        self.unsaved_user = User(
-            email="mrtest@testy.com",
-            first_name="Mr.",
-            last_name="Test",
-            is_admin=False,
-            is_staff=False,
-            date_joined=datetime.datetime.now(),
-            policies=None,
-        )
-
-    def test_check_policies_handles_user_with_null_policy(self):
-        """
-        Check that check_policies doesn't raise any error when we
-        give a user with a policy value of None.
-
-        Also make sure that we return the latest policy as what the user
-        needs to sign.
-        """
-
-        # shouldn't raise any error
-        policies_to_accept = check_policies(self.unsaved_user)
-        assert ("privacy_policy_{}".format(POLICIES["privacy_policy"]["latest"])
-                in policies_to_accept)
 
 
 class GetFileDiffTestCase(StudioTestCase):

@@ -4,6 +4,12 @@
 	"title": "Root Node",
 	"children": [
 		{
+			"node_id": "00000000000000000000000000000010",
+			"content_id": "00000000000000000000000000000006",
+			"kind_id": "video",
+			"title": "Video"
+		},
+		{
 			"node_id": "00000000000000000000000000000001",
 			"kind_id": "topic",
 			"title": "Topic A",
@@ -27,7 +33,12 @@
 					"node_id": "00000000000000000000000000000007",
 					"kind_id": "video",
 					"title": "Video 4"
-				}
+				},
+                {
+                    "node_id": "00000000000000000000000000000011",
+                    "kind_id": "video",
+                    "title": "Video 5"
+                }
 			]
 		},
 		{
@@ -92,6 +103,18 @@
 								},
 								{
 									"answer": 1.5,
+									"correct": true,
+									"help_text": ""
+								}
+							]
+						},
+						{
+							"type": "input_question",
+							"question": "Question 4?",
+							"assessment_id": "0000000000000000000000000000000d",
+							"answers": [
+								{
+									"answer": 10,
 									"correct": true,
 									"help_text": ""
 								}
