@@ -223,3 +223,11 @@ def debug_serve_file(request, path):
     with default_storage.open(filepath, 'rb') as fobj:
         response = HttpResponse(FileWrapper(fobj))
         return response
+
+
+def debug_serve_content_database_file(request, path):
+    filename = os.path.basename(path)
+    path = "/".join([settings.DB_ROOT, filename])
+    with default_storage.open(path, "rb") as f:
+        response = HttpResponse(FileWrapper(f))
+        return response
