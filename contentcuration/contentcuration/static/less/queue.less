@@ -122,18 +122,27 @@
 					font-size: 24px;
 					font-weight: bold;
 					color: @blue-500;
+
+					.drag-out-text {
+						display: none;
+					}
 				}
 
 				// Don't show overlay text when dragging out of clipboard.
-				&.queue-item-start-drag .queue-overlay-text {
-					display: none;
+				&.queue-item-start-drag {
+					.drag-in-text {
+						display: none;
+					}
+					.drag-out-text {
+						display: block;
+					}
 				}
 			}
 			&.ui-droppable-active .queue-overlay {
 				display: block;
 			}
 			&.droppable-area-hover .queue-overlay {
-				background-color: blanchedalmond;
+				background-color: rgba(255, 235, 205, 0.8);
 			}
 
 			hr{ margin: 0; }

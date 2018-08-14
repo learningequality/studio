@@ -18,7 +18,8 @@ var MESSAGES = {
     "clipboard_empty": "This is your clipboard. Use this space to save and send content to other channels",
     "drop_text": "Drop here to add to clipboard",
     "recently_added": "Recently Added",
-    "drop_text_over_clipboard": "Drop items here",
+    "drop_text_into_clipboard": "Drop items here",
+    "drop_text_out_of_clipboard": "Dragging out of clipboard ...",
     "pin_clipboard": "Pin clipboard (dock to side)",
 		"unpin_clipboard": "Unpin clipboard",
 }

@@ -36,7 +36,12 @@
 </div>
 <div class="queue-overlay">
 	<div class="queue-overlay-text">
-		{{formatMessage (intlGet 'messages.drop_text_over_clipboard')}}
+    <div class="drag-in-text">
+      {{formatMessage (intlGet 'messages.drop_text_into_clipboard')}}
+    </div>
+    <div class="drag-out-text">
+      {{formatMessage (intlGet 'messages.drop_text_out_of_clipboard')}}
+    </div>
 	</div>
 </div>
 {{else}}
