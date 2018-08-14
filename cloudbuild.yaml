@@ -44,6 +44,17 @@ steps:
   '--ciphertext-file=k8s/build-secrets/$PROJECT_ID-gcs-service-account.json.enc',
   '--plaintext-file=gcs-service-account.json'
   ]
+
+- name: 'gcr.io/cloud-builders/gcloud'
+  id: create-new-database
+  waitFor: ['-']
+  dir: "k8s"
+  entrypoint: 'bash'
+  args: [
+  '-c',
+  './create-cloudsql-database.sh $BRANCH_NAME develop'
+  ]
+
 - name: 'gcr.io/$PROJECT_ID/helm'
   id: helm-deploy-studio-instance
   waitFor: ['decrypt-gcs-service-account', 'push-app-image', 'push-nginx-image']
@@ -56,7 +67,7 @@ steps:
   args: [
   '-c',
   # still run helm.bash to initialze creds, but otherwise run our own deploy script
-  '/builder/helm.bash && ./helm-deploy.sh $BRANCH_NAME studio-qa-content $COMMIT_SHA $$POSTMARK_API_KEY arontest arontest arontest ops-central-studio-qa-sql-proxy-gcloud-sqlproxy.sqlproxy ../gcs-service-account.json'
+  '/builder/helm.bash && ./helm-deploy.sh $BRANCH_NAME studio-qa-content $COMMIT_SHA $$POSTMARK_API_KEY arontest $BRANCH_NAME arontest ops-central-studio-qa-sql-proxy-gcloud-sqlproxy.sqlproxy ../gcs-service-account.json'
   ]
 
 timeout: 3600s
