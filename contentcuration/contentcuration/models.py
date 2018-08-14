@@ -9,6 +9,7 @@ import socket
 import sys
 import urlparse
 import uuid
+import warnings
 
 from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
@@ -693,7 +694,7 @@ class ContentNode(MPTTModel, models.Model):
         """
         This method sets all cached fields to current values in order to force the node into an unchanged state.
         This is a helper method for tests that let us test the behavior of marking nodes changed, as they are only
-        set to change after a publish.
+        marked as unchanged upon publish.
         Please do not use this for any production code.
         """
         if not self._original_fields:
@@ -809,7 +810,6 @@ class ContentNode(MPTTModel, models.Model):
             return None
 
     def save(self, *args, **kwargs):
-        import warnings
         channel_id = None
         if kwargs.get('request'):
             request = kwargs.pop('request')
