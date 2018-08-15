@@ -133,16 +133,21 @@ def node(data, parent=None):
 
     return new_node
 
-def channel():
-    channel = cc.Channel.objects.create(name="testchannel")
-    channel.save()
 
+def tree(parent=None):
     # Read from json fixture
     filepath = os.path.sep.join([os.path.dirname(__file__), "fixtures", "tree.json"])
     with open(filepath, "rb") as jsonfile:
         data = json.load(jsonfile)
 
-    channel.main_tree = node(data)
+    return node(data, parent)
+
+
+def channel():
+    channel = cc.Channel.objects.create(name="testchannel")
+    channel.save()
+
+    channel.main_tree = tree()
     channel.save()
 
     return channel

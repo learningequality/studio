@@ -191,10 +191,12 @@ def api_commit_channel(request):
 
         # Delete staging tree if it already exists
         if old_staging and old_staging != obj.main_tree:
-            garbage_node = ContentNode.objects.get(pk=settings.ORPHANAGE_ROOT_ID)
-            old_staging.parent = garbage_node
-            old_staging.title = "Old staging tree for channel {}".format(obj.pk)
-            old_staging.save()
+            # IMPORTANT: Do not remove this block, MPTT updating the deleted chefs block could hang the server
+            with ContentNode.objects.disable_mptt_updates():
+                garbage_node = ContentNode.objects.get(pk=settings.DELETED_CHEFS_ROOT_ID)
+                old_staging.parent = garbage_node
+                old_staging.title = "Old staging tree for channel {}".format(obj.pk)
+                old_staging.save()
 
         if not data.get('stage'):  # If user says to stage rather than submit, skip changing trees at this step
             try:
@@ -467,10 +469,12 @@ def create_channel(channel_data, user):
 
     # Delete chef tree if it already exists
     if old_chef_tree and old_chef_tree != channel.staging_tree:
-        garbage_node = ContentNode.objects.get(pk=settings.ORPHANAGE_ROOT_ID)
-        old_chef_tree.parent = garbage_node
-        old_chef_tree.title = "Old chef tree for channel {}".format(channel.pk)
-        old_chef_tree.save()
+        # IMPORTANT: Do not remove this block, MPTT updating the deleted chefs block could hang the server
+        with ContentNode.objects.disable_mptt_updates():
+            garbage_node, _new = ContentNode.objects.get_or_create(pk=settings.DELETED_CHEFS_ROOT_ID)
+            old_chef_tree.parent = garbage_node
+            old_chef_tree.title = "Old chef tree for channel {}".format(channel.pk)
+            old_chef_tree.save()
 
     return channel  # Return new channel
 

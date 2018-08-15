@@ -217,10 +217,12 @@ def activate_channel(channel, user):
     user.check_channel_space(channel)
 
     if channel.previous_tree and channel.previous_tree != channel.main_tree:
-        garbage_node = models.ContentNode.objects.get(pk=settings.ORPHANAGE_ROOT_ID)
-        channel.previous_tree.parent = garbage_node
-        channel.previous_tree.title = "Previous tree for channel {}".format(channel.pk)
-        channel.previous_tree.save()
+        # IMPORTANT: Do not remove this block, MPTT updating the deleted chefs block could hang the server
+        with models.ContentNode.objects.disable_mptt_updates():
+            garbage_node, _new = models.ContentNode.objects.get_or_create(pk=settings.DELETED_CHEFS_ROOT_ID)
+            channel.previous_tree.parent = garbage_node
+            channel.previous_tree.title = "Previous tree for channel {}".format(channel.pk)
+            channel.previous_tree.save()
 
     channel.previous_tree = channel.main_tree
     channel.main_tree = channel.staging_tree

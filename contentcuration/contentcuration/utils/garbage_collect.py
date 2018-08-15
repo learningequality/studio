@@ -8,6 +8,24 @@ from django.core.files.storage import default_storage as storage
 from contentcuration.models import ContentNode, File
 
 
+def clean_up_deleted_chefs():
+    """
+    Clean up all deleted chefs attached to the deleted chefs tree, including all
+    child nodes in that tree.
+
+    """
+    deleted_chefs_node, _new = ContentNode.objects.get_or_create(pk=settings.DELETED_CHEFS_ROOT_ID)
+    # we cannot use MPTT methods like get_descendants() or use tree_id because for performance reasons
+    # we are avoiding MPTT entirely.
+    nodes_to_clean_up = ContentNode.objects.filter(parent=deleted_chefs_node)
+
+    # don't delete files until we can ensure files are not referenced anywhere.
+    for node in nodes_to_clean_up:
+        node.delete()
+
+    assert not ContentNode.objects.filter(parent=deleted_chefs_node).exists()
+
+
 def clean_up_contentnodes(delete_older_than=settings.ORPHAN_DATE_CLEAN_UP_THRESHOLD):
     """
     Clean up all contentnodes associated with the orphan tree with a `created`
@@ -28,7 +46,7 @@ def clean_up_contentnodes(delete_older_than=settings.ORPHAN_DATE_CLEAN_UP_THRESH
     clean_up_files(nodes_to_clean_up)
 
     # Use _raw_delete for fast bulk deletions
-    nodes_to_clean_up._raw_delete(nodes_to_clean_up.db)
+    nodes_to_clean_up.delete()
     # tell MPTT to rebuild our tree values, so descendant counts
     # will be right again.
     ContentNode._tree_manager.partial_rebuild(tree_id)
