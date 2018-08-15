@@ -19,7 +19,7 @@ from django.core.exceptions import (MultipleObjectsReturned,
 from django.core.files.storage import FileSystemStorage, default_storage
 from django.core.mail import send_mail
 from django.db import IntegrityError, connection, models
-from django.db.models import Q, Sum
+from django.db.models import Q, Sum, Max
 from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.translation import ugettext as _
@@ -58,6 +58,21 @@ DEFAULT_CONTENT_DEFAULTS = {
 DEFAULT_USER_PREFERENCES = json.dumps(DEFAULT_CONTENT_DEFAULTS, ensure_ascii=False)
 
 
+# Added 7-31-2018. We can remove this once we are certain we have eliminated all cases
+# where root nodes are getting prepended rather than appended to the tree list.
+def _create_tree_space(self, target_tree_id, num_trees=1):
+    """
+    Creates space for a new tree by incrementing all tree ids
+    greater than ``target_tree_id``.
+    """
+
+    if target_tree_id == -1:
+        raise Exception("ERROR: Calling _create_tree_space with -1! Something is attempting to sort all MPTT trees root nodes!")
+
+    self._orig_create_tree_space(target_tree_id, num_trees)
+
+TreeManager._orig_create_tree_space = TreeManager._create_tree_space
+TreeManager._create_tree_space = _create_tree_space
 
 
 class UserManager(BaseUserManager):
@@ -97,7 +112,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     disk_space = models.FloatField(default=524288000, help_text=_('How many bytes a user can upload'))
 
     information = JSONField(null=True)
-    content_defaults = JSONField(default=DEFAULT_CONTENT_DEFAULTS)
+    content_defaults = JSONField(default=dict)
     policies = JSONField(default=dict, null=True)
 
     objects = UserManager()
@@ -208,10 +223,19 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def save(self, *args, **kwargs):
         super(User, self).save(*args, **kwargs)
+        changed = False
+
+        if not self.content_defaults:
+            self.content_defaults = DEFAULT_CONTENT_DEFAULTS
+            changed = True
+
         if not self.clipboard_tree:
             self.clipboard_tree = ContentNode.objects.create(title=self.email + " clipboard", kind_id="topic",
-                                                             sort_order=0)
+                                                             sort_order=get_next_sort_order())
             self.clipboard_tree.save()
+            changed = True
+
+        if changed:
             self.save()
 
     class Meta:
@@ -412,7 +436,7 @@ class Channel(models.Model):
     deleted = models.BooleanField(default=False, db_index=True)
     public = models.BooleanField(default=False, db_index=True)
     preferences = models.TextField(default=DEFAULT_USER_PREFERENCES)
-    content_defaults = JSONField(default=DEFAULT_CONTENT_DEFAULTS)
+    content_defaults = JSONField(default=dict)
     priority = models.IntegerField(default=0, help_text=_("Order to display public channels"))
     last_published = models.DateTimeField(blank=True, null=True)
     secret_tokens = models.ManyToManyField(
@@ -464,6 +488,9 @@ class Channel(models.Model):
         if self.pk and Channel.objects.filter(pk=self.pk).exists():
             original_channel = Channel.objects.get(pk=self.pk)
 
+        if not self.content_defaults:
+            self.content_defaults = DEFAULT_CONTENT_DEFAULTS
+
         record_channel_stats(self, original_channel)
 
         # Check if original thumbnail is no longer referenced
@@ -475,7 +502,7 @@ class Channel(models.Model):
             self.main_tree = ContentNode.objects.create(
                 title=self.name,
                 kind_id=content_kinds.TOPIC,
-                sort_order=0,
+                sort_order=get_next_sort_order(),
                 content_id=self.id,
                 node_id=self.id,
             )
@@ -488,7 +515,7 @@ class Channel(models.Model):
             self.trash_tree = ContentNode.objects.create(
                 title=self.name,
                 kind_id=content_kinds.TOPIC,
-                sort_order=0,
+                sort_order=get_next_sort_order(),
                 content_id=self.id,
                 node_id=self.id,
             )
@@ -576,6 +603,11 @@ class License(models.Model):
     def __str__(self):
         return self.license_name
 
+def get_next_sort_order(node=None):
+    # Get the next sort order under parent (roots if None)
+    # Based on Kevin's findings, we want to append node as prepending causes all other root sort_orders to get incremented
+    max_order = ContentNode.objects.filter(parent=node).aggregate(max_order=Max('sort_order'))['max_order'] or 0
+    return max_order + 1
 
 class ContentNode(MPTTModel, models.Model):
     """
@@ -629,7 +661,7 @@ class ContentNode(MPTTModel, models.Model):
     published = models.BooleanField(default=False)
     publishing = models.BooleanField(default=False)
 
-    changed = models.BooleanField(default=True, db_index=True)
+    changed = models.BooleanField(default=True)
     extra_fields = models.TextField(blank=True, null=True)
     author = models.CharField(max_length=200, blank=True, default="", help_text=_("Who created this content?"),
                               null=True)
@@ -762,25 +794,27 @@ class ContentNode(MPTTModel, models.Model):
 
         self.changed = self.changed or len(self.get_changed_fields()) > 0
 
-        # Detect if node has been moved to another tree
-        if self.pk and ContentNode.objects.filter(pk=self.pk).exists():
+        # Detect if node has been moved to another tree (if the original parent has not already been marked as changed, mark as changed)
+        # Necessary if nodes get deleted/moved to clipboard- user needs to be able to publish "changed" nodes
+        if self.pk and ContentNode.objects.filter(pk=self.pk, parent__changed=False).exclude(parent_id=self.parent_id).exists():
             original = ContentNode.objects.get(pk=self.pk)
-            if original.parent and original.parent_id != self.parent_id and not original.parent.changed:
-                original.parent.changed = True
-                original.parent.save()
+            original.parent.changed = True
+            original.parent.save()
 
         if self.original_node is None:
             self.original_node = self
         if self.cloned_source is None:
             self.cloned_source = self
 
-        # TODO: This SIGNIFICANTLY slows down the creation flow
-        #   Avoid calling get_channel() (db read)
-        channel = (self.parent and self.parent.get_channel()) or self.get_channel() # Check parent first otherwise new content won't have root
         if self.original_channel_id is None:
+            # TODO: This SIGNIFICANTLY slows down the creation flow
+            channel = (self.parent and self.parent.get_channel()) or self.get_channel() # Check parent first otherwise new content won't have root
             self.original_channel_id = channel.id if channel else None
         if self.source_channel_id is None:
+            # TODO: This SIGNIFICANTLY slows down the creation flow
+            channel = (self.parent and self.parent.get_channel()) or self.get_channel() # Check parent first otherwise new content won't have root
             self.source_channel_id = channel.id if channel else None
+
         if self.original_source_node_id is None:
             self.original_source_node_id = self.node_id
         if self.source_node_id is None:
@@ -793,8 +827,8 @@ class ContentNode(MPTTModel, models.Model):
             root = self.get_root()
             if self.is_prerequisite_of.exists() and (root.channel_trash.exists() or root.user_clipboard.exists()):
                 PrerequisiteContentRelationship.objects.filter(Q(prerequisite_id=self.id) | Q(target_node_id=self.id)).delete()
-        except ContentNode.DoesNotExist:
-            pass
+        except (ContentNode.DoesNotExist, MultipleObjectsReturned) as e:
+            logging.warn(str(e))
 
     class MPTTMeta:
         order_insertion_by = ['sort_order']

@@ -4,6 +4,7 @@ from collections import namedtuple
 from distutils.version import LooseVersion
 
 import os
+from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist, SuspiciousOperation, PermissionDenied
 from django.core.files import File as DjFile
 from django.core.files.storage import default_storage
@@ -18,8 +19,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from contentcuration import ricecooker_versions as rc
 from contentcuration.api import get_staged_diff, write_file_to_storage, activate_channel, get_hash
-from contentcuration.models import AssessmentItem, Channel, ContentNode, ContentTag, File, FormatPreset, Language, License, StagedFile, generate_object_storage_name
-from contentcuration.tasks import deletetree_task
+from contentcuration.models import AssessmentItem, Channel, ContentNode, ContentTag, File, FormatPreset, Language, License, StagedFile, generate_object_storage_name, get_next_sort_order
 from contentcuration.utils.tracing import trace
 from contentcuration.utils.files import get_file_diff
 
@@ -191,7 +191,10 @@ def api_commit_channel(request):
 
         # Delete staging tree if it already exists
         if old_staging and old_staging != obj.main_tree:
-            deletetree_task.delay(old_staging.tree_id)
+            garbage_node = ContentNode.objects.get(pk=settings.ORPHANAGE_ROOT_ID)
+            old_staging.parent = garbage_node
+            old_staging.title = "Old staging tree for channel {}".format(obj.pk)
+            old_staging.save()
 
         if not data.get('stage'):  # If user says to stage rather than submit, skip changing trees at this step
             try:
@@ -451,7 +454,7 @@ def create_channel(channel_data, user):
     channel.chef_tree = ContentNode.objects.create(
         title=channel.name,
         kind_id=content_kinds.TOPIC,
-        sort_order=0,
+        sort_order=get_next_sort_order(),
         published=is_published,
         content_id=channel.id,
         node_id=channel.id,
@@ -464,7 +467,10 @@ def create_channel(channel_data, user):
 
     # Delete chef tree if it already exists
     if old_chef_tree and old_chef_tree != channel.staging_tree:
-        old_chef_tree.delete()
+        garbage_node = ContentNode.objects.get(pk=settings.ORPHANAGE_ROOT_ID)
+        old_chef_tree.parent = garbage_node
+        old_chef_tree.title = "Old chef tree for channel {}".format(channel.pk)
+        old_chef_tree.save()
 
     return channel  # Return new channel
 

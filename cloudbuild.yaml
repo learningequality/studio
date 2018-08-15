@@ -48,8 +48,11 @@ steps:
 - name: 'gcr.io/cloud-builders/gcloud'
   id: create-new-database
   waitFor: ['-']
+  dir: "k8s"
+  entrypoint: 'bash'
   args: [
-  'sql', 'databases', 'create', '$COMMIT_SHA', '--instance=studio-qa'
+  '-c',
+  './create-cloudsql-database.sh $BRANCH_NAME develop'
   ]
 
 - name: 'gcr.io/$PROJECT_ID/helm'
@@ -64,7 +67,7 @@ steps:
   args: [
   '-c',
   # still run helm.bash to initialze creds, but otherwise run our own deploy script
-  '/builder/helm.bash && ./helm-deploy.sh $BRANCH_NAME studio-qa-content $COMMIT_SHA $$POSTMARK_API_KEY arontest $COMMIT_SHA arontest ops-central-studio-qa-sql-proxy-gcloud-sqlproxy.sqlproxy ../gcs-service-account.json'
+  '/builder/helm.bash && ./helm-deploy.sh $BRANCH_NAME studio-qa-content $COMMIT_SHA $$POSTMARK_API_KEY arontest $BRANCH_NAME arontest ops-central-studio-qa-sql-proxy-gcloud-sqlproxy.sqlproxy ../gcs-service-account.json'
   ]
 
 timeout: 3600s

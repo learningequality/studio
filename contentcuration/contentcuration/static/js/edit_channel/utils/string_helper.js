@@ -8,14 +8,22 @@ function format_size(text){
   var value = Number(text);
   var isnegative = value < 0;
   value = Math.abs(value)
-  if(value > 999999999)
-    return (isnegative ? "-" : "") + Math.round(parseFloat(value/1000000000)) + "GB";
-  else if(value > 999999)
-    return (isnegative ? "-" : "") + Math.round(parseFloat(value/1000000)) + "MB";
-  else if(value > 999)
-    return (isnegative ? "-" : "") + Math.round(parseFloat(value/1000)) + "KB";
-  else
-    return (isnegative ? "-" : "") + Math.round(parseFloat(value)) + "B";
+
+  var KB = parseFloat(1024)
+  var MB = parseFloat(Math.pow(KB, 2))
+  var GB = parseFloat(Math.pow(KB, 3))
+  var TB = parseFloat(Math.pow(KB, 4))
+
+  if(value < KB)
+      return (isnegative ? "-" : "") + Math.round(value) + "B"
+  else if(KB <= value && value < MB)
+      return (isnegative ? "-" : "") + Math.round(parseFloat(value/KB)) + "KB"
+  else if (MB <= value && value < GB)
+      return (isnegative ? "-" : "") + Math.round(parseFloat(value/MB)) + "MB"
+  else if (GB <= value && value < TB)
+      return (isnegative ? "-" : "") + Math.round(parseFloat(value/GB)) + "GB"
+  else if (TB <= value)
+      return (isnegative ? "-" : "") + Math.round(parseFloat(value/TB)) + "TB"
 }
 
 function escape_str(text){
@@ -298,7 +306,12 @@ var messages = {
   "role_visibility": "Visible to",
   "more": "... More",
   "less": " Less",
-  "no_text_provided": "No text provided"
+  "no_text_provided": "No text provided",
+  "image": "IMAGE",
+  "formula": "FORMULA",
+  "export_error_text": "Error exporting data. Please try again.",
+  "export_title": "Exporting Data",
+  "export_text": "Data export started. You'll receive an email with your information when it's done."
 };
 
 var translate = i18n.createTranslator(namespace, messages);

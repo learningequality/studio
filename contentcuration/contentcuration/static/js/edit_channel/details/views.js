@@ -11,13 +11,18 @@ var descriptionHelper = require("edit_channel/utils/description");
 
 var NAMESPACE = "details";
 var MESSAGES = {
-    "author": "This {model} features resources created by",
-    "aggregator": "Material in this {model} was originally hosted at",
-    "provider": "The material in this {model} was provided by",
-    "empty_details": "This {model} is empty",
+    "author": "This channel features resources created by",
+    "aggregator": "Material in this channel was originally hosted at",
+    "provider": "The material in this channel was provided by",
+    "empty_details": "This channel is empty",
+    "topic_author": "This topic features resources created by",
+    "topic_aggregator": "Material in this topic was originally hosted at",
+    "topic_provider": "The material in this topic was provided by",
+    "topic_empty_details": "This topic is empty",
     "saved": "SAVED!",
     "header": "CHANNEL DETAILS",
     "save_changes": "SAVE CHANGES",
+    "unable_to_save": "Error Saving Channel",
     "channel_name": "Channel Name",
     "channel_name_error": "Channel name cannot be blank.",
     "channel_name_placeholder": "Enter channel name...",
@@ -152,7 +157,7 @@ var ChannelDetailsView = BaseViews.BaseListEditableItemView.extend({
                         allow_edit: true,
                         model: data,
                         channel_id: self.model.id,
-                        model_name: self.get_translation("channel").toLowerCase(),
+                        is_channel: true,
                         channel: self.model.toJSON()
                     });
                     $(".details_view").css("display", "block");
@@ -312,6 +317,8 @@ var ChannelEditorView = BaseViews.BaseListEditableItemView.extend({
                 self.render();
             }
 
+        }).catch( function(error) {
+            dialog.alert(self.get_translation("unable_to_save"), error.responseText);
         });
     },
     register_changes:function(){
@@ -359,8 +366,9 @@ var DetailsView = BaseViews.BaseListEditableItemView.extend({
         _.bindAll(this, "render_visuals");
         this.allow_edit = options.allow_edit;
         this.channel_id = options.channel_id;
-        this.model_name = options.model_name || this.get_translation("topic");
+        this.is_channel = options.is_channel;
         this.channel = options.channel;
+        window.current_channel_editor_cid = this.cid;
         this.render();
     },
     events: {
@@ -378,7 +386,7 @@ var DetailsView = BaseViews.BaseListEditableItemView.extend({
             channel_id: this.channel_id,
             allow_edit: this.allow_edit,
             original_channels:original_channels,
-            model_name: this.model_name,
+            is_channel: this.is_channel,
             license_count: this.model.get("metadata").licenses.length,
             copyright_holder_count: this.model.get("metadata").copyright_holders.length,
             token_count: (this.channel && this.channel.secret_tokens)? this.channel.secret_tokens.length : 0,
@@ -397,9 +405,11 @@ var DetailsView = BaseViews.BaseListEditableItemView.extend({
         _.defer(this.render_visuals, 500);
     },
     render_visuals: function() {
-        // Render visualizations with tags/kind counts
-        this.render_breakdown();
-        this.render_tagcloud();
+        if(this.cid === window.current_channel_editor_cid){
+            // Render visualizations with tags/kind counts
+            this.render_breakdown();
+            this.render_tagcloud();
+        }
     },
     render_tagcloud: function() {
         var self = this;

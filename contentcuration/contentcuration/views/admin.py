@@ -21,6 +21,7 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.core.exceptions import ObjectDoesNotExist, SuspiciousOperation
 from django.db.models import Q, Case, When, Value, IntegerField, Count, Sum, CharField, Max
 from django.db.models.functions import Concat
+from django.core.files.storage import default_storage
 from django.core.urlresolvers import reverse_lazy
 from django.template.loader import render_to_string, get_template
 from django.template import Context
@@ -227,11 +228,12 @@ def generate_thumbnail(channel):
         except IOError:
             pass
 
-
 def get_channel_data(channel, site, default_thumbnail=None):
     import time
     start = time.time()
-    print "Starting " + channel.name
+    print "Starting " + channel.name.encode('utf-8')
+
+
     data = {
         "name": channel.name,
         "id": channel.id,
@@ -242,25 +244,14 @@ def get_channel_data(channel, site, default_thumbnail=None):
         "url": "http://{}/channels/{}/edit".format(site, channel.id)
     }
 
-    # Get information related to channel
-    tags = channel.secret_tokens.values_list('token', flat=True)
-    data["tokens"] = ", ".join(["{}-{}".format(t[:5], t[5:]) for t in tags if t != channel.id])
-    data["editors"] = ", ".join(list(channel.editors.annotate(name=Concat('first_name', Value(' '), \
-                                                'last_name', Value(' ('), 'email', Value(')'),\
-                                                output_field=CharField()))\
-                                      .values_list('name', flat=True)))
-    data["tags"] = ", ".join(channel.tags.exclude(tag_name=None).values_list('tag_name', flat=True).distinct())
+    descendants = channel.main_tree.get_descendants().prefetch_related('children', 'files', 'tags')\
+                            .select_related('license', 'language')
+    resources = descendants.exclude(kind=content_kinds.TOPIC)
 
 
-    # Get information related to nodes
-    nodes = channel.main_tree.get_descendants()\
-                            .select_related('parent', 'language', 'kind')\
-                            .prefetch_related('files')
-
-    # Get sample path at longest path
-    max_level = nodes.aggregate(max_level=Max('level'))['max_level']
-    deepest_node = nodes.filter(level=max_level).first()
-
+    # Get sample pathway by getting longest path
+    max_level = resources.aggregate(max_level=Max('level'))['max_level']
+    deepest_node = resources.filter(level=max_level).first()
     if deepest_node:
         pathway = deepest_node.get_ancestors(include_self=True)\
                             .exclude(pk=channel.main_tree.pk)\
@@ -270,31 +261,35 @@ def get_channel_data(channel, site, default_thumbnail=None):
     else:
         data["sample_pathway"] = "Channel is empty"
 
+    # Get information related to channel
+    tokens = channel.secret_tokens.values_list('token', flat=True)
+    data["tokens"] = ", ".join(["{}-{}".format(t[:5], t[5:]) for t in tokens if t != channel.id])
+    data["editors"] = ", ".join(list(channel.editors.annotate(name=Concat('first_name', Value(' '), \
+                                                'last_name', Value(' ('), 'email', Value(')'),\
+                                                output_field=CharField()))\
+                                      .values_list('name', flat=True)))
+
+    data["tags"] = ", ".join(channel.tags.exclude(tag_name=None).values_list('tag_name', flat=True).distinct())
+
     # Get language information
-    node_languages = nodes.exclude(language=None).values_list('language__readable_name', flat=True).distinct()
-    file_languages = nodes.exclude(files__language=None).values_list('files__language__readable_name', flat=True)
+    node_languages = descendants.exclude(language=None).values_list('language__readable_name', flat=True).distinct()
+    file_languages = descendants.exclude(files__language=None).values_list('files__language__readable_name', flat=True)
     language_list = list(set(chain(node_languages, file_languages)))
     language_list = filter(lambda l: l != None and l != data['language'], language_list)
     language_list = map(lambda l: l.replace(",", " -"), language_list)
     language_list = sorted(map(lambda l: l.replace(",", " -"), language_list))
     data["languages"] = ", ".join(language_list)
+    data["languages"] = ""
 
     # Get kind information
-    kind_list = nodes.values('kind_id')\
-                     .annotate(count=Count('kind_id'))\
-                     .order_by('kind_id')
+    kind_list = list(descendants.values('kind_id').annotate(count=Count('kind_id')).order_by('kind_id'))
     data["kind_counts"] = ", ".join([pluralize_kind(k['kind_id'], k['count']) for k in kind_list])
 
     # Get file size
-    data["total_size"] = sizeof_fmt(nodes.exclude(kind_id=content_kinds.EXERCISE, published=False)\
-                        .values('files__checksum', 'files__file_size')\
-                      .distinct()\
-                      .aggregate(size=Sum('files__file_size'))['size'] or 0)
+    data["total_size"] = sizeof_fmt(resources.values('files__checksum', 'files__file_size').distinct().aggregate(resource_size=Sum('files__file_size'))['resource_size'] or 0)
 
 
-
-
-    print channel.name + " time:", time.time() - start
+    print channel.name.encode('utf-8') + " time:", time.time() - start
     return data
 
 class Echo:
@@ -316,9 +311,9 @@ def stream_csv_response_generator(request):
     channels = Channel.objects.prefetch_related('editors', 'secret_tokens', 'tags')\
                             .select_related('main_tree')\
                             .exclude(deleted=True)\
-                            .filter(Q(public=True) | Q(editors=request.user) | Q(viewers=request.user))\
+                            .filter(public=True)\
                             .distinct()\
-                            .order_by('name')[:3]
+                            .order_by('name')
     site = get_current_site(request)
 
     pseudo_buffer = Echo()
@@ -327,11 +322,8 @@ def stream_csv_response_generator(request):
     yield writer.writerow(['Channel', 'ID', 'Public', 'Description', 'Tokens', 'Kind Counts',\
                     'Total Size', 'Language', 'Other Languages', 'Tags', 'Editors', 'Sample Pathway'])
 
-    pool = ThreadPool(processes=3)
-    threads = [pool.apply_async(get_channel_data, (c, site)) for c in channels]
-
-    for t in threads:
-        data = t.get()
+    for c in channels:
+        data = get_channel_data(c, site)
         yield writer.writerow([data['name'], data['id'], data['public'], data['description'], data['tokens'],\
                     data['kind_counts'], data['total_size'], data['language'], data['languages'], \
                     data['tags'], data['editors'], data['sample_pathway']])
@@ -365,7 +357,7 @@ def download_channel_pdf(request):
                             .select_related('main_tree')\
                             .filter(public=True, deleted=False)\
                             .distinct()\
-                            .order_by('name')[:3]
+                            .order_by('name')
 
     print "Channel query time:", time.time() - start
 
@@ -373,14 +365,7 @@ def download_channel_pdf(request):
 
     default_thumbnail = get_default_thumbnail()
 
-    pool = ThreadPool(processes=3)
-
-
-    threads = [pool.apply_async(get_channel_data, (c, site, default_thumbnail)) for c in channels]
-    channel_list = []
-    for t in threads:
-        channel_list.append(t.get())
-    # channel_list = [get_channel_data(c, site, default_thumbnail) for c in channels]
+    channel_list = [get_channel_data(c, site, default_thumbnail) for c in channels]
 
     context = Context({
         "channels": channel_list

@@ -5,22 +5,28 @@ steps:
 
 - name: 'gcr.io/cloud-builders/docker'
   id: build-app-image
-  waitFor: ['pull-app-image-cache']              # don't wait for previous steps
-  args: [
-    'build',
-    '-f', 'k8s/images/app/Dockerfile',
-    '--cache-from', 'gcr.io/$PROJECT_ID/learningequality-studio-app:latest',
-    '-t', 'gcr.io/$PROJECT_ID/learningequality-studio-app:$COMMIT_SHA',
-    '-t', 'gcr.io/$PROJECT_ID/learningequality-studio-app:latest',
-    '.'
-    ]
+  entrypoint: bash
+  waitFor: ['pull-app-image-cache']              # wait for app image cache pull to finish
+  secretEnv: ['CROWDIN_PROJECT', 'CROWDIN_API_KEY']
+  args:
+  - -c
+  - >
+    docker build
+    -f k8s/images/app/Dockerfile
+    --cache-from gcr.io/$PROJECT_ID/learningequality-studio-app:latest
+    -t gcr.io/$PROJECT_ID/learningequality-studio-app:$COMMIT_SHA
+    -t gcr.io/$PROJECT_ID/learningequality-studio-app:latest
+    --build-arg CROWDIN_PROJECT=$$CROWDIN_PROJECT
+    --build-arg CROWDIN_API_KEY=$$CROWDIN_API_KEY
+    .
+
 - name: 'gcr.io/cloud-builders/docker'
   id: build-nginx-image
   waitFor: ['-']              # don't wait for previous steps
   args: [
     'build',
     '-f', 'k8s/images/nginx/Dockerfile',
-    '--cache-from', 'gcr.io/$PROJECT_ID/learningequality-studio-nginx:latest', 
+    '--cache-from', 'gcr.io/$PROJECT_ID/learningequality-studio-nginx:latest',
     '-t', 'gcr.io/$PROJECT_ID/learningequality-studio-nginx:$COMMIT_SHA',
     '-t', 'gcr.io/$PROJECT_ID/learningequality-studio-nginx:latest',
     '.'
@@ -44,24 +50,47 @@ steps:
   '--ciphertext-file=k8s/build-secrets/$PROJECT_ID-gcs-service-account.json.enc',
   '--plaintext-file=gcs-service-account.json'
   ]
+- name: 'gcr.io/cloud-builders/gcloud'
+  id: decrypt-gdrive-service-account
+  waitFor: ['-']
+  args: [
+  'kms', 'decrypt',
+  '--location=global', '--keyring=prod-secrets', '--key=google-drive',
+  '--ciphertext-file=k8s/build-secrets/$PROJECT_ID-gdrive-service-account.json.enc',
+  '--plaintext-file=gdrive-service-account.json'
+  ]
+
 - name: 'gcr.io/$PROJECT_ID/helm'
   id: helm-deploy-studio-instance
-  waitFor: ['decrypt-gcs-service-account', 'push-app-image', 'push-nginx-image']
+  waitFor: ['decrypt-gcs-service-account', 'decrypt-gdrive-service-account', 'push-app-image', 'push-nginx-image']
   dir: "k8s"
   env:
   - 'CLOUDSDK_COMPUTE_ZONE=us-central1-f'
   - 'CLOUDSDK_CONTAINER_CLUSTER=contentworkshop-central'
-  secretEnv: ['POSTMARK_API_KEY', 'POSTGRES_USERNAME', 'POSTGRES_DATABASE', 'POSTGRES_PASSWORD']
+  secretEnv: ['POSTMARK_API_KEY', 'POSTGRES_USERNAME', 'POSTGRES_DATABASE', 'POSTGRES_PASSWORD', 'SENTRY_DSN_KEY']
   entrypoint: 'bash'
-  args: [
-  '-c',
-  # still run helm.bash to initialze creds, but otherwise run our own deploy script
-  '/builder/helm.bash && ./helm-deploy.sh $BRANCH_NAME $_STORAGE_BUCKET $COMMIT_SHA $$POSTMARK_API_KEY $$POSTGRES_USERNAME $$POSTGRES_DATABASE $$POSTGRES_PASSWORD studio-$_DATABASE_INSTANCE_NAME-sql-proxy-gcloud-sqlproxy.sqlproxy ../gcs-service-account.json $PROJECT_ID is_production'
-  ]
+  args:
+    - -c
+    - >
+      /builder/helm.bash &&
+      ./helm-deploy.sh
+      $BRANCH_NAME
+      $_STORAGE_BUCKET
+      $COMMIT_SHA
+      $$POSTMARK_API_KEY
+      $$POSTGRES_USERNAME
+      $$POSTGRES_DATABASE
+      $$POSTGRES_PASSWORD
+      studio-$_DATABASE_INSTANCE_NAME-sql-proxy-gcloud-sqlproxy.sqlproxy
+      ../gcs-service-account.json
+      $PROJECT_ID
+      is_production
+      ../gdrive-service-account.json
+      $$SENTRY_DSN_KEY
 
 substitutions:
   _DATABASE_INSTANCE_NAME: develop  # by default, connect to the develop DB
-  _STORAGE_BUCKET: studio-content
+  _STORAGE_BUCKET: develop-studio-content
 
 timeout: 3600s
 
@@ -78,6 +107,15 @@ secrets:
 - kmsKeyName: projects/contentworkshop-159920/locations/global/keyRings/prod-secrets/cryptoKeys/postgresPassword
   secretEnv:
     POSTGRES_PASSWORD: CiQAMPmSF7yqmZpvhbSTw1eLxx+KzaZi1MUV1QrEpsRL4VnOadUSMgD2FZMP4J23KAW6xGwwwldugufqKGb3takkNo3cpBWJocGQ1T8oQfWyJrjUHFu0PMAI
+- kmsKeyName: projects/contentworkshop-159920/locations/global/keyRings/prod-secrets/cryptoKeys/crowdinProject
+  secretEnv:
+    CROWDIN_PROJECT: CiQA4GP4aWHJjKldoAx95R+RMx+I1WhYKlT5/yOKzGqT4ABZ3joSOQAdnepcOy8znHRi5BkIPc74VD/OE5iV2HtspY8GrSCSGpE/IJcizMcjIrY6KIusaBkePzEHhJKGfA==
+- kmsKeyName: projects/contentworkshop-159920/locations/global/keyRings/prod-secrets/cryptoKeys/crowdinApiKey
+  secretEnv:
+    CROWDIN_API_KEY: CiQA5yVB2KLpFiuaF4kAmNS2+I04GTIBpEl3hy4Px21xpuApka0SSQC1m2SkfC/mzvR1KhoNaKzDHQRG7SyPI69iG/NTjNwV/u56To3swMhMqsD1ErNTITgnZEloUXAPpGSJAL+LLJB0fbzhMsE4cpY=
+- kmsKeyName: projects/contentworkshop-159920/locations/global/keyRings/prod-secrets/cryptoKeys/sentryKey
+  secretEnv:
+    SENTRY_DSN_KEY: CiQAymGxx8tU8G23aFWKz52KLPvwY+EnKDPDMI4WZtVGtw7CJi8SagAaZGpaLvlDDdn2Nr4zJLLOxy3tpnzdteSDe8NJsQiIv8iSiULHOeA9wtZKSyzNWOv+gZrIAqgjipz7Sznm1sXC//qusnMFntzLOlRE3nJy9jp5h0XtCIY5grq/xUIW5MCeEDVf66sWO5U=
 
 images:
   - gcr.io/$PROJECT_ID/learningequality-studio-nginx:latest

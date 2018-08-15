@@ -17,7 +17,14 @@
 	</a>
 </div>
 <div class="col-xs-2 text-center">
-	<input type="number" class="size_limit" min=0 value="{{mb_space}}"/> MB
+	<input type="number" class="size_limit" min=0 value="{{mb_space.size}}"/>
+	<select class="size_unit">
+		<option value="1" {{#equal mb_space.unit 'B'}}selected{{/equal}}>B</option>
+		<option value="1024" {{#equal mb_space.unit 'KB'}}selected{{/equal}}>KB</option>
+		<option value="1048576" {{#equal mb_space.unit 'MB'}}selected{{/equal}}>MB</option>
+		<option value="1073741824" {{#equal mb_space.unit 'GB'}}selected{{/equal}}>GB</option>
+		<option value="1099511627776" {{#equal mb_space.unit 'TB'}}selected{{/equal}}>TB</option>
+	</select>
 </div>
 <div class="col-xs-2 text-center">
 	{{#if editable_channels}}
