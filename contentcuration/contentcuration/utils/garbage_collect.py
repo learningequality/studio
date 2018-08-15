@@ -50,8 +50,10 @@ def clean_up_files(contentnode_ids):
         # if there's only one item in there. Extract the file_on_disk
         # string value from inside that singleton tuple
         file_path = f[0]
-        # call the storage's delete method on each file, one by one
-        storage.delete(file_path)
+        # NOTE (aron):call the storage's delete method on each file, one by one
+        # disabled for now until we implement logic to not delete files
+        # that are referenced by non-orphan nodes
+        # storage.delete(file_path)
 
     # finally, remove the entries from object storage
     # use _raw_delete for much fast file deletions
