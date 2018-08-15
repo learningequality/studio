@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import requests
 from django.conf import settings
 from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
 
 from contentcuration.models import ContentNode, File
 from contentcuration.utils.garbage_collect import clean_up_contentnodes
@@ -128,3 +129,40 @@ class CleanUpContentNodesTestCase(StudioTestCase):
         # is our senior, legit node still around? :)
         assert ContentNode.objects.filter(pk=legit_node.pk).exists()
 
+
+
+    def test_doesnt_delete_file_referenced_by_orphan_and_nonorphan_nodes(self):
+        """
+        Make sure we don't delete a file, as long as it's referenced
+        by a non-orphan node.
+        """
+
+        # Our orphan, to be taken soon from this world
+        orphan_node = _create_expired_contentnode()
+
+        # our legit node, standing proud and high with its non-orphaned status
+        legit_node = ContentNode.objects.create(
+            kind_id="Video",
+        )
+
+        f = File.objects.create(
+            contentnode=legit_node,
+            checksum="aaa",
+        )
+        forphan = File.objects.create(
+            contentnode=orphan_node,
+            checksum="aaa",
+        )
+
+        # The file they both share. This has the same checksum and contents.
+        # Alas, a file cannot have an orphan and non-orphan reference. This must
+        # not be deleted.
+        f.file_on_disk.save("aaa.jpg", ContentFile("aaa"))
+        forphan.file_on_disk.save("aaa.jpg", ContentFile("aaa"))
+
+        # check that our file exists in object storage
+        assert default_storage.exists("storage/a/a/aaa.jpg")
+
+        clean_up_contentnodes()
+
+        assert default_storage.exists("storage/a/a/aaa.jpg")
