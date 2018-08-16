@@ -42,9 +42,10 @@ def can_access_channel(function):
             channel = Channel.objects.get(pk=kwargs['channel_id'])
 
             if not channel.public and \
+                request.user.is_authenticated() and \
+                not request.user.is_admin and \
                 not channel.editors.filter(id=request.user.id).exists() and \
-                not channel.viewers.filter(id=request.user.id).exists() and \
-                not request.user.is_admin:
+                not channel.viewers.filter(id=request.user.id).exists():
                 return render_to_response('unauthorized.html', context_instance=RequestContext(request))
 
             return function(request, *args, **kwargs)
