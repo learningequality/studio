@@ -51,7 +51,7 @@ class FileFormatSerializer(serializers.ModelSerializer):
         fields = ("__all__")
 
 
-class FormatPresetSerializer(serializers.ModelSerializer):
+class FormatPresetSerializer(serializers.PrimaryKeyRelatedField):
     # files = FileSerializer(many=True, read_only=True)
     associated_mimetypes = serializers.SerializerMethodField('retrieve_mimetypes')
     # Handles multi-language content (Backbone won't allow duplicate ids in collection, so name retains id)
@@ -77,6 +77,7 @@ class FileListSerializer(serializers.ListSerializer):
         user = self.context['request'].user
         with transaction.atomic():
             for item in validated_data:
+                # import ipdb; ipdb.set_trace()
                 item.update({
                     'preset_id': item['preset']['id'],
                     'language_id': item.get('language')['id'] if item.get('language') else None
@@ -149,7 +150,8 @@ class FileSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     language = LanguageSerializer(many=False, required=False, allow_null=True)
     display_name = serializers.SerializerMethodField('retrieve_display_name')
     id = serializers.CharField(required=False)
-    preset = FormatPresetSerializer(many=False)
+    preset = FormatPresetSerializer(many=False, read_only=True)
+    # preset = serializers.PrimaryKeyRelatedField(many=False, queryset=FormatPreset.objects.all())
 
     def get(*args, **kwargs):
         return super.get(*args, **kwargs)
