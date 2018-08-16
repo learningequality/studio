@@ -23,7 +23,8 @@ from pressurecooker.videos import compress_video, extract_thumbnail_from_video
 def create_file_from_contents(contents, ext=None, node=None, preset_id=None, uploaded_by=None):
     checksum, _, path = write_raw_content_to_storage(contents, ext=ext)
     with default_storage.open(path, 'rb') as new_file:
-        return File.objects.create(
+        # import ipdb; ipdb.set_trace()
+        result = File.objects.create(
             file_on_disk=DjFile(new_file),
             file_format_id=ext,
             file_size=default_storage.size(path),
@@ -32,6 +33,7 @@ def create_file_from_contents(contents, ext=None, node=None, preset_id=None, upl
             contentnode=node,
             uploaded_by=uploaded_by
         )
+        return result
 
 
 def get_file_diff(files):
