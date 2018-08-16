@@ -55,6 +55,7 @@ def file_create(request):
     if request.method != 'POST':
         return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
 
+    import ipdb; ipdb.set_trace()
     original_filename, ext = os.path.splitext(request.FILES.values()[0]._name)
     size = request.FILES.values()[0]._size
     contentfile = DjFile(request.FILES.values()[0])
