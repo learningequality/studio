@@ -6,6 +6,12 @@ from django.conf import settings
 from django.core.files.storage import default_storage as storage
 
 from contentcuration.models import ContentNode, File
+from le_utils.constants import content_kinds
+
+
+def get_deleted_chefs_root():
+    deleted_chefs_node, _new = ContentNode.objects.get_or_create(pk=settings.DELETED_CHEFS_ROOT_ID, kind_id=content_kinds.TOPIC)
+    return deleted_chefs_node
 
 
 def clean_up_deleted_chefs():
@@ -14,7 +20,7 @@ def clean_up_deleted_chefs():
     child nodes in that tree.
 
     """
-    deleted_chefs_node, _new = ContentNode.objects.get_or_create(pk=settings.DELETED_CHEFS_ROOT_ID)
+    deleted_chefs_node = get_deleted_chefs_root()
     # we cannot use MPTT methods like get_descendants() or use tree_id because for performance reasons
     # we are avoiding MPTT entirely.
     nodes_to_clean_up = ContentNode.objects.filter(parent=deleted_chefs_node)

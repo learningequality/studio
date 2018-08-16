@@ -17,6 +17,7 @@ from django.http import HttpResponse
 from django.utils.translation import ugettext as _
 from le_utils.constants import format_presets, content_kinds, file_formats
 import contentcuration.models as models
+from contentcuration.utils.garbage_collect import get_deleted_chefs_root
 from contentcuration.tasks import deletetree_task
 
 def check_health_check_browser(user_agent_string):
@@ -219,7 +220,7 @@ def activate_channel(channel, user):
     if channel.previous_tree and channel.previous_tree != channel.main_tree:
         # IMPORTANT: Do not remove this block, MPTT updating the deleted chefs block could hang the server
         with models.ContentNode.objects.disable_mptt_updates():
-            garbage_node, _new = models.ContentNode.objects.get_or_create(pk=settings.DELETED_CHEFS_ROOT_ID)
+            garbage_node = get_deleted_chefs_root()
             channel.previous_tree.parent = garbage_node
             channel.previous_tree.title = "Previous tree for channel {}".format(channel.pk)
             channel.previous_tree.save()

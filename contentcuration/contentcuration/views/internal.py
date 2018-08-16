@@ -22,6 +22,7 @@ from contentcuration.api import get_staged_diff, write_file_to_storage, activate
 from contentcuration.models import AssessmentItem, Channel, ContentNode, ContentTag, File, FormatPreset, Language, License, StagedFile, generate_object_storage_name, get_next_sort_order
 from contentcuration.utils.tracing import trace
 from contentcuration.utils.files import get_file_diff
+from contentcuration.utils.garbage_collect import get_deleted_chefs_root
 
 VersionStatus = namedtuple('VersionStatus', ['version', 'status', 'message'])
 VERSION_OK = VersionStatus(version=rc.VERSION_OK, status=0, message=rc.VERSION_OK_MESSAGE)
@@ -193,7 +194,7 @@ def api_commit_channel(request):
         if old_staging and old_staging != obj.main_tree:
             # IMPORTANT: Do not remove this block, MPTT updating the deleted chefs block could hang the server
             with ContentNode.objects.disable_mptt_updates():
-                garbage_node = ContentNode.objects.get(pk=settings.DELETED_CHEFS_ROOT_ID)
+                garbage_node = get_deleted_chefs_root()
                 old_staging.parent = garbage_node
                 old_staging.title = "Old staging tree for channel {}".format(obj.pk)
                 old_staging.save()
@@ -471,7 +472,7 @@ def create_channel(channel_data, user):
     if old_chef_tree and old_chef_tree != channel.staging_tree:
         # IMPORTANT: Do not remove this block, MPTT updating the deleted chefs block could hang the server
         with ContentNode.objects.disable_mptt_updates():
-            garbage_node, _new = ContentNode.objects.get_or_create(pk=settings.DELETED_CHEFS_ROOT_ID)
+            garbage_node = get_deleted_chefs_root()
             old_chef_tree.parent = garbage_node
             old_chef_tree.title = "Old chef tree for channel {}".format(channel.pk)
             old_chef_tree.save()

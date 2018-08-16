@@ -336,4 +336,4 @@ ORPHANAGE_ROOT_ID = "00000000000000000000000000000000"
 # of the tree. This tree is special in that it should always be accessed inside a disable_mptt_updates code block,
 # so we must be very careful to limit code that touches this tree and to carefully check code that does. If we
 # do choose to implement restore of old chefs, we will need to ensure moving nodes does not cause a tree sort.
-DELETED_CHEFS_ROOT_ID = "00000000000000000000000000000000"
+DELETED_CHEFS_ROOT_ID = "11111111111111111111111111111111"

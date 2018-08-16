@@ -7,7 +7,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.urlresolvers import reverse_lazy
 from contentcuration import models as cc
 from contentcuration.api import activate_channel
-from contentcuration.utils.garbage_collect import clean_up_deleted_chefs
+from contentcuration.utils.garbage_collect import clean_up_deleted_chefs, get_deleted_chefs_root
 
 from base import BaseAPITestCase
 from testdata import tree
@@ -71,7 +71,7 @@ class NodeSettingTestCase(BaseAPITestCase):
         tree(parent=self.channel.chef_tree)
         chef_tree = self.channel.chef_tree
         self.assertTrue(chef_tree.get_descendant_count() > 0)
-        garbage_node, _new = cc.ContentNode.objects.get_or_create(pk=settings.DELETED_CHEFS_ROOT_ID)
+        garbage_node = get_deleted_chefs_root()
 
         self.assertNotEqual(chef_tree, self.channel.staging_tree)
         # Chef tree shouldn't be in garbage tree until create_channel is called
@@ -99,7 +99,7 @@ class NodeSettingTestCase(BaseAPITestCase):
 
     def test_old_staging_tree(self):
         staging_tree = self.channel.staging_tree
-        garbage_node, _new = cc.ContentNode.objects.get_or_create(pk=settings.DELETED_CHEFS_ROOT_ID)
+        garbage_node = get_deleted_chefs_root()
 
         tree(parent=staging_tree)
         self.assertTrue(staging_tree.get_descendant_count() > 0)
@@ -131,7 +131,7 @@ class NodeSettingTestCase(BaseAPITestCase):
     def test_activate_channel(self):
         previous_tree = self.channel.previous_tree
         tree(parent=previous_tree)
-        garbage_node, _new = cc.ContentNode.objects.get_or_create(pk=settings.DELETED_CHEFS_ROOT_ID)
+        garbage_node = get_deleted_chefs_root()
 
         # Previous tree shouldn't be in garbage tree until activate_channel is called
         self.assertFalse(garbage_node.get_descendants().filter(pk=previous_tree.pk).exists())
