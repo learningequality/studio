@@ -331,3 +331,9 @@ GOOGLE_STORAGE_REQUEST_SHEET = "16X6zcFK8FS5t5tFaGpnxbWnWTXP88h4ccpSpPbyLeA8"
 
 # Used as the default parent to collect orphan nodes
 ORPHANAGE_ROOT_ID = "00000000000000000000000000000000"
+
+# IMPORTANT: Deleted chefs should not be in the orhpanage becuase this can lead to very large and painful resorts
+# of the tree. This tree is special in that it should always be accessed inside a disable_mptt_updates code block,
+# so we must be very careful to limit code that touches this tree and to carefully check code that does. If we
+# do choose to implement restore of old chefs, we will need to ensure moving nodes does not cause a tree sort.
+DELETED_CHEFS_ROOT_ID = "11111111111111111111111111111111"
