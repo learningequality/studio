@@ -1,7 +1,7 @@
 import json
 import logging
 import os
-from django.http import HttpResponse, HttpResponseBadRequest
+from django.http import HttpResponse, HttpResponseBadRequest, Http404
 from django.conf import settings
 from django.core.files import File as DjFile
 from django.core.files.storage import default_storage
@@ -220,6 +220,18 @@ def debug_serve_file(request, path):
     checksum, _ext = os.path.splitext(filename)
     filepath = generate_object_storage_name(checksum, filename)
 
+    if not default_storage.exists(filepath):
+        raise Http404("The object requested does not exist.")
     with default_storage.open(filepath, 'rb') as fobj:
-        response = HttpResponse(FileWrapper(fobj))
+        response = HttpResponse(FileWrapper(fobj), content_type="application/octet-stream")
+        return response
+
+
+def debug_serve_content_database_file(request, path):
+    filename = os.path.basename(path)
+    path = "/".join([settings.DB_ROOT, filename])
+    if not default_storage.exists(path):
+        raise Http404("The object requested does not exist.")
+    with default_storage.open(path, "rb") as f:
+        response = HttpResponse(FileWrapper(f), content_type="application/octet-stream")
         return response
