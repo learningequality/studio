@@ -53,14 +53,15 @@ def get_or_set_cached_constants(constant, serializer):
     cache.set(constant.__name__, constant_data, None)
     return constant_data
 
-@can_access_channel
 @has_accepted_policies
 def redirect_to_channel(request, channel_id):
     channel = Channel.objects.get(pk=channel_id)
     if channel.editors.filter(pk=request.user.pk).exists():
         return redirect(reverse_lazy('channel', kwargs={'channel_id': channel_id}))
-    elif channel.viewers.filter(pk=request.user.pk).exists() or channel.public:
-        return redirect(reverse_lazy('channel_view_only', kwargs={'channel_id': channel_id}))
+
+    # it will check the view authorization after the redirect
+    return redirect(reverse_lazy('channel_view_only', kwargs={'channel_id': channel_id}))
+
 
 def redirect_to_channel_edit(request, channel_id):
     return redirect(reverse_lazy('channel', kwargs={'channel_id': channel_id}))

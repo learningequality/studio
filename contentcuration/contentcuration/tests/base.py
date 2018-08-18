@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.core.management import call_command
 from django.test import TestCase
 
@@ -69,6 +70,9 @@ class BaseTestCase(StudioTestCase):
         self.channel = testdata.channel()
         self.user = testdata.user()
         self.channel.main_tree.refresh_from_db()
+
+    def get(self, url, data=None, follow=False, secure=False):
+        return self.client.get(url, data=data, follow=follow, secure=secure, HTTP_USER_AGENT=settings.SUPPORTED_BROWSERS[0])
 
 
 class BaseAPITestCase(StudioAPITestCase):
