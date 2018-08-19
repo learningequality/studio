@@ -339,9 +339,9 @@ var EditorView = BaseViews.BaseView.extend({
     render_content: function() {
         var self = this;
         var value = this.model.get(this.edit_key)
-        if((value || value == 0) && this.model.get(this.edit_key).trim() !==""){
+        if(value && value.trim() !== ""){
             this.toggle_loading(true);
-            this.parse_content(this.model.get(this.edit_key)).then(function(result){
+            this.parse_content(value).then(function(result){
                 self.$el.html(self.view_template({content: result}, {
                     data: self.get_intl_data()
                 }));
