@@ -34,7 +34,6 @@ def _create_expired_contentnode(creation_date=THREE_MONTHS_AGO):
 
 
 class CleanUpContentNodesTestCase(StudioTestCase):
-
     def test_delete_all_contentnodes_in_orphanage_tree(self):
         """
         Make sure that by default, all nodes created with a timestamp of 3 months

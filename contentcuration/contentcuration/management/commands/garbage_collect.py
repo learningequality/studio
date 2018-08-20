@@ -6,7 +6,7 @@ database and in object storage.
 """
 from django.core.management.base import BaseCommand
 
-from contentcuration.utils.garbage_collect import clean_up_contentnodes
+from contentcuration.utils.garbage_collect import clean_up_contentnodes, clean_up_deleted_chefs
 
 
 class Command(BaseCommand):
@@ -19,3 +19,4 @@ class Command(BaseCommand):
         # clean up contentnodes, files and file objects on storage that are associated
         # with the orphan tree
         clean_up_contentnodes()
+        clean_up_deleted_chefs()
