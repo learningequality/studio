@@ -356,18 +356,21 @@ var EditorView = BaseViews.BaseView.extend({
     render_editor: function() {
         var self = this;
         this.toggle_loading(true);
-        this.parse_content(this.model.get(this.edit_key)).then(function(result){
-            var html = self.view_template({content: result}, {
-                data: self.get_intl_data()
+        var value = this.model.get(this.edit_key);
+        if (value && value.trim() !== "") {
+            this.parse_content(value).then(function(result){
+                var html = self.view_template({content: result}, {
+                    data: self.get_intl_data()
+                });
+                self.editor ? self.editor.setHTML(html) : self.$el.html(html);
+                self.toggle_loading(false);
+                self.render_toolbar();
+                if(self.editor){
+                    self.editor.push();
+                    self.editor.focus();
+                }
             });
-            self.editor ? self.editor.setHTML(html) : self.$el.html(html);
-            self.toggle_loading(false);
-            self.render_toolbar();
-            if(self.editor){
-                self.editor.push();
-                self.editor.focus();
-            }
-        });
+        }
     },
     render_toolbar:function(){
         if(this.numbersOnly){
