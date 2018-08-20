@@ -426,7 +426,7 @@ var ContentNodeCollection = BaseCollection.extend({
                         item.get('answers').each( function(a){
                             var answer = a.get('answer');
                             if (answer) {
-                                var value = numParser.parse(a.get('answer'))
+                                var value = numParser.parse(answer);
                                 a.set('answer', value !== null && value.toString());
                             }
                         });
