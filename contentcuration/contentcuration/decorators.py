@@ -27,10 +27,10 @@ def browser_is_supported(function):
 
 def is_admin(function):
     def wrap(request, *args, **kwargs):
-        if not request.user.is_admin:
-            return render_to_response('unauthorized.html', context_instance=RequestContext(request))
+        if request.user.is_admin:
+            return function(request, *args, **kwargs)
 
-        return function(request, *args, **kwargs)
+        return render_to_response('unauthorized.html', context_instance=RequestContext(request), status=403)
 
     wrap.__doc__ = function.__doc__
     wrap.__name__ = function.__name__
@@ -47,7 +47,7 @@ def can_access_channel(function):
                 request.user.is_admin:
                 return function(request, *args, **kwargs)
 
-            return render_to_response('unauthorized.html', context_instance=RequestContext(request))
+            return render_to_response('unauthorized.html', context_instance=RequestContext(request), status=403)
         except ObjectDoesNotExist:
             return render_to_response('channel_not_found.html', context_instance=RequestContext(request))
 
@@ -61,7 +61,7 @@ def can_edit_channel(function):
             channel = Channel.objects.get(pk=kwargs['channel_id'], deleted=False)
 
             if not channel.editors.filter(id=request.user.id).exists() and not request.user.is_admin:
-                return render_to_response('unauthorized.html', context_instance=RequestContext(request))
+                return render_to_response('unauthorized.html', context_instance=RequestContext(request), status=403)
 
             return function(request, *args, **kwargs)
         except ObjectDoesNotExist:
