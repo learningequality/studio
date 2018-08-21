@@ -40,16 +40,16 @@ def can_access_channel(function):
     def wrap(request, *args, **kwargs):
         try:
             channel = Channel.objects.get(pk=kwargs['channel_id'])
-
-            if channel.public or \
-                channel.editors.filter(id=request.user.id).exists() or \
-                channel.viewers.filter(id=request.user.id).exists() or \
-                request.user.is_admin:
-                return function(request, *args, **kwargs)
-
-            return render_to_response('unauthorized.html', context_instance=RequestContext(request), status=403)
         except ObjectDoesNotExist:
             return render_to_response('channel_not_found.html', context_instance=RequestContext(request))
+
+        if channel.public or \
+            channel.editors.filter(id=request.user.id).exists() or \
+            channel.viewers.filter(id=request.user.id).exists() or \
+            request.user.is_admin:
+            return function(request, *args, **kwargs)
+
+        return render_to_response('unauthorized.html', context_instance=RequestContext(request), status=403)
 
     wrap.__doc__ = function.__doc__
     wrap.__name__ = function.__name__
