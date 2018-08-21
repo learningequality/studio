@@ -72,28 +72,56 @@ var ChannelListPage  = BaseViews.BaseView.extend({
 				el: self.$("#channel_list"),
 				collection: channels
 			});
-		});
+		}).catch(function(e) {
+			  if (Raven && Raven.catchException) {
+			    Raven.catchException(e);
+			  } else {
+			    console.log("Error retrieving current channel list:");
+			    console.log(e.statusText);
+			  }
+			});
 		window.current_user.get_bookmarked_channels().then(function(channels){
 			self.starred_channel_list = new StarredChannelList({
 				container: self,
 				el: self.$("#starred_list"),
 				collection: channels
 			});
-		});
+		}).catch(function(e) {
+			  if (Raven && Raven.catchException) {
+			    Raven.catchException(e);
+			  } else {
+			    console.log("Error retrieving bookmarked channel list:");
+			    console.log(e.statusText);
+			  }
+			});
 		window.current_user.get_public_channels().then(function(channels){
 			self.public_channel_list = new PublicChannelList({
 				container: self,
 				el: self.$("#public_list"),
 				collection: channels
 			});
-		});
+		}).catch(function(e) {
+			  if (Raven && Raven.catchException) {
+			    Raven.catchException(e);
+			  } else {
+			    console.log("Error retrieving public channel list:");
+			    console.log(e.statusText);
+			  }
+			});
 		window.current_user.get_view_only_channels().then(function(channels){
 			self.viewonly_channel_list = new ViewOnlyChannelList({
 				container: self,
 				el: self.$("#viewonly_list"),
 				collection: channels
 			});
-		});
+		}).catch(function(e) {
+			  if (Raven && Raven.catchException) {
+			    Raven.catchException(e);
+			  } else {
+			    console.log("Error retrieving view-only channel list:");
+			    console.log(e.statusText);
+			  }
+			});
 	},
 	events: {
 		'click .new_channel_button' : 'new_channel',
