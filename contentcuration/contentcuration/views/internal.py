@@ -629,10 +629,10 @@ def create_node_from_file(user, file_name, parent_node, sort_order):
 # TODO: Use one file to upload a map from node filename to node metadata, instead of a file for each Node
 def get_node_data_from_file(file_name):
     file_path = generate_object_storage_name(file_name.split('.')[0], file_name)
-    if not os.path.isfile(file_path):
+    if not default_storage.exists(file_path):
         raise IOError('{} not found.'.format(file_path))
 
-    with open(file_path, 'rb') as file_obj:
+    with default_storage.open(file_path, 'rb') as file_obj:
         node_data = json.loads(file_obj.read().decode('utf-8'))
 
     if node_data is None:
@@ -751,8 +751,8 @@ def map_files_to_assessment_item(user, question, data):
     for file_data in data:
         file_name_parts = file_data['filename'].split(".")
         file_path = generate_object_storage_name(file_name_parts[0], file_data['filename'])
-        if not os.path.isfile(file_path):
-            return IOError('{} not found'.format(file_path))
+        if not default_storage.exists(file_path):
+            raise IOError('{} not found'.format(file_path))
 
         resource_obj = File(
             checksum=file_name_parts[0],
@@ -761,7 +761,7 @@ def map_files_to_assessment_item(user, question, data):
             original_filename=file_data.get('original_filename') or 'file',
             source_url=file_data.get('source_url'),
             file_size=file_data['size'],
-            file_on_disk=DjFile(open(file_path, 'rb')),
+            file_on_disk=DjFile(default_storage.open(file_path, 'rb')),
             preset_id=file_data['preset'],
             uploaded_by=user,
         )
