@@ -1,7 +1,11 @@
+import datetime
+
+from django.conf import settings
 from django.core.management import call_command
 from django.test import TestCase
 
 from contentcuration.utils import minio_utils
+from contentcuration.utils.policies import get_latest_policies
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient, APIRequestFactory, APITestCase, force_authenticate
 
@@ -69,6 +73,18 @@ class BaseTestCase(StudioTestCase):
         self.channel = testdata.channel()
         self.user = testdata.user()
         self.channel.main_tree.refresh_from_db()
+
+    def sign_in(self, user=None):
+        if not user:
+            user = self.user
+        # We agree to #allthethings, so let us in!
+        for policy in get_latest_policies():
+            user.policies = {policy: datetime.datetime.now().strftime("%d/%m/%y %H:%M")}
+        user.save()
+        self.client.force_login(user)
+
+    def get(self, url, data=None, follow=False, secure=False):
+        return self.client.get(url, data=data, follow=follow, secure=secure, HTTP_USER_AGENT=settings.SUPPORTED_BROWSERS[0])
 
 
 class BaseAPITestCase(StudioAPITestCase):
