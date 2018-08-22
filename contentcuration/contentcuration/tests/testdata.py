@@ -187,3 +187,48 @@ def create_temp_file(filebytes, kind='text', ext='txt', mimetype='text/plain'):
     db_file_obj = mixer.blend(cc.File, file_format=file_format, preset=preset, file_on_disk=storage_file_path)
 
     return {'name': os.path.basename(storage_file_path), 'data': filebytes, 'file': fileobj, 'db_file': db_file_obj}
+
+invalid_file_json = [
+    {
+        "slug": "counting-out-1-20-objects",
+        "kind": "exercise",
+        "title": "Count with small numbers",
+        "source_id": "counting-out-1-20-objects",
+        "node_id": "1243434343434343434343",
+        "content_id": "abcabcddafadfadsfsafs",
+        "thumbnail": "https://cdn.kastatic.org/ka-exercise-screenshots/counting-out-1-20-objects.png",
+        "description": "Practice counting up to 10 objects.",
+        "author": "Khan Academy",
+        "extra_fields": {},
+        "exercise_data": {
+            "m": 5,
+            "n": 7,
+            "mastery_model": "m_of_n"
+        },
+        "license": "CC-BY",
+        "files": [],
+        "questions": [
+            {
+                'type': 'single_selection',
+                'question': 'What is your quest?',
+                'hints': ['Holy', 'Coconuts'],
+                'answers': [
+                    'To seek the grail',
+                    'To eat some hail',
+                    'To spectacularly fail',
+                    'To post bail'
+                ],
+                'files': [
+                    {
+                        'filename': 'nonexistant.mp4',
+                        'size': 0,
+                    }
+                ],
+                'source_url': '',
+                'raw_data': '',
+                'assessment_id': '1'
+            }
+        ]
+
+    }
+]
