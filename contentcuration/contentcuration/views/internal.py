@@ -10,7 +10,7 @@ from django.core.files import File as DjFile
 from django.core.files.storage import default_storage
 from django.core.management import call_command
 from django.db import transaction
-from django.http import HttpResponse, HttpResponseServerError, HttpResponseForbidden
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseServerError, HttpResponseForbidden
 from le_utils.constants import content_kinds, roles
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
@@ -51,24 +51,27 @@ def authenticate_user_internal(request):
 @permission_classes((IsAuthenticated,))
 def check_version(request):
     """ Get version of Ricecooker with which CC is compatible """
-    logging.debug("Entering the check_version endpoint")
-    version = json.loads(request.body)['version']
-    status = None
+    try:
+        logging.debug("Entering the check_version endpoint")
+        version = json.loads(request.body)['version']
+        status = None
 
-    if LooseVersion(version) >= LooseVersion(VERSION_OK[0]):
-        status = VERSION_OK
-    elif LooseVersion(version) >= LooseVersion(VERSION_SOFT_WARNING[0]):
-        status = VERSION_SOFT_WARNING
-    elif LooseVersion(version) >= LooseVersion(VERSION_HARD_WARNING[0]):
-        status = VERSION_HARD_WARNING
-    else:
-        status = VERSION_ERROR
+        if LooseVersion(version) >= LooseVersion(VERSION_OK[0]):
+            status = VERSION_OK
+        elif LooseVersion(version) >= LooseVersion(VERSION_SOFT_WARNING[0]):
+            status = VERSION_SOFT_WARNING
+        elif LooseVersion(version) >= LooseVersion(VERSION_HARD_WARNING[0]):
+            status = VERSION_HARD_WARNING
+        else:
+            status = VERSION_ERROR
 
-    return HttpResponse(json.dumps({
-        'success': True,
-        'status': status[1],
-        'message': status[2].format(version, VERSION_OK[0]),
-    }))
+        return HttpResponse(json.dumps({
+            'success': True,
+            'status': status[1],
+            'message': status[2].format(version, VERSION_OK[0]),
+        }))
+    except Exception as e:
+        return HttpResponseServerError(content=str(e), reason=str(e))
 
 
 @api_view(['POST'])
@@ -163,8 +166,8 @@ def api_create_channel_endpoint(request):
             "root": obj.chef_tree.pk,
             "channel_id": obj.pk,
         }))
-    except KeyError:
-        raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+    except KeyError as e:
+        return HttpResponseBadRequest("Required attribute missing: {}".format(e.message))
     except Exception as e:
         return HttpResponseServerError(content=str(e), reason=str(e))
 
@@ -253,8 +256,8 @@ def api_add_nodes_to_tree(request):
                 "success": True,
                 "root_ids": convert_data_to_nodes(request.user, content_data, parent_id)
             }))
-    except KeyError:
-        raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+    except KeyError as e:
+        return HttpResponseBadRequest("Required attribute missing: {}".format(e.message))
     except Exception as e:
         return HttpResponseServerError(content=str(e), reason=str(e))
 
