@@ -1,6 +1,7 @@
 <!DOCTYPE HTML>
 {% load staticfiles %}
 {% load i18n %}
+{% load raven %}
 {% load render_bundle from webpack_loader %}
 {% load render_bundle_css from translation_tags %}
 {% load render_offline_css from translation_tags %}
@@ -14,6 +15,15 @@
 			<!--[if lt IE 9]>
 					<script src="{% static "js/html5shiv.js" %}"></script>
 			<![endif] -->
+            <!-- make sure configuring Sentry is one of the very first things we do in order to catch the most errors. -->
+
+            <!-- for some reason, load raven commmand doesn't actually load the raven JS library, so do so here
+                 TODO: Should we install and bundle this as a dep using yarn?
+            -->
+            <script src="https://cdn.ravenjs.com/3.26.4/raven.min.js" crossorigin="anonymous"></script>
+            <script>
+                Raven.config('{% sentry_public_dsn %}').install()
+            </script>
 	<link rel="shortcut icon" href="{% static 'img/logo.ico' %}">
 
 			<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
