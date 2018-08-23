@@ -6,7 +6,7 @@ from contentcuration import ricecooker_versions as rc
 from contentcuration import models as cc
 
 from base import BaseAPITestCase
-from testdata import invalid_file_json
+from testdata import create_temp_file, invalid_file_json, node_json
 
 
 channel_metadata = {
@@ -45,10 +45,22 @@ class ChefTestCase(BaseAPITestCase):
         response = self.post(self.file_upload_url, {})
         assert response.status_code == 400
 
-    def test_file_upload_nonexistant_file(self):
+    def test_file_upload_no_data(self):
         f = SimpleUploadedFile("myfile.txt", None)
         response = self.post(self.file_upload_url, {'file': f}, format='multipart')
         assert response.status_code == 500
+
+    def test_file_upload_bad_hash(self):
+        file_data = create_temp_file("Just some data.")
+        f = SimpleUploadedFile("myfile.txt", file_data['data'])
+        response = self.post(self.file_upload_url, {'file': f}, format='multipart')
+        assert response.status_code == 500
+
+    def test_file_upload(self):
+        file_data = create_temp_file("Just some data.")
+        f = SimpleUploadedFile(file_data['name'], file_data['data'])
+        response = self.post(self.file_upload_url, {'file': f}, format='multipart')
+        assert response.status_code == 200, "Call failed:\n output: {}".format(response.content)
 
     def test_create_channel_bad_request(self):
         response = self.post(self.create_channel_url, {})
@@ -75,3 +87,13 @@ class ChefTestCase(BaseAPITestCase):
         # Ensure that sending a node with an invalid file reference returns a 500 error
         response = self.post(self.add_nodes_url, {'root_id': data['root'], 'content_data': invalid_file_json})
         assert response.status_code == 500
+
+    def test_add_nodes(self):
+        response = self.post(self.create_channel_url, {'channel_data': channel_metadata})
+        assert response.status_code == 200
+        data = json.loads(response.content)
+        assert 'root' in data
+
+        node_data = node_json({'kind':'topic', 'license':cc.License.objects.all()[0].license_name})
+        response = self.post(self.add_nodes_url, {'root_id': data['root'], 'content_data': [node_data]})
+        assert response.status_code == 200, "Call failed:\n output: {}".format(response.content)
