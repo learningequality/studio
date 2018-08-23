@@ -43,3 +43,4 @@ DEBUG_TOOLBAR_PANELS = [
     'debug_toolbar.panels.redirects.RedirectsPanel',
 ]
 
+AWS_AUTO_CREATE_BUCKET = True
