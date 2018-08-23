@@ -335,7 +335,12 @@ def delete_nodes(request):
         nodes = data["nodes"]
         channel_id = data["channel_id"]
         request.user.can_edit(channel_id)
-        ContentNode.objects.filter(pk__in=nodes).delete()
+        nodes = ContentNode.objects.filter(pk__in=nodes)
+        for node in nodes:
+            if node.parent and not node.parent.changed:
+                node.parent.changed = True
+                node.parent.save()
+            node.delete()
 
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
@@ -474,6 +479,11 @@ def _duplicate_node_bulk_recursive(node, sort_order, parent, channel_id, to_crea
     if isinstance(parent, int) or isinstance(parent, basestring):
         parent = ContentNode.objects.get(pk=parent)
 
+    if not parent.changed:
+        parent.changed = True
+        parent.save()
+
+    source_channel = node.get_channel()
     # clone the model (in-memory) and update the fields on the cloned model
     new_node = copy.copy(node)
     new_node.id = None
@@ -483,7 +493,7 @@ def _duplicate_node_bulk_recursive(node, sort_order, parent, channel_id, to_crea
     new_node.sort_order = sort_order or node.sort_order
     new_node.changed = True
     new_node.cloned_source = node
-    new_node.source_channel_id = node.get_channel().id if node.get_channel() else None
+    new_node.source_channel_id = source_channel.id if source_channel else None
     new_node.node_id = uuid.uuid4().hex
     new_node.source_node_id = node.node_id
     new_node.freeze_authoring_data = not Channel.objects.filter(pk=node.original_channel_id, editors=user).exists()
@@ -568,6 +578,10 @@ def move_nodes(request):
 
 
 def _move_node(node, parent=None, sort_order=None, channel_id=None):
+    # if we move nodes, make sure the parent is marked as changed
+    if node.parent and not node.parent.changed:
+        node.parent.changed = True
+        node.parent.save()
     node.parent = parent or node.parent
     node.sort_order = sort_order or node.sort_order
     node.changed = True
@@ -577,6 +591,10 @@ def _move_node(node, parent=None, sort_order=None, channel_id=None):
         PrerequisiteContentRelationship.objects.filter(Q(target_node_id=node.pk) | Q(prerequisite_id=node.pk)).delete()
 
     node.save()
+    # we need to make sure the new parent is marked as changed as well
+    if node.parent and not node.parent.changed:
+        node.parent.changed = True
+        node.parent.save()
 
     for tag in ContentTag.objects.filter(tagged_content__in=descendants).distinct():
         # If moving from another channel
