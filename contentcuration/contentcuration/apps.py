@@ -9,4 +9,5 @@ class ContentConfig(AppConfig):
     name = 'contentcuration'
 
     def ready(self):
-        ensure_storage_bucket_public()
+        if settings.AWS_AUTO_CREATE_BUCKET:
+            ensure_storage_bucket_public()
