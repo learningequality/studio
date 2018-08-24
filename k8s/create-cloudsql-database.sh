@@ -1,7 +1,16 @@
 set -e
 
 BRANCH=$1
-INSTANCE=$2
+PROJECT=$2
+
+# Use instance `develop` when in project `studio`. Use instance `studio-qa`
+# when in project `ops-central`
+if [[ ${PROJECT} = "contentworkshop-159920" ]];
+then
+	INSTANCE="develop"
+else
+	INSTANCE="studio-qa"
+fi
 
 DATABASES=`gcloud sql databases list --instance=${INSTANCE} | awk '{print $1}' | tail -n +2`
 
