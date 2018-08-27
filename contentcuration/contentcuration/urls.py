@@ -202,6 +202,7 @@ urlpatterns += [
     url(r'^api/public/channel/(?P<channel_id>[^/]+)', public_views.get_channel_name_by_id, name='get_channel_name_by_id'),
     url(r'^api/public/(?P<version>[^/]+)/channels$', public_views.get_public_channel_list, name='get_public_channel_list'),
     url(r'^api/public/(?P<version>[^/]+)/channels/lookup/(?P<identifier>[^/]+)', public_views.get_public_channel_lookup, name='get_public_channel_lookup'),
+    url(r'^api/public/info', public_views.InfoViewSet.as_view({'get': 'list'}), name='info'),
 ]
 
 # Add node api enpoints
