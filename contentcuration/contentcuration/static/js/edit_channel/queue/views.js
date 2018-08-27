@@ -18,7 +18,13 @@ var MESSAGES = {
     "clipboard_empty": "This is your clipboard. Use this space to save and send content to other channels",
     "drop_text": "Drop here to add to clipboard",
     "recently_added": "Recently Added",
+    "drop_text_into_clipboard": "Drop items here",
+    "drop_text_out_of_clipboard": "Dragging out of clipboard ...",
+    "pin_clipboard": "Pin clipboard (dock to side)",
+		"unpin_clipboard": "Unpin clipboard",
 }
+
+var storage = window.localStorage || {};
 
 /* Loaded when user clicks clipboard button below navigation bar */
 var Queue = BaseViews.BaseWorkspaceView.extend({
@@ -52,7 +58,14 @@ var Queue = BaseViews.BaseWorkspaceView.extend({
 			is_root: true,
 		});
 		this.handle_checked();
-		DragHelper.addButtonDragDrop(this, this.drop_in_clipboard, this.get_translation_library());
+		DragHelper.addDroppableArea(this, this.drop_in_clipboard, this.get_translation_library());
+
+		if (this.is_pinned()) {
+			this._toggle_pinned(true);
+			if (storage['is_clipboard_opened']) {
+				this.open_queue();
+			}
+		}
 	},
 	drop_in_clipboard: function(collection, message) {
 		return this.add_to_clipboard(collection, message, 'drag in tree view');
@@ -65,13 +78,38 @@ var Queue = BaseViews.BaseWorkspaceView.extend({
 		(this.$("#queue").hasClass("closed")) ? this.open_queue() : this.close_queue();
 	},
 	open_queue:function(){
+		storage['is_clipboard_opened'] = "true";
 		this.$("#queue").removeClass("closed").addClass("opened");
+		this.adjust_edit_content_width();
 	},
 	close_queue:function(){
+		storage['is_clipboard_opened'] = "";
 		this.$("#queue").removeClass("opened").addClass("closed");
+		this.adjust_edit_content_width();
 	},
 	handle_checked:function(){
 		this.clipboard_queue.handle_checked();
+	},
+	adjust_edit_content_width: function() {
+		var should_shorten = this.is_pinned() && this.$("#queue").hasClass("opened");
+		$('#channel-edit-content-wrapper').toggleClass('pinned-clipboard', should_shorten);
+	},
+	is_pinned: function() {
+		return storage['is_clipboard_pinned'] === 'true';
+	},
+	_toggle_pinned: function(should_pin) {
+		storage['is_clipboard_pinned'] = should_pin ? "true" : "";
+		$("#queue-area").toggleClass('pinned', should_pin);
+		this.$('#queue, .pin_clipboard, #queue_content').toggleClass(
+			'pinned', should_pin);
+		this.adjust_edit_content_width();
+	},
+	toggle_pinned: function() {
+		if (this.is_pinned()) {
+			this._toggle_pinned(false);
+		} else {
+			this._toggle_pinned(true);
+		}
 	},
 	move_items:function(){
 		var list = this.get_selected(true);
@@ -86,7 +124,13 @@ var Queue = BaseViews.BaseWorkspaceView.extend({
 	},
 	close_all_popups: function() {
 		window.workspace_manager.get_main_view().close_all_popups();
-	}
+	},
+	handle_item_start_drag: function() {
+		this.$('.queue-overlay').addClass('queue-item-start-drag');
+	},
+	handle_item_stop_drag: function() {
+		this.$('.queue-overlay').removeClass('queue-item-start-drag');
+	},
 });
 
 function create_channel_node_for_content_items(items, sort_order) {
@@ -262,6 +306,7 @@ var ClipboardList = BaseViews.BaseWorkspaceListView.extend({
 	},
 	events: {
 		'change .select_all' : 'check_all_items',
+		'click .pin_clipboard': 'pin_clipboard',
 		'click .delete_items' : 'delete_items',
 		'click .edit_items' : 'edit_items',
 		'click .move_items' : 'move_items',
@@ -273,6 +318,12 @@ var ClipboardList = BaseViews.BaseWorkspaceListView.extend({
 	check_all_items: function(event) {
 		this.track_analytics_event('Clipboard', 'Select all');
 		this.check_all(event);
+	},
+	pin_clipboard: function() {
+		if (this.is_root && this.container) {
+			this.track_analytics_event('Clipboard', 'Toggle pin');
+			this.container.toggle_pinned();
+		}
 	},
 	update_badge_count:function(){
 	  	var self = this;
@@ -441,12 +492,14 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 			setTimeout(function() {
 				var v = new Vibrant(self.model.get('thumbnail'));
 				v.getPalette(function(err, palette) {
-					var colorHex = palette.Muted.getHex();
-					var color = palette.Muted.getRgb();
-					self.$('label.segment').css({
-						'border-left': `10px solid ${colorHex}`,
-						'background-color': `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.2)`,
-					});
+					if (!err && palette.Muted) {
+						var colorHex = palette.Muted.getHex();
+						var color = palette.Muted.getRgb();
+						self.$('label.segment').css({
+							'border-left': `10px solid ${colorHex}`,
+							'background-color': `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.2)`,
+						});
+					}
 				});
 			}, 0);
 		}
@@ -492,7 +545,9 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		'contextmenu .queue_item' : 'open_context_menu',
 		'click .copy_content': 'copy_content',
 		'click .move_content': 'move_content',
-		'click .queue_item_title': 'edit_item'
+		'click .queue_item_title': 'edit_item',
+		'sortstart .content-list': 'on_start_drag',
+		'sortstop .content-list': 'on_stop_drag',
 	},
 	toggle_item: function(event) {
     // NOTE: This is a bit of hack, checking the DOM to determine whether we're
@@ -556,6 +611,12 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		this.track_event_for_nodes('Clipboard', 'Move item intent', this.model);
 		this.cancel_actions(event);
 		this.open_move('clipboard');
+	},
+	on_start_drag: function(event) {
+		this.container.handle_item_start_drag();
+	},
+	on_stop_drag: function(event) {
+		this.container.handle_item_stop_drag();
 	},
 });
 

@@ -1,5 +1,11 @@
 @import "global-variables.less";
 
+#queue-area {
+  padding-left: 0;
+  display: block;
+  margin-right: 15px;
+}
+
 #queue {
 	@queue-width:600px;
 	@queue-color: black;
@@ -11,11 +17,31 @@
 	@placeholder-color:#666666;
 
 	padding-left: 5vw;
+
+  // TODO(davidhu): Make the docked clipboard resizeable, or do some
+  // refactoring so we don't have to hardcode pixel widths in a bunch of
+  // places (e.g. flexbox)
+	&.pinned {
+		padding-left: 0;
+
+		#main-queue {
+			position: fixed;
+			height: 100%;
+			margin-top: 10px;
+			box-shadow: -1px 0 1px 0px rgba(0, 0, 0, 0.1);
+			border-left: 1px solid @gray-400;
+			width: @queue-width-pinned;
+		}
+	}
+
 	&.closed {
 		#main-queue, #queue-back{ display: none; }
 	}
 	&.opened {
 		#main-queue, #queue-back{ display: block; }
+	}
+	&.opened.pinned {
+	  #queue-back { display: none; }
 	}
 
 	.queue-button{
@@ -34,21 +60,23 @@
 		}
 	}
 	.button_drop{
-		padding: 30px 10px 70px 50px;
-	    position: fixed;
 	    z-index: 999;
-	    margin-top: -25px;
 	    pointer-events: none;
+      position: relative;
+
 	    .drop_text{
 	    	visibility: hidden;
 	    	font-size: 10pt;
-	    	color: @blue-500
+		color: @blue-500;
+		display: inline-block;
+		text-align: right;
+		width: 400px;
 	    }
 	    &.ui-droppable-active {
 	    	.drop_text{ visibility: visible; }
 	    	.queue-button{ border: 3px solid @blue-500; }
 	    }
-	    &.drop-button-hover .queue-button{
+	    &.droppable-area-hover .queue-button{
 			background-color: blanchedalmond !important;
 		}
 	}
@@ -67,13 +95,56 @@
 		box-shadow: rgba(0, 0, 0, 0.2) 0 1px 2px 2px;
 		min-height: @queue-min-height;
 		background-color: @queue-background-color;
+		right: 0;
 		position: absolute;
     	z-index: 999;
-    	margin-top: 40px;
     	margin-left: 65px;
 		.queue-interior{
 			background-color: white;
 			min-height:@queue-min-height;
+
+			.queue-overlay {
+				display: none;
+				position: absolute;
+				z-index: 5;
+				height: 100%;
+				width: 100%;
+				top: 0;
+				left: 0;
+				background-color: rgba(255, 255, 255, 0.8);
+				border: 4px solid @blue-500;
+
+				.queue-overlay-text {
+					position: absolute;
+					top: 50%;
+					left: 50%;
+					transform: translateX(-50%) translateY(-50%);
+					font-size: 24px;
+					font-weight: bold;
+					color: @blue-500;
+
+					.drag-out-text {
+						display: none;
+					}
+				}
+
+				// Don't show overlay text when dragging out of clipboard.
+				&.queue-item-start-drag {
+					.drag-in-text {
+						display: none;
+					}
+					.drag-out-text {
+						display: block;
+					}
+				}
+			}
+			&.ui-droppable-active .queue-overlay {
+				display: block;
+			}
+			&.droppable-area-hover .queue-overlay {
+				background-color: rgba(255, 235, 205, 0.8);
+			}
+
 			hr{ margin: 0; }
 			.clipboard_options {
 				padding: @queue-top-bar-padding;
@@ -96,8 +167,83 @@
 			.select_all_fixed {
 				padding: @queue-top-bar-padding;
 			}
+			.select_all_label {
+				width: auto;
+			}
+			.pin_clipboard {
+				padding: 16px;
+				margin: 0;
+
+
+				.pin_clipboard_icon {
+					display: none;
+				}
+				.unpin_clipboard_icon {
+					display: block;
+					margin-top: -1px;
+				}
+
+				.pin_clipboard_icon,
+				.unpin_clipboard_icon {
+					fill: @gray-700;
+				}
+
+				&:hover .pin_clipboard_icon {
+					display: block;
+				}
+				&:hover .unpin_clipboard_icon {
+					display: none;
+				}
+
+
+				&:hover .pin_clipboard_icon,
+				&:hover .unpin_clipboard_icon {
+					fill: @blue-500;
+				}
+				&.pinned {
+					.pin_clipboard_icon {
+						display: block;
+					}
+					.unpin_clipboard_icon {
+						display: none;
+					}
+					&:hover .pin_clipboard_icon {
+						display: none;
+					}
+					&:hover .unpin_clipboard_icon {
+						display: block;
+					}
+				}
+
+				// Creates an invisible mouseover area to show a tootip.
+				rect {
+					width: 100%;
+					height: 100%;
+					opacity: 0;
+				}
+			}
 			#queue_content{
 				overflow:hidden;
+
+				&.pinned {
+					// TODO(davidhu): 110px is hardcoded. Refactor, e.g. define Studio
+					//     toolbar heights as variables.
+					height: calc(100vh - 110px);
+
+					.list_content li {
+						min-width: @queue-width-pinned - 32px;
+						label {
+							width: @queue-width-pinned - 100px;
+							&.segment {
+								width: @queue-width-pinned;
+							}
+						}
+					}
+					.list_content#clipboard_list {
+						height: calc(100% - 56px);
+					}
+				}
+
 				.list_content{
 					width: 100%;
 					height:100%;
