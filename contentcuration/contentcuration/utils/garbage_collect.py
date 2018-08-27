@@ -6,6 +6,30 @@ from django.conf import settings
 from django.core.files.storage import default_storage as storage
 
 from contentcuration.models import ContentNode, File
+from le_utils.constants import content_kinds
+
+
+def get_deleted_chefs_root():
+    deleted_chefs_node, _new = ContentNode.objects.get_or_create(pk=settings.DELETED_CHEFS_ROOT_ID, kind_id=content_kinds.TOPIC)
+    return deleted_chefs_node
+
+
+def clean_up_deleted_chefs():
+    """
+    Clean up all deleted chefs attached to the deleted chefs tree, including all
+    child nodes in that tree.
+
+    """
+    deleted_chefs_node = get_deleted_chefs_root()
+    # we cannot use MPTT methods like get_descendants() or use tree_id because for performance reasons
+    # we are avoiding MPTT entirely.
+    nodes_to_clean_up = ContentNode.objects.filter(parent=deleted_chefs_node)
+
+    # don't delete files until we can ensure files are not referenced anywhere.
+    for node in nodes_to_clean_up:
+        node.delete()
+
+    assert not ContentNode.objects.filter(parent=deleted_chefs_node).exists()
 
 
 def clean_up_contentnodes(delete_older_than=settings.ORPHAN_DATE_CLEAN_UP_THRESHOLD):
@@ -28,7 +52,7 @@ def clean_up_contentnodes(delete_older_than=settings.ORPHAN_DATE_CLEAN_UP_THRESH
     clean_up_files(nodes_to_clean_up)
 
     # Use _raw_delete for fast bulk deletions
-    nodes_to_clean_up._raw_delete(nodes_to_clean_up.db)
+    nodes_to_clean_up.delete()
     # tell MPTT to rebuild our tree values, so descendant counts
     # will be right again.
     ContentNode._tree_manager.partial_rebuild(tree_id)
@@ -50,8 +74,10 @@ def clean_up_files(contentnode_ids):
         # if there's only one item in there. Extract the file_on_disk
         # string value from inside that singleton tuple
         file_path = f[0]
-        # call the storage's delete method on each file, one by one
-        storage.delete(file_path)
+        # NOTE (aron):call the storage's delete method on each file, one by one
+        # disabled for now until we implement logic to not delete files
+        # that are referenced by non-orphan nodes
+        # storage.delete(file_path)
 
     # finally, remove the entries from object storage
     # use _raw_delete for much fast file deletions

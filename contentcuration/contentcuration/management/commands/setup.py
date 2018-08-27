@@ -11,6 +11,7 @@ from django.core.management.base import BaseCommand
 from contentcuration.models import Channel, User, ContentNode, Invitation, ContentTag, File, AssessmentItem, License, FormatPreset
 from contentcuration.api import write_file_to_storage
 from contentcuration.utils.files import duplicate_file
+from contentcuration.utils.minio_utils import ensure_storage_bucket_public
 from contentcuration.views.nodes import duplicate_node_bulk
 from le_utils.constants import content_kinds, licenses, exercises, format_presets, file_formats
 
@@ -37,6 +38,9 @@ class Command(BaseCommand):
         if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
             print "{} is not a valid email".format(email)
             sys.exit()
+
+        # create the minio bucket
+        ensure_storage_bucket_public()
 
         # create the cache table
         call_command("createcachetable")

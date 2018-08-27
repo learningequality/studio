@@ -22,6 +22,7 @@ from contentcuration.api import get_staged_diff, write_file_to_storage, activate
 from contentcuration.models import AssessmentItem, Channel, ContentNode, ContentTag, File, FormatPreset, Language, License, StagedFile, generate_object_storage_name, get_next_sort_order
 from contentcuration.utils.tracing import trace
 from contentcuration.utils.files import get_file_diff
+from contentcuration.utils.garbage_collect import get_deleted_chefs_root
 
 VersionStatus = namedtuple('VersionStatus', ['version', 'status', 'message'])
 VERSION_OK = VersionStatus(version=rc.VERSION_OK, status=0, message=rc.VERSION_OK_MESSAGE)
@@ -191,10 +192,12 @@ def api_commit_channel(request):
 
         # Delete staging tree if it already exists
         if old_staging and old_staging != obj.main_tree:
-            garbage_node = ContentNode.objects.get(pk=settings.ORPHANAGE_ROOT_ID)
-            old_staging.parent = garbage_node
-            old_staging.title = "Old staging tree for channel {}".format(obj.pk)
-            old_staging.save()
+            # IMPORTANT: Do not remove this block, MPTT updating the deleted chefs block could hang the server
+            with ContentNode.objects.disable_mptt_updates():
+                garbage_node = get_deleted_chefs_root()
+                old_staging.parent = garbage_node
+                old_staging.title = "Old staging tree for channel {}".format(obj.pk)
+                old_staging.save()
 
         if not data.get('stage'):  # If user says to stage rather than submit, skip changing trees at this step
             try:
@@ -467,10 +470,12 @@ def create_channel(channel_data, user):
 
     # Delete chef tree if it already exists
     if old_chef_tree and old_chef_tree != channel.staging_tree:
-        garbage_node = ContentNode.objects.get(pk=settings.ORPHANAGE_ROOT_ID)
-        old_chef_tree.parent = garbage_node
-        old_chef_tree.title = "Old chef tree for channel {}".format(channel.pk)
-        old_chef_tree.save()
+        # IMPORTANT: Do not remove this block, MPTT updating the deleted chefs block could hang the server
+        with ContentNode.objects.disable_mptt_updates():
+            garbage_node = get_deleted_chefs_root()
+            old_chef_tree.parent = garbage_node
+            old_chef_tree.title = "Old chef tree for channel {}".format(channel.pk)
+            old_chef_tree.save()
 
     return channel  # Return new channel
 
@@ -624,10 +629,10 @@ def create_node_from_file(user, file_name, parent_node, sort_order):
 # TODO: Use one file to upload a map from node filename to node metadata, instead of a file for each Node
 def get_node_data_from_file(file_name):
     file_path = generate_object_storage_name(file_name.split('.')[0], file_name)
-    if not os.path.isfile(file_path):
+    if not default_storage.exists(file_path):
         raise IOError('{} not found.'.format(file_path))
 
-    with open(file_path, 'rb') as file_obj:
+    with default_storage.open(file_path, 'rb') as file_obj:
         node_data = json.loads(file_obj.read().decode('utf-8'))
 
     if node_data is None:
@@ -746,8 +751,8 @@ def map_files_to_assessment_item(user, question, data):
     for file_data in data:
         file_name_parts = file_data['filename'].split(".")
         file_path = generate_object_storage_name(file_name_parts[0], file_data['filename'])
-        if not os.path.isfile(file_path):
-            return IOError('{} not found'.format(file_path))
+        if not default_storage.exists(file_path):
+            raise IOError('{} not found'.format(file_path))
 
         resource_obj = File(
             checksum=file_name_parts[0],
@@ -756,7 +761,7 @@ def map_files_to_assessment_item(user, question, data):
             original_filename=file_data.get('original_filename') or 'file',
             source_url=file_data.get('source_url'),
             file_size=file_data['size'],
-            file_on_disk=DjFile(open(file_path, 'rb')),
+            file_on_disk=DjFile(default_storage.open(file_path, 'rb')),
             preset_id=file_data['preset'],
             uploaded_by=user,
         )

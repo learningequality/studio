@@ -56,7 +56,7 @@ ALLOWED_HOSTS = ["*"]  # In production, we serve through a file socket, so this 
 # Application definition
 
 INSTALLED_APPS = (
-    'contentcuration',
+    'contentcuration.apps.ContentConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -93,6 +93,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.middleware.common.BrokenLinkEmailsMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
+    'django.middleware.http.ConditionalGetMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -321,7 +322,7 @@ AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID') or 'development'
 AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY') or 'development'
 AWS_S3_BUCKET_NAME = os.getenv('AWS_BUCKET_NAME') or 'content'
 AWS_S3_ENDPOINT_URL = os.getenv('AWS_S3_ENDPOINT_URL') or 'http://localhost:9000'
-AWS_AUTO_CREATE_BUCKET = True
+AWS_AUTO_CREATE_BUCKET = False
 AWS_S3_FILE_OVERWRITE = True
 AWS_S3_BUCKET_AUTH = False
 
@@ -331,3 +332,9 @@ GOOGLE_STORAGE_REQUEST_SHEET = "16X6zcFK8FS5t5tFaGpnxbWnWTXP88h4ccpSpPbyLeA8"
 
 # Used as the default parent to collect orphan nodes
 ORPHANAGE_ROOT_ID = "00000000000000000000000000000000"
+
+# IMPORTANT: Deleted chefs should not be in the orhpanage becuase this can lead to very large and painful resorts
+# of the tree. This tree is special in that it should always be accessed inside a disable_mptt_updates code block,
+# so we must be very careful to limit code that touches this tree and to carefully check code that does. If we
+# do choose to implement restore of old chefs, we will need to ensure moving nodes does not cause a tree sort.
+DELETED_CHEFS_ROOT_ID = "11111111111111111111111111111111"
