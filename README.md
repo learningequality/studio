@@ -222,15 +222,6 @@ All the javascript dependencies are listed in `package.json`. To install them ru
 
          CREATE DATABASE "gonano" WITH TEMPLATE = template0 OWNER = "learningequality";
 
-  5. Make sure the Redis server is running (used for job queue)
-
-         service redis-server start
-         # mac: redis-server /usr/local/etc/redis.conf
-
-  6. Start the minio server
-
-        MINIO_ACCESS_KEY=development MINIO_SECRET_KEY=development minio server ~/.minio_data
-
 
 
 ##### Run all database migrations and load constants
@@ -238,8 +229,11 @@ All the javascript dependencies are listed in `package.json`. To install them ru
 You'll only need to run these commands once, to setup the necessary tables and
 constants in the database:
 
-    make migrate collectstatic
-    cd contentcuration; python manage.py setup --settings=contentcuration.dev_settings; cd ..
+    # On one terminal, run all external services 
+    $ yarn run services
+    
+    # On another terminal, run devsetup to create all the necessary tables and buckets
+    $ yarn run devsetup
 
 ##### Start the dev server
 
