@@ -52,7 +52,7 @@ steps:
   entrypoint: 'bash'
   args: [
   '-c',
-  './create-cloudsql-database.sh $BRANCH_NAME develop'
+  './create-cloudsql-database.sh $BRANCH_NAME $PROJECT_ID'
   ]
 
 - name: 'gcr.io/$PROJECT_ID/helm'
