@@ -4,8 +4,10 @@ from contentcuration.serializers import PublicChannelSerializer
 from django.db.models import Q, Value, TextField
 from django.http import HttpResponse, HttpResponseNotFound
 from django.utils.translation import ugettext_lazy as _
+from rest_framework import viewsets
 from rest_framework.permissions import AllowAny
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
 
 def _get_channel_list(version, params, identifier=None):
     if version == "v1":
@@ -71,3 +73,23 @@ def get_channel_name_by_id(request, channel_id):
         return HttpResponseNotFound('Channel with id {} not found'.format(channel_id))
     return HttpResponse(json.dumps({"name": channel.name, "description": channel.description, "version": channel.version}))
 
+
+class InfoViewSet(viewsets.ViewSet):
+    """
+    An equivalent endpoint in kolibri which allows kolibri devices to know
+    if this device can serve content.
+    Spec doc: https://docs.google.com/document/d/1XKXQe25sf9Tht6uIXvqb3T40KeY3BLkkexcV08wvR9M/edit#
+    """
+
+    permission_classes = (AllowAny, )
+
+    def list(self, request):
+        """Returns metadata information about the type of device"""
+
+        info = {'application': 'studio',
+                'kolibri_version': None,
+                'instance_id': None,
+                'device_name': "Kolibri Studio",
+                'operating_system': None,
+                }
+        return Response(info)
