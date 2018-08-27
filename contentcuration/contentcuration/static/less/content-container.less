@@ -230,6 +230,10 @@
 	padding: 0;
 	border-top: 1px solid @blue-500;
 
+	&.pinned-clipboard {
+		width: calc(100vw - @queue-width-pinned);
+	}
+
 	#container-wrapper{
 		overflow:hidden;
 		overflow-x:auto;
