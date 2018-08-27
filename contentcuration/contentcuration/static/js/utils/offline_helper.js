@@ -58,4 +58,4 @@ var run = function(){
         Offline.on('up', function() {disabledOverlay.style.display = "none";});
  	}
 }
-setInterval(run, 5000);
+setInterval(run, 60000);
