@@ -492,12 +492,14 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 			setTimeout(function() {
 				var v = new Vibrant(self.model.get('thumbnail'));
 				v.getPalette(function(err, palette) {
-					var colorHex = palette.Muted.getHex();
-					var color = palette.Muted.getRgb();
-					self.$('label.segment').css({
-						'border-left': `10px solid ${colorHex}`,
-						'background-color': `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.2)`,
-					});
+					if (!err && palette.Muted) {
+						var colorHex = palette.Muted.getHex();
+						var color = palette.Muted.getRgb();
+						self.$('label.segment').css({
+							'border-left': `10px solid ${colorHex}`,
+							'background-color': `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.2)`,
+						});
+					}
 				});
 			}, 0);
 		}
