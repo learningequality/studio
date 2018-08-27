@@ -24,6 +24,7 @@ class ChefTestCase(BaseAPITestCase):
         self.create_channel_url = '/api/internal/create_channel'
         self.add_nodes_url = '/api/internal/add_nodes'
         self.file_upload_url = '/api/internal/file_upload'
+        self.finish_channel_url = '/api/internal/finish_channel'
 
     def test_check_version_bad_request(self):
         response = self.post(self.check_version_url, {})
@@ -76,7 +77,6 @@ class ChefTestCase(BaseAPITestCase):
         assert response.status_code == 400
 
     def test_add_nodes_invalid_file(self):
-
         response = self.post(self.create_channel_url, {'channel_data': channel_metadata})
         assert response.status_code == 200
         data = json.loads(response.content)
@@ -97,3 +97,21 @@ class ChefTestCase(BaseAPITestCase):
         node_data = node_json({'kind':'topic', 'license':cc.License.objects.all()[0].license_name})
         response = self.post(self.add_nodes_url, {'root_id': data['root'], 'content_data': [node_data]})
         assert response.status_code == 200, "Call failed:\n output: {}".format(response.content)
+
+    def test_finish_channel_bad_request(self):
+        response = self.post(self.finish_channel_url, {})
+        assert response.status_code == 400
+
+    def test_finish_channel(self):
+        response = self.post(self.create_channel_url, {'channel_data': channel_metadata})
+        assert response.status_code == 200
+        data = json.loads(response.content)
+        assert 'root' in data
+        assert 'channel_id' in data
+
+        node_data = node_json({'kind':'topic', 'license':cc.License.objects.all()[0].license_name})
+        response = self.post(self.add_nodes_url, {'root_id': data['root'], 'content_data': [node_data]})
+        assert response.status_code == 200, "Call failed:\n output: {}".format(response.content)
+
+        response = self.post(self.finish_channel_url, {'channel_id': data['channel_id']})
+        assert response.status_code == 200

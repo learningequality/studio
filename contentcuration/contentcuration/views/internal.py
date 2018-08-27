@@ -212,8 +212,8 @@ def api_commit_channel(request):
             "success": True,
             "new_channel": obj.pk,
         }))
-    except KeyError:
-        raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+    except KeyError as e:
+        return HttpResponseBadRequest("Required attribute missing: {}".format(e.message))
     except Exception as e:
         return HttpResponseServerError(content=str(e), reason=str(e))
 
