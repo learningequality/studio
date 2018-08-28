@@ -30,6 +30,7 @@ http {
         location /static/  {
             autoindex on;
             alias /app/contentworkshop_static/;
+            expires 4h;
         }
         # Serve a static file (ex. favico)
         # outside /static directory
