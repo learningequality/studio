@@ -1,0 +1,59 @@
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: {{ template "studio.fullname" . }}-contentnode-gc
+spec:
+  schedule: "0 23 * * 0"
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: {{ template "studio.fullname" . }}
+            environment: {{ .Release.Name }}
+        spec:
+          # if gc somehow takes 1 week, replace the running gc with a new one
+          concurrencyPolicy: Replace 
+          # turn off any new cron jobs from running by setting suspend to true.
+          # this is how we toggle this job on and off.
+          suspend: false
+          restartPolicy: Never
+          containers:
+          - name: runner
+            image: {{ .Values.studioApp.imageName }}
+            command: ["make", "contentnodegc"]
+            env:
+            - name: DJANGO_SETTINGS_MODULE
+              value: {{ .Values.settings }}
+            - name: DJANGO_LOG_FILE
+              value: /var/log/django.log
+            - name: MPLBACKEND
+              value: PS
+            - name: RUN_MODE
+              value: k8s
+            - name: DATA_DB_HOST
+              value: {{ .Values.postgresql.externalCloudSQL.proxyHostName | default (include "postgresql.fullname" .) }}
+            - name: DATA_DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: postgres-database
+                  name: {{ template "studio.fullname" . }}
+            - name: DATA_DB_PORT
+              value: "5432"
+            - name: DATA_DB_USER
+              valueFrom:
+                secretKeyRef:
+                  key: postgres-user
+                  name: {{ template "studio.fullname" . }}
+            - name: DATA_DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  key: postgres-password
+                  name: {{ template "studio.fullname" . }}
+            - name: SENTRY_DSN_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: sentry-dsn-key
+                  name: {{ template "studio.fullname" . }}
+                  optional: true
