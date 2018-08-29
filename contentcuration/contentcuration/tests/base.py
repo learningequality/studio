@@ -21,7 +21,7 @@ class BucketTestMixin:
     persist_bucket = False
 
     def create_bucket(self):
-        minio_utils.ensure_storage_bucket_public()
+        minio_utils.ensure_storage_bucket_public(will_sleep=False)
 
     def delete_bucket(self):
         minio_utils.ensure_bucket_deleted()
