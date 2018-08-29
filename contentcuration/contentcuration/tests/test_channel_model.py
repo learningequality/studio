@@ -21,3 +21,32 @@ class PublicChannelsTestCase(StudioTestCase):
         c.make_public()
         assert c.public
     # TODO(aron): test the bypass_signals arg to make_public
+    #
+
+class ChannelTokenTestCase(StudioTestCase):
+
+    def setUp(self):
+        super(ChannelTokenTestCase, self).setUp()
+
+        self.channel = channel()
+
+    def test_make_token_creates_human_token(self):
+        """
+        Test that we create a new primary token for a channel.
+        """
+        token = self.channel.make_token()
+
+        # test that the new token is a string
+        assert isinstance(token.token, str)
+        # this string should not be empty
+        assert token.token
+        # this string should be equivalent to the human token
+        assert self.channel.get_human_token().token == token.token
+
+    def test_make_token_creates_channel_id_token(self):
+        """
+        Check that we create a new token with the channel's id as the token string.
+        """
+        self.channel.make_token()
+
+        assert self.channel.get_channel_id_token().token == self.channel.id

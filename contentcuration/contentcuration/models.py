@@ -25,6 +25,7 @@ from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 from django.contrib.postgres.fields import JSONField
+from le_utils import proquint
 from le_utils.constants import (content_kinds, exercises, file_formats, licenses,
                                 format_presets, languages, roles)
 from mptt.models import (MPTTModel, TreeForeignKey, TreeManager,
@@ -550,6 +551,35 @@ class Channel(models.Model):
             return generate_storage_url(self.thumbnail)
 
         return '/static/img/kolibri_placeholder.png'
+
+    def get_human_token(self):
+        return self.secret_tokens.get(is_primary=True)
+
+    def get_channel_id_token(self):
+        return self.secret_tokens.get(token=self.id)
+
+    def make_token(self):
+        """
+        Creates a primary secret token for the current channel using a proquint
+        string. Creates a secondary token containing the channel id.
+
+        These tokens can be used to refer to the channel to download its content
+        database.
+        """
+        token = proquint.generate()
+
+        # Try to generate the channel token, avoiding any infinite loops if possible
+        max_retries = 1000000
+        index = 0
+        while SecretToken.objects.filter(token=token).exists():
+            token = proquint.generate()
+            if index > max_retries:
+                raise ValueError("Cannot generate new token")
+
+        human_token = self.secret_tokens.create(token=token, is_primary=True)
+        self.secret_tokens.get_or_create(token=self.id)
+
+        return human_token
 
     def make_public(self, bypass_signals=False):
         """
