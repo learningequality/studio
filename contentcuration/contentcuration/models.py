@@ -551,6 +551,24 @@ class Channel(models.Model):
 
         return '/static/img/kolibri_placeholder.png'
 
+    def make_public(self, bypass_signals=False):
+        """
+        Sets the current channel object to be public and viewable by anyone.
+
+        If bypass_signals is True, update the model in such a way that we
+        prevent any model signals from running due to the update.
+
+        Returns the same channel object.
+        """
+        if bypass_signals:
+            self.public = True     # set this attribute still, so the object will be updated
+            Channel.objects.filter(id=self.id).update(public=True)
+        else:
+            self.public = True
+            self.save()
+
+        return self
+
     @classmethod
     def get_public_channels(cls, defer_nonmain_trees=False):
         """
