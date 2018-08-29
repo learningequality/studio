@@ -3,10 +3,11 @@
 from django.test import TestCase
 
 from contentcuration.models import Channel
+from .base import StudioTestCase
 from .testdata import channel
 
 
-class PublicChannelsTestCase(TestCase):
+class PublicChannelsTestCase(StudioTestCase):
 
     def test_channel_get_public_channels_only_returns_public_channels(self):
         """
