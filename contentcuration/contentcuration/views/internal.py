@@ -17,6 +17,8 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 
+from raven.contrib.django.raven_compat.models import client
+
 from contentcuration import ricecooker_versions as rc
 from contentcuration.api import get_staged_diff, write_file_to_storage, activate_channel, get_hash
 from contentcuration.models import AssessmentItem, Channel, ContentNode, ContentTag, File, FormatPreset, Language, License, StagedFile, generate_object_storage_name, get_next_sort_order
@@ -30,6 +32,9 @@ VERSION_SOFT_WARNING = VersionStatus(version=rc.VERSION_SOFT_WARNING, status=1, 
 VERSION_HARD_WARNING = VersionStatus(version=rc.VERSION_HARD_WARNING, status=2, message=rc.VERSION_HARD_WARNING_MESSAGE)
 VERSION_ERROR = VersionStatus(version=rc.VERSION_ERROR, status=3, message=rc.VERSION_ERROR_MESSAGE)
 
+
+def handle_server_error(request):
+    client.captureException(stack=True, tags={'url': request.path })
 
 @api_view(['POST'])
 @authentication_classes((TokenAuthentication, SessionAuthentication,))
@@ -117,8 +122,9 @@ def api_file_upload(request):
             "success": True,
         }))
     except KeyError:
-        raise SuspiciousOperation("Invalid file upload request")
+        return HttpResponseBadRequest("Invalid file upload request")
     except Exception as e:
+        handle_server_error(request)
         return HttpResponseServerError(content=str(e), reason=str(e))
 
 
@@ -169,6 +175,7 @@ def api_create_channel_endpoint(request):
     except KeyError as e:
         return HttpResponseBadRequest("Required attribute missing: {}".format(e.message))
     except Exception as e:
+        handle_server_error(request)
         return HttpResponseServerError(content=str(e), reason=str(e))
 
 
@@ -215,6 +222,7 @@ def api_commit_channel(request):
     except KeyError as e:
         return HttpResponseBadRequest("Required attribute missing: {}".format(e.message))
     except Exception as e:
+        handle_server_error(request)
         return HttpResponseServerError(content=str(e), reason=str(e))
 
 
@@ -240,6 +248,7 @@ def api_add_nodes_from_file(request):
     except KeyError:
         raise ObjectDoesNotExist('Missing attribute from data: {}'.format(data))
     except Exception as e:
+        handle_server_error(request)
         return HttpResponseServerError(content=str(e), reason=str(e))
 
 @api_view(['POST'])
@@ -259,6 +268,7 @@ def api_add_nodes_to_tree(request):
     except KeyError as e:
         return HttpResponseBadRequest("Required attribute missing: {}".format(e.message))
     except Exception as e:
+        handle_server_error(request)
         return HttpResponseServerError(content=str(e), reason=str(e))
 
 
@@ -280,6 +290,7 @@ def api_publish_channel(request):
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
     except Exception as e:
+        handle_server_error(request)
         return HttpResponseServerError(content=str(e), reason=str(e))
 
 
@@ -290,6 +301,7 @@ def get_staged_diff_internal(request):
     try:
         return HttpResponse(json.dumps(get_staged_diff(json.loads(request.body)['channel_id'])))
     except Exception as e:
+        handle_server_error(request)
         return HttpResponseServerError(content=str(e), reason=str(e))
 
 
@@ -303,6 +315,7 @@ def activate_channel_internal(request):
         activate_channel(channel, request.user)
         return HttpResponse(json.dumps({"success": True}))
     except Exception as e:
+        handle_server_error(request)
         return HttpResponseServerError(content=str(e), reason=str(e))
 
 
@@ -359,6 +372,7 @@ def compare_trees(request):
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
     except Exception as e:
+        handle_server_error(request)
         return HttpResponseServerError(content=str(e), reason=str(e))
 
 
@@ -379,6 +393,7 @@ def get_tree_data(request):
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
     except Exception as e:
+        handle_server_error(request)
         return HttpResponseServerError(content=str(e), reason=str(e))
 
 @api_view(['POST'])
@@ -397,6 +412,7 @@ def get_node_tree_data(request):
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
     except Exception as e:
+        handle_server_error(request)
         return HttpResponseServerError(content=str(e), reason=str(e))
 
 @api_view(['POST'])
@@ -416,6 +432,7 @@ def get_channel_status_bulk(request):
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
     except Exception as e:
+        handle_server_error(request)
         return HttpResponseServerError(content=str(e), reason=str(e))
 
 def get_status(channel_id):
