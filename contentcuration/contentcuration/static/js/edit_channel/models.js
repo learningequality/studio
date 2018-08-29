@@ -415,8 +415,9 @@ var ContentNodeCollection = BaseCollection.extend({
                     var to_add = new FileModel(file);
                     var preset_data = to_add.get("preset");
                     preset_data.id = file.preset.name || file.preset.id;
-                    to_add.set('preset', preset_data);
-                    to_add.set('contentnode', node.id);
+                    // to_add.set('preset', preset_data);
+                    // to_add.set('preset_id', preset_data['id']);
+                    // to_add.set('contentnode', node.id);
                     fileCollection.add(to_add);
                 });
                 assessmentCollection.add(node.get('assessment_items'));
