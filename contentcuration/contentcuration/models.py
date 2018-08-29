@@ -551,6 +551,25 @@ class Channel(models.Model):
 
         return '/static/img/kolibri_placeholder.png'
 
+    @classmethod
+    def get_public_channels(cls, defer_nonmain_trees=False):
+        """
+        Get all public channels.
+
+        If defer_nonmain_trees is True, defer the loading of all
+        trees except for the main_tree."""
+        if defer_nonmain_trees:
+            c = (Channel.objects
+                .filter(public=True)
+                .exclude(deleted=True)
+                .select_related('main_tree')
+                .prefetch_related('editors')
+                .defer('trash_tree', 'clipboard_tree', 'staging_tree', 'chef_tree', 'previous_tree', 'viewers'))
+        else:
+            c = Channel.objects.filter(public=True).exclude(deleted=True)
+
+        return c
+
     class Meta:
         verbose_name = _("Channel")
         verbose_name_plural = _("Channels")

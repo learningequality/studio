@@ -175,10 +175,7 @@ def get_user_edit_channels(request):
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def get_user_public_channels(request):
-    channels = Channel.objects.filter(public=True)\
-                    .exclude(deleted=True)\
-                    .select_related('main_tree').prefetch_related('editors')\
-                    .defer('trash_tree', 'clipboard_tree', 'staging_tree', 'chef_tree', 'previous_tree', 'viewers')
+    channels = Channel.get_public_channels(defer_nonmain_trees=True)
     channel_serializer = AltChannelListSerializer(channels, many=True)
     return Response(channel_serializer.data)
 
