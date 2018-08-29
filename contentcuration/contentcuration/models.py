@@ -815,7 +815,8 @@ class ContentNode(MPTTModel, models.Model):
             request = kwargs.pop('request')
             channel = self.get_channel()
             request.user.can_edit(channel and channel.pk)
-            channel_id = channel.pk
+            if channel:
+                channel_id = channel.pk
 
         self.changed = self.changed or len(self.get_changed_fields()) > 0
 

@@ -66,3 +66,90 @@ Generate chart secret name
 {{- define "studio.secretName" -}}
 {{ default (include "studio.fullname" .) .Values.existingSecret }}
 {{- end -}}
+
+{{/*
+Generate the shared environment variables between studio app and workers
+*/}}
+{{- define "studio.sharedEnvs" -}}
+        - name: DJANGO_SETTINGS_MODULE
+          value: {{ .Values.settings }}
+        - name: DJANGO_LOG_FILE
+          value: /var/log/django.log
+        - name: MPLBACKEND
+          value: PS
+        - name: RUN_MODE
+          value: k8s
+        - name: DATA_DB_HOST
+          value: {{ .Values.postgresql.externalCloudSQL.proxyHostName | default (include "postgresql.fullname" .) }}
+        - name: DATA_DB_NAME
+          valueFrom:
+            secretKeyRef:
+              key: postgres-database
+              name: {{ template "studio.fullname" . }}
+        - name: DATA_DB_PORT
+          value: "5432"
+        - name: DATA_DB_USER
+          valueFrom:
+            secretKeyRef:
+              key: postgres-user
+              name: {{ template "studio.fullname" . }}
+        - name: DATA_DB_PASS
+          valueFrom:
+            secretKeyRef:
+              key: postgres-password
+              name: {{ template "studio.fullname" . }}
+        - name: CELERY_TIMEZONE
+          value: America/Los_Angeles
+        - name: CELERY_REDIS_DB
+          value: "0"
+        - name: CELERY_BROKER_ENDPOINT
+          value: {{ template "redis.fullname" . }}-master
+        - name: CELERY_RESULT_BACKEND_ENDPOINT
+          value: {{ template "redis.fullname" . }}-master
+        - name: CELERY_REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: redis-password
+              name: {{ template "studio.fullname" . }}
+        {{ if .Values.minio.externalGoogleCloudStorage.enabled }}
+        - name: AWS_S3_ENDPOINT_URL
+          value: https://storage.googleapis.com
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /secrets/gcs/gcs_key.json
+        {{ else }}
+        - name: AWS_S3_ENDPOINT_URL
+          value: {{ template "minio.url" . }}
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              key: accesskey
+              name: {{ template "minio.fullname" . }}
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              key: secretkey
+              name: {{ template "minio.fullname" . }}
+        {{ end }}
+        - name: RELEASE_COMMIT_SHA
+          value: {{ .Values.studioApp.releaseCommit | default "" }}
+        - name: BRANCH_ENVIRONMENT
+          value: {{ .Release.Name }}
+        - name: SENTRY_DSN_KEY
+          valueFrom:
+            secretKeyRef:
+              key: sentry-dsn-key
+              name: {{ template "studio.fullname" . }}
+              optional: true
+        - name: AWS_BUCKET_NAME
+          value: {{ .Values.bucketName }}
+        - name: EMAIL_CREDENTIALS_POSTMARK_API_KEY
+          {{ if .Values.studioApp.postmarkApiKey }}
+          valueFrom:
+            secretKeyRef:
+              key: postmark-api-key
+              name: {{ template "studio.fullname" . }}
+          {{ else }}
+          value: ""
+          {{ end }}
+
+{{- end -}}
