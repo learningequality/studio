@@ -51,7 +51,7 @@ class FileFormatSerializer(serializers.ModelSerializer):
         fields = ("__all__")
 
 
-class FormatPresetSerializer(serializers.PrimaryKeyRelatedField):
+class FormatPresetSerializer(serializers.ModelSerializer):
     # files = FileSerializer(many=True, read_only=True)
     associated_mimetypes = serializers.SerializerMethodField('retrieve_mimetypes')
     # Handles multi-language content (Backbone won't allow duplicate ids in collection, so name retains id)
@@ -75,23 +75,24 @@ class FileListSerializer(serializers.ListSerializer):
         ret = []
         update_files = {}
         user = self.context['request'].user
+        import ipdb
         with transaction.atomic():
             for item in validated_data:
-                # import ipdb; ipdb.set_trace()
-                item.update({
-                    'preset_id': item['preset']['id'],
-                    'language_id': item.get('language')['id'] if item.get('language') else None
-                })
+                ipdb.set_trace()
+                # item.update({
+                #     # 'preset_id': item['preset']['id'],
+                #     'language_id': item.get('language')['id'] if item.get('language') else None
+                # })
 
-                # User should not be able to change files without a display
-                if item['preset']['display']:
-                    if 'id' in item:
-                        update_files[item['id']] = item
-                    else:
-                        # create new nodes
-                        ret.append(File.objects.create(**item))
-                item.pop('preset', None)
-                item.pop('language', None)
+                # # User should not be able to change files without a display
+                # if item['preset']['display']:
+                #     if 'id' in item:
+                #         update_files[item['id']] = item
+                #     else:
+                #         # create new nodes
+                #         ret.append(File.objects.create(**item))
+                # item.pop('preset', None)
+                # item.pop('language', None)
 
         files_to_delete = []
         nodes_to_parse = []
@@ -99,26 +100,30 @@ class FileListSerializer(serializers.ListSerializer):
 
         # Get files that have the same contentnode, preset, and language as the files that are now attached to this node
         for file_obj in validated_data:
-            delete_queryset = File.objects.filter(
-                Q(contentnode=file_obj['contentnode']) &  # Get files that are associated with this node
-                (Q(preset_id=file_obj['preset_id']) | Q(
-                    preset=None)) &  # Look at files that have the same preset as this file
-                Q(language_id=file_obj.get('language_id')) &  # Look at files with the same language as this file
-                ~Q(id=file_obj['id'])  # Remove the file if it's not this file
-            )
-            files_to_delete += [f for f in delete_queryset.all()]
-            if file_obj['contentnode'] not in nodes_to_parse:
-                nodes_to_parse.append(file_obj['contentnode'])
+            file_obj = File.objects.get(pk=file_obj['id'])
+            file_obj = file_obj.contentnode.files.exclude(pk=file_obj.pk)\
+                        .filter(preset_id=file_obj.preset_id, language_id=file_obj.language_id)\
+                        .delete()
+            # delete_queryset = File.objects.filter(
+            #     Q(contentnode=file_obj['contentnode']) &  # Get files that are associated with this node
+            #     (Q(preset_id=file_obj['preset_id']) | Q(
+            #         preset=None)) &  # Look at files that have the same preset as this file
+            #     Q(language_id=file_obj.get('language_id')) &  # Look at files with the same language as this file
+            #     ~Q(id=file_obj['id'])  # Remove the file if it's not this file
+            # )
+            # files_to_delete += [f for f in delete_queryset.all()]
+        #     if file_obj['contentnode'] not in nodes_to_parse:
+        #         nodes_to_parse.append(file_obj['contentnode'])
 
-        # Delete removed files
-        for node in nodes_to_parse:
-            previous_files = node.files.all()
-            for f in previous_files:
-                if f.id not in current_files:
-                    files_to_delete.append(f)
+        # # Delete removed files
+        # for node in nodes_to_parse:
+        #     previous_files = node.files.all()
+        #     for f in previous_files:
+        #         if f.id not in current_files:
+        #             files_to_delete.append(f)
 
-        for to_delete in files_to_delete:
-            to_delete.delete()
+        # for to_delete in files_to_delete:
+        #     to_delete.delete()
 
         if update_files:
             with transaction.atomic():
@@ -151,7 +156,7 @@ class FileSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     display_name = serializers.SerializerMethodField('retrieve_display_name')
     id = serializers.CharField(required=False)
     preset = FormatPresetSerializer(many=False, read_only=True)
-    # preset = serializers.PrimaryKeyRelatedField(many=False, queryset=FormatPreset.objects.all())
+    # preset_id = serializers.PrimaryKeyRelatedField(many=False, queryset=FormatPreset.objects.all())
 
     def get(*args, **kwargs):
         return super.get(*args, **kwargs)
