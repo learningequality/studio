@@ -35,3 +35,44 @@ class ChannelCacher(object):
         cache.set(cls.PUBLIC_CHANNEL_CACHE_KEY, channels)
 
         return channels
+
+    @classmethod
+    def for_channel(cls, channel):
+        """
+        Return a proxy for the cache specific to a channel.
+        """
+
+        return ChannelSpecificCacher(channel)
+
+
+class ChannelSpecificCacher(object):
+
+    CHANNEL_TOKEN_CACHE_KEY_PREFIX = "channel_token"
+    CHANNEL_TOKEN_CACHE_TIMEOUT = 60 # seconds
+
+    def __init__(self, channel):
+        self.channel = channel
+        # cache key prefix is the first 5 characters of the channel id
+        self.key = channel.id[:5]
+
+    def get_human_token(self):
+        key = "{prefix}_human_token_{key}".format(
+            prefix=self.CHANNEL_TOKEN_CACHE_KEY_PREFIX,
+            key=self.key
+        )
+        return cache.get_or_set(
+            key,
+            self.channel.get_human_token,
+            self.CHANNEL_TOKEN_CACHE_TIMEOUT,
+        )
+
+    def get_channel_id_token(self):
+        key = "{prefix}_channel_id_token_{key}".format(
+            prefix=self.CHANNEL_TOKEN_CACHE_KEY_PREFIX,
+            key=self.key
+        )
+        return cache.get_or_set(
+            key,
+            self.channel.get_channel_id_token,
+            self.CHANNEL_TOKEN_CACHE_TIMEOUT,
+        )

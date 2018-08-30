@@ -50,3 +50,41 @@ class ChannelCacherTestCase(StudioTestCase):
         cached_channels = ChannelCacher.get_public_channels()
         # make sure our new public channel isn't in the cache
         assert new_public_channel not in cached_channels
+
+
+class ChannelTokenCacheTestCase(StudioTestCase):
+    """
+    Tests for caching tokens using the ChannelSpecificCacher proxy object.
+    """
+
+    def setUp(self):
+        super(ChannelTokenCacheTestCase, self).setUp()
+        self.channel = channel()
+
+    def test_channel_get_human_token_returns_token_if_present(self):
+        """
+        Check that cache.get_human_token() returns the same thing as
+        the real channel.get_human_token().
+        """
+        c = self.channel
+        c.make_token()
+
+        ccache = ChannelCacher.for_channel(c)
+
+        assert ccache.get_human_token() == c.get_human_token()
+
+    def test_channel_get_channel_id_token_returns_channel_id_token(self):
+        """
+        Check that cache.get_channel_id_token() returns the same thing as
+        the real channel.get_channel_id_token().
+        """
+        c = self.channel
+        c.make_token()
+
+        ccache = ChannelCacher.for_channel(c)
+
+        assert ccache.get_channel_id_token() == c.get_channel_id_token()
+
+
+class ChannelResourceCountCacheTestCase(StudioTestCase):
+    pass
