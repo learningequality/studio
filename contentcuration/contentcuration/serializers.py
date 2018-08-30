@@ -663,7 +663,7 @@ class ChannelFieldMixin(object):
         return channel.main_tree.created
 
     def get_date_modified(self, channel):
-        return channel.get_date_modified()
+        return ChannelCacher.for_channel(channel).get_date_modified()
 
     def check_published(self, channel):
         return channel.main_tree.published
