@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from datetime import datetime
 
 from django.test import TestCase
 
@@ -52,15 +53,24 @@ class ChannelTokenTestCase(StudioTestCase):
         assert self.channel.get_channel_id_token().token == self.channel.id
 
 class ChannelResourceCountTestCase(StudioTestCase):
+    """
+    Tests for channel.get_resource_count().
+    """
 
     def setUp(self):
         super(ChannelResourceCountTestCase, self).setUp()
         self.channel = channel()
 
     def test_returns_an_integer(self):
+        """
+        Check that we return an integer in the happy case.
+        """
         assert isinstance(self.channel.get_resource_count(), int)
 
     def test_increments_when_we_add_a_new_content_node(self):
+        """
+        Test that we increment our count when we add a new non-topic node.
+        """
         count = self.channel.get_resource_count()
         tree = self.channel.main_tree
 
@@ -77,6 +87,9 @@ class ChannelResourceCountTestCase(StudioTestCase):
         assert self.channel.get_resource_count() == count + 1
 
     def test_does_not_increment_when_we_add_a_topic(self):
+        """
+        Test that we don't increment our count when we add a topic node.
+        """
         count = self.channel.get_resource_count()
         tree = self.channel.main_tree
 
@@ -94,3 +107,40 @@ class ChannelResourceCountTestCase(StudioTestCase):
         # should be no difference in count
         assert self.channel.get_resource_count() == count
 
+
+class ChannelGetDateModifiedTestCase(StudioTestCase):
+    """
+    Tests for channel.get_date_modified().
+    """
+
+    def setUp(self):
+        super(ChannelGetDateModifiedTestCase, self).setUp()
+        self.channel = channel()
+
+    def test_returns_a_datetime(self):
+        """
+        Check that we return a datetime object in the ideal case.
+        """
+        assert isinstance(self.channel.get_date_modified(), datetime)
+
+    def test_returns_date_newer_when_node_modified(self):
+        old_date = self.channel.get_date_modified()
+        # change the root node's title
+        self.channel.main_tree.title = "new title"
+        self.channel.main_tree.save()
+        # check that the returned date is newer
+        assert self.channel.get_date_modified() > old_date
+
+    def test_returns_date_newer_when_node_added(self):
+        old_date = self.channel.get_date_modified()
+        # add a new node
+        node(
+            parent=self.channel.main_tree,
+            data={
+                "node_id": "nodez",
+                "title": "new child",
+                "kind_id": "video",
+            }
+        )
+        # check that the returned date is newer
+        assert self.channel.get_date_modified() > old_date
