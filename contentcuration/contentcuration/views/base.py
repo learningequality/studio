@@ -11,6 +11,7 @@ from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db.models import Q, Case, When, Value, IntegerField, F, TextField
 from django.core.urlresolvers import reverse_lazy
 from django.utils.translation import ugettext as _
+from django.views.decorators.cache import cache_page
 from rest_framework.renderers import JSONRenderer
 from contentcuration.api import add_editor_to_channel, activate_channel, get_staged_diff
 from contentcuration.decorators import browser_is_supported, can_access_channel, can_edit_channel, has_accepted_policies
@@ -18,12 +19,15 @@ from contentcuration.models import VIEW_ACCESS, Language, Channel, License, File
 from contentcuration.serializers import LanguageSerializer, AltChannelListSerializer, RootNodeSerializer, ChannelListSerializer, ChannelSerializer, PublicChannelSerializer, SimplifiedChannelListSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, CurrentUserSerializer, UserChannelListSerializer, InvitationSerializer
 from contentcuration.tasks import exportchannel_task, generatechannelcsv_task
 from contentcuration.utils.messages import get_messages
+from contentcuration.utils.channelcache import ChannelCacher
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from le_utils.constants import exercises, roles
 
 from rest_framework.response import Response
+
+PUBLIC_CHANNELS_CACHE_DURATION = 30 # seconds
 
 @browser_is_supported
 def base(request):
@@ -171,11 +175,12 @@ def get_user_edit_channels(request):
     channel_serializer = AltChannelListSerializer(edit_channels, many=True)
     return Response(channel_serializer.data)
 
+@cache_page(PUBLIC_CHANNELS_CACHE_DURATION)
 @api_view(['GET'])
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def get_user_public_channels(request):
-    channels = Channel.get_public_channels(defer_nonmain_trees=True)
+    channels = ChannelCacher.get_public_channels(defer_nonmain_trees=True)
     channel_serializer = AltChannelListSerializer(channels, many=True)
     return Response(channel_serializer.data)
 
