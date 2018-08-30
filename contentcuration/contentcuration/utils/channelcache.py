@@ -17,10 +17,10 @@ class ChannelCacher(object):
     PUBLIC_CHANNEL_CACHE_TIMEOUT = 60 # seconds
 
     @classmethod
-    def get_public_channels(cls):
+    def get_public_channels(cls, *args, **kwargs):
         return cache.get_or_set(
             cls.PUBLIC_CHANNEL_CACHE_KEY,
-            cls.regenerate_public_channel_cache,
+            lambda: Channel.get_public_channels(*args, **kwargs),
             cls.PUBLIC_CHANNEL_CACHE_TIMEOUT
         )
 
