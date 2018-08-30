@@ -663,7 +663,7 @@ class ChannelFieldMixin(object):
         return channel.main_tree.created
 
     def get_date_modified(self, channel):
-        return channel.main_tree.get_descendants(include_self=True).aggregate(last_modified=Max('modified'))['last_modified']
+        return channel.get_date_modified()
 
     def check_published(self, channel):
         return channel.main_tree.published
