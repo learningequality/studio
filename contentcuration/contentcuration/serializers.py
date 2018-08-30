@@ -651,9 +651,7 @@ class ChannelFieldMixin(object):
         return "-".join([token[:5], token[5:]])
 
     def generate_thumbnail_url(self, channel):
-        if channel.thumbnail and 'static' not in channel.thumbnail:
-            return generate_storage_url(channel.thumbnail)
-        return '/static/img/kolibri_placeholder.png'
+        return channel.get_thumbnail()
 
     def check_for_changes(self, channel):
         return channel.main_tree and channel.main_tree.get_descendants().filter(changed=True).count() > 0
