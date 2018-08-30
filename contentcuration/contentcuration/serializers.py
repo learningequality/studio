@@ -7,7 +7,7 @@ from itertools import chain
 import minio
 from django.conf import settings
 from django.core.cache import cache
-from django.core.exceptions import ValidationError as DjangoValidationError, PermissionDenied
+from django.core.exceptions import ValidationError as DjangoValidationError, PermissionDenied, ObjectDoesNotExist
 from django.core.files import File as DjFile
 from django.db import transaction
 from django.db.models import Q, Max
@@ -24,6 +24,7 @@ from rest_framework_bulk import BulkSerializerMixin
 from contentcuration.models import *
 from contentcuration.statistics import record_node_addition_stats, record_action_stats
 from contentcuration.utils.format import format_size
+from contentcuration.utils.channelcache import ChannelCacher
 from le_utils.constants import licenses
 
 class LicenseSerializer(serializers.ModelSerializer):
@@ -639,11 +640,15 @@ class TokenSerializer(serializers.ModelSerializer):
 class ChannelFieldMixin(object):
 
     def get_channel_primary_token(self, channel):
-        if channel.secret_tokens.filter(is_primary=True).exists():
-            token = channel.secret_tokens.filter(is_primary=True).first().token
-            return token[:5] + '-' + token[5:]
-        else:
+        try:
+            token = (ChannelCacher
+                     .for_channel(channel)
+                     .get_human_token()
+                     .token)
+        except ObjectDoesNotExist:
             return channel.pk
+
+        return "-".join([token[:5], token[5:]])
 
     def generate_thumbnail_url(self, channel):
         if channel.thumbnail and 'static' not in channel.thumbnail:
