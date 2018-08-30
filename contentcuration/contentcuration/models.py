@@ -793,7 +793,7 @@ class ContentNode(MPTTModel, models.Model):
     """
     By default, all nodes have a title and can be used as a topic.
     """
-    # The id should be the same between the content curation server and Kolibri.
+    # Random id used internally on Studio (See `node_id` for id used in Kolibri)
     id = UUIDField(primary_key=True, default=uuid.uuid4)
 
     # the content_id is used for tracking a user's interaction with a piece of
@@ -833,8 +833,10 @@ class ContentNode(MPTTModel, models.Model):
                                    help_text=_("Ascending, lowest number shown first"))
     copyright_holder = models.CharField(max_length=200, null=True, blank=True, default="",
                                         help_text=_("Organization of person who holds the essential rights"))
-    cloned_source = TreeForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='clones')
+    # legacy field...
     original_node = TreeForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='duplicates')
+    cloned_source = TreeForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='clones')
+
     thumbnail_encoding = models.TextField(blank=True, null=True)
 
     created = models.DateTimeField(auto_now_add=True, verbose_name=_("created"))

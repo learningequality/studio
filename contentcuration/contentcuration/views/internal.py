@@ -178,24 +178,29 @@ def api_create_channel_endpoint(request):
 @authentication_classes((TokenAuthentication, SessionAuthentication,))
 @permission_classes((IsAuthenticated,))
 def api_commit_channel(request):
-    """ Commit the channel staging tree to the main tree """
+    """
+    Commit the channel chef_tree to staging tree to the main tree.
+    This view backs the endpoint `/api/internal/finish_channel` called by ricecooker.
+    """
     data = json.loads(request.body)
     try:
         channel_id = data['channel_id']
 
         obj = Channel.objects.get(pk=channel_id)
 
-        # rebuild MPTT tree for this channel (since we set "disable_mptt_updates", and bulk_create doesn't trigger rebuild signals anyway)
+        # Need to rebuild MPTT tree pointers since we used `disable_mptt_updates`
         ContentNode.objects.partial_rebuild(obj.chef_tree.tree_id)
+        # set original_channel_id and source_channel_id to self since chef tree
         obj.chef_tree.get_descendants(include_self=True).update(original_channel_id=channel_id,
                                                                 source_channel_id=channel_id)
 
+        # replace staging_tree with chef_tree
         old_staging = obj.staging_tree
         obj.staging_tree = obj.chef_tree
         obj.chef_tree = None
         obj.save()
 
-        # Delete staging tree if it already exists
+        # Mark old staging tree for garbage collection
         if old_staging and old_staging != obj.main_tree:
             # IMPORTANT: Do not remove this block, MPTT updating the deleted chefs block could hang the server
             with ContentNode.objects.disable_mptt_updates():
@@ -204,12 +209,15 @@ def api_commit_channel(request):
                 old_staging.title = "Old staging tree for channel {}".format(obj.pk)
                 old_staging.save()
 
-        if not data.get('stage'):  # If user says to stage rather than submit, skip changing trees at this step
+        # If ricecooker --stage flag used, we're done (skip ACTIVATE step), else
+        # we ACTIVATE the channel, i.e., set the main tree from the staged tree
+        if not data.get('stage'):
             try:
                 activate_channel(obj, request.user)
             except PermissionDenied as e:
                 return HttpResponseForbidden(str(e))
 
+        # Respond to ricecooker script to acknoledge commit is done
         return HttpResponse(json.dumps({
             "success": True,
             "new_channel": obj.pk,
@@ -225,7 +233,21 @@ def api_commit_channel(request):
 @authentication_classes((TokenAuthentication, SessionAuthentication,))
 @permission_classes((IsAuthenticated,))
 def api_add_nodes_to_tree(request):
-    """ Add child nodes to a parent node """
+    """
+    Add the nodes from the `content_data` (list) as children to the parent node
+    whose pk is specified in `root_id`. The list `content_data` conatins json
+    dicts obtained from the to_dict serializarion of the ricecooker node class.
+
+    Response is of the form
+    ```
+        { "success": bool,
+          "root_ids": [
+                  "<node1_node_id>": "node1_pk",
+                  "<node2_node_id>": "node2_pk",
+                  ...
+          ]}
+    ```
+    """
     data = json.loads(request.body)
     try:
         content_data = data['content_data']
@@ -468,7 +490,7 @@ def convert_data_to_nodes(user, content_data, parent_node):
                     # Create files associated with node
                     map_files_to_node(user, new_node, node_data['files'])
 
-                    # Create questions associated with node
+                    # Create questions associated exercise nodes
                     create_exercises(user, new_node, node_data['questions'])
                     sort_order += 1
 
