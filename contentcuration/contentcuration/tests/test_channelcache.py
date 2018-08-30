@@ -123,3 +123,48 @@ class ChannelResourceCountCacheTestCase(StudioTestCase):
 
         # check that our cache's count is now less than the real count
         assert ccache.get_resource_count() < self.channel.get_resource_count()
+
+
+class ChannelGetDateModifiedCacheTestCase(StudioTestCase):
+    """
+    Tests for ChannelCacher.get_date_modified()
+    """
+
+    def setUp(self):
+        super(ChannelGetDateModifiedCacheTestCase, self).setUp()
+        self.channel = channel()
+
+    def test_returns_the_same_as_real_get_date_modified(self):
+        """
+        When called with the cache unfilled, ChannelCacher.get_date_modified()
+        should return the same thing as channel.get_date_modified().
+        """
+
+        ccache = ChannelCacher.for_channel(self.channel)
+
+        assert ccache.get_date_modified() == self.channel.get_date_modified()
+
+    def test_get_date_modified_really_is_a_cache(self):
+        """
+        Check that the cache is really a cache by seeing if the cache value is not
+        the same as channel.get_date_modified() when we add a new node. If it
+        gets updated, then the cache is either too short lived, or it's not
+        really a cachd at all!
+        """
+        ccache = ChannelCacher.for_channel(self.channel)
+        # fill the cache by calling get_date_modified once
+        ccache.get_date_modified()
+
+        # add a new node to the channel
+        node(
+            parent=self.channel.main_tree,
+            data={
+                "node_id": "videoz",
+                "title": "new vid",
+                "kind_id": "video",
+            }
+        )
+
+        # check that the cached modified date is not equal to the channel's new
+        # modified date
+        assert ccache.get_date_modified() <= self.channel.get_date_modified()

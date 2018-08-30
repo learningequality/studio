@@ -53,6 +53,9 @@ class ChannelSpecificCacher(object):
     CHANNEL_RESOURCE_COUNT_KEY_PREFIX = "channel_resource_count"
     CHANNEL_RESOURCE_COUNT_CACHE_TIMEOUT = 30 # seconds
 
+    CHANNEL_DATE_MODIFIED_KEY_PREFIX = "channel_date_modified"
+    CHANNEL_DATE_MODIFIED_CACHE_TIMEOUT = 30 # seconds
+
     def __init__(self, channel):
         self.channel = channel
         # cache key prefix is the first 5 characters of the channel id
@@ -90,4 +93,16 @@ class ChannelSpecificCacher(object):
             key,
             self.channel.get_resource_count,
             self.CHANNEL_RESOURCE_COUNT_CACHE_TIMEOUT,
+        )
+
+    def get_date_modified(self):
+        key = "{prefix}_{key}".format(
+            prefix=self.CHANNEL_DATE_MODIFIED_KEY_PREFIX,
+            key=self.key
+        )
+
+        return cache.get_or_set(
+            key,
+            self.channel.get_date_modified,
+            self.CHANNEL_DATE_MODIFIED_CACHE_TIMEOUT,
         )
