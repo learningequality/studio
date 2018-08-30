@@ -552,6 +552,9 @@ class Channel(models.Model):
 
         return '/static/img/kolibri_placeholder.png'
 
+    def get_resource_count(self):
+        return self.main_tree.get_descendants().exclude(kind_id=content_kinds.TOPIC).count()
+
     def get_human_token(self):
         return self.secret_tokens.get(is_primary=True)
 

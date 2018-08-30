@@ -659,7 +659,7 @@ class ChannelFieldMixin(object):
         return channel.main_tree and channel.main_tree.get_descendants().filter(changed=True).count() > 0
 
     def get_resource_count(self, channel):
-        return channel.main_tree.get_descendants().exclude(kind_id=content_kinds.TOPIC).count()
+        return channel.get_resource_count()
 
     def get_date_created(self, channel):
         return channel.main_tree.created

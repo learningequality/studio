@@ -4,7 +4,7 @@ from django.test import TestCase
 
 from contentcuration.models import Channel
 from .base import StudioTestCase
-from .testdata import channel
+from .testdata import channel, node
 
 
 class PublicChannelsTestCase(StudioTestCase):
@@ -50,3 +50,47 @@ class ChannelTokenTestCase(StudioTestCase):
         self.channel.make_token()
 
         assert self.channel.get_channel_id_token().token == self.channel.id
+
+class ChannelResourceCountTestCase(StudioTestCase):
+
+    def setUp(self):
+        super(ChannelResourceCountTestCase, self).setUp()
+        self.channel = channel()
+
+    def test_returns_an_integer(self):
+        assert isinstance(self.channel.get_resource_count(), int)
+
+    def test_increments_when_we_add_a_new_content_node(self):
+        count = self.channel.get_resource_count()
+        tree = self.channel.main_tree
+
+        # add a new video node
+        node(
+            parent=tree,
+            data={
+                "title": "New cat video",
+                "kind_id": "video",
+                "node_id": "nice"
+            }
+        )
+
+        assert self.channel.get_resource_count() == count + 1
+
+    def test_does_not_increment_when_we_add_a_topic(self):
+        count = self.channel.get_resource_count()
+        tree = self.channel.main_tree
+
+        # add a new topic node
+        node(
+            parent=tree,
+            data={
+                "kind_id": "topic",
+                "title": "topic node",
+                "node_id": "nice",
+                "children": [],
+            }
+        )
+
+        # should be no difference in count
+        assert self.channel.get_resource_count() == count
+
