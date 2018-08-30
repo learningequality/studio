@@ -729,11 +729,6 @@ class ChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
     primary_token = serializers.SerializerMethodField('get_channel_primary_token')
     content_defaults = serializers.JSONField()
 
-    def generate_thumbnail_url(self, channel):
-        if channel.thumbnail and 'static' not in channel.thumbnail:
-            return generate_storage_url(channel.thumbnail)
-        return '/static/img/kolibri_placeholder.png'
-
     class Meta:
         model = Channel
         fields = ('id', 'created', 'name', 'published', 'pending_editors', 'editors', 'viewers', 'modified', 'language', 'primary_token', 'priority',
