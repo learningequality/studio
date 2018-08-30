@@ -9,7 +9,7 @@ from contentcuration.utils.channelcache import ChannelCacher
 from contentcuration.models import Channel
 
 from .base import StudioTestCase
-from .testdata import channel
+from .testdata import channel, node
 
 
 class ChannelCacherTestCase(StudioTestCase):
@@ -87,4 +87,39 @@ class ChannelTokenCacheTestCase(StudioTestCase):
 
 
 class ChannelResourceCountCacheTestCase(StudioTestCase):
-    pass
+
+    def setUp(self):
+        super(ChannelResourceCountCacheTestCase, self).setUp()
+
+        self.channel = channel()
+
+    def test_get_resource_count_returns_same_as_channel_get_resource_count(self):
+        """
+        Check that get_resource_count() returns the same thing as
+        channel.get_resource_count() when cache is unfilled yet. That should be
+        the case on a newly created channel.
+
+        """
+        ccache = ChannelCacher.for_channel(self.channel)
+
+        assert ccache.get_resource_count() == self.channel.get_resource_count()
+
+    def test_get_resource_count_is_really_a_cache(self):
+        """
+        Check that our count is wrong when we insert a new content node.
+        """
+        ccache = ChannelCacher.for_channel(self.channel)
+        # fill our cache with a value first by calling get_resource_count()
+        ccache.get_resource_count()
+        # add our new content node
+        node(
+            parent=self.channel.main_tree,
+            data={
+                "kind_id": "video",
+                "node_id": "nicevid",
+                "title": "Bad vid",
+            }
+        )
+
+        # check that our cache's count is now less than the real count
+        assert ccache.get_resource_count() < self.channel.get_resource_count()
