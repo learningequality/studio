@@ -671,11 +671,6 @@ class ChannelFieldMixin(object):
     def check_publishing(self, channel):
         return channel.main_tree.publishing
 
-    def generate_thumbnail_url(self, channel):
-        if channel.thumbnail and 'static' not in channel.thumbnail:
-            return generate_storage_url(channel.thumbnail)
-        return '/static/img/kolibri_placeholder.png'
-
 
 class ChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
     has_changed = serializers.SerializerMethodField('check_for_changes')
