@@ -582,19 +582,7 @@ def save_export_database(channel_id):
 def add_tokens_to_channel(channel):
     if not channel.secret_tokens.filter(is_primary=True).exists():
         logging.info("Generating tokens for the channel.")
-        token = proquint.generate()
-
-        # Try to generate the channel token, avoiding any infinite loops if possible
-        max_retries = 1000000
-        index = 0
-        while ccmodels.SecretToken.objects.filter(token=token).exists():
-            token = proquint.generate()
-            if index > max_retries:
-                raise ValueError("Cannot generate new token")
-
-        tk_human = ccmodels.SecretToken.objects.create(token=token, is_primary=True)
-        tk, _new = ccmodels.SecretToken.objects.get_or_create(token=channel.id)
-        channel.secret_tokens.add(tk_human, tk)
+        channel.make_token()
 
 def fill_published_fields(channel):
     published_nodes = channel.main_tree.get_descendants().filter(published=True).prefetch_related('files')
