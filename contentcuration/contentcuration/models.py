@@ -397,6 +397,14 @@ class SecretToken(models.Model):
     token = models.CharField(max_length=100, unique=True)
     is_primary = models.BooleanField(default=False)
 
+    @classmethod
+    def exists(cls, token):
+        """
+        Return true when the token string given by string already exists.
+        Returns false otherwise.
+        """
+        return cls.objects.filter(token=token).exists()
+
     def __str__(self):
         return self.token
 
@@ -563,6 +571,7 @@ class Channel(models.Model):
 
     def get_channel_id_token(self):
         return self.secret_tokens.get(token=self.id)
+
 
     def make_token(self):
         """
