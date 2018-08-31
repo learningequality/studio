@@ -39,8 +39,10 @@ class GoogleCloudStorage(Storage):
         # compatible as a filesystem name. Change it to hex.
         tmp_filename = tmp_filename.decode("base64").encode("hex")
 
+        is_new = True
         if os.path.exists(tmp_filename):
             f = open(tmp_filename)
+            is_new = False
 
         # If there's no such file, then download that file
         # from GCS.
@@ -51,7 +53,9 @@ class GoogleCloudStorage(Storage):
             # reopen the file we just wrote, this time in read mode
             f = open(tmp_filename)
 
-        return File(f)
+        django_file = File(f)
+        django_file.just_downloaded = is_new
+        return django_file
 
     def exists(self, name):
         blob = self.bucket.get_blob(name)
