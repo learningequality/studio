@@ -30,10 +30,11 @@ class ChannelCacherTestCase(StudioTestCase):
         Returns the list of public channels.
         """
 
-        channels = ChannelCacher.get_public_channels()
+        real_channel_ids = sorted([c.id for c in self.channels])
+        cached_channel_ids = sorted([c.id for c in ChannelCacher.get_public_channels()])
 
-        assert (self.channels   # the channels we know are public...
-                == channels)    # ...should be present in get_public_channels
+        assert (real_channel_ids          # the channels we know are public...
+                == cached_channel_ids)    # ...should be present in get_public_channels
 
     def test_new_public_channel_not_in_cache(self):
         """
