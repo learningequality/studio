@@ -583,14 +583,21 @@ class Channel(models.Model):
         """
         token = proquint.generate()
 
-        # Try to generate the channel token, avoiding any infinite loops if possible
-        max_retries = 1000000
-        index = 0
-        while SecretToken.objects.filter(token=token).exists():
+        # Try 100 times to generate a unique token.
+        TRIALS = 100
+        for _ in range(TRIALS):
             token = proquint.generate()
-            if index > max_retries:
-                raise ValueError("Cannot generate new token")
+            if SecretToken.exists(token):
+                continue
+            else:
+                break
+        # after TRIALS attempts and we didn't get a unique token,
+        # just raise an error.
+        # See https://stackoverflow.com/a/9980160 on what for-else loop does.
+        else:
+            raise ValueError("Cannot generate new token")
 
+        # We found a unique token! Save it
         human_token = self.secret_tokens.create(token=token, is_primary=True)
         self.secret_tokens.get_or_create(token=self.id)
 
