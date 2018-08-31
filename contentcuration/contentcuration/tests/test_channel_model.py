@@ -19,6 +19,7 @@ class PublicChannelsTestCase(StudioTestCase):
 
     def test_channel_make_public_makes_the_current_channel_public(self):
         c = channel()
+        assert not c.public
         c.make_public()
         assert c.public
     # TODO(aron): test the bypass_signals arg to make_public
