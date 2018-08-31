@@ -27,7 +27,6 @@
 				<div class="login-label col-xs-12">
 					<div>{{form.use.label}} <i class="required_asterisk">*</i></div>
 					{% for option in form.use %}
-						<!-- {{ option.choice_value}} -->
 						<div class="use-option row">
 							<div class="col-xs-1 check-wrapper">
 								<input id="{{option.data.attrs.id}}" name="{{option.data.name}}" type="checkbox" value="{{option.data.value}}" class="check_{{option.data.value}}" {% if option.data.value in option.value %}checked{% endif %}>
