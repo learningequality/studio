@@ -25,6 +25,7 @@ from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 from django.contrib.postgres.fields import JSONField
+from le_utils import proquint
 from le_utils.constants import (content_kinds, exercises, file_formats, licenses,
                                 format_presets, languages, roles)
 from mptt.models import (MPTTModel, TreeForeignKey, TreeManager,
@@ -396,6 +397,14 @@ class SecretToken(models.Model):
     token = models.CharField(max_length=100, unique=True)
     is_primary = models.BooleanField(default=False)
 
+    @classmethod
+    def exists(cls, token):
+        """
+        Return true when the token string given by string already exists.
+        Returns false otherwise.
+        """
+        return cls.objects.filter(token=token).exists()
+
     def __str__(self):
         return self.token
 
@@ -550,6 +559,86 @@ class Channel(models.Model):
             return generate_storage_url(self.thumbnail)
 
         return '/static/img/kolibri_placeholder.png'
+
+    def get_date_modified(self):
+        return self.main_tree.get_descendants(include_self=True).aggregate(last_modified=Max('modified'))['last_modified']
+
+    def get_resource_count(self):
+        return self.main_tree.get_descendants().exclude(kind_id=content_kinds.TOPIC).count()
+
+    def get_human_token(self):
+        return self.secret_tokens.get(is_primary=True)
+
+    def get_channel_id_token(self):
+        return self.secret_tokens.get(token=self.id)
+
+
+    def make_token(self):
+        """
+        Creates a primary secret token for the current channel using a proquint
+        string. Creates a secondary token containing the channel id.
+
+        These tokens can be used to refer to the channel to download its content
+        database.
+        """
+        token = proquint.generate()
+
+        # Try 100 times to generate a unique token.
+        TRIALS = 100
+        for _ in range(TRIALS):
+            token = proquint.generate()
+            if SecretToken.exists(token):
+                continue
+            else:
+                break
+        # after TRIALS attempts and we didn't get a unique token,
+        # just raise an error.
+        # See https://stackoverflow.com/a/9980160 on what for-else loop does.
+        else:
+            raise ValueError("Cannot generate new token")
+
+        # We found a unique token! Save it
+        human_token = self.secret_tokens.create(token=token, is_primary=True)
+        self.secret_tokens.get_or_create(token=self.id)
+
+        return human_token
+
+    def make_public(self, bypass_signals=False):
+        """
+        Sets the current channel object to be public and viewable by anyone.
+
+        If bypass_signals is True, update the model in such a way that we
+        prevent any model signals from running due to the update.
+
+        Returns the same channel object.
+        """
+        if bypass_signals:
+            self.public = True     # set this attribute still, so the object will be updated
+            Channel.objects.filter(id=self.id).update(public=True)
+        else:
+            self.public = True
+            self.save()
+
+        return self
+
+    @classmethod
+    def get_public_channels(cls, defer_nonmain_trees=False):
+        """
+        Get all public channels.
+
+        If defer_nonmain_trees is True, defer the loading of all
+        trees except for the main_tree."""
+        if defer_nonmain_trees:
+            c = (Channel.objects
+                .filter(public=True)
+                .exclude(deleted=True)
+                .select_related('main_tree')
+                .prefetch_related('editors')
+                .defer('trash_tree', 'clipboard_tree', 'staging_tree', 'chef_tree', 'previous_tree', 'viewers'))
+        else:
+            c = Channel.objects.filter(public=True).exclude(deleted=True)
+
+        return c
 
     class Meta:
         verbose_name = _("Channel")
