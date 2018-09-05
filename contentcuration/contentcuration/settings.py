@@ -88,6 +88,7 @@ CACHES = {
 }
 
 # READ-ONLY SETTINGS
+# Set STUDIO_INCIDENT_TYPE to a key from contentcuration.utils.incidents to activate
 INCIDENT = INCIDENTS.get(os.getenv('STUDIO_INCIDENT_TYPE'))
 SITE_READ_ONLY = INCIDENT and INCIDENT['readonly']
 
