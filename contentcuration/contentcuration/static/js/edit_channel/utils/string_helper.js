@@ -6,24 +6,24 @@ function format_size(text){
     return "0" + translate("unit_bytes");
   }
   var value = Number(text);
-  var isnegative = value < 0;
+  var prefix = value < 0 ? "neg_" : ""
   value = Math.abs(value)
 
-  var KB = parseFloat(1024)
-  var MB = parseFloat(Math.pow(KB, 2))
-  var GB = parseFloat(Math.pow(KB, 3))
-  var TB = parseFloat(Math.pow(KB, 4))
+  var KB = parseFloat(1024);
+  var MB = parseFloat(Math.pow(KB, 2));
+  var GB = parseFloat(Math.pow(KB, 3));
+  var TB = parseFloat(Math.pow(KB, 4));
 
   if(value < KB)
-      return (isnegative ? "-" : "") + Math.round(value) + translate("unit_bytes")
+    return get_translation(messages, prefix + "unit_bytes", Math.round(value));
   else if(KB <= value && value < MB)
-      return (isnegative ? "-" : "") + Math.round(parseFloat(value/KB)) + translate("unit_kilobytes")
+    return get_translation(messages, prefix + "unit_kilobytes", Math.round(parseFloat(value/KB)));
   else if (MB <= value && value < GB)
-      return (isnegative ? "-" : "") + Math.round(parseFloat(value/MB)) + translate("unit_megabytes")
+    return get_translation(messages, prefix + "unit_megabytes", Math.round(parseFloat(value/MB)));
   else if (GB <= value && value < TB)
-      return (isnegative ? "-" : "") + Math.round(parseFloat(value/GB)) + translate("unit_gigabytes")
+    return get_translation(messages, prefix + "unit_gigabytes", Math.round(parseFloat(value/GB)));
   else if (TB <= value)
-      return (isnegative ? "-" : "") + Math.round(parseFloat(value/TB)) + translate("unit_terabytes")
+    return get_translation(messages, prefix + "unit_terabytes", Math.round(parseFloat(value/TB)));
 }
 
 function escape_str(text){
@@ -313,11 +313,16 @@ var messages = {
   "export_error_text": "Error exporting data. Please try again.",
   "export_title": "Exporting Data",
   "export_text": "Data export started. You'll receive an email with your information when it's done.",
-  "unit_bytes": "B",
-  "unit_kilobytes": "KB",
-  "unit_megabytes": "MB",
-  "unit_gigabytes": "GB",
-  "unit_terabytes": "TB",
+  "unit_bytes": "{data} B",
+  "unit_kilobytes": "{data} KB",
+  "unit_megabytes": "{data} MB",
+  "unit_gigabytes": "{data} GB",
+  "unit_terabytes": "{data} TB",
+  "neg_unit_bytes": "-{data} B",
+  "neg_unit_kilobytes": "-{data} KB",
+  "neg_unit_megabytes": "-{data} MB",
+  "neg_unit_gigabytes": "-{data} GB",
+  "neg_unit_terabytes": "-{data} TB",
   "redo": "Redo",
   "undo": "Undo",
   "image": "Image",

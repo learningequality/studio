@@ -45,7 +45,8 @@ def get_translation(value):
 
 @register.filter(is_safe=True)
 def format_size(value):
-    return "{} {}".format(*fsize(value))
+    size, unit = fsize(value)
+    return _("%(filesize)s %(unit)s") % {'filesize': size, 'unit': unit}
 
 
 @register.simple_tag
