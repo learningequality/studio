@@ -4,6 +4,8 @@ events {
     worker_connections 1024;
 }
 http {
+    proxy_cache_path /tmp/proxycache levels=1:2 keys_zone=public_channel_cache:10m max_size=10g 
+                    inactive=600m use_temp_path=off;
     include mime.types;
     sendfile on;
     gzip              on;
