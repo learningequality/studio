@@ -89,9 +89,12 @@ CACHES = {
 
 # READ-ONLY SETTINGS
 # Set STUDIO_INCIDENT_TYPE to a key from contentcuration.utils.incidents to activate
-INCIDENT = INCIDENTS.get(os.getenv('STUDIO_INCIDENT_TYPE'))
+INCIDENT_TYPE = os.getenv('STUDIO_INCIDENT_TYPE')
+INCIDENT = INCIDENTS.get(INCIDENT_TYPE)
 SITE_READ_ONLY = INCIDENT and INCIDENT['readonly']
 
+# If Studio is in readonly mode, it will throw a DatabaseWriteError
+# Use a local cache to bypass the readonly property
 if SITE_READ_ONLY:
     CACHES['default']['BACKEND'] = 'django.core.cache.backends.locmem.LocMemCache'
     CACHES['default']['LOCATION'] = 'readonly_cache'
