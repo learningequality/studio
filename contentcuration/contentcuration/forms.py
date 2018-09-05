@@ -296,7 +296,7 @@ class StorageRequestForm(forms.Form, ExtraFormMixin):
     # Nature of content
     storage = forms.CharField(required=True, widget=forms.TextInput(attrs={"placeholder": _("e.g. 1GB"), "class": "short-field"}))
     kind = forms.CharField(required=True, widget=forms.TextInput(attrs={"placeholder": _("Mostly high resolution videos, some pdfs, etc."), "class": "long-field"}))
-    resource_count = forms.CharField(required=False, widget=forms.TextInput(attrs={"class": "short-field"}))
+    resource_count = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "short-field"}))
     resource_size = forms.CharField(required=False, widget=forms.TextInput(attrs={"placeholder": _("e.g. 10MB"), "class": "short-field"}))
     creators = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "long-field"}))
     sample_link = forms.CharField(required=False, widget=forms.TextInput(attrs={"class": "long-field"}))
@@ -354,6 +354,7 @@ class StorageRequestForm(forms.Form, ExtraFormMixin):
         self.check_field('storage', _("Please indicate how much storage you need"))
         self.check_field('kind', _("Please indicate what kind of content you are uploading"))
         self.check_field('creators', _("Please indicate the author, curator, and/or aggregator of your content"))
+        self.check_field('resource_count', _("Please indicate approximately how many resources you are planning to upload"))
 
         self.cleaned_data["license"] = ", ".join(self.cleaned_data.get('license') or [])
         self.check_field('license', _("Please indicate the licensing for your content"))
