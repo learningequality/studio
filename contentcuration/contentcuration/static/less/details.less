@@ -376,17 +376,19 @@
 			}
 			.info-box {
 				border: 3px solid white;
-				padding: 10px 20px 5px 20px;
+				padding: 30px 20px 5px 20px;
 				border-radius: 15px;
 				margin-bottom: 15px;
 				.label {
 					.uppercase;
-					font-size: 12pt;
-				    margin-top: -20px;
+				    font-size: 12pt;
 				    font-weight: bold;
-				    background-color: white;
-				    padding: 0px 10px;
+				    color: white;
+				    padding-bottom: 8px;
 				    position: absolute;
+				    width: 100%;
+				    margin: -30px -20px -20px -20px;
+				    border-radius: 10px 10px 0px 0px;
 				}
 				p {
 					font-size: 12pt;
@@ -399,7 +401,7 @@
 				}
 				&#include-box {
 					border-color: @blue-200;
-					.label { color: @blue-200; }
+					.label { background-color: @blue-200; }
 					ul {
 						margin-bottom: 0px;
 						&.collapse { margin-bottom: 5px !important; }
@@ -417,10 +419,7 @@
 				@darkgreen: #639C00;
 				&#preview-box {
 					border-color: @green;
-					.label {
-						color: @green;
-						right: 20px;
-					}
+					.label { background-color: @green; }
 					.sample-nodes {
 						margin: 0px -20px 30px -20px;
 						padding: 15px 0px;
@@ -500,7 +499,7 @@
 				}
 				&#tag-box {
 					border-color: #FDB462;
-					.label { color: #FDB462; }
+					.label { background-color: #FDB462; }
 					#tagcloud {
 						margin: 0px 5px;
     					span {
