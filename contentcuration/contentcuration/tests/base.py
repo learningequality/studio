@@ -45,7 +45,6 @@ class StudioTestCase(TestCase, BucketTestMixin):
     def setUpClass(cls):
         super(StudioTestCase, cls).setUpClass()
         call_command('loadconstants')
-        cls.url = "http://127.0.0.1:8000"
         cls.admin_user = User.objects.create_superuser('big_shot', 'bigshot@reallybigcompany.com', 'password')
 
     def setUp(self):
@@ -69,7 +68,7 @@ class StudioTestCase(TestCase, BucketTestMixin):
         name = fileobj_temp['name']
 
         f = SimpleUploadedFile(name, data)
-        file_upload_url = self.url + str(reverse_lazy('api_file_upload'))
+        file_upload_url = str(reverse_lazy('api_file_upload'))
         return fileobj_temp, self.admin_client().post(file_upload_url, {"file": f})
 
 
