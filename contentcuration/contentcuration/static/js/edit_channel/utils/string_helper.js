@@ -71,6 +71,7 @@ var messages = {
   "vtt": "VTT Subtitle",
   "mp3": "MP3 Audio",
   "pdf": "PDF Document",
+  "epub": "EPub Document",
   "jpg": "JPG Image",
   "jpeg": "JPEG Image",
   "png": "PNG Image",

@@ -310,13 +310,24 @@ body {
 }
 
 #emergency-banner {
-	color: white;
-	background-color: @darkred-color;
 	font-size: 12pt;
 	padding: 10px 20px;
 	margin-bottom: 5px;
 	i {
 		font-size: 14pt;
 		vertical-align: sub;
+	}
+	&.error {
+		color: white;
+		background-color: @darkred-color;
+	}
+	&.warning {
+		background-color: @yellow-bg-color;
+		color: black;
+		i { color: #827B14; }
+	}
+	a {
+		font-weight: bold;
+		text-decoration: none;
 	}
 }
