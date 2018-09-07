@@ -75,7 +75,7 @@ class CreateChannelTestCase(BaseTestCase):
         self.fileobj_exercise = create_temp_file("jkl", 'exercise', 'perseus', 'application/perseus')
 
     def create_channel(self):
-        create_channel_url = self.url + str(reverse_lazy('api_create_channel'))
+        create_channel_url = str(reverse_lazy('api_create_channel'))
         payload = {
             'channel_data': self.channel_metadata,
         }
@@ -294,7 +294,7 @@ class CreateChannelTestCase(BaseTestCase):
         root_id = json.loads(self.create_channel().content)['root']
 
         def upload_nodes(root_id, nodes):
-            add_nodes_url = self.url + str(reverse_lazy('api_add_nodes_to_tree'))
+            add_nodes_url = str(reverse_lazy('api_add_nodes_to_tree'))
             payload = {
                 'root_id': root_id,
                 'content_data': nodes,
