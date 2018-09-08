@@ -8,9 +8,6 @@ from base import StudioTestCase
 
 class AllUrlsTest(StudioTestCase):
 
-    def setUp(self):
-        super(AllUrlsTest, self).setUp()
-
     def test_responses(self, allowed_http_codes=None,
             default_kwargs=None, quiet=False):
         """
