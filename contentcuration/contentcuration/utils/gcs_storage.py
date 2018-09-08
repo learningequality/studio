@@ -13,9 +13,9 @@ OLD_STUDIO_STORAGE_PREFIX = "/contentworkshop_content/"
 
 class GoogleCloudStorage(Storage):
 
-    def __init__(self):
+    def __init__(self, client=None):
         from django.conf import settings
-        self.client = Client()
+        self.client = client if client else Client()
         self.bucket = self.client.get_bucket(settings.AWS_S3_BUCKET_NAME)
 
     def open(self, name, mode="rb"):
