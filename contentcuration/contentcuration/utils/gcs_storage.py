@@ -67,6 +67,13 @@ class GoogleCloudStorage(Storage):
 
     def save(self, name, fobj, max_length=None):
         blob = Blob(name, self.bucket)
+    def save(self, name, fobj, max_length=None, blob_object=None):
+
+        if not blob_object:
+            blob = Blob(name, self.bucket)
+        else:
+            blob = blob_object
+
         # force the current file to be at file location 0, to
         # because that's what google wants
         fobj.seek(0)
