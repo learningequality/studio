@@ -6,6 +6,7 @@ from django.shortcuts import render, redirect
 from django.template import RequestContext
 from contentcuration.models import Channel
 from contentcuration.utils.policies import check_policies
+from django.shortcuts import render
 
 ACCEPTED_BROWSERS = settings.HEALTH_CHECK_BROWSERS + settings.SUPPORTED_BROWSERS
 
@@ -30,7 +31,7 @@ def is_admin(function):
         if request.user.is_admin:
             return function(request, *args, **kwargs)
 
-        return render_to_response('unauthorized.html', context_instance=RequestContext(request), status=403)
+        return render(request, 'unauthorized.html', status=403)
 
     wrap.__doc__ = function.__doc__
     wrap.__name__ = function.__name__
@@ -49,7 +50,7 @@ def can_access_channel(function):
             request.user.is_admin:
             return function(request, *args, **kwargs)
 
-        return render_to_response('unauthorized.html', context_instance=RequestContext(request), status=403)
+        return render(request, 'unauthorized.html', status=403)
 
     wrap.__doc__ = function.__doc__
     wrap.__name__ = function.__name__
@@ -61,7 +62,7 @@ def can_edit_channel(function):
             channel = Channel.objects.get(pk=kwargs['channel_id'], deleted=False)
 
             if not channel.editors.filter(id=request.user.id).exists() and not request.user.is_admin:
-                return render_to_response('unauthorized.html', context_instance=RequestContext(request), status=403)
+                return render(request, 'unauthorized.html', status=403)
 
             return function(request, *args, **kwargs)
         except ObjectDoesNotExist:
