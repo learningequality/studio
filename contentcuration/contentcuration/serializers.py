@@ -7,7 +7,7 @@ from itertools import chain
 import minio
 from django.conf import settings
 from django.core.cache import cache
-from django.core.exceptions import ValidationError as DjangoValidationError, PermissionDenied
+from django.core.exceptions import ValidationError as DjangoValidationError, PermissionDenied, ObjectDoesNotExist
 from django.core.files import File as DjFile
 from django.db import transaction
 from django.db.models import Q, Max
@@ -24,6 +24,7 @@ from rest_framework_bulk import BulkSerializerMixin
 from contentcuration.models import *
 from contentcuration.statistics import record_node_addition_stats, record_action_stats
 from contentcuration.utils.format import format_size
+from contentcuration.utils.channelcache import ChannelCacher
 from le_utils.constants import licenses
 
 class LicenseSerializer(serializers.ModelSerializer):
@@ -76,53 +77,20 @@ class FileListSerializer(serializers.ListSerializer):
         user = self.context['request'].user
         import ipdb
         with transaction.atomic():
-            for item in validated_data:
-                ipdb.set_trace()
-                # item.update({
-                #     # 'preset_id': item['preset']['id'],
-                #     'language_id': item.get('language')['id'] if item.get('language') else None
-                # })
-
-                # # User should not be able to change files without a display
-                # if item['preset']['display']:
-                #     if 'id' in item:
-                #         update_files[item['id']] = item
-                #     else:
-                #         # create new nodes
-                #         ret.append(File.objects.create(**item))
-                # item.pop('preset', None)
-                # item.pop('language', None)
-
-        files_to_delete = []
-        nodes_to_parse = []
-        current_files = [f['id'] for f in validated_data]
-
         # Get files that have the same contentnode, preset, and language as the files that are now attached to this node
-        for file_obj in validated_data:
-            file_obj = File.objects.get(pk=file_obj['id'])
-            file_obj = file_obj.contentnode.files.exclude(pk=file_obj.pk)\
-                        .filter(preset_id=file_obj.preset_id, language_id=file_obj.language_id)\
-                        .delete()
-            # delete_queryset = File.objects.filter(
-            #     Q(contentnode=file_obj['contentnode']) &  # Get files that are associated with this node
-            #     (Q(preset_id=file_obj['preset_id']) | Q(
-            #         preset=None)) &  # Look at files that have the same preset as this file
-            #     Q(language_id=file_obj.get('language_id')) &  # Look at files with the same language as this file
-            #     ~Q(id=file_obj['id'])  # Remove the file if it's not this file
-            # )
-            # files_to_delete += [f for f in delete_queryset.all()]
-        #     if file_obj['contentnode'] not in nodes_to_parse:
-        #         nodes_to_parse.append(file_obj['contentnode'])
+            for item in validated_data:
+                file_obj = File.objects.get(pk=item['id'])
+                files_to_replace = item['contentnode'].files.exclude(pk=file_obj.pk)\
+                            .filter(preset_id=file_obj.preset_id, language_id=file_obj.language_id)
+                files_to_replace.delete()
 
-        # # Delete removed files
-        # for node in nodes_to_parse:
-        #     previous_files = node.files.all()
-        #     for f in previous_files:
-        #         if f.id not in current_files:
-        #             files_to_delete.append(f)
+                if file_obj.preset and file_obj.preset.display:
+                    if file_obj.pk:
+                        update_files[file_obj.pk] = item
+                    else:
+                        # create new nodes
+                        ret.append(File.objects.create(**item))
 
-        # for to_delete in files_to_delete:
-        #     to_delete.delete()
 
         if update_files:
             with transaction.atomic():
@@ -646,39 +614,36 @@ class TokenSerializer(serializers.ModelSerializer):
 class ChannelFieldMixin(object):
 
     def get_channel_primary_token(self, channel):
-        if channel.secret_tokens.filter(is_primary=True).exists():
-            token = channel.secret_tokens.filter(is_primary=True).first().token
-            return token[:5] + '-' + token[5:]
-        else:
+        try:
+            token = (ChannelCacher
+                     .for_channel(channel)
+                     .get_human_token()
+                     .token)
+        except ObjectDoesNotExist:
             return channel.pk
 
+        return "-".join([token[:5], token[5:]])
+
     def generate_thumbnail_url(self, channel):
-        if channel.thumbnail and 'static' not in channel.thumbnail:
-            return generate_storage_url(channel.thumbnail)
-        return '/static/img/kolibri_placeholder.png'
+        return channel.get_thumbnail()
 
     def check_for_changes(self, channel):
         return channel.main_tree and channel.main_tree.get_descendants().filter(changed=True).count() > 0
 
     def get_resource_count(self, channel):
-        return channel.main_tree.get_descendants().exclude(kind_id=content_kinds.TOPIC).count()
+        return ChannelCacher.for_channel(channel).get_resource_count()
 
     def get_date_created(self, channel):
         return channel.main_tree.created
 
     def get_date_modified(self, channel):
-        return channel.main_tree.get_descendants(include_self=True).aggregate(last_modified=Max('modified'))['last_modified']
+        return ChannelCacher.for_channel(channel).get_date_modified()
 
     def check_published(self, channel):
         return channel.main_tree.published
 
     def check_publishing(self, channel):
         return channel.main_tree.publishing
-
-    def generate_thumbnail_url(self, channel):
-        if channel.thumbnail and 'static' not in channel.thumbnail:
-            return generate_storage_url(channel.thumbnail)
-        return '/static/img/kolibri_placeholder.png'
 
 
 class ChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
@@ -737,11 +702,6 @@ class ChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
     modified = serializers.SerializerMethodField('get_date_modified')
     primary_token = serializers.SerializerMethodField('get_channel_primary_token')
     content_defaults = serializers.JSONField()
-
-    def generate_thumbnail_url(self, channel):
-        if channel.thumbnail and 'static' not in channel.thumbnail:
-            return generate_storage_url(channel.thumbnail)
-        return '/static/img/kolibri_placeholder.png'
 
     class Meta:
         model = Channel

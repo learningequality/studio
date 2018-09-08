@@ -16,6 +16,7 @@ import re
 import logging
 import pycountry
 from datetime import datetime, timedelta
+from contentcuration.utils.incidents import INCIDENTS
 
 logging.getLogger("newrelic").setLevel(logging.CRITICAL)
 logging.getLogger("botocore").setLevel(logging.WARNING)
@@ -86,6 +87,19 @@ CACHES = {
     }
 }
 
+# READ-ONLY SETTINGS
+# Set STUDIO_INCIDENT_TYPE to a key from contentcuration.utils.incidents to activate
+INCIDENT_TYPE = os.getenv('STUDIO_INCIDENT_TYPE')
+INCIDENT = INCIDENTS.get(INCIDENT_TYPE)
+SITE_READ_ONLY = INCIDENT and INCIDENT['readonly']
+
+# If Studio is in readonly mode, it will throw a DatabaseWriteError
+# Use a local cache to bypass the readonly property
+if SITE_READ_ONLY:
+    CACHES['default']['BACKEND'] = 'django.core.cache.backends.locmem.LocMemCache'
+    CACHES['default']['LOCATION'] = 'readonly_cache'
+
+
 MIDDLEWARE_CLASSES = (
     # 'django.middleware.cache.UpdateCacheMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -145,6 +159,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'readonly.context_processors.readonly',
+                'contentcuration.context_processors.site_variables',
             ],
         },
     },
@@ -261,9 +276,6 @@ SITE_ID = 1
 # EMAIL_BACKEND = 'django_mailgun.MailgunBackend'
 # MAILGUN_ACCESS_KEY = 'ACCESS-KEY'
 # MAILGUN_SERVER_NAME = 'SERVER-NAME'
-
-# READ-ONLY SETTINGS
-SITE_READ_ONLY = os.getenv('STUDIO_READ_ONLY') or False
 
 SEND_USER_ACTIVATION_NOTIFICATION_EMAIL = bool(
     os.getenv("SEND_USER_ACTIVATION_NOTIFICATION_EMAIL")

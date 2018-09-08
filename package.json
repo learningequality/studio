@@ -13,6 +13,7 @@
     "pytest:reusedb": "cd contentcuration; pytest --reuse-db",
     "postgres": "service postgresql start || pg_ctl -D /usr/local/var/postgresql@9.6 start || true",
     "redis": "service redis-server start || redis-server /usr/local/etc/redis.conf || true",
+    "devsetup": "cd contentcuration && python manage.py setup --settings=contentcuration.dev_settings",
     "services": "npm-run-all -c --parallel --silent minio redis postgres",
     "unittests": "yarn run build && yarn run pytest",
     "unittests:reusedb": "npm-run-all --parallel --race services pytest:reusedb",
