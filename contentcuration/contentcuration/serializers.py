@@ -75,7 +75,6 @@ class FileListSerializer(serializers.ListSerializer):
         ret = []
         update_files = {}
         user = self.context['request'].user
-        import ipdb
         with transaction.atomic():
         # Get files that have the same contentnode, preset, and language as the files that are now attached to this node
             for item in validated_data:
