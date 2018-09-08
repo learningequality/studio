@@ -79,7 +79,6 @@ class FileListSerializer(serializers.ListSerializer):
         with transaction.atomic():
         # Get files that have the same contentnode, preset, and language as the files that are now attached to this node
             for item in validated_data:
-
                 file_obj = File.objects.get(pk=item['id'])
                 files_to_replace = item['contentnode'].files.exclude(pk=file_obj.pk)\
                             .filter(preset_id=file_obj.preset_id, language_id=file_obj.language_id)
@@ -91,6 +90,7 @@ class FileListSerializer(serializers.ListSerializer):
                     else:
                         # create new nodes
                         ret.append(File.objects.create(**item))
+
 
         if update_files:
             with transaction.atomic():
