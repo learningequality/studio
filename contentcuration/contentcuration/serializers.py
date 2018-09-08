@@ -123,7 +123,6 @@ class FileSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     display_name = serializers.SerializerMethodField('retrieve_display_name')
     id = serializers.CharField(required=False)
     preset = FormatPresetSerializer(many=False, read_only=True)
-    # preset_id = serializers.PrimaryKeyRelatedField(many=False, queryset=FormatPreset.objects.all())
 
     def get(*args, **kwargs):
         return super.get(*args, **kwargs)
