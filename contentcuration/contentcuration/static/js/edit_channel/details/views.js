@@ -88,7 +88,9 @@ var MESSAGES = {
     "unstar_channel": "Remove Star",
     "edit_details": "Edit Details",
     "more": "Show More",
-    "less": "Show Less"
+    "less": "Show Less",
+    "original_content": "Original Content",
+    "details_tooltip": "{kind} ({percent}%)"
 }
 
 const CHANNEL_SIZE_DIVISOR = 100000000;
@@ -378,7 +380,7 @@ var DetailsView = BaseViews.BaseListEditableItemView.extend({
     render: function() {
         var self = this;
         var original_channels = _.map(this.model.get("metadata").original_channels, function(item) {
-            return (item.id === self.channel_id) ? {"id": item.id, "name": "Original Content", "count": item.count} : item;
+            return (item.id === self.channel_id) ? {"id": item.id, "name": self.get_translation("original_content"), "count": item.count} : item;
         });
         this.$el.html(this.template({
             details: this.model.get("metadata"),

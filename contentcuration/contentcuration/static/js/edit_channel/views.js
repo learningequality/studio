@@ -70,7 +70,8 @@ var MESSAGES = {
     "publish_in_progress": "Your channel is currently publishing...",
     "publishing_prompt": "You will get an email once the channel finishes publishing.",
     "topic_title": "Topic",
-    "problem_creating_topics": "Error Creating Topic"
+    "problem_creating_topics": "Error Creating Topic",
+    "parenthesis": "({data})"
 }
 
 var BaseView = Backbone.View.extend({

@@ -23,7 +23,7 @@ from django.conf.urls.i18n import i18n_patterns
 from django.utils.translation import ugettext_lazy as _
 from django.db.models import Q
 from rest_framework import routers, viewsets
-from contentcuration.forms import ForgotPasswordForm
+from contentcuration.forms import ForgotPasswordForm, ResetPasswordForm, LoginForm
 from contentcuration.models import ContentNode, License, Channel, File, FileFormat, FormatPreset, ContentTag, AssessmentItem, ContentKind, Language, User, Invitation
 import contentcuration.serializers as serializers
 import contentcuration.views.base as views
@@ -237,6 +237,7 @@ urlpatterns += [
 
 # Add account/registration endpoints
 urlpatterns += [
+    url(r'^accounts/login/$', auth_views.login, {'template_name': 'registration/login.html', 'authentication_form': LoginForm}, name='auth_login'),
     url(r'^accounts/logout/$', auth_views.logout, {'template_name': 'registration/logout.html'}),
     url(
         r'^accounts/password/reset/$',
@@ -244,6 +245,10 @@ urlpatterns += [
         {'post_reset_redirect': reverse_lazy('auth_password_reset_done'), 'email_template_name': 'registration/password_reset_email.txt', 'password_reset_form': ForgotPasswordForm},
         name='auth_password_reset'
     ),
+    url(r'^accounts/password/reset/confirm/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',
+        auth_views.password_reset_confirm,
+        {'post_reset_redirect': reverse_lazy('auth_password_reset_complete'), 'set_password_form': ResetPasswordForm},
+        name='auth_password_reset_confirm'),
     url(r'^accounts/register/$', registration_views.UserRegistrationView.as_view(), name='registration_register'),
     url(r'^accounts/register-information/$', registration_views.InformationRegistrationView.as_view(), name='registration_information'),
     url(r'^accounts/', include('registration.backends.hmac.urls')),

@@ -28,7 +28,7 @@
 			{% csrf_token %}
 			<div class="input-group settings_field">
 				<span class="input-group-addon">{% trans "Username" %}</span>
-				<input type="text" class="form-control setting_input" value="{{user.email}}" disabled>
+				<input type="text" dir="auto" class="form-control setting_input" value="{{user.email}}" disabled>
 			</div>
 			<div class="input-group settings_field">
 				<span class="input-group-addon">{% trans "First Name" %}</span>

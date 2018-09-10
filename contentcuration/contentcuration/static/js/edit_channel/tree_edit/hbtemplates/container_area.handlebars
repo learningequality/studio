@@ -3,7 +3,7 @@
 		{{#if staging}}
 		<a href="/channels/{{channel.id}}/{{#if view_only}}view{{else}}edit{{/if}}">
 		<div class="nav-button-container">
-			<div class="nav-button disable-on-edit"><i class="material-icons">arrow_back</i></div>
+			<div class="nav-button disable-on-edit"><i class="material-icons rtl-flip">arrow_back</i></div>
 			<a class="nav-label review_button disable-on-edit">{{formatMessage (intlGet 'messages.back')}}</a>
 		</div></a>
 		{{/if}}
@@ -79,9 +79,13 @@
 		{{#if channel.ricecooker_version}}
 			<div id="ricecooker_header">
 				{{#if staging}}
-					{{formatMessage (intlGet 'messages.staging_text')}} <b><a class="approve_channel">{{formatMessage (intlGet 'messages.deploy_text')}}</a></b>
+					{{{formatMessage (intlGet 'messages.staging_deploy_prompt')}}}
 				{{else}}
-					{{formatMessage (intlGet 'messages.ricecooker_text')}} <b><a href="https://github.com/learningequality/ricecooker" target="_blank">Ricecooker</a></b> v{{channel.ricecooker_version}} (@ {{channel.created}}). {{#if channel.staging_tree}}<b><a href="/channels/{{channel.id}}/staging">{{formatMessage (intlGet 'messages.updates_available')}}</a></b>{{else}}{{formatMessage (intlGet 'messages.updates_not_available')}}{{/if}}
+					{{#if channel.staging_tree}}
+						{{{formatMessage (intlGet 'messages.ricecooker_updates_text') ricecookerlink=(link "Ricecooker" "https://github.com/learningequality/ricecooker" "true") version=channel.ricecooker_version created=channel.created reviewlink = (link (intlGet "messages.updates_available") (concat "/channels/" channel.id "/staging") "false")}}}
+					{{else}}
+						{{{formatMessage (intlGet 'messages.ricecooker_no_updates_text') ricecookerlink=(link "Ricecooker" "https://github.com/learningequality/ricecooker" "true") version=channel.ricecooker_version created=channel.created}}}
+					{{/if}}
 				{{/if}}
 			</div>
 		{{/if}}

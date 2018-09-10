@@ -29,7 +29,7 @@ function addSortable(element, selected_class, callback){
         cursor:"move",
         cancel: '.current_topic, .default-item, #preview li',
         containment: "#channel-edit-sortable-boundary",
-        appendTo: "#channel-edit-sortable-boundary",
+        appendTo: "body",
         bodyClass: "dragging",
         // helper:"clone",
         helper: function (e, item) {

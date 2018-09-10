@@ -3,11 +3,11 @@
     <div class="modal-content">
         <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="close_license"><span aria-hidden="true">&times;</span></button>
-            <h4 class="modal-title text-center">{{#translate license.license_name}}{{/translate}}</h4>
+            <h4 class="modal-title text-center">{{{translate license.license_name}}}</h4>
         </div>
         <div class="modal-body">
         	<div  class="modal-body-content">
-            	<p>{{#translate (concat license.license_name "_description")}}{{/translate}}</p>
+            	<p>{{{translate (concat license.license_name "_description")}}}</p>
             </div>
             <div class="container-fluid">
                 <div class="input-tab-control tab_item" data-next="#license_close_button"></div>
