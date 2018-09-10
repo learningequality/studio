@@ -8,6 +8,7 @@
           class="search-input"
           v-model="searchTerm"
           type="text"
+          dir="auto"
           :placeholder="$tr('searchPrompt')"
         />
         <button

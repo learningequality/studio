@@ -65,7 +65,7 @@
                                                 <li class="language">{{this}}</li>
                                             {{/each}}
                                         </ul>
-                                        <p><a class="toggle-list" data-toggle="collapse" href="#collapseLanguages" data-update="{{formatMessage (intlGet 'messages.less')}}">{{formatMessage (intlGet 'messages.more')}} ({{languages.full.length}})</a></p>
+                                        <p><a class="toggle-list" data-toggle="collapse" href="#collapseLanguages" data-update="{{formatMessage (intlGet 'messages.less')}}">{{formatMessage (intlGet 'messages.more')}} {{formatMessage (intlGet 'messages.parenthesis') data=languages.full.length}}</a></p>
                                     {{/if}}
                                 {{else}} ---
                                 {{/if}}
@@ -84,7 +84,7 @@
                                                 <li class="language">{{this}}</li>
                                             {{/each}}
                                         </ul>
-                                        <p><a class="toggle-list" data-toggle="collapse" href="#collapseAccessibleLanguages" data-update="{{formatMessage (intlGet 'messages.less')}}">{{formatMessage (intlGet 'messages.more')}} ({{accessible_languages.full.length}})</a></p>
+                                        <p><a class="toggle-list" data-toggle="collapse" href="#collapseAccessibleLanguages" data-update="{{formatMessage (intlGet 'messages.less')}}">{{formatMessage (intlGet 'messages.more')}} {{formatMessage (intlGet 'messages.parenthesis') data=accessible_languages.full.length}}</a></p>
                                     {{/if}}
                                 {{else}} ---
                                 {{/if}}
@@ -93,12 +93,12 @@
                         <div class="row additional_include">
                             <label>{{formatMessage (intlGet 'messages.instructor_resources')}}</label>
                             {{#if details.includes.coach_content}}
-                                <div class="included" data-toggle="tooltip" data-placement="top" title="{{formatMessage (intlGet 'messages.role_description')}}">
+                                <div class="details-pill" data-toggle="tooltip" data-placement="top" title="{{formatMessage (intlGet 'messages.role_description')}}">
                                     {{formatMessage (intlGet 'messages.coach_content')}}
                                 </div>
                             {{/if}}
                             {{#if details.includes.exercises}}
-                                <div class="included">
+                                <div class="details-pill">
                                     {{formatMessage (intlGet 'messages.assessments')}}
                                 </div>
                             {{/if}}
@@ -178,7 +178,7 @@
                                         <ul class="list-unstyled collapse" id="collapseAuthors">
                                             {{#each authors.full }}<li><b>{{this}}</b></li>{{/each}}
                                         </ul>
-                                        <p><a class="toggle-list" data-toggle="collapse" href="#collapseAuthors" data-update="{{formatMessage (intlGet 'messages.less')}}">{{formatMessage (intlGet 'messages.more')}} ({{authors.full.length}})</a></p>
+                                        <p><a class="toggle-list" data-toggle="collapse" href="#collapseAuthors" data-update="{{formatMessage (intlGet 'messages.less')}}">{{formatMessage (intlGet 'messages.more')}} {{formatMessage (intlGet 'messages.parenthesis') data=authors.full.length}}</a></p>
                                     {{/if}}
                                 {{else}}<br><b>---</b>
                                 {{/if}}
@@ -200,7 +200,7 @@
                                         <ul class="list-unstyled collapse" id="collapseProviders">
                                             {{#each providers.full }}<li><b>{{this}}</b></li>{{/each}}
                                         </ul>
-                                        <p><a class="toggle-list" data-toggle="collapse" href="#collapseProviders" data-update="{{formatMessage (intlGet 'messages.less')}}">{{formatMessage (intlGet 'messages.more')}} ({{providers.full.length}})</a></p>
+                                        <p><a class="toggle-list" data-toggle="collapse" href="#collapseProviders" data-update="{{formatMessage (intlGet 'messages.less')}}">{{formatMessage (intlGet 'messages.more')}} {{formatMessage (intlGet 'messages.parenthesis') data=providers.full.length}}</a></p>
                                     {{/if}}
                                 {{else}}<br><b>---</b>
                                 {{/if}}
@@ -223,7 +223,7 @@
                                         <ul class="list-unstyled collapse" id="collapseAggregators">
                                             {{#each aggregators.full }}<li><b>{{this}}</b></li>{{/each}}
                                         </ul>
-                                        <p><a class="toggle-list" data-toggle="collapse" href="#collapseAggregators" data-update="{{formatMessage (intlGet 'messages.less')}}">{{formatMessage (intlGet 'messages.more')}} ({{aggregators.full.length}})</a></p>
+                                        <p><a class="toggle-list" data-toggle="collapse" href="#collapseAggregators" data-update="{{formatMessage (intlGet 'messages.less')}}">{{formatMessage (intlGet 'messages.more')}} {{formatMessage (intlGet 'messages.parenthesis') data=aggregators.full.length}}</a></p>
                                     {{/if}}
                                 {{else}}<br><b>---</b>
                                 {{/if}}
@@ -234,15 +234,23 @@
                         <div class="col-xs-2 text-right"><i class="material-icons cc_icon">copyright</i></div>
                         <div class="col-xs-10">
                             <div class="row">
-                                {{formatMessage (intlGet 'messages.license') count=license_count}}:
+                                {{formatMessage (intlGet 'messages.license') count=license_count}}&nbsp;
                                 {{#if details.licenses}}
                                     {{#each details.licenses }}
-                                        {{{translate this}}}
-                                        <i class="material-icons help_icon" data-toggle="tooltip" data-placement="top" title="{{{translate (concat this '_description')}}}">info_outline</i>&nbsp;
+                                        <div class="details-pill" data-toggle="tooltip" data-placement="top" title="{{{translate (concat this '_description')}}}">
+                                            {{{translate this}}}
+                                        </div>
                                     {{/each}}
                                 {{else}} --- {{/if}}
                             </div>
-                            <div class="row">{{formatMessage (intlGet 'messages.copyright_holder') count=copyright_holder_count}}: {{#if details.copyright_holders}}{{{join details.copyright_holders ", "}}}{{else}} --- {{/if}}</div>
+                            <div class="row">{{formatMessage (intlGet 'messages.copyright_holder') count=copyright_holder_count}}
+                                {{#if details.copyright_holders}}
+                                    {{#each details.copyright_holders}}
+                                        <div class="details-pill">
+                                            {{this}}
+                                        </div>
+                                    {{/each}}
+                                {{else}} --- {{/if}}</div>
                         </div>
                     </div>
                     {{#if details.original_channels}}

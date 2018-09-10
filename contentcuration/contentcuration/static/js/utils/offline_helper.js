@@ -28,7 +28,8 @@ require("utils/snake");
 
 var languageMapping = {
     "en": "english",
-    "es": "spanish"
+    "es": "spanish",
+    "ar": "arabic"
 }
 
 function getOfflineLanguageName(code) {

@@ -34,9 +34,11 @@
       {% block css_bundle %}
         {% render_bundle_css 'base' %}
       {% endblock css_bundle %}
+
       {% render_offline_css LANGUAGE_CODE %}
       <script>
         window.languageCode = "{{LANGUAGE_CODE}}";
+        window.isRTL = "{{ LANGUAGE_BIDI }}" === "True";
         try{
           window.ALL_MESSAGES = JSON.parse("{{ messages|escapejs}}");
         } catch (error) { /* Page does not require front-end translations */ }
@@ -81,7 +83,7 @@
             </button>
             <a href="/channels" id="logo-container">
               <img class="navbar-brand" src="{% static 'img/logo.png' %}">
-              <label id="kolibri_label">Kolibri Studio ({% trans 'Beta' %})</label>
+              <label id="kolibri_label"><span dir="ltr">Kolibri Studio</span> <span dir="auto">({% trans 'Beta' %})</span></label>
             </a>
           </div>
             <div class="collapse navbar-collapse">

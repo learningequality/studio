@@ -188,3 +188,13 @@ Handlebars.registerHelper('format_date', function(date) {
 Handlebars.registerHelper('equal', function(val1, val2, options) {
     return ( val1!=val2 ) ? options.inverse(this) : options.fn(this);
 });
+
+Handlebars.registerHelper('link', function(text, url, blank) {
+  url = Handlebars.escapeExpression(url);
+  text = Handlebars.escapeExpression(text);
+
+  return new Handlebars.SafeString(
+    (blank!=="true")? "<a href='" + url + "'>" + text + "</a>"
+      : "<a href='" + url + "' target='_blank'>" + text + "</a>"
+  );
+});

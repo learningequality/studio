@@ -20,7 +20,7 @@ var MESSAGES = {
 	"add_channel_title": "Create a new channel",
 	"pending_loading": "Checking for invitations...",
 	"copy_id": "Copy ID to clipboard",
-	"unpublished": "Unpublished",
+	"unpublished": "(Unpublished)",
 	"view_only": "View Only",
 	"invitation_error": "Invitation Error",
 	"declining_invitation": "Declining Invitation",

@@ -492,11 +492,11 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 			setTimeout(function() {
 				var v = new Vibrant(self.model.get('thumbnail'));
 				v.getPalette(function(err, palette) {
-					if (!err && palette.Muted) {
-						var colorHex = palette.Muted.getHex();
-						var color = palette.Muted.getRgb();
+					if (!err && palette && palette.Muted) {
+						var colorHex = palette? palette.Muted.getHex() : "#6c939b";
+						var color = palette? palette.Muted.getRgb() : [108, 147, 155];
 						self.$('label.segment').css({
-							'border-left': `10px solid ${colorHex}`,
+							[window.isRTL? 'border-right': 'border-left']: `10px solid ${colorHex}`,
 							'background-color': `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.2)`,
 						});
 					}
@@ -511,6 +511,7 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 			trigger:"manual",
 			html: true,
 			selector: '[rel="popover"]',
+			placement: "bottom",
 			content: function () {
 		        return $("#queue_option_" + self.model.get("id")).html();
 		    }
@@ -518,6 +519,13 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 			self.containing_list_view.close_all_popups();
 			if(!$(this).hasClass("active-popover")){
 				$(this).popover('show');
+				// Bootstrap doesn't handle RTL very well for popovers, so calculate right
+				if(window.isRTL) {
+					var right = $("#clipboard_list").width() - $(this).position().left - self.$(".popover").outerWidth() - 5;
+					self.$(".popover").css("right", right);
+				} else {
+					self.$(".popover").css("left", self.$(".popover").position().left - 50);
+				}
 	        	$(this).addClass("active-popover");
 			}
 	        event.preventDefault();

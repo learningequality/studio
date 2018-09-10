@@ -1,4 +1,4 @@
 <option selected disabled><i>{{formatMessage (intlGet 'messages.select_language')}}</i></option>
 {{#each languages}}
-	<option value="{{id}}" data-readable="{{readable_name}}" title="{{readable_name}} ({{ietf_name}})">{{readable_name}} ({{ietf_name}})</option>
+	<option value="{{id}}" data-readable="{{readable_name}}" title="{{readable_name}} {{formatMessage (intlGet 'messages.parenthesis') data=ietf_name}}">{{readable_name}} {{formatMessage (intlGet 'messages.parenthesis') data=ietf_name}}</option>
 {{/each}}
