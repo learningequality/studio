@@ -85,6 +85,9 @@ class GetFileDiffTestCase(StudioTestCase):
 
 from contentcuration.models import FileFormat
 class FileFormatsTestCase(StudioTestCase):
+    """
+    Ensure that unsupported files aren't saved.
+    """
     def test_unsupported_files_raise_error(self):
         unsupported_file = File.objects.create(
             file_on_disk=ContentFile("test"),
@@ -93,19 +96,28 @@ class FileFormatsTestCase(StudioTestCase):
 
         try:
             unsupported_file.file_on_disk.save("aaa.wtf", ContentFile("aaa"))
-        except ValueError as e:
+        except Exception as e:
             pass
         assert e
 
     def test_guess_format_from_extension(self):
-        known_extensions = [f.pk for f in FileFormat.objects.all()]
+        """
+        Make sure that we can guess file types listed in le_utils.file_formats.choices.
+        Note: if this test fails, it's likely because le_utils file formats aren't synced.
+        """
+        from le_utils.constants import file_formats
+        known_extensions = dict(file_formats.choices).keys()
 
         for ext in known_extensions:
             file_with_ext = File.objects.create(
                 file_on_disk=ContentFile("test"),
                 checksum="aaa"
             )
-            file_with_ext.file_on_disk.save("aaa.{}".format(ext), ContentFile("aaa"))
+
+            try:
+                file_with_ext.file_on_disk.save("aaa.{}".format(ext), ContentFile("aaa"))
+            except Exception as e:
+                raise type(e)(e.message + " ... (hint: make sure that the version of le-utils you're using has its file formats synced).")
         pass
 
         
