@@ -1070,7 +1070,12 @@ class File(models.Model):
             if not self.file_size:
                 self.file_size = self.file_on_disk.size
             if not self.file_format:
-                self.file_format_id = os.path.splitext(self.file_on_disk.name)[1]
+                ext = os.path.splitext(self.file_on_disk.name)[1].lstrip('.')
+                try:
+                    self.file_format = FileFormat.objects.get(pk=ext)
+                except ObjectDoesNotExist:
+                    raise ValueError('Files of type `{}` are not supported.'.format(ext))
+                
         super(File, self).save(*args, **kwargs)
 
 

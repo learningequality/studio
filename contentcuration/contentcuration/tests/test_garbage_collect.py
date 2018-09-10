@@ -62,7 +62,6 @@ class CleanUpContentNodesTestCase(StudioTestCase):
             contentnode_id=c.pk,
             file_on_disk=ContentFile("test"),
             checksum="aaa",
-            file_format_id=file_formats.JPG
         )
 
         f.file_on_disk.save("aaa.jpg", ContentFile("aaa"))
@@ -149,12 +148,10 @@ class CleanUpContentNodesTestCase(StudioTestCase):
         f = File.objects.create(
             contentnode=legit_node,
             checksum="aaa",
-            file_format_id=file_formats.JPG
         )
         forphan = File.objects.create(
             contentnode=orphan_node,
             checksum="aaa",
-            file_format_id=file_formats.JPG
         )
 
         # The file they both share. This has the same checksum and contents.
