@@ -110,6 +110,7 @@ module.exports = {
         test: /\.less?$/,
         use: [
           `style-loader`,
+          MiniCssExtractPlugin.loader,
           `css-loader`,
           'less-loader',
         ],

@@ -281,3 +281,34 @@ ul li.placeholder:before {
   font-style:italic;
   padding-bottom: 20px;
 }
+
+[dir="rtl"] .rtl-flip {
+  direction: rtl;
+  -webkit-transform: matrix(-1, 0, 0, 1, 0, 0);
+  -moz-transform: matrix(-1, 0, 0, 1, 0, 0);
+  -o-transform: matrix(-1, 0, 0, 1, 0, 0);
+  transform: matrix(-1, 0, 0, 1, 0, 0);
+}
+
+.side-popover{
+  border-radius: 0;
+  .arrow{top:40% !important;}
+  .popover-content {
+    padding:0px;
+    min-width:140px;
+    .option{
+      width:100%;
+      padding:5px 20px;
+      border:none;
+      font-size:12pt;
+      cursor: pointer;
+      &:hover {
+        font-weight:bold;
+        background-color: @gray-200;
+      }
+    }
+  }
+  >.arrow {
+      margin-top: -26px;
+  }
+}

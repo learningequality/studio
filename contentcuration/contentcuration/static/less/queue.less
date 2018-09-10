@@ -62,15 +62,17 @@
 	.button_drop{
 	    z-index: 999;
 	    pointer-events: none;
-      position: relative;
+      	position: relative;
+      	padding: 0px 0px 35px 15px;
+    	margin: 0px 0px -35px -15px;
 
 	    .drop_text{
 	    	visibility: hidden;
 	    	font-size: 10pt;
-		color: @blue-500;
-		display: inline-block;
-		text-align: right;
-		width: 400px;
+			color: @blue-500;
+			display: inline-block;
+			text-align: right;
+			width: 400px;
 	    }
 	    &.ui-droppable-active {
 	    	.drop_text{ visibility: visible; }
@@ -262,7 +264,10 @@
 						padding-top:5px;
 						min-width:@queue-width - 32px;
 						background-color: white;
-						&.queue-item:hover { background-color: @highlight-color; }
+						&.queue-item:hover {
+							background-color: @highlight-color;
+
+						}
 						&.queue-item {
 							padding-left: 26px;
 						}
@@ -328,7 +333,31 @@
 								.content-options-dropdown{ visibility:visible; }
 								.popover{ display: block !important; }
 							}
-							.popover{ display: none !important; }
+							.popover{
+								width: 150px;
+								border-radius: 0;
+								margin-top: 0;
+								.arrow{
+									left: auto !important;
+									right: 10% !important;
+								}
+								.popover-content {
+								    padding:0px;
+								    width: 100%;
+									.option{
+										display: block;
+										width:100%;
+										padding:5px 20px;
+										border:none;
+										font-size:12pt;
+										cursor: pointer;
+										&:hover {
+											font-weight:bold;
+											background-color: @gray-200;
+										}
+									}
+								}
+							}
 							.content-options-dropdown{
 								visibility:hidden;
 								margin: 15px 10px 0 0;
@@ -377,28 +406,6 @@
 	}
 }
 
-.popover{
-	border-radius: 0;
-	margin-top: 15px;
-	.arrow{top:40% !important;}
-	.popover-content {
-		padding:0px;
-		.option{
-			display: block !important;
-			min-width:140px;
-			padding:5px 20px;
-			border:none;
-			font-size:12pt;
-			&:hover{
-				font-weight:bold;
-				background-color: @gray-200;
-			}
-		}
-	}
-	>.arrow {
-	    margin-top: -26px;
-	}
-}
 .context-menu {
 	display:none;
 	cursor:pointer;

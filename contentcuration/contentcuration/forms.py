@@ -7,7 +7,8 @@ from contentcuration.models import User, Language
 from contentcuration.utils.policies import get_latest_policies
 from django import forms
 from django.conf import settings
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, UserChangeForm, PasswordChangeForm, PasswordResetForm
+from django.contrib.auth import password_validation
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, UserChangeForm, PasswordChangeForm, PasswordResetForm, SetPasswordForm
 from django.contrib.sites.shortcuts import get_current_site
 from django.core import signing
 from django.contrib.auth.tokens import default_token_generator
@@ -26,11 +27,11 @@ class ExtraFormMixin(object):
         return self.cleaned_data.get(field)
 
 class RegistrationForm(forms.Form, ExtraFormMixin):
-    first_name = forms.CharField(widget=forms.TextInput, label=_('First Name'), required=True)
-    last_name = forms.CharField(widget=forms.TextInput, label=_('Last Name'), required=True)
-    email = forms.CharField(widget=forms.TextInput, label=_('Email'), required=True)
-    password1 = forms.CharField(widget=forms.PasswordInput(render_value = True), label=_('Password'), required=True,)
-    password2 = forms.CharField(widget=forms.PasswordInput(render_value = True), label=_('Password (again)'), required=True)
+    first_name = forms.CharField(widget=forms.TextInput(attrs={"dir": "auto"}), label=_('First Name'), required=True)
+    last_name = forms.CharField(widget=forms.TextInput(attrs={"dir": "auto"}), label=_('Last Name'), required=True)
+    email = forms.CharField(widget=forms.TextInput(attrs={"dir": "auto"}), label=_('Email'), required=True)
+    password1 = forms.CharField(widget=forms.PasswordInput(render_value = True, attrs={"dir": "auto"}), label=_('Password'), required=True,)
+    password2 = forms.CharField(widget=forms.PasswordInput(render_value = True, attrs={"dir": "auto"}), label=_('Password (again)'), required=True)
 
     def clean_email(self):
         email = self.cleaned_data['email'].strip()
@@ -90,13 +91,13 @@ SOURCES = [
 
 class RegistrationInformationForm(UserCreationForm, ExtraFormMixin):
     use = forms.ChoiceField(required=False, widget=forms.CheckboxSelectMultiple, label=_('How do you plan to use Kolibri Studio? (check all that apply)'), choices=USAGES)
-    other_use = forms.CharField(required=False, widget=forms.TextInput)
-    storage = forms.CharField(required=False, widget=forms.TextInput(attrs={"placeholder": _("e.g. 500MB")}), label=_("How much storage do you need?"))
+    other_use = forms.CharField(required=False, widget=forms.TextInput(attrs={"dir": "auto"}))
+    storage = forms.CharField(required=False, widget=forms.TextInput(attrs={"placeholder": _("e.g. 500MB"), "dir": "auto"}), label=_("How much storage do you need?"))
 
     source = forms.ChoiceField(required=False, widget=forms.Select, label=_('How did you hear about us?'), choices=SOURCES)
-    organization = forms.CharField(required=False, widget=forms.TextInput, label=_("Name of Organization"))
-    conference = forms.CharField(required=False, widget=forms.TextInput, label=_("Name of Conference"))
-    other_source = forms.CharField(required=False, widget=forms.TextInput, label=_("Please describe"))
+    organization = forms.CharField(required=False, widget=forms.TextInput(attrs={"dir": "auto"}), label=_("Name of Organization"))
+    conference = forms.CharField(required=False, widget=forms.TextInput(attrs={"dir": "auto"}), label=_("Name of Conference"))
+    other_source = forms.CharField(required=False, widget=forms.TextInput(attrs={"dir": "auto"}), label=_("Please describe"))
     accepted_policy = forms.BooleanField(widget=forms.CheckboxInput())
 
     def __init__(self, *args, **kwargs):
@@ -206,8 +207,8 @@ class PolicyAcceptForm(forms.Form):
 
 
 class ProfileSettingsForm(UserChangeForm):
-    first_name = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control setting_input'}))
-    last_name = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control setting_input'}))
+    first_name = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control setting_input', 'dir': 'auto'}))
+    last_name = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control setting_input', 'dir': 'auto'}))
 
     class Meta:
         model = User
@@ -250,11 +251,11 @@ except Exception:
 
 class PreferencesSettingsForm(forms.Form):
     # TODO: Add language, audio thumbnail, document thumbnail, exercise thumbnail, html5 thumbnail once implemented
-    author = forms.CharField(required=False, label=_('Author'), widget=forms.TextInput(attrs={'class': 'form-control setting_input'}))
-    aggregator = forms.CharField(required=False, label=_('Aggregator'), widget=forms.TextInput(attrs={'class': 'form-control setting_input'}))
-    provider = forms.CharField(required=False, label=_('Provider'), widget=forms.TextInput(attrs={'class': 'form-control setting_input'}))
-    copyright_holder = forms.CharField(required=False, label=_('Copyright Holder'), widget=forms.TextInput(attrs={'class': 'form-control setting_input'}))
-    license_description = forms.CharField(required=False, label=_('License Description'), widget=forms.TextInput(attrs={'class': 'form-control setting_input'}))
+    author = forms.CharField(required=False, label=_('Author'), widget=forms.TextInput(attrs={'class': 'form-control setting_input', 'dir': 'auto'}))
+    aggregator = forms.CharField(required=False, label=_('Aggregator'), widget=forms.TextInput(attrs={'class': 'form-control setting_input', 'dir': 'auto'}))
+    provider = forms.CharField(required=False, label=_('Provider'), widget=forms.TextInput(attrs={'class': 'form-control setting_input', 'dir': 'auto'}))
+    copyright_holder = forms.CharField(required=False, label=_('Copyright Holder'), widget=forms.TextInput(attrs={'class': 'form-control setting_input', 'dir': 'auto'}))
+    license_description = forms.CharField(required=False, label=_('License Description'), widget=forms.TextInput(attrs={'class': 'form-control setting_input', 'dir': 'auto'}))
     language = forms.ChoiceField(required=False, widget=forms.Select(attrs={'class': 'form-control setting_change'}), label=_('Language'), choices=LANGUAGES)
     license = forms.ChoiceField(required=False, widget=forms.Select(attrs={'class': 'form-control setting_change'}), label=_('License'), choices=LICENSES)
     mastery_model = forms.ChoiceField(widget=forms.Select(attrs={'class': 'form-control setting_change'}), choices=MASTERY, label=_("Mastery at"))
@@ -294,24 +295,24 @@ class PreferencesSettingsForm(forms.Form):
 
 class StorageRequestForm(forms.Form, ExtraFormMixin):
     # Nature of content
-    storage = forms.CharField(required=True, widget=forms.TextInput(attrs={"placeholder": _("e.g. 1GB"), "class": "short-field"}))
-    kind = forms.CharField(required=True, widget=forms.TextInput(attrs={"placeholder": _("Mostly high resolution videos, some pdfs, etc."), "class": "long-field"}))
-    resource_count = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "short-field"}))
-    resource_size = forms.CharField(required=False, widget=forms.TextInput(attrs={"placeholder": _("e.g. 10MB"), "class": "short-field"}))
-    creators = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "long-field"}))
-    sample_link = forms.CharField(required=False, widget=forms.TextInput(attrs={"class": "long-field"}))
+    storage = forms.CharField(required=True, widget=forms.TextInput(attrs={"placeholder": _("e.g. 1GB"), "class": "short-field", "dir": "auto"}))
+    kind = forms.CharField(required=True, widget=forms.TextInput(attrs={"placeholder": _("Mostly high resolution videos, some pdfs, etc."), "class": "long-field", "dir": "auto"}))
+    resource_count = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "short-field", "dir": "auto"}))
+    resource_size = forms.CharField(required=False, widget=forms.TextInput(attrs={"placeholder": _("e.g. 10MB"), "class": "short-field", "dir": "auto"}))
+    creators = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "long-field", "dir": "auto"}))
+    sample_link = forms.CharField(required=False, widget=forms.TextInput(attrs={"class": "long-field", "dir": "auto"}))
 
     # How are you using your content
     license = forms.MultipleChoiceField(required=True, widget=forms.CheckboxSelectMultiple(), choices=licenses.choices)
-    audience = forms.CharField(required=True, widget=forms.TextInput(attrs={"placeholder": _("In-school learners, adult learners, teachers, etc."), "class":"long-field"}))
-    import_count = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "short-field"}))
+    audience = forms.CharField(required=True, widget=forms.TextInput(attrs={"placeholder": _("In-school learners, adult learners, teachers, etc."), "class":"long-field", "dir": "auto"}))
+    import_count = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "short-field", "dir": "auto"}))
 
     # Tell us more about your use of Kolibri
     org_or_personal = forms.ChoiceField(required=True, widget=forms.RadioSelect, choices=[
         ('Organization', _("I am uploading content on behalf of")),
         ('Not Affiliated', _("I am not affiliated with an organization for this work")),
     ])
-    organization = forms.CharField(required=False, widget=forms.TextInput(attrs={"placeholder": _("Organization or Institution")}))
+    organization = forms.CharField(required=False, widget=forms.TextInput(attrs={"placeholder": _("Organization or Institution"), "dir": "auto"}))
     organization_type = forms.ChoiceField(required=False, widget=forms.RadioSelect, choices=(
         ("Grassroots and/or volunteer initiative", _("Grassroots and/or volunteer initiative")),
         ("Small NGO with annual budget < $25K", _("Small NGO with annual budget < $25K")),
@@ -320,10 +321,10 @@ class StorageRequestForm(forms.Form, ExtraFormMixin):
         ("For-profit or social enterprise company", _("For-profit or social enterprise company")),
         ("Other", _("Other")),
     ))
-    organization_other = forms.CharField(required=False, widget=forms.TextInput())
+    organization_other = forms.CharField(required=False, widget=forms.TextInput(attrs={"dir": "auto"}))
 
     # Use case
-    message = forms.CharField(required=True, widget=forms.Textarea(attrs={"rows": 4}))
+    message = forms.CharField(required=True, widget=forms.Textarea(attrs={"rows": 4, "dir": "auto"}))
 
 
     def __init__(self, *args, **kwargs):
@@ -378,9 +379,9 @@ class StorageRequestForm(forms.Form, ExtraFormMixin):
 
 
 class AccountSettingsForm(PasswordChangeForm):
-    old_password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control setting_input'}))
-    new_password1 = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control setting_input'}))
-    new_password2 = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control setting_input'}))
+    old_password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control setting_input', 'dir': 'auto'}))
+    new_password1 = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control setting_input', 'dir': 'auto'}))
+    new_password2 = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control setting_input', 'dir': 'auto'}))
 
     class Meta:
         model = User
@@ -409,7 +410,7 @@ class AccountSettingsForm(PasswordChangeForm):
 
 
 class ForgotPasswordForm(PasswordResetForm):
-    email = forms.EmailField(label=_("Email"), max_length=254)
+    email = forms.EmailField(label=_("Email"), max_length=254, widget=forms.TextInput(attrs={"dir": "auto"}))
 
     def save(self, request=None, extra_email_context=None, **kwargs):
         """
@@ -459,3 +460,15 @@ class ForgotPasswordForm(PasswordResetForm):
 
 
 
+class ResetPasswordForm(SetPasswordForm):
+    new_password1 = forms.CharField(label=_("New password"),
+                                    widget=forms.PasswordInput(attrs={"dir": "auto"}),
+                                    strip=False,
+                                    help_text=password_validation.password_validators_help_text_html())
+    new_password2 = forms.CharField(label=_("New password confirmation"),
+                                    strip=False,
+                                    widget=forms.PasswordInput(attrs={"dir": "auto"}))
+
+class LoginForm(AuthenticationForm):
+    username = forms.CharField(max_length=254, widget=forms.TextInput(attrs={"dir": "auto"}))
+    password = forms.CharField(label=_("Password"), strip=False, widget=forms.PasswordInput(attrs={"dir": "auto"}))
