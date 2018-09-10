@@ -50,7 +50,7 @@ class MimeTypesTestCase(TestCase):
         assert typ == "application/octet-stream"
 
 
-class GoogleCloudStorageSave(TestCase):
+class GoogleCloudStorageSaveTestCase(TestCase):
     """
     Tests for GoogleCloudStorage.save().
     """
