@@ -1,4 +1,5 @@
 import logging
+import mimetypes
 import os.path
 
 from google.cloud.storage import Client
@@ -13,10 +14,28 @@ OLD_STUDIO_STORAGE_PREFIX = "/contentworkshop_content/"
 
 class GoogleCloudStorage(Storage):
 
-    def __init__(self):
+    def __init__(self, client=None):
         from django.conf import settings
-        self.client = Client()
+        self.client = client if client else Client()
         self.bucket = self.client.get_bucket(settings.AWS_S3_BUCKET_NAME)
+
+    @classmethod
+    def _determine_content_type(cls, filename):
+        """
+        Guesses the content type of a filename. Returns the mimetype of a file.
+
+        Returns "application/octet-stream" if the type can't be guessed.
+        Raises an AssertionError if filename is not a string.
+        """
+
+        assert isinstance(filename, str), "Expected filename to be string, passed in {}".format(filename)
+
+        typ, _ =  mimetypes.guess_type(filename)
+
+        if not typ:
+            return "application/octet-stream"
+        else:
+            return typ
 
     def open(self, name, mode="rb"):
         # We don't have any logic for returning the file object in write
@@ -65,12 +84,24 @@ class GoogleCloudStorage(Storage):
         blob = self.bucket.get_blob(name)
         return blob.size
 
-    def save(self, name, fobj, max_length=None):
-        blob = Blob(name, self.bucket)
+    def save(self, name, fobj, max_length=None, blob_object=None):
+
+        if not blob_object:
+            blob = Blob(name, self.bucket)
+        else:
+            blob = blob_object
+
         # force the current file to be at file location 0, to
         # because that's what google wants
+
+        # determine the current file's mimetype based on the name
+        content_type = self._determine_content_type(name)
+
         fobj.seek(0)
-        blob.upload_from_file(fobj)
+        blob.upload_from_file(
+            fobj,
+            content_type=content_type,
+        )
         return name
 
     def url(self, name):
