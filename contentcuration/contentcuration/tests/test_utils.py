@@ -2,10 +2,12 @@ import datetime
 
 from cStringIO import StringIO
 from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+
 from django.conf import settings
 
 from unittest import TestCase
-from contentcuration.models import User, generate_object_storage_name
+from contentcuration.models import User, File, generate_object_storage_name
 from contentcuration.utils.policies import check_policies, POLICIES
 from contentcuration.utils.files import get_file_diff
 
@@ -80,3 +82,30 @@ class GetFileDiffTestCase(StudioTestCase):
             "rando"
         ]
         assert get_file_diff(files) == ["rando"]
+
+from contentcuration.models import FileFormat
+class FileFormatsTestCase(StudioTestCase):
+    def test_unsupported_files_raise_error(self):
+        unsupported_file = File.objects.create(
+            file_on_disk=ContentFile("test"),
+            checksum='aaa'
+        )
+
+        try:
+            unsupported_file.file_on_disk.save("aaa.wtf", ContentFile("aaa"))
+        except ValueError as e:
+            pass
+        assert e
+
+    def test_guess_format_from_extension(self):
+        known_extensions = [f.pk for f in FileFormat.objects.all()]
+
+        for ext in known_extensions:
+            file_with_ext = File.objects.create(
+                file_on_disk=ContentFile("test"),
+                checksum="aaa"
+            )
+            file_with_ext.file_on_disk.save("aaa.{}".format(ext), ContentFile("aaa"))
+        pass
+
+        

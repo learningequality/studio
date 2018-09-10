@@ -232,7 +232,7 @@ class User(AbstractBaseUser, PermissionsMixin):
             changed = True
 
         if not self.clipboard_tree:
-            self.clipboard_tree = ContentNode.objects.create(title=self.email + " clipboard", kind_id="topic",
+            self.clipboard_tree = ContentNode.objects.create(title=self.email + " clipboard", kind_id=content_kinds.TOPIC,
                                                              sort_order=get_next_sort_order())
             self.clipboard_tree.save()
             changed = True
@@ -1070,7 +1070,12 @@ class File(models.Model):
             if not self.file_size:
                 self.file_size = self.file_on_disk.size
             if not self.file_format:
-                self.file_format_id = os.path.splitext(self.file_on_disk.name)[1]
+                ext = os.path.splitext(self.file_on_disk.name)[1].lstrip('.')
+                try:
+                    self.file_format = FileFormat.objects.get(pk=ext)
+                except ObjectDoesNotExist:
+                    raise ValueError('Files of type `{}` are not supported.'.format(ext))
+                
         super(File, self).save(*args, **kwargs)
 
 

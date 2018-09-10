@@ -34,6 +34,11 @@ def _check_nodes(parent, title=None, original_channel_id=None, source_channel_id
 
 
 class NodeOperationsTestCase(BaseTestCase):
+    def setUp(self):
+        super(NodeOperationsTestCase, self).setUp()
+
+        self.channel = testdata.channel()
+
     def test_duplicate_nodes(self):
         """
         Ensures that when we copy nodes, the new channel gets marked as changed but the old channel doesn't,

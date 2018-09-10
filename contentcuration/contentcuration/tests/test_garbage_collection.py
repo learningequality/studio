@@ -8,7 +8,7 @@ from django.core.urlresolvers import reverse_lazy
 from contentcuration import models as cc
 from contentcuration.api import activate_channel
 from contentcuration.utils.garbage_collect import clean_up_deleted_chefs, get_deleted_chefs_root
-
+from le_utils.constants import content_kinds
 from base import BaseAPITestCase
 from testdata import tree
 
@@ -22,11 +22,11 @@ class NodeSettingTestCase(BaseAPITestCase):
     def setUp(self):
         super(NodeSettingTestCase, self).setUp()
         # Set up ricecooker trees
-        self.channel.staging_tree = cc.ContentNode(kind_id="topic", title="test", node_id="aaa")
+        self.channel.staging_tree = cc.ContentNode(kind_id=content_kinds.TOPIC, title="test", node_id="aaa")
         self.channel.staging_tree.save()
-        self.channel.previous_tree = cc.ContentNode(kind_id="topic", title="test", node_id="bbb")
+        self.channel.previous_tree = cc.ContentNode(kind_id=content_kinds.TOPIC, title="test", node_id="bbb")
         self.channel.previous_tree.save()
-        self.channel.chef_tree = cc.ContentNode(kind_id="topic", title="test", node_id="ccc")
+        self.channel.chef_tree = cc.ContentNode(kind_id=content_kinds.TOPIC, title="test", node_id="ccc")
         self.channel.chef_tree.save()
         self.channel.save()
 

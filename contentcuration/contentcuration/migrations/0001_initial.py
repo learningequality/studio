@@ -91,9 +91,6 @@ class Migration(migrations.Migration):
                 'verbose_name': 'Topic',
                 'verbose_name_plural': 'Topics',
             },
-            managers=[
-                ('_default_manager', django.db.models.manager.Manager()),
-            ],
         ),
         migrations.CreateModel(
             name='ContentTag',
