@@ -94,11 +94,8 @@ class FileFormatsTestCase(StudioTestCase):
             checksum='aaa'
         )
 
-        try:
+        with self.assertRaises(Exception):
             unsupported_file.file_on_disk.save("aaa.wtf", ContentFile("aaa"))
-        except Exception as e:
-            pass
-        assert e
 
     def test_guess_format_from_extension(self):
         """
