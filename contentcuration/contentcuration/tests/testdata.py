@@ -1,3 +1,4 @@
+import hashlib
 import json
 import md5
 import os
@@ -7,16 +8,10 @@ import tempfile
 from cStringIO import StringIO
 
 import pytest
-from django.conf import settings
 from django.core.files.storage import default_storage
-from django.core.management import call_command
-from rest_framework.authtoken.models import Token
-from rest_framework.test import APIClient, APIRequestFactory, force_authenticate
-from django.test.utils import override_settings
 from mixer.backend.django import mixer
 
 from contentcuration import models as cc
-from contentcuration.tests.base import StudioTestCase, StudioAPITestCase
 from le_utils.constants import format_presets
 pytestmark = pytest.mark.django_db
 
@@ -103,6 +98,23 @@ def fileobj_video(contents=None):
     yield db_file_obj
 
 
+def node_json(data):
+    node_data = {
+        "title": "Recipes",
+        "node_id": "acedacedacedacedacedacedacedaced",
+        "content_id": "aa480b60a7f4526f886e7df9f4e9b8cc",
+        "description": "Recipes for various dishes.",
+        "author": "Bradley Smoker",
+        "kind": data['kind'],
+        "license": data['license'],
+        "extra_fields": "",
+        "files": [],
+        "questions": []
+    }
+
+    return node_data
+
+
 def node(data, parent=None):
     new_node = None
     # Create topics
@@ -138,16 +150,21 @@ def node(data, parent=None):
 
     return new_node
 
-def channel():
-    channel = cc.Channel.objects.create(name="testchannel")
-    channel.save()
 
+def tree(parent=None):
     # Read from json fixture
     filepath = os.path.sep.join([os.path.dirname(__file__), "fixtures", "tree.json"])
     with open(filepath, "rb") as jsonfile:
         data = json.load(jsonfile)
 
-    channel.main_tree = node(data)
+    return node(data, parent)
+
+
+def channel():
+    channel = cc.Channel.objects.create(name="testchannel")
+    channel.save()
+
+    channel.main_tree = tree()
     channel.save()
 
     return channel
@@ -158,30 +175,77 @@ def user():
     user.save()
     return user
 
-class BaseTestCase(StudioTestCase):
-     def setUp(self):
-        super(BaseTestCase, self).setUp()
-        self.channel = channel()
-        self.user = user()
-        self.channel.main_tree.refresh_from_db()
 
-class BaseAPITestCase(StudioAPITestCase):
-    def setUp(self):
-        super(BaseAPITestCase, self).setUp()
-        self.channel = channel()
-        self.user = user()
-        token, _new = Token.objects.get_or_create(user=self.user)
-        self.header = {"Authorization": "Token {0}".format(token)}
-        self.client = APIClient()
-        self.client.force_authenticate(self.user)
-        self.channel.main_tree.refresh_from_db()
+def create_temp_file(filebytes, kind='text', ext='txt', mimetype='text/plain'):
+    """
+    Create a file and store it in Django's object db temporarily for tests.
 
-    def get(self, url):
-        return self.client.get(url, headers=self.header)
+    :param filebytes: The data to be stored in the file, as a series of bytes
+    :param kind: String identifying the kind of file
+    :param ext: File extension, omitting the initial period
+    :param mimetype: Mimetype of the file
+    :return: A dict containing the keys name (filename), data (actual bytes), file (StringIO obj) and db_file (File object in db) of the temp file.
+    """
+    fileobj = StringIO(filebytes)
+    checksum = hashlib.md5(filebytes)
+    digest = checksum.hexdigest()
+    filename = "{}.{}".format(digest, ext)
+    storage_file_path = cc.generate_object_storage_name(digest, filename)
 
-    def create_post_request(self, url, *args, **kwargs):
-        factory = APIRequestFactory()
-        request = factory.post(url, headers=self.header, *args, **kwargs)
-        request.user = self.user
-        force_authenticate(request, user=self.user)
-        return request
+    # Write out the file bytes on to object storage, with a filename specified with randomfilename
+    default_storage.save(storage_file_path, fileobj)
+
+    assert default_storage.exists(storage_file_path)
+
+    file_kind = mixer.blend(cc.ContentKind, kind=kind)
+    file_format = mixer.blend(cc.FileFormat, extension=ext, mimetype=mimetype)
+    preset = mixer.blend(cc.FormatPreset, id=ext, kind=file_kind)
+    # then create a File object with that
+    db_file_obj = mixer.blend(cc.File, file_format=file_format, preset=preset, file_on_disk=storage_file_path)
+
+    return {'name': os.path.basename(storage_file_path), 'data': filebytes, 'file': fileobj, 'db_file': db_file_obj}
+
+invalid_file_json = [
+    {
+        "slug": "counting-out-1-20-objects",
+        "kind": "exercise",
+        "title": "Count with small numbers",
+        "source_id": "counting-out-1-20-objects",
+        "node_id": "1243434343434343434343",
+        "content_id": "abcabcddafadfadsfsafs",
+        "thumbnail": "https://cdn.kastatic.org/ka-exercise-screenshots/counting-out-1-20-objects.png",
+        "description": "Practice counting up to 10 objects.",
+        "author": "Khan Academy",
+        "extra_fields": {},
+        "exercise_data": {
+            "m": 5,
+            "n": 7,
+            "mastery_model": "m_of_n"
+        },
+        "license": "CC-BY",
+        "files": [],
+        "questions": [
+            {
+                'type': 'single_selection',
+                'question': 'What is your quest?',
+                'hints': ['Holy', 'Coconuts'],
+                'answers': [
+                    'To seek the grail',
+                    'To eat some hail',
+                    'To spectacularly fail',
+                    'To post bail'
+                ],
+                'files': [
+                    {
+                        'filename': 'nonexistant.mp4',
+                        'size': 0,
+                    }
+                ],
+                'source_url': '',
+                'raw_data': '',
+                'assessment_id': '1'
+            }
+        ]
+
+    }
+]

@@ -9,6 +9,7 @@ import socket
 import sys
 import urlparse
 import uuid
+import warnings
 
 from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
@@ -24,6 +25,7 @@ from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 from django.contrib.postgres.fields import JSONField
+from le_utils import proquint
 from le_utils.constants import (content_kinds, exercises, file_formats, licenses,
                                 format_presets, languages, roles)
 from mptt.models import (MPTTModel, TreeForeignKey, TreeManager,
@@ -395,6 +397,14 @@ class SecretToken(models.Model):
     token = models.CharField(max_length=100, unique=True)
     is_primary = models.BooleanField(default=False)
 
+    @classmethod
+    def exists(cls, token):
+        """
+        Return true when the token string given by string already exists.
+        Returns false otherwise.
+        """
+        return cls.objects.filter(token=token).exists()
+
     def __str__(self):
         return self.token
 
@@ -550,6 +560,86 @@ class Channel(models.Model):
 
         return '/static/img/kolibri_placeholder.png'
 
+    def get_date_modified(self):
+        return self.main_tree.get_descendants(include_self=True).aggregate(last_modified=Max('modified'))['last_modified']
+
+    def get_resource_count(self):
+        return self.main_tree.get_descendants().exclude(kind_id=content_kinds.TOPIC).count()
+
+    def get_human_token(self):
+        return self.secret_tokens.get(is_primary=True)
+
+    def get_channel_id_token(self):
+        return self.secret_tokens.get(token=self.id)
+
+
+    def make_token(self):
+        """
+        Creates a primary secret token for the current channel using a proquint
+        string. Creates a secondary token containing the channel id.
+
+        These tokens can be used to refer to the channel to download its content
+        database.
+        """
+        token = proquint.generate()
+
+        # Try 100 times to generate a unique token.
+        TRIALS = 100
+        for _ in range(TRIALS):
+            token = proquint.generate()
+            if SecretToken.exists(token):
+                continue
+            else:
+                break
+        # after TRIALS attempts and we didn't get a unique token,
+        # just raise an error.
+        # See https://stackoverflow.com/a/9980160 on what for-else loop does.
+        else:
+            raise ValueError("Cannot generate new token")
+
+        # We found a unique token! Save it
+        human_token = self.secret_tokens.create(token=token, is_primary=True)
+        self.secret_tokens.get_or_create(token=self.id)
+
+        return human_token
+
+    def make_public(self, bypass_signals=False):
+        """
+        Sets the current channel object to be public and viewable by anyone.
+
+        If bypass_signals is True, update the model in such a way that we
+        prevent any model signals from running due to the update.
+
+        Returns the same channel object.
+        """
+        if bypass_signals:
+            self.public = True     # set this attribute still, so the object will be updated
+            Channel.objects.filter(id=self.id).update(public=True)
+        else:
+            self.public = True
+            self.save()
+
+        return self
+
+    @classmethod
+    def get_public_channels(cls, defer_nonmain_trees=False):
+        """
+        Get all public channels.
+
+        If defer_nonmain_trees is True, defer the loading of all
+        trees except for the main_tree."""
+        if defer_nonmain_trees:
+            c = (Channel.objects
+                .filter(public=True)
+                .exclude(deleted=True)
+                .select_related('main_tree')
+                .prefetch_related('editors')
+                .defer('trash_tree', 'clipboard_tree', 'staging_tree', 'chef_tree', 'previous_tree', 'viewers'))
+        else:
+            c = Channel.objects.filter(public=True).exclude(deleted=True)
+
+        return c
+
     class Meta:
         verbose_name = _("Channel")
         verbose_name_plural = _("Channels")
@@ -684,14 +774,34 @@ class ContentNode(MPTTModel, models.Model):
 
     def __init__(self, *args, **kwargs):
         super(ContentNode, self).__init__(*args, **kwargs)
-        self._original_fields = self._as_dict() # Fast way to keep track of updates (no need to query db again)
+        self._original_fields = None
 
     def _as_dict(self):
         return dict([(f.name, getattr(self, f.name)) for f in self._meta.local_fields if not f.rel])
 
+    def _mark_unchanged(self):
+        """
+        This method sets all cached fields to current values in order to force the node into an unchanged state.
+        This is a helper method for tests that let us test the behavior of marking nodes changed, as they are only
+        marked as unchanged upon publish.
+        Please do not use this for any production code.
+        """
+        if not self._original_fields:
+            self.get_changed_fields()
+        new_state = self._as_dict()
+        for field_name in self._original_fields:
+            self._original_fields[field_name] = new_state[field_name]
+
     def get_changed_fields(self):
         """ Returns a dictionary of all of the changed (dirty) fields """
         new_state = self._as_dict()
+        # In Django 1.11, _as_dict() can trigger a refresh_from_db is called from __init__, so just load it on
+        # first call here instead. We may want to whitelist what fields to check in the future
+        if not self._original_fields:
+            self._original_fields = ContentNode.objects.get(pk=self.pk)._as_dict()
+            # don't include the changed (dirty) field in the list of fields we check to see if the object is dirty
+            del self._original_fields['changed']
+
         return dict([(key, value) for key, value in self._original_fields.iteritems() if value != new_state[key]])
 
     def get_tree_data(self, include_self=True):
@@ -782,15 +892,20 @@ class ContentNode(MPTTModel, models.Model):
     def get_channel(self):
         try:
             root = self.get_root()
-            return root.channel_main.first() or root.channel_chef.first() or root.channel_trash.first() or root.channel_staging.first() or root.channel_previous.first()
+            if not root:
+                return None
+            return Channel.objects.filter(Q(main_tree=root) | Q(chef_tree=root) | Q(trash_tree=root) | Q(staging_tree=root) | Q(previous_tree=root)).first()
         except (ObjectDoesNotExist, MultipleObjectsReturned, AttributeError):
             return None
 
     def save(self, *args, **kwargs):
+        channel_id = None
         if kwargs.get('request'):
             request = kwargs.pop('request')
             channel = self.get_channel()
             request.user.can_edit(channel and channel.pk)
+            if channel:
+                channel_id = channel.pk
 
         self.changed = self.changed or len(self.get_changed_fields()) > 0
 
@@ -806,14 +921,17 @@ class ContentNode(MPTTModel, models.Model):
         if self.cloned_source is None:
             self.cloned_source = self
 
-        if self.original_channel_id is None:
-            # TODO: This SIGNIFICANTLY slows down the creation flow
-            channel = (self.parent and self.parent.get_channel()) or self.get_channel() # Check parent first otherwise new content won't have root
-            self.original_channel_id = channel.id if channel else None
-        if self.source_channel_id is None:
-            # TODO: This SIGNIFICANTLY slows down the creation flow
-            channel = (self.parent and self.parent.get_channel()) or self.get_channel() # Check parent first otherwise new content won't have root
-            self.source_channel_id = channel.id if channel else None
+        # Getting the channel is an expensive call, so warn about it so that we can reduce the number of cases in which
+        # we need to do this.
+        if not channel_id and (not self.original_channel_id or not self.source_channel_id):
+            warnings.warn("Determining node's channel is an expensive operation. Please set original_channel_id and source_channel_id to the parent's values when creating child nodes.", stacklevel=2)
+            channel = (self.parent and self.parent.get_channel()) or self.get_channel()
+            if channel:
+                channel_id = channel.pk
+            if self.original_channel_id is None:
+                self.original_channel_id = channel_id
+            if self.source_channel_id is None:
+                self.source_channel_id = channel_id
 
         if self.original_source_node_id is None:
             self.original_source_node_id = self.node_id

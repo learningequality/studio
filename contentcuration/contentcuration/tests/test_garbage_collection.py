@@ -2,14 +2,16 @@ from cStringIO import StringIO
 
 import json
 import pytest
-import requests
-from contentcuration.tests.testcase import BaseAPITestCase, node, fileobj_video
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.urlresolvers import reverse_lazy
-from rest_framework.test import force_authenticate, APIRequestFactory
 from contentcuration import models as cc
 from contentcuration.api import activate_channel
+from contentcuration.utils.garbage_collect import clean_up_deleted_chefs, get_deleted_chefs_root
+
+from base import BaseAPITestCase
+from testdata import tree
+
 from contentcuration.views.files import file_create
 from contentcuration.views.internal import create_channel, api_commit_channel
 
@@ -65,9 +67,13 @@ class NodeSettingTestCase(BaseAPITestCase):
 
 
     def test_old_chef_tree(self):
+        # make an actual tree for deletion tests
+        tree(parent=self.channel.chef_tree)
         chef_tree = self.channel.chef_tree
-        garbage_node = cc.ContentNode.objects.get(pk=settings.ORPHANAGE_ROOT_ID)
+        self.assertTrue(chef_tree.get_descendant_count() > 0)
+        garbage_node = get_deleted_chefs_root()
 
+        self.assertNotEqual(chef_tree, self.channel.staging_tree)
         # Chef tree shouldn't be in garbage tree until create_channel is called
         self.assertFalse(garbage_node.get_descendants().filter(pk=chef_tree.pk).exists())
         create_channel(self.channel.__dict__, self.user)
@@ -75,17 +81,28 @@ class NodeSettingTestCase(BaseAPITestCase):
         chef_tree.refresh_from_db()
         self.channel.refresh_from_db()
 
-        # Old chef tree should be in garbage tree now
-        self.assertTrue(garbage_node.get_descendants().filter(pk=chef_tree.pk).exists())
-        self.assertEqual(garbage_node.tree_id, chef_tree.tree_id)
+        # We can't use MPTT methods to test the deleted chefs tree because we are not running the sort code
+        # for performance reasons, so just do a parent test instead.
+        self.assertEquals(chef_tree.parent.pk, garbage_node.pk)
 
-        # New chef tree should not be in garbage tree
-        self.assertFalse(garbage_node.get_descendants().filter(pk=self.channel.chef_tree.pk).exists())
+        # New staging tree should not be in garbage tree
+        self.assertFalse(self.channel.chef_tree.parent)
         self.assertNotEqual(garbage_node.tree_id, self.channel.chef_tree.tree_id)
+
+        child_pk = chef_tree.children.first().pk
+
+        clean_up_deleted_chefs()
+
+        self.assertFalse(cc.ContentNode.objects.filter(parent=garbage_node).exists())
+        self.assertFalse(cc.ContentNode.objects.filter(pk=child_pk).exists())
+
 
     def test_old_staging_tree(self):
         staging_tree = self.channel.staging_tree
-        garbage_node = cc.ContentNode.objects.get(pk=settings.ORPHANAGE_ROOT_ID)
+        garbage_node = get_deleted_chefs_root()
+
+        tree(parent=staging_tree)
+        self.assertTrue(staging_tree.get_descendant_count() > 0)
 
         # Staging tree shouldn't be in garbage tree until api_commit_channel is called
         self.assertFalse(garbage_node.get_descendants().filter(pk=staging_tree.pk).exists())
@@ -96,17 +113,25 @@ class NodeSettingTestCase(BaseAPITestCase):
         staging_tree.refresh_from_db()
         self.channel.refresh_from_db()
 
-        # Old staging tree should be in garbage tree now
-        self.assertTrue(garbage_node.get_descendants().filter(pk=staging_tree.pk).exists())
-        self.assertEqual(garbage_node.tree_id, staging_tree.tree_id)
+        # We can't use MPTT methods on the deleted chefs tree because we are not running the sort code
+        # for performance reasons, so just do a parent test instead.
+        self.assertEqual(staging_tree.parent, garbage_node)
 
         # New staging tree should not be in garbage tree
-        self.assertFalse(garbage_node.get_descendants().filter(pk=self.channel.main_tree.pk).exists())
+        self.assertFalse(self.channel.main_tree.parent)
         self.assertNotEqual(garbage_node.tree_id, self.channel.main_tree.tree_id)
+
+        child_pk = staging_tree.children.first().pk
+
+        clean_up_deleted_chefs()
+
+        self.assertFalse(cc.ContentNode.objects.filter(parent=garbage_node).exists())
+        self.assertFalse(cc.ContentNode.objects.filter(pk=child_pk).exists())
 
     def test_activate_channel(self):
         previous_tree = self.channel.previous_tree
-        garbage_node = cc.ContentNode.objects.get(pk=settings.ORPHANAGE_ROOT_ID)
+        tree(parent=previous_tree)
+        garbage_node = get_deleted_chefs_root()
 
         # Previous tree shouldn't be in garbage tree until activate_channel is called
         self.assertFalse(garbage_node.get_descendants().filter(pk=previous_tree.pk).exists())
@@ -115,10 +140,17 @@ class NodeSettingTestCase(BaseAPITestCase):
         previous_tree.refresh_from_db()
         self.channel.refresh_from_db()
 
-        # Old previous tree should be in garbage tree now
-        self.assertTrue(garbage_node.get_descendants().filter(pk=previous_tree.pk).exists())
-        self.assertEqual(garbage_node.tree_id, previous_tree.tree_id)
+        # We can't use MPTT methods on the deleted chefs tree because we are not running the sort code
+        # for performance reasons, so just do a parent test instead.
+        self.assertTrue(previous_tree.parent == garbage_node)
 
         # New previous tree should not be in garbage tree
-        self.assertFalse(garbage_node.get_descendants().filter(pk=self.channel.previous_tree.pk).exists())
+        self.assertFalse(self.channel.previous_tree.parent)
         self.assertNotEqual(garbage_node.tree_id, self.channel.previous_tree.tree_id)
+
+        child_pk = previous_tree.children.first().pk
+
+        clean_up_deleted_chefs()
+
+        self.assertFalse(cc.ContentNode.objects.filter(parent=garbage_node).exists())
+        self.assertFalse(cc.ContentNode.objects.filter(pk=child_pk).exists())

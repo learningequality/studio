@@ -424,8 +424,11 @@ var ContentNodeCollection = BaseCollection.extend({
                     item.set('contentnode', node.id);
                     if(item.get('type') === 'input_question'){
                         item.get('answers').each( function(a){
-                            var value = numParser.parse(a.get('answer'))
-                            a.set('answer', value !== null && value.toString());
+                            var answer = a.get('answer');
+                            if (answer) {
+                                var value = numParser.parse(answer);
+                                a.set('answer', value !== null && value.toString());
+                            }
                         });
                     }
                 })

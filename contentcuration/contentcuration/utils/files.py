@@ -1,14 +1,17 @@
 import copy
 import os
 import random
+import requests
 import shutil
 import tempfile
 import zipfile
+from multiprocessing.dummy import Pool
 
 from contentcuration.api import (write_file_to_storage,
                                  write_raw_content_to_storage)
 from contentcuration.models import (File, generate_file_on_disk_name,
                                     generate_object_storage_name)
+from django.conf import settings
 from django.core.files import File as DjFile
 from django.core.files.storage import default_storage
 from le_utils.constants import content_kinds, file_formats, format_presets
@@ -38,13 +41,24 @@ def get_file_diff(files):
     """
     storage = default_storage
 
-    # Try to be storage system agnostic, in case we're using either the Object Storage,
-    # or FileSystemStorage
+    # We use a thread pool in here, making direct HEAD requests to the storage URL
+    # to see if the objects exist.
+    # The threaded method is found to be the fastest -- see
+    # https://gist.github.com/aronasorman/57b8c01e5ed2b7cbf876e7734b7b9f38
+    # for benchmarking details.
     ret = []
-    for f in files:
+
+    session = requests.Session()
+    def check_file_url(f):
         filepath = generate_object_storage_name(os.path.splitext(f)[0], f)
-        if not storage.exists(filepath) or storage.size(filepath) == 0:
+        url = "/".join([settings.AWS_S3_ENDPOINT_URL, settings.AWS_S3_BUCKET_NAME, filepath])
+        resp = session.head(url)
+        if resp.status_code != 200:
             ret.append(f)
+
+    # use a pool of 3 threads to make our queries
+    pool = Pool(3)
+    pool.map(check_file_url, files)
 
     return ret
 

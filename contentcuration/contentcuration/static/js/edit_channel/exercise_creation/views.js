@@ -339,9 +339,9 @@ var EditorView = BaseViews.BaseView.extend({
     render_content: function() {
         var self = this;
         var value = this.model.get(this.edit_key)
-        if((value || value == 0) && this.model.get(this.edit_key).trim() !==""){
+        if(value && value.trim() !== ""){
             this.toggle_loading(true);
-            this.parse_content(this.model.get(this.edit_key)).then(function(result){
+            this.parse_content(value).then(function(result){
                 self.$el.html(self.view_template({content: result}, {
                     data: self.get_intl_data()
                 }));
@@ -356,7 +356,8 @@ var EditorView = BaseViews.BaseView.extend({
     render_editor: function() {
         var self = this;
         this.toggle_loading(true);
-        this.parse_content(this.model.get(this.edit_key)).then(function(result){
+        var value = this.model.get(this.edit_key);
+        this.parse_content(value).then(function(result){
             var html = self.view_template({content: result}, {
                 data: self.get_intl_data()
             });
@@ -568,6 +569,10 @@ var EditorView = BaseViews.BaseView.extend({
         var self = this;
         content = this.parse_functions(content);
         return new Promise(function(resolve, reject){
+            if (!content || content.trim() == "") {
+              resolve(content);
+              return;
+            }
             content = self.replace_image_paths(content);
             content = stringHelper.escape_str(content.replace(/\\(?![^\\\s])/g, '\\\\'));
             // If the editor is open, convert to svgs. Otherwise use katex to make loading faster

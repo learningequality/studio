@@ -10,18 +10,21 @@ from django.core.files import File as DjFile
 from django.core.files.storage import default_storage
 from django.core.management import call_command
 from django.db import transaction
-from django.http import HttpResponse, HttpResponseServerError, HttpResponseForbidden
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseServerError, HttpResponseForbidden
 from le_utils.constants import content_kinds, roles
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 
+from raven.contrib.django.raven_compat.models import client
+
 from contentcuration import ricecooker_versions as rc
 from contentcuration.api import get_staged_diff, write_file_to_storage, activate_channel, get_hash
 from contentcuration.models import AssessmentItem, Channel, ContentNode, ContentTag, File, FormatPreset, Language, License, StagedFile, generate_object_storage_name, get_next_sort_order
 from contentcuration.utils.tracing import trace
 from contentcuration.utils.files import get_file_diff
+from contentcuration.utils.garbage_collect import get_deleted_chefs_root
 
 VersionStatus = namedtuple('VersionStatus', ['version', 'status', 'message'])
 VERSION_OK = VersionStatus(version=rc.VERSION_OK, status=0, message=rc.VERSION_OK_MESSAGE)
@@ -29,6 +32,9 @@ VERSION_SOFT_WARNING = VersionStatus(version=rc.VERSION_SOFT_WARNING, status=1, 
 VERSION_HARD_WARNING = VersionStatus(version=rc.VERSION_HARD_WARNING, status=2, message=rc.VERSION_HARD_WARNING_MESSAGE)
 VERSION_ERROR = VersionStatus(version=rc.VERSION_ERROR, status=3, message=rc.VERSION_ERROR_MESSAGE)
 
+
+def handle_server_error(request):
+    client.captureException(stack=True, tags={'url': request.path })
 
 @api_view(['POST'])
 @authentication_classes((TokenAuthentication, SessionAuthentication,))
@@ -50,24 +56,27 @@ def authenticate_user_internal(request):
 @permission_classes((IsAuthenticated,))
 def check_version(request):
     """ Get version of Ricecooker with which CC is compatible """
-    logging.debug("Entering the check_version endpoint")
-    version = json.loads(request.body)['version']
-    status = None
+    try:
+        logging.debug("Entering the check_version endpoint")
+        version = json.loads(request.body)['version']
+        status = None
 
-    if LooseVersion(version) >= LooseVersion(VERSION_OK[0]):
-        status = VERSION_OK
-    elif LooseVersion(version) >= LooseVersion(VERSION_SOFT_WARNING[0]):
-        status = VERSION_SOFT_WARNING
-    elif LooseVersion(version) >= LooseVersion(VERSION_HARD_WARNING[0]):
-        status = VERSION_HARD_WARNING
-    else:
-        status = VERSION_ERROR
+        if LooseVersion(version) >= LooseVersion(VERSION_OK[0]):
+            status = VERSION_OK
+        elif LooseVersion(version) >= LooseVersion(VERSION_SOFT_WARNING[0]):
+            status = VERSION_SOFT_WARNING
+        elif LooseVersion(version) >= LooseVersion(VERSION_HARD_WARNING[0]):
+            status = VERSION_HARD_WARNING
+        else:
+            status = VERSION_ERROR
 
-    return HttpResponse(json.dumps({
-        'success': True,
-        'status': status[1],
-        'message': status[2].format(version, VERSION_OK[0]),
-    }))
+        return HttpResponse(json.dumps({
+            'success': True,
+            'status': status[1],
+            'message': status[2].format(version, VERSION_OK[0]),
+        }))
+    except Exception as e:
+        return HttpResponseServerError(content=str(e), reason=str(e))
 
 
 @api_view(['POST'])
@@ -113,8 +122,9 @@ def api_file_upload(request):
             "success": True,
         }))
     except KeyError:
-        raise SuspiciousOperation("Invalid file upload request")
+        return HttpResponseBadRequest("Invalid file upload request")
     except Exception as e:
+        handle_server_error(request)
         return HttpResponseServerError(content=str(e), reason=str(e))
 
 
@@ -162,9 +172,10 @@ def api_create_channel_endpoint(request):
             "root": obj.chef_tree.pk,
             "channel_id": obj.pk,
         }))
-    except KeyError:
-        raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+    except KeyError as e:
+        return HttpResponseBadRequest("Required attribute missing: {}".format(e.message))
     except Exception as e:
+        handle_server_error(request)
         return HttpResponseServerError(content=str(e), reason=str(e))
 
 
@@ -191,10 +202,12 @@ def api_commit_channel(request):
 
         # Delete staging tree if it already exists
         if old_staging and old_staging != obj.main_tree:
-            garbage_node = ContentNode.objects.get(pk=settings.ORPHANAGE_ROOT_ID)
-            old_staging.parent = garbage_node
-            old_staging.title = "Old staging tree for channel {}".format(obj.pk)
-            old_staging.save()
+            # IMPORTANT: Do not remove this block, MPTT updating the deleted chefs block could hang the server
+            with ContentNode.objects.disable_mptt_updates():
+                garbage_node = get_deleted_chefs_root()
+                old_staging.parent = garbage_node
+                old_staging.title = "Old staging tree for channel {}".format(obj.pk)
+                old_staging.save()
 
         if not data.get('stage'):  # If user says to stage rather than submit, skip changing trees at this step
             try:
@@ -206,9 +219,10 @@ def api_commit_channel(request):
             "success": True,
             "new_channel": obj.pk,
         }))
-    except KeyError:
-        raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+    except KeyError as e:
+        return HttpResponseBadRequest("Required attribute missing: {}".format(e.message))
     except Exception as e:
+        handle_server_error(request)
         return HttpResponseServerError(content=str(e), reason=str(e))
 
 
@@ -234,6 +248,7 @@ def api_add_nodes_from_file(request):
     except KeyError:
         raise ObjectDoesNotExist('Missing attribute from data: {}'.format(data))
     except Exception as e:
+        handle_server_error(request)
         return HttpResponseServerError(content=str(e), reason=str(e))
 
 @api_view(['POST'])
@@ -250,9 +265,10 @@ def api_add_nodes_to_tree(request):
                 "success": True,
                 "root_ids": convert_data_to_nodes(request.user, content_data, parent_id)
             }))
-    except KeyError:
-        raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+    except KeyError as e:
+        return HttpResponseBadRequest("Required attribute missing: {}".format(e.message))
     except Exception as e:
+        handle_server_error(request)
         return HttpResponseServerError(content=str(e), reason=str(e))
 
 
@@ -274,6 +290,7 @@ def api_publish_channel(request):
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
     except Exception as e:
+        handle_server_error(request)
         return HttpResponseServerError(content=str(e), reason=str(e))
 
 
@@ -284,6 +301,7 @@ def get_staged_diff_internal(request):
     try:
         return HttpResponse(json.dumps(get_staged_diff(json.loads(request.body)['channel_id'])))
     except Exception as e:
+        handle_server_error(request)
         return HttpResponseServerError(content=str(e), reason=str(e))
 
 
@@ -297,6 +315,7 @@ def activate_channel_internal(request):
         activate_channel(channel, request.user)
         return HttpResponse(json.dumps({"success": True}))
     except Exception as e:
+        handle_server_error(request)
         return HttpResponseServerError(content=str(e), reason=str(e))
 
 
@@ -353,6 +372,7 @@ def compare_trees(request):
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
     except Exception as e:
+        handle_server_error(request)
         return HttpResponseServerError(content=str(e), reason=str(e))
 
 
@@ -373,6 +393,7 @@ def get_tree_data(request):
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
     except Exception as e:
+        handle_server_error(request)
         return HttpResponseServerError(content=str(e), reason=str(e))
 
 @api_view(['POST'])
@@ -391,6 +412,7 @@ def get_node_tree_data(request):
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
     except Exception as e:
+        handle_server_error(request)
         return HttpResponseServerError(content=str(e), reason=str(e))
 
 @api_view(['POST'])
@@ -410,6 +432,7 @@ def get_channel_status_bulk(request):
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
     except Exception as e:
+        handle_server_error(request)
         return HttpResponseServerError(content=str(e), reason=str(e))
 
 def get_status(channel_id):
@@ -467,10 +490,12 @@ def create_channel(channel_data, user):
 
     # Delete chef tree if it already exists
     if old_chef_tree and old_chef_tree != channel.staging_tree:
-        garbage_node = ContentNode.objects.get(pk=settings.ORPHANAGE_ROOT_ID)
-        old_chef_tree.parent = garbage_node
-        old_chef_tree.title = "Old chef tree for channel {}".format(channel.pk)
-        old_chef_tree.save()
+        # IMPORTANT: Do not remove this block, MPTT updating the deleted chefs block could hang the server
+        with ContentNode.objects.disable_mptt_updates():
+            garbage_node = get_deleted_chefs_root()
+            old_chef_tree.parent = garbage_node
+            old_chef_tree.title = "Old chef tree for channel {}".format(channel.pk)
+            old_chef_tree.save()
 
     return channel  # Return new channel
 
@@ -624,10 +649,10 @@ def create_node_from_file(user, file_name, parent_node, sort_order):
 # TODO: Use one file to upload a map from node filename to node metadata, instead of a file for each Node
 def get_node_data_from_file(file_name):
     file_path = generate_object_storage_name(file_name.split('.')[0], file_name)
-    if not os.path.isfile(file_path):
+    if not default_storage.exists(file_path):
         raise IOError('{} not found.'.format(file_path))
 
-    with open(file_path, 'rb') as file_obj:
+    with default_storage.open(file_path, 'rb') as file_obj:
         node_data = json.loads(file_obj.read().decode('utf-8'))
 
     if node_data is None:
@@ -746,8 +771,8 @@ def map_files_to_assessment_item(user, question, data):
     for file_data in data:
         file_name_parts = file_data['filename'].split(".")
         file_path = generate_object_storage_name(file_name_parts[0], file_data['filename'])
-        if not os.path.isfile(file_path):
-            return IOError('{} not found'.format(file_path))
+        if not default_storage.exists(file_path):
+            raise IOError('{} not found'.format(file_path))
 
         resource_obj = File(
             checksum=file_name_parts[0],
@@ -756,7 +781,7 @@ def map_files_to_assessment_item(user, question, data):
             original_filename=file_data.get('original_filename') or 'file',
             source_url=file_data.get('source_url'),
             file_size=file_data['size'],
-            file_on_disk=DjFile(open(file_path, 'rb')),
+            file_on_disk=DjFile(default_storage.open(file_path, 'rb')),
             preset_id=file_data['preset'],
             uploaded_by=user,
         )

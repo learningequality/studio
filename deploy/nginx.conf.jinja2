@@ -4,6 +4,8 @@ events {
     worker_connections 1024;
 }
 http {
+    proxy_cache_path /tmp/proxycache levels=1:2 keys_zone=public_channel_cache:10m max_size=10g 
+                    inactive=600m use_temp_path=off;
     include mime.types;
     sendfile on;
     gzip              on;
@@ -30,6 +32,7 @@ http {
         location /static/  {
             autoindex on;
             alias /app/contentworkshop_static/;
+            expires 4h;
         }
         # Serve a static file (ex. favico)
         # outside /static directory
@@ -50,6 +53,63 @@ http {
             proxy_set_header   Accept-Encoding Identity;
             proxy_redirect     off;
             gzip off;
+        }
+
+        # We cache the following expensive API endpoints.
+
+        # cache the public channel endpoint.
+        # the return value of this should be the same across all users,
+        # and the return value should rarely change as well. This makes it
+        # a candidate for long-running caches keyed simply by the URI.
+        location /get_user_public_channels/ {
+            proxy_cache public_channel_cache; 
+            proxy_pass  http://studio/get_user_public_channels/;
+
+            # cache any 200 OK status code values for 10 minutes
+            proxy_ignore_headers Cache-Control;
+            proxy_cache_valid 200 10m;
+
+            # ignore any get params
+            proxy_cache_key $scheme$proxy_host$uri;
+            # next two directives make nginx serve the cached value even when we're refreshing it
+            proxy_cache_use_stale updating error;
+            proxy_cache_background_update on;
+            
+            # proxy_cache_lock sends only 1 query to the server if there's a lot of them at once,
+            # preventing stampedes
+            proxy_cache_lock on;
+
+            # show the cache status in a header
+            add_header X-Cache-Status $upstream_cache_status;
+        }
+
+        # cache the get_user_edit_channels endpoint.
+        # this is specific on a per-user basis. This might also change very frequently.
+        # We thus need to cache this with a very short duration (5 seconds), and key it by
+        # the session id.
+        # We still cache this through nginx to take advantage of the proxy_cache_background_update
+        # and the proxy_cache_use_stale header, allowing us to serve slightly stale content while
+        # still rate limiting the amount of queries being sent to the app server.
+        location /get_user_edit_channels/ {
+            proxy_cache public_channel_cache;
+            proxy_pass  http://studio/get_user_edit_channels/;
+
+            # cache any 200 OK status code values for 5 seconds
+            proxy_ignore_headers Cache-Control;
+            proxy_cache_valid 200 5s;
+
+            # ignore any get params, cache by our cookie sessionid value
+            proxy_cache_key $scheme$proxy_host$uri$cookie_kolibri_studio_sessionid;
+            # next two directives make nginx serve the cached value even when we're refreshing it
+            proxy_cache_use_stale updating error;
+            proxy_cache_background_update on;
+
+            # proxy_cache_lock sends only 1 query to the server if there's a lot of them at once,
+            # preventing stampedes
+            proxy_cache_lock on;
+
+            # show the cache status in a header
+            add_header X-Cache-Status $upstream_cache_status;
         }
     }
 }

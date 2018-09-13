@@ -202,6 +202,7 @@ urlpatterns += [
     url(r'^api/public/channel/(?P<channel_id>[^/]+)', public_views.get_channel_name_by_id, name='get_channel_name_by_id'),
     url(r'^api/public/(?P<version>[^/]+)/channels$', public_views.get_public_channel_list, name='get_public_channel_list'),
     url(r'^api/public/(?P<version>[^/]+)/channels/lookup/(?P<identifier>[^/]+)', public_views.get_public_channel_lookup, name='get_public_channel_lookup'),
+    url(r'^api/public/info', public_views.InfoViewSet.as_view({'get': 'list'}), name='info'),
 ]
 
 # Add node api enpoints
@@ -318,8 +319,8 @@ if settings.DEBUG:
     # static files (images, css, javascript, etc.)
     urlpatterns += [
         url(r'^' + settings.STORAGE_URL[1:] + '(?P<path>.*)$', file_views.debug_serve_file, name='debug_serve_file'),
-        url(r'^' + settings.CONTENT_DATABASE_URL[1:] + '(?P<path>.*)$', django_views.static.serve, {'document_root': settings.DB_ROOT}),
-        url(r'^' + settings.CSV_URL[1:] + '(?P<path>.*)$', django_views.static.serve, {'document_root': settings.CSV_ROOT})
+        url(r'^' + settings.CONTENT_DATABASE_URL[1:] + '(?P<path>.*)$', file_views.debug_serve_content_database_file, name='content_database_debug_serve_file'),
+        url(r'^' + settings.CSV_URL[1:] + '(?P<path>.*)$', file_views.debug_serve_file, name='csv_debug_serve_file')
     ]
 
     try:
