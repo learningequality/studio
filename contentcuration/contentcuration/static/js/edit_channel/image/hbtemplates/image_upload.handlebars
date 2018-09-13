@@ -1,5 +1,5 @@
 <div class="input-tab-control tab_item" data-next="#submit_file"></div>
-<input type="text" class="tab_item first_focus_item" id="alt_text_box" placeholder="{{formatMessage (intlGet 'messages.alt_prompt')}}" value="{{alt_text}}"/>
+<input type="text" dir="auto" class="tab_item first_focus_item" id="alt_text_box" placeholder="{{formatMessage (intlGet 'messages.alt_prompt')}}" value="{{alt_text}}"/>
 <div id="dropzone" class="text-center">
 	{{#if file}}
 		<img id="dropzone_placeholder" alt="{{formatMessage (intlGet 'messages.image_error')}}" src="{{file.path}}"/>

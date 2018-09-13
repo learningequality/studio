@@ -20,7 +20,7 @@
     </div>
     {{#if edit}}
         <h4>{{formatMessage (intlGet 'messages.channel_name')}} <label class="required">*<span id="channel_error">{{formatMessage (intlGet 'messages.channel_name_error')}}</span></label></h4>
-        <input type="text" id="input_title" class="upload_input input_listener tab_item first_focus_item" placeholder="{{formatMessage (intlGet 'messages.channel_name_placeholder')}}" maxlength="200" value="{{channel.name}}" required/>
+        <input type="text" dir="auto" id="input_title" class="upload_input input_listener tab_item first_focus_item" placeholder="{{formatMessage (intlGet 'messages.channel_name_placeholder')}}" maxlength="200" value="{{channel.name}}" required/>
     {{else}}
         <h3>{{channel.name}}</h3>
         <p class="channel_text">
@@ -35,7 +35,7 @@
     {{/if}}
     {{#if edit}}
         <h4>{{formatMessage (intlGet 'messages.channel_description')}}</h4>
-        <textarea type="text" id="input_description" class="upload_input input_listener tab_item" placeholder="{{formatMessage (intlGet 'messages.description_placeholder')}}" maxlength="400" value="{{channel.description}}" rows="4">{{channel.description}}</textarea>
+        <textarea dir="auto" id="input_description" class="upload_input input_listener tab_item" placeholder="{{formatMessage (intlGet 'messages.description_placeholder')}}" maxlength="400" value="{{channel.description}}" rows="4">{{channel.description}}</textarea>
     {{else}}
         <p class="description" id="channel_description">{{channel.description}}</p>
     {{/if}}

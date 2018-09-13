@@ -5,8 +5,10 @@ import os
 import re
 import zipfile
 
+from raven.contrib.django.raven_compat.models import client
+
 from django.core.files.storage import default_storage
-from django.http import Http404, HttpResponse, HttpResponseNotFound
+from django.http import Http404, HttpResponse, HttpResponseNotFound, HttpResponseServerError
 from django.http.response import FileResponse, HttpResponseNotModified
 from django.utils.http import http_date
 from django.views.decorators.clickjacking import xframe_options_exempt
@@ -52,7 +54,8 @@ class ZipContentView(View):
         """
         Handles GET requests and serves a static file from within the zip file.
         """
-        assert VALID_STORAGE_FILENAME.match(zipped_filename), "'{}' is not a valid content storage filename".format(zipped_filename)
+        if not VALID_STORAGE_FILENAME.match(zipped_filename):
+            return HttpResponseNotFound("'{}' is not a valid URL for this zip file".format(zipped_filename))
 
         storage = default_storage
 
@@ -73,32 +76,37 @@ class ZipContentView(View):
 
         zf_obj = storage.open(zipped_path)
 
-        with zipfile.ZipFile(zf_obj) as zf:
-            # if no path, or a directory, is being referenced, look for an index.html file
-            if not embedded_filepath or embedded_filepath.endswith("/"):
-                embedded_filepath += "index.html"
+        try:
+            with zipfile.ZipFile(zf_obj) as zf:
+                # if no path, or a directory, is being referenced, look for an index.html file
+                if not embedded_filepath or embedded_filepath.endswith("/"):
+                    embedded_filepath += "index.html"
 
-            # get the details about the embedded file, and ensure it exists
-            try:
-                info = zf.getinfo(embedded_filepath)
-            except KeyError:
-                return HttpResponseNotFound('"{}" does not exist inside "{}"'.format(embedded_filepath, zipped_filename))
+                # get the details about the embedded file, and ensure it exists
+                try:
+                    info = zf.getinfo(embedded_filepath)
+                except KeyError:
+                    return HttpResponseNotFound('"{}" does not exist inside "{}"'.format(embedded_filepath, zipped_filename))
 
-            # try to guess the MIME type of the embedded file being referenced
-            content_type = mimetypes.guess_type(embedded_filepath)[0] or 'application/octet-stream'
+                # try to guess the MIME type of the embedded file being referenced
+                content_type = mimetypes.guess_type(embedded_filepath)[0] or 'application/octet-stream'
 
-            if not os.path.splitext(embedded_filepath)[1] == '.json':
-                # generate a streaming response object, pulling data from within the zip  file
-                response = FileResponse(zf.open(info), content_type=content_type)
-                file_size = info.file_size
-            else:
-                # load the stream from json file into memory, replace the path_place_holder.
-                content = zf.open(info).read()
-                str_to_be_replaced = ('$' + exercises.IMG_PLACEHOLDER).encode()
-                zipcontent = ('/' + request.resolver_match.url_name + "/" + zipped_filename).encode()
-                content_with_path = content.replace(str_to_be_replaced, zipcontent)
-                response = HttpResponse(content_with_path, content_type=content_type)
-                file_size = len(content_with_path)
+                if not os.path.splitext(embedded_filepath)[1] == '.json':
+                    # generate a streaming response object, pulling data from within the zip  file
+                    response = FileResponse(zf.open(info), content_type=content_type)
+                    file_size = info.file_size
+                else:
+                    # load the stream from json file into memory, replace the path_place_holder.
+                    content = zf.open(info).read()
+                    str_to_be_replaced = ('$' + exercises.IMG_PLACEHOLDER).encode()
+                    zipcontent = ('/' + request.resolver_match.url_name + "/" + zipped_filename).encode()
+                    content_with_path = content.replace(str_to_be_replaced, zipcontent)
+                    response = HttpResponse(content_with_path, content_type=content_type)
+                    file_size = len(content_with_path)
+        except zipfile.BadZipfile:
+            just_downloaded = getattr(zf_obj, 'just_downloaded', "Unknown (Most likely local file)")
+            client.captureMessage("Unable to open zip file. File info: name={}, size={}, mode={}, just_downloaded={}".format(zf_obj.name, zf_obj.size, zf_obj.mode, just_downloaded))
+            return HttpResponseServerError("Attempt to open zip file failed. Please try again, and if you continue to receive this message, please check that the zip file is valid.")
 
         # set the last-modified header to the date marked on the embedded file
         if info.date_time:

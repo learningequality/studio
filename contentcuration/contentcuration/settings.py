@@ -243,6 +243,7 @@ ugettext = lambda s: s
 LANGUAGES = (
     ('en', ugettext('English')),
     ('es', ugettext('Spanish')),
+    # ('ar', ugettext('Arabic')), # Uncomment when we have translations
     ('es-es', ugettext('Spanish - Spain')),
     ('es-mx', ugettext('Spanish - Mexico')),
     ('en-PT', ugettext('English - Pirate')),
