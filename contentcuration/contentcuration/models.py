@@ -158,7 +158,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         staged_size = float(channel_files.aggregate(used=Sum('file_size'))['used'] or 0)
 
         if self.get_available_space(active_files=active_files) < (active_size + staged_size):
-            raise PermissionDenied(_('Out of storage! Request more at %(email)s') % {'email': settings.SPACE_REQUEST_EMAIL})
+            raise PermissionDenied(_('Out of storage! Request more space under Settings > Storage.'))
 
 
     def check_staged_space(self, size, checksum):
@@ -166,7 +166,7 @@ class User(AbstractBaseUser, PermissionsMixin):
             return True
         space = self.get_available_staged_space()
         if space < size:
-            raise PermissionDenied(_('Out of storage! Request more at %(email)s') % {'email': settings.SPACE_REQUEST_EMAIL})
+            raise PermissionDenied(_('Out of storage! Request more space under Settings > Storage.'))
 
     def get_available_staged_space(self):
         space_used = self.staged_files.aggregate(size=Sum("file_size"))['size'] or 0
