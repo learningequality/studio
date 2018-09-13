@@ -116,6 +116,8 @@ Generate the shared environment variables between studio app and workers
           value: https://storage.googleapis.com
         - name: GOOGLE_APPLICATION_CREDENTIALS
           value: /secrets/gcs/gcs_key.json
+        - name: GOOGLE_DRIVE_AUTH_JSON
+          value: /secrets/gdrive/gdrive_key.json
         {{ else }}
         - name: AWS_S3_ENDPOINT_URL
           value: {{ template "minio.url" . }}
