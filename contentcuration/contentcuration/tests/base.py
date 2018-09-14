@@ -1,9 +1,12 @@
 import datetime
 
 from django.conf import settings
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
+from django.core.urlresolvers import reverse_lazy
 from django.test import TestCase
 
+from contentcuration.models import User
 from contentcuration.utils import minio_utils
 from contentcuration.utils.policies import get_latest_policies
 from rest_framework.authtoken.models import Token
@@ -42,6 +45,7 @@ class StudioTestCase(TestCase, BucketTestMixin):
     def setUpClass(cls):
         super(StudioTestCase, cls).setUpClass()
         call_command('loadconstants')
+        cls.admin_user = User.objects.create_superuser('big_shot', 'bigshot@reallybigcompany.com', 'password')
 
     def setUp(self):
         if not self.persist_bucket:
@@ -50,6 +54,22 @@ class StudioTestCase(TestCase, BucketTestMixin):
     def tearDown(self):
         if not self.persist_bucket:
             self.delete_bucket()
+
+    def admin_client(self):
+        client = APIClient()
+        client.force_authenticate(self.admin_user)
+        return client
+
+    def upload_temp_file(self, data, ext='.txt'):
+        """
+        Uploads a file to the server using an authorized client.
+        """
+        fileobj_temp = testdata.create_temp_file(data, ext=ext)
+        name = fileobj_temp['name']
+
+        f = SimpleUploadedFile(name, data)
+        file_upload_url = str(reverse_lazy('api_file_upload'))
+        return fileobj_temp, self.admin_client().post(file_upload_url, {"file": f})
 
 
 class StudioAPITestCase(APITestCase, BucketTestMixin):
@@ -66,6 +86,7 @@ class StudioAPITestCase(APITestCase, BucketTestMixin):
     def tearDown(self):
         if not self.persist_bucket:
             self.delete_bucket()
+
 
 class BaseTestCase(StudioTestCase):
     def setUp(self):

@@ -11,12 +11,11 @@ from django.test import TestCase
 from mixer.backend.django import mixer
 from contentcuration import models
 
-from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.urlresolvers import reverse_lazy
 
 from rest_framework.test import APIClient
 
-from base import StudioTestCase
+from base import BaseTestCase
 from testdata import create_temp_file
 from contentcuration import models as cc
 
@@ -52,14 +51,11 @@ def add_field_defaults_to_node(node):
 # Tests
 ###
 
-class CreateChannelTestCase(StudioTestCase):
+class CreateChannelTestCase(BaseTestCase):
 
     @classmethod
     def setUpClass(cls):
         super(CreateChannelTestCase, cls).setUpClass()
-
-        cls.url = "http://127.0.0.1:8000"
-        cls.admin_user = models.User.objects.create_superuser('big_shot', 'bigshot@reallybigcompany.com', 'password')
 
         cls.channel_metadata = {
             "name": "Aron's cool channel",
@@ -78,23 +74,8 @@ class CreateChannelTestCase(StudioTestCase):
         self.fileobj_document = create_temp_file("ghi", 'document', 'pdf', 'application/pdf')
         self.fileobj_exercise = create_temp_file("jkl", 'exercise', 'perseus', 'application/perseus')
 
-    def admin_client(self):
-        client = APIClient()
-        client.force_authenticate(self.admin_user)
-        return client
-
-    def upload_file(self):
-        """
-        Uploads a file to the server using an authorized client.
-        """
-        fileobj_temp = create_temp_file(":)")
-        name = fileobj_temp['name']
-        file_upload_url = self.url + str(reverse_lazy('api_file_upload'))
-        f = SimpleUploadedFile(name, fileobj_temp['data'])
-        return self.admin_client().post(file_upload_url, {"file": f})
-
     def create_channel(self):
-        create_channel_url = self.url + str(reverse_lazy('api_create_channel'))
+        create_channel_url = str(reverse_lazy('api_create_channel'))
         payload = {
             'channel_data': self.channel_metadata,
         }
@@ -103,7 +84,7 @@ class CreateChannelTestCase(StudioTestCase):
         return response
 
     def test_api_file_upload_status(self):
-        response = self.upload_file()
+        fileobj, response = self.upload_temp_file(":)")
         assert response.status_code == requests.codes.ok
 
     def test_channel_create_channel_created(self):
@@ -313,7 +294,7 @@ class CreateChannelTestCase(StudioTestCase):
         root_id = json.loads(self.create_channel().content)['root']
 
         def upload_nodes(root_id, nodes):
-            add_nodes_url = self.url + str(reverse_lazy('api_add_nodes_to_tree'))
+            add_nodes_url = str(reverse_lazy('api_add_nodes_to_tree'))
             payload = {
                 'root_id': root_id,
                 'content_data': nodes,

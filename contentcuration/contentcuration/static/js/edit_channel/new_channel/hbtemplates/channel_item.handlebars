@@ -1,19 +1,29 @@
-<div class="pull-right is_selected"><i class="material-icons">arrow_forward</i></div>
+<div class="pull-right is_selected"><i class="material-icons rtl-flip">arrow_forward</i></div>
 <div class="channel-container-wrapper open_channel"  title="{{channel.name}} {{formatMessage (intlGet 'messages.channel_title_prompt')}}">
 	<div class="profile pull-left text-center">
 			{{#if picture}}
 				<img class="channel_pic" alt="{{channel.name}} logo" src="{{picture}}"/>
 			{{/if}}
 	</div>
-		<span class="channel_metadata">
-			{{#if language}}<div class="channel_language truncate" title="{{language.attributes.readable_name}}">{{language.attributes.readable_name}}</div>&nbsp;|&nbsp;{{/if}}
-			<span class="resource_count">{{formatMessage (intlGet 'messages.resource_count') count=resource_count}}</span>
-			&nbsp;|&nbsp;{{formatMessage (intlGet 'messages.id')}}
+		<span class="channel_metadata text-left">
+			{{#if language}}
+				<span class="pull-left">
+					<div class="channel_language truncate" title="{{language.attributes.readable_name}}">{{language.attributes.readable_name}}</div>
+					&nbsp;|&nbsp;
+				</span>
+			{{/if}}
+			<span class="pull-left">
+				<span class="resource_count">{{formatMessage (intlGet 'messages.resource_count') count=resource_count}}</span>
+				&nbsp;|&nbsp;
+			</span>
+			<span class="pull-left">
+				{{formatMessage (intlGet 'messages.id')}}&nbsp;
+			</span>
 			{{#if channel.published}}
 				<input type="text" class="copy-id-text text-center" value="{{channel.id}}" readonly size='30'/>
 				<!-- <input type="text" class="copy-id-text text-center" value="{{channel.primary_token}}" readonly size='30'/> -->
 				<i class="material-icons copy-id-btn" title="{{formatMessage (intlGet 'messages.copy_id')}}">content_paste</i>
-			{{else}}<em>({{formatMessage (intlGet 'messages.unpublished')}})</em>
+			{{else}}<em>{{formatMessage (intlGet 'messages.unpublished')}}</em>
 			{{/if}}
 		</span>
 		<h4>
