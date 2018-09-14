@@ -36,3 +36,4 @@ After stopping it, Locust slaves must be stopped:
 ```bash
 $ make stop_slaves
 ```
+

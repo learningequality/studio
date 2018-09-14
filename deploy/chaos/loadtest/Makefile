@@ -1,11 +1,11 @@
 SHELL := /bin/bash
+
 URL := "http://localhost:8080"
 USERNAME := ""
 PASSWORD := ""
 NUM_CLIENTS := 100
 HATCH_RATE := 20
 
-slaves:
 	for i in {1..$(NUM_CLIENTS)}; do locust --slave & done
 
 run: slaves
