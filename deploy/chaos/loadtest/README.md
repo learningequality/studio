@@ -31,3 +31,9 @@ the `HATCH_RATE` respectively:
 $ make run NUM_CLIENTS=5 HATCH_RATE=1
 ```
 
+After stopping it, Locust slaves must be stopped:
+
+```bash
+$ make stop_slaves
+```
+
