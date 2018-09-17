@@ -988,6 +988,18 @@ class FormatPreset(models.Model):
     def __str__(self):
         return self.id
 
+    @classmethod
+    def get_preset(cls, preset_name):
+        """
+        Get the FormatPreset object with that exact name.
+
+        Returns None if that format preset is not found.
+        """
+        try:
+            return FormatPreset.objects.get(id=preset_name)
+        except FormatPreset.DoesNotExist:
+            return None
+
 
 class Language(models.Model):
     id = models.CharField(max_length=14, primary_key=True)
