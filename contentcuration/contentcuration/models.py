@@ -989,6 +989,21 @@ class FormatPreset(models.Model):
         return self.id
 
     @classmethod
+    def guess_format_preset(cls, filename):
+        """
+        Guess the format preset of a filename based on its extension.
+
+        Return None if format is unknown.
+        """
+
+        _, ext = os.path.splitext(filename)
+        f = FormatPreset.objects.filter(
+            allowed_formats__extension=ext,
+            display=True
+            )
+        return f.first()
+
+    @classmethod
     def get_preset(cls, preset_name):
         """
         Get the FormatPreset object with that exact name.
