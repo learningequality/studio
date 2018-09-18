@@ -564,7 +564,7 @@ class Channel(models.Model):
         return self.main_tree.get_descendants(include_self=True).aggregate(last_modified=Max('modified'))['last_modified']
 
     def get_resource_count(self):
-        return self.main_tree.get_descendants().exclude(kind_id=content_kinds.TOPIC).count()
+        return self.main_tree.get_descendants().exclude(kind_id=content_kinds.TOPIC).order_by('content_id').distinct('content_id').count()
 
     def get_human_token(self):
         return self.secret_tokens.get(is_primary=True)
