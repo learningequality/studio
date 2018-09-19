@@ -1,4 +1,6 @@
+import base64
 import copy
+import cStringIO
 import os
 import random
 import requests
@@ -15,9 +17,13 @@ from django.conf import settings
 from django.core.files import File as DjFile
 from django.core.files.storage import default_storage
 from le_utils.constants import content_kinds, file_formats, format_presets
+from PIL import Image
 from pressurecooker.images import (create_image_from_pdf_page,
                                    create_tiled_image, create_waveform_image)
 from pressurecooker.videos import compress_video, extract_thumbnail_from_video
+from resizeimage import resizeimage
+
+THUMBNAIL_DIMENSION = 300
 
 
 def create_file_from_contents(contents, ext=None, node=None, preset_id=None, uploaded_by=None):
@@ -203,3 +209,19 @@ def generate_thumbnail_from_node(node, set_node=None):
     assert thumbnail_object, "Cannot generate thumbnail for this content"
 
     return thumbnail_object
+
+
+def get_thumbnail_encoding(filename, dimension=THUMBNAIL_DIMENSION):
+    if filename.startswith("data:image"):
+        return filename
+
+    checksum, ext = os.path.splitext(filename)
+    filepath = generate_object_storage_name(checksum, filename)
+    buffer = cStringIO.StringIO()
+
+    with Image.open(filepath) as image:
+        width, height = image.size
+        dimension = min([dimension, width, height])
+        image.thumbnail((dimension, dimension), Image.ANTIALIAS)
+        image.save(buffer, image.format)
+        return "data:image/{};base64,{}".format(ext[1:], base64.b64encode(buffer.getvalue()))

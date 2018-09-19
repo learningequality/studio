@@ -191,10 +191,11 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
             model: this.image
         });
     },
-    use_image:function(file){
+    use_image:function(file, encoding){
         this.image = file;
         this.image_url = file.get('storage_url');
-        this.thumbnail_encoding = null;
+        this.thumbnail_encoding = {'base64': encoding, 'points': [], 'zoom': 0};
+        console.log(this.thumbnail_encoding)
         this.render();
         this.submit_image();
     },
@@ -243,6 +244,7 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
         }
         this.image_url = result.path;
         this.image_formatted_name = result.formatted_filename;
+        this.encoding = result.encoding;
     },
     image_completed:function(){
         if(this.image_error){
@@ -251,7 +253,7 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
             if(this.onerror){ this.onerror(); }
             this.render();
         } else{
-            this.thumbnail_encoding = null;
+            this.thumbnail_encoding = {'base64': this.encoding, 'points': [], 'zoom': 0};
             this.render();
             this.submit_image();
         }
@@ -306,7 +308,8 @@ var ThumbnailModalView = BaseViews.BaseModalView.extend({
         this.$("#generate_thumbnail").attr("disabled", "disabled");
         this.node.generate_thumbnail().then(function(result){
             self.$("#thumbnail_area").removeClass('loading');
-            self.model = result;
+            self.model = result.file;
+            self.encoding = result.encoding;
             self.render_preview();
             self.enable_generate();
         }).catch(function(error){
@@ -320,7 +323,7 @@ var ThumbnailModalView = BaseViews.BaseModalView.extend({
         $("#generate_thumbnail").removeClass("disabled");
     },
     use_thumbnail:function(){
-        this.onuse(this.model);
+        this.onuse(this.model, this.encoding);
         this.close();
     },
     handle_file:function(){

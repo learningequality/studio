@@ -7,7 +7,7 @@ from django.core.files import File as DjFile
 from django.core.files.storage import default_storage
 from rest_framework.renderers import JSONRenderer
 from contentcuration.api import write_file_to_storage, get_hash
-from contentcuration.utils.files import generate_thumbnail_from_node
+from contentcuration.utils.files import generate_thumbnail_from_node, get_thumbnail_encoding
 from contentcuration.models import File, FormatPreset, ContentNode, License, generate_storage_url, generate_object_storage_name
 from contentcuration.serializers import FileSerializer, ContentNodeEditSerializer
 from le_utils.constants import format_presets, content_kinds, exercises, licenses
@@ -129,8 +129,8 @@ def generate_thumbnail(request):
     data = json.loads(request.body)
     node = ContentNode.objects.get(pk=data["node_id"])
 
-
     thumbnail_object = generate_thumbnail_from_node(node)
+
     try:
         request.user.check_space(thumbnail_object.file_size, thumbnail_object.checksum)
     except Exception as e:
@@ -142,11 +142,13 @@ def generate_thumbnail(request):
         "success": True,
         "file": JSONRenderer().render(FileSerializer(thumbnail_object).data),
         "path": generate_storage_url(str(thumbnail_object)),
+        "encoding": get_thumbnail_encoding(str(thumbnail_object)),
     }))
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
 def thumbnail_upload(request):
+    # Used for channels
     if request.method != 'POST':
         return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
 
@@ -161,11 +163,13 @@ def thumbnail_upload(request):
         "formatted_filename": formatted_filename,
         "file": None,
         "path": generate_storage_url(formatted_filename),
+        "encoding": get_thumbnail_encoding(formatted_filename),
     }))
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
 def image_upload(request):
+    # Used for content nodes
     if request.method != 'POST':
         return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
 
@@ -187,6 +191,7 @@ def image_upload(request):
         "success": True,
         "file": JSONRenderer().render(FileSerializer(file_object).data),
         "path": generate_storage_url(str(file_object)),
+        "encoding": get_thumbnail_encoding(str(file_object)),
     }))
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))

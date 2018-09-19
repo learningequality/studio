@@ -288,8 +288,9 @@ var ContentNodeModel = BaseModel.extend({
                 url: window.Urls.generate_thumbnail(),
                 data:  JSON.stringify({"node_id": self.id}),
                 success: function(result) {
-                    var file = JSON.parse(result).file
-                    resolve(new FileModel(JSON.parse(file)));
+                    result = JSON.parse(result);
+                    result.file = new FileModel(JSON.parse(result.file));
+                    resolve(result);
                 },
                 error:reject
             });
