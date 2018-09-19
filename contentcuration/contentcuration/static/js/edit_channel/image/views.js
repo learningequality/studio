@@ -43,7 +43,7 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
     $trs: MESSAGES,
     initialize: function(options) {
         _.bindAll(this, 'image_uploaded','image_added','image_removed','create_dropzone', 'image_completed','image_failed',
-                         'use_image', 'create_croppie', 'cancel_croppie', 'submit_image', 'get_croppie_encoding', 'submit_croppie');
+                         'use_image', 'create_croppie', 'cancel_croppie', 'submit_image', 'submit_croppie');
         this.image_url = options.image_url;
         this.image = _.find(this.model.get('files'), function(f){ return f.preset.thumbnail; });
         if(this.image){
@@ -142,40 +142,44 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
         this.$(".finished_area").css("visibility", "visible");
         var selector = "#" + this.get_selector() + "_placeholder";
         var self = this;
+        var thumbnail_src = this.get_thumbnail_url(true);
+        $(selector).attr('src', thumbnail_src); // Need to set the src to be url or croppie
+                                                // will zoom in on encoding and not allow
+                                                // user to zoom out
+
         this.croppie = new Croppie(this.$(selector).get(0),{
             boundary: this.boundary,
             viewport: this.aspect_ratio,
             showZoomer: false,
-            customClass: "crop-img",
-            update: function(result) { _.defer(function() {self.get_croppie_encoding(result);}, 500); }
+            customClass: "crop-img"
         });
-        this.croppie.bind({
-            points: (this.thumbnail_encoding)? this.thumbnail_encoding.points : [],
-            zoom: (this.thumbnail_encoding)? this.thumbnail_encoding.zoom : 1,
-            url: this.get_thumbnail_url(true)
-        }).then(function(){})
+
+        // TODO: This should make thumbnails retain zoom/points when you re-enter cropping mode, but
+        // it seems like there's a bug with croppie https://github.com/Foliotek/Croppie/issues/122
+        // this.croppie.bind({
+        //     points: (this.thumbnail_encoding)? this.thumbnail_encoding.points : [],
+        //     zoom: (this.thumbnail_encoding)? this.thumbnail_encoding.zoom : 0,
+        //     url: thumbnail_src
+        // }).then(function(){});
     },
     cancel_croppie: function(){
         this.cropping = false;
         this.thumbnail_encoding = this.original_thumbnail_encoding;
+        this.croppie.destroy();
         this.render();
     },
     submit_croppie: function(){
         this.cropping = false;
-        this.get_croppie_encoding(this.croppie.get());
-        this.submit_image();
-        this.render();
-    },
-    get_croppie_encoding: function(result){
         var self = this;
+        var result = this.croppie.get();
         this.croppie.result({type: 'base64', size: this.aspect_ratio}).then(function(image){
-            if(!self.thumbnail_encoding || self.thumbnail_encoding.points !== result.points || self.thumbnail_encoding.zoom !== result.zoom){
-                self.thumbnail_encoding = {
-                    "points": result.points,
-                    "zoom": result.zoom,
-                    "base64": image
-                };
-            }
+            self.thumbnail_encoding = {
+                "points": result.points,
+                "zoom": result.zoom,
+                "base64": image
+            };
+            self.submit_image();
+            self.render();
         });
     },
 
