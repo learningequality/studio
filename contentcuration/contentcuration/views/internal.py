@@ -11,7 +11,7 @@ from django.core.files.storage import default_storage
 from django.core.management import call_command
 from django.db import transaction
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseServerError, HttpResponseForbidden
-from le_utils.constants import content_kinds, roles
+from le_utils.constants import content_kinds, roles, format_presets
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.exceptions import ValidationError
@@ -23,7 +23,7 @@ from contentcuration import ricecooker_versions as rc
 from contentcuration.api import get_staged_diff, write_file_to_storage, activate_channel, get_hash
 from contentcuration.models import AssessmentItem, Channel, ContentNode, ContentTag, File, FormatPreset, Language, License, StagedFile, generate_object_storage_name, get_next_sort_order
 from contentcuration.utils.tracing import trace
-from contentcuration.utils.files import get_file_diff
+from contentcuration.utils.files import get_file_diff, get_thumbnail_encoding
 from contentcuration.utils.garbage_collect import get_deleted_chefs_root
 
 VersionStatus = namedtuple('VersionStatus', ['version', 'status', 'message'])
@@ -31,7 +31,6 @@ VERSION_OK = VersionStatus(version=rc.VERSION_OK, status=0, message=rc.VERSION_O
 VERSION_SOFT_WARNING = VersionStatus(version=rc.VERSION_SOFT_WARNING, status=1, message=rc.VERSION_SOFT_WARNING_MESSAGE)
 VERSION_HARD_WARNING = VersionStatus(version=rc.VERSION_HARD_WARNING, status=2, message=rc.VERSION_HARD_WARNING_MESSAGE)
 VERSION_ERROR = VersionStatus(version=rc.VERSION_ERROR, status=3, message=rc.VERSION_ERROR_MESSAGE)
-
 
 def handle_server_error(request):
     client.captureException(stack=True, tags={'url': request.path })
@@ -764,6 +763,16 @@ def map_files_to_node(user, node, data):
         )
         resource_obj.file_on_disk.name = file_path
         resource_obj.save()
+
+        # Handle thumbnail
+        if resource_obj.preset.thumbnail:
+            node.thumbnail_encoding = json.dumps({
+                    'base64': get_thumbnail_encoding(file_path),
+                    'points': [],
+                    'zoom': 0
+                })
+            node.save()
+
 
 
 def map_files_to_assessment_item(user, question, data):

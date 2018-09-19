@@ -22,7 +22,7 @@ from django.template.loader import render_to_string
 from django.utils.translation import ugettext_lazy as _
 from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises, roles
 from pressurecooker.encodings import write_base64_to_file
-from contentcuration.utils.files import create_file_from_contents
+from contentcuration.utils.files import create_file_from_contents, get_thumbnail_encoding
 from contentcuration import models as ccmodels
 from contentcuration.utils.parser import extract_value
 from itertools import chain
@@ -242,30 +242,40 @@ def get_or_create_language(language):
         lang_direction= language.lang_direction
     )
 
-def create_content_thumbnail(thumbnail_string, file_format_id=file_formats.PNG, preset_id=None, uploaded_by=None):
-    thumbnail_data = ast.literal_eval(thumbnail_string)
-    if thumbnail_data.get('base64'):
+def create_content_thumbnail(encoding, file_format_id=file_formats.PNG, preset_id=None, uploaded_by=None):
+    temppath = None
+    try:
         with tempfile.NamedTemporaryFile(suffix=".{}".format(file_format_id), delete=False) as tempf:
+            temppath = tempf.name
             tempf.close()
-            write_base64_to_file(thumbnail_data['base64'], tempf.name)
-            with open(tempf.name, 'rb') as tf:
+            write_base64_to_file(encoding, temppath)
+            with open(temppath, 'rb') as tf:
                 return create_file_from_contents(tf.read(), ext=file_format_id, preset_id=preset_id, uploaded_by=uploaded_by)
+    finally:
+        temppath and os.unlink(temppath)
 
 def create_associated_file_objects(kolibrinode, ccnode):
     logging.debug("Creating LocalFile and File objects for Node {}".format(kolibrinode.id))
     for ccfilemodel in ccnode.files.exclude(Q(preset_id=format_presets.EXERCISE_IMAGE) | Q(preset_id=format_presets.EXERCISE_GRAPHIE)):
         preset = ccfilemodel.preset
-        format = ccfilemodel.file_format
+        fformat = ccfilemodel.file_format
         if ccfilemodel.language:
             get_or_create_language(ccfilemodel.language)
 
-        if preset.thumbnail and ccnode.thumbnail_encoding:
-            ccfilemodel = create_content_thumbnail(ccnode.thumbnail_encoding, uploaded_by=ccfilemodel.uploaded_by, file_format_id=ccfilemodel.file_format_id, preset_id=ccfilemodel.preset_id)
+        if preset.thumbnail:
+            try:
+                if ccnode.thumbnail_encoding and ccnode.thumbnail_encoding.get('base64'):
+                    encoding = json.loads(thumbnail_string)['base64']
+            except ValueError as e:
+                logging.error("ERROR: node thumbnail is not in correct format ({}: {})".format(ccnode.id, ccnode.thumbnail_encoding))
+
+            encoding = encoding or get_thumbnail_encoding(str(ccfilemodel))
+            ccfilemodel = create_content_thumbnail(encoding, uploaded_by=ccfilemodel.uploaded_by, file_format_id=ccfilemodel.file_format_id, preset_id=ccfilemodel.preset_id)
 
         kolibrilocalfilemodel, new = kolibrimodels.LocalFile.objects.get_or_create(
             pk=ccfilemodel.checksum,
             defaults={
-                'extension': format.extension,
+                'extension': fformat.extension,
                 'file_size': ccfilemodel.file_size,
             }
         )
@@ -273,7 +283,7 @@ def create_associated_file_objects(kolibrinode, ccnode):
         kolibrifilemodel = kolibrimodels.File.objects.create(
             pk=ccfilemodel.pk,
             checksum=ccfilemodel.checksum,
-            extension=format.extension,
+            extension=fformat.extension,
             available=True,  # TODO: Set this to False, once we have availability stamping implemented in Kolibri
             file_size=ccfilemodel.file_size,
             contentnode=kolibrinode,
@@ -289,24 +299,28 @@ def create_associated_file_objects(kolibrinode, ccnode):
 def create_perseus_exercise(ccnode, kolibrinode, exercise_data, user_id=None):
     logging.debug("Creating Perseus Exercise for Node {}".format(ccnode.title))
     filename = "{0}.{ext}".format(ccnode.title, ext=file_formats.PERSEUS)
-    with tempfile.NamedTemporaryFile(suffix="zip", delete=False) as tempf:
-        create_perseus_zip(ccnode, exercise_data, tempf)
-        file_size = tempf.tell()
-        tempf.flush()
+    temppath = None
+    try:
+        with tempfile.NamedTemporaryFile(suffix="zip", delete=False) as tempf:
+            temppath = tempf.name
+            create_perseus_zip(ccnode, exercise_data, tempf)
+            file_size = tempf.tell()
+            tempf.flush()
 
-        ccnode.files.filter(preset_id=format_presets.EXERCISE).delete()
+            ccnode.files.filter(preset_id=format_presets.EXERCISE).delete()
 
-        assessment_file_obj = ccmodels.File.objects.create(
-            file_on_disk=File(open(tempf.name, 'r'), name=filename),
-            contentnode=ccnode,
-            file_format_id=file_formats.PERSEUS,
-            preset_id=format_presets.EXERCISE,
-            original_filename=filename,
-            file_size=file_size,
-            uploaded_by_id=user_id,
-        )
-        logging.debug("Created exercise for {0} with checksum {1}".format(ccnode.title, assessment_file_obj.checksum))
-
+            assessment_file_obj = ccmodels.File.objects.create(
+                file_on_disk=File(open(temppath, 'r'), name=filename),
+                contentnode=ccnode,
+                file_format_id=file_formats.PERSEUS,
+                preset_id=format_presets.EXERCISE,
+                original_filename=filename,
+                file_size=file_size,
+                uploaded_by_id=user_id,
+            )
+            logging.debug("Created exercise for {0} with checksum {1}".format(ccnode.title, assessment_file_obj.checksum))
+    finally:
+        temppath and os.unlink(temppath)
 
 def process_assessment_metadata(ccnode, kolibrinode):
     # Get mastery model information, set to default if none provided
@@ -507,19 +521,15 @@ def convert_channel_thumbnail(channel):
         return ""
 
     if channel.thumbnail_encoding:
-        thumbnail_data = ast.literal_eval(channel.thumbnail_encoding)
-        if thumbnail_data.get("base64"):
-            return thumbnail_data["base64"]
+        try:
+            thumbnail_data = json.loads(channel.thumbnail_encoding)
+            if thumbnail_data.get("base64"):
+                return thumbnail_data["base64"]
+        except ValueError as str(e):
+            logging.error("ERROR: channel thumbnail is not in correct format ({}: {})".format(channel.id, channel.thumbnail_encoding))
 
-    checksum, ext = os.path.splitext(channel.thumbnail)
-    with storage.open(ccmodels.generate_object_storage_name(checksum, channel.thumbnail), 'rb') as file_obj:
-        with Image.open(file_obj) as image, tempfile.NamedTemporaryFile(suffix=ext, delete=False) as tempf:
-            cover = resizeimage.resize_cover(image, [THUMBNAIL_DIMENSION, THUMBNAIL_DIMENSION])
-            cover.save(tempf.name, image.format)
-            encoding = base64.b64encode(tempf.read()).decode('utf-8')
-            tempname = tempf.name
-        os.unlink(tempname)
-    return "data:image/png;base64," + encoding
+    return get_thumbnail_encoding(channel.thumbnail)
+
 
 def map_tags_to_node(kolibrinode, ccnode):
     """ map_tags_to_node: assigns tags to nodes (creates fk relationship)
