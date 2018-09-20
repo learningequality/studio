@@ -71,7 +71,6 @@ def license_wtfpl():
     """
     return cc.License.objects.first() or mixer.blend(cc.License, license_name="WTF License")
 
-
 def fileobj_video(contents=None):
     """
     Create an "mp4" video file on storage, and then create a File model pointing to it.
@@ -93,9 +92,15 @@ def fileobj_video(contents=None):
     default_storage.save(storage_file_path, fileobj)
 
     # then create a File object with that
-    db_file_obj = mixer.blend(cc.File, file_format=fileformat_mp4(), preset=preset_video(), file_on_disk=storage_file_path)
+    db_file_obj = mixer.blend(
+        cc.File,
+        file_format=fileformat_mp4(),
+        checksum=digest,
+        preset=preset_video(),
+        file_on_disk=storage_file_path,
+    )
 
-    yield db_file_obj
+    return db_file_obj
 
 
 def node_json(data):
@@ -129,7 +134,7 @@ def node(data, parent=None):
     elif data['kind_id'] == "video":
         new_node = cc.ContentNode(kind=video(), parent=parent, title=data['title'], node_id=data['node_id'], license=license_wtfpl())
         new_node.save()
-        video_file = fileobj_video(contents="Video File").next()
+        video_file = fileobj_video(contents="Video File")
         video_file.contentnode = new_node
         video_file.preset_id = format_presets.VIDEO_HIGH_RES
         video_file.save()
