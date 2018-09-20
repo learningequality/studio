@@ -244,3 +244,21 @@ invalid_file_json = [
 
     }
 ]
+
+
+
+def fileobj_exercise_image():
+    """
+    Create a generic exercise image file in storage and return a File model pointing to it.
+    """
+    filecontents = "".join(random.sample(string.printable, 20))
+    temp_file_dict = create_temp_file(filecontents, preset=format_presets.EXERCISE_IMAGE, ext='jpg')
+    return temp_file_dict['db_file']
+
+def fileobj_exercise_graphie():
+    """
+    Create an graphi exercise image file in storage and return a File model pointing to it.
+    """
+    filecontents = "".join(random.sample(string.printable, 20))
+    temp_file_dict = create_temp_file(filecontents, preset=format_presets.EXERCISE_GRAPHIE, ext='graphie', original_filename='theoriginalfilename')
+    return temp_file_dict['db_file']
