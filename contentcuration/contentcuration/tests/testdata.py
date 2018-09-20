@@ -39,7 +39,7 @@ def topic():
 
 def exercise():
     """
-    Create a topic content kind.
+    Create a exercise content kind.
     """
     return mixer.blend(cc.ContentKind, kind='exercise')
 
@@ -73,34 +73,17 @@ def license_wtfpl():
 
 def fileobj_video(contents=None):
     """
-    Create an "mp4" video file on storage, and then create a File model pointing to it.
+    Create an "mp4" video file on storage and return a File model pointing to it.
 
-    if contents is given and is a string, then write said contents to the file. If not given,
-    a random string is generated and set as the contents of the file.
+    if contents is given and is a string, then write said contents to the file.
+    If no contents is given, a random string is generated and set as the contents of the file.
     """
     if contents:
         filecontents = contents
     else:
         filecontents = "".join(random.sample(string.printable, 20))
-
-    fileobj = StringIO(filecontents)
-    digest = md5.new(filecontents).hexdigest()
-    filename = "{}.mp4".format(digest)
-    storage_file_path = cc.generate_object_storage_name(digest, filename)
-
-    # Write out the file bytes on to object storage, with a filename specified with randomfilename
-    default_storage.save(storage_file_path, fileobj)
-
-    # then create a File object with that
-    db_file_obj = mixer.blend(
-        cc.File,
-        file_format=fileformat_mp4(),
-        checksum=digest,
-        preset=preset_video(),
-        file_on_disk=storage_file_path,
-    )
-
-    return db_file_obj
+    temp_file_dict = create_temp_file(filecontents, preset=format_presets.VIDEO_HIGH_RES, ext='mp4')
+    return temp_file_dict['db_file']
 
 
 def node_json(data):
