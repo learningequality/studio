@@ -263,15 +263,22 @@ def create_associated_file_objects(kolibrinode, ccnode):
             get_or_create_language(ccfilemodel.language)
 
         if preset.thumbnail:
-            encoding = None
             try:
-                if ccnode.thumbnail_encoding and ccnode.thumbnail_encoding.get('base64'):
-                    encoding = json.loads(thumbnail_string)['base64']
+                encoding = ccnode.thumbnail_encoding and json.loads(ccnode.thumbnail_encoding).get('base64')
+
+                # Save the encoding if it doesn't already have an encoding
+                if not encoding:
+                    encoding = get_thumbnail_encoding(str(ccfilemodel))
+                    ccnode.thumbnail_encoding = json.dumps({
+                        "base64": encoding,
+                        "points": [],
+                        "zoom": 0,
+                    })
+                    ccnode.save()
+
+                ccfilemodel = create_content_thumbnail(encoding, uploaded_by=ccfilemodel.uploaded_by, file_format_id=ccfilemodel.file_format_id, preset_id=ccfilemodel.preset_id)
             except ValueError:
                 logging.error("ERROR: node thumbnail is not in correct format ({}: {})".format(ccnode.id, ccnode.thumbnail_encoding))
-
-            encoding = encoding or get_thumbnail_encoding(str(ccfilemodel))
-            ccfilemodel = create_content_thumbnail(encoding, uploaded_by=ccfilemodel.uploaded_by, file_format_id=ccfilemodel.file_format_id, preset_id=ccfilemodel.preset_id)
 
         kolibrilocalfilemodel, new = kolibrimodels.LocalFile.objects.get_or_create(
             pk=ccfilemodel.checksum,
