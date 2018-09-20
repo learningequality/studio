@@ -34,11 +34,13 @@ Organization
     Organization Type: {% if data.organization_type %}{{data.organization_type}}{% else %}{% if data.org_or_personal == "Organization" %}Not Answered{% else %}Not Applicable{% endif %}{% endif %}
 
 Use Case
+Time Constraint: {{data.time_constraint}}
+
 {% if data.message %}{{data.message}}{% else %}---{% endif %}
 
 ==============================================================================
 
-{% trans "We will address your request as soon as possible." %}
+{% trans "We are currently reviewing the information that you have provided, and will work to be in touch in a timely manner depending on the scope of your request. While Kolibri Studio is in Beta, we need to be especially mindful of how much additional storage can be provided to ensure that we can successful continue to build the Studio tool. Many thanks in advance for your understanding." %}
 
 
 {% trans "Thanks for using our site!" %}
