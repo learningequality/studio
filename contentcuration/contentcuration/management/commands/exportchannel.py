@@ -263,10 +263,11 @@ def create_associated_file_objects(kolibrinode, ccnode):
             get_or_create_language(ccfilemodel.language)
 
         if preset.thumbnail:
+            encoding = None
             try:
                 if ccnode.thumbnail_encoding and ccnode.thumbnail_encoding.get('base64'):
                     encoding = json.loads(thumbnail_string)['base64']
-            except ValueError as e:
+            except ValueError:
                 logging.error("ERROR: node thumbnail is not in correct format ({}: {})".format(ccnode.id, ccnode.thumbnail_encoding))
 
             encoding = encoding or get_thumbnail_encoding(str(ccfilemodel))
@@ -525,7 +526,7 @@ def convert_channel_thumbnail(channel):
             thumbnail_data = json.loads(channel.thumbnail_encoding)
             if thumbnail_data.get("base64"):
                 return thumbnail_data["base64"]
-        except ValueError as str(e):
+        except ValueError:
             logging.error("ERROR: channel thumbnail is not in correct format ({}: {})".format(channel.id, channel.thumbnail_encoding))
 
     return get_thumbnail_encoding(channel.thumbnail)

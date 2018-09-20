@@ -767,7 +767,7 @@ def map_files_to_node(user, node, data):
         # Handle thumbnail
         if resource_obj.preset.thumbnail:
             node.thumbnail_encoding = json.dumps({
-                    'base64': get_thumbnail_encoding(file_path),
+                    'base64': get_thumbnail_encoding(str(resource_obj)),
                     'points': [],
                     'zoom': 0
                 })
