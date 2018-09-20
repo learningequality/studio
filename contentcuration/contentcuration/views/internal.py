@@ -24,6 +24,7 @@ from contentcuration.api import get_staged_diff, write_file_to_storage, activate
 from contentcuration.models import AssessmentItem, Channel, ContentNode, ContentTag, File, FormatPreset, Language, License, StagedFile, generate_object_storage_name, get_next_sort_order
 from contentcuration.utils.tracing import trace
 from contentcuration.utils.files import get_file_diff
+from contentcuration.utils.nodes import map_files_to_node
 from contentcuration.utils.garbage_collect import get_deleted_chefs_root
 
 VersionStatus = namedtuple('VersionStatus', ['version', 'status', 'message'])
@@ -716,54 +717,6 @@ def create_node(node_data, parent_node, sort_order):
         node.tags = tags
         node.save()
     return node
-
-
-def map_files_to_node(user, node, data):
-    """ Generate files that reference the content node """
-
-    # filter for file data that's not empty;
-    valid_data = (d for d in data if d)
-
-    for file_data in valid_data:
-        file_name_parts = file_data['filename'].split(".")
-
-        # Determine a preset if none is given
-        kind_preset = None
-        if file_data['preset'] is None:
-            kind_preset = FormatPreset.objects.filter(kind=node.kind,
-                                                      allowed_formats__extension__contains=file_name_parts[1],
-                                                      display=True).first()
-        else:
-            kind_preset = FormatPreset.objects.get(id=file_data['preset'])
-
-        file_path = generate_object_storage_name(file_name_parts[0], file_data['filename'])
-        storage = default_storage
-        if not storage.exists(file_path):
-            return IOError('{} not found'.format(file_path))
-
-        try:
-            if file_data.get('language'):
-                # TODO: Remove DB call per file?
-                file_data['language'] = Language.objects.get(pk=file_data['language'])
-        except ObjectDoesNotExist as e:
-            invalid_lang = file_data.get('language')
-            logging.warning("file_data with language {} does not exist.".format(invalid_lang))
-            return ValidationError("file_data given was invalid; expected string, got {}".format(invalid_lang))
-
-        resource_obj = File(
-            checksum=file_name_parts[0],
-            contentnode=node,
-            file_format_id=file_name_parts[1],
-            original_filename=file_data.get('original_filename') or 'file',
-            source_url=file_data.get('source_url'),
-            file_size=file_data['size'],
-            file_on_disk=DjFile(storage.open(file_path, 'rb')),
-            preset=kind_preset,
-            language_id=file_data.get('language'),
-            uploaded_by=user,
-        )
-        resource_obj.file_on_disk.name = file_path
-        resource_obj.save()
 
 
 def map_files_to_assessment_item(user, question, data):
