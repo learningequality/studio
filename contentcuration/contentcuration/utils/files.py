@@ -23,7 +23,7 @@ from pressurecooker.images import (create_image_from_pdf_page,
 from pressurecooker.videos import compress_video, extract_thumbnail_from_video
 from resizeimage import resizeimage
 
-THUMBNAIL_DIMENSION = 300
+THUMBNAIL_DIMENSION = 400
 
 
 def create_file_from_contents(contents, ext=None, node=None, preset_id=None, uploaded_by=None):
