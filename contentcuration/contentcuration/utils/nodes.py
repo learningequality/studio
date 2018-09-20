@@ -1,6 +1,7 @@
 import os
 
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.core.files import File as DjFile
 from django.core.files.storage import default_storage
 from django_s3_storage.storage import S3Error
