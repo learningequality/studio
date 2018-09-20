@@ -1,4 +1,5 @@
 import logging
+import os
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
@@ -23,7 +24,8 @@ def map_files_to_node(user, node, data):
 
     for file_data in valid_data:
         filename = file_data["filename"]
-        checksum, ext = filename.split(".")
+        checksum, ext1 = os.path.splitext(filename)
+        ext = ext1.lstrip(".")
 
         # Determine a preset if none is given
         kind_preset = FormatPreset.get_preset(file_data["preset"]) or FormatPreset.guess_format_preset(filename)
