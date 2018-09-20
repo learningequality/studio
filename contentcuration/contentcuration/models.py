@@ -898,6 +898,18 @@ class ContentNode(MPTTModel, models.Model):
         except (ObjectDoesNotExist, MultipleObjectsReturned, AttributeError):
             return None
 
+    @classmethod
+    def get_nodes_with_title(cls, title, limit_to_children_of=None):
+        """
+        Returns all ContentNodes with a given title. If limit_to_children_of
+        is passed in with an id, only look at all the children of the node with that id.
+        """
+        if limit_to_children_of:
+            root = cls.objects.get(id=limit_to_children_of)
+            return root.get_descendants().filter(title=title)
+        else:
+            return cls.objects.filter(title=title)
+
     def save(self, *args, **kwargs):
         channel_id = None
         if kwargs.get('request'):
@@ -997,6 +1009,7 @@ class FormatPreset(models.Model):
         """
 
         _, ext = os.path.splitext(filename)
+        ext = ext.lstrip(".")
         f = FormatPreset.objects.filter(
             allowed_formats__extension=ext,
             display=True
@@ -1079,6 +1092,16 @@ class File(models.Model):
 
     def __str__(self):
         return '{checksum}{extension}'.format(checksum=self.checksum, extension='.' + self.file_format.extension)
+
+    def filename(self):
+        """
+        Returns just the filename of the File in storage, without the path
+
+        e.g. abcd.mp4
+        """
+        # TODO(aron): write tests for this
+
+        return os.path.basename(self.file_on_disk.name)
 
     def save(self, *args, **kwargs):
         """
