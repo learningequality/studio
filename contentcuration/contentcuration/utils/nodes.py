@@ -1,12 +1,11 @@
-import os
+import logging
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
-from django.core.files import File as DjFile
 from django.core.files.storage import default_storage
-from django_s3_storage.storage import S3Error
 
-from contentcuration.models import Language, User, ContentNode, AssessmentItem, FormatPreset, generate_object_storage_name, File
+from contentcuration.models import AssessmentItem, ContentNode, File, FormatPreset, Language, User
+from contentcuration.models import generate_object_storage_name
 
 
 def map_files_to_node(user, node, data):
