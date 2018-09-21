@@ -69,10 +69,10 @@ class CreateChannelTestCase(BaseTestCase):
         super(CreateChannelTestCase, self).setUp()
         self.topic = cc.ContentKind.objects.get(kind='topic')
         self.license = cc.License.objects.all()[0]
-        self.fileobj_audio = create_temp_file("abc", 'audio', 'mp3', 'application/audio')
-        self.fileobj_video = create_temp_file("def", 'video', 'mp4', 'application/video')
-        self.fileobj_document = create_temp_file("ghi", 'document', 'pdf', 'application/pdf')
-        self.fileobj_exercise = create_temp_file("jkl", 'exercise', 'perseus', 'application/perseus')
+        self.fileobj_audio = create_temp_file("abc", preset='audio', ext='mp3')
+        self.fileobj_video = create_temp_file("def", preset='high_res_video', ext='mp4')
+        self.fileobj_document = create_temp_file("ghi", preset='document', ext='pdf')
+        self.fileobj_exercise = create_temp_file("jkl", preset='exercise', ext='perseus')
 
     def create_channel(self):
         create_channel_url = str(reverse_lazy('api_create_channel'))

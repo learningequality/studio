@@ -37,7 +37,7 @@ class ZipFileTestCase(BaseTestCase):
         myzip = self.do_create_zip()
 
         self.sign_in()
-        temp_file, response = self.upload_temp_file(open(myzip, 'rb').read(), ext='.zip')
+        temp_file, response = self.upload_temp_file(open(myzip, 'rb').read(), preset='html5_zip', ext='zip')
         assert response.status_code == 200
         url = '{}{}/'.format(self.zipfile_url, temp_file['name'])
         response = self.get(url)
@@ -47,7 +47,7 @@ class ZipFileTestCase(BaseTestCase):
         myzip = self.do_create_zip()
 
         self.sign_in()
-        temp_file, response = self.upload_temp_file(open(myzip, 'rb').read(), ext='.zip')
+        temp_file, response = self.upload_temp_file(open(myzip, 'rb').read(), preset='html5_zip', ext='zip')
         assert response.status_code == 200
         url = '{}{}/index.html'.format(self.zipfile_url, temp_file['name'])
         response = self.get(url)
@@ -57,7 +57,7 @@ class ZipFileTestCase(BaseTestCase):
         myzip = self.do_create_zip()
 
         self.sign_in()
-        temp_file, response = self.upload_temp_file(open(myzip, 'rb').read(), ext='.zip')
+        temp_file, response = self.upload_temp_file(open(myzip, 'rb').read(), preset='html5_zip', ext='zip')
         assert response.status_code == 200
         url = '{}{}/iamjustanillusion.txt'.format(self.zipfile_url, temp_file['name'])
         response = self.get(url)
@@ -67,7 +67,7 @@ class ZipFileTestCase(BaseTestCase):
         myzip = self.do_create_zip()
 
         self.sign_in()
-        temp_file, response = self.upload_temp_file(open(myzip, 'rb').read(), ext='.zip')
+        temp_file, response = self.upload_temp_file(open(myzip, 'rb').read(), preset='html5_zip', ext='zip')
         assert response.status_code == 200
         url = '{}{}/../outsidejson.js'.format(self.zipfile_url, temp_file['name'])
         response = self.get(url)

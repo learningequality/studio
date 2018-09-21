@@ -22,14 +22,16 @@
 		<div class="panel-heading usage_header"><b class="pull-right">{% blocktrans with available=available|format_size %}{{available}} Available{% endblocktrans %}</b>{% trans "Usage" %}</div>
 		<ul class="list-group">
 			{% for item in breakdown %}
-				<li class="list-group-item">{% blocktrans with used=used percent=item.percent size=item.size|format_size %}{{name}} - {{percent}}% ({{size}}){% endblocktrans %}</li>
+				<li class="list-group-item">{% blocktrans with used=used percent=item.percent size=item.size|format_size name=item.name %}{{name}} - {{percent}}% ({{size}}){% endblocktrans %}</li>
 			{% empty %}<i>{% trans "You don't have any files uploaded" %}</i>
 			{% endfor %}
 		</ul>
 	</div>
 	<br><br>
 	<h5>{% trans "Request More Space" %}</h5>
-	{{message}}
+	<p>{% blocktrans %}Kindly use this form to request additional uploading storage for your Kolibri Studio account. If you import content from our public library in your channels, this content does not count towards your storage limit. <a class="link-text" target="_blank" href='https://kolibri-studio.readthedocs.io/en/latest/add_content.html#import-content-from-other-channels'>Click here to learn more how to import content from other channels.</a>
+	{% endblocktrans %}</p>
+
 	{% if form.errors %}
 		<ul class="errors text-center list-unstyled">
 			{% for field in form %}
@@ -50,11 +52,11 @@
 		<p>{% trans "What is the nature of your content?" %}</p>
 		<ul>
 			<li>{% trans "How much storage are you requesting?" %}{% if form.storage.field.required %}<b class="required">*</b>{% endif %} {{ form.storage }}</li>
-			<li>{% trans "Approximately how many resources are you planning to upload?" %}{% if form.resource_count.field.required %}<b class="required">*</b>{% endif %} {{ form.resource_count }}</li>
+			<li>{% trans "Approximately how many individual resources are you planning to upload?" %}{% if form.resource_count.field.required %}<b class="required">*</b>{% endif %} {{ form.resource_count }}</li>
 			<li>{% trans "What is the average size of each resource?" %}{% if form.resource_size.field.required %}<b class="required">*</b>{% endif %} {{ form.resource_size }}</li>
 			<li>{% trans "What kind of content are you uploading?" %}{% if form.kind.field.required %}<b class="required">*</b>{% endif %}<br>{{ form.kind }}</li>
 			<li>{% trans "Who is the author (creator), curator (organizer), and/or aggregator (maintainer) of your content? Please specify" %}{% if form.creators.field.required %}<b class="required">*</b>{% endif %}<br>{{ form.creators }}</li>
-			<li>{% trans "Link to sample content (on Studio or from source site)" %}{% if form.sample_link.field.required %}<b class="required">*</b>{% endif %}<br>{{ form.sample_link }}</li>
+			<li>{% trans "Please provide a link to a sample of your content (on Studio or from source site)" %}{% if form.sample_link.field.required %}<b class="required">*</b>{% endif %}<br>{{ form.sample_link }}</li>
 		</ul>
 
 		<p>{% trans "Who can use your content?" %}</p>
@@ -76,7 +78,7 @@
 			{% if channel_count %}
 			<li>
 				{% blocktrans %}
-					If the content is openly licensed, would you be willing to consider making your channels <a id="public_help" data-toggle="tooltip" data-placement="top" title="By making a channel public, you are allowing anyone on Kolibri Studio to access your content and use it in their own channels. Channels submitted for public use will be reviewed by the Learning Equality team.">public</a> to other Kolibri users if requested in the future? (Select all that apply)
+					If the content is openly licensed, would you be willing to consider making your channels <a id="public_help" class='link-text' data-toggle="tooltip" data-placement="top" title="By making a channel public, you are allowing anyone on Kolibri Studio to access your content and use it in their own channels. Channels submitted for public use will be reviewed by the Learning Equality team.">public</a> to other Kolibri users if requested in the future? (Select all that apply)
 				{% endblocktrans %}
 				<br>{{ form.public }}<br>
 			</li>
@@ -91,7 +93,7 @@
 				{{ form.audience }}
 			</li>
 			<li>
-				{% trans "What is the target region(s) for your content?" %}
+				{% trans "What is the target region(s) for your content (if applicable)?" %}
 				<br>{{ form.location }}<br>
 			</li>
 			<li>{% trans "How many times will this content be imported from Studio into new Kolibri installations per month, on average?" %}{% if form.import_count.field.required %}<b class="required">*</b>{% endif %} {{ form.import_count }}</li>
@@ -129,7 +131,10 @@
 			</li>
 		</ul>
 
-		<p>{% trans "Please write a paragraph explaining your needs and use case for Kolibri Studio, and how it will integrate into your programs. Include information about who is curating, deploying, and using the content. Is this work being coordinated by an organization, as part of an educational program? Include justification for the additional space being requested." %} {% if form.message.field.required %}<b class="required">*</b>{% endif %}</p>
+		<p>{% trans 'To better understand the time sensitive nature of your request, please indicate an approximate timeline by when you need this additional storage:' %} {% if form.time_constraint.field.required %}<b class="required">*</b>{% endif %}</p>
+		{{form.time_constraint}}
+
+		<p>{% trans "Please write a paragraph explaining your needs and use case for Kolibri Studio, and how it will integrate into your programs. Include information about who is curating, deploying, and using the content. Is this work being coordinated by an organization, as part of an educational program? Include justification for the additional space being requested and explanation of the time sensitive nature of your request." %} {% if form.message.field.required %}<b class="required">*</b>{% endif %}</p>
 		{{ form.message }}
 		<br><br><br>
 		<input id="send" class="action-button pull-right" type="submit" value="{% trans 'SEND REQUEST' %}"/>
