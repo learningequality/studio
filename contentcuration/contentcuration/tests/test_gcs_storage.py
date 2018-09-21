@@ -26,14 +26,6 @@ class MimeTypesTestCase(TestCase):
 
         assert isinstance(typ, str)
 
-    def test_determine_function_errors_out_when_passed_a_non_string_filename(self):
-        """
-        Make sure that the function enforces only strings being passed in,
-        and would error out otherwise.
-        """
-        with pytest.raises(AssertionError):
-            gcs._determine_content_type(None)
-
     def test_determine_function_returns_pdf_for_pdfs(self):
         """
         Check that _determine_content_type returns an application/pdf
