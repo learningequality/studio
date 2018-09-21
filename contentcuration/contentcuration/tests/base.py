@@ -60,11 +60,11 @@ class StudioTestCase(TestCase, BucketTestMixin):
         client.force_authenticate(self.admin_user)
         return client
 
-    def upload_temp_file(self, data, ext='.txt'):
+    def upload_temp_file(self, data, preset='document', ext='pdf'):
         """
         Uploads a file to the server using an authorized client.
         """
-        fileobj_temp = testdata.create_temp_file(data, ext=ext)
+        fileobj_temp = testdata.create_temp_file(data, preset=preset, ext=ext)
         name = fileobj_temp['name']
 
         f = SimpleUploadedFile(name, data)
