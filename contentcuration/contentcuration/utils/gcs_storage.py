@@ -1,3 +1,4 @@
+import tempfile
 import logging
 import mimetypes
 import os.path
@@ -35,43 +36,37 @@ class GoogleCloudStorage(Storage):
         else:
             return typ
 
-    def open(self, name, mode="rb"):
+    def open(self, name, mode="rb", blob_object=None):
+        """
+        open returns a Django File object containing the bytes of name suitable for reading.
+
+        You can pass in an optional 'mode' argument, but is only there for Django Storage class
+        compatibility. It would error out if given any other argument than "rb".
+
+        You can also pass in an object in the blob_object argument. This must have a method called
+        `download_to_file` that accepts as writeable file object as an argument, and writes the
+        bytes to it. (this is mainly used for mocking in tests.)
+        """
         # We don't have any logic for returning the file object in write
         # so just raise an error if we get any mode other than rb
         assert mode == "rb",\
             ("Sorry, we can't handle any open mode other than rb."
              " Please use Storage.save() instead.")
 
-        blob = self.bucket.get_blob(name)
-
-        # take advantage of the fact that we only
-        # write a file once, and that GCS returns the MD5
-        # hash as part of the metadata.
-
-        # See if a file with a matching MD5 hash is already
-        # present. If so, just return that.
-        tmp_filename = os.path.join("/tmp", blob.md5_hash)
-
-        # the md5 hash from gcloud storage encoded in base64, which may not be
-        # compatible as a filesystem name. Change it to hex.
-        tmp_filename = tmp_filename.decode("base64").encode("hex")
-
-        is_new = True
-        if os.path.exists(tmp_filename):
-            f = open(tmp_filename)
-            is_new = False
-
-        # If there's no such file, then download that file
-        # from GCS.
+        if not blob_object:
+            blob = self.bucket.get_blob(name)
         else:
-            with open(tmp_filename, "wb") as fobj:
-                blob.download_to_file(fobj)
+            blob = blob_object
 
-            # reopen the file we just wrote, this time in read mode
-            f = open(tmp_filename)
+        # create a spooled tempfile, where small amounts of data
+        # are stored in memory, but written to disk if it gets large.
+        fobj = tempfile.SpooledTemporaryFile()
+        blob.download_to_file(fobj)
+        # flush it to disk
+        fobj.flush()
 
-        django_file = File(f)
-        django_file.just_downloaded = is_new
+        django_file = File(fobj)
+        django_file.just_downloaded = True
         return django_file
 
     def exists(self, name):
