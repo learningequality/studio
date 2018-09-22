@@ -29,8 +29,6 @@ class GoogleCloudStorage(Storage):
         Raises an AssertionError if filename is not a string.
         """
 
-        assert isinstance(filename, str), "Expected filename to be string, passed in {}".format(filename)
-
         typ, _ =  mimetypes.guess_type(filename)
 
         if not typ:
