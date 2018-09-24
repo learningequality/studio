@@ -158,7 +158,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         staged_size = float(channel_files.aggregate(used=Sum('file_size'))['used'] or 0)
 
         if self.get_available_space(active_files=active_files) < (active_size + staged_size):
-            raise PermissionDenied(_('Out of storage! Request more at %(email)s') % {'email': settings.SPACE_REQUEST_EMAIL})
+            raise PermissionDenied(_('Out of storage! Request more space under Settings > Storage.'))
 
 
     def check_staged_space(self, size, checksum):
@@ -166,7 +166,7 @@ class User(AbstractBaseUser, PermissionsMixin):
             return True
         space = self.get_available_staged_space()
         if space < size:
-            raise PermissionDenied(_('Out of storage! Request more at %(email)s') % {'email': settings.SPACE_REQUEST_EMAIL})
+            raise PermissionDenied(_('Out of storage! Request more space under Settings > Storage.'))
 
     def get_available_staged_space(self):
         space_used = self.staged_files.aggregate(size=Sum("file_size"))['size'] or 0
@@ -898,6 +898,18 @@ class ContentNode(MPTTModel, models.Model):
         except (ObjectDoesNotExist, MultipleObjectsReturned, AttributeError):
             return None
 
+    @classmethod
+    def get_nodes_with_title(cls, title, limit_to_children_of=None):
+        """
+        Returns all ContentNodes with a given title. If limit_to_children_of
+        is passed in with an id, only look at all the children of the node with that id.
+        """
+        if limit_to_children_of:
+            root = cls.objects.get(id=limit_to_children_of)
+            return root.get_descendants().filter(title=title)
+        else:
+            return cls.objects.filter(title=title)
+
     def save(self, *args, **kwargs):
         channel_id = None
         if kwargs.get('request'):
@@ -988,6 +1000,34 @@ class FormatPreset(models.Model):
     def __str__(self):
         return self.id
 
+    @classmethod
+    def guess_format_preset(cls, filename):
+        """
+        Guess the format preset of a filename based on its extension.
+
+        Return None if format is unknown.
+        """
+
+        _, ext = os.path.splitext(filename)
+        ext = ext.lstrip(".")
+        f = FormatPreset.objects.filter(
+            allowed_formats__extension=ext,
+            display=True
+            )
+        return f.first()
+
+    @classmethod
+    def get_preset(cls, preset_name):
+        """
+        Get the FormatPreset object with that exact name.
+
+        Returns None if that format preset is not found.
+        """
+        try:
+            return FormatPreset.objects.get(id=preset_name)
+        except FormatPreset.DoesNotExist:
+            return None
+
 
 class Language(models.Model):
     id = models.CharField(max_length=14, primary_key=True)
@@ -1052,6 +1092,16 @@ class File(models.Model):
 
     def __str__(self):
         return '{checksum}{extension}'.format(checksum=self.checksum, extension='.' + self.file_format.extension)
+
+    def filename(self):
+        """
+        Returns just the filename of the File in storage, without the path
+
+        e.g. abcd.mp4
+        """
+        # TODO(aron): write tests for this
+
+        return os.path.basename(self.file_on_disk.name)
 
     def save(self, *args, **kwargs):
         """
