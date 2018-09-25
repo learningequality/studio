@@ -120,14 +120,13 @@ def file_create(request):
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
-def generate_thumbnail(request):
+def generate_thumbnail(request, contentnode_id):
     logging.debug("Entering the generate_thumbnail endpoint")
 
     if request.method != 'POST':
         return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
 
-    data = json.loads(request.body)
-    node = ContentNode.objects.get(pk=data["node_id"])
+    node = ContentNode.objects.get(pk=contentnode_id)
 
     thumbnail_object = generate_thumbnail_from_node(node)
 

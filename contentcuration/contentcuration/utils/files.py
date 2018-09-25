@@ -18,6 +18,7 @@ from django.core.files import File as DjFile
 from django.core.files.storage import default_storage
 from le_utils.constants import content_kinds, file_formats, format_presets
 from PIL import Image
+from pressurecooker.encodings import write_base64_to_file
 from pressurecooker.images import (create_image_from_pdf_page,
                                    create_tiled_image, create_waveform_image)
 from pressurecooker.videos import compress_video, extract_thumbnail_from_video
@@ -225,3 +226,15 @@ def get_thumbnail_encoding(filename, dimension=THUMBNAIL_DIMENSION):
         image.thumbnail((dimension, dimension), Image.ANTIALIAS)
         image.save(buffer, image.format)
         return "data:image/{};base64,{}".format(ext[1:], base64.b64encode(buffer.getvalue()))
+
+def create_content_thumbnail(encoding, file_format_id=file_formats.PNG, preset_id=None, uploaded_by=None):
+    temppath = None
+    try:
+        with tempfile.NamedTemporaryFile(suffix=".{}".format(file_format_id), delete=False) as tempf:
+            temppath = tempf.name
+            tempf.close()
+            write_base64_to_file(encoding, temppath)
+            with open(temppath, 'rb') as tf:
+                return create_file_from_contents(tf.read(), ext=file_format_id, preset_id=preset_id, uploaded_by=uploaded_by)
+    finally:
+        temppath and os.unlink(temppath)

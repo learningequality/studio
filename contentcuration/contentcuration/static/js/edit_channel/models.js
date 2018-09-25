@@ -285,8 +285,7 @@ var ContentNodeModel = BaseModel.extend({
         return new Promise(function(resolve, reject){
             $.ajax({
                 method:"POST",
-                url: window.Urls.generate_thumbnail(),
-                data:  JSON.stringify({"node_id": self.id}),
+                url: window.Urls.generate_thumbnail(self.id),
                 success: function(result) {
                     result = JSON.parse(result);
                     result.file = new FileModel(JSON.parse(result.file));

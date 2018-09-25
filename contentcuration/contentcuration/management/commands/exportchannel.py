@@ -22,7 +22,7 @@ from django.template.loader import render_to_string
 from django.utils.translation import ugettext_lazy as _
 from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises, roles
 from pressurecooker.encodings import write_base64_to_file
-from contentcuration.utils.files import create_file_from_contents, get_thumbnail_encoding
+from contentcuration.utils.files import create_file_from_contents, get_thumbnail_encoding, create_content_thumbnail
 from contentcuration import models as ccmodels
 from contentcuration.utils.parser import extract_value
 from itertools import chain
@@ -242,17 +242,25 @@ def get_or_create_language(language):
         lang_direction= language.lang_direction
     )
 
-def create_content_thumbnail(encoding, file_format_id=file_formats.PNG, preset_id=None, uploaded_by=None):
-    temppath = None
+
+def create_associated_thumbnail(ccnode, ccfilemodel):
+    encoding = None
     try:
-        with tempfile.NamedTemporaryFile(suffix=".{}".format(file_format_id), delete=False) as tempf:
-            temppath = tempf.name
-            tempf.close()
-            write_base64_to_file(encoding, temppath)
-            with open(temppath, 'rb') as tf:
-                return create_file_from_contents(tf.read(), ext=file_format_id, preset_id=preset_id, uploaded_by=uploaded_by)
-    finally:
-        temppath and os.unlink(temppath)
+        encoding = ccnode.thumbnail_encoding and json.loads(ccnode.thumbnail_encoding).get('base64')
+    except ValueError:
+        logging.error("ERROR: node thumbnail is not in correct format ({}: {})".format(ccnode.id, ccnode.thumbnail_encoding))
+
+    # Save the encoding if it doesn't already have an encoding
+    if not encoding:
+        encoding = get_thumbnail_encoding(str(ccfilemodel))
+        ccnode.thumbnail_encoding = json.dumps({
+            "base64": encoding,
+            "points": [],
+            "zoom": 0,
+        })
+        ccnode.save()
+
+    return create_content_thumbnail(encoding, uploaded_by=ccfilemodel.uploaded_by, file_format_id=ccfilemodel.file_format_id, preset_id=ccfilemodel.preset_id)
 
 def create_associated_file_objects(kolibrinode, ccnode):
     logging.debug("Creating LocalFile and File objects for Node {}".format(kolibrinode.id))
@@ -263,22 +271,7 @@ def create_associated_file_objects(kolibrinode, ccnode):
             get_or_create_language(ccfilemodel.language)
 
         if preset.thumbnail:
-            try:
-                encoding = ccnode.thumbnail_encoding and json.loads(ccnode.thumbnail_encoding).get('base64')
-
-                # Save the encoding if it doesn't already have an encoding
-                if not encoding:
-                    encoding = get_thumbnail_encoding(str(ccfilemodel))
-                    ccnode.thumbnail_encoding = json.dumps({
-                        "base64": encoding,
-                        "points": [],
-                        "zoom": 0,
-                    })
-                    ccnode.save()
-
-                ccfilemodel = create_content_thumbnail(encoding, uploaded_by=ccfilemodel.uploaded_by, file_format_id=ccfilemodel.file_format_id, preset_id=ccfilemodel.preset_id)
-            except ValueError:
-                logging.error("ERROR: node thumbnail is not in correct format ({}: {})".format(ccnode.id, ccnode.thumbnail_encoding))
+            ccfilemodel = create_associated_thumbnail(ccnode, ccfilemodel) or ccfilemodel
 
         kolibrilocalfilemodel, new = kolibrimodels.LocalFile.objects.get_or_create(
             pk=ccfilemodel.checksum,
