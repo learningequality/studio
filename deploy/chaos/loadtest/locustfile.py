@@ -55,8 +55,17 @@ class ChannelListPage(BaseTaskSet):
         resp = self.client.get("/channels/")
         self.channel_list_api_calls()
 
+class AdminChannelListPage(BaseTaskSet):
+
+    def on_start(self):
+        self._login()
+
+    @task
+    def channel_list_api_call(self):
+        self.client.get("/api/get_all_channels")
+
 class LoginPage(BaseTaskSet):
-    tasks = [ChannelListPage]
+    tasks = [ChannelListPage, AdminChannelListPage]
 
     @task
     def loginpage(self):
@@ -65,7 +74,6 @@ class LoginPage(BaseTaskSet):
         """
         self.client.get("/accounts/login/")
         self.i18n_requests()
-
 
 class StudioDesktopBrowserUser(HttpLocust):
     task_set = LoginPage
