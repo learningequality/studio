@@ -93,7 +93,7 @@ def get_all_channels(request):
     if not request.user.is_admin:
         raise SuspiciousOperation("You are not authorized to access this endpoint")
 
-    channel_list = Channel.objects.select_related('main_tree').prefetch_related('editors', 'viewers').distinct()
+    channel_list = Channel.get_all_channels()
     channel_serializer = AdminChannelListSerializer(channel_list, many=True)
 
     return Response(channel_serializer.data)
