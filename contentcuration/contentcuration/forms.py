@@ -124,7 +124,8 @@ class RegistrationInformationForm(UserCreationForm, ExtraFormMixin):
             fallback=True,
         )
 
-        countries = [(c.name, translator.gettext(c.name)) for c in list(pycountry.countries)]
+        countries = sorted([(c.name, translator.gettext(c.name)) for c in list(pycountry.countries)],
+            key=lambda x: x[1])
         self.fields['location'] = forms.ChoiceField(required=True, widget=forms.SelectMultiple, label=_(
             'Where do you plan to use Kolibri? (select all that apply)'), choices=countries)
 
