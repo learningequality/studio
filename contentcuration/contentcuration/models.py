@@ -473,6 +473,10 @@ class Channel(models.Model):
         blank=True,
     )
 
+    @classmethod
+    def get_all_channels(cls):
+        return cls.objects.select_related('main_tree').prefetch_related('editors', 'viewers').distinct()
+
     def resource_size_key(self):
         return "{}_resource_size".format(self.pk)
 
