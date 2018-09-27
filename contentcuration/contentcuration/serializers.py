@@ -483,6 +483,17 @@ class ContentNodeFieldMixin(object):
             "providers": filter(lambda x: x, set(split_lst[3])) if len(split_lst) > 3 else [],
         }
 
+    def retrieve_thumbail_src(self, node):
+        try:
+            if node.thumbnail_encoding:
+               return json.loads(node.thumbnail_encoding).get('base64')
+        except ValueError:
+            pass
+
+        thumbnail_file = node.files.filter(preset__thumbnail=True).first()
+        if thumbnail_file:
+            return generate_storage_url(str(thumbnail_file))
+
 
 class RootNodeSerializer(SimplifiedContentNodeSerializer, ContentNodeFieldMixin):
     channel_name = serializers.SerializerMethodField('retrieve_channel_name')
@@ -514,6 +525,7 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer, ContentNodeFieldMix
     valid = serializers.SerializerMethodField('check_valid')
     associated_presets = serializers.SerializerMethodField('retrieve_associated_presets')
     original_channel = serializers.SerializerMethodField('retrieve_original_channel')
+    thumbnail_src = serializers.SerializerMethodField('retrieve_thumbail_src')
 
     def retrieve_associated_presets(self, node):
         return node.get_associated_presets()
@@ -592,7 +604,7 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer, ContentNodeFieldMix
                   'license_description', 'assessment_items', 'files', 'parent_title', 'ancestors', 'modified', 'original_channel',
                   'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'original_source_node_id',
                   'tags', 'extra_fields', 'prerequisite', 'is_prerequisite_of', 'node_id', 'tree_id', 'publishing', 'freeze_authoring_data',
-                  'role_visibility', 'provider', 'aggregator')
+                  'role_visibility', 'provider', 'aggregator', 'thumbnail_src')
 
 
 class ContentNodeEditSerializer(ContentNodeSerializer):
@@ -606,7 +618,7 @@ class ContentNodeEditSerializer(ContentNodeSerializer):
         fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license', 'language',
                   'node_id', 'license_description', 'assessment_items', 'files', 'parent_title', 'content_id', 'modified',
                   'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'ancestors', 'tree_id',
-                  'tags', 'extra_fields', 'original_channel', 'prerequisite', 'is_prerequisite_of', 'thumbnail_encoding',
+                  'tags', 'extra_fields', 'original_channel', 'prerequisite', 'is_prerequisite_of', 'thumbnail_encoding', 'thumbnail_src',
                   'freeze_authoring_data', 'publishing', 'original_source_node_id', 'role_visibility', 'provider', 'aggregator')
 
 class ContentNodeCompleteSerializer(ContentNodeEditSerializer):
@@ -617,7 +629,7 @@ class ContentNodeCompleteSerializer(ContentNodeEditSerializer):
             'title', 'changed', 'id', 'description', 'sort_order', 'author', 'node_id', 'copyright_holder', 'license',
             'license_description', 'kind', 'prerequisite', 'is_prerequisite_of', 'parent_title', 'ancestors', 'language',
             'original_channel', 'original_source_node_id', 'source_node_id', 'content_id', 'original_channel_id',
-            'source_channel_id', 'source_id', 'source_domain', 'thumbnail_encoding', 'publishing',
+            'source_channel_id', 'source_id', 'source_domain', 'thumbnail_encoding', 'publishing', 'thumbnail_src',
             'children', 'parent', 'tags', 'created', 'modified', 'published', 'extra_fields', 'assessment_items',
             'files', 'valid', 'metadata', 'tree_id', 'freeze_authoring_data', 'role_visibility', 'provider', 'aggregator')
 
