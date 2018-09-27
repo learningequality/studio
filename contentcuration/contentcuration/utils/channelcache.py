@@ -16,6 +16,17 @@ class ChannelCacher(object):
     PUBLIC_CHANNEL_CACHE_KEY = "public_channel_cache"
     PUBLIC_CHANNEL_CACHE_TIMEOUT = 60 # seconds
 
+    ALL_CHANNELS_CACHE_KEY = "all_channels_cache"
+    ALL_CHANNELS_TIMEOUT = 60 * 10 # 10 minutes
+
+    @classmethod
+    def get_all_channels(cls):
+        return cache.get_or_set(
+            cls.ALL_CHANNELS_CACHE_KEY,
+            lambda: Channel.get_all_channels(),
+            cls.ALL_CHANNELS_TIMEOUT,
+        )
+
     @classmethod
     def get_public_channels(cls, *args, **kwargs):
         return cache.get_or_set(
