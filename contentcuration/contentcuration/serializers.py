@@ -671,7 +671,6 @@ class ChannelFieldMixin(object):
     def check_publishing(self, channel):
         return channel.main_tree.publishing
 
-
 class ChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
     has_changed = serializers.SerializerMethodField('check_for_changes')
     main_tree = RootNodeSerializer(read_only=True)
@@ -703,6 +702,7 @@ class ChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
             'staging_tree', 'source_id', 'source_domain', 'ricecooker_version', 'thumbnail', 'version', 'deleted',
             'public', 'thumbnail_url','thumbnail_encoding', 'pending_editors', 'viewers', 'tags', 'content_defaults',
             'language', 'primary_token', 'priority', 'published_size')
+        read_only_fields = ('id', 'version')
 
 
 class AccessibleChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
