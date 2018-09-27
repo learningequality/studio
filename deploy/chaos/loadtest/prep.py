@@ -5,7 +5,7 @@ Prepare the local database for load testing.
 
 It does the following:
 - Creates an admin user.
-- Creates 1000 channels. Each one has 500 topic nodes. Each node has 30 videos each.
+- Creates 1000 channels. Create 3 users for each channel, and assign 1 as the editor and the other two as viewers.
 """
 import json
 import logging
