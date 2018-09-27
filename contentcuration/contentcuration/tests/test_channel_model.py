@@ -2,6 +2,7 @@
 from datetime import datetime
 
 from django.test import TestCase
+from mixer.backend.django import mixer
 
 from contentcuration.models import Channel
 from .base import StudioTestCase
@@ -145,3 +146,23 @@ class ChannelGetDateModifiedTestCase(StudioTestCase):
         )
         # check that the returned date is newer
         assert self.channel.get_date_modified() > old_date
+
+
+class GetAllChannelsTestCase(StudioTestCase):
+    """
+    Tests for Channel.get_all_channels().
+    """
+
+    def setUp(self):
+        super(GetAllChannelsTestCase, self).setUp()
+
+        # create 10 channels for comparison
+        self.channels = mixer.cycle(10).blend(Channel)
+
+    def test_returns_all_channels_in_the_db(self):
+        """
+        Check that all channels in self.channels are also created.
+        """
+        returned_channel_ids = [c.id for c in Channel.get_all_channels()]
+        for c in self.channels:
+            assert c.id in returned_channel_ids
