@@ -15,6 +15,7 @@ from django.conf import settings
 from django.http import HttpResponse, HttpResponseNotFound, FileResponse, HttpResponseBadRequest, StreamingHttpResponse
 from django.views.decorators.http import condition
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.cache import cache_page
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.sites.shortcuts import get_current_site
@@ -31,6 +32,7 @@ from rest_framework.renderers import JSONRenderer
 from contentcuration.decorators import browser_is_supported, is_admin
 from contentcuration.models import Channel, User, Invitation, ContentNode, generate_file_on_disk_name, File, Language
 from contentcuration.utils.messages import get_messages
+from contentcuration.utils.channelcache import ChannelCacher
 from contentcuration.serializers import AdminChannelListSerializer, AdminUserListSerializer, CurrentUserSerializer, UserChannelListSerializer
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
@@ -85,6 +87,7 @@ def administration(request):
                                                  "messages": get_messages(),
                                                 })
 
+@cache_page(60 * 10) # 10 minutes
 @login_required
 @api_view(['GET'])
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
@@ -93,7 +96,7 @@ def get_all_channels(request):
     if not request.user.is_admin:
         raise SuspiciousOperation("You are not authorized to access this endpoint")
 
-    channel_list = Channel.objects.select_related('main_tree').prefetch_related('editors', 'viewers').distinct()
+    channel_list = ChannelCacher.get_all_channels()
     channel_serializer = AdminChannelListSerializer(channel_list, many=True)
 
     return Response(channel_serializer.data)
