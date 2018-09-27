@@ -38,7 +38,7 @@
 									{{form.storage.label}}<i class="required_asterisk">*</i> &nbsp;{{form.storage}}
 								</div>
 								{% endif %}
-								{% if option.choice_value == 'other' %}
+								{% if option.data.value == 'other' %}
 									{{form.other_use}}
 								{% endif %}
 							</div>
