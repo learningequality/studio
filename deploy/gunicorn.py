@@ -67,7 +67,8 @@ access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"
 workers = 3
 worker_class = 'sync'
 worker_connections = 1000
-timeout = 500
+# FIXME: Reduce this once we fix performance issues with large trees.
+timeout = 4000  # Make sure we never cut off a tree rebuild. NGINX will timeout long before this so clients don't hang.
 keepalive = 2
 
 spew = False
