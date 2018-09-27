@@ -39,7 +39,7 @@ def topic():
 
 def exercise():
     """
-    Create a topic content kind.
+    Create a exercise content kind.
     """
     return mixer.blend(cc.ContentKind, kind='exercise')
 
@@ -71,31 +71,19 @@ def license_wtfpl():
     """
     return cc.License.objects.first() or mixer.blend(cc.License, license_name="WTF License")
 
-
 def fileobj_video(contents=None):
     """
-    Create an "mp4" video file on storage, and then create a File model pointing to it.
+    Create an "mp4" video file on storage and return a File model pointing to it.
 
-    if contents is given and is a string, then write said contents to the file. If not given,
-    a random string is generated and set as the contents of the file.
+    if contents is given and is a string, then write said contents to the file.
+    If no contents is given, a random string is generated and set as the contents of the file.
     """
     if contents:
         filecontents = contents
     else:
         filecontents = "".join(random.sample(string.printable, 20))
-
-    fileobj = StringIO(filecontents)
-    digest = md5.new(filecontents).hexdigest()
-    filename = "{}.mp4".format(digest)
-    storage_file_path = cc.generate_object_storage_name(digest, filename)
-
-    # Write out the file bytes on to object storage, with a filename specified with randomfilename
-    default_storage.save(storage_file_path, fileobj)
-
-    # then create a File object with that
-    db_file_obj = mixer.blend(cc.File, file_format=fileformat_mp4(), preset=preset_video(), file_on_disk=storage_file_path)
-
-    yield db_file_obj
+    temp_file_dict = create_temp_file(filecontents, preset=format_presets.VIDEO_HIGH_RES, ext='mp4')
+    return temp_file_dict['db_file']
 
 
 def node_json(data):
@@ -129,7 +117,7 @@ def node(data, parent=None):
     elif data['kind_id'] == "video":
         new_node = cc.ContentNode(kind=video(), parent=parent, title=data['title'], node_id=data['node_id'], license=license_wtfpl())
         new_node.save()
-        video_file = fileobj_video(contents="Video File").next()
+        video_file = fileobj_video(contents="Video File")
         video_file.contentnode = new_node
         video_file.preset_id = format_presets.VIDEO_HIGH_RES
         video_file.save()
@@ -177,32 +165,39 @@ def user():
     return user
 
 
-def create_temp_file(filebytes, kind='text', ext='txt', mimetype='text/plain'):
+def create_temp_file(filebytes, preset='document', ext='pdf', original_filename=None):
     """
     Create a file and store it in Django's object db temporarily for tests.
 
-    :param filebytes: The data to be stored in the file, as a series of bytes
-    :param kind: String identifying the kind of file
+    :param filebytes: The data to be stored in the file (as bytes)
+    :param preset: String identifying the format preset (defaults to ``document``)
     :param ext: File extension, omitting the initial period
-    :param mimetype: Mimetype of the file
+    :param original_filename: Original filename (needed for exercise_images)
     :return: A dict containing the keys name (filename), data (actual bytes), file (StringIO obj) and db_file (File object in db) of the temp file.
     """
     fileobj = StringIO(filebytes)
-    checksum = hashlib.md5(filebytes)
-    digest = checksum.hexdigest()
-    filename = "{}.{}".format(digest, ext)
-    storage_file_path = cc.generate_object_storage_name(digest, filename)
+    hash = hashlib.md5(filebytes)
+    checksum = hash.hexdigest()
+    filename = "{}.{}".format(checksum, ext)
+    storage_file_path = cc.generate_object_storage_name(checksum, filename)
 
-    # Write out the file bytes on to object storage, with a filename specified with randomfilename
+    # 1. Write out the file bytes on to object storage
     default_storage.save(storage_file_path, fileobj)
-
     assert default_storage.exists(storage_file_path)
 
-    file_kind = mixer.blend(cc.ContentKind, kind=kind)
-    file_format = mixer.blend(cc.FileFormat, extension=ext, mimetype=mimetype)
-    preset = mixer.blend(cc.FormatPreset, id=ext, kind=file_kind)
-    # then create a File object with that
-    db_file_obj = mixer.blend(cc.File, file_format=file_format, preset=preset, file_on_disk=storage_file_path)
+    # 2. Get the minimum required Studio meta fields for a File object
+    preset = cc.FormatPreset.objects.get(id=preset)
+    file_format = cc.FileFormat.objects.get(extension=ext)
+    if original_filename is None:
+        original_filename = 'somefile.' + ext
+
+    # 3. Create a File object
+    db_file_obj = mixer.blend(cc.File,
+                              checksum=checksum,
+                              file_format=file_format,
+                              preset=preset,
+                              original_filename=original_filename,
+                              file_on_disk=storage_file_path)
 
     return {'name': os.path.basename(storage_file_path), 'data': filebytes, 'file': fileobj, 'db_file': db_file_obj}
 
@@ -250,3 +245,21 @@ invalid_file_json = [
 
     }
 ]
+
+
+
+def fileobj_exercise_image():
+    """
+    Create a generic exercise image file in storage and return a File model pointing to it.
+    """
+    filecontents = "".join(random.sample(string.printable, 20))
+    temp_file_dict = create_temp_file(filecontents, preset=format_presets.EXERCISE_IMAGE, ext='jpg')
+    return temp_file_dict['db_file']
+
+def fileobj_exercise_graphie():
+    """
+    Create an graphi exercise image file in storage and return a File model pointing to it.
+    """
+    filecontents = "".join(random.sample(string.printable, 20))
+    temp_file_dict = create_temp_file(filecontents, preset=format_presets.EXERCISE_GRAPHIE, ext='graphie', original_filename='theoriginalfilename')
+    return temp_file_dict['db_file']
