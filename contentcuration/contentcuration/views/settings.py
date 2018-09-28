@@ -25,6 +25,7 @@ from contentcuration.tasks import generateusercsv_task
 from contentcuration.utils.csv_writer import generate_user_csv_filename
 from contentcuration.utils.google_drive import add_row_to_sheet
 from contentcuration.utils.policies import get_latest_policies
+from le_utils.constants import content_kinds
 
 
 @login_required
@@ -213,8 +214,14 @@ def policies_settings(request):
                                                     "page": "policies",
                                                     "policies": get_latest_policies()})
 
-
-
+KIND_TRANSLATIONS = {
+    content_kinds.TOPIC: _("Topics"),
+    content_kinds.VIDEO: _("Videos"),
+    content_kinds.AUDIO: _("Audio"),
+    content_kinds.EXERCISE: _("Exercises"),
+    content_kinds.DOCUMENT: _("Documents"),
+    content_kinds.HTML5: _("HTML Apps"),
+}
 class StorageSettingsView(LoginRequiredMixin, FormView):
     success_url = reverse_lazy('storage_settings')
     template_name = 'settings/storage.html'
@@ -232,7 +239,7 @@ class StorageSettingsView(LoginRequiredMixin, FormView):
             # Send email with storage request
             channel_ids = form.cleaned_data.get("public") or ""
             channels = Channel.objects.filter(pk__in=channel_ids.split(',')).values('id', 'name')
-            #  name, email, storage requested, date of request, number of resources, average resource size, kind of content, licenses, potential public channels, audience, uploading for, message
+            #  name, email, storage requested, date of request, number of resources, average resource size, kind of content, licenses, potential public channels, audience, uploading for, message, time constraint
             uploading_for = "{} (organization)".format(form.cleaned_data.get('organization')) if form.cleaned_data.get('org_or_personal') == "Organization" else form.cleaned_data.get('org_or_personal')
             values = [
                 "{} {}".format(request.user.first_name, request.user.last_name),
@@ -252,6 +259,7 @@ class StorageSettingsView(LoginRequiredMixin, FormView):
                 uploading_for,
                 form.cleaned_data.get('organization_type'),
                 form.cleaned_data.get('message'),
+                form.cleaned_data.get('time_constraint'),
             ]
 
             # Write to storage request sheet
@@ -272,7 +280,7 @@ class StorageSettingsView(LoginRequiredMixin, FormView):
         storage_used = self.request.user.get_space_used()
         storage_percent = (min(storage_used / float(self.request.user.disk_space), 1) * 100)
         breakdown = [{
-                        "name": k.capitalize(),
+                        "name": KIND_TRANSLATIONS.get(k),
                         "size": v,
                         "percent": "%.2f" % (min(float(v) / float(self.request.user.disk_space), 1) * 100)
                     } for k,v in self.request.user.get_space_used_by_kind().items()]
