@@ -51,7 +51,7 @@ class AuthenticationTestCase(BaseTestCase):
         assert response.status_code == 200
 
     def test_channel_admin_access(self):
-        admin_url = '/channels/administration/'
+        admin_url = '/administration/'
 
         response = self.get(admin_url, follow=True)
         assert "/accounts/login/?next={}".format(admin_url) == response.redirect_chain[-1][0]
