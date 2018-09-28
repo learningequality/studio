@@ -324,8 +324,15 @@ class StorageRequestForm(forms.Form, ExtraFormMixin):
     organization_other = forms.CharField(required=False, widget=forms.TextInput(attrs={"dir": "auto"}))
 
     # Use case
+    time_constraint = forms.ChoiceField(required=False, widget=forms.RadioSelect, choices=(
+        ("1 week", _("1 week")),
+        ("2-4 weeks", _("2-4 weeks")),
+        ("1-2 months", _("1-2 months")),
+        ("3-6 months", _("3-6 months")),
+        ("6+ months", _("6+ months")),
+        ("Unknown", _("Unknown")),
+    ))
     message = forms.CharField(required=True, widget=forms.Textarea(attrs={"rows": 4, "dir": "auto"}))
-
 
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop('request', None)
