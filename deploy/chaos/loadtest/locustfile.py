@@ -15,7 +15,7 @@ class BaseTaskSet(TaskSet):
 
     def _login(self):
         """
-        Helper functoin to log in the user to the current session.
+        Helper function to log in the user to the current session.
         """
         resp = self.client.get("/accounts/login/")
         csrf = resp.cookies["csrftoken"]
@@ -40,7 +40,9 @@ class BaseTaskSet(TaskSet):
 
 
 class ChannelListPage(BaseTaskSet):
-
+    """
+    Task to explore different channels lists
+    """
     def on_start(self):
         self._login()
 
@@ -61,10 +63,17 @@ class ChannelListPage(BaseTaskSet):
 
 
 class ChannelPage(BaseTaskSet):
+    """
+    Task to open and view a channel, including its topics and nodes
+    """
     def on_start(self):
         self._login()
 
     def get_first_public_channel_id(self):
+        """
+        Returns the id of the first available public channel
+        :returns: id of the first available public channel or None if there are not public channels
+        """
         resp = self.client.get("/get_user_public_channels/").json()
         try:
             channel_id = resp[0]['id']
@@ -73,6 +82,11 @@ class ChannelPage(BaseTaskSet):
         return channel_id
 
     def get_random_topic_id(self, channel_id):
+        """
+        Returns the id of a randomly selected topic for the provided channel_id
+        :param: channel_id: id of the channel where the topic must be found
+        :returns: id of the selected topic
+        """
         topic_id = None
         channel_resp = self.client.get('/api/channel/{}'.format(channel_id)).json()
         children = channel_resp['main_tree']['children']
@@ -80,6 +94,11 @@ class ChannelPage(BaseTaskSet):
         return topic_id
 
     def get_random_resource_id(self, topic_id):
+        """
+        Returns the id of a randoly selected resource for the provided topic_id
+        :param: topic_id: id of the topic where the resource must be found
+        :returns: id of the selected resource
+        """
         nodes_resp = self.client.get('/api/get_nodes_by_ids/{}'.format(topic_id)).json()
         try:
             while nodes_resp[0]['kind'] == 'topic':
@@ -114,8 +133,8 @@ class ChannelPage(BaseTaskSet):
     @task
     def preview_random_content_item(self, content_id=None):
         """
-            Do request on all the files for a content item.
-            If content_id is not provided it will fetch a random content
+        Do request on all the files for a content item.
+        If content_id is not provided it will fetch a random content
         """
         if not content_id:
             channel_id = self.get_first_public_channel_id()
