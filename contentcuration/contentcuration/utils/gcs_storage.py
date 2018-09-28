@@ -58,8 +58,6 @@ class GoogleCloudStorage(Storage):
         else:
             blob = blob_object
 
-        # create a spooled tempfile, where small amounts of data
-        # are stored in memory, but written to disk if it gets large.
         fobj = tempfile.NamedTemporaryFile()
         blob.download_to_file(fobj)
         # flush it to disk
