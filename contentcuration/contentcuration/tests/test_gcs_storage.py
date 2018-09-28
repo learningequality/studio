@@ -118,3 +118,4 @@ class GoogleCloudStorageOpenTestCase(TestCase):
         f = self.storage.open(self.local_file.filename, blob_object=self.blob_obj)
 
         assert isinstance(f, File)
+        assert f.name
