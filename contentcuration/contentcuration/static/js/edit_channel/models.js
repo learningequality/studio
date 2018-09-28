@@ -148,7 +148,7 @@ var BasePageableCollection = PageableCollection.extend({
             });
         });
     },
-    getName:function(){
+    getName: function(){
         return this.model_name;
     },
     parseRecords: function (resp) {
@@ -162,19 +162,18 @@ var BasePageableCollection = PageableCollection.extend({
         return state;
     },
     state: {
-        pageSize: 20,
+        pageSize: 3,
         firstPage: 1,
         currentPage: 1,
+        filterQuery: {},
         sortKey: "created_at",
-        order: -1
+        order: -1,
     },
-
-    queryParams: {
+    baseQueryParams: {
         currentPage: "page",
         pageSize: "page_size",
         totalRecords: "count",
         order: null,
-        sortKey: "ordering",
         ordering: function () {
             var sortKey = this.state.sortKey, order = this.state.order;
             if (sortKey && order !== 0) {
@@ -182,8 +181,17 @@ var BasePageableCollection = PageableCollection.extend({
             }
             return null;
         }
-    }
+    },
+    fetch: function(options) {
+        // Construct the queryParams
+        this.queryParams = Object.assign({}, this.baseQueryParams)
+        this.queryParams = Object.assign(this.queryParams, this.state.filterQuery)
+
+        //Call PageableCollection's fetch
+        return PageableCollection.prototype.fetch.call(this, options);
+    },
 });
+
 Object.assign(PageableCollection.prototype, BaseCollection)
 /**** USER-CENTERED MODELS ****/
 var UserModel = BaseModel.extend({
@@ -285,6 +293,10 @@ var UserCollection = BasePageableCollection.extend({
     },
     url: window.Urls.get_users(),
 });
+
+var FilteredUserCollection = UserCollection.extend({
+
+})
 
 
 var InvitationModel = BaseModel.extend({
@@ -975,6 +987,12 @@ var ChannelCollection = BasePageableCollection.extend({
     comparator:function(channel){
         return (channel.get("public"))? -channel.get('priority') : -new Date(channel.get('created'));
     },
+});
+
+var FilteredChannelCollection = ChannelCollection.extend({
+    get_filter_state: function(){
+
+    }
 });
 
 var TagModel = BaseModel.extend({

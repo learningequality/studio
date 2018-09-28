@@ -321,7 +321,7 @@ urlpatterns += [
 
 # Add admin endpoints
 urlpatterns += [
-    url(r'^channels/administration/', admin_views.administration, name='administration'),
+    url(r'^administration/', admin_views.administration, name='administration'),
     url(r'^api/make_editor/$', admin_views.make_editor, name='make_editor'),
     url(r'^api/remove_editor/$', admin_views.remove_editor, name='remove_editor'),
     url(r'^api/get_editors/(?P<channel_id>[^/]+)$', admin_views.get_editors, name='get_editors'),

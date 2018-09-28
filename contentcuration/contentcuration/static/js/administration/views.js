@@ -1,25 +1,38 @@
 var Backbone = require("backbone");
-var Models = require("edit_channel/models");
+var Models = require("../edit_channel/models");
 var _ = require("underscore");
 require("admin.less");
-var BaseViews = require("edit_channel/views");
-var dialog = require("edit_channel/utils/dialog");
-var stringHelper = require("edit_channel/utils/string_helper");
+var BaseViews = require("../edit_channel/views");
+var dialog = require("../edit_channel/utils/dialog");
+var stringHelper = require("../edit_channel/utils/string_helper");
 var fileDownload = require("jquery-file-download");
+var AdminRouter = require("./router")
+
+function scopeEvents(events, scopeSuffix){
+    // adds a suffix to backbone event selectors (i.e. a class)
+    events = JSON.parse(JSON.stringify(events))
+    let scopeEvents = {}
+    for (let k in events){
+        scopeEvents[k+scopeSuffix] = events[k]
+    }
+    return events
+}
 
 var AdminView = BaseViews.BaseView.extend({
     lists: [],
     template: require("./hbtemplates/admin_area.handlebars"),
     initialize: function(options) {
+        this.router = options.router;
         this.render();
     },
     get_users: function(){
         let self = this;
-        this.users_collection.fetch().then(function(){
-            self.$("#user_count").text(self.users_collection.state.totalRecords);
-            self.user_list = new UserTab({
-                collection: self.users_collection,
-                el: self.$("#admin_users")
+        this.user_collection.fetch().then(function(){
+            self.$("#user_count").text(self.user_collection.state.totalRecords);
+            self.user_tab = new UserTab({
+                router: self.router,
+                collection: self.user_collection,
+                el: self.$("#users")
             });
         });
     },
@@ -27,16 +40,22 @@ var AdminView = BaseViews.BaseView.extend({
         let self = this;
         this.channel_collection.fetch().then(function(){
             self.$("#channel_count").text(self.channel_collection.state.totalRecords);
-            self.channel_list = new ChannelTab({
+            self.channel_tab = new ChannelTab({
+                router: self.router,
                 collection: self.channel_collection,
-                el: self.$("#admin_channels")
+                el: self.$("#channels")
             });
         });
     },
     render: function() {
         this.$el.html(this.template())
         this.channel_collection = new Models.ChannelCollection();
-        this.users_collection = new Models.UserCollection();
+        this.channel_collection.filterOptions = AdminRouter.CHANNEL_FILTERS,
+        this.channel_collection.sortFilterOptions = AdminRouter.CHANNEL_SORT_FILTERS,
+    
+        this.user_collection = new Models.UserCollection();
+        this.user_collection.filterOptions = AdminRouter.USER_FILTERS,
+        this.user_collection.sortFilterOptions = AdminRouter.USER_SORT_FILTERS,
 
         this.get_users();
         this.get_channels();
@@ -54,28 +73,24 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
     initialize: function(options) {
         _.bindAll(this, "handle_removed")
         this.collection = options.collection;
-        // this.extra_filters = this.get_dynamic_filters();
+        this.router = options.router;
         this.count = this.collection.length;
         this.total_count = this.collection.state.totalRecords;
         this.render();
-        this.collection.on('sync', (e) => this.render())
-    },
-    events: {
-        "change .filter_input" : "load_list",
-        "keyup .search_input" : "apply_search",
-        "paste .search_input" : "apply_search",
-        "change .select_all" : "check_all",
-        "click .download_pdf": "download_pdf",
+        this.collection.on('sync', (e) => {
+            this.render()
+        })
+        // this.on('click .download_pdf', console.log)
     },
     goto_page: function(e){
         let page = $(e.currentTarget).data('page')
-        this.collection.getPage(page);
+        this.router.gotoPage(page)
     },
     goto_previous: function(){
-        this.collection.getPreviousPage();
+        this.router.gotoPreviousPage()
     },
     goto_next: function(){
-        this.collection.getNextPage();
+        this.router.gotoNextPage();
     },
     handle_removed: function(){
         this.update_count(this.count - 1);
@@ -85,11 +100,10 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
         $(this.tab_count_selector).text(this.collection.state.totalRecords);
         this.$(".viewing_count").text("Displaying " + count + " of " + this.collection.state.totalRecords + " " + this.item_name + "(s)...");
     },
-    render: function() {
+    render: function(load_list=true) {
         this.$el.html(this.template({
-            filters: this.filters,
-            sort_filters: this.sort_filters,
-            extra_filters: this.extra_filters,
+            filters: this.collection.filterOptions,
+            sortFilters: this.collection.sortFilterOptions,
             total: this.collection.state.totalRecords,
             current_page: this.collection.state.currentPage,
             pages: Array(this.collection.state.totalPages).fill().map((_, i) => {
@@ -102,43 +116,29 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
             show_previous_page_button: this.collection.state.currentPage != 1,
             show_next_page_button: this.collection.state.currentPage != this.collection.state.totalPages,
         }));
-        this.load_list();
+        if(load_list) {
+            this.load_list();
+        }
     },
     check_all: function(event){ this.admin_list.check_all(event); },
-    get_filtered_result: function(){
-        var asc = this.$(".order_input").val() === "ascending";
-        var filter = _.findWhere(this.filters, {"key": this.$(".view_input").val()}).filter;
-        var sort = _.findWhere(this.sort_filters, {"key": this.$(".sort_input").val()}).filter;
 
-        var extra = this.$(".extra_input").val();
-        var extra_filter =_.findWhere(this.extra_filters, {"key": extra}).filter;
-
-        var filtered_list = this.collection.chain().filter(filter)
-                                .filter(function(item) { return extra_filter(item, extra); })
-                                .value();
-        var filtered_collection = new Models.ContentNodeCollection(filtered_list);
-        filtered_collection.set_comparator(function(item1, item2){return sort(item1, asc, item2);});
-        filtered_collection.sort();
-        this.update_count(filtered_collection.length);
-        return filtered_collection;
+    applyFilter: function(e) {
+        console.log("APPLY FILTER", e);
+        this.router.gotoRouteForParams({filter: e.target.selectedOptions[0].value, page: 1})
     },
-    get_search_result: function(text){
-        var q = this.check_search;
-        var text = this.$(this.search_selector).val().trim().toLowerCase();
-        var re = new RegExp(text, "i");
-        return this.collection.chain()
-            .filter(function(item) {return q(item, text, re);})
-            .pluck("id").value();
+    applySortOrder(e){
+        console.log("APPLY SORT ORDER", e);
+        this.router.gotoRouteForParams({order: e.target.selectedOptions[0].value})
     },
-    apply_search: function() {
-        var self = this;
-        _.defer(function(){
-            var matches = self.get_search_result();
-            var count = self.admin_list.apply_search(matches);
-            self.update_count(count);
-        }, 500);
+    applySortKey(e){
+        console.log("APPLY FILTER ORDER", e);
+        this.router.gotoRouteForParams({sortKey: e.target.selectedOptions[0].value})
     },
-
+    applySearch: function(e){
+        this.router.gotoRouteForParams({search: e.target.value, page: 1})
+        console.log("APPLY SEARCH", e);
+    },
+    
     /* Implement in subclasses */
     load_list: function() { },
     check_search: function(item) { return false; },
@@ -146,6 +146,20 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
     get_dynamic_filters: function() { return []; },
     download_pdf: function() {},
 });
+
+const BASE_TAB_EVENTS = {
+    // "click": "apply_filter",
+    "change .filter_input.view_input" : "applyFilter",
+    "change .filter_input.sort_input" : "applySortKey",
+    "change .filter_input.order_input" : "applySortOrder",
+    "keyup .search_input" : "applySearch",
+    "paste .search_input" : "applySearch",
+    "change .select_all" : "check_all",
+    "click .download_pdf": "download_pdf",
+    "click .page-link.page": "goto_page",
+    "click .page-link.previous": "goto_previous",
+    "click .page-link.next": "goto_next",
+}
 
 var BaseAdminList = BaseViews.BaseListView.extend({
     list_selector: ".admin_table",
@@ -204,136 +218,12 @@ var BaseAdminItem = BaseViews.BaseListNodeItemView.extend({
     },
 });
 
-
 var ChannelTab = BaseAdminTab.extend({
     template: require("./hbtemplates/channel_tab.handlebars"),
+    events: scopeEvents(BASE_TAB_EVENTS, ".channels"),
     search_selector: "#admin_channel_search",
     tab_count_selector: "#channel_count",
     item_name: "channel",
-    events: {
-        "click .page-link.channels.page": "goto_page",
-        "click .page-link.channels.previous": "goto_previous",
-        "click .page-link.channels.next": "goto_next",
-    },
-    filters: [
-        {
-            key: "all",
-            label: "All",
-            filter: function(item){ return true; }
-        }, {
-            key: "live",
-            label: "Live",
-            selected: true,
-            filter: function(item){ return !item.get("deleted"); }
-        }, {
-            key: "published",
-            label: "Published",
-            filter: function(item){ return item.get("published") && !item.get("deleted"); }
-        }, {
-            key: "public",
-            label: "Public",
-            filter: function(item){ return item.get("public") && !item.get("deleted"); }
-        }, {
-            key: "private",
-            label: "Private",
-            filter: function(item){ return !item.get("public") && !item.get("deleted"); }
-        }, {
-            key: "can_edit",
-            label: "My Channels",
-            filter: function(item){ return item.get("can_edit"); }
-        }, {
-            key: "staged",
-            label: "Needs Review",
-            filter: function(item){ return item.get("staging_tree") && !item.get("deleted"); }
-        }, {
-            key: "ricecooker",
-            label: "Sushi Chef",
-            filter: function(item){ return item.get("ricecooker_version") && !item.get("deleted"); }
-        }, {
-            key: "deleted",
-            label: "Deleted",
-            filter: function(item){ return item.get("deleted"); }
-        }
-    ],
-    sort_filters: [
-        {
-            key: "name",
-            label: "Name",
-            selected: true,
-            filter: function(item1, asc, item2){
-                return (asc) ?
-                    item1.get("name").localeCompare(item2.get("name")) :
-                    -item1.get("name").localeCompare(item2.get("name"));
-            }
-        }, {
-            key: "id",
-            label: "Channel ID",
-            filter: function(item1, asc, item2){
-                return (asc) ? item1.id.localeCompare(item2.id) : -item1.id.localeCompare(item2.id);
-            }
-        }, {
-            key: "priority",
-            label: "Priority",
-            filter: function(item1, asc, item2){
-                return (asc) ? -item2.get("priority") : item1.get("priority");
-            }
-        }, {
-            key: "users",
-            label: "# of Users",
-            filter: function(item1, asc, item2){
-                var total1 = item1.get("editors").length + item1.get("viewers").length;
-                var total2 = item2.get("editors").length + item2.get("viewers").length;
-                return (asc)? total1 - total2 : total2 - total1 ;
-            }
-        }, {
-            key: "items",
-            label: "# of Items",
-            filter: function(item1, asc, item2){
-                var count1 = item1.get("count");
-                var count2 = item2.get("count");
-                return (asc)? count1 - count2 : count2 - count1;
-            }
-        }, {
-            key: "modified",
-            label: "Last Updated",
-            filter: function(item1, asc, item2){
-                var date1 = new Date(item1.get("modified"));
-                var date2 = new Date(item2.get("modified"));
-                return (asc)? date1 - date2 : date2 - date1;
-            }
-        }, {
-            key: "created",
-            label: "Date Created",
-            filter: function(item1, asc, item2){
-                var date1 = new Date(item1.get("created"));
-                var date2 = new Date(item2.get("created"));
-                return (asc)? date1 - date2 : date2 - date1;
-            }
-        }
-    ],
-    get_dynamic_filters: function() {
-        var filter = [{
-            key: "all",
-            label: "All Users",
-            selected: true,
-            filter: function(channel, id) { return true; }
-        }];
-
-        return filter.concat(_.chain(this.collection.pluck("editors"))
-            .flatten()
-            .where({is_active : true})
-            .uniq(function(item){ return item.id; })
-            .sortBy("first_name")
-            .map(function(item){
-                return {
-                    key: item.id.toString(),
-                    label: item.first_name + " " + item.last_name,
-                    filter: function(channel, id) {
-                        return _.findWhere(channel.get("editors"), {id: Number(id)});
-                    }
-                }
-            }).value());
-    },
     load_list: function(){
         this.$("#admin_channel_search").val("");
         if(this.admin_list) {
@@ -524,100 +414,7 @@ var UserTab = BaseAdminTab.extend({
     search_selector: "#admin_user_search",
     tab_count_selector: "#user_count",
     item_name: "user",
-    events: {
-        "click .page-link.users.page": "goto_page",
-        "click .page-link.users.previous": "goto_previous",
-        "click .page-link.users.next": "goto_next",
-    },
-    filters: [
-        {
-            key: "all",
-            label: "All",
-            selected: true,
-            filter: function(item){ return true; }
-        }, {
-            key: "activated",
-            label: "Active",
-            filter: function(item){ return item.get("is_active"); }
-        }, {
-            key: "not_activated",
-            label: "Inactive",
-            filter: function(item){ return !item.get("is_active"); }
-        }, {
-            key: "admins",
-            label: "Admins",
-            filter: function(item){ return item.get("is_admin"); }
-        }, {
-            key: "is_chef",
-            label: "Sushi Chefs",
-            filter: function(item){ return item.get("is_chef"); }
-        }
-    ],
-    sort_filters: [
-        {
-            key: "email",
-            label: "Email",
-            selected: true,
-            filter: function(item1, asc, item2){
-                return (asc) ?
-                    item1.get("email").localeCompare(item2.get("email")) :
-                    -item1.get("email").localeCompare(item2.get("email"));
-            }
-        }, {
-            key: "first_name",
-            label: "First Name",
-            filter: function(item1, asc, item2){
-                return (asc) ?
-                    item1.get("first_name").localeCompare(item2.get("first_name")) :
-                    -item1.get("first_name").localeCompare(item2.get("first_name"));
-            }
-        }, {
-            key: "last_name",
-            label: "Last Name",
-            filter: function(item1, asc, item2){
-                return (asc) ?
-                    item1.get("last_name").localeCompare(item2.get("last_name")) :
-                    -item1.get("last_name").localeCompare(item2.get("last_name"));
-            }
-        }, {
-            key: "date_joined",
-            label: "Date Joined",
-            filter: function(item1, asc, item2){
-                var date1 = new Date(item1.get("date_joined"));
-                var date2 = new Date(item2.get("date_joined"));
-                return (asc)? date1 - date2 : date2 - date1;
-            }
-        }, {
-            key: "channels",
-            label: "# of Channels",
-            filter: function(item1, asc, item2){
-                var total1 = item1.get("editable_channels").length;
-                var total2 = item2.get("editable_channels").length;
-                return (asc)? total1 - total2 : total2 - total1 ;
-            }
-        },
-    ],
-    get_dynamic_filters: function() {
-        var filter = [{
-            key: "all",
-            label: "All Channels",
-            selected: true,
-            filter: function(user, id) { return true; }
-        }];
-        return filter.concat(_.chain(this.collection.pluck("editable_channels"))
-            .flatten()
-            .uniq(function(item){ return item.id; })
-            .sortBy("name")
-            .map(function(item){
-                return {
-                    key: item.id,
-                    label: item.name || "Untitled Channel " + item.id,
-                    filter: function(user, id) {
-                        return _.findWhere(user.get("editable_channels"), {id: id});
-                    }
-                }
-            }).value());
-    },
+    events: scopeEvents(BASE_TAB_EVENTS, ".users"),
     load_list: function(){
         this.$("#admin_user_search").val("");
         this.selected_users = [];
