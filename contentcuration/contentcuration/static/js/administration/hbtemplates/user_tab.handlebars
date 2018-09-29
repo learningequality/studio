@@ -12,20 +12,19 @@
 		<li>
 			<label>View</label>
 			<select id="admin_user_view" class="filter_input view_input users">
-				{{#each filters}}<option {{#if selected}}selected{{/if}} value="{{@key}}">{{label}}</option>{{/each}}
+				{{#each filterOptions}}<option {{#if selected}}selected{{/if}} value="{{@key}}">{{label}}</option>{{/each}}
 			</select>
 		</li>
 		<li class="filter_input">
 			<label>Sort By</label>
 			<select id="admin_user_sort" class="filter_input sort_input users">
-				{{#each sortFilters}}<option {{#if selected}}selected{{/if}} value="{{@key}}">{{label}}</option>{{/each}}
+				{{#each sortFilterOptions}}<option {{#if selected}}selected{{/if}} value="{{@key}}">{{label}}</option>{{/each}}
 			</select>
 		</li>
 		<li class="filter_input">
 			<label>Order</label>
 			<select id="admin_user_order" class="filter_input order_input users">
-				<option selected value="ascending">Ascending</option>
-				<option value="descending">Descending</option>
+				{{#each sortOrderOptions}}<option {{#if selected}}selected{{/if}} value="{{@key}}">{{label}}</option>{{/each}}
 			</select>
 		</li>
 		<li><input type="text" id="admin_user_search" placeholder="Search..." class="search_input users"/></li>

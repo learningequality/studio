@@ -108,6 +108,16 @@ const USER_SORT_FILTERS = {
 	},
 }
 
+const SORT_ORDER_OPTIONS = {
+	ascending: {
+		label: "Ascending",
+		selected: true,
+	},
+	descending: {
+		label: "Descending",
+	},
+}
+
 var AdministrationRouter = Backbone.Router.extend({
 
     routes: {
@@ -150,7 +160,7 @@ var AdministrationRouter = Backbone.Router.extend({
 				(filter ? "/filter/" + filter : "") +
 				(	
 					(sortKey || sortOrder) ? 
-					"/sort/" + (sortKey ? sortKey : "name") + "-" +
+					"/sort/" + (sortKey ? sortKey : this.collection.state.sortKey) + "-" +
 					(sortOrder ? sortOrder : "descending")
 					: ""
 				) +
@@ -190,28 +200,50 @@ var AdministrationRouter = Backbone.Router.extend({
 		let router = this;
 		$('.nav-tabs a').click(function(e){
 			e.stopImmediatePropagation()
-			// console.log(router, e.target.attributes)
-			let routeParams = router.routeParamsCache[e.target.attributes['data-href'].value]
+			let routeParams = router.routeParamsCache[e.currentTarget.attributes['data-href'].value]
 			router.gotoRouteForParams(routeParams)
-			// console.log("ROUTING TO",  route)
 		})
 		window.current_user = new Models.UserModel(window.user);
+	},
+	getSelected(opts) {
+		for (let k in opts){
+			if (opts[k].selected === true) {
+				return k
+			}
+		}
 	},
 	updateCollectionStateFromParams(collection, filter, sortKey, order, search, page = 1, pageSize){
 		collection.state.currentPage = page ? Number(page) : collection.state.currentPage
 		collection.state.pageSize = pageSize ? Number(pageSize) : collection.state.pageSize
 		collection.state.search = search
 
-		if (sortKey || order) {
-			collection.state.order = order ? (order === "ascending" ? 1 : -1) : collection.state.order
-			collection.state.sortKey = sortKey ? sortKey : collection.state.sortKey
-		}
-		
 		if (filter) {
 			for (let k in collection.filterOptions){
 				collection.filterOptions[k].selected = k === filter
 			}
 			collection.state.filterQuery = collection.filterOptions[filter].queryParams
+		}
+
+		if (order) {
+			for (let k in collection.sortOrderOptions){
+				collection.sortOrderOptions[k].selected = k === order
+			}
+		}
+		
+
+		if (sortKey) {
+			for (let k in collection.sortFilterOptions){
+				collection.sortFilterOptions[k].selected = k === sortKey
+			}
+		}
+
+		if (sortKey || order) {
+			let currentSortKey = 	collection.state.sortKey ?
+									collection.state.sortKey :
+									this.getSelected(collection.sortFilterOptions)
+									
+			collection.state.order = order ? (order === "ascending" ? 1 : -1) : collection.state.order
+			collection.state.sortKey = sortKey ? sortKey : currentSortKey
 		}
 	},
     users: function(filter, sortKey, order, search, page = 1, pageSize) {
@@ -237,5 +269,6 @@ module.exports = {
 	CHANNEL_SORT_FILTERS: CHANNEL_SORT_FILTERS,
 	USER_FILTERS: USER_FILTERS,
 	USER_SORT_FILTERS: USER_SORT_FILTERS,
+	SORT_ORDER_OPTIONS: SORT_ORDER_OPTIONS,
 }
 

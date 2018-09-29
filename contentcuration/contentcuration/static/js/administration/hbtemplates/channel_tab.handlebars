@@ -13,20 +13,19 @@
 		<li>
 			<label>View</label>
 			<select id="admin_channel_view" class="filter_input view_input channels">
-				{{#each filters}}<option {{#if selected}}selected{{/if}} value="{{@key}}">{{label}}</option>{{/each}}
+				{{#each filterOptions}}<option {{#if selected}}selected{{/if}} value="{{@key}}">{{label}}</option>{{/each}}
 			</select>
 		</li>
 		<li class="filter_input">
 			<label>Sort By</label>
 			<select id="admin_channel_sort" class="filter_input sort_input channels">
-				{{#each sortFilters}}<option {{#if selected}}selected{{/if}} value="{{@key}}">{{label}}</option>{{/each}}
+				{{#each sortFilterOptions}}<option {{#if selected}}selected{{/if}} value="{{@key}}">{{label}}</option>{{/each}}
 			</select>
 		</li>
 		<li class="filter_input">
 			<label>Order</label>
 			<select id="admin_channel_order" class="filter_input order_input channels">
-				<option selected value="ascending">Ascending</option>
-				<option value="descending">Descending</option>
+				{{#each sortOrderOptions}}<option {{#if selected}}selected{{/if}} value="{{@key}}">{{label}}</option>{{/each}}
 			</select>
 		</li>
 		<li><input type="text" id="admin_channel_search" placeholder="Search..." class="search_input"/></li>

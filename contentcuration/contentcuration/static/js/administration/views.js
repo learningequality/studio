@@ -49,14 +49,17 @@ var AdminView = BaseViews.BaseView.extend({
     },
     render: function() {
         this.$el.html(this.template())
-        this.channel_collection = new Models.ChannelCollection();
-        this.channel_collection.filterOptions = AdminRouter.CHANNEL_FILTERS,
-        this.channel_collection.sortFilterOptions = AdminRouter.CHANNEL_SORT_FILTERS,
-    
-        this.user_collection = new Models.UserCollection();
-        this.user_collection.filterOptions = AdminRouter.USER_FILTERS,
-        this.user_collection.sortFilterOptions = AdminRouter.USER_SORT_FILTERS,
 
+        this.user_collection = new Models.UserCollection();
+        this.user_collection.filterOptions = AdminRouter.USER_FILTERS;
+        this.user_collection.sortFilterOptions = AdminRouter.USER_SORT_FILTERS;
+        this.user_collection.sortOrderOptions = AdminRouter.SORT_ORDER_OPTIONS;
+
+        this.channel_collection = new Models.ChannelCollection();
+        this.channel_collection.filterOptions = AdminRouter.CHANNEL_FILTERS;
+        this.channel_collection.sortFilterOptions = AdminRouter.CHANNEL_SORT_FILTERS;
+        this.channel_collection.sortOrderOptions = AdminRouter.SORT_ORDER_OPTIONS;
+    
         this.get_users();
         this.get_channels();
     }
@@ -102,8 +105,9 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
     },
     render: function(load_list=true) {
         this.$el.html(this.template({
-            filters: this.collection.filterOptions,
-            sortFilters: this.collection.sortFilterOptions,
+            filterOptions: this.collection.filterOptions,
+            sortFilterOptions: this.collection.sortFilterOptions,
+            sortOrderOptions: this.collection.sortOrderOptions,
             total: this.collection.state.totalRecords,
             current_page: this.collection.state.currentPage,
             pages: Array(this.collection.state.totalPages).fill().map((_, i) => {
@@ -128,7 +132,7 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
     },
     applySortOrder(e){
         console.log("APPLY SORT ORDER", e);
-        this.router.gotoRouteForParams({order: e.target.selectedOptions[0].value})
+        this.router.gotoRouteForParams({sortOrder: e.target.selectedOptions[0].value})
     },
     applySortKey(e){
         console.log("APPLY FILTER ORDER", e);
