@@ -2,8 +2,7 @@
 	<a class="action-text download_pdf" title="Download PDF of public channels" download>Download PDF</a>
 	<a class="action-text" href="/api/download_channel_csv/" download>Download CSV</a>
 </div>
-<p class="viewing_count"></p>
-<div class="table_actions container-fluid">
+<div class="table_actions">
 	<ul class="list-inline action_list">
 		{{!-- <li class="filter_input">
 			<label>Channels For</label>
@@ -33,7 +32,7 @@
 		<li><input type="text" id="admin_channel_search" placeholder="Search..." class="search_input"/></li>
 	</ul>
 </div>
-<div id="admin_channel_table_wrapper"></div>
+<div id="admin_channel_table_wrapper" class="admin_table_wrapper"></div>
 <nav aria-label="Channel list page navigation">
   <ul class="pagination">
 	{{#if show_previous_page_button}}

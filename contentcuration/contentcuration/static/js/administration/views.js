@@ -143,7 +143,6 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
     load_list: function() { },
     check_search: function(item) { return false; },
     handle_checked: function() { },
-    get_dynamic_filters: function() { return []; },
     download_pdf: function() {},
 });
 
@@ -173,20 +172,12 @@ var BaseAdminList = BaseViews.BaseListView.extend({
     render: function() {
         this.$el.html(this.template());
         this.load_content();
+        // this.$el.find(this.list_selector).prepend(this.headerTemplate());
     },
-    apply_search: function(matches){
-        var total = 0;
-        _.each(this.views, function(view){
-            var is_match = _.contains(matches, view.model.id);
-            view.$el.css("display", (is_match) ? "block" : "none");
-            total += (is_match) ? 1 : 0;
-        });
-        return total;
-    }
 });
 
 var BaseAdminItem = BaseViews.BaseListNodeItemView.extend({
-    className: "data_row row",
+    className: "data_row grid_row",
     tagName:"div",
 
     initialize: function(options) {
@@ -231,10 +222,10 @@ var ChannelTab = BaseAdminTab.extend({
             delete this.admin_list;
         }
         this.admin_list = window.channel_list = new ChannelList({
+            el: this.$("#admin_channel_table_wrapper"),
             collection: this.collection,
             container: this
         });
-        this.$("#admin_channel_table_wrapper").html(this.admin_list.el);
     },
     check_search: function(item, text, re) {
         return item.get("name").match(re) || item.id.startsWith(text);
@@ -261,7 +252,7 @@ var ChannelTab = BaseAdminTab.extend({
 
 var ChannelList = BaseAdminList.extend({
     template: require("./hbtemplates/channel_list.handlebars"),
-    list_selector:".channel_list",
+    list_selector:".admin_table.channel_list",
     default_item:".channel_list .default-item",
     create_new_view:function(model){
         var newView = new ChannelItem({
@@ -277,7 +268,7 @@ var ChannelList = BaseAdminList.extend({
 var ChannelItem = BaseAdminItem.extend({
     template: require("./hbtemplates/channel_item.handlebars"),
     count_template: require("./hbtemplates/channel_counts.handlebars"),
-    className: "data_row row",
+    className: "data_row grid_row",
     tagName:"div",
     set_attributes: function() {
         _.bindAll(this, 'fetch_editors');
@@ -423,10 +414,10 @@ var UserTab = BaseAdminTab.extend({
             delete this.admin_list;
         }
         this.admin_list = window.user_list = new UserList({
+            el: $("#admin_user_table_wrapper"),
             collection: this.collection,
             container: this
         });
-        this.$("#admin_user_table_wrapper").html(this.admin_list.el);
         this.handle_checked();
         this.$(".select_all").attr("checked", false);
     },
@@ -457,7 +448,7 @@ var UserTab = BaseAdminTab.extend({
 
 var UserList = BaseAdminList.extend({
     template: require("./hbtemplates/user_list.handlebars"),
-    list_selector:".user_list",
+    list_selector:".admin_table.user_list",
     default_item:".user_list .default-item",
     create_new_view:function(model){
         var newView = new UserItem({

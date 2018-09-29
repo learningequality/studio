@@ -1,18 +1,33 @@
 @import "global-variables.less";
 
+body {
+	overflow: hidden;
+}
 
-#admin-page{
-	padding: 30px;
+#admin-page {
+	display: grid;
+	margin: 0 1em;
 	h2{
-		margin: 0px;
-		margin-bottom: 30px;
+		grid-column: 1 / span 1;
+		margin: 0;
 		.back_button i {
 			font-size: 30pt;
 			vertical-align: sub;
 		}
 	}
+	nav {
+		position: absolute;
+		bottom: 0;
+		.pagination {
+			margin: 5px;
+		}	
+	}
 	a{text-decoration: none;}
+	.nav-tabs {
+		grid-column: 2 / span 2;
+	}
 	.tab_nav {
+		float: right;
 		margin-right: 10px;
 		a{
 			min-width: 100px;
@@ -22,11 +37,41 @@
 		&.active a{ font-weight: bold; }
 		.badge { margin-left: 10px; background-color: @gray-500; }
 	}
+	.tab-pane {
+		grid-column: 1 / span 3;
+		display: none;
+	}
+	.tab-pane.active {
+		display: grid;
+		min-height: 0;
+		height: 100%;
+		grid-template-rows: min-content auto min-content;
+
+		.table_actions{
+			width: 100%;
+			grid-row: 1 / span 1;
+		}
+		.admin_table.user_list, .admin_table.channel_list {
+			grid-row: 2 / span 1;
+		}
+
+		.admin_table .grid_row, .header_row {
+			display: grid;
+		}
+
+		.admin_table.user_list .grid_row, .header_row.user_list{
+			grid-template-columns: 2.5fr 1fr 11em 1fr 1fr 5em;
+		}
+		.admin_table.channel_list .grid_row, .header_row.channel_list{
+			grid-template-columns: 5fr 2.5fr 1fr 1fr 1fr 1fr 5em;
+		}
+	}
+
 	.tab-content{
 		background-color: white;
 		border: 1px solid #DDD;
 		border-top: none;
-		min-height: 75vh;
+		height: 100%;
 		padding: 15px;
 	}
 	.default-item {
@@ -82,7 +127,7 @@
 		}
 	}
 
-	.row {
+	.grid_row {
 		padding: 10px;
 		margin: 0px;
 		.channel_name_wrapper [class*="col-"] { padding: 0px 5px !important; }
@@ -185,17 +230,18 @@
 			.btn-gray{ background-color: @gray-700; }
 		}
 	}
-	.admin_table{
-		font-size: 12pt;
-		min-height: 65vh;
+	#admin_channel_table_wrapper, #admin_user_table_wrapper{
+		// font-size: 12pt;
 		border: 2px solid @blue-100;
+		max-height: calc(100vh - 15em);
+		overflow: auto;
 	}
 }
 
 #email_modal {
 	.modal-header{ background-color: @blue-200; padding-bottom: 10px; }
 	.modal-dialog{ width: 680px; }
-	.row { margin-bottom: 10px; }
+	.grid_row { margin-bottom: 10px; }
 	.required, .error-text{ color: @red-error-color; }
 	.error-field { background-color: @error-input-color; }
 	.email_field {

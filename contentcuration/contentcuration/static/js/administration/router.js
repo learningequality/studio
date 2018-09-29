@@ -111,8 +111,8 @@ const USER_SORT_FILTERS = {
 var AdministrationRouter = Backbone.Router.extend({
 
     routes: {
-        "users(/filter/:filter)(/sort/:key-:order)(/search/:search)(/p:page)":        "users",    // #users
-        "channels(/filter/:filter)(/sort/:key-:order)(/search/:search)(/p:page)":     "channels",    // #channels
+        "users(/filter/:filter)(/sort/:key-:order)(/search/:search)(/p:page)(/:pagesize-per-page)":        "users",    // #users
+        "channels(/filter/:filter)(/sort/:key-:order)(/search/:search)(/p:page)(/:pagesize-per-page)":     "channels",    // #channels
     },
 	execute(callback, args, name){
 		let newRouteParams = {
@@ -122,8 +122,8 @@ var AdministrationRouter = Backbone.Router.extend({
 			sortOrder: args[2],
 			search: args[3],
 			page: Number(args[4]),
+			pageSize: Number(args[5]),
 		}
-
 		let sameTabNewParams = this.currentRouteParams.name === newRouteParams.name &&
 								!_.isEqual(this.currentRouteParams, newRouteParams)
 
@@ -145,7 +145,7 @@ var AdministrationRouter = Backbone.Router.extend({
 		$('a.btn.'+name).tab('show')
 		return false
 	},
-	getRoute({name, filter, sortKey, sortOrder, search, page}){
+	getRoute({name, filter, sortKey, sortOrder, search, page, pageSize}){
 		return name +
 				(filter ? "/filter/" + filter : "") +
 				(	
@@ -155,7 +155,8 @@ var AdministrationRouter = Backbone.Router.extend({
 					: ""
 				) +
 				(search ? "/search/" + search : "") +
-				(page ? "/p" + page : "")
+				(page ? "/p" + page : "") +
+				(pageSize ? "/" + pageSize + "-per-page" : "")
 	},
 	gotoRouteForParams(params){
 		if (!params.name) {
@@ -196,9 +197,9 @@ var AdministrationRouter = Backbone.Router.extend({
 		})
 		window.current_user = new Models.UserModel(window.user);
 	},
-	updateCollectionStateFromParams(collection, filter, sortKey, order, search, page = 1){
-		collection.state.currentPage = page ? page : collection.state.currentPage
-		collection.state.currentPage = Number(collection.state.currentPage)
+	updateCollectionStateFromParams(collection, filter, sortKey, order, search, page = 1, pageSize){
+		collection.state.currentPage = page ? Number(page) : collection.state.currentPage
+		collection.state.pageSize = pageSize ? Number(pageSize) : collection.state.pageSize
 		collection.state.search = search
 
 		if (sortKey || order) {
@@ -213,21 +214,19 @@ var AdministrationRouter = Backbone.Router.extend({
 			collection.state.filterQuery = collection.filterOptions[filter].queryParams
 		}
 	},
-    users: function(filter, sortKey, order, search, page = 1) {
+    users: function(filter, sortKey, order, search, page = 1, pageSize) {
 		this.updateCollectionStateFromParams(
 			this.admin_view.user_collection,
-			filter, sortKey, order, search, page
+			filter, sortKey, order, search, page, pageSize
 		)
 		this.admin_view.user_collection.fetch()
-		console.log("ROUTE to USERS", this, this.usersrouteParamsCache, filter, sortKey, order, search, page)
 	},
-    channels: function(filter, sortKey, order, search, page = 1) {
+    channels: function(filter, sortKey, order, search, page = 1, pageSize) {
 		this.updateCollectionStateFromParams(
 			this.admin_view.channel_collection,
-			filter, sortKey, order, search, page
+			filter, sortKey, order, search, page, pageSize
 		)
 		this.admin_view.channel_collection.fetch()
-        console.log("ROUTE to CHANNELS", this, this.channelsrouteParamsCache, filter, sortKey, order, search, page)
 	},
 	
   });
