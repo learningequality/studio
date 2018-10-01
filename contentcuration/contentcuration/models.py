@@ -232,7 +232,7 @@ class User(AbstractBaseUser, PermissionsMixin):
             changed = True
 
         if not self.clipboard_tree:
-            self.clipboard_tree = ContentNode.objects.create(title=self.email + " clipboard", kind_id="topic",
+            self.clipboard_tree = ContentNode.objects.create(title=self.email + " clipboard", kind_id=content_kinds.TOPIC,
                                                              sort_order=get_next_sort_order())
             self.clipboard_tree.save()
             changed = True
@@ -1123,8 +1123,13 @@ class File(models.Model):
                 self.checksum = md5.hexdigest()
             if not self.file_size:
                 self.file_size = self.file_on_disk.size
-            if not self.file_format:
-                self.file_format_id = os.path.splitext(self.file_on_disk.name)[1]
+            if not self.file_format_id:
+                ext = os.path.splitext(self.file_on_disk.name)[1].lstrip('.')
+                if ext in dict(file_formats.choices).keys():
+                    self.file_format_id = ext
+                else:
+                    raise ValueError("Files of type `{}` are not supported.".format(ext))
+                
         super(File, self).save(*args, **kwargs)
 
 

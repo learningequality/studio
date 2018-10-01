@@ -2,10 +2,12 @@ import datetime
 
 from cStringIO import StringIO
 from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+
 from django.conf import settings
 
 from unittest import TestCase
-from contentcuration.models import User, generate_object_storage_name
+from contentcuration.models import User, File, generate_object_storage_name
 from contentcuration.utils.policies import check_policies, POLICIES
 from contentcuration.utils.files import get_file_diff
 
@@ -80,3 +82,39 @@ class GetFileDiffTestCase(StudioTestCase):
             "rando"
         ]
         assert get_file_diff(files) == ["rando"]
+
+from contentcuration.models import FileFormat
+class FileFormatsTestCase(StudioTestCase):
+    """
+    Ensure that unsupported files aren't saved.
+    """
+    def test_unsupported_files_raise_error(self):
+        unsupported_file = File.objects.create(
+            file_on_disk=ContentFile("test"),
+            checksum='aaa'
+        )
+
+        with self.assertRaises(Exception):
+            unsupported_file.file_on_disk.save("aaa.wtf", ContentFile("aaa"))
+
+    def test_guess_format_from_extension(self):
+        """
+        Make sure that we can guess file types listed in le_utils.file_formats.choices.
+        Note: if this test fails, it's likely because le_utils file formats aren't synced.
+        """
+        from le_utils.constants import file_formats
+        known_extensions = dict(file_formats.choices).keys()
+
+        for ext in known_extensions:
+            file_with_ext = File.objects.create(
+                file_on_disk=ContentFile("test"),
+                checksum="aaa"
+            )
+
+            try:
+                file_with_ext.file_on_disk.save("aaa.{}".format(ext), ContentFile("aaa"))
+            except Exception as e:
+                raise type(e)(e.message + " ... (hint: make sure that the version of le-utils you're using has its file formats synced).")
+        pass
+
+        

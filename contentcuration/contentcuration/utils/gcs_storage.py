@@ -136,4 +136,5 @@ class GoogleCloudStorage(Storage):
         return name
 
     def generate_filename(self, filename):
-        raise NotImplementedError
+        # TODO(aron): can we move the generate_object_storage_name logic to here?
+        return filename

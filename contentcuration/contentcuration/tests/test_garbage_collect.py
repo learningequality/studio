@@ -6,9 +6,9 @@ import requests
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
-
 from contentcuration.models import ContentNode, File
 from contentcuration.utils.garbage_collect import clean_up_contentnodes
+from le_utils.constants import content_kinds, file_formats
 
 from base import StudioTestCase
 
@@ -18,7 +18,7 @@ THREE_MONTHS_AGO = datetime.now() - timedelta(days=93)
 
 def _create_expired_contentnode(creation_date=THREE_MONTHS_AGO):
     c = ContentNode.objects.create(
-        kind_id="topic",
+        kind_id=content_kinds.TOPIC,
         title="test",
         modified=creation_date,
         created=creation_date,
@@ -63,6 +63,7 @@ class CleanUpContentNodesTestCase(StudioTestCase):
             file_on_disk=ContentFile("test"),
             checksum="aaa",
         )
+
         f.file_on_disk.save("aaa.jpg", ContentFile("aaa"))
         file_url = f.file_on_disk.url
 
@@ -81,7 +82,7 @@ class CleanUpContentNodesTestCase(StudioTestCase):
         # this legit tree, since it's not attached to our
         # orphan tree, should still exist after cleanup
         legit_tree = ContentNode.objects.create(
-            kind_id="Topic",
+            kind_id=content_kinds.TOPIC,
         )
         # this file should still be here too since we attach
         # it to our legit tree
@@ -113,7 +114,7 @@ class CleanUpContentNodesTestCase(StudioTestCase):
 
         # our old, but not orphaned tree. This should exist at the end of our test.
         legit_node = ContentNode.objects.create(
-            kind_id="Topic",
+            kind_id=content_kinds.TOPIC,
         )
         # mark the legit_node as old
         ContentNode.objects.filter(pk=legit_node.pk).update(
@@ -141,7 +142,7 @@ class CleanUpContentNodesTestCase(StudioTestCase):
 
         # our legit node, standing proud and high with its non-orphaned status
         legit_node = ContentNode.objects.create(
-            kind_id="Video",
+            kind_id=content_kinds.VIDEO,
         )
 
         f = File.objects.create(
