@@ -82,6 +82,7 @@ pytest-watch = "*"
 faker = "==0.7.3"
 rope = "*"
 "autopep8" = "*"
+pre-commit= "==1.11.1"
 
 [requires]
 python_version = "2.7"
