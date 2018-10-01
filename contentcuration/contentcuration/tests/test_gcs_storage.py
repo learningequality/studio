@@ -118,3 +118,5 @@ class GoogleCloudStorageOpenTestCase(TestCase):
         f = self.storage.open(self.local_file.filename, blob_object=self.blob_obj)
 
         assert isinstance(f, File)
+        # This checks that an actual temp file was written on disk for the file.git
+        assert f.name
