@@ -154,9 +154,19 @@ class ChannelClone(BaseTaskSet):
         self._login()
 
 
+class AdminChannelListPage(BaseTaskSet):
+
+    def on_start(self):
+        self._login()
+
+    @task
+    def channel_list_api_call(self):
+        self.client.get("/api/get_all_channels")
+
+
 class LoginPage(BaseTaskSet):
-    tasks = [ChannelListPage, ChannelPage]
-    # tasks = [ChannelListPage, ChannelPage, ChannelClone]
+    tasks = [ChannelListPage, AdminChannelListPage, ChannelPage]
+    # tasks = [ChannelListPage, AdminChannelListPage, ChannelPage, ChannelClone]
 
     @task
     def loginpage(self):
