@@ -1,44 +1,66 @@
 import ast
+import base64
+import cStringIO as StringIO
 import csv
 import json
 import locale
 import os
 import sys
 import time
-reload(sys)
-sys.setdefaultencoding('UTF8')
+from itertools import chain
 
 from django.conf import settings
-from django.http import HttpResponse, HttpResponseNotFound, FileResponse, HttpResponseBadRequest, StreamingHttpResponse
-from django.views.decorators.http import condition
-from django.views.decorators.cache import cache_page
-from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.contrib.sites.shortcuts import get_current_site
-from django.core.exceptions import ObjectDoesNotExist, SuspiciousOperation
-from django.db.models import CharField, Count, Max, Sum, Value
+from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import SuspiciousOperation
+from django.db.models import CharField
+from django.db.models import Count
+from django.db.models import Max
+from django.db.models import Sum
+from django.db.models import Value
 from django.db.models.functions import Concat
-from django.template.loader import render_to_string, get_template
+from django.http import FileResponse
+from django.http import HttpResponse
+from django.http import HttpResponseBadRequest
+from django.http import HttpResponseNotFound
+from django.http import StreamingHttpResponse
+from django.shortcuts import render
 from django.template import Context
-from itertools import chain
-from rest_framework.renderers import JSONRenderer
-
-from contentcuration.decorators import browser_is_supported, is_admin
-from contentcuration.models import Channel, ContentNode, Invitation, User, generate_file_on_disk_name
-from contentcuration.utils.messages import get_messages
-from contentcuration.utils.channelcache import ChannelCacher
-from contentcuration.serializers import AdminChannelListSerializer, AdminUserListSerializer, CurrentUserSerializer, UserChannelListSerializer
-from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
-from rest_framework.response import Response
+from django.template.loader import get_template
+from django.template.loader import render_to_string
+from django.views.decorators.cache import cache_page
+from django.views.decorators.http import condition
 from le_utils.constants import content_kinds
-
-from xhtml2pdf import pisa
-import cStringIO as StringIO
 from PIL import Image
-import base64
+from rest_framework.authentication import BasicAuthentication
+from rest_framework.authentication import SessionAuthentication
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.decorators import api_view
+from rest_framework.decorators import authentication_classes
+from rest_framework.decorators import permission_classes
+from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.renderers import JSONRenderer
+from rest_framework.response import Response
+from xhtml2pdf import pisa
 
+from contentcuration.decorators import browser_is_supported
+from contentcuration.decorators import is_admin
+from contentcuration.models import Channel
+from contentcuration.models import ContentNode
+from contentcuration.models import generate_file_on_disk_name
+from contentcuration.models import Invitation
+from contentcuration.models import User
+from contentcuration.serializers import AdminChannelListSerializer
+from contentcuration.serializers import AdminUserListSerializer
+from contentcuration.serializers import CurrentUserSerializer
+from contentcuration.serializers import UserChannelListSerializer
+from contentcuration.utils.channelcache import ChannelCacher
+from contentcuration.utils.messages import get_messages
+
+reload(sys)
+sys.setdefaultencoding('UTF8')
 locale.setlocale(locale.LC_TIME, '')
 
 EMAIL_PLACEHOLDERS = [
@@ -245,7 +267,7 @@ def get_channel_data(channel, site, default_thumbnail=None):
         "public": "Yes" if channel.public else "No",
         "description": channel.description,
         "language": channel.language and channel.language.readable_name,
-        "generated_thumbnail": default_thumbnail != None and generate_thumbnail(channel) or default_thumbnail,
+        "generated_thumbnail": default_thumbnail is not None and generate_thumbnail(channel) or default_thumbnail,
         "url": "http://{}/channels/{}/edit".format(site, channel.id)
     }
 
@@ -279,7 +301,7 @@ def get_channel_data(channel, site, default_thumbnail=None):
     node_languages = descendants.exclude(language=None).values_list('language__readable_name', flat=True).distinct()
     file_languages = descendants.exclude(files__language=None).values_list('files__language__readable_name', flat=True)
     language_list = list(set(chain(node_languages, file_languages)))
-    language_list = filter(lambda l: l != None and l != data['language'], language_list)
+    language_list = filter(lambda l: l is not None and l is not data['language'], language_list)
     language_list = map(lambda l: l.replace(",", " -"), language_list)
     language_list = sorted(map(lambda l: l.replace(",", " -"), language_list))
     data["languages"] = ", ".join(language_list)

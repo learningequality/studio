@@ -207,7 +207,7 @@ def create_files(cursor, contentnode, indent=0):
         try:
             # Save values to new or existing file object
             with open(file_path, 'rb') as fobj:
-                file_obj = models.File.objects.create(
+                models.File.objects.create(
                     file_on_disk=DJFile(fobj),
                     file_format_id=extension,
                     file_size=file_size,

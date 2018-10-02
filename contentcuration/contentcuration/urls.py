@@ -119,7 +119,8 @@ class ContentNodeViewSet(BulkModelViewSet):
 
         # Set up eager loading to avoid N+1 selects
         tree_ids = get_channel_tree_ids(self.request.user)
-        return ContentNode.objects.prefetch_related('children').prefetch_related('files').prefetch_related('assessment_items').filter(tree_id__in=tree_ids).distinct()
+        return ContentNode.objects.prefetch_related('children').prefetch_related('files') \
+                                  .prefetch_related('assessment_items').filter(tree_id__in=tree_ids).distinct()
 
 
 class TagViewSet(viewsets.ModelViewSet):
@@ -143,7 +144,9 @@ class UserViewSet(viewsets.ModelViewSet):
             return User.objects.all()
         channel_list = list(self.request.user.editable_channels.values_list('pk', flat=True))
         channel_list.extend(list(self.request.user.view_only_channels.values_list('pk', flat=True)))
-        return User.objects.filter(Q(pk=self.request.user.pk) | Q(editable_channels__pk__in=channel_list) | Q(view_only_channels__pk__in=channel_list)).distinct()
+        return User.objects.filter(Q(pk=self.request.user.pk) |
+                                   Q(editable_channels__pk__in=channel_list) |
+                                   Q(view_only_channels__pk__in=channel_list)).distinct()
 
 
 class InvitationViewSet(viewsets.ModelViewSet):
@@ -167,6 +170,7 @@ class AssessmentItemViewSet(BulkModelViewSet):
             return AssessmentItem.objects.all()
         tree_ids = get_channel_tree_ids(self.request.user)
         return AssessmentItem.objects.select_related('contentnode').filter(contentnode__tree_id__in=tree_ids).distinct()
+
 
 router = routers.DefaultRouter(trailing_slash=False)
 router.register(r'license', LicenseViewSet)

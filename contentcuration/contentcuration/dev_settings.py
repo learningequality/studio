@@ -1,4 +1,4 @@
-from .test_settings import *
+from .test_settings import *  # noqa
 
 # These endpoints will throw an error on the django debug panel
 EXCLUDED_DEBUG_URLS = [
@@ -9,12 +9,10 @@ EXCLUDED_DEBUG_URLS = [
 def custom_show_toolbar(request):
     return not any(request.path.startswith(url) for url in EXCLUDED_DEBUG_URLS)
 
-LANGUAGES += (
-    ('ar', ugettext('Arabic')),
-)
+LANGUAGES += (('ar', ugettext('Arabic')),) # noqa
 
 try:
-    pass
+    import debug_panel  # noqa
 except ImportError:
     # no debug panel, no use trying to add it to our middleware
     pass

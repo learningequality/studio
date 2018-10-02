@@ -64,7 +64,7 @@ class Command(BaseCommand):
         print("\n\nFinished writing to CSV at {}\n\n".format(csv_path))
 
 
-def print_stats(l):
+def print_stats(l):  # noqa: C901
     try:
         print("\tMean: {}".format(mean(l)))
     except StatisticsError as e:

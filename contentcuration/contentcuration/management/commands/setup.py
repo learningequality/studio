@@ -119,8 +119,8 @@ class Command(BaseCommand):
 def generate_tree(root, document, video, subtitle, audio, html5, user=None, tags=None):
     topic1 = create_topic("Topic 1", root, description=DESCRIPTION)
     topic2 = create_topic("Topic 2", root)
-    topic3 = create_topic("Topic 3", topic2, description=DESCRIPTION)
-    topic4 = create_topic("Topic 4", topic2, description=DESCRIPTION)
+    create_topic("Topic 3", topic2, description=DESCRIPTION)
+    create_topic("Topic 4", topic2, description=DESCRIPTION)
 
     # Add files to topic 1
     license_id = License.objects.get(license_name=LICENSE).pk

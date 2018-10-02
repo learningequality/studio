@@ -55,7 +55,7 @@ class NodeOperationsTestCase(BaseTestCase):
         # assert self.channel.main_tree.get_channel() == self.channel
         _create_nodes(num_nodes, title, parent=self.channel.main_tree)
 
-        assert self.channel.main_tree.changed == True
+        assert self.channel.main_tree.changed is True
         assert self.channel.main_tree.get_channel() == self.channel
 
         assert self.channel.main_tree.parent is None
@@ -67,21 +67,21 @@ class NodeOperationsTestCase(BaseTestCase):
         self.channel.main_tree.changed = False
         self.channel.main_tree.save()
         self.channel.main_tree.refresh_from_db()
-        assert self.channel.main_tree.changed == False
+        assert self.channel.main_tree.changed is False
 
         new_channel.main_tree.changed = False
         new_channel.main_tree.save()
         new_channel.main_tree.refresh_from_db()
-        assert new_channel.main_tree.changed == False
+        assert new_channel.main_tree.changed is False
 
         new_tree = nodes.duplicate_node_bulk(self.channel.main_tree, parent=new_channel.main_tree)
 
         _check_nodes(new_tree, title, original_channel_id=self.channel.id, source_channel_id=self.channel.id, channel=new_channel)
         new_channel.main_tree.refresh_from_db()
-        assert new_channel.main_tree.changed == True
+        assert new_channel.main_tree.changed is True
 
         self.channel.main_tree.refresh_from_db()
-        assert self.channel.main_tree.changed == False
+        assert self.channel.main_tree.changed is False
 
     def test_multiple_copy_channel_ids(self):
         """
@@ -97,7 +97,7 @@ class NodeOperationsTestCase(BaseTestCase):
         # assert self.channel.main_tree.get_channel() == self.channel
         _create_nodes(num_nodes, title, parent=new_node)
 
-        assert self.channel.main_tree.changed == True
+        assert self.channel.main_tree.changed is True
         assert self.channel.main_tree.get_channel() == self.channel
 
         assert self.channel.main_tree.parent is None
@@ -122,24 +122,24 @@ class NodeOperationsTestCase(BaseTestCase):
             assert prev_channel.main_tree.get_changed_fields() == {}
             prev_channel.main_tree.save()
             prev_channel.main_tree.refresh_from_db()
-            assert prev_channel.main_tree.changed == False
+            assert prev_channel.main_tree.changed is False
 
             # simulate a clean, right-after-publish state to ensure only new channel is marked as change
             channel.main_tree.changed = False
             channel.main_tree.save()
             channel.main_tree.refresh_from_db()
-            assert channel.main_tree.changed == False
+            assert channel.main_tree.changed is False
 
             # make sure we always copy the copy we made in the previous go around :)
             copy_node_root = nodes.duplicate_node_bulk(copy_node_root, parent=channel.main_tree)
 
             _check_nodes(copy_node_root, original_channel_id=self.channel.id, source_channel_id=prev_channel.id, channel=channel)
             channel.main_tree.refresh_from_db()
-            assert channel.main_tree.changed == True
+            assert channel.main_tree.changed is True
             assert channel.main_tree.get_descendants().filter(changed=True).exists()
 
             prev_channel.main_tree.refresh_from_db()
-            assert prev_channel.main_tree.changed == False
+            assert prev_channel.main_tree.changed is False
 
 
 class NodeOperationsAPITestCase(BaseAPITestCase):
@@ -156,7 +156,7 @@ class NodeOperationsAPITestCase(BaseAPITestCase):
         _create_nodes(10, title, parent=self.channel.main_tree)
 
         assert self.channel.main_tree.get_descendant_count() == 10
-        assert self.channel.main_tree.changed == True
+        assert self.channel.main_tree.changed is True
         assert self.channel.main_tree.parent is None
 
         _check_nodes(self.channel.main_tree, title, original_channel_id=self.channel.id, source_channel_id=self.channel.id, channel=self.channel)
@@ -194,8 +194,8 @@ class NodeOperationsAPITestCase(BaseAPITestCase):
         assert self.channel.main_tree.get_descendants().count() == self.channel.main_tree.get_descendant_count()
 
         assert self.channel.main_tree != new_channel.main_tree
-        assert self.channel.main_tree.changed == True
-        assert new_channel.main_tree.changed == True
+        assert self.channel.main_tree.changed is True
+        assert new_channel.main_tree.changed is True
 
         assert self.channel.main_tree.get_descendant_count() == 0
         if new_channel.main_tree.get_descendants().count() > 10:
@@ -224,7 +224,7 @@ class NodeOperationsAPITestCase(BaseAPITestCase):
         _create_nodes(10, title, parent=self.channel.main_tree)
 
         assert self.channel.main_tree.get_descendant_count() == 10
-        assert self.channel.main_tree.changed == True
+        assert self.channel.main_tree.changed is True
         assert self.channel.main_tree.parent is None
 
         _check_nodes(self.channel.main_tree, title, original_channel_id=self.channel.id, source_channel_id=self.channel.id, channel=self.channel)
@@ -237,7 +237,7 @@ class NodeOperationsAPITestCase(BaseAPITestCase):
 
         self.channel.editors.add(self.user)
         self.channel.main_tree.save()
-        assert self.channel.main_tree.changed == False
+        assert self.channel.main_tree.changed is False
 
         delete_data = {
             'channel_id': self.channel.id,
@@ -253,4 +253,4 @@ class NodeOperationsAPITestCase(BaseAPITestCase):
         self.channel.main_tree.refresh_from_db()
         assert self.channel.main_tree.get_descendants().count() == 0
         assert not self.channel.main_tree.get_descendants().filter(changed=True).exists()
-        assert self.channel.main_tree.changed == True
+        assert self.channel.main_tree.changed is True

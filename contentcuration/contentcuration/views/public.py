@@ -28,7 +28,6 @@ def _get_channel_list_v1(params, identifier=None):
     keyword = params.get('keyword', '').strip()
     language_id = params.get('language', '').strip()
     token_list = params.get('tokens', '').strip().replace('-', '').split(',')
-    thumbnail = 1 if params.get('thumbnails') == 'true' else 0
 
     channels = None
     if identifier:

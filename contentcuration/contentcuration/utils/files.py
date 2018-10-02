@@ -85,7 +85,8 @@ def duplicate_file(file_object, node=None, assessment_item=None, preset_id=None,
 
 def extract_thumbnail_wrapper(file_object, node=None, preset_id=None):
     ext = file_formats.PNG
-    with tempfile.NamedTemporaryFile(suffix=".{}".format(ext)) as tempf, tempfile.NamedTemporaryFile(suffix=".{}".format(file_object.file_format.extension)) as localtempf:
+    with tempfile.NamedTemporaryFile(suffix=".{}".format(ext)) as tempf, \
+            tempfile.NamedTemporaryFile(suffix=".{}".format(file_object.file_format.extension)) as localtempf:
         shutil.copyfileobj(file_object.file_on_disk, localtempf)
         localtempf.flush()
         tempf.close()
@@ -166,7 +167,8 @@ def get_image_from_pdf(document, node=None, preset_id=None):
 def get_image_from_audio(audio, node=None, preset_id=None, max_num_of_points=None):
     ext = file_formats.PNG
     cmap_options = {'name': 'BuPu', 'vmin': 0.3, 'vmax': 0.7, 'color': 'black'}
-    with tempfile.NamedTemporaryFile(suffix=".{}".format(ext)) as tempf, tempfile.NamedTemporaryFile(suffix=".{}".format(audio.file_format.extension)) as localtempf:
+    with tempfile.NamedTemporaryFile(suffix=".{}".format(ext)) as tempf, \
+            tempfile.NamedTemporaryFile(suffix=".{}".format(audio.file_format.extension)) as localtempf:
         # localtempf is where we store the file in case it's in object storage
         shutil.copyfileobj(audio.file_on_disk, localtempf)
         tempf.close()
@@ -176,7 +178,7 @@ def get_image_from_audio(audio, node=None, preset_id=None, max_num_of_points=Non
             return create_file_from_contents(tf.read(), ext=ext, node=node, preset_id=preset_id, uploaded_by=audio.uploaded_by)
 
 
-def generate_thumbnail_from_node(node, set_node=None):
+def generate_thumbnail_from_node(node, set_node=None):  # noqa
     thumbnail_object = None
     assigned_node = node if set_node else None
     if node.kind_id == content_kinds.TOPIC:

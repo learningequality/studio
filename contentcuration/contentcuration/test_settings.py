@@ -1,5 +1,7 @@
 import logging
 
+from .settings import *  # noqa
+
 DEBUG = True
 
 ALLOWED_HOSTS = ["studio.local", "192.168.31.9", "127.0.0.1", "*"]

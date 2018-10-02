@@ -4,8 +4,12 @@ from collections import OrderedDict
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import ValidationError as DjangoValidationError
+from django.core.files.storage import default_storage
 from django.db import transaction
 from django.db.models import Max
+from django.db.models import Sum
+from le_utils.constants import content_kinds
+from le_utils.constants import exercises
 from le_utils.constants import roles
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -15,7 +19,22 @@ from rest_framework.settings import api_settings
 from rest_framework.utils import model_meta
 from rest_framework_bulk import BulkSerializerMixin
 
-from contentcuration.models import *
+from contentcuration.models import AssessmentItem
+from contentcuration.models import Channel
+from contentcuration.models import ContentKind
+from contentcuration.models import ContentNode
+from contentcuration.models import ContentTag
+from contentcuration.models import File
+from contentcuration.models import FileFormat
+from contentcuration.models import FormatPreset
+from contentcuration.models import generate_object_storage_name
+from contentcuration.models import generate_storage_url
+from contentcuration.models import Invitation
+from contentcuration.models import Language
+from contentcuration.models import License
+from contentcuration.models import PrerequisiteContentRelationship
+from contentcuration.models import SecretToken
+from contentcuration.models import User
 from contentcuration.statistics import record_node_addition_stats
 from contentcuration.utils.channelcache import ChannelCacher
 from contentcuration.utils.format import format_size
@@ -157,7 +176,7 @@ class ContentKindSerializer(serializers.ModelSerializer):
 
 class CustomListSerializer(serializers.ListSerializer):
 
-    def update(self, instance, validated_data):
+    def update(self, instance, validated_data):  # noqa: C901
         update_nodes = {}
         tag_mapping = {}
         prerequisite_mapping = {}

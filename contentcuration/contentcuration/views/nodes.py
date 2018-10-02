@@ -163,7 +163,8 @@ def get_total_size(request, ids):
 def get_nodes_by_ids(request, ids):
     nodes = ContentNode.objects.prefetch_related('children', 'files', 'assessment_items', 'tags')\
                        .filter(pk__in=ids.split(","))\
-                       .defer('node_id', 'original_source_node_id', 'source_node_id', 'content_id', 'original_channel_id', 'source_channel_id', 'source_id', 'source_domain', 'created', 'modified')
+                       .defer('node_id', 'original_source_node_id', 'source_node_id', 'content_id',
+                              'original_channel_id', 'source_channel_id', 'source_id', 'source_domain', 'created', 'modified')
     serializer = ContentNodeSerializer(nodes, many=True)
     return Response(serializer.data)
 
@@ -504,7 +505,7 @@ def duplicate_node_bulk(node, sort_order=None, parent=None, channel_id=None, use
     return new_node
 
 
-def _duplicate_node_bulk_recursive(node, sort_order, parent, channel_id, to_create, level=0, user=None):
+def _duplicate_node_bulk_recursive(node, sort_order, parent, channel_id, to_create, level=0, user=None):  # noqa
 
     if isinstance(node, int) or isinstance(node, basestring):
         node = ContentNode.objects.get(pk=node)

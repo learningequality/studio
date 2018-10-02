@@ -29,7 +29,7 @@ def start_minio():
 def _start_minio():
     logger.info("Starting minio")
 
-    MINIO_PROCESS = subprocess.Popen(
+    subprocess.Popen(
         ["run_minio.py"],
         stdin=subprocess.PIPE,
     )

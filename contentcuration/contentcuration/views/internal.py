@@ -106,7 +106,8 @@ def file_diff(request):
         data = json.loads(request.body)
 
         # Might want to use this once assumption that file exists is true (save on performance)
-        # in_db_list = File.objects.annotate(filename=Concat('checksum', Value('.'),  'file_format')).filter(filename__in=data).values_list('filename', flat=True)
+        # in_db_list = File.objects.annotate(filename=Concat('checksum', Value('.'),  'file_format'))
+        #                          .filter(filename__in=data).values_list('filename', flat=True)
         # for f in list(set(data) - set(in_db_list)):
         to_return = get_file_diff(data)
 
@@ -128,7 +129,7 @@ def api_file_upload(request):
         except Exception as e:
             return HttpResponseForbidden(str(e))
 
-        formatted_filename = write_file_to_storage(fobj, check_valid=True)
+        write_file_to_storage(fobj, check_valid=True)
         StagedFile.objects.get_or_create(
             checksum=checksum,
             file_size=fobj._size,
@@ -427,7 +428,7 @@ def get_node_tree_data(request):
         root = obj.staging_tree or obj.main_tree
         node = root.get_descendants().filter(node_id=data['node_id']).first() if data.get('node_id') else root
 
-        return HttpResponse(json.dumps({"success": True, 'tree': node.get_node_tree_data(), 'staged': obj.staging_tree != None}))
+        return HttpResponse(json.dumps({"success": True, 'tree': node.get_node_tree_data(), 'staged': obj.staging_tree is not None}))
 
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
@@ -469,9 +470,8 @@ def get_status(channel_id):
         return"unpublished"
     return "active"
 
-""" CHANNEL CREATE FUNCTIONS """
 
-
+# CHANNEL CREATE FUNCTIONS
 def create_channel(channel_data, user):
     """ Set up channel """
     # Set up initial channel

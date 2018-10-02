@@ -228,6 +228,7 @@ def policies_settings(request):
                                                     "page": "policies",
                                                     "policies": get_latest_policies()})
 
+
 KIND_TRANSLATIONS = {
     content_kinds.TOPIC: _("Topics"),
     content_kinds.VIDEO: _("Videos"),

@@ -73,6 +73,7 @@ class RegistrationForm(forms.Form, ExtraFormMixin):
 
         return self.cleaned_data
 
+
 USAGES = [
     ('organization and alignment', _("Organizing or aligning existing materials")),
     ('finding and adding content', _("Finding and adding additional content sources")),
@@ -131,7 +132,7 @@ class RegistrationInformationForm(UserCreationForm, ExtraFormMixin):
         email = self.cleaned_data['email'].strip()
         return email
 
-    def clean(self):
+    def clean(self):  # noqa: C901
         super(RegistrationInformationForm, self).clean()
 
         # Lots of fields get incorrectly processed, so manually validate form
@@ -245,6 +246,7 @@ class ProfileSettingsForm(UserChangeForm):
         user.last_name = self.cleaned_data["last_name"]
         user.save()
         return user
+
 
 MASTERY = ()
 LANGUAGES = ()
@@ -452,7 +454,7 @@ class ForgotPasswordForm(PasswordResetForm):
                     context = {
                         'site': extra_email_context.get('site'),
                         'user': user,
-                        'domain': extra_email_context.get('domain') or domain,
+                        'domain': extra_email_context.get('domain'),
                     }
                     subject = render_to_string('registration/password_reset_subject.txt', context)
                     subject = ''.join(subject.splitlines())
@@ -465,7 +467,7 @@ class ForgotPasswordForm(PasswordResetForm):
                         'expiration_days': settings.ACCOUNT_ACTIVATION_DAYS,
                         'site': extra_email_context.get('site'),
                         'user': user,
-                        'domain': extra_email_context.get('domain') or domain,
+                        'domain': extra_email_context.get('domain'),
                     }
                     subject = render_to_string('registration/password_reset_subject.txt', context)
                     subject = ''.join(subject.splitlines())

@@ -282,7 +282,7 @@ def create_associated_file_objects(kolibrinode, ccnode):
             }
         )
 
-        kolibrifilemodel = kolibrimodels.File.objects.create(
+        kolibrimodels.File.objects.create(
             pk=ccfilemodel.pk,
             checksum=ccfilemodel.checksum,
             extension=format.extension,
@@ -325,7 +325,7 @@ def process_assessment_metadata(ccnode, kolibrinode):
     assessment_items = ccnode.assessment_items.all().order_by('order')
     exercise_data = json.loads(ccnode.extra_fields) if ccnode.extra_fields else {}
 
-    randomize = exercise_data.get('randomize') if exercise_data.get('randomize') != None else True
+    randomize = exercise_data.get('randomize') if exercise_data.get('randomize') is not None else True
     assessment_item_ids = [a.assessment_id for a in assessment_items]
 
     mastery_model = {'type': exercise_data.get('mastery_model') or exercises.M_OF_N}
@@ -353,7 +353,7 @@ def process_assessment_metadata(ccnode, kolibrinode):
         'assessment_mapping': {a.assessment_id: a.type if a.type != 'true_false' else exercises.SINGLE_SELECTION.decode('utf-8') for a in assessment_items},
     })
 
-    kolibriassessmentmetadatamodel = kolibrimodels.AssessmentMetaData.objects.create(
+    kolibrimodels.AssessmentMetaData.objects.create(
         id=uuid.uuid4(),
         contentnode=kolibrinode,
         assessment_item_ids=json.dumps(assessment_item_ids),

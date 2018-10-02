@@ -12,7 +12,7 @@ logging = logmodule.getLogger(__name__)
 
 class Command(BaseCommand):
 
-    def handle(self, *args, **options):
+    def handle(self, *args, **options):  # noqa: C901
         failed = []
         channels = Channel.objects.all()
         users = User.objects.all()

@@ -5,7 +5,6 @@ import subprocess
 from django.contrib.staticfiles.management.commands.runserver import \
     Command as RunserverCommand
 
-from contentcuration.utils.minio_utils import ensure_storage_bucket_public
 from contentcuration.utils.minio_utils import start_minio
 
 

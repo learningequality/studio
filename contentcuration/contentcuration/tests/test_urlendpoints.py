@@ -7,8 +7,7 @@ from django.core.urlresolvers import reverse
 
 class AllUrlsTest(StudioTestCase):
 
-    def test_responses(self, allowed_http_codes=None,
-                       default_kwargs=None, quiet=False):
+    def test_responses(self, allowed_http_codes=None, default_kwargs=None, quiet=False):  # noqa: C901
         """
         This is a very liberal test, we are mostly just concerned with making sure
         that no pages throw errors (500).

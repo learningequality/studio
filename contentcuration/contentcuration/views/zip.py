@@ -53,7 +53,7 @@ class ZipContentView(View):
         _add_access_control_headers(request, response)
         return response
 
-    @xframe_options_exempt
+    @xframe_options_exempt  # noqa
     def get(self, request, zipped_filename, embedded_filepath):
         """
         Handles GET requests and serves a static file from within the zip file.

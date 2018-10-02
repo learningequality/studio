@@ -3,7 +3,7 @@ import newrelic.agent
 from le_utils.constants import content_kinds
 
 
-def record_channel_stats(channel, original_channel):
+def record_channel_stats(channel, original_channel):  # noqa: C901
     """
     :param channel: The channel the current action is being performed on.
     :param original_channel: The `channel` before the action was performed.
@@ -199,6 +199,8 @@ def record_action_stats(nodes_being_added, user_id):
     :param nodes_being_added: The nodes being added to the human channel.
     :param user_id: The id of the user committing the action.
     """
+
+    from contentcuration.models import ContentNode  # import here to avoid circular imports
 
     action_attributes = dict(action_source='Human', content_source='Human', user_id=user_id)
 

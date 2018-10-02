@@ -111,7 +111,7 @@ def node(data, parent=None):
         new_node.save()
 
         for child in data['children']:
-            child_node = node(child, parent=new_node)
+            node(child, parent=new_node)
 
     # Create videos
     elif data['kind_id'] == "video":
@@ -202,6 +202,7 @@ def create_temp_file(filebytes, preset='document', ext='pdf', original_filename=
                               file_on_disk=storage_file_path)
 
     return {'name': os.path.basename(storage_file_path), 'data': filebytes, 'file': fileobj, 'db_file': db_file_obj}
+
 
 invalid_file_json = [
     {

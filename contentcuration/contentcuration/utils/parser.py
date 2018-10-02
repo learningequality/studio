@@ -37,11 +37,16 @@ FORMATTED_INT = re.compile("{digit}{{1,3}}(?:{sep}{digit}{{3}})+".format(digit=D
 INTEGER = re.compile("({sign}(?:{formatted}|{unformatted}))".format(sign=SIGN, formatted=FORMATTED_INT.pattern, unformatted=UNFORMATTED_INT.pattern))
 DECIMAL = re.compile("({integer}{point}{unformatted})".format(integer=INTEGER.pattern, unformatted=UNFORMATTED_INT.pattern, point=POINT))
 NON_ZERO_INT = re.compile("({sign}{non_zero}(?:{digit}{{0,2}}(?:{sep}{digit}{{3}})+|{unformatted})?)".format(sign=SIGN,
-                                                                                                             non_zero=NON_ZERO_DIGIT, digit=DIGIT, unformatted=UNFORMATTED_INT.pattern, sep=SEP))
+                                                                                                             non_zero=NON_ZERO_DIGIT,
+                                                                                                             digit=DIGIT,
+                                                                                                             unformatted=UNFORMATTED_INT.pattern,
+                                                                                                             sep=SEP))
 FRACTION = re.compile("({integer}/{non_zero})".format(integer=INTEGER.pattern, non_zero=NON_ZERO_INT.pattern))
 MIXED_NUMBER = re.compile("({integer}) +({fraction})".format(integer=INTEGER.pattern, fraction=FRACTION.pattern))
 VALID_NUMBER = re.compile("({decimal}|{mixed_number}|{fraction}|{integer})".format(decimal=DECIMAL.pattern,
-                                                                                   mixed_number=MIXED_NUMBER.pattern, fraction=FRACTION.pattern, integer=INTEGER.pattern))
+                                                                                   mixed_number=MIXED_NUMBER.pattern,
+                                                                                   fraction=FRACTION.pattern,
+                                                                                   integer=INTEGER.pattern))
 PERCENTAGE = re.compile("({num})%".format(num=VALID_NUMBER.pattern))
 EXPONENT = re.compile("((?:{decimal}|{integer})e\+?{integer})".format(decimal=DECIMAL.pattern, integer=INTEGER.pattern))
 

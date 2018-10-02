@@ -11,10 +11,11 @@ from le_utils.constants import file_formats
 from le_utils.constants import format_presets
 from le_utils.constants import languages
 from le_utils.constants import licenses
+from readonly.exceptions import DatabaseWriteDenied
 
 from contentcuration import models
+
 logging = logmodule.getLogger(__name__)
-from readonly.exceptions import DatabaseWriteDenied
 
 
 BASE_URL = "https://raw.githubusercontent.com/learningequality/le-utils/master/le_utils/resources/{}"
@@ -137,6 +138,7 @@ class PresetGenerator(ConstantGenerator):
             "allowed_formats": constant.allowed_formats,
         }
 
+
 SITES = [
     {
         "model": Site,
@@ -196,7 +198,7 @@ class Command(BaseCommand):
                 new_model_count = 0
                 for constant in constant_list:
                     current_model = constant['model'].__name__
-                    if cache.has_key(current_model):
+                    if current_model in cache:
                         cache.delete(current_model)
                     obj, isNew = constant['model'].objects.update_or_create(**{constant['pk']: constant['fields'][constant['pk']]})
                     new_model_count += 1 if isNew else 0

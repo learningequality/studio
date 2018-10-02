@@ -27,9 +27,9 @@ def add_field_defaults_to_node(node):
             "questions": [],
             "extra_fields": {}
         })
-    if not "files" in node:
+    if "files" not in node:
         node["files"] = []
-    if not "description" in node:
+    if "description" not in node:
         node["description"] = ""
     if "children" in node:
         for i in range(0, len(node["children"])):

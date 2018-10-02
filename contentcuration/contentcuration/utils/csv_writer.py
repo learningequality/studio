@@ -5,19 +5,20 @@ import platform
 import re
 import sys
 import time
+from time import sleep
 
 import progressbar
-reload(sys)
-sys.setdefaultencoding('UTF8')
-
 from django.conf import settings
 from django.contrib.sites.models import Site
-from contentcuration.models import generate_storage_url
-from le_utils.constants import content_kinds, exercises
 from django.db.models import Sum
 from django.utils.translation import ugettext as _
+from le_utils.constants import content_kinds
+from le_utils.constants import exercises
 
-from time import sleep
+from contentcuration.models import generate_storage_url
+
+reload(sys)
+sys.setdefaultencoding('UTF8')
 
 if not os.path.exists(settings.CSV_ROOT):
     os.makedirs(settings.CSV_ROOT)
@@ -68,7 +69,8 @@ def _write_content_csv(writer, node, site):
     questions = ""
     if node.kind_id == content_kinds.EXERCISE:
         questions = " ".join([_format_question(q) for q in node.assessment_items.all().order_by("order")])
-    return writer.writerow([path, node.title, node.kind_id.capitalize(), node.description, url, node.author, language, license, node.license_description, node.copyright_holder, file_size, tags, questions])
+    return writer.writerow([path, node.title, node.kind_id.capitalize(), node.description, url,
+                            node.author, language, license, node.license_description, node.copyright_holder, file_size, tags, questions])
 
 # Formatting helpers
 
