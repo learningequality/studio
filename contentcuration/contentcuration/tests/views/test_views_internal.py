@@ -2,13 +2,14 @@
 """
 Tests for contentcuration.views.internal functions.
 """
-import json
 from mixer.main import mixer
 
-from contentcuration.models import ContentNode
-
 from ..base import StudioTestCase
-from ..testdata import tree, fileobj_video, fileobj_exercise_image, fileobj_exercise_graphie
+from ..testdata import fileobj_exercise_graphie
+from ..testdata import fileobj_exercise_image
+from ..testdata import fileobj_video
+from ..testdata import tree
+from contentcuration.models import ContentNode
 
 
 class SampleContentNodeDataSchema:
@@ -107,7 +108,6 @@ class ApiAddNodesToTreeTestCase(StudioTestCase):
         # check that we can read the file and it's equivalent to
         # our original file object
         assert f.file_on_disk.read() == self.fileobj.file_on_disk.read()
-
 
 
 class ApiAddExerciseNodesToTreeTestCase(StudioTestCase):
@@ -248,4 +248,4 @@ class ApiAddExerciseNodesToTreeTestCase(StudioTestCase):
         assert file2.assessment_item == question2, 'not associated with right assessment item'
         assert file2.filename() == self.exercise_graphie.filename(), 'wrong file'
         assert file2.file_on_disk.read() == self.exercise_graphie.file_on_disk.read(), 'different contents'
-        assert file2.original_filename ==  self.exercise_graphie.original_filename, 'wrong original_filename'
+        assert file2.original_filename == self.exercise_graphie.original_filename, 'wrong original_filename'

@@ -1,22 +1,12 @@
 import base64
 import json
-import os
-import pytest
+
 import requests
-import tempfile
-
-from cStringIO import StringIO
-from django.test import Client
-from django.test import TestCase
-from mixer.backend.django import mixer
-from contentcuration import models
-
-from django.core.urlresolvers import reverse_lazy
-
-from rest_framework.test import APIClient
-
 from base import BaseTestCase
+from django.core.urlresolvers import reverse_lazy
 from testdata import create_temp_file
+
+from contentcuration import models
 from contentcuration import models as cc
 
 
@@ -37,9 +27,9 @@ def add_field_defaults_to_node(node):
             "questions": [],
             "extra_fields": {}
         })
-    if not "files" in node:
+    if "files" not in node:
         node["files"] = []
-    if not "description" in node:
+    if "description" not in node:
         node["description"] = ""
     if "children" in node:
         for i in range(0, len(node["children"])):
@@ -96,7 +86,7 @@ class CreateChannelTestCase(BaseTestCase):
         description_check = self.channel_metadata['description']
         thumbnail_check = self.channel_metadata['thumbnail']
         results = models.Channel.objects.filter(pk=channel_id, name=name_check, description=description_check,
-                                             thumbnail=thumbnail_check)
+                                                thumbnail=thumbnail_check)
         assert results.exists()
         channel = results.first()
         assert channel.main_tree.get_channel() == channel
@@ -177,7 +167,7 @@ class CreateChannelTestCase(BaseTestCase):
         channel = models.Channel.objects.get(pk=channel_id)
         assert channel.version == 0
 
-    ### Helper methods for constructing data
+    # Helper methods for constructing data
 
     def topic_tree_data(self):
         # FIXME: This method simply returns a data structure, but the complicating factor is that,

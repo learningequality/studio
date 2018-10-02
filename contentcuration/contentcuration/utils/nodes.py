@@ -2,11 +2,17 @@ import logging
 import os
 
 from django.conf import settings
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
 
-from contentcuration.models import AssessmentItem, ContentNode, File, FormatPreset, Language, User
+from contentcuration.models import AssessmentItem
+from contentcuration.models import ContentNode
+from contentcuration.models import File
+from contentcuration.models import FormatPreset
 from contentcuration.models import generate_object_storage_name
+from contentcuration.models import Language
+from contentcuration.models import User
 
 
 def map_files_to_node(user, node, data):
@@ -40,7 +46,7 @@ def map_files_to_node(user, node, data):
             if file_data.get('language'):
                 # TODO: Remove DB call per file?
                 file_data['language'] = Language.objects.get(pk=file_data['language'])
-        except ObjectDoesNotExist as e:
+        except ObjectDoesNotExist:
             invalid_lang = file_data.get('language')
             logging.warning("file_data with language {} does not exist.".format(invalid_lang))
             return ValidationError("file_data given was invalid; expected string, got {}".format(invalid_lang))
@@ -58,7 +64,6 @@ def map_files_to_node(user, node, data):
         )
         resource_obj.file_on_disk.name = file_path
         resource_obj.save()
-
 
 
 def map_files_to_assessment_item(user, assessment_item, data):
@@ -102,4 +107,3 @@ def filter_out_nones(data):
     Filter out any falsey values from data.
     """
     return (l for l in data if l)
-
