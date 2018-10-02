@@ -9,17 +9,15 @@ database to be specified for a block of code, as follows:
 
 Thanks to https://github.com/ambitioninc/django-dynamic-db-router for inspiration behind the approach taken here.
 """
-
 import os
 import threading
 from functools import wraps
 
 from django.apps import apps
 from django.conf import settings
-from django.db import DEFAULT_DB_ALIAS, connections
+from django.db import connections
+from django.db import DEFAULT_DB_ALIAS
 from django.db.utils import ConnectionDoesNotExist
-from django.test.utils import override_settings
-
 from kolibri_content.apps import KolibriContentConfig
 
 THREAD_LOCAL = threading.local()

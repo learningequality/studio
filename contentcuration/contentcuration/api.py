@@ -5,20 +5,22 @@ import hashlib
 import json
 import logging
 import os
-import shutil
 from cStringIO import StringIO
 
-import contentcuration.models as models
 from django.conf import settings
 from django.core.exceptions import SuspiciousOperation
 from django.core.files.storage import default_storage
-from django.db.models import Count, Q, Sum
+from django.db.models import Count
+from django.db.models import Q
+from django.db.models import Sum
 from django.http import HttpResponse
 from django.utils.translation import ugettext as _
-from le_utils.constants import format_presets, content_kinds, file_formats
+from le_utils.constants import content_kinds
+from le_utils.constants import format_presets
+
 import contentcuration.models as models
 from contentcuration.utils.garbage_collect import get_deleted_chefs_root
-from contentcuration.tasks import deletetree_task
+
 
 def check_health_check_browser(user_agent_string):
     """
@@ -35,7 +37,7 @@ def check_health_check_browser(user_agent_string):
 
 
 def write_file_to_storage(fobj, check_valid=False, name=None):
-    fobj.seek(0) # Make sure reading file from beginning
+    fobj.seek(0)  # Make sure reading file from beginning
     # Check that hash is valid
     checksum = hashlib.md5()
     for chunk in iter(lambda: fobj.read(4096), b""):
@@ -73,6 +75,7 @@ def write_raw_content_to_storage(contents, ext=None):
     storage.save(file_path, StringIO(contents))
 
     return hashed_filename, full_filename, file_path
+
 
 def get_hash(fobj):
     md5 = hashlib.md5()
@@ -285,7 +288,7 @@ def get_staged_diff(channel_id):
     for kind, name in content_kinds.choices:
         original = original_stats.get(kind_id=kind)['count'] if has_main and original_stats.filter(kind_id=kind).exists() else 0
         updated = updated_stats.get(kind_id=kind)['count'] if has_staging and updated_stats.filter(kind_id=kind).exists() else 0
-        stats.append({ "field": _("# of {}s".format(name)), "live": original, "staged": updated, "difference": updated - original })
+        stats.append({"field": _("# of {}s".format(name)), "live": original, "staged": updated, "difference": updated - original})
 
     # Add number of questions
     stats.append({
@@ -307,6 +310,7 @@ def get_staged_diff(channel_id):
 
     return stats
 
+
 def compress_nodes(ids, ffmpeg_settings=None, overwrite=False):
     from contentcuration.utils.files import compress_video_wrapper
 
@@ -314,7 +318,7 @@ def compress_nodes(ids, ffmpeg_settings=None, overwrite=False):
         if node.kind_id == content_kinds.VIDEO:
             logging.debug("Compressing {}...".format(node.title))
             uncompressed_file = node.files.filter(preset_id=format_presets.VIDEO_HIGH_RES).first()\
-                                or node.files.filter(preset_id=format_presets.VIDEO_LOW_RES).first()
+                or node.files.filter(preset_id=format_presets.VIDEO_LOW_RES).first()
             if uncompressed_file:
                 compressed_file = compress_video_wrapper(uncompressed_file, ffmpeg_settings=ffmpeg_settings)
                 logging.debug("   Compressed file {} to {}".format(str(uncompressed_file), str(compressed_file)))

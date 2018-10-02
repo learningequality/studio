@@ -1,18 +1,20 @@
 import datetime
 
+import testdata
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 from django.core.urlresolvers import reverse_lazy
 from django.test import TestCase
+from rest_framework.authtoken.models import Token
+from rest_framework.test import APIClient
+from rest_framework.test import APIRequestFactory
+from rest_framework.test import APITestCase
+from rest_framework.test import force_authenticate
 
 from contentcuration.models import User
 from contentcuration.utils import minio_utils
 from contentcuration.utils.policies import get_latest_policies
-from rest_framework.authtoken.models import Token
-from rest_framework.test import APIClient, APIRequestFactory, APITestCase, force_authenticate
-
-import testdata
 
 
 class BucketTestMixin:
@@ -89,6 +91,7 @@ class StudioAPITestCase(APITestCase, BucketTestMixin):
 
 
 class BaseTestCase(StudioTestCase):
+
     def setUp(self):
         super(BaseTestCase, self).setUp()
         self.channel = testdata.channel()
@@ -109,6 +112,7 @@ class BaseTestCase(StudioTestCase):
 
 
 class BaseAPITestCase(StudioAPITestCase):
+
     def setUp(self):
         super(BaseAPITestCase, self).setUp()
         self.channel = testdata.channel()

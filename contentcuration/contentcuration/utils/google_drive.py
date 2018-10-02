@@ -1,13 +1,9 @@
 import gspread
 import httplib2
-import json
-import requests
-
 from apiclient import discovery
 from django.conf import settings
-from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseNotFound
 from oauth2client.service_account import ServiceAccountCredentials
-from rest_framework.views import APIView
+
 
 def colnum_string(n):
     """ colnum_string: get column letter
@@ -20,11 +16,14 @@ def colnum_string(n):
         string = chr(65 + remainder) + string
     return string
 
+
 def get_credentials():
     scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
     return ServiceAccountCredentials.from_json_keyfile_name(settings.GOOGLE_AUTH_JSON, scope)
 
+
 class GoogleClient():
+
     def __init__(self, *args, **kwargs):
         credentials = get_credentials()
         self.client = gspread.authorize(credentials)

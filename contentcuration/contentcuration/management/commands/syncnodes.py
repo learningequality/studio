@@ -1,15 +1,15 @@
-import copy
-from django.core.management.base import BaseCommand
-from django.db import transaction
-from contentcuration.views.nodes import sync_channel
-from contentcuration.models import Channel
-from le_utils.constants import content_kinds
-
 import logging as logmodule
+
+from django.core.management.base import BaseCommand
+
+from contentcuration.models import Channel
+from contentcuration.views.nodes import sync_channel
 logmodule.basicConfig()
 logging = logmodule.getLogger(__name__)
 
+
 class Command(BaseCommand):
+
     def add_arguments(self, parser):
         parser.add_argument('channel_id', type=str)
         parser.add_argument('--attributes', action='store_true', dest='attributes', default=False)
@@ -20,9 +20,9 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         sync_channel(Channel.objects.get(pk=options['channel_id']),
-            sync_attributes=options.get('attributes'),
-            sync_tags=options.get('tags'),
-            sync_files=options.get('files'),
-            sync_assessment_items=options.get('assessment_items'),
-            sync_sort_order=options.get('sort'),
-        )
+                     sync_attributes=options.get('attributes'),
+                     sync_tags=options.get('tags'),
+                     sync_files=options.get('files'),
+                     sync_assessment_items=options.get('assessment_items'),
+                     sync_sort_order=options.get('sort'),
+                     )

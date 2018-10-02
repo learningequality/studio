@@ -3,10 +3,10 @@
 Studio garbage collection utilities. Clean up all these old, unused records!
 """
 from django.conf import settings
-from django.core.files.storage import default_storage as storage
-
-from contentcuration.models import ContentNode, File
 from le_utils.constants import content_kinds
+
+from contentcuration.models import ContentNode
+from contentcuration.models import File
 
 
 def get_deleted_chefs_root():
@@ -73,7 +73,7 @@ def clean_up_files(contentnode_ids):
         # values_list returns each set of items in a tuple, even
         # if there's only one item in there. Extract the file_on_disk
         # string value from inside that singleton tuple
-        file_path = f[0]
+        f[0]
         # NOTE (aron):call the storage's delete method on each file, one by one
         # disabled for now until we implement logic to not delete files
         # that are referenced by non-orphan nodes

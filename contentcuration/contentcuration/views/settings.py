@@ -1,31 +1,41 @@
 import json
-import math
 import os
-from datetime import date, timedelta, datetime
-from django.shortcuts import render, redirect
+from datetime import date
+from datetime import datetime
+from datetime import timedelta
+
 from django.conf import settings as ccsettings
 from django.contrib import messages
+from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import views, update_session_auth_hash
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import send_mail
-from django.db.models import Count
-from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden
+from django.core.urlresolvers import reverse_lazy
+from django.http import HttpResponse
+from django.http import HttpResponseBadRequest
+from django.http import HttpResponseForbidden
+from django.shortcuts import redirect
+from django.shortcuts import render
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext as _
 from django.views.generic.edit import FormView
-from contentcuration.forms import ProfileSettingsForm, AccountSettingsForm, PreferencesSettingsForm, PolicyAcceptForm, StorageRequestForm
+from le_utils.constants import content_kinds
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view
-from django.core.urlresolvers import reverse_lazy
-from contentcuration.decorators import browser_is_supported, has_accepted_policies
-from contentcuration.models import Channel, License
+
+from contentcuration.decorators import browser_is_supported
+from contentcuration.decorators import has_accepted_policies
+from contentcuration.forms import AccountSettingsForm
+from contentcuration.forms import PolicyAcceptForm
+from contentcuration.forms import PreferencesSettingsForm
+from contentcuration.forms import ProfileSettingsForm
+from contentcuration.forms import StorageRequestForm
+from contentcuration.models import Channel
 from contentcuration.tasks import generateusercsv_task
 from contentcuration.utils.csv_writer import generate_user_csv_filename
 from contentcuration.utils.google_drive import add_row_to_sheet
 from contentcuration.utils.policies import get_latest_policies
-from le_utils.constants import content_kinds
 
 
 @login_required
@@ -108,6 +118,7 @@ class PreferencesView(LoginRequiredMixin, FormView):
     def user(self):
         return self.request.user
 
+
 class PolicyAcceptView(LoginRequiredMixin, FormView):
     success_url = reverse_lazy('channels')
     form_class = PolicyAcceptForm
@@ -135,7 +146,7 @@ def account_settings(request):
     else:
         form = AccountSettingsForm(request.user)
 
-    channels = [ # Count on editors is always returning 1, so iterate manually
+    channels = [  # Count on editors is always returning 1, so iterate manually
         {"name": c.name, "id": c.id}
         for c in request.user.editable_channels.filter(deleted=False)
         if c.editors.count() == 1
@@ -159,7 +170,7 @@ def delete_user_account(request, user_email):
         return HttpResponseBadRequest(_("Cannot delete admin accounts"))
 
     # Send email to notify team about account being deleted
-    buffer_date  = (date.today()+timedelta(days=ccsettings.ACCOUNT_DELETION_BUFFER)).strftime('%A, %B %d %Y')
+    buffer_date = (date.today() + timedelta(days=ccsettings.ACCOUNT_DELETION_BUFFER)).strftime('%A, %B %d %Y')
     subject = "Kolibri Studio Account Deleted"
     message = render_to_string('settings/account_deleted_notification_email.txt', {"user": request.user, "buffer_date": buffer_date})
     send_mail(subject, message, ccsettings.DEFAULT_FROM_EMAIL, [ccsettings.REGISTRATION_INFORMATION_EMAIL])
@@ -181,13 +192,14 @@ def delete_user_account(request, user_email):
         if c.editors.count() == 1:
             c.delete()
 
-    csv_path = generate_user_csv_filename(request.user) # Remove any generated csvs
+    csv_path = generate_user_csv_filename(request.user)  # Remove any generated csvs
     if os.path.exists(csv_path):
         os.unlink(csv_path)
 
     request.user.delete()
 
-    return HttpResponse({"success" : True })
+    return HttpResponse({"success": True})
+
 
 @login_required
 @api_view(['POST'])
@@ -195,7 +207,8 @@ def export_user_data(request, user_email):
     if request.user.email != user_email:
         return HttpResponseForbidden(_("Cannot export another user's data"))
     generateusercsv_task.delay(user_email)
-    return HttpResponse({"success" : True })
+    return HttpResponse({"success": True})
+
 
 def account_deleted(request):
     return render(request, "settings/account_deleted.html")
@@ -208,11 +221,13 @@ def tokens_settings(request):
                                                     "page": "tokens",
                                                     "tokens": [str(user_token)]})
 
+
 @login_required
 def policies_settings(request):
     return render(request, 'settings/policy.html', {"current_user": request.user,
                                                     "page": "policies",
                                                     "policies": get_latest_policies()})
+
 
 KIND_TRANSLATIONS = {
     content_kinds.TOPIC: _("Topics"),
@@ -222,6 +237,8 @@ KIND_TRANSLATIONS = {
     content_kinds.DOCUMENT: _("Documents"),
     content_kinds.HTML5: _("HTML Apps"),
 }
+
+
 class StorageSettingsView(LoginRequiredMixin, FormView):
     success_url = reverse_lazy('storage_settings')
     template_name = 'settings/storage.html'
@@ -239,8 +256,11 @@ class StorageSettingsView(LoginRequiredMixin, FormView):
             # Send email with storage request
             channel_ids = form.cleaned_data.get("public") or ""
             channels = Channel.objects.filter(pk__in=channel_ids.split(',')).values('id', 'name')
-            #  name, email, storage requested, date of request, number of resources, average resource size, kind of content, licenses, potential public channels, audience, uploading for, message, time constraint
-            uploading_for = "{} (organization)".format(form.cleaned_data.get('organization')) if form.cleaned_data.get('org_or_personal') == "Organization" else form.cleaned_data.get('org_or_personal')
+            # name, email, storage requested, date of request, number of resources,
+            # average resource size, kind of content, licenses, potential public
+            # channels, audience, uploading for, message, time constraint
+            uploading_for = "{} (organization)".format(form.cleaned_data.get('organization')) if form.cleaned_data.get(
+                'org_or_personal') == "Organization" else form.cleaned_data.get('org_or_personal')
             values = [
                 "{} {}".format(request.user.first_name, request.user.last_name),
                 request.user.email,
@@ -280,12 +300,12 @@ class StorageSettingsView(LoginRequiredMixin, FormView):
         storage_used = self.request.user.get_space_used()
         storage_percent = (min(storage_used / float(self.request.user.disk_space), 1) * 100)
         breakdown = [{
-                        "name": KIND_TRANSLATIONS.get(k),
-                        "size": v,
-                        "percent": "%.2f" % (min(float(v) / float(self.request.user.disk_space), 1) * 100)
-                    } for k,v in self.request.user.get_space_used_by_kind().items()]
+            "name": KIND_TRANSLATIONS.get(k),
+            "size": v,
+            "percent": "%.2f" % (min(float(v) / float(self.request.user.disk_space), 1) * 100)
+        } for k, v in self.request.user.get_space_used_by_kind().items()]
 
-        kwargs.update( {
+        kwargs.update({
             "current_user": self.request.user,
             "page": "storage",
             "percent_used": "%.2f" % storage_percent,
