@@ -1,25 +1,28 @@
 import datetime
-import time
 import mimetypes
 import os
 import re
+import time
 import zipfile
 
-from raven.contrib.django.raven_compat.models import client
-
 from django.core.files.storage import default_storage
-from django.http import Http404, HttpResponse, HttpResponseNotFound, HttpResponseServerError
-from django.http.response import FileResponse, HttpResponseNotModified
+from django.http import HttpResponse
+from django.http import HttpResponseNotFound
+from django.http import HttpResponseServerError
+from django.http.response import FileResponse
+from django.http.response import HttpResponseNotModified
 from django.utils.http import http_date
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.generic.base import View
 from le_utils.constants import exercises
+from raven.contrib.django.raven_compat.models import client
+
 from contentcuration.models import generate_object_storage_name
 
 try:
-    from urlparse import urljoin
+    pass
 except ImportError:
-    from urllib.parse import urljoin
+    pass
 
 
 # valid storage filenames consist of 32-char hex plus a file extension
@@ -40,6 +43,7 @@ def _add_access_control_headers(request, response):
 # DISK PATHS
 
 class ZipContentView(View):
+
     @xframe_options_exempt
     def options(self, request, *args, **kwargs):
         """
@@ -49,7 +53,7 @@ class ZipContentView(View):
         _add_access_control_headers(request, response)
         return response
 
-    @xframe_options_exempt
+    @xframe_options_exempt  # noqa
     def get(self, request, zipped_filename, embedded_filepath):
         """
         Handles GET requests and serves a static file from within the zip file.
@@ -105,14 +109,15 @@ class ZipContentView(View):
                     file_size = len(content_with_path)
         except zipfile.BadZipfile:
             just_downloaded = getattr(zf_obj, 'just_downloaded', "Unknown (Most likely local file)")
-            client.captureMessage("Unable to open zip file. File info: name={}, size={}, mode={}, just_downloaded={}".format(zf_obj.name, zf_obj.size, zf_obj.mode, just_downloaded))
+            client.captureMessage("Unable to open zip file. File info: name={}, size={}, mode={}, just_downloaded={}".format(
+                zf_obj.name, zf_obj.size, zf_obj.mode, just_downloaded))
             return HttpResponseServerError("Attempt to open zip file failed. Please try again, and if you continue to receive this message, please check that the zip file is valid.")
 
         # set the last-modified header to the date marked on the embedded file
         if info.date_time:
             response["Last-Modified"] = http_date(time.mktime(datetime.datetime(*info.date_time).timetuple()))
 
-        #cache these resources forever; this is safe due to the MD5-naming used on content files
+        # cache these resources forever; this is safe due to the MD5-naming used on content files
         response["Expires"] = "Sun, 17-Jan-2038 19:14:07 GMT"
 
         # set the content-length header to the size of the embedded file

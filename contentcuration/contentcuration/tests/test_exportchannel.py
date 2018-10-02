@@ -6,20 +6,17 @@ import tempfile
 from cStringIO import StringIO
 
 import pytest
-from django.conf import settings
+from base import StudioTestCase
 from django.core.files.storage import default_storage
-from django.core.management import call_command
-from django.test import TestCase
 from django.test.utils import override_settings
+from kolibri_content import models
+from kolibri_content.router import using_content_database
 from mixer.backend.django import mixer
 from mock import patch
 
-from base import StudioTestCase
 from contentcuration import models as cc
-from contentcuration.management.commands.exportchannel import (MIN_SCHEMA_VERSION,
-                                                               create_content_database)
-from kolibri_content import models
-from kolibri_content.router import using_content_database
+from contentcuration.management.commands.exportchannel import create_content_database
+from contentcuration.management.commands.exportchannel import MIN_SCHEMA_VERSION
 
 pytestmark = pytest.mark.django_db
 
@@ -132,7 +129,8 @@ def channel():
         level1 = mixer.blend(cc.ContentNode, parent=root, kind=topic())
         level2 = mixer.blend(cc.ContentNode, parent=level1, kind=topic())
         leaf = mixer.blend(cc.ContentNode, parent=level2, kind=video())
-        leaf2 = mixer.blend(cc.ContentNode, parent=level2, kind=exercise(), title='EXERCISE 1', extra_fields="{\"mastery_model\":\"do_all\",\"randomize\":true}")
+        leaf2 = mixer.blend(cc.ContentNode, parent=level2, kind=exercise(), title='EXERCISE 1',
+                            extra_fields="{\"mastery_model\":\"do_all\",\"randomize\":true}")
 
         video_file = fileobj_video()
         video_file.contentnode = leaf
@@ -161,23 +159,28 @@ def channel():
 
 CONTENT_DATABASE_DIR_TEMP = tempfile.mkdtemp()
 
+
 @override_settings(
     CONTENT_DATABASE_DIR=CONTENT_DATABASE_DIR_TEMP,
 )
 class ExportChannelTestCase(StudioTestCase):
+
     @classmethod
     def setUpClass(cls):
         super(ExportChannelTestCase, cls).setUpClass()
-        fh, output_db = tempfile.mkstemp(suffix=".sqlite3",dir=CONTENT_DATABASE_DIR_TEMP)
+        fh, output_db = tempfile.mkstemp(suffix=".sqlite3", dir=CONTENT_DATABASE_DIR_TEMP)
         output_db = output_db
         output_db_alias = os.path.splitext(os.path.basename(output_db))[0]
+
         class testing_content_database(using_content_database):
+
             def __init__(self, alias):
                 self.alias = output_db_alias
 
             def __exit__(self, exc_type, exc_value, traceback):
                 return
-        cls.patch_using = patch('contentcuration.management.commands.exportchannel.using_content_database.__new__', return_value=testing_content_database('alias'))
+        cls.patch_using = patch('contentcuration.management.commands.exportchannel.using_content_database.__new__',
+                                return_value=testing_content_database('alias'))
         cls.patch_using.start()
         cls.patch_copy_db = patch('contentcuration.management.commands.exportchannel.save_export_database')
         cls.patch_copy_db.start()

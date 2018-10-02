@@ -1,18 +1,16 @@
 import hashlib
 import json
-import md5
 import os
 import random
 import string
-import tempfile
 from cStringIO import StringIO
 
 import pytest
 from django.core.files.storage import default_storage
+from le_utils.constants import format_presets
 from mixer.backend.django import mixer
 
 from contentcuration import models as cc
-from le_utils.constants import format_presets
 pytestmark = pytest.mark.django_db
 
 
@@ -64,12 +62,14 @@ def fileformat_mp4():
     """
     return mixer.blend(cc.FileFormat, extension='mp4', mimetype='application/video')
 
+
 @pytest.fixture
 def license_wtfpl():
     """
     Create a license object called WTF License.
     """
     return cc.License.objects.first() or mixer.blend(cc.License, license_name="WTF License")
+
 
 def fileobj_video(contents=None):
     """
@@ -111,7 +111,7 @@ def node(data, parent=None):
         new_node.save()
 
         for child in data['children']:
-            child_node = node(child, parent=new_node)
+            node(child, parent=new_node)
 
     # Create videos
     elif data['kind_id'] == "video":
@@ -125,16 +125,17 @@ def node(data, parent=None):
     # Create exercises
     elif data['kind_id'] == "exercise":
         extra_fields = "{{\"mastery_model\":\"{}\",\"randomize\":true,\"m\":{},\"n\":{}}}".format(data['mastery_model'], data.get('m') or 0, data.get('n') or 0)
-        new_node = cc.ContentNode(kind=exercise(), parent=parent, title=data['title'], node_id=data['node_id'], license=license_wtfpl(), extra_fields=extra_fields)
+        new_node = cc.ContentNode(kind=exercise(), parent=parent, title=data['title'], node_id=data[
+                                  'node_id'], license=license_wtfpl(), extra_fields=extra_fields)
         new_node.save()
         for assessment_item in data['assessment_items']:
             mixer.blend(cc.AssessmentItem,
-                contentnode=new_node,
-                assessment_id=assessment_item['assessment_id'],
-                question=assessment_item['question'],
-                type=assessment_item['type'],
-                answers=json.dumps(assessment_item['answers'])
-            )
+                        contentnode=new_node,
+                        assessment_id=assessment_item['assessment_id'],
+                        question=assessment_item['question'],
+                        type=assessment_item['type'],
+                        answers=json.dumps(assessment_item['answers'])
+                        )
 
     return new_node
 
@@ -157,9 +158,11 @@ def channel():
 
     return channel
 
+
 def user():
     user = cc.User.objects.create(email='user@test.com')
     user.set_password('password')
+    user.is_active = True
     user.save()
     return user
 
@@ -199,6 +202,7 @@ def create_temp_file(filebytes, preset='document', ext='pdf', original_filename=
                               file_on_disk=storage_file_path)
 
     return {'name': os.path.basename(storage_file_path), 'data': filebytes, 'file': fileobj, 'db_file': db_file_obj}
+
 
 invalid_file_json = [
     {
@@ -246,7 +250,6 @@ invalid_file_json = [
 ]
 
 
-
 def fileobj_exercise_image():
     """
     Create a generic exercise image file in storage and return a File model pointing to it.
@@ -254,6 +257,7 @@ def fileobj_exercise_image():
     filecontents = "".join(random.sample(string.printable, 20))
     temp_file_dict = create_temp_file(filecontents, preset=format_presets.EXERCISE_IMAGE, ext='jpg')
     return temp_file_dict['db_file']
+
 
 def fileobj_exercise_graphie():
     """

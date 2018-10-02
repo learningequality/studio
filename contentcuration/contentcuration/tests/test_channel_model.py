@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 from datetime import datetime
 
-from django.test import TestCase
 from mixer.backend.django import mixer
 
-from contentcuration.models import Channel
 from .base import StudioTestCase
-from .testdata import channel, node
+from .testdata import channel
+from .testdata import node
+from contentcuration.models import Channel
 
 
 class PublicChannelsTestCase(StudioTestCase):
@@ -25,6 +25,7 @@ class PublicChannelsTestCase(StudioTestCase):
         assert c.public
     # TODO(aron): test the bypass_signals arg to make_public
     #
+
 
 class ChannelTokenTestCase(StudioTestCase):
 
@@ -53,6 +54,7 @@ class ChannelTokenTestCase(StudioTestCase):
         self.channel.make_token()
 
         assert self.channel.get_channel_id_token().token == self.channel.id
+
 
 class ChannelResourceCountTestCase(StudioTestCase):
     """

@@ -29,16 +29,16 @@
 					{% for option in form.use %}
 						<div class="use-option row">
 							<div class="col-xs-1 check-wrapper">
-								<input id="{{option.attrs.id}}" name="{{option.name}}" type="checkbox" value="{{option.choice_value}}" class="check_{{option.choice_value}}" {% if option.choice_value in option.value %}checked{% endif %}>
+								<input id="{{option.data.attrs.id}}" name="{{option.data.name}}" type="checkbox" value="{{option.data.value}}" class="check_{{option.data.value}}" {% if option.data.value in option.value %}checked{% endif %}>
 							</div>
 							<div class="col-xs-11">
-								<label for="{{option.attrs.id}}">{{option.choice_label}}</label>
-								{% if option.choice_value == 'storage' %}
+								<label for="{{option.data.attrs.id}}">{{option.data.label}}</label>
+								{% if option.data.value == 'storage' %}
 								<div id="storage" class="optional_field">
 									{{form.storage.label}}<i class="required_asterisk">*</i> &nbsp;{{form.storage}}
 								</div>
 								{% endif %}
-								{% if option.choice_value == 'other' %}
+								{% if option.data.value == 'other' %}
 									{{form.other_use}}
 								{% endif %}
 							</div>
@@ -90,7 +90,7 @@
 		</div>
 		<div class="row">
 			<div class="col-xs-12">
-				<a href="{% url 'django.contrib.auth.views.login' %}" class="action-text login-action-text" id="register_prompt">{% trans "Back to Log In" %}</a>
+				<a href="{% url 'login' %}" class="action-text login-action-text" id="register_prompt">{% trans "Back to Log In" %}</a>
 			</div>
 		</div>
 	</form>

@@ -1,6 +1,5 @@
 import datetime
 import json
-from django.utils.translation import ugettext as _
 
 POLICIES = {
     "privacy_policy": {
@@ -43,8 +42,9 @@ def check_policies(user):
     for k, v in POLICIES.items():
         policy_name = "{}_{}".format(k, v["latest"])
         if not policies.get(policy_name):
-            policies_to_accept.update({ policy_name: v["policies"][v["latest"]] })
+            policies_to_accept.update({policy_name: v["policies"][v["latest"]]})
     return policies_to_accept
+
 
 def get_latest_policies():
     return {"{}_{}".format(k, v["latest"]): v["policies"][v["latest"]] for k, v in POLICIES.items()}

@@ -3,7 +3,7 @@ import newrelic.agent
 from le_utils.constants import content_kinds
 
 
-def record_channel_stats(channel, original_channel):
+def record_channel_stats(channel, original_channel):  # noqa: C901
     """
     :param channel: The channel the current action is being performed on.
     :param original_channel: The `channel` before the action was performed.
@@ -104,9 +104,9 @@ def record_node_addition_stats(nodes_being_added, original_first_node, user_id):
 
     root_node = parent_node.get_root()
     action_attributes['channel_num_resources'] = root_node.get_descendants().exclude(kind=content_kinds.TOPIC).count() \
-                                                 + (action_attributes.get('num_resources_added') or 0)
+        + (action_attributes.get('num_resources_added') or 0)
     action_attributes['channel_num_nodes'] = root_node.get_descendant_count() \
-                                             + (action_attributes.get('num_nodes_added') or 0)
+        + (action_attributes.get('num_nodes_added') or 0)
 
     record_channel_action_stats(action_attributes)
 
@@ -151,7 +151,7 @@ def record_node_duplication_stats(original_nodes_being_copied, target_parent, de
     action_attributes['original_channel'] = node_to_copy.original_channel_id
 
     source_channel = node_to_copy.get_channel()
-    if source_channel: # No need to record stats on clipboard duplication
+    if source_channel:  # No need to record stats on clipboard duplication
         action_attributes['content_source'] = 'Human' if source_channel.ricecooker_version is None else 'Ricecooker'
         action_attributes['source_channel'] = source_channel.id
 
@@ -162,7 +162,7 @@ def record_node_duplication_stats(original_nodes_being_copied, target_parent, de
         action_attributes['channel_num_resources'] = destination_channel.main_tree.get_descendants().exclude(
             kind=content_kinds.TOPIC).count() + (action_attributes.get('num_resources_added') or 0)
         action_attributes['channel_num_nodes'] = destination_channel.main_tree.get_descendant_count() \
-                                                 + (action_attributes.get('num_nodes_added') or 0)
+            + (action_attributes.get('num_nodes_added') or 0)
     record_channel_action_stats(action_attributes)
 
 
@@ -199,6 +199,8 @@ def record_action_stats(nodes_being_added, user_id):
     :param nodes_being_added: The nodes being added to the human channel.
     :param user_id: The id of the user committing the action.
     """
+
+    from contentcuration.models import ContentNode  # import here to avoid circular imports
 
     action_attributes = dict(action_source='Human', content_source='Human', user_id=user_id)
 

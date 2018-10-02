@@ -1,21 +1,18 @@
 import base64
+import cStringIO
 import os
-import sys
 
-from django.conf import settings
 from django import template
+from django.conf import settings
 from django.template.defaultfilters import stringfilter
 from PIL import Image
-from resizeimage import resizeimage
 
 from contentcuration.models import generate_file_on_disk_name
-
-
-import cStringIO
 
 THUMBNAIL_DIMENSION = 200
 
 register = template.Library()
+
 
 @register.filter(is_safe=True)
 @stringfilter
@@ -40,6 +37,7 @@ def encode_base64(value):
         with open(filepath, 'rb') as image_file:
             _, ext = os.path.splitext(value)
             return "data:image/{};base64,{}".format(ext[1:], base64.b64encode(image_file.read()))
+
 
 @register.filter(is_safe=True)
 @stringfilter

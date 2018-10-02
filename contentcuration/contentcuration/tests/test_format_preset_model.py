@@ -1,7 +1,9 @@
 import types
 
-from contentcuration.models import FormatPreset
 from base import StudioTestCase
+
+from contentcuration.models import FormatPreset
+
 
 class GetPresetTestCase(StudioTestCase):
 
@@ -52,4 +54,3 @@ class GuessFormatPresetTestCase(StudioTestCase):
         filename = "blah.hat"
         model = FormatPreset.guess_format_preset(filename)
         assert isinstance(model, types.NoneType)
-
