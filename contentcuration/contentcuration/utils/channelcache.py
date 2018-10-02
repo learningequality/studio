@@ -2,10 +2,10 @@
 #
 # Utilities related to caching expensive endpoints.
 #
-
 from django.core.cache import cache
 
 from contentcuration.models import Channel
+
 
 class ChannelCacher(object):
     """
@@ -14,10 +14,10 @@ class ChannelCacher(object):
     """
 
     PUBLIC_CHANNEL_CACHE_KEY = "public_channel_cache"
-    PUBLIC_CHANNEL_CACHE_TIMEOUT = 60 # seconds
+    PUBLIC_CHANNEL_CACHE_TIMEOUT = 60  # seconds
 
     ALL_CHANNELS_CACHE_KEY = "all_channels_cache"
-    ALL_CHANNELS_TIMEOUT = 60 * 10 # 10 minutes
+    ALL_CHANNELS_TIMEOUT = 60 * 10  # 10 minutes
 
     @classmethod
     def get_all_channels(cls):
@@ -59,13 +59,13 @@ class ChannelCacher(object):
 class ChannelSpecificCacher(object):
 
     CHANNEL_TOKEN_CACHE_KEY_PREFIX = "channel_token"
-    CHANNEL_TOKEN_CACHE_TIMEOUT = 60 # seconds
+    CHANNEL_TOKEN_CACHE_TIMEOUT = 60  # seconds
 
     CHANNEL_RESOURCE_COUNT_KEY_PREFIX = "channel_resource_count"
-    CHANNEL_RESOURCE_COUNT_CACHE_TIMEOUT = 30 # seconds
+    CHANNEL_RESOURCE_COUNT_CACHE_TIMEOUT = 30  # seconds
 
     CHANNEL_DATE_MODIFIED_KEY_PREFIX = "channel_date_modified"
-    CHANNEL_DATE_MODIFIED_CACHE_TIMEOUT = 30 # seconds
+    CHANNEL_DATE_MODIFIED_CACHE_TIMEOUT = 30  # seconds
 
     def __init__(self, channel):
         self.channel = channel

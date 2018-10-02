@@ -1,6 +1,13 @@
 from django.core.exceptions import PermissionDenied
 from rest_framework import permissions
-from contentcuration.models import Channel, ContentNode, ContentTag, File, User, AssessmentItem, Invitation
+
+from contentcuration.models import AssessmentItem
+from contentcuration.models import Channel
+from contentcuration.models import ContentNode
+from contentcuration.models import ContentTag
+from contentcuration.models import File
+from contentcuration.models import Invitation
+from contentcuration.models import User
 
 
 def user_can_edit(user, channel):
@@ -10,6 +17,7 @@ def user_can_edit(user, channel):
         raise PermissionDenied("Cannot edit content")
     return True
 
+
 def user_can_view(user, channel):
     if isinstance(channel, int) or isinstance(channel, basestring):
         channel = Channel.objects.filter(pk=channel).first()
@@ -17,7 +25,9 @@ def user_can_view(user, channel):
         raise PermissionDenied("Cannot view content")
     return True
 
+
 class CustomPermission(permissions.BasePermission):
+
     def has_object_permission(self, request, view, obj):
         if request.method in permissions.SAFE_METHODS or request.user.is_admin:
             return True

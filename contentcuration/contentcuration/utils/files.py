@@ -1,23 +1,29 @@
 import copy
 import os
 import random
-import requests
 import shutil
 import tempfile
 import zipfile
 from multiprocessing.dummy import Pool
 
-from contentcuration.api import (write_file_to_storage,
-                                 write_raw_content_to_storage)
-from contentcuration.models import (File, generate_file_on_disk_name,
-                                    generate_object_storage_name)
+import requests
 from django.conf import settings
 from django.core.files import File as DjFile
 from django.core.files.storage import default_storage
-from le_utils.constants import content_kinds, file_formats, format_presets
-from pressurecooker.images import (create_image_from_pdf_page,
-                                   create_tiled_image, create_waveform_image)
-from pressurecooker.videos import compress_video, extract_thumbnail_from_video
+from le_utils.constants import content_kinds
+from le_utils.constants import file_formats
+from le_utils.constants import format_presets
+from pressurecooker.images import create_image_from_pdf_page
+from pressurecooker.images import create_tiled_image
+from pressurecooker.images import create_waveform_image
+from pressurecooker.videos import compress_video
+from pressurecooker.videos import extract_thumbnail_from_video
+
+from contentcuration.api import write_file_to_storage
+from contentcuration.api import write_raw_content_to_storage
+from contentcuration.models import File
+from contentcuration.models import generate_file_on_disk_name
+from contentcuration.models import generate_object_storage_name
 
 
 def create_file_from_contents(contents, ext=None, node=None, preset_id=None, uploaded_by=None):
@@ -40,7 +46,6 @@ def get_file_diff(files):
     storage, and return.
 
     """
-    storage = default_storage
 
     # We use a thread pool in here, making direct HEAD requests to the storage URL
     # to see if the objects exist.
@@ -50,6 +55,7 @@ def get_file_diff(files):
     ret = []
 
     session = requests.Session()
+
     def check_file_url(f):
         filepath = generate_object_storage_name(os.path.splitext(f)[0], f)
         url = "/".join([settings.AWS_S3_ENDPOINT_URL, settings.AWS_S3_BUCKET_NAME, filepath])

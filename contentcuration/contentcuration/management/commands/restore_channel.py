@@ -1,16 +1,18 @@
+import datetime
+import logging as logmodule
+import os
 import sqlite3
 import sys
-import os
-import datetime
+
 from django.conf import settings
-from django.core.management.base import BaseCommand
-from django.core.files.uploadedfile import SimpleUploadedFile
-from django.db import transaction
 from django.core.files import File as DJFile
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.management.base import BaseCommand
+from django.db import transaction
 from le_utils.constants import content_kinds
+
 from contentcuration import models
 from contentcuration.api import write_file_to_storage
-import logging as logmodule
 logging = logmodule.getLogger(__name__)
 
 CHANNEL_TABLE = 'content_channelmetadata'
@@ -25,6 +27,7 @@ TAG_COUNT = 0
 
 
 class EarlyExit(BaseException):
+
     def __init__(self, message, db_path):
         self.message = message
         self.db_path = db_path
@@ -90,7 +93,8 @@ def create_channel(cursor, target_id):
             target_id (str): channel_id to write to
         Returns: channel model created and id of root node
     """
-    id, name, description, thumbnail, root_pk, version = cursor.execute('SELECT id, name, description, thumbnail, root_pk, version FROM {table}'.format(table=CHANNEL_TABLE)).fetchone()
+    id, name, description, thumbnail, root_pk, version = cursor.execute(
+        'SELECT id, name, description, thumbnail, root_pk, version FROM {table}'.format(table=CHANNEL_TABLE)).fetchone()
     channel, is_new = models.Channel.objects.get_or_create(pk=target_id)
     channel.name = name
     channel.description = description

@@ -1,16 +1,18 @@
-from __future__ import absolute_import, unicode_literals
-
-import os
+from __future__ import absolute_import
+from __future__ import unicode_literals
 
 from celery.decorators import task
 from celery.utils.log import get_task_logger
 from django.conf import settings
+from django.core.mail import EmailMessage
 from django.core.management import call_command
 from django.template.loader import render_to_string
-from django.core.mail import EmailMessage
 
-from contentcuration.models import Channel, User, ContentNode
-from contentcuration.utils.csv_writer import write_channel_csv_file, write_user_csv
+from contentcuration.models import Channel
+from contentcuration.models import ContentNode
+from contentcuration.models import User
+from contentcuration.utils.csv_writer import write_channel_csv_file
+from contentcuration.utils.csv_writer import write_user_csv
 
 logger = get_task_logger(__name__)
 
@@ -31,9 +33,12 @@ logger = get_task_logger(__name__)
 #     pass
 
 # runs the management command 'exportchannel' async through celery
+
+
 @task(name='exportchannel_task')
 def exportchannel_task(channel_id, user_id):
     call_command('exportchannel', channel_id, email=True, user_id=user_id)
+
 
 @task(name='generatechannelcsv_task')
 def generatechannelcsv_task(channel_id, domain, user_id):
@@ -65,6 +70,7 @@ def generateusercsv_task(email):
     email.attach_file(csv_path)
 
     email.send()
+
 
 @task(name='deletetree_task')
 def deletetree_task(tree_id):

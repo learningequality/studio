@@ -1,17 +1,15 @@
 #!/usr/bin/env python
-import sys
 from cStringIO import StringIO
 
 import pytest
-from django.test import TestCase
 from django.core.files import File
-from mock import create_autospec
-from mixer.main import mixer
+from django.test import TestCase
 from google.cloud.storage import Client
 from google.cloud.storage.blob import Blob
+from mixer.main import mixer
+from mock import create_autospec
 
 from contentcuration.utils.gcs_storage import GoogleCloudStorage as gcs
-from .utils import slowtest
 
 
 class MimeTypesTestCase(TestCase):

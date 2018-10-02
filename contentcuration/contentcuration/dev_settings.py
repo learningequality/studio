@@ -1,12 +1,10 @@
-import logging
-import os
-
 from .test_settings import *
 
 # These endpoints will throw an error on the django debug panel
 EXCLUDED_DEBUG_URLS = [
     "/content/storage",
 ]
+
 
 def custom_show_toolbar(request):
     return not any(request.path.startswith(url) for url in EXCLUDED_DEBUG_URLS)
@@ -16,7 +14,7 @@ LANGUAGES += (
 )
 
 try:
-    import debug_panel
+    pass
 except ImportError:
     # no debug panel, no use trying to add it to our middleware
     pass

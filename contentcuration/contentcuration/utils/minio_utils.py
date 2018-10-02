@@ -8,7 +8,8 @@ from urlparse import urlparse
 import minio
 from django.conf import settings
 from minio import policy
-from minio.error import BucketAlreadyOwnedByYou, ResponseError
+from minio.error import BucketAlreadyOwnedByYou
+from minio.error import ResponseError
 
 logger = logging.getLogger(__name__)
 
@@ -109,4 +110,3 @@ def ensure_bucket_deleted(bucket=None):
             minio_client.remove_bucket(bucketname)
         except BucketAlreadyOwnedByYou:
             pass
-

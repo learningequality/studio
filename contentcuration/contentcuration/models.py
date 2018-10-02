@@ -1,40 +1,49 @@
 import ast
-import collections
 import functools
 import hashlib
 import json
 import logging
 import os
-import socket
-import sys
 import urlparse
 import uuid
 import warnings
 
 from django.conf import settings
-from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
+from django.contrib.auth.base_user import AbstractBaseUser
+from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
+from django.contrib.postgres.fields import JSONField
 from django.core.cache import cache
-from django.core.exceptions import (MultipleObjectsReturned,
-                                    ObjectDoesNotExist, PermissionDenied)
-from django.core.files.storage import FileSystemStorage, default_storage
+from django.core.exceptions import MultipleObjectsReturned
+from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import PermissionDenied
+from django.core.files.storage import default_storage
+from django.core.files.storage import FileSystemStorage
 from django.core.mail import send_mail
-from django.db import IntegrityError, connection, models
-from django.db.models import Q, Sum, Max
+from django.db import connection
+from django.db import IntegrityError
+from django.db import models
+from django.db.models import Max
+from django.db.models import Q
+from django.db.models import Sum
 from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.translation import ugettext as _
-from django.contrib.postgres.fields import JSONField
 from le_utils import proquint
-from le_utils.constants import (content_kinds, exercises, file_formats, licenses,
-                                format_presets, languages, roles)
-from mptt.models import (MPTTModel, TreeForeignKey, TreeManager,
-                         raise_if_unsaved)
-
+from le_utils.constants import content_kinds
+from le_utils.constants import exercises
+from le_utils.constants import file_formats
+from le_utils.constants import format_presets
+from le_utils.constants import languages
+from le_utils.constants import licenses
+from le_utils.constants import roles
+from mptt.models import MPTTModel
+from mptt.models import raise_if_unsaved
+from mptt.models import TreeForeignKey
+from mptt.models import TreeManager
 from pg_utils import DistinctSum
 
 from contentcuration.statistics import record_channel_stats
-from contentcuration.utils.networking import get_local_ip_address
 
 EDIT_ACCESS = "edit"
 VIEW_ACCESS = "view"
@@ -78,6 +87,7 @@ TreeManager._create_tree_space = _create_tree_space
 
 
 class UserManager(BaseUserManager):
+
     def create_user(self, email, first_name, last_name, password=None):
         if not email:
             raise ValueError('Email address not specified')
@@ -160,7 +170,6 @@ class User(AbstractBaseUser, PermissionsMixin):
         if self.get_available_space(active_files=active_files) < (active_size + staged_size):
             raise PermissionDenied(_('Out of storage! Request more space under Settings > Storage.'))
 
-
     def check_staged_space(self, size, checksum):
         if checksum in self.staged_files.values_list('checksum', flat=True):
             return True
@@ -177,14 +186,14 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def get_user_active_trees(self):
         return self.editable_channels.exclude(deleted=True)\
-                .values_list('main_tree__tree_id', flat=True)
+            .values_list('main_tree__tree_id', flat=True)
 
     def get_user_active_files(self):
         active_trees = self.get_user_active_trees()
         return self.files.select_related('contentnode')\
-                            .filter(Q(contentnode__tree_id__in=active_trees))\
-                            .values('checksum', 'file_size')\
-                            .distinct()
+            .filter(Q(contentnode__tree_id__in=active_trees))\
+            .values('checksum', 'file_size')\
+            .distinct()
 
     def get_space_used(self, active_files=None):
         active_files = active_files or self.get_user_active_files()
@@ -246,6 +255,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 
 class UUIDField(models.CharField):
+
     def __init__(self, *args, **kwargs):
         kwargs['max_length'] = 32
         super(UUIDField, self).__init__(*args, **kwargs)
@@ -255,6 +265,7 @@ class UUIDField(models.CharField):
         if isinstance(result, uuid.UUID):
             result = result.hex
         return result
+
 
 def file_on_disk_name(instance, filename):
     """
@@ -334,7 +345,7 @@ def generate_storage_url(filename, request=None, *args):
         # access even if they don't need to log in
         params = urlparse.urlparse(default_storage.url(path)).query
         host = "localhost"
-        port = 9000 # hardcoded to the default minio IP address
+        port = 9000  # hardcoded to the default minio IP address
         url = "http://{host}:{port}/{bucket}/{path}?{params}".format(
             host=host,
             port=port,
@@ -360,7 +371,6 @@ class FileOnDiskStorage(FileSystemStorage):
             logging.warn('Content copy "%s" already exists!' % name)
             return name
         return super(FileOnDiskStorage, self)._save(name, content)
-
 
 
 class ChannelResourceSize(models.Model):
@@ -495,7 +505,6 @@ class Channel(models.Model):
         cache.set(self.resource_size_key(), files['resource_size'] or 0, None)
         return files['resource_size'] or 0
 
-
     def save(self, *args, **kwargs):
 
         original_channel = None
@@ -576,7 +585,6 @@ class Channel(models.Model):
     def get_channel_id_token(self):
         return self.secret_tokens.get(token=self.id)
 
-
     def make_token(self):
         """
         Creates a primary secret token for the current channel using a proquint
@@ -634,11 +642,11 @@ class Channel(models.Model):
         trees except for the main_tree."""
         if defer_nonmain_trees:
             c = (Channel.objects
-                .filter(public=True)
-                .exclude(deleted=True)
-                .select_related('main_tree')
-                .prefetch_related('editors')
-                .defer('trash_tree', 'clipboard_tree', 'staging_tree', 'chef_tree', 'previous_tree', 'viewers'))
+                 .filter(public=True)
+                 .exclude(deleted=True)
+                 .select_related('main_tree')
+                 .prefetch_related('editors')
+                 .defer('trash_tree', 'clipboard_tree', 'staging_tree', 'chef_tree', 'previous_tree', 'viewers'))
         else:
             c = Channel.objects.filter(public=True).exclude(deleted=True)
 
@@ -697,11 +705,13 @@ class License(models.Model):
     def __str__(self):
         return self.license_name
 
+
 def get_next_sort_order(node=None):
     # Get the next sort order under parent (roots if None)
     # Based on Kevin's findings, we want to append node as prepending causes all other root sort_orders to get incremented
     max_order = ContentNode.objects.filter(parent=node).aggregate(max_order=Max('sort_order'))['max_order'] or 0
     return max_order + 1
+
 
 class ContentNode(MPTTModel, models.Model):
     """
@@ -760,9 +770,9 @@ class ContentNode(MPTTModel, models.Model):
     author = models.CharField(max_length=200, blank=True, default="", help_text=_("Who created this content?"),
                               null=True)
     aggregator = models.CharField(max_length=200, blank=True, default="", help_text=_("Who gathered this content together?"),
-                              null=True)
+                                  null=True)
     provider = models.CharField(max_length=200, blank=True, default="", help_text=_("Who distributed this content?"),
-                              null=True)
+                                null=True)
 
     role_visibility = models.CharField(max_length=50, choices=roles.choices, default=roles.LEARNER)
     freeze_authoring_data = models.BooleanField(default=False)
@@ -850,10 +860,10 @@ class ContentNode(MPTTModel, models.Model):
                 })
             else:
                 nodes.append({
-                "title": child.title,
-                "kind": child.kind_id,
-                "file_size": child.files.values('file_size').aggregate(size=Sum('file_size'))['size'],
-            })
+                    "title": child.title,
+                    "kind": child.kind_id,
+                    "file_size": child.files.values('file_size').aggregate(size=Sum('file_size'))['size'],
+                })
         return nodes
 
     def get_original_node(self):
@@ -861,7 +871,7 @@ class ContentNode(MPTTModel, models.Model):
         if self.original_channel_id and self.original_source_node_id:
             original_tree_id = Channel.objects.select_related("main_tree").get(pk=self.original_channel_id).main_tree.tree_id
             original_node = ContentNode.objects.filter(tree_id=original_tree_id, node_id=self.original_source_node_id).first() or \
-                            ContentNode.objects.filter(tree_id=original_tree_id, content_id=self.content_id).first() or self
+                ContentNode.objects.filter(tree_id=original_tree_id, content_id=self.content_id).first() or self
         return original_node
 
     def get_associated_presets(self):
@@ -1017,7 +1027,7 @@ class FormatPreset(models.Model):
         f = FormatPreset.objects.filter(
             allowed_formats__extension=ext,
             display=True
-            )
+        )
         return f.first()
 
     @classmethod
@@ -1062,6 +1072,7 @@ class AssessmentItem(models.Model):
     source_url = models.CharField(max_length=400, blank=True, null=True)
     randomize = models.BooleanField(default=False)
     deleted = models.BooleanField(default=False)
+
 
 class StagedFile(models.Model):
     """
@@ -1129,7 +1140,7 @@ class File(models.Model):
                     self.file_format_id = ext
                 else:
                     raise ValueError("Files of type `{}` are not supported.".format(ext))
-                
+
         super(File, self).save(*args, **kwargs)
 
 
@@ -1182,6 +1193,7 @@ class PrerequisiteContentRelationship(models.Model):
 
     def __unicode__(self):
         return u'%s' % (self.pk)
+
 
 class RelatedContentRelationship(models.Model):
     """

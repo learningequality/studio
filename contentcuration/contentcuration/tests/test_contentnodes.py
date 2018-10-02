@@ -1,11 +1,12 @@
 import json
 
+import testdata
+from base import BaseAPITestCase
+from base import BaseTestCase
 from django.core.urlresolvers import reverse_lazy
 
-from base import BaseAPITestCase, BaseTestCase
-import testdata
-
-from contentcuration.models import ContentKind, ContentNode
+from contentcuration.models import ContentKind
+from contentcuration.models import ContentNode
 from contentcuration.views import nodes
 
 
@@ -34,6 +35,7 @@ def _check_nodes(parent, title=None, original_channel_id=None, source_channel_id
 
 
 class NodeOperationsTestCase(BaseTestCase):
+
     def setUp(self):
         super(NodeOperationsTestCase, self).setUp()
 
@@ -111,9 +113,9 @@ class NodeOperationsTestCase(BaseTestCase):
 
         copy_node_root = new_node
         for i in range(1, len(channels)):
-            print("Copying channel {} nodes to channel {}".format(i-1, i))
+            print("Copying channel {} nodes to channel {}".format(i - 1, i))
             channel = channels[i]
-            prev_channel = channels[i-1]
+            prev_channel = channels[i - 1]
 
             prev_channel.main_tree._mark_unchanged()
             prev_channel.main_tree.changed = False
@@ -141,6 +143,7 @@ class NodeOperationsTestCase(BaseTestCase):
 
 
 class NodeOperationsAPITestCase(BaseAPITestCase):
+
     def test_move_nodes(self):
         """
         Ensures that moving nodes properly removes them from the original parent and adds them to the new one,
@@ -199,7 +202,7 @@ class NodeOperationsAPITestCase(BaseAPITestCase):
             def recursive_print(node, indent=0):
                 for child in node.get_children():
                     print("{}Node: {}".format(" " * indent, child.title))
-                    recursive_print(child, indent+4)
+                    recursive_print(child, indent + 4)
             recursive_print(new_channel.main_tree)
 
         assert new_channel.main_tree.get_descendants().count() == new_channel_node_count + 10

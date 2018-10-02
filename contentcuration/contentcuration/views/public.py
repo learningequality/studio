@@ -1,19 +1,28 @@
 import json
-from contentcuration.models import Channel, ContentNode
-from contentcuration.serializers import PublicChannelSerializer
-from django.db.models import Q, Value, TextField
-from django.http import HttpResponse, HttpResponseNotFound
+
+from django.db.models import Q
+from django.db.models import TextField
+from django.db.models import Value
+from django.http import HttpResponse
+from django.http import HttpResponseNotFound
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import viewsets
+from rest_framework.decorators import api_view
+from rest_framework.decorators import permission_classes
 from rest_framework.permissions import AllowAny
-from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
+
+from contentcuration.models import Channel
+from contentcuration.models import ContentNode
+from contentcuration.serializers import PublicChannelSerializer
+
 
 def _get_channel_list(version, params, identifier=None):
     if version == "v1":
         return _get_channel_list_v1(params, identifier=identifier)
     else:
         raise LookupError()
+
 
 def _get_channel_list_v1(params, identifier=None):
     keyword = params.get('keyword', '').strip()
@@ -30,16 +39,19 @@ def _get_channel_list_v1(params, identifier=None):
         channels = Channel.objects.prefetch_related('secret_tokens').filter(Q(public=True) | Q(secret_tokens__token__in=token_list))
 
     if keyword != '':
-        channels = channels.prefetch_related('tags').filter(Q(name__icontains=keyword) | Q(description__icontains=keyword) | Q(tags__tag_name__icontains=keyword))
+        channels = channels.prefetch_related('tags').filter(Q(name__icontains=keyword) | Q(
+            description__icontains=keyword) | Q(tags__tag_name__icontains=keyword))
 
     if language_id != '':
-        matching_tree_ids = ContentNode.objects.prefetch_related('files').filter(Q(language__id__icontains=language_id) | Q(files__language__id__icontains=language_id)).values_list('tree_id', flat=True)
+        matching_tree_ids = ContentNode.objects.prefetch_related('files').filter(
+            Q(language__id__icontains=language_id) | Q(files__language__id__icontains=language_id)).values_list('tree_id', flat=True)
         channels = channels.select_related('language').filter(Q(language__id__icontains=language_id) | Q(main_tree__tree_id__in=matching_tree_ids))
 
     return channels.annotate(tokens=Value(json.dumps(token_list), output_field=TextField()))\
-                    .filter(deleted=False, main_tree__published=True)\
-                    .order_by("-priority")\
-                    .distinct()
+        .filter(deleted=False, main_tree__published=True)\
+        .order_by("-priority")\
+        .distinct()
+
 
 @api_view(['GET'])
 @permission_classes((AllowAny,))
@@ -50,6 +62,7 @@ def get_public_channel_list(request, version):
     except LookupError:
         return HttpResponseNotFound(_("Api endpoint {} is not available").format(version))
     return HttpResponse(json.dumps(PublicChannelSerializer(channel_list, many=True).data))
+
 
 @api_view(['GET'])
 @permission_classes((AllowAny,))
@@ -63,6 +76,7 @@ def get_public_channel_lookup(request, version, identifier):
     if not channel_list.exists():
         return HttpResponseNotFound(_("No channel matching {} found").format(identifier))
     return HttpResponse(json.dumps(PublicChannelSerializer(channel_list, many=True).data))
+
 
 @api_view(['GET'])
 @permission_classes((AllowAny,))

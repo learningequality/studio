@@ -3,29 +3,44 @@ import logging
 from collections import namedtuple
 from distutils.version import LooseVersion
 
-import os
-from django.conf import settings
-from django.core.exceptions import ObjectDoesNotExist, SuspiciousOperation, PermissionDenied
-from django.core.files import File as DjFile
+from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import PermissionDenied
+from django.core.exceptions import SuspiciousOperation
 from django.core.files.storage import default_storage
 from django.core.management import call_command
 from django.db import transaction
-from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseServerError, HttpResponseForbidden
-from le_utils.constants import content_kinds, roles
-from rest_framework.authentication import TokenAuthentication, SessionAuthentication
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from django.http import HttpResponse
+from django.http import HttpResponseBadRequest
+from django.http import HttpResponseForbidden
+from django.http import HttpResponseServerError
+from le_utils.constants import content_kinds
+from le_utils.constants import roles
+from raven.contrib.django.raven_compat.models import client
+from rest_framework.authentication import SessionAuthentication
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.decorators import api_view
+from rest_framework.decorators import authentication_classes
+from rest_framework.decorators import permission_classes
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 
-from raven.contrib.django.raven_compat.models import client
-
 from contentcuration import ricecooker_versions as rc
-from contentcuration.api import get_staged_diff, write_file_to_storage, activate_channel, get_hash
-from contentcuration.models import AssessmentItem, Channel, ContentNode, ContentTag, File, FormatPreset, Language, License, StagedFile, generate_object_storage_name, get_next_sort_order
-from contentcuration.utils.tracing import trace
+from contentcuration.api import activate_channel
+from contentcuration.api import get_staged_diff
+from contentcuration.api import write_file_to_storage
+from contentcuration.models import AssessmentItem
+from contentcuration.models import Channel
+from contentcuration.models import ContentNode
+from contentcuration.models import ContentTag
+from contentcuration.models import generate_object_storage_name
+from contentcuration.models import get_next_sort_order
+from contentcuration.models import License
+from contentcuration.models import StagedFile
 from contentcuration.utils.files import get_file_diff
-from contentcuration.utils.nodes import map_files_to_node, map_files_to_assessment_item
 from contentcuration.utils.garbage_collect import get_deleted_chefs_root
+from contentcuration.utils.nodes import map_files_to_assessment_item
+from contentcuration.utils.nodes import map_files_to_node
+from contentcuration.utils.tracing import trace
 
 VersionStatus = namedtuple('VersionStatus', ['version', 'status', 'message'])
 VERSION_OK = VersionStatus(version=rc.VERSION_OK, status=0, message=rc.VERSION_OK_MESSAGE)
@@ -35,7 +50,8 @@ VERSION_ERROR = VersionStatus(version=rc.VERSION_ERROR, status=3, message=rc.VER
 
 
 def handle_server_error(request):
-    client.captureException(stack=True, tags={'url': request.path })
+    client.captureException(stack=True, tags={'url': request.path})
+
 
 @api_view(['POST'])
 @authentication_classes((TokenAuthentication, SessionAuthentication,))
@@ -114,9 +130,9 @@ def api_file_upload(request):
 
         formatted_filename = write_file_to_storage(fobj, check_valid=True)
         StagedFile.objects.get_or_create(
-            checksum = checksum,
-            file_size = fobj._size,
-            uploaded_by = request.user
+            checksum=checksum,
+            file_size=fobj._size,
+            uploaded_by=request.user
         )
 
         return HttpResponse(json.dumps({
@@ -156,6 +172,7 @@ def api_channel_structure_upload(request):
         raise ObjectDoesNotExist('Missing attribute from data: {}'.format(data))
     except Exception as e:
         return HttpResponseServerError(content=str(e), reason=str(e))
+
 
 @api_view(['POST'])
 @authentication_classes((TokenAuthentication, SessionAuthentication,))
@@ -251,6 +268,7 @@ def api_add_nodes_from_file(request):
     except Exception as e:
         handle_server_error(request)
         return HttpResponseServerError(content=str(e), reason=str(e))
+
 
 @api_view(['POST'])
 @authentication_classes((TokenAuthentication, SessionAuthentication,))
@@ -397,6 +415,7 @@ def get_tree_data(request):
         handle_server_error(request)
         return HttpResponseServerError(content=str(e), reason=str(e))
 
+
 @api_view(['POST'])
 @authentication_classes((TokenAuthentication, SessionAuthentication,))
 @permission_classes((IsAuthenticated,))
@@ -415,6 +434,7 @@ def get_node_tree_data(request):
     except Exception as e:
         handle_server_error(request)
         return HttpResponseServerError(content=str(e), reason=str(e))
+
 
 @api_view(['POST'])
 @authentication_classes((TokenAuthentication, SessionAuthentication,))
@@ -435,6 +455,7 @@ def get_channel_status_bulk(request):
     except Exception as e:
         handle_server_error(request)
         return HttpResponseServerError(content=str(e), reason=str(e))
+
 
 def get_status(channel_id):
     obj = Channel.objects.filter(pk=channel_id).first()
@@ -648,6 +669,8 @@ def create_node_from_file(user, file_name, parent_node, sort_order):
     return cur_node
 
 # TODO: Use one file to upload a map from node filename to node metadata, instead of a file for each Node
+
+
 def get_node_data_from_file(file_name):
     file_path = generate_object_storage_name(file_name.split('.')[0], file_name)
     if not default_storage.exists(file_path):

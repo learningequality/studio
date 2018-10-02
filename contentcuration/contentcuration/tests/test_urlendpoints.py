@@ -1,15 +1,14 @@
 import importlib
 
+from base import StudioTestCase
 from django.conf import settings
 from django.core.urlresolvers import reverse
-
-from base import StudioTestCase
 
 
 class AllUrlsTest(StudioTestCase):
 
     def test_responses(self, allowed_http_codes=None,
-            default_kwargs=None, quiet=False):
+                       default_kwargs=None, quiet=False):
         """
         This is a very liberal test, we are mostly just concerned with making sure
         that no pages throw errors (500).
@@ -38,6 +37,7 @@ class AllUrlsTest(StudioTestCase):
         # Some URLs only use POST requests, exclude them here.
         url_blacklist = []
         module = importlib.import_module(settings.ROOT_URLCONF)
+
         def check_urls(urlpatterns, prefix=''):
             for pattern in urlpatterns:
                 if hasattr(pattern, 'url_patterns'):
@@ -56,7 +56,7 @@ class AllUrlsTest(StudioTestCase):
                     # the url expects parameters
                     # use default_kwargs supplied
                     if regex.groups > len(regex.groupindex.keys()) \
-                        or set(regex.groupindex.keys()) - set(default_kwargs.keys()):
+                            or set(regex.groupindex.keys()) - set(default_kwargs.keys()):
                         # there are positional parameters OR
                         # keyword parameters that are not supplied in default_kwargs
                         # so we skip the url
@@ -79,8 +79,8 @@ class AllUrlsTest(StudioTestCase):
                     # TODO: We should specifically check for 403 errors and
                     # ensure that logging in as admin resolves them.
                     self.assertIn(response.status_code, allowed_http_codes,
-                        "{url} gave status code {status_code}".format(
-                            url=url, status_code=response.status_code))
+                                  "{url} gave status code {status_code}".format(
+                                      url=url, status_code=response.status_code))
                     # print status code if it is not 200
                     status = "" if response.status_code == 200 else str(response.status_code) + " "
                     if not quiet:

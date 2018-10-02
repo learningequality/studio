@@ -1,14 +1,16 @@
 import json
+
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse_lazy
-from django.shortcuts import render, redirect
-from django.template import RequestContext
-from contentcuration.models import Channel
-from contentcuration.utils.policies import check_policies
+from django.shortcuts import redirect
 from django.shortcuts import render
 
+from contentcuration.models import Channel
+from contentcuration.utils.policies import check_policies
+
 ACCEPTED_BROWSERS = settings.HEALTH_CHECK_BROWSERS + settings.SUPPORTED_BROWSERS
+
 
 def browser_is_supported(function):
     def wrap(request, *args, **kwargs):
@@ -37,6 +39,7 @@ def is_admin(function):
     wrap.__name__ = function.__name__
     return wrap
 
+
 def can_access_channel(function):
     def wrap(request, *args, **kwargs):
         try:
@@ -45,9 +48,9 @@ def can_access_channel(function):
             return render(request, 'channel_not_found.html')
 
         if channel.public or \
-            channel.editors.filter(id=request.user.id).exists() or \
-            channel.viewers.filter(id=request.user.id).exists() or \
-            request.user.is_admin:
+                channel.editors.filter(id=request.user.id).exists() or \
+                channel.viewers.filter(id=request.user.id).exists() or \
+                request.user.is_admin:
             return function(request, *args, **kwargs)
 
         return render(request, 'unauthorized.html', status=403)
@@ -55,6 +58,7 @@ def can_access_channel(function):
     wrap.__doc__ = function.__doc__
     wrap.__name__ = function.__name__
     return wrap
+
 
 def can_edit_channel(function):
     def wrap(request, *args, **kwargs):

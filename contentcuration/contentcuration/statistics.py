@@ -104,9 +104,9 @@ def record_node_addition_stats(nodes_being_added, original_first_node, user_id):
 
     root_node = parent_node.get_root()
     action_attributes['channel_num_resources'] = root_node.get_descendants().exclude(kind=content_kinds.TOPIC).count() \
-                                                 + (action_attributes.get('num_resources_added') or 0)
+        + (action_attributes.get('num_resources_added') or 0)
     action_attributes['channel_num_nodes'] = root_node.get_descendant_count() \
-                                             + (action_attributes.get('num_nodes_added') or 0)
+        + (action_attributes.get('num_nodes_added') or 0)
 
     record_channel_action_stats(action_attributes)
 
@@ -151,7 +151,7 @@ def record_node_duplication_stats(original_nodes_being_copied, target_parent, de
     action_attributes['original_channel'] = node_to_copy.original_channel_id
 
     source_channel = node_to_copy.get_channel()
-    if source_channel: # No need to record stats on clipboard duplication
+    if source_channel:  # No need to record stats on clipboard duplication
         action_attributes['content_source'] = 'Human' if source_channel.ricecooker_version is None else 'Ricecooker'
         action_attributes['source_channel'] = source_channel.id
 
@@ -162,7 +162,7 @@ def record_node_duplication_stats(original_nodes_being_copied, target_parent, de
         action_attributes['channel_num_resources'] = destination_channel.main_tree.get_descendants().exclude(
             kind=content_kinds.TOPIC).count() + (action_attributes.get('num_resources_added') or 0)
         action_attributes['channel_num_nodes'] = destination_channel.main_tree.get_descendant_count() \
-                                                 + (action_attributes.get('num_nodes_added') or 0)
+            + (action_attributes.get('num_nodes_added') or 0)
     record_channel_action_stats(action_attributes)
 
 
