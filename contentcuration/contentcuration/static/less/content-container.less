@@ -219,10 +219,10 @@
 	@channel-edit-font-color:black;
 	@highlighted-file: #E8E8E8;
 	@collapsed-height:63px;
-	@item-title-font-size: 13pt;
+	@item-title-font-size: 12pt;
 	@item-font-color: #999999;
-	@item-last-font-color: #333333;
-	@description-font-size : 14px;
+	@item-last-font-color: black;
+	@description-font-size : 10pt;
 
 	overflow-x:hidden;
 	width:100vw;
@@ -334,7 +334,7 @@
 			}
 			li{
 				background-color: @item-color;
-				border-top: 1px solid  transparent;
+				border-top: 1px solid transparent;
 				&:hover {
 					background-color: @highlighted-file;
 					.options{
@@ -348,7 +348,7 @@
 					i {
 						font-size: 18pt;
 						&.folder_open_icon {
-							margin-top: 15px;
+							margin-top: 5px;
 							font-size: 20pt
 						}
 						&.preview_option {
@@ -363,7 +363,7 @@
 					}
 				}
 				label {
-					padding:5px;
+					padding: 5px;
 					vertical-align: middle;
 					cursor:pointer;
 					width: @container-width - 10px;
@@ -372,14 +372,18 @@
 					}
 					.item_section {
 						padding: 0px;
+						&.thumbnail_section {
+							display: none;
+						}
+						&.main_item_section {
+							padding-left: 20px;
+						}
 					}
 
 					input[type=checkbox]{
-						display:inline-block;
 						width:20px;
 						height:20px;
-						vertical-align:middle;
-						margin: 6px 0 0 10px;
+						margin-left: 5px;
 						cursor:pointer;
 					}
 					.title, p, h6{
@@ -387,38 +391,63 @@
 						margin:0;
 						padding:0;
 						font-weight: normal;
-						i {
-							font-size: 11pt;
-						    margin-left: 5px;
-						    vertical-align: bottom;
-						}
 					}
 					h6 {
-						.content-kind {
-							padding: 1px 5px;
-							color: white;
-							border-radius: 3px;
-							&.kind-video { background-color: @video-color}
-							&.kind-audio { background-color: @audio-color}
-							&.kind-document { background-color: @doc-color}
-							&.kind-exercise { background-color: @exercise-color}
-							&.kind-html5 { background-color: @html-color}
-							i {
-								margin-left: 0px;
-								vertical-align: sub;
+						margin-bottom: 7px;
+						width: 100%;
+						.metadata-indicator {
+							display: inline-block;
+							span{
+								border-radius: 3px;
+								background-color: @gray-500;
+								color: white;
+								padding: 3px 5px;
+								margin-right: 5px;
+								font-weight: bold;
+								font-size: 8pt;
+								&.invalid{
+									background-color: #F7CECE;
+									color: @red-error-color;
+								}
+								&.resource-data {
+									background-color: @gray-400;
+									color: black;
+								}
+								i {
+									margin-left: 0px;
+									vertical-align: sub;
+									font-size: 11pt;
+								}
+							}
+							.content-kind {
+								color: white;
+								&.kind-video { background-color: @video-color}
+								&.kind-audio { background-color: @audio-color}
+								&.kind-document { background-color: @doc-color}
+								&.kind-exercise { background-color: @exercise-color}
+								&.kind-html5 { background-color: @html-color}
 							}
 						}
 						.visibility {
 							font-weight: bold;
+							i {
+								font-size: 11pt;
+								margin-left: 5px;
+							}
 						}
 					}
 					.title {
 						font-weight: bold;
 						font-size: @item-title-font-size;
+						.collapsed-icon {
+							font-size: 16pt;
+	    					vertical-align: sub;
+	    					margin: 0px;
+						}
 					}
 					.description {
 						font-weight:normal;
-						color: @annotation-gray;
+						color: @gray-800;
 					}
 					@thumbnail-width: 80px;
 					@thumbnail-height: 45px;
@@ -428,62 +457,81 @@
 					    object-fit: cover;
 					    vertical-align: baseline;
 					    position: absolute;
-					    margin-top: -5px;
+					    margin-top: 2px;
 					}
 					.content-item-icon{
 						position: relative;
 					    text-align: center;
 					    height: @thumbnail-height;
 					    width: @thumbnail-width;
-					    margin-top: -5px;
+					    margin-top: 2px;
 						i {
 							height: inherit;
 							width: inherit;
 							font-size: 17pt;
 							color: white;
-					    	background: rgba(0,0,0,0.4);
+					    	background: rgba(0,0,0,0.6);
 					    	padding-top: 10px;
+						}
+					}
+
+					.metadata-section {
+						background-color: @highlighted-file;
+						border-radius: 3px;
+						width: 100%;
+						margin-top: 10px;
+						font-size: 9pt;
+						padding: 2px 5px;
+						i {
+							font-size: 10pt;
+							vertical-align: sub;
 						}
 					}
 				}
 			}
 		}
+		&:not(:last-child) .main_item_section { width: 83%; }
 		&:last-child {
 			width: @container-last-width;
 			.content-list{
 				width: @container-last-width - 10px;
 				label{
+					padding: 10px 5px;
 					width: @container-last-width - 15px;
 					.main_item_section {
-						margin-top: -15px;
+						margin-top: -20px;
 						padding-left: 10px;
 					}
+					input[type="checkbox"] {
+						margin-top: 15px;
+					}
+					.thumbnail_section {
+						display: inline-block !important;
+					}
 					.metadata_to_hide{
-						display:inline-block;
+						display:block;
 					}
 					.title, p{
 						color: @item-last-font-color;
 					}
 					.description {
 						display:block;
+						min-height: 20px;
+					}
+					.collapsed-icon {
+						display: none;
+					}
+					.folder_open_icon {
+						margin-top: 10px;
 					}
 				}
-				// .unpublished, .invalid{
-				// 	border-radius:10px;
-				// 	background-color:lightgray;
-				// 	padding: 1px 10px;
-				// }
-				// .invalid{
-				// 	background-color:#F2DEDE;
-				// 	color: @red-error-color;
-				// }
 			}
 		}
 	}
 
 	#edit {
 		@edit-new-button-color: #C9C9C9;
-		@edit-container-color: #F2F2F3;
+		@edit-container-color: @gray-200;
 		@edit-new-content-color: #89C0B1;
 		@edit-current-folder-color:#666666;
 

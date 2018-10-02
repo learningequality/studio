@@ -152,7 +152,6 @@ var PrerequisiteModalView = BaseViews.BaseModalView.extend({
         this.related_view = new PrerequisiteView({
             el: this.$(".modal-body"),
             onselect: this.close_prerequisites,
-            oncount: options.oncount,
             modal : this,
             model:this.model,
             views_to_update: this.views_to_update,
@@ -178,10 +177,8 @@ var PrerequisiteView = BaseViews.BaseListView.extend({
         this.modal = options.modal;
         this.collection = window.nodeCollection;
         this.onselect = options.onselect;
-        this.oncount = options.oncount;
         this.allow_edit = options.allow_edit;
         this.views_to_update = options.views_to_update;
-        this.oncount(this.get_translation("loading"));
         this.render();
     },
     render: function() {
@@ -200,15 +197,10 @@ var PrerequisiteView = BaseViews.BaseListView.extend({
         });
         this.$("#selected_view_wrapper").html(this.selectedView.el);
     },
-    update_count:function(){
-        var prereqlist = PrereqTree.get_immediate_prerequisites();
-        this.oncount(prereqlist.length);
-    },
     update_prerequisites: function(skip_rendering){
         var self = this;
         PrereqTree.fetch_prerequisites().then(function(){
             var immediate_prereqs = PrereqTree.get_immediate_prerequisites();
-            self.oncount(immediate_prereqs.length)
             self.onselect(immediate_prereqs, self.views_to_update);
             if(skip_rendering){
                 if(self.selectedView){
@@ -355,7 +347,6 @@ var SelectedList = BaseViews.BaseListView.extend({
         }, {
             data: this.get_intl_data()
         }));
-        this.container.update_count()
         this.load_content();
     },
     create_new_view:function(model){
