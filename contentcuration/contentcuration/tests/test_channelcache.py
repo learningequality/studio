@@ -2,14 +2,10 @@
 #
 # These are tests for the ChannelCache class.
 #
-
-from django.test import TestCase
-
-from contentcuration.utils.channelcache import ChannelCacher
-from contentcuration.models import Channel
-
 from .base import StudioTestCase
-from .testdata import channel, node
+from .testdata import channel
+from .testdata import node
+from contentcuration.utils.channelcache import ChannelCacher
 
 
 class ChannelCacherTestCase(StudioTestCase):
@@ -23,7 +19,6 @@ class ChannelCacherTestCase(StudioTestCase):
         for _ in range(self.NUM_INITIAL_PUBLIC_CHANNELS):
             c = channel().make_public(bypass_signals=True)
             self.channels.append(c)
-
 
     def test_returns_public_channels(self):
         """
