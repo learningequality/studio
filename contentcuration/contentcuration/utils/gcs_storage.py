@@ -1,13 +1,11 @@
-import tempfile
 import logging
 import mimetypes
-import os.path
+import tempfile
 
+from django.core.files import File
+from django.core.files.storage import Storage
 from google.cloud.storage import Client
 from google.cloud.storage.blob import Blob
-from django.conf import settings
-from django.core.files.storage import Storage
-from django.core.files import File
 
 
 OLD_STUDIO_STORAGE_PREFIX = "/contentworkshop_content/"
@@ -29,7 +27,7 @@ class GoogleCloudStorage(Storage):
         Raises an AssertionError if filename is not a string.
         """
 
-        typ, _ =  mimetypes.guess_type(filename)
+        typ, _ = mimetypes.guess_type(filename)
 
         if not typ:
             return "application/octet-stream"

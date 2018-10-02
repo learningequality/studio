@@ -1,18 +1,18 @@
 import json
-
-from django.core.management.base import BaseCommand
-from django.db import transaction
-from contentcuration.models import Channel, User
-import progressbar
-import time
-
 import logging as logmodule
+
+import progressbar
+from django.core.management.base import BaseCommand
+
+from contentcuration.models import Channel
+from contentcuration.models import User
 logmodule.basicConfig()
 logging = logmodule.getLogger(__name__)
 
 
 class Command(BaseCommand):
-    def handle(self, *args, **options):
+
+    def handle(self, *args, **options):  # noqa: C901
         failed = []
         channels = Channel.objects.all()
         users = User.objects.all()
@@ -23,7 +23,7 @@ class Command(BaseCommand):
             try:
                 for i in range(20):
                     if not isinstance(c.content_defaults, basestring):
-                        break;
+                        break
                     c.content_defaults = json.loads(c.content_defaults.replace("'", '"').replace("\\", "").strip("\""))
                 c.save()
                 index += 1
@@ -35,15 +35,13 @@ class Command(BaseCommand):
             try:
                 for i in range(20):
                     if not isinstance(u.content_defaults, basestring):
-                        break;
+                        break
                     u.content_defaults = json.loads(u.content_defaults.replace("'", '"').replace("\\", "").strip("\""))
                 u.save()
                 index += 1
                 bar.update(index)
             except Exception as e:
                 failed.append("FAILED {} ({}): {}".format(u.email, c.id, str(e)))
-
-
 
         for f in failed:
             print f

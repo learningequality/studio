@@ -1,14 +1,13 @@
 import csv
+import logging as logmodule
 import os
-import re
-import progressbar
 from time import sleep
 
+import progressbar
 from django.conf import settings
 from django.core.management.base import BaseCommand
-from contentcuration.models import User
 
-import logging as logmodule
+from contentcuration.models import User
 logmodule.basicConfig()
 logging = logmodule.getLogger(__name__)
 
@@ -32,7 +31,8 @@ def write_user_csv_file():
 
     with open(csv_path, 'wb') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_MINIMAL)
-        writer.writerow(['Name', 'Email', 'Date Joined', 'Intended Use', 'Target Locations', 'Heard about us from', 'Channels', '# of Items Uploaded', 'Space Needed', 'Total Storage'])
+        writer.writerow(['Name', 'Email', 'Date Joined', 'Intended Use', 'Target Locations',
+                         'Heard about us from', 'Channels', '# of Items Uploaded', 'Space Needed', 'Total Storage'])
 
         users = User.objects.filter(is_active=True, is_admin=False).prefetch_related('files')
 
@@ -46,6 +46,7 @@ def write_user_csv_file():
             sleep(0.01)
 
     return csv_path
+
 
 def _write_user_csv(writer, user):
     try:
@@ -66,9 +67,10 @@ def _write_user_csv(writer, user):
     except Exception as e:
         print(user.email, str(e))
 
+
 def _format_size(num, suffix='B'):
     """ Format sizes """
-    for unit in ['','K','M','G','T','P','E','Z']:
+    for unit in ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z']:
         if abs(num) < 1024.0:
             return "%3.1f%s%s" % (num, unit, suffix)
         num /= 1024.0

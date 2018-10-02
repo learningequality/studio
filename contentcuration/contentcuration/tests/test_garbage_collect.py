@@ -1,16 +1,17 @@
 #!/usr/bin/env python
-from cStringIO import StringIO
-from datetime import datetime, timedelta
+from datetime import datetime
+from datetime import timedelta
 
 import requests
+from base import StudioTestCase
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
-from contentcuration.models import ContentNode, File
-from contentcuration.utils.garbage_collect import clean_up_contentnodes
-from le_utils.constants import content_kinds, file_formats
+from le_utils.constants import content_kinds
 
-from base import StudioTestCase
+from contentcuration.models import ContentNode
+from contentcuration.models import File
+from contentcuration.utils.garbage_collect import clean_up_contentnodes
 
 
 THREE_MONTHS_AGO = datetime.now() - timedelta(days=93)
@@ -34,6 +35,7 @@ def _create_expired_contentnode(creation_date=THREE_MONTHS_AGO):
 
 
 class CleanUpContentNodesTestCase(StudioTestCase):
+
     def test_delete_all_contentnodes_in_orphanage_tree(self):
         """
         Make sure that by default, all nodes created with a timestamp of 3 months
@@ -54,7 +56,6 @@ class CleanUpContentNodesTestCase(StudioTestCase):
         clean_up_contentnodes()
         garbage_tree.refresh_from_db()
         assert garbage_tree.get_descendant_count() == 0
-
 
     def test_deletes_associated_files(self):
         c = _create_expired_contentnode()
@@ -128,8 +129,6 @@ class CleanUpContentNodesTestCase(StudioTestCase):
         assert not ContentNode.objects.filter(pk=orphan_node.pk).exists()
         # is our senior, legit node still around? :)
         assert ContentNode.objects.filter(pk=legit_node.pk).exists()
-
-
 
     def test_doesnt_delete_file_referenced_by_orphan_and_nonorphan_nodes(self):
         """

@@ -1,7 +1,7 @@
 import pytest
-from django.conf import settings
 
 from contentcuration.utils.parser import extract_value
+
 
 @pytest.fixture
 def number_tests():

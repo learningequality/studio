@@ -1,17 +1,17 @@
 import datetime
-
 from cStringIO import StringIO
-from django.core.files.storage import default_storage
-from django.core.files.base import ContentFile
-
-from django.conf import settings
-
 from unittest import TestCase
-from contentcuration.models import User, File, generate_object_storage_name
-from contentcuration.utils.policies import check_policies, POLICIES
-from contentcuration.utils.files import get_file_diff
 
 from base import StudioTestCase
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
+
+from contentcuration.models import File
+from contentcuration.models import generate_object_storage_name
+from contentcuration.models import User
+from contentcuration.utils.files import get_file_diff
+from contentcuration.utils.policies import check_policies
+from contentcuration.utils.policies import POLICIES
 
 
 class CheckPoliciesTestCase(TestCase):
@@ -57,7 +57,6 @@ class GetFileDiffTestCase(StudioTestCase):
         self.existing_content = "dowereallyexist.jpg"
         self.existing_content_path = generate_object_storage_name("dowereallyexist", self.existing_content)
         storage.save(self.existing_content_path, StringIO("maybe"))
-        pass
 
     def test_returns_empty_if_content_already_exists(self):
         """Test if get_file_diff returns an empty list if all the files we pass in are
@@ -69,7 +68,6 @@ class GetFileDiffTestCase(StudioTestCase):
 
         files = [self.existing_content]
         assert get_file_diff(files) == []
-
 
     def test_returns_file_not_uploaded_yet(self):
         """
@@ -83,11 +81,12 @@ class GetFileDiffTestCase(StudioTestCase):
         ]
         assert get_file_diff(files) == ["rando"]
 
-from contentcuration.models import FileFormat
+
 class FileFormatsTestCase(StudioTestCase):
     """
     Ensure that unsupported files aren't saved.
     """
+
     def test_unsupported_files_raise_error(self):
         unsupported_file = File.objects.create(
             file_on_disk=ContentFile("test"),
@@ -115,6 +114,3 @@ class FileFormatsTestCase(StudioTestCase):
                 file_with_ext.file_on_disk.save("aaa.{}".format(ext), ContentFile("aaa"))
             except Exception as e:
                 raise type(e)(e.message + " ... (hint: make sure that the version of le-utils you're using has its file formats synced).")
-        pass
-
-        
