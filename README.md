@@ -190,6 +190,18 @@ flag to run the server in development mode.
 
 Pytest and other test related dependencies are stored in `requirements_test.txt`.
 
+##### Pre-Commit
+
+We use `pre-commit <http://pre-commit.com/>`_ to help ensure consistent, clean code. The pip package should already be installed from a prior setup step, but you need to install the git hooks using this command.
+
+    pre-commit install
+
+##### Additional formatting tools
+
+In case you need help formatting your python code to meet pep8 standards, there are a couple tools out there.
+https://github.com/myint/autoflake for removing unused imports and unused variables.
+https://github.com/hhatto/autopep8 for fixing whitespace issues.
+
 ##### Install javascript dependencies
 
 All the javascript dependencies are listed in `package.json`. To install them run:
