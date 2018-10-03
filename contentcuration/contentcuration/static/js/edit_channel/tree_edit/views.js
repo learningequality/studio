@@ -39,7 +39,7 @@ var MESSAGES = {
     "updates_available": "Updated content is available to review.",
     "add_topics": "Add Topics",
     "upload_files": "Upload Files",
-    "create_exercise": "Create Exercise",
+    "add_exercise": "Add Exercise",
     "import": "Import from Channels",
     "view_topic": "View topic details",
     "question_count": "{count, plural,\n =1 {# Question}\n other {# Questions}}",
