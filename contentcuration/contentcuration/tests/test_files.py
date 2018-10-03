@@ -60,7 +60,6 @@ def generated_base64encoding():
 
 
 class FileThumbnailTestCase(BaseAPITestCase):
-    persist_bucket = True
 
     def setUp(self):
         super(FileThumbnailTestCase, self).setUp()
