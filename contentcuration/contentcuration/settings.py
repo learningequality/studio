@@ -9,13 +9,15 @@ https://docs.djangoproject.com/en/1.8/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.8/ref/settings/
 """
-
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+import logging
 import os
 import re
-import logging
+from datetime import datetime
+from datetime import timedelta
+
 import pycountry
-from datetime import datetime, timedelta
+
 from contentcuration.utils.incidents import INCIDENTS
 
 logging.getLogger("newrelic").setLevel(logging.CRITICAL)
@@ -174,7 +176,7 @@ WSGI_APPLICATION = 'contentcuration.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',  # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': os.getenv("DATA_DB_NAME") or 'gonano',  #  Or path to database file if using sqlite3.
+        'NAME': os.getenv("DATA_DB_NAME") or 'gonano',  # Or path to database file if using sqlite3.
         # The following settings are not used with sqlite3:
 
         # For dev purposes only
@@ -184,7 +186,6 @@ DATABASES = {
         'PORT': '',                      # Set to empty string for default.
     },
 }
-
 
 
 DATABASE_ROUTERS = [
@@ -242,11 +243,11 @@ LOCALE_PATHS = (
 ugettext = lambda s: s
 LANGUAGES = (
     ('en', ugettext('English')),
-    ('es', ugettext('Spanish')),
+    # ('es', ugettext('Spanish')),
     # ('ar', ugettext('Arabic')), # Uncomment when we have translations
-    ('es-es', ugettext('Spanish - Spain')),
+    # ('es-es', ugettext('Spanish - Spain')),
     ('es-mx', ugettext('Spanish - Mexico')),
-    ('en-PT', ugettext('English - Pirate')),
+    # ('en-PT', ugettext('English - Pirate')),
 )
 
 
@@ -287,8 +288,8 @@ REGISTRATION_INFORMATION_EMAIL = 'studio-registrations@learningequality.org'
 HELP_EMAIL = 'content@learningequality.org'
 DEFAULT_FROM_EMAIL = 'Kolibri Studio <noreply@learningequality.org>'
 POLICY_EMAIL = 'legal@learningequality.org'
-ACCOUNT_DELETION_BUFFER = 5 # Used to determine how many days a user
-                            # has to undo accidentally deleting account
+ACCOUNT_DELETION_BUFFER = 5  # Used to determine how many days a user
+# has to undo accidentally deleting account
 
 DEFAULT_LICENSE = 1
 

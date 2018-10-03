@@ -1,24 +1,32 @@
 import datetime
 import gettext
-import pycountry
-import json
 import re
-from contentcuration.models import User, Language
-from contentcuration.utils.policies import get_latest_policies
+
+import pycountry
 from django import forms
 from django.conf import settings
 from django.contrib.auth import password_validation
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, UserChangeForm, PasswordChangeForm, PasswordResetForm, SetPasswordForm
-from django.contrib.sites.shortcuts import get_current_site
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth.forms import PasswordResetForm
+from django.contrib.auth.forms import SetPasswordForm
+from django.contrib.auth.forms import UserChangeForm
+from django.contrib.auth.forms import UserCreationForm
 from django.core import signing
-from django.contrib.auth.tokens import default_token_generator
 from django.template.loader import render_to_string
-from django.utils.translation import ugettext, ugettext_lazy as _
-from le_utils.constants import exercises, licenses
+from django.utils.translation import ugettext_lazy as _
+from le_utils.constants import exercises
+from le_utils.constants import licenses
+
+from contentcuration.models import Language
+from contentcuration.models import User
+from contentcuration.utils.policies import get_latest_policies
 
 REGISTRATION_SALT = getattr(settings, 'REGISTRATION_SALT', 'registration')
 
+
 class ExtraFormMixin(object):
+
     def check_field(self, field, error):
         if not self.cleaned_data.get(field):
             self.errors[field] = self.error_class()
@@ -26,12 +34,13 @@ class ExtraFormMixin(object):
             return False
         return self.cleaned_data.get(field)
 
+
 class RegistrationForm(forms.Form, ExtraFormMixin):
     first_name = forms.CharField(widget=forms.TextInput(attrs={"dir": "auto"}), label=_('First Name'), required=True)
     last_name = forms.CharField(widget=forms.TextInput(attrs={"dir": "auto"}), label=_('Last Name'), required=True)
     email = forms.CharField(widget=forms.TextInput(attrs={"dir": "auto"}), label=_('Email'), required=True)
-    password1 = forms.CharField(widget=forms.PasswordInput(render_value = True, attrs={"dir": "auto"}), label=_('Password'), required=True,)
-    password2 = forms.CharField(widget=forms.PasswordInput(render_value = True, attrs={"dir": "auto"}), label=_('Password (again)'), required=True)
+    password1 = forms.CharField(widget=forms.PasswordInput(render_value=True, attrs={"dir": "auto"}), label=_('Password'), required=True,)
+    password2 = forms.CharField(widget=forms.PasswordInput(render_value=True, attrs={"dir": "auto"}), label=_('Password (again)'), required=True)
 
     def clean_email(self):
         email = self.cleaned_data['email'].strip()
@@ -46,7 +55,7 @@ class RegistrationForm(forms.Form, ExtraFormMixin):
         fields = ('first_name', 'last_name', 'email', 'password1', 'password2')
 
     def clean(self):
-        cleaned_data = super(RegistrationForm, self).clean()
+        super(RegistrationForm, self).clean()
 
         # For some reason, email sometimes doesn't remain in cleaned data
         self.cleaned_data['email'] = self.data.get('email')
@@ -63,6 +72,7 @@ class RegistrationForm(forms.Form, ExtraFormMixin):
             self.errors['password2'] = self.error_class()
 
         return self.cleaned_data
+
 
 USAGES = [
     ('organization and alignment', _("Organizing or aligning existing materials")),
@@ -90,9 +100,11 @@ SOURCES = [
 
 
 class RegistrationInformationForm(UserCreationForm, ExtraFormMixin):
-    use = forms.ChoiceField(required=False, widget=forms.CheckboxSelectMultiple, label=_('How do you plan to use Kolibri Studio? (check all that apply)'), choices=USAGES)
+    use = forms.ChoiceField(required=False, widget=forms.CheckboxSelectMultiple, label=_(
+        'How do you plan to use Kolibri Studio? (check all that apply)'), choices=USAGES)
     other_use = forms.CharField(required=False, widget=forms.TextInput(attrs={"dir": "auto"}))
-    storage = forms.CharField(required=False, widget=forms.TextInput(attrs={"placeholder": _("e.g. 500MB"), "dir": "auto"}), label=_("How much storage do you need?"))
+    storage = forms.CharField(required=False, widget=forms.TextInput(
+        attrs={"placeholder": _("e.g. 500MB"), "dir": "auto"}), label=_("How much storage do you need?"))
 
     source = forms.ChoiceField(required=False, widget=forms.Select, label=_('How did you hear about us?'), choices=SOURCES)
     organization = forms.CharField(required=False, widget=forms.TextInput(attrs={"dir": "auto"}), label=_("Name of Organization"))
@@ -113,15 +125,15 @@ class RegistrationInformationForm(UserCreationForm, ExtraFormMixin):
         )
 
         countries = [(c.name, translator.gettext(c.name)) for c in list(pycountry.countries)]
-
-        self.fields['location'] = forms.ChoiceField(required=True, widget=forms.SelectMultiple, label=_('Where do you plan to use Kolibri? (select all that apply)'), choices=countries)
+        self.fields['location'] = forms.ChoiceField(required=True, widget=forms.SelectMultiple, label=_(
+            'Where do you plan to use Kolibri? (select all that apply)'), choices=countries)
 
     def clean_email(self):
         email = self.cleaned_data['email'].strip()
         return email
 
-    def clean(self):
-        cleaned_data = super(RegistrationInformationForm, self).clean()
+    def clean(self):  # noqa: C901
+        super(RegistrationInformationForm, self).clean()
 
         # Lots of fields get incorrectly processed, so manually validate form
         self.errors.clear()
@@ -139,7 +151,6 @@ class RegistrationInformationForm(UserCreationForm, ExtraFormMixin):
 
         if "storage" in uses:
             self.check_field('storage', _("Please indicate how much storage you intend to use"))
-
 
         # Set cleaned_data as a string (will be blank if none are selected)
         self.cleaned_data["use"] = ", ".join(uses)
@@ -188,6 +199,7 @@ class RegistrationInformationForm(UserCreationForm, ExtraFormMixin):
         model = User
         fields = ('first_name', 'last_name', 'password1', 'password2')
 
+
 class PolicyAcceptForm(forms.Form):
     accepted = forms.BooleanField(widget=forms.CheckboxInput())
     policy_names = forms.CharField(widget=forms.HiddenInput())
@@ -205,7 +217,6 @@ class PolicyAcceptForm(forms.Form):
         return user
 
 
-
 class ProfileSettingsForm(UserChangeForm):
     first_name = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control setting_input', 'dir': 'auto'}))
     last_name = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control setting_input', 'dir': 'auto'}))
@@ -219,7 +230,7 @@ class ProfileSettingsForm(UserChangeForm):
         pass
 
     def clean(self):
-        cleaned_data = super(ProfileSettingsForm, self).clean()
+        super(ProfileSettingsForm, self).clean()
 
         if 'first_name' not in self.cleaned_data:
             self.errors['first_name'] = self.error_class()
@@ -236,40 +247,49 @@ class ProfileSettingsForm(UserChangeForm):
         user.save()
         return user
 
+
 MASTERY = ()
 LANGUAGES = ()
 LICENSES = ()
 
 # Need to add this to allow migrate command (compiles forms.py before files are written)
 try:
-    MASTERY = tuple([(k, _(v)) for k,v in [t for t in exercises.MASTERY_MODELS] if k != "skill_check"])
+    MASTERY = tuple([(k, _(v)) for k, v in [t for t in exercises.MASTERY_MODELS] if k != "skill_check"])
     LANGUAGES = [(l['id'], _(l['readable_name'])) for l in Language.objects.values('id', 'readable_name').order_by('readable_name')]
-    LANGUAGES.insert(0, (None, _("Select a language"))) # Add default option if no language is selected
+    LANGUAGES.insert(0, (None, _("Select a language")))  # Add default option if no language is selected
     LICENSES = ((None, _("Select a license")),) + licenses.choices
 except Exception:
     pass
+
 
 class PreferencesSettingsForm(forms.Form):
     # TODO: Add language, audio thumbnail, document thumbnail, exercise thumbnail, html5 thumbnail once implemented
     author = forms.CharField(required=False, label=_('Author'), widget=forms.TextInput(attrs={'class': 'form-control setting_input', 'dir': 'auto'}))
     aggregator = forms.CharField(required=False, label=_('Aggregator'), widget=forms.TextInput(attrs={'class': 'form-control setting_input', 'dir': 'auto'}))
     provider = forms.CharField(required=False, label=_('Provider'), widget=forms.TextInput(attrs={'class': 'form-control setting_input', 'dir': 'auto'}))
-    copyright_holder = forms.CharField(required=False, label=_('Copyright Holder'), widget=forms.TextInput(attrs={'class': 'form-control setting_input', 'dir': 'auto'}))
-    license_description = forms.CharField(required=False, label=_('License Description'), widget=forms.TextInput(attrs={'class': 'form-control setting_input', 'dir': 'auto'}))
+    copyright_holder = forms.CharField(required=False, label=_('Copyright Holder'), widget=forms.TextInput(
+        attrs={'class': 'form-control setting_input', 'dir': 'auto'}))
+    license_description = forms.CharField(required=False, label=_('License Description'),
+                                          widget=forms.TextInput(attrs={'class': 'form-control setting_input', 'dir': 'auto'}))
     language = forms.ChoiceField(required=False, widget=forms.Select(attrs={'class': 'form-control setting_change'}), label=_('Language'), choices=LANGUAGES)
     license = forms.ChoiceField(required=False, widget=forms.Select(attrs={'class': 'form-control setting_change'}), label=_('License'), choices=LICENSES)
     mastery_model = forms.ChoiceField(widget=forms.Select(attrs={'class': 'form-control setting_change'}), choices=MASTERY, label=_("Mastery at"))
     m_value = forms.IntegerField(required=False, widget=forms.NumberInput(attrs={'class': 'form-control setting_input setting_change'}), label=_("M"))
     n_value = forms.IntegerField(required=False, widget=forms.NumberInput(attrs={'class': 'form-control setting_input setting_change'}), label=_("N"))
-    auto_derive_video_thumbnail = forms.BooleanField(initial=True, required=False, widget=forms.CheckboxInput(attrs={'class': 'setting_change'}), label=_("Videos"))
-    auto_derive_audio_thumbnail = forms.BooleanField(initial=True, required=False, widget=forms.CheckboxInput(attrs={'class': 'setting_change'}), label=_("Audio"))
-    auto_derive_document_thumbnail = forms.BooleanField(initial=True, required=False, widget=forms.CheckboxInput(attrs={'class': 'setting_change'}), label=_("Documents"))
-    auto_derive_html5_thumbnail = forms.BooleanField(initial=True, required=False, widget=forms.CheckboxInput(attrs={'class': 'setting_change'}), label=_("HTML Apps"))
+    auto_derive_video_thumbnail = forms.BooleanField(initial=True, required=False, widget=forms.CheckboxInput(attrs={
+                                                     'class': 'setting_change'}), label=_("Videos"))
+    auto_derive_audio_thumbnail = forms.BooleanField(initial=True, required=False, widget=forms.CheckboxInput(attrs={
+                                                     'class': 'setting_change'}), label=_("Audio"))
+    auto_derive_document_thumbnail = forms.BooleanField(initial=True, required=False, widget=forms.CheckboxInput(attrs={
+                                                        'class': 'setting_change'}), label=_("Documents"))
+    auto_derive_html5_thumbnail = forms.BooleanField(initial=True, required=False, widget=forms.CheckboxInput(attrs={
+                                                     'class': 'setting_change'}), label=_("HTML Apps"))
     auto_randomize_questions = forms.BooleanField(initial=True, required=False, widget=forms.CheckboxInput(attrs={'class': 'setting_change'}))
 
     class Meta:
         model = User
-        fields = ('author', 'copyright_holder', 'license', 'license_description', 'language', 'mastery_model', 'm_value', 'n_value', 'auto_derive_video_thumbnail', 'auto_randomize_questions')
+        fields = ('author', 'copyright_holder', 'license', 'license_description', 'language', 'mastery_model',
+                  'm_value', 'n_value', 'auto_derive_video_thumbnail', 'auto_randomize_questions')
 
     def save(self, user):
         user.content_defaults = {
@@ -296,7 +316,8 @@ class PreferencesSettingsForm(forms.Form):
 class StorageRequestForm(forms.Form, ExtraFormMixin):
     # Nature of content
     storage = forms.CharField(required=True, widget=forms.TextInput(attrs={"placeholder": _("e.g. 1GB"), "class": "short-field", "dir": "auto"}))
-    kind = forms.CharField(required=True, widget=forms.TextInput(attrs={"placeholder": _("Mostly high resolution videos, some pdfs, etc."), "class": "long-field", "dir": "auto"}))
+    kind = forms.CharField(required=True, widget=forms.TextInput(attrs={"placeholder": _(
+        "Mostly high resolution videos, some pdfs, etc."), "class": "long-field", "dir": "auto"}))
     resource_count = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "short-field", "dir": "auto"}))
     resource_size = forms.CharField(required=False, widget=forms.TextInput(attrs={"placeholder": _("e.g. 10MB"), "class": "short-field", "dir": "auto"}))
     creators = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "long-field", "dir": "auto"}))
@@ -304,7 +325,8 @@ class StorageRequestForm(forms.Form, ExtraFormMixin):
 
     # How are you using your content
     license = forms.MultipleChoiceField(required=True, widget=forms.CheckboxSelectMultiple(), choices=licenses.choices)
-    audience = forms.CharField(required=True, widget=forms.TextInput(attrs={"placeholder": _("In-school learners, adult learners, teachers, etc."), "class":"long-field", "dir": "auto"}))
+    audience = forms.CharField(required=True, widget=forms.TextInput(attrs={"placeholder": _(
+        "In-school learners, adult learners, teachers, etc."), "class": "long-field", "dir": "auto"}))
     import_count = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "short-field", "dir": "auto"}))
 
     # Tell us more about your use of Kolibri
@@ -351,12 +373,11 @@ class StorageRequestForm(forms.Form, ExtraFormMixin):
         countries = [(c.name, translator.gettext(c.name)) for c in list(pycountry.countries)]
         self.fields['location'] = forms.ChoiceField(required=True, widget=forms.SelectMultiple(attrs={"class": "multi-select-field"}), choices=countries)
 
-
     class Meta:
         fields = ("storage", "kind", "video_type", "resource_count", "resource_size", "license", "public", "audience", "org_or_personal", "organization")
 
     def clean(self):
-        cleaned_data = super(StorageRequestForm, self).clean()
+        super(StorageRequestForm, self).clean()
         self.errors.clear()
 
         self.check_field('storage', _("Please indicate how much storage you need"))
@@ -384,7 +405,6 @@ class StorageRequestForm(forms.Form, ExtraFormMixin):
         return self.cleaned_data
 
 
-
 class AccountSettingsForm(PasswordChangeForm):
     old_password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control setting_input', 'dir': 'auto'}))
     new_password1 = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control setting_input', 'dir': 'auto'}))
@@ -395,7 +415,7 @@ class AccountSettingsForm(PasswordChangeForm):
         fields = ('old_password', 'new_password1', 'new_password2')
 
     def clean(self):
-        cleaned_data = super(AccountSettingsForm, self).clean()
+        super(AccountSettingsForm, self).clean()
 
         self.check_field('old_password', _('Current password is incorrect.'))
 
@@ -428,13 +448,13 @@ class ForgotPasswordForm(PasswordResetForm):
 
         users = User.objects.filter(email=email)
         inactive_users = users.filter(is_active=False)
-        if inactive_users.exists() and inactive_users.count() == users.count(): # all matches are inactive
+        if inactive_users.exists() and inactive_users.count() == users.count():  # all matches are inactive
             for user in inactive_users:
                 if not user.password:
                     context = {
                         'site': extra_email_context.get('site'),
                         'user': user,
-                        'domain': extra_email_context.get('domain') or domain,
+                        'domain': extra_email_context.get('domain'),
                     }
                     subject = render_to_string('registration/password_reset_subject.txt', context)
                     subject = ''.join(subject.splitlines())
@@ -447,7 +467,7 @@ class ForgotPasswordForm(PasswordResetForm):
                         'expiration_days': settings.ACCOUNT_ACTIVATION_DAYS,
                         'site': extra_email_context.get('site'),
                         'user': user,
-                        'domain': extra_email_context.get('domain') or domain,
+                        'domain': extra_email_context.get('domain'),
                     }
                     subject = render_to_string('registration/password_reset_subject.txt', context)
                     subject = ''.join(subject.splitlines())
@@ -466,7 +486,6 @@ class ForgotPasswordForm(PasswordResetForm):
         )
 
 
-
 class ResetPasswordForm(SetPasswordForm):
     new_password1 = forms.CharField(label=_("New password"),
                                     widget=forms.PasswordInput(attrs={"dir": "auto"}),
@@ -475,6 +494,7 @@ class ResetPasswordForm(SetPasswordForm):
     new_password2 = forms.CharField(label=_("New password confirmation"),
                                     strip=False,
                                     widget=forms.PasswordInput(attrs={"dir": "auto"}))
+
 
 class LoginForm(AuthenticationForm):
     username = forms.CharField(max_length=254, widget=forms.TextInput(attrs={"dir": "auto"}))

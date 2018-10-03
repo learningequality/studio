@@ -6,6 +6,7 @@ register = template.Library()
 
 LICENSE_MAPPING = {l.license_name: l.license_url for l in License.objects.all()}
 
+
 @register.filter(is_safe=True)
 @stringfilter
 def get_license_url(value):

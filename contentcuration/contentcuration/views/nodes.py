@@ -2,25 +2,48 @@ import ast
 import copy
 import json
 import logging
-import pytz
 import uuid
 from datetime import datetime
-from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseNotFound
+
+import pytz
 from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
-from django.db.models import Q, Max, Sum, F, Count
+from django.db.models import Count
+from django.db.models import F
+from django.db.models import Max
+from django.db.models import Q
+from django.db.models import Sum
+from django.http import HttpResponse
+from django.http import HttpResponseBadRequest
+from django.http import HttpResponseNotFound
 from django.utils.translation import ugettext as _
-from rest_framework.renderers import JSONRenderer
-from contentcuration.utils.files import duplicate_file
-from contentcuration.models import File, ContentNode, ContentTag, AssessmentItem, License, Language, Channel, PrerequisiteContentRelationship, generate_storage_url
-from contentcuration.serializers import ContentNodeSerializer, ContentNodeEditSerializer, SimplifiedContentNodeSerializer
-from le_utils.constants import format_presets, content_kinds, roles
-from rest_framework.authentication import TokenAuthentication, SessionAuthentication
+from le_utils.constants import content_kinds
+from le_utils.constants import format_presets
+from le_utils.constants import roles
+from rest_framework.authentication import SessionAuthentication
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.decorators import api_view
+from rest_framework.decorators import authentication_classes
+from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
+
+from contentcuration.models import AssessmentItem
+from contentcuration.models import Channel
+from contentcuration.models import ContentNode
+from contentcuration.models import ContentTag
+from contentcuration.models import File
+from contentcuration.models import generate_storage_url
+from contentcuration.models import Language
+from contentcuration.models import License
+from contentcuration.models import PrerequisiteContentRelationship
+from contentcuration.serializers import ContentNodeEditSerializer
+from contentcuration.serializers import ContentNodeSerializer
+from contentcuration.serializers import SimplifiedContentNodeSerializer
+from contentcuration.utils.files import duplicate_file
 
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
@@ -30,7 +53,6 @@ def get_node_diff(request, channel_id):
     changed = []    # Nodes from original node
     fields_to_check = ['title', 'description', 'license', 'license_description', 'copyright_holder', 'author', 'extra_fields', 'language', 'role_visibility']
     assessment_fields_to_check = ['type', 'question', 'hints', 'answers', 'order', 'raw_data', 'source_url', 'randomize']
-
 
     current_tree_id = Channel.objects.get(pk=channel_id).main_tree.tree_id
     nodes = ContentNode.objects.prefetch_related('assessment_items').prefetch_related('files').prefetch_related('tags')
@@ -50,12 +72,12 @@ def get_node_diff(request, channel_id):
         if node:
             # Check lengths, metadata, tags, files, and assessment items
             node_changed = node.assessment_items.count() != copied_node.assessment_items.count() or \
-                           node.files.count() != copied_node.files.count() or \
-                           node.tags.count() != copied_node.tags.count() or \
-                           any(filter(lambda f: getattr(node, f, None) != getattr(copied_node, f, None), fields_to_check)) or \
-                           node.tags.exclude(tag_name__in=copied_node.tags.values_list('tag_name', flat=True)).exists() or \
-                           node.files.exclude(checksum__in=copied_node.files.values_list('checksum', flat=True)).exists() or \
-                           node.assessment_items.exclude(assessment_id__in=copied_node.assessment_items.values_list('assessment_id', flat=True)).exists()
+                node.files.count() != copied_node.files.count() or \
+                node.tags.count() != copied_node.tags.count() or \
+                any(filter(lambda f: getattr(node, f, None) != getattr(copied_node, f, None), fields_to_check)) or \
+                node.tags.exclude(tag_name__in=copied_node.tags.values_list('tag_name', flat=True)).exists() or \
+                node.files.exclude(checksum__in=copied_node.files.values_list('checksum', flat=True)).exists() or \
+                node.assessment_items.exclude(assessment_id__in=copied_node.assessment_items.values_list('assessment_id', flat=True)).exists()
 
             # Check individual assessment items
             if not node_changed and node.kind_id == content_kinds.EXERCISE:
@@ -74,8 +96,8 @@ def get_node_diff(request, channel_id):
     serialized_changed = JSONRenderer().render(SimplifiedContentNodeSerializer(changed, many=True).data)
 
     return HttpResponse(json.dumps({
-        "original" : serialized_original,
-        "changed" : serialized_changed,
+        "original": serialized_original,
+        "changed": serialized_changed,
     }))
 
 
@@ -99,6 +121,7 @@ def create_new_node(request):
     )
     return HttpResponse(JSONRenderer().render(ContentNodeEditSerializer(new_node).data))
 
+
 @api_view(['GET'])
 def get_prerequisites(request, get_prerequisites, ids):
     nodes = ContentNode.objects.prefetch_related('prerequisite').filter(pk__in=ids.split(","))
@@ -121,8 +144,9 @@ def get_prerequisites(request, get_prerequisites, ids):
     return HttpResponse(json.dumps({
         "prerequisite_mapping": prerequisite_mapping,
         "postrequisite_mapping": postrequisite_mapping,
-        "prerequisite_tree_nodes" : JSONRenderer().render(SimplifiedContentNodeSerializer(prerequisite_tree_nodes, many=True).data),
+        "prerequisite_tree_nodes": JSONRenderer().render(SimplifiedContentNodeSerializer(prerequisite_tree_nodes, many=True).data),
     }))
+
 
 @api_view(['GET'])
 def get_total_size(request, ids):
@@ -134,25 +158,27 @@ def get_total_size(request, ids):
 
     return HttpResponse(json.dumps({'success': True, 'size': sizes['resource_size'] or 0}))
 
+
 @api_view(['GET'])
 def get_nodes_by_ids(request, ids):
     nodes = ContentNode.objects.prefetch_related('children', 'files', 'assessment_items', 'tags')\
                        .filter(pk__in=ids.split(","))\
-                       .defer('node_id', 'original_source_node_id', 'source_node_id', 'content_id', 'original_channel_id', 'source_channel_id', 'source_id', 'source_domain', 'created', 'modified')
+                       .defer('node_id', 'original_source_node_id', 'source_node_id', 'content_id',
+                              'original_channel_id', 'source_channel_id', 'source_id', 'source_domain', 'created', 'modified')
     serializer = ContentNodeSerializer(nodes, many=True)
     return Response(serializer.data)
+
 
 def get_node_path(request, topic_id, tree_id, node_id):
     try:
         topic = ContentNode.objects.prefetch_related('children').get(node_id__startswith=topic_id, tree_id=tree_id)
 
         if topic.kind_id != content_kinds.TOPIC:
-            node =  ContentNode.objects.prefetch_related('files', 'assessment_items', 'tags').get(node_id__startswith=topic_id, tree_id=tree_id)
+            node = ContentNode.objects.prefetch_related('files', 'assessment_items', 'tags').get(node_id__startswith=topic_id, tree_id=tree_id)
             nodes = node.get_ancestors(ascending=True)
         else:
-            node =  node_id and ContentNode.objects.prefetch_related('files', 'assessment_items','tags').get(node_id__startswith=node_id, tree_id=tree_id)
+            node = node_id and ContentNode.objects.prefetch_related('files', 'assessment_items', 'tags').get(node_id__startswith=node_id, tree_id=tree_id)
             nodes = topic.get_ancestors(include_self=True, ascending=True)
-
 
         return HttpResponse(json.dumps({
             'path': JSONRenderer().render(ContentNodeSerializer(nodes, many=True).data),
@@ -162,11 +188,13 @@ def get_node_path(request, topic_id, tree_id, node_id):
     except ObjectDoesNotExist:
         return HttpResponseNotFound("Invalid URL: the referenced content does not exist in this channel.")
 
+
 @api_view(['GET'])
 def get_nodes_by_ids_simplified(request, ids):
     nodes = ContentNode.objects.prefetch_related('children').filter(pk__in=ids.split(","))
     serializer = SimplifiedContentNodeSerializer(nodes, many=True)
     return Response(serializer.data)
+
 
 @api_view(['GET'])
 def get_nodes_by_ids_complete(request, ids):
@@ -185,6 +213,7 @@ def get_channel_thumbnail(channel):
     if channel.get("thumbnail"):
         return generate_storage_url(channel.get("thumbnail"))
 
+
 def get_thumbnail(node):
     # Problems with json.loads, so use ast.literal_eval to get dict
     if node.thumbnail_encoding:
@@ -200,6 +229,8 @@ def get_thumbnail(node):
 
 
 DATE_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
+
+
 @api_view(['GET'])
 def get_topic_details(request, contentnode_id):
     """ Generates data for topic contents. Used for look-inside previews
@@ -209,16 +240,16 @@ def get_topic_details(request, contentnode_id):
     # Get nodes and channel
     node = ContentNode.objects.get(pk=contentnode_id)
     descendants = node.get_descendants().prefetch_related('children', 'files', 'tags')\
-                            .select_related('license', 'language')
+        .select_related('license', 'language')
 
     channel = node.get_channel()
 
     # If channel is a sushi chef channel, use date created for faster query
     # Otherwise, find the last time anything was updated in the channel
     last_update = channel.main_tree.created if channel and channel.ricecooker_version else \
-                        descendants.filter(changed=True)\
-                                .aggregate(latest_update=Max('modified'))\
-                                .get('latest_update')
+        descendants.filter(changed=True)\
+        .aggregate(latest_update=Max('modified'))\
+        .get('latest_update')
 
     # See if the latest cached data is up to date since the last update to the channel
     cached_data = cache.get("details_{}".format(node.node_id))
@@ -240,12 +271,13 @@ def get_topic_details(request, contentnode_id):
     providers = filter(bool, set(split_lst[3])) if len(split_lst) > 3 else []
 
     # Get sample pathway by getting longest path
-    max_level = max(resources.values_list('level', flat=True).distinct() or [0])  # Using resources.aggregate adds a lot of time, use values that have already been fetched
+    # Using resources.aggregate adds a lot of time, use values that have already been fetched
+    max_level = max(resources.values_list('level', flat=True).distinct() or [0])
     deepest_node = resources.filter(level=max_level).first()
-    pathway = list(deepest_node.get_ancestors()\
-                            .exclude(parent=None)\
-                            .values('title', 'node_id', 'kind_id')
-                ) if deepest_node else []
+    pathway = list(deepest_node.get_ancestors()
+                   .exclude(parent=None)
+                   .values('title', 'node_id', 'kind_id')
+                   ) if deepest_node else []
     sample_nodes = [
         {
             "node_id": n.node_id,
@@ -258,12 +290,12 @@ def get_topic_details(request, contentnode_id):
     # Get list of channels nodes were originally imported from (omitting the current channel)
     channel_id = channel and channel.id
     originals = resources.values("original_channel_id")\
-                        .annotate(count=Count("original_channel_id"))\
-                        .order_by("original_channel_id")
+        .annotate(count=Count("original_channel_id"))\
+        .order_by("original_channel_id")
     originals = {c['original_channel_id']: c['count'] for c in originals}
     original_channels = Channel.objects.exclude(pk=channel_id)\
-                                    .filter(pk__in=[k for k, v in originals.items()], deleted=False)\
-                                    .values('id', 'name', 'thumbnail', 'thumbnail_encoding')
+        .filter(pk__in=[k for k, v in originals.items()], deleted=False)\
+        .values('id', 'name', 'thumbnail', 'thumbnail_encoding')
     original_channels = [{
         "id": c["id"],
         "name": "{}{}".format(c["name"], _(" (Original)") if channel_id == c["id"] else ""),
@@ -272,10 +304,10 @@ def get_topic_details(request, contentnode_id):
     } for c in original_channels]
 
     # Get tags from channel
-    tags = list(ContentTag.objects.filter(tagged_content__pk__in=descendants.values_list('pk', flat=True))\
-                            .values('tag_name')\
-                            .annotate(count=Count('tag_name'))\
-                            .order_by('tag_name'))
+    tags = list(ContentTag.objects.filter(tagged_content__pk__in=descendants.values_list('pk', flat=True))
+                .values('tag_name')
+                .annotate(count=Count('tag_name'))
+                .order_by('tag_name'))
 
     # Get resource variables
     resource_count = resources.count() or 0
@@ -283,7 +315,7 @@ def get_topic_details(request, contentnode_id):
 
     languages = list(set(descendants.exclude(language=None).values_list('language__native_name', flat=True)))
     accessible_languages = resources.filter(files__preset_id=format_presets.VIDEO_SUBTITLE)\
-                                                .values_list('files__language_id', flat=True)
+        .values_list('files__language_id', flat=True)
     accessible_languages = list(Language.objects.filter(id__in=accessible_languages).distinct().values_list('native_name', flat=True))
 
     licenses = list(set(resources.exclude(license=None).values_list('license__license_name', flat=True)))
@@ -347,6 +379,7 @@ def delete_nodes(request):
 
     return HttpResponse(json.dumps({'success': True}))
 
+
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
 def duplicate_nodes(request):
@@ -378,6 +411,7 @@ def duplicate_nodes(request):
 
     serialized = ContentNodeSerializer(ContentNode.objects.filter(pk__in=new_nodes), many=True).data
     return HttpResponse(JSONRenderer().render(serialized))
+
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
@@ -465,7 +499,7 @@ def duplicate_node_bulk(node, sort_order=None, parent=None, channel_id=None, use
     return new_node
 
 
-def _duplicate_node_bulk_recursive(node, sort_order, parent, channel_id, to_create, level=0, user=None):
+def _duplicate_node_bulk_recursive(node, sort_order, parent, channel_id, to_create, level=0, user=None):  # noqa
 
     if isinstance(node, int) or isinstance(node, basestring):
         node = ContentNode.objects.get(pk=node)
@@ -602,6 +636,7 @@ def _move_node(node, parent=None, sort_order=None, channel_id=None):
 
     return node
 
+
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
 def sync_nodes(request):
@@ -632,17 +667,17 @@ def sync_nodes(request):
 def _sync_node(node, channel_id, sync_attributes=False, sync_tags=False, sync_files=False, sync_assessment_items=False, sync_sort_order=False):
     parents_to_check = []
     original_node = node.get_original_node()
-    if original_node.node_id != node.node_id: # Only update if node is not original
+    if original_node.node_id != node.node_id:  # Only update if node is not original
         logging.info("----- Syncing: {} from {}".format(node.title.encode('utf-8'), original_node.get_channel().name.encode('utf-8')))
-        if sync_attributes: # Sync node metadata
+        if sync_attributes:  # Sync node metadata
             sync_node_data(node, original_node)
-        if sync_tags: # Sync node tags
+        if sync_tags:  # Sync node tags
             sync_node_tags(node, original_node, channel_id)
-        if sync_files: # Sync node files
+        if sync_files:  # Sync node files
             sync_node_files(node, original_node)
-        if sync_assessment_items and node.kind_id == content_kinds.EXERCISE: # Sync node exercises
+        if sync_assessment_items and node.kind_id == content_kinds.EXERCISE:  # Sync node exercises
             sync_node_assessment_items(node, original_node)
-        if sync_sort_order: # Sync node sort order
+        if sync_sort_order:  # Sync node sort order
             node.sort_order = original_node.sort_order
             if node.parent not in parents_to_check:
                 parents_to_check.append(node.parent)
@@ -673,21 +708,22 @@ def sync_channel_endpoint(request):
     except KeyError:
         return ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
+
 def sync_channel(channel, sync_attributes=False, sync_tags=False, sync_files=False, sync_assessment_items=False, sync_sort_order=False):
     all_nodes = []
-    parents_to_check = [] # Keep track of parents to make resorting easier
+    parents_to_check = []  # Keep track of parents to make resorting easier
 
     with transaction.atomic():
         with ContentNode.objects.delay_mptt_updates():
             logging.info("Syncing nodes for channel {} (id:{})".format(channel.name, channel.pk))
             for node in channel.main_tree.get_descendants():
                 node, parents = _sync_node(node, channel.pk,
-                    sync_attributes=sync_attributes,
-                    sync_tags=sync_tags,
-                    sync_files=sync_files,
-                    sync_assessment_items=sync_assessment_items,
-                    sync_sort_order=sync_sort_order,
-                )
+                                           sync_attributes=sync_attributes,
+                                           sync_tags=sync_tags,
+                                           sync_files=sync_files,
+                                           sync_assessment_items=sync_assessment_items,
+                                           sync_sort_order=sync_sort_order,
+                                           )
                 parents_to_check += parents
                 all_nodes.append(node)
             # Avoid cases where sort order might have overlapped
@@ -710,6 +746,7 @@ def sync_node_data(node, original):
     node.author = original.author
     node.extra_fields = original.extra_fields
 
+
 def sync_node_tags(node, original, channel_id):
     # Remove tags that aren't in original
     for tag in node.tags.exclude(tag_name__in=original.tags.values_list('tag_name', flat=True)):
@@ -724,6 +761,7 @@ def sync_node_tags(node, original, channel_id):
         node.tags.add(new_tag)
         node.changed = True
 
+
 def sync_node_files(node, original):
     # Delete files that aren't in original
     node.files.exclude(checksum__in=original.files.values_list('checksum', flat=True)).delete()
@@ -732,7 +770,7 @@ def sync_node_files(node, original):
         # Remove any files that are already attached to node
         original_file = node.files.filter(preset_id=f.preset_id).first()
         if original_file:
-            if original_file.checksum == f.checksum: # No need to copy file- nothing has changed
+            if original_file.checksum == f.checksum:  # No need to copy file- nothing has changed
                 continue
             original_file.delete()
             node.changed = True

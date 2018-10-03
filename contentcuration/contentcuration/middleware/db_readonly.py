@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.http import HttpResponseBadRequest
 from django.utils.translation import ugettext as _
 
@@ -14,6 +13,7 @@ from readonly.exceptions import DatabaseWriteDenied
 
 
 class DatabaseReadOnlyMiddleware(MiddlewareMixin):
+
     def process_exception(self, request, exception):
         # Only process DatabaseWriteDenied exceptions
         if not isinstance(exception, DatabaseWriteDenied):

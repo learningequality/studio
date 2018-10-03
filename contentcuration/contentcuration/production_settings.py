@@ -1,5 +1,5 @@
 import os
-import raven
+
 from .settings import *
 
 MEDIA_ROOT = STORAGE_ROOT
@@ -21,7 +21,7 @@ GOOGLE_AUTH_JSON = os.getenv("GOOGLE_DRIVE_AUTH_JSON") or GOOGLE_AUTH_JSON
 
 key = (os.getenv("SENTRY_DSN_KEY")
        .strip())                # strip any possible trailing newline
-release_commit =  os.getenv("RELEASE_COMMIT_SHA")
+release_commit = os.getenv("RELEASE_COMMIT_SHA")
 if key and release_commit:
     RAVEN_CONFIG = {
         'dsn': 'https://{secret}@sentry.io/1252819'.format(secret=key),

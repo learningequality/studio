@@ -1,16 +1,17 @@
 #!/usr/bin/env python
-from cStringIO import StringIO
-from datetime import datetime, timedelta
+from datetime import datetime
+from datetime import timedelta
 
 import requests
+from base import StudioTestCase
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
+from le_utils.constants import content_kinds
 
-from contentcuration.models import ContentNode, File
+from contentcuration.models import ContentNode
+from contentcuration.models import File
 from contentcuration.utils.garbage_collect import clean_up_contentnodes
-
-from base import StudioTestCase
 
 
 THREE_MONTHS_AGO = datetime.now() - timedelta(days=93)
@@ -18,7 +19,7 @@ THREE_MONTHS_AGO = datetime.now() - timedelta(days=93)
 
 def _create_expired_contentnode(creation_date=THREE_MONTHS_AGO):
     c = ContentNode.objects.create(
-        kind_id="topic",
+        kind_id=content_kinds.TOPIC,
         title="test",
         modified=creation_date,
         created=creation_date,
@@ -34,6 +35,7 @@ def _create_expired_contentnode(creation_date=THREE_MONTHS_AGO):
 
 
 class CleanUpContentNodesTestCase(StudioTestCase):
+
     def test_delete_all_contentnodes_in_orphanage_tree(self):
         """
         Make sure that by default, all nodes created with a timestamp of 3 months
@@ -55,7 +57,6 @@ class CleanUpContentNodesTestCase(StudioTestCase):
         garbage_tree.refresh_from_db()
         assert garbage_tree.get_descendant_count() == 0
 
-
     def test_deletes_associated_files(self):
         c = _create_expired_contentnode()
         f = File.objects.create(
@@ -63,6 +64,7 @@ class CleanUpContentNodesTestCase(StudioTestCase):
             file_on_disk=ContentFile("test"),
             checksum="aaa",
         )
+
         f.file_on_disk.save("aaa.jpg", ContentFile("aaa"))
         file_url = f.file_on_disk.url
 
@@ -81,7 +83,7 @@ class CleanUpContentNodesTestCase(StudioTestCase):
         # this legit tree, since it's not attached to our
         # orphan tree, should still exist after cleanup
         legit_tree = ContentNode.objects.create(
-            kind_id="Topic",
+            kind_id=content_kinds.TOPIC,
         )
         # this file should still be here too since we attach
         # it to our legit tree
@@ -113,7 +115,7 @@ class CleanUpContentNodesTestCase(StudioTestCase):
 
         # our old, but not orphaned tree. This should exist at the end of our test.
         legit_node = ContentNode.objects.create(
-            kind_id="Topic",
+            kind_id=content_kinds.TOPIC,
         )
         # mark the legit_node as old
         ContentNode.objects.filter(pk=legit_node.pk).update(
@@ -128,8 +130,6 @@ class CleanUpContentNodesTestCase(StudioTestCase):
         # is our senior, legit node still around? :)
         assert ContentNode.objects.filter(pk=legit_node.pk).exists()
 
-
-
     def test_doesnt_delete_file_referenced_by_orphan_and_nonorphan_nodes(self):
         """
         Make sure we don't delete a file, as long as it's referenced
@@ -141,7 +141,7 @@ class CleanUpContentNodesTestCase(StudioTestCase):
 
         # our legit node, standing proud and high with its non-orphaned status
         legit_node = ContentNode.objects.create(
-            kind_id="Video",
+            kind_id=content_kinds.VIDEO,
         )
 
         f = File.objects.create(

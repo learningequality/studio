@@ -5,9 +5,9 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import get_language
 from django.utils.translation import get_language_info
 from django.utils.translation import ugettext_lazy as _
-from contentcuration.utils.format import format_size as fsize
-
 from webpack_loader import utils
+
+from contentcuration.utils.format import format_size as fsize
 
 
 register = template.Library()
@@ -69,6 +69,7 @@ def render_bundle_css(bundle_name, config='DEFAULT', attrs=''):
             '<link type="text/css" href="{0}" rel="stylesheet" {1}/>'
         ).format(chunk['url'], attrs))
     return mark_safe('\n'.join(tags))
+
 
 @register.simple_tag
 def render_offline_css(language):
