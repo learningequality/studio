@@ -156,6 +156,7 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
 
         // TODO: This should make thumbnails retain zoom/points when you re-enter cropping mode, but
         // it seems like there's a bug with croppie https://github.com/Foliotek/Croppie/issues/122
+        // Uncomment these lines when it gets fixed
         // this.croppie.bind({
         //     points: (this.thumbnail_encoding)? this.thumbnail_encoding.points : [],
         //     zoom: (this.thumbnail_encoding)? this.thumbnail_encoding.zoom : 0,
@@ -195,7 +196,6 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
         this.image = file;
         this.image_url = file.get('storage_url');
         this.thumbnail_encoding = {'base64': encoding, 'points': [], 'zoom': 0};
-        console.log(this.thumbnail_encoding)
         this.render();
         this.submit_image();
     },

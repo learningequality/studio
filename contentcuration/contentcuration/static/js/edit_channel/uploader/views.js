@@ -1174,10 +1174,13 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
         allow_edit: this.allow_edit
       });
       formats_el.html(this.exercise_view.el);
-      var question_count = _.filter(this.model.get('assessment_items'), function(item) {
-        return !item.deleted;
-      });
-      this.container.$(".question_badge").text(question_count.length);
+      this.update_question_count();
+  },
+  update_question_count: function() {
+    var question_count = _.filter(this.model.get('assessment_items'), function(item) {
+      return !item.deleted; // Only count non-deleted questions
+    });
+    this.container.$(".question_badge").text(question_count.length);
   },
   load_preview_display:function(formats_el){
     if(this.preview_view){
@@ -1191,10 +1194,7 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
   },
   handle_assessment_items:function(data){
     this.model.set('assessment_items', data);
-    var question_count = _.filter(this.model.get('assessment_items'), function(item) {
-      return !item.deleted;
-    });
-    this.container.$(".question_badge").text(question_count.length);
+    this.update_question_count();
     this.set_edited(true);
   },
   handle_change:function(){

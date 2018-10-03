@@ -37,6 +37,8 @@ from contentcuration.statistics import record_publish_stats
 from contentcuration.utils.files import create_content_thumbnail
 from contentcuration.utils.files import get_thumbnail_encoding
 from contentcuration.utils.parser import extract_value
+from contentcuration.utils.parser import load_json_string
+
 logmodule.basicConfig()
 logging = logmodule.getLogger(__name__)
 reload(sys)
@@ -249,9 +251,16 @@ def get_or_create_language(language):
 
 
 def create_associated_thumbnail(ccnode, ccfilemodel):
+    """
+        Gets the appropriate thumbnail for export (uses or generates a base64 encoding)
+        Args:
+            ccnode (<ContentNode>): node to derive thumbnail from (if encoding is provided)
+            ccfilemodel (<File>): file to get thumbnail from if no encoding is available
+        Returns <File> model of encoded, resized thumbnail
+    """
     encoding = None
     try:
-        encoding = ccnode.thumbnail_encoding and json.loads(ccnode.thumbnail_encoding).get('base64')
+        encoding = ccnode.thumbnail_encoding and load_json_string(ccnode.thumbnail_encoding).get('base64')
     except ValueError:
         logging.error("ERROR: node thumbnail is not in correct format ({}: {})".format(ccnode.id, ccnode.thumbnail_encoding))
 
@@ -534,12 +543,11 @@ def convert_channel_thumbnail(channel):
 
     if channel.thumbnail_encoding:
         try:
-            thumbnail_data = json.loads(channel.thumbnail_encoding)
+            thumbnail_data = load_json_string(channel.thumbnail_encoding)
             if thumbnail_data.get("base64"):
                 return thumbnail_data["base64"]
         except ValueError:
             logging.error("ERROR: channel thumbnail is not in correct format ({}: {})".format(channel.id, channel.thumbnail_encoding))
-
     return get_thumbnail_encoding(channel.thumbnail)
 
 

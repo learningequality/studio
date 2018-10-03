@@ -221,6 +221,13 @@ def generate_thumbnail_from_node(node, set_node=None):  # noqa
 
 
 def get_thumbnail_encoding(filename, dimension=THUMBNAIL_DIMENSION):
+    """
+        Generates a base64 encoding for a thumbnail
+        Args:
+            filename (str): thumbnail to generate encoding from (must be in storage already)
+            dimension (int): how big resized image should be
+        Returns base64 encoding of resized thumbnail
+    """
     if filename.startswith("data:image"):
         return filename
 
@@ -237,13 +244,19 @@ def get_thumbnail_encoding(filename, dimension=THUMBNAIL_DIMENSION):
 
 
 def create_content_thumbnail(encoding, file_format_id=file_formats.PNG, preset_id=None, uploaded_by=None):
-    temppath = None
+    """
+        Takes encoding and makes it into a file object
+        Args:
+            encoding (str): base64 to make into an image file
+            file_format_id (str): what the extension should be
+            preset_id (str): what the preset should be
+            uploaded_by (<User>): who uploaded the image
+        Returns <File> object with the file_on_disk being the image file generated from the encoding
+    """
+    fd, path = tempfile.mkstemp()
     try:
-        with tempfile.NamedTemporaryFile(suffix=".{}".format(file_format_id), delete=False) as tempf:
-            temppath = tempf.name
-            tempf.close()
-            write_base64_to_file(encoding, temppath)
-            with open(temppath, 'rb') as tf:
-                return create_file_from_contents(tf.read(), ext=file_format_id, preset_id=preset_id, uploaded_by=uploaded_by)
+        write_base64_to_file(encoding, path)
+        with open(path, 'rb') as tf:
+            return create_file_from_contents(tf.read(), ext=file_format_id, preset_id=preset_id, uploaded_by=uploaded_by)
     finally:
-        temppath and os.unlink(temppath)
+        os.close(fd)

@@ -474,6 +474,7 @@ class ContentNodeFieldMixin(object):
         }
 
     def retrieve_thumbail_src(self, node):
+        """ Get either the encoding or the url to use as the <img> src attribute """
         try:
             if node.thumbnail_encoding:
                 return json.loads(node.thumbnail_encoding).get('base64')
