@@ -1,6 +1,6 @@
 <div> <!-- Added to make jquery sortable more robust -->
 <label class="list_item_wrapper {{#if isfolder}}folder collapsed{{else}}file{{/if}}" for="{{#if isfolder}}folder{{else}}item{{/if}}_{{node.id}}" title="{{node.title}}">
-	<div class="options text-right hide_on_drag">
+	<div class="options text-right hide_on_drag header_options">
 		{{#if edit_mode}}
 			<i class="content-options-dropdown material-icons" role="button" rel="popover">more_horiz</i>
 		{{else}}
@@ -8,9 +8,8 @@
 			<i class="material-icons copy_item_button preview_option" title="{{formatMessage (intlGet 'messages.copy_to_clipboard')}}">content_paste</i>
 		{{/if}}
 	</div>
-	<div class="col-xs-1 item_section">
+	<div class="col-xs-1 item_section text-center">
 		<input type="checkbox" id="item_{{node.id}}" class="list_item_wrapper" {{#if checked}}checked{{/if}}/>
-		<span class="checkmark"></span>
 	</div>
 	<div class="col-xs-2 item_section thumbnail_section {{#if isfolder}}open_folder{{else}}open_file{{/if}}">
 		{{#if node.thumbnail_src}}<img src="{{node.thumbnail_src}}" class="content-item-thumbnail hide_on_drag">{{/if}}
@@ -26,14 +25,16 @@
 		<h6 class="content_metadata_summary hide_on_drag {{#unless isfolder}}open_file{{/unless}} metadata_to_hide">
 			<!-- NEW/UPDATED/INCOMPLETE Indicators -->
 			<div class="pull-right metadata-indicator">
-				{{#if node.changed}}
-					<span class="unpublished" title="{{#if node.published}}{{formatMessage (intlGet 'messages.updated')}}{{else}}{{formatMessage (intlGet 'messages.created')}}{{/if}} {{formatRelative node.modified}}">
-						{{#if node.published}}{{formatMessage (intlGet 'messages.updated')}} {{else}}{{formatMessage (intlGet 'messages.new')}}{{/if}}
-					</span>
+				{{#if edit_mode}}
+					{{#if node.changed}}
+						<span class="unpublished" title="{{#if node.published}}{{formatMessage (intlGet 'messages.updated')}}{{else}}{{formatMessage (intlGet 'messages.created')}}{{/if}} {{formatRelative node.modified}}">
+							{{#if node.published}}{{formatMessage (intlGet 'messages.updated')}} {{else}}{{formatMessage (intlGet 'messages.new')}}{{/if}}
+						</span>
+					{{/if}}
+					{{#unless node.valid}}
+						<span class="invalid">{{formatMessage (intlGet 'messages.incomplete')}}</span>
+					{{/unless}}
 				{{/if}}
-				{{#unless node.valid}}
-					<span class="invalid">{{formatMessage (intlGet 'messages.incomplete')}}</span>
-				{{/unless}}
 			</div>
 
 
@@ -44,18 +45,20 @@
 			</div>
 			{{/unless}}
 
-			<!-- Resource count / Question count / File size -->
-			<div class="metadata-indicator">
-				{{#if isfolder}}{{formatMessage (intlGet (concat 'messages.resource_count')) count=count}}{{/if}}
-			</div>
+			<!-- Resource count -->
+			{{#if isfolder}}
+				<div class="metadata-indicator resource_count">
+					{{formatMessage (intlGet (concat 'messages.resource_count')) count=count}}
+				</div>
+			{{/if}}
 
 			<!-- Coach Content -->
 			{{#if isfolder}}
 				{{#if node.metadata.coach_count}}
-					<span class="visibility" title="{{formatMessage (intlGet 'messages.coach_topic_title')}}">
+					<b class="visibility" title="{{formatMessage (intlGet 'messages.coach_topic_title')}}">
 						<i class="icon-blue material-icons">local_library</i>
 						{{formatMessage (intlGet 'messages.parenthesis') data=node.metadata.coach_count}}
-					</span>
+					</b>
 				{{/if}}
 			{{else}}
 				{{#equal node.role_visibility 'coach'}}
@@ -68,7 +71,7 @@
 		</h6>
 		<div class="title_wrapper">
 			<div class="title truncate">
-				<i class="material-icons collapsed-icon">{{{get_icon node.kind}}}</i> {{#if node}}{{node.title}}{{else}}<em>{{formatMessage (intlGet (concat 'messages.untitled'))}}</em>{{/if}}
+				<i class="material-icons collapsed-icon collapsed-icon-{{node.kind}}">{{{get_icon node.kind}}}</i> {{#if node}}{{node.title}}{{else}}<em>{{formatMessage (intlGet (concat 'messages.untitled'))}}</em>{{/if}}
 			</div>
 			<div class="description_wrapper">
 				<div class="description" title="{{node.description}}">
@@ -78,7 +81,7 @@
 		</div>
 	</div>
 	<div class="col-xs-1 item_section {{#if isfolder}}open_folder{{else}}open_file{{/if}}">
-		<div class="options pull-right hide_on_drag">
+		<div class="options text-center hide_on_drag">
 			{{#if isfolder}}<i class="folder_open_icon material-icons rtl-flip">chevron_right</i>{{/if}}
 		</div>
 	</div>
