@@ -29,8 +29,10 @@ var MESSAGES = {
     "mastery_criteria": "Mastery Criteria",
     "editing_header": "Editing Content Details",
     "remove_tag": "Remove Tag",
-    "adding_topics": "Adding Topics to {title}",
-    "adding_exercise": "Adding Exercise to {title}",
+    "add_topics": "Add Topics",
+    "add_exercise": "Add Exercise",
+    "editing_kind": "Editing {kind}",
+    "viewing_kind": "Viewing {kind}",
     "editing_content": "Editing Content",
     "viewing_content": "Viewing Content",
     "save": "SAVE",
@@ -94,7 +96,8 @@ var MetadataModalView = BaseViews.BaseModalView.extend({
       new_content: options.new_content,
       new_topic: options.new_topic,
       title: (this.model)? ((this.model.get("parent"))? this.model.get("title") : window.current_channel.get("name")) : null,
-      allow_edit: this.allow_edit
+      allow_edit: this.allow_edit,
+      node: (options.collection.length === 1)? options.collection.at(0).toJSON() : null
     });
     this.metadata_view = new EditMetadataView({
       el: this.$(".modal-body"),
