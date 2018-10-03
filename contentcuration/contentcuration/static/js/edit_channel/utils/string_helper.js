@@ -3,11 +3,11 @@ var i18n = require("../../utils/i18n");
 
 function format_size(text){
   if (!text) {
-    return "0" + translate("unit_bytes");
+    return get_translation(messages, "unit_bytes", "0");
   }
   var value = Number(text);
   var prefix = value < 0 ? "neg_" : ""
-  value = Math.abs(value)
+  value = Math.abs(value);
 
   var KB = parseFloat(1024);
   var MB = parseFloat(Math.pow(KB, 2));
