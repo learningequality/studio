@@ -1,18 +1,15 @@
-import csv
-import os
-import re
+import logging as logmodule
 
-from django.conf import settings
 from django.core.management.base import BaseCommand
+
 from contentcuration.models import Channel
 from contentcuration.utils.csv_writer import write_channel_csv_file
-
-import logging as logmodule
 logmodule.basicConfig()
 logging = logmodule.getLogger(__name__)
 
 
 class Command(BaseCommand):
+
     def add_arguments(self, parser):
         parser.add_argument('channel_id', type=str)
         parser.add_argument('--force', action='store_true', dest='force', default=False)

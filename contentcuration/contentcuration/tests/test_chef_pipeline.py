@@ -1,12 +1,12 @@
 import json
 
-from django.core.files.uploadedfile import SimpleUploadedFile
-
-from contentcuration import ricecooker_versions as rc
-from contentcuration import models as cc
-
 from base import BaseAPITestCase
-from testdata import create_temp_file, invalid_file_json, node_json
+from django.core.files.uploadedfile import SimpleUploadedFile
+from testdata import create_temp_file
+from testdata import invalid_file_json
+from testdata import node_json
+
+from contentcuration import models as cc
 
 
 channel_metadata = {
@@ -18,6 +18,7 @@ channel_metadata = {
 
 
 class ChefTestCase(BaseAPITestCase):
+
     def setUp(self):
         super(ChefTestCase, self).setUp()
         self.check_version_url = '/api/internal/check_version'
@@ -94,7 +95,7 @@ class ChefTestCase(BaseAPITestCase):
         data = json.loads(response.content)
         assert 'root' in data
 
-        node_data = node_json({'kind':'topic', 'license':cc.License.objects.all()[0].license_name})
+        node_data = node_json({'kind': 'topic', 'license': cc.License.objects.all()[0].license_name})
         response = self.post(self.add_nodes_url, {'root_id': data['root'], 'content_data': [node_data]})
         assert response.status_code == 200, "Call failed:\n output: {}".format(response.content)
 
@@ -109,7 +110,7 @@ class ChefTestCase(BaseAPITestCase):
         assert 'root' in data
         assert 'channel_id' in data
 
-        node_data = node_json({'kind':'topic', 'license':cc.License.objects.all()[0].license_name})
+        node_data = node_json({'kind': 'topic', 'license': cc.License.objects.all()[0].license_name})
         response = self.post(self.add_nodes_url, {'root_id': data['root'], 'content_data': [node_data]})
         assert response.status_code == 200, "Call failed:\n output: {}".format(response.content)
 

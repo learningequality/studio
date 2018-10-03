@@ -1,21 +1,37 @@
 import json
 import logging
 import os
-from django.http import HttpResponse, HttpResponseBadRequest, Http404
+from wsgiref.util import FileWrapper
+
 from django.conf import settings
 from django.core.files import File as DjFile
 from django.core.files.storage import default_storage
-from rest_framework.renderers import JSONRenderer
-from contentcuration.api import write_file_to_storage, get_hash
-from contentcuration.utils.files import generate_thumbnail_from_node, get_thumbnail_encoding
-from contentcuration.models import File, FormatPreset, ContentNode, License, generate_storage_url, generate_object_storage_name
-from contentcuration.serializers import FileSerializer, ContentNodeEditSerializer
-from le_utils.constants import format_presets, content_kinds, exercises, licenses
+from django.http import Http404
+from django.http import HttpResponse
+from django.http import HttpResponseBadRequest
+from le_utils.constants import content_kinds
+from le_utils.constants import exercises
+from le_utils.constants import format_presets
 from pressurecooker.videos import guess_video_preset_by_resolution
-from rest_framework.authentication import TokenAuthentication, SessionAuthentication
+from rest_framework.authentication import SessionAuthentication
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.decorators import authentication_classes
+from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.decorators import authentication_classes, permission_classes
-from wsgiref.util import FileWrapper
+from rest_framework.renderers import JSONRenderer
+
+from contentcuration.api import get_hash
+from contentcuration.api import write_file_to_storage
+from contentcuration.models import ContentNode
+from contentcuration.models import File
+from contentcuration.models import FormatPreset
+from contentcuration.models import generate_object_storage_name
+from contentcuration.models import generate_storage_url
+from contentcuration.models import License
+from contentcuration.serializers import ContentNodeEditSerializer
+from contentcuration.serializers import FileSerializer
+from contentcuration.utils.files import generate_thumbnail_from_node
+from contentcuration.utils.files import get_thumbnail_encoding
 
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
@@ -48,6 +64,7 @@ def file_upload(request):
         "filename": str(file_object),
         "file": JSONRenderer().render(FileSerializer(file_object).data)
     }))
+
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
@@ -118,6 +135,7 @@ def file_create(request):
         "node": JSONRenderer().render(ContentNodeEditSerializer(new_node).data)
     }))
 
+
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
 def generate_thumbnail(request, contentnode_id):
@@ -144,6 +162,7 @@ def generate_thumbnail(request, contentnode_id):
         "encoding": get_thumbnail_encoding(str(thumbnail_object)),
     }))
 
+
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
 def thumbnail_upload(request):
@@ -164,6 +183,7 @@ def thumbnail_upload(request):
         "path": generate_storage_url(formatted_filename),
         "encoding": get_thumbnail_encoding(formatted_filename),
     }))
+
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
@@ -193,6 +213,7 @@ def image_upload(request):
         "encoding": get_thumbnail_encoding(str(file_object)),
     }))
 
+
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
 def exercise_image_upload(request):
@@ -201,7 +222,7 @@ def exercise_image_upload(request):
 
     fobj = request.FILES.values()[0]
     name, ext = os.path.splitext(fobj._name)
-    checksum = get_hash(DjFile(fobj))
+    get_hash(DjFile(fobj))
     file_object = File(
         preset_id=format_presets.EXERCISE_IMAGE,
         file_on_disk=DjFile(request.FILES.values()[0]),
@@ -214,6 +235,7 @@ def exercise_image_upload(request):
         "file_id": file_object.pk,
         "path": generate_storage_url(str(file_object)),
     }))
+
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
