@@ -188,7 +188,7 @@ def create_nodes(cursor, target_id, parent, indent=1, download_url=None):
     parent_query = "parent_id=\'{}\'".format(parent.node_id)
 
     sql_command = 'SELECT id, title, content_id, description, sort_order, '\
-        'license_owner, author, license_id, kind, coach_content, lang_id FROM {table} WHERE {query};'\
+        'license_owner, author, license_id, kind, coach_content, lang_id FROM {table} WHERE {query} ORDER BY sort_order;'\
         .format(table=NODE_TABLE, query=parent_query)
     query = cursor.execute(sql_command).fetchall()
 
