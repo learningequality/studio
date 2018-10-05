@@ -828,6 +828,7 @@ class AdminUserListSerializer(serializers.ModelSerializer):
     view_only_channels = SimplifiedChannelListSerializer(many=True, read_only=True)
     mb_space = serializers.SerializerMethodField('calculate_space')
     is_chef = serializers.SerializerMethodField('check_if_chef')
+    chef_channels = serializers.IntegerField()
 
     def calculate_space(self, user):
         size, unit = format_size(user.disk_space)
@@ -842,7 +843,7 @@ class AdminUserListSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('email', 'first_name', 'last_name', 'id', 'editable_channels', 'view_only_channels',
-                  'is_admin', 'date_joined', 'is_active', 'disk_space', 'mb_space', 'is_chef')
+                  'is_admin', 'date_joined', 'is_active', 'disk_space', 'mb_space', 'is_chef', 'chef_channels')
 
 
 class InvitationSerializer(BulkSerializerMixin, serializers.ModelSerializer):

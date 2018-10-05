@@ -16,8 +16,10 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import SuspiciousOperation
 from django.db.models import CharField
 from django.db.models import F
+from django.db.models import Q
 
 from django.db.models import Count
+# from django.db.models.aggregates import ArrayAgg
 from django.db.models import Max
 from django.db.models import Sum
 from django.db.models import Value
@@ -189,6 +191,12 @@ class AdminChannelListFilter(django_filters.FilterSet):
     staged = django_filters.BooleanFilter(
         name='staging_tree'
     )
+    ricecooker_version__isnull = django_filters.rest_framework.BooleanFilter(
+        name='ricecooker_version',
+        lookup_expr='isnull'
+    )
+
+
 
     class Meta:
         model = Channel
@@ -249,10 +257,13 @@ class AdminChannelListView(generics.ListAPIView):
 
 
 class AdminUserListFilter(django_filters.FilterSet):
-    is_chef = django_filters.BooleanFilter(
-        name='main_tree__published',
-    )
-
+    # is_chef = django_filters.BooleanFilter(
+    #     name='main_tree__published',
+    # )
+    # can_edit_channel = django_filters.Filter(name="editable_channels", lookup_expr='in')
+    chef_channels = django_filters.NumberFilter(name='chef_channels')
+    chef_channels__gt = django_filters.NumberFilter(name='chef_channels', lookup_expr='gt')
+    # is_chef = django_filters.BooleanFilter('is_chef')
     class Meta:
         model = User
         fields = (
@@ -260,13 +271,14 @@ class AdminUserListFilter(django_filters.FilterSet):
             'first_name',
             'last_name',
             'id',
-            'is_chef',
+            # 'is_chef',
             'is_admin',
             'is_active',
             'is_staff',
             'date_joined',
             'disk_space',
-
+            # 'chef_channels'
+            # 'can_edit_channel',
         )
 
 
@@ -282,18 +294,27 @@ class AdminUserListView(generics.ListAPIView):
     authentication_classes = (SessionAuthentication, BasicAuthentication, TokenAuthentication,)
     permission_classes = (IsAdminUser,)
 
+
     ordering_fields = (
         'first_name',
         'last_name',
         'date_joined',
         'email',
-        'editable_channels_count'
+        'editable_channels_count',
+        'chef_channels'
     )
     ordering = ('email',)
 
+    # filter_fields = (
+    #     'chef_channels',
+    #     'editable_channels_count'
+    # )
+
     def get_queryset(self):
         queryset = User.objects\
-            .annotate(editable_channels_count=Count('editable_channels'))
+            .annotate(editable_channels_count=Count('editable_channels'))\
+            .annotate(chef_channels=Count('editable_channels__ricecooker_version'))\
+            # .annotate(is_chef=Count('chef_channels', Q(chef_channels__gt=0)))
 
         return queryset.all()
 

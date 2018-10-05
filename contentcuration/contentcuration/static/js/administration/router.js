@@ -121,6 +121,7 @@ const SORT_ORDER_OPTIONS = {
 var AdministrationRouter = Backbone.Router.extend({
 
     routes: {
+		"/": "channels",
 		"users/": "users",
 		"channels/": "channels",
         "users(/filter/:filter)(/sort/:key-:order)(/search/:search)(/p:page)(/:pagesize-per-page)":        "users",    // #users
