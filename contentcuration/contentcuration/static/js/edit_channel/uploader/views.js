@@ -10,6 +10,9 @@ var Info = require("edit_channel/information/views");
 var stringHelper = require("edit_channel/utils/string_helper");
 var autoCompleteHelper = require("edit_channel/utils/autocomplete");
 var dialog = require("edit_channel/utils/dialog");
+const State = require("edit_channel/state");
+const WorkspaceManager = require("../utils/workspace_manager");
+const Router = require("../router");
 require("uploader.less");
 
 var NAMESPACE = "uploader";
@@ -95,9 +98,9 @@ var MetadataModalView = BaseViews.BaseModalView.extend({
     this.render(this.close_uploader, {
       new_content: options.new_content,
       new_topic: options.new_topic,
-      title: (this.model)? ((this.model.get("parent"))? this.model.get("title") : window.current_channel.get("name")) : null,
+      title: (this.model)? ((this.model.get("parent"))? this.model.get("title") : State.current_channel.get("name")) : null,
       allow_edit: this.allow_edit,
-      node: (options.collection.length === 1)? options.collection.at(0).toJSON() : null
+      node: (options.collection.length === 1)? options.collection.at(0).toJSON() : null,
     });
     this.metadata_view = new EditMetadataView({
       el: this.$(".modal-body"),
@@ -127,7 +130,7 @@ var MetadataModalView = BaseViews.BaseModalView.extend({
     if(!this.allow_edit || (this.metadata_view && !this.metadata_view.check_for_changes()) || !event){
       this.close();
       $(".modal-backdrop").remove();
-      window.channel_router.update_url(null, null, window.title);
+      Router.update_url(null, null, window.title);
     }else{
       var t = event.target;
       var self = this;
@@ -136,12 +139,12 @@ var MetadataModalView = BaseViews.BaseModalView.extend({
               self.metadata_view.undo_changes();
               self.close();
               $(".modal-backdrop").remove();
-              window.channel_router.update_url(null, null, window.title);
+              Router.update_url(null, null, window.title);
           },
           [self.get_translation("keep_open")]:function(){},
           [self.get_translation("save")]:function(){
             self.metadata_view.save_and_finish();
-            window.channel_router.update_url(null, null, window.title);
+            Router.update_url(null, null, window.title);
           },
       }, null);
       self.cancel_actions(event);
@@ -182,7 +185,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   render: function() {
     this.$el.html(this.template({
       allow_edit: this.allow_edit,
-      staging: window.staging,
+      staging: State.staging,
       isclipboard: this.isclipboard
     }, {
       data: this.get_intl_data()
@@ -249,7 +252,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     var is_individual = selected_items.length === 1;
     var is_exercise = is_individual && selected_items[0].model.get("kind") == "exercise";
     var has_files = is_individual && selected_items[0].model.get("files").some(function(f){
-                      return window.formatpresets.get({id: f.preset.name || f.preset.id || f.preset}).get("display");
+                      return State.formatpresets.get({id: f.preset.name || f.preset.id || f.preset}).get("display");
                     });
     this.$("#metadata_details_btn").css("display", (selected_items.length) ? "inline-block" : "none");
     this.$("#metadata_preview_btn").css("display", (is_individual && has_files) ? "inline-block" : "none");
@@ -366,7 +369,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   },
   call_duplicate: function(){
     var self = this;
-    var clipboard = window.workspace_manager.get_queue_view();
+    var clipboard = WorkspaceManager.get_queue_view();
     clipboard.open_queue();
     this.display_load(this.get_translation("copying_to_clipboard"), function(load_resolve, load_reject){
       self.collection.duplicate(clipboard.clipboard_queue.model).then(function(collection){
@@ -383,7 +386,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     var self = this;
     this.edit_list.views.forEach(function(entry){
       var tags = entry.tags.reduce(function(list, tag){
-        return list.concat(JSON.stringify({tag_name: tag, channel: window.current_channel.get("id")}));
+        return list.concat(JSON.stringify({tag_name: tag, channel: State.current_channel.get("id")}));
       }, []);
       entry.set({
         tags: tags,
@@ -533,7 +536,7 @@ var EditMetadataList = BaseViews.BaseEditableListView.extend({
       "kind":"topic",
       "title": (this.model.get('parent'))? this.model.get('title') + " " + this.get_translation("topic") : this.get_translation("topic"),
       "sort_order" : this.collection.length,
-      "author": window.preferences.author || ""
+      "author": State.preferences.author || ""
     }).then(function(new_topic){
       var new_view = self.create_new_view(new_topic);
       self.$(self.list_selector).append(new_view.el);
@@ -642,14 +645,14 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     var alloriginal = this.all_original();
     var original_source_license = "---";
     if(this.shared_data && this.shared_data.shared_license){
-      original_source_license = window.licenses.get({id: this.shared_data.shared_license}).get("license_name");
+      original_source_license = State.licenses.get({id: this.shared_data.shared_license}).get("license_name");
     }
     var copyright_owner = (this.shared_data && this.shared_data.shared_copyright_owner)? this.shared_data.shared_copyright_owner: (alloriginal)? null: "---";
     var author = (this.shared_data && this.shared_data.shared_author)? this.shared_data.shared_author: (alloriginal)? null: "---";
     var aggregator = (this.shared_data && this.shared_data.shared_aggregator)? this.shared_data.shared_aggregator: (alloriginal)? null: "---";
     var provider = (this.shared_data && this.shared_data.shared_provider)? this.shared_data.shared_provider: (alloriginal)? null: "---";
     var all_top_level = (this.new_content)? !this.model.get("parent") : _.all(this.selected_items, function(item) { return item.model.get("ancestors").length === 1; });
-    var shared_source = (this.shared_data && this.shared_data.shared_source && this.shared_data.shared_source.id !== window.current_channel.id)? this.shared_data.shared_source : null;
+    var shared_source = (this.shared_data && this.shared_data.shared_source && this.shared_data.shared_source.id !== State.current_channel.id)? this.shared_data.shared_source : null;
     if(this.allow_edit){
       !this.new_content && this.container.validate();
       this.$el.html(this.template({
@@ -657,7 +660,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
         isoriginal: alloriginal,
         is_file: this.shared_data && this.shared_data.all_files,
         none_selected: this.selected_items.length === 0,
-        licenses: window.licenses.toJSON(),
+        licenses: State.licenses.toJSON(),
         license: original_source_license,
         copyright_owner: copyright_owner,
         author: author,
@@ -670,11 +673,11 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
         m_value: this.m_value,
         n_value: this.n_value,
         license_description: this.shared_data && this.shared_data.shared_license_description,
-        languages: window.languages.toJSON(),
+        languages: State.languages.toJSON(),
         roles: window.roles,
         mastery: window.mastery,
         language_default: this.get_language(null, all_top_level),
-        channel_id: window.current_channel.id,
+        channel_id: State.current_channel.id,
         source_channel: shared_source
         // NEW FIELD: Load in renderer
       }, {
@@ -755,7 +758,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   get_language: function(language, all_top_level){
     if (language === 0){ return "---"; }
     else if(!language) { return (all_top_level)? this.get_translation("same_as_channel") : this.get_translation("same_as_topic"); }
-    return window.languages.findWhere({id: language}).get("readable_name");
+    return State.languages.findWhere({id: language}).get("readable_name");
   },
   set_initial_focus:function(){
     var element = null;
@@ -779,10 +782,10 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   get_license: function(license_id){
     if(isNaN(license_id)){ return license_id; }
     else if(!license_id || license_id <= 0){ return null; }
-    return window.licenses.get({id: license_id}).get('license_name');
+    return State.licenses.get({id: license_id}).get('license_name');
   },
   display_license_description: function(license_id){
-    var license = license_id > 0 && window.licenses.get({id: license_id});
+    var license = license_id > 0 && State.licenses.get({id: license_id});
     if(license && license.get('is_custom')){
       this.$("#custom_license_description").css('display', 'block');
       if(this.shared_data){
@@ -842,7 +845,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
       data: this.get_intl_data()
     }));
     var self = this;
-    var tags = _.reject(window.contenttags.pluck("tag_name"), function(tag){
+    var tags = _.reject(State.contenttags.pluck("tag_name"), function(tag){
       return self.shared_data.shared_tags.indexOf(tag) >= 0;
     });
     autoCompleteHelper.addAutocomplete($( "#tag_box" ), tags, this.select_tag, "#tag_area_wrapper");
@@ -850,7 +853,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   load_license:function(){
     if (this.selected_items.length){
       var license_modal = new Info.LicenseModalView({
-        select_license : window.licenses.get({id: this.selected_items[0].model.get("license")})
+        select_license : State.licenses.get({id: this.selected_items[0].model.get("license")})
       });
     }
 
@@ -869,7 +872,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   },
   load_autocomplete: function() {
     var self = this;
-    var metadata = window.current_channel.get('main_tree').metadata;
+    var metadata = State.current_channel.get('main_tree').metadata;
     this.$(".autocomplete_item").each(function(index, item) {
       var list_name = $(item).data("list");
       if(list_name) {
@@ -908,8 +911,8 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
       $(".ui-menu-item").hide();
       if(this.$el.find("#tag_box").length > 0 && this.$el.find("#tag_box").val().trim() != ""){
         var tag = this.$el.find("#tag_box").val().trim();
-        if(!window.contenttags.findWhere({'tag_name':tag})){
-          window.contenttags.add(new Models.TagModel({tag_name: tag, channel: window.current_channel.id}));
+        if(!State.contenttags.findWhere({'tag_name':tag})){
+          State.contenttags.add(new Models.TagModel({tag_name: tag, channel: State.current_channel.id}));
         }
         this.assign_tag(tag);
       }
@@ -931,7 +934,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     this.selected_items.forEach(function(view){
       view.remove_tag(tagname);
     });
-    window.contenttags.remove(window.contenttags.findWhere({'tag_name':tagname}));
+    State.contenttags.remove(State.contenttags.findWhere({'tag_name':tagname}));
     this.shared_data.shared_tags = _.reject(this.shared_data.shared_tags, function(tag) {return tag === tagname});
     this.load_tags();
   },
@@ -941,7 +944,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     this.display_license_description($("#license_select").val());
   },
   toggle_license_description: function() {
-    var license = window.licenses.get({id: (iscopied || !this.allow_edit)? this.selected_items[0].model.get("license") : $("#license_select").val()})
+    var license = State.licenses.get({id: (iscopied || !this.allow_edit)? this.selected_items[0].model.get("license") : $("#license_select").val()})
   },
   set_selected:function(){
     var self = this;
@@ -1151,7 +1154,7 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
           this.model.get("tags").forEach(function(entry){
               fetch_tags.push((entry.id)? entry.id : entry);
           });
-          this.tags = window.contenttags.get_all_fetch(fetch_tags).pluck('tag_name');
+          this.tags = State.contenttags.get_all_fetch(fetch_tags).pluck('tag_name');
       }
   },
   load_file_displays:function(formats_el){
@@ -1220,7 +1223,7 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
       (this.uploads_in_progress===0)? this.container.enable_submit() : this.container.disable_submit();
   },
   validate: function() {
-    var license = window.licenses.get({id: this.model.get("license")});
+    var license = State.licenses.get({id: this.model.get("license")});
     this.error = "";
     $(".input_listener, select").removeClass("invalid_field");
     if(!this.model.get("title")) {

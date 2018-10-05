@@ -10,6 +10,7 @@ var stringHelper = require("edit_channel/utils/string_helper");
 var browserHelper = require("edit_channel/utils/browser_functions");
 var dialog = require("edit_channel/utils/dialog");
 var ImageViews = require("edit_channel/image/views");
+const State = require("edit_channel/state");
 
 var NAMESPACE = "fileUpload";
 var MESSAGES = {
@@ -246,7 +247,7 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
     },
     get_accepted_files:function(){
         var list = [];
-        window.formatpresets.forEach(function(preset){
+        State.formatpresets.forEach(function(preset){
             if(!preset.get("supplementary") && preset.get('kind') !== 'exercise' && preset.get('kind') !== null){
                 list.push(preset.get("associated_mimetypes"));
             }
@@ -265,7 +266,7 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
                 previewsContainer: this.list_selector, // Define the container to display the previews
                 headers: {
                     "X-CSRFToken": get_cookie("csrftoken"),
-                    "Preferences": JSON.stringify(window.current_channel.get('content_defaults'))
+                    "Preferences": JSON.stringify(State.current_channel.get('content_defaults'))
                 },
                 dictInvalidFileType: this.get_translation("file_not_supported"),
                 dictFileTooBig: this.get_translation("max_size_exceeded"),
@@ -432,7 +433,7 @@ var FormatEditorItem = BaseViews.BaseListNodeItemView.extend({
               preset_id: preset_id,
               upload_url: window.Urls.image_upload(),
               default_url: "/static/img/" + this.model.get("kind") + "_placeholder.png",
-              acceptedFiles: window.formatpresets.get({id:preset_id}).get('associated_mimetypes').join(','),
+              acceptedFiles: State.formatpresets.get({id:preset_id}).get('associated_mimetypes').join(','),
               onsuccess: this.set_thumbnail,
               onremove: this.remove_thumbnail,
               onerror: onerror,
@@ -679,7 +680,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
     },
     get_accepted_files:function(){
         var preset_name = this.model.get('name') || this.model.id
-        var preset = window.formatpresets.findWhere({id: preset_name});
+        var preset = State.formatpresets.findWhere({id: preset_name});
         return preset.get("associated_mimetypes").join(",");
     },
     file_uploaded:function(file){
@@ -809,7 +810,7 @@ var MultiLanguageUploadSlot = FormatSlot.extend({
     },
     get_unassigned_languages: function(){
         var current_languages = _.pluck(_.filter(this.files.pluck('language'), function(l){ return l; }), "id");
-        return new Models.LanguageCollection(window.languages.reject(function(l){ return _.contains(current_languages, l.id); }));
+        return new Models.LanguageCollection(State.languages.reject(function(l){ return _.contains(current_languages, l.id); }));
     },
     events: {
         'click .format_editor_remove ' : 'remove_item',

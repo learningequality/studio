@@ -1,4 +1,5 @@
 var Models = require("../../models");
+const State = require("../../state");
 
 /** Given an Array of ContentNode Objects, create a ContentNodeCollection
  * @param {Array<ContentNode>} contentNodes
@@ -10,7 +11,7 @@ exports.createContentNodeCollection = function(contentNodes) {
 
 // Utility function that fetches importable/accessible channels
 exports.fetchImportableChannels = function() {
-  return window.current_channel.get_accessible_channel_roots()
+  return State.current_channel.get_accessible_channel_roots()
   .then(function modify(channels) {
     channels.forEach(function(channel) {
       // alias title to channel_name

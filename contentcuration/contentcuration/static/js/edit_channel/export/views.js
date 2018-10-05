@@ -3,6 +3,8 @@ var _ = require("underscore");
 var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
 var stringHelper = require("edit_channel/utils/string_helper");
+const State = require("edit_channel/state");
+const WorkspaceManager = require("../utils/workspace_manager");
 require("export.less");
 
 
@@ -29,14 +31,14 @@ var ExportModalView = BaseViews.BaseModalView.extend({
         _.bindAll(this, "publish", 'loop_focus', 'set_indices', "toggle_language_prompt");
         this.modal = true;
         this.render(this.close, {
-            channel: window.current_channel.toJSON(),
-            licenses: window.licenses.toJSON(),
-            version: window.current_channel.get("version"),
+            channel: State.current_channel.toJSON(),
+            licenses: State.licenses.toJSON(),
+            version: State.current_channel.get("version"),
             node: this.model.toJSON(),
             resource_count: this.model.get("metadata").resource_count,
-            languages: window.languages.toJSON()
+            languages: State.languages.toJSON()
         });
-        this.$("#select_language").val(window.current_channel.get("language") || 0);
+        this.$("#select_language").val(State.current_channel.get("language") || 0);
         this.toggle_language_prompt();
         this.onpublish = options.onpublish;
         this.export_view = new ExportListView({
@@ -54,7 +56,7 @@ var ExportModalView = BaseViews.BaseModalView.extend({
         this.$(".modal").on("shown.bs.modal", this.set_initial_focus);
     },
     toggle_language_prompt: function(){
-        if(!window.current_channel.get("language")) {
+        if(!State.current_channel.get("language")) {
             this.$(".language_wrapper").addClass("prompt");
             this.$("#publish_btn").addClass("disabled")
                                 .attr("disabled", "disabled")
@@ -74,15 +76,15 @@ var ExportModalView = BaseViews.BaseModalView.extend({
       "change #select_language": "language_selected"
     },
     language_selected: function(){
-        window.current_channel.save({"language": this.$("#select_language").val()}, {
+        State.current_channel.save({"language": this.$("#select_language").val()}, {
             success: this.toggle_language_prompt
         });
     },
     publish:function(){
         var self = this;
         this.display_load(this.get_translation("publishing"), function(resolve, reject){
-            window.current_channel.publish().then(function(){
-                self.onpublish(window.workspace_manager.get_published_collection());
+            State.current_channel.publish().then(function(){
+                self.onpublish(WorkspaceManager.get_published_collection());
                 self.close();
                 resolve(true);
             }).catch(function(error){

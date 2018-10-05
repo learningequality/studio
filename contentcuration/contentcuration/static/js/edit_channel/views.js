@@ -2,6 +2,8 @@ var Backbone = require("backbone");
 var _ = require("underscore");
 var Models = require("./models");
 var analytics = require("utils/analytics");
+const State = require("edit_channel/state");
+const WorkspaceManager = require("./utils/workspace_manager");
 
 //var UndoManager = require("backbone-undo");
 
@@ -90,7 +92,7 @@ var BaseView = Backbone.View.extend({
 					.value();
 	},
 	get_intl_data: function(){
-		var language = window.languages && window.languages.find(function(l) { return l.id && l.id.toLowerCase() === window.languageCode; });
+		var language = State.languages && State.languages.find(function(l) { return l.id && l.id.toLowerCase() === window.languageCode; });
 		return {
 			intl: {
 				locales: [(language && language.id) || "en-US"],
@@ -171,28 +173,28 @@ var BaseView = Backbone.View.extend({
 		var list_to_reload = collection.chain()
 						.reduce(function(list, item){ return list.concat(item.get('ancestors'));}, [])
 						.union((include_collection) ? collection.pluck("id") : [])
-						.union((window.current_channel)? [window.current_channel.get("main_tree").id] : [])
+						.union((State.current_channel)? [State.current_channel.get("main_tree").id] : [])
 						.uniq().value();
 		var self = this;
 		this.retrieve_nodes($.unique(list_to_reload), true).then(function(fetched){
 			fetched.forEach(function(model){
-				var object = window.workspace_manager.get(model.get("id"));
+				var object = WorkspaceManager.get(model.get("id"));
 				if(object){
 					if(object.node) object.node.reload(model);
 					if(object.list) object.list.set_root_model(model);
 				}
 
-				if(model.id === window.current_channel.get("main_tree").id){
-					window.current_channel.set('main_tree', model.toJSON());
+				if(model.id === State.current_channel.get("main_tree").id){
+					State.current_channel.set('main_tree', model.toJSON());
 					self.check_if_published(model);
-					window.workspace_manager.get_main_view().handle_checked();
+					WorkspaceManager.get_main_view().handle_checked();
 				}
-				if(model.id === window.current_user.get('clipboard_tree').id){
-					window.current_user.set('clipboard_tree', model.toJSON());
+				if(model.id === State.current_user.get('clipboard_tree').id){
+					State.current_user.set('clipboard_tree', model.toJSON());
 				}
 
-				if(model.id === window.current_channel.get("trash_tree").id) {
-					window.current_channel.set("trash_tree", model.toJSON());
+				if(model.id === State.current_channel.get("trash_tree").id) {
+					State.current_channel.set("trash_tree", model.toJSON());
 				}
 			});
 			callback && callback();
@@ -200,7 +202,7 @@ var BaseView = Backbone.View.extend({
 	},
 	retrieve_nodes:function(ids, force_fetch){
 		force_fetch = (force_fetch)? true:false;
-		return window.channel_router.nodeCollection.get_all_fetch(ids, force_fetch);
+		return State.nodeCollection.get_all_fetch(ids, force_fetch);
 	},
 	fetch_model:function(model){
 		return new Promise(function(resolve, reject){
@@ -235,7 +237,7 @@ var BaseView = Backbone.View.extend({
 		event.preventDefault();
 		event.stopPropagation();
 		try{
-			window.workspace_manager.get_main_view().close_all_popups();
+			WorkspaceManager.get_main_view().close_all_popups();
 		} catch(e) {}
 	},
 
@@ -277,16 +279,16 @@ var BaseWorkspaceView = BaseView.extend({
 	publish:function(){
 		var Exporter = require("edit_channel/export/views");
 		var exporter = new Exporter.ExportModalView({
-			model: window.current_channel.get_root("main_tree"),
+			model: State.current_channel.get_root("main_tree"),
 			onpublish: this.handle_published
 		});
 	},
 	activate_channel: function(){
 		var dialog = require("edit_channel/utils/dialog");
-		var original_resource_count = window.current_channel.get('main_tree').metadata.resource_count;
-		var original_topic_count = window.current_channel.get('main_tree').metadata.total_count - original_resource_count;
-		var staged_resource_count = window.current_channel.get('staging_tree').metadata.resource_count;
-		var staged_topic_count = window.current_channel.get('staging_tree').metadata.total_count - staged_resource_count;
+		var original_resource_count = State.current_channel.get('main_tree').metadata.resource_count;
+		var original_topic_count = State.current_channel.get('main_tree').metadata.total_count - original_resource_count;
+		var staged_resource_count = State.current_channel.get('staging_tree').metadata.resource_count;
+		var staged_topic_count = State.current_channel.get('staging_tree').metadata.total_count - staged_resource_count;
 		var self = this;
 		dialog.dialog(this.get_translation("deploy_option"),
 			this.get_translation("deploy_stats", original_topic_count, original_resource_count, staged_topic_count, staged_resource_count), {
@@ -296,8 +298,8 @@ var BaseWorkspaceView = BaseView.extend({
 			},
 			[self.get_translation("keep_reviewing")]: function(){},
 			[self.get_translation("deploy")]: function(){
-				window.current_channel.activate_channel().then(function(){
-					window.location.href = '/channels/' + window.current_channel.id + '/edit';
+				State.current_channel.activate_channel().then(function(){
+					window.location.href = '/channels/' + State.current_channel.id + '/edit';
 				}).catch(function(error){
 					dialog.alert(self.get_translation("not_approved"), error);
 				});
@@ -309,24 +311,24 @@ var BaseWorkspaceView = BaseView.extend({
 		var dialog = require("edit_channel/utils/dialog");
 		this.set_publishing();
 		var self = this;
-		window.current_channel.fetch({
+		State.current_channel.fetch({
 			success: function(channel){
 				var new_channel = new Models.ChannelCollection()
 				new_channel.reset(channel.toJSON());
-				$("#publish_id_text").val(window.current_channel.get('primary_token'));
+				$("#publish_id_text").val(State.current_channel.get('primary_token'));
 				dialog.alert(self.get_translation("publish_in_progress"), self.get_translation("publishing_prompt"));
 			}
 		});
 	},
 	get_channel_id:function(collection){
 		var staticModal = require('edit_channel/information/views');
-		new staticModal.PublishedModalView({channel: window.current_channel, published: false});
+		new staticModal.PublishedModalView({channel: State.current_channel, published: false});
  	},
 	edit_permissions:function(){
 		var ShareViews = require("edit_channel/share/views");
 		var share_view = new ShareViews.ShareModalView({
-			model:window.current_channel,
-			current_user: window.current_user
+			model:State.current_channel,
+			current_user: State.current_user
 		});
 	},
 	edit_selected:function(allow_edit, isclipboard){
@@ -368,12 +370,12 @@ var BaseWorkspaceView = BaseView.extend({
 		var promise = new Promise(function(resolve, reject){
 			self.display_load(message, function(resolve_load, reject_load){
 				var reloadCollection = collection.clone();
-				var trash_node = window.current_channel.get_root("trash_tree");
+				var trash_node = State.current_channel.get_root("trash_tree");
 				collection.move(trash_node, trash_node.get("metadata").max_sort_order).then(function(){
 					self.reload_ancestors(reloadCollection, false);
 					trash_node.fetch({
 						success:function(fetched){
-							window.current_channel.set("trash_tree", fetched.attributes)
+							State.current_channel.set("trash_tree", fetched.attributes)
 							resolve(collection);
 							resolve_load(true);
 						}
@@ -386,7 +388,7 @@ var BaseWorkspaceView = BaseView.extend({
 	add_to_clipboard:function(collection, message, source){
 		this.track_event_for_nodes('Clipboard', `Add item from ${source}`, collection);
 		message = (message!=null)? message: this.get_translation("moving_to_clipboard");
-		return this.move_to_queue_list(collection, window.workspace_manager.get_queue_view().clipboard_queue, message);
+		return this.move_to_queue_list(collection, WorkspaceManager.get_queue_view().clipboard_queue, message);
 	},
 	move_to_queue_list:function(collection, list_view, message){
 		message = (message!=null)? message: this.get_translation("moving_content");
@@ -419,7 +421,7 @@ var BaseWorkspaceView = BaseView.extend({
 	open_archive:function(){
 		var ArchiveView = require("edit_channel/archive/views");
 		var archive = new ArchiveView.ArchiveModalView({
-			model : new Models.ContentNodeModel(window.current_channel.get("trash_tree"))
+			model : new Models.ContentNodeModel(State.current_channel.get("trash_tree"))
 	 	});
 	},
 	move_content:function(move_collection, source){
@@ -438,7 +440,7 @@ var BaseWorkspaceView = BaseView.extend({
           }
           self.handle_move(target, moved, original_parents);
         },
-		    model: window.current_channel.get_root("main_tree")
+		    model: State.current_channel.get_root("main_tree")
 		});
 	},
 	handle_move:function(target, moved, original_parents){
@@ -447,10 +449,10 @@ var BaseWorkspaceView = BaseView.extend({
  		reloadCollection.add(moved.models);
 
 		// Remove where nodes originally were
-		moved.forEach(function(node){ window.workspace_manager.remove(node.id)});
+		moved.forEach(function(node){ WorkspaceManager.remove(node.id)});
 
 		// Add nodes to correct place
-		var content = window.workspace_manager.get(target.id);
+		var content = WorkspaceManager.get(target.id);
 		if(content && content.list){
 			content.list.add_nodes(moved);
 		}
@@ -463,12 +465,12 @@ var BaseWorkspaceView = BaseView.extend({
 		var sync = new SyncView.TempSyncModalView({
 		 	el: $("#dialog"),
 		     onsync: this.reload_ancestors,
-		     model: window.current_channel.get_root("main_tree")
+		     model: State.current_channel.get_root("main_tree")
 		});
 		//var sync = new SyncView.SyncModalView({
 		//	el: $("#dialog"),
 		//    onsync: this.reload_ancestors,
-		//    model: window.current_channel.get_root("main_tree")
+		//    model: State.current_channel.get_root("main_tree")
 		//});
 	},
 	delete_items_permanently:function(message, list, callback){
@@ -487,7 +489,7 @@ var BaseWorkspaceView = BaseView.extend({
 						}
 						view.model.destroy({
 							success:function(data){
-								window.workspace_manager.remove(data.id);
+								WorkspaceManager.remove(data.id);
 								resolve(data);
 							},
 							error:function(obj, error){
@@ -514,14 +516,14 @@ var BaseWorkspaceView = BaseView.extend({
 	open_channel_settings: function(){
 		var settings = require('edit_channel/channel_settings/views');
 		new settings.SettingsModalView({
-			model: window.current_channel,
+			model: State.current_channel,
 			onsave: this.handle_changed_settings
 		});
 	},
 	handle_changed_settings: function(data){
 		$("#channel_selection_dropdown").text(data.get('name'));
-		window.workspace_manager.get_main_view().model.set('title', data.get('name'));
-		window.preferences = data.get('content_defaults');
+		WorkspaceManager.get_main_view().model.set('title', data.get('name'));
+		State.preferences = data.get('content_defaults');
 	}
 });
 
@@ -764,7 +766,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 		return this.copy_collection(copyCollection);
 	},
 	copy_collection:function(copyCollection){
-		var clipboard = window.workspace_manager.get_queue_view();
+		var clipboard = WorkspaceManager.get_queue_view();
 		clipboard.open_queue();
 		return copyCollection.duplicate(clipboard.clipboard_queue.model);
 	},
@@ -930,12 +932,12 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 		this.collection.create_new_node({
             "kind":"exercise",
             "title": (this.model.get('parent'))? this.model.get('title') + " " + this.get_translation("exercise_title") : this.get_translation("exercise_title"), // Avoid having exercises prefilled with 'email clipboard'
-            "author": window.preferences.author || "",
-            "aggregator": window.preferences.aggregator || "",
-            "provider": window.preferences.provider || "",
-            "copyright_holder": window.preferences.copyright_holder || "",
-            "license_name": window.preferences.license,
-            "license_description": window.preferences.license_description || ""
+            "author": State.preferences.author || "",
+            "aggregator": State.preferences.aggregator || "",
+            "provider": State.preferences.provider || "",
+            "copyright_holder": State.preferences.copyright_holder || "",
+            "license_name": State.preferences.license,
+            "license_description": State.preferences.license_description || ""
         }).then(function(new_exercise){
         	var edit_collection = new Models.ContentNodeCollection([new_exercise]);
 	        $("#main-content-area").append("<div id='dialog'></div>");
@@ -1029,7 +1031,7 @@ var BaseListEditableItemView = BaseListItemView.extend({
 				var model_id = self.model.id;
 				self.model.destroy({
 					success:function(){
-						window.workspace_manager.remove(model_id);
+						WorkspaceManager.remove(model_id);
 						if(self.containing_list_view){
 							var reload = new Models.ContentNodeCollection();
 							reload.add(self.containing_list_view.model);
@@ -1157,7 +1159,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
           }
           self.handle_move(target, moved, original_parents);
         },
-		    model: window.current_channel.get_root("main_tree")
+		    model: State.current_channel.get_root("main_tree")
 		});
 	},
 	handle_move:function(target, moved, original_parents){
@@ -1165,10 +1167,10 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 		this.reload_ancestors(original_parents, true);
 
 		// Remove where node originally was
-		window.workspace_manager.remove(this.model.id)
+		WorkspaceManager.remove(this.model.id)
 
 		// Add nodes to correct place
-		var content = window.workspace_manager.get(target.id);
+		var content = WorkspaceManager.get(target.id);
 		if(content && content.list){
 			content.list.add_nodes(moved);
 		}

@@ -7,6 +7,7 @@ var dialog = require("../edit_channel/utils/dialog");
 var stringHelper = require("../edit_channel/utils/string_helper");
 var fileDownload = require("jquery-file-download");
 var AdminRouter = require("./router")
+var State = require("../edit_channel/state");
 
 function scopeEvents(events, scopeSuffix) {
     // adds a suffix to backbone event selectors (i.e. a class)
@@ -298,7 +299,7 @@ var ChannelItem = BaseAdminItem.extend({
     tagName: "div",
     set_attributes: function () {
         _.bindAll(this, 'fetch_editors');
-        this.model.set("can_edit", _.find(this.model.get("editors"), function (editor) { return editor.id === window.current_user.id; }));
+        this.model.set("can_edit", _.find(this.model.get("editors"), function (editor) { return editor.id === State.current_user.id; }));
         this.model.set("editors", _.sortBy(this.model.get("editors"), "first_name"));
         this.model.set("viewers", _.sortBy(this.model.get("viewers"), "first_name"));
     },

@@ -3,6 +3,7 @@ var _ = require("underscore");
 var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
 var stringHelper = require("edit_channel/utils/string_helper");
+const State = require("edit_channel/state");
 require("sync.less");
 
 var NAMESPACE = "sync";
@@ -85,7 +86,7 @@ var TempSyncModalView = BaseViews.BaseModalView.extend({
     sync_content:function(){
         var self = this;
         this.display_load(this.get_translation("syncing_content"), function(resolve, reject){
-           window.current_channel.sync_channel(self.selected_options).then(function(synced){
+           State.current_channel.sync_channel(self.selected_options).then(function(synced){
                 self.onsync(synced);
                 self.close();
                 resolve(true)
@@ -160,7 +161,7 @@ var SyncView = BaseViews.BaseListView.extend({
         this.$el.html(this.template(null, {
             data: this.get_intl_data()
         }));
-        window.current_channel.get_node_diff().then(function(difference){
+        State.current_channel.get_node_diff().then(function(difference){
             self.collection = difference.original;
             self.changed_collection = difference.changed;
 
@@ -307,12 +308,12 @@ var SyncPreviewView = BaseViews.BaseView.extend({
             case "license":
                 return {
                     "field" : this.get_translation("license"),
-                    "current": stringHelper.translate(window.licenses.get(this.model.get(field)).get('license_name')),
-                    "source": stringHelper.translate(window.licenses.get(this.changed.get(field)).get('license_name'))
+                    "current": stringHelper.translate(State.licenses.get(this.model.get(field)).get('license_name')),
+                    "source": stringHelper.translate(State.licenses.get(this.changed.get(field)).get('license_name'))
                 }
             case "language":
-                var current_lang = (this.model.get(field))? window.languages.get(this.model.get(field)).get('native_name') : this.get_translation("same_as_topic");
-                var source_lang = (this.changed.get(field))? window.languages.get(this.changed.get(field)).get('native_name') : this.get_translation("same_as_topic");
+                var current_lang = (this.model.get(field))? State.languages.get(this.model.get(field)).get('native_name') : this.get_translation("same_as_topic");
+                var source_lang = (this.changed.get(field))? State.languages.get(this.changed.get(field)).get('native_name') : this.get_translation("same_as_topic");
                 return {
                     "field" : this.get_translation("language"),
                     "current": current_lang.charAt(0).toUpperCase() + current_lang.slice(1),

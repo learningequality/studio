@@ -1,5 +1,6 @@
 var _ = require("underscore");
 var i18n = require("../../utils/i18n");
+const State = require("edit_channel/state");
 
 function format_size(text){
   if (!text) {
@@ -335,7 +336,7 @@ function format_count(text, count){
   var template = require("edit_channel/utils/hbtemplates/count.handlebars");
       var div = document.createElement("DIV");
       div.id = "intl_wrapper";
-      var language = window.languages && window.languages.find(function(l) { return l.id && l.id.toLowerCase() === window.languageCode; });
+      var language = State.languages && State.languages.find(function(l) { return l.id && l.id.toLowerCase() === window.languageCode; });
       $(div).html(template({
         count: count,
         text: text
@@ -356,7 +357,7 @@ function format_number(number){
   var template = require("edit_channel/utils/hbtemplates/number.handlebars");
       var div = document.createElement("DIV");
       div.id = "intl_wrapper";
-      var language = window.languages && window.languages.find(function(l) { return l.id && l.id.toLowerCase() === window.languageCode; });
+      var language = State.languages && State.languages.find(function(l) { return l.id && l.id.toLowerCase() === window.languageCode; });
       $(div).html(template({
         number: number
       }, {
@@ -378,7 +379,7 @@ function get_translation(messages, message_id, data, data2, data3, data4){
       var template = require("edit_channel/utils/hbtemplates/intl.handlebars");
       var div = document.createElement("DIV");
       div.id = "intl_wrapper";
-      var language = window.languages && window.languages.find(function(l) { return l.id && l.id.toLowerCase() === window.languageCode; });
+      var language = State.languages && State.languages.find(function(l) { return l.id && l.id.toLowerCase() === window.languageCode; });
       var intl_data = {
         intl: {
           locales: [(language && language.id) || "en-US"],

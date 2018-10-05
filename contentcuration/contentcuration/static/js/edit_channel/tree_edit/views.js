@@ -6,6 +6,9 @@ var BaseViews = require("./../views");
 var DragHelper = require("edit_channel/utils/drag_drop");
 var dialog = require("edit_channel/utils/dialog");
 var descriptionHelper = require("edit_channel/utils/description");
+const State = require("edit_channel/state");
+const WorkspaceManager = require("../utils/workspace_manager");
+const Router = require("../router");
 
 var storage = window.localStorage || {};
 
@@ -97,15 +100,15 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 	},
 	edit_content:function(){ this.edit_selected(this.is_edit_page)},
 	render: function() {
-		var show_invite = window.current_user.get('is_admin') || (!this.staging &&
-							(_.contains(window.current_channel.get('editors'), window.current_user.id) ||
-							_.contains(window.current_channel.get('viewers'), window.current_user.id)));
+		var show_invite = State.current_user.get('is_admin') || (!this.staging &&
+							(_.contains(State.current_channel.get('editors'), State.current_user.id) ||
+							_.contains(State.current_channel.get('viewers'), State.current_user.id)));
 		this.$el.html(this.template({
 			edit: this.is_edit_page,
-			channel : window.current_channel.toJSON(),
+			channel : State.current_channel.toJSON(),
 			is_clipboard : this.is_clipboard,
 			staging: this.staging,
-			view_only: _.contains(window.current_channel.get('viewers'), window.current_user.id),
+			view_only: _.contains(State.current_channel.get('viewers'), State.current_user.id),
 			show_invite: show_invite
 		}, {
 			data: this.get_intl_data()
@@ -115,7 +118,7 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 			$("#secondary-nav").css("display","none");
 			$("#channel-edit-content-wrapper").css("background-color", "#EDDEED");
 		}
-		window.workspace_manager.set_main_view(this);
+		WorkspaceManager.set_main_view(this);
 		this.check_if_published(this.model);
 		this.handle_checked();
 		$("#main-nav-home-button").removeClass("active");
@@ -126,7 +129,7 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 			var self = this;
 			this.collection.get_node_path(this.path.topic, this.model.get("tree_id"), this.path.node).then(function(path){
 				if (path.parent_node_id){ // If the url points to a resource rather than a topic, navigate to topic of resource
-					window.channel_router.update_url(path.parent_node_id, path.node.get("node_id"));
+					Router.update_url(path.parent_node_id, path.node.get("node_id"));
 				}
 				if(path.node){ // Open the edit modal if a node is specified
 					var to_edit = new Models.ContentNodeCollection([path.node]);
@@ -155,7 +158,7 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 					});
 				});
 			}).catch(function(error) {
-				window.channel_router.update_url(self.model.get("node_id"), null, self.model.get("title"));
+				Router.update_url(self.model.get("node_id"), null, self.model.get("title"));
 				self.add_container(self.lists.length, self.model);
 			});
 		}
@@ -195,7 +198,7 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 		}
 		var closing_list = this.lists[this.lists.length-1];
 		closing_list.close_folders();
-		window.channel_router.update_url(closing_list.model.get("node_id"), null, closing_list.model.get("title"));
+		Router.update_url(closing_list.model.get("node_id"), null, closing_list.model.get("title"));
 		this.handle_checked();
 	},
 	handle_checked:function(){
@@ -268,7 +271,7 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 				lists.forEach(function(list){
 					nodeCollection.add(list.models);
 				});
-				window.workspace_manager.get_queue_view().clipboard_queue.add_nodes(nodeCollection);
+				WorkspaceManager.get_queue_view().clipboard_queue.add_nodes(nodeCollection);
         self.track_event_for_nodes('Clipboard', 'Add items from toolbar in tree view',
                                    nodeCollection);
 				load_resolve(true);
@@ -347,13 +350,13 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
 	render: function() {
 		this.$el.html(this.template({
 			topic: this.model.toJSON(),
-			title: (this.model.get("parent"))? this.model.get("title") : window.current_channel.get("name"),
+			title: (this.model.get("parent"))? this.model.get("title") : State.current_channel.get("name"),
 			edit_mode: this.edit_mode,
 			index: this.index,
 		}, {
 			data: this.get_intl_data()
 		}));
-		window.workspace_manager.put_list(this.model.get("id"), this);
+		WorkspaceManager.put_list(this.model.get("id"), this);
 
 		if(this.edit_mode){
 			this.make_droppable();
@@ -506,7 +509,7 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		if(this.isSelected){
 			this.$el.addClass(this.openedFolderClass);
 		}
-		window.workspace_manager.put_node(this.model.get("id"), this);
+		WorkspaceManager.put_node(this.model.get("id"), this);
 		this.$el.removeClass(this.selectedClass);
 		this.create_popover();
 	},
@@ -571,13 +574,13 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 			this.subcontent_view = this.containing_list_view.add_container(this);
 			this.$el.addClass(this.openedFolderClass);
 			this.containing_list_view.set_current(this.model);
-			window.channel_router.update_url(this.model.get("node_id"), null);
+			Router.update_url(this.model.get("node_id"), null);
 		}
 	},
 	open_node: function(event){
 		this.cancel_actions(event);
 		this.open_edit(this.edit_mode);
-		window.channel_router.update_url(null, this.model.get("node_id"), this.model.get("title"));
+		Router.update_url(null, this.model.get("node_id"), this.model.get("title"));
 	},
 	copy_node:function(event){
 		this.cancel_actions(event);
@@ -653,10 +656,10 @@ var DiffModalView = BaseViews.BaseModalView.extend({
 		this.$("#stats_modal").on("shown.bs.modal", this.init_focus);
 
 		var self = this;
-		window.current_channel.get_staged_diff().then(function(stats){
+		State.current_channel.get_staged_diff().then(function(stats){
 			self.$("#stats_table_wrapper").html(self.template({
 				stats: stats,
-				channel: window.current_channel.toJSON()
+				channel: State.current_channel.toJSON()
 			}, {
 				data: self.get_intl_data()
 			}));

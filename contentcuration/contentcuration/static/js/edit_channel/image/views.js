@@ -10,6 +10,7 @@ require("images.less");
 require("dropzone/dist/dropzone.css");
 require("croppie/croppie.css");
 var dialog = require("edit_channel/utils/dialog");
+const State = require("edit_channel/state");
 
 const CHANNEL_ASPECT_RATIO = { width: 130,  height: 130 };
 const CHANNEL_CROP_BOUNDARY = { width: CHANNEL_ASPECT_RATIO.width + 20,  height: CHANNEL_ASPECT_RATIO.height + 20 };
@@ -382,7 +383,7 @@ var ImageUploadView = BaseViews.BaseModalView.extend({
             this.dropzone = new Dropzone(this.$("#dropzone").get(0), {
                 maxFiles: 1,
                 clickable: ["#dropzone", "#dropzone_placeholder"],
-                acceptedFiles: window.formatpresets.get({id:this.preset_id}).get('associated_mimetypes').join(','),
+                acceptedFiles: State.formatpresets.get({id:this.preset_id}).get('associated_mimetypes').join(','),
                 url: window.Urls.exercise_image_upload(),
                 thumbnailWidth:null,
                 thumbnailHeight:null,

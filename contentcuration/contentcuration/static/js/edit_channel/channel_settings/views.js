@@ -3,6 +3,7 @@ var _ = require("underscore");
 var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
 var Images = require("edit_channel/image/views");
+const State = require("edit_channel/state");
 require("channel_settings.less");
 
 var NAMESPACE = "channelSettings";
@@ -83,9 +84,9 @@ var SettingsView = BaseViews.BaseListEditableItemView.extend({
         preferences = (typeof preferences === "string")? JSON.parse(preferences) : preferences;
         this.$el.html(this.template({
             channel: this.model.toJSON(),
-            licenses: window.licenses.toJSON(),
+            licenses: State.licenses.toJSON(),
             preferences: preferences,
-            languages: window.languages.toJSON()
+            languages: State.languages.toJSON()
         },  {
             data: this.get_intl_data()
         }));
@@ -120,15 +121,15 @@ var SettingsView = BaseViews.BaseListEditableItemView.extend({
         this.set_initial_focus();
     },
     get_license_id: function(license_name){
-        return (license_name && license_name != "None")? window.licenses.findWhere({license_name: license_name}).id : 0;
+        return (license_name && license_name != "None")? State.licenses.findWhere({license_name: license_name}).id : 0;
     },
     get_license_name: function(){
         var el = $("#license_select");
-        return el.val()!=0 && window.licenses.get(el.val()).get("license_name");
+        return el.val()!=0 && State.licenses.get(el.val()).get("license_name");
     },
     check_custom_license: function(){
         var el = $("#license_select");
-        return el.val()!=0 && window.licenses.get(el.val()).get("is_custom");
+        return el.val()!=0 && State.licenses.get(el.val()).get("is_custom");
     },
     submit_changes:function(){
         var content_defaults = this.model.get("content_defaults");
