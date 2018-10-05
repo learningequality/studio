@@ -59,13 +59,13 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         try:
             # Set up variables for restoration process
-            logging.info("\n\n********** STARTING CHANNEL RESTORATION **********")
+            print "\n\n********** STARTING CHANNEL RESTORATION **********"
             start = datetime.datetime.now()
             source_id = options['source_id']
             target_id = options.get('target') or source_id
 
             # Test connection to database
-            logging.info("Connecting to database for channel {}...".format(source_id))
+            print "Connecting to database for channel {}...".format(source_id)
 
 
             tempf = tempfile.NamedTemporaryFile(suffix=".sqlite3", delete=False)
@@ -88,7 +88,7 @@ class Command(BaseCommand):
                 cursor = conn.cursor()
 
                 # Start by creating channel
-                logging.info("Creating channel...")
+                print "Creating channel..."
                 channel, root_pk = create_channel(conn, target_id)
                 if options.get('editor'):
                     channel.editors.add(models.User.objects.get(email=options['editor']))
@@ -104,17 +104,17 @@ class Command(BaseCommand):
                 )
 
                 # Create nodes mapping to channel
-                logging.info("   Creating nodes...")
+                print "   Creating nodes..."
                 with transaction.atomic():
                     create_nodes(cursor, target_id, root, download_url=options.get('download_url'))
                     # TODO: Handle prerequisites
 
                 # Delete the previous tree if it exists
                 old_previous = channel.previous_tree
-                # if old_previous:
-                #     old_previous.parent = get_deleted_chefs_root()
-                #     old_previous.title = "Old previous tree for channel {}".format(channel.pk)
-                #     old_previous.save()
+                if old_previous:
+                    old_previous.parent = get_deleted_chefs_root()
+                    old_previous.title = "Old previous tree for channel {}".format(channel.pk)
+                    old_previous.save()
 
                 # Save tree to target tree
                 channel.previous_tree = channel.main_tree
@@ -126,8 +126,8 @@ class Command(BaseCommand):
                 os.unlink(tempf.name)
 
             # Print stats
-            logging.info("\n\nChannel has been restored (time: {ms})\n".format(ms=datetime.datetime.now() - start))
-            logging.info("\n\n********** RESTORATION COMPLETE **********\n\n")
+            print "\n\nChannel has been restored (time: {ms})\n".format(ms=datetime.datetime.now() - start)
+            print "\n\n********** RESTORATION COMPLETE **********\n\n"
 
         except EarlyExit as e:
             logging.warning("Exited early due to {message}.".format(message=e.message))
@@ -151,7 +151,7 @@ def create_channel(cursor, target_id):
     channel.thumbnail_encoding = json.dumps({'base64': thumbnail, 'points': [], 'zoom': 0})
     channel.version = version
     channel.save()
-    logging.info("\tCreated channel {} with name {}".format(target_id, name))
+    print "\tCreated channel {} with name {}".format(target_id, name)
     return channel, root_pk
 
 
@@ -193,7 +193,7 @@ def create_nodes(cursor, target_id, parent, indent=1, download_url=None):
 
     # Parse through rows and create models
     for id, title, content_id, description, sort_order, license_owner, author, license_id, kind, coach_content, lang_id in query:
-        logging.info("{indent} {id} ({title} - {kind})...".format(indent="   |" * indent, id=id, title=title, kind=kind))
+        print "{indent} {id} ({title} - {kind})...".format(indent="   |" * indent, id=id, title=title, kind=kind)
 
         # Determine role
         role = roles.LEARNER
@@ -279,7 +279,7 @@ def create_files(cursor, contentnode, indent=0, download_url=None):
     query = cursor.execute(sql_command).fetchall()
     for checksum, extension, file_size, contentnode_id, lang_id, preset in query:
         filename = "{}.{}".format(checksum, extension)
-        logging.info("{indent} * FILE {filename}...".format(indent="   |" * indent, filename=filename))
+        print "{indent} * FILE {filename}...".format(indent="   |" * indent, filename=filename)
 
         try:
             filepath = models.generate_object_storage_name(checksum, filename)
@@ -333,7 +333,7 @@ def create_tags(cursor, contentnode, target_id, indent=0):
     # Build up list of tags
     tag_list = []
     for id, tag_name in query:
-        logging.info("{indent} ** TAG {tag}...".format(indent="   |" * indent, tag=tag_name))
+        print "{indent} ** TAG {tag}...".format(indent="   |" * indent, tag=tag_name)
         # Save values to new or existing tag object
         tag_obj, is_new = models.ContentTag.objects.get_or_create(
             pk=id,
