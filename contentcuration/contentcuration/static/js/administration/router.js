@@ -33,7 +33,7 @@ const CHANNEL_FILTERS = {
 	},
 	ricecooker: {
 		label: "Sushi Chef",
-		queryParams: { ricecooker: "True" },
+		queryParams: { ricecooker_version__isnull: "False" },
 	},
 	deleted: {
 		label: "Deleted",
@@ -195,7 +195,10 @@ var AdministrationRouter = Backbone.Router.extend({
 			el: $("#admin-container"),
 			router: this,
 		});
-		this.currentRouteParams = {}
+		this.currentRouteParams = {
+			'name': 'channels',
+			'page': 1,
+		};
 		this.routeParamsCache = {
 			'users': {name: 'users'},
 			'channels': {name: 'channels'},
