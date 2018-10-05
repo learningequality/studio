@@ -111,10 +111,10 @@ class Command(BaseCommand):
 
                 # Delete the previous tree if it exists
                 old_previous = channel.previous_tree
-                # if old_previous:
-                #     old_previous.parent = get_deleted_chefs_root()
-                #     old_previous.title = "Old previous tree for channel {}".format(channel.pk)
-                #     old_previous.save()
+                if old_previous:
+                    old_previous.parent = get_deleted_chefs_root()
+                    old_previous.title = "Old previous tree for channel {}".format(channel.pk)
+                    old_previous.save()
 
                 # Save tree to target tree
                 channel.previous_tree = channel.main_tree
