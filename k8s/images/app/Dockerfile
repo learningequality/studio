@@ -24,7 +24,11 @@ ENV PATH="/node_modules/.bin:$PATH"
 
 COPY Pipfile .
 COPY Pipfile.lock .
-RUN pip install -U pip pipenv
+
+# pip 18.1 gives an error with pipenv, so pin the version to 18.0 until there is a fix.
+# More info here: https://github.com/pypa/pipenv/issues/2924
+RUN pip install pip==18.0
+RUN pip install -U pipenv
 RUN pipenv install --system  # install packages from Pipfile.lock into system
 
 COPY  . /contentcuration/
