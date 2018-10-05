@@ -24,7 +24,7 @@ ENV PATH="/node_modules/.bin:$PATH"
 
 COPY Pipfile .
 COPY Pipfile.lock .
-RUN pip install -U pip pipenv
+RUN pip install -U pip==18.0 pipenv
 RUN pipenv install --system  # install packages from Pipfile.lock into system
 
 COPY  . /contentcuration/
