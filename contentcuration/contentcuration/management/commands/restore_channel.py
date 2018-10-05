@@ -96,6 +96,7 @@ class Command(BaseCommand):
 
                 # Create root node
                 root = models.ContentNode.objects.create(
+                    sort_order=models.get_next_sort_order(),
                     node_id=root_pk,
                     title=channel.name,
                     kind_id=content_kinds.TOPIC,
