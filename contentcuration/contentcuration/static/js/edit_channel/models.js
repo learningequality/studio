@@ -573,7 +573,7 @@ var ContentNodeCollection = BaseCollection.extend({
             var sort_order =(target_parent) ? target_parent.get("metadata").max_sort_order + 1 : 1;
             var parent_id = target_parent.get("id");
 
-            var data = {"nodes": self.toJSON(),
+            var data = {"node_ids": self.models.map(node => node.id),
                         "sort_order": sort_order,
                         "target_parent": parent_id,
                         "channel_id": window.current_channel.id
