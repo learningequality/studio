@@ -252,7 +252,7 @@ def get_thumbnail_encoding(filename, dimension=THUMBNAIL_DIMENSION):
         os.unlink(tempf.name)
 
 
-def create_content_thumbnail(encoding, file_format_id=file_formats.PNG, preset_id=None, uploaded_by=None):
+def create_thumbnail_from_base64(encoding, file_format_id=file_formats.PNG, preset_id=None, uploaded_by=None):
     """
         Takes encoding and makes it into a file object
         Args:

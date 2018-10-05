@@ -13,7 +13,7 @@ from contentcuration.models import AssessmentItem
 from contentcuration.models import ContentNode
 from contentcuration.models import File
 from contentcuration.models import generate_object_storage_name
-from contentcuration.utils.files import create_content_thumbnail
+from contentcuration.utils.files import create_thumbnail_from_base64
 from contentcuration.utils.files import get_thumbnail_encoding
 from contentcuration.utils.nodes import map_files_to_node
 from contentcuration.views.files import generate_thumbnail
@@ -63,7 +63,7 @@ class FileThumbnailTestCase(BaseAPITestCase):
 
     def setUp(self):
         super(FileThumbnailTestCase, self).setUp()
-        self.thumbnail_fobj = create_content_thumbnail(base64encoding())
+        self.thumbnail_fobj = create_thumbnail_from_base64(base64encoding())
         filepath = generate_object_storage_name(self.thumbnail_fobj.checksum, str(self.thumbnail_fobj))
         with default_storage.open(filepath, 'rb') as fobj:
             self.thumbnail_contents = fobj.read()

@@ -34,7 +34,7 @@ from le_utils.constants import roles
 
 from contentcuration import models as ccmodels
 from contentcuration.statistics import record_publish_stats
-from contentcuration.utils.files import create_content_thumbnail
+from contentcuration.utils.files import create_thumbnail_from_base64
 from contentcuration.utils.files import get_thumbnail_encoding
 from contentcuration.utils.parser import extract_value
 from contentcuration.utils.parser import load_json_string
@@ -274,7 +274,7 @@ def create_associated_thumbnail(ccnode, ccfilemodel):
         })
         ccnode.save()
 
-    return create_content_thumbnail(encoding, uploaded_by=ccfilemodel.uploaded_by, file_format_id=ccfilemodel.file_format_id, preset_id=ccfilemodel.preset_id)
+    return create_thumbnail_from_base64(encoding, uploaded_by=ccfilemodel.uploaded_by, file_format_id=ccfilemodel.file_format_id, preset_id=ccfilemodel.preset_id)
 
 
 def create_associated_file_objects(kolibrinode, ccnode):
