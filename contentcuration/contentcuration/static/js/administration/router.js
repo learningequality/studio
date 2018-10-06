@@ -258,18 +258,18 @@ var AdministrationRouter = Backbone.Router.extend({
 		}
 	},
     users: function(filter, sortKey, order, search, page = 1, pageSize) {
+		let collection = this.admin_view.user_collection
 		this.updateCollectionStateFromParams(
-			this.admin_view.user_collection,
-			filter, sortKey, order, search, page, pageSize
+			collection, filter, sortKey, order, search, page, pageSize
 		)
-		this.admin_view.user_collection.fetch()
+		collection.fetch()
 	},
     channels: function(filter, sortKey, order, search, page = 1, pageSize) {
+		let collection = this.admin_view.channel_collection
 		this.updateCollectionStateFromParams(
-			this.admin_view.channel_collection,
-			filter, sortKey, order, search, page, pageSize
+			collection, filter, sortKey, order, search, page, pageSize
 		)
-		this.admin_view.channel_collection.fetch()
+		collection.fetch()
 	},
 	
   });

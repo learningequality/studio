@@ -33,7 +33,7 @@ var AdminView = BaseViews.BaseView.extend({
         this.user_collection.sortFilterOptions = AdminRouter.USER_SORT_FILTERS;
         this.user_collection.sortOrderOptions = AdminRouter.SORT_ORDER_OPTIONS;
 
-        this.user_collection.on('sync', (e) => {
+        this.listenTo(this.user_collection, 'sync', (e) => {
             this.$("#user_count").text(this.user_collection.state.totalRecords);
         })
 
@@ -42,7 +42,7 @@ var AdminView = BaseViews.BaseView.extend({
         this.channel_collection.sortFilterOptions = AdminRouter.CHANNEL_SORT_FILTERS;
         this.channel_collection.sortOrderOptions = AdminRouter.SORT_ORDER_OPTIONS;
 
-        this.channel_collection.on('sync', (e) => {
+        this.listenTo(this.channel_collection, 'sync', (e) => {
             this.$("#channel_count").text(this.channel_collection.state.totalRecords);
         })
 
@@ -73,8 +73,7 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
         this.router = options.router;
         this.count = this.collection.length;
         this.total_count = this.collection.state.totalRecords;
-        this.collection.on('sync', (e) => {
-            // console.log('SYNC', e)
+        this.listenTo(this.collection, 'sync', (e) => {
             this.render()
         })
         this.render()
@@ -107,7 +106,6 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
             total: this.collection.state.totalRecords,
             current_page: this.collection.state.currentPage,
             pages: Array(this.collection.state.totalPages).fill().map((_, i) => {
-                // console.log('page', i)
                 return {
                     current_page: i+1 == this.collection.state.currentPage,
                     page_number: i+1
@@ -119,27 +117,22 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
                 !this.collection.state.totalPages,
         }));
         if(load_list) {
-            // console.log("LOAD_LIST")
             this.load_list();
         }
     },
     check_all: function(event){ this.admin_list.check_all(event); },
 
     applyFilter: function(e) {
-        // console.log("APPLY FILTER", e);
         this.router.gotoRouteForParams({filter: e.target.selectedOptions[0].value, page: 1})
     },
     applySortOrder(e){
-        // console.log("APPLY SORT ORDER", e);
         this.router.gotoRouteForParams({sortOrder: e.target.selectedOptions[0].value})
     },
     applySortKey(e){
-        // console.log("APPLY FILTER ORDER", e);
         this.router.gotoRouteForParams({sortKey: e.target.selectedOptions[0].value})
     },
     applySearch: function(e){
         this.router.gotoRouteForParams({search: e.target.value, page: 1})
-        // console.log("APPLY SEARCH", e);
     },
     
     /* Implement in subclasses */
@@ -169,8 +162,7 @@ var BaseAdminList = BaseViews.BaseListView.extend({
     initialize: function(options) {
         this.collection = options.collection;
         this.container = options.container;
-        this.collection.on('sync', (e) => {
-            // console.log("SYNC ADMINLIST", e)
+        this.listenTo(this.collection, 'sync', (e) => {
             this.render()
         });
         this.render();
@@ -178,7 +170,6 @@ var BaseAdminList = BaseViews.BaseListView.extend({
     render: function() {
         this.$el.html(this.template());
         this.load_content();
-        // this.$el.find(this.list_selector).prepend(this.headerTemplate());
     },
 });
 
@@ -222,7 +213,6 @@ var ChannelTab = BaseAdminTab.extend({
     tab_count_selector: "#channel_count",
     item_name: "channel",
     load_list: function(){
-        // this.$("#admin_channel_search").val("");
         if(this.admin_list) {
             this.admin_list.remove();
             delete this.admin_list;
@@ -582,7 +572,6 @@ var EmailModalView = BaseViews.BaseModalView.extend({
         }
     },
     resize_box: function() {
-        // console.log()
         // var new_height = Math.max(this.$("#message_area")[0].scrollHeight, 300)
         // this.$("#message_area").autogrow();
     },

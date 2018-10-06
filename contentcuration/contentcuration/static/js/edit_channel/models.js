@@ -984,9 +984,6 @@ var ChannelCollection = BasePageableCollection.extend({
     list_name:"channel-list",
     model_name:"ChannelCollection",
     url: window.Urls.get_channels(),
-    comparator:function(channel){
-        return (channel.get("public"))? -channel.get('priority') : -new Date(channel.get('created'));
-    },
 });
 
 var FilteredChannelCollection = ChannelCollection.extend({
