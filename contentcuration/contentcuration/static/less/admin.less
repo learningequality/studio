@@ -5,29 +5,35 @@ body {
 }
 
 #admin-page {
-	display: grid;
+	// display: grid;
 	margin: 0 1em;
-	h2{
-		grid-column: 1 / span 1;
-		margin: 0;
-		.back_button i {
-			font-size: 30pt;
-			vertical-align: sub;
-		}
+	h2 { 
+		position: absolute;
+		top: 0;
+		margin: 0.3em;
+		width: 100vw;
+		text-align: center;
+		color: rgba(255,255,255,0.8);
+		pointer-events: none;
 	}
 	nav {
 		position: absolute;
 		bottom: 0;
 		.pagination {
 			margin: 5px;
+			user-select: none;
 		}	
+		.disabled {
+			pointer-events: none;
+		}
 	}
 	a{text-decoration: none;}
 	.nav-tabs {
-		grid-column: 2 / span 2;
+		grid-column: 1 / span 3;
+		grid-row: 1;
 	}
 	.tab_nav {
-		float: right;
+		float: left;
 		margin-right: 10px;
 		a{
 			min-width: 100px;
@@ -49,6 +55,7 @@ body {
 
 		.table_actions{
 			width: 100%;
+			display: grid;
 			grid-row: 1 / span 1;
 		}
 		.admin_table.user_list, .admin_table.channel_list {
@@ -57,13 +64,14 @@ body {
 
 		.admin_table .grid_row, .header_row {
 			display: grid;
+			grid-gap: 5px;
 		}
 
 		.admin_table.user_list .grid_row, .header_row.user_list{
-			grid-template-columns: 2.5fr 1fr 11em 1fr 1fr 5em;
+			grid-template-columns: 2.5fr 2fr 11em repeat(2, minmax(max-content, 1fr)) 5em;
 		}
 		.admin_table.channel_list .grid_row, .header_row.channel_list{
-			grid-template-columns: 2.5fr 2.5fr 1fr 1fr 1fr 1fr 5em;
+			grid-template-columns: 2.5fr 140px 1fr repeat(3, minmax(max-content, 1fr)) 5em;
 		}
 	}
 
@@ -75,7 +83,7 @@ body {
 		padding: 15px;
 	}
 	.default-item {
-		padding-top: 15%;
+		padding: 8%;
 		text-align: center;
 		font-size: 20pt;
 		font-weight: bold;
@@ -99,23 +107,36 @@ body {
 
 	.table_actions{
 		margin-bottom: 5px;
-		background: @gray-300;
-		padding: 5px 20px;
 		i {
 			font-size: 15pt;
 			vertical-align: bottom;
 		}
-		.action_list{
+		.select_all {
+			grid-row: 2;
+			grid-column: 1;
+		}
+		#email_selected_users { 
+			grid-row: 2;
+			grid-column: 5;
+		}
+		.action_grid{
+			grid-row: 1;
+			grid-column: 1 / span 5;
+
+			display: grid;
+			grid-template-columns: max-content max-content max-content auto;
+
 			margin-top: 5px;
 			margin-bottom: 0px;
-			li {
+
+			div {
 				margin-right: 5px;
 				input, select{
 					padding: 2px 4px;
-					border: none;
+					border: 1px solid @gray-400;
 					margin-left: 2px;
 					margin-right: 5px;
-					&.search_input{ width: 300px; }
+					&.search_input{ width: 100%; min-width: 150px; }
 					&.extra_input{ max-width: 200px; }
 					&[type='checkbox']{
 						vertical-align: middle;
@@ -231,10 +252,15 @@ body {
 		}
 	}
 	#admin_channel_table_wrapper, #admin_user_table_wrapper{
-		// font-size: 12pt;
 		border: 2px solid @blue-100;
-		max-height: calc(100vh - 15em);
-		overflow: auto;
+		div.admin_table.channel_list {
+			overflow: auto;
+			max-height: calc(100vh - 20em);
+		}
+		div.admin_table.user_list {
+			overflow: auto;
+			max-height: calc(100vh - 20.5em);
+		}
 	}
 }
 
