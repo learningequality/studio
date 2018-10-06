@@ -216,15 +216,24 @@ class AdminChannelListFilter(django_filters.FilterSet):
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import OrderingFilter
+from rest_framework.filters import SearchFilter
 
 
 class AdminChannelListView(generics.ListAPIView):
     serializer_class = AdminChannelListSerializer
-    filter_backends = (DjangoFilterBackend, OrderingFilter)
+    filter_backends = (DjangoFilterBackend, OrderingFilter, SearchFilter)
     filter_class = AdminChannelListFilter
     pagination_class = ChannelUserListPagination
     authentication_classes = (SessionAuthentication, BasicAuthentication, TokenAuthentication,)
     permission_classes = (IsAdminUser,)
+
+    search_fields = (
+        'name',
+        '=id',
+        'editors__first_name',
+        'editors__last_name',
+        '=editors__email',
+    )
 
     ordering_fields = (
         'name',
@@ -284,16 +293,24 @@ class AdminUserListFilter(django_filters.FilterSet):
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import OrderingFilter
+from rest_framework.filters import SearchFilter
 
 
 class AdminUserListView(generics.ListAPIView):
     serializer_class = AdminUserListSerializer
-    filter_backends = (DjangoFilterBackend, OrderingFilter)
+    filter_backends = (DjangoFilterBackend, OrderingFilter, SearchFilter)
     filter_class = AdminUserListFilter
     pagination_class = ChannelUserListPagination
     authentication_classes = (SessionAuthentication, BasicAuthentication, TokenAuthentication,)
     permission_classes = (IsAdminUser,)
 
+    search_fields = (
+        'first_name',
+        'last_name',
+        'email',
+        '=editable_channels__id',
+        'editable_channels__name'
+    )
 
     ordering_fields = (
         'first_name',
