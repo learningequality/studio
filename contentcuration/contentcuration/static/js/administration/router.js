@@ -29,7 +29,7 @@ const CHANNEL_FILTERS = {
 	},
 	staged: {
 		label: "Needs Review",
-		queryParams: { staging: "True" },
+		queryParams: { staged: "True" },
 	},
 	sushichef: {
 		label: "Sushi Chef",
@@ -44,7 +44,7 @@ const CHANNEL_FILTERS = {
 const CHANNEL_SORT_FILTERS = {
 	name: {
 		label: "Name",
-		// selected: true,
+		selected: true,
 	},
 	id: {
 		label: "Channel ID",

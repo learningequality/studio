@@ -196,8 +196,6 @@ class AdminChannelListFilter(django_filters.FilterSet):
         lookup_expr='isnull'
     )
 
-
-
     class Meta:
         model = Channel
         fields = (
