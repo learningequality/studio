@@ -31,7 +31,7 @@ const CHANNEL_FILTERS = {
 		label: "Needs Review",
 		queryParams: { staging: "True" },
 	},
-	ricecooker: {
+	sushichef: {
 		label: "Sushi Chef",
 		queryParams: { ricecooker_version__isnull: "False" },
 	},
@@ -128,13 +128,14 @@ var AdministrationRouter = Backbone.Router.extend({
         "channels(/filter/:filter)(/sort/:key-:order)(/search/:search)(/p:page)(/:pagesize-per-page)":     "channels",    // #channels
     },
 	execute(callback, args, name){
+		let page = args[4] ? Number(args[4]) : 1
 		let newRouteParams = {
 			name: name,
 			filter: args[0],
 			sortKey: args[1],
 			sortOrder: args[2],
 			search: args[3],
-			page: Number(args[4]),
+			page: page,
 			pageSize: Number(args[5]),
 		}
 		let sameTabNewParams = this.currentRouteParams.name === newRouteParams.name &&
@@ -196,12 +197,12 @@ var AdministrationRouter = Backbone.Router.extend({
 			router: this,
 		});
 		this.currentRouteParams = {
-			'name': 'channels',
-			'page': 1,
+			name: 'channels',
+			page: 1,
 		};
 		this.routeParamsCache = {
-			'users': {name: 'users'},
-			'channels': {name: 'channels'},
+			'users': {name: 'users', page: 1},
+			'channels': {name: 'channels', page: 1},
 		};
 		let router = this;
 		$('.nav-tabs a').click(function(e){
@@ -221,7 +222,6 @@ var AdministrationRouter = Backbone.Router.extend({
 	updateCollectionStateFromParams(collection, filter, sortKey, order, search, page = 1, pageSize){
 		collection.state.currentPage = page ? Number(page) : collection.state.currentPage
 		collection.state.pageSize = pageSize ? Number(pageSize) : collection.state.pageSize
-		collection.state.search = search
 
 		if (filter) {
 			for (let k in collection.filterOptions){
@@ -229,6 +229,11 @@ var AdministrationRouter = Backbone.Router.extend({
 			}
 			collection.state.filterQuery = collection.filterOptions[filter].queryParams
 		}
+
+		// if (search) {
+		collection.state.search = search
+		collection.state.filterQuery.search = search
+		// }
 
 		if (order) {
 			for (let k in collection.sortOrderOptions){

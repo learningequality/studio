@@ -1,7 +1,7 @@
 var Backbone = require("backbone");
 var _= require("underscore");
 var mail_helper = require("edit_channel/utils/mail");
-
+const DEFAULT_ADMIN_PAGE_SIZE = 50
 
 /**** BASE MODELS ****/
 
@@ -162,7 +162,7 @@ var BasePageableCollection = PageableCollection.extend({
         return state;
     },
     state: {
-        pageSize: 3,
+        pageSize: DEFAULT_ADMIN_PAGE_SIZE,
         firstPage: 1,
         currentPage: 1,
         filterQuery: {},
