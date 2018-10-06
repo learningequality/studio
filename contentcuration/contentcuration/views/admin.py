@@ -239,23 +239,32 @@ class AdminChannelListView(generics.ListAPIView):
         'priority',
         'users',
         'items',      # not working yet!
-        'modified',       # not working yet!
+        'modified',
         'created',
     )
     ordering = ('name',)
-
+    
     def get_queryset(self):
 
-        # (This part requires django 1.11)
-        # descendants = ContentNode.objects\
+        # (This part requires django 1.11, and isn't quite working!)
+        # from django.db.models import OuterRef
+        # from django.db.models.functions import Cast
+        # from django.db.models.functions import Coalesce
+        # from django.db.models import Subquery
+        # from django.db.models import Int
+
+        # modified = ContentNode.objects\
         #             .filter(tree_id=OuterRef('main_tree__tree_id'))\
         #             .order_by()\
-        #             .values('tree_id')
-        # modified = descendants.aggregate(Max('modified'))
+        #             .values('tree_id')\
+        #             .annotate(m=Max('modified'))\
+        #             .values('m')
+                        
 
         queryset = Channel.objects\
             .annotate(created=F('main_tree__created'))\
             .annotate(items=F("main_tree__rght")/2 - 1)
+            # .annotate(modified=Subquery(modified))\
 
         if self.request.GET.get('can_edit') == 'True':
             return queryset.filter(editors__contains=self.request.user)

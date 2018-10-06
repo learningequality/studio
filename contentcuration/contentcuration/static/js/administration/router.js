@@ -2,6 +2,11 @@ var Backbone = require("backbone");
 var Models = require("edit_channel/models");
 var _ = require("underscore");
 
+const DEFAULT_ROUTES = {
+	'users': {name: 'users', page: 1, sortKey: "email", sortOrder: "ascending"},
+	'channels': {name: 'channels', page: 1, sortKey: "name", sortOrder: "ascending"},
+}
+
 const CHANNEL_FILTERS = {
 	all: {
 		label: "All",
@@ -58,9 +63,10 @@ const CHANNEL_SORT_FILTERS = {
 	items: {
 		label: "# of Items",
 	},
-	modified: {
-		label: "Last Updated",
-	},
+	// This isn't working yet!
+	// modified: {
+	// 	label: "Last Updated",
+	// },
 	created: {
 		label: "Date Created",
 	}
@@ -70,7 +76,7 @@ const USER_FILTERS = {
 	all: {
 		label: "All",
 		queryParams: {},
-		// selected: true,
+		selected: true,
 	},
 	activated: {
 		label: "Active",
@@ -121,7 +127,8 @@ const SORT_ORDER_OPTIONS = {
 var AdministrationRouter = Backbone.Router.extend({
 
     routes: {
-		"/": "channels",
+		"": "default",
+		"/": "default",
 		"users/": "users",
 		"channels/": "channels",
         "users(/filter/:filter)(/sort/:key-:order)(/search/:search)(/p:page)(/:pagesize-per-page)":        "users",    // #users
@@ -165,7 +172,7 @@ var AdministrationRouter = Backbone.Router.extend({
 				(	
 					(sortKey || sortOrder) ? 
 					"/sort/" + (sortKey ? sortKey : this.collection.state.sortKey) + "-" +
-					(sortOrder ? sortOrder : "descending")
+					(sortOrder ? sortOrder : "ascending")
 					: ""
 				) +
 				(search ? "/search/" + search : "") +
@@ -196,14 +203,8 @@ var AdministrationRouter = Backbone.Router.extend({
 			el: $("#admin-container"),
 			router: this,
 		});
-		this.currentRouteParams = {
-			name: 'channels',
-			page: 1,
-		};
-		this.routeParamsCache = {
-			'users': {name: 'users', page: 1},
-			'channels': {name: 'channels', page: 1},
-		};
+		this.currentRouteParams = DEFAULT_ROUTES['channels']
+		this.routeParamsCache = DEFAULT_ROUTES;
 		let router = this;
 		$('.nav-tabs a').click(function(e){
 			e.stopImmediatePropagation()
@@ -253,9 +254,13 @@ var AdministrationRouter = Backbone.Router.extend({
 									collection.state.sortKey :
 									this.getSelected(collection.sortFilterOptions)
 									
-			collection.state.order = order ? (order === "ascending" ? 1 : -1) : collection.state.order
+			collection.state.order = order ? (order === "ascending" ? -1 : 1) : collection.state.order
 			collection.state.sortKey = sortKey ? sortKey : currentSortKey
 		}
+	},
+	default: function(){
+		// redirect to channels
+		this.gotoRouteForParams({name: "channels"})
 	},
     users: function(filter, sortKey, order, search, page = 1, pageSize) {
 		let collection = this.admin_view.user_collection
