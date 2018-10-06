@@ -391,7 +391,7 @@ def duplicate_nodes(request):
     data = json.loads(request.body)
 
     try:
-        nodes = data["nodes"]
+        node_ids = data["node_ids"]
         sort_order = data.get("sort_order") or 1
         channel_id = data["channel_id"]
         new_nodes = []
@@ -399,16 +399,10 @@ def duplicate_nodes(request):
         channel = target_parent.get_channel()
         request.user.can_edit(channel and channel.pk)
 
-        nodes_being_copied = []
-        for node_data in nodes:
-            nodes_being_copied.append(ContentNode.objects.get(pk=node_data['id']))
-        # record_node_duplication_stats(nodes_being_copied, ContentNode.objects.get(pk=target_parent.pk),
-        #                               Channel.objects.get(pk=channel_id))
-
         with transaction.atomic():
             with ContentNode.objects.disable_mptt_updates():
-                for node_data in nodes:
-                    new_node = duplicate_node_bulk(node_data['id'], sort_order=sort_order, parent=target_parent, channel_id=channel_id, user=request.user)
+                for node_id in node_ids:
+                    new_node = duplicate_node_bulk(node_id, sort_order=sort_order, parent=target_parent, channel_id=channel_id, user=request.user)
                     new_nodes.append(new_node.pk)
                     sort_order += 1
 
