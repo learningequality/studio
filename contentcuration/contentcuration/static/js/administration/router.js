@@ -163,11 +163,12 @@ var AdministrationRouter = Backbone.Router.extend({
 		return false
 	},
 	getRoute({name, filter, sortKey, sortOrder, search, page, pageSize}){
+		let currentSortKey = this.collection.state ? this.collection.state.sortKey : DEFAULT_ROUTES[name]['sortKey']
 		return name +
 				(filter ? "/filter/" + filter : "") +
 				(	
 					(sortKey || sortOrder) ? 
-					"/sort/" + (sortKey ? sortKey : DEFAULT_ROUTES[name]['sortKey']) + "-" +
+					"/sort/" + (sortKey ? sortKey : currentSortKey) + "-" +
 					(sortOrder ? sortOrder : "ascending")
 					: ""
 				) +
