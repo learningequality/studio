@@ -75,6 +75,13 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
         this.total_count = this.collection.state.totalRecords;
         this.listenTo(this.collection, 'sync', (e) => {
             this.render()
+            
+            // on the next frame, add the 'loaded' class to fade in the table
+            window.requestAnimationFrame((e) => this.$('.admin_table').addClass('loaded'))
+        })
+        this.listenTo(this.collection, 'request', (e) => {
+            console.log("REQUEST STARTED", e)
+            this.$('.admin_table').removeClass('loaded')
         })
         this.render()
         this.fetch();
@@ -283,9 +290,14 @@ var ChannelItem = BaseAdminItem.extend({
         "click .public_button": "make_private",
         "click .delete_button": "delete_channel",
         "click .count_link": "load_counts",
+        "click .search_for_channel_editors": "search_for_channel_editors",
         "change .channel_priority": "set_priority",
         "click .invite_button": "open_sharing",
         "click .download_csv": "download_csv"
+    },
+    search_for_channel_editors: function() {
+        // console.log("SEARCH CHANNELS EDITORS", this.model)
+        Backbone.history.navigate("/users/search/"+`${this.model.get('name')} ${this.model.get('id')}`, {trigger: true})
     },
     download_csv: function() {
         var self = this;
@@ -474,6 +486,7 @@ var UserItem = BaseAdminItem.extend({
         "click .activate_button": "activate_user",
         "click .delete_button": "delete_user",
         "click .deactivate_button": "deactivate_user",
+        "click .search_users_editable_channels": "search_users_editable_channels",
         "change .size_limit": "set_user_space",
         "change .size_unit": "set_user_space",
     },
@@ -528,6 +541,10 @@ var UserItem = BaseAdminItem.extend({
         _.defer(function(){
             model.save({"disk_space": Number(size) * size_unit}, {patch: true}); // Need to convert to bytes
         }, 1000)
+    },
+    search_users_editable_channels: function() {
+        // console.log("SEARCH USERS EDITABLE CHANNELS", this.model)
+        Backbone.history.navigate("/channels/search/"+`${this.model.get('first_name')} ${this.model.get('last_name')} ${this.model.get('email')}`, {trigger: true})
     }
 });
 

@@ -139,6 +139,7 @@ body {
 				display:none;
 				cursor: pointer;
 				padding: 0px 5px;
+				&.search { position: fixed; }
 			}
 			&:hover {
 				background-color: @gray-200;
@@ -226,6 +227,11 @@ body {
 		div.admin_table {
 			overflow: auto;
 			max-height: calc(100vh - 20em);
+			opacity: 0.1;
+			&.loaded {
+				opacity: 1;
+				transition: opacity 0.25s ease-in-out;
+			}
 		}
 	}
 }

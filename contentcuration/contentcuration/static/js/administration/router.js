@@ -63,10 +63,6 @@ const CHANNEL_SORT_FILTERS = {
 	items: {
 		label: "# of Items",
 	},
-	// This isn't working yet!
-	// modified: {
-	// 	label: "Last Updated",
-	// },
 	created: {
 		label: "Date Created",
 	}
@@ -171,7 +167,7 @@ var AdministrationRouter = Backbone.Router.extend({
 				(filter ? "/filter/" + filter : "") +
 				(	
 					(sortKey || sortOrder) ? 
-					"/sort/" + (sortKey ? sortKey : this.collection.state.sortKey) + "-" +
+					"/sort/" + (sortKey ? sortKey : DEFAULT_ROUTES[name]['sortKey']) + "-" +
 					(sortOrder ? sortOrder : "ascending")
 					: ""
 				) +
@@ -259,8 +255,8 @@ var AdministrationRouter = Backbone.Router.extend({
 		}
 	},
 	default: function(){
-		// redirect to channels
-		this.gotoRouteForParams({name: "channels"})
+		// redirect to channels on the next frame ... (a slight hack to ensure state is initialized)
+		window.requestAnimationFrame(() => this.gotoRouteForParams({name: "channels"}));
 	},
     users: function(filter, sortKey, order, search, page = 1, pageSize) {
 		let collection = this.admin_view.user_collection

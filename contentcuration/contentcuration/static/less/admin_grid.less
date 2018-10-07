@@ -15,6 +15,13 @@
 		height: 100%;
 		grid-template-rows: min-content auto min-content;
 
+		.admin_table.user_list .grid_row, .header_row.user_list{
+			grid-template-columns: 2.5fr 2fr repeat(3, minmax(max-content, 1fr)) 5em;
+		}
+		.admin_table.channel_list .grid_row, .header_row.channel_list{
+			grid-template-columns: 2.5fr 140px 1fr repeat(3, minmax(max-content, 1fr)) 5em;
+		}
+
 		.table_actions{
 			grid-row: 1 / span 1;
 
@@ -33,13 +40,6 @@
 		.admin_table .grid_row, .header_row {
 			display: grid;
 			grid-gap: 5px;
-		}
-
-		.admin_table.user_list .grid_row, .header_row.user_list{
-			grid-template-columns: 2.5fr 2fr 11em repeat(2, minmax(max-content, 1fr)) 5em;
-		}
-		.admin_table.channel_list .grid_row, .header_row.channel_list{
-			grid-template-columns: 2.5fr 140px 1fr repeat(3, minmax(max-content, 1fr)) 5em;
 		}
 	}
 
