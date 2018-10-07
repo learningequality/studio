@@ -75,12 +75,11 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
         this.total_count = this.collection.state.totalRecords;
         this.listenTo(this.collection, 'sync', (e) => {
             this.render()
-            
+
             // on the next frame, add the 'loaded' class to fade in the table
             window.requestAnimationFrame((e) => this.$('.admin_table').addClass('loaded'))
         })
         this.listenTo(this.collection, 'request', (e) => {
-            console.log("REQUEST STARTED", e)
             this.$('.admin_table').removeClass('loaded')
         })
         this.render()
@@ -296,7 +295,6 @@ var ChannelItem = BaseAdminItem.extend({
         "click .download_csv": "download_csv"
     },
     search_for_channel_editors: function() {
-        // console.log("SEARCH CHANNELS EDITORS", this.model)
         Backbone.history.navigate("/users/search/"+`${this.model.get('name')} ${this.model.get('id')}`, {trigger: true})
     },
     download_csv: function() {
@@ -543,7 +541,6 @@ var UserItem = BaseAdminItem.extend({
         }, 1000)
     },
     search_users_editable_channels: function() {
-        // console.log("SEARCH USERS EDITABLE CHANNELS", this.model)
         Backbone.history.navigate("/channels/search/"+`${this.model.get('first_name')} ${this.model.get('last_name')} ${this.model.get('email')}`, {trigger: true})
     }
 });

@@ -107,7 +107,7 @@ body {
 					border: 1px solid @gray-400;
 					margin-left: 2px;
 					margin-right: 5px;
-					&.search_input{ width: 100%; min-width: 150px; }
+					&.search_input{ width: calc(100% - 3em); min-width: 150px; }
 					&.extra_input{ max-width: 200px; }
 					&[type='checkbox']{
 						vertical-align: middle;
@@ -304,3 +304,5 @@ body {
 		font-size: 12pt;
 	}
 }
+
+.search { padding: 0.1em }
