@@ -2,10 +2,11 @@ var Backbone = require("backbone");
 var Models = require("edit_channel/models");
 var _ = require("underscore");
 
-const DEFAULT_ROUTES = {
+// this is a function so that the defaults don't get overwritten
+const GET_DEFAULT_ROUTES = () => ({
 	'users': {name: 'users', page: 1, sortKey: "email", sortOrder: "ascending"},
 	'channels': {name: 'channels', page: 1, sortKey: "name", sortOrder: "ascending"},
-}
+})
 
 const CHANNEL_FILTERS = {
 	all: {
@@ -163,12 +164,11 @@ var AdministrationRouter = Backbone.Router.extend({
 		return false
 	},
 	getRoute({name, filter, sortKey, sortOrder, search, page, pageSize}){
-		let currentSortKey = this.collection.state ? this.collection.state.sortKey : DEFAULT_ROUTES[name]['sortKey']
 		return name +
 				(filter ? "/filter/" + filter : "") +
 				(	
 					(sortKey || sortOrder) ? 
-					"/sort/" + (sortKey ? sortKey : currentSortKey) + "-" +
+					"/sort/" + (sortKey ? sortKey : GET_DEFAULT_ROUTES()[name]['sortKey']) + "-" +
 					(sortOrder ? sortOrder : "ascending")
 					: ""
 				) +
@@ -200,8 +200,9 @@ var AdministrationRouter = Backbone.Router.extend({
 			el: $("#admin-container"),
 			router: this,
 		});
-		this.currentRouteParams = DEFAULT_ROUTES['channels']
-		this.routeParamsCache = DEFAULT_ROUTES;
+		this.collections = {}
+		this.currentRouteParams = GET_DEFAULT_ROUTES()['channels']
+		this.routeParamsCache = GET_DEFAULT_ROUTES()
 		let router = this;
 		$('.nav-tabs a').click(function(e){
 			e.stopImmediatePropagation()
@@ -218,7 +219,7 @@ var AdministrationRouter = Backbone.Router.extend({
 		}
 	},
 	updateCollectionStateFromParams(collection, filter, sortKey, order, search, page = 1, pageSize){
-		collection.state.currentPage = page ? Number(page) : collection.state.currentPage
+		collection.state.currentPage = page ? Number(page) : 1
 		collection.state.pageSize = pageSize ? Number(pageSize) : collection.state.pageSize
 
 		if (filter) {
@@ -247,12 +248,15 @@ var AdministrationRouter = Backbone.Router.extend({
 		}
 
 		if (sortKey || order) {
-			let currentSortKey = 	collection.state.sortKey ?
-									collection.state.sortKey :
-									this.getSelected(collection.sortFilterOptions)
-									
+			let oldSortKey
+			try {
+				oldSortKey = collection.state.sortKey
+			} catch (error) {
+				oldSortKey = getSelection(collection.sortFilterOptions)
+			}
+										
 			collection.state.order = order ? (order === "ascending" ? -1 : 1) : collection.state.order
-			collection.state.sortKey = sortKey ? sortKey : currentSortKey
+			collection.state.sortKey = sortKey ? sortKey : oldSortKey
 		}
 	},
 	default: function(){
@@ -261,6 +265,7 @@ var AdministrationRouter = Backbone.Router.extend({
 	},
     users: function(filter, sortKey, order, search, page = 1, pageSize) {
 		let collection = this.admin_view.user_collection
+		this.collections['users'] = this.admin_view.user_collection
 		this.updateCollectionStateFromParams(
 			collection, filter, sortKey, order, search, page, pageSize
 		)
@@ -268,6 +273,7 @@ var AdministrationRouter = Backbone.Router.extend({
 	},
     channels: function(filter, sortKey, order, search, page = 1, pageSize) {
 		let collection = this.admin_view.channel_collection
+		this.collections['channels'] = this.admin_view.user_collection
 		this.updateCollectionStateFromParams(
 			collection, filter, sortKey, order, search, page, pageSize
 		)

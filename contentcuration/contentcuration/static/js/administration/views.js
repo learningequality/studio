@@ -143,7 +143,6 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
     
     /* Implement in subclasses */
     load_list: function() { },
-    check_search: function(item) { return false; },
     handle_checked: function() { },
     download_pdf: function() {},
 });
@@ -228,9 +227,6 @@ var ChannelTab = BaseAdminTab.extend({
             collection: this.collection,
             container: this
         });
-    },
-    check_search: function(item, text, re) {
-        return item.get("name").match(re) || item.id.startsWith(text);
     },
     download_pdf: function() {
         var self = this;
@@ -432,9 +428,6 @@ var UserTab = BaseAdminTab.extend({
         });
         this.handle_checked();
         this.$(".select_all").attr("checked", false);
-    },
-    check_search: function(item, text, re) {
-        return item.get("first_name").match(re) || item.get("last_name").match(re) || item.get("email").match(re);
     },
     handle_checked: function() {
         this.selected_users = _.chain(this.admin_list.views).where({checked: true}).pluck("model").value();

@@ -166,7 +166,6 @@ var BasePageableCollection = PageableCollection.extend({
         firstPage: 1,
         currentPage: 1,
         filterQuery: {},
-        sortKey: "created_at",
         order: -1,
     },
     baseQueryParams: {
@@ -293,11 +292,6 @@ var UserCollection = BasePageableCollection.extend({
     },
     url: window.Urls.get_users(),
 });
-
-var FilteredUserCollection = UserCollection.extend({
-
-})
-
 
 var InvitationModel = BaseModel.extend({
     root_list : "invitation-list",
@@ -984,12 +978,6 @@ var ChannelCollection = BasePageableCollection.extend({
     list_name:"channel-list",
     model_name:"ChannelCollection",
     url: window.Urls.get_channels(),
-});
-
-var FilteredChannelCollection = ChannelCollection.extend({
-    get_filter_state: function(){
-
-    }
 });
 
 var TagModel = BaseModel.extend({
