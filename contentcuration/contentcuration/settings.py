@@ -240,7 +240,10 @@ LOCALE_PATHS = (
     pycountry.LOCALES_DIR,
 )
 
-ugettext = lambda s: s
+
+def ugettext(s): return s
+
+
 LANGUAGES = (
     ('en', ugettext('English')),
     # ('es', ugettext('Spanish')),

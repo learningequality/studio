@@ -3,11 +3,11 @@ var i18n = require("../../utils/i18n");
 
 function format_size(text){
   if (!text) {
-    return "0" + translate("unit_bytes");
+    return get_translation(messages, "unit_bytes", "0");
   }
   var value = Number(text);
   var prefix = value < 0 ? "neg_" : ""
-  value = Math.abs(value)
+  value = Math.abs(value);
 
   var KB = parseFloat(1024);
   var MB = parseFloat(Math.pow(KB, 2));
@@ -313,16 +313,16 @@ var messages = {
   "export_error_text": "Error exporting data. Please try again.",
   "export_title": "Exporting Data",
   "export_text": "Data export started. You'll receive an email with your information when it's done.",
-  "unit_bytes": "{data} B",
-  "unit_kilobytes": "{data} KB",
-  "unit_megabytes": "{data} MB",
-  "unit_gigabytes": "{data} GB",
-  "unit_terabytes": "{data} TB",
-  "neg_unit_bytes": "-{data} B",
-  "neg_unit_kilobytes": "-{data} KB",
-  "neg_unit_megabytes": "-{data} MB",
-  "neg_unit_gigabytes": "-{data} GB",
-  "neg_unit_terabytes": "-{data} TB",
+  "unit_bytes": "{data}B",
+  "unit_kilobytes": "{data}KB",
+  "unit_megabytes": "{data}MB",
+  "unit_gigabytes": "{data}GB",
+  "unit_terabytes": "{data}TB",
+  "neg_unit_bytes": "-{data}B",
+  "neg_unit_kilobytes": "-{data}KB",
+  "neg_unit_megabytes": "-{data}MB",
+  "neg_unit_gigabytes": "-{data}GB",
+  "neg_unit_terabytes": "-{data}TB",
   "redo": "Redo",
   "undo": "Undo",
   "image": "Image",
