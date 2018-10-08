@@ -8,7 +8,6 @@ var URL_CHAR_LIMIT = 7;
 var ChannelEditRouter  = Backbone.Router.extend({
   initialize: function(options) {
     _.bindAll(this, "navigate_channel_home", "preview_page", "edit_page", "clipboard_page", "admin_page");
-    State.initialize();
 	},
 
   routes: {
@@ -20,7 +19,6 @@ var ChannelEditRouter  = Backbone.Router.extend({
   },
 
 	navigate_channel_home: function() {
-    State.navigateChannelHome();
 		var ChannelManageView = require("edit_channel/new_channel/views");
 		var channel_manager_view = new ChannelManageView.ChannelListPage ({
 			el: $("#channel-container"),
