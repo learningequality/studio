@@ -24,7 +24,7 @@
     "test-jest": "jest --config jest_config/jest.conf.js",
     "test-jest-cov": "jest --config jest_config/jest.conf.js --coverage",
     "minio:test": "rm -rf ~/.minio_test && minio server ~/.minio_test/ || true",
-    "minio": "minio server ~/.minio_data/ || true",
+    "minio": "MINIO_ACCESS_KEY=development MINIO_SECRET_KEY=development minio server ~/.minio_data/ || true",
     "runserver": "wait-on -t 5000 tcp:9000 && (cd contentcuration && python manage.py runserver --settings=contentcuration.dev_settings 0.0.0.0:8080)",
     "testserver": "wait-on -t 5000 tcp:9000 && (cd contentcuration && python manage.py runserver --settings=contentcuration.dev_settings 0.0.0.0:8081) || true",
     "devserver": "npm-run-all --parallel services build:dev runserver"
