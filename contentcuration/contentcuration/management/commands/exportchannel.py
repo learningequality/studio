@@ -135,7 +135,7 @@ def create_content_database(channel_id, force, user_id, force_exercises):
 
         prepare_export_database(tempdb)
         map_channel_to_kolibri_channel(channel)
-        map_content_nodes(channel.main_tree, channel.language, channel.id, user_id=user_id, force_exercises=force_exercises)
+        map_content_nodes(channel.main_tree, channel.language, channel.id, channel.name, user_id=user_id, force_exercises=force_exercises)
         map_prerequisites(channel.main_tree)
         save_export_database(channel_id)
 
@@ -158,7 +158,7 @@ def assign_license_to_contentcuration_nodes(channel, license):
     channel.main_tree.get_family().update(license_id=license.pk)
 
 
-def map_content_nodes(root_node, default_language, channel_id, user_id=None, force_exercises=False):
+def map_content_nodes(root_node, default_language, channel_id, channel_name, user_id=None, force_exercises=False):
 
     # make sure we process nodes higher up in the tree first, or else when we
     # make mappings the parent nodes might not be there
@@ -183,7 +183,7 @@ def map_content_nodes(root_node, default_language, channel_id, user_id=None, for
                     children = (node.children.all())
                     node_queue.extend(children)
 
-                    kolibrinode = create_bare_contentnode(node, default_language, channel_id)
+                    kolibrinode = create_bare_contentnode(node, default_language, channel_id, channel_name)
 
                     if node.kind.kind == content_kinds.EXERCISE:
                         exercise_data = process_assessment_metadata(node, kolibrinode)
@@ -193,7 +193,7 @@ def map_content_nodes(root_node, default_language, channel_id, user_id=None, for
                     map_tags_to_node(kolibrinode, node)
 
 
-def create_bare_contentnode(ccnode, default_language, channel_id):
+def create_bare_contentnode(ccnode, default_language, channel_id, channel_name):
     logging.debug("Creating a Kolibri contentnode for instance id {}".format(
         ccnode.node_id))
 
@@ -209,7 +209,7 @@ def create_bare_contentnode(ccnode, default_language, channel_id):
         pk=ccnode.node_id,
         defaults={
             'kind': ccnode.kind.kind,
-            'title': ccnode.title,
+            'title': ccnode.title if ccnode.parent else channel_name,
             'content_id': ccnode.content_id,
             'channel_id': channel_id,
             'author': ccnode.author or "",
