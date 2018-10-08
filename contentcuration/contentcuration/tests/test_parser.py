@@ -1,7 +1,8 @@
 import pytest
-from django.conf import settings
 
 from contentcuration.utils.parser import extract_value
+from contentcuration.utils.parser import load_json_string
+
 
 @pytest.fixture
 def number_tests():
@@ -37,6 +38,20 @@ def number_tests():
     ]
 
 
+@pytest.fixture
+def json_tests():
+    return [
+        ("{'a': 'b'}", {"a": "b"}),  # Test single quotes -> double quotes
+        ("{\"a\": False}", {"a": False}),  # Test False -> false
+        ("{\"a\": True}", {"a": True}),  # Test True -> true
+    ]
+
+
 def test_numbers(number_tests):
     for val1, val2 in number_tests:
         assert extract_value(val1) == val2, "Numbers don't match: {} != {}".format(val1, val2)
+
+
+def test_jsons(json_tests):
+    for val1, val2 in json_tests:
+        assert load_json_string(val1) == val2, "JSONs don't match: {} != {}".format(val1, val2)

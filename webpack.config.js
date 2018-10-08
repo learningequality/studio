@@ -88,7 +88,7 @@ module.exports = {
       new UglifyJsPlugin({
         cache: true,
         parallel: true,
-        sourceMap: false
+        sourceMap: true
       }),
       new OptimizeCSSAssetsPlugin({})
     ]
@@ -110,6 +110,7 @@ module.exports = {
         test: /\.less?$/,
         use: [
           `style-loader`,
+          MiniCssExtractPlugin.loader,
           `css-loader`,
           'less-loader',
         ],
@@ -170,6 +171,9 @@ module.exports = {
       chunkFilename: "[name]-[hash]-[id].css"
     }),
     new WebpackRTLPlugin(),
+    new webpack.SourceMapDevToolPlugin({
+      filename: '[name]-[hash].js.map'
+    })
   ],
   // new in webpack 4. Specifies the default bundle type
   mode: 'development',

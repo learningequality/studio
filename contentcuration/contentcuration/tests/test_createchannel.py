@@ -1,25 +1,12 @@
 import base64
-import hashlib
 import json
-import os
-import pytest
+
 import requests
-import tempfile
-
-from cStringIO import StringIO
-from django.test import Client
-from django.test import TestCase
-from mixer.backend.django import mixer
-from contentcuration import models
-
-from django.core.files.storage import default_storage
-from django.core.files.uploadedfile import SimpleUploadedFile
-from django.core.management import call_command
+from base import BaseTestCase
 from django.core.urlresolvers import reverse_lazy
+from testdata import create_temp_file
 
-from rest_framework.test import APIClient
-
-from base import StudioTestCase
+from contentcuration import models
 from contentcuration import models as cc
 
 
@@ -40,9 +27,9 @@ def add_field_defaults_to_node(node):
             "questions": [],
             "extra_fields": {}
         })
-    if not "files" in node:
+    if "files" not in node:
         node["files"] = []
-    if not "description" in node:
+    if "description" not in node:
         node["description"] = ""
     if "children" in node:
         for i in range(0, len(node["children"])):
@@ -50,48 +37,15 @@ def add_field_defaults_to_node(node):
     return node
 
 
-def create_temp_file(filebytes, kind='text', ext='txt', mimetype='text/plain'):
-    """
-    Create a file and store it in Django's object db temporarily for tests.
-
-    :param filebytes: The data to be stored in the file, as a series of bytes
-    :param kind: String identifying the kind of file
-    :param ext: File extension, omitting the initial period
-    :param mimetype: Mimetype of the file
-    :return: A dict containing the keys name (filename), data (actual bytes), file (StringIO obj) and db_file (File object in db) of the temp file.
-    """
-    fileobj = StringIO(filebytes)
-    checksum = hashlib.md5(filebytes)
-    digest = checksum.hexdigest()
-    filename = "{}.{}".format(digest, ext)
-    storage_file_path = cc.generate_object_storage_name(digest, filename)
-
-    # Write out the file bytes on to object storage, with a filename specified with randomfilename
-    default_storage.save(storage_file_path, fileobj)
-
-    assert default_storage.exists(storage_file_path)
-
-    file_kind = mixer.blend(cc.ContentKind, kind=kind)
-    file_format = mixer.blend(cc.FileFormat, extension=ext, mimetype=mimetype)
-    preset = mixer.blend(cc.FormatPreset, id=ext, kind=file_kind)
-    # then create a File object with that
-    db_file_obj = mixer.blend(cc.File, file_format=file_format, preset=preset, file_on_disk=storage_file_path)
-
-    return {'name': os.path.basename(storage_file_path), 'data': filebytes, 'file': fileobj, 'db_file': db_file_obj}
-
-
 ###
 # Tests
 ###
 
-class CreateChannelTestCase(StudioTestCase):
+class CreateChannelTestCase(BaseTestCase):
 
     @classmethod
     def setUpClass(cls):
         super(CreateChannelTestCase, cls).setUpClass()
-
-        cls.url = "http://127.0.0.1:8000"
-        cls.admin_user = models.User.objects.create_superuser('big_shot', 'bigshot@reallybigcompany.com', 'password')
 
         cls.channel_metadata = {
             "name": "Aron's cool channel",
@@ -105,28 +59,13 @@ class CreateChannelTestCase(StudioTestCase):
         super(CreateChannelTestCase, self).setUp()
         self.topic = cc.ContentKind.objects.get(kind='topic')
         self.license = cc.License.objects.all()[0]
-        self.fileobj_audio = create_temp_file("abc", 'audio', 'mp3', 'application/audio')
-        self.fileobj_video = create_temp_file("def", 'video', 'mp4', 'application/video')
-        self.fileobj_document = create_temp_file("ghi", 'document', 'pdf', 'application/pdf')
-        self.fileobj_exercise = create_temp_file("jkl", 'exercise', 'perseus', 'application/perseus')
-
-    def admin_client(self):
-        client = APIClient()
-        client.force_authenticate(self.admin_user)
-        return client
-
-    def upload_file(self):
-        """
-        Uploads a file to the server using an authorized client.
-        """
-        fileobj_temp = create_temp_file(":)")
-        name = fileobj_temp['name']
-        file_upload_url = self.url + str(reverse_lazy('api_file_upload'))
-        f = SimpleUploadedFile(name, fileobj_temp['data'])
-        return self.admin_client().post(file_upload_url, {"file": f})
+        self.fileobj_audio = create_temp_file("abc", preset='audio', ext='mp3')
+        self.fileobj_video = create_temp_file("def", preset='high_res_video', ext='mp4')
+        self.fileobj_document = create_temp_file("ghi", preset='document', ext='pdf')
+        self.fileobj_exercise = create_temp_file("jkl", preset='exercise', ext='perseus')
 
     def create_channel(self):
-        create_channel_url = self.url + str(reverse_lazy('api_create_channel'))
+        create_channel_url = str(reverse_lazy('api_create_channel'))
         payload = {
             'channel_data': self.channel_metadata,
         }
@@ -135,18 +74,22 @@ class CreateChannelTestCase(StudioTestCase):
         return response
 
     def test_api_file_upload_status(self):
-        response = self.upload_file()
+        fileobj, response = self.upload_temp_file(":)")
         assert response.status_code == requests.codes.ok
 
     def test_channel_create_channel_created(self):
         response = self.create_channel()
         assert response.status_code == requests.codes.ok
         channel_id = json.loads(response.content)['channel_id']
+
         name_check = self.channel_metadata['name']
         description_check = self.channel_metadata['description']
         thumbnail_check = self.channel_metadata['thumbnail']
-        assert models.Channel.objects.filter(pk=channel_id, name=name_check, description=description_check,
-                                             thumbnail=thumbnail_check).exists()
+        results = models.Channel.objects.filter(pk=channel_id, name=name_check, description=description_check,
+                                                thumbnail=thumbnail_check)
+        assert results.exists()
+        channel = results.first()
+        assert channel.main_tree.get_channel() == channel
 
     def test_channel_create_staging_tree_is_none(self):
         """
@@ -224,7 +167,7 @@ class CreateChannelTestCase(StudioTestCase):
         channel = models.Channel.objects.get(pk=channel_id)
         assert channel.version == 0
 
-    ### Helper methods for constructing data
+    # Helper methods for constructing data
 
     def topic_tree_data(self):
         # FIXME: This method simply returns a data structure, but the complicating factor is that,
@@ -341,7 +284,7 @@ class CreateChannelTestCase(StudioTestCase):
         root_id = json.loads(self.create_channel().content)['root']
 
         def upload_nodes(root_id, nodes):
-            add_nodes_url = self.url + str(reverse_lazy('api_add_nodes_to_tree'))
+            add_nodes_url = str(reverse_lazy('api_add_nodes_to_tree'))
             payload = {
                 'root_id': root_id,
                 'content_data': nodes,

@@ -17,7 +17,7 @@ function addSortable(element, selected_class, callback){
     var yPosition = 0;
 
     element.$el.find(".content-list").sortable({
-        revert:100,
+        revert:false,
         placeholder: "sorting-placeholder",
         forcePlaceholderSize: true,
         scroll:true,
@@ -29,7 +29,7 @@ function addSortable(element, selected_class, callback){
         cursor:"move",
         cancel: '.current_topic, .default-item, #preview li',
         containment: "#channel-edit-sortable-boundary",
-        appendTo: "#channel-edit-sortable-boundary",
+        appendTo: "body",
         bodyClass: "dragging",
         // helper:"clone",
         helper: function (e, item) {
@@ -43,7 +43,14 @@ function addSortable(element, selected_class, callback){
         start: function (e, ui) {
             var elements = $('.' + selectedClass + '.hidden').not('.current_topic').not('.sorting-placeholder');
             ui.item.data('items', elements);
-            window.workspace_manager.get_queue_view().close_queue();
+
+            // TODO(davidhu): Should send an event that the clipboard listens and
+            // responds to instead.
+            var queue = window.workspace_manager.get_queue_view();
+            if (!queue.is_pinned()) {
+              queue.close_queue();
+            }
+
             $("body").addClass("dragging");
         },
         receive: function (e, ui) {
@@ -123,13 +130,13 @@ function addSortable(element, selected_class, callback){
 }
 
 
-function addButtonDragDrop(element, dropCallback, messages){
-    element.$(".button_drop").droppable({
+function addDroppableArea(element, dropCallback, messages){
+    element.$(".button_drop, .queue-interior").droppable({
         items : 'li',
         revert: false,
         revertDuration:0,
         cursor:"move",
-        hoverClass: "drop-button-hover",
+        hoverClass: "droppable-area-hover",
         drop:function(event, ui){
             var selected_items = new Models.ContentNodeCollection();
             var current_view = window.workspace_manager.get(ui.draggable.context.id);
@@ -259,5 +266,5 @@ module.exports = {
     addSortable : addSortable,
     removeDragDrop : removeDragDrop,
     addTopicDragDrop:addTopicDragDrop,
-    addButtonDragDrop: addButtonDragDrop
+    addDroppableArea: addDroppableArea
 }

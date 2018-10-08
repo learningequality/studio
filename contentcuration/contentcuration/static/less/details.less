@@ -226,6 +226,21 @@
 			margin-left: 20px;
 			&:hover { color: @blue-500; }
 		}
+		.details-pill {
+			display: inline-block;
+			border-radius: 20px;
+		    padding: 0px 10px;
+		    background-color: @blue-200;
+		    color: white;
+		    font-weight: bold;
+		    margin-left: 5px;
+		    cursor: default;
+		    &[data-toggle="tooltip"] {
+		    	cursor: pointer;
+		    	text-decoration: underline;
+		    	text-decoration-style: dotted;
+		    }
+		}
 
 		&#auth-section {
 			.info-row {
@@ -354,24 +369,26 @@
 						margin-right: -8px;
 						font-style: italic;
 						&.filled {
-							color: @blue-500;
+							color: @exercise-color;
 						}
 					}
 				}
 			}
 			.info-box {
 				border: 3px solid white;
-				padding: 10px 20px 5px 20px;
+				padding: 30px 20px 5px 20px;
 				border-radius: 15px;
 				margin-bottom: 15px;
 				.label {
 					.uppercase;
-					font-size: 12pt;
-				    margin-top: -20px;
+				    font-size: 12pt;
 				    font-weight: bold;
-				    background-color: white;
-				    padding: 0px 10px;
+				    color: white;
+				    padding-bottom: 8px;
 				    position: absolute;
+				    width: 100%;
+				    margin: -30px -20px -20px -20px;
+				    border-radius: 10px 10px 0px 0px;
 				}
 				p {
 					font-size: 12pt;
@@ -383,39 +400,27 @@
 					padding-left: 20px;
 				}
 				&#include-box {
-					border-color: @blue-200;
-					.label { color: @blue-200; }
+					border-color: @video-color;
+					.label { background-color: @video-color; }
 					ul {
 						margin-bottom: 0px;
 						&.collapse { margin-bottom: 5px !important; }
 					}
 					.additional_include {
 						margin-top: 10px;
-						border-top: 1px solid @blue-100;
+						border-top: 1px solid @video-color;
 						padding: 10px;
 						padding-bottom: 0px;
-						.included {
-							display: inline-block;
-							border-radius: 20px;
-						    padding: 0px 10px;
-						    background-color: @blue-200;
-						    color: white;
-						    font-weight: bold;
-						    margin-left: 5px;
-						    cursor: default;
+						.details-pill {
+							background-color: @video-color;
 						}
 					}
 				}
 
-				@green: #B3DE69;
-				@lightgreen: #F3F9E6;
-				@darkgreen: #639C00;
+				@lightgreen: #E2F7F5;
 				&#preview-box {
-					border-color: @green;
-					.label {
-						color: @green;
-						right: 20px;
-					}
+					border-color: @exercise-color;
+					.label { background-color: @exercise-color; }
 					.sample-nodes {
 						margin: 0px -20px 30px -20px;
 						padding: 15px 0px;
@@ -437,8 +442,8 @@
 	    						color: @gray-500;
 							}
 							&:hover {
-								h5 { color: @darkgreen; }
-								img { border-color: @darkgreen; }
+								h5 { color: @exercise-color; }
+								img { border-color: @exercise-color; }
 							}
 						}
 					}
@@ -470,7 +475,7 @@
 									font-weight: bold;
 								}
 								&:hover  div { display: inline-block; }
-								&:hover, &:after { background: @green; }
+								&:hover, &:after { background: @lightgreen; }
 								&:first-child:before { left: 14px; }
 								&:last-child:after { content: none; }
 								&:before { background: white; }
@@ -494,8 +499,8 @@
 					}
 				}
 				&#tag-box {
-					border-color: #FDB462;
-					.label { color: #FDB462; }
+					border-color: @html-color;
+					.label { background-color: @html-color; }
 					#tagcloud {
 						margin: 0px 5px;
     					span {

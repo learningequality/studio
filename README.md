@@ -190,6 +190,18 @@ flag to run the server in development mode.
 
 Pytest and other test related dependencies are stored in `requirements_test.txt`.
 
+##### Pre-Commit
+
+We use `pre-commit <http://pre-commit.com/>`_ to help ensure consistent, clean code. The pip package should already be installed from a prior setup step, but you need to install the git hooks using this command.
+
+    pre-commit install
+
+##### Additional formatting tools
+
+In case you need help formatting your python code to meet pep8 standards, there are a couple tools out there.
+https://github.com/myint/autoflake for removing unused imports and unused variables.
+https://github.com/hhatto/autopep8 for fixing whitespace issues.
+
 ##### Install javascript dependencies
 
 All the javascript dependencies are listed in `package.json`. To install them run:
@@ -222,15 +234,6 @@ All the javascript dependencies are listed in `package.json`. To install them ru
 
          CREATE DATABASE "gonano" WITH TEMPLATE = template0 OWNER = "learningequality";
 
-  5. Make sure the Redis server is running (used for job queue)
-
-         service redis-server start
-         # mac: redis-server /usr/local/etc/redis.conf
-
-  6. Start the minio server
-
-        MINIO_ACCESS_KEY=development MINIO_SECRET_KEY=development minio server ~/.minio_data
-
 
 
 ##### Run all database migrations and load constants
@@ -238,8 +241,11 @@ All the javascript dependencies are listed in `package.json`. To install them ru
 You'll only need to run these commands once, to setup the necessary tables and
 constants in the database:
 
-    make migrate collectstatic
-    cd contentcuration; python manage.py setup --settings=contentcuration.dev_settings; cd ..
+    # On one terminal, run all external services 
+    $ yarn run services
+    
+    # On another terminal, run devsetup to create all the necessary tables and buckets
+    $ yarn run devsetup
 
 ##### Start the dev server
 

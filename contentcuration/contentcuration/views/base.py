@@ -1,29 +1,75 @@
 import json
 import logging
-from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseNotFound, HttpResponseForbidden
-from django.views.decorators.csrf import csrf_exempt
-from django.shortcuts import render, get_object_or_404, redirect
+
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.cache import cache
-from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
-from django.db.models import Q, Case, When, Value, IntegerField, F, TextField
+from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse_lazy
-from django.utils.translation import ugettext as _
+from django.db.models import Case
+from django.db.models import IntegerField
+from django.db.models import Q
+from django.db.models import Value
+from django.db.models import When
+from django.http import HttpResponse
+from django.http import HttpResponseBadRequest
+from django.http import HttpResponseForbidden
+from django.http import HttpResponseNotFound
+from django.shortcuts import get_object_or_404
+from django.shortcuts import redirect
+from django.shortcuts import render
+from django.views.decorators.cache import cache_page
+from django.views.decorators.csrf import csrf_exempt
+from le_utils.constants import exercises
+from le_utils.constants import roles
+from rest_framework.authentication import BasicAuthentication
+from rest_framework.authentication import SessionAuthentication
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.decorators import api_view
+from rest_framework.decorators import authentication_classes
+from rest_framework.decorators import permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
-from contentcuration.api import add_editor_to_channel, activate_channel, get_staged_diff
-from contentcuration.decorators import browser_is_supported, can_access_channel, can_edit_channel, has_accepted_policies
-from contentcuration.models import VIEW_ACCESS, Language, Channel, License, FileFormat, FormatPreset, ContentKind, ContentNode, Invitation, User, SecretToken, StagedFile
-from contentcuration.serializers import LanguageSerializer, AltChannelListSerializer, RootNodeSerializer, ChannelListSerializer, ChannelSerializer, PublicChannelSerializer, SimplifiedChannelListSerializer, LicenseSerializer, FileFormatSerializer, FormatPresetSerializer, ContentKindSerializer, CurrentUserSerializer, UserChannelListSerializer, InvitationSerializer
-from contentcuration.tasks import exportchannel_task, generatechannelcsv_task
-from contentcuration.utils.messages import get_messages
-from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
-from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
-from le_utils.constants import exercises, roles
-
 from rest_framework.response import Response
+
+from contentcuration.api import activate_channel
+from contentcuration.api import add_editor_to_channel
+from contentcuration.api import get_staged_diff
+from contentcuration.decorators import browser_is_supported
+from contentcuration.decorators import can_access_channel
+from contentcuration.decorators import can_edit_channel
+from contentcuration.decorators import has_accepted_policies
+from contentcuration.models import Channel
+from contentcuration.models import ContentKind
+from contentcuration.models import ContentNode
+from contentcuration.models import FileFormat
+from contentcuration.models import FormatPreset
+from contentcuration.models import Invitation
+from contentcuration.models import Language
+from contentcuration.models import License
+from contentcuration.models import User
+from contentcuration.models import VIEW_ACCESS
+from contentcuration.serializers import AltChannelListSerializer
+from contentcuration.serializers import ChannelListSerializer
+from contentcuration.serializers import ChannelSerializer
+from contentcuration.serializers import ContentKindSerializer
+from contentcuration.serializers import CurrentUserSerializer
+from contentcuration.serializers import FileFormatSerializer
+from contentcuration.serializers import FormatPresetSerializer
+from contentcuration.serializers import InvitationSerializer
+from contentcuration.serializers import LanguageSerializer
+from contentcuration.serializers import LicenseSerializer
+from contentcuration.serializers import RootNodeSerializer
+from contentcuration.serializers import UserChannelListSerializer
+from contentcuration.tasks import exportchannel_task
+from contentcuration.tasks import generatechannelcsv_task
+from contentcuration.utils.channelcache import ChannelCacher
+from contentcuration.utils.messages import get_messages
+
+PUBLIC_CHANNELS_CACHE_DURATION = 30  # seconds
+
 
 @browser_is_supported
 def base(request):
@@ -40,8 +86,10 @@ def health(request):
     else:
         return HttpResponse("No channels created yet!")
 
+
 def stealth(request):
     return HttpResponse("<3")
+
 
 def get_or_set_cached_constants(constant, serializer):
     cached_data = cache.get(constant.__name__)
@@ -53,14 +101,16 @@ def get_or_set_cached_constants(constant, serializer):
     cache.set(constant.__name__, constant_data, None)
     return constant_data
 
-@can_access_channel
+
 @has_accepted_policies
 def redirect_to_channel(request, channel_id):
     channel = Channel.objects.get(pk=channel_id)
     if channel.editors.filter(pk=request.user.pk).exists():
         return redirect(reverse_lazy('channel', kwargs={'channel_id': channel_id}))
-    elif channel.viewers.filter(pk=request.user.pk).exists() or channel.public:
-        return redirect(reverse_lazy('channel_view_only', kwargs={'channel_id': channel_id}))
+
+    # it will check the view authorization after the redirect
+    return redirect(reverse_lazy('channel_view_only', kwargs={'channel_id': channel_id}))
+
 
 def redirect_to_channel_edit(request, channel_id):
     return redirect(reverse_lazy('channel', kwargs={'channel_id': channel_id}))
@@ -108,7 +158,7 @@ def channel_page(request, channel, allow_edit=False, staging=False):
                                                  "messages": get_messages(),
                                                  "primary_token": token or channel.pk,
                                                  "title": settings.DEFAULT_TITLE,
-                                                })
+                                                 })
 
 
 @login_required
@@ -124,7 +174,6 @@ def channel_list(request):
     contentkinds = get_or_set_cached_constants(ContentKind, ContentKindSerializer)
     languages = get_or_set_cached_constants(Language, LanguageSerializer)
 
-
     return render(request, 'channel_list.html', {"channel_name": False,
                                                  "current_user": JSONRenderer().render(UserChannelListSerializer(request.user).data),
                                                  "user_preferences": json.dumps(request.user.content_defaults),
@@ -135,7 +184,7 @@ def channel_list(request):
                                                  "ckinds_list": contentkinds,
                                                  "langs_list": languages,
                                                  "messages": get_messages(),
-                                                })
+                                                 })
 
 
 @api_view(['GET'])
@@ -143,19 +192,20 @@ def channel_list(request):
 @permission_classes((IsAuthenticated,))
 def get_user_channels(request):
     channel_list = Channel.objects.prefetch_related('editors', 'viewers')\
-                    .filter(Q(deleted=False) & (Q(editors=request.user.pk) | Q(viewers=request.user.pk)))\
-                    .annotate(is_view_only=Case(When(editors=request.user, then=Value(0)),default=Value(1),output_field=IntegerField()))
+        .filter(Q(deleted=False) & (Q(editors=request.user.pk) | Q(viewers=request.user.pk)))\
+        .annotate(is_view_only=Case(When(editors=request.user, then=Value(0)), default=Value(1), output_field=IntegerField()))
     channel_serializer = ChannelListSerializer(channel_list, many=True)
 
     return Response(channel_serializer.data)
+
 
 @api_view(['GET'])
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def get_user_bookmarked_channels(request):
     bookmarked_channels = request.user.bookmarked_channels.exclude(deleted=True)\
-                            .select_related('main_tree').prefetch_related('editors')\
-                            .defer('trash_tree', 'clipboard_tree', 'staging_tree', 'chef_tree', 'previous_tree', 'viewers')
+        .select_related('main_tree').prefetch_related('editors')\
+        .defer('trash_tree', 'clipboard_tree', 'staging_tree', 'chef_tree', 'previous_tree', 'viewers')
     channel_serializer = AltChannelListSerializer(bookmarked_channels, many=True)
     return Response(channel_serializer.data)
 
@@ -165,40 +215,41 @@ def get_user_bookmarked_channels(request):
 @permission_classes((IsAuthenticated,))
 def get_user_edit_channels(request):
     edit_channels = request.user.editable_channels.exclude(deleted=True)\
-                    .select_related('main_tree').prefetch_related('editors')\
-                    .defer('trash_tree', 'clipboard_tree', 'staging_tree', 'chef_tree', 'previous_tree', 'viewers')
+        .select_related('main_tree').prefetch_related('editors')\
+        .defer('trash_tree', 'clipboard_tree', 'staging_tree', 'chef_tree', 'previous_tree', 'viewers')
     channel_serializer = AltChannelListSerializer(edit_channels, many=True)
     return Response(channel_serializer.data)
 
+
+@cache_page(PUBLIC_CHANNELS_CACHE_DURATION)
 @api_view(['GET'])
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def get_user_public_channels(request):
-    channels = Channel.objects.filter(public=True)\
-                    .exclude(deleted=True)\
-                    .select_related('main_tree').prefetch_related('editors')\
-                    .defer('trash_tree', 'clipboard_tree', 'staging_tree', 'chef_tree', 'previous_tree', 'viewers')
+    channels = ChannelCacher.get_public_channels(defer_nonmain_trees=True)
     channel_serializer = AltChannelListSerializer(channels, many=True)
     return Response(channel_serializer.data)
+
 
 @api_view(['GET'])
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def get_user_view_channels(request):
     view_channels = request.user.view_only_channels.exclude(deleted=True)\
-                    .select_related('main_tree').prefetch_related('editors')\
-                    .defer('trash_tree', 'clipboard_tree', 'staging_tree', 'chef_tree', 'previous_tree', 'viewers')
+        .select_related('main_tree').prefetch_related('editors')\
+        .defer('trash_tree', 'clipboard_tree', 'staging_tree', 'chef_tree', 'previous_tree', 'viewers')
 
     channel_serializer = AltChannelListSerializer(view_channels, many=True)
     return Response(channel_serializer.data)
+
 
 @api_view(['GET'])
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def get_user_pending_channels(request):
     pending_list = Invitation.objects.select_related('channel', 'sender')\
-                                    .filter(invited=request.user, channel__deleted=False)\
-                                    .exclude(channel=None) # Don't include channels that have been deleted
+        .filter(invited=request.user, channel__deleted=False)\
+        .exclude(channel=None)  # Don't include channels that have been deleted
     invitation_serializer = InvitationSerializer(pending_list, many=True)
 
     return Response(invitation_serializer.data)
@@ -336,6 +387,7 @@ def add_bookmark(request):
     except ObjectDoesNotExist:
         return HttpResponseNotFound('Channel with id {} not found'.format(data["channel_id"]))
 
+
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def remove_bookmark(request):
@@ -354,6 +406,7 @@ def remove_bookmark(request):
     except ObjectDoesNotExist:
         return HttpResponseNotFound('Channel with id {} not found'.format(data["channel_id"]))
 
+
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def set_channel_priority(request):
@@ -370,6 +423,7 @@ def set_channel_priority(request):
         return HttpResponse(json.dumps({"success": True}))
     except ObjectDoesNotExist:
         return HttpResponseNotFound('Channel with id {} not found'.format(data["channel_id"]))
+
 
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))

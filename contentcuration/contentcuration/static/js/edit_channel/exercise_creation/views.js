@@ -77,6 +77,7 @@ var MESSAGES = {
     "move_down": "Move Down",
     "hint": "Hint",
     "hints": "Hints",
+    "hint_count": "{data, plural,\n =1 {# Hint}\n other {# Hints}}",
     "randomize_answer_order": "Randomize Answer Order",
     "submit": "Submit Changes",
     "cancel_changes": "Cancel Changes",
@@ -98,7 +99,8 @@ var MESSAGES = {
     "image_error": "There was an error processing the image.",
     "invalid_characters": "Invalid characters",
     "insert_symbols": "Formatting and Special Characters",
-    "add_formula": "Insert Formula"
+    "add_formula": "Insert Formula",
+    "formula_character": "{title} ({key})"
 }
 
 /*********** FORMULA ADD-IN FOR EXERCISE EDITOR ***********/
@@ -209,7 +211,7 @@ var AddFormulaView = BaseViews.BaseView.extend({
 var UploadImage = function (context) {
     return $.summernote.ui.button({
         contents: '<i class="note-icon-picture"/>',
-        tooltip: 'Image',
+        tooltip: stringHelper.translate('Image'),
         click: function () {
             var view = new ImageUploader.ImageUploadView({
                 callback: context.options.callbacks.onCustomImageUpload,
@@ -227,7 +229,7 @@ var AddFormula = function (context) {
         ui.button({
             className: 'dropdown-toggle',
             contents: '<b class="formula_icon">∑</b> <span class="caret"></span>',
-            tooltip: 'Formula',
+            tooltip: stringHelper.translate('Formula'),
             data: { toggle: 'dropdown' },
             click: view.activate_mq
         }),
@@ -238,8 +240,9 @@ var AddFormula = function (context) {
 /*********** CUSTOM BUTTON FOR UNDO/REDO ***********/
 var UndoButton = function (context) {
     return $.summernote.ui.button({
-        contents: '<i class="note-icon-undo"/>',
-        tooltip: 'Undo',
+        contents: window.isRTL? '<i class="note-icon-redo"/>'
+                                : '<i class="note-icon-undo"/>',
+        tooltip: stringHelper.translate('Undo'),
         click: function () {
             context.options.callbacks.onUndo();
         }
@@ -248,8 +251,9 @@ var UndoButton = function (context) {
 
 var RedoButton = function (context) {
     return $.summernote.ui.button({
-        contents: '<i class="note-icon-redo"/>',
-        tooltip: 'Redo',
+        contents: window.isRTL? '<i class="note-icon-undo"/>'
+                                : '<i class="note-icon-redo"/>',
+        tooltip: stringHelper.translate('Redo'),
         click: function () {
             context.options.callbacks.onRedo();
         }
@@ -339,9 +343,9 @@ var EditorView = BaseViews.BaseView.extend({
     render_content: function() {
         var self = this;
         var value = this.model.get(this.edit_key)
-        if((value || value == 0) && this.model.get(this.edit_key).trim() !==""){
+        if(value && value.trim() !== ""){
             this.toggle_loading(true);
-            this.parse_content(this.model.get(this.edit_key)).then(function(result){
+            this.parse_content(value).then(function(result){
                 self.$el.html(self.view_template({content: result}, {
                     data: self.get_intl_data()
                 }));
@@ -356,7 +360,8 @@ var EditorView = BaseViews.BaseView.extend({
     render_editor: function() {
         var self = this;
         this.toggle_loading(true);
-        this.parse_content(this.model.get(this.edit_key)).then(function(result){
+        var value = this.model.get(this.edit_key);
+        this.parse_content(value).then(function(result){
             var html = self.view_template({content: result}, {
                 data: self.get_intl_data()
             });
@@ -568,6 +573,10 @@ var EditorView = BaseViews.BaseView.extend({
         var self = this;
         content = this.parse_functions(content);
         return new Promise(function(resolve, reject){
+            if (!content || content.trim() == "") {
+              resolve(content);
+              return;
+            }
             content = self.replace_image_paths(content);
             content = stringHelper.escape_str(content.replace(/\\(?![^\\\s])/g, '\\\\'));
             // If the editor is open, convert to svgs. Otherwise use katex to make loading faster
@@ -969,7 +978,7 @@ var AssessmentItemDisplayView = ExerciseEditableItemView.extend({
         this.hint_editor.show();
     },
     update_hints:function(){
-        this.$(".hint_count").text(this.model.get("hints").length); // Update how many hints are on assessment item
+        this.$(".hint_count").text(this.get_translation("hint_count", this.model.get("hints").length)); // Update how many hints are on assessment item
     }
 });
 

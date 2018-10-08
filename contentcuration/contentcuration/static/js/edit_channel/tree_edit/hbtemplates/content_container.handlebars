@@ -1,5 +1,5 @@
 <h2 class="text-center title-bar truncate">
-	<i class="back_button pull-left material-icons" title="{{formatMessage (intlGet 'messages.back')}}">keyboard_arrow_left</i>
+	<i class="back_button pull-left material-icons rtl-flip" title="{{formatMessage (intlGet 'messages.back')}}">keyboard_arrow_left</i>
 	<span class="container-title" title="{{title}}">{{title}}</span>
 </h2>
 <ul class="content-list list-unstyled scroll" id="container_list_{{topic.id}}">
@@ -17,7 +17,7 @@
 		  <ul class="dropdown-menu add_content_dropdown">
 		    <li><a class="disable-on-edit create_new_button" name="{{topic.title}}">{{formatMessage (intlGet 'messages.add_topics')}}</a></li>
 		    <li><a class="disable-on-edit upload_files_button" name="{{topic.title}}">{{formatMessage (intlGet 'messages.upload_files')}}</a></li>
-		    <li><a class="disable-on-edit create_exercise_button" name="{{topic.title}}">{{formatMessage (intlGet 'messages.create_exercise')}}</a></li>
+		    <li><a class="disable-on-edit create_exercise_button" name="{{topic.title}}">{{formatMessage (intlGet 'messages.add_exercise')}}</a></li>
 		    <li><a class="disable-on-edit import_button" name="{{topic.title}}">{{formatMessage (intlGet 'messages.import')}}</a></li>
 		  </ul>
 		</div>

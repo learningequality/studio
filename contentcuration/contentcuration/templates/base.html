@@ -1,6 +1,7 @@
 <!DOCTYPE HTML>
 {% load staticfiles %}
 {% load i18n %}
+{% load raven %}
 {% load render_bundle from webpack_loader %}
 {% load render_bundle_css from translation_tags %}
 {% load render_offline_css from translation_tags %}
@@ -14,6 +15,15 @@
 			<!--[if lt IE 9]>
 					<script src="{% static "js/html5shiv.js" %}"></script>
 			<![endif] -->
+            <!-- make sure configuring Sentry is one of the very first things we do in order to catch the most errors. -->
+
+            <!-- for some reason, load raven commmand doesn't actually load the raven JS library, so do so here
+                 TODO: Should we install and bundle this as a dep using yarn?
+            -->
+            <script src="https://cdn.ravenjs.com/3.26.4/raven.min.js" crossorigin="anonymous"></script>
+            <script>
+                Raven.config('{% sentry_public_dsn %}').install()
+            </script>
 	<link rel="shortcut icon" href="{% static 'img/logo.ico' %}">
 
 			<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
@@ -24,9 +34,11 @@
       {% block css_bundle %}
         {% render_bundle_css 'base' %}
       {% endblock css_bundle %}
+
       {% render_offline_css LANGUAGE_CODE %}
       <script>
         window.languageCode = "{{LANGUAGE_CODE}}";
+        window.isRTL = "{{ LANGUAGE_BIDI }}" === "True";
         try{
           window.ALL_MESSAGES = JSON.parse("{{ messages|escapejs}}");
         } catch (error) { /* Page does not require front-end translations */ }
@@ -71,7 +83,7 @@
             </button>
             <a href="/channels" id="logo-container">
               <img class="navbar-brand" src="{% static 'img/logo.png' %}">
-              <label id="kolibri_label">Kolibri Studio ({% trans 'Beta' %})</label>
+              <label id="kolibri_label"><span dir="ltr">Kolibri Studio</span> <span dir="auto">({% trans 'Beta' %})</span></label>
             </a>
           </div>
             <div class="collapse navbar-collapse">
@@ -86,7 +98,7 @@
                     {% if user.is_admin %}<li><a href="{% url 'administration' %}" >{% trans "Administration" %}</a></li>{% endif %}
                     <li><a href="{% url 'profile_settings' %}" >{% trans "Settings" %}</a></li>
                     <li><a href="http://kolibri-studio.readthedocs.io/en/latest/index.html" target="_blank">{% trans "Help" %}</a></li>
-                    <li><a href="{% url 'django.contrib.auth.views.logout' %}">{% trans "Log Out" %}</a></li>
+                    <li><a href="{% url 'logout' %}">{% trans "Log Out" %}</a></li>
                   </ul>
                 </li>
               </ul>
@@ -95,9 +107,9 @@
     		</div><!-- /.navbar-collapse -->
     	</div><!-- /.container-fluid -->
     </nav>
-    {% if SITE_READ_ONLY %}
-    <div id="emergency-banner" class="text-center">
-      <i class="material-icons">error</i> <b>{% trans 'EMERGENCY MAINTENANCE:' %}</b> {% trans "Kolibri Studio is operating on read-only mode for the time being in order for us to resolve some maintenance issues. This means all editing capabilities are disabled at the moment. Please know we're working very hard to fix the issue as soon as possible. If you have any questions please contact us at content@learningequality.org. We apologize for any inconvenience caused and appreciate your patience." %}
+    {% if INCIDENT %}
+    <div id="emergency-banner" class="text-center {% if INCIDENT.readonly %}error{% else %}warning{% endif %}">
+      <i class="material-icons">error</i> {{INCIDENT.message | safe}}
     </div>
     {% endif %}
     {% endblock nav %}

@@ -3,27 +3,27 @@ var i18n = require("../../utils/i18n");
 
 function format_size(text){
   if (!text) {
-    return "0B";
+    return get_translation(messages, "unit_bytes", "0");
   }
   var value = Number(text);
-  var isnegative = value < 0;
-  value = Math.abs(value)
+  var prefix = value < 0 ? "neg_" : ""
+  value = Math.abs(value);
 
-  var KB = parseFloat(1024)
-  var MB = parseFloat(Math.pow(KB, 2))
-  var GB = parseFloat(Math.pow(KB, 3))
-  var TB = parseFloat(Math.pow(KB, 4))
+  var KB = parseFloat(1024);
+  var MB = parseFloat(Math.pow(KB, 2));
+  var GB = parseFloat(Math.pow(KB, 3));
+  var TB = parseFloat(Math.pow(KB, 4));
 
   if(value < KB)
-      return (isnegative ? "-" : "") + Math.round(value) + "B"
+    return get_translation(messages, prefix + "unit_bytes", Math.round(value));
   else if(KB <= value && value < MB)
-      return (isnegative ? "-" : "") + Math.round(parseFloat(value/KB)) + "KB"
+    return get_translation(messages, prefix + "unit_kilobytes", Math.round(parseFloat(value/KB)));
   else if (MB <= value && value < GB)
-      return (isnegative ? "-" : "") + Math.round(parseFloat(value/MB)) + "MB"
+    return get_translation(messages, prefix + "unit_megabytes", Math.round(parseFloat(value/MB)));
   else if (GB <= value && value < TB)
-      return (isnegative ? "-" : "") + Math.round(parseFloat(value/GB)) + "GB"
+    return get_translation(messages, prefix + "unit_gigabytes", Math.round(parseFloat(value/GB)));
   else if (TB <= value)
-      return (isnegative ? "-" : "") + Math.round(parseFloat(value/TB)) + "TB"
+    return get_translation(messages, prefix + "unit_terabytes", Math.round(parseFloat(value/TB)));
 }
 
 function escape_str(text){
@@ -71,6 +71,7 @@ var messages = {
   "vtt": "VTT Subtitle",
   "mp3": "MP3 Audio",
   "pdf": "PDF Document",
+  "epub": "EPub Document",
   "jpg": "JPG Image",
   "jpeg": "JPEG Image",
   "png": "PNG Image",
@@ -311,7 +312,21 @@ var messages = {
   "formula": "FORMULA",
   "export_error_text": "Error exporting data. Please try again.",
   "export_title": "Exporting Data",
-  "export_text": "Data export started. You'll receive an email with your information when it's done."
+  "export_text": "Data export started. You'll receive an email with your information when it's done.",
+  "unit_bytes": "{data}B",
+  "unit_kilobytes": "{data}KB",
+  "unit_megabytes": "{data}MB",
+  "unit_gigabytes": "{data}GB",
+  "unit_terabytes": "{data}TB",
+  "neg_unit_bytes": "-{data}B",
+  "neg_unit_kilobytes": "-{data}KB",
+  "neg_unit_megabytes": "-{data}MB",
+  "neg_unit_gigabytes": "-{data}GB",
+  "neg_unit_terabytes": "-{data}TB",
+  "redo": "Redo",
+  "undo": "Undo",
+  "image": "Image",
+  "formula": "Formula"
 };
 
 var translate = i18n.createTranslator(namespace, messages);

@@ -88,7 +88,10 @@
     margin:10px;
     padding-bottom: 10px;
     border-bottom: 1px dotted @gray-300;
-    .file_size_metadata{ font-size: 10pt; }
+    .file_size_metadata{
+        font-size: 10pt;
+        .gray-label;
+    }
 }
 .thumbnail_img{
     width:160px;
@@ -145,7 +148,7 @@
             .format_preset_name{ font-weight:bold; }
         }
         .format_editor_file_name{
-            max-width:60%;
+            max-width:50%;
             overflow:hidden;
             display:inline-block;
             width:auto;

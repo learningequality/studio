@@ -9,13 +9,16 @@ https://docs.djangoproject.com/en/1.8/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.8/ref/settings/
 """
-
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+import logging
 import os
 import re
-import logging
+from datetime import datetime
+from datetime import timedelta
+
 import pycountry
 
+from contentcuration.utils.incidents import INCIDENTS
 
 logging.getLogger("newrelic").setLevel(logging.CRITICAL)
 logging.getLogger("botocore").setLevel(logging.WARNING)
@@ -56,7 +59,7 @@ ALLOWED_HOSTS = ["*"]  # In production, we serve through a file socket, so this 
 # Application definition
 
 INSTALLED_APPS = (
-    'contentcuration',
+    'contentcuration.apps.ContentConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -86,6 +89,19 @@ CACHES = {
     }
 }
 
+# READ-ONLY SETTINGS
+# Set STUDIO_INCIDENT_TYPE to a key from contentcuration.utils.incidents to activate
+INCIDENT_TYPE = os.getenv('STUDIO_INCIDENT_TYPE')
+INCIDENT = INCIDENTS.get(INCIDENT_TYPE)
+SITE_READ_ONLY = INCIDENT and INCIDENT['readonly']
+
+# If Studio is in readonly mode, it will throw a DatabaseWriteError
+# Use a local cache to bypass the readonly property
+if SITE_READ_ONLY:
+    CACHES['default']['BACKEND'] = 'django.core.cache.backends.locmem.LocMemCache'
+    CACHES['default']['LOCATION'] = 'readonly_cache'
+
+
 MIDDLEWARE_CLASSES = (
     # 'django.middleware.cache.UpdateCacheMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -93,6 +109,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.middleware.common.BrokenLinkEmailsMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
+    'django.middleware.http.ConditionalGetMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -144,6 +161,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'readonly.context_processors.readonly',
+                'contentcuration.context_processors.site_variables',
             ],
         },
     },
@@ -158,7 +176,7 @@ WSGI_APPLICATION = 'contentcuration.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',  # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': os.getenv("DATA_DB_NAME") or 'gonano',  #  Or path to database file if using sqlite3.
+        'NAME': os.getenv("DATA_DB_NAME") or 'gonano',  # Or path to database file if using sqlite3.
         # The following settings are not used with sqlite3:
 
         # For dev purposes only
@@ -168,7 +186,6 @@ DATABASES = {
         'PORT': '',                      # Set to empty string for default.
     },
 }
-
 
 
 DATABASE_ROUTERS = [
@@ -223,13 +240,17 @@ LOCALE_PATHS = (
     pycountry.LOCALES_DIR,
 )
 
-ugettext = lambda s: s
+
+def ugettext(s): return s
+
+
 LANGUAGES = (
     ('en', ugettext('English')),
-    ('es', ugettext('Spanish')),
-    ('es-es', ugettext('Spanish - Spain')),
+    # ('es', ugettext('Spanish')),
+    # ('ar', ugettext('Arabic')), # Uncomment when we have translations
+    # ('es-es', ugettext('Spanish - Spain')),
     ('es-mx', ugettext('Spanish - Mexico')),
-    ('en-PT', ugettext('English - Pirate')),
+    # ('en-PT', ugettext('English - Pirate')),
 )
 
 
@@ -261,9 +282,6 @@ SITE_ID = 1
 # MAILGUN_ACCESS_KEY = 'ACCESS-KEY'
 # MAILGUN_SERVER_NAME = 'SERVER-NAME'
 
-# READ-ONLY SETTINGS
-SITE_READ_ONLY = os.getenv('STUDIO_READ_ONLY') or False
-
 SEND_USER_ACTIVATION_NOTIFICATION_EMAIL = bool(
     os.getenv("SEND_USER_ACTIVATION_NOTIFICATION_EMAIL")
 )
@@ -273,8 +291,8 @@ REGISTRATION_INFORMATION_EMAIL = 'studio-registrations@learningequality.org'
 HELP_EMAIL = 'content@learningequality.org'
 DEFAULT_FROM_EMAIL = 'Kolibri Studio <noreply@learningequality.org>'
 POLICY_EMAIL = 'legal@learningequality.org'
-ACCOUNT_DELETION_BUFFER = 5 # Used to determine how many days a user
-                            # has to undo accidentally deleting account
+ACCOUNT_DELETION_BUFFER = 5  # Used to determine how many days a user
+# has to undo accidentally deleting account
 
 DEFAULT_LICENSE = 1
 
@@ -309,13 +327,19 @@ CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 
+# When cleaning up orphan nodes, only clean up any that have been last modified
+# since this date
+# our default threshold is two weeks ago
+TWO_WEEKS_AGO = datetime.now() - timedelta(days=14)
+ORPHAN_DATE_CLEAN_UP_THRESHOLD = TWO_WEEKS_AGO
+
 # CLOUD STORAGE SETTINGS
 DEFAULT_FILE_STORAGE = 'django_s3_storage.storage.S3Storage'
 AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID') or 'development'
 AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY') or 'development'
 AWS_S3_BUCKET_NAME = os.getenv('AWS_BUCKET_NAME') or 'content'
 AWS_S3_ENDPOINT_URL = os.getenv('AWS_S3_ENDPOINT_URL') or 'http://localhost:9000'
-AWS_AUTO_CREATE_BUCKET = True
+AWS_AUTO_CREATE_BUCKET = False
 AWS_S3_FILE_OVERWRITE = True
 AWS_S3_BUCKET_AUTH = False
 
@@ -325,3 +349,9 @@ GOOGLE_STORAGE_REQUEST_SHEET = "16X6zcFK8FS5t5tFaGpnxbWnWTXP88h4ccpSpPbyLeA8"
 
 # Used as the default parent to collect orphan nodes
 ORPHANAGE_ROOT_ID = "00000000000000000000000000000000"
+
+# IMPORTANT: Deleted chefs should not be in the orhpanage becuase this can lead to very large and painful resorts
+# of the tree. This tree is special in that it should always be accessed inside a disable_mptt_updates code block,
+# so we must be very careful to limit code that touches this tree and to carefully check code that does. If we
+# do choose to implement restore of old chefs, we will need to ensure moving nodes does not cause a tree sort.
+DELETED_CHEFS_ROOT_ID = "11111111111111111111111111111111"

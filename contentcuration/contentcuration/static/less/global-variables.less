@@ -55,6 +55,7 @@
 @topnav-active-tab-color:#564462;
 @red-error-color:#EF2121;
 @darkred-color: firebrick;
+@yellow-bg-color: #EFE87F;
 .action-button {
   background: @blue-500;
   border: 1px solid @blue-500 !important;
@@ -135,6 +136,9 @@
 @error-input-color : #F6CECE;
 @delete-color: #FF5252;
 
+// Clipboard width when it's docked to the side.
+@queue-width-pinned: 400px;
+
 /* CONTAINERS */
 @body-background: #FAFAFA;
 @panel-container-color: #EEEEEE;
@@ -160,6 +164,12 @@
 @blue-500: #2196F3;
 @blue-700: #1976D2;
 @blue-900: #0D47A1;
+
+@video-color: #283593;
+@audio-color: #F06292;
+@doc-color: #FF3D00;
+@exercise-color: #4DB6AC;
+@html-color: #FF8F00;
 
 /* GLOBAL STYLES */
 .inline-block {
@@ -276,4 +286,47 @@ ul li.placeholder:before {
   font-weight:bold;
   font-style:italic;
   padding-bottom: 20px;
+}
+
+[dir="rtl"] .rtl-flip {
+  direction: rtl;
+  -webkit-transform: matrix(-1, 0, 0, 1, 0, 0);
+  -moz-transform: matrix(-1, 0, 0, 1, 0, 0);
+  -o-transform: matrix(-1, 0, 0, 1, 0, 0);
+  transform: matrix(-1, 0, 0, 1, 0, 0);
+}
+
+.side-popover{
+  border-radius: 0;
+  .arrow{top:40% !important;}
+  .popover-content {
+    padding:0px;
+    min-width:140px;
+    .option{
+      width:100%;
+      padding:5px 20px;
+      border:none;
+      font-size:12pt;
+      cursor: pointer;
+      &:hover {
+        font-weight:bold;
+        background-color: @gray-200;
+      }
+    }
+  }
+  >.arrow {
+      margin-top: -26px;
+  }
+}
+
+.gray-label {
+  background-color: @gray-400;
+  color: black;
+  border-radius: 3px;
+  font-size: 10pt;
+  padding: 2px 5px;
+  i {
+    font-size: 11pt;
+    vertical-align: bottom;
+  }
 }

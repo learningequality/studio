@@ -29,8 +29,10 @@ var MESSAGES = {
     "mastery_criteria": "Mastery Criteria",
     "editing_header": "Editing Content Details",
     "remove_tag": "Remove Tag",
-    "adding_topics": "Adding Topics to {title}",
-    "adding_exercise": "Adding Exercise to {title}",
+    "add_topics": "Add Topics",
+    "add_exercise": "Add Exercise",
+    "editing_kind": "Editing {kind}",
+    "viewing_kind": "Viewing {kind}",
     "editing_content": "Editing Content",
     "viewing_content": "Viewing Content",
     "save": "SAVE",
@@ -79,7 +81,7 @@ var MESSAGES = {
     "open_settings": "Open Settings",
     "ok": "OK",
     "role_visibility": "Visible to",
-    "imported_from": "Imported from:"
+    "imported_from_channel": "Imported from {channel}"
 }
 
 var MetadataModalView = BaseViews.BaseModalView.extend({
@@ -94,7 +96,8 @@ var MetadataModalView = BaseViews.BaseModalView.extend({
       new_content: options.new_content,
       new_topic: options.new_topic,
       title: (this.model)? ((this.model.get("parent"))? this.model.get("title") : window.current_channel.get("name")) : null,
-      allow_edit: this.allow_edit
+      allow_edit: this.allow_edit,
+      node: (options.collection.length === 1)? options.collection.at(0).toJSON() : null
     });
     this.metadata_view = new EditMetadataView({
       el: this.$(".modal-body"),
@@ -152,9 +155,9 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   $trs: MESSAGES,
 
   initialize: function(options) {
-    _.bindAll(this, 'render_details', 'render_preview', 'render_questions', 'render_prerequisites', 'enable_submit', 'disable_submit',
-      'save_and_keep_open', 'save_nodes', 'save_and_finish','process_updated_collection', 'close_upload', 'copy_items', 'save_error',
-      'set_prerequisites', 'call_duplicate', 'update_prereq_count','loop_focus', 'set_indices', 'set_editor_focus', 'validate', 'init_editor');
+    _.bindAll(this, 'enable_submit', 'disable_submit', 'save_and_keep_open', 'save_nodes', 'save_and_finish',
+      'process_updated_collection', 'close_upload', 'copy_items', 'save_error', 'set_prerequisites', 'call_duplicate',
+      'loop_focus', 'set_indices', 'set_editor_focus', 'validate', 'init_editor');
     this.bind_edit_functions();
     this.new_content = options.new_content;
     this.new_exercise = options.new_exercise;
@@ -166,14 +169,9 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     this.isclipboard = options.isclipboard;
     this.show_errors = !this.new_content;
     this.render();
-    this.render_details();
     this.adjust_list_height();
   },
   events: {
-    'click #metadata_details_btn' : 'render_details',
-    'click #metadata_preview_btn' : 'render_preview',
-    'click #metadata_questions_btn': 'render_questions',
-    'click #metadata_prerequisites_btn': 'render_prerequisites',
     'click #upload_save_button' : 'save_and_keep_open',
     'click #upload_save_finish_button' : 'save_and_finish',
     'keypress #upload_save_finish_button': 'handle_save_and_finish_key',
@@ -199,49 +197,6 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
       }
     });
   },
-  render_details:function(){
-    this.is_details = true;
-    this.switchPanel("details");
-  },
-  render_preview:function(){
-    this.is_details = false;
-    this.switchPanel("preview");
-  },
-  render_questions:function(){
-    this.is_details = false;
-    this.switchPanel("questions");
-  },
-  render_prerequisites: function(){
-    this.is_details = false;
-    this.switchPanel("prerequisites")
-  },
-  switchPanel:function(panel_to_show){
-    this.$(".tab_button").removeClass("btn-tab-active");
-    this.$(".tab_panel").css("display", "none");
-    switch(panel_to_show){
-      case "preview":
-        $("#metadata_preview_btn").addClass("btn-tab-active");
-        $("#metadata_preview").css("display", "block");
-        $("#metadata_preview").find("iframe").prop("src", function(){return $(this).data("src");});
-        break;
-      case "questions":
-        $("#metadata_questions_btn").addClass("btn-tab-active");
-        $("#metadata_questions").css("display", "block");
-        $("#metadata_preview").find("iframe").prop("src", "about:blank");
-        break;
-      case "prerequisites":
-        $("#metadata_prerequisites_btn").addClass("btn-tab-active");
-        $("#metadata_prerequisites").css("display", "block");
-        break;
-      default:
-        $("#metadata_details_btn").addClass("btn-tab-active");
-        $("#metadata_edit_details").css("display", "block");
-        $("#metadata_preview").find("iframe").prop("src", "about:blank");
-        if (this.editor_view){
-          this.editor_view.set_initial_focus();
-        }
-    }
-  },
   load_list:function(){
     this.edit_list = new EditMetadataList({
       collection:this.collection,
@@ -261,6 +216,9 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   load_questions:function(view){
     view.load_question_display(this.$("#metadata_questions"));
   },
+  update_question_count: function(count){
+    this.$(".question_badge").text(count)
+  },
   load_prerequisites:function(selected_items){
     if(selected_items.length){
       if(this.prerequisite_view){
@@ -270,16 +228,13 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
       this.prerequisite_view = new Related.PrerequisiteView({
         modal: false,
         model: selected_items[0].model,
-        oncount: this.update_prereq_count,
         onselect: this.set_prerequisites,
         views_to_update: selected_items,
         el: this.$("#metadata_prerequisites"),
         allow_edit: this.allow_edit
       });
+      this.$(".prereq_badge").text(selected_items[0].model.get('prerequisite').length);
     }
-  },
-  update_prereq_count: function(count){
-    this.$(".prereq_badge").text(count)
   },
   set_prerequisites:function(prerequisite_list, selected_items){
       var self = this;
@@ -288,6 +243,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
         view.set_node({'prerequisite': prerequisite_list});
         view.set_edited(true);
       });
+      this.$(".prereq_badge").text(prerequisite_list.length);
   },
   load_editor:function(selected_items){
     var is_individual = selected_items.length === 1;
@@ -300,7 +256,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     this.$("#metadata_prerequisites_btn").css("display", (is_individual && (has_files || is_exercise)) ? "inline-block" : "none");
     this.$("#metadata_questions_btn").css("display", (is_exercise) ? "inline-block" : "none");
     if(!is_individual){
-      this.render_details();
+      this.$("a[href='#metadata_edit_details']").tab('show');
     }
     if(this.editor_view){
       this.editor_view.stopListening();
@@ -345,9 +301,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     this.onclose();
   },
   validate: function() {
-    if(!this.is_details){
-      this.render_details();
-    }
+    this.$("a[href='#metadata_edit_details']").tab('show');
     var isInvalid = this.edit_list && this.edit_list.validate();
     if(isInvalid) {
       this.disable_submit();
@@ -1223,6 +1177,13 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
         allow_edit: this.allow_edit
       });
       formats_el.html(this.exercise_view.el);
+      this.update_question_count();
+  },
+  update_question_count: function() {
+    var question_count = _.filter(this.model.get('assessment_items'), function(item) {
+      return !item.deleted; // Only count non-deleted questions
+    });
+    this.container.$(".question_badge").text(question_count.length);
   },
   load_preview_display:function(formats_el){
     if(this.preview_view){
@@ -1236,6 +1197,7 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
   },
   handle_assessment_items:function(data){
     this.model.set('assessment_items', data);
+    this.update_question_count();
     this.set_edited(true);
   },
   handle_change:function(){

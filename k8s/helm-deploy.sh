@@ -27,7 +27,7 @@ helm upgrade --install $BRANCH . \
      -f values-prod-config.yaml \
      --set studioApp.imageName=gcr.io/$PROJECT_ID/learningequality-studio-app:$COMMIT \
      --set studioNginx.imageName=gcr.io/$PROJECT_ID/learningequality-studio-nginx:$COMMIT \
-     --set studioApp.releaseCommit=$COMMIT} \
+     --set studioApp.releaseCommit=$COMMIT \
      --set bucketName=$BUCKET \
      --set studioApp.postmarkApiKey=$POSTMARK_KEY \
      --set postgresql.postgresUser=$POSTGRES_USER \

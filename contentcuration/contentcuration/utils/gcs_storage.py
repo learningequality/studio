@@ -1,11 +1,11 @@
 import logging
-import os.path
+import mimetypes
+import tempfile
 
+from django.core.files import File
+from django.core.files.storage import Storage
 from google.cloud.storage import Client
 from google.cloud.storage.blob import Blob
-from django.conf import settings
-from django.core.files.storage import Storage
-from django.core.files import File
 
 
 OLD_STUDIO_STORAGE_PREFIX = "/contentworkshop_content/"
@@ -13,45 +13,57 @@ OLD_STUDIO_STORAGE_PREFIX = "/contentworkshop_content/"
 
 class GoogleCloudStorage(Storage):
 
-    def __init__(self):
+    def __init__(self, client=None):
         from django.conf import settings
-        self.client = Client()
+        self.client = client if client else Client()
         self.bucket = self.client.get_bucket(settings.AWS_S3_BUCKET_NAME)
 
-    def open(self, name, mode="rb"):
+    @classmethod
+    def _determine_content_type(cls, filename):
+        """
+        Guesses the content type of a filename. Returns the mimetype of a file.
+
+        Returns "application/octet-stream" if the type can't be guessed.
+        Raises an AssertionError if filename is not a string.
+        """
+
+        typ, _ = mimetypes.guess_type(filename)
+
+        if not typ:
+            return "application/octet-stream"
+        else:
+            return typ
+
+    def open(self, name, mode="rb", blob_object=None):
+        """
+        open returns a Django File object containing the bytes of name suitable for reading.
+
+        You can pass in an optional 'mode' argument, but is only there for Django Storage class
+        compatibility. It would error out if given any other argument than "rb".
+
+        You can also pass in an object in the blob_object argument. This must have a method called
+        `download_to_file` that accepts as writeable file object as an argument, and writes the
+        bytes to it. (this is mainly used for mocking in tests.)
+        """
         # We don't have any logic for returning the file object in write
         # so just raise an error if we get any mode other than rb
         assert mode == "rb",\
             ("Sorry, we can't handle any open mode other than rb."
              " Please use Storage.save() instead.")
 
-        blob = self.bucket.get_blob(name)
-
-        # take advantage of the fact that we only
-        # write a file once, and that GCS returns the MD5
-        # hash as part of the metadata.
-
-        # See if a file with a matching MD5 hash is already
-        # present. If so, just return that.
-        tmp_filename = os.path.join("/tmp", blob.md5_hash)
-
-        # the md5 hash from gcloud storage encoded in base64, which may not be
-        # compatible as a filesystem name. Change it to hex.
-        tmp_filename = tmp_filename.decode("base64").encode("hex")
-
-        if os.path.exists(tmp_filename):
-            f = open(tmp_filename)
-
-        # If there's no such file, then download that file
-        # from GCS.
+        if not blob_object:
+            blob = self.bucket.get_blob(name)
         else:
-            with open(tmp_filename, "wb") as fobj:
-                blob.download_to_file(fobj)
+            blob = blob_object
 
-            # reopen the file we just wrote, this time in read mode
-            f = open(tmp_filename)
+        fobj = tempfile.NamedTemporaryFile()
+        blob.download_to_file(fobj)
+        # flush it to disk
+        fobj.flush()
 
-        return File(f)
+        django_file = File(fobj)
+        django_file.just_downloaded = True
+        return django_file
 
     def exists(self, name):
         blob = self.bucket.get_blob(name)
@@ -61,12 +73,24 @@ class GoogleCloudStorage(Storage):
         blob = self.bucket.get_blob(name)
         return blob.size
 
-    def save(self, name, fobj, max_length=None):
-        blob = Blob(name, self.bucket)
+    def save(self, name, fobj, max_length=None, blob_object=None):
+
+        if not blob_object:
+            blob = Blob(name, self.bucket)
+        else:
+            blob = blob_object
+
         # force the current file to be at file location 0, to
         # because that's what google wants
+
+        # determine the current file's mimetype based on the name
+        content_type = self._determine_content_type(name)
+
         fobj.seek(0)
-        blob.upload_from_file(fobj)
+        blob.upload_from_file(
+            fobj,
+            content_type=content_type,
+        )
         return name
 
     def url(self, name):
@@ -86,6 +110,13 @@ class GoogleCloudStorage(Storage):
         return blob.public_url
 
     def delete(self, name):
+        # the old studio storage had a prefix if /contentworkshop_content/
+        # before the path; remove that first before passing it in to
+        # GCS
+        # TODO (aron): remove hack once we've migrated all File models to remove the prefix
+        if name.startswith(OLD_STUDIO_STORAGE_PREFIX):
+            name = name.split(OLD_STUDIO_STORAGE_PREFIX).pop()
+
         blob = self.bucket.get_blob(name)
         return blob.delete()
 
@@ -103,4 +134,5 @@ class GoogleCloudStorage(Storage):
         return name
 
     def generate_filename(self, filename):
-        raise NotImplementedError
+        # TODO(aron): can we move the generate_object_storage_name logic to here?
+        return filename
