@@ -13,8 +13,6 @@ from django.core.files import File as DJFile
 from django.core.files.storage import default_storage
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management.base import BaseCommand
-from django.core.files.storage import default_storage
-from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import transaction
 from le_utils.constants import content_kinds
 from le_utils.constants import exercises
@@ -44,6 +42,7 @@ TAG_COUNT = 0
 
 
 class EarlyExit(BaseException):
+    
     def __init__(self, message, db_path):
         self.message = message
         self.db_path = db_path
