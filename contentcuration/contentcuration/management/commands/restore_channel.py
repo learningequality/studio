@@ -42,7 +42,7 @@ TAG_COUNT = 0
 
 
 class EarlyExit(BaseException):
-    
+
     def __init__(self, message, db_path):
         self.message = message
         self.db_path = db_path
