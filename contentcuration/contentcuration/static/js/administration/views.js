@@ -68,7 +68,7 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
     extra_filters: [],
     fetch: (e) => {}, // to be overridden
     initialize: function(options) {
-        _.bindAll(this, "handle_removed")
+        // _.bindAll(this, "handle_removed")
         this.collection = options.collection;
         this.router = options.router;
         this.count = this.collection.length;
@@ -95,14 +95,14 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
     goto_next: function(){
         this.router.gotoNextPage();
     },
-    handle_removed: function(){
-        this.update_count(this.count - 1);
-    },
-    update_count: function(count){
-        this.count = count;
-        $(this.tab_count_selector).text(this.collection.state.totalRecords);
-        this.$(".viewing_count").text("Displaying " + count + " of " + this.collection.state.totalRecords + " " + this.item_name + "(s)...");
-    },
+    // handle_removed: function(){
+    //     this.update_count(this.count - 1);
+    // },
+    // update_count: function(count){
+    //     this.count = count;
+    //     $(this.tab_count_selector).text(this.collection.state.totalRecords);
+    //     this.$(".viewing_count").text("Displaying " + count + " of " + this.collection.state.totalRecords + " " + this.item_name + "(s)...");
+    // },
     render: function(load_list=true) {
         this.$el.html(this.template({
             filterOptions: this.collection.filterOptions,
@@ -288,7 +288,8 @@ var ChannelItem = BaseAdminItem.extend({
         "click .search_for_channel_editors": "search_for_channel_editors",
         "change .channel_priority": "set_priority",
         "click .invite_button": "open_sharing",
-        "click .download_csv": "download_csv"
+        "click .download_csv": "download_csv",
+        "sync": "render",
     },
     search_for_channel_editors: function() {
         Backbone.history.navigate("/users/search/"+`${this.model.get('name')} ${this.model.get('id')}`, {trigger: true})

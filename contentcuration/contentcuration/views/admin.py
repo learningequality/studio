@@ -152,21 +152,6 @@ def get_channel_kind_count(request, channel_id):
         "size": (sizes['resource_size'] or 0) + (sizes['assessment_size'] or 0),
     }))
 
-
-@login_required
-@api_view(['GET'])
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
-@permission_classes((IsAdminUser,))
-def get_userlist(request):
-    if not request.user.is_admin:
-        raise SuspiciousOperation("You are not authorized to access this endpoint")
-
-    user_list = User.objects.all()
-    user_serializer = SimpleAdminUserListSerializer(user_list, many=True)
-
-    return Response(user_serializer.data)
-
-
 class ChannelUserListPagination(PageNumberPagination):
     page_size = DEFAULT_ADMIN_PAGE_SIZE
     page_size_query_param = 'page_size'
