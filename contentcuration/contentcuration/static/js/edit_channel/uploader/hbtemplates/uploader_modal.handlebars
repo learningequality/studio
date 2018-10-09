@@ -6,14 +6,14 @@
         <h4 class="modal-title truncate">
           {{#if new_content}}
             <i class="material-icons align-text-top">add</i>
-            &nbsp; {{#if new_topic}}{{formatMessage (intlGet 'messages.adding_topics') title=title}}{{else}}{{formatMessage (intlGet 'messages.adding_exercise') title=title}}{{/if}}
+            &nbsp; {{#if new_topic}}{{formatMessage (intlGet 'messages.add_topics')}}{{else}}{{formatMessage (intlGet 'messages.add_exercise')}}{{/if}}
           {{else}}
             {{#if allow_edit}}
               <i class="material-icons align-text-top">mode_edit</i>
-              &nbsp; {{formatMessage (intlGet 'messages.editing_content')}}
+              &nbsp; {{#if node}}{{formatMessage (intlGet 'messages.editing_kind') kind=(translate node.kind)}}{{else}}{{formatMessage (intlGet 'messages.editing_content')}}{{/if}}
             {{else}}
               <i class="material-icons align-text-top">pageview</i>
-              &nbsp; {{formatMessage (intlGet 'messages.viewing_content')}}
+              &nbsp; {{#if node}}{{formatMessage (intlGet 'messages.viewing_kind') kind=(translate node.kind)}}{{else}}{{formatMessage (intlGet 'messages.viewing_content')}}{{/if}}
             {{/if}}
           {{/if}}
         </h4>

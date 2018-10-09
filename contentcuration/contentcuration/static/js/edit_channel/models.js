@@ -285,11 +285,11 @@ var ContentNodeModel = BaseModel.extend({
         return new Promise(function(resolve, reject){
             $.ajax({
                 method:"POST",
-                url: window.Urls.generate_thumbnail(),
-                data:  JSON.stringify({"node_id": self.id}),
+                url: window.Urls.generate_thumbnail(self.id),
                 success: function(result) {
-                    var file = JSON.parse(result).file
-                    resolve(new FileModel(JSON.parse(file)));
+                    result = JSON.parse(result);
+                    result.file = new FileModel(JSON.parse(result.file));
+                    resolve(result);
                 },
                 error:reject
             });
@@ -415,8 +415,6 @@ var ContentNodeCollection = BaseCollection.extend({
                     var to_add = new FileModel(file);
                     var preset_data = to_add.get("preset");
                     preset_data.id = file.preset.name || file.preset.id;
-                    to_add.set('preset', preset_data);
-                    to_add.set('contentnode', node.id);
                     fileCollection.add(to_add);
                 });
                 assessmentCollection.add(node.get('assessment_items'));
@@ -575,7 +573,7 @@ var ContentNodeCollection = BaseCollection.extend({
             var sort_order =(target_parent) ? target_parent.get("metadata").max_sort_order + 1 : 1;
             var parent_id = target_parent.get("id");
 
-            var data = {"nodes": self.toJSON(),
+            var data = {"node_ids": self.models.map(node => node.id),
                         "sort_order": sort_order,
                         "target_parent": parent_id,
                         "channel_id": window.current_channel.id

@@ -17,6 +17,9 @@ RUN npm install -g yarn
 EXPOSE 8080
 
 RUN pip install pipenv
+# pip 18.1 gives an error with pipenv, so pin the version to 18.0 until there is a fix.
+# More info here: https://github.com/pypa/pipenv/issues/2924
+RUN pip install pip==18.0
 
 # Where the host source code will be mounted when run under docker compose
 RUN mkdir /src

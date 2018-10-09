@@ -1,21 +1,24 @@
-import json
-import sqlite3
-import sys
-import os
 import datetime
+import json
+import os
 import requests
 import shutil
+import sqlite3
+import sys
 import tempfile
 
 from cStringIO import StringIO
 from django.conf import settings
-from django.core.management.base import BaseCommand
-from django.core.files.storage import default_storage
-from django.core.files.uploadedfile import SimpleUploadedFile
-from django.db import transaction
 from django.core.files import File as DJFile
 from django.core.files.storage import default_storage
-from le_utils.constants import content_kinds, roles, exercises, format_presets
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.management.base import BaseCommand
+from django.db import transaction
+from le_utils.constants import content_kinds
+from le_utils.constants import exercises
+from le_utils.constants import format_presets
+from le_utils.constants import roles
+import logging as logmodule
 from pressurecooker.encodings import write_base64_to_file
 
 from contentcuration import models
@@ -23,7 +26,6 @@ from contentcuration.api import write_file_to_storage
 from contentcuration.utils.files import create_file_from_contents
 from contentcuration.utils.garbage_collect import get_deleted_chefs_root
 
-import logging as logmodule
 logmodule.basicConfig()
 logging = logmodule.getLogger(__name__)
 
@@ -40,6 +42,7 @@ TAG_COUNT = 0
 
 
 class EarlyExit(BaseException):
+
     def __init__(self, message, db_path):
         self.message = message
         self.db_path = db_path

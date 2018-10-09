@@ -1,13 +1,15 @@
+import logging as logmodule
+
 from django.core.management.base import BaseCommand
 from django.db import transaction
-from contentcuration.models import ChannelResourceSize
 
-import logging as logmodule
+from contentcuration.models import ChannelResourceSize
 logmodule.basicConfig()
 logging = logmodule.getLogger(__name__)
 
 
 class Command(BaseCommand):
+
     def add_arguments(self, parser):
         parser.add_argument('--init', action='store_true', dest='init', default=False)
 

@@ -1,41 +1,44 @@
-import ast
 import collections
 import datetime
-import os
 import itertools
-import zipfile
-import shutil
-import tempfile
 import json
+import logging as logmodule
+import os
 import re
 import sys
+import tempfile
 import uuid
-import base64
+import zipfile
+from itertools import chain
+
 from django.conf import settings
 from django.core.files import File
 from django.core.files.storage import default_storage as storage
-from django.core.mail import send_mass_mail
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
-from django.db.models import Q, Count, Sum
+from django.db import transaction
+from django.db.models import Count
+from django.db.models import Q
+from django.db.models import Sum
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext_lazy as _
-from le_utils.constants import content_kinds,file_formats, format_presets, licenses, exercises, roles
-from pressurecooker.encodings import write_base64_to_file
-from contentcuration.utils.files import create_file_from_contents
-from contentcuration import models as ccmodels
-from contentcuration.utils.parser import extract_value
-from itertools import chain
-from kolibri_content import models as kolibrimodels
 from kolibri.content.utils.search import fuzz
+from kolibri_content import models as kolibrimodels
+from kolibri_content.router import get_active_content_database
+from kolibri_content.router import using_content_database
+from le_utils.constants import content_kinds
+from le_utils.constants import exercises
+from le_utils.constants import file_formats
+from le_utils.constants import format_presets
+from le_utils.constants import roles
+
+from contentcuration import models as ccmodels
 from contentcuration.statistics import record_publish_stats
-from kolibri_content.router import get_active_content_database, using_content_database, THREAD_LOCAL
-from django.db import transaction, connections
-from django.db.utils import ConnectionDoesNotExist
-from le_utils import proquint
-from PIL import Image
-from resizeimage import resizeimage
-import logging as logmodule
+from contentcuration.utils.files import create_thumbnail_from_base64
+from contentcuration.utils.files import get_thumbnail_encoding
+from contentcuration.utils.parser import extract_value
+from contentcuration.utils.parser import load_json_string
+
 logmodule.basicConfig()
 logging = logmodule.getLogger(__name__)
 reload(sys)
@@ -47,12 +50,14 @@ MIN_SCHEMA_VERSION = "1"
 
 
 class EarlyExit(BaseException):
+
     def __init__(self, message, db_path):
         self.message = message
         self.db_path = db_path
 
 
 class Command(BaseCommand):
+
     def add_arguments(self, parser):
         parser.add_argument('channel_id', type=str)
         parser.add_argument('--force', action='store_true', dest='force', default=False)
@@ -102,6 +107,7 @@ class Command(BaseCommand):
             channel.main_tree.publishing = False
             channel.main_tree.save()
 
+
 def send_emails(channel, user_id):
     subject = render_to_string('registration/custom_email_subject.txt', {'subject': _('Kolibri Studio Channel Published')})
 
@@ -129,7 +135,7 @@ def create_content_database(channel_id, force, user_id, force_exercises):
 
         prepare_export_database(tempdb)
         map_channel_to_kolibri_channel(channel)
-        map_content_nodes(channel.main_tree, channel.language, channel.id, user_id=user_id, force_exercises=force_exercises)
+        map_content_nodes(channel.main_tree, channel.language, channel.id, channel.name, user_id=user_id, force_exercises=force_exercises)
         map_prerequisites(channel.main_tree)
         save_export_database(channel_id)
 
@@ -152,7 +158,7 @@ def assign_license_to_contentcuration_nodes(channel, license):
     channel.main_tree.get_family().update(license_id=license.pk)
 
 
-def map_content_nodes(root_node, default_language, channel_id, user_id=None, force_exercises=False):
+def map_content_nodes(root_node, default_language, channel_id, channel_name, user_id=None, force_exercises=False):
 
     # make sure we process nodes higher up in the tree first, or else when we
     # make mappings the parent nodes might not be there
@@ -177,7 +183,7 @@ def map_content_nodes(root_node, default_language, channel_id, user_id=None, for
                     children = (node.children.all())
                     node_queue.extend(children)
 
-                    kolibrinode = create_bare_contentnode(node, default_language, channel_id)
+                    kolibrinode = create_bare_contentnode(node, default_language, channel_id, channel_name)
 
                     if node.kind.kind == content_kinds.EXERCISE:
                         exercise_data = process_assessment_metadata(node, kolibrinode)
@@ -187,7 +193,7 @@ def map_content_nodes(root_node, default_language, channel_id, user_id=None, for
                     map_tags_to_node(kolibrinode, node)
 
 
-def create_bare_contentnode(ccnode, default_language, channel_id):
+def create_bare_contentnode(ccnode, default_language, channel_id, channel_name):
     logging.debug("Creating a Kolibri contentnode for instance id {}".format(
         ccnode.node_id))
 
@@ -203,7 +209,7 @@ def create_bare_contentnode(ccnode, default_language, channel_id):
         pk=ccnode.node_id,
         defaults={
             'kind': ccnode.kind.kind,
-            'title': ccnode.title,
+            'title': ccnode.title if ccnode.parent else channel_name,
             'content_id': ccnode.content_id,
             'channel_id': channel_id,
             'author': ccnode.author or "",
@@ -233,47 +239,67 @@ def create_bare_contentnode(ccnode, default_language, channel_id):
 
     return kolibrinode
 
+
 def get_or_create_language(language):
     return kolibrimodels.Language.objects.get_or_create(
         id=language.pk,
         lang_code=language.lang_code,
         lang_subcode=language.lang_subcode,
-        lang_name= language.lang_name if hasattr(language, 'lang_name') else language.native_name,
-        lang_direction= language.lang_direction
+        lang_name=language.lang_name if hasattr(language, 'lang_name') else language.native_name,
+        lang_direction=language.lang_direction
     )
 
-def create_content_thumbnail(thumbnail_string, file_format_id=file_formats.PNG, preset_id=None, uploaded_by=None):
-    thumbnail_data = ast.literal_eval(thumbnail_string)
-    if thumbnail_data.get('base64'):
-        with tempfile.NamedTemporaryFile(suffix=".{}".format(file_format_id), delete=False) as tempf:
-            tempf.close()
-            write_base64_to_file(thumbnail_data['base64'], tempf.name)
-            with open(tempf.name, 'rb') as tf:
-                return create_file_from_contents(tf.read(), ext=file_format_id, preset_id=preset_id, uploaded_by=uploaded_by)
+
+def create_associated_thumbnail(ccnode, ccfilemodel):
+    """
+        Gets the appropriate thumbnail for export (uses or generates a base64 encoding)
+        Args:
+            ccnode (<ContentNode>): node to derive thumbnail from (if encoding is provided)
+            ccfilemodel (<File>): file to get thumbnail from if no encoding is available
+        Returns <File> model of encoded, resized thumbnail
+    """
+    encoding = None
+    try:
+        encoding = ccnode.thumbnail_encoding and load_json_string(ccnode.thumbnail_encoding).get('base64')
+    except ValueError:
+        logging.error("ERROR: node thumbnail is not in correct format ({}: {})".format(ccnode.id, ccnode.thumbnail_encoding))
+
+    # Save the encoding if it doesn't already have an encoding
+    if not encoding:
+        encoding = get_thumbnail_encoding(str(ccfilemodel))
+        ccnode.thumbnail_encoding = json.dumps({
+            "base64": encoding,
+            "points": [],
+            "zoom": 0,
+        })
+        ccnode.save()
+
+    return create_thumbnail_from_base64(encoding, uploaded_by=ccfilemodel.uploaded_by, file_format_id=ccfilemodel.file_format_id, preset_id=ccfilemodel.preset_id)
+
 
 def create_associated_file_objects(kolibrinode, ccnode):
     logging.debug("Creating LocalFile and File objects for Node {}".format(kolibrinode.id))
     for ccfilemodel in ccnode.files.exclude(Q(preset_id=format_presets.EXERCISE_IMAGE) | Q(preset_id=format_presets.EXERCISE_GRAPHIE)):
         preset = ccfilemodel.preset
-        format = ccfilemodel.file_format
+        fformat = ccfilemodel.file_format
         if ccfilemodel.language:
             get_or_create_language(ccfilemodel.language)
 
-        if preset.thumbnail and ccnode.thumbnail_encoding:
-            ccfilemodel = create_content_thumbnail(ccnode.thumbnail_encoding, uploaded_by=ccfilemodel.uploaded_by, file_format_id=ccfilemodel.file_format_id, preset_id=ccfilemodel.preset_id)
+        if preset.thumbnail:
+            ccfilemodel = create_associated_thumbnail(ccnode, ccfilemodel) or ccfilemodel
 
         kolibrilocalfilemodel, new = kolibrimodels.LocalFile.objects.get_or_create(
             pk=ccfilemodel.checksum,
             defaults={
-                'extension': format.extension,
+                'extension': fformat.extension,
                 'file_size': ccfilemodel.file_size,
             }
         )
 
-        kolibrifilemodel = kolibrimodels.File.objects.create(
+        kolibrimodels.File.objects.create(
             pk=ccfilemodel.pk,
             checksum=ccfilemodel.checksum,
-            extension=format.extension,
+            extension=fformat.extension,
             available=True,  # TODO: Set this to False, once we have availability stamping implemented in Kolibri
             file_size=ccfilemodel.file_size,
             contentnode=kolibrinode,
@@ -289,23 +315,28 @@ def create_associated_file_objects(kolibrinode, ccnode):
 def create_perseus_exercise(ccnode, kolibrinode, exercise_data, user_id=None):
     logging.debug("Creating Perseus Exercise for Node {}".format(ccnode.title))
     filename = "{0}.{ext}".format(ccnode.title, ext=file_formats.PERSEUS)
-    with tempfile.NamedTemporaryFile(suffix="zip", delete=False) as tempf:
-        create_perseus_zip(ccnode, exercise_data, tempf)
-        file_size = tempf.tell()
-        tempf.flush()
+    temppath = None
+    try:
+        with tempfile.NamedTemporaryFile(suffix="zip", delete=False) as tempf:
+            temppath = tempf.name
+            create_perseus_zip(ccnode, exercise_data, tempf)
+            file_size = tempf.tell()
+            tempf.flush()
 
-        ccnode.files.filter(preset_id=format_presets.EXERCISE).delete()
+            ccnode.files.filter(preset_id=format_presets.EXERCISE).delete()
 
-        assessment_file_obj = ccmodels.File.objects.create(
-            file_on_disk=File(open(tempf.name, 'r'), name=filename),
-            contentnode=ccnode,
-            file_format_id=file_formats.PERSEUS,
-            preset_id=format_presets.EXERCISE,
-            original_filename=filename,
-            file_size=file_size,
-            uploaded_by_id=user_id,
-        )
-        logging.debug("Created exercise for {0} with checksum {1}".format(ccnode.title, assessment_file_obj.checksum))
+            assessment_file_obj = ccmodels.File.objects.create(
+                file_on_disk=File(open(temppath, 'r'), name=filename),
+                contentnode=ccnode,
+                file_format_id=file_formats.PERSEUS,
+                preset_id=format_presets.EXERCISE,
+                original_filename=filename,
+                file_size=file_size,
+                uploaded_by_id=user_id,
+            )
+            logging.debug("Created exercise for {0} with checksum {1}".format(ccnode.title, assessment_file_obj.checksum))
+    finally:
+        temppath and os.unlink(temppath)
 
 
 def process_assessment_metadata(ccnode, kolibrinode):
@@ -313,7 +344,7 @@ def process_assessment_metadata(ccnode, kolibrinode):
     assessment_items = ccnode.assessment_items.all().order_by('order')
     exercise_data = json.loads(ccnode.extra_fields) if ccnode.extra_fields else {}
 
-    randomize = exercise_data.get('randomize') if exercise_data.get('randomize') != None else True
+    randomize = exercise_data.get('randomize') if exercise_data.get('randomize') is not None else True
     assessment_item_ids = [a.assessment_id for a in assessment_items]
 
     mastery_model = {'type': exercise_data.get('mastery_model') or exercises.M_OF_N}
@@ -341,7 +372,7 @@ def process_assessment_metadata(ccnode, kolibrinode):
         'assessment_mapping': {a.assessment_id: a.type if a.type != 'true_false' else exercises.SINGLE_SELECTION.decode('utf-8') for a in assessment_items},
     })
 
-    kolibriassessmentmetadatamodel = kolibrimodels.AssessmentMetaData.objects.create(
+    kolibrimodels.AssessmentMetaData.objects.create(
         id=uuid.uuid4(),
         contentnode=kolibrinode,
         assessment_item_ids=json.dumps(assessment_item_ids),
@@ -352,6 +383,7 @@ def process_assessment_metadata(ccnode, kolibrinode):
     )
 
     return exercise_data
+
 
 def create_perseus_zip(ccnode, exercise_data, write_to_path):
     with zipfile.ZipFile(write_to_path, "w") as zf:
@@ -421,7 +453,7 @@ def write_assessment_item(assessment_item, zf):
             answer['answer'], answer_images = process_image_strings(answer['answer'], zf)
             answer.update({'images': answer_images})
 
-    answer_data = list(filter(lambda a: a['answer'] or a['answer'] == 0, answer_data)) # Filter out empty answers, but not 0
+    answer_data = list(filter(lambda a: a['answer'] or a['answer'] == 0, answer_data))  # Filter out empty answers, but not 0
 
     hint_data = json.loads(assessment_item.hints)
     for hint in hint_data:
@@ -441,6 +473,7 @@ def write_assessment_item(assessment_item, zf):
 
     result = render_to_string(template, context).encode('utf-8', "ignore")
     write_to_zipfile("{0}.json".format(assessment_item.assessment_id), result, zf)
+
 
 def process_formulas(content):
     for match in re.finditer(ur'\$(\$.+\$)\$', content):
@@ -472,11 +505,13 @@ def process_image_strings(content, zf):
 
     return content, image_list
 
+
 def map_prerequisites(root_node):
     for n in ccmodels.PrerequisiteContentRelationship.objects.filter(prerequisite__tree_id=root_node.tree_id)\
-                                                            .values('prerequisite__node_id', 'target_node__node_id'):
+            .values('prerequisite__node_id', 'target_node__node_id'):
         target_node = kolibrimodels.ContentNode.objects.get(pk=n['target_node__node_id'])
         target_node.has_prerequisite.add(n['prerequisite__node_id'])
+
 
 def map_channel_to_kolibri_channel(channel):
     logging.debug("Generating the channel metadata.")
@@ -486,15 +521,16 @@ def map_channel_to_kolibri_channel(channel):
         id=channel.id,
         name=channel.name,
         description=channel.description,
-        version=channel.version + 1, # Need to save as version being published, not current version
+        version=channel.version + 1,  # Need to save as version being published, not current version
         thumbnail=channel.icon_encoding,
         root_pk=channel.main_tree.node_id,
         root_id=channel.main_tree.node_id,
-        min_schema_version=MIN_SCHEMA_VERSION, # Need to modify Kolibri so we can import this without importing models
+        min_schema_version=MIN_SCHEMA_VERSION,  # Need to modify Kolibri so we can import this without importing models
     )
     logging.info("Generated the channel metadata.")
 
     return kolibri_channel
+
 
 def convert_channel_thumbnail(channel):
     """ encode_thumbnail: gets base64 encoding of thumbnail
@@ -502,24 +538,18 @@ def convert_channel_thumbnail(channel):
             thumbnail (str): file path or url to channel's thumbnail
         Returns: base64 encoding of thumbnail
     """
-    encoding = None
-    if not channel.thumbnail or channel.thumbnail=='' or 'static' in channel.thumbnail:
+    if not channel.thumbnail or channel.thumbnail == '' or 'static' in channel.thumbnail:
         return ""
 
     if channel.thumbnail_encoding:
-        thumbnail_data = ast.literal_eval(channel.thumbnail_encoding)
-        if thumbnail_data.get("base64"):
-            return thumbnail_data["base64"]
+        try:
+            thumbnail_data = load_json_string(channel.thumbnail_encoding)
+            if thumbnail_data.get("base64"):
+                return thumbnail_data["base64"]
+        except ValueError:
+            logging.error("ERROR: channel thumbnail is not in correct format ({}: {})".format(channel.id, channel.thumbnail_encoding))
+    return get_thumbnail_encoding(channel.thumbnail)
 
-    checksum, ext = os.path.splitext(channel.thumbnail)
-    with storage.open(ccmodels.generate_object_storage_name(checksum, channel.thumbnail), 'rb') as file_obj:
-        with Image.open(file_obj) as image, tempfile.NamedTemporaryFile(suffix=ext, delete=False) as tempf:
-            cover = resizeimage.resize_cover(image, [THUMBNAIL_DIMENSION, THUMBNAIL_DIMENSION])
-            cover.save(tempf.name, image.format)
-            encoding = base64.b64encode(tempf.read()).decode('utf-8')
-            tempname = tempf.name
-        os.unlink(tempname)
-    return "data:image/png;base64," + encoding
 
 def map_tags_to_node(kolibrinode, ccnode):
     """ map_tags_to_node: assigns tags to nodes (creates fk relationship)
@@ -584,11 +614,13 @@ def add_tokens_to_channel(channel):
         logging.info("Generating tokens for the channel.")
         channel.make_token()
 
+
 def fill_published_fields(channel):
     published_nodes = channel.main_tree.get_descendants().filter(published=True).prefetch_related('files')
     channel.total_resource_count = published_nodes.exclude(kind_id=content_kinds.TOPIC).count()
     channel.published_kind_count = json.dumps(list(published_nodes.values('kind_id').annotate(count=Count('kind_id')).order_by('kind_id')))
-    channel.published_size = published_nodes.values('files__checksum', 'files__file_size').distinct().aggregate(resource_size=Sum('files__file_size'))['resource_size'] or 0
+    channel.published_size = published_nodes.values('files__checksum', 'files__file_size').distinct(
+    ).aggregate(resource_size=Sum('files__file_size'))['resource_size'] or 0
 
     node_languages = published_nodes.exclude(language=None).values_list('language', flat=True)
     file_languages = published_nodes.values_list('files__language', flat=True)

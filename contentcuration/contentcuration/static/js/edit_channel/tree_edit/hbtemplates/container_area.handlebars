@@ -70,9 +70,13 @@
 				<a class="nav-label stats_button disable-on-edit">{{formatMessage (intlGet 'messages.summary')}}</a>
 			</div>
 		{{/if}}
-		<div class="hide-details-container">
-			<input type="checkbox" id="hide_details_checkbox"/>
-			<label for="hide_details_checkbox">{{formatMessage (intlGet 'messages.hide_details')}}</label>
+		<div class="select_channel_view_wrapper">
+			<label>{{formatMessage (intlGet 'messages.view')}}</label>
+			<select id="select_channel_view">
+				<option value="default" selected>{{formatMessage (intlGet 'messages.default')}}</option>
+				<option value="comfortable">{{formatMessage (intlGet 'messages.comfortable')}}</option>
+				<option value="compact">{{formatMessage (intlGet 'messages.compact')}}</option>
+			</select>
 		</div>
 	</nav>
 	{{#unless view_only}}
@@ -91,7 +95,7 @@
 		{{/if}}
 	{{/unless}}
 	<div id="container-wrapper">
-		<ul id="container_area" class="list-unstyled">
+		<ul id="container_area">
 		</ul>
 	</div>
 </div>

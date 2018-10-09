@@ -1,21 +1,21 @@
 <div id="metadata">
 	<div class="section pull-left tree_section" id="topic_tree_selector"></div>
-	<nav>
-		<a class="btn btn-tab btn-tab-active tab_button" id="metadata_details_btn">{{formatMessage (intlGet 'messages.details')}}</a>
-		<a class="btn btn-tab tab_button" id="metadata_questions_btn">{{formatMessage (intlGet 'messages.questions')}}</a>
-		<a class="btn btn-tab tab_button" id="metadata_preview_btn">{{formatMessage (intlGet 'messages.preview')}}</a>
-		{{#unless isclipboard}}<a class="btn btn-tab tab_button" id="metadata_prerequisites_btn">{{formatMessage (intlGet 'messages.prereqs')}} <span class="prereq_badge badge">{{formatMessage (intlGet 'messages.loading')}}</span></a>{{/unless}}
-	</nav>
+	<ul class="nav nav-tabs" role="tablist" id="metadata_tabs">
+		<li role="presentation" class="active"><a class="tab_button" href="#metadata_edit_details" aria-controls="metadata_edit_details" role="tab" data-toggle="tab" id="metadata_details_btn">{{formatMessage (intlGet 'messages.details')}}</a></li>
+		<li role="presentation"><a class="tab_button" href="#metadata_questions" aria-controls="metadata_questions" role="tab" data-toggle="tab" id="metadata_questions_btn">{{formatMessage (intlGet 'messages.questions')}} <span class="question_badge badge">{{formatMessage (intlGet 'messages.loading')}}</span></a></li>
+		<li role="presentation"><a class="tab_button" href="#metadata_preview" aria-controls="metadata_preview" role="tab" data-toggle="tab" id="metadata_preview_btn">{{formatMessage (intlGet 'messages.preview')}}</a></li>
+		{{#unless isclipboard}}<li role="presentation"><a class="tab_button" href="#metadata_prerequisites" aria-controls="metadata_prerequisites" role="tab" data-toggle="tab" id="metadata_prerequisites_btn">{{formatMessage (intlGet 'messages.prereqs')}} <span class="prereq_badge badge">{{formatMessage (intlGet 'messages.loading')}}</span></a></li>{{/unless}}
+	</ul>
 	<div class="input-tab-control tab_item" data-next="{{#if allow_edit}}#upload_save_finish_button{{else}}#copy_button{{/if}}"></div>
-	<div  class="metadata_panel">
-		<div id="metadata_edit_details" class="input_area tab_panel">
+	<div  class="metadata_panel tab-content">
+		<div id="metadata_edit_details" class="input_area tab_panel tab-pane active" role="tabpanel">
 			<div class="section pull-left edit_details_section">
 				<div id="edit_details_wrapper"><div id="metadata_placeholder" class="container-fluid text-center">{{formatMessage (intlGet 'messages.loading_content')}}</div></div>
 			</div>
 		</div>
-		<div id="metadata_questions" class="container-fluid tab_panel"></div>
-		<div id="metadata_preview" class="container-fluid tab_panel"></div>
-		<div id="metadata_prerequisites" class="container-fluid tab_panel"></div>
+		<div id="metadata_questions" class="container-fluid tab_panel tab-pane" role="tabpanel"></div>
+		<div id="metadata_preview" class="container-fluid tab_panel tab-pane" role="tabpanel"></div>
+		<div id="metadata_prerequisites" class="container-fluid tab_panel tab-pane" role="tabpanel"></div>
 	</div>
 	<br/>
 	{{#if allow_edit}}

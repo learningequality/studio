@@ -1,10 +1,10 @@
-import datetime
-from contentcuration.utils.policies import check_policies
-
 from base import BaseTestCase
+
+from contentcuration.utils.policies import check_policies
 
 
 class AuthenticationTestCase(BaseTestCase):
+
     def setUp(self):
         super(AuthenticationTestCase, self).setUp()
         self.base_url = '/channels/{}'.format(self.channel.pk)
@@ -17,7 +17,6 @@ class AuthenticationTestCase(BaseTestCase):
         if they have policies they have not yet agreed to.
         """
         base_url = '/channels/{}'.format(self.channel.pk)
-
         self.channel.viewers.add(self.user)
         self.client.force_login(self.user)
 
