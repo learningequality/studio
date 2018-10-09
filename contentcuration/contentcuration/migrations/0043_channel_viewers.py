@@ -3,7 +3,8 @@
 from __future__ import unicode_literals
 
 from django.conf import settings
-from django.db import migrations, models
+from django.db import migrations
+from django.db import models
 
 
 class Migration(migrations.Migration):
@@ -16,6 +17,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='channel',
             name='viewers',
-            field=models.ManyToManyField(blank=True, help_text='Users with view only rights', related_name='view_only_channels', to=settings.AUTH_USER_MODEL, verbose_name='viewers'),
+            field=models.ManyToManyField(blank=True, help_text='Users with view only rights', related_name='view_only_channels',
+                                         to=settings.AUTH_USER_MODEL, verbose_name='viewers'),
         ),
     ]

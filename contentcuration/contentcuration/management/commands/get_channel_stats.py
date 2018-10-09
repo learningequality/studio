@@ -1,16 +1,17 @@
 import csv
 import os
-import re
+
 import progressbar
-from statistics import mean, median, mode, pvariance, StatisticsError
-
-from time import sleep
-
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.db.models import Sum
-from contentcuration.models import Channel
 from le_utils.constants import content_kinds
+from statistics import mean
+from statistics import median
+from statistics import mode
+from statistics import StatisticsError
+
+from contentcuration.models import Channel
 
 
 class Command(BaseCommand):
@@ -44,15 +45,16 @@ class Command(BaseCommand):
                 try:
                     resources = channel.main_tree.get_descendants().prefetch_related('files').exclude(kind_id=content_kinds.TOPIC)
                     count = resources.count()
-                    size = resources.values('files__checksum', 'files__file_size').distinct().aggregate(resource_size=Sum('files__file_size'))['resource_size'] or 0,
-                    writer.writerow([ channel.id, channel.name, count, size])
-                    channel_stats.append({ "id": channel.id, "name": channel.name, "count": count, "size": size })
+                    size = resources.values('files__checksum', 'files__file_size').distinct().aggregate(
+                        resource_size=Sum('files__file_size'))['resource_size'] or 0,
+                    writer.writerow([channel.id, channel.name, count, size])
+                    channel_stats.append({"id": channel.id, "name": channel.name, "count": count, "size": size})
                     bar.update(i)
                 except Exception as e:
                     print(channel.id, str(e))
 
-        counts = [ c['count'] for c in channel_stats]
-        sizes = [ c['size'][0] for c in channel_stats]
+        counts = [c['count'] for c in channel_stats]
+        sizes = [c['size'][0] for c in channel_stats]
         print("\nCount Stats:")
         print_stats(counts)
 
@@ -62,7 +64,7 @@ class Command(BaseCommand):
         print("\n\nFinished writing to CSV at {}\n\n".format(csv_path))
 
 
-def print_stats(l):
+def print_stats(l):  # noqa: C901
     try:
         print("\tMean: {}".format(mean(l)))
     except StatisticsError as e:

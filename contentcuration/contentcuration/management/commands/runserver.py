@@ -1,15 +1,11 @@
 from __future__ import print_function
 
-import atexit
-import os
 import subprocess
-from threading import Thread
 
-from contentcuration.utils.minio_utils import (ensure_storage_bucket_public,
-                                               start_minio)
 from django.contrib.staticfiles.management.commands.runserver import \
     Command as RunserverCommand
-from django.core.management.base import CommandError
+
+from contentcuration.utils.minio_utils import start_minio
 
 
 class Command(RunserverCommand):

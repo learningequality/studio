@@ -1,5 +1,4 @@
 import os
-import shutil
 import tempfile
 import zipfile
 
@@ -7,6 +6,7 @@ from base import BaseTestCase
 
 
 class ZipFileTestCase(BaseTestCase):
+
     def setUp(self):
         super(ZipFileTestCase, self).setUp()
         self.zipfile_url = '/zipcontent/'

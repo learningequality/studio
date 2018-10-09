@@ -5,11 +5,14 @@ import uuid
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 from jsonfield import JSONField
-from kolibri.core.fields import DateTimeTzField
 from kolibri.content import legacy_models
-from le_utils.constants import content_kinds, file_formats, format_presets
+from kolibri.core.fields import DateTimeTzField
+from le_utils.constants import content_kinds
+from le_utils.constants import file_formats
+from le_utils.constants import format_presets
 from le_utils.constants.languages import LANGUAGE_DIRECTIONS
-from mptt.models import MPTTModel, TreeForeignKey
+from mptt.models import MPTTModel
+from mptt.models import TreeForeignKey
 
 
 class License(legacy_models.License):
@@ -199,6 +202,7 @@ class File(models.Model):
 
 
 class LocalFileManager(models.Manager):
+
     def delete_orphan_files(self):
         for file in self.filter(files__isnull=True):
             try:

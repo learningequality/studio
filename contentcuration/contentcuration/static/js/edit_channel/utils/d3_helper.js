@@ -4,7 +4,7 @@ var _ = require("underscore");
 require("jqcloud2")
 require("jqcloud2/dist/jqcloud.css")
 
-const COLOR_SELECTION = ["#8dd3c7", "#bebada", "#fb8072", "#80b1d3", "#fdb462", "#b3de69", "#fccde5", "#bc80bd", "#ccebc5"];
+const COLOR_SELECTION = ["#FF3D00", "#bebada", "#283593", "#FF8F00", "#F06292", "#4DB6AC", "#fccde5", "#bc80bd", "#ccebc5"];
 
 var ttCounter = 0
 

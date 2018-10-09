@@ -13,33 +13,46 @@ Including another URLconf
     1. Add an import:  from blog import urls as blog_urls
     2. Add a URL to urlpatterns:  url(r'^blog/', include(blog_urls))
 """
-from django.conf.urls import include, url
+import django_js_reverse.views as django_js_reverse_views
 from django.conf import settings
+from django.conf.urls import include
+from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.core.urlresolvers import reverse_lazy
-from django.views.i18n import javascript_catalog
-from django.conf.urls.i18n import i18n_patterns
-from django.utils.translation import ugettext_lazy as _
 from django.db.models import Q
-from rest_framework import routers, viewsets
-from contentcuration.forms import ForgotPasswordForm, ResetPasswordForm, LoginForm
-from contentcuration.models import ContentNode, License, Channel, File, FileFormat, FormatPreset, ContentTag, AssessmentItem, ContentKind, Language, User, Invitation
-import contentcuration.serializers as serializers
-import contentcuration.views.base as views
-import contentcuration.views.users as registration_views
-import contentcuration.views.settings as settings_views
-import contentcuration.views.internal as internal_views
-import contentcuration.views.zip as zip_views
-import contentcuration.views.files as file_views
-import contentcuration.views.nodes as node_views
-import contentcuration.views.admin as admin_views
-import contentcuration.views.public as public_views
-import django_js_reverse.views as django_js_reverse_views
-import django.views as django_views
-
-from rest_framework_bulk.routes import BulkRouter
+from django.views.i18n import javascript_catalog
+from rest_framework import routers
+from rest_framework import viewsets
 from rest_framework_bulk.generics import BulkModelViewSet
+from rest_framework_bulk.routes import BulkRouter
+
+import contentcuration.serializers as serializers
+import contentcuration.views.admin as admin_views
+import contentcuration.views.base as views
+import contentcuration.views.files as file_views
+import contentcuration.views.internal as internal_views
+import contentcuration.views.nodes as node_views
+import contentcuration.views.public as public_views
+import contentcuration.views.settings as settings_views
+import contentcuration.views.users as registration_views
+import contentcuration.views.zip as zip_views
+from contentcuration.forms import ForgotPasswordForm
+from contentcuration.forms import LoginForm
+from contentcuration.forms import ResetPasswordForm
+from contentcuration.models import AssessmentItem
+from contentcuration.models import Channel
+from contentcuration.models import ContentKind
+from contentcuration.models import ContentNode
+from contentcuration.models import ContentTag
+from contentcuration.models import File
+from contentcuration.models import FileFormat
+from contentcuration.models import FormatPreset
+from contentcuration.models import Invitation
+from contentcuration.models import Language
+from contentcuration.models import License
+from contentcuration.models import User
+
 
 def get_channel_tree_ids(user):
     channels = Channel.objects.select_related('trash_tree').select_related('main_tree').filter(Q(editors=user) | Q(viewers=user) | Q(public=True))
@@ -47,10 +60,12 @@ def get_channel_tree_ids(user):
     main_tree_ids = channels.values_list('main_tree__tree_id', flat=True).distinct()
     return [user.clipboard_tree.tree_id] + list(trash_tree_ids) + list(main_tree_ids)
 
+
 class LicenseViewSet(viewsets.ModelViewSet):
     queryset = License.objects.all()
 
     serializer_class = serializers.LicenseSerializer
+
 
 class LanguageViewSet(viewsets.ModelViewSet):
     queryset = Language.objects.all()
@@ -67,6 +82,7 @@ class ChannelViewSet(viewsets.ModelViewSet):
             return Channel.objects.all()
         return Channel.objects.filter(Q(editors=self.request.user) | Q(viewers=self.request.user) | Q(public=True)).distinct()
 
+
 class FileViewSet(BulkModelViewSet):
     queryset = File.objects.all()
     serializer_class = serializers.FileSerializer
@@ -76,6 +92,7 @@ class FileViewSet(BulkModelViewSet):
             return File.objects.all()
         tree_ids = get_channel_tree_ids(self.request.user)
         return File.objects.select_related('contentnode').filter(contentnode__tree_id__in=tree_ids).distinct()
+
 
 class FileFormatViewSet(viewsets.ModelViewSet):
     queryset = FileFormat.objects.all()
@@ -102,7 +119,8 @@ class ContentNodeViewSet(BulkModelViewSet):
 
         # Set up eager loading to avoid N+1 selects
         tree_ids = get_channel_tree_ids(self.request.user)
-        return ContentNode.objects.prefetch_related('children').prefetch_related('files').prefetch_related('assessment_items').filter(tree_id__in=tree_ids).distinct()
+        return ContentNode.objects.prefetch_related('children').prefetch_related('files') \
+                                  .prefetch_related('assessment_items').filter(tree_id__in=tree_ids).distinct()
 
 
 class TagViewSet(viewsets.ModelViewSet):
@@ -115,6 +133,7 @@ class TagViewSet(viewsets.ModelViewSet):
             return ContentTag.objects.all()
         return ContentTag.objects.filter(Q(channel__editors=self.request.user) | Q(channel__viewers=self.request.user) | Q(channel__public=True)).distinct()
 
+
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
 
@@ -125,7 +144,10 @@ class UserViewSet(viewsets.ModelViewSet):
             return User.objects.all()
         channel_list = list(self.request.user.editable_channels.values_list('pk', flat=True))
         channel_list.extend(list(self.request.user.view_only_channels.values_list('pk', flat=True)))
-        return User.objects.filter(Q(pk=self.request.user.pk) | Q(editable_channels__pk__in=channel_list) | Q(view_only_channels__pk__in=channel_list)).distinct()
+        return User.objects.filter(Q(pk=self.request.user.pk) |
+                                   Q(editable_channels__pk__in=channel_list) |
+                                   Q(view_only_channels__pk__in=channel_list)).distinct()
+
 
 class InvitationViewSet(viewsets.ModelViewSet):
     queryset = Invitation.objects.all()
@@ -137,6 +159,7 @@ class InvitationViewSet(viewsets.ModelViewSet):
             return Invitation.objects.all()
         return Invitation.objects.filter(Q(invited=self.request.user) | Q(sender=self.request.user)).distinct()
 
+
 class AssessmentItemViewSet(BulkModelViewSet):
     queryset = AssessmentItem.objects.all()
 
@@ -147,6 +170,7 @@ class AssessmentItemViewSet(BulkModelViewSet):
             return AssessmentItem.objects.all()
         tree_ids = get_channel_tree_ids(self.request.user)
         return AssessmentItem.objects.select_related('contentnode').filter(contentnode__tree_id__in=tree_ids).distinct()
+
 
 router = routers.DefaultRouter(trailing_slash=False)
 router.register(r'license', LicenseViewSet)
@@ -232,17 +256,18 @@ urlpatterns += [
     url(r'^zipcontent/(?P<zipped_filename>[^/]+)/(?P<embedded_filepath>.*)', zip_views.ZipContentView.as_view(), {}, "zipcontent"),
     url(r'^api/file_upload/', file_views.file_upload, name="file_upload"),
     url(r'^api/file_create/', file_views.file_create, name="file_create"),
-    url(r'^api/generate_thumbnail/$', file_views.generate_thumbnail, name='generate_thumbnail'),
+    url(r'^api/generate_thumbnail/(?P<contentnode_id>[^/]*)$', file_views.generate_thumbnail, name='generate_thumbnail'),
 ]
 
 # Add account/registration endpoints
 urlpatterns += [
-    url(r'^accounts/login/$', auth_views.login, {'template_name': 'registration/login.html', 'authentication_form': LoginForm}, name='auth_login'),
-    url(r'^accounts/logout/$', auth_views.logout, {'template_name': 'registration/logout.html'}),
+    url(r'^accounts/login/$', auth_views.login, {'template_name': 'registration/login.html', 'authentication_form': LoginForm}, name='login'),
+    url(r'^accounts/logout/$', auth_views.logout, {'template_name': 'registration/logout.html'}, name='logout'),
     url(
         r'^accounts/password/reset/$',
         registration_views.custom_password_reset,
-        {'post_reset_redirect': reverse_lazy('auth_password_reset_done'), 'email_template_name': 'registration/password_reset_email.txt', 'password_reset_form': ForgotPasswordForm},
+        {'post_reset_redirect': reverse_lazy('auth_password_reset_done'),
+         'email_template_name': 'registration/password_reset_email.txt', 'password_reset_form': ForgotPasswordForm},
         name='auth_password_reset'
     ),
     url(r'^accounts/password/reset/confirm/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',
