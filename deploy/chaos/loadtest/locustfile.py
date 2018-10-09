@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 import os
-
+from random import choice
 from locust import HttpLocust, TaskSet, task
+try:
+    import urllib.request as urlrequest
+except ImportError:
+    import urllib as urlrequest
 
 USERNAME = os.getenv("LOCUST_USERNAME") or "a@a.com"
 PASSWORD = os.getenv("LOCUST_PASSWORD") or "a"
@@ -11,7 +15,7 @@ class BaseTaskSet(TaskSet):
 
     def _login(self):
         """
-        Helper functoin to log in the user to the current session.
+        Helper function to log in the user to the current session.
         """
         resp = self.client.get("/accounts/login/")
         csrf = resp.cookies["csrftoken"]
@@ -30,13 +34,15 @@ class BaseTaskSet(TaskSet):
             }
         )
 
-
     def i18n_requests(self):
         self.client.get("/jsi18n/")
         self.client.get("/jsreverse/")
 
-class ChannelListPage(BaseTaskSet):
 
+class ChannelListPage(BaseTaskSet):
+    """
+    Task to explore different channels lists
+    """
     def on_start(self):
         self._login()
 
@@ -52,8 +58,101 @@ class ChannelListPage(BaseTaskSet):
         """
         Load the channel page and the important endpoints.
         """
-        resp = self.client.get("/channels/")
+        self.client.get("/channels/")
         self.channel_list_api_calls()
+
+
+class ChannelPage(BaseTaskSet):
+    """
+    Task to open and view a channel, including its topics and nodes
+    """
+    def on_start(self):
+        self._login()
+
+    def get_first_public_channel_id(self):
+        """
+        Returns the id of the first available public channel
+        :returns: id of the first available public channel or None if there are not public channels
+        """
+        resp = self.client.get("/get_user_public_channels/").json()
+        try:
+            channel_id = resp[0]['id']
+        except IndexError:
+            channel_id = None
+        return channel_id
+
+    def get_random_topic_id(self, channel_id):
+        """
+        Returns the id of a randomly selected topic for the provided channel_id
+        :param: channel_id: id of the channel where the topic must be found
+        :returns: id of the selected topic
+        """
+        topic_id = None
+        channel_resp = self.client.get('/api/channel/{}'.format(channel_id)).json()
+        children = channel_resp['main_tree']['children']
+        topic_id = choice(children)
+        return topic_id
+
+    def get_random_resource_id(self, topic_id):
+        """
+        Returns the id of a randoly selected resource for the provided topic_id
+        :param: topic_id: id of the topic where the resource must be found
+        :returns: id of the selected resource
+        """
+        nodes_resp = self.client.get('/api/get_nodes_by_ids/{}'.format(topic_id)).json()
+        try:
+            while nodes_resp[0]['kind'] == 'topic':
+                nodes = nodes_resp[0]['children']
+                nodes_resp = self.client.get('/api/get_nodes_by_ids/{}'.format(','.join(nodes))).json()
+            return choice(nodes_resp)['id']
+        except IndexError:
+            return None
+
+    @task
+    def open_channel(self, channel_id=None):
+        """
+        Open to edit a channel, if channel_id is None it opens the first public channel
+        """
+        if not channel_id:
+            channel_id = self.get_first_public_channel_id()
+        if channel_id:
+            self.client.get('/channels/{}'.format(channel_id))
+
+    @task
+    def open_subtopic(self, channel_id=None, topic_id=None):
+        """
+        Open  a topic, if channel_id is None it opens the first public channel
+        """
+        if not channel_id:
+            channel_id = self.get_first_public_channel_id()
+        if channel_id and not topic_id:
+            topic_id = self.get_random_topic_id(channel_id)
+        if topic_id:
+            self.get_random_resource_id(topic_id)
+
+    @task
+    def preview_random_content_item(self, content_id=None):
+        """
+        Do request on all the files for a content item.
+        If content_id is not provided it will fetch a random content
+        """
+        if not content_id:
+            channel_id = self.get_first_public_channel_id()
+            topic_id = self.get_random_topic_id(channel_id)
+            content_id = self.get_random_resource_id(topic_id)
+            if content_id:
+                resp = self.client.get('/api/get_nodes_by_ids_complete/{}'.format(content_id)).json()
+                if 'files' in resp[0]:
+                    for resource in resp[0]['files']:
+                        storage_url = resource['storage_url']
+                        print("Requesting resource {}".format(storage_url))
+                        urlrequest.urlopen(storage_url).read()
+
+
+class ChannelClone(BaseTaskSet):
+    def on_start(self):
+        self._login()
+
 
 class AdminChannelListPage(BaseTaskSet):
 
@@ -64,8 +163,10 @@ class AdminChannelListPage(BaseTaskSet):
     def channel_list_api_call(self):
         self.client.get("/api/get_all_channels")
 
+
 class LoginPage(BaseTaskSet):
-    tasks = [ChannelListPage, AdminChannelListPage]
+    tasks = [ChannelListPage, AdminChannelListPage, ChannelPage]
+    # tasks = [ChannelListPage, AdminChannelListPage, ChannelPage, ChannelClone]
 
     @task
     def loginpage(self):
@@ -74,6 +175,7 @@ class LoginPage(BaseTaskSet):
         """
         self.client.get("/accounts/login/")
         self.i18n_requests()
+
 
 class StudioDesktopBrowserUser(HttpLocust):
     task_set = LoginPage
