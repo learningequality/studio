@@ -51,7 +51,7 @@ var AdminView = BaseViews.BaseView.extend({
             collection: this.user_collection,
             el: this.$("#users")
         });
-        this.user_tab = new ChannelTab({
+        this.channel_tab = new ChannelTab({
             router: this.router,
             collection: this.channel_collection,
             el: this.$("#channels")

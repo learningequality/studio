@@ -237,8 +237,9 @@ class AdminChannelListView(generics.ListAPIView):
         'name',
         'id',
         'priority',
-        'users',
-        'items',      # not working yet!
+        'editors_count',
+        'viewers_count',
+        'items_count',
         'modified',
         'created',
     )
@@ -262,14 +263,23 @@ class AdminChannelListView(generics.ListAPIView):
                         
 
         queryset = Channel.objects\
-            .annotate(created=F('main_tree__created'))\
-            .annotate(items=F("main_tree__rght")/2 - 1)
+            .annotate(editors_count=Count('editors'))\
+            .annotate(viewers_count=Count('viewers'))\
+            .annotate(items_count=F("main_tree__rght")/2 - 1)\
+            .annotate(created=F('main_tree__created'))
             # .annotate(modified=Subquery(modified))\
 
         if self.request.GET.get('can_edit') == 'True':
-            return queryset.filter(editors__contains=self.request.user)
+            queryset = queryset.filter(editors__contains=self.request.user)
         else:
-            return queryset.all()
+            queryset = queryset.all()
+
+        if self.request.GET.get('deleted') == 'True' or self.request.GET.get('all') == 'True':
+            pass
+        else:
+            queryset = queryset.exclude(deleted=True)
+
+        return queryset
 
 
 class AdminUserListFilter(django_filters.FilterSet):
@@ -277,8 +287,8 @@ class AdminUserListFilter(django_filters.FilterSet):
     #     name='main_tree__published',
     # )
     # can_edit_channel = django_filters.Filter(name="editable_channels", lookup_expr='in')
-    chef_channels = django_filters.NumberFilter(name='chef_channels')
-    chef_channels__gt = django_filters.NumberFilter(name='chef_channels', lookup_expr='gt')
+    chef_channels_count = django_filters.NumberFilter(name='chef_channels_count')
+    chef_channels_count__gt = django_filters.NumberFilter(name='chef_channels_count', lookup_expr='gt')
     # is_chef = django_filters.BooleanFilter('is_chef')
     class Meta:
         model = User
@@ -325,7 +335,7 @@ class AdminUserListView(generics.ListAPIView):
         'date_joined',
         'email',
         'editable_channels_count',
-        'chef_channels'
+        'chef_channels_count'
     )
     ordering = ('email',)
 
@@ -334,11 +344,17 @@ class AdminUserListView(generics.ListAPIView):
     #     'editable_channels_count'
     # )
 
+    # count_chef_channels = Channel.objects.filter(editor=OuterRef('pk'))\
+    #                                 .filter(ricecooker_version__isnull=False)\
+    #                                 .order_by().values('ricecooker_version__isnull')\
+    #                                 .annotate(c=Count('*')).values('c')
+
+
+
     def get_queryset(self):
         queryset = User.objects\
             .annotate(editable_channels_count=Count('editable_channels'))\
-            .annotate(chef_channels=Count('editable_channels__ricecooker_version'))\
-            # .annotate(is_chef=Count('chef_channels', Q(chef_channels__gt=0)))
+            .annotate(chef_channels_count=Count('editable_channels__ricecooker_version'))
 
         return queryset.all()
 

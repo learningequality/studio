@@ -84,7 +84,7 @@ class TestGetUsersAndChannels(BaseAPITestCase):
         url = reverse('get_users')
         users = User.objects.annotate(chef_channels=Count('editable_channels__ricecooker_version'))
         num_chef_users = users.filter(chef_channels__gt=0).count()
-        request = APIRequestFactory().get(url, {'chef_channels__gt': 0})
+        request = APIRequestFactory().get(url, {'chef_channels_count__gt': 0})
         request.user = self.admin_user
         response = get_users(request)
         self.assertEqual(response.data.get('count'), num_chef_users)
@@ -93,7 +93,7 @@ class TestGetUsersAndChannels(BaseAPITestCase):
         url = reverse('get_users')
         users = User.objects.annotate(chef_channels=Count('editable_channels__ricecooker_version'))
         num_non_chef_users = users.filter(chef_channels=0).count()
-        request = APIRequestFactory().get(url, {'chef_channels': 0})
+        request = APIRequestFactory().get(url, {'chef_channels_count': 0})
         request.user = self.admin_user
         response = get_users(request)
         self.assertEqual(response.data.get('count'), num_non_chef_users)

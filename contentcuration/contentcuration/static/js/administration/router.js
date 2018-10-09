@@ -11,7 +11,7 @@ const GET_DEFAULT_ROUTES = () => ({
 const CHANNEL_FILTERS = {
 	all: {
 		label: "All",
-		queryParams: {}
+		queryParams: { all: "True" }
 	}, 
 	live: {
 		label: "Live",
@@ -58,8 +58,11 @@ const CHANNEL_SORT_FILTERS = {
 	priority: {
 		label: "Priority",
 	},
-	users: {
-		label: "# of Users",
+	editors_count: {
+		label: "# of Editors",
+	},
+	viewers_count: {
+		label: "# of Viewers",
 	},
 	items: {
 		label: "# of Items",
@@ -89,7 +92,7 @@ const USER_FILTERS = {
 	},
 	is_chef: {
 		label: "Sushi Chefs",
-		queryParams: { ricecooker_version: ">0.0.0" },
+		queryParams: { chef_channels_count__gt: 0 },
 	}
 }
 
