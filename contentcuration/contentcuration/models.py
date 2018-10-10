@@ -938,7 +938,11 @@ class ContentNode(MPTTModel, models.Model):
 
         # Detect if node has been moved to another tree (if the original parent has not already been marked as changed, mark as changed)
         # Necessary if nodes get deleted/moved to clipboard- user needs to be able to publish "changed" nodes
-        if self.pk and ContentNode.objects.filter(pk=self.pk, parent__changed=False).exclude(parent_id=self.parent_id).exists():
+        is_unchanged = (ContentNode.objects
+                        .filter(pk=self.pk, parent__changed=False)
+                        .exclude(parent_id=self.parent_id)
+                        .exists())
+        if self.pk and is_unchanged:
             original = ContentNode.objects.get(pk=self.pk)
             original.parent.changed = True
             original.parent.save()
@@ -951,7 +955,12 @@ class ContentNode(MPTTModel, models.Model):
         # Getting the channel is an expensive call, so warn about it so that we can reduce the number of cases in which
         # we need to do this.
         if not channel_id and (not self.original_channel_id or not self.source_channel_id):
-            warnings.warn("Determining node's channel is an expensive operation. Please set original_channel_id and source_channel_id to the parent's values when creating child nodes.", stacklevel=2)
+            msg = """
+            Determining node's channel is an expensive operation.
+            Please set original_channel_id and source_channel_id to the parent's
+            values when creating child nodes.
+            """
+            warnings.warn(msg, stacklevel=2)
             channel = (self.parent and self.parent.get_channel()) or self.get_channel()
             if channel:
                 channel_id = channel.pk
