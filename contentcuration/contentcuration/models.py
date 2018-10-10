@@ -41,6 +41,7 @@ from mptt.models import raise_if_unsaved
 from mptt.models import TreeForeignKey
 from mptt.models import TreeManager
 from pg_utils import DistinctSum
+from treebeard.mp_tree import MP_Node
 
 from contentcuration.statistics import record_channel_stats
 
@@ -992,6 +993,15 @@ class ContentNode(MPTTModel, models.Model):
         verbose_name_plural = _("Topics")
         # Do not allow two nodes with the same name on the same level
         # unique_together = ('parent', 'title')
+
+
+class ChannelTreeNode(MP_Node):
+    """
+    Stub MP-Based ContentNode. This is to check if the MPTT-ContentNode's
+    treebeard compatibility methods match the return values of
+    an MP-based node.
+    """
+    id = UUIDField(primary_key=True, default=uuid.uuid4)
 
 
 class ContentKind(models.Model):
