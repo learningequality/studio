@@ -5,13 +5,15 @@ services:
       context: .
       dockerfile: Dockerfile.dev
     image: learningequality/studio-app-dev
-    command: npm run devserver
+    command: make devserver
     depends_on:
       - minio
       - studio-postgres
       - studio-redis
     ports:
       - "8080:8080"
+    expose:
+      - 8080
     environment:
       MPLBACKEND: ps
       SHELL: /bin/bash
