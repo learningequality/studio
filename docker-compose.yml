@@ -1,11 +1,14 @@
 version: '3'
+
 services:
+
   studio-app:
     build:
       context: .
-      dockerfile: Dockerfile.dev
+      dockerfile: docker/Dockerfile.dev
     image: learningequality/studio-app-dev
-    command: npm run devserver
+    entrypoint: python docker/entrypoint.py
+    command: yarn run devserver
     depends_on:
       - minio
       - studio-postgres
@@ -24,15 +27,13 @@ services:
       CELERY_BROKER_ENDPOINT: studio-redis
       CELERY_RESULT_BACKEND_ENDPOINT: studio-redis
       CELERY_REDIS_PASSWORD: ""
-      PIPENV_HIDE_EMOJIS: "true"
     volumes:
       - .:/src
-      - studio_app_virtualenv:/root/.local/share/virtualenvs/
-      - pip_cache:/root/.cache/pip
+
   studio-worker:
     build:
       context: .
-      dockerfile: Dockerfile.dev
+      dockerfile: docker/Dockerfile.dev
     image: learningequality/studio-app-dev
     command: make prodceleryworkers
     depends_on:
@@ -41,8 +42,6 @@ services:
       - studio-redis
     volumes:
       - .:/src
-      - studio_worker_virtualenv:/root/.local/share/virtualenvs/
-      - pip_cache:/root/.cache/pip
     environment:
       MPLBACKEND: ps
       SHELL: /bin/bash
@@ -55,7 +54,7 @@ services:
       CELERY_BROKER_ENDPOINT: studio-redis
       CELERY_RESULT_BACKEND_ENDPOINT: studio-redis
       CELERY_REDIS_PASSWORD: ""
-      PIPENV_HIDE_EMOJIS: "true"
+
   minio:
     image: minio/minio
     # logging:
@@ -66,24 +65,23 @@ services:
       MINIO_SECRET_KEY: development
     volumes:
       - minio_data:/data
-      - .:/src
     ports:
       - "9000:9000"
+
   studio-postgres:
     image: postgres:9.6
     environment:
-      PGDATA: /postgres_data/pgdata
+      PGDATA: /var/lib/postgresql/data/pgdata
       POSTGRES_USER: learningequality
       POSTGRES_PASSWORD: kolibri
-      POSTGRES_DB: gonano
+      POSTGRES_DB: kolibri-studio
     volumes:
-      - pgdata:/postgres_data/
+      - pgdata:/var/lib/postgresql/data/pgdata
+
   studio-redis:
     image: redis:4.0.9
+
 
 volumes:
   minio_data:
   pgdata:
-  studio_app_virtualenv:
-  studio_worker_virtualenv:
-  pip_cache:
