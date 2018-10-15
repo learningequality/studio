@@ -234,9 +234,9 @@ var BaseView = Backbone.View.extend({
 	cancel_actions:function(event){
 		event.preventDefault();
 		event.stopPropagation();
-		if(window.workspace_manager.get_main_view()){
+		try{
 			window.workspace_manager.get_main_view().close_all_popups();
-		}
+		} catch(e) {}
 	},
 
   /**
