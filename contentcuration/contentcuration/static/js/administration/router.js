@@ -64,7 +64,7 @@ const CHANNEL_SORT_FILTERS = {
 	viewers_count: {
 		label: "# of Viewers",
 	},
-	items: {
+	resource_count: {
 		label: "# of Items",
 	},
 	created: {
@@ -109,8 +109,8 @@ const USER_SORT_FILTERS = {
 	date_joined: {
 		label: "Date Joined",
 	},
-	channels: {
-		label: "# of Channels",
+	editable_channels_count: {
+		label: "# of Editable Channels",
 	},
 }
 
@@ -225,12 +225,11 @@ var AdministrationRouter = Backbone.Router.extend({
 		collection.state.currentPage = page ? Number(page) : 1
 		collection.state.pageSize = pageSize ? Number(pageSize) : collection.state.pageSize
 
-		if (filter) {
-			for (let k in collection.filterOptions){
-				collection.filterOptions[k].selected = k === filter
-			}
-			collection.state.filterQuery = collection.filterOptions[filter].queryParams
+		filter = filter ? filter : 'all'
+		for (let k in collection.filterOptions){
+			collection.filterOptions[k].selected = k === filter
 		}
+		collection.state.filterQuery = collection.filterOptions[filter].queryParams
 
 		// if (search) {
 		collection.state.search = search
