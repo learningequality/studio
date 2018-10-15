@@ -224,7 +224,7 @@ class AdminChannelListView(generics.ListAPIView):
         'priority',
         'editors_count',
         'viewers_count',
-        'items_count',
+        'resource_count',
         'modified',
         'created',
     )
@@ -245,26 +245,28 @@ class AdminChannelListView(generics.ListAPIView):
         #             .values('tree_id')\
         #             .annotate(m=Max('modified'))\
         #             .values('m')
-                        
-
-        queryset = Channel.objects\
-            .annotate(editors_count=Count('editors'))\
-            .annotate(viewers_count=Count('viewers'))\
-            .annotate(items_count=F("main_tree__rght")/2 - 1)\
-            .annotate(created=F('main_tree__created'))
-            # .annotate(modified=Subquery(modified))\
-
-        if self.request.GET.get('can_edit') == 'True':
-            queryset = queryset.filter(editors__contains=self.request.user)
-        else:
-            queryset = queryset.all()
+                       
+        queryset = Channel.objects
 
         if self.request.GET.get('deleted') == 'True' or self.request.GET.get('all') == 'True':
             pass
         else:
             queryset = queryset.exclude(deleted=True)
 
-        return queryset
+
+        queryset = queryset.select_related('main_tree').prefetch_related('editors', 'viewers')\
+            .annotate(editors_count=Count('editors'))\
+            .annotate(viewers_count=Count('viewers'))\
+            .annotate(resource_count=F("main_tree__rght")/2 - 1)\
+            .annotate(created=F('main_tree__created'))
+            # .annotate(modified=Subquery(modified))\
+
+        if self.request.GET.get('can_edit') == 'True':
+            queryset = queryset.filter(editors__contains=self.request.user)
+        else:
+            pass
+
+        return queryset.all()
 
 
 class AdminUserListFilter(django_filters.FilterSet):
@@ -282,14 +284,11 @@ class AdminUserListFilter(django_filters.FilterSet):
             'first_name',
             'last_name',
             'id',
-            # 'is_chef',
             'is_admin',
             'is_active',
             'is_staff',
             'date_joined',
             'disk_space',
-            # 'chef_channels'
-            # 'can_edit_channel',
         )
 
 
@@ -337,7 +336,7 @@ class AdminUserListView(generics.ListAPIView):
 
 
     def get_queryset(self):
-        queryset = User.objects\
+        queryset = User.objects.prefetch_related('editable_channels')\
             .annotate(editable_channels_count=Count('editable_channels'))\
             .annotate(chef_channels_count=Count('editable_channels__ricecooker_version'))
 
