@@ -73,14 +73,20 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
         this.router = options.router;
         this.count = this.collection.length;
         this.total_count = this.collection.state.totalRecords;
-        this.listenTo(this.collection, 'sync', (e) => {
-            this.render()
+        this.listenTo(this.collection, 'sync', (model) => {
+            if(model.isBaseAdminItem){
+                return;
+            }
 
+            this.render()
             // on the next frame, add the 'loaded' class to fade in the table
-            window.requestAnimationFrame((e) => this.$('.admin_table').addClass('loaded'))
+            window.requestAnimationFrame((model) => this.$('.admin_table').addClass('loaded'))
         })
-        this.listenTo(this.collection, 'request', (e) => {
-            this.$('.admin_table').removeClass('loaded')
+        this.listenTo(this.collection, 'request', (model) => {
+            if (model.isBaseAdminItem){
+                return;
+            }
+            this.render() // this will remove the "loaded" class and update the controls
         })
         this.render()
         this.fetch();
@@ -103,7 +109,7 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
     //     $(this.tab_count_selector).text(this.collection.state.totalRecords);
     //     this.$(".viewing_count").text("Displaying " + count + " of " + this.collection.state.totalRecords + " " + this.item_name + "(s)...");
     // },
-    render: function(load_list=true) {
+    render: function() {
         this.$el.html(this.template({
             filterOptions: this.collection.filterOptions,
             sortFilterOptions: this.collection.sortFilterOptions,
@@ -122,9 +128,7 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
                 this.collection.state.currentPage == this.collection.state.totalPages ||
                 !this.collection.state.totalPages,
         }));
-        if(load_list) {
-            this.load_list();
-        }
+        this.load_list();
     },
     check_all: function(event){ this.admin_list.check_all(event); },
 
@@ -148,12 +152,10 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
 });
 
 const BASE_TAB_EVENTS = {
-    // "click": "apply_filter",
     "change .filter_input.view_input" : "applyFilter",
     "change .filter_input.sort_input" : "applySortKey",
     "change .filter_input.order_input" : "applySortOrder",
     "change .search_input" : "applySearch",
-    // "paste .search_input" : "applySearch",
     "change #admin_user_select_all" : "check_all",
     "click .download_pdf": "download_pdf",
     "click .page-link.page": "goto_page",
@@ -167,7 +169,10 @@ var BaseAdminList = BaseViews.BaseListView.extend({
     initialize: function(options) {
         this.collection = options.collection;
         this.container = options.container;
-        this.listenTo(this.collection, 'sync', (e) => {
+        this.listenTo(this.collection, 'sync', (model) => {
+            if (model.isBaseAdminItem){
+                return;
+            }
             this.render()
         });
         this.render();
@@ -186,7 +191,11 @@ var BaseAdminItem = BaseViews.BaseListNodeItemView.extend({
         this.containing_list_view = options.containing_list_view;
         this.container = options.container;
         this.set_attributes();
+        this.model.isBaseAdminItem = true;
         this.render();
+        this.listenTo(this.model, 'sync', () => {
+            this.render();
+        })
     },
     set_attributes: function() { /* Implement in subclasses */ },
     render:function(){
