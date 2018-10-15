@@ -16,15 +16,19 @@
 		grid-template-rows: min-content auto min-content;
 
 		.admin_table.user_list .grid_row, .header_row.user_list{
-			grid-template-columns: 2.5fr 2fr repeat(3, minmax(max-content, 1fr)) 5em;
+			grid-template-columns: 2.5fr 3fr repeat(3, minmax(max-content, 1fr)) 5em;
 		}
 		.admin_table.channel_list .grid_row, .header_row.channel_list{
-			grid-template-columns: 2.5fr 140px 1fr repeat(3, minmax(max-content, 1fr)) 5em;
+			grid-template-columns: 2.5fr minmax(10em, 1fr) minmax(10em, 1fr) repeat(3, minmax(max-content, 1fr)) 5em;
 		}
-
+		.can_edit, .editors{
+			display: grid;
+			grid-template-columns: max-content 0em;
+			margin: auto;		
+		}
 		.table_actions{
 			grid-row: 1 / span 1;
-
+			grid-column-gap: 4px;
 			width: 100%;
 			display: grid;
 			grid-template-rows: auto 2em;
@@ -57,7 +61,7 @@
 			grid-column: 1 / span 5;
 
 			display: grid;
-			grid-template-columns: max-content max-content max-content auto;
+			grid-template-columns: max-content max-content max-content auto max-content;
 		}
 	}
 }

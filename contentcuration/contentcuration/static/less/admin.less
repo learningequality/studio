@@ -9,6 +9,12 @@ body {
 	overflow-x: auto;
 }
 
+#admin-container {
+    max-width: 100em;
+    margin: 0 auto;
+    padding: 0 2vw;
+}
+
 #admin-page {
 	margin: 0 1em;
 	h2 { 
@@ -21,7 +27,6 @@ body {
 		pointer-events: none;
 	}
 	nav {
-		position: absolute;
 		bottom: 0;
 		.pagination {
 			margin: 5px;
@@ -101,7 +106,6 @@ body {
 			margin-bottom: 0px;
 
 			div {
-				margin-right: 5px;
 				input, select{
 					padding: 2px 4px;
 					border: 1px solid @gray-400;
@@ -126,6 +130,7 @@ body {
 		&.header_row {
 			font-weight: bold;
 			background-color: @blue-000;
+			padding-right: 2em;
 			.email_button{ margin: -5px; }
 		}
 		&.data_row{
@@ -139,7 +144,6 @@ body {
 				display:none;
 				cursor: pointer;
 				padding: 0px 5px;
-				&.search { position: fixed; }
 			}
 			&:hover {
 				background-color: @gray-200;
@@ -171,7 +175,7 @@ body {
 				padding-left: 2px;
 			}
 			.channel_priority {
-				width: 100%;
+				width: 75%;
 			    padding: 0px 2px;
 			}
 			.channel_priority_private { color: @gray-700; }
@@ -226,7 +230,8 @@ body {
 		border: 2px solid @blue-100;
 		div.admin_table {
 			overflow: auto;
-			max-height: calc(100vh - 20em);
+			overflow-y: scroll;
+			max-height: calc(100vh - 25em);
 			opacity: 0.1;
 			&.loaded {
 				opacity: 1;
