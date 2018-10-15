@@ -7,14 +7,14 @@
 	{{#unless deleted}}<i class="icon material-icons action-text name_icon" title="Open in new tab">open_in_new</i></a>{{/unless}}
 	<a class="action-text download_csv name_icon" title="Download CSV"><i class="icon material-icons">file_download</i></a>
 </div>
-<div class="grid_item" title="{{id}}">
+<div class="grid_item text-center" title="{{id}}">
 	<input type="text" value="{{id}}" class="channel_id" readonly/>&nbsp;
 	<a class="action-text copy_id"><i class="icon material-icons" title="Copy">content_paste</i></a>
 </div>
-<div class="grid_item">
+<div class="grid_item text-center">
 	{{#if public}}<input type="number" value="{{priority}}" class="channel_priority" min="0"/>{{else}}<em class="channel_priority_private" title="Priority does not count for private channels">(Private)</em>{{/if}}
 </div>
-<div class="grid_item text-center">
+<div class="grid_item text-center editors">
 	{{#if editors}}
 		<a tabindex="0" class="popover_link action-text" data-id="#admin_editors_{{id}}">{{#format_count "Editor" editors.length}}{{/format_count}}</a>
 		<a class="action-text search_for_channel_editors search name_icon" title="Search for this channel's editors"><i class="icon material-icons">search</i></a>
@@ -28,8 +28,8 @@
 	{{/if}}
 </div>
 <div class="grid_item text-center">
-	{{#if count}}
-		<a tabindex="0" class="popover_link count_link action-text" data-id="#admin_counts_{{id}}">{{#format_count "Item" count}}{{/format_count}}</a>
+	{{#if resource_count}}
+		<a tabindex="0" class="popover_link count_link action-text" data-id="#admin_counts_{{id}}">{{#format_count "Item" resource_count}}{{/format_count}}</a>
 	{{else}}None
 	{{/if}}
 </div>
