@@ -11,6 +11,7 @@ from le_utils.constants import format_presets
 from mixer.backend.django import mixer
 
 from contentcuration import models as cc
+
 pytestmark = pytest.mark.django_db
 
 
@@ -103,12 +104,40 @@ def node_json(data):
     return node_data
 
 
-def node(data, parent=None):
+def node(data=None, parent=None, save=True, **kwargs):
+    class _ContentNodeValues:
+        """
+        Use with mixer to generate random values for a topic node.
+        """
+        title = str
+        license = str
+        node_id = str
+
+    from mixer.main import mixer as mixer_gen
+    randvals = mixer_gen.blend(_ContentNodeValues)
+
+    defaultdata = {
+        "title": randvals.title,
+        "node_id": randvals.node_id,
+        "kind_id": "topic",
+        "children": [],
+
+    }
+
+    if not data:
+        data = {}
+
+    # populate defaultdata with data and kwargs, then use that for the rest of the functions
+    defaultdata.update(data)
+    defaultdata.update(kwargs)
+    data = defaultdata
+
     new_node = None
     # Create topics
-    if data['kind_id'] == "topic":
+    if data.get("kind_id") == "topic" or kwargs.get("kind_id") == "topic":
         new_node = cc.ContentNode(kind=topic(), parent=parent, title=data['title'], node_id=data['node_id'])
-        new_node.save()
+        if save:
+            new_node.save()
 
         for child in data['children']:
             node(child, parent=new_node)
@@ -116,7 +145,8 @@ def node(data, parent=None):
     # Create videos
     elif data['kind_id'] == "video":
         new_node = cc.ContentNode(kind=video(), parent=parent, title=data['title'], node_id=data['node_id'], license=license_wtfpl())
-        new_node.save()
+        if save:
+            new_node.save()
         video_file = fileobj_video(contents="Video File")
         video_file.contentnode = new_node
         video_file.preset_id = format_presets.VIDEO_HIGH_RES
@@ -127,7 +157,8 @@ def node(data, parent=None):
         extra_fields = "{{\"mastery_model\":\"{}\",\"randomize\":true,\"m\":{},\"n\":{}}}".format(data['mastery_model'], data.get('m') or 0, data.get('n') or 0)
         new_node = cc.ContentNode(kind=exercise(), parent=parent, title=data['title'], node_id=data[
                                   'node_id'], license=license_wtfpl(), extra_fields=extra_fields)
-        new_node.save()
+        if save:
+            new_node.save()
         for assessment_item in data['assessment_items']:
             mixer.blend(cc.AssessmentItem,
                         contentnode=new_node,
