@@ -1,7 +1,7 @@
 var Backbone = require("backbone");
 var _= require("underscore");
 var mail_helper = require("edit_channel/utils/mail");
-const DEFAULT_ADMIN_PAGE_SIZE = 50
+const DEFAULT_ADMIN_PAGE_SIZE = 25
 
 /**** BASE MODELS ****/
 
