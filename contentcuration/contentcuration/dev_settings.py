@@ -1,3 +1,4 @@
+# flake8: noqa
 from .test_settings import *  # noqa
 
 # These endpoints will throw an error on the django debug panel
@@ -9,7 +10,8 @@ EXCLUDED_DEBUG_URLS = [
 def custom_show_toolbar(request):
     return not any(request.path.startswith(url) for url in EXCLUDED_DEBUG_URLS)
 
-LANGUAGES += (('ar', ugettext('Arabic')),) # noqa
+
+LANGUAGES += (('ar', ugettext('Arabic')),)  # noqa
 
 try:
     import debug_panel  # noqa

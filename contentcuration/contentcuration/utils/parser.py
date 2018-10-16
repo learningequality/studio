@@ -17,6 +17,7 @@ SIGN: -{0,1}
 EXPONENT: [DECIMAL | INTEGER]e+{0,1}[INTEGER]
 
 """
+import json
 import re
 
 from django.utils.translation import get_language
@@ -102,3 +103,17 @@ def parse_exponent(text):
 
 def to_en(text):
     return text.replace(SEP, '').replace(POINT, '.')
+
+
+def load_json_string(json_string):
+    """
+        Using code from https://grimhacker.com/2016/04/24/loading-dirty-json-with-python/
+        Instead of using ast.literal_eval to process malformed json, load this way
+        Arg: json_string (str) to parse
+        Returns json generated from string
+    """
+    regex_replace = [(r"([ \{,:\[])(u)?'([^']+)'", r'\1"\3"'), (r" False([, \}\]])", r' false\1'), (r" True([, \}\]])", r' true\1')]
+    for r, s in regex_replace:
+        json_string = re.sub(r, s, json_string)
+    clean_json = json.loads(json_string)
+    return clean_json
