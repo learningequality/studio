@@ -164,6 +164,9 @@ var AdministrationRouter = Backbone.Router.extend({
 
 		// make sure the correct tab is showing, even if we aren't loading anything
 		$('a.btn.'+name).tab('show')
+
+		// trigger an event we can listen to if we need to update anything on the view side
+		this.collections[name].trigger('showingTab')
 		return false
 	},
 	getRoute({name, filter, sortKey, sortOrder, search, page, pageSize}){
@@ -288,7 +291,7 @@ var AdministrationRouter = Backbone.Router.extend({
 	},
     channels: function(filter, sortKey, order, search, page = 1, pageSize) {
 		let collection = this.admin_view.channel_collection
-		this.collections['channels'] = this.admin_view.user_collection
+		this.collections['channels'] = this.admin_view.channel_collection
 		this.updateCollectionStateFromParams(
 			collection, filter, sortKey, order, search, page, pageSize
 		)

@@ -81,11 +81,9 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
             this.render()
             // on the next frame, add the 'loaded' class to fade in the table
             window.requestAnimationFrame(() => this.$('.admin_table').addClass('loaded'))
-            window.requestAnimationFrame(() => {
-                let tableTop = this.$('.admin_table').get(0).getBoundingClientRect().top
-                let navHeight = this.$('nav .pagination').get(0).clientHeight
-                this.$('.admin_table').css('max-height', `calc(100vh - 5em - ${tableTop}px - ${navHeight}px)`)
-            })
+        })
+        this.listenTo(this.collection, 'showingTab', () => {
+            this.adjustTableHeight(this)
         })
         this.listenTo(this.collection, 'request', (model) => {
             if (model.isBaseAdminItem){
@@ -134,6 +132,16 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
                 !this.collection.state.totalPages,
         }));
         this.load_list();
+        
+        // update the table height on the next frame
+        this.adjustTableHeight(this)
+    },
+    adjustTableHeight: function(view){
+        window.requestAnimationFrame(() => {
+            let tableTop = view.$('.admin_table').get(0).getBoundingClientRect().top
+            let navHeight = view.$('nav .pagination').get(0).clientHeight
+            view.$('.admin_table').css('max-height', `calc(100vh - 5em - ${tableTop}px - ${navHeight}px)`)    
+        })
     },
     check_all: function(event){ this.admin_list.check_all(event); },
 
