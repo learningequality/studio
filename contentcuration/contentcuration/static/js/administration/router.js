@@ -231,9 +231,13 @@ var AdministrationRouter = Backbone.Router.extend({
 		}
 	},
 	updateCollectionStateFromParams(collection, filter, sortKey, order, search, page = 1, pageSize){
+		// updates a collection's state with given route parameters
+		
+		// default to page 1 and the collection's currently set pageSize
 		collection.state.currentPage = page ? Number(page) : 1
 		collection.state.pageSize = pageSize ? Number(pageSize) : collection.state.pageSize
 
+		// default to view all
 		filter = filter ? filter : 'all'
 		for (let k in collection.filterOptions){
 			collection.filterOptions[k].selected = k === filter
@@ -242,13 +246,14 @@ var AdministrationRouter = Backbone.Router.extend({
 		collection.state.search = search
 		collection.state.filterQuery.search = search
 
+		// update the collection's sortOrderOptions to reflect the new state
 		if (order) {
 			for (let k in collection.sortOrderOptions){
 				collection.sortOrderOptions[k].selected = k === order
 			}
 		}
-		
 
+		// update the collection's sortFilterOptions to reflect the new state
 		if (sortKey) {
 			for (let k in collection.sortFilterOptions){
 				collection.sortFilterOptions[k].selected = k === sortKey
@@ -258,11 +263,13 @@ var AdministrationRouter = Backbone.Router.extend({
 		if (sortKey || order) {
 			let oldSortKey
 			try {
+				// fall back to the collection's previous sort key
 				oldSortKey = collection.state.sortKey
 			} catch (error) {
-				oldSortKey = getSelection(collection.sortFilterOptions)
+				// if it hasn't been set before, default to the one set in its sortFilterOptions
+				oldSortKey = this.getSelected(collection.sortFilterOptions)
 			}
-										
+						
 			collection.state.order = order ? (order === "ascending" ? -1 : 1) : collection.state.order
 			collection.state.sortKey = sortKey ? sortKey : oldSortKey
 		}
