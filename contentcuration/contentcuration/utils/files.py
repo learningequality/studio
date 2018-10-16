@@ -1,4 +1,6 @@
+import base64
 import copy
+import cStringIO
 import os
 import random
 import shutil
@@ -13,6 +15,8 @@ from django.core.files.storage import default_storage
 from le_utils.constants import content_kinds
 from le_utils.constants import file_formats
 from le_utils.constants import format_presets
+from PIL import Image
+from pressurecooker.encodings import write_base64_to_file
 from pressurecooker.images import create_image_from_pdf_page
 from pressurecooker.images import create_tiled_image
 from pressurecooker.images import create_waveform_image
@@ -24,6 +28,8 @@ from contentcuration.api import write_raw_content_to_storage
 from contentcuration.models import File
 from contentcuration.models import generate_file_on_disk_name
 from contentcuration.models import generate_object_storage_name
+
+THUMBNAIL_DIMENSION = 400
 
 
 def create_file_from_contents(contents, ext=None, node=None, preset_id=None, uploaded_by=None):
@@ -212,3 +218,54 @@ def generate_thumbnail_from_node(node, set_node=None):  # noqa
     assert thumbnail_object, "Cannot generate thumbnail for this content"
 
     return thumbnail_object
+
+
+def get_thumbnail_encoding(filename, dimension=THUMBNAIL_DIMENSION):
+    """
+        Generates a base64 encoding for a thumbnail
+        Args:
+            filename (str): thumbnail to generate encoding from (must be in storage already)
+            dimension (int): how big resized image should be
+        Returns base64 encoding of resized thumbnail
+    """
+    if filename.startswith("data:image"):
+        return filename
+
+    checksum, ext = os.path.splitext(filename)
+    filepath = generate_object_storage_name(checksum, filename)
+    buffer = cStringIO.StringIO()
+
+    tempf = tempfile.NamedTemporaryFile(suffix=ext, delete=False)
+
+    try:
+        with default_storage.open(filepath) as localtempf:
+            shutil.copyfileobj(localtempf, tempf)  # Copy image to tempfile
+            tempf.close()
+            with Image.open(tempf.name) as image:
+                width, height = image.size
+                dimension = min([dimension, width, height])
+                image.thumbnail((dimension, dimension), Image.ANTIALIAS)
+                image.save(buffer, image.format)
+                return "data:image/{};base64,{}".format(ext[1:], base64.b64encode(buffer.getvalue()))
+    finally:
+        tempf.close()
+        os.unlink(tempf.name)
+
+
+def create_thumbnail_from_base64(encoding, file_format_id=file_formats.PNG, preset_id=None, uploaded_by=None):
+    """
+        Takes encoding and makes it into a file object
+        Args:
+            encoding (str): base64 to make into an image file
+            file_format_id (str): what the extension should be
+            preset_id (str): what the preset should be
+            uploaded_by (<User>): who uploaded the image
+        Returns <File> object with the file_on_disk being the image file generated from the encoding
+    """
+    fd, path = tempfile.mkstemp()
+    try:
+        write_base64_to_file(encoding, path)
+        with open(path, 'rb') as tf:
+            return create_file_from_contents(tf.read(), ext=file_format_id, preset_id=preset_id, uploaded_by=uploaded_by)
+    finally:
+        os.close(fd)

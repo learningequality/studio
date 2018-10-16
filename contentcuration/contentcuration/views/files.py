@@ -31,6 +31,7 @@ from contentcuration.models import License
 from contentcuration.serializers import ContentNodeEditSerializer
 from contentcuration.serializers import FileSerializer
 from contentcuration.utils.files import generate_thumbnail_from_node
+from contentcuration.utils.files import get_thumbnail_encoding
 
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
@@ -137,16 +138,16 @@ def file_create(request):
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
-def generate_thumbnail(request):
+def generate_thumbnail(request, contentnode_id):
     logging.debug("Entering the generate_thumbnail endpoint")
 
     if request.method != 'POST':
         return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
 
-    data = json.loads(request.body)
-    node = ContentNode.objects.get(pk=data["node_id"])
+    node = ContentNode.objects.get(pk=contentnode_id)
 
     thumbnail_object = generate_thumbnail_from_node(node)
+
     try:
         request.user.check_space(thumbnail_object.file_size, thumbnail_object.checksum)
     except Exception as e:
@@ -158,12 +159,14 @@ def generate_thumbnail(request):
         "success": True,
         "file": JSONRenderer().render(FileSerializer(thumbnail_object).data),
         "path": generate_storage_url(str(thumbnail_object)),
+        "encoding": get_thumbnail_encoding(str(thumbnail_object)),
     }))
 
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
 def thumbnail_upload(request):
+    # Used for channels
     if request.method != 'POST':
         return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
 
@@ -178,12 +181,14 @@ def thumbnail_upload(request):
         "formatted_filename": formatted_filename,
         "file": None,
         "path": generate_storage_url(formatted_filename),
+        "encoding": get_thumbnail_encoding(formatted_filename),
     }))
 
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
 def image_upload(request):
+    # Used for content nodes
     if request.method != 'POST':
         return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
 
@@ -205,6 +210,7 @@ def image_upload(request):
         "success": True,
         "file": JSONRenderer().render(FileSerializer(file_object).data),
         "path": generate_storage_url(str(file_object)),
+        "encoding": get_thumbnail_encoding(str(file_object)),
     }))
 
 

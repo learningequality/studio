@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 
@@ -13,6 +14,7 @@ from contentcuration.models import FormatPreset
 from contentcuration.models import generate_object_storage_name
 from contentcuration.models import Language
 from contentcuration.models import User
+from contentcuration.utils.files import get_thumbnail_encoding
 
 
 def map_files_to_node(user, node, data):
@@ -64,6 +66,15 @@ def map_files_to_node(user, node, data):
         )
         resource_obj.file_on_disk.name = file_path
         resource_obj.save()
+
+        # Handle thumbnail
+        if resource_obj.preset and resource_obj.preset.thumbnail:
+            node.thumbnail_encoding = json.dumps({
+                'base64': get_thumbnail_encoding(str(resource_obj)),
+                'points': [],
+                'zoom': 0
+            })
+            node.save()
 
 
 def map_files_to_assessment_item(user, assessment_item, data):

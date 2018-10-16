@@ -1,76 +1,77 @@
 <div> <!-- Added to make jquery sortable more robust -->
-<input type="checkbox" id="item_{{node.id}}" class="list_item_wrapper" {{#if checked}}checked{{/if}}/>
-{{#if isfolder}}
-	<label class="list_item_wrapper folder collapsed open_folder" for="folder_{{node.id}}" title="{{node.title}}">
-{{else}}
-	<label class="list_item_wrapper file" for="item_{{node.id}}" title="{{node.title}}">
-{{/if}}
-		<div class="options pull-right hide_on_drag">
-			{{#if edit_mode}}
-				<a class="btn btn-default content-options-dropdown" role="button" rel="popover">
-					<i class="material-icons">more_horiz</i>
-				</a>
-				<br/>
-				{{#if isfolder}}<i class="folder_open_icon open_folder material-icons rtl-flip">chevron_right</i>{{/if}}
-			{{else}}
-				{{#if isfolder}}<i class="material-icons edit_item_button" title="{{formatMessage (intlGet 'messages.view_topic')}}">pageview</i>{{/if}}
-				<i class="material-icons copy_item_button" title="{{formatMessage (intlGet 'messages.copy_to_clipboard')}}">content_paste</i>
-			{{/if}}
+<label class="list_item_wrapper {{#if isfolder}}folder collapsed{{else}}file{{/if}}" for="{{#if isfolder}}folder{{else}}item{{/if}}_{{node.id}}" title="{{node.title}}">
+	<div class="options text-right hide_on_drag header_options">
+		{{#if edit_mode}}
+			<i class="content-options-dropdown material-icons" role="button" rel="popover">more_horiz</i>
+		{{else}}
+			{{#if isfolder}}<i class="material-icons edit_item_button preview_option" title="{{formatMessage (intlGet 'messages.view_topic')}}">search</i>{{/if}}
+			<i class="material-icons copy_item_button preview_option" title="{{formatMessage (intlGet 'messages.copy_to_clipboard')}}">content_paste</i>
+		{{/if}}
+	</div>
+	<div class="col-xs-1 item_section text-center">
+		<input type="checkbox" id="item_{{node.id}}" class="list_item_wrapper" {{#if checked}}checked{{/if}}/>
+	</div>
+	<div class="col-xs-2 item_section thumbnail_section {{#if isfolder}}open_folder{{else}}open_file{{/if}}">
+		{{#if node.thumbnail_src}}<img src="{{node.thumbnail_src}}" class="content-item-thumbnail hide_on_drag">{{/if}}
+		<div class="content-item-icon">
+			{{#if isfolder}}
+				<i class="material-icons">{{{get_icon node.kind}}}</i>
+			{{else}}{{#if node.thumbnail_src}}&nbsp;
+			{{else}}<i class="material-icons">{{{get_icon node.kind}}}</i>
+			{{/if}}{{/if}}
 		</div>
-		<h6 class="content_metadata_summary hide_on_drag {{#unless isfolder}}open_file{{/unless}}">
-			<span class="metadata_to_hide row">
-				{{#if isfolder}}
-					{{#if node.metadata.coach_count}}
-						<span class="visibility pull-left" title="{{formatMessage (intlGet 'messages.coach_topic_title')}}">
-							<i class="icon-blue material-icons">local_library</i>
-							({{node.metadata.coach_count}})
+	</div>
+	<div class="col-xs-8 item_section main_item_section {{#if isfolder}}open_folder{{else}}open_file{{/if}}">
+		<h6 class="content_metadata_summary hide_on_drag {{#unless isfolder}}open_file{{/unless}} metadata_to_hide">
+			<!-- NEW/UPDATED/INCOMPLETE Indicators -->
+			<div class="pull-right metadata-indicator">
+				{{#if edit_mode}}
+					{{#if node.changed}}
+						<span class="unpublished" title="{{#if node.published}}{{formatMessage (intlGet 'messages.updated')}}{{else}}{{formatMessage (intlGet 'messages.created')}}{{/if}} {{formatRelative node.modified}}">
+							{{#if node.published}}{{formatMessage (intlGet 'messages.updated')}} {{else}}{{formatMessage (intlGet 'messages.new')}}{{/if}}
 						</span>
 					{{/if}}
+					{{#unless node.valid}}
+						<span class="invalid">{{formatMessage (intlGet 'messages.incomplete')}}</span>
+					{{/unless}}
 				{{/if}}
-				{{#if time}}&nbsp;<i class="material-icons pull-left">access_time</i>{{time}}{{/if}}
-				{{#if isfolder}}<span class="pull-left">&nbsp;{{formatMessage (intlGet (concat 'messages.resource_count')) count=count}}</span>{{/if}}
-				{{#unless isfolder}}
-					<span class="pull-left">
-						&nbsp;
-						{{#if isexercise}}
-							<i class="material-icons">check_circle</i>
-							{{formatMessage (intlGet (concat 'messages.question_count')) count=count}}
-						{{else}}
-							<i class="material-icons">insert_drive_file</i>
-							{{{format_file_size node.metadata.resource_size}}}
-						{{/if}}
-					</span>
-				{{/unless}}
-				{{#if node.changed}}
-					<span class="pull-left">
-						&nbsp;
-						{{#if node.published}}<em class="unpublished" title="{{formatMessage (intlGet 'messages.updated')}} {{formatRelative node.modified}}">{{formatMessage (intlGet 'messages.updated')}}</em>
-						{{else}}<em class="unpublished" title="{{formatMessage (intlGet 'messages.created')}} {{formatRelative node.modified}}">{{formatMessage (intlGet 'messages.new')}}</em>
-						{{/if}}
-					</span>
-				{{/if}}
-				{{#unless node.valid}}
-					<span class="pull-left">
-						&nbsp;
-						<em class="invalid">{{formatMessage (intlGet 'messages.incomplete')}}</em>
-					</span>
-				{{/unless}}
-				{{#unless isfolder}}
-					{{#equal node.role_visibility 'coach'}}
-						<b class="visibility pull-left" title="{{formatMessage (intlGet 'messages.coach_title')}}">
-							<i class="icon-blue material-icons">local_library</i>
-							{{formatMessage (intlGet 'messages.coach')}}
-						</b>
-					{{/equal}}
-				{{/unless}}
-			</span>
-		</h6>
-		<div class="{{#unless isfolder}}open_file{{/unless}} title_wrapper">
-			<div class = "title truncate">
-				<div class="content-item-icon">
-					<i class="material-icons align-text-top">{{{get_icon node.kind}}}</i>
+			</div>
+
+
+			<!-- Content Kind -->
+			{{#unless isfolder}}
+			<div class="metadata-indicator">
+				<span class="content-kind kind-{{node.kind}}"><i class="material-icons">{{{get_icon node.kind}}}</i> {{{translate node.kind}}}</span>
+			</div>
+			{{/unless}}
+
+			<!-- Resource count -->
+			{{#if isfolder}}
+				<div class="metadata-indicator resource_count">
+					{{formatMessage (intlGet (concat 'messages.resource_count')) count=count}}
 				</div>
-				{{#if node}}{{node.title}}{{else}}<em>{{formatMessage (intlGet (concat 'messages.untitled'))}}</em>{{/if}}
+			{{/if}}
+
+			<!-- Coach Content -->
+			{{#if isfolder}}
+				{{#if node.metadata.coach_count}}
+					<b class="visibility" title="{{formatMessage (intlGet 'messages.coach_topic_title')}}">
+						<i class="icon-blue material-icons">local_library</i>
+						{{formatMessage (intlGet 'messages.parenthesis') data=node.metadata.coach_count}}
+					</b>
+				{{/if}}
+			{{else}}
+				{{#equal node.role_visibility 'coach'}}
+					<b class="visibility" title="{{formatMessage (intlGet 'messages.coach_title')}}">
+						<i class="icon-blue material-icons">local_library</i>
+						{{formatMessage (intlGet 'messages.coach')}}
+					</b>
+				{{/equal}}
+			{{/if}}
+		</h6>
+		<div class="title_wrapper">
+			<div class="title truncate">
+				<i class="material-icons collapsed-icon collapsed-icon-{{node.kind}}">{{{get_icon node.kind}}}</i> {{#if node}}{{node.title}}{{else}}<em>{{formatMessage (intlGet (concat 'messages.untitled'))}}</em>{{/if}}
 			</div>
 			<div class="description_wrapper">
 				<div class="description" title="{{node.description}}">
@@ -78,7 +79,14 @@
 				</div>
 			</div>
 		</div>
+	</div>
+	<div class="col-xs-1 item_section {{#if isfolder}}open_folder{{else}}open_file{{/if}}">
+		<div class="options text-center hide_on_drag">
+			{{#if isfolder}}<i class="folder_open_icon material-icons rtl-flip">chevron_right</i>{{/if}}
+		</div>
+	</div>
 </label>
+
 <div class="popover content-popover" tabindex="0" role="tooltip" id="options_{{node.id}}">
 	<div class="arrow"></div>
 	<div class="popover-content">

@@ -103,9 +103,7 @@ var ImportModalView = BaseViews.BaseView.extend({
 
     _mountVueComponent: function() {
         this._resetPageState();
-        console.log('constructor', ImportModal);
         this.ImportModal = new ImportModal({ store: store });
-        console.log('component', ImportModalComponent);
         this.ImportModal.$on('modalclosed', this._destroy.bind(this))
         this.ImportModal.$mount();
     },

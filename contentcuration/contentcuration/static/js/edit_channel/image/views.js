@@ -43,7 +43,7 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
     $trs: MESSAGES,
     initialize: function(options) {
         _.bindAll(this, 'image_uploaded','image_added','image_removed','create_dropzone', 'image_completed','image_failed',
-                         'use_image', 'create_croppie', 'cancel_croppie', 'submit_image', 'get_croppie_encoding', 'submit_croppie');
+                         'use_image', 'create_croppie', 'cancel_croppie', 'submit_image', 'submit_croppie');
         this.image_url = options.image_url;
         this.image = _.find(this.model.get('files'), function(f){ return f.preset.thumbnail; });
         if(this.image){
@@ -142,40 +142,45 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
         this.$(".finished_area").css("visibility", "visible");
         var selector = "#" + this.get_selector() + "_placeholder";
         var self = this;
+        var thumbnail_src = this.get_thumbnail_url(true);
+        $(selector).attr('src', thumbnail_src); // Need to set the src to be url or croppie
+                                                // will zoom in on encoding and not allow
+                                                // user to zoom out
+
         this.croppie = new Croppie(this.$(selector).get(0),{
             boundary: this.boundary,
             viewport: this.aspect_ratio,
             showZoomer: false,
-            customClass: "crop-img",
-            update: function(result) { _.defer(function() {self.get_croppie_encoding(result);}, 500); }
+            customClass: "crop-img"
         });
-        this.croppie.bind({
-            points: (this.thumbnail_encoding)? this.thumbnail_encoding.points : [],
-            zoom: (this.thumbnail_encoding)? this.thumbnail_encoding.zoom : 1,
-            url: this.get_thumbnail_url(true)
-        }).then(function(){})
+
+        // TODO: This should make thumbnails retain zoom/points when you re-enter cropping mode, but
+        // it seems like there's a bug with croppie https://github.com/Foliotek/Croppie/issues/122
+        // Uncomment these lines when it gets fixed
+        // this.croppie.bind({
+        //     points: (this.thumbnail_encoding)? this.thumbnail_encoding.points : [],
+        //     zoom: (this.thumbnail_encoding)? this.thumbnail_encoding.zoom : 0,
+        //     url: thumbnail_src
+        // }).then(function(){});
     },
     cancel_croppie: function(){
         this.cropping = false;
         this.thumbnail_encoding = this.original_thumbnail_encoding;
+        this.croppie.destroy();
         this.render();
     },
     submit_croppie: function(){
         this.cropping = false;
-        this.get_croppie_encoding(this.croppie.get());
-        this.submit_image();
-        this.render();
-    },
-    get_croppie_encoding: function(result){
         var self = this;
+        var result = this.croppie.get();
         this.croppie.result({type: 'base64', size: this.aspect_ratio}).then(function(image){
-            if(!self.thumbnail_encoding || self.thumbnail_encoding.points !== result.points || self.thumbnail_encoding.zoom !== result.zoom){
-                self.thumbnail_encoding = {
-                    "points": result.points,
-                    "zoom": result.zoom,
-                    "base64": image
-                };
-            }
+            self.thumbnail_encoding = {
+                "points": result.points,
+                "zoom": result.zoom,
+                "base64": image
+            };
+            self.submit_image();
+            self.render();
         });
     },
 
@@ -187,10 +192,10 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
             model: this.image
         });
     },
-    use_image:function(file){
+    use_image:function(file, encoding){
         this.image = file;
         this.image_url = file.get('storage_url');
-        this.thumbnail_encoding = null;
+        this.thumbnail_encoding = {'base64': encoding, 'points': [], 'zoom': 0};
         this.render();
         this.submit_image();
     },
@@ -239,6 +244,7 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
         }
         this.image_url = result.path;
         this.image_formatted_name = result.formatted_filename;
+        this.encoding = result.encoding;
     },
     image_completed:function(){
         if(this.image_error){
@@ -247,7 +253,7 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
             if(this.onerror){ this.onerror(); }
             this.render();
         } else{
-            this.thumbnail_encoding = null;
+            this.thumbnail_encoding = {'base64': this.encoding, 'points': [], 'zoom': 0};
             this.render();
             this.submit_image();
         }
@@ -302,7 +308,8 @@ var ThumbnailModalView = BaseViews.BaseModalView.extend({
         this.$("#generate_thumbnail").attr("disabled", "disabled");
         this.node.generate_thumbnail().then(function(result){
             self.$("#thumbnail_area").removeClass('loading');
-            self.model = result;
+            self.model = result.file;
+            self.encoding = result.encoding;
             self.render_preview();
             self.enable_generate();
         }).catch(function(error){
@@ -316,7 +323,7 @@ var ThumbnailModalView = BaseViews.BaseModalView.extend({
         $("#generate_thumbnail").removeClass("disabled");
     },
     use_thumbnail:function(){
-        this.onuse(this.model);
+        this.onuse(this.model, this.encoding);
         this.close();
     },
     handle_file:function(){
