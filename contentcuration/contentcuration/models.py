@@ -914,6 +914,96 @@ class ContentNode(MPTTModel, models.Model):
         except (ObjectDoesNotExist, MultipleObjectsReturned, AttributeError):
             return None
 
+    # treebeard compatibility methods.
+
+    def get_parent(self):
+        """
+        Returns this node's parent. Returns None if this
+        node has no parent :(
+        """
+        return self.parent
+
+    def add_child(self, **kwargs):
+        """
+        Adds a child to the node. The new node will be the
+        new rightmost child.
+
+        You can either pass in a kwargs parameter dict. That
+        will be passed in to the node.create() method.
+
+        e.g.
+        node.add_child(original_node_id=1, title='abcd')
+
+        You can also pass in an already-constructed (but not yet saved)
+        model instance, to the instance= keyword parameter.
+
+        e.g.
+        new_node = ContentNode(title='nice')
+        node.add_child(instance=new_node)
+        """
+        instance = kwargs.pop("instance", None)
+        if not instance:
+            instance = self.__class__(**kwargs)
+
+        instance.insert_at(self, position="last-child")
+        # put the save call on a separate line, so we can use
+        # force_insert. Otherwise mptt will error out with
+        # InvalidMove: A node may not be made a child of any of its descendants.
+        instance.save(force_insert=True)
+        return instance
+
+    def move(self, target, pos="first-child"):
+        """
+        Moves the current node and all its descendants
+        to a new position relative to another node.
+
+        target - The node that will be used as a relative child/sibling when moving
+        pos -  The position, relative to the target node, where the current node object will be moved to, can be one of:
+
+        first-child: the node will be the new leftmost child of the target node
+        last-child: the node will be the new rightmost child of the target node
+        left: the node will take the target node's place, which will be moved to the right 1 position
+        right: the node will be moved to the right of the target node
+
+        Defaults to first-child.
+        """
+        possible_pos = ["first-child", "last-child", "left", "right"]
+        err = "Please give a valid ContentNode.move argument. Should be one of {}, you gave '{}'.".format(possible_pos, pos)
+        assert pos in possible_pos, err
+
+        self.move_to(target, pos)
+
+    def add_sibling(self, pos=None, **kwargs):
+        """
+        Add a new node as a sibling to the current node.
+
+        Args:
+        - pos: The position of the new instance relative to the current instance. Can be one of:
+              left - to the left of the current instance
+              right - to the right of the current instance
+              first-sibling - the very first in the list of siblings
+              last-sibling - the very last in the list of siblings
+        - kwargs: Object creation data that will be passed to the new ContentNode model instance.
+        - instance: A special keyword parameter. This can be used to pass in a constructed, but not saved,
+                    ContentNode instance. That instance will be made a sibling of the current instance.
+        """
+        assert False
+
+    def fix_tree(self, destructive=False):
+        """
+        Fix problems with the tree. For MPTT-based nodes,
+        you must pass in destructive=True. Raises an error if not.
+
+        Calls partial rebuild underneath.
+        """
+        assert False
+
+    def get_last_child(self):
+        # TODO(aron): write tests for this func
+        return self.get_children().last()
+
+    # end treebeard compatibility methods.
+
     @classmethod
     def get_nodes_with_title(cls, title, limit_to_children_of=None):
         """
