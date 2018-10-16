@@ -58,6 +58,7 @@ django-db-readonly = "==0.5.0"
 raven = "*"
 "oauth2client" = "*"
 django-treebeard = "*"
+gnureadline = "*"
 
 [dev-packages]
 python-language-server = "*"
