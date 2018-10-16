@@ -1,10 +1,6 @@
-import pytest
 from rest_framework.test import APIRequestFactory
 from rest_framework.reverse import reverse
-from rest_framework import status
-from rest_framework.test import APITestCase
-from rest_framework.test import force_authenticate
-from django.db.models import Q, Count
+from django.db.models import Count
 from contentcuration.management.commands.setup import create_user
 from contentcuration.management.commands.setup import create_channel
 from contentcuration.models import User
@@ -16,10 +12,11 @@ from base import BaseAPITestCase
 get_users = AdminUserListView.as_view()
 get_channels = AdminChannelListView.as_view()
 
+
 class TestGetUsersAndChannels(BaseAPITestCase):
     @classmethod
     def setUpTestData(self):
-        self.admin_user = self.first_user = create_user('a@a.com','a','a','a',True)
+        self.admin_user = self.first_user = create_user('a@a.com', 'a', 'a', 'a', True)
         dummy_chef_channel = create_channel('a_chef_channel')
         dummy_chef_channel.ricecooker_version = 'ricecooker of the future!'
         dummy_chef_channel.public = False
@@ -39,24 +36,20 @@ class TestGetUsersAndChannels(BaseAPITestCase):
         for x in ['is_admin', 'is_not_active', 'is_chef']:
             for i in range(num_users):
                 name = 'user_%s_%i' % (x, i)
-                user = create_user(name+'@a.com', name, name, name, x=='is_admin')
+                user = create_user(name+'@a.com', name, name, name, x == 'is_admin')
                 user.is_active = x != 'is_not_active'
                 user.save()
                 self.dummy_users.append(user)
 
-                if x=='is_chef':
+                if x == 'is_chef':
                     dummy_chef_channel.editors.add(user)
                     
-
         for i in range(3):
             name = 'channel%i' % i
             channel = create_channel(name, "", [self.dummy_users[i]])
             self.dummy_channels.append(channel)
 
-        self.last_user = create_user('z@z.com','z','z','z',True)
-        # self.last_user.save()
-
-    # get_users 
+        self.last_user = create_user('z@z.com', 'z', 'z', 'z', True)
 
     # def test_get_users_for_channel(self):
     #     url = reverse('get_users')
@@ -136,7 +129,7 @@ class TestGetUsersAndChannels(BaseAPITestCase):
     
     def test_get_live_channels(self):
         url = reverse('get_channels')
-        request = APIRequestFactory().get(url, {'is_live':True})
+        request = APIRequestFactory().get(url, {'is_live': True})
         request.user = self.admin_user
         response = get_channels(request)
         self.assertEqual(response.data.get('count'), Channel.objects.exclude(deleted=True).count())

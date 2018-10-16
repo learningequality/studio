@@ -16,7 +16,6 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import SuspiciousOperation
 from django.db.models import CharField
 from django.db.models import F
-from django.db.models import Q
 
 from django.db.models import Count
 # from django.db.models.aggregates import ArrayAgg
@@ -32,6 +31,9 @@ from django.http import StreamingHttpResponse
 from django.shortcuts import render
 from django.template import Context
 import django_filters
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import OrderingFilter
+from rest_framework.filters import SearchFilter
 from rest_framework import generics
 from rest_framework.pagination import PageNumberPagination
 from django.template.loader import get_template
@@ -152,6 +154,7 @@ def get_channel_kind_count(request, channel_id):
         "size": (sizes['resource_size'] or 0) + (sizes['assessment_size'] or 0),
     }))
 
+
 class ChannelUserListPagination(PageNumberPagination):
     page_size = DEFAULT_ADMIN_PAGE_SIZE
     page_size_query_param = 'page_size'
@@ -195,11 +198,6 @@ class AdminChannelListFilter(django_filters.FilterSet):
             'deleted',
             'published'
         )
-
-
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.filters import OrderingFilter
-from rest_framework.filters import SearchFilter
 
 
 class AdminChannelListView(generics.ListAPIView):
@@ -253,13 +251,11 @@ class AdminChannelListView(generics.ListAPIView):
         else:
             queryset = queryset.exclude(deleted=True)
 
-
         queryset = queryset.select_related('main_tree').prefetch_related('editors', 'viewers')\
             .annotate(editors_count=Count('editors'))\
             .annotate(viewers_count=Count('viewers'))\
             .annotate(resource_count=F("main_tree__rght")/2 - 1)\
             .annotate(created=F('main_tree__created'))
-            # .annotate(modified=Subquery(modified))\
 
         if self.request.GET.get('can_edit') == 'True':
             queryset = queryset.filter(editors__contains=self.request.user)
@@ -270,13 +266,9 @@ class AdminChannelListView(generics.ListAPIView):
 
 
 class AdminUserListFilter(django_filters.FilterSet):
-    # is_chef = django_filters.BooleanFilter(
-    #     name='main_tree__published',
-    # )
-    # can_edit_channel = django_filters.Filter(name="editable_channels", lookup_expr='in')
     chef_channels_count = django_filters.NumberFilter(name='chef_channels_count')
     chef_channels_count__gt = django_filters.NumberFilter(name='chef_channels_count', lookup_expr='gt')
-    # is_chef = django_filters.BooleanFilter('is_chef')
+
     class Meta:
         model = User
         fields = (
@@ -290,11 +282,6 @@ class AdminUserListFilter(django_filters.FilterSet):
             'date_joined',
             'disk_space',
         )
-
-
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.filters import OrderingFilter
-from rest_framework.filters import SearchFilter
 
 
 class AdminUserListView(generics.ListAPIView):
@@ -332,8 +319,6 @@ class AdminUserListView(generics.ListAPIView):
     #                                 .filter(ricecooker_version__isnull=False)\
     #                                 .order_by().values('ricecooker_version__isnull')\
     #                                 .annotate(c=Count('*')).values('c')
-
-
 
     def get_queryset(self):
         queryset = User.objects.prefetch_related('editable_channels')\
