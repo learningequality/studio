@@ -167,17 +167,26 @@ var AdministrationRouter = Backbone.Router.extend({
 		return false
 	},
 	getRoute({name, filter, sortKey, sortOrder, search, page, pageSize}){
-		return name +
-				(filter ? "/filter/" + filter : "") +
-				(	
-					(sortKey || sortOrder) ? 
-					"/sort/" + (sortKey ? sortKey : GET_DEFAULT_ROUTES()[name]['sortKey']) + "-" +
-					(sortOrder ? sortOrder : "ascending")
-					: ""
-				) +
-				(search ? "/search/" + search : "") +
-				(page ? "/p" + page : "") +
-				(pageSize ? "/" + pageSize + "-per-page" : "")
+		// takes an object of route parameters and builds a route string
+		let route = name
+		if (filter) {
+			route += `/filter/${filter}`
+		}
+		if (sortKey || sortOrder){
+			let resultingSortKey = sortKey ? sortKey : GET_DEFAULT_ROUTES()[name]['sortKey']
+			let resultingSortOrder = sortOrder ? sortOrder : "ascending"
+			route += `/sort/${resultingSortKey}-${resultingSortOrder}`
+		}
+		if (search) {
+			route += `/search/${search}`
+		}
+		if (page) {
+			route += `/p${page}`
+		}
+		if (pageSize) {
+			route += `/${pageSize}-per-page`
+		}
+		return route
 	},
 	gotoRouteForParams(params){
 		if (!params.name) {
