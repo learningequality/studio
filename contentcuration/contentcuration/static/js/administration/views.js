@@ -33,8 +33,8 @@ var AdminView = BaseViews.BaseView.extend({
         this.user_collection.sortFilterOptions = AdminRouter.USER_SORT_FILTERS;
         this.user_collection.sortOrderOptions = AdminRouter.SORT_ORDER_OPTIONS;
 
-        this.listenTo(this.user_collection, 'sync', (e) => {
-            this.$("#user_count").text(this.user_collection.state.totalRecords);
+        this.listenTo(this.user_collection, 'sync', (collection) => {
+            this.$("#user_count").text(collection.state.totalRecords);
         })
 
         this.channel_collection = new Models.ChannelCollection();
@@ -42,8 +42,8 @@ var AdminView = BaseViews.BaseView.extend({
         this.channel_collection.sortFilterOptions = AdminRouter.CHANNEL_SORT_FILTERS;
         this.channel_collection.sortOrderOptions = AdminRouter.SORT_ORDER_OPTIONS;
 
-        this.listenTo(this.channel_collection, 'sync', (e) => {
-            this.$("#channel_count").text(this.channel_collection.state.totalRecords);
+        this.listenTo(this.channel_collection, 'sync', (collection) => {
+            this.$("#channel_count").text(collection.state.totalRecords);
         })
 
         this.user_tab = new UserTab({
@@ -80,7 +80,12 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
 
             this.render()
             // on the next frame, add the 'loaded' class to fade in the table
-            window.requestAnimationFrame((model) => this.$('.admin_table').addClass('loaded'))
+            window.requestAnimationFrame(() => this.$('.admin_table').addClass('loaded'))
+            window.requestAnimationFrame(() => {
+                let tableTop = this.$('.admin_table').get(0).getBoundingClientRect().top
+                let navHeight = this.$('nav .pagination').get(0).clientHeight
+                this.$('.admin_table').css('max-height', `calc(100vh - 5em - ${tableTop}px - ${navHeight}px)`)
+            })
         })
         this.listenTo(this.collection, 'request', (model) => {
             if (model.isBaseAdminItem){
