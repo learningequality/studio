@@ -239,11 +239,8 @@ var AdministrationRouter = Backbone.Router.extend({
 			collection.filterOptions[k].selected = k === filter
 		}
 		collection.state.filterQuery = collection.filterOptions[filter].queryParams
-
-		// if (search) {
 		collection.state.search = search
 		collection.state.filterQuery.search = search
-		// }
 
 		if (order) {
 			for (let k in collection.sortOrderOptions){
