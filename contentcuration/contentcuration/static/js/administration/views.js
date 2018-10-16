@@ -568,8 +568,8 @@ var EmailModalView = BaseViews.BaseModalView.extend({
         "keyup #subject_field": "validate",
         "click #send_button": "send_email",
         "click .email_selected": "toggle_dropdown",
+        "click .email_option": "toggle_dropdown",
         "click .close_dropdown": "close_dropdown",
-        "click .placeholder": "insert_placeholder",
         "click .placeholder": "insert_placeholder",
     },
     close_modal:function(event){
