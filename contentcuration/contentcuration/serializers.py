@@ -848,12 +848,12 @@ class AdminUserListSerializer(serializers.ModelSerializer):
         return user.get_space_used()
 
     def check_if_chef(self, user):
-        return user.editable_channels.exclude(ricecooker_version=None).exists()
+        return user.chef_channels_count > 0
 
     class Meta:
         model = User
-        fields = ('email', 'first_name', 'last_name', 'id', 'editable_channels', 'view_only_channels',
-                  'is_admin', 'date_joined', 'is_active', 'disk_space', 'mb_space', 'is_chef', 'chef_channels_count')
+        fields = ('email', 'first_name', 'last_name', 'id', 'editable_channels', 'view_only_channels', 'is_chef',
+                  'is_admin', 'date_joined', 'is_active', 'disk_space', 'mb_space', 'chef_channels_count')
 
 
 class InvitationSerializer(BulkSerializerMixin, serializers.ModelSerializer):

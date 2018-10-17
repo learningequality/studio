@@ -15,10 +15,11 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import SuspiciousOperation
 from django.db.models import CharField
+from django.db.models import IntegerField
 from django.db.models import F
-
+from django.db.models import When
+from django.db.models import Case
 from django.db.models import Count
-# from django.db.models.aggregates import ArrayAgg
 from django.db.models import Max
 from django.db.models import Sum
 from django.db.models import Value
@@ -297,7 +298,7 @@ class AdminUserListView(generics.ListAPIView):
         'last_name',
         'email',
         '=editable_channels__id',
-        'editable_channels__name'
+        'editable_channels__name',
     )
 
     ordering_fields = (
@@ -323,7 +324,14 @@ class AdminUserListView(generics.ListAPIView):
     def get_queryset(self):
         queryset = User.objects.prefetch_related('editable_channels')\
             .annotate(editable_channels_count=Count('editable_channels'))\
-            .annotate(chef_channels_count=Count('editable_channels__ricecooker_version'))
+            .annotate(chef_channels_count=Sum(
+                    Case(
+                        When(editable_channels__ricecooker_version__isnull=True, then=0),
+                        When(editable_channels__ricecooker_version=None, then=0),
+                        When(editable_channels__ricecooker_version='', then=0),
+                        default=1, output_field=IntegerField()
+                    )
+                ))
 
         return queryset.all()
 
