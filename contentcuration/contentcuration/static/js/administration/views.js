@@ -33,8 +33,8 @@ var AdminView = BaseViews.BaseView.extend({
         this.user_collection.sortFilterOptions = AdminRouter.USER_SORT_FILTERS;
         this.user_collection.sortOrderOptions = AdminRouter.SORT_ORDER_OPTIONS;
 
-        this.listenTo(this.user_collection, 'sync', (collection) => {
-            this.$("#user_count").text(collection.state.totalRecords);
+        this.listenTo(this.user_collection, 'sync', () => {
+            this.$("#user_count").text(this.user_collection.state.totalRecords);
         })
 
         this.channel_collection = new Models.ChannelCollection();
@@ -42,8 +42,8 @@ var AdminView = BaseViews.BaseView.extend({
         this.channel_collection.sortFilterOptions = AdminRouter.CHANNEL_SORT_FILTERS;
         this.channel_collection.sortOrderOptions = AdminRouter.SORT_ORDER_OPTIONS;
 
-        this.listenTo(this.channel_collection, 'sync', (collection) => {
-            this.$("#channel_count").text(collection.state.totalRecords);
+        this.listenTo(this.channel_collection, 'sync', () => {
+            this.$("#channel_count").text(this.channel_collection.state.totalRecords);
         })
 
         this.user_tab = new UserTab({
@@ -207,6 +207,9 @@ var BaseAdminItem = BaseViews.BaseListNodeItemView.extend({
         this.model.isBaseAdminItem = true;
         this.render();
         this.listenTo(this.model, 'sync', () => {
+            this.render();
+        })
+        this.listenTo(this.model, 'save', () => {
             this.render();
         })
     },

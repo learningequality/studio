@@ -778,10 +778,15 @@ class PublicChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     content_defaults = serializers.JSONField()
+    mb_space = serializers.SerializerMethodField('calculate_space')
+    
+    def calculate_space(self, user):
+        size, unit = format_size(user.disk_space)
+        return {"size": round(float(size)), "unit": unit}
 
     class Meta:
         model = User
-        fields = ('email', 'first_name', 'last_name', 'id', 'disk_space', 'is_active', 'information', 'policies', 'content_defaults')
+        fields = ('email', 'first_name', 'last_name', 'id', 'disk_space', 'mb_space', 'is_active', 'information', 'policies', 'content_defaults')
 
 
 class CurrentUserSerializer(serializers.ModelSerializer):
@@ -839,7 +844,7 @@ class AdminUserListSerializer(serializers.ModelSerializer):
     mb_space = serializers.SerializerMethodField('calculate_space')
     is_chef = serializers.SerializerMethodField('check_if_chef')
     chef_channels_count = serializers.IntegerField()
-
+    
     def calculate_space(self, user):
         size, unit = format_size(user.disk_space)
         return {"size": round(float(size)), "unit": unit}
