@@ -3,7 +3,7 @@ var _ = require("underscore");
 var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
 var Related = require("edit_channel/related/views");
-var Previewer = require("edit_channel/preview/views");
+var { PreviewView } = require("edit_channel/preview/views");
 var FileUploader = require("edit_channel/file_upload/views");
 var Exercise = require("edit_channel/exercise_creation/views");
 var Info = require("edit_channel/information/views");
@@ -210,12 +210,10 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     });
     this.edit_list.handle_if_individual();
   },
-  load_preview:function(view){
-    if(view.preview_view){
-      view.preview_view.remove();
-    }
-
-    view.preview_view = new Previewer.PreviewView({
+  load_preview(view){
+    // prior preview, if exists, should already have called the 'remove' event
+    // so it should be ok just to just create a new one. Explicit call would be better.
+    view.preview_view = new PreviewView({
       model: view.model
     });
 
