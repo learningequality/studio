@@ -28,13 +28,17 @@ body {
 		pointer-events: none;
 	}
 	nav {
-		bottom: 0;
+		text-align: center;		
 		.pagination {
 			margin: 5px;
 			user-select: none;
 		}	
 		.disabled {
 			pointer-events: none;
+		}
+		.collapsed {
+			max-width: 0.4vw;
+			float: left;
 		}
 	}
 	a{text-decoration: none;}
@@ -142,7 +146,7 @@ body {
     			text-decoration: none;
 			}
 			.name_icon {
-				display:none;
+				display: none;
 				cursor: pointer;
 				padding: 0px 5px;
 			}
