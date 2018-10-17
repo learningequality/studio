@@ -80,7 +80,9 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
 
             this.render()
             // on the next frame, add the 'loaded' class to fade in the table
-            window.requestAnimationFrame(() => this.$('.admin_table').addClass('loaded'))
+            window.requestAnimationFrame(() => {
+                this.$('.admin_table_wrapper').addClass('loaded')
+            })
         })
         this.listenTo(this.collection, 'showingTab', () => {
             this.adjustTableHeight(this)
