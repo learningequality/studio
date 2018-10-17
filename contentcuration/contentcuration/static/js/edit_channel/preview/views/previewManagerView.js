@@ -108,7 +108,7 @@ export default BaseView.extend({
     this.$filePreviews = this.$('.file-previews')[0];
     this.$exercisePreviews = this.$('.exercise-previews')[0];
 
-    this.renderPreview();
+    defer(() => this.renderPreview());
 
     return this;
   },
@@ -124,11 +124,8 @@ export default BaseView.extend({
       model: this.model,
       preview: this.currentPreview,
       intl_data: this.get_intl_data(),
+      el: this.$('#preview_window'),
     });
-
-    this.$('#preview_window').html(
-      this.previewView.el
-    );
   },
   selectPreview(event) {
     const selected = event.target.selectedOptions[0];
