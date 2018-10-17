@@ -57,6 +57,7 @@ google-api-python-client = "*"
 django-db-readonly = "==0.5.0"
 raven = "*"
 "oauth2client" = "*"
+"pathlib2" = "==2.2.0"
 
 [dev-packages]
 ipdb = "*"
