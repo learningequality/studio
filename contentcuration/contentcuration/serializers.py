@@ -677,6 +677,7 @@ class ChannelFieldMixin(object):
     def check_publishing(self, channel):
         return channel.main_tree.publishing
 
+
 class ChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
     has_changed = serializers.SerializerMethodField('check_for_changes')
     main_tree = RootNodeSerializer(read_only=True)
@@ -779,7 +780,7 @@ class PublicChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     content_defaults = serializers.JSONField()
     mb_space = serializers.SerializerMethodField('calculate_space')
-    
+
     def calculate_space(self, user):
         size, unit = format_size(user.disk_space)
         return {"size": round(float(size)), "unit": unit}
@@ -844,7 +845,7 @@ class AdminUserListSerializer(serializers.ModelSerializer):
     mb_space = serializers.SerializerMethodField('calculate_space')
     is_chef = serializers.SerializerMethodField('check_if_chef')
     chef_channels_count = serializers.IntegerField()
-    
+
     def calculate_space(self, user):
         size, unit = format_size(user.disk_space)
         return {"size": round(float(size)), "unit": unit}

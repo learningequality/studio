@@ -43,7 +43,7 @@ class TestGetUsersAndChannels(BaseAPITestCase):
 
                 if x == 'is_chef':
                     dummy_chef_channel.editors.add(user)
-                    
+
         for i in range(3):
             name = 'channel%i' % i
             channel = create_channel(name, "", [self.dummy_users[i]])
@@ -126,7 +126,7 @@ class TestGetUsersAndChannels(BaseAPITestCase):
     #     request.user = self.admin_user
     #     response = get_channels(request)
     #     self.assertEqual(response.data.get('count'), user.editable_channels.count())
-    
+
     def test_get_live_channels(self):
         url = reverse('get_channels')
         request = APIRequestFactory().get(url, {'is_live': True})
@@ -137,9 +137,9 @@ class TestGetUsersAndChannels(BaseAPITestCase):
     def test_get_live_and_public_channels(self):
         url = reverse('get_channels')
         request = APIRequestFactory().get(url, {
-                'deleted': False,
-                'public': True
-            })
+            'deleted': False,
+            'public': True
+        })
         request.user = self.admin_user
         response = get_channels(request)
         self.assertEqual(
@@ -150,8 +150,8 @@ class TestGetUsersAndChannels(BaseAPITestCase):
     def test_get_ricecooker_channels(self):
         url = reverse('get_channels')
         request = APIRequestFactory().get(url, {
-                'ricecooker_version__isnull': False,
-            })
+            'ricecooker_version__isnull': False,
+        })
         request.user = self.admin_user
         response = get_channels(request)
         self.assertEqual(
@@ -162,9 +162,9 @@ class TestGetUsersAndChannels(BaseAPITestCase):
     def test_get_public_ricecooker_channels(self):
         url = reverse('get_channels')
         request = APIRequestFactory().get(url, {
-                'ricecooker_version__isnull': False,
-                'public': True,
-            })
+            'ricecooker_version__isnull': False,
+            'public': True,
+        })
         request.user = self.admin_user
         response = get_channels(request)
         channels = Channel.objects.exclude(ricecooker_version=None).filter(public=True)
@@ -186,4 +186,3 @@ class TestGetUsersAndChannels(BaseAPITestCase):
         request.user = self.admin_user
         response = get_channels(request)
         self.assertEqual(response.data.get('results')[0]['name'], self.last_channel.name)
-

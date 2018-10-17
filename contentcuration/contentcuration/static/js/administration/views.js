@@ -8,12 +8,12 @@ var stringHelper = require("../edit_channel/utils/string_helper");
 var fileDownload = require("jquery-file-download");
 var AdminRouter = require("./router")
 
-function scopeEvents(events, scopeSuffix){
+function scopeEvents(events, scopeSuffix) {
     // adds a suffix to backbone event selectors (i.e. a class)
     events = JSON.parse(JSON.stringify(events))
     let scopeEvents = {}
-    for (let k in events){
-        scopeEvents[k+scopeSuffix] = events[k]
+    for (let k in events) {
+        scopeEvents[k + scopeSuffix] = events[k]
     }
     return events
 }
@@ -21,11 +21,11 @@ function scopeEvents(events, scopeSuffix){
 var AdminView = BaseViews.BaseView.extend({
     lists: [],
     template: require("./hbtemplates/admin_area.handlebars"),
-    initialize: function(options) {
+    initialize: function (options) {
         this.router = options.router;
         this.render();
     },
-    render: function() {
+    render: function () {
         this.$el.html(this.template())
 
         this.user_collection = new Models.UserCollection();
@@ -66,15 +66,15 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
     filters: [],
     sort_filters: [],
     extra_filters: [],
-    fetch: (e) => {}, // to be overridden
-    initialize: function(options) {
+    fetch: (e) => { }, // to be overridden
+    initialize: function (options) {
         // _.bindAll(this, "handle_removed")
         this.collection = options.collection;
         this.router = options.router;
         this.count = this.collection.length;
         this.total_count = this.collection.state.totalRecords;
         this.listenTo(this.collection, 'sync', (model) => {
-            if(model.isBaseAdminItem){
+            if (model.isBaseAdminItem) {
                 return;
             }
 
@@ -86,7 +86,7 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
             this.adjustTableHeight(this)
         })
         this.listenTo(this.collection, 'request', (model) => {
-            if (model.isBaseAdminItem){
+            if (model.isBaseAdminItem) {
                 return;
             }
             this.render() // this will remove the "loaded" class and update the controls
@@ -94,14 +94,14 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
         this.render()
         this.fetch();
     },
-    goto_page: function(e){
+    goto_page: function (e) {
         let page = $(e.currentTarget).data('page')
         this.router.gotoPage(page)
     },
-    goto_previous: function(){
+    goto_previous: function () {
         this.router.gotoPreviousPage()
     },
-    goto_next: function(){
+    goto_next: function () {
         this.router.gotoNextPage();
     },
     // handle_removed: function(){
@@ -112,7 +112,7 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
     //     $(this.tab_count_selector).text(this.collection.state.totalRecords);
     //     this.$(".viewing_count").text("Displaying " + count + " of " + this.collection.state.totalRecords + " " + this.item_name + "(s)...");
     // },
-    render: function() {
+    render: function () {
         this.$el.html(this.template({
             filterOptions: this.collection.filterOptions,
             sortFilterOptions: this.collection.sortFilterOptions,
@@ -122,54 +122,54 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
             current_page: this.collection.state.currentPage,
             pages: Array(this.collection.state.totalPages).fill().map((_, i) => {
                 return {
-                    current_page: i+1 == this.collection.state.currentPage,
-                    page_number: i+1
+                    current_page: i + 1 == this.collection.state.currentPage,
+                    page_number: i + 1
                 }
             }),
             disable_previous_page_button: this.collection.state.currentPage == 1,
-            disable_next_page_button: 
+            disable_next_page_button:
                 this.collection.state.currentPage == this.collection.state.totalPages ||
                 !this.collection.state.totalPages,
         }));
         this.load_list();
-        
+
         // update the table height on the next frame
         this.adjustTableHeight(this)
     },
-    adjustTableHeight: function(view){
+    adjustTableHeight: function (view) {
         window.requestAnimationFrame(() => {
             let tableTop = view.$('.admin_table').get(0).getBoundingClientRect().top
             let navHeight = view.$('nav .pagination').get(0).clientHeight
-            view.$('.admin_table').css('max-height', `calc(100vh - 5em - ${tableTop}px - ${navHeight}px)`)    
+            view.$('.admin_table').css('max-height', `calc(100vh - 5em - ${tableTop}px - ${navHeight}px)`)
         })
     },
-    check_all: function(event){ this.admin_list.check_all(event); },
+    check_all: function (event) { this.admin_list.check_all(event); },
 
-    applyFilter: function(e) {
-        this.router.gotoRouteForParams({filter: e.target.selectedOptions[0].value, page: 1})
+    applyFilter: function (e) {
+        this.router.gotoRouteForParams({ filter: e.target.selectedOptions[0].value, page: 1 })
     },
-    applySortOrder(e){
-        this.router.gotoRouteForParams({sortOrder: e.target.selectedOptions[0].value})
+    applySortOrder(e) {
+        this.router.gotoRouteForParams({ sortOrder: e.target.selectedOptions[0].value })
     },
-    applySortKey(e){
-        this.router.gotoRouteForParams({sortKey: e.target.selectedOptions[0].value})
+    applySortKey(e) {
+        this.router.gotoRouteForParams({ sortKey: e.target.selectedOptions[0].value })
     },
-    applySearch: function(e){
-        this.router.gotoRouteForParams({search: e.target.value, page: 1})
+    applySearch: function (e) {
+        this.router.gotoRouteForParams({ search: e.target.value, page: 1 })
     },
-    
+
     /* Implement in subclasses */
-    load_list: function() { },
-    handle_checked: function() { },
-    download_pdf: function() {},
+    load_list: function () { },
+    handle_checked: function () { },
+    download_pdf: function () { },
 });
 
 const BASE_TAB_EVENTS = {
-    "change .filter_input.view_input" : "applyFilter",
-    "change .filter_input.sort_input" : "applySortKey",
-    "change .filter_input.order_input" : "applySortOrder",
-    "change .search_input" : "applySearch",
-    "change #admin_user_select_all" : "check_all",
+    "change .filter_input.view_input": "applyFilter",
+    "change .filter_input.sort_input": "applySortKey",
+    "change .filter_input.order_input": "applySortOrder",
+    "change .search_input": "applySearch",
+    "change #admin_user_select_all": "check_all",
     "click .download_pdf": "download_pdf",
     "click .page-link.page": "goto_page",
     "click .page-link.previous": "goto_previous",
@@ -179,18 +179,18 @@ const BASE_TAB_EVENTS = {
 var BaseAdminList = BaseViews.BaseListView.extend({
     list_selector: ".admin_table",
     default_item: ".admin_table .default-item",
-    initialize: function(options) {
+    initialize: function (options) {
         this.collection = options.collection;
         this.container = options.container;
         this.listenTo(this.collection, 'sync', (model) => {
-            if (model.isBaseAdminItem){
+            if (model.isBaseAdminItem) {
                 return;
             }
             this.render()
         });
         this.render();
     },
-    render: function() {
+    render: function () {
         this.$el.html(this.template());
         this.load_content();
     },
@@ -198,9 +198,9 @@ var BaseAdminList = BaseViews.BaseListView.extend({
 
 var BaseAdminItem = BaseViews.BaseListNodeItemView.extend({
     className: "data_row grid_row",
-    tagName:"div",
+    tagName: "div",
 
-    initialize: function(options) {
+    initialize: function (options) {
         this.containing_list_view = options.containing_list_view;
         this.container = options.container;
         this.set_attributes();
@@ -209,16 +209,13 @@ var BaseAdminItem = BaseViews.BaseListNodeItemView.extend({
         this.listenTo(this.model, 'sync', () => {
             this.render();
         })
-        this.listenTo(this.model, 'save', () => {
-            this.render();
-        })
     },
-    set_attributes: function() { /* Implement in subclasses */ },
-    render:function(){
+    set_attributes: function () { /* Implement in subclasses */ },
+    render: function () {
         this.$el.html(this.template(this.model.toJSON()));
         this.create_popover();
     },
-    create_popover:function(){
+    create_popover: function () {
         var self = this;
         this.$el.find(".popover_link").popover({
             html: true,
@@ -230,7 +227,7 @@ var BaseAdminItem = BaseViews.BaseListNodeItemView.extend({
             }
         });
     },
-    handle_checked:function(){
+    handle_checked: function () {
         this.checked = this.$el.find("input[type=checkbox]").is(":checked");
         this.container.handle_checked();
     },
@@ -242,8 +239,8 @@ var ChannelTab = BaseAdminTab.extend({
     search_selector: "#admin_channel_search",
     tab_count_selector: "#channel_count",
     item_name: "channel",
-    load_list: function(){
-        if(this.admin_list) {
+    load_list: function () {
+        if (this.admin_list) {
             this.admin_list.remove();
             delete this.admin_list;
         }
@@ -253,17 +250,17 @@ var ChannelTab = BaseAdminTab.extend({
             container: this
         });
     },
-    download_pdf: function() {
+    download_pdf: function () {
         var self = this;
-        if(!this.$(".download_pdf").hasClass("disabled")) {
+        if (!this.$(".download_pdf").hasClass("disabled")) {
             this.$(".download_pdf").text("Generating PDF...").addClass("disabled");
             $.fileDownload(window.Urls.download_channel_pdf(), {
-                successCallback: function(url) {
+                successCallback: function (url) {
                     self.$(".download_pdf").text("Download PDF").removeClass("disabled");
                 },
-                failCallback: function(responseHtml, url) {
+                failCallback: function (responseHtml, url) {
                     self.$(".download_pdf").text("Download Failed");
-                    setTimeout(function() {
+                    setTimeout(function () {
                         self.$(".download_pdf").text("Download PDF").removeClass("disabled");
                     }, 1500);
                 }
@@ -275,15 +272,15 @@ var ChannelTab = BaseAdminTab.extend({
 
 var ChannelList = BaseAdminList.extend({
     template: require("./hbtemplates/channel_list.handlebars"),
-    list_selector:".admin_table.channel_list",
-    default_item:".channel_list .default-item",
-    fetch: function(){
+    list_selector: ".admin_table.channel_list",
+    default_item: ".channel_list .default-item",
+    fetch: function () {
         this.channel_collection.fetch();
     },
-    create_new_view:function(model){
+    create_new_view: function (model) {
         var newView = new ChannelItem({
             model: model,
-            containing_list_view:this,
+            containing_list_view: this,
             container: this.container
         });
         this.views.push(newView);
@@ -296,10 +293,10 @@ var ChannelItem = BaseAdminItem.extend({
     template: require("./hbtemplates/channel_item.handlebars"),
     count_template: require("./hbtemplates/channel_counts.handlebars"),
     className: "data_row grid_row",
-    tagName:"div",
-    set_attributes: function() {
+    tagName: "div",
+    set_attributes: function () {
         _.bindAll(this, 'fetch_editors');
-        this.model.set("can_edit", _.find(this.model.get("editors"), function(editor) { return editor.id === window.current_user.id; }));
+        this.model.set("can_edit", _.find(this.model.get("editors"), function (editor) { return editor.id === window.current_user.id; }));
         this.model.set("editors", _.sortBy(this.model.get("editors"), "first_name"));
         this.model.set("viewers", _.sortBy(this.model.get("viewers"), "first_name"));
     },
@@ -316,79 +313,79 @@ var ChannelItem = BaseAdminItem.extend({
         "click .download_csv": "download_csv",
         "sync": "render",
     },
-    search_for_channel_editors: function() {
-        Backbone.history.navigate("/users/search/"+`${this.model.get('name')} ${this.model.get('id')}`, {trigger: true})
+    search_for_channel_editors: function () {
+        Backbone.history.navigate("/users/search/" + `${this.model.get('name')} ${this.model.get('id')}`, { trigger: true })
     },
-    download_csv: function() {
+    download_csv: function () {
         var self = this;
-        if(!this.$(".download_csv").hasClass("disabled")) {
+        if (!this.$(".download_csv").hasClass("disabled")) {
             this.$(".download_csv").attr("title", "Generating CSV...").addClass("disabled");
             $.get({
                 url: window.Urls.download_channel_content_csv(this.model.id),
-                success: function() {
+                success: function () {
                     dialog.alert("Generating Channel CSV", "Channel csv generation started. You'll receive an email with the csv when it's done.");
                     self.$(".download_csv").attr("title", "Download CSV").removeClass("disabled");
                 },
-                error: function(error) {
+                error: function (error) {
                     self.$(".download_csv").attr("title", "Download Failed");
-                    setTimeout(function() {
+                    setTimeout(function () {
                         self.$(".download_csv").attr("title", "Download CSV").removeClass("disabled");
                     }, 2000);
                 }
             });
         }
     },
-    set_priority: function() {
+    set_priority: function () {
         var priority = this.$(".channel_priority").val();
         this.model.set_priority(priority);
     },
-    load_counts: function(){
-        if(this.counts && this.size){
-            this.$(".counts_popover").html(this.count_template({counts: this.counts, size: this.size}));
+    load_counts: function () {
+        if (this.counts && this.size) {
+            this.$(".counts_popover").html(this.count_template({ counts: this.counts, size: this.size }));
         } else {
             var self = this;
-            this.model.get_channel_counts().then(function(counts){
+            this.model.get_channel_counts().then(function (counts) {
                 self.counts = counts.counts;
                 self.size = counts.size;
-                self.$(".counts_popover").html(self.count_template({counts: self.counts, size: self.size}));
+                self.$(".counts_popover").html(self.count_template({ counts: self.counts, size: self.size }));
             });
         }
     },
-    open_sharing:function(){
+    open_sharing: function () {
         var ShareViews = require("edit_channel/share/views");
         var share_view = new ShareViews.ShareModalView({
-            model:this.model,
+            model: this.model,
             current_user: window.current_user,
             allow_leave: true,
             onjoin: this.fetch_editors,
             onleave: this.fetch_editors
         });
     },
-    fetch_editors: function(editor){
+    fetch_editors: function (editor) {
         // Fetch editors again
         var self = this;
-        this.model.fetch_editors().then(function() {
+        this.model.fetch_editors().then(function () {
             self.render();
         });
     },
-    copy_id: function(){
+    copy_id: function () {
         this.$(".channel_id").focus();
         this.$(".channel_id").select();
         try {
             document.execCommand("copy");
             this.$(".copy_id i").text("check");
-          } catch(e) {
-                this.$(".copy_id i").text("clear");
-          }
-          setTimeout(function(){
+        } catch (e) {
+            this.$(".copy_id i").text("clear");
+        }
+        setTimeout(function () {
             this.$(".copy_id i").text("content_paste");
         }, 2000);
     },
-    submit_change: function(data, message){
+    submit_change: function (data, message) {
         var self = this;
         var editors = this.model.get("editors");
         var viewers = this.model.get("viewers");
-        this.save(data, message).then(function(model){
+        this.save(data, message).then(function (model) {
             self.model.set({
                 "editors": editors,
                 "viewers": viewers,
@@ -396,37 +393,37 @@ var ChannelItem = BaseAdminItem.extend({
             self.render();
         });
     },
-    restore_channel: function() {
-        this.submit_change({deleted: false}, "Restoring Channel...");
+    restore_channel: function () {
+        this.submit_change({ deleted: false }, "Restoring Channel...");
     },
-    make_public: function(){
+    make_public: function () {
         var self = this;
         dialog.dialog("Public Access", "Making this channel public will allow all users to view and import from this channel. Make public?", {
-          "CANCEL":function(){},
-          "MAKE PUBLIC": function(){
-              self.submit_change({public: true}, "Making Channel Public...");
-          }
+            "CANCEL": function () { },
+            "MAKE PUBLIC": function () {
+                self.submit_change({ public: true }, "Making Channel Public...");
+            }
         }, null);
     },
-    make_private: function(){
+    make_private: function () {
         var self = this;
         dialog.dialog("Private Access", "Making this channel private will only be accessible to those with editing or view-only permissions. Make private?", {
-          "CANCEL":function(){},
-          "MAKE PRIVATE": function(){
-              self.submit_change({public: false}, "Making Channel Private...");
-          }
+            "CANCEL": function () { },
+            "MAKE PRIVATE": function () {
+                self.submit_change({ public: false }, "Making Channel Private...");
+            }
         }, null);
     },
-    delete_channel: function(){
+    delete_channel: function () {
         var self = this;
         dialog.dialog("Deleting Channel", "Are you sure you want to PERMANENTLY delete this channel and all of its content? Action cannot be undone!", {
-          "CANCEL":function(){},
-          "DELETE CHANNEL": function(){
-            self.container.collection.remove(self.model)
-            self.destroy("Deleting Channel...", function(){
-                self.remove();
-            });
-          }
+            "CANCEL": function () { },
+            "DELETE CHANNEL": function () {
+                self.container.collection.remove(self.model)
+                self.destroy("Deleting Channel...", function () {
+                    self.remove();
+                });
+            }
         }, null);
     }
 });
@@ -440,10 +437,10 @@ var UserTab = BaseAdminTab.extend({
     tab_count_selector: "#user_count",
     item_name: "user",
     events: userTabEvents,
-    load_list: function(){
+    load_list: function () {
         // this.$("#admin_user_search").val("");
         this.selected_users = [];
-        if(this.admin_list) {
+        if (this.admin_list) {
             this.admin_list.remove();
             delete this.admin_list;
         }
@@ -455,9 +452,9 @@ var UserTab = BaseAdminTab.extend({
         this.handle_checked();
         this.$(".select_all").attr("checked", false);
     },
-    handle_checked: function() {
-        this.selected_users = _.chain(this.admin_list.views).where({checked: true}).pluck("model").value();
-        if(this.selected_users.length) {
+    handle_checked: function () {
+        this.selected_users = _.chain(this.admin_list.views).where({ checked: true }).pluck("model").value();
+        if (this.selected_users.length) {
             this.$("#email_selected_users").removeAttr("disabled").removeClass("disabled");
             this.$(".email_button_text").text("Email " + stringHelper.format_count("User", this.selected_users.length));
         } else {
@@ -465,12 +462,12 @@ var UserTab = BaseAdminTab.extend({
             this.$(".email_button_text").text("Select Users...");
         }
     },
-    email_selected: function() {
+    email_selected: function () {
         new EmailModalView({
             collection: new Models.UserCollection(this.selected_users)
         })
     },
-    send_user_email: function(user){
+    send_user_email: function (user) {
         new EmailModalView({
             collection: new Models.UserCollection([user])
         })
@@ -479,15 +476,15 @@ var UserTab = BaseAdminTab.extend({
 
 var UserList = BaseAdminList.extend({
     template: require("./hbtemplates/user_list.handlebars"),
-    list_selector:".admin_table.user_list",
-    default_item:".user_list .default-item",
-    fetch: function(){
+    list_selector: ".admin_table.user_list",
+    default_item: ".user_list .default-item",
+    fetch: function () {
         this.user_collection.fetch()
     },
-    create_new_view:function(model){
+    create_new_view: function (model) {
         var newView = new UserItem({
             model: model,
-            containing_list_view:this,
+            containing_list_view: this,
             container: this.container
         });
         this.views.push(newView);
@@ -498,8 +495,8 @@ var UserList = BaseAdminList.extend({
 var UserItem = BaseAdminItem.extend({
     template: require("./hbtemplates/user_item.handlebars"),
     events: {
-        "click .user_select_checkbox" : "handle_checked",
-        "click .email_button" : "send_email",
+        "click .user_select_checkbox": "handle_checked",
+        "click .email_button": "send_email",
         "click .activate_button": "activate_user",
         "click .delete_button": "delete_user",
         "click .deactivate_button": "deactivate_user",
@@ -507,18 +504,18 @@ var UserItem = BaseAdminItem.extend({
         "change .size_limit": "set_user_space",
         "change .size_unit": "set_user_space",
     },
-    set_attributes: function() {
+    set_attributes: function () {
         this.model.set("editable_channels", _.sortBy(this.model.get("editable_channels"), "name"));
         this.model.set("view_only_channels", _.sortBy(this.model.get("view_only_channels"), "name"));
     },
-    send_email: function(){
+    send_email: function () {
         this.container.send_user_email(this.model);
     },
-    submit_change: function(data, message){
+    submit_change: function (data, message) {
         var self = this;
         var edit_channels = this.model.get("editable_channels");
         var view_channels = this.model.get("view_only_channels");
-        this.save(data, message).then(function(model){
+        this.save(data, message).then(function (model) {
             self.model.set({
                 "editable_channels": edit_channels,
                 "view_only_channels": view_channels
@@ -526,41 +523,41 @@ var UserItem = BaseAdminItem.extend({
             self.render();
         });
     },
-    activate_user: function(){
-        this.submit_change({is_active: true}, "Activating User...");
+    activate_user: function () {
+        this.submit_change({ is_active: true }, "Activating User...");
     },
-    deactivate_user: function(){
+    deactivate_user: function () {
         var self = this;
         dialog.dialog("Deactivating User", "Deactivating this user will block them from using this account. Are you sure you want to continue?", {
-          "CANCEL":function(){},
-          "DEACTIVATE USER": function(){
-            self.submit_change({is_active: false}, "Deactivating User...");
-          }
+            "CANCEL": function () { },
+            "DEACTIVATE USER": function () {
+                self.submit_change({ is_active: false }, "Deactivating User...");
+            }
         }, null);
     },
-    delete_user: function(){
+    delete_user: function () {
         var self = this;
         dialog.dialog("Deleting User", "Are you sure you want to PERMANENTLY delete this user? Action cannot be undone!", {
-          "CANCEL":function(){},
-          "DELETE USER": function(){
-            self.container.collection.remove(self.model)
-            self.destroy("Deleting User...", function(){
-                self.remove();
-            });
-          }
+            "CANCEL": function () { },
+            "DELETE USER": function () {
+                self.container.collection.remove(self.model)
+                self.destroy("Deleting User...", function () {
+                    self.remove();
+                });
+            }
         }, null);
     },
-    set_user_space: function() {
+    set_user_space: function () {
         var self = this;
         var model = this.model;
         var size = self.$(".size_limit").val() || this.model.get("disk_space");
         var size_unit = Number(self.$(".size_unit").val());
-        _.defer(function(){
-            model.save({"disk_space": Number(size) * size_unit}, {patch: true}); // Need to convert to bytes
+        _.defer(function () {
+            model.save({ "disk_space": Number(size) * size_unit }, { patch: true }); // Need to convert to bytes
         }, 1000)
     },
-    search_users_editable_channels: function() {
-        Backbone.history.navigate("/channels/search/"+`${this.model.get('first_name')} ${this.model.get('last_name')} ${this.model.get('email')}`, {trigger: true})
+    search_users_editable_channels: function () {
+        Backbone.history.navigate("/channels/search/" + `${this.model.get('first_name')} ${this.model.get('last_name')} ${this.model.get('email')}`, { trigger: true })
     }
 });
 
@@ -568,7 +565,7 @@ var UserItem = BaseAdminItem.extend({
 var EmailModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/email_modal.handlebars"),
 
-    initialize: function(options) {
+    initialize: function (options) {
         _.bindAll(this, "close_modal");
         this.collection = options.collection
         this.render(this.close_modal, {
@@ -588,15 +585,15 @@ var EmailModalView = BaseViews.BaseModalView.extend({
         "click .close_dropdown": "close_dropdown",
         "click .placeholder": "insert_placeholder",
     },
-    close_modal:function(event){
-        if(event && (this.$("#subject_field").val().trim() || this.$("#message_area").val().trim())){
+    close_modal: function (event) {
+        if (event && (this.$("#subject_field").val().trim() || this.$("#message_area").val().trim())) {
             var self = this;
             dialog.dialog("Draft in Progress", "Draft will be lost upon exiting this editor. Are you sure you want to continue?", {
-              "KEEP OPEN":function(){},
-              "DISCARD DRAFT": function(){
-                  self.close();
-                  $(".modal-backdrop").remove();
-              }
+                "KEEP OPEN": function () { },
+                "DISCARD DRAFT": function () {
+                    self.close();
+                    $(".modal-backdrop").remove();
+                }
             }, null);
             this.cancel_actions(event);
         } else {
@@ -604,39 +601,39 @@ var EmailModalView = BaseViews.BaseModalView.extend({
             $(".modal-backdrop").remove();
         }
     },
-    resize_box: function() {
+    resize_box: function () {
         // var new_height = Math.max(this.$("#message_area")[0].scrollHeight, 300)
         // this.$("#message_area").autogrow();
     },
-    validate: function() {
+    validate: function () {
         var has_subject = this.$("#subject_field").val().trim();
         var has_message = this.$("#message_area").val().trim();
-        (has_subject)? this.$("#subject_field").removeClass("error-field") : this.$("#subject_field").addClass("error-field");
+        (has_subject) ? this.$("#subject_field").removeClass("error-field") : this.$("#subject_field").addClass("error-field");
         (has_subject && has_message) ?
             this.$("#send_button").removeAttr("disabled").removeClass("disabled") :
             this.$("#send_button").attr("disabled", "disabled").addClass("disabled");
     },
-    send_email: function(){
+    send_email: function () {
         var subject = this.$("#subject_field").val().trim();
         var message = this.$("#message_area").val();
         var self = this;
-        this.collection.send_custom_email(subject, message).then(function(){
+        this.collection.send_custom_email(subject, message).then(function () {
             dialog.alert("Message Sent", "Message has been sent!", self.close_modal);
-        }).catch(function(error){
+        }).catch(function (error) {
             dialog.alert("Message Failed", "Failed to send message (" + error.responseText + ")");
         });
     },
-    toggle_dropdown: function(event) {
+    toggle_dropdown: function (event) {
         var element = this.$($(event.target).data('toggle'));
-        if(!element.is(":visible")) {
+        if (!element.is(":visible")) {
             this.$(".email_dropdown").css("display", "none");
             element.slideDown(100);
         }
     },
-    close_dropdown: function(){
+    close_dropdown: function () {
         this.$(".email_dropdown").slideUp(100);
     },
-    insert_placeholder: function(event) {
+    insert_placeholder: function (event) {
         this.$("#message_area").val(this.$("#message_area").val() + event.target.dataset.val);
         this.$("#message_area").focus();
     }

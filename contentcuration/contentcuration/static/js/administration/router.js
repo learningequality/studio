@@ -4,26 +4,26 @@ var _ = require("underscore");
 
 // this is a function so that the defaults don't get overwritten
 const GET_DEFAULT_ROUTES = () => ({
-	'users': {name: 'users', page: 1, sortKey: "email", sortOrder: "ascending"},
-	'channels': {name: 'channels', page: 1, sortKey: "name", sortOrder: "ascending"},
+	'users': { name: 'users', page: 1, sortKey: "email", sortOrder: "ascending" },
+	'channels': { name: 'channels', page: 1, sortKey: "name", sortOrder: "ascending" },
 })
 
 const CHANNEL_FILTERS = {
 	all: {
 		label: "All",
 		queryParams: { all: "True" }
-	}, 
+	},
 	live: {
 		label: "Live",
-		queryParams: { live: "True"},
+		queryParams: { live: "True" },
 	},
 	published: {
 		label: "Published",
-		queryParams: { published: "True"},
+		queryParams: { published: "True" },
 	},
 	public: {
 		label: "Public",
-		queryParams: { public: "True"},
+		queryParams: { public: "True" },
 	},
 	private: {
 		label: "Private",
@@ -85,7 +85,7 @@ const USER_FILTERS = {
 	not_activated: {
 		label: "Inactive",
 		queryParams: { is_active: "False" },
-	}, 
+	},
 	admins: {
 		label: "Admins",
 		queryParams: { is_admin: "True" },
@@ -126,15 +126,15 @@ const SORT_ORDER_OPTIONS = {
 
 var AdministrationRouter = Backbone.Router.extend({
 
-    routes: {
+	routes: {
 		"": "default",
 		"/": "default",
 		"users/": "users",
 		"channels/": "channels",
-        "users(/filter/:filter)(/sort/:key-:order)(/search/:search)(/p:page)(/:pagesize-per-page)":        "users",    // #users
-        "channels(/filter/:filter)(/sort/:key-:order)(/search/:search)(/p:page)(/:pagesize-per-page)":     "channels",    // #channels
-    },
-	execute(callback, args, name){
+		"users(/filter/:filter)(/sort/:key-:order)(/search/:search)(/p:page)(/:pagesize-per-page)": "users",    // #users
+		"channels(/filter/:filter)(/sort/:key-:order)(/search/:search)(/p:page)(/:pagesize-per-page)": "channels",    // #channels
+	},
+	execute(callback, args, name) {
 		let page = args[4] ? Number(args[4]) : 1
 		let newRouteParams = {
 			name: name,
@@ -146,14 +146,14 @@ var AdministrationRouter = Backbone.Router.extend({
 			pageSize: Number(args[5]),
 		}
 		let sameTabNewParams = this.currentRouteParams.name === newRouteParams.name &&
-								!_.isEqual(this.currentRouteParams, newRouteParams)
+			!_.isEqual(this.currentRouteParams, newRouteParams)
 
 		let switchTabNewParams = this.currentRouteParams.name !== newRouteParams.name &&
-								!_.isEqual(this.routeParamsCache[newRouteParams.name], newRouteParams)
-		if ( 
+			!_.isEqual(this.routeParamsCache[newRouteParams.name], newRouteParams)
+		if (
 			// check to see if we need to reload
 			sameTabNewParams || switchTabNewParams
-		){
+		) {
 			// if so, execute the route
 			if (callback) callback.apply(this, args);
 		}
@@ -163,19 +163,19 @@ var AdministrationRouter = Backbone.Router.extend({
 		this.routeParamsCache[name] = this.currentRouteParams
 
 		// make sure the correct tab is showing, even if we aren't loading anything
-		$('a.btn.'+name).tab('show')
+		$('a.btn.' + name).tab('show')
 
 		// trigger an event we can listen to if we need to update anything on the view side
 		this.collections[name].trigger('showingTab')
 		return false
 	},
-	getRoute({name, filter, sortKey, sortOrder, search, page, pageSize}){
+	getRoute({ name, filter, sortKey, sortOrder, search, page, pageSize }) {
 		// takes an object of route parameters and builds a route string
 		let route = name
 		if (filter) {
 			route += `/filter/${filter}`
 		}
-		if (sortKey || sortOrder){
+		if (sortKey || sortOrder) {
 			let resultingSortKey = sortKey ? sortKey : GET_DEFAULT_ROUTES()[name]['sortKey']
 			let resultingSortOrder = sortOrder ? sortOrder : "ascending"
 			route += `/sort/${resultingSortKey}-${resultingSortOrder}`
@@ -191,27 +191,27 @@ var AdministrationRouter = Backbone.Router.extend({
 		}
 		return route
 	},
-	gotoRouteForParams(params){
+	gotoRouteForParams(params) {
 		if (!params.name) {
 			// update existing params with incoming ones
 			let currentRouteParams = Object.assign({}, this.currentRouteParams)
 			params = Object.assign(currentRouteParams, params)
 		}
 		let route = this.getRoute(params)
-		this.navigate(route, {trigger: true})
+		this.navigate(route, { trigger: true })
 	},
-	gotoPage(page){
-		this.gotoRouteForParams({page: page})
+	gotoPage(page) {
+		this.gotoRouteForParams({ page: page })
 	},
-	gotoNextPage(){
-		this.gotoPage(this.currentRouteParams.page+1)
+	gotoNextPage() {
+		this.gotoPage(this.currentRouteParams.page + 1)
 	},
-	gotoPreviousPage(){
-		this.gotoPage(this.currentRouteParams.page-1)
+	gotoPreviousPage() {
+		this.gotoPage(this.currentRouteParams.page - 1)
 	},
-	initialize: function(){
+	initialize: function () {
 		var AdministrationView = require("./views");
-		this.admin_view = new AdministrationView.AdminView ({
+		this.admin_view = new AdministrationView.AdminView({
 			el: $("#admin-container"),
 			router: this,
 		});
@@ -219,7 +219,7 @@ var AdministrationRouter = Backbone.Router.extend({
 		this.currentRouteParams = GET_DEFAULT_ROUTES()['channels']
 		this.routeParamsCache = GET_DEFAULT_ROUTES()
 		let router = this;
-		$('.nav-tabs a').click(function(e){
+		$('.nav-tabs a').click(function (e) {
 			e.stopImmediatePropagation()
 			let routeParams = router.routeParamsCache[e.currentTarget.attributes['data-href'].value]
 			router.gotoRouteForParams(routeParams)
@@ -227,22 +227,22 @@ var AdministrationRouter = Backbone.Router.extend({
 		window.current_user = new Models.UserModel(window.user);
 	},
 	getSelected(opts) {
-		for (let k in opts){
+		for (let k in opts) {
 			if (opts[k].selected === true) {
 				return k
 			}
 		}
 	},
-	updateCollectionStateFromParams(collection, filter, sortKey, order, search, page = 1, pageSize){
+	updateCollectionStateFromParams(collection, filter, sortKey, order, search, page = 1, pageSize) {
 		// updates a collection's state with given route parameters
-		
+
 		// default to page 1 and the collection's currently set pageSize
 		collection.state.currentPage = page ? Number(page) : 1
 		collection.state.pageSize = pageSize ? Number(pageSize) : collection.state.pageSize
 
 		// default to view all
 		filter = filter ? filter : 'all'
-		for (let k in collection.filterOptions){
+		for (let k in collection.filterOptions) {
 			collection.filterOptions[k].selected = k === filter
 		}
 		collection.state.filterQuery = collection.filterOptions[filter].queryParams
@@ -251,14 +251,14 @@ var AdministrationRouter = Backbone.Router.extend({
 
 		// update the collection's sortOrderOptions to reflect the new state
 		if (order) {
-			for (let k in collection.sortOrderOptions){
+			for (let k in collection.sortOrderOptions) {
 				collection.sortOrderOptions[k].selected = k === order
 			}
 		}
 
 		// update the collection's sortFilterOptions to reflect the new state
 		if (sortKey) {
-			for (let k in collection.sortFilterOptions){
+			for (let k in collection.sortFilterOptions) {
 				collection.sortFilterOptions[k].selected = k === sortKey
 			}
 		}
@@ -272,16 +272,16 @@ var AdministrationRouter = Backbone.Router.extend({
 				// if it hasn't been set before, default to the one set in its sortFilterOptions
 				oldSortKey = this.getSelected(collection.sortFilterOptions)
 			}
-						
+
 			collection.state.order = order ? (order === "ascending" ? -1 : 1) : collection.state.order
 			collection.state.sortKey = sortKey ? sortKey : oldSortKey
 		}
 	},
-	default: function(){
+	default: function () {
 		// redirect to channels on the next frame ... (a slight hack to ensure state is initialized)
-		window.requestAnimationFrame(() => this.gotoRouteForParams({name: "channels"}));
+		window.requestAnimationFrame(() => this.gotoRouteForParams({ name: "channels" }));
 	},
-    users: function(filter, sortKey, order, search, page = 1, pageSize) {
+	users: function (filter, sortKey, order, search, page = 1, pageSize) {
 		let collection = this.admin_view.user_collection
 		this.collections['users'] = this.admin_view.user_collection
 		this.updateCollectionStateFromParams(
@@ -289,7 +289,7 @@ var AdministrationRouter = Backbone.Router.extend({
 		)
 		collection.fetch()
 	},
-    channels: function(filter, sortKey, order, search, page = 1, pageSize) {
+	channels: function (filter, sortKey, order, search, page = 1, pageSize) {
 		let collection = this.admin_view.channel_collection
 		this.collections['channels'] = this.admin_view.channel_collection
 		this.updateCollectionStateFromParams(
@@ -297,9 +297,9 @@ var AdministrationRouter = Backbone.Router.extend({
 		)
 		collection.fetch()
 	},
-	
-  });
-  
+
+});
+
 module.exports = {
 	Router: AdministrationRouter,
 	CHANNEL_FILTERS: CHANNEL_FILTERS,

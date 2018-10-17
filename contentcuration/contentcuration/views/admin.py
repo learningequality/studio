@@ -228,7 +228,7 @@ class AdminChannelListView(generics.ListAPIView):
         'created',
     )
     ordering = ('name',)
-    
+
     def get_queryset(self):
 
         # (This part requires django 1.11, and isn't quite working!)
@@ -244,7 +244,7 @@ class AdminChannelListView(generics.ListAPIView):
         #             .values('tree_id')\
         #             .annotate(m=Max('modified'))\
         #             .values('m')
-                       
+
         queryset = Channel.objects
 
         if self.request.GET.get('deleted') == 'True' or self.request.GET.get('all') == 'True':
@@ -325,13 +325,13 @@ class AdminUserListView(generics.ListAPIView):
         queryset = User.objects.prefetch_related('editable_channels')\
             .annotate(editable_channels_count=Count('editable_channels'))\
             .annotate(chef_channels_count=Sum(
-                    Case(
-                        When(editable_channels__ricecooker_version__isnull=True, then=0),
-                        When(editable_channels__ricecooker_version=None, then=0),
-                        When(editable_channels__ricecooker_version='', then=0),
-                        default=1, output_field=IntegerField()
-                    )
-                ))
+                Case(
+                    When(editable_channels__ricecooker_version__isnull=True, then=0),
+                    When(editable_channels__ricecooker_version=None, then=0),
+                    When(editable_channels__ricecooker_version='', then=0),
+                    default=1, output_field=IntegerField()
+                )
+            ))
 
         return queryset.all()
 
