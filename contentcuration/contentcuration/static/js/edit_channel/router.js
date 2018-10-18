@@ -7,7 +7,7 @@ var URL_CHAR_LIMIT = 7;
 
 var ChannelEditRouter  = Backbone.Router.extend({
   initialize: function(options) {
-    _.bindAll(this, "navigate_channel_home", "preview_page", "edit_page", "clipboard_page", "admin_page");
+    _.bindAll(this, "navigate_channel_home", "preview_page", "edit_page", "clipboard_page");
 	},
 
   routes: {

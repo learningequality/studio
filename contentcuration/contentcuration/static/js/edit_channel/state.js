@@ -1,8 +1,13 @@
 const Models = require("./models");
 const Constants = require("./constants/index");
 const Vuex = require("vuex");
-const Vue = require("vue").default;
+let Vue = require("vue");
 const channelModule = require("./vuexModules/channel");
+
+if (Vue.default) {
+  // Compatibility for differential behaviour of require import of ES6 export default in webpack vs Jest
+  Vue = Vue.default;
+}
 
 Vue.use(Vuex);
 
