@@ -9,6 +9,7 @@ require("details.less");
 var d3Helper = require("edit_channel/utils/d3_helper");
 var descriptionHelper = require("edit_channel/utils/description");
 const State = require("edit_channel/state");
+const Constants = require("edit_channel/constants/index");
 
 var NAMESPACE = "details";
 var MESSAGES = {
@@ -244,9 +245,9 @@ var ChannelEditorView = BaseViews.BaseListEditableItemView.extend({
         this.original_thumbnail_encoding = this.model.get("thumbnail_encoding");
         this.$el.html(this.template({
             channel: this.model.toJSON(),
-            languages: State.languages.toJSON(),
+            languages: Constants.Languages,
             picture : (this.model.get("thumbnail_encoding") && this.model.get("thumbnail_encoding").base64) || this.model.get("thumbnail_url"),
-            language: State.languages.findWhere({"id": this.model.get("language")}),
+            language: Constants.Languages.find(id => id === this.model.get("language")),
             can_edit: this.allow_edit,
             is_new: !!this.onnew,
             edit: this.edit
@@ -432,7 +433,7 @@ var DetailsView = BaseViews.BaseListEditableItemView.extend({
             };
         });
 
-        var color_key = State.contentkinds.map(function(k) { return k.get("kind"); });
+        var color_key = Constants.ContentKinds.map(function(k) { return k.kind; });
         var piechart = new d3Helper.PieChart("#svg_wrapper", data, {
             key: "kind_id",
             width: 350,

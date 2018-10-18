@@ -5,6 +5,7 @@ var Models = require("edit_channel/models");
 var stringHelper = require("edit_channel/utils/string_helper");
 const State = require("edit_channel/state");
 const WorkspaceManager = require("../utils/workspace_manager");
+const Constants = require("edit_channel/constants/index");
 require("export.less");
 
 
@@ -32,11 +33,11 @@ var ExportModalView = BaseViews.BaseModalView.extend({
         this.modal = true;
         this.render(this.close, {
             channel: State.current_channel.toJSON(),
-            licenses: State.licenses.toJSON(),
+            licenses: Constants.Licenses,
             version: State.current_channel.get("version"),
             node: this.model.toJSON(),
             resource_count: this.model.get("metadata").resource_count,
-            languages: State.languages.toJSON()
+            languages: Constants.Languages,
         });
         this.$("#select_language").val(State.current_channel.get("language") || 0);
         this.toggle_language_prompt();

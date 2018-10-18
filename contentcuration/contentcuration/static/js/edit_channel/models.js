@@ -2,6 +2,7 @@ var Backbone = require("backbone");
 var _ = require("underscore");
 var mail_helper = require("edit_channel/utils/mail");
 const State = require("./state");
+const Constants = require("./constants/index");
 
 const DEFAULT_ADMIN_PAGE_SIZE = 25
 
@@ -1020,7 +1021,7 @@ var FileModel = BaseModel.extend({
     root_list: "file-list",
     model_name: "FileModel",
     get_preset: function () {
-        return State.formatpresets.get({'id':this.get("id")});
+        return Constants.FormatPresets.find(id => id === this.get("id"));
     },
     initialize: function () {
         this.set_preset(this.get("preset"), this.get("language"));
@@ -1127,7 +1128,7 @@ var LanguageCollection = BaseCollection.extend({
     list_name: "language-list",
     model_name: "LanguageCollection",
     comparator: function (language) {
-        return language.get("readable_name");
+        return language.readable_name;
     }
 });
 
@@ -1138,7 +1139,7 @@ var ContentKindModel = BaseModel.extend({
         kind: "topic"
     },
     get_presets: function () {
-        return State.formatpresets.where({ kind: this.get("kind") })
+        Constants.FormatPresets.filter(kind => kind === this.get("kind"))
     }
 });
 

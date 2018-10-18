@@ -11,6 +11,7 @@ var browserHelper = require("edit_channel/utils/browser_functions");
 var dialog = require("edit_channel/utils/dialog");
 var ImageViews = require("edit_channel/image/views");
 const State = require("edit_channel/state");
+const Constants = require("edit_channel/constants/index");
 
 var NAMESPACE = "fileUpload";
 var MESSAGES = {
@@ -247,9 +248,9 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
     },
     get_accepted_files:function(){
         var list = [];
-        State.formatpresets.forEach(function(preset){
-            if(!preset.get("supplementary") && preset.get('kind') !== 'exercise' && preset.get('kind') !== null){
-                list.push(preset.get("associated_mimetypes"));
+        Constants.FormatPresets.forEach(function(preset){
+            if(!preset.supplementary && preset.kind !== 'exercise' && preset.kind !== null){
+                list.push(preset.associated_mimetypes);
             }
         });
         return list.join(",");
@@ -433,7 +434,7 @@ var FormatEditorItem = BaseViews.BaseListNodeItemView.extend({
               preset_id: preset_id,
               upload_url: window.Urls.image_upload(),
               default_url: "/static/img/" + this.model.get("kind") + "_placeholder.png",
-              acceptedFiles: State.formatpresets.get({id:preset_id}).get('associated_mimetypes').join(','),
+              acceptedFiles: Constants.FormatPresets.find(preset => preset.id === preset_id).associated_mimetypes.join(','),
               onsuccess: this.set_thumbnail,
               onremove: this.remove_thumbnail,
               onerror: onerror,
@@ -680,8 +681,8 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
     },
     get_accepted_files:function(){
         var preset_name = this.model.get('name') || this.model.id
-        var preset = State.formatpresets.findWhere({id: preset_name});
-        return preset.get("associated_mimetypes").join(",");
+        var preset = Constants.FormatPresets.find(preset => preset.id === preset_name);
+        return preset.associated_mimetypes.join(",");
     },
     file_uploaded:function(file){
         var data = JSON.parse(file.xhr.response).file;
@@ -810,7 +811,7 @@ var MultiLanguageUploadSlot = FormatSlot.extend({
     },
     get_unassigned_languages: function(){
         var current_languages = _.pluck(_.filter(this.files.pluck('language'), function(l){ return l; }), "id");
-        return new Models.LanguageCollection(State.languages.reject(function(l){ return _.contains(current_languages, l.id); }));
+        return new Models.LanguageCollection(Constants.Languages.filter(function(l){ return !_.contains(current_languages, l.id); }));
     },
     events: {
         'click .format_editor_remove ' : 'remove_item',

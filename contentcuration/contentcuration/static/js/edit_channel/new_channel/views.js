@@ -11,6 +11,7 @@ var get_cookie = require("utils/get_cookie");
 var stringHelper = require("edit_channel/utils/string_helper")
 var dialog = require("edit_channel/utils/dialog");
 const State = require("edit_channel/state");
+const Constants = require("edit_channel/constants/index");
 
 var NAMESPACE = "newChannel";
 var MESSAGES = {
@@ -344,8 +345,8 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 			channel_link : this.model.get("id"),
 			picture : (this.model.get("thumbnail_encoding") && this.model.get("thumbnail_encoding").base64) || this.model.get("thumbnail_url"),
 			modified: this.model.get("modified") || new Date(),
-			languages: State.languages.toJSON(),
-			language: State.languages.findWhere({id: this.model.get("language")}),
+			languages: Constants.Languages,
+			language: Constants.Languages.find(id => id === this.model.get("language")),
 			new: this.isNew
 		}, {
 			data: this.get_intl_data()

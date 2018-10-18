@@ -13,6 +13,7 @@ var dialog = require("edit_channel/utils/dialog");
 const State = require("edit_channel/state");
 const WorkspaceManager = require("../utils/workspace_manager");
 const Router = require("../router");
+const Constants = require("../constants/index");
 require("uploader.less");
 
 var NAMESPACE = "uploader";
@@ -252,7 +253,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     var is_individual = selected_items.length === 1;
     var is_exercise = is_individual && selected_items[0].model.get("kind") == "exercise";
     var has_files = is_individual && selected_items[0].model.get("files").some(function(f){
-                      return State.formatpresets.get({id: f.preset.name || f.preset.id || f.preset}).get("display");
+                      return Constants.FormatPresets.find(preset => preset.id === f.preset.name || preset.id === f.preset.id || preset.id === f.preset).display;
                     });
     this.$("#metadata_details_btn").css("display", (selected_items.length) ? "inline-block" : "none");
     this.$("#metadata_preview_btn").css("display", (is_individual && has_files) ? "inline-block" : "none");
@@ -645,7 +646,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     var alloriginal = this.all_original();
     var original_source_license = "---";
     if(this.shared_data && this.shared_data.shared_license){
-      original_source_license = State.licenses.get({id: this.shared_data.shared_license}).get("license_name");
+      original_source_license = Constants.Licenses.find(license => license.id === this.shared_data.shared_license).license_name;
     }
     var copyright_owner = (this.shared_data && this.shared_data.shared_copyright_owner)? this.shared_data.shared_copyright_owner: (alloriginal)? null: "---";
     var author = (this.shared_data && this.shared_data.shared_author)? this.shared_data.shared_author: (alloriginal)? null: "---";
@@ -660,7 +661,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
         isoriginal: alloriginal,
         is_file: this.shared_data && this.shared_data.all_files,
         none_selected: this.selected_items.length === 0,
-        licenses: State.licenses.toJSON(),
+        licenses: Constants.Licenses,
         license: original_source_license,
         copyright_owner: copyright_owner,
         author: author,
@@ -673,9 +674,9 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
         m_value: this.m_value,
         n_value: this.n_value,
         license_description: this.shared_data && this.shared_data.shared_license_description,
-        languages: State.languages.toJSON(),
-        roles: window.roles,
-        mastery: window.mastery,
+        languages: Constants.Languages,
+        roles: Constants.Roles,
+        mastery: Constants.MasteryModels,
         language_default: this.get_language(null, all_top_level),
         channel_id: State.current_channel.id,
         source_channel: shared_source
@@ -758,7 +759,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   get_language: function(language, all_top_level){
     if (language === 0){ return "---"; }
     else if(!language) { return (all_top_level)? this.get_translation("same_as_channel") : this.get_translation("same_as_topic"); }
-    return State.languages.findWhere({id: language}).get("readable_name");
+    return Constants.Languages.find(lang => lang.id === language).readable_name;
   },
   set_initial_focus:function(){
     var element = null;
@@ -782,11 +783,11 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   get_license: function(license_id){
     if(isNaN(license_id)){ return license_id; }
     else if(!license_id || license_id <= 0){ return null; }
-    return State.licenses.get({id: license_id}).get('license_name');
+    return Constants.Licenses.find(license => license.id === license_id).license_name;
   },
   display_license_description: function(license_id){
-    var license = license_id > 0 && State.licenses.get({id: license_id});
-    if(license && license.get('is_custom')){
+    var license = license_id > 0 && Constants.Licenses.find(license => license.id === license_id);
+    if(license && license.is_custom){
       this.$("#custom_license_description").css('display', 'block');
       if(this.shared_data){
         this.$("#custom_license_description").attr('placeholder', (this.selected_individual() || this.shared_data.shared_license_description !== null) ? this.get_translation("license_description_placeholder") : "---");
@@ -799,7 +800,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     } else {
       this.$("#custom_license_description").css('display', 'none');
     }
-    this.$("#copyright_holder_wrapper").css("display", license && license.get("copyright_holder_required")? "block" : "none");
+    this.$("#copyright_holder_wrapper").css("display", license && license.copyright_holder_required ? "block" : "none");
   },
   all_original: function(){
     return this.selected_items.every(function(item){ return item.isoriginal; });
@@ -853,7 +854,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   load_license:function(){
     if (this.selected_items.length){
       var license_modal = new Info.LicenseModalView({
-        select_license : State.licenses.get({id: this.selected_items[0].model.get("license")})
+        select_license : Constants.Licenses.find(license => license.id === this.selected_items[0].model.get("license"))
       });
     }
 
@@ -944,7 +945,9 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     this.display_license_description($("#license_select").val());
   },
   toggle_license_description: function() {
-    var license = State.licenses.get({id: (iscopied || !this.allow_edit)? this.selected_items[0].model.get("license") : $("#license_select").val()})
+    const license_id = (iscopied || !this.allow_edit)? this.selected_items[0].model.get("license") : $("#license_select").val();
+    var license = Constants.Licenses.find(license => license.id === license_id);
+    // TODO: This function appears to be a noop
   },
   set_selected:function(){
     var self = this;
@@ -1223,7 +1226,7 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
       (this.uploads_in_progress===0)? this.container.enable_submit() : this.container.disable_submit();
   },
   validate: function() {
-    var license = State.licenses.get({id: this.model.get("license")});
+    var license = Constants.Licenses.find(license => license.id === this.model.get("license"));
     this.error = "";
     $(".input_listener, select").removeClass("invalid_field");
     if(!this.model.get("title")) {
@@ -1232,10 +1235,10 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
     } else if(this.isoriginal && this.model.get("kind") !== "topic" && !license) {
       $("#license_select").addClass("invalid_field");
       this.error = this.get_translation("license_error");
-    } else if (this.isoriginal && this.model.get("kind") !== "topic" && license.get("copyright_holder_required") && !this.model.get("copyright_holder")) {
+    } else if (this.isoriginal && this.model.get("kind") !== "topic" && license.copyright_holder_required && !this.model.get("copyright_holder")) {
       $("#input_license_owner").addClass("invalid_field");
       this.error = this.get_translation("copyright_holder_error");
-    } else if (this.isoriginal && license && license.get('is_custom') && !this.model.get('license_description')) {
+    } else if (this.isoriginal && license && license.is_custom && !this.model.get('license_description')) {
       $("#custom_license_description").addClass("invalid_field");
       this.error = this.get_translation("special_permission_error");
     }

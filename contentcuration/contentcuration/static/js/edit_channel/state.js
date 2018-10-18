@@ -1,13 +1,11 @@
-var Models = require("./models");
+const Models = require("./models");
+const Constants = require("./constants/index");
 
 const State = {
   current_channel: window.channel && new Models.ChannelModel(window.channel),
   current_user: new Models.UserModel(window.user),
   nodeCollection: new Models.ContentNodeCollection(),
-  formatpresets: new Models.FormatPresetCollection(window.presets),
-  contentkinds: new Models.ContentKindCollection(window.kinds),
-  languages: new Models.LanguageCollection(window.langs),
-  licenses: new Models.LicenseCollection(window.license_list),
+  currentLanguage: Constants.Languages.find(l => l.id && l.id.toLowerCase() === window.languageCode ),
   openChannel(data) {
     this.staging = data.is_staging || false;
     this.contenttags = new Models.TagCollection(this.current_channel.get('tags'));

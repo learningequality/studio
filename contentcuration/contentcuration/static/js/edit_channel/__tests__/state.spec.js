@@ -12,18 +12,6 @@ describe('The State object', () => {
     it('should set State.current_user to a UserModel', () => {
       expect(State.current_user).toBeInstanceOf(Models.UserModel);
     });
-    it('should set State.formatpresets to a FileFormatCollection', () => {
-      expect(State.formatpresets).toBeInstanceOf(Models.FormatPresetCollection);
-    });
-    it('should set State.contentkinds to a ContentKindCollection', () => {
-      expect(State.contentkinds).toBeInstanceOf(Models.ContentKindCollection);
-    });
-    it('should set State.licenses to a LicenseCollection', () => {
-      expect(State.licenses).toBeInstanceOf(Models.LicenseCollection);
-    });
-    it('should set State.languages to a LanguageCollection', () => {
-      expect(State.languages).toBeInstanceOf(Models.LanguageCollection);
-    });
   });
   describe('openChannel method', () => {
     it('should set State.staging to the value of data.is_staging if defined', () => {

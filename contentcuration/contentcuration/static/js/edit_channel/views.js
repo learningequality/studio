@@ -4,6 +4,7 @@ var Models = require("./models");
 var analytics = require("utils/analytics");
 const State = require("edit_channel/state");
 const WorkspaceManager = require("./utils/workspace_manager");
+const Constants = require("edit_channel/constants/index");
 
 //var UndoManager = require("backbone-undo");
 
@@ -92,7 +93,7 @@ var BaseView = Backbone.View.extend({
 					.value();
 	},
 	get_intl_data: function(){
-		var language = State.languages && State.languages.find(function(l) { return l.id && l.id.toLowerCase() === window.languageCode; });
+		var language = State.currentLanguage;
 		return {
 			intl: {
 				locales: [(language && language.id) || "en-US"],

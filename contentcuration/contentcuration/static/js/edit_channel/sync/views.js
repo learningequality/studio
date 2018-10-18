@@ -4,6 +4,7 @@ var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
 var stringHelper = require("edit_channel/utils/string_helper");
 const State = require("edit_channel/state");
+const Constants = require("edit_channel/constants/index");
 require("sync.less");
 
 var NAMESPACE = "sync";
@@ -308,12 +309,12 @@ var SyncPreviewView = BaseViews.BaseView.extend({
             case "license":
                 return {
                     "field" : this.get_translation("license"),
-                    "current": stringHelper.translate(State.licenses.get(this.model.get(field)).get('license_name')),
-                    "source": stringHelper.translate(State.licenses.get(this.changed.get(field)).get('license_name'))
+                    "current": stringHelper.translate(Constants.Licenses.find(license => license.id === this.model.get(field)).license_name),
+                    "source": stringHelper.translate(Constants.Licenses.find(license => license.id === this.changed.get(field)).license_name),
                 }
             case "language":
-                var current_lang = (this.model.get(field))? State.languages.get(this.model.get(field)).get('native_name') : this.get_translation("same_as_topic");
-                var source_lang = (this.changed.get(field))? State.languages.get(this.changed.get(field)).get('native_name') : this.get_translation("same_as_topic");
+                var current_lang = (this.model.get(field))? Constants.Languages.find(lang => lang.id === this.model.get(field)).native_name : this.get_translation("same_as_topic");
+                var source_lang = (this.changed.get(field))? Constants.Languages.find(lang => lang.id === this.model.get(field)).native_name : this.get_translation("same_as_topic");
                 return {
                     "field" : this.get_translation("language"),
                     "current": current_lang.charAt(0).toUpperCase() + current_lang.slice(1),
