@@ -233,23 +233,21 @@ def get_thumbnail_encoding(filename, dimension=THUMBNAIL_DIMENSION):
 
     checksum, ext = os.path.splitext(filename)
     filepath = generate_object_storage_name(checksum, filename)
-    buffer = cStringIO.StringIO()
-
-    tempf = tempfile.NamedTemporaryFile(suffix=ext, delete=False)
+    inbuffer = cStringIO.StringIO()
+    outbuffer = cStringIO.StringIO()
 
     try:
         with default_storage.open(filepath) as localtempf:
-            shutil.copyfileobj(localtempf, tempf)  # Copy image to tempfile
-            tempf.close()
-            with Image.open(tempf.name) as image:
+            inbuffer.write(localtempf.read())
+            with Image.open(inbuffer) as image:
                 width, height = image.size
                 dimension = min([dimension, width, height])
                 image.thumbnail((dimension, dimension), Image.ANTIALIAS)
-                image.save(buffer, image.format)
-                return "data:image/{};base64,{}".format(ext[1:], base64.b64encode(buffer.getvalue()))
+                image.save(outbuffer, image.format)
+                return "data:image/{};base64,{}".format(ext[1:], base64.b64encode(outbuffer.getvalue()))
     finally:
-        tempf.close()
-        os.unlink(tempf.name)
+        inbuffer.close()
+        outbuffer.close()
 
 
 def create_thumbnail_from_base64(encoding, file_format_id=file_formats.PNG, preset_id=None, uploaded_by=None):
