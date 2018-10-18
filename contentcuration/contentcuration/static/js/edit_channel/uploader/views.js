@@ -846,9 +846,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
       data: this.get_intl_data()
     }));
     var self = this;
-    var tags = _.reject(State.contenttags.pluck("tag_name"), function(tag){
-      return self.shared_data.shared_tags.indexOf(tag) >= 0;
-    });
+    var tags = State.Store.getters.contentTags.map(tag => tag.tag_name).filter(tagName => self.shared_data.shared_tags.indexOf(tagName) < 0);
     autoCompleteHelper.addAutocomplete($( "#tag_box" ), tags, this.select_tag, "#tag_area_wrapper");
   },
   load_license:function(){
@@ -911,11 +909,11 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     if(!code || code ==13){
       $(".ui-menu-item").hide();
       if(this.$el.find("#tag_box").length > 0 && this.$el.find("#tag_box").val().trim() != ""){
-        var tag = this.$el.find("#tag_box").val().trim();
-        if(!State.contenttags.findWhere({'tag_name':tag})){
-          State.contenttags.add(new Models.TagModel({tag_name: tag, channel: State.current_channel.id}));
+        var tagName = this.$el.find("#tag_box").val().trim();
+        if(!State.Store.getters.contentTags.find(tag => tag.tag_name === tagName )) {
+          State.Store.commit('ADD_CONTENT_TAG', {tag_name: tagName, channel: State.current_channel.id});
         }
-        this.assign_tag(tag);
+        this.assign_tag(tagName);
       }
     }
   },
@@ -935,7 +933,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     this.selected_items.forEach(function(view){
       view.remove_tag(tagname);
     });
-    State.contenttags.remove(State.contenttags.findWhere({'tag_name':tagname}));
+    State.Store.commit('REMOVE_CONTENT_TAG_BY_NAME', tagname);
     this.shared_data.shared_tags = _.reject(this.shared_data.shared_tags, function(tag) {return tag === tagname});
     this.load_tags();
   },
@@ -1152,12 +1150,7 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
   load_tags:function(){
       this.tags = [];
       if(this.model.get("tags")){
-          var self = this;
-          var fetch_tags = [];
-          this.model.get("tags").forEach(function(entry){
-              fetch_tags.push((entry.id)? entry.id : entry);
-          });
-          this.tags = State.contenttags.get_all_fetch(fetch_tags).pluck('tag_name');
+          this.tags = this.model.get("tags").map(tag => tag.tag_name);
       }
   },
   load_file_displays:function(formats_el){
