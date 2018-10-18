@@ -9,7 +9,7 @@ const channelModule = {
   },
   mutations: {
     SET_CONTENT_TAGS(state, contentTags) {
-      state.contentTags = contentTags;
+      state.contentTags = contentTags || [];
     },
     ADD_CONTENT_TAG(state, contentTag) {
       state.contentTags.push(contentTag);

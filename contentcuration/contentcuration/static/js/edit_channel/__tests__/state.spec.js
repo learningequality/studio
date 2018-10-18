@@ -22,9 +22,9 @@ describe('The State object', () => {
       State.openChannel({});
       expect(State.staging).toEqual(false);
     });
-    it('should set State.contenttags to a TagCollection', () => {
+    it('should set State.Store.getters.contentTags to an empty Array', () => {
       State.openChannel({});
-      expect(State.contenttags).toBeInstanceOf(Models.TagCollection);
+      expect(State.Store.getters.contentTags).toEqual([]);
     });
     it('should set State.preferences to window.preferences if it is not a string', () => {
       window.preferences = 1;
