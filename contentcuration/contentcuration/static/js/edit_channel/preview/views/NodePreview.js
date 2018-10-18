@@ -1,6 +1,6 @@
 import { BaseView } from 'edit_channel/views';
 
-import PreviewView from './previewView';
+import FilePreview from './FilePreview';
 
 import { defer } from 'underscore';
 import { contains } from 'jquery';
@@ -120,7 +120,7 @@ export default BaseView.extend({
     // passing in `el` option because renderer component often uses `responsiveElement`,
     // a mixin used in Kolibri to have the element's length and width available in JS. It requires
     // DOM context (like its parents) to report dimensions properly.
-    this.previewView = new PreviewView({
+    this.previewView = new FilePreview({
       model: this.model,
       preview: this.currentPreview,
       intl_data: this.get_intl_data(),

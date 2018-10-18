@@ -523,10 +523,10 @@ var SyncPreviewFileView = SyncPreviewModalView.extend({
         _.defer(this.create_preview);
     },
     create_preview: function(){
-        var previewer = require('edit_channel/preview/views');
+        const { FilePreview } = require('edit_channel/preview/views');
 
         // TODO test
-        previewer.ItemPreviewView({
+        new FilePreview({
           el: this.$("#preview_window"),
           model: this.node,
           previewFile: this.model,
