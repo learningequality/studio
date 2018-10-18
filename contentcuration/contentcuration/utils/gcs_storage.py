@@ -60,6 +60,7 @@ class GoogleCloudStorage(Storage):
         blob.download_to_file(fobj)
         # flush it to disk
         fobj.flush()
+        fobj.seek(0)
 
         django_file = File(fobj)
         django_file.just_downloaded = True
