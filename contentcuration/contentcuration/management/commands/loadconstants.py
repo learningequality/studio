@@ -18,7 +18,6 @@ from contentcuration import models
 logging = logmodule.getLogger(__name__)
 
 
-BASE_URL = "https://raw.githubusercontent.com/learningequality/le-utils/master/le_utils/resources/{}"
 
 
 class ConstantGenerator():
@@ -74,24 +73,6 @@ class LanguageGenerator(ConstantGenerator):
     filename = "languagelookup.json"
     default_list = languages.LANGUAGELIST
     model = models.Language
-
-    def generate_list(self):
-        # Try to get json from github to avoid releasing le-utils for every new lang
-        try:
-            response = urllib.urlopen(BASE_URL.format(self.filename))
-            data = json.loads(response.read())
-            language_list = languages.generate_list(data)
-        except Exception:
-            logging.warning("Failed to retrieve latest {filename} from GitHub.".format(filename=self.filename))
-            language_list = self.default_list
-
-        return [
-            {
-                "model": self.model,
-                "pk": self.id_field,
-                "fields": self.get_dict(constant),
-            } for constant in language_list
-        ]
 
     def get_dict(self, constant):
         return {
