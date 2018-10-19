@@ -1,4 +1,4 @@
-<div class="col-xs-4 channel_name_wrapper {{#if deleted}}deleted{{/if}}" title="{{name}} (Created {{#format_date created }}{{/format_date}}, Last Updated {{#format_date modified }}{{/format_date}})">
+<div class="grid_item channel_name_wrapper {{#if deleted}}deleted{{/if}}" title="{{name}} (Created {{#format_date created }}{{/format_date}}, Last Updated {{#format_date modified }}{{/format_date}})">
 	{{#unless deleted}}<a href="/channels/{{id}}/edit" target="_blank">{{/unless}}
 		<div class="channel_name truncate">{{#if name}}{{ name }}{{else}}<i title="Channel does not have a name">[Untitled Channel]</i>{{/if}}</div>
 	{{#if ricecooker_version}}{{#if staging_tree}}
@@ -7,32 +7,33 @@
 	{{#unless deleted}}<i class="icon material-icons action-text name_icon" title="Open in new tab">open_in_new</i></a>{{/unless}}
 	<a class="action-text download_csv name_icon" title="Download CSV"><i class="icon material-icons">file_download</i></a>
 </div>
-<div class="col-xs-2" title="{{id}}">
+<div class="grid_item text-center" title="{{id}}">
 	<input type="text" value="{{id}}" class="channel_id" readonly/>&nbsp;
 	<a class="action-text copy_id"><i class="icon material-icons" title="Copy">content_paste</i></a>
 </div>
-<div class="col-xs-1">
+<div class="grid_item text-center">
 	{{#if public}}<input type="number" value="{{priority}}" class="channel_priority" min="0"/>{{else}}<em class="channel_priority_private" title="Priority does not count for private channels">(Private)</em>{{/if}}
 </div>
-<div class="col-xs-1 text-center">
+<div class="grid_item text-center editors">
 	{{#if editors}}
 		<a tabindex="0" class="popover_link action-text" data-id="#admin_editors_{{id}}">{{#format_count "Editor" editors.length}}{{/format_count}}</a>
+		<a class="action-text search_for_channel_editors search name_icon" title="Search for this channel's editors"><i class="icon material-icons">search</i></a>
 	{{else}}None
 	{{/if}}
 </div>
-<div class="col-xs-1 text-center">
+<div class="grid_item text-center">
 	{{#if viewers}}
 		<a tabindex="0" class="popover_link action-text" data-id="#admin_viewers_{{id}}">{{#format_count "Viewer" viewers.length}}{{/format_count}}</a>
 	{{else}}None
 	{{/if}}
 </div>
-<div class="col-xs-2 text-center">
-	{{#if count}}
-		<a tabindex="0" class="popover_link count_link action-text" data-id="#admin_counts_{{id}}">{{#format_count "Item" count}}{{/format_count}}</a>
+<div class="grid_item text-center">
+	{{#if resource_count}}
+		<a tabindex="0" class="popover_link count_link action-text" data-id="#admin_counts_{{id}}">{{#format_count "Item" resource_count}}{{/format_count}}</a>
 	{{else}}None
 	{{/if}}
 </div>
-<div class="col-xs-1 text-center">
+<div class="grid_item text-center">
 	<div class="btn-group btn-group-justified" role="group">
 		{{#if deleted}}
 			<div class="btn-group" role="group">

@@ -27,3 +27,4 @@ While it is possible to install **Kolibri** and import content channels without 
    publish_channel
    share_channels
    appendix
+   

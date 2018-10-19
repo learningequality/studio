@@ -45,6 +45,7 @@
   "dependencies": {
     "backbone": "^1.2.1",
     "backbone-undo": "^0.2.5",
+    "backbone.paginator": "^2.0.8",
     "bootstrap": "^3.3.5",
     "browser-filesaver": "^1.1.0",
     "croppie": "^2.4.1",

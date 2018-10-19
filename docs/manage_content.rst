@@ -17,12 +17,13 @@ To edit details for each topic/subtopic or individual resource, follow these ste
 
    **OR** 
 
-   * Hover the topic, click the |ellipsis| for more options and select **Edit**.
-   |
+   * Hover the topic, click the |ellipsis| for more options and select **Edit**. |br|
+
    **OR** 
    
-   * Right-click the topic itself and select **Edit**.
-   |
+   * Right-click the topic itself and select **Edit**. |br|
+
+
 #. Make the necessary changes in the **Editing Content** window:
 
    a. Edit the general data (title, description, license, metadata, etc.) for the content item in the **Details** tab.
@@ -60,6 +61,36 @@ To edit details for each topic/subtopic or individual resource, follow these ste
 #. Click **SAVE** button to save the intermediate changes.
 
 #. Click **SAVE & CLOSE** when you are done to return to the main channel content page.
+  
+
+.. _set_role_visibility:
+
+Set content visibility by role
+******************************
+
+Content visibility determines the type of Kolibri users that can see whole topics, subtopics or single resources. You have the option to leave the default option of visibility for *Anyone*, or set it so it's visible only to *Coaches* (teachers, facilitators, administrators).
+
+To set a topic, subtopic or a single resource as a **Coach support resource**, follow these steps.
+
+#. Use the checkbox to select the topic/subtopic or individual resource that you want to set as a **Coach resource**.
+#. Click the |pencil| button from the :ref:`Edit Channel Content Toolbar <edit_content>`.
+
+#. Select *Coaches* from the drop-down menu under the **Visible to** heading: 
+
+   .. figure:: img/coach-resource.png
+            :alt: Set the visibility of the resource so only coaches can see it.
+
+            Set the visibility of the resource so only coaches can see it.
+
+#. Click **SAVE & CLOSE** when you are done to return to the main channel content page.  
+
+Content that is set to be visible only to coaches will be marked with the |coach| icon inside the channel on Studio, and in the **Learn** page in Kolibri.
+
+   .. figure:: img/coach-resource2.png
+            :alt: Resource visible only to coaches in Kolibri Learn page.
+
+            Resource visible only to coaches in Kolibri Learn page.           
+
 
 .. _move_content:
 

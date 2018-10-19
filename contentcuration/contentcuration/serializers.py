@@ -677,6 +677,7 @@ class ChannelFieldMixin(object):
     def check_publishing(self, channel):
         return channel.main_tree.publishing
 
+
 class ChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
     has_changed = serializers.SerializerMethodField('check_for_changes')
     main_tree = RootNodeSerializer(read_only=True)
@@ -778,10 +779,15 @@ class PublicChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     content_defaults = serializers.JSONField()
+    mb_space = serializers.SerializerMethodField('calculate_space')
+
+    def calculate_space(self, user):
+        size, unit = format_size(user.disk_space)
+        return {"size": round(float(size)), "unit": unit}
 
     class Meta:
         model = User
-        fields = ('email', 'first_name', 'last_name', 'id', 'disk_space', 'is_active', 'information', 'policies', 'content_defaults')
+        fields = ('email', 'first_name', 'last_name', 'id', 'disk_space', 'mb_space', 'is_active', 'information', 'policies', 'content_defaults')
 
 
 class CurrentUserSerializer(serializers.ModelSerializer):
@@ -809,7 +815,7 @@ class UserChannelListSerializer(serializers.ModelSerializer):
 
 class AdminChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
     published = serializers.SerializerMethodField('check_published')
-    count = serializers.SerializerMethodField("compute_item_count")
+    resource_count = serializers.IntegerField()
     created = serializers.SerializerMethodField('get_date_created')
     modified = serializers.SerializerMethodField('get_date_modified')
     download_url = serializers.SerializerMethodField('generate_db_url')
@@ -820,13 +826,10 @@ class AdminChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer)
     def generate_db_url(self, channel):
         return "{path}{id}.sqlite3".format(path=settings.CONTENT_DATABASE_URL, id=channel.pk)
 
-    def compute_item_count(self, channel):
-        return channel.main_tree.get_descendant_count()
-
     class Meta:
         model = Channel
-        fields = ('id', 'created', 'modified', 'name', 'published', 'editors', 'viewers', 'staging_tree', 'description', 'count',
-                  'version', 'public', 'deleted', 'ricecooker_version', 'download_url', 'primary_token', 'priority')
+        fields = ('id', 'created', 'modified', 'name', 'published', 'editors', 'viewers', 'staging_tree', 'description',
+                  'resource_count', 'version', 'public', 'deleted', 'ricecooker_version', 'download_url', 'primary_token', 'priority')
 
 
 class SimplifiedChannelListSerializer(serializers.ModelSerializer):
@@ -841,6 +844,7 @@ class AdminUserListSerializer(serializers.ModelSerializer):
     view_only_channels = SimplifiedChannelListSerializer(many=True, read_only=True)
     mb_space = serializers.SerializerMethodField('calculate_space')
     is_chef = serializers.SerializerMethodField('check_if_chef')
+    chef_channels_count = serializers.IntegerField()
 
     def calculate_space(self, user):
         size, unit = format_size(user.disk_space)
@@ -850,12 +854,12 @@ class AdminUserListSerializer(serializers.ModelSerializer):
         return user.get_space_used()
 
     def check_if_chef(self, user):
-        return user.editable_channels.exclude(ricecooker_version=None).exists()
+        return user.chef_channels_count > 0
 
     class Meta:
         model = User
-        fields = ('email', 'first_name', 'last_name', 'id', 'editable_channels', 'view_only_channels',
-                  'is_admin', 'date_joined', 'is_active', 'disk_space', 'mb_space', 'is_chef')
+        fields = ('email', 'first_name', 'last_name', 'id', 'editable_channels', 'view_only_channels', 'is_chef',
+                  'is_admin', 'date_joined', 'is_active', 'disk_space', 'mb_space', 'chef_channels_count')
 
 
 class InvitationSerializer(BulkSerializerMixin, serializers.ModelSerializer):

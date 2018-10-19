@@ -5,13 +5,13 @@ Working with Channels
 
 When you login to Kolibri Studio, you will be able to see Kolibri content channels organized in 4 different tab views:
 
-#. **My Channels** tab with the list of channels you created previously, that you can update with the new materials if necessary, and publish again.
+#. :guilabel:`My Channels` tab with the list of channels you created previously, that you can update with the new materials if necessary, and publish again.
 
-#. |star| **Starred** tab with the channels that you flagged for quick access.
+#. |star| :guilabel:`Starred` tab with the channels that you flagged for quick access.
 
-#. **Public** tab with channels that the Learning Equality team made available from publicly available source content.
+#. :guilabel:`Public` tab with channels that the Learning Equality team made available from publicly available source content.
 
-#. **View-Only** tab for channels for which you received an invitation to view by other Kolibri Studio users, and can import content from.
+#. :guilabel:`View-Only` tab for channels for which you received an invitation to view by other Kolibri Studio users, and can import content from.
 
 .. figure:: img/channel-type.png
    :alt: Kolibri Studio content channels by type.
@@ -22,12 +22,12 @@ When you login to Kolibri Studio, you will be able to see Kolibri content channe
 Channel Details
 ===============
 
-Each channel pane page displays some basic information about the channel:
+In the main view you can see basic information for each of the channels:
 
 .. figure:: img/channel-pane-details.png
-   :alt: Details in the channel pane.
+   :alt: Basic channel information.
 
-   Details in the channel pane.
+   Basic channel information.
 
 #.  Channel name
 #.  Channel description
@@ -36,11 +36,35 @@ Each channel pane page displays some basic information about the channel:
 #.  Number of resources (exercises, videos, audio or document files)
 #.  Channel ID/token - `32 digit unique identifier <https://en.wikipedia.org/wiki/Universally_unique_identifier>`_ for each channel used for downloading and sharing content channels
 #.  Copy the channel ID/token to the computer's clipboard ( |copy-c| icon)
-#.  Edit channel information button ( |pencil| icon)
-#.  Star channel button (|star-o| icon)
+#.  Star channel button (|star| icon)
 #.  Latest update indicator
 
 .. note:: The term **Channel ID** is valid for Kolibri versions up to 0.6, while from the Kolibri version 0.7 onward, we will start using exclusively the term **token** to uniquely designate each channel.
+
+
+When you click on each of the channels from the list, panel with the extended channel information will open on the right.  
+
+.. figure:: img/channel-details.gif
+   :alt: Panel with extended channel information.
+
+   Panel with extended channel information.
+
+:guilabel:`What's inside` tab provides information about the type of resources channel contains (exercises, videos, HTML5 apps or documents), their number and storage required, as well as information about the languages offered and a preview of the topics included.
+
+.. figure:: img/channel-languages-preview.png
+   :alt: Languages of the content included in the channel.
+
+   Languages of the content included in the channel.
+
+
+In the :guilabel:`Source` tab you can view information about content creators and license holders.
+
+Open the :guilabel:`Using this channel` tab to copy the channel token that you need in order to import its content into Kolibri.
+
+.. figure:: img/channel-source-id-token.gif
+   :alt: Details about content creators, license and tokens for import.
+
+   Details about content creators, license and tokens for import.
 
 .. tip:: Click the Kolibri icon in the upper left corner to return to **My Channels** page from any other section of the Kolibri Studio site.
 
@@ -53,7 +77,7 @@ Create a New Channel
 
 To create a new content channel, follow these steps.
 
-#. Click |plus| **Channel** button.
+#. Click the :guilabel:`+ Channel` button.
 #. Name the new channel and add a description.
 #. Select the channel language from the dropdown selector.
 #. Click on the default channel image (Kolibri logo), and upload an image for the thumbnail if desired (optional).
@@ -63,16 +87,17 @@ To create a new content channel, follow these steps.
 
       Change content channel thumbnail.
 
-#. Click **CREATE** to finish creating the channel, and the channel will be available in your **My Channels** list.
+#. Click :guilabel:`CREATE` to finish creating the channel, and the channel will be available in your **My Channels** list.
 
-Now that you have created the content channel, :ref:`proceed to add and organize content in the channel <add_content>`
+Now that you have created the content channel, :ref:`proceed to add and organize content in the channel <add_content>`.
 
 Modify Channel Information
 **************************
 
-To modify the channel name description or thumbnail follow these steps.
+To modify the channel name, description or thumbnail follow these steps.
 
-#. Click on the |pencil| icon in the upper right corner of the channel pane.
+#. Click the channel you want to modify from the list in :guilabel:`My Channels` tab.
+#. Click :guilabel:`EDIT DETAILS` inside the right side panel with extended channel information.
 
    .. figure:: img/edit-channel-details.png
       :alt: Modify content channel details.
@@ -80,22 +105,18 @@ To modify the channel name description or thumbnail follow these steps.
       Modify content channel details.
 
 #. Edit the desired details (title, description, language).
-#. Click **SAVE** to finish or **CANCEL** to exit without modifying.
+#. Click :guilabel:`SAVE` to finish or :guilabel:`CANCEL` to exit without modifying.
 
-.. warning:: If you click anywhere else inside the content channel pane, except the |pencil| icon, you will open the page for :ref:`editing content topics and adding learning resources to the channel <add_content>`.
 
 Delete Channel
 **************
 
 To permanently delete the channel follow these steps.
 
-#. Click on the |pencil| icon in the upper right corner of the channel pane.
+#. Click the channel you want to modify from the list in :guilabel:`My Channels` tab.
 
-#. Click the **DELETE CHANNEL** link under the description field. 
+#. Scroll at the bottom of the :guilabel:`What's inside` tab in the right side panel.
 
-#. Read the browser warning message and click **OK** to confirm the deletion, or **CANCEL** to exit without deleting.
+#. Click :guilabel:`DELETE CHANNEL`. 
 
-   .. figure:: img/delete-channel.png
-      :alt: Warning alert while deleting channel.
-
-      Warning alert while deleting channel.
+#. Read the browser warning message and click :guilabel:`DELETE CHANNEL` to confirm, or :guilabel:`CANCEL` to exit without deleting.

@@ -10,7 +10,7 @@ var URL_CHAR_LIMIT = 7;
 var ChannelEditRouter  = Backbone.Router.extend({
   nodeCollection: new Models.ContentNodeCollection(),
   initialize: function(options) {
-    _.bindAll(this, "navigate_channel_home", "preview_page", "edit_page", "clipboard_page", "admin_page");
+    	_.bindAll(this, "navigate_channel_home", "preview_page", "edit_page", "clipboard_page");
 		this.nodeCollection = new Models.ContentNodeCollection();
 		window.current_channel = window.channel && new Models.ChannelModel(window.channel);
 		window.current_user = new Models.UserModel(window.user);
@@ -25,7 +25,6 @@ var ChannelEditRouter  = Backbone.Router.extend({
 
   routes: {
 		"": "navigate_channel_home",
-		"administration/": "admin_page",
 		":channel/edit(/:topic)(/:node)": "edit_page",
 		":channel/staging(/:topic)(/:node)": "staging_page",
 		":channel/view(/:topic)(/:node)": "preview_page",
@@ -43,13 +42,6 @@ var ChannelEditRouter  = Backbone.Router.extend({
 		var channel_manager_view = new ChannelManageView.ChannelListPage ({
 			el: $("#channel-container"),
 			collection: this.channelCollection
-		});
-	},
-
-	admin_page: function(){
-		var AdministrationView = require("edit_channel/admin/views");
-		var admin_view = new AdministrationView.AdminView ({
-			el: $("#admin-container")
 		});
 	},
 

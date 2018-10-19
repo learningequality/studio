@@ -14,12 +14,11 @@ Content Channel is a collection of content and `metadata <https://en.wikipedia.o
 
 | **Domain > Subject > Topic > Tutorial**
 | *e.g. Math > Arithmetic > Fractions > Comparing fractions*
-|
+
 Content channel aligned to a specific state curriculum might instead be structured as:
 
 | **Grade > Subject > Unit**
 | *e.g. Fifth Standard > Math > Unit 5*
-|
 
 
 Channel Topic Tree
@@ -29,10 +28,11 @@ Inside each content channel the individual learning resources (exercises, videos
 
 Think of the topics as folders that can contain other sub-folders (sub-topics) or files (learning resources) directly. A folder in the topic tree can contain both individual resources and sub-folders.
 
-   .. figure:: img/cc-topic-subtopic-resources.png
-      :alt: Topic > Sub-topic > Resource structure of the Khan Academy Math channel.
+.. figure:: img/cc-topic-subtopic-resources.png
+   :alt: Topic > Sub-topic > Resource structure of the Khan Academy Math channel.
 
-      Topic > Sub-topic > Resource structure of the Khan Academy Math channel.
+   Topic > Sub-topic > Resource structure of the Khan Academy Math channel.
+
 
 There is no inherent restriction on the depth of topic trees or the number of resources that you can place in a channel. However, you should take into consideration the intended learning pathway and user experience once channel is imported in Kolibri, and try to build your topic tree so that learners do not need to click through long series of subfolders to arrive to the desired learning resource.
 
@@ -52,18 +52,20 @@ Edit Channel Content Tools
    a. :ref:`Edit selected content details <edit_content>` ( |pencil| icon)
    b. :ref:`Copy selected content into clipboard <copy_content>` ( |copy| icon)
    c. :ref:`Move selected content items from one topic to another <move_content>` ( |move| icon)
-   d. :ref:`Delete selected content <delete_content>` ( |trash| icon)
-   e. :ref:`Sync imported content <sync>` ( |sync| icon)
-   f. :ref:`Invite collaborators <invite_collaborators>` ( |user| icon)
-   g. Hide details for all content topics (when checked, only topic titles will be displayed)
+   d. :ref:`Delete selected content <delete_content>` ( |delete| icon)
+   e. :ref:`Manage deleted content <delete_content>` ( |trash| icon)
+   f. :ref:`Sync imported content <sync>` (|sync| icon)
+   g. :ref:`Invite collaborators <invite_collaborators>` ( |invite| icon)
+   h. Hide details for all content topics (when checked, only topic titles will be displayed)
 
 #. Return to **My Channels** page (|home| icon)
 #. Channel selector dropdown menu
+#. Open channel settings
+#. :ref:`Clipboard <clipboard>` button (with the indicator of available content items)
 #. **Show ID** button to display the channel ID or token
 #. **Publish** button to save changes in channel content
-#. :ref:`Clipboard <clipboard>` button (with the indicator of available content items)
 #. Topic container pane
-#. |plus-c| **ADD** button to :ref:`add topics <add_topics>`, :ref:`upload content <upload>`, and :ref:`create exercises <exercises>`.
+#. |plus-c| **ADD** button to :ref:`add topics <add_topics>`, :ref:`upload content <upload>`, :ref:`create exercises <exercises>`, and :ref:`import content <import_content>`.
 
 
 .. _add_topics:
@@ -71,7 +73,7 @@ Edit Channel Content Tools
 Add Topics to Channel
 =====================
 
-To create a new topic in a content channel, follow these steps.
+To create one or more new topics in a content channel, follow these steps.
 
 #. Click |plus-c| **ADD** button.
 #. Select **Add Topics** option.
@@ -81,16 +83,18 @@ To create a new topic in a content channel, follow these steps.
 
          Add Topics
 
-#. Complete the topic information and metadata, and click **SAVE** button.
+#. Complete the topic information (title, description, language, thumbnail image) and metadata, and click the **SAVE** button. 
 
-   .. tip:: Use the checkboxes on the left to select topics, edit and change details or metadata, or |close| buttons to delete topics in this same window, and remember to click the **SAVE** afterward.
+   .. note:: Setting the topic language is optional: if you don't set it, it will default to the language of the parent topic; if it is the root topic, it will default to the language set for the whole channel.
 
-#. Click |plus-c| **ADD TOPIC** button on the left side to add more topics.
+#. Click |plus| **TOPIC** button on the left side to add more topics.
 
    .. figure:: img/edit-topics.png
       :alt: Edit topic details and add metadata.
 
       Edit topic details and add metadata.
+
+   .. tip:: Use the checkboxes on the left to select topics, edit and change details or metadata, or |close| buttons to delete topics in this same window. Remember to click the **SAVE** afterward.
 
 #. Click **SAVE & CLOSE** to save changes and return to the previous page.
 
@@ -133,10 +137,9 @@ Currently allowed file formats for individual learning resources are:
 -  MP3 - audio files
 -  :ref:`PDF - document files <pdf>`
 -  :ref:`ZIP - packaged HTML5 <html5>`
+-  ePUB - ebook files
 
-.. note:: Support for the **ePUB - ebook files** is in the development, and will be added soon.
-
-.. warning:: There is an initial storage limit of **500MB** for the files that you upload to Kolibri Studio. If you require more storage, please contact info@learningequality.org. You can :ref:`keep track of the used storage <settings>` in the **My Settings > Storage** page.
+.. warning:: There is an initial storage limit of **500MB** for the files that you upload to Kolibri Studio. You can :ref:`keep track of the used storage <settings>`, and request more if necessary, from the **My Settings > Storage** page.
 
 
 To upload individual learning resources into your content channel, follow these steps.
@@ -159,7 +162,7 @@ To upload individual learning resources into your content channel, follow these 
 
    .. note:: There is no general ideal size for each individual upload, and upload times and ideal number of content items per upload will largely depend on the available Internet connection.
 
-#. While uploading files, the system extracts some file information like filenames and thumbnails for videos. Once the upload is finished, you can change the name of the file, add lower/higher resolution option, and captions for videos:
+#. While uploading files, the system extracts some file information like filenames and thumbnails for videos. Once the upload is finished, you can adjust the name of the file, add lower/higher resolution option, and captions for videos:
 
    .. figure:: img/edit-upload.png
          :alt: Change or add file details.
@@ -323,7 +326,7 @@ To create an exercise, follow these steps.
 
    Keep clicking the |plus| **ANSWER** button to add as many answers as you want for the single and multiple selection types of questions.
 
-   .. warning:: Remember to activate the radio button for the correct answer (outlined in the image above).
+   .. warning:: Remember to activate the radio button for the correct answer (outlined in the image above). You can easily distinguish the correct answer by the green highlight and green left border, from the incorrect answers that have only the red border. 
 
 #. Click **HINTS** |external| to open the Hint editor window.
 
@@ -336,19 +339,21 @@ To create an exercise, follow these steps.
 
    Keep clicking the |plus| **HINT** button to add as many hints as you want for the question.
 
-   .. tip:: You can delete and reorder answers and hints with the |sort| |close| icons in the upper right corner.
+   .. tip:: You can delete and reorder answers and hints with the |sort-up| |sort-down| |close| icons in the upper right corner.
 
    .. figure:: img/reorder-answers.png
          :alt: Reorder questions and hints.
 
          Reorder questions and hints.
 
-#. Use the **Prerequisite** tab to recommend the required videos and/or exercises that the learner should finish prior to the current one:
+#. Use the **Prerequisite** tab to recommend content that the learner should view or complete prior to the current one:
 
    .. figure:: img/edit-content-prerequisites.png
          :alt: Add Prerequisites for the current exercise.
 
          Add Prerequisites for the current exercise.
+
+   .. warning:: Currently the **Prerequisites** category is used to merely indicate the **recommended content** that will allow learners to revisit key prior concepts, foundational skills, or immediately relevant background information. For learners on Kolibri, these items will appear alongside the concept for recommended viewing, **but will not be compulsory** in order to view the current resource.
 
 #. Click **SAVE** button to save the intermediate changes.
 #. Click **SAVE & CLOSE** when you finish editing to return to the topic view.
@@ -415,7 +420,7 @@ Another option for copying content between channels is to use the **Clipboard**.
 #. Open the **Clipboard** button (indicator displays the number of content items inside).
 #. Buttons to edit, move and delete content items from the clipboard.
 #. Indicators for number of content items inside each topic.
-#. Hover and click the |ellipsis| to access the menu to edit/move/delete the selected content item.
+#. Hover and click the |ellipsis| to access the menu to edit/move/copy/delete the content item.
 
 .. _copy_content:
 
@@ -448,3 +453,4 @@ Content imported from other channels can change over time. Use the **Syncing con
       :alt: Sync imported content to keep it up-to-date.
 
       Sync imported content to keep it up-to-date.
+      

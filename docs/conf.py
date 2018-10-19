@@ -47,7 +47,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Kolibri Studio'
-copyright = u'2017, Learning Equality'
+copyright = u'2018, Learning Equality'
 author = u'Learning Equality'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -141,23 +141,28 @@ rst_prolog = """
 .. role:: raw-html(raw)
       :format: html
 
-.. |star| replace:: :raw-html:`<span class="fa fa-star" aria-hidden="true"></span><span class="visuallyhidden">Star</span>`
-.. |star-o| replace:: :raw-html:`<span class="fa fa-star-o" aria-hidden="true"></span><span class="visuallyhidden">Star</span>`
-.. |copy-c| replace:: :raw-html:`<span class="fa fa-clipboard" aria-hidden="true"></span><span class="visuallyhidden">Copy to computer clipboard</span>`
-.. |copy| replace:: :raw-html:`<span class="fa fa-copy" aria-hidden="true"></span><span class="visuallyhidden">Copy to Studio clipboard</span>`
-.. |pencil| replace:: :raw-html:`<span class="fa fa-pencil" aria-hidden="true"></span><span class="visuallyhidden">Pencil</span>`
-.. |move| replace:: :raw-html:`<span class="fa fa-arrows" aria-hidden="true"></span><span class="visuallyhidden">Move</span>`
-.. |trash| replace:: :raw-html:`<span class="fa fa-trash" aria-hidden="true"></span><span class="visuallyhidden">Delete</span>`
-.. |sync| replace:: :raw-html:`<span class="fa fa-refresh" aria-hidden="true"></span><span class="visuallyhidden">Sync</span>`
-.. |plus| replace:: :raw-html:`<span class="fa fa-plus" aria-hidden="true"></span><span class="visuallyhidden">Plus</span>`
-.. |plus-c| replace:: :raw-html:`<span class="fa fa-plus-circle" aria-hidden="true"></span><span class="visuallyhidden">Plus</span>`
-.. |home| replace:: :raw-html:`<span class="fa fa-home" aria-hidden="true"></span><span class="visuallyhidden">Home</span>`
-.. |close| replace:: :raw-html:`<span class="fa fa-close" aria-hidden="true"></span><span class="visuallyhidden">Close</span>`
-.. |ellipsis| replace:: :raw-html:`<span class="fa fa-ellipsis-h fa-lg fa-border" aria-hidden="true"></span><span class="visuallyhidden">Ellipsis</span>`
-.. |download| replace:: :raw-html:`<span class="fa fa-download" aria-hidden="true"></span><span class="visuallyhidden">Download</span>`
-.. |user| replace:: :raw-html:`<span class="fa fa-user" aria-hidden="true"></span><span class="visuallyhidden">User</span>`
-.. |external| replace:: :raw-html:`<span class="fa fa-external-link" aria-hidden="true"></span>`
-.. |sort| replace:: :raw-html:`<span class="fa fa-sort" aria-hidden="true"></span><span class="visuallyhidden">Move up/down</span>`
+.. |user| replace:: :raw-html:`<span class="material-icons" aria-hidden="true">account_circle</span><span class="visuallyhidden">User menu</span>`
+.. |invite| replace:: :raw-html:`<span class="material-icons" aria-hidden="true">people</span><span class="visuallyhidden">Invite collaborators</span>`
+.. |star| replace:: :raw-html:`<span class="material-icons" aria-hidden="true">star</span><span class="visuallyhidden">Starred channels</span>`
+.. |star-o| replace:: :raw-html:`<span class="material-icons" aria-hidden="true"></span><span class="visuallyhidden">Star</span>`
+.. |copy-c| replace:: :raw-html:`<span class="material-icons" aria-hidden="true">content_paste</span><span class="visuallyhidden">Copy to computer clipboard</span>`
+.. |copy| replace:: :raw-html:`<span class="material-icons" aria-hidden="true">content_paste</span><span class="visuallyhidden">Copy to Studio clipboard</span>`
+.. |pencil| replace:: :raw-html:`<span class="material-icons" aria-hidden="true">mode_edit</span><span class="visuallyhidden">Pencil</span>`
+.. |move| replace:: :raw-html:`<span class="material-icons" aria-hidden="true">open_with</span><span class="visuallyhidden">Move</span>`
+.. |delete| replace:: :raw-html:`<span class="material-icons" aria-hidden="true">clear</span><span class="visuallyhidden">Delete</span>`
+.. |trash| replace:: :raw-html:`<span class="material-icons" aria-hidden="true">delete</span><span class="visuallyhidden">Manage deleted content</span>`
+.. |sync| replace:: :raw-html:`<span class="material-icons" aria-hidden="true">sync</span><span class="visuallyhidden">Sync</span>`
+.. |plus| replace:: :raw-html:`<span class="material-icons" aria-hidden="true">add</span><span class="visuallyhidden">Add new</span>`
+.. |plus-c| replace:: :raw-html:`<span class="material-icons" aria-hidden="true">add_circle_outline</span><span class="visuallyhidden">Plus</span>`
+.. |home| replace:: :raw-html:`<span class="material-icons" aria-hidden="true">home</span><span class="visuallyhidden">Home</span>`
+.. |close| replace:: :raw-html:`<span class="material-icons" aria-hidden="true">clear</span><span class="visuallyhidden">Close</span>`
+.. |ellipsis| replace:: :raw-html:`<span class="material-icons" aria-hidden="true">more_horiz</span><span class="visuallyhidden">Ellipsis</span>`
+.. |download| replace:: :raw-html:`<span class="material-icons" aria-hidden="true"></span><span class="visuallyhidden">Download</span>`
+.. |external| replace:: :raw-html:`<span class="material-icons" aria-hidden="true"></span>`
+.. |sort-up| replace:: :raw-html:`<span class="material-icons" aria-hidden="true">keyboard_arrow_up</span><span class="visuallyhidden">Move up</span>`
+.. |sort-down| replace:: :raw-html:`<span class="material-icons" aria-hidden="true">keyboard_arrow_down</span><span class="visuallyhidden">Move down</span>`
+.. |coach| replace:: :raw-html:`<span class="material-icons local_library" aria-hidden="true">local_library</span><span class="visuallyhidden">Coach resource</span>`
+.. |br| replace:: :raw-html:`<br /><br />`
 """
 
 
