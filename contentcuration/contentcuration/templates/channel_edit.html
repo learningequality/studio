@@ -4,6 +4,8 @@
 {% load i18n %}
 {% load render_bundle_css from translation_tags %}
 {% load render_bundle from webpack_loader %}
+{% load kolibri_tags %}
+{% load content_tags %}
 
 {% block css_bundle %}
 	{% render_bundle_css 'channel_edit' %}
@@ -81,4 +83,6 @@
 		<div id="main-content-area" ></div>
 	</div>
 	</div>
+	{% webpack_asset 'default_frontend' %}
+	{% content_renderer_assets %}
 {% endblock content %}

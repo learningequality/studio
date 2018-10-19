@@ -40,6 +40,8 @@ WEBPACK_LOADER = {
     }
 }
 
+KOLIBRI_CORE_JS_NAME = 'kolibriGlobal'
+
 PERMISSION_TEMPLATE_ROOT = os.path.join(BASE_DIR, "contentcuration", "templates", "permissions")
 
 # Quick-start development settings - unsuitable for production
@@ -75,10 +77,15 @@ INSTALLED_APPS = (
     'email_extras',
     'le_utils',
     'rest_framework.authtoken',
-    'search',
-    'django_s3_storage',
     'webpack_loader',
     'django_filters',
+    'django_s3_storage',
+    'search',
+    'kolibri.core',
+    'kolibri.plugins.media_player',
+    'kolibri.plugins.document_pdf_render',
+    'kolibri_exercise_perseus_plugin',
+    'kolibri.plugins.html5_app_renderer',
 )
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
@@ -164,6 +171,10 @@ TEMPLATES = [
                 'readonly.context_processors.readonly',
                 'contentcuration.context_processors.site_variables',
             ],
+            'libraries': {
+                'kolibri_tags': 'kolibri.core.webpack.templatetags.webpack_tags',
+                'content_tags': 'kolibri.content.templatetags.content_tags',
+            },
         },
     },
 ]
