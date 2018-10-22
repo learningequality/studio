@@ -18,7 +18,7 @@ djangorestframework-bulk = "==0.2.1"
 django-email-extras = "==0.3.3"
 kolibri = "==0.7.0"
 validators = "*"
-le-utils = "*"
+le-utils = {git = "https://github.com/elaeon/le-utils.git", ref = "master"}
 gunicorn = "==19.6.0"
 django-mailgun = "==0.9.1"
 pressurecooker = "==0.0.18"
