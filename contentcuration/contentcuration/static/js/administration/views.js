@@ -107,7 +107,15 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
         this.router.gotoNextPage();
     },
     render: function () {
-        let pageRadius = 5;
+        let visiblePageRadius = 5
+        let totalPages = this.collection.state.totalPages
+        let currentPage = this.collection.state.currentPage
+        
+        // if you made a clock out of the page numbers, what would be the distance
+        // between two page numbers on that clock?
+        let distance = (x, y) => (
+          Math.min((totalPages + x - y) % totalPages, (totalPages + y - x) % totalPages)
+        )
         this.$el.html(this.template({
             filterOptions: this.collection.filterOptions,
             sortFilterOptions: this.collection.sortFilterOptions,
@@ -117,19 +125,15 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
             currentPage: this.collection.state.currentPage,
             pages: Array(this.collection.state.totalPages).fill().map((_, i) => {
                 i = i + 1
-                let totalPages = this.collection.state.totalPages
-                let currentPage = this.collection.state.currentPage
-                let distance = (x, y) => (
-                    Math.min((totalPages + x - y) % totalPages, (totalPages + y - x) % totalPages)
-                )
-                let collapsed = distance(currentPage, i) > 5 && i !== 1 && i !== totalPages
+                // should this page link render as collapsed?
+                let collapsed = distance(currentPage, i) > visiblePageRadius && i !== 1 && i !== totalPages
                 return {
                     currentPage: i === currentPage,
                     pageNumber: i,
                     pageLinkText: collapsed ? `...${i}...` : i,
                     collapsed: collapsed
                 }
-            }).filter((pageIfExists) => pageIfExists),
+            }),
             disablePreviousPageButton: this.collection.state.currentPage == 1,
             disableNextPageButton:
                 this.collection.state.currentPage == this.collection.state.totalPages ||
