@@ -43,6 +43,7 @@ from django.views.decorators.cache import cache_page
 from django.views.decorators.http import condition
 from le_utils.constants import content_kinds
 from PIL import Image
+from raven.contrib.django.raven_compat.models import client
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authentication import TokenAuthentication
@@ -430,6 +431,8 @@ def generate_thumbnail(channel):
                 image.save(buffer, image.format)
                 return "data:image/{};base64,{}".format(ext[1:], base64.b64encode(buffer.getvalue()))
         except IOError:
+            client.captureMessage("Failed to generate thumbnail for channel id={}, filepath={}".format(
+                channel.id, filepath))
             pass
 
 

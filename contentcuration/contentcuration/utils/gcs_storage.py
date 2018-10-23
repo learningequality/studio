@@ -60,6 +60,7 @@ class GoogleCloudStorage(Storage):
         blob.download_to_file(fobj)
         # flush it to disk
         fobj.flush()
+        fobj.seek(0)
 
         django_file = File(fobj)
         django_file.just_downloaded = True
@@ -74,6 +75,9 @@ class GoogleCloudStorage(Storage):
         return blob.size
 
     def save(self, name, fobj, max_length=None, blob_object=None):
+        if name.endswith(".perseus") and self.exists(name):
+            logging.info("{} exists in Google Cloud Storage, so it's not saved again.".format(name))
+            return name
 
         if not blob_object:
             blob = Blob(name, self.bucket)
