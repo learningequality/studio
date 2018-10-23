@@ -48,8 +48,10 @@ Addresses #*PR# HERE*
 ## Reviewers
 
 If you are looking to assign a reviewer, here are some options:
-- Jordan @jayoshih (full stack)
-- Aron @aronasorman (back end, devops)
-- Ivan @ivanistheone ([Ricecooker](https://github.com/learningequality/ricecooker))
-- Richard @rtibbles ([Kolibri](https://github.com/learningequality/kolibri))
+- Jordan jayoshih (full stack)
+- Aron aronasorman (back end, devops)
+- Micah micahscopes (full stack)
+- Kevin kollivier (back end)
+- Ivan ivanistheone ([Ricecooker](https://github.com/learningequality/ricecooker))
+- Richard rtibbles (full stack, [Kolibri](https://github.com/learningequality/kolibri))
 - Radina @radinamatic (documentation)
