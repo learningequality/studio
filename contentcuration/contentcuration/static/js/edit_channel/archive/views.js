@@ -5,6 +5,8 @@ var Models = require("edit_channel/models");
 require("archive.less");
 var stringHelper = require("edit_channel/utils/string_helper");
 var dialog = require("edit_channel/utils/dialog");
+const State = require("edit_channel/state");
+const WorkspaceManager = require("../utils/workspace_manager");
 
 var NAMESPACE = "archive";
 var MESSAGES = {
@@ -22,7 +24,7 @@ var ArchiveModalView = BaseViews.BaseModalView.extend({
 
     initialize: function(options) {
         this.modal = true;
-        this.render(this.close, {channel:window.current_channel.toJSON()});
+        this.render(this.close, {channel:State.current_channel.toJSON()});
         new ArchiveView({
             el: this.$(".modal-body"),
             modal : this,
@@ -103,12 +105,12 @@ var ArchiveView = BaseViews.BaseWorkspaceView.extend({
         this.reload_ancestors(reloadCollection, true);
 
         // Remove where nodes originally were
-        var content = window.workspace_manager.get(target.id);
+        var content = WorkspaceManager.get(target.id);
         // if(content  && content.node){ node.deselect(); }
-        moved.forEach(function(node){ window.workspace_manager.remove(node.id)});
+        moved.forEach(function(node){ WorkspaceManager.remove(node.id)});
 
         // Add nodes to correct place
-        content = window.workspace_manager.get(target.id);
+        content = WorkspaceManager.get(target.id);
         if(content && content.list) {
             content.list.add_nodes(moved);
         }
@@ -156,7 +158,7 @@ var ArchiveList = BaseViews.BaseWorkspaceListView.extend({
             self.$(self.default_item).text(self.get_translation("no_items"));
             fetchedCollection.sort_by_order();
             self.load_content(fetchedCollection);
-            window.workspace_manager.put_list(self.model.id, self);
+            WorkspaceManager.put_list(self.model.id, self);
             self.container.set_indices();
             self.container.set_initial_focus();
         });
@@ -245,7 +247,7 @@ var ArchiveItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
         this.load_folder_toggle();
         this.$el.find(".archive_checkbox").prop("checked", this.checked);
         this.set_disabled(this.checked);
-        window.workspace_manager.put_node(this.model.id, this);
+        WorkspaceManager.put_node(this.model.id, this);
     },
     reload:function(model){
         this.model.set(model.attributes);
@@ -343,10 +345,10 @@ var ArchiveItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
         this.reload_ancestors(original_parents, true);
 
         // Remove where node originally was
-        window.workspace_manager.remove(this.model.id)
+        WorkspaceManager.remove(this.model.id)
 
         // Add nodes to correct place
-        var content = window.workspace_manager.get(target.id);
+        var content = WorkspaceManager.get(target.id);
         if(content && content.list){
             content.list.add_nodes(moved);
         }

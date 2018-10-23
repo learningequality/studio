@@ -1,6 +1,9 @@
 var Backbone = require("backbone");
 var _ = require("underscore");
 var mail_helper = require("edit_channel/utils/mail");
+const State = require("./state");
+const Constants = require("./constants/index");
+
 const DEFAULT_ADMIN_PAGE_SIZE = 25
 
 /**** BASE MODELS ****/
@@ -449,10 +452,10 @@ var ContentNodeModel = BaseModel.extend({
         }
         if (this.get('kind') === 'exercise') {
             var data = (this.get('extra_fields')) ? this.get('extra_fields') : {};
-            data['mastery_model'] = (data['mastery_model']) ? data['mastery_model'] : window.preferences.mastery_model;
-            data['m'] = (data['m']) ? data['m'] : window.preferences.m_value;
-            data['n'] = (data['n']) ? data['n'] : window.preferences.n_value;
-            data['randomize'] = (data['randomize'] !== undefined) ? data['randomize'] : window.preferences.auto_randomize_questions;
+            data['mastery_model'] = (data['mastery_model']) ? data['mastery_model'] : State.preferences.mastery_model;
+            data['m'] = (data['m'])? data['m'] : State.preferences.m_value;
+            data['n'] = (data['n'])? data['n'] : State.preferences.n_value;
+            data['randomize'] = (data['randomize'] !== undefined) ? data['randomize'] : State.preferences.auto_randomize_questions;
             this.set('extra_fields', data);
         }
     },
@@ -476,7 +479,7 @@ var ContentNodeModel = BaseModel.extend({
             var data = {
                 "node_id": self.id,
                 "target_parent": target_parent.get("id"),
-                "channel_id": window.current_channel.id
+                "channel_id": State.current_channel.id
             };
             $.ajax({
                 method: "POST",
@@ -670,7 +673,7 @@ var ContentNodeCollection = BaseCollection.extend({
                 "node_ids": self.models.map(node => node.id),
                 "sort_order": sort_order,
                 "target_parent": parent_id,
-                "channel_id": window.current_channel.id
+                "channel_id": State.current_channel.id
             };
             $.ajax({
                 method: "POST",
@@ -689,7 +692,7 @@ var ContentNodeCollection = BaseCollection.extend({
             var data = {
                 "nodes": self.toJSON(),
                 "target_parent": target_parent.get("id"),
-                "channel_id": window.current_channel.id,
+                "channel_id": State.current_channel.id,
                 "max_order": max_order,
                 "min_order": min_order
             };
@@ -709,7 +712,7 @@ var ContentNodeCollection = BaseCollection.extend({
         return new Promise(function (resolve, reject) {
             var data = {
                 "nodes": self.pluck('id'),
-                "channel_id": window.current_channel.id
+                "channel_id": State.current_channel.id
             };
             $.ajax({
                 method: "POST",
@@ -723,7 +726,7 @@ var ContentNodeCollection = BaseCollection.extend({
     sync_nodes: function (models) {
         var self = this;
         return new Promise(function (resolve, reject) {
-            var data = { "nodes": _.pluck(models, 'id'), "channel_id": window.current_channel.id };
+            var data = { "nodes": _.pluck(models, 'id'), "channel_id": State.current_channel.id };
             $.ajax({
                 method: "POST",
                 url: window.Urls.sync_nodes(),
@@ -1018,7 +1021,7 @@ var FileModel = BaseModel.extend({
     root_list: "file-list",
     model_name: "FileModel",
     get_preset: function () {
-        return window.formatpresets.get({ 'id': this.get("id") });
+        return Constants.FormatPresets.find(id => id === this.get("id"));
     },
     initialize: function () {
         this.set_preset(this.get("preset"), this.get("language"));
@@ -1125,7 +1128,7 @@ var LanguageCollection = BaseCollection.extend({
     list_name: "language-list",
     model_name: "LanguageCollection",
     comparator: function (language) {
-        return language.get("readable_name");
+        return language.readable_name;
     }
 });
 
@@ -1136,7 +1139,7 @@ var ContentKindModel = BaseModel.extend({
         kind: "topic"
     },
     get_presets: function () {
-        return window.formatpresets.where({ kind: this.get("kind") })
+        Constants.FormatPresets.filter(kind => kind === this.get("kind"))
     }
 });
 

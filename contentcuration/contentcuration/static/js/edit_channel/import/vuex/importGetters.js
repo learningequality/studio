@@ -1,8 +1,9 @@
 var _ = require('underscore');
+const State = require("edit_channel/state");
 
 // ID of the Channel being edited
 exports.currentChannelId = function() {
-  return window.current_channel.get('id');
+  return State.current_channel.get('id');
 }
 
 // Utility function for importedResourceCounts

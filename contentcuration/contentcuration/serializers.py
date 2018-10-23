@@ -517,6 +517,7 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer, ContentNodeFieldMix
     associated_presets = serializers.SerializerMethodField('retrieve_associated_presets')
     original_channel = serializers.SerializerMethodField('retrieve_original_channel')
     thumbnail_src = serializers.SerializerMethodField('retrieve_thumbail_src')
+    tags = TagSerializer(many=True, read_only=False)
 
     def retrieve_associated_presets(self, node):
         return node.get_associated_presets()

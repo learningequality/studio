@@ -127,12 +127,6 @@ def channel_page(request, channel, allow_edit=False, staging=False):
                           .annotate(is_view_only=Case(When(editors=request.user, then=Value(0)), default=Value(1), output_field=IntegerField()))\
                           .distinct().values("id", "name", "is_view_only").order_by('name')
 
-    fileformats = get_or_set_cached_constants(FileFormat, FileFormatSerializer)
-    licenses = get_or_set_cached_constants(License, LicenseSerializer)
-    formatpresets = get_or_set_cached_constants(FormatPreset, FormatPresetSerializer)
-    contentkinds = get_or_set_cached_constants(ContentKind, ContentKindSerializer)
-    languages = get_or_set_cached_constants(Language, LanguageSerializer)
-
     token = None
     if channel.secret_tokens.filter(is_primary=True).exists():
         token = channel.secret_tokens.filter(is_primary=True).first().token
@@ -146,13 +140,6 @@ def channel_page(request, channel, allow_edit=False, staging=False):
                                                  "channel_id": channel.pk,
                                                  "channel_name": channel.name,
                                                  "channel_list": channel_list,
-                                                 "fileformat_list": fileformats,
-                                                 "license_list": licenses,
-                                                 "fpreset_list": formatpresets,
-                                                 "ckinds_list": contentkinds,
-                                                 "langs_list": languages,
-                                                 "roles": json.dumps([r[0] for r in roles.choices]),
-                                                 "mastery": json.dumps([m[0] for m in exercises.MASTERY_MODELS if m[0] != exercises.SKILL_CHECK]),
                                                  "current_user": json_renderer.render(CurrentUserSerializer(request.user).data),
                                                  "preferences": json.dumps(channel.content_defaults),
                                                  "messages": get_messages(),

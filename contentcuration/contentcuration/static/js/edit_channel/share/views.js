@@ -5,6 +5,7 @@ var Models = require("edit_channel/models");
 require("share.less");
 var stringHelper = require("edit_channel/utils/string_helper");
 var dialog = require("edit_channel/utils/dialog");
+const State = require("edit_channel/state");
 
 var VIEWER_SHARE_MODES = [{'share_mode': 'view', 'text': 'Can view'}]
 var EDITOR_SHARE_MODES = [{'share_mode': 'edit', 'text': 'Can edit'}].concat(VIEWER_SHARE_MODES);
@@ -92,7 +93,7 @@ var ShareView = BaseViews.BaseView.extend({
         this.show_list = this.show_list();
         this.allow_leave = options.allow_leave;
         this.can_edit = this.allow_leave && _.find(this.model.get("editors"), function(u){
-            return u === window.current_user.id || u.id === window.current_user.id;
+            return u === State.current_user.id || u.id === State.current_user.id;
         });
         this.onjoin = options.onjoin;
         this.onleave = options.onleave;
@@ -136,14 +137,14 @@ var ShareView = BaseViews.BaseView.extend({
         }
     },
     show_list: function(){
-        return window.current_user.get('is_admin') || _.find(this.model.get("editors"), function(u){
-            return u === window.current_user.id
+        return State.current_user.get('is_admin') || _.find(this.model.get("editors"), function(u){
+            return u === State.current_user.id
         });
     },
     get_share_modes: function(){
         if (!this.share_modes){
-            var user_is_editor = _.find(this.model.get("editors"), function(u){return u === window.current_user.id});
-            if(window.current_user.get('is_admin') || user_is_editor){
+            var user_is_editor = _.find(this.model.get("editors"), function(u){return u === State.current_user.id});
+            if(State.current_user.get('is_admin') || user_is_editor){
                 this.share_modes = EDITOR_SHARE_MODES;
             }else{
                 this.share_modes = VIEWER_SHARE_MODES;
@@ -166,7 +167,7 @@ var ShareView = BaseViews.BaseView.extend({
                 collection: collections[0],
                 el: self.$("#current_list_wrapper"),
                 model: self.model,
-                current_user: window.current_user
+                current_user: State.current_user
             });
             collections[1].reject({email:null})
             self.pending_view = new SharePendingList({
@@ -295,9 +296,9 @@ var ShareView = BaseViews.BaseView.extend({
           [this.get_translation("cancel")]:function(){},
           [this.get_translation("join")]: function(){
                 self.$(".join_button").attr("disabled", "disabled").addClass("disabled");
-                self.model.add_editor(window.current_user.id).then(function(){
+                self.model.add_editor(State.current_user.id).then(function(){
                     self.can_edit = true;
-                    self.onjoin && self.onjoin(window.current_user);
+                    self.onjoin && self.onjoin(State.current_user);
                     self.render_user();
                 }).catch(function(error){
                     dialog.alert(self.get_translation("failed_join"), error.responseText);
@@ -315,9 +316,9 @@ var ShareView = BaseViews.BaseView.extend({
           [this.get_translation("cancel")]:function(){},
           [this.get_translation("leave")]: function(){
                 self.$(".leave_button").attr("disabled", "disabled").addClass("disabled");
-                self.model.remove_editor(window.current_user.id).then(function(){
+                self.model.remove_editor(State.current_user.id).then(function(){
                     self.can_edit = false;
-                    self.onleave && self.onleave(window.current_user);
+                    self.onleave && self.onleave(State.current_user);
                     self.render_user();
                 }).catch(function(error){
                     dialog.alert(self.get_translation("leaving_channel"), error.responseText);

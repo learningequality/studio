@@ -81,4 +81,4 @@ function WorkspaceManager(){
 	};
 }
 
-module.exports = WorkspaceManager;
+module.exports = new WorkspaceManager();

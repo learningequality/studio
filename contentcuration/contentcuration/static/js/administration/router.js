@@ -224,7 +224,6 @@ var AdministrationRouter = Backbone.Router.extend({
 			let routeParams = router.routeParamsCache[e.currentTarget.attributes['data-href'].value]
 			router.gotoRouteForParams(routeParams)
 		})
-		window.current_user = new Models.UserModel(window.user);
 	},
 	getSelected(opts) {
 		for (let k in opts) {

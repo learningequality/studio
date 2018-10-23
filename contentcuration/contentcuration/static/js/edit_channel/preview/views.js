@@ -4,6 +4,8 @@ var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
 var stringHelper = require("edit_channel/utils/string_helper");
 require("modal-styles.less");
+const State = require("edit_channel/state");
+const Constants = require("edit_channel/constants/index");
 
 var NAMESPACE = "preview";
 var MESSAGES = {
@@ -115,8 +117,8 @@ var PreviewView = BaseViews.BaseView.extend({
         this.model.get("files").forEach(function(file){
             var file_json = (file.attributes)? file.attributes : file;
             var preset_id = (file_json.preset && file_json.preset.name)? file_json.preset.name : file_json.preset;
-            var current_preset = window.formatpresets.get({id:preset_id});
-            if(current_preset && current_preset.get("subtitle")){
+            var current_preset = Constants.FormatPresets.find(id => id === preset_id);
+            if(current_preset && current_preset.subtitle){
                 subtitles.push(file_json);
             }
         });

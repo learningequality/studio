@@ -7,6 +7,7 @@ var BaseViews = require("./../views");
 var Models = require("./../models");
 var DragHelper = require("edit_channel/utils/drag_drop");
 var dialog = require("edit_channel/utils/dialog");
+const WorkspaceManager = require("../utils/workspace_manager");
 
 var NAMESPACE = "queue";
 var MESSAGES = {
@@ -42,7 +43,7 @@ var Queue = BaseViews.BaseWorkspaceView.extend({
 		this.trash_root = options.trash_root;
 		this.collection = options.collection;
 		this.render();
-		window.workspace_manager.set_queue_view(this);
+		WorkspaceManager.set_queue_view(this);
 	},
 	render: function() {
 		this.$el.html(this.template(null,  {
@@ -123,7 +124,7 @@ var Queue = BaseViews.BaseWorkspaceView.extend({
 		this.move_content(move_collection, "clipboard");
 	},
 	close_all_popups: function() {
-		window.workspace_manager.get_main_view().close_all_popups();
+		WorkspaceManager.get_main_view().close_all_popups();
 	},
 	handle_item_start_drag: function() {
 		this.$('.queue-overlay').addClass('queue-item-start-drag');
@@ -215,7 +216,7 @@ var ClipboardList = BaseViews.BaseWorkspaceListView.extend({
 		},  {
             data: this.get_intl_data()
         }));
-		window.workspace_manager.put_list(this.model.get("id"), this);
+		WorkspaceManager.put_list(this.model.get("id"), this);
 		this.$(this.default_item).text(this.get_translation("loading"));
 
 		// Don't make channels draggable, but do make items within channels
@@ -479,7 +480,7 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
             data: this.get_intl_data()
         }));
 		this.handle_checked();
-		window.workspace_manager.put_node(this.model.get("id"), this);
+		WorkspaceManager.put_node(this.model.get("id"), this);
 		if (!is_segment) {
 			this.make_droppable();
 			this.create_popover();

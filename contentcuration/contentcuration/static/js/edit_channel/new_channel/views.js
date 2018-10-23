@@ -10,6 +10,8 @@ var DetailView = require('edit_channel/details/views');
 var get_cookie = require("utils/get_cookie");
 var stringHelper = require("edit_channel/utils/string_helper")
 var dialog = require("edit_channel/utils/dialog");
+const State = require("edit_channel/state");
+const Constants = require("edit_channel/constants/index");
 
 var NAMESPACE = "newChannel";
 var MESSAGES = {
@@ -66,7 +68,7 @@ var ChannelListPage  = BaseViews.BaseView.extend({
 		}));
 		this.pending_channel_list = new PendingChannelList({container: this, el: this.$("#pending_list")});
 		var self = this;
-		window.current_user.get_channels().then(function(channels){
+		State.current_user.get_channels().then(function(channels){
 			self.current_channel_list = new CurrentChannelList({
 				container: self,
 				el: self.$("#channel_list"),
@@ -80,7 +82,7 @@ var ChannelListPage  = BaseViews.BaseView.extend({
 			    console.log(e.statusText);
 			  }
 			});
-		window.current_user.get_bookmarked_channels().then(function(channels){
+		State.current_user.get_bookmarked_channels().then(function(channels){
 			self.starred_channel_list = new StarredChannelList({
 				container: self,
 				el: self.$("#starred_list"),
@@ -94,7 +96,7 @@ var ChannelListPage  = BaseViews.BaseView.extend({
 			    console.log(e.statusText);
 			  }
 			});
-		window.current_user.get_public_channels().then(function(channels){
+		State.current_user.get_public_channels().then(function(channels){
 			self.public_channel_list = new PublicChannelList({
 				container: self,
 				el: self.$("#public_list"),
@@ -108,7 +110,7 @@ var ChannelListPage  = BaseViews.BaseView.extend({
 			    console.log(e.statusText);
 			  }
 			});
-		window.current_user.get_view_only_channels().then(function(channels){
+		State.current_user.get_view_only_channels().then(function(channels){
 			self.viewonly_channel_list = new ViewOnlyChannelList({
 				container: self,
 				el: self.$("#viewonly_list"),
@@ -289,7 +291,7 @@ var CurrentChannelList  = ChannelList.extend({
 		var preferences = (typeof window.user_preferences === "string")? JSON.parse(window.user_preferences) : window.user_preferences;
 
 		var data = {
-			editors: [window.current_user.id],
+			editors: [State.current_user.id],
 			pending_editors: [],
 			language: window.user_preferences.language,
 			content_defaults: preferences
@@ -325,7 +327,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		this.listenTo(this.model, "sync", this.set_model);
 		this.containing_list_view = options.containing_list_view;
 		this.container = options.container;
-		this.can_edit = this.model.get("editors").indexOf(window.current_user.id) >= 0;
+		this.can_edit = this.model.get("editors").indexOf(State.current_user.id) >= 0;
 		this.render();
 	},
 	set_is_new:function(isNew){
@@ -343,8 +345,8 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 			channel_link : this.model.get("id"),
 			picture : (this.model.get("thumbnail_encoding") && this.model.get("thumbnail_encoding").base64) || this.model.get("thumbnail_url"),
 			modified: this.model.get("modified") || new Date(),
-			languages: window.languages.toJSON(),
-			language: window.languages.findWhere({id: this.model.get("language")}),
+			languages: Constants.Languages,
+			language: Constants.Languages.find(id => id === this.model.get("language")),
 			new: this.isNew
 		}, {
 			data: this.get_intl_data()
@@ -404,7 +406,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	},
 	star_channel: function(event, star_icon){
 		var self = this;
-		this.model.add_bookmark(window.current_user.id).then(function() {
+		this.model.add_bookmark(State.current_user.id).then(function() {
 			self.model.set("is_bookmarked", true);
 			self.render();
 			self.set_star_icon(self.get_translation("unstar_channel"), star_icon);
@@ -413,7 +415,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	},
 	unstar_channel: function(event, star_icon){
 		var self = this;
-		this.model.remove_bookmark(window.current_user.id).then(function() {
+		this.model.remove_bookmark(State.current_user.id).then(function() {
 			self.model.set("is_bookmarked", false);
 			self.render();
 			self.set_star_icon(self.get_translation("star_channel"), star_icon);
@@ -448,7 +450,7 @@ var PendingChannelList  = ChannelList.extend({
 			data: this.get_intl_data()
 		}));
 		var self = this;
-		window.current_user.get_pending_invites().then(function(invitations){
+		State.current_user.get_pending_invites().then(function(invitations){
 			self.collection.reset(invitations.toJSON());
 			self.load_content(self.collection, " ");
 		});
