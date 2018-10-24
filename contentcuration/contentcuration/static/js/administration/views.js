@@ -107,30 +107,36 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
     goto_next: function () {
         this.router.gotoNextPage();
     },
-    // handle_removed: function(){
-    //     this.update_count(this.count - 1);
-    // },
-    // update_count: function(count){
-    //     this.count = count;
-    //     $(this.tab_count_selector).text(this.collection.state.totalRecords);
-    //     this.$(".viewing_count").text("Displaying " + count + " of " + this.collection.state.totalRecords + " " + this.item_name + "(s)...");
-    // },
     render: function () {
+        let visiblePageRadius = 5
+        let totalPages = this.collection.state.totalPages
+        let currentPage = this.collection.state.currentPage
+        
+        // if you made a clock out of the page numbers, what would be the distance
+        // between two page numbers on that clock?
+        let distance = (x, y) => (
+          Math.min((totalPages + x - y) % totalPages, (totalPages + y - x) % totalPages)
+        )
         this.$el.html(this.template({
             filterOptions: this.collection.filterOptions,
             sortFilterOptions: this.collection.sortFilterOptions,
             sortOrderOptions: this.collection.sortOrderOptions,
             collectionState: this.collection.state,
             total: this.collection.state.totalRecords,
-            current_page: this.collection.state.currentPage,
+            currentPage: this.collection.state.currentPage,
             pages: Array(this.collection.state.totalPages).fill().map((_, i) => {
+                i = i + 1
+                // should this page link render as collapsed?
+                let collapsed = distance(currentPage, i) > visiblePageRadius && i !== 1 && i !== totalPages
                 return {
-                    current_page: i + 1 == this.collection.state.currentPage,
-                    page_number: i + 1
+                    currentPage: i === currentPage,
+                    pageNumber: i,
+                    pageLinkText: collapsed ? `...${i}...` : i,
+                    collapsed: collapsed
                 }
             }),
-            disable_previous_page_button: this.collection.state.currentPage == 1,
-            disable_next_page_button:
+            disablePreviousPageButton: this.collection.state.currentPage == 1,
+            disableNextPageButton:
                 this.collection.state.currentPage == this.collection.state.totalPages ||
                 !this.collection.state.totalPages,
         }));

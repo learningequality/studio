@@ -155,7 +155,6 @@ var BasePageableCollection = PageableCollection.extend({
         return this.model_name;
     },
     parseRecords: function (resp) {
-        // console.log('response', resp)
         return resp.results;
     },
     parseState: function (resp, queryParams, state) {

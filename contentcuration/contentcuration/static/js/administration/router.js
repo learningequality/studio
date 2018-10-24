@@ -166,7 +166,9 @@ var AdministrationRouter = Backbone.Router.extend({
 		$('a.btn.' + name).tab('show')
 
 		// trigger an event we can listen to if we need to update anything on the view side
-		this.collections[name].trigger('showingTab')
+		if (this.collections[name]) {
+			this.collections[name].trigger('showingTab')
+		}
 		return false
 	},
 	getRoute({ name, filter, sortKey, sortOrder, search, page, pageSize }) {
