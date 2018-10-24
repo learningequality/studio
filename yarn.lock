@@ -3781,6 +3781,12 @@ handlebars-intl@^1.1.2:
     intl-messageformat "1.1.0"
     intl-relativeformat "1.1.0"
 
+handlebars-jest@^0.3.0:
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/handlebars-jest/-/handlebars-jest-0.3.0.tgz#696761ccf2338332e8c504204447b7d37eef5307"
+  dependencies:
+    node-cache "^4.2.0"
+
 handlebars-template-loader@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/handlebars-template-loader/-/handlebars-template-loader-1.0.0.tgz#264a8fdc356aa04d09ee08788c2980d710b01809"
@@ -5885,7 +5891,7 @@ nice-try@^1.0.4:
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/nice-try/-/nice-try-1.0.4.tgz#d93962f6c52f2c1558c0fbda6d512819f1efe1c4"
 
-node-cache@^4.1.1:
+node-cache@^4.1.1, node-cache@^4.2.0:
   version "4.2.0"
   resolved "https://registry.yarnpkg.com/node-cache/-/node-cache-4.2.0.tgz#48ac796a874e762582692004a376d26dfa875811"
   dependencies:
