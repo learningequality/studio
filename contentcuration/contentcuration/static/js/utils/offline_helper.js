@@ -4,6 +4,7 @@
 */
 
 var $ = require('jquery');
+const State = require("edit_channel/state");
 require("offline-js");
 require("../../css/offline-theme-slide.css");
 require("utils/snake");
@@ -32,10 +33,6 @@ var languageMapping = {
     "ar": "arabic"
 }
 
-function getOfflineLanguageName(code) {
-	return languageMapping[code.split("-")[0]] || languageMapping['en'];
-}
-
 var disabledOverlay = document.createElement("DIV");
 disabledOverlay.className = "fade";
 disabledOverlay.setAttribute('id', 'offline_overlay');
@@ -45,7 +42,7 @@ $(function() {
 	disabledOverlay.style.display = "none";
 });
 
-var language = getOfflineLanguageName(window.languageCode || "en");
+var language = languageMapping[State.currentLanguage.lang_code];
 
 Offline.options = {
 	checks: {xhr: {url: window.Urls.stealth()}},

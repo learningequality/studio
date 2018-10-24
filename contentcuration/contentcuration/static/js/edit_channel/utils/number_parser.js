@@ -19,9 +19,11 @@ EXPONENT: [DECIMAL | INTEGER]e+{0,1}[INTEGER]
 TODO: Add log and pi?
 
 ****************/
+const State = require("edit_channel/state");
+
 var SEP = /,/g;
 var POINT = /\./;
-if (window.languageCode.startsWith("es")) {
+if (State.currentLanguage.lang_code === "es") {
   SEP = /\./g;
   POINT = /,/;
 }

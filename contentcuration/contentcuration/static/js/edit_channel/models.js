@@ -1,7 +1,6 @@
 var Backbone = require("backbone");
 var _ = require("underscore");
 var mail_helper = require("edit_channel/utils/mail");
-const State = require("./state");
 const Constants = require("./constants/index");
 
 const DEFAULT_ADMIN_PAGE_SIZE = 25
@@ -447,6 +446,7 @@ var ContentNodeModel = BaseModel.extend({
         return attributes;
     },
     setExtraFields: function () {
+        const State = require("./state");
         if (typeof this.get('extra_fields') === 'string') {
             this.set('extra_fields', JSON.parse(this.get('extra_fields')));
         }
@@ -474,6 +474,7 @@ var ContentNodeModel = BaseModel.extend({
         return promise;
     },
     make_copy: function (target_parent) {
+        const State = require("./state");
         var self = this;
         return new Promise(function (resolve, reject) {
             var data = {
@@ -664,6 +665,7 @@ var ContentNodeCollection = BaseCollection.extend({
         this.highest_sort_order = (this.length > 0) ? this.at(this.length - 1).get("sort_order") : 1;
     },
     duplicate: function (target_parent) {
+        const State = require("./state");
         var self = this;
         return new Promise(function (resolve, reject) {
             var sort_order = (target_parent) ? target_parent.get("metadata").max_sort_order + 1 : 1;
@@ -687,6 +689,7 @@ var ContentNodeCollection = BaseCollection.extend({
         });
     },
     move: function (target_parent, max_order, min_order) {
+        const State = require("./state");
         var self = this;
         return new Promise(function (resolve, reject) {
             var data = {
@@ -708,6 +711,7 @@ var ContentNodeCollection = BaseCollection.extend({
         });
     },
     delete: function () {
+        const State = require("./state");
         var self = this;
         return new Promise(function (resolve, reject) {
             var data = {
@@ -724,6 +728,7 @@ var ContentNodeCollection = BaseCollection.extend({
         });
     },
     sync_nodes: function (models) {
+        const State = require("./state");
         var self = this;
         return new Promise(function (resolve, reject) {
             var data = { "nodes": _.pluck(models, 'id'), "channel_id": State.current_channel.id };
