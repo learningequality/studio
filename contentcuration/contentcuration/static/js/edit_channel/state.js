@@ -21,7 +21,7 @@ const State = {
   current_channel: window.channel && new Models.ChannelModel(window.channel),
   current_user: new Models.UserModel(window.user),
   nodeCollection: new Models.ContentNodeCollection(),
-  currentLanguage: Constants.Languages.find(l => l.id && l.id.toLowerCase() === window.languageCode ),
+  currentLanguage: Constants.Languages.find(l => l.id && l.id.toLowerCase() === (window.languageCode || 'en') ),
   openChannel(data) {
     this.staging = data.is_staging || false;
     Store.commit('SET_CONTENT_TAGS', this.current_channel.get('tags'))

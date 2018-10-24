@@ -96,6 +96,7 @@
     "eslint-plugin-vue": "^3.5.0",
     "esprima": "^4.0.0",
     "glob": "^7.1.2",
+    "handlebars-jest": "^0.3.0",
     "handlebars-template-loader": "^1.0.0",
     "imports-loader": "^0.8.0",
     "jest": "^23.6.0",

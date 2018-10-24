@@ -1,4 +1,5 @@
 var Models = require("edit_channel/models");
+const State = require("edit_channel/state");
 var template = require("edit_channel/utils/hbtemplates/dialog.handlebars");
 var _ = require('underscore');
 var stringHelper = require("edit_channel/utils/string_helper");
@@ -16,7 +17,7 @@ function dialog(title, submessage, actions, onclose){
     autoOpen: false,
     resizable: false,
     height: "auto",
-    width: (window.languageCode.startsWith("es"))? 500 : 400, // Spanish translations tend to be longer
+    width: State.currentLanguage.lang_code === "es" ? 500 : 400, // Spanish translations tend to be longer
     modal: false,
     buttons: actions,
     zIndex: 10000,
