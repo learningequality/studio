@@ -3,7 +3,7 @@ csrf.name = 'csrfmiddlewaretoken';
 csrf.value = 'csrfmiddlewaretoken';
 global.document.body.append(csrf);
 global.window.Urls = new Proxy({}, {
-  get() {
-    return () => undefined;
+  get(obj, prop) {
+    return () => prop;
   }
 });
