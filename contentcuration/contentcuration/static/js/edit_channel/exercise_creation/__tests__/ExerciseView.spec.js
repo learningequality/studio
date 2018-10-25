@@ -3,7 +3,7 @@ const Backbone = require('backbone');
 // Register handlebars helpers to ensure templates are rendered properly.
 require('handlebars/helpers');
 
-const exampleAnswer = {
+const exampleAssessment = {
   type: 'multiplechoice',
   question: 'Ceci n\'est pas un question?',
   hints: '["Maybe it is, maybe not?"]',
@@ -71,7 +71,7 @@ describe('ExerciseView', () => {
     });
     it('should render with a valid content node with 1 assessment_items', () => {
       model.set('assessment_items', [
-        exampleAnswer,
+        exampleAssessment,
       ]);
       const view = new ExerciseView({
         model,
@@ -81,16 +81,16 @@ describe('ExerciseView', () => {
       expect(html).toMatchSnapshot();
     });
     it('should render with a valid content node with 3 different assessment_items', () => {
-      const exampleAnswer1 = exampleAnswer;
-      const exampleAnswer2 = Object.assign({}, exampleAnswer);
-      exampleAnswer2.type = 'single_selection';
-      const exampleAnswer3 = Object.assign({}, exampleAnswer);
-      exampleAnswer3.type = 'single_selection';
-      exampleAnswer3.answers = "[]";
+      const exampleAssessment1 = exampleAssessment;
+      const exampleAssessment2 = Object.assign({}, exampleAssessment);
+      exampleAssessment2.type = 'single_selection';
+      const exampleAssessment3 = Object.assign({}, exampleAssessment);
+      exampleAssessment3.type = 'single_selection';
+      exampleAssessment3.answers = "[]";
       model.set('assessment_items', [
-        exampleAnswer1,
-        exampleAnswer2,
-        exampleAnswer3,
+        exampleAssessment1,
+        exampleAssessment2,
+        exampleAssessment3,
       ]);
       const view = new ExerciseView({
         model,
