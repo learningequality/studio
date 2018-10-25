@@ -513,8 +513,8 @@ var ContentNodeCollection = BaseCollection.extend({
                     preset_data.id = file.preset.name || file.preset.id;
                     fileCollection.add(to_add);
                 });
-                assessmentCollection.add(node.get('assessment_items'));
-                assessmentCollection.forEach(function (item) {
+                node.get('assessment_items').forEach(function (item) {
+                    item = new AssessmentItemModel(item);
                     item.set('contentnode', node.id);
                     if (item.get('type') === 'input_question') {
                         item.get('answers').each(function (a) {
@@ -525,6 +525,7 @@ var ContentNodeCollection = BaseCollection.extend({
                             }
                         });
                     }
+                    assessmentCollection.add(item);
                 })
             });
             Promise.all([fileCollection.save(), assessmentCollection.save()]).then(function () {
