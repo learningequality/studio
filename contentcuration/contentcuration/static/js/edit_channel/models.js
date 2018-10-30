@@ -1144,7 +1144,7 @@ var ContentKindModel = BaseModel.extend({
         kind: "topic"
     },
     get_presets: function () {
-        Constants.FormatPresets.filter(preset => preset.kind === this.get("kind"))
+        Constants.FormatPresets.filter(preset => preset.kind_id === this.get("kind"))
     }
 });
 
