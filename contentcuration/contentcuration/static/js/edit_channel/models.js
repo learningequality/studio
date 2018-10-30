@@ -1026,7 +1026,7 @@ var FileModel = BaseModel.extend({
     root_list: "file-list",
     model_name: "FileModel",
     get_preset: function () {
-        return Constants.FormatPresets.find(id => id === this.get("id"));
+        return Constants.FormatPresets.find(preset => preset.id === this.get("id"));
     },
     initialize: function () {
         this.set_preset(this.get("preset"), this.get("language"));
@@ -1144,7 +1144,7 @@ var ContentKindModel = BaseModel.extend({
         kind: "topic"
     },
     get_presets: function () {
-        Constants.FormatPresets.filter(kind => kind === this.get("kind"))
+        Constants.FormatPresets.filter(preset => preset.kind === this.get("kind"))
     }
 });
 

@@ -309,8 +309,8 @@ var SyncPreviewView = BaseViews.BaseView.extend({
             case "license":
                 return {
                     "field" : this.get_translation("license"),
-                    "current": stringHelper.translate(Constants.Licenses.find(license => license.id === this.model.get(field)).license_name),
-                    "source": stringHelper.translate(Constants.Licenses.find(license => license.id === this.changed.get(field)).license_name),
+                    "current": stringHelper.translate(Constants.Licenses.find(license => license.id === parseInt(this.model.get(field), 10)).license_name),
+                    "source": stringHelper.translate(Constants.Licenses.find(license => license.id === parseInt(this.changed.get(field), 10)).license_name),
                 }
             case "language":
                 var current_lang = (this.model.get(field))? Constants.Languages.find(lang => lang.id === this.model.get(field)).native_name : this.get_translation("same_as_topic");

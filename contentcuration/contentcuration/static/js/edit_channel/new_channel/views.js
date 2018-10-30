@@ -330,7 +330,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 			picture : (this.model.get("thumbnail_encoding") && this.model.get("thumbnail_encoding").base64) || this.model.get("thumbnail_url"),
 			modified: this.model.get("modified") || new Date(),
 			languages: Constants.Languages,
-			language: Constants.Languages.find(id => id === this.model.get("language")),
+			language: Constants.Languages.find(language => language.id === this.model.get("language")),
 			new: this.isNew
 		}, {
 			data: this.get_intl_data()
