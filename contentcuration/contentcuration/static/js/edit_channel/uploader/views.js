@@ -646,7 +646,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     var alloriginal = this.all_original();
     var original_source_license = "---";
     if(this.shared_data && this.shared_data.shared_license){
-      original_source_license = Constants.Licenses.find(license => license.id === this.shared_data.shared_license).license_name;
+      original_source_license = Constants.Licenses.find(license => license.id === parseInt(this.shared_data.shared_license, 10)).license_name;
     }
     var copyright_owner = (this.shared_data && this.shared_data.shared_copyright_owner)? this.shared_data.shared_copyright_owner: (alloriginal)? null: "---";
     var author = (this.shared_data && this.shared_data.shared_author)? this.shared_data.shared_author: (alloriginal)? null: "---";
@@ -783,10 +783,11 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   get_license: function(license_id){
     if(isNaN(license_id)){ return license_id; }
     else if(!license_id || license_id <= 0){ return null; }
-    return Constants.Licenses.find(license => license.id === license_id).license_name;
+    // isNaN actually coerces a numeric string to a number before checking, so to be safe we need to convert to int
+    return Constants.Licenses.find(license => license.id === parseInt(license_id, 10)).license_name;
   },
   display_license_description: function(license_id){
-    var license = license_id > 0 && Constants.Licenses.find(license => license.id === license_id);
+    var license = license_id > 0 && Constants.Licenses.find(license => license.id === parseInt(license_id, 10));
     if(license && license.is_custom){
       this.$("#custom_license_description").css('display', 'block');
       if(this.shared_data){
@@ -852,7 +853,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   load_license:function(){
     if (this.selected_items.length){
       var license_modal = new Info.LicenseModalView({
-        select_license : Constants.Licenses.find(license => license.id === this.selected_items[0].model.get("license"))
+        select_license : Constants.Licenses.find(license => license.id === parseInt(this.selected_items[0].model.get("license"), 10))
       });
     }
 
@@ -941,11 +942,6 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     this.$("#license_about").css("display", "inline");
     this.set_selected();
     this.display_license_description($("#license_select").val());
-  },
-  toggle_license_description: function() {
-    const license_id = (iscopied || !this.allow_edit)? this.selected_items[0].model.get("license") : $("#license_select").val();
-    var license = Constants.Licenses.find(license => license.id === license_id);
-    // TODO: This function appears to be a noop
   },
   set_selected:function(){
     var self = this;
@@ -1219,7 +1215,7 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
       (this.uploads_in_progress===0)? this.container.enable_submit() : this.container.disable_submit();
   },
   validate: function() {
-    var license = Constants.Licenses.find(license => license.id === this.model.get("license"));
+    var license = Constants.Licenses.find(license => license.id === parseInt(this.model.get("license"), 10));
     this.error = "";
     $(".input_listener, select").removeClass("invalid_field");
     if(!this.model.get("title")) {

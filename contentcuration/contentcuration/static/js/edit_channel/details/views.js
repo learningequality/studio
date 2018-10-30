@@ -247,7 +247,7 @@ var ChannelEditorView = BaseViews.BaseListEditableItemView.extend({
             channel: this.model.toJSON(),
             languages: Constants.Languages,
             picture : (this.model.get("thumbnail_encoding") && this.model.get("thumbnail_encoding").base64) || this.model.get("thumbnail_url"),
-            language: Constants.Languages.find(id => id === this.model.get("language")),
+            language: Constants.Languages.find(language => language.id === this.model.get("language")),
             can_edit: this.allow_edit,
             is_new: !!this.onnew,
             edit: this.edit
