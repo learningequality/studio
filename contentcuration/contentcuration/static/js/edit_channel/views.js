@@ -872,24 +872,24 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 	add_topic: function(){
 		var UploaderViews = require("edit_channel/uploader/views");
 		var self = this;
+		$("#main-content-area").append("<div id='dialog'></div>");
+		var metadata_modal = new UploaderViews.MetadataModalView({
+			el : $("#dialog"),
+			collection: new Models.ContentNodeCollection([]),
+			model: self.model,
+			new_content: true,
+			new_topic: true,
+			onsave: self.reload_ancestors,
+			onnew:self.add_nodes,
+			allow_edit: true
+		});
+
 		this.collection.create_new_node({
             "kind":"topic",
             "title": (this.model.get('parent'))? this.model.get('title') + " " + this.get_translation("topic") : this.get_translation("topic"),
         }).then(function(new_topic){
-        	var edit_collection = new Models.ContentNodeCollection([new_topic]);
-	        $("#main-content-area").append("<div id='dialog'></div>");
-
-	        var metadata_view = new UploaderViews.MetadataModalView({
-	            el : $("#dialog"),
-	            collection: edit_collection,
-	            model: self.model,
-	            new_content: true,
-	            new_topic: true,
-	            onsave: self.reload_ancestors,
-	            onnew:self.add_nodes,
-	            allow_edit: true,
-	            isclipboard: self.isclipboard
-	        });
+			metadata_modal.collection.add(new_topic)
+			metadata_modal.metadata_view.render()
         }).catch(function(error) {
         	var dialog = require("edit_channel/utils/dialog");
 			dialog.alert(self.get_translation("problem_creating_topics"), error.responseText);
@@ -930,6 +930,18 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 	add_exercise:function(){
 		var UploaderViews = require("edit_channel/uploader/views");
 		var self = this;
+		$("#main-content-area").append("<div id='dialog'></div>");
+		var metadata_modal = new UploaderViews.MetadataModalView({
+			el : $("#dialog"),
+			collection: new Models.ContentNodeCollection([]),
+			model: self.model,
+			new_content: true,
+			new_exercise: true,
+			onsave: self.reload_ancestors,
+			onnew:self.add_nodes,
+			allow_edit: true,
+			isclipboard: self.isclipboard
+		});
 		this.collection.create_new_node({
             "kind":"exercise",
             "title": (this.model.get('parent'))? this.model.get('title') + " " + this.get_translation("exercise_title") : this.get_translation("exercise_title"), // Avoid having exercises prefilled with 'email clipboard'
@@ -940,20 +952,8 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
             "license_name": State.preferences.license,
             "license_description": State.preferences.license_description || ""
         }).then(function(new_exercise){
-        	var edit_collection = new Models.ContentNodeCollection([new_exercise]);
-	        $("#main-content-area").append("<div id='dialog'></div>");
-
-	        var metadata_view = new UploaderViews.MetadataModalView({
-	            el : $("#dialog"),
-	            collection: edit_collection,
-	            model: self.model,
-	            new_content: true,
-	            new_exercise: true,
-	            onsave: self.reload_ancestors,
-	            onnew:self.add_nodes,
-	            allow_edit: true,
-	            isclipboard: self.isclipboard
-	        });
+			metadata_modal.collection.add(new_exercise)
+			metadata_modal.metadata_view.render()
         });
 	}
 });
@@ -1264,27 +1264,29 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 		});
 	},
 	add_topic: function(){
+		// Is this function ever actually used?
 		var UploaderViews = require("edit_channel/uploader/views");
 		var self = this;
+
+		$("#main-content-area").append("<div id='dialog'></div>");
+		var metadata_modal = new UploaderViews.MetadataModalView({
+			el : $("#dialog"),
+			collection: new Models.ContentNodeCollection([]),
+			model: self.model,
+			new_content: true,
+			new_topic: true,
+			onsave: self.reload_ancestors,
+			onnew:self.add_nodes,
+			allow_edit: true
+		});
 
 		this.containing_list_view.collection.create_new_node({
             "kind":"topic",
             "title": (this.model.get('parent'))? this.model.get('title') + " " + this.get_translation("topic_title") : this.get_translation("topic_title"),
             "sort_order" : this.model.get("metadata").max_sort_order,
         }).then(function(new_topic){
-        	var edit_collection = new Models.ContentNodeCollection([new_topic]);
-	        $("#main-content-area").append("<div id='dialog'></div>");
-
-	        var metadata_view = new UploaderViews.MetadataModalView({
-	            el : $("#dialog"),
-	            collection: edit_collection,
-	            model: self.model,
-	            new_content: true,
-	            new_topic: true,
-	            onsave: self.reload_ancestors,
-	            onnew:self.add_nodes,
-	            allow_edit: true
-	        });
+			metadata_modal.collection.add(new_topic)
+			metadata_modal.metadata_view.render()
         }).catch(function(error) {
         	var dialog = require("edit_channel/utils/dialog");
 			dialog.alert(self.get_translation("problem_creating_topics"), error.responseText);
