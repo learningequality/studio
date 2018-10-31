@@ -637,10 +637,10 @@ var DiffModalView = BaseViews.BaseModalView.extend({
 	template: require("./hbtemplates/stats_table.handlebars"),
 	name: NAMESPACE,
 	$trs: MESSAGES,
+	modal: true,
 	id: "stat_modal_wrapper",
 	initialize: function(options) {
 		_.bindAll(this, "init_focus");
-		this.modal = true;
 		this.render();
 	},
 	events: {

@@ -28,9 +28,9 @@ var ExportModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/export_modal.handlebars"),
     name: NAMESPACE,
     $trs: MESSAGES,
+    modal: true,
     initialize: function(options) {
         _.bindAll(this, "publish", 'loop_focus', 'set_indices', "toggle_language_prompt");
-        this.modal = true;
         this.render(this.close, {
             channel: State.current_channel.toJSON(),
             licenses: Constants.Licenses,
