@@ -384,7 +384,7 @@ var ImageUploadView = BaseViews.BaseModalView.extend({
             this.dropzone = new Dropzone(this.$("#dropzone").get(0), {
                 maxFiles: 1,
                 clickable: ["#dropzone", "#dropzone_placeholder"],
-                acceptedFiles: Constants.FormatPresets.find(id => id === this.preset_id).associated_mimetypes.join(','),
+                acceptedFiles: Constants.FormatPresets.find(preset => preset.id === this.preset_id).associated_mimetypes.join(','),
                 url: window.Urls.exercise_image_upload(),
                 thumbnailWidth:null,
                 thumbnailHeight:null,

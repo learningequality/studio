@@ -126,11 +126,11 @@ var SettingsView = BaseViews.BaseListEditableItemView.extend({
     },
     get_license_name: function(){
         var el = $("#license_select");
-        return el.val()!=0 && Constants.Licenses.find(license => license.id === el.val()).license_name;
+        return el.val()!=0 && Constants.Licenses.find(license => license.id === parseInt(el.val(), 10)).license_name;
     },
     check_custom_license: function(){
         var el = $("#license_select");
-        return el.val()!=0 && Constants.Licenses.find(license => license.id === el.val()).is_custom;
+        return el.val()!=0 && Constants.Licenses.find(license => license.id === parseInt(el.val(), 10)).is_custom;
     },
     submit_changes:function(){
         var content_defaults = this.model.get("content_defaults");
