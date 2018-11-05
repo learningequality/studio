@@ -1,12 +1,15 @@
 import json
 
 import testdata
+from testdata import create_temp_file
 from base import BaseAPITestCase
 from base import BaseTestCase
 from django.core.urlresolvers import reverse_lazy
 
+from contentcuration.models import Channel
 from contentcuration.models import ContentKind
 from contentcuration.models import ContentNode
+from contentcuration.models import Language
 from contentcuration.views import nodes
 
 
@@ -254,3 +257,126 @@ class NodeOperationsAPITestCase(BaseAPITestCase):
         assert self.channel.main_tree.get_descendants().count() == 0
         assert not self.channel.main_tree.get_descendants().filter(changed=True).exists()
         assert self.channel.main_tree.changed is True
+
+
+
+
+class SyncNodesOperationTestCase(BaseTestCase):
+    """
+    Checks that sync nodes updates properies.
+    """
+
+    def setUp(self):
+        super(SyncNodesOperationTestCase, self).setUp()
+
+    def test_sync_after_no_changes(self):
+        orig_video, cloned_video = self._setup_original_and_deriative_nodes()
+        nodes._sync_node(cloned_video, self.new_channel.id,
+                         sync_attributes=True,
+                         sync_tags=True,
+                         sync_files=True,
+                         sync_assessment_items=True,
+                         sync_sort_order=True)
+        self._assert_same_files(orig_video, cloned_video)
+
+    def test_sync_with_subs(self):
+        orig_video, cloned_video = self._setup_original_and_deriative_nodes()
+        self._add_subs_to_video_node(orig_video, 'fr')
+        self._add_subs_to_video_node(orig_video, 'es')
+        self._add_subs_to_video_node(orig_video, 'en')
+        nodes._sync_node(cloned_video, self.new_channel.id,
+                         sync_attributes=True,
+                         sync_tags=True,
+                         sync_files=True,
+                         sync_assessment_items=True,
+                         sync_sort_order=True)
+        self._assert_same_files(orig_video, cloned_video)
+
+
+    def test_resync_after_more_subs_added(self):
+        orig_video, cloned_video = self._setup_original_and_deriative_nodes()
+        self._add_subs_to_video_node(orig_video, 'fr')
+        self._add_subs_to_video_node(orig_video, 'es')
+        self._add_subs_to_video_node(orig_video, 'en')
+        nodes._sync_node(cloned_video, self.new_channel.id,
+                         sync_attributes=True,
+                         sync_tags=True,
+                         sync_files=True,
+                         sync_assessment_items=True,
+                         sync_sort_order=True)
+        self._add_subs_to_video_node(orig_video, 'ar')
+        self._add_subs_to_video_node(orig_video, 'zul')
+        nodes._sync_node(cloned_video, self.new_channel.id,
+                         sync_attributes=True,
+                         sync_tags=True,
+                         sync_files=True,
+                         sync_assessment_items=True,
+                         sync_sort_order=True)
+        self._assert_same_files(orig_video, cloned_video)
+
+
+    def _create_video_node(self, title, parent, withsubs=False):
+        data = dict(
+            kind_id='video',
+            title=title,
+            node_id='aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+        )
+        video_node = testdata.node(data, parent=parent)
+
+        if withsubs:
+            self._add_subs_to_video_node(video_node, 'fr')
+            self._add_subs_to_video_node(video_node, 'es')
+            self._add_subs_to_video_node(video_node, 'en')
+
+        return video_node
+
+    def _add_subs_to_video_node(self, video_node, lang):
+        lang_obj = Language.objects.get(id=lang)
+        sub_file = create_temp_file('subsin'+lang, preset='video_subtitle', ext='vtt')['db_file']
+        sub_file.language = lang_obj
+        sub_file.contentnode = video_node
+        sub_file.save()
+
+    def _create_empty_tree(self):
+        topic_kind = ContentKind.objects.get(kind="topic")
+        root_node = ContentNode.objects.create(title='Le derivative root', kind=topic_kind)
+        return root_node
+
+    def _create_minimal_tree(self, withsubs=False):
+        topic_kind = ContentKind.objects.get(kind="topic")
+        root_node = ContentNode.objects.create(title='Le root', kind=topic_kind)
+        self._create_video_node(title='Sample video', parent=root_node, withsubs=withsubs)
+        return root_node
+
+    def _setup_original_and_deriative_nodes(self):
+        # Setup original channel
+        self.channel = testdata.channel()  # done in base class but doesn't hurt to do again...
+        self.channel.main_tree = self._create_minimal_tree(withsubs=False)
+        self.channel.save()
+
+        # Setup derivative channel
+        self.new_channel = Channel.objects.create(name='derivative of teschannel', source_id='lkajs')
+        self.new_channel.save()
+        self.new_channel.main_tree = self._create_empty_tree()
+        self.new_channel.main_tree.save()
+        new_tree = nodes.duplicate_node_bulk(self.channel.main_tree, parent=self.new_channel.main_tree)
+        self.new_channel.main_tree = new_tree
+        # self.new_channel.main_tree.save()   #  InvalidMove: A node may not be made a child of any of its descendants.
+        self.new_channel.main_tree.refresh_from_db()
+
+        # Return video nodes we need for this test
+        orig_video = self.channel.main_tree.children.all()[0]
+        cloned_video = self.new_channel.main_tree.children.all()[0]
+        return orig_video, cloned_video
+
+    def _assert_same_files(self, nodeA, nodeB):
+        filesA = nodeA.files.all().order_by('checksum')
+        filesB = nodeB.files.all().order_by('checksum')
+        assert len(filesA) == len(filesB), 'different number of files found'
+        for fileA, fileB in zip(filesA, filesB):
+            assert fileA.checksum == fileB.checksum, 'different checksum found'
+            assert fileA.preset == fileB.preset, 'different preset found'
+            assert fileA.language == fileB.language, 'different language found'
+
+
+
