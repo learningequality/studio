@@ -11,6 +11,7 @@ spec:
         checksum: {{ include (print $.Template.BasePath "/studio-secrets.yaml") . | sha256sum }}
       labels:
         app: {{ template "studio.fullname" . }}
+        tier: app
     spec:
       containers:
       - name: app
@@ -18,7 +19,7 @@ spec:
         env:
         {{ include "studio.sharedEnvs" . }}
         - name: STATICFILES_DIR
-          value: /app/contentworkshop_static/        
+          value: /app/contentworkshop_static/
         - name: SEND_USER_ACTIVATION_NOTIFICATION_EMAIL
           value: "true"
         livenessProbe:
@@ -84,6 +85,7 @@ spec:
     metadata:
       labels:
         app: {{template "studio.fullname" . }}-workers
+        tier: workers
     spec:
       volumes:
       - name: gcs-creds
