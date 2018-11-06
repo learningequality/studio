@@ -9,4 +9,5 @@ spec:
     targetPort: {{ .Values.studioNginx.port }}
   selector:
     app: {{ template "studio.fullname" . }}
+    tier: app
   type: NodePort
