@@ -24,7 +24,7 @@
 		</ul>
 		<br/>
 
-		<h5>{% trans "Notable Outstanding Issues (Updated: Oct 29, 2018)" %}</h5>
+		<h5>{% blocktrans with update_date=update_date|date:"m/d/Y"%}Notable Outstanding Issues (Updated: {{update_date}}){% endblocktrans %}</h5>
 		<p><a class="link-text" target="_blank" href="https://github.com/learningequality/studio/issues/1052">{% trans "#1052 Reports of disappearing content" %}</a></p>
 		<p>{% blocktrans %}Two users have reported isolated incidents where content they imported from another channel disappeared, leaving only empty topics and subtopics. In one report, the content later re-appeared. They did not experience these problems consistently, and the incidents may possibly involve issues with a slow or unstable internet connection. <b>If you run into this issue, please contact us as soon as possible and let us know as much information as you can remember.</b>{% endblocktrans %}</p>
 		<br/>

@@ -38,6 +38,8 @@ from contentcuration.utils.csv_writer import generate_user_csv_filename
 from contentcuration.utils.google_drive import add_row_to_sheet
 from contentcuration.utils.policies import get_latest_policies
 
+ISSUE_UPDATE_DATE = datetime(2018, 10, 29)
+
 
 @login_required
 @browser_is_supported
@@ -345,6 +347,7 @@ class IssuesSettingsView(LoginRequiredMixin, FormView):
             "current_user": self.request.user,
             "page": "issues",
             "support_email": ccsettings.HELP_EMAIL,
+            "update_date": ISSUE_UPDATE_DATE,
         })
         return kwargs
 
