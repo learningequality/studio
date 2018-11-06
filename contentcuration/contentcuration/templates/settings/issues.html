@@ -13,16 +13,27 @@
 	<p>{% trans "We appreciate your patience and assistance as we work to improve Kolibri Studio and make it an even better tool for importing and curating educational content for Kolibri! " %}</p>
 	<hr/>
 	<div class="container-fluid">
+		<h5>{% trans "Best Practices" %}</h5>
+		<p>Here are some tips on how to use Kolibri Studio in Beta mode:</p>
+		<ul id="best-practices">
+			<li>{% trans 'Create smaller channels with fewer layers of the topic tree structure' %}</li>
+			<li>{% trans 'Copy sub-sets of topics instead of whole channels at once (especially large channels)' %}</li>
+			<li>{% trans 'Publish periodically to ensure that everything is properly backed up and saved' %}</li>
+			<li>{% blocktrans %}Compress videos before uploading them (we recommend following <a class="link-text" target="_blank" href="https://github.com/ivanistheone/ricecooker/blob/master/docs/video_compression.md">these instructions</a>){% endblocktrans %}</li>
+			<li>{% trans 'Report issues as you encounter them' %}</li>
+		</ul>
+		<br/>
+
 		<h5>{% trans "Notable Outstanding Issues (Updated: Oct 29, 2018)" %}</h5>
-		<p><a class="link-text" href="https://github.com/learningequality/studio/issues/1052">{% trans "#1052 Reports of disappearing content" %}</a></p>
+		<p><a class="link-text" target="_blank" href="https://github.com/learningequality/studio/issues/1052">{% trans "#1052 Reports of disappearing content" %}</a></p>
 		<p>{% blocktrans %}Two users have reported isolated incidents where content they imported from another channel disappeared, leaving only empty topics and subtopics. In one report, the content later re-appeared. They did not experience these problems consistently, and the incidents may possibly involve issues with a slow or unstable internet connection. <b>If you run into this issue, please contact us as soon as possible and let us know as much information as you can remember.</b>{% endblocktrans %}</p>
 		<br/>
-		<p><a class="link-text" href="https://github.com/learningequality/studio/issues/1072">{% trans "#1072 Slow performance can lead to unexpected UI state" %}</a></p>
+		<p><a class="link-text" target="_blank" href="https://github.com/learningequality/studio/issues/1072">{% trans "#1072 Slow performance can lead to unexpected UI state" %}</a></p>
 		<p>{% blocktrans %}Some operations in Studio are currently very slow, and so it may appear that the change you attempted to make timed out or did not take effect. In many cases, the change is still being processed and will appear once it is complete. If, after 5-10 minutes, the change still has not taken effect even after a browser refresh, please file an issue. We are working on solutions to these issues.{% endblocktrans %}</p>
 		<br/>
 
 		<h5>{% trans "Reporting Issues" %}</h5>
-		<p>{% blocktrans %}To report an issue, please fill out the form below. If you are familiar with GitHub and have a GitHub account, you may alternatively report issues via our <a class="link-text" href="https://github.com/learningequality/studio/issues">GitHub Issue Tracker</a> (please be sure to fill out all relevant fields in the issue template).{% endblocktrans %}</p>
+		<p>{% blocktrans %}To report an issue, please fill out the form below. If you are familiar with GitHub and have a GitHub account, you may alternatively report issues via our <a class="link-text" target="_blank" href="https://github.com/learningequality/studio/issues">GitHub Issue Tracker</a> (please be sure to fill out all relevant fields in the issue template).{% endblocktrans %}</p>
 		<br/>
 
 		{% if form.errors %}
