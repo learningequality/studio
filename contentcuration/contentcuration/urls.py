@@ -294,6 +294,7 @@ urlpatterns += [
     url(r'^settings/account/deleted', settings_views.account_deleted, name='account_deleted'),
     url(r'^settings/tokens', settings_views.tokens_settings, name='tokens_settings'),
     url(r'^settings/storage', settings_views.StorageSettingsView.as_view(), name='storage_settings'),
+    url(r'^settings/issues', settings_views.IssuesSettingsView.as_view(), name='issues_settings'),
     url(r'^settings/policies', settings_views.policies_settings, name='policies_settings'),
     url(r'^policies/update', settings_views.PolicyAcceptView.as_view(), name='policy_update'),
 ]

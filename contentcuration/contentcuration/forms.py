@@ -499,3 +499,24 @@ class ResetPasswordForm(SetPasswordForm):
 class LoginForm(AuthenticationForm):
     username = forms.CharField(max_length=254, widget=forms.TextInput(attrs={"dir": "auto"}))
     password = forms.CharField(label=_("Password"), strip=False, widget=forms.PasswordInput(attrs={"dir": "auto"}))
+
+
+class IssueReportForm(forms.Form, ExtraFormMixin):
+    operating_system = forms.CharField(required=True, widget=forms.TextInput(attrs={"dir": "auto", "placeholder": _("e.g. Windows, MacOS, Linux")}))
+    browser = forms.CharField(required=True, widget=forms.TextInput(attrs={"dir": "auto", "placeholder": _("e.g. Chrome, Firefox, Safari")}))
+    channel = forms.CharField(required=True, widget=forms.TextInput(attrs={"dir": "auto", "placeholder": _("Name of the channel you were working on")}))
+    description = forms.CharField(required=True, widget=forms.Textarea(attrs={"rows": 17, "dir": "auto",
+                                                                              "placeholder": _("A description of the steps you took, and what error "
+                                                                                               "message(s) you received, if any. \n\nFor example: \n"
+                                                                                               "I ran into an issue while copying content from the "
+                                                                                               "clipboard into the Algebra topic of my Math Grade 10 "
+                                                                                               "channel. I selected the \"Algebra basics\" topic from "
+                                                                                               "from the Khan Academy channel in the Math topic, added "
+                                                                                               "it into my clipboard, and then opened my channel, went "
+                                                                                               "to the Algebra topic, then opened the clipboard and dragged"
+                                                                                               " the \"Algebra basics\" topic into it. It appeared to be "
+                                                                                               "copying for a while, but then I received an error message "
+                                                                                               "that said \"500 HTTP Internal Server Error\".")}))
+
+    class Meta:
+        fields = ("operating_system", "browser", "channel", "description")
