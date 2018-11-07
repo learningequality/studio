@@ -310,8 +310,8 @@ body {
 	cursor:default;
 }
 
-#emergency-banner {
-	font-size: 12pt;
+.main-banner {
+	font-size: 11pt;
 	padding: 10px 20px;
 	margin-bottom: 5px;
 	i {
@@ -326,6 +326,11 @@ body {
 		background-color: @yellow-bg-color;
 		color: black;
 		i { color: #827B14; }
+	}
+	&.info {
+		background-color: @gray-200;
+		color: black;
+		i { color: @gray-700; }
 	}
 	a {
 		font-weight: bold;

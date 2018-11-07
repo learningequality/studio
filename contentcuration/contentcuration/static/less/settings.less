@@ -41,6 +41,10 @@
 			cursor: not-allowed !important;
 			opacity: 0.5;
 		}
+		.required {
+			color: @red-error-color;
+			margin-left: 2px;
+		}
 		.form-control{
 			padding: 5px;
 		}
@@ -127,11 +131,35 @@
 					width: 200px;
 				}
 			}
-			.required {
-				color: @red-error-color;
-				margin-left: 2px;
-			}
 			#id_time_constraint li { margin-bottom: 0px }
+		}
+
+		#issue_report {
+			.issue_field {
+				margin-top: 10px;
+				div:first-child {
+					font-weight: bold;
+					color: @gray-700;
+				}
+			}
+			input[type="text"] {
+				width: 100%;
+				padding: 0px 3px;
+				&[readonly] {
+					background-color: @gray-200;
+					color: @gray-700;
+					font-weight: bold;
+					border: none;
+				}
+			}
+			textarea {
+				resize: none;
+				padding: 5px 10px;
+    			width: 100%;
+			}
+			ul {
+				padding-left: 20px;
+			}
 		}
 	}
 	.token{
@@ -213,10 +241,7 @@
 				color: @gray-700;
 			}
 		}
-
 	}
-
-
 }
 
 #policy-area {
@@ -256,7 +281,3 @@
 		}
 	}
 }
-
-
-
-
