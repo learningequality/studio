@@ -56,7 +56,10 @@ def write_file_to_storage(fobj, check_valid=False, name=None):
 
     # Write file
     storage = default_storage
-    storage.save(file_path, fobj)
+    if storage.exists(file_path):
+        logging.info("{} exists in Google Cloud Storage, so it's not saved again.".format(file_path))
+    else:
+        storage.save(file_path, fobj)
     return full_filename
 
 
@@ -72,7 +75,10 @@ def write_raw_content_to_storage(contents, ext=None):
 
     # Write file
     storage = default_storage
-    storage.save(file_path, StringIO(contents))
+    if storage.exists(file_path):
+        logging.info("{} exists in Google Cloud Storage, so it's not saved again.".format(file_path))
+    else:
+        storage.save(file_path, StringIO(contents))
 
     return hashed_filename, full_filename, file_path
 
