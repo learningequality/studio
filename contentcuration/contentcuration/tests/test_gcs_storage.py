@@ -73,12 +73,6 @@ class GoogleCloudStorageSaveTestCase(TestCase):
         # Check that we pass self.content file_object to upload_from_file
         self.blob_obj.upload_from_file.assert_called_once_with(self.content, content_type="image/jpeg")
 
-    def test_save_an_existing_exercise(self):
-        """
-        Test if an existing exercise would be saved again
-        """
-        self.storage.save("testuploadexercises.perseus", self.content, blob_object=self.blob_obj)
-        self.blob_obj.upload_from_file.assert_not_called()
 
 class GoogleCloudStorageOpenTestCase(TestCase):
     """
