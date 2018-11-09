@@ -4,6 +4,7 @@ var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
 require("prerequisite.less");
 var staticModals = require("edit_channel/information/views");
+const State = require("edit_channel/state");
 
 const PREREQ_LIMIT = 5;
 
@@ -175,7 +176,7 @@ var PrerequisiteView = BaseViews.BaseListView.extend({
     initialize: function(options) {
         _.bindAll(this, 'render_selected_view');
         this.modal = options.modal;
-        this.collection = window.nodeCollection;
+        this.collection = State.nodeCollection;
         this.onselect = options.onselect;
         this.allow_edit = options.allow_edit;
         this.views_to_update = options.views_to_update;
@@ -285,7 +286,7 @@ var RelatedView = BasePrerequisiteView.extend({
             data: this.get_intl_data()
         }));
         this.collection.get_all_fetch_simplified([this.model.get('parent')]).then(function(collection){
-            self.navigate_to_node(collection.at(0) || window.current_channel.get_root("main_tree"));
+            self.navigate_to_node(collection.at(0) || State.current_channel.get_root("main_tree"));
         });
     },
     open_selected: function(){

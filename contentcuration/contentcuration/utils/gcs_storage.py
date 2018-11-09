@@ -75,10 +75,6 @@ class GoogleCloudStorage(Storage):
         return blob.size
 
     def save(self, name, fobj, max_length=None, blob_object=None):
-        if name.endswith(".perseus") and self.exists(name):
-            logging.info("{} exists in Google Cloud Storage, so it's not saved again.".format(name))
-            return name
-
         if not blob_object:
             blob = Blob(name, self.bucket)
         else:

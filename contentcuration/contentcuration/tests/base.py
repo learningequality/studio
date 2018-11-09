@@ -129,6 +129,9 @@ class BaseAPITestCase(StudioAPITestCase):
     def post(self, url, data, format='json'):
         return self.client.post(url, data, headers=self.header, format=format)
 
+    def put(self, url, data, format='json'):
+        return self.client.put(url, data, headers=self.header, format=format)
+
     def create_post_request(self, url, *args, **kwargs):
         factory = APIRequestFactory()
         request = factory.post(url, headers=self.header, *args, **kwargs)

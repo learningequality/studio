@@ -27,6 +27,7 @@ from rest_framework.decorators import api_view
 from contentcuration.decorators import browser_is_supported
 from contentcuration.decorators import has_accepted_policies
 from contentcuration.forms import AccountSettingsForm
+from contentcuration.forms import IssueReportForm
 from contentcuration.forms import PolicyAcceptForm
 from contentcuration.forms import PreferencesSettingsForm
 from contentcuration.forms import ProfileSettingsForm
@@ -36,6 +37,8 @@ from contentcuration.tasks import generateusercsv_task
 from contentcuration.utils.csv_writer import generate_user_csv_filename
 from contentcuration.utils.google_drive import add_row_to_sheet
 from contentcuration.utils.policies import get_latest_policies
+
+ISSUE_UPDATE_DATE = datetime(2018, 10, 29)
 
 
 @login_required
@@ -321,3 +324,33 @@ class StorageSettingsView(LoginRequiredMixin, FormView):
     def form_valid(self, form):
         messages.add_message(self.request, messages.INFO, _("Your storage request has been submitted for processing"))
         return super(StorageSettingsView, self).form_valid(form)
+
+
+class IssuesSettingsView(LoginRequiredMixin, FormView):
+    success_url = reverse_lazy('issues_settings')
+    template_name = 'settings/issues.html'
+    form_class = IssueReportForm
+
+    def post(self, request):
+        form = self.get_form()
+        if form.is_valid():
+            message = render_to_string('settings/issue_report_email.txt', {"data": form.cleaned_data, "user": self.request.user})
+            send_mail(_("Kolibri Studio Issue Report"), message, ccsettings.DEFAULT_FROM_EMAIL, [ccsettings.HELP_EMAIL, self.request.user.email])
+
+            return self.form_valid(form)
+        else:
+            return self.form_invalid(form)
+
+    def get_context_data(self, **kwargs):
+        kwargs = super(IssuesSettingsView, self).get_context_data(**kwargs)
+        kwargs.update({
+            "current_user": self.request.user,
+            "page": "issues",
+            "support_email": ccsettings.HELP_EMAIL,
+            "update_date": ISSUE_UPDATE_DATE,
+        })
+        return kwargs
+
+    def form_valid(self, form):
+        messages.add_message(self.request, messages.INFO, _("Your issue report has been submitted for processing"))
+        return super(IssuesSettingsView, self).form_valid(form)

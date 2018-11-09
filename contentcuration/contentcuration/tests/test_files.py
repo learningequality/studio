@@ -7,6 +7,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.urlresolvers import reverse_lazy
 from le_utils.constants import content_kinds
 from le_utils.constants import format_presets
+from mock import patch
 
 from contentcuration.management.commands.exportchannel import create_associated_thumbnail
 from contentcuration.models import AssessmentItem
@@ -87,6 +88,17 @@ class FileThumbnailTestCase(BaseAPITestCase):
         self.assertEqual(file_response.status_code, 200)
         file_data = json.loads(file_response.content)
         self.assertEqual(file_data['encoding'], generated_base64encoding())
+
+    @patch('contentcuration.api.default_storage.save')
+    @patch('contentcuration.api.default_storage.exists', return_value=True)
+    def test_existing_node_thumbnail_upload(self, storage_exists_mock, storage_save_mock):
+        upload_file = SimpleUploadedFile("image.png", self.thumbnail_contents)
+        request = self.create_post_request(reverse_lazy('image_upload'), {'file': upload_file})
+        file_response = thumbnail_upload(request)
+        self.assertEqual(file_response.status_code, 200)
+        file_data = json.loads(file_response.content)
+        self.assertEqual(file_data['encoding'], generated_base64encoding())
+        storage_save_mock.assert_not_called()
 
     def test_generate_thumbnail(self):
         # Create exercise node (generated images are more predictable)

@@ -2,6 +2,7 @@ var Models = require("edit_channel/models");
 var _ = require("underscore");
 var stringHelper = require("edit_channel/utils/string_helper");
 var dialog = require("edit_channel/utils/dialog");
+const WorkspaceManager = require("./workspace_manager");
 
 
 /* handleDrop: adds dropping ability to a certain container
@@ -46,7 +47,7 @@ function addSortable(element, selected_class, callback){
 
             // TODO(davidhu): Should send an event that the clipboard listens and
             // responds to instead.
-            var queue = window.workspace_manager.get_queue_view();
+            var queue = WorkspaceManager.get_queue_view();
             if (!queue.is_pinned()) {
               queue.close_queue();
             }
@@ -78,7 +79,7 @@ function addSortable(element, selected_class, callback){
         },
         update: function(event, ui) {
             if($(".drop-topic-hover").length === 0){
-                var view = window.workspace_manager.get(ui.item.context.id);
+                var view = WorkspaceManager.get(ui.item.context.id);
                 if(view){
                     var order = [];
                     var selected_items = new Models.ContentNodeCollection();
@@ -86,14 +87,14 @@ function addSortable(element, selected_class, callback){
                     $(".content-list").sortable( "disable" );
                     element.$el.find(".queue-list-wrapper >.content-list >li, >.content-list >li").each( function(e, list_item) {
                         if($(list_item).attr('id') && !$(list_item).attr('id').includes("default_item")){
-                            var node = window.workspace_manager.get($(list_item).attr('id')).node.model;
+                            var node = WorkspaceManager.get($(list_item).attr('id')).node.model;
                             order.push(node);
                         }
                     });
                     var appended_items = new Models.ContentNodeCollection(); //Items from another container
                     if(ui.item.data('items')){
                         ui.item.data('items').each(function(e){
-                            var view = window.workspace_manager.get(this.id);
+                            var view = WorkspaceManager.get(this.id);
                             if(view){
                                 var node = view.node.model;
                                 if(!selected_items.contains(current_node) && current_node.get("parent") == node.get("parent") && current_node.get("sort_order") < node.get("sort_order")){
@@ -139,13 +140,13 @@ function addDroppableArea(element, dropCallback, messages){
         hoverClass: "droppable-area-hover",
         drop:function(event, ui){
             var selected_items = new Models.ContentNodeCollection();
-            var current_view = window.workspace_manager.get(ui.draggable.context.id);
+            var current_view = WorkspaceManager.get(ui.draggable.context.id);
             var current_node = current_view.node.model;
             $(".content-list").sortable( "disable" );
 
             var appended_items = new Models.ContentNodeCollection(); //Items from another container
             $("#drag-list li").each(function(index, item){
-                var view = window.workspace_manager.get(item.id);
+                var view = WorkspaceManager.get(item.id);
                 if(view){
                     var node = view.node.model;
                     if(!selected_items.contains(current_node) && current_node.get("parent") == node.get("parent") && current_node.get("sort_order") < node.get("sort_order")){
@@ -206,14 +207,14 @@ function addTopicDragDrop(element, hoverCallback, dropCallback){
             if($(event.target).find(".drop-topic-hover").length === 0){
                 if($(".sorting-placeholder").css('display') === "none"){
                     var selected_items = new Models.ContentNodeCollection();
-                    var current_view = window.workspace_manager.get(ui.draggable.context.id);
+                    var current_view = WorkspaceManager.get(ui.draggable.context.id);
                     var current_node = current_view.node.model;
                     this.hoverOnItem = null;
                     $(".content-list").sortable( "disable" );
 
                     var appended_items = new Models.ContentNodeCollection(); //Items from another container
                     $("#drag-list li").each(function(index, item){
-                        var view = window.workspace_manager.get(item.id);
+                        var view = WorkspaceManager.get(item.id);
                         if(view){
                             var node = view.node.model;
                             if(!selected_items.contains(current_node) && current_node.get("parent") == node.get("parent") && current_node.get("sort_order") < node.get("sort_order")){
@@ -247,7 +248,7 @@ function addTopicDragDrop(element, hoverCallback, dropCallback){
                 var hoverItem = $(this)[0];
                 var self = this;
                 setTimeout(function(){
-                    if(self.hoverOnItem === hoverItem && window.workspace_manager.get(ui.draggable.context.id).node){
+                    if(self.hoverOnItem === hoverItem && WorkspaceManager.get(ui.draggable.context.id).node){
                         hoverCallback(event);
                     }
                 }, hoverInterval);

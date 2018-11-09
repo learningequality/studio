@@ -2,6 +2,7 @@ var $ = require('rawJquery');
 var get_cookie = require('./get_cookie');
 var csrftoken = get_cookie('csrftoken') || '';
 
+global.jQuery = global.$ = $;
 
 // side effect: bind jquery-ui functionality to jquery object
 require('./jquery-ui.js');

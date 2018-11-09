@@ -63,7 +63,6 @@ def fileformat_mp4():
     return mixer.blend(cc.FileFormat, extension='mp4', mimetype='application/video')
 
 
-@pytest.fixture
 def license_wtfpl():
     """
     Create a license object called WTF License.

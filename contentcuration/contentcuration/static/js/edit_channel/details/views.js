@@ -8,6 +8,8 @@ var dialog = require("edit_channel/utils/dialog");
 require("details.less");
 var d3Helper = require("edit_channel/utils/d3_helper");
 var descriptionHelper = require("edit_channel/utils/description");
+const State = require("edit_channel/state");
+const Constants = require("edit_channel/constants/index");
 
 var NAMESPACE = "details";
 var MESSAGES = {
@@ -243,9 +245,9 @@ var ChannelEditorView = BaseViews.BaseListEditableItemView.extend({
         this.original_thumbnail_encoding = this.model.get("thumbnail_encoding");
         this.$el.html(this.template({
             channel: this.model.toJSON(),
-            languages: window.languages.toJSON(),
+            languages: Constants.Languages,
             picture : (this.model.get("thumbnail_encoding") && this.model.get("thumbnail_encoding").base64) || this.model.get("thumbnail_url"),
-            language: window.languages.findWhere({"id": this.model.get("language")}),
+            language: Constants.Languages.find(language => language.id === this.model.get("language")),
             can_edit: this.allow_edit,
             is_new: !!this.onnew,
             edit: this.edit
@@ -370,7 +372,7 @@ var DetailsView = BaseViews.BaseListEditableItemView.extend({
         this.channel_id = options.channel_id;
         this.is_channel = options.is_channel;
         this.channel = options.channel;
-        window.current_channel_editor_cid = this.cid;
+        State.current_channel_editor_cid = this.cid;
         this.render();
     },
     events: {
@@ -407,7 +409,7 @@ var DetailsView = BaseViews.BaseListEditableItemView.extend({
         _.defer(this.render_visuals, 500);
     },
     render_visuals: function() {
-        if(this.cid === window.current_channel_editor_cid){
+        if(this.cid === State.current_channel_editor_cid){
             // Render visualizations with tags/kind counts
             this.render_breakdown();
             this.render_tagcloud();
@@ -431,7 +433,7 @@ var DetailsView = BaseViews.BaseListEditableItemView.extend({
             };
         });
 
-        var color_key = window.contentkinds.map(function(k) { return k.get("kind"); });
+        var color_key = Constants.ContentKinds.map(function(k) { return k.kind; });
         var piechart = new d3Helper.PieChart("#svg_wrapper", data, {
             key: "kind_id",
             width: 350,

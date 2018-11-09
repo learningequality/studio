@@ -3,6 +3,7 @@ var _ = require("underscore");
 var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
 var dialog = require("edit_channel/utils/dialog");
+const State = require("edit_channel/state");
 require("move.less");
 
 var NAMESPACE = "move";
@@ -79,11 +80,11 @@ var MoveView = BaseViews.BaseListView.extend({
         var fetched = new Models.ContentNodeCollection();
         // Add main tree root
         var main_node = this.model.clone();
-        main_node.set({'title': window.current_channel.get("name")});
+        main_node.set({'title': State.current_channel.get("name")});
         fetched.add(main_node);
 
         // Add clipboard node
-        var clipboard_node = window.current_user.get_clipboard().clone();
+        var clipboard_node = State.current_user.get_clipboard().clone();
         clipboard_node.set({'title': this.get_translation("my_clipboard")});
         fetched.add(clipboard_node);
 
@@ -194,7 +195,7 @@ var MoveItem = BaseViews.BaseListNodeItemView.extend({
         this.is_target = options.is_target;
         this.container = options.container;
         this.collection = new Models.ContentNodeCollection();
-        this.isclipboard = options.isclipboard || this.model.id === window.current_user.get_clipboard().id;
+        this.isclipboard = options.isclipboard || this.model.id === State.current_user.get_clipboard().id;
         this.render();
     },
     events: {

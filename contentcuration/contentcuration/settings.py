@@ -31,6 +31,8 @@ DB_ROOT = "databases"
 STATIC_ROOT = os.getenv("STATICFILES_DIR") or os.path.join(BASE_DIR, "static")
 CSV_ROOT = "csvs"
 
+BETA_MODE = os.getenv("STUDIO_BETA_MODE")
+
 # hardcoding all this info for now. Potential for shared reference with webpack?
 WEBPACK_LOADER = {
     'DEFAULT': {
@@ -78,6 +80,7 @@ INSTALLED_APPS = (
     'search',
     'django_s3_storage',
     'webpack_loader',
+    'django_filters',
 )
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"

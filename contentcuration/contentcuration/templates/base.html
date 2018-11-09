@@ -22,7 +22,14 @@
             -->
             <script src="https://cdn.ravenjs.com/3.26.4/raven.min.js" crossorigin="anonymous"></script>
             <script>
-                Raven.config('{% sentry_public_dsn %}').install()
+                // Ignore errors when CloudFlare-AlwaysOnline is in the user agent as these are errors serving
+                // the offline version and I don't think we can fix or reproduce these easily.
+                // Fix taken from here: https://github.com/getsentry/sentry-javascript/issues/617#issuecomment-227562203
+                Raven.config('{% sentry_public_dsn %}', {
+                      shouldSendCallback(data) {
+                        return !/^(.*CloudFlare-AlwaysOnline.*)$/.test(window.navigator.userAgent);
+                      }
+                    }).install()
             </script>
 	<link rel="shortcut icon" href="{% static 'img/logo.ico' %}">
 
@@ -51,6 +58,27 @@
       {% block js_bundle %} {% render_bundle 'base' 'js' %} {% endblock js_bundle %}
 
       <script type="text/javascript" src="{% url 'javascript-catalog' %}"></script>
+
+        <!-- fullstory integration, only on develop until we add an opt-in option. -->
+        {% if request.get_host == 'develop.studio.learningequality.org' %}
+        <script>
+            window['_fs_debug'] = false;
+            window['_fs_host'] = 'fullstory.com';
+            window['_fs_org'] = 'FCSD3';
+            window['_fs_namespace'] = 'FS';
+            (function(m,n,e,t,l,o,g,y){
+                if (e in m) {if(m.console && m.console.log) { m.console.log('FullStory namespace conflict. Please set window["_fs_namespace"].');} return;}
+                g=m[e]=function(a,b){g.q?g.q.push([a,b]):g._api(a,b);};g.q=[];
+                o=n.createElement(t);o.async=1;o.src='https://'+_fs_host+'/s/fs.js';
+                y=n.getElementsByTagName(t)[0];y.parentNode.insertBefore(o,y);
+                g.identify=function(i,v){g(l,{uid:i});if(v)g(l,v)};g.setUserVars=function(v){g(l,v)};g.event=function(i,v,s){g('event',{n:i,p:v,s:s})};
+                g.shutdown=function(){g("rec",!1)};g.restart=function(){g("rec",!0)};
+                g.consent=function(a){g("consent",!arguments.length||a)};
+                g.identifyAccount=function(i,v){o='account';v=v||{};v.acctId=i;g(o,v)};
+                g.clearUserCookie=function(){};
+            })(window,document,window['_fs_namespace'],'script','user');
+        </script>
+        {% endif %}
 
       {% endblock head %}
 
@@ -108,8 +136,13 @@
     	</div><!-- /.container-fluid -->
     </nav>
     {% if INCIDENT %}
-    <div id="emergency-banner" class="text-center {% if INCIDENT.readonly %}error{% else %}warning{% endif %}">
+    <div id="emergency-banner" class="text-center main-banner {% if INCIDENT.readonly %}error{% else %}warning{% endif %}">
       <i class="material-icons">error</i> {{INCIDENT.message | safe}}
+    </div>
+    {% endif %}
+    {% if BETA_MODE %}
+    <div id="beta-banner" class="text-center info main-banner">
+      <i class="material-icons">build</i> {% url 'issues_settings' as issue_url %}{% blocktrans %}Kolibri Studio is undergoing active development, and during usage you may encounter unexpected behavior or problems. <a href="{{issue_url}}" target="_blank">Please read here</a> on best practices, known issues, and error reporting recommendations. We appreciate your patience and assistance as we work to improve the Kolibri Studio Beta!{% endblocktrans %}
     </div>
     {% endif %}
     {% endblock nav %}

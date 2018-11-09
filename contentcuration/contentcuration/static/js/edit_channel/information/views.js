@@ -2,6 +2,7 @@ var Backbone = require("backbone");
 var _ = require("underscore");
 var BaseViews = require("edit_channel/views");
 var Models = require("edit_channel/models");
+const State = require("edit_channel/state");
 require("information.less");
 
 var NAMESPACE = "information";
@@ -74,9 +75,9 @@ var LicenseModalView = BaseInfoModalView.extend({
   template: require("./hbtemplates/license_modal.handlebars"),
   modal_id: "#license_modal",
   get_render_data: function(){ return {
-    license: this.data.select_license.toJSON(),
-    is_cc: this.data.select_license.get('license_url').includes('creativecommons.org'),
-    locale: window.languageCode && window.languageCode.split('-')[0] || 'en'
+    license: this.data.select_license,
+    is_cc: this.data.select_license.license_url.includes('creativecommons.org'),
+    locale: State.currentLanguage.id,
   }; }
 });
 

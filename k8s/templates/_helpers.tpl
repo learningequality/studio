@@ -77,6 +77,8 @@ Generate the shared environment variables between studio app and workers
           value: /var/log/django.log
         - name: MPLBACKEND
           value: PS
+        - name: STUDIO_BETA_MODE
+          value: "yes"
         - name: RUN_MODE
           value: k8s
         - name: DATA_DB_HOST

@@ -294,6 +294,7 @@ urlpatterns += [
     url(r'^settings/account/deleted', settings_views.account_deleted, name='account_deleted'),
     url(r'^settings/tokens', settings_views.tokens_settings, name='tokens_settings'),
     url(r'^settings/storage', settings_views.StorageSettingsView.as_view(), name='storage_settings'),
+    url(r'^settings/issues', settings_views.IssuesSettingsView.as_view(), name='issues_settings'),
     url(r'^settings/policies', settings_views.policies_settings, name='policies_settings'),
     url(r'^policies/update', settings_views.PolicyAcceptView.as_view(), name='policy_update'),
 ]
@@ -321,13 +322,15 @@ urlpatterns += [
 
 # Add admin endpoints
 urlpatterns += [
-    url(r'^channels/administration/', admin_views.administration, name='administration'),
+    url(r'^administration/', admin_views.administration, name='administration'),
     url(r'^api/make_editor/$', admin_views.make_editor, name='make_editor'),
     url(r'^api/remove_editor/$', admin_views.remove_editor, name='remove_editor'),
     url(r'^api/get_editors/(?P<channel_id>[^/]+)$', admin_views.get_editors, name='get_editors'),
     url(r'^api/send_custom_email/$', admin_views.send_custom_email, name='send_custom_email'),
-    url(r'^api/get_all_channels/$', admin_views.get_all_channels, name='get_all_channels'),
-    url(r'^api/get_all_users/$', admin_views.get_all_users, name='get_all_users'),
+    # url(r'^api/get_all_channels/$', admin_views.get_all_channels, name='get_all_channels'),
+    # url(r'^api/get_all_users/$', admin_views.get_all_users, name='get_all_users'),
+    url(r'^api/get_users/$', admin_views.AdminUserListView.as_view(), name='get_users'),
+    url(r'^api/get_channels/$', admin_views.AdminChannelListView.as_view(), name='get_channels'),
     url(r'^api/download_channel_csv/$', admin_views.download_channel_csv, name='download_channel_csv'),
     url(r'^api/download_channel_pdf/$', admin_views.download_channel_pdf, name='download_channel_pdf'),
     url(r'^api/get_channel_kind_count/(?P<channel_id>[^/]+)$', admin_views.get_channel_kind_count, name='get_channel_kind_count'),

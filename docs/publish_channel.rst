@@ -31,4 +31,4 @@ Once you receive the confirmation by email, you can share the published channel 
 
       Confirmation email you will receive once channel is published.
 
-.. tip:: Remember to re-publish the channel each time you make changes or updates to content items. The channel ID/token remains the same but administrators will need to import it again into Kolibri, in order to make the changes and see the new content available on the devices in their facilities.
+.. warning:: Remember to re-publish the channel each time you make changes or update content items. **The channel ID/token remains the same but administrators will need to import it again into Kolibri**, in order to make the changes and see the new content available on the devices in their facilities.
