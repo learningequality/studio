@@ -763,17 +763,26 @@ def sync_node_tags(node, original, channel_id):
 
 
 def sync_node_files(node, original):
-    # Delete files that aren't in original
+    """
+    Sync all files in ``node`` from the files in ``original`` node.
+    """
+    # A. Delete files that aren't in original
     node.files.exclude(checksum__in=original.files.values_list('checksum', flat=True)).delete()
-    # Add files that are in original
+    # B. Add all files that are in original
     for f in original.files.all():
-        # Remove any files that are already attached to node
-        original_file = node.files.filter(preset_id=f.preset_id).first()
-        if original_file:
-            if original_file.checksum == f.checksum:  # No need to copy file- nothing has changed
-                continue
-            original_file.delete()
-            node.changed = True
+        # 1. Look for old file with matching preset (and language if subs file)
+        if f.preset_id == format_presets.VIDEO_SUBTITLE:
+            oldf = node.files.filter(preset=f.preset, language=f.language).first()
+        else:
+            oldf = node.files.filter(preset=f.preset).first()
+        # 2. Remove oldf if it exists and its checksum has changed
+        if oldf:
+            if oldf.checksum == f.checksum:
+                continue             # No need to copy file if it hasn't changed
+            else:
+                oldf.delete()
+                node.changed = True
+        # 3. Copy over new file from original node
         fcopy = copy.copy(f)
         fcopy.id = None
         fcopy.contentnode = node
