@@ -65,10 +65,10 @@
 				<ul id="id_license">
 					{% for option in form.license %}
 						<li>
-							<label for="{{option.attrs.id}}">
-								<input id="{{option.attrs.id}}" name="license" type="checkbox" value="{{option.choice_value}}"{% if option.choice_value in option.value %}checked{% endif %}>
-								{{option.choice_value | get_translation}}
-								<a class="material-icons license-url" href="{{option.choice_value | get_license_url}}" target="_blank" data-toggle="tooltip" data-placement="top" title="{% trans 'Learn More' %}">link</a>
+							<label for="{{option.data.attrs.id}}">
+								<input id="{{option.data.attrs.id}}" name="license" type="checkbox" value="{{option.data.value}}"{% if option.data.selected %}checked{% endif %}>
+								{{option.data.value | get_translation}}
+								<a class="material-icons license-url" href="{{option.data.value | get_license_url}}" target="_blank" data-toggle="tooltip" data-placement="top" title="{% trans 'Learn More' %}">link</a>
 							</label>
 
 						</li>
@@ -108,7 +108,7 @@
 					{% for option in form.org_or_personal %}
 						<li>
 							{{option}}
-							{% if option.choice_value == 'Organization' %}
+							{% if option.data.value == 'Organization' %}
 							{{ form.organization }}
 							{% endif %}
 						</li>
@@ -122,7 +122,7 @@
 					{% for option in form.organization_type %}
 						<li>
 							{{option}}
-							{% if option.choice_value == 'Other' %}
+							{% if option.data.value == 'Other' %}
 							{{ form.organization_other }}
 							{% endif %}
 						</li>
@@ -167,12 +167,19 @@
 
 	function setOrgTypeDisabled() {
 		$(".id_org_or_personal input[value='Organization']").is(":checked") ?
-			$("input[name='organization_type']").removeAttr('disabled') :
-			$("input[name='organization_type']").attr('disabled', 'disabled');
+			$("input[name='organization_type'], #id_organization_other").removeAttr('disabled') :
+			$("input[name='organization_type'], #id_organization_other").attr('disabled', 'disabled');
 	}
-
 	$("input[name='org_or_personal']").on("change", setOrgTypeDisabled);
 	setOrgTypeDisabled();
+
+	function setOtherBoxes(ev) {
+		if($(ev.target).val().trim()) {
+			$($(ev.target).data('checkbox')).attr("checked", "checked");
+			setOrgTypeDisabled();
+		}
+	}
+	$(".other-textbox").on("keyup", setOtherBoxes);
 
 </script>
 {% endblock settingscontent %}

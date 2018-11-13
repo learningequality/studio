@@ -316,8 +316,8 @@ class PreferencesSettingsForm(forms.Form):
 class StorageRequestForm(forms.Form, ExtraFormMixin):
     # Nature of content
     storage = forms.CharField(required=True, widget=forms.TextInput(attrs={"placeholder": _("e.g. 1GB"), "class": "short-field", "dir": "auto"}))
-    kind = forms.CharField(required=True, widget=forms.TextInput(attrs={"placeholder": _(
-        "Mostly high resolution videos, some pdfs, etc."), "class": "long-field", "dir": "auto"}))
+    kind = forms.CharField(required=True, widget=forms.TextInput(attrs={"placeholder": _("Mostly high resolution videos, some pdfs, etc."),
+                                                                        "class": "long-field", "dir": "auto"}))
     resource_count = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "short-field", "dir": "auto"}))
     resource_size = forms.CharField(required=False, widget=forms.TextInput(attrs={"placeholder": _("e.g. 10MB"), "class": "short-field", "dir": "auto"}))
     creators = forms.CharField(required=True, widget=forms.TextInput(attrs={"class": "long-field", "dir": "auto"}))
@@ -334,7 +334,10 @@ class StorageRequestForm(forms.Form, ExtraFormMixin):
         ('Organization', _("I am uploading content on behalf of")),
         ('Not Affiliated', _("I am not affiliated with an organization for this work")),
     ])
-    organization = forms.CharField(required=False, widget=forms.TextInput(attrs={"placeholder": _("Organization or Institution"), "dir": "auto"}))
+    organization = forms.CharField(required=False, widget=forms.TextInput(attrs={"placeholder": _("Organization or Institution"),
+                                                                                 "dir": "auto",
+                                                                                 "class": "other-textbox",
+                                                                                 "data-checkbox": "input[name='org_or_personal'][value='Organization']"}))
     organization_type = forms.ChoiceField(required=False, widget=forms.RadioSelect, choices=(
         ("Grassroots and/or volunteer initiative", _("Grassroots and/or volunteer initiative")),
         ("Small NGO with annual budget < $25K", _("Small NGO with annual budget < $25K")),
@@ -343,7 +346,9 @@ class StorageRequestForm(forms.Form, ExtraFormMixin):
         ("For-profit or social enterprise company", _("For-profit or social enterprise company")),
         ("Other", _("Other")),
     ))
-    organization_other = forms.CharField(required=False, widget=forms.TextInput(attrs={"dir": "auto"}))
+    organization_other = forms.CharField(required=False, widget=forms.TextInput(attrs={"dir": "auto",
+                                                                                       "class": "other-textbox",
+                                                                                       "data-checkbox": "input[name='organization_type'][value='Other']"}))
 
     # Use case
     time_constraint = forms.ChoiceField(required=False, widget=forms.RadioSelect, choices=(
@@ -371,7 +376,7 @@ class StorageRequestForm(forms.Form, ExtraFormMixin):
         self.fields['public'] = forms.MultipleChoiceField(required=False, widget=forms.SelectMultiple(attrs={"class": "multi-select-field"}), choices=channels)
 
         countries = [(c.name, translator.gettext(c.name)) for c in list(pycountry.countries)]
-        self.fields['location'] = forms.ChoiceField(required=True, widget=forms.SelectMultiple(attrs={"class": "multi-select-field"}), choices=countries)
+        self.fields['location'] = forms.ChoiceField(required=False, widget=forms.SelectMultiple(attrs={"class": "multi-select-field"}), choices=countries)
 
     class Meta:
         fields = ("storage", "kind", "video_type", "resource_count", "resource_size", "license", "public", "audience", "org_or_personal", "organization")
