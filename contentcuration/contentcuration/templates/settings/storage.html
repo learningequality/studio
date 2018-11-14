@@ -175,7 +175,9 @@
 
 	function setOtherBoxes(ev) {
 		if($(ev.target).val().trim()) {
-			$($(ev.target).data('checkbox')).attr("checked", "checked");
+			var checkbox = $($(ev.target).data('checkbox'));
+			$("input[name='" + checkbox.prop("name") + "']").removeAttr("checked");
+			checkbox.prop("checked", "checked");
 			setOrgTypeDisabled();
 		}
 	}
