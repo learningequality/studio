@@ -100,6 +100,13 @@ class FileThumbnailTestCase(BaseAPITestCase):
         self.assertEqual(file_data['encoding'], generated_base64encoding())
         storage_save_mock.assert_not_called()
 
+    @patch('contentcuration.api.default_storage.save')
+    @patch('contentcuration.api.default_storage.exists', return_value=True)
+    def test_existing_thumbnail_is_not_created(self, storage_exists_mock, storage_save_mock):
+        thumbnail_fobj = create_thumbnail_from_base64(base64encoding())
+        storage_exists_mock.assert_called()
+        storage_save_mock.assert_not_called()
+
     def test_generate_thumbnail(self):
         # Create exercise node (generated images are more predictable)
         node = ContentNode(title="Test Node", kind_id=content_kinds.EXERCISE)
