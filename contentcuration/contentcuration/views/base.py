@@ -1,5 +1,6 @@
 import json
 import logging
+import time
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -22,8 +23,6 @@ from django.shortcuts import redirect
 from django.shortcuts import render
 from django.views.decorators.cache import cache_page
 from django.views.decorators.csrf import csrf_exempt
-from le_utils.constants import exercises
-from le_utils.constants import roles
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authentication import TokenAuthentication
@@ -424,6 +423,6 @@ def download_channel_content_csv(request, channel_id):
 
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
-def test_progressbar(request):
+def check_progress(request, task_id):
     time.sleep(0.5)
     return HttpResponse(json.dumps({"success": True}))

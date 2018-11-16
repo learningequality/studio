@@ -241,6 +241,28 @@ var BaseView = Backbone.View.extend({
 			WorkspaceManager.get_main_view().close_all_popups();
 		} catch(e) {}
 	},
+	check_progress: function(task_id, successCallback, cycles) {
+		// TODO: Remove cycles once API is in place
+		cycles = cycles || 5;
+		var self = this;
+		new Promise(function (resolve, reject) {
+            $.ajax({
+                method: "GET",
+                url: window.Urls.check_progress(task_id),
+                error: reject,
+                success: resolve
+            });
+        }).then(function (data) {
+        	// Temporarily using cycles to imitate polling
+        	if (cycles - 1 > 0) {
+        		console.log("Polling...");
+        		self.check_progress(task_id, successCallback, cycles - 1);
+        	} else {
+        		console.log("FINISHED!");
+        		successCallback(data);
+        	}
+        });
+	},
 
   /**
    * Track an event to analytics providers (e.g. Google Analytics, Mixpanel).
