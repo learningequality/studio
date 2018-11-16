@@ -24,6 +24,7 @@ services:
       CELERY_BROKER_ENDPOINT: studio-redis
       CELERY_RESULT_BACKEND_ENDPOINT: studio-redis
       CELERY_REDIS_PASSWORD: ""
+      PIPENV_HIDE_EMOJIS: "true"
     volumes:
       - .:/src
       - studio_app_virtualenv:/root/.local/share/virtualenvs/
@@ -54,6 +55,7 @@ services:
       CELERY_BROKER_ENDPOINT: studio-redis
       CELERY_RESULT_BACKEND_ENDPOINT: studio-redis
       CELERY_REDIS_PASSWORD: ""
+      PIPENV_HIDE_EMOJIS: "true"
   minio:
     image: minio/minio
     # logging:
