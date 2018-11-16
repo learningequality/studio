@@ -389,6 +389,22 @@
 							margin-bottom: 7px;
 							margin-top: -10px;
 							width: 100%;
+							@keyframes spin {
+								from { transform: scale(1) rotate(0deg);}
+								to { transform: scale(1) rotate(360deg);}
+							}
+							.upload-progress{
+								color: @blue-200;
+								font-size: 15pt;
+								display: none;
+								&.in-progress {
+									animation: spin 1.5s infinite linear;
+									display: inline-block;
+								}
+								&.done {
+									display: inline-block;
+								}
+							}
 							.metadata-indicator {
 								display: inline-block;
 								span{

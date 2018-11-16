@@ -629,6 +629,34 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		this.checked = this.$el.find("div>input[type=checkbox]").is(":checked");
 		(this.checked)? this.$el.addClass(this.selectedClass) : this.$el.removeClass(this.selectedClass);
 	},
+	check_progress: function(cycles) {
+		cycles = cycles || 5;
+		var self = this;
+		self.$(".upload-progress").addClass("in-progress").text("autorenew");
+		new Promise(function (resolve, reject) {
+            $.ajax({
+                method: "GET",
+                url: window.Urls.test_progressbar(),
+                error: reject,
+                success: resolve
+            });
+        }).then(function (data) {
+        	// Temporarily using cycles to imitate polling
+        	if (cycles > 0) {
+        		console.log("Polling...");
+        		self.check_progress(cycles - 1);
+        	} else {
+        		self.$(".upload-progress").removeClass("in-progress");
+        		self.$(".upload-progress").addClass("done").text("done");
+        		console.log("FINISHED!");
+        		setTimeout(function() {
+        			self.$(".upload-progress").fadeOut();
+        			self.$(".upload-progress").removeClass("done");
+        		}, 5000);
+        	}
+
+        });
+	}
 });
 
 

@@ -23,6 +23,11 @@
 	</div>
 	<div class="col-xs-8 item_section main_item_section {{#if isfolder}}open_folder{{else}}open_file{{/if}}">
 		<h6 class="content_metadata_summary hide_on_drag {{#unless isfolder}}open_file{{/unless}} metadata_to_hide">
+			<div class="pull-right">
+				<div class="spinner">
+				    <div class="material-icons upload-progress"></div>
+				</div>
+			</div>
 			<!-- NEW/UPDATED/INCOMPLETE Indicators -->
 			<div class="pull-right metadata-indicator">
 				{{#if edit_mode}}

@@ -219,6 +219,7 @@ urlpatterns = [
     url(r'^api/remove_bookmark/$', views.remove_bookmark, name='remove_bookmark'),
     url(r'^api/set_channel_priority/$', views.set_channel_priority, name='set_channel_priority'),
     url(r'^api/download_channel_content_csv/(?P<channel_id>[^/]{32})$', views.download_channel_content_csv, name='download_channel_content_csv'),
+    url(r'^api/test_progressbar/$', views.test_progressbar, name='test_progressbar'),  # TODO: Delete once progress API is done
 ]
 
 # Add public api endpoints

@@ -420,3 +420,10 @@ def download_channel_content_csv(request, channel_id):
     generatechannelcsv_task.delay(channel_id, site.domain, request.user.id)
 
     return HttpResponse({"success": True})
+
+
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
+def test_progressbar(request):
+    time.sleep(0.5)
+    return HttpResponse(json.dumps({"success": True}))
