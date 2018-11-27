@@ -44,6 +44,7 @@ var MESSAGES = {
     "upload_files": "Upload Files",
     "add_exercise": "Add Exercise",
     "import": "Import from Channels",
+    "import_from_youtube": "Import from YouTube",
     "view_topic": "View topic details",
     "question_count": "{count, plural,\n =1 {# Question}\n other {# Questions}}",
     "updated": "Updated",
@@ -345,7 +346,8 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
 		'click .import_button':'import_content',
 		'click .back_button' :'close_container',
 		'click .upload_files_button': 'add_files',
-		'click .create_exercise_button' : 'add_exercise'
+		'click .create_exercise_button' : 'add_exercise',
+		'click .youtube_import_button': 'import_from_youtube'
 	},
 	render: function() {
 		this.$el.html(this.template({

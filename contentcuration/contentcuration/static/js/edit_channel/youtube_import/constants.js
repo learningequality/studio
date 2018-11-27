@@ -1,0 +1,13 @@
+export const PageTypes = {
+  SUBMIT_URL: 'SUBMIT_URL',
+  CONFIRM: 'CONFIRM',
+};
+
+export const ImportStatus = {
+  IDLE: 'IDLE',
+  EXTRACTING: 'EXTRACTING',
+  EXTRACT_ERROR: 'EXTRACT_ERROR',
+  DOWNLOADING: 'DOWNLOADING',
+  DOWNLOAD_ERROR: 'DOWNLOAD_ERROR',
+  DONE: 'DONE',
+};

@@ -777,7 +777,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 	bind_workspace_functions: function(){
 		this.bind_edit_functions();
 		_.bindAll(this, 'copy_selected', 'delete_selected', 'add_topic','add_nodes', 'drop_in_container','handle_drop', 'refresh_droppable',
-			'import_content', 'add_files', 'add_to_clipboard', 'add_to_trash','make_droppable', 'copy_collection', 'add_exercise');
+			'import_content', 'add_files', 'add_to_clipboard', 'add_to_trash','make_droppable', 'copy_collection', 'add_exercise', 'import_from_youtube');
 	},
 
 	copy_selected:function(){
@@ -924,6 +924,15 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
           onimport: this.add_nodes,
           model: this.model
       });
+  },
+  import_from_youtube: function() {
+	var YoutubeImporter = require("edit_channel/youtube_import/views");
+  	this.file_upload_view = new YoutubeImporter.YoutubeImportModalView({
+      parent_view: this,
+      model:this.model,
+      onsave: this.reload_ancestors,
+	  onnew:this.add_nodes
+  	});
   },
   add_files:function(){
   	var FileUploader = require("edit_channel/file_upload/views");

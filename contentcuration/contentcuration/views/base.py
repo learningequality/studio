@@ -156,8 +156,10 @@ def channel_list(request):
     languages = get_or_set_cached_constants(Language, LanguageSerializer)
     fileformats = get_or_set_cached_constants(FileFormat, FileFormatSerializer)
     licenses = get_or_set_cached_constants(License, LicenseSerializer)
-    formatpresets = get_or_set_cached_constants(FormatPreset, FormatPresetSerializer)
-    contentkinds = get_or_set_cached_constants(ContentKind, ContentKindSerializer)
+    formatpresets = get_or_set_cached_constants(
+        FormatPreset, FormatPresetSerializer)
+    contentkinds = get_or_set_cached_constants(
+        ContentKind, ContentKindSerializer)
     languages = get_or_set_cached_constants(Language, LanguageSerializer)
 
     return render(request, 'channel_list.html', {"channel_name": False,
@@ -192,7 +194,8 @@ def get_user_bookmarked_channels(request):
     bookmarked_channels = request.user.bookmarked_channels.exclude(deleted=True)\
         .select_related('main_tree').prefetch_related('editors')\
         .defer('trash_tree', 'clipboard_tree', 'staging_tree', 'chef_tree', 'previous_tree', 'viewers')
-    channel_serializer = AltChannelListSerializer(bookmarked_channels, many=True)
+    channel_serializer = AltChannelListSerializer(
+        bookmarked_channels, many=True)
     return Response(channel_serializer.data)
 
 
@@ -296,7 +299,8 @@ def publish_channel(request):
         channel_id = data["channel_id"]
         request.user.can_edit(channel_id)
     except KeyError:
-        raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+        raise ObjectDoesNotExist(
+            "Missing attribute from data: {}".format(data))
 
     exportchannel_task.delay(channel_id, user_id=request.user.pk)
     return HttpResponse(json.dumps({
@@ -425,4 +429,15 @@ def download_channel_content_csv(request, channel_id):
 @permission_classes((IsAuthenticated,))
 def check_progress(request, task_id):
     time.sleep(0.5)
-    return HttpResponse(json.dumps({"success": True}))
+    resolutions = [{"resolution": "High Resolution", "size": 5000000000}, {
+        "resolution": "Low Resolution", "size": 5000000000}]
+    return HttpResponse(json.dumps({'status': 'done', 'title': 'Video Title', 'author': 'Author Name', 'type': 'Video', 'license': 'CC BY',
+                                    'videos': 1, 'available_storage': request.user.get_available_space(), 'resolutions': resolutions}))
+
+
+@api_view(['GET'])
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
+def retrieve_youtube_info(request):
+    print '\n\n\n', request.query_params.get('q', '').strip(), '\n\n\n'
+    return HttpResponse(json.dumps({'task_id': "TASK_ID"}))
