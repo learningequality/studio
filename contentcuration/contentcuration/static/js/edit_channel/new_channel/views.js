@@ -50,6 +50,7 @@ var MESSAGES = {
 	"save": "SAVE",
     "dont_save": "Discard Changes",
     "keep_open": "Keep Editing",
+    "collections": "Collections",
 }
 
 var ChannelListPage  = BaseViews.BaseView.extend({
@@ -96,6 +97,13 @@ var ChannelListPage  = BaseViews.BaseView.extend({
 				collection: channels
 			});
 		});
+		// State.current_user.get_channel_bundles().then(function(bundles){
+		// 	self.viewonly_channel_list = new ViewOnlyChannelList({
+		// 		container: self,
+		// 		el: self.$("#viewonly_list"),
+		// 		collection: channels
+		// 	});
+		// });
 	},
 	events: {
 		'click .new_channel_button' : 'new_channel',
