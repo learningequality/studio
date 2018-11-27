@@ -52,7 +52,6 @@ function getImportStatus(state) {
 
 var NAMESPACE = "youtube_import";
 var MESSAGES = {
-    "importing_content": "Importing Content..."
 }
 
 var YoutubeImportModalView = BaseViews.BaseView.extend({
@@ -64,7 +63,6 @@ var YoutubeImportModalView = BaseViews.BaseView.extend({
           getImportStatus,
           this._handleImportStatusChange.bind(this)
         );
-        this.listView = new BaseViews.BaseListView();
         this.render();
     },
 
@@ -74,14 +72,11 @@ var YoutubeImportModalView = BaseViews.BaseView.extend({
 
     _handleImportStatusChange: function(status) {
       switch (status) {
-        case ImportStatus.EXTRACTING:
-          return this._startInfoExtract();
-        case ImportStatus.UPLOADING:
+        case ImportStatus.START_IMPORT:
           return this._startImport();
-        // case ImportStatus.DOWNLOADING:
-        //   return this.trigger('finish_import', true);
-        default:
-          return;
+        case ImportStatus.DONE:
+          this._destroy();
+          this.YoutubeImportModal.closeModal();
       }
     },
 
@@ -101,42 +96,14 @@ var YoutubeImportModalView = BaseViews.BaseView.extend({
     },
 
     _resetPageState: function() {
-        store.commit('youtube_import/UPDATE_PAGE_STATE', { pageType: PageTypes.SUBMIT_URL });
-        store.commit('youtube_import/RESET_IMPORT_STATE');
-    },
-
-    _startInfoExtract: function() {
-        // var self = this;
-        // function onFinishImport(resolve, reject) {
-        //     self.once('finish_import', function(importFailed) {
-        //         self.YoutubeImportModal.closeModal();
-        //         if (importFailed) {
-        //             reject();
-        //         } else {
-        //           resolve(true);
-        //         }
-        //     });
-        // }
-        // this.listView.display_load(this.get_translation("importing_content"), onFinishImport);
+        store.commit('youtube_import/RESET_STORE');
+        store.commit('youtube_import/SET_PARENT_ID', this.model.id);
     },
 
     _startImport: function() {
-        // var self = this;
-        // function onFinishImport(resolve, reject) {
-        //     self.once('finish_import', function(importFailed) {
-        //         self.YoutubeImportModal.closeModal();
-        //         if (importFailed) {
-        //             reject();
-        //         } else {
-        //           resolve(true);
-        //         }
-        //     });
-        // }
-        // this.listView.display_load(this.get_translation("importing_content"), onFinishImport);
-    },
-
-    _finishImport: function() {
-      this.trigger('finish_import', false);
+        store.dispatch('youtube_import/addNodes', {
+            onConfirmImport: this.options.onimport,
+        });
     }
 });
 

@@ -486,7 +486,7 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	className: "content draggable to_publish",
 	initialize: function(options) {
 		_.bindAll(this, 'open_folder','open_node', 'copy_node' , 'delete_node', 'move_node',
-				'add_new_subtopic', 'open_context_menu', 'make_copy');
+				'add_new_subtopic', 'open_context_menu', 'make_copy', 'check_upload_progress');
 		this.bind_workspace_functions();
 		this.edit_mode = options.edit_mode;
 		this.containing_list_view = options.containing_list_view;
@@ -502,7 +502,8 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 			edit_mode: this.edit_mode,
 			checked: this.checked,
 			isexercise: this.model.get("kind") === "exercise",
-			count: this.model.get("metadata").resource_count
+			count: this.model.get("metadata").resource_count,
+			loading: this.loading
 		}, {
 			data: this.get_intl_data()
 		}));
@@ -514,6 +515,10 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 		WorkspaceManager.put_node(this.model.get("id"), this);
 		this.$el.removeClass(this.selectedClass);
 		this.create_popover();
+		// TODO: Change this when async tasks are done
+		if (this.model.get('task_ids').length) {
+			this.check_upload_progress();
+		}
 	},
 	create_popover:function(){
 		var self = this;
@@ -633,15 +638,20 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	},
 	check_upload_progress: function() {
 		var self = this;
-		self.$(".upload-progress").addClass("in-progress").text("autorenew");
-		this.check_progress("TASK ID", function(data){
-			self.$(".upload-progress").removeClass("in-progress");
-    		self.$(".upload-progress").addClass("done").text("done");
-    		setTimeout(function() {
-    			self.$(".upload-progress").fadeOut();
-    			self.$(".upload-progress").removeClass("done");
-    		}, 5000);
-		});
+		// TODO: Update with actual polling logic
+		if(!this.loading) { // Only call this once,
+			this.loading = true;
+			self.$(".upload-progress").addClass("in-progress").text("autorenew");
+			this.check_progress(this.model.get('task_ids')[0], function(data){
+				self.$(".upload-progress").removeClass("in-progress");
+	    		self.$(".upload-progress").addClass("done").text("done");
+	    		self.loading = false;
+	    		setTimeout(function() {
+	    			self.$(".upload-progress").fadeOut();
+	    			self.$(".upload-progress").removeClass("done");
+	    		}, 5000);
+			});
+		}
 	}
 });
 

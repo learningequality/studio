@@ -32,7 +32,7 @@
       </div>
       <div class="row">
         <div class="col-xs-4">{{ $tr('total_size') }}</div>
-        <div class="col-xs-8">{{totalSize}}</div>
+        <div class="col-xs-8"><b>{{totalSize}}</b></div>
       </div>
       <div class="row">
         <div class="col-xs-4">{{ $tr('available_storage') }}</div>
@@ -40,7 +40,13 @@
       </div>
       <div class="row">
         <div class="col-xs-4">{{ $tr('license') }}</div>
-        <div class="col-xs-8">{{youtubeData.license}}</div>
+        <div class="col-xs-8">
+          <ul class="list-unstyled">
+            <li v-for="license in license_names">
+              {{license}}
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
     <button
@@ -51,9 +57,10 @@
     >
       <span class="uppercase">
         {{ submitButtonLabel }}
-        <i v-if="isDownloading" class="material-icons upload-progress">autorenew</i>
+        <i v-if="isDownloading" class="material-icons yt-upload-progress">autorenew</i>
       </span>
     </button>
+    <div class="error pull-right" v-show="showError">{{ $tr('errorMessage') }}</div>
   </div>
 
 </template>
@@ -72,18 +79,23 @@
       YoutubeResolutionOption,
     },
     computed: Object.assign(
-      mapGetters('youtube_import', ['youtubeData', 'downloadSize']),
+      mapGetters('youtube_import', [
+        'youtubeData',
+        'downloadSize',
+        'resolutions',
+        'currentStatus',
+        'parentID',
+      ]),
       {
         enableSubmit() {
-          // TODO: Add extra validation?
-          return !this.isDownloading;
+          return !this.isDownloading && this.resolutions.length;
         },
         isDownloading() {
           return this.currentStatus === ImportStatus.DOWNLOADING;
         },
         submitButtonLabel() {
           if (this.isDownloading) {
-            return this.$tr('loading');
+            return this.$tr('downloading');
           }
           return this.$tr('import');
         },
@@ -92,16 +104,28 @@
         },
         availableStorage() {
           return `${stringHelper.format_size(this.youtubeData.available_storage)}`;
+        },
+        license_names() {
+          return _.map(this.youtubeData.licenses, function(license) {
+            return `${stringHelper.translate(license)}`
+          });
+        },
+        showError() {
+          return this.currentStatus === ImportStatus.DOWNLOAD_ERROR;
         }
       }
     ),
     methods: Object.assign(
       mapActions('youtube_import', [
-        'goToSubmitURL',
+        'downloadYoutubeVideos'
       ]),
       {
         startDownload() {
-          this.submitYoutubeURL({url: this.youtubeUrl, onSuccess: this.goToConfirm});
+          this.downloadYoutubeVideos({
+            url: this.youtubeUrl,
+            resolutions: this.resolutions,
+            parent_id: this.parentID,
+          });
         }
     }
     ),
@@ -114,7 +138,9 @@
       videos: 'Videos',
       available_storage: 'Available Storage',
       total_size: 'Total Size',
-      import: "Import"
+      import: "Import",
+      downloading: "Downloading",
+      errorMessage: 'Error importing the video(s)',
     },
   }
 
@@ -122,7 +148,7 @@
 
 
 <style lang="less" scoped>
-
+  @import "../../../../less/global-variables.less";
   #youtube-info-box {
     margin-bottom: 25px;
     font-size: 12pt;
@@ -132,4 +158,7 @@
     margin-bottom: 5px;
   }
 
+  .error {
+    margin-right: 5px;
+  }
 </style>

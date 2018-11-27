@@ -23,6 +23,8 @@ from django.shortcuts import redirect
 from django.shortcuts import render
 from django.views.decorators.cache import cache_page
 from django.views.decorators.csrf import csrf_exempt
+from le_utils.constants import format_presets
+from le_utils.constants import licenses
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authentication import TokenAuthentication
@@ -45,6 +47,7 @@ from contentcuration.models import ContentKind
 from contentcuration.models import ContentNode
 from contentcuration.models import FileFormat
 from contentcuration.models import FormatPreset
+from contentcuration.models import get_next_sort_order
 from contentcuration.models import Invitation
 from contentcuration.models import Language
 from contentcuration.models import License
@@ -54,6 +57,7 @@ from contentcuration.serializers import AltChannelListSerializer
 from contentcuration.serializers import ChannelListSerializer
 from contentcuration.serializers import ChannelSerializer
 from contentcuration.serializers import ContentKindSerializer
+from contentcuration.serializers import ContentNodeSerializer
 from contentcuration.serializers import CurrentUserSerializer
 from contentcuration.serializers import FileFormatSerializer
 from contentcuration.serializers import FormatPresetSerializer
@@ -428,16 +432,37 @@ def download_channel_content_csv(request, channel_id):
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def check_progress(request, task_id):
+    # TODO: Update this with the proper async code
     time.sleep(0.5)
-    resolutions = [{"resolution": "High Resolution", "size": 5000000000}, {
-        "resolution": "Low Resolution", "size": 5000000000}]
-    return HttpResponse(json.dumps({'status': 'done', 'title': 'Video Title', 'author': 'Author Name', 'type': 'Video', 'license': 'CC BY',
-                                    'videos': 1, 'available_storage': request.user.get_available_space(), 'resolutions': resolutions}))
+    resolutions = [{"resolution": format_presets.VIDEO_HIGH_RES, "size": 5000000000},
+                   {"resolution": format_presets.VIDEO_LOW_RES, "size": 5000000000}]
+    return HttpResponse(json.dumps({'status': 'done', 'title': 'Video Title', 'author': 'Author Name', 'videos': 1,
+                                    'type': 'Video', 'licenses': [licenses.CC_BY, licenses.CC_BY_SA], 'resolutions': resolutions,
+                                    'available_storage': request.user.get_available_space()
+                                    }))
 
 
 @api_view(['GET'])
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def retrieve_youtube_info(request):
+    # TODO: Add youtube info extraction logic
     print '\n\n\n', request.query_params.get('q', '').strip(), '\n\n\n'
     return HttpResponse(json.dumps({'task_id': "TASK_ID"}))
+
+
+@api_view(['POST'])
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
+def start_youtube_import(request):
+    # TODO: Add youtube download logic
+    data = dict(request.POST)
+    print '\n\n\n', data, '\n\n\n'
+
+    parent_node = ContentNode.objects.get(pk=data['parent_id'][0])
+    sort_order = get_next_sort_order(node=parent_node)
+    node = ContentNode(kind_id="topic", title="Youtube Import Test", parent_id=parent_node.pk, sort_order=sort_order)
+    node.save()
+    node.task_ids = ["test"]
+    serializer = ContentNodeSerializer([node], many=True)
+    return Response(serializer.data)

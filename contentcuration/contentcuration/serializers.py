@@ -518,6 +518,11 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer, ContentNodeFieldMix
     original_channel = serializers.SerializerMethodField('retrieve_original_channel')
     thumbnail_src = serializers.SerializerMethodField('retrieve_thumbail_src')
     tags = TagSerializer(many=True, read_only=False)
+    task_ids = serializers.SerializerMethodField('retreive_task_ids')
+
+    def retreive_task_ids(self, node):
+        # TODO: Update this once we figure out how to tell if nodes have associated tasks
+        return ["test"] if node.title == "Youtube Import Test" else []
 
     def retrieve_associated_presets(self, node):
         return node.get_associated_presets()
@@ -596,7 +601,7 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer, ContentNodeFieldMix
                   'license_description', 'assessment_items', 'files', 'parent_title', 'ancestors', 'modified', 'original_channel',
                   'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'original_source_node_id',
                   'tags', 'extra_fields', 'prerequisite', 'is_prerequisite_of', 'node_id', 'tree_id', 'publishing', 'freeze_authoring_data',
-                  'role_visibility', 'provider', 'aggregator', 'thumbnail_src')
+                  'role_visibility', 'provider', 'aggregator', 'thumbnail_src', 'task_ids')
 
 
 class ContentNodeEditSerializer(ContentNodeSerializer):

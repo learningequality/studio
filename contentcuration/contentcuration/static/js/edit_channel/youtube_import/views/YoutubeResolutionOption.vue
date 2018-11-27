@@ -4,15 +4,15 @@
       type="checkbox"
       @change="handleCheckboxChange"
       :checked="isChecked"
-      :id="resolution.resolution"
+      :id="resolution_name"
     >
     </input>
     <label
       :class="{ selected: isChecked }"
       :title="resolution.resolution"
-      :for="resolution.resolution"
+      :for="resolution_name"
     >
-      {{ resolution.resolution }}
+      {{ resolution_name }}
       <b class="size">{{size}}</b>
     </label>
   </li>
@@ -42,6 +42,9 @@
       {
         size() {
           return `${stringHelper.format_size(this.resolution.size)}`;
+        },
+        resolution_name() {
+          return `${stringHelper.translate(this.resolution.resolution)}`;
         }
       }
     ),

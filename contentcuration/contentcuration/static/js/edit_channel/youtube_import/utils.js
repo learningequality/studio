@@ -14,6 +14,22 @@ exports.getYoutubeVideoInfo = function(youtubeUrl) {
   });
 }
 
+exports.downloadYoutubeVideosFromURL = function(youtubeUrl, resolutions, parent_id) {
+  return new Promise(function(resolve, reject) {
+    $.ajax({
+      method:"POST",
+      url: window.Urls.start_youtube_import(),
+      success: resolve,
+      error: reject,
+      data: {
+        "youtube_url": youtubeUrl,
+        "resolutions": resolutions,
+        "parent_id": parent_id,
+      }
+    });
+  });
+}
+
 exports.checkProgress = function(task_id, cycles) {
   return new Promise(function(resolve, reject) {
     _checkTask(task_id, resolve, reject);

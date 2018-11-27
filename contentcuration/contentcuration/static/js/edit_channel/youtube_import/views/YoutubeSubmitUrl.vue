@@ -18,7 +18,7 @@
     >
       <span class="uppercase">
         {{ submitButtonLabel }}
-        <i v-if="isExtractingInfo" class="material-icons upload-progress">autorenew</i>
+        <i v-if="isExtractingInfo" class="material-icons yt-upload-progress">autorenew</i>
       </span>
     </button>
   </div>
@@ -111,27 +111,6 @@ export default {
     outline: none;
     border-bottom: 2px solid @blue-700;
   }
-}
-
-.error {
-  color: @red-error-color;
-  font-weight: bold;
-}
-
-button.action-button[disabled] {
-  opacity: 0.75;
-}
-
-@keyframes spin {
-  from { transform: scale(1) rotate(0deg);}
-  to { transform: scale(1) rotate(360deg);}
-}
-
-.upload-progress{
-  animation: spin 1.5s infinite linear;
-  font-size: 13pt;
-  vertical-align: sub;
-  margin-left: 5px;
 }
 
 </style>

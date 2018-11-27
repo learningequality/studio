@@ -69,6 +69,8 @@ export default {
       },
       closeModal() {
         $(this.$refs.topmodal).modal('hide');
+        $('body').removeClass('modal-open');
+        $('.modal-backdrop').remove();
       },
     }
   ),

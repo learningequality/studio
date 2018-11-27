@@ -26,11 +26,30 @@ export default {
 
 </script>
 
-<style lang="less" scoped>
+<style lang="less">
+  @import "../../../../less/modal-styles.less";
+  @import "../../../../less/global-variables.less";
+  #youtube_bottom_container {
+    height: 30px;
+  }
+  .error {
+    color: @red-error-color;
+    font-weight: bold;
+  }
 
-@import "../../../../less/modal-styles.less";
-@import "../../../../less/global-variables.less";
-#youtube_bottom_container {
-  height: 30px;
-}
+  button.action-button[disabled] {
+    opacity: 0.75;
+  }
+
+  @keyframes spin {
+    from { transform: scale(1) rotate(0deg);}
+    to { transform: scale(1) rotate(360deg);}
+  }
+
+  .yt-upload-progress{
+    animation: spin 1.5s infinite linear;
+    font-size: 13pt;
+    vertical-align: sub;
+    margin-left: 5px;
+  }
 </style>

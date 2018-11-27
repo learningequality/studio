@@ -25,7 +25,7 @@
 		<h6 class="content_metadata_summary hide_on_drag {{#unless isfolder}}open_file{{/unless}} metadata_to_hide">
 			<div class="pull-right">
 				<div class="spinner">
-				    <div class="material-icons upload-progress"></div>
+				    <div class="material-icons upload-progress {{#if loading}}in-progress{{/if}}">{{#if loading}}autorenew{{/if}}</div>
 				</div>
 			</div>
 			<!-- NEW/UPDATED/INCOMPLETE Indicators -->

@@ -242,7 +242,7 @@ var BaseView = Backbone.View.extend({
 		} catch(e) {}
 	},
 	check_progress: function(task_id, successCallback, cycles) {
-		// TODO: Remove cycles once API is in place
+		// TODO: Remove cycles once API is in place, maybe set interval and avoid multiple calls
 		cycles = cycles || 5;
 		var self = this;
 		new Promise(function (resolve, reject) {
@@ -928,10 +928,9 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
   import_from_youtube: function() {
 	var YoutubeImporter = require("edit_channel/youtube_import/views");
   	this.file_upload_view = new YoutubeImporter.YoutubeImportModalView({
-      parent_view: this,
-      model:this.model,
-      onsave: this.reload_ancestors,
-	  onnew:this.add_nodes
+      modal: true,
+      onimport: this.add_nodes,
+      model: this.model
   	});
   },
   add_files:function(){
