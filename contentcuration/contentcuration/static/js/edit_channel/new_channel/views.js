@@ -51,6 +51,9 @@ var MESSAGES = {
     "dont_save": "Discard Changes",
     "keep_open": "Keep Editing",
     "collections": "Collections",
+    "collection_description": "You can package together multiple Studio channels to create a collection. Use a collection token to make multiple channels available for import at once in Kolibri!",
+    "collection": "Collection",
+    "add_collection_title": "Create a new collection of channels"
 }
 
 var ChannelListPage  = BaseViews.BaseView.extend({
@@ -97,22 +100,26 @@ var ChannelListPage  = BaseViews.BaseView.extend({
 				collection: channels
 			});
 		});
-		// State.current_user.get_channel_bundles().then(function(bundles){
-		// 	self.viewonly_channel_list = new ViewOnlyChannelList({
-		// 		container: self,
-		// 		el: self.$("#viewonly_list"),
-		// 		collection: channels
-		// 	});
-		// });
+		State.current_user.get_user_channel_collections().then(function(collections){
+			self.channel_collection_list = new CollectionList({
+				container: self,
+				el: self.$("#collections_list"),
+				collection: collections
+			});
+		});
 	},
 	events: {
 		'click .new_channel_button' : 'new_channel',
-		"click #close_details": "close_details"
+		"click #close_details": "close_details",
+		'click .new_collection_button': 'new_collection'
 	},
 	new_channel: function(){
 		if (this.current_channel_list.new_channel){
 			this.current_channel_list.new_channel();
 		}
+	},
+	new_collection: function() {
+		console.log("ADDING NEW COLLECTION");
 	},
 	add_channel: function(channel, category){
 		switch(category){
@@ -303,6 +310,40 @@ var StarredChannelList  = ChannelList.extend({});
 var PublicChannelList  = ChannelList.extend({});
 
 var ViewOnlyChannelList  = ChannelList.extend({});
+
+var CollectionList  = BaseViews.BaseEditableListView.extend({
+	template: require("./hbtemplates/collection_list.handlebars"),
+	list_selector: ".channel_list",
+	default_item: ".default-item",
+	name: NAMESPACE,
+	$trs: MESSAGES,
+	initialize: function(options) {
+		this.bind_edit_functions();
+		_.bindAll(this, "add_channel", "delete_channel", "save_new_channel");
+		this.container = options.container;
+		this.collection = options.collection;
+		this.render();
+	},
+	render: function() {
+		this.$el.html(this.template(null, {
+			data: this.get_intl_data()
+		}));
+		this.load_content();
+	},
+	create_new_view:function(data){
+		var newView = new ChannelListItem({
+			model: data,
+			containing_list_view: this,
+			container: this.container
+		});
+		this.views.push(newView);
+		return newView;
+	},
+	save_new_channel: function(channel) {
+		var view = this.add_channel(channel);
+		view.open_channel();
+	}
+});
 
 var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 	name: NAMESPACE,

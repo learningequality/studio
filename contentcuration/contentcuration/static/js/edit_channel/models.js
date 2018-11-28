@@ -281,6 +281,19 @@ var UserModel = BaseModel.extend({
                 }
             });
         });
+    },
+    get_user_channel_collections: function() {
+        var self = this;
+        return new Promise(function (resolve, reject) {
+            $.ajax({
+                method: "GET",
+                url: window.Urls.get_user_channel_collections(),
+                error: reject,
+                success: function (data) {
+                    resolve(new InvitationCollection(data));
+                }
+            });
+        });
     }
 });
 
@@ -333,6 +346,13 @@ var InvitationCollection = BaseCollection.extend({
     list_name: "invitation-list",
     model_name: "InvitationCollection"
 });
+
+var ChannelSetCollection = BaseCollection.extend({
+    model: ChannelBundle,
+    list_name: "channelset-list",
+    model_name: "ChannelSetCollection"
+});
+
 
 /**** CHANNEL AND CONTENT MODELS ****/
 function fetch_nodes(ids, url) {
