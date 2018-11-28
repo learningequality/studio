@@ -877,7 +877,7 @@ class InvitationSerializer(BulkSerializerMixin, serializers.ModelSerializer):
             'id', 'invited', 'email', 'sender', 'channel', 'first_name', 'last_name', 'share_mode', 'channel_name')
 
 
-class ChannelSetSerializer(BulkSerializerMixin, serializers.ModelSerializer):
+class ChannelSetSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChannelSet
         fields = ('id', 'name', 'description', 'public', 'editors', 'channels', 'secret_tokens')

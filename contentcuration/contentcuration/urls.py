@@ -42,6 +42,7 @@ from contentcuration.forms import LoginForm
 from contentcuration.forms import ResetPasswordForm
 from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
+from contentcuration.models import ChannelSet
 from contentcuration.models import ContentKind
 from contentcuration.models import ContentNode
 from contentcuration.models import ContentTag
@@ -81,6 +82,16 @@ class ChannelViewSet(viewsets.ModelViewSet):
         if self.request.user.is_admin:
             return Channel.objects.all()
         return Channel.objects.filter(Q(editors=self.request.user) | Q(viewers=self.request.user) | Q(public=True)).distinct()
+
+
+class ChannelSetViewSet(viewsets.ModelViewSet):
+    queryset = ChannelSet.objects.all()
+    serializer_class = serializers.ChannelSetSerializer
+
+    def get_queryset(self):
+        if self.request.user.is_admin:
+            return ChannelSet.objects.all()
+        return ChannelSet.objects.filter(Q(editors=self.request.user) | Q(public=True)).distinct()
 
 
 class FileViewSet(BulkModelViewSet):
@@ -176,6 +187,7 @@ router = routers.DefaultRouter(trailing_slash=False)
 router.register(r'license', LicenseViewSet)
 router.register(r'language', LanguageViewSet)
 router.register(r'channel', ChannelViewSet)
+router.register(r'channelset', ChannelSetViewSet)
 router.register(r'fileformat', FileFormatViewSet)
 router.register(r'preset', FormatPresetViewSet)
 router.register(r'tag', TagViewSet)

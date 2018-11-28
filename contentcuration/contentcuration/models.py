@@ -662,6 +662,8 @@ class Channel(models.Model):
 
 
 class ChannelSet(models.Model):
+    # NOTE: this is referred to as "channel collections" on the front-end, but we need to call it
+    # something else as there is already a ChannelCollection model on the front-end
     id = UUIDField(primary_key=True, default=uuid.uuid4)
     name = models.CharField(max_length=200, blank=True)
     description = models.CharField(max_length=400, blank=True)
