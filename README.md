@@ -261,6 +261,8 @@ Once you see the following output in your terminal, the server is ready:
 
 You should be able to login at http://127.0.0.1:8080 using email `a@a.com`, password `a`.
 
+_Note: If you are using a Linux environemnt, you may need to increase the amount of listeners to allow the `watch` command to automatically rebuild static assets when you edit them. Please see [here for instructions](https://github.com/guard/listen/wiki/Increasing-the-amount-of-inotify-watchers) on how to do so._
+
 ##### Start required services manually
 
 Although calling `make devserver` will start the necessary services for you, sometimes it will be useful to start the

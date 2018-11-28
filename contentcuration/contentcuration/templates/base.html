@@ -26,9 +26,15 @@
                 // the offline version and I don't think we can fix or reproduce these easily.
                 // Fix taken from here: https://github.com/getsentry/sentry-javascript/issues/617#issuecomment-227562203
                 Raven.config('{% sentry_public_dsn %}', {
-                      shouldSendCallback(data) {
+                      shouldSendCallback: function(data) {
                         return !/^(.*CloudFlare-AlwaysOnline.*)$/.test(window.navigator.userAgent);
-                      }
+                      },
+                      // If there are errors that are known bugs in third-party libs or are clearly harmless,
+                      // add them here to reduce sentry noise.
+                      ignoreErrors: [
+                        // This looks like an error in Summernote: https://github.com/summernote/summernote/issues/1759
+                        'IndexSizeError: Failed to execute \'setStart\' on \'Range\'',
+                      ]
                     }).install()
             </script>
 	<link rel="shortcut icon" href="{% static 'img/logo.ico' %}">
