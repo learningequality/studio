@@ -21,6 +21,7 @@ from rest_framework_bulk import BulkSerializerMixin
 
 from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
+from contentcuration.models import ChannelSet
 from contentcuration.models import ContentKind
 from contentcuration.models import ContentNode
 from contentcuration.models import ContentTag
@@ -874,3 +875,9 @@ class InvitationSerializer(BulkSerializerMixin, serializers.ModelSerializer):
         model = Invitation
         fields = (
             'id', 'invited', 'email', 'sender', 'channel', 'first_name', 'last_name', 'share_mode', 'channel_name')
+
+
+class ChannelSetSerializer(BulkSerializerMixin, serializers.ModelSerializer):
+    class Meta:
+        model = ChannelSet
+        fields = ('id', 'name', 'description', 'public', 'editors', 'channels', 'secret_tokens')

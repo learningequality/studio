@@ -661,6 +661,28 @@ class Channel(models.Model):
         ]
 
 
+class ChannelSet(models.Model):
+    id = UUIDField(primary_key=True, default=uuid.uuid4)
+    name = models.CharField(max_length=200, blank=True)
+    description = models.CharField(max_length=400, blank=True)
+    public = models.BooleanField(default=False, db_index=True)
+    editors = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name='channel_sets',
+        verbose_name=_("editors"),
+        help_text=_("Users with edit rights"),
+        blank=True,
+    )
+    channels = models.ManyToManyField(
+        Channel,
+        related_name='sets',
+        verbose_name=_("channels"),
+        help_text=_("Channels in this set"),
+        blank=True,
+    )
+    secret_token = models.ForeignKey('SecretToken', null=True, blank=True, related_name='channel_sets')
+
+
 class ContentTag(models.Model):
     id = UUIDField(primary_key=True, default=uuid.uuid4)
     tag_name = models.CharField(max_length=30)
@@ -951,7 +973,8 @@ class ContentNode(MPTTModel, models.Model):
         # Getting the channel is an expensive call, so warn about it so that we can reduce the number of cases in which
         # we need to do this.
         if not channel_id and (not self.original_channel_id or not self.source_channel_id):
-            warnings.warn("Determining node's channel is an expensive operation. Please set original_channel_id and source_channel_id to the parent's values when creating child nodes.", stacklevel=2)
+            warnings.warn("Determining node's channel is an expensive operation. Please set original_channel_id and "
+                          "source_channel_id to the parent's values when creating child nodes.", stacklevel=2)
             channel = (self.parent and self.parent.get_channel()) or self.get_channel()
             if channel:
                 channel_id = channel.pk

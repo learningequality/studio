@@ -209,6 +209,7 @@ urlpatterns = [
     url(r'^get_user_view_channels/$', views.get_user_view_channels, name='get_user_view_channels'),
     url(r'^get_user_public_channels/$', views.get_user_public_channels, name='get_user_public_channels'),
     url(r'^get_user_pending_channels/$', views.get_user_pending_channels, name='get_user_pending_channels'),
+    url(r'^get_user_channel_sets/$', views.get_user_channel_sets, name='get_user_channel_sets'),
     url(r'^accept_channel_invite/$', views.accept_channel_invite, name='accept_channel_invite'),
     url(r'^api/activate_channel$', views.activate_channel_endpoint, name='activate_channel'),
     url(r'^api/get_staged_diff_endpoint$', views.get_staged_diff_endpoint, name='get_staged_diff'),

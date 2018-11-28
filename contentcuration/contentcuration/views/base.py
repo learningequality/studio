@@ -22,8 +22,6 @@ from django.shortcuts import redirect
 from django.shortcuts import render
 from django.views.decorators.cache import cache_page
 from django.views.decorators.csrf import csrf_exempt
-from le_utils.constants import exercises
-from le_utils.constants import roles
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authentication import TokenAuthentication
@@ -54,6 +52,7 @@ from contentcuration.models import VIEW_ACCESS
 from contentcuration.serializers import AltChannelListSerializer
 from contentcuration.serializers import ChannelListSerializer
 from contentcuration.serializers import ChannelSerializer
+from contentcuration.serializers import ChannelSetSerializer
 from contentcuration.serializers import ContentKindSerializer
 from contentcuration.serializers import CurrentUserSerializer
 from contentcuration.serializers import FileFormatSerializer
@@ -206,6 +205,15 @@ def get_user_edit_channels(request):
         .defer('trash_tree', 'clipboard_tree', 'staging_tree', 'chef_tree', 'previous_tree', 'viewers')
     channel_serializer = AltChannelListSerializer(edit_channels, many=True)
     return Response(channel_serializer.data)
+
+
+@api_view(['GET'])
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
+def get_user_channel_sets(request):
+    sets = request.user.channel_sets.prefetch_related('channels', 'secret_tokens', 'editors')
+    channelset_serializer = ChannelSetSerializer(sets, many=True)
+    return Response(channelset_serializer.data)
 
 
 @cache_page(PUBLIC_CHANNELS_CACHE_DURATION)
