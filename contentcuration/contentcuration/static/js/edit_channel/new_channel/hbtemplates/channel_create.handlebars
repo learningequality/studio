@@ -10,7 +10,7 @@
 				</a></li>
 				<li role="presentation"><a href="#public" aria-controls="public" role="tab" data-toggle="tab" class="channel_tab">{{formatMessage (intlGet 'messages.public')}}</a></li>
 				<li role="presentation"><a href="#viewonly" aria-controls="viewonly" role="tab" data-toggle="tab" class="channel_tab">{{formatMessage (intlGet 'messages.viewonly')}}</a></li>
-				<li role="presentation"><a href="#collections" aria-controls="collections" role="tab" data-toggle="tab" class="channel_tab">{{formatMessage (intlGet 'messages.collections')}}</a></li>
+				<li role="presentation"><a href="#channelset" aria-controls="channelset" role="tab" data-toggle="tab" class="channel_tab">{{formatMessage (intlGet 'messages.channel_sets')}}</a></li>
 			</ul>
 			<div class="tab-content">
 				<div role="tabpanel" class="tab-pane fade active in channel_list_wrapper" id="channels">
@@ -25,8 +25,8 @@
 				<div role="tabpanel" class="tab-pane fade channel_list_wrapper" id="starred"><div id="starred_list"><div class="default-item">{{formatMessage (intlGet 'messages.loading')}}</div></div></div>
 				<div role="tabpanel" class="tab-pane fade channel_list_wrapper" id="public"><div id="public_list"><div class="default-item">{{formatMessage (intlGet 'messages.loading')}}</div></div></div>
 				<div role="tabpanel" class="tab-pane fade channel_list_wrapper" id="viewonly"><div id="viewonly_list"><div class="default-item">{{formatMessage (intlGet 'messages.loading')}}</div></div></div>
-				<div role="tabpanel" class="tab-pane fade channel_list_wrapper" id="collections">
-					<div id="collections_list"></div>
+				<div role="tabpanel" class="tab-pane fade channel_list_wrapper" id="channelset">
+					<div id="channel_set_list"></div>
 				</div>
 			</div>
 		</div>

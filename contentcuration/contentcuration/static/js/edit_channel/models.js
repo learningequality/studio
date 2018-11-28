@@ -287,10 +287,10 @@ var UserModel = BaseModel.extend({
         return new Promise(function (resolve, reject) {
             $.ajax({
                 method: "GET",
-                url: window.Urls.get_user_channel_collections(),
+                url: window.Urls.get_user_channel_sets(),
                 error: reject,
                 success: function (data) {
-                    resolve(new InvitationCollection(data));
+                    resolve(new ChannelSetCollection(data));
                 }
             });
         });
@@ -347,8 +347,13 @@ var InvitationCollection = BaseCollection.extend({
     model_name: "InvitationCollection"
 });
 
+var ChannelSetModel = BaseModel.extend({
+    root_list: "channelset-list",
+    model_name: "ChannelSetModel"
+});
+
 var ChannelSetCollection = BaseCollection.extend({
-    model: ChannelBundle,
+    model: ChannelSetModel,
     list_name: "channelset-list",
     model_name: "ChannelSetCollection"
 });
