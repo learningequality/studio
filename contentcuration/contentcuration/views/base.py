@@ -211,7 +211,7 @@ def get_user_edit_channels(request):
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def get_user_channel_sets(request):
-    sets = request.user.channel_sets.prefetch_related('channels', 'secret_tokens', 'editors')
+    sets = request.user.channel_sets.prefetch_related('secret_token__channels', 'editors').select_related('secret_token')
     channelset_serializer = ChannelSetSerializer(sets, many=True)
     return Response(channelset_serializer.data)
 

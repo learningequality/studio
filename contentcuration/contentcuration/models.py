@@ -675,14 +675,14 @@ class ChannelSet(models.Model):
         help_text=_("Users with edit rights"),
         blank=True,
     )
-    channels = models.ManyToManyField(
-        Channel,
-        related_name='sets',
-        verbose_name=_("channels"),
-        help_text=_("Channels in this set"),
-        blank=True,
-    )
     secret_token = models.ForeignKey('SecretToken', null=True, blank=True, related_name='channel_sets')
+
+    def get_channels(self):
+        return self.secret_token.channels.all()
+
+    def save(self, *args, **kwargs):
+        super(ChannelSet, self).save(*args, **kwargs)
+        # TODO: add token on save
 
 
 class ContentTag(models.Model):
