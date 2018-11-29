@@ -66,11 +66,21 @@
 			.add_channel_wrapper {
 				margin-bottom: 15px;
 				padding-right: 50px;
+				height: 40px;
 				.new_channel_button, .new_set_button {
 					cursor: pointer;
 					font-size: 18px;
 					text-decoration: none;
 					&:hover { color:white; }
+				}
+				.about_sets_button {
+					vertical-align: sub;
+					font-size: 12pt;
+					padding: 0px;
+					i {
+						font-size: 16pt;
+						vertical-align: sub;
+					}
 				}
 			}
 		}
@@ -130,22 +140,33 @@
 				min-height: @channel-container-height;
 				height:auto;
 				box-shadow: @box-shadow;
+				margin: 0px;
 				margin-bottom: 30px;
 				padding: 10px;
 				border:4px solid @panel-container-color;
 				cursor:pointer;
 
+				&.channelset-wrapper {
+					min-height: 0px;
+				}
+
 				.profile{
 					height:100%;
 					width: @channel-profile-width;
 					margin: 5px 15px 5px 5px;
-					min-height:@channel-container-height - 75;
 					.image_dropzone{ width: auto; }
 					img{
 					    width:130px;
 					    height:130px;
 					    object-fit: cover;
 					}
+				}
+				.channel_set_icon {
+					font-size: 65pt;
+					color: @gray-700;
+				}
+				.delete_channel_set {
+					color: @gray-700;
 				}
 				.manage_area{
 					width:100%;
@@ -157,6 +178,7 @@
 
 				.channel_metadata{
 					color: @annotation-gray;
+					padding: 0px;
 					font-size: 11pt;
 					.resource-icon {
 						padding: 0 3px 0 10px;
@@ -170,11 +192,12 @@
 					.copy-id-text{
 						display: inline-block;
 						padding:2px;
-						background-color: #ddd;
+						background-color: @gray-300;
 						font-size:11pt;
 						border:none;
 						font-weight: bold;
 						width: 125px;
+						color: @gray-700;
 					}
 					.channel_language{
 						max-width: 135px;
@@ -194,12 +217,9 @@
 					font-weight: bold;
 					color: @body-font-color;
 					margin-bottom:5px;
-					width:@channel-container-width - @channel-profile-width - 30px;
-					margin-left:@channel-profile-width;
 					height:@channel-font-size;
 					.channel_name{
 						color: @body-font-color;
-						max-width:75%;
 						height:@channel-font-size + 10px;
 					}
 					.channel_option_icon {
@@ -219,8 +239,6 @@
 				}
 				.description{
 					min-height: @channel-container-height - @channel-font-size - 115px;
-					width:@channel-container-width - @channel-profile-width - 50px;
-					margin-left:@channel-profile-width;
 					overflow-y:auto;
 					margin-bottom:5px;
 					p{

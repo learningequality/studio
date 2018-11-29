@@ -7,6 +7,8 @@ var Models = require("edit_channel/models");
 var BaseViews = require("edit_channel/views");
 var ImageViews = require("edit_channel/image/views");
 var DetailView = require('edit_channel/details/views');
+var ChannelSetViews = require("edit_channel/channel_set/views");
+var Info = require("edit_channel/information/views");
 var get_cookie = require("utils/get_cookie");
 var stringHelper = require("edit_channel/utils/string_helper")
 var dialog = require("edit_channel/utils/dialog");
@@ -51,9 +53,11 @@ var MESSAGES = {
     "dont_save": "Discard Changes",
     "keep_open": "Keep Editing",
     "channel_sets": "Collections",
+    "about_channel_sets": "About Collections",
     "channel_set_description": "You can package together multiple Studio channels to create a collection. Use a collection token to make multiple channels available for import at once in Kolibri!",
     "channel_set": "Collection",
-    "add_channel_set_title": "Create a new collection of channels"
+    "add_channel_set_title": "Create a new collection of channels",
+    "channel_count": "{count, plural,\n =1 {# Channel}\n other {# Channels}}",
 }
 
 var ChannelListPage  = BaseViews.BaseView.extend({
@@ -536,10 +540,16 @@ var ChannelSetList  = BaseViews.BaseEditableListView.extend({
 		this.render();
 	},
 	events: {
-		'click .new_set_button': 'new_channel_set'
+		'click .new_set_button': 'new_channel_set',
+		'click .about_sets_button': 'open_about_sets'
 	},
 	new_channel_set: function() {
-		console.log("CREATING NEW COLLECTION")
+		var channel_set_view = new ChannelSetViews.ChannelSetModalView({
+			modal: true,
+			onsave: null,
+			isNew: true,
+			model: new Models.ChannelSetModel()
+		});
 	},
 	render: function() {
 		this.$el.html(this.template(null, {
@@ -556,9 +566,8 @@ var ChannelSetList  = BaseViews.BaseEditableListView.extend({
 		this.views.push(newView);
 		return newView;
 	},
-	save_new_channel: function(channel) {
-		var view = this.add_channel(channel);
-		view.open_channel();
+	open_about_sets: function() {
+		var channel_set_info_modal = new Info.ChannelSetModalView({});
 	}
 });
 
@@ -570,28 +579,18 @@ var ChannelSetListItem = BaseViews.BaseListEditableItemView.extend({
 		return (this.model)? this.model.get("id") : "new";
 	},
 	className:"channel_container",
-	template: require("./hbtemplates/channel_item.handlebars"),
+	template: require("./hbtemplates/channel_set_item.handlebars"),
 	initialize: function(options) {
 		this.bind_edit_functions();
-		_.bindAll(this, 'delete_channel', 'star_channel', 'unstar_channel', 'set_star_icon', 'set_model');
+		// _.bindAll(this, 'delete_channel');
 		this.listenTo(this.model, "sync", this.set_model);
 		this.containing_list_view = options.containing_list_view;
 		this.container = options.container;
-		this.can_edit = this.model.get("editors").indexOf(State.current_user.id) >= 0;
 		this.render();
 	},
 	render: function() {
 		this.$el.html(this.template({
-			can_edit: this.can_edit,
-			channel: this.model.toJSON(),
-			total_file_size: this.model.get("size"),
-			resource_count: this.model.get("count"),
-			channel_link : this.model.get("id"),
-			picture : (this.model.get("thumbnail_encoding") && this.model.get("thumbnail_encoding").base64) || this.model.get("thumbnail_url"),
-			modified: this.model.get("modified") || new Date(),
-			languages: Constants.Languages,
-			language: Constants.Languages.find(language => language.id === this.model.get("language")),
-			new: this.isNew
+			channelset: this.model.toJSON(),
 		}, {
 			data: this.get_intl_data()
 		}));
@@ -614,7 +613,12 @@ var ChannelSetListItem = BaseViews.BaseListEditableItemView.extend({
 		this.$el.addClass('highlight');
 	},
 	open_channel_set:function(event){
-		console.log("OPENING SET")
+		var channel_set_view = new ChannelSetViews.ChannelSetModalView({
+			modal: true,
+			onsave: null,
+			isNew: false,
+			model: this.model
+		});
 	},
 	copy_id:function(event){
 		event.stopPropagation();

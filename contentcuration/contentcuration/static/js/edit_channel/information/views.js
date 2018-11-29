@@ -36,7 +36,18 @@ var MESSAGES = {
     "coach_content": "What is content visibility?",
     "coach_description": "This is support content and is visible only to coaches (teachers, facilitators, administrators)",
     "anyone_description": "This content is visible to anyone",
-    "role_description": "Content visibility determines what type of Kolibri users can see this content."
+    "role_description": "Content visibility determines what type of Kolibri users can see this content.",
+    "channel_sets": "About Collections",
+    "channel_sets_description": "What is a collection?",
+    "channel_sets_description_text": "A collection is a package of multiple Studio channels all" +
+                " associated with one token, the collection token! Use a collection token to make" +
+                " multiple channels available for import at once in Kolibri!",
+    "channel_sets_instructions": "How do I make one?",
+    "channel_sets_instructions_text": "You can make a collection by simply selecting which channels you " +
+                "want to package together. Remember to give your collection a title.",
+    "channel_sets_benefits": "What are the benefits of using collections?",
+    "channel_sets_benefits_text": "You no longer have to import Channels into Kolibri using individual channel" +
+                " tokens. Collections save you time by using only one token for all the channels you select."
 }
 
 
@@ -97,6 +108,11 @@ var PrerequisiteModalView = BaseInfoModalView.extend({
   modal_id: "#prereq_modal",
 });
 
+var ChannelSetModalView = BaseInfoModalView.extend({
+  template: require("./hbtemplates/channel_set_modal.handlebars"),
+  modal_id: "#channel_set_modal",
+});
+
 var PublishedModalView = BaseInfoModalView.extend({
   template: require("./hbtemplates/published_modal.handlebars"),
   publish_template: require("./hbtemplates/published.handlebars"),
@@ -151,5 +167,6 @@ module.exports = {
     MasteryModalView:MasteryModalView,
     PrerequisiteModalView: PrerequisiteModalView,
     PublishedModalView: PublishedModalView,
-    RolesModalView: RolesModalView
+    RolesModalView: RolesModalView,
+    ChannelSetModalView: ChannelSetModalView
 }

@@ -1339,4 +1339,6 @@ module.exports = {
     ExerciseCollection: ExerciseCollection,
     AssessmentItemModel: AssessmentItemModel,
     AssessmentItemCollection: AssessmentItemCollection,
+    ChannelSetModel: ChannelSetModel,
+    ChannelSetCollection: ChannelSetCollection,
 }

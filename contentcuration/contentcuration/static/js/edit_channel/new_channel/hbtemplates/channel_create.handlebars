@@ -13,7 +13,7 @@
 				<li role="presentation"><a href="#channelset" aria-controls="channelset" role="tab" data-toggle="tab" class="channel_tab">{{formatMessage (intlGet 'messages.channel_sets')}}</a></li>
 			</ul>
 			<div class="tab-content">
-				<div role="tabpanel" class="tab-pane fade active in channel_list_wrapper" id="channels">
+				<div role="tabpanel" class="tab-pane fade channel_list_wrapper" id="channels">
 					<div class="container-fluid add_channel_wrapper">
 						<a class="action-button pull-right disable-on-edit new_channel_button" title="{{formatMessage (intlGet 'messages.add_channel_title')}}">
 							<i class="material-icons align-text-top">add</i> {{formatMessage (intlGet 'messages.channel')}}
@@ -25,7 +25,8 @@
 				<div role="tabpanel" class="tab-pane fade channel_list_wrapper" id="starred"><div id="starred_list"><div class="default-item">{{formatMessage (intlGet 'messages.loading')}}</div></div></div>
 				<div role="tabpanel" class="tab-pane fade channel_list_wrapper" id="public"><div id="public_list"><div class="default-item">{{formatMessage (intlGet 'messages.loading')}}</div></div></div>
 				<div role="tabpanel" class="tab-pane fade channel_list_wrapper" id="viewonly"><div id="viewonly_list"><div class="default-item">{{formatMessage (intlGet 'messages.loading')}}</div></div></div>
-				<div role="tabpanel" class="tab-pane fade channel_list_wrapper" id="channelset">
+				<!-- TODO: Move active in class back to current list -->
+				<div role="tabpanel" class="tab-pane fade active in channel_list_wrapper" id="channelset">
 					<div id="channel_set_list"></div>
 				</div>
 			</div>
