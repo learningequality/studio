@@ -11,13 +11,14 @@ var store = new Vuex.Store({
     "channel_set": {
 	  namespaced: true,
 	  state: {
-	    channelsAreLoading: false,
+	    loadChannels: true,
 	    name: "",
 	    description: "",
 	    channels: [],
-	    original_channels: [],
+	    allChannels: {},
+	    originalChannels: [],
 	    changed: false,
-	    channel_set:null,
+	    channelSet:null,
 	    isNewSet: false,
 	    pageState: {
 	      pageType: PageTypes.VIEW_CHANNELS,

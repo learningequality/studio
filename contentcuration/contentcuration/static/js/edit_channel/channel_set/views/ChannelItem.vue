@@ -1,8 +1,28 @@
 <template>
 
-  <li class="ListItem">
-    {{channel.name}}
-  </li>
+  <div class="channelSetChannel row">
+    <div class="col-xs-2 section">
+      <img :src='channel.thumbnail_url'/>
+    </div>
+    <div class="col-xs-9">
+      <h4 class="title" :title="channel.name">{{channel.name}}</h4>
+      <p class="description">{{channel.description}}</p>
+    </div>
+    <div class="col-xs-1 text-center section">
+      <span
+        class="removeChannel"
+        v-if='isSelected'
+        @click="removeChannel"
+      >&times;</span>
+      <a
+        class="action-text uppercase addChannel"
+        @click="addChannel"
+        v-else
+      >
+        {{ $tr('selectButtonLabel') }}
+      </a>
+    </div>
+  </div>
 
 </template>
 
@@ -11,13 +31,15 @@
 
 import _ from 'underscore';
 import stringHelper from '../../utils/string_helper';
-import { mapActions } from 'vuex';
+import { mapActions, mapGetters } from 'vuex';
+import { PageTypes } from '../constants';
 
 const RequiredBoolean = { type: Boolean, required: true };
 
 export default {
   name: 'ChannelItem',
   $trs: {
+    'selectButtonLabel': 'Select'
   },
   props: {
     channel: {
@@ -25,24 +47,39 @@ export default {
       required: true,
     }
   },
-  computed: {
-    togglerClass() {
-      // return (this.isExpanded)? 'arrow_drop_down': 'arrow_drop_up';
-    },
+  data() {
+    return {
+      isSelected: false,
+    }
+  },
+  mounted() {
+    this.checkIfSelected();
+  },
+  computed: Object.assign(
+    mapGetters('channel_set', [
+      'currentPage',
+      'channels'
+    ])
+  ),
+  watch:{
+    channels(value) {
+      this.checkIfSelected();
+    }
   },
   methods: Object.assign(
-    mapActions('import', [
-      'addItemToImportList',
-      'removeItemFromImportList',
+    mapActions('channel_set', [
+      'addChannelToSet',
+      'removeChannelFromSet',
     ]),
     {
-      handleCheckboxChange() {
-        this.isChecked = !this.isChecked;
-        if (this.isChecked) {
-          this.addItemToImportList(_.clone(this.node));
-        } else {
-          this.removeItemFromImportList(this.node.id);
-        }
+      checkIfSelected() {
+        this.isSelected = !! _.findWhere(this.channels, {'id': this.channel.id});
+      },
+      removeChannel() {
+        this.removeChannelFromSet(this.channel);
+      },
+      addChannel() {
+        this.addChannelToSet(this.channel);
       },
     }
   )
@@ -55,30 +92,38 @@ export default {
 
   @import '../../../../less/global-variables.less';
 
-  .ListItem {
-    width: -moz-max-content;
-    width: max-content;
-  }
-
-  .ListItem__Label {
-    padding: 0px 10px;
-    font-size: 16px;
-    .nodeIcon {
-      color: @gray-500;
+  .channelSetChannel {
+    width: 100%;
+    background-color: @gray-200;
+    margin: 0px;
+    margin-bottom: 10px;
+    padding: 15px;
+    cursor: default;
+    .section {
+      padding: 0px;
+      img {
+        height: 100px;
+        width: 100px;
+        object-fit: cover;
+      }
     }
-    & > * {
-      vertical-align: middle;
+    .title {
+      .truncate;
+      color: black;
+      margin: 0;
+      margin-bottom: 10px;
+      font-weight: bold;
+      font-size: 16pt;
     }
-  }
-
-  .disabled {
-    color: @gray-700;
-    opacity: 1 !important;
-    input[type=checkbox] {
-      cursor: not-allowed !important;
+    .description {
+      margin: 0;
     }
-    .ListItem__Counter {
-      background-color: @gray-400 !important;
+    .addChannel {
+      padding: 10px 0px;
+    }
+    .removeChannel {
+      font-size: 25pt;
+      cursor: pointer;
     }
   }
 

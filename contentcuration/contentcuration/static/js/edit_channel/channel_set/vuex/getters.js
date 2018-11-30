@@ -23,3 +23,15 @@ exports.name = function(state) {
 exports.description = function(state) {
   return state.description;
 }
+
+exports.loadChannels = function(state) {
+  return state.loadChannels;
+}
+
+exports.channelSet = function(state) {
+  return state.channelSet;
+}
+
+exports.allChannels = function(state) {
+  return state.allChannels;
+}

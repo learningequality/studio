@@ -2,7 +2,7 @@
 
   <div>
     <!-- SLOT FOR CHANNEL SET VIEW OR CHANNEL SELECT VIEW-->
-    <div>
+    <div id="channel-set-content">
       <slot />
     </div>
 
@@ -55,10 +55,6 @@ export default {
   //   mapMutations('import', {
   //     updateImportStatus: 'UPDATE_IMPORT_STATUS',
   //   }),
-  //   mapActions('import', [
-  //     'goToSearchResults',
-  //     'goToImportPreview',
-  //   ]),
     {
       handleSave() {
         console.log("HANDLING SAVE")
@@ -88,6 +84,15 @@ export default {
 
 button.action-button[disabled] {
   opacity: 0.75;
+}
+
+/deep/ .channel-list {
+  margin-bottom: 20px;
+}
+
+/deep/ .channelCountText {
+  font-size: 13pt;
+  margin-bottom: 15px;
 }
 
 </style>

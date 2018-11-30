@@ -1,9 +1,26 @@
 var Models = require('../models');
 
-exports.loadChannelSetChannels = function(tokenID) {
-  console.log(tokenID)
+exports.loadChannelSetChannels = function(token) {
+  return new Promise(function(resolve, reject) {
+    $.ajax({
+      method:"GET",
+      url: window.Urls.get_channels_by_token(token),
+      success: resolve,
+      error: reject
+    });
+  })
 }
 
+exports.loadChannelList = function(url) {
+  return new Promise(function(resolve, reject) {
+    $.ajax({
+      method:"GET",
+      url: url,
+      success: resolve,
+      error: reject
+    });
+  })
+}
 
 
 // exports.hasRelatedContent = function(contentNodes) {

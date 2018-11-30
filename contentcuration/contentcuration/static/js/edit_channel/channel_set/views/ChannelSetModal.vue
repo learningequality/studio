@@ -24,11 +24,10 @@ import { mapGetters, mapActions } from 'vuex';
 import { PageTypes } from '../constants';
 import ChannelSetDialog from './ChannelSetDialog.vue';
 import ChannelSetList from './ChannelSetList.vue';
-// import SearchResults from './SearchResults.vue';
-// import ImportChannelList from './ImportChannelList.vue';
+import ChannelSelectView from './ChannelSelectView.vue';
 
 const pageNameToComponentMap = {
-  // [PageTypes.SELECT_CHANNELS]: '',
+  [PageTypes.SELECT_CHANNELS]: 'ChannelSelectView',
   [PageTypes.VIEW_CHANNELS]: 'ChannelSetList',
 };
 
@@ -41,7 +40,7 @@ export default {
   components: {
     ChannelSetDialog,
     ChannelSetList,
-    // SearchResults,
+    ChannelSelectView,
   },
   mounted() {
     this.openModal();

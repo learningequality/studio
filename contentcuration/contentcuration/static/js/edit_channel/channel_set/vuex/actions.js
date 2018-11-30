@@ -1,51 +1,68 @@
 var _ = require('underscore');
 var utils = require('../util');
-var createContentNodeCollection = utils.fetchChannelsInSet;
-var { PageTypes } = require('../constants');
+var loadChannelSetChannels = utils.loadChannelSetChannels;
+var loadChannelList = utils.loadChannelList;
+var { PageTypes, ChannelListUrls } = require('../constants');
 
 // Requests the root nodes for the importable channels
 exports.loadChannelSetChannels = function(context, payload) {
-  context.commit('UPDATE_CHANNELS_ARE_LOADING', true);
-  // return fetchChannels(payload.token_id)
-  // .then(function onSuccess(channels) {
-  //   context.commit('UPDATE_CHANNELS', channels);
-  //   context.commit('UPDATE_CHANNELS_ARE_LOADING', false);
-  // });
+  if(context.getters.loadChannels) {
+    let token = context.getters.channelSet.get('secret_token').token;
+    return loadChannelSetChannels(token)
+      .then(function onSuccess(channels) {
+        context.commit('UPDATE_ORIGINAL_CHANNELS', _.clone(channels));
+        context.commit('UPDATE_CHANNELS', channels);
+        context.commit('UPDATE_CHANNELS_LOADED', false);
+      })
+      .catch(function onError(error) {
+
+      });
+  }
 }
 
+exports.loadChannelList = function(context, listName) {
+  if(!context.getters.allChannels.hasOwnProperty(listName)) {
+    return loadChannelList(ChannelListUrls[listName])
+    .then(function onSuccess(channels) {
+      context.commit('UPDATE_ALL_CHANNELS', {"key": listName, "value": channels});
+      return channels;
+    })
+    .catch(function onError(error) {
 
+    });
+  }
+}
 
+exports.goToViewChannels = function(context) {
+  context.commit('UPDATE_PAGE_STATE', {
+    pageType: PageTypes.VIEW_CHANNELS,
+    data: {},
+  })
+}
 
+exports.goToSelectChannels = function(context) {
+  context.commit('UPDATE_PAGE_STATE', {
+    pageType: PageTypes.SELECT_CHANNELS,
+    data: {},
+  })
+}
 
+function contains(list, id) {
+  return _.findWhere(list, {'id': id});
+}
 
-// // Sends a request to `get_total_size` endpoint and updates store with result
-// exports.calculateImportSize = function(context) {
-//   // HACK use negative number to signal still pending
-//   context.commit('UPDATE_IMPORT_SIZE', -1);
-//   if (context.state.itemsToImport.length === 0) {
-//     return context.commit('UPDATE_IMPORT_SIZE', 0);
-//   }
-//   return createContentNodeCollection(context.state.itemsToImport)
-//   .calculate_size()
-//   .then(function(size) {
-//     context.commit('UPDATE_IMPORT_SIZE', size);
-//   });
-// }
+exports.addChannelToSet = function(context, channel) {
+  if (!contains(context.getters.channels, channel.id)) {
+    context.commit('ADD_CHANNEL_TO_SET', channel);
+  }
+}
 
-// // Adds a ContentNode to to-import list
-// exports.addItemToImportList = function(context, contentNode) {
-//   if (!_.contains(context.getters.itemsToImportIds), contentNode.id) {
-//     context.commit('ADD_ITEM_TO_IMPORT_LIST', contentNode)
-//   }
-// }
-
-// // Given a ContentNode ID, removes from to-import list
-// exports.removeItemFromImportList = function(context, id) {
-//   if (_.contains(context.getters.itemsToImportIds), id) {
-//     context.commit('REMOVE_ITEM_FROM_IMPORT_LIST', id);
-//   }
-// }
-
+// Given a ContentNode ID, removes from to-import list
+exports.removeChannelFromSet = function(context, channel) {
+  if (contains(context.getters.channels, channel.id)) {
+    context.commit('REMOVE_CHANNEL_FROM_SET', channel);
+  }
+}
 
 
 // // Takes the to-import list and copies/duplicates them over to the current channel
@@ -61,45 +78,5 @@ exports.loadChannelSetChannels = function(context, payload) {
 //   .catch(function onFailure(error) {
 //     console.error(error);
 //     context.commit('UPDATE_IMPORT_STATUS', 'failure');
-//   });
-// }
-
-// exports.goToPreviousPage = function(context) {
-//   if (context.getters.currentImportPage === PageTypes.SEARCH_RESULTS) {
-//     context.commit('UPDATE_PAGE_STATE', { pageType: PageTypes.TREE_VIEW });
-//   }
-//   if (context.getters.currentImportPage === PageTypes.IMPORT_PREVIEW) {
-//     const { previousState } = context.state.pageState.data;
-//     const payload = {
-//       pageType: previousState.pageType,
-//       data: {},
-//     };
-//     if (previousState.pageType === PageTypes.SEARCH_RESULTS) {
-//       payload.data.searchTerm = previousState.searchTerm;
-//     }
-//     context.commit('UPDATE_PAGE_STATE', payload);
-//   }
-//   context.commit('RESET_IMPORT_STATE');
-// }
-
-// exports.goToSearchResults = function(context, payload) {
-//   context.commit('RESET_IMPORT_STATE');
-//   context.commit('UPDATE_PAGE_STATE', {
-//     pageType: PageTypes.SEARCH_RESULTS,
-//     data: {
-//       searchTerm: payload.searchTerm,
-//     },
-//   })
-// }
-
-// exports.goToImportPreview = function(context) {
-//   context.commit('UPDATE_PAGE_STATE', {
-//     pageType: PageTypes.IMPORT_PREVIEW,
-//     data: {
-//       previousState: {
-//         pageType: context.state.pageState.pageType,
-//         searchTerm: context.state.pageState.data.searchTerm,
-//       },
-//     },
 //   });
 // }

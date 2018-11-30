@@ -23,27 +23,31 @@
     >
     </textarea>
     <hr/>
-    [CHANNEL LIST WILL GO HERE]
-    <div v-if="channelsAreLoading">
-    {{ $tr('loading') }}
+    <div class="channel-list">
+      <div v-if="loadChannels" class="default-item">
+        {{ $tr('loading') }}
+      </div>
+      <div v-else>
+        <p class="channelCountText">{{ $tr('channelCountText', {'channelCount': channelCount}) }}</p>
+        <div class="container-fluid">
+          <ChannelItem
+            v-for="channel in channels"
+            :key="channel.id"
+            :channel="channel"
+          />
+        </div>
+      </div>
     </div>
-    <!-- <div v-else-if="channels.length === 0">
-      {{ $tr('importCountText', {'topicCount': topicCount, 'resourceCount': resourceCount}) }}
-    </div> -->
+    <div id="selectChannelsButton">
+      <button
+        class="action-button uppercase"
+        @click="goToSelectChannels"
+      >
+        <i class="material-icons">add</i>
+        {{ $tr('selectButtonLabel') }}
+      </button>
+    </div>
 
-    <!--       <span v-show="!isImportPreview" id="import_file_metadata" class="pull-right">
-        <span id="import_file_count">
-
-        </span>
-      </span> -->
-
-    <!-- <ul v-else class="Channels">
-      <ChannelItem
-        v-for="channel in channels"
-        :key="channel.id"
-        :channel="channel"
-      />
-    </ul> -->
   </div>
 
 </template>
@@ -52,7 +56,7 @@
 <script>
 
 import { mapState, mapGetters, mapActions } from 'vuex';
-// import ChannelItem from './ChannelItem.vue';
+import ChannelItem from './ChannelItem.vue';
 
 export default {
   name: 'ChannelSetList',
@@ -62,22 +66,20 @@ export default {
     'titlePlaceholder': "Title your collection",
     'descriptionLabel': "Description",
     'descriptionPlaceholder': "Describe your collection",
-    'importCountText': '{topicCount, plural, =1 {# Topic} other {# Topics}}, {resourceCount, plural, =1 {# Resource} other {# Resources}}',
+    'selectButtonLabel': 'Select',
+    'channelCountText': '{channelCount, plural, =1 {# channel in your collection} other {# channels in your collection}}',
   },
   mounted() {
-    // this.loadChannelSetChannels();
+    this.loadChannelSetChannels();
   },
   components: {
-    // ChannelItem,
+    ChannelItem,
   },
   computed: Object.assign(
-    mapState('channel_set', [
-      'channels',
-      'channelsAreLoading',
-    ]),
     mapGetters('channel_set', [
       'changed',
-      'channels'
+      'channels',
+      'loadChannels',
     ]),
     {
       name: {
@@ -96,15 +98,16 @@ export default {
           this.$store.commit('channel_set/SET_DESCRIPTION', value);
         }
       },
-      topicCount() {
-        return this.importedItemCounts.topics;
+      channelCount() {
+        return this.channels.length;
       }
     }
   ),
   methods: Object.assign(
-    // mapActions('channel_set', ['loadChannelSetChannels']),
-    {
-    }
+    mapActions('channel_set', [
+      'goToSelectChannels',
+      'loadChannelSetChannels'
+    ])
   ),
 };
 
@@ -127,6 +130,14 @@ h4 {
   resize: none;
   margin-bottom: 15px;
   font-size: 16px;
+}
+
+#selectChannelsButton {
+  margin-bottom: 30px;
+  i {
+    font-size: 15pt;
+    vertical-align: text-bottom;
+  }
 }
 
 </style>
