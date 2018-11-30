@@ -216,6 +216,15 @@ def get_user_channel_sets(request):
     return Response(channelset_serializer.data)
 
 
+@api_view(['GET'])
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
+def get_channels_by_token(request, token):
+    channels = Channel.objects.filter(secret_tokens__token=token)
+    channel_serializer = AltChannelListSerializer(channels, many=True)
+    return Response(channel_serializer.data)
+
+
 @cache_page(PUBLIC_CHANNELS_CACHE_DURATION)
 @api_view(['GET'])
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
