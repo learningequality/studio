@@ -15,7 +15,7 @@ import contentcuration.models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('contentcuration', '0001_squashed_0094_auto_20180910_2342'),
+        ('contentcuration', '0094_auto_20180910_2342'),
     ]
 
     operations = [
