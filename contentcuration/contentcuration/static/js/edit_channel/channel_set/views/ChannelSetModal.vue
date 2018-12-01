@@ -67,6 +67,10 @@ export default {
       openModal() {
         $(this.$refs.topmodal)
           .modal({ show: true })
+          .on('hide.bs.modal', (event) => {
+            // Check for changes
+            this.$emit('modalclosing', event);
+          })
           .on('hidden.bs.modal', () => {
             // Event to tell BB View to cleanup
             this.$emit('modalclosed');
@@ -83,9 +87,11 @@ export default {
 
 
 <style lang="less" scoped>
+  .modal-dialog {
+    width: 750px;
+  }
   #channel_set_modal_content {
     background-color: white;
-    width: 750px;
   }
   .modal-title {
     font-weight: bold;

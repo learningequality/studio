@@ -349,7 +349,11 @@ var InvitationCollection = BaseCollection.extend({
 
 var ChannelSetModel = BaseModel.extend({
     root_list: "channelset-list",
-    model_name: "ChannelSetModel"
+    model_name: "ChannelSetModel",
+    defaults: {
+        name: '',
+        description: ''
+    }
 });
 
 var ChannelSetCollection = BaseCollection.extend({

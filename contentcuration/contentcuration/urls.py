@@ -223,6 +223,7 @@ urlpatterns = [
     url(r'^get_user_pending_channels/$', views.get_user_pending_channels, name='get_user_pending_channels'),
     url(r'^get_user_channel_sets/$', views.get_user_channel_sets, name='get_user_channel_sets'),
     url(r'^get_channels_by_token/(?P<token>[^/]+)$', views.get_channels_by_token, name='get_channels_by_token'),
+    url(r'^api/save_token_to_channels/(?P<token>[^/]+)$', views.save_token_to_channels, name='save_token_to_channels'),
     url(r'^accept_channel_invite/$', views.accept_channel_invite, name='accept_channel_invite'),
     url(r'^api/activate_channel$', views.activate_channel_endpoint, name='activate_channel'),
     url(r'^api/get_staged_diff_endpoint$', views.get_staged_diff_endpoint, name='get_staged_diff'),

@@ -2,21 +2,27 @@ var _ = require('underscore');
 var utils = require('../util');
 var loadChannelSetChannels = utils.loadChannelSetChannels;
 var loadChannelList = utils.loadChannelList;
+var saveChannelsToSet = utils.saveChannelsToSet;
 var { PageTypes, ChannelListUrls } = require('../constants');
 
 // Requests the root nodes for the importable channels
 exports.loadChannelSetChannels = function(context, payload) {
   if(context.getters.loadChannels) {
-    let token = context.getters.channelSet.get('secret_token').token;
-    return loadChannelSetChannels(token)
+    let token = context.getters.channelSet.get('secret_token');
+    if(token) {
+      return loadChannelSetChannels(token.token)
       .then(function onSuccess(channels) {
-        context.commit('UPDATE_ORIGINAL_CHANNELS', _.clone(channels));
         context.commit('UPDATE_CHANNELS', channels);
         context.commit('UPDATE_CHANNELS_LOADED', false);
       })
       .catch(function onError(error) {
-
+        console.error(error);
       });
+    } else {
+      context.commit('UPDATE_CHANNELS', []);
+      context.commit('UPDATE_CHANNELS_LOADED', false);
+    }
+
   }
 }
 
@@ -28,7 +34,7 @@ exports.loadChannelList = function(context, listName) {
       return channels;
     })
     .catch(function onError(error) {
-
+      console.error(error);
     });
   }
 }
@@ -64,19 +70,13 @@ exports.removeChannelFromSet = function(context, channel) {
   }
 }
 
-
-// // Takes the to-import list and copies/duplicates them over to the current channel
-// exports.copyImportListToChannel = function(context, payload) {
-//   context.commit('UPDATE_IMPORT_STATUS', 'start');
-//   var importCollection = createContentNodeCollection(context.state.itemsToImport);
-//   return importCollection
-//   .duplicate(payload.baseViewModel)
-//   .then(function onSuccess(collection) {
-//     context.commit('UPDATE_IMPORT_STATUS', 'success');
-//     payload.onConfirmImport(collection);
-//   })
-//   .catch(function onFailure(error) {
-//     console.error(error);
-//     context.commit('UPDATE_IMPORT_STATUS', 'failure');
-//   });
-// }
+// Given a ContentNode ID, removes from to-import list
+exports.saveChannelSet = function(context) {
+  context.commit('SET_SAVING', true);
+  return saveChannelsToSet(context.getters.channelSet.toJSON(), context.getters.channels)
+    .then(function onSuccess(channelSet) {
+      context.commit('SET_CHANNEL_SET', channelSet);
+      context.commit('SET_CHANGED', false);
+      context.commit('SET_SAVING', false);
+    });
+}

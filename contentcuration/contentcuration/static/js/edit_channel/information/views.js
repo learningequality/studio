@@ -47,7 +47,8 @@ var MESSAGES = {
                 "want to package together. Remember to give your collection a title.",
     "channel_sets_benefits": "What are the benefits of using collections?",
     "channel_sets_benefits_text": "You no longer have to import Channels into Kolibri using individual channel" +
-                " tokens. Collections save you time by using only one token for all the channels you select."
+                " tokens. Collections save you time by using only one token for all the channels you select.",
+    "channel_sets_disclaimer": "You will need Kolibri 0.12.0 or higher to import channel collections"
 }
 
 

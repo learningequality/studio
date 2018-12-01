@@ -16,10 +16,6 @@ exports.UPDATE_ALL_CHANNELS = function(state, data) {
   state.allChannels[data.key] = data.value;
 }
 
-exports.UPDATE_ORIGINAL_CHANNELS = function(state, channels) {
-  state.originalChannels = channels;
-}
-
 exports.UPDATE_PAGE_STATE = function(state, payload) {
   state.pageState = {
     pageType: payload.pageType,
@@ -33,7 +29,8 @@ exports.RESET_PAGE_STATE = function(state) {
     name: "",
     description: "",
     channels: [],
-    originalChannels: [],
+    isValid: true,
+    saving: false,
     allChannels: {},
     changed: false,
     channelSet: null,
@@ -51,6 +48,12 @@ exports.SET_CHANNEL_SET = function(state, channelSet) {
   state.channelSet = channelSet;
 }
 
+exports.PREPARE_CHANNEL_SET_FOR_SAVE = function(state) {
+  state.channelSet.set('name', state.name);
+  state.channelSet.set('description', state.description);
+  console.log(state.channelSet)
+}
+
 
 exports.SET_IS_NEW = function(state, isNew) {
   state.isNewSet = isNew;
@@ -59,6 +62,7 @@ exports.SET_IS_NEW = function(state, isNew) {
 exports.SET_NAME = function(state, name) {
   state.name = name;
   state.changed = name !== state.channelSet.get('name');
+  state.isValid = name.length > 0;
 }
 
 exports.SET_DESCRIPTION = function(state, description) {
@@ -78,15 +82,10 @@ exports.REMOVE_CHANNEL_FROM_SET = function(state, channel) {
   state.changed = true;
 }
 
-// exports.REMOVE_ITEM_FROM_IMPORT_LIST = function(state, contentNodeId) {
-//
-// }
+exports.SET_CHANGED = function(state, changed) {
+  state.changed = changed;
+}
 
-// exports.UPDATE_IMPORT_SIZE = function(state, newSize) {
-//   state.importSizeInBytes = newSize;
-// }
-
-
-// exports.UPDATE_IMPORT_STATUS = function(state, status) {
-//   state.importStatus = status;
-// }
+exports.SET_SAVING = function(state, saving) {
+  state.saving = saving;
+}

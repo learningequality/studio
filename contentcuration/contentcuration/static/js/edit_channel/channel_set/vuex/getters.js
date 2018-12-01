@@ -35,3 +35,11 @@ exports.channelSet = function(state) {
 exports.allChannels = function(state) {
   return state.allChannels;
 }
+
+exports.isValid = function(state) {
+	return state.isValid;
+}
+
+exports.saving = function(state) {
+  return state.saving;
+}

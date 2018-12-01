@@ -54,7 +54,10 @@ function getImportStatus(state) {
 var NAMESPACE = "channel_set";
 var MESSAGES = {
     "warning_message": "Any associated content will not be imported or referenced as related content.",
-    "importing_content": "Importing Content..."
+    "importing_content": "Importing Content...",
+    "save_and_close": "SAVE & CLOSE",
+    "dont_save": "DON'T SAVE",
+    "keep_open": "KEEP OPEN"
 }
 
 var ChannelSetModalView = BaseViews.BaseView.extend({
@@ -103,8 +106,26 @@ var ChannelSetModalView = BaseViews.BaseView.extend({
     _mountVueComponent: function() {
         this._resetPageState();
         this.ChannelSetModal = new ChannelSetModal({ store: store });
-        this.ChannelSetModal.$on('modalclosed', this._destroy.bind(this))
+        this.ChannelSetModal.$on('modalclosed', this._destroy.bind(this));
+        this.ChannelSetModal.$on('modalclosing', this._checkChanges.bind(this));
         this.ChannelSetModal.$mount();
+    },
+
+    _checkChanges: function(event) {
+        if(store.state.channel_set.changed){
+          this.cancel_actions(event);
+          var self = this;
+          dialog.dialog(this.get_translation("unsaved_changes"), this.get_translation("unsaved_changes_text"), {
+              [this.get_translation("dont_save")]: function(){
+                store.commit('channel_set/SET_CHANGED', false);
+                self.ChannelSetModal.closeModal();
+              },
+              [this.get_translation("keep_open")]:function(){},
+              [this.get_translation("save_and_close")]:function(){
+
+              },
+          }, null);
+        }
     },
 
     _destroy: function() {
@@ -121,27 +142,28 @@ var ChannelSetModalView = BaseViews.BaseView.extend({
         store.commit('channel_set/SET_CHANNEL_SET', this.model);
     },
 
-    // _showWarning: function() {
-    //     dialog.alert(
-    //         this.get_translation("warning"),
-    //         this.get_translation("warning_message"),
-    //         this._dispatchCopyImportListToChannel.bind(this)
-    //     );
-    // },
-
-    // _startImport: function() {
-    //     var self = this;
-    //     function onFinishImport(resolve, reject) {
-    //         self.once('finish_import', function(importFailed) {
-    //             self.ImportModal.closeModal();
-    //             if (importFailed) {
-    //                 reject();
-    //             } else {
-    //               resolve(true);
-    //             }
-    //         });
-    //     }
-    //     this.listView.display_load(this.get_translation("importing_content"), onFinishImport);
+    // _saveChannelSet: function() {
+    //     this.display_load(this.get_translation("saving"), function(load_resolve, load_reject){
+    //         // return this.ChannelSetModal.
+    //         // var promises = [];
+    //         // for(var i = 0; i < self.lists.length; i++){
+    //         //     promises.push(self.lists[i].copy_selected());
+    //         //     if(self.lists[i].current_node){
+    //         //         break;
+    //         //     }
+    //         // }
+    //         // Promise.all(promises).then(function(lists){
+    //         //     var nodeCollection = new Models.ContentNodeCollection();
+    //         //     lists.forEach(function(list){
+    //         //         nodeCollection.add(list.models);
+    //         //     });
+    //         //     WorkspaceManager.get_queue_view().clipboard_queue.add_nodes(nodeCollection);
+    //         //     load_resolve(true);
+    //         // }).catch(function(error){
+    //         //     console.log(error);
+    //         //     load_reject(error);
+    //         // });
+    //     });
     // },
 
     // _finishImport: function() {

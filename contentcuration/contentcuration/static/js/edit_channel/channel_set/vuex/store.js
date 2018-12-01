@@ -16,8 +16,9 @@ var store = new Vuex.Store({
 	    description: "",
 	    channels: [],
 	    allChannels: {},
-	    originalChannels: [],
+	    saving: false,
 	    changed: false,
+	    isValid: true,
 	    channelSet:null,
 	    isNewSet: false,
 	    pageState: {

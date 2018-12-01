@@ -878,11 +878,12 @@ class InvitationSerializer(BulkSerializerMixin, serializers.ModelSerializer):
 
 
 class ChannelSetSerializer(serializers.ModelSerializer):
-    secret_token = TokenSerializer()
+    secret_token = TokenSerializer(required=False)
     channels = serializers.SerializerMethodField('get_channel_ids')
 
     def get_channel_ids(self, channelset):
-        return channelset.get_channels().values_list('id', flat=True)
+        channels = channelset.get_channels()
+        return channels and channels.values_list('id', flat=True)
 
     class Meta:
         model = ChannelSet

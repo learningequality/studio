@@ -582,11 +582,10 @@ var ChannelSetListItem = BaseViews.BaseListEditableItemView.extend({
 	template: require("./hbtemplates/channel_set_item.handlebars"),
 	initialize: function(options) {
 		this.bind_edit_functions();
-		// _.bindAll(this, 'delete_channel');
-		this.listenTo(this.model, "sync", this.set_model);
 		this.containing_list_view = options.containing_list_view;
 		this.container = options.container;
 		this.render();
+		this.listenTo(this.model, 'change', this.render);
 	},
 	render: function() {
 		this.$el.html(this.template({

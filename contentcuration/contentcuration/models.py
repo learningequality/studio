@@ -419,6 +419,34 @@ class SecretToken(models.Model):
         return self.token
 
 
+def generate_new_token(is_primary=False):
+    """
+    Creates a primary secret token for the current channel using a proquint
+    string. Creates a secondary token containing the channel id.
+
+    These tokens can be used to refer to the channel to download its content
+    database.
+    """
+    token = proquint.generate()
+
+    # Try 100 times to generate a unique token.
+    TRIALS = 100
+    for __ in range(TRIALS):
+        token = proquint.generate()
+        if SecretToken.exists(token):
+            continue
+        else:
+            break
+    # after TRIALS attempts and we didn't get a unique token,
+    # just raise an error.
+    # See https://stackoverflow.com/a/9980160 on what for-else loop does.
+    else:
+        raise ValueError("Cannot generate new token")
+
+    # We found a unique token! Save it
+    return token
+
+
 class Channel(models.Model):
     """ Permissions come from association with organizations """
     id = UUIDField(primary_key=True, default=uuid.uuid4)
@@ -586,34 +614,8 @@ class Channel(models.Model):
         return self.secret_tokens.get(token=self.id)
 
     def make_token(self):
-        """
-        Creates a primary secret token for the current channel using a proquint
-        string. Creates a secondary token containing the channel id.
-
-        These tokens can be used to refer to the channel to download its content
-        database.
-        """
-        token = proquint.generate()
-
-        # Try 100 times to generate a unique token.
-        TRIALS = 100
-        for __ in range(TRIALS):
-            token = proquint.generate()
-            if SecretToken.exists(token):
-                continue
-            else:
-                break
-        # after TRIALS attempts and we didn't get a unique token,
-        # just raise an error.
-        # See https://stackoverflow.com/a/9980160 on what for-else loop does.
-        else:
-            raise ValueError("Cannot generate new token")
-
-        # We found a unique token! Save it
-        human_token = self.secret_tokens.create(token=token, is_primary=True)
+        self.secret_tokens.create(token=generate_new_token(), is_primary=True)
         self.secret_tokens.get_or_create(token=self.id)
-
-        return human_token
 
     def make_public(self, bypass_signals=False):
         """
@@ -678,11 +680,16 @@ class ChannelSet(models.Model):
     secret_token = models.ForeignKey('SecretToken', null=True, blank=True, related_name='channel_sets')
 
     def get_channels(self):
-        return self.secret_token.channels.all()
+        if self.secret_token:
+            return self.secret_token.channels.all()
 
     def save(self, *args, **kwargs):
         super(ChannelSet, self).save(*args, **kwargs)
-        # TODO: add token on save
+
+        if not self.secret_token:
+            self.secret_token = SecretToken(token=generate_new_token())
+            self.secret_token.save()
+            self.save()
 
 
 class ContentTag(models.Model):

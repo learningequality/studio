@@ -47,6 +47,7 @@ from contentcuration.models import FormatPreset
 from contentcuration.models import Invitation
 from contentcuration.models import Language
 from contentcuration.models import License
+from contentcuration.models import SecretToken
 from contentcuration.models import User
 from contentcuration.models import VIEW_ACCESS
 from contentcuration.serializers import AltChannelListSerializer
@@ -435,5 +436,23 @@ def download_channel_content_csv(request, channel_id):
     """ Writes list of channels to csv, which is then emailed """
     site = get_current_site(request)
     generatechannelcsv_task.delay(channel_id, site.domain, request.user.id)
+
+    return HttpResponse({"success": True})
+
+
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
+def save_token_to_channels(request, token):
+    channel_ids = json.loads(request.body)
+    channels = Channel.objects.filter(pk__in=channel_ids)
+    token = SecretToken.objects.get(token=token)
+
+    # Add tokens to channels in list
+    for channel in channels.exclude(secret_tokens__token__contains=token):
+        channel.secret_tokens.add(token)
+
+    # Remove token from channels that aren't in list
+    for channel in token.channels.exclude(pk__in=channel_ids):
+        channel.secret_tokens.remove(token)
 
     return HttpResponse({"success": True})

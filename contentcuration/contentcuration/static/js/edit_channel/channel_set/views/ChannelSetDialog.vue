@@ -3,7 +3,7 @@
   <div>
     <!-- SLOT FOR CHANNEL SET VIEW OR CHANNEL SELECT VIEW-->
     <div id="channel-set-content">
-      <slot />
+      <slot/>
     </div>
 
     <br/>
@@ -16,9 +16,16 @@
         class="action-button pull-right modal-main-action-button uppercase"
         @click="handleSave"
         :disabled="!enableSave"
+        :title="saveButtonTitle"
       >
         {{ $tr('saveButtonLabel') }}
       </button>
+      <span
+        class="spinner material-icons pull-right"
+        v-show="saving"
+      >
+        autorenew
+      </span>
     </div>
   </div>
 
@@ -35,41 +42,47 @@ export default {
   $trs: {
     cancelButtonLabel: 'Cancel',
     saveButtonLabel: 'Save',
+    noChangesTitle: "No changes detected",
+    invalidCollection: "Must enter all required fields",
+    saving: "Saving..."
   },
   computed: Object.assign(
-    // mapState('channel_set', [
-    //   'itemsToImport',
-    // ]),
     mapGetters('channel_set', [
       'changed',
-      'title',
+      'name',
       'description',
+      'isValid',
+      'saving'
     ]),
     {
       enableSave() {
-        return this.changed //&& this.title.length !== 0;
+        return this.changed && this.isValid && !this.saving;
+      },
+      saveButtonTitle() {
+        if (this.saving) {
+          return this.$tr('saving');
+        } else if(!this.isValid) {
+          return this.$tr('invalidCollection');
+        } else if (!this.changed) {
+          return this.$tr('noChangesTitle');
+        } else
+        return this.$tr('saveButtonLabel');
       }
     }
   ),
   methods: Object.assign(
-  //   mapMutations('import', {
-  //     updateImportStatus: 'UPDATE_IMPORT_STATUS',
-  //   }),
+    mapMutations('channel_set', {
+      prepareForSave: 'PREPARE_CHANNEL_SET_FOR_SAVE',
+    }),
+    mapActions('channel_set', ['goToViewChannels', 'saveChannelSet']),
     {
       handleSave() {
-        console.log("HANDLING SAVE")
-        // if (this.currentImportPage === PageTypes.SEARCH_RESULTS || this.currentImportPage === PageTypes.TREE_VIEW) {
-        //   return this.goToImportPreview();
-        // }
-        // if (this.currentImportPage === PageTypes.IMPORT_PREVIEW) {
-        //   // Check to see if imports have related content
-        //   if (hasRelatedContent(this.itemsToImport)) {
-        //     return this.updateImportStatus('show_warning');
-        //   } else {
-        //     // Triggers import action from ImportModal BB View
-        //     return this.updateImportStatus('import_confirmed');
-        //   }
-        // }
+        if (this.name.length === 0) {
+          return this.goToViewChannels();
+        } else {
+          this.prepareForSave();
+          return this.saveChannelSet();
+        }
       }
     }
   ),
@@ -84,6 +97,17 @@ export default {
 
 button.action-button[disabled] {
   opacity: 0.75;
+}
+@keyframes spin {
+  from { transform: scale(1) rotate(0deg);}
+  to { transform: scale(1) rotate(360deg);}
+}
+.spinner {
+  animation: spin 1.5s infinite linear;
+  font-size: 20pt;
+  vertical-align: middle;
+  margin-right: 15px;
+  color: @blue-500;
 }
 
 /deep/ .channel-list {

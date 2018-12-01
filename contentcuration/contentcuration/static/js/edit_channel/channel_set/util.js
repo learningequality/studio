@@ -1,4 +1,5 @@
 var Models = require('../models');
+const State = require("edit_channel/state");
 
 exports.loadChannelSetChannels = function(token) {
   return new Promise(function(resolve, reject) {
@@ -22,66 +23,31 @@ exports.loadChannelList = function(url) {
   })
 }
 
+exports.saveChannelsToSet = function(channelSetData, channels) {
+  return new Promise(function(resolve, reject) {
+    let channelSetModel = new Models.ChannelSetModel();
+    delete channelSetData.secret_token; // Don't save this
 
-// exports.hasRelatedContent = function(contentNodes) {
-//   var collection = createContentNodeCollection(contentNodes);
-//   return collection.has_related_content();
-// }
+    if(!channelSetData.editors || channelSetData.editors.length === 0) {
+      channelSetData.editors = [State.current_user.id];
+    }
 
-// /**
-//  * Given an Array of ContentNode IDs, return an Array of the corresponding ContentNode Objects
-//  * @param {Array<string>} nodeIds
-//  * @returns {Promise<Array<ContentNode>>}
-//  */
-//  exports.fetchContentNodesById = function(nodeIds) {
-//    var collection = new Models.ContentNodeCollection();
-//    return collection.get_all_fetch_simplified(nodeIds)
-//    .then(function(nodeCollection) {
-//      return nodeCollection.toJSON();
-//    });
-//  }
+    channelSetModel.save(channelSetData, {
+      patch: true,
+      error: reject,
+      success: function(channelSet) {
+        console.log(channelSet)
+        $.ajax({
+          method:"POST",
+          url: window.Urls.save_token_to_channels(channelSet.get('secret_token').token),
+          success: function() {
+            resolve(channelSet);
+          },
+          error: reject,
+          data: JSON.stringify(_.pluck(channels, 'id'))
+        });
+      }
+    })
 
-// function fetchItemSearchResults(searchTerm, currentChannelId) {
-//   return new Promise(function(resolve, reject) {
-//     $.ajax({
-//       method:"GET",
-//       // omitting slash results in 301
-//       url: '/api/search/items/',
-//       success: resolve,
-//       error: reject,
-//       data: {
-//         q: searchTerm,
-//         exclude_channel: currentChannelId || '',
-//       },
-//     });
-//   });
-// }
-
-// function fetchTopicSearchResults(searchTerm, currentChannelId) {
-//   return new Promise(function(resolve, reject) {
-//     $.ajax({
-//       method:"GET",
-//       url: '/api/search/topics/',
-//       success: resolve,
-//       error: reject,
-//       data: {
-//         q: searchTerm,
-//         exclude_channel: currentChannelId || '',
-//       },
-//     });
-//   });
-// }
-
-// exports.fetchSearchResults = function(searchTerm, currentChannelId) {
-//   return Promise.all([
-//     fetchItemSearchResults(searchTerm, currentChannelId),
-//     fetchTopicSearchResults(searchTerm, currentChannelId),
-//   ])
-//   .then(function(results) {
-//     return {
-//       searchTerm: searchTerm,
-//       itemResults: results[0],
-//       topicResults: results[1],
-//     }
-//   })
-// }
+  })
+}

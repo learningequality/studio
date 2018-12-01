@@ -2,7 +2,8 @@
 
   <div>
     <!-- Title/Description metadata fields -->
-    <h4>{{ $tr('titleLabel') }}</h4>
+    <h4>{{ $tr('titleLabel') }} <span class="redText">*</span></h4>
+    <p v-show="!isValid" class="redText">{{ $tr('titleRequiredText') }}</p>
     <input
         class="set-input"
         v-model="name"
@@ -28,7 +29,25 @@
         {{ $tr('loading') }}
       </div>
       <div v-else>
-        <p class="channelCountText">{{ $tr('channelCountText', {'channelCount': channelCount}) }}</p>
+        <div class="channelSetMetadata">
+          <div class="pull-right" v-if="token">
+            <input
+              type="text"
+              class="copyTokenText text-center"
+              v-model="token"
+              readonly
+              ref="tokenText"
+              size='15'>
+            </input>
+            <i
+              class="material-icons copyTokenButton"
+              :title="$tr('copyTokenButtonLabel')"
+              @click="copyToken">
+              {{copyIcon}}
+            </i>
+          </div>
+          <span class="channelCountText">{{ $tr('channelCountText', {'channelCount': channelCount}) }}</span>
+        </div>
         <div class="container-fluid">
           <ChannelItem
             v-for="channel in channels"
@@ -55,8 +74,14 @@
 
 <script>
 
-import { mapState, mapGetters, mapActions } from 'vuex';
+import { mapGetters, mapActions } from 'vuex';
 import ChannelItem from './ChannelItem.vue';
+
+const copyStatusCodes = {
+  IDLE: "IDLE",
+  SUCCESS: "SUCCESS",
+  FAILED: "FAILED",
+}
 
 export default {
   name: 'ChannelSetList',
@@ -68,6 +93,8 @@ export default {
     'descriptionPlaceholder': "Describe your collection",
     'selectButtonLabel': 'Select',
     'channelCountText': '{channelCount, plural, =1 {# channel in your collection} other {# channels in your collection}}',
+    'copyTokenButtonLabel': "Copy Token",
+    'titleRequiredText': "Title is required"
   },
   mounted() {
     this.loadChannelSetChannels();
@@ -75,11 +102,18 @@ export default {
   components: {
     ChannelItem,
   },
+  data() {
+    return {
+      copyStatus: copyStatusCodes.IDLE,
+    }
+  },
   computed: Object.assign(
     mapGetters('channel_set', [
       'changed',
       'channels',
       'loadChannels',
+      'channelSet',
+      'isValid'
     ]),
     {
       name: {
@@ -98,6 +132,20 @@ export default {
           this.$store.commit('channel_set/SET_DESCRIPTION', value);
         }
       },
+      copyIcon() {
+        switch(this.copyStatus) {
+          case copyStatusCodes.SUCCESS:
+            return "check"
+          case copyStatusCodes.FAILED:
+            return "clear"
+          default:
+            return "content_paste"
+        }
+      },
+      token() {
+        let token = this.channelSet.get('secret_token');
+        return token && token.display_token;
+      },
       channelCount() {
         return this.channels.length;
       }
@@ -107,7 +155,23 @@ export default {
     mapActions('channel_set', [
       'goToSelectChannels',
       'loadChannelSetChannels'
-    ])
+    ]),
+    {
+      copyToken() {
+        let element = this.$refs.tokenText;
+        element.select();
+        var self = this;
+        try {
+          document.execCommand("copy");
+          this.copyStatus = copyStatusCodes.SUCCESS;
+        } catch(e) {
+          this.copyStatus = copyStatusCodes.FAILED;
+        }
+        setTimeout(() => {
+          this.copyStatus = copyStatusCodes.IDLE;
+        }, 2500);
+      }
+    }
   ),
 };
 
@@ -140,4 +204,30 @@ h4 {
   }
 }
 
+.copyTokenButton{
+  padding:3px;
+  font-size: 16pt;
+  vertical-align: sub;
+  cursor: pointer;
+  &:hover { color:@blue-500; }
+}
+.copyTokenText{
+  display: inline-block;
+  padding:2px;
+  background-color: @gray-300;
+  font-size:11pt;
+  border:none;
+  font-weight: bold;
+  width: 125px;
+  color: @gray-700;
+}
+
+.channelSetMetadata {
+  margin-bottom: 20px;
+}
+
+.redText {
+  font-weight: bold;
+  color: @red-error-color;
+}
 </style>

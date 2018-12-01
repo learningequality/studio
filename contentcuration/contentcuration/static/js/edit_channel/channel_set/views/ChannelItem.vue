@@ -30,11 +30,7 @@
 <script>
 
 import _ from 'underscore';
-import stringHelper from '../../utils/string_helper';
 import { mapActions, mapGetters } from 'vuex';
-import { PageTypes } from '../constants';
-
-const RequiredBoolean = { type: Boolean, required: true };
 
 export default {
   name: 'ChannelItem',
