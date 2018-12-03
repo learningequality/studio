@@ -216,8 +216,8 @@
 					font-size: @channel-font-size;
 					font-weight: bold;
 					color: @body-font-color;
-					margin-bottom:5px;
-					height:@channel-font-size;
+					margin-bottom: 0px;
+					padding-bottom: 5px;
 					.channel_name{
 						color: @body-font-color;
 						height:@channel-font-size + 10px;
@@ -299,6 +299,9 @@
 					font-style: italic;
 					font-size: 10pt;
 				    color: gray;
+				}
+				.delete_channel_set:hover {
+					color: @red-error-color;
 				}
 			}
 			.active_channel{

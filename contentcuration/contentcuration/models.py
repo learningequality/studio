@@ -687,8 +687,7 @@ class ChannelSet(models.Model):
         super(ChannelSet, self).save(*args, **kwargs)
 
         if not self.secret_token:
-            self.secret_token = SecretToken(token=generate_new_token())
-            self.secret_token.save()
+            self.secret_token = SecretToken.objects.create(token=generate_new_token())
             self.save()
 
 

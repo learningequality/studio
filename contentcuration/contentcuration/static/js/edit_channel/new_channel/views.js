@@ -58,6 +58,8 @@ var MESSAGES = {
     "channel_set": "Collection",
     "add_channel_set_title": "Create a new collection of channels",
     "channel_count": "{count, plural,\n =1 {# Channel}\n other {# Channels}}",
+    "delete_channel_set": "Delete Collection",
+    "delete_channel_set_text": "Are you sure you want to PERMANTENTLY delete this channel collection?"
 }
 
 var ChannelListPage  = BaseViews.BaseView.extend({
@@ -582,6 +584,7 @@ var ChannelSetListItem = BaseViews.BaseListEditableItemView.extend({
 	template: require("./hbtemplates/channel_set_item.handlebars"),
 	initialize: function(options) {
 		this.bind_edit_functions();
+		_.bindAll(this, "delete_channel_set");
 		this.containing_list_view = options.containing_list_view;
 		this.container = options.container;
 		this.render();
@@ -601,7 +604,9 @@ var ChannelSetListItem = BaseViews.BaseListEditableItemView.extend({
 		'click .copy-id-btn' : 'copy_id',
 		'click .open_channel_set': 'open_channel_set',
 		'mouseover .open_channel_set': 'add_highlight',
-		'mouseleave .open_channel_set': 'remove_highlight'
+		'mouseleave .open_channel_set': 'remove_highlight',
+		'mouseover .delete_channel_set': 'remove_highlight',
+		'click .delete_channel_set': 'delete_channel_set'
 	},
 	remove_highlight:function(event){
 		event.stopPropagation();
@@ -635,8 +640,17 @@ var ChannelSetListItem = BaseViews.BaseListEditableItemView.extend({
 			self.$(".copy-id-btn").text("content_paste");
 		}, 2500);
 	},
-	delete_channel_set: function(model){
-		this.container.delete_channel(this.model);
+	delete_channel_set: function(event){
+		event.stopImmediatePropagation();
+		var self = this;
+		dialog.dialog(self.get_translation("delete_channel_set"), self.get_translation("delete_channel_set_text"), {
+			[self.get_translation("cancel")]:function(){},
+			[self.get_translation("delete_channel_set")]: function(){
+				self.model.destroy({
+					success: function() {self.remove();}
+				});
+			},
+		}, function(){ });
 	}
 });
 
