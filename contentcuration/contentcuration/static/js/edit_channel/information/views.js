@@ -39,17 +39,16 @@ var MESSAGES = {
     "role_description": "Content visibility determines what type of Kolibri users can see this content.",
     "channel_sets": "About Collections",
     "channel_sets_description": "What is a collection?",
-    "channel_sets_description_text": "A collection is a package of multiple Studio channels all" +
-                " associated with one token, the collection token! Use a collection token to make" +
-                " multiple channels available for import at once in Kolibri!",
+    "channel_sets_description_text": "A collection is a package of multiple Studio channels all associated with one " +
+                "token, the collection token! Use a collection token to make multiple channels available for import " +
+                "at once in Kolibri. You no longer have to import Channels into Kolibri using individual channel tokens.",
     "channel_sets_instructions": "How do I make one?",
     "channel_sets_instructions_text": "You can make a collection by simply selecting which channels you " +
                 "want to package together. Remember to give your collection a title.",
-    "channel_sets_benefits": "What are the benefits of using collections?",
-    "channel_sets_benefits_text": "You no longer have to import Channels into Kolibri using individual channel" +
-                " tokens. Collections save you time by using only one token for all the channels you select.",
-    "channel_sets_disclaimer": "You will need Kolibri 0.12.0 or higher to import channel collections"
+    "channel_sets_disclaimer": "You will need Kolibri version 0.12.0 or higher to import channel collections",
+    "channel_sets_compatability": "Compatability"
 }
+
 
 
 var BaseInfoModalView = BaseViews.BaseModalView.extend({
