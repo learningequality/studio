@@ -124,4 +124,8 @@ export default {
     }
   }
 
+  /deep/ .selectedChannel {
+    background-color: @blue-000;
+  }
+
 </style>

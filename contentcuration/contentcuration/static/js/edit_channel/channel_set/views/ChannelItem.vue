@@ -1,6 +1,6 @@
 <template>
 
-  <div class="channelSetChannel row">
+  <div class="channelSetChannel row" :class="{selectedChannel: isSelected}">
     <div class="col-xs-2 section">
       <img :src='channel.thumbnail_url'/>
     </div>
@@ -13,6 +13,7 @@
         class="removeChannel"
         v-if='isSelected'
         @click="removeChannel"
+        :title="$tr('deselectButtonLabel')"
       >&times;</span>
       <a
         class="action-text uppercase addChannel"
@@ -35,7 +36,8 @@ import { mapActions, mapGetters } from 'vuex';
 export default {
   name: 'ChannelItem',
   $trs: {
-    'selectButtonLabel': 'Select'
+    'selectButtonLabel': 'Select',
+    'deselectButtonLabel': 'Deselect'
   },
   props: {
     channel: {

@@ -37,7 +37,8 @@ exports.allChannels = function(state) {
 }
 
 exports.isValid = function(state) {
-	return state.isValid;
+  // Add validation here
+  return state.stopValidation || state.name.length > 0;
 }
 
 exports.saving = function(state) {

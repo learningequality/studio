@@ -47,10 +47,6 @@ Vue.prototype.$tr = function $tr(messageId, args) {
 };
 
 
-function getImportStatus(state) {
-  return state.import.importStatus;
-}
-
 var NAMESPACE = "channel_set";
 var MESSAGES = {
     "warning_message": "Any associated content will not be imported or referenced as related content.",
@@ -60,15 +56,19 @@ var MESSAGES = {
     "keep_open": "KEEP OPEN"
 }
 
+function checkForSave(state) {
+  return state.channel_set.saving;
+}
+
 var ChannelSetModalView = BaseViews.BaseView.extend({
     name: NAMESPACE,
     $trs: MESSAGES,
     initialize: function(options) {
         this.options = options;
-        // this.statusWatcher = store.watch(
-        //   getImportStatus,
-        //   this._handleImportStatusChange.bind(this)
-        // );
+        this.statusWatcher = store.watch(
+          checkForSave,
+          this._handleSaving.bind(this)
+        );
         this.render();
     },
 
@@ -76,32 +76,15 @@ var ChannelSetModalView = BaseViews.BaseView.extend({
         Vue.nextTick().then(this._mountVueComponent.bind(this));
     },
 
-    // _handleImportStatusChange: function(status) {
-    //   switch (status) {
-    //     case 'import_confirmed':
-    //       return this._dispatchCopyImportListToChannel();
-    //     case 'start':
-    //       return this._startImport();
-    //     case 'show_warning':
-    //       return this._showWarning();
-    //     case 'success':
-    //       return this._finishImport();
-    //     case 'failure':
-    //       return this.trigger('finish_import', true);
-    //     default:
-    //       return;
-    //   }
-    // },
-
-    // // This is the only call-site for this action, to avoid having to pass BB
-    // // variables through component tree. ImportDialogue triggers it by setting
-    // // status to 'import_confirmed'
-    // _dispatchCopyImportListToChannel: function() {
-    //   store.dispatch('import/copyImportListToChannel', {
-    //     onConfirmImport: this.options.onimport,
-    //     baseViewModel: this.model,
-    //   });
-    // },
+    _handleSaving: function(saving, callback) {
+        if(saving) {
+            var self = this;
+            store.dispatch('channel_set/saveChannelSet', function(model) {
+                self.options.onsave(model);
+                callback && callback();
+            });
+        }
+    },
 
     _mountVueComponent: function() {
         this._resetPageState();
@@ -122,7 +105,7 @@ var ChannelSetModalView = BaseViews.BaseView.extend({
               },
               [this.get_translation("keep_open")]:function(){},
               [this.get_translation("save_and_close")]:function(){
-
+                self._handleSaving(true, self.ChannelSetModal.closeModal);
               },
           }, null);
         }
@@ -130,8 +113,7 @@ var ChannelSetModalView = BaseViews.BaseView.extend({
 
     _destroy: function() {
       this._resetPageState();
-      // this.statusWatcher();
-      // destroy the Vue VM, and remove it from the DOM
+      this.statusWatcher();
       this.ChannelSetModal.$destroy();
       $(this.ChannelSetModal.$el).remove();
     },
@@ -140,35 +122,7 @@ var ChannelSetModalView = BaseViews.BaseView.extend({
         store.commit('channel_set/RESET_PAGE_STATE');
         store.commit('channel_set/SET_IS_NEW', this.options.isNew);
         store.commit('channel_set/SET_CHANNEL_SET', this.model);
-    },
-
-    // _saveChannelSet: function() {
-    //     this.display_load(this.get_translation("saving"), function(load_resolve, load_reject){
-    //         // return this.ChannelSetModal.
-    //         // var promises = [];
-    //         // for(var i = 0; i < self.lists.length; i++){
-    //         //     promises.push(self.lists[i].copy_selected());
-    //         //     if(self.lists[i].current_node){
-    //         //         break;
-    //         //     }
-    //         // }
-    //         // Promise.all(promises).then(function(lists){
-    //         //     var nodeCollection = new Models.ContentNodeCollection();
-    //         //     lists.forEach(function(list){
-    //         //         nodeCollection.add(list.models);
-    //         //     });
-    //         //     WorkspaceManager.get_queue_view().clipboard_queue.add_nodes(nodeCollection);
-    //         //     load_resolve(true);
-    //         // }).catch(function(error){
-    //         //     console.log(error);
-    //         //     load_reject(error);
-    //         // });
-    //     });
-    // },
-
-    // _finishImport: function() {
-    //   this.trigger('finish_import', false);
-    // }
+    }
 });
 
 module.exports = {

@@ -30,7 +30,7 @@ import ChannelSelectList from './ChannelSelectList.vue';
 export default {
   name: 'ChannelSelectView',
   $trs: {
-    "backButtonLabel": "Back to Details",
+    "backButtonLabel": "Back to details",
     "channelCountText": "{channelCount, plural, =1 {# channel selected} other {# channels selected}}",
   },
   components: {

@@ -32,16 +32,16 @@ exports.saveChannelsToSet = function(channelSetData, channels) {
       channelSetData.editors = [State.current_user.id];
     }
 
+    // Need to save first to make sure token is available
     channelSetModel.save(channelSetData, {
       patch: true,
       error: reject,
       success: function(channelSet) {
-        console.log(channelSet)
         $.ajax({
           method:"POST",
           url: window.Urls.save_token_to_channels(channelSet.get('secret_token').token),
           success: function() {
-            resolve(channelSet);
+            channelSet.fetch({success: resolve});
           },
           error: reject,
           data: JSON.stringify(_.pluck(channels, 'id'))

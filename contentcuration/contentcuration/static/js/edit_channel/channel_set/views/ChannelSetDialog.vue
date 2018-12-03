@@ -72,17 +72,11 @@ export default {
   ),
   methods: Object.assign(
     mapMutations('channel_set', {
-      prepareForSave: 'PREPARE_CHANNEL_SET_FOR_SAVE',
+      setSaving: 'SET_SAVING',
     }),
-    mapActions('channel_set', ['goToViewChannels', 'saveChannelSet']),
     {
       handleSave() {
-        if (this.name.length === 0) {
-          return this.goToViewChannels();
-        } else {
-          this.prepareForSave();
-          return this.saveChannelSet();
-        }
+        this.setSaving(true);
       }
     }
   ),

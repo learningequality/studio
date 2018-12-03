@@ -13,12 +13,15 @@
         maxlength="200"
     />
 
-    <h4>{{ $tr('descriptionLabel') }}</h4>
+    <h4>
+      <i class="pull-right descriptionCounter" :class="{redText: !charsLeft}">{{ $tr('charCount', {'charCount': charsLeft}) }}</i>
+      {{ $tr('descriptionLabel') }}
+    </h4>
     <textarea
       class="set-input"
       v-model="description"
       dir="auto"
-      maxlength="400"
+      :maxlength="charLimit"
       rows="4"
       :placeholder="$tr('descriptionPlaceholder')"
     >
@@ -94,7 +97,8 @@ export default {
     'selectButtonLabel': 'Select',
     'channelCountText': '{channelCount, plural, =1 {# channel in your collection} other {# channels in your collection}}',
     'copyTokenButtonLabel': "Copy Token",
-    'titleRequiredText': "Title is required"
+    'titleRequiredText': "Title is required",
+    "charCount": "{charCount, plural, =1 {# character left} other {# characters left}}",
   },
   mounted() {
     this.loadChannelSetChannels();
@@ -141,6 +145,12 @@ export default {
           default:
             return "content_paste"
         }
+      },
+      charsLeft() {
+        return this.charLimit - this.description.length;
+      },
+      charLimit() {
+        return 400;
       },
       token() {
         let token = this.channelSet.get('secret_token');
@@ -226,8 +236,13 @@ h4 {
   margin-bottom: 20px;
 }
 
+.descriptionCounter {
+  color: @gray-700;
+}
+
 .redText {
   font-weight: bold;
   color: @red-error-color;
 }
+
 </style>

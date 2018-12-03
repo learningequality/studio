@@ -29,12 +29,12 @@ exports.RESET_PAGE_STATE = function(state) {
     name: "",
     description: "",
     channels: [],
-    isValid: true,
     saving: false,
     allChannels: {},
     changed: false,
     channelSet: null,
     isNewSet: false,
+    stopValidation: false,
     pageState: {
       pageType: PageTypes.VIEW_CHANNELS,
       data: {},
@@ -49,20 +49,19 @@ exports.SET_CHANNEL_SET = function(state, channelSet) {
 }
 
 exports.PREPARE_CHANNEL_SET_FOR_SAVE = function(state) {
+  state.stopValidation = false;
   state.channelSet.set('name', state.name);
   state.channelSet.set('description', state.description);
-  console.log(state.channelSet)
 }
 
-
 exports.SET_IS_NEW = function(state, isNew) {
+  state.stopValidation = isNew;
   state.isNewSet = isNew;
 }
 
 exports.SET_NAME = function(state, name) {
   state.name = name;
   state.changed = name !== state.channelSet.get('name');
-  state.isValid = name.length > 0;
 }
 
 exports.SET_DESCRIPTION = function(state, description) {

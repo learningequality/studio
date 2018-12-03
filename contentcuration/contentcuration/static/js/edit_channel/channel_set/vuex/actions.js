@@ -5,7 +5,7 @@ var loadChannelList = utils.loadChannelList;
 var saveChannelsToSet = utils.saveChannelsToSet;
 var { PageTypes, ChannelListUrls } = require('../constants');
 
-// Requests the root nodes for the importable channels
+
 exports.loadChannelSetChannels = function(context, payload) {
   if(context.getters.loadChannels) {
     let token = context.getters.channelSet.get('secret_token');
@@ -63,20 +63,27 @@ exports.addChannelToSet = function(context, channel) {
   }
 }
 
-// Given a ContentNode ID, removes from to-import list
 exports.removeChannelFromSet = function(context, channel) {
   if (contains(context.getters.channels, channel.id)) {
     context.commit('REMOVE_CHANNEL_FROM_SET', channel);
   }
 }
 
-// Given a ContentNode ID, removes from to-import list
-exports.saveChannelSet = function(context) {
-  context.commit('SET_SAVING', true);
-  return saveChannelsToSet(context.getters.channelSet.toJSON(), context.getters.channels)
-    .then(function onSuccess(channelSet) {
-      context.commit('SET_CHANNEL_SET', channelSet);
-      context.commit('SET_CHANGED', false);
-      context.commit('SET_SAVING', false);
+exports.saveChannelSet = function(context, callback) {
+  context.commit('PREPARE_CHANNEL_SET_FOR_SAVE');
+  if(!context.getters.isValid) {
+    context.commit('SET_SAVING', false);
+    context.commit('UPDATE_PAGE_STATE', {
+      pageType: PageTypes.VIEW_CHANNELS,
+      data: {},
     });
+  } else {
+    return saveChannelsToSet(context.getters.channelSet.toJSON(), context.getters.channels)
+      .then(function onSuccess(channelSet) {
+        context.commit('SET_CHANNEL_SET', channelSet);
+        context.commit('SET_CHANGED', false);
+        context.commit('SET_SAVING', false);
+        callback(channelSet);
+      });
+  }
 }

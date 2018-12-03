@@ -18,8 +18,8 @@ var store = new Vuex.Store({
 	    allChannels: {},
 	    saving: false,
 	    changed: false,
-	    isValid: true,
 	    channelSet:null,
+	    stopValidation: false,
 	    isNewSet: false,
 	    pageState: {
 	      pageType: PageTypes.VIEW_CHANNELS,
