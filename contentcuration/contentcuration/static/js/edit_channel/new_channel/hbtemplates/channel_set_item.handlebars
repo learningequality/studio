@@ -5,13 +5,13 @@
 		</div>
 		<div class="col-xs-10">
 			<div class="channel_metadata text-left container-fluid">
-				<span class="pull-right material-icons delete_channel_set">delete</span>
+				<span class="pull-right material-icons delete_channel_set" title="{{formatMessage (intlGet 'messages.delete_channel_set')}}">delete</span>
 				<span class="pull-left">
 					{{formatMessage (intlGet (concat 'messages.channel_count')) count=channelset.channels.length}}
 					&nbsp;|&nbsp;
 					{{formatMessage (intlGet 'messages.id')}}&nbsp;
 					<input type="text" class="copy-id-text text-center" value="{{channelset.secret_token.display_token}}" readonly size='30'/>
-					<i class="material-icons copy-id-btn" title="{{formatMessage (intlGet 'messages.copy_id')}}">content_paste</i>
+					<i class="material-icons copy-id-btn" title="{{formatMessage (intlGet 'messages.copy_token')}}">content_paste</i>
 				</span>
 			</div>
 			<h4 class="truncate channel_name">{{channelset.name}}</h4>

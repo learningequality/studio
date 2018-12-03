@@ -24,6 +24,7 @@ var MESSAGES = {
 	"add_channel_title": "Create a new channel",
 	"pending_loading": "Checking for invitations...",
 	"copy_id": "Copy ID to clipboard",
+	"copy_token": "Copy Token",
 	"unpublished": "(Unpublished)",
 	"view_only": "View Only",
 	"invitation_error": "Invitation Error",
@@ -536,10 +537,12 @@ var ChannelSetList  = BaseViews.BaseEditableListView.extend({
 	$trs: MESSAGES,
 	initialize: function(options) {
 		this.bind_edit_functions();
-		// _.bindAll(this, "add_channel", "delete_channel", "save_new_channel");
+		_.bindAll(this, "save_new_channel_set");
 		this.container = options.container;
 		this.collection = options.collection;
 		this.render();
+		this.listenTo(this.collection, "add", this.render);
+		this.listenTo(this.collection, "remove", this.render);
 	},
 	events: {
 		'click .new_set_button': 'new_channel_set',
@@ -548,10 +551,13 @@ var ChannelSetList  = BaseViews.BaseEditableListView.extend({
 	new_channel_set: function() {
 		var channel_set_view = new ChannelSetViews.ChannelSetModalView({
 			modal: true,
-			onsave: null,
+			onsave: this.save_new_channel_set,
 			isNew: true,
 			model: new Models.ChannelSetModel()
 		});
+	},
+	save_new_channel_set: function(channel_set) {
+		this.collection.add(channel_set);
 	},
 	render: function() {
 		this.$el.html(this.template(null, {
@@ -584,11 +590,10 @@ var ChannelSetListItem = BaseViews.BaseListEditableItemView.extend({
 	template: require("./hbtemplates/channel_set_item.handlebars"),
 	initialize: function(options) {
 		this.bind_edit_functions();
-		_.bindAll(this, "delete_channel_set");
+		_.bindAll(this, "delete_channel_set", "reload");
 		this.containing_list_view = options.containing_list_view;
 		this.container = options.container;
 		this.render();
-		this.listenTo(this.model, 'change', this.render);
 	},
 	render: function() {
 		this.$el.html(this.template({
@@ -619,7 +624,7 @@ var ChannelSetListItem = BaseViews.BaseListEditableItemView.extend({
 	open_channel_set:function(event){
 		var channel_set_view = new ChannelSetViews.ChannelSetModalView({
 			modal: true,
-			onsave: null,
+			onsave: this.reload,
 			isNew: false,
 			model: this.model
 		});
@@ -647,7 +652,9 @@ var ChannelSetListItem = BaseViews.BaseListEditableItemView.extend({
 			[self.get_translation("cancel")]:function(){},
 			[self.get_translation("delete_channel_set")]: function(){
 				self.model.destroy({
-					success: function() {self.remove();}
+					success: function() {
+						self.containing_list_view.collection.remove(self.model);
+					}
 				});
 			},
 		}, function(){ });
