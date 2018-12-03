@@ -677,7 +677,7 @@ class ChannelSet(models.Model):
         help_text=_("Users with edit rights"),
         blank=True,
     )
-    secret_token = models.ForeignKey('SecretToken', null=True, blank=True, related_name='channel_sets')
+    secret_token = models.ForeignKey('SecretToken', null=True, blank=True, related_name='channel_sets', on_delete=models.CASCADE)
 
     def get_channels(self):
         if self.secret_token:
