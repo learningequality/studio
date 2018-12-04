@@ -27,6 +27,8 @@
     >
     </textarea>
     <hr/>
+
+    <!-- Channel list section -->
     <div class="channel-list">
       <div v-if="loadChannels" class="default-item">
         {{ $tr('loading') }}

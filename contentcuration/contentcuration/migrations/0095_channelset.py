@@ -27,7 +27,7 @@ class Migration(migrations.Migration):
                 ('description', models.CharField(blank=True, max_length=400)),
                 ('public', models.BooleanField(db_index=True, default=False)),
                 ('editors', models.ManyToManyField(blank=True, help_text='Users with edit rights', related_name='channel_sets', to=settings.AUTH_USER_MODEL, verbose_name='editors')),
-                ('secret_token', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='channel_sets', to='contentcuration.SecretToken')),
+                ('secret_token', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='channel_sets', to='contentcuration.SecretToken')),
             ],
         ),
     ]
