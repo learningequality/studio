@@ -1,31 +1,39 @@
 <template>
 
   <div
-    class="channelSetChannel row"
+    class="channelSetChannel"
     :class="{selectedChannel: isSelected, unpublishedChannel: !channel.published}"
     :title="title"
   >
-    <div class="col-xs-2 section">
-      <img :src='channel.thumbnail_url'/>
+    <div class="row">
+      <div class="col-xs-2 section text-center">
+        <img :src='channel.thumbnail_url'/>
+      </div>
+      <div class="col-xs-9">
+        <h4 class="title">{{channel.name}}</h4>
+        <p class="description">{{channel.description}}</p>
+      </div>
+      <div class="col-xs-1 text-center section">
+        <span
+          class="removeChannel"
+          v-if='isSelected'
+          @click="removeChannel"
+          :title="$tr('deselectButtonLabel')"
+        >&times;</span>
+        <a
+          class="action-text uppercase addChannel"
+          @click="addChannel"
+          :title="$tr('addChannelTitle')"
+          v-else
+        >
+          {{ $tr('selectButtonLabel') }}
+        </a>
+      </div>
     </div>
-    <div class="col-xs-9">
-      <h4 class="title">{{channel.name}}</h4>
-      <p class="description">{{channel.description}}</p>
-    </div>
-    <div class="col-xs-1 text-center section">
-      <span
-        class="removeChannel"
-        v-if='isSelected'
-        @click="removeChannel"
-        :title="$tr('deselectButtonLabel')"
-      >&times;</span>
-      <a
-        class="action-text uppercase addChannel"
-        @click="addChannel"
-        v-else
-      >
-        {{ $tr('selectButtonLabel') }}
-      </a>
+    <div class="row">
+      <div class="col-xs-12 text-right version">
+        {{ $tr("versionText", {'version': channel.version}) }}
+      </div>
     </div>
   </div>
 
@@ -44,6 +52,8 @@ export default {
     'selectButtonLabel': 'Select',
     'deselectButtonLabel': 'Deselect',
     'unpublishedTitle': '{channelName} must be published to import it into Kolibri',
+    'addChannelTitle': 'Add channel to collection',
+    'versionText': 'Version {version}',
   },
   props: {
     channel: {
@@ -110,7 +120,7 @@ export default {
     background-color: @gray-200;
     margin: 0px;
     margin-bottom: 10px;
-    padding: 15px;
+    padding: 15px 20px 5px 20px;
     cursor: default;
     .section {
       padding: 0px;
@@ -137,6 +147,11 @@ export default {
     .removeChannel {
       font-size: 25pt;
       cursor: pointer;
+    }
+    .version {
+      color: @gray-700;
+      font-size: 10pt;
+      font-style: italic;
     }
   }
 

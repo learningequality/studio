@@ -10,7 +10,6 @@ exports.UPDATE_LOADED_CHANNEL_LISTS = function(state, channelListName) {
 
 exports.UPDATE_CHANNELS = function(state, channels) {
   state.channels = channels;
-  state.publishedChannels = _.where(channels, {'published': true});
 }
 
 exports.UPDATE_ALL_CHANNELS = function(state, data) {
@@ -32,7 +31,6 @@ exports.RESET_PAGE_STATE = function(state) {
     channels: [],
     saving: false,
     allChannels: {},
-    publishedChannels: [],
     changed: false,
     channelSet: null,
     isNewSet: false,
@@ -73,17 +71,11 @@ exports.SET_DESCRIPTION = function(state, description) {
 
 exports.ADD_CHANNEL_TO_SET = function(state, channel) {
   state.channels.push(channel);
-  if(channel.published && !_.contains(state.publishedChannels, channel.id)) {
-    state.publishedChannels.push(channel);
-  }
   state.changed = true;
 }
 
 exports.REMOVE_CHANNEL_FROM_SET = function(state, channel) {
   state.channels = state.channels.filter(function(c) {
-    return c.id !== channel.id;
-  });
-  state.publishedChannels = state.publishedChannels.filter(function(c) {
     return c.id !== channel.id;
   });
   state.changed = true;

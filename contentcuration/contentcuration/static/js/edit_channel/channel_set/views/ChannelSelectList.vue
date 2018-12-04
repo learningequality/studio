@@ -12,6 +12,9 @@
         {{ $tr('noChannelsText') }}
       </div>
       <div class="container-fluid">
+        <div class="channelCountText">
+          {{ $tr("publishedChannelCount", {"channelCount": channels.length}) }}
+        </div>
         <ChannelItem
           v-for="channel in channels"
           :key="channel.id"
@@ -37,7 +40,7 @@ export default {
     PUBLIC: "Public Channels",
     channelLoadingText: "Loading...",
     noChannelsText: "No channels found",
-
+    publishedChannelCount: "Showing {channelCount, plural, =1 {# published channel} other {# published channels}}"
   },
   props: {
     listName: {
@@ -106,6 +109,11 @@ export default {
 <style lang="less" scoped>
 
 @import '../../../../less/global-variables.less';
+  .channelCountText {
+    font-size: 12pt;
+    color: @gray-500;
+    font-weight: bold;
+  }
   .channelList {
     margin-bottom: 10px;
     .channelListHeader {

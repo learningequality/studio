@@ -18,7 +18,10 @@ exports.loadChannelList = function(url) {
       method:"GET",
       url: url,
       success: resolve,
-      error: reject
+      error: reject,
+      data: {
+        "published": true
+      }
     });
   })
 }

@@ -50,10 +50,6 @@
             </i>
           </div>
           <span class="channelCountText">{{ $tr('channelCountText', {'channelCount': channelCount}) }}</span>
-          <p v-show="publishedCount != channelCount" class="unpublishedHelperText">
-            {{ $tr('publishedCountText', {'publishedCount': publishedCount, 'channelCount': channelCount}) }}
-            <span class="material-icons helperIcon" :title="$tr('unpublishedHelperText')">help_outline</span>
-          </p>
         </div>
         <div class="container-fluid">
           <ChannelItem
@@ -102,9 +98,7 @@ export default {
     'channelCountText': '{channelCount, plural, =1 {# channel in your collection} other {# channels in your collection}}',
     'copyTokenButtonLabel': "Copy Token",
     'titleRequiredText': "Title is required",
-    "charCount": "{charCount, plural, =1 {# character left} other {# characters left}}",
-    "publishedCountText": "{publishedCount} of {channelCount} channels published",
-    "unpublishedHelperText": "Channels must be published to be imported into Kolibri",
+    "charCount": "{charCount, plural, =1 {# character left} other {# characters left}}"
   },
   mounted() {
     this.loadChannelSetChannels();
@@ -124,7 +118,6 @@ export default {
       'loadChannels',
       'channelSet',
       'isValid',
-      'publishedChannels'
     ]),
     {
       name: {
@@ -165,9 +158,6 @@ export default {
       },
       channelCount() {
         return this.channels.length;
-      },
-      publishedCount() {
-        return this.publishedChannels.length;
       }
     }
   ),
