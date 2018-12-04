@@ -1,11 +1,15 @@
 <template>
 
-  <div class="channelSetChannel row" :class="{selectedChannel: isSelected}">
+  <div
+    class="channelSetChannel row"
+    :class="{selectedChannel: isSelected, unpublishedChannel: !channel.published}"
+    :title="title"
+  >
     <div class="col-xs-2 section">
       <img :src='channel.thumbnail_url'/>
     </div>
     <div class="col-xs-9">
-      <h4 class="title" :title="channel.name">{{channel.name}}</h4>
+      <h4 class="title">{{channel.name}}</h4>
       <p class="description">{{channel.description}}</p>
     </div>
     <div class="col-xs-1 text-center section">
@@ -32,12 +36,14 @@
 
 import _ from 'underscore';
 import { mapActions, mapGetters } from 'vuex';
+import { PageTypes } from '../constants';
 
 export default {
   name: 'ChannelItem',
   $trs: {
     'selectButtonLabel': 'Select',
-    'deselectButtonLabel': 'Deselect'
+    'deselectButtonLabel': 'Deselect',
+    'unpublishedTitle': '{channelName} must be published to import it into Kolibri',
   },
   props: {
     channel: {
@@ -57,7 +63,16 @@ export default {
     mapGetters('channel_set', [
       'currentPage',
       'channels'
-    ])
+    ]),
+    {
+      title() {
+        if (this.currentPage === PageTypes.SELECT_CHANNELS || this.channel.published) {
+          return this.channel.name;
+        } else {
+          return this.$tr("unpublishedTitle", {"channelName": this.channel.name});
+        }
+      }
+    }
   ),
   watch:{
     channels(value) {

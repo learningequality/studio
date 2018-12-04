@@ -44,3 +44,7 @@ exports.isValid = function(state) {
 exports.saving = function(state) {
   return state.saving;
 }
+
+exports.publishedChannels = function(state) {
+  return state.publishedChannels;
+}

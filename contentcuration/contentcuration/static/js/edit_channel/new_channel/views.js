@@ -145,6 +145,7 @@ var ChannelListPage  = BaseViews.BaseView.extend({
 		this.current_channel_list.delete_channel(channel);
 		this.public_channel_list.delete_channel(channel);
 		this.viewonly_channel_list.delete_channel(channel);
+		this.channel_set_list && this.channel_set_list.delete_channel(channel);
 		this.toggle_panel();
 	},
 	remove_star: function(channel){
@@ -576,6 +577,26 @@ var ChannelSetList  = BaseViews.BaseEditableListView.extend({
 	},
 	open_about_sets: function() {
 		var channel_set_info_modal = new Info.ChannelSetModalView({});
+	},
+	delete_channel: function(channel) {
+		// Find channel sets that have the deleted channel and reload their views
+		var channelSetCollection = new Models.ChannelSetCollection(
+			this.collection.filter(function(channelset) {
+				return _.contains(channelset.get('channels'), channel.id);
+			})
+		);
+
+		var self = this;
+		channelSetCollection.fetch({
+			success: function(collection) {
+				collection.each(function(model) {
+					var view = _.find(self.views, function(view) {
+						return view.model.id === model.id;
+					});
+					view.reload(model);
+				});
+			}
+		});
 	}
 });
 
