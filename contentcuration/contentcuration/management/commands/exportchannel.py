@@ -263,6 +263,8 @@ def create_associated_thumbnail(ccnode, ccfilemodel):
         encoding = ccnode.thumbnail_encoding and load_json_string(ccnode.thumbnail_encoding).get('base64')
     except ValueError:
         logging.error("ERROR: node thumbnail is not in correct format ({}: {})".format(ccnode.id, ccnode.thumbnail_encoding))
+    except IOError:
+        logging.error("ERROR: cannot identify the thumbnail ({}: {})".format(ccnode.id, ccnode.thumbnail_encoding))
 
     # Save the encoding if it doesn't already have an encoding
     if not encoding:
@@ -274,7 +276,12 @@ def create_associated_thumbnail(ccnode, ccfilemodel):
         })
         ccnode.save()
 
-    return create_thumbnail_from_base64(encoding, uploaded_by=ccfilemodel.uploaded_by, file_format_id=ccfilemodel.file_format_id, preset_id=ccfilemodel.preset_id)
+    return create_thumbnail_from_base64(
+        encoding,
+        uploaded_by=ccfilemodel.uploaded_by,
+        file_format_id=ccfilemodel.file_format_id,
+        preset_id=ccfilemodel.preset_id
+    )
 
 
 def create_associated_file_objects(kolibrinode, ccnode):
