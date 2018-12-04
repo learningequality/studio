@@ -615,7 +615,8 @@ class Channel(models.Model):
 
     def make_token(self):
         self.secret_tokens.create(token=generate_new_token(), is_primary=True)
-        self.secret_tokens.get_or_create(token=self.id)
+        token, _ = self.secret_tokens.get_or_create(token=self.id)
+        return token
 
     def make_public(self, bypass_signals=False):
         """
