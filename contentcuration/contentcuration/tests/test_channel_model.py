@@ -185,6 +185,15 @@ class ChannelSetTestCase(BaseAPITestCase):
         self.channelset = mixer.blend(ChannelSet, editors=[self.user])
         self.channels = mixer.cycle(10).blend(Channel, secret_tokens=[self.channelset.secret_token], editors=[self.user])
 
+    def test_get_user_channel_sets(self):
+        """ Make sure get_user_channel_sets returns the correct sets """
+        other_channelset = mixer.blend(ChannelSet)
+        response = self.get(reverse_lazy("get_user_channel_sets"))
+        self.assertEqual(response.status_code, 200)
+        channelsets = json.loads(response.content)
+        self.assertTrue(any(c['id'] == self.channelset.pk for c in channelsets))
+        self.assertFalse(any(c['id'] == other_channelset.pk for c in channelsets))
+
     def test_token_created_on_save(self):
         """ Make sure tokens are created on save only if the channel set is new """
         self.assertIsNotNone(self.channelset.secret_token)

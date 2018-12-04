@@ -11,7 +11,7 @@
       <div v-else-if="channels.length === 0" class="default-item">
         {{ $tr('noChannelsText') }}
       </div>
-      <div class="container-fluid">
+      <div class="container-fluid" v-else>
         <div class="channelCountText">
           {{ $tr("publishedChannelCount", {"channelCount": channels.length}) }}
         </div>

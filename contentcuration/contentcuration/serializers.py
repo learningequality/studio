@@ -728,6 +728,15 @@ class AccessibleChannelListSerializer(ChannelFieldMixin, serializers.ModelSerial
         fields = ('id', 'created', 'name', 'size', 'count', 'version', 'deleted', 'main_tree')
 
 
+class ChannelSetChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
+    thumbnail_url = serializers.SerializerMethodField('generate_thumbnail_url')
+    published = serializers.SerializerMethodField('check_published')
+
+    class Meta:
+        model = Channel
+        fields = ('id', 'name', 'published', 'language', 'description', 'thumbnail_url', 'main_tree', 'version')
+
+
 class ChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
     thumbnail_url = serializers.SerializerMethodField('generate_thumbnail_url')
     published = serializers.SerializerMethodField('check_published')

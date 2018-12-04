@@ -415,36 +415,47 @@ class SecretToken(models.Model):
         """
         return cls.objects.filter(token=token).exists()
 
+    @classmethod
+    def generate_new_token(cls):
+        """
+        Creates a primary secret token for the current channel using a proquint
+        string. Creates a secondary token containing the channel id.
+
+        These tokens can be used to refer to the channel to download its content
+        database.
+        """
+        token = proquint.generate()
+
+        # Try 100 times to generate a unique token.
+        TRIALS = 100
+        for __ in range(TRIALS):
+            token = proquint.generate()
+            if SecretToken.exists(token):
+                continue
+            else:
+                break
+        # after TRIALS attempts and we didn't get a unique token,
+        # just raise an error.
+        # See https://stackoverflow.com/a/9980160 on what for-else loop does.
+        else:
+            raise ValueError("Cannot generate new token")
+
+        # We found a unique token! Save it
+        return token
+
+    def set_channels(self, channels):
+        channel_ids = channels.values_list('pk', flat=True)
+
+        # Remove token from channels that aren't in list
+        for channel in self.channels.exclude(pk__in=channel_ids):
+            channel.secret_tokens.remove(self)
+
+        # Add tokens to channels in list
+        for channel in channels.exclude(secret_tokens__token=self.token):
+            channel.secret_tokens.add(self)
+
     def __str__(self):
         return self.token
-
-
-def generate_new_token(is_primary=False):
-    """
-    Creates a primary secret token for the current channel using a proquint
-    string. Creates a secondary token containing the channel id.
-
-    These tokens can be used to refer to the channel to download its content
-    database.
-    """
-    token = proquint.generate()
-
-    # Try 100 times to generate a unique token.
-    TRIALS = 100
-    for __ in range(TRIALS):
-        token = proquint.generate()
-        if SecretToken.exists(token):
-            continue
-        else:
-            break
-    # after TRIALS attempts and we didn't get a unique token,
-    # just raise an error.
-    # See https://stackoverflow.com/a/9980160 on what for-else loop does.
-    else:
-        raise ValueError("Cannot generate new token")
-
-    # We found a unique token! Save it
-    return token
 
 
 class Channel(models.Model):
@@ -614,7 +625,7 @@ class Channel(models.Model):
         return self.secret_tokens.get(token=self.id)
 
     def make_token(self):
-        token = self.secret_tokens.create(token=generate_new_token(), is_primary=True)
+        token = self.secret_tokens.create(token=SecretToken.generate_new_token(), is_primary=True)
         self.secret_tokens.get_or_create(token=self.id)
         return token
 
@@ -688,7 +699,7 @@ class ChannelSet(models.Model):
         super(ChannelSet, self).save(*args, **kwargs)
 
         if not self.secret_token:
-            self.secret_token = SecretToken.objects.create(token=generate_new_token())
+            self.secret_token = SecretToken.objects.create(token=SecretToken.generate_new_token())
             self.save()
 
     def delete(self, *args, **kwargs):

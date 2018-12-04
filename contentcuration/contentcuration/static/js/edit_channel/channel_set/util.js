@@ -7,7 +7,11 @@ exports.loadChannelSetChannels = function(token) {
       method:"GET",
       url: window.Urls.get_channels_by_token(token),
       success: resolve,
-      error: reject
+      error: reject,
+      data: {
+        "published": true,
+        "serializer": "channelset"
+      }
     });
   })
 }
@@ -20,7 +24,8 @@ exports.loadChannelList = function(url) {
       success: resolve,
       error: reject,
       data: {
-        "published": true
+        "published": true,
+        "serializer": "channelset"
       }
     });
   })
