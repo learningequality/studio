@@ -31,13 +31,14 @@
 
 import { mapGetters, mapActions } from 'vuex';
 import ChannelItem from './ChannelItem.vue';
+import { ChannelListNames } from '../constants';
 
 export default {
   name: 'ChannelSelectList',
   $trs: {
-    EDIT: "My Channels",
-    VIEW_ONLY: "View Only Channels",
-    PUBLIC: "Public Channels",
+    [ChannelListNames.EDIT]: "My Channels",
+    [ChannelListNames.VIEW_ONLY]: "View Only Channels",
+    [ChannelListNames.PUBLIC]: "Public Channels",
     channelLoadingText: "Loading...",
     noChannelsText: "No channels found",
     publishedChannelCount: "Showing {channelCount, plural, =1 {# published channel} other {# published channels}}"
