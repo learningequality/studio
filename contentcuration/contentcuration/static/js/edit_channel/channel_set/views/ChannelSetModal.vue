@@ -27,8 +27,8 @@ import ChannelSetList from './ChannelSetList.vue';
 import ChannelSelectView from './ChannelSelectView.vue';
 
 const pageNameToComponentMap = {
-  [PageTypes.SELECT_CHANNELS]: 'ChannelSelectView',
-  [PageTypes.VIEW_CHANNELS]: 'ChannelSetList',
+  [PageTypes.SELECT_CHANNELS]: ChannelSelectView,
+  [PageTypes.VIEW_CHANNELS]: ChannelSetList,
 };
 
 export default {
