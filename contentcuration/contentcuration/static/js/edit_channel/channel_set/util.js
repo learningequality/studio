@@ -1,7 +1,7 @@
 var Models = require('../models');
 const State = require("edit_channel/state");
 
-exports.loadChannelSetChannels = function(token) {
+export function loadChannelSetChannels(token) {
   return new Promise(function(resolve, reject) {
     $.ajax({
       method:"GET",
@@ -16,7 +16,7 @@ exports.loadChannelSetChannels = function(token) {
   })
 }
 
-exports.loadChannelList = function(url) {
+export function loadChannelList (url) {
   return new Promise(function(resolve, reject) {
     $.ajax({
       method:"GET",
@@ -31,7 +31,7 @@ exports.loadChannelList = function(url) {
   })
 }
 
-exports.saveChannelsToSet = function(channelSetData, channels) {
+export function saveChannelsToSet(channelSetData, channels) {
   return new Promise(function(resolve, reject) {
     let channelSetModel = new Models.ChannelSetModel();
     delete channelSetData.secret_token; // Don't save this

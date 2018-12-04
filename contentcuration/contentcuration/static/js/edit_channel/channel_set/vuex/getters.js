@@ -1,46 +1,46 @@
 var _ = require('underscore');
 
-exports.isNewSet = function(state) {
+export function isNewSet(state) {
   return state.isNewSet;
 }
 
-exports.currentPage = function(state) {
+export function currentPage(state) {
   return state.pageState.pageType;
 }
 
-exports.channels = function(state) {
+export function channels(state) {
   return state.channels;
 }
 
-exports.changed = function(state) {
+export function changed(state) {
   return state.changed;
 }
 
-exports.name = function(state) {
+export function name(state) {
   return state.name;
 }
 
-exports.description = function(state) {
+export function description(state) {
   return state.description;
 }
 
-exports.loadChannels = function(state) {
+export function loadChannels(state) {
   return state.loadChannels;
 }
 
-exports.channelSet = function(state) {
+export function channelSet(state) {
   return state.channelSet;
 }
 
-exports.allChannels = function(state) {
+export function allChannels(state) {
   return state.allChannels;
 }
 
-exports.isValid = function(state) {
+export function isValid(state) {
   // Add validation here
   return state.stopValidation || state.name.length > 0;
 }
 
-exports.saving = function(state) {
+export function saving(state) {
   return state.saving;
 }

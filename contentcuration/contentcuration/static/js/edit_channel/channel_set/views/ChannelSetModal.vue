@@ -62,25 +62,23 @@ export default {
       },
     }
   ),
-  methods: Object.assign(
-    {
-      openModal() {
-        $(this.$refs.topmodal)
-          .modal({ show: true })
-          .on('hide.bs.modal', (event) => {
-            // Check for changes
-            this.$emit('modalclosing', event);
-          })
-          .on('hidden.bs.modal', () => {
-            // Event to tell BB View to cleanup
-            this.$emit('modalclosed');
-          });
-      },
-      closeModal() {
-        $(this.$refs.topmodal).modal('hide');
-      },
-    }
-  ),
+  methods: {
+    openModal() {
+      $(this.$refs.topmodal)
+        .modal({ show: true })
+        .on('hide.bs.modal', (event) => {
+          // Check for changes
+          this.$emit('modalclosing', event);
+        })
+        .on('hidden.bs.modal', () => {
+          // Event to tell BB View to cleanup
+          this.$emit('modalclosed');
+        });
+    },
+    closeModal() {
+      $(this.$refs.topmodal).modal('hide');
+    },
+  }
 }
 
 </script>

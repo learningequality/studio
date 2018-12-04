@@ -6,7 +6,7 @@ var saveChannelsToSet = utils.saveChannelsToSet;
 var { PageTypes, ChannelListUrls } = require('../constants');
 
 
-exports.loadChannelSetChannels = function(context, payload) {
+export function loadChannelSetChannels(context, payload) {
   if(context.getters.loadChannels) {
     let token = context.getters.channelSet.get('secret_token');
     if(token) {
@@ -26,7 +26,7 @@ exports.loadChannelSetChannels = function(context, payload) {
   }
 }
 
-exports.loadChannelList = function(context, listName) {
+export function loadChannelList(context, listName) {
   if(!context.getters.allChannels.hasOwnProperty(listName)) {
     return loadChannelList(ChannelListUrls[listName])
     .then(function onSuccess(channels) {
@@ -39,14 +39,14 @@ exports.loadChannelList = function(context, listName) {
   }
 }
 
-exports.goToViewChannels = function(context) {
+export function goToViewChannels(context) {
   context.commit('UPDATE_PAGE_STATE', {
     pageType: PageTypes.VIEW_CHANNELS,
     data: {},
   })
 }
 
-exports.goToSelectChannels = function(context) {
+export function goToSelectChannels(context) {
   context.commit('UPDATE_PAGE_STATE', {
     pageType: PageTypes.SELECT_CHANNELS,
     data: {},
@@ -57,19 +57,19 @@ function contains(list, id) {
   return _.findWhere(list, {'id': id});
 }
 
-exports.addChannelToSet = function(context, channel) {
+export function addChannelToSet(context, channel) {
   if (!contains(context.getters.channels, channel.id)) {
     context.commit('ADD_CHANNEL_TO_SET', channel);
   }
 }
 
-exports.removeChannelFromSet = function(context, channel) {
+export function removeChannelFromSet(context, channel) {
   if (contains(context.getters.channels, channel.id)) {
     context.commit('REMOVE_CHANNEL_FROM_SET', channel);
   }
 }
 
-exports.saveChannelSet = function(context, callback) {
+export function saveChannelSet(context, callback) {
   context.commit('PREPARE_CHANNEL_SET_FOR_SAVE');
   if(!context.getters.isValid) {
     context.commit('SET_SAVING', false);
