@@ -3,7 +3,6 @@ import ChannelSetModalComponent from './views/ChannelSetModal.vue';
 
 var Backbone = require('backbone');
 var BaseViews = require("../views");
-require("import.less"); // eslint-disable-line
 var dialog = require("../utils/dialog");
 var store = require('./vuex/store');
 var vueIntl = require("vue-intl");
