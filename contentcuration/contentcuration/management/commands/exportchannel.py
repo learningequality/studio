@@ -263,8 +263,10 @@ def create_associated_thumbnail(ccnode, ccfilemodel):
         encoding = ccnode.thumbnail_encoding and load_json_string(ccnode.thumbnail_encoding).get('base64')
     except ValueError:
         logging.error("ERROR: node thumbnail is not in correct format ({}: {})".format(ccnode.id, ccnode.thumbnail_encoding))
+        return
     except IOError:
         logging.error("ERROR: cannot identify the thumbnail ({}: {})".format(ccnode.id, ccnode.thumbnail_encoding))
+        return
 
     # Save the encoding if it doesn't already have an encoding
     if not encoding:
