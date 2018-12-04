@@ -40,7 +40,7 @@ import { PageTypes } from '../constants';
 export default {
   name: 'ChannelSetDialog',
   $trs: {
-    cancelButtonLabel: 'Cancel',
+    cancelButtonLabel: 'Close',
     saveButtonLabel: 'Save',
     noChangesTitle: "No changes detected",
     invalidCollection: "Must enter all required fields",
