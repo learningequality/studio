@@ -20,7 +20,7 @@
 
 <script>
 
-import { mapGetters, mapActions } from 'vuex';
+import { mapGetters, mapActions, mapState } from 'vuex';
 import { PageTypes } from '../constants';
 import ChannelSetDialog from './ChannelSetDialog.vue';
 import ChannelSetList from './ChannelSetList.vue';
@@ -47,8 +47,10 @@ export default {
   },
   computed: Object.assign(
     mapGetters('channel_set', [
-      'isNewSet',
       'currentPage'
+    ]),
+    mapState('channel_set', [
+      'isNewSet',
     ]),
     {
       pageType() {

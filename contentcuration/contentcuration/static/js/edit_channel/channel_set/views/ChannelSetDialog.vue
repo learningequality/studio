@@ -34,7 +34,7 @@
 
 <script>
 
-import { mapGetters, mapState, mapActions, mapMutations } from 'vuex';
+import { mapGetters, mapMutations } from 'vuex';
 import { PageTypes } from '../constants';
 
 export default {

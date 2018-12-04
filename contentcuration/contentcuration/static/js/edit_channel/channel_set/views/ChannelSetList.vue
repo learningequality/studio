@@ -115,11 +115,10 @@ export default {
   },
   computed: Object.assign(
     mapGetters('channel_set', [
-      'changed',
       'channels',
-      'loadChannels',
       'channelSet',
       'isValid',
+      'loadChannels'
     ]),
     {
       name: {

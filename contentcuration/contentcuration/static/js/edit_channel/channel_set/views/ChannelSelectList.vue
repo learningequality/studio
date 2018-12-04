@@ -29,7 +29,7 @@
 
 <script>
 
-import { mapGetters, mapActions } from 'vuex';
+import { mapActions, mapGetters } from 'vuex';
 import ChannelItem from './ChannelItem.vue';
 import { ChannelListNames } from '../constants';
 
@@ -61,7 +61,7 @@ export default {
   },
   computed: Object.assign(
     mapGetters('channel_set', [
-      'allChannels',
+      'allChannels'
     ]),
     {
 

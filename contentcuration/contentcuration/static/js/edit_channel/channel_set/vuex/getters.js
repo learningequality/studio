@@ -1,9 +1,5 @@
 var _ = require('underscore');
 
-export function isNewSet(state) {
-  return state.isNewSet;
-}
-
 export function currentPage(state) {
   return state.pageState.pageType;
 }
