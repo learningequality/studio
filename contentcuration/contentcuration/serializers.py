@@ -880,11 +880,16 @@ class InvitationSerializer(BulkSerializerMixin, serializers.ModelSerializer):
 class ChannelSetSerializer(serializers.ModelSerializer):
     secret_token = TokenSerializer(required=False)
     channels = serializers.SerializerMethodField('get_channel_ids')
+    published_channels = serializers.SerializerMethodField('retrieve_published_channels')
 
     def get_channel_ids(self, channelset):
         channels = channelset.get_channels()
         return channels and channels.values_list('id', flat=True)
 
+    def retrieve_published_channels(self, channelset):
+        channels = channelset.get_channels()
+        return channels and channels.filter(main_tree__published=True).values_list('id', flat=True)
+
     class Meta:
         model = ChannelSet
-        fields = ('id', 'name', 'description', 'public', 'editors', 'channels', 'secret_token')
+        fields = ('id', 'name', 'description', 'public', 'editors', 'channels', 'secret_token', 'published_channels')

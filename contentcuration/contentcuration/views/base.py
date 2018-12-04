@@ -221,7 +221,7 @@ def get_user_channel_sets(request):
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def get_channels_by_token(request, token):
-    channels = Channel.objects.filter(secret_tokens__token=token)
+    channels = Channel.objects.filter(secret_tokens__token=token, deleted=False)
     channel_serializer = AltChannelListSerializer(channels, many=True)
     return Response(channel_serializer.data)
 
@@ -447,12 +447,12 @@ def save_token_to_channels(request, token):
     channels = Channel.objects.filter(pk__in=channel_ids)
     token = SecretToken.objects.get(token=token)
 
-    # Add tokens to channels in list
-    for channel in channels.exclude(secret_tokens__token__contains=token):
-        channel.secret_tokens.add(token)
-
     # Remove token from channels that aren't in list
     for channel in token.channels.exclude(pk__in=channel_ids):
         channel.secret_tokens.remove(token)
+
+    # Add tokens to channels in list
+    for channel in channels.exclude(secret_tokens__token=token.token):
+        channel.secret_tokens.add(token)
 
     return HttpResponse({"success": True})

@@ -678,11 +678,11 @@ class ChannelSet(models.Model):
         help_text=_("Users with edit rights"),
         blank=True,
     )
-    secret_token = models.ForeignKey('SecretToken', null=True, blank=True, related_name='channel_sets', on_delete=models.CASCADE)
+    secret_token = models.ForeignKey('SecretToken', null=True, blank=True, related_name='channel_sets', on_delete=models.SET_NULL)
 
     def get_channels(self):
         if self.secret_token:
-            return self.secret_token.channels.all()
+            return self.secret_token.channels.filter(deleted=False)
 
     def save(self, *args, **kwargs):
         super(ChannelSet, self).save(*args, **kwargs)
@@ -690,6 +690,12 @@ class ChannelSet(models.Model):
         if not self.secret_token:
             self.secret_token = SecretToken.objects.create(token=generate_new_token())
             self.save()
+
+    def delete(self, *args, **kwargs):
+        super(ChannelSet, self).delete(*args, **kwargs)
+
+        if self.secret_token:
+            self.secret_token.delete()
 
 
 class ContentTag(models.Model):
