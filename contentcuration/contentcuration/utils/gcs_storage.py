@@ -87,6 +87,11 @@ class GoogleCloudStorage(Storage):
         content_type = self._determine_content_type(name)
 
         fobj.seek(0)
+
+        if self._is_file_empty(fobj):
+            logging.warning("Stopping the upload of an empty file: {}".format(name))
+            return name
+
         blob.upload_from_file(
             fobj,
             content_type=content_type,
@@ -136,3 +141,24 @@ class GoogleCloudStorage(Storage):
     def generate_filename(self, filename):
         # TODO(aron): can we move the generate_object_storage_name logic to here?
         return filename
+
+    @staticmethod
+    def _is_file_empty(fobj):
+        """
+        Return True if the file is empty, i.e. it has a length of 0. Raises an error
+        if the file object does not have the seek() or peek() method.
+        """
+
+        # Check if our fobj has the peek method. If so, just use that to check
+        # one byte ahead.
+        try:
+            byt = fobj.peek(1)
+        except AttributeError:
+            # emulate the peek method by saving our current location, reading
+            # one byte, then returning to the saved location. It would've been
+            # nice to use the os.SEEK_CUR argument to seek(), but that doesn't
+            # work on StringIO objects.
+            current_location = fobj.tell()
+            byt = fobj.read(1)
+            fobj.seek(current_location)
+        return len(byt) == 0

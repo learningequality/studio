@@ -263,10 +263,16 @@ def create_associated_thumbnail(ccnode, ccfilemodel):
         encoding = ccnode.thumbnail_encoding and load_json_string(ccnode.thumbnail_encoding).get('base64')
     except ValueError:
         logging.error("ERROR: node thumbnail is not in correct format ({}: {})".format(ccnode.id, ccnode.thumbnail_encoding))
+        return
 
     # Save the encoding if it doesn't already have an encoding
     if not encoding:
-        encoding = get_thumbnail_encoding(str(ccfilemodel))
+        try:
+            encoding = get_thumbnail_encoding(str(ccfilemodel))
+        except IOError:
+            # ImageMagick may raise an IOError if the file is not a thumbnail. Catch that then just return early.
+            logging.error("ERROR: cannot identify the thumbnail ({}: {})".format(ccnode.id, ccnode.thumbnail_encoding))
+            return
         ccnode.thumbnail_encoding = json.dumps({
             "base64": encoding,
             "points": [],
@@ -274,7 +280,12 @@ def create_associated_thumbnail(ccnode, ccfilemodel):
         })
         ccnode.save()
 
-    return create_thumbnail_from_base64(encoding, uploaded_by=ccfilemodel.uploaded_by, file_format_id=ccfilemodel.file_format_id, preset_id=ccfilemodel.preset_id)
+    return create_thumbnail_from_base64(
+        encoding,
+        uploaded_by=ccfilemodel.uploaded_by,
+        file_format_id=ccfilemodel.file_format_id,
+        preset_id=ccfilemodel.preset_id
+    )
 
 
 def create_associated_file_objects(kolibrinode, ccnode):

@@ -34,17 +34,18 @@ THUMBNAIL_DIMENSION = 400
 
 def create_file_from_contents(contents, ext=None, node=None, preset_id=None, uploaded_by=None):
     checksum, _, path = write_raw_content_to_storage(contents, ext=ext)
-    with default_storage.open(path, 'rb') as new_file:
-        result = File.objects.create(
-            file_on_disk=DjFile(new_file),
-            file_format_id=ext,
-            file_size=default_storage.size(path),
-            checksum=checksum,
-            preset_id=preset_id,
-            contentnode=node,
-            uploaded_by=uploaded_by
-        )
-        return result
+
+    result = File(
+        file_format_id=ext,
+        file_size=default_storage.size(path),
+        checksum=checksum,
+        preset_id=preset_id,
+        contentnode=node,
+        uploaded_by=uploaded_by
+    )
+    result.file_on_disk.name = path
+    result.save()
+    return result
 
 
 def get_file_diff(files):

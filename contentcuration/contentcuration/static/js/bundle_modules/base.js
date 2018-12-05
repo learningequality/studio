@@ -18,17 +18,30 @@ if(!global.Promise) {
 $(function() {
   $(document).ajaxError(function(event, jqXHR, ajaxSettings, thrownError) {
     let message = thrownError || jqXHR.statusText;
+
+    // Don't send a Sentry report for permissions errors
+    if (jqXHR.status === 403) {
+      return;
+    }
+
     // Put the URL in the main message for timeouts so we can see which timeouts are most frequent.
     if (jqXHR.status === 504) {
       message = "Request Timed Out: " + ajaxSettings.url;
     }
+
+    // jqXHR.responseText may be null for some reason, so make it an empty string in that case.
+    let responseText = jqXHR.responseText;
+    if (!responseText) {
+      responseText = '';
+    }
+
     const extraData = {
               type: ajaxSettings.type,
               url: ajaxSettings.url,
               data: ajaxSettings.data,
               status: jqXHR.status,
               error: thrownError || jqXHR.statusText,
-              response: jqXHR.responseText.substring(0, 100)
+              response: responseText.substring(0, 100)
     };
 
     console.log("AJAX Request Error: " + message);
