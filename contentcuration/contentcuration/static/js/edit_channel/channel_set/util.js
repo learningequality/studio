@@ -35,6 +35,7 @@ export function saveChannelsToSet(channelSetData, channels) {
   return new Promise(function(resolve, reject) {
     let channelSetModel = new Models.ChannelSetModel();
     delete channelSetData.secret_token; // Don't save this
+    channelSetData.channels = _.pluck(channels, 'id'); // Save channels to set
 
     if(!channelSetData.editors || channelSetData.editors.length === 0) {
       channelSetData.editors = [State.current_user.id];
@@ -44,18 +45,7 @@ export function saveChannelsToSet(channelSetData, channels) {
     channelSetModel.save(channelSetData, {
       patch: true,
       error: reject,
-      success: function(channelSet) {
-        $.ajax({
-          method:"POST",
-          url: window.Urls.save_token_to_channels(channelSet.get('secret_token').token),
-          success: function() {
-            channelSet.fetch({success: resolve});
-          },
-          error: reject,
-          data: JSON.stringify(_.pluck(channels, 'id'))
-        });
-      }
+      success: resolve
     })
-
   })
 }

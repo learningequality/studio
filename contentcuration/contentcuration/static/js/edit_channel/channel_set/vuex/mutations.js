@@ -30,6 +30,7 @@ export function RESET_PAGE_STATE(state) {
     description: "",
     channels: [],
     saving: false,
+    error: false,
     allChannels: {},
     changed: false,
     channelSet: null,
@@ -50,6 +51,7 @@ export function SET_CHANNEL_SET(state, channelSet) {
 
 export function PREPARE_CHANNEL_SET_FOR_SAVE(state) {
   state.stopValidation = false;
+  state.error = false;
   state.channelSet.set('name', state.name);
   state.channelSet.set('description', state.description);
 }
@@ -87,4 +89,8 @@ export function SET_CHANGED(state, changed) {
 
 export function SET_SAVING(state, saving) {
   state.saving = saving;
+}
+
+export function SET_ERROR(state, error) {
+  state.error = error;
 }

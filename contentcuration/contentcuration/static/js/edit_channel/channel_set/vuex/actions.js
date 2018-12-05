@@ -84,6 +84,10 @@ export function saveChannelSet(context, callback) {
         context.commit('SET_CHANGED', false);
         context.commit('SET_SAVING', false);
         callback(channelSet);
+      }).catch(function(error) {
+        console.error(error);
+        context.commit('SET_SAVING', false);
+        context.commit('SET_ERROR', true);
       });
   }
 }

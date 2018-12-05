@@ -224,21 +224,20 @@ class ChannelSetTestCase(BaseAPITestCase):
 
     def test_save_channels_to_token(self):
         """ Check endpoint will assign token to channels """
-        token = self.channelset.secret_token.token
+        token = self.channelset.secret_token
         channels = mixer.cycle(5).blend(Channel)
-        data = [c.pk for c in channels]
-        response = self.post(reverse_lazy("save_token_to_channels", kwargs={'token': token}), data)
-        self.assertEqual(response.status_code, 200)
+        channels = Channel.objects.filter(pk__in=[c.pk for c in channels])  # Make this a queryset
+        token.set_channels(channels)
 
         # Old channels should not be included here
         for c in self.channels:
             c.refresh_from_db()
-            self.assertFalse(c.secret_tokens.filter(token=token).exists())
+            self.assertFalse(c.secret_tokens.filter(token=token.token).exists())
 
         # New channels should be included here
         for c in channels:
             c.refresh_from_db()
-            self.assertTrue(c.secret_tokens.filter(token=token).exists())
+            self.assertTrue(c.secret_tokens.filter(token=token.token).exists())
 
     def test_public_endpoint(self):
         """ Make sure public endpoint returns all the channels under the token """

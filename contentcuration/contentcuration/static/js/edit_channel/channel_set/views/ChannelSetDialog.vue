@@ -26,6 +26,9 @@
       >
         autorenew
       </span>
+      <span class="redText errorText pull-right" v-show="error">
+        {{ $tr('errorText') }}
+      </span>
     </div>
   </div>
 
@@ -34,7 +37,7 @@
 
 <script>
 
-import { mapGetters, mapMutations } from 'vuex';
+import { mapGetters, mapMutations, mapState } from 'vuex';
 import { PageTypes } from '../constants';
 
 export default {
@@ -44,7 +47,8 @@ export default {
     saveButtonLabel: 'Save',
     noChangesTitle: "No changes detected",
     invalidCollection: "Must enter all required fields",
-    saving: "Saving..."
+    saving: "Saving...",
+    errorText: "There was a problem saving your collection"
   },
   computed: Object.assign(
     mapGetters('channel_set', [
@@ -54,6 +58,7 @@ export default {
       'isValid',
       'saving'
     ]),
+    mapState('channel_set', ['error']),
     {
       enableSave() {
         return this.changed && this.isValid && !this.saving;
@@ -111,6 +116,15 @@ button.action-button[disabled] {
 /deep/ .channelCountText {
   font-size: 13pt;
   margin-bottom: 15px;
+}
+
+.errorText {
+  margin-right: 10px;
+}
+
+/deep/ .redText {
+  font-weight: bold;
+  color: @red-error-color;
 }
 
 </style>

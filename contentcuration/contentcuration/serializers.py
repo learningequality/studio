@@ -890,6 +890,18 @@ class ChannelSetSerializer(serializers.ModelSerializer):
     secret_token = TokenSerializer(required=False)
     channels = serializers.SerializerMethodField('get_channel_ids')
 
+    def create(self, validated_data):
+        channelset = super(ChannelSetSerializer, self).create(validated_data)
+        channels = Channel.objects.filter(pk__in=self.initial_data['channels'])
+        channelset.secret_token.set_channels(channels)
+        return channelset
+
+    def update(self, instance, validated_data):
+        channelset = super(ChannelSetSerializer, self).update(instance, validated_data)
+        channels = Channel.objects.filter(pk__in=self.initial_data['channels'])
+        channelset.secret_token.set_channels(channels)
+        return channelset
+
     def get_channel_ids(self, channelset):
         channels = channelset.get_channels()
         return channels and channels.values_list('id', flat=True)
