@@ -6,24 +6,25 @@
     <p v-show="!isValid" class="redText">{{ $tr('titleRequiredText') }}</p>
     <input
         class="set-input"
-        v-model="name"
+        :value="name"
         type="text"
         dir="auto"
         :placeholder="$tr('titlePlaceholder')"
         maxlength="200"
+        @input="handleNameChange"
     />
-
     <h4>
       <i class="pull-right descriptionCounter" :class="{redText: !charsLeft}">{{ $tr('charCount', {'charCount': charsLeft}) }}</i>
       {{ $tr('descriptionLabel') }}
     </h4>
     <textarea
       class="set-input"
-      v-model="description"
+      :value="description"
       dir="auto"
       :maxlength="charLimit"
       rows="4"
       :placeholder="$tr('descriptionPlaceholder')"
+      @input="handleDescriptionChange"
     >
     </textarea>
     <hr/>
@@ -79,7 +80,7 @@
 
 <script>
 
-import { mapGetters, mapActions } from 'vuex';
+import { mapGetters, mapActions, mapMutations } from 'vuex';
 import ChannelItem from './ChannelItem.vue';
 
 const copyStatusCodes = {
@@ -118,25 +119,11 @@ export default {
       'channels',
       'channelSet',
       'isValid',
-      'loadChannels'
+      'loadChannels',
+      'name',
+      'description'
     ]),
     {
-      name: {
-        get () {
-          return this.$store.state.channel_set.name;
-        },
-        set (value) {
-          this.$store.commit('channel_set/SET_NAME', value);
-        }
-      },
-      description: {
-        get () {
-          return this.$store.state.channel_set.description;
-        },
-        set (value) {
-          this.$store.commit('channel_set/SET_DESCRIPTION', value);
-        }
-      },
       copyIcon() {
         switch(this.copyStatus) {
           case copyStatusCodes.SUCCESS:
@@ -167,6 +154,10 @@ export default {
       'goToSelectChannels',
       'loadChannelSetChannels'
     ]),
+    mapMutations('channel_set', {
+      setName: 'SET_NAME',
+      setDescription: 'SET_DESCRIPTION',
+    }),
     {
       copyToken() {
         let element = this.$refs.tokenText;
@@ -181,6 +172,12 @@ export default {
         setTimeout(() => {
           this.copyStatus = copyStatusCodes.IDLE;
         }, 2500);
+      },
+      handleNameChange(element) {
+        this.setName(element.target.value);
+      },
+      handleDescriptionChange(element) {
+        this.setDescription(element.target.value);
       }
     }
   ),
