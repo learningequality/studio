@@ -264,13 +264,15 @@ def create_associated_thumbnail(ccnode, ccfilemodel):
     except ValueError:
         logging.error("ERROR: node thumbnail is not in correct format ({}: {})".format(ccnode.id, ccnode.thumbnail_encoding))
         return
-    except IOError:
-        logging.error("ERROR: cannot identify the thumbnail ({}: {})".format(ccnode.id, ccnode.thumbnail_encoding))
-        return
 
     # Save the encoding if it doesn't already have an encoding
     if not encoding:
-        encoding = get_thumbnail_encoding(str(ccfilemodel))
+        try:
+            encoding = get_thumbnail_encoding(str(ccfilemodel))
+        except IOError:
+            # ImageMagick may raise an IOError if the file is not a thumbnail. Catch that then just return early.
+            logging.error("ERROR: cannot identify the thumbnail ({}: {})".format(ccnode.id, ccnode.thumbnail_encoding))
+            return
         ccnode.thumbnail_encoding = json.dumps({
             "base64": encoding,
             "points": [],
