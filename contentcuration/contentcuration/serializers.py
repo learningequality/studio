@@ -886,6 +886,15 @@ class InvitationSerializer(BulkSerializerMixin, serializers.ModelSerializer):
             'id', 'invited', 'email', 'sender', 'channel', 'first_name', 'last_name', 'share_mode', 'channel_name')
 
 
+class GetTreeDataSerizlizer(serializers.Serializer):
+    """
+    Used by get_*_tree_data endpoints to ontain "lightweight" tree data.
+    """
+    channel_id = serializers.CharField(required=True)
+    tree = serializers.CharField(required=False, default='main')
+    node_id = serializers.CharField(required=False)
+
+
 class ChannelSetSerializer(serializers.ModelSerializer):
     secret_token = TokenSerializer(required=False)
     channels = serializers.SerializerMethodField('get_channel_ids')

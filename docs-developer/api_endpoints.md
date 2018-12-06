@@ -300,7 +300,9 @@ Example:
 
 ### api/internal/get_tree_data
 _Method: contentcuration.views.internal.get_tree_data_
-Returns a simplified dict of the specified tree
+Returns the complete tree hierarchy information (for tree specified in `tree`).
+Note: this requests will time out for large channels, so better to use multiple
+calls to `/api/internal/get_node_tree_data` (described below).
 
     POST  api/internal/get_tree_data
     Header: ---
@@ -339,6 +341,33 @@ Example of tree:
         'file_size': 145990
       },
     ]
+
+
+#### api/internal/get_node_tree_data
+_Method: contentcuration.views.internal.get_node_tree_data_
+
+Same functionality as `get_tree_data` but returns just one-level deep children,
+for the node `node_id`. To obtain the entire tree, you need to make recursive calls
+to this endpoint for each of the nodes in returned tree.
+
+    POST  api/internal/get_node_tree_data
+    Header: ---
+    Body:
+    {
+      "channel_id": "{uuid.hex}",
+      "tree": "{str}"
+      "node_id": "{str}"
+    }
+    Tree can be "main", "chef", "staging", or "previous"
+
+Response:
+
+    {
+      "success" : True,
+      "tree" : [list of node dicts]
+    }
+
+
 
 
 ### /api/internal/get_channel_status_bulk
@@ -580,4 +609,3 @@ All endpoints
 -------------
 See this document for the full list of Studio API endpoints:
 https://docs.google.com/spreadsheets/d/181hSEwJ7yVmMh7LEwaHENqQetYSsbSDwybHTO_0zZM0/edit?usp=sharing
-

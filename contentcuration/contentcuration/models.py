@@ -867,22 +867,33 @@ class ContentNode(MPTTModel, models.Model):
 
         return dict([(key, value) for key, value in self._original_fields.iteritems() if value != new_state[key]])
 
-    def get_tree_data(self, include_self=True):
-        if not include_self:
-            return [c.get_tree_data() for c in self.children.all()]
-        elif self.kind_id == content_kinds.TOPIC:
-            return {
+    def get_tree_data(self, levels=float('inf')):
+        """
+        Returns `levels`-deep tree information starting at current node.
+        Args:
+          levels (int): depth of tree hierarchy to return
+        Returns:
+          tree (dict): starting with self, with children list containing either
+                       the just the children's `node_id`s or full recusive tree.
+        """
+        if self.kind_id == content_kinds.TOPIC:
+            node_data = {
                 "title": self.title,
                 "kind": self.kind_id,
-                "children": [c.get_tree_data() for c in self.children.all()],
                 "node_id": self.node_id,
+                "studio_id": self.id,
             }
+            children = self.children.all()
+            if levels > 0:
+                node_data["children"] = [c.get_tree_data(levels=levels-1) for c in children]
+            return node_data
         elif self.kind_id == content_kinds.EXERCISE:
             return {
                 "title": self.title,
                 "kind": self.kind_id,
                 "count": self.assessment_items.count(),
                 "node_id": self.node_id,
+                "studio_id": self.id,
             }
         else:
             return {
@@ -890,30 +901,8 @@ class ContentNode(MPTTModel, models.Model):
                 "kind": self.kind_id,
                 "file_size": self.files.values('file_size').aggregate(size=Sum('file_size'))['size'],
                 "node_id": self.node_id,
+                "studio_id": self.id,
             }
-
-    def get_node_tree_data(self):
-        nodes = []
-        for child in self.children.all():
-            if child.kind_id == content_kinds.TOPIC:
-                nodes.append({
-                    "title": child.title,
-                    "kind": child.kind_id,
-                    "node_id": child.node_id,
-                })
-            elif child.kind_id == content_kinds.EXERCISE:
-                nodes.append({
-                    "title": child.title,
-                    "kind": child.kind_id,
-                    "count": child.assessment_items.count(),
-                })
-            else:
-                nodes.append({
-                    "title": child.title,
-                    "kind": child.kind_id,
-                    "file_size": child.files.values('file_size').aggregate(size=Sum('file_size'))['size'],
-                })
-        return nodes
 
     def get_original_node(self):
         original_node = self.original_node or self
