@@ -281,6 +281,19 @@ var UserModel = BaseModel.extend({
                 }
             });
         });
+    },
+    get_user_channel_collections: function() {
+        var self = this;
+        return new Promise(function (resolve, reject) {
+            $.ajax({
+                method: "GET",
+                url: window.Urls.get_user_channel_sets(),
+                error: reject,
+                success: function (data) {
+                    resolve(new ChannelSetCollection(data));
+                }
+            });
+        });
     }
 });
 
@@ -333,6 +346,22 @@ var InvitationCollection = BaseCollection.extend({
     list_name: "invitation-list",
     model_name: "InvitationCollection"
 });
+
+var ChannelSetModel = BaseModel.extend({
+    root_list: "channelset-list",
+    model_name: "ChannelSetModel",
+    defaults: {
+        name: '',
+        description: ''
+    }
+});
+
+var ChannelSetCollection = BaseCollection.extend({
+    model: ChannelSetModel,
+    list_name: "channelset-list",
+    model_name: "ChannelSetCollection"
+});
+
 
 /**** CHANNEL AND CONTENT MODELS ****/
 function fetch_nodes(ids, url) {
@@ -1314,4 +1343,6 @@ module.exports = {
     ExerciseCollection: ExerciseCollection,
     AssessmentItemModel: AssessmentItemModel,
     AssessmentItemCollection: AssessmentItemCollection,
+    ChannelSetModel: ChannelSetModel,
+    ChannelSetCollection: ChannelSetCollection,
 }

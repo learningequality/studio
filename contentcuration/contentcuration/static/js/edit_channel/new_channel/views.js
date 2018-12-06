@@ -7,6 +7,8 @@ var Models = require("edit_channel/models");
 var BaseViews = require("edit_channel/views");
 var ImageViews = require("edit_channel/image/views");
 var DetailView = require('edit_channel/details/views');
+var ChannelSetViews = require("edit_channel/channel_set/views");
+var Info = require("edit_channel/information/views");
 var get_cookie = require("utils/get_cookie");
 var stringHelper = require("edit_channel/utils/string_helper")
 var dialog = require("edit_channel/utils/dialog");
@@ -22,6 +24,7 @@ var MESSAGES = {
 	"add_channel_title": "Create a new channel",
 	"pending_loading": "Checking for invitations...",
 	"copy_id": "Copy ID to clipboard",
+	"copy_token": "Copy Token",
 	"unpublished": "(Unpublished)",
 	"view_only": "View Only",
 	"invitation_error": "Invitation Error",
@@ -50,6 +53,14 @@ var MESSAGES = {
 	"save": "SAVE",
     "dont_save": "Discard Changes",
     "keep_open": "Keep Editing",
+    "channel_sets": "Collections",
+    "about_channel_sets": "About Collections",
+    "channel_set_description": "You can package together multiple Studio channels to create a collection. Use a collection token to make multiple channels available for import at once in Kolibri!",
+    "channel_set": "Collection",
+    "add_channel_set_title": "Create a new collection of channels",
+    "channel_count": "{count, plural,\n =1 {# Channel}\n other {# Channels}}",
+    "delete_channel_set": "Delete Collection",
+    "delete_channel_set_text": "Are you sure you want to PERMANTENTLY delete this channel collection?"
 }
 
 var ChannelListPage  = BaseViews.BaseView.extend({
@@ -96,10 +107,17 @@ var ChannelListPage  = BaseViews.BaseView.extend({
 				collection: channels
 			});
 		});
+		State.current_user.get_user_channel_collections().then(function(sets){
+			self.channel_set_list = new ChannelSetList({
+				container: self,
+				el: self.$("#channel_set_list"),
+				collection: sets
+			});
+		});
 	},
 	events: {
 		'click .new_channel_button' : 'new_channel',
-		"click #close_details": "close_details"
+		"click #close_details": "close_details",
 	},
 	new_channel: function(){
 		if (this.current_channel_list.new_channel){
@@ -127,6 +145,7 @@ var ChannelListPage  = BaseViews.BaseView.extend({
 		this.current_channel_list.delete_channel(channel);
 		this.public_channel_list.delete_channel(channel);
 		this.viewonly_channel_list.delete_channel(channel);
+		this.channel_set_list && this.channel_set_list.delete_channel(channel);
 		this.toggle_panel();
 	},
 	remove_star: function(channel){
@@ -508,6 +527,158 @@ var ChannelListPendingItem = BaseViews.BaseListEditableItemView.extend({
 		this.status = {"accepted" : accepted};
 		this.render();
 		this.containing_list_view.invitation_submitted(this.model, channel)
+	}
+});
+
+var ChannelSetList  = BaseViews.BaseEditableListView.extend({
+	template: require("./hbtemplates/channel_set_list.handlebars"),
+	list_selector: ".channel_list",
+	default_item: ".default-item",
+	name: NAMESPACE,
+	$trs: MESSAGES,
+	initialize: function(options) {
+		this.bind_edit_functions();
+		_.bindAll(this, "save_new_channel_set");
+		this.container = options.container;
+		this.collection = options.collection;
+		this.render();
+		this.listenTo(this.collection, "add", this.render);
+		this.listenTo(this.collection, "remove", this.render);
+	},
+	events: {
+		'click .new_set_button': 'new_channel_set',
+		'click .about_sets_button': 'open_about_sets'
+	},
+	new_channel_set: function() {
+		var channel_set_view = new ChannelSetViews.ChannelSetModalView({
+			modal: true,
+			onsave: this.save_new_channel_set,
+			isNew: true,
+			model: new Models.ChannelSetModel()
+		});
+	},
+	save_new_channel_set: function(channel_set) {
+		this.collection.add(channel_set);
+	},
+	render: function() {
+		this.$el.html(this.template(null, {
+			data: this.get_intl_data()
+		}));
+		this.load_content(this.collection, this.get_translation("channel_set_description"));
+	},
+	create_new_view:function(data){
+		var newView = new ChannelSetListItem({
+			model: data,
+			containing_list_view: this,
+			container: this.container
+		});
+		this.views.push(newView);
+		return newView;
+	},
+	open_about_sets: function() {
+		var channel_set_info_modal = new Info.ChannelSetModalView({});
+	},
+	delete_channel: function(channel) {
+		// Find channel sets that have the deleted channel and reload their views
+		var channelSetCollection = new Models.ChannelSetCollection(
+			this.collection.filter(function(channelset) {
+				return _.contains(channelset.get('channels'), channel.id);
+			})
+		);
+
+		var self = this;
+		channelSetCollection.fetch({
+			success: function(collection) {
+				collection.each(function(model) {
+					var view = _.find(self.views, function(view) {
+						return view.model.id === model.id;
+					});
+					view.reload(model);
+				});
+			}
+		});
+	}
+});
+
+var ChannelSetListItem = BaseViews.BaseListEditableItemView.extend({
+	name: NAMESPACE,
+	$trs: MESSAGES,
+	tagName: "li",
+	id: function(){
+		return (this.model)? this.model.get("id") : "new";
+	},
+	className:"channel_container",
+	template: require("./hbtemplates/channel_set_item.handlebars"),
+	initialize: function(options) {
+		this.bind_edit_functions();
+		_.bindAll(this, "delete_channel_set", "reload");
+		this.containing_list_view = options.containing_list_view;
+		this.container = options.container;
+		this.render();
+	},
+	render: function() {
+		this.$el.html(this.template({
+			channelset: this.model.toJSON(),
+		}, {
+			data: this.get_intl_data()
+		}));
+		this.$('[data-toggle="tooltip"]').tooltip();
+	},
+	events: {
+		'mouseover .channel_option_icon':'remove_highlight',
+		'mouseover .copy-id-btn':'remove_highlight',
+		'click .copy-id-btn' : 'copy_id',
+		'click .open_channel_set': 'open_channel_set',
+		'mouseover .open_channel_set': 'add_highlight',
+		'mouseleave .open_channel_set': 'remove_highlight',
+		'mouseover .delete_channel_set': 'remove_highlight',
+		'click .delete_channel_set': 'delete_channel_set'
+	},
+	remove_highlight:function(event){
+		event.stopPropagation();
+		event.preventDefault();
+		this.$el.removeClass('highlight');
+	},
+	add_highlight:function(event){
+		this.$el.addClass('highlight');
+	},
+	open_channel_set:function(event){
+		var channel_set_view = new ChannelSetViews.ChannelSetModalView({
+			modal: true,
+			onsave: this.reload,
+			isNew: false,
+			model: this.model
+		});
+	},
+	copy_id:function(event){
+		event.stopPropagation();
+		event.preventDefault();
+		var self = this;
+		this.$(".copy-id-text").focus();
+		this.$(".copy-id-text").select();
+		try {
+			document.execCommand("copy");
+			self.$(".copy-id-btn").text("check");
+		} catch(e) {
+			self.$(".copy-id-btn").text("clear");
+		}
+		setTimeout(function(event){
+			self.$(".copy-id-btn").text("content_paste");
+		}, 2500);
+	},
+	delete_channel_set: function(event){
+		event.stopImmediatePropagation();
+		var self = this;
+		dialog.dialog(self.get_translation("delete_channel_set"), self.get_translation("delete_channel_set_text"), {
+			[self.get_translation("cancel")]:function(){},
+			[self.get_translation("delete_channel_set")]: function(){
+				self.model.destroy({
+					success: function() {
+						self.containing_list_view.collection.remove(self.model);
+					}
+				});
+			},
+		}, function(){ });
 	}
 });
 

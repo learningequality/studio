@@ -42,6 +42,7 @@ from contentcuration.forms import LoginForm
 from contentcuration.forms import ResetPasswordForm
 from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
+from contentcuration.models import ChannelSet
 from contentcuration.models import ContentKind
 from contentcuration.models import ContentNode
 from contentcuration.models import ContentTag
@@ -81,6 +82,16 @@ class ChannelViewSet(viewsets.ModelViewSet):
         if self.request.user.is_admin:
             return Channel.objects.all()
         return Channel.objects.filter(Q(editors=self.request.user) | Q(viewers=self.request.user) | Q(public=True)).distinct()
+
+
+class ChannelSetViewSet(viewsets.ModelViewSet):
+    queryset = ChannelSet.objects.all()
+    serializer_class = serializers.ChannelSetSerializer
+
+    def get_queryset(self):
+        if self.request.user.is_admin:
+            return ChannelSet.objects.all()
+        return ChannelSet.objects.filter(Q(editors=self.request.user) | Q(public=True)).distinct()
 
 
 class FileViewSet(BulkModelViewSet):
@@ -176,6 +187,7 @@ router = routers.DefaultRouter(trailing_slash=False)
 router.register(r'license', LicenseViewSet)
 router.register(r'language', LanguageViewSet)
 router.register(r'channel', ChannelViewSet)
+router.register(r'channelset', ChannelSetViewSet)
 router.register(r'fileformat', FileFormatViewSet)
 router.register(r'preset', FormatPresetViewSet)
 router.register(r'tag', TagViewSet)
@@ -209,6 +221,8 @@ urlpatterns = [
     url(r'^get_user_view_channels/$', views.get_user_view_channels, name='get_user_view_channels'),
     url(r'^get_user_public_channels/$', views.get_user_public_channels, name='get_user_public_channels'),
     url(r'^get_user_pending_channels/$', views.get_user_pending_channels, name='get_user_pending_channels'),
+    url(r'^get_user_channel_sets/$', views.get_user_channel_sets, name='get_user_channel_sets'),
+    url(r'^get_channels_by_token/(?P<token>[^/]+)$', views.get_channels_by_token, name='get_channels_by_token'),
     url(r'^accept_channel_invite/$', views.accept_channel_invite, name='accept_channel_invite'),
     url(r'^api/activate_channel$', views.activate_channel_endpoint, name='activate_channel'),
     url(r'^api/get_staged_diff_endpoint$', views.get_staged_diff_endpoint, name='get_staged_diff'),
@@ -220,6 +234,7 @@ urlpatterns = [
     url(r'^api/set_channel_priority/$', views.set_channel_priority, name='set_channel_priority'),
     url(r'^api/download_channel_content_csv/(?P<channel_id>[^/]{32})$', views.download_channel_content_csv, name='download_channel_content_csv'),
 ]
+
 
 # Add public api endpoints
 urlpatterns += [
