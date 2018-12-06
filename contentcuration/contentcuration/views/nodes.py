@@ -239,9 +239,13 @@ def get_topic_details(request, contentnode_id):
     """
     # Get nodes and channel
     node = ContentNode.objects.get(pk=contentnode_id)
-    descendants = node.get_descendants().prefetch_related('children', 'files', 'tags')\
-        .select_related('license', 'language')
+    data = get_node_details(node)
+    return HttpResponse(json.dumps(data))
 
+
+def get_node_details(node):
+    descendants = node.get_descendants().prefetch_related('children', 'files', 'tags')\
+                            .select_related('license', 'language')
     channel = node.get_channel()
 
     # If channel is a sushi chef channel, use date created for faster query
@@ -257,7 +261,7 @@ def get_topic_details(request, contentnode_id):
     if cached_data and last_update:
         last_cache_update = datetime.strptime(json.loads(cached_data)['last_update'], DATE_TIME_FORMAT)
         if last_update.replace(tzinfo=None) < last_cache_update:
-            return HttpResponse(cached_data)
+            return json.loads(cached_data)
 
     # Get resources
     resources = descendants.exclude(kind=content_kinds.TOPIC)
@@ -328,7 +332,7 @@ def get_topic_details(request, contentnode_id):
     }
 
     # Serialize data
-    data = json.dumps({
+    data = {
         "last_update": pytz.utc.localize(datetime.now()).strftime(DATE_TIME_FORMAT),
         "resource_count": resource_count,
         "resource_size": resource_size,
@@ -345,12 +349,11 @@ def get_topic_details(request, contentnode_id):
         "sample_pathway": pathway,
         "original_channels": original_channels,
         "sample_nodes": sample_nodes,
-    })
+    }
 
     # Set cache with latest data
-    cache.set("details_{}".format(node.node_id), data, None)
-
-    return HttpResponse(data)
+    cache.set("details_{}".format(node.node_id), json.dumps(data), None)
+    return data
 
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))

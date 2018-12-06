@@ -1,4 +1,3 @@
-import ast
 import functools
 import hashlib
 import json
@@ -43,6 +42,7 @@ from mptt.models import TreeManager
 from pg_utils import DistinctSum
 
 from contentcuration.statistics import record_channel_stats
+from contentcuration.utils.parser import load_json_string
 
 EDIT_ACCESS = "edit"
 VIEW_ACCESS = "view"
@@ -455,7 +455,7 @@ class SecretToken(models.Model):
             channel.secret_tokens.add(self)
 
     def __str__(self):
-        return self.token
+        return "{}-{}".format(self.token[:5], self.token[5:])
 
 
 class Channel(models.Model):
@@ -603,9 +603,12 @@ class Channel(models.Model):
 
     def get_thumbnail(self):
         if self.thumbnail_encoding:
-            thumbnail_data = ast.literal_eval(self.thumbnail_encoding)
-            if thumbnail_data.get("base64"):
-                return thumbnail_data["base64"]
+            thumbnail_data = load_json_string(self.thumbnail_encoding)
+            try:
+                if thumbnail_data.get("base64"):
+                    return thumbnail_data["base64"]
+            except Exception:
+                pass
 
         if self.thumbnail and 'static' not in self.thumbnail:
             return generate_storage_url(self.thumbnail)
@@ -1001,6 +1004,7 @@ class ContentNode(MPTTModel, models.Model):
         if not channel_id and (not self.original_channel_id or not self.source_channel_id):
             warnings.warn("Determining node's channel is an expensive operation. Please set original_channel_id and "
                           "source_channel_id to the parent's values when creating child nodes.", stacklevel=2)
+
             channel = (self.parent and self.parent.get_channel()) or self.get_channel()
             if channel:
                 channel_id = channel.pk

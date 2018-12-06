@@ -8,6 +8,7 @@ var dialog = require("edit_channel/utils/dialog");
 require("details.less");
 var d3Helper = require("edit_channel/utils/d3_helper");
 var descriptionHelper = require("edit_channel/utils/description");
+var fileDownload = require("jquery-file-download");
 const State = require("edit_channel/state");
 const Constants = require("edit_channel/constants/index");
 
@@ -91,6 +92,17 @@ var MESSAGES = {
     "edit_details": "Edit Details",
     "more": "Show More",
     "less": "Show Less",
+    "download_pdf": "Download Detailed PDF",
+    "download_condensed_pdf": "Download PDF",
+    "download_csv": "Download CSV",
+    "download_ppt": "Download PPT",
+    "download_started": "Download Started",
+    "download_started_text": "Generating a {data} for {data2}. Download will start automatically.",
+    "download_failed": "Download Failed",
+    "download_failed_text": "Failed to download a {data} for {data2}",
+    "format_pdf": "pdf",
+    "format_ppt": "ppt",
+    "format_csv": "csv",
     "original_content": "Original Content",
     "details_tooltip": "{kind} ({percent}%)"
 }
@@ -238,7 +250,11 @@ var ChannelEditorView = BaseViews.BaseListEditableItemView.extend({
       "click #cancel_new": "close",
       "click #edit_details": "edit_details",
       'click .toggle_description' : 'toggle_description',
-      "click #cancel_edit": "cancel_edit"
+      "click #cancel_edit": "cancel_edit",
+      "click #download_pdf": "download_pdf",
+      "click #download_csv": "download_csv",
+      "click #download_ppt": "download_ppt",
+      "click #download_condensed_pdf": "download_condensed_pdf",
     },
     render: function() {
         this.original_thumbnail = this.model.get("thumbnail");
@@ -306,11 +322,15 @@ var ChannelEditorView = BaseViews.BaseListEditableItemView.extend({
         $("#submit").html(this.get_translation("saving"))
                             .attr("disabled", "disabled")
                             .addClass("disabled");
+        var thumbnail_encoding = null;
+        if (this.model.get("thumbnail_encoding") && typeof this.model.get("thumbnail_encoding") !== "string") {
+            thumbnail_encoding = JSON.stringify(this.model.get("thumbnail_encoding"));
+        }
         this.save({
             "name": $("#input_title").val().trim(),
             "description": $("#input_description").val(),
             "thumbnail": this.model.get("thumbnail"),
-            "thumbnail_encoding": this.model.get("thumbnail_encoding"),
+            "thumbnail_encoding": thumbnail_encoding,
             "language": (language===0)? null : language
         }).then(function(data){
             self.onchange(false);
@@ -357,9 +377,48 @@ var ChannelEditorView = BaseViews.BaseListEditableItemView.extend({
     edit_details: function() {
         this.edit = true;
         this.render();
+    },
+    download_pdf: function() {
+        var self = this;
+        var format = this.get_translation("format_pdf");
+        dialog.alert(this.get_translation("download_started"), this.get_translation("download_started_text", format, this.model.get("name")));
+        $.fileDownload(window.Urls.get_channel_details_pdf_endpoint(this.model.id), {
+            failCallback: function(responseHtml, url) {
+                dialog.alert(self.get_translation("download_failed"), self.get_translation("download_failed_text", format, self.model.get("name")));
+            }
+        });
+    },
+    download_condensed_pdf: function() {
+        var self = this;
+        var format = this.get_translation("format_pdf");
+        dialog.alert(this.get_translation("download_started"), this.get_translation("download_started_text", format, this.model.get("name")));
+        $.fileDownload(window.Urls.get_channel_details_pdf_endpoint(this.model.id) + "?condensed=true", {
+            failCallback: function(responseHtml, url) {
+                dialog.alert(self.get_translation("download_failed"), self.get_translation("download_failed_text", format, self.model.get("name")));
+            }
+        });
+    },
+    download_csv: function() {
+        var self = this;
+        var format = this.get_translation("format_csv");
+        dialog.alert(this.get_translation("download_started"), this.get_translation("download_started_text", format, this.model.get("name")));
+        $.fileDownload(window.Urls.get_channel_details_csv_endpoint(this.model.id), {
+            failCallback: function(responseHtml, url) {
+                dialog.alert(self.get_translation("download_failed"), self.get_translation("download_failed_text", format, self.model.get("name")));
+            }
+        });
+    },
+    download_ppt: function() {
+        var self = this;
+        var format = this.get_translation("format_ppt");
+        dialog.alert(this.get_translation("download_started"), this.get_translation("download_started_text", format, this.model.get("name")));
+        $.fileDownload(window.Urls.get_channel_details_ppt_endpoint(this.model.id), {
+            failCallback: function(responseHtml, url) {
+                dialog.alert(self.get_translation("download_failed"), self.get_translation("download_failed_text", format, self.model.get("name")));
+            }
+        });
     }
-})
-
+});
 
 var DetailsView = BaseViews.BaseListEditableItemView.extend({
     template: require("./hbtemplates/details_view.handlebars"),
