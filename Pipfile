@@ -84,6 +84,9 @@ rope = "*"
 "autopep8" = "<=1.4.0"
 pre-commit= "==1.11.1"
 Faker = "==0.7.3"
+codecov = "*"
+coverage = "*"
+pytest-cov = "*"
 
 [requires]
 python_version = "2.7"

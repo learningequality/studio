@@ -1,5 +1,8 @@
 # Kolibri Studio
 
+
+[![codecov](http://codecov.io/github/learningequality/studio/coverage.svg?branch=develop)](http://codecov.io/github/learningequality/studio?branch=develop])
+
 Kolibri Studio is a web application and content repository designed to deliver
 educational materials to [Kolibri](http://learningequality.org/kolibri/) apps.
 Kolibri Studio supports the following workflows:
