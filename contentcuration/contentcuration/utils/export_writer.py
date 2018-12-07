@@ -3,6 +3,7 @@ import csv
 import logging as logmodule
 import math
 import os
+import sys
 import tempfile
 from collections import OrderedDict
 
@@ -20,6 +21,7 @@ from pptx import Presentation
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE
 from pptx.enum.text import PP_ALIGN
+from pptx.text.fonts import FontFiles
 from pptx.util import Inches
 from pptx.util import Pt
 from pressurecooker.encodings import encode_file_to_base64
@@ -43,6 +45,24 @@ plt.switch_backend('agg')  # Avoid using tkinter as it causes server to stall (h
 os.environ['QT_QPA_PLATFORM'] = 'offscreen'  # Must be set for tests to run (https://github.com/ipython/ipython/issues/10627)
 logmodule.basicConfig()
 logging = logmodule.getLogger(__name__)
+
+
+def _monkeypatch_font_directories():
+    # python-pptx automatically fails on linux systems, so patch it
+    # https://github.com/scanny/python-pptx/blob/master/pptx/text/fonts.py#L57
+    def _can_i_haz_linux(cls):
+        if sys.platform.startswith("linux"):
+            return {
+                ('Microsoft Yahei', False, False): os.path.join(settings.STATIC_ROOT, 'fonts', 'msyh.ttc'),
+                ('Calibri', False, False): os.path.join(settings.STATIC_ROOT, 'fonts', 'arial.ttf'),
+            }
+        else:
+            return FontFiles._old_installed_fonts()
+    FontFiles._old_installed_fonts = FontFiles._installed_fonts
+    FontFiles._installed_fonts = classmethod(_can_i_haz_linux)
+
+
+_monkeypatch_font_directories()
 
 
 class PDFMixin(object):

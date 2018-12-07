@@ -255,8 +255,11 @@ def get_thumbnail_encoding(filename, dimension=THUMBNAIL_DIMENSION):
         if not filename.startswith(settings.STATIC_ROOT):
             filename = generate_object_storage_name(checksum, filename)
 
-        with default_storage.open(filename) as localtempf:
-            inbuffer.write(localtempf.read())
+            with default_storage.open(filename) as localtempf:
+                inbuffer.write(localtempf.read())
+        else:
+            with open(filename, 'rb') as fobj:
+                inbuffer.write(fobj.read())
 
         with Image.open(inbuffer) as image:
             image_format = image.format
