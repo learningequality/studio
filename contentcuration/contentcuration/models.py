@@ -134,6 +134,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __unicode__(self):
         return self.email
 
+    def delete(self):
+        # Remove any invitations associated to this account
+        self.sent_to.all().delete()
+        super(User, self).delete()
+
     def can_edit(self, channel_id):
         channel = Channel.objects.filter(pk=channel_id).first()
         if not self.is_admin and channel and not channel.editors.filter(pk=self.pk).exists():

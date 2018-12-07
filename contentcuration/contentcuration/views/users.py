@@ -13,9 +13,14 @@ from django.http import HttpResponseBadRequest
 from django.shortcuts import redirect
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext as _
-from django.views.decorators.csrf import csrf_exempt
 from registration.backends.hmac.views import ActivationView
 from registration.backends.hmac.views import RegistrationView
+from rest_framework.authentication import BasicAuthentication
+from rest_framework.authentication import SessionAuthentication
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.decorators import authentication_classes
+from rest_framework.decorators import permission_classes
+from rest_framework.permissions import IsAuthenticated
 
 from contentcuration.forms import RegistrationForm
 from contentcuration.forms import RegistrationInformationForm
@@ -28,7 +33,8 @@ from contentcuration.utils.policies import get_latest_policies
 """ REGISTRATION/INVITATION ENDPOINTS """
 
 
-@csrf_exempt
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
 def send_invitation_email(request):
     if request.method != 'POST':
         return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
@@ -36,12 +42,14 @@ def send_invitation_email(request):
     data = json.loads(request.body)
 
     try:
-        user_email = data["user_email"]
+        user_email = data["user_email"].lower()
         channel_id = data["channel_id"]
         share_mode = data["share_mode"]
-        retrieved_user = User.objects.get_or_create(email=user_email)
-        recipient = retrieved_user[0]
         channel = Channel.objects.get(id=channel_id)
+
+        recipient = User.objects.filter(email__iexact=user_email).first()
+        if not recipient:
+            recipient = User.objects.create(email=user_email)
 
         request.user.can_view(channel_id)
 
