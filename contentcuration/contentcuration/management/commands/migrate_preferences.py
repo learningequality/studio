@@ -44,4 +44,4 @@ class Command(BaseCommand):
                 failed.append("FAILED {} ({}): {}".format(u.email, c.id, str(e)))
 
         for f in failed:
-            print f
+            print(f)
