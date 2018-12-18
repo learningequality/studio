@@ -136,7 +136,6 @@ var BaseView = Backbone.View.extend({
 		$(".first_focus_item").select();
 	},
 	set_indices: function(){
-        // var selector = (this.el.id)? "#" + this.el.id : "." + this.el.className;
         $(this).select(".tab_item").each(function(){
             $(this).attr('tabindex', TABINDEX++);
         });
