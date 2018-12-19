@@ -216,8 +216,12 @@
 	}
 }
 
+:root {
+	--approxChannelEditNavHeight: 35rem;
+}
+
 #channel-edit-content-wrapper {
-	@container-height: calc( 100vh - 35rem );
+	@container-height: calc( 100vh - var(--approxChannelEditNavHeight) );
 	@container-min-height:400px;
 	@container-border-color: #BCBCBC;
 	@container-title-color: #30302F;
