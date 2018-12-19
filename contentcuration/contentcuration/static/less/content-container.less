@@ -9,6 +9,33 @@
 	cursor:pointer;
 }
 
+// flexbox settings to make secondary navbar more responsive
+#secondary-nav .nav {
+	display: flex;
+	align-items: center;
+	width: 100%;
+	
+	li {
+		max-width: min-content;
+	}
+	
+	#queue-area {
+		max-width: unset;
+		flex-grow: 1;
+		#queue {
+			width: 100%;
+			flex-grow: 1;
+			.ui-droppable {
+				display: flex;
+				align-items: center;
+				i {
+					width: 100%;
+				}
+			}
+		}
+	}
+}
+
 #secondary-nav {
 	@secondary-nav-btn-color:#F2F2F2;
 	padding:5px 10px 5px 20px;
@@ -91,7 +118,7 @@
 		}
 	}
 
-	.navbar-right{
+	// .navbar-right{
 		padding:5px;
 		*{
 			vertical-align: middle;
@@ -117,7 +144,7 @@
 		li:last-child #get_published_id{
 			margin-right: 65px;
 		}
-	}
+	// }
 }
 
 #button_bar {
@@ -189,7 +216,7 @@
 }
 
 #channel-edit-content-wrapper {
-	@container-height: 60vh;
+	@container-height: calc( 100vh - 35rem );
 	@container-min-height:400px;
 	@container-border-color: #BCBCBC;
 	@container-title-color: #30302F;
@@ -228,7 +255,6 @@
 		overflow-x:auto;
 		min-height: @container-min-height + 100;
 		position:absolute;
-		margin-bottom: 150px; // Ensure side scrollbar is visible
 		width:100vw;
 		padding-left:40px;
 		margin-top:20px;
