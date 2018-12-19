@@ -22,7 +22,6 @@ var ChannelEditRouter  = Backbone.Router.extend({
 		var ChannelManageView = require("edit_channel/new_channel/views");
 		var channel_manager_view = new ChannelManageView.ChannelListPage ({
 			el: $("#channel-container"),
-			collection: this.channelCollection
 		});
 	},
 
@@ -61,7 +60,7 @@ var ChannelEditRouter  = Backbone.Router.extend({
 			var QueueView = require("edit_channel/queue/views");
 			var queue = new QueueView.Queue({
 		 		el: $("#queue-area"),
-		 		collection: this.nodeCollection,
+		 		collection: State.nodeCollection,
 		 		clipboard_root : State.current_user.get_clipboard(),
 				trash_root : State.current_channel.get_root("trash_tree"),
 		 	});
