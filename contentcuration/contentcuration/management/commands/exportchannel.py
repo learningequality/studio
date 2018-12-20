@@ -554,7 +554,7 @@ def convert_channel_thumbnail(channel):
 
     if channel.thumbnail_encoding:
         try:
-            thumbnail_data = load_json_string(channel.thumbnail_encoding)
+            thumbnail_data = channel.thumbnail_encoding
             if thumbnail_data.get("base64"):
                 return thumbnail_data["base64"]
         except ValueError:
