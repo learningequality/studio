@@ -4,13 +4,14 @@ from __future__ import unicode_literals
 
 from django.db import migrations
 
+import ast
 import json
 
 
 def forwards(apps, schema_editor):
     Channel = apps.get_model('contentcuration', 'channel')
     for channel in Channel.objects.all():
-        channel.thumbnail_encoding_json = json.loads(channel.thumbnail_encoding) if channel.thumbnail_encoding else {}
+        channel.thumbnail_encoding_json = ast.literal_eval(channel.thumbnail_encoding) if channel.thumbnail_encoding else {}
         channel.save()
 
 

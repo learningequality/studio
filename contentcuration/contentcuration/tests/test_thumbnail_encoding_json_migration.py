@@ -47,12 +47,17 @@ class TestForwardJSONMigration(MigrationTestCase):
         self.no_encoding_id = channel_no_endcoding.id
         channel_encoding = Channel.objects.create(thumbnail_encoding=json.dumps({'base64': 'base64string'}))
         self.encoding_id = channel_encoding.id
+        channel_encoding_single_quotes = Channel.objects.create(thumbnail_encoding="{'base64': 'base64string'}")
+        self.single_quotes_id = channel_encoding_single_quotes.id
 
     def test_no_encoding_empty_dict(self):
         self.assertEqual({}, models.Channel.objects.get(id=self.no_encoding_id).thumbnail_encoding)
 
     def test_encoding_dict(self):
         self.assertEqual({'base64': 'base64string'}, models.Channel.objects.get(id=self.encoding_id).thumbnail_encoding)
+
+    def test_encoding_bad_json(self):
+        self.assertEqual({'base64': 'base64string'}, models.Channel.objects.get(id=self.single_quotes_id).thumbnail_encoding)
 
 
 class TestBackwardJSONMigration(MigrationTestCase):
