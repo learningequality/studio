@@ -152,7 +152,7 @@ def create_channel(cursor, target_id):
     channel.name = name
     channel.description = description
     channel.thumbnail = write_to_thumbnail_file(thumbnail)
-    channel.thumbnail_encoding = json.dumps({'base64': thumbnail, 'points': [], 'zoom': 0})
+    channel.thumbnail_encoding = {'base64': thumbnail, 'points': [], 'zoom': 0}
     channel.version = version
     channel.save()
     print "\tCreated channel {} with name {}".format(target_id, name)

@@ -691,6 +691,7 @@ class ChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
     tags = TagSerializer(many=True, read_only=True)
     primary_token = serializers.SerializerMethodField('get_channel_primary_token')
     content_defaults = serializers.JSONField()
+    thumbnail_encoding = serializers.JSONField()
 
     def get_date_created(self, channel):
         return channel.main_tree.created.strftime("%X %x")
