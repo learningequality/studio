@@ -73,6 +73,16 @@ class GoogleCloudStorageSaveTestCase(TestCase):
         # Check that we pass self.content file_object to upload_from_file
         self.blob_obj.upload_from_file.assert_called_once_with(self.content, content_type="image/jpeg")
 
+    def test_checks_does_not_upload_file_if_empty(self):
+        """
+        Check that it doesn't call upload_from_file if the file is empty.
+        """
+        content = StringIO("")
+        self.storage.save("myfile.jpg", content, blob_object=self.blob_obj)
+
+        # check that upload_from_file is never called
+        self.blob_obj.upload_from_file.assert_not_called()
+
 
 class GoogleCloudStorageOpenTestCase(TestCase):
     """
