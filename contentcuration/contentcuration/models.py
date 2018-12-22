@@ -1,4 +1,3 @@
-import ast
 import functools
 import hashlib
 import json
@@ -470,7 +469,7 @@ class Channel(models.Model):
     description = models.CharField(max_length=400, blank=True)
     version = models.IntegerField(default=0)
     thumbnail = models.TextField(blank=True, null=True)
-    thumbnail_encoding = models.TextField(blank=True, null=True)
+    thumbnail_encoding = JSONField(default=dict)
     editors = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         related_name='editable_channels',
@@ -608,7 +607,7 @@ class Channel(models.Model):
 
     def get_thumbnail(self):
         if self.thumbnail_encoding:
-            thumbnail_data = ast.literal_eval(self.thumbnail_encoding)
+            thumbnail_data = self.thumbnail_encoding
             if thumbnail_data.get("base64"):
                 return thumbnail_data["base64"]
 
