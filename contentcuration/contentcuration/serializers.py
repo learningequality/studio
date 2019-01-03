@@ -1,4 +1,5 @@
 import json
+import re
 from collections import OrderedDict
 
 from django.conf import settings
@@ -267,38 +268,43 @@ class TagSerializer(serializers.ModelSerializer):
         fields = ('tag_name', 'channel', 'id')
 
 
+exercise_image_checksum_regex = re.compile("\!\[[^]]*\]\(\$" + exercises.IMG_PLACEHOLDER + "/([a-f0-9]{32})\.[\w]+\)")
+
+
 class AssessmentListSerializer(serializers.ListSerializer):
 
-    def update(self, instance, validated_data):
+    def update(self, queryset, validated_data):
         ret = []
 
+        validated_data_by_id = {
+            i.pop('id'): i
+            for i in validated_data
+        }
+
         with transaction.atomic():
-            for item in validated_data:
-                files = item.pop('files', [])  # Remove here to avoid problems with setting attributes
-
-                # Handle existing items
-                if 'id' in item:
-                    aitem, is_new = AssessmentItem.objects.get_or_create(pk=item['id'])
-                    if item['deleted']:
-                        aitem.delete()
-                        continue
-                    else:
-                        # Set attributes for assessment item
-                        for attr, value in item.items():
-                            setattr(aitem, attr, value)
-                        aitem.save()
-                else:
-                    # Create item
-                    aitem = AssessmentItem.objects.create(**item)
-
-                for f in files:
-                    if f.checksum in str(aitem.__dict__):
-                        if f.assessment_item_id != aitem.pk:
-                            f.assessment_item = aitem
-                            f.save()
-                    else:
-                        f.delete()
-
+            # only handle existing items
+            aitems = AssessmentItem.objects.filter(id__in=validated_data_by_id.keys())
+            if len(validated_data) != aitems.count():
+                raise ValidationError('Could not find all objects to update')
+            for aitem in aitems:
+                item = validated_data_by_id.get(aitem.id)
+                # Defer to child serializer for update operations
+                self.child.update(aitem, item)
+                # Get unique checksums in the assessment item text fields markdown
+                # Coerce to a string, for Python 2, as the stored data is in unicode, and otherwise
+                # the unicode char in the placeholder will not match
+                checksums = set(exercise_image_checksum_regex.findall(str(aitem.question + aitem.answers + aitem.hints)))
+                # delete any files that are no longer being used
+                aitem.files.exclude(checksum__in=checksums).delete()
+                if len(checksums) != aitem.files.count():
+                    # We have some checksums that do not have files associated
+                    no_files = checksums - set(aitem.files.values_list('checksum', flat=True))
+                    for checksum in no_files:
+                        # Find an existing file object for this file
+                        file = File.objects.filter(checksum=checksum).first()
+                        file.id = None
+                        file.assessment_item = aitem
+                        file.save()
                 ret.append(aitem)
 
         return ret
@@ -310,7 +316,7 @@ class AssessmentItemSerializer(BulkSerializerMixin, serializers.ModelSerializer)
 
     class Meta:
         model = AssessmentItem
-        fields = ('id', 'question', 'files', 'type', 'answers', 'contentnode', 'assessment_id',
+        fields = ('id', 'question', 'type', 'answers', 'contentnode', 'assessment_id',
                   'hints', 'raw_data', 'order', 'source_url', 'randomize', 'deleted')
         list_serializer_class = AssessmentListSerializer
 
