@@ -349,6 +349,7 @@ var ImageUploadView = BaseViews.BaseModalView.extend({
         this.callback = options.callback;
         this.file = this.alt_text = null;
         this.preset_id = options.preset_id;
+        this.assessmentItemId = options.assessmentItemId;
         this.render();
     },
 
@@ -390,7 +391,10 @@ var ImageUploadView = BaseViews.BaseModalView.extend({
                 thumbnailHeight:null,
                 previewTemplate:this.dropzone_template(null, { data: this.get_intl_data() }),
                 previewsContainer: "#dropzone",
-                headers: {"X-CSRFToken": get_cookie("csrftoken")}
+                headers: {"X-CSRFToken": get_cookie("csrftoken")},
+                params: {
+                  assessment_item: this.assessmentItemId,
+                },
             });
             this.dropzone.on("success", this.file_uploaded);
             this.dropzone.on("addedfile", this.file_added);
