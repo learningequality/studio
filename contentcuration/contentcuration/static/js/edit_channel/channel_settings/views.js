@@ -158,6 +158,7 @@ var SettingsView = BaseViews.BaseListEditableItemView.extend({
             "name": $("#input_title").val().trim(),
             "description": $("#input_description").val(),
             "thumbnail": this.model.get("thumbnail"),
+            "thumbnail_encoding": this.model.get("thumbnail_encoding"),
             "content_defaults": content_defaults,
             "language": (language===0)? null : language
         }).then(function(data){
@@ -193,6 +194,7 @@ var SettingsView = BaseViews.BaseListEditableItemView.extend({
     },
     remove_thumbnail:function(){
         this.model.set("thumbnail", "/static/img/kolibri_placeholder.png");
+        this.model.set("thumbnail_encoding", {});
         this.register_changes();
     },
     set_thumbnail:function(thumbnail, encoding, formatted_name, path){
