@@ -106,9 +106,7 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
     },
     get_thumbnail_url:function(ignore_encoding){
         var thumbnail = _.find(this.model.get('files'), function(f){ return f.preset.thumbnail; });
-        if(!ignore_encoding && this.thumbnail_encoding){
-            if(typeof this.thumbnail_encoding === "string")
-                this.thumbnail_encoding = JSON.parse(this.thumbnail_encoding);
+        if(!ignore_encoding && this.thumbnail_encoding.base64){
             return this.thumbnail_encoding.base64;
         }
         else if(this.image_url){ return this.image_url; }
@@ -125,7 +123,7 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
             [this.get_translation("remove")]: function(){
                 self.image = null;
                 self.image_url = self.default_url;
-                self.thumbnail_encoding = null;
+                self.thumbnail_encoding = {};
                 self.onremove();
                 self.render();
             },
