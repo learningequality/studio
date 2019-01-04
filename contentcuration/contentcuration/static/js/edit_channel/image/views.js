@@ -106,7 +106,7 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
     },
     get_thumbnail_url:function(ignore_encoding){
         var thumbnail = _.find(this.model.get('files'), function(f){ return f.preset.thumbnail; });
-        if(!ignore_encoding && this.thumbnail_encoding.base64){
+        if(!ignore_encoding && this.thumbnail_encoding !== null && this.thumbnail_encoding.base64){
             return this.thumbnail_encoding.base64;
         }
         else if(this.image_url){ return this.image_url; }
