@@ -73,9 +73,9 @@ body {
 
 						ul#container_area {
 							display: flex;
-							flex-direction: row;
-							flex-wrap: nowrap;
-							
+							flex-direction: row;	
+							flex-grow: 1;							
+
 							> li {
 								.title-bar {
 									flex-shrink: 0;	
@@ -83,10 +83,14 @@ body {
 								
 								display: flex;
 								flex-direction: column;
+								max-height: 100%;
 
-								> ul {
+								> ul.content-list {
 									display: flex;
 									flex-direction: column;
+									height: 0;
+									flex-grow: 1;
+					
 
 									> li {
 										flex-shrink: 0;
@@ -380,8 +384,6 @@ body {
 				overflow-y: auto;
 				overflow-x: hidden;
 				padding: 0 0 5px 0;
-				height: 100%;
-				flex-grow: 1;
 				background-color:white;
 				margin: 5px 0px;
 				margin-bottom:0px;
