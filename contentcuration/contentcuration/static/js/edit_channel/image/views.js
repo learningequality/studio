@@ -106,9 +106,7 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
     },
     get_thumbnail_url:function(ignore_encoding){
         var thumbnail = _.find(this.model.get('files'), function(f){ return f.preset.thumbnail; });
-        if(!ignore_encoding && this.thumbnail_encoding){
-            if(typeof this.thumbnail_encoding === "string")
-                this.thumbnail_encoding = JSON.parse(this.thumbnail_encoding);
+        if(!ignore_encoding && this.thumbnail_encoding && this.thumbnail_encoding.base64){
             return this.thumbnail_encoding.base64;
         }
         else if(this.image_url){ return this.image_url; }
@@ -125,7 +123,7 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
             [this.get_translation("remove")]: function(){
                 self.image = null;
                 self.image_url = self.default_url;
-                self.thumbnail_encoding = null;
+                self.thumbnail_encoding = {};
                 self.onremove();
                 self.render();
             },
@@ -349,6 +347,7 @@ var ImageUploadView = BaseViews.BaseModalView.extend({
         this.callback = options.callback;
         this.file = this.alt_text = null;
         this.preset_id = options.preset_id;
+        this.assessmentItemId = options.assessmentItemId;
         this.render();
     },
 
@@ -390,7 +389,10 @@ var ImageUploadView = BaseViews.BaseModalView.extend({
                 thumbnailHeight:null,
                 previewTemplate:this.dropzone_template(null, { data: this.get_intl_data() }),
                 previewsContainer: "#dropzone",
-                headers: {"X-CSRFToken": get_cookie("csrftoken")}
+                headers: {"X-CSRFToken": get_cookie("csrftoken")},
+                params: {
+                  assessment_item: this.assessmentItemId,
+                },
             });
             this.dropzone.on("success", this.file_uploaded);
             this.dropzone.on("addedfile", this.file_added);
