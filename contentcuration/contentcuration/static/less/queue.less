@@ -12,7 +12,7 @@
 	@queue-background-color:@gray-300;
 	@queue-min-height: 575px;
 	@queue-list-item-height: 40px;
-	@queue-top-bar-padding: 16px;
+	@queue-top-bar-padding: 10px;
 	@highlight-color: #E6E6E6;
 	@placeholder-color:#666666;
 
@@ -104,6 +104,10 @@
 			background-color: white;
 			min-height:@queue-min-height;
 
+			.wrapper {
+				width: 100%;
+			}
+
 			.queue-overlay {
 				display: none;
 				position: absolute;
@@ -167,12 +171,13 @@
 			}
 			.select_all_fixed {
 				padding: @queue-top-bar-padding;
+				border-bottom: 1px solid @gray-200;
 			}
 			.select_all_label {
 				width: auto;
 			}
 			.pin_clipboard {
-				padding: 16px;
+				padding: @queue-top-bar-padding;
 				margin: 0;
 
 
