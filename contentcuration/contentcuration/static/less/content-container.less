@@ -14,20 +14,21 @@
 	display: flex;
 	align-items: center;
 	width: 100%;
-	
+
 	li {
 		max-width: min-content;
 	}
-	
+
 	#queue-area {
 		max-width: unset;
 		flex-grow: 1;
 		#queue {
 			width: 100%;
 			flex-grow: 1;
-			.ui-droppable {
+			> .ui-droppable {
 				display: flex;
 				align-items: center;
+				justify-content: flex-end;
 				i {
 					width: 100%;
 				}
