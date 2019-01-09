@@ -215,6 +215,7 @@ var UploadImage = function (context) {
         click: function () {
             var view = new ImageUploader.ImageUploadView({
                 callback: context.options.callbacks.onCustomImageUpload,
+                assessmentItemId: context.options.assessmentItemId,
                 preset_id: 'exercise_image'
             });
         }
@@ -318,6 +319,7 @@ var EditorView = BaseViews.BaseView.extend({
         this.edit_key = options.edit_key;
         this.editing = false;
         this.numbersOnly = options.numbersOnly || false;
+        this.assessmentItem = options.assessmentItem;
         this.render();
         this.markdown = this.model.get(this.edit_key);
         this.listenTo(this.model, "change:" + this.edit_key, this.render);
@@ -411,6 +413,7 @@ var EditorView = BaseViews.BaseView.extend({
             shortcuts: false,
             selector: this.cid,
             disableDragAndDrop: true,
+            assessmentItemId: this.assessmentItem.id,
             callbacks: {
                 onChange: _.debounce(this.save, 1),
                 onPaste: this.paste_content,
@@ -772,7 +775,12 @@ var ExerciseEditableItemView =  BaseViews.BaseListEditableItemView.extend({
     /*********** EDITOR METHODS ***********/
     render_editor: function(){
         if (!this.editor_view) {
-            this.editor_view = new EditorView({model: this.model, edit_key: this.content_field, numbersOnly:this.numbers_only()});
+            this.editor_view = new EditorView({
+                model: this.model,
+                edit_key: this.content_field,
+                numbersOnly:this.numbers_only(),
+                assessmentItem: this.assessmentItem
+            });
         }
         this.$(this.editor_el).html(this.editor_view.el);
         this.listenTo(this.model, "change:" + this.content_field, this.propagate_changes)
@@ -870,6 +878,19 @@ var ExerciseView = ExerciseEditableListView.extend({
         'change #randomize_question_order': 'set_random',
     },
 
+    /*********** EDITING METHODS ***********/
+    add_item: function() {
+        if(!this.$(this.additem_el).hasClass('disabled')){
+            this.$(this.default_item).css('display', 'none');
+            this.close_all_editors();
+            const model = new Models.AssessmentItemModel(this.get_default_attributes());
+            model.save().then(() => {
+                this.collection.add(model);
+                this.propagate_changes();
+            });
+        }
+    },
+
     /*********** LOADING METHODS ***********/
     render: function() {
         this.$el.html(this.template({
@@ -879,7 +900,7 @@ var ExerciseView = ExerciseEditableListView.extend({
         }, {
             data: this.get_intl_data()
         }));
-        this.load_content(this.collection.where({'deleted': false}), (this.allow_edit)? this.get_translation("add_question_prompt") : this.get_translation("no_questions_found"));
+        this.load_content(this.collection, (this.allow_edit)? this.get_translation("add_question_prompt") : this.get_translation("no_questions_found"));
     },
     create_new_view:function(model){
         var new_exercise_item = null;
@@ -934,6 +955,7 @@ var AssessmentItemDisplayView = ExerciseEditableItemView.extend({
 
     initialize: function(options) {
         _.bindAll(this, "update_hints", "show_hints");
+        this.assessmentItem = this.model;
         this.render();
     },
     events: {
@@ -957,7 +979,7 @@ var AssessmentItemDisplayView = ExerciseEditableItemView.extend({
                 this.answer_editor = new AssessmentItemAnswerListView({
                     collection: this.model.get("answers"),
                     container:this,
-                    assessment_item: this.model,
+                    assessmentItem: this.model,
                     isdisplay:this.isdisplay
                 });
             }
@@ -969,7 +991,7 @@ var AssessmentItemDisplayView = ExerciseEditableItemView.extend({
             this.hint_editor = new HintModalView({
                 collection: this.model.get("hints"),
                 container: this,
-                assessment_item: this.model,
+                assessmentItem: this.model,
                 model: this.model,
                 onupdate: this.update_hints,
                 isdisplay: this.isdisplay
@@ -997,6 +1019,7 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
         this.onchange = options.onchange;
         this.question = this.model.get('question');
         this.containing_list_view = options.containing_list_view;
+        this.assessmentItem = this.model;
         this.init_undo_redo();
         this.render();
         this.set_toolbar_closed();
@@ -1023,11 +1046,12 @@ var AssessmentItemView = AssessmentItemDisplayView.extend({
         dialog.dialog(this.get_translation("deleting_question"), this.get_translation("deleting_question_text"), {
             [this.get_translation("cancel")]:function(){},
             [this.get_translation("delete")]: function(){
-                self.model.set('deleted', true);
-                self.propagate_changes();
-                self.containing_list_view.views.splice(self, 1);
-                self.containing_list_view.handle_if_empty();
-                self.remove();
+                self.model.destroy().then(() => {
+                    self.propagate_changes();
+                    self.containing_list_view.views.splice(self, 1);
+                    self.containing_list_view.handle_if_empty();
+                    self.remove();
+                });
             },
         }, function(){});
     },
@@ -1258,14 +1282,14 @@ var AssessmentItemAnswerListView = ExerciseEditableListView.extend({
         return {
             order: this.get_next_order(),
             answer: "",
-            correct: this.assessment_item.get('type') === "input_question"
+            correct: this.assessmentItem.get('type') === "input_question"
         };
     },
     initialize: function(options) {
         _.bindAll(this, "render", "add_item", "add_item_view");
         this.bind_edit_functions();
         this.views = [];
-        this.assessment_item = options.assessment_item;
+        this.assessmentItem = options.assessmentItem;
         this.isdisplay = options.isdisplay;
         this.container = options.container;
         this.render();
@@ -1274,9 +1298,9 @@ var AssessmentItemAnswerListView = ExerciseEditableListView.extend({
     },
     render: function() {
         this.$el.html(this.template({
-            input_answer: this.assessment_item.get("type") === "input_question",
+            input_answer: this.assessmentItem.get("type") === "input_question",
             isdisplay: this.isdisplay,
-            true_false: this.assessment_item.get("type") === "true_false"
+            true_false: this.assessmentItem.get("type") === "true_false"
         }, {
             data: this.get_intl_data()
         }));
@@ -1287,7 +1311,7 @@ var AssessmentItemAnswerListView = ExerciseEditableListView.extend({
         var view = new AssessmentItemAnswerView({
             model: model,
             containing_list_view:this,
-            assessment_item: this.assessment_item,
+            assessmentItem: this.assessmentItem,
             isdisplay:this.isdisplay
         });
         this.views.push(view);
@@ -1317,7 +1341,7 @@ var AssessmentItemAnswerView = ExerciseEditableItemView.extend({
         _.bindAll(this, "render", "set_editor", "set_open", "toggle", "toggle_correct");
         this.open = options.open || false;
         this.containing_list_view = options.containing_list_view;
-        this.assessment_item = options.assessment_item;
+        this.assessmentItem = options.assessmentItem;
         this.isdisplay = options.isdisplay;
         this.render();
     },
@@ -1333,9 +1357,9 @@ var AssessmentItemAnswerView = ExerciseEditableItemView.extend({
             answer: this.model.toJSON(),
             input_answer: this.numbers_only(),
             single_selection: this.is_single_correct(),
-            groupName: this.assessment_item.cid,
+            groupName: this.assessmentItem.cid,
             allow_edit: !this.isdisplay,
-            is_true_false: this.assessment_item.get("type") === "true_false",
+            is_true_false: this.assessmentItem.get("type") === "true_false",
             allow_toggle: !this.isdisplay
         }, {
             data: this.get_intl_data()
@@ -1343,9 +1367,9 @@ var AssessmentItemAnswerView = ExerciseEditableItemView.extend({
         this.render_editor();
         _.defer(this.set_editor);
     },
-    numbers_only: function() {return this.assessment_item.get('type') === 'input_question';},
+    numbers_only: function() {return this.assessmentItem.get('type') === 'input_question';},
     is_single_correct: function(){
-        return this.assessment_item.get("type") === "single_selection" || this.assessment_item.get("type") === "true_false";
+        return this.assessmentItem.get("type") === "single_selection" || this.assessmentItem.get("type") === "true_false";
     },
     toggle_correct: function(event) {
         event.stopPropagation();
@@ -1373,6 +1397,7 @@ var HintQuestionDisplayView = BaseViews.BaseView.extend({
     $trs: MESSAGES,
 
     initialize: function(options) {
+        this.assessmentItem = options.assessmentItem;
         this.render();
     },
     render: function() {
@@ -1381,6 +1406,7 @@ var HintQuestionDisplayView = BaseViews.BaseView.extend({
         }));
         var editor_view = new EditorView({
             model: this.model,
+            assessmentItemId: this.assessmentItem.id,
             edit_key: "question",
             el: this.$(".question")
         });
@@ -1397,7 +1423,7 @@ var HintModalView = BaseViews.BaseModalView.extend({
 
     initialize: function(options) {
         _.bindAll(this, "closing_hints", "show", "closed_hints", "init_focus", "loop_focus");
-        this.assessment_item = options.assessment_item;
+        this.assessmentItem = options.assessmentItem;
         this.isdisplay = options.isdisplay;
         this.onupdate = options.onupdate;
         this.container = options.container;
@@ -1412,7 +1438,8 @@ var HintModalView = BaseViews.BaseModalView.extend({
         }));
         if(!this.isdisplay){
             var question_preview = new HintQuestionDisplayView({
-                model: this.assessment_item,
+                assessmentItem: this.assessmentItem,
+                model: this.model,
                 el: this.$(".question_preview")
             });
         }
@@ -1420,7 +1447,7 @@ var HintModalView = BaseViews.BaseModalView.extend({
         this.hint_editor = new AssessmentItemHintListView({
             collection: this.model.get("hints"),
             container: this.container,
-            assessment_item: this.model,
+            assessmentItem: this.model,
             model: this.model,
             onupdate: this.onupdate,
             isdisplay: this.isdisplay,
@@ -1468,7 +1495,7 @@ var AssessmentItemHintListView = ExerciseEditableListView.extend({
     initialize: function(options) {
         _.bindAll(this, "render", "add_item", "add_item_view");
         this.bind_edit_functions();
-        this.assessment_item = options.assessment_item;
+        this.assessmentItem = options.assessmentItem;
         this.isdisplay = options.isdisplay;
         this.modal_view = options.modal_view;
         this.render();
@@ -1492,7 +1519,7 @@ var AssessmentItemHintListView = ExerciseEditableListView.extend({
         var view = new AssessmentItemHintView({
             model: model,
             containing_list_view:this,
-            assessment_item: this.assessment_item,
+            assessmentItem: this.assessmentItem,
             isdisplay: this.isdisplay
         });
         this.views.push(view);
@@ -1521,7 +1548,7 @@ var AssessmentItemHintView = ExerciseEditableItemView.extend({
         _.bindAll(this, "render", "set_editor", "set_open", "toggle");
         this.open = options.open || false;
         this.containing_list_view = options.containing_list_view;
-        this.assessment_item = options.assessment_item;
+        this.assessmentItem = options.assessmentItem;
         this.isdisplay = options.isdisplay;
         this.render();
         this.set_toolbar_closed();

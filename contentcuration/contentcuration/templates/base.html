@@ -32,8 +32,13 @@
                       // If there are errors that are known bugs in third-party libs or are clearly harmless,
                       // add them here to reduce sentry noise.
                       ignoreErrors: [
-                        // This looks like an error in Summernote: https://github.com/summernote/summernote/issues/1759
+                        // These appear to be errors in Summernote, but we have yet to reproduce. Although we get a lot
+                        // of Sentry reports with these errors, they lack a stack trace, and we also have not yet gotten
+                        // any user reports of this problem. For the moment, silence them so that they don't drown out
+                        // other errors. We may wish to remove these once we resolve the other errors.
                         'IndexSizeError: Failed to execute \'setStart\' on \'Range\'',
+                        'IndexSizeError: Failed to execute \'setEnd\' on \'Range\'',
+                        'IndexSizeError: Index or size is negative or greater than the allowed amount',
                       ]
                     }).install()
             </script>
@@ -150,6 +155,11 @@
     <div id="beta-banner" class="text-center info main-banner">
       <i class="material-icons">build</i> {% url 'issues_settings' as issue_url %}{% blocktrans %}Kolibri Studio is undergoing active development, and during usage you may encounter unexpected behavior or problems. <a href="{{issue_url}}" target="_blank">Please read here</a> on best practices, known issues, and error reporting recommendations. We appreciate your patience and assistance as we work to improve the Kolibri Studio Beta!{% endblocktrans %}
     </div>
+    <script>
+      // this line ensures that the Channel Edit tree view height is calculated in consideration of the BETA_MODE notification bar height.
+      // If the BETA_MODE notification is changed to be more streamlined, please change or adjust this line.
+      document.querySelector('html').style.setProperty('--approxChannelEditNavHeight', '41rem')
+    </script>
     {% endif %}
     {% endblock nav %}
 

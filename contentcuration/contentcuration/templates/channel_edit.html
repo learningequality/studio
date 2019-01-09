@@ -25,7 +25,7 @@
 	<div id="channel-edit-sortable-boundary">
 
 	<nav class="navbar" id="secondary-nav">
-		<ul class="nav navbar-nav navbar-left">
+		<ul class="nav">
 			<li><a href="/channels" id="back_to_home"><i class="material-icons">home</i></a></li>
 			{% if not allow_edit %}<li class="channel_edit_label">{% if is_public %}{%trans "Public Channel" %}{% else %}{%trans "Viewing" %}{% endif %}</li>{% endif %}
 			{% if allow_edit %}
@@ -59,9 +59,7 @@
 					<i class="material-icons">settings</i>
 				</li>
 			{% endif %}
-		</ul>
-		<ul class="nav navbar-nav navbar-right" id="publish">
-		<li id="queue-area" class="container-fluid"></li>
+			<li id="queue-area"></li>
 		{% if staging %}
 			<li id="channel-activate-button" class="text-center">{%trans "DEPLOY CHANNEL" %}</li>
 		{% else %}
