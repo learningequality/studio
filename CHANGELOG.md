@@ -1,6 +1,6 @@
 # Studio Changelog
 
-* Please list any changes as well as any issues resolved with your update
+__Please list any changes as well as any issues resolved with your update__
 
 ## 2019-01-08 Update
 #### Changes
