@@ -12,7 +12,7 @@
 	@queue-background-color:@gray-300;
 	@queue-min-height: 575px;
 	@queue-list-item-height: 40px;
-	@queue-top-bar-padding: 16px;
+	@queue-top-bar-padding: 10px;
 	@highlight-color: #E6E6E6;
 	@placeholder-color:#666666;
 
@@ -25,7 +25,7 @@
 		#main-queue {
 			position: fixed;
 			height: 100%;
-			margin-top: 10px;
+			margin-top: 6px;
 			box-shadow: -1px 0 1px 0px rgba(0, 0, 0, 0.1);
 			border-left: 1px solid @gray-400;
 			width: @queue-width-pinned;
@@ -62,6 +62,7 @@
 	    z-index: 999;
 	    pointer-events: none;
       	position: relative;
+      	text-align: right;
       	padding: 0px 0px 35px 15px;
 		margin: 0px 0px -35px -15px;
 
@@ -103,6 +104,10 @@
 		.queue-interior{
 			background-color: white;
 			min-height:@queue-min-height;
+
+			.wrapper {
+				width: 100%;
+			}
 
 			.queue-overlay {
 				display: none;
@@ -167,12 +172,13 @@
 			}
 			.select_all_fixed {
 				padding: @queue-top-bar-padding;
+				border-bottom: 1px solid @gray-200;
 			}
 			.select_all_label {
 				width: auto;
 			}
 			.pin_clipboard {
-				padding: 16px;
+				padding: @queue-top-bar-padding;
 				margin: 0;
 
 
