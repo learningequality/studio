@@ -224,7 +224,7 @@ def generate_thumbnail_from_node(node, set_node=None):  # noqa
     return thumbnail_object
 
 
-def generate_thumbnail(item, dimension=200):
+def generate_thumbnail_from_channel(item, dimension=200):
     if item.icon_encoding:
         return item.icon_encoding
     elif item.thumbnail_encoding:

@@ -31,7 +31,7 @@ from wordcloud import WordCloud
 
 from contentcuration.models import Channel
 from contentcuration.models import ContentKind
-from contentcuration.utils.files import generate_thumbnail
+from contentcuration.utils.files import generate_thumbnail_from_channel
 from contentcuration.utils.format import format_size
 from contentcuration.views.nodes import get_node_details
 
@@ -260,7 +260,7 @@ class ChannelDetailsWriter(ExportWriter):
         data.update({
             "channel": channel,
             "site": 'https://' + self.site.domain,
-            "thumbnail": generate_thumbnail(channel, dimension=300) or self.get_default_thumbnail_encoding(),
+            "thumbnail": generate_thumbnail_from_channel(channel, dimension=300) or self.get_default_thumbnail_encoding(),
             "tokens": [str(t) for t in channel.secret_tokens.exclude(token=channel.pk)],
             "primarytoken": primarytoken and str(primarytoken),
             "storage": self.get_storage_bar(data['resource_size']),
