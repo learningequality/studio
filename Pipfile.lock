@@ -292,7 +292,7 @@
                 "sha256:9ec02aa7d674acb8618afb127e27fde7fc68994c0437ad759fa094a574adb265",
                 "sha256:ec0a6cb848cc212002b9828c3e34c675e0c9ff6741dc445cab6fdd4e1085d1f1"
             ],
-            "markers": "python_version < '3.2'",
+            "markers": "python_version == '2.6' or python_version == '2.7'",
             "version": "==3.2.0"
         },
         "google-api-core": {
@@ -1414,7 +1414,7 @@
                 "sha256:9ec02aa7d674acb8618afb127e27fde7fc68994c0437ad759fa094a574adb265",
                 "sha256:ec0a6cb848cc212002b9828c3e34c675e0c9ff6741dc445cab6fdd4e1085d1f1"
             ],
-            "markers": "python_version < '3.2'",
+            "markers": "python_version == '2.6' or python_version == '2.7'",
             "version": "==3.2.0"
         },
         "identify": {
@@ -1577,7 +1577,7 @@
                 "sha256:25199318e8cc3c25dcb45cbe084cc061051336d5a9ea2a12448d3d8cb748f742",
                 "sha256:5887121d7f7df3603bca2f710e7219f3eca0eb69e0b7cc6e0a022e155ac931a7"
             ],
-            "markers": "python_version < '3.4'",
+            "markers": "python_version == '2.7' or python_version == '3.3'",
             "version": "==2.3.3"
         },
         "pathtools": {
