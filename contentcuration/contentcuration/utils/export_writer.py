@@ -20,6 +20,7 @@ from le_utils.constants import content_kinds
 from pptx import Presentation
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE
+from pptx.enum.text import MSO_AUTO_SIZE
 from pptx.enum.text import PP_ALIGN
 from pptx.text.fonts import FontFiles
 from pptx.util import Inches
@@ -51,10 +52,13 @@ def _monkeypatch_font_directories():
     # python-pptx automatically fails on linux systems, so patch it
     # https://github.com/scanny/python-pptx/blob/master/pptx/text/fonts.py#L57
     def _can_i_haz_linux(cls):
+
         if sys.platform.startswith("linux"):
             return {
                 ('Microsoft Yahei', False, False): os.path.join(settings.STATIC_ROOT, 'fonts', 'msyh.ttc'),
-                ('Calibri', False, False): os.path.join(settings.STATIC_ROOT, 'fonts', 'arial.ttf'),
+
+                # python-pptx fails if Calibri isn't found, so reroute it to Microsoft Yahei file
+                ('Calibri', False, False): os.path.join(settings.STATIC_ROOT, 'fonts', 'msyh.ttc'),
             }
         else:
             return FontFiles._old_installed_fonts()
@@ -464,8 +468,10 @@ class ChannelDetailsPPTWriter(ChannelDetailsWriter, PPTMixin):
 
         # Add title/description
         title_left = thumbnail_width + padding * 2
+
         title_height = 0.5
-        title_tf = self.generate_textbox(title_left,  next_line,  self.width - title_left, title_height, word_wrap=False)
+        title_tf = self.generate_textbox(title_left,  next_line,  self.width - title_left, title_height)
+        title_tf.auto_size = MSO_AUTO_SIZE.TEXT_TO_FIT_SHAPE
         self.add_line(title_tf, channel.name, fontsize=24, bold=True, append=False)
         next_line += title_height
 
@@ -515,7 +521,7 @@ class ChannelDetailsPPTWriter(ChannelDetailsWriter, PPTMixin):
         self.add_shape(left=self.width/2, top=next_line, width=self.width/2, height=separator_height, color=self.get_rgb_from_hex("#595959"))
         tag_header = self.generate_textbox(padding + self.width / 2 - padding, next_line, self.width / 2 - padding, separator_height)
         self.add_line(tag_header, _("Most Common Tags"), bold=True, color=self.get_rgb_from_hex("#FFFFFF"), append=False)
-        next_line += separator_height + 0.01
+        next_line += separator_height + 0.05
 
         # Add piechart
         chart_height = 2.3
@@ -533,7 +539,7 @@ class ChannelDetailsPPTWriter(ChannelDetailsWriter, PPTMixin):
             empty_tf = self.generate_textbox(self.width / 2,  next_line, self.width / 2, chart_height)
             empty_line = self.add_line(empty_tf, _("No Tags Found"), color=self.gray, fontsize=14, italic=True)
             empty_line.alignment = PP_ALIGN.CENTER
-        next_line += chart_height + 0.05
+        next_line += chart_height + 0.01
 
         # Add logo
         logo_width = 0.9
