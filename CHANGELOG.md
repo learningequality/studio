@@ -5,9 +5,11 @@
 * [[@jayoshih](https://github.com/jayoshih)] Added ppt export on channel details
 * [[@jayoshih](https://github.com/jayoshih)] Added two pdf export options on channel details
 * [[@jayoshih](https://github.com/jayoshih)] Added csv export on channel details
+* [[@jayoshih](https://github.com/jayoshih)] Turned off offline.js when in debug mode
 
 #### Issues
 * [clearinghouse/#245](https://github.com/learningequality/clearinghouse/issues/245)
+
 
 ## 2019-01-08 Update
 #### Changes
