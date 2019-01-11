@@ -96,6 +96,8 @@ var MESSAGES = {
     "download_condensed_pdf": "Download PDF",
     "download_csv": "Download CSV",
     "download_ppt": "Download PPT",
+    "download_as": "Channel Report",
+    "download_title": "Download channel report",
     "download_started": "Download Started",
     "download_started_text": "Generating a {data} for {data2}. Download will start automatically.",
     "download_failed": "Download Failed",
@@ -322,15 +324,11 @@ var ChannelEditorView = BaseViews.BaseListEditableItemView.extend({
         $("#submit").html(this.get_translation("saving"))
                             .attr("disabled", "disabled")
                             .addClass("disabled");
-        var thumbnail_encoding = null;
-        if (this.model.get("thumbnail_encoding") && typeof this.model.get("thumbnail_encoding") !== "string") {
-            thumbnail_encoding = JSON.stringify(this.model.get("thumbnail_encoding"));
-        }
         this.save({
             "name": $("#input_title").val().trim(),
             "description": $("#input_description").val(),
             "thumbnail": this.model.get("thumbnail"),
-            "thumbnail_encoding": thumbnail_encoding,
+            "thumbnail_encoding": this.model.get("thumbnail_encoding"),
             "language": (language===0)? null : language
         }).then(function(data){
             self.onchange(false);
