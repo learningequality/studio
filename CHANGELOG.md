@@ -1,5 +1,10 @@
 # Studio Changelog
 
+## 2019-01-11 Update
+#### Changes
+* [[@jayoshih](https://github.com/jayoshih)] Fixed login screen layout
+
+
 ## 2019-01-10 Update
 #### Changes
 * [[@jayoshih](https://github.com/jayoshih)] Turned off offline.js when in debug mode
