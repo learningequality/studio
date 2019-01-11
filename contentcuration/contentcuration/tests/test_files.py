@@ -24,7 +24,6 @@ from contentcuration.views.files import thumbnail_upload
 pytestmark = pytest.mark.django_db
 
 
-@pytest.fixture
 def base64encoding():
     return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/" \
         "9hAAACk0lEQVR4AaWTA7TbbABA8/+zreMdzbYOZtu2bbt4rpPUtvlebbezbdvMvsxmG99740" \
@@ -42,7 +41,6 @@ def base64encoding():
         "/aXwDY2vpQfdHLrIAAAAASUVORK5CYII="
 
 
-@pytest.fixture
 def generated_base64encoding():
     return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAA"\
         "C8klEQVR4nKWTSWhVZxiGv/N//3+Ge+49d8gdkphYOyxMGm+p1QQSm40KIgqKoKUuKu0idFMIWRWKC7"\
@@ -103,7 +101,7 @@ class FileThumbnailTestCase(BaseAPITestCase):
     @patch('contentcuration.api.default_storage.save')
     @patch('contentcuration.api.default_storage.exists', return_value=True)
     def test_existing_thumbnail_is_not_created(self, storage_exists_mock, storage_save_mock):
-        thumbnail_fobj = create_thumbnail_from_base64(base64encoding())
+        create_thumbnail_from_base64(base64encoding())
         storage_exists_mock.assert_called()
         storage_save_mock.assert_not_called()
 

@@ -459,7 +459,7 @@ class SecretToken(models.Model):
             channel.secret_tokens.add(self)
 
     def __str__(self):
-        return self.token
+        return "{}-{}".format(self.token[:5], self.token[5:])
 
 
 class Channel(models.Model):
@@ -994,6 +994,7 @@ class ContentNode(MPTTModel, models.Model):
         if not channel_id and (not self.original_channel_id or not self.source_channel_id):
             warnings.warn("Determining node's channel is an expensive operation. Please set original_channel_id and "
                           "source_channel_id to the parent's values when creating child nodes.", stacklevel=2)
+
             channel = (self.parent and self.parent.get_channel()) or self.get_channel()
             if channel:
                 channel_id = channel.pk

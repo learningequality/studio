@@ -1,11 +1,12 @@
 import base64
 import copy
-import cStringIO
+import cStringIO as StringIO
 import os
 import random
 import shutil
 import tempfile
 import zipfile
+from fractions import Fraction
 from multiprocessing.dummy import Pool
 
 import requests
@@ -16,6 +17,7 @@ from le_utils.constants import content_kinds
 from le_utils.constants import file_formats
 from le_utils.constants import format_presets
 from PIL import Image
+from PIL import ImageFile
 from pressurecooker.encodings import write_base64_to_file
 from pressurecooker.images import create_image_from_pdf_page
 from pressurecooker.images import create_tiled_image
@@ -29,6 +31,7 @@ from contentcuration.models import File
 from contentcuration.models import generate_file_on_disk_name
 from contentcuration.models import generate_object_storage_name
 
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 THUMBNAIL_DIMENSION = 400
 
 
@@ -221,6 +224,17 @@ def generate_thumbnail_from_node(node, set_node=None):  # noqa
     return thumbnail_object
 
 
+def generate_thumbnail_from_channel(item, dimension=200):
+    if item.icon_encoding:
+        return item.icon_encoding
+    elif item.thumbnail_encoding:
+        return item.thumbnail_encoding.get('base64')
+    elif item.thumbnail:
+        checksum, ext = os.path.splitext(item.thumbnail)
+        filepath = generate_object_storage_name(checksum, item.thumbnail)
+        return get_thumbnail_encoding(filepath, dimension=dimension)
+
+
 def get_thumbnail_encoding(filename, dimension=THUMBNAIL_DIMENSION):
     """
         Generates a base64 encoding for a thumbnail
@@ -232,20 +246,41 @@ def get_thumbnail_encoding(filename, dimension=THUMBNAIL_DIMENSION):
     if filename.startswith("data:image"):
         return filename
 
-    checksum, ext = os.path.splitext(filename)
-    filepath = generate_object_storage_name(checksum, filename)
-    inbuffer = cStringIO.StringIO()
-    outbuffer = cStringIO.StringIO()
+    checksum, ext = os.path.splitext(filename.split("?")[0])
+    inbuffer = StringIO.StringIO()
+    outbuffer = StringIO.StringIO()
 
     try:
-        with default_storage.open(filepath) as localtempf:
-            inbuffer.write(localtempf.read())
-            with Image.open(inbuffer) as image:
-                width, height = image.size
-                dimension = min([dimension, width, height])
+        if not filename.startswith(settings.STATIC_ROOT):
+            filename = generate_object_storage_name(checksum, filename)
+
+            with default_storage.open(filename) as localtempf:
+                inbuffer.write(localtempf.read())
+        else:
+            with open(filename, 'rb') as fobj:
+                inbuffer.write(fobj.read())
+
+        with Image.open(inbuffer) as image:
+            image_format = image.format
+            width, height = image.size
+            dimension = min([dimension, width, height])
+            size = [dimension, dimension]
+            ratio = Fraction(*size)
+
+            # Crop image the aspect ratio is different
+            if width > ratio * height:
+                x, y = (width - ratio * height) // 2, 0
+            else:
+                x, y = 0, (height - width / ratio) // 2
+
+            image = image.crop((x, y, width - x, height - y))
+            if image.size > size:
+                image.thumbnail(size, Image.ANTIALIAS)
+            else:
                 image.thumbnail((dimension, dimension), Image.ANTIALIAS)
-                image.save(outbuffer, image.format)
-                return "data:image/{};base64,{}".format(ext[1:], base64.b64encode(outbuffer.getvalue()))
+
+            image.save(outbuffer, image_format)
+        return "data:image/{};base64,{}".format(ext[1:], base64.b64encode(outbuffer.getvalue()))
     finally:
         inbuffer.close()
         outbuffer.close()
