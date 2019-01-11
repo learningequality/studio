@@ -30,7 +30,6 @@ from contentcuration.api import write_raw_content_to_storage
 from contentcuration.models import File
 from contentcuration.models import generate_file_on_disk_name
 from contentcuration.models import generate_object_storage_name
-from contentcuration.utils.parser import load_json_string
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 THUMBNAIL_DIMENSION = 400
@@ -229,7 +228,7 @@ def generate_thumbnail(item, dimension=200):
     if item.icon_encoding:
         return item.icon_encoding
     elif item.thumbnail_encoding:
-        return load_json_string(item.thumbnail_encoding).get('base64')
+        return item.thumbnail_encoding.get('base64')
     elif item.thumbnail:
         checksum, ext = os.path.splitext(item.thumbnail)
         filepath = generate_object_storage_name(checksum, item.thumbnail)

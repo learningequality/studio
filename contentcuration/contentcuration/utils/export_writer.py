@@ -482,9 +482,15 @@ class ChannelDetailsPPTWriter(ChannelDetailsWriter, PPTMixin):
         size_width = self.width - title_left - includes_width - padding * 2
 
         # Add language information
-        includes_tf = self.generate_textbox(size_width + title_left + padding,  next_line,  includes_width, size_height + description_height)
+        icon_width = 0.2
+        language_left = size_width + title_left + padding
+        language_icon_path = os.path.join(settings.STATIC_ROOT, 'img', 'export', 'language.png')
+        encoding = encode_file_to_base64(language_icon_path, 'data:image/png;base64,')
+        self.add_picture(encoding, language_left, next_line + 0.04, icon_width, icon_width)
+
+        includes_tf = self.generate_textbox(language_left + icon_width - 0.08,  next_line,  includes_width, size_height + description_height)
         language = channel.language.native_name if channel.language else _("No language set")
-        self.add_line(includes_tf, "🌐 {}".format(language), append=False, bold=True)
+        self.add_line(includes_tf, " {}".format(language), append=False, bold=True)
         if data['accessible_languages']:
             self.add_line(includes_tf, _("    * Subtitles included"), fontsize=10, space_before=2)
 
