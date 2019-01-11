@@ -1,6 +1,6 @@
 # Studio Changelog
 
-## 2019-01-08 Update
+## 2019-01-10 Update
 #### Changes
 * [[@jayoshih](https://github.com/jayoshih)] Turned off offline.js when in debug mode
 
