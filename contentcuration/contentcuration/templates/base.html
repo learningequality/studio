@@ -55,6 +55,7 @@
 
       {% render_offline_css LANGUAGE_CODE %}
       <script>
+        window.DEBUG = "{{DEBUG}}" === "True";
         window.languageCode = "{{LANGUAGE_CODE}}";
         window.isRTL = "{{ LANGUAGE_BIDI }}" === "True";
         try{
