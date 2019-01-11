@@ -15,7 +15,7 @@
                 {{#each languages}}<option value="{{id}}" title="{{readable_name}}">{{readable_name}}</option>{{/each}}
             </select>
         {{else}}
-            {{#if language}}<i class="material-icons">language</i> <b>{{language.attributes.native_name}}</b>{{/if}}
+            {{#if language}}<i class="material-icons">language</i> <b>{{language.native_name}}</b>{{/if}}
         {{/if}}
     </div>
     {{#if edit}}

@@ -794,24 +794,6 @@ var ChannelModel = BaseModel.extend({
         root_node.set({ 'title': this.get('name') });
         return root_node;
     },
-    initialize: function () {
-        if (this.get("thumbnail_encoding") && typeof this.get("thumbnail_encoding") !== "object") {
-            this.set("thumbnail_encoding", JSON.parse(this.get("thumbnail_encoding").replace(/u*'/g, "\"")))
-        }
-    },
-    parse: function (response) {
-        if (response.thumbnail_encoding !== undefined && response.thumbnail_encoding) {
-            response.thumbnail_encoding = JSON.parse(response.thumbnail_encoding.replace(/u*'/g, "\""));
-        }
-        return response;
-    },
-    toJSON: function () {
-        var attributes = _.clone(this.attributes);
-        if (attributes.thumbnail_encoding && typeof attributes.thumbnail_encoding !== "string") {
-            attributes.thumbnail_encoding = JSON.stringify(attributes.thumbnail_encoding);
-        }
-        return attributes;
-    },
     publish: function (callback) {
         var self = this;
         return new Promise(function (resolve, reject) {

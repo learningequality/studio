@@ -204,9 +204,8 @@ def get_nodes_by_ids_complete(request, ids):
 
 
 def get_channel_thumbnail(channel):
-    # Problems with json.loads, so use ast.literal_eval to get dict
     if channel.get("thumbnail_encoding"):
-        thumbnail_data = ast.literal_eval(channel.get("thumbnail_encoding"))
+        thumbnail_data = channel.get("thumbnail_encoding")
         if thumbnail_data.get("base64"):
             return thumbnail_data["base64"]
 

@@ -221,12 +221,14 @@ def exercise_image_upload(request):
         return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
 
     fobj = request.FILES.values()[0]
+    assessment_item_id = request.POST.get('assessment_item_id', None)
     name, ext = os.path.splitext(fobj._name)
     get_hash(DjFile(fobj))
     file_object = File(
         preset_id=format_presets.EXERCISE_IMAGE,
         file_on_disk=DjFile(request.FILES.values()[0]),
         file_format_id=ext[1:].lower(),
+        assessment_item_id=assessment_item_id,
     )
     file_object.save()
     return HttpResponse(json.dumps({

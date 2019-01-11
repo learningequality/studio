@@ -17,6 +17,7 @@ from mock import patch
 from contentcuration import models as cc
 from contentcuration.management.commands.exportchannel import create_content_database
 from contentcuration.management.commands.exportchannel import MIN_SCHEMA_VERSION
+from contentcuration.management.commands.exportchannel import convert_channel_thumbnail
 
 pytestmark = pytest.mark.django_db
 
@@ -229,3 +230,22 @@ class ExportChannelTestCase(StudioTestCase):
         super(ExportChannelTestCase, cls).tearDownClass()
         cls.patch_using.stop()
         cls.patch_copy_db.stop()
+
+
+class ChannelExportUtilityFunctionTestCase(StudioTestCase):
+    def test_convert_channel_thumbnail_empty_thumbnail(self):
+        channel = cc.Channel.objects.create()
+        self.assertEqual("", convert_channel_thumbnail(channel))
+
+    def test_convert_channel_thumbnail_static_thumbnail(self):
+        channel = cc.Channel.objects.create(thumbnail="/static/kolibri_flapping_bird.png")
+        self.assertEqual("", convert_channel_thumbnail(channel))
+
+    def test_convert_channel_thumbnail_encoding_valid(self):
+        channel = cc.Channel.objects.create(thumbnail="/content/kolibri_flapping_bird.png", thumbnail_encoding={"base64": "flappy_bird"})
+        self.assertEqual("flappy_bird", convert_channel_thumbnail(channel))
+
+    def test_convert_channel_thumbnail_encoding_invalid(self):
+        with patch("contentcuration.management.commands.exportchannel.get_thumbnail_encoding", return_value="this is a test"):
+            channel = cc.Channel.objects.create(thumbnail="/content/kolibri_flapping_bird.png", thumbnail_encoding={})
+            self.assertEquals("this is a test", convert_channel_thumbnail(channel))
