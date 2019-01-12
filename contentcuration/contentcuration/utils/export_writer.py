@@ -168,37 +168,26 @@ class CSVMixin(object):
 class ExportWriter(object):
     tempfiles = None
     ext = None
-    messages = {
-        content_kinds.TOPIC: _("Topic"),
-        content_kinds.VIDEO: _("Video"),
-        content_kinds.AUDIO: _("Audio"),
-        content_kinds.EXERCISE: _("Exercise"),
-        content_kinds.DOCUMENT: _("Document"),
-        content_kinds.HTML5: _("Html App"),
-        content_kinds.TOPIC + "_plural": _("Topics"),
-        content_kinds.VIDEO + "_plural": _("Videos"),
-        content_kinds.AUDIO + "_plural": _("Audios"),
-        content_kinds.EXERCISE + "_plural": _("Exercises"),
-        content_kinds.DOCUMENT + "_plural": _("Documents"),
-        content_kinds.HTML5 + "_plural": _("Html Apps"),
-        "resource": _("Total Resource"),
-        "resource_plural": _("Total Resources")
-    }
 
     def __init__(self, *args, **kwargs):
         self.tempfiles = []
 
     def pluralize_constant(self, count, constant, sep=' '):
-        return ngettext(
-            '%(count)d%(sep)s%(singular)s',
-            '%(count)d%(sep)s%(plural)s',
-            count
-        ) % {
-            'count': count,
-            'singular': self.messages.get(constant),
-            'plural': self.messages.get(constant + "_plural"),
-            'sep': sep
-        }
+        data = {'count': count, 'sep': sep}
+        if constant == content_kinds.TOPIC:
+            return ngettext('%(count)d%(sep)sTopic', '%(count)d%(sep)sTopics', count) % data
+        elif constant == content_kinds.VIDEO:
+            return ngettext('%(count)d%(sep)sVideo', '%(count)d%(sep)sVideos', count) % data
+        elif constant == content_kinds.AUDIO:
+            return ngettext('%(count)d%(sep)sAudio', '%(count)d%(sep)sAudios', count) % data
+        elif constant == content_kinds.EXERCISE:
+            return ngettext('%(count)d%(sep)sExercise', '%(count)d%(sep)sExercises', count) % data
+        elif constant == content_kinds.DOCUMENT:
+            return ngettext('%(count)d%(sep)sDocument', '%(count)d%(sep)sDocuments', count) % data
+        elif constant == content_kinds.HTML5:
+            return ngettext('%(count)d%(sep)sHtml App', '%(count)d%(sep)sHtml Apps', count) % data
+        elif constant == "resource":
+            return ngettext('%(count)d%(sep)sResource', '%(count)d%(sep)sResources', count) % data
 
     def get_write_to_path(self, ext=None):
         ext = ext or self.ext
