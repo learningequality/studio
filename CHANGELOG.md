@@ -3,6 +3,11 @@
 ## 2019-01-11 Update
 #### Changes
 * [[@jayoshih](https://github.com/jayoshih)] Fixed login screen layout
+* [[@jayoshih](https://github.com/jayoshih)] Disabled prerequisite selection from garbage tree
+
+#### Issues
+* [#1018](https://github.com/learningequality/studio/issues/1018)
+
 
 
 ## 2019-01-10 Update
