@@ -187,9 +187,9 @@ class ExportWriter(object):
         elif constant == content_kinds.HTML5:
             return ngettext('%(count)d Html App', '%(count)d Html Apps', count) % data
         elif constant == "resource":
-            return ngettext('%(count)d Resource', '%(count)d Resources', count) % data
+            return ngettext('%(count)d Total Resource', '%(count)d Total Resources', count) % data
         elif constant == "resource_split":
-            return ngettext('%(count)d\nResource', '%(count)d\nResources', count) % data
+            return ngettext('%(count)d\nTotal Resource', '%(count)d\nTotal Resources', count) % data
 
     def get_write_to_path(self, ext=None):
         ext = ext or self.ext
