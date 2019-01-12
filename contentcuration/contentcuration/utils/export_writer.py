@@ -172,22 +172,24 @@ class ExportWriter(object):
     def __init__(self, *args, **kwargs):
         self.tempfiles = []
 
-    def pluralize_constant(self, count, constant, sep=' '):
-        data = {'count': count, 'sep': sep}
+    def pluralize_constant(self, count, constant):
+        data = {'count': count}
         if constant == content_kinds.TOPIC:
-            return ngettext('%(count)d%(sep)sTopic', '%(count)d%(sep)sTopics', count) % data
+            return ngettext('%(count)d Topic', '%(count)d Topics', count) % data
         elif constant == content_kinds.VIDEO:
-            return ngettext('%(count)d%(sep)sVideo', '%(count)d%(sep)sVideos', count) % data
+            return ngettext('%(count)d Video', '%(count)d Videos', count) % data
         elif constant == content_kinds.AUDIO:
-            return ngettext('%(count)d%(sep)sAudio', '%(count)d%(sep)sAudios', count) % data
+            return ngettext('%(count)d Audio', '%(count)d Audios', count) % data
         elif constant == content_kinds.EXERCISE:
-            return ngettext('%(count)d%(sep)sExercise', '%(count)d%(sep)sExercises', count) % data
+            return ngettext('%(count)d Exercise', '%(count)d% Exercises', count) % data
         elif constant == content_kinds.DOCUMENT:
-            return ngettext('%(count)d%(sep)sDocument', '%(count)d%(sep)sDocuments', count) % data
+            return ngettext('%(count)d Document', '%(count)d Documents', count) % data
         elif constant == content_kinds.HTML5:
-            return ngettext('%(count)d%(sep)sHtml App', '%(count)d%(sep)sHtml Apps', count) % data
+            return ngettext('%(count)d Html App', '%(count)d Html Apps', count) % data
         elif constant == "resource":
-            return ngettext('%(count)d%(sep)sResource', '%(count)d%(sep)sResources', count) % data
+            return ngettext('%(count)d Resource', '%(count)d Resources', count) % data
+        elif constant == "resource_split":
+            return ngettext('%(count)d\nResource', '%(count)d\nResources', count) % data
 
     def get_write_to_path(self, ext=None):
         ext = ext or self.ext
@@ -346,7 +348,7 @@ class ChannelDetailsWriter(ExportWriter):
 
         # Add center circle
         circle = plt.Circle((0, 0), center_text_ratio, fc='white')
-        centertext = self.pluralize_constant(sum(sizes), "resource", sep='\n').split('\n')
+        centertext = self.pluralize_constant(sum(sizes), "resource_split").split("\n")
         plt.annotate(centertext[0], xy=(0, 0.1), fontsize=center_text_size, ha="center")
         plt.annotate(centertext[1], xy=(0, -0.15), fontsize=center_text_size - 5, ha="center")
         fig = plt.gcf()
