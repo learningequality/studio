@@ -14,8 +14,8 @@ from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.files.storage import default_storage
 from django.template.loader import get_template
-from django.utils.translation import ngettext
 from django.utils.translation import ugettext as _
+from django.utils.translation import ungettext
 from le_utils.constants import content_kinds
 from pptx import Presentation
 from pptx.dml.color import RGBColor
@@ -175,21 +175,21 @@ class ExportWriter(object):
     def pluralize_constant(self, count, constant):
         data = {'count': count}
         if constant == content_kinds.TOPIC:
-            return ngettext('%(count)d Topic', '%(count)d Topics', count) % data
+            return ungettext('%(count)d Topic', '%(count)d Topics', count) % data
         elif constant == content_kinds.VIDEO:
-            return ngettext('%(count)d Video', '%(count)d Videos', count) % data
+            return ungettext('%(count)d Video', '%(count)d Videos', count) % data
         elif constant == content_kinds.AUDIO:
-            return ngettext('%(count)d Audio', '%(count)d Audios', count) % data
+            return ungettext('%(count)d Audio', '%(count)d Audios', count) % data
         elif constant == content_kinds.EXERCISE:
-            return ngettext('%(count)d Exercise', '%(count)d% Exercises', count) % data
+            return ungettext('%(count)d Exercise', '%(count)d% Exercises', count) % data
         elif constant == content_kinds.DOCUMENT:
-            return ngettext('%(count)d Document', '%(count)d Documents', count) % data
+            return ungettext('%(count)d Document', '%(count)d Documents', count) % data
         elif constant == content_kinds.HTML5:
-            return ngettext('%(count)d Html App', '%(count)d Html Apps', count) % data
+            return ungettext('%(count)d Html App', '%(count)d Html Apps', count) % data
         elif constant == "resource":
-            return ngettext('%(count)d Resource', '%(count)d Resources', count) % data
+            return ungettext('%(count)d Resource', '%(count)d Resources', count) % data
         elif constant == "resource_split":
-            return ngettext('%(count)d\nResource', '%(count)d\nResources', count) % data
+            return ungettext('%(count)d\nResource', '%(count)d\nResources', count) % data
 
     def get_write_to_path(self, ext=None):
         ext = ext or self.ext
