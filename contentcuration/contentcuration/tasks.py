@@ -11,6 +11,7 @@ from django.template.loader import render_to_string
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import User
+from contentcuration.utils.asynctask import AsyncTask
 from contentcuration.utils.csv_writer import write_channel_csv_file
 from contentcuration.utils.csv_writer import write_user_csv
 
@@ -35,8 +36,8 @@ logger = get_task_logger(__name__)
 # runs the management command 'exportchannel' async through celery
 
 
-@task(name='exportchannel_task')
-def exportchannel_task(channel_id, user_id):
+@task(name='exportchannel_task', base=AsyncTask)
+def exportchannel_task(channel_id, user_id, task_type, is_progress_tracking, metadata):
     call_command('exportchannel', channel_id, email=True, user_id=user_id)
 
 

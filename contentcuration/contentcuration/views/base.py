@@ -344,7 +344,14 @@ def publish_channel(request):
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
-    exportchannel_task.delay(channel_id, user_id=request.user.pk)
+    metadata = {"channel_id": channel_id}
+    exportchannel_task.delay(
+        channel_id,
+        user_id=request.user.pk,
+        task_type='exportchannel',
+        is_progress_tracking=False,
+        metadata=metadata)
+
     return HttpResponse(json.dumps({
         "success": True,
         "channel": channel_id

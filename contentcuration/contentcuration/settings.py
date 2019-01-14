@@ -331,6 +331,7 @@ CELERY_TIMEZONE = os.getenv("CELERY_TIMEZONE") or 'Africa/Nairobi'
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TRACK_STARTED = True
 
 # When cleaning up orphan nodes, only clean up any that have been last modified
 # since this date
