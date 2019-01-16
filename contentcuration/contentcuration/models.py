@@ -549,10 +549,15 @@ class Channel(models.Model):
         return files['resource_size'] or 0
 
     def save(self, *args, **kwargs):  # noqa: C901
-
         original_channel = None
         if self.pk and Channel.objects.filter(pk=self.pk).exists():
             original_channel = Channel.objects.get(pk=self.pk)
+
+            # Mark as changed if there are any changes to the channel's metadata
+            if self.main_tree and not self.main_tree.changed:
+                fields_to_check = ["name", "description", "thumbnail", "thumbnail_encoding", "language_id"]
+                self.main_tree.changed = any([f for f in fields_to_check if getattr(self, f) != getattr(original_channel, f)])
+                self.main_tree.save()
 
         if not self.content_defaults:
             self.content_defaults = DEFAULT_CONTENT_DEFAULTS
@@ -856,6 +861,7 @@ class ContentNode(MPTTModel, models.Model):
         if not self._original_fields:
             self.get_changed_fields()
         new_state = self._as_dict()
+
         for field_name in self._original_fields:
             self._original_fields[field_name] = new_state[field_name]
 
@@ -868,6 +874,7 @@ class ContentNode(MPTTModel, models.Model):
             self._original_fields = ContentNode.objects.get(pk=self.pk)._as_dict()
             # don't include the changed (dirty) field in the list of fields we check to see if the object is dirty
             del self._original_fields['changed']
+            del self._original_fields['modified']
 
         return dict([(key, value) for key, value in self._original_fields.iteritems() if value != new_state[key]])
 

@@ -217,6 +217,7 @@ var BaseView = Backbone.View.extend({
 		var is_published = root.get("published");
 		var is_publishing = root.get("publishing");
 		$("#hide-if-unpublished").css("display", (is_published) ? "inline-block" : "none");
+		console.log(root)
 		if(is_publishing) {
 			this.set_publishing();
 		} else if(root.get("metadata").has_changed_descendant ){
