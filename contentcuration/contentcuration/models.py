@@ -858,7 +858,6 @@ class ContentNode(MPTTModel, models.Model):
         if not self._original_fields:
             self.get_changed_fields()
         new_state = self._as_dict()
-
         for field_name in self._original_fields:
             self._original_fields[field_name] = new_state[field_name]
 
@@ -972,6 +971,7 @@ class ContentNode(MPTTModel, models.Model):
             return cls.objects.filter(title=title)
 
     def save(self, *args, **kwargs):  # noqa: C901
+
         channel_id = None
         if kwargs.get('request'):
             request = kwargs.pop('request')
