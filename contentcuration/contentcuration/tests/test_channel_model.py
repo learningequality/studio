@@ -293,7 +293,7 @@ class ChannelMetadataSaveTestCase(StudioTestCase):
     def test_change_description(self):
         for c in self.channels:
             c.description = c.description + " - updated"
-            channel.save()
+            c.save()
 
             c.main_tree.refresh_from_db()
             self.assertTrue(c.main_tree.changed)
