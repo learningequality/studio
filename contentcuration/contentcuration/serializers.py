@@ -269,12 +269,10 @@ class TagSerializer(serializers.ModelSerializer):
         fields = ('tag_name', 'channel', 'id')
 
 
-exercise_image_checksum_regex = re.compile("\!\[[^]]*\]\(\$" + exercises.IMG_PLACEHOLDER + "/([a-f0-9]{32})\.[\w]+\)")
-
-
 class AssessmentListSerializer(serializers.ListSerializer):
 
     def update(self, queryset, validated_data):
+        exercise_image_checksum_regex = re.compile(r"\!\[[^]]*\]\(\${placeholder}/([a-f0-9]{{32}})\.[\w]+\)".format(placeholder=exercises.IMG_PLACEHOLDER))
         ret = []
 
         validated_data_by_id = {
@@ -775,7 +773,7 @@ class AltChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
         model = Channel
         fields = ('id', 'created', 'name', 'published', 'pending_editors', 'editors', 'modified', 'language', 'primary_token', 'priority',
                   'description', 'count', 'public', 'thumbnail_url', 'thumbnail', 'thumbnail_encoding', 'content_defaults', 'publishing',
-                  'main_tree', 'last_published', 'secret_tokens', 'version')
+                  'main_tree', 'last_published', 'secret_tokens', 'version', 'ricecooker_version')
 
 
 class PublicChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
