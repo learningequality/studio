@@ -101,3 +101,4 @@ webpack-stats\.json
 */.minio_data/*
 
 */credentials/*
+*/exports/*

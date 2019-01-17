@@ -6,7 +6,9 @@ require('../handlebars/helpers.js');
 // side effect: adds shared styles to the DOM
 require('../../less/styles.less');
 
-require('../utils/offline_helper');
+if(!window.DEBUG) {
+  require('../utils/offline_helper');
+}
 
 // Promise polyfill
 if(!global.Promise) {

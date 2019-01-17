@@ -56,7 +56,11 @@ gspread = "==3.0.1"
 google-api-python-client = "*"
 django-db-readonly = "==0.5.0"
 raven = "*"
+matplotlib = "==2.0.0"
+wordcloud = "==1.5.0"
 "oauth2client" = "*"
+django-mathfilters = "*"
+python-pptx = "*"
 
 [dev-packages]
 ipdb = "*"

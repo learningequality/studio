@@ -28,8 +28,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STORAGE_ROOT = "storage"
 DB_ROOT = "databases"
 
-STATIC_ROOT = os.getenv("STATICFILES_DIR") or os.path.join(BASE_DIR, "static")
+STATIC_ROOT = os.getenv("STATICFILES_DIR") or os.path.join(BASE_DIR, "contentcuration", "static")
 CSV_ROOT = "csvs"
+EXPORT_ROOT = "exports"
 
 BETA_MODE = os.getenv("STUDIO_BETA_MODE")
 
@@ -81,6 +82,7 @@ INSTALLED_APPS = (
     'django_s3_storage',
     'webpack_loader',
     'django_filters',
+    'mathfilters',
 )
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
