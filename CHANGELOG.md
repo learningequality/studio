@@ -2,6 +2,7 @@
 
 ## 2019-01-17 Update
 #### Changes
+* [[@jayoshih](https://github.com/jayoshih)] Switch admin page get_channel_kind_count to use get_node_details instead
 * [[@micahscopes](https://github.com/micahscopes)] Fixed scrolling in the channel list view
 
 
