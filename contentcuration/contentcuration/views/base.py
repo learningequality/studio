@@ -154,6 +154,7 @@ def channel_page(request, channel, allow_edit=False, staging=False):
                                                  "channel": json_renderer.render(channel_serializer.data),
                                                  "channel_id": channel.pk,
                                                  "channel_name": channel.name,
+                                                 "ricecooker_version": channel.ricecooker_version,
                                                  "channel_list": channel_list,
                                                  "current_user": json_renderer.render(CurrentUserSerializer(request.user).data),
                                                  "preferences": json.dumps(channel.content_defaults),
