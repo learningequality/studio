@@ -15,6 +15,7 @@
 
 ## 2019-01-15 Update
 #### Changes
+* [[@jayoshih](https://github.com/jayoshih)] Fixed topic tree layout issues
 * [[@jayoshih](https://github.com/jayoshih)] Disabled channel metadata editing for ricecooker channels
 * [[@jayoshih](https://github.com/jayoshih)] Made header responsive
 * [[@jayoshih](https://github.com/jayoshih)] Fixed RuntimeError on naive datetime in exportchannel
@@ -22,6 +23,7 @@
 * [[@jayoshih](https://github.com/jayoshih)] Made channel metadata updates mark node as changed
 
 #### Issues
+* [#1118](https://github.com/learningequality/studio/issues/1118)
 * [#1174](https://github.com/learningequality/studio/issues/1174)
 * [#679](https://github.com/learningequality/studio/issues/679)
 * [#952](https://github.com/learningequality/studio/issues/952)

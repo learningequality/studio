@@ -1,4 +1,4 @@
-<div id={{#if is_clipboard}}"clipboard"{{else}}{{#if edit}}"edit"{{else}}"preview"{{/if}}{{/if}}>
+<div id="{{#if is_clipboard}}clipboard{{else}}{{#if edit}}edit{{else}}preview{{/if}}{{/if}}" class="tree-edit-area">
 	<nav id="button_bar">
 		{{#if staging}}
 		<a href="/channels/{{channel.id}}/{{#if view_only}}view{{else}}edit{{/if}}">
