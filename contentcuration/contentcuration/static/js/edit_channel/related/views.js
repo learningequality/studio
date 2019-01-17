@@ -141,6 +141,7 @@ var PrerequisiteModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/related_modal.handlebars"),
     name: NAMESPACE,
     $trs: MESSAGES,
+    modal: true,
 
     initialize: function(options) {
         _.bindAll(this, "close_prerequisites");
@@ -149,7 +150,6 @@ var PrerequisiteModalView = BaseViews.BaseModalView.extend({
         this.collection = options.collection;
         this.rootID = options.rootID;
         this.views_to_update = options.views_to_update;
-        this.modal = true;
         this.render(this.close, {});
         this.related_view = new PrerequisiteView({
             el: this.$(".modal-body"),

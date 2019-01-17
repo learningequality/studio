@@ -57,10 +57,10 @@ var BaseInfoModalView = BaseViews.BaseModalView.extend({
   className: "information_wrapper",
   name: NAMESPACE,
   $trs: MESSAGES,
+  modal: true,
   get_render_data: function(){ return {}; },
   initialize: function(options) {
       _.bindAll(this, 'loop_focus', 'set_indices', "init_focus", "closed_modal");
-      this.modal = true;
       this.data = options;
       this.render();
   },

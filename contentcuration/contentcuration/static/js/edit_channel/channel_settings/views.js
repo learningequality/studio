@@ -47,9 +47,9 @@ var SettingsModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/settings_modal.handlebars"),
     name: NAMESPACE,
     $trs: MESSAGES,
+    modal: true,
     initialize: function(options) {
         this.parent_view = options.parent_view;
-        this.modal = true;
         this.render(this.close, {});
         this.settings_view = new SettingsView({
             el: this.$(".modal-body"),
@@ -57,6 +57,8 @@ var SettingsModalView = BaseViews.BaseModalView.extend({
             model: this.model,
             onsave: options.onsave
         });
+        _.bindAll(this, "closed_modal");
+        this.$(".modal").on("hidden.bs.modal", this.closed_modal);
         this.$("#channel_settings_modal").on("shown.bs.modal", this.settings_view.create_initial);
     }
 });
