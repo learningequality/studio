@@ -268,3 +268,65 @@ class ChannelSetTestCase(BaseAPITestCase):
         channels = self.channelset.get_channels()
         self.assertFalse(channels.filter(pk=channel_id).exists())
         self.assertEqual(channels.count(), total_channels - 1)
+
+
+class ChannelMetadataSaveTestCase(StudioTestCase):
+    """
+    Tests for Channel.save functions.
+    """
+
+    def setUp(self):
+        super(ChannelMetadataSaveTestCase, self).setUp()
+        self.channels = mixer.cycle(5).blend(Channel)
+        for c in self.channels:
+            c.main_tree.changed = False
+            c.main_tree.save()
+
+    def test_change_name(self):
+        for c in self.channels:
+            c.name = c.name + " - updated"
+            c.save()
+
+            c.main_tree.refresh_from_db()
+            self.assertTrue(c.main_tree.changed)
+
+    def test_change_description(self):
+        for c in self.channels:
+            c.description = c.description + " - updated"
+            c.save()
+
+            c.main_tree.refresh_from_db()
+            self.assertTrue(c.main_tree.changed)
+
+    def test_change_thumbnail(self):
+        for c in self.channels:
+            c.description = c.description + " - updated"
+            c.save()
+
+            c.main_tree.refresh_from_db()
+            self.assertTrue(c.main_tree.changed)
+
+    def test_change_thumbnail_encoding(self):
+        for c in self.channels:
+            c.thumbnail_encoding = {"new": "test"}
+            c.save()
+
+            c.main_tree.refresh_from_db()
+            self.assertTrue(c.main_tree.changed)
+
+    def test_change_language(self):
+        for c in self.channels:
+            c.language_id = "en"
+            c.save()
+
+            c.main_tree.refresh_from_db()
+            self.assertTrue(c.main_tree.changed)
+
+    def test_change_public(self):
+        # Anything other than name, description, language, thumbnail, and thumbnail encoding should not set changed
+        for c in self.channels:
+            c.public = not c.public
+            c.save()
+
+            c.main_tree.refresh_from_db()
+            self.assertFalse(c.main_tree.changed)
