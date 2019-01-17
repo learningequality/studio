@@ -1,16 +1,21 @@
 """
 Simple User model creation tests.
 """
+import csv
 import datetime
 import json
+import tempfile
 
 from django.core.management import call_command
 from django.core.urlresolvers import reverse_lazy
 from django.test import TransactionTestCase
 
 from .base import BaseAPITestCase
+from .testdata import fileobj_video
 from contentcuration.models import DEFAULT_CONTENT_DEFAULTS
 from contentcuration.models import User
+from contentcuration.utils.csv_writer import _format_size
+from contentcuration.utils.csv_writer import write_user_csv
 from contentcuration.views.users import send_invitation_email
 
 
@@ -66,3 +71,28 @@ class UserInvitationTestCase(BaseAPITestCase):
         response = send_invitation_email(request)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(User.objects.filter(email__iexact="test@testing.com").count(), 1)
+
+
+class UserAccountTestCase(BaseAPITestCase):
+
+    def test_user_csv_export(self):
+        videos = [fileobj_video() for i in range(10)]
+
+        for video in videos:
+            video.uploaded_by = self.user
+            video.save()
+
+        with tempfile.NamedTemporaryFile(suffix=".csv") as tempf:
+            write_user_csv(self.user, path=tempf.name)
+
+            with open(tempf.name, 'rb') as csv_file:
+                reader = csv.reader(csv_file, delimiter=',')
+                for index, row in enumerate(reader):
+                    if index == 0:
+                        self.assertEqual(row, ['Channel', 'Title', 'Kind', 'Filename', 'File Size',
+                                               'URL', 'Description', 'Author', 'Language',
+                                               'License', 'License Description', 'Copyright Holder'])
+                    else:
+                        self.assertIn(videos[index-1].original_filename, row)
+                        self.assertIn(_format_size(videos[index-1].file_size), row)
+            self.assertEqual(index, len(videos))

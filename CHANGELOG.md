@@ -1,5 +1,13 @@
 # Studio Changelog
 
+## 2019-01-16 Update
+#### Changes
+* [[@jayoshih](https://github.com/jayoshih)] Made channel bundles GDPR-compliant
+
+#### Issues
+* [#986](https://github.com/learningequality/studio/issues/986)
+
+
 ## 2019-01-15 Update
 #### Changes
 * [[@jayoshih](https://github.com/jayoshih)] Fixed RuntimeError on naive datetime in exportchannel
