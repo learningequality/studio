@@ -25,10 +25,10 @@ var ArchiveModalView = BaseViews.BaseModalView.extend({
     initialize: function(options) {
         _.bindAll(this, "closed_modal")
         this.render(this.close, {channel:State.current_channel.toJSON()});
-        let modalBody = new ArchiveView({
+        this.archiveView = new ArchiveView({
             el: this.$(".modal-body"),
-            modal : this,
-            model:this.model
+            modal: this,
+            model: this.model
         });
         this.$(".modal").on("hidden.bs.modal", this.closed_modal);
     }
@@ -339,7 +339,7 @@ var ArchiveItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
     restore_content:function(event){
         event.stopPropagation();
         event.preventDefault();
-        this.open_move();
+        this.container.move_content(this.collection);
     },
     handle_move:function(target, moved, original_parents){
         // Recalculate counts

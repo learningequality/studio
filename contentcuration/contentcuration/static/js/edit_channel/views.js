@@ -136,7 +136,7 @@ var BaseView = Backbone.View.extend({
 		$(".first_focus_item").select();
 	},
 	set_indices: function(){
-        $(this).select(".tab_item").each(function(){
+        this.$('.tab_item').each(function() {
             $(this).attr('tabindex', TABINDEX++);
         });
     },
@@ -431,15 +431,14 @@ var BaseWorkspaceView = BaseView.extend({
 	move_content:function(move_collection, source){
 		var MoveView = require("edit_channel/move/views");
 		var list = this.get_selected(true);
-		var move_collection = new Models.ContentNodeCollection(_.pluck(list, 'model'));
-		var self = this;
+		move_collection = new Models.ContentNodeCollection(_.pluck(list, 'model'));
 		return new MoveView.MoveModalView({
 			collection: move_collection,
-			onmove: function(target, moved, original_parents) {
+			onmove: (target, moved, original_parents) => {
 			if (source === "clipboard") {
-				self.track_event_for_nodes('Clipboard', 'Move items', moved);
+				this.track_event_for_nodes('Clipboard', 'Move items', moved);
 			}
-			self.handle_move(target, moved, original_parents);
+			this.handle_move(target, moved, original_parents);
 			},
 			model: State.current_channel.get_root("main_tree")
 		});
@@ -526,7 +525,8 @@ var BaseWorkspaceView = BaseView.extend({
 });
 
 var BaseModalView = BaseView.extend({
-    callback:null,
+	callback:null,
+	className: 'dialog',
 	default_focus_button_selector: null,
 	initialize: function(){
         _.bindAll(this, "closed_modal", "close")
@@ -551,8 +551,8 @@ var BaseModalView = BaseView.extend({
     },
     closed_modal:function(){
         $("body").addClass('modal-open'); //Make sure modal-open class persists
-        $('.modal-backdrop').slice(1).remove();
-        this.remove();
+		$('.modal-backdrop').slice(1).remove();
+		this.remove();
 	},
 });
 
@@ -947,14 +947,14 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 				isclipboard: self.isclipboard
 			});
 			this.collection.create_new_node({
-				"kind":"exercise",
-				"title": (this.model.get('parent'))? this.model.get('title') + " " + this.get_translation("exercise_title") : this.get_translation("exercise_title"), // Avoid having exercises prefilled with 'email clipboard'
-				"author": State.preferences.author || "",
-				"aggregator": State.preferences.aggregator || "",
-				"provider": State.preferences.provider || "",
-				"copyright_holder": State.preferences.copyright_holder || "",
-				"license_name": State.preferences.license,
-				"license_description": State.preferences.license_description || ""
+				kind: "exercise",
+				title: (this.model.get('parent'))? this.model.get('title') + " " + this.get_translation("exercise_title") : this.get_translation("exercise_title"), // Avoid having exercises prefilled with 'email clipboard'
+				author: State.preferences.author || "",
+				aggregator: State.preferences.aggregator || "",
+				provider: State.preferences.provider || "",
+				copyright_holder: State.preferences.copyright_holder || "",
+				license_name: State.preferences.license,
+				license_description: State.preferences.license_description || ""
 			}).then(function(new_exercise){
 				metadata_modal.collection.add(new_exercise)
 				metadata_modal.metadata_view.render()
@@ -1157,14 +1157,13 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 		var move_collection = new Models.ContentNodeCollection();
 		move_collection.add(this.model);
 		State.Store.dispatch('usePrimaryModal', () => {
-			var self = this;
 			return new MoveView.MoveModalView({
 				collection: move_collection,
-				onmove: function(target, moved, original_parents) {
+				onmove: (target, moved, original_parents) => {
 				if (source === "clipboard") {
-					self.track_event_for_nodes('Clipboard', 'Move item', moved);
+					this.track_event_for_nodes('Clipboard', 'Move item', moved);
 				}
-				self.handle_move(target, moved, original_parents);
+				this.handle_move(target, moved, original_parents);
 				},
 				model: State.current_channel.get_root("main_tree")
 			});
