@@ -1,3 +1,5 @@
+const ERROR_PRIMARY_MODAL_ALREADY_OPEN = 'The primary modal is already open.'
+
 const primaryModalModule = {
     state: {
       primaryModalInUse: false,
@@ -20,12 +22,15 @@ const primaryModalModule = {
             modalView.listenTo(modalView, 'removed', () => commit('CLOSE_PRIMARY_MODAL'))
             resolve(modalView)
           } else {
-            reject('The primary modal is already open.')
+            throw new Error(ERROR_PRIMARY_MODAL_ALREADY_OPEN)
           }
         })
       },
     },
   };
   
-  module.exports = primaryModalModule;
+  module.exports = {
+    ...primaryModalModule,
+    ERROR_PRIMARY_MODAL_ALREADY_OPEN
+  };
   

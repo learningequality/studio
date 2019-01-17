@@ -1,5 +1,8 @@
 const BaseViews = require("edit_channel/views");
 let State = require("../state")
+const ERROR_PRIMARY_MODAL_ALREADY_OPEN = require("../vuexModules/primaryModal").ERROR_PRIMARY_MODAL_ALREADY_OPEN
+
+console.log(ERROR_PRIMARY_MODAL_ALREADY_OPEN)
 
 // a function that creates a BaseView
 let makeModalView = () => new BaseViews.BaseView()
@@ -16,7 +19,7 @@ describe('ContentNodeCollection', () => {
         it('should not run the view setup function if a primary modal is already open', done => {
             State.Store.commit('OPEN_PRIMARY_MODAL')
             State.Store.dispatch('usePrimaryModal', makeModalView).catch((error) => {
-                expect(error).toBeDefined()
+                expect(error.message).toBe(ERROR_PRIMARY_MODAL_ALREADY_OPEN)
                 done()
             })
         })
