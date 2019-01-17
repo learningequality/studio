@@ -14,20 +14,23 @@
 	display: flex;
 	align-items: center;
 	width: 100%;
-	
+
 	li {
 		max-width: min-content;
 	}
-	
+
+	#channel_selection_dropdown_list li {
+		max-width: unset;
+	}
 	#queue-area {
 		max-width: unset;
 		flex-grow: 1;
 		#queue {
 			width: 100%;
-			flex-shrink: 1;
-			.ui-droppable {
+			> .ui-droppable {
 				display: flex;
 				align-items: center;
+				justify-content: flex-end;
 				i {
 					width: 100%;
 				}
@@ -60,27 +63,29 @@ body {
 				display: flex;
 				flex-direction: column;
 				flex-grow: 1;
-				
-				#edit {
+
+				.tree-edit-area {
 					display: flex;
 					flex-direction: column;
 					flex-grow: 1;
-					
+
 					#container-wrapper {
 						display: flex;
-						flex-direction: column;	
+						flex-direction: column;
 						flex-grow: 1;
+						flex-wrap: nowrap;
+	    				overflow-x: auto;
 
 						ul#container_area {
 							display: flex;
-							flex-direction: row;	
-							flex-grow: 1;							
+							flex-direction: row;
+							flex-grow: 1;
 
 							> li {
 								.title-bar {
-									flex-shrink: 0;	
+									flex-shrink: 0;
 								}
-								
+
 								display: flex;
 								flex-direction: column;
 								max-height: 100%;
@@ -90,7 +95,7 @@ body {
 									flex-direction: column;
 									height: 0;
 									flex-grow: 1;
-					
+
 
 									> li {
 										flex-shrink: 0;
@@ -104,8 +109,13 @@ body {
 		}
 	}
 }
+[dir="rtl"] {
+	#container-wrapper {
+		align-items: flex-end;
+	}
+}
 
-// end of flexbox settings, for now.
+// end of flexbox settings
 
 #secondary-nav {
 	@secondary-nav-btn-color:#F2F2F2;
@@ -284,10 +294,6 @@ body {
 	}
 }
 
-:root {
-	--approxChannelEditNavHeight: 35rem;
-}
-
 #channel-edit-content-wrapper {
 	@container-min-height:250px;
 	@container-border-color: #BCBCBC;
@@ -322,6 +328,12 @@ body {
 	#container-wrapper{
 		overflow:auto;
 		padding: 20px 0;
+		.popover{
+			.side-popover;
+			width: 200px;
+			margin-top: 30px;
+			border-radius: 0px;
+		}
 	}
 	.close_clipboard{
 		margin-top:10px;
@@ -336,6 +348,7 @@ body {
 		width: max-content;
 		list-style: none;
 		padding: 0 40px;
+		padding-right: 200px; // Some extra padding for options dropdown
 
 		#container_area_title{
 			margin-top: 0px;
@@ -439,6 +452,12 @@ body {
 							    padding: 2px 5px;
 							    border-radius: 3px;
 							    margin-left: 5px;
+							    &:hover {
+							    	background-color: @blue-500;
+							    }
+							}
+							&.content-options-dropdown:hover {
+								color: @blue-500;
 							}
 						}
 					}
@@ -578,12 +597,7 @@ body {
 						padding: 10px 5px;
 						width: @container-last-width - 15px;
 						.header_options {
-							margin-top: 5px;
-							height: 5px;
-							i {
-								margin-top: -23px;
-								padding: 3px 5px;
-							}
+							margin-top: -10px;
 						}
 						.metadata_to_hide {
 							display: block;
@@ -592,7 +606,6 @@ body {
 							color: @item-last-font-color;
 						}
 						i.folder_open_icon {
-							margin-top: 10px;
 							margin-left: 0px;
 						}
 						.collapsed-icon {
@@ -705,11 +718,7 @@ body {
 					padding:10px;
 				}
 			}
-			.popover{
-				.side-popover;
-				margin-top: 30px;
-				width: 200px;
-			}
+
 			.context-menu {
 				display:none;
 				cursor:pointer;

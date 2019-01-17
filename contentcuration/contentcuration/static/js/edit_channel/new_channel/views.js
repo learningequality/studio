@@ -330,7 +330,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		this.listenTo(this.model, "sync", this.set_model);
 		this.containing_list_view = options.containing_list_view;
 		this.container = options.container;
-		this.can_edit = this.model.get("editors").indexOf(State.current_user.id) >= 0;
+		this.can_edit = this.model.get("editors").indexOf(State.current_user.id) >= 0 && !!!this.model.get('ricecooker_version');
 		this.render();
 	},
 	set_is_new:function(isNew){

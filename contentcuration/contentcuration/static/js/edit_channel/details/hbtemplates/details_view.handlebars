@@ -278,21 +278,17 @@
                 <div class="information">
                     <div class="row info-row">
                         <p>{{formatMessage (intlGet 'messages.copy_text')}}</p>
-                        {{#if channel.secret_tokens}}
-                            <div class="row">
-                                <div class="col-xs-4 text-right identifier_label">
+                        {{#if channel.primary_token}}
+                        <div class="row">
+                            <div class="col-xs-4 text-right identifier_label">
                                     <label>{{formatMessage (intlGet 'messages.channel_tokens') count=token_count}}:</label>
                                     <span>{{formatMessage (intlGet 'messages.recommended')}}</span>
                                 </div>
-                                <div class="col-xs-8">
-                                    {{#each channel.secret_tokens}}
-                                        {{#equal token ../channel.id}}{{else}}
-                                            <input type="text" class="copy-id-text text-center" value="{{display_token}}" readonly size='30' id="text_{{display_token}}"/>
-                                            <i class="material-icons copy-id-btn" title="{{formatMessage (intlGet 'messages.copy')}}" data-text="#text_{{display_token}}">content_paste</i>
-                                        {{/equal}}
-                                    {{/each}}
-                                </div>
+                            <div class="col-xs-8">
+                                <input type="text" class="copy-id-text text-center" value="{{channel.primary_token}}" readonly size='30' id="text_{{channel.primary_token}}"/>
+                                <i class="material-icons copy-id-btn" title="{{formatMessage (intlGet 'messages.copy')}}" data-text="#text_{{channel.primary_token}}">content_paste</i>
                             </div>
+                        </div>
                         {{/if}}
                         <div class="row">
                             <div class="col-xs-4 text-right identifier_label">

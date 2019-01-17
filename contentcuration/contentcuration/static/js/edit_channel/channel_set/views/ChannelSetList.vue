@@ -250,6 +250,11 @@ h4 {
   color: @gray-700;
 }
 
+.redText {
+  font-weight: bold;
+  color: @red-error-color;
+}
+
 /deep/ .unpublishedChannel {
   border: 2px dotted @gray-500;
   opacity: 0.7;

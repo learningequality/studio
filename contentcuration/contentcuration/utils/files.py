@@ -230,9 +230,7 @@ def generate_thumbnail_from_channel(item, dimension=200):
     elif item.thumbnail_encoding:
         return item.thumbnail_encoding.get('base64')
     elif item.thumbnail:
-        checksum, ext = os.path.splitext(item.thumbnail)
-        filepath = generate_object_storage_name(checksum, item.thumbnail)
-        return get_thumbnail_encoding(filepath, dimension=dimension)
+        return get_thumbnail_encoding(item.thumbnail, dimension=dimension)
 
 
 def get_thumbnail_encoding(filename, dimension=THUMBNAIL_DIMENSION):

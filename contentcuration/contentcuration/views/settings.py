@@ -190,10 +190,13 @@ def delete_user_account(request, user_email):
     })
     send_mail(subject, message, ccsettings.DEFAULT_FROM_EMAIL, [ccsettings.REGISTRATION_INFORMATION_EMAIL])
 
-    # Delete user, any previously deleted channels, and csvs
+    # Delete user, any previously deleted channels, channel sets, and csvs
     for c in request.user.editable_channels.all():
         if c.editors.count() == 1:
             c.delete()
+    for cs in request.user.channel_sets.all():
+        if cs.editors.count() == 1:
+            cs.delete()
 
     csv_path = generate_user_csv_filename(request.user)  # Remove any generated csvs
     if os.path.exists(csv_path):

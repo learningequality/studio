@@ -27,7 +27,7 @@
 	<nav class="navbar" id="secondary-nav">
 		<ul class="nav">
 			<li><a href="/channels" id="back_to_home"><i class="material-icons">home</i></a></li>
-			{% if not allow_edit %}<li class="channel_edit_label">{% if is_public %}{%trans "Public Channel" %}{% else %}{%trans "Viewing" %}{% endif %}</li>{% endif %}
+			{% if not allow_edit %}<li class="channel_edit_label">{% if is_public %}{%trans "Public" %}{% else %}{%trans "Viewing" %}{% endif %}</li>{% endif %}
 			{% if allow_edit %}
 				{% if staging %}<li class="channel_edit_label">{%trans "Reviewing" %}</li>
 				{% else %}<li class="channel_edit_label">{%trans "Editing" %}</li>{% endif %}
@@ -54,7 +54,7 @@
 					{% endfor %}
 				</ul>
 			</li>
-			{% if not staging and allow_edit %}
+			{% if not staging and allow_edit and not ricecooker_version %}
 				<li id="channel_settings" title="{%trans 'Open channel settings' %}">
 					<i class="material-icons">settings</i>
 				</li>
@@ -63,7 +63,7 @@
 		{% if staging %}
 			<li id="channel-activate-button" class="text-center">{%trans "DEPLOY CHANNEL" %}</li>
 		{% else %}
-			<li id="hide-if-unpublished"><a id="get_published_id">{% trans "Show ID" %}</a></li>
+			<li id="hide-if-unpublished"><a id="get_published_id">{% trans "Show Token" %}</a></li>
 			{% if allow_edit %}<li><button id="channel-publish-button" class="text-center"> {%trans "PUBLISH" %}</button></li>{% endif %}
 		{% endif %}
 		</ul>
