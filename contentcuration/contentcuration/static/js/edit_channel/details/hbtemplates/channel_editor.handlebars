@@ -15,7 +15,7 @@
                 {{#each languages}}<option value="{{id}}" title="{{readable_name}}">{{readable_name}}</option>{{/each}}
             </select>
         {{else}}
-            {{#if language}}<i class="material-icons">language</i> <b>{{language.attributes.native_name}}</b>{{/if}}
+            {{#if language}}<i class="material-icons">language</i> <b>{{language.native_name}}</b>{{/if}}
         {{/if}}
     </div>
     {{#if edit}}
@@ -53,6 +53,19 @@
     {{else}}
         <a class="btn action-button uppercase" id="open-button" href="/channels/{{channel.id}}/{{#if can_edit}}edit{{else}}view{{/if}}">{{formatMessage (intlGet 'messages.open')}}</a>
         {{#if can_edit}}<a class="action-text uppercase" id="edit_details">{{formatMessage (intlGet 'messages.edit_details')}}</a>{{/if}}
+        <div class="container-fluid channel-download-wrapper">
+            <div class="btn-group">
+            <a class="action-text dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                {{formatMessage (intlGet 'messages.download_as')}}
+            </a>
+            <ul class="dropdown-menu dropdown-menu-right details-download-dropdown">
+                <li id="download_csv" class="download_option">{{formatMessage (intlGet 'messages.download_csv')}}</li>
+                <li id="download_condensed_pdf" class="download_option">{{formatMessage (intlGet 'messages.download_condensed_pdf')}}</li>
+                <li id="download_pdf" class="download_option">{{formatMessage (intlGet 'messages.download_pdf')}}</li>
+                <li id="download_ppt" class="download_option">{{formatMessage (intlGet 'messages.download_ppt')}}</li>
+            </ul>
+        </div>
+    </div>
     {{/if}}{{/if}}
 </div>
 <div class="input-tab-control tab_item" data-next="#input_title"></div>

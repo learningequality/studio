@@ -37,6 +37,8 @@ makemessages:
 	npm run makemessages
 	# generate backend messages
 	python contentcuration/manage.py makemessages
+	# workaround for Django 1.11 makemessages spitting out an invalid English translation file
+	python bin/fix_django_messages.py
 
 uploadmessages: ensurecrowdinclient
 	java -jar crowdin-cli.jar upload sources

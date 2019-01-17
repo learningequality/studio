@@ -24,7 +24,6 @@
 		flex-grow: 1;
 		#queue {
 			width: 100%;
-			flex-grow: 1;
 
 			> .ui-droppable {
 				display: flex;
@@ -37,6 +36,77 @@
 		}
 	}
 }
+
+// in order to make topic tree more responsive, a chain of nested flexbox settings
+
+body {
+	display: flex;
+	flex-direction: column;
+
+	#channel-edit-sortable-boundary {
+		display: flex;
+		flex-direction: column;
+		flex-grow: 1;
+
+		#secondary-nav {
+			flex-shrink: 0;
+		}
+
+		#channel-edit-content-wrapper {
+			display: flex;
+			flex-direction: column;
+			flex-grow: 1;
+
+			#main-content-area {
+				display: flex;
+				flex-direction: column;
+				flex-grow: 1;
+
+				#edit {
+					display: flex;
+					flex-direction: column;
+					flex-grow: 1;
+
+					#container-wrapper {
+						display: flex;
+						flex-direction: column;
+						flex-grow: 1;
+
+						ul#container_area {
+							display: flex;
+							flex-direction: row;
+							flex-grow: 1;
+
+							> li {
+								.title-bar {
+									flex-shrink: 0;
+								}
+
+								display: flex;
+								flex-direction: column;
+								max-height: 100%;
+
+								> ul.content-list {
+									display: flex;
+									flex-direction: column;
+									height: 0;
+									flex-grow: 1;
+
+
+									> li {
+										flex-shrink: 0;
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+// end of flexbox settings, for now.
 
 #secondary-nav {
 	@secondary-nav-btn-color:#F2F2F2;
@@ -220,8 +290,7 @@
 }
 
 #channel-edit-content-wrapper {
-	@container-height: calc( 100vh - var(--approxChannelEditNavHeight) );
-	@container-min-height:400px;
+	@container-min-height:250px;
 	@container-border-color: #BCBCBC;
 	@container-title-color: #30302F;
 	@container-last-width: 525px;
@@ -241,9 +310,6 @@
 	@thumbnail-width: 80px;
 	@thumbnail-height: 45px;
 
-	overflow-x:hidden;
-	width:100vw;
-	height:100%;
 	padding: 0;
 	border-top: 1px solid @blue-500;
 
@@ -255,14 +321,8 @@
 	}
 
 	#container-wrapper{
-		overflow:hidden;
-		overflow-x:auto;
-		min-height: @container-min-height + 100;
-		position:absolute;
-		width:100vw;
-		padding-left:40px;
-		margin-top:20px;
-		margin-bottom: 5rem;
+		overflow:auto;
+		padding: 20px 0;
 	}
 	.close_clipboard{
 		margin-top:10px;
@@ -275,8 +335,8 @@
 	    width: -o-max-content;
 		width: -moz-max-content;
 		width: max-content;
-    	padding-right: 200px;
-    	list-style: none;
+		list-style: none;
+		padding: 0 40px;
 
 		#container_area_title{
 			margin-top: 0px;
@@ -295,6 +355,7 @@
 			margin:0;
 			margin-right:5px;
 			width: @container-width;
+			min-height: @container-min-height;
 			display:inline-block;
 			cursor:default;
 			border: 2px solid transparent;
@@ -328,8 +389,6 @@
 				overflow-y: auto;
 				overflow-x: hidden;
 				padding: 0 0 5px 0;
-				height:@container-height;
-				min-height: @container-min-height;
 				background-color:white;
 				margin: 5px 0px;
 				margin-bottom:0px;
@@ -479,7 +538,6 @@
 						    height: @thumbnail-height;
 						    object-fit: cover;
 						    vertical-align: baseline;
-						    position: absolute;
 						    margin-top: 2px;
 						}
 						.content-item-icon{
@@ -624,7 +682,6 @@
 				background-color: @edit-container-color;
 			}
 			.content-list{
-				min-height: @container-min-height * 0.80;
 				li{
 					border-color: @edit-container-color;
 					&.current_topic{
@@ -720,8 +777,6 @@
 		}
 	}
 }
-
-#container_area
 
 .staging_channel_wrapper{
 	.copy_item_button{ display: none !important; }

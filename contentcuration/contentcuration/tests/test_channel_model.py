@@ -1,12 +1,17 @@
 #!/usr/bin/env python
+import json
 from datetime import datetime
 
+from django.core.urlresolvers import reverse_lazy
 from mixer.backend.django import mixer
 
+from .base import BaseAPITestCase
 from .base import StudioTestCase
 from .testdata import channel
 from .testdata import node
 from contentcuration.models import Channel
+from contentcuration.models import ChannelSet
+from contentcuration.models import SecretToken
 
 
 class PublicChannelsTestCase(StudioTestCase):
@@ -168,3 +173,98 @@ class GetAllChannelsTestCase(StudioTestCase):
         returned_channel_ids = [c.id for c in Channel.get_all_channels()]
         for c in self.channels:
             assert c.id in returned_channel_ids
+
+
+class ChannelSetTestCase(BaseAPITestCase):
+    """
+    Tests for ChannelSet functions.
+    """
+
+    def setUp(self):
+        super(ChannelSetTestCase, self).setUp()
+        self.channelset = mixer.blend(ChannelSet, editors=[self.user])
+        self.channels = mixer.cycle(10).blend(Channel, secret_tokens=[self.channelset.secret_token], editors=[self.user])
+
+    def test_get_user_channel_sets(self):
+        """ Make sure get_user_channel_sets returns the correct sets """
+        other_channelset = mixer.blend(ChannelSet)
+        response = self.get(reverse_lazy("get_user_channel_sets"))
+        self.assertEqual(response.status_code, 200)
+        channelsets = json.loads(response.content)
+        self.assertTrue(any(c['id'] == self.channelset.pk for c in channelsets))
+        self.assertFalse(any(c['id'] == other_channelset.pk for c in channelsets))
+
+    def test_token_created_on_save(self):
+        """ Make sure tokens are created on save only if the channel set is new """
+        self.assertIsNotNone(self.channelset.secret_token)
+
+        token = self.channelset.secret_token.token
+        self.channelset.save()
+        self.assertEqual(token, self.channelset.secret_token.token)
+
+    def test_get_channels_by_token(self):
+        token = self.channelset.secret_token.token
+        response = self.get(reverse_lazy("get_channels_by_token", kwargs={'token': token}))
+        self.assertEqual(response.status_code, 200)
+        channels = json.loads(response.content)
+        for c in channels:
+            self.assertTrue(any(t['token'] == token for t in c['secret_tokens']))  # All channels should have matching token
+
+        # Make sure there aren't any channels that shouldn't be in the list
+        channel_ids = [c['id'] for c in channels]
+        self.assertFalse(self.channelset.secret_token.channels.exclude(pk__in=channel_ids).exists())
+
+    def test_channelset_deletion(self):
+        """ Make sure channels are preserved and tokens are deleted """
+        token = self.channelset.secret_token.token
+        channels = list(self.channelset.secret_token.channels.values_list('pk', flat=True))
+        self.channelset.delete()
+        self.assertFalse(SecretToken.objects.filter(token=token).exists())
+        self.assertTrue(Channel.objects.filter(pk__in=channels).count() == len(channels))
+
+    def test_save_channels_to_token(self):
+        """ Check endpoint will assign token to channels """
+        token = self.channelset.secret_token
+        channels = mixer.cycle(5).blend(Channel)
+        channels = Channel.objects.filter(pk__in=[c.pk for c in channels])  # Make this a queryset
+        token.set_channels(channels)
+
+        # Old channels should not be included here
+        for c in self.channels:
+            c.refresh_from_db()
+            self.assertFalse(c.secret_tokens.filter(token=token.token).exists())
+
+        # New channels should be included here
+        for c in channels:
+            c.refresh_from_db()
+            self.assertTrue(c.secret_tokens.filter(token=token.token).exists())
+
+    def test_public_endpoint(self):
+        """ Make sure public endpoint returns all the channels under the token """
+        published_channel_count = int(len(self.channels)/2)
+        for c in self.channels[:published_channel_count]:
+            c.main_tree.published = True
+            c.main_tree.save()
+
+        token = self.channelset.secret_token.token
+        response = self.get(reverse_lazy('get_public_channel_lookup', kwargs={'version': 'v1', 'identifier': token}))
+        self.assertEqual(response.status_code, 200)
+        channels = json.loads(response.content)
+        self.assertEqual(len(channels), published_channel_count)
+
+    def test_get_channels(self):
+        """ Check channel set's get_channel method """
+        channels = self.channelset.get_channels()
+        channel_ids = [c.pk for c in self.channels]
+        self.assertEqual(len(self.channels), channels.count())
+        self.assertEqual(channels.exclude(pk__in=channel_ids).count(), 0)
+
+    def test_channel_deletion(self):
+        """ Check channel deletion doesn't delete collection """
+        channel_id = self.channels[0].pk
+        total_channels = len(self.channels)
+        self.channels[0].delete()
+
+        channels = self.channelset.get_channels()
+        self.assertFalse(channels.filter(pk=channel_id).exists())
+        self.assertEqual(channels.count(), total_channels - 1)
