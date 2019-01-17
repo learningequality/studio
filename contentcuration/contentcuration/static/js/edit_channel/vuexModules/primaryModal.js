@@ -1,4 +1,4 @@
-const dialogModule = {
+const primaryModalModule = {
     state: {
       primaryModalInUse: false,
     },
@@ -27,5 +27,5 @@ const dialogModule = {
     },
   };
   
-  module.exports = dialogModule;
+  module.exports = primaryModalModule;
   

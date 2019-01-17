@@ -3,7 +3,7 @@ const Constants = require("./constants/index");
 const Vuex = require("vuex");
 let Vue = require("vue");
 const channelModule = require("./vuexModules/channel");
-const dialogModule = require("./vuexModules/dialog");
+const primaryModalModule = require("./vuexModules/primaryModal");
 
 if (Vue.default) {
   // Compatibility for differential behaviour of require import of ES6 export default in webpack vs Jest
@@ -15,7 +15,7 @@ Vue.use(Vuex);
 const Store = new Vuex.Store({
   modules: {
     channel: channelModule,
-    dialog: dialogModule,
+    dialog: primaryModalModule,
   },
 });
 
