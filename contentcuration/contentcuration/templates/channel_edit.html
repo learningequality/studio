@@ -54,7 +54,7 @@
 					{% endfor %}
 				</ul>
 			</li>
-			{% if not staging and allow_edit %}
+			{% if not staging and allow_edit and not ricecooker_version %}
 				<li id="channel_settings" title="{%trans 'Open channel settings' %}">
 					<i class="material-icons">settings</i>
 				</li>
