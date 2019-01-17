@@ -549,7 +549,6 @@ class Channel(models.Model):
         return files['resource_size'] or 0
 
     def save(self, *args, **kwargs):  # noqa: C901
-
         original_channel = None
         if self.pk and Channel.objects.filter(pk=self.pk).exists():
             original_channel = Channel.objects.get(pk=self.pk)
@@ -571,6 +570,8 @@ class Channel(models.Model):
                 sort_order=get_next_sort_order(),
                 content_id=self.id,
                 node_id=self.id,
+                original_channel_id=self.id,
+                source_channel_id=self.id,
             )
             self.main_tree.save()
         elif self.main_tree.title != self.name:
@@ -590,10 +591,9 @@ class Channel(models.Model):
             self.trash_tree.title = self.name
             self.trash_tree.save()
 
-        super(Channel, self).save(*args, **kwargs)
-
         if original_channel and not self.main_tree.changed:
-            fields_to_check = ['description', 'language_id', 'thumbnail', 'name', 'language', 'thumbnail_encoding', 'deleted']
+            # Changing channel metadata should also mark main_tree as changed
+            fields_to_check = ['description', 'language_id', 'thumbnail', 'name', 'thumbnail_encoding', 'deleted']
             self.main_tree.changed = any([f for f in fields_to_check if getattr(self, f) != getattr(original_channel, f)])
 
             # Delete db if channel has been deleted and mark as unpublished
@@ -604,6 +604,8 @@ class Channel(models.Model):
                     os.unlink(channel_db_url)
                     self.main_tree.published = False
             self.main_tree.save()
+
+        super(Channel, self).save(*args, **kwargs)
 
     def get_thumbnail(self):
         if self.thumbnail_encoding:
@@ -868,6 +870,8 @@ class ContentNode(MPTTModel, models.Model):
             self._original_fields = ContentNode.objects.get(pk=self.pk)._as_dict()
             # don't include the changed (dirty) field in the list of fields we check to see if the object is dirty
             del self._original_fields['changed']
+            del self._original_fields['modified']
+            del self._original_fields['publishing']
 
         return dict([(key, value) for key, value in self._original_fields.iteritems() if value != new_state[key]])
 
@@ -967,6 +971,7 @@ class ContentNode(MPTTModel, models.Model):
             return cls.objects.filter(title=title)
 
     def save(self, *args, **kwargs):  # noqa: C901
+
         channel_id = None
         if kwargs.get('request'):
             request = kwargs.pop('request')
