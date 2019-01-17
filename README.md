@@ -1,5 +1,8 @@
 # Kolibri Studio
 
+
+[![codecov](http://codecov.io/github/learningequality/studio/coverage.svg?branch=develop)](http://codecov.io/github/learningequality/studio?branch=develop])
+
 Kolibri Studio is a web application and content repository designed to deliver
 educational materials to [Kolibri](http://learningequality.org/kolibri/) apps.
 Kolibri Studio supports the following workflows:
@@ -165,7 +168,7 @@ On Ubuntu or Debian, you can install all the necessary packages using these comm
 
     apt-get install -y  python python-pip python-dev python-tk \
         postgresql-server-dev-all postgresql-contrib postgresql-client postgresql \
-        ffmpeg nodejs libmagickwand-dev nginx redis-server
+        ffmpeg nodejs libmagickwand-dev nginx redis-server wkhtmltopdf
 
 On Windows, you'll need to download and install Postgres and Redis manually.
 
@@ -241,9 +244,9 @@ All the javascript dependencies are listed in `package.json`. To install them ru
 You'll only need to run these commands once, to setup the necessary tables and
 constants in the database:
 
-    # On one terminal, run all external services 
+    # On one terminal, run all external services
     $ yarn run services
-    
+
     # On another terminal, run devsetup to create all the necessary tables and buckets
     $ yarn run devsetup
 

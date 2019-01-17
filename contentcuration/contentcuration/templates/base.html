@@ -32,8 +32,13 @@
                       // If there are errors that are known bugs in third-party libs or are clearly harmless,
                       // add them here to reduce sentry noise.
                       ignoreErrors: [
-                        // This looks like an error in Summernote: https://github.com/summernote/summernote/issues/1759
+                        // These appear to be errors in Summernote, but we have yet to reproduce. Although we get a lot
+                        // of Sentry reports with these errors, they lack a stack trace, and we also have not yet gotten
+                        // any user reports of this problem. For the moment, silence them so that they don't drown out
+                        // other errors. We may wish to remove these once we resolve the other errors.
                         'IndexSizeError: Failed to execute \'setStart\' on \'Range\'',
+                        'IndexSizeError: Failed to execute \'setEnd\' on \'Range\'',
+                        'IndexSizeError: Index or size is negative or greater than the allowed amount',
                       ]
                     }).install()
             </script>
@@ -50,6 +55,7 @@
 
       {% render_offline_css LANGUAGE_CODE %}
       <script>
+        window.DEBUG = "{{DEBUG}}" === "True";
         window.languageCode = "{{LANGUAGE_CODE}}";
         window.isRTL = "{{ LANGUAGE_BIDI }}" === "True";
         try{

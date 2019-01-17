@@ -22,6 +22,7 @@ from rest_framework_bulk import BulkSerializerMixin
 
 from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
+from contentcuration.models import ChannelSet
 from contentcuration.models import ContentKind
 from contentcuration.models import ContentNode
 from contentcuration.models import ContentTag
@@ -734,6 +735,15 @@ class AccessibleChannelListSerializer(ChannelFieldMixin, serializers.ModelSerial
         fields = ('id', 'created', 'name', 'size', 'count', 'version', 'deleted', 'main_tree')
 
 
+class ChannelSetChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
+    thumbnail_url = serializers.SerializerMethodField('generate_thumbnail_url')
+    published = serializers.SerializerMethodField('check_published')
+
+    class Meta:
+        model = Channel
+        fields = ('id', 'name', 'published', 'language', 'description', 'thumbnail_url', 'main_tree', 'version')
+
+
 class ChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
     thumbnail_url = serializers.SerializerMethodField('generate_thumbnail_url')
     published = serializers.SerializerMethodField('check_published')
@@ -765,7 +775,7 @@ class AltChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
         model = Channel
         fields = ('id', 'created', 'name', 'published', 'pending_editors', 'editors', 'modified', 'language', 'primary_token', 'priority',
                   'description', 'count', 'public', 'thumbnail_url', 'thumbnail', 'thumbnail_encoding', 'content_defaults', 'publishing',
-                  'main_tree', 'last_published', 'secret_tokens')
+                  'main_tree', 'last_published', 'secret_tokens', 'version')
 
 
 class PublicChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
@@ -881,3 +891,37 @@ class InvitationSerializer(BulkSerializerMixin, serializers.ModelSerializer):
         model = Invitation
         fields = (
             'id', 'invited', 'email', 'sender', 'channel', 'first_name', 'last_name', 'share_mode', 'channel_name')
+
+
+class GetTreeDataSerizlizer(serializers.Serializer):
+    """
+    Used by get_*_tree_data endpoints to ontain "lightweight" tree data.
+    """
+    channel_id = serializers.CharField(required=True)
+    tree = serializers.CharField(required=False, default='main')
+    node_id = serializers.CharField(required=False)
+
+
+class ChannelSetSerializer(serializers.ModelSerializer):
+    secret_token = TokenSerializer(required=False)
+    channels = serializers.SerializerMethodField('get_channel_ids')
+
+    def create(self, validated_data):
+        channelset = super(ChannelSetSerializer, self).create(validated_data)
+        channels = Channel.objects.filter(pk__in=self.initial_data['channels'])
+        channelset.secret_token.set_channels(channels)
+        return channelset
+
+    def update(self, instance, validated_data):
+        channelset = super(ChannelSetSerializer, self).update(instance, validated_data)
+        channels = Channel.objects.filter(pk__in=self.initial_data['channels'])
+        channelset.secret_token.set_channels(channels)
+        return channelset
+
+    def get_channel_ids(self, channelset):
+        channels = channelset.get_channels()
+        return channels and channels.values_list('id', flat=True)
+
+    class Meta:
+        model = ChannelSet
+        fields = ('id', 'name', 'description', 'public', 'editors', 'channels', 'secret_token')

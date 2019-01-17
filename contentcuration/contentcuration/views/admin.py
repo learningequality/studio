@@ -439,7 +439,7 @@ def generate_thumbnail(channel):
 def get_channel_data(channel, site, default_thumbnail=None):
     import time
     start = time.time()
-    print "Starting " + channel.name.encode('utf-8')
+    print("Starting " + channel.name.encode('utf-8'))
 
     data = {
         "name": channel.name,
@@ -495,7 +495,7 @@ def get_channel_data(channel, site, default_thumbnail=None):
     data["total_size"] = sizeof_fmt(resources.values('files__checksum', 'files__file_size').distinct(
     ).aggregate(resource_size=Sum('files__file_size'))['resource_size'] or 0)
 
-    print channel.name.encode('utf-8') + " time:", time.time() - start
+    print(channel.name.encode('utf-8') + " time:", time.time() - start)
     return data
 
 
@@ -570,7 +570,7 @@ def download_channel_pdf(request):
         .distinct()\
         .order_by('name')
 
-    print "Channel query time:", time.time() - start
+    print("Channel query time:", time.time() - start)
 
     site = get_current_site(request)
 
@@ -592,5 +592,5 @@ def download_channel_pdf(request):
         response['Content-disposition'] = 'attachment;filename=channels.pdf'
         response['Set-Cookie'] = "fileDownload=true; path=/"
 
-    print "\n\n\nTotal time:", time.time() - start, "\n\n\n"
+    print("\n\n\nTotal time:", time.time() - start, "\n\n\n")
     return response
