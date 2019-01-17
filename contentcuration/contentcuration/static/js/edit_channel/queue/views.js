@@ -522,10 +522,10 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 				$(this).popover('show');
 				// Bootstrap doesn't handle RTL very well for popovers, so calculate right
 				if(window.isRTL) {
-					var right = $("#clipboard_list").width() - $(this).position().left - self.$(".popover").outerWidth() - 5;
+					var right = $("#clipboard_list").width() - $(this).position().left - self.$(".popover").outerWidth();
 					self.$(".popover").css("right", right);
 				} else {
-					self.$(".popover").css("left", self.$(".popover").position().left - 50);
+					self.$(".popover").css("left", $(this).position().left - self.$(".popover").outerWidth() + 50);
 				}
 	        	$(this).addClass("active-popover");
 			}

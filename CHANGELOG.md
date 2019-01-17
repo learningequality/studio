@@ -3,9 +3,14 @@
 ## 2019-01-15 Update
 #### Changes
 * [[@jayoshih](https://github.com/jayoshih)] Fixed topic tree layout issues
+* [[@jayoshih](https://github.com/jayoshih)] Fixed RuntimeError on naive datetime in exportchannel
+* [[@jayoshih](https://github.com/jayoshih)] Fixed `modified` getting added into setting node.changed
+* [[@jayoshih](https://github.com/jayoshih)] Made channel metadata updates mark node as changed
 
 #### Issues
 * [#1118](https://github.com/learningequality/studio/issues/1118)
+* [#952](https://github.com/learningequality/studio/issues/952)
+* [#1175](https://github.com/learningequality/studio/issues/1175)
 
 
 ## 2019-01-14 Update
