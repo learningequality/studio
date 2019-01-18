@@ -61,7 +61,9 @@
 			{% endif %}
 			<li id="queue-area"></li>
 		{% if staging %}
-			<li id="channel-activate-button" class="text-center">{%trans "DEPLOY CHANNEL" %}</li>
+			<li>
+				<a id="channel-activate-button" class="text-center">{%trans "DEPLOY CHANNEL" %}</a>
+			</li>
 		{% else %}
 			<li id="hide-if-unpublished"><a id="get_published_id">{% trans "Show Token" %}</a></li>
 			{% if allow_edit %}<li><button id="channel-publish-button" class="text-center"> {%trans "PUBLISH" %}</button></li>{% endif %}
