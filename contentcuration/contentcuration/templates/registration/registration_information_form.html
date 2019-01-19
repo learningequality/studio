@@ -29,7 +29,7 @@
 					{% for option in form.use %}
 						<div class="use-option row">
 							<div class="col-xs-1 check-wrapper">
-								<input id="{{option.data.attrs.id}}" name="{{option.data.name}}" type="checkbox" value="{{option.data.value}}" class="check_{{option.data.value}}" {% if option.data.value in option.value %}checked{% endif %}>
+								<input id="{{option.data.attrs.id}}" name="{{option.data.name}}" type="checkbox" value="{{option.data.value}}" class="check_{{option.data.value}}" {% if option.data.selected %}checked{% endif %}>
 							</div>
 							<div class="col-xs-11">
 								<label for="{{option.data.attrs.id}}">{{option.data.label}}</label>
@@ -128,7 +128,6 @@
 	}
 	$("#id_other_use").on("keypress", checkOther);
 	$("#id_other_use").on("paste", checkOther);
-	checkOther();
 
 	// Display blanks for extra information on "Where did you hear about us" question
 	function displaySource() {
@@ -137,6 +136,24 @@
 	}
 	$("#id_source").on("change", displaySource);
 	displaySource();
+
+	// Allow deselection if item is clicked, don't deselect everything on click
+	$("#id_location").on("mousedown", function(ev) {
+		ev.preventDefault();
+		ev.target.selected = !ev.target.selected;
+
+		// Prevent select box from jumping to the top every click
+		var st = this.scrollTop;
+		var self = this;
+		setTimeout(function() {
+			self.scrollTop = st, 0;
+		});
+		this.focus();
+	});
+	$("#id_location").on("mousemove", function(ev) {
+		ev.preventDefault();
+	});
+
 
 </script>
 {% endblock %}

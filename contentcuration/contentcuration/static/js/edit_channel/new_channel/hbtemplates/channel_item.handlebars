@@ -16,13 +16,9 @@
 				<span class="resource_count">{{formatMessage (intlGet 'messages.resource_count') count=resource_count}}</span>
 				&nbsp;|&nbsp;
 			</span>
-			<span class="pull-left">
-				{{formatMessage (intlGet 'messages.id')}}&nbsp;
-			</span>
 			{{#if channel.published}}
-				<input type="text" class="copy-id-text text-center" value="{{channel.id}}" readonly size='30'/>
-				<!-- <input type="text" class="copy-id-text text-center" value="{{channel.primary_token}}" readonly size='30'/> -->
-				<i class="material-icons copy-id-btn" title="{{formatMessage (intlGet 'messages.copy_id')}}">content_paste</i>
+				<input type="text" class="copy-id-text text-center" value="{{channel.primary_token}}" title="{{formatMessage (intlGet 'messages.copy_prompt')}}" readonly size='30'/>
+				<i class="material-icons copy-id-btn" title="{{formatMessage (intlGet 'messages.copy_prompt')}}">content_paste</i>
 			{{else}}<em>{{formatMessage (intlGet 'messages.unpublished')}}</em>
 			{{/if}}
 		</span>
