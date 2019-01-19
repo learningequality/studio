@@ -1,36 +1,63 @@
+import logging as logmodule
 from abc import abstractmethod
-from collections import namedtuple
 
 from django.core.management.base import BaseCommand
-from django.core.management.base import CommandError
 
-Progress = namedtuple(
-    'Progress',
-    [
-        'progress',
-        'total',
-        'fraction',
-    ]
-)
+logmodule.basicConfig()
+logging = logmodule.getLogger(__name__)
+
+
+class Progress():
+    """
+    A Progress contains the progress of the tasks, the total number of expected
+    tasks/data, and the fraction which equals to progress divided by total.
+    """
+
+    def __init__(self, total):
+        self.progress = 0
+        self.total = total
+        self.fraction = 0
+
+    def update(self, increment):
+        self.progress += increment
+
+        # Raise an error when the progress exceeds the total value after increment
+        if self.progress > self.total:
+            logging.error("Progress reaches over 100%.")
+
+        self.fraction = 1.0 * self.progress / self.total
+
+        logging.info("\rProgress: [{}{}] ({}%)".format(
+            "=" * (int(self.fraction * 100) / 2),
+            " " * (50 - int(self.fraction * 100) / 2),
+            int(self.fraction * 100),
+        ))
 
 
 class TaskCommand(BaseCommand):
+    """
+    A management command that serves as a base command for asynchronous tasks,
+    with a progresstracker attribute to track the progress of the tasks.
+    """
     def handle(self, *args, **options):
+        """
+        Define the progress tracker and call handle_async method to handle
+        different asynchronous task commands.
+        """
         self.progresstracker = None
         return self.handle_async(*args, **options)
 
     def start_progress(self, total):
-        self.progresstracker = Progress(progress=0, total=total, fraction=0)
+        """
+        Initialize the progress tracker.
+        """
+        self.progresstracker = Progress(total)
 
     def update_progress(self, increment):
-        tracker = self.progresstracker
-        progress = tracker.progress + increment
-        if progress > tracker.total:
-            raise CommandError("Progress reaches over 100%.")
-
-        fraction = 1.0 * progress / tracker.total
-        updated_tracker = tracker._replace(progress=progress, fraction=fraction)
-        self.progresstracker = updated_tracker
+        """
+        Update the progress tracker with the given value
+        """
+        self.progresstracker.update(increment)
 
     @abstractmethod
     def handle_async(self, *args, **options):
