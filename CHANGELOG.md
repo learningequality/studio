@@ -1,5 +1,14 @@
 # Studio Changelog
 
+## 2019-01-18 Update
+#### Changes
+* [[@jayoshih](https://github.com/jayoshih)] Minor styling fixes
+* [[@jayoshih](https://github.com/jayoshih)] Fixed offline js overlay
+
+#### Issues
+* [#975](https://github.com/learningequality/studio/issues/975)
+
+
 ## 2019-01-17 Update
 #### Changes
 * [[@jayoshih](https://github.com/jayoshih)] Switch admin page get_channel_kind_count to use get_node_details instead
