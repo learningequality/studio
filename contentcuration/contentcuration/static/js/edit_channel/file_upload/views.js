@@ -851,7 +851,8 @@ var MultiLanguageUploadSlot = FormatSlot.extend({
             var new_preset = new Models.FormatPresetModel(this.file.get('preset'));
             this.file.set({
                 "language": selected_lang.toJSON(),
-                "display_name": new_preset.get('readable_name')
+                "display_name": new_preset.get('readable_name'),
+                "contentnode": this.node.id
             });
             this.containing_list_view.add_slot(this.file, new_preset, this);
             this.file = null;
