@@ -430,8 +430,10 @@ var BaseWorkspaceView = BaseView.extend({
 	},
 	move_content:function(move_collection, source){
 		var MoveView = require("edit_channel/move/views");
-		var list = this.get_selected(true);
-		move_collection = new Models.ContentNodeCollection(_.pluck(list, 'model'));
+		if (!move_collection){
+			var list = this.get_selected(true);
+			move_collection = new Models.ContentNodeCollection(_.pluck(list, 'model'));	
+		}
 		return new MoveView.MoveModalView({
 			collection: move_collection,
 			onmove: (target, moved, original_parents) => {
