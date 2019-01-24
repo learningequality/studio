@@ -91,6 +91,7 @@ class FileListSerializer(serializers.ListSerializer):
 
     def update(self, instance, validated_data):
         ret = []
+        nodes_to_check = []
         with transaction.atomic():
             # Get files that have the same contentnode, preset, and language as the files that are now attached to this node
             for item in validated_data:
@@ -98,17 +99,26 @@ class FileListSerializer(serializers.ListSerializer):
                 file_obj.language_id = item.get('language') and item['language']['id']
                 file_obj.contentnode = item['contentnode']
 
+                if item['contentnode'] not in nodes_to_check:
+                    nodes_to_check.append(item['contentnode'])
+
                 # Make sure file exists
                 file_path = generate_object_storage_name(file_obj.checksum, str(file_obj))
                 if not default_storage.exists(file_path):
                     raise OSError("Error: file {} was not found".format(str(file_obj)))
 
+                # Replace existing files
                 files_to_replace = item['contentnode'].files.exclude(pk=file_obj.pk)\
                     .filter(preset_id=file_obj.preset_id, language_id=file_obj.language_id)
                 files_to_replace.delete()
 
                 file_obj.save()
                 ret.append(file_obj)
+
+            # Remove items that are not in the validated data (file has been removed)
+            for node in nodes_to_check:
+                file_ids = [f['id'] for f in validated_data if f['contentnode'].pk == node.pk]
+                node.files.exclude(pk__in=file_ids).delete()
 
         return ret
 
