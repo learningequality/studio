@@ -1,5 +1,9 @@
 # Studio Changelog
 
+## 2019-01-24 Update
+#### Changes
+* [[@jayoshih](https://github.com/jayoshih)] Use local font path for font-family in exported pdfs
+
 ## 2019-01-18 Update
 #### Changes
 * [[@jayoshih](https://github.com/jayoshih)] Minor styling fixes

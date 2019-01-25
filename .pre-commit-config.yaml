@@ -4,7 +4,7 @@
     -   id: trailing-whitespace
     -   id: flake8
     -   id: check-added-large-files
-        exclude: '^.+?\.ttc$'
+        exclude: '^.+?\.ttf$'
     -   id: debug-statements
     -   id: end-of-file-fixer
         exclude: '^.+?\.json.+?\.yml$'

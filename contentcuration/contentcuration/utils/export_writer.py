@@ -55,10 +55,10 @@ def _monkeypatch_font_directories():
 
         if sys.platform.startswith("linux"):
             return {
-                ('Microsoft Yahei', False, False): os.path.join(settings.STATIC_ROOT, 'fonts', 'msyh.ttc'),
+                ('Microsoft Yahei', False, False): os.path.join(settings.STATIC_ROOT, 'fonts', 'Microsoft Yahei.ttf'),
 
                 # python-pptx fails if Calibri isn't found, so reroute it to Microsoft Yahei file
-                ('Calibri', False, False): os.path.join(settings.STATIC_ROOT, 'fonts', 'msyh.ttc'),
+                ('Calibri', False, False): os.path.join(settings.STATIC_ROOT, 'fonts', 'Microsoft Yahei.ttf'),
             }
         else:
             return FontFiles._old_installed_fonts()
