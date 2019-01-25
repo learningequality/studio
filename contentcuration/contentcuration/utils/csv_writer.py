@@ -148,8 +148,8 @@ def _write_user_row(file, writer, domain):
                      description, author, language, license, license_description, copyright_holder])
 
 
-def write_user_csv(user):
-    csv_path = generate_user_csv_filename(user)
+def write_user_csv(user, path=None):
+    csv_path = path or generate_user_csv_filename(user)
 
     with open(csv_path, 'wb') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_MINIMAL)

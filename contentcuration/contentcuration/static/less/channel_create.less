@@ -7,24 +7,78 @@
 @channel-btn-border-color:#7A7A7A;
 @details-bg-color: #EFE6EC;
 
+// nested flexbox settings to ensure that the channels list view is vertically responsive.
+body {
+	display: flex;
+	flex-direction: column;
+
+	#channel-container {
+		display: flex;
+		height: 0;
+		flex-direction: column;
+		flex-grow: 1;
+
+		#top-navigation {
+			flex: 0;
+		}
+
+		#channel_area_wrapper {
+			display: flex;
+			max-height: 100%;
+			flex: 1;
+
+			#channel_list_wrapper {
+				display: grid;
+				justify-content: normal;
+				align-content: flex-start;
+
+				#channel-list-area {
+					margin: auto;
+				}
+			}
+
+			#channel_preview_wrapper {
+				display: flex;
+				flex-direction: column;
+				flex: 1;
+				
+				#channel_details_overlay {
+					display: flex;
+					flex-direction: column;
+					flex: 1;
+					
+					#channel_details_panel {
+						display: flex;
+						flex-direction: column;	
+						flex: 1;
+
+						#channel_details_view_panel {
+							display: flex;
+							flex-direction: column;	
+							flex: 1;					
+							
+							#channel_details {
+								flex-direction: column;	
+								flex-grow: 1;
+								width: 100%;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+// end of flexbox settings
+
 .default-item{
 	color:gray;
 	padding:5px 10px;
 }
 
-#channel_area_wrapper {
-	display: -webkit-box;
-	display: -webkit-flex;
-	display: -ms-flexbox;
-	display: flex;
-	flex-wrap: wrap;
-	width: 200vw;
-}
-
 #channel_list_wrapper{
 	padding:10px;
 	overflow-y:auto;
-	height:90vh;
 	width: 100vw;
 	transition: width 500ms;
 	&.show-panel {
@@ -56,10 +110,7 @@
 		@channel-description-font-size: 11pt;
 		@channel-btn-color:#CCCCCC;
 
-		height:100vh - 30vh;
 	    width: @channel-container-width + 50;
-	    margin: auto;
-	    display: block;
 
 		.channel_list_wrapper {
 			padding-top: 20px;
@@ -309,7 +360,6 @@
 					display: block;
 				}
 				.channel-container-wrapper {
-					// background-color: beige;
 					border-color: @topnav-bg-color;
 				}
 			}
@@ -331,22 +381,15 @@
 
 @channel-preview-width: 650px;
 #channel_preview_wrapper {
-	display: flex;
-    flex-direction: column;
     overflow: hidden;
     width: 0px;
     margin-left: 2px;
-    height: 90vh;
     background-color: white;
     background-size:     cover;
     background-repeat:   no-repeat;
     background-position: center center;
-    position: absolute;
-    right: 0em;
 	#channel_details_overlay {
-    	display: flex;
     	height: inherit;
-    	flex-direction: column;
     	background-color: rgba(240,240,240, 0.8);
     }
 

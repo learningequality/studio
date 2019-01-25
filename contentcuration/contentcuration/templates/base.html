@@ -111,41 +111,31 @@
   <body>
       {% block nav %}
       <!-- Navigation bar -->
-      <nav class="nav navbar navbar-default" id="top-navigation">
-        <div class="container-fluid">
-          <!-- Brand and toggle get grouped for better mobile display -->
-          <div class="navbar-header">
-            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
-              <span class="sr-only">{%trans "Toggle navigation" %}</span>
-              <span class="icon-bar"></span>
-              <span class="icon-bar"></span>
-              <span class="icon-bar"></span>
-            </button>
+      <nav>
+        <div id="top-navigation">
+          <div id="main-nav-left">
             <a href="/channels" id="logo-container">
               <img class="navbar-brand" src="{% static 'img/logo.png' %}">
-              <label id="kolibri_label"><span dir="ltr">Kolibri Studio</span> <span dir="auto">({% trans 'Beta' %})</span></label>
+              <label id="kolibri_label"><span dir="ltr">Kolibri Studio</span> <span dir="auto">{% trans '(Beta)' %}</span></label>
             </a>
           </div>
-            <div class="collapse navbar-collapse">
-              <ul class="nav navbar-nav navbar-right">
-                <!-- <li> <a class="btn btn-main">Discover</a></li> -->
-                <li id="username_label">{% trans "Hello," %} {{ user.first_name }}</li>
-                <li class="dropdown" id="settings-dd-wrapper">
-                  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
-                    <i class="material-icons">account_circle</i>
-                  </a>
-                  <ul class="dropdown-menu">
-                    {% if user.is_admin %}<li><a href="{% url 'administration' %}" >{% trans "Administration" %}</a></li>{% endif %}
-                    <li><a href="{% url 'profile_settings' %}" >{% trans "Settings" %}</a></li>
-                    <li><a href="http://kolibri-studio.readthedocs.io/en/latest/index.html" target="_blank">{% trans "Help" %}</a></li>
-                    <li><a href="{% url 'logout' %}">{% trans "Log Out" %}</a></li>
-                  </ul>
-                </li>
+          <div id="main-nav-right">
+            <div id="username_label">{% blocktrans with name=user.first_name %}Hello, {{name}}{% endblocktrans %}</div>
+            <div class="btn-group">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                <span class="material-icons">account_circle</span>
+              </a>
+              <ul class="dropdown-menu dropdown-menu-right">
+                <li id="username_label_collapsed">{% blocktrans with name=user.first_name %}Hello, {{name}}{% endblocktrans %}</li>
+                {% if user.is_admin %}<li><a href="{% url 'administration' %}" >{% trans "Administration" %}</a></li>{% endif %}
+                <li><a href="{% url 'profile_settings' %}" >{% trans "Settings" %}</a></li>
+                <li><a href="http://kolibri-studio.readthedocs.io/en/latest/index.html" target="_blank">{% trans "Help" %}</a></li>
+                <li><a href="{% url 'logout' %}">{% trans "Log Out" %}</a></li>
               </ul>
-            </li>
-          </ul>
-    		</div><!-- /.navbar-collapse -->
-    	</div><!-- /.container-fluid -->
+            </div>
+          </div>
+        </div>
+
     </nav>
     {% if INCIDENT %}
     <div id="emergency-banner" class="text-center main-banner {% if INCIDENT.readonly %}error{% else %}warning{% endif %}">
@@ -156,11 +146,6 @@
     <div id="beta-banner" class="text-center info main-banner">
       <i class="material-icons">build</i> {% url 'issues_settings' as issue_url %}{% blocktrans %}Kolibri Studio is undergoing active development, and during usage you may encounter unexpected behavior or problems. <a href="{{issue_url}}" target="_blank">Please read here</a> on best practices, known issues, and error reporting recommendations. We appreciate your patience and assistance as we work to improve the Kolibri Studio Beta!{% endblocktrans %}
     </div>
-    <script>
-      // this line ensures that the Channel Edit tree view height is calculated in consideration of the BETA_MODE notification bar height.
-      // If the BETA_MODE notification is changed to be more streamlined, please change or adjust this line.
-      document.querySelector('html').style.setProperty('--approxChannelEditNavHeight', '41rem')
-    </script>
     {% endif %}
     {% endblock nav %}
 

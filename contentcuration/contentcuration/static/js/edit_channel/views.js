@@ -84,7 +84,6 @@ var BaseView = Backbone.View.extend({
 	$trs: MESSAGES,
 	globalMessageStore: require("utils/translations"),
 	sharedTranslations: MESSAGES,
-
 	get_translation_library: function(){
 		return _.chain(this.sharedTranslations)
 					.extend(this.$trs)
@@ -137,13 +136,11 @@ var BaseView = Backbone.View.extend({
 		$(".first_focus_item").select();
 	},
 	set_indices: function(){
-        var selector = (this.el.id)? "#" + this.el.id : "." + this.el.className;
-        $(selector + " .tab_item").each(function(){
+        this.$('.tab_item').each(function() {
             $(this).attr('tabindex', TABINDEX++);
         });
     },
 	display_load:function(message, callback){
-    	var self = this;
     	if(message.trim()!=""){
     		var load = '<div id="loading_modal" class="text-center fade">' +
             '<div id="kolibri_load_gif"></div>' +
@@ -155,15 +152,15 @@ var BaseView = Backbone.View.extend({
 			var promise = new Promise(function(resolve, reject){
 				callback(resolve, reject);
 			});
-			promise.then(function(){
+			promise.then(() => {
 				if(message.trim()!=""){
 					$("#loading_modal").remove();
 				}
-			}).catch(function(error){
+			}).catch((error) => {
 				if(message!=""){
-					$("#kolibri_load_text").text(self.get_translation("refresh_page"));
+					$("#kolibri_load_text").text(this.get_translation("refresh_page"));
 				}
-				console.log(self.get_translation("call_error"), error);
+				console.log(this.get_translation("call_error"), error);
 			});
   	}else{
   		$("#loading_modal").remove();
@@ -241,7 +238,11 @@ var BaseView = Backbone.View.extend({
 			WorkspaceManager.get_main_view().close_all_popups();
 		} catch(e) {}
 	},
-
+	remove: function(){
+		this.trigger('removed')
+		Backbone.View.prototype.remove.call(this);
+	},
+	
   /**
    * Track an event to analytics providers (e.g. Google Analytics, Mixpanel).
    * @param {string} event_category Typically the object interacted with, e.g. 'Clipboard'
@@ -327,9 +328,11 @@ var BaseWorkspaceView = BaseView.extend({
  	},
 	edit_permissions:function(){
 		var ShareViews = require("edit_channel/share/views");
-		var share_view = new ShareViews.ShareModalView({
-			model:State.current_channel,
-			current_user: State.current_user
+		State.Store.dispatch('usePrimaryModal', () => {
+			return new ShareViews.ShareModalView({
+				model:State.current_channel,
+				current_user: State.current_user
+			});
 		});
 	},
 	edit_selected:function(allow_edit, isclipboard){
@@ -349,21 +352,19 @@ var BaseWorkspaceView = BaseView.extend({
 	},
 	edit_nodes:function(allow_edit, collection, is_clipboard, parent){
 		var UploaderViews = require("edit_channel/uploader/views");
-		$("#main-content-area").append("<div id='dialog'></div>");
-
-		var self = this;
-		var metadata_view = new UploaderViews.MetadataModalView({
-			collection: collection,
-			el: $("#dialog"),
-			model: parent,
-			new_content: false,
-		    onsave: this.reload_ancestors,
-		    allow_edit: allow_edit,
-		    isclipboard: is_clipboard,
-		    onnew: function(collection, message) {
-          return self.add_to_clipboard(collection, message, 'MetadataModalView');
-        }
-		});
+		State.Store.dispatch('usePrimaryModal', () => {
+			return new UploaderViews.MetadataModalView({
+				collection: collection,
+				model: parent,
+				new_content: false,
+				onsave: this.reload_ancestors,
+				allow_edit: allow_edit,
+				isclipboard: is_clipboard,
+				onnew: (collection, message) => {
+					return this.add_to_clipboard(collection, message, 'MetadataModalView');
+				}
+			});
+		})
 	},
 	add_to_trash:function(collection, message){
 		message = (message!=null)? message: this.get_translation("archiving");
@@ -421,27 +422,25 @@ var BaseWorkspaceView = BaseView.extend({
 	},
 	open_archive:function(){
 		var ArchiveView = require("edit_channel/archive/views");
-		var archive = new ArchiveView.ArchiveModalView({
-			model : new Models.ContentNodeModel(State.current_channel.get("trash_tree"))
-	 	});
+		State.Store.dispatch('usePrimaryModal', () => {
+			return new ArchiveView.ArchiveModalView({
+				model : new Models.ContentNodeModel(State.current_channel.get("trash_tree"))
+			 });	
+		})
 	},
 	move_content:function(move_collection, source){
 		var MoveView = require("edit_channel/move/views");
 		var list = this.get_selected(true);
-		var move_collection = new Models.ContentNodeCollection(_.pluck(list, 'model'));
-		$("#main-content-area").append("<div id='dialog'></div>");
-
-		var self = this;
-		var move = new MoveView.MoveModalView({
+		move_collection = new Models.ContentNodeCollection(_.pluck(list, 'model'));
+		return new MoveView.MoveModalView({
 			collection: move_collection,
-			el: $("#dialog"),
-        onmove: function(target, moved, original_parents) {
-          if (source === "clipboard") {
-            self.track_event_for_nodes('Clipboard', 'Move items', moved);
-          }
-          self.handle_move(target, moved, original_parents);
-        },
-		    model: State.current_channel.get_root("main_tree")
+			onmove: (target, moved, original_parents) => {
+			if (source === "clipboard") {
+				this.track_event_for_nodes('Clipboard', 'Move items', moved);
+			}
+			this.handle_move(target, moved, original_parents);
+			},
+			model: State.current_channel.get_root("main_tree")
 		});
 	},
 	handle_move:function(target, moved, original_parents){
@@ -462,17 +461,12 @@ var BaseWorkspaceView = BaseView.extend({
 	},
 	sync_content:function(){
 		var SyncView = require("edit_channel/sync/views");
-		$("#main-content-area").append("<div id='dialog'></div>");
-		var sync = new SyncView.TempSyncModalView({
-		 	el: $("#dialog"),
-		     onsync: this.reload_ancestors,
-		     model: State.current_channel.get_root("main_tree")
-		});
-		//var sync = new SyncView.SyncModalView({
-		//	el: $("#dialog"),
-		//    onsync: this.reload_ancestors,
-		//    model: State.current_channel.get_root("main_tree")
-		//});
+		State.Store.dispatch('usePrimaryModal', () => {
+			return new SyncView.TempSyncModalView({
+				onsync: this.reload_ancestors,
+				model: State.current_channel.get_root("main_tree")
+		   });
+		})
 	},
 	delete_items_permanently:function(message, list, callback){
 		message = (message!=null)? message: this.get_translation("deleting");
@@ -516,10 +510,12 @@ var BaseWorkspaceView = BaseView.extend({
 	},
 	open_channel_settings: function(){
 		var settings = require('edit_channel/channel_settings/views');
-		new settings.SettingsModalView({
-			model: State.current_channel,
-			onsave: this.handle_changed_settings
-		});
+		State.Store.dispatch('usePrimaryModal', () => {
+			return new settings.SettingsModalView({
+				model: State.current_channel,
+				onsave: this.handle_changed_settings
+			})	
+		})
 	},
 	handle_changed_settings: function(data){
 		$("#channel_selection_dropdown").text(data.get('name'));
@@ -529,30 +525,35 @@ var BaseWorkspaceView = BaseView.extend({
 });
 
 var BaseModalView = BaseView.extend({
-    callback:null,
-    default_focus_button_selector: null,
+	callback:null,
+	className: 'dialog',
+	default_focus_button_selector: null,
+	initialize: function(){
+        _.bindAll(this, "closed_modal", "close")
+	},
     render: function(closeFunction, renderData) {
         this.$el.html(this.template(renderData, {
 			data: this.get_intl_data()
 		}));
         $("body").append(this.el);
         this.$(".modal").modal({show: true});
-        this.$(".modal").on("hide.bs.modal", closeFunction);
+		this.$(".modal").on("hide.bs.modal", closeFunction);
     },
 	focus: function(){
 		this.$(this.default_focus_button_selector).focus();
 	},
     close: function() {
         if(this.modal){
-            this.$(".modal").modal('hide');
-        }
-        this.remove();
+			this.$(".modal").modal('hide');
+		} else {
+			this.remove()
+		}
     },
     closed_modal:function(){
         $("body").addClass('modal-open'); //Make sure modal-open class persists
-        $('.modal-backdrop').slice(1).remove();
-        this.remove();
-    }
+		$('.modal-backdrop').slice(1).remove();
+		this.remove();
+	},
 });
 
 var BaseListView = BaseView.extend({
@@ -872,37 +873,41 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 	add_topic: function(){
 		var UploaderViews = require("edit_channel/uploader/views");
 		var self = this;
-		this.collection.create_new_node({
-            "kind":"topic",
-            "title": (this.model.get('parent'))? this.model.get('title') + " " + this.get_translation("topic") : this.get_translation("topic"),
-        }).then(function(new_topic){
-        	var edit_collection = new Models.ContentNodeCollection([new_topic]);
-	        $("#main-content-area").append("<div id='dialog'></div>");
+		State.Store.dispatch('usePrimaryModal', () => {
+			var metadata_modal = new UploaderViews.MetadataModalView({
+				collection: new Models.ContentNodeCollection([]),
+				model: self.model,
+				new_content: true,
+				new_topic: true,
+				onsave: self.reload_ancestors,
+				onnew:self.add_nodes,
+				allow_edit: true
+			});
+	
+			this.collection.create_new_node({
+				"kind":"topic",
+				"title": (this.model.get('parent'))? this.model.get('title') + " " + this.get_translation("topic") : this.get_translation("topic"),
+			}).then(function(new_topic){
+				metadata_modal.collection.add(new_topic)
+				metadata_modal.metadata_view.render()
+			}).catch(function(error) {
+				var dialog = require("edit_channel/utils/dialog");
+				dialog.alert(self.get_translation("problem_creating_topics"), error.responseText);
+			});
 
-	        var metadata_view = new UploaderViews.MetadataModalView({
-	            el : $("#dialog"),
-	            collection: edit_collection,
-	            model: self.model,
-	            new_content: true,
-	            new_topic: true,
-	            onsave: self.reload_ancestors,
-	            onnew:self.add_nodes,
-	            allow_edit: true,
-	            isclipboard: self.isclipboard
-	        });
-        }).catch(function(error) {
-        	var dialog = require("edit_channel/utils/dialog");
-			dialog.alert(self.get_translation("problem_creating_topics"), error.responseText);
-        });
+			return metadata_modal
+		})
 	},
 	import_content:function(){
 		var Import = require("edit_channel/import/views");
-      var import_view = new Import.ImportModalView({
-          modal: true,
-          onimport: this.add_nodes,
-          model: this.model
-      });
-  },
+		State.Store.dispatch('usePrimaryModal', () => {
+			return new Import.ImportModalView({
+				modal: true,
+				onimport: this.add_nodes,
+				model: this.model
+			});	
+		})
+	},
   add_files:function(){
   	var FileUploader = require("edit_channel/file_upload/views");
   	this.file_upload_view = new FileUploader.FileModalView({
@@ -930,31 +935,33 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 	add_exercise:function(){
 		var UploaderViews = require("edit_channel/uploader/views");
 		var self = this;
-		this.collection.create_new_node({
-            "kind":"exercise",
-            "title": (this.model.get('parent'))? this.model.get('title') + " " + this.get_translation("exercise_title") : this.get_translation("exercise_title"), // Avoid having exercises prefilled with 'email clipboard'
-            "author": State.preferences.author || "",
-            "aggregator": State.preferences.aggregator || "",
-            "provider": State.preferences.provider || "",
-            "copyright_holder": State.preferences.copyright_holder || "",
-            "license_name": State.preferences.license,
-            "license_description": State.preferences.license_description || ""
-        }).then(function(new_exercise){
-        	var edit_collection = new Models.ContentNodeCollection([new_exercise]);
-	        $("#main-content-area").append("<div id='dialog'></div>");
+		State.Store.dispatch('usePrimaryModal', () => {
+			var metadata_modal = new UploaderViews.MetadataModalView({
+				collection: new Models.ContentNodeCollection([]),
+				model: self.model,
+				new_content: true,
+				new_exercise: true,
+				onsave: self.reload_ancestors,
+				onnew:self.add_nodes,
+				allow_edit: true,
+				isclipboard: self.isclipboard
+			});
+			this.collection.create_new_node({
+				kind: "exercise",
+				title: (this.model.get('parent'))? this.model.get('title') + " " + this.get_translation("exercise_title") : this.get_translation("exercise_title"), // Avoid having exercises prefilled with 'email clipboard'
+				author: State.preferences.author || "",
+				aggregator: State.preferences.aggregator || "",
+				provider: State.preferences.provider || "",
+				copyright_holder: State.preferences.copyright_holder || "",
+				license_name: State.preferences.license,
+				license_description: State.preferences.license_description || ""
+			}).then(function(new_exercise){
+				metadata_modal.collection.add(new_exercise)
+				metadata_modal.metadata_view.render()
+			});
 
-	        var metadata_view = new UploaderViews.MetadataModalView({
-	            el : $("#dialog"),
-	            collection: edit_collection,
-	            model: self.model,
-	            new_content: true,
-	            new_exercise: true,
-	            onsave: self.reload_ancestors,
-	            onnew:self.add_nodes,
-	            allow_edit: true,
-	            isclipboard: self.isclipboard
-	        });
-        });
+			return metadata_modal
+		})
 	}
 });
 
@@ -1138,30 +1145,29 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 	},
 	open_preview:function(){
 		var Previewer = require("edit_channel/preview/views");
-		$("#main-content-area").append("<div id='dialog'></div>");
-		var data={
-			el : $("#dialog"),
-			model: this.model,
-		}
-		new Previewer.PreviewModalView(data);
+		State.Store.dispatch('usePrimaryModal', () => {
+			var data={
+				model: this.model,
+			}
+			return new Previewer.PreviewModalView(data);	
+		})
 	},
 	open_move:function(source){
 		var MoveView = require("edit_channel/move/views");
 		var move_collection = new Models.ContentNodeCollection();
 		move_collection.add(this.model);
-		$("#main-content-area").append("<div id='dialog'></div>");
-		var self = this;
-		new MoveView.MoveModalView({
-			collection: move_collection,
-			el: $("#dialog"),
-        onmove: function(target, moved, original_parents) {
-          if (source === "clipboard") {
-            self.track_event_for_nodes('Clipboard', 'Move item', moved);
-          }
-          self.handle_move(target, moved, original_parents);
-        },
-		    model: State.current_channel.get_root("main_tree")
-		});
+		State.Store.dispatch('usePrimaryModal', () => {
+			return new MoveView.MoveModalView({
+				collection: move_collection,
+				onmove: (target, moved, original_parents) => {
+				if (source === "clipboard") {
+					this.track_event_for_nodes('Clipboard', 'Move item', moved);
+				}
+				this.handle_move(target, moved, original_parents);
+				},
+				model: State.current_channel.get_root("main_tree")
+			});
+		})
 	},
 	handle_move:function(target, moved, original_parents){
 		// Recalculate counts
@@ -1178,22 +1184,21 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 	},
 	open_edit:function(allow_edit, isclipboard){
 		var UploaderViews = require("edit_channel/uploader/views");
-		$("#main-content-area").append("<div id='dialog'></div>");
-		var editCollection =  new Models.ContentNodeCollection([this.model]);
-		var self = this;
-		var metadata_view = new UploaderViews.MetadataModalView({
-			collection: editCollection,
-			el: $("#dialog"),
-			new_content: false,
-			model: this.containing_list_view.model,
-		  	onsave: this.reload_ancestors,
-		  	allow_edit: allow_edit,
-		  	isclipboard: this.isclipboard,
-		  	onnew: (!this.allow_edit)?
-          function(collection, message) {
-            return self.containing_list_view.add_to_clipboard(collection, message, 'preview modal');
-          } : null
-		});
+		State.Store.dispatch('usePrimaryModal', () => {
+			var editCollection =  new Models.ContentNodeCollection([this.model]);
+			return new UploaderViews.MetadataModalView({
+				collection: editCollection,
+				new_content: false,
+				model: this.containing_list_view.model,
+				onsave: this.reload_ancestors,
+				allow_edit: allow_edit,
+				isclipboard: this.isclipboard,
+				onnew: (!this.allow_edit) ?
+				(collection, message) => {
+					return this.containing_list_view.add_to_clipboard(collection, message, 'preview modal');
+				} : null
+			});
+		})
 	},
 	handle_drop:function(models){
 		var self = this;
@@ -1264,39 +1269,42 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 		});
 	},
 	add_topic: function(){
+		// Is this function ever actually used?
 		var UploaderViews = require("edit_channel/uploader/views");
 		var self = this;
 
-		this.containing_list_view.collection.create_new_node({
-            "kind":"topic",
-            "title": (this.model.get('parent'))? this.model.get('title') + " " + this.get_translation("topic_title") : this.get_translation("topic_title"),
-            "sort_order" : this.model.get("metadata").max_sort_order,
-        }).then(function(new_topic){
-        	var edit_collection = new Models.ContentNodeCollection([new_topic]);
-	        $("#main-content-area").append("<div id='dialog'></div>");
+		State.Store.dispatch('usePrimaryModal', () => {
+			var metadata_modal = new UploaderViews.MetadataModalView({
+				collection: new Models.ContentNodeCollection([]),
+				model: self.model,
+				new_content: true,
+				new_topic: true,
+				onsave: self.reload_ancestors,
+				onnew:self.add_nodes,
+				allow_edit: true
+			});
 
-	        var metadata_view = new UploaderViews.MetadataModalView({
-	            el : $("#dialog"),
-	            collection: edit_collection,
-	            model: self.model,
-	            new_content: true,
-	            new_topic: true,
-	            onsave: self.reload_ancestors,
-	            onnew:self.add_nodes,
-	            allow_edit: true
-	        });
-        }).catch(function(error) {
-        	var dialog = require("edit_channel/utils/dialog");
-			dialog.alert(self.get_translation("problem_creating_topics"), error.responseText);
-        });
+			this.containing_list_view.collection.create_new_node({
+				"kind":"topic",
+				"title": (this.model.get('parent'))? this.model.get('title') + " " + this.get_translation("topic_title") : this.get_translation("topic_title"),
+				"sort_order" : this.model.get("metadata").max_sort_order,
+			}).then(function(new_topic){
+				metadata_modal.collection.add(new_topic)
+				metadata_modal.metadata_view.render()
+			}).catch(function(error) {
+				var dialog = require("edit_channel/utils/dialog");
+				dialog.alert(self.get_translation("problem_creating_topics"), error.responseText);
+			});
+
+			return metadata_modal
+		})
 	},
 	add_nodes:function(collection){
-		var self = this;
 		if(this.subcontent_view){
 			this.subcontent_view.add_nodes(collection);
 		}else{
 			this.fetch_model(this.model).then(function(fetched){
-				self.reload(fetched);
+				this.reload(fetched);
 			});
 		}
 	}

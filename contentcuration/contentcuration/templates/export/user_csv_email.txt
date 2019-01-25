@@ -8,9 +8,9 @@
 {% trans 'Name:' %} {{user.first_name}} {{user.last_name}}
 {% trans 'Email:' %} {{user.email}}
 {% trans 'Date Joined:' %} {{user.date_joined | date:"M d, Y"}}
-{% if user.information %}{% trans 'Target Location:' %} {{user.information.location}}
-{% trans 'Intended use for Studio:' %} {{user.information.use}}
-{% trans 'Where you heard about Studio' %} {{user.information.source}}{% endif %}
+{% if user.information %}{% trans 'Target Location:' %} {{user.information.locations|join:'/'}}
+{% trans 'Intended use for Studio:' %} {{user.information.uses|join:'/'}}
+{% trans 'Where you heard about Studio:' %} {{user.information.heard_from}}{% endif %}
 
 {% if edit_channels %}{% trans 'Here are the channels you have edit access to: ' %}
 {% for channel in edit_channels %}    {{channel.id}} - {{channel.name}}

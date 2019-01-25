@@ -232,6 +232,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
       this.prerequisite_view = new Related.PrerequisiteView({
         modal: false,
         model: selected_items[0].model,
+        rootID: this.model && this.model.id,
         onselect: this.set_prerequisites,
         views_to_update: selected_items,
         el: this.$("#metadata_prerequisites"),

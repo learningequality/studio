@@ -25,6 +25,7 @@ var MESSAGES = {
 	"pending_loading": "Checking for invitations...",
 	"copy_id": "Copy ID to clipboard",
 	"copy_token": "Copy Token",
+	"copy_prompt": "Copy token to import channel into Kolibri",
 	"unpublished": "(Unpublished)",
 	"view_only": "View Only",
 	"invitation_error": "Invitation Error",
@@ -330,7 +331,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
 		this.listenTo(this.model, "sync", this.set_model);
 		this.containing_list_view = options.containing_list_view;
 		this.container = options.container;
-		this.can_edit = this.model.get("editors").indexOf(State.current_user.id) >= 0;
+		this.can_edit = this.model.get("editors").indexOf(State.current_user.id) >= 0 && !!!this.model.get('ricecooker_version');
 		this.render();
 	},
 	set_is_new:function(isNew){

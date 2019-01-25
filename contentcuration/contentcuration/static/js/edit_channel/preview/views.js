@@ -19,9 +19,9 @@ var MESSAGES = {
 
 var PreviewModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/preview_modal.handlebars"),
+    modal: true,
     initialize: function(options) {
         _.bindAll(this, "close_preview");
-        this.modal = true;
         this.render(this.close_preview, {node:this.model.toJSON()});
         this.preview_view = new PreviewView({
             model:this.model,
