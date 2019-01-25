@@ -1,5 +1,10 @@
 # Studio Changelog
 
+## 2019-01-24 Update
+#### Changes
+* [[@jayoshih](https://github.com/jayoshih)] Use local font path for font-family in exported pdfs
+
+
 ## 2019-01-14 Update
 #### Changes
 * [[@jayoshih](https://github.com/jayoshih)] Fixed channel detail exporting filename bug

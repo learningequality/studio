@@ -290,7 +290,7 @@
                             </td>
                             <td width="10%"></td>
                             <td width="40%">
-                                {% for i in data.storage.filled %}<img width="12" src="{{ 'export/storage.png' | encode_static_base64}}"> &nbsp;{% endfor %}
+                                {% for i in data.storage.filled %}<img width="12" src="{{ 'export/storage.png' | encode_static_base64}}"> &nbsp;&nbsp;{% endfor %}
                                 <br><span class="subtext">{{data.storage.storage}} - {{data.storage.text}}</span>
                             </td>
                         </tr>
