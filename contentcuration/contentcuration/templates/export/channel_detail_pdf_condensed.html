@@ -11,20 +11,15 @@
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
         <style type="text/css">
             @font-face {
-               font-family: MainFont;
-               src: url("{{'fonts/Microsoft Yahei.ttf'|static_path }}");
-            }
-            @font-face {
-               font-family: MainFontBold;
-               src: url("{{'fonts/Microsoft Yahei Bold.ttf'|static_path }}");
+               font-family: MicrosoftYahei, sans-serif;
+               src: url(fonts/msyh.ttc);
             }
             body {
-                font-family: MainFont, sans-serif;
-                font-size: 12pt;
+                font-family: MicrosoftYahei, sans-serif;
+                font-size: 11pt;
             }
             a {
                 color: black;
-                font-family: MainFontBold, sans-serif;
                 font-weight: bold;
                 text-decoration: none;
             }
@@ -39,7 +34,6 @@
                 float: right;
                 display: inline-block;
                 font-size: 16pt;
-                font-family: MainFontBold, sans-serif;
                 font-weight: bold;
             }
             #language img {
@@ -60,7 +54,6 @@
 
             #title {
                 font-size: 24pt;
-                font-family: MainFontBold, sans-serif;
                 font-weight: bold;
                 margin-bottom: 0px;
             }
@@ -73,7 +66,6 @@
             /* General section styling */
             .empty-text {
                 color: #888888;
-                font-family: MainFontBold, sans-serif;
                 font-weight: bold;
                 font-style: italic;
                 font-size: 18pt;
@@ -109,7 +101,6 @@
             }
             .header-row {
                 font-size: 14pt;
-                font-family: MainFontBold, sans-serif;
                 font-weight: bold;
                 margin-bottom: 20px;
             }
@@ -126,7 +117,7 @@
                 color: {{colors.html}};
             }
             #piechart {
-                margin-left: -30px;
+                margin-left: -40px;
             }
             #includes_section {
                 margin-left: 50px;
@@ -134,7 +125,6 @@
             #includes_section .header-row {
                 border-bottom: 1px solid {{colors.video}};
                 color: {{colors.video}};
-                font-family: MainFontBold, sans-serif;
                 font-weight: bold;
                 margin-bottom: 10px;
                 font-size: 12pt;
@@ -146,7 +136,6 @@
             }
             .pill {
                 color: #888888;
-                font-family: MainFontBold, sans-serif;
                 font-weight: bold;
             }
             .check {
