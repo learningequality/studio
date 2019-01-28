@@ -2,7 +2,7 @@
 
 ## 2019-01-24 Update
 #### Changes
-* [[@jayoshih](https://github.com/jayoshih)] Force pdf exports to use OpenSans font file
+* [[@jayoshih](https://github.com/jayoshih)] Force pdf exports to use OpenSans font file to fix blank pdf problem
 
 
 ## 2019-01-18 Update
