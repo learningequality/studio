@@ -55,10 +55,10 @@ def _monkeypatch_font_directories():
 
         if sys.platform.startswith("linux"):
             return {
-                ('OpenSans', False, False): os.path.join(settings.STATIC_ROOT, 'fonts', 'OpenSans-Regular.ttf'),
+                ('OpenSans', False, False): os.path.join(settings.STATIC_ROOT, 'fonts', 'arial.ttf'),
 
                 # python-pptx fails if Calibri isn't found, so reroute it to a local font file
-                ('Calibri', False, False): os.path.join(settings.STATIC_ROOT, 'fonts', 'OpenSans-Regular.ttf'),
+                ('Calibri', False, False): os.path.join(settings.STATIC_ROOT, 'fonts', 'arial.ttf'),
             }
         else:
             return FontFiles._old_installed_fonts()
@@ -383,7 +383,7 @@ class ChannelDetailsWriter(ExportWriter):
             max_font_size=60,
             width=self.tagcloud_width,
             height=self.tagcloud_height or 30 * len(tags) / 2 + 10,
-            font_path=os.path.sep.join([settings.STATIC_ROOT, 'fonts', 'OpenSans-Bold.ttf'])
+            font_path=os.path.sep.join([settings.STATIC_ROOT, 'fonts', 'arial.ttf'])
         ).generate_from_frequencies(tag_dict)
 
         tag_counts = [t['count'] for t in tags]
