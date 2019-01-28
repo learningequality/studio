@@ -11,7 +11,7 @@
 ## 2019-01-24 Update
 #### Changes
 * [[@jayoshih](https://github.com/jayoshih)] Force pdf exports to use Arial font file to fix blank pdfs
-
+* [[@micahscopes](https://github.com/micahscopes)] Fixed the restore button in the trash modal
 
 ## 2019-01-18 Update
 #### Changes
