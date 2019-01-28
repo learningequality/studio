@@ -9,13 +9,9 @@
         <title>{{channel.name}}</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
         <style type="text/css">
-            @font-face {
-               font-family: MicrosoftYahei, sans-serif;
-               src: url(fonts/msyh.ttc);
-            }
             body {
-                font-family: MicrosoftYahei, sans-serif;
-                font-size: 11pt;
+                font-family: FreeSans, sans-serif;
+                font-size: 12pt;
             }
             a {
                 color: black;
@@ -278,7 +274,7 @@
                             </td>
                             <td width="10%"></td>
                             <td width="40%">
-                                {% for i in data.storage.filled %}<img width="12" src="{{ 'export/storage.png' | encode_static_base64}}"> &nbsp;{% endfor %}
+                                {% for i in data.storage.filled %}<img width="12" src="{{ 'export/storage.png' | encode_static_base64}}"> &nbsp;&nbsp;{% endfor %}
                                 <br><span class="subtext">{{data.storage.storage}} - {{data.storage.text}}</span>
                             </td>
                         </tr>

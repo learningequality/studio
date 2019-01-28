@@ -55,10 +55,10 @@ def _monkeypatch_font_directories():
 
         if sys.platform.startswith("linux"):
             return {
-                ('Microsoft Yahei', False, False): os.path.join(settings.STATIC_ROOT, 'fonts', 'msyh.ttc'),
+                ('MainFont', False, False): os.path.join(settings.STATIC_ROOT, 'fonts', 'OpenSans-Regular.ttf'),
 
-                # python-pptx fails if Calibri isn't found, so reroute it to Microsoft Yahei file
-                ('Calibri', False, False): os.path.join(settings.STATIC_ROOT, 'fonts', 'msyh.ttc'),
+                # python-pptx fails if Calibri isn't found, so reroute it to a local font file
+                ('Calibri', False, False): os.path.join(settings.STATIC_ROOT, 'fonts', 'OpenSans-Regular.ttf'),
             }
         else:
             return FontFiles._old_installed_fonts()
@@ -127,7 +127,7 @@ class PPTMixin(object):
     def add_run(self, paragraph, text, fontsize=12, bold=False, color=None, italic=False):
         run = paragraph.add_run()
         run.font.size = Pt(fontsize)
-        run.font.name = 'Microsoft Yahei'
+        run.font.name = 'MainFont'
         run.font.bold = bold
         run.font.italic = italic
         run.font.color.rgb = color or RGBColor(0, 0, 0)
@@ -261,7 +261,7 @@ class ChannelDetailsWriter(ExportWriter):
             "channel": channel,
             "site": 'https://' + self.site.domain,
             "thumbnail": generate_thumbnail_from_channel(channel, dimension=300) or self.get_default_thumbnail_encoding(),
-            "tokens": [str(t) for t in channel.secret_tokens.exclude(token=channel.pk)],
+            "tokens": [str(t) for t in channel.secret_tokens.exclude(token=channel.pk).filter(is_primary=True)],
             "primarytoken": primarytoken and str(primarytoken),
             "storage": self.get_storage_bar(data['resource_size']),
             "size": self.get_size_bar(data['resource_count']),
@@ -383,7 +383,7 @@ class ChannelDetailsWriter(ExportWriter):
             max_font_size=60,
             width=self.tagcloud_width,
             height=self.tagcloud_height or 30 * len(tags) / 2 + 10,
-            font_path=os.path.sep.join([settings.STATIC_ROOT, 'fonts', 'arialbd.ttf'])
+            font_path=os.path.sep.join([settings.STATIC_ROOT, 'fonts', 'OpenSans-Regular.ttf'])
         ).generate_from_frequencies(tag_dict)
 
         tag_counts = [t['count'] for t in tags]
