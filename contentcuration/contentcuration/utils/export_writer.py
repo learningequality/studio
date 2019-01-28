@@ -261,7 +261,7 @@ class ChannelDetailsWriter(ExportWriter):
             "channel": channel,
             "site": 'https://' + self.site.domain,
             "thumbnail": generate_thumbnail_from_channel(channel, dimension=300) or self.get_default_thumbnail_encoding(),
-            "tokens": [str(t) for t in channel.secret_tokens.exclude(token=channel.pk)],
+            "tokens": [str(t) for t in channel.secret_tokens.exclude(token=channel.pk).filter(is_primary=True)],
             "primarytoken": primarytoken and str(primarytoken),
             "storage": self.get_storage_bar(data['resource_size']),
             "size": self.get_size_bar(data['resource_count']),
