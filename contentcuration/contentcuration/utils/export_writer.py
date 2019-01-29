@@ -55,10 +55,8 @@ def _monkeypatch_font_directories():
 
         if sys.platform.startswith("linux"):
             return {
-                ('MainFont', False, False): os.path.join(settings.STATIC_ROOT, 'fonts', 'OpenSans-Regular.ttf'),
-
                 # python-pptx fails if Calibri isn't found, so reroute it to a local font file
-                ('Calibri', False, False): os.path.join(settings.STATIC_ROOT, 'fonts', 'OpenSans-Regular.ttf'),
+                ('Calibri', False, False): '/usr/share/fonts/truetype/freefont/FreeSans.ttf',
             }
         else:
             return FontFiles._old_installed_fonts()
@@ -127,7 +125,7 @@ class PPTMixin(object):
     def add_run(self, paragraph, text, fontsize=12, bold=False, color=None, italic=False):
         run = paragraph.add_run()
         run.font.size = Pt(fontsize)
-        run.font.name = 'MainFont'
+        run.font.name = 'Calibri'
         run.font.bold = bold
         run.font.italic = italic
         run.font.color.rgb = color or RGBColor(0, 0, 0)
