@@ -679,6 +679,14 @@ var EditorView = BaseViews.BaseView.extend({
                     replacement: function (content) { return '*' + content + '*'; }
                 },
                 {
+                    filter: ['div'], // div is a block element, so add a line break before it.
+                    replacement: function (content) {
+                        var div = document.createElement('div');
+                        div.innerHTML = content;
+                        return '\n' + div.textContent;
+                    }
+                },
+                {
                     filter: ['span'],
                     replacement: function (content) {
                         var div = document.createElement('div');
