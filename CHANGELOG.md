@@ -1,7 +1,16 @@
 # Studio Changelog
 
+## 2019-01-30 Update
+#### Changes
+* [[@kollivier](https://github.com/kollivier)] Remove div tags from markdown output.
+
+#### Issues
+* [#1199](https://github.com/learningequality/studio/issues/1199)
+
+
 ## 2019-01-24 Update
 #### Changes
+* [[@jayoshih](https://github.com/jayoshih)] Force pdf exports to use Arial font file to fix blank pdfs
 * [[@jayoshih](https://github.com/jayoshih)] Fixed problems with uploading subtitles
 * [[@jayoshih](https://github.com/jayoshih)] Fixed problems with removing files
 * [[@jayoshih](https://github.com/jayoshih)] Only validate when user clicks save

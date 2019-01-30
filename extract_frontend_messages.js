@@ -1,4 +1,4 @@
-var esprima = require('esprima');
+var espree = require('espree');
 var escodegen = require('escodegen');
 var fs = require('fs');
 var mkdirp = require('mkdirp');
@@ -84,7 +84,7 @@ function extractMessages(files) {
       // Parse the AST for the Vue file.
       var source = fs.readFileSync(file, { encoding: 'utf-8' });
       var jsSource = readJSFromVue(source);
-      var ast = esprima.parse(jsSource, {
+      var ast = espree.parse(jsSource, {
         sourceType: 'module',
       });
       ast.body.forEach(function(node) {
@@ -150,8 +150,9 @@ function extractMessages(files) {
       !file.includes('node_modules')
     ) {
       // Inspect each source file in the chunk if it is a js file too.
-      var ast = esprima.parse(fs.readFileSync(file, { encoding: 'utf-8' }), {
+      var ast = espree.parse(fs.readFileSync(file, { encoding: 'utf-8' }), {
         sourceType: 'module',
+        ecmaVersion: 2018,
       });
       var createTranslateFn;
       var createTranslateModule;
@@ -163,9 +164,9 @@ function extractMessages(files) {
 
         // Check if an import
         if (
-          node.type === esprima.Syntax.VariableDeclaration &&
-          node.declarations[0].init.type === esprima.Syntax.MemberExpression &&
-          node.declarations[0].init.object.type === esprima.Syntax.CallExpression &&
+          node.type === espree.Syntax.VariableDeclaration &&
+          node.declarations[0].init.type === espree.Syntax.MemberExpression &&
+          node.declarations[0].init.object.type === espree.Syntax.CallExpression &&
           // We found a require statement with a chained property reference
           node.declarations[0].init.object.callee.name === 'require' &&
           // Check if requiring from the i18n module
@@ -177,8 +178,8 @@ function extractMessages(files) {
           // Set the name of the createTranslatorFn to this
           createTranslateFn = node.declarations[0].id.name;
         } else if (
-            node.type === esprima.Syntax.VariableDeclaration &&
-            node.declarations[0].init.type === esprima.Syntax.CallExpression &&
+            node.type === espree.Syntax.VariableDeclaration &&
+            node.declarations[0].init.type === espree.Syntax.CallExpression &&
             // We found a standalone require statement
             node.declarations[0].init.callee.name === 'require' &&
             // Check if requiring from the i18n module
@@ -188,8 +189,8 @@ function extractMessages(files) {
           // to find uses of the createTranslator function later.
           createTranslateModule = node.declarations[0].id.name;
         } else if (
-            node.type === esprima.Syntax.VariableDeclaration &&
-            node.declarations[0].init.type === esprima.Syntax.MemberExpression &&
+            node.type === espree.Syntax.VariableDeclaration &&
+            node.declarations[0].init.type === espree.Syntax.MemberExpression &&
             node.declarations[0].init.object.name === createTranslateModule &&
             node.declarations[0].init.property.name === 'createTranslator'
           ) {
@@ -202,27 +203,27 @@ function extractMessages(files) {
           return scopeChain.find(scope => typeof scope[name] !== 'undefined');
         }
         if (
-          node.type === esprima.Syntax.FunctionDeclaration ||
-          node.type === esprima.Syntax.FunctionExpression ||
-          node.type === esprima.Syntax.Program
+          node.type === espree.Syntax.FunctionDeclaration ||
+          node.type === espree.Syntax.FunctionExpression ||
+          node.type === espree.Syntax.Program
         ) {
           // These node types create a new scope
           scopeChain.unshift({});
         }
         var localScope = scopeChain[0];
         // New declarations only affect the local scope
-        if (node.type === esprima.Syntax.VariableDeclaration) {
+        if (node.type === espree.Syntax.VariableDeclaration) {
           node.declarations.forEach(dec => {
             localScope[dec.id.name] = dec.init;
           });
         }
         // Check if is an expression
         if (
-          node.type === esprima.Syntax.ExpressionStatement &&
+          node.type === espree.Syntax.ExpressionStatement &&
           // That assigns a value
-          node.expression.type === esprima.Syntax.AssignmentExpression &&
+          node.expression.type === espree.Syntax.AssignmentExpression &&
           // To a variable
-          node.expression.left.type === esprima.Syntax.Identifier &&
+          node.expression.left.type === espree.Syntax.Identifier &&
           // But only handle equality, because other kinds are difficult to track
           node.expression.operator === '='
         ) {
@@ -235,12 +236,12 @@ function extractMessages(files) {
         if (
           // Either invoking the createTranslator with its assigned variable name
           // or invoking it directly off the module
-          node.type === esprima.Syntax.CallExpression &&
+          node.type === espree.Syntax.CallExpression &&
           (
             createTranslateFn && node.callee.name === createTranslateFn ||
             (
               createTranslateModule &&
-              node.callee.type === esprima.Syntax.MemberExpression &&
+              node.callee.type === espree.Syntax.MemberExpression &&
               node.callee.object.name === createTranslateModule &&
               node.callee.property.name === 'createTranslator'
             )
@@ -248,10 +249,10 @@ function extractMessages(files) {
         ) {
           var messageNameSpace, messages;
           var firstArg = node.arguments[0];
-          if (firstArg.type === esprima.Syntax.Literal) {
+          if (firstArg.type === espree.Syntax.Literal) {
             // First argument is a string, get its value directly
             messageNameSpace = firstArg.value;
-          } else if (firstArg.type === esprima.Syntax.Identifier) {
+          } else if (firstArg.type === espree.Syntax.Identifier) {
             // First argument is a variable, lookup in the appropriate scope
             var varScope = getVarScope(firstArg.name);
             if (varScope) {
@@ -263,10 +264,10 @@ function extractMessages(files) {
             }
           }
           var secondArg = node.arguments[1];
-          if (secondArg.type === esprima.Syntax.ObjectExpression) {
+          if (secondArg.type === espree.Syntax.ObjectExpression) {
             // Second argument is an object, parse this chunk of the AST to get an object back
             messages = generateMessagesObject(secondArg);
-          } else if (secondArg.type === esprima.Syntax.Identifier) {
+          } else if (secondArg.type === espree.Syntax.Identifier) {
             // Second argument is a variable, lookup in the appropriate scope
             var varScope = getVarScope(secondArg.name);
             if (varScope) {
@@ -281,7 +282,7 @@ function extractMessages(files) {
         }
         if (
           node.init &&
-          node.init.type === esprima.Syntax.CallExpression &&
+          node.init.type === espree.Syntax.CallExpression &&
           node.init.callee.property &&
           node.init.callee.property.name === 'extend'
         ) {
@@ -291,10 +292,10 @@ function extractMessages(files) {
             node.init.arguments[0].properties.forEach(function(property) {
               if (property.key.name === '$trs') {
                 // Grab every message in our $trs property and save it into our messages object.
-                if (property.value.type === esprima.Syntax.ObjectExpression) {
+                if (property.value.type === espree.Syntax.ObjectExpression) {
                   // property is an object, parse this chunk of the AST to get an object back
                   messages = generateMessagesObject(property.value);
-                } else if (property.value.type === esprima.Syntax.Identifier) {
+                } else if (property.value.type === espree.Syntax.Identifier) {
                   // property is a variable, lookup in the appropriate scope
                   var varScope = getVarScope(property.value.name);
                   if (varScope) {
@@ -307,9 +308,9 @@ function extractMessages(files) {
                 }
                 // We also want to take a note of the name space these messages have been put in too!
               } else if (property.key.name === 'name') {
-                if (property.value.type === esprima.Syntax.Literal) {
+                if (property.value.type === espree.Syntax.Literal) {
                   messageNameSpace = property.value.value;
-                } else if (property.value.type === esprima.Syntax.Identifier) {
+                } else if (property.value.type === espree.Syntax.Identifier) {
                   // property is a variable, lookup in the appropriate scope
                   var varScope = getVarScope(property.value.name);
                   if (varScope) {
@@ -342,9 +343,9 @@ function extractMessages(files) {
           }
         }
         if (
-          node.type === esprima.Syntax.FunctionDeclaration ||
-          node.type === esprima.Syntax.FunctionExpression ||
-          node.type === esprima.Syntax.Program
+          node.type === espree.Syntax.FunctionDeclaration ||
+          node.type === espree.Syntax.FunctionExpression ||
+          node.type === espree.Syntax.Program
         ) {
           // Leaving this scope now!
           scopeChain.shift();
