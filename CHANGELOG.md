@@ -3,6 +3,7 @@
 ## 2019-01-30 Update
 #### Changes
 * [[@kollivier](https://github.com/kollivier)] Remove div tags from markdown output.
+* [[@micahscopes](https://github.com/micahscopes)] Ensure that the move modal dialog closes properly
 
 #### Issues
 * [#1199](https://github.com/learningequality/studio/issues/1199)
@@ -12,6 +13,9 @@
 #### Changes
 * [[@jayoshih](https://github.com/jayoshih)] Force pdf exports to use Arial font file to fix blank pdfs
 * [[@micahscopes](https://github.com/micahscopes)] Fixed the restore button in the trash modal
+* [[@jayoshih](https://github.com/jayoshih)] Fixed problems with uploading subtitles
+* [[@jayoshih](https://github.com/jayoshih)] Fixed problems with removing files
+* [[@jayoshih](https://github.com/jayoshih)] Only validate when user clicks save
 
 ## 2019-01-18 Update
 #### Changes

@@ -309,7 +309,6 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     this.$("a[href='#metadata_edit_details']").tab('show');
     var isInvalid = this.edit_list && this.edit_list.validate();
     if(isInvalid) {
-      this.disable_submit();
       this.$(".editmetadata_save").attr("title", this.get_translation("fix_errors_prompt"));
       if(isInvalid !== 1) {
         $("#editor_errors").css("display", "block").text(isInvalid);
