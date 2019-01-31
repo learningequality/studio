@@ -73,7 +73,7 @@ class PDFMixin(object):
         html = template.render(context)
         options = {
             "encoding": "utf-8-sig",
-            "quiet": "",
+            # "quiet": "",
             'page-size': 'Letter',
             'margin-top': '0.5in',
             'margin-right': '0.5in',
