@@ -11,6 +11,9 @@
 ## 2019-01-24 Update
 #### Changes
 * [[@jayoshih](https://github.com/jayoshih)] Force pdf exports to use Arial font file to fix blank pdfs
+* [[@jayoshih](https://github.com/jayoshih)] Fixed problems with uploading subtitles
+* [[@jayoshih](https://github.com/jayoshih)] Fixed problems with removing files
+* [[@jayoshih](https://github.com/jayoshih)] Only validate when user clicks save
 
 
 ## 2019-01-18 Update

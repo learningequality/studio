@@ -52,7 +52,7 @@
         <a class="action-text tab_item uppercase cancel" id="cancel_edit">{{formatMessage (intlGet 'messages.cancel')}}</a>
     {{else}}
         <a class="btn action-button uppercase" id="open-button" href="/channels/{{channel.id}}/{{#if can_edit}}edit{{else}}view{{/if}}">{{formatMessage (intlGet 'messages.open')}}</a>
-        {{#if can_edit}}<a class="action-text uppercase" id="edit_details">{{formatMessage (intlGet 'messages.edit_details')}}</a>{{/if}}
+        {{#unless channel.ricecooker_version}}{{#if can_edit}}<a class="action-text uppercase" id="edit_details">{{formatMessage (intlGet 'messages.edit_details')}}</a>{{/if}}{{/unless}}
         <div class="container-fluid channel-download-wrapper">
             <div class="btn-group">
             <a class="action-text dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
