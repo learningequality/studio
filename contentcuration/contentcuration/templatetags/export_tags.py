@@ -69,3 +69,9 @@ def encode_static_base64(value, dimension=None):
     except IOError:
         logging.warning("Could not find {}".format(value))
         return DEFAULT_ENCODING
+
+
+@register.filter(is_safe=True)
+@stringfilter
+def static_path(value):
+    return os.path.abspath(os.path.join(settings.STATIC_ROOT, value))
