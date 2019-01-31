@@ -73,5 +73,7 @@ def encode_static_base64(value, dimension=None):
 
 @register.filter(is_safe=True)
 @stringfilter
-def static_path(value):
-    return os.path.abspath(os.path.join(settings.STATIC_ROOT, value))
+def load_font_encoding(font_name):
+    staticpath = os.path.abspath(os.path.join(settings.STATIC_ROOT, "fonts", "{}.encoding".format(font_name)))
+    with open(staticpath, 'rb') as fobj:
+        return fobj.read()

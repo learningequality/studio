@@ -12,15 +12,11 @@
         <style type="text/css">
             @font-face {
                font-family: MainFont, sans-serif;
-               src: url("/usr/share/fonts/truetype/freefont/FreeSans.otf"),
-                    url("/usr/share/fonts/truetype/freefont/FreeSans.ttf") format('truetype'),
-                    url("{{'fonts/FreeSans.ttf'|static_path }}") format('truetype');
+               src: url({{'FreeSans'|load_font_encoding}});
             }
             @font-face {
                font-family: MainFontBold, sans-serif;
-               src: url("/usr/share/fonts/truetype/freefont/FreeSansBold.otf"),
-                    url("/usr/share/fonts/truetype/freefont/FreeSansBold.ttf") format('truetype'),
-                    url("{{'fonts/FreeSansBold.ttf'|static_path }}") format('truetype');
+               src: url({{'FreeSansBold'|load_font_encoding}});
             }
             body {
                 font-family: MainFont, sans-serif;
@@ -110,6 +106,9 @@
             }
             #sizes .filled {
                 background-color: {{colors.exercise}};
+            }
+            .storage-icon {
+                margin-right: 5px;
             }
             .header-row {
                 font-size: 14pt;
@@ -234,7 +233,7 @@
                             </td>
                             <td width="5%"></td>
                             <td width="45%">
-                                {% for i in data.storage.filled %}<img width="12" src="{{ 'export/storage.png' | encode_static_base64}}"> &nbsp;{% endfor %}
+                                {% for i in data.storage.filled %}<img width="12" class="storage-icon" src="{{ 'export/storage.png' | encode_static_base64}}"> &nbsp;{% endfor %}
                                 <br><span class="subtext">{{data.storage.storage}} - {{data.storage.text}}</span>
                             </td>
                         </tr>
