@@ -12,11 +12,15 @@
         <style type="text/css">
             @font-face {
                font-family: MainFont, sans-serif;
-               src: url("{{'fonts/FreeSans.ttf'|static_path }}");
+               src: url("/usr/share/fonts/truetype/freefont/FreeSans.otf"),
+                    url("/usr/share/fonts/truetype/freefont/FreeSans.ttf") format('truetype'),
+                    url("{{'fonts/FreeSans.ttf'|static_path }}") format('truetype');
             }
             @font-face {
                font-family: MainFontBold, sans-serif;
-               src: url("{{'fonts/FreeSansBold.ttf'|static_path }}");
+               src: url("/usr/share/fonts/truetype/freefont/FreeSansBold.otf"),
+                    url("/usr/share/fonts/truetype/freefont/FreeSansBold.ttf") format('truetype'),
+                    url("{{'fonts/FreeSansBold.ttf'|static_path }}") format('truetype');
             }
             body {
                 font-family: MainFont, sans-serif;
