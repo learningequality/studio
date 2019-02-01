@@ -36,6 +36,7 @@ from contentcuration.models import Language
 from contentcuration.models import License
 from contentcuration.models import PrerequisiteContentRelationship
 from contentcuration.models import SecretToken
+from contentcuration.models import Task
 from contentcuration.models import User
 from contentcuration.statistics import record_node_addition_stats
 from contentcuration.utils.channelcache import ChannelCacher
@@ -923,3 +924,9 @@ class ChannelSetSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChannelSet
         fields = ('id', 'name', 'description', 'public', 'editors', 'channels', 'secret_token')
+
+
+class TaskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Task
+        fields = ('id', 'task_type', 'created', 'metadata', 'status', 'is_progress_tracking', 'user', 'metadata')
