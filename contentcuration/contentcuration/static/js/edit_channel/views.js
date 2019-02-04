@@ -242,7 +242,7 @@ var BaseView = Backbone.View.extend({
 		this.trigger('removed')
 		Backbone.View.prototype.remove.call(this);
 	},
-	
+
   /**
    * Track an event to analytics providers (e.g. Google Analytics, Mixpanel).
    * @param {string} event_category Typically the object interacted with, e.g. 'Clipboard'
@@ -425,14 +425,14 @@ var BaseWorkspaceView = BaseView.extend({
 		State.Store.dispatch('usePrimaryModal', () => {
 			return new ArchiveView.ArchiveModalView({
 				model : new Models.ContentNodeModel(State.current_channel.get("trash_tree"))
-			 });	
+			 });
 		})
 	},
 	move_content:function(move_collection, source){
 		var MoveView = require("edit_channel/move/views");
 		if (!move_collection){
 			var list = this.get_selected(true);
-			move_collection = new Models.ContentNodeCollection(_.pluck(list, 'model'));	
+			move_collection = new Models.ContentNodeCollection(_.pluck(list, 'model'));
 		}
 		return new MoveView.MoveModalView({
 			collection: move_collection,
@@ -516,7 +516,7 @@ var BaseWorkspaceView = BaseView.extend({
 			return new settings.SettingsModalView({
 				model: State.current_channel,
 				onsave: this.handle_changed_settings
-			})	
+			})
 		})
 	},
 	handle_changed_settings: function(data){
@@ -800,51 +800,69 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 	drop_in_container:function(moved_item, selected_items, orders){
 		var self = this;
 		return new Promise(function(resolve, reject){
-			if(_.contains(orders, moved_item)){
-				self.handle_drop(selected_items).then(function(collection){
-					var ids = collection.pluck('id');
-					var pivot = orders.indexOf(moved_item);
-					var min = _.chain(orders.slice(0, pivot))
-								.reject(function(item) { return _.contains(ids, item.id); })
-								.map(function(item) { return item.get('sort_order'); })
-								.max().value();
-					var max = _.chain(orders.slice(pivot, orders.length))
-								.reject(function(item) { return _.contains(ids, item.id); })
-								.map(function(item) { return item.get('sort_order'); })
-								.min().value();
-					min = _.isFinite(min)? min : 0;
-					max = _.isFinite(max)? max : min + (selected_items.length * 2);
-
-					var reload_list = new Models.ContentNodeCollection();
-					var last_elem = $("#" + moved_item.id);
-					collection.forEach(function(node){
-						if(node.get("parent") !== self.model.get("id")){
-							var new_node = self.collection.get({id: node.get("parent")}) || new Models.ContentNodeModel({id: node.get("parent")});
-							reload_list.add(new_node);
-						}
-						var to_delete = $("#" + node.id);
-						var item_view = self.create_new_view(node);
-						last_elem.after(item_view.el);
-						last_elem = item_view.$el;
-						to_delete.remove();
-					});
-					collection.move(self.model, max, min).then(function(savedCollection){
-						self.reload_ancestors(reload_list, true, resolve);
-					}).catch(function(error){
-				        var dialog = require("edit_channel/utils/dialog");
-				        dialog.alert(self.get_translation("error_moving_content"), error.responseText, function(){
-				        	$(".content-list").sortable( "cancel" );
-			        		$(".content-list").sortable( "enable" );
-			        		$(".content-list").sortable( "refresh" );
-				            // Revert back to original positions
-			        		self.retrieve_nodes($.unique(reload_list), true).then(function(fetched){
-								self.reload_ancestors(fetched, true);
-								self.render();
-							});
-				        });
-		        	});
-				}).catch(reject);
+			if(!_.contains(orders, moved_item)) {
+				resolve();
+				return;
 			}
+
+			self.handle_drop(selected_items).then(function(collection){
+				// var ids = collection.pluck('id');
+				// var pivot = orders.indexOf(moved_item);
+				// var min = _.chain(orders.slice(0, pivot))
+				// 			.reject(function(item) { return _.contains(ids, item.id); })
+				// 			.map(function(item) { return item.get('sort_order'); })
+				// 			.max().value();
+				// var max = _.chain(orders.slice(pivot, orders.length))
+				// 			.reject(function(item) { return _.contains(ids, item.id); })
+				// 			.map(function(item) { return item.get('sort_order'); })
+				// 			.min().value();
+				// min = _.isFinite(min)? min : 0;
+				// max = _.isFinite(max)? max : min + (orders.length * 2);
+
+				var reload_list = new Models.ContentNodeCollection();
+				var last_elem = $("#" + moved_item.id);
+				collection.forEach(function(node){
+					if(node.get("parent") !== self.model.get("id")){
+						var new_node = self.collection.get({id: node.get("parent")}) || new Models.ContentNodeModel({id: node.get("parent")});
+						reload_list.add(new_node);
+					}
+					var to_delete = $("#" + node.id);
+					var item_view = self.create_new_view(node);
+					last_elem.after(item_view.el);
+					last_elem = item_view.$el;
+					to_delete.remove();
+				});
+
+				_.each(orders, function(item, index) {
+					console.log(item.get('title'), index)
+					item.set('sort_order', index);
+				})
+
+				var move_collection = new Models.ContentNodeCollection(orders);
+				// move_collection.each(function(item, index) {
+				// 	item.set('sort_order', index);
+				// })
+				// move_collection.save().then(function() {
+				// 	self.reload_ancestors(reload_list, true, resolve);
+				// });
+				console.log(move_collection, orders)
+				move_collection.move(self.model, 0, orders.length).then(function(savedCollection){
+					self.reload_ancestors(reload_list, true, resolve);
+				})
+				// .catch(function(error){
+			 //        var dialog = require("edit_channel/utils/dialog");
+			 //        dialog.alert(self.get_translation("error_moving_content"), error.responseText, function(){
+			 //        	$(".content-list").sortable( "cancel" );
+		  //       		$(".content-list").sortable( "enable" );
+		  //       		$(".content-list").sortable( "refresh" );
+			 //            // Revert back to original positions
+		  //       		self.retrieve_nodes($.unique(reload_list), true).then(function(fetched){
+				// 			self.reload_ancestors(fetched, true);
+				// 			self.render();
+				// 		});
+			 //        });
+	   //      	});
+			}).catch(reject);
 		});
 	},
 	handle_drop:function(collection){
@@ -885,7 +903,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 				onnew:self.add_nodes,
 				allow_edit: true
 			});
-	
+
 			this.collection.create_new_node({
 				"kind":"topic",
 				"title": (this.model.get('parent'))? this.model.get('title') + " " + this.get_translation("topic") : this.get_translation("topic"),
@@ -907,7 +925,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 				modal: true,
 				onimport: this.add_nodes,
 				model: this.model
-			});	
+			});
 		})
 	},
   add_files:function(){
@@ -1151,7 +1169,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 			var data={
 				model: this.model,
 			}
-			return new Previewer.PreviewModalView(data);	
+			return new Previewer.PreviewModalView(data);
 		})
 	},
 	open_move:function(source){
