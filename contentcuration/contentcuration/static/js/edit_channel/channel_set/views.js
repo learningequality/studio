@@ -26,6 +26,7 @@ var ChannelSetModalView = BaseViews.BaseView.extend({
     name: NAMESPACE,
     $trs: MESSAGES,
     initialize: function(options) {
+        _.bindAll(this, "close")
         this.options = options;
         this.statusWatcher = store.watch(
           checkForSave,
@@ -52,6 +53,7 @@ var ChannelSetModalView = BaseViews.BaseView.extend({
         this._resetPageState();
         this.ChannelSetModal = new ChannelSetModal({ store: store });
         this.ChannelSetModal.$on('modalclosed', this._destroy.bind(this));
+        this.ChannelSetModal.$on('modalclosed', this.close)
         this.ChannelSetModal.$on('modalclosing', this._checkChanges.bind(this));
         this.ChannelSetModal.$mount();
     },

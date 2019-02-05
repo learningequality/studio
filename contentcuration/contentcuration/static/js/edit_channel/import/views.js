@@ -20,10 +20,11 @@ var MESSAGES = {
     "importing_content": "Importing Content..."
 }
 
-var ImportModalView = BaseViews.BaseView.extend({
+var ImportModalView = BaseViews.BaseModalView.extend({
     name: NAMESPACE,
     $trs: MESSAGES,
     initialize: function(options) {
+        _.bindAll(this, "close")
         this.options = options;
         this.statusWatcher = store.watch(
           getImportStatus,
@@ -34,7 +35,7 @@ var ImportModalView = BaseViews.BaseView.extend({
     },
 
     render: function() {
-        Vue.nextTick().then(this._mountVueComponent.bind(this));
+      Vue.nextTick().then(this._mountVueComponent.bind(this));
     },
 
     _handleImportStatusChange: function(status) {
@@ -68,6 +69,7 @@ var ImportModalView = BaseViews.BaseView.extend({
         this._resetPageState();
         this.ImportModal = new ImportModal({ store: store });
         this.ImportModal.$on('modalclosed', this._destroy.bind(this))
+        this.ImportModal.$on('modalclosed', this.close)
         this.ImportModal.$mount();
     },
 
