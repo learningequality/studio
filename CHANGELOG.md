@@ -3,6 +3,8 @@
 ## 2019-02-05 Update
 #### Changes
 * [[@micah](https://github.com/micahscopes)] Fixed a bug where Vue-based modals weren't closing properly
+* [[@jayoshih](https://github.com/jayoshih)] Added saving indicator for move operations
+
 
 ## 2019-02-04 Update
 #### Changes
