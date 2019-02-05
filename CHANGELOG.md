@@ -1,5 +1,9 @@
 # Studio Changelog
 
+## 2019-02-05 Update
+#### Changes
+* [[@micah](https://github.com/micahscopes)] Fixed a bug where Vue-based modals weren't closing properly
+
 ## 2019-02-04 Update
 #### Changes
 * [[@jayoshih](https://github.com/jayoshih)] Fixed editors/viewers icons displaying incorrectly
