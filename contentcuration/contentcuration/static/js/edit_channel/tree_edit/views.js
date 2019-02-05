@@ -61,7 +61,7 @@ var MESSAGES = {
     "coach": "Coach",
     "coach_title": "This resource is visible to coaches",
     "coach_topic_title": "This topic contains coach-facing resources",
-    "saving": "Saving..."
+    "saving": "Saving, please wait..."
 }
 
 /**
