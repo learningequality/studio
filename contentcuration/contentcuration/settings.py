@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 import logging
 import os
 import re
+import sys
 from datetime import datetime
 from datetime import timedelta
 
@@ -33,6 +34,7 @@ CSV_ROOT = "csvs"
 EXPORT_ROOT = "exports"
 
 BETA_MODE = os.getenv("STUDIO_BETA_MODE")
+RUNNING_TESTS = (sys.argv[1:2] == ['test'] or os.path.basename(sys.argv[0]) == 'pytest')
 
 # hardcoding all this info for now. Potential for shared reference with webpack?
 WEBPACK_LOADER = {
