@@ -3,6 +3,7 @@
 ## 2019-02-05 Update
 #### Changes
 * [[@micah](https://github.com/micahscopes)] Fixed a bug where Vue-based modals weren't closing properly
+* [[@kollivier](https://github.com/kollivier)] Fixed a HTML5 app preview bug by updating le-utils.
 * [[@jayoshih](https://github.com/jayoshih)] Added saving indicator for move operations
 
 
