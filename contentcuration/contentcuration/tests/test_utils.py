@@ -33,7 +33,6 @@ class TestTheTestsTestCase(StudioTestCase):
         """
         This test checks that the Django settings for the test suite are properly set.
         """
-        import sys
         assert settings.RUNNING_TESTS and settings.CELERY_ALWAYS_EAGER
 
 
