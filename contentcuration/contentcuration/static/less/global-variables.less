@@ -330,3 +330,16 @@ ul li.placeholder:before {
     vertical-align: bottom;
   }
 }
+
+@keyframes spin {
+  from { transform: scale(1) rotate(0deg);}
+  to { transform: scale(1) rotate(360deg);}
+}
+
+.spinner {
+  .material-icons;
+  animation: spin 1.5s infinite linear;
+  &::before {
+    content: 'rotate_right';
+  }
+}

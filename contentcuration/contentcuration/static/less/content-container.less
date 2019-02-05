@@ -295,6 +295,30 @@ body {
 	}
 }
 
+#saving-spinner-wrapper {
+    position: relative;
+    margin-bottom: -10px;
+    height: 10px;
+    z-index: 100;
+    #saving-spinner {
+    	padding: 2px 10px;
+    	width: fit-content;
+    	float: right;
+    	background-color: @gray-300;
+    	color: @gray-800;
+	    margin-right: 5px;
+	    margin-top: 3px;
+	    border-radius: 5px;
+	    font-weight: bold;
+	    display: none;
+    	.spinner {
+		  font-size: 14pt;
+		  vertical-align: sub;
+		  margin-right: 5px;
+		}
+    }
+}
+
 #channel-edit-content-wrapper {
 	@container-min-height:250px;
 	@container-border-color: #BCBCBC;

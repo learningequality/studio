@@ -110,15 +110,18 @@ function addSortable(element, selected_class, callback){
                     }
 
                     selected_items.add(appended_items.models, {at: selected_items.length});
+                    $("#saving-spinner").css('display', 'block');
                     callback(current_node, selected_items, order).then(function(){
                         $(".content-list").sortable( "enable" );
                         $(".content-list").sortable( "refresh" );
+                        $("#saving-spinner").css('display', 'none');
                     }).catch(function(error){
                         console.error(error)
                         $("body").removeClass("dragging");
                         $(".content-list").sortable( "cancel" );
                         $(".content-list").sortable( "enable" );
                         $(".content-list").sortable( "refresh" );
+                        $("#saving-spinner").css('display', 'none');
                     });
                 }
 
@@ -169,12 +172,14 @@ function addDroppableArea(element, dropCallback, messages){
                         $(".content-list").sortable("cancel" );
                         $(".content-list").sortable( "enable" );
                         $(".content-list").sortable( "refresh" );
+                        $("#saving-spinner").css('display', 'none');
                     },
                     [stringHelper.get_translation(messages, "continue")]: function() {
                         dropCallback(selected_items).then(function(){
                             $(ui.draggable.context).remove();
                             $(".content-list").sortable( "enable" );
                             $(".content-list").sortable( "refresh" );
+                            $("#saving-spinner").css('display', 'none');
                         });
                     },
                 }, null);
@@ -183,6 +188,7 @@ function addDroppableArea(element, dropCallback, messages){
                     $(ui.draggable.context).remove();
                     $(".content-list").sortable( "enable" );
                     $(".content-list").sortable( "refresh" );
+                    $("#saving-spinner").css('display', 'none');
                 });
             }
         },
