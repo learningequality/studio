@@ -26,6 +26,14 @@ $(function() {
       return;
     }
 
+    if (jqXHR.status === 404) {
+      message = "404 Error: " + ajaxSettings.url;
+    }
+
+    if (jqXHR.status === 0) {
+      message = "Network Error: " + ajaxSettings.url;
+    }
+
     // Put the URL in the main message for timeouts so we can see which timeouts are most frequent.
     if (jqXHR.status === 504) {
       message = "Request Timed Out: " + ajaxSettings.url;
