@@ -199,6 +199,19 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
       if(self.collection.length > 1){
         self.load_editor(self.edit_list.selected_items);
       }
+      self.$('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+        if(self.edit_list.selected_items.length === 1) {
+          var preview_view = self.edit_list.selected_items[0].preview_view;
+          if(e.target.id === "metadata_preview_btn" && preview_view) {
+            // Load previews
+            preview_view.play();
+          } else if(preview_view) {
+            // Close previewer
+            preview_view.pause();
+          }
+        }
+
+      });
     });
   },
   load_list:function(){

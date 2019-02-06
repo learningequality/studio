@@ -112,6 +112,23 @@ var PreviewView = BaseViews.BaseView.extend({
             );
         }
     },
+    pause: function() {
+        switch(this.model.get('kind')) {
+            case "video":
+                this.$("video").get(0).pause();
+                break;
+            case "audio":
+                this.$("audio").get(0).pause();
+                break;
+        }
+    },
+    play: function() {
+        switch(this.model.get('kind')) {
+            case "html5":
+                this.$("iframe").prop("src", this.$("iframe").data("src"));
+                break;
+        }
+    },
     get_subtitles:function(){
         var subtitles = [];
         this.model.get("files").forEach(function(file){
