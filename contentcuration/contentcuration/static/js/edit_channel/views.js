@@ -800,9 +800,51 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 	drop_in_container:function(moved_item, selected_items, orders){
 		var self = this;
 		return new Promise(function(resolve, reject){
-			if(!_.contains(orders, moved_item)) {
-				resolve();
-				return;
+			if(_.contains(orders, moved_item)){
+				self.handle_drop(selected_items).then(function(collection){
+					var ids = collection.pluck('id');
+					var pivot = orders.indexOf(moved_item);
+					var min = _.chain(orders.slice(0, pivot))
+								.reject(function(item) { return _.contains(ids, item.id); })
+								.map(function(item) { return item.get('sort_order'); })
+								.max().value();
+					var max = _.chain(orders.slice(pivot, orders.length))
+								.reject(function(item) { return _.contains(ids, item.id); })
+								.map(function(item) { return item.get('sort_order'); })
+								.min().value();
+					min = _.isFinite(min)? min : 0;
+					max = _.isFinite(max)? max : min + (selected_items.length * 2);
+
+					var reload_list = new Models.ContentNodeCollection();
+					var last_elem = $("#" + moved_item.id);
+					collection.forEach(function(node){
+						if(node.get("parent") !== self.model.get("id")){
+							var new_node = self.collection.get({id: node.get("parent")}) || new Models.ContentNodeModel({id: node.get("parent")});
+							reload_list.add(new_node);
+						}
+						var to_delete = $("#" + node.id);
+						var item_view = self.create_new_view(node);
+						last_elem.after(item_view.el);
+						last_elem = item_view.$el;
+						to_delete.remove();
+					});
+					collection.move(self.model, max, min).then(function(savedCollection){
+						self.reload_ancestors(reload_list, true, resolve);
+					}).catch(function(error){
+				        var dialog = require("edit_channel/utils/dialog");
+				        dialog.alert(self.get_translation("error_moving_content"), error.responseText, function(){
+				        	$(".content-list").sortable( "cancel" );
+			        		$(".content-list").sortable( "enable" );
+			        		$(".content-list").sortable( "refresh" );
+			        		$("#saving-spinner").css('display', 'none');
+				            // Revert back to original positions
+			        		self.retrieve_nodes($.unique(reload_list), true).then(function(fetched){
+								self.reload_ancestors(fetched, true);
+								self.render();
+							});
+				        });
+		        	});
+				}).catch(reject);
 			}
 
 			self.handle_drop(selected_items).then(function(collection){

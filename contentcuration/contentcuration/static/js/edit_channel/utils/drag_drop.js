@@ -4,23 +4,6 @@ var stringHelper = require("edit_channel/utils/string_helper");
 var dialog = require("edit_channel/utils/dialog");
 const WorkspaceManager = require("./workspace_manager");
 
-var MOVES = {};
-
-function submitMove(){
-    Promise.all(_.values(MOVES)).then(function() {
-        console.log("MOVED")
-        MOVES = {};
-        $(".content-list").sortable( "enable" );
-        $(".content-list").sortable( "refresh" );
-    }).catch(function(error){
-        console.error(error)
-        $("body").removeClass("dragging");
-        $(".content-list").sortable( "cancel" );
-        $(".content-list").sortable( "enable" );
-        $(".content-list").sortable( "refresh" );
-    });
-}
-
 /* handleDrop: adds dropping ability to a certain container
 *   Parameters:
 *       container: container to add dropping ability to
@@ -100,6 +83,7 @@ function addSortable(element, selected_class, callback){
                     var order = [];
                     var selected_items = new Models.ContentNodeCollection();
                     var current_node = view.node.model;
+                    $(".content-list").sortable( "disable" );
                     element.$el.find(".queue-list-wrapper >.content-list >li, >.content-list >li").each( function(e, list_item) {
                         if($(list_item).attr('id') && !$(list_item).attr('id').includes("default_item")){
                             var node = WorkspaceManager.get($(list_item).attr('id')).node.model;
@@ -125,9 +109,19 @@ function addSortable(element, selected_class, callback){
                     }
 
                     selected_items.add(appended_items.models, {at: selected_items.length});
-
-                    MOVES[current_node.id] = callback(current_node, selected_items, order);
-                    _.debounce(submitMove, 3000)();
+                    $("#saving-spinner").css('display', 'block');
+                    callback(current_node, selected_items, order).then(function(){
+                        $(".content-list").sortable( "enable" );
+                        $(".content-list").sortable( "refresh" );
+                        $("#saving-spinner").css('display', 'none');
+                    }).catch(function(error){
+                        console.error(error)
+                        $("body").removeClass("dragging");
+                        $(".content-list").sortable( "cancel" );
+                        $(".content-list").sortable( "enable" );
+                        $(".content-list").sortable( "refresh" );
+                        $("#saving-spinner").css('display', 'none');
+                    });
                 }
 
             }
@@ -177,12 +171,14 @@ function addDroppableArea(element, dropCallback, messages){
                         $(".content-list").sortable("cancel" );
                         $(".content-list").sortable( "enable" );
                         $(".content-list").sortable( "refresh" );
+                        $("#saving-spinner").css('display', 'none');
                     },
                     [stringHelper.get_translation(messages, "continue")]: function() {
                         dropCallback(selected_items).then(function(){
                             $(ui.draggable.context).remove();
                             $(".content-list").sortable( "enable" );
                             $(".content-list").sortable( "refresh" );
+                            $("#saving-spinner").css('display', 'none');
                         });
                     },
                 }, null);
@@ -191,6 +187,7 @@ function addDroppableArea(element, dropCallback, messages){
                     $(ui.draggable.context).remove();
                     $(".content-list").sortable( "enable" );
                     $(".content-list").sortable( "refresh" );
+                    $("#saving-spinner").css('display', 'none');
                 });
             }
         },

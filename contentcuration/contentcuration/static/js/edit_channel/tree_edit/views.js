@@ -60,7 +60,8 @@ var MESSAGES = {
     "copy_to_clipboard": "Copy to Clipboard",
     "coach": "Coach",
     "coach_title": "This resource is visible to coaches",
-    "coach_topic_title": "This topic contains coach-facing resources"
+    "coach_topic_title": "This topic contains coach-facing resources",
+    "saving": "Saving, please wait..."
 }
 
 /**

@@ -1,5 +1,13 @@
 # Studio Changelog
 
+## 2019-02-05 Update
+#### Changes
+* [[@micah](https://github.com/micahscopes)] Fixed a bug where Vue-based modals weren't closing properly
+* [[@kollivier](https://github.com/kollivier)] Fixed a HTML5 app preview bug by updating le-utils.
+* [[@jayoshih](https://github.com/jayoshih)] Added saving indicator for move operations
+* [[@jayoshih](https://github.com/jayoshih)] Update gcs storage to handle opening legacy files from the server
+
+
 ## 2019-02-04 Update
 #### Changes
 * [[@jayoshih](https://github.com/jayoshih)] Fixed editors/viewers icons displaying incorrectly
