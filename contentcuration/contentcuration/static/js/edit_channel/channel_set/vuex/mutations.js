@@ -30,6 +30,7 @@ export function RESET_PAGE_STATE(state) {
     description: "",
     channels: [],
     saving: false,
+    closing: false,
     error: false,
     allChannels: {},
     changed: false,
@@ -89,6 +90,10 @@ export function SET_CHANGED(state, changed) {
 
 export function SET_SAVING(state, saving) {
   state.saving = saving;
+}
+
+export function SET_CLOSING(state, closing) {
+  state.closing = closing;
 }
 
 export function SET_ERROR(state, error) {

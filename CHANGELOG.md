@@ -3,6 +3,7 @@
 ## 2019-02-04 Update
 #### Changes
 * [[@jayoshih](https://github.com/jayoshih)] Fixed editors/viewers icons displaying incorrectly
+* [[@jayoshih](https://github.com/jayoshih)] Added Save & Close option to channel collections
 
 #### Issues
 * [#1194](https://github.com/learningequality/studio/issues/1194)

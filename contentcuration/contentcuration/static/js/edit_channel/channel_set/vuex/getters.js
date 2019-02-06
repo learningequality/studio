@@ -40,3 +40,7 @@ export function isValid(state) {
 export function saving(state) {
   return state.saving;
 }
+
+export function closing(state) {
+  return state.closing;
+}
