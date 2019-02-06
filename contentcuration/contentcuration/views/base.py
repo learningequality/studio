@@ -89,9 +89,9 @@ CHANNEL_SERIALIZER_MAP = {
 @browser_is_supported
 def base(request):
     if request.user.is_authenticated():
-        return redirect('channels')
+        return redirect('channels', permanent=False)
     else:
-        return redirect('accounts/login')
+        return redirect('accounts/login', permanent=False)
 
 
 def health(request):
