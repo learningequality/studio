@@ -6,6 +6,7 @@
 * [[@kollivier](https://github.com/kollivier)] Fixed a HTML5 app preview bug by updating le-utils.
 * [[@jayoshih](https://github.com/jayoshih)] Added saving indicator for move operations
 * [[@jayoshih](https://github.com/jayoshih)] Update gcs storage to handle opening legacy files from the server
+* [[@jayoshih](https://github.com/jayoshih)] Added Save & Close option to channel collections
 
 
 ## 2019-02-04 Update

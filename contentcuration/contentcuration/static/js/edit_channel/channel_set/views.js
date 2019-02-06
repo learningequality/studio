@@ -39,12 +39,15 @@ var ChannelSetModalView = BaseViews.BaseView.extend({
         Vue.nextTick().then(this._mountVueComponent.bind(this));
     },
 
-    _handleSaving: function(saving, callback) {
+    _handleSaving: function(saving, close) {
         if(saving) {
             var self = this;
             store.dispatch('channel_set/saveChannelSet', function(model) {
                 self.options.onsave(model);
-                callback && callback();
+                if(close || store.state.channel_set.closing) {
+                  store.commit('channel_set/SET_CLOSING', false);
+                  self.ChannelSetModal.closeModal();
+                }
             });
         }
     },
@@ -69,7 +72,7 @@ var ChannelSetModalView = BaseViews.BaseView.extend({
               },
               [this.get_translation("keep_open")]:function(){},
               [this.get_translation("save_and_close")]:function(){
-                self._handleSaving(true, self.ChannelSetModal.closeModal);
+                self._handleSaving(true, true);
               },
           }, null);
         }
