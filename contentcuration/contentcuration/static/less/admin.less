@@ -17,7 +17,7 @@ body {
 
 #admin-page {
 	margin: 0 1em;
-	h2 { 
+	h2 {
 		position: absolute;
 		top: 0;
 		left: 0;
@@ -28,11 +28,11 @@ body {
 		pointer-events: none;
 	}
 	nav {
-		text-align: center;		
+		text-align: center;
 		.pagination {
 			margin: 5px;
 			user-select: none;
-		}	
+		}
 		.disabled {
 			pointer-events: none;
 		}
@@ -248,7 +248,7 @@ body {
 			opacity: 1;
 			transition: opacity 0.25s ease-in-out;
 		}
-		.spinner {
+		.loading-spinner {
 			position: absolute;
 			pointer-events: none;
 			left: 0;
@@ -257,15 +257,9 @@ body {
 			height: 100%;
 			font-size: 5em;
 			color: @gray-300;
-		}
-
-		.spinner-animate {
-			animation: spin 1.5s infinite linear;
-		}
-				
-		@keyframes spin {
-			from { transform: scale(1) rotate(0deg);}
-			to { transform: scale(1) rotate(360deg);}
+    		.spinner {
+    			font-size: 75pt;
+    		}
 		}
 
 		&.loaded .spinner {
