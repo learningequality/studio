@@ -846,66 +846,6 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 		        	});
 				}).catch(reject);
 			}
-
-			self.handle_drop(selected_items).then(function(collection){
-				// var ids = collection.pluck('id');
-				// var pivot = orders.indexOf(moved_item);
-				// var min = _.chain(orders.slice(0, pivot))
-				// 			.reject(function(item) { return _.contains(ids, item.id); })
-				// 			.map(function(item) { return item.get('sort_order'); })
-				// 			.max().value();
-				// var max = _.chain(orders.slice(pivot, orders.length))
-				// 			.reject(function(item) { return _.contains(ids, item.id); })
-				// 			.map(function(item) { return item.get('sort_order'); })
-				// 			.min().value();
-				// min = _.isFinite(min)? min : 0;
-				// max = _.isFinite(max)? max : min + (orders.length * 2);
-
-				var reload_list = new Models.ContentNodeCollection();
-				var last_elem = $("#" + moved_item.id);
-				collection.forEach(function(node){
-					if(node.get("parent") !== self.model.get("id")){
-						var new_node = self.collection.get({id: node.get("parent")}) || new Models.ContentNodeModel({id: node.get("parent")});
-						reload_list.add(new_node);
-					}
-					var to_delete = $("#" + node.id);
-					var item_view = self.create_new_view(node);
-					last_elem.after(item_view.el);
-					last_elem = item_view.$el;
-					to_delete.remove();
-				});
-
-				_.each(orders, function(item, index) {
-					console.log(item.get('title'), index)
-					item.set('sort_order', index);
-				})
-
-				var move_collection = new Models.ContentNodeCollection(orders);
-				// move_collection.each(function(item, index) {
-				// 	item.set('sort_order', index);
-				// })
-				// move_collection.save().then(function() {
-				// 	self.reload_ancestors(reload_list, true, resolve);
-				// });
-				console.log(move_collection, orders)
-				move_collection.move(self.model, 0, orders.length).then(function(savedCollection){
-					self.reload_ancestors(reload_list, true, resolve);
-				})
-				// .catch(function(error){
-			 //        var dialog = require("edit_channel/utils/dialog");
-			 //        dialog.alert(self.get_translation("error_moving_content"), error.responseText, function(){
-			 //        	$(".content-list").sortable( "cancel" );
-		  //       		$(".content-list").sortable( "enable" );
-		  //       		$(".content-list").sortable( "refresh" );
-			 //            // Revert back to original positions
-		  //       		self.retrieve_nodes($.unique(reload_list), true).then(function(fetched){
-				// 			self.reload_ancestors(fetched, true);
-				// 			self.render();
-				// 		});
-			 //        });
-	   //      	});
-			}).catch(reject);
-		});
 	},
 	handle_drop:function(collection){
 		this.$(this.default_item).css("display", "none");
