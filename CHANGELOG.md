@@ -1,5 +1,11 @@
 # Studio Changelog
 
+
+## 2019-02-06 Update
+#### Changes
+* [[@kollivier](https://github.com/kollivier)] Improve Sentry error reporting for 404s and network errors.
+
+
 ## 2019-02-05 Update
 #### Changes
 * [[@micah](https://github.com/micahscopes)] Fixed a bug where Vue-based modals weren't closing properly
