@@ -5,8 +5,14 @@
 * [[@micah](https://github.com/micahscopes)] Fixed a bug where Vue-based modals weren't closing properly
 * [[@kollivier](https://github.com/kollivier)] Fixed a HTML5 app preview bug by updating le-utils.
 * [[@jayoshih](https://github.com/jayoshih)] Added saving indicator for move operations
+* [[@jayoshih](https://github.com/jayoshih)] Automatically start html when preview tab is opened
+* [[@jayoshih](https://github.com/jayoshih)] Pause videos and audios when preview tab is closed
 * [[@jayoshih](https://github.com/jayoshih)] Update gcs storage to handle opening legacy files from the server
 * [[@jayoshih](https://github.com/jayoshih)] Added Save & Close option to channel collections
+
+#### Issues
+* [#1050](https://github.com/learningequality/studio/issues/1050)
+* [#728](https://github.com/learningequality/studio/issues/728)
 
 
 ## 2019-02-04 Update

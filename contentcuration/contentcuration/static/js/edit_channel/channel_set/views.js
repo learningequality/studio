@@ -22,7 +22,7 @@ function checkForSave(state) {
   return state.channel_set.saving;
 }
 
-var ChannelSetModalView = BaseViews.BaseView.extend({
+var ChannelSetModalView = BaseViews.BaseModalView.extend({
     name: NAMESPACE,
     $trs: MESSAGES,
     initialize: function(options) {

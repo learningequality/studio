@@ -29,10 +29,9 @@
         {{ $tr('saveButtonLabel') }}
       </button>
       <span
-        class="spinner material-icons pull-right"
+        class="spinner pull-right"
         v-show="saving"
       >
-        autorenew
       </span>
       <span class="redText errorText pull-right" v-show="error">
         {{ $tr('errorText') }}
