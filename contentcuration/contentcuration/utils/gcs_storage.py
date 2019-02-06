@@ -52,6 +52,11 @@ class GoogleCloudStorage(Storage):
              " Please use Storage.save() instead.")
 
         if not blob_object:
+            # the old studio storage had a prefix if /contentworkshop_content/
+            # before the path; remove that first before passing it in to GCS
+            # TODO (aron): remove hack once we've migrated all File models to remove the prefix
+            if name.startswith(OLD_STUDIO_STORAGE_PREFIX):
+                name = name.split(OLD_STUDIO_STORAGE_PREFIX).pop()
             blob = self.bucket.get_blob(name)
         else:
             blob = blob_object

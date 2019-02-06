@@ -7,6 +7,7 @@
 * [[@jayoshih](https://github.com/jayoshih)] Added saving indicator for move operations
 * [[@jayoshih](https://github.com/jayoshih)] Automatically start html when preview tab is opened
 * [[@jayoshih](https://github.com/jayoshih)] Pause videos and audios when preview tab is closed
+* [[@jayoshih](https://github.com/jayoshih)] Update gcs storage to handle opening legacy files from the server
 
 #### Issues
 * [#1050](https://github.com/learningequality/studio/issues/1050)
