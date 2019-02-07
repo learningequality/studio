@@ -125,17 +125,8 @@ class ContentKindViewSet(viewsets.ModelViewSet):
 
 
 class ContentNodeViewSet(BulkModelViewSet):
-    queryset = ContentNode.objects.all()
+    queryset = ContentNode.objects.none()
     serializer_class = serializers.ContentNodeCompleteSerializer
-
-    def get_queryset(self):
-        if self.request.user.is_admin:
-            return ContentNode.objects.all()
-
-        # Set up eager loading to avoid N+1 selects
-        tree_ids = get_channel_tree_ids(self.request.user)
-        return ContentNode.objects.prefetch_related('children').prefetch_related('files') \
-                                  .prefetch_related('assessment_items').filter(tree_id__in=tree_ids).distinct()
 
 
 class TagViewSet(viewsets.ModelViewSet):
