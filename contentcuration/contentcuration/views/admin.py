@@ -9,20 +9,21 @@ import sys
 import time
 from itertools import chain
 
+import django_filters
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import SuspiciousOperation
-from django.db.models import CharField
-from django.db.models import IntegerField
-from django.db.models import F
-from django.db.models import When
 from django.db.models import Case
+from django.db.models import CharField
 from django.db.models import Count
+from django.db.models import F
+from django.db.models import IntegerField
 from django.db.models import Max
 from django.db.models import Sum
 from django.db.models import Value
+from django.db.models import When
 from django.db.models.functions import Concat
 from django.http import FileResponse
 from django.http import HttpResponse
@@ -31,25 +32,24 @@ from django.http import HttpResponseNotFound
 from django.http import StreamingHttpResponse
 from django.shortcuts import render
 from django.template import Context
-import django_filters
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.filters import OrderingFilter
-from rest_framework.filters import SearchFilter
-from rest_framework import generics
-from rest_framework.pagination import PageNumberPagination
 from django.template.loader import get_template
 from django.template.loader import render_to_string
 from django.views.decorators.cache import cache_page
 from django.views.decorators.http import condition
+from django_filters.rest_framework import DjangoFilterBackend
 from le_utils.constants import content_kinds
 from PIL import Image
 from raven.contrib.django.raven_compat.models import client
+from rest_framework import generics
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import api_view
 from rest_framework.decorators import authentication_classes
 from rest_framework.decorators import permission_classes
+from rest_framework.filters import OrderingFilter
+from rest_framework.filters import SearchFilter
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAdminUser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
@@ -59,7 +59,6 @@ from xhtml2pdf import pisa
 from contentcuration.decorators import browser_is_supported
 from contentcuration.decorators import is_admin
 from contentcuration.models import Channel
-from contentcuration.models import ContentNode
 from contentcuration.models import generate_file_on_disk_name
 from contentcuration.models import Invitation
 from contentcuration.models import User
@@ -69,6 +68,7 @@ from contentcuration.serializers import CurrentUserSerializer
 from contentcuration.serializers import UserChannelListSerializer
 from contentcuration.utils.channelcache import ChannelCacher
 from contentcuration.utils.messages import get_messages
+from contentcuration.views.nodes import get_node_details
 
 reload(sys)
 sys.setdefaultencoding('UTF8')
@@ -141,19 +141,11 @@ def get_channel_kind_count(request, channel_id):
         raise SuspiciousOperation("You are not authorized to access this endpoint")
 
     channel = Channel.objects.get(pk=channel_id)
-
-    sizes = ContentNode.objects\
-        .prefetch_related('assessment_items')\
-        .prefetch_related('files')\
-        .prefetch_related('children')\
-        .filter(tree_id=channel.main_tree.tree_id)\
-        .values('files__checksum', 'assessment_items__files__checksum', 'files__file_size', 'assessment_items__files__file_size')\
-        .distinct()\
-        .aggregate(resource_size=Sum('files__file_size'), assessment_size=Sum('assessment_items__files__file_size'))
+    data = get_node_details(channel.main_tree)
 
     return HttpResponse(json.dumps({
-        "counts": list(channel.main_tree.get_descendants().values('kind_id').annotate(count=Count('kind_id')).order_by('kind_id')),
-        "size": (sizes['resource_size'] or 0) + (sizes['assessment_size'] or 0),
+        "counts": data['kind_count'],
+        "size": data['resource_size'],
     }))
 
 
@@ -439,7 +431,7 @@ def generate_thumbnail(channel):
 def get_channel_data(channel, site, default_thumbnail=None):
     import time
     start = time.time()
-    print "Starting " + channel.name.encode('utf-8')
+    print("Starting " + channel.name.encode('utf-8'))
 
     data = {
         "name": channel.name,
@@ -495,7 +487,7 @@ def get_channel_data(channel, site, default_thumbnail=None):
     data["total_size"] = sizeof_fmt(resources.values('files__checksum', 'files__file_size').distinct(
     ).aggregate(resource_size=Sum('files__file_size'))['resource_size'] or 0)
 
-    print channel.name.encode('utf-8') + " time:", time.time() - start
+    print(channel.name.encode('utf-8') + " time:", time.time() - start)
     return data
 
 
@@ -570,7 +562,7 @@ def download_channel_pdf(request):
         .distinct()\
         .order_by('name')
 
-    print "Channel query time:", time.time() - start
+    print("Channel query time:", time.time() - start)
 
     site = get_current_site(request)
 
@@ -592,5 +584,5 @@ def download_channel_pdf(request):
         response['Content-disposition'] = 'attachment;filename=channels.pdf'
         response['Set-Cookie'] = "fileDownload=true; path=/"
 
-    print "\n\n\nTotal time:", time.time() - start, "\n\n\n"
+    print("\n\n\nTotal time:", time.time() - start, "\n\n\n")
     return response

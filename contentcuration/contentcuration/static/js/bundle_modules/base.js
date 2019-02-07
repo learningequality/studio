@@ -6,7 +6,9 @@ require('../handlebars/helpers.js');
 // side effect: adds shared styles to the DOM
 require('../../less/styles.less');
 
-require('../utils/offline_helper');
+if(!window.DEBUG) {
+  require('../utils/offline_helper');
+}
 
 // Promise polyfill
 if(!global.Promise) {
@@ -22,6 +24,14 @@ $(function() {
     // Don't send a Sentry report for permissions errors
     if (jqXHR.status === 403) {
       return;
+    }
+
+    if (jqXHR.status === 404) {
+      message = "404 Error: " + ajaxSettings.url;
+    }
+
+    if (jqXHR.status === 0) {
+      message = "Network Error: " + ajaxSettings.url;
     }
 
     // Put the URL in the main message for timeouts so we can see which timeouts are most frequent.

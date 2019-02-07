@@ -133,6 +133,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __unicode__(self):
         return self.email
 
+    def delete(self):
+        # Remove any invitations associated to this account
+        self.sent_to.all().delete()
+        super(User, self).delete()
+
     def can_edit(self, channel_id):
         channel = Channel.objects.filter(pk=channel_id).first()
         if not self.is_admin and channel and not channel.editors.filter(pk=self.pk).exists():
@@ -414,8 +419,47 @@ class SecretToken(models.Model):
         """
         return cls.objects.filter(token=token).exists()
 
+    @classmethod
+    def generate_new_token(cls):
+        """
+        Creates a primary secret token for the current channel using a proquint
+        string. Creates a secondary token containing the channel id.
+
+        These tokens can be used to refer to the channel to download its content
+        database.
+        """
+        token = proquint.generate()
+
+        # Try 100 times to generate a unique token.
+        TRIALS = 100
+        for __ in range(TRIALS):
+            token = proquint.generate()
+            if SecretToken.exists(token):
+                continue
+            else:
+                break
+        # after TRIALS attempts and we didn't get a unique token,
+        # just raise an error.
+        # See https://stackoverflow.com/a/9980160 on what for-else loop does.
+        else:
+            raise ValueError("Cannot generate new token")
+
+        # We found a unique token! Save it
+        return token
+
+    def set_channels(self, channels):
+        channel_ids = channels.values_list('pk', flat=True)
+
+        # Remove token from channels that aren't in list
+        for channel in self.channels.exclude(pk__in=channel_ids):
+            channel.secret_tokens.remove(self)
+
+        # Add tokens to channels in list
+        for channel in channels.exclude(secret_tokens__token=self.token):
+            channel.secret_tokens.add(self)
+
     def __str__(self):
-        return self.token
+        return "{}-{}".format(self.token[:5], self.token[5:])
 
 
 class Channel(models.Model):
@@ -505,7 +549,6 @@ class Channel(models.Model):
         return files['resource_size'] or 0
 
     def save(self, *args, **kwargs):  # noqa: C901
-
         original_channel = None
         if self.pk and Channel.objects.filter(pk=self.pk).exists():
             original_channel = Channel.objects.get(pk=self.pk)
@@ -527,6 +570,8 @@ class Channel(models.Model):
                 sort_order=get_next_sort_order(),
                 content_id=self.id,
                 node_id=self.id,
+                original_channel_id=self.id,
+                source_channel_id=self.id,
             )
             self.main_tree.save()
         elif self.main_tree.title != self.name:
@@ -546,10 +591,9 @@ class Channel(models.Model):
             self.trash_tree.title = self.name
             self.trash_tree.save()
 
-        super(Channel, self).save(*args, **kwargs)
-
         if original_channel and not self.main_tree.changed:
-            fields_to_check = ['description', 'language_id', 'thumbnail', 'name', 'language', 'thumbnail_encoding', 'deleted']
+            # Changing channel metadata should also mark main_tree as changed
+            fields_to_check = ['description', 'language_id', 'thumbnail', 'name', 'thumbnail_encoding', 'deleted']
             self.main_tree.changed = any([f for f in fields_to_check if getattr(self, f) != getattr(original_channel, f)])
 
             # Delete db if channel has been deleted and mark as unpublished
@@ -560,6 +604,8 @@ class Channel(models.Model):
                     os.unlink(channel_db_url)
                     self.main_tree.published = False
             self.main_tree.save()
+
+        super(Channel, self).save(*args, **kwargs)
 
     def get_thumbnail(self):
         if self.thumbnail_encoding:
@@ -585,34 +631,9 @@ class Channel(models.Model):
         return self.secret_tokens.get(token=self.id)
 
     def make_token(self):
-        """
-        Creates a primary secret token for the current channel using a proquint
-        string. Creates a secondary token containing the channel id.
-
-        These tokens can be used to refer to the channel to download its content
-        database.
-        """
-        token = proquint.generate()
-
-        # Try 100 times to generate a unique token.
-        TRIALS = 100
-        for __ in range(TRIALS):
-            token = proquint.generate()
-            if SecretToken.exists(token):
-                continue
-            else:
-                break
-        # after TRIALS attempts and we didn't get a unique token,
-        # just raise an error.
-        # See https://stackoverflow.com/a/9980160 on what for-else loop does.
-        else:
-            raise ValueError("Cannot generate new token")
-
-        # We found a unique token! Save it
-        human_token = self.secret_tokens.create(token=token, is_primary=True)
+        token = self.secret_tokens.create(token=SecretToken.generate_new_token(), is_primary=True)
         self.secret_tokens.get_or_create(token=self.id)
-
-        return human_token
+        return token
 
     def make_public(self, bypass_signals=False):
         """
@@ -658,6 +679,40 @@ class Channel(models.Model):
         index_together = [
             ["deleted", "public"]
         ]
+
+
+class ChannelSet(models.Model):
+    # NOTE: this is referred to as "channel collections" on the front-end, but we need to call it
+    # something else as there is already a ChannelCollection model on the front-end
+    id = UUIDField(primary_key=True, default=uuid.uuid4)
+    name = models.CharField(max_length=200, blank=True)
+    description = models.CharField(max_length=400, blank=True)
+    public = models.BooleanField(default=False, db_index=True)
+    editors = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name='channel_sets',
+        verbose_name=_("editors"),
+        help_text=_("Users with edit rights"),
+        blank=True,
+    )
+    secret_token = models.ForeignKey('SecretToken', null=True, blank=True, related_name='channel_sets', on_delete=models.SET_NULL)
+
+    def get_channels(self):
+        if self.secret_token:
+            return self.secret_token.channels.filter(deleted=False)
+
+    def save(self, *args, **kwargs):
+        super(ChannelSet, self).save(*args, **kwargs)
+
+        if not self.secret_token:
+            self.secret_token = SecretToken.objects.create(token=SecretToken.generate_new_token())
+            self.save()
+
+    def delete(self, *args, **kwargs):
+        super(ChannelSet, self).delete(*args, **kwargs)
+
+        if self.secret_token:
+            self.secret_token.delete()
 
 
 class ContentTag(models.Model):
@@ -815,25 +870,38 @@ class ContentNode(MPTTModel, models.Model):
             self._original_fields = ContentNode.objects.get(pk=self.pk)._as_dict()
             # don't include the changed (dirty) field in the list of fields we check to see if the object is dirty
             del self._original_fields['changed']
+            del self._original_fields['modified']
+            del self._original_fields['publishing']
 
         return dict([(key, value) for key, value in self._original_fields.iteritems() if value != new_state[key]])
 
-    def get_tree_data(self, include_self=True):
-        if not include_self:
-            return [c.get_tree_data() for c in self.children.all()]
-        elif self.kind_id == content_kinds.TOPIC:
-            return {
+    def get_tree_data(self, levels=float('inf')):
+        """
+        Returns `levels`-deep tree information starting at current node.
+        Args:
+          levels (int): depth of tree hierarchy to return
+        Returns:
+          tree (dict): starting with self, with children list containing either
+                       the just the children's `node_id`s or full recusive tree.
+        """
+        if self.kind_id == content_kinds.TOPIC:
+            node_data = {
                 "title": self.title,
                 "kind": self.kind_id,
-                "children": [c.get_tree_data() for c in self.children.all()],
                 "node_id": self.node_id,
+                "studio_id": self.id,
             }
+            children = self.children.all()
+            if levels > 0:
+                node_data["children"] = [c.get_tree_data(levels=levels-1) for c in children]
+            return node_data
         elif self.kind_id == content_kinds.EXERCISE:
             return {
                 "title": self.title,
                 "kind": self.kind_id,
                 "count": self.assessment_items.count(),
                 "node_id": self.node_id,
+                "studio_id": self.id,
             }
         else:
             return {
@@ -841,30 +909,8 @@ class ContentNode(MPTTModel, models.Model):
                 "kind": self.kind_id,
                 "file_size": self.files.values('file_size').aggregate(size=Sum('file_size'))['size'],
                 "node_id": self.node_id,
+                "studio_id": self.id,
             }
-
-    def get_node_tree_data(self):
-        nodes = []
-        for child in self.children.all():
-            if child.kind_id == content_kinds.TOPIC:
-                nodes.append({
-                    "title": child.title,
-                    "kind": child.kind_id,
-                    "node_id": child.node_id,
-                })
-            elif child.kind_id == content_kinds.EXERCISE:
-                nodes.append({
-                    "title": child.title,
-                    "kind": child.kind_id,
-                    "count": child.assessment_items.count(),
-                })
-            else:
-                nodes.append({
-                    "title": child.title,
-                    "kind": child.kind_id,
-                    "file_size": child.files.values('file_size').aggregate(size=Sum('file_size'))['size'],
-                })
-        return nodes
 
     def get_original_node(self):
         original_node = self.original_node or self
@@ -925,6 +971,7 @@ class ContentNode(MPTTModel, models.Model):
             return cls.objects.filter(title=title)
 
     def save(self, *args, **kwargs):  # noqa: C901
+
         channel_id = None
         if kwargs.get('request'):
             request = kwargs.pop('request')
@@ -950,7 +997,9 @@ class ContentNode(MPTTModel, models.Model):
         # Getting the channel is an expensive call, so warn about it so that we can reduce the number of cases in which
         # we need to do this.
         if not channel_id and (not self.original_channel_id or not self.source_channel_id):
-            warnings.warn("Determining node's channel is an expensive operation. Please set original_channel_id and source_channel_id to the parent's values when creating child nodes.", stacklevel=2)
+            warnings.warn("Determining node's channel is an expensive operation. Please set original_channel_id and "
+                          "source_channel_id to the parent's values when creating child nodes.", stacklevel=2)
+
             channel = (self.parent and self.parent.get_channel()) or self.get_channel()
             if channel:
                 channel_id = channel.pk

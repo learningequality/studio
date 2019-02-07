@@ -68,12 +68,13 @@ var TempSyncModalView = BaseViews.BaseModalView.extend({
     $trs: MESSAGES,
 
     initialize: function(options) {
-        _.bindAll(this, "init_focus");
+        _.bindAll(this, "init_focus", "closed_modal");
         this.onsync = options.onsync;
         this.collection = options.collection;
         this.selected_options = {};
         this.render(this.close, {});
         this.$("#temp_sync_modal").on("shown.bs.modal", this.init_focus);
+        this.$(".modal").on("hidden.bs.modal", this.closed_modal);
     },
     events: {
         'click .category_check' : 'handle_selection',

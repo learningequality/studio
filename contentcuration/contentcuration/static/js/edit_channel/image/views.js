@@ -266,9 +266,9 @@ var ThumbnailModalView = BaseViews.BaseModalView.extend({
     img_template: require("./hbtemplates/thumbnail_generator_preview.handlebars"),
     name: NAMESPACE,
     $trs: MESSAGES,
+    modal: true,
     initialize: function(options) {
         _.bindAll(this, "generate_thumbnail", 'use_thumbnail', 'render_preview', "init_focus");
-        this.modal = true;
         this.node = options.node;
         this.onuse = options.onuse;
         this.render();

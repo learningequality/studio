@@ -19,9 +19,9 @@ var MESSAGES = {
 
 var PreviewModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/preview_modal.handlebars"),
+    modal: true,
     initialize: function(options) {
         _.bindAll(this, "close_preview");
-        this.modal = true;
         this.render(this.close_preview, {node:this.model.toJSON()});
         this.preview_view = new PreviewView({
             model:this.model,
@@ -110,6 +110,23 @@ var PreviewView = BaseViews.BaseView.extend({
                 this.model.get("thumbnail_encoding") && this.model.get("thumbnail_encoding").base64,
                 this.get_intl_data()
             );
+        }
+    },
+    pause: function() {
+        switch(this.model.get('kind')) {
+            case "video":
+                this.$("video").get(0).pause();
+                break;
+            case "audio":
+                this.$("audio").get(0).pause();
+                break;
+        }
+    },
+    play: function() {
+        switch(this.model.get('kind')) {
+            case "html5":
+                this.$("iframe").prop("src", this.$("iframe").data("src"));
+                break;
         }
     },
     get_subtitles:function(){

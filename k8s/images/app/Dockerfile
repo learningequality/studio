@@ -1,6 +1,6 @@
 FROM ubuntu:xenial
 
-RUN apt-get update
+RUN apt-get update --fix-missing
 
 RUN apt-get -y install curl
 
@@ -13,7 +13,9 @@ RUN curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
 # install node
 RUN curl -sL https://deb.nodesource.com/setup_6.x | bash -
 
-RUN apt-get -y install nodejs python python-dev python-pip gcc libpq-dev ffmpeg imagemagick ghostscript python-tk make git gettext openjdk-9-jre-headless curl libjpeg-dev wkhtmltopdf google-cloud-sdk
+RUN apt-get -y install nodejs python python-dev python-pip gcc libpq-dev ffmpeg imagemagick ghostscript python-tk make git gettext openjdk-9-jre-headless curl libjpeg-dev wkhtmltopdf google-cloud-sdk fonts-freefont-ttf xfonts-75dpi poppler-utils
+
+RUN curl -L -o wkhtmltox.deb https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.5/wkhtmltox_0.12.5-1.xenial_amd64.deb && dpkg -i wkhtmltox.deb
 
 RUN npm install -g yarn
 

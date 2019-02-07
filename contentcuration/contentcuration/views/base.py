@@ -22,8 +22,7 @@ from django.shortcuts import redirect
 from django.shortcuts import render
 from django.views.decorators.cache import cache_page
 from django.views.decorators.csrf import csrf_exempt
-from le_utils.constants import exercises
-from le_utils.constants import roles
+from enum import Enum
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authentication import TokenAuthentication
@@ -49,11 +48,14 @@ from contentcuration.models import FormatPreset
 from contentcuration.models import Invitation
 from contentcuration.models import Language
 from contentcuration.models import License
+from contentcuration.models import SecretToken
 from contentcuration.models import User
 from contentcuration.models import VIEW_ACCESS
 from contentcuration.serializers import AltChannelListSerializer
 from contentcuration.serializers import ChannelListSerializer
 from contentcuration.serializers import ChannelSerializer
+from contentcuration.serializers import ChannelSetChannelListSerializer
+from contentcuration.serializers import ChannelSetSerializer
 from contentcuration.serializers import ContentKindSerializer
 from contentcuration.serializers import CurrentUserSerializer
 from contentcuration.serializers import FileFormatSerializer
@@ -69,6 +71,19 @@ from contentcuration.utils.channelcache import ChannelCacher
 from contentcuration.utils.messages import get_messages
 
 PUBLIC_CHANNELS_CACHE_DURATION = 30  # seconds
+
+
+class ChannelSerializerTypes(Enum):
+    DEFAULT = "default"
+    ALT = "alt"
+    CHANNEL_SET = "channelset"
+
+
+CHANNEL_SERIALIZER_MAP = {
+    ChannelSerializerTypes.DEFAULT.value: ChannelListSerializer,
+    ChannelSerializerTypes.ALT.value: AltChannelListSerializer,
+    ChannelSerializerTypes.CHANNEL_SET.value: ChannelSetChannelListSerializer,
+}
 
 
 @browser_is_supported
@@ -139,6 +154,7 @@ def channel_page(request, channel, allow_edit=False, staging=False):
                                                  "channel": json_renderer.render(channel_serializer.data),
                                                  "channel_id": channel.pk,
                                                  "channel_name": channel.name,
+                                                 "ricecooker_version": channel.ricecooker_version,
                                                  "channel_list": channel_list,
                                                  "current_user": json_renderer.render(CurrentUserSerializer(request.user).data),
                                                  "preferences": json.dumps(channel.content_defaults),
@@ -174,6 +190,18 @@ def channel_list(request):
                                                  })
 
 
+def _apply_channel_filters(channels, params, default_serializer=ChannelSerializerTypes.DEFAULT):
+    if params.get('published'):
+        channels = channels.filter(main_tree__published=True)
+
+    # Determine which serializer to use
+    serializer_class = params.get('serializer') or default_serializer.value
+    serializer = CHANNEL_SERIALIZER_MAP.get(serializer_class)
+    serializer = serializer or CHANNEL_SERIALIZER_MAP[ChannelSerializerTypes.DEFAULT.value]
+
+    return serializer(channels, many=True)
+
+
 @api_view(['GET'])
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
@@ -181,7 +209,7 @@ def get_user_channels(request):
     channel_list = Channel.objects.prefetch_related('editors', 'viewers')\
         .filter(Q(deleted=False) & (Q(editors=request.user.pk) | Q(viewers=request.user.pk)))\
         .annotate(is_view_only=Case(When(editors=request.user, then=Value(0)), default=Value(1), output_field=IntegerField()))
-    channel_serializer = ChannelListSerializer(channel_list, many=True)
+    channel_serializer = _apply_channel_filters(channel_list, request.query_params)
 
     return Response(channel_serializer.data)
 
@@ -193,7 +221,7 @@ def get_user_bookmarked_channels(request):
     bookmarked_channels = request.user.bookmarked_channels.exclude(deleted=True)\
         .select_related('main_tree').prefetch_related('editors')\
         .defer('trash_tree', 'clipboard_tree', 'staging_tree', 'chef_tree', 'previous_tree', 'viewers')
-    channel_serializer = AltChannelListSerializer(bookmarked_channels, many=True)
+    channel_serializer = _apply_channel_filters(bookmarked_channels, request.query_params, default_serializer=ChannelSerializerTypes.ALT)
     return Response(channel_serializer.data)
 
 
@@ -204,7 +232,25 @@ def get_user_edit_channels(request):
     edit_channels = request.user.editable_channels.exclude(deleted=True)\
         .select_related('main_tree').prefetch_related('editors')\
         .defer('trash_tree', 'clipboard_tree', 'staging_tree', 'chef_tree', 'previous_tree', 'viewers')
-    channel_serializer = AltChannelListSerializer(edit_channels, many=True)
+    channel_serializer = _apply_channel_filters(edit_channels, request.query_params, default_serializer=ChannelSerializerTypes.ALT)
+    return Response(channel_serializer.data)
+
+
+@api_view(['GET'])
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
+def get_user_channel_sets(request):
+    sets = request.user.channel_sets.prefetch_related('secret_token__channels', 'editors').select_related('secret_token')
+    channelset_serializer = ChannelSetSerializer(sets, many=True)
+    return Response(channelset_serializer.data)
+
+
+@api_view(['GET'])
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
+def get_channels_by_token(request, token):
+    channels = Channel.objects.filter(secret_tokens__token=token, deleted=False)
+    channel_serializer = _apply_channel_filters(channels, request.query_params, default_serializer=ChannelSerializerTypes.ALT)
     return Response(channel_serializer.data)
 
 
@@ -214,7 +260,7 @@ def get_user_edit_channels(request):
 @permission_classes((IsAuthenticated,))
 def get_user_public_channels(request):
     channels = ChannelCacher.get_public_channels(defer_nonmain_trees=True)
-    channel_serializer = AltChannelListSerializer(channels, many=True)
+    channel_serializer = _apply_channel_filters(channels, request.query_params, default_serializer=ChannelSerializerTypes.ALT)
     return Response(channel_serializer.data)
 
 
@@ -225,8 +271,7 @@ def get_user_view_channels(request):
     view_channels = request.user.view_only_channels.exclude(deleted=True)\
         .select_related('main_tree').prefetch_related('editors')\
         .defer('trash_tree', 'clipboard_tree', 'staging_tree', 'chef_tree', 'previous_tree', 'viewers')
-
-    channel_serializer = AltChannelListSerializer(view_channels, many=True)
+    channel_serializer = _apply_channel_filters(view_channels, request.query_params, default_serializer=ChannelSerializerTypes.ALT)
     return Response(channel_serializer.data)
 
 
@@ -418,5 +463,16 @@ def download_channel_content_csv(request, channel_id):
     """ Writes list of channels to csv, which is then emailed """
     site = get_current_site(request)
     generatechannelcsv_task.delay(channel_id, site.domain, request.user.id)
+
+    return HttpResponse({"success": True})
+
+
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
+def save_token_to_channels(request, token):
+    channel_ids = json.loads(request.body)
+    channels = Channel.objects.filter(pk__in=channel_ids)
+    token = SecretToken.objects.get(token=token)
+    token.set_channels(channels)
 
     return HttpResponse({"success": True})

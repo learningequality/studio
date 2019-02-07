@@ -3,6 +3,7 @@ import logging
 from collections import namedtuple
 from distutils.version import LooseVersion
 
+
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
 from django.core.exceptions import SuspiciousOperation
@@ -23,6 +24,8 @@ from rest_framework.decorators import authentication_classes
 from rest_framework.decorators import permission_classes
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
 
 from contentcuration import ricecooker_versions as rc
 from contentcuration.api import activate_channel
@@ -36,6 +39,7 @@ from contentcuration.models import generate_object_storage_name
 from contentcuration.models import get_next_sort_order
 from contentcuration.models import License
 from contentcuration.models import StagedFile
+from contentcuration.serializers import GetTreeDataSerizlizer
 from contentcuration.utils.files import get_file_diff
 from contentcuration.utils.garbage_collect import get_deleted_chefs_root
 from contentcuration.utils.nodes import map_files_to_assessment_item
@@ -400,18 +404,21 @@ def compare_trees(request):
 @authentication_classes((TokenAuthentication, SessionAuthentication,))
 @permission_classes((IsAuthenticated,))
 def get_tree_data(request):
-    """ Create the channel node """
-    data = json.loads(request.body)
+    """
+    Get the tree data for the `tree` tree of channel `channel_id`.
+    WARNING: this endpoint timesouts for large channels.
+    Returns { success: true, tree:[ nodes in channel_id ] }
+    """
+    serializer = GetTreeDataSerizlizer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     try:
-        obj = Channel.objects.get(pk=data['channel_id'])
-        root = getattr(obj, "{}_tree".format(data.get('tree') or "main"), None)
-
-        data = root.get_tree_data(include_self=False)
-
-        return HttpResponse(json.dumps({"success": True, 'tree': data}))
-
-    except KeyError:
-        raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+        channel = Channel.objects.get(pk=serializer.validated_data['channel_id'])
+        tree_name = "{}_tree".format(serializer.validated_data['tree'])
+        tree_root = getattr(channel, tree_name, None)
+        tree_data = tree_root.get_tree_data()
+        children_data = tree_data.get('children', [])
+        return Response({"success": True, 'tree': children_data})
     except Exception as e:
         handle_server_error(request)
         return HttpResponseServerError(content=str(e), reason=str(e))
@@ -421,17 +428,30 @@ def get_tree_data(request):
 @authentication_classes((TokenAuthentication, SessionAuthentication,))
 @permission_classes((IsAuthenticated,))
 def get_node_tree_data(request):
-    """ Create the channel node """
-    data = json.loads(request.body)
+    """
+    Get one level of children data for for the node `node_id` of
+    the `tree` tree associated with channel `data['channel_id']`.
+    Returns { success: true, tree:[ children of node_id ] }
+    """
+    serializer = GetTreeDataSerizlizer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     try:
-        obj = Channel.objects.get(pk=data['channel_id'])
-        root = obj.staging_tree or obj.main_tree
-        node = root.get_descendants().filter(node_id=data['node_id']).first() if data.get('node_id') else root
-
-        return HttpResponse(json.dumps({"success": True, 'tree': node.get_node_tree_data(), 'staged': obj.staging_tree is not None}))
-
-    except KeyError:
-        raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+        channel = Channel.objects.get(pk=serializer.validated_data['channel_id'])
+        tree_name = "{}_tree".format(serializer.validated_data['tree'])
+        tree_root = getattr(channel, tree_name, None)
+        if 'node_id' in serializer.validated_data:
+            node = tree_root.get_descendants().filter(node_id=serializer.validated_data['node_id']).first()
+        else:
+            node = tree_root
+        tree_data = node.get_tree_data(levels=1)
+        children_data = tree_data.get('children', [])
+        response_data = {
+            'success': True,
+            'tree': children_data,
+            'staged': channel.staging_tree is not None
+        }
+        return Response(response_data)
     except Exception as e:
         handle_server_error(request)
         return HttpResponseServerError(content=str(e), reason=str(e))

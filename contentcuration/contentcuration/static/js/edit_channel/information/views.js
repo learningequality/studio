@@ -36,8 +36,19 @@ var MESSAGES = {
     "coach_content": "What is content visibility?",
     "coach_description": "This is support content and is visible only to coaches (teachers, facilitators, administrators)",
     "anyone_description": "This content is visible to anyone",
-    "role_description": "Content visibility determines what type of Kolibri users can see this content."
+    "role_description": "Content visibility determines what type of Kolibri users can see this content.",
+    "channel_sets": "About Collections",
+    "channel_sets_description": "What is a collection?",
+    "channel_sets_description_text": "A collection is a package of multiple Studio channels all associated with one " +
+                "token, the collection token! Use a collection token to make multiple channels available for import " +
+                "at once in Kolibri. You no longer have to import Channels into Kolibri using individual channel tokens.",
+    "channel_sets_instructions": "How do I make one?",
+    "channel_sets_instructions_text": "You can make a collection by simply selecting which channels you " +
+                "want to package together. Remember to give your collection a title.",
+    "channel_sets_disclaimer": "You will need Kolibri version 0.12.0 or higher to import channel collections",
+    "channel_sets_compatability": "Compatability"
 }
+
 
 
 var BaseInfoModalView = BaseViews.BaseModalView.extend({
@@ -46,10 +57,10 @@ var BaseInfoModalView = BaseViews.BaseModalView.extend({
   className: "information_wrapper",
   name: NAMESPACE,
   $trs: MESSAGES,
+  modal: true,
   get_render_data: function(){ return {}; },
   initialize: function(options) {
       _.bindAll(this, 'loop_focus', 'set_indices', "init_focus", "closed_modal");
-      this.modal = true;
       this.data = options;
       this.render();
   },
@@ -95,6 +106,11 @@ var RolesModalView = BaseInfoModalView.extend({
 var PrerequisiteModalView = BaseInfoModalView.extend({
   template: require("./hbtemplates/prereq_modal.handlebars"),
   modal_id: "#prereq_modal",
+});
+
+var ChannelSetModalView = BaseInfoModalView.extend({
+  template: require("./hbtemplates/channel_set_modal.handlebars"),
+  modal_id: "#channel_set_modal",
 });
 
 var PublishedModalView = BaseInfoModalView.extend({
@@ -151,5 +167,6 @@ module.exports = {
     MasteryModalView:MasteryModalView,
     PrerequisiteModalView: PrerequisiteModalView,
     PublishedModalView: PublishedModalView,
-    RolesModalView: RolesModalView
+    RolesModalView: RolesModalView,
+    ChannelSetModalView: ChannelSetModalView
 }
