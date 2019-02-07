@@ -50,6 +50,16 @@
 	.new_channel_pic{
 		.image_dropzone{ width: auto; }
 	}
+	.channel-download-wrapper {
+		margin-top: 30px;
+	    margin-bottom: -25px;
+	    padding: 0px;
+	    font-size: 10pt;
+	    text-align: right;
+	}
+	.details-download-dropdown {
+		width: max-content;
+	}
 	img{
 	    width:130px;
 	    height:130px;
@@ -157,6 +167,13 @@
 	#open-button {
 		padding: 5px 25px;
 	}
+	.download_option {
+		padding: 5px 10px;
+		cursor: pointer;
+		&:hover {
+			background-color: @gray-200;
+		}
+	}
 	.toggle_description {
 		color: @gray-700 !important;
 		&:hover { color: @blue-500 !important; }
@@ -233,6 +250,7 @@
 		    background-color: @blue-200;
 		    color: white;
 		    font-weight: bold;
+		    margin: 2px;
 		    margin-left: 5px;
 		    cursor: default;
 		    &[data-toggle="tooltip"] {

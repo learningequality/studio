@@ -9,11 +9,14 @@ from le_utils.constants import content_kinds
 from le_utils.constants import format_presets
 from mock import patch
 
+from .testdata import fileobj_video
+from .testdata import node
 from contentcuration.management.commands.exportchannel import create_associated_thumbnail
 from contentcuration.models import AssessmentItem
 from contentcuration.models import ContentNode
 from contentcuration.models import File
 from contentcuration.models import generate_object_storage_name
+from contentcuration.serializers import FileSerializer
 from contentcuration.utils.files import create_thumbnail_from_base64
 from contentcuration.utils.files import get_thumbnail_encoding
 from contentcuration.utils.nodes import map_files_to_node
@@ -24,7 +27,6 @@ from contentcuration.views.files import thumbnail_upload
 pytestmark = pytest.mark.django_db
 
 
-@pytest.fixture
 def base64encoding():
     return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/" \
         "9hAAACk0lEQVR4AaWTA7TbbABA8/+zreMdzbYOZtu2bbt4rpPUtvlebbezbdvMvsxmG99740" \
@@ -42,7 +44,6 @@ def base64encoding():
         "/aXwDY2vpQfdHLrIAAAAASUVORK5CYII="
 
 
-@pytest.fixture
 def generated_base64encoding():
     return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAA"\
         "C8klEQVR4nKWTSWhVZxiGv/N//3+Ge+49d8gdkphYOyxMGm+p1QQSm40KIgqKoKUuKu0idFMIWRWKC7"\
@@ -58,6 +59,51 @@ def generated_base64encoding():
         "j6OxnMjUwIHvzMLTv0bOT61Z6B7mUAACVeh9FYnbpl81btw6ZmDQCgZ6B76flfN65yy9EE908P5kYmKQDA0"\
         "OK1Ozu9htH7dEqsjyik6O0RVW/KIFM8yzoMABMAAPdg0m1exD/v4t9iY8oAAPfokw34v4JwjcxkQYIAYq5b9"\
         "+OJrg1v1uF3yITnGcV5zxcxRYhLZ3rOem9LSe+r82vB1kP1vFwEDQAAAABJRU5ErkJggg=="
+
+
+class FileSaveTestCase(BaseAPITestCase):
+
+    def setUp(self):
+        super(FileSaveTestCase, self).setUp()
+        self.video = self.channel.main_tree.get_descendants().filter(kind_id='video').first()
+        self.video_file = self.video.files.first()
+        self.testnode = node({"kind_id": "video", "title": "test node", "node_id": "abcdef"})
+        self.newfile = fileobj_video()
+        self.newfile.contentnode = self.testnode
+        self.newfile.save()
+
+    def test_file_update(self):
+        self.video_file.contentnode = self.testnode
+        response = self.put("/api/file", FileSerializer([self.video_file], many=True).data)
+        self.assertEqual(response.status_code, 200)
+        self.video_file.refresh_from_db()
+        self.assertEqual(self.video_file.contentnode.pk, self.testnode.pk)
+
+    def test_file_add(self):
+        self.newfile.preset_id = 'low_res_video'
+        self.newfile.save()
+        self.newfile.contentnode = self.video
+        self.put("/api/file", FileSerializer([self.video_file, self.newfile], many=True).data)
+        self.video.refresh_from_db()
+        self.assertTrue(self.video.files.filter(pk=self.newfile.pk).exists())
+        self.assertTrue(self.video.files.filter(pk=self.video_file.pk).exists())
+
+    def test_file_replace(self):
+        self.newfile.contentnode = self.video
+        self.put("/api/file", FileSerializer([self.video_file, self.newfile], many=True).data)
+        self.video.refresh_from_db()
+        self.assertTrue(self.video.files.filter(pk=self.newfile.pk).exists())
+        self.assertFalse(self.video.files.filter(pk=self.video_file.pk).exists())
+        self.assertFalse(File.objects.filter(pk=self.video_file.pk).exists())
+
+    def test_file_delete(self):
+        self.newfile.contentnode = self.video
+        self.put("/api/file", FileSerializer([self.video_file, self.newfile], many=True).data)  # Add the file
+        self.put("/api/file", FileSerializer([self.newfile], many=True).data)  # Now delete the file
+        self.video.refresh_from_db()
+        self.assertTrue(self.video.files.filter(pk=self.newfile.pk).exists())
+        self.assertFalse(self.video.files.filter(pk=self.video_file.pk).exists())
+        self.assertFalse(File.objects.filter(pk=self.video_file.pk).exists())
 
 
 class FileThumbnailTestCase(BaseAPITestCase):
@@ -103,7 +149,7 @@ class FileThumbnailTestCase(BaseAPITestCase):
     @patch('contentcuration.api.default_storage.save')
     @patch('contentcuration.api.default_storage.exists', return_value=True)
     def test_existing_thumbnail_is_not_created(self, storage_exists_mock, storage_save_mock):
-        thumbnail_fobj = create_thumbnail_from_base64(base64encoding())
+        create_thumbnail_from_base64(base64encoding())
         storage_exists_mock.assert_called()
         storage_save_mock.assert_not_called()
 

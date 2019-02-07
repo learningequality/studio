@@ -31,14 +31,18 @@ Addresses #*PR# HERE*
 
 ## Checklist
 
+*Delete any items that don't apply*
+
 - [ ] Is the code clean and well-commented?
-- [ ] Does this introduce a change that needs to be updated in the [user docs](https://kolibri-studio.readthedocs.io/en/latest/index.html)?
+- [ ] Has the `docs` label been added if this introduces a change that needs to be updated in the [user docs](https://kolibri-studio.readthedocs.io/en/latest/index.html)?
+- [ ] Have the changes been added to the [CHANGELOG](https://github.com/learningequality/studio/blob/master/CHANGELOG.md)?
 - [ ] Are there tests for this change?
 - [ ] Are all user-facing strings translated properly (if applicable)?
 - [ ] Are all UI components LTR and RTL compliant (if applicable)?
 - [ ] Are there any new ways this uses user data that needs to be factored into our [Privacy Policy](https://github.com/learningequality/studio/tree/master/contentcuration/contentcuration/templates/policies/text)?
 - [ ] Are there any new interactions that need to be added to the [QA Sheet](https://docs.google.com/spreadsheets/d/1HF4Gy6rb_BLbZoNkZEWZonKFBqPyVEiQq4Ve6XgIYmQ/edit#gid=0)?
 - [ ] Are there opportunities for using Google Analytics here (if applicable)?
+- [ ] If the Pipfile has been changed, is the updated Pipfile.lock file also included in this PR?
 - [ ] Are the migrations [safe for a large db](https://www.braintreepayments.com/blog/safe-operations-for-high-volume-postgresql/) (if applicable)?
 
 ## Comments

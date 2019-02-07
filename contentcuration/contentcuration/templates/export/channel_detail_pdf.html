@@ -1,0 +1,442 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+{% load staticfiles %}
+{% load export_tags %}
+{% load license_tags %}
+{% load i18n %}
+
+<html>
+    <head>
+        <title>{{channel.name}}</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <style type="text/css">
+            body {
+                font-family: FreeSans, sans-serif;
+                font-size: 12pt;
+            }
+            a {
+                color: black;
+                font-weight: bold;
+                text-decoration: none;
+            }
+
+            /* Header */
+            #generated {
+                color: #888888;
+                font-style: italic;
+            }
+            #language{
+                text-align: right;
+                float: right;
+                display: inline-block;
+                font-size: 16pt;
+                font-weight: bold;
+            }
+            #language img {
+                vertical-align: top;
+            }
+
+
+            /* Channel information */
+            #channel {
+                margin-top: 30px;
+            }
+            #channel_thumbnail{
+                object-fit: cover;
+                background-color: white;
+                width: 150px;
+                height: 150px;
+            }
+
+            #title {
+                font-size: 24pt;
+                font-weight: bold;
+                margin-bottom: 0px;
+            }
+            #dates {
+                font-size: 12pt;
+                color: gray;
+                padding-bottom: 10px;
+            }
+
+            /* General section styling */
+            .section-header {
+                padding: 10px;
+                padding-bottom: 0px;
+                font-size: 16pt;
+                font-weight: bold;
+                margin-bottom: 30px;
+                border: 4px solid #81D3F7;
+                border-radius: 5px;
+                color: #81D3F7;
+                vertical-align: top;
+            }
+            .section-header img {
+                vertical-align: top;
+                margin-right: 10px;
+            }
+            .subinfo-box .header-row {
+                font-size: 16pt;
+                font-weight: bold;
+                margin-left: 30px;
+                padding-left: 10px;
+                margin-bottom: 20px;
+            }
+            .subinfo-box .header-row img {
+                vertical-align: top;
+                margin-right: 10px;
+            }
+            .subinfo-box .subinfo-content {
+                margin-left: 50px;
+            }
+            .separator {
+                border-bottom: 1px solid #CCCCCC;
+                margin-left: 30px;
+                margin-bottom: 20px;
+            }
+            .empty-text {
+                color: #888888;
+                font-weight: bold;
+                font-style: italic;
+                font-size: 18pt;
+                text-align: center;
+            }
+
+
+            /* What's inside */
+            #sizes div{
+                display: inline-block;
+            }
+            #sizes img {
+                opacity: 0.7;
+            }
+            #sizes .subtext {
+                font-size: 9pt;
+                color: gray;
+                font-style: italic;
+            }
+            #sizes .bar {
+                background-color: #D0D0D0;
+                margin-right: 5px;
+                width: 15px;
+                height: 15px;
+                display: inline-block;
+                margin-bottom: 5px;
+            }
+            #sizes .filled {
+                background-color: {{colors.exercise}};
+            }
+            .header-row img{
+                vertical-align: bottom;
+            }
+            #includes .header-row {
+                border-bottom: 2px dotted {{colors.video}};
+                color: {{colors.video}};
+            }
+            #tags .header-row {
+                border-bottom: 2px dotted {{colors.html}};
+                color: {{colors.html}};
+            }
+            .pill {
+                color: #888888;
+                font-weight: bold;
+            }
+            .check {
+                color: {{colors.exercise}};
+            }
+            .no-check {
+                color: {{colors.document}};
+            }
+            .language-list {
+                color: #AAAAAA;
+            }
+            #for-educators {
+                margin-left: 50px;
+                margin-top: 20px;
+            }
+
+
+
+            /* Source */
+            .auth-section {
+                font-size: 12pt;
+            }
+            .auth-section b {
+                color: #888888;
+            }
+            .auth-section li {
+                margin-bottom: 5px;
+            }
+
+
+            /* Using this channel */
+            #channel_id {
+                color: gray;
+                font-size: 12pt;
+                font-weight: bold;
+                margin-left: 40px;
+            }
+            #channel_id tr {
+                padding-bottom: 5px;
+            }
+            #channel_id .id_label{
+                text-align: right;
+                font-weight: normal;
+            }
+            .channel_id_prompt {
+                font-size: 12pt;
+                padding-left: 30px;
+            }
+        </style>
+    </head>
+    <body>
+        {% for data in channels %}
+            <div style="{% if not forloop.last %}page-break-after: always;{% endif %}">
+            <div>
+                <div id="language">
+                    {% if data.channel.language %}<img src="{{ 'export/language.png' | encode_static_base64:'20'}}">
+                    &nbsp;{{data.channel.language.native_name}}
+                    {% else %}<i>{% trans 'Language not set' %}</i>
+                    {% endif %}
+                </div>
+                {% if forloop.first %}
+                <div id="generated">
+                    {% now 'm/d/Y' as date %}
+                    {% blocktrans %}This file was generated on {{date}}{% endblocktrans %}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Channel information -->
+            <table>
+                <tbody>
+                    <tr id="channel">
+                        <td width="25%">
+                            {% if data.thumbnail %}<img id="channel_thumbnail" src="{{data.thumbnail}}">{% endif %}
+                        </td>
+                        <td width="2%"></td>
+                        <td width="73%">
+                            <div id="title"><a href="{{data.site}}/channels/{{data.channel.id}}/view">{{data.channel.name}}</a></div>
+                            <!-- Channel creation/published dates -->
+                            <div id="dates">
+                                {% trans 'Created' %} {{data.channel.main_tree.created|date:"M d, Y"}}&nbsp;|&nbsp;
+                                {% if data.channel.main_tree.published %}{% trans 'Last Published' %} {{data.channel.last_published|date:"M d, Y"}}
+                                {% else %}<i>{% trans 'Unpublished' %}</i>{% endif %}
+                            </div>
+                            <!-- Channel description -->
+                            <div id="description">{{data.channel.description}}</div>
+                        </td>
+                    </tr><br>
+                </tbody>
+            </table>
+            <br/><br/>
+
+            <!-- Using this Channel -->
+            <div style="page-break-inside: avoid;">
+                <div class="section-header"><img width="20" src="{{ 'export/using channel.png' | encode_static_base64:'20'}}"> &nbsp;&nbsp;{% trans "USING THIS CHANNEL" %}</div>
+                {% if data.channel.main_tree.published %}
+                    <p class="channel_id_prompt">{% trans 'Copy one of the following into Kolibri to import this channel:' %}</p>
+                    <div id="channel_id_wrapper">
+                        <table id="channel_id">
+                            <tbody>
+                                <tr>
+                                    <td class="id_label">{% trans 'Tokens (Recommended):' %}</td>
+                                    <td>
+                                        {% for token in data.tokens %}
+                                            &nbsp;{{token}}<br>
+                                        {% endfor %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="id_label">{% trans 'Channel ID:' %}</td>
+                                    <td>&nbsp;{{data.channel.id}}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="empty-text">{% trans 'Channel must be published to import into Kolibri' %}</p>
+                {% endif %}
+            </div>
+            <br/><br/>
+
+            <!-- What's Inside -->
+            <div class="section-header"><img width="20" src="{{ 'export/search.png' | encode_static_base64:'20'}}"> &nbsp;&nbsp;{% trans "WHAT'S INSIDE" %}</div>
+            {% if data.resource_count %}
+                <table width="100%">
+                    <tbody>
+                        <tr id="sizes">
+                            <td width="2%"></td>
+                            <td width="48%">
+                                {% for i in data.size.scale %}<div class="bar {% if i < data.size.filled %}filled{% endif %}">&nbsp;</div>{% endfor %}
+                                <br><span class="subtext">{% blocktrans count data.resource_count as count %}
+                                    {{count}} Resource {% plural %}{{count}} Resources
+                                {% endblocktrans %} - {{data.size.text}}</span>
+                            </td>
+                            <td width="10%"></td>
+                            <td width="40%">
+                                {% for i in data.storage.filled %}<img width="12" src="{{ 'export/storage.png' | encode_static_base64}}"> &nbsp;&nbsp;{% endfor %}
+                                <br><span class="subtext">{{data.storage.storage}} - {{data.storage.text}}</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <br/>
+
+                <div>
+                    <img id="piechart" src="{{data.piechart}}" width="auto" height="600px">
+                    <br/><br/><br/>
+                </div>
+
+                <!-- Includes Sub Information -->
+                <div id="includes" class="subinfo-box" style="page-break-inside: avoid;">
+                    <div class="header-row">
+                        <img width="16" src="{{ 'export/includes.png' | encode_static_base64:'16'}}"> &nbsp;&nbsp;{% trans 'Includes' %}
+                    </div>
+                    <table class="subinfo-content" width="100%">
+                        <tbody>
+                            <tr>
+                                <td width="40%">
+                                    <b>{% trans 'Languages' %}</b>
+                                    <div class="language-list">{% if data.languages %}{{ data.languages|join:" • " }}
+                                    {% else %}---{% endif %}</div>
+                                </td>
+                                <td width="5%"></td>
+                                <td width="55%">
+                                    <b>{% trans 'Subtitles' %}</b>
+                                    <div class="language-list">{% if data.accessible_languages %}{{ data.accessible_languages|join:" • " }}
+                                    {% else %}---{% endif %}</div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div id="for-educators">
+                        <b>{% trans 'For Educators' %}</b>
+                        &nbsp;&nbsp;<span class="pill">{% if data.includes.coach_content %}<i class="check">✔</i>{% else %}<b class="no-check">X</b>{% endif %} {% trans 'Coach Content' %} </span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="pill">{% if data.includes.exercises %}<i class="check">✔</i>{% else %}<b class="no-check">X</b>{% endif %} {% trans 'Assessments' %}</span>
+                    </div>
+                </div>
+                <br/><br/>
+
+
+                <!-- Tags Sub Information -->
+                <div id="tags" class="subinfo-box" style="page-break-inside: avoid;">
+                    <div class="header-row">
+                        <img width="16" src="{{ 'export/tags.png' | encode_static_base64:'16'}}"> &nbsp;&nbsp;{% trans 'Content Tags' %}
+                    </div>
+                    <div class="subinfo-content">
+                        {% if data.tagcloud %}<img id="tagcloud" src="{{data.tagcloud}}">
+                        {% else %}<i>{% trans 'No tags found' %}</i>{% endif %}
+                    </div>
+                </div>
+                <br/><br/><br/>
+            {% else %}
+                <p class="empty-text">{% trans 'This channel is empty' %}</p>
+            {% endif %}
+
+
+            <!-- Source Information -->
+            <div class="section-header"><img width="20" src="{{ 'export/source.png' | encode_static_base64:'20'}}"> &nbsp;&nbsp;{% trans "SOURCE" %}</div>
+            {% if data.resource_count %}
+                <table class="auth-section">
+                    <tbody>
+                        <tr>
+                            <td width="5%"></td>
+                            <td width="5%">
+                                <img width="64" src="{{ 'export/author.png' | encode_static_base64:'64'}}">
+                            </td>
+                            <td width="5%"></td>
+                            <td width="85%" style="page-break-inside: auto;">
+                                <div>
+                                    <b>{% trans 'This channel features resources created by:' %}</b><br/>
+                                    {% if data.authors %}{{ data.authors|join:" • " }}{% else %}<i>{% trans 'Information not available' %}</i>{% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="separator">&nbsp;</div>
+                <table class="auth-section">
+                    <tbody>
+                        <tr>
+                            <td width="5%"></td>
+                            <td width="5%">
+                                <img width="64" src="{{ 'export/provider.png' | encode_static_base64:'64'}}">
+                            </td>
+                            <td width="5%"></td>
+                            <td width="85%">
+                                <div>
+                                    <b>{% trans 'The material in this channel was provided by:' %}</b><br/>
+                                    {% if data.providers %}{{ data.providers|join:" • " }}{% else %}<i>{% trans 'Information not available' %}</i>{% endif %}
+                                </div>
+                            </td>
+                        </tr>
+
+                    </tbody>
+                </table>
+                <div class="separator">&nbsp;</div>
+                <table class="auth-section">
+                    <tbody>
+                        <tr>
+                            <td width="5%"></td>
+                            <td width="5%">
+                                <img width="64" src="{{ 'export/aggregator.png' | encode_static_base64:'64'}}">
+                            </td>
+                            <td width="5%"></td>
+                            <td width="85%">
+                                <div>
+                                    <b>{% trans 'Material in this channel was originally hosted by:' %}</b><br/>
+                                    {% if data.aggregators %}{{ data.aggregators|join:" • " }}{% else %}<i>{% trans 'Information not available' %}</i>{% endif %}
+                                </div>
+                            </td>
+                        </tr>
+
+                    </tbody>
+                </table>
+                <div class="separator">&nbsp;</div>
+                <table class="auth-section">
+                    <tbody>
+                        <tr>
+                            <td width="5%"></td>
+                            <td width="5%">
+                                <img width="64" src="{{ 'export/license.png' | encode_static_base64:'64'}}">
+                            </td>
+                            <td width="5%"></td>
+                            <td width="85%">
+                                <div>
+                                    <b>{% trans 'This channel includes the following licenses:' %}</b><br/>
+                                    <ul>
+                                        {% for license in data.licenses %}
+                                        <li><a href="{{license | get_license_url}}" target="_blank">{{license}}</a> &nbsp;<i>{{ license | get_license_description }}</i></li>
+                                        {% empty %}<i>{% trans 'Information not available' %}</i>{% endfor %}
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+
+                    </tbody>
+                </table>
+                <div class="separator">&nbsp;</div>
+                <table class="auth-section">
+                    <tbody>
+                        <tr>
+                            <td width="5%"></td>
+                            <td width="5%">
+                                <img width="64" src="{{ 'export/copyright holder.png' | encode_static_base64:'64'}}">
+                            </td>
+                            <td width="5%"></td>
+                            <td width="85%">
+                                <div>
+                                    <b>{% trans 'Copyright Holders:' %}</b><br/>
+                                    {% if data.copyright_holders %}{{ data.copyright_holders|join:" • " }}{% else %}<i>{% trans 'Information not available' %}</i>{% endif %}
+                                </div>
+                            </td>
+                        </tr>
+
+                    </tbody>
+                </table>
+            {% else %}
+                <p class="empty-text">{% trans 'This channel is empty' %}</p>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </body>
+</html>

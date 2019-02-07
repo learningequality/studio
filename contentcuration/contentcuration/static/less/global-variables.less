@@ -55,7 +55,7 @@
 @topnav-active-tab-color:#564462;
 @red-error-color:#EF2121;
 @darkred-color: firebrick;
-@yellow-bg-color: #EFE87F;
+@yellow-bg-color: #FFE300;
 .action-button {
   background: @blue-500;
   border: 1px solid @blue-500 !important;
@@ -328,5 +328,18 @@ ul li.placeholder:before {
   i {
     font-size: 11pt;
     vertical-align: bottom;
+  }
+}
+
+@keyframes spin {
+  from { transform: scale(1) rotate(0deg);}
+  to { transform: scale(1) rotate(360deg);}
+}
+
+.spinner {
+  .material-icons;
+  animation: spin 1.5s infinite linear;
+  &::before {
+    content: 'rotate_right';
   }
 }

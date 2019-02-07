@@ -1,6 +1,6 @@
 const channelModule = {
   state: {
-    contentTags: []
+    contentTags: [],
   },
   getters: {
     contentTags(state) {

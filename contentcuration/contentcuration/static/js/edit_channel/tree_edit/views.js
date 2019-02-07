@@ -60,7 +60,8 @@ var MESSAGES = {
     "copy_to_clipboard": "Copy to Clipboard",
     "coach": "Coach",
     "coach_title": "This resource is visible to coaches",
-    "coach_topic_title": "This topic contains coach-facing resources"
+    "coach_topic_title": "This topic contains coach-facing resources",
+    "saving": "Saving, please wait..."
 }
 
 /**
@@ -515,6 +516,7 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 	},
 	create_popover:function(){
 		var self = this;
+
 		this.$el.find(".content-options-dropdown").popover({
 			animation:false,
 			trigger:"manual",
@@ -528,12 +530,10 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
 			var hadClass = $(this).hasClass("active-popover");
 			self.containing_list_view.close_all_popups();
 			if(!hadClass){
-				$(this).popover('show');
+				var popover = $(this).popover('show');
 				// Bootstrap doesn't handle RTL very well for popovers, so calculate right
 				if(window.isRTL) {
-					var relativeLeft = $(this).position().left - $('#container_area').offset().left - $(window).scrollLeft();
-					var right = $("#container_area").width() - relativeLeft + self.$(".popover").outerWidth();
-					self.$(".popover").css("right", right + $(this).outerWidth() + 20);
+					$(".popover").css("right", $(document).width() - $(this).offset().left - 20);
 				}
 	        	$(this).addClass("active-popover");
 			}
@@ -637,10 +637,10 @@ var DiffModalView = BaseViews.BaseModalView.extend({
 	template: require("./hbtemplates/stats_table.handlebars"),
 	name: NAMESPACE,
 	$trs: MESSAGES,
+	modal: true,
 	id: "stat_modal_wrapper",
 	initialize: function(options) {
 		_.bindAll(this, "init_focus");
-		this.modal = true;
 		this.render();
 	},
 	events: {

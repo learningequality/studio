@@ -141,20 +141,22 @@ var PrerequisiteModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/related_modal.handlebars"),
     name: NAMESPACE,
     $trs: MESSAGES,
+    modal: true,
 
     initialize: function(options) {
         _.bindAll(this, "close_prerequisites");
         this.onselect = options.onselect;
         this.parent_view = options.parent_view;
         this.collection = options.collection;
+        this.rootID = options.rootID;
         this.views_to_update = options.views_to_update;
-        this.modal = true;
         this.render(this.close, {});
         this.related_view = new PrerequisiteView({
             el: this.$(".modal-body"),
             onselect: this.close_prerequisites,
             modal : this,
             model:this.model,
+            rootID: this.rootID,
             views_to_update: this.views_to_update,
             collection: this.collection,
             allow_edit: options.allow_edit
@@ -179,6 +181,7 @@ var PrerequisiteView = BaseViews.BaseListView.extend({
         this.collection = State.nodeCollection;
         this.onselect = options.onselect;
         this.allow_edit = options.allow_edit;
+        this.rootID = options.rootID;
         this.views_to_update = options.views_to_update;
         this.render();
     },
@@ -221,7 +224,8 @@ var PrerequisiteView = BaseViews.BaseListView.extend({
         this.$("#selected_view_wrapper").css('display', 'none');
         this.relatedView = new RelatedView({
             model: this.model,
-            container: this
+            container: this,
+            rootID: this.rootID
         });
         this.$("#related_view_wrapper").html(this.relatedView.el);
     },
@@ -244,6 +248,7 @@ var BasePrerequisiteView = BaseViews.BaseView.extend({
         this.allow_edit = options.allow_edit;
         this.collection = new Models.ContentNodeCollection();
         this.container = options.container;
+        this.rootID = options.rootID || this.model.get("parent");
         this.render();
     },
     events:{
@@ -285,7 +290,7 @@ var RelatedView = BasePrerequisiteView.extend({
         this.$el.html(this.template(null, {
             data: this.get_intl_data()
         }));
-        this.collection.get_all_fetch_simplified([this.model.get('parent')]).then(function(collection){
+        this.collection.get_all_fetch_simplified([this.rootID]).then(function(collection){
             self.navigate_to_node(collection.at(0) || State.current_channel.get_root("main_tree"));
         });
     },

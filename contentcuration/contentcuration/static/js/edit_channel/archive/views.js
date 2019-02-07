@@ -21,15 +21,16 @@ var ArchiveModalView = BaseViews.BaseModalView.extend({
     template: require("./hbtemplates/archive_modal.handlebars"),
     name: NAMESPACE,
     $trs: MESSAGES,
-
+    modal: true,
     initialize: function(options) {
-        this.modal = true;
+        _.bindAll(this, "closed_modal")
         this.render(this.close, {channel:State.current_channel.toJSON()});
-        new ArchiveView({
+        this.archiveView = new ArchiveView({
             el: this.$(".modal-body"),
-            modal : this,
-            model:this.model
+            modal: this,
+            model: this.model
         });
+        this.$(".modal").on("hidden.bs.modal", this.closed_modal);
     }
 });
 
@@ -82,8 +83,8 @@ var ArchiveView = BaseViews.BaseWorkspaceView.extend({
         this.$("#archive_selected_count").html(this.get_translation("count", collection.length));
     },
     restore_content:function(){
-        var list = this.get_selected();
-        var moveCollection = new Models.ContentNodeCollection(_.pluck(this.main_archive_list.get_selected(), 'model'));
+        let list = this.get_selected();
+        let moveCollection = new Models.ContentNodeCollection(_.pluck(this.main_archive_list.get_selected(), 'model'));
         this.$("#select_all_check").attr("checked", false);
         this.move_content(moveCollection);
     },
@@ -338,7 +339,8 @@ var ArchiveItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
     restore_content:function(event){
         event.stopPropagation();
         event.preventDefault();
-        this.open_move();
+        let move_collection = new Models.ContentNodeCollection([this.model]);
+        this.container.move_content(move_collection);
     },
     handle_move:function(target, moved, original_parents){
         // Recalculate counts

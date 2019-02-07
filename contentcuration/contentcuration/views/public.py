@@ -45,7 +45,6 @@ def _get_channel_list_v1(params, identifier=None):
         matching_tree_ids = ContentNode.objects.prefetch_related('files').filter(
             Q(language__id__icontains=language_id) | Q(files__language__id__icontains=language_id)).values_list('tree_id', flat=True)
         channels = channels.select_related('language').filter(Q(language__id__icontains=language_id) | Q(main_tree__tree_id__in=matching_tree_ids))
-
     return channels.annotate(tokens=Value(json.dumps(token_list), output_field=TextField()))\
         .filter(deleted=False, main_tree__published=True)\
         .order_by("-priority")\
@@ -71,7 +70,6 @@ def get_public_channel_lookup(request, version, identifier):
         channel_list = _get_channel_list(version, request.query_params, identifier=identifier.strip().replace('-', ''))
     except LookupError:
         return HttpResponseNotFound(_("Api endpoint {} is not available").format(version))
-
     if not channel_list.exists():
         return HttpResponseNotFound(_("No channel matching {} found").format(identifier))
     return HttpResponse(json.dumps(PublicChannelSerializer(channel_list, many=True).data))

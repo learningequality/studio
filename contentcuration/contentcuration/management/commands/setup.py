@@ -49,7 +49,7 @@ class Command(BaseCommand):
         email = options["email"]
         password = options["password"]
         if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
-            print "{} is not a valid email".format(email)
+            print("{} is not a valid email".format(email))
             sys.exit()
 
         # create the minio bucket
@@ -113,7 +113,7 @@ class Command(BaseCommand):
         # Import content from channel 1 into channel 4
         duplicate_node_bulk(channel1.main_tree.children.first(), parent=channel4.main_tree)
 
-        print "\n\n\nSETUP DONE: Log in as admin to view data (email: {}, password: {})\n\n\n".format(email, password)
+        print("\n\n\nSETUP DONE: Log in as admin to view data (email: {}, password: {})\n\n\n".format(email, password))
 
 
 def generate_tree(root, document, video, subtitle, audio, html5, user=None, tags=None):
@@ -138,7 +138,7 @@ def create_user(email, password, first_name, last_name, admin=False):
         user.set_password(password)
         user.first_name = first_name
         user.last_name = last_name
-        print "User created (email: {}, password: {}, admin: {})".format(email, password, admin)
+        print("User created (email: {}, password: {}, admin: {})".format(email, password, admin))
     user.is_staff = admin
     user.is_admin = admin
     user.is_active = True

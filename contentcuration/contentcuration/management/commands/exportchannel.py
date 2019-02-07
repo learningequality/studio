@@ -1,5 +1,4 @@
 import collections
-import datetime
 import itertools
 import json
 import logging as logmodule
@@ -21,6 +20,7 @@ from django.db.models import Count
 from django.db.models import Q
 from django.db.models import Sum
 from django.template.loader import render_to_string
+from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from kolibri.content.utils.search import fuzz
 from kolibri_content import models as kolibrimodels
@@ -150,7 +150,7 @@ def create_kolibri_license_object(ccnode):
 
 def increment_channel_version(channel):
     channel.version += 1
-    channel.last_published = datetime.datetime.now()
+    channel.last_published = timezone.now()
     channel.save()
 
 

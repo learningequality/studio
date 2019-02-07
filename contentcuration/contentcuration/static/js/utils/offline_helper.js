@@ -54,8 +54,9 @@ Offline.options = {
 var run = function(){
  	if (Offline.state === 'up') {
 	 	Offline.check();
-	 	Offline.on('down', function() {disabledOverlay.style.display = "block";});
-        Offline.on('up', function() {disabledOverlay.style.display = "none";});
  	}
 }
+Offline.on('down', function() {disabledOverlay.style.display = "block";});
+Offline.on('up', function() {disabledOverlay.style.display = "none";});
+
 setInterval(run, 60000);

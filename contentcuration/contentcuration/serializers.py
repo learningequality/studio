@@ -22,6 +22,7 @@ from rest_framework_bulk import BulkSerializerMixin
 
 from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
+from contentcuration.models import ChannelSet
 from contentcuration.models import ContentKind
 from contentcuration.models import ContentNode
 from contentcuration.models import ContentTag
@@ -90,43 +91,35 @@ class FileListSerializer(serializers.ListSerializer):
 
     def update(self, instance, validated_data):
         ret = []
-        update_files = {}
-        user = self.context['request'].user
+        nodes_to_check = []
         with transaction.atomic():
             # Get files that have the same contentnode, preset, and language as the files that are now attached to this node
             for item in validated_data:
                 file_obj = File.objects.get(pk=item['id'])
+                file_obj.language_id = item.get('language') and item['language']['id']
+                file_obj.contentnode = item['contentnode']
+
+                if item['contentnode'] not in nodes_to_check:
+                    nodes_to_check.append(item['contentnode'])
+
+                # Make sure file exists
+                file_path = generate_object_storage_name(file_obj.checksum, str(file_obj))
+                if not default_storage.exists(file_path):
+                    raise OSError("Error: file {} was not found".format(str(file_obj)))
+
+                # Replace existing files
                 files_to_replace = item['contentnode'].files.exclude(pk=file_obj.pk)\
                     .filter(preset_id=file_obj.preset_id, language_id=file_obj.language_id)
                 files_to_replace.delete()
 
-                if file_obj.preset and file_obj.preset.display:
-                    if file_obj.pk:
-                        update_files[file_obj.pk] = item
-                    else:
-                        # create new nodes
-                        ret.append(File.objects.create(**item))
+                file_obj.save()
+                ret.append(file_obj)
 
-        if update_files:
-            with transaction.atomic():
-                for file_id, data in update_files.items():
-                    file_obj, _new = File.objects.get_or_create(pk=file_id)
+            # Remove items that are not in the validated data (file has been removed)
+            for node in nodes_to_check:
+                file_ids = [f['id'] for f in validated_data if f['contentnode'].pk == node.pk]
+                node.files.exclude(pk__in=file_ids).delete()
 
-                    # potential optimization opportunity
-                    for attr, value in data.items():
-                        if attr != "preset" and attr != "language":
-                            setattr(file_obj, attr, value)
-                    file_path = generate_object_storage_name(file_obj.checksum, str(file_obj))
-
-                    if not default_storage.exists(file_path):
-                        raise OSError("Error: file {} was not found".format(str(file_obj)))
-
-                    file = default_storage.open(file_path)
-                    file_obj.file_on_disk = file
-
-                    file_obj.uploaded_by = file_obj.uploaded_by or user
-                    file_obj.save()
-                    ret.append(file_obj)
         return ret
 
 
@@ -268,12 +261,10 @@ class TagSerializer(serializers.ModelSerializer):
         fields = ('tag_name', 'channel', 'id')
 
 
-exercise_image_checksum_regex = re.compile("\!\[[^]]*\]\(\$" + exercises.IMG_PLACEHOLDER + "/([a-f0-9]{32})\.[\w]+\)")
-
-
 class AssessmentListSerializer(serializers.ListSerializer):
 
     def update(self, queryset, validated_data):
+        exercise_image_checksum_regex = re.compile(r"\!\[[^]]*\]\(\${placeholder}/([a-f0-9]{{32}})\.[\w]+\)".format(placeholder=exercises.IMG_PLACEHOLDER))
         ret = []
 
         validated_data_by_id = {
@@ -502,7 +493,7 @@ class RootNodeSerializer(SimplifiedContentNodeSerializer, ContentNodeFieldMixin)
             "resource_count": descendants.exclude(kind_id=content_kinds.TOPIC).count(),
             "max_sort_order": node.children.aggregate(max_sort_order=Max('sort_order'))['max_sort_order'] or 1,
             "resource_size": 0,
-            "has_changed_descendant": descendants.filter(changed=True).exists(),
+            "has_changed_descendant": node.changed or descendants.filter(changed=True).exists(),
         }
         data.update(self.get_creators(descendants))
         return data
@@ -734,6 +725,15 @@ class AccessibleChannelListSerializer(ChannelFieldMixin, serializers.ModelSerial
         fields = ('id', 'created', 'name', 'size', 'count', 'version', 'deleted', 'main_tree')
 
 
+class ChannelSetChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
+    thumbnail_url = serializers.SerializerMethodField('generate_thumbnail_url')
+    published = serializers.SerializerMethodField('check_published')
+
+    class Meta:
+        model = Channel
+        fields = ('id', 'name', 'published', 'language', 'description', 'thumbnail_url', 'main_tree', 'version')
+
+
 class ChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
     thumbnail_url = serializers.SerializerMethodField('generate_thumbnail_url')
     published = serializers.SerializerMethodField('check_published')
@@ -765,7 +765,7 @@ class AltChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
         model = Channel
         fields = ('id', 'created', 'name', 'published', 'pending_editors', 'editors', 'modified', 'language', 'primary_token', 'priority',
                   'description', 'count', 'public', 'thumbnail_url', 'thumbnail', 'thumbnail_encoding', 'content_defaults', 'publishing',
-                  'main_tree', 'last_published', 'secret_tokens')
+                  'main_tree', 'last_published', 'secret_tokens', 'version', 'ricecooker_version')
 
 
 class PublicChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
@@ -881,3 +881,37 @@ class InvitationSerializer(BulkSerializerMixin, serializers.ModelSerializer):
         model = Invitation
         fields = (
             'id', 'invited', 'email', 'sender', 'channel', 'first_name', 'last_name', 'share_mode', 'channel_name')
+
+
+class GetTreeDataSerizlizer(serializers.Serializer):
+    """
+    Used by get_*_tree_data endpoints to ontain "lightweight" tree data.
+    """
+    channel_id = serializers.CharField(required=True)
+    tree = serializers.CharField(required=False, default='main')
+    node_id = serializers.CharField(required=False)
+
+
+class ChannelSetSerializer(serializers.ModelSerializer):
+    secret_token = TokenSerializer(required=False)
+    channels = serializers.SerializerMethodField('get_channel_ids')
+
+    def create(self, validated_data):
+        channelset = super(ChannelSetSerializer, self).create(validated_data)
+        channels = Channel.objects.filter(pk__in=self.initial_data['channels'])
+        channelset.secret_token.set_channels(channels)
+        return channelset
+
+    def update(self, instance, validated_data):
+        channelset = super(ChannelSetSerializer, self).update(instance, validated_data)
+        channels = Channel.objects.filter(pk__in=self.initial_data['channels'])
+        channelset.secret_token.set_channels(channels)
+        return channelset
+
+    def get_channel_ids(self, channelset):
+        channels = channelset.get_channels()
+        return channels and channels.values_list('id', flat=True)
+
+    class Meta:
+        model = ChannelSet
+        fields = ('id', 'name', 'description', 'public', 'editors', 'channels', 'secret_token')

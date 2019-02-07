@@ -44,7 +44,7 @@ class RegistrationForm(forms.Form, ExtraFormMixin):
 
     def clean_email(self):
         email = self.cleaned_data['email'].strip()
-        if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+        if not re.match(r"[^@]+@[^@\.]+\.[^@]+", email):
             self.add_error('email', _('Email is invalid.'))
         elif User.objects.filter(email__iexact=email, is_active=True).exists():
             self.add_error('email', _('Email already exists.'))
@@ -248,20 +248,6 @@ class ProfileSettingsForm(UserChangeForm):
         return user
 
 
-MASTERY = ()
-LANGUAGES = ()
-LICENSES = ()
-
-# Need to add this to allow migrate command (compiles forms.py before files are written)
-try:
-    MASTERY = tuple([(k, _(v)) for k, v in [t for t in exercises.MASTERY_MODELS] if k != "skill_check"])
-    LANGUAGES = [(l['id'], _(l['readable_name'])) for l in Language.objects.values('id', 'readable_name').order_by('readable_name')]
-    LANGUAGES.insert(0, (None, _("Select a language")))  # Add default option if no language is selected
-    LICENSES = ((None, _("Select a license")),) + licenses.choices
-except Exception:
-    pass
-
-
 class PreferencesSettingsForm(forms.Form):
     # TODO: Add language, audio thumbnail, document thumbnail, exercise thumbnail, html5 thumbnail once implemented
     author = forms.CharField(required=False, label=_('Author'), widget=forms.TextInput(attrs={'class': 'form-control setting_input', 'dir': 'auto'}))
@@ -271,9 +257,7 @@ class PreferencesSettingsForm(forms.Form):
         attrs={'class': 'form-control setting_input', 'dir': 'auto'}))
     license_description = forms.CharField(required=False, label=_('License Description'),
                                           widget=forms.TextInput(attrs={'class': 'form-control setting_input', 'dir': 'auto'}))
-    language = forms.ChoiceField(required=False, widget=forms.Select(attrs={'class': 'form-control setting_change'}), label=_('Language'), choices=LANGUAGES)
-    license = forms.ChoiceField(required=False, widget=forms.Select(attrs={'class': 'form-control setting_change'}), label=_('License'), choices=LICENSES)
-    mastery_model = forms.ChoiceField(widget=forms.Select(attrs={'class': 'form-control setting_change'}), choices=MASTERY, label=_("Mastery at"))
+
     m_value = forms.IntegerField(required=False, widget=forms.NumberInput(attrs={'class': 'form-control setting_input setting_change'}), label=_("M"))
     n_value = forms.IntegerField(required=False, widget=forms.NumberInput(attrs={'class': 'form-control setting_input setting_change'}), label=_("N"))
     auto_derive_video_thumbnail = forms.BooleanField(initial=True, required=False, widget=forms.CheckboxInput(attrs={
@@ -285,6 +269,20 @@ class PreferencesSettingsForm(forms.Form):
     auto_derive_html5_thumbnail = forms.BooleanField(initial=True, required=False, widget=forms.CheckboxInput(attrs={
                                                      'class': 'setting_change'}), label=_("HTML Apps"))
     auto_randomize_questions = forms.BooleanField(initial=True, required=False, widget=forms.CheckboxInput(attrs={'class': 'setting_change'}))
+
+    def __init__(self, *args, **kwargs):
+        super(PreferencesSettingsForm, self).__init__(*args, **kwargs)
+        class_attrs = {'class': 'form-control setting_change'}
+
+        language_options = [(l['id'], _(l['readable_name'])) for l in Language.objects.values('id', 'readable_name').order_by('readable_name')]
+        language_options.insert(0, (None, _("Select a language")))  # Add default option if no language is selected
+        self.fields['language'] = forms.ChoiceField(required=False, widget=forms.Select(attrs=class_attrs), label=_('Language'), choices=language_options)
+
+        mastery_options = tuple([(k, _(v)) for k, v in [t for t in exercises.MASTERY_MODELS] if k != "skill_check"])
+        self.fields['mastery_model'] = forms.ChoiceField(widget=forms.Select(attrs=class_attrs), choices=mastery_options, label=_("Mastery at"))
+
+        license_options = ((None, _("Select a license")),) + licenses.choices
+        self.fields['license'] = forms.ChoiceField(required=False, widget=forms.Select(attrs=class_attrs), label=_('License'), choices=license_options)
 
     class Meta:
         model = User
