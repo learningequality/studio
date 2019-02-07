@@ -1,5 +1,12 @@
 # Studio Changelog
 
+## Unreleased
+#### Changes
+* [[@jayoshih](https://github.com/jayoshih)]Allow users to access invitations when they have access to the channel
+
+#### Issues Resolved
+* [#1094](https://github.com/learningequality/studio/issues/1094)
+
 
 ## 2019-02-06 Release
 #### Changes
