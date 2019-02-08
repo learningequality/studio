@@ -3,11 +3,12 @@
 ## Upcoming release
 #### Changes
 * [[@kollivier](https://github.com/kollivier)] Fix issue with channel content defaults only supporting English characters.
+* [[@kollivier](https://github.com/kollivier)] Sort countries by localized country name.
 
 
 #### Issues Resolved
 * [#1004](https://github.com/learningequality/studio/issues/1004)
-
+* [#976](https://github.com/learningequality/studio/issues/1004)
 
 ## 2019-02-06 Release
 #### Changes

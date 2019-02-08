@@ -25,6 +25,27 @@ from contentcuration.utils.policies import get_latest_policies
 REGISTRATION_SALT = getattr(settings, 'REGISTRATION_SALT', 'registration')
 
 
+def get_sorted_countries(language):
+    """
+    Gets the list of countries sorted by localized name.
+
+    NOTE: If we start adding more localization code, we should probably consolidate that code into a localization module.
+
+    :param language: Language to localize into and sort
+    :return: list of countries sorted by localized language
+    """
+    translator = gettext.translation(
+        domain='iso3166',
+        localedir=pycountry.LOCALES_DIR,
+        languages=[language],
+        codeset='utf-8',
+        fallback=True,
+    )
+
+    return sorted([(c.name, translator.gettext(c.name)) for c in list(pycountry.countries)],
+                       key=lambda x: x[1])
+
+
 class ExtraFormMixin(object):
 
     def check_field(self, field, error):
@@ -116,16 +137,7 @@ class RegistrationInformationForm(UserCreationForm, ExtraFormMixin):
         self.request = kwargs.pop('request', None)
         super(RegistrationInformationForm, self).__init__(*args, **kwargs)
 
-        translator = gettext.translation(
-            domain='iso3166',
-            localedir=pycountry.LOCALES_DIR,
-            languages=[self.request.LANGUAGE_CODE],
-            codeset='utf-8',
-            fallback=True,
-        )
-
-        countries = sorted([(c.name, translator.gettext(c.name)) for c in list(pycountry.countries)],
-            key=lambda x: x[1])
+        countries = get_sorted_countries(self.request.LANGUAGE_CODE)
         self.fields['location'] = forms.ChoiceField(required=True, widget=forms.SelectMultiple, label=_(
             'Where do you plan to use Kolibri? (select all that apply)'), choices=countries)
 
@@ -364,17 +376,10 @@ class StorageRequestForm(forms.Form, ExtraFormMixin):
         self.request = kwargs.pop('request', None)
         channels = kwargs.pop('channel_choices', None)
         super(StorageRequestForm, self).__init__(*args, **kwargs)
-        translator = gettext.translation(
-            domain='iso3166',
-            localedir=pycountry.LOCALES_DIR,
-            languages=[self.request.LANGUAGE_CODE],
-            codeset='utf-8',
-            fallback=True,
-        )
 
         self.fields['public'] = forms.MultipleChoiceField(required=False, widget=forms.SelectMultiple(attrs={"class": "multi-select-field"}), choices=channels)
 
-        countries = [(c.name, translator.gettext(c.name)) for c in list(pycountry.countries)]
+        countries = get_sorted_countries(self.request.LANGUAGE_CODE)
         self.fields['location'] = forms.ChoiceField(required=False, widget=forms.SelectMultiple(attrs={"class": "multi-select-field"}), choices=countries)
 
     class Meta:
