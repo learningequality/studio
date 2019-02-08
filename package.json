@@ -5,6 +5,8 @@
   "description": "Frontend build tools and development utilities for Kolibri Studio",
   "scripts": {
     "lint:py": "flake8 --exit-zero",
+    "lint:js": "kolibri-tools lint 'contentcuration/contentcuration/static/**/*.{js,vue,scss,less,css}' -i '**/node_modules/**','**/bundles/**','**/static/js/utils/**','**/static/css/**'",
+    "lint:js:autofix": "kolibri-tools lint 'contentcuration/contentcuration/static/**/*.{js,vue,scss,less,css}' -i '**/node_modules/**','**/bundles/**','**/static/js/utils/**','**/static/css/**' -w",
     "makemessages": "node ./extract_frontend_messages.js ./contentcuration/contentcuration/static/js/edit_channel/**{/*,}.{js,vue}",
     "build": "webpack --config webpack.config.js",
     "cypress:run": "wait-on -t 20000 tcp:8081 && cypress run --spec cypress/integration/login.js",
@@ -78,7 +80,7 @@
     "summernote": "^0.8.2",
     "to-markdown": "^3.0.3",
     "underscore": "^1.9.0",
-    "vue": "^2.5.16",
+    "vue": "^2.5.17",
     "vue-intl": "^2.0.0",
     "vuex": "^3.0.1"
   },
@@ -102,6 +104,7 @@
     "imports-loader": "^0.8.0",
     "jest": "^23.6.0",
     "jest-serializer-vue": "^2.0.2",
+    "kolibri-tools": "^0.12.0-dev.1",
     "less": "^3.0.1",
     "less-loader": "^4.1.0",
     "mini-css-extract-plugin": "^0.4.0",
@@ -113,7 +116,7 @@
     "uglifyjs-webpack-plugin": "^1.2.5",
     "vue-jest": "^2.6.0",
     "vue-loader": "^15.0.9",
-    "vue-template-compiler": "^2.5.16",
+    "vue-template-compiler": "^2.5.17",
     "wait-on": "^2.1.0",
     "webpack": "^4.5.0",
     "webpack-bundle-tracker": "^0.3.0",
@@ -121,5 +124,9 @@
     "webpack-rtl-plugin": "^1.6.0"
   },
   "false": {},
-  "peerDependencies": {}
+  "peerDependencies": {},
+  "engines": {
+    "node": "10.x",
+    "npm": ">= 3"
+  }
 }
