@@ -1,5 +1,13 @@
 # Studio Changelog
 
+## Upcoming release
+#### Changes
+* [[@kollivier](https://github.com/kollivier)] Fix issue with channel content defaults only supporting English characters.
+
+
+#### Issues Resolved
+* [#1044](https://github.com/learningequality/studio/issues/1044)
+
 
 ## 2019-02-06 Release
 #### Changes
