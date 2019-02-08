@@ -6,7 +6,7 @@
 
 
 #### Issues Resolved
-* [#1044](https://github.com/learningequality/studio/issues/1044)
+* [#1004](https://github.com/learningequality/studio/issues/1004)
 
 
 ## 2019-02-06 Release
