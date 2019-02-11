@@ -4,6 +4,7 @@
 #### Changes
 * [[@kollivier](https://github.com/kollivier)] Fix issue with channel content defaults only supporting English characters.
 * [[@kollivier](https://github.com/kollivier)] Sort countries by localized country name.
+* [[@jayoshih](https://github.com/jayoshih)] Added banner to redirect users from contentworkshop.learningequality.org to studio.learningequality.org
 
 
 #### Issues Resolved
