@@ -295,6 +295,31 @@ body {
 	}
 }
 
+#saving-spinner-wrapper {
+    position: relative;
+    margin-bottom: -10px;
+    height: 10px;
+    z-index: 100;
+    #saving-spinner {
+    	padding: 3px 10px;
+    	width: fit-content;
+    	float: right;
+    	background-color: @yellow-bg-color;
+    	color: @gray-800;
+	    margin-right: 5px;
+	    margin-top: 3px;
+	    border-radius: 5px;
+	    font-weight: bold;
+	    font-size: 13pt;
+	    display: none;
+    	.spinner {
+		  font-size: 17pt;
+		  vertical-align: sub;
+		  margin-right: 5px;
+		}
+    }
+}
+
 #channel-edit-content-wrapper {
 	@container-min-height:250px;
 	@container-border-color: #BCBCBC;
@@ -558,6 +583,7 @@ body {
 						    object-fit: cover;
 						    vertical-align: baseline;
 						    margin-top: 2px;
+						    position: absolute;
 						}
 						.content-item-icon{
 							position: relative;

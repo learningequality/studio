@@ -92,43 +92,35 @@ class FileListSerializer(serializers.ListSerializer):
 
     def update(self, instance, validated_data):
         ret = []
-        update_files = {}
-        user = self.context['request'].user
+        nodes_to_check = []
         with transaction.atomic():
             # Get files that have the same contentnode, preset, and language as the files that are now attached to this node
             for item in validated_data:
                 file_obj = File.objects.get(pk=item['id'])
+                file_obj.language_id = item.get('language') and item['language']['id']
+                file_obj.contentnode = item['contentnode']
+
+                if item['contentnode'] not in nodes_to_check:
+                    nodes_to_check.append(item['contentnode'])
+
+                # Make sure file exists
+                file_path = generate_object_storage_name(file_obj.checksum, str(file_obj))
+                if not default_storage.exists(file_path):
+                    raise OSError("Error: file {} was not found".format(str(file_obj)))
+
+                # Replace existing files
                 files_to_replace = item['contentnode'].files.exclude(pk=file_obj.pk)\
                     .filter(preset_id=file_obj.preset_id, language_id=file_obj.language_id)
                 files_to_replace.delete()
 
-                if file_obj.preset and file_obj.preset.display:
-                    if file_obj.pk:
-                        update_files[file_obj.pk] = item
-                    else:
-                        # create new nodes
-                        ret.append(File.objects.create(**item))
+                file_obj.save()
+                ret.append(file_obj)
 
-        if update_files:
-            with transaction.atomic():
-                for file_id, data in update_files.items():
-                    file_obj, _new = File.objects.get_or_create(pk=file_id)
+            # Remove items that are not in the validated data (file has been removed)
+            for node in nodes_to_check:
+                file_ids = [f['id'] for f in validated_data if f['contentnode'].pk == node.pk]
+                node.files.exclude(pk__in=file_ids).delete()
 
-                    # potential optimization opportunity
-                    for attr, value in data.items():
-                        if attr != "preset" and attr != "language":
-                            setattr(file_obj, attr, value)
-                    file_path = generate_object_storage_name(file_obj.checksum, str(file_obj))
-
-                    if not default_storage.exists(file_path):
-                        raise OSError("Error: file {} was not found".format(str(file_obj)))
-
-                    file = default_storage.open(file_path)
-                    file_obj.file_on_disk = file
-
-                    file_obj.uploaded_by = file_obj.uploaded_by or user
-                    file_obj.save()
-                    ret.append(file_obj)
         return ret
 
 

@@ -355,6 +355,7 @@ var ShareCurrentList = BaseShareList.extend({
         var share_item = new ShareCurrentItem({
             model:model,
             containing_list_view:this,
+            channel: this.model
         });
         this.views.push(share_item);
         return share_item;
@@ -472,7 +473,7 @@ var ShareCurrentItem = ShareItem.extend({
         _.bindAll(this, 'remove_editor');
         this.bind_edit_functions();
         this.containing_list_view = options.containing_list_view;
-        if(this.model.get("viewers") && this.model.get("viewers").indexOf(this.model.get("id")) >= 0){
+        if(options.channel.get("viewers") && options.channel.get("viewers").indexOf(this.model.get("id")) >= 0){
             this.share_mode = "view";
         }
         this.render();

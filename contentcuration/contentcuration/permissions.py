@@ -3,6 +3,7 @@ from rest_framework import permissions
 
 from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
+from contentcuration.models import ChannelSet
 from contentcuration.models import ContentNode
 from contentcuration.models import ContentTag
 from contentcuration.models import File
@@ -38,6 +39,8 @@ class CustomPermission(permissions.BasePermission):
                obj.channel.pending_editors.filter(pk=obj.pk).exists() or \
                user_can_view(request.user, obj.channel):
                 return True
+        elif isinstance(obj, ChannelSet):
+            return request.user.is_admin or obj.editors.filter(pk=request.user.pk).exists()
         elif isinstance(obj, Channel):
             if user_can_edit(request.user, obj):
                 return True

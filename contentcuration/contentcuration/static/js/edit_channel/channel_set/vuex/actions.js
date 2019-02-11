@@ -1,7 +1,5 @@
 var _ = require('underscore');
 var utils = require('../util');
-var loadChannelSetChannels = utils.loadChannelSetChannels;
-var loadChannelList = utils.loadChannelList;
 var saveChannelsToSet = utils.saveChannelsToSet;
 var { PageTypes, ChannelListUrls } = require('../constants');
 
@@ -10,7 +8,7 @@ export function loadChannelSetChannels(context, payload) {
   if(context.getters.loadChannels) {
     let token = context.getters.channelSet.get('secret_token');
     if(token) {
-      return loadChannelSetChannels(token.token)
+      return utils.loadChannelSetChannels(token.token)
       .then(function onSuccess(channels) {
         context.commit('UPDATE_CHANNELS', channels);
         context.commit('UPDATE_CHANNELS_LOADED', false);
@@ -28,7 +26,7 @@ export function loadChannelSetChannels(context, payload) {
 
 export function loadChannelList(context, listName) {
   if(!context.getters.allChannels.hasOwnProperty(listName)) {
-    return loadChannelList(ChannelListUrls[listName])
+    return utils.loadChannelList(ChannelListUrls[listName])
     .then(function onSuccess(channels) {
       context.commit('UPDATE_ALL_CHANNELS', {"key": listName, "value": channels});
       return channels;

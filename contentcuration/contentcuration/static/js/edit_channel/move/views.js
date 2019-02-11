@@ -23,6 +23,7 @@ var MoveModalView = BaseViews.BaseModalView.extend({
     $trs: MESSAGES,
 
     initialize: function(options) {
+        _.bindAll(this, "closed_modal")
         this.render(this.close, {});
         this.move_view = new MoveView({
             el: this.$(".modal-body"),
@@ -31,6 +32,7 @@ var MoveModalView = BaseViews.BaseModalView.extend({
             modal : this,
             model:this.model
         });
+        this.$(".modal").on("hidden.bs.modal", this.closed_modal);
     }
 });
 

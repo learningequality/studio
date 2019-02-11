@@ -17,20 +17,20 @@ describe('ContentNodeCollection', () => {
             })
         })
         it('should not run the view setup function if a primary modal is already open', done => {
-            State.Store.commit('OPEN_PRIMARY_MODAL')
+            State.Store.commit('OPEN_PRIMARY_MODAL', {name:'dummyModal'})
             State.Store.dispatch('usePrimaryModal', makeModalView).catch((error) => {
-                expect(error.message).toBe(ERROR_PRIMARY_MODAL_ALREADY_OPEN)
+                expect(error.message).toBe(ERROR_PRIMARY_MODAL_ALREADY_OPEN('dummyModal'))
                 done()
             })
         })
         it('should appropriately set `primaryModalInUse` as the modal view is created and removed', done => {
             // start out with the primary modal closed
             State.Store.commit('CLOSE_PRIMARY_MODAL')
-            expect(State.Store.getters.primaryModalInUse).toBe(false)
+            expect(State.Store.getters.primaryModalInUse).toBe(null)
 
             // create a primary modal
             State.Store.dispatch('usePrimaryModal', makeModalView).then(modalView => {
-                expect(State.Store.getters.primaryModalInUse).toBe(true)
+                expect(State.Store.getters.primaryModalInUse).toBe(modalView)
 
                 // make sure we aren't allowed to create another primary modal
                 State.Store.dispatch('usePrimaryModal', makeModalView).catch(error => {
@@ -38,7 +38,7 @@ describe('ContentNodeCollection', () => {
 
                     // remove the primary modal
                     modalView.remove()
-                    expect(State.Store.getters.primaryModalInUse).toBe(false)
+                    expect(State.Store.getters.primaryModalInUse).toBe(null)
 
                     // now we should be free to create another primary modal
                     State.Store.dispatch('usePrimaryModal', makeModalView).then(anotherModalView => {

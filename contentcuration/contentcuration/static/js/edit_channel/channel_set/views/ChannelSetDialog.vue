@@ -14,6 +14,14 @@
       </a>
       <button
         class="action-button pull-right modal-main-action-button uppercase"
+        @click="handleSaveClose"
+        :disabled="!enableSave"
+        :title="saveButtonTitle"
+      >
+        {{ $tr('saveCloseButtonLabel') }}
+      </button>
+      <button
+        class="action-text pull-right modal-main-action-button uppercase"
         @click="handleSave"
         :disabled="!enableSave"
         :title="saveButtonTitle"
@@ -21,10 +29,9 @@
         {{ $tr('saveButtonLabel') }}
       </button>
       <span
-        class="spinner material-icons pull-right"
+        class="spinner pull-right"
         v-show="saving"
       >
-        autorenew
       </span>
       <span class="redText errorText pull-right" v-show="error">
         {{ $tr('errorText') }}
@@ -45,6 +52,7 @@ export default {
   $trs: {
     cancelButtonLabel: 'Close',
     saveButtonLabel: 'Save',
+    saveCloseButtonLabel: 'Save & Close',
     noChangesTitle: "No changes detected",
     invalidCollection: "Must enter all required fields",
     saving: "Saving...",
@@ -78,9 +86,14 @@ export default {
   methods: Object.assign(
     mapMutations('channel_set', {
       setSaving: 'SET_SAVING',
+      setClosing: 'SET_CLOSING'
     }),
     {
       handleSave() {
+        this.setSaving(true);
+      },
+      handleSaveClose() {
+        this.setClosing(true);
         this.setSaving(true);
       }
     }

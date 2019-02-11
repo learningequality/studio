@@ -242,7 +242,7 @@ var BaseView = Backbone.View.extend({
 		this.trigger('removed')
 		Backbone.View.prototype.remove.call(this);
 	},
-	
+
   /**
    * Track an event to analytics providers (e.g. Google Analytics, Mixpanel).
    * @param {string} event_category Typically the object interacted with, e.g. 'Clipboard'
@@ -425,13 +425,15 @@ var BaseWorkspaceView = BaseView.extend({
 		State.Store.dispatch('usePrimaryModal', () => {
 			return new ArchiveView.ArchiveModalView({
 				model : new Models.ContentNodeModel(State.current_channel.get("trash_tree"))
-			 });	
+			 });
 		})
 	},
 	move_content:function(move_collection, source){
 		var MoveView = require("edit_channel/move/views");
-		var list = this.get_selected(true);
-		move_collection = new Models.ContentNodeCollection(_.pluck(list, 'model'));
+		if (!move_collection){
+			var list = this.get_selected(true);
+			move_collection = new Models.ContentNodeCollection(_.pluck(list, 'model'));
+		}
 		return new MoveView.MoveModalView({
 			collection: move_collection,
 			onmove: (target, moved, original_parents) => {
@@ -514,7 +516,7 @@ var BaseWorkspaceView = BaseView.extend({
 			return new settings.SettingsModalView({
 				model: State.current_channel,
 				onsave: this.handle_changed_settings
-			})	
+			})
 		})
 	},
 	handle_changed_settings: function(data){
@@ -834,6 +836,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 				        	$(".content-list").sortable( "cancel" );
 			        		$(".content-list").sortable( "enable" );
 			        		$(".content-list").sortable( "refresh" );
+			        		$("#saving-spinner").css('display', 'none');
 				            // Revert back to original positions
 			        		self.retrieve_nodes($.unique(reload_list), true).then(function(fetched){
 								self.reload_ancestors(fetched, true);
@@ -883,7 +886,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 				onnew:self.add_nodes,
 				allow_edit: true
 			});
-	
+
 			this.collection.create_new_node({
 				"kind":"topic",
 				"title": (this.model.get('parent'))? this.model.get('title') + " " + this.get_translation("topic") : this.get_translation("topic"),
@@ -905,7 +908,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
 				modal: true,
 				onimport: this.add_nodes,
 				model: this.model
-			});	
+			});
 		})
 	},
   add_files:function(){
@@ -1149,7 +1152,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 			var data={
 				model: this.model,
 			}
-			return new Previewer.PreviewModalView(data);	
+			return new Previewer.PreviewModalView(data);
 		})
 	},
 	open_move:function(source){
