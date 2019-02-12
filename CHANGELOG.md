@@ -24,6 +24,7 @@
 
 #### Issues Resolved
 * [#1004](https://github.com/learningequality/studio/issues/1004)
+* [#976](https://github.com/learningequality/studio/issues/976)
 * [#1094](https://github.com/learningequality/studio/issues/1094)
 
 
