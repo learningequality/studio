@@ -2,9 +2,28 @@
 
 ## Unreleased
 #### Changes
-* [[@jayoshih](https://github.com/jayoshih)]Allow users to access invitations when they have access to the channel
 
 #### Issues Resolved
+
+
+## Upcoming release
+#### Changes
+
+#### Issues Resolved
+
+
+## 2019-02-11 Release
+#### Changes
+* [[@kollivier](https://github.com/kollivier)] Fix issue with channel content defaults only supporting English characters.
+* [[@kollivier](https://github.com/kollivier)] Sort countries by localized country name.
+* [[@jayoshih](https://github.com/jayoshih)] Added banner to redirect users from contentworkshop.learningequality.org to studio.learningequality.org
+* [[@benjaoming](https://github.com/benjaoming)] Moved Read the Docs out of main repo
+* [[@jayoshih](https://github.com/jayoshih)]Allow users to access invitations when they have access to the channel
+
+
+
+#### Issues Resolved
+* [#1004](https://github.com/learningequality/studio/issues/1004)
 * [#1094](https://github.com/learningequality/studio/issues/1094)
 
 
