@@ -24,7 +24,7 @@ class AsyncTaskTestCase(BaseAPITestCase):
         self.assertEqual(task_info.is_progress_tracking, False)
         result = task.get()
         self.assertEqual(result, 42)
-        self.assertEqual(Task.objects.get(id=task.id).status, 'SUCCESS')
+        self.assertEqual(Task.objects.get(task_id=task.id).status, 'SUCCESS')
 
     def test_asynctask_reports_progress(self):
         metadata = {'test': True}
@@ -37,11 +37,11 @@ class AsyncTaskTestCase(BaseAPITestCase):
         self.assertTrue(Task.objects.filter(metadata__test=True).count()==1)
         result = task.get()
         self.assertEqual(result, 42)
-        self.assertEqual(Task.objects.get(id=task.id).status, 'SUCCESS')
+        self.assertEqual(Task.objects.get(task_id=task.id).status, 'SUCCESS')
 
         # progress is retrieved dynamically upon calls to get the task info, so
         # use an API call rather than checking the db directly for progress.
-        url = '{}/{}'.format(self.task_url, task.id)
+        url = '{}/{}'.format(self.task_url, task_info.id)
         response = self.get(url)
         self.assertEqual(response.data['status'], 'SUCCESS')
         self.assertEqual(response.data['task_type'], 'progress-test')
@@ -57,7 +57,7 @@ class AsyncTaskTestCase(BaseAPITestCase):
         }
         task, task_info = create_async_task('error-test', task_options)
 
-        task = Task.objects.get(id=task.id)
+        task = Task.objects.get(task_id=task.id)
         self.assertEqual(task.status, 'FAILURE')
         self.assertTrue('error' in task.metadata)
 
@@ -78,4 +78,4 @@ class AsyncTaskTestCase(BaseAPITestCase):
 
         result = task.get()
         self.assertEquals(result, 42)
-        self.assertEquals(Task.objects.filter(id=task.id).count(), 0)
+        self.assertEquals(Task.objects.filter(task_id=task.id).count(), 0)

@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Task',
             fields=[
-                ('id', models.CharField(max_length=50, primary_key=True, serialize=False)),
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('task_type', models.CharField(max_length=50)),
                 ('created', models.DateTimeField(default=django.utils.timezone.now)),
                 ('status', models.CharField(max_length=10)),

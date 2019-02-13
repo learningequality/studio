@@ -1288,7 +1288,7 @@ class Invitation(models.Model):
 
 class Task(models.Model):
     """Asynchronous tasks"""
-    id = models.CharField(primary_key=True, max_length=50)   # Get the id from Celery task
+    task_id = UUIDField(db_index=True, default=uuid.uuid4)  # This ID is used as the Celery task ID
     task_type = models.CharField(max_length=50)
     created = models.DateTimeField(default=timezone.now)
     status = models.CharField(max_length=10)

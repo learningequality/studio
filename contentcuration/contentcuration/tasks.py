@@ -49,7 +49,7 @@ def test_task(self):
     :return: The number 42
     """
     logger.info("Request ID = {}".format(self.request.id))
-    assert Task.objects.filter(id=self.request.id).count() == 1
+    assert Task.objects.filter(task_id=self.request.id).count() == 1
     return 42
 
 
@@ -68,7 +68,7 @@ def progress_test_task(self):
     :return:
     """
     logger.info("Request ID = {}".format(self.request.id))
-    assert Task.objects.filter(id=self.request.id).count() == 1
+    assert Task.objects.filter(task_id=self.request.id).count() == 1
 
     self.update_state('PROGRESS', meta={'progress': 100})
     return 42
@@ -153,11 +153,7 @@ def create_async_task(task_name, task_options, task_args=None):
     async_task = task_info['task']
     is_progress_tracking = task_info['progress_tracking']
 
-    task_id = str(uuid4())
-    logging.debug("task_id = {}".format(task_id))
-
     task_info = Task.objects.create(
-        id=task_id,
         task_type=task_name,
         status='QUEUED',
         is_progress_tracking=is_progress_tracking,
@@ -165,7 +161,7 @@ def create_async_task(task_name, task_options, task_args=None):
         metadata=metadata,
     )
 
-    task = async_task.apply_async(kwargs=task_args, task_id=task_id)
+    task = async_task.apply_async(kwargs=task_args, task_id=str(task_info.task_id))
     logging.info("Created task ID = {}".format(task.id))
 
     return task, task_info

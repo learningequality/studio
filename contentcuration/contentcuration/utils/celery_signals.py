@@ -30,14 +30,14 @@ def before_start(sender, headers, body, **kwargs):
     if not "task_type" in options:
         return
 
-    Task.objects.filter(id=task_id).update(status="PENDING")
+    Task.objects.filter(task_id=task_id).update(status="PENDING")
     logger.info("Task object {} updated with status PENDING.".format(task_id))
 
 
 @task_failure.connect
 def on_failure(sender, **kwargs):
     try:
-        task = Task.objects.get(id=sender.request.id)
+        task = Task.objects.get(task_id=sender.request.id)
         task.status = "FAILURE"
         exception_data = {
             'task_args': kwargs['args'],
@@ -55,7 +55,7 @@ def on_success(sender, result, **kwargs):
     try:
         logger.info("on_success called, process is {}".format(os.getpid()))
         task_id = sender.request.id
-        task = Task.objects.get(id=task_id)
+        task = Task.objects.get(task_id=task_id)
         task.status="SUCCESS"
         task.metadata['result'] = result
         task.save()
