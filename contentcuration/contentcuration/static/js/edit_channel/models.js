@@ -218,7 +218,6 @@ var UserModel = BaseModel.extend({
                 error: reject,
                 success: function (data) {
                     var collection = new ChannelCollection(data);
-                    collection.each(function (item) { item.set("is_bookmarked", _.contains(self.get("bookmarks"), item.id)); });
                     resolve(collection);
                 }
             });
@@ -233,7 +232,6 @@ var UserModel = BaseModel.extend({
                 error: reject,
                 success: function (data) {
                     var collection = new ChannelCollection(data);
-                    collection.each(function (item) { item.set("is_bookmarked", _.contains(self.get("bookmarks"), item.id)); });
                     resolve(collection);
                 }
             });
@@ -248,7 +246,6 @@ var UserModel = BaseModel.extend({
                 error: reject,
                 success: function (data) {
                     var collection = new ChannelCollection(data);
-                    collection.each(function (item) { item.set("is_bookmarked", true); });
                     resolve(collection);
                 }
             });
@@ -263,7 +260,6 @@ var UserModel = BaseModel.extend({
                 error: reject,
                 success: function (data) {
                     var collection = new ChannelCollection(data);
-                    collection.each(function (item) { item.set("is_bookmarked", _.contains(self.get("bookmarks"), item.id)); });
                     resolve(collection);
                 }
             });

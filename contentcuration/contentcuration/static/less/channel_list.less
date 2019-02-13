@@ -1,0 +1,70 @@
+@import "global-variables.less";
+
+@channel-preview-width: 650px;
+@channel-item-width: 70vw;
+@channel-item-max-width: 800px;
+@channel-item-min-width: 400px;
+
+// nested flexbox settings to ensure that the channels list view is vertically responsive.
+body {
+	display: flex;
+	flex-direction: column;
+
+	#channel-container {
+		display: flex;
+		height: 0;
+		flex-direction: column;
+		flex-grow: 1;
+
+		#top-navigation {
+			flex: 0;
+		}
+
+		#channel-area-wrapper {
+			display: flex;
+			max-height: 100%;
+			flex: 1;
+
+			#channel-list-wrapper {
+				display: grid;
+				justify-content: normal;
+				align-content: flex-start;
+
+				#channel-list-area {
+					margin: auto;
+				}
+			}
+
+			#channel_preview_wrapper {
+				display: flex;
+				flex-direction: column;
+				flex: 1;
+
+				#channel_details_overlay {
+					display: flex;
+					flex-direction: column;
+					flex: 1;
+
+					#channel_details_panel {
+						display: flex;
+						flex-direction: column;
+						flex: 1;
+
+						#channel_details_view_panel {
+							display: flex;
+							flex-direction: column;
+							flex: 1;
+
+							#channel_details {
+								flex-direction: column;
+								flex-grow: 1;
+								width: 100%;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+// end of flexbox settings
