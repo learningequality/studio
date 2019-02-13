@@ -15,6 +15,7 @@
       {{ $tr('noChannelsFound') }}
     </div>
     <div v-else>
+      <div>{{listChannels.length}}</div>
       <ChannelItem
         v-for="channel in listChannels"
         :key="channel.id"
@@ -29,7 +30,7 @@
 <script>
 
 import _ from 'underscore';
-import { mapGetters, mapActions } from 'vuex';
+import { mapState, mapActions } from 'vuex';
 import ChannelItem from './ChannelItem.vue';
 
 export default {
@@ -63,7 +64,7 @@ export default {
     ChannelItem,
   },
   computed: Object.assign(
-    mapGetters('channel_list', [
+    mapState('channel_list', [
       'channels'
     ]),
     {

@@ -17,7 +17,7 @@
             <span
               class="material-icons copy-id-btn"
               :title="$tr('copyPrompt')"
-              @click="copyToken"
+              @click.stop="copyToken"
               @mouseleave="highlight(false)"
               @mouseover="highlight(true)"
             >{{copyIcon}}</span>
@@ -25,16 +25,17 @@
           <div v-else>
             <em>{{ $tr('unpublishedText') }}</em>
           </div>
+          <div>{{channel.STARRED}}</div>
         </div>
         <h4>
           <span
             :title="starText"
             class="star-option material-icons"
-            :class="{starred: isStarred}"
+            :class="{starred: channel.STARRED && !channel.STARRING, spinner: channel.STARRING}"
             @mouseleave="highlight(false)"
             @mouseover="highlight(true)"
+            @click.stop="toggleStar"
           >
-            {{isStarred? 'star' : 'star_border'}}
           </span>
           <p dir="auto" class="truncate channel_name">{{channel.name}}</p>
         </h4>
@@ -52,7 +53,7 @@
 <script>
 
 import _ from 'underscore';
-import { mapActions, mapGetters, mapMutations } from 'vuex';
+import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
 import Constants from 'edit_channel/constants/index';
 
 const copyStatusCodes = {
@@ -85,8 +86,10 @@ export default {
     }
   },
   computed: Object.assign(
+    mapState('channel_list', [
+      'channels'
+    ]),
     mapGetters('channel_list', [
-      'starredChannels',
       'activeChannel'
     ]),
     {
@@ -99,11 +102,8 @@ export default {
       isSelected() {
         return this.activeChannel && this.channel.id === this.activeChannel.id;
       },
-      isStarred() {
-        return !!_.findWhere(this.starredChannels, {id: this.channel.id});
-      },
       starText() {
-        return this.isStarred? this.$tr('unstarChannel') : this.$tr('starChannel');
+        return this.channel.STARRED ? this.$tr('unstarChannel') : this.$tr('starChannel');
       },
       copyIcon() {
         switch(this.copyStatus) {
@@ -122,10 +122,10 @@ export default {
     }
   ),
   methods: Object.assign(
-    // mapActions('channel_set', [
-    //   'addChannelToSet',
-    //   'removeChannelFromSet',
-    // ]),
+    mapActions('channel_list', [
+      'addStar',
+      'removeStar',
+    ]),
     mapMutations('channel_list', {
       setActiveChannel: 'SET_ACTIVE_CHANNEL',
     }),
@@ -145,6 +145,9 @@ export default {
       },
       highlight(highlight) {
         this.optionHighlighted = highlight;
+      },
+      toggleStar() {
+        (this.channel.STARRED)? this.removeStar(this.channel) : this.addStar(this.channel);
       }
     }
   )
@@ -232,7 +235,7 @@ export default {
       font-size: 18pt;
       font-weight: bold;
       color: @body-font-color;
-      .star-option {
+      .star-option, .spinner {
         display:inline-block;
         float: right;
         font-size: 20pt;
@@ -240,11 +243,18 @@ export default {
         color: @gray-700;
         position: relative;
         top: -40px;
-        &:hover{
+        &.star-option::before {
+          .material-icons;
+          content: "star_border";
+        }
+        &.star-option:hover{
           color: @blue-500;
         }
         &.starred{
           color: @blue-500;
+          &::before {
+            content: "star";
+          }
           &:hover{
             color: @blue-200;
           }
