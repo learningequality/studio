@@ -2,9 +2,10 @@
 
 ## Upcoming release
 #### Changes
+* [[@jayoshih](https://github.com/jayoshih)] Don't allow users to set prerequisites on topics
 
 #### Issues Resolved
-
+* [#1254](https://github.com/learningequality/studio/issues/1254)
 
 ## 2019-02-11 Release
 #### Changes
