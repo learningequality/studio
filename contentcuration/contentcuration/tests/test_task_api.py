@@ -16,13 +16,13 @@ class TaskAPITestCase(BaseAPITestCase):
         self.task_data = {
             'status': 'STARTED',
             'task_type': 'YOUTUBE_IMPORT',
-            'id': 'just_a_test',
+            'task_id': 'just_a_test',
             'user': self.user.pk,
             'metadata': {}
         }
 
-    def create_new_task(self, type, metadata, id='test_task'):
-        return Task.objects.create(id=id, task_type=type, metadata=metadata, status="STARTED", user=self.user)
+    def create_new_task(self, type, metadata):
+        return Task.objects.create(task_type=type, metadata=metadata, status="STARTED", user=self.user)
 
     def test_get_task(self):
         task = self.create_new_task(type='YOUTUBE_IMPORT', metadata={'channel': self.channel.id})
