@@ -20,6 +20,7 @@ from rest_framework.settings import api_settings
 from rest_framework.utils import model_meta
 from rest_framework_bulk import BulkSerializerMixin
 
+from contentcuration.celery import app
 from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
 from contentcuration.models import ChannelSet
@@ -919,6 +920,20 @@ class ChannelSetSerializer(serializers.ModelSerializer):
 
 
 class TaskSerializer(serializers.ModelSerializer):
+    metadata = serializers.SerializerMethodField()
+
+    def get_metadata(self, task):
+        metadata = task.metadata
+        result = app.AsyncResult(task.id)
+        if not settings.CELERY_TASK_ALWAYS_EAGER:
+            if task.is_progress_tracking and 'progress' in result.state:
+                metadata['progress'] = result.state['progress']
+        elif task.is_progress_tracking:
+            # we're running the test suite, use a mock value so we can test progress support
+            metadata['progress'] = 100
+
+        return metadata
+
     class Meta:
         model = Task
         fields = ('id', 'task_type', 'created', 'metadata', 'status', 'is_progress_tracking', 'user', 'metadata')

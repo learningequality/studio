@@ -317,9 +317,9 @@ IGNORABLE_404_URLS = [
 ]
 
 # CELERY CONFIGURATIONS
-BROKER_URL = 'redis://localhost:6379'
+CELERY_BROKER_URL = 'redis://localhost:6379'
 CELERY_RESULT_BACKEND = 'redis://localhost:6379'
-BROKER_URL = "redis://:{password}@{endpoint}:/{db}".format(
+CELERY_BROKER_URL = "redis://:{password}@{endpoint}:/{db}".format(
     password=os.getenv("CELERY_REDIS_PASSWORD") or "",
     endpoint=os.getenv("CELERY_BROKER_ENDPOINT") or "localhost:6379",
     db=os.getenv("CELERY_REDIS_DB") or "0"
@@ -333,7 +333,8 @@ CELERY_TIMEZONE = os.getenv("CELERY_TIMEZONE") or 'Africa/Nairobi'
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TRACK_STARTED = True
+CELERY_TASK_TRACK_STARTED = True
+CELERY_WORKER_SEND_TASK_EVENTS = True
 
 # When cleaning up orphan nodes, only clean up any that have been last modified
 # since this date

@@ -1,6 +1,9 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
+import logging
+from uuid import uuid4
+
 from celery.decorators import task
 from celery.utils.log import get_task_logger
 from django.conf import settings
@@ -8,10 +11,11 @@ from django.core.mail import EmailMessage
 from django.core.management import call_command
 from django.template.loader import render_to_string
 
+from contentcuration.celery import app
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
+from contentcuration.models import Task
 from contentcuration.models import User
-from contentcuration.utils.asynctask import AsyncTask
 from contentcuration.utils.csv_writer import write_channel_csv_file
 from contentcuration.utils.csv_writer import write_user_csv
 
@@ -36,7 +40,50 @@ logger = get_task_logger(__name__)
 # runs the management command 'exportchannel' async through celery
 
 
-@task(name='exportchannel_task', base=AsyncTask)
+# Tasks with 'test' in their name are written specifically to test the Async Task API
+@app.task(bind=True, name='test_task')
+def test_task(self):
+    """
+    This is a mock task to be used ONLY for unit-testing various pieces of the
+    async task API.
+    :return: The number 42
+    """
+    logger.info("Request ID = {}".format(self.request.id))
+    assert Task.objects.filter(id=self.request.id).count() == 1
+    return 42
+
+
+@app.task(name='error_test_task')
+def error_test_task():
+    """
+    This is a mock task designed to test that we properly report errors to the client.
+    """
+    raise Exception("I'm sorry Dave, I'm afraid I can't do that.")
+
+
+@app.task(bind=True, name='progress_test_task')
+def progress_test_task(self):
+    """
+    This is a mock task to be used to test that we can update progress when tracking is enabled.
+    :return:
+    """
+    logger.info("Request ID = {}".format(self.request.id))
+    assert Task.objects.filter(id=self.request.id).count() == 1
+
+    self.update_state('PROGRESS', meta={'progress': 100})
+    return 42
+
+
+@app.task(name='non_async_test_task')
+def non_async_test_task():
+    """
+    This is a mock task used to test that creating a task without using create_async_task does not result
+    in a Task object being created or updated.
+    """
+    return 42
+
+
+@task(name='exportchannel_task')
 def exportchannel_task(channel_id, user_id, task_type, is_progress_tracking, metadata):
     call_command('exportchannel', channel_id, email=True, user_id=user_id)
 
@@ -76,3 +123,49 @@ def generateusercsv_task(email):
 @task(name='deletetree_task')
 def deletetree_task(tree_id):
     ContentNode.objects.filter(tree_id=tree_id).delete()
+
+
+type_mapping = {
+    'test': {'task': test_task, 'progress_tracking': False},
+    'error-test': {'task': error_test_task, 'progress_tracking': False},
+    'progress-test': {'task': progress_test_task, 'progress_tracking': True},
+}
+
+
+def create_async_task(task_name, task_options, task_args=None):
+    # We use the existence of the task_type kwarg to know if it's an async task.
+    if not task_name in type_mapping:
+        raise KeyError("Need to define task in type_mapping first.")
+        return
+    metadata = {}
+    if 'metadata' in task_options:
+        metadata = task_options["metadata"]
+    user = None
+    if 'user' in task_options:
+        user = task_options['user']
+    elif 'user_id' in task_options:
+        user_id = task_options["user_id"]
+        user = User.objects.get(id=user_id)
+    if user is None:
+        raise KeyError("All tasks must be assigned to a user.")
+
+    task_info = type_mapping[task_name]
+    async_task = task_info['task']
+    is_progress_tracking = task_info['progress_tracking']
+
+    task_id = str(uuid4())
+    logging.debug("task_id = {}".format(task_id))
+
+    task_info = Task.objects.create(
+        id=task_id,
+        task_type=task_name,
+        status='QUEUED',
+        is_progress_tracking=is_progress_tracking,
+        user=user,
+        metadata=metadata,
+    )
+
+    task = async_task.apply_async(kwargs=task_args, task_id=task_id)
+    logging.info("Created task ID = {}".format(task.id))
+
+    return task, task_info
