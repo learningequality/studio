@@ -1,36 +1,33 @@
 <template>
-  <div id="channel-area-wrapper">
-    <div id="channel-list-wrapper" :class="{'showPanel': !!activeChannel}">
-      <div id="channel-list-area">
-        <ChannelInvitationList/>
+  <div id="channel-container">
+    <div id="channel-area-wrapper">
+      <div id="channel-list-wrapper" :class="{'showPanel': !!activeChannel}">
+        <div id="channel-list-area">
+          <ChannelInvitationList/>
 
-        <ul id="manage-channel-nav">
-          <li
-            v-for="listType in lists"
-            :class="{active: activeList === listType}"
-            @click="setActiveList(listType)"
-          >
-            <span class="material-icons" v-if="listType === 'STARRED'">star</span>
-            {{ $tr(listType) }}
-          </li>
-          <li
-            :class="{active: activeList === 'CHANNEL_SETS'}"
-            @click="setActiveList('CHANNEL_SETS')"
-          >
-            {{ $tr('CHANNEL_SETS') }}
-          </li>
-        </ul>
-        <ChannelList
-          v-for="listType in lists"
-          v-show="activeList === listType"
-          :key="listType"
-          :listType="listType"
-          :canAddChannels="listType === 'EDITABLE'"
-        />
-        <ChannelSetList
-          v-show="activeList === 'CHANNEL_SETS'"
-          key="CHANNEL_SETS"
-        />
+          <ul id="manage-channel-nav">
+            <li
+              v-for="listType in lists"
+              :class="{active: activeList === listType}"
+              @click="setActiveList(listType)"
+            >
+              <span class="material-icons" v-if="listType === 'STARRED'">star</span>
+              {{ $tr(listType) }}
+            </li>
+          </ul>
+          <div v-for="listType in lists" v-show="activeList === listType">
+             <ChannelSetList
+              v-if="listType === 'CHANNEL_SETS'"
+              :key="listType"
+            />
+            <ChannelList
+              v-else
+              :key="listType"
+              :listType="listType"
+              :canAddChannels="listType === 'EDITABLE'"
+            />
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -116,30 +113,6 @@ export default {
       span {
         font-size: 16pt;
         vertical-align: sub;
-      }
-    }
-  }
-
-  /deep/ .default-item {
-    color: @gray-500;
-    font-size: 16pt;
-    font-style: italic;
-    font-weight: bold;
-    text-align: center;
-  }
-
-  /deep/ .channel-list {
-    .channel-list-width;
-  }
-
-  /deep/ .new-button {
-    text-align: right;
-    margin-bottom: 30px;
-    padding-right: 50px;
-    a {
-      font-size: 14pt;
-      span {
-        font-size: 18pt;
       }
     }
   }

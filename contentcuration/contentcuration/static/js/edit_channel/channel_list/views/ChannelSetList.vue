@@ -5,8 +5,8 @@
       <a class="action-text" id="about-sets" @click="openAboutChannelSets">
         <span class="material-icons">info</span> {{ $tr('aboutChannelSets') }}
       </a>
-      <a class="action-button" :title="$tr('addChannelSetTitle')">
-        <span class="material-icons align-text-top">add</span> {{ $tr('addChannelSetButton') }}
+      <a class="action-button" :title="$tr('addChannelSetTitle')" @click="newChannelSet">
+        <span class="material-icons">add</span> {{ $tr('addChannelSetButton') }}
       </a>
     </div>
 
@@ -65,7 +65,8 @@ export default {
   ),
   methods: Object.assign(
     mapActions('channel_list', [
-      'loadChannelSetList'
+      'loadChannelSetList',
+      'newChannelSet'
     ]),
     {
       openAboutChannelSets() {
@@ -79,6 +80,8 @@ export default {
 
 
 <style lang="less" scoped>
+
+@import '../../../../less/channel_list.less';
 
 #about-sets {
   vertical-align: sub;

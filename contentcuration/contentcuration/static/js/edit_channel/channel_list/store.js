@@ -3,12 +3,14 @@ import _ from 'underscore';
 import State from 'edit_channel/state';
 
 import Models from 'edit_channel/models';
+import { ChannelSetModalView } from 'edit_channel/channel_set/views';
+
 
 var Vuex = require('vuex');
-var { ListTypes, ChannelListGetFunctions } = require('./constants');
+var { ListTypes, ChannelListUrls } = require('./constants');
 Vue.use(Vuex);
 
-let defaultListType = 'CHANNEL_SETS'; //ListTypes.EDITABLE;
+let defaultListType = ListTypes.CHANNEL_SETS; //ListTypes.EDITABLE;
 switch(window.location.hash.substr(1)) {
 	case "starred":
 		defaultListType = ListTypes.STARRED;
@@ -20,7 +22,7 @@ switch(window.location.hash.substr(1)) {
 		defaultListType = ListTypes.PUBLIC;
 		break;
 	case "collection":
-		defaultListType = 'CHANNEL_SETS';
+		defaultListType = ListTypes.CHANNEL_SETS;
 		break;
 }
 
@@ -72,6 +74,8 @@ var store = new Vuex.Store({
 			SET_ACTIVE_LIST(state, listType) {
 				state.activeList = listType;
 			},
+
+			/* Channel mutations */
 			SET_ACTIVE_CHANNEL(state, channel) {
 				state.activeChannel = channel;
 			},
@@ -88,52 +92,79 @@ var store = new Vuex.Store({
 					}
 				});
 			},
+			ADD_CHANNEL(state, channel) {
+				state.channels.unshift(channel);
+			},
+			REMOVE_CHANNEL(state, channel) {
+				state.channels = _.reject(state.channels, (c) => {
+					return c.id === channel.id;
+				});
+			},
+
+			/* Channel set mutations */
 			SET_CHANNELSET_LIST(state, channelSets) {
 				state.channelSets = channelSets;
 			},
-			SET_INVITATION_LIST(state, invitations) {
-				state.invitations = invitations;
+			ADD_CHANNELSET(state, channelSet) {
+				state.channelSets.push(channelSet);
 			},
 			REMOVE_CHANNELSET(state, channelSet) {
 				state.channelSets = _.reject(state.channelSets, (set)=> {
 					return set.id === channelSet.id;
 				});
 			},
+
+			/* Invitation mutations */
+			SET_INVITATION_LIST(state, invitations) {
+				state.invitations = invitations;
+			},
 			REMOVE_INVITATION(state, invitationID) {
 				state.invitations = _.reject(state.invitations, (invitation)=> {
 					return invitation.id === invitationID;
 				});
-			},
-			ADD_CHANNEL(state, channel) {
-				state.channels.unshift(channel);
 			}
   		},
   		actions: {
 		    loadChannelList: function(context, listType) {
 		    	return new Promise((resolve, reject) => {
-		    		ChannelListGetFunctions[listType]().then(function (channels) {
-		    			context.commit('SET_CHANNEL_LIST', {
-		    				listType: listType,
-		    				channels: channels.toJSON()
-		    			});
-		    			resolve(channels);
-		    		});
+		    		$.ajax({
+		                method: "GET",
+		                url: ChannelListUrls[listType],
+		                error: reject,
+		                success: (channels) => {
+		                	context.commit('SET_CHANNEL_LIST', {
+			    				listType: listType,
+			    				channels: channels
+			    			});
+			    			resolve(channels);
+		                }
+		            });
 		        });
 		    },
 		    loadChannelSetList: function(context) {
 		    	return new Promise((resolve, reject) => {
-		    		State.current_user.get_user_channel_collections().then(function(sets){
-						context.commit('SET_CHANNELSET_LIST', sets.toJSON());
-		    			resolve(sets);
-					});
+		    		$.ajax({
+		                method: "GET",
+		                url: window.Urls.get_user_channel_sets(),
+		                error: reject,
+		                success: (channelSets) => {
+		                	context.commit('SET_CHANNELSET_LIST', channelSets);
+		    				resolve(channelSets);
+		                }
+		            });
 		        });
 		    },
 		    loadChannelInvitationList: function(context) {
 		    	return new Promise((resolve, reject) => {
-		    		State.current_user.get_pending_invites().then(function(invitations){
-						context.commit('SET_INVITATION_LIST', invitations.toJSON());
-		    			resolve(invitations);
-					});
+		    		$.ajax({
+		                method: "GET",
+		                url: window.Urls.get_user_pending_channels(),
+		                error: reject,
+		                success: (invitations) => {
+		                	context.commit('SET_INVITATION_LIST', invitations);
+		    				resolve(invitations);
+		                }
+		            });
 		        });
 		    },
 		    addStar: function(context, channel) {
@@ -166,7 +197,32 @@ var store = new Vuex.Store({
 	                }
 	            });
 		    },
+		    newChannelSet: function(context) {
+		    	/* TODO: REMOVE BACKBONE, move to ChannelSetList.vue */
+		    	let channelSetView = new ChannelSetModalView({
+					modal: true,
+					isNew: true,
+					model: new Models.ChannelSetModel(),
+					onsave: (channelset)=> {
+						context.commit('ADD_CHANNELSET', channelset.toJSON());
+					}
+				});
+		    },
+		    openChannelSet: function(context, channelSet) {
+		    	/* TODO: REMOVE BACKBONE */
+				let channelSetView = new ChannelSetModalView({
+					modal: true,
+					isNew: false,
+					model: new Models.ChannelSetModel(channelSet),
+					onsave: (channelset) => {
+						_.each(channelset.pairs(), (attr) => {
+							channelSet[attr[0]] = attr[1];
+						})
+					}
+				});
+			},
 		    deleteChannelSet: function(context, channelSet) {
+		    	/* TODO: REMOVE BACKBONE */
 		    	new Models.ChannelSetModel(channelSet).destroy({
 		    		success: function() {
 		    			context.commit('REMOVE_CHANNELSET', channelSet);
@@ -175,25 +231,29 @@ var store = new Vuex.Store({
 		    },
 		    acceptInvitation: function(context, invitation) {
 		    	return new Promise((resolve, reject) => {
-		    		let invite = new Models.InvitationModel(invitation);
-		    		invite.accept_invitation().then((channel) => {
-		    			channel = channel.toJSON();
-		    			prepChannel(channel);
-
-		    			switch(invitation.share_mode) {
-		    				case 'edit':
-		    					channel[ListTypes.EDITABLE] = true;
-		    					break;
-		    				case 'view':
-		    					channel[ListTypes.VIEW_ONLY] = true;
-		    					break;
-		    			}
-		    			context.commit('ADD_CHANNEL', channel);
-		    			resolve(channel);
-		    		}).catch((error)=>{ reject(error.responseText); });
+		    		$.ajax({
+		                method: "POST",
+		                url: window.Urls.accept_channel_invite(),
+		                data: JSON.stringify({ "invitation_id": invitation.id }),
+		                error: reject,
+		                success: (channel) => {
+			    			prepChannel(channel);
+			    			switch(invitation.share_mode) {
+			    				case 'edit':
+			    					channel[ListTypes.EDITABLE] = true;
+			    					break;
+			    				case 'view':
+			    					channel[ListTypes.VIEW_ONLY] = true;
+			    					break;
+			    			}
+			    			context.commit('ADD_CHANNEL', channel);
+			    			resolve(channel);
+		                }
+		            });
 		        });
 		    },
 		    declineInvitation: function(context, invitation) {
+		    	/* TODO: REMOVE BACKBONE */
 		    	return new Promise((resolve, reject) => {
 		    		let invite = new Models.InvitationModel(invitation);
 		    		invite.destroy({ success: resolve, error: reject })

@@ -1,10 +1,11 @@
 <template>
 
   <div class="channel-set-item" :title="channelSet.name" :class="{optionHighlighted: optionHighlighted}">
-    <div class="channel-container-wrapper">
+    <div class="channel-container-wrapper" @click="openChannelSet(channelSet)">
       <div class="profile">
         <span class="material-icons">storage</span>
       </div>
+      <div class="channel-options-wrapper">
         <div class="channel-metadata">
           <div>{{$tr('channelCount', {'count': channelSet.channels.length})}}</div>
           <CopyToken
@@ -12,19 +13,19 @@
             :token="channelSet.secret_token.display_token"
           />
         </div>
-        <h4>
-          <span class="channel-set-name">{{channelSet.name}}</span>
-          <span
-            class="material-icons option delete-channelset"
-            :title="$tr('deleteChannelSetTitle')"
-            @mouseleave="optionHighlighted = false"
-            @mouseover="optionHighlighted = true"
-            @click.stop="handleDeleteChannelSet"
-          >
-            delete
-          </span>
-        </h4>
-        <p class="description">{{channelSet.description}}</p>
+        <span
+          class="material-icons option delete-channelset"
+          :title="$tr('deleteChannelSetTitle')"
+          @mouseleave="optionHighlighted = false"
+          @mouseover="optionHighlighted = true"
+          @click.stop="handleDeleteChannelSet"
+        >
+          delete
+        </span>
+      </div>
+
+        <h4 dir="auto">{{channelSet.name}}</h4>
+        <p class="description" dir="auto">{{channelSet.description}}</p>
       </div>
     </div>
 
@@ -39,7 +40,6 @@ import _ from 'underscore';
 import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
 import CopyToken from './CopyToken.vue';
 import dialog from 'edit_channel/utils/dialog';
-
 
 export default {
   name: 'ChannelSetItem',
@@ -66,7 +66,8 @@ export default {
   },
   methods: Object.assign(
     mapActions('channel_list', [
-      'deleteChannelSet'
+      'deleteChannelSet',
+      'openChannelSet'
     ]),
     {
       handleDeleteChannelSet() {
@@ -94,15 +95,12 @@ export default {
 
   .channel-set-item {
     &:hover:not(.optionHighlighted) {
-      .channel-set-name {
+      h4 {
         color: @blue-500;
       }
       .channel-container-wrapper {
         border-color: @blue-500;
       }
-    }
-    .delete-channelset:hover {
-      color: @red-error-color;
     }
   }
 

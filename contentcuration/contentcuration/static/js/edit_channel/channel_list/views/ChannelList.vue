@@ -84,5 +84,6 @@ export default {
 
 <style lang="less" scoped>
 
+@import '../../../../less/channel_list.less';
 
 </style>
