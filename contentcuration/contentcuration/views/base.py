@@ -366,18 +366,15 @@ def accessible_channels(request, channel_id):
     return Response(serializer.data)
 
 
+@api_view(['POST'])
 def accept_channel_invite(request):
-    if request.method != 'POST':
-        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
-
-    data = json.loads(request.body)
-    invitation = Invitation.objects.get(pk=data['invitation_id'])
+    invitation = Invitation.objects.get(pk=request.data.get('invitation_id'))
     channel = invitation.channel
     channel.is_view_only = invitation.share_mode == VIEW_ACCESS
     channel_serializer = AltChannelListSerializer(channel)
     add_editor_to_channel(invitation)
 
-    return HttpResponse(JSONRenderer().render(channel_serializer.data))
+    return Response(channel_serializer.data)
 
 
 def activate_channel_endpoint(request):

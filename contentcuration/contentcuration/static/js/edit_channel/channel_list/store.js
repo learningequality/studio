@@ -234,7 +234,7 @@ var store = new Vuex.Store({
 		    		$.ajax({
 		                method: "POST",
 		                url: window.Urls.accept_channel_invite(),
-		                data: JSON.stringify({ "invitation_id": invitation.id }),
+		                data: { "invitation_id": invitation.id },
 		                error: reject,
 		                success: (channel) => {
 			    			prepChannel(channel);

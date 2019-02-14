@@ -94,7 +94,7 @@ export default {
           this.accepted = true;
         }).catch((error) => {
           console.log("ERROR")
-          dialog.alert(this.$tr("invitationError"), error);
+          dialog.alert(this.$tr("invitationError"), error.responseText || error);
         });
       },
       handleDecline() {

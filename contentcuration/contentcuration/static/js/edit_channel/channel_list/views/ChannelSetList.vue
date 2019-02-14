@@ -13,7 +13,7 @@
     <div v-if="loading" class="default-item">
       {{ $tr('loading') }}
     </div>
-    <div v-else-if="channelSets && !channelSets.length" class="default-item">
+    <div v-else-if="channelSets && !channelSets.length" class="no-channel-sets">
       {{ $tr('noChannelSetsFound') }}
     </div>
     <div v-else>
@@ -92,6 +92,13 @@ export default {
     font-size: 16pt;
     vertical-align: sub;
   }
+}
+
+.no-channel-sets {
+  margin-top: 30px;
+  color: @gray-500;
+  font-size: 14pt;
+  text-align: center;
 }
 
 </style>
