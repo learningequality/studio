@@ -1,0 +1,61 @@
+<template>
+
+  <div class="invitation-list">
+    <div v-if="loading" class="default-item">
+      {{ $tr('loading') }}
+    </div>
+    <div v-else>
+      <ChannelInvitationItem
+        v-for="invitation in invitations"
+        :key="invitation.id"
+        :invitation="invitation"
+      />
+    </div>
+  </div>
+
+</template>
+
+<script>
+
+import { mapGetters, mapActions } from 'vuex';
+import ChannelInvitationItem from './ChannelInvitationItem.vue';
+
+export default {
+  name: 'ChannelInvitationList',
+  $trs: {
+    loading: "Checking for invitations..."
+  },
+  data() {
+    return {
+      loading: true
+    }
+  },
+  mounted() {
+    this.loadChannelInvitationList().then(() => {
+      this.loading = false;
+    });
+  },
+  components: {
+    ChannelInvitationItem
+  },
+  computed: mapGetters('channel_list', [
+    'invitations'
+  ]),
+  methods: mapActions('channel_list', [
+    'loadChannelInvitationList'
+  ])
+};
+
+</script>
+
+
+<style lang="less" scoped>
+
+.invitation-list {
+  padding-top: 20px;
+  .default-item {
+    font-size: 12pt;
+    font-weight: normal;
+  }
+}
+</style>

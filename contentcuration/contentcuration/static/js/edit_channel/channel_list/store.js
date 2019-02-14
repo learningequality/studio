@@ -14,7 +14,7 @@ switch(window.location.hash.substr(1)) {
 		defaultListType = ListTypes.STARRED;
 		break;
 	case "viewonly":
-		defaultListType = ListTypes.VIEWONLY;
+		defaultListType = ListTypes.VIEW_ONLY;
 		break;
 	case "public":
 		defaultListType = ListTypes.PUBLIC;
@@ -22,6 +22,13 @@ switch(window.location.hash.substr(1)) {
 	case "collection":
 		defaultListType = 'CHANNEL_SETS';
 		break;
+}
+
+const ListValues = _.values(ListTypes);
+function prepChannel(channel) {
+	_.each(ListValues, (type) => {  // Need to set all attributes so vue will listen know to listen to them
+		channel[type] = false;
+	});
 }
 
 var store = new Vuex.Store({
@@ -75,9 +82,8 @@ var store = new Vuex.Store({
 					if(match) {  // If it exists, set the existing channel's listType to true
 						match[payload.listType] = true;
 					} else {  // Otherwise, add to the list of channels
-						_.each(listValues, (type) => {  // Need to set all attributes so vue will listen know to listen to them
-							channel[type] = payload.listType === type;
-						});
+						prepChannel(channel);
+						channel[payload.listType] = true;
 						state.channels.push(channel);
 					}
 				});
@@ -92,6 +98,14 @@ var store = new Vuex.Store({
 				state.channelSets = _.reject(state.channelSets, (set)=> {
 					return set.id === channelSet.id;
 				});
+			},
+			REMOVE_INVITATION(state, invitationID) {
+				state.invitations = _.reject(state.invitations, (invitation)=> {
+					return invitation.id === invitationID;
+				});
+			},
+			ADD_CHANNEL(state, channel) {
+				state.channels.unshift(channel);
 			}
   		},
   		actions: {
@@ -158,6 +172,32 @@ var store = new Vuex.Store({
 		    			context.commit('REMOVE_CHANNELSET', channelSet);
 		    		}
 		    	});
+		    },
+		    acceptInvitation: function(context, invitation) {
+		    	return new Promise((resolve, reject) => {
+		    		let invite = new Models.InvitationModel(invitation);
+		    		invite.accept_invitation().then((channel) => {
+		    			channel = channel.toJSON();
+		    			prepChannel(channel);
+
+		    			switch(invitation.share_mode) {
+		    				case 'edit':
+		    					channel[ListTypes.EDITABLE] = true;
+		    					break;
+		    				case 'view':
+		    					channel[ListTypes.VIEW_ONLY] = true;
+		    					break;
+		    			}
+		    			context.commit('ADD_CHANNEL', channel);
+		    			resolve(channel);
+		    		}).catch((error)=>{ reject(error.responseText); });
+		        });
+		    },
+		    declineInvitation: function(context, invitation) {
+		    	return new Promise((resolve, reject) => {
+		    		let invite = new Models.InvitationModel(invitation);
+		    		invite.destroy({ success: resolve, error: reject })
+		        });
 		    }
 		}
     }
