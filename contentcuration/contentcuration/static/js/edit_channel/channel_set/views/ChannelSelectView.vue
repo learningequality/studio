@@ -23,48 +23,40 @@
 
 <script>
 
-import { mapGetters, mapActions } from 'vuex';
-import { ChannelListUrls } from '../constants';
-import ChannelSelectList from './ChannelSelectList.vue';
+  import { mapGetters, mapActions } from 'vuex';
+  import { ChannelListUrls } from '../constants';
+  import ChannelSelectList from './ChannelSelectList.vue';
 
-export default {
-  name: 'ChannelSelectView',
-  $trs: {
-    "backButtonLabel": "Back to details",
-    "channelCountText": "{channelCount, plural, =1 {# channel selected} other {# channels selected}}",
-  },
-  components: {
-    ChannelSelectList
-  },
-  computed: Object.assign(
-    mapGetters('channel_set', [
-      'channels',
-    ]),
-    {
-      channelLists() {
-      return Object.keys(ChannelListUrls);
+  export default {
+    name: 'ChannelSelectView',
+    $trs: {
+      backButtonLabel: 'Back to details',
+      channelCountText:
+        '{channelCount, plural, =1 {# channel selected} other {# channels selected}}',
     },
+    components: {
+      ChannelSelectList,
+    },
+    computed: Object.assign(mapGetters('channel_set', ['channels']), {
+      channelLists() {
+        return Object.keys(ChannelListUrls);
+      },
       channelCount() {
         return this.channels.length;
-      }
-    }
-  ),
-  methods: Object.assign(
-    mapActions('channel_set', [
-      'goToViewChannels',
-    ])
-  )
-};
+      },
+    }),
+    methods: Object.assign(mapActions('channel_set', ['goToViewChannels'])),
+  };
 
 </script>
 
 
 <style lang="less" scoped>
 
-@import '../../../../less/global-variables.less';
+  @import '../../../../less/global-variables.less';
 
-#backButton {
-  margin-bottom: 20px;
-}
+  #backButton {
+    margin-bottom: 20px;
+  }
 
 </style>

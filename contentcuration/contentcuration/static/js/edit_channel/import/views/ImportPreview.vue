@@ -40,10 +40,7 @@
       ImportListItem,
     },
     computed: Object.assign(
-      mapState('import', [
-        'itemsToImport',
-        'importSizeInBytes',
-      ]),
+      mapState('import', ['itemsToImport', 'importSizeInBytes']),
       mapGetters('import', ['importedItemCounts']),
       {
         importFileSizeInWords() {
@@ -57,21 +54,14 @@
     mounted() {
       this.calculateImportSize();
     },
-    methods: Object.assign(
-      mapActions('import', [
-        'calculateImportSize',
-        'goToPreviousPage',
-      ]),
-      {
-      }
-    ),
+    methods: Object.assign(mapActions('import', ['calculateImportSize', 'goToPreviousPage']), {}),
     $trs: {
       calculatingSizeText: 'Calculating Size...',
       resourcesSize: '{ resources } Total resources selected ({ fileSize })',
       back: 'Back',
-      backWarning: 'Note: Your previous selections will be lost.'
+      backWarning: 'Note: Your previous selections will be lost.',
     },
-  }
+  };
 
 </script>
 
@@ -95,7 +85,7 @@
   }
 
   .BackButton {
-    color: #2196F3;
+    color: #2196f3;
     text-decoration: underline;
     margin-bottom: 1em;
     font-size: 1.25em;

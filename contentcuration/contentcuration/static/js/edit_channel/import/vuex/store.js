@@ -8,6 +8,6 @@ var store = new Vuex.Store({
   modules: {
     import: importModule,
   },
-})
+});
 
 module.exports = store;

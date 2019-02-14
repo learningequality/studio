@@ -29,66 +29,56 @@
 
 <script>
 
-import { mapActions, mapGetters } from 'vuex';
-import ChannelItem from './ChannelItem.vue';
-import { ChannelListNames } from '../constants';
+  import { mapActions, mapGetters } from 'vuex';
+  import ChannelItem from './ChannelItem.vue';
+  import { ChannelListNames } from '../constants';
 
-export default {
-  name: 'ChannelSelectList',
-  $trs: {
-    [ChannelListNames.EDIT]: "My Channels",
-    [ChannelListNames.VIEW_ONLY]: "View Only Channels",
-    [ChannelListNames.PUBLIC]: "Public Channels",
-    channelLoadingText: "Loading...",
-    noChannelsText: "No channels found",
-    publishedChannelCount: "Showing {channelCount, plural, =1 {# published channel} other {# published channels}}"
-  },
-  props: {
-    listName: {
-      type: String,
-      required: true,
+  export default {
+    name: 'ChannelSelectList',
+    $trs: {
+      [ChannelListNames.EDIT]: 'My Channels',
+      [ChannelListNames.VIEW_ONLY]: 'View Only Channels',
+      [ChannelListNames.PUBLIC]: 'Public Channels',
+      channelLoadingText: 'Loading...',
+      noChannelsText: 'No channels found',
+      publishedChannelCount:
+        'Showing {channelCount, plural, =1 {# published channel} other {# published channels}}',
     },
-  },
-  data() {
-    return {
-      isExpanded: false,
-      channels: [],
-      isLoading: false,
-    }
-  },
-  components: {
-    ChannelItem,
-  },
-  computed: Object.assign(
-    mapGetters('channel_set', [
-      'allChannels'
-    ]),
-    {
-
+    props: {
+      listName: {
+        type: String,
+        required: true,
+      },
+    },
+    data() {
+      return {
+        isExpanded: false,
+        channels: [],
+        isLoading: false,
+      };
+    },
+    components: {
+      ChannelItem,
+    },
+    computed: Object.assign(mapGetters('channel_set', ['allChannels']), {
       translateName() {
         return this.$tr(this.listName);
       },
       idName() {
-        return "#" + this.listName;
+        return '#' + this.listName;
       },
       togglerClass() {
-        return (this.isExpanded)? 'arrow_drop_down': 'arrow_drop_up';
+        return this.isExpanded ? 'arrow_drop_down' : 'arrow_drop_up';
       },
-    }
-  ),
-  methods: Object.assign(
-    mapActions('channel_set', [
-      'loadChannelList'
-    ]),
-    {
+    }),
+    methods: Object.assign(mapActions('channel_set', ['loadChannelList']), {
       fetchChannels() {
         if (this.allChannels.hasOwnProperty(this.listName)) {
           this.isLoading = false;
           this.channels = this.allChannels[this.listName];
         } else {
           this.isLoading = true;
-          this.loadChannelList(this.listName)
-          .then((channelData) => {
+          this.loadChannelList(this.listName).then(channelData => {
             this.isLoading = false;
             this.channels = channelData;
           });
@@ -100,16 +90,15 @@ export default {
           this.fetchChannels();
         }
       },
-    }
-  )
-};
+    }),
+  };
 
 </script>
 
 
 <style lang="less" scoped>
 
-@import '../../../../less/global-variables.less';
+  @import '../../../../less/global-variables.less';
   .channelCountText {
     font-size: 12pt;
     color: @gray-500;

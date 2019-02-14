@@ -42,61 +42,50 @@
 
 <script>
 
-import _ from 'underscore';
-import { mapActions, mapGetters } from 'vuex';
-import { PageTypes } from '../constants';
+  import _ from 'underscore';
+  import { mapActions, mapGetters } from 'vuex';
+  import { PageTypes } from '../constants';
 
-export default {
-  name: 'ChannelItem',
-  $trs: {
-    'selectButtonLabel': 'Select',
-    'deselectButtonLabel': 'Deselect',
-    'unpublishedTitle': '{channelName} must be published to import it into Kolibri',
-    'addChannelTitle': 'Add channel to collection',
-    'versionText': 'Version {version}',
-  },
-  props: {
-    channel: {
-      type: Object,
-      required: true,
-    }
-  },
-  data() {
-    return {
-      isSelected: false,
-    }
-  },
-  mounted() {
-    this.checkIfSelected();
-  },
-  computed: Object.assign(
-    mapGetters('channel_set', [
-      'currentPage',
-      'channels'
-    ]),
-    {
+  export default {
+    name: 'ChannelItem',
+    $trs: {
+      selectButtonLabel: 'Select',
+      deselectButtonLabel: 'Deselect',
+      unpublishedTitle: '{channelName} must be published to import it into Kolibri',
+      addChannelTitle: 'Add channel to collection',
+      versionText: 'Version {version}',
+    },
+    props: {
+      channel: {
+        type: Object,
+        required: true,
+      },
+    },
+    data() {
+      return {
+        isSelected: false,
+      };
+    },
+    mounted() {
+      this.checkIfSelected();
+    },
+    computed: Object.assign(mapGetters('channel_set', ['currentPage', 'channels']), {
       title() {
         if (this.currentPage === PageTypes.SELECT_CHANNELS || this.channel.published) {
           return this.channel.name;
         } else {
-          return this.$tr("unpublishedTitle", {"channelName": this.channel.name});
+          return this.$tr('unpublishedTitle', { channelName: this.channel.name });
         }
-      }
-    }
-  ),
-  watch:{
-    channels(value) {
-      this.checkIfSelected();
-    }
-  },
-  methods: Object.assign(
-    mapActions('channel_set', [
-      'addChannelToSet',
-      'removeChannelFromSet',
-    ]),
-    {
+      },
+    }),
+    watch: {
+      channels(value) {
+        this.checkIfSelected();
+      },
+    },
+    methods: Object.assign(mapActions('channel_set', ['addChannelToSet', 'removeChannelFromSet']), {
       checkIfSelected() {
-        this.isSelected = !! _.findWhere(this.channels, {'id': this.channel.id});
+        this.isSelected = !!_.findWhere(this.channels, { id: this.channel.id });
       },
       removeChannel() {
         this.removeChannelFromSet(this.channel);
@@ -104,9 +93,8 @@ export default {
       addChannel() {
         this.addChannelToSet(this.channel);
       },
-    }
-  )
-};
+    }),
+  };
 
 </script>
 

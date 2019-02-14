@@ -23,55 +23,53 @@
 
 <script>
 
-import { mapGetters, mapActions } from 'vuex';
-import { PageTypes } from '../constants';
-import ImportChannelList from './ImportChannelList.vue';
-import ImportDialogue from './ImportDialogue.vue';
-import ImportPreview from './ImportPreview.vue';
-import SearchResults from './SearchResults.vue';
+  import { mapGetters, mapActions } from 'vuex';
+  import { PageTypes } from '../constants';
+  import ImportChannelList from './ImportChannelList.vue';
+  import ImportDialogue from './ImportDialogue.vue';
+  import ImportPreview from './ImportPreview.vue';
+  import SearchResults from './SearchResults.vue';
 
-const pageNameToComponentMap = {
-  [PageTypes.IMPORT_PREVIEW]: 'ImportPreview',
-  [PageTypes.SEARCH_RESULTS]: 'SearchResults',
-  [PageTypes.TREE_VIEW]: 'ImportChannelList',
-};
+  const pageNameToComponentMap = {
+    [PageTypes.IMPORT_PREVIEW]: 'ImportPreview',
+    [PageTypes.SEARCH_RESULTS]: 'SearchResults',
+    [PageTypes.TREE_VIEW]: 'ImportChannelList',
+  };
 
-export default {
-  name: 'ImportModal',
-  $trs: {
-    importHeader: 'Import from Other Channels',
-    importPreviewHeader: 'Review selections for import',
-  },
-  components: {
-    ImportChannelList,
-    ImportDialogue,
-    ImportPreview,
-    SearchResults,
-  },
-  mounted() {
-    this.openModal();
-    this.loadChannels();
-  },
-  computed: Object.assign(
-    mapGetters({
-      currentImportPage: 'import/currentImportPage',
-      channels: 'import/channels',
-    }),
-    {
-      pageType() {
-        return pageNameToComponentMap[this.currentImportPage];
-      },
-      modalTitle() {
-        if (this.currentImportPage === PageTypes.IMPORT_PREVIEW) {
-          return this.$tr('importPreviewHeader');
-        }
-        return this.$tr('importHeader');
-      },
-    }
-  ),
-  methods: Object.assign(
-    mapActions('import', ['loadChannels']),
-    {
+  export default {
+    name: 'ImportModal',
+    $trs: {
+      importHeader: 'Import from Other Channels',
+      importPreviewHeader: 'Review selections for import',
+    },
+    components: {
+      ImportChannelList,
+      ImportDialogue,
+      ImportPreview,
+      SearchResults,
+    },
+    mounted() {
+      this.openModal();
+      this.loadChannels();
+    },
+    computed: Object.assign(
+      mapGetters({
+        currentImportPage: 'import/currentImportPage',
+        channels: 'import/channels',
+      }),
+      {
+        pageType() {
+          return pageNameToComponentMap[this.currentImportPage];
+        },
+        modalTitle() {
+          if (this.currentImportPage === PageTypes.IMPORT_PREVIEW) {
+            return this.$tr('importPreviewHeader');
+          }
+          return this.$tr('importHeader');
+        },
+      }
+    ),
+    methods: Object.assign(mapActions('import', ['loadChannels']), {
       openModal() {
         $(this.$refs.topmodal)
           .modal({ show: true })
@@ -83,9 +81,8 @@ export default {
       closeModal() {
         $(this.$refs.topmodal).modal('hide');
       },
-    }
-  ),
-}
+    }),
+  };
 
 </script>
 

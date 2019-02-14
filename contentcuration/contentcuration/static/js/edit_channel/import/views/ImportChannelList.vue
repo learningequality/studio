@@ -26,38 +26,35 @@
 
 <script>
 
-import { mapState } from 'vuex';
-import ImportListItem from './ImportListItem.vue';
+  import { mapState } from 'vuex';
+  import ImportListItem from './ImportListItem.vue';
 
-export default {
-  name: 'ImportChannelList',
-  $trs: {
-    'channelLoadingText': "Channels are loading...",
-    'noChannelsText': "No channels available to import from"
-  },
-  components: {
-    ImportListItem,
-  },
-  computed: mapState('import', [
-    'channels',
-    'channelsAreLoading',
-  ]),
-};
+  export default {
+    name: 'ImportChannelList',
+    $trs: {
+      channelLoadingText: 'Channels are loading...',
+      noChannelsText: 'No channels available to import from',
+    },
+    components: {
+      ImportListItem,
+    },
+    computed: mapState('import', ['channels', 'channelsAreLoading']),
+  };
 
 </script>
 
 
 <style lang="less" scoped>
 
-@import '../../../../less/global-variables.less';
+  @import '../../../../less/global-variables.less';
 
-.Channels {
-  height: auto;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  border-left: 2px solid @blue-500;
-  width: 100%;
-}
+  .Channels {
+    height: auto;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-left: 2px solid @blue-500;
+    width: 100%;
+  }
 
 </style>

@@ -1,426 +1,436 @@
-@import "global-variables.less";
-@import "modal-styles.less";
+@import 'global-variables.less';
+@import 'modal-styles.less';
 
-html, body, .login, .login-branding, .login-content{
-	// standardizing height across the app
-	height: 100%;
+html,
+body,
+.login,
+.login-branding,
+.login-content {
+  // standardizing height across the app
+  height: 100%;
 }
 
-.content-padding-top(){
-	padding-top: 20vh;
+.content-padding-top() {
+  padding-top: 20vh;
 }
 
-@login-background: #80749D;
-@login-btn-color:  #68BDA2;
-@login-btn-hover-color: #76D8B9;
-@login-error-bg-color:#F7DCDC;
+@login-background: #80749d;
+@login-btn-color: #68bda2;
+@login-btn-hover-color: #76d8b9;
+@login-error-bg-color: #f7dcdc;
 
 // /* LOGIN STYLING */
-.login{
-	// fighting container-fluid
-	padding: 0;
-	width: 100vw;
+.login {
+  // fighting container-fluid
+  padding: 0;
+  width: 100vw;
 
-	&-branding{
-		background: @body-background;
-		.content-padding-top;
+  &-branding {
+    background: @body-background;
+    .content-padding-top;
 
-		&-kolibri{
-			&-logo{
-				max-width: 300px;
-				width: 60vw;
-				margin: 0 auto;
-			}
+    &-kolibri {
+      &-logo {
+        max-width: 300px;
+        width: 60vw;
+        margin: 0 auto;
+      }
 
-			&-title {
-				font-weight: bold;
-				font-size: 38pt;
-			}
-			&-subtitle {
-				color: gray;
-			    font-size: 20pt;
-			}
-		}
+      &-title {
+        font-weight: bold;
+        font-size: 38pt;
+      }
+      &-subtitle {
+        color: gray;
+        font-size: 20pt;
+      }
+    }
 
-		&-le-link{
-			width: 150px;
-			height: auto;
-			margin: 0 auto;
-			margin-top: 15vh;
-		}
-	}
+    &-le-link {
+      width: 150px;
+      height: auto;
+      margin: 0 auto;
+      margin-top: 15vh;
+    }
+  }
 
-	#login-wrapper, #registration {
-		.content-padding-top;
-	}
-	#registration-info {
-		padding-top: 5vh;
-	}
+  #login-wrapper,
+  #registration {
+    .content-padding-top;
+  }
+  #registration-info {
+    padding-top: 5vh;
+  }
 
-	.login-content{
-		background-color: @login-background;
-		color: white;
-		height: max-content;
-		height: auto;
-		min-height: 100vh;
-   		padding-bottom: 50px;
+  .login-content {
+    background-color: @login-background;
+    color: white;
+    height: max-content;
+    height: auto;
+    min-height: 100vh;
+    padding-bottom: 50px;
 
-   		ul {
-   			list-style: none;
-   			&.errors li {
-				text-align: center;
-			    background-color: @login-error-bg-color;
-			    padding: 10px;
-			    color: @red-error-color;
-			    font-size: 10pt;
-			    width: 100%;
-			    margin: 0 auto;
-			    margin-bottom: 1px;
-			}
-   		}
+    ul {
+      list-style: none;
+      &.errors li {
+        text-align: center;
+        background-color: @login-error-bg-color;
+        padding: 10px;
+        color: @red-error-color;
+        font-size: 10pt;
+        width: 100%;
+        margin: 0 auto;
+        margin-bottom: 1px;
+      }
+    }
 
-		.header {
-			font-weight: bold;
-			margin-bottom: 30px;
-			font-size: 20pt;
-		}
+    .header {
+      font-weight: bold;
+      margin-bottom: 30px;
+      font-size: 20pt;
+    }
 
-		&-form, .back-to-registration{
-			max-width: 500px;
-    		width: 100%;
-			color: white;
-			margin: 0 auto;
-		}
-		.form-group {
-			margin-bottom: 20px;
-			.login-label {
-				text-align: left;
-			}
-			input[type="text"], input[type="password"] {
-				color: black;
-				padding: 2px 5px;
-				width: 100%;
-				&:read-only {
-					background-color: @gray-300;
-					border: none;
-				}
-			}
-			.login-action-text {
-			    float: right;
-			    margin-right: -15px;
-			    margin-top: 10px;
-			}
+    &-form,
+    .back-to-registration {
+      max-width: 500px;
+      width: 100%;
+      color: white;
+      margin: 0 auto;
+    }
+    .form-group {
+      margin-bottom: 20px;
+      .login-label {
+        text-align: left;
+      }
+      input[type='text'],
+      input[type='password'] {
+        color: black;
+        padding: 2px 5px;
+        width: 100%;
+        &:read-only {
+          background-color: @gray-300;
+          border: none;
+        }
+      }
+      .login-action-text {
+        float: right;
+        margin-right: -15px;
+        margin-top: 10px;
+      }
 
-			&#label_id_email {
-				margin-top: 45px;
-			}
+      &#label_id_email {
+        margin-top: 45px;
+      }
 
-			&#use, &#source {
-				margin-bottom: 30px;
-				.use-option{
-					width: 100%;
-					margin-top: 10px;
-					.check-wrapper {
-						padding: 0px;
-						text-align: right;
-						input {
-							vertical-align: middle;
-							cursor: pointer;
-						}
-					}
-					#storage {
-						margin-top: -5px;
-						input {
-							width: 80px;
-							text-align: right;
-						}
-					}
-					label {
-						font-weight: normal;
-						cursor: pointer;
-					}
-					#id_other_use {
-						width: 60%;
-						margin-left: 5px;
-					}
-				}
-				#id_other_source, #id_organization, #id_conference {
-					width: 100%;
-				}
-				.optional_field {
-					margin-top: 5px;
-					padding-left: 15px;
-					font-size: 9pt;
-					input {
-						width: 100px;
-						color: black;
-						padding: 2px;
-					}
-				}
-			}
+      &#use,
+      &#source {
+        margin-bottom: 30px;
+        .use-option {
+          width: 100%;
+          margin-top: 10px;
+          .check-wrapper {
+            padding: 0px;
+            text-align: right;
+            input {
+              vertical-align: middle;
+              cursor: pointer;
+            }
+          }
+          #storage {
+            margin-top: -5px;
+            input {
+              width: 80px;
+              text-align: right;
+            }
+          }
+          label {
+            font-weight: normal;
+            cursor: pointer;
+          }
+          #id_other_use {
+            width: 60%;
+            margin-left: 5px;
+          }
+        }
+        #id_other_source,
+        #id_organization,
+        #id_conference {
+          width: 100%;
+        }
+        .optional_field {
+          margin-top: 5px;
+          padding-left: 15px;
+          font-size: 9pt;
+          input {
+            width: 100px;
+            color: black;
+            padding: 2px;
+          }
+        }
+      }
 
-			#id_location {
-				margin-bottom: 30px;
-				width: 100%;
-				min-height: 200px;
-				option {
-					padding: 2px 5px;
-				}
-			}
-		}
+      #id_location {
+        margin-bottom: 30px;
+        width: 100%;
+        min-height: 200px;
+        option {
+          padding: 2px 5px;
+        }
+      }
+    }
 
-		#policy_accept {
-			text-align: center;
-			margin-top: 20px;
-			margin-bottom: 15px;
-			#policy_link {
-				color: @login-btn-hover-color;
-			    font-weight: bold;
-			    &:hover { color: bisque; }
-			}
-		}
+    #policy_accept {
+      text-align: center;
+      margin-top: 20px;
+      margin-bottom: 15px;
+      #policy_link {
+        color: @login-btn-hover-color;
+        font-weight: bold;
+        &:hover {
+          color: bisque;
+        }
+      }
+    }
 
-		#help_footer {
-			font-size: 9pt;
-			margin-bottom: 20px;
-			a {
-				font-weight: bold;
-				font-size: 9pt;
-			}
-		}
+    #help_footer {
+      font-size: 9pt;
+      margin-bottom: 20px;
+      a {
+        font-weight: bold;
+        font-size: 9pt;
+      }
+    }
 
-		.login-action-text {
-			color: white;
-			font-size: 12pt;
-		}
+    .login-action-text {
+      color: white;
+      font-size: 12pt;
+    }
 
-		.back-to-registration {
-			padding-left: 15px;
-			margin-bottom: 30px;
-		}
+    .back-to-registration {
+      padding-left: 15px;
+      margin-bottom: 30px;
+    }
 
-		select {
-			color: black;
-		}
+    select {
+      color: black;
+    }
 
-		.btn-login{
-			width:100%;
-			background-color:@login-btn-color;
-			margin-bottom:40px;
-			margin-top: 30px;
-			font-size:14pt;
-			padding: 3px 20px;
-			color: white;
-			&:hover {
-				background-color: @login-btn-hover-color;
-			}
-		}
-	}
+    .btn-login {
+      width: 100%;
+      background-color: @login-btn-color;
+      margin-bottom: 40px;
+      margin-top: 30px;
+      font-size: 14pt;
+      padding: 3px 20px;
+      color: white;
+      &:hover {
+        background-color: @login-btn-hover-color;
+      }
+    }
+  }
 }
 
 #policyModal {
-	color: black;
-	.modal-header {
-	    color: white;
-	    background-color: @blue-200;
-	    font-size: 14pt;
-	    font-weight: bold;
-	    padding: 15px;
-	}
-	.modal-body {
-		padding: 15px 30px;
-		h1 {
-			font-size: 20pt;
-		}
-		a {
-			color: @blue-500;
-			font-weight: bold;
-		}
-	}
+  color: black;
+  .modal-header {
+    color: white;
+    background-color: @blue-200;
+    font-size: 14pt;
+    font-weight: bold;
+    padding: 15px;
+  }
+  .modal-body {
+    padding: 15px 30px;
+    h1 {
+      font-size: 20pt;
+    }
+    a {
+      color: @blue-500;
+      font-weight: bold;
+    }
+  }
 }
 
-@media only screen and (max-device-width: 480px){
-	.login {
-		background: @login-background;
-		&-branding{
-			background: transparent;
-			padding-top: 30px;
-			width: 100vw !important;
-    		height: fit-content;
+@media only screen and (max-device-width: 480px) {
+  .login {
+    background: @login-background;
+    &-branding {
+      background: transparent;
+      padding-top: 30px;
+      width: 100vw !important;
+      height: fit-content;
 
-			&-kolibri{
-				&-logo{
-					max-width: 130px;
-				}
-				&-title {
-					color: white;
-				}
-				&-subtitle {
-					color: white;
-				}
-			}
-		}
+      &-kolibri {
+        &-logo {
+          max-width: 130px;
+        }
+        &-title {
+          color: white;
+        }
+        &-subtitle {
+          color: white;
+        }
+      }
+    }
 
-		.login-content{
-			padding-top: 50px;
-			width: 100vw !important;
-		}
-	}
+    .login-content {
+      padding-top: 50px;
+      width: 100vw !important;
+    }
+  }
 }
 
 @media only screen and (max-device-width: 768px) {
-	.login {
-		&-branding{
-			width: 40vw;
-			&-kolibri{
-				&-logo{
-					max-width: 150px;
-				}
-				&-title {
-					font-size: 22pt;
-				}
-				&-subtitle {
-				    font-size: 14pt;
-				}
-			}
+  .login {
+    &-branding {
+      width: 40vw;
+      &-kolibri {
+        &-logo {
+          max-width: 150px;
+        }
+        &-title {
+          font-size: 22pt;
+        }
+        &-subtitle {
+          font-size: 14pt;
+        }
+      }
 
-			&-le-link{
-				display: none;
-			}
-		}
+      &-le-link {
+        display: none;
+      }
+    }
 
-		.login-content{
-			width: 60vw;
-			.form-group .login-label {
-				font-size: 10pt;
-			}
-			.header {
-				font-size: 14pt;
-			}
-			.login-action-text {
-				font-size: 10pt;
-			}
+    .login-content {
+      width: 60vw;
+      .form-group .login-label {
+        font-size: 10pt;
+      }
+      .header {
+        font-size: 14pt;
+      }
+      .login-action-text {
+        font-size: 10pt;
+      }
 
-			.btn-login{
-				font-size: 12pt;
-			}
-		}
-	}
+      .btn-login {
+        font-size: 12pt;
+      }
+    }
+  }
 }
 
+.message-page {
+  @reset-btn-color: #067c7b;
+  @invitation_register-width: 450px;
 
-.message-page{
-	@reset-btn-color:  #067C7B;
-	@invitation_register-width: 450px;
+  padding-top: 15vw;
+  padding-left: 10vw;
+  .message-img-wrapper {
+    vertical-align: middle;
+    display: inline-block;
+    .message-logo {
+      width: 160px;
+      height: 130px;
+      margin-right: 20px;
+      margin-top: 25px;
+    }
+  }
+  input {
+    padding: 2px;
+  }
 
-	padding-top:15vw;
-	padding-left:10vw;
-	.message-img-wrapper{
-		vertical-align:middle;
-		display:inline-block;
-		.message-logo{
-			width:160px;
-			height:130px;
-			margin-right:20px;
-			margin-top:25px;
-		}
-	}
-	input{
-		padding:2px;
-	}
+  .message-wrapper {
+    vertical-align: middle;
+    display: inline-block;
+    width: 65vw;
+    p {
+      font-size: 12pt;
+    }
 
-	.message-wrapper{
-		vertical-align:middle;
-		display:inline-block;
-		width:65vw;
-		p{
-			font-size:12pt;
-		}
+    .message-btn {
+      padding: 2px 10px;
+      background-color: @reset-btn-color;
+      color: white;
+      font-size: 12pt;
+    }
+    ul {
+      list-style: none;
+    }
 
-		.message-btn{
-			padding:2px 10px;
-			background-color:@reset-btn-color;
-			color:white;
-			font-size:12pt;
-		}
-		ul{
-			list-style:none;
-		}
+    li {
+      color: @red-error-color;
+      font-weight: bold;
+    }
+  }
+  #email_area {
+    margin-left: 40px;
+    width: @invitation_register-width;
+    padding-top: 10px;
+    #invited_email {
+      margin: 2px;
+      margin-bottom: 20px;
+    }
+    #invited_email_hint {
+      margin: 2px;
+    }
+  }
 
-		li{
-			color:@red-error-color;
-			font-weight:bold;
-		}
-	}
-	#email_area{
-		margin-left:40px;
-		width: @invitation_register-width;
-		padding-top:10px;
-		#invited_email{
-			margin:2px;
-			margin-bottom:20px;
-		}
-		#invited_email_hint{
-			margin:2px;
-		}
-	}
+  #invitation_error_list {
+    width: @invitation_register-width;
+    text-align: center;
+    margin-left: 40px;
+  }
 
-	#invitation_error_list{
-		width:@invitation_register-width;
-		text-align:center;
-		margin-left:40px;
-	}
+  #invitation_register_form {
+    margin-left: 40px;
+    margin-top: 10px;
+    width: @invitation_register-width;
+    text-align: right;
 
-	#invitation_register_form{
-		margin-left:40px;
-		margin-top:10px;
-		width:@invitation_register-width;
-		text-align:right;
-
-		.required_asterisk{
-			color:@red-error-color;
-			font-weight:bold;
-		}
-		#invitation_register_button{
-			margin-top:10px;
-			width:100%;
-			text-align:center;
-			padding:5px;
-			margin-bottom:20px;
-		}
-		#invitation-action-text{
-			color:@reset-btn-color;
-			margin-right:40%;
-			font-size:12pt;
-		}
-	}
-	.invitation-action-text{
-		padding:0;
-		color:@reset-btn-color;
-	}
-	#invitation_accept_form{
-		margin-top:20px;
-		.required_asterisk{
-			color:@red-error-color;
-			font-weight:bold;
-		}
-		#invitation_accept_button{
-			padding:5px 10px;
-			font-size:12pt;
-		}
-		#invitation_accept_button:hover{
-			font-weight:bold;
-		}
-		#invitation-action-text{
-			color:@reset-btn-color;
-			font-size:12pt;
-		}
-		#accept-error{
-			display:inline;
-			font-weight:bold;
-			color:@red-error-color;
-			margin-left:10px;
-		}
-
-	}
+    .required_asterisk {
+      color: @red-error-color;
+      font-weight: bold;
+    }
+    #invitation_register_button {
+      margin-top: 10px;
+      width: 100%;
+      text-align: center;
+      padding: 5px;
+      margin-bottom: 20px;
+    }
+    #invitation-action-text {
+      color: @reset-btn-color;
+      margin-right: 40%;
+      font-size: 12pt;
+    }
+  }
+  .invitation-action-text {
+    padding: 0;
+    color: @reset-btn-color;
+  }
+  #invitation_accept_form {
+    margin-top: 20px;
+    .required_asterisk {
+      color: @red-error-color;
+      font-weight: bold;
+    }
+    #invitation_accept_button {
+      padding: 5px 10px;
+      font-size: 12pt;
+    }
+    #invitation_accept_button:hover {
+      font-weight: bold;
+    }
+    #invitation-action-text {
+      color: @reset-btn-color;
+      font-size: 12pt;
+    }
+    #accept-error {
+      display: inline;
+      font-weight: bold;
+      color: @red-error-color;
+      margin-left: 10px;
+    }
+  }
 }

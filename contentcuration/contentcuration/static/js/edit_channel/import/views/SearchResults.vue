@@ -66,101 +66,97 @@
 
 <script>
 
-import { mapGetters, mapActions } from 'vuex';
-import { fetchSearchResults } from '../util';
-import ImportListItem from './ImportListItem.vue';
+  import { mapGetters, mapActions } from 'vuex';
+  import { fetchSearchResults } from '../util';
+  import ImportListItem from './ImportListItem.vue';
 
-export default {
-  name: 'SearchResults',
-  $trs: {
-    'showingResultsText': "Showing top results for \"{currentSearchTerm}\"",
-    'loadingResultsText': "Loading results for \"{currentSearchTerm}\"...",
-    'backToBrowseButton': "Go Back To Browse",
-    'resourcesLabel': "Resources",
-    'noContentFoundText': "No documents, exercises, or other files matching \"{ currentSearchTerm }\"",
-    'topicsLabel': "Topics",
-    'noTopicsText': "No topics matching \"{ currentSearchTerm }\""
-  },
-  components: {
-    ImportListItem,
-  },
-  data() {
-    return {
-      itemResults: [],
-      topicResults: [],
-      resultsLoading: false,
-    };
-  },
-  computed: mapGetters('import', [
-    'currentSearchTerm',
-    'currentChannelId',
-  ]),
-  watch: {
-    currentSearchTerm() {
+  export default {
+    name: 'SearchResults',
+    $trs: {
+      showingResultsText: 'Showing top results for "{currentSearchTerm}"',
+      loadingResultsText: 'Loading results for "{currentSearchTerm}"...',
+      backToBrowseButton: 'Go Back To Browse',
+      resourcesLabel: 'Resources',
+      noContentFoundText:
+        'No documents, exercises, or other files matching "{ currentSearchTerm }"',
+      topicsLabel: 'Topics',
+      noTopicsText: 'No topics matching "{ currentSearchTerm }"',
+    },
+    components: {
+      ImportListItem,
+    },
+    data() {
+      return {
+        itemResults: [],
+        topicResults: [],
+        resultsLoading: false,
+      };
+    },
+    computed: mapGetters('import', ['currentSearchTerm', 'currentChannelId']),
+    watch: {
+      currentSearchTerm() {
+        this.updateResults();
+      },
+    },
+    mounted() {
       this.updateResults();
-    }
-  },
-  mounted() {
-    this.updateResults();
-  },
-  methods: Object.assign(
-    mapActions('import', ['goToPreviousPage']),
-    {
+    },
+    methods: Object.assign(mapActions('import', ['goToPreviousPage']), {
       updateResults() {
         if (this.currentSearchTerm.length < 3) return;
         this.resultsLoading = true;
-        return fetchSearchResults(this.currentSearchTerm, this.currentChannelId)
-        .then(({ itemResults, topicResults, searchTerm }) => {
-          if (searchTerm === this.currentSearchTerm) {
-            this.resultsLoading = false;
-            this.itemResults = itemResults;
-            this.topicResults = topicResults;
+        return fetchSearchResults(this.currentSearchTerm, this.currentChannelId).then(
+          ({ itemResults, topicResults, searchTerm }) => {
+            if (searchTerm === this.currentSearchTerm) {
+              this.resultsLoading = false;
+              this.itemResults = itemResults;
+              this.topicResults = topicResults;
+            }
           }
-        });
+        );
       },
-    }
-  ),
-}
+    }),
+  };
 
 </script>
 
 
 <style lang="less" scoped>
 
-.SearchResults {
-  padding: .5rem;
-}
+  .SearchResults {
+    padding: 0.5rem;
+  }
 
-.LoadingMsg {
-  font-style: italic;
-}
+  .LoadingMsg {
+    font-style: italic;
+  }
 
-.Results__List {
-  background-color: white;
-  overflow-y: auto;
-}
+  .Results__List {
+    background-color: white;
+    overflow-y: auto;
+  }
 
-.Results__Header {
-  font-size: 2rem;
-  color: white;
-  background-color: #54ACF2;
-  padding: .5rem;
-  text-transform: uppercase;
-}
+  .Results__Header {
+    font-size: 2rem;
+    color: white;
+    background-color: #54acf2;
+    padding: 0.5rem;
+    text-transform: uppercase;
+  }
 
-.TopResults {
-  font-weight: bold;
-}
+  .TopResults {
+    font-weight: bold;
+  }
 
-.BackButton {
-  color: #2196F3;
-  text-decoration: underline;
-}
+  .BackButton {
+    color: #2196f3;
+    text-decoration: underline;
+  }
 
-.button-reset {
-  -webkit-appearance: none;
-  border: none;
-  background: none;
-}
+  .button-reset {
+    -webkit-appearance: none;
+    border: none;
+    background: none;
+  }
 
 </style>

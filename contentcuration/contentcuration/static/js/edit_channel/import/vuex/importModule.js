@@ -18,7 +18,7 @@ module.exports = {
     pageState: {
       pageType: PageTypes.TREE_VIEW,
       data: {},
-    }
+    },
   },
   actions: actions,
   mutations: mutations,

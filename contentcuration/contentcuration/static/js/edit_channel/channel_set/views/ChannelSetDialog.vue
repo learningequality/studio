@@ -44,100 +44,97 @@
 
 <script>
 
-import { mapGetters, mapMutations, mapState } from 'vuex';
-import { PageTypes } from '../constants';
+  import { mapGetters, mapMutations, mapState } from 'vuex';
+  import { PageTypes } from '../constants';
 
-export default {
-  name: 'ChannelSetDialog',
-  $trs: {
-    cancelButtonLabel: 'Close',
-    saveButtonLabel: 'Save',
-    saveCloseButtonLabel: 'Save & Close',
-    noChangesTitle: "No changes detected",
-    invalidCollection: "Must enter all required fields",
-    saving: "Saving...",
-    errorText: "There was a problem saving your collection"
-  },
-  computed: Object.assign(
-    mapGetters('channel_set', [
-      'changed',
-      'name',
-      'description',
-      'isValid',
-      'saving'
-    ]),
-    mapState('channel_set', ['error']),
-    {
-      enableSave() {
-        return this.changed && this.isValid && !this.saving;
-      },
-      saveButtonTitle() {
-        if (this.saving) {
-          return this.$tr('saving');
-        } else if(!this.isValid) {
-          return this.$tr('invalidCollection');
-        } else if (!this.changed) {
-          return this.$tr('noChangesTitle');
-        } else
-        return this.$tr('saveButtonLabel');
+  export default {
+    name: 'ChannelSetDialog',
+    $trs: {
+      cancelButtonLabel: 'Close',
+      saveButtonLabel: 'Save',
+      saveCloseButtonLabel: 'Save & Close',
+      noChangesTitle: 'No changes detected',
+      invalidCollection: 'Must enter all required fields',
+      saving: 'Saving...',
+      errorText: 'There was a problem saving your collection',
+    },
+    computed: Object.assign(
+      mapGetters('channel_set', ['changed', 'name', 'description', 'isValid', 'saving']),
+      mapState('channel_set', ['error']),
+      {
+        enableSave() {
+          return this.changed && this.isValid && !this.saving;
+        },
+        saveButtonTitle() {
+          if (this.saving) {
+            return this.$tr('saving');
+          } else if (!this.isValid) {
+            return this.$tr('invalidCollection');
+          } else if (!this.changed) {
+            return this.$tr('noChangesTitle');
+          } else return this.$tr('saveButtonLabel');
+        },
       }
-    }
-  ),
-  methods: Object.assign(
-    mapMutations('channel_set', {
-      setSaving: 'SET_SAVING',
-      setClosing: 'SET_CLOSING'
-    }),
-    {
-      handleSave() {
-        this.setSaving(true);
-      },
-      handleSaveClose() {
-        this.setClosing(true);
-        this.setSaving(true);
+    ),
+    methods: Object.assign(
+      mapMutations('channel_set', {
+        setSaving: 'SET_SAVING',
+        setClosing: 'SET_CLOSING',
+      }),
+      {
+        handleSave() {
+          this.setSaving(true);
+        },
+        handleSaveClose() {
+          this.setClosing(true);
+          this.setSaving(true);
+        },
       }
-    }
-  ),
-}
+    ),
+  };
 
 </script>
 
 <style lang="less" scoped>
 
-@import "../../../../less/modal-styles.less";
-@import "../../../../less/global-variables.less";
+  @import '../../../../less/modal-styles.less';
+  @import '../../../../less/global-variables.less';
 
-button.action-button[disabled] {
-  opacity: 0.75;
-}
-@keyframes spin {
-  from { transform: scale(1) rotate(0deg);}
-  to { transform: scale(1) rotate(360deg);}
-}
-.spinner {
-  animation: spin 1.5s infinite linear;
-  font-size: 20pt;
-  vertical-align: middle;
-  margin-right: 15px;
-  color: @blue-500;
-}
+  button.action-button[disabled] {
+    opacity: 0.75;
+  }
+  @keyframes spin {
+    from {
+      transform: scale(1) rotate(0deg);
+    }
+    to {
+      transform: scale(1) rotate(360deg);
+    }
+  }
+  .spinner {
+    animation: spin 1.5s infinite linear;
+    font-size: 20pt;
+    vertical-align: middle;
+    margin-right: 15px;
+    color: @blue-500;
+  }
 
-/deep/ .channel-list {
-  margin-bottom: 20px;
-}
+  /deep/ .channel-list {
+    margin-bottom: 20px;
+  }
 
-/deep/ .channelCountText {
-  font-size: 13pt;
-  margin-bottom: 15px;
-}
+  /deep/ .channelCountText {
+    font-size: 13pt;
+    margin-bottom: 15px;
+  }
 
-.errorText {
-  margin-right: 10px;
-}
+  .errorText {
+    margin-right: 10px;
+  }
 
-/deep/ .redText {
-  font-weight: bold;
-  color: @red-error-color;
-}
+  /deep/ .redText {
+    font-weight: bold;
+    color: @red-error-color;
+  }
 
 </style>
