@@ -1,7 +1,7 @@
 <template>
 
   <div class="channel-list">
-    <div v-if="canAddChannels" class="new-channel">
+    <div v-if="canAddChannels" class="new-button">
       <a class="action-button" :title="$tr('addChannel')">
         <span class="material-icons align-text-top">add</span> {{ $tr('channel') }}
       </a>
@@ -11,11 +11,10 @@
     <div v-if="loading" class="default-item">
       {{ $tr('loading') }}
     </div>
-    <div v-else-if="channelCount === 0" class="default-item">
+    <div v-else-if="listChannels && !listChannels.length" class="default-item">
       {{ $tr('noChannelsFound') }}
     </div>
     <div v-else>
-      <div>{{listChannels.length}}</div>
       <ChannelItem
         v-for="channel in listChannels"
         :key="channel.id"
@@ -70,9 +69,6 @@ export default {
     {
       listChannels() {
         return _.where(this.channels, {[this.listType]: true});
-      },
-      channelCount() {
-        return this.listChannels && this.listChannels.length || 0;
       }
     }
   ),
@@ -88,34 +84,5 @@ export default {
 
 <style lang="less" scoped>
 
-@import '../../../../less/channel_list.less';
-
-.default-item {
-  margin-top: 100px;
-  color: @gray-500;
-  font-size: 16pt;
-  font-style: italic;
-  font-weight: bold;
-  text-align: center;
-}
-
-.channel-list {
-  width: @channel-item-width;
-  max-width: @channel-item-max-width + 50px;
-  min-width: @channel-item-min-width + 50px;
-  margin: 50px auto;
-}
-
-.new-channel {
-  text-align: right;
-  margin-bottom: 30px;
-  padding: 0px 50px;
-  a {
-    font-size: 14pt;
-    span {
-      font-size: 18pt;
-    }
-  }
-}
 
 </style>

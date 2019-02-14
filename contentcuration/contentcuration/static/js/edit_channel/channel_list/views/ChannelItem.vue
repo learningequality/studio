@@ -1,6 +1,6 @@
 <template>
 
-  <div class="channel-item" :class="{optionHighlighted: optionHighlighted, active: isSelected}">
+  <div class="channel-item" :class="{optionHighlighted: optionHighlighted, active: isSelected}" :id="channel.id">
     <div class="is-selected">
       <span v-show="isSelected" class="material-icons rtl-flip">arrow_forward</span>
     </div>
@@ -9,31 +9,25 @@
         <img class="channel-pic" :alt="channel.name" :src="picture"/>
       </div>
       <div>
-        <div class="channel-metadata text-left">
+        <div class="channel-metadata">
           <div v-if="language" class="channel-language" :title="language.native_name">{{language.native_name}}</div>
-          <div class="resource-count">{{$tr('resourceCount', {'count': channel.count})}}</div>
-          <div v-if="channel.published">
-            <input type="text" ref="tokenText" :value="channel.primary_token" :title="$tr('copyPrompt')" size='15' readonly/>
-            <span
-              class="material-icons copy-id-btn"
-              :title="$tr('copyPrompt')"
-              @click.stop="copyToken"
-              @mouseleave="highlight(false)"
-              @mouseover="highlight(true)"
-            >{{copyIcon}}</span>
-          </div>
+          <div>{{$tr('resourceCount', {'count': channel.count})}}</div>
+          <CopyToken
+            v-if="channel.published"
+            :key="channel.primary_token"
+            :token="channel.primary_token"
+          />
           <div v-else>
             <em>{{ $tr('unpublishedText') }}</em>
           </div>
-          <div>{{channel.STARRED}}</div>
         </div>
         <h4>
           <span
             :title="starText"
-            class="star-option material-icons"
+            class="option star-option material-icons"
             :class="{starred: channel.STARRED && !channel.STARRING, spinner: channel.STARRING}"
-            @mouseleave="highlight(false)"
-            @mouseover="highlight(true)"
+            @mouseleave="optionHighlighted = false"
+            @mouseover="optionHighlighted = true"
             @click.stop="toggleStar"
           >
           </span>
@@ -55,12 +49,7 @@
 import _ from 'underscore';
 import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
 import Constants from 'edit_channel/constants/index';
-
-const copyStatusCodes = {
-  IDLE: "IDLE",
-  SUCCESS: "SUCCESS",
-  FAILED: "FAILED",
-}
+import CopyToken from './CopyToken.vue'
 
 export default {
   name: 'ChannelItem',
@@ -79,9 +68,11 @@ export default {
       required: true,
     }
   },
+  components: {
+    CopyToken
+  },
   data() {
     return {
-      copyStatus: copyStatusCodes.IDLE,
       optionHighlighted: false
     }
   },
@@ -105,16 +96,6 @@ export default {
       starText() {
         return this.channel.STARRED ? this.$tr('unstarChannel') : this.$tr('starChannel');
       },
-      copyIcon() {
-        switch(this.copyStatus) {
-          case copyStatusCodes.SUCCESS:
-            return "check"
-          case copyStatusCodes.FAILED:
-            return "clear"
-          default:
-            return "content_paste"
-        }
-      },
       updated() {
         return this.channel.modified || new Date();
         return this.$formatRelative(this.channel.modified || new Date());
@@ -130,22 +111,6 @@ export default {
       setActiveChannel: 'SET_ACTIVE_CHANNEL',
     }),
     {
-      copyToken() {
-        let element = this.$refs.tokenText;
-        element.select();
-        try {
-          document.execCommand("copy");
-          this.copyStatus = copyStatusCodes.SUCCESS;
-        } catch (e) {
-          this.copyStatus = copyStatusCodes.FAILED;
-        }
-        setTimeout(() => {
-          this.copyStatus = copyStatusCodes.IDLE;
-        }, 2500);
-      },
-      highlight(highlight) {
-        this.optionHighlighted = highlight;
-      },
       toggleStar() {
         (this.channel.STARRED)? this.removeStar(this.channel) : this.addStar(this.channel);
       }
@@ -158,113 +123,44 @@ export default {
 
 <style lang="less" scoped>
 
-  @import '../../../../less/channel_list.less';
+@import '../../../../less/channel_list.less';
 
-  @channel-container-height: 250px;
-  @channel-profile-width: 150px;
-  @channel-thumbnail-size: 130px;
+@channel-container-height: 250px;
+@channel-profile-width: 150px;
+@channel-thumbnail-size: 130px;
 
-  .is-selected {
-    float: right;
-    padding-top: 9%;
-    span {
-      font-size: 45pt;
-      font-weight: bold;
+.is-selected {
+  float: right;
+  padding-top: 9%;
+  span {
+    font-size: 45pt;
+    font-weight: bold;
+  }
+}
+
+.channel-item {
+  &.active {
+    .is-selected span {
+      color: @topnav-bg-color;
+    }
+    .channel-container-wrapper {
+      border-color: @topnav-bg-color;
+    }
+  }
+
+  &:hover:not(.optionHighlighted) {
+    .is-selected span, .channel_name {
+      color: @blue-500;
+    }
+    .channel-container-wrapper {
+      border-color: @blue-500;
     }
   }
 
   .channel-container-wrapper {
-    background-color: @panel-container-color;
-    width: @channel-item-width;
-    max-width: @channel-item-max-width;
-    min-width: @channel-item-min-width;
     min-height: @channel-container-height;
-    box-shadow: @box-shadow;
-    margin-bottom: 30px;
-    padding: 10px;
-    border:4px solid @panel-container-color;
-    cursor:pointer;
-    position: relative;
-
     .profile {
-      width: @channel-profile-width;
       height: @channel-container-height * 0.9;
-      margin: 5px 15px 5px 5px;
-      text-align: center;
-      float: left;
-      img{
-          width:@channel-thumbnail-size;
-          height:@channel-thumbnail-size;
-          object-fit: cover;
-      }
-    }
-    .channel-metadata {
-      color: @annotation-gray;
-      font-size: 11pt;
-      div {
-        display: inline-block;
-        &:not(:last-child)::after {
-          content: '  •  ';
-        }
-
-        .channel-language {
-          .truncate;
-          max-width: 135px;
-        }
-        .copy-id-btn{
-          padding:3px;
-          font-size: 16pt;
-          vertical-align: sub;
-          &:hover { color:@blue-500; }
-        }
-        input {
-          display: inline-block;
-          padding: 2px;
-          background-color: @gray-300;
-          font-size: 11pt;
-          border:none;
-          font-weight: bold;
-          width: 120px;
-          text-align: center;
-          color: @gray-700;
-        }
-      }
-    }
-
-    h4 {
-      font-size: 18pt;
-      font-weight: bold;
-      color: @body-font-color;
-      .star-option, .spinner {
-        display:inline-block;
-        float: right;
-        font-size: 20pt;
-        padding:10px;
-        color: @gray-700;
-        position: relative;
-        top: -40px;
-        &.star-option::before {
-          .material-icons;
-          content: "star_border";
-        }
-        &.star-option:hover{
-          color: @blue-500;
-        }
-        &.starred{
-          color: @blue-500;
-          &::before {
-            content: "star";
-          }
-          &:hover{
-            color: @blue-200;
-          }
-        }
-      }
-    }
-    .description {
-      .wordwrap;
-      font-size: 11pt;
-      margin-bottom:5px;
     }
     .updated_time {
       font-style: italic;
@@ -274,26 +170,7 @@ export default {
       bottom: 5px;
     }
   }
-
-  .channel-item {
-    &.active {
-      .is-selected span {
-        color: @topnav-bg-color;
-      }
-      .channel-container-wrapper {
-        border-color: @topnav-bg-color;
-      }
-    }
-
-    &:hover:not(.optionHighlighted) {
-      .is-selected span, .channel_name {
-        color: @blue-500;
-      }
-      .channel-container-wrapper {
-        border-color: @blue-500;
-      }
-    }
-  }
+}
 
 
 </style>

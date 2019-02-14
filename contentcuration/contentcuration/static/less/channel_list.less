@@ -4,6 +4,9 @@
 @channel-item-width: 70vw;
 @channel-item-max-width: 800px;
 @channel-item-min-width: 400px;
+@channel-container-height: 250px;
+@channel-profile-width: 150px;
+@channel-thumbnail-size: 130px;
 
 // nested flexbox settings to ensure that the channels list view is vertically responsive.
 body {
@@ -68,3 +71,100 @@ body {
 	}
 }
 // end of flexbox settings
+
+.channel-container-wrapper {
+  background-color: @panel-container-color;
+  width: @channel-item-width;
+  max-width: @channel-item-max-width;
+  min-width: @channel-item-min-width;
+  box-shadow: @box-shadow;
+  margin-bottom: 30px;
+  padding: 10px;
+  border:4px solid @panel-container-color;
+  cursor:pointer;
+  position: relative;
+
+  .profile {
+    width: @channel-profile-width;
+    margin: 5px 15px 5px 5px;
+    text-align: center;
+    float: left;
+    img{
+        width:@channel-thumbnail-size;
+        height:@channel-thumbnail-size;
+        object-fit: cover;
+    }
+    span {
+      font-size: 65pt;
+      color: @gray-700;
+    }
+  }
+  .channel-metadata {
+    color: @annotation-gray;
+    font-size: 11pt;
+    div {
+      display: inline-block;
+      &:not(:last-child)::after {
+        content: '  •  ';
+      }
+
+      .channel-language {
+        .truncate;
+        max-width: 135px;
+      }
+      .copy-id-btn{
+        padding:3px;
+        font-size: 16pt;
+        vertical-align: sub;
+        &:hover { color:@blue-500; }
+      }
+      input {
+        display: inline-block;
+        padding: 2px;
+        background-color: @gray-300;
+        font-size: 11pt;
+        border:none;
+        font-weight: bold;
+        width: 120px;
+        text-align: center;
+        color: @gray-700;
+      }
+    }
+  }
+
+  h4 {
+    font-size: 18pt;
+    font-weight: bold;
+    color: @body-font-color;
+    .option {
+      display:inline-block;
+      float: right;
+      font-size: 20pt;
+      padding:10px;
+      color: @gray-700;
+      position: relative;
+      top: -40px;
+      &.star-option::before {
+        .material-icons;
+        content: "star_border";
+      }
+      &.star-option:hover{
+        color: @blue-500;
+      }
+      &.starred{
+        color: @blue-500;
+        &::before {
+          content: "star";
+        }
+        &:hover{
+          color: @blue-200;
+        }
+      }
+    }
+  }
+  .description {
+    .wordwrap;
+    font-size: 11pt;
+    margin-bottom:5px;
+  }
+}

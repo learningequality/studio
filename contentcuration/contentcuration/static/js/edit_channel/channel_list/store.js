@@ -2,13 +2,13 @@ import Vue from 'vue';
 import _ from 'underscore';
 import State from 'edit_channel/state';
 
+import Models from 'edit_channel/models';
+
 var Vuex = require('vuex');
 var { ListTypes, ChannelListGetFunctions } = require('./constants');
 Vue.use(Vuex);
 
-console.log(window.location.hash.substr(1))
-
-let defaultListType = ListTypes.EDITABLE;
+let defaultListType = 'CHANNEL_SETS'; //ListTypes.EDITABLE;
 switch(window.location.hash.substr(1)) {
 	case "starred":
 		defaultListType = ListTypes.STARRED;
@@ -19,9 +19,9 @@ switch(window.location.hash.substr(1)) {
 	case "public":
 		defaultListType = ListTypes.PUBLIC;
 		break;
-	// case "collection":
-	// 	defaultListType = ListTypes.COLLECTION;
-	// 	break;
+	case "collection":
+		defaultListType = 'CHANNEL_SETS';
+		break;
 }
 
 var store = new Vuex.Store({
@@ -31,7 +31,9 @@ var store = new Vuex.Store({
 		state: {
 			activeList: defaultListType,
 			channels: [],
-			activeChannel: null
+			activeChannel: null,
+			channelSets: [],
+			invitations: []
 		},
 		getters: {
 			activeList(state) {
@@ -42,15 +44,22 @@ var store = new Vuex.Store({
 			},
 			channels(state) {
 			  return state.channels;
+			},
+			channelSets(state) {
+				return state.channelSets;
+			},
+			invitations(state) {
+				return state.invitations;
 			}
 		},
 	   	mutations: {
 		    RESET_CHANNEL_STATE(state) {
 			  Object.assign(state, {
-			    activeList: ListTypes.EDITABLE,
-			    channelLists: {},
+			    activeList: defaultListType,
 			    channels: [],
-			    activeChannel: null
+			    invitations: [],
+			    activeChannel: null,
+			    channelSets: []
 			  });
 			},
 			SET_ACTIVE_LIST(state, listType) {
@@ -72,6 +81,17 @@ var store = new Vuex.Store({
 						state.channels.push(channel);
 					}
 				});
+			},
+			SET_CHANNELSET_LIST(state, channelSets) {
+				state.channelSets = channelSets;
+			},
+			SET_INVITATION_LIST(state, invitations) {
+				state.invitations = invitations;
+			},
+			REMOVE_CHANNELSET(state, channelSet) {
+				state.channelSets = _.reject(state.channelSets, (set)=> {
+					return set.id === channelSet.id;
+				});
 			}
   		},
   		actions: {
@@ -84,6 +104,22 @@ var store = new Vuex.Store({
 		    			});
 		    			resolve(channels);
 		    		});
+		        });
+		    },
+		    loadChannelSetList: function(context) {
+		    	return new Promise((resolve, reject) => {
+		    		State.current_user.get_user_channel_collections().then(function(sets){
+						context.commit('SET_CHANNELSET_LIST', sets.toJSON());
+		    			resolve(sets);
+					});
+		        });
+		    },
+		    loadChannelInvitationList: function(context) {
+		    	return new Promise((resolve, reject) => {
+		    		State.current_user.get_pending_invites().then(function(invitations){
+						context.commit('SET_INVITATION_LIST', invitations.toJSON());
+		    			resolve(invitations);
+					});
 		        });
 		    },
 		    addStar: function(context, channel) {
@@ -115,6 +151,13 @@ var store = new Vuex.Store({
 	                	channel.STARRING = false;
 	                }
 	            });
+		    },
+		    deleteChannelSet: function(context, channelSet) {
+		    	new Models.ChannelSetModel(channelSet).destroy({
+		    		success: function() {
+		    			context.commit('REMOVE_CHANNELSET', channelSet);
+		    		}
+		    	});
 		    }
 		}
     }

@@ -4,8 +4,7 @@ export const ListTypes = {
   EDITABLE: 'EDITABLE',
   STARRED: 'STARRED',
   VIEW_ONLY: 'VIEW_ONLY',
-  PUBLIC: 'PUBLIC',
-  // COLLECTIONS: 'COLLECTIONS'
+  PUBLIC: 'PUBLIC'
 };
 
 export const ChannelListGetFunctions = {
