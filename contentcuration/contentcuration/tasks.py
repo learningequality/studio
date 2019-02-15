@@ -9,14 +9,18 @@ from celery.utils.log import get_task_logger
 from django.conf import settings
 from django.core.mail import EmailMessage
 from django.core.management import call_command
+from django.db import transaction
 from django.template.loader import render_to_string
+from rest_framework.renderers import JSONRenderer
 
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import Task
 from contentcuration.models import User
+from contentcuration.serializers import ContentNodeSerializer
 from contentcuration.utils.csv_writer import write_channel_csv_file
 from contentcuration.utils.csv_writer import write_user_csv
+from contentcuration.utils.nodes import duplicate_node_bulk
 
 logger = get_task_logger(__name__)
 
@@ -42,6 +46,7 @@ if settings.RUNNING_TESTS:
 #     pass
 
 # runs the management command 'exportchannel' async through celery
+
 
 @task(name='exportchannel_task')
 def exportchannel_task(channel_id, user_id):

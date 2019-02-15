@@ -1,9 +1,10 @@
+import logging
+
 from base import BaseAPITestCase
 
-from contentcuration.models import Task
+from contentcuration.models import ContentNode, Task
+from contentcuration.utils.asynctask import AsyncTask
 from contentcuration.tasks import create_async_task, non_async_test_task
-# from celery.contrib.testing.worker import start_worker
-# from contentcuration.celery import app
 
 
 class AsyncTaskTestCase(BaseAPITestCase):
@@ -21,7 +22,6 @@ class AsyncTaskTestCase(BaseAPITestCase):
         metadata = {'test': True}
         task_options = {
             'user_id': self.user.pk,
-            'task_type': 'asynctask',
             'metadata': metadata
         }
         task, task_info = create_async_task('test', task_options)
@@ -40,7 +40,6 @@ class AsyncTaskTestCase(BaseAPITestCase):
         metadata = {'test': True}
         task_options = {
             'user_id': self.user.pk,
-            'task_type': 'asynctask',
             'metadata': metadata
         }
         task, task_info = create_async_task('progress-test', task_options)
@@ -66,7 +65,6 @@ class AsyncTaskTestCase(BaseAPITestCase):
         metadata = {'test': True}
         task_options = {
             'user_id': self.user.pk,
-            'task_type': 'asynctask',
             'metadata': metadata
         }
         task, task_info = create_async_task('error-test', task_options)
@@ -93,3 +91,54 @@ class AsyncTaskTestCase(BaseAPITestCase):
         result = task.get()
         self.assertEquals(result, 42)
         self.assertEquals(Task.objects.filter(task_id=task.id).count(), 0)
+
+    def test_duplicate_nodes_task(self):
+        metadata = {'test': True}
+        task_options = {
+            'user_id': self.user.pk,
+            'metadata': metadata
+        }
+
+        ids = []
+        node_ids = []
+        for i in range(3, 6):
+            node_id = '0000000000000000000000000000000' + str(i)
+            node_ids.append(node_id)
+            node = ContentNode.objects.get(node_id=node_id)
+            ids.append(node.pk)
+
+        parent_node = ContentNode.objects.get(node_id='00000000000000000000000000000002')
+
+        task_args = {
+            'user': self.user,
+            'channel_id': self.channel.pk,
+            'node_ids': ids,
+            'target_parent': parent_node
+        }
+        task, task_info = create_async_task('duplicate-nodes', task_options, task_args)
+
+        # progress is retrieved dynamically upon calls to get the task info, so
+        # use an API call rather than checking the db directly for progress.
+        url = '{}/{}'.format(self.task_url, task_info.id)
+        response = self.get(url)
+        assert response.data['status'] == 'SUCCESS', "Task failed, exception: {}".format(response.data['metadata']['error']['traceback'])
+        self.assertEqual(response.data['status'], 'SUCCESS')
+        self.assertEqual(response.data['task_type'], 'duplicate-nodes')
+        self.assertEqual(response.data['metadata']['progress'], 100)
+        result = response.data['metadata']['result']
+        self.assertTrue(isinstance(result, list))
+
+        parent_node.refresh_from_db()
+        children = parent_node.get_children()
+
+        child_ids = []
+        for child in children:
+            child_ids.append(child.source_node_id)
+
+        # make sure the changes were actually made to the DB
+        for node_id in node_ids:
+            assert node_id in child_ids
+
+        # make sure the copies are in the results
+        for item in result:
+            assert item['original_source_node_id'] in node_ids

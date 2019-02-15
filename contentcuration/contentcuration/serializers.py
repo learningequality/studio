@@ -1,4 +1,5 @@
 import json
+import logging
 import re
 from collections import OrderedDict
 
@@ -448,7 +449,7 @@ class SimplifiedContentNodeSerializer(BulkSerializerMixin, serializers.ModelSeri
         return instance
 
     def get_node_ancestors(self, node):
-        return node.get_ancestors().values_list('id', flat=True)
+        return list(node.get_ancestors().values_list('id', flat=True))
 
     class Meta:
         model = ContentNode
@@ -519,7 +520,7 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer, ContentNodeFieldMix
     tags = TagSerializer(many=True, read_only=False)
 
     def retrieve_associated_presets(self, node):
-        return node.get_associated_presets()
+        return list(node.get_associated_presets())
 
     def check_valid(self, node):
         isoriginal = node.node_id == node.original_source_node_id

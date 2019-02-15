@@ -39,9 +39,18 @@ def on_failure(sender, **kwargs):
     try:
         task = Task.objects.get(task_id=sender.request.id)
         task.status = "FAILURE"
+        task_args = []
+        task_kwargs = []
+
+        # arg values may be objects, so we need to ensure they are string representation for JSON serialization.
+        for arg in kwargs['args']:
+            task_args.append(str(arg))
+        for kwarg in kwargs['kwargs']:
+            task_kwargs.append(str(kwarg))
+
         exception_data = {
-            'task_args': kwargs['args'],
-            'task_kwargs': kwargs['kwargs'],
+            'task_args': task_args,
+            'task_kwargs': task_kwargs,
             'traceback': traceback.format_tb(kwargs['traceback'])
         }
         task.metadata['error'] = exception_data
