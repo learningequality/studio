@@ -31,15 +31,6 @@ class BucketTestMixin:
     def delete_bucket(self):
         minio_utils.ensure_bucket_deleted()
 
-    def setUp(self):
-        raise Exception("Called?")
-        if not self.persist_bucket:
-            self.create_bucket()
-
-    def tearDown(self):
-        if not self.persist_bucket:
-            self.delete_bucket()
-
 
 class StudioTestCase(TestCase, BucketTestMixin):
 
