@@ -1,14 +1,14 @@
 <template>
 
   <div>
-    <div id="backButton" class="container-fluid">
+    <div id="back-button" class="container-fluid">
       <button class="btn btn-default pull-right" @click="goToViewChannels">
         {{ $tr('backButtonLabel') }}
       </button>
-      <span class="channelCountText">{{ $tr('channelCountText', {'channelCount': channelCount}) }}</span>
+      <span class="channel-count-text">{{ $tr('channelCountText', {'channelCount': channelCount}) }}</span>
     </div>
 
-    <div id="channelListsWrapper">
+    <div id="channel-lists-wrapper">
       <ChannelSelectList
         v-for="channel in channelLists"
         :key="channel"
@@ -18,7 +18,6 @@
   </div>
 
 </template>
-
 
 
 <script>
@@ -55,7 +54,7 @@
 
   @import '../../../../less/global-variables.less';
 
-  #backButton {
+  #back-button {
     margin-bottom: 20px;
   }
 

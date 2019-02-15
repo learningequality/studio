@@ -2,8 +2,8 @@
 
   <div>
     <!-- Title/Description metadata fields -->
-    <h4>{{ $tr('titleLabel') }} <span class="redText">*</span></h4>
-    <p v-show="!isValid" class="redText">{{ $tr('titleRequiredText') }}</p>
+    <h4>{{ $tr('titleLabel') }} <span class="red-text">*</span></h4>
+    <p v-show="!isValid" class="red-text">{{ $tr('titleRequiredText') }}</p>
     <input
         class="set-input"
         :value="name"
@@ -52,7 +52,7 @@
               {{copyIcon}}
             </i>
           </div>
-          <span class="channelCountText">{{ $tr('channelCountText', {'channelCount': channelCount}) }}</span>
+          <span class="channel-count-text">{{ $tr('channelCountText', {'channelCount': channelCount}) }}</span>
         </div>
         <div class="container-fluid">
           <ChannelItem
@@ -250,7 +250,7 @@ h4 {
   color: @gray-700;
 }
 
-.redText {
+.red-text {
   font-weight: bold;
   color: @red-error-color;
 }

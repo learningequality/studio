@@ -8,7 +8,7 @@
       {{ $tr('noChannelsText') }}
     </div>
 
-    <ul v-else class="Channels">
+    <ul v-else class="channels">
       <ImportListItem
         v-for="channel in channels"
         :key="channel.id"
@@ -48,7 +48,7 @@
 
   @import '../../../../less/global-variables.less';
 
-  .Channels {
+  .channels {
     height: auto;
     margin: 0;
     padding: 0;

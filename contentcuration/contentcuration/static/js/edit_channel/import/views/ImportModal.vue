@@ -2,7 +2,7 @@
 
   <div ref="topmodal" class="modal fade" tabindex="-1">
     <div class="modal-dialog">
-      <div class="modal-content modal-dialog-default" id="import_modal_content">
+      <div class="modal-content modal-dialog-default" id="import-modal-content">
         <div class="modal-header">
           <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
@@ -85,8 +85,3 @@
   };
 
 </script>
-
-
-<style lang="less" scoped>
-
-</style>

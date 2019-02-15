@@ -1,13 +1,13 @@
 <template>
 
   <div
-    class="channelSetChannel"
+    class="channel-set-channel"
     :class="{selectedChannel: isSelected, unpublishedChannel: !channel.published}"
     :title="title"
   >
     <div class="row">
       <div class="col-xs-2 section text-center">
-        <img :src='channel.thumbnail_url'/>
+        <img :src="channel.thumbnail_url"/>
       </div>
       <div class="col-xs-9">
         <h4 class="title">{{channel.name}}</h4>
@@ -15,13 +15,13 @@
       </div>
       <div class="col-xs-1 text-center section">
         <span
-          class="removeChannel"
-          v-if='isSelected'
+          class="remove-channel"
+          v-if="isSelected"
           @click="removeChannel"
           :title="$tr('deselectButtonLabel')"
         >&times;</span>
         <a
-          class="action-text uppercase addChannel"
+          class="action-text uppercase add-channel"
           @click="addChannel"
           :title="$tr('addChannelTitle')"
           v-else
@@ -103,7 +103,7 @@
 
   @import '../../../../less/global-variables.less';
 
-  .channelSetChannel {
+  .channel-set-channel {
     width: 100%;
     background-color: @gray-200;
     margin: 0px;
@@ -129,10 +129,10 @@
     .description {
       margin: 0;
     }
-    .addChannel {
+    .add-channel {
       padding: 10px 0px;
     }
-    .removeChannel {
+    .remove-channel {
       font-size: 25pt;
       cursor: pointer;
     }
