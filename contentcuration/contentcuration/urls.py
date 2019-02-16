@@ -19,8 +19,11 @@ from django.conf.urls import include
 from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
+from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse_lazy
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
 from django.views.i18n import javascript_catalog
 from rest_framework import routers
 from rest_framework import viewsets
@@ -99,6 +102,17 @@ class FileViewSet(BulkModelViewSet):
     queryset = File.objects.all()
     serializer_class = serializers.FileSerializer
 
+    def get_object(self):
+        # when a specific node is requested, make sure we run the appropriate permissions check before
+        # returning, so that we return 403 instead of 404 when permissions aren't correct.
+        obj = get_object_or_404(File.objects.all(), pk=self.kwargs["pk"])
+        self.check_object_permissions(self.request, obj)
+        try:
+            self.get_queryset().get(pk=obj.pk)
+        except ObjectDoesNotExist:
+            raise PermissionDenied("You do not have access to this File.")
+        return obj
+
     def get_queryset(self):
         if self.request.user.is_admin:
             return File.objects.all()
@@ -124,6 +138,17 @@ class ContentKindViewSet(viewsets.ModelViewSet):
 class ContentNodeViewSet(BulkModelViewSet):
     queryset = ContentNode.objects.all()
     serializer_class = serializers.ContentNodeCompleteSerializer
+
+    def get_object(self):
+        # when a specific node is requested, make sure we run the appropriate permissions check before
+        # returning, so that we return 403 instead of 404 when permissions aren't correct.
+        obj = get_object_or_404(ContentNode.objects.all(), pk=self.kwargs["pk"])
+        self.check_object_permissions(self.request, obj)
+        try:
+            self.get_queryset().get(pk=obj.pk)
+        except ObjectDoesNotExist:
+            raise PermissionDenied("You do not have access to this content node.")
+        return obj
 
     def get_queryset(self):
         if self.request.user.is_admin:
@@ -166,6 +191,17 @@ class InvitationViewSet(viewsets.ModelViewSet):
 
     serializer_class = serializers.InvitationSerializer
 
+    def get_object(self):
+        # when a specific node is requested, make sure we run the appropriate permissions check before
+        # returning, so that we return 403 instead of 404 when permissions aren't correct.
+        obj = get_object_or_404(Invitation.objects.all(), pk=self.kwargs["pk"])
+        self.check_object_permissions(self.request, obj)
+        try:
+            self.get_queryset().get(pk=obj.pk)
+        except ObjectDoesNotExist:
+            raise PermissionDenied("You do not have access to this File.")
+        return obj
+
     def get_queryset(self):
         if self.request.user.is_admin:
             return Invitation.objects.all()
@@ -179,6 +215,17 @@ class AssessmentItemViewSet(BulkModelViewSet):
     queryset = AssessmentItem.objects.all()
 
     serializer_class = serializers.AssessmentItemSerializer
+
+    def get_object(self):
+        # when a specific node is requested, make sure we run the appropriate permissions check before
+        # returning, so that we return 403 instead of 404 when permissions aren't correct.
+        obj = get_object_or_404(AssessmentItem.objects.all(), pk=self.kwargs["pk"])
+        self.check_object_permissions(self.request, obj)
+        try:
+            self.get_queryset().get(pk=obj.pk)
+        except ObjectDoesNotExist:
+            raise PermissionDenied("You do not have access to this File.")
+        return obj
 
     def get_queryset(self):
         if self.request.user.is_admin:

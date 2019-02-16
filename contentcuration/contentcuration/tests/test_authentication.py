@@ -1,5 +1,6 @@
 from base import BaseTestCase
 
+from contentcuration.models import AssessmentItem, ContentNode, File, Invitation, User
 from contentcuration.utils.policies import check_policies
 
 
@@ -129,4 +130,48 @@ class AuthenticationTestCase(BaseTestCase):
         assert response.status_code == 200
 
         response = self.get(self.edit_url)
+        assert response.status_code == 200
+
+    def test_contentnode_access(self):
+        node_id = self.channel.main_tree.pk
+
+        url = '/api/contentnode/{}'.format(node_id)
+        self.check_object_permissions(url)
+
+    def test_file_access(self):
+        node_id = '00000000000000000000000000000003'
+        node = ContentNode.objects.get(node_id=node_id)
+        file = File.objects.filter(contentnode=node).first()
+
+        url = '/api/file/{}'.format(file.pk)
+        self.check_object_permissions(url)
+
+    def test_assessment_item_access(self):
+        node_id = '00000000000000000000000000000005'
+        node = ContentNode.objects.get(node_id=node_id)
+        file = AssessmentItem.objects.filter(contentnode=node).first()
+
+        url = '/api/assessmentitem/{}'.format(file.pk)
+        self.check_object_permissions(url)
+
+    def test_invitation_access(self):
+        newuser = User.objects.create_user('you_know_who', 'who@youknow.com', 'password')
+        invitation = Invitation.objects.create(sender=self.admin_user, invited=newuser, channel=self.channel)
+
+        url = '/api/invitation/{}'.format(invitation.pk)
+        self.check_object_permissions(url)
+
+    def check_object_permissions(self, url):
+        response = self.get(url, follow=True)
+        assert response.status_code == 403
+
+        self.sign_in()
+
+        # we're signed in, but don't have access to this channel's nodes
+        response = self.get(url, follow=True)
+        assert response.status_code == 403
+
+        self.channel.editors.add(self.user)
+
+        response = self.get(url, follow=True)
         assert response.status_code == 200
