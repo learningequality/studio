@@ -125,15 +125,15 @@ export default {
           }
         } else if (!this.activeChannel || this.channel.id !== this.activeChannel.id) {
           this.setActiveChannel(this.channel);
-          let detail_view = new ChannelDetailsView({
-            model: new Models.ChannelModel(this.channel),
-            allow_edit: this.channel.EDITABLE && !this.channel.ricecooker_version,
-            ondelete: () => {
-              this.removeChannel(this.channel);
-            },
-            onstar: () => {this.channelSTARRED = true;},
-            onunstar: () => {this.channelSTARRED = false;}
-          });
+          // let detail_view = new ChannelDetailsView({
+          //   model: new Models.ChannelModel(this.channel),
+          //   allow_edit: this.channel.EDITABLE && !this.channel.ricecooker_version,
+          //   ondelete: () => {
+          //     this.removeChannel(this.channel);
+          //   },
+          //   onstar: () => {this.channelSTARRED = true;},
+          //   onunstar: () => {this.channelSTARRED = false;}
+          // });
         }
       }
     }

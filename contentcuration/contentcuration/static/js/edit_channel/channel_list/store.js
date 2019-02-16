@@ -10,7 +10,7 @@ var Vuex = require('vuex');
 var { ListTypes, ChannelListUrls } = require('./constants');
 Vue.use(Vuex);
 
-let defaultListType = ListTypes.CHANNEL_SETS; //ListTypes.EDITABLE;
+let defaultListType = ListTypes.EDITABLE;
 switch(window.location.hash.substr(1)) {
 	case "starred":
 		defaultListType = ListTypes.STARRED;

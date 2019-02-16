@@ -1,6 +1,7 @@
 <template>
   <div id="channel-container">
     <div id="channel-area-wrapper">
+      <!-- Channel list area -->
       <div id="channel-list-wrapper" :class="{'showPanel': !!activeChannel}">
         <div id="channel-list-area">
           <ChannelInvitationList/>
@@ -29,7 +30,11 @@
           </div>
         </div>
       </div>
+
+      <!-- Channel details panel -->
+      <ChannelDetailsPanel v-if="activeChannel" key="channelDetailsPanel"/>
     </div>
+
   </div>
 
 </template>
@@ -43,6 +48,7 @@ import { ListTypes } from '../constants';
 import ChannelList from './ChannelList.vue';
 import ChannelSetList from './ChannelSetList.vue';
 import ChannelInvitationList from './ChannelInvitationList.vue';
+import ChannelDetailsPanel from './ChannelDetailsPanel.vue';
 
 export default {
   name: 'ChannelListPage',
@@ -56,7 +62,8 @@ export default {
   components: {
     ChannelList,
     ChannelSetList,
-    ChannelInvitationList
+    ChannelInvitationList,
+    ChannelDetailsPanel
   },
   computed: Object.assign(
     mapGetters('channel_list', [

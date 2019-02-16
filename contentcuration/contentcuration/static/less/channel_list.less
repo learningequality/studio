@@ -38,27 +38,27 @@ body {
 				}
 			}
 
-			#channel_preview_wrapper {
+			#channel-preview-wrapper {
 				display: flex;
 				flex-direction: column;
 				flex: 1;
 
-				#channel_details_overlay {
+				#channel-details-overlay {
 					display: flex;
 					flex-direction: column;
 					flex: 1;
 
-					#channel_details_panel {
+					#channel-details-panel {
 						display: flex;
 						flex-direction: column;
 						flex: 1;
 
-						#channel_details_view_panel {
+						#channel-details-view-panel {
 							display: flex;
 							flex-direction: column;
 							flex: 1;
 
-							#channel_details {
+							#channel-details {
 								flex-direction: column;
 								flex-grow: 1;
 								width: 100%;
@@ -125,9 +125,10 @@ body {
 	    }
 	  }
 	  .channel-options-wrapper {
-	  	display: flex;
+	  	display: grid;
+	    grid-auto-flow: column;
+	    justify-content: space-between;
 	  	.channel-metadata {
-	  		flex: 2;
 		    color: @annotation-gray;
 		    font-size: 11pt;
 		    div {
