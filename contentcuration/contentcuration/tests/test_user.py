@@ -9,10 +9,12 @@ import tempfile
 from django.core.management import call_command
 from django.core.urlresolvers import reverse_lazy
 from django.test import TransactionTestCase
+from mixer.backend.django import mixer
 
 from .base import BaseAPITestCase
 from .testdata import fileobj_video
 from contentcuration.models import DEFAULT_CONTENT_DEFAULTS
+from contentcuration.models import Invitation
 from contentcuration.models import User
 from contentcuration.utils.csv_writer import _format_size
 from contentcuration.utils.csv_writer import write_user_csv
@@ -71,6 +73,28 @@ class UserInvitationTestCase(BaseAPITestCase):
         response = send_invitation_email(request)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(User.objects.filter(email__iexact="test@testing.com").count(), 1)
+
+    def test_editors_can_access_invitations(self):
+        """
+        This checks that editors for a channel can still access invitations for the same channel
+        even if they weren't the ones who sent them
+        """
+        guestuser = User.objects.create(email="guest@test.com")
+        testuser = User.objects.create(email="testuser@test.com")
+        testviewonlyuser = User.objects.create(email="testviewonlyuser@test.com")
+        invitation = mixer.blend(Invitation, channel=self.channel, sender=self.user, invited=guestuser)
+        self.channel.editors.add(testuser)
+        self.channel.viewers.add(testviewonlyuser)
+
+        # Editors should have access
+        self.client.force_authenticate(testuser)
+        response = self.get('/api/invitation/{}'.format(invitation.pk))
+        self.assertEqual(response.status_code, 200)
+
+        # Viewers shoudl have access
+        self.client.force_authenticate(testviewonlyuser)
+        response = self.get('/api/invitation/{}'.format(invitation.pk))
+        self.assertEqual(response.status_code, 200)
 
 
 class UserAccountTestCase(BaseAPITestCase):
