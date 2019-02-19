@@ -200,7 +200,8 @@ class TaskViewSet(viewsets.ModelViewSet):
         raise MethodNotAllowed('PUT')
 
     def perform_destroy(self, instance):
-        # TODO: Add logic to delete the Celery task.q
+        # TODO: Add logic to delete the Celery task using app.control.revoke(). This will require some extensive
+        # testing to ensure terminating in-progress tasks will not put the db in an indeterminate state.
         instance.delete()
 
     def get_queryset(self):
