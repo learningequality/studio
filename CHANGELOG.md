@@ -1,13 +1,9 @@
 # Studio Changelog
 
-## Unreleased
+
+## Upcoming Release
 #### Changes
-
-#### Issues Resolved
-
-
-## Upcoming release
-#### Changes
+* [[@kollivier](https://github.com/kollivier)] Ensure attempts to access objects without permissions returns 403.
 
 #### Issues Resolved
 
