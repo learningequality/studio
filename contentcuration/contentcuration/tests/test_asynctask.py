@@ -1,7 +1,6 @@
 from base import BaseAPITestCase
 
 from contentcuration.models import Task
-from contentcuration.utils.asynctask import AsyncTask
 from contentcuration.tasks import create_async_task, non_async_test_task
 # from celery.contrib.testing.worker import start_worker
 # from contentcuration.celery import app
