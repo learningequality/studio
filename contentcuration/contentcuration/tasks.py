@@ -133,7 +133,28 @@ type_mapping = {
 
 
 def create_async_task(task_name, task_options, task_args=None):
-    # We use the existence of the task_type kwarg to know if it's an async task.
+    """
+    Starts a long-running task that runs asynchronously using Celery. Also creates a Task object that can be used by
+    Studio to keep track of the Celery task's status and progress.
+
+    This function should only be used to start Celery tasks that are user-facing, that is, that Studio users are
+    aware of and want information on. DB maintenance tasks and other similar operations should simply start a
+    Celery task manually.
+
+    The task name must be registered in the type_mapping dictionary before this function can be used to initiate
+    the task.
+
+    :param task_name: Name of the task function (omitting the word 'task', and with dashes in place of underscores)
+    :param task_options: A dictionary of task properties. Acceptable values are as follows:
+        - Required
+            - 'user' or 'user_id': User object, or string id, of the user performing the operation
+        - Optional
+            - 'metadata': A dictionary of properties to be used during status and progress tracking. Examples include
+                a list of channels and content nodes targeted by the task, task progress ('progress' key), sub-task
+                progress, when applicable.
+    :param task_args: A dictionary of keyword arguments to be passed down to the task.
+    :return: a tuple of the Task object and a dictionary containing information about the created task.
+    """
     if not task_name in type_mapping:
         raise KeyError("Need to define task in type_mapping first.")
         return

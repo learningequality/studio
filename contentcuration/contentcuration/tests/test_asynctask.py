@@ -7,9 +7,17 @@ from contentcuration.tasks import create_async_task, non_async_test_task
 
 
 class AsyncTaskTestCase(BaseAPITestCase):
+    """
+    These tests check that creating and updating Celery tasks using the create_async_task function result in
+    an up-to-date Task object with the latest status and information about the task.
+    """
     task_url = '/api/task'
 
     def test_asynctask_reports_success(self):
+        """
+        Tests that when an async task is created and completed, the Task object has a status of 'SUCCESS' and
+        contains the return value of the task.
+        """
         metadata = {'test': True}
         task_options = {
             'user_id': self.user.pk,
@@ -22,10 +30,13 @@ class AsyncTaskTestCase(BaseAPITestCase):
         self.assertEqual(task_info.task_type, 'test')
         self.assertEqual(task_info.is_progress_tracking, False)
         result = task.get()
-        self.assertEqual(result, 42)
+        self.assertEqual(Task.objects.get(task_id=task.id).metadata['result'], 42)
         self.assertEqual(Task.objects.get(task_id=task.id).status, 'SUCCESS')
 
     def test_asynctask_reports_progress(self):
+        """
+        Test that we can retrieve task progress via the Task API.
+        """
         metadata = {'test': True}
         task_options = {
             'user_id': self.user.pk,
@@ -48,6 +59,10 @@ class AsyncTaskTestCase(BaseAPITestCase):
         self.assertEqual(response.data['metadata']['result'], 42)
 
     def test_asynctask_reports_error(self):
+        """
+        Tests that if a task fails with an error, that the error information is stored in the Task object for later
+        retrieval and analysis.
+        """
         metadata = {'test': True}
         task_options = {
             'user_id': self.user.pk,

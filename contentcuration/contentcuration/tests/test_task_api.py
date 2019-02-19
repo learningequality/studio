@@ -22,9 +22,19 @@ class TaskAPITestCase(BaseAPITestCase):
         }
 
     def create_new_task(self, type, metadata):
+        """
+        Create a new Task object in the DB to simulate the creation of a Celery task and test the Task API.
+
+        :param type: A string with a task name constant.
+        :param metadata: A dictionary containing information about the task. See create_async_task docs for more details.
+        :return: The created Task object
+        """
         return Task.objects.create(task_type=type, metadata=metadata, status="STARTED", user=self.user)
 
     def test_get_task(self):
+        """
+        Ensure that GET operations using a Task ID return information about the specified task.
+        """
         task = self.create_new_task(type='YOUTUBE_IMPORT', metadata={'channel': self.channel.id})
 
         url = '{}/{}'.format(self.task_url, task.id)
@@ -54,6 +64,9 @@ class TaskAPITestCase(BaseAPITestCase):
         self.assertEqual(response.status_code, 405)
 
     def test_delete_task(self):
+        """
+        Ensure that a call to DELETE the specified task results in its deletion.
+        """
         task = self.create_new_task(type='YOUTUBE_IMPORT', metadata={'channel': self.channel.id})
 
         url = '{}/{}'.format(self.task_url, task.id)
