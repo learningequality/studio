@@ -925,12 +925,10 @@ class TaskSerializer(serializers.ModelSerializer):
     def get_metadata(self, task):
         metadata = task.metadata
         result = app.AsyncResult(task.id)
+        # If CELERY_TASK_ALWAYS_EAGER is set, attempts to retrieve state will assert, so do a sanity check first.
         if not settings.CELERY_TASK_ALWAYS_EAGER:
             if task.is_progress_tracking and 'progress' in result.state:
                 metadata['progress'] = result.state['progress']
-        elif task.is_progress_tracking:
-            # we're running the test suite, use a mock value so we can test progress support
-            metadata['progress'] = 100
 
         return metadata
 

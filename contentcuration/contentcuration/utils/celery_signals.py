@@ -58,6 +58,10 @@ def on_success(sender, result, **kwargs):
         task = Task.objects.get(task_id=task_id)
         task.status="SUCCESS"
         task.metadata['result'] = result
+        # We're finished, so go ahead and record 100% progress so that getters expecting it get a value
+        # even though there is no longer a Celery task to query.
+        if task.is_progress_tracking:
+            task.metadata['progress'] = 100
         task.save()
         logger.info("Task with ID {} succeeded".format(task_id))
     except ObjectDoesNotExist:
