@@ -48,6 +48,21 @@ if settings.RUNNING_TESTS:
 # runs the management command 'exportchannel' async through celery
 
 
+@task(bind=True, name='duplicate_nodes_task')
+def duplicate_nodes_task(self, user, channel_id, target_parent, node_ids, sort_order=1):
+    new_nodes = []
+
+    with transaction.atomic():
+        with ContentNode.objects.disable_mptt_updates():
+            for node_id in node_ids:
+                new_node = duplicate_node_bulk(node_id, sort_order=sort_order, parent=target_parent,
+                                               channel_id=channel_id, user=user)
+                new_nodes.append(new_node.pk)
+                sort_order += 1
+
+    return ContentNodeSerializer(ContentNode.objects.filter(pk__in=new_nodes), many=True).data
+
+
 @task(name='exportchannel_task')
 def exportchannel_task(channel_id, user_id):
     call_command('exportchannel', channel_id, email=True, user_id=user_id)
@@ -90,7 +105,10 @@ def deletetree_task(tree_id):
     ContentNode.objects.filter(tree_id=tree_id).delete()
 
 
-type_mapping = {}
+type_mapping = {
+    'duplicate-nodes': {'task': duplicate_nodes_task, 'progress_tracking': True}
+}
+
 if settings.RUNNING_TESTS:
     type_mapping.update({
         'test': {'task': test_task, 'progress_tracking': False},

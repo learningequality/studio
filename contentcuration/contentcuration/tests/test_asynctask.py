@@ -3,7 +3,6 @@ import logging
 from base import BaseAPITestCase
 
 from contentcuration.models import ContentNode, Task
-from contentcuration.utils.asynctask import AsyncTask
 from contentcuration.tasks import create_async_task, non_async_test_task
 
 
