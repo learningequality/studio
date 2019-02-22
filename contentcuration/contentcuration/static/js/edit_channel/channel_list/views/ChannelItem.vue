@@ -1,44 +1,44 @@
 <template>
-    <div class="channel-item" :class="{optionHighlighted: optionHighlighted, active: isSelected}" :id="channel.id">
-      <div class="channel-container-wrapper"  :title="$tr('openChannelTitle', {'channelName': channel.name})" @click="openChannel">
-        <div class="profile">
-          <img class="channel-pic" :alt="channel.name" :src="picture"/>
-        </div>
-        <div>
-          <div class="channel-options-wrapper">
-            <div class="channel-metadata">
-              <div v-if="language" class="channel-language" :title="language.native_name">{{language.native_name}}</div>
-              <div>{{$tr('resourceCount', {'count': channel.count})}}</div>
-              <CopyToken
-                v-if="channel.published"
-                :key="channel.primary_token"
-                :token="channel.primary_token"
-              />
-              <div v-else>
-                <em>{{ $tr('unpublishedText') }}</em>
-              </div>
-            </div>
-            <span
-              :title="starText"
-              class="option star-option material-icons"
-              :class="{starred: channel.STARRED && !channel.STARRING, spinner: channel.STARRING}"
-              @mouseleave="optionHighlighted = false"
-              @mouseover="optionHighlighted = true"
-              @click.stop="toggleStar"
-              />
+  <div class="channel-item" :class="{optionHighlighted: optionHighlighted, active: isSelected}" :id="channel.id">
+    <div class="channel-container-wrapper"  :title="$tr('openChannelTitle', {'channelName': channel.name})" @click="openChannel">
+      <div class="profile">
+        <img class="channel-pic" :alt="channel.name" :src="picture"/>
+      </div>
+      <div class="channel-information">
+        <div class="channel-options-wrapper">
+          <div class="channel-metadata">
+            <div v-if="language" class="channel-language" :title="language.native_name">{{language.native_name}}</div>
+            <div>{{$tr('resourceCount', {'count': channel.count})}}</div>
+            <CopyToken
+              v-if="channel.published"
+              :key="channel.primary_token"
+              :token="channel.primary_token"
+            />
+            <div v-else>
+              <em>{{ $tr('unpublishedText') }}</em>
             </div>
           </div>
-
-          <h4 dir="auto">{{channel.name}}</h4>
-          <p class="description" dir="auto">{{channel.description}}</p>
-          <div class="updated_time">
-            {{ $tr('lastUpdated', {'updated': updated}) }}
-          </div>
+          <span
+            :title="starText"
+            class="option star-option material-icons"
+            :class="{starred: channel.STARRED && !channel.STARRING, spinner: channel.STARRING}"
+            @mouseleave="optionHighlighted = false"
+            @mouseover="optionHighlighted = true"
+            @click.stop="toggleStar"
+          />
         </div>
-      <div class="is-selected">
-        <span class="material-icons rtl-flip">arrow_forward</span>
+        <h4 dir="auto">{{channel.name}}</h4>
+        <p class="description" dir="auto">{{channel.description}}</p>
+      </div>
+      <div class="updated_time">
+        <!-- TODO: change to formatRelative -->
+        {{ $tr('lastUpdated', {'updated': $formatDate(channel.modified, {day:'numeric', month:'short', 'year':'numeric'})}) }}
       </div>
     </div>
+    <div class="is-selected">
+      <span class="material-icons rtl-flip">arrow_forward</span>
+    </div>
+  </div>
 
 </template>
 
@@ -49,6 +49,7 @@ import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
 import Constants from 'edit_channel/constants/index';
 import CopyToken from './CopyToken.vue';
 import ChannelDetailsView from 'edit_channel/details/views';
+import { setChannelMixin } from './../mixins';
 
 import Models from 'edit_channel/models';
 
@@ -72,6 +73,7 @@ export default {
   components: {
     CopyToken
   },
+  mixins: [setChannelMixin],
   data() {
     return {
       optionHighlighted: false
@@ -96,10 +98,6 @@ export default {
       },
       starText() {
         return this.channel.STARRED ? this.$tr('unstarChannel') : this.$tr('starChannel');
-      },
-      updated() {
-        return this.channel.modified || new Date();
-        return this.$formatRelative(this.channel.modified || new Date());
       }
     }
   ),
@@ -109,7 +107,6 @@ export default {
       'removeStar'
     ]),
     mapMutations('channel_list', {
-      setActiveChannel: 'SET_ACTIVE_CHANNEL',
       removeChannel: 'REMOVE_CHANNEL'
     }),
     {
@@ -124,16 +121,7 @@ export default {
             window.open(window.Urls.channel_view_only(this.channel.id), "_blank");
           }
         } else if (!this.activeChannel || this.channel.id !== this.activeChannel.id) {
-          this.setActiveChannel(this.channel);
-          // let detail_view = new ChannelDetailsView({
-          //   model: new Models.ChannelModel(this.channel),
-          //   allow_edit: this.channel.EDITABLE && !this.channel.ricecooker_version,
-          //   ondelete: () => {
-          //     this.removeChannel(this.channel);
-          //   },
-          //   onstar: () => {this.channelSTARRED = true;},
-          //   onunstar: () => {this.channelSTARRED = false;}
-          // });
+          this.setChannel(this.channel);
         }
       }
     }
@@ -152,11 +140,11 @@ export default {
 @channel-thumbnail-size: 130px;
 
 .is-selected {
-  padding-top: 9%;
   margin-left: -10px;
   margin-right: -50px;
   z-index: 1;
   span {
+    margin-top: @channel-container-height / 2 - 50;
     font-size: 45pt;
     font-weight: bold;
     visibility: hidden;
@@ -164,8 +152,8 @@ export default {
 }
 
 .channel-item {
-  display: flex;
-  flex-direction: row;
+  display: grid;
+  grid-auto-flow: column;
   &.active {
     .is-selected span {
       color: @topnav-bg-color;
@@ -190,12 +178,16 @@ export default {
     .profile {
       height: @channel-container-height * 0.9;
     }
+    .channel-information {
+      padding-left: 10px;
+    }
     .updated_time {
       font-style: italic;
       font-size: 10pt;
       color: @gray-500;
       position: absolute;
       bottom: 5px;
+      left: 5px;
     }
   }
 }

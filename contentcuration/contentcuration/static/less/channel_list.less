@@ -100,6 +100,7 @@ body {
 	}
 	.channel-container-wrapper {
 		.channel-list-width;
+		.thumbnail-title-columns;
 		background-color: @panel-container-color;
 		box-shadow: @box-shadow;
 		margin-top: 0px;
@@ -110,10 +111,8 @@ body {
 		position: relative;
 
 	  .profile {
-	    width: @channel-profile-width;
 	    margin: 5px 15px 5px 5px;
-	    text-align: center;
-	    float: left;
+	    text-align: left;
 	    img{
 	        width:@channel-thumbnail-size;
 	        height:@channel-thumbnail-size;
@@ -164,7 +163,7 @@ body {
 		      font-size: 20pt;
 		      padding:10px;
 		      color: @gray-700;
-		      margin: -10px 0px;
+		      margin: -15px 0px;
 		      &.star-option::before {
 		        .material-icons;
 		        content: "star_border";

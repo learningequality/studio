@@ -5,33 +5,28 @@
       <div class="profile">
         <span class="material-icons">storage</span>
       </div>
-      <div class="channel-options-wrapper">
-        <div class="channel-metadata">
-          <div>{{$tr('channelCount', {'count': channelSet.channels.length})}}</div>
-          <CopyToken
-            :key="channelSet.secret_token.display_token"
-            :token="channelSet.secret_token.display_token"
-          />
+      <div>
+        <div class="channel-options-wrapper">
+          <div class="channel-metadata">
+            <div>{{$tr('channelCount', {'count': channelSet.channels.length})}}</div>
+            <CopyToken
+              :key="channelSet.secret_token.display_token"
+              :token="channelSet.secret_token.display_token"
+            />
+          </div>
+          <span
+            class="material-icons option delete-channelset"
+            :title="$tr('deleteChannelSetTitle')"
+            @mouseleave="optionHighlighted = false"
+            @mouseover="optionHighlighted = true"
+            @click.stop="handleDeleteChannelSet"
+          >delete</span>
         </div>
-        <span
-          class="material-icons option delete-channelset"
-          :title="$tr('deleteChannelSetTitle')"
-          @mouseleave="optionHighlighted = false"
-          @mouseover="optionHighlighted = true"
-          @click.stop="handleDeleteChannelSet"
-        >
-          delete
-        </span>
-      </div>
-
         <h4 dir="auto">{{channelSet.name}}</h4>
         <p class="description" dir="auto">{{channelSet.description}}</p>
       </div>
     </div>
-
-
   </div>
-
 </template>
 
 <script>

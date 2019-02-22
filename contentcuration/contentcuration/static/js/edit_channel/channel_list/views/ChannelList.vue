@@ -2,7 +2,7 @@
 
   <div class="channel-list">
     <div v-if="canAddChannels" class="new-button">
-      <a class="action-button" :title="$tr('addChannel')">
+      <a class="action-button" :title="$tr('addChannel')" @click="createChannel">
         <span class="material-icons align-text-top">add</span> {{ $tr('channel') }}
       </a>
     </div>
@@ -29,8 +29,10 @@
 <script>
 
 import _ from 'underscore';
-import { mapState, mapActions } from 'vuex';
+import { mapState, mapActions, mapMutations } from 'vuex';
 import ChannelItem from './ChannelItem.vue';
+import State from 'edit_channel/state';
+import { setChannelMixin } from './../mixins';
 
 export default {
   name: 'ChannelList',
@@ -62,6 +64,7 @@ export default {
   components: {
     ChannelItem,
   },
+  mixins: [setChannelMixin],
   computed: Object.assign(
     mapState('channel_list', [
       'channels'
@@ -75,7 +78,27 @@ export default {
   methods: Object.assign(
     mapActions('channel_list', [
       'loadChannelList'
-    ])
+    ]),
+    mapMutations('channel_list', {
+      setActiveChannel: 'SET_ACTIVE_CHANNEL'
+    }),
+    {
+      createChannel() {
+        let preferences = (typeof window.user_preferences === "string")? JSON.parse(window.user_preferences) : window.user_preferences;
+        let newChannel = {
+          name: "",
+          description: "",
+          editors: [State.current_user.id],
+          pending_editors: [],
+          language: preferences.language,
+          content_defaults: preferences,
+          thumbnail: "",
+          thumbnail_encoding: {}
+        };
+        this.setChannel(newChannel);
+      }
+    }
+
   ),
 };
 

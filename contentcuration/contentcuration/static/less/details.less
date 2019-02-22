@@ -1,180 +1,33 @@
 @import "global-variables.less";
 
-#channel_details_view_panel {
-	height: inherit;
-}
-#channel_details{
-	display: block;
-	overflow: hidden;
-	overflow-y: auto;
-	padding: 0px;
-	min-height: 350px;
-	background-color: rgba(256,256,256,0.8);
-	height: inherit;
-	padding-top: 15px;
-	border: 2px solid @gray-500;
-	position: relative;
 
-	#channel_details_area {
-		width: 100%;
-    	margin-left: 10px;
-		.column {
-			display: table-column;
-			&.profile {
-				padding-top: 30px;
-			}
-			.description {
-				min-height: 25px;
-				word-wrap: break-word;
-			}
-		}
-		.cancel { padding-left: 0px; }
-		#submit { margin-right: 10px; }
-	}
+// 	.image_dropzone{ width: 120px; }
+// 	.new_channel_pic{
+// 		.image_dropzone{ width: auto; }
+// 	}
+// 	.channel-download-wrapper {
+// 		margin-top: 30px;
+// 	    margin-bottom: -25px;
+// 	    padding: 0px;
+// 	    font-size: 10pt;
+// 	    text-align: right;
+// 	}
+// 	.details-download-dropdown {
+// 		width: max-content;
+// 	}
+// 	input[type="text"] {
+// 		margin-bottom: 20px;
+// 	}
 
-	#channel_error{ display:none; }
-	.image_dropzone{ width: 120px; }
-	.profile { padding: 0px; }
-	.new_channel_pic{
-		.image_dropzone{ width: auto; }
-	}
-	.channel-download-wrapper {
-		margin-top: 30px;
-	    margin-bottom: -25px;
-	    padding: 0px;
-	    font-size: 10pt;
-	    text-align: right;
-	}
-	.details-download-dropdown {
-		width: max-content;
-	}
-	img{
-	    width:130px;
-	    height:130px;
-	    object-fit: cover;
-	}
-	.channel_pic {
-		border: 2px solid @gray-500;
-		min-height: 130px;
-	}
 
-	h4, .title {
-		font-size: 10pt;
-		color: @gray-800;
-		margin: 2px 0px;
-		font-weight: bold;
-	}
-	h3 {
-		margin-bottom: 5px;
-		margin-top: 0px;
-		font-weight: bold;
-	}
-
-	.channel_text {
-		color: @gray-700;
-	}
-	.identifier_label {
-		padding: 0;
-		padding-top: 5px;
-	}
-	.language_wrapper {
-		min-height: 25px;
-		b { font-size: 15pt; }
-		i {
-			color: @blue-200;
-			vertical-align: top;
-			font-size: 20pt;
-			margin-right: 5px;
-		}
-	}
-
-	input[type="text"] {
-		margin-bottom: 20px;
-	}
-
-	input[type="text"], textarea {
-		padding: 2px 0;
-		font-size: @larger-body-text;
-		width:100%;
-		.input-form;
-		&.copy-id-text {
-			display: inline-block;
-		    padding: 2px;
-		    background-color: @gray-200;
-		    border: none;
-		    font-weight: bold;
-		    color: @gray-500;
-		    margin-bottom: 5px;
-		    width: 225px;
-    		font-size: 10pt;
-		}
-	}
-	.copy-id-btn{
-		padding:3px;
-		font-size: 16pt;
-		vertical-align: sub;
-		cursor: pointer;
-		color: @gray-500;
-		&:hover { color:@blue-500; }
-	}
-	textarea{
-		resize:none;
-		height:auto;
-		margin-bottom: 15px;
-	}
-
-	.details_view {
-		display: none;
-	}
-	#look-inside { border-bottom: 2px solid @blue-200; }
-	#delete-section {
-		padding: 5px 30px 35px 30px;
-		p {
-			margin-top: 5px;
-			margin-bottom: 20px;
-		}
-		.delete_channel {
-			color: @delete-color;
-			font-weight: bold;
-		}
-	}
-
-	.required{
-		margin-left:5px;
-		color:@red-error-color;
-		span{
-			font-style:italic;
-			font-size: 8pt;
-		}
-	}
-
-	.tab-content {
-		border: none;
-		border-top: 2px solid @blue-200;
-	}
-	#open-button {
-		padding: 5px 25px;
-	}
-	.download_option {
-		padding: 5px 10px;
-		cursor: pointer;
-		&:hover {
-			background-color: @gray-200;
-		}
-	}
-	.toggle_description {
-		color: @gray-700 !important;
-		&:hover { color: @blue-500 !important; }
-	}
-	.empty_default {
-		padding: 100px 0px;
-	    margin-top: 0px;
-		&.loading { border-top: 2px solid @blue-200; }
-	}
-	hr {
-		border-color: @gray-300;
-	}
-}
+// 	.download_option {
+// 		padding: 5px 10px;
+// 		cursor: pointer;
+// 		&:hover {
+// 			background-color: @gray-200;
+// 		}
+// 	}
+// }
 
 .details_view {
 	background-color: white;
@@ -439,6 +292,7 @@
 								border: 2px solid @gray-400;
 								width: 100px;
 								height: 100px;
+								object-fit: cover;
 								border-radius: 5px;
 								background-color: white;
 							}
@@ -547,6 +401,7 @@
 				font-size: 16pt;
 				vertical-align: sub;
 				color: @blue-200;
+				cursor: pointer;
 				&:hover { color:@blue-500; }
 			}
 			.copy-id-text{
@@ -565,19 +420,5 @@
 				color: @gray-500;
 			}
 		}
-	}
-}
-
-#channel_details_bottom {
-	height: 40px;
-	padding: 0px;
-	padding-top: 5px;
-	width: 100%;
-	a {
-		border-width: 2px !important;
-		width: inherit;
-		padding: 5px;
-	    font-size: 14pt;
-	    margin-top: 3px;
 	}
 }

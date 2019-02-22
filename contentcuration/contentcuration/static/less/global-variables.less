@@ -279,7 +279,8 @@ ul li.placeholder:before {
 .uppercase { text-transform: uppercase; }
 
 .empty_default{
-  margin-top:20%;
+  margin-top:10%;
+  margin-bottom:10%;
   text-align: center;
   color:@gray-400;
   font-size:14pt;
@@ -342,4 +343,11 @@ ul li.placeholder:before {
   &::before {
     content: 'rotate_right';
   }
+}
+
+.thumbnail-title-columns {
+  display: grid;
+  grid-auto-flow: column;
+  justify-content: flex-start;
+  grid-template-columns: 0fr 1fr;
 }

@@ -4,10 +4,11 @@ import State from 'edit_channel/state';
 
 import Models from 'edit_channel/models';
 import { ChannelSetModalView } from 'edit_channel/channel_set/views';
+import { DetailsView } from 'edit_channel/details/views';
+import { ListTypes, ChannelListUrls } from './constants';
+import { dialog } from 'edit_channel/utils/dialog';
 
-
-var Vuex = require('vuex');
-var { ListTypes, ChannelListUrls } = require('./constants');
+const Vuex = require('vuex');
 Vue.use(Vuex);
 
 let defaultListType = ListTypes.EDITABLE;
@@ -33,7 +34,7 @@ function prepChannel(channel) {
 	});
 }
 
-var store = new Vuex.Store({
+module.exports = new Vuex.Store({
   modules: {
     "channel_list": {
 		namespaced: true,
@@ -41,6 +42,8 @@ var store = new Vuex.Store({
 			activeList: defaultListType,
 			channels: [],
 			activeChannel: null,
+			changed: false,
+			channelChanges: {},
 			channelSets: [],
 			invitations: []
 		},
@@ -59,6 +62,12 @@ var store = new Vuex.Store({
 			},
 			invitations(state) {
 				return state.invitations;
+			},
+			channelChanges(state) {
+				return state.channelChanges;
+			},
+			changed(state) {
+				return state.changed;
 			}
 		},
 	   	mutations: {
@@ -67,6 +76,8 @@ var store = new Vuex.Store({
 			    activeList: defaultListType,
 			    channels: [],
 			    invitations: [],
+			    changed: false,
+			    channelChanges: {},
 			    activeChannel: null,
 			    channelSets: []
 			  });
@@ -78,6 +89,7 @@ var store = new Vuex.Store({
 			/* Channel mutations */
 			SET_ACTIVE_CHANNEL(state, channel) {
 				state.activeChannel = channel;
+				state.channelChanges = _.clone(state.activeChannel);
 			},
 			SET_CHANNEL_LIST(state, payload) {
 				let listValues = _.values(ListTypes);
@@ -95,10 +107,45 @@ var store = new Vuex.Store({
 			ADD_CHANNEL(state, channel) {
 				state.channels.unshift(channel);
 			},
+			SUBMIT_CHANNEL(state, channel) {
+				// If this is an existing channel, update the fields
+            	// Otherwise, add new channels to the list
+            	let match = _.findWhere(state.channels, {id: channel.id});
+            	if (match) {
+            		_.each(_.pairs(channel), (val) => {
+            			match[val[0]] = val[1];
+            		});
+            	} else {
+            		prepChannel(channel);
+            		channel.EDITABLE = true;
+            		state.channels.unshift(channel);
+            	}
+            	state.changed = false;
+			},
+			CANCEL_CHANNEL_CHANGES(state) {
+	   			state.changed = false;
+	   			state.channelChanges = _.clone(state.activeChannel);
+	   		},
 			REMOVE_CHANNEL(state, channel) {
 				state.channels = _.reject(state.channels, (c) => {
 					return c.id === channel.id;
 				});
+
+				// Remove channel from channel sets too
+				_.each(state.channelSets, (channelset) => {
+					channelset.channels = _.reject(channelset.channels, (channelID) => {
+						return channelID === channel.id;
+					});
+				});
+				state.changed = false;
+			},
+			SET_CHANNEL_NAME(state, name) {
+				state.channelChanges.name = name;
+				state.changed = true;
+			},
+			SET_CHANNEL_DESCRIPTION(state, description) {
+				state.channelChanges.description = description.trim();
+				state.changed = true;
 			},
 
 			/* Channel set mutations */
@@ -125,6 +172,7 @@ var store = new Vuex.Store({
 			}
   		},
   		actions: {
+  			/* Channel actions */
 		    loadChannelList: function(context, listType) {
 		    	return new Promise((resolve, reject) => {
 		    		$.ajax({
@@ -137,32 +185,6 @@ var store = new Vuex.Store({
 			    				channels: channels
 			    			});
 			    			resolve(channels);
-		                }
-		            });
-		        });
-		    },
-		    loadChannelSetList: function(context) {
-		    	return new Promise((resolve, reject) => {
-		    		$.ajax({
-		                method: "GET",
-		                url: window.Urls.get_user_channel_sets(),
-		                error: reject,
-		                success: (channelSets) => {
-		                	context.commit('SET_CHANNELSET_LIST', channelSets);
-		    				resolve(channelSets);
-		                }
-		            });
-		        });
-		    },
-		    loadChannelInvitationList: function(context) {
-		    	return new Promise((resolve, reject) => {
-		    		$.ajax({
-		                method: "GET",
-		                url: window.Urls.get_user_pending_channels(),
-		                error: reject,
-		                success: (invitations) => {
-		                	context.commit('SET_INVITATION_LIST', invitations);
-		    				resolve(invitations);
 		                }
 		            });
 		        });
@@ -197,6 +219,70 @@ var store = new Vuex.Store({
 	                }
 	            });
 		    },
+		    saveChannel: function(context) {
+		    	/* TODO: REMOVE BACKBONE */
+		    	return new Promise((resolve, reject) => {
+		    		new Models.ChannelModel().save(context.state.channelChanges, {
+		    			patch: true,
+		                error: reject,
+		                success: (channel) => {
+		                	channel = channel.toJSON();
+		                	context.commit('SUBMIT_CHANNEL', channel);
+		                	context.commit('SET_ACTIVE_CHANNEL', channel);
+		                	resolve(channel);
+		                }
+		            });
+		        });
+		    },
+		    deleteChannel: function(context) {
+		    	/* TODO: REMOVE BACKBONE */
+		    	return new Promise((resolve, reject) => {
+		    		new Models.ChannelModel(context.state.activeChannel).save({"deleted": true}, {
+		                error: reject,
+		                success: () => {
+		                	context.commit('REMOVE_CHANNEL', context.state.activeChannel);
+		                	context.commit('SET_ACTIVE_CHANNEL', null);
+		                	resolve();
+		                }
+		            });
+		        });
+		    },
+		    loadChannelDetailsView: function(context, el) {
+		    	let mainTree = context.state.activeChannel.main_tree;
+		    	mainTree = (typeof mainTree === "string")? mainTree : mainTree.id;
+		        return new Promise(function (resolve, reject) {
+		            $.ajax({
+		                method: "GET",
+		                url: window.Urls.get_topic_details(mainTree),
+		                error: reject,
+		                success: (result) => {
+		                	let detailsView = new DetailsView({
+		                        model: new Models.ContentNodeModel({'metadata': JSON.parse(result)}),
+		                        el: el,
+		                        channel_id: context.state.activeChannel.id,
+		                        is_channel: true,
+		                        channel: context.state.activeChannel
+		                    });
+		                    resolve();
+		                }
+		            });
+		        });
+		    },
+
+		    /* Channel set actions */
+		    loadChannelSetList: function(context) {
+		    	return new Promise((resolve, reject) => {
+		    		$.ajax({
+		                method: "GET",
+		                url: window.Urls.get_user_channel_sets(),
+		                error: reject,
+		                success: (channelSets) => {
+		                	context.commit('SET_CHANNELSET_LIST', channelSets);
+		    				resolve(channelSets);
+		                }
+		            });
+		        });
+		    },
 		    newChannelSet: function(context) {
 		    	/* TODO: REMOVE BACKBONE, move to ChannelSetList.vue */
 		    	let channelSetView = new ChannelSetModalView({
@@ -229,6 +315,21 @@ var store = new Vuex.Store({
 		    		}
 		    	});
 		    },
+
+		    /* Invitation actions */
+		    loadChannelInvitationList: function(context) {
+		    	return new Promise((resolve, reject) => {
+		    		$.ajax({
+		                method: "GET",
+		                url: window.Urls.get_user_pending_channels(),
+		                error: reject,
+		                success: (invitations) => {
+		                	context.commit('SET_INVITATION_LIST', invitations);
+		    				resolve(invitations);
+		                }
+		            });
+		        });
+		    },
 		    acceptInvitation: function(context, invitation) {
 		    	return new Promise((resolve, reject) => {
 		    		$.ajax({
@@ -241,9 +342,11 @@ var store = new Vuex.Store({
 			    			switch(invitation.share_mode) {
 			    				case 'edit':
 			    					channel[ListTypes.EDITABLE] = true;
+			    					context.commit('SET_ACTIVE_LIST', ListTypes.EDITABLE);
 			    					break;
 			    				case 'view':
 			    					channel[ListTypes.VIEW_ONLY] = true;
+			    					context.commit('SET_ACTIVE_LIST', ListTypes.VIEW_ONLY);
 			    					break;
 			    			}
 			    			context.commit('ADD_CHANNEL', channel);
@@ -263,5 +366,3 @@ var store = new Vuex.Store({
     }
   }
 });
-
-module.exports = store;
