@@ -4,9 +4,9 @@ import State from 'edit_channel/state';
 
 import Models from 'edit_channel/models';
 import { ChannelSetModalView } from 'edit_channel/channel_set/views';
-import { DetailsView } from 'edit_channel/details/views';
 import { ListTypes, ChannelListUrls } from './constants';
 import { dialog } from 'edit_channel/utils/dialog';
+import fileDownload from 'jquery-file-download';
 
 const Vuex = require('vuex');
 Vue.use(Vuex);
@@ -247,27 +247,48 @@ module.exports = new Vuex.Store({
 		            });
 		        });
 		    },
-		    loadChannelDetailsView: function(context, el) {
-		    	let mainTree = context.state.activeChannel.main_tree;
-		    	mainTree = (typeof mainTree === "string")? mainTree : mainTree.id;
+		    loadChannelDetails: function(context, channel) {
+		    	let mainTree = (typeof channel.main_tree === "string")? channel.main_tree : channel.main_tree.id;
 		        return new Promise(function (resolve, reject) {
 		            $.ajax({
 		                method: "GET",
 		                url: window.Urls.get_topic_details(mainTree),
 		                error: reject,
 		                success: (result) => {
-		                	let detailsView = new DetailsView({
-		                        model: new Models.ContentNodeModel({'metadata': JSON.parse(result)}),
-		                        el: el,
-		                        channel_id: context.state.activeChannel.id,
-		                        is_channel: true,
-		                        channel: context.state.activeChannel
-		                    });
-		                    resolve();
+		                	let node = new Models.ContentNodeModel({'metadata': JSON.parse(result)});
+		                    resolve(node);
 		                }
 		            });
 		        });
 		    },
+		    downloadChannelDetails: function(context, payload) {
+		    	return new Promise(function (resolve, reject) {
+		            let url = "";
+			        switch(payload.format) {
+			    		case "detailedPdf":
+			    			url = window.Urls.get_channel_details_pdf_endpoint(payload.id);
+			    			break;
+			    		case "csv":
+			    			url = window.Urls.get_channel_details_csv_endpoint(payload.id);
+			    			break;
+			    		case "ppt":
+			    			url = window.Urls.get_channel_details_ppt_endpoint(payload.id);
+			    			break;
+			    		default:
+			    			url = window.Urls.get_channel_details_pdf_endpoint(payload.id) + "?condensed=true";
+			    	}
+					$.fileDownload(url, {
+						successCallback: resolve,
+			            failCallback: (responseHtml, url) => {
+			    			reject(responseHtml);
+			            }
+			        });
+		        });
+		    },
+
+		    // download_condensed_pdf: function() {
+		    //
+		    // },
 
 		    /* Channel set actions */
 		    loadChannelSetList: function(context) {

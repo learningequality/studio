@@ -77,7 +77,7 @@ export default {
 
     {
       languages() {
-        return Constants.Languages;
+        return _.sortBy(Constants.Languages, 'native_name');
       }
     }
   ),

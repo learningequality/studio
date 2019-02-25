@@ -44,15 +44,16 @@
                     <a :href="channelUrl" id="open-channel">{{ $tr("openChannel") }}</a>
                     <a v-if="canEdit" id="edit-details" @click="editing = true">{{ $tr("editDetails") }}</a>
 
-                    <!-- <div class="channel-download-wrapper">
-                    <a class="action-text dropdown-toggle" data-toggle="dropdown">{{ $tr("downloadReport") }}</a>
-                    <ul class="dropdown-menu dropdown-menu-right details-download-dropdown">
-                        <li><a>{{ $tr("downloadCSV") }}</a></li>
-                        <li><a>{{ $tr("downloadPDF") }}</a></li>
-                        <li><a>{{ $tr("downloadDetailedPDF") }}</a></li>
-                        <li><a>{{ $tr("downloadPPT") }}</a></li>
-                    </ul>
-                  </div> -->
+                    <!-- TODO: Remove bootstrap -->
+                    <div class="btn-group" id="channel-download-wrapper">
+                      <a class="download-toggle dropdown-toggle" data-toggle="dropdown">{{ $tr("downloadReport") }}</a>
+                      <ul class="dropdown-menu dropdown-menu-right">
+                        <li><a @click="downloadDetails('csv')">{{ $tr("downloadCSV") }}</a></li>
+                        <li><a @click="downloadDetails('pdf')">{{ $tr("downloadPDF") }}</a></li>
+                        <li><a @click="downloadDetails('detailedPdf')">{{ $tr("downloadDetailedPDF") }}</a></li>
+                        <li><a @click="downloadDetails('ppt')">{{ $tr("downloadPPT") }}</a></li>
+                      </ul>
+                    </div>
                 </div>
               </div>
               <div v-if="!isNew">
@@ -89,6 +90,7 @@ import ChannelStar from './ChannelStar.vue';
 import ChannelEditor from './ChannelEditor.vue';
 import ToggleText from './ToggleText.vue';
 import { setChannelMixin } from './../mixins';
+import { DetailsView } from 'edit_channel/details/views';
 
 export default {
   name: 'ChannelDetailsPanel',
@@ -113,7 +115,15 @@ export default {
     save: "Save",
     invalidChannel: "Must fill out required fields",
     errorChannelSave: "Error Saving Channel",
-    saving: "Saving..."
+    saving: "Saving...",
+    downloadStartedHeader: "Download Started",
+    downloadStartedTextPDF: "Generating a PDF for {channelName}. Download will start automatically.",
+    downloadStartedTextPPT: "Generating a PPT for {channelName}. Download will start automatically.",
+    downloadStartedTextCSV: "Generating a CSV for {channelName}. Download will start automatically.",
+    downloadFailedHeader: "Download Failed",
+    downloadFailedTextPDF: "Failed to download a PDF for {channelName}",
+    downloadFailedTextPPT: "Failed to download a PPT for {channelName}",
+    downloadFailedTextCSV: "Failed to download a CSV for {channelName}"
   },
   components: {
     ChannelStar,
@@ -173,8 +183,9 @@ export default {
   methods: Object.assign(
     mapActions('channel_list', [
       'deleteChannel',
-      'loadChannelDetailsView',
-      'saveChannel'
+      'loadChannelDetails',
+      'saveChannel',
+      'downloadChannelDetails'
     ]),
     mapMutations('channel_list', {
       cancelChanges: 'CANCEL_CHANNEL_CHANGES'
@@ -213,10 +224,41 @@ export default {
       loadDetails() {
         if(!this.isNew) {
           this.loading = true;
-          this.loadChannelDetailsView(this.$refs.lookinside).then(() => {
+          this.loadChannelDetails(this.channel).then((detailedNode) => {
+            let detailsView = new DetailsView({
+              model: detailedNode,
+              el: this.$refs.lookinside,
+              channel_id: this.channel.id,
+              is_channel: true,
+              channel: this.channel
+            });
             this.loading = false;
           });
         }
+      },
+      downloadDetails(format) {
+        let formatString = "";
+        let errorString = "";
+        let msgArgs = {channelName: this.channel.name};
+        switch(format) {
+          case "ppt":
+            formatString = this.$tr("downloadStartedTextPPT", msgArgs);
+            errorString = this.$tr("downloadFailedTextPPT", msgArgs);
+            break;
+          case "csv":
+            formatString = this.$tr("downloadStartedTextCSV", msgArgs);
+            errorString = this.$tr("downloadFailedTextCSV", msgArgs);
+            break;
+          default:
+            formatString = this.$tr("downloadStartedTextPDF", msgArgs);
+            errorString = this.$tr("downloadFailedTextPDF", msgArgs);
+        }
+
+        alert(this.$tr("downloadStartedHeader"), formatString);
+        this.downloadChannelDetails({format: format, id: this.channel.id}).catch((error) => {
+          console.error(error);
+          alert(this.$tr("downloadFailedHeader"), errorString)
+        });
       }
     }
   )
@@ -325,6 +367,23 @@ export default {
             .action-text;
             text-transform: uppercase;
           }
+          #channel-download-wrapper {
+            margin-top: 30px;
+            margin-bottom: -25px;
+            font-size: 10pt;
+            text-align: right;
+            display: block;
+            .download-toggle {
+              .action-text;
+              padding: 5px;
+            }
+            .dropdown-menu a {
+              padding: 5px 10px;
+              &:hover {
+                background-color: @gray-200;
+              }
+            }
+          }
         }
       }
       .buttons {
@@ -382,21 +441,3 @@ export default {
 }
 
 </style>
-
-  .channel-download-wrapper {
-    margin-top: 30px;
-      margin-bottom: -25px;
-      padding: 0px;
-      font-size: 10pt;
-      text-align: right;
-  }
-  .details-download-dropdown {
-    width: max-content;
-  }
-  .download_option {
-    padding: 5px 10px;
-    cursor: pointer;
-    &:hover {
-      background-color: @gray-200;
-    }
-  }
