@@ -5,7 +5,7 @@
     <div class="channel-section">
       <div class="language-wrapper">
         <span class="material-icons">language</span>
-        <select id="select-language" @change="setLanguage($event.target.value)">
+        <select id="select-language" :tabindex="2" @change="setLanguage($event.target.value)">
           <option disabled selected value=0>{{ $tr('channelLanguagePlaceholder') }}</option>
           <option
             v-for="language in languages"
@@ -25,7 +25,9 @@
         dir="auto"
         :placeholder="$tr('channelNamePlaceholder')"
         maxlength="200"
+        :tabindex="1"
         :value="channel.name"
+        ref="firstTab"
         @input="setName($event.target.value)"
         required
       />
@@ -35,14 +37,15 @@
         dir="auto"
         :placeholder="$tr('channelDescriptionPlaceholder')"
         maxlength="400"
+        :tabindex="3"
         rows="4"
         @input="setDescription($event.target.value)"
       >{{channel.description}}</textarea>
 
       <div class="buttons">
-        <a class="action-text" @click="cancelEdit">{{ $tr('cancel') }}</a>
+        <a @click="cancelEdit" :tabindex="5" ref="lastTab">{{ $tr('cancel') }}</a>
         <button
-          class="action-button"
+          :tabindex="4"
           :class="{'disabled': !isValid || saving || uploading}"
           :disabled="!isValid || saving || uploading"
           :title="saveButtonTitle"
@@ -62,6 +65,7 @@ import { mapGetters, mapActions, mapMutations } from 'vuex';
 import { dialog } from 'edit_channel/utils/dialog';
 import Constants from 'edit_channel/constants/index';
 import { ThumbnailUploadView } from 'edit_channel/image/views';
+import { tabMixin } from './../mixins';
 
 const PRESET = _.findWhere(Constants.FormatPresets, {id: "channel_thumbnail"});
 
@@ -88,6 +92,7 @@ export default {
       uploading: false
     };
   },
+  mixins: [tabMixin],
   computed: Object.assign(
     mapGetters('channel_list', {
       channel: 'channelChanges',
@@ -262,6 +267,12 @@ export default {
       margin-left: -15px;
       a, button {
         text-transform: uppercase;
+      }
+      a {
+        .action-text;
+      }
+      button {
+        .action-button;
       }
     }
   }
