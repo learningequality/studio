@@ -345,7 +345,7 @@ class ChannelDetailsWriter(ExportWriter):
                 loc='center left',
                 labels=[l['text'].split('\n')[0] for l in labels],
                 prop={'size': 20},
-                bbox_to_anchor=(0.85, 0.5),
+                bbox_to_anchor=(0.7, 0.5),
                 bbox_transform=plt.gcf().transFigure
             )
 

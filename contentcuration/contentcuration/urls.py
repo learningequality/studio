@@ -169,7 +169,10 @@ class InvitationViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         if self.request.user.is_admin:
             return Invitation.objects.all()
-        return Invitation.objects.filter(Q(invited=self.request.user) | Q(sender=self.request.user)).distinct()
+        return Invitation.objects.filter(Q(invited=self.request.user) |
+                                         Q(sender=self.request.user) |
+                                         Q(channel__editors=self.request.user) |
+                                         Q(channel__viewers=self.request.user)).distinct()
 
 
 class AssessmentItemViewSet(BulkModelViewSet):
