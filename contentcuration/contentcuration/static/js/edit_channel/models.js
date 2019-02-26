@@ -208,89 +208,7 @@ var UserModel = BaseModel.extend({
     },
     get_full_name: function () {
         return this.get('first_name') + " " + this.get('last_name');
-    },
-    // get_channels: function () {
-    //     var self = this;
-    //     return new Promise(function (resolve, reject) {
-    //         $.ajax({
-    //             method: "GET",
-    //             url: window.Urls.get_user_edit_channels(),
-    //             error: reject,
-    //             success: function (data) {
-    //                 var collection = new ChannelCollection(data);
-    //                 resolve(collection);
-    //             }
-    //         });
-    //     });
-    // },
-    // get_view_only_channels: function () {
-    //     var self = this;
-    //     return new Promise(function (resolve, reject) {
-    //         $.ajax({
-    //             method: "GET",
-    //             url: window.Urls.get_user_view_channels(),
-    //             error: reject,
-    //             success: function (data) {
-    //                 var collection = new ChannelCollection(data);
-    //                 resolve(collection);
-    //             }
-    //         });
-    //     });
-    // },
-    // get_bookmarked_channels: function () {
-    //     var self = this;
-    //     return new Promise(function (resolve, reject) {
-    //         $.ajax({
-    //             method: "GET",
-    //             url: window.Urls.get_user_bookmarked_channels(),
-    //             error: reject,
-    //             success: function (data) {
-    //                 var collection = new ChannelCollection(data);
-    //                 resolve(collection);
-    //             }
-    //         });
-    //     });
-    // },
-    // get_public_channels: function () {
-    //     var self = this;
-    //     return new Promise(function (resolve, reject) {
-    //         $.ajax({
-    //             method: "GET",
-    //             url: window.Urls.get_user_public_channels(),
-    //             error: reject,
-    //             success: function (data) {
-    //                 var collection = new ChannelCollection(data);
-    //                 resolve(collection);
-    //             }
-    //         });
-    //     });
-    // },
-    // get_pending_invites: function () {
-    //     var self = this;
-    //     return new Promise(function (resolve, reject) {
-    //         $.ajax({
-    //             method: "GET",
-    //             url: window.Urls.get_user_pending_channels(),
-    //             error: reject,
-    //             success: function (data) {
-    //                 resolve(new InvitationCollection(data));
-    //             }
-    //         });
-    //     });
-    // },
-    // get_user_channel_collections: function() {
-    //     var self = this;
-    //     return new Promise(function (resolve, reject) {
-    //         $.ajax({
-    //             method: "GET",
-    //             url: window.Urls.get_user_channel_sets(),
-    //             error: reject,
-    //             success: function (data) {
-    //                 resolve(new ChannelSetCollection(data));
-    //             }
-    //         });
-    //     });
-    // }
+    }
 });
 
 var UserCollection = BasePageableCollection.extend({
@@ -314,27 +232,7 @@ var InvitationModel = BaseModel.extend({
     },
     get_full_name: function () {
         return this.get('first_name') + " " + this.get('last_name');
-    },
-    // accept_invitation: function () {
-    //     var self = this;
-    //     return new Promise(function (resolve, reject) {
-    //         $.ajax({
-    //             method: "POST",
-    //             url: window.Urls.accept_channel_invite(),
-    //             data: JSON.stringify({ "invitation_id": self.id }),
-    //             error: reject,
-    //             success: function (data) {
-    //                 resolve(new ChannelModel(JSON.parse(data)));
-    //             }
-    //         });
-    //     });
-    // },
-    // decline_invitation: function () {
-    //     var self = this;
-    //     return new Promise(function (resolve, reject) {
-    //         self.destroy({ success: resolve, error: reject });
-    //     });
-    // }
+    }
 });
 
 var InvitationCollection = BaseCollection.extend({
@@ -917,36 +815,6 @@ var ChannelModel = BaseModel.extend({
             });
         });
     },
-    // add_bookmark: function (user_id) {
-    //     var self = this;
-    //     return new Promise(function (resolve, reject) {
-    //         $.ajax({
-    //             method: "POST",
-    //             data: JSON.stringify({
-    //                 "channel_id": self.id,
-    //                 "user_id": user_id
-    //             }),
-    //             url: window.Urls.add_bookmark(),
-    //             success: resolve,
-    //             error: function (error) { reject(error.responseText); }
-    //         });
-    //     });
-    // },
-    // remove_bookmark: function (user_id) {
-    //     var self = this;
-    //     return new Promise(function (resolve, reject) {
-    //         $.ajax({
-    //             method: "POST",
-    //             data: JSON.stringify({
-    //                 "channel_id": self.id,
-    //                 "user_id": user_id
-    //             }),
-    //             url: window.Urls.remove_bookmark(),
-    //             success: resolve,
-    //             error: function (error) { reject(error.responseText); }
-    //         });
-    //     });
-    // },
     get_channel_counts: function () {
         var self = this;
         return new Promise(function (resolve, reject) {

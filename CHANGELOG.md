@@ -2,8 +2,11 @@
 
 ## Unreleased
 #### Changes
+* [[@jayoshih](https://github.com/jayoshih)] Vueified channel list page
 
 #### Issues Resolved
+* [#1120](https://github.com/learningequality/studio/issues/1120)
+* [#900](https://github.com/learningequality/studio/issues/900)
 
 
 ## Upcoming release
