@@ -30,7 +30,7 @@
     <hr/>
 
     <!-- Channel list section -->
-    <div class="channel-list">
+    <div class="channelset-list">
       <div v-if="loadChannels" class="default-item">
         {{ $tr('loading') }}
       </div>

@@ -27,14 +27,18 @@ exports.setChannelMixin = {
 	methods: Object.assign(
 		mapActions('channel_list', ['saveChannel']),
 		mapMutations('channel_list', {
-			setActiveChannel: 'SET_ACTIVE_CHANNEL'
+			setActiveChannel: 'SET_ACTIVE_CHANNEL',
+			cancelChanges: 'CANCEL_CHANNEL_CHANGES'
 		}),
 	    {
 			setChannel: function (channel) {
 				// Check for changes here when user switches or closes panel
 				if(this.changed && (!channel || channel.id !== this.activeChannel.id)) {
 					dialog(this.channelStrings("unsavedChanges"), this.channelStrings("unsavedChangesText"), {
-						[this.channelStrings("dontSave")]: () => { this.setActiveChannel(channel); },
+						[this.channelStrings("dontSave")]: () => {
+							this.cancelChanges();
+							this.setActiveChannel(channel);
+						},
 						[this.channelStrings("keepOpen")]:() => {},
 						[this.channelStrings("save")]: () => {
 							this.saveChannel().then(() => {

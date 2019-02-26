@@ -64,7 +64,7 @@ exports.CANCEL_CHANNEL_CHANGES = function(state) {
 
 exports.REMOVE_CHANNEL = function(state, channelID) {
 	state.channels = _.reject(state.channels, (c) => {
-		return c.id === channel.id;
+		return c.id === channelID;
 	});
 
 	// Remove channel from channel sets too
@@ -104,7 +104,8 @@ exports.SET_CHANNELSET_LIST = function(state, channelSets) {
 }
 
 exports.ADD_CHANNELSET = function(state, channelSet) {
-	state.channelSets.push(channelSet);
+	/* TODO: REMOVE BACKBONE */
+	state.channelSets.push(channelSet.toJSON());
 }
 
 exports.REMOVE_CHANNELSET = function(state, channelSetID) {

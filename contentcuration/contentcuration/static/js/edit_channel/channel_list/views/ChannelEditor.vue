@@ -1,11 +1,11 @@
 <template>
 
   <div class="channel-editor">
-    <div ref="channel-thumbnail" class="thumbnail">&nbsp;</div>
+    <div ref="channelthumbnail" class="channel-thumbnail">&nbsp;</div>
     <div class="channel-section">
       <div class="language-wrapper">
         <span class="material-icons">language</span>
-        <select id="select-language" tabindex=1>
+        <select id="select-language" @change="setLanguage($event.target.value)">
           <option disabled selected value=0>{{ $tr('channelLanguagePlaceholder') }}</option>
           <option
             v-for="language in languages"
@@ -38,6 +38,17 @@
         rows="4"
         @input="setDescription($event.target.value)"
       >{{channel.description}}</textarea>
+
+      <div class="buttons">
+        <a class="action-text" @click="cancelEdit">{{ $tr('cancel') }}</a>
+        <button
+          class="action-button"
+          :class="{'disabled': !isValid || saving || uploading}"
+          :disabled="!isValid || saving || uploading"
+          :title="saveButtonTitle"
+          @click="submitChannel"
+        >{{ (isNew)? $tr('create') : $tr('save') }}</button>
+      </div>
     </div>
   </div>
 
@@ -47,12 +58,12 @@
 <script>
 
 import _ from 'underscore';
-import State from 'edit_channel/state';
 import { mapGetters, mapActions, mapMutations } from 'vuex';
 import { dialog } from 'edit_channel/utils/dialog';
 import Constants from 'edit_channel/constants/index';
+import { ThumbnailUploadView } from 'edit_channel/image/views';
 
-const REQUIRED_FIELDS = ["name"];
+const PRESET = _.findWhere(Constants.FormatPresets, {id: "channel_thumbnail"});
 
 export default {
   name: 'ChannelEditor',
@@ -62,11 +73,19 @@ export default {
     channelNamePlaceholder: "Enter channel name...",
     channelDescription: "Channel Description",
     channelDescriptionPlaceholder: "Enter channel description...",
-    channelLanguagePlaceholder: "Select a language..."
+    channelLanguagePlaceholder: "Select a language...",
+    create: "Create",
+    save: "Save",
+    cancel: "Cancel",
+    invalidChannel: "Must fill out required fields",
+    errorChannelSave: "Error Saving Channel",
+    saving: "Saving..."
   },
   data() {
     return {
-      showError: false
+      showError: false,
+      saving: false,
+      uploading: false
     };
   },
   computed: Object.assign(
@@ -74,23 +93,92 @@ export default {
       channel: 'channelChanges',
       changed: 'changed'
     }),
-
     {
+      isNew() {
+        return !!!this.channel.id;
+      },
       languages() {
         return _.sortBy(Constants.Languages, 'native_name');
-      }
+      },
+      isValid() {
+        return !!this.channel.name.length;
+      },
+      saveButtonTitle() {
+        if(!this.isValid)
+          return this.$tr('invalidChannel');
+        else if(this.saving)
+          return this.$tr('saving');
+        return "";
+      },
     }
   ),
+  mounted() {
+    this.loadThumbnailUploader();
+  },
   methods: Object.assign(
-    // mapActions('channel_list', [
-    //   'saveChannel',
-    // ]),
+    mapActions('channel_list', [
+      'getChannelModel',
+      'saveChannel'
+    ]),
     mapMutations('channel_list', {
       setName: 'SET_CHANNEL_NAME',
-      setDescription: 'SET_CHANNEL_DESCRIPTION'
+      setDescription: 'SET_CHANNEL_DESCRIPTION',
+      setThumbnail: 'SET_CHANNEL_THUMBNAIL',
+      cancelChanges: 'CANCEL_CHANNEL_CHANGES',
+      setLanguage: 'SET_CHANNEL_LANGUAGE'
     }),
-    // {
-    // }
+    {
+      /* Handle thumbnail options */
+      loadThumbnailUploader: function() {
+        this.getChannelModel(this.channel).then((model) => {
+          let imageUploader = new ThumbnailUploadView({
+            model: model,
+            el: this.$refs.channelthumbnail,
+            preset_id: PRESET.id,
+            upload_url: window.Urls.thumbnail_upload(),
+            acceptedFiles: PRESET.associated_mimetypes.join(","),
+            image_url: this.channel.thumbnail_url,
+            default_url: "/static/img/kolibri_placeholder.png",
+            onsuccess: this.setChannelThumbnail,
+            onerror: () => { this.uploading = false; },
+            oncancel: () => { this.uploading = false; },
+            onstart:  () => { this.uploading = true; },
+            onremove: this.removeChannelThumbnail,
+            allow_edit: true,
+            is_channel: true
+          });
+        });
+      },
+      setChannelThumbnail(thumbnail, encoding, formattedName, path) {
+        this.setThumbnail({
+          thumbnail: formattedName,
+          encoding: encoding
+        });
+        this.uploading = false;
+      },
+      removeChannelThumbnail() {
+        this.setThumbnail({
+          thumbnail: "",
+          encoding: {}
+        });
+      },
+
+
+      /* Handle channel edits */
+      cancelEdit() {
+        this.cancelChanges();
+        this.$emit('cancelEdit');
+      },
+      submitChannel() {
+        this.saving = true;
+        this.saveChannel().then((channel) => {
+          this.saving = false;
+          this.$emit('submitChanges');
+        }).catch( (error) => {
+            alert(this.$tr('errorChannelSave'), error.responseText || error);
+        });
+      }
+    }
   )
 };
 
@@ -101,65 +189,83 @@ export default {
 
 @import '../../../../less/channel_list.less';
 
-  .channel-editor {
-    .thumbnail-title-columns;
-    padding: 0px 20px;
-    .channel-section {
-      padding-left: 20px;
-      .language-wrapper {
-        font-size: 15pt;
-        text-align: right;
-        font-weight: bold;
-        min-height: 25px;
-        span {
-          color: @blue-200;
-          vertical-align: top;
-          font-size: 20pt;
-          margin-right: 5px;
-        }
+.channel-editor {
+  .thumbnail-title-columns;
+  padding: 0px 15px;
+  .channel-thumbnail {
+    margin-top: 30px;
+    width: @channel-thumbnail-size;
+    /deep/ .image_dropzone {
+      width: @channel-thumbnail-size;
+      img {
+        width: @channel-thumbnail-size;
+        height: @channel-thumbnail-size;
       }
     }
   }
 
-  .thumbnail {
-    width: @channel-thumbnail-size;
-  }
-
-  h4 {
-    font-size: 10pt;
-    color: @gray-800;
-    margin: 2px 0px;
-    font-weight: bold;
-  }
-
-  .required {
-    font-weight: bold;
-    color: @red-error-color;
-    &::before {
-      content: " * ";
+  .channel-section {
+    padding-left: 25px;
+    .language-wrapper {
+      font-size: 15pt;
+      text-align: right;
+      font-weight: bold;
+      min-height: 25px;
+      span {
+        color: @blue-200;
+        vertical-align: top;
+        font-size: 20pt;
+        margin-right: 5px;
+      }
     }
-    span{
-      font-style: italic;
-      font-size: 8pt;
+    h4 {
+      font-size: 10pt;
+      color: @gray-800;
+      margin: 2px 0px;
+      font-weight: bold;
+    }
+
+    .required {
+      font-weight: bold;
+      color: @red-error-color;
+      &::before {
+        content: " * ";
+      }
+      span{
+        font-style: italic;
+        font-size: 8pt;
+      }
+    }
+
+    input[type="text"], textarea {
+      .input-form;
+      margin-bottom: 20px;
+      width: 100%;
+      font-size: @larger-body-text;
+      padding: 2px 0;
+    }
+    textarea {
+      resize:none;
+      height:auto;
+    }
+    select {
+      width: 160px;
+      font-size: 11pt;
+      font-weight: normal;
+      vertical-align: text-top;
+    }
+    .buttons {
+      display: grid;
+      grid-auto-flow: column;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      margin-left: -15px;
+      a, button {
+        text-transform: uppercase;
+      }
     }
   }
-
-  input[type="text"], textarea {
-    .input-form;
-    margin-bottom: 20px;
-    width: 100%;
-    font-size: @larger-body-text;
-    padding: 2px 0;
-  }
-  textarea {
-    resize:none;
-    height:auto;
-  }
-  select {
-    width: 160px;
-    font-size: 11pt;
-    font-weight: normal;
-    vertical-align: text-top;
-  }
+}
 
 </style>
+

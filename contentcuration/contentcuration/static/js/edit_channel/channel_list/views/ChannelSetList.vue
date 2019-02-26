@@ -29,9 +29,10 @@
 
 <script>
 
-import { mapGetters, mapActions } from 'vuex';
+import { mapGetters, mapActions, mapMutations } from 'vuex';
 import ChannelSetItem from './ChannelSetItem.vue';
-import { ChannelSetModalView } from 'edit_channel/information/views';
+import { ChannelSetInformationModalView } from 'edit_channel/information/views';
+import { ChannelSetModalView } from 'edit_channel/channel_set/views';
 
 export default {
   name: 'ChannelSetList',
@@ -56,25 +57,35 @@ export default {
   components: {
     ChannelSetItem,
   },
-  computed: Object.assign(
-    mapGetters('channel_list', [
-      'channelSets'
-    ]),
-    {
-    }
-  ),
+  computed: mapGetters('channel_list', [
+    'channelSets'
+  ]),
   methods: Object.assign(
     mapActions('channel_list', [
       'loadChannelSetList',
-      'newChannelSet'
+      'getChannelSetModel'
     ]),
+    mapMutations('channel_list', {
+      addChannelSet: 'ADD_CHANNELSET'
+    }),
     {
       openAboutChannelSets() {
-        new ChannelSetModalView({});
+        new ChannelSetInformationModalView({});
+      },
+      newChannelSet() {
+        this.getChannelSetModel({}).then((channelSet) => {
+          let channelSetView = new ChannelSetModalView({
+            modal: true,
+            isNew: true,
+            model: channelSet,
+            onsave: this.addChannelSet
+          });
+        });
       }
     }
   ),
 };
+
 
 </script>
 

@@ -1,7 +1,7 @@
 <template>
 
   <div class="channel-set-item" :title="channelSet.name" :class="{optionHighlighted: optionHighlighted}">
-    <div class="channel-container-wrapper" @click="openChannelSet(channelSet)">
+    <div class="channel-container-wrapper" @click="openChannelSet">
       <div class="profile">
         <span class="material-icons">storage</span>
       </div>
@@ -32,9 +32,10 @@
 <script>
 
 import _ from 'underscore';
-import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
+import { mapActions } from 'vuex';
 import CopyToken from './CopyToken.vue';
 import dialog from 'edit_channel/utils/dialog';
+import { ChannelSetModalView } from 'edit_channel/channel_set/views';
 
 export default {
   name: 'ChannelSetItem',
@@ -62,7 +63,7 @@ export default {
   methods: Object.assign(
     mapActions('channel_list', [
       'deleteChannelSet',
-      'openChannelSet'
+      'getChannelSetModel'
     ]),
     {
       handleDeleteChannelSet() {
@@ -72,6 +73,20 @@ export default {
             this.deleteChannelSet(this.channelSet);
           },
         }, () => {});
+      },
+      openChannelSet() {
+        this.getChannelSetModel(this.channelSet).then((channelSet) => {
+          let channelSetView = new ChannelSetModalView({
+            modal: true,
+            isNew: false,
+            model: channelSet,
+            onsave: (channelset) => {
+              _.each(channelset.pairs(), (attr) => {
+                this.channelSet[attr[0]] = attr[1];
+              });
+            }
+          });
+        });
       }
     }
   )

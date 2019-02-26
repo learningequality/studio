@@ -57,7 +57,7 @@ export default {
     [ListTypes.VIEW_ONLY]: 'View-Only',
     [ListTypes.PUBLIC]: 'Public',
     [ListTypes.STARRED]: 'Starred',
-    CHANNEL_SETS: 'Collections'
+    [ListTypes.CHANNEL_SETS]: 'Collections'
   },
   components: {
     ChannelList,
@@ -76,11 +76,9 @@ export default {
       }
     }
   ),
-  methods: Object.assign(
-    mapMutations('channel_list', {
-      setActiveList: 'SET_ACTIVE_LIST',
-    })
-  )
+  methods: mapMutations('channel_list', {
+    setActiveList: 'SET_ACTIVE_LIST',
+  })
 }
 
 </script>

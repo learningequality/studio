@@ -1,0 +1,137 @@
+<template>
+  <div class="channel-details-top">
+    <img :alt="channel.name" :src="channel.thumbnail_url"/>
+    <div class="channel-section">
+      <div class="language-wrapper">
+        <div v-if="language">
+          <span class="material-icons">language</span>
+          {{language.native_name}}
+        </div>
+      </div>
+      <h3>{{channel.name}}</h3>
+      <p class="channel-text">
+        <span>
+          {{ $tr('created', {'date': $formatDate(channel.created, {day:'numeric', month:'short', 'year':'numeric'})}) }}
+        </span>
+        <span v-if="channel.published">
+          {{ $tr('published', {'date': $formatDate(channel.last_published, {day:'numeric', month:'short', 'year':'numeric'})}) }}
+        </span>
+      </p>
+      <hr>
+      <ToggleText :text="channel.description"/>
+      <br>
+      <a :href="channelUrl" id="open-channel">{{ $tr("openChannel") }}</a>
+      <a v-if="!channel.ricecooker_version && canEdit" id="edit-details" @click="$emit('editChannel')">{{ $tr("editDetails") }}</a>
+
+      <ChannelDownloadDropdown/>
+    </div>
+  </div>
+</template>
+
+
+<script>
+
+import _ from 'underscore';
+import State from 'edit_channel/state';
+import { mapGetters } from 'vuex';
+import Constants from 'edit_channel/constants/index';
+
+// Components
+import ToggleText from './ToggleText.vue';
+import ChannelDownloadDropdown from './ChannelDownloadDropdown.vue'
+
+export default {
+  name: 'ChannelMetadataSection',
+  $trs: {
+    created: "Created {date}",
+    published: "Last Published {date}",
+    openChannel: "Open channel",
+    editDetails: "Edit details"
+  },
+  components: {
+    ToggleText,
+    ChannelDownloadDropdown
+  },
+  computed: Object.assign(
+    mapGetters('channel_list', {
+      channel: 'activeChannel'
+    }),
+    {
+      canEdit() {
+        return _.contains(this.channel.editors, State.current_user.id);
+      },
+      channelUrl() {
+        return (this.canEdit)? window.Urls.channel(this.channel.id) : window.Urls.channel_view_only(this.channel.id);
+      },
+      language() {
+        return Constants.Languages.find(language => language.id === this.channel.language);
+      }
+    }
+  )
+};
+
+</script>
+
+
+<style lang="less" scoped>
+
+@import '../../../../less/channel_list.less';
+
+.channel-details-top {
+  .thumbnail-title-columns;
+  padding: 0px 20px 40px 20px;
+  img {
+    width:130px;
+    height:130px;
+    object-fit: cover;
+    border: 2px solid @gray-500;
+    margin-top: 35px;
+  }
+  .channel-section {
+    padding-left: 20px;
+    .language-wrapper {
+      font-size: 15pt;
+      text-align: right;
+      font-weight: bold;
+      min-height: 25px;
+      span {
+        color: @blue-200;
+        vertical-align: top;
+        font-size: 20pt;
+        margin-right: 5px;
+      }
+    }
+    h3 {
+      margin: 5px 0px;
+      font-weight: bold;
+    }
+    .channel-text {
+      color: @gray-700;
+      span:not(:last-child)::after {
+        content: '  •  ';
+      }
+    }
+    /deep/ .toggle-text {
+      min-height: 20px;
+    }
+    #open-channel {
+      .action-button;
+      padding: 5px 25px;
+      margin-right: 15px;
+      text-transform: uppercase;
+    }
+    #edit-details {
+      .action-text;
+      text-transform: uppercase;
+    }
+    .channel-download-wrapper {
+      margin-top: 30px;
+      margin-bottom: -25px;
+      font-size: 10pt;
+      text-align: right;
+      display: block;
+    }
+  }
+}
+
+</style>

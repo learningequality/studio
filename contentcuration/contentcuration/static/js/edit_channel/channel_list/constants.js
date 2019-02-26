@@ -5,7 +5,7 @@ export const ListTypes = {
   STARRED: 'STARRED',
   VIEW_ONLY: 'VIEW_ONLY',
   PUBLIC: 'PUBLIC',
-  CHANNEL_SETS: 'CHANNEL_SETS',
+  CHANNEL_SETS: 'CHANNEL_SETS'
 };
 
 export const ChannelListUrls = {

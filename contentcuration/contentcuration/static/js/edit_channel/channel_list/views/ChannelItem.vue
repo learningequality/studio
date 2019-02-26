@@ -18,14 +18,9 @@
               <em>{{ $tr('unpublishedText') }}</em>
             </div>
           </div>
-          <span
-            :title="starText"
-            class="option star-option material-icons"
-            :class="{starred: channel.STARRED && !channel.STARRING, spinner: channel.STARRING}"
-            @mouseleave="optionHighlighted = false"
-            @mouseover="optionHighlighted = true"
-            @click.stop="toggleStar"
-          />
+          <span @mouseleave="optionHighlighted = false" @mouseover="optionHighlighted = true">
+            <ChannelStar :key="channel.id + '_starItem'" :channel="channel"/>
+          </span>
         </div>
         <h4 dir="auto">{{channel.name}}</h4>
         <p class="description" dir="auto">{{channel.description}}</p>
@@ -44,24 +39,18 @@
 
 <script>
 
-import _ from 'underscore';
-import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
+import { mapGetters } from 'vuex';
+import { setChannelMixin } from './../mixins';
 import Constants from 'edit_channel/constants/index';
 import CopyToken from './CopyToken.vue';
-import ChannelDetailsView from 'edit_channel/details/views';
-import { setChannelMixin } from './../mixins';
-
-import Models from 'edit_channel/models';
+import ChannelStar from './ChannelStar.vue';
 
 export default {
   name: 'ChannelItem',
   $trs: {
     openChannelTitle: "{channelName} ('CTRL' or 'CMD' + click to open in new tab)",
     resourceCount: "{count, plural,\n =1 {# Resource}\n other {# Resources}}",
-    copyPrompt: "Copy token to import channel into Kolibri",
     unpublishedText: "Unpublished",
-    unstarChannel: "Unstar Channel",
-    starChannel: "Star Channel",
     lastUpdated: "Updated {updated}"
   },
   props: {
@@ -71,7 +60,8 @@ export default {
     }
   },
   components: {
-    CopyToken
+    CopyToken,
+    ChannelStar
   },
   mixins: [setChannelMixin],
   data() {
@@ -80,11 +70,8 @@ export default {
     }
   },
   computed: Object.assign(
-    mapState('channel_list', [
-      'channels'
-    ]),
     mapGetters('channel_list', [
-      'activeChannel'
+      'activeChannel',
     ]),
     {
       picture() {
@@ -95,37 +82,22 @@ export default {
       },
       isSelected() {
         return this.activeChannel && this.channel.id === this.activeChannel.id;
-      },
-      starText() {
-        return this.channel.STARRED ? this.$tr('unstarChannel') : this.$tr('starChannel');
       }
     }
   ),
-  methods: Object.assign(
-    mapActions('channel_list', [
-      'addStar',
-      'removeStar'
-    ]),
-    mapMutations('channel_list', {
-      removeChannel: 'REMOVE_CHANNEL'
-    }),
-    {
-      toggleStar() {
-        (this.channel.STARRED)? this.removeStar(this.channel) : this.addStar(this.channel);
-      },
-      openChannel(event) {
-        if(event && (event.metaKey || event.ctrlKey)) {
-          if(this.channel.EDITABLE) {
-            window.open(window.Urls.channel(this.channel.id), "_blank");
-          } else {
-            window.open(window.Urls.channel_view_only(this.channel.id), "_blank");
-          }
-        } else if (!this.activeChannel || this.channel.id !== this.activeChannel.id) {
-          this.setChannel(this.channel);
+  methods: {
+    openChannel(event) {
+      if(event && (event.metaKey || event.ctrlKey)) {
+        if(this.channel.EDITABLE) {
+          window.open(window.Urls.channel(this.channel.id), "_blank");
+        } else {
+          window.open(window.Urls.channel_view_only(this.channel.id), "_blank");
         }
+      } else if (!this.activeChannel || this.channel.id !== this.activeChannel.id) {
+        this.setChannel(this.channel);
       }
     }
-  )
+  }
 };
 
 </script>
@@ -134,10 +106,6 @@ export default {
 <style lang="less" scoped>
 
 @import '../../../../less/channel_list.less';
-
-@channel-container-height: 250px;
-@channel-profile-width: 150px;
-@channel-thumbnail-size: 130px;
 
 .is-selected {
   margin-left: -10px;

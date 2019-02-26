@@ -83,9 +83,8 @@ var DetailsView = BaseViews.BaseListEditableItemView.extend({
     $trs: MESSAGES,
     initialize: function(options) {
         _.bindAll(this, "render_visuals");
-        this.channel_id = options.channel_id;
-        this.is_channel = options.is_channel;
         this.channel = options.channel;
+        this.is_channel = _.isEqual(this.channel.id, this.model.id);
         State.current_channel_editor_cid = this.cid;
         this.render();
     },
@@ -97,12 +96,11 @@ var DetailsView = BaseViews.BaseListEditableItemView.extend({
     render: function() {
         var self = this;
         var original_channels = _.map(this.model.get("metadata").original_channels, function(item) {
-            return (item.id === self.channel_id) ? {"id": item.id, "name": self.get_translation("original_content"), "count": item.count} : item;
+            return (item.id === self.channel.id) ? {"id": item.id, "name": self.get_translation("original_content"), "count": item.count} : item;
         });
         this.$el.html(this.template({
             details: this.model.get("metadata"),
             resource_count: this.model.get("metadata").resource_count,
-            channel_id: this.channel_id,
             original_channels:original_channels,
             is_channel: this.is_channel,
             license_count: this.model.get("metadata").licenses.length,

@@ -90,12 +90,11 @@ exports.deleteChannel = function(context, channel) {
     });
 }
 
-exports.loadChannelDetails = function(context, channel) {
-	let mainTree = (typeof channel.main_tree === "string")? channel.main_tree : channel.main_tree.id;
+exports.loadNodeDetails = function(context, nodeID) {
     return new Promise(function (resolve, reject) {
         $.ajax({
             method: "GET",
-            url: window.Urls.get_topic_details(mainTree),
+            url: window.Urls.get_topic_details(nodeID),
             error: reject,
             success: (result) => {
             	let node = new Models.ContentNodeModel({'metadata': JSON.parse(result)});
@@ -152,30 +151,9 @@ exports.loadChannelSetList = function(context) {
     });
 }
 
-exports.newChannelSet = function(context) {
-	/* TODO: REMOVE BACKBONE, move to ChannelSetList.vue */
-	let channelSetView = new ChannelSetModalView({
-		modal: true,
-		isNew: true,
-		model: new Models.ChannelSetModel(),
-		onsave: (channelset)=> {
-			context.commit('ADD_CHANNELSET', channelset.toJSON());
-		}
-	});
-}
-
-exports.openChannelSet = function(context, channelSet) {
-	/* TODO: REMOVE BACKBONE */
-	let channelSetView = new ChannelSetModalView({
-		modal: true,
-		isNew: false,
-		model: new Models.ChannelSetModel(channelSet),
-		onsave: (channelset) => {
-			_.each(channelset.pairs(), (attr) => {
-				channelSet[attr[0]] = attr[1];
-			})
-		}
-	});
+exports.getChannelSetModel = function(context, channelSet) {
+    /* TODO: REMOVE BACKBONE, needed for channel set modal view */
+    return new Models.ChannelSetModel(channelSet);
 }
 
 exports.deleteChannelSet = function(context, channelSet) {
