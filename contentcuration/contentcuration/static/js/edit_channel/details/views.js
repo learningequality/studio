@@ -84,7 +84,6 @@ var DetailsView = BaseViews.BaseListEditableItemView.extend({
     initialize: function(options) {
         _.bindAll(this, "render_visuals");
         this.channel = options.channel;
-        this.is_channel = _.isEqual(this.channel.id, this.model.id);
         State.current_channel_editor_cid = this.cid;
         this.render();
     },
@@ -102,7 +101,7 @@ var DetailsView = BaseViews.BaseListEditableItemView.extend({
             details: this.model.get("metadata"),
             resource_count: this.model.get("metadata").resource_count,
             original_channels:original_channels,
-            is_channel: this.is_channel,
+            is_channel: (this.channel.main_tree.id || this.channel.main_tree) === this.model.id,
             license_count: this.model.get("metadata").licenses.length,
             copyright_holder_count: this.model.get("metadata").copyright_holders.length,
             token_count: (this.channel && this.channel.secret_tokens)? this.channel.secret_tokens.length : 0,

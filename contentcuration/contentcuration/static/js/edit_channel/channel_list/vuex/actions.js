@@ -98,6 +98,7 @@ exports.loadNodeDetails = function(context, nodeID) {
             error: reject,
             success: (result) => {
             	let node = new Models.ContentNodeModel({'metadata': JSON.parse(result)});
+                node.id = nodeID;
                 resolve(node);
             }
         });

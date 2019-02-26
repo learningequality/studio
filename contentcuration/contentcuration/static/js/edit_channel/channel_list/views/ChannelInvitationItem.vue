@@ -104,6 +104,7 @@ export default {
             this.declineInvitation(this.invitation).then(() => {
               this.declined = true;
             }).catch((error) => {
+              console.error(error);
               dialog.alert(this.$tr("invitationError"), error);
             });
           },
