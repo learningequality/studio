@@ -42,7 +42,7 @@
 import { mapGetters } from 'vuex';
 import { setChannelMixin } from './../mixins';
 import Constants from 'edit_channel/constants/index';
-import CopyToken from './CopyToken.vue';
+import CopyToken from 'edit_channel/sharedComponents/CopyToken.vue';
 import ChannelStar from './ChannelStar.vue';
 
 export default {

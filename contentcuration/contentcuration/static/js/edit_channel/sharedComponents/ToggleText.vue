@@ -66,7 +66,7 @@ export default {
 
 <style lang="less" scoped>
 
-@import '../../../../less/global-variables.less';
+@import '../../../less/global-variables.less';
 
 .toggle-text {
   div {

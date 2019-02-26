@@ -33,7 +33,7 @@
 
 import _ from 'underscore';
 import { mapActions } from 'vuex';
-import CopyToken from './CopyToken.vue';
+import CopyToken from 'edit_channel/sharedComponents/CopyToken.vue';
 import dialog from 'edit_channel/utils/dialog';
 import { ChannelSetModalView } from 'edit_channel/channel_set/views';
 

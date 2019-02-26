@@ -1,3 +1,5 @@
+// TODO: REMOVE BACKBONE
+
 import Vue from 'vue';
 import ChannelSetModalComponent from './views/ChannelSetModal.vue';
 

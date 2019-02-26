@@ -37,7 +37,7 @@ import { mapGetters } from 'vuex';
 import Constants from 'edit_channel/constants/index';
 
 // Components
-import ToggleText from './ToggleText.vue';
+import ToggleText from 'edit_channel/sharedComponents/ToggleText.vue';
 import ChannelDownloadDropdown from './ChannelDownloadDropdown.vue'
 
 export default {

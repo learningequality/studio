@@ -69,7 +69,7 @@ export default {
 
 <style lang="less" scoped>
 
-@import '../../../../less/global-variables.less';
+@import '../../../less/global-variables.less';
 .copy-id-btn{
   padding:3px;
   font-size: 16pt;
