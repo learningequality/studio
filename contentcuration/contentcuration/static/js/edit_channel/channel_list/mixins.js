@@ -56,3 +56,11 @@ exports.setChannelMixin = {
 	    }
   	)
 };
+
+exports.tabMixin = {
+	mounted() {
+		_.defer(() => {
+			this.$refs.firstTab.focus();
+		});
+	}
+};

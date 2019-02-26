@@ -5,7 +5,7 @@
     <div class="channel-section">
       <div class="language-wrapper">
         <span class="material-icons">language</span>
-        <select id="select-language" :tabindex="2" @change="setLanguage($event.target.value)">
+        <select id="select-language" :tabindex="1" @change="setLanguage($event.target.value)">
           <option disabled selected value=0>{{ $tr('channelLanguagePlaceholder') }}</option>
           <option
             v-for="language in languages"
@@ -25,7 +25,7 @@
         dir="auto"
         :placeholder="$tr('channelNamePlaceholder')"
         maxlength="200"
-        :tabindex="1"
+        :tabindex="0"
         :value="channel.name"
         ref="firstTab"
         @input="setName($event.target.value)"
@@ -37,15 +37,15 @@
         dir="auto"
         :placeholder="$tr('channelDescriptionPlaceholder')"
         maxlength="400"
-        :tabindex="3"
+        :tabindex="2"
         rows="4"
         @input="setDescription($event.target.value)"
       >{{channel.description}}</textarea>
 
       <div class="buttons">
-        <a @click="cancelEdit" :tabindex="5" ref="lastTab">{{ $tr('cancel') }}</a>
+        <a @click="cancelEdit" :tabindex="4">{{ $tr('cancel') }}</a>
         <button
-          :tabindex="4"
+          :tabindex="3"
           :class="{'disabled': !isValid || saving || uploading}"
           :disabled="!isValid || saving || uploading"
           :title="saveButtonTitle"
