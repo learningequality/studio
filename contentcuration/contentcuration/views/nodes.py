@@ -413,15 +413,15 @@ def duplicate_nodes(request):
         }
 
         task_args = {
-            'user': request.user,
+            'user_id': request.user.pk,
             'channel_id': channel_id,
-            'target_parent': target_parent,
+            'target_parent': target_parent.pk,
             'node_ids': node_ids,
             'sort_order': sort_order
         }
 
-        task = create_async_task('duplicate-nodes', task_info, args=task_args)
-        return Response(TaskSerializer(task).data)
+        task, task_info = create_async_task('duplicate-nodes', task_info, task_args)
+        return HttpResponse(JSONRenderer().render(TaskSerializer(task_info).data))
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 

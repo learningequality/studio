@@ -49,8 +49,9 @@ if settings.RUNNING_TESTS:
 
 
 @task(bind=True, name='duplicate_nodes_task')
-def duplicate_nodes_task(self, user, channel_id, target_parent, node_ids, sort_order=1):
+def duplicate_nodes_task(self, user_id, channel_id, target_parent, node_ids, sort_order=1):
     new_nodes = []
+    user = User.objects.get(id=user_id)
 
     with transaction.atomic():
         with ContentNode.objects.disable_mptt_updates():

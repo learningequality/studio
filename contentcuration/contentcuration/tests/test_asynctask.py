@@ -109,7 +109,7 @@ class AsyncTaskTestCase(BaseAPITestCase):
         parent_node = ContentNode.objects.get(node_id='00000000000000000000000000000002')
 
         task_args = {
-            'user': self.user,
+            'user_id': self.user.pk,
             'channel_id': self.channel.pk,
             'node_ids': ids,
             'target_parent': parent_node

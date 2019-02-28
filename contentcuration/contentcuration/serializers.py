@@ -922,12 +922,22 @@ class ChannelSetSerializer(serializers.ModelSerializer):
 
 class TaskSerializer(serializers.ModelSerializer):
     metadata = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()
+
+    def get_status(self, task):
+        # If CELERY_TASK_ALWAYS_EAGER is set, attempts to retrieve state will assert, so do a sanity check first.
+        if not settings.CELERY_TASK_ALWAYS_EAGER:
+            result = app.AsyncResult(task.task_id)
+            if result and result.status:
+                return result.status
+
+        return task.status
 
     def get_metadata(self, task):
         metadata = task.metadata
-        result = app.AsyncResult(task.id)
         # If CELERY_TASK_ALWAYS_EAGER is set, attempts to retrieve state will assert, so do a sanity check first.
         if not settings.CELERY_TASK_ALWAYS_EAGER:
+            result = app.AsyncResult(task.task_id)
             if task.is_progress_tracking and 'progress' in result.state:
                 metadata['progress'] = result.state['progress']
 
