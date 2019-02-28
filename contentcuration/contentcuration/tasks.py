@@ -114,12 +114,11 @@ def create_async_task(task_name, task_options, task_args=None):
             - 'metadata': A dictionary of properties to be used during status and progress tracking. Examples include
                 a list of channels and content nodes targeted by the task, task progress ('progress' key), sub-task
                 progress, when applicable.
-    :param task_args: A dictionary of keyword arguments to be passed down to the task.
+    :param task_args: A dictionary of keyword arguments to be passed down to the task, must be JSON serializable.
     :return: a tuple of the Task object and a dictionary containing information about the created task.
     """
     if not task_name in type_mapping:
         raise KeyError("Need to define task in type_mapping first.")
-        return
     metadata = {}
     if 'metadata' in task_options:
         metadata = task_options["metadata"]
