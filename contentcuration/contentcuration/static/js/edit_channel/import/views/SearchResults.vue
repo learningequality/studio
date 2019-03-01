@@ -1,26 +1,26 @@
 <template>
 
-  <div class="SearchResults">
+  <div class="search-results">
     <div>
-      <p v-show="!resultsLoading" class="TopResults wordwrap">
+      <p v-show="!resultsLoading" class="top-results wordwrap">
         {{ $tr('showingResultsText', {currentSearchTerm: currentSearchTerm}) }}
       </p>
-      <button @click="goToPreviousPage()" class="button-reset BackButton">
+      <button @click="goToPreviousPage()" class="button-reset back-button">
         {{ $tr('backToBrowseButton') }}
       </button>
     </div>
 
     <!-- ITEM RESULTS -->
-    <div class="Results">
-      <h1 class="Results__Header">{{ $tr('resourcesLabel') }}</h1>
-      <span v-if="resultsLoading" class="LoadingMsg wordwrap">
+    <div class="results">
+      <h1 class="results-header">{{ $tr('resourcesLabel') }}</h1>
+      <span v-if="resultsLoading" class="loading-msg wordwrap">
         {{ $tr('loadingResultsText', {currentSearchTerm: currentSearchTerm}) }}
       </span>
       <template v-else>
         <div v-show="itemResults.length === 0" class="wordwrap">
           {{ $tr('noContentFoundText', {currentSearchTerm: currentSearchTerm}) }}
         </div>
-        <ul class="list-unstyled Results__List">
+        <ul class="list-unstyled results-list">
           <ImportListItem
             v-for="item in itemResults"
             :key="item.id"
@@ -36,16 +36,16 @@
     </div>
 
     <!-- TOPIC RESULTS -->
-    <div class="Results">
-      <h1 class="Results__Header">{{ $tr('topicsLabel') }}</h1>
-      <span v-if="resultsLoading" class="LoadingMsg wordwrap">
+    <div class="results">
+      <h1 class="results-header">{{ $tr('topicsLabel') }}</h1>
+      <span v-if="resultsLoading" class="loading-msg wordwrap">
         {{ $tr('loadingResultsText', {currentSearchTerm: currentSearchTerm}) }}
       </span>
       <template v-else>
         <div v-show="topicResults.length === 0" class="wordwrap">
           {{ $tr('noTopicsText', {currentSearchTerm: currentSearchTerm}) }}
         </div>
-        <ul class="list-unstyled Results__List">
+        <ul class="list-unstyled results-list">
           <ImportListItem
             v-for="topic in topicResults"
             :key="topic.id"
@@ -127,20 +127,20 @@ export default {
 
 <style lang="less" scoped>
 
-.SearchResults {
+.search-results {
   padding: .5rem;
 }
 
-.LoadingMsg {
+.loading-msg {
   font-style: italic;
 }
 
-.Results__List {
+.results-list {
   background-color: white;
   overflow-y: auto;
 }
 
-.Results__Header {
+.results-header {
   font-size: 2rem;
   color: white;
   background-color: #54ACF2;
@@ -148,11 +148,11 @@ export default {
   text-transform: uppercase;
 }
 
-.TopResults {
+.top-results {
   font-weight: bold;
 }
 
-.BackButton {
+.back-button {
   color: #2196F3;
   text-decoration: underline;
 }

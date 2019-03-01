@@ -651,13 +651,13 @@ var DiffModalView = BaseViews.BaseModalView.extend({
 			data: this.get_intl_data()
 		}));
 		$("body").append(this.el);
-		this.$("#stats_modal").modal({show: true});
-		this.$("#stats_modal").on("hidden.bs.modal", this.closed_modal);
-		this.$("#stats_modal").on("shown.bs.modal", this.init_focus);
+		this.$("#stats-modal").modal({show: true});
+		this.$("#stats-modal").on("hidden.bs.modal", this.closed_modal);
+		this.$("#stats-modal").on("shown.bs.modal", this.init_focus);
 
 		var self = this;
 		State.current_channel.get_staged_diff().then(function(stats){
-			self.$("#stats_table_wrapper").html(self.template({
+			self.$("#stats-table-wrapper").html(self.template({
 				stats: stats,
 				channel: State.current_channel.toJSON()
 			}, {
