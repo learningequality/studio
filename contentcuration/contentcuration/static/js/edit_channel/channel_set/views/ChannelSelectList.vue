@@ -1,10 +1,11 @@
 <template>
-  <div class="channelList">
-    <div class="channelListHeader uppercase" @click="toggleChannelList">
+
+  <div class="channel-list">
+    <div class="channel-list-header uppercase" @click="toggleChannelList">
       {{translateName}}
       <span class="toggler material-icons">{{togglerClass}}</span>
     </div>
-    <div v-show="isExpanded" class="channelListContent">
+    <div v-show="isExpanded" class="channel-list-content">
       <em v-if="isLoading" class="default-item">
         {{ $tr('channelLoadingText') }}
       </em>
@@ -12,7 +13,7 @@
         {{ $tr('noChannelsText') }}
       </div>
       <div class="container-fluid" v-else>
-        <div class="channelCountText">
+        <div class="channel-count-text">
           {{ $tr("publishedChannelCount", {"channelCount": channels.length}) }}
         </div>
         <ChannelItem
@@ -110,14 +111,14 @@ export default {
 <style lang="less" scoped>
 
 @import '../../../../less/global-variables.less';
-  .channelCountText {
+  .channel-count-text {
     font-size: 12pt;
     color: @gray-500;
     font-weight: bold;
   }
-  .channelList {
+  .channel-list {
     margin-bottom: 10px;
-    .channelListHeader {
+    .channel-list-header {
       cursor: pointer;
       background-color: @blue-200;
       padding: 5px 15px;
@@ -128,7 +129,7 @@ export default {
         vertical-align: sub;
       }
     }
-    .channelListContent {
+    .channel-list-content {
       padding: 15px 0px;
     }
   }

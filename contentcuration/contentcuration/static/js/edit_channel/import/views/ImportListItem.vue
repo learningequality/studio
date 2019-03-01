@@ -1,29 +1,28 @@
 <template>
 
-  <li class="ListItem" :class="importListItemClass">
+  <li class="list-item" :class="import-list-item-class">
     <template v-if="!isChannel && !readOnly">
       <input
         type="checkbox"
-        class="ListItem__Checkbox"
+        class="list-item-checkbox"
         @change="handleCheckboxChange"
         :checked="isChecked || parentIsChecked"
         :disabled="isDisabled || parentIsChecked"
-      >
-      </input>
+      />
     </template>
 
     <!-- TODO reinstate 'for' attribute and restrict toggling to the toggle element -->
     <label
-      class="ListItem__Label"
+      class="list-item-label"
       :class="{ selected: isChecked }"
       :title="node.title"
       @click="handleClickLabel"
     >
-      <i v-if="!isFolder" class="material-icons nodeIcon">{{iconClass}}</i>
+      <i v-if="!isFolder" class="material-icons node-icon">{{iconClass}}</i>
 
-      <span class="ListItem__Label__Title">
+      <span class="list-item-label-title">
         {{ node.title }}
-        <em v-if="isFolder && !isChannel && (resourceCount > 0)" class="ListItem__ChildCount">
+        <em v-if="isFolder && !isChannel && (resourceCount > 0)" class="list-item-child-count">
           {{ $tr('resourceCount', {'resourceCount': resourceCount}) }}
         </em>
       </span>
@@ -33,12 +32,12 @@
           <i class="material-icons" :style="{ cursor: 'pointer' }">{{togglerClass}}</i>
         </template>
 
-        <em v-else class="ListItem__ChildCount">
+        <em v-else class="list-item-child-count">
           {{ $tr('empty') }}
         </em>
       </template>
 
-      <i v-show="(isFolder || isChannel) & isChecked" class="ListItem__Counter badge">
+      <i v-show="(isFolder || isChannel) & isChecked" class="list-item-counter badge">
         {{ $tr('resourceCount', {'resourceCount': resourceCount}) }}
       </i>
     </label>
@@ -49,7 +48,7 @@
         <em v-show="isLoading" class="default-item">
           {{ $tr('loading') }}
         </em>
-        <ul class="ListItem__SubList">
+        <ul class="list-item-sub-list">
           <transition-group name="fade">
             <ImportListItem
               ref="children"
@@ -198,12 +197,12 @@ export default {
 
   @import '../../../../less/global-variables.less';
 
-  .ListItem {
+  .list-item {
     width: -moz-max-content;
     width: max-content;
   }
 
-  .ListItem__SubList {
+  .list-item-sub-list {
     border-left: 2px solid #2196F3;
     margin-left: 30px !important;
     height: auto;
@@ -214,10 +213,10 @@ export default {
     width: calc(~"100% - 30px");
   }
 
-  .ListItem__Label {
+  .list-item-label {
     padding: 0px 10px;
     font-size: 16px;
-    .nodeIcon {
+    .node-icon {
       color: @gray-500;
     }
     & > * {
@@ -225,7 +224,7 @@ export default {
     }
   }
 
-  .ListItem__Checkbox {
+  .list-item-checkbox {
     display: inline-block;
     width: 16px;
     height: 16px;
@@ -235,12 +234,12 @@ export default {
     margin-left: 10px;
   }
 
-  .ListItem__Counter {
+  .list-item-counter {
     margin-left: 10px;
     background-color: @blue-500;
   }
 
-  .ListItem__ChildCount {
+  .list-item-child-count {
     font-size: 10pt;
     color: gray;
     display: inline-block;
@@ -252,7 +251,7 @@ export default {
     input[type=checkbox] {
       cursor: not-allowed !important;
     }
-    .ListItem__Counter {
+    .list-item-counter {
       background-color: @gray-400 !important;
     }
   }

@@ -2,8 +2,8 @@
 
   <div>
     <!-- Title/Description metadata fields -->
-    <h4>{{ $tr('titleLabel') }} <span class="redText">*</span></h4>
-    <p v-show="!isValid" class="redText">{{ $tr('titleRequiredText') }}</p>
+    <h4>{{ $tr('titleLabel') }} <span class="red-text">*</span></h4>
+    <p v-show="!isValid" class="red-text">{{ $tr('titleRequiredText') }}</p>
     <input
         class="set-input"
         :value="name"
@@ -14,7 +14,7 @@
         @input="handleNameChange"
     />
     <h4>
-      <i class="pull-right descriptionCounter" :class="{redText: !charsLeft}">{{ $tr('charCount', {'charCount': charsLeft}) }}</i>
+      <i class="pull-right description-counter" :class="{redText: !charsLeft}">{{ $tr('charCount', {'charCount': charsLeft}) }}</i>
       {{ $tr('descriptionLabel') }}
     </h4>
     <textarea
@@ -35,24 +35,24 @@
         {{ $tr('loading') }}
       </div>
       <div v-else>
-        <div class="channelSetMetadata">
+        <div class="channel-set-metadata">
           <div class="pull-right" v-if="token">
             <input
               type="text"
-              class="copyTokenText text-center"
+              class="copy-token-text text-center"
               v-model="token"
               readonly
               ref="tokenText"
-              size='15'>
-            </input>
+              size="15"
+            />
             <i
-              class="material-icons copyTokenButton"
+              class="material-icons copy-token-button"
               :title="$tr('copyTokenButtonLabel')"
               @click="copyToken">
               {{copyIcon}}
             </i>
           </div>
-          <span class="channelCountText">{{ $tr('channelCountText', {'channelCount': channelCount}) }}</span>
+          <span class="channel-count-text">{{ $tr('channelCountText', {'channelCount': channelCount}) }}</span>
         </div>
         <div class="container-fluid">
           <ChannelItem
@@ -63,7 +63,7 @@
         </div>
       </div>
     </div>
-    <div id="selectChannelsButton">
+    <div id="select-channels-button">
       <button
         class="action-button uppercase"
         @click="goToSelectChannels"
@@ -216,7 +216,7 @@ h4 {
   font-size: 16px;
 }
 
-#selectChannelsButton {
+#select-channels-button {
   margin-bottom: 30px;
   i {
     font-size: 15pt;
@@ -224,14 +224,14 @@ h4 {
   }
 }
 
-.copyTokenButton{
+.copy-token-button{
   padding:3px;
   font-size: 16pt;
   vertical-align: sub;
   cursor: pointer;
   &:hover { color:@blue-500; }
 }
-.copyTokenText{
+.copy-token-text{
   display: inline-block;
   padding:2px;
   background-color: @gray-300;
@@ -242,15 +242,15 @@ h4 {
   color: @gray-700;
 }
 
-.channelSetMetadata {
+.channel-set-metadata {
   margin-bottom: 20px;
 }
 
-.descriptionCounter {
+.description-counter {
   color: @gray-700;
 }
 
-.redText {
+.red-text {
   font-weight: bold;
   color: @red-error-color;
 }
