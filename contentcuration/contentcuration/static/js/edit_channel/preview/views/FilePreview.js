@@ -111,6 +111,7 @@ export default BaseView.extend({
   },
   getStudioTemplate(previewFile, intlData) {
     const imageFormats = ['jpg', 'jpeg', 'png'];
+    const subtitleFormats = ['srt', 'vtt'];
 
     // only handles file types.
     if(!previewFile || !previewFile.file_format){
@@ -131,7 +132,7 @@ export default BaseView.extend({
     }
 
     // Needs subtitle template (not in kolibri)
-    if (previewFile.file_format === 'srt') {
+    if (subtitleFormats.includes(previewFile.file_format)) {
       return documentTemplate({ source: previewFile.storage_url }, { data: intlData });
     }
 
