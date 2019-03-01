@@ -33,7 +33,7 @@
         v-show="saving"
       >
       </span>
-      <span class="redText errorText pull-right" v-show="error">
+      <span class="red-text error-text pull-right" v-show="error">
         {{ $tr('errorText') }}
       </span>
     </div>
@@ -102,6 +102,7 @@ export default {
 
 </script>
 
+
 <style lang="less" scoped>
 
 @import "../../../../less/modal-styles.less";
@@ -126,16 +127,16 @@ button.action-button[disabled] {
   margin-bottom: 20px;
 }
 
-/deep/ .channelCountText {
+/deep/ .channel-count-text {
   font-size: 13pt;
   margin-bottom: 15px;
 }
 
-.errorText {
+.error-text {
   margin-right: 10px;
 }
 
-/deep/ .redText {
+/deep/ .red-text {
   font-weight: bold;
   color: @red-error-color;
 }

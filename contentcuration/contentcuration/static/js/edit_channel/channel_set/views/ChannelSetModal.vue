@@ -2,7 +2,7 @@
 
   <div ref="topmodal" class="modal fade" tabindex="-1">
     <div class="modal-dialog">
-      <div class="modal-content modal-dialog-default" id="channel_set_modal_content">
+      <div class="modal-content modal-dialog-default" id="channel-set-modal-content">
         <div class="modal-header">
           <h4 class="modal-title">{{ modalTitle }}</h4>
         </div>
@@ -90,7 +90,7 @@ export default {
   .modal-dialog {
     width: 750px;
   }
-  #channel_set_modal_content {
+  #channel-set-modal-content {
     background-color: white;
   }
   .modal-title {

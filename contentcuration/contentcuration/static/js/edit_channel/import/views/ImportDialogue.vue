@@ -3,7 +3,7 @@
   <div>
     <!-- SEARCH FORM -->
     <div v-if="!isImportPreview">
-      <form @submit="submitSearch" :disabled="!searchTermIsValid" class="SearchForm">
+      <form @submit="submitSearch" :disabled="!searchTermIsValid" class="search-form">
         <input
           class="search-input"
           v-model="searchTerm"
@@ -23,19 +23,19 @@
     </div>
 
     <!-- SLOT FOR TREE VIEW OR SEARCH RESULTS -->
-    <div id="import_from_channel_box" class="modal-content-default">
+    <div id="import-from-channel-box" class="modal-content-default">
       <slot />
     </div>
 
     <br/>
 
-    <div id="import_bottom_container" class="modal-bottom-content-default">
+    <div id="import-bottom-container" class="modal-bottom-content-default">
       <a class="action-text uppercase" data-dismiss="modal">
         <span>{{ $tr('cancelButtonLabel') }}</span>
       </a>
       <button
         class="action-button pull-right modal-main-action-button"
-        id="import_content_submit"
+        id="import-content-submit"
         @click="handleClickNext"
         v-if="importIsEnabled"
       >
@@ -43,8 +43,8 @@
           {{ submitButtonLabel }}
         </span>
       </button>
-      <span v-show="!isImportPreview" id="import_file_metadata" class="pull-right">
-        <span id="import_file_count">
+      <span v-show="!isImportPreview" id="import-file-metadata" class="pull-right">
+        <span id="import-file-count">
           {{ $tr('importCountText', {'topicCount': topicCount, 'resourceCount': resourceCount}) }}
         </span>
       </span>
@@ -159,26 +159,27 @@ export default {
 
 </script>
 
+
 <style lang="less" scoped>
 
 @import "../../../../less/modal-styles.less";
 @import "../../../../less/global-variables.less";
 
-#import_from_channel_box {
+#import-from-channel-box {
   width: @uploader-width - 30px;
 }
 
-#import_content_submit {
+#import-content-submit {
   margin-right: 20px;
 }
 
-#import_file_metadata {
+#import-file-metadata {
   padding-right: 20px;
   font-size: 12pt;
   margin-top: 2px;
 }
 
-#import_bottom_container {
+#import-bottom-container {
   height: 50px;
 }
 
@@ -196,7 +197,7 @@ export default {
   }
 }
 
-.SearchForm {
+.search-form {
   padding: 5px 0;
 }
 

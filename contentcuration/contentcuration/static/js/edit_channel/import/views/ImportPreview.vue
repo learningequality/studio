@@ -1,7 +1,7 @@
 <template>
 
-  <div class="ImportPreview">
-    <button @click="goToPreviousPage()" class="BackButton button-reset">
+  <div class="import-preview">
+    <button @click="goToPreviousPage()" class="back-button button-reset">
       {{ $tr('back') }}
     </button>
     <span>({{ $tr('backWarning') }})</span>
@@ -78,7 +78,7 @@
 
 <style lang="less" scoped>
 
-  .ImportPreview {
+  .import-preview {
     padding: 1.5em;
   }
 
@@ -94,7 +94,7 @@
     background: none;
   }
 
-  .BackButton {
+  .back-button {
     color: #2196F3;
     text-decoration: underline;
     margin-bottom: 1em;
