@@ -6,7 +6,7 @@
   "scripts": {
     "lint:py": "flake8 --exit-zero",
     "lint:js": "kolibri-tools lint 'contentcuration/contentcuration/static/**/*.{js,vue,scss,less,css}' -i '**/node_modules/**','**/bundles/**','**/static/js/utils/**','**/static/css/**'",
-    "lint:js:autofix": "kolibri-tools lint 'contentcuration/contentcuration/static/**/*.{js,vue,scss,less,css}' -i '**/node_modules/**','**/bundles/**','**/static/js/utils/**','**/static/css/**' -w",
+    "lint:js:fix": "kolibri-tools lint 'contentcuration/contentcuration/static/**/*.{js,vue,scss,less,css}' -i '**/node_modules/**','**/bundles/**','**/static/js/utils/**','**/static/css/**' -w",
     "makemessages": "node ./extract_frontend_messages.js ./contentcuration/contentcuration/static/js/edit_channel/**{/*,}.{js,vue}",
     "build": "webpack --config webpack.config.js",
     "cypress:run": "wait-on -t 20000 tcp:8081 && cypress run --spec cypress/integration/login.js",
