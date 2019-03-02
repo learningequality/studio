@@ -29,6 +29,7 @@
         :value="channel.name"
         ref="firstTab"
         @input="setName($event.target.value)"
+        class="channel-name"
         required
       />
 
@@ -40,11 +41,13 @@
         :tabindex="2"
         rows="4"
         @input="setDescription($event.target.value)"
+        class="channel-description"
       >{{channel.description}}</textarea>
 
       <div class="buttons">
-        <a @click="cancelEdit" :tabindex="4">{{ $tr('cancel') }}</a>
+        <a @click="cancelEdit" class="cancel-edits" :tabindex="4">{{ $tr('cancel') }}</a>
         <button
+          class="save-channel"
           :tabindex="3"
           :class="{'disabled': !isValid || saving || uploading}"
           :disabled="!isValid || saving || uploading"

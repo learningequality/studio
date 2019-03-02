@@ -5,7 +5,7 @@
       <a class="action-text" id="about-sets" @click="openAboutChannelSets">
         <span class="material-icons">info</span> {{ $tr('aboutChannelSets') }}
       </a>
-      <a class="action-button" :title="$tr('addChannelSetTitle')" @click="newChannelSet">
+      <a class="action-button" id="new-set" :title="$tr('addChannelSetTitle')" @click="newChannelSet">
         <span class="material-icons">add</span> {{ $tr('addChannelSetButton') }}
       </a>
     </div>

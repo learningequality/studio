@@ -1,7 +1,7 @@
 <template>
 
   <div class="channel-list">
-    <div v-if="canAddChannels" class="new-button">
+    <div v-if="listType === 'EDITABLE'" class="new-button">
       <button class="action-button" :title="$tr('addChannel')" @click="createChannel">
         <span class="material-icons align-text-top">add</span> {{ $tr('channel') }}
       </button>
@@ -46,9 +46,6 @@ export default {
     listType: {
       type: String,
       required: true
-    },
-    canAddChannels: {
-      type: Boolean
     }
   },
   data() {

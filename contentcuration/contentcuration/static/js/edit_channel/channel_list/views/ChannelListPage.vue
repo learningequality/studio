@@ -10,9 +10,9 @@
             <li
               v-for="listType in lists"
               :class="{active: activeList === listType}"
-              @click="setActiveList(listType)"
+              @click="activeList = listType"
             >
-              <span class="material-icons" v-if="listType === 'STARRED'">star</span>
+              <span v-if="listType === 'STARRED'"/>
               {{ $tr(listType) }}
             </li>
           </ul>
@@ -25,14 +25,13 @@
               v-else
               :key="listType"
               :listType="listType"
-              :canAddChannels="listType === 'EDITABLE'"
             />
           </div>
         </div>
       </div>
 
       <!-- Channel details panel -->
-      <ChannelDetailsPanel v-if="activeChannel" key="channelDetailsPanel"/>
+      <ChannelDetailsPanel v-if="activeChannel"/>
     </div>
 
   </div>
@@ -43,12 +42,28 @@
 <script>
 
 import _ from 'underscore';
-import { mapGetters, mapMutations } from 'vuex';
+import { mapGetters } from 'vuex';
 import { ListTypes } from '../constants';
 import ChannelList from './ChannelList.vue';
 import ChannelSetList from './ChannelSetList.vue';
 import ChannelInvitationList from './ChannelInvitationList.vue';
 import ChannelDetailsPanel from './ChannelDetailsPanel.vue';
+
+let defaultListType = ListTypes.EDITABLE;
+switch(window.location.hash.substr(1)) {
+  case "starred":
+    defaultListType = ListTypes.STARRED;
+    break;
+  case "viewonly":
+    defaultListType = ListTypes.VIEW_ONLY;
+    break;
+  case "public":
+    defaultListType = ListTypes.PUBLIC;
+    break;
+  case "collection":
+    defaultListType = ListTypes.CHANNEL_SETS;
+    break;
+}
 
 export default {
   name: 'ChannelListPage',
@@ -65,9 +80,13 @@ export default {
     ChannelInvitationList,
     ChannelDetailsPanel
   },
+  data() {
+    return {
+      activeList: defaultListType
+    }
+  },
   computed: Object.assign(
     mapGetters('channel_list', [
-      'activeList',
       'activeChannel'
     ]),
     {
@@ -75,10 +94,7 @@ export default {
         return _.values(ListTypes);
       }
     }
-  ),
-  methods: mapMutations('channel_list', {
-    setActiveList: 'SET_ACTIVE_LIST',
-  })
+  )
 }
 
 </script>
@@ -115,7 +131,9 @@ export default {
         font-weight: bold;
         border-color: @blue-500;
       }
-      span {
+      span::before {
+        .material-icons;
+        content: "star";
         font-size: 16pt;
         vertical-align: sub;
       }

@@ -1,4 +1,4 @@
-
+import _ from 'underscore';
 import { mapGetters, mapActions, mapMutations } from 'vuex';
 import { createTranslator } from 'utils/i18n';
 import { dialog, alert } from 'edit_channel/utils/dialog';
@@ -46,7 +46,6 @@ exports.setChannelMixin = {
 							}).catch( (error) => {
 								alert(this.channelStrings('errorChannelSave'), error.responseText || error);
 							});
-
 						},
 					}, null);
 				} else {

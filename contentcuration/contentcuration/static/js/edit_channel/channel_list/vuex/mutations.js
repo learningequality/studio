@@ -11,9 +11,6 @@ function prepChannel(channel) {
 
 
 /* CHANNEL LIST MUTATIONS */
-exports.SET_ACTIVE_LIST = function(state, listType) {
-	state.activeList = listType;
-}
 
 exports.SET_ACTIVE_CHANNEL = function(state, channel) {
 	state.activeChannel = channel;
@@ -87,7 +84,7 @@ exports.SET_CHANNEL_DESCRIPTION = function(state, description) {
 }
 
 exports.SET_CHANNEL_THUMBNAIL = function(state, payload) {
-	state.channelChanges.thumbnail = payload.formattedName;
+	state.channelChanges.thumbnail = payload.thumbnail;
 	state.channelChanges.thumbnail_encoding = payload.encoding;
 	state.changed = true;
 }

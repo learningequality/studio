@@ -9,6 +9,7 @@
 
 <script>
 
+import _ from 'underscore';
 
 export default {
   name: 'ToggleText',
@@ -38,11 +39,13 @@ export default {
     splitIndex() {
       // Find where to split the index without breaking words
       // If no spaces are found after the bufferRange, split the text anyways
-      let bufferRange = Math.round(this.splitAt/4);
-      let index = _.findIndex(this.trimmedText.substring(this.splitAt, this.splitAt + bufferRange), (char) => {
+      let bufferRange = Math.ceil(this.splitAt/4);
+      let start = this.splitAt - bufferRange;
+      let end = this.splitAt + bufferRange;
+      let index = _.findIndex(this.trimmedText.substring(start, end), (char) => {
         return char === " ";
       });
-      let newSplitIndex = index + this.splitAt;
+      let newSplitIndex = index + start;
 
       // If there are only a few characters left, just return the whole text. Otherwise, return new index
       return (this.trimmedText.length - newSplitIndex <= bufferRange)? this.trimmedText.length : newSplitIndex;

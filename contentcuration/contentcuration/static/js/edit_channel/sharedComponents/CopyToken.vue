@@ -2,11 +2,11 @@
 
   <div>
     <input type="text" ref="tokenText" :value="token" :title="$tr('copyPrompt')" size='15' readonly/>
-    <span
+    <a
       class="material-icons copy-id-btn"
       :title="$tr('copyPrompt')"
       @click.stop="copyToken"
-    >{{copyIcon}}</span>
+    >{{copyIcon}}</a>
   </div>
 
 </template>
