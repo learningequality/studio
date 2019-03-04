@@ -128,13 +128,16 @@ describe('channelListStore', () => {
 
     })
     it('loadChannelSetList should get list of channel sets', () => {
-      store.dispatch('channel_list/loadChannelSetList');
+      // store.dispatch('channel_list/loadChannelSetList');
       // TODO: get_user_channel_sets endpoint should be called
     });
     it('deleteChannelSet should delete the channel set', () => {
-      store.dispatch('channel_list/deleteChannelSet').then(() => {
-        console.log("TEST", Backbone.sync.mock.calls[0][1])
-        // expect().toEqual('patch');
+      let channelSet = {'id': 'test'};
+      store.commit('channel_list/SET_CHANNELSET_LIST', [channelSet]);
+      store.dispatch('channel_list/deleteChannelSet', channelSet).then(() => {
+        expect(Backbone.sync.mock.calls[0][0]).toEqual('delete');
+        expect(Backbone.sync.mock.calls[0][1].attributes.id).toEqual(channelSet.id);
+        expect(_.find(store.state.channel_list.channelSets, {id: channelSet.id})).toBeFalsy();
       });
     });
   });
