@@ -69,7 +69,7 @@ exports.saveChannel = function(context) {
             success: (channel) => {
             	channel = channel.toJSON();
             	context.commit('SUBMIT_CHANNEL', channel);
-            	context.commit('SET_ACTIVE_CHANNEL', channel);
+            	context.commit('SET_ACTIVE_CHANNEL', channel); // Used for new channelss
             	resolve(channel);
             }
         });

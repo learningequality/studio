@@ -1,6 +1,20 @@
 import _ from 'underscore';
 import { ListTypes } from './../constants';
 
+
+exports.RESET_STATE = function(state) {
+	state = {
+		channels: [],
+		activeChannel: null,
+		changed: false,
+		channelChanges: {},
+		channelSets: [],
+		invitations: []
+	}
+}
+
+
+/* CHANNEL LIST MUTATIONS */
 const ListValues = _.values(ListTypes);
 function prepChannel(channel) {
 	// Set all channel list attributes so vue will listen to them
@@ -8,10 +22,6 @@ function prepChannel(channel) {
 		channel[type] = false;
 	});
 }
-
-
-/* CHANNEL LIST MUTATIONS */
-
 exports.SET_ACTIVE_CHANNEL = function(state, channel) {
 	state.activeChannel = channel;
 	state.channelChanges = _.clone(state.activeChannel);

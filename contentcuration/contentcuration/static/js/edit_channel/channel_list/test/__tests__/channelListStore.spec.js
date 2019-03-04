@@ -1,78 +1,171 @@
 import { mount } from '@vue/test-utils';
-import ChannelStar from './../../views/ChannelStar.vue';
 import _ from 'underscore';
+import store from './../../vuex/store';
+import { ListTypes } from './../../constants';
+import { Invitations } from './../data';
+const Backbone = require('backbone');
 
+/*
+  TODO: there are some issues trying to mock jquery.ajax as it
+  throws a `TypeError: Cannot read property 'prototype' of undefined`
+  due to how it interacts with Backbone. Added TODOs where we'll need
+  to test
+*/
 
 describe('channelListStore', () => {
+  let channel;
+  beforeEach(() => {
+    channel = {'id': 'test', 'name': 'channel', 'main_tree': 'node'};
+    store.commit('channel_list/RESET_STATE');
+  })
+  afterEach(() => {
+    jest.clearAllMocks();
+  })
 
   describe('channel actions', () => {
-    describe('setActiveChannel', () => {
-      it('should change channel', () => {
-        expect(true).toBe(true);
-      });
-      it('should block channel change if changes are detected', () => {
-        expect(true).toBe(true);
-      });
-    })
-
     describe('loadChannelList', () => {
       it('should get list of channels', () => {
-        // TODO: test all list types
-        expect(true).toBe(true);
+        _.each(_.values(ListTypes), (type) => {
+          store.dispatch('channel_list/loadChannelList', type);
+          // TODO: make sure ChannelListUrls[type] endpoint is called
+        });
       });
+      describe('adding channels to the store', () => {
+        let channels;
+        let payload1;
+        let payload2;
+
+        beforeEach(() => {
+          store.commit('channel_list/RESET_STATE');
+          channels = store.state.channel_list.channels;
+          payload1 = {
+            listType: ListTypes.EDITABLE,
+            channels: [{'id': 'channel 1'}, {'id': 'channel 2'}]
+          };
+          payload2 = {
+            listType: ListTypes.VIEW_ONLY,
+            channels: [{'id': 'channel 1'}, {'id': 'channel 3'}]
+          };
+        })
+
+        it('should merge the channels to one list', () => {
+          store.commit('channel_list/SET_CHANNEL_LIST', payload1);
+          expect(channels).toHaveLength(2);
+          store.commit('channel_list/SET_CHANNEL_LIST', payload2);
+          expect(channels).toHaveLength(3);
+        })
+
+        it('should mark relevant list types as true', () => {
+          store.commit('channel_list/SET_CHANNEL_LIST', payload1);
+          store.commit('channel_list/SET_CHANNEL_LIST', payload2);
+          expect(_.find(channels, {[ListTypes.EDITABLE]: true, id: "channel 1"})).toBeTruthy();
+          expect(_.find(channels, {[ListTypes.EDITABLE]: true, id: "channel 2"})).toBeTruthy();
+          expect(_.find(channels, {[ListTypes.EDITABLE]: false, id: "channel 3" })).toBeTruthy();
+          expect(_.find(channels, {[ListTypes.VIEW_ONLY]: true, id: "channel 1" })).toBeTruthy();
+          expect(_.find(channels, {[ListTypes.VIEW_ONLY]: false, id: "channel 2" })).toBeTruthy();
+          expect(_.find(channels, {[ListTypes.VIEW_ONLY]: true, id: "channel 3" })).toBeTruthy();
+        })
+      })
     })
 
     describe('star actions', () => {
       it('addStar should post a star request', () => {
-        expect(true).toBe(true);
+        // store.dispatch('channel_list/addStar', channel)
+        // TODO: add_bookmark endpoint should be called
       });
       it('removeStar should post a star request', () => {
-        expect(true).toBe(true);
+        // store.dispatch('channel_list/removeStar', channel)
+        // TODO: remove_bookmark endpoint should be called
       });
     })
-
     describe('channel edit actions', () => {
+      beforeEach(() => {
+        store.commit('channel_list/RESET_STATE');
+        store.commit('channel_list/ADD_CHANNEL', channel);
+        store.commit('channel_list/SET_ACTIVE_CHANNEL', channel);
+      })
+
       it('saveChannel should save changes', () => {
-        expect(true).toBe(true);
+        store.commit('channel_list/SET_CHANNEL_NAME', 'new name');
+        store.dispatch('channel_list/saveChannel').then(() => {
+          // Needs to be patch as post will overwrite editors
+          expect(Backbone.sync.mock.calls[0][0]).toEqual('patch');
+          expect(Backbone.sync.mock.calls[0][1].attributes.name).toEqual('new name');
+          expect(store.state.channel_list.changed).toBe(false);
+          expect(store.state.channel_list.activeChannel.id).toBe("test");
+        });
       });
+
       it('deleteChannel should mark channel.deleted as true', () => {
-        expect(true).toBe(true);
-        // TODO: test if channel counts on sets are updated too
+        store.commit('channel_list/SET_CHANNELSET_LIST', [{id:'channelset', channels:['test']}]);
+        store.dispatch('channel_list/deleteChannel', channel).then(() => {
+          expect(Backbone.sync.mock.calls[0][1].attributes.deleted).toBe(true);
+          expect(_.find(store.state.channel_list.channels, {'id': 'test'})).toBeFalsy();
+          expect(store.state.channel_list.channelSets[0].channels).toHaveLength(0);
+        })
       });
     })
 
     it('loadNodeDetails should generate channel details', () => {
-      expect(true).toBe(true);
+      // store.dispatch('channel_list/loadNodeDetails', channel.main_tree);
+      // TODO: get_topic_details endpoint should be called
     });
 
-    describe('downloadChannelDetails', () => {
-      it('should start pdf download', () => {
-        // TODO: test all export types
-        expect(true).toBe(true);
-      });
-    })
+    it('should start pdf download', () => {
+      // store.dispatch('channel_list/downloadChannelDetails', {id: 'test', format: 'detailedPDF'});
+      // TODO: make sure get_channel_details_pdf_endpoint endpoint is called
+      // store.dispatch('channel_list/downloadChannelDetails', {id: 'test', format: 'pdf'});
+      // TODO: make sure get_channel_details_pdf_endpoint endpoint is called
+      // store.dispatch('channel_list/downloadChannelDetails', {id: 'test', format: 'csv'});
+      // TODO: make sure get_channel_details_csv_endpoint endpoint is called
+      // store.dispatch('channel_list/downloadChannelDetails', {id: 'test', format: 'ppt'});
+      // TODO: make sure get_channel_details_ppt_endpoint endpoint is called
+    });
   });
 
   describe('channel set actions', () => {
+    beforeEach(() => {
+
+    })
     it('loadChannelSetList should get list of channel sets', () => {
-      expect(true).toBe(true);
+      store.dispatch('channel_list/loadChannelSetList');
+      // TODO: get_user_channel_sets endpoint should be called
     });
     it('deleteChannelSet should delete the channel set', () => {
-      expect(true).toBe(true);
+      store.dispatch('channel_list/deleteChannelSet').then(() => {
+        console.log("TEST", Backbone.sync.mock.calls[0][1])
+        // expect().toEqual('patch');
+      });
     });
   });
 
   describe('invitation actions', () => {
+    beforeEach(() => {
+      store.commit('channel_list/RESET_STATE');
+    })
     it('loadChannelInvitationList should get list of invitations', () => {
-      expect(true).toBe(true);
+      // store.dispatch('channel_list/loadChannelInvitationList');
+      // TODO: get_user_pending_channels endpoint should be called
     });
     it('acceptInvitation should accept the invitation', () => {
-      expect(true).toBe(true);
-      // TODO: Make sure proper edit/view access is given
-      // TODO: Make sure channels are added to correct lists
+      // _.each(Invitations, (invitation) => {
+      //   store.dispatch('channel_list/acceptInvitation', invitation).then(() => {
+          // TODO: accept_channel_invite endpoint should be called
+          // TODO: Make sure proper edit/view access is given
+          // TODO: Make sure channels are added to correct lists
+      //     jest.clearAllMocks();
+      //   });
+      // });
     });
+
     it('declineInvitation should decline the invitation', () => {
-      expect(true).toBe(true);
+      _.each(Invitations, (invitation) => {
+        store.dispatch('channel_list/declineInvitation', invitation).then(() => {
+          expect(Backbone.sync.mock.calls[0][0]).toEqual('delete');
+          expect(Backbone.sync.mock.calls[0][1].attributes.id).toEqual(invitation.id);
+          jest.clearAllMocks();
+        });
+      })
     });
   });
 

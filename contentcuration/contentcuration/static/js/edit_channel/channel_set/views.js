@@ -2,6 +2,7 @@
 
 import Vue from 'vue';
 import ChannelSetModalComponent from './views/ChannelSetModal.vue';
+import _ from 'underscore';
 
 var Backbone = require('backbone');
 var BaseViews = require("../views");

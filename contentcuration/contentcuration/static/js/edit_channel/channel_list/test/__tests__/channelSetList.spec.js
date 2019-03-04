@@ -2,6 +2,7 @@ import { shallowMount } from '@vue/test-utils';
 import ChannelSetList from './../../views/ChannelSetList.vue';
 import ChannelSetItem from './../../views/ChannelSetItem.vue';
 import { ChannelSets, localStore, mockFunctions } from './../data';
+import _ from 'underscore';
 require('handlebars/helpers'); // Needed for collection details modal
 
 function makeWrapper() {
@@ -30,11 +31,10 @@ describe('channelSetList', () => {
 
   it('CREATE should open channel set modal', () => {
     listWrapper.find('#new-set').trigger('click');
-    // TODO: check for modal
-
+    // TODO: check for channel_set/views/ChannelSetModal
   });
   it('About Collections link should open information modal', () => {
     listWrapper.find('#about-sets').trigger('click');
-    // TODO: check for modal,remove backbone
+    // TODO: check for information/views/ChannelSetInformationModalView
   });
 });

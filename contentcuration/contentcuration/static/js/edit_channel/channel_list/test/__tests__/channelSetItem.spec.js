@@ -2,7 +2,6 @@ import { shallowMount } from '@vue/test-utils';
 import ChannelSetItem from './../../views/ChannelSetItem.vue';
 import { localStore, mockFunctions } from './../data.js';
 
-
 function makeWrapper(props = {}) {
   let channelSet = {
     name: "test title",
@@ -36,7 +35,7 @@ describe('channelSetItem', () => {
   it('on DELETE click, dialog should be shown', () => {
     wrapper.find('.delete-channelset').trigger('click')
     expect(mockFunctions.deleteChannelSet).not.toHaveBeenCalled();
-    // TODO: check for dialog
+    expect(document.querySelector('#dialog-box')).toBeTruthy();
   });
   it('on DELETE, channel set should be deleted', () => {
     wrapper.vm.deleteChannelSet(wrapper.vm.channelSet);
@@ -48,6 +47,6 @@ describe('channelSetItem', () => {
   });
   it('on click should open channel set modal', () => {
     wrapper.find('.channel-container-wrapper').trigger('click');
-    // TODO: check for modal
+    // TODO: check for channel_set/views/ChannelSetModal
   });
 });

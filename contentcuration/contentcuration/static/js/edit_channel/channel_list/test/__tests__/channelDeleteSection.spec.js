@@ -20,7 +20,7 @@ describe('channelDeleteSection', () => {
     wrapper.find('.delete-channel').trigger('click');
     expect(mockFunctions.deleteChannel).not.toHaveBeenCalled();
 
-    // TODO: check dialog has been created
+    expect(document.querySelector('#dialog-box')).toBeTruthy();
     wrapper.vm.deleteChannel(wrapper.channel);
     expect(mockFunctions.deleteChannel).toHaveBeenCalled();
   });

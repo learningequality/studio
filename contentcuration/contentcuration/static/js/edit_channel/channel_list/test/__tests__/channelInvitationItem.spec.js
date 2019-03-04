@@ -42,7 +42,7 @@ describe('channelInvitationItem', () => {
     expect(mockFunctions.acceptInvitation).not.toHaveBeenCalled();
     expect(mockFunctions.declineInvitation).not.toHaveBeenCalled();
 
-    // TODO: check dialog has been created
+    expect(document.querySelector('#dialog-box')).toBeTruthy();
     wrapper.vm.declineInvitation(wrapper.vm.invitation);
     expect(mockFunctions.declineInvitation).toHaveBeenCalled();
   });
