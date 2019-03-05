@@ -33,6 +33,7 @@ import { mapState, mapActions } from 'vuex';
 import ChannelItem from './ChannelItem.vue';
 import State from 'edit_channel/state';
 import { setChannelMixin } from './../mixins';
+import { ListTypes } from './../constants';
 
 export default {
   name: 'ChannelList',
@@ -68,7 +69,13 @@ export default {
     ]),
     {
       listChannels() {
-        return _.where(this.channels, {[this.listType]: true});
+        return _.chain(this.channels)
+                .where({[this.listType]: true})
+                .sortBy((channel) => {
+                  return this.listType === ListTypes.PUBLIC ? -channel.priority : null;
+                })
+                .sortBy('-modified')
+                .value();
       }
     }
   ),

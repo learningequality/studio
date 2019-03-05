@@ -74,6 +74,7 @@ export default {
   padding:3px;
   font-size: 16pt;
   vertical-align: sub;
+  color: @gray-500;
   &:hover { color:@blue-500; }
 }
 input {
