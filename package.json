@@ -5,8 +5,11 @@
   "description": "Frontend build tools and development utilities for Kolibri Studio",
   "scripts": {
     "lint:py": "flake8 --exit-zero",
-    "lint:js": "kolibri-tools lint 'contentcuration/contentcuration/static/**/*.{js,vue,scss,less,css}' -i '**/node_modules/**','**/bundles/**','**/static/js/utils/**','**/static/css/**'",
-    "lint:js:fix": "kolibri-tools lint 'contentcuration/contentcuration/static/**/*.{js,vue,scss,less,css}' -i '**/node_modules/**','**/bundles/**','**/static/js/utils/**','**/static/css/**' -w",
+    "lint": "kolibri-tools lint",
+    "lint-all": "yarn run lint 'contentcuration/contentcuration/static/**/*.{js,vue,scss,less,css}' -i '**/node_modules/**','**/bundles/**','**/static/js/utils/**','**/static/css/**'",
+    "lint-all:fix": "yarn run lint-all -w",
+    "lint:fix": "yarn run lint -w",
+    "lint:watch": "yarn lint-all -w -m",
     "makemessages": "node ./extract_frontend_messages.js ./contentcuration/contentcuration/static/js/edit_channel/**{/*,}.{js,vue}",
     "build": "webpack --config webpack.config.js",
     "cypress:run": "wait-on -t 20000 tcp:8081 && cypress run --spec cypress/integration/login.js",
