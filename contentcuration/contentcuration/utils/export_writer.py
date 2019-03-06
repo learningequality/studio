@@ -8,7 +8,7 @@ import tempfile
 from collections import OrderedDict
 
 # On OS X, the default backend will fail if you are not using a Framework build of Python,
-# e.g. in a virtualenv. To avoid having to set MPLBACKEND each time we use Pressure Cooker,
+# e.g. in a virtualenv. To avoid having to set MPLBACKEND each time we use Studio,
 # automatically set the backend.
 if sys.platform.startswith("darwin"):
     import matplotlib
