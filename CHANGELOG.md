@@ -9,6 +9,7 @@
 ## Upcoming release
 #### Changes
 * [[@jayoshih](https://github.com/jayoshih)] Don't allow users to set prerequisites on topics
+* [[@kollivier](https://github.com/kollivier)] Always use get_node_details cache if available and update later to improve performance.
 
 #### Issues Resolved
 * [#1254](https://github.com/learningequality/studio/issues/1254)
