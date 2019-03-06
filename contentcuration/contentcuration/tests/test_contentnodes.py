@@ -1,15 +1,20 @@
 import json
 
 import testdata
-from testdata import create_temp_file
+from .testdata import create_temp_file
 from base import BaseAPITestCase
 from base import BaseTestCase
+
+from django.conf import settings
 from django.core.urlresolvers import reverse_lazy
 
 from contentcuration.models import Channel
 from contentcuration.models import ContentKind
 from contentcuration.models import ContentNode
+from contentcuration.models import FormatPreset
+from contentcuration.models import generate_storage_url
 from contentcuration.models import Language
+from contentcuration.utils.files import create_thumbnail_from_base64
 from contentcuration.views import nodes
 
 
@@ -35,6 +40,49 @@ def _check_nodes(parent, title=None, original_channel_id=None, source_channel_id
         if source_channel_id:
             assert node.source_channel_id == source_channel_id
         _check_nodes(node, title, original_channel_id, source_channel_id, channel)
+
+
+class NodeGettersTestCase(BaseTestCase):
+    def setUp(self):
+        super(NodeGettersTestCase, self).setUp()
+
+        self.channel = testdata.channel()
+        self.topic, _created = ContentKind.objects.get_or_create(kind="Topic")
+        self.thumbnail_data = "allyourbase64arebelongtous"
+
+    def test_get_node_thumbnail_default(self):
+        new_node = ContentNode.objects.create(title="Heyo!", parent=self.channel.main_tree, kind=self.topic)
+
+        default_thumbnail = "/".join([settings.STATIC_URL.rstrip("/"), "img", "{}_placeholder.png".format(new_node.kind_id)])
+        thumbnail = new_node.get_thumbnail()
+        assert thumbnail == default_thumbnail
+
+    def test_get_node_thumbnail_base64(self):
+        new_node = ContentNode.objects.create(title="Heyo!", parent=self.channel.main_tree, kind=self.topic)
+
+        new_node.thumbnail_encoding = '{"base64": "%s"}' % self.thumbnail_data
+
+        assert new_node.get_thumbnail() == self.thumbnail_data
+
+    def test_get_node_thumbnail_file(self):
+        new_node = ContentNode.objects.create(title="Heyo!", parent=self.channel.main_tree, kind=self.topic)
+        thumbnail_file = create_thumbnail_from_base64(testdata.base64encoding())
+        thumbnail_file.contentnode = new_node
+
+        # we need to make sure the file is marked as a thumbnail
+        preset, _created = FormatPreset.objects.get_or_create(id="video_thumbnail")
+        preset.thumbnail = True
+        thumbnail_file.preset = preset
+        thumbnail_file.save()
+
+        assert new_node.get_thumbnail() == generate_storage_url(str(thumbnail_file))
+
+    def test_get_node_details(self):
+        details = self.channel.main_tree.get_details()
+        assert details['resource_count'] > 0
+        assert details['resource_size'] > 0
+        assert details['kind_count'] > 0
+
 
 
 class NodeOperationsTestCase(BaseTestCase):
