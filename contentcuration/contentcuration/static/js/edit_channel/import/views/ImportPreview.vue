@@ -1,7 +1,6 @@
 <template>
-
   <div class="import-preview">
-    <button @click="goToPreviousPage()" class="back-button button-reset">
+    <button class="back-button button-reset" @click="goToPreviousPage()">
       {{ $tr('back') }}
     </button>
     <span>({{ $tr('backWarning') }})</span>
@@ -24,15 +23,14 @@
       </div>
     </div>
   </div>
-
 </template>
 
 
 <script>
 
   import { mapState, mapActions, mapGetters } from 'vuex';
-  import ImportListItem from './ImportListItem.vue';
   import stringHelper from '../../utils/string_helper';
+  import ImportListItem from './ImportListItem.vue';
 
   export default {
     name: 'ImportPreview',
@@ -40,10 +38,7 @@
       ImportListItem,
     },
     computed: Object.assign(
-      mapState('import', [
-        'itemsToImport',
-        'importSizeInBytes',
-      ]),
+      mapState('import', ['itemsToImport', 'importSizeInBytes']),
       mapGetters('import', ['importedItemCounts']),
       {
         importFileSizeInWords() {
@@ -57,21 +52,14 @@
     mounted() {
       this.calculateImportSize();
     },
-    methods: Object.assign(
-      mapActions('import', [
-        'calculateImportSize',
-        'goToPreviousPage',
-      ]),
-      {
-      }
-    ),
+    methods: Object.assign(mapActions('import', ['calculateImportSize', 'goToPreviousPage']), {}),
     $trs: {
       calculatingSizeText: 'Calculating Size...',
       resourcesSize: '{ resources } Total resources selected ({ fileSize })',
       back: 'Back',
-      backWarning: 'Note: Your previous selections will be lost.'
+      backWarning: 'Note: Your previous selections will be lost.',
     },
-  }
+  };
 
 </script>
 
@@ -83,22 +71,22 @@
   }
 
   .resources-msg {
-    font-weight: bold;
-    font-size: 1.25em;
     margin-bottom: 1em;
+    font-size: 1.25em;
+    font-weight: bold;
   }
 
   .button-reset {
-    -webkit-appearance: none;
-    border: none;
     background: none;
+    border: none;
+    -webkit-appearance: none;
   }
 
   .back-button {
-    color: #2196F3;
-    text-decoration: underline;
     margin-bottom: 1em;
     font-size: 1.25em;
+    color: #2196f3;
+    text-decoration: underline;
   }
 
 </style>

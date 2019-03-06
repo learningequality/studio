@@ -1,18 +1,19 @@
 <template>
-
   <div class="search-results">
     <div>
       <p v-show="!resultsLoading" class="top-results wordwrap">
         {{ $tr('showingResultsText', {currentSearchTerm: currentSearchTerm}) }}
       </p>
-      <button @click="goToPreviousPage()" class="button-reset back-button">
+      <button class="button-reset back-button" @click="goToPreviousPage()">
         {{ $tr('backToBrowseButton') }}
       </button>
     </div>
 
     <!-- ITEM RESULTS -->
     <div class="results">
-      <h1 class="results-header">{{ $tr('resourcesLabel') }}</h1>
+      <h1 class="results-header">
+        {{ $tr('resourcesLabel') }}
+      </h1>
       <span v-if="resultsLoading" class="loading-msg wordwrap">
         {{ $tr('loadingResultsText', {currentSearchTerm: currentSearchTerm}) }}
       </span>
@@ -37,7 +38,9 @@
 
     <!-- TOPIC RESULTS -->
     <div class="results">
-      <h1 class="results-header">{{ $tr('topicsLabel') }}</h1>
+      <h1 class="results-header">
+        {{ $tr('topicsLabel') }}
+      </h1>
       <span v-if="resultsLoading" class="loading-msg wordwrap">
         {{ $tr('loadingResultsText', {currentSearchTerm: currentSearchTerm}) }}
       </span>
@@ -60,107 +63,102 @@
       </template>
     </div>
   </div>
-
 </template>
 
 
 <script>
 
-import { mapGetters, mapActions } from 'vuex';
-import { fetchSearchResults } from '../util';
-import ImportListItem from './ImportListItem.vue';
+  import { mapGetters, mapActions } from 'vuex';
+  import { fetchSearchResults } from '../util';
+  import ImportListItem from './ImportListItem.vue';
 
-export default {
-  name: 'SearchResults',
-  $trs: {
-    'showingResultsText': "Showing top results for \"{currentSearchTerm}\"",
-    'loadingResultsText': "Loading results for \"{currentSearchTerm}\"...",
-    'backToBrowseButton': "Go Back To Browse",
-    'resourcesLabel': "Resources",
-    'noContentFoundText': "No documents, exercises, or other files matching \"{ currentSearchTerm }\"",
-    'topicsLabel': "Topics",
-    'noTopicsText': "No topics matching \"{ currentSearchTerm }\""
-  },
-  components: {
-    ImportListItem,
-  },
-  data() {
-    return {
-      itemResults: [],
-      topicResults: [],
-      resultsLoading: false,
-    };
-  },
-  computed: mapGetters('import', [
-    'currentSearchTerm',
-    'currentChannelId',
-  ]),
-  watch: {
-    currentSearchTerm() {
+  export default {
+    name: 'SearchResults',
+    $trs: {
+      showingResultsText: 'Showing top results for "{currentSearchTerm}"',
+      loadingResultsText: 'Loading results for "{currentSearchTerm}"...',
+      backToBrowseButton: 'Go Back To Browse',
+      resourcesLabel: 'Resources',
+      noContentFoundText:
+        'No documents, exercises, or other files matching "{ currentSearchTerm }"',
+      topicsLabel: 'Topics',
+      noTopicsText: 'No topics matching "{ currentSearchTerm }"',
+    },
+    components: {
+      ImportListItem,
+    },
+    data() {
+      return {
+        itemResults: [],
+        topicResults: [],
+        resultsLoading: false,
+      };
+    },
+    computed: mapGetters('import', ['currentSearchTerm', 'currentChannelId']),
+    watch: {
+      currentSearchTerm() {
+        this.updateResults();
+      },
+    },
+    mounted() {
       this.updateResults();
-    }
-  },
-  mounted() {
-    this.updateResults();
-  },
-  methods: Object.assign(
-    mapActions('import', ['goToPreviousPage']),
-    {
+    },
+    methods: Object.assign(mapActions('import', ['goToPreviousPage']), {
       updateResults() {
         if (this.currentSearchTerm.length < 3) return;
         this.resultsLoading = true;
-        return fetchSearchResults(this.currentSearchTerm, this.currentChannelId)
-        .then(({ itemResults, topicResults, searchTerm }) => {
-          if (searchTerm === this.currentSearchTerm) {
-            this.resultsLoading = false;
-            this.itemResults = itemResults;
-            this.topicResults = topicResults;
+        return fetchSearchResults(this.currentSearchTerm, this.currentChannelId).then(
+          ({ itemResults, topicResults, searchTerm }) => {
+            if (searchTerm === this.currentSearchTerm) {
+              this.resultsLoading = false;
+              this.itemResults = itemResults;
+              this.topicResults = topicResults;
+            }
           }
-        });
+        );
       },
-    }
-  ),
-}
+    }),
+  };
 
 </script>
 
 
 <style lang="less" scoped>
 
-.search-results {
-  padding: .5rem;
-}
+  .search-results {
+    padding: 0.5rem;
+  }
 
-.loading-msg {
-  font-style: italic;
-}
+  .loading-msg {
+    font-style: italic;
+  }
 
-.results-list {
-  background-color: white;
-  overflow-y: auto;
-}
+  .results-list {
+    overflow-y: auto;
+    background-color: white;
+  }
 
-.results-header {
-  font-size: 2rem;
-  color: white;
-  background-color: #54ACF2;
-  padding: .5rem;
-  text-transform: uppercase;
-}
+  .results-header {
+    padding: 0.5rem;
+    font-size: 2rem;
+    color: white;
+    text-transform: uppercase;
+    background-color: #54acf2;
+  }
 
-.top-results {
-  font-weight: bold;
-}
+  .top-results {
+    font-weight: bold;
+  }
 
-.back-button {
-  color: #2196F3;
-  text-decoration: underline;
-}
+  .back-button {
+    color: #2196f3;
+    text-decoration: underline;
+  }
 
-.button-reset {
-  -webkit-appearance: none;
-  border: none;
-  background: none;
-}
+  .button-reset {
+    background: none;
+    border: none;
+    -webkit-appearance: none;
+  }
 
 </style>

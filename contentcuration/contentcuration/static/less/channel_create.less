@@ -1,416 +1,450 @@
-@import "global-variables.less";
+@import 'global-variables.less';
 
-@btn-filter-color:#C5C5C5;
-@btn-find-color:#6FAFE3;
+@btn-filter-color: #c5c5c5;
+@btn-find-color: #6fafe3;
 
-@channel-clipboard-btn-color: #F2F2F2;
-@channel-btn-border-color:#7A7A7A;
-@details-bg-color: #EFE6EC;
+@channel-clipboard-btn-color: #f2f2f2;
+@channel-btn-border-color: #7a7a7a;
+@details-bg-color: #efe6ec;
 
 // nested flexbox settings to ensure that the channels list view is vertically responsive.
 body {
-	display: flex;
-	flex-direction: column;
+  display: flex;
+  flex-direction: column;
 
-	#channel-container {
-		display: flex;
-		height: 0;
-		flex-direction: column;
-		flex-grow: 1;
+  #channel-container {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    height: 0;
 
-		#top-navigation {
-			flex: 0;
-		}
+    #top-navigation {
+      flex: 0;
+    }
 
-		#channel_area_wrapper {
-			display: flex;
-			max-height: 100%;
-			flex: 1;
+    #channel_area_wrapper {
+      display: flex;
+      flex: 1;
+      max-height: 100%;
 
-			#channel_list_wrapper {
-				display: grid;
-				justify-content: normal;
-				align-content: flex-start;
+      #channel_list_wrapper {
+        display: grid;
+        align-content: flex-start;
+        justify-content: normal;
 
-				#channel-list-area {
-					margin: auto;
-				}
-			}
+        #channel-list-area {
+          margin: auto;
+        }
+      }
 
-			#channel_preview_wrapper {
-				display: flex;
-				flex-direction: column;
-				flex: 1;
-				
-				#channel_details_overlay {
-					display: flex;
-					flex-direction: column;
-					flex: 1;
-					
-					#channel_details_panel {
-						display: flex;
-						flex-direction: column;	
-						flex: 1;
+      #channel_preview_wrapper {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
 
-						#channel_details_view_panel {
-							display: flex;
-							flex-direction: column;	
-							flex: 1;					
-							
-							#channel_details {
-								flex-direction: column;	
-								flex-grow: 1;
-								width: 100%;
-							}
-						}
-					}
-				}
-			}
-		}
-	}
+        #channel_details_overlay {
+          display: flex;
+          flex: 1;
+          flex-direction: column;
+
+          #channel_details_panel {
+            display: flex;
+            flex: 1;
+            flex-direction: column;
+
+            #channel_details_view_panel {
+              display: flex;
+              flex: 1;
+              flex-direction: column;
+
+              #channel_details {
+                flex-direction: column;
+                flex-grow: 1;
+                width: 100%;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 }
 // end of flexbox settings
 
-.default-item{
-	color:gray;
-	padding:5px 10px;
+.default-item {
+  padding: 5px 10px;
+  color: gray;
 }
 
-#channel_list_wrapper{
-	padding:10px;
-	overflow-y:auto;
-	width: 100vw;
-	transition: width 500ms;
-	&.show-panel {
-		width: calc(~"100vw - 650px");
-	}
-	#manage-channel-nav.nav-tabs{
-		border-bottom: none;
-		margin-bottom: 10px;
-		.channel_tab{
-		    font-size: 14pt;
-		    color: @body-font-color;
-		    margin-right: 10px;
-		    &:hover { border-color: @body-background; }
-		}
-		.active .channel_tab{
-			background-color: @body-background;
-			font-weight: bold;
-			border: none;
-			border-bottom: 3px solid @blue-500;
-		}
-	}
-	#channel-list-area{
-		@channel-container-bg-color: white;
-		@channel-continer-border-color: #C5C5C5;
-		@channel-container-height: 250px;
-		@channel-container-width: 800px;
-		@channel-profile-width: 150px;
-		@channel-font-size: 18pt;
-		@channel-description-font-size: 11pt;
-		@channel-btn-color:#CCCCCC;
+#channel_list_wrapper {
+  width: 100vw;
+  padding: 10px;
+  overflow-y: auto;
+  transition: width 500ms;
+  &.show-panel {
+    width: calc(~'100vw - 650px');
+  }
+  #manage-channel-nav.nav-tabs {
+    margin-bottom: 10px;
+    border-bottom: none;
+    .channel_tab {
+      margin-right: 10px;
+      font-size: 14pt;
+      color: @body-font-color;
+      &:hover {
+        border-color: @body-background;
+      }
+    }
+    .active .channel_tab {
+      font-weight: bold;
+      background-color: @body-background;
+      border: none;
+      border-bottom: 3px solid @blue-500;
+    }
+  }
+  #channel-list-area {
+    @channel-container-bg-color: white;
+    @channel-continer-border-color: #c5c5c5;
+    @channel-container-height: 250px;
+    @channel-container-width: 800px;
+    @channel-profile-width: 150px;
+    @channel-font-size: 18pt;
+    @channel-description-font-size: 11pt;
+    @channel-btn-color: #cccccc;
 
-	    width: @channel-container-width + 50;
+    width: @channel-container-width + 50;
 
-		.channel_list_wrapper {
-			padding-top: 20px;
-			.add_channel_wrapper {
-				margin-bottom: 15px;
-				padding-right: 50px;
-				height: 40px;
-				.new_channel_button, .new_set_button {
-					cursor: pointer;
-					font-size: 18px;
-					text-decoration: none;
-					&:hover { color:white; }
-				}
-				.about_sets_button {
-					vertical-align: sub;
-					font-size: 12pt;
-					padding: 0px;
-					i {
-						font-size: 16pt;
-						vertical-align: sub;
-					}
-				}
-			}
-		}
+    .channel_list_wrapper {
+      padding-top: 20px;
+      .add_channel_wrapper {
+        height: 40px;
+        padding-right: 50px;
+        margin-bottom: 15px;
+        .new_channel_button,
+        .new_set_button {
+          font-size: 18px;
+          text-decoration: none;
+          cursor: pointer;
+          &:hover {
+            color: white;
+          }
+        }
+        .about_sets_button {
+          padding: 0;
+          font-size: 12pt;
+          vertical-align: sub;
+          i {
+            font-size: 16pt;
+            vertical-align: sub;
+          }
+        }
+      }
+    }
 
-		.new-channel {
-			display: inline-block;
-		    position: relative;
-		    left: 13px;
-		    top: 6px;
-		}
-		#pending_list{
-			margin-bottom: 30px;
-			.pending_container{
-		        font-size: 12pt;
-		        .pending_text{ padding: 5px;}
-		        .btn-pending {
-		        	background-color: white;
-		        	font-weight:bold;
-		        	width: 100%;
-		        	border: 2px solid white;
-		        	&.accept_invite { color: @blue-500; &:hover{ border-color: @blue-500; }}
-		        	&.decline_invite { color: #D14C4C;  &:hover{ border-color: #D14C4C; }}
-		        	i {
-		        		font-size: 14pt;
-    					font-weight: bold;
-    				}
-		        }
-		        .alert{
-		        	margin-bottom: 15px;
-		        	padding: 5px 15px;
-		        	button{ right: 0px; top: 5px; }
-		        }
-		        &:last-child{ margin-bottom: 50px; }
-			}
-		}
-		.channel_list {
-			padding-bottom: 50px;
-			.default-item{
-				font-size: 12pt;
-				margin: 20px 10px 10px 10px;
-				color: @annotation-gray;
-				text-align: center;
-			}
-			.is_selected {
-				display: none;
-				padding-top: 9%;
-				i {
-					font-size: 45pt;
-    				color: @topnav-bg-color;
-    				font-weight: bold;
-				}
-			}
+    .new-channel {
+      position: relative;
+      top: 6px;
+      left: 13px;
+      display: inline-block;
+    }
+    #pending_list {
+      margin-bottom: 30px;
+      .pending_container {
+        font-size: 12pt;
+        .pending_text {
+          padding: 5px;
+        }
+        .btn-pending {
+          width: 100%;
+          font-weight: bold;
+          background-color: white;
+          border: 2px solid white;
+          &.accept_invite {
+            color: @blue-500;
+            &:hover {
+              border-color: @blue-500;
+            }
+          }
+          &.decline_invite {
+            color: #d14c4c;
+            &:hover {
+              border-color: #d14c4c;
+            }
+          }
+          i {
+            font-size: 14pt;
+            font-weight: bold;
+          }
+        }
+        .alert {
+          padding: 5px 15px;
+          margin-bottom: 15px;
+          button {
+            top: 5px;
+            right: 0;
+          }
+        }
+        &:last-child {
+          margin-bottom: 50px;
+        }
+      }
+    }
+    .channel_list {
+      padding-bottom: 50px;
+      .default-item {
+        margin: 20px 10px 10px;
+        font-size: 12pt;
+        color: @annotation-gray;
+        text-align: center;
+      }
+      .is_selected {
+        display: none;
+        padding-top: 9%;
+        i {
+          font-size: 45pt;
+          font-weight: bold;
+          color: @topnav-bg-color;
+        }
+      }
 
-			.channel-container-wrapper {
-				background-color: @panel-container-color;
-				width: @channel-container-width;
-				min-height: @channel-container-height;
-				height:auto;
-				box-shadow: @box-shadow;
-				margin: 0px;
-				margin-bottom: 30px;
-				padding: 10px;
-				border:4px solid @panel-container-color;
-				cursor:pointer;
+      .channel-container-wrapper {
+        width: @channel-container-width;
+        height: auto;
+        min-height: @channel-container-height;
+        padding: 10px;
+        margin: 0;
+        margin-bottom: 30px;
+        cursor: pointer;
+        background-color: @panel-container-color;
+        border: 4px solid @panel-container-color;
+        box-shadow: @box-shadow;
 
-				&.channelset-wrapper {
-					min-height: 0px;
-				}
+        &.channelset-wrapper {
+          min-height: 0;
+        }
 
-				.profile{
-					height:100%;
-					width: @channel-profile-width;
-					margin: 5px 15px 5px 5px;
-					.image_dropzone{ width: auto; }
-					img{
-					    width:130px;
-					    height:130px;
-					    object-fit: cover;
-					}
-				}
-				.channel_set_icon {
-					font-size: 65pt;
-					color: @gray-700;
-				}
-				.delete_channel_set {
-					color: @gray-700;
-				}
-				.manage_area{
-					width:100%;
-					.open_channel {
-						.action-button;
-						margin-right:10px;
-					}
-				}
+        .profile {
+          width: @channel-profile-width;
+          height: 100%;
+          margin: 5px 15px 5px 5px;
+          .image_dropzone {
+            width: auto;
+          }
+          img {
+            width: 130px;
+            height: 130px;
+            object-fit: cover;
+          }
+        }
+        .channel_set_icon {
+          font-size: 65pt;
+          color: @gray-700;
+        }
+        .delete_channel_set {
+          color: @gray-700;
+        }
+        .manage_area {
+          width: 100%;
+          .open_channel {
+            .action-button;
 
-				.channel_metadata{
-					color: @annotation-gray;
-					padding: 0px;
-					font-size: 11pt;
-					.resource-icon {
-						padding: 0 3px 0 10px;
-					}
-					.copy-id-btn{
-						padding:3px;
-						font-size: 16pt;
-    					vertical-align: sub;
-						&:hover { color:@blue-500; }
-					}
-					.copy-id-text{
-						display: inline-block;
-						padding:2px;
-						background-color: @gray-300;
-						font-size:11pt;
-						border:none;
-						font-weight: bold;
-						width: 125px;
-						color: @gray-700;
-					}
-					.channel_language{
-						max-width: 135px;
-					    display: inline-block;
-					    margin-bottom: -3px;
-					}
-				}
-				#channel_name_error{
-					color:@red-error-color;
-					font-weight:bold;
-					margin:0;
-					padding:0;
-					visibility: hidden;
-				}
-				h4{
-					font-size: @channel-font-size;
-					font-weight: bold;
-					color: @body-font-color;
-					margin-bottom: 0px;
-					padding-bottom: 5px;
-					.channel_name{
-						color: @body-font-color;
-						height:@channel-font-size + 10px;
-					}
-					.channel_option_icon {
-						cursor:pointer;
-						display:inline-block;
-						font-size: 20pt;
-						padding:10px;
-						color: @gray-700;
-						position: relative;
-						top: -45px;
-						&:not(.disabled):hover{ color: @blue-500; }
-						&.unstar_channel{
-							color: @blue-500;
-							&:hover{ color: @blue-200; }
-						}
-					}
-				}
-				.description{
-					min-height: @channel-container-height - @channel-font-size - 115px;
-					overflow-y:auto;
-					margin-bottom:5px;
-					p{
-						font-size: @channel-description-font-size;
-					}
-				}
+            margin-right: 10px;
+          }
+        }
 
-				#new_channel_name, textarea{
-					height: 35px;
-					width: @channel-container-width - @channel-profile-width - 50px;
-					color: @body-font-color;
-					background: transparent;
-				    border: none;
-				    border-bottom: 1px solid #BDBDBD;
-				    margin-top: 10px;
-				}
+        .channel_metadata {
+          padding: 0;
+          font-size: 11pt;
+          color: @annotation-gray;
+          .resource-icon {
+            padding: 0 3px 0 10px;
+          }
+          .copy-id-btn {
+            padding: 3px;
+            font-size: 16pt;
+            vertical-align: sub;
+            &:hover {
+              color: @blue-500;
+            }
+          }
+          .copy-id-text {
+            display: inline-block;
+            width: 125px;
+            padding: 2px;
+            font-size: 11pt;
+            font-weight: bold;
+            color: @gray-700;
+            background-color: @gray-300;
+            border: none;
+          }
+          .channel_language {
+            display: inline-block;
+            max-width: 135px;
+            margin-bottom: -3px;
+          }
+        }
+        #channel_name_error {
+          padding: 0;
+          margin: 0;
+          font-weight: bold;
+          color: @red-error-color;
+          visibility: hidden;
+        }
+        h4 {
+          padding-bottom: 5px;
+          margin-bottom: 0;
+          font-size: @channel-font-size;
+          font-weight: bold;
+          color: @body-font-color;
+          .channel_name {
+            height: @channel-font-size + 10px;
+            color: @body-font-color;
+          }
+          .channel_option_icon {
+            position: relative;
+            top: -45px;
+            display: inline-block;
+            padding: 10px;
+            font-size: 20pt;
+            color: @gray-700;
+            cursor: pointer;
+            &:not(.disabled):hover {
+              color: @blue-500;
+            }
+            &.unstar_channel {
+              color: @blue-500;
+              &:hover {
+                color: @blue-200;
+              }
+            }
+          }
+        }
+        .description {
+          min-height: @channel-container-height - @channel-font-size - 115px;
+          margin-bottom: 5px;
+          overflow-y: auto;
+          p {
+            font-size: @channel-description-font-size;
+          }
+        }
 
-				#new_channel_name:focus, textarea:focus {
-					outline: none;
-					border-bottom: 3px solid #BDBDBD;
-				    .input-form;
-				}
-				.delete_channel{
-					color: @delete-color;
-					font-weight: bold;
-					margin-top:10px;
-					font-size:9pt;
-				}
+        #new_channel_name,
+        textarea {
+          width: @channel-container-width - @channel-profile-width - 50px;
+          height: 35px;
+          margin-top: 10px;
+          color: @body-font-color;
+          background: transparent;
+          border: none;
+          border-bottom: 1px solid #bdbdbd;
+        }
 
-				.channel_options{
-					width: @channel-container-width  - 40px;
-					padding-left:@channel-profile-width;
-					top: 20px;
-					.save_channel {
-						.action-button;
-					}
-				}
-				input[type=text] {
-					font-size: 20px;
-				}
-				textarea{
-					font-size: 16px;
-					resize: none;
-					height: @channel-container-height * 0.3;
-					margin-top: 25px;
-				}
+        #new_channel_name:focus,
+        textarea:focus {
+          border-bottom: 3px solid #bdbdbd;
+          outline: none;
+          .input-form;
+        }
+        .delete_channel {
+          margin-top: 10px;
+          font-size: 9pt;
+          font-weight: bold;
+          color: @delete-color;
+        }
 
-				.tag_area{
-					li{
-						background-color: @channel-btn-color;
-						border: 1px solid @channel-btn-border-color;
-						color:black;
-						padding: 0px 5px;
-						font-size:9pt;
-					}
-				}
-				.updated_time {
-					font-style: italic;
-					font-size: 10pt;
-				    color: gray;
-				}
-				.delete_channel_set:hover {
-					color: @red-error-color;
-				}
-			}
-			.active_channel{
-				.is_selected {
-					display: block;
-				}
-				.channel-container-wrapper {
-					border-color: @topnav-bg-color;
-				}
-			}
-			.highlight {
-				.is_selected i{
-					color: @blue-500 !important;
-				}
-				.channel-container-wrapper {
-					border:4px solid @blue-500 !important;
-					.channel_name{
-						color:@blue-500 !important;
-					}
-				}
+        .channel_options {
+          top: 20px;
+          width: @channel-container-width - 40px;
+          padding-left: @channel-profile-width;
+          .save_channel {
+            .action-button;
+          }
+        }
+        input[type='text'] {
+          font-size: 20px;
+        }
+        textarea {
+          height: @channel-container-height * 0.3;
+          margin-top: 25px;
+          font-size: 16px;
+          resize: none;
+        }
 
-			}
-		}
-	}
+        .tag_area {
+          li {
+            padding: 0 5px;
+            font-size: 9pt;
+            color: black;
+            background-color: @channel-btn-color;
+            border: 1px solid @channel-btn-border-color;
+          }
+        }
+        .updated_time {
+          font-size: 10pt;
+          font-style: italic;
+          color: gray;
+        }
+        .delete_channel_set:hover {
+          color: @red-error-color;
+        }
+      }
+      .active_channel {
+        .is_selected {
+          display: block;
+        }
+        .channel-container-wrapper {
+          border-color: @topnav-bg-color;
+        }
+      }
+      .highlight {
+        .is_selected i {
+          color: @blue-500 !important;
+        }
+        .channel-container-wrapper {
+          border: 4px solid @blue-500 !important;
+          .channel_name {
+            color: @blue-500 !important;
+          }
+        }
+      }
+    }
+  }
 }
 
 @channel-preview-width: 650px;
 #channel_preview_wrapper {
-    overflow: hidden;
-    width: 0px;
-    margin-left: 2px;
-    background-color: white;
-    background-size:     cover;
-    background-repeat:   no-repeat;
-    background-position: center center;
-	#channel_details_overlay {
-    	height: inherit;
-    	background-color: rgba(240,240,240, 0.8);
-    }
+  width: 0;
+  margin-left: 2px;
+  overflow: hidden;
+  background-color: white;
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: cover;
+  #channel_details_overlay {
+    height: inherit;
+    background-color: rgba(240, 240, 240, 0.8);
+  }
 
-    #close_wrapper {
-    	margin: 12px 0px;
-    	#close_details { margin-right: 20px; }
+  #close_wrapper {
+    margin: 12px 0;
+    #close_details {
+      margin-right: 20px;
     }
+  }
 
-	#channel_details_panel {
-		margin: 0px auto;
-		float: none;
-		display: table-cell;
-		vertical-align: top;
-		height: 83vh;
-		width: @channel-preview-width - 40px;
-		.default-item {
-			padding-top: 45%;
-		    font-size: 15pt;
-		    font-weight: bold;
-		    text-align: center;
-		    color: @gray-300;
-		}
-	}
+  #channel_details_panel {
+    display: table-cell;
+    float: none;
+    width: @channel-preview-width - 40px;
+    height: 83vh;
+    margin: 0 auto;
+    vertical-align: top;
+    .default-item {
+      padding-top: 45%;
+      font-size: 15pt;
+      font-weight: bold;
+      color: @gray-300;
+      text-align: center;
+    }
+  }
 }
