@@ -1,4 +1,3 @@
-import ast
 import functools
 import hashlib
 import json
@@ -47,6 +46,7 @@ from mptt.models import TreeManager
 from pg_utils import DistinctSum
 
 from contentcuration.statistics import record_channel_stats
+from contentcuration.utils.parser import load_json_string
 
 EDIT_ACCESS = "edit"
 VIEW_ACCESS = "view"
@@ -966,7 +966,7 @@ class ContentNode(MPTTModel, models.Model):
     def get_thumbnail(self):
         # Problems with json.loads, so use ast.literal_eval to get dict
         if self.thumbnail_encoding:
-            thumbnail_data = ast.literal_eval(self.thumbnail_encoding)
+            thumbnail_data = load_json_string(self.thumbnail_encoding)
             if thumbnail_data.get("base64"):
                 return thumbnail_data["base64"]
 
@@ -997,15 +997,6 @@ class ContentNode(MPTTModel, models.Model):
         descendants = self.get_descendants().prefetch_related('children', 'files', 'tags') \
             .select_related('license', 'language')
         channel = self.get_channel()
-
-        # If channel is a sushi chef channel, use date created for faster query
-        # Otherwise, find the last time anything was updated in the channel
-        last_update = channel.main_tree.created if channel and channel.ricecooker_version else \
-            descendants.filter(changed=True) \
-                .aggregate(latest_update=Max('modified')) \
-                .get('latest_update')
-
-        # See if the latest cached data is up to date since the last update to the channel
 
         # Get resources
         resources = descendants.exclude(kind=content_kinds.TOPIC)
