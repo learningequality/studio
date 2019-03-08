@@ -9,9 +9,11 @@
 ## Upcoming release
 #### Changes
 * [[@jayoshih](https://github.com/jayoshih)] Don't allow users to set prerequisites on topics
+* [[@jayoshih](https://github.com/jayoshih)] Removed deleted channels from storage request list
 
 #### Issues Resolved
 * [#1254](https://github.com/learningequality/studio/issues/1254)
+* [#1269](https://github.com/learningequality/studio/issues/1269)
 
 ## 2019-02-11 Release
 #### Changes
