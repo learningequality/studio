@@ -252,7 +252,7 @@ class StorageSettingsView(LoginRequiredMixin, FormView):
 
     def get_form_kwargs(self):
         kw = super(StorageSettingsView, self).get_form_kwargs()
-        kw['channel_choices'] = [(c['id'], c['name']) for c in self.request.user.editable_channels.values("id", "name")]
+        kw['channel_choices'] = [(c['id'], c['name']) for c in self.request.user.editable_channels.exclude(deleted=True).values("id", "name")]
         kw['request'] = self.request
         return kw
 
