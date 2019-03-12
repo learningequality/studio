@@ -4,7 +4,7 @@
   font-weight: bold;
   cursor: pointer;
   background-color: @gray-200;
-  border: none;
+  border: 0;
   outline: none;
 }
 
@@ -108,7 +108,7 @@ body {
   padding: 5px;
   margin: 0 0 0 27px;
   background-color: transparent;
-  border: none;
+  border: 0;
   li {
     font-size: @larger-body-text;
     color: @gray-700;
@@ -149,7 +149,7 @@ body {
       margin-left: 3px;
       overflow-y: auto;
       border: 1px solid @gray-400;
-      border-top: none;
+      border-top: 0;
       box-shadow: none;
       li a {
         width: 100%;
@@ -170,7 +170,6 @@ body {
     .dropdown-toggle {
       width: 300px;
       padding: 7px;
-      font-weight: bold;
       font-weight: bold;
       color: @gray-700;
       background-color: white;
@@ -195,7 +194,7 @@ body {
   #channel-publish-button,
   #channel-activate-button {
     margin: 0 40px 0 0;
-    border: none;
+    border: 0;
     .action-button;
   }
   #channel-activate-button {
@@ -349,9 +348,6 @@ body {
     cursor: pointer;
   }
   #container_area {
-    width: -webkit-max-content;
-    width: -o-max-content;
-    width: -moz-max-content;
     width: max-content;
     padding: 0 40px;
     padding-right: 200px; // Some extra padding for options dropdown
@@ -436,7 +432,7 @@ body {
           border-top: 1px solid transparent;
           &:first-child,
           &:nth-child(2) {
-            border-top: none;
+            border-top: 0;
           }
           &:hover {
             background-color: @highlighted-file;
@@ -867,14 +863,11 @@ body {
         }
       }
       .table-row {
-        display: -webkit-box;
-        display: -webkit-flex;
-        display: -ms-flexbox;
         display: flex;
         flex-wrap: wrap;
         border-bottom: 1px solid @gray-300;
         &:last-child {
-          border: none;
+          border: 0;
           .table-cell:last-child {
             border-bottom: @border-emphasis;
           }

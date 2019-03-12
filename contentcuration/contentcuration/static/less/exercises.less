@@ -74,8 +74,6 @@
         background-color: @blue-100;
         border-left: 3px solid @blue-500;
       }
-    }
-    .assessment_li {
       &:first-of-type .move_up,
       &:last-of-type .move_down {
         .disabled;
@@ -115,8 +113,8 @@
 }
 
 .assessment_item {
-  display: -webkit-flex;
-  -webkit-flex-flow: row;
+  display: flex;
+  flex-flow: row;
   min-height: 100px;
   margin: 10px 5px 35px 15px;
   .assessment_item_error {
@@ -327,7 +325,7 @@
       border-radius: 0;
       .btn {
         background: transparent;
-        border: none;
+        border: 0;
         border-radius: 0;
         box-shadow: none;
       }
@@ -413,14 +411,12 @@
       background: rgba(0, 0, 0, 0.6);
     }
     .mq-wrapper {
-      display: -webkit-flex;
-      -webkit-flex-flow: row;
+      display: flex;
+      flex-flow: row;
       padding: 5px;
       font-size: 18pt;
       * {
         outline: none;
-        -webkit-box-shadow: none;
-        -moz-box-shadow: none;
         box-shadow: none;
       }
       .mq-editable-field {
