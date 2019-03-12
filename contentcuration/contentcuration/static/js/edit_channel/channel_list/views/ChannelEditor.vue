@@ -9,11 +9,15 @@
           <option disabled selected value=0>{{ $tr('channelLanguagePlaceholder') }}</option>
           <option
             v-for="language in languages"
+            :key="language.id"
             :value="language.id"
             :selected="language.id === channel.language"
-          >{{language.native_name}}</option>
+          >
+            {{language.native_name}}
+          </option>
         </select>
       </div>
+
       <h4>
         {{ $tr("channelName") }}
         <label class="required">
@@ -103,7 +107,7 @@ export default {
     }),
     {
       isNew() {
-        return !!!this.channel.id;
+        return !this.channel.id;
       },
       languages() {
         return _.sortBy(Constants.Languages, 'native_name');
@@ -282,4 +286,3 @@ export default {
 }
 
 </style>
-
