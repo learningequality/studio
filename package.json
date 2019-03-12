@@ -6,7 +6,7 @@
   "scripts": {
     "lint:py": "flake8 --exit-zero",
     "lint": "kolibri-tools lint",
-    "lint-all": "yarn run lint 'contentcuration/contentcuration/static/**/*.{js,vue,scss,less,css}' -i '**/node_modules/**','**/bundles/**','**/static/js/utils/**','**/static/css/**'",
+    "lint-all": "yarn run lint 'contentcuration/contentcuration/static/**/*.{js,vue,scss,less,css}' -i '**/node_modules/**','**/bundles/**','**/static/js/utils/**','**/static/css/**','contentcuration/static/**'",
     "lint-all:fix": "yarn run lint-all -w",
     "lint:fix": "yarn run lint -w",
     "lint:watch": "yarn lint-all -w -m",
