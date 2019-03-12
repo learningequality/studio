@@ -250,7 +250,7 @@
     font-weight: bold;
     color: @gray-700;
     background-color: @gray-300;
-    border: none;
+    border: 0;
   }
 
   .channel-set-metadata {

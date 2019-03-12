@@ -182,7 +182,7 @@
     font-size: @larger-body-text;
     color: @body-font-color;
     background: transparent;
-    border: none;
+    border: 0;
     border-bottom: 1px solid #bdbdbd;
     &:focus {
       border-bottom: 2px solid @blue-700;

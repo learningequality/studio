@@ -20,9 +20,6 @@
 
   .restore_icon {
     filter: FlipH; /* IE 6/7/8 */
-    -moz-transform: scaleX(-1); /* Gecko */
-    -o-transform: scaleX(-1); /* Opera */
-    -webkit-transform: scaleX(-1); /* Webkit */
     transform: scaleX(-1); /* Standard */
   }
   #archive_content {
@@ -37,8 +34,6 @@
           display: none;
         }
         .item_wrapper {
-          width: -moz-max-content;
-          width: -webkit-max-content;
           width: max-content;
           min-width: @archive-list-width / 2;
         }

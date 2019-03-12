@@ -157,8 +157,8 @@
 
   .button-reset {
     background: none;
-    border: none;
-    -webkit-appearance: none;
+    border: 0;
+    appearance: none;
   }
 
 </style>

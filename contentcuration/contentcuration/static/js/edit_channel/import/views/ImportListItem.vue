@@ -196,7 +196,6 @@
   @import '../../../../less/global-variables.less';
 
   .list-item {
-    width: -moz-max-content;
     width: max-content;
   }
 
