@@ -91,7 +91,7 @@
   font-weight: bold;
   color: @blue-500;
   background-color: transparent;
-  border: none;
+  border: 0;
   &:focus,
   &:hover {
     text-decoration: underline;
@@ -155,7 +155,7 @@
 .input-form {
   color: @body-font-color;
   background: transparent;
-  border: none;
+  border: 0;
   border-bottom: 1px solid #bdbdbd;
   &:focus {
     border-bottom: 2px solid @blue-700;
@@ -303,9 +303,6 @@ a {
 
 [dir='rtl'] .rtl-flip {
   direction: rtl;
-  -webkit-transform: matrix(-1, 0, 0, 1, 0, 0);
-  -moz-transform: matrix(-1, 0, 0, 1, 0, 0);
-  -o-transform: matrix(-1, 0, 0, 1, 0, 0);
   transform: matrix(-1, 0, 0, 1, 0, 0);
 }
 
@@ -322,7 +319,7 @@ a {
       padding: 5px 20px;
       font-size: 12pt;
       cursor: pointer;
-      border: none;
+      border: 0;
       &:hover {
         font-weight: bold;
         background-color: @gray-200;
