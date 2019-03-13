@@ -7,7 +7,7 @@
     <form @submit.prevent="submitChannel" class="channel-section">
 
       <!-- Previously used h4, which carries semantic meaning. Size is just style -->
-      <label class="language-wrapper">
+      <label class="language-wrapper input-wrapper">
         <span class="material-icons">language</span>
 
         <span class="sr-only">
@@ -40,14 +40,14 @@
       </label>
 
       <!-- Previously used h4, which carries semantic meaning. Size is just style -->
-      <label>
-        <span class="edit-label required">
+      <label class="input-wrapper">
+        <span class="input-label required">
           {{ $tr("channelName") }}
         </span>
         <span
           role="alert"
           class="error-message"
-          v-show="nameError"
+          v-if="nameError"
         >
           {{ nameError }}
         </span>
@@ -67,8 +67,8 @@
       </label>
 
       <!-- Previously used h4, which carries semantic meaning. Size is just style -->
-      <label>
-        <span class="edit-label">
+      <label class="input-wrapper">
+        <span class="input-label">
           {{ $tr('channelDescription') }}
         </span>
 
@@ -284,10 +284,13 @@ export default {
   }
 
   .channel-section {
-    padding-left: 25px;
     width: 100%;
-    .language-wrapper {
+
+    .input-wrapper {
       display: block;
+    }
+
+    .language-wrapper {
       font-size: 15pt;
       text-align: right;
       font-weight: bold;
@@ -300,7 +303,7 @@ export default {
       }
     }
 
-    .edit-label {
+    .input-label {
       font-size: 10pt;
       color: @gray-800;
       font-weight: bold;
@@ -342,7 +345,6 @@ export default {
       grid-auto-flow: column;
       justify-content: space-between;
       margin-bottom: 20px;
-      margin-left: -15px;
       a, button {
         text-transform: uppercase;
       }
