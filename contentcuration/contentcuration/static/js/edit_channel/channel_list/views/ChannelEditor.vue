@@ -2,64 +2,112 @@
 
   <div class="channel-editor">
     <div ref="channelthumbnail" class="channel-thumbnail">&nbsp;</div>
-    <div class="channel-section">
-      <div class="language-wrapper">
+
+
+    <form @submit.prevent="submitChannel" class="channel-section">
+
+      <!-- Previously used h4, which carries semantic meaning. Size is just style -->
+      <label class="language-wrapper">
         <span class="material-icons">language</span>
-        <select id="select-language" :tabindex="1" @change="setLanguage($event.target.value)">
-          <option disabled selected value=0>{{ $tr('channelLanguagePlaceholder') }}</option>
+
+        <span class="sr-only">
+          {{ $tr('channelLanguagePlaceholder') }}
+        </span>
+
+        <select
+          id="select-language"
+          :tabindex="1"
+          v-model="language"
+          @blur="setLanguage(language)"
+        >
+          <option
+            disabled
+            selected
+            value="0"
+          >
+            {{ $tr('channelLanguagePlaceholder') }}
+          </option>
+
           <option
             v-for="language in languages"
             :key="language.id"
             :value="language.id"
-            :selected="language.id === channel.language"
           >
-            {{language.native_name}}
+            {{ language.native_name }}
           </option>
+
         </select>
-      </div>
+      </label>
 
-      <h4>
-        {{ $tr("channelName") }}
-        <label class="required">
-          <span v-show="changed && !channel.name.length">{{ $tr("channelError") }}</span>
-        </label>
-      </h4>
-      <input
-        type="text"
-        dir="auto"
-        :placeholder="$tr('channelNamePlaceholder')"
-        maxlength="200"
-        :tabindex="0"
-        :value="channel.name"
-        ref="firstTab"
-        @input="setName($event.target.value)"
-        class="channel-name"
-        required
-      />
+      <!-- Previously used h4, which carries semantic meaning. Size is just style -->
+      <label>
+        <span class="edit-label required">
+          {{ $tr("channelName") }}
+        </span>
+        <span
+          role="alert"
+          class="error-message"
+          v-show="nameError"
+        >
+          {{ nameError }}
+        </span>
 
-      <h4>{{ $tr('channelDescription') }}</h4>
-      <textarea
-        dir="auto"
-        :placeholder="$tr('channelDescriptionPlaceholder')"
-        maxlength="400"
-        :tabindex="2"
-        rows="4"
-        @input="setDescription($event.target.value)"
-        class="channel-description"
-      >{{channel.description}}</textarea>
+        <input
+          :placeholder="$tr('channelNamePlaceholder')"
+          :tabindex="0"
+          v-model="name"
+          @blur="setName(name)"
+          type="text"
+          dir="auto"
+          maxlength="200"
+          ref="firstTab"
+          class="channel-name"
+          required
+        />
+      </label>
+
+      <!-- Previously used h4, which carries semantic meaning. Size is just style -->
+      <label>
+        <span class="edit-label">
+          {{ $tr('channelDescription') }}
+        </span>
+
+        <textarea
+          v-model="description"
+          :placeholder="$tr('channelDescriptionPlaceholder')"
+          @blur="setDescription(description)"
+          class="channel-description"
+          dir="auto"
+          maxlength="400"
+          :tabindex="2"
+          rows="4"
+        >
+        </textarea>
+      </label>
 
       <div class="buttons">
-        <a @click="cancelEdit" class="cancel-edits" :tabindex="4">{{ $tr('cancel') }}</a>
+        <!-- Tabindex necessary? -->
+        <button
+          type="reset"
+          @click="cancelEdit"
+          class="cancel-edits"
+          :tabindex="4"
+        >
+          {{ $tr('cancel') }}
+        </button>
         <button
           class="save-channel"
+          type="submit"
           :tabindex="3"
-          :class="{'disabled': !isValid || saving || uploading}"
-          :disabled="!isValid || saving || uploading"
+          :class="{'disabled': invalid}"
+          :disabled="invalid"
           :title="saveButtonTitle"
-          @click="submitChannel"
-        >{{ (isNew)? $tr('create') : $tr('save') }}</button>
+        >
+          {{ (isNew)? $tr('create') : $tr('save') }}
+        </button>
+
       </div>
-    </div>
+    </form>
   </div>
 
 </template>
@@ -94,12 +142,22 @@ export default {
   },
   data() {
     return {
-      showError: false,
       saving: false,
-      uploading: false
+      uploading: false,
+      // The way vue handles forms assumes local state. Not in vuex state.
+      // Vuex state updates make this a bit awkward.
+      language: '',
+      name: '',
+      description: '',
     };
   },
   mixins: [tabMixin],
+  beforeMount() {
+    // Only need this because we're using getters. Could go straight to $store.state in `data`
+    this.language = this.channel.language;
+    this.name = this.channel.name;
+    this.description = this.channel.description;
+  },
   computed: Object.assign(
     mapGetters('channel_list', {
       channel: 'channelChanges',
@@ -109,18 +167,26 @@ export default {
       isNew() {
         return !this.channel.id;
       },
-      languages() {
-        return _.sortBy(Constants.Languages, 'native_name');
+      nameError() {
+        if (this.changed && !(this.name.length)) {
+          return this.$tr("channelError");
+        }
+        return '';
       },
-      isValid() {
-        return !!this.channel.name.length;
+      languages() {
+        return Constants.Languages.sort(
+          (langA, langB) => langA.native_name.localeCompare(langB.native_name)
+        )
+      },
+      invalid() {
+        return Boolean(this.nameError) || this.saving || this.uploading;
       },
       saveButtonTitle() {
-        if(!this.isValid)
-          return this.$tr('invalidChannel');
-        else if(this.saving)
+        if(this.saving)
           return this.$tr('saving');
-        return "";
+        else if(this.invalid)
+          return this.$tr('invalidChannel');
+        return '';
       },
     }
   ),
@@ -174,8 +240,6 @@ export default {
           encoding: {}
         });
       },
-
-
       /* Handle channel edits */
       cancelEdit() {
         this.cancelChanges();
@@ -183,6 +247,9 @@ export default {
       },
       submitChannel() {
         this.saving = true;
+
+        // saveChannel relies on vuex state to submit
+        // Submitting using local `data` would probably be simpler
         this.saveChannel().then((channel) => {
           this.saving = false;
           this.$emit('submitChanges');
@@ -218,35 +285,37 @@ export default {
 
   .channel-section {
     padding-left: 25px;
+    width: 100%;
     .language-wrapper {
+      display: block;
       font-size: 15pt;
       text-align: right;
       font-weight: bold;
       min-height: 25px;
-      span {
+      .material-icons {
         color: @blue-200;
         vertical-align: top;
         font-size: 20pt;
         margin-right: 5px;
       }
     }
-    h4 {
+
+    .edit-label {
       font-size: 10pt;
       color: @gray-800;
-      margin: 2px 0px;
       font-weight: bold;
-    }
-
-    .required {
-      font-weight: bold;
-      color: @red-error-color;
-      &::before {
+      width: 100%;
+      &.required::after {
+        color: @red-error-color;
         content: " * ";
       }
-      span{
-        font-style: italic;
-        font-size: 8pt;
-      }
+    }
+
+    .error-message {
+      font-weight: bold;
+      color: @red-error-color;
+      font-style: italic;
+      font-size: 8pt;
     }
 
     input[type="text"], textarea {
@@ -255,7 +324,9 @@ export default {
       width: 100%;
       font-size: @larger-body-text;
       padding: 2px 0;
+      font-weight: normal;
     }
+
     textarea {
       resize:none;
       height:auto;
