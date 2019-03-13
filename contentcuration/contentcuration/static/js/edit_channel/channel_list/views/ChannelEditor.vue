@@ -269,10 +269,11 @@ export default {
 @import '../../../../less/channel_list.less';
 
 .channel-editor {
+
   .thumbnail-title-columns;
-  padding: 0px 15px;
+  padding: 0px 20px 40px;
   .channel-thumbnail {
-    margin-top: 30px;
+    margin-top: 35px;
     width: @channel-thumbnail-size;
     /deep/ .image_dropzone {
       width: @channel-thumbnail-size;
@@ -285,6 +286,7 @@ export default {
 
   .channel-section {
     width: 100%;
+    padding-left: 20px;
 
     .input-wrapper {
       display: block;
