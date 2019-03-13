@@ -1,5 +1,5 @@
 <template>
-  <li class="list-item" :class="import-list-item-class">
+  <li class="list-item" :class="importListItemClass">
     <template v-if="!isChannel && !readOnly">
       <input
         type="checkbox"
