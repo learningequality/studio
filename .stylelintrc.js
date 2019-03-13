@@ -1,6 +1,6 @@
 module.exports = {
   extends: [
-    'kolibri-tools/stylelint-config',
+    'kolibri-tools/.stylelintrc',
   ],
   rules: {
     /*
