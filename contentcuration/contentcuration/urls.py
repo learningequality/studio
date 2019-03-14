@@ -22,8 +22,10 @@ from django.contrib.auth import views as auth_views
 from django.core.urlresolvers import reverse_lazy
 from django.db.models import Q
 from django.views.i18n import javascript_catalog
+from rest_framework import permissions
 from rest_framework import routers
 from rest_framework import viewsets
+from rest_framework.exceptions import MethodNotAllowed
 from rest_framework_bulk.generics import BulkModelViewSet
 from rest_framework_bulk.routes import BulkRouter
 
@@ -53,6 +55,7 @@ from contentcuration.models import FormatPreset
 from contentcuration.models import Invitation
 from contentcuration.models import Language
 from contentcuration.models import License
+from contentcuration.models import Task
 from contentcuration.models import User
 
 
@@ -169,7 +172,10 @@ class InvitationViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         if self.request.user.is_admin:
             return Invitation.objects.all()
-        return Invitation.objects.filter(Q(invited=self.request.user) | Q(sender=self.request.user)).distinct()
+        return Invitation.objects.filter(Q(invited=self.request.user) |
+                                         Q(sender=self.request.user) |
+                                         Q(channel__editors=self.request.user) |
+                                         Q(channel__viewers=self.request.user)).distinct()
 
 
 class AssessmentItemViewSet(BulkModelViewSet):
@@ -184,6 +190,27 @@ class AssessmentItemViewSet(BulkModelViewSet):
         return AssessmentItem.objects.select_related('contentnode').filter(contentnode__tree_id__in=tree_ids).distinct()
 
 
+class TaskViewSet(viewsets.ModelViewSet):
+    queryset = Task.objects.all()
+    serializer_class = serializers.TaskSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    # task creation and updates are handled by the Celery async task, so forbid them via API
+    def create(self, validated_data):
+        raise MethodNotAllowed('POST')
+
+    def update(self, *args, **kwargs):
+        raise MethodNotAllowed('PUT')
+
+    def perform_destroy(self, instance):
+        # TODO: Add logic to delete the Celery task using app.control.revoke(). This will require some extensive
+        # testing to ensure terminating in-progress tasks will not put the db in an indeterminate state.
+        instance.delete()
+
+    def get_queryset(self):
+        return Task.objects.filter(user=self.request.user)
+
+
 router = routers.DefaultRouter(trailing_slash=False)
 router.register(r'license', LicenseViewSet)
 router.register(r'language', LanguageViewSet)
@@ -193,6 +220,7 @@ router.register(r'fileformat', FileFormatViewSet)
 router.register(r'preset', FormatPresetViewSet)
 router.register(r'tag', TagViewSet)
 router.register(r'contentkind', ContentKindViewSet)
+router.register(r'task', TaskViewSet)
 router.register(r'user', UserViewSet)
 router.register(r'invitation', InvitationViewSet)
 
