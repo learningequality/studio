@@ -1,4 +1,5 @@
 import json
+import re
 
 from django.conf import settings
 from django.contrib.auth import logout
@@ -33,6 +34,27 @@ from contentcuration.utils.policies import get_latest_policies
 """ REGISTRATION/INVITATION ENDPOINTS """
 
 
+def _validate_email(email, channel, user, upgrade=False, reinvite=False):
+    # Check email is valid against a regex
+    if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+        return False, _("Invalid email address")
+
+    # Check user is not already an editor, adjust message if current user
+    if channel.editors.filter(email=email).exists():
+        if user.email == email:
+            return False, _("You already have editing permission for this channel.")
+        return False, _("This person already has edit access to this channel.")
+
+    # Check if user is a viewer and prompt if want to make editor
+    if not upgrade and channel.viewers.filter(email=email).exists():
+        return True, json.dumps({"prompt_to_upgrade": True})
+
+    # Check if user has already been invited
+    if not reinvite and channel.pending_editors.filter(email=email).exists():
+        return True, json.dumps({"reinvite": True})
+    return True, None
+
+
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def send_invitation_email(request):
@@ -47,11 +69,19 @@ def send_invitation_email(request):
         share_mode = data["share_mode"]
         channel = Channel.objects.get(id=channel_id)
 
+        # Check if user has access to channel in the first place
+        request.user.can_view(channel_id)
+
+        # Validate
+        valid, response = _validate_email(user_email, channel, request.user, upgrade=data.get('upgrade'), reinvite=data.get('reinvite'))
+        if valid:
+            return HttpResponse(response)
+        elif response:
+            return HttpResponseBadRequest(response)
+
         recipient = User.objects.filter(email__iexact=user_email).first()
         if not recipient:
             recipient = User.objects.create(email=user_email)
-
-        request.user.can_view(channel_id)
 
         fields = {
             "invited": recipient,
