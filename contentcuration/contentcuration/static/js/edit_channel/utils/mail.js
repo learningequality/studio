@@ -1,7 +1,7 @@
 function send_mail(channel, email, share_mode){
   return new Promise(function(resolve, reject){
     var data = {
-      "channel_id": channel.get("id"),
+      "channel_id": channel.id,
       "user_email": email,
       "share_mode": share_mode
     };
@@ -14,6 +14,7 @@ function send_mail(channel, email, share_mode){
           resolve(new Models.InvitationModel(JSON.parse(data)));
         },
         error:function(error){
+          console.error(error);
           reject(error);
         }
     });
