@@ -3,9 +3,9 @@
 <div>
 	<h4>{{ $tr('inviteText')}}</h4>
 	<form @submit="submitEmail">
-		<p v-if="shareError" class="error">{{shareError}}</p>
-		<p v-else-if="shareSuccess" class="success">{{shareSuccess}}</p>
-		<p v-else-if="sharing">{{ $tr('sendingIndicator') }}</p>
+		<p v-if="shareError" class="message error">{{shareError}}</p>
+		<p v-else-if="shareSuccess" class="message success">{{shareSuccess}}</p>
+		<p v-else-if="sharing" class="message sending">{{ $tr('sendingIndicator') }}</p>
 		<div class="email-input-area">
 			<input type="text" dir="auto" ref="email" :placeholder="$tr('emailPlaceholder')" name="email">
 			<select name="permission" ref="share_mode">
@@ -15,9 +15,13 @@
 					:selected="currentUserPermission === permission"
 				>{{ $tr(permission) }}</option>
 			</select>
-			<button type="submit" @click.prevent="submitEmail" :disabled="sharing" :class="{disabled: sharing}">
-				{{ $tr('inviteButton') }}
-			</button>
+			<button
+				type="submit"
+				@click.prevent="submitEmail"
+				:disabled="sharing"
+				:class="{disabled: sharing}"
+				:title="sharing? $tr('sendingIndicator') : $tr('inviteButton')"
+			>{{ $tr('inviteButton') }}</button>
 		</div>
 	</form>
 
@@ -35,14 +39,6 @@
 <script>
 
 	// TODO: disable share
-//,
-// "grant_edit_prompt": "",
-// "granting_permissions": ,
-//
-// "user_already_invited": ,
-// "resend_prompt": "This user has already been invited. Resend invitation to {data}?",
-// "already_invited": "This person has already been invited.",
-// "invite_failed": "Failed to send invitation",
 
 import { mapGetters, mapActions, mapState } from 'vuex';
 import { Permissions, PermissionRanks } from '../constants';
@@ -69,7 +65,7 @@ export default {
     upgradeHeader: "Granting Permissions",
     upgradePrompt: "This person already has viewing access. Would you like to grant editing permissions?",
     cancelButton: "Cancel",
-    resendButton: "Send",
+    sendButton: "Send",
     grantButton: "Grant Access"
   },
   data() {
@@ -119,7 +115,7 @@ export default {
 	  	promptReinvite() {
 	  		dialog(this.$tr('resendHeader'), this.$tr('resendPrompt'), {
 	  			[this.$tr('cancelButton')]: () => {},
-	  			[this.$tr('resendButton')]: () => {
+	  			[this.$tr('sendButton')]: () => {
 	  				this.attemptSendInvitation({reinvite: true});
 	  			}
 	  		});
@@ -170,12 +166,15 @@ export default {
 	}
 }
 
-.success, .error {
+.message {
 	margin: 0px 20px;
   font-weight: bold;
-  color: @blue-500;
+  color: @gray-700;
   &.error {
   	color: @red-error-color;
+  }
+  &.error {
+  	color: @blue-500;
   }
 }
 
