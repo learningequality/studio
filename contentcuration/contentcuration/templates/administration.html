@@ -10,16 +10,16 @@
 {% endblock css_bundle %} -->
 
 {% block js_bundle %}
-	{% render_bundle 'administration' 'js' %}
-{% endblock js_bundle %}
-
-{% block content %}
-
 	<script>
 		var user = JSON.parse("{{ current_user|escapejs }}");
 		var default_sender = "{{default_sender |escapejs}}";
 		var email_placeholders = JSON.parse("{{ placeholders|escapejs }}");
 		var url = "{% url 'administration' %}";
 	</script>
+	{% render_bundle 'administration' 'js' %}
+{% endblock js_bundle %}
+
+{% block content %}
+
 	<div id="admin-container"></div>
 {% endblock content %}

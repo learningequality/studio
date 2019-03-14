@@ -111,7 +111,7 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
         let visiblePageRadius = 5
         let totalPages = this.collection.state.totalPages
         let currentPage = this.collection.state.currentPage
-        
+
         // if you made a clock out of the page numbers, what would be the distance
         // between two page numbers on that clock?
         let distance = (x, y) => (
@@ -362,12 +362,9 @@ var ChannelItem = BaseAdminItem.extend({
     },
     open_sharing: function () {
         var ShareViews = require("edit_channel/share/views");
-        var share_view = new ShareViews.ShareModalView({
+        return new ShareViews.ShareModalView({
             model: this.model,
-            current_user: window.current_user,
-            allow_leave: true,
-            onjoin: this.fetch_editors,
-            onleave: this.fetch_editors
+            onsync: this.fetch_editors
         });
     },
     fetch_editors: function (editor) {

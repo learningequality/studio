@@ -330,8 +330,7 @@ var BaseWorkspaceView = BaseView.extend({
 		var ShareViews = require("edit_channel/share/views");
 		State.Store.dispatch('usePrimaryModal', () => {
 			return new ShareViews.ShareModalView({
-				model:State.current_channel,
-				current_user: State.current_user
+				model:State.current_channel
 			});
 		});
 	},
