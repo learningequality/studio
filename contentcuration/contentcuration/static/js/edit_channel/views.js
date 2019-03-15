@@ -173,7 +173,8 @@ var BaseView = Backbone.View.extend({
           if (message != '') {
             $('#kolibri_load_text').text(this.get_translation('refresh_page'));
           }
-          console.log(this.get_translation('call_error'), error);
+          // eslint-disable-next-line no-console
+          console.warn(this.get_translation('call_error'), error);
         });
     } else {
       $('#loading_modal').remove();
@@ -748,7 +749,8 @@ var BaseEditableListView = BaseListView.extend({
             resolve_load(true);
           },
           error: function(obj, error) {
-            console.log(self.get_translation('error'), error);
+            // eslint-disable-next-line no-console
+            console.warn(self.get_translation('error'), error);
             reject(error);
             reject_load(error);
           },
@@ -1153,7 +1155,8 @@ var BaseListEditableItemView = BaseListItemView.extend({
             resolve(newView.model);
           })
           .catch(function(error) {
-            console.log(self.get_translation('error'), error);
+            // eslint-disable-next-line no-console
+            console.warn(self.get_translation('error'), error);
             reject(error);
           });
       } else {
@@ -1165,7 +1168,8 @@ var BaseListEditableItemView = BaseListItemView.extend({
               resolve_load(true);
             },
             error: function(obj, error) {
-              console.log(self.get_translation('error'), error);
+              // eslint-disable-next-line no-console
+              console.warn(self.get_translation('error'), error);
               reject(error);
               reject_load(error);
             },

@@ -3,8 +3,6 @@ let State = require('../state');
 const ERROR_PRIMARY_MODAL_ALREADY_OPEN = require('../vuexModules/primaryModal')
   .ERROR_PRIMARY_MODAL_ALREADY_OPEN;
 
-console.log(ERROR_PRIMARY_MODAL_ALREADY_OPEN);
-
 // a function that creates a BaseView
 let makeModalView = () => new BaseViews.BaseView();
 

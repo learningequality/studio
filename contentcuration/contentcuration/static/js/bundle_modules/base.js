@@ -54,8 +54,8 @@ $(function() {
       response: responseText.substring(0, 100),
     };
 
-    console.log('AJAX Request Error: ' + message);
-    console.log('Error data: ' + JSON.stringify(extraData));
+    console.warn('AJAX Request Error: ' + message);  // eslint-disable-line no-console
+    console.warn('Error data: ' + JSON.stringify(extraData)); // eslint-disable-line no-console
     if (Raven && Raven.captureMessage) {
       Raven.captureMessage(message, {
         extra: extraData,
