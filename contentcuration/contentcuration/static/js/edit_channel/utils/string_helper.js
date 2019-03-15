@@ -1,5 +1,5 @@
 var _ = require('underscore');
-const State = require('edit_channel/state');
+// const State = require('edit_channel/state');
 const Constants = require('edit_channel/constants/index');
 var i18n = require('../../utils/i18n');
 
