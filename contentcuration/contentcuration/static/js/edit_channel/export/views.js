@@ -1,4 +1,3 @@
-var Backbone = require('backbone');
 var _ = require('underscore');
 var BaseViews = require('edit_channel/views');
 var Models = require('edit_channel/models');

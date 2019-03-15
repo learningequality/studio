@@ -1,5 +1,4 @@
 var Models = require('edit_channel/models');
-var _ = require('underscore');
 var stringHelper = require('edit_channel/utils/string_helper');
 var dialog = require('edit_channel/utils/dialog');
 const WorkspaceManager = require('./workspace_manager');
@@ -9,12 +8,7 @@ const WorkspaceManager = require('./workspace_manager');
  *       container: container to add dropping ability to
  */
 function addSortable(element, selected_class, callback) {
-  var oldContainer;
-  var item_height = 0;
-  var target;
-  var isaboveclosest;
   var selectedClass = selected_class;
-  var yPosition = 0;
 
   element.$el
     .find('.content-list')
@@ -107,7 +101,7 @@ function addSortable(element, selected_class, callback) {
               });
             var appended_items = new Models.ContentNodeCollection(); //Items from another container
             if (ui.item.data('items')) {
-              ui.item.data('items').each(function(e) {
+              ui.item.data('items').each(function() {
                 var view = WorkspaceManager.get(this.id);
                 if (view) {
                   var node = view.node.model;
@@ -138,6 +132,7 @@ function addSortable(element, selected_class, callback) {
                 $('#saving-spinner').css('display', 'none');
               })
               .catch(function(error) {
+                // eslint-disable-next-line no-console
                 console.error(error);
                 $('body').removeClass('dragging');
                 $('.content-list').sortable('cancel');
@@ -225,10 +220,10 @@ function addDroppableArea(element, dropCallback, messages) {
         });
       }
     },
-    out: function(event, ui) {
+    out: function() {
       $('.sorting-placeholder').css('display', 'block');
     },
-    over: function(event, ui) {
+    over: function() {
       $('.sorting-placeholder').css('display', 'none');
     },
   });
@@ -282,7 +277,7 @@ function addTopicDragDrop(element, hoverCallback, dropCallback) {
         }
       }
     },
-    out: function(event, ui) {
+    out: function() {
       $('.sorting-placeholder').css('display', 'block');
       this.hoverOnItem = null;
     },

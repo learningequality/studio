@@ -1,4 +1,3 @@
-var Backbone = require('backbone');
 var _ = require('underscore');
 var BaseViews = require('edit_channel/views');
 var Models = require('edit_channel/models');
@@ -7,7 +6,6 @@ var get_cookie = require('utils/get_cookie');
 require('file-uploader.less');
 require('dropzone/dist/dropzone.css');
 var stringHelper = require('edit_channel/utils/string_helper');
-var browserHelper = require('edit_channel/utils/browser_functions');
 var dialog = require('edit_channel/utils/dialog');
 var ImageViews = require('edit_channel/image/views');
 const State = require('edit_channel/state');
@@ -260,7 +258,7 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
     this.update_count();
     _.defer(this.create_dropzone, 1);
   },
-  show_uploading: function(event) {
+  show_uploading: function() {
     var is_checked = this.$('#show_uploading').is(':checked');
     is_checked ? this.$el.addClass('hide_uploaded') : this.$el.removeClass('hide_uploaded');
     this.$(this.default_item).css(
@@ -367,12 +365,12 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
       this.enable_next();
     }
   },
-  file_added: function(file) {
+  file_added: function() {
     this.uploads_in_progress++;
     this.$(this.default_item).css('display', 'none');
     this.disable_next(this.uploads_in_progress > 0);
   },
-  file_removed: function(file) {
+  file_removed: function() {
     if (this.views.length === 0 && this.uploads_in_progress === 0) {
       this.load_content(this.collection, this.get_translation('drop_files_text'));
     }
@@ -644,9 +642,6 @@ var FormatSlotList = BaseViews.BaseEditableListView.extend({
     );
     this.load_content();
   },
-  update_metadata: function(model) {
-    this.content_node_view.update_metadata();
-  },
   create_new_view: function(model) {
     var associated_file = this.files.find(function(file) {
       return file.get('preset').id === model.get('id');
@@ -841,14 +836,14 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
     this.render();
     this.containing_list_view.set_file_format(this.file, this.model);
   },
-  file_added: function(file) {
+  file_added: function() {
     if (this.file) {
       this.$('.format_metadata').css('display', 'none');
     }
     this.$('.add_format_button').css('display', 'none');
     this.set_uploading(true);
   },
-  file_removed: function(file) {
+  file_removed: function() {
     this.$('.add_format_button').css('display', 'inline');
   },
   file_failed: function(file, error, xhr) {
@@ -935,7 +930,7 @@ var MultiLanguageSlotList = FormatSlotList.extend({
     }
     this.load_content();
   },
-  add_slot: function(file, preset, target) {
+  add_slot: function(file, preset) {
     this.files.push(file);
     this.collection.add(preset);
     this.set_file_format(file, preset);
@@ -1021,7 +1016,7 @@ var MultiLanguageUploadSlot = FormatSlot.extend({
     }
     if (this.language) this.$('.language_dropdown').val(this.language);
   },
-  check_and_set_language: function(event) {
+  check_and_set_language: function() {
     this.set_language();
   },
   add_language: function(language) {

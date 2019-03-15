@@ -1,5 +1,4 @@
 var Backbone = require('backbone');
-var Models = require('edit_channel/models');
 var _ = require('underscore');
 
 // this is a function so that the defaults don't get overwritten

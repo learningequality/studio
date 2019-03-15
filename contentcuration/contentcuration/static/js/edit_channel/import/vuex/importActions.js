@@ -1,9 +1,9 @@
 var _ = require('underscore');
+var { PageTypes } = require('../constants');
 var utils = require('./importUtils');
 
 var createContentNodeCollection = utils.createContentNodeCollection;
 var fetchImportableChannels = utils.fetchImportableChannels;
-var { PageTypes } = require('../constants');
 
 // Sends a request to `get_total_size` endpoint and updates store with result
 exports.calculateImportSize = function(context) {
@@ -53,6 +53,7 @@ exports.copyImportListToChannel = function(context, payload) {
       payload.onConfirmImport(collection);
     })
     .catch(function onFailure(error) {
+      // eslint-disable-next-line no-console
       console.error(error);
       context.commit('UPDATE_IMPORT_STATUS', 'failure');
     });

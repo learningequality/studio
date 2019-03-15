@@ -1,5 +1,3 @@
-var _ = require('underscore');
-
 var config = {
   showProcessingMessages: false,
   jax: ['input/TeX', 'input/MathML', 'output/SVG'],
@@ -25,6 +23,7 @@ var SvgGenerator = {
     this.svg_container = document.createElement('div');
     this.svg_container.id = 'mathjax_container';
     MathJax.Hub.Register.MessageHook('Math Processing Error', function(message) {
+      // eslint-disable-next-line no-console
       console.error(message);
     });
   },
@@ -76,7 +75,7 @@ function init() {
 }
 
 function toSVG(text) {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function(resolve) {
     SvgGenerator.generate(text, resolve);
   });
 }

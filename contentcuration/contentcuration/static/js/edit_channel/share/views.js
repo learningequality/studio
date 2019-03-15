@@ -1,9 +1,7 @@
-var Backbone = require('backbone');
 var _ = require('underscore');
 var BaseViews = require('edit_channel/views');
 var Models = require('edit_channel/models');
 require('share.less');
-var stringHelper = require('edit_channel/utils/string_helper');
 var dialog = require('edit_channel/utils/dialog');
 const State = require('edit_channel/state');
 
@@ -105,9 +103,8 @@ var ShareView = BaseViews.BaseView.extend({
     this.render();
     this.$('#share_email_address').attr('disabled', true);
     var self = this;
-    Promise.all([this.fetch_model(this.model), this.fetch_model(this.current_user)]).then(function(
-      data
-    ) {
+    Promise.all([this.fetch_model(this.model), this.fetch_model(this.current_user)])
+    .then(() => {
       self.load_lists(function() {
         self.$('#share_email_address').removeAttr('disabled');
       });
@@ -251,7 +248,8 @@ var ShareView = BaseViews.BaseView.extend({
     }
   },
   check_email: function(email) {
-    var emailtest = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    // eslint-disable-next-line max-len
+    var emailtest = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     if (!emailtest.test(email)) {
       this.$('#share_error').text(this.get_translation('invalid_email'));
       return false;
@@ -345,7 +343,7 @@ var ShareView = BaseViews.BaseView.extend({
         self.$('#share_email_address').val('');
         self.pending_view.add_to_pending_collection(invite);
       })
-      .catch(function(error) {
+      .catch(function() {
         self.$('#share_success').text('');
         self.$('#share_error').text(self.get_translation('invite_failed'));
       });

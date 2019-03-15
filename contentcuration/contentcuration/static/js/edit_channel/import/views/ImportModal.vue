@@ -1,4 +1,5 @@
 <template>
+
   <div ref="topmodal" class="modal fade" tabindex="-1">
     <div class="modal-dialog">
       <div id="import-modal-content" class="modal-content modal-dialog-default">
@@ -20,6 +21,7 @@
       </div>
     </div>
   </div>
+
 </template>
 
 
@@ -45,14 +47,10 @@
       importPreviewHeader: 'Review selections for import',
     },
     components: {
-      ImportChannelList,
+      ImportChannelList, // eslint-disable-line vue/no-unused-components
       ImportDialogue,
-      ImportPreview,
-      SearchResults,
-    },
-    mounted() {
-      this.openModal();
-      this.loadChannels();
+      ImportPreview, // eslint-disable-line vue/no-unused-components
+      SearchResults, // eslint-disable-line vue/no-unused-components
     },
     computed: Object.assign(
       mapGetters({
@@ -71,6 +69,10 @@
         },
       }
     ),
+    mounted() {
+      this.openModal();
+      this.loadChannels();
+    },
     methods: Object.assign(mapActions('import', ['loadChannels']), {
       openModal() {
         $(this.$refs.topmodal)

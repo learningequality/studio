@@ -1,7 +1,5 @@
-var Backbone = require('backbone');
 var _ = require('underscore');
 require('content-container.less');
-var DragHelper = require('edit_channel/utils/drag_drop');
 var dialog = require('edit_channel/utils/dialog');
 var descriptionHelper = require('edit_channel/utils/description');
 const State = require('edit_channel/state');
@@ -14,7 +12,6 @@ var storage = window.localStorage || {};
 
 var NAMESPACE = 'treeEdit';
 var MESSAGES = {
-  new: 'New',
   comparison: 'Comparison',
   live: 'Live (Deployed)',
   staged: 'Staged (Updated)',
@@ -195,7 +192,7 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
             }
           );
         })
-        .catch(function(error) {
+        .catch(function() {
           Router.update_url(self.model.get('node_id'), null, self.model.get('title'));
           self.add_container(self.lists.length, self.model);
         });
@@ -266,7 +263,7 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
     this.$('#container_area').removeClass();
     this.$('#container_area').addClass(storage['topic_tree_view']);
   },
-  delete_content: function(event) {
+  delete_content: function() {
     var self = this;
     var title = this.get_translation('warning');
     var message = this.get_translation('delete_warning');
@@ -298,7 +295,7 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
       null
     );
   },
-  copy_content: function(event) {
+  copy_content: function() {
     var copyCollection = new Models.ContentNodeCollection(
       _.pluck(this.get_selected(true), 'model')
     );
@@ -340,7 +337,8 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
           load_resolve(true);
         })
         .catch(function(error) {
-          console.log(error);
+          // eslint-disable-next-line no-console
+          console.warn(error);
           load_reject(error);
         });
     });
@@ -593,7 +591,7 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
         }
       )
     );
-    var description = new descriptionHelper.Description(
+    new descriptionHelper.Description(
       this.model.get('description').trim(),
       this.$('.description_wrapper'),
       49
@@ -625,7 +623,7 @@ var ContentItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
         var hadClass = $(this).hasClass('active-popover');
         self.containing_list_view.close_all_popups();
         if (!hadClass) {
-          var popover = $(this).popover('show');
+          $(this).popover('show');
           // Bootstrap doesn't handle RTL very well for popovers, so calculate right
           if (window.isRTL) {
             $('.popover').css('right', $(document).width() - $(this).offset().left - 20);
@@ -745,7 +743,7 @@ var DiffModalView = BaseViews.BaseModalView.extend({
   $trs: MESSAGES,
   modal: true,
   id: 'stat_modal_wrapper',
-  initialize: function(options) {
+  initialize: function() {
     _.bindAll(this, 'init_focus');
     this.render();
   },

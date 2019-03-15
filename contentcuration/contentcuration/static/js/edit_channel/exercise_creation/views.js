@@ -1,12 +1,12 @@
 /* CONSTANTS */
-const MATHJAX_REGEX = /\$\$([^\$]+)\$\$/g; // <-- this is not used
+// eslint-disable-next-line no-unused-vars
+const MATHJAX_REGEX = /\$\$([^$]+)\$\$/g; // <-- this is not used
 const IMG_PLACEHOLDER = '${☣ CONTENTSTORAGE}/';
-const IMG_REGEX = /\${☣ CONTENTSTORAGE}\/([^)]+)/g;
-const NUM_REGEX = /[0-9\,\.\-\/\+e\s]+/g;
+const IMG_REGEX = /${☣ CONTENTSTORAGE}\/([^)]+)/g;
+const NUM_REGEX = /[0-9,.\-/+e\s]+/g;
 const IMG_CHECK = /.*\/content\/storage\/[0-9a-z]\/[0-9a-z]\/([0-9a-z]{32}\..+)/;
 
 /* MODULES */
-var Backbone = require('backbone');
 var _ = require('underscore');
 var BaseViews = require('edit_channel/views');
 var Models = require('edit_channel/models');
@@ -229,6 +229,7 @@ var AddFormulaView = BaseViews.BaseView.extend({
       if ($(el).hasClass('mq-non-leaf')) {
         return;
       }
+      // eslint-disable-next-line no-control-regex
       if (!/^[\x00-\x7F]*$/.test($(el).text()) && !_.contains(self.accepted_chars, $(el).text())) {
         // Valid Mathjax symbols only
         isValid = false;
@@ -247,7 +248,7 @@ var UploadImage = function(context) {
       contents: '<i class="note-icon-picture"/>',
       tooltip: stringHelper.translate('Image'),
       click: function() {
-        var view = new ImageUploader.ImageUploadView({
+        new ImageUploader.ImageUploadView({
           callback: context.options.callbacks.onCustomImageUpload,
           assessmentItemId: context.options.assessmentItemId,
           preset_id: 'exercise_image',
@@ -545,7 +546,7 @@ var EditorView = BaseViews.BaseView.extend({
   },
 
   /*********** EDITOR CONTENT METHODS ***********/
-  save: function(contents, $editable) {
+  save: function(contents) {
     this.setting_model = true;
     this.markdown = this.convert_html_to_markdown(contents);
     this.model.set(this.edit_key, this.markdown);
@@ -561,7 +562,10 @@ var EditorView = BaseViews.BaseView.extend({
       var key = event.keyCode || event.which;
       var allowedKeys = [46, 8, 9, 27, 110, 37, 38, 39, 40, 10];
       if (
-        !this.check_key(String.fromCharCode(key), key, event.shiftKey) && // Key is a digit or allowed special characters
+        !this.check_key( // `key` is a digit or allowed special characters
+          String.fromCharCode(key),
+          key, event.shiftKey,
+        ) &&
         !_.contains(allowedKeys, key) &&
         !(event.ctrlKey || event.metaKey)
       ) {
@@ -716,7 +720,7 @@ var EditorView = BaseViews.BaseView.extend({
   parse_content: function(content) {
     var self = this;
     content = this.parse_functions(content);
-    return new Promise(function(resolve, reject) {
+    return new Promise(function(resolve) {
       if (!content || content.trim() == '') {
         resolve(content);
         return;
@@ -775,7 +779,6 @@ var EditorView = BaseViews.BaseView.extend({
     return mathjax_list;
   },
   replace_mathjax_with_svgs: function(content, callback) {
-    var self = this;
     var matches = this.get_mathjax_strings(content);
     var promises = [];
     matches.forEach(function(match) {
@@ -808,7 +811,6 @@ var EditorView = BaseViews.BaseView.extend({
     });
 
     // Render content to markdown (use custom fiters for images and italics)
-    var self = this;
     contents = toMarkdown(contents, {
       converters: [
         {
@@ -820,7 +822,6 @@ var EditorView = BaseViews.BaseView.extend({
                 .split('/')
                 .slice(-1)[0] || '';
             var alt = node.alt || '';
-            var title = node.title || '';
             var width = node.style.width || node.width || null;
             var height = node.style.height || node.height || null;
             var size = width ? ' =' + width.toString().replace('px', '') + 'x' : '';
@@ -992,7 +993,7 @@ var ExerciseEditableItemView = BaseViews.BaseListEditableItemView.extend({
     event.stopPropagation();
     this.set_closed();
   },
-  set_editor: function(save) {
+  set_editor: function() {
     if (this.open) {
       this.set_toolbar_open();
       this.editor_view.activate_editor();
@@ -1157,7 +1158,7 @@ var AssessmentItemDisplayView = ExerciseEditableItemView.extend({
   isdisplay: true,
   template: require('./hbtemplates/assessment_item_edit.handlebars'),
 
-  initialize: function(options) {
+  initialize: function() {
     _.bindAll(this, 'update_hints', 'show_hints');
     this.assessmentItem = this.model;
     this.render();
@@ -1195,7 +1196,7 @@ var AssessmentItemDisplayView = ExerciseEditableItemView.extend({
       this.$('.answers').html(this.answer_editor.el);
     }
   },
-  show_hints: function(event) {
+  show_hints: function() {
     if (!this.hint_editor) {
       this.hint_editor = new HintModalView({
         collection: this.model.get('hints'),
@@ -1701,7 +1702,7 @@ var HintQuestionDisplayView = BaseViews.BaseView.extend({
         }
       )
     );
-    var editor_view = new EditorView({
+    new EditorView({
       model: this.model,
       assessmentItemId: this.assessmentItem.id,
       edit_key: 'question',
@@ -1739,7 +1740,7 @@ var HintModalView = BaseViews.BaseModalView.extend({
       )
     );
     if (!this.isdisplay) {
-      var question_preview = new HintQuestionDisplayView({
+      new HintQuestionDisplayView({
         assessmentItem: this.assessmentItem,
         model: this.model,
         el: this.$('.question_preview'),

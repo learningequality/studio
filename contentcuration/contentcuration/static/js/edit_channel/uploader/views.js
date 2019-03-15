@@ -1,4 +1,3 @@
-var Backbone = require('backbone');
 var _ = require('underscore');
 var BaseViews = require('edit_channel/views');
 var Models = require('edit_channel/models');
@@ -145,7 +144,6 @@ var MetadataModalView = BaseViews.BaseModalView.extend({
       $('.modal-backdrop').remove();
       Router.update_url(null, null, window.title);
     } else {
-      var t = event.target;
       var self = this;
       dialog.dialog(
         this.get_translation('unsaved_changes'),
@@ -294,7 +292,6 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     }
   },
   set_prerequisites: function(prerequisite_list, selected_items) {
-    var self = this;
     selected_items.forEach(function(view) {
       // TODO: Handle prerequisites that were previously set on the node if multiple selected
       view.set_node({ prerequisite: prerequisite_list });
@@ -405,7 +402,7 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
       this.save_and_finish(event);
     }
   },
-  save_and_finish: function(event) {
+  save_and_finish: function() {
     var self = this;
     this.editor_view.add_tag(null);
     this.show_errors = true;
@@ -813,7 +810,8 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
         return f.preset.display && !f.preset.thumbnail;
       });
 
-    // Set license, author, copyright values based on whether selected items have been copied from another source
+    // Set license, author, copyright values based on whether selected items
+    // have been copied from another source.
     var alloriginal = this.all_original();
     var original_source_license = '---';
     if (this.shared_data && this.shared_data.shared_license) {
@@ -913,7 +911,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
           var randomize = this.shared_data.shared_exercise_data.randomize;
           this.$('#randomize_exercise').prop(
             'indeterminate',
-            randomize === null || randomize === undefined
+            (randomize === null || randomize === undefined)
           );
           this.$('#randomize_exercise').prop('checked', randomize);
         }
@@ -977,7 +975,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
           this.shared_data.shared_exercise_data.mastery_model === 'm_of_n' ? 'inline-block' : 'none'
         );
 
-        var randomize = this.shared_data.shared_exercise_data.randomize;
+        randomize = this.shared_data.shared_exercise_data.randomize;
         this.$('#randomize_exercise').prop(
           'indeterminate',
           randomize === null || randomize === undefined
@@ -1030,7 +1028,8 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
     } else if (!license_id || license_id <= 0) {
       return null;
     }
-    // isNaN actually coerces a numeric string to a number before checking, so to be safe we need to convert to int
+    // isNaN actually coerces a numeric string to a number before checking,
+    // so to be safe we need to convert to int:
     return Constants.Licenses.find(license => license.id === parseInt(license_id, 10)).license_name;
   },
   display_license_description: function(license_id) {
@@ -1119,7 +1118,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   },
   load_license: function() {
     if (this.selected_items.length) {
-      var license_modal = new Info.LicenseModalView({
+      new Info.LicenseModalView({
         select_license: Constants.Licenses.find(
           license => license.id === parseInt(this.selected_items[0].model.get('license'), 10)
         ),
@@ -1340,7 +1339,6 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
   set_language: function() {
     var language = this.$('#select_language').val();
     language = language === 'inherit' ? null : language;
-    var self = this;
     this.selected_items.forEach(function(view) {
       view.set_language(language);
     });

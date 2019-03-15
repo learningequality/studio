@@ -1,4 +1,5 @@
 <template>
+
   <div>
     <!-- Title/Description metadata fields -->
     <h4>
@@ -85,6 +86,7 @@
       </button>
     </div>
   </div>
+
 </template>
 
 
@@ -122,9 +124,6 @@
         copyStatus: copyStatusCodes.IDLE,
       };
     },
-    mounted() {
-      this.loadChannelSetChannels();
-    },
     computed: Object.assign(
       mapGetters('channel_set', [
         'channels',
@@ -160,6 +159,9 @@
         },
       }
     ),
+    mounted() {
+      this.loadChannelSetChannels();
+    },
     methods: Object.assign(
       mapActions('channel_set', ['goToSelectChannels', 'loadChannelSetChannels']),
       mapMutations('channel_set', {
@@ -170,7 +172,6 @@
         copyToken() {
           let element = this.$refs.tokenText;
           element.select();
-          var self = this;
           try {
             document.execCommand('copy');
             this.copyStatus = copyStatusCodes.SUCCESS;

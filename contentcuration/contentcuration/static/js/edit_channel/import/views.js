@@ -1,7 +1,6 @@
 import Vue from 'vue';
 import ImportModalComponent from './views/ImportModal.vue';
 
-var Backbone = require('backbone');
 var BaseViews = require('../views');
 require('import.less'); // eslint-disable-line
 var dialog = require('../utils/dialog');

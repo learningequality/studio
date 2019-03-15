@@ -1,4 +1,5 @@
 <template>
+
   <li class="list-item" :class="importListItemClass">
     <template v-if="!isChannel && !readOnly">
       <input
@@ -67,6 +68,7 @@
       </ul>
     </div>
   </li>
+
 </template>
 
 
@@ -86,6 +88,9 @@
       loading: 'Loading',
       empty: '(empty)',
       resourceCount: '{resourceCount, plural, =1 {# Resource} other {# Resources}}',
+    },
+    filters: {
+      pluralize,
     },
     props: {
       isChannel: RequiredBoolean,
@@ -183,9 +188,6 @@
         },
       }
     ),
-    filters: {
-      pluralize,
-    },
   };
 
 </script>
@@ -216,7 +218,7 @@
     .node-icon {
       color: @gray-500;
     }
-    & > * {
+    > * {
       vertical-align: middle;
     }
   }

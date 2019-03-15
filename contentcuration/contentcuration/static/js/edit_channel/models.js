@@ -1,6 +1,7 @@
 var Backbone = require('backbone');
 var _ = require('underscore');
 var mail_helper = require('edit_channel/utils/mail');
+var PageableCollection = require('backbone.paginator');
 const Constants = require('./constants/index');
 
 const DEFAULT_ADMIN_PAGE_SIZE = 25;
@@ -29,7 +30,7 @@ var BaseCollection = Backbone.Collection.extend({
   url: function() {
     return window.Urls[this.list_name]();
   },
-  save: function(callback) {
+  save: function() {
     Backbone.sync('update', this, { url: this.model.prototype.urlRoot() });
   },
   set_comparator: function(comparator) {
@@ -38,7 +39,7 @@ var BaseCollection = Backbone.Collection.extend({
   get_all_fetch: function(ids, force_fetch) {
     force_fetch = force_fetch ? true : false;
     var self = this;
-    var promise = new Promise(function(resolve, reject) {
+    var promise = new Promise(function(resolve) {
       var promises = [];
       ids.forEach(function(id) {
         promises.push(
@@ -73,7 +74,7 @@ var BaseCollection = Backbone.Collection.extend({
   },
   destroy: function() {
     var self = this;
-    return new Promise(function(resolve, reject) {
+    return new Promise(function(resolve) {
       var promise_list = [];
       self.forEach(function(model) {
         promise_list.push(
@@ -95,10 +96,8 @@ var BaseCollection = Backbone.Collection.extend({
   },
 });
 
-var PageableCollection = require('backbone.paginator');
-
 var BasePageableCollection = PageableCollection.extend({
-  save: function(callback) {
+  save: function() {
     Backbone.sync('update', this, { url: this.model.prototype.urlRoot() });
   },
   set_comparator: function(comparator) {
@@ -107,7 +106,7 @@ var BasePageableCollection = PageableCollection.extend({
   get_all_fetch: function(ids, force_fetch) {
     force_fetch = force_fetch ? true : false;
     var self = this;
-    var promise = new Promise(function(resolve, reject) {
+    var promise = new Promise(function(resolve) {
       var promises = [];
       ids.forEach(function(id) {
         promises.push(
@@ -142,7 +141,7 @@ var BasePageableCollection = PageableCollection.extend({
   },
   destroy: function() {
     var self = this;
-    return new Promise(function(resolve, reject) {
+    return new Promise(function(resolve) {
       var promise_list = [];
       self.forEach(function(model) {
         promise_list.push(
@@ -254,7 +253,6 @@ var UserModel = BaseModel.extend({
     });
   },
   get_bookmarked_channels: function() {
-    var self = this;
     return new Promise(function(resolve, reject) {
       $.ajax({
         method: 'GET',
@@ -288,7 +286,6 @@ var UserModel = BaseModel.extend({
     });
   },
   get_pending_invites: function() {
-    var self = this;
     return new Promise(function(resolve, reject) {
       $.ajax({
         method: 'GET',
@@ -301,7 +298,6 @@ var UserModel = BaseModel.extend({
     });
   },
   get_user_channel_collections: function() {
-    var self = this;
     return new Promise(function(resolve, reject) {
       $.ajax({
         method: 'GET',
@@ -382,7 +378,7 @@ var ChannelSetCollection = BaseCollection.extend({
 
 /**** CHANNEL AND CONTENT MODELS ****/
 function fetch_nodes(ids, url) {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function(resolve) {
     // Getting "Request Line is too large" error on some channels, so chunk the requests
     var promises = _.chain(ids)
       .chunk(50)
@@ -614,7 +610,6 @@ var ContentNodeCollection = BaseCollection.extend({
     return this.has_prerequisites() || this.has_postrequisites();
   },
   get_prerequisites: function(ids, get_postrequisites) {
-    var self = this;
     return new Promise(function(resolve, reject) {
       $.ajax({
         method: 'GET',
@@ -711,7 +706,7 @@ var ContentNodeCollection = BaseCollection.extend({
   get_fetch_nodes: function(ids, url, force_fetch) {
     force_fetch = force_fetch ? true : false;
     var self = this;
-    return new Promise(function(resolve, reject) {
+    return new Promise(function(resolve) {
       var idlists = _.partition(ids, function(id) {
         return force_fetch || !self.get({ id: id });
       });
@@ -800,7 +795,6 @@ var ContentNodeCollection = BaseCollection.extend({
   },
   sync_nodes: function(models) {
     const State = require('./state');
-    var self = this;
     return new Promise(function(resolve, reject) {
       var data = { nodes: _.pluck(models, 'id'), channel_id: State.current_channel.id };
       $.ajax({
@@ -836,7 +830,7 @@ var ChannelModel = BaseModel.extend({
     root_node.set({ title: this.get('name') });
     return root_node;
   },
-  publish: function(callback) {
+  publish: function() {
     var self = this;
     return new Promise(function(resolve, reject) {
       var data = { channel_id: self.get('id') };
@@ -1320,7 +1314,7 @@ var AssessmentItemCollection = BaseCollection.extend({
   get_all_fetch: function(ids, force_fetch) {
     force_fetch = force_fetch ? true : false;
     var self = this;
-    var promise = new Promise(function(resolve, reject) {
+    var promise = new Promise(function(resolve) {
       var promises = [];
       ids.forEach(function(id) {
         promises.push(

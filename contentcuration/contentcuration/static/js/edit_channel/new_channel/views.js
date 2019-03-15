@@ -1,16 +1,11 @@
-var Backbone = require('backbone');
 var _ = require('underscore');
 require('channel_create.less');
-var Dropzone = require('dropzone');
 require('dropzone/dist/dropzone.css');
 var Models = require('edit_channel/models');
 var BaseViews = require('edit_channel/views');
-var ImageViews = require('edit_channel/image/views');
 var DetailView = require('edit_channel/details/views');
 var ChannelSetViews = require('edit_channel/channel_set/views');
 var Info = require('edit_channel/information/views');
-var get_cookie = require('utils/get_cookie');
-var stringHelper = require('edit_channel/utils/string_helper');
 var dialog = require('edit_channel/utils/dialog');
 const State = require('edit_channel/state');
 const Constants = require('edit_channel/constants/index');
@@ -70,7 +65,7 @@ var ChannelListPage = BaseViews.BaseView.extend({
   list_selector: '#channel_list',
   name: NAMESPACE,
   $trs: MESSAGES,
-  initialize: function(options) {
+  initialize: function() {
     _.bindAll(this, 'new_channel', 'set_all_models', 'toggle_panel');
     this.open = false;
     this.render();
@@ -161,10 +156,13 @@ var ChannelListPage = BaseViews.BaseView.extend({
   },
   set_active_channel(channel) {
     this.$el.removeClass('active_channel');
-    // This function gets called by open_channel, but since the API calls to populate the channels list can be slow,
-    // these lists may be undefined when this gets called. For now, just check that the list is undefined to prevent
-    // this from throwing errors.
-    // TODO: The real fix is to make the channel list code more performant so that this doesn't happen.
+    // This function gets called by open_channel, but since the API calls
+    // to populate the channels list can be slow, these lists may be undefined
+    // when this gets called. For now, just check that the list is undefined to
+    // prevent this from throwing errors.
+    //
+    // TODO:  The real fix is to make the channel list code more performant
+    //        so that this doesn't happen.
     if (this.starred_channel_list) {
       this.starred_channel_list.set_active_channel(channel);
     }
@@ -215,7 +213,9 @@ var ChannelListPage = BaseViews.BaseView.extend({
     $('.active_channel').removeClass('active_channel');
     if (view) {
       this.current_view && this.current_view.remove();
-      view.render(); // Calling separately to make background stay the same if user selects "KEEP EDITING" option
+      // Calling separately to make background stay the same if user
+      // selects "KEEP EDITING" option:
+      view.render();
       if (!this.open) {
         this.open = true;
         this.$('#channel_preview_wrapper').animate({ width: 650 }, 500);
@@ -360,7 +360,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
   set_is_new: function(isNew) {
     this.isNew = isNew;
   },
-  set_model: function(data) {
+  set_model: function() {
     this.container.set_all_models(this.model);
   },
   render: function() {
@@ -404,7 +404,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
     event.preventDefault();
     this.$el.removeClass('highlight');
   },
-  add_highlight: function(event) {
+  add_highlight: function() {
     this.$el.addClass('highlight');
   },
   open_channel: function(event) {
@@ -436,7 +436,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
     } catch (e) {
       self.$('.copy-id-btn').text('clear');
     }
-    setTimeout(function(event) {
+    setTimeout(function() {
       self.$('.copy-id-btn').text('content_paste');
     }, 2500);
   },
@@ -467,7 +467,7 @@ var ChannelListItem = BaseViews.BaseListEditableItemView.extend({
     $('#channel_details_view_panel .star_icon').attr('data-original-title', new_message);
     this.$('.star_option').attr('data-original-title', new_message);
   },
-  delete_channel: function(model) {
+  delete_channel: function() {
     this.container.delete_channel(this.model);
   },
 });
@@ -551,6 +551,7 @@ var ChannelListPendingItem = BaseViews.BaseListEditableItemView.extend({
         self.submit_invitation(true, channel);
       })
       .catch(function(error) {
+        // eslint-disable-next-line no-console
         console.error(error);
         dialog.alert(self.get_translation('invitation_error'), error);
       });
@@ -599,7 +600,7 @@ var ChannelSetList = BaseViews.BaseEditableListView.extend({
     'click .about_sets_button': 'open_about_sets',
   },
   new_channel_set: function() {
-    var channel_set_view = new ChannelSetViews.ChannelSetModalView({
+    new ChannelSetViews.ChannelSetModalView({
       modal: true,
       onsave: this.save_new_channel_set,
       isNew: true,
@@ -627,7 +628,7 @@ var ChannelSetList = BaseViews.BaseEditableListView.extend({
     return newView;
   },
   open_about_sets: function() {
-    var channel_set_info_modal = new Info.ChannelSetModalView({});
+    new Info.ChannelSetModalView({});
   },
   delete_channel: function(channel) {
     // Find channel sets that have the deleted channel and reload their views
@@ -695,11 +696,11 @@ var ChannelSetListItem = BaseViews.BaseListEditableItemView.extend({
     event.preventDefault();
     this.$el.removeClass('highlight');
   },
-  add_highlight: function(event) {
+  add_highlight: function() {
     this.$el.addClass('highlight');
   },
-  open_channel_set: function(event) {
-    var channel_set_view = new ChannelSetViews.ChannelSetModalView({
+  open_channel_set: function() {
+    new ChannelSetViews.ChannelSetModalView({
       modal: true,
       onsave: this.reload,
       isNew: false,
@@ -718,7 +719,7 @@ var ChannelSetListItem = BaseViews.BaseListEditableItemView.extend({
     } catch (e) {
       self.$('.copy-id-btn').text('clear');
     }
-    setTimeout(function(event) {
+    setTimeout(function() {
       self.$('.copy-id-btn').text('content_paste');
     }, 2500);
   },

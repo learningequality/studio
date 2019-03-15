@@ -1,6 +1,5 @@
 import { Croppie } from 'croppie';
 
-var Backbone = require('backbone');
 var _ = require('underscore');
 var BaseViews = require('edit_channel/views');
 var Models = require('edit_channel/models');
@@ -10,7 +9,6 @@ require('images.less');
 require('dropzone/dist/dropzone.css');
 require('croppie/croppie.css');
 var dialog = require('edit_channel/utils/dialog');
-const State = require('edit_channel/state');
 const Constants = require('edit_channel/constants/index');
 
 const CHANNEL_ASPECT_RATIO = { width: 130, height: 130 };
@@ -188,7 +186,6 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
     this.render();
     this.$('.finished_area').css('visibility', 'visible');
     var selector = '#' + this.get_selector() + '_placeholder';
-    var self = this;
     var thumbnail_src = this.get_thumbnail_url(true);
     $(selector).attr('src', thumbnail_src); // Need to set the src to be url or croppie
     // will zoom in on encoding and not allow
@@ -233,7 +230,7 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
 
   /*********** GENERATE IMAGE FUNCTIONS ***********/
   open_thumbnail_generator: function() {
-    var thumbnail_modal = new ThumbnailModalView({
+    new ThumbnailModalView({
       node: this.model,
       onuse: this.use_image,
       model: this.image,
@@ -275,7 +272,7 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
   image_failed: function(data, error, xhr) {
     this.image_error = xhr && xhr.status === 403 ? this.get_translation('no_space') : error;
   },
-  image_added: function(thumbnail) {
+  image_added: function() {
     this.image_error = this.get_translation('file_error_text');
     this.$('.finished_area').css('display', 'none');
     this.$('#' + this.get_selector() + '_placeholder').css('display', 'none');
@@ -283,7 +280,7 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
       this.onstart();
     }
   },
-  image_removed: function(thumbnail) {
+  image_removed: function() {
     this.image_error = null;
     this.$('#' + this.get_selector() + '_placeholder').css('display', 'block');
     this.$('.finished_area').css('display', 'block');
@@ -303,7 +300,6 @@ var ThumbnailUploadView = BaseViews.BaseView.extend({
   },
   image_completed: function() {
     if (this.image_error) {
-      var self = this;
       dialog.alert(this.get_translation('image_error'), this.image_error);
       if (this.onerror) {
         this.onerror();
@@ -507,7 +503,7 @@ var ImageUploadView = BaseViews.BaseModalView.extend({
     this.file_error = null;
     this.file = JSON.parse(file.xhr.response);
   },
-  file_added: function(file) {
+  file_added: function() {
     this.file_error = this.get_translation('file_error_text');
     this.$('#dropzone_placeholder').css('display', 'none');
   },

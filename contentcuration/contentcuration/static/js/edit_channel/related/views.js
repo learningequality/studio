@@ -1,4 +1,3 @@
-var Backbone = require('backbone');
 var _ = require('underscore');
 var BaseViews = require('edit_channel/views');
 var Models = require('edit_channel/models');
@@ -66,7 +65,7 @@ function PrerequisiteTree() {
     this.prerequisite_fetch_list = [];
     this.prerequisites = {};
     this.postrequisites = {};
-    return new Promise(function(resolve, reject) {
+    return new Promise(function(resolve) {
       self.tree_collection.get_prerequisites([self.selected], true).then(function(nodes) {
         self.tree_collection = nodes.prerequisite_tree_nodes;
         self.ancestors = _.flatten(nodes.prerequisite_tree_nodes.pluck('ancestors'));
@@ -159,7 +158,7 @@ function PrerequisiteTree() {
   };
   this.fetch_prerequisites = function() {
     var self = this;
-    return new Promise(function(resolve, reject) {
+    return new Promise(function(resolve) {
       if (self.prerequisite_fetch_list.length === 0) {
         resolve(true);
       }
@@ -225,7 +224,6 @@ var PrerequisiteView = BaseViews.BaseListView.extend({
     this.render();
   },
   render: function() {
-    var self = this;
     this.$el.html(
       this.template(
         { node: this.model.toJSON() },

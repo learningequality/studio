@@ -64,6 +64,10 @@ $(function() {
   });
 
   // TODO revaluate need. From their repo:
-  // Note: As of late 2015 most mobile browsers - notably Chrome and Safari - no longer have a 300ms touch delay, so fastclick offers no benefit on newer browsers, and risks introducing bugs into your application. Consider carefully whether you really need to use it.
+  // Note: As of late 2015 most mobile browsers (notably Chrome and Safari)
+  // no longer have a 300ms touch delay, so fastclick offers no benefit on newer
+  // browsers, and risks introducing bugs into your application.
+  //
+  // Consider carefully whether you really need to use it!
   fastclick.attach(document.body);
 });

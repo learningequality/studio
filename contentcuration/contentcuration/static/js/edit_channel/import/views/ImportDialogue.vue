@@ -1,4 +1,5 @@
 <template>
+
   <div>
     <!-- SEARCH FORM -->
     <div v-if="!isImportPreview">
@@ -49,6 +50,7 @@
       </span>
     </div>
   </div>
+
 </template>
 
 
@@ -58,7 +60,6 @@
   import { hasRelatedContent } from '../util';
   import { PageTypes } from '../constants';
   import { pluralize } from './filters';
-  import ImportChannelList from './ImportChannelList.vue';
 
   export default {
     name: 'ImportDialogue',
@@ -72,8 +73,8 @@
       searchPrompt: 'What are you looking for?',
       selectContentPrompt: 'Select content to import...',
     },
-    components: {
-      ImportChannelList,
+    filters: {
+      pluralize,
     },
     data() {
       return {
@@ -145,9 +146,6 @@
         },
       }
     ),
-    filters: {
-      pluralize,
-    },
   };
 
 </script>
