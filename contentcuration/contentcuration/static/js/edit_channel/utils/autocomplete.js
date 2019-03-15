@@ -1,5 +1,3 @@
-var Models = require('edit_channel/models');
-
 function addAutocomplete(element, values, callback, appendTo) {
   element
     .autocomplete({

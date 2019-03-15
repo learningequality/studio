@@ -1,7 +1,5 @@
-var Backbone = require('backbone');
 var _ = require('underscore');
 var BaseViews = require('edit_channel/views');
-var Models = require('edit_channel/models');
 const State = require('edit_channel/state');
 require('information.less');
 
@@ -154,7 +152,6 @@ var PublishedModalView = BaseInfoModalView.extend({
     } catch (e) {
       $('#modal-copy-btn').text(self.get_translation('copy_failed'));
     }
-    var self = this;
     setTimeout(function() {
       $('#modal-copy-btn').text(self.get_translation('copy').toUpperCase());
       self.set_initial_focus();

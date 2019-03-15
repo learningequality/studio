@@ -4,11 +4,9 @@ import Vue from 'vue';
 import ChannelSetModalComponent from './views/ChannelSetModal.vue';
 import _ from 'underscore';
 
-var Backbone = require('backbone');
 var BaseViews = require('../views');
 var dialog = require('../utils/dialog');
 var store = require('./vuex/store');
-var { PageTypes } = require('./constants');
 
 var ChannelSetModal = Vue.extend(ChannelSetModalComponent);
 

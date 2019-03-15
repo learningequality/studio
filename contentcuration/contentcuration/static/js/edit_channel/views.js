@@ -2,7 +2,6 @@ var Backbone = require('backbone');
 var _ = require('underscore');
 var analytics = require('utils/analytics');
 const State = require('edit_channel/state');
-const Constants = require('edit_channel/constants/index');
 const WorkspaceManager = require('./utils/workspace_manager');
 var Models = require('./models');
 
@@ -257,7 +256,9 @@ var BaseView = Backbone.View.extend({
     event.stopPropagation();
     try {
       WorkspaceManager.get_main_view().close_all_popups();
-    } catch (e) {}
+    } catch (e) {
+      // do nothing?
+    }
   },
   remove: function() {
     this.trigger('removed');
@@ -316,7 +317,7 @@ var BaseWorkspaceView = BaseView.extend({
   },
   publish: function() {
     var Exporter = require('edit_channel/export/views');
-    var exporter = new Exporter.ExportModalView({
+    new Exporter.ExportModalView({
       model: State.current_channel.get_root('main_tree'),
       onpublish: this.handle_published,
     });
@@ -359,7 +360,7 @@ var BaseWorkspaceView = BaseView.extend({
       null
     );
   },
-  handle_published: function(collection) {
+  handle_published: function() {
     var dialog = require('edit_channel/utils/dialog');
     this.set_publishing();
     var self = this;
@@ -375,7 +376,7 @@ var BaseWorkspaceView = BaseView.extend({
       },
     });
   },
-  get_channel_id: function(collection) {
+  get_channel_id: function() {
     var staticModal = require('edit_channel/information/views');
     new staticModal.PublishedModalView({ channel: State.current_channel, published: false });
   },
@@ -388,7 +389,7 @@ var BaseWorkspaceView = BaseView.extend({
       });
     });
   },
-  edit_selected: function(allow_edit, isclipboard) {
+  edit_selected: function(allow_edit) {
     var list = this.get_selected();
     var edit_collection = new Models.ContentNodeCollection();
     /* Create list of nodes to edit */
@@ -422,8 +423,8 @@ var BaseWorkspaceView = BaseView.extend({
   add_to_trash: function(collection, message) {
     message = message != null ? message : this.get_translation('archiving');
     var self = this;
-    var promise = new Promise(function(resolve, reject) {
-      self.display_load(message, function(resolve_load, reject_load) {
+    var promise = new Promise(function(resolve) {
+      self.display_load(message, function(resolve_load) {
         var reloadCollection = collection.clone();
         var trash_node = State.current_channel.get_root('trash_tree');
         collection.move(trash_node, trash_node.get('metadata').max_sort_order).then(function() {
@@ -452,8 +453,8 @@ var BaseWorkspaceView = BaseView.extend({
   move_to_queue_list: function(collection, list_view, message) {
     message = message != null ? message : this.get_translation('moving_content');
     var self = this;
-    var promise = new Promise(function(resolve, reject) {
-      self.display_load(message, function(resolve_load, reject_load) {
+    var promise = new Promise(function(resolve) {
+      self.display_load(message, function(resolve_load) {
         var reloadCollection = collection.clone();
         collection
           .move(list_view.model, null, list_view.model.get('metadata').max_sort_order + 1)
@@ -795,7 +796,6 @@ var BaseEditableListView = BaseListView.extend({
     var self = this;
     this.display_load(message, function(resolve_load, reject_load) {
       var list = self.get_selected();
-      var promise_list = [];
       var deleteCollection = new Models.ContentNodeCollection();
       for (var i = 0; i < list.length; i++) {
         var view = list[i];
@@ -951,7 +951,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
             });
             collection
               .move(self.model, max, min)
-              .then(function(savedCollection) {
+              .then(function() {
                 self.reload_ancestors(reload_list, true, resolve);
               })
               .catch(function(error) {
@@ -979,7 +979,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
   },
   handle_drop: function(collection) {
     this.$(this.default_item).css('display', 'none');
-    var promise = new Promise(function(resolve, reject) {
+    var promise = new Promise(function(resolve) {
       resolve(collection);
     });
     return promise;
@@ -1343,7 +1343,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
       content.list.add_nodes(moved);
     }
   },
-  open_edit: function(allow_edit, isclipboard) {
+  open_edit: function(allow_edit) {
     var UploaderViews = require('edit_channel/uploader/views');
     State.Store.dispatch('usePrimaryModal', () => {
       var editCollection = new Models.ContentNodeCollection([this.model]);
@@ -1368,7 +1368,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
   },
   handle_drop: function(models) {
     var self = this;
-    var promise = new Promise(function(resolve, reject) {
+    var promise = new Promise(function(resolve) {
       var tempCollection = new Models.ContentNodeCollection();
       var sort_order = self.model.get('metadata').max_sort_order;
       var reload_list = [self.model.get('id')];
@@ -1380,7 +1380,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
         });
         tempCollection.add(node);
       });
-      tempCollection.move(self.model.id).then(function(savedCollection) {
+      tempCollection.move(self.model.id).then(function() {
         self.retrieve_nodes(reload_list, true).then(function(fetched) {
           self.reload_ancestors(fetched);
           resolve(true);
@@ -1425,7 +1425,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
     var copyCollection = new Models.ContentNodeCollection();
     copyCollection.add(this.model);
     var self = this;
-    this.display_load(message, function(resolve, reject) {
+    this.display_load(message, function(resolve) {
       var target_parent = self.containing_list_view.model;
       // If the target parent is a UI segment, go up a level to its parent to
       // get the collection to make a copy into.

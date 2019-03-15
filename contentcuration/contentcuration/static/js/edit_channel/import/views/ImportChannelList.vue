@@ -1,4 +1,5 @@
 <template>
+
   <div>
     <div v-if="channelsAreLoading">
       {{ $tr('channelLoadingText') }}
@@ -19,6 +20,7 @@
       />
     </ul>
   </div>
+
 </template>
 
 

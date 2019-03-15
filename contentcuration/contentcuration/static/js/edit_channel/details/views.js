@@ -1,4 +1,3 @@
-var Backbone = require('backbone');
 var _ = require('underscore');
 var BaseViews = require('edit_channel/views');
 var Models = require('edit_channel/models');
@@ -8,7 +7,6 @@ var dialog = require('edit_channel/utils/dialog');
 require('details.less');
 var d3Helper = require('edit_channel/utils/d3_helper');
 var descriptionHelper = require('edit_channel/utils/description');
-var fileDownload = require('jquery-file-download');
 const State = require('edit_channel/state');
 const Constants = require('edit_channel/constants/index');
 
@@ -219,7 +217,6 @@ var ChannelDetailsView = BaseViews.BaseListEditableItemView.extend({
     event.stopPropagation();
     event.preventDefault();
     var button = $(event.target);
-    var self = this;
     $(button.data('text')).focus();
     $(button.data('text')).select();
     try {
@@ -427,7 +424,7 @@ var ChannelEditorView = BaseViews.BaseListEditableItemView.extend({
     this.model.set('thumbnail', '/static/img/kolibri_placeholder.png');
     this.register_changes();
   },
-  set_thumbnail: function(thumbnail, encoding, formatted_name, path) {
+  set_thumbnail: function(thumbnail, encoding, formatted_name) {
     this.model.set('thumbnail', formatted_name);
     this.model.set('thumbnail_encoding', encoding);
     this.register_changes();
@@ -448,7 +445,7 @@ var ChannelEditorView = BaseViews.BaseListEditableItemView.extend({
       this.get_translation('download_started_text', format, this.model.get('name'))
     );
     $.fileDownload(window.Urls.get_channel_details_pdf_endpoint(this.model.id), {
-      failCallback: function(responseHtml, url) {
+      failCallback: function() {
         dialog.alert(
           self.get_translation('download_failed'),
           self.get_translation('download_failed_text', format, self.model.get('name'))
@@ -466,7 +463,7 @@ var ChannelEditorView = BaseViews.BaseListEditableItemView.extend({
     $.fileDownload(
       window.Urls.get_channel_details_pdf_endpoint(this.model.id) + '?condensed=true',
       {
-        failCallback: function(responseHtml, url) {
+        failCallback: function() {
           dialog.alert(
             self.get_translation('download_failed'),
             self.get_translation('download_failed_text', format, self.model.get('name'))
@@ -483,7 +480,7 @@ var ChannelEditorView = BaseViews.BaseListEditableItemView.extend({
       this.get_translation('download_started_text', format, this.model.get('name'))
     );
     $.fileDownload(window.Urls.get_channel_details_csv_endpoint(this.model.id), {
-      failCallback: function(responseHtml, url) {
+      failCallback: function() {
         dialog.alert(
           self.get_translation('download_failed'),
           self.get_translation('download_failed_text', format, self.model.get('name'))
@@ -499,7 +496,7 @@ var ChannelEditorView = BaseViews.BaseListEditableItemView.extend({
       this.get_translation('download_started_text', format, this.model.get('name'))
     );
     $.fileDownload(window.Urls.get_channel_details_ppt_endpoint(this.model.id), {
-      failCallback: function(responseHtml, url) {
+      failCallback: function() {
         dialog.alert(
           self.get_translation('download_failed'),
           self.get_translation('download_failed_text', format, self.model.get('name'))
@@ -574,8 +571,7 @@ var DetailsView = BaseViews.BaseListEditableItemView.extend({
     }
   },
   render_tagcloud: function() {
-    var self = this;
-    var tagcloud = new d3Helper.TagCloud('#tagcloud', this.model.get('metadata').tags, {
+    new d3Helper.TagCloud('#tagcloud', this.model.get('metadata').tags, {
       key: 'tag_name',
       value_key: 'count',
     });
@@ -594,7 +590,7 @@ var DetailsView = BaseViews.BaseListEditableItemView.extend({
     var color_key = Constants.ContentKinds.map(function(k) {
       return k.kind;
     });
-    var piechart = new d3Helper.PieChart('#svg_wrapper', data, {
+    new d3Helper.PieChart('#svg_wrapper', data, {
       key: 'kind_id',
       width: 350,
       total: stringHelper.format_number(total),
@@ -608,7 +604,7 @@ var DetailsView = BaseViews.BaseListEditableItemView.extend({
       },
     });
 
-    var legend = new d3Helper.Legend('#legend_wrapper', data, {
+    new d3Helper.Legend('#legend_wrapper', data, {
       key: 'kind_id',
       color_key: color_key,
       get_text: function(d) {

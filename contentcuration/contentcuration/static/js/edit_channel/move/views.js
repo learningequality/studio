@@ -1,4 +1,3 @@
-var Backbone = require('backbone');
 var _ = require('underscore');
 var BaseViews = require('edit_channel/views');
 var Models = require('edit_channel/models');
@@ -244,7 +243,6 @@ var MoveItem = BaseViews.BaseListNodeItemView.extend({
   },
   load_subfiles: function() {
     var self = this;
-    var filter_ids = this.container.to_move_ids;
     this.collection.get_all_fetch_simplified(this.model.get('children')).then(function(fetched) {
       var nodes = fetched.filter(function(n) {
         return !self.is_target || n.get('kind') === 'topic';

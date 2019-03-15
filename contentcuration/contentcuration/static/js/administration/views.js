@@ -5,7 +5,6 @@ require('admin.less');
 var BaseViews = require('../edit_channel/views');
 var dialog = require('../edit_channel/utils/dialog');
 var stringHelper = require('../edit_channel/utils/string_helper');
-var fileDownload = require('jquery-file-download');
 var State = require('../edit_channel/state');
 var AdminRouter = require('./router');
 
@@ -67,7 +66,7 @@ var BaseAdminTab = BaseViews.BaseListView.extend({
   filters: [],
   sort_filters: [],
   extra_filters: [],
-  fetch: e => {}, // to be overridden
+  fetch: () => {}, // to be overridden
   initialize: function(options) {
     // _.bindAll(this, "handle_removed")
     this.collection = options.collection;
@@ -238,7 +237,6 @@ var BaseAdminItem = BaseViews.BaseListNodeItemView.extend({
     this.create_popover();
   },
   create_popover: function() {
-    var self = this;
     this.$el.find('.popover_link').popover({
       html: true,
       placement: 'bottom',
@@ -279,13 +277,13 @@ var ChannelTab = BaseAdminTab.extend({
         .text('Generating PDF...')
         .addClass('disabled');
       $.fileDownload(window.Urls.download_channel_pdf(), {
-        successCallback: function(url) {
+        successCallback: function() {
           self
             .$('.download_pdf')
             .text('Download PDF')
             .removeClass('disabled');
         },
-        failCallback: function(responseHtml, url) {
+        failCallback: function() {
           self.$('.download_pdf').text('Download Failed');
           setTimeout(function() {
             self
@@ -370,7 +368,7 @@ var ChannelItem = BaseAdminItem.extend({
             .attr('title', 'Download CSV')
             .removeClass('disabled');
         },
-        error: function(error) {
+        error: function() {
           self.$('.download_csv').attr('title', 'Download Failed');
           setTimeout(function() {
             self
@@ -402,7 +400,7 @@ var ChannelItem = BaseAdminItem.extend({
   },
   open_sharing: function() {
     var ShareViews = require('edit_channel/share/views');
-    var share_view = new ShareViews.ShareModalView({
+    new ShareViews.ShareModalView({
       model: this.model,
       current_user: window.current_user,
       allow_leave: true,
@@ -410,7 +408,7 @@ var ChannelItem = BaseAdminItem.extend({
       onleave: this.fetch_editors,
     });
   },
-  fetch_editors: function(editor) {
+  fetch_editors: function() {
     // Fetch editors again
     var self = this;
     this.model.fetch_editors().then(function() {
@@ -434,7 +432,7 @@ var ChannelItem = BaseAdminItem.extend({
     var self = this;
     var editors = this.model.get('editors');
     var viewers = this.model.get('viewers');
-    this.save(data, message).then(function(model) {
+    this.save(data, message).then(function() {
       self.model.set({
         editors: editors,
         viewers: viewers,
@@ -588,7 +586,7 @@ var UserItem = BaseAdminItem.extend({
     var self = this;
     var edit_channels = this.model.get('editable_channels');
     var view_channels = this.model.get('view_only_channels');
-    this.save(data, message).then(function(model) {
+    this.save(data, message).then(function() {
       self.model.set({
         editable_channels: edit_channels,
         view_only_channels: view_channels,
@@ -636,7 +634,9 @@ var UserItem = BaseAdminItem.extend({
     var size = self.$('.size_limit').val() || this.model.get('disk_space');
     var size_unit = Number(self.$('.size_unit').val());
     _.defer(function() {
-      model.save({ disk_space: Number(size) * size_unit }, { patch: true }); // Need to convert to bytes
+      model.save(
+        { disk_space: Number(size) * size_unit },
+        { patch: true }); // Need to convert to bytes
     }, 1000);
   },
   search_users_editable_channels: function() {

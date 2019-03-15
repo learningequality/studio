@@ -1,4 +1,3 @@
-var Backbone = require('backbone');
 var _ = require('underscore');
 var BaseViews = require('edit_channel/views');
 var Models = require('edit_channel/models');
@@ -22,7 +21,7 @@ var ArchiveModalView = BaseViews.BaseModalView.extend({
   name: NAMESPACE,
   $trs: MESSAGES,
   modal: true,
-  initialize: function(options) {
+  initialize: function() {
     _.bindAll(this, 'closed_modal');
     this.render(this.close, { channel: State.current_channel.toJSON() });
     this.archiveView = new ArchiveView({
@@ -64,7 +63,7 @@ var ArchiveView = BaseViews.BaseWorkspaceView.extend({
       content_node_view: null,
     });
   },
-  select_all: function(event) {
+  select_all: function() {
     var checked = this.$('#select_all_check').is(':checked');
     this.main_archive_list.views.forEach(function(view) {
       $('#' + view.id() + '_check').prop('checked', checked);
@@ -80,11 +79,9 @@ var ArchiveView = BaseViews.BaseWorkspaceView.extend({
       $('.archive_option').removeAttr('disabled');
       $('.archive_option').removeClass('disabled');
     }
-    var data = this.main_archive_list.get_metadata();
     this.$('#archive_selected_count').html(this.get_translation('count', collection.length));
   },
   restore_content: function() {
-    let list = this.get_selected();
     let moveCollection = new Models.ContentNodeCollection(
       _.pluck(this.main_archive_list.get_selected(), 'model')
     );

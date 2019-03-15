@@ -1,4 +1,5 @@
 <template>
+
   <div>
     <div id="back-button" class="container-fluid">
       <button class="btn btn-default pull-right" @click="goToViewChannels">
@@ -17,6 +18,7 @@
       />
     </div>
   </div>
+
 </template>
 
 
@@ -52,10 +54,10 @@
 
 <style lang="less" scoped>
 
-@import '../../../../less/global-variables.less';
+  @import '../../../../less/global-variables.less';
 
-#back-button {
-  margin-bottom: 20px;
-}
+  #back-button {
+    margin-bottom: 20px;
+  }
 
 </style>

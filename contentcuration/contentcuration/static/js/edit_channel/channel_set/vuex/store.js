@@ -1,10 +1,10 @@
 import Vue from 'vue';
 
 var Vuex = require('vuex');
+var { PageTypes } = require('../constants');
 var mutations = require('./mutations');
 var actions = require('./actions');
 var getters = require('./getters');
-var { PageTypes } = require('../constants');
 
 Vue.use(Vuex);
 

@@ -28,7 +28,6 @@ if (State.currentLanguage.lang_code === 'es') {
   POINT = /,/;
 }
 
-var LINE = /^(.*)$/;
 var SIGN = /-?/;
 var DIGIT = /[0-9]/;
 var NON_ZERO_DIGIT = /[1-9]/;

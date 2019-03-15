@@ -6,7 +6,8 @@ const channelModule = require('./vuexModules/channel');
 const primaryModalModule = require('./vuexModules/primaryModal');
 
 if (Vue.default) {
-  // Compatibility for differential behaviour of require import of ES6 export default in webpack vs Jest
+  // Compatibility for differential behaviour of require import
+  // of ES6 export default in webpack vs Jest
   Vue = Vue.default;
 }
 

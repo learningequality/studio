@@ -1,4 +1,5 @@
 <template>
+
   <div class="import-preview">
     <button class="back-button button-reset" @click="goToPreviousPage()">
       {{ $tr('back') }}
@@ -7,7 +8,11 @@
 
     <div>
       <div class="resources-msg">
-        {{ $tr('resourcesSize', { resources: importedItemCounts.resources, fileSize: importFileSizeInWords }) }}
+        {{ $tr('resourcesSize', {
+          resources: importedItemCounts.resources,
+          fileSize: importFileSizeInWords
+          })
+        }}
       </div>
       <div class="resources-list">
         <ul class="list-unstyled">
@@ -23,6 +28,7 @@
       </div>
     </div>
   </div>
+
 </template>
 
 

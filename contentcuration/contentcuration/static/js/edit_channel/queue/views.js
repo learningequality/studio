@@ -1,4 +1,3 @@
-var Backbone = require('backbone');
 var _ = require('underscore');
 var Vibrant = require('node-vibrant');
 
@@ -513,7 +512,7 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
     this.container = options.container;
     this.render();
   },
-  render: function(renderData) {
+  render: function() {
     var is_segment = this.is_segment();
     var channel_id = this.model.get('id');
     var segment_url =
@@ -689,10 +688,10 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
     this.cancel_actions(event);
     this.open_move('clipboard');
   },
-  on_start_drag: function(event) {
+  on_start_drag: function() {
     this.container.handle_item_start_drag();
   },
-  on_stop_drag: function(event) {
+  on_stop_drag: function() {
     this.container.handle_item_stop_drag();
   },
 });

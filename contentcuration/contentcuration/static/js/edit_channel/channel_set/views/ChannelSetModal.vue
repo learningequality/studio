@@ -1,4 +1,5 @@
 <template>
+
   <div ref="topmodal" class="modal fade" tabindex="-1">
     <div class="modal-dialog">
       <div id="channel-set-modal-content" class="modal-content modal-dialog-default">
@@ -15,16 +16,17 @@
       </div>
     </div>
   </div>
+
 </template>
 
 
 <script>
 
-  import { mapGetters, mapActions, mapState } from 'vuex';
+  import { mapGetters, mapState } from 'vuex';
   import { PageTypes } from '../constants';
   import ChannelSetDialog from './ChannelSetDialog.vue';
-  import ChannelSetList from './ChannelSetList.vue';
   import ChannelSelectView from './ChannelSelectView.vue';
+  import ChannelSetList from './ChannelSetList.vue';
 
   const pageNameToComponentMap = {
     [PageTypes.SELECT_CHANNELS]: ChannelSelectView,
@@ -39,11 +41,6 @@
     },
     components: {
       ChannelSetDialog,
-      ChannelSetList,
-      ChannelSelectView,
-    },
-    mounted() {
-      this.openModal();
     },
     computed: Object.assign(
       mapGetters('channel_set', ['currentPage']),
@@ -60,6 +57,9 @@
         },
       }
     ),
+    mounted() {
+      this.openModal();
+    },
     methods: {
       openModal() {
         $(this.$refs.topmodal)
@@ -83,6 +83,7 @@
 
 
 <style lang="less" scoped>
+
   .modal-dialog {
     width: 750px;
   }
@@ -92,4 +93,5 @@
   .modal-title {
     font-weight: bold;
   }
+
 </style>
