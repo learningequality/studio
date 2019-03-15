@@ -4,7 +4,7 @@ var utils = require('../util');
 var saveChannelsToSet = utils.saveChannelsToSet;
 var { PageTypes, ChannelListUrls } = require('../constants');
 
-export function loadChannelSetChannels(context, payload) {
+export function loadChannelSetChannels(context) {
   if (context.getters.loadChannels) {
     let token = context.getters.channelSet.get('secret_token');
     if (token) {
@@ -15,6 +15,7 @@ export function loadChannelSetChannels(context, payload) {
           context.commit('UPDATE_CHANNELS_LOADED', false);
         })
         .catch(function onError(error) {
+          // eslint-disable-next-line no-console
           console.error(error);
         });
     } else {
@@ -33,6 +34,7 @@ export function loadChannelList(context, listName) {
         return channels;
       })
       .catch(function onError(error) {
+        // eslint-disable-next-line no-console
         console.error(error);
       });
   }
@@ -85,6 +87,7 @@ export function saveChannelSet(context, callback) {
         callback(channelSet);
       })
       .catch(function(error) {
+        // eslint-disable-next-line no-console
         console.error(error);
         context.commit('SET_SAVING', false);
         context.commit('SET_ERROR', true);

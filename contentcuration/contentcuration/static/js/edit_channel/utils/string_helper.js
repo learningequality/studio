@@ -1,7 +1,5 @@
-var _ = require('underscore');
-// const State = require('edit_channel/state');
-const Constants = require('edit_channel/constants/index');
 var i18n = require('../../utils/i18n');
+const State = require('edit_channel/state');
 
 function format_size(text) {
   if (!text) {
@@ -31,8 +29,8 @@ function escape_str(text) {
   return text
     .replace(/>/g, '&gt;')
     .replace(/</g, '&lt;')
-    .replace(/\&/g, '&amp;')
-    .replace(/\"/g, '&quot;');
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;');
 }
 
 function unescape(text) {
@@ -327,8 +325,6 @@ var messages = {
   more: '... More',
   less: ' Less',
   no_text_provided: 'No text provided',
-  image: 'IMAGE',
-  formula: 'FORMULA',
   export_error_text: 'Error exporting data. Please try again.',
   export_title: 'Exporting Data',
   export_text: "Data export started. You'll receive an email with your information when it's done.",

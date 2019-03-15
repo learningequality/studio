@@ -1,9 +1,6 @@
-var Backbone = require('backbone');
 var _ = require('underscore');
 var BaseViews = require('edit_channel/views');
-var Models = require('edit_channel/models');
 var Images = require('edit_channel/image/views');
-const State = require('edit_channel/state');
 const Constants = require('edit_channel/constants/index');
 require('channel_settings.less');
 
@@ -242,7 +239,7 @@ var SettingsView = BaseViews.BaseListEditableItemView.extend({
     this.model.set('thumbnail_encoding', {});
     this.register_changes();
   },
-  set_thumbnail: function(thumbnail, encoding, formatted_name, path) {
+  set_thumbnail: function(thumbnail, encoding, formatted_name) {
     this.model.set('thumbnail', formatted_name);
     this.model.set('thumbnail_encoding', encoding);
     this.register_changes();

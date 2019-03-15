@@ -28,8 +28,10 @@ Handlebars.registerHelper('url', function(url_name) {
     return window.Urls[url_name].apply(window.Urls, args);
   } else {
     if (!window.Urls) {
+      // eslint-disable-next-line no-console
       console.warn('Django Reverse JS not loaded');
     } else if (!window.Urls[url_name]) {
+      // eslint-disable-next-line no-console
       console.warn('Url name invalid');
     }
     return '';
@@ -156,7 +158,7 @@ Handlebars.registerHelper('parse_question', function(str) {
     return stringHelper.translate('question');
   }
   return str
-    .replace(/\$\$([^\$]+)\$\$/g, ' ' + stringHelper.translate('formula') + ' ')
+    .replace(/\$\$([^$]+)\$\$/g, ' ' + stringHelper.translate('formula') + ' ')
     .replace(
       /!\[.*\]\(\${☣ CONTENTSTORAGE}\/([^)]+)\)/g,
       ' ' + stringHelper.translate('image') + ' '
@@ -202,7 +204,7 @@ Handlebars.registerHelper('format_date', function(date) {
     'Nov',
     'Dec',
   ];
-  var date = new Date(date);
+  date = new Date(date);
   var day = date.getDate();
   var monthIndex = date.getMonth();
   var year = date.getFullYear();

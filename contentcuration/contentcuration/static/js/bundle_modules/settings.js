@@ -6,7 +6,7 @@ var stringHelper = require('edit_channel/utils/string_helper');
 
 $(function() {
   // Export data call
-  $('#export_data').click(function(ev) {
+  $('#export_data').click(function() {
     $.ajax({
       method: 'POST',
       url: window.Urls.export_user_data(window.email),
@@ -16,13 +16,13 @@ $(function() {
           stringHelper.translate('export_error_text')
         );
       },
-      success: function(data) {
+      success: function() {
         dialog.alert(stringHelper.translate('export_title'), stringHelper.translate('export_text'));
       },
     });
   });
   // Enable
-  $('.setting_input').on('keydown', function(event) {
+  $('.setting_input').on('keydown', function() {
     $('#save').attr('disabled', false);
   });
 
@@ -42,7 +42,7 @@ $(function() {
   $('#deleteAccountModal').on('hidden.bs.modal', resetDeleteModal);
 
   // Delete account call
-  $('#submit_delete_account').click(function(ev) {
+  $('#submit_delete_account').click(function() {
     if (!$('#submit_delete_account').attr('disabled')) {
       $('#submit_delete_account')
         .addClass('disabled')
@@ -52,7 +52,7 @@ $(function() {
         method: 'POST',
         url: window.Urls.delete_user_account($('#email_confirm').val()),
         error: showDeleteError,
-        success: function(data) {
+        success: function() {
           window.location = '/settings/account/deleted';
         },
       });

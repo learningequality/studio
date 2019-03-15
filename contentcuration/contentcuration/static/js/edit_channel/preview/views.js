@@ -1,10 +1,8 @@
-var Backbone = require('backbone');
 var _ = require('underscore');
 var BaseViews = require('edit_channel/views');
 var Models = require('edit_channel/models');
 var stringHelper = require('edit_channel/utils/string_helper');
 require('modal-styles.less');
-const State = require('edit_channel/state');
 const Constants = require('edit_channel/constants/index');
 
 var NAMESPACE = 'preview';
@@ -20,7 +18,7 @@ var MESSAGES = {
 var PreviewModalView = BaseViews.BaseModalView.extend({
   template: require('./hbtemplates/preview_modal.handlebars'),
   modal: true,
-  initialize: function(options) {
+  initialize: function() {
     _.bindAll(this, 'close_preview');
     this.render(this.close_preview, { node: this.model.toJSON() });
     this.preview_view = new PreviewView({
@@ -39,7 +37,7 @@ var PreviewView = BaseViews.BaseView.extend({
   $trs: MESSAGES,
   tabs_template: require('./hbtemplates/preview_templates/tabs.handlebars'),
   template: require('./hbtemplates/preview_dialog.handlebars'),
-  initialize: function(options) {
+  initialize: function() {
     _.bindAll(
       this,
       'select_preview',

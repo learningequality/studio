@@ -1,4 +1,5 @@
 <template>
+
   <div>
     <!-- SLOT FOR CHANNEL SET VIEW OR CHANNEL SELECT VIEW-->
     <div id="channel-set-content">
@@ -37,13 +38,13 @@
       </span>
     </div>
   </div>
+
 </template>
 
 
 <script>
 
   import { mapGetters, mapMutations, mapState } from 'vuex';
-  import { PageTypes } from '../constants';
 
   export default {
     name: 'ChannelSetDialog',

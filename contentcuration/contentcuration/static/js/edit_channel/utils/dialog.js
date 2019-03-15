@@ -1,4 +1,3 @@
-var Models = require('edit_channel/models');
 const State = require('edit_channel/state');
 var template = require('edit_channel/utils/hbtemplates/dialog.handlebars');
 var _ = require('underscore');

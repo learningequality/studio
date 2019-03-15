@@ -1,5 +1,5 @@
-const ExerciseView = require('../views').ExerciseView;
 const Backbone = require('backbone');
+const ExerciseView = require('../views').ExerciseView;
 // Register handlebars helpers to ensure templates are rendered properly.
 require('handlebars/helpers');
 

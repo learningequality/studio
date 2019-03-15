@@ -1,4 +1,3 @@
-var Backbone = require('backbone');
 var _ = require('underscore');
 var BaseViews = require('edit_channel/views');
 var Models = require('edit_channel/models');
@@ -840,7 +839,7 @@ var SyncItem = BaseViews.BaseListNodeItemView.extend({
     this.checked = this.$('.sync_checkbox').is(':checked');
     this.container.handle_selection();
   },
-  set_selected: function(event) {
+  set_selected: function() {
     this.containing_list_view.set_selected(this.model, this.changed);
     this.$el.addClass('selected');
   },

@@ -65,7 +65,8 @@ class Visual {
         Base class for visualizations
         config = {
             key (str): key used for data id such as name or label [default:"id"],
-            value_key (str): key used for getting number such as percent or count [default:"percent"],
+            value_key (str): key used for getting number such as `percent`
+                             or count [default:"percent"],
             tooltip (function): function for text to display on tooltip [default:null],
             get_text (function): function for text to display on sections of visualization,
             title (str): title of the visualization,
@@ -122,10 +123,10 @@ class Visual {
     this.setConfig(config);
     this.render(data);
   }
-  init(data, config) {
+  init() {
     /* Override in subclasses */
   }
-  render(data) {
+  render() {
     /* Override in subclasses */
   }
 }
@@ -194,10 +195,10 @@ class PieChart extends Visual {
           tip.html(config.tooltip(d));
           tip.show();
         })
-        .on('mousemove', function(d) {
+        .on('mousemove', function() {
           tip.move();
         })
-        .on('mouseout', function(d) {
+        .on('mouseout', function() {
           tip.hide();
         });
     }
@@ -236,8 +237,6 @@ class Legend extends Visual {
       .select(this.selector)
       .append('table')
       .attr('class', 'legend');
-    var leg = {};
-    var color = this.color;
     var config = this.config;
 
     var tr = legend

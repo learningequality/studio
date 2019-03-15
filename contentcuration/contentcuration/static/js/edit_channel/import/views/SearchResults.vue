@@ -1,4 +1,5 @@
 <template>
+
   <div class="search-results">
     <div>
       <p v-show="!resultsLoading" class="top-results wordwrap">
@@ -63,6 +64,7 @@
       </template>
     </div>
   </div>
+
 </template>
 
 

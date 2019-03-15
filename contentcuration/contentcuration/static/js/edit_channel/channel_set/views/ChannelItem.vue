@@ -1,4 +1,5 @@
 <template>
+
   <div
     class="channel-set-channel"
     :class="{selectedChannel: isSelected, unpublishedChannel: !channel.published}"
@@ -41,6 +42,7 @@
       </div>
     </div>
   </div>
+
 </template>
 
 
@@ -70,9 +72,6 @@
         isSelected: false,
       };
     },
-    mounted() {
-      this.checkIfSelected();
-    },
     computed: Object.assign(mapGetters('channel_set', ['currentPage', 'channels']), {
       title() {
         if (this.currentPage === PageTypes.SELECT_CHANNELS || this.channel.published) {
@@ -83,9 +82,12 @@
       },
     }),
     watch: {
-      channels(value) {
+      channels() {
         this.checkIfSelected();
       },
+    },
+    mounted() {
+      this.checkIfSelected();
     },
     methods: Object.assign(mapActions('channel_set', ['addChannelToSet', 'removeChannelFromSet']), {
       checkIfSelected() {
