@@ -69,7 +69,7 @@ function WorkspaceManager() {
   };
 
   this.print_values = function() {
-    console.log(this.table);
+    console.log(this.table); // eslint-disable-line no-console
   };
 
   this.get_published_collection = function() {
