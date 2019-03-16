@@ -11,7 +11,7 @@
         {{ $tr('resourcesSize', {
           resources: importedItemCounts.resources,
           fileSize: importFileSizeInWords
-          })
+        })
         }}
       </div>
       <div class="resources-list">
