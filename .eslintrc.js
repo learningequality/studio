@@ -1,6 +1,5 @@
 const esLintConfig = require('kolibri-tools/.eslintrc');
 esLintConfig.globals = {
-  // Misc. global variables
   "$": false,
   "_": false,
   "MathQuill": false,
