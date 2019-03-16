@@ -91,7 +91,7 @@
     },
     methods: Object.assign(mapActions('channel_set', ['addChannelToSet', 'removeChannelFromSet']), {
       checkIfSelected() {
-        this.isSelected = !!_.findWhere(this.channels, { id: this.channel.id });
+        this.isSelected = Boolean(_.findWhere(this.channels, { id: this.channel.id }));
       },
       removeChannel() {
         this.removeChannelFromSet(this.channel);
