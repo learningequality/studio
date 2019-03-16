@@ -20,7 +20,7 @@ const primaryModalModule = {
   },
   actions: {
     usePrimaryModal({ state, commit }, buildModalView) {
-      return new Promise((resolve) => {
+      return new Promise(resolve => {
         if (!state.primaryModalInUse) {
           let modalView = buildModalView();
           commit('OPEN_PRIMARY_MODAL', modalView);

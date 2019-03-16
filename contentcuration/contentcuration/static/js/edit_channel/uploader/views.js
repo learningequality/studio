@@ -823,26 +823,26 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
       this.shared_data && this.shared_data.shared_copyright_owner
         ? this.shared_data.shared_copyright_owner
         : alloriginal
-        ? null
-        : '---';
+          ? null
+          : '---';
     var author =
       this.shared_data && this.shared_data.shared_author
         ? this.shared_data.shared_author
         : alloriginal
-        ? null
-        : '---';
+          ? null
+          : '---';
     var aggregator =
       this.shared_data && this.shared_data.shared_aggregator
         ? this.shared_data.shared_aggregator
         : alloriginal
-        ? null
-        : '---';
+          ? null
+          : '---';
     var provider =
       this.shared_data && this.shared_data.shared_provider
         ? this.shared_data.shared_provider
         : alloriginal
-        ? null
-        : '---';
+          ? null
+          : '---';
     var all_top_level = this.new_content
       ? !this.model.get('parent')
       : _.all(this.selected_items, function(item) {
@@ -911,7 +911,7 @@ var EditMetadataEditor = BaseViews.BaseView.extend({
           var randomize = this.shared_data.shared_exercise_data.randomize;
           this.$('#randomize_exercise').prop(
             'indeterminate',
-            (randomize === null || randomize === undefined)
+            randomize === null || randomize === undefined
           );
           this.$('#randomize_exercise').prop('checked', randomize);
         }

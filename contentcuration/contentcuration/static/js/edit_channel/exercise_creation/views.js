@@ -562,9 +562,11 @@ var EditorView = BaseViews.BaseView.extend({
       var key = event.keyCode || event.which;
       var allowedKeys = [46, 8, 9, 27, 110, 37, 38, 39, 40, 10];
       if (
-        !this.check_key( // `key` is a digit or allowed special characters
+        !this.check_key(
+          // `key` is a digit or allowed special characters
           String.fromCharCode(key),
-          key, event.shiftKey,
+          key,
+          event.shiftKey
         ) &&
         !_.contains(allowedKeys, key) &&
         !(event.ctrlKey || event.metaKey)
