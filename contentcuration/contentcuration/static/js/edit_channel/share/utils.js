@@ -1,5 +1,5 @@
-
-import { Permissions } from './constants';
+import _ from 'underscore';
+import { Permissions, PermissionRanks } from './constants';
 
 export function getPermission(user, channel) {
 	if(user.is_admin) {
@@ -9,4 +9,11 @@ export function getPermission(user, channel) {
 		return Permissions.EDIT;
 	}
 	return Permissions.VIEW_ONLY;
+}
+
+export function getHighestPermission() {
+	return _.chain(PermissionRanks)
+          .filter((rank) => { return rank.field; })
+          .max('rank')
+          .value();
 }

@@ -12,12 +12,14 @@ from django.test import TransactionTestCase
 from mixer.backend.django import mixer
 
 from .base import BaseAPITestCase
+from .base import BaseTestCase
 from .testdata import fileobj_video
 from contentcuration.models import DEFAULT_CONTENT_DEFAULTS
 from contentcuration.models import Invitation
 from contentcuration.models import User
 from contentcuration.utils.csv_writer import _format_size
 from contentcuration.utils.csv_writer import write_user_csv
+from contentcuration.views.users import _validate_email
 from contentcuration.views.users import send_invitation_email
 
 
@@ -120,3 +122,31 @@ class UserAccountTestCase(BaseAPITestCase):
                         self.assertIn(videos[index-1].original_filename, row)
                         self.assertIn(_format_size(videos[index-1].file_size), row)
             self.assertEqual(index, len(videos))
+
+
+class EmailValidationTestCase(BaseTestCase):
+
+    def test_validate_email(self):
+        # Add editor to channel
+        editor = User.objects.create(email="user@edit.com")
+        self.channel.editors.add(editor)
+
+        # Add invitation to channel
+        viewer = User.objects.create(email="user@view.com")
+        self.channel.viewers.add(viewer)
+
+        # Add viewer to channel
+        invited = User.objects.create(email="user@invite.com")
+        mixer.blend(Invitation, channel=self.channel, sender=self.user, invited=invited, email=invited.email)
+
+        testdata = [{"email": editor.email, "result": False, "message": "Editors cannot be invited"},
+                    {"email": 'user', "result": False, "message": "Invalid email"},
+                    {"email": '@user.com', "result": False, "message": "Invalid email"},
+                    {"email": viewer.email, "result": True, "data": "prompt_to_upgrade", "message": "Viewers should upgrade"},
+                    {"email": invited.email, "result": True, "data": "reinvite", "message": "Invitations should be resent"}]
+
+        for test in testdata:
+            result, data = _validate_email(test['email'], self.channel, self.user)
+            self.assertEqual(result, test['result'], test['message'])
+            if test.get('data'):
+                self.assertTrue(json.loads(data).get(test['data']), test['message'])

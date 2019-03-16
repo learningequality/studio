@@ -5,7 +5,7 @@
     {{ $tr('accessListHeader') }}
     <span v-if="!loading" class="count-badge">{{ accessList.length }}</span>
   </h4>
-  <UserItem :model="currentUser" :isSelf="true" />
+  <UserItem :model="currentUser"/>
 
 	<p v-if="loading" class="loading">{{ $tr('loading') }}</p>
 	<div v-else>

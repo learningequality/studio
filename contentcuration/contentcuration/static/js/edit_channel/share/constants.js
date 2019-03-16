@@ -7,14 +7,17 @@ export const Permissions = {
 export const PermissionRanks = [
 	{
 		"shareMode": Permissions.VIEW_ONLY,
-		"rank": 0
+		"rank": 0,
+		"field": 'viewers'
 	},
 	{
 		"shareMode": Permissions.EDIT,
-		"rank": 1
+		"rank": 1,
+		"field": 'editors'
 	},
 	{
 		"shareMode": Permissions.OWNER,
-		"rank": 2
+		"rank": 2,
+		"field": null
 	},
 ]

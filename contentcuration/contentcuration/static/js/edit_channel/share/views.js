@@ -42,7 +42,7 @@ var ShareModalView = BaseViews.BaseModalView.extend({
     channel.editors = _.map(channel.editors, (u) => { return u.id || u; });
     channel.viewers = _.map(channel.viewers, (u) => { return u.id || u; });
 
-    store.commit('share/SET_CHANNEL', channel); // TODO: Pass this into component when pure vue
+    store.commit('share/SET_CHANNEL', channel);
     this.ShareModal = new ShareModal({ store: store  });
     this.ShareModal.$on('modalclosed', this._destroy.bind(this));
     this.ShareModal.$mount();

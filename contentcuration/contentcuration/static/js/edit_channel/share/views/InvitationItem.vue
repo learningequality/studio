@@ -2,8 +2,8 @@
 
 <share-item :model="model" :permission="model.share_mode" :highlight="recentlySent === model.id">
 	<label v-if="recentlySent === model.id">{{ $tr('sentIndicator') }}</label>
-	<span class="option" :title="$tr('reinviteTitle')" @click="reinviteUser">mail_outline</span>
-	<span class="option red-option" :title="$tr('cancelInviteTitle')" @click="uninviteUser">clear</span>
+	<span class="option reinvite" :title="$tr('reinviteTitle')" @click="reinviteUser">mail_outline</span>
+	<span class="option red-option remove" :title="$tr('cancelInviteTitle')" @click="uninviteUser">clear</span>
 </share-item>
 
 </template>
@@ -42,15 +42,18 @@ export default {
        	dialog(this.$tr('resendHeader'), this.$tr('resendPrompt', {name: this.userName.trim()}), {
           [this.$tr('cancelButton')]: () => {},
           [this.$tr('sendButton')]: () => {
-        		let payload = {
-        			email: this.model.email,
-        			share_mode: this.model.share_mode,
-        			reinvite: true
-        		}
-        		this.sendInvitation(payload);
+        		this.handleSendInvitation();
           },
         }, null);
 	  	},
+      handleSendInvitation() {
+        let payload = {
+          email: this.model.email,
+          share_mode: this.model.share_mode,
+          reinvite: true
+        }
+        this.sendInvitation(payload);
+      },
 	  	uninviteUser() {
         dialog(this.$tr("uninvitingHeader"), this.$tr("uninvitingPrompt", {name: this.userName.trim()}), {
             [this.$tr('cancelButton')]: () => {},

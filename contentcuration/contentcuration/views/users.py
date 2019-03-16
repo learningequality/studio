@@ -74,9 +74,9 @@ def send_invitation_email(request):
 
         # Validate
         valid, response = _validate_email(user_email, channel, request.user, upgrade=data.get('upgrade'), reinvite=data.get('reinvite'))
-        if valid:
+        if valid and response:  # Email is valid, but extra prompting is needed
             return HttpResponse(response)
-        elif response:
+        elif not valid:
             return HttpResponseBadRequest(response)
 
         recipient = User.objects.filter(email__iexact=user_email).first()

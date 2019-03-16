@@ -11,6 +11,7 @@
 			<select name="permission" ref="share_mode">
 				<option
 					v-for="permission in permissions"
+					class="permission"
 					:value="permission"
 					:selected="currentUserPermission === permission"
 				>{{ $tr(permission) }}</option>
