@@ -103,8 +103,7 @@ var ShareView = BaseViews.BaseView.extend({
     this.render();
     this.$('#share_email_address').attr('disabled', true);
     var self = this;
-    Promise.all([this.fetch_model(this.model), this.fetch_model(this.current_user)])
-    .then(() => {
+    Promise.all([this.fetch_model(this.model), this.fetch_model(this.current_user)]).then(() => {
       self.load_lists(function() {
         self.$('#share_email_address').removeAttr('disabled');
       });
