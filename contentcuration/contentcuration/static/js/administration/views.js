@@ -635,8 +635,10 @@ var UserItem = BaseAdminItem.extend({
     var size_unit = Number(self.$('.size_unit').val());
     _.defer(function() {
       model.save(
+        // Need to convert to bytes
         { disk_space: Number(size) * size_unit },
-        { patch: true }); // Need to convert to bytes
+        { patch: true }
+      );
     }, 1000);
   },
   search_users_editable_channels: function() {
