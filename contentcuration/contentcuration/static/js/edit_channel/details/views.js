@@ -168,7 +168,7 @@ var ChannelDetailsView = BaseViews.BaseListEditableItemView.extend({
         {
           channel: this.model.toJSON(),
           can_edit: this.allow_edit,
-          is_new: !!this.onnew,
+          is_new: Boolean(this.onnew),
         },
         {
           data: this.get_intl_data(),
@@ -275,7 +275,7 @@ var ChannelEditorView = BaseViews.BaseListEditableItemView.extend({
     this.onclose = options.onclose;
     this.allow_edit = options.allow_edit;
     this.onchange = options.onchange;
-    this.edit = !!this.onnew;
+    this.edit = Boolean(this.onnew);
     this.render();
   },
   events: {
@@ -308,7 +308,7 @@ var ChannelEditorView = BaseViews.BaseListEditableItemView.extend({
             language => language.id === this.model.get('language')
           ),
           can_edit: this.allow_edit,
-          is_new: !!this.onnew,
+          is_new: Boolean(this.onnew),
           edit: this.edit,
         },
         {
