@@ -17,7 +17,7 @@
     hooks:
       -   id: frontend-lint
           name: Linting of JS, Vue, SCSS and CSS files
-          description: This hook handles all frontend linting for Kolibri
+          description: This hook handles all frontend linting for Kolibri Studio
           entry: yarn run lint -w
           language: system
-          files: \.(js|vue|scss|css)$
+          files: \.(js|vue|scss|less|css)$
