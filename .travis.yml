@@ -26,5 +26,7 @@ addons:
 
 script:
   - make endtoendtest
+  - yarn run lint-all
+  # - yarn run lint:py
 
 cache: yarn
