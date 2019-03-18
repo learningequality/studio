@@ -14,7 +14,7 @@ export function loadAccessList(context) {
   });
 }
 
-export function addEditor(context, payload) {
+export function addEditor(context, user) {
 	return new Promise(function (resolve, reject) {
 		$.ajax({
 			method: "POST",

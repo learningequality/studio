@@ -2,10 +2,14 @@
 
 ## Upcoming release
 #### Changes
-* 
+* [[@jayoshih](https://github.com/jayoshih)] Migrated share modal to vue
+*
 
 #### Issues Resolved
-* 
+* [#1195 Move share modal validation to backend](https://github.com/learningequality/studio/issues/1195)
+*
+
+
 
 ## 2019-02-11 Release
 #### Changes
