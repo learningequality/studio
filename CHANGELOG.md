@@ -7,6 +7,7 @@
 #### Issues Resolved
 * [#1120](https://github.com/learningequality/studio/issues/1120)
 * [#900](https://github.com/learningequality/studio/issues/900)
+* [#875 Make sure files referenced by both orphan and non-orphan nodes aren't deleted](https://github.com/learningequality/studio/issues/875)
 
 
 
