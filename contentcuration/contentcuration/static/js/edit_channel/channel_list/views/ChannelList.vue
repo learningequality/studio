@@ -46,7 +46,10 @@ export default {
   props: {
     listType: {
       type: String,
-      required: true
+      validator: function (value) {
+        // The value must match one of the ListTypes
+        return _.contains(_.values(ListTypes), value);
+      }
     }
   },
   data() {
