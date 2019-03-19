@@ -13,9 +13,9 @@ Kolibri Studio supports the following workflows:
 
 - Creating learning pathways and assessments.
 
-- Uploading new content through the web interface or programatically using [ricecooker-powered](https://github.com/learningequality/ricecooker) chef scripts.
+- Uploading new content through the web interface or programatically using [ricecooker-powered](https://github.com/learningequality/ricecooker) content import scripts.
 
-Kolibri Studio uses Django for the backend and Backbone.js for the frontend.
+Kolibri Studio uses [Django](https://www.djangoproject.com/) for the backend and is transitioning from [Backbone.js](https://backbonejs.org/) to [Vue.js](https://vuetifyjs.com/en/) for the frontend.
 
 
 ## Developer Instructions
