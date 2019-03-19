@@ -2,7 +2,7 @@
 
 [![codecov](http://codecov.io/github/learningequality/studio/coverage.svg?branch=develop)](http://codecov.io/github/learningequality/studio?branch=develop])
 
-[Beta Site](https://studio.learningequality.org)
+Check out our [beta site](https://studio.learningequality.org)
 
 Kolibri Studio is a web application designed to deliver educational materials to [Kolibri](http://learningequality.org/kolibri/).
 Kolibri Studio supports the following workflows:
@@ -53,8 +53,8 @@ You need the following software installed on your machine to run Studio:
   - [python-tk](https://wiki.python.org/moin/TkInter)
   - [libmagickwand-dev](http://docs.wand-py.org/en/0.2.4/guide/install.html)
 
-**Ubuntu or Debian:**
-You can install all the necessary packages using these commands:
+**Ubuntu or Debian**
+You can install all the necessary packages using these commands (you may need to add `sudo` if you receive `Permission Denied` errors:
 
     # Install minio
     wget https://dl.minio.io/server/minio/release/linux-amd64/minio -O /usr/local/bin/minio
@@ -77,16 +77,7 @@ You can install the corresponding packages using Homebrew:
     brew link --force imagemagick@6
 
 **Windows**
-Windows is no longer supported due to some of the required packages.
-
-
-
-### 1.5. (Optional) Set up a virtual environment
-Run the following command (make sure you are under your project directory folder)
-
-    pipenv shell
-
-This will set up a virtual environment for you. To reactivate, run `pipenv shell`
+Windows is no longer supported due to incompatibilities with some of the required packages.
 
 
 
@@ -94,6 +85,10 @@ This will set up a virtual environment for you. To reactivate, run `pipenv shell
 Run the following commands to install the python dependencies listed in `Pipfile`
 
     pip install -U pipenv
+    
+    # Recommended: create virtual environment (reactivate with `pipenv shell`)
+    pipenv shell
+    
     pipenv install
 
 
@@ -104,18 +99,21 @@ We use [pre-commit](http://pre-commit.com/) to help ensure consistent, clean cod
 
     pre-commit install
 
+_Note: you may need to run `pip install pre-commit` if you see `pre-commit command not found`_
+
 
 #### Additional formatting tools
 
 In case you need help formatting your python code to meet pep8 standards, there are a couple tools out there.
-    - [autoflake](https://github.com/myint/autoflake) for removing unused imports and unused variables
-    - [autopep8](https://github.com/hhatto/autopep8) for fixing whitespace issues.
+
+  - [autoflake](https://github.com/myint/autoflake) for removing unused imports and unused variables
+  - [autopep8](https://github.com/hhatto/autopep8) for fixing whitespace issues.
 
 
 
 ### 4. Install javascript dependencies
 
-All the javascript dependencies are listed in `package.json`. To install them run:
+All the javascript dependencies are listed in `package.json`. To install them run the following [yarn](https://yarnpkg.com/en/) command:
 
     npm install -g yarn
     yarn install
@@ -136,7 +134,7 @@ Create a database user with username `learningequality` and password `kolibri`:
     sudo su postgres
     psql
     # mac: psql postgres
-      CREATE USER learningequality with NOSUPERUSER INHERIT NOCREATEROLE CREATEDB LOGIN NOREPLICATION NOBYPASSRLS PASSWORD 'kolibri';
+    CREATE USER learningequality with NOSUPERUSER INHERIT NOCREATEROLE CREATEDB LOGIN NOREPLICATION NOBYPASSRLS PASSWORD 'kolibri';
 
 Create a database called `gonano`
 
@@ -149,10 +147,10 @@ Create a database called `gonano`
 You'll only need to run these commands once, to setup the necessary tables and constants in the database:
 
     # On one terminal, run all external services
-    $ yarn run services
+    yarn run services
 
     # On another terminal, run devsetup to create all the necessary tables and buckets
-    $ yarn run devsetup
+    yarn run devsetup
 
 
 
@@ -162,7 +160,7 @@ You're all setup now, and ready to start the Studio local development server:
 
     make devserver
 
-Alternatively, you can run `pipenv run make devserver` or `yarn make devserver`
+Alternatively, you can run `pipenv run make devserver` or `yarn run devserver`
 This will start any of the required services (e.g. postgres, redis, minio) that are not already running.
 
 Once you see the following output in your terminal, the server is ready:
