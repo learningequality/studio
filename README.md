@@ -28,9 +28,10 @@ Follow the instructions below to setup your dev environment and get started. (No
 ### 0. Get the code
 
   - Fork the [studio repo](https://github.com/learningequality/studio) to create a copy of the studio repository under your own github username.
-
-    cd [project directory]
-    git clone git@github.com:[yourusername]/studio.git
+      ```
+      cd <project directory>
+      git clone git@github.com:<yourusername>/studio.git
+      ```
 
   - The folder `<project directory>/studio` now contains the latest Studio code.
   - For more information on using git, please check out [these instructions](https://github.com/learningequality/studio/blob/develop/docs-developer/git_setup.md)
