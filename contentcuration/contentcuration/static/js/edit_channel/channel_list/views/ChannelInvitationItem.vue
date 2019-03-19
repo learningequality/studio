@@ -80,38 +80,36 @@ export default {
       declined: false
     }
   },
-  methods: Object.assign(
-    mapMutations('channel_list', {
+  methods: {
+    ...mapMutations('channel_list', {
       removeInvitation: 'REMOVE_INVITATION',
     }),
-    mapActions('channel_list', [
+    ...mapActions('channel_list', [
       'acceptInvitation',
       'declineInvitation'
     ]),
-    {
-      handleAccept() {
-        this.acceptInvitation(this.invitation).then(() => {
-          this.accepted = true;
-        }).catch((error) => {
-          console.log("ERROR")
-          dialog.alert(this.$tr("invitationError"), error.responseText || error);
-        });
-      },
-      handleDecline() {
-        dialog.dialog(this.$tr("decliningInvitation"), this.$tr("decliningInvitationMessage"), {
-          [this.$tr("cancel")]:()=>{},
-          [this.$tr("decline")]: () => {
-            this.declineInvitation(this.invitation).then(() => {
-              this.declined = true;
-            }).catch((error) => {
-              console.error(error);
-              dialog.alert(this.$tr("invitationError"), error);
-            });
-          },
-        },()=>{});
-      }
+    handleAccept() {
+      this.acceptInvitation(this.invitation).then(() => {
+        this.accepted = true;
+      }).catch((error) => {
+        console.log("ERROR")
+        dialog.alert(this.$tr("invitationError"), error.responseText || error);
+      });
+    },
+    handleDecline() {
+      dialog.dialog(this.$tr("decliningInvitation"), this.$tr("decliningInvitationMessage"), {
+        [this.$tr("cancel")]:()=>{},
+        [this.$tr("decline")]: () => {
+          this.declineInvitation(this.invitation).then(() => {
+            this.declined = true;
+          }).catch((error) => {
+            console.error(error);
+            dialog.alert(this.$tr("invitationError"), error);
+          });
+        },
+      },()=>{});
     }
-  )
+  }
 };
 
 </script>

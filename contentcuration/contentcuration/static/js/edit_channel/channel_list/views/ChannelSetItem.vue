@@ -60,36 +60,34 @@ export default {
       optionHighlighted: false
     }
   },
-  methods: Object.assign(
-    mapActions('channel_list', [
+  methods: {
+    ...mapActions('channel_list', [
       'deleteChannelSet',
       'getChannelSetModel'
     ]),
-    {
-      handleDeleteChannelSet() {
-        dialog.dialog(this.$tr("deleteChannelSetTitle"), this.$tr("deleteChannelSetText"), {
-          [this.$tr("cancel")]:function(){},
-          [this.$tr("deleteChannelSetTitle")]: () => {
-            this.deleteChannelSet(this.channelSet);
-          },
-        }, () => {});
-      },
-      openChannelSet() {
-        this.getChannelSetModel(this.channelSet).then((channelSet) => {
-          let channelSetView = new ChannelSetModalView({
-            modal: true,
-            isNew: false,
-            model: channelSet,
-            onsave: (channelset) => {
-              _.each(channelset.pairs(), (attr) => {
-                this.channelSet[attr[0]] = attr[1];
-              });
-            }
-          });
+    handleDeleteChannelSet() {
+      dialog.dialog(this.$tr("deleteChannelSetTitle"), this.$tr("deleteChannelSetText"), {
+        [this.$tr("cancel")]:function(){},
+        [this.$tr("deleteChannelSetTitle")]: () => {
+          this.deleteChannelSet(this.channelSet);
+        },
+      }, () => {});
+    },
+    openChannelSet() {
+      this.getChannelSetModel(this.channelSet).then((channelSet) => {
+        let channelSetView = new ChannelSetModalView({
+          modal: true,
+          isNew: false,
+          model: channelSet,
+          onsave: (channelset) => {
+            _.each(channelset.pairs(), (attr) => {
+              this.channelSet[attr[0]] = attr[1];
+            });
+          }
         });
-      }
+      });
     }
-  )
+  }
 };
 
 </script>
@@ -113,5 +111,6 @@ export default {
       }
     }
   }
+
 
 </style>

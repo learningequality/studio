@@ -66,46 +66,37 @@ export default {
     ChannelItem,
   },
   mixins: [setChannelMixin],
-  computed: Object.assign(
-    mapState('channel_list', [
-      'channels'
-    ]),
-    {
-      listChannels() {
-        return _.chain(this.channels)
-                .where({[this.listType]: true})
-                .sortBy((channel) => {
-                  return this.listType === ListTypes.PUBLIC ? -channel.priority : null;
-                })
-                .sortBy('-modified')
-                .value();
-      },
-      isEditable() {
-        return this.listType === ListTypes.EDITABLE;
-      },
+  computed: {
+    ...mapState('channel_list', ['channels']),
+    listChannels() {
+      return _.chain(this.channels)
+              .where({[this.listType]: true})
+              .sortBy((channel) => {
+                return this.listType === ListTypes.PUBLIC ? -channel.priority : null;
+              })
+              .sortBy('-modified')
+              .value();
+    },
+    isEditable() {
+      return this.listType === ListTypes.EDITABLE;
     }
-  ),
-  methods: Object.assign(
-    mapActions('channel_list', [
-      'loadChannelList'
-    ]),
-    {
-      createChannel() {
-        let newChannel = {
-          name: "",
-          description: "",
-          editors: [State.current_user.id],
-          pending_editors: [],
-          language: State.preferences.language,
-          content_defaults: State.preferences,
-          thumbnail: "",
-          thumbnail_encoding: {}
-        };
-        this.setChannel(newChannel);
-      }
+  },
+  methods: {
+    ...mapActions('channel_list', ['loadChannelList']),
+    createChannel() {
+      let newChannel = {
+        name: "",
+        description: "",
+        editors: [State.current_user.id],
+        pending_editors: [],
+        language: State.preferences.language,
+        content_defaults: State.preferences,
+        thumbnail: "",
+        thumbnail_encoding: {}
+      };
+      this.setChannel(newChannel);
     }
-
-  ),
+  }
 };
 
 </script>

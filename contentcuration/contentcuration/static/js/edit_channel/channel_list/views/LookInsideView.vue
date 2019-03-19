@@ -49,22 +49,20 @@ export default {
       }
     }
   },
-  methods: Object.assign(
-    mapActions('channel_list', ['loadNodeDetails']),
-    {
-      loadDetails() {
-        this.loading = true;
-        this.loadNodeDetails(this.nodeID).then((detailedNode) => {
-          let detailsView = new DetailsView({
-            model: detailedNode,
-            el: this.$refs.lookinside,
-            channel: this.channel
-          });
-          this.loading = false;
+  methods: {
+    ...mapActions('channel_list', ['loadNodeDetails']),
+    loadDetails() {
+      this.loading = true;
+      this.loadNodeDetails(this.nodeID).then((detailedNode) => {
+        let detailsView = new DetailsView({
+          model: detailedNode,
+          el: this.$refs.lookinside,
+          channel: this.channel
         });
-      }
+        this.loading = false;
+      });
     }
-  )
+  }
 };
 
 </script>

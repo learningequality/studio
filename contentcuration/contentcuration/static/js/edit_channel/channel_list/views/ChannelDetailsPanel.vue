@@ -68,22 +68,20 @@ export default {
       }
     }
   },
-  computed: Object.assign(
-    mapState('channel_list', {
+  computed: {
+    ...mapState('channel_list', {
       channel: 'activeChannel'
     }),
-    {
-      isNew() {
-        return !!!this.channel.id;
-      },
-      canEdit() {
-        return _.contains(this.channel.editors, State.current_user.id);
-      },
-      thumbnailUrl() {
-        return (this.isNew)? "/static/img/kolibri_placeholder.png" : this.channel.thumbnail_url;
-      }
+    isNew() {
+      return !!!this.channel.id;
+    },
+    canEdit() {
+      return _.contains(this.channel.editors, State.current_user.id);
+    },
+    thumbnailUrl() {
+      return (this.isNew)? "/static/img/kolibri_placeholder.png" : this.channel.thumbnail_url;
     }
-  ),
+  },
   methods: {
     closePanel() {
       this.editing = false;

@@ -69,22 +69,18 @@ export default {
       optionHighlighted: false
     }
   },
-  computed: Object.assign(
-    mapState('channel_list', [
-      'activeChannel',
-    ]),
-    {
-      picture() {
-        return (this.channel.thumbnail_encoding && this.channel.thumbnail_encoding.base64) || this.channel.thumbnail_url;
-      },
-      language() {
-        return Constants.Languages.find(language => language.id === this.channel.language);
-      },
-      isSelected() {
-        return this.activeChannel && this.channel.id === this.activeChannel.id;
-      }
+  computed: {
+    ...mapState('channel_list', ['activeChannel']),
+    picture() {
+      return (this.channel.thumbnail_encoding && this.channel.thumbnail_encoding.base64) || this.channel.thumbnail_url;
+    },
+    language() {
+      return Constants.Languages.find(language => language.id === this.channel.language);
+    },
+    isSelected() {
+      return this.activeChannel && this.channel.id === this.activeChannel.id;
     }
-  ),
+  },
   methods: {
     openChannel(event) {
       if(event && (event.metaKey || event.ctrlKey)) {

@@ -158,109 +158,106 @@ export default {
     this.name = this.channel.name;
     this.description = this.channel.description;
   },
-  computed: Object.assign(
-    mapState('channel_list', {
+  computed: {
+    ...mapState('channel_list', {
       channel: 'channelChanges'
     }),
-    mapGetters('channel_list', {
+    ...mapGetters('channel_list', {
       changed: 'changed'
     }),
-    {
-      isNew() {
-        return !this.channel.id;
-      },
-      nameError() {
-        if (this.changed && !(this.name.length)) {
-          return this.$tr("channelError");
-        }
-        return '';
-      },
-      languages() {
-        return Constants.Languages.sort(
-          (langA, langB) => langA.native_name.localeCompare(langB.native_name)
-        )
-      },
-      invalid() {
-        return Boolean(this.nameError) || this.saving || this.uploading;
-      },
-      saveButtonTitle() {
-        if(this.saving)
-          return this.$tr('saving');
-        else if(this.invalid)
-          return this.$tr('invalidChannel');
-        return '';
-      },
+    isNew() {
+      return !this.channel.id;
+    },
+    nameError() {
+      if (this.changed && !(this.name.length)) {
+        return this.$tr("channelError");
+      }
+      return '';
+    },
+    languages() {
+      return Constants.Languages.sort(
+        (langA, langB) => langA.native_name.localeCompare(langB.native_name)
+      )
+    },
+    invalid() {
+      return Boolean(this.nameError) || this.saving || this.uploading;
+    },
+    saveButtonTitle() {
+      if(this.saving)
+        return this.$tr('saving');
+      else if(this.invalid)
+        return this.$tr('invalidChannel');
+      return '';
     }
-  ),
+  },
   mounted() {
     this.loadThumbnailUploader();
   },
-  methods: Object.assign(
-    mapActions('channel_list', [
+  methods: {
+    ...mapActions('channel_list', [
       'getChannelModel',
       'saveChannel'
     ]),
-    mapMutations('channel_list', {
+    ...mapMutations('channel_list', {
       setName: 'SET_CHANNEL_NAME',
       setDescription: 'SET_CHANNEL_DESCRIPTION',
       setThumbnail: 'SET_CHANNEL_THUMBNAIL',
       cancelChanges: 'CANCEL_CHANNEL_CHANGES',
       setLanguage: 'SET_CHANNEL_LANGUAGE'
     }),
-    {
-      /* Handle thumbnail options */
-      loadThumbnailUploader: function() {
-        this.getChannelModel(this.channel).then((model) => {
-          let imageUploader = new ThumbnailUploadView({
-            model: model,
-            el: this.$refs.channelthumbnail,
-            preset_id: PRESET.id,
-            upload_url: window.Urls.thumbnail_upload(),
-            acceptedFiles: PRESET.associated_mimetypes.join(","),
-            image_url: this.channel.thumbnail_url,
-            default_url: "/static/img/kolibri_placeholder.png",
-            onsuccess: this.setChannelThumbnail,
-            onerror: () => { this.uploading = false; },
-            oncancel: () => { this.uploading = false; },
-            onstart:  () => { this.uploading = true; },
-            onremove: this.removeChannelThumbnail,
-            allow_edit: true,
-            is_channel: true
-          });
-        });
-      },
-      setChannelThumbnail(thumbnail, encoding, formattedName, path) {
-        this.setThumbnail({
-          thumbnail: formattedName,
-          encoding: encoding
-        });
-        this.uploading = false;
-      },
-      removeChannelThumbnail() {
-        this.setThumbnail({
-          thumbnail: "",
-          encoding: {}
-        });
-      },
-      /* Handle channel edits */
-      cancelEdit() {
-        this.cancelChanges();
-        this.$emit('cancelEdit');
-      },
-      submitChannel() {
-        this.saving = true;
 
-        // saveChannel relies on vuex state to submit
-        // Submitting using local `data` would probably be simpler
-        this.saveChannel().then((channel) => {
-          this.saving = false;
-          this.$emit('submitChanges');
-        }).catch( (error) => {
-            alert(this.$tr('errorChannelSave'), error.responseText || error);
+    /* Handle thumbnail options */
+    loadThumbnailUploader: function() {
+      this.getChannelModel(this.channel).then((model) => {
+        let imageUploader = new ThumbnailUploadView({
+          model: model,
+          el: this.$refs.channelthumbnail,
+          preset_id: PRESET.id,
+          upload_url: window.Urls.thumbnail_upload(),
+          acceptedFiles: PRESET.associated_mimetypes.join(","),
+          image_url: this.channel.thumbnail_url,
+          default_url: "/static/img/kolibri_placeholder.png",
+          onsuccess: this.setChannelThumbnail,
+          onerror: () => { this.uploading = false; },
+          oncancel: () => { this.uploading = false; },
+          onstart:  () => { this.uploading = true; },
+          onremove: this.removeChannelThumbnail,
+          allow_edit: true,
+          is_channel: true
         });
-      }
+      });
+    },
+    setChannelThumbnail(thumbnail, encoding, formattedName, path) {
+      this.setThumbnail({
+        thumbnail: formattedName,
+        encoding: encoding
+      });
+      this.uploading = false;
+    },
+    removeChannelThumbnail() {
+      this.setThumbnail({
+        thumbnail: "",
+        encoding: {}
+      });
+    },
+    /* Handle channel edits */
+    cancelEdit() {
+      this.cancelChanges();
+      this.$emit('cancelEdit');
+    },
+    submitChannel() {
+      this.saving = true;
+
+      // saveChannel relies on vuex state to submit
+      // Submitting using local `data` would probably be simpler
+      this.saveChannel().then((channel) => {
+        this.saving = false;
+        this.$emit('submitChanges');
+      }).catch( (error) => {
+          alert(this.$tr('errorChannelSave'), error.responseText || error);
+      });
     }
-  )
+  }
 };
 
 </script>

@@ -60,30 +60,28 @@ export default {
   computed: mapGetters('channel_list', [
     'channelSets'
   ]),
-  methods: Object.assign(
-    mapActions('channel_list', [
+  methods: {
+    ...mapActions('channel_list', [
       'loadChannelSetList',
       'getChannelSetModel'
     ]),
-    mapMutations('channel_list', {
+    ...mapMutations('channel_list', {
       addChannelSet: 'ADD_CHANNELSET'
     }),
-    {
-      openAboutChannelSets() {
-        new ChannelSetInformationModalView({});
-      },
-      newChannelSet() {
-        this.getChannelSetModel({}).then((channelSet) => {
-          let channelSetView = new ChannelSetModalView({
-            modal: true,
-            isNew: true,
-            model: channelSet,
-            onsave: this.addChannelSet
-          });
+    openAboutChannelSets() {
+      new ChannelSetInformationModalView({});
+    },
+    newChannelSet() {
+      this.getChannelSetModel({}).then((channelSet) => {
+        let channelSetView = new ChannelSetModalView({
+          modal: true,
+          isNew: true,
+          model: channelSet,
+          onsave: this.addChannelSet
         });
-      }
+      });
     }
-  ),
+  }
 };
 
 

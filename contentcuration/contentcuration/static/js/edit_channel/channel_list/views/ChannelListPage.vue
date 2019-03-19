@@ -87,16 +87,12 @@ export default {
       activeList: defaultListType
     }
   },
-  computed: Object.assign(
-    mapState('channel_list', [
-      'activeChannel'
-    ]),
-    {
-      lists() {
-        return _.values(ListTypes);
-      }
+  computed: {
+    ...mapState('channel_list', ['activeChannel']),
+    lists() {
+      return _.values(ListTypes);
     }
-  )
+  }
 }
 
 </script>

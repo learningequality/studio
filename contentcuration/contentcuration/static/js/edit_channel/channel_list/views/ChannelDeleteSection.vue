@@ -11,7 +11,7 @@
 
 <script>
 
-import { mapActions, mapGetters } from 'vuex';
+import { mapActions, mapState } from 'vuex';
 import { dialog } from 'edit_channel/utils/dialog';
 
 export default {
@@ -24,25 +24,21 @@ export default {
     deleteWarning: "All content under this channel will be deleted.\nAre you sure you want to delete this channel?",
     cancel: "Cancel"
   },
-  computed: mapGetters('channel_list', {
+  computed: mapState('channel_list', {
     channel: 'activeChannel'
   }),
-  methods: Object.assign(
-    mapActions('channel_list', [
-      'deleteChannel'
-    ]),
-    {
-      handleDeleteChannel() {
-        dialog(this.$tr("deletingChannel"), this.$tr("deleteWarning"), {
-            [this.$tr("cancel")]:() => { },
-            [this.$tr("deleteChannel")]: () => {
-                this.deleteChannel(this.channel);
-                this.$emit('deletedChannel')
-            },
-        }, null);
-      }
+  methods: {
+    ...mapActions('channel_list', ['deleteChannel']),
+    handleDeleteChannel() {
+      dialog(this.$tr("deletingChannel"), this.$tr("deleteWarning"), {
+          [this.$tr("cancel")]:() => { },
+          [this.$tr("deleteChannel")]: () => {
+              this.deleteChannel(this.channel);
+              this.$emit('deletedChannel')
+          },
+      }, null);
     }
-  )
+  }
 };
 
 </script>

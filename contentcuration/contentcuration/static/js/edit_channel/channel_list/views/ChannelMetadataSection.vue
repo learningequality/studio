@@ -52,22 +52,20 @@ export default {
     ToggleText,
     ChannelDownloadDropdown
   },
-  computed: Object.assign(
-    mapState('channel_list', {
+  computed: {
+    ...mapState('channel_list', {
       channel: 'activeChannel'
     }),
-    {
-      canEdit() {
-        return _.contains(this.channel.editors, State.current_user.id);
-      },
-      channelUrl() {
-        return (this.canEdit)? window.Urls.channel(this.channel.id) : window.Urls.channel_view_only(this.channel.id);
-      },
-      language() {
-        return Constants.Languages.find(language => language.id === this.channel.language);
-      }
+    canEdit() {
+      return _.contains(this.channel.editors, State.current_user.id);
+    },
+    channelUrl() {
+      return (this.canEdit)? window.Urls.channel(this.channel.id) : window.Urls.channel_view_only(this.channel.id);
+    },
+    language() {
+      return Constants.Languages.find(language => language.id === this.channel.language);
     }
-  )
+  }
 };
 
 </script>

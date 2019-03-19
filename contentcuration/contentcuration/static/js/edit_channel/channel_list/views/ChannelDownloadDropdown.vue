@@ -16,7 +16,7 @@
 
 <script>
 
-import { mapGetters, mapActions } from 'vuex';
+import { mapState, mapActions } from 'vuex';
 import { dialog, alert } from 'edit_channel/utils/dialog';
 
 export default {
@@ -36,40 +36,36 @@ export default {
     downloadFailedTextPPT: "Failed to download a PPT for {channelName}",
     downloadFailedTextCSV: "Failed to download a CSV for {channelName}"
   },
-  computed: mapGetters('channel_list', {
+  computed: mapState('channel_list', {
     channel: 'activeChannel'
   }),
-  methods: Object.assign(
-    mapActions('channel_list', [
-      'downloadChannelDetails'
-    ]),
-    {
-      downloadDetails(format) {
-        let formatString = "";
-        let errorString = "";
-        let msgArgs = {channelName: this.channel.name};
-        switch(format) {
-          case "ppt":
-            formatString = this.$tr("downloadStartedTextPPT", msgArgs);
-            errorString = this.$tr("downloadFailedTextPPT", msgArgs);
-            break;
-          case "csv":
-            formatString = this.$tr("downloadStartedTextCSV", msgArgs);
-            errorString = this.$tr("downloadFailedTextCSV", msgArgs);
-            break;
-          default:
-            formatString = this.$tr("downloadStartedTextPDF", msgArgs);
-            errorString = this.$tr("downloadFailedTextPDF", msgArgs);
-        }
-
-        alert(this.$tr("downloadStartedHeader"), formatString);
-        this.downloadChannelDetails({format: format, id: this.channel.id}).catch((error) => {
-          console.error(error);
-          alert(this.$tr("downloadFailedHeader"), errorString)
-        });
+  methods: {
+    ...mapActions('channel_list', ['downloadChannelDetails']),
+    downloadDetails(format) {
+      let formatString = "";
+      let errorString = "";
+      let msgArgs = {channelName: this.channel.name};
+      switch(format) {
+        case "ppt":
+          formatString = this.$tr("downloadStartedTextPPT", msgArgs);
+          errorString = this.$tr("downloadFailedTextPPT", msgArgs);
+          break;
+        case "csv":
+          formatString = this.$tr("downloadStartedTextCSV", msgArgs);
+          errorString = this.$tr("downloadFailedTextCSV", msgArgs);
+          break;
+        default:
+          formatString = this.$tr("downloadStartedTextPDF", msgArgs);
+          errorString = this.$tr("downloadFailedTextPDF", msgArgs);
       }
+
+      alert(this.$tr("downloadStartedHeader"), formatString);
+      this.downloadChannelDetails({format: format, id: this.channel.id}).catch((error) => {
+        console.error(error);
+        alert(this.$tr("downloadFailedHeader"), errorString)
+      });
     }
-  )
+  }
 };
 
 </script>
