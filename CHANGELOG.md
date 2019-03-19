@@ -1,18 +1,13 @@
 # Studio Changelog
 
-## Unreleased
-#### Changes
-
-#### Issues Resolved
-
-
 ## Upcoming release
 #### Changes
-* [[@jayoshih](https://github.com/jayoshih)] Don't allow users to set prerequisites on topics
 * [[@kollivier](https://github.com/kollivier)] Always use get_node_details cache if available and update later to improve performance.
 
+
 #### Issues Resolved
-* [#1254](https://github.com/learningequality/studio/issues/1254)
+* [#875 Make sure files referenced by both orphan and non-orphan nodes aren't deleted](https://github.com/learningequality/studio/issues/875)
+*
 
 ## 2019-02-11 Release
 #### Changes
