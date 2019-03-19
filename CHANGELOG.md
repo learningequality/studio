@@ -3,11 +3,11 @@
 ## Upcoming release
 #### Changes
 * [[@jayoshih](https://github.com/jayoshih)] Migrated share modal to vue
-*
+* [[@jayoshih](https://github.com/jayoshih)] Updated README
 
 #### Issues Resolved
 * [#1195 Move share modal validation to backend](https://github.com/learningequality/studio/issues/1195)
-*
+* [#875 Make sure files referenced by both orphan and non-orphan nodes aren't deleted](https://github.com/learningequality/studio/issues/875)
 
 
 
