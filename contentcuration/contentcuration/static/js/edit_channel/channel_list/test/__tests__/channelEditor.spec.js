@@ -3,11 +3,15 @@ import ChannelEditor from './../../views/ChannelEditor.vue';
 import { localStore, mockFunctions } from './../data.js';
 require('handlebars/helpers'); // Needed for image uploader
 
+let testChannel = {
+  'name': 'channel',
+  'description': "description",
+  'language': 'en',
+}
+
 function makeWrapper(props = {}) {
   let testChannel = {
-    'name': 'channel',
-    'description': "description",
-    'language': 'en',
+    ...testChannel,
     ...props
   }
   localStore.commit('channel_list/SET_ACTIVE_CHANNEL', testChannel)
@@ -38,13 +42,13 @@ describe('channelMetadataSection', () => {
       })
     });
     it('.channel-name is set to channel.name', () => {
-      expect(wrapper.find('.channel-name').element.value).toEqual('channel');
+      expect(wrapper.find('.channel-name').element.value).toEqual(testChannel.name);
     });
     it('.channel-description is set to channel.description', () => {
-      expect(wrapper.find('.channel-description').element.value).toEqual('description');
+      expect(wrapper.find('.channel-description').element.value).toEqual(testChannel.description);
     });
     it('#select-language is set to channel.language_id', () => {
-      expect(wrapper.find('#select-language').element.value).toEqual('en');
+      expect(wrapper.find('#select-language').element.value).toEqual(testChannel.language);
     });
   })
   describe('changes registered', () => {
