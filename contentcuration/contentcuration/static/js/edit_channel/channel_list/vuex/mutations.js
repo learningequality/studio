@@ -1,5 +1,6 @@
 import _ from 'underscore';
 import { ListTypes } from './../constants';
+import { prepChannel } from './../utils';
 
 
 export function RESET_STATE(state) {
@@ -15,13 +16,6 @@ export function RESET_STATE(state) {
 
 
 /* CHANNEL LIST MUTATIONS */
-const ListValues = _.values(ListTypes);
-function prepChannel(channel) {
-	// Set all channel list attributes so vue will listen to them
-	_.each(ListValues, (type) => {
-		channel[type] = false;
-	});
-}
 
 export function SET_ACTIVE_CHANNEL(state, channel) {
 	state.activeChannel = channel;

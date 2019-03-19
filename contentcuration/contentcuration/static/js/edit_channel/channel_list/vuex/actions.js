@@ -5,6 +5,7 @@ import State from 'edit_channel/state';
 import Models from 'edit_channel/models';
 import { ChannelSetModalView } from 'edit_channel/channel_set/views';
 import { ListTypes, ChannelListUrls } from './../constants';
+import { prepChannel } from './../utils';
 import fileDownload from 'jquery-file-download';
 
 
