@@ -132,14 +132,14 @@ All the javascript dependencies are listed in `package.json`. To install them ru
 
   5c. Create a database user with username `learningequality` and password `kolibri`:
 
-         sudo su postgres
-         psql
-         # mac: psql postgres
-           CREATE USER learningequality with NOSUPERUSER INHERIT NOCREATEROLE CREATEDB LOGIN NOREPLICATION NOBYPASSRLS PASSWORD 'kolibri';
+    sudo su postgres
+    psql
+    # mac: psql postgres
+      CREATE USER learningequality with NOSUPERUSER INHERIT NOCREATEROLE CREATEDB LOGIN NOREPLICATION NOBYPASSRLS PASSWORD 'kolibri';
 
   5d. Create a database called `gonano`
 
-         CREATE DATABASE "gonano" WITH TEMPLATE = template0 OWNER = "learningequality";
+    CREATE DATABASE "gonano" WITH TEMPLATE = template0 OWNER = "learningequality";
 
 
 
