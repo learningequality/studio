@@ -1,28 +1,48 @@
-from base import StudioTestCase
+import json
+import pytz
+
+import datetime
+
+from django.conf import settings
+from django.core.cache import cache
+
+from base import BaseAPITestCase
 from mock import patch
 
-from contentcuration.models import Channel
-from contentcuration.views.nodes import get_channel_thumbnail
+from rest_framework.reverse import reverse
+
+from contentcuration.views.nodes import get_topic_details
 
 
-class NodeViewsUtilityTestCase(StudioTestCase):
+class NodeViewsUtilityTestCase(BaseAPITestCase):
+    def test_get_topic_details(self):
+        node_pk = self.channel.main_tree.pk
+        url = reverse('get_topic_details', [node_pk])
+        request = self.create_get_request(url)
+        response = get_topic_details(request, node_pk)
 
-    def test_get_channel_thumbnail_empty_thumbnail(self):
-        channel = Channel.objects.create()
-        self.assertEqual(None, get_channel_thumbnail(channel.__dict__))
+        details = json.loads(response.content)
+        assert details['resource_count'] > 0
+        assert details['resource_size'] > 0
+        assert details['kind_count'] > 0
 
-    def test_get_channel_thumbnail_path_thumbnail(self):
-        return_path = "flapping_bird.jpg"
-        with patch("contentcuration.views.nodes.generate_storage_url", return_value=return_path):
-            channel = Channel.objects.create(thumbnail="/static/kolibri_flapping_bird.png")
-            self.assertEqual(return_path, get_channel_thumbnail(channel.__dict__))
+    def test_get_topic_details_cached(self):
+        node = self.channel.main_tree
+        node_pk = self.channel.main_tree.pk
+        cache_key = "details_{}".format(node.node_id)
 
-    def test_get_channel_thumbnail_encoding_valid(self):
-        channel = Channel.objects.create(thumbnail="/content/kolibri_flapping_bird.png", thumbnail_encoding={"base64": "flappy_bird"})
-        self.assertEqual("flappy_bird", get_channel_thumbnail(channel.__dict__))
+        # force the cache to update by adding a very old cache entry. Since Celery tasks run sync in the test suite,
+        # get_topic_details will return an updated cache value rather than generate it async.
+        data = {"last_update": pytz.utc.localize(datetime.datetime(1990, 1, 1)).strftime(settings.DATE_TIME_FORMAT)}
+        cache.set(cache_key, json.dumps(data))
 
-    def test_get_channel_thumbnail_encoding_invalid(self):
-        return_path = "flapping_bird.jpg"
-        with patch("contentcuration.views.nodes.generate_storage_url", return_value=return_path):
-            channel = Channel.objects.create(thumbnail="/content/kolibri_flapping_bird.png", thumbnail_encoding={})
-            self.assertEquals(return_path, get_channel_thumbnail(channel.__dict__))
+        url = reverse('get_topic_details', [node_pk])
+        request = self.create_get_request(url)
+        response = get_topic_details(request, node_pk)
+
+        # the response will contain the invalid cache entry that we set above, but if we retrieve the cache
+        # now it will be updated with the correct values.
+        cache_details = json.loads(cache.get(cache_key))
+        assert cache_details['resource_count'] > 0
+        assert cache_details['resource_size'] > 0
+        assert cache_details['kind_count'] > 0
