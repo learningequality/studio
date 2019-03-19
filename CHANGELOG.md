@@ -2,6 +2,7 @@
 
 ## Upcoming release
 #### Changes
+* [[@jayoshih](https://github.com/jayoshih)] Updated README
 *
 
 #### Issues Resolved
