@@ -1,6 +1,6 @@
 # Studio Changelog
 
-## Unreleased
+## Upcoming release
 #### Changes
 * [[@jayoshih](https://github.com/jayoshih)] Vueified channel list page
 
@@ -8,11 +8,6 @@
 * [#1120](https://github.com/learningequality/studio/issues/1120)
 * [#900](https://github.com/learningequality/studio/issues/900)
 
-
-## Upcoming release
-#### Changes
-
-#### Issues Resolved
 
 
 ## 2019-02-11 Release

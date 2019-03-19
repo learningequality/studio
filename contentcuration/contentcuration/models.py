@@ -1284,3 +1284,14 @@ class Invitation(models.Model):
     class Meta:
         verbose_name = _("Invitation")
         verbose_name_plural = _("Invitations")
+
+
+class Task(models.Model):
+    """Asynchronous tasks"""
+    task_id = UUIDField(db_index=True, default=uuid.uuid4)  # This ID is used as the Celery task ID
+    task_type = models.CharField(max_length=50)
+    created = models.DateTimeField(default=timezone.now)
+    status = models.CharField(max_length=10)
+    is_progress_tracking = models.BooleanField(default=False)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="task")
+    metadata = JSONField()
