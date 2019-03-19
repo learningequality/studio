@@ -24,8 +24,10 @@ If you would like to get a local preview of Studio, please follow [these instruc
 
 Follow the instructions below to setup your dev environment and get started.
 
+Note: We do have [instructions](https://github.com/learningequality/studio/blob/develop/docs-developer/docker_setup.md) for setting up your environment using [docker](https://www.docker.com/), but this is currently a work in progress. In the meantime, please follow the instructions below.
 
-### Get the code
+
+### 0. Get the code
 
   - Fork the [studio repo](https://github.com/learningequality/studio) to create a copy of the studio repository under your own github username.
 
@@ -38,11 +40,7 @@ Follow the instructions below to setup your dev environment and get started.
 
 
 
-### Setting up your local development environment
-
-Note: We do have [instructions](https://github.com/learningequality/studio/blob/develop/docs-developer/docker_setup.md) for setting up your environment using [docker](https://www.docker.com/), but this is currently a work in progress. In the meantime, please follow the instructions below.
-
-#### 1. Install software prerequisites
+### 1. Install software prerequisites
 
 You need the following software installed on your machine to run Studio:
 
@@ -85,7 +83,7 @@ Windows is no longer supported due to some of the required packages.
 
 
 
-#### 1.5. (Optional) Set up a virtual environment
+### 1.5. (Optional) Set up a virtual environment
 Run the following command (make sure you are under your project directory folder)
 
     pipenv shell
@@ -94,7 +92,7 @@ This will set up a virtual environment for you. To reactivate, run `pipenv shell
 
 
 
-#### 2. Set up python dependencies through pipenv
+### 2. Set up python dependencies through pipenv
 Run the following commands to install the python dependencies listed in `Pipfile`
 
     pip install -U pipenv
@@ -102,14 +100,14 @@ Run the following commands to install the python dependencies listed in `Pipfile
 
 
 
-#### 3. Set up pre-commit hooks
+### 3. Set up pre-commit hooks
 
 We use [pre-commit](http://pre-commit.com/) to help ensure consistent, clean code. The pip package should already be installed from a prior setup step, but you need to install the git hooks using this command.
 
     pre-commit install
 
 
-##### Additional formatting tools
+#### Additional formatting tools
 
 In case you need help formatting your python code to meet pep8 standards, there are a couple tools out there.
     - [autoflake](https://github.com/myint/autoflake) for removing unused imports and unused variables
@@ -117,7 +115,7 @@ In case you need help formatting your python code to meet pep8 standards, there 
 
 
 
-#### 4. Install javascript dependencies
+### 4. Install javascript dependencies
 
 All the javascript dependencies are listed in `package.json`. To install them run:
 
@@ -126,7 +124,7 @@ All the javascript dependencies are listed in `package.json`. To install them ru
 
 
 
-#### 5. Set up the database and start redis
+### 5. Set up the database and start redis
 
   5a. Install [postgres](https://www.postgresql.org/download/) if you don't have it already. If you're using a package manager, you need to make sure you install the following packages: `postgresql`, `postgresql-contrib`, and `postgresql-server-dev-all` which will be required to build `psycopg2` python driver.
 
@@ -148,7 +146,7 @@ All the javascript dependencies are listed in `package.json`. To install them ru
 
 
 
-#### 6. Run all database migrations and load constants
+### 6. Run all database migrations and load constants
 
 You'll only need to run these commands once, to setup the necessary tables and constants in the database:
 
@@ -160,7 +158,7 @@ You'll only need to run these commands once, to setup the necessary tables and c
 
 
 
-#### 7. Start the dev server
+### 7. Start the dev server
 
 You're all setup now, and ready to start the Studio local development server:
 
@@ -180,7 +178,7 @@ _Note: If you are using a Linux environemnt, you may need to increase the amount
 
 
 
-### Start required services manually
+## Start required services manually
 
 Although calling `make devserver` will start the necessary services for you, sometimes it will be useful to start the
 services manually. To do so, you can run the following command:
@@ -191,7 +189,7 @@ Make sure to run this command in a separate terminal from the one you run Studio
 you force quit it. If you want to see how to start each individual service, check the services command in `package.json`
 to learn more.
 
-### Running tests
+## Running tests
 Make sure you've installed the test requirements, setup a virtual environment, and started the minio server. Then, to
 run python tests:
 
@@ -207,7 +205,7 @@ Finally, to run all tests:
 
     yarn run test
 
-#### Customizing Test Runs and Output
+### Customizing Test Runs and Output
 
 If you want more control while testing, there are several options for customizing test runs.
 First, make sure you start services manually in a separate terminal using:
@@ -234,7 +232,7 @@ Sometimes it's nice to use print statements in your tests to see what's going on
 
     pytest contentcuration -s --reuse-db
 
-#### Automatically running tests during development
+### Automatically running tests during development
 For running tests continuously during development, pytest-watch is included.  This works well with the `--reuse-db` option:
 
     ptw contentcuration -- --reuse-db
@@ -243,7 +241,7 @@ The extra `--` is required for passing pytest options through pytest-watch.  Som
 
     ptw contentcuration/contentcuration/tests/test_megaboard.py -- -s --reuse-db
 
-#### Emulating the Travis CI environment
+### Emulating the Travis CI environment
 To emulate the Travis CI environment locally:
 
     docker-compose run studio-app make test

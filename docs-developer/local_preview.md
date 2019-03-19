@@ -24,7 +24,7 @@ will use to run Kubernetes.
 
 
 
-### Deploying on Minikube
+## Deploying on Minikube
 
 Follow each of these steps in your terminal to get a local Studio deployment
 in a cluster on your local machine:
