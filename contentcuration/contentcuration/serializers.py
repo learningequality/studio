@@ -20,6 +20,7 @@ from rest_framework.settings import api_settings
 from rest_framework.utils import model_meta
 from rest_framework_bulk import BulkSerializerMixin
 
+from contentcuration.celery import app
 from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
 from contentcuration.models import ChannelSet
@@ -36,6 +37,7 @@ from contentcuration.models import Language
 from contentcuration.models import License
 from contentcuration.models import PrerequisiteContentRelationship
 from contentcuration.models import SecretToken
+from contentcuration.models import Task
 from contentcuration.models import User
 from contentcuration.statistics import record_node_addition_stats
 from contentcuration.utils.channelcache import ChannelCacher
@@ -915,3 +917,21 @@ class ChannelSetSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChannelSet
         fields = ('id', 'name', 'description', 'public', 'editors', 'channels', 'secret_token')
+
+
+class TaskSerializer(serializers.ModelSerializer):
+    metadata = serializers.SerializerMethodField()
+
+    def get_metadata(self, task):
+        metadata = task.metadata
+        result = app.AsyncResult(task.id)
+        # If CELERY_TASK_ALWAYS_EAGER is set, attempts to retrieve state will assert, so do a sanity check first.
+        if not settings.CELERY_TASK_ALWAYS_EAGER:
+            if task.is_progress_tracking and 'progress' in result.state:
+                metadata['progress'] = result.state['progress']
+
+        return metadata
+
+    class Meta:
+        model = Task
+        fields = ('id', 'task_id', 'task_type', 'created', 'metadata', 'status', 'is_progress_tracking', 'user', 'metadata')

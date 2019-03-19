@@ -8,5 +8,7 @@ class ContentConfig(AppConfig):
     name = 'contentcuration'
 
     def ready(self):
+        # see note in the celery_signals.py file for why we import here.
+        import contentcuration.utils.celery_signals
         if settings.AWS_AUTO_CREATE_BUCKET:
             ensure_storage_bucket_public()
