@@ -12,7 +12,7 @@
 	</span>
 	<span v-else-if="currentUserPermission === 'manage'">
 		<span v-if="isOnlyEditor" class="option disabled" :title="$tr('cannotRemoveTitle')" disabled>clear</span>
-		<span v-else class="option red-option remove" :title="$tr('removeTitle')" @click="removeEditor">clear</span>
+		<span v-else class="option red-option remove" :title="$tr('removeTitle')" @click="removeEditor(false)">clear</span>
 	</span>
 </share-item>
 

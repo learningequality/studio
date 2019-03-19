@@ -1,5 +1,6 @@
 
 import _ from 'underscore';
+import { PermissionRanks } from '../constants';
 
 export function SET_CHANNEL(state, channel) {
   state.channel = channel;
@@ -18,8 +19,14 @@ export function REMOVE_USER(state, userID) {
 	state.accessList = _.reject(state.accessList, (user) => {
 		return user.id === userID;
 	});
-	state.channel.editors = _.pluck(state.accessList, 'id');
-	state.channel.viewers = _.pluck(state.accessList, 'id');
+
+	_.each(PermissionRanks, (permission) => {
+		if(permission.field && _.contains(state.channel[permission.field], userID)){
+			state.channel[permission.field] = _.reject(state.channel[permission.field], (user) => {
+				return user === userID;
+			})
+		}
+	});
 }
 
 export function SET_INVITATIONS(state, invitations) {

@@ -19,14 +19,14 @@ export default {
   $trs: {
     reinviteTitle: "Resend Invitation",
     cancelInviteTitle: "Cancel Invitation",
-    resendPrompt: "Send invitation to {name} again?",
+    resendPrompt: "Send invitation to {name} ({email}) again?",
     resendHeader: "Pending Invitation",
     invitationFailedText: "Failed to send invitation",
     sentIndicator: "Sent!",
     sendButton: "Send",
     cancelButton: "Cancel",
     uninvitingHeader: "Uninviting User",
-    uninvitingPrompt: "Are you sure you want to uninvite {name}?",
+    uninvitingPrompt: "Are you sure you want to uninvite {name} ({email})?",
     uninviteButton: "Uninvite",
     userName: "{firstName} {lastName}"
   },
@@ -39,7 +39,8 @@ export default {
   	mapActions('share', ['sendInvitation', 'deleteInvitation']),
 	  {
 	  	reinviteUser() {
-       	dialog(this.$tr('resendHeader'), this.$tr('resendPrompt', {name: this.userName.trim()}), {
+        let messageArgs = {name: this.userName.trim(), email: this.model.email};
+       	dialog(this.$tr('resendHeader'), this.$tr('resendPrompt', messageArgs), {
           [this.$tr('cancelButton')]: () => {},
           [this.$tr('sendButton')]: () => {
         		this.handleSendInvitation();
@@ -55,7 +56,8 @@ export default {
         this.sendInvitation(payload);
       },
 	  	uninviteUser() {
-        dialog(this.$tr("uninvitingHeader"), this.$tr("uninvitingPrompt", {name: this.userName.trim()}), {
+        let messageArgs = {name: this.userName.trim(), email: this.model.email};
+        dialog(this.$tr("uninvitingHeader"), this.$tr("uninvitingPrompt", messageArgs), {
             [this.$tr('cancelButton')]: () => {},
             [this.$tr('uninviteButton')]: () => {
             	this.deleteInvitation(this.model);

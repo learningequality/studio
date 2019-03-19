@@ -174,7 +174,7 @@ export default {
   &.error {
   	color: @red-error-color;
   }
-  &.error {
+  &.success {
   	color: @blue-500;
   }
 }

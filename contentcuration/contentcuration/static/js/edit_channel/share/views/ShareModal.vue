@@ -4,7 +4,7 @@
     <div class="modal-dialog">
       <div class="modal-content modal-dialog-default">
         <div class="modal-header">
-          <h4 class="modal-title">{{ $tr('modalHeader') }}</h4>
+          <h4 class="modal-title">{{ $tr('modalHeader', {'name': channel.name}) }}</h4>
         </div>
         <div class="modal-body">
         	<ShareView :channel="channel"/>
@@ -27,7 +27,7 @@ import ShareView from './ShareView.vue';
 export default {
   name: 'ShareModal',
   $trs: {
-    modalHeader: 'Share Channel',
+    modalHeader: 'Share {name}',
     closeButton: 'Close'
   },
   components: {
