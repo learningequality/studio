@@ -124,21 +124,21 @@ All the javascript dependencies are listed in `package.json`. To install them ru
 
 ### 5. Set up the database and start redis
 
-  5a. Install [postgres](https://www.postgresql.org/download/) if you don't have it already. If you're using a package manager, you need to make sure you install the following packages: `postgresql`, `postgresql-contrib`, and `postgresql-server-dev-all` which will be required to build `psycopg2` python driver.
+Install [postgres](https://www.postgresql.org/download/) if you don't have it already. If you're using a package manager, you need to make sure you install the following packages: `postgresql`, `postgresql-contrib`, and `postgresql-server-dev-all` which will be required to build `psycopg2` python driver.
 
-  5b. Make sure postgres is running
+Make sure postgres is running
 
     service postgresql start
     # or pg_ctl -D /usr/local/var/postgresql@9.6 start
 
-  5c. Create a database user with username `learningequality` and password `kolibri`:
+Create a database user with username `learningequality` and password `kolibri`:
 
     sudo su postgres
     psql
     # mac: psql postgres
       CREATE USER learningequality with NOSUPERUSER INHERIT NOCREATEROLE CREATEDB LOGIN NOREPLICATION NOBYPASSRLS PASSWORD 'kolibri';
 
-  5d. Create a database called `gonano`
+Create a database called `gonano`
 
     CREATE DATABASE "gonano" WITH TEMPLATE = template0 OWNER = "learningequality";
 
