@@ -76,6 +76,10 @@ class CleanUpContentNodesTestCase(StudioTestCase):
         assert File.objects.count() == 0
 
     def test_doesnt_delete_shared_files(self):
+        """
+        Make sure that a file shared between two file objects doesn't
+        get deleted when one of the file objects gets deleted
+        """
         c = _create_expired_contentnode()
         file_on_disk = ContentFile("test")
         f = File.objects.create(
