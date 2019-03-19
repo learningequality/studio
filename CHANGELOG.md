@@ -2,10 +2,11 @@
 
 ## Upcoming release
 #### Changes
-* 
+* [[@jayoshih](https://github.com/jayoshih)] Updated README
+*
 
 #### Issues Resolved
-* 
+*
 
 ## 2019-02-11 Release
 #### Changes
