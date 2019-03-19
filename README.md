@@ -17,8 +17,6 @@ Kolibri Studio supports the following workflows:
 
 Kolibri Studio uses Django for the backend and Backbone.js for the frontend.
 
-If you would like to get a local preview of Studio, please follow `docs-developer/local_preview`
-
 
 ## Developer Instructions
 
