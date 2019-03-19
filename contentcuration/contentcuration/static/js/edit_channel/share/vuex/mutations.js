@@ -34,7 +34,10 @@ export function SET_INVITATIONS(state, invitations) {
 }
 
 export function ADD_INVITATION(state, invitation) {
-	if(!_.findWhere(state.invitations, {id: invitation.id})) {
+	let match = _.findWhere(state.invitations, {id: invitation.id});
+	if(match) {
+		match.share_mode = invitation.share_mode;
+	} else {
 		state.invitations.push(invitation);
 	}
 	state.recentlySent = invitation.id;

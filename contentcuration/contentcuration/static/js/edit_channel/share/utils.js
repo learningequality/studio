@@ -11,6 +11,10 @@ export function getPermission(user, channel) {
 	return Permissions.VIEW_ONLY;
 }
 
+export function getPermissionRank(permission) {
+	return _.findWhere(PermissionRanks, {'shareMode': permission});
+}
+
 export function getHighestPermission() {
 	return _.chain(PermissionRanks)
           .filter((rank) => { return rank.field; })

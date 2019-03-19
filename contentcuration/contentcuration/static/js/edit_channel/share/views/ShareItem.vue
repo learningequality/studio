@@ -20,7 +20,7 @@ import { Permissions } from '../constants';
 export default {
   name: 'ShareItem',
   $trs: {
-  	[Permissions.OWNER]: "Can Manage",
+  	[Permissions.OWNER]: "Can Manage (admins only)",
     [Permissions.EDIT]: "Can Edit",
     [Permissions.VIEW_ONLY]: "Can View",
     userName: "{firstName} {lastName}"

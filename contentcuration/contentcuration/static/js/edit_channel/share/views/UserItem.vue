@@ -24,7 +24,7 @@ import { mapGetters, mapActions } from 'vuex';
 import _ from 'underscore';
 import { dialog, alert } from 'edit_channel/utils/dialog';
 import State from 'edit_channel/state';
-import { getPermission, getHighestPermission } from '../utils';
+import { getPermission, getHighestPermission, getPermissionRank } from '../utils';
 import ShareItem from './ShareItem.vue';
 
 export default {
@@ -65,7 +65,8 @@ export default {
 	  	isOnlyEditor() {
         // Check length of highest permission rank
         let topLevel = getHighestPermission();
-	  		return this.channel[topLevel.field].length === 1;
+        let currentRank = getPermissionRank(this.userPermission).rank;
+	  		return currentRank >= topLevel.rank && this.channel[topLevel.field].length === 1;
 	  	},
 	  	userPermission() {
 	  		return getPermission(this.model, this.channel);

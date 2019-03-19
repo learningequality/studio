@@ -54,7 +54,7 @@ export default {
   name: 'ShareView',
   $trs: {
     inviteText: 'Invite others to collaborate',
-    [Permissions.OWNER]: "Owner",
+    [Permissions.OWNER]: "Can Manage",
     [Permissions.EDIT]: "Can Edit",
     [Permissions.VIEW_ONLY]: "Can View",
     emailPlaceholder: "Enter email address...",
@@ -89,7 +89,7 @@ export default {
 	  	permissions() {
 	  		let userRank = _.findWhere(PermissionRanks, { shareMode: this.currentUserPermission });
 	  		return _.chain(PermissionRanks)
-					.filter((permission) => { return permission.rank <= userRank.rank; })
+					.filter((permission) => { return permission.field && permission.rank <= userRank.rank; })
 					.sortBy('rank')
 					.pluck('shareMode')
 					.value();
