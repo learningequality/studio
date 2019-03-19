@@ -6,6 +6,7 @@
 *
 
 #### Issues Resolved
+* [#875 Make sure files referenced by both orphan and non-orphan nodes aren't deleted](https://github.com/learningequality/studio/issues/875)
 *
 
 ## 2019-02-11 Release
