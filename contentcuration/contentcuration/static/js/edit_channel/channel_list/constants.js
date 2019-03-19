@@ -1,5 +1,3 @@
-const State = require("edit_channel/state");
-
 export const ListTypes = {
   EDITABLE: 'EDITABLE',
   STARRED: 'STARRED',

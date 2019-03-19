@@ -33,7 +33,7 @@
 
 import _ from 'underscore';
 import State from 'edit_channel/state';
-import { mapGetters } from 'vuex';
+import { mapState } from 'vuex';
 import Constants from 'edit_channel/constants/index';
 
 // Components
@@ -53,7 +53,7 @@ export default {
     ChannelDownloadDropdown
   },
   computed: Object.assign(
-    mapGetters('channel_list', {
+    mapState('channel_list', {
       channel: 'activeChannel'
     }),
     {

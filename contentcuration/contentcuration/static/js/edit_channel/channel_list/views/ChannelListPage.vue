@@ -42,13 +42,15 @@
 <script>
 
 import _ from 'underscore';
-import { mapGetters } from 'vuex';
+import { mapState } from 'vuex';
 import { ListTypes } from '../constants';
 import ChannelList from './ChannelList.vue';
 import ChannelSetList from './ChannelSetList.vue';
 import ChannelInvitationList from './ChannelInvitationList.vue';
 import ChannelDetailsPanel from './ChannelDetailsPanel.vue';
 
+
+// TODO: Move this logic to a vue router
 let defaultListType = ListTypes.EDITABLE;
 switch(window.location.hash.substr(1)) {
   case "starred":
@@ -86,7 +88,7 @@ export default {
     }
   },
   computed: Object.assign(
-    mapGetters('channel_list', [
+    mapState('channel_list', [
       'activeChannel'
     ]),
     {

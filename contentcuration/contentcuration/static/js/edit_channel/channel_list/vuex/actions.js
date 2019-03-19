@@ -9,7 +9,7 @@ import fileDownload from 'jquery-file-download';
 
 
 /* CHANNEL LIST ACTIONS */
-exports.loadChannelList = function(context, listType) {
+export function loadChannelList(context, listType) {
 	return new Promise((resolve, reject) => {
 		$.ajax({
 	        method: "GET",
@@ -26,7 +26,7 @@ exports.loadChannelList = function(context, listType) {
 	});
 }
 
-exports.addStar = function(context, channel) {
+export function addStar(context, channel) {
 	channel.STARRING = true;
 	$.ajax({
         method: "POST",
@@ -42,7 +42,7 @@ exports.addStar = function(context, channel) {
     });
 }
 
-exports.removeStar = function(context, channel) {
+export function removeStar(context, channel) {
 	channel.STARRING = true;
 	$.ajax({
         method: "POST",
@@ -60,7 +60,7 @@ exports.removeStar = function(context, channel) {
 
 
 /* CHANNEL EDITOR ACTIONS */
-exports.saveChannel = function(context) {
+export function saveChannel(context) {
 	/* TODO: REMOVE BACKBONE */
 	return new Promise((resolve, reject) => {
 		new Models.ChannelModel().save(context.state.channelChanges, {
@@ -76,7 +76,7 @@ exports.saveChannel = function(context) {
     });
 }
 
-exports.deleteChannel = function(context, channel) {
+export function deleteChannel(context, channel) {
 	/* TODO: REMOVE BACKBONE */
 	return new Promise((resolve, reject) => {
 		new Models.ChannelModel(channel).save({"deleted": true}, {
@@ -90,7 +90,7 @@ exports.deleteChannel = function(context, channel) {
     });
 }
 
-exports.loadNodeDetails = function(context, nodeID) {
+export function loadNodeDetails(context, nodeID) {
     return new Promise(function (resolve, reject) {
         $.ajax({
             method: "GET",
@@ -105,7 +105,7 @@ exports.loadNodeDetails = function(context, nodeID) {
     });
 }
 
-exports.downloadChannelDetails = function(context, payload) {
+export function downloadChannelDetails(context, payload) {
 	return new Promise(function (resolve, reject) {
         let url = "";
         switch(payload.format) {
@@ -130,7 +130,7 @@ exports.downloadChannelDetails = function(context, payload) {
     });
 }
 
-exports.getChannelModel = function(context, channel) {
+export function getChannelModel(context, channel) {
 	/* TODO: REMOVE BACKBONE, needed for image upload view */
 	return new Models.ChannelModel(channel);
 }
@@ -138,7 +138,7 @@ exports.getChannelModel = function(context, channel) {
 
 
 /* CHANNEL SET ACTIONS */
-exports.loadChannelSetList = function(context) {
+export function loadChannelSetList(context) {
 	return new Promise((resolve, reject) => {
 		$.ajax({
             method: "GET",
@@ -152,12 +152,12 @@ exports.loadChannelSetList = function(context) {
     });
 }
 
-exports.getChannelSetModel = function(context, channelSet) {
+export function getChannelSetModel(context, channelSet) {
     /* TODO: REMOVE BACKBONE, needed for channel set modal view */
     return new Models.ChannelSetModel(channelSet);
 }
 
-exports.deleteChannelSet = function(context, channelSet) {
+export function deleteChannelSet(context, channelSet) {
 	/* TODO: REMOVE BACKBONE */
 	new Models.ChannelSetModel(channelSet).destroy({
 		success: function() {
@@ -169,7 +169,7 @@ exports.deleteChannelSet = function(context, channelSet) {
 
 
 /* INVITATION ACTIONS */
-exports.loadChannelInvitationList = function(context) {
+export function loadChannelInvitationList(context) {
 	return new Promise((resolve, reject) => {
 		$.ajax({
             method: "GET",
@@ -183,7 +183,7 @@ exports.loadChannelInvitationList = function(context) {
     });
 }
 
-exports.acceptInvitation = function(context, invitation) {
+export function acceptInvitation(context, invitation) {
 	return new Promise((resolve, reject) => {
 		$.ajax({
             method: "POST",
@@ -209,7 +209,7 @@ exports.acceptInvitation = function(context, invitation) {
     });
 }
 
-exports.declineInvitation = function(context, invitation) {
+export function declineInvitation(context, invitation) {
 	/* TODO: REMOVE BACKBONE */
 	return new Promise((resolve, reject) => {
 		let invite = new Models.InvitationModel(invitation);

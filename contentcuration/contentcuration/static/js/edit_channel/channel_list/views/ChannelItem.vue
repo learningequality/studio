@@ -39,7 +39,7 @@
 
 <script>
 
-import { mapGetters } from 'vuex';
+import { mapState } from 'vuex';
 import { setChannelMixin } from './../mixins';
 import Constants from 'edit_channel/constants/index';
 import CopyToken from 'edit_channel/sharedComponents/CopyToken.vue';
@@ -70,7 +70,7 @@ export default {
     }
   },
   computed: Object.assign(
-    mapGetters('channel_list', [
+    mapState('channel_list', [
       'activeChannel',
     ]),
     {

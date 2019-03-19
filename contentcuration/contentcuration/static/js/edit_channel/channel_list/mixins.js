@@ -58,7 +58,7 @@ exports.setChannelMixin = {
 
 exports.tabMixin = {
 	mounted() {
-		_.defer(() => {
+		this.$nextTick(() => {
 			this.$refs.firstTab.focus();
 		});
 	}

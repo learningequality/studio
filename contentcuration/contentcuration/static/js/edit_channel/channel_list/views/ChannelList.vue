@@ -1,7 +1,7 @@
 <template>
 
   <div class="channel-list">
-    <div v-if="listType === 'EDITABLE'" class="new-button">
+    <div v-if="isEditable" class="new-button">
       <button class="action-button" :title="$tr('addChannel')" @click="createChannel">
         <span class="material-icons align-text-top">add</span> {{ $tr('channel') }}
       </button>
@@ -76,7 +76,10 @@ export default {
                 })
                 .sortBy('-modified')
                 .value();
-      }
+      },
+      isEditable() {
+        return this.listType === ListTypes.EDITABLE;
+      },
     }
   ),
   methods: Object.assign(

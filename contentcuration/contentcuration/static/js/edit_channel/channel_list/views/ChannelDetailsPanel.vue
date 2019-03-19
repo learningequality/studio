@@ -1,6 +1,6 @@
 <template>
 
-  <div id="channel-preview-wrapper" :style="'background-image: url(' + thumbnailUrl + ')'">
+  <div id="channel-preview-wrapper" :style="{ backgroundImage: `url('${thumbnailUrl}')` }">
     <div id="channel-details-overlay">
         <div id="channel-details-panel">
           <h2 id="channel-details-top-options">
@@ -36,7 +36,7 @@
 
 import _ from 'underscore';
 import State from 'edit_channel/state';
-import { mapGetters } from 'vuex';
+import { mapState } from 'vuex';
 import { setChannelMixin } from './../mixins';
 
 // Components
@@ -69,7 +69,7 @@ export default {
     }
   },
   computed: Object.assign(
-    mapGetters('channel_list', {
+    mapState('channel_list', {
       channel: 'activeChannel'
     }),
     {

@@ -116,7 +116,7 @@
 <script>
 
 import _ from 'underscore';
-import { mapGetters, mapActions, mapMutations } from 'vuex';
+import { mapGetters, mapActions, mapMutations, mapState } from 'vuex';
 import { dialog } from 'edit_channel/utils/dialog';
 import Constants from 'edit_channel/constants/index';
 import { ThumbnailUploadView } from 'edit_channel/image/views';
@@ -159,8 +159,10 @@ export default {
     this.description = this.channel.description;
   },
   computed: Object.assign(
+    mapState('channel_list', {
+      channel: 'channelChanges'
+    }),
     mapGetters('channel_list', {
-      channel: 'channelChanges',
       changed: 'changed'
     }),
     {

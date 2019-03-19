@@ -1,24 +1,16 @@
 
-exports.activeChannel = function(state) {
-	return state.activeChannel;
-}
-
-exports.channels = function(state) {
+export function channels(state) {
 	return state.channels;
 }
 
-exports.channelSets = function(state) {
+export function channelSets(state) {
 	return state.channelSets;
 }
 
-exports.invitations = function(state) {
+export function invitations(state) {
 	return state.invitations;
 }
 
-exports.channelChanges = function(state) {
-	return state.channelChanges;
-}
-
-exports.changed = function(state) {
+export function changed(state) {
 	return state.changed;
 }
