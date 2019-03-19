@@ -10,11 +10,10 @@ let testChannel = {
 }
 
 function makeWrapper(props = {}) {
-  let testChannel = {
+  localStore.commit('channel_list/SET_ACTIVE_CHANNEL', {
     ...testChannel,
     ...props
-  }
-  localStore.commit('channel_list/SET_ACTIVE_CHANNEL', testChannel)
+  })
   return mount(ChannelEditor, {
     store: localStore
   })
