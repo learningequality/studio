@@ -91,14 +91,13 @@ export default {
     ]),
     {
       createChannel() {
-        let preferences = (typeof window.user_preferences === "string")? JSON.parse(window.user_preferences) : window.user_preferences;
         let newChannel = {
           name: "",
           description: "",
           editors: [State.current_user.id],
           pending_editors: [],
-          language: preferences.language,
-          content_defaults: preferences,
+          language: State.preferences.language,
+          content_defaults: State.preferences,
           thumbnail: "",
           thumbnail_encoding: {}
         };

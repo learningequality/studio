@@ -23,6 +23,7 @@ var ChannelEditRouter  = Backbone.Router.extend({
 	navigate_channel_home: function() {
 		var ChannelListPage = require("edit_channel/channel_list/views");
 		var store = require("edit_channel/channel_list/vuex/store");
+		State.setChannelListState();
 
 		new Vue({
 		  el: '#channel-container',
