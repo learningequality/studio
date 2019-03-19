@@ -2,7 +2,7 @@
 
 [![codecov](http://codecov.io/github/learningequality/studio/coverage.svg?branch=develop)](http://codecov.io/github/learningequality/studio?branch=develop])
 
-Check out our [beta site](https://studio.learningequality.org)
+Check out our [beta site](https://studio.learningequality.org)!
 
 Kolibri Studio is a web application designed to deliver educational materials to [Kolibri](http://learningequality.org/kolibri/).
 Kolibri Studio supports the following workflows:
@@ -17,12 +17,12 @@ Kolibri Studio supports the following workflows:
 
 Kolibri Studio uses Django for the backend and Backbone.js for the frontend.
 
-If you would like to get a local preview of Studio, please follow [these instructions](https://github.com/learningequality/studio/blob/develop/docs-developer/local_preview.md)
+If you would like to get a local preview of Studio, please follow `docs-developer/local_preview`
 
 
 ## Developer Instructions
 
-Follow the instructions below to setup your dev environment and get started. (Note: We do have [instructions](https://github.com/learningequality/studio/blob/develop/docs-developer/docker_setup.md) for setting up your environment using [docker](https://www.docker.com/), but this is currently a work in progress.)
+Follow the instructions below to setup your dev environment and get started. (Note: `docs-developer/docker_setup` has instructions for setting up your environment using [docker](https://www.docker.com/), but this is currently a work in progress.)
 
 
 ### 0. Get the code
@@ -34,7 +34,7 @@ Follow the instructions below to setup your dev environment and get started. (No
       ```
 
   - The folder `<project directory>/studio` now contains the latest Studio code.
-  - For more information on using git, please check out [these instructions](https://github.com/learningequality/studio/blob/develop/docs-developer/git_setup.md)
+  - For more information on using git, please check out `docs-developer/git_setup`
 
 
 
@@ -86,7 +86,7 @@ Run the following commands to install the python dependencies listed in `Pipfile
 
     pip install -U pipenv
     
-    # Recommended: create virtual environment (reactivate with `pipenv shell`)
+    # Create virtual environment (reactivate with `pipenv shell`)
     pipenv shell
     
     pipenv install
@@ -100,14 +100,6 @@ We use [pre-commit](http://pre-commit.com/) to help ensure consistent, clean cod
     pre-commit install
 
 _Note: you may need to run `pip install pre-commit` if you see `pre-commit command not found`_
-
-
-#### Additional formatting tools
-
-In case you need help formatting your python code to meet pep8 standards, there are a couple tools out there.
-
-  - [autoflake](https://github.com/myint/autoflake) for removing unused imports and unused variables
-  - [autopep8](https://github.com/hhatto/autopep8) for fixing whitespace issues.
 
 
 
@@ -136,15 +128,15 @@ Create a database user with username `learningequality` and password `kolibri`:
     # mac: psql postgres
     CREATE USER learningequality with NOSUPERUSER INHERIT NOCREATEROLE CREATEDB LOGIN NOREPLICATION NOBYPASSRLS PASSWORD 'kolibri';
 
-Create a database called `gonano`
+Create a database called `kolibri-studio`
 
-    CREATE DATABASE "gonano" WITH TEMPLATE = template0 OWNER = "learningequality";
+    CREATE DATABASE "kolibri-studio" WITH TEMPLATE = template0 OWNER = "learningequality";
 
 
 
 ### 6. Run all database migrations and load constants
 
-You'll only need to run these commands once, to setup the necessary tables and constants in the database:
+These commands setup the necessary tables and contents in the database:
 
     # On one terminal, run all external services
     yarn run services
@@ -158,10 +150,9 @@ You'll only need to run these commands once, to setup the necessary tables and c
 
 You're all setup now, and ready to start the Studio local development server:
 
-    make devserver
+    yarn run devserver
 
-Alternatively, you can run `pipenv run make devserver` or `yarn run devserver`
-This will start any of the required services (e.g. postgres, redis, minio) that are not already running.
+This will start any of the required services (e.g. postgres, redis, minio) that are not already running. (Alternatively, you can run `pipenv run make devserver`)
 
 Once you see the following output in your terminal, the server is ready:
 
@@ -186,4 +177,9 @@ you force quit it. If you want to see how to start each individual service, chec
 to learn more.
 
 ## Running tests
-Testing instructions can be found [here](https://github.com/learningequality/studio/blob/develop/docs-developer/running_tests.md)
+
+You can run tests using the following command:
+
+    yarn run test
+    
+For more testing tips, please check out `docs-developer/running_tests`.
