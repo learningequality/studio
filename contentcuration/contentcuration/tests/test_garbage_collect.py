@@ -75,6 +75,33 @@ class CleanUpContentNodesTestCase(StudioTestCase):
         # there should be no file object in the DB
         assert File.objects.count() == 0
 
+    def test_doesnt_delete_shared_files(self):
+        c = _create_expired_contentnode()
+        file_on_disk = ContentFile("test")
+        f = File.objects.create(
+            contentnode_id=c.pk,
+            file_on_disk=file_on_disk,
+            checksum="aaa",
+        )
+        f.file_on_disk.save("aaa.jpg", file_on_disk)
+        file_url = f.file_on_disk.url
+
+        c2 = ContentNode.objects.create(kind_id=content_kinds.TOPIC, title="test")
+        f2 = File.objects.create(
+            contentnode_id=c2.pk,
+            file_on_disk=file_on_disk,
+            checksum="aaa",
+        )
+        f2.file_on_disk.save("aaa.jpg", file_on_disk)
+
+        # check that file_url exists before cleaning up
+        requests.head(file_url).raise_for_status()
+        clean_up_contentnodes()
+
+        # the file should still be available
+        response = requests.head(file_url)
+        assert response.status_code == 200
+
     def test_doesnt_delete_nonorphan_files_and_contentnodes(self):
         """
         Make sure that clean_up_contentnodes doesn't touch non-orphan files and
