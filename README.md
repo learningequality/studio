@@ -83,10 +83,10 @@ Windows is no longer supported due to incompatibilities with some of the require
 Run the following commands to install the python dependencies listed in `Pipfile`
 
     pip install -U pipenv
-    
+
     # Create virtual environment (reactivate with `pipenv shell`)
     pipenv shell
-    
+
     pipenv install
 
 
@@ -136,10 +136,10 @@ Create a database called `kolibri-studio`
 
 These commands setup the necessary tables and contents in the database:
 
-    # On one terminal, run all external services
+    # In one terminal, run all external services
     yarn run services
 
-    # On another terminal, run devsetup to create all the necessary tables and buckets
+    # In another terminal, run devsetup to create all the necessary tables and buckets
     yarn run devsetup
 
 
@@ -148,9 +148,12 @@ These commands setup the necessary tables and contents in the database:
 
 You're all setup now, and ready to start the Studio local development server:
 
+    # Mac only: run this in another terminal first
+    yarn run services
+
+    # Start the server
     yarn run devserver
 
-This will start any of the required services (e.g. postgres, redis, minio) that are not already running. (Alternatively, you can run `pipenv run make devserver`)
 
 Once you see the following output in your terminal, the server is ready:
 
@@ -163,21 +166,10 @@ _Note: If you are using a Linux environemnt, you may need to increase the amount
 
 
 
-## Start required services manually
-
-Although calling `make devserver` will start the necessary services for you, sometimes it will be useful to start the
-services manually. To do so, you can run the following command:
-
-    yarn run services
-
-Make sure to run this command in a separate terminal from the one you run Studio on, as it will continue running until
-you force quit it. If you want to see how to start each individual service, check the services command in `package.json`
-to learn more.
-
 ## Running tests
 
 You can run tests using the following command:
 
     yarn run test
-    
+
 For more testing tips, please check out `docs-developer/running_tests`.
