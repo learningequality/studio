@@ -7,6 +7,14 @@ import sys
 import tempfile
 from collections import OrderedDict
 
+# On OS X, the default backend will fail if you are not using a Framework build of Python,
+# e.g. in a virtualenv. To avoid having to set MPLBACKEND each time we use Studio,
+# automatically set the backend.
+if sys.platform.startswith("darwin"):
+    import matplotlib
+    if matplotlib.get_backend().lower() == "macosx":
+        matplotlib.use('PS')
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pdfkit
@@ -33,7 +41,6 @@ from contentcuration.models import Channel
 from contentcuration.models import ContentKind
 from contentcuration.utils.files import generate_thumbnail_from_channel
 from contentcuration.utils.format import format_size
-from contentcuration.views.nodes import get_node_details
 
 
 AUDIO_COLOR = "#F06292"
@@ -252,7 +259,7 @@ class ChannelDetailsWriter(ExportWriter):
         raise NotImplementedError("Must implement a write_export_file method for ChannelDetailsWriter subclasses")
 
     def get_channel_data(self, channel):
-        data = get_node_details(channel.main_tree)
+        data = channel.main_tree.get_details()
         primarytoken = channel.secret_tokens.filter(is_primary=True).first()
 
         data.update({
