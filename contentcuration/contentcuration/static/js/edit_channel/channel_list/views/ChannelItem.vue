@@ -1,5 +1,5 @@
 <template>
-  <div class="channel-item" :class="{optionHighlighted: optionHighlighted, active: isSelected}" :id="channel.id">
+  <div class="channel-item" :class="{optionHighlighted: optionHighlighted, active: isSelected}" :id="channelID">
     <div class="channel-container-wrapper"  :title="$tr('openChannelTitle', {'channelName': channel.name})" @click="openChannel">
       <div class="profile">
         <img class="channel-pic" :alt="channel.name" :src="picture"/>
@@ -19,7 +19,7 @@
             </div>
           </div>
           <span @mouseleave="optionHighlighted = false" @mouseover="optionHighlighted = true">
-            <ChannelStar :key="channel.id + '_starItem'" :channel="channel"/>
+            <ChannelStar :key="channelID + '_starItem'" :channelID="channelID"/>
           </span>
         </div>
         <h4 dir="auto">{{channel.name}}</h4>
@@ -39,7 +39,7 @@
 
 <script>
 
-import { mapState } from 'vuex';
+import { mapGetters, mapState } from 'vuex';
 import { setChannelMixin } from './../mixins';
 import Constants from 'edit_channel/constants/index';
 import CopyToken from 'edit_channel/sharedComponents/CopyToken.vue';
@@ -54,8 +54,8 @@ export default {
     lastUpdated: "Updated {updated}"
   },
   props: {
-    channel: {
-      type: Object,
+    channelID: {
+      type: String,
       required: true,
     }
   },
@@ -71,6 +71,7 @@ export default {
   },
   computed: {
     ...mapState('channel_list', ['activeChannel']),
+    ...mapGetters('channel_list', ['getChannel']),
     picture() {
       return (this.channel.thumbnail_encoding && this.channel.thumbnail_encoding.base64) || this.channel.thumbnail_url;
     },
@@ -78,19 +79,23 @@ export default {
       return Constants.Languages.find(language => language.id === this.channel.language);
     },
     isSelected() {
-      return this.activeChannel && this.channel.id === this.activeChannel.id;
+      return this.activeChannel && this.channelID === this.activeChannel.id;
+    },
+    channel() {
+      return this.getChannel(this.channelID);
     }
   },
   methods: {
     openChannel(event) {
       if(event && (event.metaKey || event.ctrlKey)) {
         if(this.channel.EDITABLE) {
-          window.open(window.Urls.channel(this.channel.id), "_blank");
+          window.open(window.Urls.channel(this.channelID), "_blank");
         } else {
-          window.open(window.Urls.channel_view_only(this.channel.id), "_blank");
+          window.open(window.Urls.channel_view_only(this.channelID), "_blank");
         }
-      } else if (!this.activeChannel || this.channel.id !== this.activeChannel.id) {
-        this.setChannel(this.channel);
+      } else if (!this.activeChannel || this.channelID !== this.activeChannel.id) {
+        // Only load if it isn't already the active channel
+        this.setChannel(this.channelID);
       }
     }
   }

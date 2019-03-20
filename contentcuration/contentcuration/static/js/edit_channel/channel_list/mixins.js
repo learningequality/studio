@@ -26,25 +26,25 @@ exports.setChannelMixin = {
 			setActiveChannel: 'SET_ACTIVE_CHANNEL',
 			cancelChanges: 'CANCEL_CHANNEL_CHANGES'
 		}),
-		setChannel: function (channel) {
+		setChannel: function (channelID) {
 			// Check for changes here when user switches or closes panel
-			if(this.changed && (!channel || channel.id !== this.activeChannel.id)) {
+			if(this.changed && channelID !== this.activeChannel.id) {
 				dialog(this.channelStrings("unsavedChanges"), this.channelStrings("unsavedChangesText"), {
 					[this.channelStrings("dontSave")]: () => {
 						this.cancelChanges();
-						this.setActiveChannel(channel);
+						this.setActiveChannel(channelID);
 					},
 					[this.channelStrings("keepOpen")]:() => {},
 					[this.channelStrings("save")]: () => {
 						this.saveChannel().then(() => {
-							this.setActiveChannel(channel);
+							this.setActiveChannel(channelID);
 						}).catch( (error) => {
 							alert(this.channelStrings('errorChannelSave'), error.responseText || error);
 						});
 					},
 				}, null);
 			} else {
-				this.setActiveChannel(channel);
+				this.setActiveChannel(channelID);
 			}
 		}
 	}

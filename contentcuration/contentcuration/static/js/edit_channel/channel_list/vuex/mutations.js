@@ -1,6 +1,6 @@
 import _ from 'underscore';
 import { ListTypes } from './../constants';
-import { prepChannel } from './../utils';
+import { prepChannel, getDefaultChannel } from './../utils';
 
 
 export function RESET_STATE(state) {
@@ -16,9 +16,9 @@ export function RESET_STATE(state) {
 
 
 /* CHANNEL LIST MUTATIONS */
-
-export function SET_ACTIVE_CHANNEL(state, channel) {
-	state.activeChannel = channel;
+export function SET_ACTIVE_CHANNEL(state, channelID) {
+	state.activeChannel = (channelID === "")? getDefaultChannel() :
+													_.findWhere(state.channels, {id: channelID});
 	state.channelChanges = _.clone(state.activeChannel);
 }
 

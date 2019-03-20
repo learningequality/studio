@@ -33,7 +33,7 @@ export default {
       dialog(this.$tr("deletingChannel"), this.$tr("deleteWarning"), {
           [this.$tr("cancel")]:() => { },
           [this.$tr("deleteChannel")]: () => {
-              this.deleteChannel(this.channel);
+              this.deleteChannel(this.channel.id);
               this.$emit('deletedChannel')
           },
       }, null);

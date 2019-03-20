@@ -12,3 +12,8 @@ export const ChannelListUrls = {
 	[ListTypes.VIEW_ONLY]: window.Urls.get_user_view_channels(),
 	[ListTypes.PUBLIC]: window.Urls.get_user_public_channels()
 }
+
+export const ChannelInvitationMapping = {
+	'edit': ListTypes.EDITABLE,
+	'view': ListTypes.VIEW_ONLY
+}

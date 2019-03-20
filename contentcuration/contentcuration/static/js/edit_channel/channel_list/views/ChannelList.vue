@@ -18,7 +18,7 @@
       <ChannelItem
         v-for="channel in listChannels"
         :key="channel.id"
-        :channel="channel"
+        :channelID="channel.id"
       />
     </div>
   </div>
@@ -31,7 +31,6 @@
 import _ from 'underscore';
 import { mapState, mapActions } from 'vuex';
 import ChannelItem from './ChannelItem.vue';
-import State from 'edit_channel/state';
 import { setChannelMixin } from './../mixins';
 import { ListTypes } from './../constants';
 
@@ -84,17 +83,7 @@ export default {
   methods: {
     ...mapActions('channel_list', ['loadChannelList']),
     createChannel() {
-      let newChannel = {
-        name: "",
-        description: "",
-        editors: [State.current_user.id],
-        pending_editors: [],
-        language: State.preferences.language,
-        content_defaults: State.preferences,
-        thumbnail: "",
-        thumbnail_encoding: {}
-      };
-      this.setChannel(newChannel);
+      this.setChannel("");
     }
   }
 };

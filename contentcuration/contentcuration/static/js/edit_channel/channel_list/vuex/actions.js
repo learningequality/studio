@@ -4,7 +4,7 @@ import State from 'edit_channel/state';
 
 import Models from 'edit_channel/models';
 import { ChannelSetModalView } from 'edit_channel/channel_set/views';
-import { ListTypes, ChannelListUrls } from './../constants';
+import { ListTypes, ChannelListUrls, ChannelInvitationMapping } from './../constants';
 import { prepChannel } from './../utils';
 import fileDownload from 'jquery-file-download';
 
@@ -27,12 +27,13 @@ export function loadChannelList(context, listType) {
 	});
 }
 
-export function addStar(context, channel) {
+export function addStar(context, channelID) {
+    let channel = context.getters.getChannel(channelID);
 	channel.STARRING = true;
 	$.ajax({
         method: "POST",
         data: JSON.stringify({
-            "channel_id": channel.id,
+            "channel_id": channelID,
             "user_id": State.current_user.id
         }),
         url: window.Urls.add_bookmark(),
@@ -43,12 +44,13 @@ export function addStar(context, channel) {
     });
 }
 
-export function removeStar(context, channel) {
+export function removeStar(context, channelID) {
+    let channel = context.getters.getChannel(channelID);
 	channel.STARRING = true;
 	$.ajax({
         method: "POST",
         data: JSON.stringify({
-            "channel_id": channel.id,
+            "channel_id": channelID,
             "user_id": State.current_user.id
         }),
         url: window.Urls.remove_bookmark(),
@@ -77,7 +79,9 @@ export function saveChannel(context) {
     });
 }
 
-export function deleteChannel(context, channel) {
+export function deleteChannel(context, channelID) {
+    let channel = context.getters.getChannel(channelID);
+
 	/* TODO: REMOVE BACKBONE */
 	return new Promise((resolve, reject) => {
 		new Models.ChannelModel(channel).save({"deleted": true}, {
@@ -131,8 +135,9 @@ export function downloadChannelDetails(context, payload) {
     });
 }
 
-export function getChannelModel(context, channel) {
+export function getChannelModel(context, channelID) {
 	/* TODO: REMOVE BACKBONE, needed for image upload view */
+    let channel = context.getters.getChannel(channelID);
 	return new Models.ChannelModel(channel);
 }
 
@@ -153,16 +158,17 @@ export function loadChannelSetList(context) {
     });
 }
 
-export function getChannelSetModel(context, channelSet) {
+export function getChannelSetModel(context, channelSetID) {
     /* TODO: REMOVE BACKBONE, needed for channel set modal view */
+    let channelSet = context.getters.getChannelSet(channelSetID);
     return new Models.ChannelSetModel(channelSet);
 }
 
-export function deleteChannelSet(context, channelSet) {
+export function deleteChannelSet(context, channelSetID) {
 	/* TODO: REMOVE BACKBONE */
-	new Models.ChannelSetModel(channelSet).destroy({
+	new Models.ChannelSetModel({id: channelSetID}).destroy({
 		success: function() {
-			context.commit('REMOVE_CHANNELSET', channelSet.id);
+			context.commit('REMOVE_CHANNELSET', channelSetID);
 		}
 	});
 }
@@ -184,25 +190,18 @@ export function loadChannelInvitationList(context) {
     });
 }
 
-export function acceptInvitation(context, invitation) {
+export function acceptInvitation(context, invitationID) {
+    let invitation = context.getters.getInvitation(invitationID);
 	return new Promise((resolve, reject) => {
 		$.ajax({
             method: "POST",
             url: window.Urls.accept_channel_invite(),
-            data: { "invitation_id": invitation.id },
+            data: { "invitation_id": invitationID },
             error: reject,
             success: (channel) => {
     			prepChannel(channel);
-    			switch(invitation.share_mode) {
-    				case 'edit':
-    					channel[ListTypes.EDITABLE] = true;
-    					context.commit('SET_ACTIVE_LIST', ListTypes.EDITABLE);
-    					break;
-    				case 'view':
-    					channel[ListTypes.VIEW_ONLY] = true;
-    					context.commit('SET_ACTIVE_LIST', ListTypes.VIEW_ONLY);
-    					break;
-    			}
+                let listType = ChannelInvitationMapping[invitation.share_mode];
+                channel[listType] = true;
     			context.commit('ADD_CHANNEL', channel);
     			resolve(channel);
             }
@@ -210,10 +209,10 @@ export function acceptInvitation(context, invitation) {
     });
 }
 
-export function declineInvitation(context, invitation) {
+export function declineInvitation(context, invitationID) {
 	/* TODO: REMOVE BACKBONE */
 	return new Promise((resolve, reject) => {
-		let invite = new Models.InvitationModel(invitation);
+		let invite = new Models.InvitationModel({id: invitationID});
 		invite.destroy({ success: resolve, error: reject })
     });
 }

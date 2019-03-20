@@ -52,7 +52,7 @@ import dialog from 'edit_channel/utils/dialog';
 
 
 export default {
-  name: 'ChannelSetItem',
+  name: 'ChannelInvitationItem',
   $trs: {
     editText: '{firstname} {lastname} has invited you to edit {channel}',
     viewText: '{firstname} {lastname} has invited you to view {channel}',
@@ -69,8 +69,8 @@ export default {
   },
 
   props: {
-    invitation: {
-      type: Object,
+    invitationID: {
+      type: String,
       required: true,
     }
   },
@@ -78,6 +78,13 @@ export default {
     return {
       accepted: false,
       declined: false
+    }
+  },
+  computed: {
+    ...mapGetters('channel_list', ['getInvitation']),
+    invitation() {
+      console.log(this.invitationID, this.getInvitation(this.invitationID))
+      return this.getInvitation(this.invitationID);
     }
   },
   methods: {
@@ -89,7 +96,8 @@ export default {
       'declineInvitation'
     ]),
     handleAccept() {
-      this.acceptInvitation(this.invitation).then(() => {
+      this.acceptInvitation(this.invitationID).then(() => {
+        this.$emit('acceptedInvitation', this.invitation.share_mode);
         this.accepted = true;
       }).catch((error) => {
         console.log("ERROR")
@@ -100,7 +108,7 @@ export default {
       dialog.dialog(this.$tr("decliningInvitation"), this.$tr("decliningInvitationMessage"), {
         [this.$tr("cancel")]:()=>{},
         [this.$tr("decline")]: () => {
-          this.declineInvitation(this.invitation).then(() => {
+          this.declineInvitation(this.invitationID).then(() => {
             this.declined = true;
           }).catch((error) => {
             console.error(error);

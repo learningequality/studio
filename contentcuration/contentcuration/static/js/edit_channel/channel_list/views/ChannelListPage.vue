@@ -4,7 +4,7 @@
       <!-- Channel list area -->
       <div id="channel-list-wrapper" :class="{'showPanel': !!activeChannel}">
         <div id="channel-list-area">
-          <ChannelInvitationList/>
+          <ChannelInvitationList @setActiveList="setActiveList"/>
 
           <ul id="manage-channel-nav">
             <li
@@ -91,6 +91,11 @@ export default {
     ...mapState('channel_list', ['activeChannel']),
     lists() {
       return _.values(ListTypes);
+    }
+  },
+  methods: {
+    setActiveList(listType) {
+      this.activeList = listType;
     }
   }
 }

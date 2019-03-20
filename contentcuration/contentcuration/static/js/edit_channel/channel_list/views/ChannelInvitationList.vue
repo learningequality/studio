@@ -8,7 +8,8 @@
       <ChannelInvitationItem
         v-for="invitation in invitations"
         :key="invitation.id"
-        :invitation="invitation"
+        :invitationID="invitation.id"
+        @acceptedInvitation="acceptedInvitation"
       />
     </div>
   </div>
@@ -18,6 +19,7 @@
 <script>
 
 import { mapGetters, mapActions } from 'vuex';
+import { ChannelInvitationMapping } from './../constants';
 import ChannelInvitationItem from './ChannelInvitationItem.vue';
 
 export default {
@@ -41,9 +43,14 @@ export default {
   computed: mapGetters('channel_list', [
     'invitations'
   ]),
-  methods: mapActions('channel_list', [
-    'loadChannelInvitationList'
-  ])
+  methods: {
+    ...mapActions('channel_list', [
+      'loadChannelInvitationList'
+    ]),
+    acceptedInvitation(shareMode) {
+      this.$emit('setActiveList', ChannelInvitationMapping[shareMode]);
+    }
+  }
 };
 
 </script>

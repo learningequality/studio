@@ -32,7 +32,7 @@
 <script>
 
 import _ from 'underscore';
-import { mapActions } from 'vuex';
+import { mapActions, mapGetters } from 'vuex';
 import CopyToken from 'edit_channel/sharedComponents/CopyToken.vue';
 import dialog from 'edit_channel/utils/dialog';
 import { ChannelSetModalView } from 'edit_channel/channel_set/views';
@@ -47,8 +47,8 @@ export default {
     cancel: "Cancel"
   },
   props: {
-    channelSet: {
-      type: Object,
+    channelSetID: {
+      type: String,
       required: true,
     }
   },
@@ -60,6 +60,12 @@ export default {
       optionHighlighted: false
     }
   },
+  computed: {
+    ...mapGetters('channel_list', ['getChannelSet']),
+    channelSet() {
+      return this.getChannelSet(this.channelSetID);
+    }
+  },
   methods: {
     ...mapActions('channel_list', [
       'deleteChannelSet',
@@ -69,12 +75,12 @@ export default {
       dialog.dialog(this.$tr("deleteChannelSetTitle"), this.$tr("deleteChannelSetText"), {
         [this.$tr("cancel")]:function(){},
         [this.$tr("deleteChannelSetTitle")]: () => {
-          this.deleteChannelSet(this.channelSet);
+          this.deleteChannelSet(this.channelSetID);
         },
       }, () => {});
     },
     openChannelSet() {
-      this.getChannelSetModel(this.channelSet).then((channelSet) => {
+      this.getChannelSetModel(this.channelSetID).then((channelSet) => {
         let channelSetView = new ChannelSetModalView({
           modal: true,
           isNew: false,

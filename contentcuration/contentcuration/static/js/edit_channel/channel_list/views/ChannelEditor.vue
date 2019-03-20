@@ -208,7 +208,7 @@ export default {
 
     /* Handle thumbnail options */
     loadThumbnailUploader: function() {
-      this.getChannelModel(this.channel).then((model) => {
+      this.getChannelModel(this.channel.id).then((model) => {
         let imageUploader = new ThumbnailUploadView({
           model: model,
           el: this.$refs.channelthumbnail,
@@ -247,7 +247,7 @@ export default {
     },
     submitChannel() {
       this.saving = true;
-
+      console.log("CALLED")
       // saveChannel relies on vuex state to submit
       // Submitting using local `data` would probably be simpler
       this.saveChannel().then((channel) => {

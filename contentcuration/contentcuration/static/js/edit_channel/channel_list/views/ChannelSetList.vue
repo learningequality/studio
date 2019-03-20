@@ -20,7 +20,7 @@
       <ChannelSetItem
         v-for="channelSet in channelSets"
         :key="channelSet.id"
-        :channelSet="channelSet"
+        :channelSetID="channelSet.id"
       />
     </div>
   </div>
@@ -72,7 +72,7 @@ export default {
       new ChannelSetInformationModalView({});
     },
     newChannelSet() {
-      this.getChannelSetModel({}).then((channelSet) => {
+      this.getChannelSetModel().then((channelSet) => {
         let channelSetView = new ChannelSetModalView({
           modal: true,
           isNew: true,

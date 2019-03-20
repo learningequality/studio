@@ -4,7 +4,8 @@
     <div id="channel-details-overlay">
         <div id="channel-details-panel">
           <h2 id="channel-details-top-options">
-            <ChannelStar :class="{invisible: isNew}" :channel="channel"/>
+            <div v-if="isNew">&nbsp;</div>
+            <ChannelStar v-else :channelID="channel.id"/>
             <a class="material-icons" @click="closePanel">clear</a>
           </h2>
 
