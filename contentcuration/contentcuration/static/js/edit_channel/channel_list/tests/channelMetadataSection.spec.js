@@ -1,19 +1,25 @@
 import { shallowMount } from '@vue/test-utils';
-import ChannelMetadataSection from './../../views/ChannelMetadataSection.vue';
+import ChannelMetadataSection from './../views/ChannelMetadataSection.vue';
 import _ from 'underscore';
-import { localStore, mockFunctions } from './../data.js';
-import { ListTypes } from './../../constants';
+import { localStore, mockFunctions } from './data.js';
+import { ListTypes } from './../constants';
 import State from 'edit_channel/state';
 
 State.current_user = {'id': 'testuser'}
 
+const testChannel = {
+  'id': 'test',
+  'name': 'channel',
+  'created': new Date(),
+}
 function makeWrapper(props = {}) {
-  let testChannel = {
-    'name': 'channel',
-    'created': new Date(),
+  localStore.commit('channel_list/RESET_STATE');
+  let channel = {
+    ...testChannel,
     ...props
   }
-  localStore.commit('channel_list/SET_ACTIVE_CHANNEL', testChannel)
+  localStore.commit('channel_list/ADD_CHANNEL', channel);
+  localStore.commit('channel_list/SET_ACTIVE_CHANNEL', channel.id);
   return shallowMount(ChannelMetadataSection, {
     store: localStore
   })

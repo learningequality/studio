@@ -1,7 +1,7 @@
 import { shallowMount } from '@vue/test-utils';
-import ChannelSetList from './../../views/ChannelSetList.vue';
-import ChannelSetItem from './../../views/ChannelSetItem.vue';
-import { ChannelSets, localStore, mockFunctions } from './../data';
+import ChannelSetList from './../views/ChannelSetList.vue';
+import ChannelSetItem from './../views/ChannelSetItem.vue';
+import { ChannelSets, localStore, mockFunctions } from './data';
 import _ from 'underscore';
 require('handlebars/helpers'); // Needed for collection details modal
 
@@ -26,7 +26,7 @@ describe('channelSetList', () => {
     listWrapper.vm.$nextTick().then(() => {
       let actualLength = listWrapper.findAll(ChannelSetItem).length;
       expect(actualLength).toEqual(ChannelSets.length);
-    })
+    });
   });
 
   it('CREATE should open channel set modal', () => {

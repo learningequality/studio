@@ -121,6 +121,7 @@ import { dialog } from 'edit_channel/utils/dialog';
 import Constants from 'edit_channel/constants/index';
 import { ThumbnailUploadView } from 'edit_channel/image/views';
 import { tabMixin } from './../mixins';
+import { getBackboneChannel } from './../utils';
 
 const PRESET = _.findWhere(Constants.FormatPresets, {id: "channel_thumbnail"});
 
@@ -194,10 +195,7 @@ export default {
     this.loadThumbnailUploader();
   },
   methods: {
-    ...mapActions('channel_list', [
-      'getChannelModel',
-      'saveChannel'
-    ]),
+    ...mapActions('channel_list', ['saveChannel']),
     ...mapMutations('channel_list', {
       setName: 'SET_CHANNEL_NAME',
       setDescription: 'SET_CHANNEL_DESCRIPTION',
@@ -208,23 +206,21 @@ export default {
 
     /* Handle thumbnail options */
     loadThumbnailUploader: function() {
-      this.getChannelModel(this.channel.id).then((model) => {
-        let imageUploader = new ThumbnailUploadView({
-          model: model,
-          el: this.$refs.channelthumbnail,
-          preset_id: PRESET.id,
-          upload_url: window.Urls.thumbnail_upload(),
-          acceptedFiles: PRESET.associated_mimetypes.join(","),
-          image_url: this.channel.thumbnail_url,
-          default_url: "/static/img/kolibri_placeholder.png",
-          onsuccess: this.setChannelThumbnail,
-          onerror: () => { this.uploading = false; },
-          oncancel: () => { this.uploading = false; },
-          onstart:  () => { this.uploading = true; },
-          onremove: this.removeChannelThumbnail,
-          allow_edit: true,
-          is_channel: true
-        });
+      let imageUploader = new ThumbnailUploadView({
+        model: getBackboneChannel(this.channel),
+        el: this.$refs.channelthumbnail,
+        preset_id: PRESET.id,
+        upload_url: window.Urls.thumbnail_upload(),
+        acceptedFiles: PRESET.associated_mimetypes.join(","),
+        image_url: this.channel.thumbnail_url,
+        default_url: "/static/img/kolibri_placeholder.png",
+        onsuccess: this.setChannelThumbnail,
+        onerror: () => { this.uploading = false; },
+        oncancel: () => { this.uploading = false; },
+        onstart:  () => { this.uploading = true; },
+        onremove: this.removeChannelThumbnail,
+        allow_edit: true,
+        is_channel: true
       });
     },
     setChannelThumbnail(thumbnail, encoding, formattedName, path) {
@@ -247,7 +243,6 @@ export default {
     },
     submitChannel() {
       this.saving = true;
-      console.log("CALLED")
       // saveChannel relies on vuex state to submit
       // Submitting using local `data` would probably be simpler
       this.saveChannel().then((channel) => {

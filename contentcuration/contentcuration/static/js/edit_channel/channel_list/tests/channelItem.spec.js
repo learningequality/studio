@@ -1,18 +1,21 @@
 import { shallowMount } from '@vue/test-utils';
-import ChannelItem from './../../views/ChannelItem.vue';
+import ChannelItem from './../views/ChannelItem.vue';
 import _ from 'underscore';
-import { localStore } from './../data.js';
+import { localStore } from './data.js';
+import { ListTypes } from './../constants';
 
+const testChannel = {
+  id: "test channel",
+  name: "test title",
+  modified: new Date()
+};
 
 function makeWrapper(props = {}) {
+  localStore.commit('channel_list/SET_CHANNEL_LIST', {channels: [testChannel], listType: ListTypes.EDITABLE});
   return shallowMount(ChannelItem, {
     store: localStore,
     propsData: {
-      channel: {
-        id: "test channel",
-        name: "test title",
-        modified: new Date()
-      }
+      channelID: testChannel.id
     }
   })
 }
@@ -24,12 +27,12 @@ describe('channelItem', () => {
   });
 
   it('should load channel information', () => {
-    expect(wrapper.text()).toEqual(expect.stringContaining("test title"))
+    expect(wrapper.text()).toEqual(expect.stringContaining(testChannel.name))
   });
   it('should set the store.activeChannel', () => {
     let channel = wrapper.find('.channel-container-wrapper');
     channel.trigger('click');
-    expect(wrapper.vm.activeChannel.id).toEqual("test channel")
+    expect(wrapper.vm.activeChannel.id).toEqual(testChannel.id)
   });
   it('CTRL + click should open new window', () => {
     global.open = jest.fn();

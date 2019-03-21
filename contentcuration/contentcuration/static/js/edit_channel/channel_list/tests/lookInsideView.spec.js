@@ -1,6 +1,6 @@
 import { shallowMount } from '@vue/test-utils';
-import LookInsideView from './../../views/LookInsideView.vue';
-import { localStore, mockFunctions } from './../data.js';
+import LookInsideView from './../views/LookInsideView.vue';
+import { localStore, mockFunctions } from './data.js';
 
 
 function makeWrapper(props = {}) {
@@ -16,6 +16,7 @@ function makeWrapper(props = {}) {
 describe('lookInsideView', () => {
   it('should load details when rendered', () => {
     let wrapper = makeWrapper();
+    // TODO: Need to mock endpoint to get rid of UnhandledPromiseRejectionWarning
     expect(mockFunctions.loadNodeDetails).toHaveBeenCalled()
   });
 });

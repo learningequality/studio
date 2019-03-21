@@ -1,34 +1,15 @@
 <template>
 
-  <div>
-    <!-- User accepted invitation -->
-    <div v-if="accepted" class="invitation accepted">
-      <div class="invite-text">
-        <span v-if="invitation.share_mode === 'edit'">{{ $tr('acceptedEditText', {channel: invitation.channel_name})}}</span>
-        <span v-else>{{ $tr('acceptedViewText', {channel: invitation.channel_name})}}</span>
-      </div>
-      <div class="remove material-icons" @click="removeInvitation(invitation.id)">clear</div>
-    </div>
-
-    <!-- User declined invitation -->
-    <div v-else-if="declined" class="invitation declined">
-       <div class="invite-text">
-        <span v-if="invitation.share_mode === 'edit'">{{ $tr('declinedEditText', {channel: invitation.channel_name})}}</span>
-        <span v-else>{{ $tr('declinedViewText', {channel: invitation.channel_name})}}</span>
-      </div>
-      <div class="remove material-icons" @click="removeInvitation(invitation.id)">clear</div>
+  <div v-if="invitation">
+    <!-- User accepted or declined invitation -->
+    <div v-if="accepted || declined" class="invitation" :class="{'accepted': accepted, 'declined': declined}">
+      <div class="invite-text">{{(accepted)? acceptedText : declinedText}}</div>
+      <div class="remove material-icons" @click="removeInvitation(invitationID)">clear</div>
     </div>
 
     <!-- Invitation is pending -->
     <div v-else class="invitation">
-      <div class="invite-text">
-        <span v-if="invitation.share_mode === 'edit'">
-          {{ $tr('editText', {firstname: invitation.sender.first_name, lastname: invitation.sender.last_name, channel: invitation.channel_name})}}
-        </span>
-        <span v-else>
-          {{ $tr('viewText', {firstname: invitation.sender.first_name, lastname: invitation.sender.last_name, channel: invitation.channel_name})}}
-        </span>
-      </div>
+      <div class="invite-text">{{invitationText}}</div>
       <div class="invite-options">
         <a class="accept-invitation" @click="handleAccept">
           <span class="material-icons">check</span>
@@ -48,6 +29,7 @@
 
 import _ from 'underscore';
 import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
+import { ListTypes } from '../constants';
 import dialog from 'edit_channel/utils/dialog';
 
 
@@ -81,10 +63,39 @@ export default {
     }
   },
   computed: {
-    ...mapGetters('channel_list', ['getInvitation']),
+    ...mapGetters('channel_list', ['getInvitation', 'invitations']),
     invitation() {
-      console.log(this.invitationID, this.getInvitation(this.invitationID))
       return this.getInvitation(this.invitationID);
+    },
+    acceptedText() {
+      switch(this.invitation.share_mode) {
+        case ListTypes.EDITABLE:
+          return this.$tr('acceptedEditText', {channel: this.invitation.channel_name});
+        default:
+          return this.$tr('acceptedViewText', {channel: this.invitation.channel_name});
+      }
+    },
+    declinedText() {
+      switch(this.invitation.share_mode) {
+        case ListTypes.EDITABLE:
+          return this.$tr('declinedEditText', {channel: this.invitation.channel_name});
+        default:
+          return this.$tr('declinedViewText', {channel: this.invitation.channel_name});
+      }
+    },
+    invitationText() {
+      let messageArgs = {
+        firstname: this.invitation.sender.first_name,
+        lastname: this.invitation.sender.last_name,
+        channel: this.invitation.channel_name
+      };
+
+      switch(this.invitation.share_mode) {
+        case ListTypes.EDITABLE:
+          return this.$tr('editText', messageArgs);
+        default:
+          return this.$tr('viewText', messageArgs);
+      }
     }
   },
   methods: {
@@ -100,7 +111,7 @@ export default {
         this.$emit('acceptedInvitation', this.invitation.share_mode);
         this.accepted = true;
       }).catch((error) => {
-        console.log("ERROR")
+        console.error(error)
         dialog.alert(this.$tr("invitationError"), error.responseText || error);
       });
     },

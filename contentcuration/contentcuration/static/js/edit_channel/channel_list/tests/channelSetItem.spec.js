@@ -1,9 +1,10 @@
 import { shallowMount } from '@vue/test-utils';
-import ChannelSetItem from './../../views/ChannelSetItem.vue';
-import { localStore, mockFunctions } from './../data.js';
+import ChannelSetItem from './../views/ChannelSetItem.vue';
+import { localStore, mockFunctions } from './data.js';
 
 function makeWrapper(props = {}) {
   let channelSet = {
+    id: 'channel-set-id',
     name: "test title",
     channels: ['test'],
     secret_token: {
@@ -17,7 +18,7 @@ function makeWrapper(props = {}) {
   return shallowMount(ChannelSetItem, {
     store: localStore,
     propsData: {
-      channelSet: channelSet
+      channelSetID: channelSet.id
     }
   })
 }

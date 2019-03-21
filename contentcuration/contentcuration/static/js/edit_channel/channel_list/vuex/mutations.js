@@ -99,6 +99,10 @@ export function SET_CHANNEL_LANGUAGE(state, language) {
 	state.changed = true;
 }
 
+export function SET_CHANGED(state, changed) {
+	state.changed = changed;
+}
+
 
 
 /* CHANNEL SET MUTATIONS */

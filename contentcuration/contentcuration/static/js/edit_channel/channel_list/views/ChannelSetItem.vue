@@ -36,6 +36,7 @@ import { mapActions, mapGetters } from 'vuex';
 import CopyToken from 'edit_channel/sharedComponents/CopyToken.vue';
 import dialog from 'edit_channel/utils/dialog';
 import { ChannelSetModalView } from 'edit_channel/channel_set/views';
+import { getChannelSetModel } from './../utils';
 
 export default {
   name: 'ChannelSetItem',
@@ -67,10 +68,7 @@ export default {
     }
   },
   methods: {
-    ...mapActions('channel_list', [
-      'deleteChannelSet',
-      'getChannelSetModel'
-    ]),
+    ...mapActions('channel_list', ['deleteChannelSet']),
     handleDeleteChannelSet() {
       dialog.dialog(this.$tr("deleteChannelSetTitle"), this.$tr("deleteChannelSetText"), {
         [this.$tr("cancel")]:function(){},
@@ -80,17 +78,15 @@ export default {
       }, () => {});
     },
     openChannelSet() {
-      this.getChannelSetModel(this.channelSetID).then((channelSet) => {
-        let channelSetView = new ChannelSetModalView({
-          modal: true,
-          isNew: false,
-          model: channelSet,
-          onsave: (channelset) => {
-            _.each(channelset.pairs(), (attr) => {
-              this.channelSet[attr[0]] = attr[1];
-            });
-          }
-        });
+      let channelSetView = new ChannelSetModalView({
+        modal: true,
+        isNew: false,
+        model: getChannelSetModel(this.channelSet),
+        onsave: (channelset) => {
+          _.each(channelset.pairs(), (attr) => {
+            this.channelSet[attr[0]] = attr[1];
+          });
+        }
       });
     }
   }

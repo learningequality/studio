@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
-import ChannelDownloadDropdown from './../../views/ChannelDownloadDropdown.vue';
+import ChannelDownloadDropdown from './../views/ChannelDownloadDropdown.vue';
 import _ from 'underscore';
-import { localStore, mockFunctions } from './../data.js';
+import { localStore, mockFunctions } from './data.js';
 
 
 function makeWrapper(props = {}) {
@@ -10,11 +10,15 @@ function makeWrapper(props = {}) {
   })
 }
 
+const testChannel = { id: 'test', name: 'test' }
+localStore.commit('channel_list/ADD_CHANNEL', testChannel)
+
+
 describe('channelDownloadDropdown', () => {
   let wrapper;
   beforeEach(() => {
+    localStore.commit('channel_list/SET_ACTIVE_CHANNEL', testChannel.id);
     mockFunctions.downloadChannelDetails.mockReset();
-    localStore.commit('channel_list/SET_ACTIVE_CHANNEL', {name: 'test'})
     wrapper = makeWrapper();
   });
 

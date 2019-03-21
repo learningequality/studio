@@ -1,9 +1,9 @@
 import { shallowMount } from '@vue/test-utils';
-import ChannelList from './../../views/ChannelList.vue';
-import ChannelItem from './../../views/ChannelItem.vue';
+import ChannelList from './../views/ChannelList.vue';
+import ChannelItem from './../views/ChannelItem.vue';
 import _ from 'underscore';
-import { Channels, localStore, mockFunctions } from './../data';
-import { ListTypes } from './../../constants';
+import { Channels, localStore, mockFunctions } from './data';
+import { ListTypes } from './../constants';
 
 
 function makeWrapper(listType) {

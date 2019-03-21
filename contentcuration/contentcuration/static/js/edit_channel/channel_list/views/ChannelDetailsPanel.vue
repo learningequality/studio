@@ -80,7 +80,7 @@ export default {
       return _.contains(this.channel.editors, State.current_user.id);
     },
     thumbnailUrl() {
-      return (this.isNew)? "/static/img/kolibri_placeholder.png" : this.channel.thumbnail_url;
+      return this.channel.thumbnail_url || "/static/img/kolibri_placeholder.png";
     }
   },
   methods: {

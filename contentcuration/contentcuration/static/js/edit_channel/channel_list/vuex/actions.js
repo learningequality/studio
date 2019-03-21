@@ -135,13 +135,6 @@ export function downloadChannelDetails(context, payload) {
     });
 }
 
-export function getChannelModel(context, channelID) {
-	/* TODO: REMOVE BACKBONE, needed for image upload view */
-    let channel = context.getters.getChannel(channelID);
-	return new Models.ChannelModel(channel);
-}
-
-
 
 /* CHANNEL SET ACTIONS */
 export function loadChannelSetList(context) {
@@ -156,12 +149,6 @@ export function loadChannelSetList(context) {
             }
         });
     });
-}
-
-export function getChannelSetModel(context, channelSetID) {
-    /* TODO: REMOVE BACKBONE, needed for channel set modal view */
-    let channelSet = context.getters.getChannelSet(channelSetID);
-    return new Models.ChannelSetModel(channelSet);
 }
 
 export function deleteChannelSet(context, channelSetID) {

@@ -1,8 +1,8 @@
 import { shallowMount } from '@vue/test-utils';
-import ChannelInvitationList from './../../views/ChannelInvitationList.vue';
-import ChannelInvitationItem from './../../views/ChannelInvitationItem.vue';
+import ChannelInvitationList from './../views/ChannelInvitationList.vue';
+import ChannelInvitationItem from './../views/ChannelInvitationItem.vue';
 import _ from 'underscore';
-import { Invitations, localStore, mockFunctions } from './../data';
+import { Invitations, localStore, mockFunctions } from './data';
 
 
 function makeWrapper() {
@@ -23,6 +23,6 @@ describe('channelInvitationList', () => {
     listWrapper.vm.$nextTick().then(() => {
       let actualLength = listWrapper.findAll(ChannelInvitationItem).length;
       expect(actualLength).toEqual(Invitations.length);
-    })
+    });
   });
 });

@@ -1,23 +1,23 @@
 import { mount } from '@vue/test-utils';
-import ChannelInvitationItem from './../../views/ChannelInvitationItem.vue';
+import ChannelInvitationItem from './../views/ChannelInvitationItem.vue';
 import _ from 'underscore';
-import { localStore, mockFunctions } from './../data.js';
+import { localStore, mockFunctions } from './data.js';
 
 
 function makeWrapper(share_mode) {
   let invitation = {
     "id": "inviteid",
-    "share_mode": "edit",
+    "share_mode": share_mode || "edit",
     "sender": {
       "first_name": "First",
       "last_name": "Last"
     }
   };
-  localStore.commit('channel_list/SET_INVITATION_LIST', [invitation])
+  localStore.commit('channel_list/SET_INVITATION_LIST', [invitation]);
   return mount(ChannelInvitationItem, {
     store: localStore,
     propsData: {
-      invitation: invitation
+      invitationID: invitation.id
     }
   })
 }
@@ -25,6 +25,7 @@ function makeWrapper(share_mode) {
 describe('channelInvitationItem', () => {
   let wrapper;
   beforeEach(() => {
+
     wrapper = makeWrapper();
     mockFunctions.declineInvitation.mockReset();
     mockFunctions.acceptInvitation.mockReset();

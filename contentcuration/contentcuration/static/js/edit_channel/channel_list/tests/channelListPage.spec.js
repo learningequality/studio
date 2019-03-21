@@ -1,8 +1,8 @@
 import { shallowMount } from '@vue/test-utils';
-import ChannelListPage from './../../views/ChannelListPage.vue';
-import ChannelDetailsPanel from './../../views/ChannelDetailsPanel.vue';
-import { ListTypes } from './../../constants';
-import { localStore } from '../data'
+import ChannelListPage from './../views/ChannelListPage.vue';
+import ChannelDetailsPanel from './../views/ChannelDetailsPanel.vue';
+import { ListTypes } from './../constants';
+import { localStore } from './data'
 import _ from 'underscore';
 
 function makeWrapper(props = {}) {
@@ -31,10 +31,13 @@ describe('channelListPage', () => {
     })
     it('details panel should toggle when active channel is set/unset', () => {
       let channel = {'id': 'id', 'channel': 'channel'};
+      wrapper.vm.$store.commit('channel_list/ADD_CHANNEL', channel);
       expect(wrapper.find(ChannelDetailsPanel).exists()).toBe(false);
-      wrapper.vm.$store.commit('channel_list/SET_ACTIVE_CHANNEL', channel);
+      wrapper.vm.$store.commit('channel_list/SET_ACTIVE_CHANNEL', channel.id);
       expect(wrapper.find(ChannelDetailsPanel).exists()).toBe(true);
       wrapper.vm.$store.commit('channel_list/SET_ACTIVE_CHANNEL', null);
       expect(wrapper.find(ChannelDetailsPanel).exists()).toBe(false);
+      wrapper.vm.$store.commit('channel_list/SET_ACTIVE_CHANNEL', "");
+      expect(wrapper.find(ChannelDetailsPanel).exists()).toBe(true);
     })
 });

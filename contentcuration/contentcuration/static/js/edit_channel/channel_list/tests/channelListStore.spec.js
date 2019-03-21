@@ -1,8 +1,8 @@
 import { mount } from '@vue/test-utils';
 import _ from 'underscore';
-import store from './../../vuex/store';
-import { ListTypes } from './../../constants';
-import { Invitations } from './../data';
+import store from './../vuex/store';
+import { ListTypes } from './../constants';
+import { Invitations } from './data';
 const Backbone = require('backbone');
 
 /*
@@ -82,12 +82,13 @@ describe('channelListStore', () => {
       beforeEach(() => {
         store.commit('channel_list/RESET_STATE');
         store.commit('channel_list/ADD_CHANNEL', channel);
-        store.commit('channel_list/SET_ACTIVE_CHANNEL', channel);
+        store.commit('channel_list/SET_ACTIVE_CHANNEL', channel.id);
       })
 
       it('saveChannel should save changes', () => {
         store.commit('channel_list/SET_CHANNEL_NAME', 'new name');
         store.dispatch('channel_list/saveChannel').then(() => {
+          // TODO: Need to mock endpoint to get rid of UnhandledPromiseRejectionWarning
           // Needs to be patch as post will overwrite editors
           expect(Backbone.sync.mock.calls[0][0]).toEqual('patch');
           expect(Backbone.sync.mock.calls[0][1].attributes.name).toEqual('new name');
@@ -98,13 +99,13 @@ describe('channelListStore', () => {
 
       it('deleteChannel should mark channel.deleted as true', () => {
         store.commit('channel_list/SET_CHANNELSET_LIST', [{id:'channelset', channels:['test']}]);
-        store.dispatch('channel_list/deleteChannel', channel).then(() => {
+        store.dispatch('channel_list/deleteChannel', channel.id).then(() => {
           expect(Backbone.sync.mock.calls[0][1].attributes.deleted).toBe(true);
           expect(_.find(store.state.channel_list.channels, {'id': 'test'})).toBeFalsy();
           expect(store.state.channel_list.channelSets[0].channels).toHaveLength(0);
-        })
+        });
       });
-    })
+    });
 
     it('loadNodeDetails should generate channel details', () => {
       // store.dispatch('channel_list/loadNodeDetails', channel.main_tree);
@@ -134,7 +135,7 @@ describe('channelListStore', () => {
     it('deleteChannelSet should delete the channel set', () => {
       let channelSet = {'id': 'test'};
       store.commit('channel_list/SET_CHANNELSET_LIST', [channelSet]);
-      store.dispatch('channel_list/deleteChannelSet', channelSet).then(() => {
+      store.dispatch('channel_list/deleteChannelSet', channelSet.id).then(() => {
         expect(Backbone.sync.mock.calls[0][0]).toEqual('delete');
         expect(Backbone.sync.mock.calls[0][1].attributes.id).toEqual(channelSet.id);
         expect(_.find(store.state.channel_list.channelSets, {id: channelSet.id})).toBeFalsy();
@@ -163,7 +164,9 @@ describe('channelListStore', () => {
 
     it('declineInvitation should decline the invitation', () => {
       _.each(Invitations, (invitation) => {
-        store.dispatch('channel_list/declineInvitation', invitation).then(() => {
+        store.commit('channel_list/SET_INVITATION_LIST', [invitation]);
+        store.dispatch('channel_list/declineInvitation', invitation.id).then(() => {
+          // TODO: Need to mock endpoint to get rid of UnhandledPromiseRejectionWarning
           expect(Backbone.sync.mock.calls[0][0]).toEqual('delete');
           expect(Backbone.sync.mock.calls[0][1].attributes.id).toEqual(invitation.id);
           jest.clearAllMocks();
