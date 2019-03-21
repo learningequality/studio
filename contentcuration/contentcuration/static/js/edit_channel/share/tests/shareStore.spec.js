@@ -1,8 +1,8 @@
 import { mount } from '@vue/test-utils';
 import _ from 'underscore';
-import store from './../../vuex/store';
-import { Permissions } from './../../constants';
-import { defaultChannel, Users, Invitations } from './../data';
+import store from './../vuex/store';
+import { Permissions } from './../constants';
+import { defaultChannel, Users, Invitations } from './data';
 const Backbone = require('backbone');
 
 /*
@@ -63,7 +63,7 @@ describe('channelListStore', () => {
     })
 
     it('addEditor should call make_editor', () => {
-      store.dispatch('share/addEditor', {'user': testUser});
+      store.dispatch('share/addEditor', testUser.id);
       // TODO: check endpoint was called
     });
 
@@ -73,7 +73,7 @@ describe('channelListStore', () => {
     });
 
     it('removeEditor should call remove_editor', () => {
-      store.dispatch('share/removeUser', testUser);
+      store.dispatch('share/removeUser', testUser.id);
       // TODO: check endpoint was called
     });
 
@@ -127,7 +127,7 @@ describe('channelListStore', () => {
     });
 
     it('deleteInvitation should delete the invitation', () => {
-      store.dispatch('share/deleteInvitation', testInvitation);
+      store.dispatch('share/deleteInvitation', testInvitation.id);
       // TODO: check endpoint was called, wait for non-backbone implementation
     });
 

@@ -66,6 +66,7 @@ from contentcuration.serializers import AdminChannelListSerializer
 from contentcuration.serializers import AdminUserListSerializer
 from contentcuration.serializers import CurrentUserSerializer
 from contentcuration.serializers import UserChannelListSerializer
+from contentcuration.serializers import UserSerializer
 from contentcuration.utils.channelcache import ChannelCacher
 from contentcuration.utils.messages import get_messages
 from contentcuration.views.nodes import get_node_details
@@ -351,7 +352,8 @@ def make_editor(request):
 
         Invitation.objects.filter(invited=user, channel=channel).delete()   # Delete any invitations for this user
 
-        return HttpResponse(json.dumps({"success": True}))
+        user_serializer = UserSerializer(user)
+        return HttpResponse(JSONRenderer().render(user_serializer.data))
     except ObjectDoesNotExist:
         return HttpResponseNotFound('Channel with id {} not found'.format(data["channel_id"]))
 

@@ -1,7 +1,7 @@
 import { shallowMount } from '@vue/test-utils';
-import AccessList from './../../views/AccessList.vue';
-import UserItem from './../../views/UserItem.vue';
-import { localStore, mockFunctions, Users } from './../data.js';
+import AccessList from './../views/AccessList.vue';
+import UserItem from './../views/UserItem.vue';
+import { localStore, mockFunctions, Users } from './data.js';
 
 
 function makeWrapper() {

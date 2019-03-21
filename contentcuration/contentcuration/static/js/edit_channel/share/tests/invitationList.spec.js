@@ -1,7 +1,7 @@
 import { shallowMount } from '@vue/test-utils';
-import InvitationList from './../../views/InvitationList.vue';
-import InvitationItem from './../../views/InvitationItem.vue';
-import { localStore, mockFunctions, Invitations } from './../data.js';
+import InvitationList from './../views/InvitationList.vue';
+import InvitationItem from './../views/InvitationItem.vue';
+import { localStore, mockFunctions, Invitations } from './data.js';
 
 
 function makeWrapper() {

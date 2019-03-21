@@ -1,7 +1,7 @@
 <template>
 <share-item :model="model" :permission="userPermission">
 	<span v-if="isSelf">
-		<span v-if="userPermission === 'manage'">
+		<span v-if="isOwner">
 			<span v-if="isOnlyEditor" class="option leave disabled" :title="$tr('cannotRemoveTitle')" disabled>remove_circle_outline</span>
       <span v-else-if="canJoin" class="option join" :title="$tr('joinTitle')" @click="joinChannel">person_add</span>
 			<span v-else class="option red-option leave" :title="$tr('leaveTitle')" @click="removeEditor(true)">remove_circle_outline</span>
@@ -10,7 +10,7 @@
 			<label>{{ $tr('youLabel') }}</label>
 		</span>
 	</span>
-	<span v-else-if="currentUserPermission === 'manage'">
+	<span v-else-if="isOwner">
 		<span v-if="isOnlyEditor" class="option disabled" :title="$tr('cannotRemoveTitle')" disabled>clear</span>
 		<span v-else class="option red-option remove" :title="$tr('removeTitle')" @click="removeEditor(false)">clear</span>
 	</span>
@@ -24,6 +24,7 @@ import { mapGetters, mapActions } from 'vuex';
 import _ from 'underscore';
 import { dialog, alert } from 'edit_channel/utils/dialog';
 import State from 'edit_channel/state';
+import { Permissions } from '../constants';
 import { getPermission, getHighestPermission, getPermissionRank } from '../utils';
 import ShareItem from './ShareItem.vue';
 
@@ -52,57 +53,58 @@ export default {
   components: {
 	  ShareItem,
 	},
-  computed: Object.assign(
-  	mapGetters('share', ['channel', 'accessList']),
-  	{
-      isSelf() {
-        return this.model.id === State.current_user.id;
-      },
-  		canJoin() {
-  			// Only admins can join channels they're not a part of
-        return this.model.is_admin && !_.findWhere(this.accessList, {id: this.model.id});
-	  	},
-	  	isOnlyEditor() {
-        // Check length of highest permission rank
-        let topLevel = getHighestPermission();
-        let currentRank = getPermissionRank(this.userPermission).rank;
-	  		return currentRank >= topLevel.rank && this.channel[topLevel.field].length === 1;
-	  	},
-	  	userPermission() {
-	  		return getPermission(this.model, this.channel);
-	  	},
-	  	currentUserPermission() {
-	  		return getPermission(State.current_user.toJSON(), this.channel);
-	  	}
-  	}
-  ),
-  methods: Object.assign(
-  	mapActions('share', ['addEditor', 'removeUser']),
-	  {
-	  	removeEditor(isLeaving) {
-	  		let header = (isLeaving)? this.$tr("leavingHeader") : this.$tr("removingHeader");
-	  		let prompt = (isLeaving)? this.$tr("leavingPrompt") : this.$tr("removingPrompt", {name: this.userName});
-	  		let actionButton = (isLeaving)? this.$tr("leave") : this.$tr("remove");
+  computed: {
+    ...mapGetters('share', ['channel', 'accessList']),
+    isSelf() {
+      return this.model.id === State.current_user.id;
+    },
+    canJoin() {
+      // Only admins can join channels they're not a part of
+      return this.model.is_admin && !_.findWhere(this.accessList, {id: this.model.id});
+    },
+    isOnlyEditor() {
+      // Check length of highest permission rank
+      let topLevel = getHighestPermission();
+      let currentRank = getPermissionRank(this.userPermission).rank;
+      return currentRank >= topLevel.rank
+            && _.contains(this.channel[topLevel.field], this.model.id)
+            && this.channel[topLevel.field].length === 1;
+    },
+    userPermission() {
+      return getPermission(this.model, this.channel);
+    },
+    currentUserPermission() {
+      return getPermission(State.current_user.toJSON(), this.channel);
+    },
+    isOwner() {
+      return this.userPermission === Permissions.OWNER;
+    }
+  },
+  methods: {
+    ...mapActions('share', ['addEditor', 'removeUser']),
+    removeEditor(isLeaving) {
+      let header = (isLeaving)? this.$tr("leavingHeader") : this.$tr("removingHeader");
+      let prompt = (isLeaving)? this.$tr("leavingPrompt") : this.$tr("removingPrompt", {name: this.userName});
+      let actionButton = (isLeaving)? this.$tr("leave") : this.$tr("remove");
 
-	      dialog(header, prompt, {
-          [this.$tr("cancel")]:() => {},
-          [actionButton]: () => {
-            this.removeUser(this.model)
-            		.catch((error) => {alert(this.$tr('failedHeader'), error)} );
-        	}
-	      });
-	  	},
-	  	joinChannel() {
-	  		dialog(this.$tr("joiningHeader"), this.$tr("joiningPrompt"), {
-          [this.$tr("cancel")]:() => {},
-          [this.$tr("join")]: () => {
-            this.addEditor(this.model)
-            		.catch((error) => {alert(this.$tr('failedHeader'), error)} );
-        	}
-	      });
-	  	}
-	  }
-	)
+      dialog(header, prompt, {
+        [this.$tr("cancel")]:() => {},
+        [actionButton]: () => {
+          this.removeUser(this.model.id)
+              .catch((error) => {alert(this.$tr('failedHeader'), error)} );
+        }
+      });
+    },
+    joinChannel() {
+      dialog(this.$tr("joiningHeader"), this.$tr("joiningPrompt"), {
+        [this.$tr("cancel")]:() => {},
+        [this.$tr("join")]: () => {
+          this.addEditor(this.model.id)
+              .catch((error) => {alert(this.$tr('failedHeader'), error)} );
+        }
+      });
+    }
+  }
 }
 
 </script>

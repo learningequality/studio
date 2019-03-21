@@ -80,75 +80,71 @@ export default {
   	AccessList,
   	InvitationList,
   },
-  computed: Object.assign(
-  	mapGetters('share', ['channel', 'invitations', 'accessList']),
-  	{
-	  	currentUserPermission() {
-	  		return getPermission(this.user, this.channel);
-	  	},
-	  	permissions() {
-	  		let userRank = _.findWhere(PermissionRanks, { shareMode: this.currentUserPermission });
-	  		return _.chain(PermissionRanks)
-					.filter((permission) => { return permission.field && permission.rank <= userRank.rank; })
-					.sortBy('rank')
-					.pluck('shareMode')
-					.value();
-	  	},
-	  	user() {
-	  		return State.current_user.toJSON();
-	  	}
-	  }
-  ),
-  methods: Object.assign(
-  	mapActions('share', ['sendInvitation']),
-  	{
-	  	submitEmail() {
-	  		this.attemptSendInvitation();
-	  	},
-	  	promptUpgrade() {
-	  		dialog(this.$tr('upgradeHeader'), this.$tr('upgradePrompt'), {
-	  			[this.$tr('cancelButton')]: () => {},
-	  			[this.$tr('grantButton')]: () => {
-	  				this.attemptSendInvitation({upgrade: true});
-	  			}
-	  		});
-	  	},
-	  	promptReinvite() {
-	  		dialog(this.$tr('resendHeader'), this.$tr('resendPrompt'), {
-	  			[this.$tr('cancelButton')]: () => {},
-	  			[this.$tr('sendButton')]: () => {
-	  				this.attemptSendInvitation({reinvite: true});
-	  			}
-	  		});
-	  	},
-	  	attemptSendInvitation(data) {
-	  		let email = this.$refs.email.value
-	  		if(email.length) {
-	  			this.shareError = "";
-	  			let payload = {
-	    			email: email,
-	    			share_mode: this.$refs.share_mode.value,
-	    			...data
-	    		}
-	    		this.sharing = true;
-	    		this.sendInvitation(payload).then((data) => {
-	    			this.sharing = false;
-	    			if (data.prompt_to_upgrade) {
-	    				this.promptUpgrade();
-	    			} else if (data.reinvite) {
-	    				this.promptReinvite();
-	    			} else {
-	    				this.shareSuccess = this.$tr("invitationSentMessage", {email: email});
-	    				this.$refs.email.value = "";
-	    			}
-	    		}).catch((error) => {
-	    			this.shareError = error;
-	    			this.sharing = false;
-	    		})
-	  		}
-	  	}
-	  }
-  )
+  computed: {
+  	...mapGetters('share', ['channel', 'invitations', 'accessList']),
+  	currentUserPermission() {
+  		return getPermission(this.user, this.channel);
+  	},
+  	permissions() {
+  		let userRank = _.findWhere(PermissionRanks, { shareMode: this.currentUserPermission });
+  		return _.chain(PermissionRanks)
+				.filter((permission) => { return permission.field && permission.rank <= userRank.rank; })
+				.sortBy('rank')
+				.pluck('shareMode')
+				.value();
+  	},
+  	user() {
+  		return State.current_user.toJSON();
+  	}
+  },
+  methods: {
+  	...mapActions('share', ['sendInvitation']),
+  	submitEmail() {
+  		this.attemptSendInvitation();
+  	},
+  	promptUpgrade() {
+  		dialog(this.$tr('upgradeHeader'), this.$tr('upgradePrompt'), {
+  			[this.$tr('cancelButton')]: () => {},
+  			[this.$tr('grantButton')]: () => {
+  				this.attemptSendInvitation({upgrade: true});
+  			}
+  		});
+  	},
+  	promptReinvite() {
+  		dialog(this.$tr('resendHeader'), this.$tr('resendPrompt'), {
+  			[this.$tr('cancelButton')]: () => {},
+  			[this.$tr('sendButton')]: () => {
+  				this.attemptSendInvitation({reinvite: true});
+  			}
+  		});
+  	},
+  	attemptSendInvitation(data) {
+  		let email = this.$refs.email.value
+  		if(email.length) {
+  			this.shareError = "";
+  			let payload = {
+    			email: email,
+    			share_mode: this.$refs.share_mode.value,
+    			...data
+    		}
+    		this.sharing = true;
+    		this.sendInvitation(payload).then((data) => {
+    			this.sharing = false;
+    			if (data.prompt_to_upgrade) {
+    				this.promptUpgrade();
+    			} else if (data.reinvite) {
+    				this.promptReinvite();
+    			} else {
+    				this.shareSuccess = this.$tr("invitationSentMessage", {email: email});
+    				this.$refs.email.value = "";
+    			}
+    		}).catch((error) => {
+    			this.shareError = error;
+    			this.sharing = false;
+    		})
+  		}
+  	}
+  }
 }
 
 </script>

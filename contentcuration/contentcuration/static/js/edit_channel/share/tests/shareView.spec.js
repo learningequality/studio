@@ -1,11 +1,11 @@
 import { shallowMount } from '@vue/test-utils';
-import ShareView from './../../views/ShareView.vue';
-import { localStore, mockFunctions, currentUser } from './../data.js';
-import { Permissions, PermissionRanks } from './../../constants';
+import ShareView from './../views/ShareView.vue';
+import { localStore, mockFunctions, currentUser } from './data.js';
+import { Permissions, PermissionRanks } from './../constants';
 import _ from 'underscore';
 import State from 'edit_channel/state';
 const Models = require("edit_channel/models");
-import { getHighestPermission } from './../../utils';
+import { getHighestPermission } from './../utils';
 
 
 function makeWrapper() {

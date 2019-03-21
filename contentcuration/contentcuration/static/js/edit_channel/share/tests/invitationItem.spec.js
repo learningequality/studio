@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
-import InvitationItem from './../../views/InvitationItem.vue';
-import { localStore, mockFunctions } from './../data.js';
-import { Permissions } from './../../constants';
+import InvitationItem from './../views/InvitationItem.vue';
+import { localStore, mockFunctions } from './data.js';
+import { Permissions } from './../constants';
 import _ from 'underscore';
 
 function makeWrapper(share_mode) {

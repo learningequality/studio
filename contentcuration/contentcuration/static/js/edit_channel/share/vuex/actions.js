@@ -14,17 +14,17 @@ export function loadAccessList(context) {
   });
 }
 
-export function addEditor(context, user) {
+export function addEditor(context, userID) {
 	return new Promise(function (resolve, reject) {
 		$.ajax({
 			method: "POST",
 			data: JSON.stringify({
 				"channel_id": context.getters.channel.id,
-				"user_id": user.id
+				"user_id": userID
 			}),
 			url: window.Urls.make_editor(),
-			success: () => {
-				context.commit("ADD_USER", user)
+			success: (addedUser) => {
+				context.commit("ADD_USER", JSON.parse(addedUser));
 				resolve();
 			},
 			error: (error) => { reject(error.responseText); }
@@ -32,18 +32,18 @@ export function addEditor(context, user) {
 	});
 }
 
-export function removeUser(context, user) {
+export function removeUser(context, userID) {
 	return new Promise(function (resolve, reject) {
 
 		$.ajax({
 			method: "POST",
 			data: JSON.stringify({
 				"channel_id": context.getters.channel.id,
-				"user_id": user.id
+				"user_id": userID
 			}),
 			url: window.Urls.remove_editor(),
 			success: () => {
-				context.commit("REMOVE_USER", user.id)
+				context.commit("REMOVE_USER", userID)
 				resolve();
 			},
 			error: (error) => { reject(error.responseText); }
@@ -91,11 +91,11 @@ export function sendInvitation(context, payload) {
   });
 }
 
-export function deleteInvitation(context, invitation) {
+export function deleteInvitation(context, invitationID) {
 	return new Promise((resolve, reject) => {
-		new Models.InvitationModel(invitation).destroy({
+		new Models.InvitationModel({id: invitationID}).destroy({
 			success: () => {
-				context.commit('REMOVE_INVITATION', invitation.id);
+				context.commit('REMOVE_INVITATION', invitationID);
 				resolve();
 			},
 			error: reject

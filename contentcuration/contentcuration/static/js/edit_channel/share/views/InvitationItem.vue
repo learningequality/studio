@@ -35,37 +35,35 @@ export default {
 	  ShareItem,
 	},
   computed: mapGetters('share', ['recentlySent']),
-  methods: Object.assign(
-  	mapActions('share', ['sendInvitation', 'deleteInvitation']),
-	  {
-	  	reinviteUser() {
-        let messageArgs = {name: this.userName.trim(), email: this.model.email};
-       	dialog(this.$tr('resendHeader'), this.$tr('resendPrompt', messageArgs), {
+  methods: {
+    ...mapActions('share', ['sendInvitation', 'deleteInvitation']),
+    reinviteUser() {
+      let messageArgs = {name: this.userName.trim(), email: this.model.email};
+      dialog(this.$tr('resendHeader'), this.$tr('resendPrompt', messageArgs), {
+        [this.$tr('cancelButton')]: () => {},
+        [this.$tr('sendButton')]: () => {
+          this.handleSendInvitation();
+        },
+      }, null);
+    },
+    handleSendInvitation() {
+      let payload = {
+        email: this.model.email,
+        share_mode: this.model.share_mode,
+        reinvite: true
+      }
+      this.sendInvitation(payload);
+    },
+    uninviteUser() {
+      let messageArgs = {name: this.userName.trim(), email: this.model.email};
+      dialog(this.$tr("uninvitingHeader"), this.$tr("uninvitingPrompt", messageArgs), {
           [this.$tr('cancelButton')]: () => {},
-          [this.$tr('sendButton')]: () => {
-        		this.handleSendInvitation();
+          [this.$tr('uninviteButton')]: () => {
+            this.deleteInvitation(this.model.id);
           },
-        }, null);
-	  	},
-      handleSendInvitation() {
-        let payload = {
-          email: this.model.email,
-          share_mode: this.model.share_mode,
-          reinvite: true
-        }
-        this.sendInvitation(payload);
-      },
-	  	uninviteUser() {
-        let messageArgs = {name: this.userName.trim(), email: this.model.email};
-        dialog(this.$tr("uninvitingHeader"), this.$tr("uninvitingPrompt", messageArgs), {
-            [this.$tr('cancelButton')]: () => {},
-            [this.$tr('uninviteButton')]: () => {
-            	this.deleteInvitation(this.model);
-            },
-        }, null);
-	  	}
-	  }
-  )
+      }, null);
+    }
+  }
 }
 
 </script>

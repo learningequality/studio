@@ -40,14 +40,12 @@ export default {
   		this.loading = false;
   	});
   },
-  computed: Object.assign(
-    mapGetters('share', ['accessList']),
-    {
-      currentUser() {
-        return State.current_user.toJSON();
-      }
+  computed: {
+    ...mapGetters('share', ['accessList']),
+    currentUser() {
+      return State.current_user.toJSON();
     }
-  ),
+  },
   methods: mapActions('share', ['loadAccessList'])
 }
 

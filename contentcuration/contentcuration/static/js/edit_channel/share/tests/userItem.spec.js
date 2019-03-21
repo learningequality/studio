@@ -1,11 +1,11 @@
 import { mount } from '@vue/test-utils';
-import UserItem from './../../views/UserItem.vue';
-import { localStore, mockFunctions, Users, currentUser, defaultChannel } from './../data.js';
-import { Permissions } from './../../constants';
+import UserItem from './../views/UserItem.vue';
+import { localStore, mockFunctions, Users, currentUser, defaultChannel } from './data.js';
+import { Permissions } from './../constants';
 import _ from 'underscore';
 import State from 'edit_channel/state';
 const Models = require("edit_channel/models");
-import { getHighestPermission } from './../../utils';
+import { getHighestPermission } from './../utils';
 
 
 function makeWrapper(user) {
