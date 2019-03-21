@@ -55,6 +55,9 @@ def get_secret(secret_name, secret_storage=None):
             or SECRET_STORAGE_GCP_KMS_DEFAULT_LOCATION
         )
 
+        if not project_id:
+            raise KeyError("The env variable SECRET_STORAGE_GCP_PROJECT_ID was not defined!")
+
         ciphertext = get_encrypted_secret(secret_name, project_id, env)
 
         return decrypt_secret(ciphertext, project_id, kms_location, env, secret_name)
