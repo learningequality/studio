@@ -2,7 +2,6 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 import logging
-from uuid import uuid4
 
 from celery.decorators import task
 from celery.utils.log import get_task_logger
@@ -11,7 +10,6 @@ from django.core.mail import EmailMessage
 from django.core.management import call_command
 from django.db import transaction
 from django.template.loader import render_to_string
-from rest_framework.renderers import JSONRenderer
 
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
@@ -27,7 +25,7 @@ logger = get_task_logger(__name__)
 
 # if we're running tests, import our test tasks as well
 if settings.RUNNING_TESTS:
-    from .tasks_test import *
+    from .tasks_test import error_test_task, progress_test_task, test_task
 
 # TODO: Try to get debugger working for celery workers
 # Attach Python Cloud Debugger
@@ -106,6 +104,12 @@ def deletetree_task(tree_id):
     ContentNode.objects.filter(tree_id=tree_id).delete()
 
 
+@task(name='getnodedetails_task')
+def getnodedetails_task(node_id):
+    node = ContentNode.objects.get(pk=node_id)
+    return node.get_details()
+
+
 type_mapping = {
     'duplicate-nodes': {'task': duplicate_nodes_task, 'progress_tracking': True}
 }
@@ -141,7 +145,7 @@ def create_async_task(task_name, task_options, task_args=None):
     :param task_args: A dictionary of keyword arguments to be passed down to the task, must be JSON serializable.
     :return: a tuple of the Task object and a dictionary containing information about the created task.
     """
-    if not task_name in type_mapping:
+    if task_name not in type_mapping:
         raise KeyError("Need to define task in type_mapping first.")
     metadata = {}
     if 'metadata' in task_options:

@@ -68,7 +68,6 @@ from contentcuration.serializers import CurrentUserSerializer
 from contentcuration.serializers import UserChannelListSerializer
 from contentcuration.utils.channelcache import ChannelCacher
 from contentcuration.utils.messages import get_messages
-from contentcuration.views.nodes import get_node_details
 
 reload(sys)
 sys.setdefaultencoding('UTF8')
@@ -141,7 +140,7 @@ def get_channel_kind_count(request, channel_id):
         raise SuspiciousOperation("You are not authorized to access this endpoint")
 
     channel = Channel.objects.get(pk=channel_id)
-    data = get_node_details(channel.main_tree)
+    data = channel.main_tree.get_details()
 
     return HttpResponse(json.dumps({
         "counts": data['kind_count'],

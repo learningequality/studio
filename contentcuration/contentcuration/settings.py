@@ -280,6 +280,9 @@ ACCOUNT_ACTIVATION_DAYS = 7
 REGISTRATION_OPEN = True
 SITE_ID = 1
 
+# Used for serializing datetime objects.
+DATE_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
+
 # EMAIL_HOST = 'localhost'
 # EMAIL_PORT = 8000
 # EMAIL_HOST_USER = ''

@@ -7,10 +7,12 @@ from mixer.backend.django import mixer
 
 from .base import BaseAPITestCase
 from .base import StudioTestCase
+from .testdata import base64encoding
 from .testdata import channel
 from .testdata import node
 from contentcuration.models import Channel
 from contentcuration.models import ChannelSet
+from contentcuration.models import generate_storage_url
 from contentcuration.models import SecretToken
 
 
@@ -330,3 +332,21 @@ class ChannelMetadataSaveTestCase(StudioTestCase):
 
             c.main_tree.refresh_from_db()
             self.assertFalse(c.main_tree.changed)
+
+
+class ChannelGettersTestCase(BaseAPITestCase):
+    def test_get_channel_thumbnail_default(self):
+        default_thumbnail = '/static/img/kolibri_placeholder.png'
+        thumbnail = self.channel.get_thumbnail()
+        assert thumbnail == default_thumbnail
+
+    def test_get_channel_thumbnail_base64(self):
+        self.channel.thumbnail_encoding = {"base64": base64encoding()}
+
+        assert self.channel.get_thumbnail() == base64encoding()
+
+    def test_get_channel_thumbnail_file(self):
+        thumbnail_url = '/path/to/thumbnail.png'
+        self.channel.thumbnail = thumbnail_url
+
+        assert self.channel.get_thumbnail() == generate_storage_url(thumbnail_url)
