@@ -269,9 +269,10 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     var has_files = is_individual && selected_items[0].model.get("files").some(function(f){
                       return Constants.FormatPresets.find(preset => preset.id === f.preset.name || preset.id === f.preset.id || preset.id === f.preset).display;
                     });
+    var is_topic = is_individual && selected_items[0].model.get("kind") === "topic";
     this.$("#metadata_details_btn").css("display", (selected_items.length) ? "inline-block" : "none");
     this.$("#metadata_preview_btn").css("display", (is_individual && has_files) ? "inline-block" : "none");
-    this.$("#metadata_prerequisites_btn").css("display", (is_individual && (has_files || is_exercise)) ? "inline-block" : "none");
+    this.$("#metadata_prerequisites_btn").css("display", (is_individual && !is_topic) ? "inline-block" : "none");
     this.$("#metadata_questions_btn").css("display", (is_exercise) ? "inline-block" : "none");
     if(!is_individual){
       this.$("a[href='#metadata_edit_details']").tab('show');
