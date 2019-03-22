@@ -1,14 +1,21 @@
 <template>
-
   <div>
-    <input type="text" ref="tokenText" :value="token" :title="$tr('copyPrompt')" size="15" readonly/>
+    <input
+      ref="tokenText"
+      type="text"
+      :value="token"
+      :title="$tr('copyPrompt')"
+      size="15"
+      readonly
+    >
     <a
       class="material-icons copy-id-btn"
       :title="$tr('copyPrompt')"
       @click.stop="copyToken"
-    >{{copyIcon}}</a>
+    >
+      {{ copyIcon }}
+    </a>
   </div>
-
 </template>
 
 <script>
@@ -24,16 +31,16 @@
     $trs: {
       copyPrompt: 'Copy token to import channel into Kolibri',
     },
-    data() {
-      return {
-        copyStatus: copyStatusCodes.IDLE,
-      };
-    },
     props: {
       token: {
         type: String,
         required: true,
       },
+    },
+    data() {
+      return {
+        copyStatus: copyStatusCodes.IDLE,
+      };
     },
     computed: {
       copyIcon() {
@@ -73,22 +80,22 @@
   .copy-id-btn {
     padding: 3px;
     font-size: 16pt;
-    vertical-align: sub;
     color: @gray-500;
+    vertical-align: sub;
     &:hover {
       color: @blue-500;
     }
   }
   input {
     display: inline-block;
-    padding: 2px;
-    background-color: @gray-300;
-    font-size: 11pt;
-    border: none;
-    font-weight: bold;
     width: 120px;
-    text-align: center;
+    padding: 2px;
+    font-size: 11pt;
+    font-weight: bold;
     color: @gray-700;
+    text-align: center;
+    background-color: @gray-300;
+    border: none;
   }
 
 </style>

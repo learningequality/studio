@@ -1,9 +1,9 @@
 import { shallowMount } from '@vue/test-utils';
+import _ from 'underscore';
 import ChannelListPage from './../views/ChannelListPage.vue';
 import ChannelDetailsPanel from './../views/ChannelDetailsPanel.vue';
 import { ListTypes } from './../constants';
 import { localStore } from './data';
-import _ from 'underscore';
 
 function makeWrapper(props = {}) {
   return shallowMount(ChannelListPage, {

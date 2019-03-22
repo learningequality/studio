@@ -1,8 +1,8 @@
 // TODO: REMOVE BACKBONE
 
 import Vue from 'vue';
-import ChannelSetModalComponent from './views/ChannelSetModal.vue';
 import _ from 'underscore';
+import ChannelSetModalComponent from './views/ChannelSetModal.vue';
 
 var BaseViews = require('../views');
 var dialog = require('../utils/dialog');

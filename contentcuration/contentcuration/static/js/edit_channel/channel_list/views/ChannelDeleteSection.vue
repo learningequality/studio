@@ -1,11 +1,11 @@
 <template>
-
   <div>
     <h4>{{ $tr('deleteTitle') }}</h4>
     <p>{{ $tr('deletePrompt') }}</p>
-    <a class="delete-channel" @click="handleDeleteChannel">{{ $tr('deleteChannel') }}</a>
+    <a class="delete-channel" @click="handleDeleteChannel">
+      {{ $tr('deleteChannel') }}
+    </a>
   </div>
-
 </template>
 
 
@@ -55,18 +55,18 @@
   @import '../../../../less/channel_list.less';
 
   h4 {
+    margin: 2px 0;
     font-size: 10pt;
-    color: @gray-800;
-    margin: 2px 0px;
     font-weight: bold;
+    color: @gray-800;
   }
   p {
     margin-top: 5px;
     margin-bottom: 20px;
   }
   a {
-    color: @delete-color;
     font-weight: bold;
+    color: @delete-color;
     text-transform: uppercase;
   }
 

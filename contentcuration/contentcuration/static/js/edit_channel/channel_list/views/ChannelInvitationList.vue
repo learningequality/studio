@@ -1,5 +1,4 @@
 <template>
-
   <div class="invitation-list">
     <div v-if="loading" class="default-item">
       {{ $tr('loading') }}
@@ -13,7 +12,6 @@
       />
     </div>
   </div>
-
 </template>
 
 <script>
@@ -27,6 +25,9 @@
     $trs: {
       loading: 'Checking for invitations...',
     },
+    components: {
+      ChannelInvitationItem,
+    },
     data() {
       return {
         loading: true,
@@ -36,9 +37,6 @@
       this.loadChannelInvitationList().then(() => {
         this.loading = false;
       });
-    },
-    components: {
-      ChannelInvitationItem,
     },
     computed: mapGetters('channel_list', ['invitations']),
     methods: {

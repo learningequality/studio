@@ -1,9 +1,9 @@
 import { shallowMount } from '@vue/test-utils';
-import ChannelMetadataSection from './../views/ChannelMetadataSection.vue';
 import _ from 'underscore';
+import State from 'edit_channel/state';
+import ChannelMetadataSection from './../views/ChannelMetadataSection.vue';
 import { localStore, mockFunctions } from './data.js';
 import { ListTypes } from './../constants';
-import State from 'edit_channel/state';
 
 State.current_user = { id: 'testuser' };
 

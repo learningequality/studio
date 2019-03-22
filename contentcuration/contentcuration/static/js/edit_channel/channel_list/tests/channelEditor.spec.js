@@ -1,6 +1,7 @@
 import { mount } from '@vue/test-utils';
 import ChannelEditor from './../views/ChannelEditor.vue';
 import { localStore, mockFunctions } from './data.js';
+
 require('handlebars/helpers'); // Needed for image uploader
 
 let testChannel = {

@@ -1,7 +1,7 @@
 import { shallowMount } from '@vue/test-utils';
+import _ from 'underscore';
 import ChannelInvitationList from './../views/ChannelInvitationList.vue';
 import ChannelInvitationItem from './../views/ChannelInvitationItem.vue';
-import _ from 'underscore';
 import { Invitations, localStore, mockFunctions } from './data';
 
 function makeWrapper() {

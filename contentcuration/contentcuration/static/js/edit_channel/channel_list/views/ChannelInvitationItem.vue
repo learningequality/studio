@@ -1,36 +1,44 @@
 <template>
-
   <div v-if="invitation">
     <!-- User accepted or declined invitation -->
     <div v-if="accepted || declined" class="invitation" :class="{'accepted': accepted, 'declined': declined}">
-      <div class="invite-text">{{(accepted)? acceptedText : declinedText}}</div>
-      <div class="remove material-icons" @click="removeInvitation(invitationID)">clear</div>
+      <div class="invite-text">
+        {{ (accepted)? acceptedText : declinedText }}
+      </div>
+      <div class="remove material-icons" @click="removeInvitation(invitationID)">
+        clear
+      </div>
     </div>
 
     <!-- Invitation is pending -->
     <div v-else class="invitation">
-      <div class="invite-text">{{invitationText}}</div>
+      <div class="invite-text">
+        {{ invitationText }}
+      </div>
       <div class="invite-options">
         <a class="accept-invitation" @click="handleAccept">
-          <span class="material-icons">check</span>
+          <span class="material-icons">
+            check
+          </span>
           {{ $tr('accept') }}
         </a>
         <a class="decline-invitation" @click="handleDecline">
-          <span class="material-icons">clear</span>
+          <span class="material-icons">
+            clear
+          </span>
           {{ $tr('decline') }}
         </a>
       </div>
     </div>
   </div>
-
 </template>
 
 <script>
 
   import _ from 'underscore';
   import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
-  import { ListTypes } from '../constants';
   import dialog from 'edit_channel/utils/dialog';
+  import { ListTypes } from '../constants';
 
   export default {
     name: 'ChannelInvitationItem',
@@ -150,29 +158,30 @@
 
   .invitation {
     .channel-list-width;
+    display: flex;
+    padding: 8px 15px;
+
     margin-top: 10px;
     margin-bottom: 10px;
-    font-size: 12pt;
     margin-bottom: 15px;
-    padding: 8px 15px;
-    background-color: @blue-100;
+    font-size: 12pt;
     color: @blue-900;
+    background-color: @blue-100;
     border-radius: 5px;
-    display: flex;
 
     &.accepted {
-      background-color: @accepted-bg-color;
       color: @accepted-text-color;
+      background-color: @accepted-bg-color;
     }
     &.declined {
-      background-color: @declined-bg-color;
       color: @declined-text-color;
+      background-color: @declined-bg-color;
     }
 
     .invite-text {
-      padding: 5px;
-      flex-direction: column;
       flex: 2;
+      flex-direction: column;
+      padding: 5px;
     }
 
     .remove {
@@ -184,11 +193,12 @@
       padding-top: 5px;
       a {
         .action-button;
-        background-color: white;
+        margin: 0 5px;
         font-weight: bold;
-        border: 2px solid white;
         text-transform: uppercase;
-        margin: 0px 5px;
+
+        background-color: white;
+        border: 2px solid white;
         &.accept-invitation {
           color: @blue-500;
           &:hover {
@@ -202,8 +212,8 @@
           }
         }
         span {
-          font-weight: bold;
           font-size: 16pt;
+          font-weight: bold;
           vertical-align: sub;
         }
       }

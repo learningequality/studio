@@ -1,11 +1,9 @@
 <template>
-
-    <Star
-      :starred="isStarred"
-      @starred="addStar(channelID)"
-      @unstarred="removeStar(channelID)"
-    />
-
+  <Star
+    :starred="isStarred"
+    @starred="addStar(channelID)"
+    @unstarred="removeStar(channelID)"
+  />
 </template>
 
 <script>

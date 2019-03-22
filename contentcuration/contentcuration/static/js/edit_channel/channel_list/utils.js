@@ -1,7 +1,7 @@
 import Models from 'edit_channel/models';
-import { ListTypes } from './constants';
 import State from 'edit_channel/state';
 import _ from 'underscore';
+import { ListTypes } from './constants';
 
 const ListValues = _.values(ListTypes);
 export function prepChannel(channel) {

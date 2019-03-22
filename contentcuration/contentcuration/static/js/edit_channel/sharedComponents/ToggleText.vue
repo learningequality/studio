@@ -1,8 +1,14 @@
 <template>
   <div class="toggle-text">
-      <div>{{trimmedText.substring(0, splitIndex)}}</div>
-      <div class="overflow" :class="{expanded: expanded}">{{overflowText}}</div>
-      <p><a v-if="overflowText" class="toggler" @click.stop="toggle">{{togglerText}}</a></p>
+    <div>{{ trimmedText.substring(0, splitIndex) }}</div>
+    <div class="overflow" :class="{expanded: expanded}">
+      {{ overflowText }}
+    </div>
+    <p>
+      <a v-if="overflowText" class="toggler" @click.stop="toggle">
+        {{ togglerText }}
+      </a>
+    </p>
   </div>
 </template>
 
@@ -76,12 +82,13 @@
   .toggle-text {
     div {
       .wordwrap;
-      margin: 0px;
       display: inline;
+
+      margin: 0;
     }
     .overflow {
       display: block;
-      max-height: 0px;
+      max-height: 0;
       overflow-y: hidden;
       -webkit-transition: max-height 0.4s linear;
       -moz-transition: max-height 0.4s linear;
@@ -92,9 +99,9 @@
       }
     }
     .toggler {
-      text-decoration: none;
-      color: @gray-700;
       font-weight: bold;
+      color: @gray-700;
+      text-decoration: none;
       &:hover {
         color: @blue-500;
       }

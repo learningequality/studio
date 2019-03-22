@@ -4,7 +4,7 @@
       <!-- Channel list area -->
       <div id="channel-list-wrapper" :class="{'showPanel': !!activeChannel}">
         <div id="channel-list-area">
-          <ChannelInvitationList @setActiveList="setActiveList"/>
+          <ChannelInvitationList @setActiveList="setActiveList" />
 
           <ul id="manage-channel-nav">
             <li
@@ -12,12 +12,12 @@
               :class="{active: activeList === listType}"
               @click="activeList = listType"
             >
-              <span v-if="listType === 'STARRED'"/>
+              <span v-if="listType === 'STARRED'"></span>
               {{ $tr(listType) }}
             </li>
           </ul>
           <div v-for="listType in lists" v-show="activeList === listType">
-             <ChannelSetList
+            <ChannelSetList
               v-if="listType === 'CHANNEL_SETS'"
               :key="listType"
             />
@@ -31,11 +31,9 @@
       </div>
 
       <!-- Channel details panel -->
-      <ChannelDetailsPanel v-if="activeChannel"/>
+      <ChannelDetailsPanel v-if="activeChannel" />
     </div>
-
   </div>
-
 </template>
 
 
@@ -107,9 +105,9 @@
   @import '../../../../less/channel_list.less';
 
   #channel-list-wrapper {
+    width: 100vw;
     padding: 10px;
     overflow-y: auto;
-    width: 100vw;
     transition: width 500ms;
     &.showPanel {
       width: calc(~'100vw' - @channel-preview-width);
@@ -117,15 +115,16 @@
   }
   #manage-channel-nav {
     .channel-list-width;
-    list-style-type: none;
     margin-top: 50px;
     margin-bottom: 10px;
+
+    list-style-type: none;
     li {
+      display: inline-block;
+      padding: 10px 25px;
       font-size: 14pt;
       color: @body-font-color;
-      display: inline-block;
       cursor: pointer;
-      padding: 10px 25px;
       border-bottom: 3px solid transparent;
       &:hover {
         border-color: @gray-300;
@@ -136,9 +135,10 @@
       }
       span::before {
         .material-icons;
-        content: 'star';
         font-size: 16pt;
         vertical-align: sub;
+
+        content: 'star';
       }
     }
   }

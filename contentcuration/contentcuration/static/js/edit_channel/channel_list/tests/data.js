@@ -1,9 +1,11 @@
-import { ListTypes } from '../constants';
 import Vue from 'vue';
+import { ListTypes } from '../constants';
+
 var mutations = require('edit_channel/channel_list/vuex/mutations');
 var getters = require('edit_channel/channel_list/vuex/getters');
 var actions = require('edit_channel/channel_list/vuex/actions');
 const Vuex = require('vuex');
+
 Vue.use(Vuex);
 
 export const Channels = [

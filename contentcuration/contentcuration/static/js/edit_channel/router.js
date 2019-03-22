@@ -1,9 +1,10 @@
+import Vue from 'vue';
+
+import ChannelListPage from 'edit_channel/channel_list/views/ChannelListPage.vue';
+
 var _ = require('underscore');
 var Backbone = require('backbone');
 var State = require('./state');
-
-import Vue from 'vue';
-import ChannelListPage from 'edit_channel/channel_list/views/ChannelListPage.vue';
 
 //var saveDispatcher = _.clone(Backbone.Events);
 var URL_CHAR_LIMIT = 7;
