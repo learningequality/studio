@@ -52,7 +52,7 @@
       loadDetails() {
         this.loading = true;
         this.loadNodeDetails(this.nodeID).then(detailedNode => {
-          let detailsView = new DetailsView({
+          new DetailsView({
             model: detailedNode,
             el: this.$refs.lookinside,
             channel: this.channel,

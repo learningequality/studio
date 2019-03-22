@@ -9,6 +9,7 @@
           <ul id="manage-channel-nav">
             <li
               v-for="listType in lists"
+              :key="listType.id"
               :class="{active: activeList === listType}"
               @click="activeList = listType"
             >
@@ -16,7 +17,11 @@
               {{ $tr(listType) }}
             </li>
           </ul>
-          <div v-for="listType in lists" v-show="activeList === listType">
+          <div
+            v-for="listType in lists"
+            v-show="activeList === listType"
+            :key="listType.id"
+          >
             <ChannelSetList
               v-if="listType === 'CHANNEL_SETS'"
               :key="listType"
@@ -115,9 +120,9 @@
   }
   #manage-channel-nav {
     .channel-list-width;
+
     margin-top: 50px;
     margin-bottom: 10px;
-
     list-style-type: none;
     li {
       display: inline-block;
@@ -135,9 +140,9 @@
       }
       span::before {
         .material-icons;
+
         font-size: 16pt;
         vertical-align: sub;
-
         content: 'star';
       }
     }

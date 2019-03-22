@@ -1,5 +1,4 @@
 import { mount } from '@vue/test-utils';
-import _ from 'underscore';
 import ChannelInvitationItem from './../views/ChannelInvitationItem.vue';
 import { localStore, mockFunctions } from './data.js';
 

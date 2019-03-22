@@ -95,7 +95,7 @@
     color: @gray-700;
     text-align: center;
     background-color: @gray-300;
-    border: none;
+    border: 0;
   }
 
 </style>

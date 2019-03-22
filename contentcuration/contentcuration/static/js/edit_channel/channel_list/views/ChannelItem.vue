@@ -1,6 +1,13 @@
 <template>
-  <div :id="channelID" class="channel-item" :class="{optionHighlighted: optionHighlighted, active: isSelected}">
-    <div class="channel-container-wrapper" :title="$tr('openChannelTitle', {'channelName': channel.name})" @click="openChannel">
+  <div :id="channelID"
+    class="channel-item"
+    :class="{optionHighlighted: optionHighlighted, active: isSelected}"
+  >
+    <div
+      class="channel-container-wrapper"
+      :title="$tr('openChannelTitle', {'channelName': channel.name})"
+      @click="openChannel"
+    >
       <div class="profile">
         <img class="channel-pic" :alt="channel.name" :src="picture">
       </div>
@@ -33,7 +40,11 @@
       </div>
       <div class="updated_time">
         <!-- TODO: change to formatRelative -->
-        {{ $tr('lastUpdated', {'updated': $formatDate(channel.modified, {day:'numeric', month:'short', 'year':'numeric'})}) }}
+        {{ $tr('lastUpdated',
+          {'updated': $formatDate(channel.modified,
+            {day:'numeric', month:'short', 'year':'numeric'})
+          })
+        }}
       </div>
     </div>
     <div class="is-selected">

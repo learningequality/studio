@@ -5,7 +5,7 @@ import ChannelDetailsPanel from './../views/ChannelDetailsPanel.vue';
 import { ListTypes } from './../constants';
 import { localStore } from './data';
 
-function makeWrapper(props = {}) {
+function makeWrapper() {
   return shallowMount(ChannelListPage, {
     store: localStore,
   });

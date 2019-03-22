@@ -1,5 +1,4 @@
 import { shallowMount } from '@vue/test-utils';
-import _ from 'underscore';
 import ChannelInvitationList from './../views/ChannelInvitationList.vue';
 import ChannelInvitationItem from './../views/ChannelInvitationItem.vue';
 import { Invitations, localStore, mockFunctions } from './data';
@@ -12,7 +11,6 @@ function makeWrapper() {
 
 describe('channelInvitationList', () => {
   it('loadChannelInvitationList should be called', () => {
-    let listWrapper = makeWrapper();
     expect(mockFunctions.loadChannelInvitationList).toHaveBeenCalled();
   });
 

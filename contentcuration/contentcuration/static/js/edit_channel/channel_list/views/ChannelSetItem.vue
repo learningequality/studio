@@ -1,5 +1,9 @@
 <template>
-  <div class="channel-set-item" :title="channelSet.name" :class="{optionHighlighted: optionHighlighted}">
+  <div
+    class="channel-set-item"
+    :title="channelSet.name"
+    :class="{optionHighlighted: optionHighlighted}"
+  >
     <div class="channel-container-wrapper" @click="openChannelSet">
       <div class="profile">
         <span class="material-icons">
@@ -90,7 +94,7 @@
         );
       },
       openChannelSet() {
-        let channelSetView = new ChannelSetModalView({
+        new ChannelSetModalView({
           modal: true,
           isNew: false,
           model: getChannelSetModel(this.channelSet),

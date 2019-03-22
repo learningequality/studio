@@ -2,7 +2,7 @@ import { shallowMount } from '@vue/test-utils';
 import ChannelSetItem from './../views/ChannelSetItem.vue';
 import { localStore, mockFunctions } from './data.js';
 
-function makeWrapper(props = {}) {
+function makeWrapper() {
   let channelSet = {
     id: 'channel-set-id',
     name: 'test title',

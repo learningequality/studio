@@ -6,7 +6,12 @@
           info
         </span> {{ $tr('aboutChannelSets') }}
       </a>
-      <a id="new-set" class="action-button" :title="$tr('addChannelSetTitle')" @click="newChannelSet">
+      <a
+        id="new-set"
+        class="action-button"
+        :title="$tr('addChannelSetTitle')"
+        @click="newChannelSet"
+      >
         <span class="material-icons">
           add
         </span> {{ $tr('addChannelSetButton') }}
@@ -71,7 +76,7 @@
         new ChannelSetInformationModalView({});
       },
       newChannelSet() {
-        let channelSetView = new ChannelSetModalView({
+        new ChannelSetModalView({
           modal: true,
           isNew: true,
           model: getChannelSetModel({}),

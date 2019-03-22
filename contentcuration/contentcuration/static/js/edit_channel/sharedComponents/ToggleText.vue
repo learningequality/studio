@@ -53,7 +53,8 @@
         });
         let newSplitIndex = index + start;
 
-        // If there are only a few characters left, just return the whole text. Otherwise, return new index
+        // If there are only a few characters left, just return the whole text...
+        // Otherwise, return new index.
         return this.trimmedText.length - newSplitIndex <= bufferRange
           ? this.trimmedText.length
           : newSplitIndex;
@@ -82,17 +83,14 @@
   .toggle-text {
     div {
       .wordwrap;
-      display: inline;
 
+      display: inline;
       margin: 0;
     }
     .overflow {
       display: block;
       max-height: 0;
       overflow-y: hidden;
-      -webkit-transition: max-height 0.4s linear;
-      -moz-transition: max-height 0.4s linear;
-      -o-transition: max-height 0.4s linear;
       transition: max-height 0.4s linear;
       &.expanded {
         max-height: 100vh;

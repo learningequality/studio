@@ -1,7 +1,11 @@
 <template>
   <div v-if="invitation">
     <!-- User accepted or declined invitation -->
-    <div v-if="accepted || declined" class="invitation" :class="{'accepted': accepted, 'declined': declined}">
+    <div
+      v-if="accepted || declined"
+      class="invitation"
+      :class="{'accepted': accepted, 'declined': declined}"
+    >
       <div class="invite-text">
         {{ (accepted)? acceptedText : declinedText }}
       </div>
@@ -35,8 +39,7 @@
 
 <script>
 
-  import _ from 'underscore';
-  import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
+  import { mapActions, mapGetters, mapMutations } from 'vuex';
   import dialog from 'edit_channel/utils/dialog';
   import { ListTypes } from '../constants';
 
@@ -117,7 +120,7 @@
             this.accepted = true;
           })
           .catch(error => {
-            console.error(error);
+            console.error(error); // eslint-disable-line no-console
             dialog.alert(this.$tr('invitationError'), error.responseText || error);
           });
       },
@@ -133,7 +136,7 @@
                   this.declined = true;
                 })
                 .catch(error => {
-                  console.error(error);
+                  console.error(error); // eslint-disable-line no-console
                   dialog.alert(this.$tr('invitationError'), error);
                 });
             },
@@ -158,11 +161,10 @@
 
   .invitation {
     .channel-list-width;
+
     display: flex;
     padding: 8px 15px;
-
     margin-top: 10px;
-    margin-bottom: 10px;
     margin-bottom: 15px;
     font-size: 12pt;
     color: @blue-900;
@@ -193,10 +195,10 @@
       padding-top: 5px;
       a {
         .action-button;
+
         margin: 0 5px;
         font-weight: bold;
         text-transform: uppercase;
-
         background-color: white;
         border: 2px solid white;
         &.accept-invitation {
