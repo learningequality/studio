@@ -1,5 +1,4 @@
 <template>
-
   <div>
     <!-- Title/Description metadata fields -->
     <h4>
@@ -86,7 +85,6 @@
       </button>
     </div>
   </div>
-
 </template>
 
 

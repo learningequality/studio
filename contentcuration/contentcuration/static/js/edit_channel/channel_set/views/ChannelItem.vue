@@ -1,5 +1,4 @@
 <template>
-
   <div
     class="channel-set-channel"
     :class="{selectedChannel: isSelected, unpublishedChannel: !channel.published}"
@@ -42,7 +41,6 @@
       </div>
     </div>
   </div>
-
 </template>
 
 

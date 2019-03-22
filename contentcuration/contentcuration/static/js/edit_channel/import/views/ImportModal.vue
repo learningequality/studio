@@ -1,5 +1,4 @@
 <template>
-
   <div ref="topmodal" class="modal fade" tabindex="-1">
     <div class="modal-dialog">
       <div id="import-modal-content" class="modal-content modal-dialog-default">
@@ -21,7 +20,6 @@
       </div>
     </div>
   </div>
-
 </template>
 
 

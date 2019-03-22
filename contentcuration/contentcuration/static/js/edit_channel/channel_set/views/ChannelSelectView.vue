@@ -1,5 +1,4 @@
 <template>
-
   <div>
     <div id="back-button" class="container-fluid">
       <button class="btn btn-default pull-right" @click="goToViewChannels">
@@ -18,7 +17,6 @@
       />
     </div>
   </div>
-
 </template>
 
 
