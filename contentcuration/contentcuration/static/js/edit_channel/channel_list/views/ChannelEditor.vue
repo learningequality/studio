@@ -1,14 +1,16 @@
 <template>
-
   <div class="channel-editor">
-    <div ref="channelthumbnail" class="channel-thumbnail">&nbsp;</div>
+    <div ref="channelthumbnail" class="channel-thumbnail">
+&nbsp;
+    </div>
 
 
-    <form @submit.prevent="submitChannel" class="channel-section">
-
+    <form class="channel-section" @submit.prevent="submitChannel">
       <!-- Previously used h4, which carries semantic meaning. Size is just style -->
       <label class="language-wrapper input-wrapper">
-        <span class="material-icons">language</span>
+        <span class="material-icons">
+          language
+        </span>
 
         <span class="sr-only">
           {{ $tr('channelLanguagePlaceholder') }}
@@ -16,8 +18,8 @@
 
         <select
           id="select-language"
-          :tabindex="1"
           v-model="language"
+          :tabindex="1"
           @blur="setLanguage(language)"
         >
           <option
@@ -35,7 +37,6 @@
           >
             {{ language.native_name }}
           </option>
-
         </select>
       </label>
 
@@ -45,25 +46,25 @@
           {{ $tr("channelName") }}
         </span>
         <span
+          v-if="nameError"
           role="alert"
           class="error-message"
-          v-if="nameError"
         >
           {{ nameError }}
         </span>
 
         <input
+          ref="firstTab"
+          v-model="name"
           :placeholder="$tr('channelNamePlaceholder')"
           :tabindex="0"
-          v-model="name"
-          @blur="setName(name)"
           type="text"
           dir="auto"
           maxlength="200"
-          ref="firstTab"
           class="channel-name"
           required
-        />
+          @blur="setName(name)"
+        >
       </label>
 
       <!-- Previously used h4, which carries semantic meaning. Size is just style -->
@@ -75,12 +76,12 @@
         <textarea
           v-model="description"
           :placeholder="$tr('channelDescriptionPlaceholder')"
-          @blur="setDescription(description)"
           class="channel-description"
           dir="auto"
           maxlength="400"
           :tabindex="2"
           rows="4"
+          @blur="setDescription(description)"
         >
         </textarea>
       </label>
@@ -89,9 +90,9 @@
         <!-- Tabindex necessary? -->
         <button
           type="reset"
-          @click="cancelEdit"
           class="cancel-edits"
           :tabindex="4"
+          @click="cancelEdit"
         >
           {{ $tr('cancel') }}
         </button>
@@ -105,11 +106,9 @@
         >
           {{ (isNew)? $tr('create') : $tr('save') }}
         </button>
-
       </div>
     </form>
   </div>
-
 </template>
 
 
@@ -141,6 +140,7 @@
       errorChannelSave: 'Error Saving Channel',
       saving: 'Saving...',
     },
+    mixins: [tabMixin],
     data() {
       return {
         saving: false,
@@ -152,7 +152,6 @@
         description: '',
       };
     },
-    mixins: [tabMixin],
     beforeMount() {
       // Only need this because we're using getters. Could go straight to $store.state in `data`
       this.language = this.channel.language;
@@ -270,10 +269,11 @@
 
   .channel-editor {
     .thumbnail-title-columns;
-    padding: 0px 20px 40px;
+
+    padding: 0 20px 40px;
     .channel-thumbnail {
-      margin-top: 35px;
       width: @channel-thumbnail-size;
+      margin-top: 35px;
       /deep/ .image_dropzone {
         width: @channel-thumbnail-size;
         img {
@@ -292,23 +292,23 @@
       }
 
       .language-wrapper {
-        font-size: 15pt;
-        text-align: right;
-        font-weight: bold;
         min-height: 25px;
+        font-size: 15pt;
+        font-weight: bold;
+        text-align: right;
         .material-icons {
+          margin-right: 5px;
+          font-size: 20pt;
           color: @blue-200;
           vertical-align: top;
-          font-size: 20pt;
-          margin-right: 5px;
         }
       }
 
       .input-label {
-        font-size: 10pt;
-        color: @gray-800;
-        font-weight: bold;
         width: 100%;
+        font-size: 10pt;
+        font-weight: bold;
+        color: @gray-800;
         &.required::after {
           color: @red-error-color;
           content: ' * ';
@@ -316,25 +316,26 @@
       }
 
       .error-message {
+        font-size: 8pt;
+        font-style: italic;
         font-weight: bold;
         color: @red-error-color;
-        font-style: italic;
-        font-size: 8pt;
       }
 
       input[type='text'],
       textarea {
         .input-form;
-        margin-bottom: 20px;
         width: 100%;
-        font-size: @larger-body-text;
         padding: 2px 0;
+
+        margin-bottom: 20px;
+        font-size: @larger-body-text;
         font-weight: normal;
       }
 
       textarea {
-        resize: none;
         height: auto;
+        resize: none;
       }
       select {
         width: 160px;

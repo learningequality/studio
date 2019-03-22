@@ -1,14 +1,16 @@
 <template>
   <div class="channel-details-top">
-    <img :alt="channel.name" :src="channel.thumbnail_url"/>
+    <img :alt="channel.name" :src="channel.thumbnail_url">
     <div class="channel-section">
       <div class="language-wrapper">
         <div v-if="language">
-          <span class="material-icons">language</span>
-          {{language.native_name}}
+          <span class="material-icons">
+            language
+          </span>
+          {{ language.native_name }}
         </div>
       </div>
-      <h3>{{channel.name}}</h3>
+      <h3>{{ channel.name }}</h3>
       <p class="channel-text">
         <span>
           {{ $tr('created', {'date': $formatDate(channel.created, {day:'numeric', month:'short', 'year':'numeric'})}) }}
@@ -18,12 +20,16 @@
         </span>
       </p>
       <hr>
-      <ToggleText :text="channel.description"/>
+      <ToggleText :text="channel.description" />
       <br>
-      <a :href="channelUrl" id="open-channel">{{ $tr("openChannel") }}</a>
-      <a v-if="!channel.ricecooker_version && canEdit" id="edit-details" @click="$emit('editChannel')">{{ $tr("editDetails") }}</a>
+      <a id="open-channel" :href="channelUrl">
+        {{ $tr("openChannel") }}
+      </a>
+      <a v-if="!channel.ricecooker_version && canEdit" id="edit-details" @click="$emit('editChannel')">
+        {{ $tr("editDetails") }}
+      </a>
 
-      <ChannelDownloadDropdown/>
+      <ChannelDownloadDropdown />
     </div>
   </div>
 </template>
@@ -79,30 +85,31 @@
 
   .channel-details-top {
     .thumbnail-title-columns;
-    padding: 0px 20px 40px 20px;
+
+    padding: 0 20px 40px;
     img {
       width: 130px;
       height: 130px;
-      object-fit: cover;
-      border: 2px solid @gray-500;
       margin-top: 35px;
+      border: 2px solid @gray-500;
+      object-fit: cover;
     }
     .channel-section {
       padding-left: 20px;
       .language-wrapper {
-        font-size: 15pt;
-        text-align: right;
-        font-weight: bold;
         min-height: 25px;
+        font-size: 15pt;
+        font-weight: bold;
+        text-align: right;
         span {
+          margin-right: 5px;
+          font-size: 20pt;
           color: @blue-200;
           vertical-align: top;
-          font-size: 20pt;
-          margin-right: 5px;
         }
       }
       h3 {
-        margin: 5px 0px;
+        margin: 5px 0;
         font-weight: bold;
       }
       .channel-text {
@@ -116,20 +123,22 @@
       }
       #open-channel {
         .action-button;
+
         padding: 5px 25px;
         margin-right: 15px;
         text-transform: uppercase;
       }
       #edit-details {
         .action-text;
+
         text-transform: uppercase;
       }
       .channel-download-wrapper {
+        display: block;
         margin-top: 30px;
         margin-bottom: -25px;
         font-size: 10pt;
         text-align: right;
-        display: block;
       }
     }
   }

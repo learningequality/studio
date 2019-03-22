@@ -1,16 +1,32 @@
 <template>
-
   <!-- TODO: Remove bootstrap -->
   <div class="btn-group channel-download-wrapper">
-    <a class="download-toggle dropdown-toggle" data-toggle="dropdown">{{ $tr("downloadReport") }}</a>
+    <a class="download-toggle dropdown-toggle" data-toggle="dropdown">
+      {{ $tr("downloadReport") }}
+    </a>
     <ul class="dropdown-menu dropdown-menu-right">
-      <li><a @click="downloadDetails('csv')">{{ $tr("downloadCSV") }}</a></li>
-      <li><a @click="downloadDetails('pdf')">{{ $tr("downloadPDF") }}</a></li>
-      <li><a @click="downloadDetails('detailedPdf')">{{ $tr("downloadDetailedPDF") }}</a></li>
-      <li><a @click="downloadDetails('ppt')">{{ $tr("downloadPPT") }}</a></li>
+      <li>
+        <a @click="downloadDetails('csv')">
+          {{ $tr("downloadCSV") }}
+        </a>
+      </li>
+      <li>
+        <a @click="downloadDetails('pdf')">
+          {{ $tr("downloadPDF") }}
+        </a>
+      </li>
+      <li>
+        <a @click="downloadDetails('detailedPdf')">
+          {{ $tr("downloadDetailedPDF") }}
+        </a>
+      </li>
+      <li>
+        <a @click="downloadDetails('ppt')">
+          {{ $tr("downloadPPT") }}
+        </a>
+      </li>
     </ul>
   </div>
-
 </template>
 
 
@@ -81,6 +97,7 @@
   .channel-download-wrapper {
     .download-toggle {
       .action-text;
+
       padding: 5px;
     }
     .dropdown-menu a {

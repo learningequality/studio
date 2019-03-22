@@ -1,11 +1,10 @@
 <template>
-    <a
-      :title="starText"
-      class="option star-option material-icons"
-      :class="{starred: starred}"
-      @click.stop="toggleStar"
-    ></a>
-
+  <a
+    :title="starText"
+    class="option star-option material-icons"
+    :class="{starred: starred}"
+    @click.stop="toggleStar"
+  ></a>
 </template>
 
 <script>
@@ -45,6 +44,7 @@
     cursor: pointer;
     &::before {
       .material-icons;
+
       content: 'star_border';
     }
     &.starred {

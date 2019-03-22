@@ -1,14 +1,15 @@
 <template>
-
   <div class="channel-set-item" :title="channelSet.name" :class="{optionHighlighted: optionHighlighted}">
     <div class="channel-container-wrapper" @click="openChannelSet">
       <div class="profile">
-        <span class="material-icons">storage</span>
+        <span class="material-icons">
+          storage
+        </span>
       </div>
       <div>
         <div class="channel-options-wrapper">
           <div class="channel-metadata">
-            <div>{{$tr('channelCount', {'count': channelSet.channels.length})}}</div>
+            <div>{{ $tr('channelCount', {'count': channelSet.channels.length}) }}</div>
             <CopyToken
               :key="channelSet.secret_token.display_token"
               :token="channelSet.secret_token.display_token"
@@ -20,10 +21,16 @@
             @mouseleave="optionHighlighted = false"
             @mouseover="optionHighlighted = true"
             @click.stop="handleDeleteChannelSet"
-          >delete</span>
+          >
+            delete
+          </span>
         </div>
-        <h4 dir="auto">{{channelSet.name}}</h4>
-        <p class="description" dir="auto">{{channelSet.description}}</p>
+        <h4 dir="auto">
+          {{ channelSet.name }}
+        </h4>
+        <p class="description" dir="auto">
+          {{ channelSet.description }}
+        </p>
       </div>
     </div>
   </div>
@@ -47,14 +54,14 @@
       channelCount: '{count, plural,\n =1 {# Channel}\n other {# Channels}}',
       cancel: 'Cancel',
     },
+    components: {
+      CopyToken,
+    },
     props: {
       channelSetID: {
         type: String,
         required: true,
       },
-    },
-    components: {
-      CopyToken,
     },
     data() {
       return {

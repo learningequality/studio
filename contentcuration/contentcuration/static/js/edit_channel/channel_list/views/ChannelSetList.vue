@@ -1,12 +1,15 @@
 <template>
-
   <div class="channel-list">
     <div class="new-button">
-      <a class="action-text" id="about-sets" @click="openAboutChannelSets">
-        <span class="material-icons">info</span> {{ $tr('aboutChannelSets') }}
+      <a id="about-sets" class="action-text" @click="openAboutChannelSets">
+        <span class="material-icons">
+          info
+        </span> {{ $tr('aboutChannelSets') }}
       </a>
-      <a class="action-button" id="new-set" :title="$tr('addChannelSetTitle')" @click="newChannelSet">
-        <span class="material-icons">add</span> {{ $tr('addChannelSetButton') }}
+      <a id="new-set" class="action-button" :title="$tr('addChannelSetTitle')" @click="newChannelSet">
+        <span class="material-icons">
+          add
+        </span> {{ $tr('addChannelSetButton') }}
       </a>
     </div>
 
@@ -24,15 +27,14 @@
       />
     </div>
   </div>
-
 </template>
 
 <script>
 
   import { mapGetters, mapActions, mapMutations } from 'vuex';
-  import ChannelSetItem from './ChannelSetItem.vue';
   import { ChannelSetInformationModalView } from 'edit_channel/information/views';
   import { ChannelSetModalView } from 'edit_channel/channel_set/views';
+  import ChannelSetItem from './ChannelSetItem.vue';
   import { getChannelSetModel } from './../utils';
 
   export default {
@@ -46,6 +48,9 @@
       addChannelSetButton: 'Collection',
       aboutChannelSets: 'About Collections',
     },
+    components: {
+      ChannelSetItem,
+    },
     data() {
       return {
         loading: true,
@@ -55,9 +60,6 @@
       this.loadChannelSetList().then(() => {
         this.loading = false;
       });
-    },
-    components: {
-      ChannelSetItem,
     },
     computed: mapGetters('channel_list', ['channelSets']),
     methods: {
@@ -87,10 +89,10 @@
   @import '../../../../less/channel_list.less';
 
   #about-sets {
-    vertical-align: sub;
-    font-size: 12pt;
-    padding: 0px;
     float: left;
+    padding: 0;
+    font-size: 12pt;
+    vertical-align: sub;
     span {
       font-size: 16pt;
       vertical-align: sub;
@@ -99,8 +101,8 @@
 
   .no-channel-sets {
     margin-top: 30px;
-    color: @gray-500;
     font-size: 14pt;
+    color: @gray-500;
     text-align: center;
   }
 

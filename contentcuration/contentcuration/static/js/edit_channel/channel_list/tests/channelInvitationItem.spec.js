@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
-import ChannelInvitationItem from './../views/ChannelInvitationItem.vue';
 import _ from 'underscore';
+import ChannelInvitationItem from './../views/ChannelInvitationItem.vue';
 import { localStore, mockFunctions } from './data.js';
 
 function makeWrapper(share_mode) {

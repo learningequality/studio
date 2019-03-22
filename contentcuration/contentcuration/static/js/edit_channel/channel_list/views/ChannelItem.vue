@@ -1,14 +1,16 @@
 <template>
-  <div class="channel-item" :class="{optionHighlighted: optionHighlighted, active: isSelected}" :id="channelID">
-    <div class="channel-container-wrapper"  :title="$tr('openChannelTitle', {'channelName': channel.name})" @click="openChannel">
+  <div :id="channelID" class="channel-item" :class="{optionHighlighted: optionHighlighted, active: isSelected}">
+    <div class="channel-container-wrapper" :title="$tr('openChannelTitle', {'channelName': channel.name})" @click="openChannel">
       <div class="profile">
-        <img class="channel-pic" :alt="channel.name" :src="picture"/>
+        <img class="channel-pic" :alt="channel.name" :src="picture">
       </div>
       <div class="channel-information">
         <div class="channel-options-wrapper">
           <div class="channel-metadata">
-            <div v-if="language" class="channel-language" :title="language.native_name">{{language.native_name}}</div>
-            <div>{{$tr('resourceCount', {'count': channel.count})}}</div>
+            <div v-if="language" class="channel-language" :title="language.native_name">
+              {{ language.native_name }}
+            </div>
+            <div>{{ $tr('resourceCount', {'count': channel.count}) }}</div>
             <CopyToken
               v-if="channel.published"
               :key="channel.primary_token"
@@ -19,11 +21,15 @@
             </div>
           </div>
           <span @mouseleave="optionHighlighted = false" @mouseover="optionHighlighted = true">
-            <ChannelStar :key="channelID + '_starItem'" :channelID="channelID"/>
+            <ChannelStar :key="channelID + '_starItem'" :channelID="channelID" />
           </span>
         </div>
-        <h4 dir="auto">{{channel.name}}</h4>
-        <p class="description" dir="auto">{{channel.description}}</p>
+        <h4 dir="auto">
+          {{ channel.name }}
+        </h4>
+        <p class="description" dir="auto">
+          {{ channel.description }}
+        </p>
       </div>
       <div class="updated_time">
         <!-- TODO: change to formatRelative -->
@@ -31,18 +37,19 @@
       </div>
     </div>
     <div class="is-selected">
-      <span class="material-icons rtl-flip">arrow_forward</span>
+      <span class="material-icons rtl-flip">
+        arrow_forward
+      </span>
     </div>
   </div>
-
 </template>
 
 <script>
 
   import { mapGetters, mapState } from 'vuex';
-  import { setChannelMixin } from './../mixins';
   import Constants from 'edit_channel/constants/index';
   import CopyToken from 'edit_channel/sharedComponents/CopyToken.vue';
+  import { setChannelMixin } from './../mixins';
   import ChannelStar from './ChannelStar.vue';
 
   export default {
@@ -53,17 +60,17 @@
       unpublishedText: 'Unpublished',
       lastUpdated: 'Updated {updated}',
     },
+    components: {
+      CopyToken,
+      ChannelStar,
+    },
+    mixins: [setChannelMixin],
     props: {
       channelID: {
         type: String,
         required: true,
       },
     },
-    components: {
-      CopyToken,
-      ChannelStar,
-    },
-    mixins: [setChannelMixin],
     data() {
       return {
         optionHighlighted: false,
@@ -112,9 +119,9 @@
   @import '../../../../less/channel_list.less';
 
   .is-selected {
-    margin-left: -10px;
-    margin-right: -50px;
     z-index: 1;
+    margin-right: -50px;
+    margin-left: -10px;
     span {
       margin-top: @channel-container-height / 2 - 50;
       font-size: 45pt;
@@ -155,12 +162,12 @@
         padding-left: 10px;
       }
       .updated_time {
-        font-style: italic;
-        font-size: 10pt;
-        color: @gray-500;
         position: absolute;
         bottom: 5px;
         left: 5px;
+        font-size: 10pt;
+        font-style: italic;
+        color: @gray-500;
       }
     }
   }

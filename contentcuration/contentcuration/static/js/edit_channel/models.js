@@ -96,6 +96,7 @@ var BaseCollection = Backbone.Collection.extend({
 });
 
 var PageableCollection = require('backbone.paginator');
+
 var BasePageableCollection = PageableCollection.extend({
   save: function(callback) {
     Backbone.sync('update', this, { url: this.model.prototype.urlRoot() });

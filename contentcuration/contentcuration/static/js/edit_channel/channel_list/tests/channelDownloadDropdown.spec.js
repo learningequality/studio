@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
-import ChannelDownloadDropdown from './../views/ChannelDownloadDropdown.vue';
 import _ from 'underscore';
+import ChannelDownloadDropdown from './../views/ChannelDownloadDropdown.vue';
 import { localStore, mockFunctions } from './data.js';
 
 function makeWrapper(props = {}) {

@@ -1,6 +1,6 @@
 import { shallowMount } from '@vue/test-utils';
-import ChannelItem from './../views/ChannelItem.vue';
 import _ from 'underscore';
+import ChannelItem from './../views/ChannelItem.vue';
 import { localStore } from './data.js';
 import { ListTypes } from './../constants';
 

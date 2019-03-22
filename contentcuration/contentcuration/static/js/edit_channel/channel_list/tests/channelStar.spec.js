@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
-import ChannelStar from './../views/ChannelStar.vue';
 import _ from 'underscore';
+import ChannelStar from './../views/ChannelStar.vue';
 import { localStore, mockFunctions } from './data';
 import { ListTypes } from './../constants';
 

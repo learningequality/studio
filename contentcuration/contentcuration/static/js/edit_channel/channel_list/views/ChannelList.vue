@@ -1,9 +1,10 @@
 <template>
-
   <div class="channel-list">
     <div v-if="isEditable" class="new-button">
       <button class="action-button" :title="$tr('addChannel')" @click="createChannel">
-        <span class="material-icons align-text-top">add</span> {{ $tr('channel') }}
+        <span class="material-icons align-text-top">
+          add
+        </span> {{ $tr('channel') }}
       </button>
     </div>
 
@@ -22,7 +23,6 @@
       />
     </div>
   </div>
-
 </template>
 
 
@@ -42,6 +42,10 @@
       channel: 'Channel',
       addChannel: 'Create a new channel',
     },
+    components: {
+      ChannelItem,
+    },
+    mixins: [setChannelMixin],
     props: {
       listType: {
         type: String,
@@ -61,10 +65,6 @@
         this.loading = false;
       });
     },
-    components: {
-      ChannelItem,
-    },
-    mixins: [setChannelMixin],
     computed: {
       ...mapState('channel_list', ['channels']),
       listChannels() {
