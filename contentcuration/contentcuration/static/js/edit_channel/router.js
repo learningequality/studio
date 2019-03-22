@@ -1,3 +1,7 @@
+import Vue from 'vue';
+
+import ChannelListPage from 'edit_channel/channel_list/views/ChannelListPage.vue';
+
 var _ = require('underscore');
 var Backbone = require('backbone');
 var State = require('./state');
@@ -17,6 +21,18 @@ var ChannelEditRouter = Backbone.Router.extend({
     ':channel/view(/:topic)(/:node)': 'preview_page',
     ':channel/clipboard(/:topic)(/:node)': 'clipboard_page',
   },
+
+  navigate_channel_home: function() {
+    var store = require('edit_channel/channel_list/vuex/store');
+    State.setChannelListState();
+
+    new Vue({
+      el: '#channel-container',
+      store,
+      ...ChannelListPage,
+    });
+  },
+
   edit_page: function(channel, topic, node) {
     var data = { edit_mode_on: true, topic: topic, node: node, page: 'edit' };
     this.open_channel(data, State.current_channel.get_root('main_tree'));
@@ -30,6 +46,13 @@ var ChannelEditRouter = Backbone.Router.extend({
     this.open_channel(data, State.current_channel.get_root('main_tree'));
   },
   clipboard_page: function() {
+    // var data = {
+    //   edit_mode_on: true,
+    //   is_clipboard: true,
+    //   topic: topic,
+    //   node: node,
+    //   page: 'clipboard',
+    // };
     this.open_channel(true, true, false, State.current_user.get_clipboard());
   },
   open_channel: function(data, root) {
