@@ -24,6 +24,9 @@ const State = {
   current_user: new Models.UserModel(window.user),
   nodeCollection: new Models.ContentNodeCollection(),
   currentLanguage: Constants.Languages.find(l => l.id && l.id.toLowerCase() === (window.languageCode || 'en') ),
+  setChannelListState() {
+    this.preferences = (typeof window.user_preferences === "string")? JSON.parse(window.user_preferences) : window.user_preferences;
+  },
   openChannel(data) {
     this.staging = data.is_staging || false;
     Store.commit('SET_CONTENT_TAGS', this.current_channel.get('tags'))
