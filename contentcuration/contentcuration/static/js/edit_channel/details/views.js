@@ -92,7 +92,8 @@ var DetailsView = BaseViews.BaseListEditableItemView.extend({
   initialize: function(options) {
     _.bindAll(this, 'render_visuals');
     this.channel = options.channel;
-    this.is_channel = _.isEqual(this.channel.id, this.model.id);
+    var channel_maintree_id = this.channel.main_tree.id || this.channel.main_tree;
+    this.is_channel = _.isEqual(channel_maintree_id, this.model.id);
     State.current_channel_editor_cid = this.cid;
     this.render();
   },
