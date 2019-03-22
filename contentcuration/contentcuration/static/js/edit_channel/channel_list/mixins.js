@@ -11,7 +11,7 @@ const channelStrings = createTranslator('ChannelStrings', {
   errorChannelSave: 'Error Saving Channel',
 });
 
-exports.setChannelMixin = {
+export const setChannelMixin = {
   computed: {
     ...mapState('channel_list', ['activeChannel']),
     ...mapState('channel_list', ['changed']),
@@ -56,7 +56,7 @@ exports.setChannelMixin = {
   },
 };
 
-exports.tabMixin = {
+export const tabMixin = {
   mounted() {
     this.$nextTick(() => {
       this.$refs.firstTab.focus();

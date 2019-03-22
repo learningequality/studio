@@ -38,13 +38,16 @@
           {{ channel.description }}
         </p>
       </div>
-      <div class="updated_time">
-        <!-- TODO: change to formatRelative -->
-        {{$tr('lastUpdated',
-          {'updated': $formatDate(channel.modified,
-            {day:'numeric', month:'short', 'year':'numeric'})
-          })
-        }}
+      <div class="updated-time">
+      {{$tr(
+        'lastUpdated',
+        {
+          'updated':  $formatDate(
+            channel.modified,
+            {day:'numeric', month:'short', 'year':'numeric'}
+          )
+        })
+      }} <!-- TODO: change to formatRelative -->
       </div>
     </div>
     <div class="is-selected">
@@ -60,7 +63,7 @@
   import { mapGetters, mapState } from 'vuex';
   import Constants from 'edit_channel/constants/index';
   import CopyToken from 'edit_channel/sharedComponents/CopyToken.vue';
-  import { setChannelMixin } from './../mixins';
+  import { setChannelMixin } from '../mixins';
   import ChannelStar from './ChannelStar.vue';
 
   export default {
@@ -172,7 +175,7 @@
       .channel-information {
         padding-left: 10px;
       }
-      .updated_time {
+      .updated-time {
         position: absolute;
         bottom: 5px;
         left: 5px;

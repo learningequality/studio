@@ -18,12 +18,12 @@ var dialog = require('edit_channel/utils/dialog');
 var get_cookie = require('utils/get_cookie');
 
 /* PARSERS */
-var Katex = require('katex');
-var toMarkdown = require('to-markdown');
+var Katex = require('katex'); // eslint-disable-line import/order
+var toMarkdown = require('to-markdown'); // eslint-disable-line import/order
 var stringHelper = require('edit_channel/utils/string_helper');
 var numParser = require('edit_channel/utils/number_parser');
 var jax2svg = require('edit_channel/utils/mathjaxtosvg');
-const CHARACTERS = require('./symbols.json');
+const CHARACTERS = require('./symbols.json'); // eslint-disable-line import/order
 
 jax2svg.init();
 

@@ -41,7 +41,7 @@ var MESSAGES = {
   no_space: 'Not enough space. Check your storage under Settings page.',
 };
 
-var ThumbnailUploadView = BaseViews.BaseView.extend({
+export const ThumbnailUploadView = BaseViews.BaseView.extend({
   template: require('./hbtemplates/thumbnail_upload.handlebars'),
   preview_template: require('./hbtemplates/thumbnail_preview.handlebars'),
   dropzone_template: require('./hbtemplates/thumbnail_dropzone.handlebars'),
@@ -411,7 +411,7 @@ var ThumbnailModalView = BaseViews.BaseModalView.extend({
   },
 });
 
-var ImageUploadView = BaseViews.BaseModalView.extend({
+export const ImageUploadView = BaseViews.BaseModalView.extend({
   modal: true,
   className: 'exercise_image_upload_modal',
   name: NAMESPACE,
@@ -523,7 +523,5 @@ var ImageUploadView = BaseViews.BaseModalView.extend({
   },
 });
 
-module.exports = {
-  ThumbnailUploadView: ThumbnailUploadView,
-  ImageUploadView: ImageUploadView,
-};
+// export const ThumbnailUploadView
+// export const ImageUploadView;

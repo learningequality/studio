@@ -31,8 +31,8 @@
   import _ from 'underscore';
   import { mapState, mapActions } from 'vuex';
   import ChannelItem from './ChannelItem.vue';
-  import { setChannelMixin } from './../mixins';
-  import { ListTypes } from './../constants';
+  import { setChannelMixin } from '../mixins';
+  import { ListTypes } from '../constants';
 
   export default {
     name: 'ChannelList',

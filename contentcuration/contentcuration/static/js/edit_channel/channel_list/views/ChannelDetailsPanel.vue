@@ -43,7 +43,7 @@
   import _ from 'underscore';
   import State from 'edit_channel/state';
   import { mapState } from 'vuex';
-  import { setChannelMixin } from './../mixins';
+  import { setChannelMixin } from '../mixins';
 
   // Components
   import ChannelStar from './ChannelStar.vue';

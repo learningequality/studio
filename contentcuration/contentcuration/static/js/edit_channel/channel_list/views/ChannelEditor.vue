@@ -118,8 +118,8 @@
   import { mapGetters, mapActions, mapMutations, mapState } from 'vuex';
   import Constants from 'edit_channel/constants/index';
   import { ThumbnailUploadView } from 'edit_channel/image/views';
-  import { tabMixin } from './../mixins';
-  import { getBackboneChannel } from './../utils';
+  import { tabMixin } from '../mixins';
+  import { getBackboneChannel } from '../utils';
 
   const PRESET = _.findWhere(Constants.FormatPresets, { id: 'channel_thumbnail' });
 
