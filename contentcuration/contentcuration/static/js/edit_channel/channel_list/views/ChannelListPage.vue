@@ -41,78 +41,78 @@
 
 <script>
 
-import _ from 'underscore';
-import { mapState } from 'vuex';
-import { ListTypes } from '../constants';
-import ChannelList from './ChannelList.vue';
-import ChannelSetList from './ChannelSetList.vue';
-import ChannelInvitationList from './ChannelInvitationList.vue';
-import ChannelDetailsPanel from './ChannelDetailsPanel.vue';
+  import _ from 'underscore';
+  import { mapState } from 'vuex';
+  import { ListTypes } from '../constants';
+  import ChannelList from './ChannelList.vue';
+  import ChannelSetList from './ChannelSetList.vue';
+  import ChannelInvitationList from './ChannelInvitationList.vue';
+  import ChannelDetailsPanel from './ChannelDetailsPanel.vue';
 
-
-// TODO: Move this logic to a vue router
-let defaultListType = ListTypes.EDITABLE;
-switch(window.location.hash.substr(1)) {
-  case "starred":
-    defaultListType = ListTypes.STARRED;
-    break;
-  case "viewonly":
-    defaultListType = ListTypes.VIEW_ONLY;
-    break;
-  case "public":
-    defaultListType = ListTypes.PUBLIC;
-    break;
-  case "collection":
-    defaultListType = ListTypes.CHANNEL_SETS;
-    break;
-}
-
-export default {
-  name: 'ChannelListPage',
-  $trs: {
-    [ListTypes.EDITABLE]: 'My Channels',
-    [ListTypes.VIEW_ONLY]: 'View-Only',
-    [ListTypes.PUBLIC]: 'Public',
-    [ListTypes.STARRED]: 'Starred',
-    [ListTypes.CHANNEL_SETS]: 'Collections'
-  },
-  components: {
-    ChannelList,
-    ChannelSetList,
-    ChannelInvitationList,
-    ChannelDetailsPanel
-  },
-  data() {
-    return {
-      activeList: defaultListType
-    }
-  },
-  computed: {
-    ...mapState('channel_list', ['activeChannel']),
-    lists() {
-      return _.values(ListTypes);
-    }
-  },
-  methods: {
-    setActiveList(listType) {
-      this.activeList = listType;
-    }
+  // TODO: Move this logic to a vue router
+  let defaultListType = ListTypes.EDITABLE;
+  switch (window.location.hash.substr(1)) {
+    case 'starred':
+      defaultListType = ListTypes.STARRED;
+      break;
+    case 'viewonly':
+      defaultListType = ListTypes.VIEW_ONLY;
+      break;
+    case 'public':
+      defaultListType = ListTypes.PUBLIC;
+      break;
+    case 'collection':
+      defaultListType = ListTypes.CHANNEL_SETS;
+      break;
   }
-}
+
+  export default {
+    name: 'ChannelListPage',
+    $trs: {
+      [ListTypes.EDITABLE]: 'My Channels',
+      [ListTypes.VIEW_ONLY]: 'View-Only',
+      [ListTypes.PUBLIC]: 'Public',
+      [ListTypes.STARRED]: 'Starred',
+      [ListTypes.CHANNEL_SETS]: 'Collections',
+    },
+    components: {
+      ChannelList,
+      ChannelSetList,
+      ChannelInvitationList,
+      ChannelDetailsPanel,
+    },
+    data() {
+      return {
+        activeList: defaultListType,
+      };
+    },
+    computed: {
+      ...mapState('channel_list', ['activeChannel']),
+      lists() {
+        return _.values(ListTypes);
+      },
+    },
+    methods: {
+      setActiveList(listType) {
+        this.activeList = listType;
+      },
+    },
+  };
 
 </script>
 
 
 <style lang="less" scoped>
+
   @import '../../../../less/channel_list.less';
 
   #channel-list-wrapper {
-    padding:10px;
-    overflow-y:auto;
+    padding: 10px;
+    overflow-y: auto;
     width: 100vw;
     transition: width 500ms;
     &.showPanel {
-      width: calc(~"100vw" - @channel-preview-width);
+      width: calc(~'100vw' - @channel-preview-width);
     }
   }
   #manage-channel-nav {
@@ -136,7 +136,7 @@ export default {
       }
       span::before {
         .material-icons;
-        content: "star";
+        content: 'star';
         font-size: 16pt;
         vertical-align: sub;
       }

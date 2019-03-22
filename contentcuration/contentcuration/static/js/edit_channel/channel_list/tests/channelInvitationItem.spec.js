@@ -3,29 +3,27 @@ import ChannelInvitationItem from './../views/ChannelInvitationItem.vue';
 import _ from 'underscore';
 import { localStore, mockFunctions } from './data.js';
 
-
 function makeWrapper(share_mode) {
   let invitation = {
-    "id": "inviteid",
-    "share_mode": share_mode || "edit",
-    "sender": {
-      "first_name": "First",
-      "last_name": "Last"
-    }
+    id: 'inviteid',
+    share_mode: share_mode || 'edit',
+    sender: {
+      first_name: 'First',
+      last_name: 'Last',
+    },
   };
   localStore.commit('channel_list/SET_INVITATION_LIST', [invitation]);
   return mount(ChannelInvitationItem, {
     store: localStore,
     propsData: {
-      invitationID: invitation.id
-    }
-  })
+      invitationID: invitation.id,
+    },
+  });
 }
 
 describe('channelInvitationItem', () => {
   let wrapper;
   beforeEach(() => {
-
     wrapper = makeWrapper();
     mockFunctions.declineInvitation.mockReset();
     mockFunctions.acceptInvitation.mockReset();
@@ -49,7 +47,7 @@ describe('channelInvitationItem', () => {
   });
   it('clicking X should dismiss invitation', () => {
     expect(localStore.state.channel_list.invitations).toHaveLength(1);
-    wrapper.setData({accepted: true});
+    wrapper.setData({ accepted: true });
     wrapper.find('.remove').trigger('click');
     expect(localStore.state.channel_list.invitations).toHaveLength(0);
   });

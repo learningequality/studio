@@ -4,19 +4,17 @@ import ChannelInvitationItem from './../views/ChannelInvitationItem.vue';
 import _ from 'underscore';
 import { Invitations, localStore, mockFunctions } from './data';
 
-
 function makeWrapper() {
   return shallowMount(ChannelInvitationList, {
-    store: localStore
-  })
+    store: localStore,
+  });
 }
 
 describe('channelInvitationList', () => {
-
   it('loadChannelInvitationList should be called', () => {
     let listWrapper = makeWrapper();
     expect(mockFunctions.loadChannelInvitationList).toHaveBeenCalled();
-  })
+  });
 
   it('list should load all invitations', () => {
     let listWrapper = makeWrapper();

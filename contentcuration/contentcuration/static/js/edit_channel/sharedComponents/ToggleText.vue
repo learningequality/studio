@@ -9,94 +9,96 @@
 
 <script>
 
-import _ from 'underscore';
+  import _ from 'underscore';
 
-export default {
-  name: 'ToggleText',
-  $trs: {
-    more: "... More",
-    less: "Less"
-  },
-  props: {
-    text: {
-      type: String,
-      default: ""
+  export default {
+    name: 'ToggleText',
+    $trs: {
+      more: '... More',
+      less: 'Less',
     },
-    splitAt: {
-      type: Number,
-      default: 100
-    }
-  },
-  data() {
-    return {
-      expanded: false
-    };
-  },
-  computed: {
-    trimmedText() {
-      return this.text.trim();
+    props: {
+      text: {
+        type: String,
+        default: '',
+      },
+      splitAt: {
+        type: Number,
+        default: 100,
+      },
     },
-    splitIndex() {
-      // Find where to split the index without breaking words
-      // If no spaces are found after the bufferRange, split the text anyways
-      let bufferRange = Math.ceil(this.splitAt/4);
-      let start = this.splitAt - bufferRange;
-      let end = this.splitAt + bufferRange;
-      let index = _.findIndex(this.trimmedText.substring(start, end), (char) => {
-        return char === " ";
-      });
-      let newSplitIndex = index + start;
+    data() {
+      return {
+        expanded: false,
+      };
+    },
+    computed: {
+      trimmedText() {
+        return this.text.trim();
+      },
+      splitIndex() {
+        // Find where to split the index without breaking words
+        // If no spaces are found after the bufferRange, split the text anyways
+        let bufferRange = Math.ceil(this.splitAt / 4);
+        let start = this.splitAt - bufferRange;
+        let end = this.splitAt + bufferRange;
+        let index = _.findIndex(this.trimmedText.substring(start, end), char => {
+          return char === ' ';
+        });
+        let newSplitIndex = index + start;
 
-      // If there are only a few characters left, just return the whole text. Otherwise, return new index
-      return (this.trimmedText.length - newSplitIndex <= bufferRange)? this.trimmedText.length : newSplitIndex;
+        // If there are only a few characters left, just return the whole text. Otherwise, return new index
+        return this.trimmedText.length - newSplitIndex <= bufferRange
+          ? this.trimmedText.length
+          : newSplitIndex;
+      },
+      overflowText() {
+        return this.trimmedText.substring(this.splitIndex, this.trimmedText.length);
+      },
+      togglerText() {
+        return this.expanded ? this.$tr('less') : this.$tr('more');
+      },
     },
-    overflowText() {
-      return this.trimmedText.substring(this.splitIndex, this.trimmedText.length);
+    methods: {
+      toggle() {
+        this.expanded = !this.expanded;
+      },
     },
-    togglerText() {
-      return (this.expanded)? this.$tr("less") : this.$tr("more");
-    }
-  },
-  methods: {
-    toggle() {
-      this.expanded = !this.expanded;
-    }
-  }
-};
+  };
 
 </script>
 
 
 <style lang="less" scoped>
 
-@import '../../../less/global-variables.less';
+  @import '../../../less/global-variables.less';
 
-.toggle-text {
-  div {
-    .wordwrap;
-    margin: 0px;
-    display: inline;
-  }
-  .overflow {
-    display: block;
-    max-height: 0px;
-    overflow-y: hidden;
-    -webkit-transition: max-height 0.4s linear;
-    -moz-transition: max-height 0.4s linear;
-    -o-transition: max-height 0.4s linear;
-    transition: max-height 0.4s linear;
-    &.expanded {
-      max-height: 100vh;
+  .toggle-text {
+    div {
+      .wordwrap;
+      margin: 0px;
+      display: inline;
+    }
+    .overflow {
+      display: block;
+      max-height: 0px;
+      overflow-y: hidden;
+      -webkit-transition: max-height 0.4s linear;
+      -moz-transition: max-height 0.4s linear;
+      -o-transition: max-height 0.4s linear;
+      transition: max-height 0.4s linear;
+      &.expanded {
+        max-height: 100vh;
+      }
+    }
+    .toggler {
+      text-decoration: none;
+      color: @gray-700;
+      font-weight: bold;
+      &:hover {
+        color: @blue-500;
+      }
     }
   }
-  .toggler {
-    text-decoration: none;
-    color: @gray-700;
-    font-weight: bold;
-    &:hover {
-      color: @blue-500;
-    }
-  }
-}
 
 </style>

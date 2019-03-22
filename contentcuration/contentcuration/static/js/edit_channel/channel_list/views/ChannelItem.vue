@@ -39,127 +39,130 @@
 
 <script>
 
-import { mapGetters, mapState } from 'vuex';
-import { setChannelMixin } from './../mixins';
-import Constants from 'edit_channel/constants/index';
-import CopyToken from 'edit_channel/sharedComponents/CopyToken.vue';
-import ChannelStar from './ChannelStar.vue';
+  import { mapGetters, mapState } from 'vuex';
+  import { setChannelMixin } from './../mixins';
+  import Constants from 'edit_channel/constants/index';
+  import CopyToken from 'edit_channel/sharedComponents/CopyToken.vue';
+  import ChannelStar from './ChannelStar.vue';
 
-export default {
-  name: 'ChannelItem',
-  $trs: {
-    openChannelTitle: "{channelName} ('CTRL' or 'CMD' + click to open in new tab)",
-    resourceCount: "{count, plural,\n =1 {# Resource}\n other {# Resources}}",
-    unpublishedText: "Unpublished",
-    lastUpdated: "Updated {updated}"
-  },
-  props: {
-    channelID: {
-      type: String,
-      required: true,
-    }
-  },
-  components: {
-    CopyToken,
-    ChannelStar
-  },
-  mixins: [setChannelMixin],
-  data() {
-    return {
-      optionHighlighted: false
-    }
-  },
-  computed: {
-    ...mapState('channel_list', ['activeChannel']),
-    ...mapGetters('channel_list', ['getChannel']),
-    picture() {
-      return (this.channel.thumbnail_encoding && this.channel.thumbnail_encoding.base64) || this.channel.thumbnail_url;
+  export default {
+    name: 'ChannelItem',
+    $trs: {
+      openChannelTitle: "{channelName} ('CTRL' or 'CMD' + click to open in new tab)",
+      resourceCount: '{count, plural,\n =1 {# Resource}\n other {# Resources}}',
+      unpublishedText: 'Unpublished',
+      lastUpdated: 'Updated {updated}',
     },
-    language() {
-      return Constants.Languages.find(language => language.id === this.channel.language);
+    props: {
+      channelID: {
+        type: String,
+        required: true,
+      },
     },
-    isSelected() {
-      return this.activeChannel && this.channelID === this.activeChannel.id;
+    components: {
+      CopyToken,
+      ChannelStar,
     },
-    channel() {
-      return this.getChannel(this.channelID);
-    }
-  },
-  methods: {
-    openChannel(event) {
-      if(event && (event.metaKey || event.ctrlKey)) {
-        if(this.channel.EDITABLE) {
-          window.open(window.Urls.channel(this.channelID), "_blank");
-        } else {
-          window.open(window.Urls.channel_view_only(this.channelID), "_blank");
+    mixins: [setChannelMixin],
+    data() {
+      return {
+        optionHighlighted: false,
+      };
+    },
+    computed: {
+      ...mapState('channel_list', ['activeChannel']),
+      ...mapGetters('channel_list', ['getChannel']),
+      picture() {
+        return (
+          (this.channel.thumbnail_encoding && this.channel.thumbnail_encoding.base64) ||
+          this.channel.thumbnail_url
+        );
+      },
+      language() {
+        return Constants.Languages.find(language => language.id === this.channel.language);
+      },
+      isSelected() {
+        return this.activeChannel && this.channelID === this.activeChannel.id;
+      },
+      channel() {
+        return this.getChannel(this.channelID);
+      },
+    },
+    methods: {
+      openChannel(event) {
+        if (event && (event.metaKey || event.ctrlKey)) {
+          if (this.channel.EDITABLE) {
+            window.open(window.Urls.channel(this.channelID), '_blank');
+          } else {
+            window.open(window.Urls.channel_view_only(this.channelID), '_blank');
+          }
+        } else if (!this.activeChannel || this.channelID !== this.activeChannel.id) {
+          // Only load if it isn't already the active channel
+          this.setChannel(this.channelID);
         }
-      } else if (!this.activeChannel || this.channelID !== this.activeChannel.id) {
-        // Only load if it isn't already the active channel
-        this.setChannel(this.channelID);
-      }
-    }
-  }
-};
+      },
+    },
+  };
 
 </script>
 
 
 <style lang="less" scoped>
 
-@import '../../../../less/channel_list.less';
+  @import '../../../../less/channel_list.less';
 
-.is-selected {
-  margin-left: -10px;
-  margin-right: -50px;
-  z-index: 1;
-  span {
-    margin-top: @channel-container-height / 2 - 50;
-    font-size: 45pt;
-    font-weight: bold;
-    visibility: hidden;
-  }
-}
-
-.channel-item {
-  display: grid;
-  grid-auto-flow: column;
-  &.active {
-    .is-selected span {
-      color: @topnav-bg-color;
-      visibility: visible;
+  .is-selected {
+    margin-left: -10px;
+    margin-right: -50px;
+    z-index: 1;
+    span {
+      margin-top: @channel-container-height / 2 - 50;
+      font-size: 45pt;
+      font-weight: bold;
+      visibility: hidden;
     }
+  }
+
+  .channel-item {
+    display: grid;
+    grid-auto-flow: column;
+    &.active {
+      .is-selected span {
+        color: @topnav-bg-color;
+        visibility: visible;
+      }
+      .channel-container-wrapper {
+        border-color: @topnav-bg-color;
+      }
+    }
+
+    &:hover:not(.optionHighlighted) {
+      .is-selected span,
+      h4 {
+        color: @blue-500;
+      }
+      .channel-container-wrapper {
+        border-color: @blue-500;
+      }
+    }
+
     .channel-container-wrapper {
-      border-color: @topnav-bg-color;
+      min-height: @channel-container-height;
+      .profile {
+        height: @channel-container-height * 0.9;
+      }
+      .channel-information {
+        padding-left: 10px;
+      }
+      .updated_time {
+        font-style: italic;
+        font-size: 10pt;
+        color: @gray-500;
+        position: absolute;
+        bottom: 5px;
+        left: 5px;
+      }
     }
   }
-
-  &:hover:not(.optionHighlighted) {
-    .is-selected span, h4 {
-      color: @blue-500;
-    }
-    .channel-container-wrapper {
-      border-color: @blue-500;
-    }
-  }
-
-  .channel-container-wrapper {
-    min-height: @channel-container-height;
-    .profile {
-      height: @channel-container-height * 0.9;
-    }
-    .channel-information {
-      padding-left: 10px;
-    }
-    .updated_time {
-      font-style: italic;
-      font-size: 10pt;
-      color: @gray-500;
-      position: absolute;
-      bottom: 5px;
-      left: 5px;
-    }
-  }
-}
-
 
 </style>
