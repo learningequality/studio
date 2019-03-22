@@ -20,7 +20,6 @@ describe('channelDetailsPanel', () => {
   it('panel should set background as thumbnail', () => {
     let wrapper = makeWrapper({ thumbnail_url: 'test.png' });
     let panel = wrapper.find('#channel-preview-wrapper');
-    let expectedStyle = "background-image: url('test.png')";
     expect(panel.attributes('style')).toContain('test.png');
   });
   it('panel should set background as default thumbnail for new channels', () => {

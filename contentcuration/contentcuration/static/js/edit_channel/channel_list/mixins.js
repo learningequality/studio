@@ -1,4 +1,3 @@
-import _ from 'underscore';
 import { mapActions, mapMutations, mapState } from 'vuex';
 import { createTranslator } from 'utils/i18n';
 import { dialog, alert } from 'edit_channel/utils/dialog';

@@ -40,7 +40,7 @@
       </div>
       <div class="updated_time">
         <!-- TODO: change to formatRelative -->
-        {{ $tr('lastUpdated',
+        {{$tr('lastUpdated',
           {'updated': $formatDate(channel.modified,
             {day:'numeric', month:'short', 'year':'numeric'})
           })
