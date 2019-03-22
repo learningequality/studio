@@ -18,51 +18,48 @@
 
 <script>
 
-import { mapGetters, mapActions } from 'vuex';
-import { ChannelInvitationMapping } from './../constants';
-import ChannelInvitationItem from './ChannelInvitationItem.vue';
+  import { mapGetters, mapActions } from 'vuex';
+  import { ChannelInvitationMapping } from './../constants';
+  import ChannelInvitationItem from './ChannelInvitationItem.vue';
 
-export default {
-  name: 'ChannelInvitationList',
-  $trs: {
-    loading: "Checking for invitations..."
-  },
-  data() {
-    return {
-      loading: true
-    }
-  },
-  mounted() {
-    this.loadChannelInvitationList().then(() => {
-      this.loading = false;
-    });
-  },
-  components: {
-    ChannelInvitationItem
-  },
-  computed: mapGetters('channel_list', [
-    'invitations'
-  ]),
-  methods: {
-    ...mapActions('channel_list', [
-      'loadChannelInvitationList'
-    ]),
-    acceptedInvitation(shareMode) {
-      this.$emit('setActiveList', ChannelInvitationMapping[shareMode]);
-    }
-  }
-};
+  export default {
+    name: 'ChannelInvitationList',
+    $trs: {
+      loading: 'Checking for invitations...',
+    },
+    data() {
+      return {
+        loading: true,
+      };
+    },
+    mounted() {
+      this.loadChannelInvitationList().then(() => {
+        this.loading = false;
+      });
+    },
+    components: {
+      ChannelInvitationItem,
+    },
+    computed: mapGetters('channel_list', ['invitations']),
+    methods: {
+      ...mapActions('channel_list', ['loadChannelInvitationList']),
+      acceptedInvitation(shareMode) {
+        this.$emit('setActiveList', ChannelInvitationMapping[shareMode]);
+      },
+    },
+  };
 
 </script>
 
 
 <style lang="less" scoped>
 
-.invitation-list {
-  padding-top: 20px;
-  .default-item {
-    font-size: 12pt;
-    font-weight: normal;
+  .invitation-list {
+    padding-top: 20px;
+    .default-item {
+      font-size: 12pt;
+      font-weight: normal;
+    }
   }
-}
+
 </style>

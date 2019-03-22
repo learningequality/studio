@@ -8,86 +8,86 @@ Vue.use(Vuex);
 
 export const Channels = [
   {
-    "id": "channel1",
-    "name": "Editable Channel",
+    id: 'channel1',
+    name: 'Editable Channel',
     [ListTypes.STARRED]: false,
     [ListTypes.EDITABLE]: true,
     [ListTypes.PUBLIC]: false,
-    [ListTypes.VIEW_ONLY]: false
+    [ListTypes.VIEW_ONLY]: false,
   },
   {
-    "id": "channel2",
-    "name": "View-Only Channel",
+    id: 'channel2',
+    name: 'View-Only Channel',
     [ListTypes.STARRED]: false,
     [ListTypes.EDITABLE]: false,
     [ListTypes.PUBLIC]: false,
-    [ListTypes.VIEW_ONLY]: true
+    [ListTypes.VIEW_ONLY]: true,
   },
   {
-    "id": "channel3",
-    "name": "Public Channel",
+    id: 'channel3',
+    name: 'Public Channel',
     [ListTypes.STARRED]: false,
     [ListTypes.EDITABLE]: false,
     [ListTypes.PUBLIC]: true,
-    [ListTypes.VIEW_ONLY]: false
+    [ListTypes.VIEW_ONLY]: false,
   },
   {
-    "id": "channel4",
-    "name": "Starred + Public Channel",
+    id: 'channel4',
+    name: 'Starred + Public Channel',
     [ListTypes.STARRED]: true,
     [ListTypes.EDITABLE]: false,
     [ListTypes.PUBLIC]: true,
-    [ListTypes.VIEW_ONLY]: false
+    [ListTypes.VIEW_ONLY]: false,
   },
   {
-    "id": "channel5",
-    "name": "Starred + Editable Channel",
+    id: 'channel5',
+    name: 'Starred + Editable Channel',
     [ListTypes.STARRED]: true,
     [ListTypes.EDITABLE]: true,
     [ListTypes.PUBLIC]: false,
-    [ListTypes.VIEW_ONLY]: false
+    [ListTypes.VIEW_ONLY]: false,
   },
-]
+];
 
 export const Invitations = [
   {
-    "id": "invitation1",
-    "share_mode": "edit",
-    "sender": {
-      "first_name": "First",
-      "last_name": "Last"
-    }
+    id: 'invitation1',
+    share_mode: 'edit',
+    sender: {
+      first_name: 'First',
+      last_name: 'Last',
+    },
   },
   {
-    "id": "invitation2",
-    "share_mode": "view",
-    "sender": {
-      "first_name": "First",
-      "last_name": "Last"
-    }
-  }
-]
+    id: 'invitation2',
+    share_mode: 'view',
+    sender: {
+      first_name: 'First',
+      last_name: 'Last',
+    },
+  },
+];
 
 export const ChannelSets = [
   {
     id: 'channelSet1',
-    name: "test title",
+    name: 'test title',
     channels: ['test'],
     secret_token: {
-      display_token: 'test-test'
-    }
+      display_token: 'test-test',
+    },
   },
   {
     id: 'channelSet2',
-    name: "test title",
+    name: 'test title',
     channels: ['test'],
     secret_token: {
-      display_token: 'test-test'
-    }
-  }
-]
+      display_token: 'test-test',
+    },
+  },
+];
 
-export const mockFunctions =  {
+export const mockFunctions = {
   downloadChannelDetails: jest.fn(),
   addStar: jest.fn(),
   removeStar: jest.fn(),
@@ -99,12 +99,12 @@ export const mockFunctions =  {
   loadNodeDetails: jest.fn(),
   deleteChannelSet: jest.fn(),
   loadChannelSetList: jest.fn(),
-  saveChannel: jest.fn()
-}
+  saveChannel: jest.fn(),
+};
 
 export const localStore = new Vuex.Store({
   modules: {
-    "channel_list": {
+    channel_list: {
       namespaced: true,
       state: {
         channels: [],
@@ -112,26 +112,26 @@ export const localStore = new Vuex.Store({
         changed: false,
         channelChanges: {},
         channelSets: [],
-        invitations: []
+        invitations: [],
       },
       getters: getters,
       mutations: {
         ...mutations,
         SET_CHANNEL_LIST: (state, payload) => {
           state.channels = payload.channels;
-        }
+        },
       },
       actions: {
         ...actions,
-        loadChannelInvitationList: (context) => {
+        loadChannelInvitationList: context => {
           context.commit('SET_INVITATION_LIST', Invitations);
           mockFunctions.loadChannelInvitationList();
         },
-        loadChannelList: (context) => {
-          context.commit('SET_CHANNEL_LIST', {channels: Channels});
+        loadChannelList: context => {
+          context.commit('SET_CHANNEL_LIST', { channels: Channels });
           mockFunctions.loadChannelList();
         },
-        loadChannelSetList: (context) => {
+        loadChannelSetList: context => {
           context.commit('SET_CHANNELSET_LIST', ChannelSets);
           mockFunctions.loadChannelSetList();
         },
@@ -143,8 +143,8 @@ export const localStore = new Vuex.Store({
         deleteChannel: mockFunctions.deleteChannel,
         loadNodeDetails: mockFunctions.loadNodeDetails,
         deleteChannelSet: mockFunctions.deleteChannelSet,
-        saveChannel: mockFunctions.saveChannel
-      }
-    }
-  }
-})
+        saveChannel: mockFunctions.saveChannel,
+      },
+    },
+  },
+});

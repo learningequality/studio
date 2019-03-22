@@ -27,109 +27,114 @@
 
 <script>
 
-import _ from 'underscore';
-import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
-import { ListTypes } from '../constants';
-import dialog from 'edit_channel/utils/dialog';
+  import _ from 'underscore';
+  import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
+  import { ListTypes } from '../constants';
+  import dialog from 'edit_channel/utils/dialog';
 
+  export default {
+    name: 'ChannelInvitationItem',
+    $trs: {
+      editText: '{firstname} {lastname} has invited you to edit {channel}',
+      viewText: '{firstname} {lastname} has invited you to view {channel}',
+      acceptedEditText: 'Accepted invitation to edit {channel}',
+      declinedEditText: 'Declined invitation to edit {channel}',
+      acceptedViewText: 'Accepted invitation to view {channel}',
+      declinedViewText: 'Declined invitation to view {channel}',
+      accept: 'Accept',
+      decline: 'Decline',
+      cancel: 'Cancel',
+      invitationError: 'Invitation Error',
+      decliningInvitation: 'Declining Invitation',
+      decliningInvitationMessage: 'Are you sure you want to decline this invitation?',
+    },
 
-export default {
-  name: 'ChannelInvitationItem',
-  $trs: {
-    editText: '{firstname} {lastname} has invited you to edit {channel}',
-    viewText: '{firstname} {lastname} has invited you to view {channel}',
-    acceptedEditText: 'Accepted invitation to edit {channel}',
-    declinedEditText: 'Declined invitation to edit {channel}',
-    acceptedViewText: 'Accepted invitation to view {channel}',
-    declinedViewText: 'Declined invitation to view {channel}',
-    accept: 'Accept',
-    decline: 'Decline',
-    cancel: 'Cancel',
-    invitationError: 'Invitation Error',
-    decliningInvitation: 'Declining Invitation',
-    decliningInvitationMessage: 'Are you sure you want to decline this invitation?'
-  },
-
-  props: {
-    invitationID: {
-      type: String,
-      required: true,
-    }
-  },
-  data() {
-    return {
-      accepted: false,
-      declined: false
-    }
-  },
-  computed: {
-    ...mapGetters('channel_list', ['getInvitation', 'invitations']),
-    invitation() {
-      return this.getInvitation(this.invitationID);
+    props: {
+      invitationID: {
+        type: String,
+        required: true,
+      },
     },
-    acceptedText() {
-      switch(this.invitation.share_mode) {
-        case ListTypes.EDITABLE:
-          return this.$tr('acceptedEditText', {channel: this.invitation.channel_name});
-        default:
-          return this.$tr('acceptedViewText', {channel: this.invitation.channel_name});
-      }
-    },
-    declinedText() {
-      switch(this.invitation.share_mode) {
-        case ListTypes.EDITABLE:
-          return this.$tr('declinedEditText', {channel: this.invitation.channel_name});
-        default:
-          return this.$tr('declinedViewText', {channel: this.invitation.channel_name});
-      }
-    },
-    invitationText() {
-      let messageArgs = {
-        firstname: this.invitation.sender.first_name,
-        lastname: this.invitation.sender.last_name,
-        channel: this.invitation.channel_name
+    data() {
+      return {
+        accepted: false,
+        declined: false,
       };
-
-      switch(this.invitation.share_mode) {
-        case ListTypes.EDITABLE:
-          return this.$tr('editText', messageArgs);
-        default:
-          return this.$tr('viewText', messageArgs);
-      }
-    }
-  },
-  methods: {
-    ...mapMutations('channel_list', {
-      removeInvitation: 'REMOVE_INVITATION',
-    }),
-    ...mapActions('channel_list', [
-      'acceptInvitation',
-      'declineInvitation'
-    ]),
-    handleAccept() {
-      this.acceptInvitation(this.invitationID).then(() => {
-        this.$emit('acceptedInvitation', this.invitation.share_mode);
-        this.accepted = true;
-      }).catch((error) => {
-        console.error(error)
-        dialog.alert(this.$tr("invitationError"), error.responseText || error);
-      });
     },
-    handleDecline() {
-      dialog.dialog(this.$tr("decliningInvitation"), this.$tr("decliningInvitationMessage"), {
-        [this.$tr("cancel")]:()=>{},
-        [this.$tr("decline")]: () => {
-          this.declineInvitation(this.invitationID).then(() => {
-            this.declined = true;
-          }).catch((error) => {
+    computed: {
+      ...mapGetters('channel_list', ['getInvitation', 'invitations']),
+      invitation() {
+        return this.getInvitation(this.invitationID);
+      },
+      acceptedText() {
+        switch (this.invitation.share_mode) {
+          case ListTypes.EDITABLE:
+            return this.$tr('acceptedEditText', { channel: this.invitation.channel_name });
+          default:
+            return this.$tr('acceptedViewText', { channel: this.invitation.channel_name });
+        }
+      },
+      declinedText() {
+        switch (this.invitation.share_mode) {
+          case ListTypes.EDITABLE:
+            return this.$tr('declinedEditText', { channel: this.invitation.channel_name });
+          default:
+            return this.$tr('declinedViewText', { channel: this.invitation.channel_name });
+        }
+      },
+      invitationText() {
+        let messageArgs = {
+          firstname: this.invitation.sender.first_name,
+          lastname: this.invitation.sender.last_name,
+          channel: this.invitation.channel_name,
+        };
+
+        switch (this.invitation.share_mode) {
+          case ListTypes.EDITABLE:
+            return this.$tr('editText', messageArgs);
+          default:
+            return this.$tr('viewText', messageArgs);
+        }
+      },
+    },
+    methods: {
+      ...mapMutations('channel_list', {
+        removeInvitation: 'REMOVE_INVITATION',
+      }),
+      ...mapActions('channel_list', ['acceptInvitation', 'declineInvitation']),
+      handleAccept() {
+        this.acceptInvitation(this.invitationID)
+          .then(() => {
+            this.$emit('acceptedInvitation', this.invitation.share_mode);
+            this.accepted = true;
+          })
+          .catch(error => {
             console.error(error);
-            dialog.alert(this.$tr("invitationError"), error);
+            dialog.alert(this.$tr('invitationError'), error.responseText || error);
           });
-        },
-      },()=>{});
-    }
-  }
-};
+      },
+      handleDecline() {
+        dialog.dialog(
+          this.$tr('decliningInvitation'),
+          this.$tr('decliningInvitationMessage'),
+          {
+            [this.$tr('cancel')]: () => {},
+            [this.$tr('decline')]: () => {
+              this.declineInvitation(this.invitationID)
+                .then(() => {
+                  this.declined = true;
+                })
+                .catch(error => {
+                  console.error(error);
+                  dialog.alert(this.$tr('invitationError'), error);
+                });
+            },
+          },
+          () => {}
+        );
+      },
+    },
+  };
 
 </script>
 
@@ -138,10 +143,10 @@ export default {
 
   @import '../../../../less/channel_list.less';
 
-  @accepted-bg-color: #CEEFCE;
-  @accepted-text-color: #2D6B2D;
-  @declined-bg-color: #F7DCDC;
-  @declined-text-color: #B72525;
+  @accepted-bg-color: #ceefce;
+  @accepted-text-color: #2d6b2d;
+  @declined-bg-color: #f7dcdc;
+  @declined-text-color: #b72525;
 
   .invitation {
     .channel-list-width;
@@ -176,7 +181,7 @@ export default {
     }
 
     .invite-options {
-        padding-top: 5px;
+      padding-top: 5px;
       a {
         .action-button;
         background-color: white;

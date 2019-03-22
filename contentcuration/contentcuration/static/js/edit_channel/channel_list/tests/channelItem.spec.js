@@ -5,19 +5,22 @@ import { localStore } from './data.js';
 import { ListTypes } from './../constants';
 
 const testChannel = {
-  id: "test channel",
-  name: "test title",
-  modified: new Date()
+  id: 'test channel',
+  name: 'test title',
+  modified: new Date(),
 };
 
 function makeWrapper(props = {}) {
-  localStore.commit('channel_list/SET_CHANNEL_LIST', {channels: [testChannel], listType: ListTypes.EDITABLE});
+  localStore.commit('channel_list/SET_CHANNEL_LIST', {
+    channels: [testChannel],
+    listType: ListTypes.EDITABLE,
+  });
   return shallowMount(ChannelItem, {
     store: localStore,
     propsData: {
-      channelID: testChannel.id
-    }
-  })
+      channelID: testChannel.id,
+    },
+  });
 }
 
 describe('channelItem', () => {
@@ -27,12 +30,12 @@ describe('channelItem', () => {
   });
 
   it('should load channel information', () => {
-    expect(wrapper.text()).toEqual(expect.stringContaining(testChannel.name))
+    expect(wrapper.text()).toEqual(expect.stringContaining(testChannel.name));
   });
   it('should set the store.activeChannel', () => {
     let channel = wrapper.find('.channel-container-wrapper');
     channel.trigger('click');
-    expect(wrapper.vm.activeChannel.id).toEqual(testChannel.id)
+    expect(wrapper.vm.activeChannel.id).toEqual(testChannel.id);
   });
   it('CTRL + click should open new window', () => {
     global.open = jest.fn();

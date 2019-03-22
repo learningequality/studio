@@ -4,9 +4,9 @@ import Star from '../Star.vue';
 function makeWrapper(starred) {
   return mount(Star, {
     propsData: {
-      starred: starred
-    }
-  })
+      starred: starred,
+    },
+  });
 }
 
 describe('star', () => {
@@ -15,7 +15,7 @@ describe('star', () => {
   beforeEach(() => {
     starredWrapper = makeWrapper(true);
     unstarredWrapper = makeWrapper(false);
-  })
+  });
   it('should reflect correct star on load', () => {
     expect(starredWrapper.find('a').is('.starred')).toBe(true);
     expect(unstarredWrapper.find('a').is('.starred')).toBe(false);

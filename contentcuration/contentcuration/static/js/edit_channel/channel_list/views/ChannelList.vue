@@ -28,71 +28,71 @@
 
 <script>
 
-import _ from 'underscore';
-import { mapState, mapActions } from 'vuex';
-import ChannelItem from './ChannelItem.vue';
-import { setChannelMixin } from './../mixins';
-import { ListTypes } from './../constants';
+  import _ from 'underscore';
+  import { mapState, mapActions } from 'vuex';
+  import ChannelItem from './ChannelItem.vue';
+  import { setChannelMixin } from './../mixins';
+  import { ListTypes } from './../constants';
 
-export default {
-  name: 'ChannelList',
-  $trs: {
-    loading: "Loading channels...",
-    noChannelsFound: "No channels found",
-    channel: "Channel",
-    addChannel: "Create a new channel"
-  },
-  props: {
-    listType: {
-      type: String,
-      validator: function (value) {
-        // The value must match one of the ListTypes
-        return _.contains(_.values(ListTypes), value);
-      }
-    }
-  },
-  data() {
-    return {
-      loading: true
-    }
-  },
-  mounted() {
-    this.loadChannelList(this.listType).then(() => {
-      this.loading = false;
-    });
-  },
-  components: {
-    ChannelItem,
-  },
-  mixins: [setChannelMixin],
-  computed: {
-    ...mapState('channel_list', ['channels']),
-    listChannels() {
-      return _.chain(this.channels)
-              .where({[this.listType]: true})
-              .sortBy((channel) => {
-                return this.listType === ListTypes.PUBLIC ? -channel.priority : null;
-              })
-              .sortBy('-modified')
-              .value();
+  export default {
+    name: 'ChannelList',
+    $trs: {
+      loading: 'Loading channels...',
+      noChannelsFound: 'No channels found',
+      channel: 'Channel',
+      addChannel: 'Create a new channel',
     },
-    isEditable() {
-      return this.listType === ListTypes.EDITABLE;
-    }
-  },
-  methods: {
-    ...mapActions('channel_list', ['loadChannelList']),
-    createChannel() {
-      this.setChannel("");
-    }
-  }
-};
+    props: {
+      listType: {
+        type: String,
+        validator: function(value) {
+          // The value must match one of the ListTypes
+          return _.contains(_.values(ListTypes), value);
+        },
+      },
+    },
+    data() {
+      return {
+        loading: true,
+      };
+    },
+    mounted() {
+      this.loadChannelList(this.listType).then(() => {
+        this.loading = false;
+      });
+    },
+    components: {
+      ChannelItem,
+    },
+    mixins: [setChannelMixin],
+    computed: {
+      ...mapState('channel_list', ['channels']),
+      listChannels() {
+        return _.chain(this.channels)
+          .where({ [this.listType]: true })
+          .sortBy(channel => {
+            return this.listType === ListTypes.PUBLIC ? -channel.priority : null;
+          })
+          .sortBy('-modified')
+          .value();
+      },
+      isEditable() {
+        return this.listType === ListTypes.EDITABLE;
+      },
+    },
+    methods: {
+      ...mapActions('channel_list', ['loadChannelList']),
+      createChannel() {
+        this.setChannel('');
+      },
+    },
+  };
 
 </script>
 
 
 <style lang="less" scoped>
 
-@import '../../../../less/channel_list.less';
+  @import '../../../../less/channel_list.less';
 
 </style>

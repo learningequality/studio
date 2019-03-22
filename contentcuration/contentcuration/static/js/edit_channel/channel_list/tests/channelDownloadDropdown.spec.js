@@ -3,16 +3,14 @@ import ChannelDownloadDropdown from './../views/ChannelDownloadDropdown.vue';
 import _ from 'underscore';
 import { localStore, mockFunctions } from './data.js';
 
-
 function makeWrapper(props = {}) {
   return mount(ChannelDownloadDropdown, {
-    store: localStore
-  })
+    store: localStore,
+  });
 }
 
-const testChannel = { id: 'test', name: 'test' }
-localStore.commit('channel_list/ADD_CHANNEL', testChannel)
-
+const testChannel = { id: 'test', name: 'test' };
+localStore.commit('channel_list/ADD_CHANNEL', testChannel);
 
 describe('channelDownloadDropdown', () => {
   let wrapper;

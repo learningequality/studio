@@ -3,11 +3,10 @@ import ChannelDeleteSection from './../views/ChannelDeleteSection.vue';
 import _ from 'underscore';
 import { localStore, mockFunctions } from './data.js';
 
-
 function makeWrapper(props = {}) {
   return mount(ChannelDeleteSection, {
-    store: localStore
-  })
+    store: localStore,
+  });
 }
 
 describe('channelDeleteSection', () => {

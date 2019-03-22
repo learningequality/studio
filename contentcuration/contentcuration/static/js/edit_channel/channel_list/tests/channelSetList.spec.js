@@ -7,8 +7,8 @@ require('handlebars/helpers'); // Needed for collection details modal
 
 function makeWrapper() {
   return shallowMount(ChannelSetList, {
-    store: localStore
-  })
+    store: localStore,
+  });
 }
 
 describe('channelSetList', () => {
@@ -16,11 +16,11 @@ describe('channelSetList', () => {
 
   beforeEach(() => {
     listWrapper = makeWrapper();
-  })
+  });
 
   it('loadChannelSetList should be called', () => {
     expect(mockFunctions.loadChannelSetList).toHaveBeenCalled();
-  })
+  });
 
   it('list should load all channel sets', () => {
     listWrapper.vm.$nextTick().then(() => {

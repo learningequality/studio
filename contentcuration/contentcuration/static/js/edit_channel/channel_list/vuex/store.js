@@ -8,19 +8,19 @@ Vue.use(Vuex);
 
 module.exports = new Vuex.Store({
   modules: {
-    "channel_list": {
-		namespaced: true,
-		state: {
-			channels: [],
-			activeChannel: null,
-			changed: false,
-			channelChanges: {},
-			channelSets: [],
-			invitations: []
-		},
-		getters: getters,
-	   	mutations: mutations,
-  		actions: actions
-  	}
-  }
+    channel_list: {
+      namespaced: true,
+      state: {
+        channels: [],
+        activeChannel: null,
+        changed: false,
+        channelChanges: {},
+        channelSets: [],
+        invitations: [],
+      },
+      getters: getters,
+      mutations: mutations,
+      actions: actions,
+    },
+  },
 });

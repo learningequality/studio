@@ -31,66 +31,71 @@
 
 <script>
 
-import _ from 'underscore';
-import { mapActions, mapGetters } from 'vuex';
-import CopyToken from 'edit_channel/sharedComponents/CopyToken.vue';
-import dialog from 'edit_channel/utils/dialog';
-import { ChannelSetModalView } from 'edit_channel/channel_set/views';
-import { getChannelSetModel } from './../utils';
+  import _ from 'underscore';
+  import { mapActions, mapGetters } from 'vuex';
+  import CopyToken from 'edit_channel/sharedComponents/CopyToken.vue';
+  import dialog from 'edit_channel/utils/dialog';
+  import { ChannelSetModalView } from 'edit_channel/channel_set/views';
+  import { getChannelSetModel } from './../utils';
 
-export default {
-  name: 'ChannelSetItem',
-  $trs: {
-    deleteChannelSetTitle: 'Delete Collection',
-    deleteChannelSetText: "Are you sure you want to PERMANTENTLY delete this channel collection?",
-    copyPrompt: "Copy token to import channel into Kolibri",
-    channelCount: "{count, plural,\n =1 {# Channel}\n other {# Channels}}",
-    cancel: "Cancel"
-  },
-  props: {
-    channelSetID: {
-      type: String,
-      required: true,
-    }
-  },
-  components: {
-    CopyToken,
-  },
-  data() {
-    return {
-      optionHighlighted: false
-    }
-  },
-  computed: {
-    ...mapGetters('channel_list', ['getChannelSet']),
-    channelSet() {
-      return this.getChannelSet(this.channelSetID);
-    }
-  },
-  methods: {
-    ...mapActions('channel_list', ['deleteChannelSet']),
-    handleDeleteChannelSet() {
-      dialog.dialog(this.$tr("deleteChannelSetTitle"), this.$tr("deleteChannelSetText"), {
-        [this.$tr("cancel")]:function(){},
-        [this.$tr("deleteChannelSetTitle")]: () => {
-          this.deleteChannelSet(this.channelSetID);
-        },
-      }, () => {});
+  export default {
+    name: 'ChannelSetItem',
+    $trs: {
+      deleteChannelSetTitle: 'Delete Collection',
+      deleteChannelSetText: 'Are you sure you want to PERMANTENTLY delete this channel collection?',
+      copyPrompt: 'Copy token to import channel into Kolibri',
+      channelCount: '{count, plural,\n =1 {# Channel}\n other {# Channels}}',
+      cancel: 'Cancel',
     },
-    openChannelSet() {
-      let channelSetView = new ChannelSetModalView({
-        modal: true,
-        isNew: false,
-        model: getChannelSetModel(this.channelSet),
-        onsave: (channelset) => {
-          _.each(channelset.pairs(), (attr) => {
-            this.channelSet[attr[0]] = attr[1];
-          });
-        }
-      });
-    }
-  }
-};
+    props: {
+      channelSetID: {
+        type: String,
+        required: true,
+      },
+    },
+    components: {
+      CopyToken,
+    },
+    data() {
+      return {
+        optionHighlighted: false,
+      };
+    },
+    computed: {
+      ...mapGetters('channel_list', ['getChannelSet']),
+      channelSet() {
+        return this.getChannelSet(this.channelSetID);
+      },
+    },
+    methods: {
+      ...mapActions('channel_list', ['deleteChannelSet']),
+      handleDeleteChannelSet() {
+        dialog.dialog(
+          this.$tr('deleteChannelSetTitle'),
+          this.$tr('deleteChannelSetText'),
+          {
+            [this.$tr('cancel')]: function() {},
+            [this.$tr('deleteChannelSetTitle')]: () => {
+              this.deleteChannelSet(this.channelSetID);
+            },
+          },
+          () => {}
+        );
+      },
+      openChannelSet() {
+        let channelSetView = new ChannelSetModalView({
+          modal: true,
+          isNew: false,
+          model: getChannelSetModel(this.channelSet),
+          onsave: channelset => {
+            _.each(channelset.pairs(), attr => {
+              this.channelSet[attr[0]] = attr[1];
+            });
+          },
+        });
+      },
+    },
+  };
 
 </script>
 
@@ -113,6 +118,5 @@ export default {
       }
     }
   }
-
 
 </style>
