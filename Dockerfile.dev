@@ -5,7 +5,7 @@ RUN apt-get update
 RUN apt-get -y install curl
 
 # install node
-RUN curl -sL https://deb.nodesource.com/setup_6.x | bash -
+RUN curl -sL https://deb.nodesource.com/setup_10.x | bash -
 
 RUN apt-get -y install nodejs python python-dev \
     python-pip gcc libpq-dev ffmpeg imagemagick \
