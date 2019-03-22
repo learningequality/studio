@@ -33,12 +33,12 @@
         loading: true,
       };
     },
+    computed: mapGetters('channel_list', ['invitations']),
     mounted() {
       this.loadChannelInvitationList().then(() => {
         this.loading = false;
       });
     },
-    computed: mapGetters('channel_list', ['invitations']),
     methods: {
       ...mapActions('channel_list', ['loadChannelInvitationList']),
       acceptedInvitation(shareMode) {

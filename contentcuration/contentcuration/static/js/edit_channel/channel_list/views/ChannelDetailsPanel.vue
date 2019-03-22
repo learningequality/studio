@@ -67,13 +67,6 @@
         editing: false,
       };
     },
-    watch: {
-      channel(newVal, oldVal) {
-        if (newVal.id !== oldVal.id) {
-          this.editing = false;
-        }
-      },
-    },
     computed: {
       ...mapState('channel_list', {
         channel: 'activeChannel',
@@ -86,6 +79,13 @@
       },
       thumbnailUrl() {
         return this.channel.thumbnail_url || '/static/img/kolibri_placeholder.png';
+      },
+    },
+    watch: {
+      channel(newVal, oldVal) {
+        if (newVal.id !== oldVal.id) {
+          this.editing = false;
+        }
       },
     },
     methods: {

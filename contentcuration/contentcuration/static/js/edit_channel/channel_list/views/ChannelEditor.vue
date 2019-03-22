@@ -31,11 +31,11 @@
           </option>
 
           <option
-            v-for="language in languages"
-            :key="language.id"
-            :value="language.id"
+            v-for="lang in languages"
+            :key="lang.id"
+            :value="lang.id"
           >
-            {{ language.native_name }}
+            {{ lang.native_name }}
           </option>
         </select>
       </label>
@@ -151,12 +151,6 @@
         description: '',
       };
     },
-    beforeMount() {
-      // Only need this because we're using getters. Could go straight to $store.state in `data`
-      this.language = this.channel.language;
-      this.name = this.channel.name;
-      this.description = this.channel.description;
-    },
     computed: {
       ...mapState('channel_list', {
         channel: 'channelChanges',
@@ -186,6 +180,12 @@
         else if (this.invalid) return this.$tr('invalidChannel');
         return '';
       },
+    },
+    beforeMount() {
+      // Only need this because we're using getters. Could go straight to $store.state in `data`
+      this.language = this.channel.language;
+      this.name = this.channel.name;
+      this.description = this.channel.description;
     },
     mounted() {
       this.loadThumbnailUploader();

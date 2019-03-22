@@ -61,12 +61,12 @@
         loading: true,
       };
     },
+    computed: mapGetters('channel_list', ['channelSets']),
     mounted() {
       this.loadChannelSetList().then(() => {
         this.loading = false;
       });
     },
-    computed: mapGetters('channel_list', ['channelSets']),
     methods: {
       ...mapActions('channel_list', ['loadChannelSetList']),
       ...mapMutations('channel_list', {
