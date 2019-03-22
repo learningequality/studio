@@ -13,12 +13,13 @@
       <h3>{{ channel.name }}</h3>
       <p class="channel-text">
         <span>
-          {{ $tr('created',
-            {'date':
-                $formatDate(channel.created, {
-                day:'numeric', month:'short', 'year':'numeric'
-              })
-            })
+          {{
+            $tr('created', {
+                'date': $formatDate(channel.created, {
+                  day:'numeric', month:'short', 'year':'numeric'
+                })
+              }
+            )
           }}
         </span>
         <span v-if="channel.published">

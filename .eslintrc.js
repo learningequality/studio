@@ -6,5 +6,6 @@ esLintConfig.globals = {
   "HandlebarsIntl": false,
   "MathJax": false,
   "Raven": false,
+  "jest": false,
 }
 module.exports = esLintConfig;

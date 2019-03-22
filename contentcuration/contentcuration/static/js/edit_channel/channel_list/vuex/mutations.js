@@ -1,15 +1,15 @@
 import _ from 'underscore';
 import { prepChannel, getDefaultChannel } from './../utils';
 
-export function RESET_STATE() {
-  state = {
+export function RESET_STATE(state) {
+  Object.merge(state, {
     channels: [],
     activeChannel: null,
     changed: false,
     channelChanges: {},
     channelSets: [],
     invitations: [],
-  };
+  });
 }
 
 /* CHANNEL LIST MUTATIONS */
