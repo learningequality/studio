@@ -86,6 +86,7 @@ function extractMessages(files) {
       var jsSource = readJSFromVue(source);
       var ast = espree.parse(jsSource, {
         sourceType: 'module',
+        ecmaVersion: 2018,
       });
       ast.body.forEach(function(node) {
         // Look through each top level node until we find the module.exports or export default
