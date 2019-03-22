@@ -10,7 +10,7 @@ RUN curl -sL https://deb.nodesource.com/setup_10.x | bash -
 RUN apt-get -y install nodejs python python-dev \
     python-pip gcc libpq-dev ffmpeg imagemagick \
     ghostscript python-tk make libjpeg-dev \
-    wkhtmltopdf
+    wkhtmltopdf git
 
 RUN npm install -g yarn
 
