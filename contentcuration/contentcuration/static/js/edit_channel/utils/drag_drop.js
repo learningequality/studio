@@ -1,7 +1,7 @@
+const WorkspaceManager = require('./workspace_manager');
 var Models = require('edit_channel/models');
 var stringHelper = require('edit_channel/utils/string_helper');
 var dialog = require('edit_channel/utils/dialog');
-const WorkspaceManager = require('./workspace_manager');
 
 /* handleDrop: adds dropping ability to a certain container
  *   Parameters:

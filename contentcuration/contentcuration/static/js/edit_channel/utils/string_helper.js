@@ -1,5 +1,5 @@
-const State = require('edit_channel/state');
 var i18n = require('../../utils/i18n');
+const State = require('edit_channel/state');
 
 function format_size(text) {
   if (!text) {

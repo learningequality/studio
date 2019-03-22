@@ -15,10 +15,10 @@
         <span>
           {{
             $tr('created', {
-                'date': $formatDate(channel.created, {
-                  day:'numeric', month:'short', 'year':'numeric'
-                })
-              }
+              'date': $formatDate(channel.created, {
+                day:'numeric', month:'short', 'year':'numeric'
+              })
+            }
             )
           }}
         </span>
@@ -53,13 +53,13 @@
 <script>
 
   import _ from 'underscore';
-  import State from 'edit_channel/state';
   import { mapState } from 'vuex';
+  import ChannelDownloadDropdown from './ChannelDownloadDropdown.vue';
+  import State from 'edit_channel/state';
   import Constants from 'edit_channel/constants/index';
 
   // Components
   import ToggleText from 'edit_channel/sharedComponents/ToggleText.vue';
-  import ChannelDownloadDropdown from './ChannelDownloadDropdown.vue';
 
   export default {
     name: 'ChannelMetadataSection',

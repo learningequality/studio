@@ -1,7 +1,7 @@
 var _ = require('underscore');
+var Dropzone = require('dropzone');
 var BaseViews = require('edit_channel/views');
 var Models = require('edit_channel/models');
-var Dropzone = require('dropzone');
 var get_cookie = require('utils/get_cookie');
 require('file-uploader.less');
 require('dropzone/dist/dropzone.css');

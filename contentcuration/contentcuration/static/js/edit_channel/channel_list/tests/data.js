@@ -1,10 +1,10 @@
 import Vue from 'vue';
 import { ListTypes } from '../constants';
 
+const Vuex = require('vuex');
 var mutations = require('edit_channel/channel_list/vuex/mutations');
 var getters = require('edit_channel/channel_list/vuex/getters');
 var actions = require('edit_channel/channel_list/vuex/actions');
-const Vuex = require('vuex');
 
 Vue.use(Vuex);
 

@@ -37,10 +37,10 @@
 <script>
 
   import { mapGetters, mapActions, mapMutations } from 'vuex';
-  import { ChannelSetInformationModalView } from 'edit_channel/information/views';
-  import { ChannelSetModalView } from 'edit_channel/channel_set/views';
   import ChannelSetItem from './ChannelSetItem.vue';
   import { getChannelSetModel } from './../utils';
+  import { ChannelSetInformationModalView } from 'edit_channel/information/views';
+  import { ChannelSetModalView } from 'edit_channel/channel_set/views';
 
   export default {
     name: 'ChannelSetList',

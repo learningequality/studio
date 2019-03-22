@@ -1,5 +1,5 @@
-const State = require('edit_channel/state');
 var Models = require('../models');
+const State = require('edit_channel/state');
 
 export function loadChannelSetChannels(token) {
   return new Promise(function(resolve, reject) {

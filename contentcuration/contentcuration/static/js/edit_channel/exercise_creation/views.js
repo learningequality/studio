@@ -8,10 +8,10 @@ const IMG_CHECK = /.*\/content\/storage\/[0-9a-z]\/[0-9a-z]\/([0-9a-z]{32}\..+)/
 
 /* MODULES */
 var _ = require('underscore');
+var UndoManager = require('backbone-undo');
 var BaseViews = require('edit_channel/views');
 var Models = require('edit_channel/models');
 var ImageUploader = require('edit_channel/image/views');
-var UndoManager = require('backbone-undo');
 require('summernote');
 require('../../utils/mathquill.min.js');
 var dialog = require('edit_channel/utils/dialog');

@@ -1,12 +1,12 @@
 var _ = require('underscore');
 require('content-container.less');
-var dialog = require('edit_channel/utils/dialog');
-var descriptionHelper = require('edit_channel/utils/description');
-const State = require('edit_channel/state');
 const WorkspaceManager = require('../utils/workspace_manager');
 const Router = require('../router');
 var BaseViews = require('./../views');
 var Models = require('./../models');
+const State = require('edit_channel/state');
+var descriptionHelper = require('edit_channel/utils/description');
+var dialog = require('edit_channel/utils/dialog');
 
 var storage = window.localStorage || {};
 

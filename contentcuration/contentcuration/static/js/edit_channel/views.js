@@ -1,9 +1,9 @@
 var Backbone = require('backbone');
 var _ = require('underscore');
-var analytics = require('utils/analytics');
-const State = require('edit_channel/state');
 const WorkspaceManager = require('./utils/workspace_manager');
 var Models = require('./models');
+var analytics = require('utils/analytics');
+const State = require('edit_channel/state');
 
 //var UndoManager = require("backbone-undo");
 
