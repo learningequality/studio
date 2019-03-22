@@ -2,7 +2,7 @@ import _ from 'underscore';
 import { prepChannel, getDefaultChannel } from './../utils';
 
 export function RESET_STATE(state) {
-  Object.merge(state, {
+  Object.assign(state, {
     channels: [],
     activeChannel: null,
     changed: false,

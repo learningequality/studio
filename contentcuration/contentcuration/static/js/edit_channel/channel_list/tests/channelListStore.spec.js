@@ -1,3 +1,4 @@
+import _ from 'underscore';
 import store from './../vuex/store';
 import { ListTypes } from './../constants';
 import { Invitations } from './data';
