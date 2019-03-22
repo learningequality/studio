@@ -1,7 +1,6 @@
 import { shallowMount } from '@vue/test-utils';
 import LookInsideView from './../views/LookInsideView.vue';
-import { localStore } from './data.js';
-import { mockFunctions } from './data.js';
+import { localStore, mockFunctions } from './data.js';
 
 function makeWrapper() {
   return shallowMount(LookInsideView, {
