@@ -1,4 +1,7 @@
 var _ = require('underscore');
+const WorkspaceManager = require('../utils/workspace_manager');
+const Router = require('../router');
+const Constants = require('../constants/index');
 var BaseViews = require('edit_channel/views');
 var Models = require('edit_channel/models');
 var Related = require('edit_channel/related/views');
@@ -10,9 +13,6 @@ var stringHelper = require('edit_channel/utils/string_helper');
 var autoCompleteHelper = require('edit_channel/utils/autocomplete');
 var dialog = require('edit_channel/utils/dialog');
 const State = require('edit_channel/state');
-const WorkspaceManager = require('../utils/workspace_manager');
-const Router = require('../router');
-const Constants = require('../constants/index');
 require('uploader.less');
 
 var NAMESPACE = 'uploader';

@@ -1,10 +1,10 @@
 var _ = require('underscore');
+const WorkspaceManager = require('../utils/workspace_manager');
 var BaseViews = require('edit_channel/views');
 var Models = require('edit_channel/models');
 var stringHelper = require('edit_channel/utils/string_helper');
 const State = require('edit_channel/state');
 const Constants = require('edit_channel/constants/index');
-const WorkspaceManager = require('../utils/workspace_manager');
 require('export.less');
 
 var NAMESPACE = 'export';

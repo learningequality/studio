@@ -40,8 +40,8 @@
 <script>
 
   import { mapActions, mapGetters, mapMutations } from 'vuex';
-  import dialog from 'edit_channel/utils/dialog';
   import { ListTypes } from '../constants';
+  import dialog from 'edit_channel/utils/dialog';
 
   export default {
     name: 'ChannelInvitationItem',

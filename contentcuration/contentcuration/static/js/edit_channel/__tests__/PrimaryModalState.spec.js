@@ -1,7 +1,7 @@
-const BaseViews = require('edit_channel/views');
 let State = require('../state');
 const ERROR_PRIMARY_MODAL_ALREADY_OPEN = require('../vuexModules/primaryModal')
   .ERROR_PRIMARY_MODAL_ALREADY_OPEN;
+const BaseViews = require('edit_channel/views');
 
 // a function that creates a BaseView
 let makeModalView = () => new BaseViews.BaseView();

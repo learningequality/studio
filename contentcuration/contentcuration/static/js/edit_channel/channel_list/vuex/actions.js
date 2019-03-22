@@ -1,8 +1,8 @@
+import { ChannelListUrls, ChannelInvitationMapping } from './../constants';
+import { prepChannel } from './../utils';
 import State from 'edit_channel/state';
 
 import Models from 'edit_channel/models';
-import { ChannelListUrls, ChannelInvitationMapping } from './../constants';
-import { prepChannel } from './../utils';
 
 /* CHANNEL LIST ACTIONS */
 export function loadChannelList(context, listType) {

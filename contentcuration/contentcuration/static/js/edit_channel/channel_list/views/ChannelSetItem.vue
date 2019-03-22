@@ -44,10 +44,10 @@
 
   import _ from 'underscore';
   import { mapActions, mapGetters } from 'vuex';
+  import { getChannelSetModel } from './../utils';
   import CopyToken from 'edit_channel/sharedComponents/CopyToken.vue';
   import dialog from 'edit_channel/utils/dialog';
   import { ChannelSetModalView } from 'edit_channel/channel_set/views';
-  import { getChannelSetModel } from './../utils';
 
   export default {
     name: 'ChannelSetItem',

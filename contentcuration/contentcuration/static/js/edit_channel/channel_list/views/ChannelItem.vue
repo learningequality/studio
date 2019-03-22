@@ -1,5 +1,6 @@
 <template>
-  <div :id="channelID"
+  <div
+    :id="channelID"
     class="channel-item"
     :class="{optionHighlighted: optionHighlighted, active: isSelected}"
   >
@@ -39,15 +40,15 @@
         </p>
       </div>
       <div class="updated-time">
-      {{$tr(
-        'lastUpdated',
-        {
-          'updated':  $formatDate(
-            channel.modified,
-            {day:'numeric', month:'short', 'year':'numeric'}
-          )
-        })
-      }} <!-- TODO: change to formatRelative -->
+        {{ $tr(
+          'lastUpdated',
+          {
+            'updated': $formatDate(
+              channel.modified,
+              {day:'numeric', month:'short', 'year':'numeric'}
+            )
+          })
+        }} <!-- TODO: change to formatRelative -->
       </div>
     </div>
     <div class="is-selected">
@@ -61,10 +62,10 @@
 <script>
 
   import { mapGetters, mapState } from 'vuex';
-  import Constants from 'edit_channel/constants/index';
-  import CopyToken from 'edit_channel/sharedComponents/CopyToken.vue';
   import { setChannelMixin } from '../mixins';
   import ChannelStar from './ChannelStar.vue';
+  import Constants from 'edit_channel/constants/index';
+  import CopyToken from 'edit_channel/sharedComponents/CopyToken.vue';
 
   export default {
     name: 'ChannelItem',

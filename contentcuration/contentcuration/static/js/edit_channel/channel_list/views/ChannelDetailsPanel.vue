@@ -41,7 +41,6 @@
 <script>
 
   import _ from 'underscore';
-  import State from 'edit_channel/state';
   import { mapState } from 'vuex';
   import { setChannelMixin } from '../mixins';
 
@@ -51,6 +50,7 @@
   import ChannelDeleteSection from './ChannelDeleteSection.vue';
   import ChannelMetadataSection from './ChannelMetadataSection.vue';
   import LookInsideView from './LookInsideView.vue';
+  import State from 'edit_channel/state';
 
   export default {
     name: 'ChannelDetailsPanel',

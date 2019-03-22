@@ -1,6 +1,6 @@
+var _ = require('underscore');
 const State = require('edit_channel/state');
 var template = require('edit_channel/utils/hbtemplates/dialog.handlebars');
-var _ = require('underscore');
 var stringHelper = require('edit_channel/utils/string_helper');
 
 function dialog(title, submessage, actions, onclose) {
