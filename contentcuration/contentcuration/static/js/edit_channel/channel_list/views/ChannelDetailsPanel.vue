@@ -4,7 +4,7 @@
       <div id="channel-details-panel">
         <h2 id="channel-details-top-options">
           <div v-if="isNew">
-&nbsp;
+            &nbsp;
           </div>
           <ChannelStar v-else :channelID="channel.id" />
           <a class="material-icons" @click="closePanel">

@@ -11,6 +11,7 @@ function makeWrapper() {
 
 describe('channelInvitationList', () => {
   it('loadChannelInvitationList should be called', () => {
+    makeWrapper();
     expect(mockFunctions.loadChannelInvitationList).toHaveBeenCalled();
   });
 

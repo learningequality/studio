@@ -101,6 +101,7 @@
   .channel-details-top {
     .thumbnail-title-columns;
 
+    grid-template-columns: 1fr 3fr;
     padding: 0 20px 40px;
     img {
       width: 130px;

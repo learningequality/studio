@@ -90,14 +90,14 @@
         <!-- Tabindex necessary? -->
         <button
           type="reset"
-          class="cancel-edits"
+          class="cancel-edits action-text"
           :tabindex="4"
           @click="cancelEdit"
         >
           {{ $tr('cancel') }}
         </button>
         <button
-          class="save-channel"
+          class="save-channel action-button"
           type="submit"
           :tabindex="3"
           :class="{'disabled': invalid}"
@@ -350,12 +350,6 @@
         a,
         button {
           text-transform: uppercase;
-        }
-        a {
-          .action-text;
-        }
-        button {
-          .action-button;
         }
       }
     }
