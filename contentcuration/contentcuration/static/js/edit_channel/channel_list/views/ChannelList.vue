@@ -60,11 +60,6 @@
         loading: true,
       };
     },
-    mounted() {
-      this.loadChannelList(this.listType).then(() => {
-        this.loading = false;
-      });
-    },
     computed: {
       ...mapState('channel_list', ['channels']),
       listChannels() {
@@ -79,6 +74,11 @@
       isEditable() {
         return this.listType === ListTypes.EDITABLE;
       },
+    },
+    mounted() {
+      this.loadChannelList(this.listType).then(() => {
+        this.loading = false;
+      });
     },
     methods: {
       ...mapActions('channel_list', ['loadChannelList']),
