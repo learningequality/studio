@@ -17,14 +17,6 @@ var ChannelEditRouter = Backbone.Router.extend({
     ':channel/view(/:topic)(/:node)': 'preview_page',
     ':channel/clipboard(/:topic)(/:node)': 'clipboard_page',
   },
-
-  navigate_channel_home: function() {
-    var ChannelManageView = require('edit_channel/new_channel/views');
-    new ChannelManageView.ChannelListPage({
-      el: $('#channel-container'),
-    });
-  },
-
   edit_page: function(channel, topic, node) {
     var data = { edit_mode_on: true, topic: topic, node: node, page: 'edit' };
     this.open_channel(data, State.current_channel.get_root('main_tree'));
