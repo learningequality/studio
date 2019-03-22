@@ -7,7 +7,7 @@ var getters = require('./getters');
 
 Vue.use(Vuex);
 
-module.exports = new Vuex.Store({
+const store = new Vuex.Store({
   modules: {
     channel_list: {
       namespaced: true,
@@ -25,3 +25,6 @@ module.exports = new Vuex.Store({
     },
   },
 });
+
+export default store;
+module.exports = store;
