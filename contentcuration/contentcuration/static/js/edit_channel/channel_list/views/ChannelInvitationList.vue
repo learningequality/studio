@@ -1,5 +1,4 @@
 <template>
-
   <div class="invitation-list">
     <div v-if="loading" class="default-item">
       {{ $tr('loading') }}
@@ -13,56 +12,52 @@
       />
     </div>
   </div>
-
 </template>
 
 <script>
 
-import { mapGetters, mapActions } from 'vuex';
-import { ChannelInvitationMapping } from './../constants';
-import ChannelInvitationItem from './ChannelInvitationItem.vue';
+  import { mapGetters, mapActions } from 'vuex';
+  import { ChannelInvitationMapping } from './../constants';
+  import ChannelInvitationItem from './ChannelInvitationItem.vue';
 
-export default {
-  name: 'ChannelInvitationList',
-  $trs: {
-    loading: "Checking for invitations..."
-  },
-  data() {
-    return {
-      loading: true
-    }
-  },
-  mounted() {
-    this.loadChannelInvitationList().then(() => {
-      this.loading = false;
-    });
-  },
-  components: {
-    ChannelInvitationItem
-  },
-  computed: mapGetters('channel_list', [
-    'invitations'
-  ]),
-  methods: {
-    ...mapActions('channel_list', [
-      'loadChannelInvitationList'
-    ]),
-    acceptedInvitation(shareMode) {
-      this.$emit('setActiveList', ChannelInvitationMapping[shareMode]);
-    }
-  }
-};
+  export default {
+    name: 'ChannelInvitationList',
+    $trs: {
+      loading: 'Checking for invitations...',
+    },
+    components: {
+      ChannelInvitationItem,
+    },
+    data() {
+      return {
+        loading: true,
+      };
+    },
+    computed: mapGetters('channel_list', ['invitations']),
+    mounted() {
+      this.loadChannelInvitationList().then(() => {
+        this.loading = false;
+      });
+    },
+    methods: {
+      ...mapActions('channel_list', ['loadChannelInvitationList']),
+      acceptedInvitation(shareMode) {
+        this.$emit('setActiveList', ChannelInvitationMapping[shareMode]);
+      },
+    },
+  };
 
 </script>
 
 
 <style lang="less" scoped>
 
-.invitation-list {
-  padding-top: 20px;
-  .default-item {
-    font-size: 12pt;
-    font-weight: normal;
+  .invitation-list {
+    padding-top: 20px;
+    .default-item {
+      font-size: 12pt;
+      font-weight: normal;
+    }
   }
-}
+
 </style>

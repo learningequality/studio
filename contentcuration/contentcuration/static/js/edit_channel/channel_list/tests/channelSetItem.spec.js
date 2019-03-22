@@ -2,25 +2,25 @@ import { shallowMount } from '@vue/test-utils';
 import ChannelSetItem from './../views/ChannelSetItem.vue';
 import { localStore, mockFunctions } from './data.js';
 
-function makeWrapper(props = {}) {
+function makeWrapper() {
   let channelSet = {
     id: 'channel-set-id',
-    name: "test title",
+    name: 'test title',
     channels: ['test'],
     secret_token: {
-      display_token: 'test-test'
-    }
-  }
+      display_token: 'test-test',
+    },
+  };
 
-  localStore.commit('channel_list/ADD_CHANNEL', {'id': 'test'})
-  localStore.commit('channel_list/SET_CHANNELSET_LIST', [channelSet])
+  localStore.commit('channel_list/ADD_CHANNEL', { id: 'test' });
+  localStore.commit('channel_list/SET_CHANNELSET_LIST', [channelSet]);
 
   return shallowMount(ChannelSetItem, {
     store: localStore,
     propsData: {
-      channelSetID: channelSet.id
-    }
-  })
+      channelSetID: channelSet.id,
+    },
+  });
 }
 
 describe('channelSetItem', () => {
@@ -30,11 +30,11 @@ describe('channelSetItem', () => {
   });
 
   it('should show correct number of channels', () => {
-    let metadata = wrapper.find('.channel-metadata')
-    expect(metadata.text()).toEqual(expect.stringContaining("1 Channel"));
+    let metadata = wrapper.find('.channel-metadata');
+    expect(metadata.text()).toEqual(expect.stringContaining('1 Channel'));
   });
   it('on DELETE click, dialog should be shown', () => {
-    wrapper.find('.delete-channelset').trigger('click')
+    wrapper.find('.delete-channelset').trigger('click');
     expect(mockFunctions.deleteChannelSet).not.toHaveBeenCalled();
     expect(document.querySelector('#dialog-box')).toBeTruthy();
   });

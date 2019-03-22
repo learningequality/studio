@@ -13,3 +13,11 @@
     hooks:
     -   id: reorder-python-imports
         language_version: python2.7
+-   repo: local
+    hooks:
+      -   id: frontend-lint
+          name: Linting of JS, Vue, SCSS and CSS files
+          description: This hook handles all frontend linting for Kolibri Studio
+          entry: yarn run lint -w
+          language: system
+          files: \.(js|vue|scss|less|css)$

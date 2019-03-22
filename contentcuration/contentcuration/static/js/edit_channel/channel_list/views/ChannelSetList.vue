@@ -1,12 +1,20 @@
 <template>
-
   <div class="channel-list">
     <div class="new-button">
-      <a class="action-text" id="about-sets" @click="openAboutChannelSets">
-        <span class="material-icons">info</span> {{ $tr('aboutChannelSets') }}
+      <a id="about-sets" class="action-text" @click="openAboutChannelSets">
+        <span class="material-icons">
+          info
+        </span> {{ $tr('aboutChannelSets') }}
       </a>
-      <a class="action-button" id="new-set" :title="$tr('addChannelSetTitle')" @click="newChannelSet">
-        <span class="material-icons">add</span> {{ $tr('addChannelSetButton') }}
+      <a
+        id="new-set"
+        class="action-button"
+        :title="$tr('addChannelSetTitle')"
+        @click="newChannelSet"
+      >
+        <span class="material-icons">
+          add
+        </span> {{ $tr('addChannelSetButton') }}
       </a>
     </div>
 
@@ -24,86 +32,83 @@
       />
     </div>
   </div>
-
 </template>
 
 <script>
 
-import { mapGetters, mapActions, mapMutations } from 'vuex';
-import ChannelSetItem from './ChannelSetItem.vue';
-import { ChannelSetInformationModalView } from 'edit_channel/information/views';
-import { ChannelSetModalView } from 'edit_channel/channel_set/views';
-import { getChannelSetModel } from './../utils';
+  import { mapGetters, mapActions, mapMutations } from 'vuex';
+  import ChannelSetItem from './ChannelSetItem.vue';
+  import { getChannelSetModel } from './../utils';
+  import { ChannelSetInformationModalView } from 'edit_channel/information/views';
+  import { ChannelSetModalView } from 'edit_channel/channel_set/views';
 
-export default {
-  name: 'ChannelSetList',
-  $trs: {
-    loading: "Loading collections...",
-    noChannelSetsFound: "You can package together multiple Studio channels to create a collection." +
-                        " Use a collection token to make multiple channels available for import at once in Kolibri!",
-    addChannelSetTitle: "Create a new collection of channelsn",
-    addChannelSetButton: "Collection",
-    aboutChannelSets: "About Collections"
-  },
-  data() {
-    return {
-      loading: true
-    }
-  },
-  mounted() {
-    this.loadChannelSetList().then(() => {
-      this.loading = false;
-    });
-  },
-  components: {
-    ChannelSetItem,
-  },
-  computed: mapGetters('channel_list', [
-    'channelSets'
-  ]),
-  methods: {
-    ...mapActions('channel_list', ['loadChannelSetList']),
-    ...mapMutations('channel_list', {
-      addChannelSet: 'ADD_CHANNELSET'
-    }),
-    openAboutChannelSets() {
-      new ChannelSetInformationModalView({});
+  export default {
+    name: 'ChannelSetList',
+    $trs: {
+      loading: 'Loading collections...',
+      noChannelSetsFound:
+        'You can package together multiple Studio channels to create a collection.' +
+        ' Use a collection token to make multiple channels available for import at once in Kolibri!',
+      addChannelSetTitle: 'Create a new collection of channelsn',
+      addChannelSetButton: 'Collection',
+      aboutChannelSets: 'About Collections',
     },
-    newChannelSet() {
-      let channelSetView = new ChannelSetModalView({
-        modal: true,
-        isNew: true,
-        model: getChannelSetModel({}),
-        onsave: this.addChannelSet
+    components: {
+      ChannelSetItem,
+    },
+    data() {
+      return {
+        loading: true,
+      };
+    },
+    computed: mapGetters('channel_list', ['channelSets']),
+    mounted() {
+      this.loadChannelSetList().then(() => {
+        this.loading = false;
       });
-    }
-  }
-};
-
+    },
+    methods: {
+      ...mapActions('channel_list', ['loadChannelSetList']),
+      ...mapMutations('channel_list', {
+        addChannelSet: 'ADD_CHANNELSET',
+      }),
+      openAboutChannelSets() {
+        new ChannelSetInformationModalView({});
+      },
+      newChannelSet() {
+        new ChannelSetModalView({
+          modal: true,
+          isNew: true,
+          model: getChannelSetModel({}),
+          onsave: this.addChannelSet,
+        });
+      },
+    },
+  };
 
 </script>
 
 
 <style lang="less" scoped>
 
-@import '../../../../less/channel_list.less';
+  @import '../../../../less/channel_list.less';
 
-#about-sets {
-  vertical-align: sub;
-  font-size: 12pt;
-  padding: 0px;
-  float: left;
-  span {
-    font-size: 16pt;
+  #about-sets {
+    float: left;
+    padding: 0;
+    font-size: 12pt;
     vertical-align: sub;
+    span {
+      font-size: 16pt;
+      vertical-align: sub;
+    }
   }
-}
 
-.no-channel-sets {
-  margin-top: 30px;
-  color: @gray-500;
-  font-size: 14pt;
-  text-align: center;
-}
+  .no-channel-sets {
+    margin-top: 30px;
+    font-size: 14pt;
+    color: @gray-500;
+    text-align: center;
+  }
 
 </style>
