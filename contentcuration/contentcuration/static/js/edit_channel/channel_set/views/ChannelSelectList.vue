@@ -1,5 +1,4 @@
 <template>
-
   <div class="channel-list">
     <div class="channel-list-header uppercase" @click="toggleChannelList">
       {{ translateName }}
@@ -26,7 +25,6 @@
       </div>
     </div>
   </div>
-
 </template>
 
 

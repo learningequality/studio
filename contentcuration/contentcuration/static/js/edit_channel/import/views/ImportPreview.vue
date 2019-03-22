@@ -1,5 +1,4 @@
 <template>
-
   <div class="import-preview">
     <button class="back-button button-reset" @click="goToPreviousPage()">
       {{ $tr('back') }}
@@ -28,7 +27,6 @@
       </div>
     </div>
   </div>
-
 </template>
 
 

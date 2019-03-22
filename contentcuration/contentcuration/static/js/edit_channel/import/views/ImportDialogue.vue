@@ -1,5 +1,4 @@
 <template>
-
   <div>
     <!-- SEARCH FORM -->
     <div v-if="!isImportPreview">
@@ -50,7 +49,6 @@
       </span>
     </div>
   </div>
-
 </template>
 
 

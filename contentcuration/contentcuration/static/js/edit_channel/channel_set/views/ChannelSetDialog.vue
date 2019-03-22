@@ -1,5 +1,4 @@
 <template>
-
   <div>
     <!-- SLOT FOR CHANNEL SET VIEW OR CHANNEL SELECT VIEW-->
     <div id="channel-set-content">
@@ -38,7 +37,6 @@
       </span>
     </div>
   </div>
-
 </template>
 
 

@@ -1,5 +1,4 @@
 <template>
-
   <div ref="topmodal" class="modal fade" tabindex="-1">
     <div class="modal-dialog">
       <div id="channel-set-modal-content" class="modal-content modal-dialog-default">
@@ -16,7 +15,6 @@
       </div>
     </div>
   </div>
-
 </template>
 
 

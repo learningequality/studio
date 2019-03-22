@@ -1,5 +1,4 @@
 <template>
-
   <li class="list-item" :class="importListItemClass">
     <template v-if="!isChannel && !readOnly">
       <input
@@ -68,7 +67,6 @@
       </ul>
     </div>
   </li>
-
 </template>
 
 
