@@ -1,7 +1,3 @@
-import Vue from 'vue';
-
-import ChannelListPage from 'edit_channel/channel_list/views/ChannelListPage.vue';
-
 var _ = require('underscore');
 var Backbone = require('backbone');
 var State = require('./state');

@@ -33,7 +33,7 @@
 <script>
 
   import { mapState, mapActions } from 'vuex';
-  import { dialog, alert } from 'edit_channel/utils/dialog';
+  import { alert } from 'edit_channel/utils/dialog';
 
   export default {
     name: 'ChannelDownloadDropdown',
@@ -80,7 +80,7 @@
 
         alert(this.$tr('downloadStartedHeader'), formatString);
         this.downloadChannelDetails({ format: format, id: this.channel.id }).catch(error => {
-          console.error(error);
+          console.error(error); // eslint-disable-line no-console
           alert(this.$tr('downloadFailedHeader'), errorString);
         });
       },

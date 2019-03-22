@@ -1,7 +1,6 @@
 import { shallowMount } from '@vue/test-utils';
-import _ from 'underscore';
 import ChannelDetailsPanel from './../views/ChannelDetailsPanel.vue';
-import { localStore, mockFunctions } from './data.js';
+import { localStore } from './data.js';
 
 function makeWrapper(props = {}) {
   let channel = {

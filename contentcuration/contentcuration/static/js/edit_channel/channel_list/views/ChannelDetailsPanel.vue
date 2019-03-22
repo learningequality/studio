@@ -21,7 +21,11 @@
             />
             <ChannelMetadataSection v-else @editChannel="editing = true" />
             <div v-if="!isNew">
-              <LookInsideView v-if="channel" :nodeID="channel.main_tree.id || channel.main_tree" :channel="channel" />
+              <LookInsideView
+                v-if="channel"
+                :nodeID="channel.main_tree.id || channel.main_tree"
+                :channel="channel"
+              />
               <div v-if="canEdit" id="delete-section">
                 <ChannelDeleteSection @deletedChannel="editing=false" />
               </div>
@@ -30,7 +34,6 @@
         </div>
       </div>
     </div>
-  </div>
   </div>
 </template>
 
@@ -169,8 +172,8 @@
     }
 
     .tab-content {
-      border-right: none;
-      border-left: none;
+      border-right: 0;
+      border-left: 0;
     }
 
     #delete-section {

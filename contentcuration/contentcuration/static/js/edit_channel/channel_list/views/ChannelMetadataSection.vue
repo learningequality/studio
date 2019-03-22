@@ -13,10 +13,20 @@
       <h3>{{ channel.name }}</h3>
       <p class="channel-text">
         <span>
-          {{ $tr('created', {'date': $formatDate(channel.created, {day:'numeric', month:'short', 'year':'numeric'})}) }}
+          {{ $tr('created',
+            {'date':
+                $formatDate(channel.created, {
+                day:'numeric', month:'short', 'year':'numeric'
+              })
+            })
+          }}
         </span>
         <span v-if="channel.published">
-          {{ $tr('published', {'date': $formatDate(channel.last_published, {day:'numeric', month:'short', 'year':'numeric'})}) }}
+          {{ $tr('published', {
+            'date': $formatDate(channel.last_published, {
+              day:'numeric', month:'short', 'year':'numeric'
+            })
+          }) }}
         </span>
       </p>
       <hr>
@@ -25,7 +35,11 @@
       <a id="open-channel" :href="channelUrl">
         {{ $tr("openChannel") }}
       </a>
-      <a v-if="!channel.ricecooker_version && canEdit" id="edit-details" @click="$emit('editChannel')">
+      <a
+        v-if="!channel.ricecooker_version && canEdit"
+        id="edit-details"
+        @click="$emit('editChannel')"
+      >
         {{ $tr("editDetails") }}
       </a>
 

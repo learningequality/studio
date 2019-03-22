@@ -1,5 +1,4 @@
 import { shallowMount } from '@vue/test-utils';
-import _ from 'underscore';
 import ChannelSetList from './../views/ChannelSetList.vue';
 import ChannelSetItem from './../views/ChannelSetItem.vue';
 import { ChannelSets, localStore, mockFunctions } from './data';

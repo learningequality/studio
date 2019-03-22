@@ -1,9 +1,8 @@
 import { mount } from '@vue/test-utils';
-import _ from 'underscore';
 import ChannelDeleteSection from './../views/ChannelDeleteSection.vue';
 import { localStore, mockFunctions } from './data.js';
 
-function makeWrapper(props = {}) {
+function makeWrapper() {
   return mount(ChannelDeleteSection, {
     store: localStore,
   });

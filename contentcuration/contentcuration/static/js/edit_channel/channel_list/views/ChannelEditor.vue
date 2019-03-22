@@ -116,7 +116,6 @@
 
   import _ from 'underscore';
   import { mapGetters, mapActions, mapMutations, mapState } from 'vuex';
-  import { dialog } from 'edit_channel/utils/dialog';
   import Constants from 'edit_channel/constants/index';
   import { ThumbnailUploadView } from 'edit_channel/image/views';
   import { tabMixin } from './../mixins';
@@ -203,7 +202,7 @@
 
       /* Handle thumbnail options */
       loadThumbnailUploader: function() {
-        let imageUploader = new ThumbnailUploadView({
+        new ThumbnailUploadView({
           model: getBackboneChannel(this.channel),
           el: this.$refs.channelthumbnail,
           preset_id: PRESET.id,
@@ -226,7 +225,7 @@
           is_channel: true,
         });
       },
-      setChannelThumbnail(thumbnail, encoding, formattedName, path) {
+      setChannelThumbnail(thumbnail, encoding, formattedName) {
         this.setThumbnail({
           thumbnail: formattedName,
           encoding: encoding,
@@ -249,7 +248,7 @@
         // saveChannel relies on vuex state to submit
         // Submitting using local `data` would probably be simpler
         this.saveChannel()
-          .then(channel => {
+          .then(() => {
             this.saving = false;
             this.$emit('submitChanges');
           })
@@ -325,9 +324,9 @@
       input[type='text'],
       textarea {
         .input-form;
+
         width: 100%;
         padding: 2px 0;
-
         margin-bottom: 20px;
         font-size: @larger-body-text;
         font-weight: normal;

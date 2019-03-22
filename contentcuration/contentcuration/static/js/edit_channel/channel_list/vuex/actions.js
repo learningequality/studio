@@ -1,11 +1,7 @@
-import Vue from 'vue';
-import _ from 'underscore';
 import State from 'edit_channel/state';
 
 import Models from 'edit_channel/models';
-import { ChannelSetModalView } from 'edit_channel/channel_set/views';
-import fileDownload from 'jquery-file-download';
-import { ListTypes, ChannelListUrls, ChannelInvitationMapping } from './../constants';
+import { ChannelListUrls, ChannelInvitationMapping } from './../constants';
 import { prepChannel } from './../utils';
 
 /* CHANNEL LIST ACTIONS */
@@ -129,7 +125,7 @@ export function downloadChannelDetails(context, payload) {
     }
     $.fileDownload(url, {
       successCallback: resolve,
-      failCallback: (responseHtml, url) => {
+      failCallback: responseHtml => {
         reject(responseHtml);
       },
     });

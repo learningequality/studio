@@ -1,8 +1,7 @@
 import _ from 'underscore';
-import { ListTypes } from './../constants';
 import { prepChannel, getDefaultChannel } from './../utils';
 
-export function RESET_STATE(state) {
+export function RESET_STATE() {
   state = {
     channels: [],
     activeChannel: null,
@@ -21,7 +20,6 @@ export function SET_ACTIVE_CHANNEL(state, channelID) {
 }
 
 export function SET_CHANNEL_LIST(state, payload) {
-  let listValues = _.values(ListTypes);
   _.each(payload.channels, channel => {
     let match = _.findWhere(state.channels, { id: channel.id });
     if (match) {

@@ -1,5 +1,4 @@
 import { shallowMount } from '@vue/test-utils';
-import _ from 'underscore';
 import ChannelItem from './../views/ChannelItem.vue';
 import { localStore } from './data.js';
 import { ListTypes } from './../constants';
@@ -10,7 +9,7 @@ const testChannel = {
   modified: new Date(),
 };
 
-function makeWrapper(props = {}) {
+function makeWrapper() {
   localStore.commit('channel_list/SET_CHANNEL_LIST', {
     channels: [testChannel],
     listType: ListTypes.EDITABLE,
