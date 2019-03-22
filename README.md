@@ -59,7 +59,7 @@ You can install all the necessary packages using these commands (you may need to
     chmod +x /usr/local/bin/minio
 
     # Install node PPA
-    curl -sL https://deb.nodesource.com/setup_6.x | bash -
+    curl -sL https://deb.nodesource.com/setup_10.x | bash -
 
     # Install packages
     apt-get install -y  python python-pip python-dev python-tk \
