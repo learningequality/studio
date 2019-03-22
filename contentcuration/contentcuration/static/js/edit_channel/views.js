@@ -279,9 +279,9 @@ var BaseWorkspaceView = BaseView.extend({
 			'edit_selected', 'add_to_trash', 'add_to_clipboard', 'get_selected', 'cancel_actions', 'delete_items_permanently', 'sync_content');
 	},
 	publish:function(){
-		var Exporter = require("edit_channel/export/views");
-		var exporter = new Exporter.ExportModalView({
-			model: State.current_channel.get_root("main_tree"),
+		var Publisher = require("edit_channel/publish/views");
+		var exporter = new Publisher.PublishModalView({
+			model: State.current_channel,
 			onpublish: this.handle_published
 		});
 	},
