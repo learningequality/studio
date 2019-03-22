@@ -85,6 +85,12 @@ def deletetree_task(tree_id):
     ContentNode.objects.filter(tree_id=tree_id).delete()
 
 
+@task(name='getnodedetails_task')
+def getnodedetails_task(node_id):
+    node = ContentNode.objects.get(pk=node_id)
+    return node.get_details()
+
+
 type_mapping = {}
 if settings.RUNNING_TESTS:
     type_mapping.update({

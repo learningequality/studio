@@ -108,7 +108,7 @@ var PrerequisiteModalView = BaseInfoModalView.extend({
   modal_id: "#prereq_modal",
 });
 
-var ChannelSetModalView = BaseInfoModalView.extend({
+var ChannelSetInformationModalView = BaseInfoModalView.extend({
   template: require("./hbtemplates/channel_set_modal.handlebars"),
   modal_id: "#channel_set_modal",
 });
@@ -168,5 +168,5 @@ module.exports = {
     PrerequisiteModalView: PrerequisiteModalView,
     PublishedModalView: PublishedModalView,
     RolesModalView: RolesModalView,
-    ChannelSetModalView: ChannelSetModalView
+    ChannelSetInformationModalView: ChannelSetInformationModalView
 }

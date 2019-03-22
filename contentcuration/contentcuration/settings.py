@@ -183,7 +183,7 @@ WSGI_APPLICATION = 'contentcuration.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',  # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': os.getenv("DATA_DB_NAME") or 'gonano',  # Or path to database file if using sqlite3.
+        'NAME': os.getenv("DATA_DB_NAME") or 'kolibri-studio',  # Or path to database file if using sqlite3.
         # The following settings are not used with sqlite3:
 
         # For dev purposes only
@@ -279,6 +279,9 @@ AUTH_USER_MODEL = 'contentcuration.User'
 ACCOUNT_ACTIVATION_DAYS = 7
 REGISTRATION_OPEN = True
 SITE_ID = 1
+
+# Used for serializing datetime objects.
+DATE_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 # EMAIL_HOST = 'localhost'
 # EMAIL_PORT = 8000

@@ -114,7 +114,7 @@
                                 {{#if details.sample_pathway}}
                                 <div class="btn-group btn-group-justified pathway flat" role="group">
                                     {{#each details.sample_pathway}}
-                                        <a href="/channels/{{../channel_id}}/view/{{node_id}}" target="_blank" class="btn" title="{{title}}">
+                                        <a href="/channels/{{../channel.id}}/view/{{node_id}}" target="_blank" class="btn" title="{{title}}">
                                             <i class="material-icons">{{{get_icon kind_id}}}</i>
                                             <div>{{title}}</div>
                                         </a>
@@ -125,7 +125,7 @@
                             <div class="sample-nodes row">
                                 {{#each details.sample_nodes}}
                                     <div class="col-xs-3 text-center preview">
-                                        <a href="/channels/{{../channel_id}}/view/{{node_id}}" target="_blank">
+                                        <a href="/channels/{{../channel.id}}/view/{{node_id}}" target="_blank">
                                             <img src="{{thumbnail}}">
                                             <h5>{{title}}</h5>
                                         </a>

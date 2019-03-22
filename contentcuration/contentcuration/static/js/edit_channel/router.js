@@ -2,6 +2,9 @@ var _ = require("underscore");
 var Backbone = require("backbone");
 var State = require("./state");
 
+import Vue from 'vue';
+import ChannelListPage from 'edit_channel/channel_list/views/ChannelListPage.vue';
+
 //var saveDispatcher = _.clone(Backbone.Events);
 var URL_CHAR_LIMIT = 7;
 
@@ -19,9 +22,13 @@ var ChannelEditRouter  = Backbone.Router.extend({
   },
 
 	navigate_channel_home: function() {
-		var ChannelManageView = require("edit_channel/new_channel/views");
-		var channel_manager_view = new ChannelManageView.ChannelListPage ({
-			el: $("#channel-container"),
+		var store = require("edit_channel/channel_list/vuex/store");
+		State.setChannelListState();
+
+		new Vue({
+		  el: '#channel-container',
+		  store,
+		  ...ChannelListPage
 		});
 	},
 

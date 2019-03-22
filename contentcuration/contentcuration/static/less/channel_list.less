@@ -1,0 +1,204 @@
+@import "global-variables.less";
+
+@channel-preview-width: 650px;
+@channel-item-width: 70vw;
+@channel-item-max-width: 800px;
+@channel-item-min-width: 400px;
+@channel-container-height: 250px;
+@channel-profile-width: 150px;
+@channel-thumbnail-size: 150px;
+
+// nested flexbox settings to ensure that the channels list view is vertically responsive.
+body {
+	display: flex;
+	flex-direction: column;
+
+	#channel-container {
+		display: flex;
+		height: 0;
+		flex-direction: column;
+		flex-grow: 1;
+
+		#top-navigation {
+			flex: 0;
+		}
+
+		#channel-area-wrapper {
+			display: flex;
+			max-height: 100%;
+			flex: 1;
+
+			#channel-list-wrapper {
+				display: grid;
+				justify-content: normal;
+				align-content: flex-start;
+
+				#channel-list-area {
+					margin: auto;
+				}
+			}
+
+			#channel-preview-wrapper {
+				display: flex;
+				flex-direction: column;
+				flex: 1;
+
+				#channel-details-overlay {
+					display: flex;
+					flex-direction: column;
+					flex: 1;
+
+					#channel-details-panel {
+						display: flex;
+						flex-direction: column;
+						flex: 1;
+
+						#channel-details-view-panel {
+							display: flex;
+							flex-direction: column;
+							flex: 1;
+
+							#channel-details {
+								flex-direction: column;
+								flex-grow: 1;
+								width: 100%;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+// end of flexbox settings
+
+.channel-list-width {
+	width: @channel-item-width;
+	max-width: @channel-item-max-width;
+	min-width: @channel-item-min-width;
+	margin: 50px auto;
+}
+
+.channel-list {
+    .channel-list-width;
+    .new-button {
+		text-align: right;
+		margin-bottom: 30px;
+		a, button {
+			font-size: 14pt;
+			span {
+				font-size: 18pt;
+			}
+		}
+	}
+	.default-item {
+		color: @gray-500;
+		font-size: 16pt;
+		font-style: italic;
+		font-weight: bold;
+		text-align: center;
+	}
+	.channel-container-wrapper {
+		.channel-list-width;
+		.thumbnail-title-columns;
+		background-color: @panel-container-color;
+		box-shadow: @box-shadow;
+		margin-top: 0px;
+		margin-bottom: 20px;
+		padding: 10px;
+		border:4px solid @panel-container-color;
+		cursor:pointer;
+		position: relative;
+
+	  .profile {
+	    margin: 5px 15px 5px 5px;
+	    text-align: left;
+	    img{
+	        width:@channel-thumbnail-size;
+	        height:@channel-thumbnail-size;
+	        object-fit: cover;
+	    }
+	    span {
+	      font-size: 65pt;
+	      color: @gray-700;
+	    }
+	  }
+	  .channel-options-wrapper {
+	  	display: grid;
+	    grid-auto-flow: column;
+	    justify-content: space-between;
+	  	.channel-metadata {
+		    color: @annotation-gray;
+		    font-size: 11pt;
+		    div {
+		      display: inline-block;
+		      &:not(:last-child)::after {
+		        content: '  •  ';
+		      }
+
+		      .channel-language {
+		        .truncate;
+		        max-width: 135px;
+		      }
+		      .copy-id-btn{
+		        padding:3px;
+		        font-size: 16pt;
+		        vertical-align: sub;
+		        &:hover { color:@blue-500; }
+		      }
+		      input {
+		        display: inline-block;
+		        padding: 2px;
+		        background-color: @gray-300;
+		        font-size: 11pt;
+		        border:none;
+		        font-weight: bold;
+		        width: 120px;
+		        text-align: center;
+		        color: @gray-700;
+		      }
+		    }
+		  }
+		  .option {
+		      font-size: 20pt;
+		      padding:10px;
+		      color: @gray-700;
+		      margin: -15px 0px;
+		      &.star-option::before {
+		        .material-icons;
+		        content: "star_border";
+		      }
+		      &.star-option:hover{
+		        color: @blue-500;
+		      }
+		      &.starred{
+		        color: @blue-500;
+		        &::before {
+		          content: "star";
+		        }
+		        &:hover{
+		          color: @blue-200;
+		        }
+		      }
+		      &.delete-channelset:hover {
+		      	color: @red-error-color;
+		      }
+		    }
+	  }
+
+
+	  h4 {
+	  	.truncate;
+	    font-size: 18pt;
+	    font-weight: bold;
+	    color: @body-font-color;
+	    padding-bottom: 5px;
+	  }
+	  .description {
+	    .wordwrap;
+	    font-size: 11pt;
+	    margin-bottom:5px;
+	  }
+	}
+
+  }
