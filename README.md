@@ -42,7 +42,7 @@ You need the following software installed on your machine to run Studio:
 
   - [python (2.7)](https://www.python.org/downloads/release/python-2713/)
   - [python-pip](https://pip.pypa.io/en/stable/installing/)
-  - [nodejs 10.x](https://nodejs.org/en/download/)
+  - [nodejs (10.x)](https://nodejs.org/en/download/)
   - [Postgres DB](https://www.postgresql.org/download/)
   - [redis](https://redis.io/topics/quickstart)
   - [minio](https://www.minio.io/downloads.html)
@@ -51,12 +51,6 @@ You need the following software installed on your machine to run Studio:
   - [python-tk](https://wiki.python.org/moin/TkInter)
   - [libmagickwand-dev](http://docs.wand-py.org/en/0.2.4/guide/install.html)
 
-
-**Node.js 10.x and `nvm`**
-Currently Studio's front-end linting tools require Node.js version 10.x.  You can use a tool like [nvm](https://github.com/creationix/nvm) to switch between Node versions.  To switch to Node.js 10 using `nvm`, run:
-
-    nvm install 10
-    nvm use 10
 
 **Ubuntu or Debian**
 You can install all the necessary packages using these commands (you may need to add `sudo` if you receive `Permission Denied` errors:
@@ -109,6 +103,11 @@ _Note: you may need to run `pip install pre-commit` if you see `pre-commit comma
 
 
 ### 4. Install javascript dependencies
+
+Kolibri Studio has dependencies that rely on Node.js version 10.x. You can use `nodeenv`, which is included as a python development dependency, to install Node.js 10.x in your python virtual environment:
+
+    pipenv shell
+    nodeenv install -p --node=10.15.3
 
 All the javascript dependencies are listed in `package.json`. To install them run the following [yarn](https://yarnpkg.com/en/) command:
 
