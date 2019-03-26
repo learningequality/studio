@@ -4,6 +4,7 @@ var State = require("./state");
 
 import Vue from 'vue';
 import ChannelListPage from 'edit_channel/channel_list/views/ChannelListPage.vue';
+import PublishingOverlay from 'edit_channel/publish/views/PublishingOverlay.vue';
 
 //var saveDispatcher = _.clone(Backbone.Events);
 var URL_CHAR_LIMIT = 7;
@@ -63,6 +64,16 @@ var ChannelEditRouter  = Backbone.Router.extend({
 			is_clipboard : data.is_clipboard || false,
 			staging: State.staging
 		});
+
+		// if(data.edit_mode_on) {
+		// 	var store = require("edit_channel/publish/vuex/store");
+		// 	new Vue({
+		// 	  el: '#channel-edit-overlay',
+		// 	  store,
+		// 	  ...PublishingOverlay
+		// 	});
+		// }
+
 		if(!window.is_staging){
 			var QueueView = require("edit_channel/queue/views");
 			var queue = new QueueView.Queue({

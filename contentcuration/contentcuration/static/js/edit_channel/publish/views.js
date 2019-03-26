@@ -1,5 +1,6 @@
 import Vue from 'vue';
 import PublishModalComponent from './views/PublishModal.vue';
+import PublishingOverlayComponent from './views/PublishingOverlay.vue';
 import _ from "underscore";
 
 var Backbone = require('backbone');
@@ -8,6 +9,7 @@ var store = require('./vuex/store');
 const State = require("edit_channel/state");
 
 var PublishModal = Vue.extend(PublishModalComponent);
+var PublishingOverlay = Vue.extend(PublishingOverlayComponent);
 
 // function getChannel(state) {
 //   let channel = state.share.channel;
@@ -59,5 +61,5 @@ var PublishModalView = BaseViews.BaseModalView.extend({
 });
 
 module.exports = {
-    PublishModalView: PublishModalView,
+    PublishModalView: PublishModalView
 }
