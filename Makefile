@@ -13,7 +13,7 @@ prodceleryworkers:
 
 devserver:
 	yarn run build
-	cd contentcuration/ && python manage.py setup
+	cd contentcuration/ && python manage.py setup --settings=contentcuration.dev_settings
 	cd contentcuration/ && python manage.py loaddata contentcuration/fixtures/admin_user.json
 	cd contentcuration/ && python manage.py loaddata contentcuration/fixtures/admin_user_token.json
 	cd contentcuration/ && python manage.py runserver --settings=contentcuration.dev_settings 0.0.0.0:8080
@@ -79,9 +79,10 @@ dcup:
 	docker-compose up
 
 dcshell:
-	# run make deverver in foreground with all dependent services using docker-compose
+	# bash shell inside studio-app container
 	docker exec -ti studio_studio-app_1  /bin/bash
 
 dctest: endtoendtest
 	# launch all studio's dependent services using docker-compose, and then run the tests
 	echo "Running   make test -e DJANGO_SETTINGS_MODULE=contentcuration.test_settings"
+

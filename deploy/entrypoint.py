@@ -18,16 +18,14 @@ logging.basicConfig()
 
 CONNECT_TRIES = 5
 
-DEFAULT_CMD = [
-    "make",
-    "devserver",
-]
+DEFAULT_CMD = ["make", "devserver"]
 
 def update_pipenv_env():
     """
     Update our environment based on the latest pipfile.
     """
     subprocess.call(["pipenv", "sync", "--dev"])
+
 
 def check_postgresql_ready(postgres_checks=CONNECT_TRIES):
     import psycopg2
@@ -76,8 +74,8 @@ def check_minio_ready(minio_checks=CONNECT_TRIES):
 
 
 def run_cmd():
-   cmd = sys.argv[1:]
-   sys.exit(subprocess.call(cmd))
+    cmd = sys.argv[1:]
+    sys.exit(subprocess.call(cmd))
 
 
 
