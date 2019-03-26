@@ -1,5 +1,7 @@
 version: '3'
+
 services:
+
   studio-app:
     build:
       context: .
@@ -31,6 +33,7 @@ services:
       - .:/src
       - studio_app_virtualenv:/root/.local/share/virtualenvs/
       - pip_cache:/root/.cache/pip
+
   studio-worker:
     build:
       context: .
@@ -58,6 +61,7 @@ services:
       CELERY_RESULT_BACKEND_ENDPOINT: studio-redis
       CELERY_REDIS_PASSWORD: ""
       PIPENV_HIDE_EMOJIS: "true"
+
   minio:
     image: minio/minio
     # logging:
@@ -71,15 +75,17 @@ services:
       - .:/src
     ports:
       - "9000:9000"
+
   studio-postgres:
     image: postgres:9.6
     environment:
       PGDATA: /postgres_data/pgdata
       POSTGRES_USER: learningequality
       POSTGRES_PASSWORD: kolibri
-      POSTGRES_DB: gonano
+      POSTGRES_DB: kolibri-studio
     volumes:
       - pgdata:/postgres_data/
+
   studio-redis:
     image: redis:4.0.9
 

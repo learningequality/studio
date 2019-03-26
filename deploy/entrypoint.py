@@ -37,7 +37,7 @@ def check_postgresql_ready(postgres_checks=CONNECT_TRIES):
     while True:
         try:
             psycopg2.connect(
-                dbname=os.getenv("DATA_DB_NAME") or "gonano",
+                dbname=os.getenv("DATA_DB_NAME") or "kolibri-studio",
                 user=os.getenv("DATA_DB_USER") or "learningequality",
                 password=os.getenv("DATA_DB_PASS") or "kolibri",
                 host=os.getenv("DATA_DB_HOST") or "localhost",
