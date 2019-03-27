@@ -50,8 +50,6 @@ class ChannelListTestCase(BaseAPITestCase):
     def test_no_public_channels(self):
         """
         Ensure that if there are no public channels, we get 0 results from the serializer.
-
-        :return:
         """
         response = self.client.get(reverse('get_user_public_channels'))
         self.assertEqual(len(response.data), 0)
