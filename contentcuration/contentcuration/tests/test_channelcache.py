@@ -31,22 +31,6 @@ class ChannelCacherTestCase(StudioTestCase):
         assert (real_channel_ids          # the channels we know are public...
                 == cached_channel_ids)    # ...should be present in get_public_channels
 
-    def test_new_public_channel_not_in_cache(self):
-        """
-        Check that our cache is indeed a cache by not returning any new public
-        channels created after regenerating our cache.
-        """
-
-        # force fill our public channel cache
-        ChannelCacher.regenerate_public_channel_cache()
-        # create our new channel and bypass signals when creating it
-        new_public_channel = channel()
-        new_public_channel.make_public(bypass_signals=True)
-        # fetch our cached channel list
-        cached_channels = ChannelCacher.get_public_channels()
-        # make sure our new public channel isn't in the cache
-        assert new_public_channel not in cached_channels
-
 
 class ChannelTokenCacheTestCase(StudioTestCase):
     """
@@ -99,26 +83,6 @@ class ChannelResourceCountCacheTestCase(StudioTestCase):
         ccache = ChannelCacher.for_channel(self.channel)
 
         assert ccache.get_resource_count() == self.channel.get_resource_count()
-
-    def test_get_resource_count_is_really_a_cache(self):
-        """
-        Check that our count is wrong when we insert a new content node.
-        """
-        ccache = ChannelCacher.for_channel(self.channel)
-        # fill our cache with a value first by calling get_resource_count()
-        ccache.get_resource_count()
-        # add our new content node
-        node(
-            parent=self.channel.main_tree,
-            data={
-                "kind_id": "video",
-                "node_id": "nicevid",
-                "title": "Bad vid",
-            }
-        )
-
-        # check that our cache's count is now less than the real count
-        assert ccache.get_resource_count() < self.channel.get_resource_count()
 
 
 class ChannelGetDateModifiedCacheTestCase(StudioTestCase):

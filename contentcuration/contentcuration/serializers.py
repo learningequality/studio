@@ -647,10 +647,7 @@ class ChannelFieldMixin(object):
 
     def get_channel_primary_token(self, channel):
         try:
-            token = (ChannelCacher
-                     .for_channel(channel)
-                     .get_human_token()
-                     .token)
+            token = channel.get_human_token().token
         except ObjectDoesNotExist:
             return channel.pk
 
@@ -713,30 +710,11 @@ class ChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
         read_only_fields = ('id', 'version')
 
 
-class AccessibleChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
-    size = serializers.SerializerMethodField("get_resource_size")
-    count = serializers.SerializerMethodField("get_resource_count")
-    created = serializers.SerializerMethodField('get_date_created')
-    main_tree = RootNodeSerializer(read_only=True)
-
-    def get_resource_size(self, channel):
-        return channel.get_resource_size()
-
-    class Meta:
-        model = Channel
-        fields = ('id', 'created', 'name', 'size', 'count', 'version', 'deleted', 'main_tree')
-
-
-class ChannelSetChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
-    thumbnail_url = serializers.SerializerMethodField('generate_thumbnail_url')
-    published = serializers.SerializerMethodField('check_published')
-
-    class Meta:
-        model = Channel
-        fields = ('id', 'name', 'published', 'language', 'description', 'thumbnail_url', 'main_tree', 'version')
-
-
 class ChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
+    """
+    Primarily used by ricecooker, exposes fields not necessarily needed by Studio consumers, such as deleted state
+    and viewers.
+    """
     thumbnail_url = serializers.SerializerMethodField('generate_thumbnail_url')
     published = serializers.SerializerMethodField('check_published')
     publishing = serializers.SerializerMethodField('check_publishing')
@@ -752,7 +730,10 @@ class ChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
                   'description', 'count', 'version', 'public', 'thumbnail_url', 'thumbnail', 'thumbnail_encoding', 'deleted', 'content_defaults', 'publishing')
 
 
-class AltChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
+class StudioChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
+    """
+    Primarily used for the channel list APIs in Studio, called by the channels list page.
+    """
     thumbnail_url = serializers.SerializerMethodField('generate_thumbnail_url')
     published = serializers.SerializerMethodField('check_published')
     publishing = serializers.SerializerMethodField('check_publishing')
@@ -765,12 +746,21 @@ class AltChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
 
     class Meta:
         model = Channel
-        fields = ('id', 'created', 'name', 'published', 'pending_editors', 'editors', 'modified', 'language', 'primary_token', 'priority',
+        fields = ('id', 'created', 'name', 'published', 'modified', 'language', 'primary_token', 'priority',
                   'description', 'count', 'public', 'thumbnail_url', 'thumbnail', 'thumbnail_encoding', 'content_defaults', 'publishing',
                   'main_tree', 'last_published', 'secret_tokens', 'version', 'ricecooker_version')
 
 
+# to minimize refactoring, we are aliasing the StudioChannelListSerializer to other serializers that contained the same
+# data, or a subset of it
+AltChannelListSerializer = StudioChannelListSerializer
+ChannelSetChannelListSerializer = StudioChannelListSerializer
+
+
 class PublicChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
+    """
+    Called by the public API, primarily used by Kolibri. Contains information more specific to Kolibri's needs.
+    """
     kind_count = serializers.SerializerMethodField('generate_kind_count')
     matching_tokens = serializers.SerializerMethodField('match_tokens')
 

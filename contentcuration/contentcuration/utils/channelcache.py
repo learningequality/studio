@@ -29,11 +29,11 @@ class ChannelCacher(object):
 
     @classmethod
     def get_public_channels(cls, *args, **kwargs):
-        return cache.get_or_set(
-            cls.PUBLIC_CHANNEL_CACHE_KEY,
-            lambda: Channel.get_public_channels(*args, **kwargs),
-            cls.PUBLIC_CHANNEL_CACHE_TIMEOUT
-        )
+        """
+        Get public channels, no longer cached as queries are lazy-loaded so at this point the query has not
+        been run.
+        """
+        return Channel.get_public_channels(*args, **kwargs)
 
     @classmethod
     def regenerate_public_channel_cache(cls):
@@ -43,8 +43,6 @@ class ChannelCacher(object):
 
         """
         channels = list(Channel.get_public_channels())
-        cache.set(cls.PUBLIC_CHANNEL_CACHE_KEY, channels)
-
         return channels
 
     @classmethod
@@ -73,47 +71,13 @@ class ChannelSpecificCacher(object):
         self.key = channel.id[:5]
 
     def get_human_token(self):
-        key = "{prefix}_human_token_{key}".format(
-            prefix=self.CHANNEL_TOKEN_CACHE_KEY_PREFIX,
-            key=self.key
-        )
-        return cache.get_or_set(
-            key,
-            self.channel.get_human_token,
-            self.CHANNEL_TOKEN_CACHE_TIMEOUT,
-        )
+        return self.channel.get_human_token()
 
     def get_channel_id_token(self):
-        key = "{prefix}_channel_id_token_{key}".format(
-            prefix=self.CHANNEL_TOKEN_CACHE_KEY_PREFIX,
-            key=self.key
-        )
-        return cache.get_or_set(
-            key,
-            self.channel.get_channel_id_token,
-            self.CHANNEL_TOKEN_CACHE_TIMEOUT,
-        )
+        return self.channel.get_channel_id_token()
 
     def get_resource_count(self):
-        key = "{prefix}_{key}".format(
-            prefix=self.CHANNEL_RESOURCE_COUNT_KEY_PREFIX,
-            key=self.key,
-        )
-
-        return cache.get_or_set(
-            key,
-            self.channel.get_resource_count,
-            self.CHANNEL_RESOURCE_COUNT_CACHE_TIMEOUT,
-        )
+        return self.channel.get_resource_count()
 
     def get_date_modified(self):
-        key = "{prefix}_{key}".format(
-            prefix=self.CHANNEL_DATE_MODIFIED_KEY_PREFIX,
-            key=self.key
-        )
-
-        return cache.get_or_set(
-            key,
-            self.channel.get_date_modified,
-            self.CHANNEL_DATE_MODIFIED_CACHE_TIMEOUT,
-        )
+        return self.channel.get_date_modified()
