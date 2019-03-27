@@ -236,9 +236,7 @@ def get_channels_by_token(request, token):
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def get_user_public_channels(request):
-    print("Hello!")
     channels = ChannelCacher.get_public_channels(defer_nonmain_trees=True)
-    print("len(channels) = {}".format(channels.count()))
     channel_serializer = _apply_channel_filters(channels, request.query_params, default_serializer=ChannelSerializerTypes.ALT)
     return Response(channel_serializer.data)
 
