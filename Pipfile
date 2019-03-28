@@ -61,6 +61,7 @@ django-mathfilters = "*"
 python-pptx = "*"
 backoff = "*"
 google-cloud-kms = "*"
+kombu = "==4.3"
 
 [dev-packages]
 ipdb = "*"
