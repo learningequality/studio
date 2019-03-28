@@ -3,6 +3,9 @@ apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
   name: {{ template "studio.fullname" . }}
+  labels:
+    tier: app
+    app: {{ template "studio.fullname" . }}
 spec:
   replicas: {{ .Values.studioApp.replicas }}
   template:
@@ -16,8 +19,7 @@ spec:
       containers:
       - name: app
         image: {{ .Values.studioApp.imageName }}
-        env:
-        {{ include "studio.sharedEnvs" . }}
+        env: {{ include "studio.sharedEnvs" . | nindent 8 }}
         - name: STATICFILES_DIR
           value: /app/contentworkshop_static/
         - name: SEND_USER_ACTIVATION_NOTIFICATION_EMAIL
@@ -102,5 +104,4 @@ spec:
         volumeMounts:
         - name: gcs-creds
           mountPath: /secrets/gcs
-        env:
-        {{ include "studio.sharedEnvs" . }}
+        env: {{ include "studio.sharedEnvs" . | nindent 10 }}
