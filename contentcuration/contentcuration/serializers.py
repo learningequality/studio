@@ -40,7 +40,6 @@ from contentcuration.models import SecretToken
 from contentcuration.models import Task
 from contentcuration.models import User
 from contentcuration.statistics import record_node_addition_stats
-from contentcuration.utils.channelcache import ChannelCacher
 from contentcuration.utils.format import format_size
 
 
@@ -660,13 +659,13 @@ class ChannelFieldMixin(object):
         return channel.main_tree and channel.main_tree.get_descendants().filter(changed=True).count() > 0
 
     def get_resource_count(self, channel):
-        return ChannelCacher.for_channel(channel).get_resource_count()
+        return channel.get_resource_count()
 
     def get_date_created(self, channel):
         return channel.main_tree.created
 
     def get_date_modified(self, channel):
-        return ChannelCacher.for_channel(channel).get_date_modified()
+        return channel.get_date_modified()
 
     def check_published(self, channel):
         return channel.main_tree.published
