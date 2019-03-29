@@ -1,4 +1,8 @@
+# production_settings.py -- production studio settings override
+#
+# noinspection PyUnresolvedReferences
 import settings as base_settings
+from settings import *  # noqa
 
 from contentcuration.utils.secretmanagement import get_secret
 
