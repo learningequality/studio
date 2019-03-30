@@ -5,7 +5,7 @@ services:
   studio-app:
     build:
       context: .
-      dockerfile: Dockerfile.dev
+      dockerfile: docker/Dockerfile.dev
     image: learningequality/studio-app-dev
     command: make devserver
     depends_on:
@@ -37,7 +37,7 @@ services:
   studio-worker:
     build:
       context: .
-      dockerfile: Dockerfile.dev
+      dockerfile: docker/Dockerfile.dev
     image: learningequality/studio-app-dev
     command: make prodceleryworkers
     depends_on:
