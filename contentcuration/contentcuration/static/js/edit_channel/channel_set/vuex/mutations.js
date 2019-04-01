@@ -26,8 +26,8 @@ export function UPDATE_PAGE_STATE(state, payload) {
 export function RESET_PAGE_STATE(state) {
   Object.assign(state, {
     loadChannels: true,
-    name: "",
-    description: "",
+    name: '',
+    description: '',
     channels: [],
     saving: false,
     closing: false,
@@ -40,7 +40,7 @@ export function RESET_PAGE_STATE(state) {
     pageState: {
       pageType: PageTypes.VIEW_CHANNELS,
       data: {},
-    }
+    },
   });
 }
 

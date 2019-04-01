@@ -61,6 +61,7 @@ django-mathfilters = "*"
 python-pptx = "*"
 backoff = "*"
 google-cloud-kms = "*"
+kombu = "==4.3"
 
 [dev-packages]
 ipdb = "*"
@@ -91,6 +92,7 @@ Faker = "==0.7.3"
 codecov = "*"
 coverage = "*"
 pytest-cov = "*"
+nodeenv = "*"
 
 [requires]
 python_version = "2.7"

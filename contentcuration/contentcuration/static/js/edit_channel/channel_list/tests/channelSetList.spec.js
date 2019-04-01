@@ -2,13 +2,13 @@ import { shallowMount } from '@vue/test-utils';
 import ChannelSetList from './../views/ChannelSetList.vue';
 import ChannelSetItem from './../views/ChannelSetItem.vue';
 import { ChannelSets, localStore, mockFunctions } from './data';
-import _ from 'underscore';
+
 require('handlebars/helpers'); // Needed for collection details modal
 
 function makeWrapper() {
   return shallowMount(ChannelSetList, {
-    store: localStore
-  })
+    store: localStore,
+  });
 }
 
 describe('channelSetList', () => {
@@ -16,11 +16,11 @@ describe('channelSetList', () => {
 
   beforeEach(() => {
     listWrapper = makeWrapper();
-  })
+  });
 
   it('loadChannelSetList should be called', () => {
     expect(mockFunctions.loadChannelSetList).toHaveBeenCalled();
-  })
+  });
 
   it('list should load all channel sets', () => {
     listWrapper.vm.$nextTick().then(() => {

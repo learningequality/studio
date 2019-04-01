@@ -76,6 +76,7 @@ function extractMessages(files) {
     }
   }
   files.forEach(function(file) {
+    // eslint-disable-next-line no-console
     console.log(`Processing ${file} for frontend messages`);
     if (file && file.indexOf('.vue') === file.length - 4) {
       // Inspect each source file in the chunk if it is a vue file.
@@ -377,6 +378,7 @@ if (require.main === module) {
     var messageDir = path.join('contentcuration', 'locale', 'en', 'LC_FRONTEND_MESSAGES');
     // Make sure the directory we are using exists.
     mkdirp.sync(messageDir);
+    // eslint-disable-next-line no-console
     console.log(`${Object.keys(messages).length} messages found, writing to disk`);
     // Write out the data to JSON.
     fs.writeFileSync(path.join(messageDir, 'contentcuration-messages.json'), JSON.stringify(messages));
