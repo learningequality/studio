@@ -3,11 +3,15 @@
 ## Upcoming release
 #### Changes
 * [[@jayoshih](https://github.com/jayoshih)] Updated README
-*
+* [[@jayoshih](https://github.com/jayoshih)] Vueified channel list page
 
 #### Issues Resolved
 * [#875 Make sure files referenced by both orphan and non-orphan nodes aren't deleted](https://github.com/learningequality/studio/issues/875)
-*
+* [#1120](https://github.com/learningequality/studio/issues/1120)
+* [#900](https://github.com/learningequality/studio/issues/900)
+* [#875 Make sure files referenced by both orphan and non-orphan nodes aren't deleted](https://github.com/learningequality/studio/issues/875)
+
+
 
 ## 2019-02-11 Release
 #### Changes

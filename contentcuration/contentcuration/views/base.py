@@ -41,13 +41,8 @@ from contentcuration.decorators import can_access_channel
 from contentcuration.decorators import can_edit_channel
 from contentcuration.decorators import has_accepted_policies
 from contentcuration.models import Channel
-from contentcuration.models import ContentKind
 from contentcuration.models import ContentNode
-from contentcuration.models import FileFormat
-from contentcuration.models import FormatPreset
 from contentcuration.models import Invitation
-from contentcuration.models import Language
-from contentcuration.models import License
 from contentcuration.models import SecretToken
 from contentcuration.models import User
 from contentcuration.models import VIEW_ACCESS
@@ -56,13 +51,8 @@ from contentcuration.serializers import ChannelListSerializer
 from contentcuration.serializers import ChannelSerializer
 from contentcuration.serializers import ChannelSetChannelListSerializer
 from contentcuration.serializers import ChannelSetSerializer
-from contentcuration.serializers import ContentKindSerializer
 from contentcuration.serializers import CurrentUserSerializer
-from contentcuration.serializers import FileFormatSerializer
-from contentcuration.serializers import FormatPresetSerializer
 from contentcuration.serializers import InvitationSerializer
-from contentcuration.serializers import LanguageSerializer
-from contentcuration.serializers import LicenseSerializer
 from contentcuration.serializers import RootNodeSerializer
 from contentcuration.serializers import UserChannelListSerializer
 from contentcuration.tasks import exportchannel_task
@@ -170,22 +160,9 @@ def channel_page(request, channel, allow_edit=False, staging=False):
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def channel_list(request):
-    languages = get_or_set_cached_constants(Language, LanguageSerializer)
-    fileformats = get_or_set_cached_constants(FileFormat, FileFormatSerializer)
-    licenses = get_or_set_cached_constants(License, LicenseSerializer)
-    formatpresets = get_or_set_cached_constants(FormatPreset, FormatPresetSerializer)
-    contentkinds = get_or_set_cached_constants(ContentKind, ContentKindSerializer)
-    languages = get_or_set_cached_constants(Language, LanguageSerializer)
-
     return render(request, 'channel_list.html', {"channel_name": False,
                                                  "current_user": JSONRenderer().render(UserChannelListSerializer(request.user).data),
                                                  "user_preferences": json.dumps(request.user.content_defaults),
-                                                 "langs_list": languages,
-                                                 "fileformat_list": fileformats,
-                                                 "license_list": licenses,
-                                                 "fpreset_list": formatpresets,
-                                                 "ckinds_list": contentkinds,
-                                                 "langs_list": languages,
                                                  "messages": get_messages(),
                                                  })
 
@@ -370,18 +347,15 @@ def accessible_channels(request, channel_id):
     return Response(serializer.data)
 
 
+@api_view(['POST'])
 def accept_channel_invite(request):
-    if request.method != 'POST':
-        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
-
-    data = json.loads(request.body)
-    invitation = Invitation.objects.get(pk=data['invitation_id'])
+    invitation = Invitation.objects.get(pk=request.data.get('invitation_id'))
     channel = invitation.channel
     channel.is_view_only = invitation.share_mode == VIEW_ACCESS
     channel_serializer = AltChannelListSerializer(channel)
     add_editor_to_channel(invitation)
 
-    return HttpResponse(JSONRenderer().render(channel_serializer.data))
+    return Response(channel_serializer.data)
 
 
 def activate_channel_endpoint(request):
