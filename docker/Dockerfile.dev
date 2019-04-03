@@ -34,8 +34,6 @@ RUN pipenv install --system
 ################################################################################
 
 
-EXPOSE 8080
-
 ENTRYPOINT ["pipenv", "run", "python", "deploy/entrypoint.py"]
 
 CMD ["make", "devserver"]
