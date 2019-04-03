@@ -60,6 +60,7 @@ docs: clean-docs
 	# sphinx-apidoc -d 10 -H "Python Reference" -o docs/py_modules/ kolibri kolibri/test kolibri/deployment/ kolibri/dist/
 	$(MAKE) -C docs html
 
+DCINSTANCE = $(shell git rev-parse --abbrev-ref HEAD)_studio-app_1
 
 dcclean:
 	# stop all containers and delete volumes
@@ -71,11 +72,11 @@ dcbuild:
 
 dcup:
 	# run make deverver in foreground with all dependent services using docker-compose
-	docker-compose up
+	docker-compose --project-name ${DCINSTANCE} up
 
 dcshell:
 	# bash shell inside studio-app container
-	docker exec -ti studio_studio-app_1  /bin/bash
+	docker exec -ti ${DCINSTANCE} /usr/bin/fish
 
 dctest: endtoendtest
 	# launch all studio's dependent services using docker-compose, and then run the tests
