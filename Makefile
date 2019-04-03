@@ -1,4 +1,4 @@
-altprodserver: migrate collectstatic ensurecrowdinclient downloadmessages compilemessages
+altprodserver: createcachetable migrate collectstatic ensurecrowdinclient downloadmessages compilemessages
 	cd contentcuration/ && gunicorn contentcuration.wsgi:application --timeout=4000 --error-logfile=/var/log/gunicorn-error.log --workers=3 --bind=0.0.0.0:8081 --pid=/tmp/contentcuration.pid --log-level=debug || sleep infinity
 
 contentnodegc:
@@ -59,3 +59,6 @@ docs: clean-docs
 	# Adapt to apidocs
 	# sphinx-apidoc -d 10 -H "Python Reference" -o docs/py_modules/ kolibri kolibri/test kolibri/deployment/ kolibri/dist/
 	$(MAKE) -C docs html
+
+createcachetable:
+	python contentcuration/manage.py createcachetable

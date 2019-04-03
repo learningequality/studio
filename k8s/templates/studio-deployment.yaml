@@ -71,9 +71,11 @@ spec:
             secretName: {{ template "studio.fullname" . }}-gcs
         - emptyDir: {}
           name: staticfiles
+        {{ if .Values.studioApp.gDrive.keyJson }}
         - name: gdrive-creds
           secret:
             secretName: {{ template "studio.fullname" . }}-gdrive
+        {{ end }}
 ---
 apiVersion: apps/v1beta1
 kind: Deployment
