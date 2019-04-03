@@ -1,29 +1,41 @@
 FROM ubuntu:xenial
 
-RUN apt-get update
+# Studio source directory ######################################################
+RUN mkdir /src
+WORKDIR /src
+################################################################################
 
+
+# System packages ##############################################################
+RUN apt-get update --fix-missing
 RUN apt-get -y install curl
-
-# install node
 RUN curl -sL https://deb.nodesource.com/setup_10.x | bash -
-
 RUN apt-get -y install nodejs python python-dev \
     python-pip gcc libpq-dev ffmpeg imagemagick \
-    ghostscript python-tk make libjpeg-dev \
-    wkhtmltopdf git
+    ghostscript python-tk make git gettext openjdk-9-jre-headless libjpeg-dev \
+    wkhtmltopdf fonts-freefont-ttf xfonts-75dpi poppler-utils
+RUN curl -L -o wkhtmltox.deb https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.5/wkhtmltox_0.12.5-1.xenial_amd64.deb && dpkg -i wkhtmltox.deb
+################################################################################
 
+
+# Node packages ################################################################
 RUN npm install -g yarn
+COPY ./package.json ./yarn.lock   /src/
+RUN  yarn install --network-timeout 1000000 --pure-lockfile
+ENV PATH="/src/node_modules/.bin:$PATH"
+################################################################################
+
+
+# Python packages ##############################################################
+COPY Pipfile Pipfile.lock   /src/
+RUN pip install -U pipenv
+# install packages from Pipfile.lock into system
+RUN pipenv install --system
+################################################################################
+
 
 EXPOSE 8080
 
-RUN pip install pipenv
-# pip 18.1 gives an error with pipenv, so pin the version to 18.0 until there is a fix.
-# More info here: https://github.com/pypa/pipenv/issues/2924
-RUN pip install pip==18.0
-
-# Where the host source code will be mounted when run under docker compose
-RUN mkdir /src
-WORKDIR /src
-
 ENTRYPOINT ["pipenv", "run", "python", "deploy/entrypoint.py"]
+
 CMD ["make", "devserver"]
