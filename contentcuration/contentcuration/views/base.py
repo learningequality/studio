@@ -220,7 +220,7 @@ def get_user_channels(request):
 def get_user_bookmarked_channels(request):
     bookmarked_channels = request.user.bookmarked_channels.exclude(deleted=True)\
         .select_related('main_tree').prefetch_related('editors')\
-        .defer('trash_tree', 'clipboard_tree', 'staging_tree', 'chef_tree', 'previous_tree', 'viewers')
+        .defer('trash_tree', 'staging_tree', 'chef_tree', 'previous_tree', 'viewers')
     channel_serializer = _apply_channel_filters(bookmarked_channels, request.query_params, default_serializer=ChannelSerializerTypes.ALT)
     return Response(channel_serializer.data)
 
@@ -231,7 +231,7 @@ def get_user_bookmarked_channels(request):
 def get_user_edit_channels(request):
     edit_channels = request.user.editable_channels.exclude(deleted=True)\
         .select_related('main_tree').prefetch_related('editors')\
-        .defer('trash_tree', 'clipboard_tree', 'staging_tree', 'chef_tree', 'previous_tree', 'viewers')
+        .defer('trash_tree', 'staging_tree', 'chef_tree', 'previous_tree', 'viewers')
     channel_serializer = _apply_channel_filters(edit_channels, request.query_params, default_serializer=ChannelSerializerTypes.ALT)
     return Response(channel_serializer.data)
 
@@ -271,7 +271,7 @@ def get_user_public_channels(request):
 def get_user_view_channels(request):
     view_channels = request.user.view_only_channels.exclude(deleted=True)\
         .select_related('main_tree').prefetch_related('editors')\
-        .defer('trash_tree', 'clipboard_tree', 'staging_tree', 'chef_tree', 'previous_tree', 'viewers')
+        .defer('trash_tree', 'staging_tree', 'chef_tree', 'previous_tree', 'viewers')
     channel_serializer = _apply_channel_filters(view_channels, request.query_params, default_serializer=ChannelSerializerTypes.ALT)
     return Response(channel_serializer.data)
 

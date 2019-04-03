@@ -81,10 +81,13 @@ INSTALLED_APPS = (
     'le_utils',
     'rest_framework.authtoken',
     'search',
+    'flexible_search',
     'django_s3_storage',
     'webpack_loader',
     'django_filters',
     'mathfilters',
+    'haystack',
+    'celery_haystack'
 )
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
@@ -158,7 +161,6 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.SessionAuthentication',
-        # 'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.TokenAuthentication',
     )
 }
@@ -353,6 +355,7 @@ CELERY_TASK_TRACK_STARTED = True
 # We hook into task events to update the Task DB records with the updated state.
 # See celerysignals.py for more info.
 CELERY_WORKER_SEND_TASK_EVENTS = True
+# CELERY_IMPORTS=('celery_haystack.tasks',)
 
 # When cleaning up orphan nodes, only clean up any that have been last modified
 # since this date
@@ -385,3 +388,21 @@ DELETED_CHEFS_ROOT_ID = "11111111111111111111111111111111"
 
 # How long we should cache any APIs that return public channel list details, which change infrequently
 PUBLIC_CHANNELS_CACHE_DURATION = 300
+
+# HAYSTACK/ELASTICSEARCH SETTINGSt
+ELASTICSEARCH_HOST = os.getenv('ELASTICSEARCH_HOST')
+HAYSTACK_CONNECTIONS = {
+    'default': {
+        'ENGINE': 'flexible_search.partial_update.StudioElasticsearchEngine',
+        'URL': 'http://%s:9200/' % ELASTICSEARCH_HOST,
+        'INDEX_NAME': 'haystack',
+    },
+}
+
+HAYSTACK_SIGNAL_PROCESSOR = 'flexible_search.search_signals.StudioSignalProcessor'
+
+#CELERY-HAYSTACK
+CELERY_HAYSTACK_QUEUE = 'indexing'
+CELERY_HAYSTACK_COUNTDOWN = 0
+CELERY_HAYSTACK_HANDLER = 'flexible_search.partial_update.StudioCeleryHaystackSignalHandler'
+CELERY_HAYSTACK_DEFAULT_TASK = 'celery_haystack.tasks.haystack_signal_handler'

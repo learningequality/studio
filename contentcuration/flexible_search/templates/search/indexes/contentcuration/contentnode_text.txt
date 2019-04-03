@@ -1,0 +1,3 @@
+{{ object.title }}
+{{ object.description }}
+{{ object.get_channel.name }}

@@ -10,12 +10,17 @@ dummyusers:
 	cd contentcuration/ && python manage.py loaddata contentcuration/fixtures/admin_user.json
 	cd contentcuration/ && python manage.py loaddata contentcuration/fixtures/admin_user_token.json
 
-prodceleryworkers:
-	cd contentcuration/ && celery -A contentcuration worker -l info --concurrency=3 --without-mingle --without-gossip
-
 prodcelerydashboard:
 	# connect to the celery dashboard by visiting http://localhost:5555
 	kubectl port-forward deployment/master-studio-celery-dashboard 5555
+
+celery_studio_worker:
+	cd contentcuration/ && celery -A contentcuration worker -Q celery -l info -n publishing-worker@%h 
+
+celery_indexing_worker:
+	cd contentcuration/ && celery -A contentcuration worker -Q indexing -l debug -n indexing-worker@%h --without-gossip --without-mingle --without-heartbeat -Ofair -P solo
+
+prodceleryworkers: celery_studio_worker
 
 devserver:
 	yarn run devserver
@@ -33,7 +38,6 @@ endtoendtest:
 	docker-compose run -v "${PWD}/shared:/shared" studio-app make test -e DJANGO_SETTINGS_MODULE=contentcuration.test_settings
 	bash <(curl -s https://codecov.io/bash)
 	rm -rf shared
-
 
 collectstatic:
 	python contentcuration/manage.py collectstatic --noinput
@@ -81,14 +85,16 @@ setup:
 
 export COMPOSE_PROJECT_NAME=studio_$(shell git rev-parse --abbrev-ref HEAD)
 
-
 dcbuild:
 	# build all studio docker image and all dependent services using docker-compose
-	docker-compose build
+	docker-compose build --no-cache
 
 dcup:
 	# run all services except for cloudprober
-	docker-compose up studio-app celery-worker
+	docker-compose up elasticsearch studio-app celery-worker indexing-worker
+
+dctestup:
+
 
 dcup-cloudprober:
 	# run all services including cloudprober
@@ -103,11 +109,25 @@ dcclean:
 	docker-compose down -v
 	docker image prune -f
 
-export COMPOSE_STUDIO_APP = ${COMPOSE_PROJECT_NAME}_studio-app_1
 dcshell:
 	# bash shell inside studio-app container
-	docker exec -ti ${COMPOSE_STUDIO_APP} /usr/bin/fish
+	docker-compose exec studio-app /usr/bin/fish 
 
-dctest: endtoendtest
+dctestup: COMPOSE_PROJECT_NAME=studio_test
+dctestup:
 	# launch all studio's dependent services using docker-compose, and then run the tests
-	echo "Finished running  make test -e DJANGO_SETTINGS_MODULE=contentcuration.test_settings"
+	docker-compose up -d --renew-anon-volumes studio-app celery-worker indexing-worker
+
+dctestshell: dcshell
+	docker-compose exec studio-app /usr/bin/fish
+
+dctestrun: dctestup
+	# launch all studio's dependent services using docker-compose, and then run the tests	
+	docker-compose run studio-app make test -e DJANGO_SETTINGS_MODULE=contentcuration.test_settings
+
+dctestdown:
+	docker-compose down --volumes
+
+endtoendtest: dctestrun dctestdown
+
+

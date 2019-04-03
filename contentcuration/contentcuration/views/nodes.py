@@ -33,6 +33,7 @@ from contentcuration.serializers import TaskSerializer
 from contentcuration.tasks import create_async_task
 from contentcuration.tasks import getnodedetails_task
 
+from contentcuration.signals import changed_tree
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))

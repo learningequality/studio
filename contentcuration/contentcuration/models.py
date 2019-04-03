@@ -43,7 +43,7 @@ from mptt.models import raise_if_unsaved
 from mptt.models import TreeForeignKey
 from mptt.models import TreeManager
 from pg_utils import DistinctSum
-
+from .signals import changed_tree, channel_updated
 from contentcuration.statistics import record_channel_stats
 from contentcuration.utils.cache import delete_public_channel_cache_keys
 from contentcuration.utils.parser import load_json_string
@@ -583,7 +583,6 @@ class Channel(models.Model):
     )
     language = models.ForeignKey('Language', null=True, blank=True, related_name='channel_language')
     trash_tree = models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_trash')
-    clipboard_tree = models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_clipboard')
     main_tree = models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_main')
     staging_tree = models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_staging')
     chef_tree = models.ForeignKey('ContentNode', null=True, blank=True, related_name='channel_chef')
@@ -630,6 +629,15 @@ class Channel(models.Model):
     @classmethod
     def get_all_channels(cls):
         return cls.objects.select_related('main_tree').prefetch_related('editors', 'viewers').distinct()
+
+    def all_trees(self):
+        return [
+            self.main_tree,
+            self.trash_tree,
+            self.staging_tree,
+            self.chef_tree,
+            self.previous_tree,
+        ]
 
     def resource_size_key(self):
         return "{}_resource_size".format(self.pk)
@@ -692,6 +700,7 @@ class Channel(models.Model):
             self.trash_tree.title = self.name
             self.trash_tree.save()
 
+
         if original_channel and not self.main_tree.changed:
             # Changing channel metadata should also mark main_tree as changed
             fields_to_check = ['description', 'language_id', 'thumbnail', 'name', 'thumbnail_encoding', 'deleted']
@@ -705,6 +714,14 @@ class Channel(models.Model):
                     os.unlink(channel_db_url)
                     self.main_tree.published = False
             self.main_tree.save()
+
+        from flexible_search.search_indexes import ContentNodeIndex
+
+        if original_channel and any([
+            getattr(self, field) != getattr(original_channel, field)
+            for field in ContentNodeIndex.indexed_channel_fields()
+        ]):
+            channel_updated.send(sender=Channel, channel=self)
 
         super(Channel, self).save(*args, **kwargs)
 
@@ -776,7 +793,7 @@ class Channel(models.Model):
                  .exclude(deleted=True)
                  .select_related('main_tree')
                  .prefetch_related('editors')
-                 .defer('trash_tree', 'clipboard_tree', 'staging_tree', 'chef_tree', 'previous_tree', 'viewers'))
+                 .defer('trash_tree', 'staging_tree', 'chef_tree', 'previous_tree', 'viewers'))
         else:
             c = Channel.objects.filter(public=True).exclude(deleted=True)
 
@@ -1070,6 +1087,29 @@ class ContentNode(MPTTModel, models.Model):
         except (ObjectDoesNotExist, MultipleObjectsReturned, AttributeError):
             return None
 
+    def get_tree_context(self):
+        try:
+            root = self.get_root()
+            if not root:
+                return (None, None, None)
+
+            channel = Channel.objects.filter(Q(main_tree=root) | Q(chef_tree=root) | Q(trash_tree=root) | Q(staging_tree=root) | Q(previous_tree=root)).first()
+            if channel.main_tree == root:
+                tree = 'main_tree'
+            if channel.chef_tree == root:
+                tree = 'chef_tree'
+            if channel.trash_tree == root:
+                tree = 'trash_tree'
+            if channel.staging_tree == root:
+                tree = 'staging_tree'
+            if channel.previous_tree == root:
+                tree = 'previous_tree'
+
+            return (root, tree, channel)
+
+        except (ObjectDoesNotExist, MultipleObjectsReturned, AttributeError):
+            return (None, None, None)
+
     def get_thumbnail(self):
         # Problems with json.loads, so use ast.literal_eval to get dict
         if self.thumbnail_encoding:
@@ -1199,7 +1239,7 @@ class ContentNode(MPTTModel, models.Model):
         return data
 
     def save(self, *args, **kwargs):  # noqa: C901
-
+        # import ipdb; ipdb.set_trace()
         channel_id = None
         if kwargs.get('request'):
             request = kwargs.pop('request')
@@ -1213,6 +1253,7 @@ class ContentNode(MPTTModel, models.Model):
         # Detect if node has been moved to another tree (if the original parent has not already been marked as changed, mark as changed)
         # Necessary if nodes get deleted/moved to clipboard- user needs to be able to publish "changed" nodes
         if self.pk and ContentNode.objects.filter(pk=self.pk, parent__changed=False).exclude(parent_id=self.parent_id).exists():
+            print("SHOULD CHANGE TREE")
             original = ContentNode.objects.get(pk=self.pk)
             original.parent.changed = True
             original.parent.save()
@@ -1255,11 +1296,8 @@ class ContentNode(MPTTModel, models.Model):
         order_insertion_by = ['sort_order']
 
     class Meta:
-        verbose_name = _("Topic")
-        verbose_name_plural = _("Topics")
-        # Do not allow two nodes with the same name on the same level
-        # unique_together = ('parent', 'title')
-
+        verbose_name = _("ContentNode")
+        verbose_name_plural = _("ContentNodes")
 
 class ContentKind(models.Model):
     kind = models.CharField(primary_key=True, max_length=200, choices=content_kinds.choices)

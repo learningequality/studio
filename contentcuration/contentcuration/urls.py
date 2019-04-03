@@ -282,6 +282,7 @@ urlpatterns = [
     url(r'^healthz$', views.health, name='health'),
     url(r'^stealthz$', views.stealth, name='stealth'),
     url(r'^api/search/', include('search.urls'), name='search'),
+    url(r'^api/flexible_search/', include('flexible_search.urls'), name='flexible_search'),
     url(r'^api/add_bookmark/$', views.add_bookmark, name='add_bookmark'),
     url(r'^api/remove_bookmark/$', views.remove_bookmark, name='remove_bookmark'),
     url(r'^api/set_channel_priority/$', views.set_channel_priority, name='set_channel_priority'),
