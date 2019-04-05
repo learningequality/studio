@@ -1,70 +1,81 @@
 <template>
-  <span>
-    <span class="language-icon" :title="$tr('languageTitle')">language</span>
-    <select ref="languagedropdown" @input="selectedLanguage">
-      <option disabled :selected="!selected">{{ $tr('defaultText') }}</option>
-      <option v-for="language in languages" :value="language.id" :selected="selected === language.id">{{language.native_name}}</option>
-    </select>
-  </span>
+  <VAutocomplete
+    ref="select"
+    v-model="selected"
+    :items="languages"
+    :label="$tr('labelText')"
+    color="#2196f3"
+    :value="language"
+    itemValue="id"
+    itemText="native_name"
+    :autoSelectFirst="true"
+    @input="selectedLanguage"
+  />
 </template>
 
 
 <script>
 
-import Constants from 'edit_channel/constants/index';
+  import _ from 'underscore';
+  import Constants from 'edit_channel/constants/index';
 
-export default {
-  name: 'LanguageDropdown',
-  $trs: {
-  	defaultText: "Select a language...",
-    languageTitle: "Language"
-  },
-  props: {
-    language: {
-      type: String,
-      required: false,
-      validator: function (value) {
-        return !value || _.contains(_.pluck(Constants.Languages, 'id'), value);
-      }
-    }
-  },
-  data () {
-    return {
-      selected: ""
-    }
-  },
-  mounted() {
-    this.selected = this.language; // || State.preferences.language
-  },
-  computed: {
-    languages() {
-      return Constants.Languages;
-    }
-  },
-  methods: {
-    selectedLanguage() {
-      this.$emit('changed', this.$refs.languagedropdown.value);
-    }
-  }
-}
+  export default {
+    name: 'LanguageDropdown',
+    $trs: {
+      labelText: 'Language',
+    },
+    props: {
+      language: {
+        type: String,
+        required: false,
+        validator: function(value) {
+          return !value || _.contains(_.pluck(Constants.Languages, 'id'), value);
+        },
+      },
+    },
+    data() {
+      return {
+        selected: '',
+      };
+    },
+    computed: {
+      languages() {
+        return _.chain(Constants.Languages)
+          .sortBy('native_name')
+          .value();
+      },
+    },
+    watch: {
+      select() {
+        setTimeout(() => {
+          this.$refs.select.menuIsActive = false;
+        }, 50);
+      },
+    },
+    mounted() {
+      this.selected = this.language; // || State.preferences.language
+    },
+    methods: {
+      selectedLanguage(languageCode) {
+        this.$emit('changed', languageCode);
+      },
+    },
+  };
 
 </script>
 
 
 <style lang="less" scoped>
-@import '../../../less/global-variables.less';
 
-.language-icon {
-  .material-icons;
-  color: @blue-200;
-  vertical-align: top;
-  font-size: 18pt;
-  padding-right: 5px;
-  cursor: default;
-}
+  @import '../../../less/global-variables.less';
 
-select {
-  max-width: 150px;
-}
+  .v-autocomplete {
+    display: inline-block;
+    width: 150px;
+  }
+
+  .v-menu__content {
+    width: 300px;
+  }
 
 </style>

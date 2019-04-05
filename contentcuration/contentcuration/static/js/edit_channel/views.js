@@ -300,7 +300,6 @@ var BaseWorkspaceView = BaseView.extend({
     _.bindAll(
       this,
       'reload_ancestors',
-      'publish',
       'edit_permissions',
       'handle_published',
       'handle_move',
@@ -314,13 +313,6 @@ var BaseWorkspaceView = BaseView.extend({
       'delete_items_permanently',
       'sync_content'
     );
-  },
-  publish: function() {
-    var Publisher = require('edit_channel/publish/views');
-    new Publisher.PublishModalView({
-      model: State.current_channel,
-      onpublish: this.handle_published,
-    });
   },
   activate_channel: function() {
     var dialog = require('edit_channel/utils/dialog');
