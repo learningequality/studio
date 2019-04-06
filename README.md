@@ -88,7 +88,8 @@ Run the following commands to install the python dependencies listed in `Pipfile
     # Create virtual environment (reactivate with `pipenv shell`)
     pipenv shell
 
-    pipenv install
+    # Ensure your environment matches the one specified in Pipfile.lock
+    pipenv sync
 
 
 
@@ -134,7 +135,7 @@ Create a database user with username `learningequality` and password `kolibri`:
 
 Create a database called `kolibri-studio`
 
-    CREATE DATABASE "kolibri-studio" WITH TEMPLATE = template0 OWNER = "learningequality";
+    CREATE DATABASE "kolibri-studio" WITH TEMPLATE = template0 ENCODING = "UTF8" OWNER = "learningequality";
 
 
 
