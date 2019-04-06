@@ -27,11 +27,8 @@ services:
       CELERY_BROKER_ENDPOINT: studio-redis
       CELERY_RESULT_BACKEND_ENDPOINT: studio-redis
       CELERY_REDIS_PASSWORD: ""
-      PIPENV_HIDE_EMOJIS: "true"
     volumes:
       - .:/src
-      - studio_app_virtualenv:/root/.local/share/virtualenvs/
-      - pip_cache:/root/.cache/pip
 
   studio-worker:
     build:
@@ -45,8 +42,6 @@ services:
       - studio-redis
     volumes:
       - .:/src
-      - studio_worker_virtualenv:/root/.local/share/virtualenvs/
-      - pip_cache:/root/.cache/pip
     environment:
       MPLBACKEND: ps
       SHELL: /bin/bash
@@ -59,7 +54,6 @@ services:
       CELERY_BROKER_ENDPOINT: studio-redis
       CELERY_RESULT_BACKEND_ENDPOINT: studio-redis
       CELERY_REDIS_PASSWORD: ""
-      PIPENV_HIDE_EMOJIS: "true"
 
   minio:
     image: minio/minio
@@ -71,7 +65,6 @@ services:
       MINIO_SECRET_KEY: development
     volumes:
       - minio_data:/data
-      - .:/src
     ports:
       - "9000:9000"
 
@@ -88,9 +81,7 @@ services:
   studio-redis:
     image: redis:4.0.9
 
+
 volumes:
   minio_data:
   pgdata:
-  studio_app_virtualenv:
-  studio_worker_virtualenv:
-  pip_cache:
