@@ -30,7 +30,7 @@ ENV PATH="/src/node_modules/.bin:$PATH"
 COPY Pipfile Pipfile.lock   /src/
 RUN pip install -U pipenv
 # install packages from Pipfile.lock into system
-RUN pipenv install --system --ignore-pipfile
+RUN pipenv install --dev --system --ignore-pipfile
 ################################################################################
 
 
