@@ -7,15 +7,13 @@ services:
       context: .
       dockerfile: docker/Dockerfile.dev
     image: learningequality/studio-app-dev
-    command: make devserver
+    command: yarn run devserver
     depends_on:
       - minio
       - studio-postgres
       - studio-redis
     ports:
       - "8080:8080"
-    expose:
-      - 8080
     environment:
       MPLBACKEND: ps
       SHELL: /bin/bash

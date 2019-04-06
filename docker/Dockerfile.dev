@@ -30,10 +30,10 @@ ENV PATH="/src/node_modules/.bin:$PATH"
 COPY Pipfile Pipfile.lock   /src/
 RUN pip install -U pipenv
 # install packages from Pipfile.lock into system
-RUN pipenv install --system
+RUN pipenv install --system --ignore-pipfile
 ################################################################################
 
 
-ENTRYPOINT ["pipenv", "run", "python", "deploy/entrypoint.py"]
+ENTRYPOINT ["python", "docker/entrypoint.py"]
 
-CMD ["make", "devserver"]
+CMD ["yarn", "run", "devserver"]
