@@ -34,6 +34,4 @@ RUN pipenv install --system --ignore-pipfile
 ################################################################################
 
 
-ENTRYPOINT ["python", "docker/entrypoint.py"]
-
 CMD ["yarn", "run", "devserver"]

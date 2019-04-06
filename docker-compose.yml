@@ -7,6 +7,7 @@ services:
       context: .
       dockerfile: docker/Dockerfile.dev
     image: learningequality/studio-app-dev
+    entrypoint: python docker/entrypoint.py
     command: yarn run devserver
     depends_on:
       - minio

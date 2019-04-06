@@ -21,19 +21,6 @@ logging.basicConfig()
 CONNECT_TRIES = 5
 
 
-def setup_studio():
-    """
-    Run the Studio `setup` management command that includes the following steps:
-      - createcachetable
-      - migrate
-      - loadconstants
-      - create admin account a@a.com:a
-      - create sample user accounts: user@a.com:a, user@b.com:b, user@c.com:c
-      - create sample channels
-    """
-    subprocess.call(["python", "manage.py", "setup", "--settings=contentcuration.dev_settings"])
-
-
 def check_postgresql_ready(postgres_checks=CONNECT_TRIES):
     import psycopg2
     """
@@ -78,6 +65,19 @@ def check_minio_ready(minio_checks=CONNECT_TRIES):
         logging.info("Minio refused connection. Waiting...")
         minio_checks -= 1
         time.sleep(2)
+
+
+def setup_studio():
+    """
+    Run the Studio `setup` management command that includes the following steps:
+      - createcachetable
+      - migrate
+      - loadconstants
+      - create admin account a@a.com:a
+      - create sample user accounts: user@a.com:a, user@b.com:b, user@c.com:c
+      - create sample channels
+    """
+    subprocess.call(["python", "contentcuration/manage.py", "setup", "--settings=contentcuration.dev_settings"])
 
 
 def run_cmd():
