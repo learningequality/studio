@@ -1,10 +1,12 @@
 #!/usr/bin/env python2
 """
-The entrypoint for the studio-app docker image.
+The entrypoint for the studio-app docker image for development purposes.
+This script is not used in the production, develop, or staging setups (k8s).
 
 It currently has the following responsibilities:
-
-- Waits for minio, postgres and redis to be ready.
+  - Waits for postgres and minio to be ready
+  - Runs the studio setup command
+  - Run the CMD specified in the Dockerfile or passed in via docker compose file
 """
 
 import logging
@@ -18,13 +20,18 @@ logging.basicConfig()
 
 CONNECT_TRIES = 5
 
-DEFAULT_CMD = ["make", "devserver"]
 
-def update_pipenv_env():
+def setup_studio():
     """
-    Update our environment based on the latest pipfile.
+    Run the Studio `setup` management command that includes the following steps:
+      - createcachetable
+      - migrate
+      - loadconstants
+      - create admin account a@a.com:a
+      - create sample user accounts: user@a.com:a, user@b.com:b, user@c.com:c
+      - create sample channels
     """
-    subprocess.call(["pipenv", "sync", "--dev"])
+    subprocess.call(["python", "manage.py", "setup", "--settings=contentcuration.dev_settings"])
 
 
 def check_postgresql_ready(postgres_checks=CONNECT_TRIES):
@@ -80,7 +87,7 @@ def run_cmd():
 
 
 if __name__ == "__main__":
-    update_pipenv_env()
     check_postgresql_ready()
     check_minio_ready()
+    setup_studio()
     run_cmd()
