@@ -4,7 +4,8 @@
 #### Changes
 * [[@jayoshih](https://github.com/jayoshih)] Updated README
 * [[@jayoshih](https://github.com/jayoshih)] Vueified channel list page
-* [[@ivanistheone](https://github.com/ivanistheone)] docker-compose setup for dev
+* [[@ivanistheone](https://github.com/ivanistheone)] Dockerfile fixes
+* [[@DXCanas](https://github.com/DXCanas)] docker-compose setup for dev
 
 
 #### Issues Resolved
