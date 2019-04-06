@@ -12,11 +12,7 @@ prodceleryworkers:
 	cd contentcuration/ && celery -A contentcuration worker -l info
 
 devserver:
-	yarn run build
-	cd contentcuration/ && python manage.py setup --settings=contentcuration.dev_settings
-	cd contentcuration/ && python manage.py loaddata contentcuration/fixtures/admin_user.json
-	cd contentcuration/ && python manage.py loaddata contentcuration/fixtures/admin_user_token.json
-	cd contentcuration/ && python manage.py runserver --settings=contentcuration.dev_settings 0.0.0.0:8080
+	yarn run devserver
 
 test:
 	yarn install && yarn run unittests
