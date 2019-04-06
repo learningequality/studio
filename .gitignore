@@ -1,8 +1,3 @@
-
-# Output directory of collectstatic
-contentcuration/contentcuration/static
-
-
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
