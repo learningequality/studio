@@ -22,12 +22,11 @@ $(function() {
     let message = thrownError || jqXHR.statusText;
 
     // Don't send a Sentry report for permissions errors
-    if (jqXHR.status === 403) {
+    // Many 404s are in fact also unauthorized requests so
+    // we should silence those on the front end and try
+    // to catch legitimate request issues in the backend.
+    if (jqXHR.status === 403 || jqXHR.status === 404) {
       return;
-    }
-
-    if (jqXHR.status === 404) {
-      message = '404 Error: ' + ajaxSettings.url;
     }
 
     if (jqXHR.status === 0) {
