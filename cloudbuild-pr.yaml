@@ -8,7 +8,7 @@ steps:
   waitFor: ['pull-app-image-cache']              # don't wait for previous steps
   args: [
     'build',
-    '-f', 'k8s/images/app/Dockerfile',
+    '-f', 'docker/Dockerfile.demo',
     '--cache-from', 'gcr.io/$PROJECT_ID/learningequality-studio-app:latest',
     '-t', 'gcr.io/$PROJECT_ID/learningequality-studio-app:$COMMIT_SHA',
     '-t', 'gcr.io/$PROJECT_ID/learningequality-studio-app:latest',
