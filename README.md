@@ -50,7 +50,12 @@ You need the following software installed on your machine to run Studio:
   - [ffmpeg](https://www.ffmpeg.org/)
   - [python-tk](https://wiki.python.org/moin/TkInter)
   - [libmagickwand-dev](http://docs.wand-py.org/en/0.2.4/guide/install.html)
+  - [yarn](https://yarnpkg.com/lang/en/docs/install)
 
+You can also use `nodeenv` (which is included as a python development dependency below) or `nvm`, to install Node.js 10.x if you need to maintain multiple versions of node:
+
+* http://ekalinin.github.io/nodeenv/
+* https://github.com/creationix/nvm
 
 **Ubuntu or Debian**
 You can install all the necessary packages using these commands (you may need to add `sudo` if you receive `Permission Denied` errors:
@@ -105,14 +110,10 @@ _Note: you may need to run `pip install pre-commit` if you see `pre-commit comma
 
 ### 4. Install javascript dependencies
 
-Kolibri Studio has dependencies that rely on Node.js version 10.x. You can use `nodeenv`, which is included as a python development dependency, to install Node.js 10.x in your python virtual environment:
-
-    pipenv shell
-    nodeenv install -p --node=10.15.3
+As described above, Kolibri Studio has dependencies that rely on Node.js version 10.x. You'll also need [yarn](https://yarnpkg.com/lang/en/docs/install) installed.
 
 All the javascript dependencies are listed in `package.json`. To install them run the following [yarn](https://yarnpkg.com/en/) command:
 
-    npm install -g yarn
     yarn install
 
 
