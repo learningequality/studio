@@ -76,7 +76,7 @@ dcup:
 DCAPP = ${DCPROJECT}_studio-app_1
 dcshell:
 	# bash shell inside studio-app container
-	docker exec -u $(USER) -ti ${DCAPP} /usr/bin/fish 
+	docker exec -ti ${DCAPP} /usr/bin/fish 
 
 dctest: endtoendtest
 	# launch all studio's dependent services using docker-compose, and then run the tests
