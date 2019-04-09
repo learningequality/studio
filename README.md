@@ -152,7 +152,7 @@ service postgresql start
 Start the client with:
 
 ```bash
-sudo su postgres
+sudo su postgres  # switch to the postgres account
 psql  # mac: psql postgres
 ```
 
@@ -168,7 +168,11 @@ Create a database called `kolibri-studio`:
 CREATE DATABASE "kolibri-studio" WITH TEMPLATE = template0 ENCODING = "UTF8" OWNER = "learningequality";
 ```
 
-Press <kbd>Ctrl</kbd>+<kbd>D</kbd> to exit the `psql` client.
+Press <kbd>Ctrl</kbd>+<kbd>D</kbd> to exit the `psql` client. Finally
+
+```bash
+exit  # leave the postgres account
+```
 
 
 ### 6. Run all database migrations and load constants
@@ -187,6 +191,8 @@ In another terminal, run devsetup to create all the necessary tables and buckets
 ```bash
 yarn run devsetup
 ```
+
+When this completes, close the second tab and kill the services.
 
 
 ### 7. Start the dev server
