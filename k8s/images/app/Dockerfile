@@ -31,7 +31,8 @@ COPY Pipfile.lock .
 # More info here: https://github.com/pypa/pipenv/issues/2924
 RUN pip install pip==18.0
 RUN pip install -U pipenv
-RUN pipenv install --system  # install packages from Pipfile.lock into system
+# install the environment exactly as specified in the Pipfile.lock file
+RUN pipenv install --system --ignore-pipfile --keep-outdated
 
 COPY  . /contentcuration/
 WORKDIR /contentcuration

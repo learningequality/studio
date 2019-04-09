@@ -9,7 +9,7 @@ dummyusers:
 	cd contentcuration/ && python manage.py loaddata contentcuration/fixtures/admin_user_token.json
 
 prodceleryworkers:
-	cd contentcuration/ && celery -A contentcuration worker -l info
+	cd contentcuration && celery -A contentcuration worker -l info
 
 devserver:
 	yarn run devserver
