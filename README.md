@@ -20,7 +20,7 @@ Kolibri Studio uses [Django](https://www.djangoproject.com/) for the backend and
 
 ## Developer Instructions
 
-Follow the instructions below to setup your dev environment and get started. (Note: [docs-developer/docker_setup](docs-developer/docker_setup.md) has instructions for setting up your environment using [docker](https://www.docker.com/), but this is currently a work in progress.)
+Follow the instructions below to setup your dev environment and get started. (Note: [docs/docker_setup](docs/docker_setup.md) has instructions for setting up your environment using [docker](https://www.docker.com/), but this is currently a work in progress.)
 
 
 ### 0. Get the code
@@ -32,7 +32,7 @@ Follow the instructions below to setup your dev environment and get started. (No
       ```
 
   - The folder `<project directory>/studio` now contains the latest Studio code.
-  - For more information on using git, please check out [docs-developer/git_setup](docs-developer/git_setup.md)
+  - For more information on using git, please check out [docs/git_setup](docs/git_setup.md)
 
 
 
@@ -179,7 +179,7 @@ You can run tests using the following command:
 
     yarn run test
 
-For more testing tips, please check out [docs-developer/running_tests](docs-developer/running_tests.md).
+For more testing tips, please check out [docs/running_tests](docs/running_tests.md).
 
 ## Linting
 Front-end linting is run using:
