@@ -45,7 +45,7 @@ You need the following software installed on your machine to run Studio:
   - [nodejs (10.x)](https://nodejs.org/en/download/)
   - [Postgres DB](https://www.postgresql.org/download/)
   - [redis](https://redis.io/topics/quickstart)
-  - [minio](https://www.minio.io/downloads.html)
+  - [minio server](https://www.minio.io/downloads.html)
   - [nginx](https://www.nginx.com/resources/wiki/start/topics/tutorials/install/)
   - [ffmpeg](https://www.ffmpeg.org/)
   - [python-tk](https://wiki.python.org/moin/TkInter)
