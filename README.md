@@ -53,7 +53,7 @@ You need the following software installed on your machine to run Studio:
   - [libmagickwand-dev](http://docs.wand-py.org/en/0.2.4/guide/install.html)
   - [yarn](https://yarnpkg.com/lang/en/docs/install)
 
-You can also use `nodeenv` (which is included as a python development dependency below) or `nvm`, to install Node.js 10.x if you need to maintain multiple versions of node:
+You can also use `nodeenv` (which is included as a python development dependency below) or `nvm` to install Node.js 10.x if you need to maintain multiple versions of node:
 
 * http://ekalinin.github.io/nodeenv/
 * https://github.com/creationix/nvm
