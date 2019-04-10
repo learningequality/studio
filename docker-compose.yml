@@ -57,8 +57,6 @@ services:
 
   minio:
     image: minio/minio
-    # logging:
-    #   driver: none
     entrypoint: minio server /data
     environment:
       MINIO_ACCESS_KEY: development
