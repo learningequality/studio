@@ -25,6 +25,8 @@ var/
 
 # Ignore editor / IDE related data
 .vscode/
+.idea/*
+!.idea/studio.iml
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
