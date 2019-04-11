@@ -25,6 +25,8 @@ var/
 
 # Ignore editor / IDE related data
 .vscode/
+
+# IntelliJ IDE, except project config
 .idea/*
 !.idea/studio.iml
 
