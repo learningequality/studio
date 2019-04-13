@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 import logging
 import os
 import re
+import sys
 from datetime import datetime
 from datetime import timedelta
 
@@ -33,6 +34,7 @@ CSV_ROOT = "csvs"
 EXPORT_ROOT = "exports"
 
 BETA_MODE = os.getenv("STUDIO_BETA_MODE")
+RUNNING_TESTS = (sys.argv[1:2] == ['test'] or os.path.basename(sys.argv[0]) == 'pytest')
 
 # hardcoding all this info for now. Potential for shared reference with webpack?
 WEBPACK_LOADER = {
@@ -181,7 +183,7 @@ WSGI_APPLICATION = 'contentcuration.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',  # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': os.getenv("DATA_DB_NAME") or 'gonano',  # Or path to database file if using sqlite3.
+        'NAME': os.getenv("DATA_DB_NAME") or 'kolibri-studio',  # Or path to database file if using sqlite3.
         # The following settings are not used with sqlite3:
 
         # For dev purposes only
@@ -278,6 +280,9 @@ ACCOUNT_ACTIVATION_DAYS = 7
 REGISTRATION_OPEN = True
 SITE_ID = 1
 
+# Used for serializing datetime objects.
+DATE_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
+
 # EMAIL_HOST = 'localhost'
 # EMAIL_PORT = 8000
 # EMAIL_HOST_USER = ''
@@ -315,9 +320,9 @@ IGNORABLE_404_URLS = [
 ]
 
 # CELERY CONFIGURATIONS
-BROKER_URL = 'redis://localhost:6379'
+CELERY_BROKER_URL = 'redis://localhost:6379'
 CELERY_RESULT_BACKEND = 'redis://localhost:6379'
-BROKER_URL = "redis://:{password}@{endpoint}:/{db}".format(
+CELERY_BROKER_URL = "redis://:{password}@{endpoint}:/{db}".format(
     password=os.getenv("CELERY_REDIS_PASSWORD") or "",
     endpoint=os.getenv("CELERY_BROKER_ENDPOINT") or "localhost:6379",
     db=os.getenv("CELERY_REDIS_DB") or "0"
@@ -331,6 +336,8 @@ CELERY_TIMEZONE = os.getenv("CELERY_TIMEZONE") or 'Africa/Nairobi'
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TASK_TRACK_STARTED = True
+CELERY_WORKER_SEND_TASK_EVENTS = True
 
 # When cleaning up orphan nodes, only clean up any that have been last modified
 # since this date

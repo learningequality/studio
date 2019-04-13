@@ -123,6 +123,9 @@ class BaseAPITestCase(StudioAPITestCase):
         self.client.force_authenticate(self.user)
         self.channel.main_tree.refresh_from_db()
 
+    def delete(self, url):
+        return self.client.delete(url, headers=self.header)
+
     def get(self, url):
         return self.client.get(url, headers=self.header)
 

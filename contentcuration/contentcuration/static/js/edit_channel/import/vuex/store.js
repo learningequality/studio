@@ -1,4 +1,5 @@
 import Vue from 'vue';
+
 var Vuex = require('vuex');
 var importModule = require('./importModule');
 
@@ -8,6 +9,6 @@ var store = new Vuex.Store({
   modules: {
     import: importModule,
   },
-})
+});
 
 module.exports = store;

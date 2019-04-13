@@ -35,7 +35,7 @@ Addresses #*PR# HERE*
 
 - [ ] Is the code clean and well-commented?
 - [ ] Has the `docs` label been added if this introduces a change that needs to be updated in the [user docs](https://kolibri-studio.readthedocs.io/en/latest/index.html)?
-- [ ] Have the changes been added to the [CHANGELOG](https://github.com/learningequality/studio/blob/master/CHANGELOG.md)?
+- [ ] Has the `CHANGELOG` label been added to this pull request? Items with this label will be added to the [CHANGELOG](https://github.com/learningequality/studio/blob/master/CHANGELOG.md) at a later time
 - [ ] Are there tests for this change?
 - [ ] Are all user-facing strings translated properly (if applicable)?
 - [ ] Are all UI components LTR and RTL compliant (if applicable)?

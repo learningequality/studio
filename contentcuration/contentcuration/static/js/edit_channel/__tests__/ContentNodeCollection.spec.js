@@ -3,7 +3,7 @@ const Backbone = require('backbone');
 const ContentNodeCollection = require('../models').ContentNodeCollection;
 
 function exampleContentNode() {
-  const id = String(Math.floor(Math.random()*Math.pow(10, 32)));
+  const id = String(Math.floor(Math.random() * Math.pow(10, 32)));
   return {
     title: id,
     changed: false,
@@ -43,11 +43,11 @@ function exampleContentNode() {
     provider: id,
     aggregator: id,
     thumbnail_src: id,
-  }
+  };
 }
 
 function exampleFile() {
-  const id = String(Math.floor(Math.random()*Math.pow(10, 32)));
+  const id = String(Math.floor(Math.random() * Math.pow(10, 32)));
   return {
     id: id,
     preset: {
@@ -58,12 +58,13 @@ function exampleFile() {
 }
 
 function exampleAssessment() {
-  const id = String(Math.floor(Math.random()*Math.pow(10, 32)));
+  const id = String(Math.floor(Math.random() * Math.pow(10, 32)));
   return {
     type: 'multiplechoice',
-    question: 'Ceci n\'est pas un question?',
+    question: "Ceci n'est pas un question?",
     hints: '["Maybe it is, maybe not?"]',
-    answers: '[{ "correct": true, "answer": "First" }, { "correct": false, "answer": "Second" }, { "correct": false, "answer": "Fish" } ]',
+    answers:
+      '[{ "correct": true, "answer": "First" }, { "correct": false, "answer": "Second" }, { "correct": false, "answer": "Fish" } ]',
     order: 1,
     assessment_id: 'test',
     raw_data: '',
@@ -77,7 +78,7 @@ function exampleAssessment() {
 describe('ContentNodeCollection', () => {
   let collection;
   beforeEach(() => {
-    collection = new ContentNodeCollection([])
+    collection = new ContentNodeCollection([]);
   });
   afterEach(() => {
     jest.clearAllMocks();

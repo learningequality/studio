@@ -13,6 +13,8 @@ before_install:
   - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
   - chmod +x docker-compose
   - sudo mv docker-compose /usr/local/bin
+  - nvm install 10
+  - nvm use 10
 
 after_success:
   - coverage combine
@@ -26,5 +28,7 @@ addons:
 
 script:
   - make endtoendtest
+  - yarn run lint-all
+  # - yarn run lint:py
 
 cache: yarn

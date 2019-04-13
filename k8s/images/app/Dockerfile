@@ -11,7 +11,7 @@ RUN echo "deb http://packages.cloud.google.com/apt cloud-sdk-xenial main" | tee 
 RUN curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
 
 # install node
-RUN curl -sL https://deb.nodesource.com/setup_6.x | bash -
+RUN curl -sL https://deb.nodesource.com/setup_10.x | bash -
 
 RUN apt-get -y install nodejs python python-dev python-pip gcc libpq-dev ffmpeg imagemagick ghostscript python-tk make git gettext openjdk-9-jre-headless curl libjpeg-dev wkhtmltopdf google-cloud-sdk fonts-freefont-ttf xfonts-75dpi poppler-utils
 
@@ -31,13 +31,14 @@ COPY Pipfile.lock .
 # More info here: https://github.com/pypa/pipenv/issues/2924
 RUN pip install pip==18.0
 RUN pip install -U pipenv
-RUN pipenv install --system  # install packages from Pipfile.lock into system
+# install the environment exactly as specified in the Pipfile.lock file
+RUN pipenv install --system --ignore-pipfile --keep-outdated
 
 COPY  . /contentcuration/
 WORKDIR /contentcuration
 
 # generate the node bundles
-RUN mkdir -p contentcuration/static/js/bundles #
+RUN mkdir -p contentcuration/static/js/bundles
 RUN ln -s /node_modules /contentcuration/node_modules
 RUN yarn run build -p
 

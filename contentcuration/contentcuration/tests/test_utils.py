@@ -1,5 +1,6 @@
 import datetime
 from cStringIO import StringIO
+from django.conf import settings
 from django.test import TestCase
 
 
@@ -25,6 +26,14 @@ from le_utils.constants import file_formats
 from le_utils.constants import format_presets
 from le_utils.constants import languages
 from le_utils.constants import licenses
+
+
+class TestTheTestsTestCase(StudioTestCase):
+    def test_we_are_testing(self):
+        """
+        This test checks that the Django settings for the test suite are properly set.
+        """
+        assert settings.RUNNING_TESTS and settings.CELERY_TASK_ALWAYS_EAGER
 
 
 class CheckPoliciesTestCase(TestCase):
