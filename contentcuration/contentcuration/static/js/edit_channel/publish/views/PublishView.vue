@@ -4,32 +4,29 @@
       {{ channel.name }}
     </h4>
     <p>
-      <span>{{ $tr('topicCountText', {count: topicCount}) }}</span>
-      <span>{{ $tr('resourceCountText', {count: resourceCount}) }}</span>
-      <span v-if="channel.language">
-        {{ channel.language }}
+      <span v-if="language">
+        {{ language.native_name }}
       </span>
       <span v-if="channel.version">
         {{ $tr('versionText', {version: channel.version}) }}
       </span>
+      <span v-else>
+        {{ $tr('unpublishedText') }}
+      </span>
     </p>
     <hr>
-    <div v-if="!isValid" class="invalid-section">
+    <div v-if="!validOnLoad" class="invalid-section">
       <label>{{ $tr('invalidHeader') }}</label>
       <ul>
         <li>
+          <span v-if="saving" class="prompt-icon spinner"></span>
+          <span v-else class="prompt-icon" :class="{valid: isValid, invalid: !isValid}">
+            {{ (isValid)? 'check' : 'clear' }}
+          </span>
           <span class="prompt">
             {{ $tr('languageRequired') }}
           </span>
-          <LanguageDropdown :language="channel.language" @changed="setChannelLanguage" />
-          <span
-            v-if="updatedLanguage"
-            :title="$tr('submitLanguage')"
-            class="submit-language"
-            @click="submitLanguage"
-          >
-            check
-          </span>
+          <LanguageDropdown :language="channel.language" @changed="setLanguage" />
         </li>
       </ul>
     </div>
@@ -44,23 +41,30 @@
 
 <script>
 
+  import _ from 'underscore';
   import { mapActions, mapState } from 'vuex';
+  import Constants from 'edit_channel/constants/index';
 
   import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown.vue';
 
   export default {
     name: 'PublishView',
     $trs: {
-      topicCountText: '{count, plural, =1 {# Topic} other {# Topics}}',
-      resourceCountText: '{count, plural, =1 {# Resource} other {# Resources}}',
       versionText: 'Current Version: {version}',
       languageRequired: 'Channel language is required',
       invalidHeader: 'Please resolve the following before publishing:',
       validHeader: 'Ready to publish!',
       submitLanguage: 'Set channel language',
+      unpublishedText: 'Unpublished',
     },
     components: {
       LanguageDropdown,
+    },
+    data() {
+      return {
+        validOnLoad: true,
+        saving: false,
+      };
     },
     computed: {
       ...mapState('publish', ['channel']),
@@ -73,12 +77,21 @@
       topicCount() {
         return this.channel.main_tree.metadata.total_count - this.resourceCount;
       },
+      language() {
+        return _.findWhere(Constants.Languages, { id: this.channel.language });
+      },
     },
     mounted() {
-      // console.log(this.channel);
+      this.validOnLoad = this.isValid;
     },
     methods: {
-      ...mapActions('publish', ['']),
+      ...mapActions('publish', ['setChannelLanguage']),
+      setLanguage(languageID) {
+        this.saving = true;
+        this.setChannelLanguage(languageID).then(() => {
+          this.saving = false;
+        });
+      },
     },
   };
 
@@ -115,18 +128,26 @@
       }
     }
 
+    .prompt-icon {
+      .material-icons;
+
+      margin-right: 10px;
+      color: @gray-500;
+      vertical-align: text-bottom;
+      &.valid {
+        color: @green-success-color;
+      }
+      &.invalid {
+        color: @red-error-color;
+      }
+    }
+
     .prompt {
       margin-right: 20px;
       font-size: 12pt;
-      &::before {
-        .material-icons;
-
-        margin-right: 10px;
-        color: @red-error-color;
-        vertical-align: text-bottom;
-        content: 'clear';
-      }
       &.prompt-ready::before {
+        .prompt-icon;
+
         color: @green-success-color;
         content: 'check_circle';
       }

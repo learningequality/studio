@@ -1,84 +1,101 @@
 <template>
-
-  <div class="overlay">
-    <div class="message">
-      <h1>{{ $tr('overlayHeader') }}</h1>
-      <p>{{ $tr('overlayDescription') }}</p>
-      <ProgressBar/>
-      <div class="actions">
-        <a class="action-text" :href="homeUrl">{{ $tr('backLink') }}</a>
-        <button class="action-button">{{ $tr('stopPublishButton') }}</button>
-      </div>
-    </div>
-  </div>
-
+  <VDialog v-model="dialog" persistent light maxWidth="525" attach="body">
+    <VCard class="message">
+      <VCardTitle class="header">
+        {{ $tr('overlayHeader') }}
+      </VCardTitle>
+      <VCardText class="description">
+        {{ $tr('overlayDescription') }}
+      </VCardText>
+      <ProgressBar :taskID="taskID" @finished="handleDone" />
+      <VCardActions class="actions">
+        <VSpacer />
+        <VBtn v-if="done" dark flat class="action-button" @click="dialog = false">
+          {{ $tr('donePublishingButtton') }}
+        </VBtn>
+        <VBtn v-else dark flat class="action-button">
+          {{ $tr('stopPublishButton') }}
+        </VBtn>
+      </VCardActions>
+    </VCard>
+  </VDialog>
 </template>
-
 
 <script>
 
-import ProgressBar from 'edit_channel/sharedComponents/ProgressBar.vue';
+  import { mapState } from 'vuex';
+  import ProgressBar from 'edit_channel/sharedComponents/ProgressBar.vue';
 
-export default {
-  name: 'PublishingOverlay',
-  $trs: {
-    overlayHeader: 'Publishing Channel',
-    overlayDescription: 'Please wait for publishing to finish to edit this channel',
-    backLink: 'Back to channels',
-    stopPublishButton: 'Stop publishing'
-  },
-  components: {
-    ProgressBar,
-  },
-  computed: {
-    homeUrl() {
-      return window.Urls.channels();
-    }
-  }
-}
+  export default {
+    name: 'PublishingOverlay',
+    $trs: {
+      overlayHeader: 'Publishing Channel',
+      overlayDescription: 'Please wait for publishing to finish to edit this channel',
+      backLink: 'Back to channels',
+      stopPublishButton: 'Stop publishing',
+      donePublishingButtton: 'Close',
+    },
+    components: {
+      ProgressBar,
+    },
+    data() {
+      return {
+        dialog: true,
+        done: false,
+      };
+    },
+    computed: {
+      ...mapState('publish', ['channel']),
+      homeUrl() {
+        return window.Urls.channels();
+      },
+      taskID() {
+        return 'TODO: find taskID for publishing ' + this.channel.id;
+      },
+    },
+    methods: {
+      handleDone() {
+        this.done = true;
+      },
+    },
+  };
+
 </script>
 
 
 <style lang="less" scoped>
-@import '../../../../less/global-variables.less';
-.overlay {
-  width: 100vw;
-  height: calc(~"100vh" - 50px);
-  position: absolute;
-  background-color: rgba(256, 256, 256, 0.65);
-  z-index: 10000;
+
+  @import '../../../../less/global-variables.less';
+
+  .app {
+    position: absolute;
+  }
+
   .message {
-    background-color: white;
-    top: 30vh;
-    width: 525px;
-    position: relative;
-    margin: auto;
+    padding: 5px 20px;
     border: 1px solid @blue-100;
-    padding: 20px;
-    h1 {
+    * {
+      font-family: @font-family;
+    }
+    .header {
+      padding: 0;
+      padding-top: 20px;
       font-size: 18pt;
       font-weight: bold;
-      margin-top: 0px;
     }
-    p {
+    .description {
+      padding: 0;
+      padding-bottom: 30px;
       font-size: 12pt;
       color: @gray-500;
-      margin-bottom: 20px;
     }
     .actions {
-      display: grid;
-      grid-auto-flow: column;
-      justify-content: space-between;
-      margin-top: 30px;
-      a, button {
-        text-transform: uppercase;
+      padding-top: 25px;
+      .action-button {
         font-weight: bold;
-      }
-      a {
-        padding: 5px 0px;
+        text-transform: uppercase;
       }
     }
   }
-}
 
 </style>

@@ -1,47 +1,58 @@
 <template>
-  <VApp>
-    <VDialog v-model="dialog" maxWidth="530px" attach="body">
-      <template v-slot:activator="{ on }">
-        <VBtn flat dark class="publish-button" v-on="on">
-          {{ $tr('publishButton') }}
-        </VBtn>
-      </template>
+  <div class="publish-items">
+    <label v-if="!channel.has_changed" class="unchanged-label">
+      {{ $tr('noChangesLabel') }}
+    </label>
+    <VBtn
+      flat
+      dark
+      class="publish-button"
+      :class="{disabled: !channel.has_changed}"
+      :disabled="!channel.has_changed"
+      @click.stop="toggleModal(true)"
+    >
+      {{ $tr('publishButton') }}
+    </VBtn>
+    <VDialog v-model="dialog" maxWidth="500px" attach="body">
       <VCard>
         <VCardText>
-          <!-- <v-container grid-list-md> -->
           <PublishView />
-          <!-- </v-container> -->
         </VCardText>
         <VCardActions>
           <VBtn
             flat
             dark
             class="cancel-text"
-            @click="dialog = false"
+            @click="toggleModal(false)"
           >
             {{ $tr('cancelButton') }}
           </VBtn>
-
-          <VBtn
-            flat
-            dark
-            class="publish-button"
-            :class="{disabled: !channel.language}"
-            :disabled="!channel.language"
-            @click="publishChannel"
-          >
-            {{ $tr('publishButton') }}
-          </VBtn>
+          <div>
+            <span class="size-text">
+              {{ $tr('publishingSizeText', {count: count, size: sizeText}) }}
+            </span>
+            <VBtn
+              flat
+              dark
+              class="publish-button"
+              :class="{disabled: !channel.language}"
+              :disabled="!channel.language"
+              @click="publishChannel"
+            >
+              {{ $tr('publishButton') }}
+            </VBtn>
+          </div>
         </VCardActions>
       </VCard>
     </VDialog>
-  </VApp>
+  </div>
 </template>
 
 <script>
 
   import { mapActions, mapMutations, mapState } from 'vuex';
   import PublishView from './PublishView.vue';
+  import { format_size } from 'edit_channel/utils/string_helper';
 
   export default {
     name: 'PublishModal',
@@ -49,6 +60,9 @@
       modalHeader: 'Publish Channel',
       cancelButton: 'CANCEL',
       publishButton: 'PUBLISH',
+      noChangesLabel: 'No changes',
+      loadingSize: 'Loading...',
+      publishingSizeText: '{count, plural, =1 {# Resource} other {# Resources}} ({size})',
     },
     components: {
       PublishView,
@@ -56,16 +70,29 @@
     data() {
       return {
         dialog: false,
+        size: null,
       };
     },
-    computed: mapState('publish', ['channel']),
+    computed: {
+      ...mapState('publish', ['channel']),
+      sizeText() {
+        return this.size === null ? this.$tr('loadingSize') : format_size(this.size);
+      },
+      count() {
+        return this.channel.main_tree.metadata.resource_count;
+      },
+    },
     methods: {
-      ...mapActions('publish', ['publishChannel', 'setChannelLanguage']),
+      ...mapActions('publish', ['publishChannel', 'setChannelLanguage', 'loadChannelSize']),
       ...mapMutations('publish', { reset: 'RESET_STATE' }),
       toggleModal(open) {
         this.dialog = open;
         if (!this.dialog) {
           this.reset();
+        } else {
+          this.loadChannelSize().then(size => {
+            this.size = size;
+          });
         }
       },
       handlePublish() {
@@ -101,12 +128,22 @@
     font-family: 'Noto Sans';
   }
 
+  .unchanged-label {
+    color: @gray-500;
+  }
+
   .publish-button {
     .action-button;
 
-    margin-right: 40px;
     font-weight: bold;
     color: white;
+  }
+
+  .size-text {
+    margin-right: 5px;
+    font-size: 10pt;
+    font-style: italic;
+    color: @gray-500;
   }
 
   .cancel-text {
@@ -121,16 +158,12 @@
     justify-content: space-between;
   }
 
+  .publish-items {
+    min-width: max-content;
+  }
+
   /deep/ .v-dialog {
     cursor: default;
-  }
-
-  /deep/ .application--wrap {
-    min-height: 0;
-  }
-
-  /deep/ .v-overlay {
-    width: 100vw;
   }
 
 </style>

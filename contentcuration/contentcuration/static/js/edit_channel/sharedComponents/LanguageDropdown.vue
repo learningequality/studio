@@ -7,8 +7,9 @@
     color="#2196f3"
     :value="language"
     itemValue="id"
-    itemText="native_name"
+    :itemText="languageText"
     :autoSelectFirst="true"
+    :allowOverflow="false"
     @input="selectedLanguage"
   />
 </template>
@@ -23,6 +24,7 @@
     name: 'LanguageDropdown',
     $trs: {
       labelText: 'Language',
+      languageItemText: '{language} ({code})',
     },
     props: {
       language: {
@@ -45,19 +47,22 @@
           .value();
       },
     },
-    watch: {
-      select() {
-        setTimeout(() => {
-          this.$refs.select.menuIsActive = false;
-        }, 50);
-      },
-    },
+    // watch: {
+    //   select() {
+    //     setTimeout(() => {
+    //       this.$refs.select.menuIsActive = false;
+    //     }, 50);
+    //   },
+    // },
     mounted() {
       this.selected = this.language; // || State.preferences.language
     },
     methods: {
       selectedLanguage(languageCode) {
         this.$emit('changed', languageCode);
+      },
+      languageText(item) {
+        return this.$tr('languageItemText', { language: item.native_name, code: item.id });
       },
     },
   };
@@ -74,8 +79,13 @@
     width: 150px;
   }
 
-  .v-menu__content {
-    width: 300px;
+  /deep/ .v-list__tile {
+    width: 100%;
+    text-decoration: none !important;
+    &:hover,
+    &.v-list__tile--highlighted {
+      background-color: @gray-200 !important;
+    }
   }
 
 </style>

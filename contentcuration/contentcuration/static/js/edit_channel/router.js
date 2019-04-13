@@ -2,10 +2,9 @@ import Vue from 'vue';
 import Vuetify from 'vuetify';
 
 import ChannelListPage from 'edit_channel/channel_list/views/ChannelListPage.vue';
-import PublishModal from 'edit_channel/publish/views/PublishModal.vue';
+import PublishWrapper from 'edit_channel/publish/views/PublishWrapper.vue';
 
-Vue.use(Vuetify);
-// import PublishingOverlay from 'edit_channel/publish/views/PublishingOverlay.vue';
+Vue.use(Vuetify, { rtl: window.isRTL });
 
 var _ = require('underscore');
 var Backbone = require('backbone');
@@ -78,24 +77,6 @@ var ChannelEditRouter = Backbone.Router.extend({
       staging: State.staging,
     });
 
-    if (data.edit_mode_on) {
-      let store = require('edit_channel/publish/vuex/store');
-      if (State.current_channel.get('publishing')) {
-        // new Vue({
-        //   el: '#channel-edit-overlay',
-        //   store,
-        //   ...PublishingOverlay
-        // });
-      } else {
-        store.commit('publish/SET_CHANNEL', State.current_channel.toJSON());
-        new Vue({
-          el: '#channel-publish-button',
-          store,
-          ...PublishModal,
-        });
-      }
-    }
-
     if (!window.is_staging) {
       var QueueView = require('edit_channel/queue/views');
       new QueueView.Queue({
@@ -104,6 +85,24 @@ var ChannelEditRouter = Backbone.Router.extend({
         clipboard_root: State.current_user.get_clipboard(),
         trash_root: State.current_channel.get_root('trash_tree'),
       });
+    }
+
+    // TODO: Once topic tree has been migrated to vue, move this logic there
+    if (data.edit_mode_on) {
+      let store = require('edit_channel/publish/vuex/store');
+      store.commit('publish/SET_CHANNEL', State.current_channel.toJSON());
+      new Vue({
+        el: '#channel-publish-button',
+        store,
+        ...PublishWrapper,
+      });
+      // if (State.current_channel.get('main_tree').publishing) {
+      //   new Vue({
+      //     el: '#channel-edit-overlay',
+      //     store,
+      //     ...PublishingOverlay
+      //   });
+      // }
     }
   },
   update_url: function(topic, node, replacement) {
