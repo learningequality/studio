@@ -4,6 +4,7 @@ const Models = require('./models');
 const Constants = require('./constants/index');
 const channelModule = require('./vuexModules/channel');
 const primaryModalModule = require('./vuexModules/primaryModal');
+const progressModule = require('./vuexModules/progress');
 
 if (Vue.default) {
   // Compatibility for differential behaviour of require import
@@ -17,6 +18,7 @@ const Store = new Vuex.Store({
   modules: {
     channel: channelModule,
     dialog: primaryModalModule,
+    progress: progressModule,
   },
 });
 

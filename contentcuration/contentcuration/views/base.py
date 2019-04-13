@@ -1,5 +1,6 @@
 import json
 import logging
+import time  # TODO: Remove once API is integrated
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -454,3 +455,11 @@ def save_token_to_channels(request, token):
     token.set_channels(channels)
 
     return HttpResponse({"success": True})
+
+
+# TODO: REMOVE ONCE TASKS ARE AVAILABLE
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
+def check_progress(request, task_id):
+    time.sleep(0.5)
+    return HttpResponse(json.dumps({'status': 'done'}))

@@ -3,70 +3,115 @@
     <div>
       <div class="progressbar">
         <div class="progressbar-fill" role="progressbar" :style="{ width: `${percent}%` }">
-          <span class="sr-only">{{$tr('completedText', { percent: percent })}}</span>
+          <span class="sr-only">
+            {{ $tr('completedText', { percent: percent }) }}
+          </span>
         </div>
       </div>
-      <div class="status">Publishing item 10/20</div>
+      <div v-if="error" class="status status-error">
+        {{ error }}
+      </div>
+      <div class="status">
+        {{ message }}
+      </div>
     </div>
     <div class="percentage">
-      50%
+      {{ $tr('progressText', {percent: Math.round(percent)}) }}
     </div>
   </div>
-
 </template>
 
 
 <script>
 
-export default {
-  name: 'ProgressBar',
-  $trs: {
-    completedText: "{percent}% Complete"
-  },
-  computed: {
-    percent() {
-      return 50
-    }
-  }
-}
+  import State from 'edit_channel/state';
+
+  export default {
+    name: 'ProgressBar',
+    $trs: {
+      completedText: '{percent}% Complete',
+      progressText: '{percent}%',
+    },
+    props: {
+      taskID: {
+        type: String,
+        required: true,
+      },
+    },
+    data() {
+      return {
+        percent: 0,
+        message: '',
+        error: null,
+      };
+    },
+    mounted() {
+      this.checkProgress();
+    },
+    methods: {
+      checkProgress() {
+        State.Store.dispatch('checkProgress', {
+          taskID: this.taskID,
+          update: this.updateProgress,
+        });
+      },
+      updateProgress(data) {
+        if (data.error) {
+          this.error = data.error;
+        } else {
+          this.message = data.message;
+          this.percent = data.percent;
+          if (this.percent >= 100) {
+            this.$emit('finished');
+          }
+        }
+      },
+    },
+  };
+
 </script>
 
 
 <style lang="less" scoped>
-@import '../../../less/global-variables.less';
 
-.progress-wrapper {
-  display: grid;
-  grid-auto-flow: column;
-  grid-template-columns: 1fr max-content;
-}
+  @import '../../../less/global-variables.less';
 
-.progressbar {
-  overflow: hidden;
-  height: 20px;
-  background-color: @gray-300;
-  border-radius: 4px;
-  .progressbar-fill {
-    float: left;
-    width: 0;
-    height: 100%;
-    color: white;
-    text-align: center;
-    background-color: @blue-500;
-    transition: width .6s ease;
+  .progress-wrapper {
+    display: grid;
+    grid-template-columns: 1fr max-content;
+    grid-auto-flow: column;
   }
-}
 
-.status {
-  color: @gray-500;
-  font-style: italic;
-  margin-top: 5px;
-}
+  .progressbar {
+    height: 20px;
+    overflow: hidden;
+    background-color: @gray-300;
+    border-radius: 4px;
+    .progressbar-fill {
+      float: left;
+      width: 0;
+      height: 100%;
+      color: white;
+      text-align: center;
+      background-color: @blue-500;
+      transition: width 0.6s ease;
+    }
+  }
 
-.percentage {
-  color: @gray-500;
-  font-weight: bold;
-  padding-left: 10px;
-}
+  .status {
+    margin-top: 5px;
+    font-style: italic;
+    color: @gray-500;
+    &.status-error {
+      font-weight: bold;
+      color: @red-error-color;
+    }
+  }
+
+  .percentage {
+    padding-left: 10px;
+    font-weight: bold;
+    color: @gray-500;
+  }
 
 </style>
