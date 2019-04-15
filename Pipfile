@@ -61,6 +61,10 @@ django-mathfilters = "*"
 python-pptx = "*"
 google-cloud-kms = "*"
 backoff = "*"
+flower = "*"
+kombu = "==4.3"
+singledispatch = "==3.4.0.3"
+backports-abc = "==0.5"
 
 [dev-packages]
 ipdb = "*"
