@@ -16,11 +16,15 @@
 		<h5>{% trans "Best Practices" %}</h5>
 		<p>Here are some tips on how to use Kolibri Studio in Beta mode:</p>
 		<ul id="best-practices">
-			<li>{% trans 'Create smaller channels with fewer layers of the topic tree structure' %}</li>
-			<li>{% trans 'Copy sub-sets of topics instead of whole channels at once (especially large channels)' %}</li>
-			<li>{% trans 'Publish periodically to ensure that everything is properly backed up and saved' %}</li>
-			<li>{% blocktrans %}Compress videos before uploading them (we recommend following <a class="link-text" target="_blank" href="https://github.com/ivanistheone/ricecooker/blob/master/docs/video_compression.md">these instructions</a>){% endblocktrans %}</li>
-			<li>{% trans 'Report issues as you encounter them' %}</li>
+			<li>{% blocktrans %}When using import and clipboard operations, <b>work with small subsets of topics</b> instead of whole channels at once (especially for large channels).{% endblocktrans %}</li>
+			<li>{% blocktrans %}It is preferable to create multiple <b>small channels</b> rather than one giant channel with many layers of topics.{% endblocktrans %}</li>
+			<li>{% blocktrans %}<b>Reload the page often</b> to ensure your work was saved to the server and no network errors have occurred. Use <b>CTRL+R</b> on linux/windows or <b>⌘+R</b> on mac.{% endblocktrans %}</li>
+			<li>{% blocktrans %}<b>Avoid concurrent edits on the same channel</b>. Channels should not be edited by multiple users at the same time or by the same user in multiple browser windows.{% endblocktrans %}</li>
+			<li>{% blocktrans %}It is possible that you will encounter <b>timeout errors</b> in your browser when performing operations like import and sync, on large channels. Don't be alarmed by this error message and <b>do not repeat the same operation again right away</b>. It doesn't mean the operation has failed—Studio is still working in the background. <b>Wait a few minutes</b> and <b>reload the page</b> before continuing your edits.{% endblocktrans %}</li>
+			<li>{% blocktrans %}<b>Compress videos</b> before uploading them (see <a class="link-text" target="_blank" href="https://github.com/learningequality/ricecooker/blob/master/docs/video_compression.md#handbrake">these instructions</a>).{% endblocktrans %}</li>
+			<li>{% blocktrans %}<b>PUBLISH periodically</b> and import your channel into Kolibri to preview the content and obtain a local backup copy of your channel.{% endblocktrans %}</li>
+			<li>{% blocktrans %}<b>Do not edit the channel after you click PUBLISH</b>. Wait for the notification email before resuming editing operations.{% endblocktrans %}</li>
+			<li>{% blocktrans %}<b>Report issues as you encounter them</b>.{% endblocktrans %}</li>
 		</ul>
 		<br/>
 

@@ -1,6 +1,6 @@
 # Studio Changelog
 
-## Upcoming release
+## Upcoming Release
 #### Changes
 * [[@jayoshih](https://github.com/jayoshih)] Updated README
 * [[@jayoshih](https://github.com/jayoshih)] Vueified channel list page
@@ -14,6 +14,16 @@
 * [#900](https://github.com/learningequality/studio/issues/900)
 * [#875 Make sure files referenced by both orphan and non-orphan nodes aren't deleted](https://github.com/learningequality/studio/issues/875)
 
+
+
+## 2019-03-11 Release
+#### Changes
+* [[@jayoshih](https://github.com/jayoshih)] Don't allow users to set prerequisites on topics
+* [[@jayoshih](https://github.com/jayoshih)] Removed deleted channels from storage request list
+
+#### Issues Resolved
+* [#1254](https://github.com/learningequality/studio/issues/1254)
+* [#1269](https://github.com/learningequality/studio/issues/1269)
 
 
 ## 2019-02-11 Release
