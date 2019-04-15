@@ -60,6 +60,8 @@ docs: clean-docs
 	# sphinx-apidoc -d 10 -H "Python Reference" -o docs/py_modules/ kolibri kolibri/test kolibri/deployment/ kolibri/dist/
 	$(MAKE) -C docs html
 
+setup:
+	python contentcuration/manage.py setup
 
 dcbuild:
 	# bild all studio docker image and all dependent services using docker-compose
@@ -85,4 +87,3 @@ dcshell:
 dctest: endtoendtest
 	# launch all studio's dependent services using docker-compose, and then run the tests
 	echo "Finished running  make test -e DJANGO_SETTINGS_MODULE=contentcuration.test_settings"
-
