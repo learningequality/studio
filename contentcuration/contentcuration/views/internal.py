@@ -3,7 +3,6 @@ import logging
 from collections import namedtuple
 from distutils.version import LooseVersion
 
-
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
 from django.core.exceptions import SuspiciousOperation
@@ -17,6 +16,7 @@ from django.http import HttpResponseServerError
 from le_utils.constants import content_kinds
 from le_utils.constants import roles
 from raven.contrib.django.raven_compat.models import client
+from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import api_view
@@ -25,7 +25,6 @@ from rest_framework.decorators import permission_classes
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework import status
 
 from contentcuration import ricecooker_versions as rc
 from contentcuration.api import activate_channel
@@ -38,12 +37,14 @@ from contentcuration.models import ContentTag
 from contentcuration.models import generate_object_storage_name
 from contentcuration.models import get_next_sort_order
 from contentcuration.models import License
+from contentcuration.models import SlideshowSlide
 from contentcuration.models import StagedFile
 from contentcuration.serializers import GetTreeDataSerizlizer
 from contentcuration.utils.files import get_file_diff
 from contentcuration.utils.garbage_collect import get_deleted_chefs_root
 from contentcuration.utils.nodes import map_files_to_assessment_item
 from contentcuration.utils.nodes import map_files_to_node
+from contentcuration.utils.nodes import map_files_to_slideshow_slide_item
 from contentcuration.utils.tracing import trace
 
 VersionStatus = namedtuple('VersionStatus', ['version', 'status', 'message'])
@@ -564,6 +565,11 @@ def convert_data_to_nodes(user, content_data, parent_node):
                     create_exercises(user, new_node, node_data['questions'])
                     sort_order += 1
 
+                    # Create Slideshow slides (if slideshow kind)
+                    if node_data['kind'] == 'slideshow':
+                        slides = create_slides(user, new_node, node_data['extra_fields'])
+                        map_files_to_slideshow_slide_item(user, new_node, slides, node_data["files"])
+
                     # Track mapping between newly created node and node id
                     root_mapping.update({node_data['node_id']: new_node.pk})
             return root_mapping
@@ -783,3 +789,29 @@ def create_exercises(user, node, data):
             order += 1
             question_obj.save()
             map_files_to_assessment_item(user, question_obj, question['files'])
+
+
+def create_slides(user, node, data):
+    """ Generate SlideshowSlides from data """
+    """ Returns a collection of SlideshowSlide objects """
+
+    # Data comes as <type 'unicode'>. Convert to a JSON string, then a list
+    str_data = data.encode("ascii", "ignore")
+    json_data = json.loads(str_data)
+
+    slides = []
+
+    with transaction.atomic():
+        for slide in json_data:
+            slide_obj = SlideshowSlide(
+                contentnode=node,
+                sort_order=slide.get("sort_order"),
+                metadata={
+                    "caption": slide.get('caption'),
+                    "checksum": slide.get('checksum')
+                }
+            )
+            slide_obj.save()
+            slides.append(slide_obj)
+
+    return slides

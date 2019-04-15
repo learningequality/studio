@@ -1247,7 +1247,7 @@ class SlideshowSlide(models.Model):
     contentnode = models.ForeignKey('ContentNode', related_name="slideshow_slides", blank=True, null=True,
                                     db_index=True)
     sort_order = models.IntegerField(default=1)
-    caption = models.TextField(default="")
+    metadata = JSONField(default={})
 
 
 class StagedFile(models.Model):
