@@ -20,19 +20,20 @@ Kolibri Studio uses [Django](https://www.djangoproject.com/) for the backend and
 
 ## Developer Instructions
 
-Follow the instructions below to setup your dev environment and get started. (Note: `docs-developer/docker_setup` has instructions for setting up your environment using [docker](https://www.docker.com/), but this is currently a work in progress.)
+Follow the instructions below to setup your dev environment and get started. (Note: [docs/docker_setup](docs/docker_setup.md) has instructions for setting up your environment using [docker](https://www.docker.com/), but this is currently a work in progress.)
 
 
 ### 0. Get the code
 
   - Fork the [studio repo](https://github.com/learningequality/studio) to create a copy of the studio repository under your own github username.
-      ```
+
+      ```bash
       cd <project directory>
       git clone git@github.com:<yourusername>/studio.git
       ```
 
   - The folder `<project directory>/studio` now contains the latest Studio code.
-  - For more information on using git, please check out `docs-developer/git_setup`
+  - For more information on using git, please check out [docs/git_setup](docs/git_setup.md)
 
 
 
@@ -45,35 +46,44 @@ You need the following software installed on your machine to run Studio:
   - [nodejs (10.x)](https://nodejs.org/en/download/)
   - [Postgres DB](https://www.postgresql.org/download/)
   - [redis](https://redis.io/topics/quickstart)
-  - [minio](https://www.minio.io/downloads.html)
+  - [minio server](https://www.minio.io/downloads.html)
   - [nginx](https://www.nginx.com/resources/wiki/start/topics/tutorials/install/)
   - [ffmpeg](https://www.ffmpeg.org/)
   - [python-tk](https://wiki.python.org/moin/TkInter)
   - [libmagickwand-dev](http://docs.wand-py.org/en/0.2.4/guide/install.html)
+  - [yarn](https://yarnpkg.com/lang/en/docs/install)
 
+You can also use `nodeenv` (which is included as a python development dependency below) or `nvm` to install Node.js 10.x if you need to maintain multiple versions of node:
+
+* http://ekalinin.github.io/nodeenv/
+* https://github.com/creationix/nvm
 
 **Ubuntu or Debian**
 You can install all the necessary packages using these commands (you may need to add `sudo` if you receive `Permission Denied` errors:
 
-    # Install minio
-    wget https://dl.minio.io/server/minio/release/linux-amd64/minio -O /usr/local/bin/minio
-    chmod +x /usr/local/bin/minio
+```bash
+# Install minio
+wget https://dl.minio.io/server/minio/release/linux-amd64/minio -O /usr/local/bin/minio
+chmod +x /usr/local/bin/minio
 
-    # Install node PPA
-    curl -sL https://deb.nodesource.com/setup_10.x | bash -
+# Install node PPA
+curl -sL https://deb.nodesource.com/setup_10.x | bash -
 
-    # Install packages
-    apt-get install -y  python python-pip python-dev python-tk \
-        postgresql-server-dev-all postgresql-contrib postgresql-client postgresql \
-        ffmpeg nodejs libmagickwand-dev nginx redis-server wkhtmltopdf
+# Install packages
+apt-get install -y  python python-pip python-dev python-tk \
+    postgresql-server-dev-all postgresql-contrib postgresql-client postgresql \
+    ffmpeg nodejs libmagickwand-dev nginx redis-server wkhtmltopdf
+```
 
 **Mac OS X**
 You can install the corresponding packages using Homebrew:
 
-    brew install  postgresql@9.6 redis node ffmpeg imagemagick@6 gs
-    brew install minio/stable/minio
-    brew link --force postgresql@9.6
-    brew link --force imagemagick@6
+```bash
+brew install  postgresql@9.6 redis node ffmpeg imagemagick@6 gs
+brew install minio/stable/minio
+brew link --force postgresql@9.6
+brew link --force imagemagick@6
+```
 
 **Windows**
 Windows is no longer supported due to incompatibilities with some of the required packages.
@@ -81,22 +91,33 @@ Windows is no longer supported due to incompatibilities with some of the require
 
 
 ### 2. Set up python dependencies through pipenv
-Run the following commands to install the python dependencies listed in `Pipfile`
 
-    pip install -U pipenv
-    
-    # Create virtual environment (reactivate with `pipenv shell`)
-    pipenv shell
-    
-    pipenv install
+If you haven't installed pipenv,
 
+```bash
+pip install -U pipenv
+```
+
+Then set up:
+
+```bash
+# Create virtual environment
+pipenv shell
+
+# Ensure your environment matches the one specified in Pipfile.lock
+pipenv sync
+```
+
+Exit the virtual environment by running `exit`. Reactivate it by running `pipenv shell` again.
 
 
 ### 3. Set up pre-commit hooks
 
 We use [pre-commit](http://pre-commit.com/) to help ensure consistent, clean code. The pip package should already be installed from a prior setup step, but you need to install the git hooks using this command.
 
-    pre-commit install
+```bash
+pre-commit install
+```
 
 _Note: you may need to run `pip install pre-commit` if you see `pre-commit command not found`_
 
@@ -104,97 +125,125 @@ _Note: you may need to run `pip install pre-commit` if you see `pre-commit comma
 
 ### 4. Install javascript dependencies
 
-Kolibri Studio has dependencies that rely on Node.js version 10.x. You can use `nodeenv`, which is included as a python development dependency, to install Node.js 10.x in your python virtual environment:
-
-    pipenv shell
-    nodeenv install -p --node=10.15.3
+As described above, Kolibri Studio has dependencies that rely on Node.js version 10.x. You'll also need [yarn](https://yarnpkg.com/lang/en/docs/install) installed.
 
 All the javascript dependencies are listed in `package.json`. To install them run the following [yarn](https://yarnpkg.com/en/) command:
 
-    npm install -g yarn
-    yarn install
+```bash
+yarn install
+```
 
+This may take a long time.
+
+If you encounter a `ESOCKETTIMEDOUT` error related to `material-design-icons`, you can increase your timeout by setting `network-timeout 600000` inside `~/.yarnrc`.
 
 
 ### 5. Set up the database and start redis
 
 Install [postgres](https://www.postgresql.org/download/) if you don't have it already. If you're using a package manager, you need to make sure you install the following packages: `postgresql`, `postgresql-contrib`, and `postgresql-server-dev-all` which will be required to build `psycopg2` python driver.
 
-Make sure postgres is running
+Make sure postgres is running:
 
-    service postgresql start
-    # or pg_ctl -D /usr/local/var/postgresql@9.6 start
+```bash
+service postgresql start
+# alternatively: pg_ctl -D /usr/local/var/postgresql@9.6 start
+```
+
+Start the client with:
+
+```bash
+sudo su postgres  # switch to the postgres account
+psql  # mac: psql postgres
+```
 
 Create a database user with username `learningequality` and password `kolibri`:
 
-    sudo su postgres
-    psql
-    # mac: psql postgres
-    CREATE USER learningequality with NOSUPERUSER INHERIT NOCREATEROLE CREATEDB LOGIN NOREPLICATION NOBYPASSRLS PASSWORD 'kolibri';
+```sql
+CREATE USER learningequality with NOSUPERUSER INHERIT NOCREATEROLE CREATEDB LOGIN NOREPLICATION NOBYPASSRLS PASSWORD 'kolibri';
+  ```
 
-Create a database called `kolibri-studio`
+Create a database called `kolibri-studio`:
 
-    CREATE DATABASE "kolibri-studio" WITH TEMPLATE = template0 OWNER = "learningequality";
+```sql
+CREATE DATABASE "kolibri-studio" WITH TEMPLATE = template0 ENCODING = "UTF8" OWNER = "learningequality";
+```
 
+Press <kbd>Ctrl</kbd>+<kbd>D</kbd> to exit the `psql` client. Finally
+
+```bash
+exit  # leave the postgres account
+```
 
 
 ### 6. Run all database migrations and load constants
 
-These commands setup the necessary tables and contents in the database:
+These commands setup the necessary tables and contents in the database.
 
-    # On one terminal, run all external services
-    yarn run services
 
-    # On another terminal, run devsetup to create all the necessary tables and buckets
-    yarn run devsetup
+In one terminal, run all external services:
 
+```bash
+yarn run services
+```
+
+In another terminal, run devsetup to create all the necessary tables and buckets:
+
+```bash
+yarn run devsetup
+```
+
+When this completes, close the second tab and kill the services.
 
 
 ### 7. Start the dev server
 
-You're all setup now, and ready to start the Studio local development server:
+You're all set up now, and ready to start the Studio local development server:
 
-    yarn run devserver
+On *Macs only* run this in another terminal first:
 
-This will start any of the required services (e.g. postgres, redis, minio) that are not already running. (Alternatively, you can run `pipenv run make devserver`)
+```bash
+yarn run services
+```
+
+Start the server:
+
+```bash
+yarn run devserver
+```
 
 Once you see the following output in your terminal, the server is ready:
 
-    Starting development server at http://0.0.0.0:8080/
-    Quit the server with CONTROL-C.
+```
+Starting development server at http://0.0.0.0:8080/
+Quit the server with CONTROL-C.
+```
 
 You should be able to login at http://127.0.0.1:8080 using email `a@a.com`, password `a`.
 
-_Note: If you are using a Linux environemnt, you may need to increase the amount of listeners to allow the `watch` command to automatically rebuild static assets when you edit them. Please see [here for instructions](https://github.com/guard/listen/wiki/Increasing-the-amount-of-inotify-watchers) on how to do so._
+_Note: If you are using a Linux environment, you may need to increase the amount of listeners to allow the `watch` command to automatically rebuild static assets when you edit them. Please see [here for instructions](https://github.com/guard/listen/wiki/Increasing-the-amount-of-inotify-watchers) on how to do so._
 
-
-
-## Start required services manually
-
-Although calling `make devserver` will start the necessary services for you, sometimes it will be useful to start the
-services manually. To do so, you can run the following command:
-
-    yarn run services
-
-Make sure to run this command in a separate terminal from the one you run Studio on, as it will continue running until
-you force quit it. If you want to see how to start each individual service, check the services command in `package.json`
-to learn more.
 
 ## Running tests
 
 You can run tests using the following command:
 
-    yarn run test
-    
-For more testing tips, please check out `docs-developer/running_tests`.
+```bash
+yarn run test
+```
+
+For more testing tips, please check out [docs/running_tests](docs/running_tests.md).
 
 ## Linting
 Front-end linting is run using:
 
-    yarn run lint-all
+```bash
+yarn run lint-all
+```
 
-Some linting errors can be fixed automatically by running:  
+Some linting errors can be fixed automatically by running:
 
-    yarn run lint-all:fix
+```bash
+yarn run lint-all:fix
+```
 
 Make sure you've set up pre-commit hooks by following the instructions [here](#3-install-pre-commit-hooks).  This will ensure that linting is automatically run on staged changes before every commit.
