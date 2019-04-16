@@ -9,7 +9,7 @@ dummyusers:
 	cd contentcuration/ && python manage.py loaddata contentcuration/fixtures/admin_user_token.json
 
 prodceleryworkers:
-	cd contentcuration/ && celery -A contentcuration worker -l info
+	cd contentcuration && celery -A contentcuration worker -l info
 
 devserver:
 	yarn run devserver
@@ -59,3 +59,31 @@ docs: clean-docs
 	# Adapt to apidocs
 	# sphinx-apidoc -d 10 -H "Python Reference" -o docs/py_modules/ kolibri kolibri/test kolibri/deployment/ kolibri/dist/
 	$(MAKE) -C docs html
+
+setup:
+	python contentcuration/manage.py setup
+
+dcbuild:
+	# bild all studio docker image and all dependent services using docker-compose
+	docker-compose build
+
+dcup:
+	# run make deverver in foreground with all dependent services using docker-compose
+	docker-compose up
+
+dcdown:
+	# run make deverver in foreground with all dependent services using docker-compose
+	docker-compose down
+
+dcclean:
+	# stop all containers and delete volumes
+	docker-compose down -v
+	docker image prune -f
+
+dcshell:
+	# bash shell inside studio-app container
+	docker exec -ti studio_studio-app_1 /usr/bin/fish
+
+dctest: endtoendtest
+	# launch all studio's dependent services using docker-compose, and then run the tests
+	echo "Finished running  make test -e DJANGO_SETTINGS_MODULE=contentcuration.test_settings"
