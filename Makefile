@@ -11,6 +11,10 @@ dummyusers:
 prodceleryworkers:
 	cd contentcuration && celery -A contentcuration worker -l info
 
+prodcelerydashboard:
+	# connect to the celery dashboard by visiting http://localhost:5555
+	kubectl port-forward deployment/master-studio-celery-dashboard 5555
+
 devserver:
 	yarn run devserver
 
@@ -18,7 +22,7 @@ test:
 	yarn install && yarn run unittests
 
 endtoendtest:
-	# launch all studio's dependent services using docker-compose, and then run the tests	
+	# launch all studio's dependent services using docker-compose, and then run the tests
 	docker-compose run studio-app make test -e DJANGO_SETTINGS_MODULE=contentcuration.test_settings
 
 collectstatic: migrate

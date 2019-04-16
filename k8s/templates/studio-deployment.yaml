@@ -3,6 +3,9 @@ apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
   name: {{ template "studio.fullname" . }}
+  labels:
+    tier: app
+    app: {{ template "studio.fullname" . }}
 spec:
   replicas: {{ .Values.studioApp.replicas }}
   template:
@@ -16,8 +19,7 @@ spec:
       containers:
       - name: app
         image: {{ .Values.studioApp.imageName }}
-        env:
-        {{ include "studio.sharedEnvs" . }}
+        env: {{ include "studio.sharedEnvs" . | nindent 8 }}
         - name: STATICFILES_DIR
           value: /app/contentworkshop_static/
         - name: SEND_USER_ACTIVATION_NOTIFICATION_EMAIL
@@ -39,8 +41,10 @@ spec:
         volumeMounts:
         - mountPath: /app/contentworkshop_static/
           name: staticfiles
+        {{- if .Values.minio.externalGoogleCloudStorage.enabled }}
         - name: gcs-creds
           mountPath: /secrets/gcs
+        {{- end }}
         {{ if .Values.studioApp.gDrive.keyJson }}
         - name: gdrive-creds
           mountPath: /secrets/gdrive
@@ -66,11 +70,13 @@ spec:
         - mountPath: /app/contentworkshop_static/
           name: staticfiles
       volumes:
+        - emptyDir: {}
+          name: staticfiles
+        {{ if .Values.minio.externalGoogleCloudStorage.enabled }}
         - name: gcs-creds
           secret:
             secretName: {{ template "studio.fullname" . }}-gcs
-        - emptyDir: {}
-          name: staticfiles
+        {{ end }}
         {{ if .Values.studioApp.gDrive.keyJson }}
         - name: gdrive-creds
           secret:
@@ -90,9 +96,11 @@ spec:
         tier: workers
     spec:
       volumes:
+      {{- if .Values.minio.externalGoogleCloudStorage.enabled }}
       - name: gcs-creds
         secret:
           secretName: {{ template "studio.fullname" . }}-gcs
+      {{- end }}
       containers:
       - name: worker
         image: {{ .Values.studioApp.imageName }}
@@ -100,7 +108,8 @@ spec:
         - make
         - prodceleryworkers
         volumeMounts:
+        {{- if .Values.minio.externalGoogleCloudStorage.enabled }}
         - name: gcs-creds
           mountPath: /secrets/gcs
-        env:
-        {{ include "studio.sharedEnvs" . }}
+        {{- end }}
+        env: {{ include "studio.sharedEnvs" . | nindent 10 }}
