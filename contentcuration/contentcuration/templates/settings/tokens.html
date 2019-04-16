@@ -26,7 +26,8 @@
 			document.execCommand("copy");
 			$(event.target).val("{% trans 'Copied!' %}");
 		} catch(e) {
-			console.log(e)
+			// eslint-disable-next-line no-console
+			console.warn(e)
 			$(event.target).val("{% trans 'Copy Failed' %}");
 		}
 		setTimeout(function(){
