@@ -13,7 +13,7 @@
         <VBtn v-if="done" dark flat class="action-button" @click="dialog = false">
           {{ $tr('donePublishingButtton') }}
         </VBtn>
-        <VBtn v-else dark flat class="action-button">
+        <VBtn v-else dark flat class="action-button" @click="handleCancel">
           {{ $tr('stopPublishButton') }}
         </VBtn>
       </VCardActions>
@@ -23,7 +23,7 @@
 
 <script>
 
-  import { mapState } from 'vuex';
+  import { mapActions, mapState } from 'vuex';
   import ProgressBar from 'edit_channel/sharedComponents/ProgressBar.vue';
 
   export default {
@@ -46,6 +46,7 @@
     },
     computed: {
       ...mapState('publish', ['channel']),
+      ...mapActions('publish', ['cancelPublish']),
       homeUrl() {
         return window.Urls.channels();
       },
@@ -57,6 +58,7 @@
       handleDone() {
         this.done = true;
       },
+      handleCancel() {},
     },
   };
 

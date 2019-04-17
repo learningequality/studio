@@ -29,7 +29,7 @@
           </VBtn>
           <div>
             <span class="size-text">
-              {{ $tr('publishingSizeText', {count: count, size: sizeText}) }}
+              {{ $tr('publishingSizeText', {count: channelCount, size: sizeText}) }}
             </span>
             <VBtn
               flat
@@ -50,7 +50,7 @@
 
 <script>
 
-  import { mapActions, mapMutations, mapState } from 'vuex';
+  import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
   import PublishView from './PublishView.vue';
   import { format_size } from 'edit_channel/utils/string_helper';
 
@@ -73,13 +73,12 @@
         size: null,
       };
     },
+    // TODO: add watch here for channelCount
     computed: {
       ...mapState('publish', ['channel']),
+      ...mapGetters('publish', ['channelCount']),
       sizeText() {
         return this.size === null ? this.$tr('loadingSize') : format_size(this.size);
-      },
-      count() {
-        return this.channel.main_tree.metadata.resource_count;
       },
     },
     methods: {
