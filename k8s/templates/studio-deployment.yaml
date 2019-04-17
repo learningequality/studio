@@ -41,14 +41,8 @@ spec:
         volumeMounts:
         - mountPath: /app/contentworkshop_static/
           name: staticfiles
-        {{- if .Values.minio.externalGoogleCloudStorage.enabled }}
-        - name: gcs-creds
-          mountPath: /secrets/gcs
-        {{- end }}
-        {{ if .Values.studioApp.gDrive.keyJson }}
-        - name: gdrive-creds
-          mountPath: /secrets/gdrive
-        {{ end }}
+        {{ include "studio.pvc.gcs-creds" . | nindent 8 }}
+        {{ include "studio.pvc.gdrive-creds" . | nindent 8 }}
         resources:
           requests:
             cpu: 1000m
@@ -72,16 +66,8 @@ spec:
       volumes:
         - emptyDir: {}
           name: staticfiles
-        {{ if .Values.minio.externalGoogleCloudStorage.enabled }}
-        - name: gcs-creds
-          secret:
-            secretName: {{ template "studio.fullname" . }}-gcs
-        {{ end }}
-        {{ if .Values.studioApp.gDrive.keyJson }}
-        - name: gdrive-creds
-          secret:
-            secretName: {{ template "studio.fullname" . }}-gdrive
-        {{ end }}
+        {{ include "studio.volume.gcs-creds" . | nindent 8 }}
+        {{ include "studio.volume.gdrive-creds" . | nindent 8 }}
 ---
 apiVersion: apps/v1beta1
 kind: Deployment
@@ -96,11 +82,7 @@ spec:
         tier: workers
     spec:
       volumes:
-      {{- if .Values.minio.externalGoogleCloudStorage.enabled }}
-      - name: gcs-creds
-        secret:
-          secretName: {{ template "studio.fullname" . }}-gcs
-      {{- end }}
+        {{ include "studio.volume.gcs-creds" . | nindent 8 }}
       containers:
       - name: worker
         image: {{ .Values.studioApp.imageName }}
@@ -108,8 +90,5 @@ spec:
         - make
         - prodceleryworkers
         volumeMounts:
-        {{- if .Values.minio.externalGoogleCloudStorage.enabled }}
-        - name: gcs-creds
-          mountPath: /secrets/gcs
-        {{- end }}
+        {{ include "studio.pvc.gcs-creds" . | nindent 10 }}
         env: {{ include "studio.sharedEnvs" . | nindent 10 }}
