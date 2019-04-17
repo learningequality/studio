@@ -173,3 +173,17 @@ Generate the shared environment variables between studio app and workers
     secretName: {{ template "studio.fullname" . }}-gdrive
 {{ end }}
 {{- end -}}
+
+{{- define "studio.pvc.gcs-creds" -}}
+{{- if .Values.minio.externalGoogleCloudStorage.enabled }}
+- name: gcs-creds
+  mountPath: /secrets/gcs
+{{- end }}
+{{- end -}}
+
+{{- define "studio.pvc.gdrive-creds" -}}
+{{ if .Values.studioApp.gDrive.keyJson }}
+- name: gdrive-creds
+  mountPath: /secrets/gdrive
+{{ end }}
+{{- end -}}
