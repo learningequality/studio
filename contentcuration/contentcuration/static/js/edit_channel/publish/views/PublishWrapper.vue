@@ -1,13 +1,13 @@
 <template>
   <VApp>
     <PublishModal />
-    <PublishingOverlay v-if="channel.main_tree.publishing" />
+    <PublishingOverlay v-if="isPublishing" />
   </VApp>
 </template>
 
 <script>
 
-  import { mapState } from 'vuex';
+  import { mapGetters, mapState } from 'vuex';
   import PublishModal from './PublishModal.vue';
   import PublishingOverlay from './PublishingOverlay.vue';
 
@@ -23,7 +23,10 @@
       PublishModal,
       PublishingOverlay,
     },
-    computed: mapState('publish', ['channel']),
+    computed: {
+      ...mapState('publish', ['channel']),
+      ...mapGetters('publish', ['isPublishing']),
+    },
   };
 
 </script>

@@ -463,3 +463,10 @@ def save_token_to_channels(request, token):
 def check_progress(request, task_id):
     time.sleep(0.5)
     return HttpResponse(json.dumps({'status': 'done'}))
+
+
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
+def cancel_task(request, task_id):
+    time.sleep(0.5)
+    return HttpResponse(json.dumps({'status': 'cancelled'}))

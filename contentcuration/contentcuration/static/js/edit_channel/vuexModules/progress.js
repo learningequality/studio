@@ -32,6 +32,20 @@ const progressModule = {
         });
       });
     },
+    cancelTask(context, payload) {
+      // TODO: Update with real progress tracking logic
+      // Test payload needs taskID and update function
+      return new Promise((resolve, reject) => {
+        $.ajax({
+          method: 'GET',
+          url: window.Urls.cancel_task(payload.taskID),
+          error: reject,
+          success: data => {
+            resolve(data);
+          },
+        });
+      });
+    },
   },
 };
 

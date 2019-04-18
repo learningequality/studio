@@ -4,7 +4,7 @@ const WorkspaceManager = require('./utils/workspace_manager');
 var Models = require('./models');
 var analytics = require('utils/analytics');
 const State = require('edit_channel/state');
-
+let publishStore = require('edit_channel/publish/vuex/store');
 //var UndoManager = require("backbone-undo");
 
 var TABINDEX = 1;
@@ -72,9 +72,6 @@ var MESSAGES = {
   language: 'Language',
   select_language: 'Select a Language',
   make_copy: 'Make a Copy',
-  publish_title_prompt: 'Make this channel available for download into Kolibri',
-  publish_in_progress: 'Your channel is currently publishing...',
-  publishing_prompt: 'You will get an email once the channel finishes publishing.',
   topic_title: 'Topic',
   problem_creating_topics: 'Error Creating Topic',
   parenthesis: '({data})',
@@ -227,23 +224,8 @@ var BaseView = Backbone.View.extend({
       });
     });
   },
-  check_if_published: function(root) {
-    var is_published = root.get('published');
-    var is_publishing = root.get('publishing');
-    $('#hide-if-unpublished').css('display', is_published ? 'inline-block' : 'none');
-    if (is_publishing) {
-      this.set_publishing();
-    } else if (root.get('metadata').has_changed_descendant) {
-      $('#channel-publish-button')
-        .removeAttr('disabled')
-        .attr('title', this.get_translation('publish_title_prompt'))
-        .removeClass('disabled');
-    } else {
-      $('#channel-publish-button')
-        .attr('disabled', 'disabled')
-        .attr('title', this.get_translation('no_changes_detected'))
-        .addClass('disabled');
-    }
+  check_if_published: function() {
+    publishStore.commit('publish/SET_CHANNEL', State.current_channel.toJSON());
   },
   set_publishing: function() {
     $('#channel-publish-button')

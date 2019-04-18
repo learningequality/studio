@@ -7,8 +7,10 @@ export function loadNodes(context, nodeIDs) {
   });
 }
 
-export function publishChannel() {
-  // console.log(context.getters.channel)
+export function publishChannel(context) {
+  return new Models.ChannelModel(context.state.channel).publish().then(() => {
+    context.commit('SET_PUBLISHING', true);
+  });
 }
 
 export function setChannelLanguage(context, languageID) {

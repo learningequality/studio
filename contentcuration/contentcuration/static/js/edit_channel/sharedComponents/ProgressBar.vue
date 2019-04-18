@@ -55,6 +55,11 @@
           update: this.updateProgress,
         });
       },
+      cancelTask() {
+        State.Store.dispatch('cancelTask', {
+          taskID: this.taskID,
+        });
+      },
       updateProgress(data) {
         if (data.error) {
           this.error = data.error;

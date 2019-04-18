@@ -9,6 +9,7 @@
       class="publish-button"
       :class="{disabled: !channel.has_changed}"
       :disabled="!channel.has_changed"
+      :title="$tr('publishButtonTitle')"
       @click.stop="toggleModal(true)"
     >
       {{ $tr('publishButton') }}
@@ -37,7 +38,7 @@
               class="publish-button"
               :class="{disabled: !channel.language}"
               :disabled="!channel.language"
-              @click="publishChannel"
+              @click="handlePublish"
             >
               {{ $tr('publishButton') }}
             </VBtn>
@@ -53,6 +54,7 @@
   import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
   import PublishView from './PublishView.vue';
   import { format_size } from 'edit_channel/utils/string_helper';
+  import { alert } from 'edit_channel/utils/dialog';
 
   export default {
     name: 'PublishModal',
@@ -63,6 +65,10 @@
       noChangesLabel: 'No changes',
       loadingSize: 'Loading...',
       publishingSizeText: '{count, plural, =1 {# Resource} other {# Resources}} ({size})',
+      publishButtonTitle: 'Make this channel available for download into Kolibri',
+      publishAlertHeader: 'Publishing started',
+      publishAlertText: 'You will get an email once the channel finishes publishing.',
+      publishErrorHeader: 'Publishing error',
     },
     components: {
       PublishView,
@@ -73,7 +79,6 @@
         size: null,
       };
     },
-    // TODO: add watch here for channelCount
     computed: {
       ...mapState('publish', ['channel']),
       ...mapGetters('publish', ['channelCount']),
@@ -86,32 +91,21 @@
       ...mapMutations('publish', { reset: 'RESET_STATE' }),
       toggleModal(open) {
         this.dialog = open;
-        if (!this.dialog) {
-          this.reset();
-        } else {
+        if (this.dialog) {
           this.loadChannelSize().then(size => {
             this.size = size;
           });
         }
       },
       handlePublish() {
-        this.publishChannel();
-        // handle_published: function() {
-        //   var dialog = require('edit_channel/utils/dialog');
-        //   this.set_publishing();
-        //   var self = this;
-        //   State.current_channel.fetch({
-        //     success: function(channel) {
-        //       var new_channel = new Models.ChannelCollection();
-        //       new_channel.reset(channel.toJSON());
-        //       $('#publish_id_text').val(State.current_channel.get('primary_token'));
-        //       dialog.alert(
-        //         self.get_translation('publish_in_progress'),
-        //         self.get_translation('publishing_prompt')
-        //       );
-        //     },
-        //   });
-        // },
+        this.publishChannel()
+          .then(() => {
+            this.toggleModal(false);
+            alert(this.$tr('publishAlertHeader'), this.$tr('publishAlertText'));
+          })
+          .catch(error => {
+            alert(this.$tr('publishErrorHeader'), error.responseText || error);
+          });
       },
     },
   };
