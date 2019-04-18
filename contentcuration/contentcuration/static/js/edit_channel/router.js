@@ -96,13 +96,6 @@ var ChannelEditRouter = Backbone.Router.extend({
         store,
         ...PublishWrapper,
       });
-      // if (State.current_channel.get('main_tree').publishing) {
-      //   new Vue({
-      //     el: '#channel-edit-overlay',
-      //     store,
-      //     ...PublishingOverlay
-      //   });
-      // }
     }
   },
   update_url: function(topic, node, replacement) {

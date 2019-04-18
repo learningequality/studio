@@ -47,15 +47,8 @@
           .value();
       },
     },
-    // watch: {
-    //   select() {
-    //     setTimeout(() => {
-    //       this.$refs.select.menuIsActive = false;
-    //     }, 50);
-    //   },
-    // },
     mounted() {
-      this.selected = this.language; // || State.preferences.language
+      this.selected = this.language;
     },
     methods: {
       selectedLanguage(languageCode) {
