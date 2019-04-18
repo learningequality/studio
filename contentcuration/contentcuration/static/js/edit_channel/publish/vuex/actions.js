@@ -1,4 +1,3 @@
-// var _ = require('underscore');
 var Models = require('edit_channel/models');
 
 export function loadNodes(context, nodeIDs) {
