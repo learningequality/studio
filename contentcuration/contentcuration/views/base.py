@@ -58,7 +58,6 @@ from contentcuration.serializers import RootNodeSerializer
 from contentcuration.serializers import UserChannelListSerializer
 from contentcuration.tasks import exportchannel_task
 from contentcuration.tasks import generatechannelcsv_task
-from contentcuration.utils.channelcache import ChannelCacher
 from contentcuration.utils.messages import get_messages
 
 PUBLIC_CHANNELS_CACHE_DURATION = 30  # seconds
@@ -237,7 +236,7 @@ def get_channels_by_token(request, token):
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def get_user_public_channels(request):
-    channels = ChannelCacher.get_public_channels(defer_nonmain_trees=True)
+    channels = Channel.get_public_channels(defer_nonmain_trees=True)
     channel_serializer = _apply_channel_filters(channels, request.query_params, default_serializer=ChannelSerializerTypes.ALT)
     return Response(channel_serializer.data)
 

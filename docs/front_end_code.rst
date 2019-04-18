@@ -1,63 +1,34 @@
 Front End Code
 --------------
 
-All of our front end code is written in Javascript, with much of it using `Backbone.js <http://backbonejs.org>`_ (and its dependencies `jQuery <https://jquery.com/>`_ and `Underscore.js <http://underscorejs.org>`_).
+All of our front end code is written in Javascript, with much of it using `Vue.js <https://vuejs.org/>`_, `Backbone.js <http://backbonejs.org>`_ (and its dependencies `jQuery <https://jquery.com/>`_ and `Underscore.js <http://underscorejs.org>`_).
 
-All new code, where possible, should be written using `Backbone.js <http://backbone.js>`_ to modularize functionality, and allow code to be reused across the site.
+All new code, where possible, should be written using `Vue.js <https://vuejs.org/>`_ to modularize functionality, and allow code to be reused across the site.
 
 Inline Javascript (i.e. Javascript directly in the Django templates inside `<script>` tags) should be avoided except where absolutely necessary (such as to initialize some master object on a page).
 
 For templating on the front end, we use `Handlebars.js <http://handlebarsjs.com/>`_ to render templates with a restricted set of statements and access to all variables passed into the template context.
 
-Modularity
-----------
-
-In order to maintain modular code and be explicit about our dependencies, we use `Browserify <http://http://browserify.org/>`_ to build Javascript code into bundles for use on the client side.
-
-To specify a bundle to be imported into the page, you need to create a 'bundle module' - this will be automatically detected by our Javascript build script, and be built into a bundle that can then be included as a script tag in a Django template.
-
-'Bundle modules' are specified inside the static/js directory of a Django app - e.g. 'bundle modules' in contentcuration are under ``contentcuration/contentcuration/static/js/bundle_modules``. Here is a simple example of a bundle_module::
-
-    var attachfastclick = require("fastclick");
-    var $ = require("jquery");
-    global.$ = $;
-    global.jQuery = $;
-
-    require("bootstrap/less/bootstrap.less");
-    require("../../less/styles.less");
-    require("bootstrap/dist/js/npm.js");
-
-    $(function() {
-        attachfastclick(document.body);
-    });
-
-This is the 'base' bundle module (a file called base.js in the above directory) - all it specifies is a set of top level objects that need to be exposed to be run within the context of the Django template (because we need Django template context variables to be passed into the Javascript) - here are the relevant ``<script>`` tags from the template::
-
-    <script type="text/javascript" src="{% static 'js/bundles/base.js' %}"></script>
-
-Here, we ``require`` the learn bundle (all bundles can be referenced by their name in this way), and are then able to access the objects defined in its ``module.exports``.
-
-It is worth noting that we are also using the same build system for LESS dependencies, so LESS files that are required for styling within a particular bundle_module (or any module) can be required in the same way as a Javascript module.
-
-For more information about using Browserify to handle dependencies, please refer to the `Browserify Handbook <https://github.com/substack/browserify-handbook>`_.
-
 Building Frontend Code
 ----------------------
 
+In order to maintain modular code and be explicit about our dependencies, we use `Webpack <https://webpack.js.org/>`_ to build Javascript code into bundles for use on the client side.
+
 The build script uses `node.js <https://nodejs.org/>`_ - to run the build server for production simply run ``yarn run build``.
 
-Alternatively, for development, running ``yarn run build`` with the ``--watch`` flag will automatically run the build process in watch mode, recompiling Javascript as it changes, on the fly.
+Alternatively, for development, run ``yarn run devserver`` to start the build process in watch mode, recompiling front-end assets as they change.
 
-The compilation process has the following flags::
 
-    --watch         Run in watch mode - automatically recompile Javascript when modules imported into bundles are changed (N.B. this will not detect new bundles being created.)
-    --debug         Compile in debug mode - do not minify source code, and create source maps for easier client side debugging.
-    --staticfiles   Saves built files directly to the static files dir, rather than into the original app directories - useful if collectstatic has already been run.
-
-Implementing with Backbone
+Working with Backbone code
 --------------------------
 
-Most of our front end code uses only three kinds of objects, Backbone Models, Collections, and Views.
+The docs below reflect how to work with Backbone code. Newer development should use Vue instead where possible.
+
+
+Implementing with Backbone
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Most of our Backbone code uses only three kinds of objects, Backbone Models, Collections, and Views.
 
 Backbone Models contain data that we use to render the page - in the case of a coach report, for example, this might be data about each student.
 
@@ -112,7 +83,7 @@ The content to be rendered into the DOM in this instance is so simple that a Han
 The part of the page that the view is scoped to can be refered to by ``this.$el`` - this is a jQuery object for the subsection of the DOM of the view, so any whole view operations (such as ``this.$el.html(message);`` or ``this.$el.show();``) will change the entire subsection of the DOM for that view (but will normally only be a subset of the DOM of the entire page). ``this.$el.html(message);`` sets the entire HTML content of the view DOM subsection to the content of the ``message`` variable, and ``this.$el.show();`` makes the DOM subsection visible.
 
 Creating Your Own Backbone View
--------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To create a new Backbone View, you will either add to an existing Javascript file in the project, or create a new file. For example if you were to add a new View to the coachreports app you could create a file under ``kalite/coachreports/static/js/coachreports/hexagon_report.js``. Some boilerplate to start off with might look something like this::
 
@@ -175,8 +146,10 @@ Line by line this means - ``$(function(){<code here>});`` wait for the browser t
 
 make a new instance of the HexagonReportView. This will automatically call initialize and so the view will render. In addition, ``el: $("#student-report-container"),`` tells the view that it should set its subsection of the DOM to be the DOM element selected by ``$("#student-report-container")`` (i.e. the element with the id 'student-report-container'), and ``model: hexagonReportModel`` tells it to set its 'model' attribute to the hexagonReportModel we instantiated and fetch before.
 
-TL;DR (or 7 quick steps to creating a Backbone View in KA Lite)
----------------------------------------------------------------
+TL;DR
+~~~~~
+
+(or, 7 quick steps to creating a Backbone View in Studio)
 
 #. Find the appropriate app folder inside KA Lite - inside <folder>/static/js/<folder>/ either create a folder for your Backbone files, or find an existing one with a name that fits.
 #. Inside this folder either create or open views.js.

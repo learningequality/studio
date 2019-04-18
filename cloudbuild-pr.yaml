@@ -8,7 +8,7 @@ steps:
   waitFor: ['pull-app-image-cache']              # don't wait for previous steps
   args: [
     'build',
-    '-f', 'k8s/images/app/Dockerfile',
+    '-f', 'docker/Dockerfile.demo',
     '--cache-from', 'gcr.io/$PROJECT_ID/learningequality-studio-app:latest',
     '-t', 'gcr.io/$PROJECT_ID/learningequality-studio-app:$COMMIT_SHA',
     '-t', 'gcr.io/$PROJECT_ID/learningequality-studio-app:latest',
@@ -30,6 +30,7 @@ steps:
   id: push-app-image
   waitFor: ['build-app-image']
   args: ['push', 'gcr.io/$PROJECT_ID/learningequality-studio-app:$COMMIT_SHA']
+
 - name: 'gcr.io/cloud-builders/docker'
   id: push-nginx-image
   waitFor: ['build-nginx-image']
@@ -52,7 +53,7 @@ steps:
   entrypoint: 'bash'
   args: [
   '-c',
-  './create-cloudsql-database.sh $BRANCH_NAME $PROJECT_ID'
+  './create-cloudsql-database.sh $_RELEASE_NAME $_DATABASE_INSTANCE_NAME'
   ]
 
 - name: 'gcr.io/$PROJECT_ID/helm'
@@ -69,17 +70,21 @@ steps:
     - >
       /builder/helm.bash &&
       ./helm-deploy.sh
-      $BRANCH_NAME
-      studio-qa-content
+      $_RELEASE_NAME
+      $_STORAGE_BUCKET
       $COMMIT_SHA
       $$POSTMARK_API_KEY
-      arontest
-      $BRANCH_NAME
-      arontest
-      $PROJECT_ID-studio-qa-sql-proxy-gcloud-sqlproxy.sqlproxy
+      $_POSTGRES_USERNAME
+      $_RELEASE_NAME
+      $_POSTGRES_PASSWORD
+      $PROJECT_ID-$_DATABASE_INSTANCE_NAME-sql-proxy-gcloud-sqlproxy.sqlproxy
       ../gcs-service-account.json
       $PROJECT_ID
-      is_production
+
+- name: 'gcr.io/cloud-builders/gsutil'
+  id: remove-tarball-in-gcs
+  waitFor: ['helm-deploy-studio-instance']
+  args: ['rm', $_TARBALL_LOCATION]
 
 timeout: 3600s
 secrets:
@@ -92,4 +97,3 @@ images:
   - 'gcr.io/$PROJECT_ID/learningequality-studio-nginx:latest'
   - 'gcr.io/$PROJECT_ID/learningequality-studio-app:$COMMIT_SHA'
   - 'gcr.io/$PROJECT_ID/learningequality-studio-app:latest'
-
