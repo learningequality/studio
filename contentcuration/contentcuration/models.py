@@ -1246,7 +1246,7 @@ class AssessmentItem(models.Model):
 class SlideshowSlide(models.Model):
     contentnode = models.ForeignKey('ContentNode', related_name="slideshow_slides", blank=True, null=True,
                                     db_index=True)
-    sort_order = models.IntegerField(default=1)
+    sort_order = models.FloatField(default=1.0)
     metadata = JSONField(default={})
 
 
