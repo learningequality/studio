@@ -808,7 +808,8 @@ def create_slides(user, node, data):
                 sort_order=slide.get("sort_order"),
                 metadata={
                     "caption": slide.get('caption'),
-                    "checksum": slide.get('checksum')
+                    "checksum": slide.get('checksum'),
+                    "extension": slide.get('extension')
                 }
             )
             slide_obj.save()
