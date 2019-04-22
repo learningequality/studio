@@ -1,8 +1,13 @@
 <template>
   <div class="progress-wrapper">
     <div>
-      <div class="progressbar">
-        <div class="progressbar-fill" role="progressbar" :style="{ width: `${percent}%` }">
+      <div class="progressbar" :class="{failed: Boolean(error), finished: isDone}">
+        <div
+          class="progressbar-fill"
+          role="progressbar"
+          :style="{ width: `${percent}%` }"
+          :indeterminate="!percent && !error"
+        >
           <span class="sr-only">
             {{ $tr('completedText', { percent: percent }) }}
           </span>
@@ -15,7 +20,7 @@
         {{ message }}
       </div>
     </div>
-    <div class="percentage">
+    <div v-if="percent" class="percentage">
       {{ $tr('progressText', {percent: Math.round(percent)}) }}
     </div>
   </div>
@@ -45,6 +50,11 @@
         error: null,
       };
     },
+    computed: {
+      isDone() {
+        return this.percent >= 100;
+      },
+    },
     mounted() {
       this.checkProgress();
     },
@@ -58,14 +68,17 @@
       cancelTask() {
         State.Store.dispatch('cancelTask', {
           taskID: this.taskID,
+        }).then(() => {
+          this.$emit('cancelled');
         });
       },
       updateProgress(data) {
         if (data.error) {
           this.error = data.error;
+          this.$emit('failed');
         } else {
           this.message = data.message;
-          this.percent = data.percent;
+          this.percent = Math.min(100, data.percent * 100);
           if (this.percent >= 100) {
             this.$emit('finished');
           }
@@ -92,6 +105,15 @@
     overflow: hidden;
     background-color: @gray-300;
     border-radius: 4px;
+    &.failed {
+      background-color: @error-input-color;
+      .progressbar-fill {
+        background-color: @red-error-color;
+      }
+    }
+    &.finished .progressbar-fill {
+      background-color: @green-success-color;
+    }
     .progressbar-fill {
       float: left;
       width: 0;

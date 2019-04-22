@@ -1,7 +1,7 @@
 <template>
   <VApp>
     <PublishModal />
-    <PublishingOverlay v-if="isPublishing" />
+    <PublishingOverlay v-if="isPublishing" :taskID="channel.id" />
   </VApp>
 </template>
 
@@ -26,6 +26,9 @@
     computed: {
       ...mapState('publish', ['channel']),
       ...mapGetters('publish', ['isPublishing']),
+      taskID() {
+        return this.channel.id;
+      },
     },
   };
 

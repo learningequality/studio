@@ -1,0 +1,6 @@
+module.exports = {
+  STARTED: 'STARTED',
+  SUCCESS: 'SUCCESS',
+  FAILURE: 'FAILURE',
+  REVOKED: 'REVOKED',
+};

@@ -51,7 +51,7 @@
     name: 'PublishView',
     $trs: {
       versionText: 'Current Version: {version}',
-      languageRequired: 'Channel language is required',
+      languageRequired: 'Select a channel language',
       invalidHeader: 'Please resolve the following before publishing:',
       validHeader: 'Ready to publish!',
       submitLanguage: 'Set channel language',

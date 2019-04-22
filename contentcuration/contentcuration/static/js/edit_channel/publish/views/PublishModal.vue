@@ -66,8 +66,6 @@
       loadingSize: 'Loading...',
       publishingSizeText: '{count, plural, =1 {# Resource} other {# Resources}} ({size})',
       publishButtonTitle: 'Make this channel available for download into Kolibri',
-      publishAlertHeader: 'Publishing started',
-      publishAlertText: 'You will get an email once the channel finishes publishing.',
       publishErrorHeader: 'Publishing error',
     },
     components: {
@@ -101,7 +99,6 @@
         this.publishChannel()
           .then(() => {
             this.toggleModal(false);
-            alert(this.$tr('publishAlertHeader'), this.$tr('publishAlertText'));
           })
           .catch(error => {
             alert(this.$tr('publishErrorHeader'), error.responseText || error);

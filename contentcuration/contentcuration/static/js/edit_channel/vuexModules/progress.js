@@ -1,5 +1,6 @@
-const DEFAULT_CYCLES = 25; // Temporarily using cycles to imitate polling
-const POLLING_INTERVAL = 100; // TODO: Update to 5000
+import { Statuses } from 'edit_channel/constants/index';
+
+const POLLING_INTERVAL = 5000;
 
 const progressModule = {
   actions: {
@@ -15,18 +16,14 @@ const progressModule = {
             reject(error);
           },
           success: data => {
-            payload.cycles = payload.cycles || 0;
-            if (payload.cycles < DEFAULT_CYCLES) {
-              let percentage = (payload.cycles / DEFAULT_CYCLES) * 100;
-              let message = 'Publishing ' + payload.cycles + '/' + DEFAULT_CYCLES;
-              payload.update({ percent: percentage, message: message });
-              payload.cycles++;
+            data = JSON.parse(data);
+            payload.update(data);
+            if (data.status === Statuses.SUCCESS) {
+              resolve(data);
+            } else {
               setTimeout(() => {
                 context.dispatch('checkProgress', payload);
               }, POLLING_INTERVAL);
-            } else {
-              payload.update({ percent: 100, message: 'FINISHED!' });
-              resolve(data);
             }
           },
         });
