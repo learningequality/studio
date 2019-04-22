@@ -59,9 +59,12 @@ wordcloud = "==1.5.0"
 "oauth2client" = "*"
 django-mathfilters = "*"
 python-pptx = "*"
-backoff = "*"
 google-cloud-kms = "*"
+backoff = "*"
+flower = "*"
 kombu = "==4.3"
+singledispatch = "==3.4.0.3"
+backports-abc = "==0.5"
 
 [dev-packages]
 ipdb = "*"
