@@ -336,8 +336,14 @@ CELERY_TIMEZONE = os.getenv("CELERY_TIMEZONE") or 'Africa/Nairobi'
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
+# If this is True, Celery tasks are run synchronously. This is set to True in the unit tests,
+# as it is not possible to correctly test Celery tasks asynchronously currently.
 CELERY_TASK_ALWAYS_EAGER = False
+# This tells Celery to mark a task as started. Otherwise, we would have no way of tracking
+# if the task is running.
 CELERY_TASK_TRACK_STARTED = True
+# We hook into task events to update the Task DB records with the updated state.
+# See celerysignals.py for more info.
 CELERY_WORKER_SEND_TASK_EVENTS = True
 
 # When cleaning up orphan nodes, only clean up any that have been last modified
