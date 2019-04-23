@@ -912,12 +912,35 @@ class TaskSerializer(serializers.ModelSerializer):
     metadata = serializers.SerializerMethodField()
     status = serializers.SerializerMethodField()
 
+    def __init__(self, *args, **kwargs):
+        super(TaskSerializer, self).__init__(*args, **kwargs)
+
+        # AsyncResult returns the last reported status, but if the Celery worker crashed or was terminated,
+        # the status could be inaccurate, so we check the Celery process using the inspector to confirm.
+        # In the case of a crash, the status of interrupted tasks will be incorrect for 24 hours, but
+        # this won't be a problem with the serialization code until we support viewing task history.
+        #
+        # We do this in init so that if we're serializing a list of tasks, we only do the Celery server
+        # call once per request instead of once per record.
+
+        # NOTE: This code takes approx. 1 second to complete, so do not call GET /api/tasks more than once
+        # every few seconds until we can improve performance.
+        inspector = app.control.inspect()
+        servers = inspector.active()
+        self.active_tasks_by_server = servers
+
     def get_status(self, task):
-        # If CELERY_TASK_ALWAYS_EAGER is set, attempts to retrieve state will assert, so do a sanity check first.
+        # If CELERY_TASK_ALWAYS_EAGER is set, attempts to retrieve state will assert, so do a sanity
+        # check first.
         if not settings.CELERY_TASK_ALWAYS_EAGER:
-            result = app.AsyncResult(task.task_id)
-            if result and result.status:
-                return result.status
+            # AsyncResult can report 'STARTED' for a task even if an error happened. So make sure we
+            # only check tasks we know have a running Celery worker.
+            for server in self.active_tasks_by_server:
+                for active_task in self.active_tasks_by_server[server]:
+                    if active_task['id'] == task.task_id:
+                        result = app.AsyncResult(task.task_id)
+                        if result and result.status:
+                            return result.status
 
         return task.status
 
@@ -926,7 +949,7 @@ class TaskSerializer(serializers.ModelSerializer):
         # If CELERY_TASK_ALWAYS_EAGER is set, attempts to retrieve state will assert, so do a sanity check first.
         if not settings.CELERY_TASK_ALWAYS_EAGER:
             result = app.AsyncResult(task.task_id)
-            if task.is_progress_tracking and 'progress' in result.state:
+            if task.is_progress_tracking and result.state and 'progress' in result.state:
                 metadata['progress'] = result.state['progress']
 
         return metadata
