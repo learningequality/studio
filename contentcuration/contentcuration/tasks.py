@@ -2,6 +2,7 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 import logging
+import math
 
 from celery.decorators import task
 from celery.utils.log import get_task_logger
@@ -50,6 +51,8 @@ if settings.RUNNING_TESTS:
 def duplicate_nodes_task(self, user_id, channel_id, target_parent, node_ids, sort_order=1):
     new_nodes = []
     user = User.objects.get(id=user_id)
+    progress_percent = math.ceil(100 / len(node_ids))
+    progress = 0
 
     with transaction.atomic():
         with ContentNode.objects.disable_mptt_updates():
@@ -58,6 +61,8 @@ def duplicate_nodes_task(self, user_id, channel_id, target_parent, node_ids, sor
                                                channel_id=channel_id, user=user)
                 new_nodes.append(new_node.pk)
                 sort_order += 1
+                progress += progress_percent
+                self.update_state(meta={'progress': max(100, progress)})
 
     return ContentNodeSerializer(ContentNode.objects.filter(pk__in=new_nodes), many=True).data
 
