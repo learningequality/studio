@@ -393,7 +393,7 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
   id: function() {
     return 'list_' + this.model.get('id');
   },
-  className: 'container content-container pre_animation',
+  className: 'content-container pre_animation',
 
   initialize: function(options) {
     _.bindAll(this, 'close_container', 'update_name', 'create_new_view');

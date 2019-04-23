@@ -1,6 +1,8 @@
 // include all logic in "base" entrypoint
 require('./base');
 
+require('vuetify/dist/vuetify.min.css');
+
 var Backbone = require('backbone');
 const WorkspaceManager = require('../edit_channel/utils/workspace_manager');
 const State = require('edit_channel/state');

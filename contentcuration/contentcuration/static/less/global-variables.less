@@ -20,6 +20,12 @@
     url('@{icon-font-path}MaterialIcons-Regular.ttf') format('truetype');
 }
 
+@font-family: 'Noto Sans', Verdana, sans-serif;
+
+html {
+  overflow: auto !important; // Overwrite vuetify rule
+}
+
 .align-bottom {
   vertical-align: bottom !important;
 }
@@ -61,6 +67,7 @@
 
 @topnav-active-tab-color: #564462;
 @red-error-color: #ef2121;
+@green-success-color: #4db6ac;
 @darkred-color: firebrick;
 @yellow-bg-color: #f5dc14;
 .action-button {
@@ -184,7 +191,7 @@
 @video-color: #283593;
 @audio-color: #f06292;
 @doc-color: #ff3d00;
-@exercise-color: #4db6ac;
+@exercise-color: @green-success-color;
 @html-color: #ff8f00;
 
 /* GLOBAL STYLES */
@@ -353,7 +360,8 @@ a {
 }
 
 .spinner {
-  // .material-icons;
+  .material-icons;
+
   animation: spin 1.5s infinite linear;
   &::before {
     content: 'rotate_right';
@@ -364,4 +372,14 @@ a {
   display: grid;
   grid-auto-flow: column;
   justify-content: flex-start;
+}
+
+select {
+  padding: 0 5px;
+  background-color: white;
+  border: 2px solid @gray-500;
+  border-radius: 5px;
+  &:hover {
+    border-color: @blue-500;
+  }
 }

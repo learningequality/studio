@@ -4,7 +4,7 @@ const WorkspaceManager = require('./utils/workspace_manager');
 var Models = require('./models');
 var analytics = require('utils/analytics');
 const State = require('edit_channel/state');
-
+let publishStore = require('edit_channel/publish/vuex/store');
 //var UndoManager = require("backbone-undo");
 
 var TABINDEX = 1;
@@ -72,9 +72,6 @@ var MESSAGES = {
   language: 'Language',
   select_language: 'Select a Language',
   make_copy: 'Make a Copy',
-  publish_title_prompt: 'Make this channel available for download into Kolibri',
-  publish_in_progress: 'Your channel is currently publishing...',
-  publishing_prompt: 'You will get an email once the channel finishes publishing.',
   topic_title: 'Topic',
   problem_creating_topics: 'Error Creating Topic',
   parenthesis: '({data})',
@@ -216,6 +213,7 @@ var BaseView = Backbone.View.extend({
 
         if (model.id === State.current_channel.get('main_tree').id) {
           State.current_channel.set('main_tree', model.toJSON());
+          State.current_channel.set('has_changed', model.get('metadata').has_changed_descendant);
           self.check_if_published(model);
           WorkspaceManager.get_main_view().handle_checked();
         }
@@ -242,23 +240,10 @@ var BaseView = Backbone.View.extend({
       });
     });
   },
-  check_if_published: function(root) {
-    var is_published = root.get('published');
-    var is_publishing = root.get('publishing');
+  check_if_published: function() {
+    var is_published = State.current_channel.get('main_tree').published;
     $('#hide-if-unpublished').css('display', is_published ? 'inline-block' : 'none');
-    if (is_publishing) {
-      this.set_publishing();
-    } else if (root.get('metadata').has_changed_descendant) {
-      $('#channel-publish-button')
-        .removeAttr('disabled')
-        .attr('title', this.get_translation('publish_title_prompt'))
-        .removeClass('disabled');
-    } else {
-      $('#channel-publish-button')
-        .attr('disabled', 'disabled')
-        .attr('title', this.get_translation('no_changes_detected'))
-        .addClass('disabled');
-    }
+    publishStore.commit('publish/SET_CHANNEL', State.current_channel.toJSON());
   },
   set_publishing: function() {
     $('#channel-publish-button')
@@ -315,7 +300,6 @@ var BaseWorkspaceView = BaseView.extend({
     _.bindAll(
       this,
       'reload_ancestors',
-      'publish',
       'edit_permissions',
       'handle_published',
       'handle_move',
@@ -329,13 +313,6 @@ var BaseWorkspaceView = BaseView.extend({
       'delete_items_permanently',
       'sync_content'
     );
-  },
-  publish: function() {
-    var Exporter = require('edit_channel/export/views');
-    new Exporter.ExportModalView({
-      model: State.current_channel.get_root('main_tree'),
-      onpublish: this.handle_published,
-    });
   },
   activate_channel: function() {
     var dialog = require('edit_channel/utils/dialog');

@@ -1,5 +1,7 @@
 import json
 import logging
+import random  # TODO: Remove once API is integrated
+import time  # TODO: Remove once API is integrated
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -453,3 +455,25 @@ def save_token_to_channels(request, token):
     token.set_channels(channels)
 
     return HttpResponse({"success": True})
+
+
+# TODO: REMOVE ONCE TASKS ARE AVAILABLE
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
+def check_progress(request, task_id):
+    time.sleep(0.5)
+    channel = Channel.objects.get(pk=task_id)
+    response = {
+        'status': 'STARTED' if channel.main_tree.publishing else 'SUCCESS',
+        'message': 'Publishing...' if channel.main_tree.publishing else 'FINISHED!',
+        'percent': random.uniform(0, 0.99) if channel.main_tree.publishing else 1,
+    }
+
+    return HttpResponse(json.dumps(response))
+
+
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((IsAuthenticated,))
+def cancel_task(request, task_id):
+    time.sleep(0.5)
+    return HttpResponse(json.dumps({'status': 'REVOKED'}))

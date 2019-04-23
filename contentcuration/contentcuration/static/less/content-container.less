@@ -12,14 +12,12 @@
 #secondary-nav .nav {
   display: flex;
   align-items: center;
-  width: 100%;
-  li {
-    max-width: min-content;
-  }
+  height: 45px;
   #channel_selection_dropdown_list li {
     max-width: unset;
   }
   #queue-area {
+    z-index: 200;
     flex-grow: 1;
     max-width: unset;
     #queue {
@@ -64,6 +62,7 @@ body {
             flex-direction: column;
             flex-grow: 1;
             flex-wrap: nowrap;
+            align-items: flex-start;
             overflow-x: auto;
             ul#container_area {
               display: flex;
@@ -104,9 +103,8 @@ body {
 #secondary-nav {
   width: 100%;
   min-height: 0;
-  padding: 5px 10px 5px 20px;
-  padding: 5px;
-  margin: 0 0 0 27px;
+  padding: 5px 15px;
+  margin: 0;
   background-color: transparent;
   border: 0;
   li {
@@ -143,6 +141,7 @@ body {
     width: 300px;
     padding: 3px;
     .dropdown-menu {
+      z-index: 200;
       width: 100%;
       max-height: 80vh;
       margin-top: -10px;
@@ -195,9 +194,10 @@ body {
   #channel-activate-button {
     margin: 0 40px 0 0;
     border: 0;
-    .action-button;
   }
   #channel-activate-button {
+    .action-button;
+
     white-space: nowrap;
     background-color: #2a982a;
     border-color: #2a982a !important;

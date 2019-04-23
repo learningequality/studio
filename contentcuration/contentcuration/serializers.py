@@ -656,7 +656,7 @@ class ChannelFieldMixin(object):
         return channel.get_thumbnail()
 
     def check_for_changes(self, channel):
-        return channel.main_tree and channel.main_tree.get_descendants().filter(changed=True).count() > 0
+        return channel.main_tree and channel.main_tree.get_descendants().filter(changed=True).exists()
 
     def get_resource_count(self, channel):
         return channel.get_resource_count()
