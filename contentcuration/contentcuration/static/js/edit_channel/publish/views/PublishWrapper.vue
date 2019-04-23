@@ -13,12 +13,6 @@
 
   export default {
     name: 'PublishWrapper',
-    $trs: {
-      modalHeader: 'Publish Channel',
-      cancelButton: 'CANCEL',
-      publishButton: 'PUBLISH',
-      noChangesLabel: 'No Changes',
-    },
     components: {
       PublishModal,
       PublishingOverlay,

@@ -226,6 +226,8 @@ var BaseView = Backbone.View.extend({
     });
   },
   check_if_published: function() {
+    var is_published = State.current_channel.get('main_tree').published;
+    $('#hide-if-unpublished').css('display', is_published ? 'inline-block' : 'none');
     publishStore.commit('publish/SET_CHANNEL', State.current_channel.toJSON());
   },
   set_publishing: function() {

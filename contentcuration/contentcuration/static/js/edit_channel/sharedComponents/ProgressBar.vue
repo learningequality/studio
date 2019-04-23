@@ -1,18 +1,15 @@
 <template>
   <div class="progress-wrapper">
     <div>
-      <div class="progressbar" :class="{failed: Boolean(error), finished: isDone}">
-        <div
-          class="progressbar-fill"
-          role="progressbar"
-          :style="{ width: `${percent}%` }"
-          :indeterminate="!percent && !error"
-        >
-          <span class="sr-only">
-            {{ $tr('completedText', { percent: percent }) }}
-          </span>
-        </div>
-      </div>
+      <!-- Setting the colors to avoid styling with !important tags -->
+      <VProgressLinear
+        v-model="percent"
+        :indeterminate="!percent && !error"
+        :class="{failed: error, finished: isDone}"
+        height="20"
+        backgroundColor="#FFF"
+        color="#FFF"
+      />
       <div v-if="error" class="status status-error">
         {{ error }}
       </div>
@@ -34,7 +31,6 @@
   export default {
     name: 'ProgressBar',
     $trs: {
-      completedText: '{percent}% Complete',
       progressText: '{percent}%',
     },
     props: {
@@ -100,28 +96,24 @@
     grid-auto-flow: column;
   }
 
-  .progressbar {
-    height: 20px;
-    overflow: hidden;
-    background-color: @gray-300;
-    border-radius: 4px;
+  /deep/ .v-progress-linear {
+    margin: 0;
+    .v-progress-linear__background {
+      background-color: @blue-100 !important;
+    }
+    .v-progress-linear__bar div {
+      background-color: @blue-500 !important;
+    }
     &.failed {
-      background-color: @error-input-color;
-      .progressbar-fill {
-        background-color: @red-error-color;
+      .v-progress-linear__background {
+        background-color: @error-input-color !important;
+      }
+      .v-progress-linear__bar div {
+        background-color: @red-error-color !important;
       }
     }
-    &.finished .progressbar-fill {
-      background-color: @green-success-color;
-    }
-    .progressbar-fill {
-      float: left;
-      width: 0;
-      height: 100%;
-      color: white;
-      text-align: center;
-      background-color: @blue-500;
-      transition: width 0.6s ease;
+    &.finished .v-progress-linear__bar div {
+      background-color: @green-success-color !important;
     }
   }
 
