@@ -264,6 +264,12 @@ urlpatterns = [
     url(r'^api/download_channel_content_csv/(?P<channel_id>[^/]{32})$', views.download_channel_content_csv, name='download_channel_content_csv'),
 ]
 
+# Add progress tracking endpoints
+urlpatterns += [
+    url(r'^api/check_progress/(?P<task_id>[^/]+)$', views.check_progress, name='check_progress'),  # TODO: Delete once progress API is done
+    url(r'^api/cancel_task/(?P<task_id>[^/]+)$', views.cancel_task, name='cancel_task'),  # TODO: Delete once progress API is done
+]
+
 
 # Add public api endpoints
 urlpatterns += [

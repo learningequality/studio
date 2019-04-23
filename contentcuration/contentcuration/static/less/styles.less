@@ -16,8 +16,9 @@
   margin: 0;
 }
 body {
+  width: 100vw;
   overflow-x: hidden;
-  font-family: 'Noto Sans', Verdana, sans-serif;
+  font-family: @font-family;
   letter-spacing: 0.03em;
 }
 
@@ -66,7 +67,6 @@ body {
   .dropdown-toggle {
     padding: 15px;
     margin-right: 10px;
-    margin-left: 5px;
     margin-left: 15px;
     color: white;
     background-color: transparent;
@@ -81,6 +81,7 @@ body {
     }
   }
   .dropdown-menu {
+    z-index: 202;
     margin-top: 10px;
     background-color: @body-background;
     border: 0;

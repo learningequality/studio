@@ -400,20 +400,6 @@ var ContentNodeModel = BaseModel.extend({
       this.set('extra_fields', data);
     }
   },
-  calculate_size: function() {
-    var self = this;
-    var promise = new Promise(function(resolve, reject) {
-      $.ajax({
-        method: 'GET',
-        url: window.Urls.get_total_size(self.id),
-        error: reject,
-        success: function(data) {
-          resolve(JSON.parse(data).size);
-        },
-      });
-    });
-    return promise;
-  },
   make_copy: function(target_parent) {
     const State = require('./state');
     var self = this;
