@@ -1,15 +1,14 @@
-const BaseViews = require("edit_channel/views");
-let State = require("../state")
+let State = require('../state');
 
 let dummyTasks = [
   {
-    'id': 1,
-    'task_id': 'celery1',
+    id: 1,
+    task_id: 'celery1',
   },
   {
-    'id': 2,
-    'task_id': 'celery2',
-  }
+    id: 2,
+    task_id: 'celery2',
+  },
 ];
 
 describe('AsyncTask', () => {
@@ -20,6 +19,4 @@ describe('AsyncTask', () => {
     expect(tasks).toEqual(dummyTasks);
     done();
   });
-
-
 });

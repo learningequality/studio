@@ -1,9 +1,9 @@
-import logging
-
 from base import BaseAPITestCase
 
-from contentcuration.models import ContentNode, Task
-from contentcuration.tasks import create_async_task, non_async_test_task
+from contentcuration.models import ContentNode
+from contentcuration.models import Task
+from contentcuration.tasks import create_async_task
+from contentcuration.tasks_test import non_async_test_task
 
 
 class AsyncTaskTestCase(BaseAPITestCase):
@@ -24,11 +24,12 @@ class AsyncTaskTestCase(BaseAPITestCase):
             'metadata': metadata
         }
         task, task_info = create_async_task('test', task_options)
-        self.assertTrue(Task.objects.filter(metadata__test=True).count()==1)
+        self.assertTrue(Task.objects.filter(metadata__test=True).count() == 1)
         self.assertEqual(task_info.user, self.user)
         self.assertEqual(task_info.task_type, 'test')
         self.assertEqual(task_info.is_progress_tracking, False)
         result = task.get()
+        self.assertEqual(result, 42)
         self.assertEqual(Task.objects.get(task_id=task.id).metadata['result'], 42)
         self.assertEqual(Task.objects.get(task_id=task.id).status, 'SUCCESS')
 
@@ -42,7 +43,7 @@ class AsyncTaskTestCase(BaseAPITestCase):
             'metadata': metadata
         }
         task, task_info = create_async_task('progress-test', task_options)
-        self.assertTrue(Task.objects.filter(metadata__test=True).count()==1)
+        self.assertTrue(Task.objects.filter(metadata__test=True).count() == 1)
         result = task.get()
         self.assertEqual(result, 42)
         self.assertEqual(Task.objects.get(task_id=task.id).status, 'SUCCESS')
