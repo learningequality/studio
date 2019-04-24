@@ -1,11 +1,5 @@
 var Models = require('edit_channel/models');
 
-export function loadNodes(context, nodeIDs) {
-  return new Models.ContentNodeCollection().get_all_fetch_simplified(nodeIDs).then(collection => {
-    context.commit('ADD_NODES', collection.toJSON());
-  });
-}
-
 export function publishChannel(context) {
   return new Models.ChannelModel(context.state.channel).publish().then(() => {
     context.commit('SET_PUBLISHING', true);
