@@ -199,7 +199,7 @@ def create_slideshow_manifest(ccnode, kolibrinode, user_id=None):
     print("Creating slideshow manifest...")
 
     preset = ccmodels.FormatPreset.objects.filter(pk="slideshow_manifest")[0]
-    ext = file_formats.SLIDESHOW
+    ext = file_formats.JSON
     filename = "{0}.{ext}".format(ccnode.title, ext=ext)
 
     try:
@@ -215,7 +215,7 @@ def create_slideshow_manifest(ccnode, kolibrinode, user_id=None):
             ccmodels.File.objects.create(
                 file_on_disk=file_on_disk,
                 contentnode=ccnode,
-                file_format_id=file_formats.SLIDESHOW,
+                file_format_id=file_formats.JSON,
                 preset_id=preset,
                 original_filename=filename,
                 file_size=size_on_disk,

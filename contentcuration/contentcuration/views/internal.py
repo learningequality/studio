@@ -567,7 +567,13 @@ def convert_data_to_nodes(user, content_data, parent_node):
 
                     # Create Slideshow slides (if slideshow kind)
                     if node_data['kind'] == 'slideshow':
-                        slides = create_slides(user, new_node, node_data['extra_fields'])
+                        extra_fields_unicode = node_data['extra_fields']
+
+                        # Extra Fields comes as type<unicode> - convert it to a dict and get slideshow_data
+                        extra_fields_json = extra_fields_unicode.encode("ascii", "ignore")
+                        extra_fields = json.loads(extra_fields_json)
+
+                        slides = create_slides(user, new_node, extra_fields.get('slideshow_data'))
                         map_files_to_slideshow_slide_item(user, new_node, slides, node_data["files"])
 
                     # Track mapping between newly created node and node id
@@ -791,18 +797,14 @@ def create_exercises(user, node, data):
             map_files_to_assessment_item(user, question_obj, question['files'])
 
 
-def create_slides(user, node, data):
+def create_slides(user, node, slideshow_data):
     """ Generate SlideshowSlides from data """
     """ Returns a collection of SlideshowSlide objects """
-
-    # Data comes as <type 'unicode'>. Convert to a JSON string, then a list
-    str_data = data.encode("ascii", "ignore")
-    json_data = json.loads(str_data)
 
     slides = []
 
     with transaction.atomic():
-        for slide in json_data:
+        for slide in slideshow_data:
             slide_obj = SlideshowSlide(
                 contentnode=node,
                 sort_order=slide.get("sort_order"),
