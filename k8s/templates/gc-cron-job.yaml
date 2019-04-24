@@ -2,7 +2,7 @@
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
-  name: {{ template "studio.fullname" . }}-contentnode-gc
+  name: {{ template "studio.fullname" . }}-gc
 spec:
   schedule: "0 23 * * 0"
   jobTemplate:
@@ -14,7 +14,7 @@ spec:
             environment: {{ .Release.Name }}
         spec:
           # if gc somehow takes 1 week, replace the running gc with a new one
-          concurrencyPolicy: Replace 
+          concurrencyPolicy: Replace
           # turn off any new cron jobs from running by setting suspend to true.
           # this is how we toggle this job on and off.
           suspend: false
