@@ -15,9 +15,9 @@ from mixer.backend.django import mixer
 from mock import patch
 
 from contentcuration import models as cc
-from contentcuration.management.commands.exportchannel import create_content_database
-from contentcuration.management.commands.exportchannel import MIN_SCHEMA_VERSION
-from contentcuration.management.commands.exportchannel import convert_channel_thumbnail
+from contentcuration.utils.publish import convert_channel_thumbnail
+from contentcuration.utils.publish import create_content_database
+from contentcuration.utils.publish import MIN_SCHEMA_VERSION
 
 pytestmark = pytest.mark.django_db
 
@@ -105,13 +105,21 @@ def fileobj_video(contents=None):
 
 
 def assessment_item():
-    answers = "[{\"correct\": false, \"answer\": \"White Rice\", \"help_text\": \"\"}, {\"correct\": true, \"answer\": \"Brown Rice\", \"help_text\": \"\"}, {\"correct\": false, \"answer\": \"Rice Krispies\", \"help_text\": \"\"}]"
-    return mixer.blend(cc.AssessmentItem, question='Which rice is the healthiest?', type='single_selection', answers=answers)
+    answers = "[{\"correct\": false, \"answer\": \"White Rice\", \"help_text\": \"\"}, " \
+              "{\"correct\": true, \"answer\": \"Brown Rice\", \"help_text\": \"\"}, " \
+              "{\"correct\": false, \"answer\": \"Rice Krispies\", \"help_text\": \"\"}]"
+    return mixer.blend(cc.AssessmentItem, question='Which rice is the healthiest?',
+                       type='single_selection', answers=answers)
 
 
 def assessment_item2():
-    answers = "[{\"correct\": true, \"answer\": \"Eggs\", \"help_text\": \"\"}, {\"correct\": true, \"answer\": \"Tofu\", \"help_text\": \"\"}, {\"correct\": true, \"answer\": \"Meat\", \"help_text\": \"\"}, {\"correct\": true, \"answer\": \"Beans\", \"help_text\": \"\"}, {\"correct\": false, \"answer\": \"Rice\", \"help_text\": \"\"}]"
-    return mixer.blend(cc.AssessmentItem, question='Which of the following are proteins?', type='multiple_selection', answers=answers)
+    answers = "[{\"correct\": true, \"answer\": \"Eggs\", \"help_text\": \"\"}, " \
+              "{\"correct\": true, \"answer\": \"Tofu\", \"help_text\": \"\"}, " \
+              "{\"correct\": true, \"answer\": \"Meat\", \"help_text\": \"\"}, " \
+              "{\"correct\": true, \"answer\": \"Beans\", \"help_text\": \"\"}, " \
+              "{\"correct\": false, \"answer\": \"Rice\", \"help_text\": \"\"}]"
+    return mixer.blend(cc.AssessmentItem, question='Which of the following are proteins?',
+                       type='multiple_selection', answers=answers)
 
 
 def assessment_item3():
@@ -121,7 +129,8 @@ def assessment_item3():
 
 def assessment_item4():
     answers = "[{\"correct\": true, \"answer\": 20, \"help_text\": \"\"}]"
-    return mixer.blend(cc.AssessmentItem, question='How many minutes does it take to cook rice?', type='input_question', answers=answers)
+    return mixer.blend(cc.AssessmentItem, question='How many minutes does it take to cook rice?',
+                       type='input_question', answers=answers)
 
 
 def channel():
@@ -180,10 +189,10 @@ class ExportChannelTestCase(StudioTestCase):
 
             def __exit__(self, exc_type, exc_value, traceback):
                 return
-        cls.patch_using = patch('contentcuration.management.commands.exportchannel.using_content_database.__new__',
+        cls.patch_using = patch('contentcuration.utils.publish.using_content_database.__new__',
                                 return_value=testing_content_database('alias'))
         cls.patch_using.start()
-        cls.patch_copy_db = patch('contentcuration.management.commands.exportchannel.save_export_database')
+        cls.patch_copy_db = patch('contentcuration.utils.publish.save_export_database')
         cls.patch_copy_db.start()
 
     def setUp(self):
@@ -246,6 +255,6 @@ class ChannelExportUtilityFunctionTestCase(StudioTestCase):
         self.assertEqual("flappy_bird", convert_channel_thumbnail(channel))
 
     def test_convert_channel_thumbnail_encoding_invalid(self):
-        with patch("contentcuration.management.commands.exportchannel.get_thumbnail_encoding", return_value="this is a test"):
+        with patch("contentcuration.utils.publish.get_thumbnail_encoding", return_value="this is a test"):
             channel = cc.Channel.objects.create(thumbnail="/content/kolibri_flapping_bird.png", thumbnail_encoding={})
             self.assertEquals("this is a test", convert_channel_thumbnail(channel))
