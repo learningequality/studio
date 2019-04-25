@@ -1,11 +1,9 @@
 <template>
   <VAutocomplete
-    ref="select"
     v-model="selected"
     :items="languages"
     :label="$tr('labelText')"
     color="#2196f3"
-    :value="language"
     itemValue="id"
     :itemText="languageText"
     :autoSelectFirst="true"

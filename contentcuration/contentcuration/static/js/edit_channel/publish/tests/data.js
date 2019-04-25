@@ -14,13 +14,6 @@ export const mockFunctions = {
   loadChannelSize: jest.fn(),
 };
 
-export const App = Vue.component('App', {
-  template: `
-    <div data-app>
-    </div>
-  `,
-});
-
 export const localStore = new Vuex.Store({
   modules: {
     publish: {
