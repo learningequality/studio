@@ -1,13 +1,13 @@
 <template>
   <VApp>
     <PublishModal />
-    <PublishingOverlay v-if="isPublishing" :taskID="channel.id" />
+    <PublishingOverlay v-if="taskID" :taskID="taskID" />
   </VApp>
 </template>
 
 <script>
 
-  import { mapGetters, mapState } from 'vuex';
+  import { mapGetters } from 'vuex';
   import PublishModal from './PublishModal.vue';
   import PublishingOverlay from './PublishingOverlay.vue';
 
@@ -18,11 +18,7 @@
       PublishingOverlay,
     },
     computed: {
-      ...mapState('publish', ['channel']),
-      ...mapGetters('publish', ['isPublishing']),
-      taskID() {
-        return this.channel.id;
-      },
+      ...mapGetters('publish', ['taskID']),
     },
   };
 

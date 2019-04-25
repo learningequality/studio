@@ -1,8 +1,20 @@
-var Models = require('edit_channel/models');
+let Models = require('edit_channel/models');
 
 export function publishChannel(context) {
-  return new Models.ChannelModel(context.state.channel).publish().then(() => {
-    context.commit('SET_PUBLISHING', true);
+  return new Promise((resolve, reject) => {
+    let data = { channel_id: context.state.channel.id };
+    $.ajax({
+      method: 'POST',
+      url: window.Urls.publish_channel(),
+      data: JSON.stringify(data),
+      error: reject,
+      success: taskID => {
+        // TODO: update with task logic
+        taskID = context.state.channel.id;
+        context.commit('SET_TASK', taskID);
+        resolve(true);
+      },
+    });
   });
 }
 

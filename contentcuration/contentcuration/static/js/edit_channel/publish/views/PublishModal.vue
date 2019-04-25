@@ -51,7 +51,7 @@
 
 <script>
 
-  import { mapActions, mapMutations, mapState } from 'vuex';
+  import { mapActions, mapState } from 'vuex';
   import PublishView from './PublishView.vue';
   import { format_size } from 'edit_channel/utils/string_helper';
   import { alert } from 'edit_channel/utils/dialog';
@@ -91,7 +91,6 @@
     },
     methods: {
       ...mapActions('publish', ['publishChannel', 'setChannelLanguage', 'loadChannelSize']),
-      ...mapMutations('publish', { reset: 'RESET_STATE' }),
       openModal() {
         this.dialog = true;
         this.loadChannelSize().then(size => {

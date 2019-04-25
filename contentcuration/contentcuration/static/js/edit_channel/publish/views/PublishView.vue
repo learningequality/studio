@@ -1,8 +1,8 @@
 <template>
   <div class="publish-view">
-    <h4 :title="channel.name">
+    <h1 :title="channel.name">
       {{ channel.name }}
-    </h4>
+    </h1>
     <p>
       <span v-if="language">
         {{ language.native_name }}
@@ -71,12 +71,6 @@
       isValid() {
         return Boolean(this.channel.language);
       },
-      resourceCount() {
-        return this.channel.main_tree.metadata.resource_count;
-      },
-      topicCount() {
-        return this.channel.main_tree.metadata.total_count - this.resourceCount;
-      },
       language() {
         return _.findWhere(Constants.Languages, { id: this.channel.language });
       },
@@ -104,7 +98,8 @@
 
   .publish-view {
     min-height: 200px;
-    h4 {
+    h1 {
+      font-size: 15pt;
       font-weight: bold;
     }
     p {

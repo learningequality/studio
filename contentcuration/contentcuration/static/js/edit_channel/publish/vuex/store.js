@@ -9,15 +9,16 @@ var store = new Vuex.Store({
       namespaced: true,
       state: {
         channel: null,
+        tempTaskID: null, // Depending on task logic, set using mutation
+        // on publishChannel action success callback
+        // or update getter logic to get task info
       },
       actions: actions,
       mutations: mutations,
       getters: {
-        channelCount(state) {
-          return state.channel.main_tree.metadata.resource_count;
-        },
-        isPublishing(state) {
-          return state.channel.main_tree.publishing;
+        taskID(state) {
+          // TODO: Replace with task logic
+          return state.tempTaskID;
         },
       },
     },
