@@ -43,6 +43,22 @@ class TaskAPITestCase(BaseAPITestCase):
         self.assertEqual(response.data['task_type'], 'YOUTUBE_IMPORT')
         self.assertEqual(response.data['metadata'], {'channel': self.channel.id})
 
+    def test_get_task_list(self):
+        task = self.create_new_task(type='YOUTUBE_IMPORT', metadata={'channel': self.channel.id})
+
+        url = '{}'.format(self.task_url)
+        response = self.get(url)
+        self.assertEqual(len(response.data), 1)
+
+        self.assertEqual(response.data[0]['status'], 'STARTED')
+        self.assertEqual(response.data[0]['task_type'], 'YOUTUBE_IMPORT')
+        self.assertEqual(response.data[0]['metadata'], {'channel': self.channel.id})
+
+    def test_get_empty_task_list(self):
+        url = '{}'.format(self.task_url)
+        response = self.get(url)
+        self.assertEqual(len(response.data), 0)
+
     def test_cannot_create_task(self):
         """
         Tasks are created when Celery operations are started. It is not possible to manually create tasks via

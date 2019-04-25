@@ -2,28 +2,30 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 import logging
-from uuid import uuid4
 
 from celery.decorators import task
 from celery.utils.log import get_task_logger
 from django.conf import settings
 from django.core.mail import EmailMessage
 from django.core.management import call_command
+from django.db import transaction
 from django.template.loader import render_to_string
 
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import Task
 from contentcuration.models import User
+from contentcuration.serializers import ContentNodeSerializer
 from contentcuration.utils.csv_writer import write_channel_csv_file
 from contentcuration.utils.csv_writer import write_user_csv
+from contentcuration.utils.nodes import duplicate_node_bulk
 
 logger = get_task_logger(__name__)
 
 
 # if we're running tests, import our test tasks as well
 if settings.RUNNING_TESTS:
-    from .tasks_test import *
+    from .tasks_test import error_test_task, progress_test_task, test_task
 
 # TODO: Try to get debugger working for celery workers
 # Attach Python Cloud Debugger
@@ -42,6 +44,23 @@ if settings.RUNNING_TESTS:
 #     pass
 
 # runs the management command 'exportchannel' async through celery
+
+
+@task(bind=True, name='duplicate_nodes_task')
+def duplicate_nodes_task(self, user_id, channel_id, target_parent, node_ids, sort_order=1):
+    new_nodes = []
+    user = User.objects.get(id=user_id)
+
+    with transaction.atomic():
+        with ContentNode.objects.disable_mptt_updates():
+            for node_id in node_ids:
+                new_node = duplicate_node_bulk(node_id, sort_order=sort_order, parent=target_parent,
+                                               channel_id=channel_id, user=user)
+                new_nodes.append(new_node.pk)
+                sort_order += 1
+
+    return ContentNodeSerializer(ContentNode.objects.filter(pk__in=new_nodes), many=True).data
+
 
 @task(name='exportchannel_task')
 def exportchannel_task(channel_id, user_id):
@@ -91,7 +110,10 @@ def getnodedetails_task(node_id):
     return node.get_details()
 
 
-type_mapping = {}
+type_mapping = {
+    'duplicate-nodes': {'task': duplicate_nodes_task, 'progress_tracking': True}
+}
+
 if settings.RUNNING_TESTS:
     type_mapping.update({
         'test': {'task': test_task, 'progress_tracking': False},
@@ -123,7 +145,7 @@ def create_async_task(task_name, task_options, task_args=None):
     :param task_args: A dictionary of keyword arguments to be passed down to the task, must be JSON serializable.
     :return: a tuple of the Task object and a dictionary containing information about the created task.
     """
-    if not task_name in type_mapping:
+    if task_name not in type_mapping:
         raise KeyError("Need to define task in type_mapping first.")
     metadata = {}
     if 'metadata' in task_options:

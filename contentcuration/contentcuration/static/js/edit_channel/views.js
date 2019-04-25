@@ -144,18 +144,20 @@ var BaseView = Backbone.View.extend({
       $(this).attr('tabindex', TABINDEX++);
     });
   },
-  display_load: function(message, callback) {
-    if (message.trim() != '') {
-      var load =
-        '<div id="loading_modal" class="text-center fade">' +
-        '<div id="kolibri_load_gif"></div>' +
-        '<h4 id="kolibri_load_text" class="text-center">' +
-        message +
-        '</h4>' +
-        '</div>';
-      $(load).appendTo('body');
+  state_changed: function() {
+    // If tasks are running, show modal so that the user cannot edit during this process.
+    let runningTasks = State.Store.getters.runningTasks;
+
+    if (runningTasks.length > 0) {
+      this.show_loading_modal('Updating channel, please wait...');
+    } else if ($('#loading_modal').length > 0) {
+      this.dismiss_loading_modal();
+      this.render();
     }
+  },
+  display_load: function(message, callback) {
     if (callback) {
+      this.show_loading_modal(message);
       var promise = new Promise(function(resolve, reject) {
         callback(resolve, reject);
       });
@@ -165,16 +167,29 @@ var BaseView = Backbone.View.extend({
             $('#loading_modal').remove();
           }
         })
-        .catch(error => {
+        .catch(() => {
           if (message != '') {
             $('#kolibri_load_text').text(this.get_translation('refresh_page'));
           }
-          // eslint-disable-next-line no-console
-          console.warn(this.get_translation('call_error'), error);
         });
     } else {
-      $('#loading_modal').remove();
+      this.dismiss_loading_modal();
     }
+  },
+  show_loading_modal: function(message) {
+    if ($('#loading_modal').length == 0 && message.trim() != '') {
+      var load =
+        '<div id="loading_modal" class="text-center fade">' +
+        '<div id="kolibri_load_gif"></div>' +
+        '<h4 id="kolibri_load_text" class="text-center">' +
+        message +
+        '</h4>' +
+        '</div>';
+      $(load).appendTo('body');
+    }
+  },
+  dismiss_loading_modal: function() {
+    $('#loading_modal').remove();
   },
   reload_ancestors: function(collection, include_collection, callback) {
     include_collection = include_collection == null || include_collection;

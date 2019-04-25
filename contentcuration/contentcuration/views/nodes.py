@@ -1,8 +1,6 @@
-import ast
 import copy
 import json
 import logging
-import uuid
 from datetime import datetime
 
 from django.conf import settings
@@ -19,7 +17,6 @@ from django.http import HttpResponseNotFound
 from django.utils.translation import ugettext as _
 from le_utils.constants import content_kinds
 from le_utils.constants import format_presets
-from le_utils.constants import roles
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import api_view
@@ -29,20 +26,18 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 
-from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import ContentTag
-from contentcuration.models import File
-from contentcuration.models import generate_storage_url
-from contentcuration.models import Language
 from contentcuration.models import License
 from contentcuration.models import PrerequisiteContentRelationship
 from contentcuration.serializers import ContentNodeEditSerializer
 from contentcuration.serializers import ContentNodeSerializer
 from contentcuration.serializers import SimplifiedContentNodeSerializer
+from contentcuration.serializers import TaskSerializer
+from contentcuration.tasks import create_async_task
 from contentcuration.tasks import getnodedetails_task
-from contentcuration.utils.files import duplicate_file
+from contentcuration.utils.nodes import duplicate_node_bulk
 
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
@@ -226,8 +221,8 @@ def get_node_details_cached(node):
         # Otherwise, find the last time anything was updated in the channel
         last_update = channel.main_tree.created if channel and channel.ricecooker_version else \
             descendants.filter(changed=True) \
-                .aggregate(latest_update=Max('modified')) \
-                .get('latest_update')
+            .aggregate(latest_update=Max('modified')) \
+            .get('latest_update')
 
         if last_update:
             last_cache_update = datetime.strptime(json.loads(cached_data)['last_update'], settings.DATE_TIME_FORMAT)
@@ -280,23 +275,32 @@ def duplicate_nodes(request):
         node_ids = data["node_ids"]
         sort_order = data.get("sort_order") or 1
         channel_id = data["channel_id"]
-        new_nodes = []
         target_parent = ContentNode.objects.get(pk=data["target_parent"])
         channel = target_parent.get_channel()
         request.user.can_edit(channel and channel.pk)
 
-        with transaction.atomic():
-            with ContentNode.objects.disable_mptt_updates():
-                for node_id in node_ids:
-                    new_node = duplicate_node_bulk(node_id, sort_order=sort_order, parent=target_parent, channel_id=channel_id, user=request.user)
-                    new_nodes.append(new_node.pk)
-                    sort_order += 1
+        task_info = {
+            'user': request.user,
+            'metadata': {
+                'affects': {
+                    'channels': [channel_id],
+                    'nodes': node_ids,
+                }
+            }
+        }
 
+        task_args = {
+            'user_id': request.user.pk,
+            'channel_id': channel_id,
+            'target_parent': target_parent.pk,
+            'node_ids': node_ids,
+            'sort_order': sort_order
+        }
+
+        task, task_info = create_async_task('duplicate-nodes', task_info, task_args)
+        return HttpResponse(JSONRenderer().render(TaskSerializer(task_info).data))
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
-
-    serialized = ContentNodeSerializer(ContentNode.objects.filter(pk__in=new_nodes), many=True).data
-    return HttpResponse(JSONRenderer().render(serialized))
 
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
@@ -333,126 +337,6 @@ def duplicate_node_inline(request):
 
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
-
-
-def duplicate_node_bulk(node, sort_order=None, parent=None, channel_id=None, user=None):
-    if isinstance(node, int) or isinstance(node, basestring):
-        node = ContentNode.objects.get(pk=node)
-
-    # keep track of the in-memory models so that we can bulk-create them at the end (for efficiency)
-    to_create = {
-        "nodes": [],
-        "node_files": [],
-        "assessment_files": [],
-        "assessments": [],
-    }
-
-    # perform the actual recursive node cloning
-    new_node = _duplicate_node_bulk_recursive(node=node, sort_order=sort_order, parent=parent, channel_id=channel_id, to_create=to_create, user=user)
-
-    # create nodes, one level at a time, starting from the top of the tree (so that we have IDs to pass as "parent" for next level down)
-    for node_level in to_create["nodes"]:
-        for node in node_level:
-            node.parent_id = node.parent.id
-        ContentNode.objects.bulk_create(node_level)
-        for node in node_level:
-            for tag in node._meta.tags_to_add:
-                node.tags.add(tag)
-
-    # rebuild MPTT tree for this channel (since we're inside "disable_mptt_updates", and bulk_create doesn't trigger rebuild signals anyway)
-    ContentNode.objects.partial_rebuild(to_create["nodes"][0][0].tree_id)
-
-    ai_node_ids = []
-
-    # create each of the assessment items
-    for a in to_create["assessments"]:
-        a.contentnode_id = a.contentnode.id
-        ai_node_ids.append(a.contentnode_id)
-    AssessmentItem.objects.bulk_create(to_create["assessments"])
-
-    # build up a mapping of contentnode/assessment_id onto assessment item IDs, so we can point files to them correctly after
-    aid_mapping = {}
-    for a in AssessmentItem.objects.filter(contentnode_id__in=ai_node_ids):
-        aid_mapping[a.contentnode_id + ":" + a.assessment_id] = a.id
-
-    # create the file objects, for both nodes and assessment items
-    for f in to_create["node_files"]:
-        f.contentnode_id = f.contentnode.id
-    for f in to_create["assessment_files"]:
-        f.assessment_item_id = aid_mapping[f.assessment_item.contentnode_id + ":" + f.assessment_item.assessment_id]
-    File.objects.bulk_create(to_create["node_files"] + to_create["assessment_files"])
-
-    return new_node
-
-
-def _duplicate_node_bulk_recursive(node, sort_order, parent, channel_id, to_create, level=0, user=None):  # noqa
-
-    if isinstance(node, int) or isinstance(node, basestring):
-        node = ContentNode.objects.get(pk=node)
-
-    if isinstance(parent, int) or isinstance(parent, basestring):
-        parent = ContentNode.objects.get(pk=parent)
-
-    if not parent.changed:
-        parent.changed = True
-        parent.save()
-
-    source_channel = node.get_channel()
-    # clone the model (in-memory) and update the fields on the cloned model
-    new_node = copy.copy(node)
-    new_node.id = None
-    new_node.tree_id = parent.tree_id
-    new_node.parent = parent
-    new_node.published = False
-    new_node.sort_order = sort_order or node.sort_order
-    new_node.changed = True
-    new_node.cloned_source = node
-    new_node.source_channel_id = source_channel.id if source_channel else None
-    new_node.node_id = uuid.uuid4().hex
-    new_node.source_node_id = node.node_id
-    new_node.freeze_authoring_data = not Channel.objects.filter(pk=node.original_channel_id, editors=user).exists()
-
-    # There might be some legacy nodes that don't have these, so ensure they are added
-    if not new_node.original_channel_id or not new_node.original_source_node_id:
-        original_node = node.get_original_node()
-        original_channel = original_node.get_channel()
-        new_node.original_channel_id = original_channel.id if original_channel else None
-        new_node.original_source_node_id = original_node.node_id
-
-    # store the new unsaved model in a list, at the appropriate level, for later creation
-    while len(to_create["nodes"]) <= level:
-        to_create["nodes"].append([])
-    to_create["nodes"][level].append(new_node)
-
-    # find or create any tags that are needed, and store them under _meta on the node so we can add them to it later
-    new_node._meta.tags_to_add = []
-    for tag in node.tags.all():
-        new_tag, is_new = ContentTag.objects.get_or_create(
-            tag_name=tag.tag_name,
-            channel_id=channel_id,
-        )
-        new_node._meta.tags_to_add.append(new_tag)
-
-    # clone the file objects for later saving
-    for fobj in node.files.all():
-        f = duplicate_file(fobj, node=new_node, save=False)
-        to_create["node_files"].append(f)
-
-    # copy assessment item objects, and associated files
-    for aiobj in node.assessment_items.prefetch_related("files").all():
-        aiobj_copy = copy.copy(aiobj)
-        aiobj_copy.id = None
-        aiobj_copy.contentnode = new_node
-        to_create["assessments"].append(aiobj_copy)
-        for fobj in aiobj.files.all():
-            f = duplicate_file(fobj, assessment_item=aiobj_copy, save=False)
-            to_create["assessment_files"].append(f)
-
-    # recurse down the tree and clone the children
-    for child in node.children.all():
-        _duplicate_node_bulk_recursive(node=child, sort_order=None, parent=new_node, channel_id=channel_id, to_create=to_create, level=level + 1, user=user)
-
-    return new_node
 
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))

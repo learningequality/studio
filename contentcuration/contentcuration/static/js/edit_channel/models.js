@@ -623,7 +623,7 @@ var ContentNodeCollection = BaseCollection.extend({
         url: window.Urls.duplicate_nodes(),
         data: JSON.stringify(data),
         success: function(data) {
-          resolve(new ContentNodeCollection(JSON.parse(data)));
+          resolve(State.Store.dispatch('startTask', data));
         },
         error: reject,
       });
