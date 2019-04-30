@@ -1,15 +1,18 @@
 import datetime
 import os
+
 import requests
 
 USERNAME = os.getenv("PROBER_STUDIO_USERNAME") or "a@a.com"
 PASSWORD = os.getenv("PROBER_STUDIO_PASSWORD") or "a"
+PRODUCTION_MODE_ON = os.getenv("PROBER_STUDIO_PRODUCTION_MODE_ON") or False
 STUDIO_BASE_URL = os.getenv("PROBER_STUDIO_BASE_URL") or "https://studio.learningequality.org/{path}"
 
 
 class BaseProbe(object):
 
     metric = "STUB_METRIC"
+    develop_only = False
 
     def __init__(self):
         self.session = requests.Session()
@@ -47,11 +50,15 @@ class BaseProbe(object):
         return STUDIO_BASE_URL.format(path=path_stripped)
 
     def run(self):
-        start_time  = datetime.datetime.now()
 
-        ret = self.do_probe()
+        if self.develop_only and PRODUCTION_MODE_ON:
+            return
 
-        end_time  = datetime.datetime.now()
+        start_time = datetime.datetime.now()
+
+        self.do_probe()
+
+        end_time = datetime.datetime.now()
         elapsed = (end_time - start_time).total_seconds() * 1000
 
         print("{metric_name} {latency_ms}".format(
