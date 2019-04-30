@@ -13,7 +13,8 @@ class LoginProbe(BaseProbe):
 
     def do_probe(self):
         url = STUDIO_BASE_URL.format(path="accounts/login/")
-        requests.get(url)
+        r = requests.get(url)
+        r.raise_for_status()
 
 
 if __name__ == "__main__":
