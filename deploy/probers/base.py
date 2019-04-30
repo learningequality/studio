@@ -5,7 +5,7 @@ import requests
 
 USERNAME = os.getenv("PROBER_STUDIO_USERNAME") or "a@a.com"
 PASSWORD = os.getenv("PROBER_STUDIO_PASSWORD") or "a"
-PRODUCTION_MODE_ON = os.getenv("PROBER_PRODUCTION_MODE_ON") or False
+PRODUCTION_MODE_ON = os.getenv("PROBER_STUDIO_PRODUCTION_MODE_ON") or False
 STUDIO_BASE_URL = os.getenv("PROBER_STUDIO_BASE_URL") or "https://studio.learningequality.org/{path}"
 
 
