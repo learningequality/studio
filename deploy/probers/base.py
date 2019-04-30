@@ -63,9 +63,6 @@ class BaseProbe(object):
             'X-CSRFToken': self.session.cookies.get('csrftoken'),
         })
 
-        data.update({
-            'csrfmiddlewaretoken': self.session.cookies.get('csrftoken'),
-        })
         headers.update({'Content-Type': contenttype})
         response = self.session.request(action, url, data=data, headers=headers)
         response.raise_for_status()
