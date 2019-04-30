@@ -2,7 +2,8 @@
 
 from base import BaseProbe
 import sys
-sys.path.insert(1, '../../contentcuration')
+import os
+sys.path.insert(1, os.path.abspath('../../contentcuration'))
 from contentcuration import celery_app
 
 EXPECTED_WORKERS = {'celery'}
