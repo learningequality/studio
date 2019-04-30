@@ -49,6 +49,23 @@ class BaseProbe(object):
         path_stripped = path.lstrip("/")
         return STUDIO_BASE_URL.format(path=path_stripped)
 
+    def request(self, path, action="GET", data=None, headers=None, contenttype="application/json"):
+        data = data or {}
+        headers = headers or {}
+
+        # Make sure session is logged in
+        if not self.session.cookies.get('csrftoken'):
+            self._login()
+
+        url = self._construct_studio_url(path)
+
+        data.update({'csrfmiddlewaretoken': self.session.cookies.get('csrftoken')})
+        headers.update({'Content-Type': contenttype})
+        response = self.session.request(action, url, data=data, headers=headers)
+        response.raise_for_status()
+
+        return response
+
     def run(self):
 
         if self.develop_only and PRODUCTION_MODE_ON:
