@@ -27,8 +27,6 @@ class PostgresWriteContentnodeProbe(BaseProbe):
             connect_timeout=TIMEOUT_SECONDS,
         )
         cur = conn.cursor()
-        cur.execute("SELECT * FROM contentcuration_contentnode;")
-        count_before = cur.rowcount
         now = datetime.now()
         cur.execute(
             """
@@ -57,11 +55,7 @@ class PostgresWriteContentnodeProbe(BaseProbe):
                 "test",
             ),
         )
-        cur.execute("SELECT * FROM contentcuration_contentnode;")
-        count_after = cur.rowcount
         conn.close()
-        if count_before + 1 != count_after:
-            raise Exception("Writing a ContentNode to PostgreSQL database failed.")
 
 
 if __name__ == "__main__":
