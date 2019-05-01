@@ -832,6 +832,7 @@ class AdminChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer)
 
 
 class SimplifiedChannelListSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Channel
         fields = ('id', 'name', 'description', 'version', 'public')

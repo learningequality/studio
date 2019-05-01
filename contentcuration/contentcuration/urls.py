@@ -389,7 +389,6 @@ urlpatterns += [
     url(r'^api/get_channel_kind_count/(?P<channel_id>[^/]+)$', admin_views.get_channel_kind_count, name='get_channel_kind_count'),
 ]
 
-
 urlpatterns += [url(r'^jsreverse/$', django_js_reverse_views.urls_js, name='js_reverse')]
 
 # I18N Endpoints
