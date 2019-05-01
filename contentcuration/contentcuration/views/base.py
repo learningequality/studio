@@ -24,6 +24,7 @@ from django.shortcuts import redirect
 from django.shortcuts import render
 from django.views.decorators.cache import cache_page
 from django.views.decorators.csrf import csrf_exempt
+from django.views.generic.base import TemplateView
 from enum import Enum
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.authentication import SessionAuthentication
@@ -477,3 +478,7 @@ def check_progress(request, task_id):
 def cancel_task(request, task_id):
     time.sleep(0.5)
     return HttpResponse(json.dumps({'status': 'REVOKED'}))
+
+
+class SandboxView(TemplateView):
+    template_name = "sandbox.html"

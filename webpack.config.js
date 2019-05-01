@@ -1,14 +1,14 @@
 /* eslint-env node */
-const webpack = require('webpack');
 const path = require('path');
+const webpack = require('webpack');
 
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const BundleTracker = require('webpack-bundle-tracker');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
 
-const UglifyJsPlugin = require("uglifyjs-webpack-plugin");
-const MiniCssExtractPlugin = require("mini-css-extract-plugin");
-const OptimizeCSSAssetsPlugin = require("optimize-css-assets-webpack-plugin");
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const WebpackRTLPlugin = require('webpack-rtl-plugin');
 
 const djangoProjectDir = path.resolve('contentcuration');
@@ -17,7 +17,7 @@ const staticJsDir = path.resolve(staticFilesDir, 'js');
 const staticLessDir = path.resolve(staticFilesDir, 'less');
 
 const bundleEntryDir = path.resolve(staticJsDir, 'bundle_modules');
-const bundleOutputDir = path.resolve(staticJsDir,'bundles');
+const bundleOutputDir = path.resolve(staticJsDir, 'bundles');
 
 const jqueryDir = path.resolve('node_modules', 'jquery');
 const studioJqueryDir = path.resolve(staticJsDir, 'utils', 'studioJquery');
@@ -28,9 +28,9 @@ const jsLoaders = [
     options: {
       // might be able to limit browsers for smaller bundles
       presets: ['env'],
-      plugins:[ 'transform-object-rest-spread' ],
+      plugins: ['transform-object-rest-spread'],
     },
-  }
+  },
 ];
 
 function recursiveIssuer(m) {
@@ -53,6 +53,8 @@ module.exports = {
     channel_edit: './channel_edit.js',
     administration: './administration.js',
     settings: './settings.js',
+    // A simple code sandbox to play with components in
+    sandbox: './sandbox.js',
   },
   output: {
     filename: '[name]-[hash].js',
@@ -62,38 +64,40 @@ module.exports = {
     // builds a bundle that holds common code between the 2 entry points
     splitChunks: {
       cacheGroups: {
-          commons: {
-              name: "common",
-              chunks: "initial",
-              minChunks: 2
-          },
-          // Chunk css by bundle, not by dynamic split points.
-          // This will add a bit to each bundle, but will mean we don't
-          // have to dynamically determine which css bundle to load
-          // if we do webpack code splitting.
-          // Modified from https://github.com/webpack-contrib/mini-css-extract-plugin#extracting-css-based-on-entry
-          baseStyles: {
-            name: 'base',
-            test: (m,c,entry = 'base') => m.constructor.name === 'CssModule' && recursiveIssuer(m) === entry,
-            chunks: 'all',
-            enforce: true
-          },
-          channelEditStyles: {
-            name: 'channel_edit',
-            test: (m,c,entry = 'channel_edit') => m.constructor.name === 'CssModule' && recursiveIssuer(m) === entry,
-            chunks: 'all',
-            enforce: true
-          },
-      }
+        commons: {
+          name: 'common',
+          chunks: 'initial',
+          minChunks: 2,
+        },
+        // Chunk css by bundle, not by dynamic split points.
+        // This will add a bit to each bundle, but will mean we don't
+        // have to dynamically determine which css bundle to load
+        // if we do webpack code splitting.
+        // Modified from https://github.com/webpack-contrib/mini-css-extract-plugin#extracting-css-based-on-entry
+        baseStyles: {
+          name: 'base',
+          test: (m, c, entry = 'base') =>
+            m.constructor.name === 'CssModule' && recursiveIssuer(m) === entry,
+          chunks: 'all',
+          enforce: true,
+        },
+        channelEditStyles: {
+          name: 'channel_edit',
+          test: (m, c, entry = 'channel_edit') =>
+            m.constructor.name === 'CssModule' && recursiveIssuer(m) === entry,
+          chunks: 'all',
+          enforce: true,
+        },
+      },
     },
     minimizer: [
       new UglifyJsPlugin({
         cache: true,
         parallel: true,
-        sourceMap: true
+        sourceMap: true,
       }),
-      new OptimizeCSSAssetsPlugin({})
-    ]
+      new OptimizeCSSAssetsPlugin({}),
+    ],
   },
   module: {
     rules: [
@@ -104,30 +108,19 @@ module.exports = {
       },
       {
         test: /\.handlebars?$/,
-        use: [
-          'handlebars-template-loader',
-        ],
+        use: ['handlebars-template-loader'],
       },
       {
         test: /\.less?$/,
-        use: [
-          `style-loader`,
-          MiniCssExtractPlugin.loader,
-          `css-loader`,
-          'less-loader',
-        ],
+        use: [`style-loader`, MiniCssExtractPlugin.loader, `css-loader`, 'less-loader'],
       },
       {
         test: /\.css?$/,
-        use: [
-          `style-loader`,
-          MiniCssExtractPlugin.loader,
-          `css-loader`,
-        ],
+        use: [`style-loader`, MiniCssExtractPlugin.loader, `css-loader`],
       },
       {
         test: /\.vue?$/,
-        loader:'vue-loader',
+        loader: 'vue-loader',
       },
       // Granular shim for JQuery (used inside of studioJquery)
       {
@@ -166,16 +159,16 @@ module.exports = {
       $: 'jquery',
       // used in Mathquill, set in jquery
       'window.jQuery': 'jquery',
-      'jQuery': 'jquery',
+      jQuery: 'jquery',
     }),
     new MiniCssExtractPlugin({
-      filename: "[name]-[hash].css",
-      chunkFilename: "[name]-[hash]-[id].css"
+      filename: '[name]-[hash].css',
+      chunkFilename: '[name]-[hash]-[id].css',
     }),
     new WebpackRTLPlugin(),
     new webpack.SourceMapDevToolPlugin({
-      filename: '[name]-[hash].js.map'
-    })
+      filename: '[name]-[hash].js.map',
+    }),
   ],
   // new in webpack 4. Specifies the default bundle type
   mode: 'development',

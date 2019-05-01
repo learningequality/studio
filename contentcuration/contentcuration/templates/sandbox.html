@@ -1,0 +1,17 @@
+<!DOCTYPE HTML>
+{% extends "base.html" %}
+{% load staticfiles %}
+{% load render_bundle_css from translation_tags %}
+{% load render_bundle from webpack_loader %}
+
+{% block css_bundle %}
+	{% render_bundle_css 'sandbox' %}
+{% endblock css_bundle %}
+
+{% block content %}
+<sandbox></sandbox>
+{% endblock content %}
+
+{% block js_bundle %}
+	{% render_bundle 'sandbox' 'js' %}
+{% endblock js_bundle %}
