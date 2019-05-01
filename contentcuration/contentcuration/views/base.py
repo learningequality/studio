@@ -54,7 +54,7 @@ from contentcuration.serializers import ChannelSetSerializer
 from contentcuration.serializers import CurrentUserSerializer
 from contentcuration.serializers import InvitationSerializer
 from contentcuration.serializers import RootNodeSerializer
-from contentcuration.serializers import SimplifiedChannelListSerializer
+from contentcuration.serializers import SimplifiedChannelProbeCheckSerializer
 from contentcuration.serializers import UserChannelListSerializer
 from contentcuration.tasks import exportchannel_task
 from contentcuration.tasks import generatechannelcsv_task
@@ -110,7 +110,7 @@ def get_prober_channel(request):
     if not channel:
         channel = Channel.objects.create(name="Prober channel", editors=[request.user])
 
-    return Response(SimplifiedChannelListSerializer(channel).data)
+    return Response(SimplifiedChannelProbeCheckSerializer(channel).data)
 
 
 """ END HEALTH CHECKS """

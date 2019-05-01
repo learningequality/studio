@@ -832,11 +832,17 @@ class AdminChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer)
 
 
 class SimplifiedChannelListSerializer(serializers.ModelSerializer):
-    """ Used for channel list dropdown on channel list page and prober check """
-
     class Meta:
         model = Channel
         fields = ('id', 'name', 'description', 'version', 'public', 'main_tree')
+
+
+class SimplifiedChannelProbeCheckSerializer(serializers.ModelSerializer):
+    """ Used for channel list dropdown on channel prober checks """
+
+    class Meta:
+        model = Channel
+        fields = ('id', 'name', 'description', 'thumbnail', 'main_tree')
 
 
 class AdminUserListSerializer(serializers.ModelSerializer):
