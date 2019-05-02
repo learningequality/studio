@@ -77,8 +77,11 @@ def channel():
         level2 = mixer.blend(cc.ContentNode, parent=level1, kind=topic())
         leaf = mixer.blend(cc.ContentNode, parent=level2, kind=video())
         leaf2 = mixer.blend(cc.ContentNode, parent=level2, kind=exercise(), title='EXERCISE 1',
-                            extra_fields="{\"mastery_model\":\"do_all\",\"randomize\":true}")
-        leaf3 = mixer.blend(cc.ContentNode, parent=level2, kind=slideshow(), title="SLIDESHOW 1", extra_fields="{}")
+        extra_fields={
+            'mastery_model': 'do_all',
+            'randomize': True
+        }
+        leaf3 = mixer.blend(cc.ContentNode, parent=level2, kind=slideshow(), title="SLIDESHOW 1", extra_fields=extra_fields)
 
         video_file = fileobj_video()
         video_file.contentnode = leaf
