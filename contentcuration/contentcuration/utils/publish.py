@@ -1,44 +1,58 @@
+import collections
+import itertools
+import json
 import logging as logmodule
+import os
+import re
 import sys
+import tempfile
+import uuid
+import zipfile
+from itertools import chain
 
-from django.core.management.base import BaseCommand
+from django.conf import settings
+from django.core.files import File
+from django.core.files.storage import default_storage as storage
+from django.core.management import call_command
+from django.db import transaction
+from django.db.models import Count
+from django.db.models import Q
+from django.db.models import Sum
+from django.template.loader import render_to_string
+from django.utils import timezone
+from django.utils.translation import ugettext_lazy as _
+from kolibri.content.utils.search import fuzz
+from kolibri_content import models as kolibrimodels
+from kolibri_content.router import get_active_content_database
+from kolibri_content.router import using_content_database
+from le_utils.constants import content_kinds
+from le_utils.constants import exercises
+from le_utils.constants import file_formats
+from le_utils.constants import format_presets
+from le_utils.constants import roles
 
-from contentcuration.utils import publish
+from contentcuration import models as ccmodels
+from contentcuration.statistics import record_publish_stats
+from contentcuration.utils.files import create_thumbnail_from_base64
+from contentcuration.utils.files import get_thumbnail_encoding
+from contentcuration.utils.parser import extract_value
+from contentcuration.utils.parser import load_json_string
 
 logmodule.basicConfig()
 logging = logmodule.getLogger(__name__)
 reload(sys)
 sys.setdefaultencoding('utf8')
 
+PERSEUS_IMG_DIR = exercises.IMG_PLACEHOLDER + "/images"
+THUMBNAIL_DIMENSION = 128
+MIN_SCHEMA_VERSION = "1"
 
-class Command(BaseCommand):
 
-    def add_arguments(self, parser):
-        parser.add_argument('channel_id', type=str)
-        parser.add_argument('--force', action='store_true', dest='force', default=False)
-        parser.add_argument('--user_id', dest='user_id', default=None)
-        parser.add_argument('--force-exercises', action='store_true', dest='force-exercises', default=False)
+class EarlyExit(BaseException):
 
-        # optional argument to send an email to the user when done with exporting channel
-        parser.add_argument('--email', action='store_true', default=False)
-
-    def handle(self, *args, **options):
-        channel_id = options['channel_id']
-        force = options['force']
-        send_email = options['email']
-        user_id = options['user_id']
-        force_exercises = options['force-exercises']
-
-        try:
-            publish.publish_channel(user_id, channel_id, force, force_exercises, send_email)
-        except publish.EarlyExit as e:
-            logging.warning("Publishing exited early: {message}.".format(message=e.message))
-            self.stdout.write("You can find your database in {path}".format(path=e.db_path))
-
-        # No matter what, make sure publishing is set to False once the run is done
-        finally:
-            channel.main_tree.publishing = False
-            channel.main_tree.save()
+    def __init__(self, message, db_path):
+        self.message = message
+        self.db_path = db_path
 
 
 def send_emails(channel, user_id):
@@ -122,40 +136,8 @@ def map_content_nodes(root_node, default_language, channel_id, channel_name, use
                         exercise_data = process_assessment_metadata(node, kolibrinode)
                         if force_exercises or node.changed or not node.files.filter(preset_id=format_presets.EXERCISE).exists():
                             create_perseus_exercise(node, kolibrinode, exercise_data, user_id=user_id)
-                    elif node.kind.kind == content_kinds.SLIDESHOW:
-                        create_slideshow_manifest(node, kolibrinode, user_id=user_id)
                     create_associated_file_objects(kolibrinode, node)
                     map_tags_to_node(kolibrinode, node)
-
-
-def create_slideshow_manifest(ccnode, kolibrinode, user_id=None):
-    print("Creating slideshow manifest...")
-
-    preset = ccmodels.FormatPreset.objects.filter(pk="slideshow_manifest")[0]
-    ext = file_formats.JSON
-    filename = "{0}.{ext}".format(ccnode.title, ext=ext)
-
-    try:
-        with tempfile.NamedTemporaryFile(prefix="slideshow_manifest_", delete=False) as temp_manifest:
-            temp_filepath = temp_manifest.name
-
-            temp_manifest.write(ccnode.extra_fields)
-
-            size_on_disk = temp_manifest.tell()
-            temp_manifest.seek(0)
-            file_on_disk = File(open(temp_filepath, mode='r'), name=filename)
-            # Create the file in Studio
-            ccmodels.File.objects.create(
-                file_on_disk=file_on_disk,
-                contentnode=ccnode,
-                file_format_id=file_formats.JSON,
-                preset_id=preset,
-                original_filename=filename,
-                file_size=size_on_disk,
-                uploaded_by_id=user_id
-            )
-    finally:
-        temp_manifest.close()
 
 
 def create_bare_contentnode(ccnode, default_language, channel_id, channel_name):
@@ -606,3 +588,34 @@ def fill_published_fields(channel):
         if lang:
             channel.included_languages.add(lang)
     channel.save()
+
+
+def publish_channel(user_id, channel_id, force, force_exercises, send_email):
+    channel = ccmodels.Channel.objects.get(pk=channel_id)
+
+    try:
+        create_content_database(channel_id, force, user_id, force_exercises)
+
+        increment_channel_version(channel)
+        mark_all_nodes_as_changed(channel)
+        add_tokens_to_channel(channel)
+        fill_published_fields(channel)
+
+        # Attributes not getting set for some reason, so just save it here
+        channel.main_tree.publishing = False
+        channel.main_tree.changed = False
+        channel.main_tree.published = True
+        channel.main_tree.save()
+
+        if send_email:
+            send_emails(channel, user_id)
+
+        # use SQLite backup API to put DB into archives folder.
+        # Then we can use the empty db name to have SQLite use a temporary DB (https://www.sqlite.org/inmemorydb.html)
+
+        record_publish_stats(channel)
+
+    # No matter what, make sure publishing is set to False once the run is done
+    finally:
+        channel.main_tree.publishing = False
+        channel.main_tree.save()

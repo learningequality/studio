@@ -405,7 +405,8 @@ if settings.DEBUG:
     urlpatterns += [
         url(r'^' + settings.STORAGE_URL[1:] + '(?P<path>.*)$', file_views.debug_serve_file, name='debug_serve_file'),
         url(r'^' + settings.CONTENT_DATABASE_URL[1:] + '(?P<path>.*)$', file_views.debug_serve_content_database_file, name='content_database_debug_serve_file'),
-        url(r'^' + settings.CSV_URL[1:] + '(?P<path>.*)$', file_views.debug_serve_file, name='csv_debug_serve_file')
+        url(r'^' + settings.CSV_URL[1:] + '(?P<path>.*)$', file_views.debug_serve_file, name='csv_debug_serve_file'),
+        url(r'^sandbox/$', views.SandboxView.as_view()),
     ]
 
     try:

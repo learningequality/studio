@@ -22,6 +22,7 @@ from django.shortcuts import redirect
 from django.shortcuts import render
 from django.views.decorators.cache import cache_page
 from django.views.decorators.csrf import csrf_exempt
+from django.views.generic.base import TemplateView
 from enum import Enum
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.authentication import SessionAuthentication
@@ -453,3 +454,7 @@ def save_token_to_channels(request, token):
     token.set_channels(channels)
 
     return HttpResponse({"success": True})
+
+
+class SandboxView(TemplateView):
+    template_name = "sandbox.html"
