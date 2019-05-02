@@ -1,13 +1,12 @@
 import json
 
 import testdata
-from .testdata import create_temp_file
 from base import BaseAPITestCase
 from base import BaseTestCase
-
 from django.conf import settings
 from django.core.urlresolvers import reverse_lazy
 
+from .testdata import create_temp_file
 from contentcuration.models import Channel
 from contentcuration.models import ContentKind
 from contentcuration.models import ContentNode
@@ -15,6 +14,8 @@ from contentcuration.models import FormatPreset
 from contentcuration.models import generate_storage_url
 from contentcuration.models import Language
 from contentcuration.utils.files import create_thumbnail_from_base64
+from contentcuration.utils.nodes import move_nodes
+from contentcuration.utils.sync import sync_node
 from contentcuration.views import nodes
 
 
@@ -192,9 +193,6 @@ class NodeOperationsTestCase(BaseTestCase):
             prev_channel.main_tree.refresh_from_db()
             assert prev_channel.main_tree.changed is False
 
-
-class NodeOperationsAPITestCase(BaseAPITestCase):
-
     def test_move_nodes(self):
         """
         Ensures that moving nodes properly removes them from the original parent and adds them to the new one,
@@ -217,16 +215,12 @@ class NodeOperationsAPITestCase(BaseAPITestCase):
         new_channel.main_tree.get_children().delete()
         new_channel_node_count = new_channel.main_tree.get_descendants().count()
 
-        move_data = {
-            'target_parent': new_channel.main_tree.id,
-            'channel_id': new_channel.id,
-            'nodes': []
-        }
+        nodes = []
 
         for node in self.channel.main_tree.get_children():
-            move_data['nodes'].append({'id': node.pk})
+            nodes.append({'id': node.pk})
 
-        assert self.channel.main_tree.pk not in [node['id'] for node in move_data['nodes']]
+        assert self.channel.main_tree.pk not in [node['id'] for node in nodes]
 
         # simulate a clean, right-after-publish state for both trees to ensure they are marked changed after this
         self.channel.main_tree.changed = False
@@ -234,8 +228,8 @@ class NodeOperationsAPITestCase(BaseAPITestCase):
         new_channel.main_tree.changed = False
         new_channel.main_tree.save()
 
-        request = self.create_post_request(reverse_lazy('move_nodes'), data=json.dumps(move_data), content_type='application/json')
-        nodes.move_nodes(request)
+        move_nodes(new_channel.id, new_channel.main_tree.id, nodes,
+                   min_order=0, max_order=len(nodes))
 
         ContentNode.objects.partial_rebuild(self.channel.main_tree.tree_id)
         self.channel.main_tree.refresh_from_db()
@@ -263,6 +257,9 @@ class NodeOperationsAPITestCase(BaseAPITestCase):
 
         # TODO: Should a newly created node that was moved still have the channel it was moved from as its origin/source
         _check_nodes(new_channel.main_tree, title=title, original_channel_id=self.channel.id, source_channel_id=self.channel.id, channel=new_channel)
+
+
+class NodeOperationsAPITestCase(BaseAPITestCase):
 
     def test_delete_nodes(self):
         """
@@ -319,7 +316,7 @@ class SyncNodesOperationTestCase(BaseTestCase):
 
     def test_sync_after_no_changes(self):
         orig_video, cloned_video = self._setup_original_and_deriative_nodes()
-        nodes._sync_node(cloned_video, self.new_channel.id,
+        sync_node(cloned_video, self.new_channel.id,
                          sync_attributes=True,
                          sync_tags=True,
                          sync_files=True,
@@ -332,7 +329,7 @@ class SyncNodesOperationTestCase(BaseTestCase):
         self._add_subs_to_video_node(orig_video, 'fr')
         self._add_subs_to_video_node(orig_video, 'es')
         self._add_subs_to_video_node(orig_video, 'en')
-        nodes._sync_node(cloned_video, self.new_channel.id,
+        sync_node(cloned_video, self.new_channel.id,
                          sync_attributes=True,
                          sync_tags=True,
                          sync_files=True,
@@ -346,7 +343,7 @@ class SyncNodesOperationTestCase(BaseTestCase):
         self._add_subs_to_video_node(orig_video, 'fr')
         self._add_subs_to_video_node(orig_video, 'es')
         self._add_subs_to_video_node(orig_video, 'en')
-        nodes._sync_node(cloned_video, self.new_channel.id,
+        sync_node(cloned_video, self.new_channel.id,
                          sync_attributes=True,
                          sync_tags=True,
                          sync_files=True,
@@ -354,7 +351,7 @@ class SyncNodesOperationTestCase(BaseTestCase):
                          sync_sort_order=True)
         self._add_subs_to_video_node(orig_video, 'ar')
         self._add_subs_to_video_node(orig_video, 'zul')
-        nodes._sync_node(cloned_video, self.new_channel.id,
+        sync_node(cloned_video, self.new_channel.id,
                          sync_attributes=True,
                          sync_tags=True,
                          sync_files=True,
@@ -425,6 +422,3 @@ class SyncNodesOperationTestCase(BaseTestCase):
             assert fileA.checksum == fileB.checksum, 'different checksum found'
             assert fileA.preset == fileB.preset, 'different preset found'
             assert fileA.language == fileB.language, 'different language found'
-
-
-

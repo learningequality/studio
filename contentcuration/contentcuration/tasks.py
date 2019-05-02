@@ -20,6 +20,11 @@ from contentcuration.serializers import ContentNodeSerializer
 from contentcuration.utils.csv_writer import write_channel_csv_file
 from contentcuration.utils.csv_writer import write_user_csv
 from contentcuration.utils.nodes import duplicate_node_bulk
+from contentcuration.utils.nodes import move_nodes
+from contentcuration.utils.publish import publish_channel
+from contentcuration.utils.sync import sync_channel
+from contentcuration.utils.sync import sync_nodes
+
 
 logger = get_task_logger(__name__)
 
@@ -67,9 +72,28 @@ def duplicate_nodes_task(self, user_id, channel_id, target_parent, node_ids, sor
     return ContentNodeSerializer(ContentNode.objects.filter(pk__in=new_nodes), many=True).data
 
 
-@task(name='exportchannel_task')
-def exportchannel_task(channel_id, user_id):
-    call_command('exportchannel', channel_id, email=True, user_id=user_id)
+@task(bind=True, name='export_channel_task')
+def export_channel_task(self, user_id, channel_id):
+    publish_channel(user_id, channel_id, send_email=True, task_object=self)
+
+
+@task(bind=True, name='move_nodes_task')
+def move_nodes_task(self, user_id, channel_id, target_parent, node_ids, min_order, max_order):
+    move_nodes(channel_id, target_parent, node_ids, min_order, max_order, task_object=self)
+
+
+@task(bind=True, name='sync_channel_task')
+def sync_channel_task(self, user_id, channel_id, node_ids, sync_attributes, sync_tags,
+                    sync_files, sync_assessment_items, sync_sort_order):
+    sync_channel(channel_id, node_ids, sync_attributes, sync_tags, sync_files,
+                              sync_tags, sync_sort_order, task_object=self)
+
+
+@task(bind=True, name='sync_nodes_task')
+def sync_nodes_task(self, user_id, channel_id, node_ids, sync_attributes, sync_tags,
+                    sync_files, sync_assessment_items):
+    sync_nodes(channel_id, node_ids, sync_attributes, sync_tags, sync_files,
+                              sync_tags, task_object=self)
 
 
 @task(name='generatechannelcsv_task')
@@ -116,7 +140,11 @@ def getnodedetails_task(node_id):
 
 
 type_mapping = {
-    'duplicate-nodes': {'task': duplicate_nodes_task, 'progress_tracking': True}
+    'duplicate-nodes': {'task': duplicate_nodes_task, 'progress_tracking': True},
+    'export-channel': {'task': export_channel_task, 'progress_tracking': True},
+    'move-nodes': {'task': move_nodes_task, 'progress_tracking': True},
+    'sync-channel': {'task': sync_channel_task, 'progress_tracking': True},
+    'sync-nodes': {'task': sync_nodes_task, 'progress_tracking': True},
 }
 
 if settings.RUNNING_TESTS:

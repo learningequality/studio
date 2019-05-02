@@ -9,14 +9,12 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import F
 from django.db.models import Max
-from django.db.models import Q
 from django.db.models import Sum
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.http import HttpResponseNotFound
 from django.utils.translation import ugettext as _
 from le_utils.constants import content_kinds
-from le_utils.constants import format_presets
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import api_view
@@ -28,9 +26,7 @@ from rest_framework.response import Response
 
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
-from contentcuration.models import ContentTag
 from contentcuration.models import License
-from contentcuration.models import PrerequisiteContentRelationship
 from contentcuration.serializers import ContentNodeEditSerializer
 from contentcuration.serializers import ContentNodeSerializer
 from contentcuration.serializers import SimplifiedContentNodeSerializer
@@ -359,52 +355,30 @@ def move_nodes(request):
         channel = target_parent.get_channel()
         request.user.can_edit(channel and channel.pk)
 
-    except KeyError:
-        return ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+        task_info = {
+            'user': request.user,
+            'metadata': {
+                'affects': {
+                    'channels': [channel_id],
+                    'nodes': nodes,
+                }
+            }
+        }
 
-    all_ids = []
+        task_args = {
+            'user_id': request.user.pk,
+            'channel_id': channel_id,
+            'node_ids': nodes,
+            'target_parent': data["target_parent"],
+            'min_order': min_order,
+            'max_order': max_order
+        }
 
-    with ContentNode.objects.delay_mptt_updates():
-        for n in nodes:
-            min_order = min_order + float(max_order - min_order) / 2
-            node = ContentNode.objects.get(pk=n['id'])
-            _move_node(node, parent=target_parent, sort_order=min_order, channel_id=channel_id)
-            all_ids.append(n['id'])
+        task, task_info = create_async_task('move-nodes', task_info, task_args)
+        return HttpResponse(JSONRenderer().render(TaskSerializer(task_info).data))
 
-    serialized = ContentNodeSerializer(ContentNode.objects.filter(pk__in=all_ids), many=True).data
-    return HttpResponse(JSONRenderer().render(serialized))
-
-
-def _move_node(node, parent=None, sort_order=None, channel_id=None):
-    # if we move nodes, make sure the parent is marked as changed
-    if node.parent and not node.parent.changed:
-        node.parent.changed = True
-        node.parent.save()
-    node.parent = parent or node.parent
-    node.sort_order = sort_order or node.sort_order
-    node.changed = True
-    descendants = node.get_descendants(include_self=True)
-
-    if node.tree_id != parent.tree_id:
-        PrerequisiteContentRelationship.objects.filter(Q(target_node_id=node.pk) | Q(prerequisite_id=node.pk)).delete()
-
-    node.save()
-    # we need to make sure the new parent is marked as changed as well
-    if node.parent and not node.parent.changed:
-        node.parent.changed = True
-        node.parent.save()
-
-    for tag in ContentTag.objects.filter(tagged_content__in=descendants).distinct():
-        # If moving from another channel
-        if tag.channel_id != channel_id:
-            t, is_new = ContentTag.objects.get_or_create(tag_name=tag.tag_name, channel_id=channel_id)
-
-            # Set descendants with this tag to correct tag
-            for n in descendants.filter(tags=tag):
-                n.tags.remove(tag)
-                n.tags.add(t)
-
-    return node
+    except KeyError as e:
+        raise ObjectDoesNotExist("Missing attribute from data: {}".format(e.message))
 
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
@@ -421,37 +395,30 @@ def sync_nodes(request):
         nodes = data["nodes"]
         channel_id = data['channel_id']
 
+        task_info = {
+            'user': request.user,
+            'metadata': {
+                'affects': {
+                    'channels': [channel_id],
+                    'nodes': nodes,
+                }
+            }
+        }
+
+        task_args = {
+            'user_id': request.user.pk,
+            'channel_id': channel_id,
+            'node_ids': nodes,
+            'sync_attributes': True,
+            'sync_tags': True,
+            'sync_files': True,
+            'sync_assessment_items': True,
+        }
+
+        task, task_info = create_async_task('sync-nodes-task', task_info, task_args)
+        return HttpResponse(JSONRenderer().render(TaskSerializer(task_info).data))
     except KeyError:
-        return ObjectDoesNotExist("Missing attribute from data: {}".format(data))
-
-    all_nodes = []
-    with transaction.atomic(), ContentNode.objects.delay_mptt_updates():
-        for n in nodes:
-            node, _ = _sync_node(ContentNode.objects.get(pk=n), channel_id, sync_attributes=True, sync_tags=True, sync_files=True, sync_assessment_items=True)
-            if node.changed:
-                node.save()
-            all_nodes.append(node)
-    return HttpResponse(JSONRenderer().render(ContentNodeSerializer(all_nodes, many=True).data))
-
-
-def _sync_node(node, channel_id, sync_attributes=False, sync_tags=False, sync_files=False, sync_assessment_items=False, sync_sort_order=False):
-    parents_to_check = []
-    original_node = node.get_original_node()
-    if original_node.node_id != node.node_id:  # Only update if node is not original
-        logging.info("----- Syncing: {} from {}".format(node.title.encode('utf-8'), original_node.get_channel().name.encode('utf-8')))
-        if sync_attributes:  # Sync node metadata
-            sync_node_data(node, original_node)
-        if sync_tags:  # Sync node tags
-            sync_node_tags(node, original_node, channel_id)
-        if sync_files:  # Sync node files
-            sync_node_files(node, original_node)
-        if sync_assessment_items and node.kind_id == content_kinds.EXERCISE:  # Sync node exercises
-            sync_node_assessment_items(node, original_node)
-        if sync_sort_order:  # Sync node sort order
-            node.sort_order = original_node.sort_order
-            if node.parent not in parents_to_check:
-                parents_to_check.append(node.parent)
-    return node, parents_to_check
+        raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
@@ -465,114 +432,29 @@ def sync_channel_endpoint(request):
     data = json.loads(request.body)
 
     try:
-        nodes = sync_channel(
-            Channel.objects.get(pk=data['channel_id']),
-            sync_attributes=data.get('attributes'),
-            sync_tags=data.get('tags'),
-            sync_files=data.get('files'),
-            sync_assessment_items=data.get('assessment_items'),
-            sync_sort_order=data.get('sort'),
-        )
+        nodes = data["nodes"]
+        channel_id = data['channel_id']
 
-        return HttpResponse(JSONRenderer().render(ContentNodeSerializer(nodes, many=True).data))
-    except KeyError:
-        return ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+        task_info = {
+            'user': request.user,
+            'metadata': {
+                'affects': {
+                    'channels': [channel_id],
+                }
+            }
+        }
 
+        task_args = {
+            'user_id': request.user.pk,
+            'channel_id': channel_id,
+            'sync_attributes': data.get('attributes'),
+            'sync_tags': data.get('tags'),
+            'sync_files': data.get('files'),
+            'sync_assessment_items': data.get('assessment_items'),
+            'sync_sort_order': data.get('sort'),
+        }
 
-def sync_channel(channel, sync_attributes=False, sync_tags=False, sync_files=False, sync_assessment_items=False, sync_sort_order=False):
-    all_nodes = []
-    parents_to_check = []  # Keep track of parents to make resorting easier
-
-    with transaction.atomic():
-        with ContentNode.objects.delay_mptt_updates():
-            logging.info("Syncing nodes for channel {} (id:{})".format(channel.name, channel.pk))
-            for node in channel.main_tree.get_descendants():
-                node, parents = _sync_node(node, channel.pk,
-                                           sync_attributes=sync_attributes,
-                                           sync_tags=sync_tags,
-                                           sync_files=sync_files,
-                                           sync_assessment_items=sync_assessment_items,
-                                           sync_sort_order=sync_sort_order,
-                                           )
-                parents_to_check += parents
-                all_nodes.append(node)
-            # Avoid cases where sort order might have overlapped
-            for parent in parents_to_check:
-                sort_order = 1
-                for child in parent.children.all().order_by('sort_order', 'title'):
-                    child.sort_order = sort_order
-                    child.save()
-                    sort_order += 1
-
-    return all_nodes
-
-
-def sync_node_data(node, original):
-    node.title = original.title
-    node.description = original.description
-    node.license = original.license
-    node.copyright_holder = original.copyright_holder
-    node.changed = True
-    node.author = original.author
-    node.extra_fields = original.extra_fields
-
-
-def sync_node_tags(node, original, channel_id):
-    # Remove tags that aren't in original
-    for tag in node.tags.exclude(tag_name__in=original.tags.values_list('tag_name', flat=True)):
-        node.tags.remove(tag)
-        node.changed = True
-    # Add tags that are in original
-    for tag in original.tags.exclude(tag_name__in=node.tags.values_list('tag_name', flat=True)):
-        new_tag, is_new = ContentTag.objects.get_or_create(
-            tag_name=tag.tag_name,
-            channel_id=channel_id,
-        )
-        node.tags.add(new_tag)
-        node.changed = True
-
-
-def sync_node_files(node, original):
-    """
-    Sync all files in ``node`` from the files in ``original`` node.
-    """
-    # A. Delete files that aren't in original
-    node.files.exclude(checksum__in=original.files.values_list('checksum', flat=True)).delete()
-    # B. Add all files that are in original
-    for f in original.files.all():
-        # 1. Look for old file with matching preset (and language if subs file)
-        if f.preset_id == format_presets.VIDEO_SUBTITLE:
-            oldf = node.files.filter(preset=f.preset, language=f.language).first()
-        else:
-            oldf = node.files.filter(preset=f.preset).first()
-        # 2. Remove oldf if it exists and its checksum has changed
-        if oldf:
-            if oldf.checksum == f.checksum:
-                continue             # No need to copy file if it hasn't changed
-            else:
-                oldf.delete()
-                node.changed = True
-        # 3. Copy over new file from original node
-        fcopy = copy.copy(f)
-        fcopy.id = None
-        fcopy.contentnode = node
-        fcopy.save()
-        node.changed = True
-
-
-def sync_node_assessment_items(node, original):
-    node.extra_fields = original.extra_fields
-    node.changed = True
-    # Clear assessment items on node
-    node.assessment_items.all().delete()
-    # Add assessment items onto node
-    for ai in original.assessment_items.all():
-        ai_copy = copy.copy(ai)
-        ai_copy.id = None
-        ai_copy.contentnode = node
-        ai_copy.save()
-        for f in ai.files.all():
-            f_copy = copy.copy(f)
-            f_copy.id = None
-            f_copy.assessment_item = ai_copy
-            f_copy.save()
+        task, task_info = create_async_task('sync-channel-task', task_info, task_args)
+        return HttpResponse(JSONRenderer().render(TaskSerializer(task_info).data))
+    except KeyError as e:
+        raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))

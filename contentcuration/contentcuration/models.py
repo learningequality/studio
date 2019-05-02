@@ -3,13 +3,12 @@ import hashlib
 import json
 import logging
 import os
-import pytz
 import urlparse
 import uuid
 import warnings
-
 from datetime import datetime
 
+import pytz
 from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.base_user import BaseUserManager
@@ -622,6 +621,9 @@ class Channel(models.Model):
             return generate_storage_url(self.thumbnail)
 
         return '/static/img/kolibri_placeholder.png'
+
+    def has_changes(self):
+        return self.main_tree.get_descendants(include_self=True).filter(changed=True).exists()
 
     def get_date_modified(self):
         return self.main_tree.get_descendants(include_self=True).aggregate(last_modified=Max('modified'))['last_modified']

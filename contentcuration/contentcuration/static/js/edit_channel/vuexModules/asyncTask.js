@@ -6,6 +6,7 @@ let timerID = null;
 const asyncTasksModule = {
   state: {
     asyncTasks: [],
+    currentTaskID: null,
     runningTasks: [],
     finishedTasks: [],
   },
@@ -24,7 +25,7 @@ const asyncTasksModule = {
       }
       let tasks = store.getters.asyncTasks;
       tasks.push(newTask);
-      store.dispatch('updateTaskList');
+      store.commit('SET_CURRENT_TASK', newTask.id);
     },
 
     updateTaskList(store) {
@@ -79,6 +80,9 @@ const asyncTasksModule = {
     },
     SET_TASK_FINISHED(state, task) {
       state.finishedTasks.push(task);
+    },
+    SET_CURRENT_TASK(state, task) {
+      state.currentTaskID = task;
     },
   },
 };

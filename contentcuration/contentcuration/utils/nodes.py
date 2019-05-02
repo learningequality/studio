@@ -8,6 +8,7 @@ from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
+from django.db.models import Q
 
 from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
@@ -17,6 +18,7 @@ from contentcuration.models import File
 from contentcuration.models import FormatPreset
 from contentcuration.models import generate_object_storage_name
 from contentcuration.models import Language
+from contentcuration.models import PrerequisiteContentRelationship
 from contentcuration.models import User
 from contentcuration.utils.files import duplicate_file
 from contentcuration.utils.files import get_thumbnail_encoding
@@ -243,3 +245,50 @@ def _duplicate_node_bulk_recursive(node, sort_order, parent, channel_id, to_crea
         _duplicate_node_bulk_recursive(node=child, sort_order=None, parent=new_node, channel_id=channel_id, to_create=to_create, level=level + 1, user=user)
 
     return new_node
+
+
+def move_nodes(channel_id, target_parent_id, nodes, min_order, max_order, task_object=None):
+    all_ids = []
+
+    target_parent = ContentNode.objects.get(pk=target_parent_id)
+
+    with ContentNode.objects.delay_mptt_updates():
+        for n in nodes:
+            min_order = min_order + float(max_order - min_order) / 2
+            node = ContentNode.objects.get(pk=n['id'])
+            move_node(node, parent=target_parent, sort_order=min_order, channel_id=channel_id)
+            all_ids.append(n['id'])
+
+    return all_ids
+
+
+def move_node(node, parent=None, sort_order=None, channel_id=None):
+    # if we move nodes, make sure the parent is marked as changed
+    if node.parent and not node.parent.changed:
+        node.parent.changed = True
+        node.parent.save()
+    node.parent = parent or node.parent
+    node.sort_order = sort_order or node.sort_order
+    node.changed = True
+    descendants = node.get_descendants(include_self=True)
+
+    if node.tree_id != parent.tree_id:
+        PrerequisiteContentRelationship.objects.filter(Q(target_node_id=node.pk) | Q(prerequisite_id=node.pk)).delete()
+
+    node.save()
+    # we need to make sure the new parent is marked as changed as well
+    if node.parent and not node.parent.changed:
+        node.parent.changed = True
+        node.parent.save()
+
+    for tag in ContentTag.objects.filter(tagged_content__in=descendants).distinct():
+        # If moving from another channel
+        if tag.channel_id != channel_id:
+            t, is_new = ContentTag.objects.get_or_create(tag_name=tag.tag_name, channel_id=channel_id)
+
+            # Set descendants with this tag to correct tag
+            for n in descendants.filter(tags=tag):
+                n.tags.remove(tag)
+                n.tags.add(t)
+
+    return node

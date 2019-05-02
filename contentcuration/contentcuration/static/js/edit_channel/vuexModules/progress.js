@@ -10,7 +10,7 @@ const progressModule = {
       return new Promise((resolve, reject) => {
         $.ajax({
           method: 'GET',
-          url: window.Urls.check_progress(payload.taskID),
+          url: window.Urls.tasks(payload.taskID),
           error: error => {
             payload.update({ error: 'There was an error publishing your channel' });
             reject(error);
@@ -34,8 +34,8 @@ const progressModule = {
       // Test payload needs taskID and update function
       return new Promise((resolve, reject) => {
         $.ajax({
-          method: 'GET',
-          url: window.Urls.cancel_task(payload.taskID),
+          method: 'DELETE',
+          url: window.Urls.tasks(payload.taskID),
           error: reject,
           success: data => {
             resolve(data);

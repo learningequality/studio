@@ -645,8 +645,8 @@ var ContentNodeCollection = BaseCollection.extend({
         url: window.Urls.move_nodes(),
         data: JSON.stringify(data),
         error: reject,
-        success: function(moved) {
-          resolve(new ContentNodeCollection(JSON.parse(moved)));
+        success: function(data) {
+          resolve(State.Store.dispatch('startTask', data));
         },
       });
     });
@@ -677,8 +677,8 @@ var ContentNodeCollection = BaseCollection.extend({
         url: window.Urls.sync_nodes(),
         data: JSON.stringify(data),
         error: reject,
-        success: function(synced) {
-          resolve(new ContentNodeCollection(JSON.parse(synced)));
+        success: function(data) {
+          resolve(State.Store.dispatch('startTask', data));
         },
       });
     });
@@ -753,7 +753,7 @@ var ChannelModel = BaseModel.extend({
         url: window.Urls.sync_channel(),
         data: JSON.stringify(data),
         success: function(data) {
-          resolve(new ContentNodeCollection(JSON.parse(data)));
+          resolve(State.Store.dispatch('startTask', data));
         },
         error: reject,
       });
