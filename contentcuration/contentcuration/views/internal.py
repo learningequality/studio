@@ -810,6 +810,7 @@ def create_slides(user, node, slideshow_data):
                 sort_order=slide.get("sort_order"),
                 metadata={
                     "caption": slide.get('caption'),
+                    "descriptive_text": slide.get('descriptive_text'),
                     "checksum": slide.get('checksum'),
                     "extension": slide.get('extension')
                 }
