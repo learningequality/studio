@@ -10,7 +10,7 @@
 </template>
 <script>
 
-  import { mapState } from 'vuex';
+  import { mapGetters, mapState } from 'vuex';
   import ProgressOverlay from 'edit_channel/sharedComponents/ProgressOverlay.vue';
 
   export default {
@@ -30,9 +30,7 @@
     },
     computed: {
       ...mapState('publish', ['channel']),
-      taskID() {
-        return this.channel.id;
-      },
+      ...mapGetters('publish', ['taskID']),
     },
   };
 

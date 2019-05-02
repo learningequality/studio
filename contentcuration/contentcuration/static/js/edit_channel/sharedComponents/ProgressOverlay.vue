@@ -16,10 +16,16 @@
       />
       <VCardActions class="actions">
         <VSpacer />
-        <VBtn v-if="done || failed" dark flat class="action-button" @click="closeOverlay">
+        <VBtn
+          v-if="done || failed"
+          dark
+          flat
+          class="action-button done-button"
+          @click="closeOverlay"
+        >
           {{ doneButtonText || $tr('doneButton') }}
         </VBtn>
-        <VBtn v-else dark flat class="action-button" @click="handleCancel">
+        <VBtn v-else dark flat class="action-button cancel-button" @click="handleCancel">
           {{ stopButtonText || $tr('stopButton') }}
         </VBtn>
       </VCardActions>
@@ -101,9 +107,12 @@
         dialog(headerText, promptText, {
           [this.$tr('cancel')]: () => {},
           [stopTaskText]: () => {
-            this.$refs.progressbar.cancelTask();
+            this.cancelTask();
           },
         });
+      },
+      cancelTask() {
+        this.$refs.progressbar.cancelTask();
       },
     },
   };

@@ -1,20 +1,20 @@
 <template>
   <div class="publish-items">
-    <label v-if="!channel.has_changed" class="unchanged-label">
+    <label v-if="!isChanged" class="unchanged-label">
       {{ $tr('noChangesLabel') }}
     </label>
     <VBtn
       flat
       dark
-      class="publish-button"
-      :class="{disabled: !channel.has_changed}"
-      :disabled="!channel.has_changed"
+      class="open-modal-button publish-button"
+      :class="{disabled: !isChanged}"
+      :disabled="!isChanged"
       :title="$tr('publishButtonTitle')"
-      @click.stop="toggleModal(true)"
+      @click.stop="openModal"
     >
       {{ $tr('publishButton') }}
     </VBtn>
-    <VDialog v-model="dialog" maxWidth="500px" attach="body">
+    <VDialog v-model="dialog" class="publish-modal" maxWidth="500px" attach="body">
       <VCard>
         <VCardText>
           <PublishView />
@@ -23,8 +23,8 @@
           <VBtn
             flat
             dark
-            class="cancel-text"
-            @click="toggleModal(false)"
+            class="cancel-button"
+            @click="dialog = false"
           >
             {{ $tr('cancelButton') }}
           </VBtn>
@@ -35,7 +35,7 @@
             <VBtn
               flat
               dark
-              class="publish-button"
+              class="main-publish-button publish-button"
               :class="{disabled: !channel.language}"
               :disabled="!channel.language"
               @click="handlePublish"
@@ -51,7 +51,7 @@
 
 <script>
 
-  import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
+  import { mapActions, mapState } from 'vuex';
   import PublishView from './PublishView.vue';
   import { format_size } from 'edit_channel/utils/string_helper';
   import { alert } from 'edit_channel/utils/dialog';
@@ -79,26 +79,28 @@
     },
     computed: {
       ...mapState('publish', ['channel']),
-      ...mapGetters('publish', ['channelCount']),
       sizeText() {
         return this.size === null ? this.$tr('loadingSize') : format_size(this.size);
+      },
+      channelCount() {
+        return this.channel.main_tree.metadata.resource_count;
+      },
+      isChanged() {
+        return this.channel.main_tree.metadata.has_changed_descendant;
       },
     },
     methods: {
       ...mapActions('publish', ['publishChannel', 'setChannelLanguage', 'loadChannelSize']),
-      ...mapMutations('publish', { reset: 'RESET_STATE' }),
-      toggleModal(open) {
-        this.dialog = open;
-        if (this.dialog) {
-          this.loadChannelSize().then(size => {
-            this.size = size;
-          });
-        }
+      openModal() {
+        this.dialog = true;
+        this.loadChannelSize().then(size => {
+          this.size = size;
+        });
       },
       handlePublish() {
         this.publishChannel()
           .then(() => {
-            this.toggleModal(false);
+            this.dialog = false;
           })
           .catch(error => {
             alert(this.$tr('publishErrorHeader'), error.responseText || error);
@@ -136,7 +138,7 @@
     color: @gray-500;
   }
 
-  .cancel-text {
+  .cancel-button {
     .action-text;
 
     color: @blue-500 !important;

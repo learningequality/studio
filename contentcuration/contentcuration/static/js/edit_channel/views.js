@@ -213,7 +213,6 @@ var BaseView = Backbone.View.extend({
 
         if (model.id === State.current_channel.get('main_tree').id) {
           State.current_channel.set('main_tree', model.toJSON());
-          State.current_channel.set('has_changed', model.get('metadata').has_changed_descendant);
           self.check_if_published(model);
           WorkspaceManager.get_main_view().handle_checked();
         }

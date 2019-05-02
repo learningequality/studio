@@ -705,23 +705,6 @@ var ChannelModel = BaseModel.extend({
     root_node.set({ title: this.get('name') });
     return root_node;
   },
-  publish: function() {
-    var self = this;
-    return new Promise(function(resolve, reject) {
-      var data = { channel_id: self.get('id') };
-      $.ajax({
-        method: 'POST',
-        url: window.Urls.publish_channel(),
-        data: JSON.stringify(data),
-        success: function() {
-          resolve(true);
-        },
-        error: function(error) {
-          reject(error);
-        },
-      });
-    });
-  },
   get_accessible_channel_roots: function() {
     var self = this;
     return new Promise(function(resolve, reject) {
