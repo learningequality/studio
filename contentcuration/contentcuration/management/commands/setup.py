@@ -215,7 +215,7 @@ def create_exercise(title, parent, license_id, description="", user=None):
         copyright_holder="{} {}".format(user.first_name, user.last_name),
         license_id=license_id,
         license_description=LICENSE_DESCRIPTION,
-        extra_fields=json.dumps(mastery_model),
+        extra_fields=mastery_model,
         sort_order=get_sort_order(),
     )
     exercise.save()
