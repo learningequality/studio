@@ -8,7 +8,6 @@ from base import StudioTestCase
 from django.test.utils import override_settings
 from kolibri_content import models
 from kolibri_content.router import using_content_database
-from mixer.backend.django import mixer
 from mock import patch
 
 from .testdata import create_studio_file
@@ -17,6 +16,7 @@ from .testdata import slideshow
 from .testdata import topic
 from .testdata import video
 from contentcuration import models as cc
+from contentcuration.tests.utils import mixer
 from contentcuration.utils.publish import convert_channel_thumbnail
 from contentcuration.utils.publish import create_bare_contentnode
 from contentcuration.utils.publish import create_content_database
@@ -24,7 +24,6 @@ from contentcuration.utils.publish import create_slideshow_manifest
 from contentcuration.utils.publish import MIN_SCHEMA_VERSION
 
 pytestmark = pytest.mark.django_db
-
 
 def fileobj_video(contents=None):
     """
