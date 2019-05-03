@@ -1,59 +1,44 @@
-version: '3'
+version: '3.4'
+
+x-studio-environment:
+  &studio-environment
+      MPLBACKEND: ps
+      SHELL: /bin/bash
+      AWS_S3_ENDPOINT_URL: http://minio:9000
+      DATA_DB_HOST: postgres
+      DJANGO_SETTINGS_MODULE: contentcuration.dev_settings
+      RUN_MODE: docker-compose
+      CELERY_TIMEZONE: America/Los_Angeles
+      CELERY_REDIS_DB: 0
+      CELERY_BROKER_ENDPOINT: redis
+      CELERY_RESULT_BACKEND_ENDPOINT: redis
+      CELERY_REDIS_PASSWORD: ""
+
+x-studio-worker:
+  &studio-worker
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.dev
+    image: learningequality/studio-app-dev
+    depends_on:
+      - minio
+      - postgres
+      - redis
+    volumes:
+      - .:/src
+  environment: *studio-environment
 
 services:
-
   studio-app:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.dev
-    image: learningequality/studio-app-dev
+    <<: *studio-worker
     entrypoint: python docker/entrypoint.py
     command: yarn run devserver
-    depends_on:
-      - minio
-      - postgres
-      - redis
     ports:
       - "8080:8080"
-    environment:
-      MPLBACKEND: ps
-      SHELL: /bin/bash
-      AWS_S3_ENDPOINT_URL: http://minio:9000
-      DATA_DB_HOST: postgres
-      DJANGO_SETTINGS_MODULE: contentcuration.dev_settings
-      RUN_MODE: docker-compose
-      CELERY_TIMEZONE: America/Los_Angeles
-      CELERY_REDIS_DB: 0
-      CELERY_BROKER_ENDPOINT: redis
-      CELERY_RESULT_BACKEND_ENDPOINT: redis
-      CELERY_REDIS_PASSWORD: ""
-    volumes:
-      - .:/src
 
-  worker:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.dev
-    image: learningequality/studio-app-dev
+  celery-worker:
+    <<: *studio-worker
     command: make prodceleryworkers
-    depends_on:
-      - minio
-      - postgres
-      - redis
-    volumes:
-      - .:/src
-    environment:
-      MPLBACKEND: ps
-      SHELL: /bin/bash
-      AWS_S3_ENDPOINT_URL: http://minio:9000
-      DATA_DB_HOST: postgres
-      DJANGO_SETTINGS_MODULE: contentcuration.dev_settings
-      RUN_MODE: docker-compose
-      CELERY_TIMEZONE: America/Los_Angeles
-      CELERY_REDIS_DB: 0
-      CELERY_BROKER_ENDPOINT: redis
-      CELERY_RESULT_BACKEND_ENDPOINT: redis
-      CELERY_REDIS_PASSWORD: ""
 
   minio:
     image: minio/minio
