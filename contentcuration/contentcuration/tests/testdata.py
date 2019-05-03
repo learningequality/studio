@@ -8,8 +8,8 @@ from cStringIO import StringIO
 import pytest
 from django.core.files.storage import default_storage
 from le_utils.constants import format_presets
-from mixer.backend.django import mixer
 
+from contentcuration.tests.utils import mixer
 from contentcuration import models as cc
 pytestmark = pytest.mark.django_db
 
