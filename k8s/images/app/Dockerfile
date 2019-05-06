@@ -27,6 +27,7 @@ ENV PATH="/node_modules/.bin:$PATH"
 COPY Pipfile .
 COPY Pipfile.lock .
 
+RUN pip install --upgrade pip
 RUN pip install -U pipenv
 # install the environment exactly as specified in the Pipfile.lock file
 RUN pipenv install --system --ignore-pipfile --keep-outdated
