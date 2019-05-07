@@ -15,6 +15,7 @@ const store = new Vuex.Store({
         nodes: [],
         selectedIndices: [],
         viewOnly: false,
+        isClipboard: false,
       },
       getters: getters,
       mutations: mutations,

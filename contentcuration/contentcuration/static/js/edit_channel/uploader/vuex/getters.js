@@ -15,3 +15,24 @@ export function selected(state) {
     return state.nodes[index];
   });
 }
+
+// TODO: Remove this once hooked up to actual state
+export function authors() {
+  return ['Alakazam', 'Arbok', 'Articuno', 'Aerodactyl'];
+}
+
+export function providers() {
+  return ['Pikachu', 'Pidgey', 'Pinsir'];
+}
+
+export function aggregators() {
+  return [];
+}
+
+export function copyrightHolders() {
+  return ['Charizard', 'Clefairy', 'Cloyster', 'Caterpie'];
+}
+
+export function tags() {
+  return ['Tauros', 'Tentacool', 'Tangela'];
+}

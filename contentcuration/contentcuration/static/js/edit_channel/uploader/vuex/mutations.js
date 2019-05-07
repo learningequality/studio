@@ -8,7 +8,11 @@ export function RESET_STATE(state) {
 }
 
 export function SET_NODES(state, nodes) {
+  _.each(nodes, node => {
+    node.changed = true;
+  });
   state.nodes = nodes;
+  state.selectedIndices = [0]; // TODO: remove
 }
 
 export function RESET_SELECTED(state) {
