@@ -27,9 +27,7 @@ ENV PATH="/node_modules/.bin:$PATH"
 COPY Pipfile .
 COPY Pipfile.lock .
 
-# pip 18.1 gives an error with pipenv, so pin the version to 18.0 until there is a fix.
-# More info here: https://github.com/pypa/pipenv/issues/2924
-RUN pip install pip==18.0
+RUN pip install --upgrade pip
 RUN pip install -U pipenv
 # install the environment exactly as specified in the Pipfile.lock file
 RUN pipenv install --system --ignore-pipfile --keep-outdated
