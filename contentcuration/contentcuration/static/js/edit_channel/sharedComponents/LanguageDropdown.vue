@@ -3,11 +3,14 @@
     v-model="selected"
     :items="languages"
     :label="$tr('labelText')"
-    color="#2196f3"
+    color="primary"
+    class="language-dropdown"
     itemValue="id"
     :itemText="languageText"
-    :autoSelectFirst="true"
+    autoSelectFirst
     :allowOverflow="false"
+    :hint="hint"
+    persistentHint
     @input="selectedLanguage"
   />
 </template>
@@ -31,6 +34,10 @@
         validator: function(value) {
           return !value || _.contains(_.pluck(Constants.Languages, 'id'), value);
         },
+      },
+      hint: {
+        type: String,
+        required: false,
       },
     },
     data() {
@@ -72,7 +79,7 @@
 
   /deep/ .v-list__tile {
     width: 100%;
-    text-decoration: none !important;
+    .linked-list-item;
     &:hover,
     &.v-list__tile--highlighted {
       background-color: @gray-200 !important;

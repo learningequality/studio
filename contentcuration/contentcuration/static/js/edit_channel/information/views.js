@@ -1,24 +1,11 @@
 var _ = require('underscore');
 var BaseViews = require('edit_channel/views');
-const State = require('edit_channel/state');
 require('information.less');
 
 var NAMESPACE = 'information';
 var MESSAGES = {
   copied: 'Copied!',
   copy_failed: 'Copy Failed',
-  learn_more: 'LEARN MORE',
-  exercise: 'What is an Exercise?',
-  exercise_description:
-    'An exercise contains a set of interactive ' +
-    'questions that a learner can engage with in Kolibri. They ' +
-    'will receive instant feedback on whether they answer each ' +
-    'question correctly or incorrectly. Kolibri will cycle through ' +
-    'the available questions in an exercise until the Learner achieves mastery.',
-  mastery: 'Achieving Mastery',
-  mastery_description:
-    'Kolibri marks an exercise as "completed" when the mastery ' +
-    'criteria is met. Here are the different types of mastery criteria for an exercise:',
   prereq: 'Prerequisites',
   prereq_description:
     'Prerequisites help Kolibri recommend content that will allow learners ' +
@@ -34,12 +21,6 @@ var MESSAGES = {
   get_token: 'Get Channel Token',
   get_id: 'Get Channel ID',
   published_version: 'Published Version:',
-  coach_content: 'What is content visibility?',
-  coach_description:
-    'This is support content and is visible only to coaches (teachers, facilitators, administrators)',
-  anyone_description: 'This content is visible to anyone',
-  role_description:
-    'Content visibility determines what type of Kolibri users can see this content.',
   channel_sets: 'About Collections',
   channel_sets_description: 'What is a collection?',
   channel_sets_description_text:
@@ -88,28 +69,6 @@ var BaseInfoModalView = BaseViews.BaseModalView.extend({
     this.set_indices();
     this.set_initial_focus();
   },
-});
-
-var LicenseModalView = BaseInfoModalView.extend({
-  template: require('./hbtemplates/license_modal.handlebars'),
-  modal_id: '#license_modal',
-  get_render_data: function() {
-    return {
-      license: this.data.select_license,
-      is_cc: this.data.select_license.license_url.includes('creativecommons.org'),
-      locale: State.currentLanguage.id,
-    };
-  },
-});
-
-var MasteryModalView = BaseInfoModalView.extend({
-  template: require('./hbtemplates/mastery_modal.handlebars'),
-  modal_id: '#mastery_modal',
-});
-
-var RolesModalView = BaseInfoModalView.extend({
-  template: require('./hbtemplates/roles_modal.handlebars'),
-  modal_id: '#roles_modal',
 });
 
 var PrerequisiteModalView = BaseInfoModalView.extend({
@@ -172,10 +131,7 @@ var PublishedModalView = BaseInfoModalView.extend({
 });
 
 module.exports = {
-  LicenseModalView: LicenseModalView,
-  MasteryModalView: MasteryModalView,
   PrerequisiteModalView: PrerequisiteModalView,
   PublishedModalView: PublishedModalView,
-  RolesModalView: RolesModalView,
   ChannelSetInformationModalView: ChannelSetInformationModalView,
 };
