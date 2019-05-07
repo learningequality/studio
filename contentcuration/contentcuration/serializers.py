@@ -838,6 +838,14 @@ class SimplifiedChannelListSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'description', 'version', 'public')
 
 
+class SimplifiedChannelProbeCheckSerializer(serializers.ModelSerializer):
+    """ Used for channel list dropdown on channel prober checks """
+
+    class Meta:
+        model = Channel
+        fields = ('id', 'name', 'description', 'thumbnail', 'main_tree')
+
+
 class AdminUserListSerializer(serializers.ModelSerializer):
     editable_channels = SimplifiedChannelListSerializer(many=True, read_only=True)
     view_only_channels = SimplifiedChannelListSerializer(many=True, read_only=True)

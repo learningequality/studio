@@ -3,7 +3,6 @@ import logging
 from collections import namedtuple
 from distutils.version import LooseVersion
 
-
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
 from django.core.exceptions import SuspiciousOperation
@@ -17,6 +16,7 @@ from django.http import HttpResponseServerError
 from le_utils.constants import content_kinds
 from le_utils.constants import roles
 from raven.contrib.django.raven_compat.models import client
+from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import api_view
@@ -25,7 +25,6 @@ from rest_framework.decorators import permission_classes
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework import status
 
 from contentcuration import ricecooker_versions as rc
 from contentcuration.api import activate_channel
@@ -57,7 +56,7 @@ def handle_server_error(request):
     client.captureException(stack=True, tags={'url': request.path})
 
 
-@api_view(['POST'])
+@api_view(['POST', 'GET'])
 @authentication_classes((TokenAuthentication, SessionAuthentication,))
 @permission_classes((IsAuthenticated,))
 def authenticate_user_internal(request):
@@ -65,6 +64,7 @@ def authenticate_user_internal(request):
     logging.debug("Logging in user")
     return HttpResponse(json.dumps({
         'success': True,
+        'user_id': request.user.id,
         'username': unicode(request.user),
         'first_name': request.user.first_name,
         'last_name': request.user.last_name,
