@@ -121,9 +121,13 @@
 @import '../../../../less/global-variables.less';
 
 /deep/ a {
-  text-decoration: none !important;
-  &:hover {
-    color: @blue-500;
+  .linked-list-item;
+}
+
+/deep/ * {
+  font-family: @font-family;
+  &.v-icon {
+    .material-icons;
   }
 }
 

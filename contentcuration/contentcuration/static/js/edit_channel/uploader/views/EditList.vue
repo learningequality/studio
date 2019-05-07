@@ -33,7 +33,7 @@
     },
     data() {
       return {
-        selectAllChecked: false,
+        selectAllChecked: true,
         drawer: {
           open: true,
         },
@@ -52,6 +52,7 @@
         this.selectAllChecked = !this.selectAllChecked;
       },
       openDrawer() {
+        // TODO: auto select all on load
         this.drawer.open = true;
       },
     },
@@ -60,5 +61,9 @@
 </script>
 
 <style lang="less" scoped>
+
+  .v-divider {
+    margin-top: 0;
+  }
 
 </style>

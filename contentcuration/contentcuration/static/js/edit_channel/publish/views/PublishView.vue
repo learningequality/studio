@@ -26,7 +26,7 @@
           <span class="prompt">
             {{ $tr('languageRequired') }}
           </span>
-          <LanguageDropdown :language="channel.language" @changed="setLanguage" />
+          <LanguageDropdown :language="channel.language" width="150" @changed="setLanguage" />
         </li>
       </ul>
     </div>
