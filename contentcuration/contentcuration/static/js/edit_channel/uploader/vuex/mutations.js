@@ -12,7 +12,6 @@ export function SET_NODES(state, nodes) {
     node.changed = true;
   });
   state.nodes = nodes;
-  state.selectedIndices = [0]; // TODO: remove
 }
 
 export function RESET_SELECTED(state) {
