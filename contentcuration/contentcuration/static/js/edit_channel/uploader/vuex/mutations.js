@@ -9,7 +9,7 @@ export function RESET_STATE(state) {
 
 export function SET_NODES(state, nodes) {
   _.each(nodes, node => {
-    node.changed = true;
+    node.changesStaged = false;
   });
   state.nodes = nodes;
 }

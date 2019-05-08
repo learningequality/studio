@@ -86,9 +86,9 @@
       },
     },
     watch: {
-      // Temporary workaround while waiting for Vuetify bug
-      // to be fixed https://github.com/vuetifyjs/vuetify/issues/5617
       dialog(val) {
+        // Temporary workaround while waiting for Vuetify bug
+        // to be fixed https://github.com/vuetifyjs/vuetify/issues/5617
         if (val) {
           setTimeout(() => {
             this.$refs.editlist.openDrawer();

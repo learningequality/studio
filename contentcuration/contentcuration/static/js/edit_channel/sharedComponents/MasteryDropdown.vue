@@ -1,5 +1,5 @@
 <template>
-  <VLayout grid wrap>
+  <VLayout grid wrap class="align-center">
     <VFlex xs10>
       <VSelect
         v-model="masteryData.mastery_model"
@@ -30,7 +30,7 @@
               row
               class="mastery-row"
             >
-              <VFlex xs3 textRight class="mastery-label">
+              <VFlex xs3 class="mastery-label text-right">
                 {{ translate(criteria.id) }}
               </VFlex>
               <VFlex xs9>
@@ -41,7 +41,7 @@
         </template>
       </InfoModal>
     </VFlex>
-    <VLayout v-if="showMofN" alignCenter>
+    <VLayout v-if="showMofN" class="align-center">
       <VFlex xs3>
         <VTextField
           v-model="masteryData.m"

@@ -4,6 +4,11 @@
       <VCheckbox color="primary" :value="isSelected" @click.stop="toggleNode" />
     </VListTileAction>
     <VListTileAction>
+      <span v-if="node.changesStaged" class="changed">
+        *
+      </span>
+    </VListTileAction>
+    <VListTileAction>
       <ContentNodeIcon :kind="node.kind" />
     </VListTileAction>
     <VListTileContent>
@@ -62,6 +67,11 @@
 <style lang="less" scoped>
 
 @import '../../../../less/global-variables.less';
+
+.changed {
+  font-weight: bold;
+  color: @blue-500;
+}
 
 .v-list__tile__action {
   width: max-content;
