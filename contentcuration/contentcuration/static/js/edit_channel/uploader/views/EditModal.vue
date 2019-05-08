@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="edit-modal-wrapper">
     <VDialog v-model="dialog" fullscreen hideOverlay transition="dialog-bottom-transition" lazy>
       <template #activator="{on}">
         <VBtn v-on="on">
@@ -116,19 +116,8 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="less">
 
-@import '../../../../less/global-variables.less';
-
-/deep/ a {
-  .linked-list-item;
-}
-
-/deep/ * {
-  font-family: @font-family;
-  &.v-icon {
-    .material-icons;
-  }
-}
+@import '../../../../less/edit-modal.less';
 
 </style>
