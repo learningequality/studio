@@ -43,6 +43,7 @@ Addresses #*PR# HERE*
 - [ ] Are there any new interactions that need to be added to the [QA Sheet](https://docs.google.com/spreadsheets/d/1HF4Gy6rb_BLbZoNkZEWZonKFBqPyVEiQq4Ve6XgIYmQ/edit#gid=0)?
 - [ ] Are there opportunities for using Google Analytics here (if applicable)?
 - [ ] If the Pipfile has been changed, is the updated Pipfile.lock file also included in this PR?
+- [ ] If the changes add any new endpoints, are there any new probers for those endpoints?
 - [ ] Are the migrations [safe for a large db](https://www.braintreepayments.com/blog/safe-operations-for-high-volume-postgresql/) (if applicable)?
 
 ## Comments
