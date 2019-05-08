@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import sys
-
+from .migration_test_case import *
 import pytest
 
 # Mark the test class or function as a slow test, where we avoid running it
