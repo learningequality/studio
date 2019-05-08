@@ -17,4 +17,7 @@ module.exports = [
   {
     kind: 'exercise',
   },
+  {
+    kind: 'slideshow',
+  },
 ];
