@@ -22,7 +22,7 @@ test:
 	yarn install && yarn run unittests
 
 endtoendtest:
-	# launch all studio's dependent services using docker-compose, and then run the tests
+	# launch all studio's dependent services using docker-compose, and then run the tests	
 	docker-compose run studio-app make test -e DJANGO_SETTINGS_MODULE=contentcuration.test_settings
 
 collectstatic: migrate
@@ -67,12 +67,19 @@ docs: clean-docs
 setup:
 	python contentcuration/manage.py setup
 
+export COMPOSE_PROJECT_NAME=studio_$(shell git rev-parse --abbrev-ref HEAD)
+
+
 dcbuild:
-	# bild all studio docker image and all dependent services using docker-compose
+	# build all studio docker image and all dependent services using docker-compose
 	docker-compose build
 
 dcup:
-	# run make deverver in foreground with all dependent services using docker-compose
+	# run all services except for cloudprober
+	docker-compose up studio-app celery-worker
+
+dcup-cloudprober:
+	# run all services including cloudprober
 	docker-compose up
 
 dcdown:
@@ -84,9 +91,10 @@ dcclean:
 	docker-compose down -v
 	docker image prune -f
 
+export COMPOSE_STUDIO_APP = ${COMPOSE_PROJECT_NAME}_studio-app_1
 dcshell:
 	# bash shell inside studio-app container
-	docker exec -ti studio_studio-app_1 /usr/bin/fish
+	docker exec -ti ${COMPOSE_STUDIO_APP} /usr/bin/fish 
 
 dctest: endtoendtest
 	# launch all studio's dependent services using docker-compose, and then run the tests
