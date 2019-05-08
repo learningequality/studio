@@ -17,6 +17,8 @@ TIMEOUT_SECONDS = 2
 class PostgresWriteContentnodeProbe(BaseProbe):
     metric = "postgres_write_contentnode_latency_msec"
 
+    develop_only = True
+
     def do_probe(self):
         conn = psycopg2.connect(
             host=DB_HOST,
