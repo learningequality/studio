@@ -83,13 +83,13 @@ def create_content_database(channel_id, force, user_id, force_exercises, task_ob
 
         prepare_export_database(tempdb)
         if task_object:
-            task_object.update_state(meta={'progress': 10.0})
+            task_object.update_state(state='STARTED', meta={'progress': 10.0})
         map_channel_to_kolibri_channel(channel)
         map_content_nodes(channel.main_tree, channel.language, channel.id, channel.name, user_id=user_id,
-                          force_exercises=force_exercises, starting_percent=10.0)
+                          force_exercises=force_exercises, task_object=task_object, starting_percent=10.0)
         # It should be at this percent already, but just in case.
         if task_object:
-            task_object.update_state(meta={'progress': 90.0})
+            task_object.update_state(state='STARTED', meta={'progress': 90.0})
         map_prerequisites(channel.main_tree)
         save_export_database(channel_id)
 
@@ -113,7 +113,7 @@ def assign_license_to_contentcuration_nodes(channel, license):
 
 
 def map_content_nodes(root_node, default_language, channel_id, channel_name, user_id=None,
-                        force_exercises=False, task_object=None, starting_percent=10):
+                      force_exercises=False, task_object=None, starting_percent=10.0):
 
     # make sure we process nodes higher up in the tree first, or else when we
     # make mappings the parent nodes might not be there
@@ -122,7 +122,9 @@ def map_content_nodes(root_node, default_language, channel_id, channel_name, use
     node_queue.append(root_node)
 
     task_percent_total = 80.0
-    percent_per_node = task_percent_total / len(node_queue)
+    total_nodes = root_node.get_descendant_count()
+    percent_per_node = task_percent_total / total_nodes
+
     current_node_percent = 0.0
 
     def queue_get_return_none_when_empty():
@@ -146,7 +148,7 @@ def map_content_nodes(root_node, default_language, channel_id, channel_name, use
                     if node.kind.kind == content_kinds.EXERCISE:
                         exercise_data = process_assessment_metadata(node, kolibrinode)
                         if force_exercises or node.changed or not \
-                            node.files.filter(preset_id=format_presets.EXERCISE).exists():
+                                node.files.filter(preset_id=format_presets.EXERCISE).exists():
                             create_perseus_exercise(node, kolibrinode, exercise_data, user_id=user_id)
                     create_associated_file_objects(kolibrinode, node)
                     map_tags_to_node(kolibrinode, node)
@@ -155,8 +157,8 @@ def map_content_nodes(root_node, default_language, channel_id, channel_name, use
                 # of the task every node due to the latency involved, so only update in 1 percent increments.
                 new_node_percent = current_node_percent + percent_per_node
                 if task_object and new_node_percent > math.ceil(current_node_percent):
-                    progress_percent = max(40.0 + starting_percent, starting_percent + new_node_percent)
-                    task_object.update_state(meta={'progress': progress_percent})
+                    progress_percent = min(task_percent_total + starting_percent, starting_percent + new_node_percent)
+                    task_object.update_state(state='STARTED', meta={'progress': progress_percent})
                 current_node_percent = new_node_percent
 
 
@@ -635,7 +637,7 @@ def publish_channel(user_id, channel_id, force=False, force_exercises=False, sen
         record_publish_stats(channel)
 
         if task_object:
-            task_object.update_state(meta={'progress': 100.0})
+            task_object.update_state(state='STARTED', meta={'progress': 100.0})
 
     # No matter what, make sure publishing is set to False once the run is done
     finally:
