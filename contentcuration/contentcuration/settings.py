@@ -336,6 +336,8 @@ CELERY_TIMEZONE = os.getenv("CELERY_TIMEZONE") or 'Africa/Nairobi'
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
+# This is needed for worker update_state calls to work so they can send progress info.
+CELERYD_STATE_DB = '/tmp/celery_state'
 # If this is True, Celery tasks are run synchronously. This is set to True in the unit tests,
 # as it is not possible to correctly test Celery tasks asynchronously currently.
 CELERY_TASK_ALWAYS_EAGER = False

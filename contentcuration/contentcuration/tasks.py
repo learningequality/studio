@@ -8,7 +8,6 @@ from celery.decorators import task
 from celery.utils.log import get_task_logger
 from django.conf import settings
 from django.core.mail import EmailMessage
-from django.core.management import call_command
 from django.db import transaction
 from django.template.loader import render_to_string
 
@@ -67,7 +66,7 @@ def duplicate_nodes_task(self, user_id, channel_id, target_parent, node_ids, sor
                 new_nodes.append(new_node.pk)
                 sort_order += 1
                 progress += progress_percent
-                self.update_state(meta={'progress': max(100, progress)})
+                self.update_state(state='STARTED', meta={'progress': max(100, progress)})
 
     return ContentNodeSerializer(ContentNode.objects.filter(pk__in=new_nodes), many=True).data
 
@@ -84,16 +83,16 @@ def move_nodes_task(self, user_id, channel_id, target_parent, node_ids, min_orde
 
 @task(bind=True, name='sync_channel_task')
 def sync_channel_task(self, user_id, channel_id, node_ids, sync_attributes, sync_tags,
-                    sync_files, sync_assessment_items, sync_sort_order):
+                      sync_files, sync_assessment_items, sync_sort_order):
     sync_channel(channel_id, node_ids, sync_attributes, sync_tags, sync_files,
-                              sync_tags, sync_sort_order, task_object=self)
+                 sync_tags, sync_sort_order, task_object=self)
 
 
 @task(bind=True, name='sync_nodes_task')
 def sync_nodes_task(self, user_id, channel_id, node_ids, sync_attributes, sync_tags,
                     sync_files, sync_assessment_items):
     sync_nodes(channel_id, node_ids, sync_attributes, sync_tags, sync_files,
-                              sync_tags, task_object=self)
+               sync_tags, task_object=self)
 
 
 @task(name='generatechannelcsv_task')
