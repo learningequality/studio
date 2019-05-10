@@ -1,13 +1,13 @@
-import ast
-import logging
 import os
 import traceback
 
-from celery.signals import after_task_publish, task_failure, task_success
+from celery.signals import after_task_publish
+from celery.signals import task_failure
+from celery.signals import task_success
 from celery.utils.log import get_task_logger
 from django.core.exceptions import ObjectDoesNotExist
 
-from contentcuration.models import Task, User
+from contentcuration.models import Task
 
 # because Celery connects signals upon import, we don't want to put signals into other modules that may be
 # imported multiple times. Instead, we follow the advice here and use AppConfig.init to import the module:
@@ -25,13 +25,15 @@ def before_start(sender, headers, body, **kwargs):
     sent to the broker.
     """
     task_id = headers["id"]
-    options = ast.literal_eval(headers["kwargsrepr"])
-    # We use the existence of the task_type kwarg to know if it's an async task.
-    if not "task_type" in options:
-        return
 
-    Task.objects.filter(task_id=task_id).update(status="PENDING")
-    logger.info("Task object {} updated with status PENDING.".format(task_id))
+    try:
+        task = Task.objects.get(task_id=task_id)
+        task.status = "PENDING"
+        task.save()
+        logger.info("Task object {} updated with status PENDING.".format(task_id))
+    except ObjectDoesNotExist:
+        # If the object doesn't exist, that likely means the task was created outside of create_async_task
+        pass
 
 
 @task_failure.connect
@@ -65,7 +67,7 @@ def on_success(sender, result, **kwargs):
         logger.info("on_success called, process is {}".format(os.getpid()))
         task_id = sender.request.id
         task = Task.objects.get(task_id=task_id)
-        task.status="SUCCESS"
+        task.status = "SUCCESS"
         task.metadata['result'] = result
         # We're finished, so go ahead and record 100% progress so that getters expecting it get a value
         # even though there is no longer a Celery task to query.
