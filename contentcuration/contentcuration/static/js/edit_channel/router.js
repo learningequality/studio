@@ -89,7 +89,7 @@ var ChannelEditRouter = Backbone.Router.extend({
 
     // TODO: Once topic tree has been migrated to vue, move this logic there
     if (data.edit_mode_on) {
-      let store = require('edit_channel/publish/vuex/store');
+      let store = State.Store;
       store.commit('publish/SET_CHANNEL', State.current_channel.toJSON());
       new Vue({
         el: '#channel-publish-button',

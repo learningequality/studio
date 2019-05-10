@@ -1,5 +1,12 @@
 <template>
-  <VDialog v-model="dialog" persistent light maxWidth="575" attach="body">
+  <VDialog
+    v-if="currentTask"
+    v-model="dialog"
+    persistent
+    light
+    maxWidth="575"
+    attach="body"
+  >
     <VCard class="message">
       <VCardTitle class="header">
         {{ headerText }}
@@ -7,17 +14,26 @@
       <VCardText class="description">
         {{ descriptionText }}
       </VCardText>
-      <ProgressBar
-        ref="progressbar"
-        :taskID="taskID"
-        @finished="handleDone"
-        @cancelled="handleCancelled"
-        @failed="handleFailed"
-      />
+      <div class="progress-wrapper">
+        <div>
+          <ProgressBar
+            ref="progressbar"
+            @finished="handleDone"
+            @cancelled="handleCancelled"
+            @failed="handleFailed"
+          />
+          <div v-if="currentTaskError" class="status status-error">
+            {{ errorText }}
+          </div>
+          <div class="status">
+            {{ message }}
+          </div>
+        </div>
+      </div>
       <VCardActions class="actions">
         <VSpacer />
         <VBtn
-          v-if="done || failed"
+          v-if="progressPercent === 100 || currentTaskError"
           dark
           flat
           class="action-button done-button"
@@ -35,12 +51,23 @@
 
 <script>
 
+  import { mapGetters } from 'vuex';
+
   import ProgressBar from 'edit_channel/sharedComponents/ProgressBar.vue';
   import { dialog } from 'edit_channel/utils/dialog';
 
   export default {
     name: 'ProgressOverlay',
     $trs: {
+      defaultHeader: 'Updating Channel',
+      defaultDescription: 'Update is in progress, please wait...',
+      defaultErrorText:
+        'An unexpected error has occurred. Please try again, and if you continue ' +
+        'to see this message, please contact support via the Help menu.',
+      publishHeader: 'Publishing Channel',
+      publishDescription:
+        'Please wait for publishing to finish to make further edits.' +
+        ' You will receive an email notice once channel publishing is complete.',
       stopButton: 'Stop',
       doneButton: 'Close',
       cancel: 'Cancel',
@@ -51,18 +78,6 @@
       ProgressBar,
     },
     props: {
-      taskID: {
-        type: String,
-        required: true,
-      },
-      headerText: {
-        type: String,
-        required: true,
-      },
-      descriptionText: {
-        type: String,
-        default: '',
-      },
       doneButtonText: {
         type: String,
         default: '',
@@ -85,10 +100,25 @@
         dialog: true,
         done: false,
         failed: false,
+        message: '',
+        errorText: this.$tr('defaultErrorText'),
+        headerText: this.$tr('defaultHeader'),
+        descriptionText: this.$tr('defaultDescription'),
       };
+    },
+    computed: {
+      ...mapGetters(['currentTask', 'currentTaskError', 'progressPercent']),
+    },
+    mounted: function() {
+      if (this.currentTask && this.currentTask.task_type === 'export-channel') {
+        this.headerText = this.$tr('publishHeader');
+        this.descriptionText = this.$tr('publishDescription');
+      }
     },
     methods: {
       closeOverlay() {
+        this.$store.commit('SET_CURRENT_TASK', { taskID: null });
+        this.$store.commit('SET_PROGRESS', 0);
         window.location.reload();
       },
       handleDone() {

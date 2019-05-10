@@ -94,10 +94,6 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
     this.staging = options.staging;
     this.path = options.path;
 
-    // Handler for any Vuex state changes we may want to listen to.
-    this.state_changed = this.state_changed.bind(this);
-    State.Store.subscribe(this.state_changed);
-
     // Check if the user has any running tasks so we know if we need to show the update dialog.
     State.Store.dispatch('updateTaskList');
     this.render();

@@ -4,7 +4,6 @@ const WorkspaceManager = require('./utils/workspace_manager');
 var Models = require('./models');
 var analytics = require('utils/analytics');
 const State = require('edit_channel/state');
-let publishStore = require('edit_channel/publish/vuex/store');
 //var UndoManager = require("backbone-undo");
 
 var TABINDEX = 1;
@@ -144,17 +143,6 @@ var BaseView = Backbone.View.extend({
       $(this).attr('tabindex', TABINDEX++);
     });
   },
-  state_changed: function() {
-    // If tasks are running, show modal so that the user cannot edit during this process.
-    let runningTasks = State.Store.getters.runningTasks;
-
-    if (runningTasks.length > 0) {
-      this.show_loading_modal('Updating channel, please wait...');
-    } else if ($('#loading_modal').length > 0) {
-      this.dismiss_loading_modal();
-      this.render();
-    }
-  },
   display_load: function(message, callback) {
     if (callback) {
       this.show_loading_modal(message);
@@ -242,7 +230,7 @@ var BaseView = Backbone.View.extend({
   check_if_published: function() {
     var is_published = State.current_channel.get('main_tree').published;
     $('#hide-if-unpublished').css('display', is_published ? 'inline-block' : 'none');
-    publishStore.commit('publish/SET_CHANNEL', State.current_channel.toJSON());
+    State.Store.commit('publish/SET_CHANNEL', State.current_channel.toJSON());
   },
   set_publishing: function() {
     $('#channel-publish-button')
@@ -411,22 +399,18 @@ var BaseWorkspaceView = BaseView.extend({
       });
     });
   },
-  add_to_trash: function(collection, message) {
-    message = message != null ? message : this.get_translation('archiving');
+  add_to_trash: function(collection) {
     var self = this;
     var promise = new Promise(function(resolve) {
-      self.display_load(message, function(resolve_load) {
-        var reloadCollection = collection.clone();
-        var trash_node = State.current_channel.get_root('trash_tree');
-        collection.move(trash_node, trash_node.get('metadata').max_sort_order).then(function() {
-          self.reload_ancestors(reloadCollection, false);
-          trash_node.fetch({
-            success: function(fetched) {
-              State.current_channel.set('trash_tree', fetched.attributes);
-              resolve(collection);
-              resolve_load(true);
-            },
-          });
+      var reloadCollection = collection.clone();
+      var trash_node = State.current_channel.get_root('trash_tree');
+      collection.move(trash_node, trash_node.get('metadata').max_sort_order).then(function() {
+        self.reload_ancestors(reloadCollection, false);
+        trash_node.fetch({
+          success: function(fetched) {
+            State.current_channel.set('trash_tree', fetched.attributes);
+            resolve(collection);
+          },
         });
       });
     });

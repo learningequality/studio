@@ -1,24 +1,24 @@
 <template>
   <VApp>
     <PublishModal />
-    <PublishingOverlay v-if="taskID" :taskID="taskID" />
+    <ProgressOverlay v-if="currentTask" />
   </VApp>
 </template>
 
 <script>
 
   import { mapGetters } from 'vuex';
+  import ProgressOverlay from '../../sharedComponents/ProgressOverlay.vue';
   import PublishModal from './PublishModal.vue';
-  import PublishingOverlay from './PublishingOverlay.vue';
 
   export default {
     name: 'PublishWrapper',
     components: {
       PublishModal,
-      PublishingOverlay,
+      ProgressOverlay,
     },
     computed: {
-      ...mapGetters('publish', ['taskID']),
+      ...mapGetters(['currentTask']),
     },
   };
 

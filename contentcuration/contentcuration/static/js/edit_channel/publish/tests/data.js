@@ -2,8 +2,7 @@ import Vue from 'vue';
 
 const Vuex = require('vuex');
 const Vuetify = require('vuetify');
-var mutations = require('edit_channel/publish/vuex/mutations');
-var actions = require('edit_channel/publish/vuex/actions');
+const publish = require('edit_channel/vuexModules/publish');
 
 Vue.use(Vuex);
 Vue.use(Vuetify);
@@ -16,22 +15,35 @@ export const mockFunctions = {
 
 export const localStore = new Vuex.Store({
   modules: {
+    asyncTask: {
+      namespaced: false,
+      state: {
+        currentTask: null,
+      },
+      getters: {
+        currentTask(state) {
+          return state.currentTask;
+        },
+      },
+      mutations: {
+        SET_CURRENT_TASK(state, task) {
+          state.currentTask = task;
+        },
+      },
+      actions: {
+        ...publish.actions,
+      },
+    },
     publish: {
       namespaced: true,
       state: {
         channel: null,
-        tempTaskID: null,
       },
-      getters: {
-        taskID(state) {
-          return state.tempTaskID;
-        },
-      },
-      mutations: mutations,
+      mutations: publish.mutations,
       actions: {
-        ...actions,
+        ...publish.actions,
         publishChannel: context => {
-          context.commit('SET_TASK', 'test');
+          context.commit('SET_CURRENT_TASK', 'test', { root: true });
           mockFunctions.publishChannel();
         },
         setChannelLanguage: (context, languageID) => {

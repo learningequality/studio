@@ -1,30 +1,52 @@
+import _ from 'underscore';
 import Vue from 'vue';
 import Vuetify from 'vuetify';
 import { mount } from '@vue/test-utils';
 import ProgressOverlay from '../ProgressOverlay.vue';
 import ProgressBar from '../ProgressBar.vue';
+import State from 'edit_channel/state';
 
 Vue.use(Vuetify);
 
-function makeWrapper(props = {}) {
+const task = { task: { id: 123, task_type: 'test-task' } };
+
+function makeWrapper() {
+  const store = State.Store;
   return mount(ProgressOverlay, {
-    propsData: {
-      headerText: 'test',
-      taskID: 'test',
-      ...props,
-    },
+    store: store,
   });
 }
 
 describe('progressOverlay', () => {
   let wrapper;
   beforeEach(() => {
+    State.Store.commit('SET_CURRENT_TASK', task);
+    State.Store.commit('SET_CURRENT_TASK_ERROR', null);
     wrapper = makeWrapper();
   });
   describe('on render', () => {
+    it('status should be reflected in .status div', () => {
+      function test(status) {
+        wrapper.setData({ message: status });
+        expect(wrapper.find('.status').text()).toEqual(status);
+      }
+      let statuses = ['good', 'bad', 'nice', "it's complicated"];
+      _.each(statuses, test);
+    });
+    it('errors should be in .status-error div', () => {
+      function test(error) {
+        wrapper.setData({ errorText: error });
+        expect(wrapper.find('.status-error').text()).toEqual(error);
+        expect(wrapper.find('.failed').exists()).toBe(true);
+      }
+      expect(wrapper.find('.status-error').exists()).toBe(false);
+      State.Store.commit('SET_CURRENT_TASK_ERROR', 'testing');
+      let errors = ['comedy of errors', 'faux pas', 'translation error'];
+      _.each(errors, test);
+    });
     it('header text should match props data', () => {
       let header = 'Test Header';
-      wrapper = makeWrapper({ headerText: header });
+      wrapper.setData({ headerText: header });
       expect(wrapper.find('.header').text()).toBe(header);
     });
     it('ProgressBar should be included', () => {
@@ -34,7 +56,7 @@ describe('progressOverlay', () => {
       expect(wrapper.find('.cancel-button').exists()).toBe(true);
       expect(wrapper.find('.done-button').exists()).toBe(false);
       expect(wrapper.findAll(ProgressBar)).toBeTruthy();
-      wrapper.setData({ done: true });
+      State.Store.commit('SET_PROGRESS', 100);
       expect(wrapper.find('.cancel-button').exists()).toBe(false);
       expect(wrapper.find('.done-button').exists()).toBe(true);
     });
@@ -42,8 +64,8 @@ describe('progressOverlay', () => {
 
   describe('on button clicks', () => {
     it('DONE button should call closeOverlay', () => {
+      State.Store.commit('SET_PROGRESS', 100);
       window.location.reload = jest.fn();
-      wrapper.setData({ done: true });
       wrapper.find('.done-button').trigger('click');
       expect(window.location.reload).toBeCalled();
     });

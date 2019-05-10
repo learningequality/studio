@@ -1,72 +1,98 @@
-const DEFAULT_CHECK_INTERVAL = 5000;
-const TASKS_RUNNING_CHECK_INTERVAL = 1000;
+const DEFAULT_CHECK_INTERVAL = 1000;
 
 let timerID = null;
 
 const asyncTasksModule = {
   state: {
     asyncTasks: [],
-    currentTaskID: null,
-    runningTasks: [],
-    finishedTasks: [],
+    currentTaskError: null,
+    currentTask: null,
+    callbacks: {},
   },
   getters: {
     asyncTasks(state) {
       return state.asyncTasks;
     },
-    runningTasks(state) {
-      return state.runningTasks;
+    currentTaskError(state) {
+      return state.currentTaskError;
+    },
+    currentTask(state) {
+      return state.currentTask;
+    },
+    callbacks(state) {
+      return state.callbacks;
     },
   },
   actions: {
-    startTask(store, newTask) {
-      if (timerID) {
-        clearTimeout(timerID);
-      }
+    startTask(store, newTask, resolveCallback, rejectCallback) {
       let tasks = store.getters.asyncTasks;
       tasks.push(newTask);
-      store.commit('SET_CURRENT_TASK', newTask.id);
+
+      const payload = {
+        task: newTask,
+        resolveCallback: resolveCallback,
+        rejectCallback: rejectCallback,
+      };
+      store.commit('SET_CURRENT_TASK', payload);
+      // force an immediate update in case the timer isn't already running
+      store.dispatch('updateTaskList');
     },
 
     updateTaskList(store) {
+      if (!timerID) {
+        timerID = setInterval(function() {
+          store.dispatch('updateTaskList');
+        }, DEFAULT_CHECK_INTERVAL);
+      }
       $.ajax({
         method: 'GET',
         url: '/api/task',
         dataType: 'json',
         success: function(data) {
-          let runningTasks = [];
-          // We re-construct the list of running tasks each time by checking the list, as some tasks
-          // can run through the queue very quickly and skip certain statuses. This would cause
-          // quirks where we didn't properly remove a finished task.
-          let currentRunningTasks = store.getters.runningTasks;
+          let currentTask = store.getters.currentTask;
+          let runningTask = null;
+
           if (data && data.length > 0) {
             for (let i = 0; i < data.length; i++) {
               const task = data[i];
-              const runningTask = currentRunningTasks.find(function(item) {
-                return item.id === task.id;
-              });
-              if (task.status === 'STARTED') {
-                runningTasks.push(task);
-              } else if (task.status === 'SUCCESS' || task.status === 'FAILURE') {
-                if (runningTask) {
-                  store.commit('SET_TASK_FINISHED', task);
+              if (task.status === 'SUCCESS' || task.status === 'FAILURE') {
+                if (currentTask && task.id === currentTask.id) {
+                  runningTask = currentTask;
+                  if (task.status === 'SUCCESS') {
+                    store.commit('SET_PROGRESS', 100.0);
+                  }
+                  let callbacks = store.getters.callbacks;
+                  if (callbacks && callbacks[task.id]) {
+                    let callback = callbacks[task.id]['resolve'];
+                    if (task.status === 'FAILURE') {
+                      callback = callbacks[task.id]['reject'];
+                    }
+                    delete callbacks[task.id];
+                    if (callback) {
+                      callback();
+                    }
+                  }
                 }
               }
             }
           }
 
-          // In order to not overly burden the server, we turn down the task check interval when
-          // the user doesn't have any currently running tasks. When a task is started from the
-          // UI, it will trigger this to update the check interval.
-          let checkTimerInterval = DEFAULT_CHECK_INTERVAL;
-          if (runningTasks.length > 0) {
-            checkTimerInterval = TASKS_RUNNING_CHECK_INTERVAL;
+          if (runningTask && runningTask.metadata.progress) {
+            store.commit('SET_PROGRESS', runningTask.metadata.progress);
           }
-          timerID = setTimeout(function() {
-            store.dispatch('updateTaskList');
-          }, checkTimerInterval);
           store.commit('SET_ASYNC_TASKS', data);
-          store.commit('SET_RUNNING_TASKS', runningTasks);
+        },
+        error: function(error) {
+          // if we can't get task status, there is likely a server failure of some sort,
+          // so assume the task failed and report that.
+          let currentTask = store.getters.currentTask;
+          let callbacks = store.getters.callbacks;
+          store.commit('SET_CURRENT_TASK_ERROR', error);
+          if (currentTask) {
+            if (callbacks[currentTask.id] && callbacks[currentTask.id]['reject']) {
+              callbacks[currentTask.id]['reject'](error);
+            }
+          }
         },
       });
     },
@@ -75,14 +101,16 @@ const asyncTasksModule = {
     SET_ASYNC_TASKS(state, asyncTasks) {
       state.asyncTasks = asyncTasks || [];
     },
-    SET_RUNNING_TASKS(state, runningTasks) {
-      state.runningTasks = runningTasks || [];
+    SET_CURRENT_TASK_ERROR(state, error) {
+      state.currentTaskError = error;
     },
-    SET_TASK_FINISHED(state, task) {
-      state.finishedTasks.push(task);
-    },
-    SET_CURRENT_TASK(state, task) {
-      state.currentTaskID = task;
+    SET_CURRENT_TASK(state, payload) {
+      state.currentTask = payload.task;
+      let resolveCallback = payload.resolveCallback;
+      let rejectCallback = payload.rejectCallback;
+      if (payload.task && (resolveCallback || rejectCallback)) {
+        state.callbacks[payload.task.id] = { resolve: resolveCallback, reject: rejectCallback };
+      }
     },
   },
 };
