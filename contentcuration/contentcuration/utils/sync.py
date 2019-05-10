@@ -16,16 +16,16 @@ def sync_channel(channel, sync_attributes=False, sync_tags=False, sync_files=Fal
 
     with transaction.atomic():
         with ContentNode.objects.delay_mptt_updates():
-            logging.info("Syncing nodes for channel {} (id:{})".format(channel.name, channel.pk))
             for node in channel.main_tree.get_descendants():
                 node, parents = sync_node(node, channel.pk,
-                                           sync_attributes=sync_attributes,
-                                           sync_tags=sync_tags,
-                                           sync_files=sync_files,
-                                           sync_assessment_items=sync_assessment_items,
-                                           sync_sort_order=sync_sort_order,
-                                           )
+                                          sync_attributes=sync_attributes,
+                                          sync_tags=sync_tags,
+                                          sync_files=sync_files,
+                                          sync_assessment_items=sync_assessment_items,
+                                          sync_sort_order=sync_sort_order)
                 parents_to_check += parents
+                if node.changed:
+                    node.save()
                 all_nodes.append(node)
             # Avoid cases where sort order might have overlapped
             for parent in parents_to_check:
@@ -44,9 +44,9 @@ def sync_nodes(channel_id, node_ids, sync_attributes=True, sync_tags=True,
     with transaction.atomic(), ContentNode.objects.delay_mptt_updates():
         for n in node_ids:
             node, _ = sync_node(ContentNode.objects.get(pk=n), channel_id,
-                                 sync_attributes=sync_attributes, sync_tags=sync_tags,
-                                 sync_files=sync_files,
-                                 sync_assessment_items=sync_assessment_items)
+                                sync_attributes=sync_attributes, sync_tags=sync_tags,
+                                sync_files=sync_files,
+                                sync_assessment_items=sync_assessment_items)
             if node.changed:
                 node.save()
             all_nodes.append(node)
@@ -55,7 +55,7 @@ def sync_nodes(channel_id, node_ids, sync_attributes=True, sync_tags=True,
 
 
 def sync_node(node, channel_id, sync_attributes=False, sync_tags=False, sync_files=False,
-               sync_assessment_items=False, sync_sort_order=False):
+              sync_assessment_items=False, sync_sort_order=False):
     parents_to_check = []
     original_node = node.get_original_node()
     if original_node.node_id != node.node_id:  # Only update if node is not original
