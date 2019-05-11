@@ -681,7 +681,7 @@ var ContentNodeCollection = BaseCollection.extend({
         dataType: 'json',
         error: reject,
         success: function(data) {
-          resolve(State.Store.dispatch('startTask', data));
+          State.Store.dispatch('startTask', data, resolve, reject);
         },
       });
     });
