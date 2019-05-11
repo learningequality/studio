@@ -66,7 +66,7 @@ def duplicate_nodes_task(self, user_id, channel_id, target_parent, node_ids, sor
                 new_nodes.append(new_node.pk)
                 sort_order += 1
                 progress += progress_percent
-                self.update_state(state='STARTED', meta={'progress': max(100, progress)})
+                self.update_state(state='STARTED', meta={'progress': min(100, progress)})
 
     return ContentNodeSerializer(ContentNode.objects.filter(pk__in=new_nodes), many=True).data
 
@@ -82,9 +82,10 @@ def move_nodes_task(self, user_id, channel_id, target_parent, node_ids, min_orde
 
 
 @task(bind=True, name='sync_channel_task')
-def sync_channel_task(self, user_id, channel_id, node_ids, sync_attributes, sync_tags,
+def sync_channel_task(self, user_id, channel_id, sync_attributes, sync_tags,
                       sync_files, sync_assessment_items, sync_sort_order):
-    sync_channel(channel_id, node_ids, sync_attributes, sync_tags, sync_files,
+    channel = Channel.objects.get(pk=channel_id)
+    sync_channel(channel, sync_attributes, sync_tags, sync_files,
                  sync_tags, sync_sort_order, task_object=self)
 
 

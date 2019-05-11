@@ -622,8 +622,9 @@ var ContentNodeCollection = BaseCollection.extend({
         method: 'POST',
         url: window.Urls.duplicate_nodes(),
         data: JSON.stringify(data),
+        dataType: 'json',
         success: function(data) {
-          resolve(State.Store.dispatch('startTask', data));
+          State.Store.dispatch('startTask', data, resolve, reject);
         },
         error: reject,
       });
@@ -757,7 +758,7 @@ var ChannelModel = BaseModel.extend({
         data: JSON.stringify(data),
         dataType: 'json',
         success: function(data) {
-          resolve(State.Store.dispatch('startTask', data));
+          State.Store.dispatch('startTask', data, resolve, reject);
         },
         error: reject,
       });

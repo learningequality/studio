@@ -1,4 +1,4 @@
-const DEFAULT_CHECK_INTERVAL = 1000;
+const DEFAULT_CHECK_INTERVAL = 2000;
 
 let timerID = null;
 
@@ -8,6 +8,7 @@ const asyncTasksModule = {
     currentTaskError: null,
     currentTask: null,
     callbacks: {},
+    progressPercent: 0.0,
   },
   getters: {
     asyncTasks(state) {
@@ -22,6 +23,9 @@ const asyncTasksModule = {
     callbacks(state) {
       return state.callbacks;
     },
+    progressPercent(state) {
+      return state.progressPercent;
+    },
   },
   actions: {
     startTask(store, newTask, resolveCallback, rejectCallback) {
@@ -33,11 +37,21 @@ const asyncTasksModule = {
         resolveCallback: resolveCallback,
         rejectCallback: rejectCallback,
       };
+      store.commit('SET_PROGRESS', 0.0);
       store.commit('SET_CURRENT_TASK', payload);
       // force an immediate update in case the timer isn't already running
       store.dispatch('updateTaskList');
     },
 
+    deleteCurrentTask(store) {
+      const currentTask = store.getters.currentTask;
+      if (currentTask) {
+        $.ajax({
+          method: 'DELETE',
+          url: '/api/task/' + currentTask.id,
+        });
+      }
+    },
     updateTaskList(store) {
       if (!timerID) {
         timerID = setInterval(function() {
@@ -55,29 +69,34 @@ const asyncTasksModule = {
           if (data && data.length > 0) {
             for (let i = 0; i < data.length; i++) {
               const task = data[i];
-              if (task.status === 'SUCCESS' || task.status === 'FAILURE') {
-                if (currentTask && task.id === currentTask.id) {
-                  runningTask = currentTask;
-                  if (task.status === 'SUCCESS') {
-                    store.commit('SET_PROGRESS', 100.0);
+              // TODO: Figure out how to set currentTask upon page reload.
+              if (currentTask && task.id === currentTask.id) {
+                runningTask = task;
+              }
+              if (runningTask == task && (task.status === 'SUCCESS' || task.status === 'FAILURE')) {
+                if (task.status === 'SUCCESS') {
+                  store.commit('SET_PROGRESS', 100.0);
+                }
+                let callbacks = store.getters.callbacks;
+                if (callbacks && callbacks[task.id]) {
+                  let callback = callbacks[task.id]['resolve'];
+                  if (task.status === 'FAILURE') {
+                    callback = callbacks[task.id]['reject'];
                   }
-                  let callbacks = store.getters.callbacks;
-                  if (callbacks && callbacks[task.id]) {
-                    let callback = callbacks[task.id]['resolve'];
-                    if (task.status === 'FAILURE') {
-                      callback = callbacks[task.id]['reject'];
-                    }
-                    delete callbacks[task.id];
-                    if (callback) {
-                      callback();
-                    }
+                  delete callbacks[task.id];
+                  if (callback) {
+                    callback();
                   }
                 }
               }
             }
           }
 
-          if (runningTask && runningTask.metadata.progress) {
+          if (
+            runningTask &&
+            runningTask.metadata.progress &&
+            runningTask.metadata.progress >= 0.0
+          ) {
             store.commit('SET_PROGRESS', runningTask.metadata.progress);
           }
           store.commit('SET_ASYNC_TASKS', data);
@@ -106,11 +125,15 @@ const asyncTasksModule = {
     },
     SET_CURRENT_TASK(state, payload) {
       state.currentTask = payload.task;
+      state.progressPercent = 0.0;
       let resolveCallback = payload.resolveCallback;
       let rejectCallback = payload.rejectCallback;
       if (payload.task && (resolveCallback || rejectCallback)) {
         state.callbacks[payload.task.id] = { resolve: resolveCallback, reject: rejectCallback };
       }
+    },
+    SET_PROGRESS(state, percent) {
+      state.progressPercent = Math.min(100, percent);
     },
   },
 };

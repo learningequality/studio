@@ -87,16 +87,10 @@ var TempSyncModalView = BaseViews.BaseModalView.extend({
   },
   sync_content: function() {
     var self = this;
-    this.display_load(this.get_translation('syncing_content'), function(resolve, reject) {
-      State.current_channel
-        .sync_channel(self.selected_options)
-        .then(function(synced) {
-          self.onsync(synced);
-          self.close();
-          resolve(true);
-        })
-        .catch(reject);
+    State.current_channel.sync_channel(self.selected_options).then(function(synced) {
+      self.onsync(synced);
     });
+    this.close();
   },
   get_selected_options: function() {
     this.selected_options.details = this.$('#check_details').is(':checked');

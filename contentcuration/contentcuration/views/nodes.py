@@ -1,4 +1,3 @@
-import copy
 import json
 import logging
 from datetime import datetime
@@ -377,8 +376,8 @@ def move_nodes(request):
         task, task_info = create_async_task('move-nodes', task_info, task_args)
         return HttpResponse(JSONRenderer().render(TaskSerializer(task_info).data))
 
-    except KeyError as e:
-        raise ObjectDoesNotExist("Missing attribute from data: {}".format(e.message))
+    except KeyError:
+        raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
@@ -415,7 +414,7 @@ def sync_nodes(request):
             'sync_assessment_items': True,
         }
 
-        task, task_info = create_async_task('sync-nodes-task', task_info, task_args)
+        task, task_info = create_async_task('sync-nodes', task_info, task_args)
         return HttpResponse(JSONRenderer().render(TaskSerializer(task_info).data))
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
@@ -432,7 +431,6 @@ def sync_channel_endpoint(request):
     data = json.loads(request.body)
 
     try:
-        nodes = data["nodes"]
         channel_id = data['channel_id']
 
         task_info = {
@@ -454,7 +452,7 @@ def sync_channel_endpoint(request):
             'sync_sort_order': data.get('sort'),
         }
 
-        task, task_info = create_async_task('sync-channel-task', task_info, task_args)
+        task, task_info = create_async_task('sync-channel', task_info, task_args)
         return HttpResponse(JSONRenderer().render(TaskSerializer(task_info).data))
-    except KeyError as e:
+    except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))

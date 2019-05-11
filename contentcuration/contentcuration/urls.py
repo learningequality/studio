@@ -40,6 +40,7 @@ import contentcuration.views.public as public_views
 import contentcuration.views.settings as settings_views
 import contentcuration.views.users as registration_views
 import contentcuration.views.zip as zip_views
+from contentcuration.celery import app
 from contentcuration.forms import ForgotPasswordForm
 from contentcuration.forms import LoginForm
 from contentcuration.forms import ResetPasswordForm
@@ -205,6 +206,7 @@ class TaskViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         # TODO: Add logic to delete the Celery task using app.control.revoke(). This will require some extensive
         # testing to ensure terminating in-progress tasks will not put the db in an indeterminate state.
+        app.control.revoke(instance.task_id, terminate=True)
         instance.delete()
 
     def get_queryset(self):

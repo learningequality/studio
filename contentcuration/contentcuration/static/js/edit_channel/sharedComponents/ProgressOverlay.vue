@@ -142,7 +142,8 @@
         });
       },
       cancelTask() {
-        this.$refs.progressbar.cancelTask();
+        this.$store.dispatch('deleteCurrentTask');
+        this.closeOverlay();
       },
     },
   };
