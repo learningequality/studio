@@ -87,7 +87,7 @@ module.exports = [
     multi_language: false,
     id: 'document_thumbnail',
     kind_id: 'document',
-    order: 2,
+    order: 3,
     display: true,
   },
   {
