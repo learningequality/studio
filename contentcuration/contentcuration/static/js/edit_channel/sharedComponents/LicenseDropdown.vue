@@ -3,7 +3,7 @@
     <VLayout class="license-dropdown" row alignCenter>
       <VSelect
         ref="license"
-        v-model="selected"
+        :value="selectedID"
         :items="licenses"
         :label="$tr('licenseLabel')"
         color="primary"
@@ -11,9 +11,10 @@
         :itemText="translate"
         :disabled="disabled"
         :required="required"
-        :rules="rules.license"
+        :rules="required? rules.license : []"
+        :placeholder="placeholder"
         class="license-select"
-        @input="$emit('licensechanged', selected)"
+        @input="handleLicenseChange"
       />
       <InfoModal v-if="selectedLicense">
         <template v-slot:header>
@@ -40,15 +41,16 @@
     <VTextarea
       v-if="isCustom"
       ref="description"
-      v-model="description"
+      :value="licenseDescription"
       maxlength="400"
       counter="400"
       noResize
       :label="$tr('licenseDescriptionLabel')"
       :disabled="disabled"
-      required
-      :rules="rules.description"
-      @input="$emit('descriptionchanged', description)"
+      :placeholder="descriptionPlaceholder"
+      :required="descriptionRequired"
+      :rules="descriptionRequired? rules.description : []"
+      @input="handleDescriptionChange"
     />
   </div>
 </template>
@@ -85,14 +87,25 @@
         type: Number,
         required: false,
       },
+      placeholder: {
+        type: String,
+        default: '',
+      },
       licenseDescription: {
         type: String,
         required: false,
       },
+      descriptionPlaceholder: {
+        type: String,
+        default: '',
+      },
+      descriptionRequired: {
+        type: Boolean,
+        default: true,
+      },
     },
     data() {
       return {
-        selected: null,
         rules: {
           license: [v => !!v || this.$tr('licenseValidationMessage')],
           description: [v => !!v || this.$tr('descriptionValidationMessage')],
@@ -101,7 +114,7 @@
     },
     computed: {
       selectedLicense() {
-        return _.findWhere(Constants.Licenses, { id: this.selected });
+        return _.findWhere(Constants.Licenses, { id: this.selectedID });
       },
       isCustom() {
         return this.selectedLicense && this.selectedLicense.is_custom;
@@ -115,16 +128,18 @@
         return isCC ? licenseUrl + 'deed.' + window.languageCode : licenseUrl;
       },
     },
-    beforeMount() {
-      this.selected = this.selectedID;
-      this.description = this.licenseDescription;
-    },
     methods: {
       translate(item) {
         return translate(item.license_name);
       },
       translateDescription(item) {
         return translate(item.license_name + '_description');
+      },
+      handleLicenseChange(licenseID) {
+        this.$emit('licensechanged', licenseID);
+      },
+      handleDescriptionChange(description) {
+        this.$emit('descriptionchanged', description);
       },
     },
   };

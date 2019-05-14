@@ -1,8 +1,4 @@
-import _ from 'underscore';
-
-export function nodes(state) {
-  return state.nodes;
-}
+import { getSelected } from './utils';
 
 export function getNode(state) {
   return function(index) {
@@ -11,9 +7,17 @@ export function getNode(state) {
 }
 
 export function selected(state) {
-  return _.map(state.selectedIndices, index => {
-    return state.nodes[index];
-  });
+  return getSelected(state);
+}
+
+export function allExercises(state) {
+  let selected = getSelected(state);
+  return _.every(selected, { kind: 'exercise' });
+}
+
+export function allResources(state) {
+  let selected = getSelected(state);
+  return !_.some(selected, { kind: 'topic' });
 }
 
 // TODO: Remove this once hooked up to actual state

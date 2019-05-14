@@ -11,60 +11,85 @@
     <p v-if="!oneSelected" class="count-message">
       {{ countText }}
     </p>
-    <VForm ref="form" v-model="valid" lazyValidation>
+    <VForm ref="form" v-model="valid" lazyValidation @input="handleValidation">
       <!-- Language and import link -->
       <VLayout grid alignTop class="language-section" wrap>
-        <VFlex v-if="oneSelected" md4 sm12>
+        <VFlex v-if="oneSelected && isImported" md4 sm12>
           <VBtn color="primary" flat class="import-link" :href="importUrl" target="_blank">
             {{ $tr('importedFromButtonText', {channel: 'Sample Channel'}) }}
           </VBtn>
         </VFlex>
         <VSpacer />
         <VFlex md4 sm12>
-          <LanguageDropdown width="250" :hint="$tr('languageHelpText')" />
+          <LanguageDropdown
+            width="250"
+            :hint="languageHint"
+            :language="changes.language.value"
+            :placeholder="getPlaceholder('language')"
+            @changed="setLanguage"
+          />
         </VFlex>
 
         <!-- Title -->
         <VFlex xs12>
           <VTextField
             v-if="oneSelected"
-            :value="changes.title"
+            :value="changes.title.value"
             counter="200"
             maxlength="200"
             :rules="rules.title"
             :label="$tr('titleLabel')"
             autofocus
             required
-            lazy
+            @change="setTitle"
           />
         </VFlex>
 
 
         <!-- Visibility -->
         <VFlex sm12 md4>
-          <VisibilityDropdown :role="changes.role_visibility" />
+          <VisibilityDropdown
+            :role="changes.role_visibility.value"
+            :placeholder="getPlaceholder('role_visibility')"
+            :required="!changes.role_visibility.varied"
+            @changed="setVisibility"
+          />
         </VFlex>
         <VSpacer />
 
         <!-- Mastery -->
         <VFlex sm12 md6>
-          <MasteryDropdown v-if="allExercises" :mastery="changes.extra_fields" />
+          <MasteryDropdown
+            v-if="allExercises"
+            :masteryModel="changes.extra_fields.mastery_model.value"
+            :placeholder="getExtraFieldPlaceholder('mastery_model')"
+            :required="!changes.extra_fields.mastery_model.varied"
+            :mValue="changes.extra_fields.m.value"
+            :mPlaceholder="getExtraFieldPlaceholder('m')"
+            :mRequired="!changes.extra_fields.m.varied"
+            :nValue="changes.extra_fields.n.value"
+            :nPlaceholder="getExtraFieldPlaceholder('n')"
+            :nRequired="!changes.extra_fields.n.varied"
+            @changed="setExtraFields"
+          />
         </VFlex>
       </VLayout>
 
       <!-- Authoring Section -->
       <div v-if="allResources">
         <VDivider />
-        <VLayout row class="auth-section" wrap alignTop>
+        <VLayout row class="auth-section align-top" wrap>
           <!-- Author -->
           <VFlex md4 sm12 class="field-with-tooltip">
             <VCombobox
-              v-model="changes.author"
+              :value="changes.author.value"
               :items="authors"
               :label="$tr('authorLabel')"
               :disabled="disableAuthEdits"
               maxlength="200"
               autoSelectFirst
+              :placeholder="getPlaceholder('author')"
+              @change="setAuthor"
             />
             <HelpTooltip :text="$tr('authorToolTip')" />
           </VFlex>
@@ -72,12 +97,14 @@
           <!-- Provider -->
           <VFlex md4 sm12 class="field-with-tooltip">
             <VCombobox
-              v-model="changes.provider"
+              :value="changes.provider.value"
               :items="providers"
               :label="$tr('providerLabel')"
               :disabled="disableAuthEdits"
               maxlength="200"
+              :placeholder="getPlaceholder('provider')"
               autoSelectFirst
+              @change="setProvider"
             />
             <HelpTooltip :text="$tr('providerToolTip')" />
           </VFlex>
@@ -85,12 +112,14 @@
           <!-- Aggregator -->
           <VFlex md4 sm12 class="field-with-tooltip">
             <VCombobox
-              v-model="changes.aggregator"
+              :value="changes.aggregator.value"
               :items="aggregators"
               :label="$tr('aggregatorLabel')"
               :disabled="disableAuthEdits"
               maxlength="200"
               autoSelectFirst
+              :placeholder="getPlaceholder('aggregator')"
+              @change="setAggregator"
             />
             <HelpTooltip :text="$tr('aggregatorToolTip')" />
           </VFlex>
@@ -98,8 +127,13 @@
           <!-- License -->
           <VFlex md5 sm12>
             <LicenseDropdown
-              :selectedID="changes.license"
+              :selectedID="changes.license.value"
+              :licenseDescription="changes.license_description.value"
               :disabled="disableAuthEdits"
+              :required="!changes.license.varied"
+              :descriptionRequired="!changes.license_description.varied"
+              :placeholder="getPlaceholder('license')"
+              :descriptionPlaceholder="getPlaceholder('license_description')"
               @licensechanged="setLicense"
               @descriptionchanged="setLicenseDescription"
             />
@@ -110,14 +144,16 @@
           <VFlex md5 sm12>
             <VCombobox
               v-if="copyrightHolderRequired"
-              v-model="changes.copyright_holder"
+              :value="changes.copyright_holder.value"
               :items="copyrightHolders"
               :label="$tr('copyrightHolderLabel')"
               :disabled="disableAuthEdits"
               maxlength="200"
-              required
-              :rules="rules.copyrightHolder"
+              :required="!changes.copyright_holder.varied"
+              :rules="changes.copyright_holder.varied? [] : rules.copyrightHolder"
+              :placeholder="getPlaceholder('copyright_holder')"
               autoSelectFirst
+              @input="setCopyrightHolder"
             />
           </VFlex>
         </VLayout>
@@ -126,72 +162,43 @@
 
       <!-- Description -->
       <VTextarea
-        v-model="changes.description"
+        :value="changes.description.value"
+        :placeholder="getPlaceholder('description')"
         :label="$tr('descriptionLabel')"
         counter="400"
         noResize
+        @change="setDescription"
       />
 
       <!-- Tags -->
+      <!--  TODO: partially type a tag and select another node; clear when select from list -->
       <VCombobox
-        v-model="changes.tags"
+        :value="changes.tags"
         :items="tags"
         chips
-        color="primary"
         :label="$tr('tagsLabel')"
         multiple
+        deletableChips
         hideSelected
         class="tags-field"
         maxlength="30"
         autoSelectFirst
-      >
-        <template v-slot:selection="data">
-          <VChip
-            :selected="data.selected"
-            close
-            @input="removeTag(data.item)"
-          >
-            {{ data.item }}
-          </VChip>
-        </template>
-      </VCombobox>
+        @input="setTags"
+      />
     </VForm>
   </div>
 </template>
 
-<!--
-  TODOS:
-    Use placeholder to show some items already have author/aggregator/provider fields
-    Add license info modal link
-    Assign license and language
-    Add license and mastery validation
-    Handle shared data
- -->
-
 <script>
 
   import _ from 'underscore';
-  import { mapGetters, mapState } from 'vuex';
+  import { mapGetters, mapMutations, mapState } from 'vuex';
   import Constants from 'edit_channel/constants';
   import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown.vue';
   import HelpTooltip from 'edit_channel/sharedComponents/HelpTooltip.vue';
   import LicenseDropdown from 'edit_channel/sharedComponents/LicenseDropdown.vue';
   import MasteryDropdown from 'edit_channel/sharedComponents/MasteryDropdown.vue';
   import VisibilityDropdown from 'edit_channel/sharedComponents/VisibilityDropdown.vue';
-
-  const editableFields = [
-    'title',
-    'description',
-    'license',
-    'changed',
-    'copyright_holder',
-    'author',
-    'extra_fields',
-    'prerequisite',
-    'role_visibility',
-    'aggregator',
-    'provider',
-  ];
 
   export default {
     name: 'DetailsEditView',
@@ -201,6 +208,7 @@
       titleLabel: 'Title *',
       titleValidationMessage: 'Title is required',
       languageHelpText: 'Leave blank to default to topic language',
+      languageChannelHelpText: 'Leave blank to default to channel language',
       importedFromButtonText: 'Imported from {channel}',
       detectedImportText: 'READ-ONLY: content has been imported with view-only permission',
       authorLabel: 'Author',
@@ -215,7 +223,8 @@
       descriptionLabel: 'Description',
       descriptionValidationMessage:
         'Too long - recommend removing {data, plural,\n =1 {# character}\n other {# characters}}',
-      tagsLabel: 'Tags',
+      tagsLabel: "Tags (press 'Enter' to add)",
+      variedFieldPlaceholder: '---',
     },
     components: {
       LanguageDropdown,
@@ -234,7 +243,7 @@
       };
     },
     computed: {
-      ...mapState('edit_modal', ['viewOnly']),
+      ...mapState('edit_modal', ['viewOnly', 'changes']),
       ...mapGetters('edit_modal', [
         'selected',
         'authors',
@@ -242,25 +251,9 @@
         'aggregators',
         'copyrightHolders',
         'tags',
+        'allExercises',
+        'allResources',
       ]),
-      changes() {
-        let data = _.reduce(
-          editableFields,
-          (shardData, field) => {
-            let fields = _.pluck(this.selected, field);
-            if (
-              _.every(fields, f => {
-                return f === fields[0];
-              })
-            )
-              shardData[field] = fields[0];
-            return shardData;
-          },
-          {}
-        );
-        data.tags = _.intersection.apply(_, _.pluck(this.selected, 'tags'));
-        return data;
-      },
       countText() {
         let messageArgs = { count: this.selected.length };
         return this.viewOnly
@@ -273,17 +266,22 @@
       oneSelected() {
         return this.selected.length === 1;
       },
-      allResources() {
-        return !_.some(this.selected, { kind: 'topic' });
-      },
-      allExercises() {
-        return _.every(this.selected, { kind: 'exercise' });
+      languageHint() {
+        let topLevel = !_.some(this.selected, item => item.ancestors.length > 1);
+        return topLevel ? this.$tr('languageChannelHelpText') : this.$tr('languageHelpText');
       },
       copyrightHolderRequired() {
-        return _.findWhere(Constants.Licenses, {
-          id: this.changes.license,
-          copyright_holder_required: true,
+        // Needs to appear when any of the selected licenses require a copyright holder
+        return _.some(this.selected, node => {
+          return !!_.findWhere(Constants.Licenses, {
+            id: node.license,
+            copyright_holder_required: true,
+          });
         });
+      },
+      isImported() {
+        let selected = this.selected[0];
+        return selected.node_id !== selected.original_source_node_id;
       },
       importUrl() {
         let selected = this.selected[0];
@@ -292,22 +290,36 @@
       },
     },
     methods: {
+      ...mapMutations('edit_modal', {
+        setValid: 'SET_VALID',
+        setTitle: 'SET_TITLE',
+        setDescription: 'SET_DESCRIPTION',
+        setLicense: 'SET_LICENSE',
+        setLicenseDescription: 'SET_LICENSE_DESCRIPTION',
+        setCopyrightHolder: 'SET_COPYRIGHT_HOLDER',
+        setLanguage: 'SET_LANGUAGE',
+        setExtraFields: 'SET_EXTRA_FIELDS',
+        setAuthor: 'SET_AUTHOR',
+        setProvider: 'SET_PROVIDER',
+        setAggregator: 'SET_AGGREGATOR',
+        setVisibility: 'SET_VISIBILITY',
+        setTags: 'SET_TAGS',
+        removeTag: 'REMOVE_TAG',
+      }),
       validate() {
         if (this.$refs.form.validate()) {
           this.snackbar = true;
         }
         // TODO: set error message
       },
-      setLicense(licenseID) {
-        this.changes.license = licenseID;
+      handleValidation(isValid) {
+        this.setValid(isValid);
       },
-      setLicenseDescription(description) {
-        this.changes.license_description = description;
+      getPlaceholder(field) {
+        return this.changes[field].varied ? this.$tr('variedFieldPlaceholder') : null;
       },
-      removeTag(item) {
-        this.changes.tags = _.reject(this.changes.tags, tag => {
-          return tag === item;
-        });
+      getExtraFieldPlaceholder(field) {
+        return this.changes.extra_fields[field].varied ? this.$tr('variedFieldPlaceholder') : null;
       },
     },
   };

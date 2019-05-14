@@ -2,15 +2,16 @@
   <VLayout grid wrap class="align-center">
     <VFlex xs10>
       <VSelect
-        v-model="masteryData.mastery_model"
+        :value="masteryModel"
         :items="masteryCriteria"
         :label="$tr('labelText')"
         color="primary"
         :itemText="translate"
+        :placeholder="placeholder"
         itemValue="id"
         :required="required"
-        :rules="rules.mastery"
-        @input="handleInput"
+        :rules="required? rules.mastery : []"
+        @input="updateMastery"
       />
     </VFlex>
     <VFlex xs2>
@@ -41,30 +42,37 @@
         </template>
       </InfoModal>
     </VFlex>
-    <VLayout v-if="showMofN" class="align-center">
-      <VFlex xs3>
+    <VLayout v-if="showMofN" alignTop>
+      <VFlex xs5>
         <VTextField
-          v-model="masteryData.m"
+          :value="mValue"
           type="number"
           min="1"
-          :max="masteryData.n"
-          :required="required"
-          :rules="rules.mValue"
-          @input="handleInput"
+          :max="nValue"
+          :required="mRequired"
+          :placeholder="mPlaceholder"
+          :rules="mRequired? rules.mValue : []"
+          :hint="$tr('mHint')"
+          persistentHint
+          @input="updateMValue"
         />
       </VFlex>
-      <VFlex xs2 justifyCenter>
-        {{ $tr('ofText') }}
+      <VSpacer />
+      <VFlex xs2 justifyCenter class="out-of">
+        /
       </VFlex>
-      <VFlex xs3>
+      <VFlex xs5>
         <VTextField
-          v-model="masteryData.n"
+          :value="nValue"
           type="number"
           min="1"
           max="20"
-          :required="required"
-          :rules="rules.nValue"
-          @input="updateMValue"
+          :hint="$tr('nHint')"
+          persistentHint
+          :required="nRequired"
+          :placeholder="nPlaceholder"
+          :rules="nRequired? rules.nValue : []"
+          @input="updateNValue"
         />
       </VFlex>
     </VLayout>
@@ -103,33 +111,58 @@
       mnValueValidationMessage: 'Must be at least 1',
       mValueValidationMessage: 'Must be lesser than or equal to N',
       requiredValidationMessage: 'Required',
+      mHint: 'Correct answers needed',
+      nHint: 'Recent answers',
     },
     components: {
       InfoModal,
     },
     props: {
-      mastery: {
+      masteryModel: {
         type: String,
-        default: 'num_5_in_a_row',
+        required: false,
         validator: function(value) {
-          let data = JSON.parse(value);
-          return !value || _.contains(Constants.MasteryModels, data.mastery_model);
+          return !value || _.contains(Constants.MasteryModels, value);
         },
+      },
+      placeholder: {
+        type: String,
       },
       required: {
         type: Boolean,
         default: true,
       },
+      mValue: {
+        type: Number,
+        required: false,
+      },
+      mRequired: {
+        type: Boolean,
+        default: true,
+      },
+      mPlaceholder: {
+        type: String,
+      },
+      nValue: {
+        type: Number,
+        required: false,
+      },
+      nRequired: {
+        type: Boolean,
+        default: true,
+      },
+      nPlaceholder: {
+        type: String,
+      },
     },
     data() {
       return {
-        masteryData: JSON.parse(this.mastery),
         rules: {
           mastery: [v => !!v || this.$tr('masteryValidationMessage')],
           mValue: [
             v => !!v || this.$tr('requiredValidationMessage'),
             v => v > 0 || this.$tr('mnValueValidationMessage'),
-            v => v <= this.masteryData.n || this.$tr('mValueValidationMessage'),
+            v => v <= this.nValue || this.$tr('mValueValidationMessage'),
           ],
           nValue: [
             v => !!v || this.$tr('requiredValidationMessage'),
@@ -143,7 +176,7 @@
         return masteryMap;
       },
       showMofN() {
-        return this.masteryData.mastery_model === 'm_of_n';
+        return this.masteryModel === 'm_of_n';
       },
     },
     methods: {
@@ -151,13 +184,27 @@
         return translate(item.id || item);
       },
       updateMValue(value) {
-        if (value < this.masteryData.m) {
-          this.masteryData.m = value;
-        }
-        this.handleInput();
+        value = Number(value);
+        this.handleInput({ m: value });
       },
-      handleInput() {
-        this.$emit('changed', this.masteryData);
+      updateNValue(value) {
+        value = Number(value);
+        if (value < this.mValue) {
+          this.updateMValue(value);
+        }
+        this.handleInput({ n: value });
+      },
+      updateMastery(value) {
+        this.handleInput({ mastery_model: value });
+      },
+      handleInput(newValue) {
+        let data = {
+          mastery_model: this.masteryModel,
+          m: this.mValue,
+          n: this.nValue,
+          ...newValue,
+        };
+        this.$emit('changed', data);
       },
     },
   };
@@ -176,6 +223,12 @@
 
   .mastery-field {
     width: 50px;
+  }
+
+  .out-of {
+    margin-top: 20px;
+    font-size: 16pt;
+    color: @gray-500;
   }
 
   .mastery-table {

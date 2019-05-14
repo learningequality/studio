@@ -7,27 +7,27 @@
         </VBtn>
       </template>
       <VCard>
-        <EditList ref="editlist" />
+        <EditList ref="editlist" :mode="mode" />
         <VToolbar dark color="primary" fixed clippedLeft app>
           <VBtn icon dark app @click="closeModal">
             <VIcon>close</VIcon>
           </VBtn>
-          <VToolbarTitle>{{ headerText }}</VToolbarTitle>
+          <VToolbarTitle>{{ $tr(mode) }}</VToolbarTitle>
           <VSpacer />
           <VToolbarItems>
-            <VBtn v-if="!viewOnly" dark flat @click="saveContent">
+            <VBtn v-if="!isViewOnly" dark flat @click="saveContent">
               {{ $tr('saveButtonText') }}
             </VBtn>
-            <VBtn v-if="!viewOnly" dark flat @click="saveContent">
+            <VBtn v-if="!isViewOnly" dark flat @click="saveContent">
               {{ $tr('saveAndCloseButtonText') }}
             </VBtn>
-            <VBtn v-if="viewOnly" dark flat @click="copyContent">
+            <VBtn v-if="isViewOnly" dark flat @click="copyContent">
               {{ $tr('copyButtonText') }}
             </VBtn>
           </VToolbarItems>
         </VToolbar>
 
-        <EditView />
+        <EditView :mode="mode" />
       </VCard>
     </VDialog>
   </div>
@@ -35,18 +35,18 @@
 
 <script>
 
-  import { mapState } from 'vuex';
+  import { modes } from '../constants';
   import EditList from './EditList.vue';
   import EditView from './EditView.vue';
 
   export default {
     name: 'EditModal',
     $trs: {
-      editingHeader: 'Editing Content Details',
-      viewingHeader: 'Viewing Content Details',
-      newTopicHeader: 'Adding Topics',
-      newExerciseHeader: 'Adding Exercises',
-      uploadingFilesHeader: 'Uploading Files',
+      [modes.EDIT]: 'Editing Content Details',
+      [modes.VIEW_ONLY]: 'Viewing Content Details',
+      [modes.NEW_TOPIC]: 'Adding Topics',
+      [modes.NEW_EXERCISE]: 'Adding Exercises',
+      [modes.UPLOAD]: 'Uploading Files',
       saveButtonText: 'Save',
       saveAndCloseButtonText: 'Save & Close',
       copyButtonText: 'Copy',
@@ -56,17 +56,9 @@
       EditView,
     },
     props: {
-      newTopic: {
-        type: Boolean,
-        default: false,
-      },
-      newExercise: {
-        type: Boolean,
-        default: false,
-      },
-      uploadingFiles: {
-        type: Boolean,
-        default: false,
+      mode: {
+        type: String,
+        default: modes.NEW_EXERCISE,
       },
     },
     data() {
@@ -75,14 +67,8 @@
       };
     },
     computed: {
-      ...mapState('edit_modal', ['viewOnly']),
-      headerText() {
-        if (this.viewOnly) return this.$tr('viewingHeader');
-        else if (this.editingMode) return this.$tr('editingHeader');
-        else if (this.newTopic) return this.$tr('newTopicHeader');
-        else if (this.newExercise) return this.$tr('newExerciseHeader');
-        else if (this.uploadingFiles) return this.$tr('uploadingFilesHeader');
-        return this.$tr('editingHeader');
+      isViewOnly() {
+        return this.mode === modes.VIEW_ONLY;
       },
     },
     watch: {
@@ -90,9 +76,7 @@
         // Temporary workaround while waiting for Vuetify bug
         // to be fixed https://github.com/vuetifyjs/vuetify/issues/5617
         if (val) {
-          setTimeout(() => {
-            this.$refs.editlist.openDrawer();
-          }, 300);
+          setTimeout(this.$refs.editlist.openDrawer, 300);
         }
       },
     },
@@ -110,7 +94,9 @@
         this.dialog = false;
         this.$emit('modalclosed');
       },
-      copyContent() {},
+      copyContent() {
+        this.closeModal();
+      },
     },
   };
 
@@ -118,6 +104,17 @@
 
 <style lang="less">
 
-@import '../../../../less/edit-modal.less';
+@import '../../../../less/global-variables.less';
 
+.edit-modal-wrapper {
+  * {
+    font-family: @font-family;
+    &.v-icon {
+      .material-icons;
+    }
+  }
+  a {
+    .linked-list-item;
+  }
+}
 </style>

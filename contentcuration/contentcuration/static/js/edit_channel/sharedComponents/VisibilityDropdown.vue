@@ -2,11 +2,14 @@
   <VLayout grid wrap alignCenter>
     <VFlex xs10>
       <VSelect
-        v-model="selected"
+        :value="role"
         :items="roles"
         :label="$tr('labelText')"
+        :placeholder="placeholder"
         color="primary"
         itemValue="id"
+        :required="required"
+        :rules="required? rules : []"
         @input="handleInput"
       >
         <template v-slot:selection="{ item, index }">
@@ -77,6 +80,7 @@
       coach:
         'This is support content and is visible only to coaches (teachers, facilitators, administrators)',
       learner: 'This content is visible to anyone',
+      visibilityRequired: 'Visibility is required',
     },
     components: {
       InfoModal,
@@ -89,10 +93,18 @@
           return !value || _.contains(Constants.Roles, value);
         },
       },
+      placeholder: {
+        type: String,
+        required: false,
+      },
+      required: {
+        type: Boolean,
+        default: false,
+      },
     },
     data() {
       return {
-        selected: this.role,
+        rules: [v => !!v || this.$tr('visibilityRequired')],
       };
     },
     computed: {

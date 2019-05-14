@@ -1,6 +1,6 @@
 <template>
   <VAutocomplete
-    v-model="selected"
+    :value="language"
     :items="languages"
     :label="$tr('labelText')"
     color="primary"
@@ -11,6 +11,7 @@
     :allowOverflow="false"
     :hint="hint"
     persistentHint
+    :placeholder="placeholder"
     @input="selectedLanguage"
   />
 </template>
@@ -39,11 +40,10 @@
         type: String,
         required: false,
       },
-    },
-    data() {
-      return {
-        selected: '',
-      };
+      placeholder: {
+        type: String,
+        default: '',
+      },
     },
     computed: {
       languages() {
@@ -51,9 +51,6 @@
           .sortBy('native_name')
           .value();
       },
-    },
-    mounted() {
-      this.selected = this.language;
     },
     methods: {
       selectedLanguage(languageCode) {

@@ -4,3 +4,11 @@ export const TabNames = {
   QUESTIONS: 'QUESTIONS',
   PREREQUISITES: 'PREREQUISITES',
 };
+
+export const modes = {
+  EDIT: 'EDIT',
+  NEW_TOPIC: 'NEW_TOPIC',
+  NEW_EXERCISE: 'NEW_EXERCISE',
+  UPLOAD: 'UPLOAD',
+  VIEW_ONLY: 'VIEW_ONLY',
+};

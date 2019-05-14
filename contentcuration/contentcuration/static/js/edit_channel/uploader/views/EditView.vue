@@ -4,13 +4,16 @@
       <VLayout v-if="selected.length" justifyCenter>
         <VFlex grow>
           <VTabs fixedTabs sliderColor="primary">
-            <VTab v-for="(component, key) in tabs" :key="key" @click="currentTab=key">
+            <VTab v-for="(item, key) in tabs" :key="key" @click="currentTab=key">
               {{ $tr(key) }}
+              <VChip v-if="item.count" color="gray" dark class="tab-count">
+                {{ item.count }}
+              </VChip>
             </VTab>
           </VTabs>
 
           <!-- Not using v-tab-items as it loads everything into page at once -->
-          <component :is="tabContent" />
+          <component :is="tabs[currentTab].component" v-if="currentTab" />
         </VFlex>
       </VLayout>
       <VLayout v-else justifyCenter alignCenter fillHeight>
@@ -24,9 +27,8 @@
 
 <script>
 
-  import _ from 'underscore';
   import { mapGetters, mapState } from 'vuex';
-  import { TabNames } from '../constants';
+  import { TabNames, modes } from '../constants';
   import DetailsEditView from './DetailsEditView.vue';
   import DetailsViewOnlyView from './DetailsViewOnlyView.vue';
 
@@ -44,26 +46,32 @@
       DetailsEditView, // eslint-disable-line vue/no-unused-components
       DetailsViewOnlyView, // eslint-disable-line vue/no-unused-components
     },
+    props: {
+      mode: {
+        type: String,
+        default: modes.VIEW_ONLY,
+      },
+    },
     data() {
       return {
         currentTab: null,
       };
     },
     computed: {
-      ...mapGetters('edit_modal', ['selected']),
+      ...mapGetters('edit_modal', ['selected', 'allExercises', 'allResources']),
       ...mapState('edit_modal', ['viewOnly', 'isClipboard']),
       noItemText() {
-        return this.viewOnly ? this.$tr('noItemsToViewText') : this.$tr('noItemsToEditText');
+        return this.mode === modes.VIEW_ONLY
+          ? this.$tr('noItemsToViewText')
+          : this.$tr('noItemsToEditText');
       },
       tabs() {
-        // TODO: Add counts
-
         let map = {
           [TabNames.DETAILS]: { component: 'DetailsEditView' },
         };
 
         // Set detail view to view only mode
-        if (this.viewOnly) {
+        if (this.mode === modes.VIEW_ONLY) {
           map[TabNames.DETAILS] = { component: 'DetailsViewOnlyView' };
         }
 
@@ -75,27 +83,20 @@
           if (this.selected[0].kind === 'exercise') {
             map[TabNames.QUESTIONS] = {
               component: 'DetailsViewOnlyView',
-              // badge: this.selected[0].questions.length
+              count: this.selected[0].assessment_items.length,
             };
           }
 
-          // Only show prerequisites if not editing clipboard item
-          if (!this.isClipboard) {
+          // Only show prerequisites if not editing a topic or clipboard item
+          if (!this.isClipboard && this.allResources) {
             map[TabNames.PREREQUISITES] = {
               component: 'DetailsViewOnlyView',
-              // badge: this.selected[0].prerequisite.length
+              count: this.selected[0].prerequisite.length,
             };
           }
         }
 
         return map;
-      },
-      tabContent() {
-        let slot = this.tabs[this.currentTab];
-        return slot && slot.component;
-      },
-      allExercises() {
-        return _.every(this.selected, { kind: 'exercise' });
       },
     },
     mounted() {
@@ -114,6 +115,11 @@
 
 /deep/ .v-tabs__item {
   font-weight: bold;
+}
+
+.tab-count {
+  height: 20px;
+  margin-left: 10px;
 }
 
 </style>

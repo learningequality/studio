@@ -14,8 +14,11 @@ const store = new Vuex.Store({
       state: {
         nodes: [],
         selectedIndices: [],
-        viewOnly: false,
         isClipboard: false,
+        changes: {},
+        changed: false,
+        targetNode: { parent_title: 'Sandbox' },
+        isValid: true,
       },
       getters: getters,
       mutations: mutations,
