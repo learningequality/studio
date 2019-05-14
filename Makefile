@@ -11,6 +11,10 @@ dummyusers:
 prodceleryworkers:
 	cd contentcuration && celery -A contentcuration worker -l info
 
+prodcelerydashboard:
+	# connect to the celery dashboard by visiting http://localhost:5555
+	kubectl port-forward deployment/master-studio-celery-dashboard 5555
+
 devserver:
 	yarn run devserver
 
@@ -60,13 +64,22 @@ docs: clean-docs
 	# sphinx-apidoc -d 10 -H "Python Reference" -o docs/py_modules/ kolibri kolibri/test kolibri/deployment/ kolibri/dist/
 	$(MAKE) -C docs html
 
+setup:
+	python contentcuration/manage.py setup
+
+export COMPOSE_PROJECT_NAME=studio_$(shell git rev-parse --abbrev-ref HEAD)
+
 
 dcbuild:
-	# bild all studio docker image and all dependent services using docker-compose
+	# build all studio docker image and all dependent services using docker-compose
 	docker-compose build
 
 dcup:
-	# run make deverver in foreground with all dependent services using docker-compose
+	# run all services except for cloudprober
+	docker-compose up studio-app celery-worker
+
+dcup-cloudprober:
+	# run all services including cloudprober
 	docker-compose up
 
 dcdown:
@@ -78,11 +91,11 @@ dcclean:
 	docker-compose down -v
 	docker image prune -f
 
+export COMPOSE_STUDIO_APP = ${COMPOSE_PROJECT_NAME}_studio-app_1
 dcshell:
 	# bash shell inside studio-app container
-	docker exec -ti studio_studio-app_1 /usr/bin/fish
+	docker exec -ti ${COMPOSE_STUDIO_APP} /usr/bin/fish 
 
 dctest: endtoendtest
 	# launch all studio's dependent services using docker-compose, and then run the tests
 	echo "Finished running  make test -e DJANGO_SETTINGS_MODULE=contentcuration.test_settings"
-
