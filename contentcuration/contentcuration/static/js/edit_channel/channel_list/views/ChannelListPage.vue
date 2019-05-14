@@ -121,6 +121,7 @@
   #manage-channel-nav {
     .channel-list-width;
 
+    padding-bottom: 5px;
     margin-top: 50px;
     margin-bottom: 10px;
     list-style-type: none;

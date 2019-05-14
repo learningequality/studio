@@ -106,6 +106,7 @@ export const ThumbnailUploadView = BaseViews.BaseView.extend({
             show_generate: this.model.get('kind') != undefined,
             not_default: thumbnail_src != this.default_url,
             cropping: this.cropping,
+            ratio: this.aspect_ratio,
           },
           {
             data: this.get_intl_data(),
