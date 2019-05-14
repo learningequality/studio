@@ -84,7 +84,7 @@ describe('channelEditor', () => {
       let nameInput = wrapper.find('.channel-name');
       nameInput.element.value = newName;
       nameInput.trigger('input');
-      nameInput.trigger('blur');
+      nameInput.trigger('change');
       expect(wrapper.vm.changed).toBe(true);
       expect(wrapper.vm.channel.name).toEqual(newName);
     });
@@ -93,7 +93,7 @@ describe('channelEditor', () => {
       let descriptionInput = wrapper.find('.channel-description');
       descriptionInput.element.value = newDescription;
       descriptionInput.trigger('input');
-      descriptionInput.trigger('blur');
+      descriptionInput.trigger('change');
       expect(wrapper.vm.changed).toBe(true);
       expect(wrapper.vm.channel.description).toEqual(newDescription);
     });
@@ -102,7 +102,7 @@ describe('channelEditor', () => {
       let languageDropdown = wrapper.find('#select-language');
       languageDropdown.element.value = newLanguage;
       languageDropdown.trigger('input');
-      languageDropdown.trigger('blur');
+      languageDropdown.trigger('change');
       expect(wrapper.vm.changed).toBe(true);
       expect(wrapper.vm.channel.language).toEqual(newLanguage);
     });
@@ -112,7 +112,7 @@ describe('channelEditor', () => {
     let nameInput = wrapper.find('.channel-name');
     nameInput.element.value = 'new channel name';
     nameInput.trigger('input');
-    nameInput.trigger('blur');
+    nameInput.trigger('change');
 
     // Cancel changes
     wrapper.find('.cancel-edits').trigger('click');
