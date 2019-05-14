@@ -49,7 +49,7 @@ function recursiveIssuer(m) {
 module.exports = {
   context: bundleEntryDir,
   entry: {
-    base: './base.js',
+    base: ['@babel/polyfill', './base.js'],
     channel_edit: './channel_edit.js',
     administration: './administration.js',
     settings: './settings.js',
