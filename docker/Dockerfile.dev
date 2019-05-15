@@ -20,7 +20,7 @@ RUN curl -L -o wkhtmltox.deb https://github.com/wkhtmltopdf/wkhtmltopdf/releases
 
 # Download then install node
 RUN curl -sL https://deb.nodesource.com/setup_10.x | bash - &&\
-    apt install -y nodejs
+    apt-get install -y nodejs
 ################################################################################
 
 
