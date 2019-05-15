@@ -7,15 +7,18 @@
           <ChannelInvitationList @setActiveList="setActiveList" />
 
           <ul id="manage-channel-nav">
-            <li
+            <router-link
               v-for="listType in lists"
               :key="listType.id"
-              :class="{active: activeList === listType}"
-              @click="activeList = listType"
+              :to="getLink(listType)"
+              activeClass="active"
+              exact
             >
-              <span v-if="listType === 'STARRED'"></span>
-              {{ $tr(listType) }}
-            </li>
+              <li>
+                <span v-if="listType === 'STARRED'"></span>
+                {{ $tr(listType) }}
+              </li>
+            </router-link>
           </ul>
           <div
             v-for="listType in lists"
@@ -52,23 +55,6 @@
   import ChannelInvitationList from './ChannelInvitationList.vue';
   import ChannelDetailsPanel from './ChannelDetailsPanel.vue';
 
-  // TODO: Move this logic to a vue router
-  let defaultListType = ListTypes.EDITABLE;
-  switch (window.location.hash.substr(1)) {
-    case 'starred':
-      defaultListType = ListTypes.STARRED;
-      break;
-    case 'viewonly':
-      defaultListType = ListTypes.VIEW_ONLY;
-      break;
-    case 'public':
-      defaultListType = ListTypes.PUBLIC;
-      break;
-    case 'collection':
-      defaultListType = ListTypes.CHANNEL_SETS;
-      break;
-  }
-
   export default {
     name: 'ChannelListPage',
     $trs: {
@@ -84,10 +70,11 @@
       ChannelInvitationList,
       ChannelDetailsPanel,
     },
-    data() {
-      return {
-        activeList: defaultListType,
-      };
+    props: {
+      activeList: {
+        type: String,
+        required: true,
+      },
     },
     computed: {
       ...mapState('channel_list', ['activeChannel']),
@@ -99,6 +86,16 @@
       setActiveList(listType) {
         this.activeList = listType;
       },
+      getLink(listType) {
+        const name = {
+          EDITABLE: 'ChannelList',
+          STARRED: 'ChannelList/Starred',
+          VIEW_ONLY: 'ChannelList/ViewOnly',
+          PUBLIC: 'ChannelList/Public',
+          CHANNEL_SETS: 'ChannelList/Collections',
+        }[listType];
+        return { name };
+      }
     },
   };
 
@@ -119,6 +116,10 @@
     }
   }
   #manage-channel-nav {
+    .active li {
+      font-weight: bold;
+      border-color: @blue-500;
+    }
     .channel-list-width;
 
     padding-bottom: 5px;
@@ -130,14 +131,10 @@
       padding: 10px 25px;
       font-size: 14pt;
       color: @body-font-color;
-      cursor: pointer;
+      // cursor: pointer;
       border-bottom: 3px solid transparent;
       &:hover {
         border-color: @gray-300;
-      }
-      &.active {
-        font-weight: bold;
-        border-color: @blue-500;
       }
       span::before {
         .material-icons;

@@ -1,7 +1,3 @@
-import Vue from 'vue';
-
-import ChannelListPage from 'edit_channel/channel_list/views/ChannelListPage.vue';
-
 var _ = require('underscore');
 var Backbone = require('backbone');
 var State = require('./state');
@@ -11,26 +7,14 @@ var URL_CHAR_LIMIT = 7;
 
 var ChannelEditRouter = Backbone.Router.extend({
   initialize: function() {
-    _.bindAll(this, 'navigate_channel_home', 'preview_page', 'edit_page', 'clipboard_page');
+    _.bindAll(this, 'preview_page', 'edit_page', 'clipboard_page');
   },
 
   routes: {
-    '': 'navigate_channel_home',
     ':channel/edit(/:topic)(/:node)': 'edit_page',
     ':channel/staging(/:topic)(/:node)': 'staging_page',
     ':channel/view(/:topic)(/:node)': 'preview_page',
     ':channel/clipboard(/:topic)(/:node)': 'clipboard_page',
-  },
-
-  navigate_channel_home: function() {
-    var store = require('edit_channel/channel_list/vuex/store');
-    State.setChannelListState();
-
-    new Vue({
-      el: '#channel-container',
-      store,
-      ...ChannelListPage,
-    });
   },
 
   edit_page: function(channel, topic, node) {
