@@ -320,7 +320,7 @@
       }),
       validate() {
         if (this.$refs.form.validate()) {
-          this.snackbar = true;
+          // this.snackbar = true;
         }
         // TODO: set error message
       },
