@@ -171,10 +171,11 @@
       />
 
       <!-- Tags -->
-      <!--  TODO: partially type a tag and select another node; clear when select from list -->
       <VCombobox
+        ref="tagbox"
         :value="changes.tags"
         :items="tags"
+        :searchInput.sync="tagText"
         chips
         :label="$tr('tagsLabel')"
         multiple
@@ -183,8 +184,18 @@
         class="tags-field"
         maxlength="30"
         autoSelectFirst
-        @input="setTags"
-      />
+        @change="handleTags"
+      >
+        <template v-slot:no-data>
+          <VListTile v-if="tagText && tagText.trim()">
+            <VListTileContent>
+              <VListTileTitle>
+                {{ $tr('noTagsFoundText', {text: tagText.trim()}) }}
+              </VListTileTitle>
+            </VListTileContent>
+          </VListTile>
+        </template>
+      </VCombobox>
     </VForm>
   </div>
 </template>
@@ -223,8 +234,9 @@
       descriptionLabel: 'Description',
       descriptionValidationMessage:
         'Too long - recommend removing {data, plural,\n =1 {# character}\n other {# characters}}',
-      tagsLabel: "Tags (press 'Enter' to add)",
+      tagsLabel: 'Tags',
       variedFieldPlaceholder: '---',
+      noTagsFoundText: 'No results matching "{text}". Press \'enter\'to create a new tag',
     },
     components: {
       LanguageDropdown,
@@ -235,6 +247,7 @@
     },
     data() {
       return {
+        tagText: null,
         valid: true,
         rules: {
           title: [v => !!v || this.$tr('titleValidationMessage')],
@@ -304,7 +317,6 @@
         setAggregator: 'SET_AGGREGATOR',
         setVisibility: 'SET_VISIBILITY',
         setTags: 'SET_TAGS',
-        removeTag: 'REMOVE_TAG',
       }),
       validate() {
         if (this.$refs.form.validate()) {
@@ -320,6 +332,11 @@
       },
       getExtraFieldPlaceholder(field) {
         return this.changes.extra_fields[field].varied ? this.$tr('variedFieldPlaceholder') : null;
+      },
+      handleTags(tags) {
+        // If selecting a tag, clear the text field
+        if (tags.length > this.changes.tags.length) this.tagText = null;
+        this.setTags(tags);
       },
     },
   };

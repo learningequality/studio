@@ -1,5 +1,6 @@
 import _ from 'underscore';
 import { getSelected } from './utils';
+import State from 'edit_channel/state';
 
 const editableFields = [
   'language',
@@ -202,11 +203,17 @@ export function SET_TAGS(state, tags) {
   });
   state.changes.changed = true;
   state.changes.tags = tags;
-}
 
-export function REMOVE_TAG(state, tag) {
-  let newTags = _.reject(state.changes.tags, t => t === tag);
-  SET_TAGS(state, newTags);
+  let newTags = _.difference(tags, State.Store.getters.contentTags);
+  _.each(newTags, tag => {
+    State.Store.commit('ADD_CONTENT_TAG', {
+      tag_name: tag,
+      channel: State.current_channel.id,
+    });
+  });
+  _.each(removed, tag => {
+    State.Store.commit('REMOVE_CONTENT_TAG_BY_NAME', tag);
+  });
 }
 
 export function SET_EXTRA_FIELDS(state, obj) {

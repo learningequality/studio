@@ -7,6 +7,7 @@ require('vuetify/dist/vuetify.min.css');
 require('../../less/styles.less');
 
 require('utils/translations');
+const State = require('edit_channel/state');
 
 var store = require('edit_channel/uploader/vuex/store');
 
@@ -18,6 +19,10 @@ Vue.use(Vuetify, {
     // accent: colors.indigo.base // #3F51B5
   },
 });
+
+if (State.current_channel) {
+  State.current_channel.fetch({ async: false });
+}
 
 let testNodes = [
   {
