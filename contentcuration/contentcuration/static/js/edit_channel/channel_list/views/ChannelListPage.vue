@@ -11,8 +11,6 @@
               v-for="listType in lists"
               :key="listType.id"
               :to="getLink(listType)"
-              activeClass="active"
-              exact
             >
               <li>
                 <span v-if="listType === 'STARRED'"></span>
@@ -33,6 +31,7 @@
               v-else
               :key="listType"
               :listType="listType"
+              @channel_list_ready="setChannelListReady(listType)"
             />
           </div>
         </div>
@@ -50,6 +49,7 @@
   import _ from 'underscore';
   import { mapState } from 'vuex';
   import { ListTypes } from '../constants';
+  import { setChannelMixin } from '../mixins';
   import ChannelList from './ChannelList.vue';
   import ChannelSetList from './ChannelSetList.vue';
   import ChannelInvitationList from './ChannelInvitationList.vue';
@@ -70,11 +70,17 @@
       ChannelInvitationList,
       ChannelDetailsPanel,
     },
+    mixins: [setChannelMixin],
     props: {
       activeList: {
         type: String,
         required: true,
       },
+    },
+    data() {
+      return {
+        channelListIsReady: false,
+      }
     },
     computed: {
       ...mapState('channel_list', ['activeChannel']),
@@ -82,9 +88,21 @@
         return _.values(ListTypes);
       },
     },
+    watch: {
+      channelListIsReady(newVal) {
+        if (newVal === true) {
+          this.setActiveChannelFromQuery();
+        }
+      },
+    },
     methods: {
       setActiveList(listType) {
         this.activeList = listType;
+      },
+      setChannelListReady(listType) {
+        if (this.activeList === listType) {
+          this.channelListIsReady = true;
+        }
       },
       getLink(listType) {
         const name = {
@@ -95,7 +113,13 @@
           CHANNEL_SETS: 'ChannelList/Collections',
         }[listType];
         return { name };
-      }
+      },
+      setActiveChannelFromQuery() {
+        if (this.$route.query.channel_id) {
+          this.setChannel(this.$route.query.channel_id);
+          // TODO revert query if there is no actual channel with the channel_id
+        }
+      },
     },
   };
 
@@ -116,7 +140,7 @@
     }
   }
   #manage-channel-nav {
-    .active li {
+    .router-link-active li {
       font-weight: bold;
       border-color: @blue-500;
     }

@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="channel-edit-index">
     <router-view />
   </div>
 </template>
@@ -29,4 +29,10 @@
 </script>
 
 
-<style lang="scss" scoped></style>
+<style lang="css" scoped>
+
+  .channel-edit-index {
+    height: calc(100% - 50px);
+  }
+
+</style>
