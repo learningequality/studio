@@ -5,7 +5,7 @@ One of Kolibri Studio's deployment methods use Kubernetes and Docker. If you wou
 
 ## Running Docker
 
-You need to install the latest [Docker edition](https://www.docker.com/community-edition). Make sure it comes with the `docker-compose` executable.
+You need to install the latest [Docker edition](https://hub.docker.com/search/?type=edition&offering=community). Make sure it comes with the `docker-compose` executable.
 
 To set up your environment, run 
 
