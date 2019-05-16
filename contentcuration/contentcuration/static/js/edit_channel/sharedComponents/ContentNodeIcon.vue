@@ -1,5 +1,7 @@
 <template>
-  <VIcon>{{ icon }}</VIcon>
+  <VIcon :class="kind">
+    {{ icon }}
+  </VIcon>
 </template>
 
 <script>
@@ -52,7 +54,28 @@
   @import '../../../less/global-variables.less';
 
   .v-icon {
-    color: @gray-500;
+    padding: 2px;
+    font-size: 13pt !important;
+    color: white;
+    border-radius: 5px;
+    &.video {
+      background-color: @video-color;
+    }
+    &.audio {
+      background-color: @audio-color;
+    }
+    &.document {
+      background-color: @doc-color;
+    }
+    &.exercise {
+      background-color: @exercise-color;
+    }
+    &.html5 {
+      background-color: @html-color;
+    }
+    &.topic {
+      background-color: @gray-500;
+    }
   }
 
 </style>
