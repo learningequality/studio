@@ -69,6 +69,10 @@ const asyncTasksModule = {
           if (data && data.length > 0) {
             for (let i = 0; i < data.length; i++) {
               const task = data[i];
+              if (!currentTask && task.status === 'STARTED') {
+                store.commit('SET_CURRENT_TASK', { task: task });
+                currentTask = task;
+              }
               // TODO: Figure out how to set currentTask upon page reload.
               if (currentTask && task.id === currentTask.id) {
                 runningTask = task;
