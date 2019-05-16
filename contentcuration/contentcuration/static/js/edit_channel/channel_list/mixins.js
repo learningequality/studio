@@ -1,3 +1,4 @@
+import _ from 'underscore';
 import { mapActions, mapMutations, mapState, mapGetters } from 'vuex';
 import { createTranslator } from 'utils/i18n';
 import { dialog, alert } from 'edit_channel/utils/dialog';
@@ -22,16 +23,20 @@ export const setChannelMixin = {
   methods: {
     ...mapActions('channel_list', ['saveChannel']),
     ...mapMutations('channel_list', {
-      setActiveChannel: 'SET_ACTIVE_CHANNEL',
       cancelChanges: 'CANCEL_CHANNEL_CHANGES',
     }),
+    setActiveChannel(channelId) {
+      if (channelId) {
+        this.$router.push({ query: { channel_id: channelId }})
+      } else {
+        this.$router.push({ query: _.omit(this.$route.query, 'channel_id') });
+      }
+      this.$store.commit('channel_list/SET_ACTIVE_CHANNEL', channelId);
+    },
     setChannel(channelID) {
       let checkForChanges = false;
-      if (this.activeChannel && this.activeChannel.id !== channelID) {
-        checkForChanges = true;
-      }
-      if (this.activeChannel && !channelID) {
-        checkForChanges = true;
+      if (this.activeChannel) {
+        checkForChanges = this.activeChannel.id !== channelID || !channelID;
       }
       // Check for changes here when user switches or closes panel
       if (this.activeChannelHasBeenModified && checkForChanges) {

@@ -84,8 +84,8 @@
       },
     },
     watch: {
-      channelListIsReady(newVal) {
-        if (newVal === true) {
+      $route(newVal) {
+        if (newVal.query.channel_id) {
           this.setActiveChannelFromQuery();
         }
       },
