@@ -13,8 +13,7 @@ const channelStrings = createTranslator('ChannelStrings', {
 
 export const setChannelMixin = {
   computed: {
-    ...mapState('channel_list', ['activeChannel']),
-    ...mapState('channel_list', ['changed']),
+    ...mapState('channel_list', ['activeChannel', 'changed']),
     channelStrings() {
       return channelStrings;
     },
@@ -25,7 +24,7 @@ export const setChannelMixin = {
       setActiveChannel: 'SET_ACTIVE_CHANNEL',
       cancelChanges: 'CANCEL_CHANNEL_CHANGES',
     }),
-    setChannel: function(channelID) {
+    setChannel(channelID) {
       // Check for changes here when user switches or closes panel
       if (this.changed && channelID !== this.activeChannel.id) {
         dialog(

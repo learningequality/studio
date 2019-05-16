@@ -25,7 +25,7 @@
           <option
             disabled
             selected
-            value="0"
+            value=""
           >
             {{ $tr('channelLanguagePlaceholder') }}
           </option>
@@ -183,7 +183,7 @@
     },
     beforeMount() {
       // Only need this because we're using getters. Could go straight to $store.state in `data`
-      this.language = this.channel.language;
+      this.language = this.channel.language || '';
       this.name = this.channel.name;
       this.description = this.channel.description;
     },

@@ -31,7 +31,7 @@
               v-else
               :key="listType"
               :listType="listType"
-              @channel_list_ready="setChannelListReady(listType)"
+              @channel_list_ready="handleChanneListReady(listType)"
             />
           </div>
         </div>
@@ -77,11 +77,6 @@
         required: true,
       },
     },
-    data() {
-      return {
-        channelListIsReady: false,
-      }
-    },
     computed: {
       ...mapState('channel_list', ['activeChannel']),
       lists() {
@@ -99,9 +94,10 @@
       setActiveList(listType) {
         this.activeList = listType;
       },
-      setChannelListReady(listType) {
+      handleChanneListReady(listType) {
+        // Only open the channel tab if the channel list for this page is ready
         if (this.activeList === listType) {
-          this.channelListIsReady = true;
+          this.setActiveChannelFromQuery();
         }
       },
       getLink(listType) {
