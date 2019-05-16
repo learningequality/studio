@@ -15,13 +15,24 @@
           <VToolbarTitle>{{ $tr(mode) }}</VToolbarTitle>
           <VSpacer />
           <VToolbarItems>
-            <VBtn v-if="!isViewOnly" dark flat @click="saveContent">
-              {{ $tr('saveButtonText') }}
-            </VBtn>
+            <VFlex alignCenter>
+              <div v-if="saving">
+                <VProgressCircular
+                  indeterminate
+                  size="15"
+                  width="2"
+                  color="white"
+                />
+                Autosaving...
+              </div>
+              <div v-else-if="lastSaved">
+                {{ savedMessage }}
+              </div>
+            </VFlex>
             <VBtn v-if="!isViewOnly" dark flat @click="saveContent">
               {{ $tr('saveAndCloseButtonText') }}
             </VBtn>
-            <VBtn v-if="isViewOnly" dark flat @click="copyContent">
+            <VBtn v-else dark flat @click="copyContent">
               {{ $tr('copyButtonText') }}
             </VBtn>
           </VToolbarItems>
@@ -35,9 +46,13 @@
 
 <script>
 
+  import { mapState } from 'vuex';
   import { modes } from '../constants';
   import EditList from './EditList.vue';
   import EditView from './EditView.vue';
+
+  const AUTOSAVE_TIMER = 15000;
+  const AUTOSAVE_MESSAGE_TIMER = 10000;
 
   export default {
     name: 'EditModal',
@@ -50,6 +65,8 @@
       saveButtonText: 'Save',
       saveAndCloseButtonText: 'Save & Close',
       copyButtonText: 'Copy',
+      savedMessage: 'Saved {relativeTime}',
+      savedNowMessage: 'Saved just now',
     },
     components: {
       EditList,
@@ -58,17 +75,27 @@
     props: {
       mode: {
         type: String,
-        default: modes.NEW_EXERCISE,
+        default: modes.EDIT,
       },
     },
     data() {
       return {
         dialog: true,
+        lastSaved: null,
+        saving: false,
+        savedMessage: null,
+        interval: null,
       };
     },
     computed: {
+      ...mapState('edit_modal', ['changed']),
       isViewOnly() {
         return this.mode === modes.VIEW_ONLY;
+      },
+      lastSavedTime() {
+        return this.$tr('savedMessage', {
+          relativeTime: this.$formatRelative(this.lastSaved),
+        });
       },
     },
     watch: {
@@ -86,11 +113,31 @@
     methods: {
       openModal() {
         this.dialog = true;
+        let timingInterval;
+        this.interval = setInterval(() => {
+          // if(this.changed) {
+          clearInterval(timingInterval);
+          this.saving = true;
+          setTimeout(() => {
+            this.lastSaved = Date.now();
+            this.saving = false;
+            timingInterval = setInterval(() => {
+              this.savedMessage = this.getSavedTime();
+            }, AUTOSAVE_MESSAGE_TIMER);
+          }, 1000);
+          // }
+        }, AUTOSAVE_TIMER);
+      },
+      getSavedTime() {
+        return this.$tr('savedMessage', {
+          relativeTime: this.$formatRelative(this.lastSaved),
+        });
       },
       saveContent() {
         this.closeModal();
       },
       closeModal() {
+        clearInterval(this.interval);
         this.dialog = false;
         this.$emit('modalclosed');
       },

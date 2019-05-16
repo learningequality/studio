@@ -11,9 +11,16 @@
               </VChip>
             </VTab>
           </VTabs>
-
-          <!-- Not using v-tab-items as it loads everything into page at once -->
-          <component :is="tabs[currentTab].component" v-if="currentTab" />
+          <VTabsItems v-model="currentTab">
+            <VTabItem
+              v-for="(item, key) in tabs"
+              :key="key + '-tab'"
+              :value="key"
+              lazy
+            >
+              <component :is="item.component" />
+            </VTabItem>
+          </VTabsItems>
         </VFlex>
       </VLayout>
       <VLayout v-else justifyCenter alignCenter fillHeight>
