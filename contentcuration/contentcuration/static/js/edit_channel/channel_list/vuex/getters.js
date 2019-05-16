@@ -17,7 +17,7 @@ export function changed(state) {
   return state.changed;
 }
 
-const omitListTypes = x => _.omit(x, _.keys(ListTypes));
+const omitListTypes = x => _.omit(x, [..._.keys(ListTypes), 'STARRING']);
 
 export function activeChannelHasBeenModified(state) {
   if (!state.activeChannel) {
