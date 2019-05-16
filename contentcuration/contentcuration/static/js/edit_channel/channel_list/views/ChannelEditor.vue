@@ -156,13 +156,13 @@
         channel: 'channelChanges',
       }),
       ...mapGetters('channel_list', {
-        changed: 'changed',
+        activeChannelHasBeenModified: 'activeChannelHasBeenModified',
       }),
       isNew() {
         return !this.channel.id;
       },
       nameError() {
-        if (this.changed && !this.name.length) {
+        if (this.activeChannelHasBeenModified && !this.name.length) {
           return this.$tr('channelError');
         }
         return '';

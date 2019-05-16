@@ -16,6 +16,13 @@ export function changed(state) {
   return state.changed;
 }
 
+export function activeChannelHasBeenModified(state) {
+  if (!state.activeChannel) {
+    return false;
+  }
+  return !_.isEqual(state.channelChanges, state.activeChannel);
+}
+
 export function getChannel(state) {
   return function(channelID) {
     return _.findWhere(state.channels, { id: channelID });
