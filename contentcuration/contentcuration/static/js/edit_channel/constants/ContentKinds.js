@@ -3,6 +3,9 @@ module.exports = [
     kind: 'document',
   },
   {
+    kind: 'slideshow',
+  },
+  {
     kind: 'topic',
   },
   {
