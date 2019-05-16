@@ -89,7 +89,7 @@
       <div class="buttons">
         <!-- Tabindex necessary? -->
         <button
-          type="reset"
+          type="button"
           class="cancel-edits action-text"
           :tabindex="4"
           @click="cancelEdit"
@@ -180,6 +180,16 @@
         else if (this.invalid) return this.$tr('invalidChannel');
         return '';
       },
+    },
+    watch:{
+      // Should only be called when clicking "+ Channel" again when the ChannelEditor
+      // is open
+      channel(newVal) {
+        this.language = newVal.language || '';
+        this.name = newVal.name;
+        this.description = newVal.description;
+        this.$refs.firstTab.focus();
+      }
     },
     beforeMount() {
       // Only need this because we're using getters. Could go straight to $store.state in `data`

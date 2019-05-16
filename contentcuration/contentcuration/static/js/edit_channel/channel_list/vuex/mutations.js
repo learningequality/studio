@@ -55,9 +55,13 @@ export function SUBMIT_CHANNEL(state, channel) {
   state.changed = false;
 }
 
+export function CLEAR_CHANNEL_CHANGES(state) {
+  state.channelChanges = getDefaultChannel();
+}
+
 export function CANCEL_CHANNEL_CHANGES(state) {
   state.changed = false;
-  state.channelChanges = _.clone(state.activeChannel);
+  // state.channelChanges = _.clone(state.activeChannel);
 }
 
 export function REMOVE_CHANNEL(state, channelID) {
