@@ -3,6 +3,7 @@ import Vue from 'vue';
 import VueRouter from 'vue-router';
 import ChannelEditIndex from './ChannelEditIndex.vue';
 import ChannelListPage from 'edit_channel/channel_list/views/ChannelListPage.vue';
+import State from 'edit_channel/state';
 
 Vue.use(VueRouter);
 
@@ -59,6 +60,8 @@ const router = new VueRouter({
 });
 
 $(function() {
+  // Bind extra stuff to window object that channel_list will need
+  State.setChannelListState();
   new Vue({
     el: '#channel-container',
     store,
