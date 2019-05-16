@@ -1,5 +1,5 @@
 <template>
-  <div class="channel-list">
+  <div class="channelset-list">
     <div class="channel-list-header uppercase" @click="toggleChannelList">
       {{ translateName }}
       <span class="toggler material-icons">
@@ -105,7 +105,7 @@
     font-weight: bold;
     color: @gray-500;
   }
-  .channel-list {
+  .channelset-list {
     margin-bottom: 10px;
     .channel-list-header {
       padding: 5px 15px;
