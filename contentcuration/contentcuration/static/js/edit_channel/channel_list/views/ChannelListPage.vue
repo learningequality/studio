@@ -121,11 +121,21 @@
         return { name };
       },
       setActiveChannelFromQuery() {
-        if (this.$route.query.channel_id) {
-          this.setChannel(this.$route.query.channel_id);
+        const { channel_id } = this.$route.query;
+
+        if (channel_id) {
+          if (!this.activeChannel || this.activeChannel.id !== channel_id) {
+            this.setChannel(channel_id);
+          }
           // TODO revert query if there is no actual channel with the channel_id
         } else {
-          this.setChannel(null);
+          // Need to infer whether we are creating a new channel or closing a page
+          if (this.activeChannel && this.activeChannel.id === undefined) {
+            // TODO figure out how to not call this twice when "+ Channel" is clicked
+            this.setChannel('');
+          } else {
+            this.setChannel(null);
+          }
         }
       },
     },
