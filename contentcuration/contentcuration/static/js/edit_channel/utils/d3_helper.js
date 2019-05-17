@@ -13,12 +13,12 @@ const COLOR_MAP = {
 };
 
 const COLOR_SELECTION = [
-  '#FF3D00',
+  COLOR_MAP.document,
+  COLOR_MAP.video,
+  COLOR_MAP.html5,
+  COLOR_MAP.audio,
+  COLOR_MAP.exercise,
   '#bebada',
-  '#283593',
-  '#FF8F00',
-  '#F06292',
-  '#4DB6AC',
   '#fccde5',
   '#bc80bd',
   '#ccebc5',
