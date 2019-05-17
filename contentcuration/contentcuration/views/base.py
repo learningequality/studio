@@ -57,6 +57,7 @@ from contentcuration.serializers import ChannelSetSerializer
 from contentcuration.serializers import CurrentUserSerializer
 from contentcuration.serializers import InvitationSerializer
 from contentcuration.serializers import RootNodeSerializer
+from contentcuration.serializers import SimplifiedChannelProbeCheckSerializer
 from contentcuration.serializers import UserChannelListSerializer
 from contentcuration.tasks import exportchannel_task
 from contentcuration.tasks import generatechannelcsv_task
@@ -86,6 +87,9 @@ def base(request):
         return redirect('accounts/login')
 
 
+""" HEALTH CHECKS """
+
+
 def health(request):
     c = Channel.objects.first()
     if c:
@@ -96,6 +100,23 @@ def health(request):
 
 def stealth(request):
     return HttpResponse("<3")
+
+
+@api_view(['GET'])
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
+def get_prober_channel(request):
+    if not request.user.is_admin:
+        return HttpResponseForbidden()
+
+    channel = Channel.objects.filter(editors=request.user).first()
+    if not channel:
+        channel = Channel.objects.create(name="Prober channel", editors=[request.user])
+
+    return Response(SimplifiedChannelProbeCheckSerializer(channel).data)
+
+
+""" END HEALTH CHECKS """
 
 
 def get_or_set_cached_constants(constant, serializer):
