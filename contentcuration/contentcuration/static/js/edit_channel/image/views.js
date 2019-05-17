@@ -189,6 +189,7 @@ export const ThumbnailUploadView = BaseViews.BaseView.extend({
     this.croppie = new Croppie(this.$(selector).get(0), {
       boundary: this.boundary,
       viewport: this.aspect_ratio,
+      enforceBoundary: false,
       showZoomer: false,
       customClass: 'crop-img',
     });
