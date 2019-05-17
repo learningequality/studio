@@ -1,11 +1,9 @@
 <template>
   <div class="edit-modal-wrapper">
+    <VBtn @click.stop="openModal">
+      Open Edit Modal
+    </VBtn>
     <VDialog v-model="dialog" fullscreen hideOverlay transition="dialog-bottom-transition" lazy>
-      <template #activator="{on}">
-        <VBtn v-on="on">
-          Open Dialog
-        </VBtn>
-      </template>
       <VCard>
         <EditList ref="editlist" :mode="mode" />
         <VToolbar dark color="primary" fixed clippedLeft app>
@@ -15,7 +13,7 @@
           <VToolbarTitle>{{ $tr(mode) }}</VToolbarTitle>
           <VSpacer />
           <VToolbarItems>
-            <VFlex alignCenter>
+            <VFlex alignCenter class="last-saved-time">
               <div v-if="saving">
                 <VProgressCircular
                   indeterminate
@@ -23,14 +21,14 @@
                   width="2"
                   color="white"
                 />
-                Autosaving...
+                {{ $tr('savingIndicator') }}
               </div>
               <div v-else-if="lastSaved">
                 {{ savedMessage }}
               </div>
             </VFlex>
             <VBtn v-if="!isViewOnly" dark flat @click="saveContent">
-              {{ $tr('saveAndCloseButtonText') }}
+              {{ $tr('saveButtonText') }}
             </VBtn>
             <VBtn v-else dark flat @click="copyContent">
               {{ $tr('copyButtonText') }}
@@ -46,13 +44,13 @@
 
 <script>
 
-  import { mapState } from 'vuex';
+  import { mapActions, mapGetters } from 'vuex';
   import { modes } from '../constants';
   import EditList from './EditList.vue';
   import EditView from './EditView.vue';
 
-  const AUTOSAVE_TIMER = 15000;
-  const AUTOSAVE_MESSAGE_TIMER = 10000;
+  const SAVE_TIMER = 5000;
+  const SAVE_MESSAGE_TIMER = 1000;
 
   export default {
     name: 'EditModal',
@@ -62,11 +60,11 @@
       [modes.NEW_TOPIC]: 'Adding Topics',
       [modes.NEW_EXERCISE]: 'Adding Exercises',
       [modes.UPLOAD]: 'Uploading Files',
-      saveButtonText: 'Save',
-      saveAndCloseButtonText: 'Save & Close',
+      saveButtonText: 'Save & Close',
       copyButtonText: 'Copy',
       savedMessage: 'Saved {relativeTime}',
       savedNowMessage: 'Saved just now',
+      savingIndicator: 'Saving...',
     },
     components: {
       EditList,
@@ -85,10 +83,11 @@
         saving: false,
         savedMessage: null,
         interval: null,
+        updateInterval: null,
       };
     },
     computed: {
-      ...mapState('edit_modal', ['changed']),
+      ...mapGetters('edit_modal', ['changed']),
       isViewOnly() {
         return this.mode === modes.VIEW_ONLY;
       },
@@ -111,33 +110,38 @@
       this.openModal();
     },
     methods: {
+      ...mapActions('edit_modal', ['saveNodes']),
       openModal() {
         this.dialog = true;
-        let timingInterval;
         this.interval = setInterval(() => {
-          // if(this.changed) {
-          clearInterval(timingInterval);
-          this.saving = true;
-          setTimeout(() => {
-            this.lastSaved = Date.now();
-            this.saving = false;
-            timingInterval = setInterval(() => {
-              this.savedMessage = this.getSavedTime();
-            }, AUTOSAVE_MESSAGE_TIMER);
-          }, 1000);
-          // }
-        }, AUTOSAVE_TIMER);
+          if (this.changed) {
+            clearInterval(this.updateInterval);
+            this.saving = true;
+            this.saveNodes().then(() => {
+              this.lastSaved = Date.now();
+              this.saving = false;
+              this.updateSavedTime();
+              this.updateInterval = setInterval(this.updateSavedTime, SAVE_MESSAGE_TIMER);
+            });
+          }
+        }, SAVE_TIMER);
       },
-      getSavedTime() {
-        return this.$tr('savedMessage', {
+      updateSavedTime() {
+        this.savedMessage = this.$tr('savedMessage', {
           relativeTime: this.$formatRelative(this.lastSaved),
         });
       },
       saveContent() {
-        this.closeModal();
+        this.saving = true;
+        this.saveNodes().then(() => {
+          this.closeModal();
+        });
       },
       closeModal() {
         clearInterval(this.interval);
+        clearInterval(this.updateInterval);
+        this.saving = false;
+        this.lastSaved = null;
         this.dialog = false;
         this.$emit('modalclosed');
       },
@@ -151,17 +155,28 @@
 
 <style lang="less">
 
-@import '../../../../less/global-variables.less';
+  @import '../../../../less/global-variables.less';
 
-.edit-modal-wrapper {
-  * {
-    font-family: @font-family;
-    &.v-icon {
-      .material-icons;
+  .edit-modal-wrapper {
+    * {
+      font-family: @font-family;
+      &.v-icon {
+        .material-icons;
+      }
+    }
+    a {
+      .linked-list-item;
+    }
+
+    .last-saved-time {
+      padding-top: 20px;
+      margin-right: 15px;
+      font-style: italic;
+      .v-progress-circular {
+        margin-right: 10px;
+        vertical-align: text-top;
+      }
     }
   }
-  a {
-    .linked-list-item;
-  }
-}
+
 </style>

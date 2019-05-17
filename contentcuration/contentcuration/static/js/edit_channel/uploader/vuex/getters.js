@@ -20,6 +20,10 @@ export function allResources(state) {
   return !_.some(selected, { kind: 'topic' });
 }
 
+export function changed(state) {
+  return _.some(state.nodes, { changesStaged: true });
+}
+
 // TODO: Remove this once hooked up to actual state
 export function authors() {
   return ['Alakazam', 'Arbok', 'Articuno', 'Aerodactyl'];
