@@ -4,6 +4,14 @@ var _ = require('underscore');
 require('jqcloud2');
 require('jqcloud2/dist/jqcloud.css');
 
+const COLOR_MAP = {
+  video: '#283593',
+  audio: '#f06292',
+  document: '#ff3d00',
+  exercise: '#4db6ac',
+  html5: '#ff8f00',
+};
+
 const COLOR_SELECTION = [
   '#FF3D00',
   '#bebada',
@@ -182,7 +190,7 @@ class PieChart extends Visual {
       .append('path')
       .attr('d', arc)
       .style('fill', function(d) {
-        return config.color(d.data[config.key]);
+        return COLOR_MAP[d.data[config.key]];
       });
 
     if (config.tooltip) {
@@ -255,7 +263,7 @@ class Legend extends Visual {
       .attr('width', '16')
       .attr('height', '16')
       .attr('fill', function(d) {
-        return config.color(d[config.key]);
+        return COLOR_MAP[d[config.key]];
       });
 
     // create the second column for each segment.
