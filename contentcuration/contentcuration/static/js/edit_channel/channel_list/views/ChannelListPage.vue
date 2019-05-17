@@ -11,6 +11,7 @@
               v-for="listType in lists"
               :key="listType.id"
               :to="getLink(listType)"
+              :exact="linkShouldBeExact(listType)"
             >
               <li>
                 <span v-if="listType === 'STARRED'"></span>
@@ -84,13 +85,22 @@
       },
     },
     watch: {
-      $route(newVal) {
-        if (newVal.query.channel_id) {
-          this.setActiveChannelFromQuery();
-        }
+      $route() {
+        this.setActiveChannelFromQuery();
       },
     },
     methods: {
+      // HACK to get the first link to not be active under certain conditions
+      linkShouldBeExact(listType) {
+        if (listType ==='EDITABLE') {
+          if (this.$route.name !== 'ChannelList') {
+            return true;
+          } else {
+            return !this.$route.query.channel_id;
+          }
+        }
+        return false;
+      },
       setActiveList(listType) {
         this.activeList = listType;
       },
@@ -114,6 +124,8 @@
         if (this.$route.query.channel_id) {
           this.setChannel(this.$route.query.channel_id);
           // TODO revert query if there is no actual channel with the channel_id
+        } else {
+          this.setChannel(null);
         }
       },
     },
