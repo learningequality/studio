@@ -49,8 +49,8 @@
   import EditList from './EditList.vue';
   import EditView from './EditView.vue';
 
-  const SAVE_TIMER = 5000;
-  const SAVE_MESSAGE_TIMER = 1000;
+  const SAVE_TIMER = 35000;
+  const SAVE_MESSAGE_TIMER = 10000;
 
   export default {
     name: 'EditModal',
