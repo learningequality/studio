@@ -79,6 +79,10 @@
       <div v-if="allResources">
         <VDivider />
         <VLayout row class="auth-section align-top" wrap>
+          <VFlex v-if="disableAuthEdits" xs12 class="imports-detected-text">
+            {{ $tr('detectedImportText') }}
+          </VFlex>
+
           <!-- Author -->
           <VFlex md4 sm12 class="field-with-tooltip">
             <VCombobox
@@ -394,6 +398,12 @@
         width: 100%;
         margin: 0 auto;
 
+        .imports-detected-text {
+          padding: 5px;
+          font-weight: bold;
+          color: @gray-700;
+          background-color: @gray-200;
+        }
         .v-autocomplete {
           /deep/ .v-input__append-inner {
             visibility: hidden;
