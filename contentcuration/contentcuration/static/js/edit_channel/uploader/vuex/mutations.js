@@ -33,6 +33,7 @@ export function RESET_STATE(state) {
 export function SET_NODES(state, nodes) {
   _.each(nodes, node => {
     node.changesStaged = false;
+    node.loaded = false;
   });
   state.nodes = nodes;
 }
@@ -66,6 +67,16 @@ export function SET_CHANGES(state) {
   state.changes.extra_fields = _generateSharedData(extraFieldItems, extraFields);
 
   state.changes.tags = _.intersection.apply(_, _.pluck(selected, 'tags'));
+}
+
+export function SET_LOADED_NODES(state, nodes) {
+  _.each(nodes, node => {
+    let match = _.findWhere(state.nodes, { id: node.id });
+    _.extendOwn(match, {
+      ...node,
+      loaded: true,
+    });
+  });
 }
 
 export function RESET_SELECTED(state) {
@@ -121,6 +132,8 @@ export function ADD_NODE(state, payload) {
     extra_fields: {},
     tags: [],
     role_visibility: 'learner',
+    loaded: true,
+    changesStaged: true,
     ...payload,
   });
   _.defer(() => {

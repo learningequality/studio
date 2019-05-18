@@ -191,8 +191,9 @@ def get_nodes_by_ids_simplified(request, ids):
 
 
 @api_view(['GET'])
-def get_nodes_by_ids_complete(request, ids):
-    nodes = ContentNode.objects.prefetch_related('children', 'files', 'assessment_items', 'tags').filter(pk__in=ids.split(","))
+def get_nodes_by_ids_complete(request):
+    ids = json.loads(request.GET['nodes'])
+    nodes = ContentNode.objects.prefetch_related('children', 'files', 'assessment_items', 'tags').filter(pk__in=ids)
     serializer = ContentNodeEditSerializer(nodes, many=True)
     return Response(serializer.data)
 

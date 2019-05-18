@@ -1,7 +1,18 @@
 <template>
   <VContent>
     <VContainer fluid fillHeight>
-      <VLayout v-if="selected.length" justifyCenter>
+      <VLayout v-if="!selected.length" justifyCenter alignCenter fillHeight>
+        <VFlex grow class="default-content">
+          {{ noItemText }}
+        </VFlex>
+      </VLayout>
+      <VLayout v-else-if="!allLoaded" justifyCenter alignCenter fillHeight>
+        <VFlex grow class="default-content">
+          {{ $tr('loadingText') }}
+          <VProgressLinear :indeterminate="true" />
+        </VFlex>
+      </VLayout>
+      <VLayout v-else justifyCenter>
         <VFlex grow>
           <VTabs fixedTabs sliderColor="primary">
             <VTab v-for="(item, key) in tabs" :key="key" @click="currentTab=key">
@@ -23,18 +34,13 @@
           </VTabsItems>
         </VFlex>
       </VLayout>
-      <VLayout v-else justifyCenter alignCenter fillHeight>
-        <VFlex grow class="default-content">
-          {{ noItemText }}
-        </VFlex>
-      </VLayout>
     </VContainer>
   </VContent>
 </template>
 
 <script>
 
-  import { mapGetters, mapState } from 'vuex';
+  import { mapActions, mapGetters, mapState } from 'vuex';
   import { TabNames, modes } from '../constants';
   import DetailsEditView from './DetailsEditView.vue';
   import DetailsViewOnlyView from './DetailsViewOnlyView.vue';
@@ -48,6 +54,7 @@
       [TabNames.PREREQUISITES]: 'Prerequisites',
       noItemsToEditText: 'Please select an item or items to edit',
       noItemsToViewText: 'Please select an item or items to view',
+      loadingText: 'Loading Content...',
     },
     components: {
       DetailsEditView, // eslint-disable-line vue/no-unused-components
@@ -62,6 +69,8 @@
     data() {
       return {
         currentTab: null,
+        loadError: false,
+        loader: this.loadNodesDebounced(),
       };
     },
     computed: {
@@ -105,28 +114,53 @@
 
         return map;
       },
+      allLoaded() {
+        return !_.some(this.selected, { loaded: false });
+      },
+    },
+    watch: {
+      selected(newVal) {
+        if (newVal.length > 0) {
+          this.loader();
+        }
+      },
     },
     mounted() {
       this.currentTab = TabNames.DETAILS;
+    },
+    methods: {
+      ...mapActions('edit_modal', ['loadNodes']),
+      loadNodesDebounced() {
+        return _.debounce(() => {
+          let selectedIDs = _.chain(this.selected)
+            .where({ loaded: false })
+            .pluck('id')
+            .value();
+          this.loadNodes(selectedIDs);
+        }, 1000);
+      },
     },
   };
 
 </script>
 
 <style lang="less" scoped>
-@import '../../../../less/global-variables.less';
 
-.default-content {
-  .empty_default;
-}
+  @import '../../../../less/global-variables.less';
 
-/deep/ .v-tabs__item {
-  font-weight: bold;
-}
+  .default-content {
+    .empty_default;
 
-.tab-count {
-  height: 20px;
-  margin-left: 10px;
-}
+    margin: 10% 50px;
+  }
+
+  /deep/ .v-tabs__item {
+    font-weight: bold;
+  }
+
+  .tab-count {
+    height: 20px;
+    margin-left: 10px;
+  }
 
 </style>

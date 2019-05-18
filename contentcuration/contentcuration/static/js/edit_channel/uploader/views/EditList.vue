@@ -4,7 +4,7 @@
       <!-- Select all checkbox -->
       <VListTile :disabled="!isValid" @click="toggleSelectAll">
         <VListTileAction>
-          <VCheckbox color="primary" :value="selectAllChecked" />
+          <VCheckbox color="primary" :value="selectAllChecked" @click.stop="toggleSelectAll" />
         </VListTileAction>
         <VListTileContent>
           <VListTileTitle>{{ $tr('selectAllLabel') }}</VListTileTitle>
