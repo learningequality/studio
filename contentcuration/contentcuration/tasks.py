@@ -206,5 +206,13 @@ def create_async_task(task_name, task_options, task_args=None):
 
     task = async_task.apply_async(kwargs=task_args, task_id=str(task_info.task_id))
     logging.info("Created task ID = {}".format(task.id))
+    # If there was a failure to create the task, the apply_async call will return failed, but
+    # checking the status will still show PENDING. So make sure we write the failure to the
+    # db directly so the frontend can know of the failure.
+    if task.status == 'FAILURE':
+        logging.error("Task failed to start, please check Celery status.")
+        task_info.status = 'FAILURE'
+        task_info.metadata['error'] = 'Unable to start task. Please contact support.'
+        task_info.save()
 
     return task, task_info

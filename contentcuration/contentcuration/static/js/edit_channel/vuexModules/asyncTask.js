@@ -85,6 +85,9 @@ const asyncTasksModule = {
                 if (callbacks && callbacks[task.id]) {
                   let callback = callbacks[task.id]['resolve'];
                   if (task.status === 'FAILURE') {
+                    if (task.metadata && task.metadata.error) {
+                      store.commit('SET_CURRENT_TASK_ERROR', task.metadata.error);
+                    }
                     callback = callbacks[task.id]['reject'];
                   }
                   delete callbacks[task.id];

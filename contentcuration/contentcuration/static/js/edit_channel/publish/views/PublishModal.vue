@@ -54,7 +54,6 @@
   import { mapActions, mapState } from 'vuex';
   import PublishView from './PublishView.vue';
   import { format_size } from 'edit_channel/utils/string_helper';
-  import { alert } from 'edit_channel/utils/dialog';
 
   export default {
     name: 'PublishModal',
@@ -98,13 +97,9 @@
         });
       },
       handlePublish() {
-        this.publishChannel()
-          .then(() => {
-            this.dialog = false;
-          })
-          .catch(error => {
-            alert(this.$tr('publishErrorHeader'), error.responseText || error);
-          });
+        this.publishChannel().then(() => {
+          this.dialog = false;
+        });
       },
     },
   };
