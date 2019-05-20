@@ -9,6 +9,7 @@ import uuid
 from django.core.files import File as DjFile
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
+from django.db import Error as DBError
 from le_utils.constants import content_kinds
 from le_utils.constants import exercises
 from le_utils.constants import file_formats
@@ -31,7 +32,10 @@ from contentcuration.views.nodes import duplicate_node_bulk
 logmodule.basicConfig()
 logging = logmodule.getLogger(__name__)
 
-DESCRIPTION = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur."
+DESCRIPTION = ("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore"
+               " et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut "
+               "aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
+               "cillum dolore eu fugiat nulla pariatur.")
 LICENSE = licenses.SPECIAL_PERMISSIONS
 LICENSE_DESCRIPTION = "Sample text for content with special permissions"
 TAGS = ["Tag 1", "Tag 2", "Tag 3"]
@@ -56,7 +60,10 @@ class Command(BaseCommand):
         ensure_storage_bucket_public()
 
         # create the cache table
-        call_command("createcachetable")
+        try:
+            call_command("createcachetable")
+        except DBError as e:
+            logging.error('Error creating cache table: {}'.format(str(e)))
 
         # Run migrations
         call_command('migrate')
