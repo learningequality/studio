@@ -155,9 +155,7 @@
       ...mapState('channel_list', {
         channel: 'channelChanges',
       }),
-      ...mapGetters('channel_list', {
-        activeChannelHasBeenModified: 'activeChannelHasBeenModified',
-      }),
+      ...mapGetters('channel_list', ['activeChannelHasBeenModified']),
       isNew() {
         return !this.channel.id;
       },
@@ -186,7 +184,7 @@
       // is open
       channel(newVal) {
         this.language = newVal.language || '';
-        this.name = newVal.name;
+        this.name = newVal.name || '';
         this.description = newVal.description;
         this.$refs.firstTab.focus();
       }
@@ -194,7 +192,7 @@
     beforeMount() {
       // Only need this because we're using getters. Could go straight to $store.state in `data`
       this.language = this.channel.language || '';
-      this.name = this.channel.name;
+      this.name = this.channel.name || '';
       this.description = this.channel.description;
     },
     mounted() {

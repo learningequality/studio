@@ -16,6 +16,11 @@ function makeWrapper() {
   });
   return shallowMount(ChannelItem, {
     store: localStore,
+    mocks: {
+      $router: {
+        push() {},
+      },
+    },
     propsData: {
       channelID: testChannel.id,
     },

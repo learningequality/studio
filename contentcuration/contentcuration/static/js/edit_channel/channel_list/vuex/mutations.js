@@ -61,7 +61,6 @@ export function CLEAR_CHANNEL_CHANGES(state) {
 
 export function CANCEL_CHANNEL_CHANGES(state) {
   state.changed = false;
-  // state.channelChanges = _.clone(state.activeChannel);
 }
 
 export function REMOVE_CHANNEL(state, channelID) {
