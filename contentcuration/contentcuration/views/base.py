@@ -503,3 +503,12 @@ def cancel_task(request, task_id):
 
 class SandboxView(TemplateView):
     template_name = "sandbox.html"
+
+    def get_context_data(self, **kwargs):
+        kwargs = super(SandboxView, self).get_context_data(**kwargs)
+        kinds = ['topic', 'exercise', 'html5', 'document', 'video', 'audio']
+        nodes = list(ContentNode.objects.filter(kind_id=k).values('title', 'kind_id', 'pk').first() for k in kinds)
+        nodes = [{'id': n['pk'], 'kind': n['kind_id'], 'title': n['title']} for n in nodes]
+        kwargs.update({"nodes": json.dumps(nodes),
+                       "channel": Channel.objects.first().pk})
+        return kwargs
