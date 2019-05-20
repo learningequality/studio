@@ -27,7 +27,7 @@ export const setChannelMixin = {
     }),
     setActiveChannel(channelId) {
       if (channelId) {
-        this.$router.push({ query: { channel_id: channelId }})
+        this.$router.push({ query: { channel_id: channelId } });
       } else {
         this.$router.push({ query: _.omit(this.$route.query, 'channel_id') });
       }
@@ -47,7 +47,7 @@ export const setChannelMixin = {
             [this.channelStrings('dontSave')]: () => {
               // If going from "Create Channel" to new "Create Channel"
               if (this.activeChannel.id === undefined && channelID === '') {
-                this.$store.commit('channel_list/CLEAR_CHANNEL_CHANGES')
+                this.$store.commit('channel_list/CLEAR_CHANNEL_CHANGES');
               } else {
                 this.setActiveChannel(channelID);
               }

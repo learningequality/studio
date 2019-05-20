@@ -92,7 +92,7 @@
     methods: {
       // HACK to get the first link to not be active under certain conditions
       linkShouldBeExact(listType) {
-        if (listType ==='EDITABLE') {
+        if (listType === 'EDITABLE') {
           if (this.$route.name !== 'ChannelList') {
             return true;
           } else {
@@ -158,16 +158,14 @@
     }
   }
   #manage-channel-nav {
-    .router-link-active li {
-      font-weight: bold;
-      border-color: @blue-500;
-    }
-    .channel-list-width;
-
     padding-bottom: 5px;
     margin-top: 50px;
     margin-bottom: 10px;
     list-style-type: none;
+    .router-link-active li {
+      font-weight: bold;
+      border-color: @blue-500;
+    }
     li {
       display: inline-block;
       padding: 10px 25px;
@@ -179,13 +177,13 @@
         border-color: @gray-300;
       }
       span::before {
-        .material-icons;
-
         font-size: 16pt;
         vertical-align: sub;
         content: 'star';
+        .material-icons;
       }
     }
+    .channel-list-width;
   }
 
 </style>

@@ -56,7 +56,8 @@ const router = new VueRouter({
     },
     // Catch-all for unrecognized URLs
     {
-      path: '*', redirect: '/',
+      path: '*',
+      redirect: '/',
     },
   ],
 });

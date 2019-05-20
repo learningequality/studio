@@ -9,21 +9,11 @@
 
   export default {
     name: 'ChannelEditIndex',
-    components: {
-
-    },
-    props: {
-
-    },
-    computed: {
-
-    },
-    methods: {
-
-    },
-    $trs: {
-
-    }
+    components: {},
+    props: {},
+    computed: {},
+    methods: {},
+    $trs: {},
   };
 
 </script>

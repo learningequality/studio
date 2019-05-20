@@ -3,7 +3,6 @@ const Backbone = require('backbone');
 const WorkspaceManager = require('../edit_channel/utils/workspace_manager');
 require('./base');
 
-
 const State = require('edit_channel/state');
 // Require the router object so that it is ready for Backbone history start call.
 require('../edit_channel/router');
