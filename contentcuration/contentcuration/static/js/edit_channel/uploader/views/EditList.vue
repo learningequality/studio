@@ -1,52 +1,50 @@
 <template>
-  <VNavigationDrawer v-model="drawer.open" stateless clipped app class="edit-list">
-    <VList>
-      <!-- Select all checkbox -->
-      <VListTile :disabled="!isValid" @click="toggleSelectAll">
-        <VListTileAction>
-          <VCheckbox color="primary" :value="selectAllChecked" @click.stop="toggleSelectAll" />
-        </VListTileAction>
-        <VListTileContent>
-          <VListTileTitle>{{ $tr('selectAllLabel') }}</VListTileTitle>
-        </VListTileContent>
-      </VListTile>
-      <VDivider />
+  <VList>
+    <!-- Select all checkbox -->
+    <VListTile :disabled="!isValid" @click="toggleSelectAll">
+      <VListTileAction>
+        <VCheckbox color="primary" :value="selectAllChecked" @click.stop="toggleSelectAll" />
+      </VListTileAction>
+      <VListTileContent>
+        <VListTileTitle>{{ $tr('selectAllLabel') }}</VListTileTitle>
+      </VListTileContent>
+    </VListTile>
+    <VDivider />
 
-      <!-- Selected items -->
-      <EditListItem
-        v-for="(node, index) in nodes"
-        :key="node.id"
-        :index="index"
-        :removable="allowAddTopic || allowAddExercise"
-      />
+    <!-- Selected items -->
+    <EditListItem
+      v-for="(node, index) in nodes"
+      :key="node.id"
+      :index="index"
+      :removable="allowAddTopic || allowAddExercise"
+    />
 
-      <!-- Create button -->
-      <VListTile class="add-item-wrapper" :disabled="!isValid">
-        <VListTileContent>
-          <VBtn
-            v-if="allowAddTopic"
-            block
-            depressed
-            color="primary"
-            dark
-            @click="createNode('topic')"
-          >
-            {{ $tr('addTopic') }}
-          </VBtn>
-          <VBtn
-            v-else-if="allowAddExercise"
-            block
-            depressed
-            color="primary"
-            dark
-            @click="createNode('exercise')"
-          >
-            {{ $tr('addExercise') }}
-          </VBtn>
-        </VListTileContent>
-      </VListTile>
-    </VList>
-  </VNavigationDrawer>
+    <!-- Create button -->
+    <VListTile class="add-item-wrapper" :disabled="!isValid">
+      <VListTileContent>
+        <VBtn
+          v-if="allowAddTopic"
+          block
+          depressed
+          color="primary"
+          dark
+          @click="createNode('topic')"
+        >
+          {{ $tr('addTopic') }}
+        </VBtn>
+        <VBtn
+          v-else-if="allowAddExercise"
+          block
+          depressed
+          color="primary"
+          dark
+          @click="createNode('exercise')"
+        >
+          {{ $tr('addExercise') }}
+        </VBtn>
+      </VListTileContent>
+    </VListTile>
+  </VList>
 </template>
 
 <script>
@@ -75,10 +73,7 @@
     },
     data() {
       return {
-        selectAllChecked: true,
-        drawer: {
-          open: true,
-        },
+        selectAllChecked: false,
       };
     },
     computed: {
@@ -99,10 +94,6 @@
       toggleSelectAll() {
         this.selectAllChecked ? this.deselectAll() : this.selectAll();
         this.selectAllChecked = !this.selectAllChecked;
-      },
-      openDrawer() {
-        // TODO: auto select all on load
-        this.drawer.open = true;
       },
       createNode(kind) {
         let payload = {

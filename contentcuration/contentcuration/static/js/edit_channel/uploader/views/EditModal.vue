@@ -5,7 +5,9 @@
     </VBtn>
     <VDialog v-model="dialog" fullscreen hideOverlay transition="dialog-bottom-transition" lazy>
       <VCard>
-        <EditList ref="editlist" :mode="mode" />
+        <VNavigationDrawer v-model="drawer.open" stateless clipped app class="edit-list">
+          <EditList :mode="mode" />
+        </VNavigationDrawer>
         <VToolbar dark color="primary" fixed clippedLeft app>
           <VBtn icon dark app @click="closeModal">
             <VIcon>close</VIcon>
@@ -44,7 +46,7 @@
 
 <script>
 
-  import { mapActions, mapGetters } from 'vuex';
+  import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
   import { modes } from '../constants';
   import EditList from './EditList.vue';
   import EditView from './EditView.vue';
@@ -84,9 +86,13 @@
         savedMessage: null,
         interval: null,
         updateInterval: null,
+        drawer: {
+          open: true,
+        },
       };
     },
     computed: {
+      ...mapState('edit_modal', ['nodes']),
       ...mapGetters('edit_modal', ['changed']),
       isViewOnly() {
         return this.mode === modes.VIEW_ONLY;
@@ -96,21 +102,29 @@
           relativeTime: this.$formatRelative(this.lastSaved),
         });
       },
+      showEditList() {
+        return this.mode !== modes.EDIT || this.nodes.length > 1;
+      },
     },
     watch: {
       dialog(val) {
         // Temporary workaround while waiting for Vuetify bug
         // to be fixed https://github.com/vuetifyjs/vuetify/issues/5617
         if (val) {
-          setTimeout(this.$refs.editlist.openDrawer, 300);
+          setTimeout(() => (this.drawer.open = this.showEditList), 300);
         }
       },
     },
+    beforeMount() {
+      this.drawer.open = this.showEditList;
+    },
     mounted() {
       this.openModal();
+      this.select(0);
     },
     methods: {
       ...mapActions('edit_modal', ['saveNodes']),
+      ...mapMutations('edit_modal', { select: 'SELECT_NODE' }),
       openModal() {
         this.dialog = true;
         this.interval = setInterval(() => {
