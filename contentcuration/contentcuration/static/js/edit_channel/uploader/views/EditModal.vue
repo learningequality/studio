@@ -1,8 +1,5 @@
 <template>
   <div class="edit-modal-wrapper">
-    <VBtn @click.stop="openModal">
-      Open Edit Modal
-    </VBtn>
     <VDialog v-model="dialog" fullscreen hideOverlay transition="dialog-bottom-transition" lazy>
       <VCard>
         <VNavigationDrawer v-model="drawer.open" stateless clipped app class="edit-list">
@@ -51,7 +48,7 @@
   import EditList from './EditList.vue';
   import EditView from './EditView.vue';
 
-  const SAVE_TIMER = 35000;
+  const SAVE_TIMER = 5000;
   const SAVE_MESSAGE_TIMER = 10000;
 
   export default {
@@ -75,12 +72,12 @@
     props: {
       mode: {
         type: String,
-        default: modes.EDIT,
+        default: modes.VIEW_ONLY,
       },
     },
     data() {
       return {
-        dialog: true,
+        dialog: false,
         lastSaved: null,
         saving: false,
         savedMessage: null,
@@ -114,31 +111,19 @@
           setTimeout(() => (this.drawer.open = this.showEditList), 300);
         }
       },
+      changed(changed) {
+        changed ? this.throttleSave()() : clearInterval(this.updateInterval);
+      },
     },
     beforeMount() {
       this.drawer.open = this.showEditList;
-    },
-    mounted() {
-      this.openModal();
-      this.select(0);
     },
     methods: {
       ...mapActions('edit_modal', ['saveNodes']),
       ...mapMutations('edit_modal', { select: 'SELECT_NODE' }),
       openModal() {
         this.dialog = true;
-        this.interval = setInterval(() => {
-          if (this.changed) {
-            clearInterval(this.updateInterval);
-            this.saving = true;
-            this.saveNodes().then(() => {
-              this.lastSaved = Date.now();
-              this.saving = false;
-              this.updateSavedTime();
-              this.updateInterval = setInterval(this.updateSavedTime, SAVE_MESSAGE_TIMER);
-            });
-          }
-        }, SAVE_TIMER);
+        this.select(0);
       },
       updateSavedTime() {
         this.savedMessage = this.$tr('savedMessage', {
@@ -151,8 +136,20 @@
           this.closeModal();
         });
       },
+      throttleSave() {
+        return _.throttle(this.save, SAVE_TIMER, { leading: false });
+      },
+      save() {
+        clearInterval(this.updateInterval);
+        this.saving = true;
+        this.saveNodes().then(() => {
+          this.lastSaved = Date.now();
+          this.saving = false;
+          this.updateSavedTime();
+          this.updateInterval = setInterval(this.updateSavedTime, SAVE_MESSAGE_TIMER);
+        });
+      },
       closeModal() {
-        clearInterval(this.interval);
         clearInterval(this.updateInterval);
         this.saving = false;
         this.lastSaved = null;

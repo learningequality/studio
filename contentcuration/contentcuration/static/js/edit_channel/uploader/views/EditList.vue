@@ -109,6 +109,8 @@
 
 <style lang="less" scoped>
 
+  @import '../../../../less/global-variables.less';
+
   .v-divider {
     margin-top: 0;
   }
@@ -116,6 +118,10 @@
   .add-item-wrapper {
     padding-bottom: 50px;
     margin-top: 20px;
+  }
+
+  /deep/ a {
+    .linked-list-item;
   }
 
 </style>

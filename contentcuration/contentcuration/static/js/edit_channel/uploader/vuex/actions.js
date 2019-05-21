@@ -3,10 +3,11 @@
 // import Models from 'edit_channel/models';
 
 export function saveNodes(context) {
+  // Setting this before in case changes happen between saving start and finish
+  _.each(context.state.nodes, node => (node.changesStaged = false));
   return new Promise(resolve => {
     // ADD SAVE LOGIC HERE
-    _.each(context.state.nodes, node => (node.changesStaged = false));
-    setTimeout(resolve, 1000);
+    setTimeout(resolve, 5000);
   });
 }
 

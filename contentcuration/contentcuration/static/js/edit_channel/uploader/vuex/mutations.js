@@ -115,6 +115,7 @@ export function SELECT_ALL_NODES(state) {
 }
 
 export function ADD_NODE(state, payload) {
+  // console.log(State.preferences);
   let data = _.reduce(
     editableFields,
     (dict, field) => {
@@ -213,6 +214,7 @@ export function SET_TAGS(state, tags) {
       .union(tags)
       .difference(removed)
       .value();
+    node.changesStaged = true;
   });
   state.changes.changed = true;
   state.changes.tags = tags;
