@@ -1,44 +1,42 @@
 <template>
-  <div class="edit-modal-wrapper">
-    <VDialog v-model="dialog" fullscreen hideOverlay transition="dialog-bottom-transition" lazy>
-      <VCard>
-        <VNavigationDrawer v-model="drawer.open" stateless clipped app class="edit-list">
-          <EditList :mode="mode" />
-        </VNavigationDrawer>
-        <VToolbar dark color="primary" fixed clippedLeft app>
-          <VBtn icon dark app @click="closeModal">
-            <VIcon>close</VIcon>
+  <VDialog v-model="dialog" fullscreen hideOverlay transition="dialog-bottom-transition" lazy>
+    <VCard class="edit-modal-wrapper">
+      <VNavigationDrawer v-model="drawer.open" stateless clipped app class="edit-list">
+        <EditList :mode="mode" />
+      </VNavigationDrawer>
+      <VToolbar dark color="primary" fixed clippedLeft app>
+        <VBtn icon dark app @click="closeModal">
+          <VIcon>close</VIcon>
+        </VBtn>
+        <VToolbarTitle>{{ $tr(mode) }}</VToolbarTitle>
+        <VSpacer />
+        <VToolbarItems>
+          <VFlex alignCenter class="last-saved-time">
+            <div v-if="saving">
+              <VProgressCircular
+                indeterminate
+                size="15"
+                width="2"
+                color="white"
+              />
+              {{ $tr('savingIndicator') }}
+            </div>
+            <div v-else-if="lastSaved">
+              {{ savedMessage }}
+            </div>
+          </VFlex>
+          <VBtn v-if="!isViewOnly" dark flat @click="saveContent">
+            {{ $tr('saveButtonText') }}
           </VBtn>
-          <VToolbarTitle>{{ $tr(mode) }}</VToolbarTitle>
-          <VSpacer />
-          <VToolbarItems>
-            <VFlex alignCenter class="last-saved-time">
-              <div v-if="saving">
-                <VProgressCircular
-                  indeterminate
-                  size="15"
-                  width="2"
-                  color="white"
-                />
-                {{ $tr('savingIndicator') }}
-              </div>
-              <div v-else-if="lastSaved">
-                {{ savedMessage }}
-              </div>
-            </VFlex>
-            <VBtn v-if="!isViewOnly" dark flat @click="saveContent">
-              {{ $tr('saveButtonText') }}
-            </VBtn>
-            <VBtn v-else dark flat @click="copyContent">
-              {{ $tr('copyButtonText') }}
-            </VBtn>
-          </VToolbarItems>
-        </VToolbar>
+          <VBtn v-else dark flat @click="copyContent">
+            {{ $tr('copyButtonText') }}
+          </VBtn>
+        </VToolbarItems>
+      </VToolbar>
 
-        <EditView :mode="mode" />
-      </VCard>
-    </VDialog>
-  </div>
+      <EditView :mode="mode" />
+    </VCard>
+  </VDialog>
 </template>
 
 <script>
@@ -118,12 +116,18 @@
     beforeMount() {
       this.drawer.open = this.showEditList;
     },
+    mounted() {
+      this.openModal();
+    },
     methods: {
       ...mapActions('edit_modal', ['saveNodes']),
-      ...mapMutations('edit_modal', { select: 'SELECT_NODE' }),
+      ...mapMutations('edit_modal', {
+        select: 'SELECT_NODE',
+        deselectAll: 'RESET_SELECTED',
+      }),
       openModal() {
         this.dialog = true;
-        this.select(0);
+        if (this.nodes.length > 0) this.select(0);
       },
       updateSavedTime() {
         this.savedMessage = this.$tr('savedMessage', {
@@ -154,6 +158,7 @@
         this.saving = false;
         this.lastSaved = null;
         this.dialog = false;
+        this.deselectAll();
         this.$emit('modalclosed');
       },
       copyContent() {

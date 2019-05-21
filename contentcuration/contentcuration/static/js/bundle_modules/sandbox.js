@@ -27,8 +27,6 @@ if (State.current_channel) {
   State.current_channel.fetch({ async: false });
 }
 
-store.commit('edit_modal/SET_NODES', window.nodes);
-
 new Vue({
   el: 'sandbox',
   store,

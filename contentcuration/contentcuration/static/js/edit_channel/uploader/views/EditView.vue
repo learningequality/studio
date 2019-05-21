@@ -54,6 +54,8 @@
       [TabNames.PREREQUISITES]: 'Prerequisites',
       noItemsToEditText: 'Please select an item or items to edit',
       noItemsToViewText: 'Please select an item or items to view',
+      addTopicText: 'Please add a topic to get started',
+      addExerciseText: 'Please add an exercise to get started',
       loadingText: 'Loading Content...',
     },
     components: {
@@ -75,8 +77,12 @@
     },
     computed: {
       ...mapGetters('edit_modal', ['selected', 'allExercises', 'allResources']),
-      ...mapState('edit_modal', ['viewOnly', 'isClipboard']),
+      ...mapState('edit_modal', ['viewOnly', 'isClipboard', 'nodes']),
       noItemText() {
+        if (!this.nodes.length) {
+          if (this.mode === modes.NEW_EXERCISE) return this.$tr('addExerciseText');
+          else if (this.mode === modes.NEW_TOPIC) return this.$tr('addTopicText');
+        }
         return this.mode === modes.VIEW_ONLY
           ? this.$tr('noItemsToViewText')
           : this.$tr('noItemsToEditText');

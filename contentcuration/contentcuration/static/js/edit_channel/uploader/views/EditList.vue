@@ -120,8 +120,4 @@
     margin-top: 20px;
   }
 
-  /deep/ a {
-    .linked-list-item;
-  }
-
 </style>

@@ -1,7 +1,7 @@
 <template>
   <div>
     <VApp>
-      <VBtn @click="openModal('editmodal')">
+      <VBtn @click="openModal('EDIT')">
         Edit Modal
       </VBtn>
 
@@ -21,12 +21,13 @@
         Upload File
       </VBtn>
 
-      <EditModal ref="editmodal" :mode="mode" />
+      <EditModal v-if="mode" :mode="mode" @modalclosed="mode=null" />
     </VApp>
   </div>
 </template>
 <script>
 
+  import { mapMutations } from 'vuex';
   import EditModal from 'edit_channel/uploader/views/EditModal.vue';
 
   export default {
@@ -36,13 +37,15 @@
     },
     data() {
       return {
-        mode: 'EDIT',
+        mode: null,
       };
     },
     methods: {
+      ...mapMutations('edit_modal', { setNodes: 'SET_NODES' }),
       openModal(mode) {
+        let nodes = mode === 'VIEW_ONLY' || mode === 'EDIT' ? window.nodes : [];
+        this.setNodes(nodes);
         this.mode = mode;
-        this.$refs.editmodal.openModal();
       },
     },
   };
