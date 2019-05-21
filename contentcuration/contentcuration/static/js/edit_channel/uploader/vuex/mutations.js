@@ -26,7 +26,6 @@ export function RESET_STATE(state) {
     isClipboard: false,
     changes: {},
     targetNode: {},
-    changed: false,
     isValid: true,
   });
 }
@@ -172,14 +171,13 @@ export function ADD_NODE(state, payload) {
 export function REMOVE_NODE(state, index) {
   state.nodes = _.reject(state.nodes, (n, i) => i === index);
   state.selectedIndices = _.reject(state.selectedIndices, i => i === index);
+  SET_CHANGES(state);
 }
 
 // Form fields
 export function SET_FIELD(state, fieldName, value) {
-  // console.log(fieldName, value)
   state.changes[fieldName].value = value;
   state.changes[fieldName].varied = false;
-  state.changes.changed = true;
   let selected = getSelected(state);
   _.each(selected, node => {
     if (!_.isEqual(node[fieldName], value)) {
@@ -240,8 +238,8 @@ export function SET_TAGS(state, tags) {
       .difference(removed)
       .value();
     node.changesStaged = true;
+    node.changed = true;
   });
-  state.changes.changed = true;
   state.changes.tags = tags;
 
   let newTags = _.difference(tags, State.Store.getters.contentTags);
@@ -262,7 +260,6 @@ export function SET_EXTRA_FIELDS(state, obj) {
     _.each(_.pairs(obj), pair => {
       state.changes.extra_fields[pair[0]].value = pair[1];
       state.changes.extra_fields[pair[0]].varied = false;
-      state.changes.changed = true;
 
       // Update selected
       _.each(selected, node => {

@@ -81,13 +81,14 @@
         savedMessage: null,
         interval: null,
         updateInterval: null,
+        saveFunction: this.debouncedSave(),
         drawer: {
           open: true,
         },
       };
     },
     computed: {
-      ...mapState('edit_modal', ['nodes']),
+      ...mapState('edit_modal', ['nodes', 'changes']),
       ...mapGetters('edit_modal', ['changed']),
       isViewOnly() {
         return this.mode === modes.VIEW_ONLY;
@@ -109,8 +110,11 @@
           setTimeout(() => (this.drawer.open = this.showEditList), 300);
         }
       },
-      changed(changed) {
-        changed ? this.throttleSave()() : clearInterval(this.updateInterval);
+      changes: {
+        deep: true,
+        handler() {
+          this.saveFunction();
+        },
       },
     },
     beforeMount() {
@@ -137,26 +141,25 @@
       saveContent() {
         this.saving = true;
         this.saveNodes().then(() => {
+          clearInterval(this.updateInterval);
+          this.saving = false;
+          this.lastSaved = null;
           this.closeModal();
         });
       },
-      throttleSave() {
-        return _.throttle(this.save, SAVE_TIMER, { leading: false });
-      },
-      save() {
-        clearInterval(this.updateInterval);
-        this.saving = true;
-        this.saveNodes().then(() => {
-          this.lastSaved = Date.now();
-          this.saving = false;
-          this.updateSavedTime();
-          this.updateInterval = setInterval(this.updateSavedTime, SAVE_MESSAGE_TIMER);
-        });
+      debouncedSave() {
+        return _.debounce(() => {
+          clearInterval(this.updateInterval);
+          this.saving = true;
+          this.saveNodes().then(() => {
+            this.lastSaved = Date.now();
+            this.saving = false;
+            this.updateSavedTime();
+            this.updateInterval = setInterval(this.updateSavedTime, SAVE_MESSAGE_TIMER);
+          });
+        }, SAVE_TIMER);
       },
       closeModal() {
-        clearInterval(this.updateInterval);
-        this.saving = false;
-        this.lastSaved = null;
         this.dialog = false;
         this.deselectAll();
         this.$emit('modalclosed');

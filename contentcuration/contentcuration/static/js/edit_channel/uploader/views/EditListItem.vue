@@ -25,7 +25,7 @@
 
 <script>
 
-  import { mapGetters, mapMutations, mapState } from 'vuex';
+  import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
   import ContentNodeIcon from 'edit_channel/sharedComponents/ContentNodeIcon.vue';
 
   export default {
@@ -88,8 +88,8 @@
         select: 'SELECT_NODE',
         deselect: 'DESELECT_NODE',
         setNode: 'SET_NODE',
-        removeNode: 'REMOVE_NODE',
       }),
+      ...mapActions('edit_modal', ['removeNode']),
       toggleNode() {
         this.isSelected ? this.deselect(this.index) : this.select(this.index);
       },

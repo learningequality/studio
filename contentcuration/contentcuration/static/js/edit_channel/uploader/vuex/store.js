@@ -16,7 +16,6 @@ const store = new Vuex.Store({
         selectedIndices: [],
         isClipboard: false,
         changes: {},
-        changed: false,
         targetNode: { parent_title: 'Sandbox' },
         isValid: true,
       },
