@@ -1,6 +1,7 @@
 import _ from 'underscore';
 import { getSelected } from './utils';
 import State from 'edit_channel/state';
+import Constants from 'edit_channel/constants/index';
 
 const editableFields = [
   'language',
@@ -115,11 +116,35 @@ export function SELECT_ALL_NODES(state) {
 }
 
 export function ADD_NODE(state, payload) {
-  // console.log(State.preferences);
+  let preferences = payload.kind === 'topic' ? {} : State.preferences;
   let data = _.reduce(
     editableFields,
     (dict, field) => {
-      dict[field] = null;
+      switch (field) {
+        case 'license':
+          dict.license = _.findWhere(Constants.Licenses, { license_name: preferences.license });
+          dict.license = (dict.license && dict.license.id) || null;
+          break;
+        default:
+          dict[field] = preferences[field];
+      }
+      return dict;
+    },
+    {}
+  );
+  let extraFieldData = _.reduce(
+    extraFields,
+    (dict, field) => {
+      switch (field) {
+        case 'm':
+          dict.m = preferences.m_value || null;
+          break;
+        case 'n':
+          dict.n = preferences.n_value || null;
+          break;
+        default:
+          dict[field] = preferences[field];
+      }
       return dict;
     },
     {}
@@ -130,7 +155,7 @@ export function ADD_NODE(state, payload) {
     assessment_items: [],
     prerequisite: [],
     ancestors: [],
-    extra_fields: {},
+    extra_fields: extraFieldData,
     tags: [],
     role_visibility: 'learner',
     loaded: true,

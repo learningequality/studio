@@ -85,6 +85,17 @@
         return this.mode === modes.NEW_EXERCISE;
       },
     },
+    mounted() {
+      /*
+        Leaving this commented as we might not want to automatically
+        create nodes with autosaving
+      */
+      // if(this.mode === modes.NEW_TOPIC) {
+      //   this.createNode('topic');
+      // } else if (this.mode === modes.NEW_EXERCISE) {
+      //   this.createNode('exercise');
+      // }
+    },
     methods: {
       ...mapMutations('edit_modal', {
         selectAll: 'SELECT_ALL_NODES',
