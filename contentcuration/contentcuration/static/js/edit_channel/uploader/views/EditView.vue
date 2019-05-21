@@ -151,7 +151,7 @@
   .default-content {
     .empty_default;
 
-    margin: 10% 50px;
+    margin: 10% auto;
   }
 
   /deep/ .v-tabs__item {
