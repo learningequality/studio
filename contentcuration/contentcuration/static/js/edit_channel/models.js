@@ -624,7 +624,12 @@ var ContentNodeCollection = BaseCollection.extend({
         data: JSON.stringify(data),
         dataType: 'json',
         success: function(data) {
-          State.Store.dispatch('startTask', data, resolve, reject);
+          const payload = {
+            task: data,
+            resolveCallback: resolve,
+            rejectCallback: reject,
+          };
+          State.Store.dispatch('startTask', payload);
         },
         error: reject,
       });
@@ -648,7 +653,12 @@ var ContentNodeCollection = BaseCollection.extend({
         dataType: 'json',
         error: reject,
         success: function(data) {
-          State.Store.dispatch('startTask', data, resolve, reject);
+          const payload = {
+            task: data,
+            resolveCallback: resolve,
+            rejectCallback: reject,
+          };
+          State.Store.dispatch('startTask', payload);
         },
       });
     });
@@ -681,7 +691,12 @@ var ContentNodeCollection = BaseCollection.extend({
         dataType: 'json',
         error: reject,
         success: function(data) {
-          State.Store.dispatch('startTask', data, resolve, reject);
+          const payload = {
+            task: data,
+            resolveCallback: resolve,
+            rejectCallback: reject,
+          };
+          State.Store.dispatch('startTask', payload);
         },
       });
     });
@@ -758,7 +773,12 @@ var ChannelModel = BaseModel.extend({
         data: JSON.stringify(data),
         dataType: 'json',
         success: function(data) {
-          State.Store.dispatch('startTask', data, resolve, reject);
+          const payload = {
+            task: data,
+            resolveCallback: resolve,
+            rejectCallback: reject,
+          };
+          State.Store.dispatch('startTask', payload);
         },
         error: reject,
       });

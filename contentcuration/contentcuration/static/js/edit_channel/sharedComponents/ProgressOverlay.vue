@@ -117,8 +117,7 @@
     },
     methods: {
       closeOverlay() {
-        this.$store.commit('SET_CURRENT_TASK', { taskID: null });
-        this.$store.commit('SET_PROGRESS', 0);
+        this.$store.dispatch('clearCurrentTask');
         window.location.reload();
       },
       handleDone() {

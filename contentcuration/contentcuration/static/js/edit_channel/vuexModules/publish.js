@@ -26,7 +26,7 @@ const publishModule = {
           success: task => {
             let mypayload = { task: task, resolveCallback: resolve, rejectCallback: reject };
             // FIXME: Find a way to force a task list update, as we do when we call startTask
-            context.commit('SET_CURRENT_TASK', mypayload, { root: true });
+            context.dispatch('startTask', mypayload, { root: true });
           },
         });
       });

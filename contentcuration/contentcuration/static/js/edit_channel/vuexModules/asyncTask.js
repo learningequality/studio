@@ -1,4 +1,5 @@
-const DEFAULT_CHECK_INTERVAL = 2000;
+const DEFAULT_CHECK_INTERVAL = 3000;
+const RUNNING_TASK_INTERVAL = 1000;
 
 let timerID = null;
 
@@ -28,19 +29,35 @@ const asyncTasksModule = {
     },
   },
   actions: {
-    startTask(store, newTask, resolveCallback, rejectCallback) {
+    startTask(store, payload) {
       let tasks = store.getters.asyncTasks;
-      tasks.push(newTask);
+      tasks.push(payload.task);
 
-      const payload = {
-        task: newTask,
-        resolveCallback: resolveCallback,
-        rejectCallback: rejectCallback,
-      };
       store.commit('SET_PROGRESS', 0.0);
       store.commit('SET_CURRENT_TASK', payload);
       // force an immediate update in case the timer isn't already running
       store.dispatch('updateTaskList');
+    },
+
+    clearCurrentTask(store) {
+      store.commit('SET_CURRENT_TASK', null);
+      store.commit('SET_CURRENT_TASK_ERROR', null);
+      store.commit('SET_PROGRESS', 0.0);
+      store.dispatch('setCheckInterval');
+    },
+
+    setCheckInterval(store) {
+      const currentTask = store.getters.currentTask;
+      let interval = DEFAULT_CHECK_INTERVAL;
+      if (currentTask) {
+        interval = RUNNING_TASK_INTERVAL;
+      }
+      if (timerID) {
+        clearInterval(timerID);
+      }
+      timerID = setInterval(function() {
+        store.dispatch('updateTaskList');
+      }, interval);
     },
 
     deleteCurrentTask(store) {
@@ -54,17 +71,27 @@ const asyncTasksModule = {
     },
     updateTaskList(store) {
       if (!timerID) {
-        timerID = setInterval(function() {
-          store.dispatch('updateTaskList');
-        }, DEFAULT_CHECK_INTERVAL);
+        store.dispatch('setCheckInterval');
       }
+      let currentTask = store.getters.currentTask;
+      let url = '/api/task';
+      // if we have a running task, only get status on it.
+      if (currentTask && currentTask.id) {
+        url += '/' + currentTask.id;
+      }
+
       $.ajax({
         method: 'GET',
-        url: '/api/task',
+        url: url,
         dataType: 'json',
         success: function(data) {
-          let currentTask = store.getters.currentTask;
           let runningTask = null;
+
+          // Treat the return value as an array even though we're getting a single task
+          // because the code is expecting an array of tasks to check.
+          if (currentTask) {
+            data = [data];
+          }
 
           if (data && data.length > 0) {
             for (let i = 0; i < data.length; i++) {
@@ -80,14 +107,15 @@ const asyncTasksModule = {
               if (runningTask == task && (task.status === 'SUCCESS' || task.status === 'FAILURE')) {
                 if (task.status === 'SUCCESS') {
                   store.commit('SET_PROGRESS', 100.0);
+                } else if (task.status === 'FAILURE') {
+                  if (task.metadata && task.metadata.error) {
+                    store.commit('SET_CURRENT_TASK_ERROR', task.metadata.error);
+                  }
                 }
                 let callbacks = store.getters.callbacks;
                 if (callbacks && callbacks[task.id]) {
                   let callback = callbacks[task.id]['resolve'];
                   if (task.status === 'FAILURE') {
-                    if (task.metadata && task.metadata.error) {
-                      store.commit('SET_CURRENT_TASK_ERROR', task.metadata.error);
-                    }
                     callback = callbacks[task.id]['reject'];
                   }
                   delete callbacks[task.id];
@@ -131,8 +159,11 @@ const asyncTasksModule = {
       state.currentTaskError = error;
     },
     SET_CURRENT_TASK(state, payload) {
+      if (!payload || !payload.task || !payload.task.id) {
+        state.currentTask = null;
+        return;
+      }
       state.currentTask = payload.task;
-      state.progressPercent = 0.0;
       let resolveCallback = payload.resolveCallback;
       let rejectCallback = payload.rejectCallback;
       if (payload.task && (resolveCallback || rejectCallback)) {
