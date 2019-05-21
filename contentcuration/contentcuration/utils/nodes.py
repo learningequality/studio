@@ -8,7 +8,9 @@ from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
+from django.db import transaction
 from django.db.models import Q
+from django.utils.translation import ugettext as _
 
 from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
@@ -173,6 +175,24 @@ def duplicate_node_bulk(node, sort_order=None, parent=None, channel_id=None, use
     for f in to_create["assessment_files"]:
         f.assessment_item_id = aid_mapping[f.assessment_item.contentnode_id + ":" + f.assessment_item.assessment_id]
     File.objects.bulk_create(to_create["node_files"] + to_create["assessment_files"])
+
+    return new_node
+
+
+def duplicate_node_inline(channel_id, node_id, target_parent, user=None):
+    node = ContentNode.objects.get(pk=node_id)
+    target_parent = ContentNode.objects.get(pk=target_parent)
+
+    new_node = None
+    with transaction.atomic():
+        with ContentNode.objects.disable_mptt_updates():
+            sort_order = (
+                node.sort_order + node.get_next_sibling().sort_order) / 2 if node.get_next_sibling() else node.sort_order + 1
+            new_node = duplicate_node_bulk(node, sort_order=sort_order, parent=target_parent, channel_id=channel_id,
+                                           user=user)
+            if not new_node.title.endswith(_(" (Copy)")):
+                new_node.title = new_node.title + _(" (Copy)")
+                new_node.save()
 
     return new_node
 

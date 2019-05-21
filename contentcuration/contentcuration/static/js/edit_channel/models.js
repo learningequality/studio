@@ -412,9 +412,15 @@ var ContentNodeModel = BaseModel.extend({
       $.ajax({
         method: 'POST',
         url: window.Urls.duplicate_node_inline(),
-        data: JSON.stringify(data),
+        data: data,
+        dataType: 'json',
         success: function(data) {
-          resolve(new ContentNodeCollection(JSON.parse(data)));
+          const payload = {
+            task: data,
+            resolveCallback: resolve,
+            rejectCallback: reject,
+          };
+          State.Store.dispatch('startTask', payload);
         },
         error: reject,
       });

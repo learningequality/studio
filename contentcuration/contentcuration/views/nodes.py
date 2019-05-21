@@ -5,14 +5,12 @@ from datetime import datetime
 from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
-from django.db import transaction
 from django.db.models import F
 from django.db.models import Max
 from django.db.models import Sum
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.http import HttpResponseNotFound
-from django.utils.translation import ugettext as _
 from le_utils.constants import content_kinds
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authentication import TokenAuthentication
@@ -32,7 +30,6 @@ from contentcuration.serializers import SimplifiedContentNodeSerializer
 from contentcuration.serializers import TaskSerializer
 from contentcuration.tasks import create_async_task
 from contentcuration.tasks import getnodedetails_task
-from contentcuration.utils.nodes import duplicate_node_bulk
 
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
@@ -298,37 +295,43 @@ def duplicate_nodes(request):
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
 
+@api_view(['POST'])
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
 def duplicate_node_inline(request):
-    logging.debug("Entering the copy_node endpoint")
+    logging.debug("Entering the dupllicate_node_inline endpoint")
 
     if request.method != 'POST':
         return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
 
-    data = json.loads(request.body)
+    data = request.data
 
     try:
-
-        node = ContentNode.objects.get(pk=data["node_id"])
+        node_id = data["node_id"]
         channel_id = data["channel_id"]
         target_parent = ContentNode.objects.get(pk=data["target_parent"])
         channel = target_parent.get_channel()
         request.user.can_edit(channel and channel.pk)
 
-        # record_node_duplication_stats([node], ContentNode.objects.get(pk=target_parent.pk),
-        #                               Channel.objects.get(pk=channel_id))
+        task_info = {
+            'user': request.user,
+            'metadata': {
+                'affects': {
+                    'channels': [channel_id],
+                    'nodes': [node_id],
+                }
+            }
+        }
 
-        new_node = None
-        with transaction.atomic():
-            with ContentNode.objects.disable_mptt_updates():
-                sort_order = (node.sort_order + node.get_next_sibling().sort_order) / 2 if node.get_next_sibling() else node.sort_order + 1
-                new_node = duplicate_node_bulk(node, sort_order=sort_order, parent=target_parent, channel_id=channel_id, user=request.user)
-                if not new_node.title.endswith(_(" (Copy)")):
-                    new_node.title = new_node.title + _(" (Copy)")
-                    new_node.save()
+        task_args = {
+            'user_id': request.user.pk,
+            'channel_id': channel_id,
+            'target_parent': target_parent.pk,
+            'node_id': node_id,
+        }
 
-        return HttpResponse(JSONRenderer().render(ContentNodeSerializer(ContentNode.objects.filter(pk=new_node.pk), many=True).data))
+        task, task_info = create_async_task('duplicate-node-inline', task_info, task_args)
+        return Response(TaskSerializer(task_info).data)
 
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
@@ -374,7 +377,7 @@ def move_nodes(request):
         }
 
         task, task_info = create_async_task('move-nodes', task_info, task_args)
-        return HttpResponse(JSONRenderer().render(TaskSerializer(task_info).data))
+        return Response(TaskSerializer(task_info).data)
 
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
