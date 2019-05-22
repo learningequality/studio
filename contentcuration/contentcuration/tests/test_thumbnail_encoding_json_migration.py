@@ -1,4 +1,5 @@
 from django.db import connection
+from django.core import management
 from django.db.migrations.executor import MigrationExecutor
 from django.test import TransactionTestCase
 
@@ -33,6 +34,14 @@ class MigrationTestCase(TransactionTestCase):
         executor.migrate(migrate_to)
 
         self.apps = executor.loader.project_state(migrate_to).apps
+
+    @classmethod
+    def tearDownClass(cls):
+        """
+        Ensures that the DB is reset and fully migrated due to this
+        test class's selective migrations
+        """
+        management.call_command("migrate")
 
 
 class TestForwardJSONMigration(MigrationTestCase):

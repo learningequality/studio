@@ -66,8 +66,6 @@
       <script src="{% url 'js_reverse' %}" type="text/javascript"></script>
 
       {% render_bundle 'common' 'js' %}
-      <!-- prevent more than 1 bundle per page -->
-      {% block js_bundle %} {% render_bundle 'base' 'js' %} {% endblock js_bundle %}
 
       <script type="text/javascript" src="{% url 'javascript-catalog' %}"></script>
 
@@ -156,5 +154,7 @@
 
   	<!-- Site content gets injected here -->
   	{% block content %}{% endblock content %}
+    <!-- prevent more than 1 bundle per page -->
+    {% block js_bundle %} {% render_bundle 'base' 'js' %} {% endblock js_bundle %}
 	</body>
 </html>

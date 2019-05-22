@@ -1,7 +1,5 @@
 import json
 import logging
-import random  # TODO: Remove once API is integrated
-import time  # TODO: Remove once API is integrated
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -24,6 +22,7 @@ from django.shortcuts import redirect
 from django.shortcuts import render
 from django.views.decorators.cache import cache_page
 from django.views.decorators.csrf import csrf_exempt
+from django.views.generic.base import TemplateView
 from enum import Enum
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.authentication import SessionAuthentication
@@ -56,6 +55,7 @@ from contentcuration.serializers import ChannelSetSerializer
 from contentcuration.serializers import CurrentUserSerializer
 from contentcuration.serializers import InvitationSerializer
 from contentcuration.serializers import RootNodeSerializer
+from contentcuration.serializers import SimplifiedChannelProbeCheckSerializer
 from contentcuration.serializers import TaskSerializer
 from contentcuration.serializers import UserChannelListSerializer
 from contentcuration.tasks import create_async_task
@@ -86,6 +86,9 @@ def base(request):
         return redirect('accounts/login')
 
 
+""" HEALTH CHECKS """
+
+
 def health(request):
     c = Channel.objects.first()
     if c:
@@ -96,6 +99,23 @@ def health(request):
 
 def stealth(request):
     return HttpResponse("<3")
+
+
+@api_view(['GET'])
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
+def get_prober_channel(request):
+    if not request.user.is_admin:
+        return HttpResponseForbidden()
+
+    channel = Channel.objects.filter(editors=request.user).first()
+    if not channel:
+        channel = Channel.objects.create(name="Prober channel", editors=[request.user])
+
+    return Response(SimplifiedChannelProbeCheckSerializer(channel).data)
+
+
+""" END HEALTH CHECKS """
 
 
 def get_or_set_cached_constants(constant, serializer):
@@ -459,3 +479,7 @@ def save_token_to_channels(request, token):
     token.set_channels(channels)
 
     return HttpResponse({"success": True})
+
+
+class SandboxView(TemplateView):
+    template_name = "sandbox.html"

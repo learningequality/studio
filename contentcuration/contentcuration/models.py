@@ -1343,6 +1343,7 @@ class PrerequisiteContentRelationship(models.Model):
 
     class Meta:
         unique_together = ['target_node', 'prerequisite']
+        auto_created = True  # Avoids `AttributeError: Cannot set values on a ManyToManyField which specifies an intermediary model`
 
     def clean(self, *args, **kwargs):
         # self reference exception

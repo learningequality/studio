@@ -3,7 +3,6 @@ import json
 from django.db.models import Q
 from django.db.models import TextField
 from django.db.models import Value
-from django.http import HttpResponse
 from django.http import HttpResponseNotFound
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import viewsets
@@ -59,7 +58,7 @@ def get_public_channel_list(request, version):
         channel_list = _get_channel_list(version, request.query_params)
     except LookupError:
         return HttpResponseNotFound(_("Api endpoint {} is not available").format(version))
-    return HttpResponse(json.dumps(PublicChannelSerializer(channel_list, many=True).data))
+    return Response(PublicChannelSerializer(channel_list, many=True).data)
 
 
 @api_view(['GET'])
@@ -72,7 +71,7 @@ def get_public_channel_lookup(request, version, identifier):
         return HttpResponseNotFound(_("Api endpoint {} is not available").format(version))
     if not channel_list.exists():
         return HttpResponseNotFound(_("No channel matching {} found").format(identifier))
-    return HttpResponse(json.dumps(PublicChannelSerializer(channel_list, many=True).data))
+    return Response(PublicChannelSerializer(channel_list, many=True).data)
 
 
 @api_view(['GET'])
@@ -82,7 +81,12 @@ def get_channel_name_by_id(request, channel_id):
     channel = Channel.objects.filter(pk=channel_id).first()
     if not channel:
         return HttpResponseNotFound('Channel with id {} not found'.format(channel_id))
-    return HttpResponse(json.dumps({"name": channel.name, "description": channel.description, "version": channel.version}))
+    channel_info = {
+        "name": channel.name,
+        "description": channel.description,
+        "version": channel.version
+    }
+    return Response(channel_info)
 
 
 class InfoViewSet(viewsets.ViewSet):
