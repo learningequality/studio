@@ -5,6 +5,7 @@
     -   id: flake8
     -   id: check-added-large-files
         exclude: '^.+?\.ttf$'
+        exclude: '^crowdin-cli\.jar$'
     -   id: debug-statements
     -   id: end-of-file-fixer
         exclude: '^.+?\.json.+?\.yml$'
