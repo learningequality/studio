@@ -94,8 +94,19 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
     this.staging = options.staging;
     this.path = options.path;
 
-    // Check if the user has any running tasks so we know if we need to show the update dialog.
+    // Check if the user has any running tasks immediately so we know if we need to
+    // show the update dialog.
     State.Store.dispatch('updateTaskList');
+    // Also start the update check to run the check periodically.
+    State.Store.dispatch('activateTaskUpdateTimer');
+
+    // When the page is not active or the frontmost tab, stop polling and restore
+    // when it once again becomes frontmost.
+    this.on_blur = this.on_blur.bind(this);
+    this.on_focus = this.on_focus.bind(this);
+
+    window.addEventListener('blur', this.on_blur);
+    window.addEventListener('focus', this.on_focus);
     this.render();
   },
   events: {
@@ -110,6 +121,12 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
     'click .move_button': 'move_items',
     'click .approve_channel': 'activate_channel',
     'click .stats_button': 'open_stats',
+  },
+  on_blur: function() {
+    State.Store.dispatch('deactivateTaskUpdateTimer');
+  },
+  on_focus: function() {
+    State.Store.dispatch('activateTaskUpdateTimer');
   },
   edit_content: function() {
     this.edit_selected(this.is_edit_page);

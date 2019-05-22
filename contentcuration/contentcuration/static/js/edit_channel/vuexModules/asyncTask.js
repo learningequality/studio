@@ -2,6 +2,7 @@ const DEFAULT_CHECK_INTERVAL = 3000;
 const RUNNING_TASK_INTERVAL = 1000;
 
 let timerID = null;
+let currentInterval = DEFAULT_CHECK_INTERVAL;
 
 const asyncTasksModule = {
   state: {
@@ -35,7 +36,7 @@ const asyncTasksModule = {
 
       store.commit('SET_PROGRESS', 0.0);
       store.commit('SET_CURRENT_TASK', payload);
-      // force an immediate update in case the timer isn't already running
+      // force an immediate update to quickly get a first state update
       store.dispatch('updateTaskList');
     },
 
@@ -43,21 +44,27 @@ const asyncTasksModule = {
       store.commit('SET_CURRENT_TASK', null);
       store.commit('SET_CURRENT_TASK_ERROR', null);
       store.commit('SET_PROGRESS', 0.0);
-      store.dispatch('setCheckInterval');
+      store.dispatch('activateTaskUpdateTimer');
     },
 
-    setCheckInterval(store) {
+    deactivateTaskUpdateTimer() {
+      if (timerID) {
+        clearInterval(timerID);
+      }
+    },
+
+    activateTaskUpdateTimer(store) {
       const currentTask = store.getters.currentTask;
-      let interval = DEFAULT_CHECK_INTERVAL;
+      currentInterval = DEFAULT_CHECK_INTERVAL;
       if (currentTask) {
-        interval = RUNNING_TASK_INTERVAL;
+        currentInterval = RUNNING_TASK_INTERVAL;
       }
       if (timerID) {
         clearInterval(timerID);
       }
       timerID = setInterval(function() {
         store.dispatch('updateTaskList');
-      }, interval);
+      }, currentInterval);
     },
 
     deleteCurrentTask(store) {
@@ -70,9 +77,6 @@ const asyncTasksModule = {
       }
     },
     updateTaskList(store) {
-      if (!timerID) {
-        store.dispatch('setCheckInterval');
-      }
       let currentTask = store.getters.currentTask;
       let url = '/api/task';
       // if we have a running task, only get status on it.
