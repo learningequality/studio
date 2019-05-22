@@ -1,110 +1,111 @@
-@import "global-variables.less";
-@import "modal-styles.less";
+@import 'global-variables.less';
+@import 'modal-styles.less';
 
-#move_modal_content{
-	@move-list-item-height: 30px;
-	@highlight-color: #E6E6E6;
-	background-color:@gray-200;
-	padding:10px;
+#move_modal_content {
+  @move-list-item-height: 30px;
+  @highlight-color: #e6e6e6;
 
-	.empty_default{	margin-top: 40%; }
-	.move_section_wrapper {
-	    display: flex;
-  		flex-wrap: wrap;
-	    width:100%;
-	    margin: 0px;
-	    .move_section{
-			min-height: 400px;
-			margin-bottom: 20px;
-			padding:0px;
-		}
-	}
+  padding: 10px;
+  background-color: @gray-200;
 
-	#move_arrow_indicator{
-		padding-top:20%;
-		div { font-size:30pt }
-	}
+  .empty_default {
+    margin-top: 40%;
+  }
+  .move_section_wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+    margin: 0;
+    .move_section {
+      min-height: 400px;
+      padding: 0;
+      margin-bottom: 20px;
+    }
+  }
 
-	.move_list_section{
-		background-color:white;
-		overflow:auto;
-		&#move_to_list_section {
-			width: 58%;
-		}
-		.move-list{
-			height:auto;
-			margin:0px;
-			padding:0px;
-			width: -moz-max-content;
-			width: -webkit-max-content;
-			width: max-content;
-			li {
-				cursor:pointer;
-				padding-left:10px;
-				.disabled *{cursor:not-allowed !important;}
-				input[type=radio]{
-					cursor:pointer;
-					display:inline-block;
-					width:16px;
-					height:16px;
-					vertical-align:middle;
-					margin: 0px 4px;
-				}
-				input[type=radio]:checked + label{
-					font-weight:bold;
-				}
-				label *{
-					display:inline-block;
-					vertical-align:middle;
-				}
-				.move_item{
-					cursor:pointer;
-					font-size:16px;
-					height:@move-list-item-height;
-					font-weight:normal;
-					.tog_folder{
-						font-size:22pt;
-						padding:5px;
-						display:inline-block;
-					}
-					.icon {
-						color: @gray-500;
-					}
-					.move_item_title{
-						margin-right:15px;
-						font-size:13pt;
-						overflow:hidden;
-						max-width:250px;
-						-webkit-touch-callout: none;
-						-webkit-user-select: none;
-						-khtml-user-select: none;
-						-moz-user-select: none;
-						-ms-user-select: none;
-						user-select: none;
-					}
-					.move_empty{
-						font-size: 10pt;
-						color:gray;
-					}
-				}
-				.subdirectory{
-					display:none;
-				}
-			}
-		}
-		.to-move-list{
-			border-left:2px solid @gray-400;
-			padding-left:10px;
-		}
-		.target-list{
-			margin-left: 15px;
-		}
-		.to-move-list .move_item_title{
-			color:@gray-700;
-		}
-	}
+  #move_arrow_indicator {
+    padding-top: 20%;
+    div {
+      font-size: 30pt;
+    }
+  }
 
-	#target_list_area > .target-list{
-		margin-left: 0px;
-	}
+  .move_list_section {
+    overflow: auto;
+    background-color: white;
+    &#move_to_list_section {
+      width: 58%;
+    }
+    .move-list {
+      width: max-content;
+      height: auto;
+      padding: 0;
+      margin: 0;
+      li {
+        padding-left: 10px;
+        cursor: pointer;
+        .disabled * {
+          cursor: not-allowed !important;
+        }
+        input[type='radio'] {
+          display: inline-block;
+          width: 16px;
+          height: 16px;
+          margin: 0 4px;
+          vertical-align: middle;
+          cursor: pointer;
+        }
+        input[type='radio']:checked + label {
+          font-weight: bold;
+        }
+        label * {
+          display: inline-block;
+          vertical-align: middle;
+        }
+        .move_item {
+          height: @move-list-item-height;
+          font-size: 16px;
+          font-weight: normal;
+          cursor: pointer;
+          .tog_folder {
+            display: inline-block;
+            padding: 5px;
+            font-size: 22pt;
+          }
+          .icon {
+            color: @gray-500;
+          }
+          .move_item_title {
+            max-width: 250px;
+            margin-right: 15px;
+            overflow: hidden;
+            font-size: 13pt;
+            user-select: none;
+            -webkit-touch-callout: none;
+          }
+          .move_empty {
+            font-size: 10pt;
+            color: gray;
+          }
+        }
+        .subdirectory {
+          display: none;
+        }
+      }
+    }
+    .to-move-list {
+      padding-left: 10px;
+      border-left: 2px solid @gray-400;
+    }
+    .target-list {
+      margin-left: 15px;
+    }
+    .to-move-list .move_item_title {
+      color: @gray-700;
+    }
+  }
+
+  #target_list_area > .target-list {
+    margin-left: 0;
+  }
 }

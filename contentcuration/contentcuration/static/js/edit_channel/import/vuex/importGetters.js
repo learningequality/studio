@@ -1,10 +1,10 @@
 var _ = require('underscore');
-const State = require("edit_channel/state");
+const State = require('edit_channel/state');
 
 // ID of the Channel being edited
 exports.currentChannelId = function() {
   return State.current_channel.get('id');
-}
+};
 
 // Utility function for importedResourceCounts
 function updateCounts(totals, node) {
@@ -29,20 +29,20 @@ exports.importedItemCounts = function(state) {
   return state.itemsToImport.reduce(updateCounts, {
     resources: 0,
     topics: 0,
-  })
-}
+  });
+};
 
 // Name of the current ImportModal page
 exports.currentImportPage = function(state) {
   return state.pageState.pageType;
-}
+};
 
 // Array of IDs from itemsToImport
 exports.itemsToImportIds = function(state) {
   return _.pluck(state.itemsToImport, 'id');
-}
+};
 
 // Current search term, when on Search Results page
 exports.currentSearchTerm = function(state, getters, rootState) {
   return rootState.import.pageState.data.searchTerm || '';
-}
+};

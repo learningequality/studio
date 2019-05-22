@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 import json
 
 import pytest
@@ -15,7 +14,6 @@ from .testdata import base64encoding
 from .testdata import fileobj_video
 from .testdata import generated_base64encoding
 from .testdata import node
-from contentcuration.management.commands.exportchannel import create_associated_thumbnail
 from contentcuration.models import AssessmentItem
 from contentcuration.models import ContentNode
 from contentcuration.models import DEFAULT_CONTENT_DEFAULTS
@@ -25,6 +23,7 @@ from contentcuration.serializers import FileSerializer
 from contentcuration.utils.files import create_thumbnail_from_base64
 from contentcuration.utils.files import get_thumbnail_encoding
 from contentcuration.utils.nodes import map_files_to_node
+from contentcuration.utils.publish import create_associated_thumbnail
 from contentcuration.views.files import file_create
 from contentcuration.views.files import generate_thumbnail
 from contentcuration.views.files import image_upload

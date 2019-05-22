@@ -3,13 +3,12 @@ import hashlib
 import json
 import logging
 import os
-import pytz
 import urlparse
 import uuid
 import warnings
-
 from datetime import datetime
 
+import pytz
 from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.base_user import BaseUserManager
@@ -1341,6 +1340,7 @@ class PrerequisiteContentRelationship(models.Model):
 
     class Meta:
         unique_together = ['target_node', 'prerequisite']
+        auto_created = True  # Avoids `AttributeError: Cannot set values on a ManyToManyField which specifies an intermediary model`
 
     def clean(self, *args, **kwargs):
         # self reference exception

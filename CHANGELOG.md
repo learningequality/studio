@@ -11,6 +11,9 @@
 ## 2019-05-23 Release
 #### Changes
 * [@jayoshih] Updated README
+* [@jayoshih] Vueified channel list page
+* [@ivanistheone] Dockerfile fixes
+* [@DXCanas] docker-compose setup for dev
 * [@kollivier] Added Django debug toolbar profiling panel
 * [@jonboiser] Added vue router to channel list page
 * [@kollivier] Made default thumbnail aspect ratio 16:9
@@ -53,6 +56,7 @@
 * [#1193 images are not loading](https://github.com/learningequality/studio/issues/1193)
 * [#905 Error: ResizeObserver loop limit exceeded](https://github.com/learningequality/studio/issues/905)
 * [#875 Make sure files referenced by both orphan and non-orphan nodes aren't deleted](https://github.com/learningequality/studio/issues/875)
+* [#900 TypeError: Cannot read property 'set_active_channel' of undefined](https://github.com/learningequality/studio/issues/900)
 
 
 ## 2019-03-11 Release

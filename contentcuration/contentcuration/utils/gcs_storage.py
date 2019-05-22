@@ -2,13 +2,16 @@ import logging
 import mimetypes
 import tempfile
 
+import backoff
 from django.core.files import File
 from django.core.files.storage import Storage
+from google.cloud.exceptions import InternalServerError
 from google.cloud.storage import Client
 from google.cloud.storage.blob import Blob
 
-
 OLD_STUDIO_STORAGE_PREFIX = "/contentworkshop_content/"
+
+MAX_RETRY_TIME = 60  # seconds
 
 
 class GoogleCloudStorage(Storage):
@@ -47,7 +50,7 @@ class GoogleCloudStorage(Storage):
         """
         # We don't have any logic for returning the file object in write
         # so just raise an error if we get any mode other than rb
-        assert mode == "rb",\
+        assert mode == "rb", \
             ("Sorry, we can't handle any open mode other than rb."
              " Please use Storage.save() instead.")
 
@@ -71,7 +74,13 @@ class GoogleCloudStorage(Storage):
         django_file.just_downloaded = True
         return django_file
 
+    @backoff.on_exception(backoff.expo, InternalServerError, max_time=MAX_RETRY_TIME)
     def exists(self, name):
+        """
+        Check if a resource with the given name exists. Has a maximum backoff time of MAX_RETRY_TIME.
+        :param name: the name of the resource to check
+        :return: True if the resource with the name exists, or False otherwise.
+        """
         blob = self.bucket.get_blob(name)
         return blob
 
