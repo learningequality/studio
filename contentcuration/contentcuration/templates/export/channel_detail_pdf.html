@@ -268,9 +268,10 @@
                             <td width="2%"></td>
                             <td width="48%">
                                 {% for i in data.size.scale %}<div class="bar {% if i < data.size.filled %}filled{% endif %}">&nbsp;</div>{% endfor %}
-                                <br><span class="subtext">{% blocktrans count data.resource_count as count %}
-                                    {{count}} Resource {% plural %}{{count}} Resources
-                                {% endblocktrans %} - {{data.size.text}}</span>
+                                <br>
+                                <span class="subtext">
+                                {% blocktrans count data.resource_count as count %}{{count}} Resource{% plural %}{{count}} Resources{% endblocktrans %} - {{data.size.text}}
+                                </span>
                             </td>
                             <td width="10%"></td>
                             <td width="40%">
