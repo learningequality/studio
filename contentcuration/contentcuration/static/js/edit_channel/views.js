@@ -1377,22 +1377,10 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
       source
     );
   },
-  copy_item: function(message, source) {
-    message = message != null ? message : this.get_translation('copying_to_clipboard');
+  copy_item: function() {
     var copyCollection = new Models.ContentNodeCollection();
     copyCollection.add(this.model);
-    var self = this;
-    this.display_load(message, function(resolve, reject) {
-      self.containing_list_view
-        .copy_collection(copyCollection)
-        .then(function(collection) {
-          self.containing_list_view.add_to_clipboard(collection, message, source);
-          resolve(collection);
-        })
-        .catch(function(error) {
-          reject(error);
-        });
-    });
+    this.containing_list_view.copy_collection(copyCollection);
   },
   make_copy: function() {
     // Makes inline copy
