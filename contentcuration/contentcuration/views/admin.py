@@ -66,7 +66,6 @@ from contentcuration.serializers import AdminChannelListSerializer
 from contentcuration.serializers import AdminUserListSerializer
 from contentcuration.serializers import CurrentUserSerializer
 from contentcuration.serializers import UserChannelListSerializer
-from contentcuration.utils.channelcache import ChannelCacher
 from contentcuration.utils.messages import get_messages
 
 reload(sys)
@@ -125,7 +124,7 @@ def get_all_channels(request):
     if not request.user.is_admin:
         raise SuspiciousOperation("You are not authorized to access this endpoint")
 
-    channel_list = ChannelCacher.get_all_channels()
+    channel_list = Channel.get_all_channels()
     channel_serializer = AdminChannelListSerializer(channel_list, many=True)
 
     return Response(channel_serializer.data)

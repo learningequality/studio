@@ -66,8 +66,6 @@
       <script src="{% url 'js_reverse' %}" type="text/javascript"></script>
 
       {% render_bundle 'common' 'js' %}
-      <!-- prevent more than 1 bundle per page -->
-      {% block js_bundle %} {% render_bundle 'base' 'js' %} {% endblock js_bundle %}
 
       <script type="text/javascript" src="{% url 'javascript-catalog' %}"></script>
 
@@ -79,6 +77,7 @@
             window['_fs_org'] = 'FCSD3';
             window['_fs_namespace'] = 'FS';
             (function(m,n,e,t,l,o,g,y){
+              // eslint-disable-next-line no-console
                 if (e in m) {if(m.console && m.console.log) { m.console.log('FullStory namespace conflict. Please set window["_fs_namespace"].');} return;}
                 g=m[e]=function(a,b){g.q?g.q.push([a,b]):g._api(a,b);};g.q=[];
                 o=n.createElement(t);o.async=1;o.src='https://'+_fs_host+'/s/fs.js';
@@ -155,5 +154,7 @@
 
   	<!-- Site content gets injected here -->
   	{% block content %}{% endblock content %}
+    <!-- prevent more than 1 bundle per page -->
+    {% block js_bundle %} {% render_bundle 'base' 'js' %} {% endblock js_bundle %}
 	</body>
 </html>
