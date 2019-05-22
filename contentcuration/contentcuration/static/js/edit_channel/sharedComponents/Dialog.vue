@@ -7,6 +7,7 @@
 
       <VCardText>
         <p>{{ text }}</p>
+        <slot name="content"></slot>
       </VCardText>
       <VCardActions>
         <slot name="buttons"></slot>
@@ -19,9 +20,7 @@
 
   export default {
     name: 'Dialog',
-    $trs: {
-      closeButtonLabel: 'Close',
-    },
+    $trs: {},
     props: {
       header: {
         type: String,

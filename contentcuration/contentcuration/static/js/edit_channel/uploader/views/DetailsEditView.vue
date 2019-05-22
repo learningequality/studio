@@ -387,6 +387,7 @@
       margin-top: 30px;
       /deep/ .language-dropdown {
         width: 250px;
+        max-width: 100%;
       }
       .flex {
         text-align: center;

@@ -39,6 +39,7 @@
       </VCard>
     </VDialog>
 
+    <!-- Dialog for catching unsaved changes -->
     <Dialog ref="saveprompt" :header="$tr('unsavedChanges')" :text="$tr('unsavedChangesText')">
       <template v-slot:buttons>
         <VBtn flat color="primary" @click="closeModal">
@@ -53,6 +54,14 @@
         </VBtn>
       </template>
     </Dialog>
+
+    <!-- Alert for related content -->
+    <Alert
+      ref="relatedalert"
+      :header="$tr('relatedContentHeader')"
+      :text="$tr('relatedContentText')"
+      messageID="relatedContentAlertOnCopyFromEditModal"
+    />
   </div>
 </template>
 
@@ -63,6 +72,7 @@
   import EditList from './EditList.vue';
   import EditView from './EditView.vue';
   import Dialog from 'edit_channel/sharedComponents/Dialog.vue';
+  import Alert from 'edit_channel/sharedComponents/Alert.vue';
 
   const SAVE_TIMER = 5000;
   const SAVE_MESSAGE_TIMER = 10000;
@@ -85,11 +95,24 @@
       dontSaveButton: "Don't save",
       cancelButton: 'Cancel',
       saveButton: 'Save changes',
+      relatedContentHeader: 'Related content detected',
+      relatedContentText: 'Related content will not be included in the copy of this content.',
+
+      // invalid_items: 'One or more of the selected items is invalid',
+      // fix_errors_prompt: 'Saving disabled (invalid content detected)',
+      // error_saving: 'Save Failed',
+      // save_failed: 'There was a problem saving your content.',
+      // out_of_space: 'Out of Disk Space',
+      // out_of_space_text:
+      //   "Please request more space under your Settings page.",
+      // open_settings: 'Open Settings',
+      // ok: 'OK'
     },
     components: {
       EditList,
       EditView,
       Dialog,
+      Alert,
     },
     props: {
       mode: {
@@ -198,6 +221,7 @@
         this.dialog = false;
         this.deselectAll();
         this.$emit('modalclosed');
+        // TODO: Update router
       },
       copyContent() {
         this.closeModal();
