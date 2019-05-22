@@ -28,6 +28,7 @@ else:
 
 DEBUG_TOOLBAR_PANELS = [
     'debug_toolbar.panels.versions.VersionsPanel',
+    'debug_toolbar.panels.profiling.ProfilingPanel',
     'debug_toolbar.panels.timer.TimerPanel',
     'debug_toolbar.panels.settings.SettingsPanel',
     'debug_toolbar.panels.headers.HeadersPanel',
