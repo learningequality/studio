@@ -29,6 +29,7 @@
 * [@lyw07] Implemented per PR continuous deployment system
 * [@kollivier] Optimized channel load times by reducing queries
 * [@kollivier] Removed unused constant queries
+* [@nucleogenesis] Added slideshow import from Ricecooker & publish to Kolibri
 
 
 #### Issues Resolved
