@@ -27,10 +27,7 @@
       </VSelect>
     </VFlex>
     <VFlex xs2>
-      <InfoModal>
-        <template v-slot:header>
-          {{ $tr('visibilityHeader') }}
-        </template>
+      <InfoModal :header="$tr('visibilityHeader')">
         <template v-slot:content>
           <p>{{ $tr('visibilityDescription') }}</p>
           <VDivider />

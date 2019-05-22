@@ -16,10 +16,7 @@
         class="license-select"
         @input="handleLicenseChange"
       />
-      <InfoModal v-if="selectedLicense">
-        <template v-slot:header>
-          {{ translate(selectedLicense) }}
-        </template>
+      <InfoModal v-if="selectedLicense" :header="translate(selectedLicense)">
         <template v-slot:content>
           <p class="license-info">
             {{ translateDescription(selectedLicense) }}

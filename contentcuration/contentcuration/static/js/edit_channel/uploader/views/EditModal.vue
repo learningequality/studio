@@ -1,42 +1,59 @@
 <template>
-  <VDialog v-model="dialog" fullscreen hideOverlay transition="dialog-bottom-transition" lazy>
-    <VCard class="edit-modal-wrapper">
-      <VNavigationDrawer v-model="drawer.open" stateless clipped app class="edit-list">
-        <EditList :mode="mode" />
-      </VNavigationDrawer>
-      <VToolbar dark color="primary" fixed clippedLeft app>
-        <VBtn icon dark app @click="closeModal">
-          <VIcon>close</VIcon>
-        </VBtn>
-        <VToolbarTitle>{{ $tr(mode) }}</VToolbarTitle>
-        <VSpacer />
-        <VToolbarItems>
-          <VFlex alignCenter class="last-saved-time">
-            <div v-if="saving">
-              <VProgressCircular
-                indeterminate
-                size="15"
-                width="2"
-                color="white"
-              />
-              {{ $tr('savingIndicator') }}
-            </div>
-            <div v-else-if="lastSaved">
-              {{ savedMessage }}
-            </div>
-          </VFlex>
-          <VBtn v-if="!isViewOnly" dark flat @click="saveContent">
-            {{ $tr('saveButtonText') }}
+  <div>
+    <VDialog v-model="dialog" fullscreen hideOverlay transition="dialog-bottom-transition" lazy>
+      <VCard class="edit-modal-wrapper">
+        <VNavigationDrawer v-model="drawer.open" stateless clipped app class="edit-list">
+          <EditList :mode="mode" />
+        </VNavigationDrawer>
+        <VToolbar dark color="primary" fixed clippedLeft app>
+          <VBtn icon dark app @click="handleClose">
+            <VIcon>close</VIcon>
           </VBtn>
-          <VBtn v-else dark flat @click="copyContent">
-            {{ $tr('copyButtonText') }}
-          </VBtn>
-        </VToolbarItems>
-      </VToolbar>
+          <VToolbarTitle>{{ $tr(mode) }}</VToolbarTitle>
+          <VSpacer />
+          <VToolbarItems>
+            <VFlex alignCenter class="last-saved-time">
+              <div v-if="saving">
+                <VProgressCircular
+                  indeterminate
+                  size="15"
+                  width="2"
+                  color="white"
+                />
+                {{ $tr('savingIndicator') }}
+              </div>
+              <div v-else-if="lastSaved">
+                {{ savedMessage }}
+              </div>
+            </VFlex>
+            <VBtn v-if="!isViewOnly" dark flat @click="saveContent">
+              {{ $tr('saveButtonText') }}
+            </VBtn>
+            <VBtn v-else dark flat @click="copyContent">
+              {{ $tr('copyButtonText') }}
+            </VBtn>
+          </VToolbarItems>
+        </VToolbar>
 
-      <EditView :mode="mode" />
-    </VCard>
-  </VDialog>
+        <EditView :mode="mode" />
+      </VCard>
+    </VDialog>
+
+    <Dialog ref="saveprompt" :header="$tr('unsavedChanges')" :text="$tr('unsavedChangesText')">
+      <template v-slot:buttons>
+        <VBtn flat color="primary" @click="closeModal">
+          {{ $tr('dontSaveButton') }}
+        </VBtn>
+        <VSpacer />
+        <VBtn flat color="primary" @click="dismissPrompt">
+          {{ $tr('cancelButton') }}
+        </VBtn>
+        <VBtn depressed color="primary" @click="saveContent">
+          {{ $tr('saveButton') }}
+        </VBtn>
+      </template>
+    </Dialog>
+  </div>
 </template>
 
 <script>
@@ -45,6 +62,7 @@
   import { modes } from '../constants';
   import EditList from './EditList.vue';
   import EditView from './EditView.vue';
+  import Dialog from 'edit_channel/sharedComponents/Dialog.vue';
 
   const SAVE_TIMER = 5000;
   const SAVE_MESSAGE_TIMER = 10000;
@@ -62,10 +80,16 @@
       savedMessage: 'Saved {relativeTime}',
       savedNowMessage: 'Saved just now',
       savingIndicator: 'Saving...',
+      unsavedChanges: 'Save your changes?',
+      unsavedChangesText: "Your changes will be lost if you don't save them",
+      dontSaveButton: "Don't save",
+      cancelButton: 'Cancel',
+      saveButton: 'Save changes',
     },
     components: {
       EditList,
       EditView,
+      Dialog,
     },
     props: {
       mode: {
@@ -113,7 +137,7 @@
       changes: {
         deep: true,
         handler() {
-          this.saveFunction();
+          this.changed && this.saveFunction();
         },
       },
     },
@@ -159,7 +183,18 @@
           });
         }, SAVE_TIMER);
       },
+      handleClose() {
+        if (this.changed) {
+          this.$refs.saveprompt.prompt();
+        } else {
+          this.closeModal();
+        }
+      },
+      dismissPrompt() {
+        this.$refs.saveprompt.close();
+      },
       closeModal() {
+        this.dismissPrompt();
         this.dialog = false;
         this.deselectAll();
         this.$emit('modalclosed');

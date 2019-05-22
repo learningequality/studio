@@ -1,29 +1,27 @@
 <template>
-  <div>
-    <VApp>
-      <VBtn @click="openModal('EDIT')">
-        Edit Modal
-      </VBtn>
+  <VApp>
+    <VBtn @click="openModal('EDIT')">
+      Edit Modal
+    </VBtn>
 
-      <VBtn @click="openModal('VIEW_ONLY')">
-        View Only
-      </VBtn>
+    <VBtn @click="openModal('VIEW_ONLY')">
+      View Only
+    </VBtn>
 
-      <VBtn @click="openModal('NEW_TOPIC')">
-        Add Topic
-      </VBtn>
+    <VBtn @click="openModal('NEW_TOPIC')">
+      Add Topic
+    </VBtn>
 
-      <VBtn @click="openModal('NEW_EXERCISE')">
-        Add Exercise
-      </VBtn>
+    <VBtn @click="openModal('NEW_EXERCISE')">
+      Add Exercise
+    </VBtn>
 
-      <VBtn @click="openModal('UPLOAD')">
-        Upload File
-      </VBtn>
+    <VBtn @click="openModal('UPLOAD')">
+      Upload File
+    </VBtn>
 
-      <EditModal v-if="mode" :mode="mode" @modalclosed="mode=null" />
-    </VApp>
-  </div>
+    <EditModal v-if="mode" :mode="mode" @modalclosed="mode=null" />
+  </VApp>
 </template>
 <script>
 

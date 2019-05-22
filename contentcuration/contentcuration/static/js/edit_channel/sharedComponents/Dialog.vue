@@ -1,25 +1,15 @@
 <template>
-  <VDialog v-model="dialog" width="550">
-    <template v-slot:activator="{ on }">
-      <VBtn color="primary" icon flat v-on="on">
-        <VIcon>info</VIcon>
-      </VBtn>
-    </template>
-
+  <VDialog v-model="dialog" width="400">
     <VCard>
       <VCardTitle class="header">
         <h1>{{ header }}</h1>
       </VCardTitle>
 
       <VCardText>
-        <slot name="content"></slot>
+        <p>{{ text }}</p>
       </VCardText>
       <VCardActions>
-        <slot name="extra-button" class="extra-button"></slot>
-        <VSpacer />
-        <VBtn color="primary" depressed autofocus @click="dialog = false">
-          <b>{{ $tr('closeButtonLabel') }}</b>
-        </VBtn>
+        <slot name="buttons"></slot>
       </VCardActions>
     </VCard>
   </VDialog>
@@ -28,12 +18,16 @@
 <script>
 
   export default {
-    name: 'InfoModal',
+    name: 'Dialog',
     $trs: {
       closeButtonLabel: 'Close',
     },
     props: {
       header: {
+        type: String,
+        required: true,
+      },
+      text: {
         type: String,
         required: true,
       },
@@ -43,6 +37,14 @@
         dialog: false,
       };
     },
+    methods: {
+      prompt() {
+        this.dialog = true;
+      },
+      close() {
+        this.dialog = false;
+      },
+    },
   };
 
 </script>
@@ -51,17 +53,18 @@
 
   @import '../../../less/global-variables.less';
 
-  h1 {
-    width: 100%;
-    margin: 0;
-    font-size: 22pt;
-    text-align: center;
+  .header {
+    background-color: @gray-300;
+    h1 {
+      margin: 0;
+      font-size: 14pt;
+      font-weight: bold;
+    }
   }
 
-  /deep/ p {
+  p {
     font-size: 12pt;
     color: @gray-700;
-    text-indent: 20px;
   }
 
 </style>

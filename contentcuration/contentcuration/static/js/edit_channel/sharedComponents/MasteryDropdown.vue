@@ -15,10 +15,7 @@
       />
     </VFlex>
     <VFlex xs2>
-      <InfoModal>
-        <template v-slot:header>
-          {{ $tr('exerciseHeader') }}
-        </template>
+      <InfoModal :header="$tr('exerciseHeader')">
         <template v-slot:content>
           <p>{{ $tr('exerciseDescripiton') }}</p>
           <VDivider />
