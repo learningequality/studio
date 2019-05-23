@@ -24,6 +24,14 @@ module.exports = [
     id: 'zh-TW',
   },
   {
+    readable_name: 'Acholi; Acooli; Akoli',
+    lang_subcode: null,
+    lang_direction: 'ltr',
+    native_name: 'Acholi',
+    lang_code: 'ach',
+    id: 'ach',
+  },
+  {
     readable_name: 'French, Canada',
     lang_subcode: 'CA',
     lang_direction: 'ltr',
@@ -667,6 +675,14 @@ module.exports = [
     id: 'bi',
   },
   {
+    readable_name: 'Turkana; Turkwana; Buma; Bume',
+    lang_subcode: null,
+    lang_direction: 'ltr',
+    native_name: "Ng\u2019aturkana, Ng'aturkana",
+    lang_code: 'tuv',
+    id: 'tuv',
+  },
+  {
     readable_name: 'Rusyn',
     lang_subcode: null,
     lang_direction: 'ltr',
@@ -1009,7 +1025,7 @@ module.exports = [
     id: 'uk',
   },
   {
-    readable_name: 'Fula',
+    readable_name: 'Fula; Fulah',
     lang_subcode: null,
     lang_direction: 'ltr',
     native_name: 'Fulfulde',
@@ -1023,6 +1039,14 @@ module.exports = [
     native_name: '\u0a2a\u0a70\u0a1c\u0a3e\u0a2c\u0a40, \u067e\u0646\u062c\u0627\u0628\u06cc\u200e',
     lang_code: 'pa',
     id: 'pa',
+  },
+  {
+    readable_name: 'Oluwanga; Oluhanga; Hanga; Kawanga',
+    lang_subcode: null,
+    lang_direction: 'ltr',
+    native_name: 'Oluwanga',
+    lang_code: 'lwg',
+    id: 'lwg',
   },
   {
     readable_name: 'Vietnamese',
@@ -1161,6 +1185,14 @@ module.exports = [
     id: 'he',
   },
   {
+    readable_name: 'Fulfulde Mbororo; Fulfulde Mbororoore',
+    lang_subcode: null,
+    lang_direction: 'ltr',
+    native_name: 'Fulfulde',
+    lang_code: 'fuv',
+    id: 'fuv',
+  },
+  {
     readable_name: 'Malagasy',
     lang_subcode: null,
     lang_direction: 'ltr',
@@ -1295,6 +1327,22 @@ module.exports = [
     native_name: 'Afaraf',
     lang_code: 'aa',
     id: 'aa',
+  },
+  {
+    readable_name: 'Masaaba; Bagisu',
+    lang_subcode: null,
+    lang_direction: 'ltr',
+    native_name: 'Lumasaaba, Masaaba',
+    lang_code: 'myx',
+    id: 'myx',
+  },
+  {
+    readable_name: 'Nyankore; Nkole; Nyankole',
+    lang_subcode: null,
+    lang_direction: 'ltr',
+    native_name: 'Runyankore',
+    lang_code: 'nyn',
+    id: 'nyn',
   },
   {
     readable_name: 'Abkhaz',
@@ -1584,6 +1632,14 @@ module.exports = [
     native_name: 'chiChe\u0175a, chinyanja',
     lang_code: 'ny',
     id: 'ny',
+  },
+  {
+    readable_name: 'Soga',
+    lang_subcode: null,
+    lang_direction: 'ltr',
+    native_name: 'Lusoga, Olusoga',
+    lang_code: 'xog',
+    id: 'xog',
   },
   {
     readable_name: 'Volap\u00fck',

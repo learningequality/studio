@@ -271,14 +271,12 @@
 
     padding: 0 20px 40px;
     .channel-thumbnail {
-      width: @channel-thumbnail-size;
+      width: @channel-thumbnail-width;
+      height: @channel-thumbnail-height;
       margin-top: 35px;
       /deep/ .image_dropzone {
-        width: @channel-thumbnail-size;
-        img {
-          width: @channel-thumbnail-size;
-          height: @channel-thumbnail-size;
-        }
+        width: @channel-thumbnail-width;
+        height: @channel-thumbnail-height;
       }
     }
 
