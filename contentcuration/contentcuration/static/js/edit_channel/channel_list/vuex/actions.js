@@ -4,6 +4,8 @@ import State from 'edit_channel/state';
 
 import Models from 'edit_channel/models';
 
+require('jquery-file-download');
+
 /* CHANNEL LIST ACTIONS */
 export function loadChannelList(context, listType) {
   return new Promise((resolve, reject) => {
@@ -81,6 +83,7 @@ export function deleteChannel(context, channelID) {
     new Models.ChannelModel(channel).save(
       { deleted: true },
       {
+        patch: true,
         error: reject,
         success: () => {
           context.commit('REMOVE_CHANNEL', channel.id);

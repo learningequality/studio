@@ -11,11 +11,6 @@ require('croppie/croppie.css');
 var dialog = require('edit_channel/utils/dialog');
 const Constants = require('edit_channel/constants/index');
 
-const CHANNEL_ASPECT_RATIO = { width: 130, height: 130 };
-const CHANNEL_CROP_BOUNDARY = {
-  width: CHANNEL_ASPECT_RATIO.width + 20,
-  height: CHANNEL_ASPECT_RATIO.height + 20,
-};
 const THUMBNAIL_ASPECT_RATIO = { width: 160, height: 90 };
 const THUMBNAIL_CROP_BOUNDARY = {
   width: THUMBNAIL_ASPECT_RATIO.width + 10,
@@ -81,8 +76,8 @@ export const ThumbnailUploadView = BaseViews.BaseView.extend({
     this.upload_url = options.upload_url;
     this.default_url = options.default_url;
     this.allow_edit = options.allow_edit;
-    this.aspect_ratio = options.is_channel ? CHANNEL_ASPECT_RATIO : THUMBNAIL_ASPECT_RATIO;
-    this.boundary = options.is_channel ? CHANNEL_CROP_BOUNDARY : THUMBNAIL_CROP_BOUNDARY;
+    this.aspect_ratio = THUMBNAIL_ASPECT_RATIO;
+    this.boundary = THUMBNAIL_CROP_BOUNDARY;
     this.cropping = false;
     this.render();
     this.dropzone = null;
@@ -194,6 +189,7 @@ export const ThumbnailUploadView = BaseViews.BaseView.extend({
     this.croppie = new Croppie(this.$(selector).get(0), {
       boundary: this.boundary,
       viewport: this.aspect_ratio,
+      enforceBoundary: false,
       showZoomer: false,
       customClass: 'crop-img',
     });

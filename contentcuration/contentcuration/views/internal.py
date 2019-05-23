@@ -58,7 +58,7 @@ def handle_server_error(request):
     client.captureException(stack=True, tags={'url': request.path})
 
 
-@api_view(['POST'])
+@api_view(['POST', 'GET'])
 @authentication_classes((TokenAuthentication, SessionAuthentication,))
 @permission_classes((IsAuthenticated,))
 def authenticate_user_internal(request):
@@ -66,6 +66,7 @@ def authenticate_user_internal(request):
     logging.debug("Logging in user")
     return HttpResponse(json.dumps({
         'success': True,
+        'user_id': request.user.id,
         'username': unicode(request.user),
         'first_name': request.user.first_name,
         'last_name': request.user.last_name,
@@ -152,35 +153,6 @@ def api_file_upload(request):
 
 
 @api_view(['POST'])
-@authentication_classes((TokenAuthentication,))
-@permission_classes((IsAuthenticated,))
-def api_channel_structure_upload(request):
-    """
-    Creates a channel based on the structure sent in the request.
-    :param request: POST request containing the tree structure of a channel.
-    :return: The channel_id of the newly created channel.
-    """
-    data = json.loads(request.body)
-    try:
-        channel_id = data['channel_id']
-        channel_structure = data['channel_structure']
-
-        new_channel = create_channel_from_structure(channel_id, channel_structure, request.user)
-
-        if not data.get('stage'):  # If user says to stage rather than submit, skip changing trees at this step
-            activate_channel(new_channel, request.user)
-
-        return HttpResponse(json.dumps({
-            'success': True,
-            'channel_id': new_channel.pk,
-        }))
-    except KeyError:
-        raise ObjectDoesNotExist('Missing attribute from data: {}'.format(data))
-    except Exception as e:
-        return HttpResponseServerError(content=str(e), reason=str(e))
-
-
-@api_view(['POST'])
 @authentication_classes((TokenAuthentication, SessionAuthentication,))
 @permission_classes((IsAuthenticated,))
 def api_create_channel_endpoint(request):
@@ -245,32 +217,6 @@ def api_commit_channel(request):
         }))
     except KeyError as e:
         return HttpResponseBadRequest("Required attribute missing: {}".format(e.message))
-    except Exception as e:
-        handle_server_error(request)
-        return HttpResponseServerError(content=str(e), reason=str(e))
-
-
-@api_view(['POST'])
-@authentication_classes((TokenAuthentication,))
-@permission_classes((IsAuthenticated,))
-def api_add_nodes_from_file(request):
-    """
-    Creates a channel based on the structure sent in the request.
-    :param request: POST request containing the tree structure of a channel.
-    :return: The channel_id of the newly created channel.
-    """
-    try:
-        fobj = request.FILES["file"]
-        data = json.loads(fobj.read())
-        content_data = data['content_data']
-        parent_id = data['root_id']
-        with ContentNode.objects.disable_mptt_updates():
-            return HttpResponse(json.dumps({
-                "success": True,
-                "root_ids": convert_data_to_nodes(content_data, parent_id)
-            }))
-    except KeyError:
-        raise ObjectDoesNotExist('Missing attribute from data: {}'.format(data))
     except Exception as e:
         handle_server_error(request)
         return HttpResponseServerError(content=str(e), reason=str(e))
@@ -582,149 +528,6 @@ def convert_data_to_nodes(user, content_data, parent_node):
 
     except KeyError as e:
         raise ObjectDoesNotExist("Error creating node: {0}".format(e.message))
-
-
-def create_channel_from_structure(channel_id, channel_structure_dict, user):
-    """ Set up channel """
-    # Set up initial channel
-    channel, isNew = Channel.objects.get_or_create(id=channel_id)
-
-    # Add user as editor if channel is new or channel has no editors
-    # Otherwise, check if user is an editor
-    if isNew or channel.editors.count() == 0:
-        channel.editors.add(user)
-    elif user not in channel.editors.all():
-        raise SuspiciousOperation("User is not authorized to edit this channel")
-
-    if len(channel_structure_dict) != 1:
-        logging.warning(
-            "ROOT: Channel structure expected to have one entry, found {}.".format(len(channel_structure_dict)))
-        raise ValidationError(
-            "ROOT: Channel structure expected to have one entry, found {}.".format(len(channel_structure_dict)))
-
-    is_published = channel.main_tree is not None and channel.main_tree.published
-    old_staging = channel.staging_tree
-    channel.staging_tree, channel_data = create_tree_from_structure(user, channel_structure_dict.items()[0], is_published)
-
-    channel.name = channel_data['name']
-    channel.description = channel_data['description']
-    channel.thumbnail = channel_data['thumbnail']
-    channel.deleted = False
-    channel.source_id = channel_data.get('source_id')
-    channel.source_domain = channel_data.get('source_domain')
-    channel.ricecooker_version = channel_data.get('ricecooker_version')
-
-    channel.save()
-
-    # TODO: Memory leak?
-    # Delete staging tree if it already exists
-    if old_staging and old_staging != channel.main_tree:
-        old_staging.delete()
-
-    return channel  # Return new channel
-
-
-def create_tree_from_structure(user, root_node_pair, is_published):
-    file_name = root_node_pair[0]
-    children = root_node_pair[1][1]
-
-    child_sort_order = 0
-    root_node, root_data = create_root_from_file(file_name, is_published)
-    with transaction.atomic():
-        with ContentNode.objects.disable_mptt_updates():
-            for child_node_pair in children.items():
-                fill_tree_from_structure(user, child_node_pair, root_node)
-                child_sort_order += 1
-    ContentNode.objects.partial_rebuild(root_node.tree_id)
-
-    return root_node, root_data
-
-
-def fill_tree_from_structure(user, cur_node_pair, parent_node):
-    file_name = cur_node_pair[0]
-    sort_order = cur_node_pair[1][0]
-    children = cur_node_pair[1][1]
-
-    cur_node = create_node_from_file(user, file_name, parent_node, sort_order)
-    for child_node_pair in children.items():
-        fill_tree_from_structure(child_node_pair, cur_node)
-
-
-@trace
-def create_root_from_file(file_name, is_published):
-    node_data = get_node_data_from_file(file_name)
-
-    return ContentNode.objects.create(
-        title=node_data['name'],
-        kind_id=content_kinds.TOPIC,
-        published=is_published,
-        content_id=node_data['id'],
-        node_id=node_data['id'],
-        source_id=node_data['source_id'],
-        source_domain=node_data['source_domain'],
-        extra_fields=json.dumps({'ricecooker_version': node_data['ricecooker_version']}),
-        language_id=node_data.get('language'),
-    ), node_data
-
-
-@trace
-def create_node_from_file(user, file_name, parent_node, sort_order):
-    node_data = get_node_data_from_file(file_name)
-
-    cur_node = ContentNode.objects.create(
-        title=node_data['title'],
-        tree_id=parent_node.tree_id,
-        kind_id=node_data['kind'],
-        node_id=node_data['node_id'],
-        content_id=node_data['content_id'],
-        description=node_data['description'],
-        author=node_data['author'],
-        aggregator=node_data.get('aggregator') or "",
-        provider=node_data.get('provider') or "",
-        license=node_data['license'],
-        license_description=node_data['license_description'],
-        copyright_holder=node_data['copyright_holder'] or "",
-        parent=parent_node,
-        extra_fields=node_data['extra_fields'],
-        sort_order=sort_order,
-        source_id=node_data['source_id'],
-        source_domain=node_data['source_domain'],
-        language_id=node_data.get('language'),
-        role_visibility=node_data.get('role') or roles.LEARNER,
-    )
-    # Create files associated with node
-    map_files_to_node(user, cur_node, node_data['files'])
-
-    # Create questions associated with node
-    create_exercises(cur_node, node_data['questions'])
-
-    return cur_node
-
-# TODO: Use one file to upload a map from node filename to node metadata, instead of a file for each Node
-
-
-def get_node_data_from_file(file_name):
-    file_path = generate_object_storage_name(file_name.split('.')[0], file_name)
-    if not default_storage.exists(file_path):
-        raise IOError('{} not found.'.format(file_path))
-
-    with default_storage.open(file_path, 'rb') as file_obj:
-        node_data = json.loads(file_obj.read().decode('utf-8'))
-
-    if node_data is None:
-        raise IOError('{} is empty or could not be read.'.format(file_path))
-
-    # Make sure license is valid
-    license = None
-    license_name = node_data['license']
-    if license_name is not None:
-        try:
-            license = License.objects.get(license_name__iexact=license_name)
-        except ObjectDoesNotExist:
-            raise ObjectDoesNotExist('Invalid license found')
-
-    node_data['license'] = license
-    return node_data
 
 
 def create_node(node_data, parent_node, sort_order):

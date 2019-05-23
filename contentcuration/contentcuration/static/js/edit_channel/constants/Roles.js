@@ -1,1 +1,5 @@
-module.exports = ['coach', 'learner'];
+module.exports = [
+  "coach",
+  "learner",
+];
+

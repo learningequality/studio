@@ -174,37 +174,28 @@ class CSVMixin(object):
 class ExportWriter(object):
     tempfiles = None
     ext = None
-    messages = {
-        content_kinds.TOPIC: _("Topic"),
-        content_kinds.VIDEO: _("Video"),
-        content_kinds.AUDIO: _("Audio"),
-        content_kinds.EXERCISE: _("Exercise"),
-        content_kinds.DOCUMENT: _("Document"),
-        content_kinds.HTML5: _("Html App"),
-        content_kinds.TOPIC + "_plural": _("Topics"),
-        content_kinds.VIDEO + "_plural": _("Videos"),
-        content_kinds.AUDIO + "_plural": _("Audios"),
-        content_kinds.EXERCISE + "_plural": _("Exercises"),
-        content_kinds.DOCUMENT + "_plural": _("Documents"),
-        content_kinds.HTML5 + "_plural": _("Html Apps"),
-        "resource": _("Total Resource"),
-        "resource_plural": _("Total Resources")
-    }
 
     def __init__(self, *args, **kwargs):
         self.tempfiles = []
 
-    def pluralize_constant(self, count, constant, sep=' '):
-        return ngettext(
-            '%(count)d%(sep)s%(singular)s',
-            '%(count)d%(sep)s%(plural)s',
-            count
-        ) % {
-            'count': count,
-            'singular': self.messages.get(constant),
-            'plural': self.messages.get(constant + "_plural"),
-            'sep': sep
-        }
+    def pluralize_constant(self, count, constant):
+        data = {'count': count}
+        if constant == content_kinds.TOPIC:
+            return ngettext('%(count)d Topic', '%(count)d Topics', count) % data
+        elif constant == content_kinds.VIDEO:
+            return ngettext('%(count)d Video', '%(count)d Videos', count) % data
+        elif constant == content_kinds.AUDIO:
+            return ngettext('%(count)d Audio', '%(count)d Audios', count) % data
+        elif constant == content_kinds.EXERCISE:
+            return ngettext('%(count)d Exercise', '%(count)d% Exercises', count) % data
+        elif constant == content_kinds.DOCUMENT:
+            return ngettext('%(count)d Document', '%(count)d Documents', count) % data
+        elif constant == content_kinds.HTML5:
+            return ngettext('%(count)d Html App', '%(count)d Html Apps', count) % data
+        elif constant == "resource":
+            return ngettext('%(count)d Total Resource', '%(count)d Total Resources', count) % data
+        elif constant == "resource_split":
+            return ngettext('%(count)d\nTotal Resource', '%(count)d\nTotal Resources', count) % data
 
     def get_write_to_path(self, ext=None):
         ext = ext or self.ext
@@ -363,7 +354,7 @@ class ChannelDetailsWriter(ExportWriter):
 
         # Add center circle
         circle = plt.Circle((0, 0), center_text_ratio, fc='white')
-        centertext = self.pluralize_constant(sum(sizes), "resource", sep='\n').split('\n')
+        centertext = self.pluralize_constant(sum(sizes), "resource_split").split("\n")
         plt.annotate(centertext[0], xy=(0, 0.1), fontsize=center_text_size, ha="center")
         plt.annotate(centertext[1], xy=(0, -0.15), fontsize=center_text_size - 5, ha="center")
         fig = plt.gcf()
