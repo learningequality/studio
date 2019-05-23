@@ -2,6 +2,7 @@ import pytest
 from base import BaseAPITestCase
 from django.core.files.storage import default_storage
 from django.core.urlresolvers import reverse_lazy
+from le_utils.constants import content_kinds
 
 from contentcuration.utils.export_writer import ChannelDetailsCSVWriter
 from contentcuration.utils.export_writer import ChannelDetailsPDFWriter
@@ -49,3 +50,15 @@ class ChannelDetailsTestCase(BaseAPITestCase):
         response = get_channel_details_csv_endpoint(request, self.channel.pk)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response['Content-Type'], 'text/csv')
+
+    def test_pluralize_constant(self):
+        exporter = ChannelDetailsPPTWriter([self.channel.pk])
+        to_test = {content_kinds.TOPIC: '1 Topic',
+                   content_kinds.VIDEO: '1 Video',
+                   content_kinds.AUDIO: '1 Audio',
+                   content_kinds.EXERCISE: '1 Exercise',
+                   content_kinds.DOCUMENT: '1 Document',
+                   content_kinds.HTML5: '1 HTML App',
+                   'resource': '1 Total Resource'}
+        for kind, result in to_test.items():
+            self.assertEqual(exporter.pluralize_constant(1, kind), result)
