@@ -251,6 +251,9 @@ function render_preview(el, file_model, subtitles, force_load, encoding, intl_da
     case 'zip':
       preview_template = require('./hbtemplates/preview_templates/html5.handlebars');
       break;
+    case 'json':
+      preview_template = require('./hbtemplates/preview_templates/slideshow.handlebars');
+      break;
     default:
       preview_template = require('./hbtemplates/preview_templates/default.handlebars');
   }
