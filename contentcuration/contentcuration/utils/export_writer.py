@@ -15,32 +15,32 @@ if sys.platform.startswith("darwin"):
     if matplotlib.get_backend().lower() == "macosx":
         matplotlib.use('PS')
 
-import matplotlib.pyplot as plt
-import numpy as np
-import pdfkit
-from django.conf import settings
-from django.contrib.sites.models import Site
-from django.core.files.storage import default_storage
-from django.template.loader import get_template
-from django.utils.translation import ngettext
-from django.utils.translation import ugettext as _
-from le_utils.constants import content_kinds
-from pptx import Presentation
-from pptx.dml.color import RGBColor
-from pptx.enum.shapes import MSO_SHAPE
-from pptx.enum.text import MSO_AUTO_SIZE
-from pptx.enum.text import PP_ALIGN
-from pptx.text.fonts import FontFiles
-from pptx.util import Inches
-from pptx.util import Pt
-from pressurecooker.encodings import encode_file_to_base64
-from pressurecooker.encodings import write_base64_to_file
-from wordcloud import WordCloud
+import matplotlib.pyplot as plt  # noqa: E402
+import numpy as np  # noqa: E402
+import pdfkit  # noqa: E402
+from django.conf import settings  # noqa: E402
+from django.contrib.sites.models import Site  # noqa: E402
+from django.core.files.storage import default_storage  # noqa: E402
+from django.template.loader import get_template  # noqa: E402
+from django.utils.translation import ngettext  # noqa: E402
+from django.utils.translation import ugettext as _  # noqa: E402
+from le_utils.constants import content_kinds  # noqa: E402
+from pptx import Presentation  # noqa: E402
+from pptx.dml.color import RGBColor  # noqa: E402
+from pptx.enum.shapes import MSO_SHAPE  # noqa: E402
+from pptx.enum.text import MSO_AUTO_SIZE  # noqa: E402
+from pptx.enum.text import PP_ALIGN  # noqa: E402
+from pptx.text.fonts import FontFiles  # noqa: E402
+from pptx.util import Inches  # noqa: E402
+from pptx.util import Pt  # noqa: E402
+from pressurecooker.encodings import encode_file_to_base64  # noqa: E402
+from pressurecooker.encodings import write_base64_to_file  # noqa: E402
+from wordcloud import WordCloud  # noqa: E402
 
-from contentcuration.models import Channel
-from contentcuration.models import ContentKind
-from contentcuration.utils.files import generate_thumbnail_from_channel
-from contentcuration.utils.format import format_size
+from contentcuration.models import Channel  # noqa: E402
+from contentcuration.models import ContentKind  # noqa: E402
+from contentcuration.utils.files import generate_thumbnail_from_channel  # noqa: E402
+from contentcuration.utils.format import format_size  # noqa: E402
 
 
 AUDIO_COLOR = "#F06292"
@@ -192,10 +192,15 @@ class ExportWriter(object):
             return ngettext('%(count)d Document', '%(count)d Documents', count) % data
         elif constant == content_kinds.HTML5:
             return ngettext('%(count)d Html App', '%(count)d Html Apps', count) % data
+        elif constant == content_kinds.SLIDESHOW:
+            return ngettext('%(count)d Slideshow', '%(count)d Slideshows', count) % data
         elif constant == "resource":
             return ngettext('%(count)d Total Resource', '%(count)d Total Resources', count) % data
         elif constant == "resource_split":
             return ngettext('%(count)d\nTotal Resource', '%(count)d\nTotal Resources', count) % data
+        else:
+            logging.warning('No translation for pluralizing {}'.format(constant))
+            return '{} {}'.format(count, constant)
 
     def get_write_to_path(self, ext=None):
         ext = ext or self.ext
@@ -213,7 +218,8 @@ class ExportWriter(object):
 
 
 class ChannelDetailsWriter(ExportWriter):
-    color_selection = [AUDIO_COLOR, DOCUMENT_COLOR, EXERCISE_COLOR, HTML_COLOR, VIDEO_COLOR, SLIDESHOW_COLOR]
+    # Needs to be alphabetized to match content kind sorting
+    color_selection = [AUDIO_COLOR, DOCUMENT_COLOR, EXERCISE_COLOR, HTML_COLOR, SLIDESHOW_COLOR, VIDEO_COLOR]
     condensed_tag_limit = 10
     size_divisor = 100000000
     scale_text = [_("Very Small")] * 2 + [_("Small")] * 2 + [_("Average")] * 3 + [_("Large")] * 2 + [_("Very Large")] * 2
