@@ -33,6 +33,7 @@
 * [@kollivier] Optimized channel load times by reducing queries
 * [@kollivier] Removed unused constant queries
 * [@nucleogenesis] Added slideshow import from Ricecooker & publish to Kolibri
+* @jayoshih Removed broken garbage collection file
 
 
 #### Issues Resolved
