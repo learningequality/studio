@@ -48,6 +48,7 @@ DOCUMENT_COLOR = "#FF3D00"
 EXERCISE_COLOR = "#4DB6AC"
 HTML_COLOR = "#FF8F00"
 VIDEO_COLOR = "#283593"
+SLIDESHOW_COLOR = "#4ECE90"
 
 plt.switch_backend('agg')  # Avoid using tkinter as it causes server to stall (https://discuss.erpnext.com/t/wkhtmltopdf-error-erpnext-v7/14673/10)
 os.environ['QT_QPA_PLATFORM'] = 'offscreen'  # Must be set for tests to run (https://github.com/ipython/ipython/issues/10627)
@@ -212,7 +213,7 @@ class ExportWriter(object):
 
 
 class ChannelDetailsWriter(ExportWriter):
-    color_selection = [AUDIO_COLOR, DOCUMENT_COLOR, EXERCISE_COLOR, HTML_COLOR, VIDEO_COLOR]
+    color_selection = [AUDIO_COLOR, DOCUMENT_COLOR, EXERCISE_COLOR, HTML_COLOR, VIDEO_COLOR, SLIDESHOW_COLOR]
     condensed_tag_limit = 10
     size_divisor = 100000000
     scale_text = [_("Very Small")] * 2 + [_("Small")] * 2 + [_("Average")] * 3 + [_("Large")] * 2 + [_("Very Large")] * 2
@@ -421,6 +422,7 @@ class ChannelDetailsPDFWriter(ChannelDetailsWriter, PDFMixin):
                 "exercise": EXERCISE_COLOR,
                 "html": HTML_COLOR,
                 "video": VIDEO_COLOR,
+                "slideshow": SLIDESHOW_COLOR,
             }
         }
         try:

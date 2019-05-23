@@ -291,7 +291,14 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
   get_accepted_files: function() {
     var list = [];
     Constants.FormatPresets.forEach(function(preset) {
-      if (!preset.supplementary && preset.kind !== 'exercise' && preset.kind !== null) {
+      // TODO Remove the preset.kind_id !== slideshow portion when Slideshows are
+      // ready to be uploaded.
+      if (
+        !preset.supplementary &&
+        preset.kind !== 'exercise' &&
+        preset.kind !== null &&
+        preset.kind_id !== 'slideshow'
+      ) {
         list.push(preset.associated_mimetypes);
       }
     });

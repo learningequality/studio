@@ -10,6 +10,7 @@ const COLOR_MAP = {
   document: '#ff3d00',
   exercise: '#4db6ac',
   html5: '#ff8f00',
+  slideshow: '#4ece90',
 };
 
 const COLOR_SELECTION = [
@@ -18,6 +19,7 @@ const COLOR_SELECTION = [
   COLOR_MAP.html5,
   COLOR_MAP.audio,
   COLOR_MAP.exercise,
+  COLOR_MAP.slideshow,
   '#bebada',
   '#fccde5',
   '#bc80bd',

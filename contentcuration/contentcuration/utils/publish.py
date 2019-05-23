@@ -136,8 +136,40 @@ def map_content_nodes(root_node, default_language, channel_id, channel_name, use
                         exercise_data = process_assessment_metadata(node, kolibrinode)
                         if force_exercises or node.changed or not node.files.filter(preset_id=format_presets.EXERCISE).exists():
                             create_perseus_exercise(node, kolibrinode, exercise_data, user_id=user_id)
+                    elif node.kind.kind == content_kinds.SLIDESHOW:
+                        create_slideshow_manifest(node, kolibrinode, user_id=user_id)
                     create_associated_file_objects(kolibrinode, node)
                     map_tags_to_node(kolibrinode, node)
+
+
+def create_slideshow_manifest(ccnode, kolibrinode, user_id=None):
+    print("Creating slideshow manifest...")
+
+    preset = ccmodels.FormatPreset.objects.filter(pk="slideshow_manifest")[0]
+    ext = file_formats.JSON
+    filename = "{0}.{ext}".format(ccnode.title, ext=ext)
+
+    try:
+        with tempfile.NamedTemporaryFile(prefix="slideshow_manifest_", delete=False) as temp_manifest:
+            temp_filepath = temp_manifest.name
+
+            temp_manifest.write(ccnode.extra_fields)
+
+            size_on_disk = temp_manifest.tell()
+            temp_manifest.seek(0)
+            file_on_disk = File(open(temp_filepath, mode='r'), name=filename)
+            # Create the file in Studio
+            ccmodels.File.objects.create(
+                file_on_disk=file_on_disk,
+                contentnode=ccnode,
+                file_format_id=file_formats.JSON,
+                preset_id=preset,
+                original_filename=filename,
+                file_size=size_on_disk,
+                uploaded_by_id=user_id
+            )
+    finally:
+        temp_manifest.close()
 
 
 def create_bare_contentnode(ccnode, default_language, channel_id, channel_name):

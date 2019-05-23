@@ -37,12 +37,14 @@ from contentcuration.models import ContentTag
 from contentcuration.models import generate_object_storage_name
 from contentcuration.models import get_next_sort_order
 from contentcuration.models import License
+from contentcuration.models import SlideshowSlide
 from contentcuration.models import StagedFile
 from contentcuration.serializers import GetTreeDataSerizlizer
 from contentcuration.utils.files import get_file_diff
 from contentcuration.utils.garbage_collect import get_deleted_chefs_root
 from contentcuration.utils.nodes import map_files_to_assessment_item
 from contentcuration.utils.nodes import map_files_to_node
+from contentcuration.utils.nodes import map_files_to_slideshow_slide_item
 from contentcuration.utils.tracing import trace
 
 VersionStatus = namedtuple('VersionStatus', ['version', 'status', 'message'])
@@ -509,6 +511,17 @@ def convert_data_to_nodes(user, content_data, parent_node):
                     create_exercises(user, new_node, node_data['questions'])
                     sort_order += 1
 
+                    # Create Slideshow slides (if slideshow kind)
+                    if node_data['kind'] == 'slideshow':
+                        extra_fields_unicode = node_data['extra_fields']
+
+                        # Extra Fields comes as type<unicode> - convert it to a dict and get slideshow_data
+                        extra_fields_json = extra_fields_unicode.encode("ascii", "ignore")
+                        extra_fields = json.loads(extra_fields_json)
+
+                        slides = create_slides(user, new_node, extra_fields.get('slideshow_data'))
+                        map_files_to_slideshow_slide_item(user, new_node, slides, node_data["files"])
+
                     # Track mapping between newly created node and node id
                     root_mapping.update({node_data['node_id']: new_node.pk})
             return root_mapping
@@ -585,3 +598,27 @@ def create_exercises(user, node, data):
             order += 1
             question_obj.save()
             map_files_to_assessment_item(user, question_obj, question['files'])
+
+
+def create_slides(user, node, slideshow_data):
+    """ Generate SlideshowSlides from data """
+    """ Returns a collection of SlideshowSlide objects """
+
+    slides = []
+
+    with transaction.atomic():
+        for slide in slideshow_data:
+            slide_obj = SlideshowSlide(
+                contentnode=node,
+                sort_order=slide.get("sort_order"),
+                metadata={
+                    "caption": slide.get('caption'),
+                    "descriptive_text": slide.get('descriptive_text'),
+                    "checksum": slide.get('checksum'),
+                    "extension": slide.get('extension')
+                }
+            )
+            slide_obj.save()
+            slides.append(slide_obj)
+
+    return slides
