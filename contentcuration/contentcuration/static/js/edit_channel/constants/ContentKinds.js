@@ -1,24 +1,23 @@
 module.exports = [
   {
-    kind: "document",
+    kind: 'document',
   },
   {
-    kind: "slideshow",
+    kind: 'slideshow',
   },
   {
-    kind: "topic",
+    kind: 'topic',
   },
   {
-    kind: "video",
+    kind: 'video',
   },
   {
-    kind: "html5",
+    kind: 'html5',
   },
   {
-    kind: "audio",
+    kind: 'audio',
   },
   {
-    kind: "exercise",
+    kind: 'exercise',
   },
 ];
-
