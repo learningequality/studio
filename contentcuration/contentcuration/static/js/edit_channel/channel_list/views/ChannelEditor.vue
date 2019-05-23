@@ -20,7 +20,7 @@
           id="select-language"
           v-model="language"
           :tabindex="1"
-          @blur="setLanguage(language)"
+          @change="setLanguage(language)"
         >
           <option
             disabled
@@ -63,7 +63,7 @@
           maxlength="200"
           class="channel-name"
           required
-          @blur="setName(name)"
+          @change="setName(name)"
         >
       </label>
 
@@ -81,7 +81,7 @@
           maxlength="400"
           :tabindex="2"
           rows="4"
-          @blur="setDescription(description)"
+          @change="setDescription(description)"
         >
         </textarea>
       </label>
@@ -271,14 +271,12 @@
 
     padding: 0 20px 40px;
     .channel-thumbnail {
-      width: @channel-thumbnail-size;
+      width: @channel-thumbnail-width;
+      height: @channel-thumbnail-height;
       margin-top: 35px;
       /deep/ .image_dropzone {
-        width: @channel-thumbnail-size;
-        img {
-          width: @channel-thumbnail-size;
-          height: @channel-thumbnail-size;
-        }
+        width: @channel-thumbnail-width;
+        height: @channel-thumbnail-height;
       }
     }
 

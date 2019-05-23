@@ -762,10 +762,26 @@ class PublicChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
     """
     kind_count = serializers.SerializerMethodField('generate_kind_count')
     matching_tokens = serializers.SerializerMethodField('match_tokens')
+    icon_encoding = serializers.SerializerMethodField('get_thumbnail_encoding')
 
     def match_tokens(self, channel):
         tokens = json.loads(channel.tokens) if hasattr(channel, 'tokens') else []
         return list(channel.secret_tokens.filter(token__in=tokens).values_list('token', flat=True))
+
+    def get_thumbnail_encoding(self, channel):
+        """
+        Historically, we did not set channel.icon_encoding in the Studio database. We
+        only set it in the exported Kolibri sqlite db. So when Kolibri asks for the channel
+        information, fall back to the channel thumbnail data if icon_encoding is not set.
+        """
+        if channel.icon_encoding:
+            return channel.icon_encoding
+        elif channel.thumbnail_encoding:
+            base64 = channel.thumbnail_encoding.get('base64')
+            if base64:
+                return base64
+
+        return None
 
     def generate_kind_count(self, channel):
         return channel.published_kind_count and json.loads(channel.published_kind_count)

@@ -104,11 +104,11 @@
     grid-template-columns: 1fr 3fr;
     padding: 0 20px 40px;
     img {
-      width: 130px;
-      height: 130px;
+      width: 160px;
+      height: 90px;
       margin-top: 35px;
       border: 2px solid @gray-500;
-      object-fit: cover;
+      object-fit: contain;
     }
     .channel-section {
       padding-left: 20px;

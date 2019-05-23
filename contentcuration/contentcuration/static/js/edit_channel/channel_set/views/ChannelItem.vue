@@ -117,9 +117,9 @@
     .section {
       padding: 0;
       img {
-        width: 100px;
-        height: 100px;
-        object-fit: cover;
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
       }
     }
     .title {
