@@ -14,7 +14,7 @@ settings: contentcuration.production_settings
 productionIngress: false
 
 studioApp:
-  imageName: "REPLACEME"        
+  imageName: "REPLACEME"
   postmarkApiKey: "REPLACEME"
   releaseCommit:
   replicas: 3

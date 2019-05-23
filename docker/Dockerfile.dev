@@ -42,6 +42,9 @@ RUN pip install --no-cache-dir -U pipenv
 RUN pipenv install --clear --dev --system --ignore-pipfile
 ################################################################################
 
+# Copy prober code #############################################################
+COPY deploy/cloudprober.cfg /src/
+COPY deploy/probers /src/probers/
 
 # Cloudprober binary ###########################################################
 RUN curl -L -o /cloudprober.zip https://github.com/google/cloudprober/releases/download/v0.10.2/cloudprober-v0.10.2-linux-x86_64.zip

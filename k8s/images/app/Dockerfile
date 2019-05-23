@@ -13,7 +13,7 @@ RUN curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
 # install node
 RUN curl -sL https://deb.nodesource.com/setup_10.x | bash -
 
-RUN apt-get -y install nodejs python python-dev python-pip gcc libpq-dev ffmpeg imagemagick ghostscript python-tk make git gettext openjdk-9-jre-headless curl libjpeg-dev wkhtmltopdf google-cloud-sdk fonts-freefont-ttf xfonts-75dpi poppler-utils
+RUN apt-get -y install nodejs python python-dev python-pip gcc libpq-dev ffmpeg imagemagick ghostscript python-tk make git gettext openjdk-9-jre-headless curl libjpeg-dev wkhtmltopdf google-cloud-sdk fonts-freefont-ttf xfonts-75dpi poppler-utils unzip
 
 RUN curl -L -o wkhtmltox.deb https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.5/wkhtmltox_0.12.5-1.xenial_amd64.deb && dpkg -i wkhtmltox.deb
 
@@ -25,6 +25,11 @@ RUN yarn install
 
 COPY Pipfile .
 COPY Pipfile.lock .
+
+# Copy prober files
+COPY deploy/cloudprober.cfg .
+COPY deploy/probers ./probers/
+COPY docker/prober-entrypoint.sh .
 
 RUN pip install --upgrade pip
 RUN pip install -U pipenv

@@ -187,3 +187,6 @@ Generate the shared environment variables between studio app and workers
   mountPath: /secrets/gdrive
 {{ end }}
 {{- end -}}
+
+- name: PROBER_STUDIO_BASE_URL
+  value: http://{{ template "studio.fullname" . }}-app.default.svc.cluster.local

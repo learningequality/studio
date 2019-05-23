@@ -1,0 +1,20 @@
+---
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: {{ template "studio.fullname" . }}-prober
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: {{ template "studio.fullname" . }}-prober
+        tier: prober
+    spec:
+      containers:
+      - name: prober
+        image: {{ .Values.studioApp.imageName }}
+        command:
+        - bash
+        - prober-entrypoint.sh
+        env: {{ include "studio.sharedEnvs" . | nindent 12 }}
