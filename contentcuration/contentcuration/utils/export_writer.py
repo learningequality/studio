@@ -7,14 +7,6 @@ import sys
 import tempfile
 from collections import OrderedDict
 
-# On OS X, the default backend will fail if you are not using a Framework build of Python,
-# e.g. in a virtualenv. To avoid having to set MPLBACKEND each time we use Studio,
-# automatically set the backend.
-if sys.platform.startswith("darwin"):
-    import matplotlib
-    if matplotlib.get_backend().lower() == "macosx":
-        matplotlib.use('PS')
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pdfkit
@@ -41,6 +33,14 @@ from contentcuration.models import Channel
 from contentcuration.models import ContentKind
 from contentcuration.utils.files import generate_thumbnail_from_channel
 from contentcuration.utils.format import format_size
+
+# On OS X, the default backend will fail if you are not using a Framework build of Python,
+# e.g. in a virtualenv. To avoid having to set MPLBACKEND each time we use Studio,
+# automatically set the backend.
+if sys.platform.startswith("darwin"):
+    import matplotlib
+    if matplotlib.get_backend().lower() == "macosx":
+        matplotlib.use('PS')
 
 
 AUDIO_COLOR = "#F06292"
@@ -173,37 +173,29 @@ class CSVMixin(object):
 class ExportWriter(object):
     tempfiles = None
     ext = None
-    messages = {
-        content_kinds.TOPIC: _("Topic"),
-        content_kinds.VIDEO: _("Video"),
-        content_kinds.AUDIO: _("Audio"),
-        content_kinds.EXERCISE: _("Exercise"),
-        content_kinds.DOCUMENT: _("Document"),
-        content_kinds.HTML5: _("Html App"),
-        content_kinds.TOPIC + "_plural": _("Topics"),
-        content_kinds.VIDEO + "_plural": _("Videos"),
-        content_kinds.AUDIO + "_plural": _("Audios"),
-        content_kinds.EXERCISE + "_plural": _("Exercises"),
-        content_kinds.DOCUMENT + "_plural": _("Documents"),
-        content_kinds.HTML5 + "_plural": _("Html Apps"),
-        "resource": _("Total Resource"),
-        "resource_plural": _("Total Resources")
-    }
 
     def __init__(self, *args, **kwargs):
         self.tempfiles = []
 
     def pluralize_constant(self, count, constant, sep=' '):
-        return ngettext(
-            '%(count)d%(sep)s%(singular)s',
-            '%(count)d%(sep)s%(plural)s',
-            count
-        ) % {
-            'count': count,
-            'singular': self.messages.get(constant),
-            'plural': self.messages.get(constant + "_plural"),
-            'sep': sep
-        }
+        msgargs = {'count': count, 'sep': sep}
+        if constant == content_kinds.TOPIC:
+            return ngettext('%(count)d%(sep)sTopic', '%(count)d%(sep)sTopics', count) % msgargs
+        elif constant == content_kinds.VIDEO:
+            return ngettext('%(count)d%(sep)sVideo', '%(count)d%(sep)sVideos', count) % msgargs
+        elif constant == content_kinds.AUDIO:
+            return ngettext('%(count)d%(sep)sAudio', '%(count)d%(sep)sAudios', count) % msgargs
+        elif constant == content_kinds.EXERCISE:
+            return ngettext('%(count)d%(sep)sExercise', '%(count)d%(sep)sExercises', count) % msgargs
+        elif constant == content_kinds.DOCUMENT:
+            return ngettext('%(count)d%(sep)sDocument', '%(count)d%(sep)sDocuments', count) % msgargs
+        elif constant == content_kinds.HTML5:
+            return ngettext('%(count)d%(sep)sHTML App', '%(count)d%(sep)sHTML Apps', count) % msgargs
+        elif constant == "resource":
+            return ngettext('%(count)d%(sep)sTotal Resource', '%(count)d%(sep)sTotal Resources', count) % msgargs
+        else:
+            logging.warning('No translation available for {}'.format(constant))
+            return '{} {}'.format(count, constant)
 
     def get_write_to_path(self, ext=None):
         ext = ext or self.ext
