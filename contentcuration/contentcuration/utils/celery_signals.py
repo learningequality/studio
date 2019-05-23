@@ -55,7 +55,9 @@ def on_failure(sender, **kwargs):
             'task_kwargs': task_kwargs,
             'traceback': traceback.format_tb(kwargs['traceback'])
         }
-        task.metadata['error'] = exception_data
+        if 'error' not in task.metadata:
+            task.metadata['error'] = {}
+        task.metadata['error'].update(exception_data)
         task.save()
     except ObjectDoesNotExist:
         pass  # If the object doesn't exist, that likely means the task was created outside of create_async_task

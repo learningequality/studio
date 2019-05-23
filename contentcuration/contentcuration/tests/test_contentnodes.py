@@ -14,9 +14,10 @@ from contentcuration.models import FormatPreset
 from contentcuration.models import generate_storage_url
 from contentcuration.models import Language
 from contentcuration.utils.files import create_thumbnail_from_base64
+from contentcuration.utils.nodes import duplicate_node_bulk
 from contentcuration.utils.nodes import move_nodes
 from contentcuration.utils.sync import sync_node
-from contentcuration.views import nodes
+from contentcuration.views.nodes import delete_nodes
 
 
 def _create_nodes(num_nodes, title, parent=None, levels=2):
@@ -135,7 +136,7 @@ class NodeOperationsTestCase(BaseTestCase):
         new_channel.main_tree.refresh_from_db()
         assert new_channel.main_tree.changed is False
 
-        new_tree = nodes.duplicate_node_bulk(self.channel.main_tree, parent=new_channel.main_tree)
+        new_tree = duplicate_node_bulk(self.channel.main_tree, parent=new_channel.main_tree)
 
         _check_nodes(new_tree, title, original_channel_id=self.channel.id,
                      source_channel_id=self.channel.id, channel=new_channel)
@@ -194,7 +195,7 @@ class NodeOperationsTestCase(BaseTestCase):
             assert channel.main_tree.changed is False
 
             # make sure we always copy the copy we made in the previous go around :)
-            copy_node_root = nodes.duplicate_node_bulk(copy_node_root, parent=channel.main_tree)
+            copy_node_root = duplicate_node_bulk(copy_node_root, parent=channel.main_tree)
 
             _check_nodes(copy_node_root, original_channel_id=self.channel.id,
                          source_channel_id=prev_channel.id, channel=channel)
@@ -317,7 +318,7 @@ class NodeOperationsAPITestCase(BaseAPITestCase):
         request = self.create_post_request(reverse_lazy('delete_nodes'),
                                            data=json.dumps(delete_data),
                                            content_type='application/json')
-        nodes.delete_nodes(request)
+        delete_nodes(request)
 
         self.channel.main_tree.refresh_from_db()
         assert self.channel.main_tree.get_descendants().count() == 0
@@ -421,8 +422,8 @@ class SyncNodesOperationTestCase(BaseTestCase):
         self.new_channel.save()
         self.new_channel.main_tree = self._create_empty_tree()
         self.new_channel.main_tree.save()
-        new_tree = nodes.duplicate_node_bulk(self.channel.main_tree,
-                                             parent=self.new_channel.main_tree)
+        new_tree = duplicate_node_bulk(self.channel.main_tree,
+                                       parent=self.new_channel.main_tree)
         self.new_channel.main_tree = new_tree
         self.new_channel.main_tree.refresh_from_db()
 

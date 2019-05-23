@@ -10,6 +10,7 @@ from django.conf import settings
 from django.core.mail import EmailMessage
 from django.db import transaction
 from django.template.loader import render_to_string
+from django.utils.translation import ugettext as _
 
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
@@ -213,14 +214,22 @@ def create_async_task(task_name, task_options, task_args=None):
     )
 
     task = async_task.apply_async(kwargs=task_args, task_id=str(task_info.task_id))
-    logging.info("Created task ID = {}".format(task.id))
     # If there was a failure to create the task, the apply_async call will return failed, but
     # checking the status will still show PENDING. So make sure we write the failure to the
     # db directly so the frontend can know of the failure.
     if task.status == 'FAILURE':
+        # Error information may have gotten added to the Task object during the call.
+        task_info.refresh_from_db()
         logging.error("Task failed to start, please check Celery status.")
         task_info.status = 'FAILURE'
-        task_info.metadata['error'] = 'Unable to start task. Please contact support.'
+        error_data = {
+            'message': _('Unknown error starting task. Please contact support.')
+        }
+        # The Celery on_failure handler may also add a traceback, so make sure
+        # we only create a new error object if one doesn't already exist.
+        if 'error' not in task_info.metadata:
+            task_info.metadata['error'] = {}
+        task_info.metadata['error'].update(error_data)
         task_info.save()
 
     return task, task_info
