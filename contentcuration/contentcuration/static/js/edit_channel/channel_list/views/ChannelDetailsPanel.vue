@@ -136,10 +136,7 @@
     }
 
     // Hacks to fix icon position
-    .channel-star {
-      margin-top: -24px;
-    }
-
+    .channel-star,
     .channel-close {
       margin-top: -12px;
     }
