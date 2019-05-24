@@ -51,6 +51,7 @@ module.exports = {
   entry: {
     base: ['@babel/polyfill', './base.js'],
     channel_edit: './channel_edit.js',
+    channel_list: './channel_list.js',
     administration: './administration.js',
     settings: './settings.js',
     // A simple code sandbox to play with components in

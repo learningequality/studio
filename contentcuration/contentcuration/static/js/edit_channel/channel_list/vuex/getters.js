@@ -1,4 +1,5 @@
 import _ from 'underscore';
+import { ListTypes } from '../constants';
 
 export function channels(state) {
   return state.channels;
@@ -14,6 +15,17 @@ export function invitations(state) {
 
 export function changed(state) {
   return state.changed;
+}
+
+const omitListTypes = x => _.omit(x, [..._.keys(ListTypes), 'STARRING']);
+
+export function activeChannelHasBeenModified(state) {
+  if (!state.activeChannel) {
+    return false;
+  }
+  // List Types are added to Channels Object in the SET_CHANNEL_LIST mutation,
+  // so we remove them here before comparing
+  return !_.isEqual(omitListTypes(state.channelChanges), omitListTypes(state.activeChannel));
 }
 
 export function getChannel(state) {

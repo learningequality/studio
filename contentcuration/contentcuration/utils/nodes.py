@@ -118,6 +118,41 @@ def map_files_to_assessment_item(user, assessment_item, data):
         resource_obj.save()
 
 
+def map_files_to_slideshow_slide_item(user, node, slides, files):
+    """
+    Generate files referenced in given slideshow slide
+    """
+    for file_data in files:
+        filename = file_data["filename"]
+        checksum, ext = filename.split(".")
+
+        matching_slide = next((slide for slide in slides if slide.metadata["checksum"] == checksum), None)
+
+        if not matching_slide:
+            # TODO(Jacob) Determine proper error type... raise it.
+            print ("NO MATCH")
+
+        file_path = generate_object_storage_name(checksum, filename)
+        storage = default_storage
+
+        if not storage.exists(file_path):
+            raise IOError('{} not found'.format(file_path))
+
+        file_obj = File(
+            slideshow_slide=matching_slide,
+            checksum=checksum,
+            file_format_id=ext,
+            original_filename=file_data.get("original_filename") or "file",
+            source_url=file_data.get("source_url"),
+            file_size=file_data["size"],
+            preset_id=file_data["preset"],
+            uploaded_by=user
+        )
+
+        file_obj.file_on_disk.name = file_path
+        file_obj.save()
+
+
 def filter_out_nones(data):
     """
     Filter out any falsey values from data.

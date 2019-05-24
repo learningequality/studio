@@ -1,4 +1,5 @@
-import { mapActions, mapMutations, mapState } from 'vuex';
+import _ from 'underscore';
+import { mapActions, mapMutations, mapState, mapGetters } from 'vuex';
 import { createTranslator } from 'utils/i18n';
 import { dialog, alert } from 'edit_channel/utils/dialog';
 
@@ -13,8 +14,8 @@ const channelStrings = createTranslator('ChannelStrings', {
 
 export const setChannelMixin = {
   computed: {
-    ...mapState('channel_list', ['activeChannel']),
-    ...mapState('channel_list', ['changed']),
+    ...mapState('channel_list', ['activeChannel', 'changed']),
+    ...mapGetters('channel_list', ['activeChannelHasBeenModified']),
     channelStrings() {
       return channelStrings;
     },
@@ -22,19 +23,34 @@ export const setChannelMixin = {
   methods: {
     ...mapActions('channel_list', ['saveChannel']),
     ...mapMutations('channel_list', {
-      setActiveChannel: 'SET_ACTIVE_CHANNEL',
       cancelChanges: 'CANCEL_CHANNEL_CHANGES',
     }),
-    setChannel: function(channelID) {
+    setActiveChannel(channelId) {
+      if (channelId) {
+        this.$router.push({ query: { channel_id: channelId } });
+      } else {
+        this.$router.push({ query: _.omit(this.$route.query, 'channel_id') });
+      }
+      this.$store.commit('channel_list/SET_ACTIVE_CHANNEL', channelId);
+    },
+    setChannel(channelID) {
+      let checkForChanges = false;
+      if (this.activeChannel) {
+        checkForChanges = this.activeChannel.id !== channelID || !channelID;
+      }
       // Check for changes here when user switches or closes panel
-      if (this.changed && channelID !== this.activeChannel.id) {
+      if (this.activeChannelHasBeenModified && checkForChanges) {
         dialog(
           this.channelStrings('unsavedChanges'),
           this.channelStrings('unsavedChangesText'),
           {
             [this.channelStrings('dontSave')]: () => {
-              this.cancelChanges();
-              this.setActiveChannel(channelID);
+              // If going from "Create Channel" to new "Create Channel"
+              if (this.activeChannel.id === undefined && channelID === '') {
+                this.$store.commit('channel_list/CLEAR_CHANNEL_CHANGES');
+              } else {
+                this.setActiveChannel(channelID);
+              }
             },
             [this.channelStrings('keepOpen')]: () => {},
             [this.channelStrings('save')]: () => {

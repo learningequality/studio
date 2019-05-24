@@ -1243,6 +1243,13 @@ class AssessmentItem(models.Model):
     deleted = models.BooleanField(default=False)
 
 
+class SlideshowSlide(models.Model):
+    contentnode = models.ForeignKey('ContentNode', related_name="slideshow_slides", blank=True, null=True,
+                                    db_index=True)
+    sort_order = models.FloatField(default=1.0)
+    metadata = JSONField(default={})
+
+
 class StagedFile(models.Model):
     """
     Keeps track of files uploaded through Ricecooker to avoid user going over disk quota limit
@@ -1264,6 +1271,7 @@ class File(models.Model):
                                     blank=True)
     contentnode = models.ForeignKey(ContentNode, related_name='files', blank=True, null=True, db_index=True)
     assessment_item = models.ForeignKey(AssessmentItem, related_name='files', blank=True, null=True, db_index=True)
+    slideshow_slide = models.ForeignKey(SlideshowSlide, related_name='files', blank=True, null=True, db_index=True)
     file_format = models.ForeignKey(FileFormat, related_name='files', blank=True, null=True, db_index=True)
     preset = models.ForeignKey(FormatPreset, related_name='files', blank=True, null=True, db_index=True)
     language = models.ForeignKey(Language, related_name='files', blank=True, null=True)
