@@ -1,11 +1,8 @@
-import Vue from 'vue';
+import Vuex from 'vuex';
 
-const Vuex = require('vuex');
 var mutations = require('./mutations');
 var actions = require('./actions');
 var getters = require('./getters');
-
-Vue.use(Vuex);
 
 const store = new Vuex.Store({
   modules: {
@@ -19,9 +16,9 @@ const store = new Vuex.Store({
         channelSets: [],
         invitations: [],
       },
-      getters: getters,
-      mutations: mutations,
-      actions: actions,
+      getters,
+      mutations,
+      actions,
     },
   },
 });

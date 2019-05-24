@@ -9,6 +9,8 @@ let testChannel = {
   name: 'channel',
   description: 'description',
   language: 'en',
+  thumbnail: 'abc',
+  thumbnail_encoding: '16bit',
 };
 
 function makeWrapper(props = {}) {
@@ -32,7 +34,7 @@ describe('channelEditor', () => {
 
   describe('on load', () => {
     it('changed is false', () => {
-      expect(wrapper.vm.changed).toBe(false);
+      expect(wrapper.vm.activeChannelHasBeenModified).toBe(false);
     });
     it('thumbnail is shown', () => {
       let thumbnail = 'thumbnail.png';
@@ -65,7 +67,7 @@ describe('channelEditor', () => {
         thumbnail,
         thumbnail
       );
-      expect(wrapper.vm.changed).toBe(true);
+      expect(wrapper.vm.activeChannelHasBeenModified).toBe(true);
       expect(wrapper.vm.channel.thumbnail).toEqual(thumbnail);
       expect(wrapper.vm.channel.thumbnail_encoding).toEqual({ 'new encoding': thumbnail });
     });
@@ -75,7 +77,7 @@ describe('channelEditor', () => {
         thumbnail_encoding: { test: 'test' },
       });
       thumbnailWrapper.vm.removeChannelThumbnail();
-      expect(wrapper.vm.changed).toBe(true);
+      expect(wrapper.vm.activeChannelHasBeenModified).toBe(true);
       expect(wrapper.vm.channel.thumbnail).toEqual('');
       expect(wrapper.vm.channel.thumbnail_encoding).toEqual({});
     });
@@ -85,7 +87,7 @@ describe('channelEditor', () => {
       nameInput.element.value = newName;
       nameInput.trigger('input');
       nameInput.trigger('change');
-      expect(wrapper.vm.changed).toBe(true);
+      expect(wrapper.vm.activeChannelHasBeenModified).toBe(true);
       expect(wrapper.vm.channel.name).toEqual(newName);
     });
     it('setting .channel-description sets channel.description', () => {
@@ -94,16 +96,16 @@ describe('channelEditor', () => {
       descriptionInput.element.value = newDescription;
       descriptionInput.trigger('input');
       descriptionInput.trigger('change');
-      expect(wrapper.vm.changed).toBe(true);
+      expect(wrapper.vm.activeChannelHasBeenModified).toBe(true);
       expect(wrapper.vm.channel.description).toEqual(newDescription);
     });
     it('setting #select-language sets channel.language_id', () => {
-      let newLanguage = 'en';
+      let newLanguage = 'es';
       let languageDropdown = wrapper.find('#select-language');
       languageDropdown.element.value = newLanguage;
       languageDropdown.trigger('input');
       languageDropdown.trigger('change');
-      expect(wrapper.vm.changed).toBe(true);
+      expect(wrapper.vm.activeChannelHasBeenModified).toBe(true);
       expect(wrapper.vm.channel.language).toEqual(newLanguage);
     });
   });
@@ -116,9 +118,7 @@ describe('channelEditor', () => {
 
     // Cancel changes
     wrapper.find('.cancel-edits').trigger('click');
-    expect(wrapper.vm.changed).toBe(false);
-    expect(wrapper.vm.channel.name).toEqual('channel');
-    expect(wrapper.emitted().cancelEdit).toBeTruthy();
+    expect(wrapper.emitted().cancelEdit).toHaveLength(1);
   });
 
   it('clicking SAVE saves edits', () => {
