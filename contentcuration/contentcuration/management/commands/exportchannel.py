@@ -34,3 +34,4 @@ class Command(BaseCommand):
         except publish.EarlyExit as e:
             logging.warning("Publishing exited early: {message}.".format(message=e.message))
             self.stdout.write("You can find your database in {path}".format(path=e.db_path))
+

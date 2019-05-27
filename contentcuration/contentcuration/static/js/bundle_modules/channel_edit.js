@@ -1,10 +1,10 @@
 // include all logic in "base" entrypoint
+const Backbone = require('backbone');
+const WorkspaceManager = require('../edit_channel/utils/workspace_manager');
 require('./base');
 
 require('vuetify/dist/vuetify.min.css');
 
-var Backbone = require('backbone');
-const WorkspaceManager = require('../edit_channel/utils/workspace_manager');
 const State = require('edit_channel/state');
 // Require the router object so that it is ready for Backbone history start call.
 require('../edit_channel/router');
@@ -18,7 +18,6 @@ $(function() {
     State.current_channel.fetch({ async: false });
   }
   $('#channel-edit-content-wrapper').on('click', close_popups);
-
   Backbone.history.start({
     pushState: true,
     // set in Django template

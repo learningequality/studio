@@ -25,7 +25,7 @@
           <option
             disabled
             selected
-            value="0"
+            value=""
           >
             {{ $tr('channelLanguagePlaceholder') }}
           </option>
@@ -89,7 +89,7 @@
       <div class="buttons">
         <!-- Tabindex necessary? -->
         <button
-          type="reset"
+          type="button"
           class="cancel-edits action-text"
           :tabindex="4"
           @click="cancelEdit"
@@ -155,14 +155,12 @@
       ...mapState('channel_list', {
         channel: 'channelChanges',
       }),
-      ...mapGetters('channel_list', {
-        changed: 'changed',
-      }),
+      ...mapGetters('channel_list', ['activeChannelHasBeenModified']),
       isNew() {
         return !this.channel.id;
       },
       nameError() {
-        if (this.changed && !this.name.length) {
+        if (this.activeChannelHasBeenModified && !this.name.length) {
           return this.$tr('channelError');
         }
         return '';
@@ -181,10 +179,20 @@
         return '';
       },
     },
+    watch: {
+      // Should only be called when clicking "+ Channel" again when the ChannelEditor
+      // is open
+      channel(newVal) {
+        this.language = newVal.language || '';
+        this.name = newVal.name || '';
+        this.description = newVal.description;
+        this.$refs.firstTab.focus();
+      },
+    },
     beforeMount() {
       // Only need this because we're using getters. Could go straight to $store.state in `data`
-      this.language = this.channel.language;
-      this.name = this.channel.name;
+      this.language = this.channel.language || '';
+      this.name = this.channel.name || '';
       this.description = this.channel.description;
     },
     mounted() {

@@ -17,6 +17,8 @@ from mock import patch
 from contentcuration import models as cc
 from contentcuration.utils.publish import convert_channel_thumbnail
 from contentcuration.utils.publish import create_content_database
+from contentcuration.utils.publish import create_slideshow_manifest
+from contentcuration.utils.publish import create_bare_contentnode
 from contentcuration.utils.publish import MIN_SCHEMA_VERSION
 
 pytestmark = pytest.mark.django_db
@@ -48,6 +50,13 @@ def exercise():
     Create a topic content kind.
     """
     return mixer.blend(cc.ContentKind, kind='exercise')
+
+
+def slideshow():
+    """
+    Create a slideshow content kind.
+    """
+    return mixer.blend(cc.ContentKind, kind='slideshow')
 
 
 def preset_exercise():
@@ -141,6 +150,7 @@ def channel():
         leaf = mixer.blend(cc.ContentNode, parent=level2, kind=video())
         leaf2 = mixer.blend(cc.ContentNode, parent=level2, kind=exercise(), title='EXERCISE 1',
                             extra_fields="{\"mastery_model\":\"do_all\",\"randomize\":true}")
+        leaf3 = mixer.blend(cc.ContentNode, parent=level2, kind=slideshow(), title="SLIDESHOW 1", extra_fields="{}")
 
         video_file = fileobj_video()
         video_file.contentnode = leaf
@@ -258,3 +268,11 @@ class ChannelExportUtilityFunctionTestCase(StudioTestCase):
         with patch("contentcuration.utils.publish.get_thumbnail_encoding", return_value="this is a test"):
             channel = cc.Channel.objects.create(thumbnail="/content/kolibri_flapping_bird.png", thumbnail_encoding={})
             self.assertEquals("this is a test", convert_channel_thumbnail(channel))
+
+    def test_create_slideshow_manifest(self):
+        content_channel = cc.Channel.objects.create()
+        ccnode = cc.ContentNode.objects.create(kind_id=slideshow(), extra_fields="{}")
+        kolibrinode = create_bare_contentnode(ccnode, ccnode.language, content_channel.id, content_channel.name)
+        create_slideshow_manifest(ccnode, kolibrinode)
+        manifest_collection = cc.File.objects.filter(contentnode=ccnode, preset_id=u"slideshow_manifest")
+        assert len(manifest_collection) is 1

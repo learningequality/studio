@@ -11,6 +11,7 @@ const COLOR_SELECTION = [
   '#FF8F00',
   '#F06292',
   '#4DB6AC',
+  '#4ECE90',
   '#fccde5',
   '#bc80bd',
   '#ccebc5',

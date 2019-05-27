@@ -7,15 +7,17 @@
           <ChannelInvitationList @setActiveList="setActiveList" />
 
           <ul id="manage-channel-nav">
-            <li
+            <router-link
               v-for="listType in lists"
               :key="listType.id"
-              :class="{active: activeList === listType}"
-              @click="activeList = listType"
+              :to="getLink(listType)"
+              :exact="linkShouldBeExact(listType)"
             >
-              <span v-if="listType === 'STARRED'"></span>
-              {{ $tr(listType) }}
-            </li>
+              <li>
+                <span v-if="listType === 'STARRED'"></span>
+                {{ $tr(listType) }}
+              </li>
+            </router-link>
           </ul>
           <div
             v-for="listType in lists"
@@ -30,6 +32,7 @@
               v-else
               :key="listType"
               :listType="listType"
+              @channel_list_ready="handleChanneListReady(listType)"
             />
           </div>
         </div>
@@ -47,27 +50,11 @@
   import _ from 'underscore';
   import { mapState } from 'vuex';
   import { ListTypes } from '../constants';
+  import { setChannelMixin } from '../mixins';
   import ChannelList from './ChannelList.vue';
   import ChannelSetList from './ChannelSetList.vue';
   import ChannelInvitationList from './ChannelInvitationList.vue';
   import ChannelDetailsPanel from './ChannelDetailsPanel.vue';
-
-  // TODO: Move this logic to a vue router
-  let defaultListType = ListTypes.EDITABLE;
-  switch (window.location.hash.substr(1)) {
-    case 'starred':
-      defaultListType = ListTypes.STARRED;
-      break;
-    case 'viewonly':
-      defaultListType = ListTypes.VIEW_ONLY;
-      break;
-    case 'public':
-      defaultListType = ListTypes.PUBLIC;
-      break;
-    case 'collection':
-      defaultListType = ListTypes.CHANNEL_SETS;
-      break;
-  }
 
   export default {
     name: 'ChannelListPage',
@@ -84,10 +71,12 @@
       ChannelInvitationList,
       ChannelDetailsPanel,
     },
-    data() {
-      return {
-        activeList: defaultListType,
-      };
+    mixins: [setChannelMixin],
+    props: {
+      activeList: {
+        type: String,
+        required: true,
+      },
     },
     computed: {
       ...mapState('channel_list', ['activeChannel']),
@@ -95,9 +84,59 @@
         return _.values(ListTypes);
       },
     },
+    watch: {
+      $route() {
+        this.setActiveChannelFromQuery();
+      },
+    },
     methods: {
+      // HACK to get the first link to not be active under certain conditions
+      linkShouldBeExact(listType) {
+        if (listType === 'EDITABLE') {
+          if (this.$route.name !== 'ChannelList') {
+            return true;
+          } else {
+            return !this.$route.query.channel_id;
+          }
+        }
+        return false;
+      },
       setActiveList(listType) {
         this.activeList = listType;
+      },
+      handleChanneListReady(listType) {
+        // Only open the channel tab if the channel list for this page is ready
+        if (this.activeList === listType) {
+          this.setActiveChannelFromQuery();
+        }
+      },
+      getLink(listType) {
+        const name = {
+          EDITABLE: 'ChannelList',
+          STARRED: 'ChannelList/Starred',
+          VIEW_ONLY: 'ChannelList/ViewOnly',
+          PUBLIC: 'ChannelList/Public',
+          CHANNEL_SETS: 'ChannelList/Collections',
+        }[listType];
+        return { name };
+      },
+      setActiveChannelFromQuery() {
+        const { channel_id } = this.$route.query;
+
+        if (channel_id) {
+          if (!this.activeChannel || this.activeChannel.id !== channel_id) {
+            this.setChannel(channel_id);
+          }
+          // TODO revert query if there is no actual channel with the channel_id
+        } else {
+          // Need to infer whether we are creating a new channel or closing a page
+          if (this.activeChannel && this.activeChannel.id === undefined) {
+            // TODO figure out how to not call this twice when "+ Channel" is clicked
+            this.setChannel('');
+          } else {
+            this.setChannel(null);
+          }
+        }
       },
     },
   };
@@ -119,34 +158,32 @@
     }
   }
   #manage-channel-nav {
-    .channel-list-width;
-
     padding-bottom: 5px;
     margin-top: 50px;
     margin-bottom: 10px;
     list-style-type: none;
+    .router-link-active li {
+      font-weight: bold;
+      border-color: @blue-500;
+    }
     li {
       display: inline-block;
       padding: 10px 25px;
       font-size: 14pt;
       color: @body-font-color;
-      cursor: pointer;
+      // cursor: pointer;
       border-bottom: 3px solid transparent;
       &:hover {
         border-color: @gray-300;
       }
-      &.active {
-        font-weight: bold;
-        border-color: @blue-500;
-      }
       span::before {
-        .material-icons;
-
         font-size: 16pt;
         vertical-align: sub;
         content: 'star';
+        .material-icons;
       }
     }
+    .channel-list-width;
   }
 
 </style>

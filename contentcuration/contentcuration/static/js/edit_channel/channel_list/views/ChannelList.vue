@@ -78,6 +78,7 @@
     mounted() {
       this.loadChannelList(this.listType).then(() => {
         this.loading = false;
+        this.$emit('channel_list_ready');
       });
     },
     methods: {

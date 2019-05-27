@@ -102,6 +102,8 @@ var messages = {
   topic_thumbnail: 'Thumbnail',
   html5_zip: 'HTML5 Zip',
   html5_thumbnail: 'Thumbnail',
+  slideshow: 'Slideshow',
+  slideshow_plural: 'Slideshows',
   'CC BY': 'CC BY',
   'CC BY-SA': 'CC BY-SA',
   'CC BY-ND': 'CC BY-ND',

@@ -1,4 +1,4 @@
-import { shallowMount } from '@vue/test-utils';
+import { mount, RouterLinkStub } from '@vue/test-utils';
 import _ from 'underscore';
 import ChannelListPage from './../views/ChannelListPage.vue';
 import ChannelDetailsPanel from './../views/ChannelDetailsPanel.vue';
@@ -6,8 +6,19 @@ import { ListTypes } from './../constants';
 import { localStore } from './data';
 
 function makeWrapper() {
-  return shallowMount(ChannelListPage, {
+  return mount(ChannelListPage, {
     store: localStore,
+    propsData: {
+      activeList: 'EDITABLE',
+    },
+    stubs: {
+      RouterLink: RouterLinkStub,
+      ChannelDetailsPanel: '<div />',
+      ChannelList: '<div />',
+    },
+    mocks: {
+      $route: {},
+    },
   });
 }
 
@@ -20,14 +31,13 @@ describe('channelListPage', () => {
     let expectedTabLength = _.values(ListTypes).length;
     expect(wrapper.findAll('#manage-channel-nav li')).toHaveLength(expectedTabLength);
   });
-  it('on CLICK tab must navigate to corresponding list', () => {
-    let results = wrapper.findAll('#manage-channel-nav li');
-    _.each(_.range(0, results.length), index => {
-      let tab = results.at(index);
-      tab.trigger('click');
-      expect(tab.is('.active')).toBe(true);
-      expect(wrapper.vm.$tr(wrapper.vm.activeList)).toEqual(tab.text());
-    });
+  it('has links to all of the different list types', () => {
+    const routerLinks = wrapper.findAll(RouterLinkStub);
+    expect(routerLinks.at(0).props().to.name).toEqual('ChannelList');
+    expect(routerLinks.at(1).props().to.name).toEqual('ChannelList/Starred');
+    expect(routerLinks.at(2).props().to.name).toEqual('ChannelList/ViewOnly');
+    expect(routerLinks.at(3).props().to.name).toEqual('ChannelList/Public');
+    expect(routerLinks.at(4).props().to.name).toEqual('ChannelList/Collections');
   });
   it('details panel should toggle when active channel is set/unset', () => {
     let channel = { id: 'id', channel: 'channel' };
