@@ -1,29 +1,15 @@
-import { mount, RouterLinkStub, createLocalVue } from '@vue/test-utils';
+import { mount, RouterLinkStub } from '@vue/test-utils';
 import _ from 'underscore';
-import VueRouter from 'vue-router';
 import ChannelListPage from './../views/ChannelListPage.vue';
 import ChannelDetailsPanel from './../views/ChannelDetailsPanel.vue';
 import ChannelInvitationList from './../views/ChannelInvitationList.vue';
 import { ListTypes, RouterNames } from './../constants';
 import { localStore } from './data';
 
-const localVue = createLocalVue();
-localVue.use(VueRouter);
+let router = require('edit_channel/channel_list/router');
 
 function makeWrapper() {
-  // TODO: update with actual routes once the central vue router is available
-  const router = new VueRouter({
-    routes: [
-      { path: '/', name: 'ChannelList', component: ChannelListPage },
-      { path: '/view_only', name: 'ChannelList/ViewOnly', component: ChannelListPage },
-      { path: '/starred', name: 'ChannelList/Starred', component: ChannelListPage },
-      { path: '/public', name: 'ChannelList/Public', component: ChannelListPage },
-      { path: '/collections', name: 'ChannelList/Collections', component: ChannelListPage },
-    ],
-  });
-
   return mount(ChannelListPage, {
-    localVue,
     router,
     store: localStore,
     propsData: {
