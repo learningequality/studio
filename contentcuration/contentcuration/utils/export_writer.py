@@ -189,7 +189,7 @@ class ExportWriter(object):
         elif constant == content_kinds.AUDIO:
             return ngettext('%(count)d Audio', '%(count)d Audios', count) % data
         elif constant == content_kinds.EXERCISE:
-            return ngettext('%(count)d Exercise', '%(count)d% Exercises', count) % data
+            return ngettext('%(count)d Exercise', '%(count)d Exercises', count) % data
         elif constant == content_kinds.DOCUMENT:
             return ngettext('%(count)d Document', '%(count)d Documents', count) % data
         elif constant == content_kinds.HTML5:
