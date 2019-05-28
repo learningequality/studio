@@ -1,12 +1,30 @@
-import { mount, RouterLinkStub } from '@vue/test-utils';
+import { mount, RouterLinkStub, createLocalVue } from '@vue/test-utils';
 import _ from 'underscore';
+import VueRouter from 'vue-router';
 import ChannelListPage from './../views/ChannelListPage.vue';
 import ChannelDetailsPanel from './../views/ChannelDetailsPanel.vue';
-import { ListTypes } from './../constants';
+import ChannelInvitationList from './../views/ChannelInvitationList.vue';
+import { ListTypes, RouterNames } from './../constants';
 import { localStore } from './data';
 
+const localVue = createLocalVue();
+localVue.use(VueRouter);
+
 function makeWrapper() {
+  // TODO: update with actual routes once the central vue router is available
+  const router = new VueRouter({
+    routes: [
+      { path: '/', name: 'ChannelList', component: ChannelListPage },
+      { path: '/view_only', name: 'ChannelList/ViewOnly', component: ChannelListPage },
+      { path: '/starred', name: 'ChannelList/Starred', component: ChannelListPage },
+      { path: '/public', name: 'ChannelList/Public', component: ChannelListPage },
+      { path: '/collections', name: 'ChannelList/Collections', component: ChannelListPage },
+    ],
+  });
+
   return mount(ChannelListPage, {
+    localVue,
+    router,
     store: localStore,
     propsData: {
       activeList: 'EDITABLE',
@@ -15,9 +33,7 @@ function makeWrapper() {
       RouterLink: RouterLinkStub,
       ChannelDetailsPanel: '<div />',
       ChannelList: '<div />',
-    },
-    mocks: {
-      $route: {},
+      ChannelInvitationList: '<div />',
     },
   });
 }
@@ -49,5 +65,12 @@ describe('channelListPage', () => {
     expect(wrapper.find(ChannelDetailsPanel).exists()).toBe(false);
     wrapper.vm.$store.commit('channel_list/SET_ACTIVE_CHANNEL', '');
     expect(wrapper.find(ChannelDetailsPanel).exists()).toBe(true);
+  });
+  it('accepting an invitation should set the channel list', () => {
+    let inviteList = wrapper.find(ChannelInvitationList);
+    _.each(_.pairs(RouterNames), tab => {
+      inviteList.vm.$emit('setActiveList', tab[0]);
+      expect(wrapper.vm.$route.name).toEqual(tab[1]);
+    });
   });
 });

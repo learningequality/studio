@@ -22,3 +22,11 @@ export const ChannelInvitationMapping = {
   [InvitationShareModes.EDIT]: ListTypes.EDITABLE,
   [InvitationShareModes.VIEW_ONLY]: ListTypes.VIEW_ONLY,
 };
+
+export const RouterNames = {
+  [ListTypes.EDITABLE]: 'ChannelList',
+  [ListTypes.STARRED]: 'ChannelList/Starred',
+  [ListTypes.VIEW_ONLY]: 'ChannelList/ViewOnly',
+  [ListTypes.PUBLIC]: 'ChannelList/Public',
+  [ListTypes.CHANNEL_SETS]: 'ChannelList/Collections',
+};

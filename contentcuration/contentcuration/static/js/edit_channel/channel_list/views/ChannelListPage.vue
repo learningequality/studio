@@ -49,7 +49,7 @@
 
   import _ from 'underscore';
   import { mapState } from 'vuex';
-  import { ListTypes } from '../constants';
+  import { ListTypes, RouterNames } from '../constants';
   import { setChannelMixin } from '../mixins';
   import ChannelList from './ChannelList.vue';
   import ChannelSetList from './ChannelSetList.vue';
@@ -111,13 +111,7 @@
         }
       },
       getLink(listType) {
-        const name = {
-          EDITABLE: 'ChannelList',
-          STARRED: 'ChannelList/Starred',
-          VIEW_ONLY: 'ChannelList/ViewOnly',
-          PUBLIC: 'ChannelList/Public',
-          CHANNEL_SETS: 'ChannelList/Collections',
-        }[listType];
+        const name = RouterNames[listType];
         return { name };
       },
       setActiveChannelFromQuery() {
