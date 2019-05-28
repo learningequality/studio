@@ -13,7 +13,12 @@ export const ChannelListUrls = {
   [ListTypes.PUBLIC]: window.Urls.get_user_public_channels(),
 };
 
+export const InvitationShareModes = {
+  EDIT: 'edit',
+  VIEW_ONLY: 'view',
+};
+
 export const ChannelInvitationMapping = {
-  edit: ListTypes.EDITABLE,
-  view: ListTypes.VIEW_ONLY,
+  [InvitationShareModes.EDIT]: ListTypes.EDITABLE,
+  [InvitationShareModes.VIEW_ONLY]: ListTypes.VIEW_ONLY,
 };

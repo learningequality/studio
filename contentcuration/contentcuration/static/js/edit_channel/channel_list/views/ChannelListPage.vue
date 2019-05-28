@@ -102,7 +102,7 @@
         return false;
       },
       setActiveList(listType) {
-        this.activeList = listType;
+        this.$router.push(this.getLink(listType));
       },
       handleChanneListReady(listType) {
         // Only open the channel tab if the channel list for this page is ready
