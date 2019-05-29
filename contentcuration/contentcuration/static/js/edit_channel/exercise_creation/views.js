@@ -2,7 +2,7 @@
 // eslint-disable-next-line no-unused-vars
 const MATHJAX_REGEX = /\$\$([^$]+)\$\$/g; // <-- this is not used
 const IMG_PLACEHOLDER = '${☣ CONTENTSTORAGE}/';
-const IMG_REGEX = /${☣ CONTENTSTORAGE}\/([^)]+)/g;
+const IMG_REGEX = /\${☣ CONTENTSTORAGE}\/([^)]+)/g; // eslint-disable-line no-useless-escape
 const NUM_REGEX = /[0-9,.\-/+e\s]+/g;
 const IMG_CHECK = /.*\/content\/storage\/[0-9a-z]\/[0-9a-z]\/([0-9a-z]{32}\..+)/;
 
