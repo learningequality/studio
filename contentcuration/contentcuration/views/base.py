@@ -54,6 +54,7 @@ from contentcuration.serializers import ChannelListSerializer
 from contentcuration.serializers import ChannelSerializer
 from contentcuration.serializers import ChannelSetChannelListSerializer
 from contentcuration.serializers import ChannelSetSerializer
+from contentcuration.serializers import ContentNodeSerializer
 from contentcuration.serializers import CurrentUserSerializer
 from contentcuration.serializers import InvitationSerializer
 from contentcuration.serializers import RootNodeSerializer
@@ -508,8 +509,8 @@ class SandboxView(TemplateView):
         kwargs = super(SandboxView, self).get_context_data(**kwargs)
         kinds = ['topic', 'exercise', 'html5', 'document', 'video', 'audio']
         tree_ids = Channel.objects.filter(deleted=False).values_list('main_tree__tree_id', flat=True)
-        nodes = list(ContentNode.objects.filter(kind_id=k, tree_id__in=tree_ids).values('title', 'kind_id', 'pk').first() for k in kinds)
-        nodes = [{'id': n['pk'], 'kind': n['kind_id'], 'title': n['title']} for n in nodes]
-        kwargs.update({"nodes": json.dumps(nodes),
+        nodes = list(ContentNode.objects.filter(kind_id=k, tree_id__in=tree_ids).first() for k in kinds)
+        nodes = ContentNodeSerializer(nodes, many=True)
+        kwargs.update({"nodes": JSONRenderer().render(nodes.data),
                        "channel": Channel.objects.first().pk})
         return kwargs

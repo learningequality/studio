@@ -6,7 +6,6 @@ from distutils.version import LooseVersion
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
 from django.core.exceptions import SuspiciousOperation
-from django.core.files.storage import default_storage
 from django.core.management import call_command
 from django.db import transaction
 from django.http import HttpResponse
@@ -22,7 +21,6 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import api_view
 from rest_framework.decorators import authentication_classes
 from rest_framework.decorators import permission_classes
-from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -34,7 +32,6 @@ from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import ContentTag
-from contentcuration.models import generate_object_storage_name
 from contentcuration.models import get_next_sort_order
 from contentcuration.models import License
 from contentcuration.models import SlideshowSlide
@@ -472,7 +469,7 @@ def create_channel(channel_data, user):
         node_id=channel.id,
         source_id=channel.source_id,
         source_domain=channel.source_domain,
-        extra_fields=json.dumps({'ricecooker_version': channel.ricecooker_version}),
+        extra_fields={'ricecooker_version': channel.ricecooker_version},
     )
     channel.chef_tree.save()
     channel.save()
