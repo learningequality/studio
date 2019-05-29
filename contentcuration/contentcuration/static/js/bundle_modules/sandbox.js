@@ -23,17 +23,17 @@ Vue.use(Vuetify, {
   },
 });
 
-window.preferences = {
-  license: 'Public Domain',
-  author: 'Default Author',
-  provider: 'Default Provider',
-  aggregator: 'Default Aggregator',
-  copyright_holder: 'Default Copyright Holder',
-  license_description: 'Default License Description',
-  mastery_model: 'm_of_n',
-  m_value: 2,
-  n_value: 5,
-};
+// window.preferences = {
+//   license: 'Public Domain',
+//   author: 'Default Author',
+//   provider: 'Default Provider',
+//   aggregator: 'Default Aggregator',
+//   copyright_holder: 'Default Copyright Holder',
+//   license_description: 'Default License Description',
+//   mastery_model: 'm_of_n',
+//   m_value: 2,
+//   n_value: 5,
+// };
 
 State.openChannel({});
 

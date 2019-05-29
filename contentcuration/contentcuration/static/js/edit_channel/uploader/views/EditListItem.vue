@@ -1,5 +1,5 @@
 <template>
-  <VListTile :disabled="!isValid" @click.stop="setNode(index)">
+  <VListTile :disabled="!isValid" :class="{invalid: !nodeIsValid}" @click.stop="setNode(index)">
     <VListTileAction>
       <VCheckbox color="primary" :value="isSelected" @click.stop="toggleNode" />
     </VListTileAction>
@@ -44,35 +44,6 @@
         default: false,
       },
     },
-    data() {
-      return {
-        validationRules: [
-          item => !!item.title, // Title is required
-          item => {
-            // License is required for resources
-            return item.freeze_authoring_data || item.kind === 'topic' || !!item.license;
-          },
-          item => {
-            // Copyright holder is required for certain licenses
-            return (
-              item.freeze_authoring_data ||
-              item.kind === 'topic' ||
-              !item.license.copyright_holder_required ||
-              !!item.copyright_holder
-            );
-          },
-          item => {
-            // License description is required for certain licenses
-            return (
-              item.freeze_authoring_data ||
-              item.kind === 'topic' ||
-              !item.license.is_custom ||
-              !!item.license_description
-            );
-          },
-        ],
-      };
-    },
     computed: {
       ...mapGetters('edit_modal', ['getNode']),
       ...mapState('edit_modal', ['selectedIndices', 'isValid']),
@@ -81,6 +52,30 @@
       },
       isSelected() {
         return _.contains(this.selectedIndices, this.index);
+      },
+      nodeIsValid() {
+        // Title is required
+        if (!this.node.title) {
+          return false;
+        }
+
+        // Authoring information is required for resources
+        if (!this.node.freeze_authoring_data && this.node.kind !== 'topic') {
+          // License is required
+          if (!this.node.license) {
+            return false;
+          }
+          // Copyright holder is required for certain licenses
+          else if (this.node.license.copyright_holder_required && !this.node.copyright_holder) {
+            return false;
+          }
+          // License description is required for certain licenses
+          else if (this.license.is_custom && !this.node.license_description) {
+            return false;
+          }
+        }
+
+        return true;
       },
     },
     methods: {
@@ -92,9 +87,6 @@
       ...mapActions('edit_modal', ['removeNode']),
       toggleNode() {
         this.isSelected ? this.deselect(this.index) : this.select(this.index);
-      },
-      validate() {
-        // _.each(this.validationRules, (rule) => rule(this.node));
       },
     },
   };
