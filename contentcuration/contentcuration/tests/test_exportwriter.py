@@ -58,7 +58,8 @@ class ChannelDetailsTestCase(BaseAPITestCase):
                    content_kinds.AUDIO: '1 Audio',
                    content_kinds.EXERCISE: '1 Exercise',
                    content_kinds.DOCUMENT: '1 Document',
-                   content_kinds.HTML5: '1 HTML App',
+                   content_kinds.HTML5: '1 Html App',
+                   content_kinds.SLIDESHOW: '1 Slideshow',
                    'resource': '1 Total Resource'}
         for kind, result in to_test.items():
             self.assertEqual(exporter.pluralize_constant(1, kind), result)
