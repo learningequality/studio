@@ -1,5 +1,3 @@
-var _ = require('underscore');
-
 export function currentPage(state) {
   return state.pageState.pageType;
 }

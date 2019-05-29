@@ -14,6 +14,7 @@ function track(event_category, event_action, event_data) {
     event_data_string = JSON.stringify(event_data);
   }
 
+  // eslint-disable-next-line no-console
   console.log(`Tracking analytics event "${event_category}: ${event_action}"`,
               ` ${event_data_string}`);
 

@@ -37,10 +37,10 @@ from contentcuration.models import Language
 from contentcuration.models import License
 from contentcuration.models import PrerequisiteContentRelationship
 from contentcuration.models import SecretToken
+from contentcuration.models import SlideshowSlide
 from contentcuration.models import Task
 from contentcuration.models import User
 from contentcuration.statistics import record_node_addition_stats
-from contentcuration.utils.channelcache import ChannelCacher
 from contentcuration.utils.format import format_size
 
 
@@ -312,6 +312,15 @@ class AssessmentItemSerializer(BulkSerializerMixin, serializers.ModelSerializer)
         fields = ('id', 'question', 'type', 'answers', 'contentnode', 'assessment_id',
                   'hints', 'raw_data', 'order', 'source_url', 'randomize', 'deleted')
         list_serializer_class = AssessmentListSerializer
+
+
+class SlideshowSlideSerializer(BulkSerializerMixin, serializers.ModelSerializer):
+    contentnode = serializers.PrimaryKeyRelatedField(queryset=ContentNode.objects.all())
+    id = serializers.IntegerField(required=False)
+
+    class Meta:
+        model = SlideshowSlide
+        fields = ('id', 'sort_order', 'metadata', 'contentnode')
 
 
 class SimplifiedContentNodeSerializer(BulkSerializerMixin, serializers.ModelSerializer):
@@ -592,7 +601,7 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer, ContentNodeFieldMix
         list_serializer_class = CustomListSerializer
         model = ContentNode
         fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license', 'language',
-                  'license_description', 'assessment_items', 'files', 'parent_title', 'ancestors', 'modified', 'original_channel',
+                  'license_description', 'assessment_items', 'slideshow_slides', 'files', 'parent_title', 'ancestors', 'modified', 'original_channel',
                   'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'original_source_node_id',
                   'tags', 'extra_fields', 'prerequisite', 'is_prerequisite_of', 'node_id', 'tree_id', 'publishing', 'freeze_authoring_data',
                   'role_visibility', 'provider', 'aggregator', 'thumbnail_src')
@@ -602,12 +611,13 @@ class ContentNodeEditSerializer(ContentNodeSerializer):
     files = FileSerializer(many=True, read_only=True)
     tags = TagSerializer(many=True)
     assessment_items = AssessmentItemSerializer(many=True, read_only=True)
+    slideshow_slides = SlideshowSlideSerializer(many=True, read_only=True)
 
     class Meta:
         list_serializer_class = CustomListSerializer
         model = ContentNode
         fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license', 'language',
-                  'node_id', 'license_description', 'assessment_items', 'files', 'parent_title', 'content_id', 'modified',
+                  'node_id', 'license_description', 'assessment_items', 'slideshow_slides', 'files', 'parent_title', 'content_id', 'modified',
                   'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'ancestors', 'tree_id',
                   'tags', 'extra_fields', 'original_channel', 'prerequisite', 'is_prerequisite_of', 'thumbnail_encoding', 'thumbnail_src',
                   'freeze_authoring_data', 'publishing', 'original_source_node_id', 'role_visibility', 'provider', 'aggregator')
@@ -623,7 +633,7 @@ class ContentNodeCompleteSerializer(ContentNodeEditSerializer):
             'license_description', 'kind', 'prerequisite', 'is_prerequisite_of', 'parent_title', 'ancestors', 'language',
             'original_channel', 'original_source_node_id', 'source_node_id', 'content_id', 'original_channel_id',
             'source_channel_id', 'source_id', 'source_domain', 'thumbnail_encoding', 'publishing', 'thumbnail_src',
-            'children', 'parent', 'tags', 'created', 'modified', 'published', 'extra_fields', 'assessment_items',
+            'children', 'parent', 'tags', 'created', 'modified', 'published', 'extra_fields', 'assessment_items', 'slideshow_slides',
             'files', 'valid', 'metadata', 'tree_id', 'freeze_authoring_data', 'role_visibility', 'provider', 'aggregator')
 
 
@@ -647,10 +657,7 @@ class ChannelFieldMixin(object):
 
     def get_channel_primary_token(self, channel):
         try:
-            token = (ChannelCacher
-                     .for_channel(channel)
-                     .get_human_token()
-                     .token)
+            token = channel.get_human_token().token
         except ObjectDoesNotExist:
             return channel.pk
 
@@ -663,13 +670,13 @@ class ChannelFieldMixin(object):
         return channel.main_tree and channel.main_tree.get_descendants().filter(changed=True).count() > 0
 
     def get_resource_count(self, channel):
-        return ChannelCacher.for_channel(channel).get_resource_count()
+        return channel.get_resource_count()
 
     def get_date_created(self, channel):
         return channel.main_tree.created
 
     def get_date_modified(self, channel):
-        return ChannelCacher.for_channel(channel).get_date_modified()
+        return channel.get_date_modified()
 
     def check_published(self, channel):
         return channel.main_tree.published
@@ -713,30 +720,11 @@ class ChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
         read_only_fields = ('id', 'version')
 
 
-class AccessibleChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
-    size = serializers.SerializerMethodField("get_resource_size")
-    count = serializers.SerializerMethodField("get_resource_count")
-    created = serializers.SerializerMethodField('get_date_created')
-    main_tree = RootNodeSerializer(read_only=True)
-
-    def get_resource_size(self, channel):
-        return channel.get_resource_size()
-
-    class Meta:
-        model = Channel
-        fields = ('id', 'created', 'name', 'size', 'count', 'version', 'deleted', 'main_tree')
-
-
-class ChannelSetChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
-    thumbnail_url = serializers.SerializerMethodField('generate_thumbnail_url')
-    published = serializers.SerializerMethodField('check_published')
-
-    class Meta:
-        model = Channel
-        fields = ('id', 'name', 'published', 'language', 'description', 'thumbnail_url', 'main_tree', 'version')
-
-
 class ChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
+    """
+    Primarily used by ricecooker, exposes fields not necessarily needed by Studio consumers, such as deleted state
+    and viewers.
+    """
     thumbnail_url = serializers.SerializerMethodField('generate_thumbnail_url')
     published = serializers.SerializerMethodField('check_published')
     publishing = serializers.SerializerMethodField('check_publishing')
@@ -752,7 +740,10 @@ class ChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
                   'description', 'count', 'version', 'public', 'thumbnail_url', 'thumbnail', 'thumbnail_encoding', 'deleted', 'content_defaults', 'publishing')
 
 
-class AltChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
+class StudioChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
+    """
+    Primarily used for the channel list APIs in Studio, called by the channels list page.
+    """
     thumbnail_url = serializers.SerializerMethodField('generate_thumbnail_url')
     published = serializers.SerializerMethodField('check_published')
     publishing = serializers.SerializerMethodField('check_publishing')
@@ -765,18 +756,43 @@ class AltChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
 
     class Meta:
         model = Channel
-        fields = ('id', 'created', 'name', 'published', 'pending_editors', 'editors', 'modified', 'language', 'primary_token', 'priority',
+        fields = ('id', 'created', 'name', 'published', 'editors', 'modified', 'language', 'primary_token', 'priority',
                   'description', 'count', 'public', 'thumbnail_url', 'thumbnail', 'thumbnail_encoding', 'content_defaults', 'publishing',
                   'main_tree', 'last_published', 'secret_tokens', 'version', 'ricecooker_version')
 
 
+# to minimize refactoring, we are aliasing the StudioChannelListSerializer to other serializers that contained the same
+# data, or a subset of it
+AltChannelListSerializer = StudioChannelListSerializer
+ChannelSetChannelListSerializer = StudioChannelListSerializer
+
+
 class PublicChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
+    """
+    Called by the public API, primarily used by Kolibri. Contains information more specific to Kolibri's needs.
+    """
     kind_count = serializers.SerializerMethodField('generate_kind_count')
     matching_tokens = serializers.SerializerMethodField('match_tokens')
+    icon_encoding = serializers.SerializerMethodField('get_thumbnail_encoding')
 
     def match_tokens(self, channel):
         tokens = json.loads(channel.tokens) if hasattr(channel, 'tokens') else []
         return list(channel.secret_tokens.filter(token__in=tokens).values_list('token', flat=True))
+
+    def get_thumbnail_encoding(self, channel):
+        """
+        Historically, we did not set channel.icon_encoding in the Studio database. We
+        only set it in the exported Kolibri sqlite db. So when Kolibri asks for the channel
+        information, fall back to the channel thumbnail data if icon_encoding is not set.
+        """
+        if channel.icon_encoding:
+            return channel.icon_encoding
+        elif channel.thumbnail_encoding:
+            base64 = channel.thumbnail_encoding.get('base64')
+            if base64:
+                return base64
+
+        return None
 
     def generate_kind_count(self, channel):
         return channel.published_kind_count and json.loads(channel.published_kind_count)
@@ -847,6 +863,14 @@ class SimplifiedChannelListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Channel
         fields = ('id', 'name', 'description', 'version', 'public')
+
+
+class SimplifiedChannelProbeCheckSerializer(serializers.ModelSerializer):
+    """ Used for channel list dropdown on channel prober checks """
+
+    class Meta:
+        model = Channel
+        fields = ('id', 'name', 'description', 'thumbnail', 'main_tree')
 
 
 class AdminUserListSerializer(serializers.ModelSerializer):

@@ -2,7 +2,7 @@
 
 set -e
 
-BRANCH=$1
+RELEASENAME=$1
 BUCKET=$2
 COMMIT=$3
 POSTMARK_KEY=$4
@@ -23,7 +23,7 @@ fi
 GDRIVE_SERVICE_ACCOUNT_JSON=${12}
 SENTRY_DSN_KEY=${13}
 
-helm upgrade --install $BRANCH . \
+helm upgrade --install $RELEASENAME . \
      -f values-prod-config.yaml \
      --set studioApp.imageName=gcr.io/$PROJECT_ID/learningequality-studio-app:$COMMIT \
      --set studioNginx.imageName=gcr.io/$PROJECT_ID/learningequality-studio-nginx:$COMMIT \
