@@ -142,46 +142,47 @@
 </div>
 
 <script>
-	$('[data-toggle="tooltip"]').tooltip();
+	window.addEventListener('load', function(){
+		$('[data-toggle="tooltip"]').tooltip();
 
-	// Allow deselection if item is clicked, don't deselect everything on click
-	$(".multi-select-field").on("mousedown", function(ev) {
-		ev.preventDefault();
-		ev.target.selected = !ev.target.selected;
+		// Allow deselection if item is clicked, don't deselect everything on click
+		$(".multi-select-field").on("mousedown", function(ev) {
+			ev.preventDefault();
+			ev.target.selected = !ev.target.selected;
 
-		// Prevent select box from jumping to the top every click
-		var st = this.scrollTop;
-		var self = this;
-		setTimeout(function() {
-			self.scrollTop = st, 0;
+			// Prevent select box from jumping to the top every click
+			var st = this.scrollTop;
+			var self = this;
+			setTimeout(function() {
+				self.scrollTop = st, 0;
+			});
+			this.focus();
 		});
-		this.focus();
-	});
-	$(".multi-select-field").on("mousemove", function(ev) {
-		ev.preventDefault();
-	});
+		$(".multi-select-field").on("mousemove", function(ev) {
+			ev.preventDefault();
+		});
 
-	$(".license-url").on("click", function(ev) {
-		ev.stopPropagation();
-	});
+		$(".license-url").on("click", function(ev) {
+			ev.stopPropagation();
+		});
 
-	function setOrgTypeDisabled() {
-		$(".id_org_or_personal input[value='Organization']").is(":checked") ?
-			$("input[name='organization_type'], #id_organization_other").removeAttr('disabled') :
-			$("input[name='organization_type'], #id_organization_other").attr('disabled', 'disabled');
-	}
-	$("input[name='org_or_personal']").on("change", setOrgTypeDisabled);
-	setOrgTypeDisabled();
-
-	function setOtherBoxes(ev) {
-		if($(ev.target).val().trim()) {
-			var checkbox = $($(ev.target).data('checkbox'));
-			$("input[name='" + checkbox.prop("name") + "']").removeAttr("checked");
-			checkbox.prop("checked", "checked");
-			setOrgTypeDisabled();
+		function setOrgTypeDisabled() {
+			$(".id_org_or_personal input[value='Organization']").is(":checked") ?
+				$("input[name='organization_type'], #id_organization_other").removeAttr('disabled') :
+				$("input[name='organization_type'], #id_organization_other").attr('disabled', 'disabled');
 		}
-	}
-	$(".other-textbox").on("keyup", setOtherBoxes);
+		$("input[name='org_or_personal']").on("change", setOrgTypeDisabled);
+		setOrgTypeDisabled();
 
+		function setOtherBoxes(ev) {
+			if($(ev.target).val().trim()) {
+				var checkbox = $($(ev.target).data('checkbox'));
+				$("input[name='" + checkbox.prop("name") + "']").removeAttr("checked");
+				checkbox.prop("checked", "checked");
+				setOrgTypeDisabled();
+			}
+		}
+		$(".other-textbox").on("keyup", setOtherBoxes);
+	});
 </script>
 {% endblock settingscontent %}

@@ -10,7 +10,9 @@
       @click="openChannel"
     >
       <div class="profile">
-        <img class="channel-pic" :alt="channel.name" :src="picture">
+        <div class="channel-pic">
+          <img :alt="channel.name" :src="picture">
+        </div>
       </div>
       <div class="channel-information">
         <div class="channel-options-wrapper">

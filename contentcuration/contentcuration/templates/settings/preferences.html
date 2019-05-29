@@ -123,17 +123,19 @@
 	</form>
 </div>
 <script>
-	function registerChange(){
-		$("#license_description_input").css('display', ($("#id_license").val()==="Special Permissions")? "block" : "none");
+	window.addEventListener('load', function(){
+		function registerChange(){
+			$("#license_description_input").css('display', ($("#id_license").val()==="Special Permissions")? "block" : "none");
+			$(".mastery_criteria").css('display', ($("#id_mastery_model").val()==="m_of_n")? "inline-table" : "none");
+			if(Number($("#id_m_value").val()) > Number($("#id_n_value").val())) $("#id_n_value").val($("#id_m_value").val());
+			$("#save").attr("disabled", false);
+			$("#save").val("{% trans 'SAVE CHANGES' %}");
+		}
+		$(".setting_input").on("keyup", registerChange);
+		$(".setting_change").on("change", registerChange);
+		$('#id_language option').each(function() { $(this).attr("disabled", !$(this).val()); });
 		$(".mastery_criteria").css('display', ($("#id_mastery_model").val()==="m_of_n")? "inline-table" : "none");
-		if(Number($("#id_m_value").val()) > Number($("#id_n_value").val())) $("#id_n_value").val($("#id_m_value").val());
-		$("#save").attr("disabled", false);
-		$("#save").val("{% trans 'SAVE CHANGES' %}");
-	}
-	$(".setting_input").on("keyup", registerChange);
-	$(".setting_change").on("change", registerChange);
-	$('#id_language option').each(function() { $(this).attr("disabled", !$(this).val()); });
-	$(".mastery_criteria").css('display', ($("#id_mastery_model").val()==="m_of_n")? "inline-table" : "none");
-	$("#license_description_input").css('display', ($("#id_license").val()==="Special Permissions")? "block" : "none");
+		$("#license_description_input").css('display', ($("#id_license").val()==="Special Permissions")? "block" : "none");
+	});
 </script>
 {% endblock settingscontent %}

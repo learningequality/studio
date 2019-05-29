@@ -6,8 +6,8 @@
           <div v-if="isNew">
             &nbsp;
           </div>
-          <ChannelStar v-else :channelID="channel.id" />
-          <a class="material-icons" @click="closePanel">
+          <ChannelStar v-else class="channel-star" :channelID="channel.id" />
+          <a class="material-icons channel-close" @click="closePanel">
             clear
           </a>
         </h2>
@@ -134,6 +134,13 @@
       margin: 0 auto;
       vertical-align: top;
     }
+
+    // Hacks to fix icon position
+    .channel-star,
+    .channel-close {
+      margin-top: -12px;
+    }
+
     h2 {
       display: grid;
       grid-auto-flow: column;
