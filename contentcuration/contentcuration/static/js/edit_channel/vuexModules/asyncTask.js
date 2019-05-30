@@ -34,7 +34,12 @@ const asyncTasksModule = {
       let tasks = store.getters.asyncTasks;
       tasks.push(payload.task);
 
-      store.commit('SET_PROGRESS', 0.0);
+      let startPercent = 0.0;
+      if (!payload.task.is_progress_tracking) {
+        startPercent = -1;
+      }
+
+      store.commit('SET_PROGRESS', startPercent);
       store.commit('SET_CURRENT_TASK', payload);
       // force an immediate update to quickly get a first state update
       store.dispatch('updateTaskList');

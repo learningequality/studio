@@ -377,7 +377,7 @@ def move_nodes(request):
         }
 
         task, task_info = create_async_task('move-nodes', task_info, task_args)
-        return Response(TaskSerializer(task_info).data)
+        return HttpResponse(JSONRenderer().render(TaskSerializer(task_info).data))
 
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))

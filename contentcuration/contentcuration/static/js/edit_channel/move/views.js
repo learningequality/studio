@@ -115,26 +115,14 @@ var MoveView = BaseViews.BaseListView.extend({
       );
     } else {
       this.call_move();
+      this.close_move();
     }
   },
   call_move: function() {
     var self = this;
-    this.display_load(this.get_translation('moving_content'), function(resolve, reject) {
-      var sort_order = self.target_node.get('metadata').max_sort_order;
-      var original_parents = self.collection.pluck('parent');
-      // Get original parents
-      self.collection
-        .move(self.target_node, null, sort_order)
-        .then(function(moved) {
-          self.collection.get_all_fetch_simplified(original_parents).then(function(fetched) {
-            fetched.add(self.target_node);
-            self.onmove(self.target_node, moved, fetched);
-            self.close_move();
-            resolve(true);
-          });
-        })
-        .catch(reject);
-    });
+
+    var sort_order = self.target_node.get('metadata').max_sort_order;
+    self.collection.move(self.target_node, null, sort_order);
   },
   handle_target_selection: function(node, clipboard_selected) {
     // Set node to move items to

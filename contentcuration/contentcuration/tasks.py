@@ -58,7 +58,7 @@ def duplicate_nodes_task(self, user_id, channel_id, target_parent, node_ids, sor
     new_nodes = []
     user = User.objects.get(id=user_id)
     progress_percent = math.ceil(100 / len(node_ids))
-    progress = 0
+    progress = 0.0
 
     with transaction.atomic():
         with ContentNode.objects.disable_mptt_updates():
@@ -149,7 +149,7 @@ def getnodedetails_task(node_id):
 
 type_mapping = {
     'duplicate-nodes': {'task': duplicate_nodes_task, 'progress_tracking': True},
-    'duplicate-node-inline': {'task': duplicate_node_inline_task, 'progress_tracking': True},
+    'duplicate-node-inline': {'task': duplicate_node_inline_task, 'progress_tracking': False},
     'export-channel': {'task': export_channel_task, 'progress_tracking': True},
     'move-nodes': {'task': move_nodes_task, 'progress_tracking': True},
     'sync-channel': {'task': sync_channel_task, 'progress_tracking': True},

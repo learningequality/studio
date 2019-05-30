@@ -11,7 +11,7 @@
         color="#FFF"
       />
     </div>
-    <div v-if="progressPercent" class="percentage">
+    <div v-if="progressPercent && progressPercent !== -1" class="percentage">
       {{ $tr('progressText', {percent: Math.round(progressPercent)}) }}
     </div>
   </div>

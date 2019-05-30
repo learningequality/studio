@@ -1,6 +1,7 @@
 import copy
 import json
 import logging
+import math
 import os
 import uuid
 
@@ -306,13 +307,22 @@ def move_nodes(channel_id, target_parent_id, nodes, min_order, max_order, task_o
     all_ids = []
 
     target_parent = ContentNode.objects.get(pk=target_parent_id)
+    # last 20% is MPTT tree updates
+    percent_per_node = math.ceil(80.0 / len(nodes))
+    percent_done = 0.0
 
     with ContentNode.objects.delay_mptt_updates():
         for n in nodes:
             min_order = min_order + float(max_order - min_order) / 2
             node = ContentNode.objects.get(pk=n['id'])
             move_node(node, parent=target_parent, sort_order=min_order, channel_id=channel_id)
+            percent_done += percent_per_node
+            if task_object:
+                task_object.update_state(state='STARTED', meta={'progress': percent_done})
             all_ids.append(n['id'])
+
+        if task_object:
+            task_object.update_state(state='STARTED', meta={'progress': 80.0})
 
     return all_ids
 
