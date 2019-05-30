@@ -56,18 +56,32 @@
   import ProgressBar from 'edit_channel/sharedComponents/ProgressBar.vue';
   import { dialog } from 'edit_channel/utils/dialog';
 
+  let taskStringKeys = {
+    'duplicate-nodes': 'copy',
+    'export-channel': 'publish',
+    'move-nodes': 'move',
+    'sync-channel': 'sync',
+    'sync-nodes': 'sync',
+  };
+
   export default {
     name: 'ProgressOverlay',
     $trs: {
+      copyHeader: 'Copying Content',
+      copyDescription: 'Copy operation is in progress, please wait...',
       defaultHeader: 'Updating Channel',
       defaultDescription: 'Update is in progress, please wait...',
       defaultErrorText:
         'An unexpected error has occurred. Please try again, and if you continue ' +
         'to see this message, please contact support via the Help menu.',
+      moveHeader: 'Moving Content',
+      moveDescription: 'Move operation is in progress, please wait...',
       publishHeader: 'Publishing Channel',
       publishDescription:
         'Please wait for publishing to finish to make further edits.' +
         ' You will receive an email notice once channel publishing is complete.',
+      syncHeader: 'Syncing Content',
+      syncDescription: 'Content sync operation is in progress, please wait...',
       stopButton: 'Stop',
       doneButton: 'Close',
       cancel: 'Cancel',
@@ -110,9 +124,13 @@
       ...mapGetters(['currentTask', 'currentTaskError', 'progressPercent']),
     },
     mounted: function() {
-      if (this.currentTask && this.currentTask.task_type === 'export-channel') {
-        this.headerText = this.$tr('publishHeader');
-        this.descriptionText = this.$tr('publishDescription');
+      let key = taskStringKeys[this.currentTask.task_type];
+      if (!key) {
+        key = 'default';
+      }
+      if (key) {
+        this.headerText = this.$tr(key + 'Header');
+        this.descriptionText = this.$tr(key + 'Description');
       }
     },
     methods: {
