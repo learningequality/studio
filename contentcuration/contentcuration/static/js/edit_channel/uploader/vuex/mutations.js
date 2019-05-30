@@ -27,6 +27,7 @@ export function RESET_STATE(state) {
     changes: {},
     targetNode: {},
     isValid: true,
+    validationOn: false,
   });
 }
 
@@ -34,6 +35,7 @@ export function SET_NODES(state, nodes) {
   _.each(nodes, node => {
     node.changesStaged = false;
     node.loaded = false;
+    // node.copyright_holder = null;
   });
   state.nodes = nodes;
 }

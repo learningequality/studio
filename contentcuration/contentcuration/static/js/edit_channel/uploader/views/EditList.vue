@@ -1,7 +1,7 @@
 <template>
   <VList>
     <!-- Select all checkbox -->
-    <VListTile :disabled="!isValid" @click="toggleSelectAll">
+    <VListTile @click="toggleSelectAll">
       <VListTileAction>
         <VCheckbox color="primary" :value="selectAllChecked" @click.stop="toggleSelectAll" />
       </VListTileAction>
@@ -49,7 +49,7 @@
 
 <script>
 
-  import { mapMutations, mapState } from 'vuex';
+  import { mapGetters, mapMutations, mapState } from 'vuex';
   import { modes } from '../constants';
   import EditListItem from './EditListItem.vue';
 
@@ -77,7 +77,8 @@
       };
     },
     computed: {
-      ...mapState('edit_modal', ['isValid', 'nodes', 'targetNode']),
+      ...mapGetters('edit_modal', ['isValid']),
+      ...mapState('edit_modal', ['nodes', 'targetNode']),
       allowAddTopic() {
         return this.mode === modes.NEW_TOPIC;
       },

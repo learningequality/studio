@@ -1,8 +1,10 @@
 <template>
-  <Dialog ref="saveprompt" :header="header" :text="text">
+  <Dialog ref="alert" :header="header" :text="text">
     <template v-slot:content>
       <VCheckbox
+        v-if="messageID"
         v-model="dontShowAgain"
+        color="primary"
         :label="$tr('dontShowAgain')"
       />
     </template>
@@ -40,7 +42,7 @@
       },
       messageID: {
         type: String,
-        required: true,
+        required: false,
       },
     },
     data() {
@@ -54,7 +56,9 @@
         return (localStorage['dont_show_messages'] || '').split(',');
       },
       prompt() {
-        if (!_.contains(this.getMessages(), this.messageID)) this.dialog = true;
+        if (!this.messageID || !_.contains(this.getMessages(), this.messageID)) {
+          this.$refs.alert.prompt();
+        }
       },
       close() {
         if (this.dontShowAgain) {
@@ -68,3 +72,15 @@
   };
 
 </script>
+
+<style lang="less" scoped>
+
+  /deep/ label {
+    margin: 0;
+    font-weight: normal;
+  }
+  .v-input--checkbox {
+    margin-bottom: -25px;
+  }
+
+</style>

@@ -13,7 +13,13 @@
           <VSpacer />
           <VToolbarItems>
             <VFlex alignCenter class="last-saved-time">
-              <div v-if="saving">
+              <div v-if="invalidNodes.length">
+                {{ $tr('invalidItemsDetected') }}
+              </div>
+              <div v-else-if="saveError">
+                {{ $tr('saveFailedText') }}
+              </div>
+              <div v-else-if="saving">
                 <VProgressCircular
                   indeterminate
                   size="15"
@@ -26,7 +32,7 @@
                 {{ savedMessage }}
               </div>
             </VFlex>
-            <VBtn v-if="!isViewOnly" dark flat @click="saveContent">
+            <VBtn v-if="!isViewOnly" dark flat @click="handleSave">
               {{ $tr('saveButtonText') }}
             </VBtn>
             <VBtn v-else dark flat @click="copyContent">
@@ -61,6 +67,13 @@
       :header="$tr('relatedContentHeader')"
       :text="$tr('relatedContentText')"
       messageID="relatedContentAlertOnCopyFromEditModal"
+    />
+
+    <!-- Alert for failed save -->
+    <Alert
+      ref="savefailedalert"
+      :header="$tr('saveFailedHeader')"
+      :text="$tr('saveFailedText')"
     />
   </div>
 </template>
@@ -97,11 +110,10 @@
       saveButton: 'Save changes',
       relatedContentHeader: 'Related content detected',
       relatedContentText: 'Related content will not be included in the copy of this content.',
+      invalidItemsDetected: 'Saving disabled (invalid content detected)',
+      saveFailedHeader: 'Save failed',
+      saveFailedText: 'There was a problem saving your content',
 
-      // invalid_items: 'One or more of the selected items is invalid',
-      // fix_errors_prompt: 'Saving disabled (invalid content detected)',
-      // error_saving: 'Save Failed',
-      // save_failed: 'There was a problem saving your content.',
       // out_of_space: 'Out of Disk Space',
       // out_of_space_text:
       //   "Please request more space under your Settings page.",
@@ -126,6 +138,7 @@
         lastSaved: null,
         saving: false,
         savedMessage: null,
+        saveError: false,
         interval: null,
         updateInterval: null,
         saveFunction: this.debouncedSave(),
@@ -136,7 +149,7 @@
     },
     computed: {
       ...mapState('edit_modal', ['nodes', 'changes']),
-      ...mapGetters('edit_modal', ['changed']),
+      ...mapGetters('edit_modal', ['changed', 'invalidNodes']),
       isViewOnly() {
         return this.mode === modes.VIEW_ONLY;
       },
@@ -186,24 +199,39 @@
         });
       },
       saveContent() {
-        this.saving = true;
-        this.saveNodes().then(() => {
+        this.saveError = false;
+        return new Promise((resolve, reject) => {
           clearInterval(this.updateInterval);
-          this.saving = false;
-          this.lastSaved = null;
-          this.closeModal();
+          if (this.invalidNodes.length) {
+            resolve();
+          } else {
+            this.saving = true;
+            this.saveNodes()
+              .then(() => {
+                this.lastSaved = Date.now();
+                this.saving = false;
+                resolve();
+              })
+              .catch(reject);
+          }
         });
+      },
+      handleSave() {
+        this.saveContent()
+          .then(() => {
+            this.lastSaved = null;
+            this.closeModal();
+          })
+          .catch(this.$refs.savefailedalert.prompt);
       },
       debouncedSave() {
         return _.debounce(() => {
-          clearInterval(this.updateInterval);
-          this.saving = true;
-          this.saveNodes().then(() => {
-            this.lastSaved = Date.now();
-            this.saving = false;
-            this.updateSavedTime();
-            this.updateInterval = setInterval(this.updateSavedTime, SAVE_MESSAGE_TIMER);
-          });
+          this.saveContent()
+            .then(() => {
+              this.updateSavedTime();
+              this.updateInterval = setInterval(this.updateSavedTime, SAVE_MESSAGE_TIMER);
+            })
+            .catch(() => (this.saveError = true));
         }, SAVE_TIMER);
       },
       handleClose() {

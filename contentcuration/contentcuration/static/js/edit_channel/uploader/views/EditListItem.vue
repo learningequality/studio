@@ -1,5 +1,5 @@
 <template>
-  <VListTile :disabled="!isValid" :class="{invalid: !nodeIsValid}" @click.stop="setNode(index)">
+  <VListTile :class="{invalid: !nodeIsValid}" @click.stop="setNode(index)">
     <VListTileAction>
       <VCheckbox color="primary" :value="isSelected" @click.stop="toggleNode" />
     </VListTileAction>
@@ -25,6 +25,7 @@
 
 <script>
 
+  import _ from 'underscore';
   import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
   import ContentNodeIcon from 'edit_channel/sharedComponents/ContentNodeIcon.vue';
 
@@ -45,8 +46,8 @@
       },
     },
     computed: {
-      ...mapGetters('edit_modal', ['getNode']),
-      ...mapState('edit_modal', ['selectedIndices', 'isValid']),
+      ...mapGetters('edit_modal', ['getNode', 'invalidNodes']),
+      ...mapState('edit_modal', ['selectedIndices']),
       node() {
         return this.getNode(this.index);
       },
@@ -54,28 +55,7 @@
         return _.contains(this.selectedIndices, this.index);
       },
       nodeIsValid() {
-        // Title is required
-        if (!this.node.title) {
-          return false;
-        }
-
-        // Authoring information is required for resources
-        if (!this.node.freeze_authoring_data && this.node.kind !== 'topic') {
-          // License is required
-          if (!this.node.license) {
-            return false;
-          }
-          // Copyright holder is required for certain licenses
-          else if (this.node.license.copyright_holder_required && !this.node.copyright_holder) {
-            return false;
-          }
-          // License description is required for certain licenses
-          else if (this.license.is_custom && !this.node.license_description) {
-            return false;
-          }
-        }
-
-        return true;
+        return !_.contains(this.invalidNodes, this.index);
       },
     },
     methods: {
@@ -104,6 +84,10 @@
       font-weight: bold;
       color: @blue-500;
     }
+  }
+
+  .invalid {
+    background-color: @red-bg-color;
   }
 
   .remove-item {

@@ -18,6 +18,7 @@ const store = new Vuex.Store({
         changes: {},
         targetNode: { parent_title: 'Sandbox' },
         isValid: true,
+        validationOn: false,
       },
       getters: getters,
       mutations: mutations,
