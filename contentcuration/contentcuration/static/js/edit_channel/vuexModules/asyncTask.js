@@ -84,6 +84,12 @@ const asyncTasksModule = {
         url += '/' + currentTask.id;
       }
 
+      // if we're inside a channel, make sure we only check tasks relevant to the channel.
+      // note that we do this even for specific task lookups to check channel access.
+      if (window.channel) {
+        url += '?channel_id=' + window.channel.id;
+      }
+
       $.ajax({
         method: 'GET',
         url: url,

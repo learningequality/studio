@@ -210,7 +210,21 @@ class TaskViewSet(viewsets.ModelViewSet):
         instance.delete()
 
     def get_queryset(self):
-        return Task.objects.filter(user=self.request.user)
+        queryset = Task.objects.none()
+        channel_id = self.request.query_params.get('channel_id', None)
+        if channel_id is not None:
+            user = self.request.user
+            channel = Channel.objects.filter(pk=channel_id).first()
+            if channel:
+                has_access = channel.editors.filter(pk=user.pk).exists() or \
+                         channel.viewers.filter(pk=user.pk).exists() or \
+                         user.is_admin
+                if has_access:
+                    queryset = Task.objects.filter(metadata__affects__channels__contains=[channel_id])
+        else:
+            queryset = Task.objects.filter(user=self.request.user)
+
+        return queryset
 
 
 router = routers.DefaultRouter(trailing_slash=False)

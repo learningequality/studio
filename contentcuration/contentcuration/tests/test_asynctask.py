@@ -57,6 +57,36 @@ class AsyncTaskTestCase(BaseAPITestCase):
         self.assertEqual(response.data['metadata']['progress'], 100)
         self.assertEqual(response.data['metadata']['result'], 42)
 
+    def test_asynctask_filters_by_channel(self):
+        """
+        Test that we can filter tasks by channel ID.
+        """
+
+        self.channel.editors.add(self.user)
+        self.channel.save()
+        metadata = {'affects': {'channels': [self.channel.id]}}
+        task_options = {
+            'user_id': self.user.pk,
+            'metadata': metadata
+        }
+        task, task_info = create_async_task('progress-test', task_options)
+        self.assertTrue(Task.objects.filter(metadata__affects__channels__contains=[self.channel.id]).count() == 1)
+        result = task.get()
+        self.assertEqual(result, 42)
+        self.assertEqual(Task.objects.get(task_id=task.id).status, 'SUCCESS')
+
+        url = '{}?channel_id={}'.format(self.task_url, self.channel.id)
+        response = self.get(url)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['status'], 'SUCCESS')
+        self.assertEqual(response.data[0]['task_type'], 'progress-test')
+        self.assertEqual(response.data[0]['metadata']['progress'], 100)
+        self.assertEqual(response.data[0]['metadata']['result'], 42)
+
+        url = '{}?channel_id={}'.format(self.task_url, task_info.id, "nope")
+        response = self.get(url)
+        self.assertEqual(len(response.data), 0)
+
     def test_asynctask_reports_error(self):
         """
         Tests that if a task fails with an error, that the error information is stored in the Task object for later

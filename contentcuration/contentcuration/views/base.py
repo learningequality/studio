@@ -343,7 +343,10 @@ def publish_channel(request):
 
         task_info = {
             'user': request.user,
-            'metadata': {}
+            'metadata': {
+                'affects': {
+                    'channels': [channel_id]
+                }}
         }
 
         task_args = {
