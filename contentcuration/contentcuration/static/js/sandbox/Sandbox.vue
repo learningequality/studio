@@ -20,12 +20,12 @@
       Upload File
     </VBtn>
 
-    <EditModal v-if="mode" :mode="mode" @modalclosed="mode=null" />
+    <EditModal v-if="mode" ref="editmodal" @modalclosed="reset" />
   </VApp>
 </template>
 <script>
 
-  import { mapMutations } from 'vuex';
+  import { mapMutations, mapState } from 'vuex';
   import EditModal from 'edit_channel/uploader/views/EditModal.vue';
 
   export default {
@@ -33,17 +33,18 @@
     components: {
       EditModal,
     },
-    data() {
-      return {
-        mode: null,
-      };
-    },
     methods: {
-      ...mapMutations('edit_modal', { setNodes: 'SET_NODES' }),
+      ...mapMutations('edit_modal', {
+        setNodes: 'SET_NODES',
+        setMode: 'SET_MODE',
+        reset: 'RESET_STATE',
+      }),
+      ...mapState('edit_modal', ['mode']),
       openModal(mode) {
+        this.setMode(mode);
         let nodes = mode === 'VIEW_ONLY' || mode === 'EDIT' ? window.nodes : [];
         this.setNodes(nodes);
-        this.mode = mode;
+        this.$refs.editmodal.openModal();
       },
     },
   };

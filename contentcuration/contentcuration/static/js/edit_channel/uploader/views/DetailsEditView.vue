@@ -8,10 +8,7 @@
       <!-- INSERT FILE UPLOAD MODULE HERE -->
     </div>
 
-    <p v-if="!oneSelected" class="count-message">
-      {{ countText }}
-    </p>
-    <VForm ref="form" v-model="valid" lazyValidation @input="handleValidation">
+    <VForm ref="form" v-model="valid" lazyValidation>
       <!-- Language and import link -->
       <VLayout grid alignTop class="language-section" wrap>
         <VFlex v-if="oneSelected && isImported" md4 sm12>
@@ -218,8 +215,6 @@
   export default {
     name: 'DetailsEditView',
     $trs: {
-      viewingMultipleCount: 'Viewing details for {count, plural,\n =1 {# item}\n other {# items}}',
-      editingMultipleCount: 'Editing details for {count, plural,\n =1 {# item}\n other {# items}}',
       titleLabel: 'Title *',
       titleValidationMessage: 'Title is required',
       languageHelpText: 'Leave blank to default to topic language',
@@ -271,12 +266,6 @@
         'allExercises',
         'allResources',
       ]),
-      countText() {
-        let messageArgs = { count: this.selected.length };
-        return this.viewOnly
-          ? this.$tr('viewingMultipleCount', messageArgs)
-          : this.$tr('editingMultipleCount', messageArgs);
-      },
       disableAuthEdits() {
         return _.some(this.selected, { freeze_authoring_data: true });
       },
@@ -306,9 +295,15 @@
         return baseUrl + '/' + selected.original_source_node_id;
       },
     },
+    watch: {
+      selected(newVal) {
+        _.some(newVal, n => !n.isNew)
+          ? this.$refs.form.validate()
+          : this.$refs.form.resetValidation();
+      },
+    },
     methods: {
       ...mapMutations('edit_modal', {
-        setValid: 'SET_VALID',
         setTitle: 'SET_TITLE',
         setDescription: 'SET_DESCRIPTION',
         setLicense: 'SET_LICENSE',
@@ -322,15 +317,6 @@
         setVisibility: 'SET_VISIBILITY',
         setTags: 'SET_TAGS',
       }),
-      validate() {
-        if (this.$refs.form.validate()) {
-          // this.snackbar = true;
-        }
-        // TODO: set error message
-      },
-      handleValidation(isValid) {
-        this.setValid(isValid);
-      },
       getPlaceholder(field) {
         return this.changes[field].varied ? this.$tr('variedFieldPlaceholder') : null;
       },
@@ -363,14 +349,6 @@
     max-width: 1000px;
     padding: 30px;
     margin: 0 auto;
-    .count-message {
-      padding: 5px;
-      font-size: 12pt;
-      font-weight: bold;
-      color: @gray-700;
-      text-align: center;
-      background: @blue-100;
-    }
 
     .import-link {
       .action-text;

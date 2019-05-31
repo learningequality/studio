@@ -20,7 +20,7 @@
     />
 
     <!-- Create button -->
-    <VListTile class="add-item-wrapper" :disabled="!isValid">
+    <VListTile class="add-item-wrapper">
       <VListTileContent>
         <VBtn
           v-if="allowAddTopic"
@@ -49,7 +49,7 @@
 
 <script>
 
-  import { mapGetters, mapMutations, mapState } from 'vuex';
+  import { mapMutations, mapState } from 'vuex';
   import { modes } from '../constants';
   import EditListItem from './EditListItem.vue';
 
@@ -65,37 +65,19 @@
     components: {
       EditListItem,
     },
-    props: {
-      mode: {
-        type: String,
-        default: modes.VIEW_ONLY,
-      },
-    },
     data() {
       return {
         selectAllChecked: false,
       };
     },
     computed: {
-      ...mapGetters('edit_modal', ['isValid']),
-      ...mapState('edit_modal', ['nodes', 'targetNode']),
+      ...mapState('edit_modal', ['nodes', 'targetNode', 'changes', 'mode']),
       allowAddTopic() {
         return this.mode === modes.NEW_TOPIC;
       },
       allowAddExercise() {
         return this.mode === modes.NEW_EXERCISE;
       },
-    },
-    mounted() {
-      /*
-        Leaving this commented as we might not want to automatically
-        create nodes with autosaving
-      */
-      // if(this.mode === modes.NEW_TOPIC) {
-      //   this.createNode('topic');
-      // } else if (this.mode === modes.NEW_EXERCISE) {
-      //   this.createNode('exercise');
-      // }
     },
     methods: {
       ...mapMutations('edit_modal', {

@@ -1,5 +1,7 @@
 import Vue from 'vue';
 
+import { modes } from './../constants';
+
 const Vuex = require('vuex');
 var mutations = require('./mutations');
 var actions = require('./actions');
@@ -17,8 +19,7 @@ const store = new Vuex.Store({
         isClipboard: false,
         changes: {},
         targetNode: { parent_title: 'Sandbox' },
-        isValid: true,
-        validationOn: false,
+        mode: modes.VIEW_ONLY,
       },
       getters: getters,
       mutations: mutations,

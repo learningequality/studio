@@ -1,5 +1,5 @@
 <template>
-  <VListTile :class="{invalid: !nodeIsValid}" @click.stop="setNode(index)">
+  <VListTile :class="{invalid: !nodeIsValid, selected: isSelected}" @click.stop="setNode(index)">
     <VListTileAction>
       <VCheckbox color="primary" :value="isSelected" @click.stop="toggleNode" />
     </VListTileAction>
@@ -55,6 +55,7 @@
         return _.contains(this.selectedIndices, this.index);
       },
       nodeIsValid() {
+        // Bypass lazy validation logic
         return !_.contains(this.invalidNodes, this.index);
       },
     },
@@ -89,9 +90,12 @@
   .invalid {
     background-color: @red-bg-color;
   }
+  .selected {
+    background-color: @gray-200;
+  }
 
   .remove-item {
-    color: @gray-500;
+    color: @gray-500 !important;
     &:hover {
       color: @red-error-color;
     }

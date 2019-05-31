@@ -3,17 +3,17 @@
     <VDialog v-model="dialog" fullscreen hideOverlay transition="dialog-bottom-transition" lazy>
       <VCard class="edit-modal-wrapper">
         <VNavigationDrawer v-model="drawer.open" stateless clipped app class="edit-list">
-          <EditList :mode="mode" />
+          <EditList />
         </VNavigationDrawer>
         <VToolbar dark color="primary" fixed clippedLeft app>
           <VBtn icon dark app @click="handleClose">
             <VIcon>close</VIcon>
           </VBtn>
-          <VToolbarTitle>{{ $tr(mode) }}</VToolbarTitle>
+          <VToolbarTitle>{{ mode && $tr(mode) }}</VToolbarTitle>
           <VSpacer />
           <VToolbarItems>
-            <VFlex alignCenter class="last-saved-time">
-              <div v-if="invalidNodes.length">
+            <VFlex v-if="!isViewOnly" alignCenter class="last-saved-time">
+              <div v-if="invalidNodesOverridden.length">
                 {{ $tr('invalidItemsDetected') }}
               </div>
               <div v-else-if="saveError">
@@ -41,7 +41,7 @@
           </VToolbarItems>
         </VToolbar>
 
-        <EditView :mode="mode" />
+        <EditView />
       </VCard>
     </VDialog>
 
@@ -55,7 +55,7 @@
         <VBtn flat color="primary" @click="dismissPrompt">
           {{ $tr('cancelButton') }}
         </VBtn>
-        <VBtn depressed color="primary" @click="saveContent">
+        <VBtn depressed color="primary" @click="handleSave">
           {{ $tr('saveButton') }}
         </VBtn>
       </template>
@@ -126,12 +126,6 @@
       Dialog,
       Alert,
     },
-    props: {
-      mode: {
-        type: String,
-        default: modes.VIEW_ONLY,
-      },
-    },
     data() {
       return {
         dialog: false,
@@ -148,15 +142,10 @@
       };
     },
     computed: {
-      ...mapState('edit_modal', ['nodes', 'changes']),
-      ...mapGetters('edit_modal', ['changed', 'invalidNodes']),
+      ...mapState('edit_modal', ['nodes', 'changes', 'mode']),
+      ...mapGetters('edit_modal', ['changed', 'invalidNodes', 'invalidNodesOverridden']),
       isViewOnly() {
         return this.mode === modes.VIEW_ONLY;
-      },
-      lastSavedTime() {
-        return this.$tr('savedMessage', {
-          relativeTime: this.$formatRelative(this.lastSaved),
-        });
       },
       showEditList() {
         return this.mode !== modes.EDIT || this.nodes.length > 1;
@@ -180,14 +169,14 @@
     beforeMount() {
       this.drawer.open = this.showEditList;
     },
-    mounted() {
-      this.openModal();
-    },
     methods: {
       ...mapActions('edit_modal', ['saveNodes']),
       ...mapMutations('edit_modal', {
         select: 'SELECT_NODE',
         deselectAll: 'RESET_SELECTED',
+        reset: 'RESET_STATE',
+        prepareForSave: 'PREP_NODES_FOR_SAVE',
+        setSelected: 'SET_SELECTED',
       }),
       openModal() {
         this.dialog = true;
@@ -217,21 +206,28 @@
         });
       },
       handleSave() {
-        this.saveContent()
-          .then(() => {
-            this.lastSaved = null;
-            this.closeModal();
-          })
-          .catch(this.$refs.savefailedalert.prompt);
+        this.prepareForSave();
+        if (this.invalidNodes.length) {
+          this.setSelected(this.invalidNodes);
+        } else {
+          this.saveContent()
+            .then(this.closeModal)
+            .catch(() => {
+              this.$refs.savefailedalert.prompt();
+              this.dismissPrompt();
+            });
+        }
       },
       debouncedSave() {
         return _.debounce(() => {
-          this.saveContent()
-            .then(() => {
-              this.updateSavedTime();
-              this.updateInterval = setInterval(this.updateSavedTime, SAVE_MESSAGE_TIMER);
-            })
-            .catch(() => (this.saveError = true));
+          if (!this.invalidNodesOverridden.length) {
+            this.saveContent()
+              .then(() => {
+                this.updateSavedTime();
+                this.updateInterval = setInterval(this.updateSavedTime, SAVE_MESSAGE_TIMER);
+              })
+              .catch(() => (this.saveError = true));
+          }
         }, SAVE_TIMER);
       },
       handleClose() {
@@ -247,6 +243,7 @@
       closeModal() {
         this.dismissPrompt();
         this.dialog = false;
+        this.lastSaved = null;
         this.deselectAll();
         this.$emit('modalclosed');
         // TODO: Update router

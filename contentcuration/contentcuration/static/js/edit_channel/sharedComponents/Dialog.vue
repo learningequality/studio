@@ -66,4 +66,8 @@
     color: @gray-700;
   }
 
+  /deep/ .v-btn {
+    font-weight: bold;
+  }
+
 </style>

@@ -28,6 +28,8 @@ export function RESET_STATE(state) {
     targetNode: {},
     isValid: true,
     validationOn: false,
+    mode: null,
+    validateNodes: [],
   });
 }
 
@@ -35,13 +37,12 @@ export function SET_NODES(state, nodes) {
   _.each(nodes, node => {
     node.changesStaged = false;
     node.loaded = false;
-    // node.copyright_holder = null;
   });
   state.nodes = nodes;
 }
 
-export function SET_VALID(state, isValid) {
-  state.isValid = isValid;
+export function SET_MODE(state, mode) {
+  state.mode = mode;
 }
 
 function _generateSharedData(items, fields) {
@@ -69,6 +70,13 @@ export function SET_CHANGES(state) {
   state.changes.extra_fields = _generateSharedData(extraFieldItems, extraFields);
 
   state.changes.tags = _.intersection.apply(_, _.pluck(selected, 'tags'));
+  _.each(state.nodes, (node, i) => {
+    if (!_.contains(state.selectedIndices, i)) node.isNew = false;
+  });
+}
+
+export function PREP_NODES_FOR_SAVE(state) {
+  _.each(state.nodes, node => (node.isNew = false));
 }
 
 export function SET_LOADED_NODES(state, nodes) {
@@ -85,6 +93,13 @@ export function RESET_SELECTED(state) {
   _.defer(() => {
     state.selectedIndices = [];
     state.changes = {};
+  });
+}
+
+export function SET_SELECTED(state, payload) {
+  _.defer(() => {
+    state.selectedIndices = payload;
+    SET_CHANGES(state);
   });
 }
 
@@ -161,6 +176,7 @@ export function ADD_NODE(state, payload) {
     role_visibility: 'learner',
     loaded: true,
     changesStaged: true,
+    isNew: true,
     ...payload,
   });
   _.defer(() => {

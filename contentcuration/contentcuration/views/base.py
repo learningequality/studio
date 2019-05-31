@@ -509,7 +509,7 @@ class SandboxView(TemplateView):
         kwargs = super(SandboxView, self).get_context_data(**kwargs)
         kinds = ['topic', 'exercise', 'html5', 'document', 'video', 'audio']
         tree_ids = Channel.objects.filter(deleted=False).values_list('main_tree__tree_id', flat=True)
-        nodes = list(ContentNode.objects.filter(kind_id=k, tree_id__in=tree_ids).first() for k in kinds)
+        nodes = list(ContentNode.objects.filter(kind_id=k, tree_id__in=tree_ids).exclude(parent=None).first() for k in kinds)
         nodes = ContentNodeSerializer(nodes, many=True)
         kwargs.update({"nodes": JSONRenderer().render(nodes.data),
                        "channel": Channel.objects.first().pk})

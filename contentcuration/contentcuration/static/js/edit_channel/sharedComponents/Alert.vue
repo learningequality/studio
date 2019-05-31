@@ -66,7 +66,7 @@
           messages.push(this.messageID);
           localStorage['dont_show_messages'] = messages;
         }
-        this.dialog = false;
+        this.$refs.alert.close();
       },
     },
   };

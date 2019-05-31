@@ -14,6 +14,12 @@
       </VLayout>
       <VLayout v-else justifyCenter>
         <VFlex grow>
+          <VAlert :value="invalidSelected && selected.length > 1" type="error" outline>
+            {{ $tr('invalidItemsText') }}
+          </VAlert>
+          <VAlert :value="selected.length > 1" type="info" outline>
+            {{ countText }}
+          </VAlert>
           <VTabs fixedTabs sliderColor="primary">
             <VTab v-for="(item, key) in tabs" :key="key" @click="currentTab=key">
               {{ $tr(key) }}
@@ -57,16 +63,13 @@
       addTopicText: 'Please add a topic to get started',
       addExerciseText: 'Please add an exercise to get started',
       loadingText: 'Loading Content...',
+      viewingMultipleCount: 'Viewing details for {count, plural,\n =1 {# item}\n other {# items}}',
+      editingMultipleCount: 'Editing details for {count, plural,\n =1 {# item}\n other {# items}}',
+      invalidItemsText: 'One or more of the selected items is invalid',
     },
     components: {
       DetailsEditView, // eslint-disable-line vue/no-unused-components
       DetailsViewOnlyView, // eslint-disable-line vue/no-unused-components
-    },
-    props: {
-      mode: {
-        type: String,
-        default: modes.VIEW_ONLY,
-      },
     },
     data() {
       return {
@@ -76,8 +79,8 @@
       };
     },
     computed: {
-      ...mapGetters('edit_modal', ['selected', 'allExercises', 'allResources']),
-      ...mapState('edit_modal', ['viewOnly', 'isClipboard', 'nodes']),
+      ...mapGetters('edit_modal', ['selected', 'allExercises', 'allResources', 'invalidNodes']),
+      ...mapState('edit_modal', ['viewOnly', 'isClipboard', 'nodes', 'selectedIndices', 'mode']),
       noItemText() {
         if (!this.nodes.length) {
           if (this.mode === modes.NEW_EXERCISE) return this.$tr('addExerciseText');
@@ -123,6 +126,15 @@
       allLoaded() {
         return !_.some(this.selected, { loaded: false });
       },
+      countText() {
+        let messageArgs = { count: this.selected.length };
+        return this.viewOnly
+          ? this.$tr('viewingMultipleCount', messageArgs)
+          : this.$tr('editingMultipleCount', messageArgs);
+      },
+      invalidSelected() {
+        return _.some(this.selectedIndices, i => _.contains(this.invalidNodes, i));
+      },
     },
     watch: {
       selected(newVal) {
@@ -158,6 +170,12 @@
     .empty_default;
 
     margin: 10% auto;
+  }
+
+  .v-alert {
+    padding: 10px;
+    margin-bottom: 15px;
+    font-weight: bold;
   }
 
   /deep/ .v-tabs__item {
