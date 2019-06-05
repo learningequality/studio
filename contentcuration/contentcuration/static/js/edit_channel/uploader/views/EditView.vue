@@ -77,7 +77,7 @@
               Preview
             </VTabItem>
             <VTabItem :key="tabs.QUESTIONS" ref="questionwindow" :value="tabs.QUESTIONS" lazy>
-              Questions
+              <AssessmentView />
             </VTabItem>
             <VTabItem
               :key="tabs.PREREQUISITES"
@@ -100,7 +100,8 @@
   import { mapActions, mapGetters, mapState } from 'vuex';
   import { TabNames, modes } from '../constants';
   import DetailsTabView from './DetailsTabView.vue';
-
+  import AssessmentView from './AssessmentView.vue';
+  
   export default {
     name: 'EditView',
     $trs: {
@@ -121,6 +122,7 @@
     },
     components: {
       DetailsTabView,
+      AssessmentView
     },
     props: {
       isClipboard: {
