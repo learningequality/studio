@@ -22,8 +22,8 @@ test:
 	yarn install && yarn run unittests
 
 endtoendtest:
-	# launch all studio's dependent services using docker-compose, and then run the tests	
-	docker-compose run studio-app make test -e DJANGO_SETTINGS_MODULE=contentcuration.test_settings
+	# launch all studio's dependent services using docker-compose, and then run the tests
+	bash -c 'ci_env=`bash <(curl -s https://codecov.io/env)` docker-compose run $$ci_env studio-app make test -e DJANGO_SETTINGS_MODULE=contentcuration.test_settings'
 
 collectstatic: migrate
 	python contentcuration/manage.py collectstatic --noinput
