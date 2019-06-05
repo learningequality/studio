@@ -96,7 +96,6 @@ export COMPOSE_STUDIO_APP = ${COMPOSE_PROJECT_NAME}_studio-app_1
 dcshell:
 	# bash shell inside studio-app container
 	docker exec -ti ${COMPOSE_STUDIO_APP} /usr/bin/fish
-	docker exec -ti ${COMPOSE_STUDIO_APP} /usr/bin/fish
 
 dctest: endtoendtest
 	# launch all studio's dependent services using docker-compose, and then run the tests
