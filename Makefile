@@ -18,9 +18,11 @@ prodcelerydashboard:
 devserver:
 	yarn run devserver
 
-test:
+test: SHELL:=/bin/bash
+	# Codecov needs bash syntax support, but Ubuntu default is dash
+	# so we set shell to bash explicitly for this command.
 	yarn install && yarn run unittests
-	bash -c 'bash <(curl -s https://codecov.io/bash) -t \$CODECOV_TOKEN'
+	bash <(curl -s https://codecov.io/bash) -t $CODECOV_TOKEN
 
 endtoendtest:
 	# launch all studio's dependent services using docker-compose, and then run the tests
