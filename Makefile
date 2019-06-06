@@ -18,18 +18,17 @@ prodcelerydashboard:
 devserver:
 	yarn run devserver
 
-test: SHELL:=/bin/bash
 test:
 	# Codecov needs bash syntax support, but Ubuntu default is dash
 	# so we set shell to bash explicitly for this command.
 	yarn install && yarn run unittests
-	bash <(curl -s https://codecov.io/bash) -t ${CODECOV_TOKEN}
+	mv coverage.txt shared
 
-endtoendtest: SHELL:=/bin/bash
 endtoendtest:
 	# launch all studio's dependent services using docker-compose, and then run the tests
-	ci_env=`bash <(curl -s https://codecov.io/env)`
-	docker-compose run ${ci_env} -e DJANGO_SETTINGS_MODULE=contentcuration.test_settings studio-app make test
+	mkdir shared
+	docker-compose run -v "$PWD/shared:/shared" studio-app make test -e DJANGO_SETTINGS_MODULE=contentcuration.test_settings
+	bash <(curl -s https://codecov.io/bash)
 
 collectstatic: migrate
 	python contentcuration/manage.py collectstatic --noinput
