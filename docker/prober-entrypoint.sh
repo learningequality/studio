@@ -4,4 +4,4 @@ curl -L -o cloudprober.zip https://github.com/google/cloudprober/releases/downlo
 unzip -p cloudprober.zip > /bin/cloudprober
 chmod +x /bin/cloudprober
 
-cloudprober --config_file cloudprober.cfg
+cloudprober --config_file /cloudprober.cfg

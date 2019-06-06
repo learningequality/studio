@@ -16,5 +16,5 @@ spec:
         image: {{ .Values.studioApp.imageName }}
         command:
         - bash
-        - prober-entrypoint.sh
+        - /prober-entrypoint.sh
         env: {{ include "studio.sharedEnvs" . | nindent 12 }}
