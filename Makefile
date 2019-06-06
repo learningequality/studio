@@ -19,6 +19,7 @@ devserver:
 	yarn run devserver
 
 test: SHELL:=/bin/bash
+test:
 	# Codecov needs bash syntax support, but Ubuntu default is dash
 	# so we set shell to bash explicitly for this command.
 	yarn install && yarn run unittests
