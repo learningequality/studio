@@ -20,7 +20,7 @@ devserver:
 
 test:
 	yarn install && yarn run unittests
-	bash -c 'bash CODECOV_TOKEN=$$CODECOV_TOKEN <(curl -s https://codecov.io/bash)'
+	bash -c 'bash <(curl -s https://codecov.io/bash) -t \$CODECOV_TOKEN'
 
 endtoendtest:
 	# launch all studio's dependent services using docker-compose, and then run the tests
