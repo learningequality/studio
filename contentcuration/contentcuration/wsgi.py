@@ -7,11 +7,8 @@ For more information on this file, see
 https://docs.djangoproject.com/en/1.8/howto/deployment/wsgi/
 """
 
+import logging
 import os
-
-from django.core.wsgi import get_wsgi_application
-
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "contentcuration.settings")
 
 # Attach newrelic APM
 try:
@@ -21,4 +18,9 @@ try:
 except ImportError:
     pass
 
-application = get_wsgi_application()
+try:
+    from django.core.wsgi import get_wsgi_application
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "contentcuration.settings")
+    application = get_wsgi_application()
+except ImportError:
+    logging.warn("Django's WSGI wasn't successfully imported!")
