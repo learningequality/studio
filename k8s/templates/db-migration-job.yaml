@@ -1,14 +1,17 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: db-migrate
+  name: {{ template "studio.fullname" . }}-db-migrate
+  labels:
+    tier: backend
+    app: {{ template "studio.fullname" . }}
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade
     "helm.sh/hook-delete-policy": hook-succeeded
 spec:
   activeDeadlineSeconds: 7200 # 2 hours
   template:
-    name: db-migrate
+    name: {{ template "studio.fullname" . }}-db-migrate
     spec:
      restartPolicy: OnFailure
     containers:
