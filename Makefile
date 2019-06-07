@@ -22,7 +22,7 @@ test:
 	# Codecov needs bash syntax support, but Ubuntu default is dash
 	# so we set shell to bash explicitly for this command.
 	yarn install && yarn run unittests
-	mv coverage.txt shared
+	mv contentcuration/coverage.xml shared
 
 endtoendtest:
 	# launch all studio's dependent services using docker-compose, and then run the tests
