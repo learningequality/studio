@@ -20,10 +20,17 @@ devserver:
 
 test:
 	yarn install && yarn run unittests
+	mv contentcuration/coverage.xml shared
 
 endtoendtest:
-	# launch all studio's dependent services using docker-compose, and then run the tests	
-	docker-compose run studio-app make test -e DJANGO_SETTINGS_MODULE=contentcuration.test_settings
+	# launch all studio's dependent services using docker-compose, and then run the tests
+	# create a shared directory accessible from within Docker so that it can pass the
+	# coverage report back for uploading.
+	mkdir -p shared
+	docker-compose run -v "${PWD}/shared:/shared" studio-app make test -e DJANGO_SETTINGS_MODULE=contentcuration.test_settings
+	bash <(curl -s https://codecov.io/bash)
+	rm -rf shared
+
 
 collectstatic: migrate
 	python contentcuration/manage.py collectstatic --noinput
@@ -94,7 +101,7 @@ dcclean:
 export COMPOSE_STUDIO_APP = ${COMPOSE_PROJECT_NAME}_studio-app_1
 dcshell:
 	# bash shell inside studio-app container
-	docker exec -ti ${COMPOSE_STUDIO_APP} /usr/bin/fish 
+	docker exec -ti ${COMPOSE_STUDIO_APP} /usr/bin/fish
 
 dctest: endtoendtest
 	# launch all studio's dependent services using docker-compose, and then run the tests
