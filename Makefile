@@ -33,7 +33,7 @@ endtoendtest:
 	rm -rf shared
 
 
-collectstatic: migrate
+collectstatic:
 	python contentcuration/manage.py collectstatic --noinput
 	python contentcuration/manage.py collectstatic_js_reverse
 
