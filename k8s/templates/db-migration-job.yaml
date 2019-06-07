@@ -1,0 +1,27 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-migrate
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  activeDeadlineSeconds: 7200 # 2 hours
+  template:
+    name: db-migrate
+    spec:
+     restartPolicy: OnFailure
+    containers:
+      - name: db-migrate
+        image: {{ .Values.studioApp.imageName }}
+        command:
+          - make
+          - migrate
+        env: {{ include "studio.sharedEnvs" . | nindent 8 }}
+        resources:
+          requests:
+            cpu: 1000m
+            memory: "1Gi"
+          limits:
+            cpu: 1000m
+            memory: "2Gi"
