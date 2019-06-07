@@ -24,6 +24,7 @@ test:
 	yarn install && yarn run unittests
 	mv contentcuration/coverage.xml shared
 
+endtoendtest: SHELL:=/bin/bash
 endtoendtest:
 	# launch all studio's dependent services using docker-compose, and then run the tests
 	mkdir -p shared
