@@ -29,7 +29,7 @@ endtoendtest:
 	# launch all studio's dependent services using docker-compose, and then run the tests
 	mkdir -p shared
 	docker-compose run -v "${PWD}/shared:/shared" studio-app make test -e DJANGO_SETTINGS_MODULE=contentcuration.test_settings
-	bash <(curl -s https://codecov.io/bash)
+	bash <(curl -s https://codecov.io/bash) -v
 	rm -rf shared
 
 collectstatic: migrate
