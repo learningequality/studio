@@ -11,10 +11,11 @@ metadata:
 spec:
   activeDeadlineSeconds: 7200 # 2 hours
   template:
-    name: {{ template "studio.fullname" . }}-db-migrate
+    metadata:
+      name: {{ template "studio.fullname" . }}-db-migrate
     spec:
-     restartPolicy: OnFailure
-    containers:
+      restartPolicy: OnFailure
+      containers:
       - name: db-migrate
         image: {{ .Values.studioApp.imageName }}
         command:
