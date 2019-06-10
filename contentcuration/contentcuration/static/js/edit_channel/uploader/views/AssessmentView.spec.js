@@ -4,6 +4,7 @@ import AssessmentView from './AssessmentView';
 
 // TODO @MisRob: Consistent imports
 const editModalGetters = require('../vuex/getters');
+const editModalMutations = require('../vuex/mutations');
 
 const localVue = createLocalVue();
 localVue.use(Vuex);
@@ -44,6 +45,7 @@ const EDIT_MODAL_STATE = {
       ],
     },
   ],
+  nodesAssessmentDrafts: {},
 };
 
 const initWrapper = state => {
@@ -53,6 +55,7 @@ const initWrapper = state => {
         namespaced: true,
         state,
         getters: editModalGetters,
+        mutations: editModalMutations,
       },
     },
   });

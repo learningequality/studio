@@ -23,6 +23,8 @@ const store = new Vuex.Store({
         selectedIndices: [],
         changes: {},
         mode: modes.VIEW_ONLY,
+        // <node ID> : <to be updated or new assessment items> map
+        nodesAssessmentDrafts: {},
       },
       getters: getters,
       mutations: mutations,

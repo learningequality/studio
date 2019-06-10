@@ -1,4 +1,5 @@
 import _ from 'underscore';
+import Vue from 'vue';
 import { modes } from '../constants';
 import { getSelected } from './utils';
 import State from 'edit_channel/state';
@@ -245,3 +246,7 @@ export function REMOVE_NODE(state, index) {
 export function PREP_NODES_FOR_SAVE(state) {
   _.each(state.nodes, node => (node.isNew = false));
 }
+
+export const addNodeAssessmentDraft = (state, { nodeId, assessmentItems }) => {
+  Vue.set(state.nodesAssessmentDrafts, nodeId, assessmentItems);
+};

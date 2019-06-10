@@ -99,3 +99,11 @@ export function copyrightHolders() {
 export function tags() {
   return _.pluck(State.Store.getters.contentTags, 'tag_name');
 }
+
+export const nodeAssessmentDraft = state => nodeId => {
+  if (!Object.keys(state.nodesAssessmentDrafts).includes(nodeId)) {
+    return null;
+  }
+
+  return state.nodesAssessmentDrafts[nodeId];
+};

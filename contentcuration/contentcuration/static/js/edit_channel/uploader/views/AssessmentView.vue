@@ -1,12 +1,12 @@
 <template>
   <VContainer>
     <VExpansionPanel
-      v-if="orderedAssessmentItems.length"
+      v-if="assessmentItems && assessmentItems.length"
       v-model="openItemIdx"
       popout
     >
       <AssessmentItem
-        v-for="(item, idx) in orderedAssessmentItems"
+        v-for="(item, idx) in assessmentItems"
         :key="idx"
         :item="item"
         :itemIdx="idx"
@@ -28,7 +28,7 @@
 
 <script>
 
-  import { mapState, mapGetters } from 'vuex';
+  import { mapState, mapGetters, mapMutations } from 'vuex';
 
   import AssessmentItem from '../components/AssessmentItem/AssessmentItem.vue';
 
@@ -44,23 +44,37 @@
     },
     computed: {
       ...mapState('edit_modal', ['selectedIndices']),
-      ...mapGetters('edit_modal', ['getNode']),
-      assessmentItems() {
-        // assessment view is accessible only when exactly one exercise item selected
-        const nodeIndex = this.selectedIndices[0];
-
-        return this.getNode(nodeIndex).assessment_items;
+      ...mapGetters('edit_modal', ['getNode', 'nodeAssessmentDraft']),
+      // assessment view is accessible only when exactly one exercise node is selected
+      nodeIndex() {
+        return this.selectedIndices[0];
       },
-      orderedAssessmentItems() {
-        if (!this.assessmentItems || !this.assessmentItems.length) {
-          return [];
-        }
-
-        const assessmentItems = [...this.assessmentItems];
-        return assessmentItems.sort((item1, item2) => item1.order > item2.order);
+      node() {
+        return this.getNode(this.nodeIndex);
+      },
+      nodeId() {
+        return this.node.id;
+      },
+      assessmentItems() {
+        return this.nodeAssessmentDraft(this.nodeId);
       },
     },
+    created() {
+      if (this.nodeAssessmentDraft(this.nodeId) !== null) {
+        return;
+      }
+
+      let assessmentItems = [];
+      if (this.node.assessment_items && this.node.assessment_items.length) {
+        assessmentItems = [...this.node.assessment_items].sort((item1, item2) =>
+          item1.order > item2.order ? 1 : -1
+        );
+      }
+
+      this.addNodeAssessmentDraft({ nodeId: this.nodeId, assessmentItems });
+    },
     methods: {
+      ...mapMutations('edit_modal', ['addNodeAssessmentDraft']),
       closeItem() {
         this.openItemIdx = null;
       },
