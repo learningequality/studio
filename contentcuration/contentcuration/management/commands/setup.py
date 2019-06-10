@@ -144,6 +144,7 @@ def generate_tree(root, document, video, subtitle, audio, html5, user=None, tags
     create_contentnode("Sample Audio", topic1, audio, content_kinds.AUDIO, license_id, user=user, tags=tags)
     create_contentnode("Sample HTML", topic1, html5, content_kinds.HTML5, license_id, user=user, tags=tags)
     create_exercise("Sample Exercise", topic1, license_id, user=user)
+    create_exercise("Sample Empty Exercise", topic1, license_id, user=user, empty=True)
 
 
 def create_user(email, password, first_name, last_name, admin=False):
@@ -213,7 +214,7 @@ def create_topic(title, parent, description=""):
     return topic
 
 
-def create_exercise(title, parent, license_id, description="", user=None):
+def create_exercise(title, parent, license_id, description="", user=None, empty=False):
     mastery_model = {
         "mastery_model": exercises.M_OF_N,
         "randomize": False,
@@ -234,9 +235,11 @@ def create_exercise(title, parent, license_id, description="", user=None):
     )
     exercise.save()
 
-    create_question(exercise, "Question 1", exercises.SINGLE_SELECTION)
-    create_question(exercise, "Question 2", exercises.MULTIPLE_SELECTION)
-    create_question(exercise, "Question 3", exercises.INPUT_QUESTION)
+    if not empty:
+        create_question(exercise, "Question 1", exercises.SINGLE_SELECTION)
+        create_question(exercise, "Question 2", exercises.MULTIPLE_SELECTION)
+        create_question(exercise, "Question 3", exercises.INPUT_QUESTION)
+
     return exercise
 
 
