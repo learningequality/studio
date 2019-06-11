@@ -1,6 +1,7 @@
 import _ from 'underscore';
 import Vue from 'vue';
-import { modes } from '../constants';
+
+import { modes, AssessmentItemTypes } from '../constants';
 import { getSelected } from './utils';
 import State from 'edit_channel/state';
 import Constants from 'edit_channel/constants/index';
@@ -249,4 +250,19 @@ export function PREP_NODES_FOR_SAVE(state) {
 
 export const addNodeAssessmentDraft = (state, { nodeId, assessmentItems }) => {
   Vue.set(state.nodesAssessmentDrafts, nodeId, assessmentItems);
+};
+
+export const addNodeAssessmentDraftItem = (state, nodeId) => {
+  if (!state.nodesAssessmentDrafts[nodeId]) {
+    Vue.set(state.nodesAssessmentDrafts, nodeId, []);
+  }
+
+  const nodeAssessmentDraft = [...state.nodesAssessmentDrafts[nodeId]];
+  nodeAssessmentDraft.push({
+    question: '',
+    type: AssessmentItemTypes.SINGLE_SELECTION,
+    order: nodeAssessmentDraft.length,
+  });
+
+  Vue.set(state.nodesAssessmentDrafts, nodeId, nodeAssessmentDraft);
 };

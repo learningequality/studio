@@ -9,7 +9,7 @@
           <div class="caption grey--text mb-1">
             {{ kindLabel }}
           </div>
-          <div data-test="questionText">
+          <div>
             {{ question }}
           </div>
         </VFlex>
@@ -22,7 +22,10 @@
       </template>
     </template>
 
-    <VCard>
+    <VCard
+      v-if="isOpen"
+      data-test="open"
+    >
       <VContainer fluid>
         <VLayout row>
           <VFlex xs5>
