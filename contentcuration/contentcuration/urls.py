@@ -22,6 +22,7 @@ from django.contrib.auth import views as auth_views
 from django.core.urlresolvers import reverse_lazy
 from django.db.models import Q
 from rest_framework import permissions
+from django.views.static import serve as django_static_serve
 from rest_framework import routers
 from rest_framework import viewsets
 from rest_framework.exceptions import MethodNotAllowed
@@ -394,6 +395,7 @@ urlpatterns += [
     url(r'^api/internal/add_nodes$', internal_views.api_add_nodes_to_tree, name="api_add_nodes_to_tree"),
     url(r'^api/internal/finish_channel$', internal_views.api_commit_channel, name="api_finish_channel"),
     url(r'^api/internal/get_channel_status_bulk$', internal_views.get_channel_status_bulk, name="get_channel_status_bulk"),
+    url(r'^api/internal/get_full_node_diff/(?P<channel_id>[^/]{32})$', internal_views.get_full_node_diff_endpoint, name="get_full_node_diff"),
 ]
 
 # Add admin endpoints
@@ -430,6 +432,7 @@ if settings.DEBUG:
         url(r'^' + settings.CONTENT_DATABASE_URL[1:] + '(?P<path>.*)$', file_views.debug_serve_content_database_file, name='content_database_debug_serve_file'),
         url(r'^' + settings.CSV_URL[1:] + '(?P<path>.*)$', file_views.debug_serve_file, name='csv_debug_serve_file'),
         url(r'^sandbox/$', views.SandboxView.as_view()),
+        url(r'^' + settings.JSON_URL[1:] + '(?P<path>.*)$', django_views.static.serve, {'document_root': settings.JSON_ROOT})
     ]
 
     try:
