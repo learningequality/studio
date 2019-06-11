@@ -78,12 +78,20 @@
       this.addNodeAssessmentDraft({ nodeId: this.nodeId, assessmentItems });
     },
     methods: {
-      ...mapMutations('edit_modal', ['addNodeAssessmentDraft', 'addNodeAssessmentDraftItem']),
+      ...mapMutations('edit_modal', [
+        'addNodeAssessmentDraft',
+        'addNodeAssessmentDraftItem',
+        'updateNodeAssessmentDraftItem',
+      ]),
       closeItem() {
         this.openItemIdx = null;
       },
-      updateItem(payload) {
-        alert(payload);
+      updateItem({ itemIdx, payload }) {
+        this.updateNodeAssessmentDraftItem({
+          nodeId: this.nodeId,
+          assessmentItemIdx: itemIdx,
+          data: payload,
+        });
       },
       addNewItem() {
         this.addNodeAssessmentDraftItem(this.nodeId);

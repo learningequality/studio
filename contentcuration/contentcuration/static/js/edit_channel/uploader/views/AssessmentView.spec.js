@@ -1,6 +1,7 @@
 import { mount, createLocalVue } from '@vue/test-utils';
 import Vuex from 'vuex';
 
+import { AssessmentItemTypes } from '../constants';
 import AssessmentView from './AssessmentView';
 
 // TODO @MisRob: Consistent imports
@@ -20,6 +21,7 @@ const EDIT_MODAL_STATE = {
         {
           id: 0,
           question: 'Exercise 1 - Question 1',
+          type: AssessmentItemTypes.SINGLE_SELECTION,
           order: 0,
         },
       ],
@@ -31,16 +33,19 @@ const EDIT_MODAL_STATE = {
         {
           id: 1,
           question: 'Exercise 2 - Question 2',
+          type: AssessmentItemTypes.SINGLE_SELECTION,
           order: 1,
         },
         {
           id: 2,
           question: 'Exercise 2 - Question 3',
+          type: AssessmentItemTypes.MULTIPLE_SELECTION,
           order: 2,
         },
         {
           id: 1,
           question: 'Exercise 2 - Question 1',
+          type: AssessmentItemTypes.INPUT_QUESTION,
           order: 0,
         },
       ],
