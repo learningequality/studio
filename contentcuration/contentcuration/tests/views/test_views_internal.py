@@ -13,6 +13,7 @@ from ..testdata import fileobj_exercise_graphie
 from ..testdata import fileobj_exercise_image
 from ..testdata import fileobj_video
 from ..testdata import tree
+from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 
 
@@ -262,6 +263,12 @@ class PublishEndpointTestCase(BaseAPITestCase):
         self.assertEqual(response.status_code, 404)
 
     def test_200_publish_successful(self):
+        self.channel.editors.add(self.user)
         response = self.post(reverse_lazy("api_publish_channel"), {"channel_id": self.channel.id})
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.json()["success"])
+
+    def test_404_not_authorized(self):
+        new_channel = Channel.objects.create()
+        response = self.post(reverse_lazy("api_publish_channel"), {"channel_id": new_channel.id})
+        self.assertEqual(response.status_code, 404)

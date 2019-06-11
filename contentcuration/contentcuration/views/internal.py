@@ -251,13 +251,15 @@ def api_publish_channel(request):
 
     try:
         channel_id = data["channel_id"]
+        # Ensure that the user has permission to edit this channel.
+        request.user.can_edit(channel_id)
         call_command("exportchannel", channel_id, user_id=request.user.pk)
 
         return JsonResponse({
             "success": True,
             "channel": channel_id
         })
-    except (KeyError, Channel.DoesNotExist):
+    except (KeyError, Channel.DoesNotExist, PermissionDenied):
         return HttpResponseNotFound("No channel matching: {}".format(data))
     except Exception as e:
         handle_server_error(request)
