@@ -48,16 +48,18 @@ function recursiveIssuer(m) {
 
 module.exports = (env = {}) => {
   const dev = env.dev;
+  const hot = env.hot;
   return {
     context: bundleEntryDir,
     entry: {
+      // Use arrays for every entry to allow for hot reloading.
       base: ['@babel/polyfill', './base.js'],
-      channel_edit: './channel_edit.js',
-      channel_list: './channel_list.js',
-      administration: './administration.js',
-      settings: './settings.js',
+      channel_edit: ['./channel_edit.js'],
+      channel_list: ['./channel_list.js'],
+      administration: ['./administration.js'],
+      settings: ['./settings.js'],
       // A simple code sandbox to play with components in
-      sandbox: './sandbox.js',
+      sandbox: ['./sandbox.js'],
     },
     output: {
       filename: '[name]-[hash].js',
@@ -66,6 +68,9 @@ module.exports = (env = {}) => {
     },
     devServer: {
       port: 3000,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+      },
     },
     optimization: {
       // builds a bundle that holds common code between the 2 entry points
@@ -119,11 +124,11 @@ module.exports = (env = {}) => {
         },
         {
           test: /\.less?$/,
-          use: [`style-loader`, MiniCssExtractPlugin.loader, `css-loader`, 'less-loader'],
+          use: [hot ? `style-loader` : MiniCssExtractPlugin.loader, `css-loader`, 'less-loader'],
         },
         {
           test: /\.css?$/,
-          use: [`style-loader`, MiniCssExtractPlugin.loader, `css-loader`],
+          use: [hot ? `style-loader` : MiniCssExtractPlugin.loader, `css-loader`],
         },
         {
           test: /\.vue?$/,
