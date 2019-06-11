@@ -11,7 +11,9 @@ from django.db import transaction
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.http import HttpResponseForbidden
+from django.http import HttpResponseNotFound
 from django.http import HttpResponseServerError
+from django.http import JsonResponse
 from le_utils.constants import content_kinds
 from le_utils.constants import roles
 from raven.contrib.django.raven_compat.models import client
@@ -249,14 +251,16 @@ def api_publish_channel(request):
 
     try:
         channel_id = data["channel_id"]
+        # Ensure that the user has permission to edit this channel.
+        request.user.can_edit(channel_id)
         call_command("exportchannel", channel_id, user_id=request.user.pk)
 
-        return HttpResponse(json.dumps({
+        return JsonResponse({
             "success": True,
             "channel": channel_id
-        }))
-    except KeyError:
-        raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+        })
+    except (KeyError, Channel.DoesNotExist, PermissionDenied):
+        return HttpResponseNotFound("No channel matching: {}".format(data))
     except Exception as e:
         handle_server_error(request)
         return HttpResponseServerError(content=str(e), reason=str(e))
