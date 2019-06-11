@@ -324,6 +324,14 @@
         vertical-align: text-top;
       }
     }
+
+    // there is a conflicting style for .row class in common styles
+    // that sets left and right margin to -15px which breaks Vuetify
+    // elements using Vuetify's .row class
+    .row {
+      margin-right: 0;
+      margin-left: 0;
+    }
   }
 
 </style>
