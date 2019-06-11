@@ -106,7 +106,13 @@ def node(data, parent=None):
     new_node = None
     # Create topics
     if data['kind_id'] == "topic":
-        new_node = cc.ContentNode(kind=topic(), parent=parent, title=data['title'], node_id=data['node_id'])
+        new_node = cc.ContentNode(
+            kind=topic(),
+            parent=parent,
+            title=data['title'],
+            node_id=data['node_id'],
+            content_id=data.get('content_id') or data['node_id']
+        )
         new_node.save()
 
         for child in data['children']:
@@ -114,7 +120,14 @@ def node(data, parent=None):
 
     # Create videos
     elif data['kind_id'] == "video":
-        new_node = cc.ContentNode(kind=video(), parent=parent, title=data['title'], node_id=data['node_id'], license=license_wtfpl())
+        new_node = cc.ContentNode(
+            kind=video(),
+            parent=parent,
+            title=data['title'],
+            node_id=data['node_id'],
+            license=license_wtfpl(),
+            content_id=data.get('content_id') or data['node_id'],
+        )
         new_node.save()
         video_file = fileobj_video(contents="Video File")
         video_file.contentnode = new_node
@@ -124,17 +137,33 @@ def node(data, parent=None):
     # Create exercises
     elif data['kind_id'] == "exercise":
         extra_fields = "{{\"mastery_model\":\"{}\",\"randomize\":true,\"m\":{},\"n\":{}}}".format(data['mastery_model'], data.get('m') or 0, data.get('n') or 0)
-        new_node = cc.ContentNode(kind=exercise(), parent=parent, title=data['title'], node_id=data[
-                                  'node_id'], license=license_wtfpl(), extra_fields=extra_fields)
+        new_node = cc.ContentNode(
+            kind=exercise(),
+            parent=parent,
+            title=data['title'],
+            node_id=data['node_id'],
+            license=license_wtfpl(),
+            extra_fields=extra_fields,
+            content_id=data.get('content_id') or data['node_id'],
+        )
         new_node.save()
         for assessment_item in data['assessment_items']:
-            mixer.blend(cc.AssessmentItem,
-                        contentnode=new_node,
-                        assessment_id=assessment_item['assessment_id'],
-                        question=assessment_item['question'],
-                        type=assessment_item['type'],
-                        answers=json.dumps(assessment_item['answers'])
-                        )
+            ai = cc.AssessmentItem(
+                contentnode=new_node,
+                assessment_id=assessment_item['assessment_id'],
+                question=assessment_item['question'],
+                type=assessment_item['type'],
+                answers=json.dumps(assessment_item['answers']),
+                hints=json.dumps(assessment_item.get('hints') or [])
+            )
+            ai.save()
+
+    if data.get('tags'):
+        for tag in data['tags']:
+            t = cc.ContentTag(tag_name=tag['tag_name'])
+            t.save()
+            new_node.tags.add(t)
+            new_node.save()
 
     return new_node
 
