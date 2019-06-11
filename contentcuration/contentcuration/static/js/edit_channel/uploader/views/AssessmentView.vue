@@ -63,6 +63,11 @@
         return this.nodeAssessmentDraft(this.nodeId);
       },
     },
+    watch: {
+      selectedIndices() {
+        this.closeItem();
+      },
+    },
     created() {
       if (this.nodeAssessmentDraft(this.nodeId) !== null) {
         return;
