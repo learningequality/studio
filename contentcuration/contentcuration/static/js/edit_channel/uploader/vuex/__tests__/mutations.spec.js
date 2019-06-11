@@ -103,5 +103,64 @@ describe('edit_modal', () => {
         });
       });
     });
+
+    describe('updateNodeAssessmentDraftItem', () => {
+      beforeEach(() => {
+        state = {
+          nodesAssessmentDrafts: {
+            'node-1': [
+              {
+                question: 'Node 1 - Question 1',
+                type: AssessmentItemTypes.SINGLE_SELECTION,
+                order: 0,
+              },
+              {
+                question: 'Node 1 - Question 2',
+                type: AssessmentItemTypes.MULTIPLE_SELECTION,
+                order: 1,
+              },
+            ],
+            'node-2': [
+              {
+                question: 'Node 2 - Question 1',
+                order: 0,
+              },
+            ],
+          },
+        };
+      });
+
+      it('updates a correct node assessment draft item', () => {
+        mutations.updateNodeAssessmentDraftItem(state, {
+          nodeId: 'node-1',
+          assessmentItemIdx: 1,
+          data: {
+            question: 'Node 1 - Updated Question 2',
+            type: AssessmentItemTypes.TRUE_FALSE,
+          },
+        });
+
+        expect(state.nodesAssessmentDrafts).toEqual({
+          'node-1': [
+            {
+              question: 'Node 1 - Question 1',
+              type: AssessmentItemTypes.SINGLE_SELECTION,
+              order: 0,
+            },
+            {
+              question: 'Node 1 - Updated Question 2',
+              type: AssessmentItemTypes.TRUE_FALSE,
+              order: 1,
+            },
+          ],
+          'node-2': [
+            {
+              question: 'Node 2 - Question 1',
+              order: 0,
+            },
+          ],
+        });
+      });
+    });
   });
 });

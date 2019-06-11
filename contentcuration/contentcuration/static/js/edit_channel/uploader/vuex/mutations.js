@@ -266,3 +266,14 @@ export const addNodeAssessmentDraftItem = (state, nodeId) => {
 
   Vue.set(state.nodesAssessmentDrafts, nodeId, nodeAssessmentDraft);
 };
+
+export const updateNodeAssessmentDraftItem = (state, { nodeId, assessmentItemIdx, data }) => {
+  const nodeAssessmentDraft = [...state.nodesAssessmentDrafts[nodeId]];
+
+  nodeAssessmentDraft[assessmentItemIdx] = {
+    ...nodeAssessmentDraft[assessmentItemIdx],
+    ...data,
+  };
+
+  Vue.set(state.nodesAssessmentDrafts, nodeId, nodeAssessmentDraft);
+};
