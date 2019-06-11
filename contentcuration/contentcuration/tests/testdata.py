@@ -145,6 +145,7 @@ def node(data, parent=None):
             'm': data.get('m') or 0,
             'n': data.get('n') or 0
         }
+        # extra_fields = "{{\"mastery_model\":\"{}\",\"randomize\":true,\"m\":{},\"n\":{}}}".format(data['mastery_model'], data.get('m') or 0, data.get('n') or 0)
         new_node = cc.ContentNode(
             kind=exercise(),
             parent=parent,
@@ -181,7 +182,6 @@ def tree(parent=None):
     filepath = os.path.sep.join([os.path.dirname(__file__), "fixtures", "tree.json"])
     with open(filepath, "rb") as jsonfile:
         data = json.load(jsonfile)
-
     return node(data, parent)
 
 
