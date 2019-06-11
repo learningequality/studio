@@ -1,5 +1,6 @@
 import { mount, createLocalVue } from '@vue/test-utils';
 import Vuex from 'vuex';
+
 import AssessmentView from './AssessmentView';
 
 // TODO @MisRob: Consistent imports
@@ -48,6 +49,21 @@ const EDIT_MODAL_STATE = {
   nodesAssessmentDrafts: {},
 };
 
+const clickNewQuestionBtn = wrapper => {
+  wrapper
+    .find('[data-test=newQuestionBtn]')
+    .find('button')
+    .trigger('click');
+};
+
+const getAssessmentItems = wrapper => {
+  return wrapper.findAll({ name: 'AssessmentItem' });
+};
+
+const isAssessmentItemOpen = assessmentItemWrapper => {
+  return assessmentItemWrapper.contains('[data-test="open"]');
+};
+
 const initWrapper = state => {
   const store = new Vuex.Store({
     modules: {
@@ -84,16 +100,45 @@ describe('AssessmentView', () => {
 
   describe('for an exercise with some questions', () => {
     beforeEach(() => {
-      wrapper = initWrapper(EDIT_MODAL_STATE);
+      const state = JSON.parse(JSON.stringify(EDIT_MODAL_STATE));
+      wrapper = initWrapper(state);
     });
 
-    it('renders correctly ordered questions of a selected exercise', () => {
-      const questions = wrapper.findAll('[data-test=questionText]');
+    it('renders correctly ordered items of a selected exercise', () => {
+      const assessmentItems = getAssessmentItems(wrapper);
 
-      expect(questions.length).toBe(3);
-      expect(questions.at(0).text()).toBe('Exercise 2 - Question 1');
-      expect(questions.at(1).text()).toBe('Exercise 2 - Question 2');
-      expect(questions.at(2).text()).toBe('Exercise 2 - Question 3');
+      expect(assessmentItems.length).toBe(3);
+
+      expect(assessmentItems.at(0).html()).toContain('Exercise 2 - Question 1');
+      expect(assessmentItems.at(1).html()).toContain('Exercise 2 - Question 2');
+      expect(assessmentItems.at(2).html()).toContain('Exercise 2 - Question 3');
+    });
+
+    it('renders items as closed by default', () => {
+      const assessmentItems = getAssessmentItems(wrapper);
+
+      expect(isAssessmentItemOpen(assessmentItems.at(0))).toBe(false);
+      expect(isAssessmentItemOpen(assessmentItems.at(1))).toBe(false);
+      expect(isAssessmentItemOpen(assessmentItems.at(2))).toBe(false);
+    });
+  });
+
+  describe('on a new question button click', () => {
+    beforeEach(() => {
+      const state = JSON.parse(JSON.stringify(EDIT_MODAL_STATE));
+      wrapper = initWrapper(state);
+      clickNewQuestionBtn(wrapper);
+    });
+
+    it('renders a new item and opens it', () => {
+      const assessmentItems = getAssessmentItems(wrapper);
+
+      expect(assessmentItems.length).toBe(4);
+
+      expect(isAssessmentItemOpen(assessmentItems.at(0))).toBe(false);
+      expect(isAssessmentItemOpen(assessmentItems.at(1))).toBe(false);
+      expect(isAssessmentItemOpen(assessmentItems.at(2))).toBe(false);
+      expect(isAssessmentItemOpen(assessmentItems.at(3))).toBe(true);
     });
   });
 });

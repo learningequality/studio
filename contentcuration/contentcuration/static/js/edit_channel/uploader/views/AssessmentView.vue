@@ -20,7 +20,11 @@
       No questions yet
     </div>
 
-    <VBtn color="primary">
+    <VBtn
+      color="primary"
+      data-test="newQuestionBtn"
+      @click="addNewItem"
+    >
       New question
     </VBtn>
   </VContainer>
@@ -74,12 +78,16 @@
       this.addNodeAssessmentDraft({ nodeId: this.nodeId, assessmentItems });
     },
     methods: {
-      ...mapMutations('edit_modal', ['addNodeAssessmentDraft']),
+      ...mapMutations('edit_modal', ['addNodeAssessmentDraft', 'addNodeAssessmentDraftItem']),
       closeItem() {
         this.openItemIdx = null;
       },
       updateItem(payload) {
         alert(payload);
+      },
+      addNewItem() {
+        this.addNodeAssessmentDraftItem(this.nodeId);
+        this.openItemIdx = this.assessmentItems.length - 1;
       },
     },
   };
