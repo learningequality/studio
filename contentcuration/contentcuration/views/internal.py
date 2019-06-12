@@ -92,11 +92,11 @@ def check_version(request):
         else:
             status = VERSION_ERROR
 
-        return HttpResponse(json.dumps({
+        return JsonResponse({
             'success': True,
             'status': status[1],
             'message': status[2].format(version, VERSION_OK[0]),
-        }))
+        })
     except Exception as e:
         return HttpResponseServerError(content=str(e), reason=str(e))
 

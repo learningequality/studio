@@ -6,6 +6,7 @@ import uuid
 
 from django.core.urlresolvers import reverse_lazy
 from mixer.main import mixer
+from mock import patch
 
 from ..base import BaseAPITestCase
 from ..base import StudioTestCase
@@ -13,8 +14,10 @@ from ..testdata import fileobj_exercise_graphie
 from ..testdata import fileobj_exercise_image
 from ..testdata import fileobj_video
 from ..testdata import tree
+from contentcuration import ricecooker_versions as rc
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
+from contentcuration.views import internal
 
 
 class SampleContentNodeDataSchema:
@@ -272,3 +275,66 @@ class PublishEndpointTestCase(BaseAPITestCase):
         new_channel = Channel.objects.create()
         response = self.post(reverse_lazy("api_publish_channel"), {"channel_id": new_channel.id})
         self.assertEqual(response.status_code, 404)
+
+
+class VersionEndpointTestCase(BaseAPITestCase):
+
+    def test_better_than_OK(self):
+        with patch("contentcuration.views.internal.VERSION_OK", internal.VersionStatus(version="0.0.1", status=0, message=rc.VERSION_OK_MESSAGE)):
+            response = self.post(reverse_lazy("check_version"), {"version": "0.1.1"})
+            self.assertEqual(response.status_code, 200)
+            self.assertTrue(response.json()["success"])
+            self.assertEqual(response.json()["status"], internal.VERSION_OK[1])
+
+    def test_OK(self):
+        response = self.post(reverse_lazy("check_version"), {"version": rc.VERSION_OK})
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()["success"])
+        self.assertEqual(response.json()["status"], internal.VERSION_OK[1])
+
+    def test_worse_than_OK_but_better_than_soft(self):
+        with patch(
+                    "contentcuration.views.internal.VERSION_OK",
+                    internal.VersionStatus(version="1.0.0", status=0, message=rc.VERSION_OK_MESSAGE)
+                ), patch(
+                    "contentcuration.views.internal.VERSION_SOFT_WARNING",
+                    internal.VersionStatus(version="0.0.1", status=1, message=rc.VERSION_SOFT_WARNING_MESSAGE)
+                ):
+            response = self.post(reverse_lazy("check_version"), {"version": "0.1.1"})
+            self.assertEqual(response.status_code, 200)
+            self.assertTrue(response.json()["success"])
+            self.assertEqual(response.json()["status"], internal.VERSION_SOFT_WARNING[1])
+
+    def test_soft_warning(self):
+        response = self.post(reverse_lazy("check_version"), {"version": rc.VERSION_SOFT_WARNING})
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()["success"])
+        self.assertEqual(response.json()["status"], internal.VERSION_SOFT_WARNING[1])
+
+    def test_worse_than_soft_but_better_than_hard(self):
+        with patch(
+                    "contentcuration.views.internal.VERSION_SOFT_WARNING",
+                    internal.VersionStatus(version="1.0.0", status=1, message=rc.VERSION_SOFT_WARNING_MESSAGE)
+                ), patch(
+                    "contentcuration.views.internal.VERSION_HARD_WARNING",
+                    internal.VersionStatus(version="0.0.1", status=2, message=rc.VERSION_HARD_WARNING_MESSAGE)
+                ):
+            response = self.post(reverse_lazy("check_version"), {"version": "0.1.1"})
+            self.assertEqual(response.status_code, 200)
+            self.assertTrue(response.json()["success"])
+            self.assertEqual(response.json()["status"], internal.VERSION_HARD_WARNING[1])
+
+    def test_hard_warning(self):
+        response = self.post(reverse_lazy("check_version"), {"version": rc.VERSION_HARD_WARNING})
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()["success"])
+        self.assertEqual(response.json()["status"], internal.VERSION_HARD_WARNING[1])
+
+    def test_worse_than_hard(self):
+        with patch(
+                "contentcuration.views.internal.VERSION_HARD_WARNING",
+                internal.VersionStatus(version="1.0.0", status=2, message=rc.VERSION_HARD_WARNING_MESSAGE)):
+            response = self.post(reverse_lazy("check_version"), {"version": "0.1.1"})
+            self.assertEqual(response.status_code, 200)
+            self.assertTrue(response.json()["success"])
+            self.assertEqual(response.json()["status"], internal.VERSION_ERROR[1])
