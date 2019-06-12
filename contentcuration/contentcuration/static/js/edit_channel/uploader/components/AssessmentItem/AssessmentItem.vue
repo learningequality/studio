@@ -2,17 +2,37 @@
   <VExpansionPanelContent>
     <template v-slot:header>
       <template v-if="!isOpen">
-        <VFlex xs1>
-          {{ order }}
-        </VFlex>
-        <VFlex>
-          <div class="caption grey--text mb-1">
-            {{ kindLabel }}
-          </div>
-          <div>
-            {{ question }}
-          </div>
-        </VFlex>
+        <VContainer fluid>
+          <VLayout row>
+            <VFlex xs1>
+              {{ order }}
+            </VFlex>
+            <VFlex>
+              <div class="caption grey--text mb-1">
+                {{ kindLabel }}
+              </div>
+              <div>
+                {{ question }}
+              </div>
+            </VFlex>
+          </VLayout>
+
+          <template v-if="displayAnswersPreview">
+            <!-- eslint-disable-next-line -->
+            <VLayout row mt-3>
+              <div class="caption grey--text mb-1">
+                Answers
+              </div>
+            </VLayout>
+
+            <VLayout row>
+              <AnswersPreview
+                :questionKind="kind"
+                :answers="answers"
+              />
+            </VLayout>
+          </template>
+        </VContainer>
       </template>
 
       <template v-else>
@@ -99,9 +119,13 @@
 <script>
 
   import { AssessmentItemTypes } from '../../constants';
+  import AnswersPreview from '../AnswersPreview/AnswersPreview.vue';
 
   export default {
     name: 'AssessmentItem',
+    components: {
+      AnswersPreview,
+    },
     props: {
       item: {
         type: Object,
@@ -110,6 +134,10 @@
         type: Number,
       },
       isOpen: {
+        type: Boolean,
+        default: false,
+      },
+      displayAnswersPreview: {
         type: Boolean,
         default: false,
       },
@@ -146,6 +174,13 @@
       },
       kindLabel() {
         return this.kindSelectItems.find(item => item.value === this.kind).text;
+      },
+      answers() {
+        if (!this.item.answers) {
+          return [];
+        }
+
+        return JSON.parse(this.item.answers);
       },
     },
     methods: {
