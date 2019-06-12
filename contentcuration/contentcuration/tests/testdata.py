@@ -42,11 +42,11 @@ def exercise():
     return mixer.blend(cc.ContentKind, kind='exercise')
 
 
-def preset_exercise():
+def slideshow():
     """
-    Create an exercise format preset.
+    Returns a slideshow content kind object.
     """
-    return mixer.blend(cc.FormatPreset, id='exercise', kind=exercise())
+    return mixer.blend(cc.ContentKind, kind='slideshow')
 
 
 def fileformat_perseus():
