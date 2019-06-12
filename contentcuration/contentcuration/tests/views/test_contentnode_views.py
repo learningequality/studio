@@ -8,7 +8,8 @@ class BaseGetNodesByIdSerializerTestCaseMixin:
     """
     We have several content node serializer endpoints, which differ primarily only
     in the fields they return. This class contains some basic tests that can be
-    run on all the serializers just by passing in the endpoint name and expected fields.
+    run on all the serializers just by setting the class endpoint and serializer_fields
+    properties. (See below classes for example.)
     """
     def test_get_nodes_by_ids_no_ids(self):
         """
