@@ -13,7 +13,6 @@ from django.db.models import Max
 from django.db.models import Q
 from django.db.models import Sum
 from django.http import HttpResponse
-from django.http import HttpResponseBadRequest
 from django.http import HttpResponseNotFound
 from django.utils.translation import ugettext as _
 from le_utils.constants import content_kinds
@@ -43,7 +42,9 @@ from contentcuration.utils.files import duplicate_file
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
+@api_view(['GET'])
 def get_node_diff(request, channel_id):
+    request.user.can_edit(channel_id)
     original = []   # Currently imported nodes
     changed = []    # Nodes from original node
     fields_to_check = ['title', 'description', 'license', 'license_description', 'copyright_holder', 'author', 'extra_fields', 'language', 'role_visibility']
@@ -87,19 +88,16 @@ def get_node_diff(request, channel_id):
                 original.append(copied_node)
                 changed.append(node)
 
-    serialized_original = JSONRenderer().render(SimplifiedContentNodeSerializer(original, many=True).data)
-    serialized_changed = JSONRenderer().render(SimplifiedContentNodeSerializer(changed, many=True).data)
-
-    return HttpResponse(json.dumps({
-        "original": serialized_original,
-        "changed": serialized_changed,
-    }))
+    return Response({
+        "original": SimplifiedContentNodeSerializer(original, many=True).data,
+        "changed": SimplifiedContentNodeSerializer(changed, many=True).data,
+    })
 
 
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
+@api_view(['POST'])
 def create_new_node(request):
-    if request.method != 'POST':
-        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
-
     data = json.loads(request.body)
     license = License.objects.filter(license_name=data.get('license_name')).first()  # Use filter/first in case preference hasn't been set
     license_id = license.pk if license else settings.DEFAULT_LICENSE
@@ -114,9 +112,11 @@ def create_new_node(request):
         license_description=data.get('license_description'),
         parent_id=settings.ORPHANAGE_ROOT_ID,
     )
-    return HttpResponse(JSONRenderer().render(ContentNodeEditSerializer(new_node).data))
+    return Response(ContentNodeEditSerializer(new_node).data)
 
 
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
 @api_view(['GET'])
 def get_prerequisites(request, get_postrequisites, ids):
     nodes = ContentNode.objects.prefetch_related('prerequisite').filter(pk__in=ids.split(","))
@@ -145,30 +145,41 @@ def get_prerequisites(request, get_postrequisites, ids):
     })
 
 
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
 @api_view(['GET'])
 def get_total_size(request, ids):
-    sizes = ContentNode.objects.prefetch_related('assessment_items', 'files', 'children')\
+    nodes = ContentNode.objects.prefetch_related('assessment_items', 'files', 'children')\
                        .exclude(kind_id=content_kinds.EXERCISE, published=False)\
                        .filter(id__in=ids.split(",")).get_descendants(include_self=True)\
                        .values('files__checksum', 'files__file_size')\
-                       .distinct().aggregate(resource_size=Sum('files__file_size'))
+                       .distinct()
+    request.user.can_view_nodes(nodes)
+    sizes = nodes.aggregate(resource_size=Sum('files__file_size'))
 
-    return HttpResponse(json.dumps({'success': True, 'size': sizes['resource_size'] or 0}))
+    return Response({'success': True, 'size': sizes['resource_size'] or 0})
 
 
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
 @api_view(['GET'])
 def get_nodes_by_ids(request, ids):
     nodes = ContentNode.objects.prefetch_related('children', 'files', 'assessment_items', 'tags')\
                        .filter(pk__in=ids.split(","))\
                        .defer('node_id', 'original_source_node_id', 'source_node_id', 'content_id',
                               'original_channel_id', 'source_channel_id', 'source_id', 'source_domain', 'created', 'modified')
+    request.user.can_view_nodes(nodes)
     serializer = ContentNodeSerializer(nodes, many=True)
     return Response(serializer.data)
 
 
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
+@api_view(['GET'])
 def get_node_path(request, topic_id, tree_id, node_id):
     try:
         topic = ContentNode.objects.prefetch_related('children').get(node_id__startswith=topic_id, tree_id=tree_id)
+        request.user.can_view_node(topic)
 
         if topic.kind_id != content_kinds.TOPIC:
             node = ContentNode.objects.prefetch_related('files', 'assessment_items', 'tags').get(node_id__startswith=topic_id, tree_id=tree_id)
@@ -177,29 +188,37 @@ def get_node_path(request, topic_id, tree_id, node_id):
             node = node_id and ContentNode.objects.prefetch_related('files', 'assessment_items', 'tags').get(node_id__startswith=node_id, tree_id=tree_id)
             nodes = topic.get_ancestors(include_self=True, ascending=True)
 
-        return HttpResponse(json.dumps({
-            'path': JSONRenderer().render(ContentNodeSerializer(nodes, many=True).data),
-            'node': node and JSONRenderer().render(ContentNodeEditSerializer(node).data),
+        return Response({
+            'path': ContentNodeSerializer(nodes, many=True).data,
+            'node': node and ContentNodeEditSerializer(node).data,
             'parent_node_id': topic.kind_id != content_kinds.TOPIC and node.parent and node.parent.node_id
-        }))
+        })
     except ObjectDoesNotExist:
         return HttpResponseNotFound("Invalid URL: the referenced content does not exist in this channel.")
 
 
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
 @api_view(['GET'])
 def get_nodes_by_ids_simplified(request, ids):
     nodes = ContentNode.objects.prefetch_related('children').filter(pk__in=ids.split(","))
+    request.user.can_view_nodes(nodes)
     serializer = SimplifiedContentNodeSerializer(nodes, many=True)
     return Response(serializer.data)
 
 
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
 @api_view(['GET'])
 def get_nodes_by_ids_complete(request, ids):
     nodes = ContentNode.objects.prefetch_related('children', 'files', 'assessment_items', 'tags').filter(pk__in=ids.split(","))
+    request.user.can_view_nodes(nodes)
     serializer = ContentNodeEditSerializer(nodes, many=True)
     return Response(serializer.data)
 
 
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
 @api_view(['GET'])
 def get_topic_details(request, contentnode_id):
     """ Generates data for topic contents. Used for look-inside previews
@@ -208,6 +227,7 @@ def get_topic_details(request, contentnode_id):
     """
     # Get nodes and channel
     node = ContentNode.objects.get(pk=contentnode_id)
+    request.user.can_view_node(node)
     data = get_node_details_cached(node)
     return HttpResponse(json.dumps(data))
 
@@ -239,11 +259,8 @@ def get_node_details_cached(node):
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
+@api_view(['POST'])
 def delete_nodes(request):
-    logging.debug("Entering the copy_node endpoint")
-
-    if request.method != 'POST':
-        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
 
     data = json.loads(request.body)
 
@@ -252,6 +269,7 @@ def delete_nodes(request):
         channel_id = data["channel_id"]
         request.user.can_edit(channel_id)
         nodes = ContentNode.objects.filter(pk__in=nodes)
+        request.user.can_edit_nodes(nodes)
         for node in nodes:
             if node.parent and not node.parent.changed:
                 node.parent.changed = True
@@ -261,16 +279,14 @@ def delete_nodes(request):
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
-    return HttpResponse(json.dumps({'success': True}))
+    return Response({'success': True})
 
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
+@api_view(['POST'])
 def duplicate_nodes(request):
     logging.debug("Entering the copy_node endpoint")
-
-    if request.method != 'POST':
-        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
 
     data = json.loads(request.body)
 
@@ -294,16 +310,14 @@ def duplicate_nodes(request):
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
     serialized = ContentNodeSerializer(ContentNode.objects.filter(pk__in=new_nodes), many=True).data
-    return HttpResponse(JSONRenderer().render(serialized))
+    return Response(serialized)
 
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
+@api_view(['POST'])
 def duplicate_node_inline(request):
     logging.debug("Entering the copy_node endpoint")
-
-    if request.method != 'POST':
-        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
 
     data = json.loads(request.body)
 
@@ -327,7 +341,7 @@ def duplicate_node_inline(request):
                     new_node.title = new_node.title + _(" (Copy)")
                     new_node.save()
 
-        return HttpResponse(JSONRenderer().render(ContentNodeSerializer(ContentNode.objects.filter(pk=new_node.pk), many=True).data))
+        return Response(ContentNodeSerializer(ContentNode.objects.filter(pk=new_node.pk), many=True).data)
 
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
@@ -455,11 +469,9 @@ def _duplicate_node_bulk_recursive(node, sort_order, parent, channel_id, to_crea
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
+@api_view(['POST'])
 def move_nodes(request):
     logging.debug("Entering the move_nodes endpoint")
-
-    if request.method != 'POST':
-        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
 
     data = json.loads(request.body)
 
@@ -523,17 +535,16 @@ def _move_node(node, parent=None, sort_order=None, channel_id=None):
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
+@api_view(['POST'])
 def sync_nodes(request):
     logging.debug("Entering the sync_nodes endpoint")
-
-    if request.method != 'POST':
-        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
 
     data = json.loads(request.body)
 
     try:
         nodes = data["nodes"]
         channel_id = data['channel_id']
+        request.user.can_edit(channel_id)
 
     except KeyError:
         return ObjectDoesNotExist("Missing attribute from data: {}".format(data))
@@ -545,7 +556,7 @@ def sync_nodes(request):
             if node.changed:
                 node.save()
             all_nodes.append(node)
-    return HttpResponse(JSONRenderer().render(ContentNodeSerializer(all_nodes, many=True).data))
+    return Response(ContentNodeSerializer(all_nodes, many=True).data)
 
 
 def _sync_node(node, channel_id, sync_attributes=False, sync_tags=False, sync_files=False, sync_assessment_items=False, sync_sort_order=False):
@@ -570,15 +581,14 @@ def _sync_node(node, channel_id, sync_attributes=False, sync_tags=False, sync_fi
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
+@api_view(['POST'])
 def sync_channel_endpoint(request):
     logging.debug("Entering the sync_nodes endpoint")
-
-    if request.method != 'POST':
-        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
 
     data = json.loads(request.body)
 
     try:
+        request.user.can_edit(data['channel_id'])
         nodes = sync_channel(
             Channel.objects.get(pk=data['channel_id']),
             sync_attributes=data.get('attributes'),
@@ -588,7 +598,7 @@ def sync_channel_endpoint(request):
             sync_sort_order=data.get('sort'),
         )
 
-        return HttpResponse(JSONRenderer().render(ContentNodeSerializer(nodes, many=True).data))
+        return Response(ContentNodeSerializer(nodes, many=True).data)
     except KeyError:
         return ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 

@@ -11,15 +11,13 @@ from rest_framework.reverse import reverse
 from contentcuration.models import Channel
 from contentcuration.models import ContentKind
 from contentcuration.models import ContentNode
-from contentcuration.views.nodes import get_topic_details
 
 
 class NodeViewsUtilityTestCase(BaseAPITestCase):
     def test_get_topic_details(self):
         node_pk = self.channel.main_tree.pk
         url = reverse('get_topic_details', [node_pk])
-        request = self.create_get_request(url)
-        response = get_topic_details(request, node_pk)
+        response = self.get(url)
 
         details = json.loads(response.content)
         assert details['resource_count'] > 0
@@ -37,8 +35,7 @@ class NodeViewsUtilityTestCase(BaseAPITestCase):
         cache.set(cache_key, json.dumps(data))
 
         url = reverse('get_topic_details', [node_pk])
-        request = self.create_get_request(url)
-        get_topic_details(request, node_pk)
+        self.get(url)
 
         # the response will contain the invalid cache entry that we set above, but if we retrieve the cache
         # now it will be updated with the correct values.
