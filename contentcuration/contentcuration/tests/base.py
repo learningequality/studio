@@ -96,6 +96,7 @@ class BaseTestCase(StudioTestCase):
         super(BaseTestCase, self).setUp()
         self.channel = testdata.channel()
         self.user = testdata.user()
+        self.channel.editors.add(self.user)
         self.channel.main_tree.refresh_from_db()
 
     def sign_in(self, user=None):
@@ -117,6 +118,7 @@ class BaseAPITestCase(StudioAPITestCase):
         super(BaseAPITestCase, self).setUp()
         self.channel = testdata.channel()
         self.user = testdata.user()
+        self.channel.editors.add(self.user)
         token, _new = Token.objects.get_or_create(user=self.user)
         self.header = {"Authorization": "Token {0}".format(token)}
         self.client = APIClient()

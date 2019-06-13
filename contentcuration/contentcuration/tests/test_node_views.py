@@ -8,7 +8,9 @@ from django.core.cache import cache
 from le_utils.constants import content_kinds
 from rest_framework.reverse import reverse
 
+from contentcuration.models import Channel
 from contentcuration.models import ContentKind
+from contentcuration.models import ContentNode
 from contentcuration.views.nodes import get_topic_details
 
 
@@ -85,3 +87,11 @@ class GetPrerequisitesTestCase(BaseAPITestCase):
         self.assertTrue(len(filter(lambda x: x["id"] == self.node2.id, tree_nodes)) > 0)
         self.assertTrue(len(filter(lambda x: x["id"] == self.prereq.id, tree_nodes)) > 0)
         self.assertTrue(len(filter(lambda x: x["id"] == self.postreq.id, tree_nodes)) > 0)
+
+    def test_get_prerequisites_no_permissions(self):
+        channel = Channel.objects.create()
+        node = ContentNode.objects.create(kind=ContentKind.objects.get(kind=content_kinds.TOPIC))
+        channel.main_tree = node
+        channel.save()
+        response = self.get(reverse("get_prerequisites", kwargs={"get_prerequisites": "false", "ids": node.id}))
+        self.assertEqual(response.status_code, 403)

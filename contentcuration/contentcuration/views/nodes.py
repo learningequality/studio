@@ -121,6 +121,8 @@ def create_new_node(request):
 def get_prerequisites(request, get_prerequisites, ids):
     nodes = ContentNode.objects.prefetch_related('prerequisite').filter(pk__in=ids.split(","))
 
+    request.user.can_view_nodes(nodes)
+
     prerequisite_mapping = {}
     postrequisite_mapping = {}
     prerequisite_tree_nodes = []
