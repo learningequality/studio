@@ -154,6 +154,24 @@ class User(AbstractBaseUser, PermissionsMixin):
             raise PermissionDenied("Cannot view content")
         return True
 
+    def can_view_nodes(self, nodes):
+        if self.is_admin:
+            return True
+        root_nodes = ContentNode.objects.filter(parent=None, tree_id__in=nodes.values_list("tree_id", flat=True).distinct()).distinct()
+        channels = Channel.objects.filter(Q(main_tree__in=root_nodes)
+                                          | Q(chef_tree__in=root_nodes)
+                                          | Q(trash_tree__in=root_nodes)
+                                          | Q(staging_tree__in=root_nodes)
+                                          | Q(previous_tree__in=root_nodes))
+        channels_user_has_perms_for = channels.filter(Q(editors__id__contains=self.id) | Q(viewers__id__contains=self.id))
+        # The channel user has perms for is a subset of all the channels that were passed in.
+        # We check the count for simplicity, as if the user does not have permissions for
+        # even one of the channels the content is drawn from, then the number of channels
+        # will be smaller.
+        if channels.distinct().count() > channels_user_has_perms_for.distinct().count():
+            raise PermissionDenied("Cannot view content")
+        return True
+
     def check_space(self, size, checksum):
         active_files = self.get_user_active_files()
         if checksum in active_files.values_list('checksum', flat=True):

@@ -1,4 +1,3 @@
-import ast
 import copy
 import json
 import logging
@@ -19,7 +18,6 @@ from django.http import HttpResponseNotFound
 from django.utils.translation import ugettext as _
 from le_utils.constants import content_kinds
 from le_utils.constants import format_presets
-from le_utils.constants import roles
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import api_view
@@ -34,8 +32,6 @@ from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import ContentTag
 from contentcuration.models import File
-from contentcuration.models import generate_storage_url
-from contentcuration.models import Language
 from contentcuration.models import License
 from contentcuration.models import PrerequisiteContentRelationship
 from contentcuration.serializers import ContentNodeEditSerializer
@@ -122,8 +118,10 @@ def create_new_node(request):
 
 
 @api_view(['GET'])
-def get_prerequisites(request, get_prerequisites, ids):
+def get_prerequisites(request, get_postrequisites, ids):
     nodes = ContentNode.objects.prefetch_related('prerequisite').filter(pk__in=ids.split(","))
+
+    request.user.can_view_nodes(nodes)
 
     prerequisite_mapping = {}
     postrequisite_mapping = {}
@@ -131,7 +129,7 @@ def get_prerequisites(request, get_prerequisites, ids):
 
     for n in nodes:
         prereqs, prereqmapping = n.get_prerequisites()
-        if get_prerequisites == "true":
+        if get_postrequisites == "true":
             postreqs, postreqmapping = n.get_postrequisites()
             postrequisite_mapping.update(postreqmapping)
             prerequisite_mapping.update(prereqmapping)
@@ -140,11 +138,11 @@ def get_prerequisites(request, get_prerequisites, ids):
             prerequisite_mapping.update({n.pk: prereqmapping})
             prerequisite_tree_nodes += prereqs + [n]
 
-    return HttpResponse(json.dumps({
+    return Response({
         "prerequisite_mapping": prerequisite_mapping,
         "postrequisite_mapping": postrequisite_mapping,
-        "prerequisite_tree_nodes": JSONRenderer().render(SimplifiedContentNodeSerializer(prerequisite_tree_nodes, many=True).data),
-    }))
+        "prerequisite_tree_nodes": SimplifiedContentNodeSerializer(prerequisite_tree_nodes, many=True).data,
+    })
 
 
 @api_view(['GET'])
@@ -226,8 +224,8 @@ def get_node_details_cached(node):
         # Otherwise, find the last time anything was updated in the channel
         last_update = channel.main_tree.created if channel and channel.ricecooker_version else \
             descendants.filter(changed=True) \
-                .aggregate(latest_update=Max('modified')) \
-                .get('latest_update')
+            .aggregate(latest_update=Max('modified')) \
+            .get('latest_update')
 
         if last_update:
             last_cache_update = datetime.strptime(json.loads(cached_data)['last_update'], settings.DATE_TIME_FORMAT)
