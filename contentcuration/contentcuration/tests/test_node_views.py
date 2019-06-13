@@ -60,7 +60,7 @@ class GetPrerequisitesTestCase(BaseAPITestCase):
         self.postreq.prerequisite.add(self.node1, self.node2)
 
     def test_get_prerequisites_only(self):
-        response = self.get(reverse("get_prerequisites", kwargs={"get_prerequisites": "false", "ids": ",".join((self.node1.id, self.node2.id))}))
+        response = self.get(reverse("get_prerequisites", kwargs={"get_postrequisites": "false", "ids": ",".join((self.node1.id, self.node2.id))}))
         prerequisites = response.json()["prerequisite_mapping"]
         self.assertTrue(self.prereq.id in prerequisites[self.node1.id])
         self.assertTrue(self.prereq.id in prerequisites[self.node2.id])
@@ -68,12 +68,12 @@ class GetPrerequisitesTestCase(BaseAPITestCase):
     def test_get_postrequisites(self):
         postpostreq = self.channel.main_tree.get_descendants().exclude(kind=ContentKind.objects.get(kind=content_kinds.TOPIC))[4:5][0]
         postpostreq.prerequisite.add(self.postreq)
-        response = self.get(reverse("get_prerequisites", kwargs={"get_prerequisites": "true", "ids": ",".join((self.node1.id, self.node2.id))}))
+        response = self.get(reverse("get_prerequisites", kwargs={"get_postrequisites": "true", "ids": ",".join((self.node1.id, self.node2.id))}))
         postrequisites = response.json()["postrequisite_mapping"]
         self.assertTrue(postpostreq.id in postrequisites[self.postreq.id])
 
     def test_get_prerequisites_only_check_nodes(self):
-        response = self.get(reverse("get_prerequisites", kwargs={"get_prerequisites": "false", "ids": ",".join((self.node1.id, self.node2.id))}))
+        response = self.get(reverse("get_prerequisites", kwargs={"get_postrequisites": "false", "ids": ",".join((self.node1.id, self.node2.id))}))
         tree_nodes = response.json()["prerequisite_tree_nodes"]
         self.assertTrue(len(filter(lambda x: x["id"] == self.node1.id, tree_nodes)) > 0)
         self.assertTrue(len(filter(lambda x: x["id"] == self.node2.id, tree_nodes)) > 0)
@@ -81,7 +81,7 @@ class GetPrerequisitesTestCase(BaseAPITestCase):
         self.assertTrue(len(filter(lambda x: x["id"] == self.postreq.id, tree_nodes)) == 0)
 
     def test_get_postrequisites_check_nodes(self):
-        response = self.get(reverse("get_prerequisites", kwargs={"get_prerequisites": "true", "ids": ",".join((self.node1.id, self.node2.id))}))
+        response = self.get(reverse("get_prerequisites", kwargs={"get_postrequisites": "true", "ids": ",".join((self.node1.id, self.node2.id))}))
         tree_nodes = response.json()["prerequisite_tree_nodes"]
         self.assertTrue(len(filter(lambda x: x["id"] == self.node1.id, tree_nodes)) > 0)
         self.assertTrue(len(filter(lambda x: x["id"] == self.node2.id, tree_nodes)) > 0)
@@ -93,5 +93,5 @@ class GetPrerequisitesTestCase(BaseAPITestCase):
         node = ContentNode.objects.create(kind=ContentKind.objects.get(kind=content_kinds.TOPIC))
         channel.main_tree = node
         channel.save()
-        response = self.get(reverse("get_prerequisites", kwargs={"get_prerequisites": "false", "ids": node.id}))
+        response = self.get(reverse("get_prerequisites", kwargs={"get_postrequisites": "false", "ids": node.id}))
         self.assertEqual(response.status_code, 403)
