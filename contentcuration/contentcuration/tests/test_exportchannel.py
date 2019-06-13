@@ -11,7 +11,7 @@ from kolibri_content.router import using_content_database
 from mixer.backend.django import mixer
 from mock import patch
 
-from .testdata import create_temp_file
+from .testdata import create_studio_file
 from .testdata import exercise
 from .testdata import slideshow
 from .testdata import topic
@@ -37,7 +37,7 @@ def fileobj_video(contents=None):
     else:
         filecontents = "".join(random.sample(string.printable, 20))
     # leverage existing function in testdata
-    file_data = create_temp_file(filecontents, preset='high_res_video', ext='mp4')
+    file_data = create_studio_file(filecontents, preset='high_res_video', ext='mp4')
     return file_data['db_file']
 
 

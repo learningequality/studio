@@ -20,6 +20,7 @@ from contentcuration.utils import minio_utils
 from contentcuration.utils.policies import get_latest_policies
 
 
+
 class BucketTestMixin:
     """
     Handles bucket setup and tear down for test classes. If you want your entire TestCase to share the same bucket,
@@ -69,7 +70,7 @@ class StudioTestCase(TestCase, BucketTestMixin):
         """
         Uploads a file to the server using an authorized client.
         """
-        fileobj_temp = testdata.create_temp_file(data, preset=preset, ext=ext)
+        fileobj_temp = testdata.create_studio_file(data, preset=preset, ext=ext)
         name = fileobj_temp['name']
 
         f = SimpleUploadedFile(name, data)
