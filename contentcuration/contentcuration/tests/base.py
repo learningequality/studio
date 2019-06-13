@@ -123,7 +123,6 @@ class BaseAPITestCase(StudioAPITestCase):
         self.channel = testdata.channel()
         self.user = testdata.user()
         self.channel.editors.add(self.user)
-        token, _new = Token.objects.get_or_create(user=self.user)
         self.token, _new = Token.objects.get_or_create(user=self.user)
         self.client = APIClient()
         self.client.force_authenticate(self.user)   # This will skip all authentication checks
