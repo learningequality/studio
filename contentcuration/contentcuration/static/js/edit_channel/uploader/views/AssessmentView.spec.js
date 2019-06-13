@@ -23,6 +23,10 @@ const EDIT_MODAL_STATE = {
           question: 'Exercise 1 - Question 1',
           type: AssessmentItemTypes.SINGLE_SELECTION,
           order: 0,
+          answers: JSON.stringify([
+            { answer: 'Blue', correct: false, order: 1 },
+            { answer: 'Yellow', correct: true, order: 2 },
+          ]),
         },
       ],
     },
@@ -35,18 +39,31 @@ const EDIT_MODAL_STATE = {
           question: 'Exercise 2 - Question 2',
           type: AssessmentItemTypes.SINGLE_SELECTION,
           order: 1,
+          answers: JSON.stringify([
+            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+            { answer: 'Peanut butter', correct: false, order: 2 },
+          ]),
         },
         {
           id: 2,
           question: 'Exercise 2 - Question 3',
           type: AssessmentItemTypes.MULTIPLE_SELECTION,
           order: 2,
+          answers: JSON.stringify([
+            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+            { answer: 'Peanut butter', correct: false, order: 2 },
+            { answer: 'Jelly', correct: true, order: 3 },
+          ]),
         },
         {
           id: 1,
           question: 'Exercise 2 - Question 1',
           type: AssessmentItemTypes.INPUT_QUESTION,
           order: 0,
+          answers: JSON.stringify([
+            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+            { answer: 'Peanut butter', correct: true, order: 2 },
+          ]),
         },
       ],
     },
@@ -59,6 +76,13 @@ const clickNewQuestionBtn = wrapper => {
     .find('[data-test=newQuestionBtn]')
     .find('button')
     .trigger('click');
+};
+
+const checkShowAnswers = wrapper => {
+  wrapper
+    .find('[data-test=showAnswersCheckbox]')
+    .find('input')
+    .setChecked(true);
 };
 
 const getAssessmentItems = wrapper => {
@@ -125,6 +149,20 @@ describe('AssessmentView', () => {
       expect(isAssessmentItemOpen(assessmentItems.at(0))).toBe(false);
       expect(isAssessmentItemOpen(assessmentItems.at(1))).toBe(false);
       expect(isAssessmentItemOpen(assessmentItems.at(2))).toBe(false);
+    });
+
+    it("doesn't render answers preview by default", () => {
+      expect(wrapper.html()).not.toContain('Mayonnaise (I mean you can, but...)');
+      expect(wrapper.html()).not.toContain('Peanut butter');
+      expect(wrapper.html()).not.toContain('Jelly');
+    });
+
+    it('renders answers preview on show answers click', () => {
+      checkShowAnswers(wrapper);
+
+      expect(wrapper.html()).toContain('Mayonnaise (I mean you can, but...)');
+      expect(wrapper.html()).toContain('Peanut butter');
+      expect(wrapper.html()).toContain('Jelly');
     });
   });
 

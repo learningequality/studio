@@ -1,5 +1,11 @@
 <template>
   <VContainer>
+    <VCheckbox
+      v-model="displayAnswersPreview"
+      label="Show answers"
+      data-test="showAnswersCheckbox"
+    />
+
     <VExpansionPanel
       v-if="assessmentItems && assessmentItems.length"
       v-model="openItemIdx"
@@ -11,6 +17,7 @@
         :item="item"
         :itemIdx="idx"
         :isOpen="idx === openItemIdx"
+        :displayAnswersPreview="displayAnswersPreview"
         @update="updateItem"
         @close="closeItem"
       />
@@ -44,6 +51,7 @@
     data() {
       return {
         openItemIdx: null,
+        displayAnswersPreview: false,
       };
     },
     computed: {
