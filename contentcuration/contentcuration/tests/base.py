@@ -123,33 +123,33 @@ class BaseAPITestCase(StudioAPITestCase):
         self.user = testdata.user()
         self.channel.editors.add(self.user)
         token, _new = Token.objects.get_or_create(user=self.user)
-        self.header = {"Authorization": "Token {0}".format(token)}
+        self.token, _new = Token.objects.get_or_create(user=self.user)
         self.client = APIClient()
-        self.client.force_authenticate(self.user)
+        self.client.force_authenticate(self.user)   # This will skip all authentication checks
         self.channel.main_tree.refresh_from_db()
 
     def delete(self, url):
-        return self.client.delete(url, headers=self.header)
+        return self.client.delete(url)
 
     def get(self, url):
-        return self.client.get(url, headers=self.header)
+        return self.client.get(url)
 
     def post(self, url, data, format='json'):
-        return self.client.post(url, data, headers=self.header, format=format)
+        return self.client.post(url, data, format=format)
 
     def put(self, url, data, format='json'):
-        return self.client.put(url, data, headers=self.header, format=format)
+        return self.client.put(url, data, format=format)
 
     def create_get_request(self, url, *args, **kwargs):
         factory = APIRequestFactory()
-        request = factory.get(url, headers=self.header, *args, **kwargs)
+        request = factory.get(url, *args, **kwargs)
         request.user = self.user
         force_authenticate(request, user=self.user)
         return request
 
     def create_post_request(self, url, *args, **kwargs):
         factory = APIRequestFactory()
-        request = factory.post(url, headers=self.header, *args, **kwargs)
+        request = factory.post(url, *args, **kwargs)
         request.user = self.user
         force_authenticate(request, user=self.user)
         return request

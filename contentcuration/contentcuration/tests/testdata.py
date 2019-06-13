@@ -188,10 +188,11 @@ def channel():
 
 
 def user():
-    user = cc.User.objects.create(email='user@test.com')
-    user.set_password('password')
-    user.is_active = True
-    user.save()
+    user, is_new = cc.User.objects.get_or_create(email='user@test.com')
+    if is_new:
+        user.set_password('password')
+        user.is_active = True
+        user.save()
     return user
 
 
