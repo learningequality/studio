@@ -165,7 +165,7 @@ def filter_out_nones(data):
     return (l for l in data if l)
 
 
-def duplicate_node_bulk(node, sort_order=None, parent=None, channel_id=None, user=None):
+def duplicate_node_bulk(node, sort_order=None, parent=None, channel_id=None, user=None, task_object=None):
     if isinstance(node, int) or isinstance(node, basestring):
         node = ContentNode.objects.get(pk=node)
 
@@ -179,6 +179,18 @@ def duplicate_node_bulk(node, sort_order=None, parent=None, channel_id=None, use
 
     # perform the actual recursive node cloning
     new_node = _duplicate_node_bulk_recursive(node=node, sort_order=sort_order, parent=parent, channel_id=channel_id, to_create=to_create, user=user)
+    node_percent = 0
+    this_node_percent = 0
+
+    if task_object:
+        task_object.progress += 15
+        task_object.update_state(state='STARTED', meta={'progress': task_object.progress})
+
+        num_nodes_to_create = len(to_create["nodes"]) + 2
+        node_copy_total_percent = 75.0
+        this_node_percent = node_copy_total_percent / task_object.root_nodes_to_copy
+
+        node_percent = this_node_percent / num_nodes_to_create
 
     # create nodes, one level at a time, starting from the top of the tree (so that we have IDs to pass as "parent" for next level down)
     for node_level in to_create["nodes"]:
@@ -188,6 +200,10 @@ def duplicate_node_bulk(node, sort_order=None, parent=None, channel_id=None, use
         for node in node_level:
             for tag in node._meta.tags_to_add:
                 node.tags.add(tag)
+
+        if task_object:
+            task_object.progress += node_percent
+            task_object.update_state(state='STARTED', meta={'progress': task_object.progress})
 
     # rebuild MPTT tree for this channel (since we're inside "disable_mptt_updates", and bulk_create doesn't trigger rebuild signals anyway)
     ContentNode.objects.partial_rebuild(to_create["nodes"][0][0].tree_id)
@@ -200,6 +216,10 @@ def duplicate_node_bulk(node, sort_order=None, parent=None, channel_id=None, use
         ai_node_ids.append(a.contentnode_id)
     AssessmentItem.objects.bulk_create(to_create["assessments"])
 
+    if task_object:
+        task_object.progress += node_percent
+        task_object.update_state(state='STARTED', meta={'progress': task_object.progress})
+
     # build up a mapping of contentnode/assessment_id onto assessment item IDs, so we can point files to them correctly after
     aid_mapping = {}
     for a in AssessmentItem.objects.filter(contentnode_id__in=ai_node_ids):
@@ -211,6 +231,10 @@ def duplicate_node_bulk(node, sort_order=None, parent=None, channel_id=None, use
     for f in to_create["assessment_files"]:
         f.assessment_item_id = aid_mapping[f.assessment_item.contentnode_id + ":" + f.assessment_item.assessment_id]
     File.objects.bulk_create(to_create["node_files"] + to_create["assessment_files"])
+
+    if task_object:
+        task_object.progress += min(this_node_percent, node_percent)
+        task_object.update_state(state='STARTED', meta={'progress': task_object.progress})
 
     return new_node
 
