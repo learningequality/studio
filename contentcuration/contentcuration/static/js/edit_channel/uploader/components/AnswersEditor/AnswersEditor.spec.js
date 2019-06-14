@@ -96,6 +96,22 @@ describe('AnswersEditor', () => {
     it('renders new answer button', () => {
       expect(rendersNewAnswerBtn(wrapper)).toBe(true);
     });
+
+    describe('on new answer button click', () => {
+      beforeEach(() => {
+        clickNewAnswerBtn(wrapper);
+      });
+
+      it('emits update event with a payload containing all answers + new answer which is wrong by default', () => {
+        expect(wrapper.emitted().update).toBeTruthy();
+        expect(wrapper.emitted().update.length).toBe(1);
+        expect(wrapper.emitted().update[0][0]).toEqual([
+          { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+          { answer: 'Peanut butter', correct: false, order: 2 },
+          { answer: '', correct: false, order: 3 },
+        ]);
+      });
+    });
   });
 
   describe('for a multiple selection question', () => {
@@ -142,6 +158,23 @@ describe('AnswersEditor', () => {
 
     it('renders new answer button', () => {
       expect(rendersNewAnswerBtn(wrapper)).toBe(true);
+    });
+
+    describe('on new answer button click', () => {
+      beforeEach(() => {
+        clickNewAnswerBtn(wrapper);
+      });
+
+      it('emits update event with a payload containing all answers + new answer which is wrong by default', () => {
+        expect(wrapper.emitted().update).toBeTruthy();
+        expect(wrapper.emitted().update.length).toBe(1);
+        expect(wrapper.emitted().update[0][0]).toEqual([
+          { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+          { answer: 'Peanut butter', correct: false, order: 2 },
+          { answer: 'Jelly', correct: true, order: 3 },
+          { answer: '', correct: false, order: 4 },
+        ]);
+      });
     });
   });
 
@@ -214,6 +247,22 @@ describe('AnswersEditor', () => {
     it('renders new answer button', () => {
       expect(rendersNewAnswerBtn(wrapper)).toBe(true);
     });
+
+    describe('on new answer button click', () => {
+      beforeEach(() => {
+        clickNewAnswerBtn(wrapper);
+      });
+
+      it('emits update event with a payload containing all answers + new answer which is correct', () => {
+        expect(wrapper.emitted().update).toBeTruthy();
+        expect(wrapper.emitted().update.length).toBe(1);
+        expect(wrapper.emitted().update[0][0]).toEqual([
+          { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+          { answer: 'Peanut butter', correct: true, order: 2 },
+          { answer: '', correct: true, order: 3 },
+        ]);
+      });
+    });
   });
 
   describe('on toggle click', () => {
@@ -241,32 +290,6 @@ describe('AnswersEditor', () => {
 
       clickAnswerToggle(wrapper, answerIdx);
       expect(wrapper.contains('[data-test=editAnswerTextInput]')).toBe(false);
-    });
-  });
-
-  describe('on new answer button click', () => {
-    beforeEach(() => {
-      wrapper = mount(AnswersEditor, {
-        propsData: {
-          questionKind: AssessmentItemTypes.SINGLE_SELECTION,
-          answers: [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-            { answer: 'Peanut butter', correct: false, order: 2 },
-          ],
-        },
-      });
-
-      clickNewAnswerBtn(wrapper);
-    });
-
-    it('emits update event with a payload containing all answers + new answer', () => {
-      expect(wrapper.emitted().update).toBeTruthy();
-      expect(wrapper.emitted().update.length).toBe(1);
-      expect(wrapper.emitted().update[0][0]).toEqual([
-        { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-        { answer: 'Peanut butter', correct: false, order: 2 },
-        { answer: '', correct: false, order: 3 },
-      ]);
     });
   });
 

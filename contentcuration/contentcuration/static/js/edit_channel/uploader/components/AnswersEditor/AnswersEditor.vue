@@ -220,9 +220,10 @@
           updatedAnswers = [...this.answers];
         }
 
+        const defaultCorrectState = this.isInputQuestion ? true : false;
         updatedAnswers.push({
           answer: '',
-          correct: false,
+          correct: defaultCorrectState,
           order: updatedAnswers.length + 1,
         });
 
