@@ -183,6 +183,17 @@ class User(AbstractBaseUser, PermissionsMixin):
             raise PermissionDenied("Cannot view content")
         return True
 
+    def can_edit_node(self, node):
+        if self.is_admin:
+            return True
+        root = node.get_root()
+        channel_id = Channel.objects.filter(Q(main_tree=root)
+                                            | Q(chef_tree=root)
+                                            | Q(trash_tree=root)
+                                            | Q(staging_tree=root)
+                                            | Q(previous_tree=root)).values_list("id", flat=True).first()
+        return self.can_edit(channel_id)
+
     def can_edit_nodes(self, nodes):
         if self.is_admin:
             return True
