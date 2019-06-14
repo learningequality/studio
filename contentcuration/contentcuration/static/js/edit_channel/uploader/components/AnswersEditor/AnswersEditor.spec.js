@@ -18,6 +18,14 @@ const clickAnswerToggle = (wrapper, answerIdx) => {
     .trigger('click');
 };
 
+const rendersAnswerToggle = wrapper => {
+  return wrapper.contains('[data-test=answerToggle]');
+};
+
+const rendersNewAnswerBtn = wrapper => {
+  return wrapper.contains('[data-test=newAnswerBtn]');
+};
+
 const updateOpenAnswerText = (wrapper, newAnswerText) => {
   // only one answer can be open
   wrapper.find('[data-test=editAnswerTextInput]').setValue(newAnswerText);
@@ -80,6 +88,14 @@ describe('AnswersEditor', () => {
       expect(inputs.at(0).element.checked).toBe(true);
       expect(inputs.at(1).element.checked).toBe(false);
     });
+
+    it('renders toggle', () => {
+      expect(rendersAnswerToggle(wrapper)).toBe(true);
+    });
+
+    it('renders new answer button', () => {
+      expect(rendersNewAnswerBtn(wrapper)).toBe(true);
+    });
   });
 
   describe('for a multiple selection question', () => {
@@ -119,6 +135,14 @@ describe('AnswersEditor', () => {
       expect(inputs.at(1).element.checked).toBe(false);
       expect(inputs.at(2).element.checked).toBe(true);
     });
+
+    it('renders toggle', () => {
+      expect(rendersAnswerToggle(wrapper)).toBe(true);
+    });
+
+    it('renders new answer button', () => {
+      expect(rendersNewAnswerBtn(wrapper)).toBe(true);
+    });
   });
 
   describe('for a true/false question', () => {
@@ -155,6 +179,14 @@ describe('AnswersEditor', () => {
       expect(inputs.at(0).element.checked).toBe(false);
       expect(inputs.at(1).element.checked).toBe(true);
     });
+
+    it('does not render toggle', () => {
+      expect(rendersAnswerToggle(wrapper)).toBe(false);
+    });
+
+    it('does not render new answer button', () => {
+      expect(rendersNewAnswerBtn(wrapper)).toBe(false);
+    });
   });
 
   describe('for an input question', () => {
@@ -173,6 +205,14 @@ describe('AnswersEditor', () => {
     it('renders all possible answers', () => {
       expect(wrapper.html()).toContain('Mayonnaise (I mean you can, but...)');
       expect(wrapper.html()).toContain('Peanut butter');
+    });
+
+    it('renders toggle', () => {
+      expect(rendersAnswerToggle(wrapper)).toBe(true);
+    });
+
+    it('renders new answer button', () => {
+      expect(rendersNewAnswerBtn(wrapper)).toBe(true);
     });
   });
 

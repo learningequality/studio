@@ -81,6 +81,7 @@
           </VFlex>
 
           <Toggle
+            v-if="isEditingAllowed"
             :isOpen="isAnswerOpen(answerIdx)"
             data-test="answerToggle"
             @close="closeAnswer"
@@ -91,6 +92,7 @@
     </VCard>
 
     <VBtn
+      v-if="isEditingAllowed"
       flat
       data-test="newAnswerBtn"
       @click="addNewAnswer"
@@ -153,6 +155,9 @@
       hasOneCorrectAnswer() {
         return questionHasOneCorrectAnswer(this.questionKind);
       },
+      isEditingAllowed() {
+        return !this.isTrueFalse;
+      },
     },
     watch: {
       answers() {
@@ -174,7 +179,7 @@
 
         const updatedAnswers = mapCorrectAnswers(this.answers, this.correctAnswersIndices);
 
-        this.$emit('update', updatedAnswers);
+        this.emitUpdate(updatedAnswers);
       },
     },
     methods: {
@@ -206,7 +211,7 @@
         const updatedAnswers = [...this.answers];
         updatedAnswers[answerIdx].answer = newAnswerText;
 
-        this.$emit('update', updatedAnswers);
+        this.emitUpdate(updatedAnswers);
       },
       addNewAnswer() {
         let updatedAnswers = [];
@@ -221,8 +226,11 @@
           order: updatedAnswers.length + 1,
         });
 
-        this.$emit('update', updatedAnswers);
+        this.emitUpdate(updatedAnswers);
         this.openAnswer(updatedAnswers.length - 1);
+      },
+      emitUpdate(updatedAnswers) {
+        this.$emit('update', updatedAnswers);
       },
     },
   };
