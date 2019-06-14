@@ -69,6 +69,12 @@
           </VFlex>
         </VLayout>
 
+        <AnswersEditor
+          :questionKind="kind"
+          :answers="answers"
+          @update="onAnswersChange"
+        />
+
         <VDivider />
 
         <!-- eslint-disable-next-line -->
@@ -105,11 +111,13 @@
 <script>
 
   import { AssessmentItemTypes } from '../../constants';
+  import AnswersEditor from '../AnswersEditor/AnswersEditor.vue';
   import AnswersPreview from '../AnswersPreview/AnswersPreview.vue';
 
   export default {
     name: 'AssessmentItem',
     components: {
+      AnswersEditor,
       AnswersPreview,
     },
     props: {
@@ -178,6 +186,9 @@
       },
       onKindChange(newKind) {
         this.$emit('update', { itemIdx: this.itemIdx, payload: { type: newKind } });
+      },
+      onAnswersChange(newAnswers) {
+        this.$emit('update', { itemIdx: this.itemIdx, payload: { answers: newAnswers } });
       },
       onCloseClick() {
         this.$emit('close');
