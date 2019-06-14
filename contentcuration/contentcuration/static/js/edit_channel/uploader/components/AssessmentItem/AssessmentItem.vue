@@ -69,22 +69,6 @@
           </VFlex>
         </VLayout>
 
-        <!-- TODO @MisRob: Find out which linter tool is removing
-        dashes from Vuetify attributes and disable -->
-        <!-- eslint-disable-next-line -->
-        <VLayout row mt-3>
-          <div class="grey--text text--darken-1 mb-3">
-            Answers
-          </div>
-        </VLayout>
-
-        <!-- eslint-disable-next-line -->
-        <VLayout row mb-3>
-          <VBtn flat>
-            New answer
-          </VBtn>
-        </VLayout>
-
         <VDivider />
 
         <!-- eslint-disable-next-line -->
@@ -100,6 +84,8 @@
           </VBtn>
         </VLayout>
 
+        <!-- TODO @MisRob: Find out which linter tool is removing
+        dashes from Vuetify attributes and disable -->
         <!-- eslint-disable-next-line -->
         <VLayout row justify-end>
           <VBtn

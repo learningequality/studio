@@ -1,5 +1,9 @@
 <template>
   <div>
+    <div class="grey--text text--darken-1 mb-3">
+      Answers
+    </div>
+
     <div v-if="!answers || !answers.length">
       No answers yet
     </div>
