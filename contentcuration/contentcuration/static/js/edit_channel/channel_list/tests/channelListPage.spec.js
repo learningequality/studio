@@ -2,11 +2,15 @@ import { mount, RouterLinkStub } from '@vue/test-utils';
 import _ from 'underscore';
 import ChannelListPage from './../views/ChannelListPage.vue';
 import ChannelDetailsPanel from './../views/ChannelDetailsPanel.vue';
-import { ListTypes } from './../constants';
+import ChannelInvitationList from './../views/ChannelInvitationList.vue';
+import { ListTypes, RouterNames } from './../constants';
 import { localStore } from './data';
+
+let router = require('edit_channel/channel_list/router');
 
 function makeWrapper() {
   return mount(ChannelListPage, {
+    router,
     store: localStore,
     propsData: {
       activeList: 'EDITABLE',
@@ -15,9 +19,7 @@ function makeWrapper() {
       RouterLink: RouterLinkStub,
       ChannelDetailsPanel: '<div />',
       ChannelList: '<div />',
-    },
-    mocks: {
-      $route: {},
+      ChannelInvitationList: '<div />',
     },
   });
 }
@@ -49,5 +51,12 @@ describe('channelListPage', () => {
     expect(wrapper.find(ChannelDetailsPanel).exists()).toBe(false);
     wrapper.vm.$store.commit('channel_list/SET_ACTIVE_CHANNEL', '');
     expect(wrapper.find(ChannelDetailsPanel).exists()).toBe(true);
+  });
+  it('accepting an invitation should set the channel list', () => {
+    let inviteList = wrapper.find(ChannelInvitationList);
+    _.each(_.pairs(RouterNames), tab => {
+      inviteList.vm.$emit('setActiveList', tab[0]);
+      expect(wrapper.vm.$route.name).toEqual(tab[1]);
+    });
   });
 });

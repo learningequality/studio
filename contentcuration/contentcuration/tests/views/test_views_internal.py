@@ -2,14 +2,22 @@
 """
 Tests for contentcuration.views.internal functions.
 """
-from mixer.main import mixer
+import uuid
 
+from django.core.urlresolvers import reverse_lazy
+from mixer.main import mixer
+from mock import patch
+
+from ..base import BaseAPITestCase
 from ..base import StudioTestCase
 from ..testdata import fileobj_exercise_graphie
 from ..testdata import fileobj_exercise_image
 from ..testdata import fileobj_video
 from ..testdata import tree
+from contentcuration import ricecooker_versions as rc
+from contentcuration.models import Channel
 from contentcuration.models import ContentNode
+from contentcuration.views import internal
 
 
 class SampleContentNodeDataSchema:
@@ -157,7 +165,7 @@ class ApiAddExerciseNodesToTreeTestCase(StudioTestCase):
                             ],
                             "question": u"Which numbers are even?\n\nTest local image include: ![](${☣ CONTENTSTORAGE}/%s)" % self.exercise_image.filename(),
                             "hints": "[]",
-                            "answers": "[{\"answer\": \"1\", \"correct\": false, \"order\": 0}, {\"answer\": \"2\", \"correct\": True, \"order\": 1}, {\"answer\": \"3\", \"correct\": false, \"order\": 2}, {\"answer\": \"4\", \"correct\": true, \"order\": 3}, {\"answer\": \"5\", \"correct\": false, \"order\": 4}]",
+                            "answers": "[{\"answer\": \"1\", \"correct\": false, \"order\": 0}, {\"answer\": \"2\", \"correct\": True, \"order\": 1}, {\"answer\": \"3\", \"correct\": false, \"order\": 2}, {\"answer\": \"4\", \"correct\": true, \"order\": 3}, {\"answer\": \"5\", \"correct\": false, \"order\": 4}]",  # noqa
                             "raw_data": "",
                             "source_url": None,
                             "randomize": False
@@ -178,7 +186,7 @@ class ApiAddExerciseNodesToTreeTestCase(StudioTestCase):
                             "question": "",
                             "hints": "[]",
                             "answers": "[]",
-                            "raw_data": u"{\"question\": {\"content\": \"What was the main idea in the passage you just read?\\n\\n[[☃ radio 1]]\\n\\n Test web+graphie image ![graph](web+graphie:${☣ CONTENTSTORAGE}/%s)\", \"images\": {}, \"widgets\": {\"radio 1\": {\"type\": \"radio\", \"alignment\": \"default\", \"static\": false, \"graded\": true, \"options\": {\"choices\": [{\"content\": \"The right answer\", \"correct\": true}, {\"content\": \"Another option\", \"correct\": false}, {\"isNoneOfTheAbove\": false, \"content\": \"Nope, not this\", \"correct\": false}], \"randomize\": false, \"multipleSelect\": false, \"countChoices\": false, \"displayCount\": null, \"hasNoneOfTheAbove\": false, \"deselectEnabled\": false}, \"version\": {\"major\": 1, \"minor\": 0}}}}, \"answerArea\": {\"calculator\": false, \"chi2Table\": false, \"periodicTable\": false, \"tTable\": false, \"zTable\": false}, \"itemDataVersion\": {\"major\": 0, \"minor\": 1}, \"hints\": []}" % self.exercise_graphie.original_filename,
+                            "raw_data": u"{\"question\": {\"content\": \"What was the main idea in the passage you just read?\\n\\n[[☃ radio 1]]\\n\\n Test web+graphie image ![graph](web+graphie:${☣ CONTENTSTORAGE}/%s)\", \"images\": {}, \"widgets\": {\"radio 1\": {\"type\": \"radio\", \"alignment\": \"default\", \"static\": false, \"graded\": true, \"options\": {\"choices\": [{\"content\": \"The right answer\", \"correct\": true}, {\"content\": \"Another option\", \"correct\": false}, {\"isNoneOfTheAbove\": false, \"content\": \"Nope, not this\", \"correct\": false}], \"randomize\": false, \"multipleSelect\": false, \"countChoices\": false, \"displayCount\": null, \"hasNoneOfTheAbove\": false, \"deselectEnabled\": false}, \"version\": {\"major\": 1, \"minor\": 0}}}}, \"answerArea\": {\"calculator\": false, \"chi2Table\": false, \"periodicTable\": false, \"tTable\": false, \"zTable\": false}, \"itemDataVersion\": {\"major\": 0, \"minor\": 1}, \"hints\": []}" % self.exercise_graphie.original_filename,  # noqa
                             "source_url": None,
                             "randomize": False
                         }
@@ -249,3 +257,84 @@ class ApiAddExerciseNodesToTreeTestCase(StudioTestCase):
         assert file2.filename() == self.exercise_graphie.filename(), 'wrong file'
         assert file2.file_on_disk.read() == self.exercise_graphie.file_on_disk.read(), 'different contents'
         assert file2.original_filename == self.exercise_graphie.original_filename, 'wrong original_filename'
+
+
+class PublishEndpointTestCase(BaseAPITestCase):
+
+    def test_404_non_existent(self):
+        response = self.post(reverse_lazy("api_publish_channel"), {"channel_id": uuid.uuid4().hex})
+        self.assertEqual(response.status_code, 404)
+
+    def test_200_publish_successful(self):
+        self.channel.editors.add(self.user)
+        response = self.post(reverse_lazy("api_publish_channel"), {"channel_id": self.channel.id})
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()["success"])
+
+    def test_404_not_authorized(self):
+        new_channel = Channel.objects.create()
+        response = self.post(reverse_lazy("api_publish_channel"), {"channel_id": new_channel.id})
+        self.assertEqual(response.status_code, 404)
+
+
+class VersionEndpointTestCase(BaseAPITestCase):
+
+    def test_better_than_OK(self):
+        with patch("contentcuration.views.internal.VERSION_OK", internal.VersionStatus(version="0.0.1", status=0, message=rc.VERSION_OK_MESSAGE)):
+            response = self.post(reverse_lazy("check_version"), {"version": "0.1.1"})
+            self.assertEqual(response.status_code, 200)
+            self.assertTrue(response.json()["success"])
+            self.assertEqual(response.json()["status"], internal.VERSION_OK[1])
+
+    def test_OK(self):
+        response = self.post(reverse_lazy("check_version"), {"version": rc.VERSION_OK})
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()["success"])
+        self.assertEqual(response.json()["status"], internal.VERSION_OK[1])
+
+    def test_worse_than_OK_but_better_than_soft(self):
+        with patch(
+                    "contentcuration.views.internal.VERSION_OK",
+                    internal.VersionStatus(version="1.0.0", status=0, message=rc.VERSION_OK_MESSAGE)
+                ), patch(
+                    "contentcuration.views.internal.VERSION_SOFT_WARNING",
+                    internal.VersionStatus(version="0.0.1", status=1, message=rc.VERSION_SOFT_WARNING_MESSAGE)
+                ):
+            response = self.post(reverse_lazy("check_version"), {"version": "0.1.1"})
+            self.assertEqual(response.status_code, 200)
+            self.assertTrue(response.json()["success"])
+            self.assertEqual(response.json()["status"], internal.VERSION_SOFT_WARNING[1])
+
+    def test_soft_warning(self):
+        response = self.post(reverse_lazy("check_version"), {"version": rc.VERSION_SOFT_WARNING})
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()["success"])
+        self.assertEqual(response.json()["status"], internal.VERSION_SOFT_WARNING[1])
+
+    def test_worse_than_soft_but_better_than_hard(self):
+        with patch(
+                    "contentcuration.views.internal.VERSION_SOFT_WARNING",
+                    internal.VersionStatus(version="1.0.0", status=1, message=rc.VERSION_SOFT_WARNING_MESSAGE)
+                ), patch(
+                    "contentcuration.views.internal.VERSION_HARD_WARNING",
+                    internal.VersionStatus(version="0.0.1", status=2, message=rc.VERSION_HARD_WARNING_MESSAGE)
+                ):
+            response = self.post(reverse_lazy("check_version"), {"version": "0.1.1"})
+            self.assertEqual(response.status_code, 200)
+            self.assertTrue(response.json()["success"])
+            self.assertEqual(response.json()["status"], internal.VERSION_HARD_WARNING[1])
+
+    def test_hard_warning(self):
+        response = self.post(reverse_lazy("check_version"), {"version": rc.VERSION_HARD_WARNING})
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()["success"])
+        self.assertEqual(response.json()["status"], internal.VERSION_HARD_WARNING[1])
+
+    def test_worse_than_hard(self):
+        with patch(
+                "contentcuration.views.internal.VERSION_HARD_WARNING",
+                internal.VersionStatus(version="1.0.0", status=2, message=rc.VERSION_HARD_WARNING_MESSAGE)):
+            response = self.post(reverse_lazy("check_version"), {"version": "0.1.1"})
+            self.assertEqual(response.status_code, 200)
+            self.assertTrue(response.json()["success"])
+            self.assertEqual(response.json()["status"], internal.VERSION_ERROR[1])

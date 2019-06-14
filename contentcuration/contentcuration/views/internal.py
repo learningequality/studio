@@ -6,13 +6,14 @@ from distutils.version import LooseVersion
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
 from django.core.exceptions import SuspiciousOperation
-from django.core.files.storage import default_storage
 from django.core.management import call_command
 from django.db import transaction
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.http import HttpResponseForbidden
+from django.http import HttpResponseNotFound
 from django.http import HttpResponseServerError
+from django.http import JsonResponse
 from le_utils.constants import content_kinds
 from le_utils.constants import roles
 from raven.contrib.django.raven_compat.models import client
@@ -22,7 +23,6 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import api_view
 from rest_framework.decorators import authentication_classes
 from rest_framework.decorators import permission_classes
-from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -34,7 +34,6 @@ from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import ContentTag
-from contentcuration.models import generate_object_storage_name
 from contentcuration.models import get_next_sort_order
 from contentcuration.models import License
 from contentcuration.models import SlideshowSlide
@@ -93,11 +92,11 @@ def check_version(request):
         else:
             status = VERSION_ERROR
 
-        return HttpResponse(json.dumps({
+        return JsonResponse({
             'success': True,
             'status': status[1],
             'message': status[2].format(version, VERSION_OK[0]),
-        }))
+        })
     except Exception as e:
         return HttpResponseServerError(content=str(e), reason=str(e))
 
@@ -252,14 +251,16 @@ def api_publish_channel(request):
 
     try:
         channel_id = data["channel_id"]
+        # Ensure that the user has permission to edit this channel.
+        request.user.can_edit(channel_id)
         call_command("exportchannel", channel_id, user_id=request.user.pk)
 
-        return HttpResponse(json.dumps({
+        return JsonResponse({
             "success": True,
             "channel": channel_id
-        }))
-    except KeyError:
-        raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+        })
+    except (KeyError, Channel.DoesNotExist, PermissionDenied):
+        return HttpResponseNotFound("No channel matching: {}".format(data))
     except Exception as e:
         handle_server_error(request)
         return HttpResponseServerError(content=str(e), reason=str(e))
@@ -305,46 +306,6 @@ def check_user_is_editor(request):
 
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
-
-
-@api_view(['POST'])
-@authentication_classes((TokenAuthentication, SessionAuthentication,))
-@permission_classes((IsAuthenticated,))
-def compare_trees(request):
-    """ Create the channel node """
-    data = json.loads(request.body)
-    try:
-        obj = Channel.objects.get(pk=data['channel_id'])
-        check_staging = data.get('staging')
-
-        comparison_tree = obj.staging_tree if check_staging else obj.main_tree
-        if not comparison_tree or not obj.previous_tree:
-            raise ValueError("Comparison Failed: Tree does not exist")
-
-        node_ids = comparison_tree.get_descendants().values_list('node_id', flat=True)
-        previous_node_ids = obj.previous_tree.get_descendants().values_list('node_id', flat=True)
-
-        new_nodes = comparison_tree.get_descendants().exclude(node_id__in=previous_node_ids).values('node_id', 'title',
-                                                                                                    'files__file_size',
-                                                                                                    'kind_id')
-        deleted_nodes = obj.previous_tree.get_descendants().exclude(node_id__in=node_ids).values('node_id', 'title',
-                                                                                                 'files__file_size',
-                                                                                                 'kind_id')
-
-        new_node_mapping = {
-            n['node_id']: {'title': n['title'], 'kind': n['kind_id'], 'file_size': n['files__file_size']} for n in
-            new_nodes.all()}
-        deleted_node_mapping = {
-            n['node_id']: {'title': n['title'], 'kind': n['kind_id'], 'file_size': n['files__file_size']} for n in
-            deleted_nodes.all()}
-
-        return HttpResponse(json.dumps({"success": True, 'new': new_node_mapping, 'deleted': deleted_node_mapping}))
-
-    except KeyError:
-        raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
-    except Exception as e:
-        handle_server_error(request)
-        return HttpResponseServerError(content=str(e), reason=str(e))
 
 
 @api_view(['POST'])

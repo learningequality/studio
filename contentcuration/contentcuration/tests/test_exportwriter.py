@@ -51,12 +51,15 @@ class ChannelDetailsTestCase(BaseAPITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response['Content-Type'], 'text/csv')
 
-    def test_pluralization(self):
-        writer = ChannelDetailsCSVWriter([self.channel.pk])
-
-        self.assertEqual(writer.pluralize_constant(0, content_kinds.TOPIC), "0 Topics")
-        self.assertEqual(writer.pluralize_constant(1, content_kinds.TOPIC), "1 Topic")
-        self.assertEqual(writer.pluralize_constant(2, content_kinds.TOPIC), "2 Topics")
-        self.assertEqual(writer.pluralize_constant(0, "resource"), "0 Total Resources")
-        self.assertEqual(writer.pluralize_constant(1, "resource"), "1 Total Resource")
-        self.assertEqual(writer.pluralize_constant(2, "resource"), "2 Total Resources")
+    def test_pluralize_constant(self):
+        exporter = ChannelDetailsPPTWriter([self.channel.pk])
+        to_test = {content_kinds.TOPIC: '1 Topic',
+                   content_kinds.VIDEO: '1 Video',
+                   content_kinds.AUDIO: '1 Audio',
+                   content_kinds.EXERCISE: '1 Exercise',
+                   content_kinds.DOCUMENT: '1 Document',
+                   content_kinds.HTML5: '1 Html App',
+                   content_kinds.SLIDESHOW: '1 Slideshow',
+                   'resource': '1 Total Resource'}
+        for kind, result in to_test.items():
+            self.assertEqual(exporter.pluralize_constant(1, kind), result)

@@ -33,7 +33,6 @@ from contentcuration.models import ContentKind
 from contentcuration.utils.files import generate_thumbnail_from_channel
 from contentcuration.utils.format import format_size
 
-
 # On OS X, the default backend will fail if you are not using a Framework build of Python,
 # e.g. in a virtualenv. To avoid having to set MPLBACKEND each time we use Studio,
 # automatically set the backend.
@@ -189,7 +188,7 @@ class ExportWriter(object):
         elif constant == content_kinds.AUDIO:
             return ngettext('%(count)d Audio', '%(count)d Audios', count) % data
         elif constant == content_kinds.EXERCISE:
-            return ngettext('%(count)d Exercise', '%(count)d% Exercises', count) % data
+            return ngettext('%(count)d Exercise', '%(count)d Exercises', count) % data
         elif constant == content_kinds.DOCUMENT:
             return ngettext('%(count)d Document', '%(count)d Documents', count) % data
         elif constant == content_kinds.HTML5:
