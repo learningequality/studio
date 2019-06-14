@@ -53,6 +53,8 @@ def check_minio_ready(minio_checks=CONNECT_TRIES):
     """
     while True:
         url = os.getenv("AWS_S3_ENDPOINT_URL") or "http://localhost:9000"
+
+        # Catch connection errors, as they will be thrown if minio is not ready
         try:
             robj = requests.get(url)
             if robj.status_code == 403:  # what we expect when we have no keys
