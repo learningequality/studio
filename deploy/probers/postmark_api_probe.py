@@ -1,8 +1,5 @@
 #!/usr/bin/env python
-import os
 import requests
-import datetime
-
 from base import BaseProbe
 
 POSTMARK_SERVICE_STATUS_URL = "https://status.postmarkapp.com/api/1.0/services"

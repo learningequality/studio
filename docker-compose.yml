@@ -13,6 +13,7 @@ x-studio-environment:
     CELERY_BROKER_ENDPOINT: redis
     CELERY_RESULT_BACKEND_ENDPOINT: redis
     CELERY_REDIS_PASSWORD: ""
+    PROBER_STUDIO_BASE_URL: http://studio-app:8080/{path}
 
 x-studio-worker:
   &studio-worker
@@ -27,6 +28,8 @@ x-studio-worker:
     volumes:
       - .:/src
     environment: *studio-environment
+    networks:
+      - studio-network
 
 services:
   studio-app:
@@ -35,6 +38,9 @@ services:
     command: yarn run devserver
     ports:
       - "8080:8080"
+    links:
+      - minio
+      - postgres
 
   celery-worker:
     <<: *studio-worker
@@ -48,8 +54,8 @@ services:
       MINIO_SECRET_KEY: development
     volumes:
       - minio_data:/data
-    ports:
-      - "9000:9000"
+    networks:
+      - studio-network
 
   postgres:
     image: postgres:9.6
@@ -60,9 +66,13 @@ services:
       POSTGRES_DB: kolibri-studio
     volumes:
       - pgdata:/var/lib/postgresql/data/pgdata
+    networks:
+      - studio-network
 
   redis:
     image: redis:4.0.9
+    networks:
+      - studio-network
 
   cloudprober:
     <<: *studio-worker
@@ -72,8 +82,13 @@ services:
     depends_on:
       - studio-app
       - celery-worker
+    links:
+      - studio-app
 
 
 volumes:
   minio_data:
   pgdata:
+
+networks:
+  studio-network:
