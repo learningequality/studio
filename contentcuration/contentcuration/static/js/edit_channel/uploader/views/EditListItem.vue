@@ -55,7 +55,6 @@
         return _.contains(this.selectedIndices, this.index);
       },
       nodeIsValid() {
-        // Bypass lazy validation logic
         return !_.contains(this.invalidNodes, this.index);
       },
     },

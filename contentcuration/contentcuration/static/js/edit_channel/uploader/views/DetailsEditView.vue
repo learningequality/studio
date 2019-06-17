@@ -255,7 +255,7 @@
       };
     },
     computed: {
-      ...mapState('edit_modal', ['viewOnly', 'changes']),
+      ...mapState('edit_modal', ['viewOnly', 'changes', 'selectedIndices']),
       ...mapGetters('edit_modal', [
         'selected',
         'authors',
@@ -295,13 +295,17 @@
         return baseUrl + '/' + selected.original_source_node_id;
       },
     },
-    watch: {
-      selected(newVal) {
-        _.some(newVal, n => !n.isNew)
-          ? this.$refs.form.validate()
-          : this.$refs.form.resetValidation();
-      },
-    },
+    // watch: {
+    //   changes: {
+    //     handler(newVal) {
+    //     console.log(newVal)
+    //     _.some(this.selected, n => !n.isNew)
+    //       ? this.$refs.form.validate()
+    //       : this.$refs.form.resetValidation();
+    //     },
+    //     deep: true
+    //   },
+    // },
     methods: {
       ...mapMutations('edit_modal', {
         setTitle: 'SET_TITLE',

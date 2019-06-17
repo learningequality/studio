@@ -1,4 +1,5 @@
 import _ from 'underscore';
+import { modes } from '../constants';
 import { getSelected } from './utils';
 import State from 'edit_channel/state';
 import Constants from 'edit_channel/constants/index';
@@ -22,14 +23,10 @@ export function RESET_STATE(state) {
   Object.assign(state, {
     nodes: [],
     selectedIndices: [],
-    viewOnly: false,
     isClipboard: false,
     changes: {},
-    targetNode: {},
-    isValid: true,
-    validationOn: false,
-    mode: null,
-    validateNodes: [],
+    targetNode: { parent_title: 'Sandbox' },
+    mode: modes.VIEW_ONLY,
   });
 }
 
@@ -37,6 +34,7 @@ export function SET_NODES(state, nodes) {
   _.each(nodes, node => {
     node.changesStaged = false;
     node.loaded = false;
+    node.copyright_holder = null;
   });
   state.nodes = nodes;
 }
@@ -85,6 +83,7 @@ export function SET_LOADED_NODES(state, nodes) {
     _.extendOwn(match, {
       ...node,
       loaded: true,
+      copyright_holder: null,
     });
   });
 }

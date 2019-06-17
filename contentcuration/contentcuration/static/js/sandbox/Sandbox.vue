@@ -25,6 +25,7 @@
 </template>
 <script>
 
+  import _ from 'underscore';
   import { mapMutations, mapState } from 'vuex';
   import EditModal from 'edit_channel/uploader/views/EditModal.vue';
 
@@ -42,7 +43,7 @@
       ...mapState('edit_modal', ['mode']),
       openModal(mode) {
         this.setMode(mode);
-        let nodes = mode === 'VIEW_ONLY' || mode === 'EDIT' ? window.nodes : [];
+        let nodes = mode === 'VIEW_ONLY' || mode === 'EDIT' ? _.clone(window.nodes) : [];
         this.setNodes(nodes);
         this.$refs.editmodal.openModal();
       },

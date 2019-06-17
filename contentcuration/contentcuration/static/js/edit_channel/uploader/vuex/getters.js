@@ -49,6 +49,7 @@ export function invalidNodes(state) {
 
   return _.chain(state.nodes)
     .map((node, index) => {
+      // console.log(node);
       // Don't automatically validate new nodes
       if (node.isNew) return -1;
       return _validateNode(node, index);
