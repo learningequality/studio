@@ -170,11 +170,11 @@
         return this.kindSelectItems.find(item => item.value === this.kind).text;
       },
       answers() {
-        if (!this.item.answers) {
+        if (!this.item || !this.item.answers) {
           return [];
         }
 
-        return JSON.parse(this.item.answers);
+        return this.item.answers;
       },
     },
     methods: {

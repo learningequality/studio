@@ -81,14 +81,10 @@
         return;
       }
 
-      let assessmentItems = [];
-      if (this.node.assessment_items && this.node.assessment_items.length) {
-        assessmentItems = [...this.node.assessment_items].sort((item1, item2) =>
-          item1.order > item2.order ? 1 : -1
-        );
-      }
-
-      this.addNodeAssessmentDraft({ nodeId: this.nodeId, assessmentItems });
+      this.addNodeAssessmentDraft({
+        nodeId: this.nodeId,
+        assessmentItems: this.node.assessment_items,
+      });
     },
     methods: {
       ...mapMutations('edit_modal', [

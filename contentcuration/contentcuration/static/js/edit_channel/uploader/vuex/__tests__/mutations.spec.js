@@ -7,30 +7,61 @@ describe('edit_modal', () => {
 
   describe('mutations', () => {
     describe('addNodeAssessmentDraft', () => {
+      let assessmentItems;
+
       beforeEach(() => {
         state = {
           nodesAssessmentDrafts: {},
         };
-      });
 
-      it('saves assessment items under a given node ID', () => {
-        const assessmentItems = [
-          {
-            id: 1,
-            order: 0,
-            question: 'Question 1',
-          },
+        assessmentItems = [
           {
             id: 2,
             order: 1,
             question: 'Question 2',
+            answers: JSON.stringify([
+              { answer: 'Question 2 - Answer 1', correct: true, order: 1 },
+              { answer: 'Question 2 - Answer 2', correct: false, order: 2 },
+            ]),
+          },
+          {
+            id: 1,
+            order: 0,
+            question: 'Question 1',
+            answers: JSON.stringify([
+              { answer: 'Question 1 - Answer 3', correct: false, order: 3 },
+              { answer: 'Question 1 - Answer 1', correct: true, order: 1 },
+              { answer: 'Question 1 - Answer 2', correct: false, order: 2 },
+            ]),
           },
         ];
+      });
 
+      it('saves sorted assessment items containing parsed and sorted questions under a given node ID', () => {
         mutations.addNodeAssessmentDraft(state, { nodeId: 'node-1', assessmentItems });
 
         expect(state.nodesAssessmentDrafts).toEqual({
-          'node-1': assessmentItems,
+          'node-1': [
+            {
+              id: 1,
+              order: 0,
+              question: 'Question 1',
+              answers: [
+                { answer: 'Question 1 - Answer 1', correct: true, order: 1 },
+                { answer: 'Question 1 - Answer 2', correct: false, order: 2 },
+                { answer: 'Question 1 - Answer 3', correct: false, order: 3 },
+              ],
+            },
+            {
+              id: 2,
+              order: 1,
+              question: 'Question 2',
+              answers: [
+                { answer: 'Question 2 - Answer 1', correct: true, order: 1 },
+                { answer: 'Question 2 - Answer 2', correct: false, order: 2 },
+              ],
+            },
+          ],
         });
       });
     });

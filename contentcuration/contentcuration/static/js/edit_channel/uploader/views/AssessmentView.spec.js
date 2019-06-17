@@ -114,6 +114,47 @@ const initWrapper = state => {
 describe('AssessmentView', () => {
   let wrapper;
 
+  it('saves assessment items of a selected node to drafts store after mounted', () => {
+    const state = JSON.parse(JSON.stringify(EDIT_MODAL_STATE));
+    wrapper = initWrapper(state);
+
+    expect(state.nodesAssessmentDrafts).toEqual({
+      'exercise-2': [
+        {
+          id: 1,
+          question: 'Exercise 2 - Question 1',
+          type: AssessmentItemTypes.INPUT_QUESTION,
+          order: 0,
+          answers: [
+            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+            { answer: 'Peanut butter', correct: true, order: 2 },
+          ],
+        },
+        {
+          id: 1,
+          question: 'Exercise 2 - Question 2',
+          type: AssessmentItemTypes.SINGLE_SELECTION,
+          order: 1,
+          answers: [
+            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+            { answer: 'Peanut butter', correct: false, order: 2 },
+          ],
+        },
+        {
+          id: 2,
+          question: 'Exercise 2 - Question 3',
+          type: AssessmentItemTypes.MULTIPLE_SELECTION,
+          order: 2,
+          answers: [
+            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+            { answer: 'Peanut butter', correct: false, order: 2 },
+            { answer: 'Jelly', correct: true, order: 3 },
+          ],
+        },
+      ],
+    });
+  });
+
   describe('for an exercise without questions', () => {
     beforeEach(() => {
       const state = JSON.parse(JSON.stringify(EDIT_MODAL_STATE));

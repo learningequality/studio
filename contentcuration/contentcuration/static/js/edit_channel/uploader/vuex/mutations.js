@@ -248,8 +248,36 @@ export function PREP_NODES_FOR_SAVE(state) {
   _.each(state.nodes, node => (node.isNew = false));
 }
 
+/**
+ * Save assessment items to draft store in format suitable for any further work -
+ * parse stringified data and make sure that everything is properly sorted by order.
+ */
 export const addNodeAssessmentDraft = (state, { nodeId, assessmentItems }) => {
-  Vue.set(state.nodesAssessmentDrafts, nodeId, assessmentItems);
+  let items = [];
+
+  if (assessmentItems && assessmentItems.length) {
+    items = JSON.parse(JSON.stringify(assessmentItems));
+  }
+
+  items = items.map(item => {
+    let answers = [];
+
+    // API returns answers as string
+    if (item.answers) {
+      answers = JSON.parse(item.answers);
+    }
+
+    answers.sort((answer1, answer2) => (answer1.order > answer2.order ? 1 : -1));
+
+    return {
+      ...item,
+      answers,
+    };
+  });
+
+  items.sort((item1, item2) => (item1.order > item2.order ? 1 : -1));
+
+  Vue.set(state.nodesAssessmentDrafts, nodeId, items);
 };
 
 export const addNodeAssessmentDraftItem = (state, nodeId) => {
