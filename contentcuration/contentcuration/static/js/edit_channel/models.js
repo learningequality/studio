@@ -482,9 +482,7 @@ var ContentNodeCollection = BaseCollection.extend({
           resolve({
             prerequisite_mapping: nodes.prerequisite_mapping,
             postrequisite_mapping: nodes.postrequisite_mapping,
-            prerequisite_tree_nodes: new ContentNodeCollection(
-              JSON.parse(nodes.prerequisite_tree_nodes)
-            ),
+            prerequisite_tree_nodes: new ContentNodeCollection(nodes.prerequisite_tree_nodes),
           });
         },
         error: reject,

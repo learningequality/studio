@@ -44,9 +44,12 @@
 	</form>
 </div>
 <script>
-	$(".setting_input").on("keydown", function(event){
-		$("#save").attr("disabled", false)
-		$("#save").val("{% trans 'SAVE CHANGES' %}")
+	window.addEventListener('load', function(){
+		$(".setting_input").on("keydown", function(event){
+			$("#save").attr("disabled", false)
+			$("#save").val("{% trans 'SAVE CHANGES' %}")
+		});
 	});
+
 </script>
 {% endblock settingscontent %}

@@ -239,65 +239,6 @@ Returns list of json changes. Example:
     ]
 
 
-### api/internal/compare_trees
-_Method: contentcuration.views.internal.compare_trees_
-Returns a dict of new nodes and deleted nodes between either the staging tree or main tree and the previous tree (use staging flag to indicate whether to use staging or main)
-
-    POST  api/internal/compare_trees
-    Header: ---
-    Body:
-    {
-      "channel_id": "{uuid.hex}",
-      "staging": boolean
-    }
-
-
-Response:
-
-    {
-      "success" : True,
-      "new" : {
-        "{node_id}" : {
-          "title" : "{str}",
-          "kind" : "{str}",
-          "file_size" : {number}
-        },
-      },
-      "deleted" : {
-          "{node_id}" : {
-          "title" : "{str}",
-          "kind" : "{str}",
-          "file_size" : {number}
-        }
-      }
-    }
-
-Example:
-
-    {
-      "success" : True,
-      "new" : {
-        "aaa" : {
-          "title" : "Node Title",
-          "kind" : "topic",
-          "file_size" : 0
-        },
-        "bbb" : {
-          "title" : "Node Title 2",
-          "kind" : "audio",
-          "file_size" : 100
-        }
-      },
-      "deleted" : {
-        "ccc" : {
-          "title" : "Node Title 3",
-          "kind" : "video",
-          "file_size" : 999999
-        }
-      }
-    }
-
-
 ### api/internal/get_tree_data
 _Method: contentcuration.views.internal.get_tree_data_
 Returns the complete tree hierarchy information (for tree specified in `tree`).

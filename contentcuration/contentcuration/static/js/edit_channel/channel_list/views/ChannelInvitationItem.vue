@@ -40,7 +40,7 @@
 <script>
 
   import { mapActions, mapGetters, mapMutations } from 'vuex';
-  import { ListTypes } from '../constants';
+  import { InvitationShareModes } from '../constants';
   import dialog from 'edit_channel/utils/dialog';
 
   export default {
@@ -79,7 +79,7 @@
       },
       acceptedText() {
         switch (this.invitation.share_mode) {
-          case ListTypes.EDITABLE:
+          case InvitationShareModes.EDIT:
             return this.$tr('acceptedEditText', { channel: this.invitation.channel_name });
           default:
             return this.$tr('acceptedViewText', { channel: this.invitation.channel_name });
@@ -87,7 +87,7 @@
       },
       declinedText() {
         switch (this.invitation.share_mode) {
-          case ListTypes.EDITABLE:
+          case InvitationShareModes.EDIT:
             return this.$tr('declinedEditText', { channel: this.invitation.channel_name });
           default:
             return this.$tr('declinedViewText', { channel: this.invitation.channel_name });
@@ -101,7 +101,7 @@
         };
 
         switch (this.invitation.share_mode) {
-          case ListTypes.EDITABLE:
+          case InvitationShareModes.EDIT:
             return this.$tr('editText', messageArgs);
           default:
             return this.$tr('viewText', messageArgs);

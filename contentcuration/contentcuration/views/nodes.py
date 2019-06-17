@@ -117,8 +117,10 @@ def create_new_node(request):
 
 
 @api_view(['GET'])
-def get_prerequisites(request, get_prerequisites, ids):
+def get_prerequisites(request, get_postrequisites, ids):
     nodes = ContentNode.objects.prefetch_related('prerequisite').filter(pk__in=ids.split(","))
+
+    request.user.can_view_nodes(nodes)
 
     prerequisite_mapping = {}
     postrequisite_mapping = {}
@@ -126,7 +128,7 @@ def get_prerequisites(request, get_prerequisites, ids):
 
     for n in nodes:
         prereqs, prereqmapping = n.get_prerequisites()
-        if get_prerequisites == "true":
+        if get_postrequisites == "true":
             postreqs, postreqmapping = n.get_postrequisites()
             postrequisite_mapping.update(postreqmapping)
             prerequisite_mapping.update(prereqmapping)
@@ -135,11 +137,11 @@ def get_prerequisites(request, get_prerequisites, ids):
             prerequisite_mapping.update({n.pk: prereqmapping})
             prerequisite_tree_nodes += prereqs + [n]
 
-    return HttpResponse(json.dumps({
+    return Response({
         "prerequisite_mapping": prerequisite_mapping,
         "postrequisite_mapping": postrequisite_mapping,
-        "prerequisite_tree_nodes": JSONRenderer().render(SimplifiedContentNodeSerializer(prerequisite_tree_nodes, many=True).data),
-    }))
+        "prerequisite_tree_nodes": SimplifiedContentNodeSerializer(prerequisite_tree_nodes, many=True).data,
+    })
 
 
 @api_view(['GET'])

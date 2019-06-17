@@ -7,15 +7,6 @@ import sys
 import tempfile
 from collections import OrderedDict
 
-# On OS X, the default backend will fail if you are not using a Framework build of Python,
-# e.g. in a virtualenv. To avoid having to set MPLBACKEND each time we use Studio,
-# automatically set the backend.
-if sys.platform.startswith("darwin"):
-    import matplotlib
-    if matplotlib.get_backend().lower() == "macosx":
-        matplotlib.use('PS')
-
-import matplotlib.pyplot as plt
 import numpy as np
 import pdfkit
 from django.conf import settings
@@ -41,6 +32,16 @@ from contentcuration.models import Channel
 from contentcuration.models import ContentKind
 from contentcuration.utils.files import generate_thumbnail_from_channel
 from contentcuration.utils.format import format_size
+
+# On OS X, the default backend will fail if you are not using a Framework build of Python,
+# e.g. in a virtualenv. To avoid having to set MPLBACKEND each time we use Studio,
+# automatically set the backend.
+if sys.platform.startswith("darwin"):
+    import matplotlib
+    if matplotlib.get_backend().lower() == "macosx":
+        matplotlib.use('PS')
+
+import matplotlib.pyplot as plt  # noqa: E402
 
 
 AUDIO_COLOR = "#F06292"
@@ -187,15 +188,20 @@ class ExportWriter(object):
         elif constant == content_kinds.AUDIO:
             return ngettext('%(count)d Audio', '%(count)d Audios', count) % data
         elif constant == content_kinds.EXERCISE:
-            return ngettext('%(count)d Exercise', '%(count)d% Exercises', count) % data
+            return ngettext('%(count)d Exercise', '%(count)d Exercises', count) % data
         elif constant == content_kinds.DOCUMENT:
             return ngettext('%(count)d Document', '%(count)d Documents', count) % data
         elif constant == content_kinds.HTML5:
             return ngettext('%(count)d Html App', '%(count)d Html Apps', count) % data
+        elif constant == content_kinds.SLIDESHOW:
+            return ngettext('%(count)d Slideshow', '%(count)d Slideshows', count) % data
         elif constant == "resource":
             return ngettext('%(count)d Total Resource', '%(count)d Total Resources', count) % data
         elif constant == "resource_split":
             return ngettext('%(count)d\nTotal Resource', '%(count)d\nTotal Resources', count) % data
+        else:
+            logging.warning('No translation for pluralizing {}'.format(constant))
+            return '{} {}'.format(count, constant)
 
     def get_write_to_path(self, ext=None):
         ext = ext or self.ext
@@ -213,7 +219,8 @@ class ExportWriter(object):
 
 
 class ChannelDetailsWriter(ExportWriter):
-    color_selection = [AUDIO_COLOR, DOCUMENT_COLOR, EXERCISE_COLOR, HTML_COLOR, VIDEO_COLOR, SLIDESHOW_COLOR]
+    # Needs to be alphabetized to match content kind sorting
+    color_selection = [AUDIO_COLOR, DOCUMENT_COLOR, EXERCISE_COLOR, HTML_COLOR, SLIDESHOW_COLOR, VIDEO_COLOR]
     condensed_tag_limit = 10
     size_divisor = 100000000
     scale_text = [_("Very Small")] * 2 + [_("Small")] * 2 + [_("Average")] * 3 + [_("Large")] * 2 + [_("Very Large")] * 2

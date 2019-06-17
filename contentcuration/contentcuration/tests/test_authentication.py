@@ -34,6 +34,8 @@ class AuthenticationTestCase(BaseTestCase):
         assert "/accounts/login/?next={}".format(staging_url) == response.redirect_chain[-1][0]
         assert response.status_code == 200
 
+        self.channel.editors.remove(self.user)
+
         self.sign_in()
 
         response = self.get(staging_url)
@@ -86,6 +88,8 @@ class AuthenticationTestCase(BaseTestCase):
         assert response.status_code == 200
 
     def test_no_rights_channel_access(self):
+        self.channel.editors.remove(self.user)
+
         self.sign_in()
 
         response = self.get(self.base_url, follow=True)
@@ -100,6 +104,8 @@ class AuthenticationTestCase(BaseTestCase):
         assert response.status_code == 403
 
     def test_view_only_channel_access(self):
+        self.channel.editors.remove(self.user)
+
         self.sign_in()
 
         self.channel.viewers.add(self.user)
@@ -118,7 +124,6 @@ class AuthenticationTestCase(BaseTestCase):
 
     def test_edit_channel_access(self):
         self.sign_in()
-        self.channel.editors.add(self.user)
 
         # we can edit!
         response = self.get(self.base_url, follow=True)

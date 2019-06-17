@@ -1,6 +1,7 @@
 import json
+
+from .base import MigrationTestCase
 from contentcuration import models
-from .utils import MigrationTestCase
 
 
 class TestForwardJSONMigration(MigrationTestCase):
