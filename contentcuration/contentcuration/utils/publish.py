@@ -122,7 +122,7 @@ def map_content_nodes(root_node, default_language, channel_id, channel_name, use
     node_queue.append(root_node)
 
     task_percent_total = 80.0
-    total_nodes = root_node.get_descendant_count()
+    total_nodes = root_node.get_descendant_count() + 1  # make sure we include root_node
     percent_per_node = task_percent_total / total_nodes
 
     current_node_percent = 0.0
