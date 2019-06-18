@@ -65,6 +65,18 @@ describe('AssessmentItem', () => {
     });
   });
 
+  describe('on hints update', () => {
+    it('emits update event with a correct payload', () => {
+      const newHints = [{ hint: 'Hint 1', order: 1 }, { hint: 'Hint 2', order: 2 }];
+
+      wrapper.find({ name: 'HintsEditor' }).vm.$emit('update', newHints);
+
+      expect(wrapper.emitted().update).toBeTruthy();
+      expect(wrapper.emitted().update.length).toBe(1);
+      expect(wrapper.emitted().update[0]).toEqual([{ payload: { hints: newHints }, itemIdx: 1 }]);
+    });
+  });
+
   describe('on close click', () => {
     it('emits close event', () => {
       clickCloseBtn(wrapper);

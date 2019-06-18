@@ -77,18 +77,10 @@
 
         <VDivider />
 
-        <!-- eslint-disable-next-line -->
-        <VLayout row mt-3>
-          <div class="grey--text text--darken-1 mb-3">
-            Hints
-          </div>
-        </VLayout>
-
-        <VLayout row>
-          <VBtn flat>
-            New hint
-          </VBtn>
-        </VLayout>
+        <HintsEditor
+          :hints="hints"
+          @update="onHintsChange"
+        />
 
         <!-- TODO @MisRob: Find out which linter tool is removing
         dashes from Vuetify attributes and disable -->
@@ -113,12 +105,14 @@
   import { AssessmentItemTypes } from '../../constants';
   import AnswersEditor from '../AnswersEditor/AnswersEditor.vue';
   import AnswersPreview from '../AnswersPreview/AnswersPreview.vue';
+  import HintsEditor from '../HintsEditor/HintsEditor.vue';
 
   export default {
     name: 'AssessmentItem',
     components: {
       AnswersEditor,
       AnswersPreview,
+      HintsEditor,
     },
     props: {
       item: {
@@ -176,6 +170,13 @@
 
         return this.item.answers;
       },
+      hints() {
+        if (!this.item || !this.item.hints) {
+          return [];
+        }
+
+        return this.item.hints;
+      },
     },
     methods: {
       onQuestionChange(newQuestion) {
@@ -189,6 +190,9 @@
       },
       onAnswersChange(newAnswers) {
         this.$emit('update', { itemIdx: this.itemIdx, payload: { answers: newAnswers } });
+      },
+      onHintsChange(newHints) {
+        this.$emit('update', { itemIdx: this.itemIdx, payload: { hints: newHints } });
       },
       onCloseClick() {
         this.$emit('close');

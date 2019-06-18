@@ -27,6 +27,7 @@ const EDIT_MODAL_STATE = {
             { answer: 'Blue', correct: false, order: 1 },
             { answer: 'Yellow', correct: true, order: 2 },
           ]),
+          hints: JSON.stringify([{ hint: 'Not red', order: 1 }]),
         },
       ],
     },
@@ -42,6 +43,10 @@ const EDIT_MODAL_STATE = {
           answers: JSON.stringify([
             { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
             { answer: 'Peanut butter', correct: false, order: 2 },
+          ]),
+          hints: JSON.stringify([
+            { hint: "It's not healthy", order: 1 },
+            { hint: 'Tasty!', order: 2 },
           ]),
         },
         {
@@ -129,6 +134,7 @@ describe('AssessmentView', () => {
             { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
             { answer: 'Peanut butter', correct: true, order: 2 },
           ],
+          hints: [],
         },
         {
           id: 1,
@@ -139,6 +145,7 @@ describe('AssessmentView', () => {
             { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
             { answer: 'Peanut butter', correct: false, order: 2 },
           ],
+          hints: [{ hint: "It's not healthy", order: 1 }, { hint: 'Tasty!', order: 2 }],
         },
         {
           id: 2,
@@ -150,6 +157,7 @@ describe('AssessmentView', () => {
             { answer: 'Peanut butter', correct: false, order: 2 },
             { answer: 'Jelly', correct: true, order: 3 },
           ],
+          hints: [],
         },
       ],
     });
