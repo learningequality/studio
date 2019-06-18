@@ -24,6 +24,9 @@ else:
     MIDDLEWARE_CLASSES += ('debug_panel.middleware.DebugPanelMiddleware',)
     DEBUG_TOOLBAR_CONFIG = {
         'SHOW_TOOLBAR_CALLBACK': custom_show_toolbar,
+        'RENDER_PANELS': False,
+        'ENABLE_STACKTRACES': False,
+        'SHOW_TEMPLATE_CONTEXT': False
     }
 
 DEBUG_TOOLBAR_PANELS = [
