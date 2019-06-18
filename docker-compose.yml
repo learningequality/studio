@@ -66,7 +66,9 @@ services:
   cloudprober:
     <<: *studio-worker
     working_dir: /src/deploy
-    command: /bin/cloudprober --config_file ./cloudprober.cfg
+    entrypoint: ""
+    # sleep 30 seconds allowing some time for the studio app to start up
+    command: '/bin/bash -c "sleep 30 && /bin/cloudprober --config_file ./cloudprober.cfg"'
     # wait until the main app and celery worker have started
     depends_on:
       - studio-app
