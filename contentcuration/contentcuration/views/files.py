@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+from tempfile import NamedTemporaryFile
 from wsgiref.util import FileWrapper
 
 from django.conf import settings
@@ -11,7 +12,10 @@ from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from le_utils.constants import content_kinds
 from le_utils.constants import exercises
+from le_utils.constants import file_formats
 from le_utils.constants import format_presets
+from pressurecooker.converters import build_subtitle_converter
+from pressurecooker.subtitles import InvalidSubtitleFormatError
 from pressurecooker.videos import guess_video_preset_by_resolution
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authentication import TokenAuthentication
@@ -81,7 +85,6 @@ def file_create(request):
     presets = FormatPreset.objects.filter(allowed_formats__extension__contains=ext[1:].lower())
     kind = presets.first().kind
     preferences = json.loads(request.POST.get('content_defaults', None) or "{}")
-
 
     license = License.objects.filter(license_name=preferences.get('license')).first()  # Use filter/first in case preference hasn't been set
     license_id = license.pk if license else None
@@ -233,6 +236,54 @@ def exercise_image_upload(request):
         "formatted_filename": exercises.CONTENT_STORAGE_FORMAT.format(str(file_object)),
         "file_id": file_object.pk,
         "path": generate_storage_url(str(file_object)),
+    }))
+
+
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
+def subtitle_upload(request):
+    if request.method != 'POST':
+        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+
+    language_id = request.META.get('HTTP_LANGUAGE')
+    if not language_id:
+        return HttpResponseBadRequest("Language is required")
+
+    # File will be converted to VTT format
+    ext = file_formats.VTT
+    content_file = request.FILES.values()[0]
+
+    with NamedTemporaryFile() as temp_file:
+        try:
+            converter = build_subtitle_converter(language_id)
+            captions_str = content_file.read()
+            temp_file.write(converter.convert_str(unicode(captions_str, 'utf-8')))
+        except InvalidSubtitleFormatError as ex:
+            return HttpResponseBadRequest("Subtitle conversion failed: {}".format(ex))
+
+        temp_file.seek(0)
+        converted_file = DjFile(temp_file)
+
+        checksum = get_hash(converted_file)
+        size = converted_file.size
+        request.user.check_space(size, checksum)
+
+        file_object = File(
+            file_size=size,
+            file_on_disk=converted_file,
+            checksum=checksum,
+            file_format_id=ext,
+            original_filename=request.FILES.values()[0]._name,
+            preset_id=request.META.get('HTTP_PRESET'),
+            language_id=language_id,
+            uploaded_by=request.user,
+        )
+        file_object.save()
+
+    return HttpResponse(json.dumps({
+        "success": True,
+        "filename": str(file_object),
+        "file": JSONRenderer().render(FileSerializer(file_object).data)
     }))
 
 
