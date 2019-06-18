@@ -853,7 +853,6 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
   },
   copy_collection: function(copyCollection) {
     var clipboard = WorkspaceManager.get_queue_view();
-    clipboard.open_queue();
     return copyCollection.duplicate(clipboard.clipboard_queue.model);
   },
   delete_selected: function() {

@@ -331,37 +331,30 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
   },
   call_duplicate: function() {
     var self = this;
-    this.display_load(this.get_translation('copying_to_clipboard'), function(
-      load_resolve,
-      load_reject
-    ) {
-      var promises = [];
-      for (var i = 0; i < self.lists.length; i++) {
-        promises.push(self.lists[i].copy_selected());
-        if (self.lists[i].current_node) {
-          break;
-        }
+    var promises = [];
+    for (var i = 0; i < self.lists.length; i++) {
+      promises.push(self.lists[i].copy_selected());
+      if (self.lists[i].current_node) {
+        break;
       }
-      Promise.all(promises)
-        .then(function(lists) {
-          var nodeCollection = new Models.ContentNodeCollection();
-          lists.forEach(function(list) {
-            nodeCollection.add(list.models);
-          });
-          WorkspaceManager.get_queue_view().clipboard_queue.add_nodes(nodeCollection);
-          self.track_event_for_nodes(
-            'Clipboard',
-            'Add items from toolbar in tree view',
-            nodeCollection
-          );
-          load_resolve(true);
-        })
-        .catch(function(error) {
-          // eslint-disable-next-line no-console
-          console.warn(error);
-          load_reject(error);
+    }
+    Promise.all(promises)
+      .then(function(lists) {
+        var nodeCollection = new Models.ContentNodeCollection();
+        lists.forEach(function(list) {
+          nodeCollection.add(list.models);
         });
-    });
+        WorkspaceManager.get_queue_view().clipboard_queue.add_nodes(nodeCollection);
+        self.track_event_for_nodes(
+          'Clipboard',
+          'Add items from toolbar in tree view',
+          nodeCollection
+        );
+      })
+      .catch(function(error) {
+        // eslint-disable-next-line no-console
+        console.warn(error);
+      });
   },
   close_all_popups: function() {
     $('.content-options-dropdown').each(function() {
