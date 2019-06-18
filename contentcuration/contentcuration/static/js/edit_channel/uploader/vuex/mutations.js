@@ -261,17 +261,24 @@ export const addNodeAssessmentDraft = (state, { nodeId, assessmentItems }) => {
 
   items = items.map(item => {
     let answers = [];
+    let hints = [];
 
-    // API returns answers as string
+    // API returns answers and hints as string
     if (item.answers) {
       answers = JSON.parse(item.answers);
     }
 
+    if (item.hints) {
+      hints = JSON.parse(item.hints);
+    }
+
     answers.sort((answer1, answer2) => (answer1.order > answer2.order ? 1 : -1));
+    hints.sort((hint1, hint2) => (hint1.order > hint2.order ? 1 : -1));
 
     return {
       ...item,
       answers,
+      hints,
     };
   });
 
