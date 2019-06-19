@@ -14,13 +14,13 @@
     <VForm ref="form" v-model="valid" :lazyValidation="newContent">
       <!-- Language and import link -->
       <VLayout grid alignTop class="language-section" wrap>
-        <VFlex v-if="oneSelected && isImported" md4 sm12>
+        <VFlex v-if="oneSelected && isImported" lg4 md6 sm12>
           <VBtn color="primary" flat class="import-link" :href="importUrl" target="_blank">
             {{ $tr('importedFromButtonText', {channel: 'Sample Channel'}) }}
           </VBtn>
         </VFlex>
         <VSpacer />
-        <VFlex md4 sm12>
+        <VFlex lg4 md6 sm12>
           <LanguageDropdown
             width="250"
             :hint="languageHint"
@@ -309,8 +309,9 @@
     watch: {
       changes() {
         _.defer(() => {
-          this.newContent ? this.$refs.form.resetValidation() : this.$refs.form.validate();
-        });
+          if (this.$refs.form)
+            this.newContent ? this.$refs.form.resetValidation() : this.$refs.form.validate();
+        }, 100);
       },
     },
     methods: {

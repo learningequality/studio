@@ -86,6 +86,9 @@ export function SET_LOADED_NODES(state, nodes) {
       copyright_holder: null,
     });
   });
+  _.defer(() => {
+    SET_CHANGES(state);
+  });
 }
 
 export function RESET_SELECTED(state) {
@@ -272,18 +275,13 @@ export function SET_TAGS(state, tags) {
 }
 
 export function SET_EXTRA_FIELDS(state, obj) {
-  _.defer(() => {
-    let selected = getSelected(state);
-    _.each(_.pairs(obj), pair => {
-      state.changes.extra_fields[pair[0]].value = pair[1];
-      state.changes.extra_fields[pair[0]].varied = false;
-
-      // Update selected
-      _.each(selected, node => {
-        node[pair[0]] = pair[1];
-        node.changed = true;
-        node.changesStaged = true;
-      });
-    });
+  let selected = getSelected(state);
+  _.each(selected, node => {
+    if (!_.isEqual(node.extra_fields, obj)) {
+      _.assign(node.extra_fields, obj);
+      node.changed = true;
+      node.changesStaged = true;
+    }
   });
+  SET_CHANGES(state);
 }

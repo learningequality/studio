@@ -37,7 +37,11 @@ function _validateNode(node, index) {
   if (node.kind === 'exercise') {
     let mastery = node.extra_fields;
     if (!mastery.mastery_model) return index;
-    else if (mastery.mastery_model === 'm_of_n' && (!mastery.m || !mastery.n)) return index;
+    else if (
+      mastery.mastery_model === 'm_of_n' &&
+      (!mastery.m || !mastery.n || mastery.m > mastery.n)
+    )
+      return index;
   }
 
   return -1;
@@ -62,37 +66,6 @@ export function invalidNodesOverridden(state) {
     .map(_validateNode)
     .filter(num => num !== -1)
     .value();
-}
-
-export function nodeIsInvalid(state) {
-  // Returns index if node is invalid and -1 if node is valid
-  // (allows for overriding lazy validation)
-  return function(index) {
-    let node = state.nodes[index];
-    // Title is required
-    if (!node.title) return index;
-
-    // Authoring information is required for resources
-    if (!node.freeze_authoring_data && node.kind !== 'topic') {
-      let license =
-        node.license && _.findWhere(Constants.Licenses, { id: node.license.id || node.license });
-      // License is required
-      if (!license) return index;
-      // Copyright holder is required for certain licenses
-      else if (license.copyright_holder_required && !node.copyright_holder) return index;
-      // License description is required for certain licenses
-      else if (license.is_custom && !node.license_description) return index;
-    }
-
-    // Mastery is required on exercises
-    if (node.kind === 'exercise') {
-      let mastery = node.extra_fields;
-      if (!mastery.mastery_model) return index;
-      else if (mastery.mastery_model === 'm_of_n' && (!mastery.m || !mastery.n)) return index;
-    }
-
-    return -1;
-  };
 }
 
 export function allResources(state) {

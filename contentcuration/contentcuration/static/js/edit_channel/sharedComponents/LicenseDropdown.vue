@@ -19,7 +19,7 @@
       <InfoModal v-if="selectedLicense" :header="translate(selectedLicense)">
         <template v-slot:content>
           <p class="license-info">
-            {{ translateDescription(selectedLicense) }}
+            {{ selectedLicense | translateDescription }}
           </p>
         </template>
         <template v-if="selectedLicense.license_url" v-slot:extra-button>
@@ -70,6 +70,11 @@
     },
     components: {
       InfoModal,
+    },
+    filters: {
+      translateDescription(item) {
+        return translate(item.license_name + '_description');
+      },
     },
     props: {
       required: {
@@ -128,9 +133,6 @@
     methods: {
       translate(item) {
         return translate(item.license_name);
-      },
-      translateDescription(item) {
-        return translate(item.license_name + '_description');
       },
       handleLicenseChange(licenseID) {
         this.$emit('licensechanged', licenseID);
