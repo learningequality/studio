@@ -12,14 +12,16 @@ export function saveNodes(context) {
 }
 
 export function loadNodes(context, nodeIDs) {
-  $.ajax({
-    method: 'GET',
-    url: window.Urls.get_nodes_by_ids_complete(),
-    data: { nodes: JSON.stringify(nodeIDs) },
-    success: data => {
-      context.commit('SET_LOADED_NODES', data);
-    },
-  });
+  if (nodeIDs.length) {
+    $.ajax({
+      method: 'GET',
+      url: window.Urls.get_nodes_by_ids_complete(),
+      data: { nodes: JSON.stringify(nodeIDs) },
+      success: data => {
+        context.commit('SET_LOADED_NODES', data);
+      },
+    });
+  }
 }
 
 export function removeNode(context, index) {

@@ -6,6 +6,14 @@
           {{ noItemText }}
         </VFlex>
       </VLayout>
+      <VLayout v-else-if="loadError" justifyCenter alignCenter fillHeight>
+        <VFlex grow class="default-content">
+          <v-icon color="red" class="error-icon">
+            error_outline
+          </v-icon>
+          <p>{{ $tr('loadErrorText') }}</p>
+        </VFlex>
+      </VLayout>
       <VLayout v-else-if="!allLoaded" justifyCenter alignCenter fillHeight>
         <VFlex grow class="default-content">
           {{ $tr('loadingText') }}
@@ -14,28 +22,54 @@
       </VLayout>
       <VLayout v-else justifyCenter>
         <VFlex grow>
-          <VAlert :value="invalidSelected && selected.length > 1" type="error" outline>
-            {{ $tr('invalidItemsText') }}
-          </VAlert>
-          <VAlert :value="selected.length > 1" type="info" outline>
-            {{ countText }}
-          </VAlert>
           <VTabs fixedTabs sliderColor="primary">
-            <VTab v-for="(item, key) in tabs" :key="key" @click="currentTab=key">
-              {{ $tr(key) }}
-              <VChip v-if="item.count" color="gray" dark class="tab-count">
-                {{ item.count }}
+            <!-- Details tab -->
+            <VTab @click="currentTab = tabs.DETAILS">
+              {{ $tr(tabs.DETAILS) }}
+              <v-tooltip v-if="invalidSelected" top>
+                <template v-slot:activator="{ on }">
+                  <v-icon color="red" dark v-on="on">
+                    error_outline
+                  </v-icon>
+                </template>
+                <span>{{ $tr('invalidFieldsToolTip') }}</span>
+              </v-tooltip>
+            </VTab>
+
+            <!-- Preview tab -->
+            <VTab v-if="showPreviewTab" @click="currentTab = tabs.PREVIEW">
+              {{ $tr(tabs.PREVIEW) }}
+            </VTab>
+
+            <!-- Questions tab -->
+            <VTab v-if="showQuestionsTab" @click="currentTab = tabs.QUESTIONS">
+              {{ $tr(tabs.QUESTIONS) }}
+              <VChip v-if="oneSelected.assessment_items.length" color="gray" dark>
+                {{ oneSelected.assessment_items.length }}
+              </VChip>
+            </VTab>
+
+            <!-- Prerequisites tab -->
+            <VTab v-if="showPrerequisitesTab" @click="currentTab = tabs.PREREQUISITES">
+              {{ $tr(tabs.PREREQUISITES) }}
+              <VChip v-if="oneSelected.prerequisite.length" color="gray" dark>
+                {{ oneSelected.prerequisite.length }}
               </VChip>
             </VTab>
           </VTabs>
           <VTabsItems v-model="currentTab">
-            <VTabItem
-              v-for="(item, key) in tabs"
-              :key="key + '-tab'"
-              :value="key"
-              lazy
-            >
-              <component :is="item.component" />
+            <VTabItem :key="tabs.DETAILS" :value="tabs.DETAILS" lazy>
+              <DetailsViewOnlyView v-if="viewOnly" />
+              <DetailsEditView v-else />
+            </VTabItem>
+            <VTabItem :key="tabs.PREVIEW" :value="tabs.PREVIEW" lazy>
+              <DetailsViewOnlyView />
+            </VTabItem>
+            <VTabItem :key="tabs.QUESTIONS" :value="tabs.QUESTIONS" lazy>
+              <DetailsViewOnlyView />
+            </VTabItem>
+            <VTabItem :key="tabs.PREREQUISITES" :value="tabs.PREREQUISITES" lazy>
+              <DetailsViewOnlyView />
             </VTabItem>
           </VTabsItems>
         </VFlex>
@@ -63,19 +97,27 @@
       addTopicText: 'Please add a topic to get started',
       addExerciseText: 'Please add an exercise to get started',
       loadingText: 'Loading Content...',
-      viewingMultipleCount: 'Viewing details for {count, plural,\n =1 {# item}\n other {# items}}',
-      editingMultipleCount: 'Editing details for {count, plural,\n =1 {# item}\n other {# items}}',
-      invalidItemsText: 'One or more of the selected items is invalid',
+      loadErrorText: 'Unable to load content',
+      invalidFieldsToolTip: 'Invalid fields detected',
     },
     components: {
-      DetailsEditView, // eslint-disable-line vue/no-unused-components
-      DetailsViewOnlyView, // eslint-disable-line vue/no-unused-components
+      DetailsEditView,
+      DetailsViewOnlyView,
     },
     data() {
       return {
         currentTab: null,
         loadError: false,
-        loader: this.loadNodesDebounced(),
+        loadNodesDebounced: _.debounce(() => {
+          this.loadError = false;
+          let selectedIDs = _.chain(this.selected)
+            .where({ loaded: false })
+            .pluck('id')
+            .value();
+          this.loadNodes(selectedIDs).catch(() => {
+            this.loadError = true;
+          });
+        }, 1000),
       };
     },
     computed: {
@@ -86,77 +128,41 @@
           if (this.mode === modes.NEW_EXERCISE) return this.$tr('addExerciseText');
           else if (this.mode === modes.NEW_TOPIC) return this.$tr('addTopicText');
         }
-        return this.mode === modes.VIEW_ONLY
-          ? this.$tr('noItemsToViewText')
-          : this.$tr('noItemsToEditText');
+        return this.viewOnly ? this.$tr('noItemsToViewText') : this.$tr('noItemsToEditText');
       },
       tabs() {
-        let map = {
-          [TabNames.DETAILS]: { component: 'DetailsEditView' },
-        };
-
-        // Set detail view to view only mode
-        if (this.mode === modes.VIEW_ONLY) {
-          map[TabNames.DETAILS] = { component: 'DetailsViewOnlyView' };
-        }
-
-        // Only show some tabs if only one item is selected
-        if (this.selected.length === 1) {
-          map[TabNames.PREVIEW] = { component: 'DetailsViewOnlyView' };
-
-          // Only show question editor if the item is a question
-          if (this.selected[0].kind === 'exercise') {
-            map[TabNames.QUESTIONS] = {
-              component: 'DetailsViewOnlyView',
-              count: this.selected[0].assessment_items.length,
-            };
-          }
-
-          // Only show prerequisites if not editing a topic or clipboard item
-          if (!this.isClipboard && this.allResources) {
-            map[TabNames.PREREQUISITES] = {
-              component: 'DetailsViewOnlyView',
-              count: this.selected[0].prerequisite.length,
-            };
-          }
-        }
-
-        return map;
+        return TabNames;
+      },
+      viewOnly() {
+        return this.mode === modes.VIEW_ONLY;
+      },
+      oneSelected() {
+        return this.selected.length === 1 && this.selected[0];
+      },
+      showPreviewTab() {
+        return this.oneSelected && this.oneSelected.files.length;
+      },
+      showQuestionsTab() {
+        return this.oneSelected && this.allExercises;
+      },
+      showPrerequisitesTab() {
+        return this.oneSelected && !this.isClipboard && this.allResources;
       },
       allLoaded() {
         return !_.some(this.selected, { loaded: false });
       },
-      countText() {
-        let messageArgs = { count: this.selected.length };
-        return this.viewOnly
-          ? this.$tr('viewingMultipleCount', messageArgs)
-          : this.$tr('editingMultipleCount', messageArgs);
-      },
       invalidSelected() {
-        return _.some(this.selectedIndices, i => _.contains(this.invalidNodes, i));
+        return _.intersection(this.selectedIndices, this.invalidNodes).length;
       },
     },
     watch: {
       selected(newVal) {
-        if (newVal.length > 0) {
-          this.loader();
-        }
+        this.currentTab = TabNames.DETAILS;
+        if (newVal.length > 0) this.loadNodesDebounced();
       },
-    },
-    mounted() {
-      this.currentTab = TabNames.DETAILS;
     },
     methods: {
       ...mapActions('edit_modal', ['loadNodes']),
-      loadNodesDebounced() {
-        return _.debounce(() => {
-          let selectedIDs = _.chain(this.selected)
-            .where({ loaded: false })
-            .pluck('id')
-            .value();
-          this.loadNodes(selectedIDs);
-        }, 1000);
-      },
     },
   };
 
@@ -172,19 +178,22 @@
     margin: 10% auto;
   }
 
-  .v-alert {
-    padding: 10px;
-    margin-bottom: 15px;
+  .v-tabs__div {
     font-weight: bold;
+    .v-icon {
+      margin-left: 5px;
+      font-size: 12pt;
+    }
   }
 
-  /deep/ .v-tabs__item {
-    font-weight: bold;
-  }
-
-  .tab-count {
+  .v-chip {
     height: 20px;
     margin-left: 10px;
+  }
+
+  .error-icon {
+    margin-bottom: 20px;
+    font-size: 45pt;
   }
 
 </style>

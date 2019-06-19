@@ -1,14 +1,17 @@
 <template>
   <div class="details-edit-view">
-    <div v-if="false">
-      <!-- INSERT ERROR MESSAGES HERE -->
-    </div>
+    <VAlert :value="selected.length > 1" type="info" outline>
+      {{ countText }}
+    </VAlert>
+    <VAlert :value="!newContent && !valid" type="error" outline>
+      {{ $tr('errorBannerText') }}
+    </VAlert>
 
     <div v-if="oneSelected">
       <!-- INSERT FILE UPLOAD MODULE HERE -->
     </div>
 
-    <VForm ref="form" v-model="valid" lazyValidation>
+    <VForm ref="form" v-model="valid" :lazyValidation="newContent">
       <!-- Language and import link -->
       <VLayout grid alignTop class="language-section" wrap>
         <VFlex v-if="oneSelected && isImported" md4 sm12>
@@ -168,6 +171,7 @@
         :label="$tr('descriptionLabel')"
         counter="400"
         noResize
+        autoGrow
         @change="setDescription"
       />
 
@@ -205,6 +209,7 @@
 
   import _ from 'underscore';
   import { mapGetters, mapMutations, mapState } from 'vuex';
+  import { modes } from '../constants';
   import Constants from 'edit_channel/constants';
   import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown.vue';
   import HelpTooltip from 'edit_channel/sharedComponents/HelpTooltip.vue';
@@ -215,6 +220,9 @@
   export default {
     name: 'DetailsEditView',
     $trs: {
+      errorBannerText: 'Please address invalid fields',
+      viewingMultipleCount: 'Viewing details for {count, plural,\n =1 {# item}\n other {# items}}',
+      editingMultipleCount: 'Editing details for {count, plural,\n =1 {# item}\n other {# items}}',
       titleLabel: 'Title *',
       titleValidationMessage: 'Title is required',
       languageHelpText: 'Leave blank to default to topic language',
@@ -265,7 +273,14 @@
         'tags',
         'allExercises',
         'allResources',
+        'invalidNodes',
       ]),
+      countText() {
+        let messageArgs = { count: this.selected.length };
+        return this.mode === modes.VIEW_ONLY
+          ? this.$tr('viewingMultipleCount', messageArgs)
+          : this.$tr('editingMultipleCount', messageArgs);
+      },
       disableAuthEdits() {
         return _.some(this.selected, { freeze_authoring_data: true });
       },
@@ -294,18 +309,15 @@
         let baseUrl = window.Urls.channel_view_only(selected.original_channel.id);
         return baseUrl + '/' + selected.original_source_node_id;
       },
+      newContent() {
+        return !!_.some(this.selected, { isNew: true });
+      },
     },
-    // watch: {
-    //   changes: {
-    //     handler(newVal) {
-    //     console.log(newVal)
-    //     _.some(this.selected, n => !n.isNew)
-    //       ? this.$refs.form.validate()
-    //       : this.$refs.form.resetValidation();
-    //     },
-    //     deep: true
-    //   },
-    // },
+    watch: {
+      changes() {
+        if (!this.newContent) _.defer(this.$refs.form.validate);
+      },
+    },
     methods: {
       ...mapMutations('edit_modal', {
         setTitle: 'SET_TITLE',
@@ -340,6 +352,12 @@
 <style lang="less" scoped>
 
   @import '../../../../less/global-variables.less';
+
+  .v-alert {
+    padding: 10px;
+    margin-bottom: 15px;
+    font-weight: bold;
+  }
 
   /deep/ a {
     .linked-list-item;

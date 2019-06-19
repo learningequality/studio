@@ -1,5 +1,5 @@
 <template>
-  <VListTile :class="{invalid: !nodeIsValid, selected: isSelected}" @click.stop="setNode(index)">
+  <VListTile :class="{selected: isSelected, invalid: !nodeIsValid}" @click.stop="setNode(index)">
     <VListTileAction>
       <VCheckbox color="primary" :value="isSelected" @click.stop="toggleNode" />
     </VListTileAction>
@@ -86,11 +86,11 @@
     }
   }
 
-  .invalid {
-    background-color: @red-bg-color;
-  }
   .selected {
     background-color: @gray-200;
+  }
+  .invalid {
+    background-color: @red-bg-color;
   }
 
   .remove-item {

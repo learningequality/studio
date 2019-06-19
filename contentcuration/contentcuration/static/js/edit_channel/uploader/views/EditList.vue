@@ -79,6 +79,14 @@
         return this.mode === modes.NEW_EXERCISE;
       },
     },
+    mounted() {
+      // Set changesStaged to false to avoid automatically saving nodes right away
+      if (this.allowAddTopic) {
+        this.createNode('topic', { changesStaged: false });
+      } else if (this.allowAddExercise) {
+        this.createNode('exercise', { changesStaged: false });
+      }
+    },
     methods: {
       ...mapMutations('edit_modal', {
         selectAll: 'SELECT_ALL_NODES',
@@ -89,10 +97,11 @@
         this.selectAllChecked ? this.deselectAll() : this.selectAll();
         this.selectAllChecked = !this.selectAllChecked;
       },
-      createNode(kind) {
+      createNode(kind, props = {}) {
         let payload = {
           title: this.$tr(kind + 'DefaultTitle', { parent: this.targetNode.parent_title }),
           kind: kind,
+          ...props,
         };
         this.addNode(payload);
       },

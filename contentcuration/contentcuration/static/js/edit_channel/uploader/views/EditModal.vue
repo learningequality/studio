@@ -13,19 +13,11 @@
           <VSpacer />
           <VToolbarItems>
             <VFlex v-if="!isViewOnly" alignCenter class="last-saved-time">
-              <div v-if="invalidNodesOverridden.length">
-                {{ $tr('invalidItemsDetected') }}
-              </div>
-              <div v-else-if="saveError">
+              <div v-if="saveError">
                 {{ $tr('saveFailedText') }}
               </div>
               <div v-else-if="saving">
-                <VProgressCircular
-                  indeterminate
-                  size="15"
-                  width="2"
-                  color="white"
-                />
+                <VProgressCircular indeterminate size="15" width="2" color="white" />
                 {{ $tr('savingIndicator') }}
               </div>
               <div v-else-if="lastSaved">
@@ -101,7 +93,6 @@
       saveButtonText: 'Save & Close',
       copyButtonText: 'Copy',
       savedMessage: 'Saved {relativeTime}',
-      savedNowMessage: 'Saved just now',
       savingIndicator: 'Saving...',
       unsavedChanges: 'Save your changes?',
       unsavedChangesText: "Your changes will be lost if you don't save them",
@@ -135,10 +126,19 @@
         saveError: false,
         interval: null,
         updateInterval: null,
-        saveFunction: this.debouncedSave(),
         drawer: {
           open: true,
         },
+        debouncedSave: _.debounce(() => {
+          if (!this.invalidNodesOverridden.length) {
+            this.saveContent()
+              .then(() => {
+                this.updateSavedTime();
+                this.updateInterval = setInterval(this.updateSavedTime, SAVE_MESSAGE_TIMER);
+              })
+              .catch(() => (this.saveError = true));
+          }
+        }, SAVE_TIMER),
       };
     },
     computed: {
@@ -148,6 +148,7 @@
         return this.mode === modes.VIEW_ONLY;
       },
       showEditList() {
+        // Only hide drawer when editing a single item
         return this.mode !== modes.EDIT || this.nodes.length > 1;
       },
     },
@@ -162,7 +163,7 @@
       changes: {
         deep: true,
         handler() {
-          this.changed && this.saveFunction();
+          if (this.changed) this.debouncedSave();
         },
       },
     },
@@ -176,7 +177,7 @@
         deselectAll: 'RESET_SELECTED',
         reset: 'RESET_STATE',
         prepareForSave: 'PREP_NODES_FOR_SAVE',
-        setSelected: 'SET_SELECTED',
+        setNode: 'SET_NODE',
       }),
       openModal() {
         this.dialog = true;
@@ -208,7 +209,7 @@
       handleSave() {
         this.prepareForSave();
         if (this.invalidNodes.length) {
-          this.setSelected(this.invalidNodes);
+          this.setNode(this.invalidNodes[0]);
         } else {
           this.saveContent()
             .then(this.closeModal)
@@ -217,18 +218,6 @@
               this.dismissPrompt();
             });
         }
-      },
-      debouncedSave() {
-        return _.debounce(() => {
-          if (!this.invalidNodesOverridden.length) {
-            this.saveContent()
-              .then(() => {
-                this.updateSavedTime();
-                this.updateInterval = setInterval(this.updateSavedTime, SAVE_MESSAGE_TIMER);
-              })
-              .catch(() => (this.saveError = true));
-          }
-        }, SAVE_TIMER);
       },
       handleClose() {
         if (this.changed) {
