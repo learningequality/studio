@@ -45,7 +45,6 @@
           />
         </VFlex>
 
-
         <!-- Visibility -->
         <VFlex sm12 md4>
           <VisibilityDropdown
@@ -71,6 +70,15 @@
             :nPlaceholder="getExtraFieldPlaceholder('n')"
             :nRequired="!changes.extra_fields.n.varied"
             @changed="setExtraFields"
+          />
+          <br>
+          <v-checkbox
+            v-if="allExercises"
+            :label="$tr('randomizeQuestionLabel')"
+            :inputValue="changes.extra_fields.randomize.value"
+            :indeterminate="changes.extra_fields.randomize.varied"
+            color="primary"
+            @change="setQuestionOrderRandomization"
           />
         </VFlex>
       </VLayout>
@@ -165,42 +173,45 @@
       </div>
 
       <!-- Description -->
-      <VTextarea
-        :value="changes.description.value"
-        :placeholder="getPlaceholder('description')"
-        :label="$tr('descriptionLabel')"
-        counter="400"
-        noResize
-        autoGrow
-        @change="setDescription"
-      />
+      <VFlex xs12>
+        <VTextarea
+          :value="changes.description.value"
+          :placeholder="getPlaceholder('description')"
+          :label="$tr('descriptionLabel')"
+          counter="400"
+          noResize
+          autoGrow
+          @change="setDescription"
+        />
+      </VFlex>
 
       <!-- Tags -->
-      <VCombobox
-        ref="tagbox"
-        :value="changes.tags"
-        :items="tags"
-        :searchInput.sync="tagText"
-        chips
-        :label="$tr('tagsLabel')"
-        multiple
-        deletableChips
-        hideSelected
-        class="tags-field"
-        maxlength="30"
-        autoSelectFirst
-        @change="handleTags"
-      >
-        <template v-slot:no-data>
-          <VListTile v-if="tagText && tagText.trim()">
-            <VListTileContent>
-              <VListTileTitle>
-                {{ $tr('noTagsFoundText', {text: tagText.trim()}) }}
-              </VListTileTitle>
-            </VListTileContent>
-          </VListTile>
-        </template>
-      </VCombobox>
+      <VFlex xs12>
+        <VCombobox
+          ref="tagbox"
+          :value="changes.tags"
+          :items="tags"
+          :searchInput.sync="tagText"
+          chips
+          :label="$tr('tagsLabel')"
+          multiple
+          deletableChips
+          hideSelected
+          maxlength="30"
+          autoSelectFirst
+          @change="handleTags"
+        >
+          <template v-slot:no-data>
+            <VListTile v-if="tagText && tagText.trim()">
+              <VListTileContent>
+                <VListTileTitle>
+                  {{ $tr('noTagsFoundText', {text: tagText.trim()}) }}
+                </VListTileTitle>
+              </VListTileContent>
+            </VListTile>
+          </template>
+        </VCombobox>
+      </VFlex>
     </VForm>
   </div>
 </template>
@@ -240,6 +251,7 @@
       tagsLabel: 'Tags',
       variedFieldPlaceholder: '---',
       noTagsFoundText: 'No results matching "{text}". Press \'enter\'to create a new tag',
+      randomizeQuestionLabel: 'Randomize question order for learners',
     },
     components: {
       LanguageDropdown,
@@ -340,6 +352,9 @@
         if (tags.length > this.changes.tags.length) this.tagText = null;
         this.setTags(tags);
       },
+      setQuestionOrderRandomization(value) {
+        this.setExtraFields({ randomize: value || false });
+      },
     },
   };
 
@@ -361,6 +376,11 @@
 
   /deep/ .error--text {
     font-weight: bold;
+  }
+
+  /deep/ .v-label {
+    margin-bottom: 0;
+    font-weight: normal;
   }
 
   .details-edit-view {

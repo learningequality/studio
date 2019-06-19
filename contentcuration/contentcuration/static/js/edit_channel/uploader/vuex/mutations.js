@@ -17,7 +17,7 @@ const editableFields = [
   'provider',
 ];
 
-const extraFields = ['mastery_model', 'm', 'n'];
+const extraFields = ['mastery_model', 'm', 'n', 'randomize'];
 
 export function RESET_STATE(state) {
   Object.assign(state, {
@@ -34,7 +34,7 @@ export function SET_NODES(state, nodes) {
   _.each(nodes, node => {
     node.changesStaged = false;
     node.loaded = false;
-    node.copyright_holder = null;
+    // node.copyright_holder = null;
   });
   state.nodes = nodes;
 }
@@ -83,7 +83,7 @@ export function SET_LOADED_NODES(state, nodes) {
     _.extendOwn(match, {
       ...node,
       loaded: true,
-      copyright_holder: null,
+      // copyright_holder: null,
     });
   });
   _.defer(() => {
