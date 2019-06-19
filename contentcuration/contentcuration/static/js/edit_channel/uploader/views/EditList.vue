@@ -28,7 +28,7 @@
           depressed
           color="primary"
           dark
-          @click="createNode('topic')"
+          @click="$emit('addNode')"
         >
           {{ $tr('addTopic') }}
         </VBtn>
@@ -38,7 +38,7 @@
           depressed
           color="primary"
           dark
-          @click="createNode('exercise')"
+          @click="$emit('addNode')"
         >
           {{ $tr('addExercise') }}
         </VBtn>
@@ -59,8 +59,6 @@
       selectAllLabel: 'Select All',
       addTopic: 'Add Topic',
       addExercise: 'Add Exercise',
-      topicDefaultTitle: '{parent} Topic',
-      exerciseDefaultTitle: '{parent} Exercise',
     },
     components: {
       EditListItem,
@@ -79,31 +77,14 @@
         return this.mode === modes.NEW_EXERCISE;
       },
     },
-    mounted() {
-      // Set changesStaged to false to avoid automatically saving nodes right away
-      if (this.allowAddTopic) {
-        this.createNode('topic', { changesStaged: false });
-      } else if (this.allowAddExercise) {
-        this.createNode('exercise', { changesStaged: false });
-      }
-    },
     methods: {
       ...mapMutations('edit_modal', {
         selectAll: 'SELECT_ALL_NODES',
         deselectAll: 'RESET_SELECTED',
-        addNode: 'ADD_NODE',
       }),
       toggleSelectAll() {
         this.selectAllChecked ? this.deselectAll() : this.selectAll();
         this.selectAllChecked = !this.selectAllChecked;
-      },
-      createNode(kind, props = {}) {
-        let payload = {
-          title: this.$tr(kind + 'DefaultTitle', { parent: this.targetNode.parent_title }),
-          kind: kind,
-          ...props,
-        };
-        this.addNode(payload);
       },
     },
   };

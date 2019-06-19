@@ -3,7 +3,7 @@
     <VDialog v-model="dialog" fullscreen hideOverlay transition="dialog-bottom-transition" lazy>
       <VCard class="edit-modal-wrapper">
         <VNavigationDrawer v-model="drawer.open" stateless clipped app class="edit-list">
-          <EditList />
+          <EditList @addNode="createNode" />
         </VNavigationDrawer>
         <VToolbar dark color="primary" fixed clippedLeft app>
           <VBtn icon dark app @click="handleClose">
@@ -15,6 +15,9 @@
             <VFlex v-if="!isViewOnly" alignCenter class="last-saved-time">
               <div v-if="saveError">
                 {{ $tr('saveFailedText') }}
+              </div>
+              <div v-else-if="invalidNodes.length">
+                {{ $tr('autosaveDisabledMessage', {count: invalidNodes.length}) }}
               </div>
               <div v-else-if="saving">
                 <VProgressCircular indeterminate size="15" width="2" color="white" />
@@ -104,7 +107,10 @@
       invalidItemsDetected: 'Saving disabled (invalid content detected)',
       saveFailedHeader: 'Save failed',
       saveFailedText: 'There was a problem saving your content',
-
+      autosaveDisabledMessage:
+        'Autosave paused ({count, plural,\n =1 {# error}\n other {# errors}} detected)',
+      topicDefaultTitle: '{parent} Topic',
+      exerciseDefaultTitle: '{parent} Exercise',
       // out_of_space: 'Out of Disk Space',
       // out_of_space_text:
       //   "Please request more space under your Settings page.",
@@ -142,7 +148,7 @@
       };
     },
     computed: {
-      ...mapState('edit_modal', ['nodes', 'changes', 'mode']),
+      ...mapState('edit_modal', ['nodes', 'changes', 'mode', 'targetNode']),
       ...mapGetters('edit_modal', ['changed', 'invalidNodes', 'invalidNodesOverridden']),
       isViewOnly() {
         return this.mode === modes.VIEW_ONLY;
@@ -178,10 +184,32 @@
         reset: 'RESET_STATE',
         prepareForSave: 'PREP_NODES_FOR_SAVE',
         setNode: 'SET_NODE',
+        addNodeToList: 'ADD_NODE',
       }),
+      toggleSelectAll() {
+        this.selectAllChecked ? this.deselectAll() : this.selectAll();
+        this.selectAllChecked = !this.selectAllChecked;
+      },
       openModal() {
         this.dialog = true;
         if (this.nodes.length > 0) this.select(0);
+        if (this.mode === modes.NEW_TOPIC || this.mode === modes.NEW_EXERCISE) {
+          this.createNode();
+        }
+      },
+      createNode() {
+        let titleArgs = { parent: this.targetNode.parent_title };
+        if (this.mode === modes.NEW_TOPIC) {
+          this.addNodeToList({
+            title: this.$tr('topicDefaultTitle', titleArgs),
+            kind: 'topic',
+          });
+        } else if (this.mode === modes.NEW_EXERCISE) {
+          this.addNodeToList({
+            title: this.$tr('exerciseDefaultTitle', titleArgs),
+            kind: 'exercise',
+          });
+        }
       },
       updateSavedTime() {
         this.savedMessage = this.$tr('savedMessage', {
@@ -233,7 +261,7 @@
         this.dismissPrompt();
         this.dialog = false;
         this.lastSaved = null;
-        this.deselectAll();
+        this.reset();
         this.$emit('modalclosed');
         // TODO: Update router
       },

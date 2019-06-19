@@ -76,6 +76,7 @@
 <style lang="less" scoped>
 
   @import '../../../../less/global-variables.less';
+  @highlighted-red-color: #fdb1b9;
 
   .v-list__tile__action {
     min-width: 30px;
@@ -91,6 +92,9 @@
   }
   .invalid {
     background-color: @red-bg-color;
+    &.selected {
+      background-color: @highlighted-red-color;
+    }
   }
 
   .remove-item {

@@ -1,7 +1,7 @@
 <template>
   <div class="details-edit-view">
     <VAlert :value="selected.length > 1" type="info" outline>
-      {{ countText }}
+      {{ $tr('editingMultipleCount', {count: selected.length}) }}
     </VAlert>
     <VAlert :value="!newContent && !valid" type="error" outline>
       {{ $tr('errorBannerText') }}
@@ -209,7 +209,6 @@
 
   import _ from 'underscore';
   import { mapGetters, mapMutations, mapState } from 'vuex';
-  import { modes } from '../constants';
   import Constants from 'edit_channel/constants';
   import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown.vue';
   import HelpTooltip from 'edit_channel/sharedComponents/HelpTooltip.vue';
@@ -221,7 +220,6 @@
     name: 'DetailsEditView',
     $trs: {
       errorBannerText: 'Please address invalid fields',
-      viewingMultipleCount: 'Viewing details for {count, plural,\n =1 {# item}\n other {# items}}',
       editingMultipleCount: 'Editing details for {count, plural,\n =1 {# item}\n other {# items}}',
       titleLabel: 'Title *',
       titleValidationMessage: 'Title is required',
@@ -239,8 +237,6 @@
       copyrightHolderLabel: 'Copyright Holder',
       copyrightHolderValidationMessage: 'Copyright holder is required',
       descriptionLabel: 'Description',
-      descriptionValidationMessage:
-        'Too long - recommend removing {data, plural,\n =1 {# character}\n other {# characters}}',
       tagsLabel: 'Tags',
       variedFieldPlaceholder: '---',
       noTagsFoundText: 'No results matching "{text}". Press \'enter\'to create a new tag',
@@ -275,12 +271,6 @@
         'allResources',
         'invalidNodes',
       ]),
-      countText() {
-        let messageArgs = { count: this.selected.length };
-        return this.mode === modes.VIEW_ONLY
-          ? this.$tr('viewingMultipleCount', messageArgs)
-          : this.$tr('editingMultipleCount', messageArgs);
-      },
       disableAuthEdits() {
         return _.some(this.selected, { freeze_authoring_data: true });
       },
@@ -288,7 +278,7 @@
         return this.selected.length === 1;
       },
       languageHint() {
-        let topLevel = !_.some(this.selected, item => item.ancestors.length > 1);
+        let topLevel = !_.some(this.selected, item => item && item.ancestors.length > 1);
         return topLevel ? this.$tr('languageChannelHelpText') : this.$tr('languageHelpText');
       },
       copyrightHolderRequired() {
@@ -302,7 +292,7 @@
       },
       isImported() {
         let selected = this.selected[0];
-        return selected.node_id !== selected.original_source_node_id;
+        return selected && selected.node_id !== selected.original_source_node_id;
       },
       importUrl() {
         let selected = this.selected[0];
@@ -312,10 +302,15 @@
       newContent() {
         return !!_.some(this.selected, { isNew: true });
       },
+      invalidSelected() {
+        return _.intersection(this.selectedIndices, this.invalidNodes).length;
+      },
     },
     watch: {
       changes() {
-        if (!this.newContent) _.defer(this.$refs.form.validate);
+        _.defer(() => {
+          this.newContent ? this.$refs.form.resetValidation() : this.$refs.form.validate();
+        });
       },
     },
     methods: {
