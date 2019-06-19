@@ -54,14 +54,13 @@
   h1 {
     width: 100%;
     margin: 0;
-    font-size: 22pt;
+    font-size: 18pt;
     text-align: center;
   }
 
   /deep/ p {
     font-size: 12pt;
     color: @gray-700;
-    text-indent: 20px;
   }
 
 </style>

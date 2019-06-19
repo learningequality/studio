@@ -14,15 +14,14 @@
     <VForm ref="form" v-model="valid" :lazyValidation="newContent">
       <!-- Language and import link -->
       <VLayout grid alignTop class="language-section" wrap>
-        <VFlex v-if="oneSelected && isImported" lg4 md6 sm12>
+        <VFlex v-if="oneSelected && isImported" lg4 md7 sm12>
           <VBtn color="primary" flat class="import-link" :href="importUrl" target="_blank">
             {{ $tr('importedFromButtonText', {channel: 'Sample Channel'}) }}
           </VBtn>
         </VFlex>
         <VSpacer />
-        <VFlex lg4 md6 sm12>
+        <VFlex lg4 md5 sm12>
           <LanguageDropdown
-            width="250"
             :hint="languageHint"
             :language="changes.language.value"
             :placeholder="getPlaceholder('language')"
@@ -378,7 +377,7 @@
     font-weight: bold;
   }
 
-  /deep/ .v-label {
+  /deep/ .v-input--checkbox .v-label {
     margin-bottom: 0;
     font-weight: normal;
   }
@@ -402,8 +401,7 @@
     .v-form {
       margin-top: 30px;
       /deep/ .language-dropdown {
-        width: 250px;
-        max-width: 100%;
+        width: 100%;
       }
       .flex {
         text-align: center;

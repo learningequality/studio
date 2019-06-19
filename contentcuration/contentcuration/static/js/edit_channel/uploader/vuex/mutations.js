@@ -34,8 +34,11 @@ export function SET_NODES(state, nodes) {
   _.each(nodes, node => {
     node.changesStaged = false;
     node.loaded = false;
-    // node.copyright_holder = null;
   });
+
+  // TODO: Remove
+  if (state.nodes.length) nodes[nodes.length - 1].copyright_holder = null;
+
   state.nodes = nodes;
 }
 
@@ -83,9 +86,12 @@ export function SET_LOADED_NODES(state, nodes) {
     _.extendOwn(match, {
       ...node,
       loaded: true,
-      // copyright_holder: null,
     });
   });
+
+  // TODO: Remove
+  if (state.nodes.length) state.nodes[state.nodes.length - 1].copyright_holder = null;
+
   _.defer(() => {
     SET_CHANGES(state);
   });

@@ -1,7 +1,7 @@
 <template>
   <VListTile :class="{selected: isSelected, invalid: !nodeIsValid}" @click.stop="setNode(index)">
     <VListTileAction>
-      <VCheckbox color="primary" :value="isSelected" @click.stop="toggleNode" />
+      <VCheckbox color="primary" :inputValue="isSelected" @click.stop="toggleNode" />
     </VListTileAction>
     <VListTileAction v-if="node.changesStaged" class="changed">
       *
