@@ -403,6 +403,8 @@ def get_node_tree_data(request):
             'staged': channel.staging_tree is not None
         }
         return Response(response_data)
+    except (Channel.DoesNotExist, PermissionDenied):
+        return HttpResponseNotFound("No channel matching: {}".format(channel_id))
     except Exception as e:
         handle_server_error(request)
         return HttpResponseServerError(content=str(e), reason=str(e))
