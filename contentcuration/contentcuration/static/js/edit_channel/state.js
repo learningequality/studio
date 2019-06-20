@@ -3,6 +3,7 @@ let Vue = require('vue');
 const Models = require('./models');
 const Constants = require('./constants/index');
 const channelModule = require('./vuexModules/channel');
+const contentNodesModule = require('./vuexModules/contentNodes');
 const primaryModalModule = require('./vuexModules/primaryModal');
 
 if (Vue.default) {
@@ -16,6 +17,7 @@ Vue.use(Vuex);
 const Store = new Vuex.Store({
   modules: {
     channel: channelModule,
+    topicTree: contentNodesModule,
     dialog: primaryModalModule,
   },
 });
