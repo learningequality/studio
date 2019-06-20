@@ -8,6 +8,7 @@ from django.core.cache import cache
 from le_utils.constants import content_kinds
 from rest_framework.reverse import reverse
 
+from .testdata import tree
 from contentcuration.models import Channel
 from contentcuration.models import ContentKind
 from contentcuration.models import ContentNode
@@ -105,5 +106,22 @@ class GetNodeDiffEndpointTestCase(BaseAPITestCase):
         new_channel = Channel.objects.create()
         response = self.get(
             reverse("get_node_diff", kwargs={"channel_id": new_channel.id}),
+        )
+        self.assertEqual(response.status_code, 403)
+
+
+class GetTotalSizeEndpointTestCase(BaseAPITestCase):
+    def test_200_post(self):
+        response = self.get(
+            reverse("get_total_size", kwargs={"ids": self.channel.main_tree.id})
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_403_no_permission(self):
+        new_channel = Channel.objects.create()
+        new_channel.main_tree = tree()
+        new_channel.save()
+        response = self.get(
+            reverse("get_total_size", kwargs={"ids": new_channel.main_tree.id}),
         )
         self.assertEqual(response.status_code, 403)
