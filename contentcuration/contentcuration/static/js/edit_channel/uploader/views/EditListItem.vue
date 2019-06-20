@@ -16,7 +16,7 @@
     </VListTileContent>
     <VSpacer />
     <VListTileAction v-if="!nodeIsValid">
-      <VIcon color="red">
+      <VIcon color="red" class="error-icon">
         error
       </VIcon>
     </VListTileAction>
@@ -93,16 +93,17 @@
 
   .selected {
     background-color: @gray-200;
-    &.invalid {
-      background-color: @red-bg-color;
-    }
   }
 
   .remove-item {
     color: @gray-500 !important;
     &:hover {
-      color: @red-error-color;
+      color: @red-error-color !important;
     }
+  }
+
+  .error-icon {
+    font-size: 14pt !important;
   }
 
 </style>
