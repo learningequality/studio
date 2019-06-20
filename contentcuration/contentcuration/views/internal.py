@@ -37,7 +37,7 @@ from contentcuration.models import get_next_sort_order
 from contentcuration.models import License
 from contentcuration.models import SlideshowSlide
 from contentcuration.models import StagedFile
-from contentcuration.serializers import GetTreeDataSerizlizer
+from contentcuration.serializers import GetTreeDataSerializer
 from contentcuration.utils.files import get_file_diff
 from contentcuration.utils.garbage_collect import get_deleted_chefs_root
 from contentcuration.utils.nodes import map_files_to_assessment_item
@@ -354,7 +354,7 @@ def get_tree_data(request):
     WARNING: this endpoint timesouts for large channels.
     Returns { success: true, tree:[ nodes in channel_id ] }
     """
-    serializer = GetTreeDataSerizlizer(data=request.data)
+    serializer = GetTreeDataSerializer(data=request.data)
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     try:
@@ -366,6 +366,8 @@ def get_tree_data(request):
         tree_data = tree_root.get_tree_data()
         children_data = tree_data.get('children', [])
         return Response({"success": True, 'tree': children_data})
+    except (Channel.DoesNotExist, PermissionDenied):
+        return HttpResponseNotFound("No channel matching: {}".format(channel_id))
     except Exception as e:
         handle_server_error(request)
         return HttpResponseServerError(content=str(e), reason=str(e))
@@ -380,7 +382,7 @@ def get_node_tree_data(request):
     the `tree` tree associated with channel `data['channel_id']`.
     Returns { success: true, tree:[ children of node_id ] }
     """
-    serializer = GetTreeDataSerizlizer(data=request.data)
+    serializer = GetTreeDataSerializer(data=request.data)
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     try:
