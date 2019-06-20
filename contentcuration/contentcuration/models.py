@@ -163,6 +163,9 @@ class User(AbstractBaseUser, PermissionsMixin):
                                             | Q(trash_tree=root)
                                             | Q(staging_tree=root)
                                             | Q(previous_tree=root)).values_list("id", flat=True).first()
+        if not channel_id:
+            # Don't let a non-admin view orphaned nodes
+            raise PermissionDenied("Cannot view content")
         return self.can_view(channel_id)
 
     def can_view_nodes(self, nodes):
@@ -179,7 +182,9 @@ class User(AbstractBaseUser, PermissionsMixin):
         # We check the count for simplicity, as if the user does not have permissions for
         # even one of the channels the content is drawn from, then the number of channels
         # will be smaller.
-        if channels.distinct().count() > channels_user_has_perms_for.distinct().count():
+        total_channels = channels.distinct().count()
+        # If no channels, then these nodes are orphans - do not let them be viewed except by an admin.
+        if not total_channels or total_channels > channels_user_has_perms_for.distinct().count():
             raise PermissionDenied("Cannot view content")
         return True
 
@@ -192,6 +197,9 @@ class User(AbstractBaseUser, PermissionsMixin):
                                             | Q(trash_tree=root)
                                             | Q(staging_tree=root)
                                             | Q(previous_tree=root)).values_list("id", flat=True).first()
+        if not channel_id:
+            # Don't let a non-admin edit orphaned nodes
+            raise PermissionDenied("Cannot edit content")
         return self.can_edit(channel_id)
 
     def can_edit_nodes(self, nodes):
@@ -208,7 +216,9 @@ class User(AbstractBaseUser, PermissionsMixin):
         # We check the count for simplicity, as if the user does not have permissions for
         # even one of the channels the content is drawn from, then the number of channels
         # will be smaller.
-        if channels.distinct().count() > channels_user_can_edit.distinct().count():
+        total_channels = channels.distinct().count()
+        # If no channels, then these nodes are orphans - do not let them be edited except by an admin.
+        if not total_channels or total_channels > channels_user_can_edit.distinct().count():
             raise PermissionDenied("Cannot edit content")
         return True
 

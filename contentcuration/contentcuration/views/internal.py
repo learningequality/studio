@@ -261,6 +261,8 @@ def api_add_nodes_to_tree(request):
                 "success": True,
                 "root_ids": convert_data_to_nodes(request.user, content_data, parent_id)
             })
+    except (ContentNode.DoesNotExist, PermissionDenied):
+        return HttpResponseNotFound("No content matching: {}".format(parent_id))
     except KeyError as e:
         return HttpResponseBadRequest("Required attribute missing: {}".format(e.message))
     except Exception as e:

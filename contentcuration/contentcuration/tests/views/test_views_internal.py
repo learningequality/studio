@@ -7,6 +7,7 @@ import uuid
 from django.core.urlresolvers import reverse_lazy
 from mixer.main import mixer
 from mock import patch
+from rest_framework.test import APIClient
 
 from ..base import BaseAPITestCase
 from ..base import StudioTestCase
@@ -16,6 +17,7 @@ from ..testdata import fileobj_exercise_image
 from ..testdata import fileobj_video
 from ..testdata import channel
 from ..testdata import tree
+from ..testdata import user
 from contentcuration import ricecooker_versions as rc
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
@@ -54,7 +56,7 @@ class ApiAddNodesToTreeTestCase(StudioTestCase):
         random_data = mixer.blend(SampleContentNodeDataSchema)
         self.fileobj = fileobj_video()
         self.title = random_data.title
-        sample_data = {
+        self.sample_data = {
             "root_id": self.root_node.id,
             "content_data": [
                 {
@@ -87,8 +89,16 @@ class ApiAddNodesToTreeTestCase(StudioTestCase):
             ],
         }
         self.resp = self.admin_client().post(
-            "/api/internal/add_nodes", data=sample_data, format="json"
+            reverse_lazy("api_add_nodes_to_tree"), data=self.sample_data, format="json"
         )
+
+    def test_404_no_permission(self):
+        client = APIClient()
+        client.force_authenticate(user())
+        response = client.post(
+            reverse_lazy("api_add_nodes_to_tree"), self.sample_data, format="json"
+        )
+        self.assertEqual(response.status_code, 404)
 
     def test_returns_200_status_code(self):
         """
@@ -145,7 +155,7 @@ class ApiAddExerciseNodesToTreeTestCase(StudioTestCase):
         # a perseus image file associated with question
         self.exercise_graphie = fileobj_exercise_graphie()
         self.title = random_data.title
-        sample_data = {
+        self.sample_data = {
             "root_id": self.root_node.id,
             "content_data": [
                 {
@@ -212,8 +222,16 @@ class ApiAddExerciseNodesToTreeTestCase(StudioTestCase):
             ],
         }
         self.resp = self.admin_client().post(
-            "/api/internal/add_nodes", data=sample_data, format="json"
+            reverse_lazy("api_add_nodes_to_tree"), data=self.sample_data, format="json"
         )
+
+    def test_404_no_permission(self):
+        client = APIClient()
+        client.force_authenticate(user())
+        response = client.post(
+            reverse_lazy("api_add_nodes_to_tree"), self.sample_data, format="json"
+        )
+        self.assertEqual(response.status_code, 404)
 
     def test_returns_200_status_code(self):
         """
