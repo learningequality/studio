@@ -92,3 +92,18 @@ class GetPrerequisitesTestCase(BaseAPITestCase):
         channel.save()
         response = self.get(reverse("get_prerequisites", kwargs={"get_postrequisites": "false", "ids": node.id}))
         self.assertEqual(response.status_code, 403)
+
+
+class GetNodeDiffEndpointTestCase(BaseAPITestCase):
+    def test_200_post(self):
+        response = self.get(
+            reverse("get_node_diff", kwargs={"channel_id": self.channel.id})
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_403_no_permission(self):
+        new_channel = Channel.objects.create()
+        response = self.get(
+            reverse("get_node_diff", kwargs={"channel_id": new_channel.id}),
+        )
+        self.assertEqual(response.status_code, 403)
