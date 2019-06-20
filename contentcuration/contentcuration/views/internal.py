@@ -426,7 +426,8 @@ def get_channel_status_bulk(request):
             "success": True,
             'statuses': statuses,
         })
-
+    except (Channel.DoesNotExist, PermissionDenied):
+        return HttpResponseNotFound("No complete set of channels matching: {}".format(",".join(channel_ids)))
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
     except Exception as e:

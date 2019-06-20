@@ -586,3 +586,19 @@ class GetNodeTreeDataEndpointTestCase(BaseAPITestCase):
             {"channel_id": new_channel.id, "tree": "main"},
         )
         self.assertEqual(response.status_code, 404)
+
+
+class GetChannelStatusBulkEndpointTestCase(BaseAPITestCase):
+    def test_200_post(self):
+        response = self.post(
+            reverse_lazy("get_channel_status_bulk"), {"channel_ids": [self.channel.id]}
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_404_no_permission(self):
+        new_channel = Channel.objects.create()
+        response = self.post(
+            reverse_lazy("get_channel_status_bulk"),
+            {"channel_ids": [self.channel.id, new_channel.id]},
+        )
+        self.assertEqual(response.status_code, 404)
