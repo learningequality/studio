@@ -81,6 +81,9 @@ export function PREP_NODES_FOR_SAVE(state) {
 }
 
 export function SET_LOADED_NODES(state, nodes) {
+  // TODO: Remove
+  let updateNode = state.nodes.length && !state.nodes[state.nodes.length - 1].loaded;
+
   _.each(nodes, node => {
     let match = _.findWhere(state.nodes, { id: node.id });
     _.extendOwn(match, {
@@ -90,7 +93,7 @@ export function SET_LOADED_NODES(state, nodes) {
   });
 
   // TODO: Remove
-  if (state.nodes.length) state.nodes[state.nodes.length - 1].copyright_holder = null;
+  if (updateNode) state.nodes[state.nodes.length - 1].copyright_holder = null;
 
   _.defer(() => {
     SET_CHANGES(state);
