@@ -4,6 +4,7 @@ const Models = require('./models');
 const Constants = require('./constants/index');
 const asyncTaskModule = require('./vuexModules/asyncTask');
 const channelModule = require('./vuexModules/channel');
+const contentNodesModule = require('./vuexModules/contentNodes');
 const primaryModalModule = require('./vuexModules/primaryModal');
 const progressModule = require('./vuexModules/progress');
 
@@ -19,6 +20,7 @@ const Store = new Vuex.Store({
   modules: {
     asyncTask: asyncTaskModule,
     channel: channelModule,
+    topicTree: contentNodesModule,
     dialog: primaryModalModule,
     progress: progressModule,
   },

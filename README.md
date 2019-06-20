@@ -105,7 +105,7 @@ Then set up:
 pipenv shell
 
 # Ensure your environment matches the one specified in Pipfile.lock
-pipenv sync
+pipenv sync --dev
 ```
 
 Exit the virtual environment by running `exit`. Reactivate it by running `pipenv shell` again.
@@ -174,6 +174,13 @@ Press <kbd>Ctrl</kbd>+<kbd>D</kbd> to exit the `psql` client. Finally
 exit  # leave the postgres account
 ```
 
+To start redis on Linux-based systems, run the following command
+
+```bash
+service redis-server start
+```
+
+On Mac, it will be started as part of the `yarn run services` command (detailed below).
 
 ### 6. Run all database migrations and load constants
 
