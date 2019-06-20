@@ -10,6 +10,7 @@ from mock import patch
 
 from ..base import BaseAPITestCase
 from ..base import StudioTestCase
+from ..testdata import create_temp_file
 from ..testdata import fileobj_exercise_graphie
 from ..testdata import fileobj_exercise_image
 from ..testdata import fileobj_video
@@ -345,3 +346,26 @@ class VersionEndpointTestCase(BaseAPITestCase):
             self.assertEqual(response.status_code, 200)
             self.assertTrue(response.json()["success"])
             self.assertEqual(response.json()["status"], internal.VERSION_ERROR[1])
+
+
+class FileDiffEndpointTestCase(BaseAPITestCase):
+    def test_200_no_files(self):
+        response = self.post(reverse_lazy("file_diff"), [])
+        self.assertEqual(response.status_code, 200)
+
+    def test_200_1_file_present(self):
+        file = create_temp_file(b"test")
+        response = self.post(reverse_lazy("file_diff"), [file["name"]])
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), [])
+
+    def test_200_1_file_present_1_missing(self):
+        file = create_temp_file(b"test")
+        response = self.post(reverse_lazy("file_diff"), [file["name"], "test_file"])
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), ["test_file"])
+
+    def test_401_no_auth(self):
+        self.client.logout()
+        response = self.post(reverse_lazy("file_diff"), [])
+        self.assertEqual(response.status_code, 401)
