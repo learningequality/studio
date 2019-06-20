@@ -17,8 +17,7 @@ class BaseGetNodesByIdSerializerTestCaseMixin:
         when called without any ID arguments.
         """
         response = self.get('/api/{}/'.format(self.endpoint))
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data), 0)
+        self.assertEqual(response.status_code, 404)
 
     def test_get_nodes_by_ids_get_only(self):
         """
@@ -37,8 +36,7 @@ class BaseGetNodesByIdSerializerTestCaseMixin:
         but does not return any data.
         """
         response = self.get(reverse_lazy(self.endpoint, kwargs={"ids": ''}))
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data), 0)
+        self.assertEqual(response.status_code, 404)
 
     def test_get_nodes_by_ids_with_invalid_id(self):
         """
@@ -46,8 +44,7 @@ class BaseGetNodesByIdSerializerTestCaseMixin:
         does not return node data.
         """
         response = self.get(reverse_lazy(self.endpoint, kwargs={"ids": '1234'}))
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data), 0)
+        self.assertEqual(response.status_code, 404)
 
     def test_get_nodes_by_ids_single(self):
         """
