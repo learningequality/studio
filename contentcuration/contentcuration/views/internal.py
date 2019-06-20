@@ -222,6 +222,8 @@ def api_commit_channel(request):
             "success": True,
             "new_channel": obj.pk,
         })
+    except (Channel.DoesNotExist, PermissionDenied):
+        return HttpResponseNotFound("No channel matching: {}".format(channel_id))
     except KeyError as e:
         return HttpResponseBadRequest("Required attribute missing: {}".format(e.message))
     except Exception as e:

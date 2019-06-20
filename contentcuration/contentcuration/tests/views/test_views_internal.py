@@ -484,3 +484,21 @@ class AuthenticateUserEndpointTestCase(BaseAPITestCase):
         self.assertEqual(response.json()["first_name"], self.user.first_name)
         self.assertEqual(response.json()["last_name"], self.user.last_name)
         self.assertEqual(response.json()["is_admin"], self.user.is_admin)
+
+
+class APICommitChannelEndpointTestCase(BaseAPITestCase):
+    def test_200_post(self):
+        self.channel.chef_tree = self.channel.main_tree
+        self.channel.staging_tree = self.channel.main_tree
+        self.channel.save()
+        response = self.post(
+            reverse_lazy("api_finish_channel"), {"channel_id": self.channel.id}
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_404_no_permission(self):
+        new_channel = Channel.objects.create()
+        response = self.post(
+            reverse_lazy("api_finish_channel"), {"channel_id": new_channel.id}
+        )
+        self.assertEqual(response.status_code, 404)
