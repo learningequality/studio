@@ -339,7 +339,7 @@ def check_user_is_editor(request):
             request.user.can_edit(channel_id)
             return Response({"success": True})
         except PermissionDenied:
-            return HttpResponseForbidden("User is not authorized to edit this channel")
+            return HttpResponseNotFound("Channel not found {}".format(channel_id))
 
     except KeyError:
         raise HttpResponseBadRequest("Missing attribute from data: {}".format(data))

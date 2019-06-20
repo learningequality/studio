@@ -546,12 +546,12 @@ class CheckUserIsEditorEndpointTestCase(BaseAPITestCase):
         )
         self.assertEqual(response.status_code, 200)
 
-    def test_403_no_permission(self):
+    def test_404_no_permission(self):
         new_channel = Channel.objects.create()
         response = self.post(
             reverse_lazy("check_user_is_editor"), {"channel_id": new_channel.id}
         )
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 404)
 
 
 class GetTreeDataEndpointTestCase(BaseAPITestCase):

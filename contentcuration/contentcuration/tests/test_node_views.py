@@ -92,7 +92,7 @@ class GetPrerequisitesTestCase(BaseAPITestCase):
         channel.main_tree = node
         channel.save()
         response = self.get(reverse("get_prerequisites", kwargs={"get_postrequisites": "false", "ids": node.id}))
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 404)
 
 
 class GetNodeDiffEndpointTestCase(BaseAPITestCase):
@@ -102,12 +102,12 @@ class GetNodeDiffEndpointTestCase(BaseAPITestCase):
         )
         self.assertEqual(response.status_code, 200)
 
-    def test_403_no_permission(self):
+    def test_404_no_permission(self):
         new_channel = Channel.objects.create()
         response = self.get(
             reverse("get_node_diff", kwargs={"channel_id": new_channel.id}),
         )
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 404)
 
 
 class GetTotalSizeEndpointTestCase(BaseAPITestCase):
@@ -117,14 +117,14 @@ class GetTotalSizeEndpointTestCase(BaseAPITestCase):
         )
         self.assertEqual(response.status_code, 200)
 
-    def test_403_no_permission(self):
+    def test_404_no_permission(self):
         new_channel = Channel.objects.create()
         new_channel.main_tree = tree()
         new_channel.save()
         response = self.get(
             reverse("get_total_size", kwargs={"ids": new_channel.main_tree.id}),
         )
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 404)
 
 
 class GetNodesByIdsEndpointTestCase(BaseAPITestCase):
@@ -134,14 +134,14 @@ class GetNodesByIdsEndpointTestCase(BaseAPITestCase):
         )
         self.assertEqual(response.status_code, 200)
 
-    def test_403_no_permission(self):
+    def test_404_no_permission(self):
         new_channel = Channel.objects.create()
         new_channel.main_tree = tree()
         new_channel.save()
         response = self.get(
             reverse("get_nodes_by_ids", kwargs={"ids": new_channel.main_tree.id}),
         )
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 404)
 
 
 class GetNodesByIdsSimplifiedEndpointTestCase(BaseAPITestCase):
@@ -151,14 +151,14 @@ class GetNodesByIdsSimplifiedEndpointTestCase(BaseAPITestCase):
         )
         self.assertEqual(response.status_code, 200)
 
-    def test_403_no_permission(self):
+    def test_404_no_permission(self):
         new_channel = Channel.objects.create()
         new_channel.main_tree = tree()
         new_channel.save()
         response = self.get(
             reverse("get_nodes_by_ids_simplified", kwargs={"ids": new_channel.main_tree.id}),
         )
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 404)
 
 
 class GetNodesByIdsCompleteEndpointTestCase(BaseAPITestCase):
@@ -168,14 +168,14 @@ class GetNodesByIdsCompleteEndpointTestCase(BaseAPITestCase):
         )
         self.assertEqual(response.status_code, 200)
 
-    def test_403_no_permission(self):
+    def test_404_no_permission(self):
         new_channel = Channel.objects.create()
         new_channel.main_tree = tree()
         new_channel.save()
         response = self.get(
             reverse("get_nodes_by_ids_complete", kwargs={"ids": new_channel.main_tree.id}),
         )
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 404)
 
 
 class GetTopicDetailsEndpointTestCase(BaseAPITestCase):
@@ -185,11 +185,11 @@ class GetTopicDetailsEndpointTestCase(BaseAPITestCase):
         )
         self.assertEqual(response.status_code, 200)
 
-    def test_403_no_permission(self):
+    def test_404_no_permission(self):
         new_channel = Channel.objects.create()
         new_channel.main_tree = tree()
         new_channel.save()
         response = self.get(
             reverse("get_topic_details", kwargs={"contentnode_id": new_channel.main_tree.id}),
         )
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 404)

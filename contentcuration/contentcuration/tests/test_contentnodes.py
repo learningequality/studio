@@ -316,7 +316,7 @@ class NodeOperationsAPITestCase(BaseAPITestCase):
 
         response = self.post(reverse_lazy('delete_nodes'), delete_data)
 
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 404)
 
     def test_no_node_permission_delete_nodes(self):
         new_channel = Channel.objects.create()
@@ -329,7 +329,7 @@ class NodeOperationsAPITestCase(BaseAPITestCase):
 
         response = self.post(reverse_lazy('delete_nodes'), delete_data)
 
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 404)
 
 
 class SyncNodesOperationTestCase(BaseTestCase):

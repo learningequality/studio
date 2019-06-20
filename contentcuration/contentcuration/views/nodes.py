@@ -7,6 +7,7 @@ from datetime import datetime
 from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.db.models import F
 from django.db.models import Max
@@ -44,7 +45,10 @@ from contentcuration.utils.files import duplicate_file
 @permission_classes((IsAuthenticated,))
 @api_view(['GET'])
 def get_node_diff(request, channel_id):
-    request.user.can_edit(channel_id)
+    try:
+        request.user.can_edit(channel_id)
+    except PermissionDenied:
+        return HttpResponseNotFound("No channel matching: {}".format(channel_id))
     original = []   # Currently imported nodes
     changed = []    # Nodes from original node
     fields_to_check = ['title', 'description', 'license', 'license_description', 'copyright_holder', 'author', 'extra_fields', 'language', 'role_visibility']
@@ -120,8 +124,10 @@ def create_new_node(request):
 @api_view(['GET'])
 def get_prerequisites(request, get_postrequisites, ids):
     nodes = ContentNode.objects.prefetch_related('prerequisite').filter(pk__in=ids.split(","))
-
-    request.user.can_view_nodes(nodes)
+    try:
+        request.user.can_view_nodes(nodes)
+    except PermissionDenied:
+        return HttpResponseNotFound("No prerequisites found for {}".format(ids))
 
     prerequisite_mapping = {}
     postrequisite_mapping = {}
@@ -154,7 +160,10 @@ def get_total_size(request, ids):
                        .filter(id__in=ids.split(",")).get_descendants(include_self=True)\
                        .values('files__checksum', 'files__file_size')\
                        .distinct()
-    request.user.can_view_nodes(nodes)
+    try:
+        request.user.can_view_nodes(nodes)
+    except PermissionDenied:
+        return HttpResponseNotFound("No nodes found for {}".format(ids))
     sizes = nodes.aggregate(resource_size=Sum('files__file_size'))
 
     return Response({'success': True, 'size': sizes['resource_size'] or 0})
@@ -168,7 +177,10 @@ def get_nodes_by_ids(request, ids):
                        .filter(pk__in=ids.split(","))\
                        .defer('node_id', 'original_source_node_id', 'source_node_id', 'content_id',
                               'original_channel_id', 'source_channel_id', 'source_id', 'source_domain', 'created', 'modified')
-    request.user.can_view_nodes(nodes)
+    try:
+        request.user.can_view_nodes(nodes)
+    except PermissionDenied:
+        return HttpResponseNotFound("No nodes found for {}".format(ids))
     serializer = ContentNodeSerializer(nodes, many=True)
     return Response(serializer.data)
 
@@ -179,7 +191,10 @@ def get_nodes_by_ids(request, ids):
 def get_node_path(request, topic_id, tree_id, node_id):
     try:
         topic = ContentNode.objects.prefetch_related('children').get(node_id__startswith=topic_id, tree_id=tree_id)
-        request.user.can_view_node(topic)
+        try:
+            request.user.can_view_node(topic)
+        except PermissionDenied:
+            return HttpResponseNotFound("No topic found for {}".format(topic_id))
 
         if topic.kind_id != content_kinds.TOPIC:
             node = ContentNode.objects.prefetch_related('files', 'assessment_items', 'tags').get(node_id__startswith=topic_id, tree_id=tree_id)
@@ -202,7 +217,10 @@ def get_node_path(request, topic_id, tree_id, node_id):
 @api_view(['GET'])
 def get_nodes_by_ids_simplified(request, ids):
     nodes = ContentNode.objects.prefetch_related('children').filter(pk__in=ids.split(","))
-    request.user.can_view_nodes(nodes)
+    try:
+        request.user.can_view_nodes(nodes)
+    except PermissionDenied:
+        return HttpResponseNotFound("No nodes found for {}".format(ids))
     serializer = SimplifiedContentNodeSerializer(nodes, many=True)
     return Response(serializer.data)
 
@@ -212,7 +230,10 @@ def get_nodes_by_ids_simplified(request, ids):
 @api_view(['GET'])
 def get_nodes_by_ids_complete(request, ids):
     nodes = ContentNode.objects.prefetch_related('children', 'files', 'assessment_items', 'tags').filter(pk__in=ids.split(","))
-    request.user.can_view_nodes(nodes)
+    try:
+        request.user.can_view_nodes(nodes)
+    except PermissionDenied:
+        return HttpResponseNotFound("No nodes found for {}".format(ids))
     serializer = ContentNodeEditSerializer(nodes, many=True)
     return Response(serializer.data)
 
@@ -227,7 +248,10 @@ def get_topic_details(request, contentnode_id):
     """
     # Get nodes and channel
     node = ContentNode.objects.get(pk=contentnode_id)
-    request.user.can_view_node(node)
+    try:
+        request.user.can_view_node(node)
+    except PermissionDenied:
+        return HttpResponseNotFound("No topic found for {}".format(contentnode_id))
     data = get_node_details_cached(node)
     return HttpResponse(json.dumps(data))
 
@@ -267,9 +291,12 @@ def delete_nodes(request):
     try:
         nodes = data["nodes"]
         channel_id = data["channel_id"]
-        request.user.can_edit(channel_id)
-        nodes = ContentNode.objects.filter(pk__in=nodes)
-        request.user.can_edit_nodes(nodes)
+        try:
+            request.user.can_edit(channel_id)
+            nodes = ContentNode.objects.filter(pk__in=nodes)
+            request.user.can_edit_nodes(nodes)
+        except PermissionDenied:
+            return HttpResponseNotFound("Resources not found to delete")
         for node in nodes:
             if node.parent and not node.parent.changed:
                 node.parent.changed = True
@@ -297,7 +324,10 @@ def duplicate_nodes(request):
         new_nodes = []
         target_parent = ContentNode.objects.get(pk=data["target_parent"])
         channel = target_parent.get_channel()
-        request.user.can_edit(channel and channel.pk)
+        try:
+            request.user.can_edit(channel and channel.pk)
+        except PermissionDenied:
+            return HttpResponseNotFound("No channel matching: {}".format(channel and channel.pk))
 
         with transaction.atomic():
             with ContentNode.objects.disable_mptt_updates():
@@ -327,7 +357,10 @@ def duplicate_node_inline(request):
         channel_id = data["channel_id"]
         target_parent = ContentNode.objects.get(pk=data["target_parent"])
         channel = target_parent.get_channel()
-        request.user.can_edit(channel and channel.pk)
+        try:
+            request.user.can_edit(channel and channel.pk)
+        except PermissionDenied:
+            return HttpResponseNotFound("No channel matching: {}".format(channel and channel.pk))
 
         # record_node_duplication_stats([node], ContentNode.objects.get(pk=target_parent.pk),
         #                               Channel.objects.get(pk=channel_id))
@@ -483,7 +516,11 @@ def move_nodes(request):
         max_order = data.get("max_order") or min_order + len(nodes)
 
         channel = target_parent.get_channel()
-        request.user.can_edit(channel and channel.pk)
+        try:
+            request.user.can_edit(channel and channel.pk)
+            request.user.can_edit_nodes(ContentNode.objects.filter(id__in=list(n["id"] for n in nodes)))
+        except PermissionDenied:
+            return HttpResponseNotFound("Resources not found")
 
     except KeyError:
         return ObjectDoesNotExist("Missing attribute from data: {}".format(data))
@@ -544,7 +581,11 @@ def sync_nodes(request):
     try:
         nodes = data["nodes"]
         channel_id = data['channel_id']
-        request.user.can_edit(channel_id)
+        try:
+            request.user.can_edit(channel_id)
+            request.user.can_edit_nodes(ContentNode.objects.filter(id__in=list(n["id"] for n in nodes)))
+        except PermissionDenied:
+            return HttpResponseNotFound("Resources not found")
 
     except KeyError:
         return ObjectDoesNotExist("Missing attribute from data: {}".format(data))
@@ -588,9 +629,13 @@ def sync_channel_endpoint(request):
     data = json.loads(request.body)
 
     try:
-        request.user.can_edit(data['channel_id'])
+        channel_id = data['channel_id']
+        try:
+            request.user.can_edit(channel_id)
+        except PermissionDenied:
+            return HttpResponseNotFound("No channel matching: {}".format(channel_id))
         nodes = sync_channel(
-            Channel.objects.get(pk=data['channel_id']),
+            Channel.objects.get(pk=channel_id),
             sync_attributes=data.get('attributes'),
             sync_tags=data.get('tags'),
             sync_files=data.get('files'),
