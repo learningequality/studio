@@ -142,3 +142,54 @@ class GetNodesByIdsEndpointTestCase(BaseAPITestCase):
             reverse("get_nodes_by_ids", kwargs={"ids": new_channel.main_tree.id}),
         )
         self.assertEqual(response.status_code, 403)
+
+
+class GetNodesByIdsSimplifiedEndpointTestCase(BaseAPITestCase):
+    def test_200_post(self):
+        response = self.get(
+            reverse("get_nodes_by_ids_simplified", kwargs={"ids": self.channel.main_tree.id})
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_403_no_permission(self):
+        new_channel = Channel.objects.create()
+        new_channel.main_tree = tree()
+        new_channel.save()
+        response = self.get(
+            reverse("get_nodes_by_ids_simplified", kwargs={"ids": new_channel.main_tree.id}),
+        )
+        self.assertEqual(response.status_code, 403)
+
+
+class GetNodesByIdsCompleteEndpointTestCase(BaseAPITestCase):
+    def test_200_post(self):
+        response = self.get(
+            reverse("get_nodes_by_ids_complete", kwargs={"ids": self.channel.main_tree.id})
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_403_no_permission(self):
+        new_channel = Channel.objects.create()
+        new_channel.main_tree = tree()
+        new_channel.save()
+        response = self.get(
+            reverse("get_nodes_by_ids_complete", kwargs={"ids": new_channel.main_tree.id}),
+        )
+        self.assertEqual(response.status_code, 403)
+
+
+class GetTopicDetailsEndpointTestCase(BaseAPITestCase):
+    def test_200_post(self):
+        response = self.get(
+            reverse("get_topic_details", kwargs={"contentnode_id": self.channel.main_tree.id})
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_403_no_permission(self):
+        new_channel = Channel.objects.create()
+        new_channel.main_tree = tree()
+        new_channel.save()
+        response = self.get(
+            reverse("get_topic_details", kwargs={"contentnode_id": new_channel.main_tree.id}),
+        )
+        self.assertEqual(response.status_code, 403)
