@@ -103,11 +103,10 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
 
       // When the page is not active or the frontmost tab, stop polling and restore
       // when it once again becomes frontmost.
-      this.on_blur = this.on_blur.bind(this);
-      this.on_focus = this.on_focus.bind(this);
-
-      window.addEventListener('blur', this.on_blur);
-      window.addEventListener('focus', this.on_focus);
+      this.on_visibility_change = this.on_visibility_change.bind(this);
+      // Make sure we trigger on load.
+      this.on_visibility_change();
+      document.addEventListener('visibilitychange', this.on_visibility_change);
     }
 
     this.render();
@@ -125,11 +124,12 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
     'click .approve_channel': 'activate_channel',
     'click .stats_button': 'open_stats',
   },
-  on_blur: function() {
-    State.Store.dispatch('deactivateTaskUpdateTimer');
-  },
-  on_focus: function() {
-    State.Store.dispatch('activateTaskUpdateTimer');
+  on_visibility_change: function() {
+    if (document.visibilityState == 'hidden') {
+      State.Store.dispatch('deactivateTaskUpdateTimer');
+    } else {
+      State.Store.dispatch('activateTaskUpdateTimer');
+    }
   },
   edit_content: function() {
     this.edit_selected(this.is_edit_page);
