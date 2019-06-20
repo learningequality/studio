@@ -7,6 +7,7 @@ from django.conf import settings
 from django.core.urlresolvers import reverse_lazy
 
 from .testdata import create_studio_file
+from .testdata import tree
 from contentcuration.models import Channel
 from contentcuration.models import ContentKind
 from contentcuration.models import ContentNode
@@ -81,7 +82,6 @@ class NodeGettersTestCase(BaseTestCase):
         assert details['resource_count'] > 0
         assert details['resource_size'] > 0
         assert details['kind_count'] > 0
-
 
 
 class NodeOperationsTestCase(BaseTestCase):
@@ -305,7 +305,31 @@ class NodeOperationsAPITestCase(BaseAPITestCase):
         assert not self.channel.main_tree.get_descendants().filter(changed=True).exists()
         assert self.channel.main_tree.changed is True
 
+    def test_no_channel_permission_delete_nodes(self):
+        new_channel = Channel.objects.create()
+        new_channel.main_tree = tree()
+        new_channel.save()
+        delete_data = {
+            'channel_id': new_channel.id,
+            'nodes': []
+        }
 
+        response = self.post(reverse_lazy('delete_nodes'), delete_data)
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_no_node_permission_delete_nodes(self):
+        new_channel = Channel.objects.create()
+        new_channel.main_tree = tree()
+        new_channel.save()
+        delete_data = {
+            'channel_id': self.channel.id,
+            'nodes': [new_channel.main_tree.id]
+        }
+
+        response = self.post(reverse_lazy('delete_nodes'), delete_data)
+
+        self.assertEqual(response.status_code, 403)
 
 
 class SyncNodesOperationTestCase(BaseTestCase):
@@ -339,7 +363,6 @@ class SyncNodesOperationTestCase(BaseTestCase):
                          sync_sort_order=True)
         self._assert_same_files(orig_video, cloned_video)
 
-
     def test_resync_after_more_subs_added(self):
         orig_video, cloned_video = self._setup_original_and_deriative_nodes()
         self._add_subs_to_video_node(orig_video, 'fr')
@@ -360,7 +383,6 @@ class SyncNodesOperationTestCase(BaseTestCase):
                          sync_assessment_items=True,
                          sync_sort_order=True)
         self._assert_same_files(orig_video, cloned_video)
-
 
     def _create_video_node(self, title, parent, withsubs=False):
         data = dict(
