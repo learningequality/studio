@@ -3,7 +3,7 @@
     <VAlert :value="selected.length > 1" type="info" outline>
       {{ $tr('editingMultipleCount', {count: selected.length}) }}
     </VAlert>
-    <VAlert :value="!newContent && !valid" type="error" outline>
+    <VAlert :value="!newContent && !valid" type="error" outline icon="error">
       {{ $tr('errorBannerText') }}
     </VAlert>
 

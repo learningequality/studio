@@ -9,7 +9,7 @@
       <VLayout v-else-if="loadError" justifyCenter alignCenter fillHeight>
         <VFlex grow class="default-content">
           <v-icon color="red" class="error-icon">
-            error_outline
+            error
           </v-icon>
           <p>{{ $tr('loadErrorText') }}</p>
         </VFlex>
@@ -29,7 +29,7 @@
               <v-tooltip v-if="invalidSelected" top>
                 <template v-slot:activator="{ on }">
                   <v-icon color="red" dark v-on="on">
-                    error_outline
+                    error
                   </v-icon>
                 </template>
                 <span>{{ $tr('invalidFieldsToolTip') }}</span>

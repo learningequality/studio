@@ -15,6 +15,11 @@
       </VListTileTitle>
     </VListTileContent>
     <VSpacer />
+    <VListTileAction v-if="!nodeIsValid">
+      <VIcon color="red">
+        error
+      </VIcon>
+    </VListTileAction>
     <VListTileAction v-if="removable">
       <VBtn icon small flat class="remove-item" @click.stop="removeNode(index)">
         <VIcon>clear</VIcon>
@@ -76,7 +81,6 @@
 <style lang="less" scoped>
 
   @import '../../../../less/global-variables.less';
-  @highlighted-red-color: #fdb1b9;
 
   .v-list__tile__action {
     min-width: 30px;
@@ -89,11 +93,8 @@
 
   .selected {
     background-color: @gray-200;
-  }
-  .invalid {
-    background-color: @red-bg-color;
-    &.selected {
-      background-color: @highlighted-red-color;
+    &.invalid {
+      background-color: @red-bg-color;
     }
   }
 
