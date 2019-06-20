@@ -236,21 +236,32 @@ def create_exercise(title, parent, license_id, description="", user=None, empty=
     exercise.save()
 
     if not empty:
-        create_question(exercise, "Question 1", exercises.SINGLE_SELECTION)
-        create_question(exercise, "Question 2", exercises.MULTIPLE_SELECTION)
-        create_question(exercise, "Question 3", exercises.INPUT_QUESTION)
+        create_question(exercise, "What color is the sky", exercises.SINGLE_SELECTION, [
+            {"answer": "Yellow", "correct": False, "order": 1},
+            {"answer": "Black", "correct": False, "order": 2},
+            {"answer": "Blue", "correct": True, "order": 3},
+        ])
+
+        create_question(exercise, "Which equations add up to 4", exercises.MULTIPLE_SELECTION, [
+            {"answer": "2+2", "correct": True, "order": 1},
+            {"answer": "9+1", "correct": False, "order": 2},
+            {"answer": "1+3", "correct": True, "order": 3},
+        ])
+
+        create_question(exercise, "Hot pink is a color in the rainbow", 'true_false', [
+            {"answer": "True", "correct": False, "order": 1},
+            {"answer": "False", "correct": True, "order": 2},
+        ])
+
+        create_question(exercise, "3+5=?", exercises.INPUT_QUESTION, [
+            {"answer": "8", "correct": True, "order": 1},
+            {"answer": "8.0", "correct": True, "order": 2},
+        ])
 
     return exercise
 
 
-def create_question(node, question, question_type):
-    answers = [
-        {"answer": "1", "correct": False, "order": 1},
-        {"answer": "2", "correct": True, "order": 2},
-        {"answer": "3", "correct": False, "order": 3},
-        {"answer": "4", "correct": False, "order": 4},
-    ]
-
+def create_question(node, question, question_type, answers):
     hints = [
         {"hint": "Hint 1", "order": 1},
         {"hint": "Hint 2", "order": 2},
