@@ -125,3 +125,20 @@ class GetTotalSizeEndpointTestCase(BaseAPITestCase):
             reverse("get_total_size", kwargs={"ids": new_channel.main_tree.id}),
         )
         self.assertEqual(response.status_code, 403)
+
+
+class GetNodesByIdsEndpointTestCase(BaseAPITestCase):
+    def test_200_post(self):
+        response = self.get(
+            reverse("get_nodes_by_ids", kwargs={"ids": self.channel.main_tree.id})
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_403_no_permission(self):
+        new_channel = Channel.objects.create()
+        new_channel.main_tree = tree()
+        new_channel.save()
+        response = self.get(
+            reverse("get_nodes_by_ids", kwargs={"ids": new_channel.main_tree.id}),
+        )
+        self.assertEqual(response.status_code, 403)
