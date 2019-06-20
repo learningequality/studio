@@ -537,3 +537,18 @@ class APIActivateChannelEndpointTestCase(BaseAPITestCase):
             reverse_lazy("activate_channel_internal"), {"channel_id": new_channel.id}
         )
         self.assertEqual(response.status_code, 404)
+
+
+class CheckUserIsEditorEndpointTestCase(BaseAPITestCase):
+    def test_200_post(self):
+        response = self.post(
+            reverse_lazy("check_user_is_editor"), {"channel_id": self.channel.id}
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_403_no_permission(self):
+        new_channel = Channel.objects.create()
+        response = self.post(
+            reverse_lazy("check_user_is_editor"), {"channel_id": new_channel.id}
+        )
+        self.assertEqual(response.status_code, 403)
