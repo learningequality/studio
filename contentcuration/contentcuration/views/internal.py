@@ -363,11 +363,15 @@ def get_tree_data(request):
         channel = Channel.objects.get(pk=channel_id)
         tree_name = "{}_tree".format(serializer.validated_data['tree'])
         tree_root = getattr(channel, tree_name, None)
+        if tree_root is None:
+            raise ValueError("Invalid tree name")
         tree_data = tree_root.get_tree_data()
         children_data = tree_data.get('children', [])
         return Response({"success": True, 'tree': children_data})
     except (Channel.DoesNotExist, PermissionDenied):
         return HttpResponseNotFound("No channel matching: {}".format(channel_id))
+    except ValueError:
+        return HttpResponseNotFound("No tree name matching: {}".format(tree_name))
     except Exception as e:
         handle_server_error(request)
         return HttpResponseServerError(content=str(e), reason=str(e))
