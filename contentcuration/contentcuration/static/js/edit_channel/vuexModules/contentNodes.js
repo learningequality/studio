@@ -37,12 +37,7 @@ const contentNodesModule = {
   },
   getters: {
     contentNodeList(state) {
-      return _.map(_.pairs(state.contentNodes), pair => {
-        return {
-          id: pair[0],
-          ...pair[1],
-        };
-      });
+      return _.values(state.contentNodes);
     },
   },
   mutations: {

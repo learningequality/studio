@@ -5,9 +5,11 @@ let State = require('../state');
 const exampleNodes = {
   'node-1': {
     title: 'Node 1',
+    id: 'node-1',
   },
   'node-2': {
     title: 'Node 2',
+    id: 'node-2',
   },
 };
 
