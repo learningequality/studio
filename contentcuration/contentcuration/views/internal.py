@@ -320,6 +320,8 @@ def activate_channel_internal(request):
         channel = Channel.objects.get(pk=channel_id)
         activate_channel(channel, request.user)
         return Response({"success": True})
+    except (Channel.DoesNotExist, PermissionDenied):
+        return HttpResponseNotFound("No channel matching: {}".format(channel_id))
     except Exception as e:
         handle_server_error(request)
         return HttpResponseServerError(content=str(e), reason=str(e))
