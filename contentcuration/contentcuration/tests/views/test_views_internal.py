@@ -460,3 +460,27 @@ class GetStagedDiffEndpointTestCase(BaseAPITestCase):
         for field, difference in zip(fields, differences):
             diff = filter(lambda x: x["field"] == field, response.json())[0]
             self.assertEqual(diff["difference"], difference)
+
+
+class AuthenticateUserEndpointTestCase(BaseAPITestCase):
+    def test_200_get(self):
+        response = self.get(reverse_lazy("authenticate_user_internal"))
+        self.assertEqual(response.status_code, 200)
+
+    def test_200_post(self):
+        response = self.post(reverse_lazy("authenticate_user_internal"), {})
+        self.assertEqual(response.status_code, 200)
+
+    def test_401_no_auth(self):
+        self.client.logout()
+        response = self.post(reverse_lazy("authenticate_user_internal"), {})
+        self.assertEqual(response.status_code, 401)
+
+    def test_200_response(self):
+        response = self.get(reverse_lazy("authenticate_user_internal"))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["user_id"], self.user.id)
+        self.assertEqual(response.json()["username"], unicode(self.user))
+        self.assertEqual(response.json()["first_name"], self.user.first_name)
+        self.assertEqual(response.json()["last_name"], self.user.last_name)
+        self.assertEqual(response.json()["is_admin"], self.user.is_admin)
