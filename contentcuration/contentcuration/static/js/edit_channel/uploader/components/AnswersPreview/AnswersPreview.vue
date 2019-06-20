@@ -43,6 +43,7 @@
 <script>
 
   import { AssessmentItemTypes } from '../../constants';
+  import { getCorrectAnswersIndices } from '../../utils';
 
   export default {
     name: 'AnswersPreview',
@@ -71,17 +72,8 @@
       isInputQuestion() {
         return this.questionKind === AssessmentItemTypes.INPUT_QUESTION;
       },
-      // returns an index or an array of indices based on question kind
       correctAnswersIndices() {
-        if (this.isSingleSelection || this.isTrueFalse) {
-          return this.answers.findIndex(answer => answer.correct);
-        }
-
-        return this.answers
-          .map((answer, idx) => {
-            return answer.correct ? idx : undefined;
-          })
-          .filter(idx => idx !== undefined);
+        return getCorrectAnswersIndices(this.questionKind, this.answers);
       },
     },
   };
