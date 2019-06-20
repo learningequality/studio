@@ -6,11 +6,7 @@
       data-test="showAnswersCheckbox"
     />
 
-    <VExpansionPanel
-      v-if="assessmentItems && assessmentItems.length"
-      v-model="openItemIdx"
-      popout
-    >
+    <template v-if="assessmentItems && assessmentItems.length">
       <AssessmentItem
         v-for="(item, idx) in assessmentItems"
         :key="idx"
@@ -20,8 +16,9 @@
         :displayAnswersPreview="displayAnswersPreview"
         @update="updateItem"
         @close="closeItem"
+        @open="openItem(idx)"
       />
-    </VExpansionPanel>
+    </template>
 
     <div v-else>
       No questions yet
@@ -92,6 +89,9 @@
         'addNodeAssessmentDraftItem',
         'updateNodeAssessmentDraftItem',
       ]),
+      openItem(itemIdx) {
+        this.openItemIdx = itemIdx;
+      },
       closeItem() {
         this.openItemIdx = null;
       },
