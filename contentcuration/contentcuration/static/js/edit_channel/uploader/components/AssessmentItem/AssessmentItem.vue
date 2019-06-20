@@ -1,103 +1,112 @@
 <template>
-  <VExpansionPanelContent>
-    <template v-slot:header>
-      <template v-if="!isOpen">
+  <VCard>
+    <VCardTitle
+      v-if="!isOpen"
+      class="header"
+      @click="onOpenClick"
+    >
+      <VContainer fluid>
+        <VLayout row>
+          <VFlex xs1>
+            {{ order }}
+          </VFlex>
+
+          <VFlex>
+            <div class="caption grey--text mb-1">
+              {{ kindLabel }}
+            </div>
+            <div data-test="questionText">
+              {{ question }}
+            </div>
+          </VFlex>
+        </VLayout>
+
+        <template v-if="displayAnswersPreview">
+          <!-- eslint-disable-next-line -->
+          <VLayout row mt-3 justify-end>
+            <VFlex xs11>
+              <div class="caption grey--text mb-1">
+                Answers
+              </div>
+
+              <AnswersPreview
+                :questionKind="kind"
+                :answers="answers"
+              />
+            </VFlex>
+          </VLayout>
+        </template>
+      </VContainer>
+    </VCardTitle>
+
+    <template v-else>
+      <VCardTitle data-test="open">
         <VContainer fluid>
           <VLayout row>
             <VFlex xs1>
               {{ order }}
             </VFlex>
-            <VFlex>
-              <div class="caption grey--text mb-1">
-                {{ kindLabel }}
-              </div>
-              <div>
-                {{ question }}
-              </div>
+
+            <VFlex xs5>
+              <VSelect
+                :items="kindSelectItems"
+                :value="kind"
+                label="Question type"
+                data-test="kindSelect"
+                @input="onKindChange"
+              />
             </VFlex>
           </VLayout>
 
-          <template v-if="displayAnswersPreview">
-            <!-- eslint-disable-next-line -->
-            <VLayout row mt-3>
-              <div class="caption grey--text mb-1">
-                Answers
-              </div>
-            </VLayout>
+          <!-- eslint-disable-next-line -->
+          <VLayout row justify-end>
+            <VFlex xs11>
+              <VTextField
+                label="Question text"
+                :value="question"
+                data-test="questionInput"
+                @input="onQuestionChange"
+              />
+            </VFlex>
+          </VLayout>
+        </VContainer>
+      </VCardTitle>
 
-            <VLayout row>
-              <AnswersPreview
+      <VCardText>
+        <VContainer fluid>
+          <!-- eslint-disable-next-line -->
+          <VLayout row justify-end>
+            <VFlex xs11>
+              <AnswersEditor
                 :questionKind="kind"
                 :answers="answers"
+                @update="onAnswersChange"
               />
-            </VLayout>
-          </template>
+
+              <VDivider class="mt-3 mb-3" />
+
+              <HintsEditor
+                :hints="hints"
+                @update="onHintsChange"
+              />
+            </VFlex>
+          </VLayout>
+
+          <!-- eslint-disable-next-line -->
+          <VLayout row justify-end>
+            <VBtn
+              flat
+              color="primary"
+              data-test="closeBtn"
+              @click="onCloseClick"
+            >
+              Close
+            </VBtn>
+          </VLayout>
         </VContainer>
-      </template>
-
-      <template v-else>
-        <VFlex xs12>
-          {{ order }}
-        </VFlex>
-      </template>
+      </VCardText>
     </template>
-
-    <VCard
-      v-if="isOpen"
-      data-test="open"
-    >
-      <VContainer fluid>
-        <VLayout row>
-          <VFlex xs5>
-            <VSelect
-              :items="kindSelectItems"
-              :value="kind"
-              label="Question type"
-              data-test="kindSelect"
-              @input="onKindChange"
-            />
-          </VFlex>
-        </VLayout>
-
-        <VLayout row>
-          <VFlex>
-            <VTextField
-              label="Question text"
-              :value="question"
-              @input="onQuestionChange"
-            />
-          </VFlex>
-        </VLayout>
-
-        <AnswersEditor
-          :questionKind="kind"
-          :answers="answers"
-          @update="onAnswersChange"
-        />
-
-        <VDivider />
-
-        <HintsEditor
-          :hints="hints"
-          @update="onHintsChange"
-        />
-
-        <!-- TODO @MisRob: Find out which linter tool is removing
-        dashes from Vuetify attributes and disable -->
-        <!-- eslint-disable-next-line -->
-        <VLayout row justify-end>
-          <VBtn
-            flat
-            color="primary"
-            data-test="closeBtn"
-            @click="onCloseClick"
-          >
-            Close
-          </VBtn>
-        </VLayout>
-      </VContainer>
-    </VCard>
-  </VExpansionPanelContent>
+  </VCard>
 </template>
 
 <script>
@@ -197,7 +206,18 @@
       onCloseClick() {
         this.$emit('close');
       },
+      onOpenClick() {
+        this.$emit('open');
+      },
     },
   };
 
 </script>
+
+<style lang="less" scoped>
+
+  .header:hover {
+    cursor: pointer;
+  }
+
+</style>

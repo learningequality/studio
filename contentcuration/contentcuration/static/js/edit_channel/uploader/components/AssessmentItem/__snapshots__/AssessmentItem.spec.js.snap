@@ -1,0 +1,252 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AssessmentItem when closed renders a correct order, type and text 1`] = `
+<div class="v-card v-sheet theme--light">
+  <div class="v-card__title header">
+    <div class="container fluid">
+      <div class="layout row">
+        <div class="flex xs1">
+          2
+        </div>
+        <div class="flex">
+          <div class="caption grey--text mb-1">
+            Single selection
+          </div>
+          <div data-test="questionText">
+            What color is the sky?
+          </div>
+        </div>
+      </div>
+      <!---->
+    </div>
+  </div>
+</div>
+`;
+
+exports[`AssessmentItem when open renders a correct order, type select, text input, answers editor, hints editor, close button 1`] = `
+<div class="v-card v-sheet theme--light">
+  <div data-test="open" class="v-card__title">
+    <div class="container fluid">
+      <div class="layout row">
+        <div class="flex xs1">
+          2
+        </div>
+        <div class="flex xs5">
+          <div role="combobox" class="v-input v-text-field v-select v-input--is-label-active v-input--is-dirty theme--light">
+            <div class="v-input__control">
+              <div class="v-input__slot">
+                <div class="v-select__slot"><label aria-hidden="true" class="v-label v-label--active theme--light" style="left: 0px; position: absolute;">Question type</label>
+                  <div class="v-select__selections">
+                    <div class="v-select__selection v-select__selection--comma">Single selection</div><input aria-label="Question type" data-test="kindSelect" readonly="readonly" type="text" autocomplete="on" aria-readonly="false">
+                  </div>
+                  <div class="v-input__append-inner">
+                    <div class="v-input__icon v-input__icon--append"><i aria-hidden="true" class="v-icon material-icons theme--light">arrow_drop_down</i></div>
+                  </div>
+                </div>
+                <div class="v-menu">
+                  <div class="v-menu__content theme--light " style="max-height: 300px; min-width: 0px; max-width: auto; top: 12px; left: 0px; transform-origin: top left; z-index: 0; display: none;">
+                    <div class="v-select-list v-card theme--light">
+                      <div role="list" class="v-list theme--light">
+                        <div role="listitem" class="primary--text"><a class="v-list__tile v-list__tile--link v-list__tile--active theme--light primary--text">
+                            <div class="v-list__tile__content">
+                              <div class="v-list__tile__title">Single selection</div>
+                            </div>
+                          </a></div>
+                        <div role="listitem"><a class="v-list__tile v-list__tile--link theme--light">
+                            <div class="v-list__tile__content">
+                              <div class="v-list__tile__title">Multiple selection</div>
+                            </div>
+                          </a></div>
+                        <div role="listitem"><a class="v-list__tile v-list__tile--link theme--light">
+                            <div class="v-list__tile__content">
+                              <div class="v-list__tile__title">Input question</div>
+                            </div>
+                          </a></div>
+                        <div role="listitem"><a class="v-list__tile v-list__tile--link theme--light">
+                            <div class="v-list__tile__content">
+                              <div class="v-list__tile__title">True/False</div>
+                            </div>
+                          </a></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="v-text-field__details">
+                <div class="v-messages theme--light">
+                  <div class="v-messages__wrapper"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="layout row justify-end">
+        <div class="flex xs11">
+          <div class="v-input v-text-field v-input--is-label-active v-input--is-dirty theme--light">
+            <div class="v-input__control">
+              <div class="v-input__slot">
+                <div class="v-text-field__slot"><label aria-hidden="true" class="v-label v-label--active theme--light" style="left: 0px; position: absolute;">Question text</label><input aria-label="Question text" data-test="questionInput" type="text"></div>
+              </div>
+              <div class="v-text-field__details">
+                <div class="v-messages theme--light">
+                  <div class="v-messages__wrapper"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="v-card__text">
+    <div class="container fluid">
+      <div class="layout row justify-end">
+        <div class="flex xs11">
+          <div>
+            <div class="grey--text text--darken-1 mb-3">
+              Answers
+            </div>
+            <!---->
+            <div class="v-card v-sheet theme--light">
+              <div class="indicator wrong"></div>
+              <div class="v-card__text">
+                <div class="layout">
+                  <div class="flex xs11">
+                    <div class="v-input v-input--selection-controls v-input--radio-group v-input--radio-group--column v-input--is-label-active v-input--is-dirty theme--light">
+                      <div class="v-input__control">
+                        <div class="v-input__slot" style="height: auto;">
+                          <div role="radiogroup" class="v-input--radio-group__input">
+                            <div class="v-radio theme--light">
+                              <div class="v-input--selection-controls__input"><input aria-label="Yellow" aria-checked="false" role="radio" type="radio" name="v-radio-28" value="0" data-test="answerRadio">
+                                <div class="v-input--selection-controls__ripple"></div><i aria-hidden="true" class="v-icon material-icons theme--light">radio_button_unchecked</i>
+                              </div><label aria-hidden="true" class="v-label theme--light" style="left: 0px; position: relative;">Yellow</label>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="v-messages theme--light"><span name="message-transition" tag="div" class="v-messages__wrapper"></span></div>
+                      </div>
+                    </div>
+                    <!---->
+                    <!---->
+                    <!---->
+                  </div>
+                  <div data-test="answerToggle"><i aria-hidden="true" data-test="iconArrowDown" class="v-icon v-icon--link material-icons theme--light">keyboard_arrow_down</i></div>
+                </div>
+              </div>
+            </div>
+            <div class="v-card v-sheet theme--light">
+              <div class="indicator wrong"></div>
+              <div class="v-card__text">
+                <div class="layout">
+                  <div class="flex xs11">
+                    <div class="v-input v-input--selection-controls v-input--radio-group v-input--radio-group--column v-input--is-label-active v-input--is-dirty theme--light">
+                      <div class="v-input__control">
+                        <div class="v-input__slot" style="height: auto;">
+                          <div role="radiogroup" class="v-input--radio-group__input">
+                            <div class="v-radio theme--light">
+                              <div class="v-input--selection-controls__input"><input aria-label="Black" aria-checked="false" role="radio" type="radio" name="v-radio-36" value="1" data-test="answerRadio">
+                                <div class="v-input--selection-controls__ripple"></div><i aria-hidden="true" class="v-icon material-icons theme--light">radio_button_unchecked</i>
+                              </div><label aria-hidden="true" class="v-label theme--light" style="left: 0px; position: relative;">Black</label>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="v-messages theme--light"><span name="message-transition" tag="div" class="v-messages__wrapper"></span></div>
+                      </div>
+                    </div>
+                    <!---->
+                    <!---->
+                    <!---->
+                  </div>
+                  <div data-test="answerToggle"><i aria-hidden="true" data-test="iconArrowDown" class="v-icon v-icon--link material-icons theme--light">keyboard_arrow_down</i></div>
+                </div>
+              </div>
+            </div>
+            <div class="v-card v-sheet theme--light">
+              <div class="indicator correct"></div>
+              <div class="v-card__text">
+                <div class="layout">
+                  <div class="flex xs11">
+                    <div class="v-input v-input--selection-controls v-input--radio-group v-input--radio-group--column v-input--is-label-active v-input--is-dirty theme--light">
+                      <div class="v-input__control">
+                        <div class="v-input__slot" style="height: auto;">
+                          <div role="radiogroup" class="v-input--radio-group__input">
+                            <div class="v-radio theme--light accent--text">
+                              <div class="v-input--selection-controls__input"><input aria-label="Blue" aria-checked="true" role="radio" type="radio" name="v-radio-44" value="2" data-test="answerRadio">
+                                <div class="v-input--selection-controls__ripple accent--text"></div><i aria-hidden="true" class="v-icon material-icons theme--light accent--text">radio_button_checked</i>
+                              </div><label aria-hidden="true" class="v-label theme--light" style="left: 0px; position: relative;">Blue</label>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="v-messages theme--light"><span name="message-transition" tag="div" class="v-messages__wrapper"></span></div>
+                      </div>
+                    </div>
+                    <!---->
+                    <!---->
+                    <!---->
+                  </div>
+                  <div data-test="answerToggle"><i aria-hidden="true" data-test="iconArrowDown" class="v-icon v-icon--link material-icons theme--light">keyboard_arrow_down</i></div>
+                </div>
+              </div>
+            </div> <button type="button" class="v-btn v-btn--flat theme--light" data-test="newAnswerBtn">
+              <div class="v-btn__content">
+                New answer
+              </div>
+            </button>
+          </div>
+          <hr class="mt-3 mb-3 v-divider theme--light">
+          <div>
+            <div class="grey--text text--darken-1 mb-3">
+              Hints
+            </div>
+            <!---->
+            <div class="v-card v-sheet theme--light">
+              <div class="v-card__text">
+                <div class="layout row">
+                  <div class="flex xs1">
+                    1
+                  </div>
+                  <div class="flex xs10">
+                    <p>
+                      First hint
+                    </p>
+                  </div>
+                  <div class="flex">
+                    <div data-test="hintToggle"><i aria-hidden="true" data-test="iconArrowDown" class="v-icon v-icon--link material-icons theme--light">keyboard_arrow_down</i></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="v-card v-sheet theme--light">
+              <div class="v-card__text">
+                <div class="layout row">
+                  <div class="flex xs1">
+                    2
+                  </div>
+                  <div class="flex xs10">
+                    <p>
+                      Second hint
+                    </p>
+                  </div>
+                  <div class="flex">
+                    <div data-test="hintToggle"><i aria-hidden="true" data-test="iconArrowDown" class="v-icon v-icon--link material-icons theme--light">keyboard_arrow_down</i></div>
+                  </div>
+                </div>
+              </div>
+            </div> <button type="button" class="v-btn v-btn--flat theme--light" data-test="newHintBtn">
+              <div class="v-btn__content">
+                New hint
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="layout row justify-end"><button type="button" class="v-btn v-btn--flat theme--light primary--text" data-test="closeBtn">
+          <div class="v-btn__content">
+            Close
+          </div>
+        </button></div>
+    </div>
+  </div>
+</div>
+`;

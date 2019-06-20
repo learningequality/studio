@@ -3,6 +3,18 @@ import { shallowMount, mount } from '@vue/test-utils';
 import { AssessmentItemTypes } from '../../constants';
 import AssessmentItem from './AssessmentItem';
 
+const ITEM = {
+  question: 'What color is the sky?',
+  type: AssessmentItemTypes.SINGLE_SELECTION,
+  order: 1,
+  answers: [
+    { answer: 'Yellow', correct: false, order: 1 },
+    { answer: 'Black', correct: false, order: 2 },
+    { answer: 'Blue', correct: true, order: 3 },
+  ],
+  hints: [{ hint: 'First hint', order: 1 }, { hint: 'Second hint', order: 2 }],
+};
+
 const clickCloseBtn = wrapper => {
   wrapper.find('[data-test=closeBtn]').trigger('click');
 };
@@ -14,21 +26,12 @@ const selectKind = (wrapper, kind) => {
   input.trigger('input');
 };
 
+const updateQuestion = (wrapper, newQuestion) => {
+  wrapper.find('[data-test=questionInput]').setValue(newQuestion);
+};
+
 describe('AssessmentItem', () => {
   let wrapper;
-
-  beforeEach(() => {
-    wrapper = mount(AssessmentItem, {
-      propsData: {
-        item: {
-          question: 'What color is the sky?',
-          type: AssessmentItemTypes.SINGLE_SELECTION,
-        },
-        itemIdx: 1,
-        isOpen: true,
-      },
-    });
-  });
 
   it('smoke test', () => {
     const wrapper = shallowMount(AssessmentItem);
@@ -36,44 +39,88 @@ describe('AssessmentItem', () => {
     expect(wrapper.isVueInstance()).toBe(true);
   });
 
-  describe('on item type update', () => {
-    it('emits update event with a correct payload', () => {
-      selectKind(wrapper, AssessmentItemTypes.MULTIPLE_SELECTION);
+  describe('when closed', () => {
+    beforeEach(() => {
+      wrapper = mount(AssessmentItem, {
+        propsData: {
+          item: ITEM,
+          itemIdx: 1,
+          isOpen: false,
+        },
+      });
+    });
 
-      expect(wrapper.emitted().update).toBeTruthy();
-      expect(wrapper.emitted().update.length).toBe(1);
-      expect(wrapper.emitted().update[0]).toEqual([
-        { payload: { type: AssessmentItemTypes.MULTIPLE_SELECTION }, itemIdx: 1 },
-      ]);
+    it('renders a correct order, type and text', () => {
+      expect(wrapper.html()).toMatchSnapshot();
     });
   });
 
-  describe('on answers update', () => {
-    it('emits update event with a correct payload', () => {
-      const newAnswers = [
-        { answer: 'Answer 1', correct: false, order: 1 },
-        { answer: 'Answer 2', correct: true, order: 2 },
-      ];
-
-      wrapper.find({ name: 'AnswersEditor' }).vm.$emit('update', newAnswers);
-
-      expect(wrapper.emitted().update).toBeTruthy();
-      expect(wrapper.emitted().update.length).toBe(1);
-      expect(wrapper.emitted().update[0]).toEqual([
-        { payload: { answers: newAnswers }, itemIdx: 1 },
-      ]);
+  describe('when open', () => {
+    beforeEach(() => {
+      wrapper = mount(AssessmentItem, {
+        propsData: {
+          item: ITEM,
+          itemIdx: 1,
+          isOpen: true,
+        },
+      });
     });
-  });
 
-  describe('on hints update', () => {
-    it('emits update event with a correct payload', () => {
-      const newHints = [{ hint: 'Hint 1', order: 1 }, { hint: 'Hint 2', order: 2 }];
+    it('renders a correct order, type select, text input, answers editor, hints editor, close button', () => {
+      expect(wrapper.html()).toMatchSnapshot();
+    });
 
-      wrapper.find({ name: 'HintsEditor' }).vm.$emit('update', newHints);
+    describe('on item type update', () => {
+      it('emits update event with a correct payload', () => {
+        selectKind(wrapper, AssessmentItemTypes.MULTIPLE_SELECTION);
 
-      expect(wrapper.emitted().update).toBeTruthy();
-      expect(wrapper.emitted().update.length).toBe(1);
-      expect(wrapper.emitted().update[0]).toEqual([{ payload: { hints: newHints }, itemIdx: 1 }]);
+        expect(wrapper.emitted().update).toBeTruthy();
+        expect(wrapper.emitted().update.length).toBe(1);
+        expect(wrapper.emitted().update[0]).toEqual([
+          { payload: { type: AssessmentItemTypes.MULTIPLE_SELECTION }, itemIdx: 1 },
+        ]);
+      });
+    });
+
+    describe('on question update', () => {
+      it('emits update event with a correct payload', () => {
+        updateQuestion(wrapper, 'What color is your eyes?');
+
+        expect(wrapper.emitted().update).toBeTruthy();
+        expect(wrapper.emitted().update.length).toBe(1);
+        expect(wrapper.emitted().update[0]).toEqual([
+          { payload: { question: 'What color is your eyes?' }, itemIdx: 1 },
+        ]);
+      });
+    });
+
+    describe('on answers update', () => {
+      it('emits update event with a correct payload', () => {
+        const newAnswers = [
+          { answer: 'Answer 1', correct: false, order: 1 },
+          { answer: 'Answer 2', correct: true, order: 2 },
+        ];
+
+        wrapper.find({ name: 'AnswersEditor' }).vm.$emit('update', newAnswers);
+
+        expect(wrapper.emitted().update).toBeTruthy();
+        expect(wrapper.emitted().update.length).toBe(1);
+        expect(wrapper.emitted().update[0]).toEqual([
+          { payload: { answers: newAnswers }, itemIdx: 1 },
+        ]);
+      });
+    });
+
+    describe('on hints update', () => {
+      it('emits update event with a correct payload', () => {
+        const newHints = [{ hint: 'Hint 1', order: 1 }, { hint: 'Hint 2', order: 2 }];
+
+        wrapper.find({ name: 'HintsEditor' }).vm.$emit('update', newHints);
+
+        expect(wrapper.emitted().update).toBeTruthy();
+        expect(wrapper.emitted().update.length).toBe(1);
+        expect(wrapper.emitted().update[0]).toEqual([{ payload: { hints: newHints }, itemIdx: 1 }]);
+      });
     });
   });
 
