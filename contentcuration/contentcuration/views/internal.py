@@ -298,6 +298,8 @@ def get_staged_diff_internal(request):
         channel_id = json.loads(request.body)['channel_id']
         request.user.can_edit(channel_id)
         return Response(get_staged_diff(channel_id))
+    except (Channel.DoesNotExist, PermissionDenied):
+        return HttpResponseNotFound("No channel matching: {}".format(channel_id))
     except Exception as e:
         handle_server_error(request)
         return HttpResponseServerError(content=str(e), reason=str(e))
