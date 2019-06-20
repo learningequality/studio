@@ -153,8 +153,19 @@ describe('AnswersPreview', () => {
       });
     });
 
-    it('renders possible answers count', () => {
-      expect(wrapper.html()).toContain('2 accepted answers');
+    it('renders all answers', () => {
+      expect(
+        wrapper
+          .findAll('li')
+          .at(0)
+          .text()
+      ).toBe('Mayonnaise (I mean you can, but...)');
+      expect(
+        wrapper
+          .findAll('li')
+          .at(1)
+          .text()
+      ).toBe('Peanut butter');
     });
   });
 });

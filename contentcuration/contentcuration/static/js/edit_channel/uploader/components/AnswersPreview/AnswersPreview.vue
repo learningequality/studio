@@ -28,9 +28,14 @@
         />
       </template>
 
-      <template v-if="isInputQuestion">
-        <p>{{ answers.length }} accepted answers</p>
-      </template>
+      <ul v-if="isInputQuestion">
+        <li
+          v-for="(answer, idx) in answers"
+          :key="idx"
+        >
+          {{ answer.answer }}
+        </li>
+      </ul>
     </template>
   </div>
 </template>
