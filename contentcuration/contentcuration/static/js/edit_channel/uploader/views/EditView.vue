@@ -22,9 +22,9 @@
       </VLayout>
       <VLayout v-else justifyCenter>
         <VFlex grow>
-          <VTabs fixedTabs sliderColor="primary">
+          <VTabs v-model="currentTab" fixedTabs sliderColor="primary">
             <!-- Details tab -->
-            <VTab @click="currentTab = tabs.DETAILS">
+            <VTab :href="`#${tabs.DETAILS}`">
               {{ $tr(tabs.DETAILS) }}
               <v-tooltip v-if="invalidSelected" top>
                 <template v-slot:activator="{ on }">
@@ -37,12 +37,12 @@
             </VTab>
 
             <!-- Preview tab -->
-            <VTab v-if="showPreviewTab" @click="currentTab = tabs.PREVIEW">
+            <VTab v-if="showPreviewTab" :href="`#${tabs.PREVIEW}`">
               {{ $tr(tabs.PREVIEW) }}
             </VTab>
 
             <!-- Questions tab -->
-            <VTab v-if="showQuestionsTab" @click="currentTab = tabs.QUESTIONS">
+            <VTab v-if="showQuestionsTab" :href="`#${tabs.QUESTIONS}`">
               {{ $tr(tabs.QUESTIONS) }}
               <VChip v-if="oneSelected.assessment_items.length" color="gray" dark>
                 {{ oneSelected.assessment_items.length }}
@@ -50,26 +50,27 @@
             </VTab>
 
             <!-- Prerequisites tab -->
-            <VTab v-if="showPrerequisitesTab" @click="currentTab = tabs.PREREQUISITES">
+            <VTab v-if="showPrerequisitesTab" :href="`#${tabs.PREREQUISITES}`">
               {{ $tr(tabs.PREREQUISITES) }}
               <VChip v-if="oneSelected.prerequisite.length" color="gray" dark>
                 {{ oneSelected.prerequisite.length }}
               </VChip>
             </VTab>
           </VTabs>
+
           <VTabsItems v-model="currentTab">
             <VTabItem :key="tabs.DETAILS" :value="tabs.DETAILS" lazy>
               <DetailsViewOnlyView v-if="viewOnly" />
               <DetailsEditView v-else />
             </VTabItem>
             <VTabItem :key="tabs.PREVIEW" :value="tabs.PREVIEW" lazy>
-              <DetailsViewOnlyView />
+              Preview
             </VTabItem>
             <VTabItem :key="tabs.QUESTIONS" :value="tabs.QUESTIONS" lazy>
-              <DetailsViewOnlyView />
+              Questions
             </VTabItem>
             <VTabItem :key="tabs.PREREQUISITES" :value="tabs.PREREQUISITES" lazy>
-              <DetailsViewOnlyView />
+              Prerequisites
             </VTabItem>
           </VTabsItems>
         </VFlex>
@@ -110,11 +111,7 @@
         loadError: false,
         loadNodesDebounced: _.debounce(() => {
           this.loadError = false;
-          let selectedIDs = _.chain(this.selected)
-            .where({ loaded: false })
-            .pluck('id')
-            .value();
-          this.loadNodes(selectedIDs).catch(() => {
+          this.loadNodes(_.pluck(this.selected, 'id')).catch(() => {
             this.loadError = true;
           });
         }, 1000),
@@ -149,7 +146,7 @@
         return this.oneSelected && !this.isClipboard && this.allResources;
       },
       allLoaded() {
-        return !_.some(this.selected, { loaded: false });
+        return _.all(this.selected, v => v['_COMPLETE']);
       },
       invalidSelected() {
         return _.intersection(this.selectedIndices, this.invalidNodes).length;
