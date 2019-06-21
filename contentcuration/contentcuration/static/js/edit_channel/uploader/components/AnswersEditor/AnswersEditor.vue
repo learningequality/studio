@@ -11,6 +11,9 @@
     <VCard
       v-for="(answer, answerIdx) in answers"
       :key="answerIdx"
+      :style="getAnswerPointerStyle(answerIdx)"
+      data-test="answer"
+      @click="openAnswer($event, answerIdx)"
     >
       <div :class="getIndicatorClasses(answer)"></div>
 
@@ -83,14 +86,6 @@
               </VLayout>
             </template>
           </VFlex>
-
-          <Toggle
-            v-if="isEditingAllowed"
-            :isOpen="isAnswerOpen(answerIdx)"
-            data-test="answerToggle"
-            @close="closeAnswer"
-            @open="openAnswer(answerIdx)"
-          />
         </VLayout>
       </VCardText>
     </VCard>
@@ -114,13 +109,9 @@
     getCorrectAnswersIndices,
     mapCorrectAnswers,
   } from '../../utils';
-  import Toggle from '../Toggle/Toggle.vue';
 
   export default {
     name: 'AnswersEditor',
-    components: {
-      Toggle,
-    },
     model: {
       prop: 'answers',
       event: 'update',
@@ -187,14 +178,8 @@
       },
     },
     methods: {
-      openAnswer(answerIdx) {
-        this.openAnswerIdx = answerIdx;
-      },
-      closeAnswer() {
-        this.openAnswerIdx = null;
-      },
-      isAnswerOpen(answerIdx) {
-        return answerIdx === this.openAnswerIdx;
+      getAnswerPointerStyle(answerIdx) {
+        return this.isEditingAllowed && !this.isAnswerOpen(answerIdx) ? { cursor: 'pointer' } : {};
       },
       getIndicatorClasses(answer) {
         const classes = ['indicator'];
@@ -206,6 +191,28 @@
         }
 
         return classes;
+      },
+      openAnswer(event, answerIdx) {
+        if (!this.isEditingAllowed) {
+          return;
+        }
+
+        // do not open an answer on checkbox or radio click
+        if (
+          event.target &&
+          (event.target.classList.contains('v-label') ||
+            event.target.classList.contains('v-input--selection-controls__ripple'))
+        ) {
+          return;
+        }
+
+        this.openAnswerIdx = answerIdx;
+      },
+      closeAnswer() {
+        this.openAnswerIdx = null;
+      },
+      isAnswerOpen(answerIdx) {
+        return answerIdx === this.openAnswerIdx;
       },
       updateAnswerText(newAnswerText, answerIdx) {
         if (newAnswerText === this.answers[answerIdx].answer) {

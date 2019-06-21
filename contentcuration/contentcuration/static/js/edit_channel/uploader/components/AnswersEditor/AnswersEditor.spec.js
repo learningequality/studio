@@ -10,20 +10,15 @@ const clickNewAnswerBtn = wrapper => {
     .trigger('click');
 };
 
-const clickAnswerToggle = (wrapper, answerIdx) => {
-  wrapper
-    .findAll('[data-test=answerToggle]')
-    .at(answerIdx)
-    .find('i')
-    .trigger('click');
-};
-
-const rendersAnswerToggle = wrapper => {
-  return wrapper.contains('[data-test=answerToggle]');
-};
-
 const rendersNewAnswerBtn = wrapper => {
   return wrapper.contains('[data-test=newAnswerBtn]');
+};
+
+const clickAnswer = (wrapper, answerIdx) => {
+  wrapper
+    .findAll('[data-test=answer]')
+    .at(answerIdx)
+    .trigger('click');
 };
 
 const updateOpenAnswerText = (wrapper, newAnswerText) => {
@@ -89,10 +84,6 @@ describe('AnswersEditor', () => {
       expect(inputs.at(1).element.checked).toBe(false);
     });
 
-    it('renders toggle', () => {
-      expect(rendersAnswerToggle(wrapper)).toBe(true);
-    });
-
     it('renders new answer button', () => {
       expect(rendersNewAnswerBtn(wrapper)).toBe(true);
     });
@@ -152,10 +143,6 @@ describe('AnswersEditor', () => {
       expect(inputs.at(2).element.checked).toBe(true);
     });
 
-    it('renders toggle', () => {
-      expect(rendersAnswerToggle(wrapper)).toBe(true);
-    });
-
     it('renders new answer button', () => {
       expect(rendersNewAnswerBtn(wrapper)).toBe(true);
     });
@@ -213,10 +200,6 @@ describe('AnswersEditor', () => {
       expect(inputs.at(1).element.checked).toBe(true);
     });
 
-    it('does not render toggle', () => {
-      expect(rendersAnswerToggle(wrapper)).toBe(false);
-    });
-
     it('does not render new answer button', () => {
       expect(rendersNewAnswerBtn(wrapper)).toBe(false);
     });
@@ -240,10 +223,6 @@ describe('AnswersEditor', () => {
       expect(wrapper.html()).toContain('Peanut butter');
     });
 
-    it('renders toggle', () => {
-      expect(rendersAnswerToggle(wrapper)).toBe(true);
-    });
-
     it('renders new answer button', () => {
       expect(rendersNewAnswerBtn(wrapper)).toBe(true);
     });
@@ -265,34 +244,6 @@ describe('AnswersEditor', () => {
     });
   });
 
-  describe('on toggle click', () => {
-    beforeEach(() => {
-      wrapper = mount(AnswersEditor, {
-        propsData: {
-          questionKind: AssessmentItemTypes.INPUT_QUESTION,
-          answers: [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-            { answer: 'Peanut butter', correct: true, order: 2 },
-          ],
-        },
-      });
-    });
-
-    it('opens/closes a correct answer', () => {
-      const answerIdx = 1;
-
-      expect(wrapper.contains('[data-test=editAnswerTextInput]')).toBe(false);
-
-      clickAnswerToggle(wrapper, answerIdx);
-      const editAnswerTextInputs = wrapper.findAll('[data-test=editAnswerTextInput]');
-      expect(editAnswerTextInputs.length).toBe(1);
-      expect(editAnswerTextInputs.at(0).element.value).toBe('Peanut butter');
-
-      clickAnswerToggle(wrapper, answerIdx);
-      expect(wrapper.contains('[data-test=editAnswerTextInput]')).toBe(false);
-    });
-  });
-
   describe('on answer text update', () => {
     beforeEach(() => {
       wrapper = mount(AnswersEditor, {
@@ -305,7 +256,7 @@ describe('AnswersEditor', () => {
         },
       });
 
-      clickAnswerToggle(wrapper, 1);
+      clickAnswer(wrapper, 1);
       updateOpenAnswerText(wrapper, 'Irish butter');
     });
 
@@ -331,7 +282,7 @@ describe('AnswersEditor', () => {
         },
       });
 
-      clickAnswerToggle(wrapper, 1);
+      clickAnswer(wrapper, 1);
       wrapper
         .findAll('[data-test=answerRadio]')
         .at(1)

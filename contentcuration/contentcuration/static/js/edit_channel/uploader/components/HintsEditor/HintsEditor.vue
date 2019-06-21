@@ -11,6 +11,9 @@
     <VCard
       v-for="(hint, hintIdx) in hints"
       :key="hintIdx"
+      :style="[!isHintOpen(hintIdx) ? { cursor: 'pointer' } : {}]"
+      data-test="hint"
+      @click="openHint(hintIdx)"
     >
       <VCardText>
         <VLayout row>
@@ -29,15 +32,6 @@
               @input="updateHintText($event, hintIdx)"
             />
           </VFlex>
-
-          <VFlex>
-            <Toggle
-              :isOpen="isHintOpen(hintIdx)"
-              data-test="hintToggle"
-              @close="closeHint"
-              @open="openHint(hintIdx)"
-            />
-          </VFlex>
         </VLayout>
       </VCardText>
     </VCard>
@@ -54,13 +48,8 @@
 
 <script>
 
-  import Toggle from '../Toggle/Toggle.vue';
-
   export default {
     name: 'HintsEditor',
-    components: {
-      Toggle,
-    },
     model: {
       prop: 'hints',
       event: 'update',
