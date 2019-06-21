@@ -1,5 +1,5 @@
 import { AssessmentItemTypes } from './constants';
-import { getCorrectAnswersIndices, mapCorrectAnswers } from './utils';
+import { getCorrectAnswersIndices, mapCorrectAnswers, updateAnswersToQuestionKind } from './utils';
 
 describe('utils', () => {
   describe('getCorrectAnswersIndices', () => {
@@ -142,6 +142,229 @@ describe('utils', () => {
           { answer: 'Answer 2', correct: true },
           { answer: 'Answer 3', correct: true },
         ]);
+      });
+    });
+  });
+
+  describe('updateAnswersToQuestionKind', () => {
+    let answers;
+
+    describe('for originally single selection answers', () => {
+      beforeEach(() => {
+        answers = [
+          { answer: 'Mayonnaise (I mean you can, but...)', correct: false, order: 1 },
+          { answer: 'Peanut butter', correct: true, order: 2 },
+          { answer: 'Jelly', correct: false, order: 3 },
+        ];
+      });
+
+      describe('conversion to single selection', () => {
+        it('returns the same answers', () => {
+          expect(
+            updateAnswersToQuestionKind(AssessmentItemTypes.SINGLE_SELECTION, answers)
+          ).toEqual(answers);
+        });
+      });
+
+      describe('conversion to multiple selection', () => {
+        it('returns the same answers', () => {
+          expect(
+            updateAnswersToQuestionKind(AssessmentItemTypes.MULTIPLE_SELECTION, answers)
+          ).toEqual(answers);
+        });
+      });
+
+      describe('conversion to input question', () => {
+        it('makes all answers correct', () => {
+          expect(updateAnswersToQuestionKind(AssessmentItemTypes.INPUT_QUESTION, answers)).toEqual([
+            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+            { answer: 'Peanut butter', correct: true, order: 2 },
+            { answer: 'Jelly', correct: true, order: 3 },
+          ]);
+        });
+      });
+
+      describe('conversion to true/false', () => {
+        it('returns true/false answers only', () => {
+          expect(updateAnswersToQuestionKind(AssessmentItemTypes.TRUE_FALSE, answers)).toEqual([
+            { answer: 'True', correct: true, order: 1 },
+            { answer: 'False', correct: false, order: 2 },
+          ]);
+        });
+      });
+    });
+
+    describe('for originally input question', () => {
+      beforeEach(() => {
+        answers = [
+          { answer: '8', correct: true, order: 1 },
+          { answer: '8.0', correct: true, order: 2 },
+        ];
+      });
+
+      describe('conversion to input question', () => {
+        it('returns the same answers', () => {
+          expect(updateAnswersToQuestionKind(AssessmentItemTypes.INPUT_QUESTION, answers)).toEqual(
+            answers
+          );
+        });
+      });
+
+      describe('conversion to multiple selection', () => {
+        it('returns the same answers', () => {
+          expect(
+            updateAnswersToQuestionKind(AssessmentItemTypes.MULTIPLE_SELECTION, answers)
+          ).toEqual(answers);
+        });
+      });
+
+      describe('conversion to single selection', () => {
+        it('keeps only first answer as correct', () => {
+          expect(
+            updateAnswersToQuestionKind(AssessmentItemTypes.SINGLE_SELECTION, answers)
+          ).toEqual([
+            { answer: '8', correct: true, order: 1 },
+            { answer: '8.0', correct: false, order: 2 },
+          ]);
+        });
+      });
+
+      describe('conversion to true/false', () => {
+        it('returns true/false answers only', () => {
+          expect(updateAnswersToQuestionKind(AssessmentItemTypes.TRUE_FALSE, answers)).toEqual([
+            { answer: 'True', correct: true, order: 1 },
+            { answer: 'False', correct: false, order: 2 },
+          ]);
+        });
+      });
+    });
+
+    describe('for originally true/false question', () => {
+      beforeEach(() => {
+        answers = [
+          { answer: 'True', correct: false, order: 1 },
+          { answer: 'False', correct: true, order: 2 },
+        ];
+      });
+
+      describe('conversion to true/false question', () => {
+        it('returns the same answers', () => {
+          expect(
+            updateAnswersToQuestionKind(AssessmentItemTypes.SINGLE_SELECTION, answers)
+          ).toEqual(answers);
+        });
+      });
+
+      describe('conversion to multiple selection', () => {
+        it('returns the same answers', () => {
+          expect(
+            updateAnswersToQuestionKind(AssessmentItemTypes.MULTIPLE_SELECTION, answers)
+          ).toEqual(answers);
+        });
+      });
+
+      describe('conversion to single selection', () => {
+        it('returns the same answers', () => {
+          expect(
+            updateAnswersToQuestionKind(AssessmentItemTypes.SINGLE_SELECTION, answers)
+          ).toEqual(answers);
+        });
+      });
+
+      describe('conversion to input question', () => {
+        it('makes all answers correct', () => {
+          expect(updateAnswersToQuestionKind(AssessmentItemTypes.INPUT_QUESTION, answers)).toEqual([
+            { answer: 'True', correct: true, order: 1 },
+            { answer: 'False', correct: true, order: 2 },
+          ]);
+        });
+      });
+    });
+
+    describe('for originally multiple selection answers', () => {
+      describe('conversion to multiple selection', () => {
+        it('returns the same answers', () => {
+          expect(
+            updateAnswersToQuestionKind(AssessmentItemTypes.SINGLE_SELECTION, answers)
+          ).toEqual(answers);
+        });
+      });
+
+      describe('conversion to single selection', () => {
+        describe('if there are some correct answers', () => {
+          beforeEach(() => {
+            answers = [
+              { answer: 'Mayonnaise (I mean you can, but...)', correct: false, order: 1 },
+              { answer: 'Peanut butter', correct: true, order: 2 },
+              { answer: 'Jelly', correct: true, order: 3 },
+            ];
+          });
+
+          it('keeps only first correct answer', () => {
+            expect(
+              updateAnswersToQuestionKind(AssessmentItemTypes.SINGLE_SELECTION, answers)
+            ).toEqual([
+              { answer: 'Mayonnaise (I mean you can, but...)', correct: false, order: 1 },
+              { answer: 'Peanut butter', correct: true, order: 2 },
+              { answer: 'Jelly', correct: false, order: 3 },
+            ]);
+          });
+        });
+
+        describe('if there is no correct answer', () => {
+          beforeEach(() => {
+            answers = [
+              { answer: 'Mayonnaise (I mean you can, but...)', correct: false, order: 1 },
+              { answer: 'Peanut butter', correct: false, order: 2 },
+              { answer: 'Jelly', correct: false, order: 3 },
+            ];
+          });
+
+          it('makes a first answer correct', () => {
+            expect(
+              updateAnswersToQuestionKind(AssessmentItemTypes.SINGLE_SELECTION, answers)
+            ).toEqual([
+              { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+              { answer: 'Peanut butter', correct: false, order: 2 },
+              { answer: 'Jelly', correct: false, order: 3 },
+            ]);
+          });
+        });
+      });
+
+      describe('conversion to input question', () => {
+        beforeEach(() => {
+          answers = [
+            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+            { answer: 'Peanut butter', correct: false, order: 2 },
+            { answer: 'Jelly', correct: true, order: 3 },
+          ];
+        });
+
+        it('marks all answers to be correct', () => {
+          expect(updateAnswersToQuestionKind(AssessmentItemTypes.INPUT_QUESTION, answers)).toEqual([
+            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+            { answer: 'Peanut butter', correct: true, order: 2 },
+            { answer: 'Jelly', correct: true, order: 3 },
+          ]);
+        });
+      });
+
+      describe('conversion to true/false', () => {
+        beforeEach(() => {
+          answers = [
+            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+            { answer: 'Peanut butter', correct: false, order: 2 },
+            { answer: 'Jelly', correct: true, order: 3 },
+          ];
+        });
+
+        it('returns true/false answers only', () => {
+          expect(updateAnswersToQuestionKind(AssessmentItemTypes.TRUE_FALSE, answers)).toEqual([
+            { answer: 'True', correct: true, order: 1 },
+            { answer: 'False', correct: false, order: 2 },
+          ]);
+        });
       });
     });
   });
