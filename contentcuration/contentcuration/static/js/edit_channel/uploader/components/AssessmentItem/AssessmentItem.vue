@@ -2,7 +2,7 @@
   <VCard>
     <VCardTitle
       v-if="!isOpen"
-      class="header"
+      :style="{ 'cursor': 'pointer' }"
       @click="onOpenClick"
     >
       <VContainer fluid>
@@ -213,11 +213,3 @@
   };
 
 </script>
-
-<style lang="less" scoped>
-
-  .header:hover {
-    cursor: pointer;
-  }
-
-</style>

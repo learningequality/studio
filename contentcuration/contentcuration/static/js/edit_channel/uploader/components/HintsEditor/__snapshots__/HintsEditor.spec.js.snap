@@ -1,0 +1,92 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`HintsEditor on hint click opens a correct hint 1`] = `
+<div>
+  <div class="grey--text text--darken-1 mb-3">
+    Hints
+  </div>
+  <!---->
+  <div class="v-card v-sheet theme--light" style="cursor: pointer;" data-test="hint">
+    <div class="v-card__text">
+      <div class="layout row">
+        <div class="flex xs1">
+          1
+        </div>
+        <div class="flex xs10">
+          <p>
+            First hint
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="v-card v-sheet theme--light" style="" data-test="hint">
+    <div class="v-card__text">
+      <div class="layout row">
+        <div class="flex xs1">
+          2
+        </div>
+        <div class="flex xs10">
+          <div class="v-input v-text-field v-input--is-label-active v-input--is-dirty theme--light">
+            <div class="v-input__control">
+              <div class="v-input__slot">
+                <div class="v-text-field__slot"><input data-test="editHintTextInput" type="text"></div>
+              </div>
+              <div class="v-text-field__details">
+                <div class="v-messages theme--light">
+                  <div class="v-messages__wrapper"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div> <button type="button" class="v-btn v-btn--flat theme--light" data-test="newHintBtn">
+    <div class="v-btn__content">
+      New hint
+    </div>
+  </button>
+</div>
+`;
+
+exports[`HintsEditor renders all hints 1`] = `
+<div>
+  <div class="grey--text text--darken-1 mb-3">
+    Hints
+  </div>
+  <!---->
+  <div class="v-card v-sheet theme--light" style="cursor: pointer;" data-test="hint">
+    <div class="v-card__text">
+      <div class="layout row">
+        <div class="flex xs1">
+          1
+        </div>
+        <div class="flex xs10">
+          <p>
+            First hint
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="v-card v-sheet theme--light" style="cursor: pointer;" data-test="hint">
+    <div class="v-card__text">
+      <div class="layout row">
+        <div class="flex xs1">
+          2
+        </div>
+        <div class="flex xs10">
+          <p>
+            Second hint
+          </p>
+        </div>
+      </div>
+    </div>
+  </div> <button type="button" class="v-btn v-btn--flat theme--light" data-test="newHintBtn">
+    <div class="v-btn__content">
+      New hint
+    </div>
+  </button>
+</div>
+`;

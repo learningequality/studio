@@ -9,11 +9,10 @@ const clickNewHintBtn = wrapper => {
     .trigger('click');
 };
 
-const clickHintToggle = (wrapper, hintIdx) => {
+const clickHint = (wrapper, hintIdx) => {
   wrapper
-    .findAll('[data-test=hintToggle]')
+    .findAll('[data-test=hint]')
     .at(hintIdx)
-    .find('i')
     .trigger('click');
 };
 
@@ -52,8 +51,7 @@ describe('HintsEditor', () => {
   });
 
   it('renders all hints', () => {
-    expect(wrapper.html()).toContain('First hint');
-    expect(wrapper.html()).toContain('Second hint');
+    expect(wrapper.html()).toMatchSnapshot();
   });
 
   describe('on new hint button click', () => {
@@ -72,25 +70,17 @@ describe('HintsEditor', () => {
     });
   });
 
-  describe('on hint toggle click', () => {
-    it('opens/closes a correct hint', () => {
-      const hintIdx = 1;
+  describe('on hint click', () => {
+    it('opens a correct hint', () => {
+      clickHint(wrapper, 1);
 
-      expect(wrapper.contains('[data-test=editHintTextInput]')).toBe(false);
-
-      clickHintToggle(wrapper, hintIdx);
-      const editHintTextInputs = wrapper.findAll('[data-test=editHintTextInput]');
-      expect(editHintTextInputs.length).toBe(1);
-      expect(editHintTextInputs.at(0).element.value).toBe('Second hint');
-
-      clickHintToggle(wrapper, hintIdx);
-      expect(wrapper.contains('[data-test=editHintTextInput]')).toBe(false);
+      expect(wrapper.html()).toMatchSnapshot();
     });
   });
 
   describe('on hint text update', () => {
     beforeEach(() => {
-      clickHintToggle(wrapper, 1);
+      clickHint(wrapper, 1);
       updateOpenHintText(wrapper, 'Second updated hint');
     });
 
