@@ -112,6 +112,7 @@
 <script>
 
   import { AssessmentItemTypes } from '../../constants';
+  import { updateAnswersToQuestionKind } from '../../utils';
   import AnswersEditor from '../AnswersEditor/AnswersEditor.vue';
   import AnswersPreview from '../AnswersPreview/AnswersPreview.vue';
   import HintsEditor from '../HintsEditor/HintsEditor.vue';
@@ -195,7 +196,20 @@
         });
       },
       onKindChange(newKind) {
-        this.$emit('update', { itemIdx: this.itemIdx, payload: { type: newKind } });
+        if (this.kind === newKind) {
+          return;
+        }
+
+        if (newKind === AssessmentItemTypes.TRUE_FALSE) {
+          // TODO @MisRob: display warning that all answers
+          // will be lost and continue only when confirmed
+        }
+        const newAnswers = updateAnswersToQuestionKind(newKind, this.answers);
+
+        this.$emit('update', {
+          itemIdx: this.itemIdx,
+          payload: { type: newKind, answers: newAnswers },
+        });
       },
       onAnswersChange(newAnswers) {
         this.$emit('update', { itemIdx: this.itemIdx, payload: { answers: newAnswers } });

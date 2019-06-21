@@ -55,3 +55,58 @@ export const mapCorrectAnswers = (answers, correctAnswersIndices) => {
     };
   });
 };
+
+/**
+ * Update answers to correspond to a question kind:
+ * - multiple selection: No answers updates needed.
+ * - input question: Make all answers correct.
+ * - true/false: Remove answers in favour of new true/false values.
+ * - single selection: Keep first correct choice only if there is any.
+ *                     Otherwise mark first choice as correct.
+ * @param {String} newQuestionKind single/multiple selection, true/false, input question
+ * @param {Array} answers An array of answer objects.
+ * @returns {Array} An array of updated answer objects.
+ */
+export const updateAnswersToQuestionKind = (questionKind, answers) => {
+  if (!answers || !answers.length) {
+    return [];
+  }
+
+  let newAnswers = JSON.parse(JSON.stringify(answers));
+
+  switch (questionKind) {
+    case AssessmentItemTypes.MULTIPLE_SELECTION:
+      break;
+
+    case AssessmentItemTypes.INPUT_QUESTION:
+      newAnswers = newAnswers.map(answer => {
+        answer.correct = true;
+        return answer;
+      });
+      break;
+
+    case AssessmentItemTypes.TRUE_FALSE:
+      newAnswers = [
+        { answer: 'True', correct: true, order: 1 },
+        { answer: 'False', correct: false, order: 2 },
+      ];
+      break;
+
+    case AssessmentItemTypes.SINGLE_SELECTION: {
+      let firstCorrectAnswerIdx = answers.findIndex(answer => answer.correct === true);
+      if (firstCorrectAnswerIdx === -1) {
+        firstCorrectAnswerIdx = 0;
+      }
+
+      newAnswers = newAnswers.map(answer => {
+        answer.correct = false;
+        return answer;
+      });
+
+      newAnswers[firstCorrectAnswerIdx].correct = true;
+      break;
+    }
+  }
+
+  return newAnswers;
+};

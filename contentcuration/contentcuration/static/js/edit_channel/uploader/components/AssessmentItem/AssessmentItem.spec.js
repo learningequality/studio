@@ -77,7 +77,17 @@ describe('AssessmentItem', () => {
         expect(wrapper.emitted().update).toBeTruthy();
         expect(wrapper.emitted().update.length).toBe(1);
         expect(wrapper.emitted().update[0]).toEqual([
-          { payload: { type: AssessmentItemTypes.MULTIPLE_SELECTION }, itemIdx: 1 },
+          {
+            payload: {
+              type: AssessmentItemTypes.MULTIPLE_SELECTION,
+              answers: [
+                { answer: 'Yellow', correct: false, order: 1 },
+                { answer: 'Black', correct: false, order: 2 },
+                { answer: 'Blue', correct: true, order: 3 },
+              ],
+            },
+            itemIdx: 1,
+          },
         ]);
       });
     });
