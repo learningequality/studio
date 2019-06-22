@@ -512,5 +512,7 @@ class SandboxView(TemplateView):
         nodes = list(ContentNode.objects.filter(kind_id=k, tree_id__in=tree_ids).exclude(parent=None).first() for k in kinds)
         nodes = ContentNodeSerializer(nodes, many=True)
         kwargs.update({"nodes": JSONRenderer().render(nodes.data),
-                       "channel": Channel.objects.first().pk})
+                       "channel": Channel.objects.first().pk,
+                       "current_user": JSONRenderer().render(CurrentUserSerializer(self.request.user).data)
+                       })
         return kwargs

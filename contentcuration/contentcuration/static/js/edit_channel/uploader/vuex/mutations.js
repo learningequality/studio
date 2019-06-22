@@ -33,11 +33,11 @@ export function RESET_STATE(state) {
 export function SET_NODES(state, nodes) {
   _.each(nodes, node => {
     node.changesStaged = false;
-    node.loaded = false;
+    node['_COMPLETE'] = false;
   });
 
   // TODO: Remove
-  if (state.nodes.length) nodes[nodes.length - 1].copyright_holder = null;
+  // if (state.nodes.length) nodes[nodes.length - 1].copyright_holder = null;
 
   state.nodes = nodes;
 }
@@ -82,22 +82,23 @@ export function PREP_NODES_FOR_SAVE(state) {
 
 export function SET_LOADED_NODES(state, nodes) {
   // TODO: Remove
-  let updateNode = state.nodes.length && !state.nodes[state.nodes.length - 1].loaded;
+  let updateNode = state.nodes.length && !state.nodes[state.nodes.length - 1]['_COMPLETE'];
 
-  _.each(nodes, node => {
-    let match = _.findWhere(state.nodes, { id: node.id });
-    _.extendOwn(match, {
-      ...node,
-      loaded: true,
-    });
+  _.each(_.values(nodes), value => {
+    // First, try to find a matching id. If none exists (i.e. the node is new), use sort_order
+    let match =
+      _.findWhere(state.nodes, { id: value.id }) ||
+      _.findWhere(state.nodes, { sort_order: value.sort_order });
+    if (match) {
+      _.extendOwn(match, value);
+      match.changesStaged = false;
+    }
   });
 
   // TODO: Remove
   if (updateNode) state.nodes[state.nodes.length - 1].copyright_holder = null;
 
-  _.defer(() => {
-    SET_CHANGES(state);
-  });
+  _.defer(() => SET_CHANGES(state));
 }
 
 export function RESET_SELECTED(state) {
@@ -185,9 +186,10 @@ export function ADD_NODE(state, payload) {
     extra_fields: extraFieldData,
     tags: [],
     role_visibility: 'learner',
-    loaded: true,
     changesStaged: true,
     isNew: true,
+    sort_order: state.nodes.length,
+    _COMPLETE: true,
     ...payload,
   });
   _.defer(() => {
@@ -199,7 +201,7 @@ export function ADD_NODE(state, payload) {
 
 export function REMOVE_NODE(state, index) {
   state.nodes = _.reject(state.nodes, (n, i) => i === index);
-  state.selectedIndices = _.reject(state.selectedIndices, i => i === index);
+  state.selectedIndices = _.reject(state.selectedIndices, index);
   SET_CHANGES(state);
 }
 
@@ -208,12 +210,11 @@ export function SET_FIELD(state, fieldName, value) {
   state.changes[fieldName].value = value;
   state.changes[fieldName].varied = false;
   let selected = getSelected(state);
+
   _.each(selected, node => {
-    if (!_.isEqual(node[fieldName], value)) {
-      node[fieldName] = value;
-      node.changed = true;
-      node.changesStaged = true;
-    }
+    node[fieldName] = value;
+    node.changed = true;
+    node.changesStaged = true;
   });
 }
 

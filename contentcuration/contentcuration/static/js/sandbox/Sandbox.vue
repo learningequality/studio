@@ -20,6 +20,13 @@
       Upload File
     </VBtn>
 
+    <VBtn @click="openOneNode('EDIT')">
+      Edit Single Item
+    </VBtn>
+    <VBtn @click="openOneNode('VIEW_ONLY')">
+      View Single Item
+    </VBtn>
+
     <EditModal v-if="mode" ref="editmodal" @modalclosed="reset" />
   </VApp>
 </template>
@@ -44,6 +51,12 @@
       openModal(mode) {
         this.setMode(mode);
         let nodes = mode === 'VIEW_ONLY' || mode === 'EDIT' ? _.clone(window.nodes) : [];
+        this.setNodes(nodes);
+        this.$refs.editmodal.openModal();
+      },
+      openOneNode(mode) {
+        this.setMode(mode);
+        let nodes = [_.clone(window.nodes[0])];
         this.setNodes(nodes);
         this.$refs.editmodal.openModal();
       },

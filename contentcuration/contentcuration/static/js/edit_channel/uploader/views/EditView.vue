@@ -16,8 +16,9 @@
       </VLayout>
       <VLayout v-else-if="!allLoaded" justifyCenter alignCenter fillHeight>
         <VFlex grow class="default-content">
-          {{ $tr('loadingText') }}
-          <VProgressLinear :indeterminate="true" />
+          <VProgressCircular :indeterminate="true" size="50" color="primary" />
+          <br><br>
+          <p>{{ $tr('loadingText') }}</p>
         </VFlex>
       </VLayout>
       <VLayout v-else justifyCenter>
@@ -60,8 +61,7 @@
 
           <VTabsItems v-model="currentTab">
             <VTabItem :key="tabs.DETAILS" :value="tabs.DETAILS" lazy>
-              <DetailsViewOnlyView v-if="viewOnly" />
-              <DetailsEditView v-else />
+              <DetailsEditView :viewOnly="viewOnly" />
             </VTabItem>
             <VTabItem :key="tabs.PREVIEW" :value="tabs.PREVIEW" lazy>
               Preview
@@ -81,10 +81,10 @@
 
 <script>
 
+  import _ from 'underscore';
   import { mapActions, mapGetters, mapState } from 'vuex';
   import { TabNames, modes } from '../constants';
   import DetailsEditView from './DetailsEditView.vue';
-  import DetailsViewOnlyView from './DetailsViewOnlyView.vue';
 
   export default {
     name: 'EditView',
@@ -103,7 +103,6 @@
     },
     components: {
       DetailsEditView,
-      DetailsViewOnlyView,
     },
     data() {
       return {
@@ -111,15 +110,13 @@
         loadError: false,
         loadNodesDebounced: _.debounce(() => {
           this.loadError = false;
-          this.loadNodes(_.pluck(this.selected, 'id')).catch(() => {
-            this.loadError = true;
-          });
+          this.loadNodes(this.selectedIndices).catch(() => (this.loadError = true));
         }, 1000),
       };
     },
     computed: {
       ...mapGetters('edit_modal', ['selected', 'allExercises', 'allResources', 'invalidNodes']),
-      ...mapState('edit_modal', ['viewOnly', 'isClipboard', 'nodes', 'selectedIndices', 'mode']),
+      ...mapState('edit_modal', ['isClipboard', 'nodes', 'selectedIndices', 'mode']),
       noItemText() {
         if (!this.nodes.length) {
           if (this.mode === modes.NEW_EXERCISE) return this.$tr('addExerciseText');
@@ -146,16 +143,16 @@
         return this.oneSelected && !this.isClipboard && this.allResources;
       },
       allLoaded() {
-        return _.all(this.selected, v => v['_COMPLETE']);
+        return _.all(this.selected, '_COMPLETE');
       },
       invalidSelected() {
         return _.intersection(this.selectedIndices, this.invalidNodes).length;
       },
     },
     watch: {
-      selected(newVal) {
+      selected() {
         this.currentTab = TabNames.DETAILS;
-        if (newVal.length > 0) this.loadNodesDebounced();
+        this.loadNodesDebounced();
       },
     },
     methods: {

@@ -20,27 +20,16 @@
     />
 
     <!-- Create button -->
-    <VListTile class="add-item-wrapper">
+    <VListTile v-if="allowAddTopic || allowAddExercise" class="add-item-wrapper">
       <VListTileContent>
         <VBtn
-          v-if="allowAddTopic"
           block
           depressed
           color="primary"
           dark
           @click="$emit('addNode')"
         >
-          {{ $tr('addTopic') }}
-        </VBtn>
-        <VBtn
-          v-else-if="allowAddExercise"
-          block
-          depressed
-          color="primary"
-          dark
-          @click="$emit('addNode')"
-        >
-          {{ $tr('addExercise') }}
+          {{ addButtonText }}
         </VBtn>
       </VListTileContent>
     </VListTile>
@@ -75,6 +64,11 @@
       },
       allowAddExercise() {
         return this.mode === modes.NEW_EXERCISE;
+      },
+      addButtonText() {
+        if (this.allowAddTopic) return this.$tr('addTopic');
+        else if (this.allowAddExercise) return this.$tr('addExercise');
+        return null;
       },
     },
     methods: {

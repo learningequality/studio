@@ -178,7 +178,6 @@
           :placeholder="getPlaceholder('description')"
           :label="$tr('descriptionLabel')"
           counter="400"
-          noResize
           autoGrow
           @change="setDescription"
         />
@@ -259,6 +258,12 @@
       MasteryDropdown,
       VisibilityDropdown,
     },
+    props: {
+      viewOnly: {
+        type: Boolean,
+        default: true,
+      },
+    },
     data() {
       return {
         tagText: null,
@@ -270,7 +275,7 @@
       };
     },
     computed: {
-      ...mapState('edit_modal', ['viewOnly', 'changes', 'selectedIndices']),
+      ...mapState('edit_modal', ['changes', 'selectedIndices']),
       ...mapGetters('edit_modal', [
         'selected',
         'authors',

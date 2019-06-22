@@ -1,25 +1,24 @@
-// import State from 'edit_channel/state';
-
-import Models from 'edit_channel/models';
+import State from 'edit_channel/state';
 
 export function saveNodes(context) {
   // Setting this before in case changes happen between saving start and finish
-  _.each(context.state.nodes, node => (node.changesStaged = false));
-  return new Promise(resolve => {
-    // ADD SAVE LOGIC HERE
-    setTimeout(resolve, 5000);
+  return new Promise((resolve, reject) => {
+    let changed = _.where(context.state.nodes, { changesStaged: true });
+
+    State.Store.dispatch('saveNodes', changed)
+      .then(data => {
+        context.commit('SET_LOADED_NODES', data);
+        resolve();
+      })
+      .catch(reject);
   });
 }
 
-export function loadNodes(context, nodeIDs) {
-  if (nodeIDs.length) {
-    $.ajax({
-      method: 'GET',
-      url: window.Urls.get_nodes_by_ids_complete(),
-      data: { nodes: JSON.stringify(nodeIDs) },
-      success: data => {
-        context.commit('SET_LOADED_NODES', data);
-      },
+export function loadNodes(context, indices) {
+  let nodes = _.filter(context.state.nodes, (node, i) => node.id && _.contains(indices, i));
+  if (nodes.length) {
+    State.Store.dispatch('loadNodesComplete', _.pluck(nodes, 'id')).then(data => {
+      context.commit('SET_LOADED_NODES', data);
     });
   }
 }
@@ -27,12 +26,19 @@ export function loadNodes(context, nodeIDs) {
 export function removeNode(context, index) {
   let node = context.state.nodes[index];
   if (node.id) {
-    new Models.ContentNodeModel({ id: node.id }).destroy({
-      success: () => {
-        context.commit('REMOVE_NODE', index);
-      },
+    State.Store.dispatch('deleteNodes', [node.id]).then(() => {
+      context.commit('REMOVE_NODE', index);
     });
   } else {
     context.commit('REMOVE_NODE', index);
   }
+}
+
+export function copyNodes(context) {
+  return new Promise(resolve => {
+    let payload = { nodeIDs: _.pluck(context.state.nodes, 'id') };
+    State.Store.dispatch('copyNodes', payload).then(data => {
+      resolve(data);
+    });
+  });
 }

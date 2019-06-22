@@ -31,11 +31,10 @@
               {{ $tr('saveButtonText') }}
             </VBtn>
             <VBtn v-else dark flat @click="copyContent">
-              {{ $tr('copyButtonText') }}
+              {{ $tr('copyButtonText', {count: nodes.length}) }}
             </VBtn>
           </VToolbarItems>
         </VToolbar>
-
         <EditView />
       </VCard>
     </VDialog>
@@ -94,7 +93,8 @@
       [modes.NEW_EXERCISE]: 'Adding Exercises',
       [modes.UPLOAD]: 'Uploading Files',
       saveButtonText: 'Save & Close',
-      copyButtonText: 'Copy',
+      copyButtonText:
+        '{count, plural,\n =1 {Copy to clipboard}\n other {Copy # items to clipboard}}',
       savedMessage: 'Saved {relativeTime}',
       savingIndicator: 'Saving...',
       unsavedChanges: 'Save your changes?',
@@ -111,11 +111,6 @@
         'Autosave paused ({count, plural,\n =1 {# error}\n other {# errors}} detected)',
       topicDefaultTitle: '{parent} Topic',
       exerciseDefaultTitle: '{parent} Exercise',
-      // out_of_space: 'Out of Disk Space',
-      // out_of_space_text:
-      //   "Please request more space under your Settings page.",
-      // open_settings: 'Open Settings',
-      // ok: 'OK'
     },
     components: {
       EditList,
@@ -155,7 +150,7 @@
       },
       showEditList() {
         // Only hide drawer when editing a single item
-        return this.mode !== modes.EDIT || this.nodes.length > 1;
+        return (this.mode !== modes.EDIT && !this.isViewOnly) || this.nodes.length > 1;
       },
     },
     watch: {
@@ -177,7 +172,7 @@
       this.drawer.open = this.showEditList;
     },
     methods: {
-      ...mapActions('edit_modal', ['saveNodes']),
+      ...mapActions('edit_modal', ['saveNodes', 'copyNodes']),
       ...mapMutations('edit_modal', {
         select: 'SELECT_NODE',
         deselectAll: 'RESET_SELECTED',
@@ -220,7 +215,7 @@
         this.saveError = false;
         return new Promise((resolve, reject) => {
           clearInterval(this.updateInterval);
-          if (this.invalidNodes.length) {
+          if (this.invalidNodesOverridden.length) {
             resolve();
           } else {
             this.saving = true;
@@ -235,6 +230,8 @@
         });
       },
       handleSave() {
+        // Prepare for save sets all as not new and
+        // activates validation on all nodes
         this.prepareForSave();
         if (this.invalidNodes.length) {
           this.setNode(this.invalidNodes[0]);
@@ -260,13 +257,19 @@
       closeModal() {
         this.dismissPrompt();
         this.dialog = false;
+        clearInterval(this.updateInterval);
         this.lastSaved = null;
         this.reset();
         this.$emit('modalclosed');
         // TODO: Update router
       },
       copyContent() {
-        this.closeModal();
+        if (_.some(this.nodes, n => n.prerequisite.length || n.is_prerequisite_of.length)) {
+          this.$refs.relatedalert.prompt();
+        }
+        this.copyNodes().then(() => {
+          this.closeModal();
+        });
       },
     },
   };
