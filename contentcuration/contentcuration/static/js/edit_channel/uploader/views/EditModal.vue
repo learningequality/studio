@@ -1,6 +1,13 @@
 <template>
   <div>
-    <VDialog v-model="dialog" fullscreen hideOverlay transition="dialog-bottom-transition" lazy>
+    <VDialog
+      v-if="dialog"
+      v-model="dialog"
+      fullscreen
+      hideOverlay
+      transition="dialog-bottom-transition"
+      lazy
+    >
       <VCard class="edit-modal-wrapper">
         <VNavigationDrawer v-model="drawer.open" stateless clipped app class="edit-list">
           <EditList @addNode="createNode" />
@@ -245,6 +252,7 @@
         }
       },
       handleClose() {
+        this.debouncedSave.cancel();
         if (this.changed) {
           this.$refs.saveprompt.prompt();
         } else {
@@ -253,12 +261,14 @@
       },
       dismissPrompt() {
         this.$refs.saveprompt.close();
+        this.debouncedSave();
       },
       closeModal() {
+        this.debouncedSave.cancel();
         this.dismissPrompt();
         this.dialog = false;
-        clearInterval(this.updateInterval);
         this.lastSaved = null;
+        this.savedMessage = '';
         this.reset();
         this.$emit('modalclosed');
         // TODO: Update router

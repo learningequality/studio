@@ -189,7 +189,7 @@ export function ADD_NODE(state, payload) {
     changesStaged: true,
     isNew: true,
     parent: state.targetNode.id,
-    sort_order: state.nodes.length,
+    sort_order: state.targetNode.metadata.max_sort_order + state.nodes.length + 1,
     _COMPLETE: true,
     ...payload,
   });
