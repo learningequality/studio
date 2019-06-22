@@ -193,7 +193,7 @@
         }
       },
       createNode() {
-        let titleArgs = { parent: this.targetNode.parent_title };
+        let titleArgs = { parent: this.targetNode.title };
         if (this.mode === modes.NEW_TOPIC) {
           this.addNodeToList({
             title: this.$tr('topicDefaultTitle', titleArgs),

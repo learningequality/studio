@@ -25,7 +25,7 @@ export function RESET_STATE(state) {
     selectedIndices: [],
     isClipboard: false,
     changes: {},
-    targetNode: { parent_title: 'Sandbox' },
+    targetNode: State.current_channel.get('main_tree'), // TODO: replace with actual target
     mode: modes.VIEW_ONLY,
   });
 }
@@ -188,6 +188,7 @@ export function ADD_NODE(state, payload) {
     role_visibility: 'learner',
     changesStaged: true,
     isNew: true,
+    parent: state.targetNode.id,
     sort_order: state.nodes.length,
     _COMPLETE: true,
     ...payload,
