@@ -61,7 +61,13 @@
 
           <VTabsItems v-model="currentTab">
             <VTabItem :key="tabs.DETAILS" :value="tabs.DETAILS" lazy>
-              <DetailsEditView :viewOnly="viewOnly" />
+              <VAlert :value="selected.length > 1" type="info" outline>
+                {{ countText }}
+              </VAlert>
+              <VAlert :value="invalidSelected" type="error" outline icon="error">
+                {{ $tr('errorBannerText') }}
+              </VAlert>
+              <DetailsTabView :viewOnly="viewOnly" />
             </VTabItem>
             <VTabItem :key="tabs.PREVIEW" :value="tabs.PREVIEW" lazy>
               Preview
@@ -84,7 +90,7 @@
   import _ from 'underscore';
   import { mapActions, mapGetters, mapState } from 'vuex';
   import { TabNames, modes } from '../constants';
-  import DetailsEditView from './DetailsEditView.vue';
+  import DetailsTabView from './DetailsTabView.vue';
 
   export default {
     name: 'EditView',
@@ -100,9 +106,12 @@
       loadingText: 'Loading Content...',
       loadErrorText: 'Unable to load content',
       invalidFieldsToolTip: 'Invalid fields detected',
+      errorBannerText: 'Please address invalid fields',
+      editingMultipleCount: 'Editing details for {count, plural,\n =1 {# item}\n other {# items}}',
+      viewingMultipleCount: 'Viewing details for {count, plural,\n =1 {# item}\n other {# items}}',
     },
     components: {
-      DetailsEditView,
+      DetailsTabView,
     },
     data() {
       return {
@@ -146,7 +155,12 @@
         return _.all(this.selected, '_COMPLETE');
       },
       invalidSelected() {
-        return _.intersection(this.selectedIndices, this.invalidNodes).length;
+        return !this.viewOnly && _.intersection(this.selectedIndices, this.invalidNodes).length;
+      },
+      countText() {
+        let messageArgs = { count: this.selected.length };
+        if (this.viewOnly) return this.$tr('viewingMultipleCount', messageArgs);
+        return this.$tr('editingMultipleCount', messageArgs);
       },
     },
     watch: {
@@ -165,6 +179,12 @@
 <style lang="less" scoped>
 
   @import '../../../../less/global-variables.less';
+
+  .v-alert {
+    padding: 10px;
+    margin: 15px;
+    font-weight: bold;
+  }
 
   .default-content {
     .empty_default;

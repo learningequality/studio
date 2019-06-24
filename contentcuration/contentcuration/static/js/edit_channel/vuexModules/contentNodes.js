@@ -119,9 +119,7 @@ const contentNodesModule = {
             _.each(nodes, node => (node[NODE_COMPLETE_LOAD] = true));
             context.commit('SET_NODES', nodes);
             let returnData = {};
-            _.each(contentNodeIDs, id => {
-              returnData[id] = context.state.contentNodes[id];
-            });
+            _.each(contentNodeIDs, id => (returnData[id] = context.state.contentNodes[id]));
             resolve(returnData);
           })
           .catch(reject);
@@ -132,7 +130,6 @@ const contentNodesModule = {
     saveNodes(context, payload) {
       // Some nodes may have extra_fields set to null, so make an empty dict instead
       _.each(payload, n => (n.extra_fields = n.extra_fields || {}));
-
       return new Promise((resolve, reject) => {
         $.ajax({
           method: 'PUT',
@@ -144,8 +141,10 @@ const contentNodesModule = {
           },
           error: reject,
           success: data => {
-            context.commit('SET_NODES', data);
-            resolve(data);
+            let savedData = {};
+            _.each(data, node => (savedData[node.id] = node));
+            context.commit('SET_NODES', savedData);
+            resolve(savedData);
           },
         });
       });

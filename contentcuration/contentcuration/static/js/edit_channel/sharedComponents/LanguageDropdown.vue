@@ -12,6 +12,7 @@
     :hint="hint"
     persistentHint
     :placeholder="placeholder"
+    :readonly="readonly"
     @input="selectedLanguage"
   />
 </template>
@@ -43,6 +44,10 @@
       placeholder: {
         type: String,
         default: '',
+      },
+      readonly: {
+        type: Boolean,
+        default: false,
       },
     },
     computed: {

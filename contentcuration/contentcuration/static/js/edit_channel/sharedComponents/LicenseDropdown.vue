@@ -11,6 +11,7 @@
         :itemText="translate"
         :disabled="disabled"
         :required="required"
+        :readonly="readonly"
         :rules="required? rules.license : []"
         :placeholder="placeholder"
         class="license-select"
@@ -40,11 +41,12 @@
       ref="description"
       :value="licenseDescription"
       maxlength="400"
-      counter="400"
+      :counter="!readonly && 400"
       noResize
       :label="$tr('licenseDescriptionLabel')"
       :disabled="disabled"
       :placeholder="descriptionPlaceholder"
+      :readonly="readonly"
       :required="descriptionRequired"
       :rules="descriptionRequired? rules.description : []"
       @input="handleDescriptionChange"
@@ -92,6 +94,10 @@
       placeholder: {
         type: String,
         default: '',
+      },
+      readonly: {
+        type: Boolean,
+        default: false,
       },
       licenseDescription: {
         type: String,

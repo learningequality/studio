@@ -36,9 +36,6 @@ export function SET_NODES(state, nodes) {
     node['_COMPLETE'] = false;
   });
 
-  // TODO: Remove
-  // if (state.nodes.length) nodes[nodes.length - 1].copyright_holder = null;
-
   state.nodes = nodes;
 }
 
@@ -70,7 +67,8 @@ export function SET_CHANGES(state) {
   let extraFieldItems = _.pluck(selected, 'extra_fields');
   state.changes.extra_fields = _generateSharedData(extraFieldItems, extraFields);
 
-  state.changes.tags = _.intersection.apply(_, _.pluck(selected, 'tags'));
+  let tags = _.map(selected, n => _.pluck(n.tags, 'tag_name'));
+  state.changes.tags = _.intersection.apply(_, tags);
   _.each(state.nodes, (node, i) => {
     if (!_.contains(state.selectedIndices, i)) node.isNew = false;
   });
@@ -81,9 +79,6 @@ export function PREP_NODES_FOR_SAVE(state) {
 }
 
 export function SET_LOADED_NODES(state, nodes) {
-  // TODO: Remove
-  let updateNode = state.nodes.length && !state.nodes[state.nodes.length - 1]['_COMPLETE'];
-
   _.each(_.values(nodes), value => {
     // First, try to find a matching id. If none exists (i.e. the node is new), use sort_order
     let match =
@@ -94,9 +89,6 @@ export function SET_LOADED_NODES(state, nodes) {
       match.changesStaged = false;
     }
   });
-
-  // TODO: Remove
-  if (updateNode) state.nodes[state.nodes.length - 1].copyright_holder = null;
 
   _.defer(() => SET_CHANGES(state));
 }
@@ -202,7 +194,7 @@ export function ADD_NODE(state, payload) {
 
 export function REMOVE_NODE(state, index) {
   state.nodes = _.reject(state.nodes, (n, i) => i === index);
-  state.selectedIndices = _.reject(state.selectedIndices, index);
+  state.selectedIndices = _.reject(state.selectedIndices, i => i === index);
   SET_CHANGES(state);
 }
 
@@ -262,16 +254,19 @@ export function SET_VISIBILITY(state, role) {
 export function SET_TAGS(state, tags) {
   let removed = _.difference(state.changes.tags, tags);
   let selected = getSelected(state);
+
   _.each(selected, node => {
     // Node tags + new tags - old tags
     node.tags = _.chain(node.tags)
+      .map(t => t.tag_name || t) // Loaded values are in dict form,
       .union(tags)
       .difference(removed)
+      .map(t => ({ tag_name: t, channel: State.current_channel.id }))
       .value();
     node.changesStaged = true;
     node.changed = true;
   });
-  state.changes.tags = tags;
+  // state.changes.tags = tags;
 
   let newTags = _.difference(tags, State.Store.getters.contentTags);
   _.each(newTags, tag => {
@@ -283,6 +278,7 @@ export function SET_TAGS(state, tags) {
   _.each(removed, tag => {
     State.Store.commit('REMOVE_CONTENT_TAG_BY_NAME', tag);
   });
+  SET_CHANGES(state);
 }
 
 export function SET_EXTRA_FIELDS(state, obj) {

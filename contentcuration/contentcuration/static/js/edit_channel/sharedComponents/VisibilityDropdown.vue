@@ -8,6 +8,7 @@
         :placeholder="placeholder"
         color="primary"
         itemValue="id"
+        :readonly="readonly"
         :required="required"
         :rules="required? rules : []"
         @input="handleInput"
@@ -95,6 +96,10 @@
         required: false,
       },
       required: {
+        type: Boolean,
+        default: false,
+      },
+      readonly: {
         type: Boolean,
         default: false,
       },

@@ -1,6 +1,8 @@
+import _ from 'underscore';
 import { modes } from '../constants';
 import { getSelected } from './utils';
 import Constants from 'edit_channel/constants/index';
+import State from 'edit_channel/state';
 
 export function getNode(state) {
   return function(index) {
@@ -95,5 +97,5 @@ export function copyrightHolders() {
 }
 
 export function tags() {
-  return ['Tauros', 'Tentacool', 'Tangela'];
+  return _.pluck(State.Store.getters.contentTags, 'tag_name');
 }

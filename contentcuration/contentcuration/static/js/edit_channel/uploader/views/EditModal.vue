@@ -1,7 +1,6 @@
 <template>
   <div>
     <VDialog
-      v-if="dialog"
       v-model="dialog"
       fullscreen
       hideOverlay

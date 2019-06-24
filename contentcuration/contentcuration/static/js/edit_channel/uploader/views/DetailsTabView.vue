@@ -1,17 +1,6 @@
 <template>
   <div class="details-edit-view">
-    <VAlert :value="selected.length > 1" type="info" outline>
-      {{ $tr('editingMultipleCount', {count: selected.length}) }}
-    </VAlert>
-    <VAlert :value="!newContent && !valid" type="error" outline icon="error">
-      {{ $tr('errorBannerText') }}
-    </VAlert>
-
-    <div v-if="oneSelected">
-      <!-- INSERT FILE UPLOAD MODULE HERE -->
-    </div>
-
-    <VForm ref="form" v-model="valid" :lazyValidation="newContent">
+    <VForm ref="form" v-model="valid" :lazyValidation="newContent" :disabled="viewOnly">
       <!-- Language and import link -->
       <VLayout grid alignTop class="language-section" wrap>
         <VFlex v-if="oneSelected && isImported" lg4 md7 sm12>
@@ -25,6 +14,7 @@
             :hint="languageHint"
             :language="changes.language.value"
             :placeholder="getPlaceholder('language')"
+            :readonly="viewOnly"
             @changed="setLanguage"
           />
         </VFlex>
@@ -34,12 +24,13 @@
           <VTextField
             v-if="oneSelected"
             :value="changes.title.value"
-            counter="200"
+            :counter="(viewOnly)? null : 200"
             maxlength="200"
             :rules="rules.title"
-            :label="$tr('titleLabel')"
+            :label="$tr('titleLabel') + (viewOnly ? '' : ' *')"
             autofocus
             required
+            :readonly="viewOnly"
             @change="setTitle"
           />
         </VFlex>
@@ -50,6 +41,7 @@
             :role="changes.role_visibility.value"
             :placeholder="getPlaceholder('role_visibility')"
             :required="!changes.role_visibility.varied"
+            :readonly="viewOnly"
             @changed="setVisibility"
           />
         </VFlex>
@@ -68,6 +60,7 @@
             :nValue="changes.extra_fields.n.value"
             :nPlaceholder="getExtraFieldPlaceholder('n')"
             :nRequired="!changes.extra_fields.n.varied"
+            :readonly="viewOnly"
             @changed="setExtraFields"
           />
           <br>
@@ -77,6 +70,7 @@
             :inputValue="changes.extra_fields.randomize.value"
             :indeterminate="changes.extra_fields.randomize.varied"
             color="primary"
+            :readonly="viewOnly"
             @change="setQuestionOrderRandomization"
           />
         </VFlex>
@@ -97,6 +91,7 @@
               :items="authors"
               :label="$tr('authorLabel')"
               :disabled="disableAuthEdits"
+              :readonly="viewOnly"
               maxlength="200"
               autoSelectFirst
               :placeholder="getPlaceholder('author')"
@@ -112,6 +107,7 @@
               :items="providers"
               :label="$tr('providerLabel')"
               :disabled="disableAuthEdits"
+              :readonly="viewOnly"
               maxlength="200"
               :placeholder="getPlaceholder('provider')"
               autoSelectFirst
@@ -127,6 +123,7 @@
               :items="aggregators"
               :label="$tr('aggregatorLabel')"
               :disabled="disableAuthEdits"
+              :readonly="viewOnly"
               maxlength="200"
               autoSelectFirst
               :placeholder="getPlaceholder('aggregator')"
@@ -142,6 +139,7 @@
               :licenseDescription="changes.license_description.value"
               :disabled="disableAuthEdits"
               :required="!changes.license.varied"
+              :readonly="viewOnly"
               :descriptionRequired="!changes.license_description.varied"
               :placeholder="getPlaceholder('license')"
               :descriptionPlaceholder="getPlaceholder('license_description')"
@@ -164,6 +162,7 @@
               :rules="changes.copyright_holder.varied? [] : rules.copyrightHolder"
               :placeholder="getPlaceholder('copyright_holder')"
               autoSelectFirst
+              :readonly="viewOnly"
               @input="setCopyrightHolder"
             />
           </VFlex>
@@ -177,8 +176,9 @@
           :value="changes.description.value"
           :placeholder="getPlaceholder('description')"
           :label="$tr('descriptionLabel')"
-          counter="400"
+          :counter="!viewOnly && 400"
           autoGrow
+          :readonly="viewOnly"
           @change="setDescription"
         />
       </VFlex>
@@ -190,6 +190,7 @@
           :value="changes.tags"
           :items="tags"
           :searchInput.sync="tagText"
+          :readonly="viewOnly"
           chips
           :label="$tr('tagsLabel')"
           multiple
@@ -226,11 +227,9 @@
   import VisibilityDropdown from 'edit_channel/sharedComponents/VisibilityDropdown.vue';
 
   export default {
-    name: 'DetailsEditView',
+    name: 'DetailsTabView',
     $trs: {
-      errorBannerText: 'Please address invalid fields',
-      editingMultipleCount: 'Editing details for {count, plural,\n =1 {# item}\n other {# items}}',
-      titleLabel: 'Title *',
+      titleLabel: 'Title',
       titleValidationMessage: 'Title is required',
       languageHelpText: 'Leave blank to default to topic language',
       languageChannelHelpText: 'Leave blank to default to channel language',
@@ -294,6 +293,7 @@
         return this.selected.length === 1;
       },
       languageHint() {
+        if (this.viewOnly) return '';
         let topLevel = !_.some(this.selected, item => item && item.ancestors.length > 1);
         return topLevel ? this.$tr('languageChannelHelpText') : this.$tr('languageHelpText');
       },
@@ -324,10 +324,12 @@
     },
     watch: {
       changes() {
-        _.defer(() => {
-          if (this.$refs.form)
-            this.newContent ? this.$refs.form.resetValidation() : this.$refs.form.validate();
-        }, 100);
+        if (!this.viewOnly) {
+          this.$nextTick(() => {
+            if (this.$refs.form)
+              this.newContent ? this.$refs.form.resetValidation() : this.$refs.form.validate();
+          });
+        }
       },
     },
     methods: {
@@ -346,12 +348,18 @@
         setTags: 'SET_TAGS',
       }),
       getPlaceholder(field) {
-        return this.changes[field].varied ? this.$tr('variedFieldPlaceholder') : null;
+        return this.changes[field].varied || this.viewOnly
+          ? this.$tr('variedFieldPlaceholder')
+          : null;
       },
       getExtraFieldPlaceholder(field) {
-        return this.changes.extra_fields[field].varied ? this.$tr('variedFieldPlaceholder') : null;
+        return this.changes.extra_fields[field].varied || this.viewOnly
+          ? this.$tr('variedFieldPlaceholder')
+          : null;
       },
       handleTags(tags) {
+        if (this.viewOnly) return;
+
         // If selecting a tag, clear the text field
         if (tags.length > this.changes.tags.length) this.tagText = null;
         this.setTags(tags);
@@ -367,12 +375,6 @@
 <style lang="less" scoped>
 
   @import '../../../../less/global-variables.less';
-
-  .v-alert {
-    padding: 10px;
-    margin-bottom: 15px;
-    font-weight: bold;
-  }
 
   /deep/ a {
     .linked-list-item;
@@ -414,6 +416,21 @@
       .v-input {
         margin-bottom: 20px;
       }
+      /deep/ .v-input--is-readonly {
+        /deep/ label,
+        /deep/ .v-icon {
+          color: @gray-600 !important;
+        }
+        /deep/ .v-input__slot {
+          &::before {
+            border-style: dotted;
+          }
+          &::after {
+            border: 0;
+          }
+        }
+      }
+
       .auth-section {
         width: 100%;
         margin: 0 auto;

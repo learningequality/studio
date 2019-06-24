@@ -10,6 +10,7 @@
         :placeholder="placeholder"
         itemValue="id"
         :required="required"
+        :readonly="readonly"
         :rules="required? rules.mastery : []"
         @input="updateMastery"
       />
@@ -48,6 +49,7 @@
           :max="nValue"
           :required="mRequired"
           :placeholder="mPlaceholder"
+          :readonly="readonly"
           :rules="mRequired? rules.mValue : []"
           :hint="$tr('mHint')"
           persistentHint
@@ -67,6 +69,7 @@
           :hint="$tr('nHint')"
           persistentHint
           :required="nRequired"
+          :readonly="readonly"
           :placeholder="nPlaceholder"
           :rules="nRequired? rules.nValue : []"
           @input="updateNValue"
@@ -128,6 +131,10 @@
       required: {
         type: Boolean,
         default: true,
+      },
+      readonly: {
+        type: Boolean,
+        default: false,
       },
       mValue: {
         type: Number,
