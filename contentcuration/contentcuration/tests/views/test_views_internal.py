@@ -13,6 +13,7 @@ from ..base import StudioTestCase
 from ..testdata import fileobj_exercise_graphie
 from ..testdata import fileobj_exercise_image
 from ..testdata import fileobj_video
+from ..testdata import channel
 from ..testdata import tree
 from contentcuration import ricecooker_versions as rc
 from contentcuration.models import Channel
@@ -43,9 +44,12 @@ class ApiAddNodesToTreeTestCase(StudioTestCase):
 
     def setUp(self):
         super(ApiAddNodesToTreeTestCase, self).setUp()
+        # first setup a test channel...
+        self.channel = channel()
+        self.root_node = self.channel.main_tree
+
         # get our random data from mixer
         random_data = mixer.blend(SampleContentNodeDataSchema)
-        self.root_node = tree()
         self.fileobj = fileobj_video()
         self.title = random_data.title
         sample_data = {
@@ -126,9 +130,12 @@ class ApiAddExerciseNodesToTreeTestCase(StudioTestCase):
 
     def setUp(self):
         super(ApiAddExerciseNodesToTreeTestCase, self).setUp()
+        # first setup a test channel...
+        self.channel = channel()
+        self.root_node = self.channel.main_tree
+
         # get our random data from mixer
         random_data = mixer.blend(SampleContentNodeDataSchema)
-        self.root_node = tree()
         self.exercise_image = fileobj_exercise_image()          # a vanilla image file associated with question
         self.exercise_graphie = fileobj_exercise_graphie()      # a perseus image file associated with question
         self.title = random_data.title

@@ -1,13 +1,12 @@
 import json
 
 import testdata
-from .testdata import create_temp_file
 from base import BaseAPITestCase
 from base import BaseTestCase
-
 from django.conf import settings
 from django.core.urlresolvers import reverse_lazy
 
+from .testdata import create_studio_file
 from contentcuration.models import Channel
 from contentcuration.models import ContentKind
 from contentcuration.models import ContentNode
@@ -380,7 +379,7 @@ class SyncNodesOperationTestCase(BaseTestCase):
 
     def _add_subs_to_video_node(self, video_node, lang):
         lang_obj = Language.objects.get(id=lang)
-        sub_file = create_temp_file('subsin'+lang, preset='video_subtitle', ext='vtt')['db_file']
+        sub_file = create_studio_file('subsin'+lang, preset='video_subtitle', ext='vtt')['db_file']
         sub_file.language = lang_obj
         sub_file.contentnode = video_node
         sub_file.save()
@@ -425,6 +424,3 @@ class SyncNodesOperationTestCase(BaseTestCase):
             assert fileA.checksum == fileB.checksum, 'different checksum found'
             assert fileA.preset == fileB.preset, 'different preset found'
             assert fileA.language == fileB.language, 'different language found'
-
-
-
