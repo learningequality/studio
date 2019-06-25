@@ -15,6 +15,8 @@
 
 <script>
 
+  import _ from 'underscore';
+
   export default {
     name: 'HelpTooltip',
     props: {

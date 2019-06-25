@@ -42,7 +42,7 @@
       :value="licenseDescription"
       maxlength="400"
       :counter="!readonly && 400"
-      noResize
+      autoGrow
       :label="$tr('licenseDescriptionLabel')"
       :disabled="disabled"
       :placeholder="descriptionPlaceholder"
@@ -133,7 +133,7 @@
       licenseUrl() {
         let licenseUrl = this.selectedLicense.license_url;
         let isCC = licenseUrl.includes('creativecommons.org');
-        return isCC ? licenseUrl + 'deed.' + window.languageCode : licenseUrl;
+        return isCC ? licenseUrl + 'deed.' + (window.languageCode || 'en') : licenseUrl;
       },
     },
     methods: {

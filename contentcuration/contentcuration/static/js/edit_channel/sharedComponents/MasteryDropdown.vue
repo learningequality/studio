@@ -2,6 +2,7 @@
   <VLayout grid wrap class="align-center">
     <VFlex xs10>
       <VSelect
+        ref="masteryModel"
         :value="masteryModel"
         :items="masteryCriteria"
         :label="$tr('labelText')"
@@ -11,6 +12,7 @@
         itemValue="id"
         :required="required"
         :readonly="readonly"
+        :disabled="disabled"
         :rules="required? rules.mastery : []"
         @input="updateMastery"
       />
@@ -43,6 +45,7 @@
     <VLayout v-if="showMofN" alignTop>
       <VFlex xs5>
         <VTextField
+          ref="mValue"
           :value="mValue"
           type="number"
           min="1"
@@ -51,6 +54,7 @@
           :placeholder="mPlaceholder"
           :readonly="readonly"
           :rules="mRequired? rules.mValue : []"
+          :disabled="disabled"
           :hint="$tr('mHint')"
           persistentHint
           @input="updateMValue"
@@ -62,16 +66,17 @@
       </VFlex>
       <VFlex xs5>
         <VTextField
+          ref="nValue"
           :value="nValue"
           type="number"
           min="1"
-          max="20"
           :hint="$tr('nHint')"
           persistentHint
           :required="nRequired"
           :readonly="readonly"
           :placeholder="nPlaceholder"
           :rules="nRequired? rules.nValue : []"
+          :disabled="disabled"
           @input="updateNValue"
         />
       </VFlex>
@@ -106,7 +111,6 @@
       masteryDescripiton:
         'Kolibri marks an exercise as "completed" when the mastery ' +
         'criteria is met. Here are the different types of mastery criteria for an exercise:',
-      ofText: 'of',
       masteryValidationMessage: 'Mastery is required',
       mnValueValidationMessage: 'Must be at least 1',
       mValueValidationMessage: 'Must be lesser than or equal to N',
@@ -133,6 +137,10 @@
         default: true,
       },
       readonly: {
+        type: Boolean,
+        default: false,
+      },
+      disabled: {
         type: Boolean,
         default: false,
       },

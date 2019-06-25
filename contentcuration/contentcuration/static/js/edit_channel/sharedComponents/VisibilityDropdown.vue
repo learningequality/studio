@@ -2,12 +2,14 @@
   <VLayout grid wrap alignCenter>
     <VFlex xs10>
       <VSelect
+        ref="visibility"
         :value="role"
         :items="roles"
         :label="$tr('labelText')"
         :placeholder="placeholder"
         color="primary"
         itemValue="id"
+        :disabled="disabled"
         :readonly="readonly"
         :required="required"
         :rules="required? rules : []"
@@ -96,6 +98,10 @@
         required: false,
       },
       required: {
+        type: Boolean,
+        default: false,
+      },
+      disabled: {
         type: Boolean,
         default: false,
       },

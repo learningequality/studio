@@ -4,7 +4,6 @@
     :items="languages"
     :label="$tr('labelText')"
     color="primary"
-    class="language-dropdown"
     itemValue="id"
     :itemText="languageText"
     autoSelectFirst
@@ -13,6 +12,8 @@
     persistentHint
     :placeholder="placeholder"
     :readonly="readonly"
+    :required="required"
+    :rules="required? rules : []"
     @input="selectedLanguage"
   />
 </template>
@@ -28,6 +29,7 @@
     $trs: {
       labelText: 'Language',
       languageItemText: '{language} ({code})',
+      languageRequired: 'Language is required',
     },
     props: {
       language: {
@@ -49,6 +51,15 @@
         type: Boolean,
         default: false,
       },
+      required: {
+        type: Boolean,
+        default: false,
+      },
+    },
+    data() {
+      return {
+        rules: [v => !!v || this.$tr('languageRequired')],
+      };
     },
     computed: {
       languages() {
@@ -76,7 +87,7 @@
 
   .v-autocomplete {
     display: inline-block;
-    width: 150px;
+    width: 100%;
   }
 
   /deep/ .v-list__tile {

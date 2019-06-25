@@ -64,7 +64,7 @@
         if (this.dontShowAgain) {
           let messages = this.getMessages();
           messages.push(this.messageID);
-          localStorage['dont_show_messages'] = messages;
+          localStorage['dont_show_messages'] = messages.join(',');
         }
         this.$refs.alert.close();
       },
