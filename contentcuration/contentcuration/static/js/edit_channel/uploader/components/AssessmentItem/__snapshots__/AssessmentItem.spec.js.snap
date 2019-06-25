@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`AssessmentItem when closed renders a correct order, type and text 1`] = `
+exports[`AssessmentItem when closed renders 1`] = `
 <div class="v-card v-sheet theme--light">
   <div class="v-card__title" style="cursor: pointer;">
     <div class="container fluid">
@@ -16,14 +16,39 @@ exports[`AssessmentItem when closed renders a correct order, type and text 1`] =
             What color is the sky?
           </div>
         </div>
+        <div class="spacer"></div> <span class="toolbar"><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIconArrowUp"><div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light" style="color: rgb(104, 104, 104); caret-color: #686868;">keyboard_arrow_up</i></div></button><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move up</span>
+      </div></span> <button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIconArrowDown">
+        <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light" style="color: rgb(104, 104, 104); caret-color: #686868;">keyboard_arrow_down</i></div>
+      </button><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move down</span>
+    </div></span> <button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIconEdit">
+      <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light" style="color: rgb(104, 104, 104); caret-color: #686868;">edit</i></div>
+    </button><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Edit</span>
+  </div></span> <button type="button" class="v-btn v-btn--icon theme--light">
+    <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light" style="color: rgb(104, 104, 104); caret-color: #686868;">more_vert</i></div>
+  </button>
+  <div class="v-menu">
+    <div class="v-menu__content theme--light " style="max-height: auto; min-width: 0px; max-width: auto; top: 12px; left: 12px; transform-origin: top left; z-index: 0; display: none;">
+      <div role="list" class="v-list theme--light">
+        <div role="listitem"><a data-test="toolbarMenuAddItemAbove" class="v-list__tile v-list__tile--link theme--light">
+            <div class="v-list__tile__title">Add question above</div>
+          </a></div>
+        <div role="listitem"><a data-test="toolbarMenuAddItemBelow" class="v-list__tile v-list__tile--link theme--light">
+            <div class="v-list__tile__title">Add question below</div>
+          </a></div>
+        <div role="listitem"><a data-test="toolbarMenuDeleteItem" class="v-list__tile v-list__tile--link theme--light">
+            <div class="v-list__tile__title">Delete</div>
+          </a></div>
       </div>
-      <!---->
     </div>
-  </div>
+  </div></span>
+</div>
+<!---->
+</div>
+</div>
 </div>
 `;
 
-exports[`AssessmentItem when open renders a correct order, type select, text input, answers editor, hints editor, close button 1`] = `
+exports[`AssessmentItem when open renders 1`] = `
 <div class="v-card v-sheet theme--light">
   <div data-test="open" class="v-card__title">
     <div class="container fluid">
@@ -80,164 +105,187 @@ exports[`AssessmentItem when open renders a correct order, type select, text inp
             </div>
           </div>
         </div>
+        <div class="spacer"></div> <span class="toolbar"><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIconArrowUp"><div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light" style="color: rgb(104, 104, 104); caret-color: #686868;">keyboard_arrow_up</i></div></button><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move up</span>
+      </div></span> <button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIconArrowDown">
+        <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light" style="color: rgb(104, 104, 104); caret-color: #686868;">keyboard_arrow_down</i></div>
+      </button><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move down</span>
+    </div></span>
+    <!----> <button type="button" class="v-btn v-btn--icon theme--light">
+      <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light" style="color: rgb(104, 104, 104); caret-color: #686868;">more_vert</i></div>
+    </button>
+    <div class="v-menu">
+      <div class="v-menu__content theme--light " style="max-height: auto; min-width: 0px; max-width: auto; top: 12px; left: 12px; transform-origin: top left; z-index: 0; display: none;">
+        <div role="list" class="v-list theme--light">
+          <div role="listitem"><a data-test="toolbarMenuAddItemAbove" class="v-list__tile v-list__tile--link theme--light">
+              <div class="v-list__tile__title">Add question above</div>
+            </a></div>
+          <div role="listitem"><a data-test="toolbarMenuAddItemBelow" class="v-list__tile v-list__tile--link theme--light">
+              <div class="v-list__tile__title">Add question below</div>
+            </a></div>
+          <div role="listitem"><a data-test="toolbarMenuDeleteItem" class="v-list__tile v-list__tile--link theme--light">
+              <div class="v-list__tile__title">Delete</div>
+            </a></div>
+        </div>
       </div>
-      <div class="layout row justify-end">
-        <div class="flex xs11">
-          <div class="v-input v-text-field v-input--is-label-active v-input--is-dirty theme--light">
-            <div class="v-input__control">
-              <div class="v-input__slot">
-                <div class="v-text-field__slot"><label aria-hidden="true" class="v-label v-label--active theme--light" style="left: 0px; position: absolute;">Question text</label><input aria-label="Question text" data-test="questionInput" type="text"></div>
-              </div>
-              <div class="v-text-field__details">
-                <div class="v-messages theme--light">
-                  <div class="v-messages__wrapper"></div>
-                </div>
-              </div>
+    </div></span>
+  </div>
+  <div class="layout row justify-end">
+    <div class="flex xs11">
+      <div class="v-input v-text-field v-input--is-label-active v-input--is-dirty theme--light">
+        <div class="v-input__control">
+          <div class="v-input__slot">
+            <div class="v-text-field__slot"><label aria-hidden="true" class="v-label v-label--active theme--light" style="left: 0px; position: absolute;">Question text</label><input aria-label="Question text" data-test="questionInput" type="text"></div>
+          </div>
+          <div class="v-text-field__details">
+            <div class="v-messages theme--light">
+              <div class="v-messages__wrapper"></div>
             </div>
           </div>
         </div>
       </div>
     </div>
   </div>
-  <div class="v-card__text">
-    <div class="container fluid">
-      <div class="layout row justify-end">
-        <div class="flex xs11">
-          <div>
-            <div class="grey--text text--darken-1 mb-3">
-              Answers
-            </div>
-            <!---->
-            <div class="v-card v-sheet theme--light" style="cursor: pointer;" data-test="answer">
-              <div class="indicator wrong"></div>
-              <div class="v-card__text">
-                <div class="layout">
-                  <div class="flex xs11">
-                    <div class="v-input v-input--selection-controls v-input--radio-group v-input--radio-group--column v-input--is-label-active v-input--is-dirty theme--light">
-                      <div class="v-input__control">
-                        <div class="v-input__slot" style="height: auto;">
-                          <div role="radiogroup" class="v-input--radio-group__input">
-                            <div class="v-radio theme--light">
-                              <div class="v-input--selection-controls__input"><input aria-label="Yellow" aria-checked="false" role="radio" type="radio" name="v-radio-28" value="0" data-test="answerRadio">
-                                <div class="v-input--selection-controls__ripple"></div><i aria-hidden="true" class="v-icon material-icons theme--light">radio_button_unchecked</i>
-                              </div><label aria-hidden="true" class="v-label theme--light" style="left: 0px; position: relative;">Yellow</label>
-                            </div>
-                          </div>
-                        </div>
-                        <div class="v-messages theme--light"><span name="message-transition" tag="div" class="v-messages__wrapper"></span></div>
-                      </div>
-                    </div>
-                    <!---->
-                    <!---->
-                    <!---->
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="v-card v-sheet theme--light" style="cursor: pointer;" data-test="answer">
-              <div class="indicator wrong"></div>
-              <div class="v-card__text">
-                <div class="layout">
-                  <div class="flex xs11">
-                    <div class="v-input v-input--selection-controls v-input--radio-group v-input--radio-group--column v-input--is-label-active v-input--is-dirty theme--light">
-                      <div class="v-input__control">
-                        <div class="v-input__slot" style="height: auto;">
-                          <div role="radiogroup" class="v-input--radio-group__input">
-                            <div class="v-radio theme--light">
-                              <div class="v-input--selection-controls__input"><input aria-label="Black" aria-checked="false" role="radio" type="radio" name="v-radio-34" value="1" data-test="answerRadio">
-                                <div class="v-input--selection-controls__ripple"></div><i aria-hidden="true" class="v-icon material-icons theme--light">radio_button_unchecked</i>
-                              </div><label aria-hidden="true" class="v-label theme--light" style="left: 0px; position: relative;">Black</label>
-                            </div>
-                          </div>
-                        </div>
-                        <div class="v-messages theme--light"><span name="message-transition" tag="div" class="v-messages__wrapper"></span></div>
-                      </div>
-                    </div>
-                    <!---->
-                    <!---->
-                    <!---->
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="v-card v-sheet theme--light" style="cursor: pointer;" data-test="answer">
-              <div class="indicator correct"></div>
-              <div class="v-card__text">
-                <div class="layout">
-                  <div class="flex xs11">
-                    <div class="v-input v-input--selection-controls v-input--radio-group v-input--radio-group--column v-input--is-label-active v-input--is-dirty theme--light">
-                      <div class="v-input__control">
-                        <div class="v-input__slot" style="height: auto;">
-                          <div role="radiogroup" class="v-input--radio-group__input">
-                            <div class="v-radio theme--light accent--text">
-                              <div class="v-input--selection-controls__input"><input aria-label="Blue" aria-checked="true" role="radio" type="radio" name="v-radio-40" value="2" data-test="answerRadio">
-                                <div class="v-input--selection-controls__ripple accent--text"></div><i aria-hidden="true" class="v-icon material-icons theme--light accent--text">radio_button_checked</i>
-                              </div><label aria-hidden="true" class="v-label theme--light" style="left: 0px; position: relative;">Blue</label>
-                            </div>
-                          </div>
-                        </div>
-                        <div class="v-messages theme--light"><span name="message-transition" tag="div" class="v-messages__wrapper"></span></div>
-                      </div>
-                    </div>
-                    <!---->
-                    <!---->
-                    <!---->
-                  </div>
-                </div>
-              </div>
-            </div> <button type="button" class="v-btn v-btn--flat theme--light" data-test="newAnswerBtn">
-              <div class="v-btn__content">
-                New answer
-              </div>
-            </button>
+</div>
+</div>
+<div class="v-card__text">
+  <div class="container fluid">
+    <div class="layout row justify-end">
+      <div class="flex xs11">
+        <div>
+          <div class="grey--text text--darken-1 mb-3">
+            Answers
           </div>
-          <hr class="mt-3 mb-3 v-divider theme--light">
-          <div>
-            <div class="grey--text text--darken-1 mb-3">
-              Hints
-            </div>
-            <!---->
-            <div class="v-card v-sheet theme--light" style="cursor: pointer;" data-test="hint">
-              <div class="v-card__text">
-                <div class="layout row">
-                  <div class="flex xs1">
-                    1
+          <!---->
+          <div class="v-card v-sheet theme--light" style="cursor: pointer;" data-test="answer">
+            <div class="indicator wrong"></div>
+            <div class="v-card__text">
+              <div class="layout">
+                <div class="flex xs11">
+                  <div class="v-input v-input--selection-controls v-input--radio-group v-input--radio-group--column v-input--is-label-active v-input--is-dirty theme--light">
+                    <div class="v-input__control">
+                      <div class="v-input__slot" style="height: auto;">
+                        <div role="radiogroup" class="v-input--radio-group__input">
+                          <div class="v-radio theme--light">
+                            <div class="v-input--selection-controls__input"><input aria-label="Yellow" aria-checked="false" role="radio" type="radio" name="v-radio-69" value="0" data-test="answerRadio">
+                              <div class="v-input--selection-controls__ripple"></div><i aria-hidden="true" class="v-icon material-icons theme--light">radio_button_unchecked</i>
+                            </div><label aria-hidden="true" class="v-label theme--light" style="left: 0px; position: relative;">Yellow</label>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="v-messages theme--light"><span name="message-transition" tag="div" class="v-messages__wrapper"></span></div>
+                    </div>
                   </div>
-                  <div class="flex xs10">
-                    <p>
-                      First hint
-                    </p>
-                  </div>
+                  <!---->
+                  <!---->
+                  <!---->
                 </div>
               </div>
             </div>
-            <div class="v-card v-sheet theme--light" style="cursor: pointer;" data-test="hint">
-              <div class="v-card__text">
-                <div class="layout row">
-                  <div class="flex xs1">
-                    2
-                  </div>
-                  <div class="flex xs10">
-                    <p>
-                      Second hint
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div> <button type="button" class="v-btn v-btn--flat theme--light" data-test="newHintBtn">
-              <div class="v-btn__content">
-                New hint
-              </div>
-            </button>
           </div>
+          <div class="v-card v-sheet theme--light" style="cursor: pointer;" data-test="answer">
+            <div class="indicator wrong"></div>
+            <div class="v-card__text">
+              <div class="layout">
+                <div class="flex xs11">
+                  <div class="v-input v-input--selection-controls v-input--radio-group v-input--radio-group--column v-input--is-label-active v-input--is-dirty theme--light">
+                    <div class="v-input__control">
+                      <div class="v-input__slot" style="height: auto;">
+                        <div role="radiogroup" class="v-input--radio-group__input">
+                          <div class="v-radio theme--light">
+                            <div class="v-input--selection-controls__input"><input aria-label="Black" aria-checked="false" role="radio" type="radio" name="v-radio-75" value="1" data-test="answerRadio">
+                              <div class="v-input--selection-controls__ripple"></div><i aria-hidden="true" class="v-icon material-icons theme--light">radio_button_unchecked</i>
+                            </div><label aria-hidden="true" class="v-label theme--light" style="left: 0px; position: relative;">Black</label>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="v-messages theme--light"><span name="message-transition" tag="div" class="v-messages__wrapper"></span></div>
+                    </div>
+                  </div>
+                  <!---->
+                  <!---->
+                  <!---->
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="v-card v-sheet theme--light" style="cursor: pointer;" data-test="answer">
+            <div class="indicator correct"></div>
+            <div class="v-card__text">
+              <div class="layout">
+                <div class="flex xs11">
+                  <div class="v-input v-input--selection-controls v-input--radio-group v-input--radio-group--column v-input--is-label-active v-input--is-dirty theme--light">
+                    <div class="v-input__control">
+                      <div class="v-input__slot" style="height: auto;">
+                        <div role="radiogroup" class="v-input--radio-group__input">
+                          <div class="v-radio theme--light accent--text">
+                            <div class="v-input--selection-controls__input"><input aria-label="Blue" aria-checked="true" role="radio" type="radio" name="v-radio-81" value="2" data-test="answerRadio">
+                              <div class="v-input--selection-controls__ripple accent--text"></div><i aria-hidden="true" class="v-icon material-icons theme--light accent--text">radio_button_checked</i>
+                            </div><label aria-hidden="true" class="v-label theme--light" style="left: 0px; position: relative;">Blue</label>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="v-messages theme--light"><span name="message-transition" tag="div" class="v-messages__wrapper"></span></div>
+                    </div>
+                  </div>
+                  <!---->
+                  <!---->
+                  <!---->
+                </div>
+              </div>
+            </div>
+          </div> <button type="button" class="v-btn v-btn--flat theme--light" data-test="newAnswerBtn">
+            <div class="v-btn__content">
+              New answer
+            </div>
+          </button>
+        </div>
+        <hr class="mt-3 mb-3 v-divider theme--light">
+        <div>
+          <div class="grey--text text--darken-1 mb-3">
+            Hints
+          </div>
+          <!---->
+          <div class="v-card v-sheet theme--light" style="cursor: pointer;" data-test="hint">
+            <div class="v-card__text">
+              <div class="layout row">
+                <div class="flex xs1">
+                  1
+                </div>
+                <div class="flex xs10">
+                  <p>
+                    First hint
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="v-card v-sheet theme--light" style="cursor: pointer;" data-test="hint">
+            <div class="v-card__text">
+              <div class="layout row">
+                <div class="flex xs1">
+                  2
+                </div>
+                <div class="flex xs10">
+                  <p>
+                    Second hint
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div> <button type="button" class="v-btn v-btn--flat theme--light" data-test="newHintBtn">
+            <div class="v-btn__content">
+              New hint
+            </div>
+          </button>
         </div>
       </div>
-      <div class="layout row justify-end"><button type="button" class="v-btn v-btn--flat theme--light primary--text" data-test="closeBtn">
-          <div class="v-btn__content">
-            Close
-          </div>
-        </button></div>
     </div>
+    <div class="layout row justify-end"><button type="button" class="v-btn v-btn--flat theme--light primary--text" data-test="closeBtn">
+        <div class="v-btn__content">
+          Close
+        </div>
+      </button></div>
   </div>
+</div>
 </div>
 `;

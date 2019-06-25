@@ -14,9 +14,11 @@
         :itemIdx="idx"
         :isOpen="idx === openItemIdx"
         :displayAnswersPreview="displayAnswersPreview"
+        :isFirst="idx === 0"
+        :isLast="idx === assessmentItems.length-1"
         @update="updateItem"
         @close="closeItem"
-        @open="openItem(idx)"
+        @toolbarClick="onToolbarClick($event, idx)"
       />
     </template>
 
@@ -38,6 +40,7 @@
 
   import { mapState, mapGetters, mapMutations } from 'vuex';
 
+  import { AssessmentItemToolbarActions } from '../constants';
   import AssessmentItem from '../components/AssessmentItem/AssessmentItem.vue';
 
   export default {
@@ -89,6 +92,11 @@
         'addNodeAssessmentDraftItem',
         'updateNodeAssessmentDraftItem',
       ]),
+      onToolbarClick(action, itemIdx) {
+        if (action === AssessmentItemToolbarActions.EDIT_ITEM) {
+          this.openItem(itemIdx);
+        }
+      },
       openItem(itemIdx) {
         this.openItemIdx = itemIdx;
       },

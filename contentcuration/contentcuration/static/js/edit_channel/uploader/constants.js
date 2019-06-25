@@ -19,3 +19,12 @@ export const AssessmentItemTypes = {
   TRUE_FALSE: 'true_false',
   INPUT_QUESTION: 'input_question',
 };
+
+export const AssessmentItemToolbarActions = {
+  MOVE_ITEM_UP: 'move_item_up',
+  MOVE_ITEM_DOWN: 'move_item_down',
+  EDIT_ITEM: 'edit_item',
+  ADD_ITEM_ABOVE: 'add_item_above',
+  ADD_ITEM_BELOW: 'add_item_below',
+  DELETE_ITEM: 'delete_item',
+};
