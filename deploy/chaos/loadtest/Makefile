@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-URL := "http://localhost:8000"
+URL := "http://localhost:8080"
 USERNAME := ""
 PASSWORD := ""
 NUM_CLIENTS := 100

@@ -15,7 +15,6 @@ PASSWORD = os.getenv("LOCUST_PASSWORD") or "a"
 
 
 class BaseTaskSet(TaskSet):
-
     max_wait = 60000
 
     def _login(self):
@@ -159,19 +158,8 @@ class ChannelClone(BaseTaskSet):
         self._login()
 
 
-class AdminChannelListPage(BaseTaskSet):
-
-    def on_start(self):
-        self._login()
-
-    @task
-    def channel_list_api_call(self):
-        self.client.get("/api/get_all_channels")
-
-
 class LoginPage(BaseTaskSet):
-    tasks = [ChannelListPage, AdminChannelListPage, ChannelPage]
-    # tasks = [ChannelListPage, AdminChannelListPage, ChannelPage, ChannelClone]
+    tasks = [ChannelListPage, ChannelPage]
 
     @task
     def loginpage(self):

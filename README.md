@@ -240,6 +240,26 @@ yarn run test
 
 For more testing tips, please check out [docs/running_tests](docs/running_tests.md).
 
+
+## Profiling and local production testing
+
+If you want to test the performance of your changes, you can start up a local server
+with settings closer to a production environment like so:
+
+```bash
+yarn run localprodserver
+```
+
+Once the local production server is running, you can also use Locust to test your changes
+under scenarios of high demand like so:
+
+```bash
+cd deploy/chaos/loadtest
+make timed_run
+make stop_slaves  # mac: killall python
+```
+
+
 ## Linting
 Front-end linting is run using:
 
