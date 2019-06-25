@@ -1,5 +1,5 @@
 <template>
-  <VContainer>
+  <div>
     <VCheckbox
       v-model="displayAnswersPreview"
       label="Show answers"
@@ -33,7 +33,7 @@
     >
       New question
     </VBtn>
-  </VContainer>
+  </div>
 </template>
 
 <script>
