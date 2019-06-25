@@ -909,7 +909,7 @@ class InvitationSerializer(BulkSerializerMixin, serializers.ModelSerializer):
             'id', 'invited', 'email', 'sender', 'channel', 'first_name', 'last_name', 'share_mode', 'channel_name')
 
 
-class GetTreeDataSerizlizer(serializers.Serializer):
+class GetTreeDataSerializer(serializers.Serializer):
     """
     Used by get_*_tree_data endpoints to ontain "lightweight" tree data.
     """

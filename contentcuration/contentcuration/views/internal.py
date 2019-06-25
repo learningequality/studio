@@ -8,7 +8,6 @@ from django.core.exceptions import PermissionDenied
 from django.core.exceptions import SuspiciousOperation
 from django.core.management import call_command
 from django.db import transaction
-from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.http import HttpResponseForbidden
 from django.http import HttpResponseNotFound
@@ -38,7 +37,7 @@ from contentcuration.models import get_next_sort_order
 from contentcuration.models import License
 from contentcuration.models import SlideshowSlide
 from contentcuration.models import StagedFile
-from contentcuration.serializers import GetTreeDataSerizlizer
+from contentcuration.serializers import GetTreeDataSerializer
 from contentcuration.utils.files import get_file_diff
 from contentcuration.utils.garbage_collect import get_deleted_chefs_root
 from contentcuration.utils.nodes import map_files_to_assessment_item
@@ -63,14 +62,14 @@ def handle_server_error(request):
 def authenticate_user_internal(request):
     """ Verify user is valid """
     logging.debug("Logging in user")
-    return HttpResponse(json.dumps({
+    return Response({
         'success': True,
         'user_id': request.user.id,
         'username': unicode(request.user),
         'first_name': request.user.first_name,
         'last_name': request.user.last_name,
         'is_admin': request.user.is_admin,
-    }))
+    })
 
 
 @api_view(['POST'])
@@ -116,7 +115,7 @@ def file_diff(request):
         # for f in list(set(data) - set(in_db_list)):
         to_return = get_file_diff(data)
 
-        return HttpResponse(json.dumps(to_return))
+        return Response(to_return)
     except Exception as e:
         return HttpResponseServerError(content=str(e), reason=str(e))
 
@@ -141,9 +140,9 @@ def api_file_upload(request):
             uploaded_by=request.user
         )
 
-        return HttpResponse(json.dumps({
+        return Response({
             "success": True,
-        }))
+        })
     except KeyError:
         return HttpResponseBadRequest("Invalid file upload request")
     except Exception as e:
@@ -162,11 +161,11 @@ def api_create_channel_endpoint(request):
 
         obj = create_channel(channel_data, request.user)
 
-        return HttpResponse(json.dumps({
+        return Response({
             "success": True,
             "root": obj.chef_tree.pk,
             "channel_id": obj.pk,
-        }))
+        })
     except KeyError as e:
         return HttpResponseBadRequest("Required attribute missing: {}".format(e.message))
     except Exception as e:
@@ -185,6 +184,8 @@ def api_commit_channel(request):
     data = json.loads(request.body)
     try:
         channel_id = data['channel_id']
+
+        request.user.can_edit(channel_id)
 
         obj = Channel.objects.get(pk=channel_id)
 
@@ -215,13 +216,14 @@ def api_commit_channel(request):
             try:
                 activate_channel(obj, request.user)
             except PermissionDenied as e:
-                return HttpResponseForbidden(str(e))
+                return Response(str(e), status=e.status_code)
 
-        # Respond to ricecooker script to acknoledge commit is done
-        return HttpResponse(json.dumps({
+        return Response({
             "success": True,
             "new_channel": obj.pk,
-        }))
+        })
+    except (Channel.DoesNotExist, PermissionDenied):
+        return HttpResponseNotFound("No channel matching: {}".format(channel_id))
     except KeyError as e:
         return HttpResponseBadRequest("Required attribute missing: {}".format(e.message))
     except Exception as e:
@@ -252,11 +254,15 @@ def api_add_nodes_to_tree(request):
     try:
         content_data = data['content_data']
         parent_id = data['root_id']
+        node = ContentNode.objects.get(id=parent_id)
+        request.user.can_edit_node(node)
         with ContentNode.objects.disable_mptt_updates():
-            return HttpResponse(json.dumps({
+            return Response({
                 "success": True,
                 "root_ids": convert_data_to_nodes(request.user, content_data, parent_id)
-            }))
+            })
+    except (ContentNode.DoesNotExist, PermissionDenied):
+        return HttpResponseNotFound("No content matching: {}".format(parent_id))
     except KeyError as e:
         return HttpResponseBadRequest("Required attribute missing: {}".format(e.message))
     except Exception as e:
@@ -277,7 +283,7 @@ def api_publish_channel(request):
         request.user.can_edit(channel_id)
         call_command("exportchannel", channel_id, user_id=request.user.pk)
 
-        return JsonResponse({
+        return Response({
             "success": True,
             "channel": channel_id
         })
@@ -293,7 +299,11 @@ def api_publish_channel(request):
 @permission_classes((IsAuthenticated,))
 def get_staged_diff_internal(request):
     try:
-        return HttpResponse(json.dumps(get_staged_diff(json.loads(request.body)['channel_id'])))
+        channel_id = json.loads(request.body)['channel_id']
+        request.user.can_edit(channel_id)
+        return Response(get_staged_diff(channel_id))
+    except (Channel.DoesNotExist, PermissionDenied):
+        return HttpResponseNotFound("No channel matching: {}".format(channel_id))
     except Exception as e:
         handle_server_error(request)
         return HttpResponseServerError(content=str(e), reason=str(e))
@@ -305,9 +315,13 @@ def get_staged_diff_internal(request):
 def activate_channel_internal(request):
     try:
         data = json.loads(request.body)
-        channel = Channel.objects.get(pk=data['channel_id'])
+        channel_id = data['channel_id']
+        request.user.can_edit(channel_id)
+        channel = Channel.objects.get(pk=channel_id)
         activate_channel(channel, request.user)
-        return HttpResponse(json.dumps({"success": True}))
+        return Response({"success": True})
+    except (Channel.DoesNotExist, PermissionDenied):
+        return HttpResponseNotFound("No channel matching: {}".format(channel_id))
     except Exception as e:
         handle_server_error(request)
         return HttpResponseServerError(content=str(e), reason=str(e))
@@ -320,14 +334,15 @@ def check_user_is_editor(request):
     """ Create the channel node """
     data = json.loads(request.body)
     try:
-        obj = Channel.objects.get(pk=data['channel_id'])
-        if obj.editors.filter(pk=request.user.pk).exists():
-            return HttpResponse(json.dumps({"success": True}))
-        else:
-            return SuspiciousOperation("User is not authorized to edit this channel")
+        channel_id = data['channel_id']
+        try:
+            request.user.can_edit(channel_id)
+            return Response({"success": True})
+        except PermissionDenied:
+            return HttpResponseNotFound("Channel not found {}".format(channel_id))
 
     except KeyError:
-        raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+        raise HttpResponseBadRequest("Missing attribute from data: {}".format(data))
 
 
 @api_view(['POST'])
@@ -339,16 +354,24 @@ def get_tree_data(request):
     WARNING: this endpoint timesouts for large channels.
     Returns { success: true, tree:[ nodes in channel_id ] }
     """
-    serializer = GetTreeDataSerizlizer(data=request.data)
+    serializer = GetTreeDataSerializer(data=request.data)
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     try:
-        channel = Channel.objects.get(pk=serializer.validated_data['channel_id'])
+        channel_id = serializer.validated_data['channel_id']
+        request.user.can_edit(channel_id)
+        channel = Channel.objects.get(pk=channel_id)
         tree_name = "{}_tree".format(serializer.validated_data['tree'])
         tree_root = getattr(channel, tree_name, None)
+        if tree_root is None:
+            raise ValueError("Invalid tree name")
         tree_data = tree_root.get_tree_data()
         children_data = tree_data.get('children', [])
         return Response({"success": True, 'tree': children_data})
+    except (Channel.DoesNotExist, PermissionDenied):
+        return HttpResponseNotFound("No channel matching: {}".format(channel_id))
+    except ValueError:
+        return HttpResponseNotFound("No tree name matching: {}".format(tree_name))
     except Exception as e:
         handle_server_error(request)
         return HttpResponseServerError(content=str(e), reason=str(e))
@@ -363,11 +386,13 @@ def get_node_tree_data(request):
     the `tree` tree associated with channel `data['channel_id']`.
     Returns { success: true, tree:[ children of node_id ] }
     """
-    serializer = GetTreeDataSerizlizer(data=request.data)
+    serializer = GetTreeDataSerializer(data=request.data)
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     try:
-        channel = Channel.objects.get(pk=serializer.validated_data['channel_id'])
+        channel_id = serializer.validated_data['channel_id']
+        request.user.can_edit(channel_id)
+        channel = Channel.objects.get(pk=channel_id)
         tree_name = "{}_tree".format(serializer.validated_data['tree'])
         tree_root = getattr(channel, tree_name, None)
         if 'node_id' in serializer.validated_data:
@@ -382,6 +407,8 @@ def get_node_tree_data(request):
             'staged': channel.staging_tree is not None
         }
         return Response(response_data)
+    except (Channel.DoesNotExist, PermissionDenied):
+        return HttpResponseNotFound("No channel matching: {}".format(channel_id))
     except Exception as e:
         handle_server_error(request)
         return HttpResponseServerError(content=str(e), reason=str(e))
@@ -394,13 +421,17 @@ def get_channel_status_bulk(request):
     """ Create the channel node """
     data = json.loads(request.body)
     try:
+        channel_ids = data['channel_ids']
+        for cid in channel_ids:
+            request.user.can_edit(cid)
         statuses = {cid: get_status(cid) for cid in data['channel_ids']}
 
-        return HttpResponse(json.dumps({
+        return Response({
             "success": True,
             'statuses': statuses,
-        }))
-
+        })
+    except (Channel.DoesNotExist, PermissionDenied):
+        return HttpResponseNotFound("No complete set of channels matching: {}".format(",".join(channel_ids)))
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
     except Exception as e:
