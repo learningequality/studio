@@ -3,7 +3,7 @@
     <VCardTitle
       v-if="!isOpen"
       :style="{ 'cursor': 'pointer' }"
-      @click="onOpenClick"
+      @click="onClosedQuestionClick"
     >
       <VContainer fluid>
         <VLayout row>
@@ -19,6 +19,14 @@
               {{ question }}
             </div>
           </VFlex>
+
+          <VSpacer />
+          <AssessmentItemToolbar
+            :canMoveUp="!isFirst"
+            :canMoveDown="!isLast"
+            class="toolbar"
+            @click="onToolbarClick"
+          />
         </VLayout>
 
         <template v-if="displayAnswersPreview">
@@ -56,6 +64,15 @@
                 @input="onKindChange"
               />
             </VFlex>
+
+            <VSpacer />
+            <AssessmentItemToolbar
+              :displayEdit="false"
+              :canMoveUp="!isFirst"
+              :canMoveDown="!isLast"
+              class="toolbar"
+              @click="onToolbarClick"
+            />
           </VLayout>
 
           <!-- eslint-disable-next-line -->
@@ -111,10 +128,11 @@
 
 <script>
 
-  import { AssessmentItemTypes } from '../../constants';
+  import { AssessmentItemTypes, AssessmentItemToolbarActions } from '../../constants';
   import { updateAnswersToQuestionKind } from '../../utils';
   import AnswersEditor from '../AnswersEditor/AnswersEditor.vue';
   import AnswersPreview from '../AnswersPreview/AnswersPreview.vue';
+  import AssessmentItemToolbar from '../AssessmentItemToolbar/AssessmentItemToolbar.vue';
   import HintsEditor from '../HintsEditor/HintsEditor.vue';
 
   export default {
@@ -122,6 +140,7 @@
     components: {
       AnswersEditor,
       AnswersPreview,
+      AssessmentItemToolbar,
       HintsEditor,
     },
     props: {
@@ -136,6 +155,14 @@
         default: false,
       },
       displayAnswersPreview: {
+        type: Boolean,
+        default: false,
+      },
+      isFirst: {
+        type: Boolean,
+        default: false,
+      },
+      isLast: {
         type: Boolean,
         default: false,
       },
@@ -220,8 +247,16 @@
       onCloseClick() {
         this.$emit('close');
       },
-      onOpenClick() {
-        this.$emit('open');
+      onClosedQuestionClick(event) {
+        // ignore toolbar click in this case (click on edit icon is handled below)
+        if (event.target.closest('.toolbar') !== null) {
+          return;
+        }
+
+        this.$emit('toolbarClick', AssessmentItemToolbarActions.EDIT_ITEM);
+      },
+      onToolbarClick(action) {
+        this.$emit('toolbarClick', action);
       },
     },
   };

@@ -50,7 +50,7 @@ describe('AssessmentItem', () => {
       });
     });
 
-    it('renders a correct order, type and text', () => {
+    it('renders', () => {
       expect(wrapper.html()).toMatchSnapshot();
     });
   });
@@ -66,7 +66,7 @@ describe('AssessmentItem', () => {
       });
     });
 
-    it('renders a correct order, type select, text input, answers editor, hints editor, close button', () => {
+    it('renders', () => {
       expect(wrapper.html()).toMatchSnapshot();
     });
 
