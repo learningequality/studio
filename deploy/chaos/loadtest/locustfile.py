@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 import os
 from random import choice
-from locust import HttpLocust, TaskSet, task
+
+from locust import HttpLocust
+from locust import task
+from locust import TaskSet
 try:
     import urllib.request as urlrequest
 except ImportError:
@@ -12,6 +15,8 @@ PASSWORD = os.getenv("LOCUST_PASSWORD") or "a"
 
 
 class BaseTaskSet(TaskSet):
+
+    max_wait = 60000
 
     def _login(self):
         """
