@@ -312,3 +312,17 @@ export const updateNodeAssessmentDraftItem = (state, { nodeId, assessmentItemIdx
 
   Vue.set(state.nodesAssessmentDrafts, nodeId, nodeAssessmentDraft);
 };
+
+export const deleteNodeAssessmentDraftItem = (state, { nodeId, assessmentItemIdx }) => {
+  let nodeAssessmentDraft = [...state.nodesAssessmentDrafts[nodeId]];
+
+  nodeAssessmentDraft.splice(assessmentItemIdx, 1);
+  nodeAssessmentDraft = nodeAssessmentDraft.map((item, itemIdx) => {
+    return {
+      ...item,
+      order: itemIdx,
+    };
+  });
+
+  Vue.set(state.nodesAssessmentDrafts, nodeId, nodeAssessmentDraft);
+};

@@ -211,5 +211,67 @@ describe('edit_modal', () => {
         });
       });
     });
+
+    describe('deleteNodeAssessmentDraftItem', () => {
+      beforeEach(() => {
+        state = {
+          nodesAssessmentDrafts: {
+            'node-1': [
+              {
+                question: 'Node 1 - Question 1',
+                order: 0,
+              },
+            ],
+            'node-2': [
+              {
+                question: 'Node 2 - Question 1',
+                type: AssessmentItemTypes.SINGLE_SELECTION,
+                order: 0,
+              },
+              {
+                question: 'Node 2 - Question 2',
+                type: AssessmentItemTypes.MULTIPLE_SELECTION,
+                order: 1,
+              },
+              {
+                question: 'Node 2 - Question 3',
+                type: AssessmentItemTypes.TRUE_FALSE,
+                order: 2,
+              },
+            ],
+          },
+        };
+      });
+
+      it('deletes a correct node assessment draft item and reorders remaining items belonging to the node', () => {
+        mutations.deleteNodeAssessmentDraftItem(state, {
+          nodeId: 'node-2',
+          assessmentItemIdx: 1,
+        });
+
+        expect(state).toEqual({
+          nodesAssessmentDrafts: {
+            'node-1': [
+              {
+                question: 'Node 1 - Question 1',
+                order: 0,
+              },
+            ],
+            'node-2': [
+              {
+                question: 'Node 2 - Question 1',
+                type: AssessmentItemTypes.SINGLE_SELECTION,
+                order: 0,
+              },
+              {
+                question: 'Node 2 - Question 3',
+                type: AssessmentItemTypes.TRUE_FALSE,
+                order: 1,
+              },
+            ],
+          },
+        });
+      });
+    });
   });
 });

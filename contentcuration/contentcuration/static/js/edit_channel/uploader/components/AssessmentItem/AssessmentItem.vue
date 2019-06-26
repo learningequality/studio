@@ -221,12 +221,22 @@
       },
     },
     methods: {
-      ...mapMutations('edit_modal', ['updateNodeAssessmentDraftItem']),
+      ...mapMutations('edit_modal', [
+        'updateNodeAssessmentDraftItem',
+        'deleteNodeAssessmentDraftItem',
+      ]),
       updateItem(data) {
         this.updateNodeAssessmentDraftItem({
           nodeId: this.nodeId,
           assessmentItemIdx: this.itemIdx,
           data,
+        });
+      },
+      deleteItem() {
+        // TODO @MisRob: display warning and continue only when confirmed
+        this.deleteNodeAssessmentDraftItem({
+          nodeId: this.nodeId,
+          assessmentItemIdx: this.itemIdx,
         });
       },
       onQuestionChange(newQuestion) {
@@ -267,6 +277,10 @@
         switch (action) {
           case AssessmentItemToolbarActions.EDIT_ITEM:
             this.$emit('open');
+            break;
+
+          case AssessmentItemToolbarActions.DELETE_ITEM:
+            this.deleteItem();
             break;
         }
       },
