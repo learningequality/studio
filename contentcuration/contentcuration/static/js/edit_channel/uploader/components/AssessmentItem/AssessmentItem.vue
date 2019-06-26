@@ -128,8 +128,11 @@
 
 <script>
 
+  import { mapGetters, mapMutations } from 'vuex';
+
   import { AssessmentItemTypes, AssessmentItemToolbarActions } from '../../constants';
   import { updateAnswersToQuestionKind } from '../../utils';
+
   import AnswersEditor from '../AnswersEditor/AnswersEditor.vue';
   import AnswersPreview from '../AnswersPreview/AnswersPreview.vue';
   import AssessmentItemToolbar from '../AssessmentItemToolbar/AssessmentItemToolbar.vue';
@@ -144,8 +147,8 @@
       HintsEditor,
     },
     props: {
-      item: {
-        type: Object,
+      nodeId: {
+        type: String,
       },
       itemIdx: {
         type: Number,
@@ -158,16 +161,12 @@
         type: Boolean,
         default: false,
       },
-      isFirst: {
-        type: Boolean,
-        default: false,
-      },
-      isLast: {
-        type: Boolean,
-        default: false,
-      },
     },
     computed: {
+      ...mapGetters('edit_modal', ['nodeAssessmentDraft']),
+      item() {
+        return this.nodeAssessmentDraft(this.nodeId)[this.itemIdx];
+      },
       order() {
         if (!this.item || this.item.order === undefined) {
           return 1;
@@ -214,13 +213,24 @@
 
         return this.item.hints;
       },
+      isFirst() {
+        return this.itemIdx === 0;
+      },
+      isLast() {
+        return this.itemIdx === this.nodeAssessmentDraft(this.nodeId).length - 1;
+      },
     },
     methods: {
-      onQuestionChange(newQuestion) {
-        this.$emit('update', {
-          itemIdx: this.itemIdx,
-          payload: { question: newQuestion },
+      ...mapMutations('edit_modal', ['updateNodeAssessmentDraftItem']),
+      updateItem(data) {
+        this.updateNodeAssessmentDraftItem({
+          nodeId: this.nodeId,
+          assessmentItemIdx: this.itemIdx,
+          data,
         });
+      },
+      onQuestionChange(newQuestion) {
+        this.updateItem({ question: newQuestion });
       },
       onKindChange(newKind) {
         if (this.kind === newKind) {
@@ -233,30 +243,32 @@
         }
         const newAnswers = updateAnswersToQuestionKind(newKind, this.answers);
 
-        this.$emit('update', {
-          itemIdx: this.itemIdx,
-          payload: { type: newKind, answers: newAnswers },
-        });
+        this.updateItem({ type: newKind, answers: newAnswers });
       },
       onAnswersChange(newAnswers) {
-        this.$emit('update', { itemIdx: this.itemIdx, payload: { answers: newAnswers } });
+        this.updateItem({ answers: newAnswers });
       },
       onHintsChange(newHints) {
-        this.$emit('update', { itemIdx: this.itemIdx, payload: { hints: newHints } });
+        this.updateItem({ hints: newHints });
       },
       onCloseClick() {
         this.$emit('close');
       },
       onClosedQuestionClick(event) {
-        // ignore toolbar click in this case (click on edit icon is handled below)
+        // ignore toolbar click in this case (click on edit
+        // icon is processed in toolbar click handler)
         if (event.target.closest('.toolbar') !== null) {
           return;
         }
 
-        this.$emit('toolbarClick', AssessmentItemToolbarActions.EDIT_ITEM);
+        this.$emit('open');
       },
       onToolbarClick(action) {
-        this.$emit('toolbarClick', action);
+        switch (action) {
+          case AssessmentItemToolbarActions.EDIT_ITEM:
+            this.$emit('open');
+            break;
+        }
       },
     },
   };

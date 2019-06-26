@@ -8,17 +8,14 @@
 
     <template v-if="assessmentItems && assessmentItems.length">
       <AssessmentItem
-        v-for="(item, idx) in assessmentItems"
-        :key="idx"
-        :item="item"
-        :itemIdx="idx"
-        :isOpen="idx === openItemIdx"
+        v-for="(_, itemIdx) in assessmentItems"
+        :key="itemIdx"
+        :nodeId="nodeId"
+        :itemIdx="itemIdx"
+        :isOpen="itemIdx === openItemIdx"
         :displayAnswersPreview="displayAnswersPreview"
-        :isFirst="idx === 0"
-        :isLast="idx === assessmentItems.length-1"
-        @update="updateItem"
         @close="closeItem"
-        @toolbarClick="onToolbarClick($event, idx)"
+        @open="openItem(itemIdx)"
       />
     </template>
 
@@ -40,7 +37,6 @@
 
   import { mapState, mapGetters, mapMutations } from 'vuex';
 
-  import { AssessmentItemToolbarActions } from '../constants';
   import AssessmentItem from '../components/AssessmentItem/AssessmentItem.vue';
 
   export default {
@@ -87,32 +83,16 @@
       });
     },
     methods: {
-      ...mapMutations('edit_modal', [
-        'addNodeAssessmentDraft',
-        'addNodeAssessmentDraftItem',
-        'updateNodeAssessmentDraftItem',
-      ]),
-      onToolbarClick(action, itemIdx) {
-        if (action === AssessmentItemToolbarActions.EDIT_ITEM) {
-          this.openItem(itemIdx);
-        }
+      ...mapMutations('edit_modal', ['addNodeAssessmentDraft', 'addNodeAssessmentDraftItem']),
+      addNewItem() {
+        this.addNodeAssessmentDraftItem(this.nodeId);
+        this.openItem(this.assessmentItems.length - 1);
       },
       openItem(itemIdx) {
         this.openItemIdx = itemIdx;
       },
       closeItem() {
         this.openItemIdx = null;
-      },
-      updateItem({ itemIdx, payload }) {
-        this.updateNodeAssessmentDraftItem({
-          nodeId: this.nodeId,
-          assessmentItemIdx: itemIdx,
-          data: payload,
-        });
-      },
-      addNewItem() {
-        this.addNodeAssessmentDraftItem(this.nodeId);
-        this.openItemIdx = this.assessmentItems.length - 1;
       },
     },
   };
