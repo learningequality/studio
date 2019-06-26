@@ -16,7 +16,8 @@ def sync_channel(channel, sync_attributes=False, sync_tags=False, sync_files=Fal
 
     sync_node_count = channel.main_tree.get_descendant_count()
     # last 20% is MPTT tree updates
-    percent_per_node = 80.0 / sync_node_count
+    total_percent = 80.0
+    percent_per_node = total_percent / sync_node_count
     percent_done = 0.0
     with transaction.atomic():
         with ContentNode.objects.delay_mptt_updates():
@@ -28,7 +29,7 @@ def sync_channel(channel, sync_attributes=False, sync_tags=False, sync_files=Fal
                                           sync_assessment_items=sync_assessment_items,
                                           sync_sort_order=sync_sort_order)
                 if task_object:
-                    percent_done += percent_per_node
+                    percent_done = min(percent_done + percent_per_node, total_percent)
                     task_object.update_state(state='STARTED', meta={'progress': percent_done})
                 parents_to_check += parents
                 if node.changed:

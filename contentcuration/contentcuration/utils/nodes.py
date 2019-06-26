@@ -181,13 +181,10 @@ def duplicate_node_bulk(node, sort_order=None, parent=None, channel_id=None, use
     new_node = _duplicate_node_bulk_recursive(node=node, sort_order=sort_order, parent=parent, channel_id=channel_id, to_create=to_create, user=user)
     node_percent = 0
     this_node_percent = 0
+    node_copy_total_percent = 90.0
 
     if task_object:
-        task_object.progress += 15
-        task_object.update_state(state='STARTED', meta={'progress': task_object.progress})
-
         num_nodes_to_create = len(to_create["nodes"]) + 2
-        node_copy_total_percent = 75.0
         this_node_percent = node_copy_total_percent / task_object.root_nodes_to_copy
 
         node_percent = this_node_percent / num_nodes_to_create
@@ -202,7 +199,7 @@ def duplicate_node_bulk(node, sort_order=None, parent=None, channel_id=None, use
                 node.tags.add(tag)
 
         if task_object:
-            task_object.progress += node_percent
+            task_object.progress = min(task_object.progress + node_percent, node_copy_total_percent)
             task_object.update_state(state='STARTED', meta={'progress': task_object.progress})
 
     # rebuild MPTT tree for this channel (since we're inside "disable_mptt_updates", and bulk_create doesn't trigger rebuild signals anyway)
@@ -217,7 +214,7 @@ def duplicate_node_bulk(node, sort_order=None, parent=None, channel_id=None, use
     AssessmentItem.objects.bulk_create(to_create["assessments"])
 
     if task_object:
-        task_object.progress += node_percent
+        task_object.progress = min(task_object.progress + node_percent, node_copy_total_percent)
         task_object.update_state(state='STARTED', meta={'progress': task_object.progress})
 
     # build up a mapping of contentnode/assessment_id onto assessment item IDs, so we can point files to them correctly after
@@ -233,7 +230,7 @@ def duplicate_node_bulk(node, sort_order=None, parent=None, channel_id=None, use
     File.objects.bulk_create(to_create["node_files"] + to_create["assessment_files"])
 
     if task_object:
-        task_object.progress += min(this_node_percent, node_percent)
+        task_object.progress = min(task_object.progress + node_percent, node_copy_total_percent)
         task_object.update_state(state='STARTED', meta={'progress': task_object.progress})
 
     return new_node
@@ -332,7 +329,8 @@ def move_nodes(channel_id, target_parent_id, nodes, min_order, max_order, task_o
 
     target_parent = ContentNode.objects.get(pk=target_parent_id)
     # last 20% is MPTT tree updates
-    percent_per_node = math.ceil(80.0 / len(nodes))
+    total_percent = 80.0
+    percent_per_node = math.ceil(total_percent / len(nodes))
     percent_done = 0.0
 
     with ContentNode.objects.delay_mptt_updates():
@@ -340,7 +338,7 @@ def move_nodes(channel_id, target_parent_id, nodes, min_order, max_order, task_o
             min_order = min_order + float(max_order - min_order) / 2
             node = ContentNode.objects.get(pk=n['id'])
             move_node(node, parent=target_parent, sort_order=min_order, channel_id=channel_id)
-            percent_done += percent_per_node
+            percent_done = min(percent_done + percent_per_node, total_percent)
             if task_object:
                 task_object.update_state(state='STARTED', meta={'progress': percent_done})
             all_ids.append(n['id'])
