@@ -1,28 +1,23 @@
 import datetime
 import json
+import logging as logmodule
 import os
-import requests
 import shutil
 import sqlite3
 import sys
 import tempfile
-
 from cStringIO import StringIO
+
+import requests
 from django.conf import settings
-from django.core.files import File as DJFile
 from django.core.files.storage import default_storage
-from django.core.files.uploadedfile import SimpleUploadedFile
-from django.core.management.base import BaseCommand
 from django.db import transaction
 from le_utils.constants import content_kinds
-from le_utils.constants import exercises
 from le_utils.constants import format_presets
 from le_utils.constants import roles
-import logging as logmodule
 from pressurecooker.encodings import write_base64_to_file
 
 from contentcuration import models
-from contentcuration.api import write_file_to_storage
 from contentcuration.utils.files import create_file_from_contents
 from contentcuration.utils.garbage_collect import get_deleted_chefs_root
 
@@ -41,101 +36,88 @@ FILE_COUNT = 0
 TAG_COUNT = 0
 
 
-class EarlyExit(BaseException):
+def import_channel(source_id, target_id=None, download_url=None, editor=None):
+    """
+    Import a channel from another Studio instance. This can be used to
+    copy online Studio channels into local machines for development,
+    testing, faster editing, or other purposes.
 
-    def __init__(self, message, db_path):
-        self.message = message
-        self.db_path = db_path
+    :param source_id: The UUID of the channel to import from the source Studio instance.
+    :param target_id: The UUID of the channel on the local instance. Defaults to source_id.
+    :param download_url: The URL of the Studio instance to import from.
+    :param editor: The email address of the user you wish to add as an editor, if any.
 
+    """
 
-class Command(BaseCommand):
+    # Set up variables for the import process
+    logging.info("\n\n********** STARTING CHANNEL IMPORT **********")
+    start = datetime.datetime.now()
+    target_id = target_id or source_id
 
-    def add_arguments(self, parser):
-        # ID of channel to read data from
-        parser.add_argument('source_id', type=str)
+    # Test connection to database
+    logging.info("Connecting to database for channel {}...".format(source_id))
 
-        # ID of channel to write data to (can be same as source channel)
-        parser.add_argument('--target', help='restore channel db to TARGET CHANNEL ID')
-        parser.add_argument('--download-url', help='where to download db from')
-        parser.add_argument('--editor', help='add user as editor to channel')
+    tempf = tempfile.NamedTemporaryFile(suffix=".sqlite3", delete=False)
+    conn = None
+    try:
+        if download_url:
+            response = requests.get('{}/content/databases/{}.sqlite3'.format(download_url, source_id))
+            for chunk in response:
+                tempf.write(chunk)
+        else:
+            filepath = "/".join([settings.DB_ROOT, "{}.sqlite3".format(source_id)])
+            # Check if database exists
+            if not default_storage.exists(filepath):
+                raise IOError("The object requested does not exist.")
+            with default_storage.open(filepath) as fobj:
+                shutil.copyfileobj(fobj, tempf)
 
-    def handle(self, *args, **options):
-        try:
-            # Set up variables for restoration process
-            print("\n\n********** STARTING CHANNEL RESTORATION **********")
-            start = datetime.datetime.now()
-            source_id = options['source_id']
-            target_id = options.get('target') or source_id
+        tempf.close()
+        conn = sqlite3.connect(tempf.name)
+        cursor = conn.cursor()
 
-            # Test connection to database
-            print("Connecting to database for channel {}...".format(source_id))
+        # Start by creating channel
+        logging.info("Creating channel...")
+        channel, root_pk = create_channel(conn, target_id)
+        if editor:
+            channel.editors.add(models.User.objects.get(email=editor))
+            channel.save()
 
+        # Create root node
+        root = models.ContentNode.objects.create(
+            sort_order=models.get_next_sort_order(),
+            node_id=root_pk,
+            title=channel.name,
+            kind_id=content_kinds.TOPIC,
+            original_channel_id=target_id,
+            source_channel_id=target_id,
+        )
 
-            tempf = tempfile.NamedTemporaryFile(suffix=".sqlite3", delete=False)
-            conn = None
-            try:
-                if options.get('download_url'):
-                    response = requests.get('{}/content/databases/{}.sqlite3'.format(options['download_url'], source_id))
-                    for chunk in response:
-                        tempf.write(chunk)
-                else:
-                    filepath = "/".join([settings.DB_ROOT, "{}.sqlite3".format(source_id)])
-                    # Check if database exists
-                    if not default_storage.exists(filepath):
-                        raise IOError("The object requested does not exist.")
-                    with default_storage.open(filepath) as fobj:
-                        shutil.copyfileobj(fobj, tempf)
+        # Create nodes mapping to channel
+        logging.info("   Creating nodes...")
+        with transaction.atomic():
+            create_nodes(cursor, target_id, root, download_url=download_url)
+            # TODO: Handle prerequisites
 
-                tempf.close()
-                conn = sqlite3.connect(tempf.name)
-                cursor = conn.cursor()
+        # Delete the previous tree if it exists
+        old_previous = channel.previous_tree
+        if old_previous:
+            old_previous.parent = get_deleted_chefs_root()
+            old_previous.title = "Old previous tree for channel {}".format(channel.pk)
+            old_previous.save()
 
-                # Start by creating channel
-                print("Creating channel...")
-                channel, root_pk = create_channel(conn, target_id)
-                if options.get('editor'):
-                    channel.editors.add(models.User.objects.get(email=options['editor']))
-                    channel.save()
+        # Save tree to target tree
+        channel.previous_tree = channel.main_tree
+        channel.main_tree = root
+        channel.save()
+    finally:
+        conn and conn.close()
+        tempf.close()
+        os.unlink(tempf.name)
 
-                # Create root node
-                root = models.ContentNode.objects.create(
-                    sort_order=models.get_next_sort_order(),
-                    node_id=root_pk,
-                    title=channel.name,
-                    kind_id=content_kinds.TOPIC,
-                    original_channel_id=target_id,
-                    source_channel_id=target_id,
-                )
-
-                # Create nodes mapping to channel
-                print("   Creating nodes...")
-                with transaction.atomic():
-                    create_nodes(cursor, target_id, root, download_url=options.get('download_url'))
-                    # TODO: Handle prerequisites
-
-                # Delete the previous tree if it exists
-                old_previous = channel.previous_tree
-                if old_previous:
-                    old_previous.parent = get_deleted_chefs_root()
-                    old_previous.title = "Old previous tree for channel {}".format(channel.pk)
-                    old_previous.save()
-
-                # Save tree to target tree
-                channel.previous_tree = channel.main_tree
-                channel.main_tree = root
-                channel.save()
-            finally:
-                conn and conn.close()
-                tempf.close()
-                os.unlink(tempf.name)
-
-            # Print stats
-            print("\n\nChannel has been restored (time: {ms})\n".format(ms=datetime.datetime.now() - start))
-            print("\n\n********** RESTORATION COMPLETE **********\n\n")
-
-        except EarlyExit as e:
-            logging.warning("Exited early due to {message}.".format(message=e.message))
-            self.stdout.write("You can find your database in {path}".format(path=e.db_path))
+    # Print stats
+    logging.info("\n\nChannel has been imported (time: {ms})\n".format(ms=datetime.datetime.now() - start))
+    logging.info("\n\n********** IMPORT COMPLETE **********\n\n")
 
 
 def create_channel(cursor, target_id):
@@ -155,7 +137,7 @@ def create_channel(cursor, target_id):
     channel.thumbnail_encoding = {'base64': thumbnail, 'points': [], 'zoom': 0}
     channel.version = version
     channel.save()
-    print("\tCreated channel {} with name {}".format(target_id, name))
+    logging.info("\tCreated channel {} with name {}".format(target_id, name))
     return channel, root_pk
 
 
@@ -197,7 +179,7 @@ def create_nodes(cursor, target_id, parent, indent=1, download_url=None):
 
     # Parse through rows and create models
     for id, title, content_id, description, sort_order, license_owner, author, license_id, kind, coach_content, lang_id in query:
-        print("{indent} {id} ({title} - {kind})...".format(indent="   |" * indent, id=id, title=title, kind=kind))
+        logging.info("{indent} {id} ({title} - {kind})...".format(indent="   |" * indent, id=id, title=title, kind=kind))
 
         # Determine role
         role = roles.LEARNER
@@ -263,7 +245,9 @@ def retrieve_license(cursor, license_id):
         return None
 
     # Return license that matches name
-    name, description = cursor.execute('SELECT license_name, license_description FROM {table} WHERE id={id}'.format(table=LICENSE_TABLE, id=license_id)).fetchone()
+    name, description = cursor.execute(
+        'SELECT license_name, license_description FROM {table} WHERE id={id}'.format(table=LICENSE_TABLE, id=license_id)
+    ).fetchone()
     return models.License.objects.get(license_name=name), description
 
 
@@ -283,7 +267,7 @@ def create_files(cursor, contentnode, indent=0, download_url=None):
     query = cursor.execute(sql_command).fetchall()
     for checksum, extension, file_size, contentnode_id, lang_id, preset in query:
         filename = "{}.{}".format(checksum, extension)
-        print("{indent} * FILE {filename}...".format(indent="   |" * indent, filename=filename))
+        logging.info("{indent} * FILE {filename}...".format(indent="   |" * indent, filename=filename))
 
         try:
             filepath = models.generate_object_storage_name(checksum, filename)
@@ -337,7 +321,7 @@ def create_tags(cursor, contentnode, target_id, indent=0):
     # Build up list of tags
     tag_list = []
     for id, tag_name in query:
-        print("{indent} ** TAG {tag}...".format(indent="   |" * indent, tag=tag_name))
+        logging.info("{indent} ** TAG {tag}...".format(indent="   |" * indent, tag=tag_name))
         # Save values to new or existing tag object
         tag_obj, is_new = models.ContentTag.objects.get_or_create(
             pk=id,
