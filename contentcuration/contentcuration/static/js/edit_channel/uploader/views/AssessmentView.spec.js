@@ -61,7 +61,7 @@ const EDIT_MODAL_STATE = {
           ]),
         },
         {
-          id: 1,
+          id: 0,
           question: 'Exercise 2 - Question 1',
           type: AssessmentItemTypes.INPUT_QUESTION,
           order: 0,
@@ -126,7 +126,7 @@ describe('AssessmentView', () => {
     expect(state.nodesAssessmentDrafts).toEqual({
       'exercise-2': [
         {
-          id: 1,
+          id: 0,
           question: 'Exercise 2 - Question 1',
           type: AssessmentItemTypes.INPUT_QUESTION,
           order: 0,

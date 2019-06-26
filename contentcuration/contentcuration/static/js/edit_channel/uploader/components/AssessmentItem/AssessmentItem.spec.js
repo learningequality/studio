@@ -1,18 +1,47 @@
-import { shallowMount, mount } from '@vue/test-utils';
+import { mount, createLocalVue } from '@vue/test-utils';
+import Vuex from 'vuex';
 
 import { AssessmentItemTypes } from '../../constants';
 import AssessmentItem from './AssessmentItem';
 
+// TODO @MisRob: Consistent imports
+const editModalGetters = require('../../vuex/getters');
+const editModalMutations = require('../../vuex/mutations');
+
+const localVue = createLocalVue();
+localVue.use(Vuex);
+
+const NODE_ID = 'exercise-2';
+const ITEM_IDX = 1;
 const ITEM = {
-  question: 'What color is the sky?',
+  id: 'exercise-2-item-2',
+  question: 'Exercise 2 - Question 2',
   type: AssessmentItemTypes.SINGLE_SELECTION,
   order: 1,
   answers: [
-    { answer: 'Yellow', correct: false, order: 1 },
-    { answer: 'Black', correct: false, order: 2 },
-    { answer: 'Blue', correct: true, order: 3 },
+    { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+    { answer: 'Peanut butter', correct: false, order: 2 },
   ],
-  hints: [{ hint: 'First hint', order: 1 }, { hint: 'Second hint', order: 2 }],
+  hints: [{ hint: "It's not healthy", order: 1 }, { hint: 'Tasty!', order: 2 }],
+};
+
+const EDIT_MODAL_STATE = {
+  nodesAssessmentDrafts: {
+    [NODE_ID]: [
+      {
+        id: 'exercise-2-item-1',
+        question: 'Exercise 2 - Question 1',
+        type: AssessmentItemTypes.INPUT_QUESTION,
+        order: 0,
+        answers: [
+          { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+          { answer: 'Peanut butter', correct: true, order: 2 },
+        ],
+        hints: [],
+      },
+      ITEM,
+    ],
+  },
 };
 
 const clickCloseBtn = wrapper => {
@@ -26,28 +55,73 @@ const selectKind = (wrapper, kind) => {
   input.trigger('input');
 };
 
+const clickToolbarEditIcon = wrapper => {
+  wrapper.find('[data-test=toolbarIconEdit]').trigger('click');
+};
+
 const updateQuestion = (wrapper, newQuestion) => {
   wrapper.find('[data-test=questionInput]').setValue(newQuestion);
+};
+
+const initWrapper = (state, propsData) => {
+  const store = new Vuex.Store({
+    modules: {
+      edit_modal: {
+        namespaced: true,
+        state,
+        getters: editModalGetters,
+        mutations: editModalMutations,
+      },
+    },
+  });
+
+  return mount(AssessmentItem, {
+    localVue,
+    store,
+    propsData,
+  });
 };
 
 describe('AssessmentItem', () => {
   let wrapper;
 
-  it('smoke test', () => {
-    const wrapper = shallowMount(AssessmentItem);
-
-    expect(wrapper.isVueInstance()).toBe(true);
-  });
-
   describe('when closed', () => {
     beforeEach(() => {
-      wrapper = mount(AssessmentItem, {
-        propsData: {
-          item: ITEM,
-          itemIdx: 1,
-          isOpen: false,
-        },
+      const state = JSON.parse(JSON.stringify(EDIT_MODAL_STATE));
+      const propsData = {
+        nodeId: NODE_ID,
+        itemIdx: ITEM_IDX,
+        isOpen: false,
+      };
+
+      wrapper = initWrapper(state, propsData);
+    });
+
+    it('renders', () => {
+      expect(wrapper.html()).toMatchSnapshot();
+    });
+
+    describe('on toolbar edit click', () => {
+      it('emits open event', () => {
+        clickToolbarEditIcon(wrapper);
+
+        expect(wrapper.emitted().open).toBeTruthy();
+        expect(wrapper.emitted().open.length).toBe(1);
       });
+    });
+  });
+
+  describe('when closed with answers preview', () => {
+    beforeEach(() => {
+      const state = JSON.parse(JSON.stringify(EDIT_MODAL_STATE));
+      const propsData = {
+        nodeId: NODE_ID,
+        itemIdx: ITEM_IDX,
+        isOpen: false,
+        displayAnswersPreview: true,
+      };
+
+      wrapper = initWrapper(state, propsData);
     });
 
     it('renders', () => {
@@ -57,13 +131,14 @@ describe('AssessmentItem', () => {
 
   describe('when open', () => {
     beforeEach(() => {
-      wrapper = mount(AssessmentItem, {
-        propsData: {
-          item: ITEM,
-          itemIdx: 1,
-          isOpen: true,
-        },
-      });
+      const state = JSON.parse(JSON.stringify(EDIT_MODAL_STATE));
+      const propsData = {
+        nodeId: NODE_ID,
+        itemIdx: ITEM_IDX,
+        isOpen: true,
+      };
+
+      wrapper = initWrapper(state, propsData);
     });
 
     it('renders', () => {
@@ -71,41 +146,27 @@ describe('AssessmentItem', () => {
     });
 
     describe('on item type update', () => {
-      it('emits update event with a correct payload', () => {
+      it('updates a correct item in drafts store', () => {
         selectKind(wrapper, AssessmentItemTypes.MULTIPLE_SELECTION);
 
-        expect(wrapper.emitted().update).toBeTruthy();
-        expect(wrapper.emitted().update.length).toBe(1);
-        expect(wrapper.emitted().update[0]).toEqual([
-          {
-            payload: {
-              type: AssessmentItemTypes.MULTIPLE_SELECTION,
-              answers: [
-                { answer: 'Yellow', correct: false, order: 1 },
-                { answer: 'Black', correct: false, order: 2 },
-                { answer: 'Blue', correct: true, order: 3 },
-              ],
-            },
-            itemIdx: 1,
-          },
-        ]);
+        expect(
+          wrapper.vm.$store.state['edit_modal'].nodesAssessmentDrafts[NODE_ID][ITEM_IDX]
+        ).toEqual({ ...ITEM, type: AssessmentItemTypes.MULTIPLE_SELECTION });
       });
     });
 
     describe('on question update', () => {
-      it('emits update event with a correct payload', () => {
+      it('updates a correct item in drafts store', () => {
         updateQuestion(wrapper, 'What color is your eyes?');
 
-        expect(wrapper.emitted().update).toBeTruthy();
-        expect(wrapper.emitted().update.length).toBe(1);
-        expect(wrapper.emitted().update[0]).toEqual([
-          { payload: { question: 'What color is your eyes?' }, itemIdx: 1 },
-        ]);
+        expect(
+          wrapper.vm.$store.state['edit_modal'].nodesAssessmentDrafts[NODE_ID][ITEM_IDX]
+        ).toEqual({ ...ITEM, question: 'What color is your eyes?' });
       });
     });
 
     describe('on answers update', () => {
-      it('emits update event with a correct payload', () => {
+      it('updates a correct item in drafts store', () => {
         const newAnswers = [
           { answer: 'Answer 1', correct: false, order: 1 },
           { answer: 'Answer 2', correct: true, order: 2 },
@@ -113,23 +174,27 @@ describe('AssessmentItem', () => {
 
         wrapper.find({ name: 'AnswersEditor' }).vm.$emit('update', newAnswers);
 
-        expect(wrapper.emitted().update).toBeTruthy();
-        expect(wrapper.emitted().update.length).toBe(1);
-        expect(wrapper.emitted().update[0]).toEqual([
-          { payload: { answers: newAnswers }, itemIdx: 1 },
-        ]);
+        expect(
+          wrapper.vm.$store.state['edit_modal'].nodesAssessmentDrafts[NODE_ID][ITEM_IDX]
+        ).toEqual({
+          ...ITEM,
+          answers: [
+            { answer: 'Answer 1', correct: false, order: 1 },
+            { answer: 'Answer 2', correct: true, order: 2 },
+          ],
+        });
       });
     });
 
     describe('on hints update', () => {
-      it('emits update event with a correct payload', () => {
+      it('updates a correct item in drafts store', () => {
         const newHints = [{ hint: 'Hint 1', order: 1 }, { hint: 'Hint 2', order: 2 }];
 
         wrapper.find({ name: 'HintsEditor' }).vm.$emit('update', newHints);
 
-        expect(wrapper.emitted().update).toBeTruthy();
-        expect(wrapper.emitted().update.length).toBe(1);
-        expect(wrapper.emitted().update[0]).toEqual([{ payload: { hints: newHints }, itemIdx: 1 }]);
+        expect(
+          wrapper.vm.$store.state['edit_modal'].nodesAssessmentDrafts[NODE_ID][ITEM_IDX]
+        ).toEqual({ ...ITEM, hints: [{ hint: 'Hint 1', order: 1 }, { hint: 'Hint 2', order: 2 }] });
       });
     });
   });
