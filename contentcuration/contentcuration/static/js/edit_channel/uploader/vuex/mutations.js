@@ -2,6 +2,7 @@ import _ from 'underscore';
 import Vue from 'vue';
 
 import { modes, AssessmentItemTypes } from '../constants';
+import { insertBefore, insertAfter } from '../utils';
 import { getSelected } from './utils';
 import State from 'edit_channel/state';
 import Constants from 'edit_channel/constants/index';
@@ -287,16 +288,38 @@ export const addNodeAssessmentDraft = (state, { nodeId, assessmentItems }) => {
   Vue.set(state.nodesAssessmentDrafts, nodeId, items);
 };
 
-export const addNodeAssessmentDraftItem = (state, nodeId) => {
+/**
+ * @param {Number|null} before If specified, add a new assessment draft item
+ *                                before an item with this index
+ * @param {Number|null} after If specified, add a new assessment draft item
+ *                                after an item with this index
+ * Push a new item to the end if neither `before` nor `after` specified.
+ */
+export const addNodeAssessmentDraftItem = (state, { nodeId, before, after }) => {
   if (!state.nodesAssessmentDrafts[nodeId]) {
     Vue.set(state.nodesAssessmentDrafts, nodeId, []);
   }
 
-  const nodeAssessmentDraft = [...state.nodesAssessmentDrafts[nodeId]];
-  nodeAssessmentDraft.push({
+  let nodeAssessmentDraft = [...state.nodesAssessmentDrafts[nodeId]];
+
+  const newItem = {
     question: '',
     type: AssessmentItemTypes.SINGLE_SELECTION,
-    order: nodeAssessmentDraft.length,
+  };
+
+  if (after !== undefined) {
+    nodeAssessmentDraft = insertAfter(nodeAssessmentDraft, after, newItem);
+  } else if (before !== undefined) {
+    nodeAssessmentDraft = insertBefore(nodeAssessmentDraft, before, newItem);
+  } else {
+    nodeAssessmentDraft.push(newItem);
+  }
+
+  nodeAssessmentDraft = nodeAssessmentDraft.map((item, itemIdx) => {
+    return {
+      ...item,
+      order: itemIdx,
+    };
   });
 
   Vue.set(state.nodesAssessmentDrafts, nodeId, nodeAssessmentDraft);

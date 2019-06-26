@@ -222,6 +222,7 @@
     },
     methods: {
       ...mapMutations('edit_modal', [
+        'addNodeAssessmentDraftItem',
         'updateNodeAssessmentDraftItem',
         'deleteNodeAssessmentDraftItem',
       ]),
@@ -238,6 +239,22 @@
           nodeId: this.nodeId,
           assessmentItemIdx: this.itemIdx,
         });
+      },
+      addItemAbove() {
+        this.addNodeAssessmentDraftItem({
+          nodeId: this.nodeId,
+          before: this.itemIdx,
+        });
+
+        this.$emit('newItemAdded', this.itemIdx);
+      },
+      addItemBelow() {
+        this.addNodeAssessmentDraftItem({
+          nodeId: this.nodeId,
+          after: this.itemIdx,
+        });
+
+        this.$emit('newItemAdded', this.itemIdx + 1);
       },
       onQuestionChange(newQuestion) {
         this.updateItem({ question: newQuestion });
@@ -281,6 +298,14 @@
 
           case AssessmentItemToolbarActions.DELETE_ITEM:
             this.deleteItem();
+            break;
+
+          case AssessmentItemToolbarActions.ADD_ITEM_ABOVE:
+            this.addItemAbove();
+            break;
+
+          case AssessmentItemToolbarActions.ADD_ITEM_BELOW:
+            this.addItemBelow();
             break;
         }
       },

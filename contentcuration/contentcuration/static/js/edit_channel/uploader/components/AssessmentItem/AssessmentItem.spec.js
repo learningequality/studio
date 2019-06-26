@@ -75,6 +75,14 @@ const clickDeleteItem = wrapper => {
   wrapper.find('[data-test=toolbarMenuDeleteItem]').trigger('click');
 };
 
+const clickAddQuestionAbove = wrapper => {
+  wrapper.find('[data-test=toolbarMenuAddItemAbove]').trigger('click');
+};
+
+const clickAddQuestionBelow = wrapper => {
+  wrapper.find('[data-test=toolbarMenuAddItemBelow]').trigger('click');
+};
+
 const initWrapper = (state, propsData) => {
   const store = new Vuex.Store({
     modules: {
@@ -254,6 +262,104 @@ describe('AssessmentItem', () => {
           hints: [],
         },
       ]);
+    });
+  });
+
+  describe('on "Add question above" click', () => {
+    beforeEach(() => {
+      const state = JSON.parse(JSON.stringify(EDIT_MODAL_STATE));
+      const propsData = {
+        nodeId: NODE_ID,
+        itemIdx: ITEM_IDX,
+      };
+
+      wrapper = initWrapper(state, propsData);
+      clickAddQuestionAbove(wrapper);
+    });
+
+    it('adds a new item in drafts store before this item', () => {
+      expect(wrapper.vm.$store.state['edit_modal'].nodesAssessmentDrafts[NODE_ID]).toEqual([
+        {
+          id: 'exercise-2-item-1',
+          question: 'Exercise 2 - Question 1',
+          type: AssessmentItemTypes.INPUT_QUESTION,
+          order: 0,
+          answers: [
+            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+            { answer: 'Peanut butter', correct: true, order: 2 },
+          ],
+          hints: [],
+        },
+        {
+          question: '',
+          type: AssessmentItemTypes.SINGLE_SELECTION,
+          order: 1,
+        },
+        { ...ITEM, order: 2 },
+        {
+          id: 'exercise-2-item-3',
+          question: 'Exercise 2 - Question 3',
+          type: AssessmentItemTypes.INPUT_QUESTION,
+          order: 3,
+          answers: [],
+          hints: [],
+        },
+      ]);
+    });
+
+    it('emits new item added event with an index of a newly added item', () => {
+      expect(wrapper.emitted().newItemAdded).toBeTruthy();
+      expect(wrapper.emitted().newItemAdded.length).toBe(1);
+      expect(wrapper.emitted().newItemAdded[0][0]).toBe(1);
+    });
+  });
+
+  describe('on "Add question below" click', () => {
+    beforeEach(() => {
+      const state = JSON.parse(JSON.stringify(EDIT_MODAL_STATE));
+      const propsData = {
+        nodeId: NODE_ID,
+        itemIdx: ITEM_IDX,
+      };
+
+      wrapper = initWrapper(state, propsData);
+      clickAddQuestionBelow(wrapper);
+    });
+
+    it('adds a new item in drafts store after this item', () => {
+      expect(wrapper.vm.$store.state['edit_modal'].nodesAssessmentDrafts[NODE_ID]).toEqual([
+        {
+          id: 'exercise-2-item-1',
+          question: 'Exercise 2 - Question 1',
+          type: AssessmentItemTypes.INPUT_QUESTION,
+          order: 0,
+          answers: [
+            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+            { answer: 'Peanut butter', correct: true, order: 2 },
+          ],
+          hints: [],
+        },
+        ITEM,
+        {
+          question: '',
+          type: AssessmentItemTypes.SINGLE_SELECTION,
+          order: 2,
+        },
+        {
+          id: 'exercise-2-item-3',
+          question: 'Exercise 2 - Question 3',
+          type: AssessmentItemTypes.INPUT_QUESTION,
+          order: 3,
+          answers: [],
+          hints: [],
+        },
+      ]);
+    });
+
+    it('emits new item added event with an index of a newly added item', () => {
+      expect(wrapper.emitted().newItemAdded).toBeTruthy();
+      expect(wrapper.emitted().newItemAdded.length).toBe(1);
+      expect(wrapper.emitted().newItemAdded[0][0]).toBe(2);
     });
   });
 });
