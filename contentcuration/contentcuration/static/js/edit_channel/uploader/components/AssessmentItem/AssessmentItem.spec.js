@@ -40,6 +40,14 @@ const EDIT_MODAL_STATE = {
         hints: [],
       },
       ITEM,
+      {
+        id: 'exercise-2-item-3',
+        question: 'Exercise 2 - Question 3',
+        type: AssessmentItemTypes.INPUT_QUESTION,
+        order: 2,
+        answers: [],
+        hints: [],
+      },
     ],
   },
 };
@@ -61,6 +69,10 @@ const clickToolbarEditIcon = wrapper => {
 
 const updateQuestion = (wrapper, newQuestion) => {
   wrapper.find('[data-test=questionInput]').setValue(newQuestion);
+};
+
+const clickDeleteItem = wrapper => {
+  wrapper.find('[data-test=toolbarMenuDeleteItem]').trigger('click');
 };
 
 const initWrapper = (state, propsData) => {
@@ -205,6 +217,43 @@ describe('AssessmentItem', () => {
 
       expect(wrapper.emitted().close).toBeTruthy();
       expect(wrapper.emitted().close.length).toBe(1);
+    });
+  });
+
+  describe('on delete item click', () => {
+    beforeEach(() => {
+      const state = JSON.parse(JSON.stringify(EDIT_MODAL_STATE));
+      const propsData = {
+        nodeId: NODE_ID,
+        itemIdx: ITEM_IDX,
+      };
+
+      wrapper = initWrapper(state, propsData);
+      clickDeleteItem(wrapper);
+    });
+
+    it('removes item from drafts store', () => {
+      expect(wrapper.vm.$store.state['edit_modal'].nodesAssessmentDrafts[NODE_ID]).toEqual([
+        {
+          id: 'exercise-2-item-1',
+          question: 'Exercise 2 - Question 1',
+          type: AssessmentItemTypes.INPUT_QUESTION,
+          order: 0,
+          answers: [
+            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+            { answer: 'Peanut butter', correct: true, order: 2 },
+          ],
+          hints: [],
+        },
+        {
+          id: 'exercise-2-item-3',
+          question: 'Exercise 2 - Question 3',
+          type: AssessmentItemTypes.INPUT_QUESTION,
+          order: 1,
+          answers: [],
+          hints: [],
+        },
+      ]);
     });
   });
 });
