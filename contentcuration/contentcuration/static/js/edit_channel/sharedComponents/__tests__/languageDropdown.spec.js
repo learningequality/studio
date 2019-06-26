@@ -3,16 +3,18 @@ import Vue from 'vue';
 import Vuetify from 'vuetify';
 import { mount } from '@vue/test-utils';
 import LanguageDropdown from '../LanguageDropdown.vue';
+import TestForm from './TestForm.vue';
 import Constants from 'edit_channel/constants';
 
 Vue.use(Vuetify);
 
 document.body.setAttribute('data-app', true); // Vuetify prints a warning without this
 
-function makeWrapper(props = {}) {
-  return mount(LanguageDropdown, {
-    attachToDocument: true,
-    propsData: props,
+function makeWrapper() {
+  return mount(TestForm, {
+    slots: {
+      testComponent: LanguageDropdown,
+    },
   });
 }
 
@@ -20,8 +22,10 @@ let testLanguages = _.first(Constants.Languages, 10);
 
 describe('languageDropdown', () => {
   let wrapper;
+  let formWrapper;
   beforeEach(() => {
-    wrapper = makeWrapper();
+    formWrapper = makeWrapper();
+    wrapper = formWrapper.find(LanguageDropdown);
   });
   it('updating the language should emit changed event', () => {
     function test(language, i) {
@@ -37,12 +41,19 @@ describe('languageDropdown', () => {
   });
   it('setting readonly should prevent any edits', () => {
     expect(wrapper.find('input[readonly]').exists()).toBe(false);
-    wrapper = makeWrapper({ readonly: true });
+    wrapper.setProps({ readonly: true });
     expect(wrapper.find('input[readonly]').exists()).toBe(true);
   });
   it('setting required should make field required', () => {
     expect(wrapper.find('input:required').exists()).toBe(false);
-    wrapper = makeWrapper({ required: true });
+    wrapper.setProps({ required: true });
     expect(wrapper.find('input:required').exists()).toBe(true);
+  });
+  it('validation should catch empty required languages', () => {
+    formWrapper.vm.validate();
+    expect(wrapper.find('.error--text').exists()).toBe(false);
+    wrapper.setProps({ required: true });
+    formWrapper.vm.validate();
+    expect(wrapper.find('.error--text').exists()).toBe(true);
   });
 });

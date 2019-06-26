@@ -4,6 +4,7 @@ import Vuetify from 'vuetify';
 import { mount } from '@vue/test-utils';
 import InfoModal from '../InfoModal.vue';
 import VisibilityDropdown from '../VisibilityDropdown.vue';
+import TestForm from './TestForm.vue';
 import { translate } from 'edit_channel/utils/string_helper';
 import Constants from 'edit_channel/constants';
 
@@ -11,17 +12,20 @@ Vue.use(Vuetify);
 
 document.body.setAttribute('data-app', true); // Vuetify prints a warning without this
 
-function makeWrapper(props = {}) {
-  return mount(VisibilityDropdown, {
-    attachToDocument: true,
-    propsData: props,
+function makeWrapper() {
+  return mount(TestForm, {
+    slots: {
+      testComponent: VisibilityDropdown,
+    },
   });
 }
 
 describe('visibilityDropdown', () => {
   let wrapper;
+  let formWrapper;
   beforeEach(() => {
-    wrapper = makeWrapper();
+    formWrapper = makeWrapper();
+    wrapper = formWrapper.find(VisibilityDropdown);
   });
 
   describe('on load', () => {
@@ -32,7 +36,7 @@ describe('visibilityDropdown', () => {
     });
     it('should render according to visibility prop', () => {
       function test(visibility) {
-        wrapper = makeWrapper({ role: visibility });
+        wrapper.setProps({ role: visibility });
         expect(wrapper.vm.$refs.visibility.value).toEqual(visibility);
       }
       _.each(Constants.Roles, test);
@@ -41,7 +45,7 @@ describe('visibilityDropdown', () => {
   describe('props', () => {
     it('setting readonly should prevent any edits', () => {
       expect(wrapper.find({ ref: 'visibility' }).classes()).not.toContain('v-input--is-readonly');
-      wrapper = makeWrapper({ readonly: true });
+      wrapper.setProps({ readonly: true });
       expect(wrapper.find({ ref: 'visibility' }).classes()).toContain('v-input--is-readonly');
     });
     it('setting required should make fields required', () => {
@@ -51,13 +55,20 @@ describe('visibilityDropdown', () => {
           .find('input')
           .attributes('required')
       ).toBeFalsy();
-      wrapper = makeWrapper({ required: true });
+      wrapper.setProps({ required: true });
       expect(
         wrapper
           .find({ ref: 'visibility' })
           .find('input')
           .attributes('required')
       ).toEqual('required');
+    });
+    it('validation should flag empty required fields', () => {
+      formWrapper.vm.validate();
+      expect(wrapper.find('.error--text').exists()).toBe(false);
+      wrapper.setProps({ required: true, role: null });
+      formWrapper.vm.validate();
+      expect(wrapper.find('.error--text').exists()).toBe(true);
     });
     it('setting disabled should make fields required', () => {
       expect(
@@ -66,7 +77,7 @@ describe('visibilityDropdown', () => {
           .find('input')
           .attributes('disabled')
       ).toBeFalsy();
-      wrapper = makeWrapper({ disabled: true });
+      wrapper.setProps({ disabled: true });
       expect(
         wrapper
           .find({ ref: 'visibility' })
@@ -85,7 +96,6 @@ describe('visibilityDropdown', () => {
   });
   describe('emitted events', () => {
     it('should emit changed event when visibility is changed', () => {
-      let wrapper = makeWrapper();
       expect(wrapper.emitted('changed')).toBeFalsy();
       wrapper.find('input').setValue(Constants.Roles[0]);
       expect(wrapper.emitted('changed')).toBeTruthy();
