@@ -193,7 +193,7 @@
       },
       openModal() {
         this.dialog = true;
-        if (this.nodes.length > 0) this.select(0);
+        if (this.nodes.length > 0) this.$nextTick(() => this.select(0));
         if (this.mode === modes.NEW_TOPIC || this.mode === modes.NEW_EXERCISE) {
           this.createNode();
         }

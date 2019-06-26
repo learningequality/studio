@@ -133,7 +133,7 @@
             <LicenseDropdown
               :selectedID="changes.license.value"
               :licenseDescription="changes.license_description.value"
-              :required="!disableAuthEdits && !changes.license.varied"
+              :required="!changes.license.varied"
               :readonly="viewOnly || disableAuthEdits"
               :descriptionRequired="!changes.license_description.varied"
               :placeholder="getPlaceholder('license')"
@@ -152,7 +152,7 @@
               :items="copyrightHolders"
               :label="$tr('copyrightHolderLabel')"
               maxlength="200"
-              :required="!disableAuthEdits && !changes.copyright_holder.varied"
+              :required="!changes.copyright_holder.varied"
               :rules="rules.copyrightHolder"
               :placeholder="getPlaceholder('copyright_holder')"
               autoSelectFirst

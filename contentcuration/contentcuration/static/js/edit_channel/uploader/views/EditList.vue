@@ -1,7 +1,7 @@
 <template>
   <VList>
     <!-- Select all checkbox -->
-    <VListTile @click="toggleSelectAll">
+    <VListTile class="select-all-wrapper" @click="toggleSelectAll">
       <VListTileAction>
         <VCheckbox color="primary" :inputValue="selectAllChecked" @click.stop="toggleSelectAll" />
       </VListTileAction>
@@ -58,7 +58,7 @@
       };
     },
     computed: {
-      ...mapState('edit_modal', ['nodes', 'targetNode', 'changes', 'mode']),
+      ...mapState('edit_modal', ['nodes', 'mode']),
       allowAddTopic() {
         return this.mode === modes.NEW_TOPIC;
       },
