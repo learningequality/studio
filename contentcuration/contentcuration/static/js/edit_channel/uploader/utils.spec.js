@@ -1,5 +1,13 @@
+import each from 'jest-each';
+
 import { AssessmentItemTypes } from './constants';
-import { getCorrectAnswersIndices, mapCorrectAnswers, updateAnswersToQuestionKind } from './utils';
+import {
+  getCorrectAnswersIndices,
+  mapCorrectAnswers,
+  updateAnswersToQuestionKind,
+  insertBefore,
+  insertAfter,
+} from './utils';
 
 describe('utils', () => {
   describe('getCorrectAnswersIndices', () => {
@@ -366,6 +374,28 @@ describe('utils', () => {
           ]);
         });
       });
+    });
+  });
+
+  describe('insertBefore', () => {
+    each([
+      [[], 0, 'pink', ['pink']],
+      [['blue', 'yellow', 'violet'], -1, 'pink', ['pink', 'blue', 'yellow', 'violet']],
+      [['blue', 'yellow', 'violet'], 0, 'pink', ['pink', 'blue', 'yellow', 'violet']],
+      [['blue', 'yellow', 'violet'], 1, 'pink', ['blue', 'pink', 'yellow', 'violet']],
+    ]).it('inserts a new item before another item', (arr, idx, item, expected) => {
+      expect(insertBefore(arr, idx, item)).toEqual(expected);
+    });
+  });
+
+  describe('insertAfter', () => {
+    each([
+      [[], 2, 'pink', ['pink']],
+      [['blue', 'yellow', 'violet'], 3, 'pink', ['blue', 'yellow', 'violet', 'pink']],
+      [['blue', 'yellow', 'violet'], 2, 'pink', ['blue', 'yellow', 'violet', 'pink']],
+      [['blue', 'yellow', 'violet'], 1, 'pink', ['blue', 'yellow', 'pink', 'violet']],
+    ]).it('inserts a new item after another item', (arr, idx, item, expected) => {
+      expect(insertAfter(arr, idx, item)).toEqual(expected);
     });
   });
 });

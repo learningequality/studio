@@ -93,7 +93,7 @@ describe('edit_modal', () => {
         });
 
         it('adds a new node entry and saves a new assessment item with a correct order and default values', () => {
-          mutations.addNodeAssessmentDraftItem(state, 'node-1');
+          mutations.addNodeAssessmentDraftItem(state, { nodeId: 'node-1' });
 
           expect(state.nodesAssessmentDrafts).toEqual({
             'node-1': [
@@ -128,7 +128,7 @@ describe('edit_modal', () => {
         });
 
         it('saves a new assessment item with a correct order and default values to a correct node', () => {
-          mutations.addNodeAssessmentDraftItem(state, 'node-1');
+          mutations.addNodeAssessmentDraftItem(state, { nodeId: 'node-1' });
 
           expect(state.nodesAssessmentDrafts).toEqual({
             'node-1': [
@@ -146,6 +146,69 @@ describe('edit_modal', () => {
               {
                 question: 'Node 2 - Question 1',
                 order: 0,
+              },
+            ],
+          });
+        });
+      });
+
+      describe('before/after', () => {
+        beforeEach(() => {
+          state = {
+            nodesAssessmentDrafts: {
+              'node-1': [
+                {
+                  question: 'Node 1 - Question 1',
+                  order: 0,
+                },
+                {
+                  question: 'Node 1 - Question 1',
+                  order: 1,
+                },
+              ],
+            },
+          };
+        });
+
+        it('saves a new assessment item before an item with this index and updates `order` field of all items when `before` specified', () => {
+          mutations.addNodeAssessmentDraftItem(state, { nodeId: 'node-1', before: 1 });
+
+          expect(state.nodesAssessmentDrafts).toEqual({
+            'node-1': [
+              {
+                question: 'Node 1 - Question 1',
+                order: 0,
+              },
+              {
+                question: '',
+                type: AssessmentItemTypes.SINGLE_SELECTION,
+                order: 1,
+              },
+              {
+                question: 'Node 1 - Question 1',
+                order: 2,
+              },
+            ],
+          });
+        });
+
+        it('saves a new assessment item after an item with this index and updates `order` field of all items when `after` specified', () => {
+          mutations.addNodeAssessmentDraftItem(state, { nodeId: 'node-1', after: 0 });
+
+          expect(state.nodesAssessmentDrafts).toEqual({
+            'node-1': [
+              {
+                question: 'Node 1 - Question 1',
+                order: 0,
+              },
+              {
+                question: '',
+                type: AssessmentItemTypes.SINGLE_SELECTION,
+                order: 1,
+              },
+              {
+                question: 'Node 1 - Question 1',
+                order: 2,
               },
             ],
           });

@@ -110,3 +110,33 @@ export const updateAnswersToQuestionKind = (questionKind, answers) => {
 
   return newAnswers;
 };
+
+/**
+ * Insert an item into an array before another item.
+ * @param {Array} arr
+ * @param {Number} idx An index of an item before which
+ *                     a new item will be inserted.
+ * @param {*} item A new item to be inserted into an array.
+ */
+export const insertBefore = (arr, idx, item) => {
+  const newArr = JSON.parse(JSON.stringify(arr));
+  const insertAt = Math.max(0, idx);
+  newArr.splice(insertAt, 0, item);
+
+  return newArr;
+};
+
+/**
+ * Insert an item into an array after another item.
+ * @param {Array} arr
+ * @param {Number} idx An index of an item after which
+ *                     a new item will be inserted.
+ * @param {*} item A new item to be inserted into an array.
+ */
+export const insertAfter = (arr, idx, item) => {
+  const newArr = JSON.parse(JSON.stringify(arr));
+  const insertAt = Math.min(arr.length, idx + 1);
+  newArr.splice(insertAt, 0, item);
+
+  return newArr;
+};

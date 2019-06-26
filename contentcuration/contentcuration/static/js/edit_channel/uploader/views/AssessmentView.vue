@@ -16,6 +16,7 @@
         :displayAnswersPreview="displayAnswersPreview"
         @close="closeItem"
         @open="openItem(itemIdx)"
+        @newItemAdded="onNewItemAdded"
       />
     </template>
 
@@ -85,7 +86,7 @@
     methods: {
       ...mapMutations('edit_modal', ['addNodeAssessmentDraft', 'addNodeAssessmentDraftItem']),
       addNewItem() {
-        this.addNodeAssessmentDraftItem(this.nodeId);
+        this.addNodeAssessmentDraftItem({ nodeId: this.nodeId });
         this.openItem(this.assessmentItems.length - 1);
       },
       openItem(itemIdx) {
@@ -93,6 +94,9 @@
       },
       closeItem() {
         this.openItemIdx = null;
+      },
+      onNewItemAdded(itemIdx) {
+        this.openItem(itemIdx);
       },
     },
   };
