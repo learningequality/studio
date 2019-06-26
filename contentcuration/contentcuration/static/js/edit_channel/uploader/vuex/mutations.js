@@ -4,6 +4,23 @@ import { getSelected } from './utils';
 import State from 'edit_channel/state';
 import Constants from 'edit_channel/constants/index';
 
+export function RESET_STATE(state) {
+  Object.assign(state, {
+    nodes: [],
+    selectedIndices: [],
+    isClipboard: false,
+    changes: {},
+    targetNode: State.current_channel.get('main_tree'), // TODO: replace with actual target
+    mode: modes.VIEW_ONLY,
+  });
+}
+
+export function SET_MODE(state, mode) {
+  state.mode = mode;
+}
+
+/*********** AGGREGATE CHANGES ***********/
+
 const editableFields = [
   'language',
   'title',
@@ -18,30 +35,6 @@ const editableFields = [
 ];
 
 const extraFields = ['mastery_model', 'm', 'n', 'randomize'];
-
-export function RESET_STATE(state) {
-  Object.assign(state, {
-    nodes: [],
-    selectedIndices: [],
-    isClipboard: false,
-    changes: {},
-    targetNode: State.current_channel.get('main_tree'), // TODO: replace with actual target
-    mode: modes.VIEW_ONLY,
-  });
-}
-
-export function SET_NODES(state, nodes) {
-  _.each(nodes, node => {
-    node.changesStaged = false;
-    node['_COMPLETE'] = false;
-  });
-
-  state.nodes = nodes;
-}
-
-export function SET_MODE(state, mode) {
-  state.mode = mode;
-}
 
 function _generateSharedData(items, fields) {
   return _.reduce(
@@ -74,8 +67,15 @@ export function SET_CHANGES(state) {
   });
 }
 
-export function PREP_NODES_FOR_SAVE(state) {
-  _.each(state.nodes, node => (node.isNew = false));
+/*********** SET NODES ***********/
+
+export function SET_NODES(state, nodes) {
+  _.each(nodes, node => {
+    node.changesStaged = false;
+    node['_COMPLETE'] = false;
+  });
+
+  state.nodes = nodes;
 }
 
 export function SET_LOADED_NODES(state, nodes) {
@@ -93,112 +93,40 @@ export function SET_LOADED_NODES(state, nodes) {
   _.defer(() => SET_CHANGES(state));
 }
 
+/*********** SELECT NODES ***********/
+
 export function RESET_SELECTED(state) {
-  _.defer(() => {
-    state.selectedIndices = [];
-    state.changes = {};
-  });
+  state.selectedIndices = [];
+  state.changes = {};
 }
 
 export function SET_SELECTED(state, payload) {
-  _.defer(() => {
-    state.selectedIndices = payload;
-    SET_CHANGES(state);
-  });
+  state.selectedIndices = payload;
+  SET_CHANGES(state);
 }
 
 export function SET_NODE(state, index) {
-  _.defer(() => {
-    state.selectedIndices = [index];
-    SET_CHANGES(state);
-  });
+  state.selectedIndices = [index];
+  SET_CHANGES(state);
 }
 
 export function SELECT_NODE(state, index) {
-  _.defer(() => {
-    state.selectedIndices.push(index);
-    SET_CHANGES(state);
-  });
+  state.selectedIndices.push(index);
+  SET_CHANGES(state);
 }
 
 export function DESELECT_NODE(state, index) {
-  _.defer(() => {
-    state.selectedIndices = _.reject(state.selectedIndices, i => i === index);
-    SET_CHANGES(state);
-  });
-}
-
-export function SELECT_ALL_NODES(state) {
-  _.defer(() => {
-    state.selectedIndices = _.range(state.nodes.length);
-    SET_CHANGES(state);
-  });
-}
-
-export function ADD_NODE(state, payload) {
-  let preferences = payload.kind === 'topic' ? {} : State.preferences;
-  let data = _.reduce(
-    editableFields,
-    (dict, field) => {
-      switch (field) {
-        case 'license':
-          dict.license = _.findWhere(Constants.Licenses, { license_name: preferences.license });
-          dict.license = (dict.license && dict.license.id) || null;
-          break;
-        default:
-          dict[field] = preferences[field];
-      }
-      return dict;
-    },
-    {}
-  );
-  let extraFieldData = _.reduce(
-    extraFields,
-    (dict, field) => {
-      switch (field) {
-        case 'm':
-          dict.m = preferences.m_value || null;
-          break;
-        case 'n':
-          dict.n = preferences.n_value || null;
-          break;
-        default:
-          dict[field] = preferences[field];
-      }
-      return dict;
-    },
-    {}
-  );
-  state.nodes.push({
-    ...data,
-    files: [],
-    assessment_items: [],
-    prerequisite: [],
-    ancestors: [],
-    extra_fields: extraFieldData,
-    tags: [],
-    role_visibility: 'learner',
-    changesStaged: true,
-    isNew: true,
-    parent: state.targetNode.id,
-    sort_order: state.targetNode.metadata.max_sort_order + state.nodes.length + 1,
-    _COMPLETE: true,
-    ...payload,
-  });
-  _.defer(() => {
-    // Wait for node to render
-    state.selectedIndices = [state.nodes.length - 1];
-    SET_CHANGES(state);
-  });
-}
-
-export function REMOVE_NODE(state, index) {
-  state.nodes = _.reject(state.nodes, (n, i) => i === index);
   state.selectedIndices = _.reject(state.selectedIndices, i => i === index);
   SET_CHANGES(state);
 }
 
-// Form fields
+export function SELECT_ALL_NODES(state) {
+  state.selectedIndices = _.range(state.nodes.length);
+  SET_CHANGES(state);
+}
+
+/*********** SET FIELDS ***********/
+
 export function SET_FIELD(state, fieldName, value) {
   state.changes[fieldName].value = value;
   state.changes[fieldName].varied = false;
@@ -291,4 +219,73 @@ export function SET_EXTRA_FIELDS(state, obj) {
     }
   });
   SET_CHANGES(state);
+}
+
+/*********** NODE OPERATIONS ***********/
+
+export function ADD_NODE(state, payload) {
+  let preferences = payload.kind === 'topic' ? {} : State.preferences;
+  let data = _.reduce(
+    editableFields,
+    (dict, field) => {
+      switch (field) {
+        case 'license':
+          dict.license = _.findWhere(Constants.Licenses, { license_name: preferences.license });
+          dict.license = (dict.license && dict.license.id) || null;
+          break;
+        default:
+          dict[field] = preferences[field];
+      }
+      return dict;
+    },
+    {}
+  );
+  let extraFieldData = _.reduce(
+    extraFields,
+    (dict, field) => {
+      switch (field) {
+        case 'm':
+          dict.m = preferences.m_value || null;
+          break;
+        case 'n':
+          dict.n = preferences.n_value || null;
+          break;
+        default:
+          dict[field] = preferences[field];
+      }
+      return dict;
+    },
+    {}
+  );
+  state.nodes.push({
+    ...data,
+    files: [],
+    assessment_items: [],
+    prerequisite: [],
+    ancestors: [],
+    extra_fields: extraFieldData,
+    tags: [],
+    role_visibility: 'learner',
+    changesStaged: true,
+    isNew: true,
+    parent: state.targetNode.id,
+    sort_order: state.targetNode.metadata.max_sort_order + state.nodes.length + 1,
+    _COMPLETE: true,
+    ...payload,
+  });
+  _.defer(() => {
+    // Wait for node to render
+    state.selectedIndices = [state.nodes.length - 1];
+    SET_CHANGES(state);
+  });
+}
+
+export function REMOVE_NODE(state, index) {
+  state.nodes = _.reject(state.nodes, (n, i) => i === index);
+  state.selectedIndices = _.reject(state.selectedIndices, i => i === index);
+  SET_CHANGES(state);
+}
+
+export function PREP_NODES_FOR_SAVE(state) {
+  _.each(state.nodes, node => (node.isNew = false));
 }

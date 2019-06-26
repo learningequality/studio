@@ -63,7 +63,6 @@
             :readonly="viewOnly"
             @changed="setExtraFields"
           />
-          <br>
           <v-checkbox
             v-if="allExercises"
             :label="$tr('randomizeQuestionLabel')"
@@ -90,8 +89,7 @@
               :value="changes.author.value"
               :items="authors"
               :label="$tr('authorLabel')"
-              :disabled="disableAuthEdits"
-              :readonly="viewOnly"
+              :readonly="viewOnly || disableAuthEdits"
               maxlength="200"
               autoSelectFirst
               :placeholder="getPlaceholder('author')"
@@ -106,8 +104,7 @@
               :value="changes.provider.value"
               :items="providers"
               :label="$tr('providerLabel')"
-              :disabled="disableAuthEdits"
-              :readonly="viewOnly"
+              :readonly="viewOnly || disableAuthEdits"
               maxlength="200"
               :placeholder="getPlaceholder('provider')"
               autoSelectFirst
@@ -122,8 +119,7 @@
               :value="changes.aggregator.value"
               :items="aggregators"
               :label="$tr('aggregatorLabel')"
-              :disabled="disableAuthEdits"
-              :readonly="viewOnly"
+              :readonly="viewOnly || disableAuthEdits"
               maxlength="200"
               autoSelectFirst
               :placeholder="getPlaceholder('aggregator')"
@@ -137,9 +133,8 @@
             <LicenseDropdown
               :selectedID="changes.license.value"
               :licenseDescription="changes.license_description.value"
-              :disabled="disableAuthEdits"
-              :required="!changes.license.varied"
-              :readonly="viewOnly"
+              :required="!disableAuthEdits && !changes.license.varied"
+              :readonly="viewOnly || disableAuthEdits"
               :descriptionRequired="!changes.license_description.varied"
               :placeholder="getPlaceholder('license')"
               :descriptionPlaceholder="getPlaceholder('license_description')"
@@ -156,13 +151,12 @@
               :value="changes.copyright_holder.value"
               :items="copyrightHolders"
               :label="$tr('copyrightHolderLabel')"
-              :disabled="disableAuthEdits"
               maxlength="200"
-              :required="!changes.copyright_holder.varied"
-              :rules="changes.copyright_holder.varied? [] : rules.copyrightHolder"
+              :required="!disableAuthEdits && !changes.copyright_holder.varied"
+              :rules="rules.copyrightHolder"
               :placeholder="getPlaceholder('copyright_holder')"
               autoSelectFirst
-              :readonly="viewOnly"
+              :readonly="viewOnly || disableAuthEdits"
               @input="setCopyrightHolder"
             />
           </VFlex>
@@ -269,7 +263,13 @@
         valid: true,
         rules: {
           title: [v => !!v || this.$tr('titleValidationMessage')],
-          copyrightHolder: [v => !!v || this.$tr('copyrightHolderValidationMessage')],
+          copyrightHolder: [
+            v =>
+              this.disableAuthEdits ||
+              this.changes.copyright_holder.varied ||
+              !!v ||
+              this.$tr('copyrightHolderValidationMessage'),
+          ],
         },
       };
     },
@@ -407,9 +407,6 @@
     }
     .v-form {
       margin-top: 30px;
-      /deep/ .language-dropdown {
-        width: 100%;
-      }
       .flex {
         text-align: center;
       }
@@ -417,9 +414,11 @@
         margin-bottom: 20px;
       }
       /deep/ .v-input--is-readonly {
-        /deep/ label,
-        /deep/ .v-icon {
+        /deep/ label {
           color: @gray-600 !important;
+        }
+        /deep/ .v-input__append-inner {
+          display: none;
         }
         /deep/ .v-input__slot {
           &::before {
@@ -429,6 +428,9 @@
             border: 0;
           }
         }
+        /deep/ .v-chip {
+          color: black;
+        }
       }
 
       .auth-section {
@@ -437,6 +439,7 @@
 
         .imports-detected-text {
           padding: 5px;
+          margin-bottom: 15px;
           font-weight: bold;
           color: @gray-700;
           background-color: @gray-200;
