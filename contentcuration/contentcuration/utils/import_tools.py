@@ -1,6 +1,6 @@
 import datetime
 import json
-import logging as logmodule
+import logging
 import os
 import shutil
 import sqlite3
@@ -21,9 +21,6 @@ from contentcuration import models
 from contentcuration.utils.files import create_file_from_contents
 from contentcuration.utils.garbage_collect import get_deleted_chefs_root
 
-logmodule.basicConfig()
-logging = logmodule.getLogger(__name__)
-
 CHANNEL_TABLE = 'content_channelmetadata'
 NODE_TABLE = 'content_contentnode'
 ASSESSMENTMETADATA_TABLE = 'content_assessmentmetadata'
@@ -35,8 +32,10 @@ NODE_COUNT = 0
 FILE_COUNT = 0
 TAG_COUNT = 0
 
+log = logging.getLogger(__name__)
 
-def import_channel(source_id, target_id=None, download_url=None, editor=None):
+
+def import_channel(source_id, target_id=None, download_url=None, editor=None, logger=None):
     """
     Import a channel from another Studio instance. This can be used to
     copy online Studio channels into local machines for development,
@@ -49,13 +48,19 @@ def import_channel(source_id, target_id=None, download_url=None, editor=None):
 
     """
 
+    global log
+    if logger:
+        log = logger
+    else:
+        log = logging.getLogger(__name__)
+
     # Set up variables for the import process
-    logging.info("\n\n********** STARTING CHANNEL IMPORT **********")
+    log.info("\n\n********** STARTING CHANNEL IMPORT **********")
     start = datetime.datetime.now()
     target_id = target_id or source_id
 
     # Test connection to database
-    logging.info("Connecting to database for channel {}...".format(source_id))
+    log.info("Connecting to database for channel {}...".format(source_id))
 
     tempf = tempfile.NamedTemporaryFile(suffix=".sqlite3", delete=False)
     conn = None
@@ -77,7 +82,7 @@ def import_channel(source_id, target_id=None, download_url=None, editor=None):
         cursor = conn.cursor()
 
         # Start by creating channel
-        logging.info("Creating channel...")
+        log.info("Creating channel...")
         channel, root_pk = create_channel(conn, target_id)
         if editor:
             channel.editors.add(models.User.objects.get(email=editor))
@@ -94,7 +99,7 @@ def import_channel(source_id, target_id=None, download_url=None, editor=None):
         )
 
         # Create nodes mapping to channel
-        logging.info("   Creating nodes...")
+        log.info("   Creating nodes...")
         with transaction.atomic():
             create_nodes(cursor, target_id, root, download_url=download_url)
             # TODO: Handle prerequisites
@@ -116,8 +121,8 @@ def import_channel(source_id, target_id=None, download_url=None, editor=None):
         os.unlink(tempf.name)
 
     # Print stats
-    logging.info("\n\nChannel has been imported (time: {ms})\n".format(ms=datetime.datetime.now() - start))
-    logging.info("\n\n********** IMPORT COMPLETE **********\n\n")
+    log.info("\n\nChannel has been imported (time: {ms})\n".format(ms=datetime.datetime.now() - start))
+    log.info("\n\n********** IMPORT COMPLETE **********\n\n")
 
 
 def create_channel(cursor, target_id):
@@ -137,7 +142,7 @@ def create_channel(cursor, target_id):
     channel.thumbnail_encoding = {'base64': thumbnail, 'points': [], 'zoom': 0}
     channel.version = version
     channel.save()
-    logging.info("\tCreated channel {} with name {}".format(target_id, name))
+    log.info("\tCreated channel {} with name {}".format(target_id, name))
     return channel, root_pk
 
 
@@ -179,7 +184,7 @@ def create_nodes(cursor, target_id, parent, indent=1, download_url=None):
 
     # Parse through rows and create models
     for id, title, content_id, description, sort_order, license_owner, author, license_id, kind, coach_content, lang_id in query:
-        logging.info("{indent} {id} ({title} - {kind})...".format(indent="   |" * indent, id=id, title=title, kind=kind))
+        log.info("{indent} {id} ({title} - {kind})...".format(indent="   |" * indent, id=id, title=title, kind=kind))
 
         # Determine role
         role = roles.LEARNER
@@ -267,7 +272,7 @@ def create_files(cursor, contentnode, indent=0, download_url=None):
     query = cursor.execute(sql_command).fetchall()
     for checksum, extension, file_size, contentnode_id, lang_id, preset in query:
         filename = "{}.{}".format(checksum, extension)
-        logging.info("{indent} * FILE {filename}...".format(indent="   |" * indent, filename=filename))
+        log.info("{indent} * FILE {filename}...".format(indent="   |" * indent, filename=filename))
 
         try:
             filepath = models.generate_object_storage_name(checksum, filename)
@@ -293,7 +298,7 @@ def create_files(cursor, contentnode, indent=0, download_url=None):
                 file_obj.save()
 
         except IOError as e:
-            logging.warning("\b FAILED (check logs for more details)")
+            log.warning("\b FAILED (check logs for more details)")
             sys.stderr.write("Restoration Process Error: Failed to save file object {}: {}".format(filename, os.strerror(e.errno)))
             continue
 
@@ -321,7 +326,7 @@ def create_tags(cursor, contentnode, target_id, indent=0):
     # Build up list of tags
     tag_list = []
     for id, tag_name in query:
-        logging.info("{indent} ** TAG {tag}...".format(indent="   |" * indent, tag=tag_name))
+        log.info("{indent} ** TAG {tag}...".format(indent="   |" * indent, tag=tag_name))
         # Save values to new or existing tag object
         tag_obj, is_new = models.ContentTag.objects.get_or_create(
             pk=id,
