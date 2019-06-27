@@ -83,6 +83,14 @@ const clickAddQuestionBelow = wrapper => {
   wrapper.find('[data-test=toolbarMenuAddItemBelow]').trigger('click');
 };
 
+const clickMoveItemUp = wrapper => {
+  wrapper.find('[data-test=toolbarIconArrowUp]').trigger('click');
+};
+
+const clickMoveItemDown = wrapper => {
+  wrapper.find('[data-test=toolbarIconArrowDown]').trigger('click');
+};
+
 const initWrapper = (state, propsData) => {
   const store = new Vuex.Store({
     modules: {
@@ -360,6 +368,94 @@ describe('AssessmentItem', () => {
       expect(wrapper.emitted().newItemAdded).toBeTruthy();
       expect(wrapper.emitted().newItemAdded.length).toBe(1);
       expect(wrapper.emitted().newItemAdded[0][0]).toBe(2);
+    });
+  });
+
+  describe('on "Move up" click', () => {
+    beforeEach(() => {
+      const state = JSON.parse(JSON.stringify(EDIT_MODAL_STATE));
+      const propsData = {
+        nodeId: NODE_ID,
+        itemIdx: ITEM_IDX,
+      };
+
+      wrapper = initWrapper(state, propsData);
+      clickMoveItemUp(wrapper);
+    });
+
+    it('moves an item up in drafts store', () => {
+      expect(wrapper.vm.$store.state['edit_modal'].nodesAssessmentDrafts[NODE_ID]).toEqual([
+        { ...ITEM, order: 0 },
+        {
+          id: 'exercise-2-item-1',
+          question: 'Exercise 2 - Question 1',
+          type: AssessmentItemTypes.INPUT_QUESTION,
+          order: 1,
+          answers: [
+            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+            { answer: 'Peanut butter', correct: true, order: 2 },
+          ],
+          hints: [],
+        },
+        {
+          id: 'exercise-2-item-3',
+          question: 'Exercise 2 - Question 3',
+          type: AssessmentItemTypes.INPUT_QUESTION,
+          order: 2,
+          answers: [],
+          hints: [],
+        },
+      ]);
+    });
+
+    it('emits items swapped event', () => {
+      expect(wrapper.emitted().itemsSwapped).toBeTruthy();
+      expect(wrapper.emitted().itemsSwapped.length).toBe(1);
+      expect(wrapper.emitted().itemsSwapped[0][0]).toEqual({ firstItemIdx: 1, secondItemIdx: 0 });
+    });
+  });
+
+  describe('on "Move down" click', () => {
+    beforeEach(() => {
+      const state = JSON.parse(JSON.stringify(EDIT_MODAL_STATE));
+      const propsData = {
+        nodeId: NODE_ID,
+        itemIdx: ITEM_IDX,
+      };
+
+      wrapper = initWrapper(state, propsData);
+      clickMoveItemDown(wrapper);
+    });
+
+    it('moves an item down in drafts store', () => {
+      expect(wrapper.vm.$store.state['edit_modal'].nodesAssessmentDrafts[NODE_ID]).toEqual([
+        {
+          id: 'exercise-2-item-1',
+          question: 'Exercise 2 - Question 1',
+          type: AssessmentItemTypes.INPUT_QUESTION,
+          order: 0,
+          answers: [
+            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+            { answer: 'Peanut butter', correct: true, order: 2 },
+          ],
+          hints: [],
+        },
+        {
+          id: 'exercise-2-item-3',
+          question: 'Exercise 2 - Question 3',
+          type: AssessmentItemTypes.INPUT_QUESTION,
+          order: 1,
+          answers: [],
+          hints: [],
+        },
+        { ...ITEM, order: 2 },
+      ]);
+    });
+
+    it('emits items swapped event', () => {
+      expect(wrapper.emitted().itemsSwapped).toBeTruthy();
+      expect(wrapper.emitted().itemsSwapped.length).toBe(1);
+      expect(wrapper.emitted().itemsSwapped[0][0]).toEqual({ firstItemIdx: 1, secondItemIdx: 2 });
     });
   });
 });

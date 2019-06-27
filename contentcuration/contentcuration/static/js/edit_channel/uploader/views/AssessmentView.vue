@@ -17,6 +17,7 @@
         @close="closeItem"
         @open="openItem(itemIdx)"
         @newItemAdded="onNewItemAdded"
+        @itemsSwapped="onItemsSwapped"
       />
     </template>
 
@@ -97,6 +98,17 @@
       },
       onNewItemAdded(itemIdx) {
         this.openItem(itemIdx);
+      },
+      onItemsSwapped({ firstItemIdx, secondItemIdx }) {
+        if (this.openItemIdx === firstItemIdx) {
+          this.openItemIdx = secondItemIdx;
+          return;
+        }
+
+        if (this.openItemIdx === secondItemIdx) {
+          this.openItemIdx = firstItemIdx;
+          return;
+        }
       },
     },
   };

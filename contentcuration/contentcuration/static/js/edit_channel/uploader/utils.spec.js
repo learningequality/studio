@@ -7,6 +7,7 @@ import {
   updateAnswersToQuestionKind,
   insertBefore,
   insertAfter,
+  swapElements,
 } from './utils';
 
 describe('utils', () => {
@@ -396,6 +397,15 @@ describe('utils', () => {
       [['blue', 'yellow', 'violet'], 1, 'pink', ['blue', 'yellow', 'pink', 'violet']],
     ]).it('inserts a new item after another item', (arr, idx, item, expected) => {
       expect(insertAfter(arr, idx, item)).toEqual(expected);
+    });
+  });
+
+  describe('swapElements', () => {
+    each([
+      [['blue', 'yellow', 'violet'], 0, 0, ['blue', 'yellow', 'violet']],
+      [['blue', 'yellow', 'violet'], 0, 2, ['violet', 'yellow', 'blue']],
+    ]).it('swaps two elements', (arr, idx1, idx2, expected) => {
+      expect(swapElements(arr, idx1, idx2)).toEqual(expected);
     });
   });
 });

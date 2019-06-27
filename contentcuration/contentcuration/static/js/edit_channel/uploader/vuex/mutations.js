@@ -2,7 +2,7 @@ import _ from 'underscore';
 import Vue from 'vue';
 
 import { modes, AssessmentItemTypes } from '../constants';
-import { insertBefore, insertAfter } from '../utils';
+import { insertBefore, insertAfter, swapElements } from '../utils';
 import { getSelected } from './utils';
 import State from 'edit_channel/state';
 import Constants from 'edit_channel/constants/index';
@@ -340,6 +340,20 @@ export const deleteNodeAssessmentDraftItem = (state, { nodeId, assessmentItemIdx
   let nodeAssessmentDraft = [...state.nodesAssessmentDrafts[nodeId]];
 
   nodeAssessmentDraft.splice(assessmentItemIdx, 1);
+  nodeAssessmentDraft = nodeAssessmentDraft.map((item, itemIdx) => {
+    return {
+      ...item,
+      order: itemIdx,
+    };
+  });
+
+  Vue.set(state.nodesAssessmentDrafts, nodeId, nodeAssessmentDraft);
+};
+
+export const swapNodeAssessmentDraftItems = (state, { nodeId, firstItemIdx, secondItemIdx }) => {
+  let nodeAssessmentDraft = [...state.nodesAssessmentDrafts[nodeId]];
+
+  nodeAssessmentDraft = swapElements(nodeAssessmentDraft, firstItemIdx, secondItemIdx);
   nodeAssessmentDraft = nodeAssessmentDraft.map((item, itemIdx) => {
     return {
       ...item,
