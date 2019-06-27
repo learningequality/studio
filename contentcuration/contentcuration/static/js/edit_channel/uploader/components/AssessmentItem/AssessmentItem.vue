@@ -225,6 +225,7 @@
         'addNodeAssessmentDraftItem',
         'updateNodeAssessmentDraftItem',
         'deleteNodeAssessmentDraftItem',
+        'swapNodeAssessmentDraftItems',
       ]),
       updateItem(data) {
         this.updateNodeAssessmentDraftItem({
@@ -255,6 +256,32 @@
         });
 
         this.$emit('newItemAdded', this.itemIdx + 1);
+      },
+      moveItemUp() {
+        if (this.isFirst) {
+          return;
+        }
+
+        this.swapWithItem(this.itemIdx - 1);
+      },
+      moveItemDown() {
+        if (this.isLast) {
+          return;
+        }
+
+        this.swapWithItem(this.itemIdx + 1);
+      },
+      swapWithItem(itemIdx) {
+        const firstItemIdx = this.itemIdx;
+        const secondItemIdx = itemIdx;
+
+        this.swapNodeAssessmentDraftItems({
+          nodeId: this.nodeId,
+          firstItemIdx,
+          secondItemIdx,
+        });
+
+        this.$emit('itemsSwapped', { firstItemIdx, secondItemIdx });
       },
       onQuestionChange(newQuestion) {
         this.updateItem({ question: newQuestion });
@@ -306,6 +333,14 @@
 
           case AssessmentItemToolbarActions.ADD_ITEM_BELOW:
             this.addItemBelow();
+            break;
+
+          case AssessmentItemToolbarActions.MOVE_ITEM_UP:
+            this.moveItemUp();
+            break;
+
+          case AssessmentItemToolbarActions.MOVE_ITEM_DOWN:
+            this.moveItemDown();
             break;
         }
       },

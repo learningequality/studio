@@ -140,3 +140,16 @@ export const insertAfter = (arr, idx, item) => {
 
   return newArr;
 };
+
+/**
+ * Swap two elements of an array
+ * @param {Array} arr
+ * @param {Number} idx1
+ * @param {Number} idx2
+ */
+export const swapElements = (arr, idx1, idx2) => {
+  const newArr = JSON.parse(JSON.stringify(arr));
+  [newArr[idx1], newArr[idx2]] = [newArr[idx2], newArr[idx1]];
+
+  return newArr;
+};

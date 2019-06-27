@@ -337,4 +337,70 @@ describe('edit_modal', () => {
       });
     });
   });
+
+  describe('swapNodeAssessmentDraftItems', () => {
+    beforeEach(() => {
+      state = {
+        nodesAssessmentDrafts: {
+          'node-1': [
+            {
+              question: 'Node 1 - Question 1',
+              order: 0,
+            },
+          ],
+          'node-2': [
+            {
+              question: 'Node 2 - Question 1',
+              type: AssessmentItemTypes.SINGLE_SELECTION,
+              order: 0,
+            },
+            {
+              question: 'Node 2 - Question 2',
+              type: AssessmentItemTypes.MULTIPLE_SELECTION,
+              order: 1,
+            },
+            {
+              question: 'Node 2 - Question 3',
+              type: AssessmentItemTypes.TRUE_FALSE,
+              order: 2,
+            },
+          ],
+        },
+      };
+    });
+
+    it('swaps correct node assessment draft items and reorders all items belonging to the node', () => {
+      mutations.swapNodeAssessmentDraftItems(state, {
+        nodeId: 'node-2',
+        firstItemIdx: 0,
+        secondItemIdx: 2,
+      });
+
+      expect(state.nodesAssessmentDrafts).toEqual({
+        'node-1': [
+          {
+            question: 'Node 1 - Question 1',
+            order: 0,
+          },
+        ],
+        'node-2': [
+          {
+            question: 'Node 2 - Question 3',
+            type: AssessmentItemTypes.TRUE_FALSE,
+            order: 0,
+          },
+          {
+            question: 'Node 2 - Question 2',
+            type: AssessmentItemTypes.MULTIPLE_SELECTION,
+            order: 1,
+          },
+          {
+            question: 'Node 2 - Question 1',
+            type: AssessmentItemTypes.SINGLE_SELECTION,
+            order: 2,
+          },
+        ],
+      });
+    });
+  });
 });
