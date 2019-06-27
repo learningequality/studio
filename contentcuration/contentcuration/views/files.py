@@ -14,8 +14,10 @@ from le_utils.constants import content_kinds
 from le_utils.constants import exercises
 from le_utils.constants import file_formats
 from le_utils.constants import format_presets
-from pressurecooker.converters import build_subtitle_converter
+from le_utils.constants.languages import getlang_by_alpha2
+from pressurecooker.subtitles import build_subtitle_converter
 from pressurecooker.subtitles import InvalidSubtitleFormatError
+from pressurecooker.subtitles import LANGUAGE_CODE_UNKNOWN
 from pressurecooker.videos import guess_video_preset_by_resolution
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authentication import TokenAuthentication
@@ -255,9 +257,27 @@ def subtitle_upload(request):
 
     with NamedTemporaryFile() as temp_file:
         try:
-            converter = build_subtitle_converter(language_id)
-            captions_str = content_file.read()
-            temp_file.write(converter.convert_str(unicode(captions_str, 'utf-8')))
+            converter = build_subtitle_converter(content_file.read())
+            convert_language_code = language_id
+
+            # We're making the assumption here that language the user selected is truly the caption
+            # file's language if it's unknown
+            if len(converter.get_language_codes()) == 1 \
+                    and converter.has_language(LANGUAGE_CODE_UNKNOWN):
+                converter.replace_unknown_language(language_id)
+
+            # determine if the request language exists by another code, otherwise we can't continue
+            if not converter.has_language(convert_language_code):
+                for language_code in converter.get_language_codes():
+                    language = getlang_by_alpha2(language_code)
+                    if language and language.code == language_id:
+                        convert_language_code = language_code
+                        break
+                else:
+                    return HttpResponseBadRequest(
+                        "Language '{}' not present in subtitle file".format(language_id))
+
+            converter.write(temp_file.name, convert_language_code)
         except InvalidSubtitleFormatError as ex:
             return HttpResponseBadRequest("Subtitle conversion failed: {}".format(ex))
 
