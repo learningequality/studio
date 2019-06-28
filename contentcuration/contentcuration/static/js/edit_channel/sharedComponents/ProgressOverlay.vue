@@ -7,7 +7,7 @@
     maxWidth="575"
     attach="body"
   >
-    <VCard class="message">
+    <VCard v-if="progress" class="message">
       <VCardTitle class="header">
         {{ headerText }}
       </VCardTitle>
@@ -112,6 +112,7 @@
     data() {
       return {
         dialog: true,
+        progress: true,
         done: false,
         failed: false,
         message: '',
@@ -135,7 +136,7 @@
     },
     methods: {
       closeOverlay() {
-        this.$store.dispatch('clearCurrentTask');
+        this.progress = false;
         window.location.reload();
       },
       handleDone() {
