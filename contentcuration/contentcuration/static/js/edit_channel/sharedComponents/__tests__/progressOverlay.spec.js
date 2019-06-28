@@ -22,6 +22,7 @@ describe('progressOverlay', () => {
   beforeEach(() => {
     State.Store.commit('SET_CURRENT_TASK', task);
     State.Store.commit('SET_CURRENT_TASK_ERROR', null);
+    State.Store.commit('SET_PROGRESS', 0);
     wrapper = makeWrapper();
   });
   describe('on render', () => {
