@@ -1,5 +1,21 @@
 <template>
   <span>
+    <VTooltip v-if="displayEdit" top>
+      <template slot="activator" slot-scope="{ on }">
+        <VBtn
+          icon
+          data-test="toolbarIconEdit"
+          v-on="on"
+          @click="clickItem(actions.EDIT_ITEM)"
+        >
+          <VIcon color="#686868">
+            edit
+          </VIcon>
+        </VBtn>
+      </template>
+      <span>Edit</span>
+    </VTooltip>
+
     <VTooltip top>
       <template slot="activator" slot-scope="{ on }">
         <VBtn
@@ -32,22 +48,6 @@
         </VBtn>
       </template>
       <span>Move down</span>
-    </VTooltip>
-
-    <VTooltip v-if="displayEdit" top>
-      <template slot="activator" slot-scope="{ on }">
-        <VBtn
-          icon
-          data-test="toolbarIconEdit"
-          v-on="on"
-          @click="clickItem(actions.EDIT_ITEM)"
-        >
-          <VIcon color="#686868">
-            edit
-          </VIcon>
-        </VBtn>
-      </template>
-      <span>Edit</span>
     </VTooltip>
 
     <VMenu bottom left>
