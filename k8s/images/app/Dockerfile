@@ -24,11 +24,6 @@ RUN yarn install
 COPY Pipfile .
 COPY Pipfile.lock .
 
-# Copy prober files
-COPY deploy/cloudprober.cfg .
-COPY deploy/probers ./probers/
-COPY docker/prober-entrypoint.sh .
-
 RUN pip install --upgrade pip
 RUN pip install -U pipenv
 # install the environment exactly as specified in the Pipfile.lock file

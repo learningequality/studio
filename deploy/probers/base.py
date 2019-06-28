@@ -6,7 +6,7 @@ import requests
 USERNAME = os.getenv("PROBER_STUDIO_USERNAME") or "a@a.com"
 PASSWORD = os.getenv("PROBER_STUDIO_PASSWORD") or "a"
 PRODUCTION_MODE_ON = os.getenv("PROBER_STUDIO_PRODUCTION_MODE_ON") or False
-STUDIO_BASE_URL = os.getenv("PROBER_STUDIO_BASE_URL") or "http://127.0.0.1:8080/{path}"
+STUDIO_BASE_URL = os.getenv("PROBER_STUDIO_BASE_URL") or "https://127.0.0.1:8080"
 
 
 class BaseProbe(object):
@@ -47,7 +47,8 @@ class BaseProbe(object):
 
     def _construct_studio_url(self, path):
         path_stripped = path.lstrip("/")
-        return STUDIO_BASE_URL.format(path=path_stripped)
+        url = "{base_url}/{path}".format(base_url=STUDIO_BASE_URL, path=path_stripped)
+        return url
 
     def request(self, path, action="GET", data=None, headers=None, contenttype="application/json"):
         data = data or {}
