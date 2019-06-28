@@ -513,8 +513,7 @@ var ContentNodeCollection = BaseCollection.extend({
       $.ajax({
         method: 'GET',
         url: window.Urls.get_node_path(topic_id, tree_id, node_id),
-        success: function(result) {
-          var data = JSON.parse(result);
+        success: function(data) {
           var returnCollection = new ContentNodeCollection(data.path);
           self.add(returnCollection.toJSON());
 
