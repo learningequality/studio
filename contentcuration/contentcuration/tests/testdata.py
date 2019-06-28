@@ -4,6 +4,7 @@ import os
 import random
 import string
 from cStringIO import StringIO
+from tempfile import TemporaryFile
 
 import pytest
 from django.core.files.storage import default_storage
@@ -11,6 +12,7 @@ from le_utils.constants import format_presets
 from mixer.backend.django import mixer
 
 from contentcuration import models as cc
+
 pytestmark = pytest.mark.django_db
 
 
@@ -25,7 +27,7 @@ def preset_video():
     """
     Create a video format preset.
     """
-    return mixer.blend(cc.FormatPreset, id='mp4', kind=video())
+    return mixer.blend(cc.FormatPreset, id='high_res_video', kind=video())
 
 
 def topic():
@@ -42,11 +44,11 @@ def exercise():
     return mixer.blend(cc.ContentKind, kind='exercise')
 
 
-def preset_exercise():
+def slideshow():
     """
-    Create an exercise format preset.
+    Returns a slideshow content kind object.
     """
-    return mixer.blend(cc.FormatPreset, id='exercise', kind=exercise())
+    return mixer.blend(cc.ContentKind, kind='slideshow')
 
 
 def fileformat_perseus():
@@ -81,7 +83,7 @@ def fileobj_video(contents=None):
         filecontents = contents
     else:
         filecontents = "".join(random.sample(string.printable, 20))
-    temp_file_dict = create_temp_file(filecontents, preset=format_presets.VIDEO_HIGH_RES, ext='mp4')
+    temp_file_dict = create_studio_file(filecontents, preset=format_presets.VIDEO_HIGH_RES, ext='mp4')
     return temp_file_dict['db_file']
 
 
@@ -106,7 +108,13 @@ def node(data, parent=None):
     new_node = None
     # Create topics
     if data['kind_id'] == "topic":
-        new_node = cc.ContentNode(kind=topic(), parent=parent, title=data['title'], node_id=data['node_id'])
+        new_node = cc.ContentNode(
+            kind=topic(),
+            parent=parent,
+            title=data['title'],
+            node_id=data['node_id'],
+            content_id=data.get('content_id') or data['node_id']
+        )
         new_node.save()
 
         for child in data['children']:
@@ -114,7 +122,14 @@ def node(data, parent=None):
 
     # Create videos
     elif data['kind_id'] == "video":
-        new_node = cc.ContentNode(kind=video(), parent=parent, title=data['title'], node_id=data['node_id'], license=license_wtfpl())
+        new_node = cc.ContentNode(
+            kind=video(),
+            parent=parent,
+            title=data['title'],
+            node_id=data['node_id'],
+            license=license_wtfpl(),
+            content_id=data.get('content_id') or data['node_id'],
+        )
         new_node.save()
         video_file = fileobj_video(contents="Video File")
         video_file.contentnode = new_node
@@ -124,17 +139,33 @@ def node(data, parent=None):
     # Create exercises
     elif data['kind_id'] == "exercise":
         extra_fields = "{{\"mastery_model\":\"{}\",\"randomize\":true,\"m\":{},\"n\":{}}}".format(data['mastery_model'], data.get('m') or 0, data.get('n') or 0)
-        new_node = cc.ContentNode(kind=exercise(), parent=parent, title=data['title'], node_id=data[
-                                  'node_id'], license=license_wtfpl(), extra_fields=extra_fields)
+        new_node = cc.ContentNode(
+            kind=exercise(),
+            parent=parent,
+            title=data['title'],
+            node_id=data['node_id'],
+            license=license_wtfpl(),
+            extra_fields=extra_fields,
+            content_id=data.get('content_id') or data['node_id'],
+        )
         new_node.save()
         for assessment_item in data['assessment_items']:
-            mixer.blend(cc.AssessmentItem,
-                        contentnode=new_node,
-                        assessment_id=assessment_item['assessment_id'],
-                        question=assessment_item['question'],
-                        type=assessment_item['type'],
-                        answers=json.dumps(assessment_item['answers'])
-                        )
+            ai = cc.AssessmentItem(
+                contentnode=new_node,
+                assessment_id=assessment_item['assessment_id'],
+                question=assessment_item['question'],
+                type=assessment_item['type'],
+                answers=json.dumps(assessment_item['answers']),
+                hints=json.dumps(assessment_item.get('hints') or [])
+            )
+            ai.save()
+
+    if data.get('tags'):
+        for tag in data['tags']:
+            t = cc.ContentTag(tag_name=tag['tag_name'])
+            t.save()
+            new_node.tags.add(t)
+            new_node.save()
 
     return new_node
 
@@ -159,22 +190,32 @@ def channel():
 
 
 def user():
-    user = cc.User.objects.create(email='user@test.com')
-    user.set_password('password')
-    user.is_active = True
-    user.save()
+    user, is_new = cc.User.objects.get_or_create(email='user@test.com')
+    if is_new:
+        user.set_password('password')
+        user.is_active = True
+        user.save()
     return user
 
 
 def create_temp_file(filebytes, preset='document', ext='pdf', original_filename=None):
-    """
-    Create a file and store it in Django's object db temporarily for tests.
+    """Old name for create_studio_file."""
+    import warnings
+    warnings.warn('Deprecated function; use create_studio_file instead.', DeprecationWarning)
+    return create_studio_file(filebytes, preset='document', ext='pdf', original_filename=None)
 
+def create_studio_file(filebytes, preset='document', ext='pdf', original_filename=None):
+    """
+    Create a file with contents of `filebytes` and the associated cc.File object for it.
     :param filebytes: The data to be stored in the file (as bytes)
     :param preset: String identifying the format preset (defaults to ``document``)
     :param ext: File extension, omitting the initial period
     :param original_filename: Original filename (needed for exercise_images)
-    :return: A dict containing the keys name (filename), data (actual bytes), file (StringIO obj) and db_file (File object in db) of the temp file.
+    Returns a dict containing the following:
+    - name (str): the filename within the content storage system (= md5 hash of the contents + .ext )
+    - data (bytes): file content (echo of `filebytes`)
+    - file (file): a basic StringIO file-like object that you can read/write
+    - db_file (cc.File): a Studio File object saved in DB
     """
     fileobj = StringIO(filebytes)
     hash = hashlib.md5(filebytes)
@@ -200,7 +241,40 @@ def create_temp_file(filebytes, preset='document', ext='pdf', original_filename=
                               original_filename=original_filename,
                               file_on_disk=storage_file_path)
 
-    return {'name': os.path.basename(storage_file_path), 'data': filebytes, 'file': fileobj, 'db_file': db_file_obj}
+    return {
+        'name': os.path.basename(storage_file_path),
+        'data': filebytes,
+        'file': fileobj,
+        'db_file': db_file_obj
+    }
+
+
+def create_test_file(filebytes, ext='pdf'):
+    """
+    Create a temporary file with contents of `filebytes` for use in tests.
+    :param filebytes: The data to be stored in the file (as bytes)
+    :param ext: File extension, omitting the initial period
+    Returns a dict containing the following:
+    - checksum (str): md5 hash of file contents
+    - name (str): the filename within the content storage system (= checksum + . + ext )
+    - storagepath (str): the relative storage path for this file storage/c/h/checksum.ext
+    - data (bytes): file content (echo of `filebytes`)
+    - file (file): an instance of TemporaryFile object that you can read/write
+    """
+    hash = hashlib.md5(filebytes)
+    checksum = hash.hexdigest()
+    filename = "{}.{}".format(checksum, ext)
+    storage_file_path = cc.generate_object_storage_name(checksum, filename)
+    fileobj = TemporaryFile()
+    fileobj.write(filebytes)
+    fileobj.seek(0)
+    return {
+        'checksum': checksum,
+        'name': os.path.basename(storage_file_path),
+        'storagepath': storage_file_path,
+        'data': filebytes,
+        'file': fileobj
+    }
 
 
 invalid_file_json = [
@@ -254,7 +328,7 @@ def fileobj_exercise_image():
     Create a generic exercise image file in storage and return a File model pointing to it.
     """
     filecontents = "".join(random.sample(string.printable, 20))
-    temp_file_dict = create_temp_file(filecontents, preset=format_presets.EXERCISE_IMAGE, ext='jpg')
+    temp_file_dict = create_studio_file(filecontents, preset=format_presets.EXERCISE_IMAGE, ext='jpg')
     return temp_file_dict['db_file']
 
 
@@ -263,7 +337,7 @@ def fileobj_exercise_graphie():
     Create an graphi exercise image file in storage and return a File model pointing to it.
     """
     filecontents = "".join(random.sample(string.printable, 20))
-    temp_file_dict = create_temp_file(filecontents, preset=format_presets.EXERCISE_GRAPHIE, ext='graphie', original_filename='theoriginalfilename')
+    temp_file_dict = create_studio_file(filecontents, preset=format_presets.EXERCISE_GRAPHIE, ext='graphie', original_filename='theoriginalfilename')
     return temp_file_dict['db_file']
 
 

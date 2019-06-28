@@ -500,9 +500,7 @@ var ContentNodeCollection = BaseCollection.extend({
           resolve({
             prerequisite_mapping: nodes.prerequisite_mapping,
             postrequisite_mapping: nodes.postrequisite_mapping,
-            prerequisite_tree_nodes: new ContentNodeCollection(
-              JSON.parse(nodes.prerequisite_tree_nodes)
-            ),
+            prerequisite_tree_nodes: new ContentNodeCollection(nodes.prerequisite_tree_nodes),
           });
         },
         error: reject,
@@ -517,12 +515,12 @@ var ContentNodeCollection = BaseCollection.extend({
         url: window.Urls.get_node_path(topic_id, tree_id, node_id),
         success: function(result) {
           var data = JSON.parse(result);
-          var returnCollection = new ContentNodeCollection(JSON.parse(data.path));
+          var returnCollection = new ContentNodeCollection(data.path);
           self.add(returnCollection.toJSON());
 
           var node = null;
           if (data.node) {
-            node = new ContentNodeModel(JSON.parse(data.node));
+            node = new ContentNodeModel(data.node);
             self.add(node);
           }
           resolve({
@@ -753,8 +751,8 @@ var ChannelModel = BaseModel.extend({
         success: function(data) {
           var nodes = JSON.parse(data);
           resolve({
-            original: new ContentNodeCollection(JSON.parse(nodes.original)),
-            changed: new ContentNodeCollection(JSON.parse(nodes.changed)),
+            original: new ContentNodeCollection(nodes.original),
+            changed: new ContentNodeCollection(nodes.changed),
           });
         },
         error: reject,

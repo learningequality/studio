@@ -87,6 +87,7 @@ class ChannelListTestCase(BaseAPITestCase):
         """
         Ensure that if there are no channels editable by the user, we get 0 results from the serializer.
         """
+        self.channel.editors.remove(self.user)
         response = self.client.get(reverse('get_user_edit_channels'))
         self.assertEqual(len(response.data), 0)
         self.assertEqual(response.status_code, 200)

@@ -1,17 +1,18 @@
 import datetime
 import uuid
-from base import StudioTestCase
-from mock import patch
-from mock import MagicMock
 
-from contentcuration.management.commands.restore_channel import create_channel
+from base import StudioTestCase
+from mock import MagicMock
+from mock import patch
+
+from contentcuration.utils.import_tools import create_channel
 
 
 thumbnail_path = "/content/thumbnail.png"
 
 
 class ChannelRestoreUtilityFunctionTestCase(StudioTestCase):
-    @patch("contentcuration.management.commands.restore_channel.write_to_thumbnail_file", return_value=thumbnail_path)
+    @patch("contentcuration.utils.import_tools.write_to_thumbnail_file", return_value=thumbnail_path)
     def setUp(self, thumb_mock):
         self.id = uuid.uuid4().hex
         self.name = "test name"

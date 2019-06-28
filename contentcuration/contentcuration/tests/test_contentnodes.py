@@ -6,7 +6,8 @@ from base import BaseTestCase
 from django.conf import settings
 from django.core.urlresolvers import reverse_lazy
 
-from .testdata import create_temp_file
+from .testdata import create_studio_file
+from .testdata import tree
 from contentcuration.models import Channel
 from contentcuration.models import ContentKind
 from contentcuration.models import ContentNode
@@ -325,6 +326,32 @@ class NodeOperationsAPITestCase(BaseAPITestCase):
         assert not self.channel.main_tree.get_descendants().filter(changed=True).exists()
         assert self.channel.main_tree.changed is True
 
+    def test_no_channel_permission_delete_nodes(self):
+        new_channel = Channel.objects.create()
+        new_channel.main_tree = tree()
+        new_channel.save()
+        delete_data = {
+            'channel_id': new_channel.id,
+            'nodes': []
+        }
+
+        response = self.post(reverse_lazy('delete_nodes'), delete_data)
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_no_node_permission_delete_nodes(self):
+        new_channel = Channel.objects.create()
+        new_channel.main_tree = tree()
+        new_channel.save()
+        delete_data = {
+            'channel_id': self.channel.id,
+            'nodes': [new_channel.main_tree.id]
+        }
+
+        response = self.post(reverse_lazy('delete_nodes'), delete_data)
+
+        self.assertEqual(response.status_code, 404)
+
 
 class SyncNodesOperationTestCase(BaseTestCase):
     """
@@ -395,7 +422,7 @@ class SyncNodesOperationTestCase(BaseTestCase):
 
     def _add_subs_to_video_node(self, video_node, lang):
         lang_obj = Language.objects.get(id=lang)
-        sub_file = create_temp_file('subsin'+lang, preset='video_subtitle', ext='vtt')['db_file']
+        sub_file = create_studio_file('subsin'+lang, preset='video_subtitle', ext='vtt')['db_file']
         sub_file.language = lang_obj
         sub_file.contentnode = video_node
         sub_file.save()

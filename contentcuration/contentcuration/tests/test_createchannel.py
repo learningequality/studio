@@ -4,11 +4,10 @@ import json
 import requests
 from base import BaseTestCase
 from django.core.urlresolvers import reverse_lazy
-from testdata import create_temp_file
+from testdata import create_studio_file
 
 from contentcuration import models
 from contentcuration import models as cc
-
 
 ###
 # Test helper functions
@@ -59,10 +58,10 @@ class CreateChannelTestCase(BaseTestCase):
         super(CreateChannelTestCase, self).setUp()
         self.topic = cc.ContentKind.objects.get(kind='topic')
         self.license = cc.License.objects.all()[0]
-        self.fileobj_audio = create_temp_file("abc", preset='audio', ext='mp3')
-        self.fileobj_video = create_temp_file("def", preset='high_res_video', ext='mp4')
-        self.fileobj_document = create_temp_file("ghi", preset='document', ext='pdf')
-        self.fileobj_exercise = create_temp_file("jkl", preset='exercise', ext='perseus')
+        self.fileinfo_audio = create_studio_file("abc", preset='audio', ext='mp3')
+        self.fileinfo_video = create_studio_file("def", preset='high_res_video', ext='mp4')
+        self.fileinfo_document = create_studio_file("ghi", preset='document', ext='pdf')
+        self.fileinfo_exercise = create_studio_file("jkl", preset='exercise', ext='perseus')
 
     def create_channel(self):
         create_channel_url = str(reverse_lazy('api_create_channel'))
@@ -198,9 +197,9 @@ class CreateChannelTestCase(BaseTestCase):
                         "content_id": "fd373d00523b5484a5586c81e4004afb",
                         "author": "Aristotle",
                         "description": "The Nicomachean Ethics is the name normally given to ...",
-                        "files": [get_file_data(self.fileobj_document)],
+                        "files": [get_file_data(self.fileinfo_document)],
                         "license": self.license.license_name,
-                        "kind": self.fileobj_document['db_file'].preset.kind.pk,
+                        "kind": self.fileinfo_document['db_file'].preset.kind.pk,
                     },
                     {
                         "title": "The Critique of Pure Reason",
@@ -216,10 +215,10 @@ class CreateChannelTestCase(BaseTestCase):
                                 "node_id": "facefacefacefacefacefacefaceface",
                                 "content_id": "9ec91b66dc175c93a4c6a599a76cbc25",
                                 "related": "deaddeaddeaddeaddeaddeaddeaddead",
-                                "files": [get_file_data(self.fileobj_video)],
+                                "files": [get_file_data(self.fileinfo_video)],
                                 "author": "Immanuel Kant",
                                 "license": self.license.license_name,
-                                "kind": self.fileobj_video['db_file'].preset.kind.pk,
+                                "kind": self.fileinfo_video['db_file'].preset.kind.pk,
                             },
                             {
                                 "title": "02 - Preface to the Second Edition",
@@ -257,9 +256,9 @@ class CreateChannelTestCase(BaseTestCase):
                         "node_id": "beefbeefbeefbeefbeefbeefbeefbeef",
                         "content_id": "598fc2a55ea55f86bb7ce9008f34a9d0",
                         "author": "Bradley Smoker",
-                        "files": [get_file_data(self.fileobj_audio)],
+                        "files": [get_file_data(self.fileinfo_audio)],
                         "license": self.license.license_name,
-                        "kind": self.fileobj_audio['db_file'].preset.kind.pk,
+                        "kind": self.fileinfo_audio['db_file'].preset.kind.pk,
                     },
                     {
                         "title": "Food Mob Bites 10: Garlic Bread",
@@ -267,9 +266,9 @@ class CreateChannelTestCase(BaseTestCase):
                         "content_id": "7fc278d7dd31577da822e525ec67ee02",
                         "author": "Revision 3",
                         "description": "Basic garlic bread recipe.",
-                        "files": [get_file_data(self.fileobj_exercise)],
+                        "files": [get_file_data(self.fileinfo_exercise)],
                         "license": self.license.license_name,
-                        "kind": self.fileobj_exercise['db_file'].preset.kind.pk,
+                        "kind": self.fileinfo_exercise['db_file'].preset.kind.pk,
                     }
                 ]
             },
