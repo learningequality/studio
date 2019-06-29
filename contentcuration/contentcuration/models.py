@@ -158,6 +158,8 @@ class User(AbstractBaseUser, PermissionsMixin):
         if self.is_admin:
             return True
         root = node.get_root()
+        if root == self.clipboard_tree:
+            return True
         channel_id = Channel.objects.filter(Q(main_tree=root)
                                             | Q(chef_tree=root)
                                             | Q(trash_tree=root)
@@ -171,7 +173,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     def can_view_nodes(self, nodes):
         if self.is_admin:
             return True
-        root_nodes = ContentNode.objects.filter(parent=None, tree_id__in=nodes.values_list("tree_id", flat=True).distinct()).distinct()
+        root_nodes_all = ContentNode.objects.filter(parent=None, tree_id__in=nodes.values_list("tree_id", flat=True).distinct()).distinct()
+        # If all the nodes belong to the clipboard, skip the channel check.
+        root_nodes = root_nodes_all.exclude(tree_id=self.clipboard_tree.tree_id)
+        if root_nodes.count() == 0 and root_nodes_all.count() > 0:
+            return True
         channels = Channel.objects.filter(Q(main_tree__in=root_nodes)
                                           | Q(chef_tree__in=root_nodes)
                                           | Q(trash_tree__in=root_nodes)
@@ -192,6 +198,9 @@ class User(AbstractBaseUser, PermissionsMixin):
         if self.is_admin:
             return True
         root = node.get_root()
+        if root == self.clipboard_tree:
+            return True
+
         channel_id = Channel.objects.filter(Q(main_tree=root)
                                             | Q(chef_tree=root)
                                             | Q(trash_tree=root)
@@ -205,7 +214,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     def can_edit_nodes(self, nodes):
         if self.is_admin:
             return True
-        root_nodes = ContentNode.objects.filter(parent=None, tree_id__in=nodes.values_list("tree_id", flat=True).distinct()).distinct()
+        root_nodes_all = ContentNode.objects.filter(parent=None, tree_id__in=nodes.values_list("tree_id", flat=True).distinct()).distinct()
+        # If all the nodes belong to the clipboard, skip the channel check.
+        root_nodes = root_nodes_all.exclude(tree_id=self.clipboard_tree.tree_id)
+        if root_nodes.count() == 0 and root_nodes_all.count() > 0:
+            return True
         channels = Channel.objects.filter(Q(main_tree__in=root_nodes)
                                           | Q(chef_tree__in=root_nodes)
                                           | Q(trash_tree__in=root_nodes)

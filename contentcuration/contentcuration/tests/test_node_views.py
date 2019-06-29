@@ -127,10 +127,44 @@ class GetTotalSizeEndpointTestCase(BaseAPITestCase):
         self.assertEqual(response.status_code, 404)
 
 
-class GetNodesByIdsEndpointTestCase(BaseAPITestCase):
+class GetNodePathEndpointTestCase(BaseAPITestCase):
     def test_200_post(self):
         response = self.get(
+            reverse("get_node_path", args=[
+                self.channel.main_tree.node_id,
+                self.channel.main_tree.tree_id,
+                self.channel.main_tree.children.first().node_id,
+            ])
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue('node' in response.data)
+
+    def test_404_no_permission(self):
+        new_channel = Channel.objects.create()
+        new_channel.main_tree = tree()
+        new_channel.save()
+        response = self.get(
+            reverse("get_node_path", args=[
+                new_channel.main_tree.node_id,
+                new_channel.main_tree.tree_id,
+                new_channel.main_tree.children.first().node_id
+            ]),
+        )
+        self.assertEqual(response.status_code, 404)
+
+
+class GetNodesByIdsEndpointTestCase(BaseAPITestCase):
+    def test_200_get(self):
+        response = self.get(
             reverse("get_nodes_by_ids", kwargs={"ids": self.channel.main_tree.id})
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_200_clipboard(self):
+        self.user.clipboard_tree = tree()
+        self.user.clipboard_tree.save()
+        response = self.get(
+            reverse("get_nodes_by_ids", kwargs={"ids": self.user.clipboard_tree.id}),
         )
         self.assertEqual(response.status_code, 200)
 
