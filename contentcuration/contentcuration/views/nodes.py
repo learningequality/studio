@@ -307,7 +307,7 @@ def delete_nodes(request):
 def duplicate_nodes(request):
     logging.debug("Entering the copy_node endpoint")
 
-    data = json.loads(request.body)
+    data = request.data
 
     try:
         node_ids = data["node_ids"]
@@ -395,7 +395,7 @@ def duplicate_node_inline(request):
 def move_nodes(request):
     logging.debug("Entering the move_nodes endpoint")
 
-    data = json.loads(request.body)
+    data = request.data
 
     try:
         nodes = data["nodes"]
@@ -486,7 +486,7 @@ def sync_nodes(request):
 def sync_channel_endpoint(request):
     logging.debug("Entering the sync_nodes endpoint")
 
-    data = json.loads(request.body)
+    data = request.data
 
     try:
         channel_id = data['channel_id']

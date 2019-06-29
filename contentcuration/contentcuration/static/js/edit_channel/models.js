@@ -539,7 +539,7 @@ var ContentNodeCollection = BaseCollection.extend({
         method: 'GET',
         url: window.Urls.get_total_size(self.pluck('id').join(',')),
         success: function(data) {
-          resolve(JSON.parse(data).size);
+          resolve(data.size);
         },
         error: reject,
       });
@@ -624,6 +624,7 @@ var ContentNodeCollection = BaseCollection.extend({
       $.ajax({
         method: 'POST',
         url: window.Urls.duplicate_nodes(),
+        contentType: 'application/json',
         data: JSON.stringify(data),
         dataType: 'json',
         success: function(data) {
@@ -653,6 +654,7 @@ var ContentNodeCollection = BaseCollection.extend({
         method: 'POST',
         url: window.Urls.move_nodes(),
         data: JSON.stringify(data),
+        contentType: 'application/json',
         dataType: 'json',
         error: reject,
         success: function(data) {
@@ -774,6 +776,7 @@ var ChannelModel = BaseModel.extend({
         method: 'POST',
         url: window.Urls.sync_channel(),
         data: JSON.stringify(data),
+        contentType: 'application/json',
         dataType: 'json',
         success: function(data) {
           const payload = {

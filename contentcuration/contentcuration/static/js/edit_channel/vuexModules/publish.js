@@ -56,7 +56,7 @@ const publishModule = {
           url: window.Urls.get_total_size(mainTreeID),
           error: reject,
           success: function(data) {
-            resolve(JSON.parse(data).size);
+            resolve(data.size);
           },
         });
       });

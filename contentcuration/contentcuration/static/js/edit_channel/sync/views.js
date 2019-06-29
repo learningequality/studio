@@ -87,9 +87,7 @@ var TempSyncModalView = BaseViews.BaseModalView.extend({
   },
   sync_content: function() {
     var self = this;
-    State.current_channel.sync_channel(self.selected_options).then(function(synced) {
-      self.onsync(synced);
-    });
+    State.current_channel.sync_channel(self.selected_options);
     this.close();
   },
   get_selected_options: function() {
