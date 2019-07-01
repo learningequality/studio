@@ -22,6 +22,8 @@
 
           <VSpacer />
           <AssessmentItemToolbar
+            itemLabel="question"
+            :displayDeleteIcon="false"
             :canMoveUp="!isFirst"
             :canMoveDown="!isLast"
             class="toolbar"
@@ -67,7 +69,9 @@
 
             <VSpacer />
             <AssessmentItemToolbar
-              :displayEdit="false"
+              itemLabel="question"
+              :displayDeleteIcon="false"
+              :displayEditIcon="false"
               :canMoveUp="!isFirst"
               :canMoveDown="!isLast"
               class="toolbar"

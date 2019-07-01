@@ -23,10 +23,11 @@ exports[`AssessmentItem when closed renders 1`] = `
     </div></span> <button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIconArrowDown">
       <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light" style="color: rgb(104, 104, 104); caret-color: #686868;">keyboard_arrow_down</i></div>
     </button><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move down</span>
-  </div></span> <button type="button" class="v-btn v-btn--icon theme--light">
+  </div></span>
+  <!----> <button type="button" class="v-btn v-btn--icon theme--light">
     <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light" style="color: rgb(104, 104, 104); caret-color: #686868;">more_vert</i></div>
   </button>
-  <div class="v-menu">
+  <div class="v-menu" data-test="toolbarMenu">
     <div class="v-menu__content theme--light " style="max-height: auto; min-width: 0px; max-width: auto; top: 12px; left: 12px; transform-origin: top left; z-index: 0; display: none;">
       <div role="list" class="v-list theme--light">
         <div role="listitem"><a data-test="toolbarMenuAddItemAbove" class="v-list__tile v-list__tile--link theme--light">
@@ -71,10 +72,11 @@ exports[`AssessmentItem when closed with answers preview renders 1`] = `
     </div></span> <button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIconArrowDown">
       <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light" style="color: rgb(104, 104, 104); caret-color: #686868;">keyboard_arrow_down</i></div>
     </button><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move down</span>
-  </div></span> <button type="button" class="v-btn v-btn--icon theme--light">
+  </div></span>
+  <!----> <button type="button" class="v-btn v-btn--icon theme--light">
     <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light" style="color: rgb(104, 104, 104); caret-color: #686868;">more_vert</i></div>
   </button>
-  <div class="v-menu">
+  <div class="v-menu" data-test="toolbarMenu">
     <div class="v-menu__content theme--light " style="max-height: auto; min-width: 0px; max-width: auto; top: 12px; left: 12px; transform-origin: top left; z-index: 0; display: none;">
       <div role="list" class="v-list theme--light">
         <div role="listitem"><a data-test="toolbarMenuAddItemAbove" class="v-list__tile v-list__tile--link theme--light">
@@ -186,10 +188,11 @@ exports[`AssessmentItem when open renders 1`] = `
       </div></span> <button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIconArrowDown">
         <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light" style="color: rgb(104, 104, 104); caret-color: #686868;">keyboard_arrow_down</i></div>
       </button><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move down</span>
-    </div></span> <button type="button" class="v-btn v-btn--icon theme--light">
+    </div></span>
+    <!----> <button type="button" class="v-btn v-btn--icon theme--light">
       <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light" style="color: rgb(104, 104, 104); caret-color: #686868;">more_vert</i></div>
     </button>
-    <div class="v-menu">
+    <div class="v-menu" data-test="toolbarMenu">
       <div class="v-menu__content theme--light " style="max-height: auto; min-width: 0px; max-width: auto; top: 12px; left: 12px; transform-origin: top left; z-index: 0; display: none;">
         <div role="list" class="v-list theme--light">
           <div role="listitem"><a data-test="toolbarMenuAddItemAbove" class="v-list__tile v-list__tile--link theme--light">

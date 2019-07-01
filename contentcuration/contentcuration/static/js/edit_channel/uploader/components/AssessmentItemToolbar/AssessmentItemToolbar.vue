@@ -1,6 +1,6 @@
 <template>
   <span>
-    <VTooltip v-if="displayEdit" top>
+    <VTooltip v-if="displayEditIcon" top>
       <template slot="activator" slot-scope="{ on }">
         <VBtn
           icon
@@ -50,7 +50,28 @@
       <span>Move down</span>
     </VTooltip>
 
-    <VMenu bottom left>
+    <VTooltip v-if="displayDeleteIcon" top>
+      <template slot="activator" slot-scope="{ on }">
+        <VBtn
+          icon
+          data-test="toolbarIconDelete"
+          v-on="on"
+          @click="clickItem(actions.DELETE_ITEM)"
+        >
+          <VIcon color="#686868">
+            close
+          </VIcon>
+        </VBtn>
+      </template>
+      <span>Delete</span>
+    </VTooltip>
+
+    <VMenu
+      v-if="displayMenu"
+      bottom
+      left
+      data-test="toolbarMenu"
+    >
       <template slot="activator" slot-scope="{ on }">
         <VBtn icon v-on="on">
           <VIcon color="#686868">
@@ -64,14 +85,14 @@
           data-test="toolbarMenuAddItemAbove"
           @click="clickItem(actions.ADD_ITEM_ABOVE)"
         >
-          <VListTileTitle>Add question above</VListTileTitle>
+          <VListTileTitle>Add {{ itemLabel }} above</VListTileTitle>
         </VListTile>
 
         <VListTile
           data-test="toolbarMenuAddItemBelow"
           @click="clickItem(actions.ADD_ITEM_BELOW)"
         >
-          <VListTileTitle>Add question below</VListTileTitle>
+          <VListTileTitle>Add {{ itemLabel }} below</VListTileTitle>
         </VListTile>
 
         <VListTile
@@ -103,9 +124,21 @@
         type: Boolean,
         default: true,
       },
-      displayEdit: {
+      displayEditIcon: {
         type: Boolean,
         default: true,
+      },
+      displayDeleteIcon: {
+        type: Boolean,
+        default: true,
+      },
+      displayMenu: {
+        type: Boolean,
+        default: true,
+      },
+      itemLabel: {
+        type: String,
+        default: 'item',
       },
     },
     data() {
