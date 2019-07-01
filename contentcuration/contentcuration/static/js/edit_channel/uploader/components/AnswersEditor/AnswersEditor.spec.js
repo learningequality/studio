@@ -21,6 +21,27 @@ const clickAnswer = (wrapper, answerIdx) => {
     .trigger('click');
 };
 
+const clickMoveAnswerUp = (wrapper, answerIdx) => {
+  wrapper
+    .findAll('[data-test=toolbarIconArrowUp]')
+    .at(answerIdx)
+    .trigger('click');
+};
+
+const clickMoveAnswerDown = (wrapper, answerIdx) => {
+  wrapper
+    .findAll('[data-test=toolbarIconArrowDown]')
+    .at(answerIdx)
+    .trigger('click');
+};
+
+const clickDeleteAnswer = (wrapper, answerIdx) => {
+  wrapper
+    .findAll('[data-test=toolbarIconDelete]')
+    .at(answerIdx)
+    .trigger('click');
+};
+
 const updateOpenAnswerText = (wrapper, newAnswerText) => {
   // only one answer can be open
   wrapper.find('[data-test=editAnswerTextInput]').setValue(newAnswerText);
@@ -295,6 +316,80 @@ describe('AnswersEditor', () => {
       expect(wrapper.emitted().update[0][0]).toEqual([
         { answer: 'Mayonnaise (I mean you can, but...)', correct: false, order: 1 },
         { answer: 'Peanut butter', correct: true, order: 2 },
+      ]);
+    });
+  });
+
+  describe('on move answer up click', () => {
+    beforeEach(() => {
+      wrapper = mount(AnswersEditor, {
+        propsData: {
+          questionKind: AssessmentItemTypes.SINGLE_SELECTION,
+          answers: [
+            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+            { answer: 'Peanut butter', correct: false, order: 2 },
+          ],
+        },
+      });
+
+      clickMoveAnswerUp(wrapper, 1);
+    });
+
+    it('emits update event with a payload containing updated and properly ordered answers', () => {
+      expect(wrapper.emitted().update).toBeTruthy();
+      expect(wrapper.emitted().update.length).toBe(1);
+      expect(wrapper.emitted().update[0][0]).toEqual([
+        { answer: 'Peanut butter', correct: false, order: 1 },
+        { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 2 },
+      ]);
+    });
+  });
+
+  describe('on move answer down click', () => {
+    beforeEach(() => {
+      wrapper = mount(AnswersEditor, {
+        propsData: {
+          questionKind: AssessmentItemTypes.SINGLE_SELECTION,
+          answers: [
+            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+            { answer: 'Peanut butter', correct: false, order: 2 },
+          ],
+        },
+      });
+
+      clickMoveAnswerDown(wrapper, 0);
+    });
+
+    it('emits update event with a payload containing updated and properly ordered answers', () => {
+      expect(wrapper.emitted().update).toBeTruthy();
+      expect(wrapper.emitted().update.length).toBe(1);
+      expect(wrapper.emitted().update[0][0]).toEqual([
+        { answer: 'Peanut butter', correct: false, order: 1 },
+        { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 2 },
+      ]);
+    });
+  });
+
+  describe('on delete answer click', () => {
+    beforeEach(() => {
+      wrapper = mount(AnswersEditor, {
+        propsData: {
+          questionKind: AssessmentItemTypes.SINGLE_SELECTION,
+          answers: [
+            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+            { answer: 'Peanut butter', correct: false, order: 2 },
+          ],
+        },
+      });
+
+      clickDeleteAnswer(wrapper, 0);
+    });
+
+    it('emits update event with a payload containing updated and properly ordered answers', () => {
+      expect(wrapper.emitted().update).toBeTruthy();
+      expect(wrapper.emitted().update.length).toBe(1);
+      expect(wrapper.emitted().update[0][0]).toEqual([
+        { answer: 'Peanut butter', correct: false, order: 1 },
       ]);
     });
   });

@@ -13,13 +13,13 @@
       :key="answerIdx"
       :style="getAnswerPointerStyle(answerIdx)"
       data-test="answer"
-      @click="openAnswer($event, answerIdx)"
+      @click="onAnswerClick($event, answerIdx)"
     >
       <div :class="getIndicatorClasses(answer)"></div>
 
       <VCardText>
         <VLayout>
-          <VFlex xs11>
+          <VFlex xs8>
             <template v-if="!isAnswerOpen(answerIdx)">
               <!--
                 VRadio cannot be used without VRadioGroup like VCheckbox but it can
@@ -86,6 +86,16 @@
               </VLayout>
             </template>
           </VFlex>
+
+          <VSpacer />
+          <AssessmentItemToolbar
+            :displayMenu="false"
+            :displayEditIcon="false"
+            :canMoveUp="!isAnswerFirst(answerIdx)"
+            :canMoveDown="!isAnswerLast(answerIdx)"
+            class="toolbar"
+            @click="onToolbarClick($event, answerIdx)"
+          />
         </VLayout>
       </VCardText>
     </VCard>
@@ -103,15 +113,20 @@
 
 <script>
 
-  import { AssessmentItemTypes } from '../../constants';
+  import { AssessmentItemTypes, AssessmentItemToolbarActions } from '../../constants';
   import {
     questionHasOneCorrectAnswer,
     getCorrectAnswersIndices,
     mapCorrectAnswers,
+    swapElements,
   } from '../../utils';
+  import AssessmentItemToolbar from '../AssessmentItemToolbar/AssessmentItemToolbar.vue';
 
   export default {
     name: 'AnswersEditor',
+    components: {
+      AssessmentItemToolbar,
+    },
     model: {
       prop: 'answers',
       event: 'update',
@@ -178,6 +193,12 @@
       },
     },
     methods: {
+      isAnswerFirst(answerIdx) {
+        return answerIdx === 0;
+      },
+      isAnswerLast(answerIdx) {
+        return answerIdx === this.answers.length - 1;
+      },
       getAnswerPointerStyle(answerIdx) {
         return this.isEditingAllowed && !this.isAnswerOpen(answerIdx) ? { cursor: 'pointer' } : {};
       },
@@ -192,8 +213,61 @@
 
         return classes;
       },
-      openAnswer(event, answerIdx) {
-        if (!this.isEditingAllowed) {
+      moveAnswerUp(answerIdx) {
+        if (this.isAnswerFirst(answerIdx)) {
+          return;
+        }
+
+        let updatedAnswers = swapElements(this.answers, answerIdx, answerIdx - 1);
+        updatedAnswers = updatedAnswers.map((answer, answerIdx) => {
+          return {
+            ...answer,
+            order: answerIdx + 1,
+          };
+        });
+
+        if (answerIdx === this.openAnswerIdx) {
+          this.openAnswerIdx = answerIdx - 1;
+        }
+
+        this.emitUpdate(updatedAnswers);
+      },
+      moveAnswerDown(answerIdx) {
+        if (this.isAnswerLast(answerIdx)) {
+          return;
+        }
+
+        let updatedAnswers = swapElements(this.answers, answerIdx, answerIdx + 1);
+        updatedAnswers = updatedAnswers.map((answer, answerIdx) => {
+          return {
+            ...answer,
+            order: answerIdx + 1,
+          };
+        });
+
+        if (answerIdx === this.openAnswerIdx) {
+          this.openAnswerIdx = answerIdx + 1;
+        }
+
+        this.emitUpdate(updatedAnswers);
+      },
+      deleteAnswer(answerIdx) {
+        let updatedAnswers = JSON.parse(JSON.stringify(this.answers));
+
+        updatedAnswers.splice(answerIdx, 1);
+        updatedAnswers = updatedAnswers.map((answer, answerIdx) => {
+          return {
+            ...answer,
+            order: answerIdx + 1,
+          };
+        });
+
+        this.emitUpdate(updatedAnswers);
+        this.closeAnswer();
+      },
+      onAnswerClick(event, answerIdx) {
+        // do not open answer on toolbar click
+        if (event.target.closest('.toolbar') !== null) {
           return;
         }
 
@@ -203,6 +277,28 @@
           (event.target.classList.contains('v-label') ||
             event.target.classList.contains('v-input--selection-controls__ripple'))
         ) {
+          return;
+        }
+
+        this.openAnswer(answerIdx);
+      },
+      onToolbarClick(action, answerIdx) {
+        switch (action) {
+          case AssessmentItemToolbarActions.MOVE_ITEM_UP:
+            this.moveAnswerUp(answerIdx);
+            break;
+
+          case AssessmentItemToolbarActions.MOVE_ITEM_DOWN:
+            this.moveAnswerDown(answerIdx);
+            break;
+
+          case AssessmentItemToolbarActions.DELETE_ITEM:
+            this.deleteAnswer(answerIdx);
+            break;
+        }
+      },
+      openAnswer(answerIdx) {
+        if (!this.isEditingAllowed) {
           return;
         }
 
