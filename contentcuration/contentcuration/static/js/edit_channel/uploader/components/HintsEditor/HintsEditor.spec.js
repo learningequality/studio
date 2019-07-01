@@ -16,6 +16,27 @@ const clickHint = (wrapper, hintIdx) => {
     .trigger('click');
 };
 
+const clickMoveHintUp = (wrapper, hintIdx) => {
+  wrapper
+    .findAll('[data-test=toolbarIconArrowUp]')
+    .at(hintIdx)
+    .trigger('click');
+};
+
+const clickMoveHintDown = (wrapper, hintIdx) => {
+  wrapper
+    .findAll('[data-test=toolbarIconArrowDown]')
+    .at(hintIdx)
+    .trigger('click');
+};
+
+const clickDeleteHint = (wrapper, hintIdx) => {
+  wrapper
+    .findAll('[data-test=toolbarIconDelete]')
+    .at(hintIdx)
+    .trigger('click');
+};
+
 const updateOpenHintText = (wrapper, newHintText) => {
   // only one hint can be open
   wrapper.find('[data-test=editHintTextInput]').setValue(newHintText);
@@ -91,6 +112,48 @@ describe('HintsEditor', () => {
         { hint: 'First hint', order: 1 },
         { hint: 'Second updated hint', order: 2 },
       ]);
+    });
+  });
+
+  describe('on move hint up click', () => {
+    beforeEach(() => {
+      clickMoveHintUp(wrapper, 1);
+    });
+
+    it('emits update event with a payload containing updated and properly ordered hints', () => {
+      expect(wrapper.emitted().update).toBeTruthy();
+      expect(wrapper.emitted().update.length).toBe(1);
+      expect(wrapper.emitted().update[0][0]).toEqual([
+        { hint: 'Second hint', order: 1 },
+        { hint: 'First hint', order: 2 },
+      ]);
+    });
+  });
+
+  describe('on move hint down click', () => {
+    beforeEach(() => {
+      clickMoveHintDown(wrapper, 0);
+    });
+
+    it('emits update event with a payload containing updated and properly ordered hints', () => {
+      expect(wrapper.emitted().update).toBeTruthy();
+      expect(wrapper.emitted().update.length).toBe(1);
+      expect(wrapper.emitted().update[0][0]).toEqual([
+        { hint: 'Second hint', order: 1 },
+        { hint: 'First hint', order: 2 },
+      ]);
+    });
+  });
+
+  describe('on delete hint click', () => {
+    beforeEach(() => {
+      clickDeleteHint(wrapper, 0);
+    });
+
+    it('emits update event with a payload containing updated and properly ordered hints', () => {
+      expect(wrapper.emitted().update).toBeTruthy();
+      expect(wrapper.emitted().update.length).toBe(1);
+      expect(wrapper.emitted().update[0][0]).toEqual([{ hint: 'Second hint', order: 1 }]);
     });
   });
 });
