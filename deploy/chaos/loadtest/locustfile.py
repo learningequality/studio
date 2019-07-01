@@ -85,19 +85,20 @@ class ChannelPage(BaseTaskSet):
             channel_id = None
         return channel_id
 
-    def get_random_topic_id(self, channel_id):
+    def get_topic_id(self, channel_id, random=False):
         """
         Returns the id of a randomly selected topic for the provided channel_id
         :param: channel_id: id of the channel where the topic must be found
         :returns: id of the selected topic
         """
-        topic_id = None
         channel_resp = self.client.get('/api/channel/{}'.format(channel_id)).json()
         children = channel_resp['main_tree']['children']
-        topic_id = choice(children)
+        topic_id = children[0]
+        if random:
+            topic_id = choice(children)
         return topic_id
 
-    def get_random_resource_id(self, topic_id):
+    def get_resource_id(self, topic_id, random=False):
         """
         Returns the id of a randoly selected resource for the provided topic_id
         :param: topic_id: id of the topic where the resource must be found
@@ -108,7 +109,10 @@ class ChannelPage(BaseTaskSet):
             while nodes_resp[0]['kind'] == 'topic':
                 nodes = nodes_resp[0]['children']
                 nodes_resp = self.client.get('/api/get_nodes_by_ids/{}'.format(','.join(nodes))).json()
-            return choice(nodes_resp)['id']
+            node_id = nodes_resp[0]['id']
+            if random:
+                node_id = choice(nodes_resp)['id']
+            return node_id
         except IndexError:
             return None
 
@@ -122,7 +126,8 @@ class ChannelPage(BaseTaskSet):
         if channel_id:
             self.client.get('/channels/{}'.format(channel_id))
 
-    @task
+    # This is the most frequently hit scenario outside of ricecooker usage, so give it more weight.
+    @task(3)
     def open_subtopic(self, channel_id=None, topic_id=None):
         """
         Open  a topic, if channel_id is None it opens the first public channel
@@ -130,20 +135,20 @@ class ChannelPage(BaseTaskSet):
         if not channel_id:
             channel_id = self.get_first_public_channel_id()
         if channel_id and not topic_id:
-            topic_id = self.get_random_topic_id(channel_id)
+            topic_id = self.get_topic_id(channel_id)
         if topic_id:
-            self.get_random_resource_id(topic_id)
+            self.get_resource_id(topic_id)
 
     @task
-    def preview_random_content_item(self, content_id=None):
+    def preview_content_item(self, content_id=None, random=False):
         """
         Do request on all the files for a content item.
         If content_id is not provided it will fetch a random content
         """
         if not content_id:
             channel_id = self.get_first_public_channel_id()
-            topic_id = self.get_random_topic_id(channel_id)
-            content_id = self.get_random_resource_id(topic_id)
+            topic_id = self.get_topic_id(channel_id, random=random)
+            content_id = self.get_resource_id(topic_id, random=random)
             if content_id:
                 resp = self.client.get('/api/get_nodes_by_ids_complete/{}'.format(content_id)).json()
                 if 'files' in resp[0]:
@@ -161,7 +166,9 @@ class ChannelClone(BaseTaskSet):
 class LoginPage(BaseTaskSet):
     tasks = [ChannelListPage, ChannelPage]
 
-    @task
+    # This is by far our most hit endpoint, over 50% of all calls, so
+    # weight it accordingly.
+    @task(10)
     def loginpage(self):
         """
         Visit the login page and the i18n endpoints without logging in.
