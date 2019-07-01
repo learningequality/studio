@@ -223,6 +223,11 @@ LOGGING = {
         }
     },
     'loggers': {
+        'command': {
+            'handlers': ['console'],
+            'level': 'DEBUG' if globals().get('DEBUG') else 'INFO',
+            'propagate': True,
+        },
         'django': {
             'handlers': ['file', 'console'],
             'level': 'DEBUG' if globals().get('DEBUG') else 'INFO',
