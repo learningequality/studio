@@ -22,6 +22,7 @@ from le_utils.constants import roles
 from pressurecooker.encodings import write_base64_to_file
 
 from contentcuration import models
+from contentcuration.api import write_raw_content_to_storage
 from contentcuration.utils.files import create_file_from_contents
 from contentcuration.utils.garbage_collect import get_deleted_chefs_root
 
@@ -245,8 +246,8 @@ def create_nodes(cursor, target_id, parent, indent=1, download_url=None):
             create_nodes(cursor, target_id, node, indent=indent + 1, download_url=download_url)
         elif kind == content_kinds.EXERCISE:
             create_assessment_items(cursor, node, indent=indent + 1, download_url=download_url)
-        # create_files(cursor, node, indent=indent + 1, download_url=download_url)
-        # create_tags(cursor, node, target_id, indent=indent + 1)
+        create_files(cursor, node, indent=indent + 1, download_url=download_url)
+        create_tags(cursor, node, target_id, indent=indent + 1)
 
     return node
 
@@ -269,6 +270,34 @@ def retrieve_license(cursor, license_id):
     return models.License.objects.get(license_name=name), description
 
 
+def download_file(download_url, filename, contentnode=None, assessment_item=None, preset=None, file_size=None, lang_id=None):
+    checksum, extension = os.path.splitext(filename)
+    extension = extension.lstrip('.')
+    filepath = models.generate_object_storage_name(checksum, filename)
+
+    # Download file if it hasn't already been downloaded
+    if download_url and not default_storage.exists(filepath):
+        buffer = StringIO()
+        response = requests.get('{}/content/storage/{}/{}/{}'.format(download_url, filename[0], filename[1], filename))
+        for chunk in response:
+            buffer.write(chunk)
+
+        checksum, _, filepath = write_raw_content_to_storage(buffer.getvalue(), ext=extension)
+        buffer.close()
+
+    # Save values to new file object
+    file_obj = models.File(
+        file_format_id=extension,
+        file_size=file_size or default_storage.size(filepath),
+        contentnode=contentnode,
+        assessment_item=assessment_item,
+        language_id=lang_id,
+        preset_id=preset or "",
+    )
+    file_obj.file_on_disk.name = filepath
+    file_obj.save()
+
+
 def create_files(cursor, contentnode, indent=0, download_url=None):
     """ create_files: Get license
         Args:
@@ -288,27 +317,7 @@ def create_files(cursor, contentnode, indent=0, download_url=None):
         log.info("{indent} * FILE {filename}...".format(indent="   |" * indent, filename=filename))
 
         try:
-            filepath = models.generate_object_storage_name(checksum, filename)
-
-            # Download file first
-            if download_url and not default_storage.exists(filepath):
-                buffer = StringIO()
-                response = requests.get('{}/content/storage/{}/{}/{}'.format(download_url, filename[0], filename[1], filename))
-                for chunk in response:
-                    buffer.write(chunk)
-                create_file_from_contents(buffer.getvalue(), ext=extension, node=contentnode, preset_id=preset or "")
-                buffer.close()
-            else:
-                # Save values to new or existing file object
-                file_obj = models.File(
-                    file_format_id=extension,
-                    file_size=file_size,
-                    contentnode=contentnode,
-                    language_id=lang_id,
-                    preset_id=preset or "",
-                )
-                file_obj.file_on_disk.name = filepath
-                file_obj.save()
+            download_file(download_url, filename, contentnode=contentnode, preset=preset, file_size=file_size, lang_id=lang_id)
 
         except IOError as e:
             log.warning("\b FAILED (check logs for more details)")
@@ -362,6 +371,7 @@ def create_assessment_items(cursor, contentnode, indent=0, download_url=None):
             download_url (str): Domain to download files from
         Returns: None
     """
+
     # Parse database for files referencing content node and make file models
     sql_command = 'SELECT checksum, extension '\
         'preset FROM {table} WHERE contentnode_id=\'{id}\' AND preset=\'exercise\';'\
@@ -404,18 +414,21 @@ def create_assessment_items(cursor, contentnode, indent=0, download_url=None):
                 else:
                     # Parse questions
                     assessment_data['question']['content'] = '\n\n'.join(assessment_data['question']['content'].split('\n\n')[:-1])
-                    assessment_item.question = process_content(assessment_data['question'])
+                    assessment_item.question = process_content(assessment_data['question'], download_url, assessment_item)
 
                     # Parse answers
                     answer_data = assessment_data['question']['widgets'][ANSWER_FIELD_MAP[assessment_type]]['options']
                     if assessment_type == exercises.INPUT_QUESTION:
                         assessment_item.answers = json.dumps([{'answer': a['value']} for a in answer_data['answers']])
                     else:
-                        assessment_item.answers = json.dumps([{'answer': process_content(a), 'correct': a['correct']} for a in answer_data['choices']])
+                        assessment_item.answers = json.dumps([
+                            {'answer': process_content(a, download_url, assessment_item), 'correct': a['correct']}
+                            for a in answer_data['choices']
+                        ])
                         assessment_item.randomize = answer_data['randomize']
 
                     # Parse hints
-                    assessment_item.hints = json.dumps([{'hint': process_content(hint)} for hint in assessment_data['hints']])
+                    assessment_item.hints = json.dumps([{'hint': process_content(h, download_url, assessment_item)} for h in assessment_data['hints']])
 
                 assessment_item.save()
 
@@ -428,7 +441,7 @@ def create_assessment_items(cursor, contentnode, indent=0, download_url=None):
             shutil.rmtree(tempdir)
 
 
-def process_content(data):
+def process_content(data, download_url, assessment_item):
     # Process formulas
     for match in re.finditer(ur' (\$.+\$) ', data['content']):
         data['content'] = data['content'].replace(match.group(0), '${}$'.format(match.group(0)))
@@ -439,5 +452,8 @@ def process_content(data):
         image_data = data['images'].get(match.group(1))
         if image_data and image_data.get('width'):
             data['content'] = data['content'].replace(match.group(3), '{} ={}x{}'.format(match.group(3), image_data['width'], image_data['height']))
+
+        # Save files to db
+        download_file(download_url, match.group(3), assessment_item=assessment_item, preset=format_presets.EXERCISE)
 
     return data['content']
