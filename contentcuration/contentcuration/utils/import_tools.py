@@ -1,11 +1,14 @@
+# -*- coding: utf-8 -*-
 import datetime
 import json
 import logging
 import os
+import re
 import shutil
 import sqlite3
 import sys
 import tempfile
+import zipfile
 from cStringIO import StringIO
 
 import requests
@@ -13,6 +16,7 @@ from django.conf import settings
 from django.core.files.storage import default_storage
 from django.db import transaction
 from le_utils.constants import content_kinds
+from le_utils.constants import exercises
 from le_utils.constants import format_presets
 from le_utils.constants import roles
 from pressurecooker.encodings import write_base64_to_file
@@ -20,6 +24,9 @@ from pressurecooker.encodings import write_base64_to_file
 from contentcuration import models
 from contentcuration.utils.files import create_file_from_contents
 from contentcuration.utils.garbage_collect import get_deleted_chefs_root
+
+reload(sys)
+sys.setdefaultencoding('utf8')
 
 CHANNEL_TABLE = 'content_channelmetadata'
 NODE_TABLE = 'content_contentnode'
@@ -31,6 +38,12 @@ LICENSE_TABLE = 'content_license'
 NODE_COUNT = 0
 FILE_COUNT = 0
 TAG_COUNT = 0
+
+ANSWER_FIELD_MAP = {
+  exercises.SINGLE_SELECTION: 'radio 1',
+  exercises.MULTIPLE_SELECTION: 'radio 1',
+  exercises.INPUT_QUESTION: 'numeric-input 1',
+}
 
 log = logging.getLogger(__name__)
 
@@ -231,9 +244,9 @@ def create_nodes(cursor, target_id, parent, indent=1, download_url=None):
         if kind == content_kinds.TOPIC:
             create_nodes(cursor, target_id, node, indent=indent + 1, download_url=download_url)
         elif kind == content_kinds.EXERCISE:
-            pass
-        create_files(cursor, node, indent=indent + 1, download_url=download_url)
-        create_tags(cursor, node, target_id, indent=indent + 1)
+            create_assessment_items(cursor, node, indent=indent + 1, download_url=download_url)
+        # create_files(cursor, node, indent=indent + 1, download_url=download_url)
+        # create_tags(cursor, node, target_id, indent=indent + 1)
 
     return node
 
@@ -338,3 +351,93 @@ def create_tags(cursor, contentnode, target_id, indent=0):
     # Save tags to node
     contentnode.tags = tag_list
     contentnode.save()
+
+
+def create_assessment_items(cursor, contentnode, indent=0, download_url=None):
+    """ extract_perseus_zip: Generate assessment items based on perseus zip
+        Args:
+            cursor (sqlite3.Connection): connection to export database
+            contentnode (models.ContentNode): node file references
+            indent (int): How far to indent print statements
+            download_url (str): Domain to download files from
+        Returns: None
+    """
+    # Parse database for files referencing content node and make file models
+    sql_command = 'SELECT checksum, extension '\
+        'preset FROM {table} WHERE contentnode_id=\'{id}\' AND preset=\'exercise\';'\
+        .format(table=FILE_TABLE, id=contentnode.node_id)
+
+    query = cursor.execute(sql_command).fetchall()
+    for checksum, extension in query:
+        filename = "{}.{}".format(checksum, extension)
+        log.info("{indent} * EXERCISE {filename}...".format(indent="   |" * indent, filename=filename))
+
+        try:
+            # Store the downloaded zip into temporary storage
+            tempf = tempfile.NamedTemporaryFile(suffix='.{}'.format(extension), delete=False)
+            tempdir = tempfile.mkdtemp()
+
+            response = requests.get('{}/content/storage/{}/{}/{}'.format(download_url, filename[0], filename[1], filename))
+            for chunk in response:
+                tempf.write(chunk)
+            tempf.close()
+
+            with zipfile.ZipFile(tempf.name, 'r') as zipf:
+                zipf.extractall(tempdir)
+            os.chdir(tempdir)
+
+            with open('exercise.json', 'rb') as fobj:
+                data = json.load(fobj)
+
+            for index, assessment_id in enumerate(data['all_assessment_items']):
+                assessment_type = data['assessment_mapping'][assessment_id]
+                with open('{}.json'.format(assessment_id), 'rb') as fobj:
+                    assessment_data = json.load(fobj)
+
+                assessment_item = contentnode.assessment_items.create(
+                    assessment_id=assessment_id,
+                    type=assessment_type,
+                    order=index
+                )
+                if assessment_type == exercises.PERSEUS_QUESTION:
+                    assessment_item.raw_data = json.dumps(assessment_data)
+                else:
+                    # Parse questions
+                    assessment_data['question']['content'] = '\n\n'.join(assessment_data['question']['content'].split('\n\n')[:-1])
+                    assessment_item.question = process_content(assessment_data['question'])
+
+                    # Parse answers
+                    answer_data = assessment_data['question']['widgets'][ANSWER_FIELD_MAP[assessment_type]]['options']
+                    if assessment_type == exercises.INPUT_QUESTION:
+                        assessment_item.answers = json.dumps([{'answer': a['value']} for a in answer_data['answers']])
+                    else:
+                        assessment_item.answers = json.dumps([{'answer': process_content(a), 'correct': a['correct']} for a in answer_data['choices']])
+                        assessment_item.randomize = answer_data['randomize']
+
+                    # Parse hints
+                    assessment_item.hints = json.dumps([{'hint': process_content(hint)} for hint in assessment_data['hints']])
+
+                assessment_item.save()
+
+        except IOError as e:
+            log.warning("\b FAILED (check logs for more details)")
+            sys.stderr.write("Restoration Process Error: Failed to save file object {}: {}".format(filename, os.strerror(e.errno)))
+            continue
+        finally:
+            os.unlink(tempf.name)
+            shutil.rmtree(tempdir)
+
+
+def process_content(data):
+    # Process formulas
+    for match in re.finditer(ur' (\$.+\$) ', data['content']):
+        data['content'] = data['content'].replace(match.group(0), '${}$'.format(match.group(0)))
+
+    # Process images
+    for match in re.finditer(ur'!\[[^\]]*\]\((\$(\{☣ LOCALPATH\}\/images)\/([^\.]+\.[^\)]+))\)', data['content']):
+        data['content'] = data['content'].replace(match.group(2), exercises.CONTENT_STORAGE_PLACEHOLDER)
+        image_data = data['images'].get(match.group(1))
+        if image_data and image_data.get('width'):
+            data['content'] = data['content'].replace(match.group(3), '{} ={}x{}'.format(match.group(3), image_data['width'], image_data['height']))
+
+    return data['content']
