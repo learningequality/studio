@@ -1,6 +1,7 @@
 <template>
   <div>
     <VDialog
+      ref="editmodal"
       v-model="dialog"
       fullscreen
       hideOverlay
@@ -8,11 +9,18 @@
       lazy
     >
       <VCard class="edit-modal-wrapper">
-        <VNavigationDrawer v-model="drawer.open" stateless clipped app class="edit-list">
+        <VNavigationDrawer
+          v-if="showEditList"
+          v-model="drawer.open"
+          stateless
+          clipped
+          app
+          class="edit-list"
+        >
           <EditList @addNode="createNode" />
         </VNavigationDrawer>
         <VToolbar dark color="primary" fixed clippedLeft app>
-          <VBtn icon dark app @click="handleClose">
+          <VBtn ref="closebutton" icon dark app @click="handleClose">
             <VIcon>close</VIcon>
           </VBtn>
           <VToolbarTitle>{{ mode && $tr(mode) }}</VToolbarTitle>
@@ -33,10 +41,10 @@
                 {{ savedMessage }}
               </div>
             </VFlex>
-            <VBtn v-if="!isViewOnly" dark flat @click="handleSave">
+            <VBtn v-if="!isViewOnly" ref="savebutton" dark flat @click="handleSave">
               {{ $tr('saveButtonText') }}
             </VBtn>
-            <VBtn v-else dark flat @click="copyContent">
+            <VBtn v-else ref="copybutton" dark flat @click="copyContent">
               {{ $tr('copyButtonText', {count: nodes.length}) }}
             </VBtn>
           </VToolbarItems>
@@ -80,6 +88,7 @@
 
 <script>
 
+  import _ from 'underscore';
   import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
   import { modes } from '../constants';
   import EditList from './EditList.vue';
@@ -187,10 +196,6 @@
         setNode: 'SET_NODE',
         addNodeToList: 'ADD_NODE',
       }),
-      toggleSelectAll() {
-        this.selectAllChecked ? this.deselectAll() : this.selectAll();
-        this.selectAllChecked = !this.selectAllChecked;
-      },
       openModal() {
         this.dialog = true;
         if (this.nodes.length > 0) this.$nextTick(() => this.select(0));
