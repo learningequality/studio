@@ -91,6 +91,18 @@ const clickMoveItemDown = wrapper => {
   wrapper.find('[data-test=toolbarIconArrowDown]').trigger('click');
 };
 
+const confirmDialog = wrapper => {
+  wrapper.find('[data-test=dialogSubmitBtn]').trigger('click');
+};
+
+const containsConfirmDialog = wrapper => {
+  return wrapper.vm.dialog.open;
+};
+
+const getConfirmDialogMessage = wrapper => {
+  return wrapper.find('[data-test=dialogMessage]').text();
+};
+
 const initWrapper = (state, propsData) => {
   const store = new Vuex.Store({
     modules: {
@@ -174,12 +186,207 @@ describe('AssessmentItem', () => {
     });
 
     describe('on item type update', () => {
-      it('updates a correct item in drafts store', () => {
-        selectKind(wrapper, AssessmentItemTypes.MULTIPLE_SELECTION);
+      describe('when changing to single selection', () => {
+        describe('when there was only one correct answer', () => {
+          beforeEach(() => {
+            const state = JSON.parse(JSON.stringify(EDIT_MODAL_STATE));
+            state.nodesAssessmentDrafts[NODE_ID][ITEM_IDX].type =
+              AssessmentItemTypes.MULTIPLE_SELECTION;
+            state.nodesAssessmentDrafts[NODE_ID][ITEM_IDX].answers = [
+              { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+              { answer: 'Peanut butter', correct: false, order: 2 },
+            ];
 
-        expect(
-          wrapper.vm.$store.state['edit_modal'].nodesAssessmentDrafts[NODE_ID][ITEM_IDX]
-        ).toEqual({ ...ITEM, type: AssessmentItemTypes.MULTIPLE_SELECTION });
+            const propsData = {
+              nodeId: NODE_ID,
+              itemIdx: ITEM_IDX,
+              isOpen: true,
+            };
+
+            wrapper = initWrapper(state, propsData);
+
+            selectKind(wrapper, AssessmentItemTypes.SINGLE_SELECTION);
+          });
+
+          it("doesn't display confirm dialog", () => {
+            expect(containsConfirmDialog(wrapper)).toBe(false);
+          });
+
+          it('updates a correct item in drafts store', () => {
+            expect(
+              wrapper.vm.$store.state['edit_modal'].nodesAssessmentDrafts[NODE_ID][ITEM_IDX]
+            ).toEqual({
+              ...ITEM,
+              answers: [
+                { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+                { answer: 'Peanut butter', correct: false, order: 2 },
+              ],
+              type: AssessmentItemTypes.SINGLE_SELECTION,
+            });
+          });
+        });
+
+        describe('when there was more correct answers', () => {
+          beforeEach(() => {
+            const state = JSON.parse(JSON.stringify(EDIT_MODAL_STATE));
+
+            state.nodesAssessmentDrafts[NODE_ID][ITEM_IDX].type =
+              AssessmentItemTypes.MULTIPLE_SELECTION;
+            state.nodesAssessmentDrafts[NODE_ID][ITEM_IDX].answers = [
+              { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+              { answer: 'Peanut butter', correct: true, order: 2 },
+            ];
+
+            const propsData = {
+              nodeId: NODE_ID,
+              itemIdx: ITEM_IDX,
+              isOpen: true,
+            };
+
+            wrapper = initWrapper(state, propsData);
+
+            selectKind(wrapper, AssessmentItemTypes.SINGLE_SELECTION);
+          });
+
+          it('displays confirm dialog with a correct message', () => {
+            expect(containsConfirmDialog(wrapper)).toBe(true);
+            expect(getConfirmDialogMessage(wrapper)).toBe(
+              'Switching to single selection will set only one answer as correct. Continue?'
+            );
+          });
+
+          it('updates a correct item in drafts store after dialog confirmed', () => {
+            confirmDialog(wrapper);
+
+            expect(
+              wrapper.vm.$store.state['edit_modal'].nodesAssessmentDrafts[NODE_ID][ITEM_IDX]
+            ).toEqual({
+              ...ITEM,
+              answers: [
+                { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+                { answer: 'Peanut butter', correct: false, order: 2 },
+              ],
+              type: AssessmentItemTypes.SINGLE_SELECTION,
+            });
+          });
+        });
+      });
+
+      describe('when changing to true/false question', () => {
+        beforeEach(() => {
+          const state = JSON.parse(JSON.stringify(EDIT_MODAL_STATE));
+
+          const propsData = {
+            nodeId: NODE_ID,
+            itemIdx: ITEM_IDX,
+            isOpen: true,
+          };
+
+          wrapper = initWrapper(state, propsData);
+
+          selectKind(wrapper, AssessmentItemTypes.TRUE_FALSE);
+        });
+
+        it('displays confirm dialog with a correct message', () => {
+          expect(containsConfirmDialog(wrapper)).toBe(true);
+          expect(getConfirmDialogMessage(wrapper)).toBe(
+            'Switching to true or false will remove any current answers. Continue?'
+          );
+        });
+
+        it('updates a correct item in drafts store after dialog confirmed', () => {
+          confirmDialog(wrapper);
+
+          expect(
+            wrapper.vm.$store.state['edit_modal'].nodesAssessmentDrafts[NODE_ID][ITEM_IDX]
+          ).toEqual({
+            ...ITEM,
+            answers: [
+              { answer: 'True', correct: true, order: 1 },
+              { answer: 'False', correct: false, order: 2 },
+            ],
+            type: AssessmentItemTypes.TRUE_FALSE,
+          });
+        });
+      });
+
+      describe('when changing to input question', () => {
+        beforeEach(() => {
+          const state = JSON.parse(JSON.stringify(EDIT_MODAL_STATE));
+          state.nodesAssessmentDrafts[NODE_ID][ITEM_IDX].type =
+            AssessmentItemTypes.SINGLE_SELECTION;
+          state.nodesAssessmentDrafts[NODE_ID][ITEM_IDX].answers = [
+            { answer: '1', correct: true, order: 1 },
+            { answer: '2', correct: false, order: 2 },
+          ];
+
+          const propsData = {
+            nodeId: NODE_ID,
+            itemIdx: ITEM_IDX,
+            isOpen: true,
+          };
+
+          wrapper = initWrapper(state, propsData);
+
+          selectKind(wrapper, AssessmentItemTypes.INPUT_QUESTION);
+        });
+
+        it('displays confirm dialog with a correct message', () => {
+          expect(containsConfirmDialog(wrapper)).toBe(true);
+          expect(getConfirmDialogMessage(wrapper)).toBe(
+            'Switching to numeric input will set all answers as correct and remove all non-numeric answers. Continue?'
+          );
+        });
+
+        it('updates a correct item in drafts store after dialog confirmed', () => {
+          confirmDialog(wrapper);
+
+          expect(
+            wrapper.vm.$store.state['edit_modal'].nodesAssessmentDrafts[NODE_ID][ITEM_IDX]
+          ).toEqual({
+            ...ITEM,
+            answers: [
+              { answer: '1', correct: true, order: 1 },
+              { answer: '2', correct: true, order: 2 },
+            ],
+            type: AssessmentItemTypes.INPUT_QUESTION,
+          });
+        });
+      });
+
+      describe('when changing to multiple selection', () => {
+        beforeEach(() => {
+          const state = JSON.parse(JSON.stringify(EDIT_MODAL_STATE));
+          state.nodesAssessmentDrafts[NODE_ID][ITEM_IDX].type =
+            AssessmentItemTypes.SINGLE_SELECTION;
+          state.nodesAssessmentDrafts[NODE_ID][ITEM_IDX].answers = [
+            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+            { answer: 'Peanut butter', correct: false, order: 2 },
+          ];
+
+          const propsData = {
+            nodeId: NODE_ID,
+            itemIdx: ITEM_IDX,
+            isOpen: true,
+          };
+
+          wrapper = initWrapper(state, propsData);
+
+          selectKind(wrapper, AssessmentItemTypes.MULTIPLE_SELECTION);
+        });
+
+        it('updates a correct item in drafts store', () => {
+          expect(
+            wrapper.vm.$store.state['edit_modal'].nodesAssessmentDrafts[NODE_ID][ITEM_IDX]
+          ).toEqual({
+            ...ITEM,
+            answers: [
+              { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+              { answer: 'Peanut butter', correct: false, order: 2 },
+            ],
+            type: AssessmentItemTypes.MULTIPLE_SELECTION,
+          });
+        });
       });
     });
 
@@ -248,7 +455,16 @@ describe('AssessmentItem', () => {
       clickDeleteItem(wrapper);
     });
 
-    it('removes item from drafts store', () => {
+    it('displays confirm dialog with a correct message', () => {
+      expect(containsConfirmDialog(wrapper)).toBe(true);
+      expect(getConfirmDialogMessage(wrapper)).toBe(
+        'Are you sure you want to delete this question?'
+      );
+    });
+
+    it('removes item from drafts store after dialog confirmed', () => {
+      confirmDialog(wrapper);
+
       expect(wrapper.vm.$store.state['edit_modal'].nodesAssessmentDrafts[NODE_ID]).toEqual([
         {
           id: 'exercise-2-item-1',

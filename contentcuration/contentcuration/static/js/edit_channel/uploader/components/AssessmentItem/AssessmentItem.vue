@@ -1,77 +1,30 @@
 <template>
-  <VCard>
-    <VCardTitle
-      v-if="!isOpen"
-      :style="{ 'cursor': 'pointer' }"
-      @click="onClosedQuestionClick"
-    >
-      <VContainer fluid>
-        <VLayout row>
-          <VFlex xs1>
-            {{ order }}
-          </VFlex>
-
-          <VFlex>
-            <div class="caption grey--text mb-1">
-              {{ kindLabel }}
-            </div>
-            <div data-test="questionText">
-              {{ question }}
-            </div>
-          </VFlex>
-
-          <VSpacer />
-          <AssessmentItemToolbar
-            itemLabel="question"
-            :displayDeleteIcon="false"
-            :canMoveUp="!isFirst"
-            :canMoveDown="!isLast"
-            class="toolbar"
-            @click="onToolbarClick"
-          />
-        </VLayout>
-
-        <template v-if="displayAnswersPreview">
-          <!-- eslint-disable-next-line -->
-          <VLayout row mt-3 justify-end>
-            <VFlex xs11>
-              <div class="caption grey--text mb-1">
-                Answers
-              </div>
-
-              <AnswersPreview
-                :questionKind="kind"
-                :answers="answers"
-              />
-            </VFlex>
-          </VLayout>
-        </template>
-      </VContainer>
-    </VCardTitle>
-
-    <template v-else>
-      <VCardTitle data-test="open">
+  <div>
+    <VCard>
+      <VCardTitle
+        v-if="!isOpen"
+        :style="{ 'cursor': 'pointer' }"
+        @click="onClosedQuestionClick"
+      >
         <VContainer fluid>
           <VLayout row>
             <VFlex xs1>
               {{ order }}
             </VFlex>
 
-            <VFlex xs5>
-              <VSelect
-                :items="kindSelectItems"
-                :value="kind"
-                label="Question type"
-                data-test="kindSelect"
-                @input="onKindChange"
-              />
+            <VFlex>
+              <div class="caption grey--text mb-1">
+                {{ kindLabel }}
+              </div>
+              <div data-test="questionText">
+                {{ question }}
+              </div>
             </VFlex>
 
             <VSpacer />
             <AssessmentItemToolbar
               itemLabel="question"
               :displayDeleteIcon="false"
-              :displayEditIcon="false"
               :canMoveUp="!isFirst"
               :canMoveDown="!isLast"
               class="toolbar"
@@ -79,55 +32,130 @@
             />
           </VLayout>
 
-          <!-- eslint-disable-next-line -->
-          <VLayout row justify-end>
-            <VFlex xs11>
-              <VTextField
-                label="Question text"
-                :value="question"
-                data-test="questionInput"
-                @input="onQuestionChange"
-              />
-            </VFlex>
-          </VLayout>
+          <template v-if="displayAnswersPreview">
+            <!-- eslint-disable-next-line -->
+            <VLayout row mt-3 justify-end>
+              <VFlex xs11>
+                <div class="caption grey--text mb-1">
+                  Answers
+                </div>
+
+                <AnswersPreview
+                  :questionKind="kind"
+                  :answers="answers"
+                />
+              </VFlex>
+            </VLayout>
+          </template>
         </VContainer>
       </VCardTitle>
 
-      <VCardText>
-        <VContainer fluid>
-          <!-- eslint-disable-next-line -->
-          <VLayout row justify-end>
-            <VFlex xs11>
-              <AnswersEditor
-                :questionKind="kind"
-                :answers="answers"
-                @update="onAnswersChange"
+      <template v-else>
+        <VCardTitle data-test="open">
+          <VContainer fluid>
+            <VLayout row>
+              <VFlex xs1>
+                {{ order }}
+              </VFlex>
+
+              <VFlex xs5>
+                <VSelect
+                  :key="kindSelectKey"
+                  :items="kindSelectItems"
+                  :value="kind"
+                  label="Question type"
+                  data-test="kindSelect"
+                  @input="onKindChange"
+                />
+              </VFlex>
+
+              <VSpacer />
+              <AssessmentItemToolbar
+                itemLabel="question"
+                :displayDeleteIcon="false"
+                :displayEditIcon="false"
+                :canMoveUp="!isFirst"
+                :canMoveDown="!isLast"
+                class="toolbar"
+                @click="onToolbarClick"
               />
+            </VLayout>
 
-              <VDivider class="mt-3 mb-3" />
+            <!-- eslint-disable-next-line -->
+            <VLayout row justify-end>
+              <VFlex xs11>
+                <VTextField
+                  label="Question text"
+                  :value="question"
+                  data-test="questionInput"
+                  @input="onQuestionChange"
+                />
+              </VFlex>
+            </VLayout>
+          </VContainer>
+        </VCardTitle>
 
-              <HintsEditor
-                :hints="hints"
-                @update="onHintsChange"
-              />
-            </VFlex>
-          </VLayout>
+        <VCardText>
+          <VContainer fluid>
+            <!-- eslint-disable-next-line -->
+            <VLayout row justify-end>
+              <VFlex xs11>
+                <AnswersEditor
+                  :questionKind="kind"
+                  :answers="answers"
+                  @update="onAnswersChange"
+                />
 
-          <!-- eslint-disable-next-line -->
-          <VLayout row justify-end>
-            <VBtn
-              flat
-              color="primary"
-              data-test="closeBtn"
-              @click="onCloseClick"
-            >
-              Close
-            </VBtn>
-          </VLayout>
-        </VContainer>
-      </VCardText>
-    </template>
-  </VCard>
+                <VDivider class="mt-3 mb-3" />
+
+                <HintsEditor
+                  :hints="hints"
+                  @update="onHintsChange"
+                />
+              </VFlex>
+            </VLayout>
+
+            <!-- eslint-disable-next-line -->
+            <VLayout row justify-end>
+              <VBtn
+                flat
+                color="primary"
+                data-test="closeBtn"
+                @click="onCloseClick"
+              >
+                Close
+              </VBtn>
+            </VLayout>
+          </VContainer>
+        </VCardText>
+      </template>
+    </VCard>
+
+    <DialogBox
+      v-model="dialog.open"
+      :title="dialog.title"
+    >
+      {{ dialog.message }}
+
+      <template slot="controls">
+        <VBtn
+          flat
+          @click="dialog.onCancel"
+        >
+          Cancel
+        </VBtn>
+
+        <VBtn
+          color="primary"
+          flat
+          data-test="dialogSubmitBtn"
+          @click="dialog.onSubmit"
+        >
+          {{ dialog.submitLabel }}
+        </VBtn>
+      </template>
+    </DialogBox>
+  </div>
 </template>
 
 <script>
@@ -140,6 +168,7 @@
   import AnswersEditor from '../AnswersEditor/AnswersEditor.vue';
   import AnswersPreview from '../AnswersPreview/AnswersPreview.vue';
   import AssessmentItemToolbar from '../AssessmentItemToolbar/AssessmentItemToolbar.vue';
+  import DialogBox from '../DialogBox/DialogBox.vue';
   import HintsEditor from '../HintsEditor/HintsEditor.vue';
 
   export default {
@@ -148,6 +177,7 @@
       AnswersEditor,
       AnswersPreview,
       AssessmentItemToolbar,
+      DialogBox,
       HintsEditor,
     },
     props: {
@@ -165,6 +195,19 @@
         type: Boolean,
         default: false,
       },
+    },
+    data() {
+      return {
+        kindSelectKey: 0,
+        dialog: {
+          open: false,
+          title: '',
+          message: '',
+          submitLabel: '',
+          onSubmit: () => {},
+          onCancel: () => {},
+        },
+      };
     },
     computed: {
       ...mapGetters('edit_modal', ['nodeAssessmentDraft']),
@@ -223,6 +266,11 @@
       isLast() {
         return this.itemIdx === this.nodeAssessmentDraft(this.nodeId).length - 1;
       },
+      hasMoreCorrectAnswers() {
+        const correctAnswers = this.answers.filter(answer => answer.correct === true);
+
+        return correctAnswers.length > 1;
+      },
     },
     methods: {
       ...mapMutations('edit_modal', [
@@ -239,7 +287,6 @@
         });
       },
       deleteItem() {
-        // TODO @MisRob: display warning and continue only when confirmed
         this.deleteNodeAssessmentDraftItem({
           nodeId: this.nodeId,
           assessmentItemIdx: this.itemIdx,
@@ -287,6 +334,49 @@
 
         this.$emit('itemsSwapped', { firstItemIdx, secondItemIdx });
       },
+      changeKind(newKind) {
+        const newAnswers = updateAnswersToQuestionKind(newKind, this.answers);
+
+        this.updateItem({ type: newKind, answers: newAnswers });
+      },
+      /* question type VSelect needs to be rerended when confirmation dialog
+         cancelled to display a correct, previous, value that has changed
+         in the select but has not been changed in data storage actually
+         because of cancel action
+      */
+      rerenderKindSelect() {
+        this.kindSelectKey += 1;
+      },
+      openDialog(title, message, submitLabel, onSubmit, onCancel) {
+        this.dialog = {
+          open: true,
+          title,
+          message,
+          submitLabel,
+          onSubmit: () => {
+            if (typeof onSubmit === 'function') {
+              onSubmit();
+            }
+            this.closeDialog();
+          },
+          onCancel: () => {
+            if (typeof onCancel === 'function') {
+              onCancel();
+            }
+            this.closeDialog();
+          },
+        };
+      },
+      closeDialog() {
+        this.dialog = {
+          open: false,
+          title: '',
+          message: '',
+          submitLabel: '',
+          onSubmit: () => {},
+          onCancel: () => {},
+        };
+      },
       onQuestionChange(newQuestion) {
         this.updateItem({ question: newQuestion });
       },
@@ -295,13 +385,46 @@
           return;
         }
 
-        if (newKind === AssessmentItemTypes.TRUE_FALSE) {
-          // TODO @MisRob: display warning that all answers
-          // will be lost and continue only when confirmed
-        }
-        const newAnswers = updateAnswersToQuestionKind(newKind, this.answers);
+        switch (newKind) {
+          case AssessmentItemTypes.SINGLE_SELECTION:
+            if (this.hasMoreCorrectAnswers) {
+              this.openDialog(
+                'Changing question type',
+                'Switching to single selection will set only one answer as correct. Continue?',
+                'Change',
+                () => this.changeKind(newKind),
+                this.rerenderKindSelect
+              );
+            } else {
+              this.changeKind(newKind);
+            }
 
-        this.updateItem({ type: newKind, answers: newAnswers });
+            break;
+
+          case AssessmentItemTypes.TRUE_FALSE:
+            this.openDialog(
+              'Changing question type',
+              'Switching to true or false will remove any current answers. Continue?',
+              'Change',
+              () => this.changeKind(newKind),
+              this.rerenderKindSelect
+            );
+            break;
+
+          case AssessmentItemTypes.INPUT_QUESTION:
+            this.openDialog(
+              'Changing question type',
+              'Switching to numeric input will set all answers as correct and remove all non-numeric answers. Continue?',
+              'Change',
+              () => this.changeKind(newKind),
+              this.rerenderKindSelect
+            );
+            break;
+
+          default:
+            this.changeKind(newKind);
+            break;
+        }
       },
       onAnswersChange(newAnswers) {
         this.updateItem({ answers: newAnswers });
@@ -328,7 +451,12 @@
             break;
 
           case AssessmentItemToolbarActions.DELETE_ITEM:
-            this.deleteItem();
+            this.openDialog(
+              'Deleting question',
+              'Are you sure you want to delete this question?',
+              'Delete',
+              this.deleteItem
+            );
             break;
 
           case AssessmentItemToolbarActions.ADD_ITEM_ABOVE:
