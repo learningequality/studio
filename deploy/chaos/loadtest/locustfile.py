@@ -38,10 +38,6 @@ class BaseTaskSet(TaskSet):
             }
         )
 
-    def i18n_requests(self):
-        self.client.get("/jsi18n/")
-        self.client.get("/jsreverse/")
-
 
 class ChannelListPage(BaseTaskSet):
     """
@@ -174,7 +170,6 @@ class LoginPage(BaseTaskSet):
         Visit the login page and the i18n endpoints without logging in.
         """
         self.client.get("/accounts/login/")
-        self.i18n_requests()
 
 
 class StudioDesktopBrowserUser(HttpLocust):

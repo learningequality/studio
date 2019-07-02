@@ -21,7 +21,6 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.core.urlresolvers import reverse_lazy
 from django.db.models import Q
-from django.views.i18n import javascript_catalog
 from rest_framework import permissions
 from rest_framework import routers
 from rest_framework import viewsets
@@ -394,7 +393,6 @@ js_info_dict = {
 }
 
 urlpatterns += [
-    url(r'^jsi18n/$', javascript_catalog, js_info_dict, name='javascript-catalog'),
     url(r'^i18n/', include('django.conf.urls.i18n')),
 ]
 
