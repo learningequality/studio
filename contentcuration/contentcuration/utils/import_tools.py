@@ -419,16 +419,21 @@ def create_assessment_items(cursor, contentnode, indent=0, download_url=None):
                     # Parse answers
                     answer_data = assessment_data['question']['widgets'][ANSWER_FIELD_MAP[assessment_type]]['options']
                     if assessment_type == exercises.INPUT_QUESTION:
-                        assessment_item.answers = json.dumps([{'answer': a['value']} for a in answer_data['answers']])
+                        assessment_item.answers = json.dumps([
+                            {'answer': answer['value']} for answer in answer_data['answers']
+                        ])
                     else:
                         assessment_item.answers = json.dumps([
-                            {'answer': process_content(a, download_url, assessment_item), 'correct': a['correct']}
-                            for a in answer_data['choices']
+                            {'answer': process_content(answer, download_url, assessment_item), 'correct': answer['correct']}
+                            for answer in answer_data['choices']
                         ])
                         assessment_item.randomize = answer_data['randomize']
 
                     # Parse hints
-                    assessment_item.hints = json.dumps([{'hint': process_content(h, download_url, assessment_item)} for h in assessment_data['hints']])
+                    assessment_item.hints = json.dumps([
+                        {'hint': process_content(hint, download_url, assessment_item)}
+                        for hint in assessment_data['hints']
+                    ])
 
                 assessment_item.save()
 
