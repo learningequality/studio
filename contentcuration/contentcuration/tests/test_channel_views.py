@@ -26,6 +26,8 @@ class ChannelListTestCase(BaseAPITestCase):
 
     def tearDown(self):
         settings.DEBUG = self.debug_setting
+        # Make sure subsequent tests aren't working with cached data.
+        cache.clear()
 
     def assertHasSerializerFields(self, data, serializer):
         """
@@ -52,7 +54,6 @@ class ChannelListTestCase(BaseAPITestCase):
         """
         Ensure that if there are no public channels, we get 0 results from the serializer.
         """
-        cache.clear()
         response = self.client.get(reverse('get_user_public_channels'))
         self.assertEqual(len(response.data), 0)
         self.assertEqual(response.status_code, 200)
@@ -72,7 +73,6 @@ class ChannelListTestCase(BaseAPITestCase):
         """
         Test that we are not running too many queries in order to return a single public channel result.
         """
-        cache.clear()
         self.channel.make_public(bypass_signals=True)
         settings.DEBUG = True
 
