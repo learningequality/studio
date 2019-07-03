@@ -270,7 +270,7 @@ def retrieve_license(cursor, license_id):
     return models.License.objects.get(license_name=name), description
 
 
-def download_file(download_url, filename, contentnode=None, assessment_item=None, preset=None, file_size=None, lang_id=None):
+def download_file(filename, download_url=None, contentnode=None, assessment_item=None, preset=None, file_size=None, lang_id=None):
     checksum, extension = os.path.splitext(filename)
     extension = extension.lstrip('.')
     filepath = models.generate_object_storage_name(checksum, filename)
@@ -317,7 +317,7 @@ def create_files(cursor, contentnode, indent=0, download_url=None):
         log.info("{indent} * FILE {filename}...".format(indent="   |" * indent, filename=filename))
 
         try:
-            download_file(download_url, filename, contentnode=contentnode, preset=preset, file_size=file_size, lang_id=lang_id)
+            download_file(filename, download_url=download_url, contentnode=contentnode, preset=preset, file_size=file_size, lang_id=lang_id)
 
         except IOError as e:
             log.warning("\b FAILED (check logs for more details)")
@@ -363,10 +363,10 @@ def create_tags(cursor, contentnode, target_id, indent=0):
 
 
 def create_assessment_items(cursor, contentnode, indent=0, download_url=None):
-    """ extract_perseus_zip: Generate assessment items based on perseus zip
+    """ create_assessment_items: Generate assessment items based on perseus zip
         Args:
             cursor (sqlite3.Connection): connection to export database
-            contentnode (models.ContentNode): node file references
+            contentnode (models.ContentNode): node assessment items reference
             indent (int): How far to indent print statements
             download_url (str): Domain to download files from
         Returns: None
@@ -385,80 +385,118 @@ def create_assessment_items(cursor, contentnode, indent=0, download_url=None):
         try:
             # Store the downloaded zip into temporary storage
             tempf = tempfile.NamedTemporaryFile(suffix='.{}'.format(extension), delete=False)
-            tempdir = tempfile.mkdtemp()
-
             response = requests.get('{}/content/storage/{}/{}/{}'.format(download_url, filename[0], filename[1], filename))
             for chunk in response:
                 tempf.write(chunk)
             tempf.close()
-
-            with zipfile.ZipFile(tempf.name, 'r') as zipf:
-                zipf.extractall(tempdir)
-            os.chdir(tempdir)
-
-            with open('exercise.json', 'rb') as fobj:
-                data = json.load(fobj)
-
-            for index, assessment_id in enumerate(data['all_assessment_items']):
-                assessment_type = data['assessment_mapping'][assessment_id]
-                with open('{}.json'.format(assessment_id), 'rb') as fobj:
-                    assessment_data = json.load(fobj)
-
-                assessment_item = contentnode.assessment_items.create(
-                    assessment_id=assessment_id,
-                    type=assessment_type,
-                    order=index
-                )
-                if assessment_type == exercises.PERSEUS_QUESTION:
-                    assessment_item.raw_data = json.dumps(assessment_data)
-                else:
-                    # Parse questions
-                    assessment_data['question']['content'] = '\n\n'.join(assessment_data['question']['content'].split('\n\n')[:-1])
-                    assessment_item.question = process_content(assessment_data['question'], download_url, assessment_item)
-
-                    # Parse answers
-                    answer_data = assessment_data['question']['widgets'][ANSWER_FIELD_MAP[assessment_type]]['options']
-                    if assessment_type == exercises.INPUT_QUESTION:
-                        assessment_item.answers = json.dumps([
-                            {'answer': answer['value']} for answer in answer_data['answers']
-                        ])
-                    else:
-                        assessment_item.answers = json.dumps([
-                            {'answer': process_content(answer, download_url, assessment_item), 'correct': answer['correct']}
-                            for answer in answer_data['choices']
-                        ])
-                        assessment_item.randomize = answer_data['randomize']
-
-                    # Parse hints
-                    assessment_item.hints = json.dumps([
-                        {'hint': process_content(hint, download_url, assessment_item)}
-                        for hint in assessment_data['hints']
-                    ])
-
-                assessment_item.save()
-
+            extract_assessment_items(tempf.name, contentnode, download_url=download_url)
         except IOError as e:
             log.warning("\b FAILED (check logs for more details)")
             sys.stderr.write("Restoration Process Error: Failed to save file object {}: {}".format(filename, os.strerror(e.errno)))
             continue
         finally:
             os.unlink(tempf.name)
-            shutil.rmtree(tempdir)
 
 
-def process_content(data, download_url, assessment_item):
+def extract_assessment_items(filepath, contentnode, download_url=None):
+    """ extract_assessment_items: Create and save assessment items to content node
+        Args:
+            filepath (str): Where perseus zip is stored
+            contentnode (models.ContentNode): node assessment items reference
+            download_url (str): Domain to download files from
+        Returns: None
+    """
+
+    try:
+        tempdir = tempfile.mkdtemp()
+        with zipfile.ZipFile(filepath, 'r') as zipf:
+            zipf.extractall(tempdir)
+        os.chdir(tempdir)
+
+        with open('exercise.json', 'rb') as fobj:
+            data = json.load(fobj)
+
+        for index, assessment_id in enumerate(data['all_assessment_items']):
+            with open('{}.json'.format(assessment_id), 'rb') as fobj:
+                assessment_item = generate_assessment_item(
+                    assessment_id,
+                    index,
+                    data['assessment_mapping'][assessment_id],
+                    json.load(fobj),
+                    download_url=download_url
+                )
+                contentnode.assessment_items.add(assessment_item)
+    finally:
+        shutil.rmtree(tempdir)
+
+
+def generate_assessment_item(assessment_id, order, assessment_type, assessment_data, download_url=None):
+    """ generate_assessment_item: Generates a new assessment item
+        Args:
+            assessment_id (str): AssessmentItem.assessment_id value
+            order (Number): AssessmentItem.order value
+            assessment_type (str): AssessmentItem.type value
+            assessment_data (dict): Extracted data from perseus file
+            download_url (str): Domain to download files from
+        Returns: models.AssessmentItem
+    """
+    assessment_item = models.AssessmentItem.objects.create(
+        assessment_id=assessment_id,
+        type=assessment_type,
+        order=order
+    )
+    if assessment_type == exercises.PERSEUS_QUESTION:
+        assessment_item.raw_data = json.dumps(assessment_data)
+    else:
+        # Parse questions
+        assessment_data['question']['content'] = '\n\n'.join(assessment_data['question']['content'].split('\n\n')[:-1])
+        assessment_item.question = process_content(assessment_data['question'], assessment_item, download_url=download_url)
+
+        # Parse answers
+        answer_data = assessment_data['question']['widgets'][ANSWER_FIELD_MAP[assessment_type]]['options']
+        if assessment_type == exercises.INPUT_QUESTION:
+            assessment_item.answers = json.dumps([
+                {'answer': answer['value'], 'correct': True} for answer in answer_data['answers']
+            ])
+        else:
+            assessment_item.answers = json.dumps([
+                {'answer': process_content(answer, assessment_item, download_url=download_url), 'correct': answer['correct']}
+                for answer in answer_data['choices']
+            ])
+            assessment_item.randomize = answer_data['randomize']
+
+        # Parse hints
+        assessment_item.hints = json.dumps([
+            {'hint': process_content(hint, assessment_item, download_url=download_url)}
+            for hint in assessment_data['hints']
+        ])
+
+    assessment_item.save()
+    return assessment_item
+
+
+def process_content(data, assessment_item, download_url=None):
+    """ process_content: Parses perseus text for special formatting (e.g. formulas, images)
+        Args:
+            data (dict): Perseus data to parse (e.g. parsing 'question' field)
+            download_url (str): Domain to download files from
+            assessment_item (models.AssessmentItem): assessment item to save images to
+        Returns: models.AssessmentItem
+    """
+    data['content'] = data['content'].replace(' ', '')  # Remove unrecognized non unicode characters
     # Process formulas
-    for match in re.finditer(ur' (\$.+\$) ', data['content']):
+    for match in re.finditer(r'(\$[^\$☣]+\$)', data['content']):
         data['content'] = data['content'].replace(match.group(0), '${}$'.format(match.group(0)))
 
     # Process images
-    for match in re.finditer(ur'!\[[^\]]*\]\((\$(\{☣ LOCALPATH\}\/images)\/([^\.]+\.[^\)]+))\)', data['content']):
+
+    for match in re.finditer(r'!\[[^\]]*\]\((\$(\{☣ LOCALPATH\}\/images)\/([^\.]+\.[^\)]+))\)', data['content']):
         data['content'] = data['content'].replace(match.group(2), exercises.CONTENT_STORAGE_PLACEHOLDER)
         image_data = data['images'].get(match.group(1))
         if image_data and image_data.get('width'):
             data['content'] = data['content'].replace(match.group(3), '{} ={}x{}'.format(match.group(3), image_data['width'], image_data['height']))
 
         # Save files to db
-        download_file(download_url, match.group(3), assessment_item=assessment_item, preset=format_presets.EXERCISE)
+        download_file(match.group(3), assessment_item=assessment_item, preset=format_presets.EXERCISE, download_url=download_url)
 
     return data['content']
