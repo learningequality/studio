@@ -107,5 +107,6 @@ webpack-stats\.json
 */credentials/*
 */exports/*
 
-# Ignore cloud prober executable
+# Ignore cloud prober executable and its log
 */cloudprober
+deploy/prober.log
