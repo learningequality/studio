@@ -462,7 +462,7 @@ describe('AssessmentItem', () => {
       );
     });
 
-    it('removes item from drafts store after dialog confirmed', () => {
+    it('removes item from drafts store after dialog confirmed and emits item deleted event with an index of a deleted item', () => {
       confirmDialog(wrapper);
 
       expect(wrapper.vm.$store.state['edit_modal'].nodesAssessmentDrafts[NODE_ID]).toEqual([
@@ -486,6 +486,10 @@ describe('AssessmentItem', () => {
           hints: [],
         },
       ]);
+
+      expect(wrapper.emitted().itemDeleted).toBeTruthy();
+      expect(wrapper.emitted().itemDeleted.length).toBe(1);
+      expect(wrapper.emitted().itemDeleted[0][0]).toBe(ITEM_IDX);
     });
   });
 
