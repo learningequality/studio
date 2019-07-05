@@ -44,6 +44,11 @@
                   :questionKind="kind"
                   :answers="answers"
                 />
+
+                <HintsPreview
+                  :hints="hints"
+                  class="hintsPreview"
+                />
               </VFlex>
             </VLayout>
           </template>
@@ -173,6 +178,7 @@
 
   import AnswersEditor from '../AnswersEditor/AnswersEditor.vue';
   import AnswersPreview from '../AnswersPreview/AnswersPreview.vue';
+  import HintsPreview from '../HintsPreview/HintsPreview.vue';
   import AssessmentItemToolbar from '../AssessmentItemToolbar/AssessmentItemToolbar.vue';
   import DialogBox from '../DialogBox/DialogBox.vue';
   import HintsEditor from '../HintsEditor/HintsEditor.vue';
@@ -185,6 +191,7 @@
       AssessmentItemToolbar,
       DialogBox,
       HintsEditor,
+      HintsPreview,
     },
     props: {
       nodeId: {
@@ -449,6 +456,11 @@
         // ignore toolbar click in this case (click on edit
         // icon is processed in toolbar click handler)
         if (event.target.closest('.toolbar') !== null) {
+          return;
+        }
+
+        // allow hints preview toggling when question closed
+        if (event.target.closest('.hintsPreview') !== null) {
           return;
         }
 
