@@ -142,10 +142,12 @@
       answers: {
         type: Array,
       },
+      openAnswerIdx: {
+        type: Number,
+      },
     },
     data() {
       return {
-        openAnswerIdx: null,
         correctAnswersIndices: getCorrectAnswersIndices(this.questionKind, this.answers),
       };
     },
@@ -199,6 +201,9 @@
       isAnswerLast(answerIdx) {
         return answerIdx === this.answers.length - 1;
       },
+      isAnswerOpen(answerIdx) {
+        return answerIdx === this.openAnswerIdx;
+      },
       getAnswerPointerStyle(answerIdx) {
         return this.isEditingAllowed && !this.isAnswerOpen(answerIdx) ? { cursor: 'pointer' } : {};
       },
@@ -213,6 +218,19 @@
 
         return classes;
       },
+      emitOpen(answerIdx) {
+        if (!this.isEditingAllowed) {
+          return;
+        }
+
+        this.$emit('open', answerIdx);
+      },
+      emitClose() {
+        this.$emit('close');
+      },
+      emitUpdate(updatedAnswers) {
+        this.$emit('update', updatedAnswers);
+      },
       moveAnswerUp(answerIdx) {
         if (this.isAnswerFirst(answerIdx)) {
           return;
@@ -226,11 +244,12 @@
           };
         });
 
-        if (answerIdx === this.openAnswerIdx) {
-          this.openAnswerIdx = answerIdx - 1;
-        }
-
         this.emitUpdate(updatedAnswers);
+        if (this.isAnswerOpen(answerIdx)) {
+          this.emitOpen(answerIdx - 1);
+        } else if (this.isAnswerOpen(answerIdx - 1)) {
+          this.emitOpen(answerIdx);
+        }
       },
       moveAnswerDown(answerIdx) {
         if (this.isAnswerLast(answerIdx)) {
@@ -245,11 +264,12 @@
           };
         });
 
-        if (answerIdx === this.openAnswerIdx) {
-          this.openAnswerIdx = answerIdx + 1;
-        }
-
         this.emitUpdate(updatedAnswers);
+        if (this.isAnswerOpen(answerIdx)) {
+          this.emitOpen(answerIdx + 1);
+        } else if (this.isAnswerOpen(answerIdx + 1)) {
+          this.emitOpen(answerIdx);
+        }
       },
       deleteAnswer(answerIdx) {
         let updatedAnswers = JSON.parse(JSON.stringify(this.answers));
@@ -263,7 +283,11 @@
         });
 
         this.emitUpdate(updatedAnswers);
-        this.closeAnswer();
+        if (this.isAnswerOpen(answerIdx)) {
+          this.emitClose();
+        } else if (this.openAnswerIdx > answerIdx) {
+          this.emitOpen(this.openAnswerIdx - 1);
+        }
       },
       onAnswerClick(event, answerIdx) {
         // do not open answer on toolbar click
@@ -280,7 +304,7 @@
           return;
         }
 
-        this.openAnswer(answerIdx);
+        this.emitOpen(answerIdx);
       },
       onToolbarClick(action, answerIdx) {
         switch (action) {
@@ -296,19 +320,6 @@
             this.deleteAnswer(answerIdx);
             break;
         }
-      },
-      openAnswer(answerIdx) {
-        if (!this.isEditingAllowed) {
-          return;
-        }
-
-        this.openAnswerIdx = answerIdx;
-      },
-      closeAnswer() {
-        this.openAnswerIdx = null;
-      },
-      isAnswerOpen(answerIdx) {
-        return answerIdx === this.openAnswerIdx;
       },
       updateAnswerText(newAnswerText, answerIdx) {
         if (newAnswerText === this.answers[answerIdx].answer) {
@@ -335,10 +346,7 @@
         });
 
         this.emitUpdate(updatedAnswers);
-        this.openAnswer(updatedAnswers.length - 1);
-      },
-      emitUpdate(updatedAnswers) {
-        this.$emit('update', updatedAnswers);
+        this.emitOpen(updatedAnswers.length - 1);
       },
     },
   };

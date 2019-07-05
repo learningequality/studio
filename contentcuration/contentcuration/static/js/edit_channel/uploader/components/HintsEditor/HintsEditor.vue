@@ -75,18 +75,19 @@
       hints: {
         type: Array,
       },
-    },
-    data() {
-      return {
-        openHintIdx: null,
-      };
+      openHintIdx: {
+        type: Number,
+      },
     },
     methods: {
-      openHint(hintIdx) {
-        this.openHintIdx = hintIdx;
+      emitOpen(hintIdx) {
+        this.$emit('open', hintIdx);
       },
-      closeHint() {
-        this.openHintIdx = null;
+      emitClose() {
+        this.$emit('close');
+      },
+      emitUpdate(updatedHints) {
+        this.$emit('update', updatedHints);
       },
       isHintOpen(hintIdx) {
         return hintIdx === this.openHintIdx;
@@ -110,11 +111,12 @@
           };
         });
 
-        if (hintIdx === this.openHintIdx) {
-          this.openHintIdx = hintIdx - 1;
-        }
-
         this.emitUpdate(updatedHints);
+        if (this.isHintOpen(hintIdx)) {
+          this.emitOpen(hintIdx - 1);
+        } else if (this.isHintOpen(hintIdx - 1)) {
+          this.emitOpen(hintIdx);
+        }
       },
       moveHintDown(hintIdx) {
         if (this.isHintLast(hintIdx)) {
@@ -129,11 +131,12 @@
           };
         });
 
-        if (hintIdx === this.openHintIdx) {
-          this.openHintIdx = hintIdx + 1;
-        }
-
         this.emitUpdate(updatedHints);
+        if (this.isHintOpen(hintIdx)) {
+          this.emitOpen(hintIdx + 1);
+        } else if (this.isHintOpen(hintIdx + 1)) {
+          this.emitOpen(hintIdx);
+        }
       },
       deleteHint(hintIdx) {
         let updatedHints = JSON.parse(JSON.stringify(this.hints));
@@ -147,7 +150,11 @@
         });
 
         this.emitUpdate(updatedHints);
-        this.closeHint();
+        if (this.isHintOpen(hintIdx)) {
+          this.emitClose();
+        } else if (this.openHintIdx > hintIdx) {
+          this.emitOpen(this.openHintIdx - 1);
+        }
       },
       onHintClick(event, hintIdx) {
         if (this.isHintOpen(hintIdx)) {
@@ -159,7 +166,7 @@
           return;
         }
 
-        this.openHint(hintIdx);
+        this.emitOpen(hintIdx);
       },
       onToolbarClick(action, hintIdx) {
         switch (action) {
@@ -189,7 +196,7 @@
         });
 
         this.emitUpdate(updatedHints);
-        this.openHint(updatedHints.length - 1);
+        this.emitOpen(updatedHints.length - 1);
       },
       updateHintText(newHintText, hintIdx) {
         if (newHintText === this.hints[hintIdx].hint) {
@@ -200,9 +207,6 @@
         updatedHints[hintIdx].hint = newHintText;
 
         this.emitUpdate(updatedHints);
-      },
-      emitUpdate(updatedHints) {
-        this.$emit('update', updatedHints);
       },
     },
   };

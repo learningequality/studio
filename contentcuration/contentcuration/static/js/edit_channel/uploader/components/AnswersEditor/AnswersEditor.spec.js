@@ -265,7 +265,7 @@ describe('AnswersEditor', () => {
     });
   });
 
-  describe('on answer text update', () => {
+  describe('on an answer click', () => {
     beforeEach(() => {
       wrapper = mount(AnswersEditor, {
         propsData: {
@@ -278,6 +278,50 @@ describe('AnswersEditor', () => {
       });
 
       clickAnswer(wrapper, 1);
+    });
+
+    it('emits open event with a correct answer idx', () => {
+      expect(wrapper.emitted().open).toBeTruthy();
+      expect(wrapper.emitted().open.length).toBe(1);
+      expect(wrapper.emitted().open[0][0]).toBe(1);
+    });
+  });
+
+  describe('on new answer button click', () => {
+    beforeEach(() => {
+      wrapper = mount(AnswersEditor, {
+        propsData: {
+          questionKind: AssessmentItemTypes.SINGLE_SELECTION,
+          answers: [
+            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+            { answer: 'Peanut butter', correct: false, order: 2 },
+          ],
+        },
+      });
+
+      clickNewAnswerBtn(wrapper);
+    });
+
+    it('emits open event with a new answer idx', () => {
+      expect(wrapper.emitted().open).toBeTruthy();
+      expect(wrapper.emitted().open.length).toBe(1);
+      expect(wrapper.emitted().open[0][0]).toBe(2);
+    });
+  });
+
+  describe('on answer text update', () => {
+    beforeEach(() => {
+      wrapper = mount(AnswersEditor, {
+        propsData: {
+          questionKind: AssessmentItemTypes.SINGLE_SELECTION,
+          answers: [
+            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+            { answer: 'Peanut butter', correct: false, order: 2 },
+          ],
+          openAnswerIdx: 1,
+        },
+      });
+
       updateOpenAnswerText(wrapper, 'Irish butter');
     });
 
@@ -300,10 +344,10 @@ describe('AnswersEditor', () => {
             { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
             { answer: 'Peanut butter', correct: false, order: 2 },
           ],
+          openAnswerIdx: 1,
         },
       });
 
-      clickAnswer(wrapper, 1);
       wrapper
         .findAll('[data-test=answerRadio]')
         .at(1)
@@ -331,17 +375,49 @@ describe('AnswersEditor', () => {
           ],
         },
       });
-
-      clickMoveAnswerUp(wrapper, 1);
     });
 
     it('emits update event with a payload containing updated and properly ordered answers', () => {
+      clickMoveAnswerUp(wrapper, 1);
+
       expect(wrapper.emitted().update).toBeTruthy();
       expect(wrapper.emitted().update.length).toBe(1);
       expect(wrapper.emitted().update[0][0]).toEqual([
         { answer: 'Peanut butter', correct: false, order: 1 },
         { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 2 },
       ]);
+    });
+
+    describe('if moved answer was open', () => {
+      beforeEach(() => {
+        wrapper.setProps({
+          openAnswerIdx: 1,
+        });
+      });
+
+      it('emits open event with updated answer index', () => {
+        clickMoveAnswerUp(wrapper, 1);
+
+        expect(wrapper.emitted().open).toBeTruthy();
+        expect(wrapper.emitted().open.length).toBe(1);
+        expect(wrapper.emitted().open[0][0]).toBe(0);
+      });
+    });
+
+    describe('if an answer above a moved answer was open', () => {
+      beforeEach(() => {
+        wrapper.setProps({
+          openAnswerIdx: 0,
+        });
+
+        clickMoveAnswerUp(wrapper, 1);
+      });
+
+      it('emits open event with updated, originally open, answer index', () => {
+        expect(wrapper.emitted().open).toBeTruthy();
+        expect(wrapper.emitted().open.length).toBe(1);
+        expect(wrapper.emitted().open[0][0]).toBe(1);
+      });
     });
   });
 
@@ -356,17 +432,49 @@ describe('AnswersEditor', () => {
           ],
         },
       });
-
-      clickMoveAnswerDown(wrapper, 0);
     });
 
     it('emits update event with a payload containing updated and properly ordered answers', () => {
+      clickMoveAnswerDown(wrapper, 0);
+
       expect(wrapper.emitted().update).toBeTruthy();
       expect(wrapper.emitted().update.length).toBe(1);
       expect(wrapper.emitted().update[0][0]).toEqual([
         { answer: 'Peanut butter', correct: false, order: 1 },
         { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 2 },
       ]);
+    });
+
+    describe('if moved answer was open', () => {
+      beforeEach(() => {
+        wrapper.setProps({
+          openAnswerIdx: 0,
+        });
+      });
+
+      it('emits open event with updated answer index', () => {
+        clickMoveAnswerDown(wrapper, 0);
+
+        expect(wrapper.emitted().open).toBeTruthy();
+        expect(wrapper.emitted().open.length).toBe(1);
+        expect(wrapper.emitted().open[0][0]).toBe(1);
+      });
+    });
+
+    describe('if an answer below a moved answer was open', () => {
+      beforeEach(() => {
+        wrapper.setProps({
+          openAnswerIdx: 1,
+        });
+
+        clickMoveAnswerDown(wrapper, 0);
+      });
+
+      it('emits open event with updated, originally open, answer index', () => {
+        expect(wrapper.emitted().open).toBeTruthy();
+        expect(wrapper.emitted().open.length).toBe(1);
+        expect(wrapper.emitted().open[0][0]).toBe(0);
+      });
     });
   });
 
@@ -381,16 +489,47 @@ describe('AnswersEditor', () => {
           ],
         },
       });
-
-      clickDeleteAnswer(wrapper, 0);
     });
 
     it('emits update event with a payload containing updated and properly ordered answers', () => {
+      clickDeleteAnswer(wrapper, 0);
+
       expect(wrapper.emitted().update).toBeTruthy();
       expect(wrapper.emitted().update.length).toBe(1);
       expect(wrapper.emitted().update[0][0]).toEqual([
         { answer: 'Peanut butter', correct: false, order: 1 },
       ]);
+    });
+
+    describe('if deleted answer was open', () => {
+      beforeEach(() => {
+        wrapper.setProps({
+          openAnswerIdx: 0,
+        });
+      });
+
+      it('emits close event', () => {
+        clickDeleteAnswer(wrapper, 0);
+
+        expect(wrapper.emitted().close).toBeTruthy();
+        expect(wrapper.emitted().close.length).toBe(1);
+      });
+    });
+
+    describe('if an answer below a deleted answer was open', () => {
+      beforeEach(() => {
+        wrapper.setProps({
+          openAnswerIdx: 1,
+        });
+
+        clickDeleteAnswer(wrapper, 0);
+      });
+
+      it('emits open event with updated, originally open, answer index', () => {
+        expect(wrapper.emitted().open).toBeTruthy();
+        expect(wrapper.emitted().open.length).toBe(1);
+        expect(wrapper.emitted().open[0][0]).toBe(0);
+      });
     });
   });
 });

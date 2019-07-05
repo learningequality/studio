@@ -18,6 +18,7 @@
         @open="openItem(itemIdx)"
         @newItemAdded="onNewItemAdded"
         @itemsSwapped="onItemsSwapped"
+        @itemDeleted="onItemDeleted"
       />
     </template>
 
@@ -108,6 +109,13 @@
         if (this.openItemIdx === secondItemIdx) {
           this.openItemIdx = firstItemIdx;
           return;
+        }
+      },
+      onItemDeleted(itemIdx) {
+        if (this.openItemIdx === itemIdx) {
+          this.closeItem();
+        } else if (this.openItemIdx > itemIdx) {
+          this.openItem(this.openItemIdx - 1);
         }
       },
     },

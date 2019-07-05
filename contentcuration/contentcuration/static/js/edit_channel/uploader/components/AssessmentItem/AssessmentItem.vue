@@ -103,14 +103,20 @@
                 <AnswersEditor
                   :questionKind="kind"
                   :answers="answers"
+                  :openAnswerIdx="openAnswerIdx"
                   @update="onAnswersChange"
+                  @open="openAnswer"
+                  @close="closeAnswer"
                 />
 
                 <VDivider class="mt-3 mb-3" />
 
                 <HintsEditor
                   :hints="hints"
+                  :openHintIdx="openHintIdx"
                   @update="onHintsChange"
+                  @open="openHint"
+                  @close="closeHint"
                 />
               </VFlex>
             </VLayout>
@@ -198,6 +204,8 @@
     },
     data() {
       return {
+        openHintIdx: null,
+        openAnswerIdx: null,
         kindSelectKey: 0,
         dialog: {
           open: false,
@@ -291,6 +299,8 @@
           nodeId: this.nodeId,
           assessmentItemIdx: this.itemIdx,
         });
+
+        this.$emit('itemDeleted', this.itemIdx);
       },
       addItemAbove() {
         this.addNodeAssessmentDraftItem({
@@ -475,6 +485,20 @@
             this.moveItemDown();
             break;
         }
+      },
+      openHint(hintIdx) {
+        this.openHintIdx = hintIdx;
+        this.closeAnswer();
+      },
+      closeHint() {
+        this.openHintIdx = null;
+      },
+      openAnswer(answerIdx) {
+        this.openAnswerIdx = answerIdx;
+        this.closeHint();
+      },
+      closeAnswer() {
+        this.openAnswerIdx = null;
       },
     },
   };
