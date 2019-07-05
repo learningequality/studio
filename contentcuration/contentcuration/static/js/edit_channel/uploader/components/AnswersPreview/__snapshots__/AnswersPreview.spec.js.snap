@@ -1,0 +1,20 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AnswersPreview for an input question renders all answers 1`] = `
+<div>
+  <!---->
+  <!---->
+  <div role="list" class="v-list theme--light">
+    <div role="listitem">
+      <div class="v-list__tile theme--light">
+        Mayonnaise (I mean you can, but...)
+      </div>
+    </div>
+    <div role="listitem">
+      <div class="v-list__tile theme--light">
+        Peanut butter
+      </div>
+    </div>
+  </div>
+</div>
+`;
