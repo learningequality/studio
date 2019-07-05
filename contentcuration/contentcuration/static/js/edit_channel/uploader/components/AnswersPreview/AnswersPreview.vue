@@ -28,14 +28,14 @@
         />
       </template>
 
-      <ul v-if="isInputQuestion">
-        <li
+      <VList v-if="isInputQuestion">
+        <VListTile
           v-for="(answer, idx) in answers"
           :key="idx"
         >
           {{ answer.answer }}
-        </li>
-      </ul>
+        </VListTile>
+      </VList>
     </template>
   </div>
 </template>
