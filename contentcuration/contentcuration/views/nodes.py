@@ -176,7 +176,16 @@ def get_total_size(request, ids):
 @permission_classes((IsAuthenticated,))
 @api_view(['GET'])
 def get_nodes_by_ids(request, ids):
-    nodes = ContentNode.objects.prefetch_related('children', 'files', 'assessment_items', 'tags')\
+    nodes = ContentNode.objects.prefetch_related(
+                            'children',
+                            'files',
+                            'assessment_items',
+                            'tags',
+                            'prerequisite',
+                            'license',
+                            'slideshow_slides',
+                            'is_prerequisite_of'
+                        )\
                        .filter(pk__in=ids.split(","))\
                        .defer('node_id', 'original_source_node_id', 'source_node_id', 'content_id',
                               'original_channel_id', 'source_channel_id', 'source_id', 'source_domain', 'created', 'modified')

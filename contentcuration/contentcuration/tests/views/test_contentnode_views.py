@@ -76,7 +76,7 @@ class SimplfiedContentNodeSerializerTestCase(BaseGetNodesByIdSerializerTestCaseM
     endpoint = "get_nodes_by_ids_simplified"
     serializer_fields = (
         'title', 'id', 'sort_order', 'kind', 'children', 'parent', 'metadata', 'content_id', 'prerequisite',
-        'is_prerequisite_of', 'parent_title', 'ancestors', 'tree_id', 'language', 'role_visibility'
+        'is_prerequisite_of', 'ancestors', 'tree_id', 'language', 'role_visibility'
     )
 
 
@@ -85,7 +85,7 @@ class ContentNodeSerializerTestCase(BaseGetNodesByIdSerializerTestCaseMixin, Bas
     serializer_fields = (
         'title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder',
         'license', 'language', 'license_description', 'assessment_items', 'slideshow_slides',
-        'files', 'parent_title', 'ancestors', 'modified', 'original_channel', 'kind', 'parent',
+        'files', 'ancestors', 'modified', 'original_channel', 'kind', 'parent',
         'children', 'published', 'associated_presets', 'valid', 'metadata', 'original_source_node_id',
         'tags', 'extra_fields', 'prerequisite', 'is_prerequisite_of', 'node_id', 'tree_id',
         'publishing', 'freeze_authoring_data', 'role_visibility', 'provider', 'aggregator',
@@ -98,7 +98,7 @@ class CompleteContentNodeSerializerTestCase(BaseGetNodesByIdSerializerTestCaseMi
     serializer_fields = (
         'title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder',
         'license', 'language', 'node_id', 'license_description', 'assessment_items',
-        'slideshow_slides', 'files', 'parent_title', 'content_id', 'modified', 'kind', 'parent',
+        'slideshow_slides', 'files', 'content_id', 'modified', 'kind', 'parent',
         'children', 'published', 'associated_presets', 'valid', 'metadata', 'ancestors', 'tree_id',
         'tags', 'extra_fields', 'original_channel', 'prerequisite', 'is_prerequisite_of',
         'thumbnail_encoding', 'thumbnail_src', 'freeze_authoring_data', 'publishing',
