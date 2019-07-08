@@ -551,6 +551,20 @@ class SecretToken(models.Model):
         return "{}-{}".format(self.token[:5], self.token[5:])
 
 
+def get_channel_thumbnail(channel):
+    if not isinstance(channel, dict):
+        channel = channel.__dict__
+    if channel.get("thumbnail_encoding"):
+        thumbnail_data = channel.get("thumbnail_encoding")
+        if thumbnail_data.get("base64"):
+            return thumbnail_data["base64"]
+
+    if channel.get("thumbnail") and 'static' not in channel.get("thumbnail"):
+        return generate_storage_url(channel.get("thumbnail"))
+
+    return '/static/img/kolibri_placeholder.png'
+
+
 class Channel(models.Model):
     """ Permissions come from association with organizations """
     id = UUIDField(primary_key=True, default=uuid.uuid4)
@@ -697,15 +711,7 @@ class Channel(models.Model):
         super(Channel, self).save(*args, **kwargs)
 
     def get_thumbnail(self):
-        if self.thumbnail_encoding:
-            thumbnail_data = self.thumbnail_encoding
-            if thumbnail_data.get("base64"):
-                return thumbnail_data["base64"]
-
-        if self.thumbnail and 'static' not in self.thumbnail:
-            return generate_storage_url(self.thumbnail)
-
-        return '/static/img/kolibri_placeholder.png'
+        return get_channel_thumbnail(self)
 
     def has_changes(self):
         return self.main_tree.get_descendants(include_self=True).filter(changed=True).exists()
