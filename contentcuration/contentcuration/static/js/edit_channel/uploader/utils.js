@@ -1,4 +1,4 @@
-import { AssessmentItemTypes } from './constants';
+import { AssessmentItemTypes, AssessmentItemValidationErrors } from './constants';
 
 export const questionHasOneCorrectAnswer = questionKind => {
   return (
@@ -111,6 +111,170 @@ export const updateAnswersToQuestionKind = (questionKind, answers) => {
   return newAnswers;
 };
 
+/**
+ * Sanitize assesment item answers
+ * @param {Array} answers Assessment item answers
+ * @param {Boolean} removeEmpty Remove all empty answers?
+ * @returns {Array} Cleaned answers
+ */
+export const sanitizeAssessmentItemAnswers = (answers, removeEmpty = false) => {
+  if (!answers || !answers.length) {
+    return [];
+  }
+
+  let sanitizedAnswers = answers.map(answer => {
+    const answerText = answer.answer ? answer.answer.trim() : '';
+
+    return {
+      ...answer,
+      answer: answerText,
+    };
+  });
+
+  if (removeEmpty) {
+    sanitizedAnswers = sanitizedAnswers.filter(answer => answer.answer.length > 0);
+  }
+
+  sanitizedAnswers = sanitizedAnswers.map((answer, answerIdx) => {
+    return {
+      ...answer,
+      order: answerIdx + 1,
+    };
+  });
+
+  return sanitizedAnswers;
+};
+
+/**
+ * Sanitize assesment item hints
+ * @param {Array} hints Assessment item hints
+ * @param {Boolean} removeEmpty Remove all empty hints?
+ * @returns {Array} Cleaned hints
+ */
+export const sanitizeAssessmentItemHints = (hints, removeEmpty = false) => {
+  if (!hints || !hints.length) {
+    return [];
+  }
+
+  let sanitizedHints = hints.map(hint => {
+    const hintText = hint.hint ? hint.hint.trim() : '';
+
+    return {
+      ...hint,
+      hint: hintText,
+    };
+  });
+
+  if (removeEmpty) {
+    sanitizedHints = sanitizedHints.filter(hint => hint.hint.length > 0);
+  }
+
+  sanitizedHints = sanitizedHints.map((hint, hintIdx) => {
+    return {
+      ...hint,
+      order: hintIdx + 1,
+    };
+  });
+
+  return sanitizedHints;
+};
+
+/**
+ * Sanitize an assesment item.
+ *  - trim question text
+ *  - sanitize answers and hints
+ * @param {Array} assessmentItem An assessment item
+ * @param {Boolean} removeEmpty Remove empty answers and hints?
+ * @returns {Array} Cleaned assessment item
+ */
+export const sanitizeAssessmentItem = (assessmentItem, removeEmpty = false) => {
+  const question = assessmentItem.question ? assessmentItem.question.trim() : '';
+  const answers = assessmentItem.answers
+    ? sanitizeAssessmentItemAnswers(assessmentItem.answers, removeEmpty)
+    : [];
+  const hints = assessmentItem.hints
+    ? sanitizeAssessmentItemHints(assessmentItem.hints, removeEmpty)
+    : [];
+
+  return {
+    ...assessmentItem,
+    question,
+    answers,
+    hints,
+  };
+};
+
+/**
+ * Validate an assessment item.
+ * @param {Object} assessmentItem An assessment item. Should be sanitized first.
+ * @returns {Object} { questionErrors, answersErrors } where
+ *                   `questionErrors`{Array} Codes of errors related to a question
+ *                   `answersErrors` {Array} Codes of errors related to answers
+ */
+export const validateAssessmentItem = assessmentItem => {
+  const questionErrors = [];
+  const answersErrors = [];
+
+  const hasOneCorrectAnswer =
+    assessmentItem.answers &&
+    assessmentItem.answers.filter(answer => answer.correct === true).length === 1;
+  const hasAtLeatOneCorrectAnswer =
+    assessmentItem.answers &&
+    assessmentItem.answers.filter(answer => answer.correct === true).length > 0;
+
+  if (!assessmentItem.question) {
+    questionErrors.push(AssessmentItemValidationErrors.BLANK_QUESTION);
+  }
+
+  switch (assessmentItem.type) {
+    case AssessmentItemTypes.MULTIPLE_SELECTION:
+    case AssessmentItemTypes.INPUT_QUESTION:
+      if (!hasAtLeatOneCorrectAnswer) {
+        answersErrors.push(AssessmentItemValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS);
+      }
+      break;
+
+    case AssessmentItemTypes.TRUE_FALSE:
+    case AssessmentItemTypes.SINGLE_SELECTION:
+      if (!hasOneCorrectAnswer) {
+        answersErrors.push(AssessmentItemValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS);
+      }
+      break;
+  }
+
+  return { questionErrors, answersErrors };
+};
+
+export const getAssessmentItemErrorMessage = (error, itemKind) => {
+  switch (error) {
+    case AssessmentItemValidationErrors.BLANK_QUESTION:
+      return 'Question cannot be blank';
+
+    case AssessmentItemValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS:
+      if (
+        itemKind === AssessmentItemTypes.SINGLE_SELECTION ||
+        itemKind === AssessmentItemTypes.TRUE_FALSE
+      ) {
+        return 'Choose a correct answer';
+      }
+
+      if (itemKind === AssessmentItemTypes.MULTIPLE_SELECTION) {
+        return 'Choose at least one correct answer';
+      }
+
+      if ((itemKind = AssessmentItemTypes.INPUT_QUESTION)) {
+        return 'Provide at least one correct answer';
+      }
+
+      break;
+
+    default:
+      return null;
+  }
+};
+
+// TODO @MisRob: Utilities below are not specific to exercise creation.
+// Find/create a file higher in the project structure for general stuff.
 /**
  * Insert an item into an array before another item.
  * @param {Array} arr

@@ -25,6 +25,14 @@ const store = new Vuex.Store({
         mode: modes.VIEW_ONLY,
         // <node ID> : <to be updated or new assessment items> map
         nodesAssessmentDrafts: {},
+        dialog: {
+          open: false,
+          title: '',
+          message: '',
+          submitLabel: '',
+          onSubmit: () => {},
+          onCancel: () => {},
+        },
       },
       getters: getters,
       mutations: mutations,

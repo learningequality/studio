@@ -294,12 +294,23 @@ describe('AnswersEditor', () => {
           questionKind: AssessmentItemTypes.SINGLE_SELECTION,
           answers: [
             { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-            { answer: 'Peanut butter', correct: false, order: 2 },
+            { answer: '  ', correct: true, order: 2 },
+            { answer: 'Peanut butter', correct: false, order: 3 },
           ],
         },
       });
 
       clickNewAnswerBtn(wrapper);
+    });
+
+    it('emits update event with a payload containing all non-empty answers and one new empty answer', () => {
+      expect(wrapper.emitted().update).toBeTruthy();
+      expect(wrapper.emitted().update.length).toBe(1);
+      expect(wrapper.emitted().update[0][0]).toEqual([
+        { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+        { answer: 'Peanut butter', correct: false, order: 2 },
+        { answer: '', correct: false, order: 3 },
+      ]);
     });
 
     it('emits open event with a new answer idx', () => {

@@ -197,12 +197,11 @@
       this.drawer.open = this.showEditList;
     },
     methods: {
-      ...mapActions('edit_modal', ['saveNodes', 'copyNodes']),
+      ...mapActions('edit_modal', ['saveNodes', 'copyNodes', 'prepareForSave']),
       ...mapMutations('edit_modal', {
         select: 'SELECT_NODE',
         deselectAll: 'RESET_SELECTED',
         reset: 'RESET_STATE',
-        prepareForSave: 'PREP_NODES_FOR_SAVE',
         setNode: 'SET_NODE',
         addNodeToList: 'ADD_NODE',
       }),

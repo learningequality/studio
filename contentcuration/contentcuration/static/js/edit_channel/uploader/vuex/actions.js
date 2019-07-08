@@ -27,6 +27,15 @@ export function loadNodes(context, indices) {
   }
 }
 
+export function prepareForSave({ commit, state }) {
+  commit('PREP_NODES_FOR_SAVE');
+
+  for (const nodeId of Object.keys(state.nodesAssessmentDrafts)) {
+    commit('sanitizeNodeAssessmentDraft', { nodeId });
+    commit('validateNodeAssessmentDraft', { nodeId });
+  }
+}
+
 export function removeNode(context, index) {
   let node = context.state.nodes[index];
   if (node.id) {
