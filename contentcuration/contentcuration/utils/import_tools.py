@@ -1,11 +1,14 @@
+# -*- coding: utf-8 -*-
 import datetime
 import json
 import logging
 import os
+import re
 import shutil
 import sqlite3
 import sys
 import tempfile
+import zipfile
 from cStringIO import StringIO
 
 import requests
@@ -13,13 +16,18 @@ from django.conf import settings
 from django.core.files.storage import default_storage
 from django.db import transaction
 from le_utils.constants import content_kinds
+from le_utils.constants import exercises
 from le_utils.constants import format_presets
 from le_utils.constants import roles
 from pressurecooker.encodings import write_base64_to_file
 
 from contentcuration import models
+from contentcuration.api import write_raw_content_to_storage
 from contentcuration.utils.files import create_file_from_contents
 from contentcuration.utils.garbage_collect import get_deleted_chefs_root
+
+reload(sys)
+sys.setdefaultencoding('utf8')
 
 CHANNEL_TABLE = 'content_channelmetadata'
 NODE_TABLE = 'content_contentnode'
@@ -31,6 +39,12 @@ LICENSE_TABLE = 'content_license'
 NODE_COUNT = 0
 FILE_COUNT = 0
 TAG_COUNT = 0
+
+ANSWER_FIELD_MAP = {
+  exercises.SINGLE_SELECTION: 'radio 1',
+  exercises.MULTIPLE_SELECTION: 'radio 1',
+  exercises.INPUT_QUESTION: 'numeric-input 1',
+}
 
 log = logging.getLogger(__name__)
 
@@ -231,7 +245,7 @@ def create_nodes(cursor, target_id, parent, indent=1, download_url=None):
         if kind == content_kinds.TOPIC:
             create_nodes(cursor, target_id, node, indent=indent + 1, download_url=download_url)
         elif kind == content_kinds.EXERCISE:
-            pass
+            create_assessment_items(cursor, node, indent=indent + 1, download_url=download_url)
         create_files(cursor, node, indent=indent + 1, download_url=download_url)
         create_tags(cursor, node, target_id, indent=indent + 1)
 
@@ -256,6 +270,34 @@ def retrieve_license(cursor, license_id):
     return models.License.objects.get(license_name=name), description
 
 
+def download_file(filename, download_url=None, contentnode=None, assessment_item=None, preset=None, file_size=None, lang_id=None):
+    checksum, extension = os.path.splitext(filename)
+    extension = extension.lstrip('.')
+    filepath = models.generate_object_storage_name(checksum, filename)
+
+    # Download file if it hasn't already been downloaded
+    if download_url and not default_storage.exists(filepath):
+        buffer = StringIO()
+        response = requests.get('{}/content/storage/{}/{}/{}'.format(download_url, filename[0], filename[1], filename))
+        for chunk in response:
+            buffer.write(chunk)
+
+        checksum, _, filepath = write_raw_content_to_storage(buffer.getvalue(), ext=extension)
+        buffer.close()
+
+    # Save values to new file object
+    file_obj = models.File(
+        file_format_id=extension,
+        file_size=file_size or default_storage.size(filepath),
+        contentnode=contentnode,
+        assessment_item=assessment_item,
+        language_id=lang_id,
+        preset_id=preset or "",
+    )
+    file_obj.file_on_disk.name = filepath
+    file_obj.save()
+
+
 def create_files(cursor, contentnode, indent=0, download_url=None):
     """ create_files: Get license
         Args:
@@ -275,27 +317,7 @@ def create_files(cursor, contentnode, indent=0, download_url=None):
         log.info("{indent} * FILE {filename}...".format(indent="   |" * indent, filename=filename))
 
         try:
-            filepath = models.generate_object_storage_name(checksum, filename)
-
-            # Download file first
-            if download_url and not default_storage.exists(filepath):
-                buffer = StringIO()
-                response = requests.get('{}/content/storage/{}/{}/{}'.format(download_url, filename[0], filename[1], filename))
-                for chunk in response:
-                    buffer.write(chunk)
-                create_file_from_contents(buffer.getvalue(), ext=extension, node=contentnode, preset_id=preset or "")
-                buffer.close()
-            else:
-                # Save values to new or existing file object
-                file_obj = models.File(
-                    file_format_id=extension,
-                    file_size=file_size,
-                    contentnode=contentnode,
-                    language_id=lang_id,
-                    preset_id=preset or "",
-                )
-                file_obj.file_on_disk.name = filepath
-                file_obj.save()
+            download_file(filename, download_url=download_url, contentnode=contentnode, preset=preset, file_size=file_size, lang_id=lang_id)
 
         except IOError as e:
             log.warning("\b FAILED (check logs for more details)")
@@ -338,3 +360,143 @@ def create_tags(cursor, contentnode, target_id, indent=0):
     # Save tags to node
     contentnode.tags = tag_list
     contentnode.save()
+
+
+def create_assessment_items(cursor, contentnode, indent=0, download_url=None):
+    """ create_assessment_items: Generate assessment items based on perseus zip
+        Args:
+            cursor (sqlite3.Connection): connection to export database
+            contentnode (models.ContentNode): node assessment items reference
+            indent (int): How far to indent print statements
+            download_url (str): Domain to download files from
+        Returns: None
+    """
+
+    # Parse database for files referencing content node and make file models
+    sql_command = 'SELECT checksum, extension '\
+        'preset FROM {table} WHERE contentnode_id=\'{id}\' AND preset=\'exercise\';'\
+        .format(table=FILE_TABLE, id=contentnode.node_id)
+
+    query = cursor.execute(sql_command).fetchall()
+    for checksum, extension in query:
+        filename = "{}.{}".format(checksum, extension)
+        log.info("{indent} * EXERCISE {filename}...".format(indent="   |" * indent, filename=filename))
+
+        try:
+            # Store the downloaded zip into temporary storage
+            tempf = tempfile.NamedTemporaryFile(suffix='.{}'.format(extension), delete=False)
+            response = requests.get('{}/content/storage/{}/{}/{}'.format(download_url, filename[0], filename[1], filename))
+            for chunk in response:
+                tempf.write(chunk)
+            tempf.close()
+            extract_assessment_items(tempf.name, contentnode, download_url=download_url)
+        except IOError as e:
+            log.warning("\b FAILED (check logs for more details)")
+            sys.stderr.write("Restoration Process Error: Failed to save file object {}: {}".format(filename, os.strerror(e.errno)))
+            continue
+        finally:
+            os.unlink(tempf.name)
+
+
+def extract_assessment_items(filepath, contentnode, download_url=None):
+    """ extract_assessment_items: Create and save assessment items to content node
+        Args:
+            filepath (str): Where perseus zip is stored
+            contentnode (models.ContentNode): node assessment items reference
+            download_url (str): Domain to download files from
+        Returns: None
+    """
+
+    try:
+        tempdir = tempfile.mkdtemp()
+        with zipfile.ZipFile(filepath, 'r') as zipf:
+            zipf.extractall(tempdir)
+        os.chdir(tempdir)
+
+        with open('exercise.json', 'rb') as fobj:
+            data = json.load(fobj)
+
+        for index, assessment_id in enumerate(data['all_assessment_items']):
+            with open('{}.json'.format(assessment_id), 'rb') as fobj:
+                assessment_item = generate_assessment_item(
+                    assessment_id,
+                    index,
+                    data['assessment_mapping'][assessment_id],
+                    json.load(fobj),
+                    download_url=download_url
+                )
+                contentnode.assessment_items.add(assessment_item)
+    finally:
+        shutil.rmtree(tempdir)
+
+
+def generate_assessment_item(assessment_id, order, assessment_type, assessment_data, download_url=None):
+    """ generate_assessment_item: Generates a new assessment item
+        Args:
+            assessment_id (str): AssessmentItem.assessment_id value
+            order (Number): AssessmentItem.order value
+            assessment_type (str): AssessmentItem.type value
+            assessment_data (dict): Extracted data from perseus file
+            download_url (str): Domain to download files from
+        Returns: models.AssessmentItem
+    """
+    assessment_item = models.AssessmentItem.objects.create(
+        assessment_id=assessment_id,
+        type=assessment_type,
+        order=order
+    )
+    if assessment_type == exercises.PERSEUS_QUESTION:
+        assessment_item.raw_data = json.dumps(assessment_data)
+    else:
+        # Parse questions
+        assessment_data['question']['content'] = '\n\n'.join(assessment_data['question']['content'].split('\n\n')[:-1])
+        assessment_item.question = process_content(assessment_data['question'], assessment_item, download_url=download_url)
+
+        # Parse answers
+        answer_data = assessment_data['question']['widgets'][ANSWER_FIELD_MAP[assessment_type]]['options']
+        if assessment_type == exercises.INPUT_QUESTION:
+            assessment_item.answers = json.dumps([
+                {'answer': answer['value'], 'correct': True} for answer in answer_data['answers']
+            ])
+        else:
+            assessment_item.answers = json.dumps([
+                {'answer': process_content(answer, assessment_item, download_url=download_url), 'correct': answer['correct']}
+                for answer in answer_data['choices']
+            ])
+            assessment_item.randomize = answer_data['randomize']
+
+        # Parse hints
+        assessment_item.hints = json.dumps([
+            {'hint': process_content(hint, assessment_item, download_url=download_url)}
+            for hint in assessment_data['hints']
+        ])
+
+    assessment_item.save()
+    return assessment_item
+
+
+def process_content(data, assessment_item, download_url=None):
+    """ process_content: Parses perseus text for special formatting (e.g. formulas, images)
+        Args:
+            data (dict): Perseus data to parse (e.g. parsing 'question' field)
+            download_url (str): Domain to download files from
+            assessment_item (models.AssessmentItem): assessment item to save images to
+        Returns: models.AssessmentItem
+    """
+    data['content'] = data['content'].replace(' ', '')  # Remove unrecognized non unicode characters
+    # Process formulas
+    for match in re.finditer(r'(\$[^\$☣]+\$)', data['content']):
+        data['content'] = data['content'].replace(match.group(0), '${}$'.format(match.group(0)))
+
+    # Process images
+
+    for match in re.finditer(r'!\[[^\]]*\]\((\$(\{☣ LOCALPATH\}\/images)\/([^\.]+\.[^\)]+))\)', data['content']):
+        data['content'] = data['content'].replace(match.group(2), exercises.CONTENT_STORAGE_PLACEHOLDER)
+        image_data = data['images'].get(match.group(1))
+        if image_data and image_data.get('width'):
+            data['content'] = data['content'].replace(match.group(3), '{} ={}x{}'.format(match.group(3), image_data['width'], image_data['height']))
+
+        # Save files to db
+        download_file(match.group(3), assessment_item=assessment_item, preset=format_presets.EXERCISE, download_url=download_url)
+
+    return data['content']
