@@ -89,10 +89,19 @@ INSTALLED_APPS = (
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
 
+REDIS_URL = "redis://:{password}@{endpoint}:/".format(
+    password=os.getenv("CELERY_REDIS_PASSWORD") or "",
+    endpoint=os.getenv("CELERY_BROKER_ENDPOINT") or "localhost:6379")
+
+CACHE_REDIS_DB = os.getenv("CACHE_REDIS_DB") or "1"
+
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
-        'LOCATION': 'studio_db_cache',
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': '{url}{db}'.format(url=REDIS_URL, db=CACHE_REDIS_DB),
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        }
     }
 }
 
@@ -325,18 +334,14 @@ IGNORABLE_404_URLS = [
 ]
 
 # CELERY CONFIGURATIONS
-CELERY_BROKER_URL = 'redis://localhost:6379'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379'
-CELERY_BROKER_URL = "redis://:{password}@{endpoint}:/{db}".format(
-    password=os.getenv("CELERY_REDIS_PASSWORD") or "",
-    endpoint=os.getenv("CELERY_BROKER_ENDPOINT") or "localhost:6379",
-    db=os.getenv("CELERY_REDIS_DB") or "0"
+CELERY_BROKER_URL = REDIS_URL
+CELERY_RESULT_BACKEND = REDIS_URL
+CELERY_REDIS_DB = os.getenv("CELERY_REDIS_DB") or "0"
+CELERY_BROKER_URL = "{url}{db}".format(
+    url=REDIS_URL,
+    db=CELERY_REDIS_DB
 )
-CELERY_RESULT_BACKEND = "redis://:{password}@{endpoint}:/{db}".format(
-    password=os.getenv("CELERY_REDIS_PASSWORD") or "",
-    endpoint=os.getenv("CELERY_RESULT_BACKEND_ENDPOINT") or "localhost:6379",
-    db=os.getenv("CELERY_REDIS_DB") or "0"
-) or CELERY_RESULT_BACKEND
+CELERY_RESULT_BACKEND = CELERY_BROKER_URL
 CELERY_TIMEZONE = os.getenv("CELERY_TIMEZONE") or 'Africa/Nairobi'
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
