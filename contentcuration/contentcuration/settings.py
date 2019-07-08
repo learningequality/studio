@@ -93,10 +93,12 @@ REDIS_URL = "redis://:{password}@{endpoint}:/".format(
     password=os.getenv("CELERY_REDIS_PASSWORD") or "",
     endpoint=os.getenv("CELERY_BROKER_ENDPOINT") or "localhost:6379")
 
+CACHE_REDIS_DB = os.getenv("CACHE_REDIS_DB") or "1"
+
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': '{url}{db}'.format(url=REDIS_URL, db=1),
+        'LOCATION': '{url}{db}'.format(url=REDIS_URL, db=CACHE_REDIS_DB),
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         }
@@ -334,9 +336,10 @@ IGNORABLE_404_URLS = [
 # CELERY CONFIGURATIONS
 CELERY_BROKER_URL = REDIS_URL
 CELERY_RESULT_BACKEND = REDIS_URL
+CELERY_REDIS_DB = os.getenv("CELERY_REDIS_DB") or "0"
 CELERY_BROKER_URL = "{url}{db}".format(
     url=REDIS_URL,
-    db=os.getenv("CELERY_REDIS_DB") or "0"
+    db=CELERY_REDIS_DB
 )
 CELERY_RESULT_BACKEND = CELERY_BROKER_URL
 CELERY_TIMEZONE = os.getenv("CELERY_TIMEZONE") or 'Africa/Nairobi'
