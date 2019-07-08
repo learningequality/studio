@@ -1,6 +1,6 @@
 import _ from 'underscore';
 import { modes } from '../constants';
-import { getSelected } from './utils';
+import { getSelected, isAssessmentItemInvalid } from './utils';
 import Constants from 'edit_channel/constants/index';
 import State from 'edit_channel/state';
 
@@ -100,10 +100,43 @@ export function tags() {
   return _.pluck(State.Store.getters.contentTags, 'tag_name');
 }
 
+/**
+ * Return number of node assessment draft items if user has already started
+ * editing the node. Otherwise return number of assessment items retrieved
+ * from the last API call.
+ * @param {*} state
+ */
+export const nodeAssessmentItemsCount = state => nodeId => {
+  const nodeAssessmentDraft = state.nodesAssessmentDrafts[nodeId];
+
+  if (nodeAssessmentDraft !== undefined) {
+    return nodeAssessmentDraft.length;
+  }
+
+  const node = state.nodes.find(node => node.id === nodeId);
+  if (node === undefined) {
+    return 0;
+  }
+
+  return node.assessment_items.length;
+};
+
 export const nodeAssessmentDraft = state => nodeId => {
   if (!Object.keys(state.nodesAssessmentDrafts).includes(nodeId)) {
     return null;
   }
 
   return state.nodesAssessmentDrafts[nodeId];
+};
+
+export const isNodeAssessmentDraftValid = state => nodeId => {
+  const nodeAssessmentDraft = state.nodesAssessmentDrafts[nodeId];
+
+  return !nodeAssessmentDraft.some(isAssessmentItemInvalid);
+};
+
+export const invalidNodeAssessmentDraftItemsCount = state => nodeId => {
+  const nodeAssessmentDraft = state.nodesAssessmentDrafts[nodeId];
+
+  return nodeAssessmentDraft.filter(isAssessmentItemInvalid).length;
 };

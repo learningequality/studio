@@ -59,7 +59,7 @@
 <script>
 
   import { AssessmentItemToolbarActions } from '../../constants';
-  import { swapElements } from '../../utils';
+  import { swapElements, sanitizeAssessmentItemHints } from '../../utils';
   import AssessmentItemToolbar from '../AssessmentItemToolbar/AssessmentItemToolbar.vue';
 
   export default {
@@ -184,11 +184,8 @@
         }
       },
       addNewHint() {
-        let updatedHints = [];
-
-        if (this.hints && this.hints.length) {
-          updatedHints = [...this.hints];
-        }
+        // primarily to disable adding more empty hints
+        const updatedHints = sanitizeAssessmentItemHints(this.hints, true);
 
         updatedHints.push({
           hint: '',

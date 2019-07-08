@@ -119,6 +119,7 @@
     getCorrectAnswersIndices,
     mapCorrectAnswers,
     swapElements,
+    sanitizeAssessmentItemAnswers,
   } from '../../utils';
   import AssessmentItemToolbar from '../AssessmentItemToolbar/AssessmentItemToolbar.vue';
 
@@ -332,11 +333,8 @@
         this.emitUpdate(updatedAnswers);
       },
       addNewAnswer() {
-        let updatedAnswers = [];
-
-        if (this.answers && this.answers.length) {
-          updatedAnswers = [...this.answers];
-        }
+        // primarily to disable adding more empty hints
+        const updatedAnswers = sanitizeAssessmentItemAnswers(this.answers, true);
 
         const defaultCorrectState = this.isInputQuestion ? true : false;
         updatedAnswers.push({

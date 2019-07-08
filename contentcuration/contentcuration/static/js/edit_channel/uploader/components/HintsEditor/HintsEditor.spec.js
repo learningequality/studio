@@ -77,15 +77,23 @@ describe('HintsEditor', () => {
 
   describe('on new hint button click', () => {
     beforeEach(() => {
+      wrapper.setProps({
+        hints: [
+          { hint: 'First hint', order: 1 },
+          { hint: '', order: 2 },
+          { hint: 'Third hint', order: 3 },
+        ],
+      });
+
       clickNewHintBtn(wrapper);
     });
 
-    it('emits update event with a payload containing all hints + new hint', () => {
+    it('emits update event with a payload containing all non-empty hints and one new empty hint', () => {
       expect(wrapper.emitted().update).toBeTruthy();
       expect(wrapper.emitted().update.length).toBe(1);
       expect(wrapper.emitted().update[0][0]).toEqual([
         { hint: 'First hint', order: 1 },
-        { hint: 'Second hint', order: 2 },
+        { hint: 'Third hint', order: 2 },
         { hint: '', order: 3 },
       ]);
     });

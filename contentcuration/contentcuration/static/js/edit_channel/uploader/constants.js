@@ -28,3 +28,8 @@ export const AssessmentItemToolbarActions = {
   ADD_ITEM_BELOW: 'add_item_below',
   DELETE_ITEM: 'delete_item',
 };
+
+export const AssessmentItemValidationErrors = {
+  BLANK_QUESTION: 'BLANK_QUESTION',
+  INVALID_NUMBER_OF_CORRECT_ANSWERS: 'INVALID_NUMBER_OF_CORRECT_ANSWERS',
+};

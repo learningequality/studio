@@ -1,30 +1,113 @@
 <template>
-  <div>
-    <VCard>
-      <VCardTitle
-        v-if="!isOpen"
-        :style="{ 'cursor': 'pointer' }"
-        @click="onClosedQuestionClick"
-      >
+  <VCard>
+    <VCardTitle
+      v-if="!isOpen"
+      :style="{ 'cursor': 'pointer' }"
+      @click="onClosedQuestionClick"
+    >
+      <VContainer fluid>
+        <!-- eslint-disable-next-line -->
+        <VLayout row align-center>
+          <VFlex xs1>
+            {{ order }}
+          </VFlex>
+
+          <VFlex xs4 md5>
+            <div class="caption grey--text mb-1">
+              {{ kindLabel }}
+            </div>
+            <div data-test="questionText">
+              {{ question }}
+            </div>
+          </VFlex>
+
+          <VSpacer />
+
+          <VFlex
+            v-if="isInvalid"
+            xs1
+            lg2
+            data-test="invalidIndicator"
+          >
+            <template v-if="$vuetify.breakpoint.lgAndUp">
+              <VIcon class="red--text">
+                error
+              </VIcon>
+              <span
+                v-if="$vuetify.breakpoint.lgAndUp"
+                class="red--text font-weight-bold"
+              >
+                Incomplete
+              </span>
+            </template>
+
+            <VTooltip v-else top>
+              <template slot="activator" slot-scope="{ on }">
+                <VIcon class="red--text" v-on="on">
+                  error
+                </VIcon>
+              </template>
+              <span>Incomplete</span>
+            </VTooltip>
+          </VFlex>
+
+          <AssessmentItemToolbar
+            itemLabel="question"
+            :displayDeleteIcon="false"
+            :canMoveUp="!isFirst"
+            :canMoveDown="!isLast"
+            class="toolbar"
+            @click="onToolbarClick"
+          />
+        </VLayout>
+
+        <template v-if="displayAnswersPreview">
+          <!-- eslint-disable-next-line -->
+          <VLayout row mt-3 justify-end>
+            <VFlex xs11>
+              <div class="caption grey--text mb-1">
+                Answers
+              </div>
+
+              <AnswersPreview
+                :questionKind="kind"
+                :answers="answers"
+              />
+
+              <HintsPreview
+                :hints="hints"
+                class="hintsPreview"
+              />
+            </VFlex>
+          </VLayout>
+        </template>
+      </VContainer>
+    </VCardTitle>
+
+    <template v-else>
+      <VCardTitle data-test="open">
         <VContainer fluid>
           <VLayout row>
             <VFlex xs1>
               {{ order }}
             </VFlex>
 
-            <VFlex>
-              <div class="caption grey--text mb-1">
-                {{ kindLabel }}
-              </div>
-              <div data-test="questionText">
-                {{ question }}
-              </div>
+            <VFlex xs5>
+              <VSelect
+                :key="kindSelectKey"
+                :items="kindSelectItems"
+                :value="kind"
+                label="Question type"
+                data-test="kindSelect"
+                @input="onKindChange"
+              />
             </VFlex>
 
             <VSpacer />
             <AssessmentItemToolbar
               itemLabel="question"
               :displayDeleteIcon="false"
+              :displayEditIcon="false"
               :canMoveUp="!isFirst"
               :canMoveDown="!isLast"
               class="toolbar"
@@ -32,141 +115,71 @@
             />
           </VLayout>
 
-          <template v-if="displayAnswersPreview">
-            <!-- eslint-disable-next-line -->
-            <VLayout row mt-3 justify-end>
-              <VFlex xs11>
-                <div class="caption grey--text mb-1">
-                  Answers
-                </div>
+          <!-- eslint-disable-next-line -->
+          <VLayout row justify-end>
+            <VFlex xs11>
+              <ErrorList
+                :errors="questionErrors"
+                data-test="questionErrors"
+              />
 
-                <AnswersPreview
-                  :questionKind="kind"
-                  :answers="answers"
-                />
-
-                <HintsPreview
-                  :hints="hints"
-                  class="hintsPreview"
-                />
-              </VFlex>
-            </VLayout>
-          </template>
+              <VTextField
+                label="Question"
+                :value="question"
+                data-test="questionInput"
+                @input="onQuestionChange"
+              />
+            </VFlex>
+          </VLayout>
         </VContainer>
       </VCardTitle>
 
-      <template v-else>
-        <VCardTitle data-test="open">
-          <VContainer fluid>
-            <VLayout row>
-              <VFlex xs1>
-                {{ order }}
-              </VFlex>
-
-              <VFlex xs5>
-                <VSelect
-                  :key="kindSelectKey"
-                  :items="kindSelectItems"
-                  :value="kind"
-                  label="Question type"
-                  data-test="kindSelect"
-                  @input="onKindChange"
-                />
-              </VFlex>
-
-              <VSpacer />
-              <AssessmentItemToolbar
-                itemLabel="question"
-                :displayDeleteIcon="false"
-                :displayEditIcon="false"
-                :canMoveUp="!isFirst"
-                :canMoveDown="!isLast"
-                class="toolbar"
-                @click="onToolbarClick"
+      <VCardText>
+        <VContainer fluid>
+          <!-- eslint-disable-next-line -->
+          <VLayout row justify-end>
+            <VFlex xs11>
+              <ErrorList
+                :errors="answersErrors"
+                data-test="answersErrors"
               />
-            </VLayout>
 
-            <!-- eslint-disable-next-line -->
-            <VLayout row justify-end>
-              <VFlex xs11>
-                <VTextField
-                  label="Question text"
-                  :value="question"
-                  data-test="questionInput"
-                  @input="onQuestionChange"
-                />
-              </VFlex>
-            </VLayout>
-          </VContainer>
-        </VCardTitle>
+              <AnswersEditor
+                :questionKind="kind"
+                :answers="answers"
+                :openAnswerIdx="openAnswerIdx"
+                @update="onAnswersChange"
+                @open="openAnswer"
+                @close="closeAnswer"
+              />
 
-        <VCardText>
-          <VContainer fluid>
-            <!-- eslint-disable-next-line -->
-            <VLayout row justify-end>
-              <VFlex xs11>
-                <AnswersEditor
-                  :questionKind="kind"
-                  :answers="answers"
-                  :openAnswerIdx="openAnswerIdx"
-                  @update="onAnswersChange"
-                  @open="openAnswer"
-                  @close="closeAnswer"
-                />
+              <VDivider class="mt-3 mb-3" />
 
-                <VDivider class="mt-3 mb-3" />
+              <HintsEditor
+                :hints="hints"
+                :openHintIdx="openHintIdx"
+                @update="onHintsChange"
+                @open="openHint"
+                @close="closeHint"
+              />
+            </VFlex>
+          </VLayout>
 
-                <HintsEditor
-                  :hints="hints"
-                  :openHintIdx="openHintIdx"
-                  @update="onHintsChange"
-                  @open="openHint"
-                  @close="closeHint"
-                />
-              </VFlex>
-            </VLayout>
-
-            <!-- eslint-disable-next-line -->
-            <VLayout row justify-end>
-              <VBtn
-                flat
-                color="primary"
-                data-test="closeBtn"
-                @click="onCloseClick"
-              >
-                Close
-              </VBtn>
-            </VLayout>
-          </VContainer>
-        </VCardText>
-      </template>
-    </VCard>
-
-    <DialogBox
-      v-model="dialog.open"
-      :title="dialog.title"
-    >
-      {{ dialog.message }}
-
-      <template slot="controls">
-        <VBtn
-          flat
-          @click="dialog.onCancel"
-        >
-          Cancel
-        </VBtn>
-
-        <VBtn
-          color="primary"
-          flat
-          data-test="dialogSubmitBtn"
-          @click="dialog.onSubmit"
-        >
-          {{ dialog.submitLabel }}
-        </VBtn>
-      </template>
-    </DialogBox>
-  </div>
+          <!-- eslint-disable-next-line -->
+          <VLayout row justify-end>
+            <VBtn
+              flat
+              color="primary"
+              data-test="closeBtn"
+              @click="onCloseClick"
+            >
+              Close
+            </VBtn>
+          </VLayout>
+        </VContainer>
+      </VCardText>
+    </template>
+  </VCard>
 </template>
 
 <script>
@@ -174,14 +187,14 @@
   import { mapGetters, mapMutations } from 'vuex';
 
   import { AssessmentItemTypes, AssessmentItemToolbarActions } from '../../constants';
-  import { updateAnswersToQuestionKind } from '../../utils';
+  import { getAssessmentItemErrorMessage, updateAnswersToQuestionKind } from '../../utils';
 
   import AnswersEditor from '../AnswersEditor/AnswersEditor.vue';
   import AnswersPreview from '../AnswersPreview/AnswersPreview.vue';
   import HintsPreview from '../HintsPreview/HintsPreview.vue';
   import AssessmentItemToolbar from '../AssessmentItemToolbar/AssessmentItemToolbar.vue';
-  import DialogBox from '../DialogBox/DialogBox.vue';
   import HintsEditor from '../HintsEditor/HintsEditor.vue';
+  import ErrorList from '../ErrorList/ErrorList.vue';
 
   export default {
     name: 'AssessmentItem',
@@ -189,9 +202,9 @@
       AnswersEditor,
       AnswersPreview,
       AssessmentItemToolbar,
-      DialogBox,
       HintsEditor,
       HintsPreview,
+      ErrorList,
     },
     props: {
       nodeId: {
@@ -214,41 +227,50 @@
         openHintIdx: null,
         openAnswerIdx: null,
         kindSelectKey: 0,
-        dialog: {
-          open: false,
-          title: '',
-          message: '',
-          submitLabel: '',
-          onSubmit: () => {},
-          onCancel: () => {},
-        },
       };
     },
     computed: {
       ...mapGetters('edit_modal', ['nodeAssessmentDraft']),
-      item() {
-        return this.nodeAssessmentDraft(this.nodeId)[this.itemIdx];
+      itemData() {
+        if (
+          this.nodeAssessmentDraft(this.nodeId) === null ||
+          this.nodeAssessmentDraft(this.nodeId)[this.itemIdx] === undefined
+        ) {
+          return null;
+        }
+
+        return this.nodeAssessmentDraft(this.nodeId)[this.itemIdx].data;
+      },
+      itemValidation() {
+        if (
+          this.nodeAssessmentDraft(this.nodeId) === null ||
+          this.nodeAssessmentDraft(this.nodeId)[this.itemIdx] === undefined
+        ) {
+          return null;
+        }
+
+        return this.nodeAssessmentDraft(this.nodeId)[this.itemIdx].validation;
       },
       order() {
-        if (!this.item || this.item.order === undefined) {
+        if (!this.itemData || this.itemData.order === undefined) {
           return 1;
         }
 
-        return this.item.order + 1;
+        return this.itemData.order + 1;
       },
       question() {
-        if (!this.item || !this.item.question) {
+        if (!this.itemData || !this.itemData.question) {
           return '';
         }
 
-        return this.item.question;
+        return this.itemData.question;
       },
       kind() {
-        if (!this.item || !this.item.type) {
+        if (!this.itemData || !this.itemData.type) {
           return AssessmentItemTypes.SINGLE_SELECTION;
         }
 
-        return this.item.type;
+        return this.itemData.type;
       },
       kindSelectItems() {
         return [
@@ -262,18 +284,42 @@
         return this.kindSelectItems.find(item => item.value === this.kind).text;
       },
       answers() {
-        if (!this.item || !this.item.answers) {
+        if (!this.itemData || !this.itemData.answers) {
           return [];
         }
 
-        return this.item.answers;
+        return this.itemData.answers;
       },
       hints() {
-        if (!this.item || !this.item.hints) {
+        if (!this.itemData || !this.itemData.hints) {
           return [];
         }
 
-        return this.item.hints;
+        return this.itemData.hints;
+      },
+      questionErrors() {
+        if (!this.itemValidation.questionErrors) {
+          return [];
+        }
+
+        return this.itemValidation.questionErrors.map(error =>
+          getAssessmentItemErrorMessage(error, this.kind)
+        );
+      },
+      answersErrors() {
+        if (!this.itemValidation.answersErrors) {
+          return [];
+        }
+
+        return this.itemValidation.answersErrors.map(error =>
+          getAssessmentItemErrorMessage(error, this.kind)
+        );
+      },
+      isInvalid() {
+        return (
+          (this.questionErrors && this.questionErrors.length) ||
+          (this.answersErrors && this.answersErrors.length)
+        );
       },
       isFirst() {
         return this.itemIdx === 0;
@@ -289,67 +335,27 @@
     },
     methods: {
       ...mapMutations('edit_modal', [
-        'addNodeAssessmentDraftItem',
-        'updateNodeAssessmentDraftItem',
-        'deleteNodeAssessmentDraftItem',
-        'swapNodeAssessmentDraftItems',
+        'updateNodeAssessmentDraftItemData',
+        'sanitizeNodeAssessmentDraftItem',
+        'validateNodeAssessmentDraftItem',
+        'openDialog',
       ]),
       updateItem(data) {
-        this.updateNodeAssessmentDraftItem({
+        this.updateNodeAssessmentDraftItemData({
           nodeId: this.nodeId,
           assessmentItemIdx: this.itemIdx,
           data,
         });
-      },
-      deleteItem() {
-        this.deleteNodeAssessmentDraftItem({
+
+        this.sanitizeNodeAssessmentDraftItem({
           nodeId: this.nodeId,
           assessmentItemIdx: this.itemIdx,
         });
 
-        this.$emit('itemDeleted', this.itemIdx);
-      },
-      addItemAbove() {
-        this.addNodeAssessmentDraftItem({
+        this.validateNodeAssessmentDraftItem({
           nodeId: this.nodeId,
-          before: this.itemIdx,
+          assessmentItemIdx: this.itemIdx,
         });
-
-        this.$emit('newItemAdded', this.itemIdx);
-      },
-      addItemBelow() {
-        this.addNodeAssessmentDraftItem({
-          nodeId: this.nodeId,
-          after: this.itemIdx,
-        });
-
-        this.$emit('newItemAdded', this.itemIdx + 1);
-      },
-      moveItemUp() {
-        if (this.isFirst) {
-          return;
-        }
-
-        this.swapWithItem(this.itemIdx - 1);
-      },
-      moveItemDown() {
-        if (this.isLast) {
-          return;
-        }
-
-        this.swapWithItem(this.itemIdx + 1);
-      },
-      swapWithItem(itemIdx) {
-        const firstItemIdx = this.itemIdx;
-        const secondItemIdx = itemIdx;
-
-        this.swapNodeAssessmentDraftItems({
-          nodeId: this.nodeId,
-          firstItemIdx,
-          secondItemIdx,
-        });
-
-        this.$emit('itemsSwapped', { firstItemIdx, secondItemIdx });
       },
       changeKind(newKind) {
         const newAnswers = updateAnswersToQuestionKind(newKind, this.answers);
@@ -364,36 +370,6 @@
       rerenderKindSelect() {
         this.kindSelectKey += 1;
       },
-      openDialog(title, message, submitLabel, onSubmit, onCancel) {
-        this.dialog = {
-          open: true,
-          title,
-          message,
-          submitLabel,
-          onSubmit: () => {
-            if (typeof onSubmit === 'function') {
-              onSubmit();
-            }
-            this.closeDialog();
-          },
-          onCancel: () => {
-            if (typeof onCancel === 'function') {
-              onCancel();
-            }
-            this.closeDialog();
-          },
-        };
-      },
-      closeDialog() {
-        this.dialog = {
-          open: false,
-          title: '',
-          message: '',
-          submitLabel: '',
-          onSubmit: () => {},
-          onCancel: () => {},
-        };
-      },
       onQuestionChange(newQuestion) {
         this.updateItem({ question: newQuestion });
       },
@@ -405,13 +381,14 @@
         switch (newKind) {
           case AssessmentItemTypes.SINGLE_SELECTION:
             if (this.hasMoreCorrectAnswers) {
-              this.openDialog(
-                'Changing question type',
-                'Switching to single selection will set only one answer as correct. Continue?',
-                'Change',
-                () => this.changeKind(newKind),
-                this.rerenderKindSelect
-              );
+              this.openDialog({
+                title: 'Changing question type',
+                message:
+                  'Switching to single selection will set only one answer as correct. Continue?',
+                submitLabel: 'Change',
+                onSubmit: () => this.changeKind(newKind),
+                onCancel: this.rerenderKindSelect,
+              });
             } else {
               this.changeKind(newKind);
             }
@@ -419,23 +396,24 @@
             break;
 
           case AssessmentItemTypes.TRUE_FALSE:
-            this.openDialog(
-              'Changing question type',
-              'Switching to true or false will remove any current answers. Continue?',
-              'Change',
-              () => this.changeKind(newKind),
-              this.rerenderKindSelect
-            );
+            this.openDialog({
+              title: 'Changing question type',
+              message: 'Switching to true or false will remove any current answers. Continue?',
+              submitLabel: 'Change',
+              onSubmit: () => this.changeKind(newKind),
+              onCancel: this.rerenderKindSelect,
+            });
             break;
 
           case AssessmentItemTypes.INPUT_QUESTION:
-            this.openDialog(
-              'Changing question type',
-              'Switching to numeric input will set all answers as correct and remove all non-numeric answers. Continue?',
-              'Change',
-              () => this.changeKind(newKind),
-              this.rerenderKindSelect
-            );
+            this.openDialog({
+              title: 'Changing question type',
+              message:
+                'Switching to numeric input will set all answers as correct and remove all non-numeric answers. Continue?',
+              submitLabel: 'Change',
+              onSubmit: () => this.changeKind(newKind),
+              onCancel: this.rerenderKindSelect,
+            });
             break;
 
           default:
@@ -473,28 +451,31 @@
             break;
 
           case AssessmentItemToolbarActions.DELETE_ITEM:
-            this.openDialog(
-              'Deleting question',
-              'Are you sure you want to delete this question?',
-              'Delete',
-              this.deleteItem
-            );
+            this.$emit('delete');
             break;
 
           case AssessmentItemToolbarActions.ADD_ITEM_ABOVE:
-            this.addItemAbove();
+            this.$emit('addItemAbove');
             break;
 
           case AssessmentItemToolbarActions.ADD_ITEM_BELOW:
-            this.addItemBelow();
+            this.$emit('addItemBelow');
             break;
 
           case AssessmentItemToolbarActions.MOVE_ITEM_UP:
-            this.moveItemUp();
+            if (this.isFirst) {
+              break;
+            }
+
+            this.$emit('moveUp');
             break;
 
           case AssessmentItemToolbarActions.MOVE_ITEM_DOWN:
-            this.moveItemDown();
+            if (this.isLast) {
+              break;
+            }
+
+            this.$emit('moveDown');
             break;
         }
       },

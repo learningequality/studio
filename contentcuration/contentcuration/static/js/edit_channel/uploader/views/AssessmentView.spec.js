@@ -1,7 +1,7 @@
 import { mount, createLocalVue } from '@vue/test-utils';
 import Vuex from 'vuex';
 
-import { AssessmentItemTypes } from '../constants';
+import { AssessmentItemTypes, AssessmentItemValidationErrors } from '../constants';
 import AssessmentView from './AssessmentView';
 
 // TODO @MisRob: Consistent imports
@@ -74,6 +74,14 @@ const EDIT_MODAL_STATE = {
     },
   ],
   nodesAssessmentDrafts: {},
+  dialog: {
+    open: false,
+    title: '',
+    message: '',
+    submitLabel: '',
+    onSubmit: () => {},
+    onCancel: () => {},
+  },
 };
 
 const clickNewQuestionBtn = wrapper => {
@@ -126,38 +134,47 @@ describe('AssessmentView', () => {
     expect(state.nodesAssessmentDrafts).toEqual({
       'exercise-2': [
         {
-          id: 0,
-          question: 'Exercise 2 - Question 1',
-          type: AssessmentItemTypes.INPUT_QUESTION,
-          order: 0,
-          answers: [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-            { answer: 'Peanut butter', correct: true, order: 2 },
-          ],
-          hints: [],
+          data: {
+            id: 0,
+            question: 'Exercise 2 - Question 1',
+            type: AssessmentItemTypes.INPUT_QUESTION,
+            order: 0,
+            answers: [
+              { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+              { answer: 'Peanut butter', correct: true, order: 2 },
+            ],
+            hints: [],
+          },
+          validation: {},
         },
         {
-          id: 1,
-          question: 'Exercise 2 - Question 2',
-          type: AssessmentItemTypes.SINGLE_SELECTION,
-          order: 1,
-          answers: [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-            { answer: 'Peanut butter', correct: false, order: 2 },
-          ],
-          hints: [{ hint: "It's not healthy", order: 1 }, { hint: 'Tasty!', order: 2 }],
+          data: {
+            id: 1,
+            question: 'Exercise 2 - Question 2',
+            type: AssessmentItemTypes.SINGLE_SELECTION,
+            order: 1,
+            answers: [
+              { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+              { answer: 'Peanut butter', correct: false, order: 2 },
+            ],
+            hints: [{ hint: "It's not healthy", order: 1 }, { hint: 'Tasty!', order: 2 }],
+          },
+          validation: {},
         },
         {
-          id: 2,
-          question: 'Exercise 2 - Question 3',
-          type: AssessmentItemTypes.MULTIPLE_SELECTION,
-          order: 2,
-          answers: [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-            { answer: 'Peanut butter', correct: false, order: 2 },
-            { answer: 'Jelly', correct: true, order: 3 },
-          ],
-          hints: [],
+          data: {
+            id: 2,
+            question: 'Exercise 2 - Question 3',
+            type: AssessmentItemTypes.MULTIPLE_SELECTION,
+            order: 2,
+            answers: [
+              { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+              { answer: 'Peanut butter', correct: false, order: 2 },
+              { answer: 'Jelly', correct: true, order: 3 },
+            ],
+            hints: [],
+          },
+          validation: {},
         },
       ],
     });
@@ -231,6 +248,69 @@ describe('AssessmentView', () => {
       expect(isAssessmentItemOpen(assessmentItems.at(1))).toBe(false);
       expect(isAssessmentItemOpen(assessmentItems.at(2))).toBe(false);
       expect(isAssessmentItemOpen(assessmentItems.at(3))).toBe(true);
+    });
+  });
+
+  describe('for an invalid exercise', () => {
+    beforeEach(() => {
+      const state = JSON.parse(JSON.stringify(EDIT_MODAL_STATE));
+      state.nodesAssessmentDrafts = {
+        'exercise-2': [
+          {
+            data: {
+              id: 0,
+              question: '',
+              type: AssessmentItemTypes.INPUT_QUESTION,
+              order: 0,
+              answers: [
+                { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+                { answer: 'Peanut butter', correct: true, order: 2 },
+              ],
+              hints: [],
+            },
+            validation: {
+              questionErrors: [AssessmentItemValidationErrors.BLANK_QUESTION],
+            },
+          },
+          {
+            data: {
+              id: 1,
+              question: 'Exercise 2 - Question 2',
+              type: AssessmentItemTypes.SINGLE_SELECTION,
+              order: 1,
+              answers: [
+                { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+                { answer: 'Peanut butter', correct: false, order: 2 },
+              ],
+              hints: [{ hint: "It's not healthy", order: 1 }, { hint: 'Tasty!', order: 2 }],
+            },
+            validation: {},
+          },
+          {
+            data: {
+              id: 2,
+              question: '',
+              type: AssessmentItemTypes.MULTIPLE_SELECTION,
+              order: 2,
+              answers: [
+                { answer: 'Mayonnaise (I mean you can, but...)', correct: false, order: 1 },
+                { answer: 'Peanut butter', correct: false, order: 2 },
+                { answer: 'Jelly', correct: false, order: 3 },
+              ],
+              hints: [],
+            },
+            validation: {
+              questionErrors: [AssessmentItemValidationErrors.BLANK_QUESTION],
+              answersErrors: [AssessmentItemValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS],
+            },
+          },
+        ],
+      };
+      wrapper = initWrapper(state);
+    });
+
+    it('renders an alert with a correct count of invalid items', () => {
+      expect(wrapper.find('[data-test=alert]').html()).toContain('2 incomplete questions');
     });
   });
 });

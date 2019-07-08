@@ -1,0 +1,14 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ErrorList renders all errors 1`] = `
+<div role="list" class="v-list theme--light">
+  <div role="listitem">
+    <div class="v-list__tile theme--light"><span class="red--text font-weight-medium">Oops!</span></div>
+  </div>
+  <div role="listitem">
+    <div class="v-list__tile theme--light"><span class="red--text font-weight-medium">Something went wrong :(</span></div>
+  </div>
+</div>
+`;
+
+exports[`ErrorList renders nothing when there are no errors 1`] = `undefined`;

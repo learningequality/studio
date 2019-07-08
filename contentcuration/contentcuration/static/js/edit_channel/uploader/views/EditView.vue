@@ -45,8 +45,16 @@
             <!-- Questions tab -->
             <VTab v-if="showQuestionsTab" ref="questiontab" :href="`#${tabs.QUESTIONS}`">
               {{ $tr(tabs.QUESTIONS) }}
-              <VChip v-if="oneSelected.assessment_items.length" color="gray" dark>
-                {{ oneSelected.assessment_items.length }}
+              <VTooltip v-if="isAssessmentDraftInvalid" top>
+                <template v-slot:activator="{ on }">
+                  <VIcon color="red" dark v-on="on">
+                    error
+                  </VIcon>
+                </template>
+                <span>{{ $tr('invalidFieldsToolTip') }}</span>
+              </VTooltip>
+              <VChip v-else color="gray" dark>
+                {{ assessmentItemsCount }}
               </VChip>
             </VTab>
 
@@ -101,7 +109,7 @@
   import { TabNames, modes } from '../constants';
   import DetailsTabView from './DetailsTabView.vue';
   import AssessmentView from './AssessmentView.vue';
-  
+
   export default {
     name: 'EditView',
     $trs: {
@@ -122,7 +130,7 @@
     },
     components: {
       DetailsTabView,
-      AssessmentView
+      AssessmentView,
     },
     props: {
       isClipboard: {
@@ -141,7 +149,15 @@
       };
     },
     computed: {
-      ...mapGetters('edit_modal', ['selected', 'allExercises', 'allResources', 'invalidNodes']),
+      ...mapGetters('edit_modal', [
+        'selected',
+        'allExercises',
+        'allResources',
+        'invalidNodes',
+        'nodeAssessmentDraft',
+        'isNodeAssessmentDraftValid',
+        'nodeAssessmentItemsCount',
+      ]),
       ...mapState('edit_modal', ['nodes', 'selectedIndices', 'mode']),
       noItemText() {
         if (!this.nodes.length) {
@@ -178,6 +194,15 @@
         let messageArgs = { count: this.selected.length };
         if (this.viewOnly) return this.$tr('viewingMultipleCount', messageArgs);
         return this.$tr('editingMultipleCount', messageArgs);
+      },
+      isAssessmentDraftInvalid() {
+        return (
+          this.nodeAssessmentDraft(this.selected[0].id) !== null &&
+          !this.isNodeAssessmentDraftValid(this.selected[0].id)
+        );
+      },
+      assessmentItemsCount() {
+        return this.nodeAssessmentItemsCount(this.selected[0].id);
       },
     },
     watch: {
