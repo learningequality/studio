@@ -494,6 +494,14 @@ class ContentNodeFieldMixin(object):
             return generate_storage_url(str(thumbnail_file))
 
 
+class ReadOnlySimplifiedContentNodeSerializer(SimplifiedContentNodeSerializer):
+    class Meta:
+        model = ContentNode
+        fields = ('title', 'id', 'sort_order', 'kind', 'children', 'parent', 'metadata', 'content_id', 'prerequisite',
+                  'is_prerequisite_of', 'parent_title', 'ancestors', 'tree_id', 'language', 'role_visibility')
+        read_only_fields = ('title', 'id', 'sort_order', 'kind', 'children', 'parent', 'metadata', 'content_id', 'prerequisite',
+                  'is_prerequisite_of', 'parent_title', 'ancestors', 'tree_id', 'language', 'role_visibility')
+
 class RootNodeSerializer(SimplifiedContentNodeSerializer, ContentNodeFieldMixin):
     channel_name = serializers.SerializerMethodField('retrieve_channel_name')
 
@@ -605,6 +613,43 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer, ContentNodeFieldMix
                   'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'original_source_node_id',
                   'tags', 'extra_fields', 'prerequisite', 'is_prerequisite_of', 'node_id', 'tree_id', 'publishing', 'freeze_authoring_data',
                   'role_visibility', 'provider', 'aggregator', 'thumbnail_src')
+
+
+class ReadOnlyContentNodeSerializer(ContentNodeSerializer, ContentNodeFieldMixin):
+    class Meta:
+        list_serializer_class = CustomListSerializer
+        model = ContentNode
+        fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license', 'language',
+                  'license_description', 'assessment_items', 'slideshow_slides', 'files', 'parent_title', 'ancestors', 'modified', 'original_channel',
+                  'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'original_source_node_id',
+                  'tags', 'extra_fields', 'prerequisite', 'is_prerequisite_of', 'node_id', 'tree_id', 'publishing', 'freeze_authoring_data',
+                  'role_visibility', 'provider', 'aggregator', 'thumbnail_src')
+        read_only_fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license', 'language',
+                  'license_description', 'assessment_items', 'slideshow_slides', 'files', 'parent_title', 'ancestors', 'modified', 'original_channel',
+                  'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'original_source_node_id',
+                  'tags', 'extra_fields', 'prerequisite', 'is_prerequisite_of', 'node_id', 'tree_id', 'publishing', 'freeze_authoring_data',
+                  'role_visibility', 'provider', 'aggregator', 'thumbnail_src')
+
+
+class ReadOnlyContentNodeFullSerializer(ContentNodeSerializer):
+    files = FileSerializer(many=True, read_only=True)
+    tags = TagSerializer(many=True)
+    assessment_items = AssessmentItemSerializer(many=True, read_only=True)
+    slideshow_slides = SlideshowSlideSerializer(many=True, read_only=True)
+
+    class Meta:
+        list_serializer_class = CustomListSerializer
+        model = ContentNode
+        fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license', 'language',
+                  'node_id', 'license_description', 'assessment_items', 'slideshow_slides', 'files', 'parent_title', 'content_id', 'modified',
+                  'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'ancestors', 'tree_id',
+                  'tags', 'extra_fields', 'original_channel', 'prerequisite', 'is_prerequisite_of', 'thumbnail_encoding', 'thumbnail_src',
+                  'freeze_authoring_data', 'publishing', 'original_source_node_id', 'role_visibility', 'provider', 'aggregator')
+        read_only_fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license', 'language',
+                  'node_id', 'license_description', 'assessment_items', 'slideshow_slides', 'files', 'parent_title', 'content_id', 'modified',
+                  'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'ancestors', 'tree_id',
+                  'tags', 'extra_fields', 'original_channel', 'prerequisite', 'is_prerequisite_of', 'thumbnail_encoding', 'thumbnail_src',
+                  'freeze_authoring_data', 'publishing', 'original_source_node_id', 'role_visibility', 'provider', 'aggregator')
 
 
 class ContentNodeEditSerializer(ContentNodeSerializer):

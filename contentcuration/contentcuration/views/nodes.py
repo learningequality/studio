@@ -36,6 +36,9 @@ from contentcuration.models import License
 from contentcuration.models import PrerequisiteContentRelationship
 from contentcuration.serializers import ContentNodeEditSerializer
 from contentcuration.serializers import ContentNodeSerializer
+from contentcuration.serializers import ReadOnlyContentNodeFullSerializer
+from contentcuration.serializers import ReadOnlyContentNodeSerializer
+from contentcuration.serializers import ReadOnlySimplifiedContentNodeSerializer
 from contentcuration.serializers import SimplifiedContentNodeSerializer
 from contentcuration.tasks import getnodedetails_task
 from contentcuration.utils.files import duplicate_file
@@ -93,8 +96,8 @@ def get_node_diff(request, channel_id):
                 changed.append(node)
 
     return Response({
-        "original": SimplifiedContentNodeSerializer(original, many=True).data,
-        "changed": SimplifiedContentNodeSerializer(changed, many=True).data,
+        "original": ReadOnlySimplifiedContentNodeSerializer(original, many=True).data,
+        "changed": ReadOnlySimplifiedContentNodeSerializer(changed, many=True).data,
     })
 
 
@@ -147,7 +150,7 @@ def get_prerequisites(request, get_postrequisites, ids):
     return Response({
         "prerequisite_mapping": prerequisite_mapping,
         "postrequisite_mapping": postrequisite_mapping,
-        "prerequisite_tree_nodes": SimplifiedContentNodeSerializer(prerequisite_tree_nodes, many=True).data,
+        "prerequisite_tree_nodes": ReadOnlySimplifiedContentNodeSerializer(prerequisite_tree_nodes, many=True).data,
     })
 
 
@@ -181,7 +184,7 @@ def get_nodes_by_ids(request, ids):
         request.user.can_view_nodes(nodes)
     except PermissionDenied:
         return HttpResponseNotFound("No nodes found for {}".format(ids))
-    serializer = ContentNodeSerializer(nodes, many=True)
+    serializer = ReadOnlyContentNodeSerializer(nodes, many=True)
     return Response(serializer.data)
 
 
@@ -204,8 +207,8 @@ def get_node_path(request, topic_id, tree_id, node_id):
             nodes = topic.get_ancestors(include_self=True, ascending=True)
 
         return Response({
-            'path': ContentNodeSerializer(nodes, many=True).data,
-            'node': node and ContentNodeEditSerializer(node).data,
+            'path': ReadOnlyContentNodeSerializer(nodes, many=True).data,
+            'node': node and ReadOnlyContentNodeFullSerializer(node).data,
             'parent_node_id': topic.kind_id != content_kinds.TOPIC and node.parent and node.parent.node_id
         })
     except ObjectDoesNotExist:
@@ -221,7 +224,7 @@ def get_nodes_by_ids_simplified(request, ids):
         request.user.can_view_nodes(nodes)
     except PermissionDenied:
         return HttpResponseNotFound("No nodes found for {}".format(ids))
-    serializer = SimplifiedContentNodeSerializer(nodes, many=True)
+    serializer = ReadOnlySimplifiedContentNodeSerializer(nodes, many=True)
     return Response(serializer.data)
 
 
@@ -234,7 +237,7 @@ def get_nodes_by_ids_complete(request, ids):
         request.user.can_view_nodes(nodes)
     except PermissionDenied:
         return HttpResponseNotFound("No nodes found for {}".format(ids))
-    serializer = ContentNodeEditSerializer(nodes, many=True)
+    serializer = ReadOnlyContentNodeFullSerializer(nodes, many=True)
     return Response(serializer.data)
 
 
