@@ -10,11 +10,13 @@ const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const WebpackRTLPlugin = require('webpack-rtl-plugin');
+const VuetifyLoaderPlugin = require('vuetify-loader/lib/plugin');
 
 const djangoProjectDir = path.resolve('contentcuration');
 const staticFilesDir = path.resolve(djangoProjectDir, 'contentcuration', 'static');
 const staticJsDir = path.resolve(staticFilesDir, 'js');
 const staticLessDir = path.resolve(staticFilesDir, 'less');
+const assetsDir = path.resolve(djangoProjectDir, 'contentcuration', 'assets');
 
 const bundleEntryDir = path.resolve(staticJsDir, 'bundle_modules');
 const bundleOutputDir = path.resolve(staticJsDir, 'bundles');
@@ -60,9 +62,12 @@ module.exports = (env = {}) => {
     context: bundleEntryDir,
     entry: {
       // Use arrays for every entry to allow for hot reloading.
-      base: ['@babel/polyfill', './base.js'],
-      channel_edit: ['./channel_edit.js'],
-      channel_list: ['./channel_list.js'],
+      channel_edit: [
+        path.resolve(djangoProjectDir, 'contentcuration', 'assets/channelEdit/index.js'),
+      ],
+      channel_list: [
+        path.resolve(djangoProjectDir, 'contentcuration', 'assets/channelList/index.js'),
+      ],
       administration: ['./administration.js'],
       settings: ['./settings.js'],
       // A simple code sandbox to play with components in
@@ -83,11 +88,11 @@ module.exports = (env = {}) => {
       // builds a bundle that holds common code between the 2 entry points
       splitChunks: {
         cacheGroups: {
-          commons: {
-            name: 'common',
-            chunks: 'initial',
-            minChunks: 2,
-          },
+          // commons: {
+          //   name: 'common',
+          //   chunks: 'initial',
+          //   minChunks: 2,
+          // },
           // Chunk css by bundle, not by dynamic split points.
           // This will add a bit to each bundle, but will mean we don't
           // have to dynamically determine which css bundle to load
@@ -123,6 +128,10 @@ module.exports = (env = {}) => {
           use: ['handlebars-template-loader'],
         },
         {
+          test: /\.styl(us)?$/,
+          use: [hot ? `style-loader` : MiniCssExtractPlugin.loader, `css-loader`, 'stylus-loader'],
+        },
+        {
           test: /\.less?$/,
           use: [hot ? `style-loader` : MiniCssExtractPlugin.loader, `css-loader`, postCSSLoader, 'less-loader'],
         },
@@ -149,22 +158,33 @@ module.exports = (env = {}) => {
             options: { name: '[name].[ext]?[hash]' },
           },
         },
+        {
+          test: /\.(png|jpe?g|gif|svg)$/,
+          use: {
+            loader: 'url-loader',
+            options: { limit: 10000, name: '[name].[ext]?[hash]' },
+          },
+        },
       ],
     },
     resolve: {
       alias: {
         // explicit alias definitions (rather than modules) for speed
         edit_channel: path.resolve(staticJsDir, 'edit_channel'),
+        less: path.resolve(staticJsDir, 'less'),
         utils: path.resolve(staticJsDir, 'utils'),
+        shared: path.resolve(assetsDir, 'shared'),
         jquery: studioJqueryDir,
         // TODO just use modules alias
         rawJquery: jqueryDir,
       },
+      extensions: ['.js', '.vue', '.css', '.less'],
       // carryover of path resolution from build.js
       modules: ['node_modules', staticLessDir],
     },
     plugins: [
       new VueLoaderPlugin(),
+      new VuetifyLoaderPlugin(),
       new BundleTracker({
         path: path.resolve(djangoProjectDir, 'build'),
         filename: 'webpack-stats.json',
