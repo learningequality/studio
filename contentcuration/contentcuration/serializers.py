@@ -877,7 +877,7 @@ class UserChannelListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('email', 'first_name', 'last_name', 'id', 'is_active', 'bookmarks')
+        fields = ('email', 'first_name', 'last_name', 'id', 'is_active', 'bookmarks', 'is_admin')
 
 
 class AdminChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
