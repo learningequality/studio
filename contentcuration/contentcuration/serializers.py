@@ -330,6 +330,14 @@ class SimplifiedContentNodeSerializer(BulkSerializerMixin, serializers.ModelSeri
     is_prerequisite_of = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     metadata = serializers.SerializerMethodField('retrieve_metadata')
     ancestors = serializers.SerializerMethodField('get_node_ancestors')
+    valid = serializers.SerializerMethodField('check_valid')
+    thumbnail_src = serializers.SerializerMethodField('retrieve_thumbail_src')
+
+    @staticmethod
+    def setup_eager_loading(queryset):
+        """ Perform necessary eager loading of data. """
+        queryset = queryset.prefetch_related('children')
+        return queryset
 
     def retrieve_metadata(self, node):
         if node.kind_id == content_kinds.TOPIC:
@@ -349,11 +357,51 @@ class SimplifiedContentNodeSerializer(BulkSerializerMixin, serializers.ModelSeri
                 "resource_count": 1,
             }
 
-    @staticmethod
-    def setup_eager_loading(queryset):
-        """ Perform necessary eager loading of data. """
-        queryset = queryset.prefetch_related('children').prefetch_related('files').prefetch_related('assessment_items')
-        return queryset
+    def get_creators(self, descendants):
+        creators = descendants.values_list('copyright_holder', 'author', 'aggregator', 'provider')
+        split_lst = zip(*creators)
+
+        return {
+            "copyright_holders": filter(lambda x: x, set(split_lst[0])) if len(split_lst) > 0 else [],
+            "authors": filter(lambda x: x, set(split_lst[1])) if len(split_lst) > 1 else [],
+            "aggregators": filter(lambda x: x, set(split_lst[2])) if len(split_lst) > 2 else [],
+            "providers": filter(lambda x: x, set(split_lst[3])) if len(split_lst) > 3 else [],
+        }
+
+    def retrieve_thumbail_src(self, node):
+        """ Get either the encoding or the url to use as the <img> src attribute """
+        try:
+            if node.thumbnail_encoding:
+                return json.loads(node.thumbnail_encoding).get('base64')
+        except ValueError:
+            pass
+
+        thumbnail_file = node.files.filter(preset__thumbnail=True).first()
+        if thumbnail_file:
+            return generate_storage_url(str(thumbnail_file))
+
+    def check_valid(self, node):
+        isoriginal = node.node_id == node.original_source_node_id
+        if node.kind_id == content_kinds.TOPIC:
+            return True
+        elif isoriginal and not node.license:
+            return False
+        elif isoriginal and node.license.copyright_holder_required and not node.copyright_holder:
+            return False
+        elif isoriginal and node.license.is_custom and not node.license_description:
+            return False
+        elif node.kind_id == content_kinds.EXERCISE:
+            for aitem in node.assessment_items.exclude(type=exercises.PERSEUS_QUESTION):
+                answers = json.loads(aitem.answers)
+                correct_answers = filter(lambda a: a['correct'], answers)
+                if aitem.question == "" or len(answers) == 0 or len(correct_answers) == 0 or \
+                        any(filter(lambda a: a['answer'] == "", answers)) or \
+                        (aitem.type == exercises.SINGLE_SELECTION and len(correct_answers) > 1) or \
+                        any(filter(lambda h: h['hint'] == "", json.loads(aitem.hints))):
+                    return False
+            return True
+        else:
+            return node.files.filter(preset__supplementary=False).exists()
 
     def to_internal_value(self, data):
         """
@@ -458,47 +506,22 @@ class SimplifiedContentNodeSerializer(BulkSerializerMixin, serializers.ModelSeri
     class Meta:
         model = ContentNode
         fields = ('title', 'id', 'sort_order', 'kind', 'children', 'parent', 'metadata', 'content_id', 'prerequisite',
-                  'is_prerequisite_of', 'ancestors', 'tree_id', 'language', 'role_visibility')
-
-
-""" Shared methods across content node serializers """
-
-
-class ContentNodeFieldMixin(object):
-
-    def get_creators(self, descendants):
-        creators = descendants.values_list('copyright_holder', 'author', 'aggregator', 'provider')
-        split_lst = zip(*creators)
-
-        return {
-            "copyright_holders": filter(lambda x: x, set(split_lst[0])) if len(split_lst) > 0 else [],
-            "authors": filter(lambda x: x, set(split_lst[1])) if len(split_lst) > 1 else [],
-            "aggregators": filter(lambda x: x, set(split_lst[2])) if len(split_lst) > 2 else [],
-            "providers": filter(lambda x: x, set(split_lst[3])) if len(split_lst) > 3 else [],
-        }
-
-    def retrieve_thumbail_src(self, node):
-        """ Get either the encoding or the url to use as the <img> src attribute """
-        try:
-            if node.thumbnail_encoding:
-                return json.loads(node.thumbnail_encoding).get('base64')
-        except ValueError:
-            pass
-
-        thumbnail_file = node.files.filter(preset__thumbnail=True).first()
-        if thumbnail_file:
-            return generate_storage_url(str(thumbnail_file))
+                  'is_prerequisite_of', 'ancestors', 'tree_id', 'language', 'role_visibility', 'description', 'valid',
+                  'thumbnail_src')
 
 
 class ReadOnlySimplifiedContentNodeSerializer(SimplifiedContentNodeSerializer):
     class Meta:
         model = ContentNode
         fields = ('title', 'id', 'sort_order', 'kind', 'children', 'parent', 'metadata', 'content_id', 'prerequisite',
-                  'is_prerequisite_of', 'parent_title', 'ancestors', 'tree_id', 'language', 'role_visibility')
+                  'is_prerequisite_of', 'ancestors', 'tree_id', 'language', 'role_visibility', 'description', 'valid',
+                  'thumbnail_src')
         read_only_fields = ('title', 'id', 'sort_order', 'kind', 'children', 'parent', 'metadata', 'content_id', 'prerequisite',
-                  'is_prerequisite_of', 'parent_title', 'ancestors', 'tree_id', 'language', 'role_visibility')
+                  'is_prerequisite_of', 'ancestors', 'tree_id', 'language', 'role_visibility', 'description', 'valid',
+                  'thumbnail_src')
 
-class RootNodeSerializer(SimplifiedContentNodeSerializer, ContentNodeFieldMixin):
+
+class RootNodeSerializer(SimplifiedContentNodeSerializer):
     channel_name = serializers.SerializerMethodField('retrieve_channel_name')
 
     def retrieve_metadata(self, node):
@@ -523,39 +546,20 @@ class RootNodeSerializer(SimplifiedContentNodeSerializer, ContentNodeFieldMixin)
                   'prerequisite', 'is_prerequisite_of', 'ancestors', 'tree_id', 'role_visibility')
 
 
-class ContentNodeSerializer(SimplifiedContentNodeSerializer, ContentNodeFieldMixin):
+class ContentNodeSerializer(SimplifiedContentNodeSerializer):
     ancestors = serializers.SerializerMethodField('get_node_ancestors')
-    valid = serializers.SerializerMethodField('check_valid')
     associated_presets = serializers.SerializerMethodField('retrieve_associated_presets')
     original_channel = serializers.SerializerMethodField('retrieve_original_channel')
-    thumbnail_src = serializers.SerializerMethodField('retrieve_thumbail_src')
     tags = TagSerializer(many=True, read_only=False)
+
+    @staticmethod
+    def setup_eager_loading(queryset):
+        """ Perform necessary eager loading of data. """
+        queryset = queryset.prefetch_related('children').prefetch_related('files').prefetch_related('assessment_items')
+        return queryset
 
     def retrieve_associated_presets(self, node):
         return node.get_associated_presets()
-
-    def check_valid(self, node):
-        isoriginal = node.node_id == node.original_source_node_id
-        if node.kind_id == content_kinds.TOPIC:
-            return True
-        elif isoriginal and not node.license:
-            return False
-        elif isoriginal and node.license.copyright_holder_required and not node.copyright_holder:
-            return False
-        elif isoriginal and node.license.is_custom and not node.license_description:
-            return False
-        elif node.kind_id == content_kinds.EXERCISE:
-            for aitem in node.assessment_items.exclude(type=exercises.PERSEUS_QUESTION):
-                answers = json.loads(aitem.answers)
-                correct_answers = filter(lambda a: a['correct'], answers)
-                if aitem.question == "" or len(answers) == 0 or len(correct_answers) == 0 or \
-                        any(filter(lambda a: a['answer'] == "", answers)) or \
-                        (aitem.type == exercises.SINGLE_SELECTION and len(correct_answers) > 1) or \
-                        any(filter(lambda h: h['hint'] == "", json.loads(aitem.hints))):
-                    return False
-            return True
-        else:
-            return node.files.filter(preset__supplementary=False).exists()
 
     def retrieve_metadata(self, node):
         if node.kind_id == content_kinds.TOPIC:
@@ -611,17 +615,17 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer, ContentNodeFieldMix
                   'role_visibility', 'provider', 'aggregator', 'thumbnail_src')
 
 
-class ReadOnlyContentNodeSerializer(ContentNodeSerializer, ContentNodeFieldMixin):
+class ReadOnlyContentNodeSerializer(ContentNodeSerializer):
     class Meta:
         list_serializer_class = CustomListSerializer
         model = ContentNode
         fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license', 'language',
-                  'license_description', 'assessment_items', 'slideshow_slides', 'files', 'parent_title', 'ancestors', 'modified', 'original_channel',
+                  'license_description', 'assessment_items', 'slideshow_slides', 'files', 'ancestors', 'modified', 'original_channel',
                   'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'original_source_node_id',
                   'tags', 'extra_fields', 'prerequisite', 'is_prerequisite_of', 'node_id', 'tree_id', 'publishing', 'freeze_authoring_data',
                   'role_visibility', 'provider', 'aggregator', 'thumbnail_src')
         read_only_fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license', 'language',
-                  'license_description', 'assessment_items', 'slideshow_slides', 'files', 'parent_title', 'ancestors', 'modified', 'original_channel',
+                  'license_description', 'assessment_items', 'slideshow_slides', 'files', 'ancestors', 'modified', 'original_channel',
                   'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'original_source_node_id',
                   'tags', 'extra_fields', 'prerequisite', 'is_prerequisite_of', 'node_id', 'tree_id', 'publishing', 'freeze_authoring_data',
                   'role_visibility', 'provider', 'aggregator', 'thumbnail_src')
@@ -637,12 +641,12 @@ class ReadOnlyContentNodeFullSerializer(ContentNodeSerializer):
         list_serializer_class = CustomListSerializer
         model = ContentNode
         fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license', 'language',
-                  'node_id', 'license_description', 'assessment_items', 'slideshow_slides', 'files', 'parent_title', 'content_id', 'modified',
+                  'node_id', 'license_description', 'assessment_items', 'slideshow_slides', 'files', 'content_id', 'modified',
                   'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'ancestors', 'tree_id',
                   'tags', 'extra_fields', 'original_channel', 'prerequisite', 'is_prerequisite_of', 'thumbnail_encoding', 'thumbnail_src',
                   'freeze_authoring_data', 'publishing', 'original_source_node_id', 'role_visibility', 'provider', 'aggregator')
         read_only_fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license', 'language',
-                  'node_id', 'license_description', 'assessment_items', 'slideshow_slides', 'files', 'parent_title', 'content_id', 'modified',
+                  'node_id', 'license_description', 'assessment_items', 'slideshow_slides', 'files', 'content_id', 'modified',
                   'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'ancestors', 'tree_id',
                   'tags', 'extra_fields', 'original_channel', 'prerequisite', 'is_prerequisite_of', 'thumbnail_encoding', 'thumbnail_src',
                   'freeze_authoring_data', 'publishing', 'original_source_node_id', 'role_visibility', 'provider', 'aggregator')

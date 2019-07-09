@@ -291,7 +291,7 @@ function fetch_nodes(ids, url) {
   });
 }
 function fetch_nodes_by_ids(ids) {
-  return fetch_nodes(ids, window.Urls.get_nodes_by_ids);
+  return fetch_nodes(ids, window.Urls.get_nodes_by_ids_simplified);
 }
 
 var ContentNodeModel = BaseModel.extend({
@@ -503,8 +503,7 @@ var ContentNodeCollection = BaseCollection.extend({
       $.ajax({
         method: 'GET',
         url: window.Urls.get_prerequisites((get_postrequisites || false).toString(), ids.join(',')),
-        success: function(data) {
-          var nodes = JSON.parse(data);
+        success: function(nodes) {
           resolve({
             prerequisite_mapping: nodes.prerequisite_mapping,
             postrequisite_mapping: nodes.postrequisite_mapping,
@@ -581,7 +580,7 @@ var ContentNodeCollection = BaseCollection.extend({
     });
   },
   get_all_fetch: function(ids, force_fetch) {
-    return this.get_fetch_nodes(ids, window.Urls.get_nodes_by_ids, force_fetch);
+    return this.get_fetch_nodes(ids, window.Urls.get_nodes_by_ids_simplified, force_fetch);
   },
   get_all_fetch_simplified: function(ids, force_fetch) {
     return this.get_fetch_nodes(ids, window.Urls.get_nodes_by_ids_simplified, force_fetch);

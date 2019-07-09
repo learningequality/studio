@@ -60,14 +60,14 @@ const contentNodesModule = {
   actions: {
     loadNodes(context, contentNodeIDs) {
       // Load nodes that aren't already in the state
-      fetchNodes(context.state, contentNodeIDs, window.Urls.get_nodes_by_ids).then(nodes =>
-        context.commit('SET_NODES', nodes)
+      fetchNodes(context.state, contentNodeIDs, window.Urls.get_nodes_by_ids_simplfied).then(
+        nodes => context.commit('SET_NODES', nodes)
       );
     },
     reloadNodes(context, contentNodeIDs) {
       // Reload nodes
-      fetchNodes(context.state, contentNodeIDs, window.Urls.get_nodes_by_ids, true).then(nodes =>
-        context.commit('SET_NODES', nodes)
+      fetchNodes(context.state, contentNodeIDs, window.Urls.get_nodes_by_ids_simplified, true).then(
+        nodes => context.commit('SET_NODES', nodes)
       );
     },
     loadNodesSimplified(context, contentNodeIDs) {

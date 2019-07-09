@@ -1374,9 +1374,7 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
     this.model.setExtraFields();
     this.containing_list_view = options.containing_list_view;
     this.container = options.container;
-    this.thumbnail = this.model.get('files').filter(function(f) {
-      return f.preset.thumbnail;
-    });
+    this.thumbnail = this.model.get('thumbnail_src');
     this.edited = false;
     this.allow_edit = options.allow_edit;
     this.new_content = options.new_content;

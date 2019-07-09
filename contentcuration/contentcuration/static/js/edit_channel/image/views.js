@@ -125,15 +125,13 @@ export const ThumbnailUploadView = BaseViews.BaseView.extend({
     return 'dropzone_image_' + this.cid;
   },
   get_thumbnail_url: function(ignore_encoding) {
-    var thumbnail = _.find(this.model.get('files'), function(f) {
-      return f.preset.thumbnail;
-    });
+    var thumbnail = this.model.get('thumbnail_src');
     if (!ignore_encoding && this.thumbnail_encoding && this.thumbnail_encoding.base64) {
       return this.thumbnail_encoding.base64;
     } else if (this.image_url) {
       return this.image_url;
     } else if (thumbnail) {
-      return thumbnail.storage_url;
+      return thumbnail;
     } else if (this.model.get('kind') != undefined) {
       return '/static/img/' + this.model.get('kind') + '_placeholder.png';
     } else {
