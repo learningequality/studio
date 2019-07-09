@@ -15,7 +15,7 @@ class ChannelEditPageProbe(BaseProbe):
     def do_probe(self):
         channel = self._get_channel()
         path = "channels/{}/edit".format(channel['id'])
-        self.request(path)
+        self.request(path, prober_name="CHANNEL-EDIT-PAGE-PROBER")
 
 
 if __name__ == "__main__":

@@ -34,6 +34,7 @@ class BaseProbe(object):
         headers = {
             "content-type": "application/x-www-form-urlencoded",
             "referer": url,
+            "X-Studio-Internal-Prober": "LOGIN-PROBER",
         }
 
         r = self.session.post(
@@ -50,7 +51,7 @@ class BaseProbe(object):
         url = "{base_url}/{path}".format(base_url=STUDIO_BASE_URL, path=path_stripped)
         return url
 
-    def request(self, path, action="GET", data=None, headers=None, contenttype="application/json"):
+    def request(self, path, action="GET", data=None, headers=None, contenttype="application/json", prober_name="PROBER"):
         data = data or {}
         headers = headers or {}
 
@@ -65,6 +66,7 @@ class BaseProbe(object):
         })
 
         headers.update({'Content-Type': contenttype})
+        headers.update({'X-Studio-Internal-Prober': prober_name})
         response = self.session.request(action, url, data=data, headers=headers)
         response.raise_for_status()
 

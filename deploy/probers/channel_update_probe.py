@@ -19,7 +19,7 @@ class ChannelUpdateProbe(BaseProbe):
             'id': channel['id']
         }
         path = "api/channel/{}".format(channel['id'])
-        self.request(path, action="PATCH", data=payload, contenttype="application/x-www-form-urlencoded")
+        self.request(path, action="PATCH", data=payload, contenttype="application/x-www-form-urlencoded", prober_name="CHANNEL-UPDATE-PROBER")
 
 
 if __name__ == "__main__":

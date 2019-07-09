@@ -22,7 +22,7 @@ class ChannelCreationProbe(BaseProbe):
             'content_defaults': "{}",
             'editors': [self._get_user_id()]
         }
-        self.request("api/channel", action="POST", data=payload, contenttype="application/x-www-form-urlencoded")
+        self.request("api/channel", action="POST", data=payload, contenttype="application/x-www-form-urlencoded", prober_name="CHANNEL-CREATION-PROBER")
 
 
 if __name__ == "__main__":

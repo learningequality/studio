@@ -28,7 +28,7 @@ class TopicCreationProbe(BaseProbe):
             "parent": channel['main_tree']
         })
         path = "api/contentnode/{}".format(new_topic['id'])
-        self.request(path, action="PUT", data=payload, contenttype="application/x-www-form-urlencoded")
+        self.request(path, action="PUT", data=payload, contenttype="application/x-www-form-urlencoded", prober_name="TOPIC-CREATION-PROBER")
 
 
 if __name__ == "__main__":
