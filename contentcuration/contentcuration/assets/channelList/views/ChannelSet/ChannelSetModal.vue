@@ -199,6 +199,23 @@
     created() {
       this.loadChannels();
     },
+    beforeRouteEnter(to, from, next) {
+      next(vm => {
+        if (!vm.getChannelSet(to.params.channelSetId)) {
+          // Couldn't verify the channelset details, so go back!
+          // We should probaly replace this with a 404 page, as
+          // when navigating in from an external link (as this behaviour
+          // would often be from - it produces a confusing back step)
+          vm.$router.back();
+        }
+      });
+    },
+    beforeRouteUpdate(to, from, next) {
+      if (!this.getChannelSet(to.params.channelSetId)) {
+        // Couldn't verify the channelset details, so cancel navigation!
+        next(false);
+      }
+    },
     computed: {
       ...mapGetters('channelSet', [
         'getChannelSet',
@@ -292,7 +309,7 @@
       }
     },
     methods: {
-      ...mapActions('channelList', ['loadAllChannels']),
+      ...mapActions('channelList', ['loadChannelList']),
       ...mapActions('channelSet', ['saveChannelSet']),
       ...mapMutations('channelSet', {
         updateChannelSet: 'UPDATE_CHANNELSET',
@@ -302,7 +319,7 @@
       },
       loadChannels() {
         this.loadingChannels = true;
-        this.loadAllChannels().then(() => {
+        this.loadChannelList().then(() => {
           this.loadingChannels = false;
         });
       },

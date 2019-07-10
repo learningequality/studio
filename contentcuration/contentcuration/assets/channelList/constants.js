@@ -6,13 +6,6 @@ export const ListTypes = {
   PUBLIC: 'public',
 };
 
-export const ChannelListUrls = {
-  [ListTypes.EDITABLE]: window.Urls['channelslim-list']() + '?edit=true',
-  [ListTypes.STARRED]: window.Urls['channelslim-list']() + '?bookmark=true',
-  [ListTypes.VIEW_ONLY]: window.Urls['channelslim-list']() + '?view=true',
-  [ListTypes.PUBLIC]: window.Urls['channelslim-list']() + '?public=true',
-};
-
 export const InvitationShareModes = {
   EDIT: 'edit',
   VIEW_ONLY: 'view',

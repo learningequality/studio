@@ -466,11 +466,26 @@
     },
     beforeRouteEnter(to, from, next) {
       next(vm => {
-        vm.setChannelDetails(to.params.channelId);
+        const channelId = to.params.channelId;
+        vm.verifyChannel(channelId).then(() => {
+          vm.setChannelDetails(channelId);
+        }).catch(() => {
+          // Couldn't verify the channel details, so go back!
+          // We should probaly replace this with a 404 page, as
+          // when navigating in from an external link (as this behaviour
+          // would often be from - it produces a confusing back step)
+          vm.$router.back();
+        });
       });
     },
     beforeRouteUpdate(to, from, next) {
-      this.setChannelDetails(to.params.channelId);
+      const channelId = to.params.channelId;
+      return this.verifyChannel(channelId).then(() => {
+        this.setChannelDetails(channelId);
+      }).catch(() => {
+        // Couldn't verify the channel details, so go cancel navigation!
+        next(false);
+      });
     },
     computed: {
       ...mapState(['currentLanguage']),
@@ -566,10 +581,29 @@
       },
     },
     methods: {
-      ...mapActions('channelList', ['saveChannel', 'addStar', 'removeStar', 'loadChannelDetails']),
+      ...mapActions('channelList', ['saveChannel', 'addStar', 'removeStar', 'loadChannelList', 'loadChannelDetails']),
       ...mapMutations('channelList', {
         updateChannel: 'UPDATE_CHANNEL',
       }),
+      verifyChannel(channelId) {
+        return new Promise((resolve, reject) => {
+          // Check if we already have the channel locally
+          if (this.getChannel(channelId)) {
+            resolve();
+            return;
+          }
+          // If not, try to load the channel
+          this.loadChannelList({ids: channelId }).then(channels => {
+            // Did our fetch return any channels, then we have a channel!
+            if (channels.length) {
+              resolve();
+              return;
+            }
+            // If not, reject!
+            reject();
+          })
+        });
+      },
       channelLink(channelId) {
         return window.Urls.channel() + `#/${channelId}/view/`;
       },
@@ -578,7 +612,7 @@
       },
       setChannelDetails(channelId) {
         this.channelDetails = null;
-        if (!this.isNew) {
+        if (!isTempId(channelId)) {
           this.loadChannelDetails(channelId).then(details => {
             this.channelDetails = details;
           });

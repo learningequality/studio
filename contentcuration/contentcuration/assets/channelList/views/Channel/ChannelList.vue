@@ -122,7 +122,7 @@
       },
       loadData(listType) {
         this.loading = true;
-        this.loadChannelList(listType).then(() => {
+        this.loadChannelList({ listType }).then(() => {
           this.loading = false;
         });
       },

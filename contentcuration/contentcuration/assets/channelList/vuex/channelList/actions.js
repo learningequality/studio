@@ -1,19 +1,19 @@
-import { ChannelListUrls, ChannelInvitationMapping } from '../../constants';
+import { ChannelInvitationMapping } from '../../constants';
 import { isTempId } from '../../utils';
 import client from 'shared/client';
 import { channelLastSavedState } from './index';
 
-/* CHANNEL LIST ACTIONS */
-export function loadChannelList(context, listType) {
-  return client.get(ChannelListUrls[listType]).then(response => {
-    const channels = response.data;
-    context.commit('ADD_CHANNELS', channels);
-    return channels;
-  });
-}
 
-export function loadAllChannels(context) {
-  return client.get(window.Urls['channelslim-list']()).then(response => {
+/* CHANNEL LIST ACTIONS */
+export function loadChannelList(context, { listType, ids } = {}) {
+  const params = {};
+  if (listType) {
+    params[listType] = true;
+  }
+  if (ids) {
+    params['ids'] = ids;
+  }
+  return client.get(window.Urls['channelslim-list'](), { params }).then(response => {
     const channels = response.data;
     context.commit('ADD_CHANNELS', channels);
     return channels;
