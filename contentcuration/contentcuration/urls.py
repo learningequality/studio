@@ -319,18 +319,65 @@ class UserViewSet(viewsets.ModelViewSet):
                                    Q(view_only_channels__pk__in=channel_list)).distinct()
 
 
+class InvitationFilter(FilterSet):
+    invited = CharFilter(method="filter_invited")
+
+    class Meta:
+        model = Invitation
+        fields = ("invited", )
+
+    def filter_invited(self, queryset, name, value):
+        return queryset.filter(invited=value)
+
+
 class InvitationViewSet(viewsets.ModelViewSet):
     queryset = Invitation.objects.all()
-
+    filter_backends = (DjangoFilterBackend,)
+    filter_class = InvitationFilter
     serializer_class = serializers.InvitationSerializer
 
     def get_queryset(self):
-        if self.request.user.is_admin:
-            return Invitation.objects.all()
-        return Invitation.objects.filter(Q(invited=self.request.user) |
-                                         Q(sender=self.request.user) |
-                                         Q(channel__editors=self.request.user) |
-                                         Q(channel__viewers=self.request.user)).distinct()
+        return Invitation.objects.filter(
+            Q(invited=self.request.user)
+            | Q(sender=self.request.user)
+            | Q(channel__editors=self.request.user)
+            | Q(channel__viewers=self.request.user)
+        ).distinct()
+
+    def _map_fields(self, invitation):
+        invitation["sender"] = {
+            "first_name": invitation["sender__first_name"],
+            "last_name": invitation["sender__last_name"]
+        }
+        invitation.pop("sender__first_name")
+        invitation.pop("sender__last_name")
+        invitation["channel_name"] = invitation["channel__name"]
+        invitation.pop("channel__name")
+        return invitation
+
+    def _serialize_queryset(self, queryset):
+        queryset = queryset.select_related("sender", "channel")
+        return queryset.values(
+            "id",
+            "invited",
+            "email",
+            "sender__first_name",
+            "sender__last_name",
+            "channel_id",
+            "share_mode",
+            "channel__name",
+        )
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            data = map(self._map_fields, self._serialize_queryset(page) or [])
+            return self.get_paginated_response(data)
+
+        data = map(self._map_fields, self._serialize_queryset(queryset) or [])
+        return Response(data)
 
 
 class AssessmentItemViewSet(BulkModelViewSet):
@@ -419,14 +466,7 @@ urlpatterns = [
     url(r'^channels/(?P<channel_id>[^/]{32})/view', views.channel_view_only, name='channel_view_only'),
     url(r'^channels/(?P<channel_id>[^/]{32})/staging', views.channel_staging, name='channel_staging'),
     url(r'^accessible_channels/(?P<channel_id>[^/]{32})$', views.accessible_channels, name='accessible_channels'),
-    url(r'^get_user_channels/$', views.get_user_channels, name='get_user_channels'),
-    url(r'^get_user_bookmarked_channels/$', views.get_user_bookmarked_channels, name='get_user_bookmarked_channels'),
-    url(r'^get_user_edit_channels/$', views.get_user_edit_channels, name='get_user_edit_channels'),
-    url(r'^get_user_view_channels/$', views.get_user_view_channels, name='get_user_view_channels'),
-    url(r'^get_user_public_channels/$', views.get_user_public_channels, name='get_user_public_channels'),
-    url(r'^get_user_pending_channels/$', views.get_user_pending_channels, name='get_user_pending_channels'),
     url(r'^get_user_channel_sets/$', views.get_user_channel_sets, name='get_user_channel_sets'),
-    url(r'^get_channels_by_token/(?P<token>[^/]+)$', views.get_channels_by_token, name='get_channels_by_token'),
     url(r'^accept_channel_invite/$', views.accept_channel_invite, name='accept_channel_invite'),
     url(r'^api/activate_channel$', views.activate_channel_endpoint, name='activate_channel'),
     url(r'^api/get_staged_diff_endpoint$', views.get_staged_diff_endpoint, name='get_staged_diff'),
