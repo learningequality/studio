@@ -52,13 +52,10 @@ from contentcuration.models import SecretToken
 from contentcuration.models import User
 from contentcuration.models import VIEW_ACCESS
 from contentcuration.serializers import AltChannelListSerializer
-from contentcuration.serializers import ChannelListSerializer
-from contentcuration.serializers import ChannelSerializer
-from contentcuration.serializers import ChannelSetChannelListSerializer
 from contentcuration.serializers import ChannelSetSerializer
 from contentcuration.serializers import ContentNodeSerializer
 from contentcuration.serializers import CurrentUserSerializer
-from contentcuration.serializers import InvitationSerializer
+from contentcuration.serializers import RootNodeSerializer
 from contentcuration.serializers import SimplifiedChannelProbeCheckSerializer
 from contentcuration.serializers import TaskSerializer
 from contentcuration.serializers import UserChannelListSerializer
@@ -67,19 +64,6 @@ from contentcuration.tasks import generatechannelcsv_task
 from contentcuration.utils.messages import get_messages
 
 PUBLIC_CHANNELS_CACHE_DURATION = 30  # seconds
-
-
-class ChannelSerializerTypes(Enum):
-    DEFAULT = "default"
-    ALT = "alt"
-    CHANNEL_SET = "channelset"
-
-
-CHANNEL_SERIALIZER_MAP = {
-    ChannelSerializerTypes.DEFAULT.value: ChannelListSerializer,
-    ChannelSerializerTypes.ALT.value: AltChannelListSerializer,
-    ChannelSerializerTypes.CHANNEL_SET.value: ChannelSetChannelListSerializer,
-}
 
 
 @browser_is_supported
@@ -133,16 +117,6 @@ def get_or_set_cached_constants(constant, serializer):
     return constant_data
 
 
-@has_accepted_policies
-def redirect_to_channel(request, channel_id):
-    channel = Channel.objects.get(pk=channel_id)
-    if channel.editors.filter(pk=request.user.pk).exists():
-        return redirect(reverse_lazy('channel', kwargs={'channel_id': channel_id}))
-
-    # it will check the view authorization after the redirect
-    return redirect(reverse_lazy('channel_view_only', kwargs={'channel_id': channel_id}))
-
-
 def redirect_to_channel_edit(request, channel_id):
     return redirect(reverse_lazy('channel', kwargs={'channel_id': channel_id}))
 
@@ -193,52 +167,6 @@ def channel_list(request):
                                                  })
 
 
-def _apply_channel_filters(channels, params, default_serializer=ChannelSerializerTypes.DEFAULT):
-    if params.get('published'):
-        channels = channels.filter(main_tree__published=True)
-
-    # Determine which serializer to use
-    serializer_class = params.get('serializer') or default_serializer.value
-    serializer = CHANNEL_SERIALIZER_MAP.get(serializer_class)
-    serializer = serializer or CHANNEL_SERIALIZER_MAP[ChannelSerializerTypes.DEFAULT.value]
-
-    return serializer(channels, many=True)
-
-
-@api_view(['GET'])
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
-@permission_classes((IsAuthenticated,))
-def get_user_channels(request):
-    channel_list = Channel.objects.prefetch_related('editors', 'viewers')\
-        .filter(Q(deleted=False) & (Q(editors=request.user.pk) | Q(viewers=request.user.pk)))\
-        .annotate(is_view_only=Case(When(editors=request.user, then=Value(0)), default=Value(1), output_field=IntegerField()))
-    channel_serializer = _apply_channel_filters(channel_list, request.query_params)
-
-    return Response(channel_serializer.data)
-
-
-@api_view(['GET'])
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
-@permission_classes((IsAuthenticated,))
-def get_user_bookmarked_channels(request):
-    bookmarked_channels = request.user.bookmarked_channels.exclude(deleted=True)\
-        .select_related('main_tree').prefetch_related('editors')\
-        .defer('trash_tree', 'clipboard_tree', 'staging_tree', 'chef_tree', 'previous_tree', 'viewers')
-    channel_serializer = _apply_channel_filters(bookmarked_channels, request.query_params, default_serializer=ChannelSerializerTypes.ALT)
-    return Response(channel_serializer.data)
-
-
-@api_view(['GET'])
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
-@permission_classes((IsAuthenticated,))
-def get_user_edit_channels(request):
-    edit_channels = request.user.editable_channels.exclude(deleted=True)\
-        .select_related('main_tree').prefetch_related('editors')\
-        .defer('trash_tree', 'clipboard_tree', 'staging_tree', 'chef_tree', 'previous_tree', 'viewers')
-    channel_serializer = _apply_channel_filters(edit_channels, request.query_params, default_serializer=ChannelSerializerTypes.ALT)
-    return Response(channel_serializer.data)
-
-
 @api_view(['GET'])
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
@@ -246,48 +174,6 @@ def get_user_channel_sets(request):
     sets = request.user.channel_sets.prefetch_related('secret_token__channels', 'editors').select_related('secret_token')
     channelset_serializer = ChannelSetSerializer(sets, many=True)
     return Response(channelset_serializer.data)
-
-
-@api_view(['GET'])
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
-@permission_classes((IsAuthenticated,))
-def get_channels_by_token(request, token):
-    channels = Channel.objects.filter(secret_tokens__token=token, deleted=False)
-    channel_serializer = _apply_channel_filters(channels, request.query_params, default_serializer=ChannelSerializerTypes.ALT)
-    return Response(channel_serializer.data)
-
-
-@cache_page(PUBLIC_CHANNELS_CACHE_DURATION)
-@api_view(['GET'])
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
-@permission_classes((IsAuthenticated,))
-def get_user_public_channels(request):
-    channels = Channel.get_public_channels(defer_nonmain_trees=True)
-    channel_serializer = _apply_channel_filters(channels, request.query_params, default_serializer=ChannelSerializerTypes.ALT)
-    return Response(channel_serializer.data)
-
-
-@api_view(['GET'])
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
-@permission_classes((IsAuthenticated,))
-def get_user_view_channels(request):
-    view_channels = request.user.view_only_channels.exclude(deleted=True)\
-        .select_related('main_tree').prefetch_related('editors')\
-        .defer('trash_tree', 'clipboard_tree', 'staging_tree', 'chef_tree', 'previous_tree', 'viewers')
-    channel_serializer = _apply_channel_filters(view_channels, request.query_params, default_serializer=ChannelSerializerTypes.ALT)
-    return Response(channel_serializer.data)
-
-
-@api_view(['GET'])
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
-@permission_classes((IsAuthenticated,))
-def get_user_pending_channels(request):
-    pending_list = Invitation.objects.select_related('channel', 'sender')\
-        .filter(invited=request.user, channel__deleted=False)\
-        .exclude(channel=None)  # Don't include channels that have been deleted
-    invitation_serializer = InvitationSerializer(pending_list, many=True)
-
-    return Response(invitation_serializer.data)
 
 
 @login_required
