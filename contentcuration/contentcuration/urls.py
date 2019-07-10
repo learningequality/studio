@@ -28,6 +28,7 @@ from django.db.models import Prefetch
 from django.db.models import Q
 from django.db.models import Subquery
 from django_filters.rest_framework import BooleanFilter
+from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
 from le_utils.constants import content_kinds
@@ -105,10 +106,11 @@ class ChannelFilter(FilterSet):
     edit = BooleanFilter(method="filter_edit")
     view = BooleanFilter(method="filter_view")
     bookmark = BooleanFilter(method="filter_bookmark")
+    ids = CharFilter(method="filter_ids")
 
     class Meta:
         model = Channel
-        fields = ("edit", "view", "public", "bookmark")
+        fields = ("edit", "view", "public", "bookmark", "ids")
 
     def filter_edit(self, queryset, name, value):
         return queryset.filter(editors=self.request.user)
@@ -118,6 +120,15 @@ class ChannelFilter(FilterSet):
 
     def filter_bookmark(self, queryset, name, value):
         return queryset.filter(bookmarked_by=self.request.user)
+
+    def filter_ids(self, queryset, name, value):
+        try:
+            # Limit SQL params to 50 - shouldn't be fetching this many
+            # ids at once
+            return queryset.filter(pk__in=value.split(",")[:50])
+        except ValueError:
+            # Catch in case of a poorly formed UUID
+            return queryset.none()
 
 
 class SQCount(Subquery):
