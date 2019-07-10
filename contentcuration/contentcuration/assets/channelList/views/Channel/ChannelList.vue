@@ -36,6 +36,11 @@
   import ChannelItem from './ChannelItem.vue';
   import { generateTempId, isTempId } from '../../utils';
 
+  function listTypeValidator(value) {
+    // The value must match one of the ListTypes
+    return Object.values(ListTypes).includes(value);
+  }
+
   export default {
     name: 'ChannelList',
     $trs: {
@@ -51,10 +56,7 @@
     props: {
       listType: {
         type: String,
-        validator: function(value) {
-          // The value must match one of the ListTypes
-          return Object.values(ListTypes).includes(value);
-        },
+        validator: listTypeValidator,
       },
     },
     data() {
@@ -80,13 +82,20 @@
         return this.listType === ListTypes.EDITABLE;
       },
     },
-    watch: {
-      listType() {
-        this.loadData();
-      },
+    beforeRouteEnter(to, from, next) {
+      if(listTypeValidator(to.params.listType)) {
+        return next(vm => {
+          vm.loadData(to.params.listType);
+        });
+      }
+      return next(false);
     },
-    created() {
-      this.loadData();
+    beforeRouteUpdate(to, from, next) {
+      if(listTypeValidator(to.params.listType)) {
+        this.loadData(to.params.listType);
+        return next();
+      }
+      return next(false);
     },
     methods: {
       ...mapActions('channelList', ['loadChannelList']),
@@ -111,9 +120,9 @@
       createChannel() {
         this.setChannel('');
       },
-      loadData() {
+      loadData(listType) {
         this.loading = true;
-        this.loadChannelList(this.listType).then(() => {
+        this.loadChannelList(listType).then(() => {
           this.loading = false;
         });
       },
