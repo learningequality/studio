@@ -12,7 +12,15 @@
 <html dir="{{ LANGUAGE_BIDI|yesno:'rtl,ltr' }}" lang="{{ LANGUAGE_CODE }}">
     <head>
         {% block head %}
-        {% cache 3600 head_cache %}
+        <script>
+            window.DEBUG = "{{DEBUG}}" === "True";
+            window.languageCode = "{{LANGUAGE_CODE}}";
+            window.isRTL = "{{ LANGUAGE_BIDI }}" === "True";
+            try{
+              window.ALL_MESSAGES = JSON.parse("{{ messages|escapejs}}");
+            } catch (error) { /* Page does not require front-end translations */ }
+        </script>
+        {% cache 60 head_cache %}
         <!--[if lt IE 9]>
             <script src="{% static "js/html5shiv.js" %}"></script>
         <![endif] -->
@@ -48,27 +56,16 @@
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-      {% render_bundle_css 'common' %}
-      {% block css_bundle %}
-        {% render_bundle_css 'base' %}
-      {% endblock css_bundle %}
+        {% render_bundle_css 'common' %}
 
-      {% render_offline_css LANGUAGE_CODE %}
-      <script>
-        window.DEBUG = "{{DEBUG}}" === "True";
-        window.languageCode = "{{LANGUAGE_CODE}}";
-        window.isRTL = "{{ LANGUAGE_BIDI }}" === "True";
-        try{
-          window.ALL_MESSAGES = JSON.parse("{{ messages|escapejs}}");
-        } catch (error) { /* Page does not require front-end translations */ }
-      </script>
-      {% if not debug %}
-        <script src={% static 'django_js_reverse/js/reverse.js' %}></script>
-      {% else %}
-        <script src="{% url 'js_reverse' %}" type="text/javascript"></script>
-      {% endif %}
+        {% render_offline_css LANGUAGE_CODE %}
+        {% if not debug %}
+            <script src={% static 'django_js_reverse/js/reverse.js' %}></script>
+        {% else %}
+            <script src="{% url 'js_reverse' %}" type="text/javascript"></script>
+        {% endif %}
 
-      {% render_bundle 'common' 'js' %}
+        {% render_bundle 'common' 'js' %}
 
         <!-- fullstory integration, only on develop until we add an opt-in option. -->
         {% if request.get_host == 'develop.studio.learningequality.org' %}
@@ -92,6 +89,9 @@
         </script>
         {% endif %}
         {% endcache %}
+        {% block css_bundle %}
+            {% render_bundle_css 'base' %}
+        {% endblock css_bundle %}
         <title>Kolibri Studio ({% trans 'Beta' %})</title>
       {% endblock head %}
 
