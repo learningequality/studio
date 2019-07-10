@@ -63,8 +63,32 @@
           />
         </VFlex>
       </VLayout>
+      <VLayout v-if="channelDetails && channelDetails.resource_count" row wrap justify-center>
+        <VFlex xs4>
+          <VMenu offset-y>
+            <template v-slot:activator="{ on }">
+              <VBtn
+                color="primary"
+                dark
+                v-on="on"
+              >
+                {{ $tr('downloadReport') }}
+              </VBtn>
+            </template>
+            <VList>
+              <VListTile
+                v-for="(item, index) in downloadOptions"
+                :key="index"
+                :href="item.href"
+                download
+              >
+                <VListTileTitle>{{ item.title }}</VListTileTitle>
+              </VListTile>
+            </VList>
+          </VMenu>
+        </VFlex>
+      </VLayout>
       <VLayout v-if="channelDetails && channelDetails.resource_count" row wrap>
-        <ChannelDownloadDropdown :channelId="channelId" />
         <VFlex xs12 sm12 md8 justifyCenter>
           <VTabs>
             <VTab :key="0">
@@ -339,7 +363,6 @@
   // Components
   import { isTempId } from '../../utils';
   import { RouterNames } from '../../constants';
-  import ChannelDownloadDropdown from './ChannelDownloadDropdown';
   import Constants from 'edit_channel/constants/index';
   import CopyToken from 'edit_channel/sharedComponents/CopyToken';
   import Star from 'edit_channel/sharedComponents/Star';
@@ -364,7 +387,6 @@
   export default {
     name: 'ChannelModal',
     components: {
-      ChannelDownloadDropdown,
       CopyToken,
       Star,
       ThumbnailUpload,
@@ -450,6 +472,22 @@
       less: 'Show Less',
       original_content: 'Original Content',
       details_tooltip: '{kind} ({percent}%)',
+      downloadReport: 'Download Channel Report',
+      downloadDetailedPDF: 'Download Detailed PDF',
+      downloadPDF: 'Download PDF',
+      downloadCSV: 'Download CSV',
+      downloadPPT: 'Download PPT',
+      downloadStartedHeader: 'Download Started',
+      downloadStartedTextPDF:
+        'Generating a PDF for {channelName}. Download will start automatically.',
+      downloadStartedTextPPT:
+        'Generating a PPT for {channelName}. Download will start automatically.',
+      downloadStartedTextCSV:
+        'Generating a CSV for {channelName}. Download will start automatically.',
+      downloadFailedHeader: 'Download Failed',
+      downloadFailedTextPDF: 'Failed to download a PDF for {channelName}',
+      downloadFailedTextPPT: 'Failed to download a PPT for {channelName}',
+      downloadFailedTextCSV: 'Failed to download a CSV for {channelName}',
     },
     mixins: [setChannelMixin],
     props: {
@@ -578,6 +616,26 @@
             text: this.$tr(SCALE_TEXT[sizeIndex]),
           };
         }
+      },
+      downloadOptions() {
+        return [
+          {
+            title: this.$tr('downloadCSV'),
+            href: window.Urls.get_channel_details_csv_endpoint(this.channelId),
+          },
+          {
+            title: this.$tr('downloadDetailedPDF'),
+            href: window.Urls.get_channel_details_pdf_endpoint(this.channelId),
+          },
+          {
+            title: this.$tr('downloadPDF'),
+            href: window.Urls.get_channel_details_pdf_endpoint(this.channelId) + '?condensed=true',
+          },
+          {
+            title: this.$tr('downloadPPT'),
+            href: window.Urls.get_channel_details_ppt_endpoint(this.channelId),
+          },
+        ];
       },
     },
     methods: {
