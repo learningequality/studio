@@ -96,7 +96,7 @@
       {% endblock head %}
 
       {% block analytics %}
-        {% cache 3600 analytics_block %}
+        {% cache 60 analytics_block %}
         {% if not debug %}
           <!-- Global site tag (gtag.js) - Google Analytics -->
           <script async src="https://www.googletagmanager.com/gtag/js?id=UA-36937407-7"></script>
@@ -160,7 +160,7 @@
     {% block content %}{% endblock content %}
     <!-- prevent more than 1 bundle per page -->
       {% block js_bundle %}
-        {% cache 3600 base_bundle_cache %}
+        {% cache 60 base_bundle_cache %}
         {% render_bundle 'base' 'js' %}
         {% endcache %}
       {% endblock js_bundle %}
