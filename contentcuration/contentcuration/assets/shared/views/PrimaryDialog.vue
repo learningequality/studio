@@ -28,6 +28,7 @@
   const modalTracker = Vue.observable({
     open: false,
     name: '',
+    uid: null,
   });
 
   export default {
@@ -47,7 +48,7 @@
     },
     computed: {
       disabled() {
-        return modalTracker.open && modalTracker.name !== this.$parent.$options.name;
+        return modalTracker.open && modalTracker.uid !== this._uid;
       },
       open: {
         get() {
@@ -75,7 +76,7 @@
     methods: {
       registerOpen(openProp) {
         const name = this.$parent.$options.name;
-        if (!openProp && modalTracker.name === name && modalTracker.open) {
+        if (!openProp && modalTracker.uid === this._uid && modalTracker.open) {
           modalTracker.open = false;
           modalTracker.name = '';
         } else if (openProp && modalTracker.open) {
@@ -89,6 +90,7 @@
         } else if (openProp && !modalTracker.open) {
           modalTracker.open = true;
           modalTracker.name = name;
+          modalTracker.uid = this._uid;
         }
       },
     },
