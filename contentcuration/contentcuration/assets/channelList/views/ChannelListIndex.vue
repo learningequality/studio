@@ -19,7 +19,45 @@
     </AppBar>
     <VContent>
       <VContainer fluid>
-        <ChannelInvitationList @setActiveList="setActiveList" />
+        <VCard v-if="invitations.length">
+          <VList subheader>
+            <VSubheader>{{ $tr('invitations') }}</VSubheader>
+            <VListTile
+              v-for="(invitation, i) in invitations"
+              :key="invitation.id"
+            >
+              <VListTileContent>
+                <VListTileTitle>{{ getInvitationText(invitation) }}</VListTileTitle>
+              </VListTileContent>
+
+              <VListTileAction v-if="!invitation.accepted && !invitation.declined">
+                <VBtn icon @click="acceptInvitation(invitation.id)">
+                  <VIcon color="green">check</VIcon>
+                </VBtn>
+              </VListTileAction>
+              <VListTileAction>
+                <VBtn icon @click="invitation.accepted || invitation.declined ? removeInvitation(invitation.id) : decline(invitation.id)">
+                  <VIcon color="red">clear</VIcon>
+                </VBtn>
+              </VListTileAction>
+            </VListTile>
+            <PrimaryDialog v-model="invitationDialog" :title="$tr('decliningInvitation')">
+              {{ $tr('decliningInvitationMessage') }}
+              <template v-slot:actions>
+                <VBtn
+                  @click="closeDecline"
+                >
+                  {{ $tr('cancel') }}
+                </VBtn>
+                <VBtn
+                  @click="declineAndClose"
+                >
+                  {{ $tr('decline') }}
+                </VBtn>
+              </template>
+            </PrimaryDialog>
+          </VList>
+        </VCard>
         <router-view />
       </VContainer>
     </VContent>
@@ -29,13 +67,13 @@
 
 <script>
 
-  import { mapState } from 'vuex';
-  import { ListTypes, RouterNames } from '../constants';
+  import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
+  import { InvitationShareModes, ListTypes, RouterNames } from '../constants';
   import { setChannelMixin } from '../mixins';
   import ChannelList from './Channel/ChannelList.vue';
   import ChannelSetList from './ChannelSet/ChannelSetList.vue';
-  import ChannelInvitationList from './Channel/ChannelInvitationList.vue';
   import AppBar from 'shared/views/AppBar';
+  import PrimaryDialog from 'shared/views/PrimaryDialog';
 
   export default {
     name: 'ChannelListIndex',
@@ -45,15 +83,35 @@
       [ListTypes.PUBLIC]: 'Public',
       [ListTypes.STARRED]: 'Starred',
       channelSets: 'Collections',
+      editText: '{firstname} {lastname} has invited you to edit {channel}',
+      viewText: '{firstname} {lastname} has invited you to view {channel}',
+      acceptedEditText: 'Accepted invitation to edit {channel}',
+      declinedEditText: 'Declined invitation to edit {channel}',
+      acceptedViewText: 'Accepted invitation to view {channel}',
+      declinedViewText: 'Declined invitation to view {channel}',
+      accept: 'Accept',
+      decline: 'Decline',
+      cancel: 'Cancel',
+      invitations: 'Channel invitations',
+      invitationError: 'Invitation Error',
+      decliningInvitation: 'Declining Invitation',
+      decliningInvitationMessage: 'Are you sure you want to decline this invitation?',
     },
     components: {
       AppBar,
       ChannelList,
       ChannelSetList,
-      ChannelInvitationList,
+      PrimaryDialog,
+    },
+    data() {
+      return {
+        invitationDialog: false,
+        declineInvitationId: null,
+      };
     },
     mixins: [setChannelMixin],
     computed: {
+      ...mapGetters('channelList', ['invitations']),
       ...mapState('channelList', ['activeChannel']),
       lists() {
         return Object.values(ListTypes);
@@ -62,37 +120,61 @@
         return { name: RouterNames.CHANNEL_SETS };
       },
     },
-    watch: {
-      $route() {
-        this.setActiveChannelFromQuery();
-      },
+    created() {
+      this.loadInvitationList();
     },
     methods: {
-      setActiveList(listType) {
-        this.$router.push(this.getChannelLink(listType));
+      ...mapMutations('channelList', {
+        removeInvitation: 'REMOVE_INVITATION',
+      }),
+      ...mapActions('channelList', ['loadInvitationList', 'acceptInvitation', 'declineInvitation']),
+      getInvitationText(invitation) {
+        const messageParams = {
+          channel: invitation.channel_name,
+          firstname: invitation.sender.first_name,
+          lastname: invitation.sender.last_name,
+        };
+        let messageId;
+        if(invitation.accepted) {
+          if (invitation.share_mode === InvitationShareModes.EDIT) {
+            messageId = 'acceptedEditText';
+          } else {
+            messageId = 'acceptedViewText';
+          }
+        } else if (invitation.declined) {
+          if (invitation.share_mode === InvitationShareModes.EDIT) {
+            messageId = 'declinedEditText';
+          } else {
+            messageId = 'declinedViewText';
+          }
+        } else {
+          messageParams.firstname = invitation.sender.first_name;
+          messageParams.lastname = invitation.sender.last_name;
+          if (invitation.share_mode === InvitationShareModes.EDIT) {
+            messageId = 'editText';
+          } else {
+            messageId = 'viewText';
+          }
+        }
+        return this.$tr(messageId, messageParams);
       },
       getChannelLink(listType) {
         const name = RouterNames.CHANNELS;
         return { name, params: { listType } };
       },
-      setActiveChannelFromQuery() {
-        const { channel_id } = this.$route.query;
-
-        if (channel_id) {
-          if (!this.activeChannel || this.activeChannel.id !== channel_id) {
-            this.setChannel(channel_id);
-          }
-          // TODO revert query if there is no actual channel with the channel_id
-        } else {
-          // Need to infer whether we are creating a new channel or closing a page
-          if (this.activeChannel && this.activeChannel.id === undefined) {
-            // TODO figure out how to not call this twice when "+ Channel" is clicked
-            this.setChannel('');
-          } else {
-            this.setChannel(null);
-          }
-        }
+      decline(invitationId) {
+        this.declineInvitationId = invitationId;
+        this.invitationDialog = true;
       },
+      declineAndClose() {
+        this.declineInvitation(this.declineInvitationId).then(() => {
+          this.closeDecline();
+        });
+      },
+      closeDecline() {
+        this.invitationDialog = false;
+        this.declineInvitationId = null;
+      }
     },
   };
 

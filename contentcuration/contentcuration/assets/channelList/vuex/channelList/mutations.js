@@ -1,5 +1,5 @@
 import Vue from 'vue';
-import { channelLastSavedState, invitationLastSavedState } from './index';
+import { channelLastSavedState } from './index';
 
 /* CHANNEL LIST MUTATIONS */
 function mergeChannel(channelsMap, channel) {
@@ -62,12 +62,23 @@ export function SET_CHANNEL_BOOKMARK(state, { id, bookmark }) {
 export function SET_INVITATION_LIST(state, invitations) {
   const invitationsMap = {};
   invitations.forEach(invitation => {
-    storeLastSavedState(invitation);
-    invitationsMap[invitation.id] = invitation;
+    invitationsMap[invitation.id] = {
+      ...invitation,
+      accepted: false,
+      declined: false,
+    };
   });
   state.invitationsMap = invitationsMap;
 }
 
+export function ACCEPT_INVITATION(state, invitationId) {
+  state.invitationsMap[invitationId].accepted = true;
+}
+
+export function DECLINE_INVITATION(state, invitationId) {
+  state.invitationsMap[invitationId].declined = true;
+}
+
 export function REMOVE_INVITATION(state, invitationId) {
-  delete state.invitationsMap[invitationId];
+  Vue.delete(state.invitationsMap, invitationId);
 }

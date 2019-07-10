@@ -88,8 +88,8 @@ export function loadChannelDetails(context, channelId) {
 }
 
 /* INVITATION ACTIONS */
-export function loadChannelInvitationList(context) {
-  return client.get(window.Urls.get_user_pending_channels()).then(response => {
+export function loadInvitationList(context) {
+  return client.get(window.Urls.invitation_list(), { params: { invited: context.rootGetters.currentUserId }}).then(response => {
     const invitations = response.data;
     context.commit('SET_INVITATION_LIST', invitations);
     return invitations;
@@ -101,6 +101,7 @@ export function acceptInvitation(context, invitationId) {
   return client
     .post(window.Urls.accept_channel_invite(), { invitation_id: invitationId })
     .then(response => {
+      context.commit('ACCEPT_INVITATION', invitationId);
       const channel = response.data;
       let listType = ChannelInvitationMapping[invitation.share_mode];
       channel[listType] = true;
@@ -110,5 +111,7 @@ export function acceptInvitation(context, invitationId) {
 }
 
 export function declineInvitation(context, invitationId) {
-  return client.delete(window.Urls['invitation-details'](invitationId));
+  return client.delete(window.Urls.invitation_detail(invitationId)).then(() => {
+    context.commit('DECLINE_INVITATION', invitationId);
+  });
 }
