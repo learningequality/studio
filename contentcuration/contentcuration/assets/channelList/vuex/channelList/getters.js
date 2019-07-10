@@ -1,9 +1,11 @@
 import omit from 'lodash/omit';
 import isEqual from 'lodash/isEqual';
-import { isDirty, isDummyId } from '../../utils';
+import { isTempId } from '../../utils';
+import { channelLastSavedState } from './index';
+
 
 export function channels(state) {
-  return Object.values(state.channelsMap).filter(channel => !isDummyId(channel.id));
+  return Object.values(state.channelsMap).filter(channel => !isTempId(channel.id));
 }
 
 export function invitations(state) {
@@ -16,10 +18,10 @@ export function getChannel(state) {
   };
 }
 
-export function getChannelIsDirty(state) {
+export function getChannelUnsaved(state) {
   return function(channelId) {
     const channel = state.channelsMap[channelId];
-    return channel ? isDirty(channel) : false;
+    return channel ? channelLastSavedState.hasUnsavedChanges(channel) : false;
   };
 }
 

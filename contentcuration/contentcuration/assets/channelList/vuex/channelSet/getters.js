@@ -1,7 +1,8 @@
-import { isDirty, isDummyId } from '../../utils';
+import { isTempId } from '../../utils';
+import { channelSetLastSavedState } from './index';
 
 export function channelSets(state) {
-  return Object.values(state.channelSetsMap).filter(set => !isDummyId(set.id));
+  return Object.values(state.channelSetsMap).filter(set => !isTempId(set.id));
 }
 
 export function getChannelSet(state) {
@@ -13,7 +14,7 @@ export function getChannelSet(state) {
 export function getChannelSetIsDirty(state) {
   return function(channelSetId) {
     const set = state.channelSetsMap[channelSetId];
-    return set ? isDirty(set) : false;
+    return set ? channelSetLastSavedState.hasUnsavedChanges(set) : false;
   };
 }
 

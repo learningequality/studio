@@ -149,7 +149,7 @@
   import { mapGetters, mapActions, mapMutations, mapState } from 'vuex';
   import sortBy from 'lodash/sortBy';
   import CopyToken from 'edit_channel/sharedComponents/CopyToken.vue';
-  import { isDummyId } from '../../utils';
+  import { isTempId } from '../../utils';
   import { RouterNames } from '../../constants';
 
   export default {
@@ -288,7 +288,7 @@
         return this.channels.length;
       },
       isNewSet() {
-        return isDummyId(this.channelSetId)
+        return isTempId(this.channelSetId)
       }
     },
     methods: {

@@ -1,19 +1,19 @@
 import Vue from 'vue';
 import { PageTypes } from '../../constants';
-import { setDirtyTracking } from '../../utils';
+import { channelSetLastSavedState } from './index';
 
 /* CHANNEL SET MUTATIONS */
 export function SET_CHANNELSET_LIST(state, channelSets) {
   const channelSetsMap = {};
   channelSets.forEach(channelSet => {
-    setDirtyTracking(channelSet);
+    channelSetLastSavedState.storeLastSavedState(channelSet);
     channelSetsMap[channelSet.id] = channelSet;
   });
   state.channelSetsMap = channelSetsMap;
 }
 
 export function ADD_CHANNELSET(state, channelSet) {
-  setDirtyTracking(channelSet);
+  channelSetLastSavedState.storeLastSavedState(channelSet);
   state.channelSetsMap = {
     ...state.channelSetsMap,
     [channelSet.id]: channelSet,

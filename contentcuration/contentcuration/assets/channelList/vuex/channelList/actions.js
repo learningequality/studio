@@ -1,6 +1,7 @@
 import { ChannelListUrls, ChannelInvitationMapping } from '../../constants';
-import { isDummyId, getDirtyDiff } from '../../utils';
+import { isTempId } from '../../utils';
 import client from 'shared/client';
+import { channelLastSavedState } from './index';
 
 /* CHANNEL LIST ACTIONS */
 export function loadChannelList(context, listType) {
@@ -46,13 +47,12 @@ export function removeStar(context, channelId) {
 /* CHANNEL EDITOR ACTIONS */
 export function saveChannel(context, channelId) {
   if (context.getters.getChannelIsValid(channelId)) {
-    const channelData = getDirtyDiff(context.getters.getChannel(channelId));
+    const channelData = channelLastSavedState.getUnsavedChanges(context.getters.getChannel(channelId));
     if (Object.keys(channelData).length) {
-      if (!channelData.editors || channelData.editors.length === 0) {
-        channelData.editors = [context.rootGetters.currentUserId];
-      }
-
-      if (isDummyId(channelId)) {
+      if (isTempId(channelId)) {
+        if (!channelData.editors || channelData.editors.length === 0) {
+          channelData.editors = [context.rootGetters.currentUserId];
+        }
         delete channelData.id;
         return client.post(window.Urls['channel-list'](), channelData).then(response => {
           const channel = response.data;

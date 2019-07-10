@@ -1,9 +1,9 @@
 import Vue from 'vue';
-import { prepChannel, setDirtyTracking } from '../../utils';
+import { channelLastSavedState, invitationLastSavedState } from './index';
 
 /* CHANNEL LIST MUTATIONS */
 function mergeChannel(channelsMap, channel) {
-  setDirtyTracking(channel);
+  channelLastSavedState.storeLastSavedState(channel);
   return {
     ...channelsMap,
     [channel.id]: {
@@ -62,7 +62,7 @@ export function SET_CHANNEL_BOOKMARK(state, { id, bookmark }) {
 export function SET_INVITATION_LIST(state, invitations) {
   const invitationsMap = {};
   invitations.forEach(invitation => {
-    setDirtyTracking(invitation);
+    storeLastSavedState(invitation);
     invitationsMap[invitation.id] = invitation;
   });
   state.invitationsMap = invitationsMap;

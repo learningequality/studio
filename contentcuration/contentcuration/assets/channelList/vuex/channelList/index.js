@@ -1,6 +1,10 @@
 import * as getters from './getters';
 import * as mutations from './mutations';
 import * as actions from './actions';
+import { lastSavedStateFactory } from '../../utils';
+
+export const channelLastSavedState = lastSavedStateFactory();
+export const invitationLastSavedState = lastSavedStateFactory();
 
 export default {
   namespaced: true,

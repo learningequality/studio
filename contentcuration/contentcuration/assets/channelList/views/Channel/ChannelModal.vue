@@ -337,7 +337,7 @@
   import { setChannelMixin } from '../../mixins';
 
   // Components
-  import { isDummyId } from '../../utils';
+  import { isTempId } from '../../utils';
   import { RouterNames } from '../../constants';
   import ChannelDownloadDropdown from './ChannelDownloadDropdown';
   import Constants from 'edit_channel/constants/index';
@@ -519,7 +519,7 @@
         );
       },
       isNew() {
-        return isDummyId(this.channelId);
+        return isTempId(this.channelId);
       },
       open: {
         get() {

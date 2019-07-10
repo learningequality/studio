@@ -34,7 +34,7 @@
   import { setChannelMixin } from '../../mixins';
   import { ListTypes, RouterNames } from '../../constants';
   import ChannelItem from './ChannelItem.vue';
-  import { generateDummyId, isDummyId } from '../../utils';
+  import { generateTempId, isTempId } from '../../utils';
 
   export default {
     name: 'ChannelList',
@@ -60,7 +60,7 @@
     data() {
       return {
         loading: true,
-        newSetId: generateDummyId(),
+        newSetId: generateTempId(),
       };
     },
     computed: {
@@ -97,7 +97,7 @@
       newChannel() {
         // Clear any previously existing dummy channelset
         this.removeChannel(this.newId);
-        this.newId = generateDummyId();
+        this.newId = generateTempId();
         this.addChannel({
           id: this.newId,
           name: '',

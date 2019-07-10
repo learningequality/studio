@@ -52,7 +52,7 @@
 <script>
 
   import { mapGetters, mapActions, mapMutations } from 'vuex';
-  import { generateDummyId, isDummyId } from '../../utils';
+  import { generateTempId, isTempId } from '../../utils';
   import ChannelSetItem from './ChannelSetItem.vue';
   import ChannelSetModal from './ChannelSetModal';
   import PrimaryDialog from 'shared/views/PrimaryDialog';
@@ -87,7 +87,7 @@
         loading: true,
         newSetDialog: false,
         infoDialog: false,
-        newSetId: generateDummyId(),
+        newSetId: generateTempId(),
       };
     },
     computed: {
@@ -107,7 +107,7 @@
       newChannelSet() {
         // Clear any previously existing dummy channelset
         this.removeChannelSet(this.newSetId);
-        this.newSetId = generateDummyId();
+        this.newSetId = generateTempId();
         this.addChannelSet({
           id: this.newSetId,
           name: '',

@@ -1,5 +1,6 @@
-import { isDummyId, getDirtyDiff } from '../../utils';
+import { isTempId } from '../../utils';
 import client from 'shared/client';
+import { channelSetLastSavedState } from './index';
 
 /* CHANNEL SET ACTIONS */
 export function loadChannelSetList(context) {
@@ -18,13 +19,12 @@ export function deleteChannelSet(context, channelSetId) {
 
 export function saveChannelSet(context, channelSetId) {
   if (context.getters.getChannelSetIsValid(channelSetId)) {
-    const channelSetData = getDirtyDiff(context.getters.getChannelSet(channelSetId));
+    const channelSetData = channelSetLastSavedState.getUnsavedChanges(context.getters.getChannelSet(channelSetId));
     if (Object.keys(channelSetData).length) {
-      if (!channelSetData.editors || channelSetData.editors.length === 0) {
-        channelSetData.editors = [context.rootGetters.currentUserId];
-      }
-
-      if (isDummyId(channelSetId)) {
+      if (isTempId(channelSetId)) {
+        if (!channelSetData.editors || channelSetData.editors.length === 0) {
+          channelSetData.editors = [context.rootGetters.currentUserId];
+        }
         delete channelSetData.id;
         return client.post(window.Urls['channelset-list'](), channelSetData).then(response => {
           const channelSet = response.data;
