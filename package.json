@@ -86,6 +86,7 @@
     "lodash": "^4.17.11",
     "marked": "^0.3.5",
     "material-design-icons": "^3.0.1",
+    "material-icons": "^0.3.1",
     "mathjax": "^2.7.0",
     "mathquill": "^0.10.1-a",
     "node-vibrant": "^3.0.0",
