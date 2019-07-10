@@ -495,8 +495,7 @@ var ContentNodeCollection = BaseCollection.extend({
       $.ajax({
         method: 'GET',
         url: window.Urls.get_prerequisites((get_postrequisites || false).toString(), ids.join(',')),
-        success: function(data) {
-          var nodes = JSON.parse(data);
+        success: function(nodes) {
           resolve({
             prerequisite_mapping: nodes.prerequisite_mapping,
             postrequisite_mapping: nodes.postrequisite_mapping,
