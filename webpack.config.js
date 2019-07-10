@@ -93,13 +93,6 @@ module.exports = (env = {}) => {
             chunks: 'all',
             enforce: true,
           },
-          channelEditStyles: {
-            name: 'channel_edit',
-            test: (m, c, entry = 'channel_edit') =>
-              m.constructor.name === 'CssModule' && recursiveIssuer(m) === entry,
-            chunks: 'all',
-            enforce: true,
-          },
         },
       },
       minimizer: [

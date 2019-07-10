@@ -703,6 +703,9 @@ class Channel(models.Model):
 
         return '/static/img/kolibri_placeholder.png'
 
+    def has_changes(self):
+        return self.main_tree.get_descendants(include_self=True).filter(changed=True).exists()
+
     def get_date_modified(self):
         return self.main_tree.get_descendants(include_self=True).aggregate(last_modified=Max('modified'))['last_modified']
 
