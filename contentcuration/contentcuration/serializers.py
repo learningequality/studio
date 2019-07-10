@@ -971,8 +971,10 @@ class ChannelSetSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         channelset = super(ChannelSetSerializer, self).update(instance, validated_data)
-        channels = Channel.objects.filter(pk__in=self.initial_data['channels'])
-        channelset.secret_token.set_channels(channels)
+        channels = self.initial_data.get('channels', None)
+        if channels is not None:
+            channels = Channel.objects.filter(pk__in=self.initial_data['channels'])
+            channelset.secret_token.set_channels(channels)
         return channelset
 
     def get_channel_ids(self, channelset):
