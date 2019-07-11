@@ -35,9 +35,16 @@
     </VLayout>
     <VCardActions>
       <VBtn
+        color="primary"
+        :to="channelSetDetailsLink"
+        >
+        {{ $tr('edit') }}
+      </VBtn>
+      <VSpacer/>
+      <VBtn
         flat
         icon
-        color="red"
+        color="error"
         :title="$tr('deleteChannelSetTitle')"
         @click.prevent="deleteDialog=true"
       >
@@ -77,6 +84,7 @@
       deleteChannelSetText: 'Are you sure you want to PERMANENTLY delete this channel collection?',
       channelCount: '{count, plural,\n =1 {# Channel}\n other {# Channels}}',
       cancel: 'Cancel',
+      edit: 'Edit',
     },
     components: {
       CopyToken,

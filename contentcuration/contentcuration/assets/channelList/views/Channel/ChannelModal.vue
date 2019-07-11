@@ -56,10 +56,8 @@
           </template>
         </VFlex>
         <VFlex xs1>
-          <Star
-            :starred="channel.bookmark"
-            @starred="addStar(channel.id)"
-            @unstarred="removeStar(channel.id)"
+          <ChannelStar
+            :channel="channel"
           />
         </VFlex>
       </VLayout>
@@ -364,7 +362,7 @@
   import { RouterNames } from '../../constants';
   import Constants from 'edit_channel/constants/index';
   import CopyToken from 'edit_channel/sharedComponents/CopyToken';
-  import Star from 'edit_channel/sharedComponents/Star';
+  import ChannelStar from './ChannelStar';
   import ThumbnailUpload from 'shared/views/ThumbnailUpload';
 
   const SCALE_TEXT = [
@@ -387,7 +385,7 @@
     name: 'ChannelModal',
     components: {
       CopyToken,
-      Star,
+      ChannelStar,
       ThumbnailUpload,
     },
     $trs: {

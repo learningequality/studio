@@ -8,20 +8,11 @@
       </VFlex>
       <VFlex xs12 sm12 md9>
         <VLayout row wrap>
-          <VFlex xs11 grow>
+          <VFlex xs12>
             <VCardTitle>
               <h3 class="headline mb-0">
                 {{ channel.name }}
               </h3>
-            </VCardTitle>
-          </VFlex>
-          <VFlex xs1 shrink>
-            <VCardTitle>
-              <Star
-                :starred="channel.bookmark"
-                @starred="addStar(channel.id)"
-                @unstarred="removeStar(channel.id)"
-              />
             </VCardTitle>
           </VFlex>
         </VLayout>
@@ -76,6 +67,24 @@
         </VCardText>
       </VFlex>
     </VLayout>
+    <VCardActions>
+      <VBtn
+        color="primary"
+        :to="channelDetailsLink"
+      >
+        {{ $tr(channel.edit ? 'editDetails' : 'viewDetails')}}
+      </VBtn>
+      <VBtn
+        color="primary"
+        :href="openChannelLink"
+      >
+        {{ $tr(channel.edit ? 'editContents' : 'viewContents')}}
+      </VBtn>
+      <VSpacer/>
+      <ChannelStar
+        :channel="channel"
+      />
+    </VCardActions>
   </VCard>
 </template>
 
@@ -85,7 +94,7 @@
   import { RouterNames } from '../../constants';
   import Constants from 'edit_channel/constants/index';
   import CopyToken from 'edit_channel/sharedComponents/CopyToken';
-  import Star from 'edit_channel/sharedComponents/Star';
+  import ChannelStar from './ChannelStar';
 
   export default {
     name: 'ChannelItem',
@@ -95,10 +104,14 @@
       unpublishedText: 'Unpublished',
       lastUpdated: 'Updated {updated}',
       versionText: 'Version {version}',
+      editDetails: 'Edit details',
+      viewDetails: 'View details',
+      editContents: 'Edit contents',
+      viewContents: 'View contents',
     },
     components: {
       CopyToken,
-      Star,
+      ChannelStar,
     },
     props: {
       channel: {
@@ -129,20 +142,8 @@
           },
         };
       },
-    },
-    methods: {
-      ...mapActions('channelList', ['addStar', 'removeStar']),
-      openChannel(event) {
-        if (event && (event.metaKey || event.ctrlKey)) {
-          if (this.channel.EDITABLE) {
-            window.open(window.Urls.channel(this.channel.id), '_blank');
-          } else {
-            window.open(window.Urls.channel_view_only(this.channel.id), '_blank');
-          }
-        } else if (!this.activeChannel || this.channel.id !== this.activeChannel.id) {
-          // Only load if it isn't already the active channel
-          this.setChannel(this.channel.id);
-        }
+      openChannelLink() {
+        return window.Urls.channel() + `#/channel/${this.channel.id}`;
       },
     },
   };
