@@ -156,9 +156,6 @@ Generate the shared environment variables between studio app and workers
   value: ""
   {{ end }}
 
-- name: PROBER_STUDIO_BASE_URL
-  value: http://{{ template "studio.fullname" . }}-app.default.svc.cluster.local
-
 {{- end -}}
 
 {{- define "studio.volume.gcs-creds" -}}

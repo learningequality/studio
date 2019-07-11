@@ -52,3 +52,4 @@ studioProber:
   imageName: "REPLACEME"
   newrelicKey: "REPLACEME"
   newrelicAccountId: "REPLACEME"
+  port: 9313

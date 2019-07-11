@@ -43,8 +43,10 @@ RUN pipenv install --clear --dev --system --ignore-pipfile
 ################################################################################
 
 # Copy prober code #############################################################
-COPY deploy/cloudprober.cfg /src/
-COPY deploy/probers /src/probers/
+COPY deploy/cloudprober.cfg /src/deploy/
+COPY deploy/send_metrics_newrelic.py /src/deploy/
+COPY deploy/prober-entrypoint.sh /src/deploy/
+COPY deploy/probers /src/deploy/probers/
 
 # Cloudprober binary ###########################################################
 RUN curl -L -o /cloudprober.zip https://github.com/google/cloudprober/releases/download/v0.10.2/cloudprober-v0.10.2-linux-x86_64.zip
