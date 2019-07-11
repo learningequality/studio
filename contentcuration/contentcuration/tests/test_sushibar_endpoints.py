@@ -129,10 +129,10 @@ class SushibarEndpointsTestCase(BaseAPITestCase):
         response = self.post(url, {})
         assert response.status_code == 400
         response = self.post(url, {'channel_id': 'NONEXISTENT'})
-        assert response.status_code == 500
+        assert response.status_code == 404
         channel_id = self.channel.id
         response = self.post(url, {'channel_id': channel_id, 'tree': 'NONEXISTENT'})
-        assert response.status_code == 500
+        assert response.status_code == 404
 
     def test_get_tree_data_method_onelevel(self):
         main_tree = self.channel.main_tree

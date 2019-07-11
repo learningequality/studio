@@ -27,11 +27,16 @@ from contentcuration.models import License
 from contentcuration.models import User
 from contentcuration.utils.files import duplicate_file
 from contentcuration.utils.minio_utils import ensure_storage_bucket_public
-from contentcuration.views.nodes import duplicate_node_bulk
+from contentcuration.utils.nodes import duplicate_node_bulk
 logmodule.basicConfig()
 logging = logmodule.getLogger(__name__)
 
-DESCRIPTION = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur."
+DESCRIPTION = """
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt
+ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
+laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
+voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+"""
 LICENSE = licenses.SPECIAL_PERMISSIONS
 LICENSE_DESCRIPTION = "Sample text for content with special permissions"
 TAGS = ["Tag 1", "Tag 2", "Tag 3"]

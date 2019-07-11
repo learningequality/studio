@@ -1,9 +1,9 @@
 from base import BaseAPITestCase
 
+from contentcuration.models import ContentNode
 from contentcuration.models import Task
-from contentcuration.tasks import create_async_task, non_async_test_task
-# from celery.contrib.testing.worker import start_worker
-# from contentcuration.celery import app
+from contentcuration.tasks import create_async_task
+from contentcuration.tasks_test import non_async_test_task
 
 
 class AsyncTaskTestCase(BaseAPITestCase):
@@ -21,15 +21,15 @@ class AsyncTaskTestCase(BaseAPITestCase):
         metadata = {'test': True}
         task_options = {
             'user_id': self.user.pk,
-            'task_type': 'asynctask',
             'metadata': metadata
         }
         task, task_info = create_async_task('test', task_options)
-        self.assertTrue(Task.objects.filter(metadata__test=True).count()==1)
+        self.assertTrue(Task.objects.filter(metadata__test=True).count() == 1)
         self.assertEqual(task_info.user, self.user)
         self.assertEqual(task_info.task_type, 'test')
         self.assertEqual(task_info.is_progress_tracking, False)
         result = task.get()
+        self.assertEqual(result, 42)
         self.assertEqual(Task.objects.get(task_id=task.id).metadata['result'], 42)
         self.assertEqual(Task.objects.get(task_id=task.id).status, 'SUCCESS')
 
@@ -40,11 +40,10 @@ class AsyncTaskTestCase(BaseAPITestCase):
         metadata = {'test': True}
         task_options = {
             'user_id': self.user.pk,
-            'task_type': 'asynctask',
             'metadata': metadata
         }
         task, task_info = create_async_task('progress-test', task_options)
-        self.assertTrue(Task.objects.filter(metadata__test=True).count()==1)
+        self.assertTrue(Task.objects.filter(metadata__test=True).count() == 1)
         result = task.get()
         self.assertEqual(result, 42)
         self.assertEqual(Task.objects.get(task_id=task.id).status, 'SUCCESS')
@@ -58,6 +57,36 @@ class AsyncTaskTestCase(BaseAPITestCase):
         self.assertEqual(response.data['metadata']['progress'], 100)
         self.assertEqual(response.data['metadata']['result'], 42)
 
+    def test_asynctask_filters_by_channel(self):
+        """
+        Test that we can filter tasks by channel ID.
+        """
+
+        self.channel.editors.add(self.user)
+        self.channel.save()
+        metadata = {'affects': {'channels': [self.channel.id]}}
+        task_options = {
+            'user_id': self.user.pk,
+            'metadata': metadata
+        }
+        task, task_info = create_async_task('progress-test', task_options)
+        self.assertTrue(Task.objects.filter(metadata__affects__channels__contains=[self.channel.id]).count() == 1)
+        result = task.get()
+        self.assertEqual(result, 42)
+        self.assertEqual(Task.objects.get(task_id=task.id).status, 'SUCCESS')
+
+        url = '{}?channel_id={}'.format(self.task_url, self.channel.id)
+        response = self.get(url)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['status'], 'SUCCESS')
+        self.assertEqual(response.data[0]['task_type'], 'progress-test')
+        self.assertEqual(response.data[0]['metadata']['progress'], 100)
+        self.assertEqual(response.data[0]['metadata']['result'], 42)
+
+        url = '{}?channel_id={}'.format(self.task_url, task_info.id, "nope")
+        response = self.get(url)
+        self.assertEqual(len(response.data), 0)
+
     def test_asynctask_reports_error(self):
         """
         Tests that if a task fails with an error, that the error information is stored in the Task object for later
@@ -66,7 +95,6 @@ class AsyncTaskTestCase(BaseAPITestCase):
         metadata = {'test': True}
         task_options = {
             'user_id': self.user.pk,
-            'task_type': 'asynctask',
             'metadata': metadata
         }
         task, task_info = create_async_task('error-test', task_options)
@@ -76,7 +104,7 @@ class AsyncTaskTestCase(BaseAPITestCase):
         self.assertTrue('error' in task.metadata)
 
         error = task.metadata['error']
-        self.assertItemsEqual(list(error.keys()), ['task_args', 'task_kwargs', 'traceback'])
+        self.assertItemsEqual(list(error.keys()), ['message', 'task_args', 'task_kwargs', 'traceback'])
         self.assertEqual(len(error['task_args']), 0)
         self.assertEqual(len(error['task_kwargs']), 0)
         traceback_string = '\n'.join(error['traceback'])
@@ -93,3 +121,54 @@ class AsyncTaskTestCase(BaseAPITestCase):
         result = task.get()
         self.assertEquals(result, 42)
         self.assertEquals(Task.objects.filter(task_id=task.id).count(), 0)
+
+    def test_duplicate_nodes_task(self):
+        metadata = {'test': True}
+        task_options = {
+            'user_id': self.user.pk,
+            'metadata': metadata
+        }
+
+        ids = []
+        node_ids = []
+        for i in range(3, 6):
+            node_id = '0000000000000000000000000000000' + str(i)
+            node_ids.append(node_id)
+            node = ContentNode.objects.get(node_id=node_id)
+            ids.append(node.pk)
+
+        parent_node = ContentNode.objects.get(node_id='00000000000000000000000000000002')
+
+        task_args = {
+            'user_id': self.user.pk,
+            'channel_id': self.channel.pk,
+            'node_ids': ids,
+            'target_parent': parent_node
+        }
+        task, task_info = create_async_task('duplicate-nodes', task_options, task_args)
+
+        # progress is retrieved dynamically upon calls to get the task info, so
+        # use an API call rather than checking the db directly for progress.
+        url = '{}/{}'.format(self.task_url, task_info.id)
+        response = self.get(url)
+        assert response.data['status'] == 'SUCCESS', "Task failed, exception: {}".format(response.data['metadata']['error']['traceback'])
+        self.assertEqual(response.data['status'], 'SUCCESS')
+        self.assertEqual(response.data['task_type'], 'duplicate-nodes')
+        self.assertEqual(response.data['metadata']['progress'], 100)
+        result = response.data['metadata']['result']
+        self.assertTrue(isinstance(result, list))
+
+        parent_node.refresh_from_db()
+        children = parent_node.get_children()
+
+        child_ids = []
+        for child in children:
+            child_ids.append(child.source_node_id)
+
+        # make sure the changes were actually made to the DB
+        for node_id in node_ids:
+            assert node_id in child_ids
+
+        # make sure the copies are in the results
+        for item in result:
+            assert item['original_source_node_id'] in node_ids

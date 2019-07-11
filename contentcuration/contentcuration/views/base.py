@@ -56,8 +56,9 @@ from contentcuration.serializers import CurrentUserSerializer
 from contentcuration.serializers import InvitationSerializer
 from contentcuration.serializers import RootNodeSerializer
 from contentcuration.serializers import SimplifiedChannelProbeCheckSerializer
+from contentcuration.serializers import TaskSerializer
 from contentcuration.serializers import UserChannelListSerializer
-from contentcuration.tasks import exportchannel_task
+from contentcuration.tasks import create_async_task
 from contentcuration.tasks import generatechannelcsv_task
 from contentcuration.utils.messages import get_messages
 
@@ -339,18 +340,24 @@ def publish_channel(request):
     try:
         channel_id = data["channel_id"]
         request.user.can_edit(channel_id)
+
+        task_info = {
+            'user': request.user,
+            'metadata': {
+                'affects': {
+                    'channels': [channel_id]
+                }}
+        }
+
+        task_args = {
+            'user_id': request.user.pk,
+            'channel_id': channel_id,
+        }
+
+        task, task_info = create_async_task('export-channel', task_info, task_args)
+        return HttpResponse(JSONRenderer().render(TaskSerializer(task_info).data))
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
-
-    exportchannel_task.delay(
-        channel_id,
-        user_id=request.user.pk
-    )
-
-    return HttpResponse(json.dumps({
-        "success": True,
-        "channel": channel_id
-    }))
 
 
 @api_view(['GET'])

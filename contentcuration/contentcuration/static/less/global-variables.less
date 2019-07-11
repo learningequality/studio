@@ -4,20 +4,26 @@
 
 @font-face {
   font-family: 'Noto Sans';
-  src: url('@{icon-font-path}NotoSans-Regular.ttf') format('truetype');
+  src: url('../fonts/NotoSans-Regular.ttf') format('truetype');
 }
 
 @font-face {
   font-family: 'Material Icons';
   font-style: normal;
   font-weight: 400;
-  src: url('@{icon-font-path}MaterialIcons-Regular.eot');
+  src: url('../fonts/MaterialIcons-Regular.eot');
 
   /* For IE6-8 */
   src: local('Material Icons'), local('MaterialIcons-Regular'),
-    url('@{icon-font-path}MaterialIcons-Regular.woff2') format('woff2'),
-    url('@{icon-font-path}MaterialIcons-Regular.woff') format('woff'),
-    url('@{icon-font-path}MaterialIcons-Regular.ttf') format('truetype');
+    url('../fonts/MaterialIcons-Regular.woff2') format('woff2'),
+    url('../fonts/MaterialIcons-Regular.woff') format('woff'),
+    url('../fonts/MaterialIcons-Regular.ttf') format('truetype');
+}
+
+@font-family: 'Noto Sans', Verdana, sans-serif;
+
+html {
+  overflow: auto !important; // Overwrite vuetify rule
 }
 
 .align-bottom {
@@ -61,6 +67,7 @@
 
 @topnav-active-tab-color: #564462;
 @red-error-color: #ef2121;
+@green-success-color: #4db6ac;
 @darkred-color: firebrick;
 @yellow-bg-color: #f5dc14;
 .action-button {
@@ -184,7 +191,7 @@
 @video-color: #283593;
 @audio-color: #f06292;
 @doc-color: #ff3d00;
-@exercise-color: #4db6ac;
+@exercise-color: @green-success-color;
 @html-color: #ff8f00;
 @slideshow-color: #4ece90;
 

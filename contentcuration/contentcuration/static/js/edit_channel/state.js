@@ -2,8 +2,11 @@ const Vuex = require('vuex');
 let Vue = require('vue');
 const Models = require('./models');
 const Constants = require('./constants/index');
+const asyncTaskModule = require('./vuexModules/asyncTask');
 const channelModule = require('./vuexModules/channel');
+const contentNodesModule = require('./vuexModules/contentNodes');
 const primaryModalModule = require('./vuexModules/primaryModal');
+const publishModule = require('./vuexModules/publish');
 
 if (Vue.default) {
   // Compatibility for differential behaviour of require import
@@ -15,8 +18,11 @@ Vue.use(Vuex);
 
 const Store = new Vuex.Store({
   modules: {
+    asyncTask: asyncTaskModule,
     channel: channelModule,
+    topicTree: contentNodesModule,
     dialog: primaryModalModule,
+    publish: publishModule,
   },
 });
 

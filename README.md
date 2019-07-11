@@ -105,7 +105,7 @@ Then set up:
 pipenv shell
 
 # Ensure your environment matches the one specified in Pipfile.lock
-pipenv sync
+pipenv sync --dev
 ```
 
 Exit the virtual environment by running `exit`. Reactivate it by running `pipenv shell` again.
@@ -174,6 +174,13 @@ Press <kbd>Ctrl</kbd>+<kbd>D</kbd> to exit the `psql` client. Finally
 exit  # leave the postgres account
 ```
 
+To start redis on Linux-based systems, run the following command
+
+```bash
+service redis-server start
+```
+
+On Mac, it will be started as part of the `yarn run services` command (detailed below).
 
 ### 6. Run all database migrations and load constants
 
@@ -232,6 +239,26 @@ yarn run test
 ```
 
 For more testing tips, please check out [docs/running_tests](docs/running_tests.md).
+
+
+## Profiling and local production testing
+
+If you want to test the performance of your changes, you can start up a local server
+with settings closer to a production environment like so:
+
+```bash
+yarn run localprodserver
+```
+
+Once the local production server is running, you can also use Locust to test your changes
+under scenarios of high demand like so:
+
+```bash
+cd deploy/chaos/loadtest
+make timed_run
+make stop_slaves  # mac: killall python
+```
+
 
 ## Linting
 Front-end linting is run using:

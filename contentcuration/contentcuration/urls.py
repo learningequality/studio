@@ -21,7 +21,6 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.core.urlresolvers import reverse_lazy
 from django.db.models import Q
-from django.views.i18n import javascript_catalog
 from rest_framework import permissions
 from rest_framework import routers
 from rest_framework import viewsets
@@ -40,6 +39,7 @@ import contentcuration.views.public as public_views
 import contentcuration.views.settings as settings_views
 import contentcuration.views.users as registration_views
 import contentcuration.views.zip as zip_views
+from contentcuration.celery import app
 from contentcuration.forms import ForgotPasswordForm
 from contentcuration.forms import LoginForm
 from contentcuration.forms import ResetPasswordForm
@@ -205,10 +205,25 @@ class TaskViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         # TODO: Add logic to delete the Celery task using app.control.revoke(). This will require some extensive
         # testing to ensure terminating in-progress tasks will not put the db in an indeterminate state.
+        app.control.revoke(instance.task_id, terminate=True)
         instance.delete()
 
     def get_queryset(self):
-        return Task.objects.filter(user=self.request.user)
+        queryset = Task.objects.none()
+        channel_id = self.request.query_params.get('channel_id', None)
+        if channel_id is not None:
+            user = self.request.user
+            channel = Channel.objects.filter(pk=channel_id).first()
+            if channel:
+                has_access = channel.editors.filter(pk=user.pk).exists() or \
+                         channel.viewers.filter(pk=user.pk).exists() or \
+                         user.is_admin
+                if has_access:
+                    queryset = Task.objects.filter(metadata__affects__channels__contains=[channel_id])
+        else:
+            queryset = Task.objects.filter(user=self.request.user)
+
+        return queryset
 
 
 router = routers.DefaultRouter(trailing_slash=False)
@@ -265,6 +280,12 @@ urlpatterns = [
     url(r'^api/probers/get_prober_channel', views.get_prober_channel, name='get_prober_channel'),
 ]
 
+# if activated, turn on django prometheus urls
+if "django_prometheus" in settings.INSTALLED_APPS:
+    urlpatterns += [
+        url('', include('django_prometheus.urls')),
+    ]
+
 
 # Add public api endpoints
 urlpatterns += [
@@ -294,7 +315,7 @@ urlpatterns += [
     url(r'^api/get_node_diff/(?P<channel_id>[^/]{32})$', node_views.get_node_diff, name='get_node_diff'),
     url(r'^api/internal/sync_nodes$', node_views.sync_nodes, name='sync_nodes'),
     url(r'^api/internal/sync_channel$', node_views.sync_channel_endpoint, name='sync_channel'),
-    url(r'^api/get_prerequisites/(?P<get_prerequisites>[^/]+)/(?P<ids>[^/]*)$', node_views.get_prerequisites, name='get_prerequisites'),
+    url(r'^api/get_prerequisites/(?P<get_postrequisites>[^/]+)/(?P<ids>[^/]*)$', node_views.get_prerequisites, name='get_prerequisites'),
     url(r'^api/get_node_path/(?P<topic_id>[^/]+)/(?P<tree_id>[^/]+)/(?P<node_id>[^/]*)$', node_views.get_node_path, name='get_node_path'),
     url(r'^api/duplicate_node_inline$', node_views.duplicate_node_inline, name='duplicate_node_inline'),
     url(r'^api/delete_nodes$', node_views.delete_nodes, name='delete_nodes'),
@@ -395,7 +416,6 @@ js_info_dict = {
 }
 
 urlpatterns += [
-    url(r'^jsi18n/$', javascript_catalog, js_info_dict, name='javascript-catalog'),
     url(r'^i18n/', include('django.conf.urls.i18n')),
 ]
 
@@ -410,9 +430,8 @@ if settings.DEBUG:
 
     try:
         import debug_toolbar
-    except ImportError:
-        pass
-    else:
         urlpatterns += [
             url(r'^__debug__/', include(debug_toolbar.urls)),
         ]
+    except ImportError:
+        pass
