@@ -257,7 +257,7 @@ def subtitle_upload(request):
 
     with NamedTemporaryFile() as temp_file:
         try:
-            converter = build_subtitle_converter(content_file.read())
+            converter = build_subtitle_converter(unicode(content_file.read(), 'utf-8'))
             convert_language_code = language_id
 
             # We're making the assumption here that language the user selected is truly the caption
