@@ -85,7 +85,6 @@ INSTALLED_APPS = (
     'webpack_loader',
     'django_filters',
     'mathfilters',
-    'django_prometheus',
 )
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
@@ -98,7 +97,7 @@ CACHE_REDIS_DB = os.getenv("CACHE_REDIS_DB") or "1"
 
 CACHES = {
     'default': {
-        'BACKEND': 'django_prometheus.cache.backends.redis.RedisCache',
+        'BACKEND': 'django_redis.cache.RedisCache',
         'LOCATION': '{url}{db}'.format(url=REDIS_URL, db=CACHE_REDIS_DB),
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
@@ -115,12 +114,11 @@ SITE_READ_ONLY = INCIDENT and INCIDENT['readonly']
 # If Studio is in readonly mode, it will throw a DatabaseWriteError
 # Use a local cache to bypass the readonly property
 if SITE_READ_ONLY:
-    CACHES['default']['BACKEND'] = 'django_prometheus.cache.backends.locmem.LocMemCache'
+    CACHES['default']['BACKEND'] = 'django.core.cache.backends.locmem.LocMemCache'
     CACHES['default']['LOCATION'] = 'readonly_cache'
 
 
 MIDDLEWARE_CLASSES = (
-    'django_prometheus.middleware.PrometheusBeforeMiddleware',
     # 'django.middleware.cache.UpdateCacheMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
@@ -135,7 +133,6 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.security.SecurityMiddleware',
     'contentcuration.middleware.db_readonly.DatabaseReadOnlyMiddleware',
     # 'django.middleware.cache.FetchFromCacheMiddleware',
-    'django_prometheus.middleware.PrometheusAfterMiddleware',
 )
 
 if os.getenv("GCLOUD_ERROR_REPORTING"):
@@ -194,7 +191,7 @@ WSGI_APPLICATION = 'contentcuration.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django_prometheus.db.backends.postgresql',
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': os.getenv("DATA_DB_NAME") or 'kolibri-studio',
         # For dev purposes only
         'USER': os.getenv('DATA_DB_USER') or 'learningequality',
