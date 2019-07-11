@@ -47,3 +47,8 @@ minio:
 
 redis:
   internalRedisEnabled: true
+
+studioProber:
+  imageName: "REPLACEME"
+  newrelicKey: "REPLACEME"
+  newrelicAccountId: "REPLACEME"

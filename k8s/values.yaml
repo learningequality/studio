@@ -61,3 +61,8 @@ redis:
 
 sentry:
   dsnKey:
+
+studioProber:
+  imageName: gcr.io/github-learningequality-studio/app:nlatest
+  newrelicKey:
+  newrelicAccountId:

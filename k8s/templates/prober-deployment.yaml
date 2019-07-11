@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
       - name: prober
-        image: {{ .Values.studioApp.imageName }}
+        image: {{ .Values.studioProber.imageName }}
         command:
         - ./docker/prober-entrypoint.sh
         env: {{ include "studio.sharedEnvs" . | nindent 12 }}

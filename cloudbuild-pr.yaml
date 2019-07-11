@@ -63,7 +63,7 @@ steps:
   env:
   - 'CLOUDSDK_COMPUTE_ZONE=us-central1-f'
   - 'CLOUDSDK_CONTAINER_CLUSTER=dev-qa-cluster'
-  secretEnv: ['POSTMARK_API_KEY']
+  secretEnv: ['POSTMARK_API_KEY', 'PROBER_NEWRELIC_KEY', 'PROBER_NEWRELIC_ACCOUNT_ID']
   entrypoint: 'bash'
   args:
     - -c
@@ -74,6 +74,8 @@ steps:
       $_STORAGE_BUCKET
       $COMMIT_SHA
       $$POSTMARK_API_KEY
+      $$PROBER_NEWRELIC_KEY
+      $$PROBER_NEWRELIC_ACCOUNT_ID
       $_POSTGRES_USERNAME
       $_RELEASE_NAME
       $_POSTGRES_PASSWORD
