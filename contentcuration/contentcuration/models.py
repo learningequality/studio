@@ -305,8 +305,12 @@ def object_storage_name(instance, filename):
     :param filename: str
     :return: str
     """
-    return generate_object_storage_name(
-        instance.checksum, filename, '.{}'.format(instance.file_format_id))
+
+    default_ext = ''
+    if instance.file_format_id:
+        default_ext = '.{}'.format(instance.file_format_id)
+
+    return generate_object_storage_name(instance.checksum, filename, default_ext)
 
 
 def generate_object_storage_name(checksum, filename, default_ext=''):
