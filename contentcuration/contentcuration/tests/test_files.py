@@ -14,6 +14,7 @@ from .testdata import base64encoding
 from .testdata import fileobj_video
 from .testdata import generated_base64encoding
 from .testdata import node
+from .testdata import srt_subtitle
 from contentcuration.models import AssessmentItem
 from contentcuration.models import ContentNode
 from contentcuration.models import DEFAULT_CONTENT_DEFAULTS
@@ -27,6 +28,7 @@ from contentcuration.utils.publish import create_associated_thumbnail
 from contentcuration.views.files import file_create
 from contentcuration.views.files import generate_thumbnail
 from contentcuration.views.files import image_upload
+from contentcuration.views.files import subtitle_upload
 from contentcuration.views.files import thumbnail_upload
 
 pytestmark = pytest.mark.django_db
@@ -195,3 +197,21 @@ class FileThumbnailTestCase(BaseAPITestCase):
         self.assertTrue(isinstance(newfile, File))
         thumbnail_data = json.loads(node.thumbnail_encoding)
         self.assertEqual(thumbnail_data['base64'], generated_base64encoding())
+
+
+class FileSubtitleTestCase(BaseAPITestCase):
+    def test_upload_no_language(self):
+        upload_file = SimpleUploadedFile("test.srt", srt_subtitle())
+        request = self.create_post_request(reverse_lazy('subtitle_upload'), {'file': upload_file})
+
+        file_response = subtitle_upload(request)
+        self.assertEqual(file_response.status_code, 400)
+        self.assertEqual(file_response.content, 'Language is required')
+
+    def test_upload(self):
+        upload_file = SimpleUploadedFile("test.srt", srt_subtitle())
+        request = self.create_post_request(reverse_lazy('subtitle_upload'), {'file': upload_file})
+        request.META.update({'HTTP_LANGUAGE': 'ar'})
+
+        file_response = subtitle_upload(request)
+        self.assertEqual(file_response.status_code, 200)

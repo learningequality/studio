@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import hashlib
 import json
 import os
@@ -204,6 +205,7 @@ def create_temp_file(filebytes, preset='document', ext='pdf', original_filename=
     warnings.warn('Deprecated function; use create_studio_file instead.', DeprecationWarning)
     return create_studio_file(filebytes, preset='document', ext='pdf', original_filename=None)
 
+
 def create_studio_file(filebytes, preset='document', ext='pdf', original_filename=None):
     """
     Create a file with contents of `filebytes` and the associated cc.File object for it.
@@ -373,3 +375,19 @@ def generated_base64encoding():
         "j6OxnMjUwIHvzMLTv0bOT61Z6B7mUAACVeh9FYnbpl81btw6ZmDQCgZ6B76flfN65yy9EE908P5kYmKQDA0"\
         "OK1Ozu9htH7dEqsjyik6O0RVW/KIFM8yzoMABMAAPdg0m1exD/v4t9iY8oAAPfokw34v4JwjcxkQYIAYq5b9"\
         "+OJrg1v1uF3yITnGcV5zxcxRYhLZ3rOem9LSe+r82vB1kP1vFwEDQAAAABJRU5ErkJggg=="
+
+
+def srt_subtitle():
+    return """1
+00:00:12,464 --> 00:00:14,979
+أمضيت ما يقرب من العقدين
+
+2
+00:00:14,979 --> 00:00:18,532
+ألاحظ ما يجعل البعض أكثر حظًا من غيرهم
+
+3
+00:00:18,536 --> 00:00:22,119
+وأحاول مساعدة الناس على زيادة حظهم.
+
+    """
