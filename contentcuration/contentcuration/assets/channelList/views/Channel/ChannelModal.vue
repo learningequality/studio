@@ -358,7 +358,6 @@
 
   import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
   import pick from 'lodash/pick';
-  import { setChannelMixin } from '../../mixins';
 
   // Components
   import { isTempId } from '../../utils';
@@ -489,7 +488,6 @@
       downloadFailedTextPPT: 'Failed to download a PPT for {channelName}',
       downloadFailedTextCSV: 'Failed to download a CSV for {channelName}',
     },
-    mixins: [setChannelMixin],
     props: {
       channelId: {
         type: String,

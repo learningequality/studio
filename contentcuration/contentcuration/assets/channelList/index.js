@@ -5,6 +5,8 @@ import ChannelListIndex from './views/ChannelListIndex.vue';
 import store from './store';
 import router from './router';
 
+import 'shared/i18n/setup';
+
 import 'vuetify/dist/vuetify.min.css';
 import 'shared/styles/main.less';
 

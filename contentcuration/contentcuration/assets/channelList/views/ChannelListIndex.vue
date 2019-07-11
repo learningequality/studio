@@ -69,7 +69,6 @@
 
   import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
   import { InvitationShareModes, ListTypes, RouterNames } from '../constants';
-  import { setChannelMixin } from '../mixins';
   import ChannelList from './Channel/ChannelList.vue';
   import ChannelSetList from './ChannelSet/ChannelSetList.vue';
   import AppBar from 'shared/views/AppBar';
@@ -109,7 +108,6 @@
         declineInvitationId: null,
       };
     },
-    mixins: [setChannelMixin],
     computed: {
       ...mapGetters('channelList', ['invitations']),
       ...mapState('channelList', ['activeChannel']),

@@ -82,7 +82,6 @@
 <script>
 
   import { mapActions, mapGetters, mapState } from 'vuex';
-  import { setChannelMixin } from '../../mixins';
   import { RouterNames } from '../../constants';
   import Constants from 'edit_channel/constants/index';
   import CopyToken from 'edit_channel/sharedComponents/CopyToken';
@@ -101,17 +100,11 @@
       CopyToken,
       Star,
     },
-    mixins: [setChannelMixin],
     props: {
       channel: {
         type: Object,
         required: true,
       },
-    },
-    data() {
-      return {
-        optionHighlighted: false,
-      };
     },
     computed: {
       ...mapState('channelList', ['activeChannel']),

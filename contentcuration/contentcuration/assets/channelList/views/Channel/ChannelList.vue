@@ -1,29 +1,42 @@
 <template>
-  <div class="channel-list">
-    <div v-if="isEditable" class="new-button">
-      <button class="action-button" :title="$tr('addChannel')" @click="newChannel">
-        <span class="material-icons align-text-top">
-          add
-        </span> {{ $tr('channel') }}
-      </button>
-    </div>
-
-
-    <div v-if="loading" class="default-item">
-      {{ $tr('loading') }}
-    </div>
-    <div v-else-if="listChannels && !listChannels.length" class="default-item">
-      {{ $tr('noChannelsFound') }}
-    </div>
-    <div v-else>
-      <ChannelItem
-        v-for="channel in listChannels"
-        :key="channel.id"
-        :channel="channel"
-      />
-    </div>
-    <router-view v-if="!loading"/>
-  </div>
+  <VContainer fluid>
+    <VLayout row wrap justify-center>
+      <VFlex xs12 sm10 md6>
+        <VLayout row wrap justify-end>
+          <VFlex xs2>
+            <VBtn v-if="isEditable" color="primary" @click="newChannel">
+              <VIcon>add</VIcon>
+              {{ $tr('channel') }}
+            </VBtn>
+          </VFlex>
+        </VLayout>
+        <VLayout row justify-center>
+          <VFlex xs12>
+            <template v-if="loading">
+              <VProgressLinear
+                indeterminate
+                color="primary"
+              />
+              <p class="headline mb-0">
+                {{ $tr('loading') }}
+              </p>
+            </template>
+            <p v-else-if="listChannels && !listChannels.length" class="headline mb-0">
+              {{ $tr('noChannelsFound') }}
+            </p>
+            <template v-else>
+              <ChannelItem
+                v-for="channel in listChannels"
+                :key="channel.id"
+                :channel="channel"
+              />
+            </template>
+            <router-view v-if="!loading"/>
+          </VFlex>
+        </VLayout>
+      </VFlex>
+    </VLayout>
+  </VContainer>
 </template>
 
 
@@ -31,7 +44,6 @@
 
   import sortBy from 'lodash/sortBy';
   import { mapGetters, mapActions, mapState, mapMutations } from 'vuex';
-  import { setChannelMixin } from '../../mixins';
   import { ListTypes, RouterNames } from '../../constants';
   import ChannelItem from './ChannelItem.vue';
   import { generateTempId, isTempId } from '../../utils';
@@ -52,7 +64,6 @@
     components: {
       ChannelItem,
     },
-    mixins: [setChannelMixin],
     props: {
       listType: {
         type: String,
@@ -134,6 +145,5 @@
 
 <style lang="less" scoped>
 
-  @import '../../../../static/less/channel_list.less';
 
 </style>

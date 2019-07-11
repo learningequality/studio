@@ -1,52 +1,69 @@
 <template>
-  <div class="channel-list">
-    <div class="new-button">
-      <a id="about-sets" class="action-text" @click="infoDialog=true">
-        <span class="material-icons">
-          info
-        </span> {{ $tr('aboutChannelSets') }}
-      </a>
-      <PrimaryDialog v-model="infoDialog" :title="$tr('aboutChannelSets')">
-        <p>
-          {{ $tr('channelSetsDescriptionText') }}
-        </p>
-        <p>
-          {{ $tr('channelSetsInstructionsText') }}
-        </p>
-        <p class="red--text">
-          {{ $tr('channelSetsDisclaimer') }}
-        </p>
-        <template v-slot:actions>
-          <VBtn @click="infoDialog=false">
-            {{ $tr('cancelButtonLabel') }}
-          </VBtn>
-        </template>
-      </PrimaryDialog>
-      <VBtn
-        :title="$tr('addChannelSetTitle')"
-        @click="newChannelSet"
-      >
-        <VIcon>
-          add
-        </VIcon> {{ $tr('addChannelSetButton') }}
-      </VBtn>
-    </div>
-    <router-view v-if="!loading"/>
-
-    <div v-if="loading" class="default-item">
-      {{ $tr('loading') }}
-    </div>
-    <div v-else-if="channelSets && !channelSets.length" class="no-channel-sets">
-      {{ $tr('noChannelSetsFound') }}
-    </div>
-    <div v-else>
-      <ChannelSetItem
-        v-for="channelSet in channelSets"
-        :key="channelSet.id"
-        :channelSet="channelSet"
-      />
-    </div>
-  </div>
+  <VContainer fluid>
+    <VLayout row wrap justify-center>
+      <VFlex xs12 sm10 md6>
+        <VLayout row wrap justify-space-between>
+          <VFlex xs2>
+            <VBtn flat color="primary" @click="infoDialog=true">
+              <VIcon>info</VIcon>
+              {{ $tr('aboutChannelSets') }}
+            </VBtn>
+            <PrimaryDialog v-model="infoDialog" :title="$tr('aboutChannelSets')">
+              <p>
+                {{ $tr('channelSetsDescriptionText') }}
+              </p>
+              <p>
+                {{ $tr('channelSetsInstructionsText') }}
+              </p>
+              <p class="red--text">
+                {{ $tr('channelSetsDisclaimer') }}
+              </p>
+              <template v-slot:actions>
+                <VBtn @click="infoDialog=false">
+                  {{ $tr('cancelButtonLabel') }}
+                </VBtn>
+              </template>
+            </PrimaryDialog>
+          </VFlex>
+          <VFlex xs2>
+            <VBtn
+              :title="$tr('addChannelSetTitle')"
+              color="primary"
+              @click="newChannelSet"
+            >
+              <VIcon>
+                add
+              </VIcon> {{ $tr('addChannelSetButton') }}
+            </VBtn>
+          </VFlex>
+        </VLayout>
+        <VLayout row justify-center>
+          <VFlex xs12>
+            <template v-if="loading">
+              <VProgressLinear
+                indeterminate
+                color="primary"
+              />
+              <p class="headline mb-0">
+                {{ $tr('loading') }}
+              </p>
+            </template>
+            <p v-else-if="channelSets && !channelSets.length" class="headline mb-0">
+              {{ $tr('noChannelSetsFound') }}
+            </p>
+            <template v-else>
+              <ChannelSetItem
+                v-for="channelSet in channelSets"
+                :key="channelSet.id"
+                :channelSet="channelSet"
+              />
+            </template>
+            <router-view v-if="!loading"/>
+          </VFlex>
+        </VLayout>
+      </VFlex>
+    </VLayout>
+  </VContainer>
 </template>
 
 <script>
@@ -124,24 +141,5 @@
 
 <style lang="less" scoped>
 
-  @import '../../../../static/less/channel_list.less';
-
-  #about-sets {
-    float: left;
-    padding: 0;
-    font-size: 12pt;
-    vertical-align: sub;
-    span {
-      font-size: 16pt;
-      vertical-align: sub;
-    }
-  }
-
-  .no-channel-sets {
-    margin-top: 30px;
-    font-size: 14pt;
-    color: @gray-500;
-    text-align: center;
-  }
 
 </style>

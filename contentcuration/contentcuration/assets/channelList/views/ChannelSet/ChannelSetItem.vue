@@ -1,41 +1,49 @@
 <template>
-  <div
-    class="channel-set-item"
-    :title="channelSet.name"
-    :class="{optionHighlighted: optionHighlighted}"
-  >
-    <div class="channel-container-wrapper" @click="open">
-      <div class="profile">
-        <span class="material-icons">
-          storage
-        </span>
-      </div>
-      <div>
-        <div class="channel-options-wrapper">
-          <div class="channel-metadata">
-            <div>{{ $tr('channelCount', {'count': channelSet.channels.length}) }}</div>
-            <CopyToken
-              :token="channelSet.secret_token.display_token"
-            />
-          </div>
-          <VBtn
-            flat
-            icon
-            color="red"
-            :title="$tr('deleteChannelSetTitle')"
-            @click.stop="deleteDialog=true"
-          >
-            <VIcon>delete</VIcon>
-          </VBtn>
-        </div>
-        <h4 dir="auto">
-          {{ channelSet.name }}
-        </h4>
-        <p class="description" dir="auto">
-          {{ channelSet.description }}
-        </p>
-      </div>
-    </div>
+  <VCard class="my-3" :to="channelSetDetailsLink">
+    <VLayout>
+      <VFlex xs1>
+        <VCardTitle>
+          <VIcon x-large>storage</VIcon>
+        </VCardTitle>
+      </VFlex>
+      <VFlex xs11>
+        <VCardTitle>
+          <VLayout row>
+            <VFlex xs4>
+              <h3 class="headline mb-0">
+                {{ channelSet.name }}
+              </h3>
+            </VFlex>
+            <VFlex xs4>
+              <p class="headline mb-0">{{ $tr('channelCount', {'count': channelSet.channels.length}) }}</p>
+            </VFlex>
+            <VFlex xs4>
+              <CopyToken
+                :token="channelSet.secret_token.display_token"
+              />
+            </VFlex>
+          </VLayout>
+        </VCardTitle>
+        <VLayout>
+          <VFlex xs12>
+            <VCardText>
+              {{ channelSet.description }}
+            </VCardText>
+          </VFlex>
+        </VLayout>
+      </VFlex>
+    </VLayout>
+    <VCardActions>
+      <VBtn
+        flat
+        icon
+        color="red"
+        :title="$tr('deleteChannelSetTitle')"
+        @click.prevent="deleteDialog=true"
+      >
+        <VIcon>delete</VIcon>
+      </VBtn>
+    </VCardActions>
     <PrimaryDialog v-model="deleteDialog" :title="$tr('deleteChannelSetTitle')">
       {{ $tr('deleteChannelSetText') }}
       <template v-slot:actions>
@@ -51,7 +59,7 @@
         </VBtn>
       </template>
     </PrimaryDialog>
-  </div>
+  </VCard>
 </template>
 
 <script>
@@ -83,16 +91,16 @@
     },
     data() {
       return {
-        optionHighlighted: false,
-        editDialog: false,
         deleteDialog: false,
       };
     },
+    computed: {
+      channelSetDetailsLink() {
+        return { name: RouterNames.CHANNEL_SET_DETAILS, params: {channelSetId: this.channelSet.id }};
+      },
+    },
     methods: {
       ...mapActions('channelSet', ['deleteChannelSet']),
-      open() {
-        this.$router.push({ name: RouterNames.CHANNEL_SET_DETAILS, params: {channelSetId: this.channelSet.id }});
-      },
     },
   };
 
@@ -100,22 +108,5 @@
 
 
 <style lang="less" scoped>
-
-  @import '../../../../static/less/channel_list.less';
-
-  .channel-container-wrapper {
-    min-height: 150px;
-  }
-
-  .channel-set-item {
-    &:hover:not(.optionHighlighted) {
-      h4 {
-        color: @blue-500;
-      }
-      .channel-container-wrapper {
-        border-color: @blue-500;
-      }
-    }
-  }
 
 </style>
