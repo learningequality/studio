@@ -1,5 +1,5 @@
 ---
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ template "studio.fullname" . }}-prober
@@ -18,6 +18,6 @@ spec:
           containerPort: {{ .Values.studioProber.port }}
         command:
         - ./deploy/prober-entrypoint.sh
-        env: {{ include "studio.sharedEnvs" . | nindent 12 }}
+        env: {{ include "studio.sharedEnvs" . | nindent 8 }}
         - name: PROBER_STUDIO_BASE_URL
           value: http://{{ template "studio.fullname" . }}-app.default.svc.cluster.local
