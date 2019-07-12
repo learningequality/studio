@@ -7,6 +7,7 @@ from django.conf import settings
 from django.core.urlresolvers import reverse_lazy
 
 from .testdata import create_studio_file
+from .testdata import node_json
 from .testdata import tree
 from contentcuration.models import Channel
 from contentcuration.models import ContentKind
@@ -14,6 +15,7 @@ from contentcuration.models import ContentNode
 from contentcuration.models import FormatPreset
 from contentcuration.models import generate_storage_url
 from contentcuration.models import Language
+from contentcuration.models import License
 from contentcuration.utils.files import create_thumbnail_from_base64
 from contentcuration.utils.nodes import duplicate_node_bulk
 from contentcuration.utils.nodes import move_nodes
@@ -280,6 +282,11 @@ class NodeOperationsTestCase(BaseTestCase):
 
 
 class NodeOperationsAPITestCase(BaseAPITestCase):
+
+    def test_create_new_node(self):
+        node = node_json({'kind': 'topic', 'license': License.objects.all()[0].license_name})
+        response = self.post(reverse_lazy('create_new_node'), data=node)
+        assert response.status_code == 200
 
     def test_delete_nodes(self):
         """
