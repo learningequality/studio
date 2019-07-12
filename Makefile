@@ -9,7 +9,7 @@ dummyusers:
 	cd contentcuration/ && python manage.py loaddata contentcuration/fixtures/admin_user_token.json
 
 prodceleryworkers:
-	cd contentcuration/ && celery -A contentcuration worker -l info --concurrency=200 --pool=eventlet
+	cd contentcuration/ && celery -A contentcuration worker -l info
 
 prodcelerydashboard:
 	# connect to the celery dashboard by visiting http://localhost:5555
