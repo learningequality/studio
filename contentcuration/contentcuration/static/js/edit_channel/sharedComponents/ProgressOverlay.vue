@@ -11,16 +11,17 @@
       <VCardTitle class="header">
         {{ headerText }}
       </VCardTitle>
-      <VCardText class="description">
+      <VCardText v-if="progressPercent < 100 && !currentTaskError" class="description">
         {{ descriptionText }}
       </VCardText>
+      <VCardText v-else class="description">
+        {{ finishedText }}
+      </VCardText>
+
       <div class="progress-wrapper">
         <div>
           <ProgressBar
             ref="progressbar"
-            @finished="handleDone"
-            @cancelled="handleCancelled"
-            @failed="handleFailed"
           />
           <div v-if="currentTaskError" class="status status-error">
             {{ errorText }}
@@ -74,6 +75,7 @@
       defaultErrorText:
         'An unexpected error has occurred. Please try again, and if you continue ' +
         'to see this message, please contact support via the Help menu.',
+      finishedMessage: 'Operation complete! Click "Close" to update the page.',
       moveHeader: 'Moving Content',
       moveDescription: 'Move operation is in progress, please wait...',
       publishHeader: 'Publishing Channel',
@@ -119,6 +121,7 @@
         errorText: this.$tr('defaultErrorText'),
         headerText: this.$tr('defaultHeader'),
         descriptionText: this.$tr('defaultDescription'),
+        finishedText: this.$tr('finishedMessage'),
       };
     },
     computed: {
@@ -137,15 +140,6 @@
     methods: {
       closeOverlay() {
         this.progress = false;
-        window.location.reload();
-      },
-      handleDone() {
-        this.done = true;
-      },
-      handleFailed() {
-        this.failed = true;
-      },
-      handleCancelled() {
         window.location.reload();
       },
       handleCancel() {
