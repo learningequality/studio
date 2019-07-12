@@ -8,6 +8,7 @@ class ChannelCreationProbe(BaseProbe):
 
     metric = "channel_creation_latency_msec"
     develop_only = True
+    prober_name = "CHANNEL-CREATION-PROBER"
 
     def _get_user_id(self):
         response = self.request('api/internal/authenticate_user_internal')
@@ -22,7 +23,7 @@ class ChannelCreationProbe(BaseProbe):
             'content_defaults': "{}",
             'editors': [self._get_user_id()]
         }
-        self.request("api/channel", action="POST", data=payload, contenttype="application/x-www-form-urlencoded", prober_name="CHANNEL-CREATION-PROBER")
+        self.request("api/channel", action="POST", data=payload, contenttype="application/x-www-form-urlencoded")
 
 
 if __name__ == "__main__":

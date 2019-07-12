@@ -9,6 +9,7 @@ class TopicCreationProbe(BaseProbe):
 
     metric = "topic_creation_latency_msec"
     develop_only = True
+    prober_name = "TOPIC-CREATION-PROBER"
 
     def _get_channel(self):
         response = self.request('api/probers/get_prober_channel')
@@ -28,7 +29,7 @@ class TopicCreationProbe(BaseProbe):
             "parent": channel['main_tree']
         })
         path = "api/contentnode/{}".format(new_topic['id'])
-        self.request(path, action="PUT", data=payload, contenttype="application/x-www-form-urlencoded", prober_name="TOPIC-CREATION-PROBER")
+        self.request(path, action="PUT", data=payload, contenttype="application/x-www-form-urlencoded")
 
 
 if __name__ == "__main__":

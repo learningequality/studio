@@ -13,6 +13,7 @@ class BaseProbe(object):
 
     metric = "STUB_METRIC"
     develop_only = False
+    prober_name = "PROBER"
 
     def __init__(self):
         self.session = requests.Session()
@@ -51,7 +52,7 @@ class BaseProbe(object):
         url = "{base_url}/{path}".format(base_url=STUDIO_BASE_URL, path=path_stripped)
         return url
 
-    def request(self, path, action="GET", data=None, headers=None, contenttype="application/json", prober_name="PROBER"):
+    def request(self, path, action="GET", data=None, headers=None, contenttype="application/json"):
         data = data or {}
         headers = headers or {}
 
@@ -66,7 +67,7 @@ class BaseProbe(object):
         })
 
         headers.update({'Content-Type': contenttype})
-        headers.update({'X-Studio-Internal-Prober': prober_name})
+        headers.update({'X-Studio-Internal-Prober': self.prober_name})
         response = self.session.request(action, url, data=data, headers=headers)
         response.raise_for_status()
 
