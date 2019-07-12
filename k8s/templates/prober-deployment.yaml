@@ -9,7 +9,6 @@ spec:
     metadata:
       labels:
         app: {{ template "studio.fullname" . }}-prober
-        tier: prober
     spec:
       containers:
       - name: prober

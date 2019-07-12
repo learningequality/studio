@@ -9,5 +9,4 @@ spec:
     targetPort: {{ .Values.studioProber.port }}
   selector:
     app: {{ template "studio.fullname" . }}-prober
-    tier: prober
   type: NodePort
