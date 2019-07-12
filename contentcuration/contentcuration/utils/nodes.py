@@ -333,7 +333,7 @@ def move_nodes(channel_id, target_parent_id, nodes, min_order, max_order, task_o
     percent_per_node = math.ceil(total_percent / len(nodes))
     percent_done = 0.0
 
-    with ContentNode.objects.delay_mptt_updates():
+    with transaction.atomic():
         for n in nodes:
             min_order = min_order + float(max_order - min_order) / 2
             node = ContentNode.objects.get(pk=n['id'])
