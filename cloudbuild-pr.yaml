@@ -93,6 +93,12 @@ secrets:
 - kmsKeyName: projects/ops-central/locations/global/keyRings/builder-secrets/cryptoKeys/secret-encrypter
   secretEnv:
     POSTMARK_API_KEY: CiQA7z1GH3QhvCEWNn6KS64t/c8BEQng5I4CdMC6VGNxJkWmZrwSTgB+R8mv/PSrzlDmCYSOZc4bugWA+K+lJ8nIll1BBsZZEV5M9GuOCYVn6sVWg9pCIVujwyb4EvEy1QaKmZCzAnTw9aHEXDH0sruAUHBaTA==
+- kmsKeyName: projects/ops-central/locations/global/keyRings/builder-secrets/cryptoKeys/proberNewrelicKey
+  secretEnv:
+    PROBER_NEWRELIC_KEY: CiQAfPus0ALc6lu6q1UWqlXy2GSlIpoP8Ld7sAaQvYpWX/rIBGESSgC/YPuCpL13usytN/eOPJV2Z3SqXloUpghwRiDEeO7tUobUmVjuo46eezP9l2Xek6RbNvRVCOgotgEYgQDoua8AVveIsQKEI+J0
+- kmsKeyName: projects/ops-central/locations/global/keyRings/builder-secrets/cryptoKeys/proberNewrelicAccountId
+  secretEnv:
+    PROBER_NEWRELIC_ACCOUNT_ID: CiQA3yNuVig7N0+JW78z+is/ujBnD/3U4buHKj7oJ5ObzSLc6toSMQBoDQ+Cv13BID7dgu/rQ4NZq3yozpZqm9mf6H7+jGXP0gvC0mzNjVfvVq545Ei+Bwc=
 
 images:
   - 'gcr.io/$PROJECT_ID/learningequality-studio-nginx:$COMMIT_SHA'
