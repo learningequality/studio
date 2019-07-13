@@ -5,6 +5,9 @@ metadata:
   name: {{ template "studio.fullname" . }}-prober
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: {{ template "studio.fullname" . }}-prober
   template:
     metadata:
       labels:
@@ -14,8 +17,7 @@ spec:
       - name: prober
         image: {{ .Values.studioProber.imageName }}
         ports:
-        - name: prober-webui
-          containerPort: {{ .Values.studioProber.port }}
+        - containerPort: {{ .Values.studioProber.port }}
         command:
         - ./deploy/prober-entrypoint.sh
         env: {{ include "studio.sharedEnvs" . | nindent 8 }}
