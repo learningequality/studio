@@ -657,6 +657,7 @@ var ContentNodeCollection = BaseCollection.extend({
         dataType: 'json',
         error: reject,
         success: function(data) {
+          data.noDialog = true;
           const payload = {
             task: data,
             resolveCallback: resolve,
