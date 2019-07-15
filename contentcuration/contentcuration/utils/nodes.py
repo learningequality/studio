@@ -329,7 +329,7 @@ def move_nodes(channel_id, target_parent_id, nodes, min_order, max_order, task_o
 
     target_parent = ContentNode.objects.get(pk=target_parent_id)
     # last 20% is MPTT tree updates
-    total_percent = 80.0
+    total_percent = 100.0
     percent_per_node = math.ceil(total_percent / len(nodes))
     percent_done = 0.0
 
@@ -342,9 +342,6 @@ def move_nodes(channel_id, target_parent_id, nodes, min_order, max_order, task_o
             if task_object:
                 task_object.update_state(state='STARTED', meta={'progress': percent_done})
             all_ids.append(n['id'])
-
-        if task_object:
-            task_object.update_state(state='STARTED', meta={'progress': 80.0})
 
     return all_ids
 
