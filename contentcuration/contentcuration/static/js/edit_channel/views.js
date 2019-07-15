@@ -4,7 +4,6 @@ const WorkspaceManager = require('./utils/workspace_manager');
 var Models = require('./models');
 var analytics = require('utils/analytics');
 const State = require('edit_channel/state');
-
 //var UndoManager = require("backbone-undo");
 
 var TABINDEX = 1;
@@ -72,9 +71,6 @@ var MESSAGES = {
   language: 'Language',
   select_language: 'Select a Language',
   make_copy: 'Make a Copy',
-  publish_title_prompt: 'Make this channel available for download into Kolibri',
-  publish_in_progress: 'Your channel is currently publishing...',
-  publishing_prompt: 'You will get an email once the channel finishes publishing.',
   topic_title: 'Topic',
   problem_creating_topics: 'Error Creating Topic',
   parenthesis: '({data})',
@@ -148,17 +144,8 @@ var BaseView = Backbone.View.extend({
     });
   },
   display_load: function(message, callback) {
-    if (message.trim() != '') {
-      var load =
-        '<div id="loading_modal" class="text-center fade">' +
-        '<div id="kolibri_load_gif"></div>' +
-        '<h4 id="kolibri_load_text" class="text-center">' +
-        message +
-        '</h4>' +
-        '</div>';
-      $(load).appendTo('body');
-    }
     if (callback) {
+      this.show_loading_modal(message);
       var promise = new Promise(function(resolve, reject) {
         callback(resolve, reject);
       });
@@ -168,16 +155,29 @@ var BaseView = Backbone.View.extend({
             $('#loading_modal').remove();
           }
         })
-        .catch(error => {
+        .catch(() => {
           if (message != '') {
             $('#kolibri_load_text').text(this.get_translation('refresh_page'));
           }
-          // eslint-disable-next-line no-console
-          console.warn(this.get_translation('call_error'), error);
         });
     } else {
-      $('#loading_modal').remove();
+      this.dismiss_loading_modal();
     }
+  },
+  show_loading_modal: function(message) {
+    if ($('#loading_modal').length == 0 && message.trim() != '') {
+      var load =
+        '<div id="loading_modal" class="text-center fade">' +
+        '<div id="kolibri_load_gif"></div>' +
+        '<h4 id="kolibri_load_text" class="text-center">' +
+        message +
+        '</h4>' +
+        '</div>';
+      $(load).appendTo('body');
+    }
+  },
+  dismiss_loading_modal: function() {
+    $('#loading_modal').remove();
   },
   reload_ancestors: function(collection, include_collection, callback) {
     include_collection = include_collection == null || include_collection;
@@ -227,23 +227,10 @@ var BaseView = Backbone.View.extend({
       });
     });
   },
-  check_if_published: function(root) {
-    var is_published = root.get('published');
-    var is_publishing = root.get('publishing');
+  check_if_published: function() {
+    var is_published = State.current_channel.get('main_tree').published;
     $('#hide-if-unpublished').css('display', is_published ? 'inline-block' : 'none');
-    if (is_publishing) {
-      this.set_publishing();
-    } else if (root.get('metadata').has_changed_descendant) {
-      $('#channel-publish-button')
-        .removeAttr('disabled')
-        .attr('title', this.get_translation('publish_title_prompt'))
-        .removeClass('disabled');
-    } else {
-      $('#channel-publish-button')
-        .attr('disabled', 'disabled')
-        .attr('title', this.get_translation('no_changes_detected'))
-        .addClass('disabled');
-    }
+    State.Store.commit('publish/SET_CHANNEL', State.current_channel.toJSON());
   },
   set_publishing: function() {
     $('#channel-publish-button')
@@ -300,7 +287,6 @@ var BaseWorkspaceView = BaseView.extend({
     _.bindAll(
       this,
       'reload_ancestors',
-      'publish',
       'edit_permissions',
       'handle_published',
       'handle_move',
@@ -314,13 +300,6 @@ var BaseWorkspaceView = BaseView.extend({
       'delete_items_permanently',
       'sync_content'
     );
-  },
-  publish: function() {
-    var Exporter = require('edit_channel/export/views');
-    new Exporter.ExportModalView({
-      model: State.current_channel.get_root('main_tree'),
-      onpublish: this.handle_published,
-    });
   },
   activate_channel: function() {
     var dialog = require('edit_channel/utils/dialog');
@@ -420,22 +399,18 @@ var BaseWorkspaceView = BaseView.extend({
       });
     });
   },
-  add_to_trash: function(collection, message) {
-    message = message != null ? message : this.get_translation('archiving');
+  add_to_trash: function(collection) {
     var self = this;
     var promise = new Promise(function(resolve) {
-      self.display_load(message, function(resolve_load) {
-        var reloadCollection = collection.clone();
-        var trash_node = State.current_channel.get_root('trash_tree');
-        collection.move(trash_node, trash_node.get('metadata').max_sort_order).then(function() {
-          self.reload_ancestors(reloadCollection, false);
-          trash_node.fetch({
-            success: function(fetched) {
-              State.current_channel.set('trash_tree', fetched.attributes);
-              resolve(collection);
-              resolve_load(true);
-            },
-          });
+      var reloadCollection = collection.clone();
+      var trash_node = State.current_channel.get_root('trash_tree');
+      collection.move(trash_node, trash_node.get('metadata').max_sort_order).then(function() {
+        self.reload_ancestors(reloadCollection, false);
+        trash_node.fetch({
+          success: function(fetched) {
+            State.current_channel.set('trash_tree', fetched.attributes);
+            resolve(collection);
+          },
         });
       });
     });
@@ -878,7 +853,6 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
   },
   copy_collection: function(copyCollection) {
     var clipboard = WorkspaceManager.get_queue_view();
-    clipboard.open_queue();
     return copyCollection.duplicate(clipboard.clipboard_queue.model);
   },
   delete_selected: function() {
@@ -1402,42 +1376,23 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
       source
     );
   },
-  copy_item: function(message, source) {
-    message = message != null ? message : this.get_translation('copying_to_clipboard');
+  copy_item: function() {
     var copyCollection = new Models.ContentNodeCollection();
     copyCollection.add(this.model);
-    var self = this;
-    this.display_load(message, function(resolve, reject) {
-      self.containing_list_view
-        .copy_collection(copyCollection)
-        .then(function(collection) {
-          self.containing_list_view.add_to_clipboard(collection, message, source);
-          resolve(collection);
-        })
-        .catch(function(error) {
-          reject(error);
-        });
-    });
+    this.containing_list_view.copy_collection(copyCollection);
   },
-  make_copy: function(message) {
+  make_copy: function() {
     // Makes inline copy
-    message = message != null ? message : this.get_translation('making_copy');
     var copyCollection = new Models.ContentNodeCollection();
     copyCollection.add(this.model);
     var self = this;
-    this.display_load(message, function(resolve) {
-      var target_parent = self.containing_list_view.model;
-      // If the target parent is a UI segment, go up a level to its parent to
-      // get the collection to make a copy into.
-      if (self.containing_list_view.is_segment()) {
-        target_parent = self.containing_list_view.content_node_view.containing_list_view.model;
-      }
-      self.model.make_copy(target_parent).then(function(collection) {
-        var new_view = self.containing_list_view.create_new_view(collection.at(0));
-        self.$el.after(new_view.el);
-        self.reload_ancestors(collection, true, resolve);
-      });
-    });
+    var target_parent = self.containing_list_view.model;
+    // If the target parent is a UI segment, go up a level to its parent to
+    // get the collection to make a copy into.
+    if (self.containing_list_view.is_segment()) {
+      target_parent = self.containing_list_view.content_node_view.containing_list_view.model;
+    }
+    self.model.make_copy(target_parent);
   },
   add_topic: function() {
     // Is this function ever actually used?

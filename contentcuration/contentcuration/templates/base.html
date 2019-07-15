@@ -62,12 +62,13 @@
           window.ALL_MESSAGES = JSON.parse("{{ messages|escapejs}}");
         } catch (error) { /* Page does not require front-end translations */ }
       </script>
-      <!-- TODO work out why debug is not working here and use the static version -->
-      <script src="{% url 'js_reverse' %}" type="text/javascript"></script>
+      {% if not debug %}
+        <script src={% static 'django_js_reverse/js/reverse.js' %}></script>
+      {% else %}
+        <script src="{% url 'js_reverse' %}" type="text/javascript"></script>
+      {% endif %}
 
       {% render_bundle 'common' 'js' %}
-
-      <script type="text/javascript" src="{% url 'javascript-catalog' %}"></script>
 
         <!-- fullstory integration, only on develop until we add an opt-in option. -->
         {% if request.get_host == 'develop.studio.learningequality.org' %}
@@ -107,7 +108,7 @@
         {% endif %}
       {% endblock %}
 	</head>
-  <body>
+  <body data-app>
       {% block nav %}
       <!-- Navigation bar -->
       <nav>
@@ -138,15 +139,15 @@
     </nav>
 
     {% if INCIDENT %}
-      <div id="emergency-banner" class="text-center main-banner {% if INCIDENT.readonly %}error{% else %}warning{% endif %}">
+      <div id="emergency-banner" class="text-center main-banner {% if INCIDENT.readonly %}error-banner{% else %}warning-banner{% endif %}">
         <i class="material-icons">error</i> {{INCIDENT.message | safe}}
       </div>
     {% elif DEPRECATED %}
-      <div class="text-center main-banner warning" id="redirect-banner">
+      <div class="text-center main-banner warning-banner" id="redirect-banner">
         <i class="material-icons">error</i> {% blocktrans %}Contentworkshop.learningequality.org has been deprecated. Please go to <a href="https://studio.learningequality.org">studio.learningequality.org</a> for the latest version of Studio{% endblocktrans %}
       </div>
     {% elif BETA_MODE %}
-      <div id="beta-banner" class="text-center info main-banner">
+      <div id="beta-banner" class="text-center info-banner main-banner">
         <i class="material-icons">build</i> {% url 'issues_settings' as issue_url %}{% blocktrans %}Kolibri Studio is undergoing active development, and during usage you may encounter unexpected behavior or problems. <a href="{{issue_url}}" target="_blank">Please read here</a> on best practices, known issues, and error reporting recommendations. We appreciate your patience and assistance as we work to improve the Kolibri Studio Beta!{% endblocktrans %}
       </div>
     {% endif %}

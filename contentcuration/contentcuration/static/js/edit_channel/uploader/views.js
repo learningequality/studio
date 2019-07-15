@@ -449,22 +449,8 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
   call_duplicate: function() {
     var self = this;
     var clipboard = WorkspaceManager.get_queue_view();
-    clipboard.open_queue();
-    this.display_load(this.get_translation('copying_to_clipboard'), function(
-      load_resolve,
-      load_reject
-    ) {
-      self.collection
-        .duplicate(clipboard.clipboard_queue.model)
-        .then(function(collection) {
-          self.onnew(collection, self.get_translation('copying_to_clipboard'));
-          self.onclose();
-          load_resolve(true);
-        })
-        .catch(function(error) {
-          load_reject(error);
-        });
-    });
+    self.collection.duplicate(clipboard.clipboard_queue.model);
+    self.close_upload();
   },
   save_nodes: function() {
     var sort_order =

@@ -158,7 +158,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         if self.is_admin:
             return True
         root = node.get_root()
-        if root == self.clipboard_tree:
+        if root == self.clipboard_tree or root.pk == settings.ORPHANAGE_ROOT_ID:
             return True
         channel_id = Channel.objects.filter(Q(main_tree=root)
                                             | Q(chef_tree=root)
@@ -175,9 +175,11 @@ class User(AbstractBaseUser, PermissionsMixin):
             return True
         root_nodes_all = ContentNode.objects.filter(parent=None, tree_id__in=nodes.values_list("tree_id", flat=True).distinct()).distinct()
         # If all the nodes belong to the clipboard, skip the channel check.
-        root_nodes = root_nodes_all.exclude(tree_id=self.clipboard_tree.tree_id)
+
+        root_nodes = root_nodes_all.exclude(tree_id=self.clipboard_tree.tree_id).exclude(pk=settings.ORPHANAGE_ROOT_ID)
         if root_nodes.count() == 0 and root_nodes_all.count() > 0:
             return True
+
         channels = Channel.objects.filter(Q(main_tree__in=root_nodes)
                                           | Q(chef_tree__in=root_nodes)
                                           | Q(trash_tree__in=root_nodes)
@@ -198,7 +200,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         if self.is_admin:
             return True
         root = node.get_root()
-        if root == self.clipboard_tree:
+        if root == self.clipboard_tree or root.pk == settings.ORPHANAGE_ROOT_ID:
             return True
 
         channel_id = Channel.objects.filter(Q(main_tree=root)
@@ -216,7 +218,7 @@ class User(AbstractBaseUser, PermissionsMixin):
             return True
         root_nodes_all = ContentNode.objects.filter(parent=None, tree_id__in=nodes.values_list("tree_id", flat=True).distinct()).distinct()
         # If all the nodes belong to the clipboard, skip the channel check.
-        root_nodes = root_nodes_all.exclude(tree_id=self.clipboard_tree.tree_id)
+        root_nodes = root_nodes_all.exclude(tree_id=self.clipboard_tree.tree_id).exclude(pk=settings.ORPHANAGE_ROOT_ID)
         if root_nodes.count() == 0 and root_nodes_all.count() > 0:
             return True
         channels = Channel.objects.filter(Q(main_tree__in=root_nodes)
@@ -702,6 +704,9 @@ class Channel(models.Model):
             return generate_storage_url(self.thumbnail)
 
         return '/static/img/kolibri_placeholder.png'
+
+    def has_changes(self):
+        return self.main_tree.get_descendants(include_self=True).filter(changed=True).exists()
 
     def get_date_modified(self):
         return self.main_tree.get_descendants(include_self=True).aggregate(last_modified=Max('modified'))['last_modified']
