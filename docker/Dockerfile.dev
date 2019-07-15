@@ -31,7 +31,6 @@ RUN curl -sL https://deb.nodesource.com/setup_10.x | bash - &&\
 RUN npm install -g yarn && npm cache clean --force
 COPY ./package.json ./yarn.lock   /src/
 RUN  yarn install --network-timeout 1000000 --pure-lockfile && yarn cache clean
-ENV PATH="/src/node_modules/.bin:$PATH"
 ################################################################################
 
 
