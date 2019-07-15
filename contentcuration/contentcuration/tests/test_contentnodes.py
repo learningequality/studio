@@ -1,16 +1,21 @@
 import json
+import random
+import string
 
 import testdata
 from base import BaseAPITestCase
 from base import BaseTestCase
 from django.conf import settings
 from django.core.urlresolvers import reverse_lazy
+from django.db.utils import DataError
+from mixer.backend.django import mixer
 
 from .testdata import create_studio_file
 from .testdata import tree
 from contentcuration.models import Channel
 from contentcuration.models import ContentKind
 from contentcuration.models import ContentNode
+from contentcuration.models import ContentTag
 from contentcuration.models import FormatPreset
 from contentcuration.models import generate_storage_url
 from contentcuration.models import Language
@@ -446,3 +451,14 @@ class SyncNodesOperationTestCase(BaseTestCase):
             assert fileA.checksum == fileB.checksum, 'different checksum found'
             assert fileA.preset == fileB.preset, 'different preset found'
             assert fileA.language == fileB.language, 'different language found'
+
+
+class NodeCreationTestCase(BaseTestCase):
+
+    def test_content_tag_creation(self):
+        """
+        Verfies tag creation works
+        """
+        mixer.blend(ContentTag, tag_name="".join(random.sample(string.printable, random.randint(31, 50))))
+        with self.assertRaises(DataError):
+            mixer.blend(ContentTag, tag_name=random.sample(string.printable, random.randint(51, 80)))
