@@ -39,6 +39,7 @@ import contentcuration.views.public as public_views
 import contentcuration.views.settings as settings_views
 import contentcuration.views.users as registration_views
 import contentcuration.views.zip as zip_views
+from contentcuration.celery import app
 from contentcuration.forms import ForgotPasswordForm
 from contentcuration.forms import LoginForm
 from contentcuration.forms import ResetPasswordForm
@@ -204,10 +205,25 @@ class TaskViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         # TODO: Add logic to delete the Celery task using app.control.revoke(). This will require some extensive
         # testing to ensure terminating in-progress tasks will not put the db in an indeterminate state.
+        app.control.revoke(instance.task_id, terminate=True)
         instance.delete()
 
     def get_queryset(self):
-        return Task.objects.filter(user=self.request.user)
+        queryset = Task.objects.none()
+        channel_id = self.request.query_params.get('channel_id', None)
+        if channel_id is not None:
+            user = self.request.user
+            channel = Channel.objects.filter(pk=channel_id).first()
+            if channel:
+                has_access = channel.editors.filter(pk=user.pk).exists() or \
+                         channel.viewers.filter(pk=user.pk).exists() or \
+                         user.is_admin
+                if has_access:
+                    queryset = Task.objects.filter(metadata__affects__channels__contains=[channel_id])
+        else:
+            queryset = Task.objects.filter(user=self.request.user)
+
+        return queryset
 
 
 router = routers.DefaultRouter(trailing_slash=False)
@@ -263,6 +279,12 @@ urlpatterns = [
     url(r'^api/download_channel_content_csv/(?P<channel_id>[^/]{32})$', views.download_channel_content_csv, name='download_channel_content_csv'),
     url(r'^api/probers/get_prober_channel', views.get_prober_channel, name='get_prober_channel'),
 ]
+
+# if activated, turn on django prometheus urls
+if "django_prometheus" in settings.INSTALLED_APPS:
+    urlpatterns += [
+        url('', include('django_prometheus.urls')),
+    ]
 
 
 # Add public api endpoints

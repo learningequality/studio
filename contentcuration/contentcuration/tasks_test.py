@@ -38,7 +38,7 @@ def progress_test_task(self):
     logger.info("Request ID = {}".format(self.request.id))
     assert Task.objects.filter(task_id=self.request.id).count() == 1
 
-    self.update_state('PROGRESS', meta={'progress': 100})
+    self.update_state(state='PROGRESS', meta={'progress': 100})
     return 42
 
 

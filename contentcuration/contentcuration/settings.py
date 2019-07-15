@@ -191,10 +191,8 @@ WSGI_APPLICATION = 'contentcuration.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',  # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': os.getenv("DATA_DB_NAME") or 'kolibri-studio',  # Or path to database file if using sqlite3.
-        # The following settings are not used with sqlite3:
-
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': os.getenv("DATA_DB_NAME") or 'kolibri-studio',
         # For dev purposes only
         'USER': os.getenv('DATA_DB_USER') or 'learningequality',
         'PASSWORD': os.getenv('DATA_DB_PASS') or 'kolibri',
@@ -346,7 +344,16 @@ CELERY_TIMEZONE = os.getenv("CELERY_TIMEZONE") or 'Africa/Nairobi'
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
+# This is needed for worker update_state calls to work so they can send progress info.
+CELERYD_STATE_DB = '/tmp/celery_state'
+# If this is True, Celery tasks are run synchronously. This is set to True in the unit tests,
+# as it is not possible to correctly test Celery tasks asynchronously currently.
+CELERY_TASK_ALWAYS_EAGER = False
+# This tells Celery to mark a task as started. Otherwise, we would have no way of tracking
+# if the task is running.
 CELERY_TASK_TRACK_STARTED = True
+# We hook into task events to update the Task DB records with the updated state.
+# See celerysignals.py for more info.
 CELERY_WORKER_SEND_TASK_EVENTS = True
 
 # When cleaning up orphan nodes, only clean up any that have been last modified
