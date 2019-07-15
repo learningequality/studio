@@ -551,8 +551,10 @@ var ContentNodeCollection = BaseCollection.extend({
         method: 'POST',
         url: window.Urls.create_new_node(),
         data: JSON.stringify(data),
+        contentType: 'application/json',
+        dataType: 'json',
         success: function(data) {
-          var new_node = new ContentNodeModel(JSON.parse(data));
+          var new_node = new ContentNodeModel(data);
           self.add(new_node);
           resolve(new_node);
         },

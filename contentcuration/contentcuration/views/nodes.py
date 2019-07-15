@@ -26,11 +26,9 @@ from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import License
 from contentcuration.serializers import ContentNodeEditSerializer
-from contentcuration.serializers import ContentNodeSerializer
 from contentcuration.serializers import ReadOnlyContentNodeFullSerializer
 from contentcuration.serializers import ReadOnlyContentNodeSerializer
 from contentcuration.serializers import ReadOnlySimplifiedContentNodeSerializer
-from contentcuration.serializers import SimplifiedContentNodeSerializer
 from contentcuration.serializers import TaskSerializer
 from contentcuration.tasks import create_async_task
 from contentcuration.tasks import getnodedetails_task
@@ -97,7 +95,7 @@ def get_node_diff(request, channel_id):
 @permission_classes((IsAuthenticated,))
 @api_view(['POST'])
 def create_new_node(request):
-    data = json.loads(request.body)
+    data = request.data
     license = License.objects.filter(license_name=data.get('license_name')).first()  # Use filter/first in case preference hasn't been set
     license_id = license.pk if license else settings.DEFAULT_LICENSE
     new_node = ContentNode.objects.create(
@@ -290,7 +288,7 @@ def get_node_details_cached(node):
 @api_view(['POST'])
 def delete_nodes(request):
 
-    data = json.loads(request.body)
+    data = request.data
 
     try:
         nodes = data["nodes"]
@@ -455,7 +453,7 @@ def move_nodes(request):
 def sync_nodes(request):
     logging.debug("Entering the sync_nodes endpoint")
 
-    data = json.loads(request.body)
+    data = request.data
 
     try:
         nodes = data["nodes"]
