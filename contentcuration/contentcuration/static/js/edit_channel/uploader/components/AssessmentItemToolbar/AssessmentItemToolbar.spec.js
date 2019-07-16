@@ -31,36 +31,6 @@ describe('AssessmentItemToolbar', () => {
     expect(wrapper.find('[data-test="toolbarMenu"]').html()).toContain('Add question below');
   });
 
-  it("doesn't render edit icon if displayEditIcon is false", () => {
-    wrapper = mount(AssessmentItemToolbar, {
-      propsData: {
-        displayEditIcon: false,
-      },
-    });
-
-    expect(wrapper.html()).not.toContain('edit');
-  });
-
-  it("doesn't render delete icon if displayDeleteIcon is false", () => {
-    wrapper = mount(AssessmentItemToolbar, {
-      propsData: {
-        displayDeleteIcon: false,
-      },
-    });
-
-    expect(wrapper.html()).not.toContain('delete');
-  });
-
-  it("doesn't render menu if displayMenu is false", () => {
-    wrapper = mount(AssessmentItemToolbar, {
-      propsData: {
-        displayMenu: false,
-      },
-    });
-
-    expect(wrapper.contains('[data-test="toolbarMenu"]')).toBe(false);
-  });
-
   it('emits click action with correct payload on arrow up icon click', () => {
     wrapper.find('[data-test=toolbarIconArrowUp]').trigger('click');
 
@@ -93,7 +63,7 @@ describe('AssessmentItemToolbar', () => {
     expect(wrapper.emitted().click[0][0]).toEqual(AssessmentItemToolbarActions.DELETE_ITEM);
   });
 
-  it('emits click action with correct payload on menu "Add item above" click', () => {
+  it('emits click action with correct payload on "Add item above" menu item click', () => {
     wrapper.find('[data-test=toolbarMenuAddItemAbove]').trigger('click');
 
     expect(wrapper.emitted().click).toBeTruthy();
@@ -101,7 +71,7 @@ describe('AssessmentItemToolbar', () => {
     expect(wrapper.emitted().click[0][0]).toEqual(AssessmentItemToolbarActions.ADD_ITEM_ABOVE);
   });
 
-  it('emits click action with correct payload on menu "Add item below" click', () => {
+  it('emits click action with correct payload on "Add item below" menu item click', () => {
     wrapper.find('[data-test=toolbarMenuAddItemBelow]').trigger('click');
 
     expect(wrapper.emitted().click).toBeTruthy();
@@ -109,11 +79,107 @@ describe('AssessmentItemToolbar', () => {
     expect(wrapper.emitted().click[0][0]).toEqual(AssessmentItemToolbarActions.ADD_ITEM_BELOW);
   });
 
-  it('emits click action with correct payload on menu "Delete" click', () => {
-    wrapper.find('[data-test=toolbarMenuDeleteItem]').trigger('click');
+  it("doesn't render edit icon if displayEditIcon is false", () => {
+    wrapper = mount(AssessmentItemToolbar, {
+      propsData: {
+        displayEditIcon: false,
+      },
+    });
 
-    expect(wrapper.emitted().click).toBeTruthy();
-    expect(wrapper.emitted().click.length).toBe(1);
-    expect(wrapper.emitted().click[0][0]).toEqual(AssessmentItemToolbarActions.DELETE_ITEM);
+    expect(wrapper.html()).not.toContain('[data-test="toolbarIconEdit"]');
+  });
+
+  describe('when displayDeleteIcon is false', () => {
+    beforeEach(() => {
+      wrapper = mount(AssessmentItemToolbar, {
+        propsData: {
+          displayDeleteIcon: false,
+        },
+      });
+    });
+
+    it("doesn't render delete icon", () => {
+      expect(wrapper.contains('[data-test="toolbarIconDelete"]')).toBe(false);
+    });
+
+    it('renders "Delete" menu item', () => {
+      expect(wrapper.contains('[data-test="toolbarMenuDeleteItem"]')).toBe(true);
+    });
+
+    it('emits click action with correct payload on "Delete" menu item click', () => {
+      wrapper.find('[data-test=toolbarMenuDeleteItem]').trigger('click');
+
+      expect(wrapper.emitted().click).toBeTruthy();
+      expect(wrapper.emitted().click.length).toBe(1);
+      expect(wrapper.emitted().click[0][0]).toEqual(AssessmentItemToolbarActions.DELETE_ITEM);
+    });
+  });
+
+  it("doesn't render menu if displayMenu is false", () => {
+    wrapper = mount(AssessmentItemToolbar, {
+      propsData: {
+        displayMenu: false,
+      },
+    });
+
+    expect(wrapper.contains('[data-test="toolbarMenu"]')).toBe(false);
+  });
+
+  describe('when collapse is true', () => {
+    beforeEach(() => {
+      wrapper = mount(AssessmentItemToolbar, {
+        propsData: {
+          collapse: true,
+        },
+      });
+    });
+
+    it("doesn't render arrow up icon", () => {
+      expect(wrapper.contains('[data-test="toolbarIconArrowUp"]')).toBe(false);
+    });
+
+    it('renders "Move up" menu item', () => {
+      expect(wrapper.contains('[data-test="toolbarMenuMoveItemUp"]')).toBe(true);
+    });
+
+    it('emits click action with correct payload on "Move up" menu item click', () => {
+      wrapper.find('[data-test=toolbarMenuMoveItemUp]').trigger('click');
+
+      expect(wrapper.emitted().click).toBeTruthy();
+      expect(wrapper.emitted().click.length).toBe(1);
+      expect(wrapper.emitted().click[0][0]).toEqual(AssessmentItemToolbarActions.MOVE_ITEM_UP);
+    });
+
+    it("doesn't render arrow down icon", () => {
+      expect(wrapper.contains('[data-test="toolbarIconArrowDown"]')).toBe(false);
+    });
+
+    it('renders "Move down" menu item', () => {
+      expect(wrapper.contains('[data-test="toolbarMenuMoveItemDown"]')).toBe(true);
+    });
+
+    it('emits click action with correct payload on "Move down" menu item click', () => {
+      wrapper.find('[data-test=toolbarMenuMoveItemDown]').trigger('click');
+
+      expect(wrapper.emitted().click).toBeTruthy();
+      expect(wrapper.emitted().click.length).toBe(1);
+      expect(wrapper.emitted().click[0][0]).toEqual(AssessmentItemToolbarActions.MOVE_ITEM_DOWN);
+    });
+
+    it("doesn't render delete icon", () => {
+      expect(wrapper.contains('[data-test="toolbarIconDelete"]')).toBe(false);
+    });
+
+    it('renders "Delete" menu item', () => {
+      expect(wrapper.contains('[data-test="toolbarMenuDeleteItem"]')).toBe(true);
+    });
+
+    it('emits click action with correct payload on "Delete" menu item click', () => {
+      wrapper.find('[data-test=toolbarMenuDeleteItem]').trigger('click');
+
+      expect(wrapper.emitted().click).toBeTruthy();
+      expect(wrapper.emitted().click.length).toBe(1);
+      expect(wrapper.emitted().click[0][0]).toEqual(AssessmentItemToolbarActions.DELETE_ITEM);
+    });
   });
 });

@@ -13,15 +13,15 @@ exports[`AssessmentItemToolbar renders 1`] = `
 <div class="v-menu" data-test="toolbarMenu">
   <div class="v-menu__content theme--light " style="max-height: auto; min-width: 0px; max-width: auto; top: 12px; left: 12px; transform-origin: top left; z-index: 0; display: none;">
     <div role="list" class="v-list theme--light">
+      <!---->
+      <!---->
       <div role="listitem"><a data-test="toolbarMenuAddItemAbove" class="v-list__tile v-list__tile--link theme--light">
           <div class="v-list__tile__title">Add item above</div>
         </a></div>
       <div role="listitem"><a data-test="toolbarMenuAddItemBelow" class="v-list__tile v-list__tile--link theme--light">
           <div class="v-list__tile__title">Add item below</div>
         </a></div>
-      <div role="listitem"><a data-test="toolbarMenuDeleteItem" class="v-list__tile v-list__tile--link theme--light">
-          <div class="v-list__tile__title">Delete</div>
-        </a></div>
+      <!---->
     </div>
   </div>
 </div></span>

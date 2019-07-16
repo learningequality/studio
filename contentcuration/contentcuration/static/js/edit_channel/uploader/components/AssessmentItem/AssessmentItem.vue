@@ -56,6 +56,7 @@
             :displayDeleteIcon="false"
             :canMoveUp="!isFirst"
             :canMoveDown="!isLast"
+            :collapse="!$vuetify.breakpoint.mdAndUp"
             class="toolbar"
             @click="onToolbarClick"
           />
@@ -110,6 +111,7 @@
               :displayEditIcon="false"
               :canMoveUp="!isFirst"
               :canMoveDown="!isLast"
+              :collapse="!$vuetify.breakpoint.mdAndUp"
               class="toolbar"
               @click="onToolbarClick"
             />
