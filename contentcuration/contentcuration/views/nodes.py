@@ -354,7 +354,6 @@ def duplicate_nodes(request):
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
 
-@api_view(['POST'])
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
 @api_view(['POST'])
