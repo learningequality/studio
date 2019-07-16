@@ -11,12 +11,14 @@
     <VCard
       v-for="(hint, hintIdx) in hints"
       :key="hintIdx"
-      :style="[!isHintOpen(hintIdx) ? { cursor: 'pointer' } : {}]"
+      flat
+      :style="cardStyle(hintIdx)"
       data-test="hint"
       @click="onHintClick($event, hintIdx)"
     >
       <VCardText>
-        <VLayout row>
+        <!-- eslint-disable-next-line -->
+        <VLayout row align-center>
           <VFlex xs1>
             {{ hint.order }}
           </VFlex>
@@ -48,6 +50,8 @@
 
     <VBtn
       flat
+      color="primary"
+      class="mt-3 ml-0"
       data-test="newHintBtn"
       @click="addNewHint"
     >
@@ -97,6 +101,18 @@
       },
       isHintLast(hintIdx) {
         return hintIdx === this.hints.length - 1;
+      },
+      cardStyle(hintIdx) {
+        const style = {
+          border: '1px #d2d2d2 solid',
+          'margin-top': '-1px',
+        };
+
+        if (!this.isHintOpen(hintIdx)) {
+          style.cursor = 'pointer';
+        }
+
+        return style;
       },
       moveHintUp(hintIdx) {
         if (this.isHintFirst(hintIdx)) {

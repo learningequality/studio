@@ -41,6 +41,7 @@
 
     <VBtn
       color="primary"
+      class="mt-3"
       data-test="newQuestionBtn"
       @click="onNewItemBtnClick"
     >
