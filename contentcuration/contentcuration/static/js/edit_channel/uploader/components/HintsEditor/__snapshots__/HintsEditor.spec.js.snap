@@ -6,9 +6,9 @@ exports[`HintsEditor renders all hints 1`] = `
     Hints
   </div>
   <!---->
-  <div class="v-card v-sheet theme--light" style="cursor: pointer;" data-test="hint">
+  <div class="v-card v-card--flat v-sheet theme--light" style="margin-top: -1px; cursor: pointer; border: 1px solid #d2d2d2;" data-test="hint">
     <div class="v-card__text">
-      <div class="layout row">
+      <div class="layout row align-center">
         <div class="flex xs1">
           1
         </div>
@@ -33,9 +33,9 @@ exports[`HintsEditor renders all hints 1`] = `
 </div>
 </div>
 </div>
-<div class="v-card v-sheet theme--light" style="cursor: pointer;" data-test="hint">
+<div class="v-card v-card--flat v-sheet theme--light" style="margin-top: -1px; cursor: pointer; border: 1px solid #d2d2d2;" data-test="hint">
   <div class="v-card__text">
-    <div class="layout row">
+    <div class="layout row align-center">
       <div class="flex xs1">
         2
       </div>
@@ -59,7 +59,7 @@ exports[`HintsEditor renders all hints 1`] = `
 </div>
 </div>
 </div>
-</div> <button type="button" class="v-btn v-btn--flat theme--light" data-test="newHintBtn">
+</div> <button type="button" class="mt-3 ml-0 v-btn v-btn--flat theme--light primary--text" data-test="newHintBtn">
   <div class="v-btn__content">
     New hint
   </div>

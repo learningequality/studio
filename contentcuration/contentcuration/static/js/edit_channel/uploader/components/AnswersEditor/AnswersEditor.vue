@@ -11,14 +11,16 @@
     <VCard
       v-for="(answer, answerIdx) in answers"
       :key="answerIdx"
-      :style="getAnswerPointerStyle(answerIdx)"
+      flat
+      :style="cardStyle(answerIdx)"
       data-test="answer"
       @click="onAnswerClick($event, answerIdx)"
     >
       <div :class="getIndicatorClasses(answer)"></div>
 
       <VCardText>
-        <VLayout>
+        <!-- eslint-disable-next-line -->
+        <VLayout row align-center>
           <VFlex>
             <template v-if="!isAnswerOpen(answerIdx)">
               <!--
@@ -103,6 +105,8 @@
     <VBtn
       v-if="isEditingAllowed"
       flat
+      color="primary"
+      class="mt-3 ml-0"
       data-test="newAnswerBtn"
       @click="addNewAnswer"
     >
@@ -205,8 +209,17 @@
       isAnswerOpen(answerIdx) {
         return answerIdx === this.openAnswerIdx;
       },
-      getAnswerPointerStyle(answerIdx) {
-        return this.isEditingAllowed && !this.isAnswerOpen(answerIdx) ? { cursor: 'pointer' } : {};
+      cardStyle(answerIdx) {
+        const style = {
+          border: '1px #d2d2d2 solid',
+          'margin-top': '-1px',
+        };
+
+        if (this.isEditingAllowed && !this.isAnswerOpen(answerIdx)) {
+          style.cursor = 'pointer';
+        }
+
+        return style;
       },
       getIndicatorClasses(answer) {
         const classes = ['indicator'];

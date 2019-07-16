@@ -1,5 +1,5 @@
 <template>
-  <VCard>
+  <VCard :style="itemStyle">
     <VCardTitle
       v-if="!isOpen"
       :style="{ 'cursor': 'pointer' }"
@@ -155,9 +155,8 @@
                 @close="closeAnswer"
               />
 
-              <VDivider class="mt-3 mb-3" />
-
               <HintsEditor
+                class="mt-4"
                 :hints="hints"
                 :openHintIdx="openHintIdx"
                 @update="onHintsChange"
@@ -172,6 +171,7 @@
             <VBtn
               flat
               color="primary"
+              class="mr-0"
               data-test="closeBtn"
               @click="onCloseClick"
             >
@@ -233,6 +233,17 @@
     },
     computed: {
       ...mapGetters('edit_modal', ['nodeAssessmentDraft']),
+      itemStyle() {
+        if (this.isOpen) {
+          return {
+            margin: '8px 0',
+          };
+        }
+
+        return {
+          margin: '0 8px',
+        };
+      },
       itemData() {
         if (
           this.nodeAssessmentDraft(this.nodeId) === null ||
