@@ -1,5 +1,5 @@
 <template>
-  <span>
+  <div :style="toolbarStyle">
     <VTooltip v-if="displayEditIcon" top>
       <template slot="activator" slot-scope="{ on }">
         <VBtn
@@ -122,7 +122,7 @@
         </VListTile>
       </VList>
     </VMenu>
-  </span>
+  </div>
 </template>
 
 <script>
@@ -183,6 +183,15 @@
         } else {
           return GRAY_LIGHT;
         }
+      },
+      toolbarStyle() {
+        if (this.collapse) {
+          return {};
+        }
+
+        return {
+          minWidth: '175px',
+        };
       },
     },
     methods: {
