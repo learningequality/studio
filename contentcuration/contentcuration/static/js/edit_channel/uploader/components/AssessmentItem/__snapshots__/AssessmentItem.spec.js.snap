@@ -250,13 +250,13 @@ exports[`AssessmentItem when open renders 1`] = `
   <div class="layout row justify-end">
     <div class="flex xs11">
       <!---->
-      <div class="v-input v-text-field v-input--is-label-active v-input--is-dirty theme--light">
+      <div class="v-input v-text-field v-input--is-label-active v-input--is-dirty v-input--is-focused theme--light primary--text">
         <div class="v-input__control">
           <div class="v-input__slot">
-            <div class="v-text-field__slot"><label aria-hidden="true" class="v-label v-label--active theme--light" style="left: 0px; position: absolute;">Question</label><input aria-label="Question" data-test="questionInput" type="text"></div>
+            <div class="v-text-field__slot"><label aria-hidden="true" class="v-label v-label--active theme--light primary--text" style="left: 0px; position: absolute;">Question</label><input aria-label="Question" data-test="questionInput" type="text"></div>
           </div>
           <div class="v-text-field__details">
-            <div class="v-messages theme--light">
+            <div class="v-messages theme--light primary--text">
               <div class="v-messages__wrapper"></div>
             </div>
           </div>
@@ -279,7 +279,7 @@ exports[`AssessmentItem when open renders 1`] = `
           <div class="v-card v-card--flat v-sheet theme--light" style="margin-top: -1px; cursor: pointer; border: 1px solid #d2d2d2;" data-test="answer">
             <div class="indicator correct"></div>
             <div class="v-card__text">
-              <div class="layout row align-center">
+              <div class="layout row alignCenter">
                 <div class="flex">
                   <div class="v-input v-input--selection-controls v-input--radio-group v-input--radio-group--column theme--light">
                     <div class="v-input__control">
@@ -318,7 +318,7 @@ exports[`AssessmentItem when open renders 1`] = `
     <div class="v-card v-card--flat v-sheet theme--light" style="margin-top: -1px; cursor: pointer; border: 1px solid #d2d2d2;" data-test="answer">
       <div class="indicator wrong"></div>
       <div class="v-card__text">
-        <div class="layout row align-center">
+        <div class="layout row alignCenter">
           <div class="flex">
             <div class="v-input v-input--selection-controls v-input--radio-group v-input--radio-group--column theme--light">
               <div class="v-input__control">
@@ -365,7 +365,7 @@ exports[`AssessmentItem when open renders 1`] = `
   <!---->
   <div class="v-card v-card--flat v-sheet theme--light" style="margin-top: -1px; cursor: pointer; border: 1px solid #d2d2d2;" data-test="hint">
     <div class="v-card__text">
-      <div class="layout row align-center">
+      <div class="layout row alignCenter">
         <div class="flex xs1">
           1
         </div>
@@ -392,7 +392,7 @@ exports[`AssessmentItem when open renders 1`] = `
 </div>
 <div class="v-card v-card--flat v-sheet theme--light" style="margin-top: -1px; cursor: pointer; border: 1px solid #d2d2d2;" data-test="hint">
   <div class="v-card__text">
-    <div class="layout row align-center">
+    <div class="layout row alignCenter">
       <div class="flex xs1">
         2
       </div>

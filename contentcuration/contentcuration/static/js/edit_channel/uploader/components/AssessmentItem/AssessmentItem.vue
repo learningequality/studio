@@ -126,6 +126,7 @@
               />
 
               <VTextField
+                ref="questionInput"
                 label="Question"
                 :value="question"
                 data-test="questionInput"
@@ -346,6 +347,14 @@
         return correctAnswers.length > 1;
       },
     },
+    watch: {
+      isOpen() {
+        this.focusQuestion();
+      },
+    },
+    mounted() {
+      this.focusQuestion();
+    },
     methods: {
       ...mapMutations('edit_modal', [
         'updateNodeAssessmentDraftItemData',
@@ -353,6 +362,15 @@
         'validateNodeAssessmentDraftItem',
         'openDialog',
       ]),
+      focusQuestion() {
+        if (!this.isOpen) {
+          return;
+        }
+
+        this.$nextTick(() => {
+          this.$refs.questionInput.$el.querySelector('.v-text-field input').focus();
+        });
+      },
       updateItem(data) {
         this.updateNodeAssessmentDraftItemData({
           nodeId: this.nodeId,

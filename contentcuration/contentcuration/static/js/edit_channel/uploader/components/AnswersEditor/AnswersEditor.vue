@@ -80,6 +80,7 @@
 
                 <VFlex>
                   <VTextField
+                    class="answerInput"
                     :value="answer.answer"
                     data-test="editAnswerTextInput"
                     @input="updateAnswerText($event, answerIdx)"
@@ -197,6 +198,11 @@
         const updatedAnswers = mapCorrectAnswers(this.answers, this.correctAnswersIndices);
 
         this.emitUpdate(updatedAnswers);
+      },
+      openAnswerIdx() {
+        this.$nextTick(() => {
+          this.$el.querySelector('.v-text-field input').focus();
+        });
       },
     },
     methods: {
