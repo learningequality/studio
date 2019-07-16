@@ -83,6 +83,13 @@
         type: Number,
       },
     },
+    watch: {
+      openHintIdx() {
+        this.$nextTick(() => {
+          this.$el.querySelector('.v-text-field input').focus();
+        });
+      },
+    },
     methods: {
       emitOpen(hintIdx) {
         this.$emit('open', hintIdx);

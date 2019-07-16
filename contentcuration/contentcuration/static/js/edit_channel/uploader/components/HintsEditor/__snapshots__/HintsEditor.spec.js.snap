@@ -8,7 +8,7 @@ exports[`HintsEditor renders all hints 1`] = `
   <!---->
   <div class="v-card v-card--flat v-sheet theme--light" style="margin-top: -1px; cursor: pointer; border: 1px solid #d2d2d2;" data-test="hint">
     <div class="v-card__text">
-      <div class="layout row align-center">
+      <div class="layout row alignCenter">
         <div class="flex xs1">
           1
         </div>
@@ -35,7 +35,7 @@ exports[`HintsEditor renders all hints 1`] = `
 </div>
 <div class="v-card v-card--flat v-sheet theme--light" style="margin-top: -1px; cursor: pointer; border: 1px solid #d2d2d2;" data-test="hint">
   <div class="v-card__text">
-    <div class="layout row align-center">
+    <div class="layout row alignCenter">
       <div class="flex xs1">
         2
       </div>
