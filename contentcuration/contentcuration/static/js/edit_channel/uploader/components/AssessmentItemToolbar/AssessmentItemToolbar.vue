@@ -16,55 +16,57 @@
       <span>Edit</span>
     </VTooltip>
 
-    <VTooltip top>
-      <template slot="activator" slot-scope="{ on }">
-        <VBtn
-          icon
-          :disabled="!canMoveUp"
-          data-test="toolbarIconArrowUp"
-          v-on="on"
-          @click="clickItem(actions.MOVE_ITEM_UP)"
-        >
-          <VIcon :color="arrowUpColor">
-            keyboard_arrow_up
-          </VIcon>
-        </VBtn>
-      </template>
-      <span>Move up</span>
-    </VTooltip>
+    <template v-if="!collapse">
+      <VTooltip top>
+        <template slot="activator" slot-scope="{ on }">
+          <VBtn
+            icon
+            :disabled="!canMoveUp"
+            data-test="toolbarIconArrowUp"
+            v-on="on"
+            @click="clickItem(actions.MOVE_ITEM_UP)"
+          >
+            <VIcon :color="arrowUpColor">
+              keyboard_arrow_up
+            </VIcon>
+          </VBtn>
+        </template>
+        <span>Move up</span>
+      </VTooltip>
 
-    <VTooltip top>
-      <template slot="activator" slot-scope="{ on }">
-        <VBtn
-          icon
-          :disabled="!canMoveDown"
-          data-test="toolbarIconArrowDown"
-          v-on="on"
-          @click="clickItem(actions.MOVE_ITEM_DOWN)"
-        >
-          <VIcon :color="arrowDownColor">
-            keyboard_arrow_down
-          </VIcon>
-        </VBtn>
-      </template>
-      <span>Move down</span>
-    </VTooltip>
+      <VTooltip top>
+        <template slot="activator" slot-scope="{ on }">
+          <VBtn
+            icon
+            :disabled="!canMoveDown"
+            data-test="toolbarIconArrowDown"
+            v-on="on"
+            @click="clickItem(actions.MOVE_ITEM_DOWN)"
+          >
+            <VIcon :color="arrowDownColor">
+              keyboard_arrow_down
+            </VIcon>
+          </VBtn>
+        </template>
+        <span>Move down</span>
+      </VTooltip>
 
-    <VTooltip v-if="displayDeleteIcon" top>
-      <template slot="activator" slot-scope="{ on }">
-        <VBtn
-          icon
-          data-test="toolbarIconDelete"
-          v-on="on"
-          @click="clickItem(actions.DELETE_ITEM)"
-        >
-          <VIcon color="#686868">
-            close
-          </VIcon>
-        </VBtn>
-      </template>
-      <span>Delete</span>
-    </VTooltip>
+      <VTooltip v-if="displayDeleteIcon" top>
+        <template slot="activator" slot-scope="{ on }">
+          <VBtn
+            icon
+            data-test="toolbarIconDelete"
+            v-on="on"
+            @click="clickItem(actions.DELETE_ITEM)"
+          >
+            <VIcon color="#686868">
+              close
+            </VIcon>
+          </VBtn>
+        </template>
+        <span>Delete</span>
+      </VTooltip>
+    </template>
 
     <VMenu
       v-if="displayMenu"
@@ -82,6 +84,22 @@
 
       <VList>
         <VListTile
+          v-if="collapse"
+          data-test="toolbarMenuMoveItemUp"
+          @click="clickItem(actions.MOVE_ITEM_UP)"
+        >
+          <VListTileTitle>Move up</VListTileTitle>
+        </VListTile>
+
+        <VListTile
+          v-if="collapse"
+          data-test="toolbarMenuMoveItemDown"
+          @click="clickItem(actions.MOVE_ITEM_DOWN)"
+        >
+          <VListTileTitle>Move down</VListTileTitle>
+        </VListTile>
+
+        <VListTile
           data-test="toolbarMenuAddItemAbove"
           @click="clickItem(actions.ADD_ITEM_ABOVE)"
         >
@@ -96,6 +114,7 @@
         </VListTile>
 
         <VListTile
+          v-if="!displayDeleteIcon || collapse"
           data-test="toolbarMenuDeleteItem"
           @click="clickItem(actions.DELETE_ITEM)"
         >
@@ -139,6 +158,10 @@
       itemLabel: {
         type: String,
         default: 'item',
+      },
+      collapse: {
+        type: Boolean,
+        default: false,
       },
     },
     data() {
