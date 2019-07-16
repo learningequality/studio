@@ -21,7 +21,7 @@
             {{ hint.order }}
           </VFlex>
 
-          <VFlex xs5>
+          <VFlex xs4 sm6 md8>
             <p v-if="!isHintOpen(hintIdx)">
               {{ hint.hint }}
             </p>

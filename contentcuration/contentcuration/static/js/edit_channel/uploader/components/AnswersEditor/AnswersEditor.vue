@@ -19,7 +19,7 @@
 
       <VCardText>
         <VLayout>
-          <VFlex xs8>
+          <VFlex>
             <template v-if="!isAnswerOpen(answerIdx)">
               <!--
                 VRadio cannot be used without VRadioGroup like VCheckbox but it can
@@ -76,7 +76,7 @@
                   />
                 </VFlex>
 
-                <VFlex xs10>
+                <VFlex>
                   <VTextField
                     :value="answer.answer"
                     data-test="editAnswerTextInput"
