@@ -1,6 +1,6 @@
 <template>
   <VDialog
-    v-if="currentTask"
+    v-if="currentTask && !currentTask.noDialog"
     v-model="dialog"
     persistent
     light
