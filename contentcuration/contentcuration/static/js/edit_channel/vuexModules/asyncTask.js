@@ -43,6 +43,9 @@ const asyncTasksModule = {
       store.commit('SET_CURRENT_TASK', payload);
       // force an immediate update to quickly get a first state update
       store.dispatch('updateTaskList');
+      if (!timerID) {
+        store.dispatch('activateTaskUpdateTimer');
+      }
     },
 
     clearCurrentTask(store) {

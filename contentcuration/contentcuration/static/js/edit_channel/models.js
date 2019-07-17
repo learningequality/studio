@@ -680,6 +680,7 @@ var ContentNodeCollection = BaseCollection.extend({
       };
       $.ajax({
         method: 'POST',
+        contentType: 'application/json',
         url: window.Urls.delete_nodes(),
         data: JSON.stringify(data),
         success: resolve,

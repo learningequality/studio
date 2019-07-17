@@ -94,7 +94,9 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
     this.staging = options.staging;
     this.path = options.path;
 
-    if (this.is_edit_page) {
+    // is_edit_page is false for ricecooker channels, even when the edit page is loaded,
+    // so use the edit state set on the Store to check instead of is_edit_page.
+    if (State.Store.getters.canEdit) {
       // Check if the user has any running tasks immediately so we know if we need to
       // show the update dialog.
       State.Store.dispatch('updateTaskList');

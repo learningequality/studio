@@ -150,6 +150,8 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def can_view(self, channel_id):
         channel = Channel.objects.filter(pk=channel_id).first()
+        if channel and channel.public:
+            return True
         if not self.is_admin and channel and not channel.editors.filter(pk=self.pk).exists() and not channel.viewers.filter(pk=self.pk).exists():
             raise PermissionDenied("Cannot view content")
         return True
@@ -185,7 +187,7 @@ class User(AbstractBaseUser, PermissionsMixin):
                                           | Q(trash_tree__in=root_nodes)
                                           | Q(staging_tree__in=root_nodes)
                                           | Q(previous_tree__in=root_nodes))
-        channels_user_has_perms_for = channels.filter(Q(editors__id__contains=self.id) | Q(viewers__id__contains=self.id))
+        channels_user_has_perms_for = channels.filter(Q(editors__id__contains=self.id) | Q(viewers__id__contains=self.id) | Q(public=True))
         # The channel user has perms for is a subset of all the channels that were passed in.
         # We check the count for simplicity, as if the user does not have permissions for
         # even one of the channels the content is drawn from, then the number of channels
