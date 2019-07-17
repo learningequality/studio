@@ -13,6 +13,7 @@ x-studio-environment:
     CELERY_BROKER_ENDPOINT: redis
     CELERY_RESULT_BACKEND_ENDPOINT: redis
     CELERY_REDIS_PASSWORD: ""
+    PROBER_STUDIO_BASE_URL: http://studio-app:8080/{path}
 
 x-studio-worker:
   &studio-worker
@@ -48,8 +49,6 @@ services:
       MINIO_SECRET_KEY: development
     volumes:
       - minio_data:/data
-    ports:
-      - "9000:9000"
 
   postgres:
     image: postgres:9.6
@@ -67,7 +66,9 @@ services:
   cloudprober:
     <<: *studio-worker
     working_dir: /src/deploy
-    command: /bin/cloudprober --config_file ./cloudprober.cfg
+    entrypoint: ""
+    # sleep 30 seconds allowing some time for the studio app to start up
+    command: '/bin/bash -c "sleep 30 && /bin/cloudprober --config_file ./cloudprober.cfg"'
     # wait until the main app and celery worker have started
     depends_on:
       - studio-app
