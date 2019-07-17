@@ -58,7 +58,6 @@
 
         {% render_bundle_css 'common' %}
 
-        {% render_offline_css LANGUAGE_CODE %}
         {% if not debug %}
             <script src={% static 'django_js_reverse/js/reverse.js' %}></script>
         {% else %}
@@ -92,6 +91,7 @@
         {% block css_bundle %}
             {% render_bundle_css 'base' %}
         {% endblock css_bundle %}
+        {% render_offline_css LANGUAGE_CODE %}
         <title>Kolibri Studio ({% trans 'Beta' %})</title>
       {% endblock head %}
 
