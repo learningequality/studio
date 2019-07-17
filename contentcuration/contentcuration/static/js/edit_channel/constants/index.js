@@ -10,7 +10,7 @@ const Statuses = require('./Statuses');
 module.exports = {
   ContentKinds,
   FormatPresets,
-  Languages: sortBy(Languages, 'readable_name'),
+  Languages: sortBy(Languages, 'native_name'),
   Licenses,
   MasteryModels,
   Roles,

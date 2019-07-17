@@ -809,13 +809,17 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
         options && options.headers ? options.headers : {}
       );
 
+      var url = this.model.get('multi_language')
+        ? window.Urls.multilanguage_file_upload()
+        : window.Urls.file_upload();
+
       var dropzone = new Dropzone(
         $(dz_selector).get(0),
         _.extend(
           {
             clickable: clickables,
             acceptedFiles: this.get_accepted_files(),
-            url: window.Urls.file_upload(),
+            url: url,
             previewTemplate: this.dropzone_template(null, { data: this.get_intl_data() }),
             maxFiles: 1,
             previewsContainer: dz_selector,
@@ -1026,10 +1030,6 @@ var MultiLanguageUploadSlot = FormatSlot.extend({
           Language: this.language,
         },
       };
-
-      if (this.model.get('id') === 'video_subtitle') {
-        settings.url = window.Urls.subtitle_upload();
-      }
 
       _.defer(this.create_dropzone, settings);
     }

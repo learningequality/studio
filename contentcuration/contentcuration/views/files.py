@@ -241,18 +241,10 @@ def exercise_image_upload(request):
     }))
 
 
-@authentication_classes((TokenAuthentication, SessionAuthentication))
-@permission_classes((IsAuthenticated,))
 def subtitle_upload(request):
-    if request.method != 'POST':
-        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
-
-    language_id = request.META.get('HTTP_LANGUAGE')
-    if not language_id:
-        return HttpResponseBadRequest("Language is required")
-
     # File will be converted to VTT format
     ext = file_formats.VTT
+    language_id = request.META.get('HTTP_LANGUAGE')
     content_file = request.FILES.values()[0]
 
     with NamedTemporaryFile() as temp_file:
@@ -305,6 +297,22 @@ def subtitle_upload(request):
         "filename": str(file_object),
         "file": JSONRenderer().render(FileSerializer(file_object).data)
     }))
+
+
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
+def multilanguage_file_upload(request):
+    if request.method != 'POST':
+        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+
+    if not request.META.get('HTTP_LANGUAGE'):
+        return HttpResponseBadRequest("Language is required")
+
+    preset_id = request.META.get('HTTP_PRESET')
+    if preset_id == format_presets.VIDEO_SUBTITLE:
+        return subtitle_upload(request)
+    else:
+        return HttpResponseBadRequest("Unsupported preset" if preset_id else "Preset is required")
 
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))

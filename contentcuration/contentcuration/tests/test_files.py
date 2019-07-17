@@ -28,7 +28,7 @@ from contentcuration.utils.publish import create_associated_thumbnail
 from contentcuration.views.files import file_create
 from contentcuration.views.files import generate_thumbnail
 from contentcuration.views.files import image_upload
-from contentcuration.views.files import subtitle_upload
+from contentcuration.views.files import multilanguage_file_upload
 from contentcuration.views.files import thumbnail_upload
 
 pytestmark = pytest.mark.django_db
@@ -199,19 +199,41 @@ class FileThumbnailTestCase(BaseAPITestCase):
         self.assertEqual(thumbnail_data['base64'], generated_base64encoding())
 
 
-class FileSubtitleTestCase(BaseAPITestCase):
+class FileMultilanguageTestCase(BaseAPITestCase):
     def test_upload_no_language(self):
-        upload_file = SimpleUploadedFile("test.srt", srt_subtitle())
-        request = self.create_post_request(reverse_lazy('subtitle_upload'), {'file': upload_file})
+        upload_file = SimpleUploadedFile("test_file.txt", "file contents")
+        request = self.create_post_request(reverse_lazy('multilanguage_file_upload'), {'file': upload_file})
 
-        file_response = subtitle_upload(request)
+        file_response = multilanguage_file_upload(request)
         self.assertEqual(file_response.status_code, 400)
         self.assertEqual(file_response.content, 'Language is required')
 
+    def test_upload_no_preset(self):
+        upload_file = SimpleUploadedFile("test_file.txt", "file contents")
+        request = self.create_post_request(reverse_lazy('multilanguage_file_upload'), {'file': upload_file})
+        request.META.update({'HTTP_LANGUAGE': 'en'})
+
+        file_response = multilanguage_file_upload(request)
+        self.assertEqual(file_response.status_code, 400)
+        self.assertEqual(file_response.content, 'Preset is required')
+
+    def test_upload_unsupported_preset(self):
+        upload_file = SimpleUploadedFile("test_file.txt", "file contents")
+        request = self.create_post_request(reverse_lazy('multilanguage_file_upload'), {'file': upload_file})
+        request.META.update({'HTTP_LANGUAGE': 'en'})
+        request.META.update({'HTTP_PRESET': 'unsupported_preset'})
+
+        file_response = multilanguage_file_upload(request)
+        self.assertEqual(file_response.status_code, 400)
+        self.assertEqual(file_response.content, 'Unsupported preset')
+
+
+class FileSubtitleTestCase(BaseAPITestCase):
     def test_upload(self):
         upload_file = SimpleUploadedFile("test.srt", srt_subtitle())
-        request = self.create_post_request(reverse_lazy('subtitle_upload'), {'file': upload_file})
+        request = self.create_post_request(reverse_lazy('multilanguage_file_upload'), {'file': upload_file})
         request.META.update({'HTTP_LANGUAGE': 'ar'})
+        request.META.update({'HTTP_PRESET': format_presets.VIDEO_SUBTITLE})
 
-        file_response = subtitle_upload(request)
+        file_response = multilanguage_file_upload(request)
         self.assertEqual(file_response.status_code, 200)
