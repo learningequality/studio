@@ -185,7 +185,7 @@ class User(AbstractBaseUser, PermissionsMixin):
                                           | Q(trash_tree__in=root_nodes)
                                           | Q(staging_tree__in=root_nodes)
                                           | Q(previous_tree__in=root_nodes))
-        channels_user_has_perms_for = channels.filter(Q(editors__id__contains=self.id) | Q(viewers__id__contains=self.id))
+        channels_user_has_perms_for = channels.filter(Q(editors__id__contains=self.id) | Q(viewers__id__contains=self.id) | Q(public=True))
         # The channel user has perms for is a subset of all the channels that were passed in.
         # We check the count for simplicity, as if the user does not have permissions for
         # even one of the channels the content is drawn from, then the number of channels

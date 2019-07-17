@@ -74,16 +74,17 @@ var ChannelEditRouter = Backbone.Router.extend({
       });
     }
 
+    let store = State.Store;
+
+    store.commit('SET_EDIT_MODE', data.edit_mode_on);
     // TODO: Once topic tree has been migrated to vue, move this logic there
-    if (data.edit_mode_on) {
-      let store = State.Store;
-      store.commit('publish/SET_CHANNEL', State.current_channel.toJSON());
-      new Vue({
-        el: '#channel-publish-button',
-        store,
-        ...PublishWrapper,
-      });
-    }
+    store.commit('publish/SET_CHANNEL', State.current_channel.toJSON());
+
+    new Vue({
+      el: '#channel-publish-button',
+      store,
+      ...PublishWrapper,
+    });
   },
   update_url: function(topic, node, replacement) {
     State.updateUrl(topic, node, replacement);
