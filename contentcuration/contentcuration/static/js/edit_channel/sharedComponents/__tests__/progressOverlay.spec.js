@@ -75,26 +75,4 @@ describe('progressOverlay', () => {
       expect(document.querySelector('#dialog-box')).toBeTruthy();
     });
   });
-
-  describe('on progress bar emitted events', () => {
-    let progressBar;
-    beforeEach(() => {
-      progressBar = wrapper.find(ProgressBar);
-    });
-    it('finished should trigger done to be marked as true', () => {
-      expect(wrapper.vm.done).toBe(false);
-      progressBar.vm.$emit('finished');
-      expect(wrapper.vm.done).toBe(true);
-    });
-    it('cancelled should trigger handleCancelled', () => {
-      window.location.reload = jest.fn();
-      progressBar.vm.$emit('cancelled');
-      expect(window.location.reload).toBeCalled();
-    });
-    it('failed should trigger failed to be marked as true', () => {
-      expect(wrapper.vm.failed).toBe(false);
-      progressBar.vm.$emit('failed');
-      expect(wrapper.vm.failed).toBe(true);
-    });
-  });
 });
