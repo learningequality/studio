@@ -1,3 +1,10 @@
+import Vue from 'vue';
+import Vuetify from 'vuetify';
+
+import PublishWrapper from 'edit_channel/publish/views/PublishWrapper.vue';
+
+Vue.use(Vuetify, { rtl: window.isRTL });
+
 var _ = require('underscore');
 var Backbone = require('backbone');
 var State = require('./state');
@@ -56,6 +63,7 @@ var ChannelEditRouter = Backbone.Router.extend({
       is_clipboard: data.is_clipboard || false,
       staging: State.staging,
     });
+
     if (!window.is_staging) {
       var QueueView = require('edit_channel/queue/views');
       new QueueView.Queue({
@@ -65,6 +73,18 @@ var ChannelEditRouter = Backbone.Router.extend({
         trash_root: State.current_channel.get_root('trash_tree'),
       });
     }
+
+    let store = State.Store;
+
+    store.commit('SET_EDIT_MODE', data.edit_mode_on);
+    // TODO: Once topic tree has been migrated to vue, move this logic there
+    store.commit('publish/SET_CHANNEL', State.current_channel.toJSON());
+
+    new Vue({
+      el: '#channel-publish-button',
+      store,
+      ...PublishWrapper,
+    });
   },
   update_url: function(topic, node, replacement) {
     State.updateUrl(topic, node, replacement);

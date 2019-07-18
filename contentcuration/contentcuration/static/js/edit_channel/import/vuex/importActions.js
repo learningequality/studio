@@ -44,19 +44,11 @@ exports.loadChannels = function(context) {
 
 // Takes the to-import list and copies/duplicates them over to the current channel
 exports.copyImportListToChannel = function(context, payload) {
+  // now that this operation is async, we only need to notify that import has started in order
+  // to close the import dialog.
   context.commit('UPDATE_IMPORT_STATUS', 'start');
   var importCollection = createContentNodeCollection(context.state.itemsToImport);
-  return importCollection
-    .duplicate(payload.baseViewModel)
-    .then(function onSuccess(collection) {
-      context.commit('UPDATE_IMPORT_STATUS', 'success');
-      payload.onConfirmImport(collection);
-    })
-    .catch(function onFailure(error) {
-      // eslint-disable-next-line no-console
-      console.error(error);
-      context.commit('UPDATE_IMPORT_STATUS', 'failure');
-    });
+  return importCollection.duplicate(payload.baseViewModel);
 };
 
 exports.goToPreviousPage = function(context) {

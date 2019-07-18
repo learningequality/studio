@@ -41,9 +41,8 @@ def _get_channel_list_v1(params, identifier=None):
             description__icontains=keyword) | Q(tags__tag_name__icontains=keyword))
 
     if language_id != '':
-        matching_tree_ids = ContentNode.objects.prefetch_related('files').filter(
-            Q(language__id__icontains=language_id) | Q(files__language__id__icontains=language_id)).values_list('tree_id', flat=True)
-        channels = channels.select_related('language').filter(Q(language__id__icontains=language_id) | Q(main_tree__tree_id__in=matching_tree_ids))
+        channels.filter(included_languages__id=language_id)
+
     return channels.annotate(tokens=Value(json.dumps(token_list), output_field=TextField()))\
         .filter(deleted=False, main_tree__published=True)\
         .order_by("-priority")\
