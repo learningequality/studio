@@ -148,15 +148,16 @@ def get_prerequisites(request, get_postrequisites, ids):
 @permission_classes((IsAuthenticated,))
 @api_view(['GET'])
 def get_total_size(request, ids):
-    nodes = ContentNode.objects.prefetch_related('assessment_items', 'files', 'children')\
-                       .exclude(kind_id=content_kinds.EXERCISE, published=False)\
-                       .filter(id__in=ids.split(",")).get_descendants(include_self=True)\
-                       .values('files__checksum', 'files__file_size')\
-                       .distinct()
+    # Get the minimal set of nodes that we need to check permissions on first.
+    nodes = ContentNode.objects.exclude(kind_id=content_kinds.EXERCISE, published=False)\
+                       .filter(id__in=ids.split(","))
     try:
         request.user.can_view_nodes(nodes)
     except PermissionDenied:
         return HttpResponseNotFound("No nodes found for {}".format(ids))
+    nodes = nodes.prefetch_related('files').get_descendants(include_self=True)\
+                       .values('files__checksum', 'files__file_size')\
+                       .distinct()
     sizes = nodes.aggregate(resource_size=Sum('files__file_size'))
 
     return Response({'success': True, 'size': sizes['resource_size'] or 0})
