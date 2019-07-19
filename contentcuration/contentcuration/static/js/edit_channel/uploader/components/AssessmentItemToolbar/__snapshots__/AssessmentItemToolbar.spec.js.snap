@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`AssessmentItemToolbar renders 1`] = `
-<div style="min-width: 175px;"><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIconEdit">
+<div><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIconEdit">
     <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light" style="color: rgb(104, 104, 104); caret-color: #686868;">edit</i></div>
   </button><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Edit</span></div></span> <button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIconArrowUp">
   <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light" style="color: rgb(104, 104, 104); caret-color: #686868;">keyboard_arrow_up</i></div>

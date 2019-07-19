@@ -1,5 +1,5 @@
 <template>
-  <div :style="toolbarStyle">
+  <div>
     <VTooltip v-if="displayEditIcon" top>
       <template slot="activator" slot-scope="{ on }">
         <VBtn
@@ -183,15 +183,6 @@
         } else {
           return GRAY_LIGHT;
         }
-      },
-      toolbarStyle() {
-        if (this.collapse) {
-          return {};
-        }
-
-        return {
-          minWidth: '175px',
-        };
       },
     },
     methods: {

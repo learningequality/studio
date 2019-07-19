@@ -3,48 +3,45 @@ import { shallowMount, mount } from '@vue/test-utils';
 import { AssessmentItemTypes } from '../../constants';
 import AnswersEditor from './AnswersEditor';
 
+jest.mock('../MarkdownEditor/MarkdownEditor.vue');
+
 const clickNewAnswerBtn = wrapper => {
   wrapper
-    .find('[data-test=newAnswerBtn]')
+    .find('[data-test="newAnswerBtn"]')
     .find('button')
     .trigger('click');
 };
 
 const rendersNewAnswerBtn = wrapper => {
-  return wrapper.contains('[data-test=newAnswerBtn]');
+  return wrapper.contains('[data-test="newAnswerBtn"]');
 };
 
 const clickAnswer = (wrapper, answerIdx) => {
   wrapper
-    .findAll('[data-test=answer]')
+    .findAll('[data-test="answer"]')
     .at(answerIdx)
     .trigger('click');
 };
 
 const clickMoveAnswerUp = (wrapper, answerIdx) => {
   wrapper
-    .findAll('[data-test=toolbarIconArrowUp]')
+    .findAll('[data-test="toolbarIconArrowUp"]')
     .at(answerIdx)
     .trigger('click');
 };
 
 const clickMoveAnswerDown = (wrapper, answerIdx) => {
   wrapper
-    .findAll('[data-test=toolbarIconArrowDown]')
+    .findAll('[data-test="toolbarIconArrowDown"]')
     .at(answerIdx)
     .trigger('click');
 };
 
 const clickDeleteAnswer = (wrapper, answerIdx) => {
   wrapper
-    .findAll('[data-test=toolbarIconDelete]')
+    .findAll('[data-test="toolbarIconDelete"]')
     .at(answerIdx)
     .trigger('click');
-};
-
-const updateOpenAnswerText = (wrapper, newAnswerText) => {
-  // only one answer can be open
-  wrapper.find('[data-test=editAnswerTextInput]').setValue(newAnswerText);
 };
 
 describe('AnswersEditor', () => {
@@ -56,18 +53,14 @@ describe('AnswersEditor', () => {
     expect(wrapper.isVueInstance()).toBe(true);
   });
 
-  describe('with no answers', () => {
-    beforeEach(() => {
-      wrapper = mount(AnswersEditor, {
-        propsData: {
-          answers: [],
-        },
-      });
+  it('renders a placeholder when there are no answers', () => {
+    wrapper = mount(AnswersEditor, {
+      propsData: {
+        answers: [],
+      },
     });
 
-    it('renders a placeholder', () => {
-      expect(wrapper.html()).toContain('No answers yet');
-    });
+    expect(wrapper.html()).toContain('No answers yet');
   });
 
   describe('for a single selection question', () => {
@@ -333,7 +326,8 @@ describe('AnswersEditor', () => {
         },
       });
 
-      updateOpenAnswerText(wrapper, 'Irish butter');
+      // only one editor is rendered at a time => "wrapper.find"
+      wrapper.find({ name: 'MarkdownEditor' }).vm.$emit('update', 'European butter');
     });
 
     it('emits update event with a payload containing updated answers', () => {
@@ -341,7 +335,7 @@ describe('AnswersEditor', () => {
       expect(wrapper.emitted().update.length).toBe(1);
       expect(wrapper.emitted().update[0][0]).toEqual([
         { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-        { answer: 'Irish butter', correct: false, order: 2 },
+        { answer: 'European butter', correct: false, order: 2 },
       ]);
     });
   });

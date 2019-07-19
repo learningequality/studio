@@ -135,6 +135,13 @@ export const isNodeAssessmentDraftValid = state => nodeId => {
   return !nodeAssessmentDraft.some(isAssessmentItemInvalid);
 };
 
+export const isNodeAssessmentDraftItemValid = state => ({ nodeId, assessmentItemIdx }) => {
+  const nodeAssessmentDraft = [...state.nodesAssessmentDrafts[nodeId]];
+  const item = nodeAssessmentDraft[assessmentItemIdx];
+
+  return !isAssessmentItemInvalid(item);
+};
+
 export const invalidNodeAssessmentDraftItemsCount = state => nodeId => {
   const nodeAssessmentDraft = state.nodesAssessmentDrafts[nodeId];
 
