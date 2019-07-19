@@ -25,6 +25,7 @@ from contentcuration.models import FormatPreset
 from contentcuration.models import Invitation
 from contentcuration.models import License
 from contentcuration.models import User
+from contentcuration.models import MultipleObjectsReturned
 from contentcuration.utils.files import duplicate_file
 from contentcuration.utils.minio_utils import ensure_storage_bucket_public
 from contentcuration.utils.nodes import duplicate_node_bulk
@@ -85,12 +86,16 @@ class Command(BaseCommand):
         channel4 = create_channel("Imported Channel", editors=[admin])
 
         # Invite admin to channel 3
-        invitation, _new = Invitation.objects.get_or_create(
-            invited=admin,
-            sender=user3,
-            channel=channel3,
-            email=admin.email,
-        )
+        try:
+            invitation, _new = Invitation.objects.get_or_create(
+                invited=admin,
+                sender=user3,
+                channel=channel3,
+                email=admin.email,
+            )
+        except MultipleObjectsReturned:
+            # we don't care, just continue
+            pass
         invitation.share_mode = "edit"
         invitation.save()
 
