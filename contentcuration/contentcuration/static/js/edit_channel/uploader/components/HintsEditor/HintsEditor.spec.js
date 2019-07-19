@@ -2,6 +2,8 @@ import { shallowMount, mount } from '@vue/test-utils';
 
 import HintsEditor from './HintsEditor';
 
+jest.mock('../MarkdownEditor/MarkdownEditor.vue');
+
 const clickNewHintBtn = wrapper => {
   wrapper
     .find('[data-test=newHintBtn]')
@@ -37,21 +39,8 @@ const clickDeleteHint = (wrapper, hintIdx) => {
     .trigger('click');
 };
 
-const updateOpenHintText = (wrapper, newHintText) => {
-  // only one hint can be open
-  wrapper.find('[data-test=editHintTextInput]').setValue(newHintText);
-};
-
 describe('HintsEditor', () => {
   let wrapper;
-
-  beforeEach(() => {
-    wrapper = mount(HintsEditor, {
-      propsData: {
-        hints: [{ hint: 'First hint', order: 1 }, { hint: 'Second hint', order: 2 }],
-      },
-    });
-  });
 
   it('smoke test', () => {
     const wrapper = shallowMount(HintsEditor);
@@ -59,30 +48,59 @@ describe('HintsEditor', () => {
     expect(wrapper.isVueInstance()).toBe(true);
   });
 
-  describe('with no hints', () => {
-    beforeEach(() => {
-      wrapper.setProps({
+  it('renders a placeholder when there are no hints', () => {
+    wrapper = mount(HintsEditor, {
+      propsData: {
         hints: [],
-      });
+      },
     });
 
-    it('renders a placeholder', () => {
-      expect(wrapper.html()).toContain('No hints yet');
-    });
+    expect(wrapper.html()).toContain('No hints yet');
   });
 
   it('renders all hints', () => {
+    wrapper = mount(HintsEditor, {
+      propsData: {
+        hints: [{ hint: 'First hint', order: 1 }, { hint: 'Second hint', order: 2 }],
+      },
+    });
+
     expect(wrapper.html()).toMatchSnapshot();
+  });
+
+  describe('on hint text update', () => {
+    beforeEach(() => {
+      wrapper = mount(HintsEditor, {
+        propsData: {
+          hints: [{ hint: 'First hint', order: 1 }, { hint: 'Second hint', order: 2 }],
+          openHintIdx: 1,
+        },
+      });
+
+      // only one editor is rendered at a time => "wrapper.find"
+      wrapper.find({ name: 'MarkdownEditor' }).vm.$emit('update', 'Updated hint');
+    });
+
+    it('emits update event with a payload containing updated hints', () => {
+      expect(wrapper.emitted().update).toBeTruthy();
+      expect(wrapper.emitted().update.length).toBe(1);
+      expect(wrapper.emitted().update[0][0]).toEqual([
+        { hint: 'First hint', order: 1 },
+        { hint: 'Updated hint', order: 2 },
+      ]);
+    });
   });
 
   describe('on new hint button click', () => {
     beforeEach(() => {
-      wrapper.setProps({
-        hints: [
-          { hint: 'First hint', order: 1 },
-          { hint: '', order: 2 },
-          { hint: 'Third hint', order: 3 },
-        ],
+      wrapper = mount(HintsEditor, {
+        propsData: {
+          hints: [
+            { hint: 'First hint', order: 1 },
+            { hint: '', order: 2 },
+            { hint: 'Third hint', order: 3 },
+          ],
+        },
       });
 
       clickNewHintBtn(wrapper);
@@ -106,38 +124,32 @@ describe('HintsEditor', () => {
   });
 
   describe('on hint click', () => {
-    it('emits open event with a correct hint idx', () => {
-      clickHint(wrapper, 1);
+    beforeEach(() => {
+      wrapper = mount(HintsEditor, {
+        propsData: {
+          hints: [{ hint: 'First hint', order: 1 }, { hint: 'Second hint', order: 2 }],
+        },
+      });
 
+      clickHint(wrapper, 1);
+    });
+
+    it('emits open event with a correct hint idx', () => {
       expect(wrapper.emitted().open).toBeTruthy();
       expect(wrapper.emitted().open.length).toBe(1);
       expect(wrapper.emitted().open[0][0]).toBe(1);
     });
   });
 
-  describe('on hint text update', () => {
+  describe('on move hint up click', () => {
     beforeEach(() => {
       wrapper = mount(HintsEditor, {
         propsData: {
           hints: [{ hint: 'First hint', order: 1 }, { hint: 'Second hint', order: 2 }],
-          openHintIdx: 1,
         },
       });
-
-      updateOpenHintText(wrapper, 'Second updated hint');
     });
 
-    it('emits update event with a payload containing updated hints', () => {
-      expect(wrapper.emitted().update).toBeTruthy();
-      expect(wrapper.emitted().update.length).toBe(1);
-      expect(wrapper.emitted().update[0][0]).toEqual([
-        { hint: 'First hint', order: 1 },
-        { hint: 'Second updated hint', order: 2 },
-      ]);
-    });
-  });
-
-  describe('on move hint up click', () => {
     it('emits update event with a payload containing updated and properly ordered hints', () => {
       clickMoveHintUp(wrapper, 1);
 
@@ -183,6 +195,14 @@ describe('HintsEditor', () => {
   });
 
   describe('on move hint down click', () => {
+    beforeEach(() => {
+      wrapper = mount(HintsEditor, {
+        propsData: {
+          hints: [{ hint: 'First hint', order: 1 }, { hint: 'Second hint', order: 2 }],
+        },
+      });
+    });
+
     it('emits update event with a payload containing updated and properly ordered hints', () => {
       clickMoveHintDown(wrapper, 0);
 
@@ -228,6 +248,14 @@ describe('HintsEditor', () => {
   });
 
   describe('on delete hint click', () => {
+    beforeEach(() => {
+      wrapper = mount(HintsEditor, {
+        propsData: {
+          hints: [{ hint: 'First hint', order: 1 }, { hint: 'Second hint', order: 2 }],
+        },
+      });
+    });
+
     it('emits update event with a payload containing updated and properly ordered hints', () => {
       clickDeleteHint(wrapper, 0);
 

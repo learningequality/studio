@@ -13,7 +13,7 @@
         {{ title }}
       </VCardTitle>
 
-      <VCardText data-test="dialogMessage">
+      <VCardText>
         <slot></slot>
       </VCardText>
 

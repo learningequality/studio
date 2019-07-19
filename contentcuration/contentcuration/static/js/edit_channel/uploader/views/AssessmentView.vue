@@ -18,21 +18,74 @@
     />
 
     <template v-if="assessmentItemsData && assessmentItemsData.length">
-      <AssessmentItem
-        v-for="(_, itemIdx) in assessmentItemsData"
+      <VCard
+        v-for="(itemData, itemIdx) in assessmentItemsData"
         :key="itemIdx"
-        :nodeId="nodeId"
-        :itemIdx="itemIdx"
-        :isOpen="itemIdx === openItemIdx"
-        :displayAnswersPreview="displayAnswersPreview"
-        @close="onItemClose(itemIdx)"
-        @open="onItemOpen(itemIdx)"
-        @delete="onDeleteItem(itemIdx)"
-        @moveUp="onMoveItemUp(itemIdx)"
-        @moveDown="onMoveItemDown(itemIdx)"
-        @addItemAbove="onAddItemAbove(itemIdx)"
-        @addItemBelow="onAddItemBelow(itemIdx)"
-      />
+        class="pa-1 item"
+        data-test="assessmentItem"
+        :style="itemStyle(itemIdx)"
+        @click="onItemClick($event, itemIdx)"
+      >
+        <VCardText>
+          <!-- eslint-disable-next-line -->
+          <VLayout align-start>
+            <VFlex xs1>
+              {{ itemData.order + 1 }}
+            </VFlex>
+
+            <VFlex
+              v-if="!isItemOpen(itemIdx)"
+              xs6
+              lg8
+            >
+              <AssessmentItemPreview
+                :question="itemData.question"
+                :kind="itemData.type"
+                :answers="itemData.answers"
+                :hints="itemData.hints"
+                :detailed="displayAnswersPreview"
+                :isInvalid="!isItemValid(itemIdx)"
+              />
+            </VFlex>
+
+            <VFlex>
+              <AssessmentItemEdit
+                v-if="isItemOpen(itemIdx)"
+                :nodeId="nodeId"
+                :itemIdx="itemIdx"
+                data-test="assessmentItemEdit"
+                @close="onItemClose"
+              />
+
+              <!-- eslint-disable-next-line -->
+              <VLayout v-if="isItemOpen(itemIdx)" justify-end>
+                <VBtn
+                  flat
+                  color="primary"
+                  class="close-item-btn mr-0"
+                  data-test="closeBtn"
+                  @click="closeOpenItem"
+                >
+                  Close
+                </VBtn>
+              </VLayout>
+            </VFlex>
+
+            <VSpacer />
+
+            <AssessmentItemToolbar
+              itemLabel="question"
+              :displayDeleteIcon="false"
+              :displayEditIcon="!isItemOpen(itemIdx)"
+              :canMoveUp="!isItemFirst(itemIdx)"
+              :canMoveDown="!isItemLast(itemIdx)"
+              :collapse="!$vuetify.breakpoint.mdAndUp"
+              class="toolbar"
+              @click="onToolbarClick(itemIdx, $event)"
+            />
+          </VLayout>
+        </VCardText>
+      </VCard>
     </template>
 
     <div v-else>
@@ -79,13 +132,20 @@
 <script>
 
   import { mapState, mapGetters, mapMutations } from 'vuex';
-  import AssessmentItem from '../components/AssessmentItem/AssessmentItem.vue';
+
+  import { AssessmentItemToolbarActions } from '../constants';
+
+  import AssessmentItemEdit from '../components/AssessmentItemEdit/AssessmentItemEdit.vue';
+  import AssessmentItemPreview from '../components/AssessmentItemPreview/AssessmentItemPreview.vue';
+  import AssessmentItemToolbar from '../components/AssessmentItemToolbar/AssessmentItemToolbar.vue';
   import DialogBox from '../components/DialogBox/DialogBox.vue';
 
   export default {
     name: 'AssessmentView',
     components: {
-      AssessmentItem,
+      AssessmentItemEdit,
+      AssessmentItemPreview,
+      AssessmentItemToolbar,
       DialogBox,
     },
     data() {
@@ -100,6 +160,7 @@
         'getNode',
         'nodeAssessmentDraft',
         'isNodeAssessmentDraftValid',
+        'isNodeAssessmentDraftItemValid',
         'invalidNodeAssessmentDraftItemsCount',
       ]),
       // assessment view is accessible only when exactly one exercise node is selected
@@ -184,6 +245,108 @@
       closeOpenItem() {
         this.openItemIdx = null;
       },
+      isItemOpen(itemIdx) {
+        return this.openItemIdx === itemIdx;
+      },
+      isItemFirst(itemIdx) {
+        return itemIdx === 0;
+      },
+      isItemLast(itemIdx) {
+        return itemIdx === this.nodeAssessmentDraft(this.nodeId).length - 1;
+      },
+      isItemValid(itemIdx) {
+        return this.isNodeAssessmentDraftItemValid({
+          nodeId: this.nodeId,
+          assessmentItemIdx: itemIdx,
+        });
+      },
+      itemStyle(itemIdx) {
+        if (this.isItemOpen(itemIdx)) {
+          return {
+            margin: '8px 0',
+          };
+        }
+
+        return {
+          margin: '0 8px',
+          cursor: 'pointer',
+        };
+      },
+      onItemClick(event, itemIdx) {
+        if (this.isItemOpen(itemIdx)) {
+          return;
+        }
+
+        if (
+          event.target.closest('.close-item-btn') !== null ||
+          event.target.closest('.toolbar') !== null ||
+          event.target.closest('.hints-preview') !== null
+        ) {
+          return;
+        }
+
+        this.validateOpenItem();
+        this.openItem(itemIdx);
+      },
+      onToolbarClick(itemIdx, action) {
+        switch (action) {
+          case AssessmentItemToolbarActions.EDIT_ITEM:
+            this.validateOpenItem();
+            this.openItem(itemIdx);
+            break;
+
+          case AssessmentItemToolbarActions.DELETE_ITEM:
+            this.openDialog({
+              title: 'Deleting question',
+              message: 'Are you sure you want to delete this question?',
+              submitLabel: 'Delete',
+              onSubmit: () => this.deleteItem(itemIdx),
+            });
+            break;
+
+          case AssessmentItemToolbarActions.ADD_ITEM_ABOVE:
+            this.validateOpenItem();
+            // primarily to disable adding more empty questions
+            this.sanitizeItems();
+
+            this.addNodeAssessmentDraftItem({
+              nodeId: this.nodeId,
+              before: itemIdx,
+            });
+
+            this.openItem(itemIdx);
+            break;
+
+          case AssessmentItemToolbarActions.ADD_ITEM_BELOW:
+            this.validateOpenItem();
+            // primarily to disable adding more empty questions
+            this.sanitizeItems();
+
+            this.addNodeAssessmentDraftItem({
+              nodeId: this.nodeId,
+              after: itemIdx,
+            });
+
+            this.openItem(itemIdx + 1);
+            break;
+
+          case AssessmentItemToolbarActions.MOVE_ITEM_UP:
+            if (this.isItemFirst(itemIdx)) {
+              break;
+            }
+
+            this.swapItems(itemIdx, itemIdx - 1);
+            break;
+
+          case AssessmentItemToolbarActions.MOVE_ITEM_DOWN:
+            if (this.isItemLast(itemIdx)) {
+              break;
+            }
+
+            this.swapItems(itemIdx, itemIdx + 1);
+            break;
+        }
+      },
       validateOpenItem() {
         if (this.openItemIdx !== null) {
           this.sanitizeNodeAssessmentDraftItem({
@@ -231,22 +394,9 @@
           return;
         }
       },
-      onItemOpen(itemIdx) {
-        this.validateOpenItem();
-
-        this.openItem(itemIdx);
-      },
       onItemClose() {
         this.validateOpenItem();
         this.closeOpenItem();
-      },
-      onDeleteItem(itemIdx) {
-        this.openDialog({
-          title: 'Deleting question',
-          message: 'Are you sure you want to delete this question?',
-          submitLabel: 'Delete',
-          onSubmit: () => this.deleteItem(itemIdx),
-        });
       },
       onNewItemBtnClick() {
         this.validateOpenItem();
@@ -257,37 +407,19 @@
 
         this.openItem(this.assessmentItemsData.length - 1);
       },
-      onAddItemAbove(itemIdx) {
-        this.validateOpenItem();
-        // primarily to disable adding more empty questions
-        this.sanitizeItems();
-
-        this.addNodeAssessmentDraftItem({
-          nodeId: this.nodeId,
-          before: itemIdx,
-        });
-
-        this.openItem(itemIdx);
-      },
-      onAddItemBelow(itemIdx) {
-        this.validateOpenItem();
-        // primarily to disable adding more empty questions
-        this.sanitizeItems();
-
-        this.addNodeAssessmentDraftItem({
-          nodeId: this.nodeId,
-          after: itemIdx,
-        });
-
-        this.openItem(itemIdx + 1);
-      },
-      onMoveItemUp(itemIdx) {
-        this.swapItems(itemIdx, itemIdx - 1);
-      },
-      onMoveItemDown(itemIdx) {
-        this.swapItems(itemIdx, itemIdx + 1);
-      },
     },
   };
 
 </script>
+
+<style lang="less" scoped>
+  .item {
+    position: relative;
+
+    .toolbar {
+      position: absolute;
+      right: 10px;
+    }
+  }
+
+</style>

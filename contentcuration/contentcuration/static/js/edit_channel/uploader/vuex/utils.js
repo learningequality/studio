@@ -20,6 +20,10 @@ export const updateAssessmentDraftOrder = assessmentDraft => {
 };
 
 export const isAssessmentItemInvalid = item => {
+  if (!item.validation) {
+    return false;
+  }
+
   return (
     (item.validation.questionErrors && item.validation.questionErrors.length > 0) ||
     (item.validation.answersErrors && item.validation.answersErrors.length > 0)

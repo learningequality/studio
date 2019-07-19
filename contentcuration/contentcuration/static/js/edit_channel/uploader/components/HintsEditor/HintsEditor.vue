@@ -11,31 +11,34 @@
     <VCard
       v-for="(hint, hintIdx) in hints"
       :key="hintIdx"
-      flat
       :style="cardStyle(hintIdx)"
+      flat
       data-test="hint"
       @click="onHintClick($event, hintIdx)"
     >
       <VCardText>
         <!-- eslint-disable-next-line -->
-        <VLayout row align-center>
+        <VLayout align-top justify-space-between>
           <VFlex xs1>
             {{ hint.order }}
           </VFlex>
 
-          <VFlex xs4 sm6 md8>
+          <VFlex xs4 md6 lg7>
             <p v-if="!isHintOpen(hintIdx)">
               {{ hint.hint }}
             </p>
-            <VTextField
-              v-else
-              :value="hint.hint"
-              data-test="editHintTextInput"
-              @input="updateHintText($event, hintIdx)"
-            />
+
+            <keep-alive :max="5">
+              <MarkdownEditor
+                v-if="isHintOpen(hintIdx)"
+                :markdown="hint.hint"
+                @update="updateHintText($event, hintIdx)"
+              />
+            </keep-alive>
           </VFlex>
 
           <VSpacer />
+
           <AssessmentItemToolbar
             :displayMenu="false"
             :displayEditIcon="false"
@@ -64,12 +67,15 @@
 
   import { AssessmentItemToolbarActions } from '../../constants';
   import { swapElements, sanitizeAssessmentItemHints } from '../../utils';
+
   import AssessmentItemToolbar from '../AssessmentItemToolbar/AssessmentItemToolbar.vue';
+  import MarkdownEditor from '../MarkdownEditor/MarkdownEditor.vue';
 
   export default {
     name: 'HintsEditor',
     components: {
       AssessmentItemToolbar,
+      MarkdownEditor,
     },
     model: {
       prop: 'hints',
@@ -81,13 +87,6 @@
       },
       openHintIdx: {
         type: Number,
-      },
-    },
-    watch: {
-      openHintIdx() {
-        this.$nextTick(() => {
-          this.$el.querySelector('.v-text-field input').focus();
-        });
       },
     },
     methods: {
@@ -112,7 +111,7 @@
       cardStyle(hintIdx) {
         const style = {
           border: '1px #d2d2d2 solid',
-          'margin-top': '-1px',
+          marginTop: '-1px',
         };
 
         if (!this.isHintOpen(hintIdx)) {
@@ -135,6 +134,7 @@
         });
 
         this.emitUpdate(updatedHints);
+
         if (this.isHintOpen(hintIdx)) {
           this.emitOpen(hintIdx - 1);
         } else if (this.isHintOpen(hintIdx - 1)) {
@@ -155,6 +155,7 @@
         });
 
         this.emitUpdate(updatedHints);
+
         if (this.isHintOpen(hintIdx)) {
           this.emitOpen(hintIdx + 1);
         } else if (this.isHintOpen(hintIdx + 1)) {
@@ -173,6 +174,7 @@
         });
 
         this.emitUpdate(updatedHints);
+
         if (this.isHintOpen(hintIdx)) {
           this.emitClose();
         } else if (this.openHintIdx > hintIdx) {

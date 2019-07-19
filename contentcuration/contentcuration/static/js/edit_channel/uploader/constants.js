@@ -20,6 +20,13 @@ export const AssessmentItemTypes = {
   INPUT_QUESTION: 'input_question',
 };
 
+export const AssessmentItemTypeLabels = {
+  [AssessmentItemTypes.SINGLE_SELECTION]: 'Single selection',
+  [AssessmentItemTypes.MULTIPLE_SELECTION]: 'Multiple selection',
+  [AssessmentItemTypes.TRUE_FALSE]: 'True/False',
+  [AssessmentItemTypes.INPUT_QUESTION]: 'Input question',
+};
+
 export const AssessmentItemToolbarActions = {
   MOVE_ITEM_UP: 'move_item_up',
   MOVE_ITEM_DOWN: 'move_item_down',

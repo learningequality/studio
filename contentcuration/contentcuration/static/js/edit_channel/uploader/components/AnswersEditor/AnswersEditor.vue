@@ -11,8 +11,8 @@
     <VCard
       v-for="(answer, answerIdx) in answers"
       :key="answerIdx"
-      flat
       :style="cardStyle(answerIdx)"
+      flat
       data-test="answer"
       @click="onAnswerClick($event, answerIdx)"
     >
@@ -20,77 +20,52 @@
 
       <VCardText>
         <!-- eslint-disable-next-line -->
-        <VLayout row align-center>
-          <VFlex>
-            <template v-if="!isAnswerOpen(answerIdx)">
-              <!--
-                VRadio cannot be used without VRadioGroup like VCheckbox but it can
-                be solved by wrapping each VRadio to VRadioGroup
-                https://github.com/vuetifyjs/vuetify/issues/2345
-              -->
-              <VRadioGroup
-                v-if="hasOneCorrectAnswer"
-                v-model="correctAnswersIndices"
-              >
-                <VRadio
-                  :value="answerIdx"
-                  :label="answer.answer"
-                  data-test="answerRadio"
-                />
-              </VRadioGroup>
-
-              <VCheckbox
-                v-if="isMultipleSelection"
-                :key="answerIdx"
-                v-model="correctAnswersIndices"
+        <VLayout align-top justify-space-between>
+          <VFlex xs1>
+            <!--
+              VRadio cannot be used without VRadioGroup like VCheckbox but it can
+              be solved by wrapping each VRadio to VRadioGroup
+              https://github.com/vuetifyjs/vuetify/issues/2345
+            -->
+            <VRadioGroup
+              v-if="hasOneCorrectAnswer"
+              v-model="correctAnswersIndices"
+            >
+              <VRadio
                 :value="answerIdx"
-                :label="answer.answer"
-                data-test="answerCheckbox"
+                :label="answerLabel(answerIdx)"
+                data-test="answerRadio"
               />
+            </VRadioGroup>
 
-              <div
-                v-if="isInputQuestion"
-                class="input-question"
-              >
-                {{ answer.answer }}
-              </div>
-            </template>
+            <VCheckbox
+              v-if="isMultipleSelection"
+              :key="answerIdx"
+              v-model="correctAnswersIndices"
+              :value="answerIdx"
+              :label="answerLabel(answerIdx)"
+            />
 
-            <template v-if="isAnswerOpen(answerIdx)">
-              <VLayout>
-                <VFlex xs1>
-                  <VRadioGroup
-                    v-if="hasOneCorrectAnswer"
-                    v-model="correctAnswersIndices"
-                  >
-                    <VRadio
-                      :value="answerIdx"
-                      data-test="answerRadio"
-                    />
-                  </VRadioGroup>
+            <div
+              v-if="!isAnswerOpen(answerIdx) && isInputQuestion"
+              class="input-question"
+            >
+              {{ answerLabel(answerIdx) }}
+            </div>
+          </VFlex>
 
-                  <VCheckbox
-                    v-if="isMultipleSelection"
-                    :key="answerIdx"
-                    v-model="correctAnswersIndices"
-                    :value="answerIdx"
-                    data-test="answerCheckbox"
-                  />
-                </VFlex>
-
-                <VFlex>
-                  <VTextField
-                    class="answerInput"
-                    :value="answer.answer"
-                    data-test="editAnswerTextInput"
-                    @input="updateAnswerText($event, answerIdx)"
-                  />
-                </VFlex>
-              </VLayout>
-            </template>
+          <VFlex xs4 md6 lg7>
+            <keep-alive :max="5">
+              <MarkdownEditor
+                v-if="isAnswerOpen(answerIdx)"
+                :markdown="answer.answer"
+                @update="updateAnswerText($event, answerIdx)"
+              />
+            </keep-alive>
           </VFlex>
 
           <VSpacer />
+
           <AssessmentItemToolbar
             :displayMenu="false"
             :displayEditIcon="false"
@@ -126,12 +101,15 @@
     swapElements,
     sanitizeAssessmentItemAnswers,
   } from '../../utils';
+
   import AssessmentItemToolbar from '../AssessmentItemToolbar/AssessmentItemToolbar.vue';
+  import MarkdownEditor from '../MarkdownEditor/MarkdownEditor.vue';
 
   export default {
     name: 'AnswersEditor',
     components: {
       AssessmentItemToolbar,
+      MarkdownEditor,
     },
     model: {
       prop: 'answers',
@@ -199,11 +177,6 @@
 
         this.emitUpdate(updatedAnswers);
       },
-      openAnswerIdx() {
-        this.$nextTick(() => {
-          this.$el.querySelector('.v-text-field input').focus();
-        });
-      },
     },
     methods: {
       isAnswerFirst(answerIdx) {
@@ -215,10 +188,21 @@
       isAnswerOpen(answerIdx) {
         return answerIdx === this.openAnswerIdx;
       },
+      answerLabel(answerIdx) {
+        if (!this.answers || !this.answers.length) {
+          return '';
+        }
+
+        if (this.isAnswerOpen(answerIdx)) {
+          return '';
+        }
+
+        return this.answers[answerIdx].answer;
+      },
       cardStyle(answerIdx) {
         const style = {
           border: '1px #d2d2d2 solid',
-          'margin-top': '-1px',
+          marginTop: '-1px',
         };
 
         if (this.isEditingAllowed && !this.isAnswerOpen(answerIdx)) {
@@ -265,6 +249,7 @@
         });
 
         this.emitUpdate(updatedAnswers);
+
         if (this.isAnswerOpen(answerIdx)) {
           this.emitOpen(answerIdx - 1);
         } else if (this.isAnswerOpen(answerIdx - 1)) {
@@ -285,6 +270,7 @@
         });
 
         this.emitUpdate(updatedAnswers);
+
         if (this.isAnswerOpen(answerIdx)) {
           this.emitOpen(answerIdx + 1);
         } else if (this.isAnswerOpen(answerIdx + 1)) {
@@ -303,6 +289,7 @@
         });
 
         this.emitUpdate(updatedAnswers);
+
         if (this.isAnswerOpen(answerIdx)) {
           this.emitClose();
         } else if (this.openAnswerIdx > answerIdx) {
@@ -352,7 +339,7 @@
         this.emitUpdate(updatedAnswers);
       },
       addNewAnswer() {
-        // primarily to disable adding more empty hints
+        // primarily to disable adding more empty answers
         const updatedAnswers = sanitizeAssessmentItemAnswers(this.answers, true);
 
         const defaultCorrectState = this.isInputQuestion ? true : false;
