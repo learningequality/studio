@@ -385,3 +385,15 @@ body {
     text-decoration: none;
   }
 }
+
+/* Undoing some problems caused by Vuetify styles bleeding over into non-Vue elements */
+select:not(.application--wrap) {
+  background-color: white;
+  border: 1px solid gray;
+  -webkit-appearance: menulist-button;
+}
+
+.title:not(.application--wrap) {
+  font-family: 'Noto Sans' !important;
+  font-size: 16px !important;
+}
