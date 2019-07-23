@@ -37,7 +37,7 @@ def calculate_included_languages(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('contentcuration', '0098_auto_20190424_1709'),
+        ('contentcuration', '0099_auto_20190715_2201'),
     ]
 
     operations = [
