@@ -59,11 +59,11 @@
   export default {
     name: 'ChannelListPage',
     $trs: {
-      [ListTypes.EDITABLE]: 'My Channels',
-      [ListTypes.VIEW_ONLY]: 'View-Only',
-      [ListTypes.PUBLIC]: 'Public',
-      [ListTypes.STARRED]: 'Starred',
-      [ListTypes.CHANNEL_SETS]: 'Collections',
+      EDITABLE: 'My Channels',
+      VIEW_ONLY: 'View-Only',
+      PUBLIC: 'Public',
+      STARRED: 'Starred',
+      CHANNEL_SETS: 'Collections',
     },
     components: {
       ChannelList,
