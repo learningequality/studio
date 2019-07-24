@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: content-curation\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-05-23 00:11+0000\n"
-"PO-Revision-Date: 2019-05-23 20:51\n"
+"POT-Creation-Date: 2019-07-23 22:02+0000\n"
+"PO-Revision-Date: 2019-07-24 22:14\n"
 "Last-Translator: learningequality\n"
 "Language-Team: Spanish\n"
 "Language: es_ES\n"
@@ -302,7 +302,7 @@ msgstr "Seleccionar idioma"
 #: contentcuration/contentcuration/forms.py:292
 #: contentcuration/contentcuration/templates/settings/preferences.html:68
 #: contentcuration/contentcuration/utils/csv_writer.py:158
-#: contentcuration/contentcuration/utils/export_writer.py:569
+#: contentcuration/contentcuration/utils/export_writer.py:577
 msgid "Language"
 msgstr "Idioma"
 
@@ -482,163 +482,167 @@ msgstr "Una descripción de los pasos que seguiste, y qué mensaje(s) de error r
 "Por ejemplo:\n"
 "Tuve un problema al copiar contenido del portapapeles en el tema de Álgebra de mi canal de Matemáticas de octavo. Elegí el tema \"Álgebra básica\" del canal de Khan Academy, lo añadí a mi portapapeles, y después abrí mi canal, fue al tema de Álgebra, abrí el portapapeles y arrastré el tema \"Álgebra básica\" encima. Parecía que se estaba copiando pero después recibí un mensaje de error que decía \"500 HTTP Internal Server Error\"."
 
-#: contentcuration/contentcuration/management/commands/exportchannel.py:112
-msgid "Kolibri Studio Channel Published"
-msgstr "Canal publicado en Kolibri Studio"
-
 #: contentcuration/contentcuration/middleware/db_readonly.py:24
 msgid "The site is currently in read-only mode. Please try again later."
 msgstr "El sitio está actualmente en modo de solo lectura. Por favor, inténtalo más tarde."
 
-#: contentcuration/contentcuration/models.py:121
+#: contentcuration/contentcuration/models.py:120
 msgid "active"
 msgstr "activo"
 
-#: contentcuration/contentcuration/models.py:122
+#: contentcuration/contentcuration/models.py:121
 msgid "Designates whether this user should be treated as active."
 msgstr "Señala si este usuario se debe tratar como activo."
 
-#: contentcuration/contentcuration/models.py:123
+#: contentcuration/contentcuration/models.py:122
 msgid "staff status"
 msgstr "estatus de personal"
 
-#: contentcuration/contentcuration/models.py:124
+#: contentcuration/contentcuration/models.py:123
 msgid "Designates whether the user can log into this admin site."
 msgstr "Señala si el usuario puede iniciar sesión en páginas de administración."
 
-#: contentcuration/contentcuration/models.py:125
+#: contentcuration/contentcuration/models.py:124
 msgid "date joined"
 msgstr "fecha de registro"
 
-#: contentcuration/contentcuration/models.py:128
+#: contentcuration/contentcuration/models.py:127
 msgid "How many bytes a user can upload"
 msgstr "Cuantos bytes puede subir un usuario"
 
-#: contentcuration/contentcuration/models.py:165
+#: contentcuration/contentcuration/models.py:164
 msgid "Not enough space. Check your storage under Settings page."
 msgstr "No hay suficiente espacio. Comprueba el almacenamiento disponible en la página de Configuración."
 
-#: contentcuration/contentcuration/models.py:180
-#: contentcuration/contentcuration/models.py:187
+#: contentcuration/contentcuration/models.py:179
+#: contentcuration/contentcuration/models.py:186
 msgid "Out of storage! Request more space under Settings > Storage."
 msgstr "El espacio de almacenamiento es insuficiente. Solicita más espacio en Configuración > Almacenamiento."
 
-#: contentcuration/contentcuration/models.py:262
+#: contentcuration/contentcuration/models.py:261
 msgid "User"
 msgstr "Usuario"
 
-#: contentcuration/contentcuration/models.py:263
+#: contentcuration/contentcuration/models.py:262
 msgid "Users"
 msgstr "Usuarios"
 
-#: contentcuration/contentcuration/models.py:481
-#: contentcuration/contentcuration/models.py:699
+#: contentcuration/contentcuration/models.py:480
+#: contentcuration/contentcuration/models.py:698
 msgid "editors"
 msgstr "editores"
 
-#: contentcuration/contentcuration/models.py:482
-#: contentcuration/contentcuration/models.py:700
+#: contentcuration/contentcuration/models.py:481
+#: contentcuration/contentcuration/models.py:699
 msgid "Users with edit rights"
 msgstr "Usuarios que tienen permisos de edición"
 
-#: contentcuration/contentcuration/models.py:488
+#: contentcuration/contentcuration/models.py:487
 msgid "viewers"
 msgstr "sólo modo de lectura"
 
-#: contentcuration/contentcuration/models.py:489
+#: contentcuration/contentcuration/models.py:488
 msgid "Users with view only rights"
 msgstr "Usuarios que tienen solo permisos para ver el canal"
 
-#: contentcuration/contentcuration/models.py:502
+#: contentcuration/contentcuration/models.py:501
 msgid "bookmarked by"
 msgstr "marcado como favorito por"
 
-#: contentcuration/contentcuration/models.py:508
+#: contentcuration/contentcuration/models.py:507
 msgid "Order to display public channels"
 msgstr "Orden de visualización de canales públicos"
 
-#: contentcuration/contentcuration/models.py:513
+#: contentcuration/contentcuration/models.py:512
 msgid "secret tokens"
 msgstr "tokens secretos"
 
-#: contentcuration/contentcuration/models.py:530
+#: contentcuration/contentcuration/models.py:529
 msgid "languages"
 msgstr "idiomas"
 
-#: contentcuration/contentcuration/models.py:681
+#: contentcuration/contentcuration/models.py:680
 #: contentcuration/contentcuration/templates/settings/issues.html:86
 #: contentcuration/contentcuration/utils/csv_writer.py:157
 msgid "Channel"
 msgstr "Canal"
 
-#: contentcuration/contentcuration/models.py:682
+#: contentcuration/contentcuration/models.py:681
 msgid "Channels"
 msgstr "Canales"
 
-#: contentcuration/contentcuration/models.py:760
+#: contentcuration/contentcuration/models.py:759
 msgid "license exists"
 msgstr "licencia existe"
 
-#: contentcuration/contentcuration/models.py:761
+#: contentcuration/contentcuration/models.py:760
 msgid "Tells whether or not a content item is licensed to share"
 msgstr "Señala si un elemento de contenido tiene licencia que permite compartir"
 
-#: contentcuration/contentcuration/models.py:815
+#: contentcuration/contentcuration/models.py:814
 msgid "sort order"
 msgstr "ordenar por"
 
-#: contentcuration/contentcuration/models.py:816
+#: contentcuration/contentcuration/models.py:815
 msgid "Ascending, lowest number shown first"
 msgstr "Ascendente, el número menor aparece primero"
 
-#: contentcuration/contentcuration/models.py:818
+#: contentcuration/contentcuration/models.py:817
 msgid "Organization of person who holds the essential rights"
 msgstr "Organización de la persona que tiene los derechos esenciales"
 
-#: contentcuration/contentcuration/models.py:823
+#: contentcuration/contentcuration/models.py:822
 msgid "created"
 msgstr "creado"
 
-#: contentcuration/contentcuration/models.py:824
+#: contentcuration/contentcuration/models.py:823
 msgid "modified"
 msgstr "modificado"
 
-#: contentcuration/contentcuration/models.py:830
+#: contentcuration/contentcuration/models.py:829
 msgid "Who created this content?"
 msgstr "¿Quién creó este contenido?"
 
-#: contentcuration/contentcuration/models.py:832
+#: contentcuration/contentcuration/models.py:831
 msgid "Who gathered this content together?"
 msgstr "¿Quién reunió este contenido?"
 
-#: contentcuration/contentcuration/models.py:834
+#: contentcuration/contentcuration/models.py:833
 msgid "Who distributed this content?"
 msgstr "¿Quién distribuyó este contenido?"
 
-#: contentcuration/contentcuration/models.py:1039
+#: contentcuration/contentcuration/models.py:1038
 msgid " (Original)"
 msgstr " (Original)"
 
-#: contentcuration/contentcuration/models.py:1151
+#: contentcuration/contentcuration/models.py:1150
 msgid "Topic"
 msgstr "Tema"
 
-#: contentcuration/contentcuration/models.py:1152
+#: contentcuration/contentcuration/models.py:1151
 #: contentcuration/contentcuration/views/settings.py:239
 msgid "Topics"
 msgstr "Temas"
 
-#: contentcuration/contentcuration/models.py:1406
+#: contentcuration/contentcuration/models.py:1414
 msgid "Invitation"
 msgstr "Invitación"
 
-#: contentcuration/contentcuration/models.py:1407
+#: contentcuration/contentcuration/models.py:1415
 msgid "Invitations"
 msgstr "Invitaciones"
 
 #: contentcuration/contentcuration/settings.py:255
 msgid "English"
 msgstr "Inglés"
+
+#: contentcuration/contentcuration/settings.py:256
+msgid "Spanish"
+msgstr "Español"
+
+#: contentcuration/contentcuration/settings.py:258
+msgid "Spanish - Spain"
+msgstr "Español - España"
 
 #: contentcuration/contentcuration/settings.py:259
 msgid "Spanish - Mexico"
@@ -649,37 +653,37 @@ msgstr "Español - México"
 msgid "Beta"
 msgstr "Beta"
 
-#: contentcuration/contentcuration/templates/base.html:119
+#: contentcuration/contentcuration/templates/base.html:118
 msgid "(Beta)"
 msgstr "(Beta)"
 
-#: contentcuration/contentcuration/templates/base.html:123
-#: contentcuration/contentcuration/templates/base.html:129
+#: contentcuration/contentcuration/templates/base.html:122
+#: contentcuration/contentcuration/templates/base.html:128
 #, python-format
 msgid "Hello, %(name)s"
 msgstr "Hola %(name)s"
 
-#: contentcuration/contentcuration/templates/base.html:130
+#: contentcuration/contentcuration/templates/base.html:129
 msgid "Administration"
 msgstr "Administración"
 
-#: contentcuration/contentcuration/templates/base.html:131
+#: contentcuration/contentcuration/templates/base.html:130
 msgid "Settings"
 msgstr "Configuración"
 
-#: contentcuration/contentcuration/templates/base.html:132
+#: contentcuration/contentcuration/templates/base.html:131
 msgid "Help"
 msgstr "Ayuda"
 
-#: contentcuration/contentcuration/templates/base.html:133
+#: contentcuration/contentcuration/templates/base.html:132
 msgid "Log Out"
 msgstr "Cerrar la sesión"
 
-#: contentcuration/contentcuration/templates/base.html:147
+#: contentcuration/contentcuration/templates/base.html:146
 msgid "Contentworkshop.learningequality.org has been deprecated. Please go to <a href=\"https://studio.learningequality.org\">studio.learningequality.org</a> for the latest version of Studio"
 msgstr "contentworkshop.learningequality.org ya no es válido. Por favor, vaya a <a href=\"https://studio.learningequality.org\">studio.learningequality.org</a> para acceder a la última versión de Studio"
 
-#: contentcuration/contentcuration/templates/base.html:151
+#: contentcuration/contentcuration/templates/base.html:150
 #, python-format
 msgid "Kolibri Studio is undergoing active development, and during usage you may encounter unexpected behavior or problems. <a href=\"%(issue_url)s\" target=\"_blank\">Please read here</a> on best practices, known issues, and error reporting recommendations. We appreciate your patience and assistance as we work to improve the Kolibri Studio Beta!"
 msgstr "Kolibri Studio está en desarrollo activo, y al usarlo puede encontrar un comportamiento o problemas inesperados. <a href=\"%(issue_url)s\" target=\"_blank\">Por favor lea aquí</a> sobre las mejores prácticas, problemas conocidos y recomendaciones de informes de errores. ¡Apreciamos su paciencia y asistencia mientras trabajamos para mejorar Kolibri Studio Beta!"
@@ -817,13 +821,13 @@ msgstr "Incluye"
 
 #: contentcuration/contentcuration/templates/export/channel_detail_pdf.html:300
 #: contentcuration/contentcuration/templates/export/channel_detail_pdf_condensed.html:237
-#: contentcuration/contentcuration/utils/export_writer.py:570
+#: contentcuration/contentcuration/utils/export_writer.py:578
 msgid "Languages"
 msgstr "Idiomas"
 
 #: contentcuration/contentcuration/templates/export/channel_detail_pdf.html:306
 #: contentcuration/contentcuration/templates/export/channel_detail_pdf_condensed.html:246
-#: contentcuration/contentcuration/utils/export_writer.py:570
+#: contentcuration/contentcuration/utils/export_writer.py:578
 msgid "Subtitles"
 msgstr "Subtítulos"
 
@@ -915,7 +919,7 @@ msgstr "\n"
 "                                        "
 
 #: contentcuration/contentcuration/templates/export/channel_detail_pdf_condensed.html:268
-#: contentcuration/contentcuration/utils/export_writer.py:526
+#: contentcuration/contentcuration/utils/export_writer.py:534
 msgid "Most Common Tags"
 msgstr "Etiquetas más comunes"
 
@@ -1745,7 +1749,7 @@ msgstr "Navegador"
 
 #: contentcuration/contentcuration/templates/settings/issues.html:92
 #: contentcuration/contentcuration/utils/csv_writer.py:157
-#: contentcuration/contentcuration/utils/export_writer.py:569
+#: contentcuration/contentcuration/utils/export_writer.py:577
 msgid "Description"
 msgstr "Descripción"
 
@@ -1800,8 +1804,8 @@ msgstr "Automáticamente aleatorizar orden de preguntas"
 msgid "No Changes Found"
 msgstr "No se encontraron cambios"
 
-#: contentcuration/contentcuration/templates/settings/preferences.html:131
-#: contentcuration/contentcuration/templates/settings/profile.html:49
+#: contentcuration/contentcuration/templates/settings/preferences.html:132
+#: contentcuration/contentcuration/templates/settings/profile.html:50
 msgid "SAVE CHANGES"
 msgstr "GUARDAR CAMBIOS"
 
@@ -1839,7 +1843,7 @@ msgstr "Cuenta"
 
 #: contentcuration/contentcuration/templates/settings/settings.html:18
 #: contentcuration/contentcuration/templates/settings/storage.html:10
-#: contentcuration/contentcuration/utils/export_writer.py:569
+#: contentcuration/contentcuration/utils/export_writer.py:577
 msgid "Storage"
 msgstr "Almacenamiento"
 
@@ -1997,15 +2001,15 @@ msgid "Get tokens for authentication."
 msgstr "Obtener tokens para identificación."
 
 #: contentcuration/contentcuration/templates/settings/tokens.html:16
-#: contentcuration/contentcuration/templates/settings/tokens.html:33
+#: contentcuration/contentcuration/templates/settings/tokens.html:35
 msgid "COPY"
 msgstr "COPIAR"
 
-#: contentcuration/contentcuration/templates/settings/tokens.html:27
+#: contentcuration/contentcuration/templates/settings/tokens.html:28
 msgid "Copied!"
 msgstr "¡Copiado!"
 
-#: contentcuration/contentcuration/templates/settings/tokens.html:30
+#: contentcuration/contentcuration/templates/settings/tokens.html:32
 msgid "Copy Failed"
 msgstr "Copiar ha fallado"
 
@@ -2160,182 +2164,198 @@ msgstr "No hay recursos"
 msgid "Staged File"
 msgstr "Archivo enviado"
 
-#: contentcuration/contentcuration/utils/export_writer.py:183
-#, python-format
-msgid "%(count)d%(sep)sTopic"
-msgid_plural "%(count)d%(sep)sTopics"
-msgstr[0] "%(count)d%(sep)sTema"
-msgstr[1] "%(count)d%(sep)sTemas"
-
 #: contentcuration/contentcuration/utils/export_writer.py:185
 #, python-format
-msgid "%(count)d%(sep)sVideo"
-msgid_plural "%(count)d%(sep)sVideos"
-msgstr[0] "%(count)d%(sep)sVideo"
-msgstr[1] "%(count)d%(sep)sVideos"
+msgid "%(count)d Topic"
+msgid_plural "%(count)d Topics"
+msgstr[0] "%(count)d Tema"
+msgstr[1] "%(count)d Temas"
 
 #: contentcuration/contentcuration/utils/export_writer.py:187
 #, python-format
-msgid "%(count)d%(sep)sAudio"
-msgid_plural "%(count)d%(sep)sAudios"
-msgstr[0] "%(count)d%(sep)sAudio"
-msgstr[1] "%(count)d%(sep)sAudios"
+msgid "%(count)d Video"
+msgid_plural "%(count)d Videos"
+msgstr[0] "%(count)d Vídeo"
+msgstr[1] "%(count)d Vídeos"
 
 #: contentcuration/contentcuration/utils/export_writer.py:189
 #, python-format
-msgid "%(count)d%(sep)sExercise"
-msgid_plural "%(count)d%(sep)sExercises"
-msgstr[0] "%(count)d%(sep)sEjercicio"
-msgstr[1] "%(count)d%(sep)sEjercicios"
+msgid "%(count)d Audio"
+msgid_plural "%(count)d Audios"
+msgstr[0] "%(count)d Audio"
+msgstr[1] "%(count)d Audios"
 
 #: contentcuration/contentcuration/utils/export_writer.py:191
 #, python-format
-msgid "%(count)d%(sep)sDocument"
-msgid_plural "%(count)d%(sep)sDocuments"
-msgstr[0] "%(count)d%(sep)sDocumento"
-msgstr[1] "%(count)d%(sep)sDocumentos"
+msgid "%(count)d Exercise"
+msgid_plural "%(count)d Exercises"
+msgstr[0] "%(count)d Ejercicio"
+msgstr[1] "%(count)d Ejercicios"
 
 #: contentcuration/contentcuration/utils/export_writer.py:193
 #, python-format
-msgid "%(count)d%(sep)sHTML App"
-msgid_plural "%(count)d%(sep)sHTML Apps"
-msgstr[0] "%(count)d%(sep)sAplicacion HTML5"
-msgstr[1] "%(count)d%(sep)sAplicaciones HTML5"
+msgid "%(count)d Document"
+msgid_plural "%(count)d Documents"
+msgstr[0] "%(count)d Documento"
+msgstr[1] "%(count)d Documentos"
 
 #: contentcuration/contentcuration/utils/export_writer.py:195
 #, python-format
-msgid "%(count)d%(sep)sTotal Resource"
-msgid_plural "%(count)d%(sep)sTotal Resources"
-msgstr[0] "%(count)d%(sep)sRecurso Total"
-msgstr[1] "%(count)d%(sep)sRecursos Totales"
+msgid "%(count)d Html App"
+msgid_plural "%(count)d Html Apps"
+msgstr[0] "%(count)d Aplicación HTML5"
+msgstr[1] "%(count)d Aplicaciones HTML5"
 
-#: contentcuration/contentcuration/utils/export_writer.py:219
+#: contentcuration/contentcuration/utils/export_writer.py:197
+#, python-format
+msgid "%(count)d Slideshow"
+msgid_plural "%(count)d Slideshows"
+msgstr[0] "%(count)d Presentación"
+msgstr[1] "%(count)d Presentaciones"
+
+#: contentcuration/contentcuration/utils/export_writer.py:199
+#, python-format
+msgid "%(count)d Total Resource"
+msgid_plural "%(count)d Total Resources"
+msgstr[0] "%(count)d Total Recurso"
+msgstr[1] "%(count)d Total Recursos"
+
+#: contentcuration/contentcuration/utils/export_writer.py:201
+#, python-format
+msgid "%(count)d\n"
+"Total Resource"
+msgid_plural "%(count)d\n"
+"Total Resources"
+msgstr[0] "%(count)d Total Recurso"
+msgstr[1] "%(count)d Total Recursos"
+
+#: contentcuration/contentcuration/utils/export_writer.py:226
 msgid "Very Small"
 msgstr "Muy pequeño"
 
-#: contentcuration/contentcuration/utils/export_writer.py:219
+#: contentcuration/contentcuration/utils/export_writer.py:226
 msgid "Small"
 msgstr "Pequeño"
 
-#: contentcuration/contentcuration/utils/export_writer.py:219
+#: contentcuration/contentcuration/utils/export_writer.py:226
 msgid "Average"
 msgstr "Medio"
 
-#: contentcuration/contentcuration/utils/export_writer.py:219
+#: contentcuration/contentcuration/utils/export_writer.py:226
 msgid "Large"
 msgstr "Grande"
 
-#: contentcuration/contentcuration/utils/export_writer.py:219
+#: contentcuration/contentcuration/utils/export_writer.py:226
 msgid "Very Large"
 msgstr "Muy grande"
 
-#: contentcuration/contentcuration/utils/export_writer.py:411
+#: contentcuration/contentcuration/utils/export_writer.py:418
 #, python-format
 msgid "Page %(page)s of %(pagecount)s - %(channel)s can be found on Kolibri Studio, a product of Learning Equality"
 msgstr "Página %(page)s de %(pagecount)s - %(channel)s se puede encontrar en Kolibri Studio, un producto de Learning Equality"
 
-#: contentcuration/contentcuration/utils/export_writer.py:414
+#: contentcuration/contentcuration/utils/export_writer.py:421
 #, python-format
 msgid "Page %(page)s of %(pagecount)s - These channels can be found on Kolibri Studio, a product of Learning Equality"
 msgstr "Página %(page)s de %(pagecount)s - Estos canales se pueden encontrar en Kolibri Studio, un producto de Learning Equality"
 
-#: contentcuration/contentcuration/utils/export_writer.py:489
-#: contentcuration/contentcuration/utils/export_writer.py:576
+#: contentcuration/contentcuration/utils/export_writer.py:497
+#: contentcuration/contentcuration/utils/export_writer.py:584
 msgid "No language set"
 msgstr "Idioma no establecido"
 
-#: contentcuration/contentcuration/utils/export_writer.py:492
+#: contentcuration/contentcuration/utils/export_writer.py:500
 msgid "    * Subtitles included"
 msgstr "    * Subtítulos incluidos"
 
-#: contentcuration/contentcuration/utils/export_writer.py:497
+#: contentcuration/contentcuration/utils/export_writer.py:505
 msgid " Coach Content"
 msgstr " Contenido para tutores"
 
-#: contentcuration/contentcuration/utils/export_writer.py:502
+#: contentcuration/contentcuration/utils/export_writer.py:510
 msgid " Assessments"
 msgstr " Evaluaciones"
 
-#: contentcuration/contentcuration/utils/export_writer.py:509
+#: contentcuration/contentcuration/utils/export_writer.py:517
 #, python-format
 msgid "Channel size: %(size)s"
 msgstr "Tamaño del canal: %(size)s"
 
-#: contentcuration/contentcuration/utils/export_writer.py:522
+#: contentcuration/contentcuration/utils/export_writer.py:530
 msgid "Resource Breakdown"
 msgstr "Desglose de recursos"
 
-#: contentcuration/contentcuration/utils/export_writer.py:535
+#: contentcuration/contentcuration/utils/export_writer.py:543
 msgid "No Resources Found"
 msgstr "No se han encontrado recursos"
 
-#: contentcuration/contentcuration/utils/export_writer.py:543
+#: contentcuration/contentcuration/utils/export_writer.py:551
 msgid "No Tags Found"
 msgstr "No se encontraron etiquetas"
 
-#: contentcuration/contentcuration/utils/export_writer.py:560
+#: contentcuration/contentcuration/utils/export_writer.py:568
 msgid "This slide was automatically generated by Kolibri Studio, a product of Learning Equality"
 msgstr "Esta diapositiva fue generada automáticamente por Kolibri Studio, un producto de Learning Equality"
 
-#: contentcuration/contentcuration/utils/export_writer.py:569
+#: contentcuration/contentcuration/utils/export_writer.py:577
 msgid "Name"
 msgstr "Nombre"
 
-#: contentcuration/contentcuration/utils/export_writer.py:569
+#: contentcuration/contentcuration/utils/export_writer.py:577
 msgid "Token"
 msgstr "Token"
 
-#: contentcuration/contentcuration/utils/export_writer.py:569
+#: contentcuration/contentcuration/utils/export_writer.py:577
 msgid "Size"
 msgstr "Tamaño"
 
-#: contentcuration/contentcuration/utils/export_writer.py:569
+#: contentcuration/contentcuration/utils/export_writer.py:577
 msgid "Resources"
 msgstr "Recursos"
 
-#: contentcuration/contentcuration/utils/export_writer.py:570
+#: contentcuration/contentcuration/utils/export_writer.py:578
 msgid "Coach Content?"
 msgstr "¿Contenido para tutores?"
 
-#: contentcuration/contentcuration/utils/export_writer.py:570
+#: contentcuration/contentcuration/utils/export_writer.py:578
 msgid "Assessments?"
 msgstr "¿Evaluaciones?"
 
-#: contentcuration/contentcuration/utils/export_writer.py:570
+#: contentcuration/contentcuration/utils/export_writer.py:578
 msgid "Tags"
 msgstr "Etiquetas"
 
-#: contentcuration/contentcuration/utils/export_writer.py:570
+#: contentcuration/contentcuration/utils/export_writer.py:578
 msgid "Authors"
 msgstr "Autores"
 
-#: contentcuration/contentcuration/utils/export_writer.py:571
+#: contentcuration/contentcuration/utils/export_writer.py:579
 msgid "Providers"
 msgstr "Proveedores"
 
-#: contentcuration/contentcuration/utils/export_writer.py:571
+#: contentcuration/contentcuration/utils/export_writer.py:579
 msgid "Aggregators"
 msgstr "Agregadores"
 
-#: contentcuration/contentcuration/utils/export_writer.py:571
+#: contentcuration/contentcuration/utils/export_writer.py:579
 msgid "Licenses"
 msgstr "Licencias"
 
-#: contentcuration/contentcuration/utils/export_writer.py:571
+#: contentcuration/contentcuration/utils/export_writer.py:579
 msgid "Copyright Holders"
 msgstr "Titular de derechos de autor"
 
-#: contentcuration/contentcuration/utils/export_writer.py:577
+#: contentcuration/contentcuration/utils/export_writer.py:585
 msgid "Publish channel to get token"
 msgstr "Publicar canal para obtener token"
 
-#: contentcuration/contentcuration/utils/export_writer.py:583
-#: contentcuration/contentcuration/utils/export_writer.py:584
+#: contentcuration/contentcuration/utils/export_writer.py:591
+#: contentcuration/contentcuration/utils/export_writer.py:592
 msgid "Yes"
 msgstr "Sí"
 
-#: contentcuration/contentcuration/utils/export_writer.py:583
-#: contentcuration/contentcuration/utils/export_writer.py:584
+#: contentcuration/contentcuration/utils/export_writer.py:591
+#: contentcuration/contentcuration/utils/export_writer.py:592
 msgid "No"
 msgstr "No"
 
@@ -2383,17 +2403,21 @@ msgstr "Hubo un problema con un servicio externo. Esto significa que no es posib
 msgid "We are encountering issues with our data center. This means you may encounter networking problems while using Studio. We appreciate your patience while these issues are being resolved. To check the status of this service, please visit <a target='_blank' href='https://status.cloud.google.com/'>here</a>"
 msgstr "Estamos encontrando problemas con nuestro centro de datos. Esto significa que puede encontrar problemas de red mientras utiliza Studio. Agradecemos su paciencia mientras se resuelvenn estos problemas. Para comprobar el estado de este servicio <a target='_blank' href='https://status.cloud.google.com/'>visite este enlace</a>"
 
+#: contentcuration/contentcuration/utils/publish.py:59
+msgid "Kolibri Studio Channel Published"
+msgstr "Canal publicado en Kolibri Studio"
+
 #: contentcuration/contentcuration/views/nodes.py:328
 #: contentcuration/contentcuration/views/nodes.py:329
 msgid " (Copy)"
 msgstr " (Copiar)"
 
-#: contentcuration/contentcuration/views/public.py:61
-#: contentcuration/contentcuration/views/public.py:72
+#: contentcuration/contentcuration/views/public.py:60
+#: contentcuration/contentcuration/views/public.py:71
 msgid "Api endpoint {} is not available"
 msgstr "API endpoint {} no disponible"
 
-#: contentcuration/contentcuration/views/public.py:74
+#: contentcuration/contentcuration/views/public.py:73
 msgid "No channel matching {} found"
 msgstr "Ningún canal con {} encontrado"
 
