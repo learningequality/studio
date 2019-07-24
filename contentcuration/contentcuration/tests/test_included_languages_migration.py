@@ -11,8 +11,8 @@ included_languages_should_up_date = datetime.datetime(2016, 11, 30)
 
 class TestForwardIncludedLanguagesMigrationPublishedChannel(MigrationTestCase):
 
-    migrate_from = '0098_auto_20190424_1709'
-    migrate_to = '0099_calculate_included_languages'
+    migrate_from = '0099_auto_20190715_2201'
+    migrate_to = '0100_calculate_included_languages'
     app = 'contentcuration'
 
     def setUpBeforeMigration(self, apps):
@@ -40,8 +40,8 @@ class TestForwardIncludedLanguagesMigrationPublishedChannel(MigrationTestCase):
 
 class TestForwardIncludedLanguagesMigrationNewlyPublishedChannel(MigrationTestCase):
 
-    migrate_from = '0098_auto_20190424_1709'
-    migrate_to = '0099_calculate_included_languages'
+    migrate_from = '0099_auto_20190715_2201'
+    migrate_to = '0100_calculate_included_languages'
     app = 'contentcuration'
 
     def setUpBeforeMigration(self, apps):
@@ -66,8 +66,8 @@ class TestForwardIncludedLanguagesMigrationNewlyPublishedChannel(MigrationTestCa
 
 class TestForwardIncludedLanguagesMigrationUnpublishedChannel(MigrationTestCase):
 
-    migrate_from = '0098_auto_20190424_1709'
-    migrate_to = '0099_calculate_included_languages'
+    migrate_from = '0099_auto_20190715_2201'
+    migrate_to = '0100_calculate_included_languages'
     app = 'contentcuration'
 
     def setUpBeforeMigration(self, apps):
@@ -91,8 +91,8 @@ class TestForwardIncludedLanguagesMigrationUnpublishedChannel(MigrationTestCase)
 
 class TestForwardIncludedLanguagesMigrationFile(MigrationTestCase):
 
-    migrate_from = '0098_auto_20190424_1709'
-    migrate_to = '0099_calculate_included_languages'
+    migrate_from = '0099_auto_20190715_2201'
+    migrate_to = '0100_calculate_included_languages'
     app = 'contentcuration'
 
     def setUpBeforeMigration(self, apps):
