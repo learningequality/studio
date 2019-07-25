@@ -385,3 +385,17 @@ body {
     text-decoration: none;
   }
 }
+
+/* Undoing some problems caused by Vuetify styles bleeding over into non-Vue elements */
+select:not(.application--wrap) {
+  background-color: white;
+  border: 1px solid gray;
+  /* stylelint-disable csstree/validator */
+  appearance: menulist-button;
+  /* stylelint-enable */
+}
+
+.title:not(.application--wrap) {
+  font-family: 'Noto Sans' !important;
+  font-size: 16px !important;
+}
