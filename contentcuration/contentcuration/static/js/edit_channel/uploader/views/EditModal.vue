@@ -4,7 +4,7 @@
       ref="editmodal"
       v-model="dialog"
       fullscreen
-      hideOverlay
+      hide-overlay
       transition="dialog-bottom-transition"
       lazy
       scrollable
@@ -20,14 +20,14 @@
         >
           <EditList @addNode="createNode" />
         </VNavigationDrawer>
-        <VToolbar dark color="primary" fixed clippedLeft app>
+        <VToolbar dark color="primary" fixed clipped-left app>
           <VBtn ref="closebutton" icon dark app @click="handleClose">
             <VIcon>close</VIcon>
           </VBtn>
           <VToolbarTitle>{{ mode && $tr(mode) }}</VToolbarTitle>
           <VSpacer />
           <VToolbarItems>
-            <VFlex v-if="!isViewOnly" alignCenter class="last-saved-time">
+            <VFlex v-if="!isViewOnly" align-center class="last-saved-time">
               <div v-if="saveError">
                 {{ $tr('saveFailedText') }}
               </div>

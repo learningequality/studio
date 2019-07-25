@@ -1,12 +1,12 @@
 <template>
   <VContent>
-    <VContainer fluid fillHeight>
-      <VLayout v-if="!selected.length" justifyCenter alignCenter fillHeight>
+    <VContainer fluid fill-height>
+      <VLayout v-if="!selected.length" justify-center align-center fill-height>
         <VFlex grow class="default-content">
           {{ noItemText }}
         </VFlex>
       </VLayout>
-      <VLayout v-else-if="loadError" justifyCenter alignCenter fillHeight>
+      <VLayout v-else-if="loadError" justify-center align-center fill-height>
         <VFlex grow class="default-content">
           <v-icon color="red" class="error-icon">
             error
@@ -14,16 +14,16 @@
           <p>{{ $tr('loadErrorText') }}</p>
         </VFlex>
       </VLayout>
-      <VLayout v-else-if="!allLoaded" justifyCenter alignCenter fillHeight>
+      <VLayout v-else-if="!allLoaded" justify-center align-center fill-height>
         <VFlex grow class="default-content">
           <VProgressCircular :indeterminate="true" size="50" color="primary" />
           <br><br>
           <p>{{ $tr('loadingText') }}</p>
         </VFlex>
       </VLayout>
-      <VLayout v-else justifyCenter>
+      <VLayout v-else justify-center>
         <VFlex grow>
-          <VTabs v-model="currentTab" fixedTabs sliderColor="primary">
+          <VTabs v-model="currentTab" fixed-tabs slider-color="primary">
             <!-- Details tab -->
             <VTab ref="detailstab" :href="`#${tabs.DETAILS}`">
               {{ $tr(tabs.DETAILS) }}

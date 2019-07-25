@@ -17,7 +17,6 @@
       @click="onHintClick($event, hintIdx)"
     >
       <VCardText>
-        <!-- eslint-disable-next-line -->
         <VLayout align-top justify-space-between>
           <VFlex xs1>
             {{ hint.order }}
