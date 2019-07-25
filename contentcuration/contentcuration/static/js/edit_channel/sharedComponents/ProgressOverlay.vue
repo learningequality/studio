@@ -4,7 +4,7 @@
     v-model="dialog"
     persistent
     light
-    maxWidth="575"
+    max-width="575"
     attach="body"
   >
     <VCard v-if="progress" class="message">

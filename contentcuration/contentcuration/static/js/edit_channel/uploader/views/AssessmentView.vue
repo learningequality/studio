@@ -27,7 +27,6 @@
         @click="onItemClick($event, itemIdx)"
       >
         <VCardText>
-          <!-- eslint-disable-next-line -->
           <VLayout align-start>
             <VFlex xs1>
               {{ itemData.order + 1 }}
@@ -72,7 +71,6 @@
             />
           </VLayout>
 
-          <!-- eslint-disable-next-line -->
           <VLayout v-if="isItemOpen(itemIdx)" justify-end>
             <VBtn
               flat

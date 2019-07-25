@@ -1,6 +1,5 @@
 <template>
   <div>
-    <!-- eslint-disable-next-line -->
     <VLayout align-top justify-space-between>
       <VFlex>
         <div class="caption grey--text mb-1">
@@ -40,7 +39,6 @@
       </VFlex>
     </VLayout>
 
-    <!-- eslint-disable-next-line -->
     <VLayout v-if="detailed" mt-3>
       <VFlex>
         <div class="caption grey--text mb-1">

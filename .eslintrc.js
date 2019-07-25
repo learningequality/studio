@@ -14,5 +14,8 @@ esLintConfig.settings['import/resolver'].alias = {
   map: Object.entries(webpack.resolve.alias),
   extensions: ['.vue', '.less', '.js', '.handlebars'],
 };
+// Vuetify's helper attributes use hyphens and they would
+// not be recognized if auto-formatted to camel case
+esLintConfig.rules['vue/attribute-hyphenation'] = 0;
 
 module.exports = esLintConfig;

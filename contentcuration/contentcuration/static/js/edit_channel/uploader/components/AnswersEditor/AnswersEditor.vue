@@ -19,7 +19,6 @@
       <div :class="getIndicatorClasses(answer)"></div>
 
       <VCardText>
-        <!-- eslint-disable-next-line -->
         <VLayout align-top justify-space-between>
           <VFlex xs1>
             <!--
