@@ -6,8 +6,6 @@
 
 <script>
 
-  import $ from 'jquery';
-
   import { ImageUploadBtn, FormulaBtn, UndoBtn, RedoBtn } from './buttons';
 
   export default {
