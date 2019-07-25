@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: content-curation\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-07-24 22:39+0000\n"
+"POT-Creation-Date: 2019-07-25 19:58+0000\n"
 "PO-Revision-Date: 2019-05-23 00:17\n"
 "Last-Translator: learningequality\n"
 "Language-Team: Spanish, Mexico\n"
@@ -16,33 +16,33 @@ msgstr ""
 "X-Crowdin-Language: es-MX\n"
 "X-Crowdin-File: django.po\n"
 
-#: contentcuration/contentcuration/api.py:276
+#: contentcuration/contentcuration/api.py:140
 msgid "Date/Time Created"
 msgstr "Fecha/Hora creación"
 
-#: contentcuration/contentcuration/api.py:277
-#: contentcuration/contentcuration/api.py:278
+#: contentcuration/contentcuration/api.py:141
+#: contentcuration/contentcuration/api.py:142
 msgid "Not Available"
 msgstr "No está disponible"
 
-#: contentcuration/contentcuration/api.py:281
+#: contentcuration/contentcuration/api.py:145
 msgid "Ricecooker Version"
 msgstr "Versión de Ricecooker"
 
-#: contentcuration/contentcuration/api.py:286
+#: contentcuration/contentcuration/api.py:150
 #: contentcuration/contentcuration/utils/csv_writer.py:157
 msgid "File Size"
 msgstr "Tamaño del archivo"
 
-#: contentcuration/contentcuration/api.py:297
+#: contentcuration/contentcuration/api.py:161
 msgid "# of {}s"
 msgstr "# de {}s"
 
-#: contentcuration/contentcuration/api.py:301
+#: contentcuration/contentcuration/api.py:165
 msgid "# of Questions"
 msgstr "# de Preguntas"
 
-#: contentcuration/contentcuration/api.py:311
+#: contentcuration/contentcuration/api.py:175
 msgid "# of Subtitles"
 msgstr "# de Subtítulos"
 
@@ -521,188 +521,192 @@ msgstr "fecha de registro"
 msgid "How many bytes a user can upload"
 msgstr ""
 
-#: contentcuration/contentcuration/models.py:164
+#: contentcuration/contentcuration/models.py:249
 msgid "Not enough space. Check your storage under Settings page."
 msgstr ""
 
-#: contentcuration/contentcuration/models.py:179
-#: contentcuration/contentcuration/models.py:186
+#: contentcuration/contentcuration/models.py:264
+#: contentcuration/contentcuration/models.py:271
 msgid "Out of storage! Request more space under Settings > Storage."
 msgstr ""
 
-#: contentcuration/contentcuration/models.py:261
+#: contentcuration/contentcuration/models.py:346
 msgid "User"
 msgstr "Usuario"
 
-#: contentcuration/contentcuration/models.py:262
+#: contentcuration/contentcuration/models.py:347
 msgid "Users"
 msgstr "Usuarios"
 
-#: contentcuration/contentcuration/models.py:480
-#: contentcuration/contentcuration/models.py:698
+#: contentcuration/contentcuration/models.py:565
+#: contentcuration/contentcuration/models.py:786
 msgid "editors"
 msgstr "editores"
 
-#: contentcuration/contentcuration/models.py:481
-#: contentcuration/contentcuration/models.py:699
+#: contentcuration/contentcuration/models.py:566
+#: contentcuration/contentcuration/models.py:787
 msgid "Users with edit rights"
 msgstr "Usuarios que tienen permisos de edición"
 
-#: contentcuration/contentcuration/models.py:487
+#: contentcuration/contentcuration/models.py:572
 msgid "viewers"
 msgstr "espectadores"
 
-#: contentcuration/contentcuration/models.py:488
+#: contentcuration/contentcuration/models.py:573
 msgid "Users with view only rights"
 msgstr "Usuarios que tienen solo permisos para ver el canal"
 
-#: contentcuration/contentcuration/models.py:501
+#: contentcuration/contentcuration/models.py:586
 msgid "bookmarked by"
 msgstr "marcado como favorito por"
 
-#: contentcuration/contentcuration/models.py:507
+#: contentcuration/contentcuration/models.py:592
 msgid "Order to display public channels"
 msgstr ""
 
-#: contentcuration/contentcuration/models.py:512
+#: contentcuration/contentcuration/models.py:597
 msgid "secret tokens"
 msgstr ""
 
-#: contentcuration/contentcuration/models.py:529
+#: contentcuration/contentcuration/models.py:614
 msgid "languages"
 msgstr ""
 
-#: contentcuration/contentcuration/models.py:680
+#: contentcuration/contentcuration/models.py:768
 #: contentcuration/contentcuration/templates/settings/issues.html:86
 #: contentcuration/contentcuration/utils/csv_writer.py:157
 msgid "Channel"
 msgstr "Canal"
 
-#: contentcuration/contentcuration/models.py:681
+#: contentcuration/contentcuration/models.py:769
 msgid "Channels"
 msgstr "Canales"
 
-#: contentcuration/contentcuration/models.py:759
+#: contentcuration/contentcuration/models.py:847
 msgid "license exists"
 msgstr "licencia existe"
 
-#: contentcuration/contentcuration/models.py:760
+#: contentcuration/contentcuration/models.py:848
 msgid "Tells whether or not a content item is licensed to share"
 msgstr ""
 "Señala si un elemento de contenido tiene licencia que permite compartir"
 
-#: contentcuration/contentcuration/models.py:814
+#: contentcuration/contentcuration/models.py:902
 msgid "sort order"
 msgstr "ordenar por"
 
-#: contentcuration/contentcuration/models.py:815
+#: contentcuration/contentcuration/models.py:903
 msgid "Ascending, lowest number shown first"
 msgstr "Ascendente, el número menor aparece primero"
 
-#: contentcuration/contentcuration/models.py:817
+#: contentcuration/contentcuration/models.py:905
 msgid "Organization of person who holds the essential rights"
 msgstr "Organización de la persona que tiene los derechos esenciales"
 
-#: contentcuration/contentcuration/models.py:822
+#: contentcuration/contentcuration/models.py:912
 msgid "created"
 msgstr "creado"
 
-#: contentcuration/contentcuration/models.py:823
+#: contentcuration/contentcuration/models.py:913
 msgid "modified"
 msgstr "modificado"
 
-#: contentcuration/contentcuration/models.py:829
+#: contentcuration/contentcuration/models.py:919
 msgid "Who created this content?"
 msgstr ""
 
-#: contentcuration/contentcuration/models.py:831
+#: contentcuration/contentcuration/models.py:921
 msgid "Who gathered this content together?"
 msgstr ""
 
-#: contentcuration/contentcuration/models.py:833
+#: contentcuration/contentcuration/models.py:923
 msgid "Who distributed this content?"
 msgstr ""
 
-#: contentcuration/contentcuration/models.py:1038
+#: contentcuration/contentcuration/models.py:1128
 msgid " (Original)"
 msgstr ""
 
-#: contentcuration/contentcuration/models.py:1150
+#: contentcuration/contentcuration/models.py:1240
 msgid "Topic"
 msgstr "Tema"
 
-#: contentcuration/contentcuration/models.py:1151
+#: contentcuration/contentcuration/models.py:1241
 #: contentcuration/contentcuration/views/settings.py:239
 msgid "Topics"
 msgstr "Temas"
 
-#: contentcuration/contentcuration/models.py:1414
+#: contentcuration/contentcuration/models.py:1504
 msgid "Invitation"
 msgstr "Invitación"
 
-#: contentcuration/contentcuration/models.py:1415
+#: contentcuration/contentcuration/models.py:1505
 msgid "Invitations"
 msgstr "Invitaciones"
 
-#: contentcuration/contentcuration/settings.py:255
+#: contentcuration/contentcuration/settings.py:267
 msgid "English"
 msgstr "Inglés"
 
-#: contentcuration/contentcuration/settings.py:256
+#: contentcuration/contentcuration/settings.py:268
 #, fuzzy
 #| msgid "Spanish - Mexico"
 msgid "Spanish"
 msgstr "Español - Méjico"
 
-#: contentcuration/contentcuration/settings.py:258
+#: contentcuration/contentcuration/settings.py:270
 #, fuzzy
 #| msgid "Spanish - Mexico"
 msgid "Spanish - Spain"
 msgstr "Español - Méjico"
 
-#: contentcuration/contentcuration/settings.py:259
+#: contentcuration/contentcuration/settings.py:271
 msgid "Spanish - Mexico"
 msgstr "Español - Méjico"
 
-#: contentcuration/contentcuration/templates/base.html:50
+#: contentcuration/contentcuration/tasks.py:226
+msgid "Unknown error starting task. Please contact support."
+msgstr ""
+
+#: contentcuration/contentcuration/templates/base.html:95
 #: contentcuration/contentcuration/templates/registration/getting_started.html:15
 msgid "Beta"
 msgstr ""
 
-#: contentcuration/contentcuration/templates/base.html:118
+#: contentcuration/contentcuration/templates/base.html:122
 msgid "(Beta)"
 msgstr ""
 
-#: contentcuration/contentcuration/templates/base.html:122
-#: contentcuration/contentcuration/templates/base.html:128
+#: contentcuration/contentcuration/templates/base.html:126
+#: contentcuration/contentcuration/templates/base.html:132
 #, python-format
 msgid "Hello, %(name)s"
 msgstr ""
 
-#: contentcuration/contentcuration/templates/base.html:129
+#: contentcuration/contentcuration/templates/base.html:133
 msgid "Administration"
 msgstr "Administración"
 
-#: contentcuration/contentcuration/templates/base.html:130
+#: contentcuration/contentcuration/templates/base.html:134
 msgid "Settings"
 msgstr "Configuración"
 
-#: contentcuration/contentcuration/templates/base.html:131
+#: contentcuration/contentcuration/templates/base.html:135
 msgid "Help"
 msgstr ""
 
-#: contentcuration/contentcuration/templates/base.html:132
+#: contentcuration/contentcuration/templates/base.html:136
 msgid "Log Out"
 msgstr "Cerrar la sesión"
 
-#: contentcuration/contentcuration/templates/base.html:146
+#: contentcuration/contentcuration/templates/base.html:150
 msgid ""
 "Contentworkshop.learningequality.org has been deprecated. Please go to <a "
 "href=\"https://studio.learningequality.org\">studio.learningequality.org</a> "
 "for the latest version of Studio"
 msgstr ""
 
-#: contentcuration/contentcuration/templates/base.html:150
+#: contentcuration/contentcuration/templates/base.html:154
 #, python-format
 msgid ""
 "Kolibri Studio is undergoing active development, and during usage you may "
@@ -752,10 +756,6 @@ msgstr "DESPLEGAR CANAL"
 #: contentcuration/contentcuration/templates/channel_edit.html:68
 msgid "Show Token"
 msgstr ""
-
-#: contentcuration/contentcuration/templates/channel_edit.html:69
-msgid "PUBLISH"
-msgstr "PUBLICAR"
 
 #: contentcuration/contentcuration/templates/channel_not_found.html:12
 msgid "We're sorry, this channel was not found."
@@ -2716,21 +2716,21 @@ msgid ""
 "com/'>here</a>"
 msgstr ""
 
-#: contentcuration/contentcuration/utils/publish.py:59
-msgid "Kolibri Studio Channel Published"
-msgstr ""
-
-#: contentcuration/contentcuration/views/nodes.py:328
-#: contentcuration/contentcuration/views/nodes.py:329
+#: contentcuration/contentcuration/utils/nodes.py:250
+#: contentcuration/contentcuration/utils/nodes.py:251
 msgid " (Copy)"
 msgstr " (Copiar)"
 
-#: contentcuration/contentcuration/views/public.py:60
-#: contentcuration/contentcuration/views/public.py:71
+#: contentcuration/contentcuration/utils/publish.py:60
+msgid "Kolibri Studio Channel Published"
+msgstr ""
+
+#: contentcuration/contentcuration/views/public.py:59
+#: contentcuration/contentcuration/views/public.py:70
 msgid "Api endpoint {} is not available"
 msgstr ""
 
-#: contentcuration/contentcuration/views/public.py:73
+#: contentcuration/contentcuration/views/public.py:72
 msgid "No channel matching {} found"
 msgstr ""
 
@@ -2769,3 +2769,6 @@ msgstr ""
 #: contentcuration/kolibri_content/models.py:185
 msgid "Unknown format"
 msgstr "Formato desconocido"
+
+#~ msgid "PUBLISH"
+#~ msgstr "PUBLICAR"
