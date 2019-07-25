@@ -10,8 +10,7 @@ _JSON_MESSAGES_FILE_CACHE = {}
 
 def locale_data_file(locale):
     path = getattr(settings, 'LOCALE_PATHS')[0]
-    locale_path = os.path.join(path, locale)
-    return os.path.join(locale_path, "LC_FRONTEND_MESSAGES", "contentcuration-messages.json")
+    return os.path.join(path, locale, "LC_FRONTEND_MESSAGES", "contentcuration-messages.json")
 
 
 def get_messages():
