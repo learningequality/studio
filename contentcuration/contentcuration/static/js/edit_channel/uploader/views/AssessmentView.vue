@@ -56,19 +56,6 @@
                 data-test="assessmentItemEdit"
                 @close="onItemClose"
               />
-
-              <!-- eslint-disable-next-line -->
-              <VLayout v-if="isItemOpen(itemIdx)" justify-end>
-                <VBtn
-                  flat
-                  color="primary"
-                  class="close-item-btn mr-0"
-                  data-test="closeBtn"
-                  @click="closeOpenItem"
-                >
-                  Close
-                </VBtn>
-              </VLayout>
             </VFlex>
 
             <VSpacer />
@@ -83,6 +70,19 @@
               class="toolbar"
               @click="onToolbarClick(itemIdx, $event)"
             />
+          </VLayout>
+
+          <!-- eslint-disable-next-line -->
+          <VLayout v-if="isItemOpen(itemIdx)" justify-end>
+            <VBtn
+              flat
+              color="primary"
+              class="close-item-btn mr-0"
+              data-test="closeBtn"
+              @click="closeOpenItem"
+            >
+              Close
+            </VBtn>
           </VLayout>
         </VCardText>
       </VCard>
