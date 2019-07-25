@@ -122,7 +122,7 @@ var MoveView = BaseViews.BaseListView.extend({
     var self = this;
 
     var sort_order = self.target_node.get('metadata').max_sort_order;
-    self.collection.move(self.target_node, null, sort_order, true);
+    self.collection.move(self.target_node, null, sort_order);
   },
   handle_target_selection: function(node, clipboard_selected) {
     // Set node to move items to

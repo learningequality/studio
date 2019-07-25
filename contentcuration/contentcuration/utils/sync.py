@@ -67,8 +67,7 @@ def sync_node(node, channel_id, sync_attributes=False, sync_tags=False, sync_fil
               sync_assessment_items=False, sync_sort_order=False):
     parents_to_check = []
     original_node = node.get_original_node()
-    # Only update if node is not original and the originating channel node still exists.
-    if original_node.node_id != node.node_id and original_node.get_channel():
+    if original_node.node_id != node.node_id:  # Only update if node is not original
         logging.info("----- Syncing: {} from {}".format(node.title,
                                                         original_node.get_channel().name))
         if sync_attributes:  # Sync node metadata
