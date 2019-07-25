@@ -61,6 +61,8 @@ uploadmessages: ensurecrowdinclient
 # in order for it to properly extract strings
 downloadmessages: ensurecrowdinclient makemessages
 	java -jar crowdin-cli.jar download -b `git rev-parse --abbrev-ref HEAD` || true
+	# Manual hack to add es language by copying es_ES to es
+	cp -r contentcuration/locale/es_ES contentcuration/locale/es
 
 compilemessages:
 	python contentcuration/manage.py compilemessages
