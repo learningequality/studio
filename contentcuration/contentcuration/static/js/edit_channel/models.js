@@ -640,7 +640,7 @@ var ContentNodeCollection = BaseCollection.extend({
       });
     });
   },
-  move: function(target_parent, max_order, min_order) {
+  move: function(target_parent, max_order, min_order, show_dialog) {
     const State = require('./state');
     var self = this;
     return new Promise(function(resolve, reject) {
@@ -659,7 +659,9 @@ var ContentNodeCollection = BaseCollection.extend({
         dataType: 'json',
         error: reject,
         success: function(data) {
-          data.noDialog = true;
+          if (!show_dialog) {
+            data.noDialog = true;
+          }
           const payload = {
             task: data,
             resolveCallback: resolve,
