@@ -55,12 +55,12 @@ makemessages:
 	python bin/fix_django_messages.py
 
 uploadmessages: ensurecrowdinclient
-	java -jar crowdin-cli.jar upload sources
+	java -jar crowdin-cli.jar upload sources -b `git rev-parse --abbrev-ref HEAD`
 
 # we need to depend on makemessages, since CrowdIn requires the en folder to be populated
 # in order for it to properly extract strings
 downloadmessages: ensurecrowdinclient makemessages
-	java -jar crowdin-cli.jar download || true
+	java -jar crowdin-cli.jar download -b `git rev-parse --abbrev-ref HEAD` || true
 
 compilemessages:
 	python contentcuration/manage.py compilemessages
