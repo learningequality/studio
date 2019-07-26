@@ -13,6 +13,21 @@ export const modes = {
   VIEW_ONLY: 'VIEW_ONLY',
 };
 
+export const AssessmentItemToolbarActions = {
+  MOVE_ITEM_UP: 'MOVE_ITEM_UP',
+  MOVE_ITEM_DOWN: 'MOVE_ITEM_DOWN',
+  EDIT_ITEM: 'EDIT_ITEM',
+  ADD_ITEM_ABOVE: 'ADD_ITEM_ABOVE',
+  ADD_ITEM_BELOW: 'ADD_ITEM_BELOW',
+  DELETE_ITEM: 'DELETE_ITEM',
+};
+
+export const AssessmentItemValidationErrors = {
+  BLANK_QUESTION: 'BLANK_QUESTION',
+  INVALID_NUMBER_OF_CORRECT_ANSWERS: 'INVALID_NUMBER_OF_CORRECT_ANSWERS',
+};
+
+// should correspond to backend types
 export const AssessmentItemTypes = {
   SINGLE_SELECTION: 'single_selection',
   MULTIPLE_SELECTION: 'multiple_selection',
@@ -25,18 +40,4 @@ export const AssessmentItemTypeLabels = {
   [AssessmentItemTypes.MULTIPLE_SELECTION]: 'Multiple selection',
   [AssessmentItemTypes.TRUE_FALSE]: 'True/False',
   [AssessmentItemTypes.INPUT_QUESTION]: 'Input question',
-};
-
-export const AssessmentItemToolbarActions = {
-  MOVE_ITEM_UP: 'move_item_up',
-  MOVE_ITEM_DOWN: 'move_item_down',
-  EDIT_ITEM: 'edit_item',
-  ADD_ITEM_ABOVE: 'add_item_above',
-  ADD_ITEM_BELOW: 'add_item_below',
-  DELETE_ITEM: 'delete_item',
-};
-
-export const AssessmentItemValidationErrors = {
-  BLANK_QUESTION: 'BLANK_QUESTION',
-  INVALID_NUMBER_OF_CORRECT_ANSWERS: 'INVALID_NUMBER_OF_CORRECT_ANSWERS',
 };
