@@ -22,7 +22,6 @@ RUN npm install -g yarn
 COPY ./package.json .
 COPY ./yarn.lock .
 RUN yarn install
-ENV PATH="/node_modules/.bin:$PATH"
 
 COPY Pipfile .
 COPY Pipfile.lock .

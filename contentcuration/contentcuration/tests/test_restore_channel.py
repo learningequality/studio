@@ -1,17 +1,82 @@
+# -*- coding: utf-8 -*-
 import datetime
+import json
+import sys
 import uuid
-from base import StudioTestCase
-from mock import patch
-from mock import MagicMock
+from cStringIO import StringIO
 
-from contentcuration.management.commands.restore_channel import create_channel
+from base import StudioTestCase
+from django.core.files.storage import default_storage
+from django.template.loader import render_to_string
+from le_utils.constants import exercises
+from mixer.backend.django import mixer
+from mock import MagicMock
+from mock import patch
+
+from contentcuration.models import AssessmentItem
+from contentcuration.models import generate_object_storage_name
+from contentcuration.utils.import_tools import create_channel
+from contentcuration.utils.import_tools import generate_assessment_item
+from contentcuration.utils.import_tools import process_content
+
+reload(sys)
+sys.setdefaultencoding('utf8')
 
 
 thumbnail_path = "/content/thumbnail.png"
+ASSESSMENT_DATA = {
+    'input-question-test': {
+        'template': 'perseus/input_question.json',
+        'type': exercises.INPUT_QUESTION,
+        'question': "Input question",
+        'question_images': [],
+        'hints': [{'hint': 'Hint 1'}],
+        'answers': [
+            {'answer': '1', 'correct': True, 'images': []},
+            {'answer': '2', 'correct': True, 'images': []}
+        ],
+        'order': 0
+    },
+    'multiple-selection-test': {
+        'template': 'perseus/multiple_selection.json',
+        'type': exercises.MULTIPLE_SELECTION,
+        'question': "Multiple selection question",
+        'question_images': [],
+        'hints': [],
+        'answers': [
+            {'answer': 'A', 'correct': True, 'images': []},
+            {'answer': 'B', 'correct': True, 'images': []},
+            {'answer': 'C', 'correct': False, 'images': []},
+        ],
+        'multiple_select': True,
+        'order': 1,
+        'randomize': False
+    },
+    'single-selection-test': {
+        'template': 'perseus/multiple_selection.json',
+        'type': exercises.SINGLE_SELECTION,
+        'question': "Single select question",
+        'question_images': [],
+        'hints': [{'hint': 'Hint test'}],
+        'answers': [
+            {'answer': 'Correct answer', 'correct': True, 'images': []},
+            {'answer': 'Incorrect answer', 'correct': False, 'images': []},
+        ],
+        'multiple_select': False,
+        'order': 2,
+        'randomize': True
+    },
+    'perseus-question-test': {
+        'template': 'perseus/perseus_question.json',
+        'type': exercises.PERSEUS_QUESTION,
+        'order': 3,
+        'raw_data': '{}'
+    }
+}
 
 
 class ChannelRestoreUtilityFunctionTestCase(StudioTestCase):
-    @patch("contentcuration.management.commands.restore_channel.write_to_thumbnail_file", return_value=thumbnail_path)
+    @patch("contentcuration.utils.import_tools.write_to_thumbnail_file", return_value=thumbnail_path)
     def setUp(self, thumb_mock):
         self.id = uuid.uuid4().hex
         self.name = "test name"
@@ -49,3 +114,65 @@ class ChannelRestoreUtilityFunctionTestCase(StudioTestCase):
 
     def test_restore_channel_version(self):
         self.assertEqual(self.channel.version, self.version)
+
+
+class PerseusRestoreTestCase(StudioTestCase):
+    def setUp(self):
+        super(PerseusRestoreTestCase, self).setUp()
+        image_path = generate_object_storage_name('test', 'test.png')
+        default_storage.save(image_path, StringIO('test'))
+
+    def test_process_content(self):
+        tests = [
+            {
+                "content": 'test 1',
+                "output": 'test 1',
+                'images': {}
+            },
+            {
+                "content": 'test 2 ![test](${☣ LOCALPATH}/images/test.png)',
+                "output": 'test 2 ![test](${☣ CONTENTSTORAGE}/test.png)',
+                'images': {}
+            },
+            {
+                "content": 'test 3 ![](${☣ LOCALPATH}/images/test.png)',
+                "output": 'test 3 ![](${☣ CONTENTSTORAGE}/test.png =50x50)',
+                'images': {
+                    '${☣ LOCALPATH}/images/test.png': {
+                        'width': 50,
+                        'height': 50
+                    }
+                }
+            },
+            {
+                "content": 'test 4 ![](${☣ LOCALPATH}/images/test.png) ![](${☣ LOCALPATH}/images/test.png)',
+                "output": 'test 4 ![](${☣ CONTENTSTORAGE}/test.png) ![](${☣ CONTENTSTORAGE}/test.png)',
+                'images': {}
+            },
+            {
+                "content": 'test 5  $\\sqrt{36}+\\frac{1}{2}$ ',
+                "output": 'test 5 $$\\sqrt{36}+\\frac{1}{2}$$',
+                'images': {}
+            },
+            {
+                "content": 'test 6 $\\frac{1}{2}$ $\\frac{3}{2}$',
+                "output": 'test 6 $$\\frac{1}{2}$$ $$\\frac{3}{2}$$',
+                'images': {}
+            }
+        ]
+        for test in tests:
+            result = process_content(test, mixer.blend(AssessmentItem))
+            self.assertEqual(result, test['output'])
+
+    def test_generate_assessment_item(self):
+        for assessment_id, data in ASSESSMENT_DATA.items():
+            assessment_data = json.loads(render_to_string(data['template'], data).encode('utf-8', "ignore"))
+            assessment_item = generate_assessment_item(assessment_id, data['order'], data['type'], assessment_data)
+            self.assertEqual(assessment_item.type, data['type'])
+            self.assertEqual(assessment_item.question, data.get('question', ''))
+            self.assertEqual(assessment_item.randomize, bool(data.get('randomize')))
+            self.assertEqual(assessment_item.raw_data, data.get('raw_data', ''))
+            for hint in json.loads(assessment_item.hints):
+                self.assertTrue(any(h for h in data['hints'] if h['hint'] == hint['hint']))
+            for answer in json.loads(assessment_item.answers):
+                self.assertTrue(any(a for a in data['answers'] if a['answer'] == str(answer['answer']) and a['correct'] == answer['correct']))

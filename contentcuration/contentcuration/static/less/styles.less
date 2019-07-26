@@ -16,8 +16,9 @@
   margin: 0;
 }
 body {
+  width: 100vw;
   overflow-x: hidden;
-  font-family: 'Noto Sans', Verdana, sans-serif;
+  font-family: @font-family;
   letter-spacing: 0.03em;
 }
 
@@ -66,7 +67,6 @@ body {
   .dropdown-toggle {
     padding: 15px;
     margin-right: 10px;
-    margin-left: 5px;
     margin-left: 15px;
     color: white;
     background-color: transparent;
@@ -81,6 +81,7 @@ body {
     }
   }
   .dropdown-menu {
+    z-index: 202;
     margin-top: 10px;
     background-color: @body-background;
     border: 0;
@@ -361,18 +362,18 @@ body {
     font-size: 14pt;
     vertical-align: sub;
   }
-  &.error {
+  &.error-banner {
     color: white;
     background-color: @darkred-color;
   }
-  &.warning {
+  &.warning-banner {
     color: black;
     background-color: @yellow-bg-color;
     i {
       color: #827b14;
     }
   }
-  &.info {
+  &.info-banner {
     color: black;
     background-color: @gray-200;
     i {
@@ -383,4 +384,18 @@ body {
     font-weight: bold;
     text-decoration: none;
   }
+}
+
+/* Undoing some problems caused by Vuetify styles bleeding over into non-Vue elements */
+select:not(.application--wrap) {
+  background-color: white;
+  border: 1px solid gray;
+  /* stylelint-disable csstree/validator */
+  appearance: menulist-button;
+  /* stylelint-enable */
+}
+
+.title:not(.application--wrap) {
+  font-family: 'Noto Sans' !important;
+  font-size: 16px !important;
 }

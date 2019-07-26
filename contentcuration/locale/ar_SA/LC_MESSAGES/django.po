@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: content-curation\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-07-23 22:02+0000\n"
-"PO-Revision-Date: 2019-07-24 22:40\n"
+"POT-Creation-Date: 2019-07-24 22:56+0000\n"
+"PO-Revision-Date: 2019-07-25 21:26\n"
 "Last-Translator: learningequality\n"
 "Language-Team: Arabic\n"
 "Language: ar_SA\n"
@@ -14,41 +14,41 @@ msgstr ""
 "X-Generator: crowdin.com\n"
 "X-Crowdin-Project: content-curation\n"
 "X-Crowdin-Language: ar\n"
-"X-Crowdin-File: django.po\n"
+"X-Crowdin-File: /develop/django.po\n"
 
-#: contentcuration/contentcuration/api.py:276
+#: contentcuration/contentcuration/api.py:140
 msgid "Date/Time Created"
 msgstr ""
 
-#: contentcuration/contentcuration/api.py:277
-#: contentcuration/contentcuration/api.py:278
+#: contentcuration/contentcuration/api.py:141
+#: contentcuration/contentcuration/api.py:142
 msgid "Not Available"
 msgstr ""
 
-#: contentcuration/contentcuration/api.py:281
+#: contentcuration/contentcuration/api.py:145
 msgid "Ricecooker Version"
 msgstr ""
 
-#: contentcuration/contentcuration/api.py:286
+#: contentcuration/contentcuration/api.py:150
 #: contentcuration/contentcuration/utils/csv_writer.py:157
 msgid "File Size"
 msgstr ""
 
-#: contentcuration/contentcuration/api.py:297
+#: contentcuration/contentcuration/api.py:161
 msgid "# of {}s"
 msgstr ""
 
-#: contentcuration/contentcuration/api.py:301
+#: contentcuration/contentcuration/api.py:165
 msgid "# of Questions"
 msgstr ""
 
-#: contentcuration/contentcuration/api.py:311
+#: contentcuration/contentcuration/api.py:175
 msgid "# of Subtitles"
 msgstr ""
 
 #: contentcuration/contentcuration/dev_settings.py:14
 msgid "Arabic"
-msgstr ""
+msgstr "العربيّة"
 
 #: contentcuration/contentcuration/forms.py:60
 #: contentcuration/contentcuration/templates/settings/profile.html:34
@@ -70,7 +70,7 @@ msgstr ""
 #: contentcuration/contentcuration/forms.py:510
 #: contentcuration/contentcuration/templates/registration/login.html:33
 msgid "Password"
-msgstr ""
+msgstr "كلمة المرور"
 
 #: contentcuration/contentcuration/forms.py:64
 msgid "Password (again)"
@@ -237,7 +237,7 @@ msgstr ""
 #: contentcuration/contentcuration/templates/settings/preferences.html:32
 #: contentcuration/contentcuration/utils/csv_writer.py:158
 msgid "Author"
-msgstr ""
+msgstr "المؤلف"
 
 #: contentcuration/contentcuration/forms.py:267
 #: contentcuration/contentcuration/templates/settings/preferences.html:42
@@ -275,19 +275,19 @@ msgstr ""
 #: contentcuration/contentcuration/templates/settings/preferences.html:77
 #: contentcuration/contentcuration/views/settings.py:240
 msgid "Videos"
-msgstr ""
+msgstr "مقاطع الفيديو"
 
 #: contentcuration/contentcuration/forms.py:279
 #: contentcuration/contentcuration/templates/settings/preferences.html:81
 #: contentcuration/contentcuration/views/settings.py:241
 msgid "Audio"
-msgstr ""
+msgstr "الملف الصوتي"
 
 #: contentcuration/contentcuration/forms.py:281
 #: contentcuration/contentcuration/templates/settings/preferences.html:85
 #: contentcuration/contentcuration/views/settings.py:243
 msgid "Documents"
-msgstr ""
+msgstr "ملفات نصيّة"
 
 #: contentcuration/contentcuration/forms.py:283
 #: contentcuration/contentcuration/templates/settings/preferences.html:89
@@ -304,7 +304,7 @@ msgstr ""
 #: contentcuration/contentcuration/utils/csv_writer.py:158
 #: contentcuration/contentcuration/utils/export_writer.py:577
 msgid "Language"
-msgstr ""
+msgstr "اللغة"
 
 #: contentcuration/contentcuration/forms.py:295
 msgid "Mastery at"
@@ -318,7 +318,7 @@ msgstr ""
 #: contentcuration/contentcuration/templates/settings/preferences.html:48
 #: contentcuration/contentcuration/utils/csv_writer.py:158
 msgid "License"
-msgstr ""
+msgstr "الترخيص"
 
 #: contentcuration/contentcuration/forms.py:329
 msgid "e.g. 1GB"
@@ -455,7 +455,7 @@ msgstr ""
 #: contentcuration/contentcuration/forms.py:499
 #: contentcuration/contentcuration/templates/registration/password_change_form.html:23
 msgid "New password"
-msgstr ""
+msgstr "كلمة مرور جديدة"
 
 #: contentcuration/contentcuration/forms.py:503
 #: contentcuration/contentcuration/templates/registration/password_change_form.html:24
@@ -486,7 +486,7 @@ msgstr ""
 
 #: contentcuration/contentcuration/models.py:120
 msgid "active"
-msgstr ""
+msgstr "مُفعّل"
 
 #: contentcuration/contentcuration/models.py:121
 msgid "Designates whether this user should be treated as active."
@@ -508,180 +508,184 @@ msgstr ""
 msgid "How many bytes a user can upload"
 msgstr ""
 
-#: contentcuration/contentcuration/models.py:164
+#: contentcuration/contentcuration/models.py:249
 msgid "Not enough space. Check your storage under Settings page."
 msgstr ""
 
-#: contentcuration/contentcuration/models.py:179
-#: contentcuration/contentcuration/models.py:186
+#: contentcuration/contentcuration/models.py:264
+#: contentcuration/contentcuration/models.py:271
 msgid "Out of storage! Request more space under Settings > Storage."
 msgstr ""
 
-#: contentcuration/contentcuration/models.py:261
+#: contentcuration/contentcuration/models.py:346
 msgid "User"
-msgstr ""
+msgstr "المستخدم"
 
-#: contentcuration/contentcuration/models.py:262
+#: contentcuration/contentcuration/models.py:347
 msgid "Users"
-msgstr ""
+msgstr "المستخدمون"
 
-#: contentcuration/contentcuration/models.py:480
-#: contentcuration/contentcuration/models.py:698
+#: contentcuration/contentcuration/models.py:565
+#: contentcuration/contentcuration/models.py:786
 msgid "editors"
 msgstr ""
 
-#: contentcuration/contentcuration/models.py:481
-#: contentcuration/contentcuration/models.py:699
+#: contentcuration/contentcuration/models.py:566
+#: contentcuration/contentcuration/models.py:787
 msgid "Users with edit rights"
 msgstr ""
 
-#: contentcuration/contentcuration/models.py:487
+#: contentcuration/contentcuration/models.py:572
 msgid "viewers"
 msgstr ""
 
-#: contentcuration/contentcuration/models.py:488
+#: contentcuration/contentcuration/models.py:573
 msgid "Users with view only rights"
 msgstr ""
 
-#: contentcuration/contentcuration/models.py:501
+#: contentcuration/contentcuration/models.py:586
 msgid "bookmarked by"
 msgstr ""
 
-#: contentcuration/contentcuration/models.py:507
+#: contentcuration/contentcuration/models.py:592
 msgid "Order to display public channels"
 msgstr ""
 
-#: contentcuration/contentcuration/models.py:512
+#: contentcuration/contentcuration/models.py:597
 msgid "secret tokens"
 msgstr ""
 
-#: contentcuration/contentcuration/models.py:529
+#: contentcuration/contentcuration/models.py:614
 msgid "languages"
 msgstr ""
 
-#: contentcuration/contentcuration/models.py:680
+#: contentcuration/contentcuration/models.py:768
 #: contentcuration/contentcuration/templates/settings/issues.html:86
 #: contentcuration/contentcuration/utils/csv_writer.py:157
 msgid "Channel"
-msgstr ""
+msgstr "القناة"
 
-#: contentcuration/contentcuration/models.py:681
+#: contentcuration/contentcuration/models.py:769
 msgid "Channels"
-msgstr ""
+msgstr "القنوات التعليمية"
 
-#: contentcuration/contentcuration/models.py:759
+#: contentcuration/contentcuration/models.py:847
 msgid "license exists"
 msgstr ""
 
-#: contentcuration/contentcuration/models.py:760
+#: contentcuration/contentcuration/models.py:848
 msgid "Tells whether or not a content item is licensed to share"
 msgstr ""
 
-#: contentcuration/contentcuration/models.py:814
+#: contentcuration/contentcuration/models.py:902
 msgid "sort order"
 msgstr ""
 
-#: contentcuration/contentcuration/models.py:815
+#: contentcuration/contentcuration/models.py:903
 msgid "Ascending, lowest number shown first"
 msgstr ""
 
-#: contentcuration/contentcuration/models.py:817
+#: contentcuration/contentcuration/models.py:905
 msgid "Organization of person who holds the essential rights"
 msgstr ""
 
-#: contentcuration/contentcuration/models.py:822
+#: contentcuration/contentcuration/models.py:912
 msgid "created"
-msgstr ""
+msgstr "تمّ الإنشاء"
 
-#: contentcuration/contentcuration/models.py:823
+#: contentcuration/contentcuration/models.py:913
 msgid "modified"
 msgstr ""
 
-#: contentcuration/contentcuration/models.py:829
+#: contentcuration/contentcuration/models.py:919
 msgid "Who created this content?"
 msgstr ""
 
-#: contentcuration/contentcuration/models.py:831
+#: contentcuration/contentcuration/models.py:921
 msgid "Who gathered this content together?"
 msgstr ""
 
-#: contentcuration/contentcuration/models.py:833
+#: contentcuration/contentcuration/models.py:923
 msgid "Who distributed this content?"
 msgstr ""
 
-#: contentcuration/contentcuration/models.py:1038
+#: contentcuration/contentcuration/models.py:1128
 msgid " (Original)"
 msgstr ""
 
-#: contentcuration/contentcuration/models.py:1150
+#: contentcuration/contentcuration/models.py:1240
 msgid "Topic"
-msgstr ""
+msgstr "الموضوع"
 
-#: contentcuration/contentcuration/models.py:1151
+#: contentcuration/contentcuration/models.py:1241
 #: contentcuration/contentcuration/views/settings.py:239
 msgid "Topics"
-msgstr ""
+msgstr "المواضيع"
 
-#: contentcuration/contentcuration/models.py:1414
+#: contentcuration/contentcuration/models.py:1504
 msgid "Invitation"
 msgstr ""
 
-#: contentcuration/contentcuration/models.py:1415
+#: contentcuration/contentcuration/models.py:1505
 msgid "Invitations"
 msgstr ""
 
-#: contentcuration/contentcuration/settings.py:255
+#: contentcuration/contentcuration/settings.py:267
 msgid "English"
-msgstr ""
+msgstr "الإنجليزية"
 
-#: contentcuration/contentcuration/settings.py:256
+#: contentcuration/contentcuration/settings.py:268
 msgid "Spanish"
 msgstr ""
 
-#: contentcuration/contentcuration/settings.py:258
+#: contentcuration/contentcuration/settings.py:270
 msgid "Spanish - Spain"
 msgstr ""
 
-#: contentcuration/contentcuration/settings.py:259
+#: contentcuration/contentcuration/settings.py:271
 msgid "Spanish - Mexico"
 msgstr ""
 
-#: contentcuration/contentcuration/templates/base.html:50
+#: contentcuration/contentcuration/tasks.py:226
+msgid "Unknown error starting task. Please contact support."
+msgstr ""
+
+#: contentcuration/contentcuration/templates/base.html:95
 #: contentcuration/contentcuration/templates/registration/getting_started.html:15
 msgid "Beta"
 msgstr ""
 
-#: contentcuration/contentcuration/templates/base.html:118
+#: contentcuration/contentcuration/templates/base.html:122
 msgid "(Beta)"
 msgstr ""
 
-#: contentcuration/contentcuration/templates/base.html:122
-#: contentcuration/contentcuration/templates/base.html:128
+#: contentcuration/contentcuration/templates/base.html:126
+#: contentcuration/contentcuration/templates/base.html:132
 #, python-format
 msgid "Hello, %(name)s"
 msgstr ""
 
-#: contentcuration/contentcuration/templates/base.html:129
+#: contentcuration/contentcuration/templates/base.html:133
 msgid "Administration"
 msgstr ""
 
-#: contentcuration/contentcuration/templates/base.html:130
+#: contentcuration/contentcuration/templates/base.html:134
 msgid "Settings"
-msgstr ""
+msgstr "الإعدادات"
 
-#: contentcuration/contentcuration/templates/base.html:131
+#: contentcuration/contentcuration/templates/base.html:135
 msgid "Help"
 msgstr ""
 
-#: contentcuration/contentcuration/templates/base.html:132
+#: contentcuration/contentcuration/templates/base.html:136
 msgid "Log Out"
 msgstr ""
 
-#: contentcuration/contentcuration/templates/base.html:146
+#: contentcuration/contentcuration/templates/base.html:150
 msgid "Contentworkshop.learningequality.org has been deprecated. Please go to <a href=\"https://studio.learningequality.org\">studio.learningequality.org</a> for the latest version of Studio"
 msgstr ""
 
-#: contentcuration/contentcuration/templates/base.html:150
+#: contentcuration/contentcuration/templates/base.html:154
 #, python-format
 msgid "Kolibri Studio is undergoing active development, and during usage you may encounter unexpected behavior or problems. <a href=\"%(issue_url)s\" target=\"_blank\">Please read here</a> on best practices, known issues, and error reporting recommendations. We appreciate your patience and assistance as we work to improve the Kolibri Studio Beta!"
 msgstr ""
@@ -727,10 +731,6 @@ msgstr ""
 msgid "Show Token"
 msgstr ""
 
-#: contentcuration/contentcuration/templates/channel_edit.html:69
-msgid "PUBLISH"
-msgstr ""
-
 #: contentcuration/contentcuration/templates/channel_not_found.html:12
 msgid "We're sorry, this channel was not found."
 msgstr ""
@@ -744,7 +744,7 @@ msgstr ""
 
 #: contentcuration/contentcuration/templates/exercise_list.html:56
 msgid "Previous"
-msgstr ""
+msgstr "السؤال السابق"
 
 #: contentcuration/contentcuration/templates/exercise_list.html:62
 msgid "current"
@@ -752,7 +752,7 @@ msgstr ""
 
 #: contentcuration/contentcuration/templates/exercise_list.html:66
 msgid "Next"
-msgstr ""
+msgstr "التالي"
 
 #: contentcuration/contentcuration/templates/export/channel_detail_pdf.html:198
 #: contentcuration/contentcuration/templates/export/channel_detail_pdf_condensed.html:168
@@ -768,7 +768,7 @@ msgstr ""
 #: contentcuration/contentcuration/templates/export/channel_detail_pdf.html:221
 #: contentcuration/contentcuration/templates/export/channel_detail_pdf_condensed.html:190
 msgid "Created"
-msgstr ""
+msgstr "تمّ الإنشاء"
 
 #: contentcuration/contentcuration/templates/export/channel_detail_pdf.html:222
 #: contentcuration/contentcuration/templates/export/channel_detail_pdf_condensed.html:191
@@ -1023,7 +1023,7 @@ msgstr ""
 
 #: contentcuration/contentcuration/templates/export/user_csv_email.txt:8
 msgid "Name:"
-msgstr ""
+msgstr "الاسم:"
 
 #: contentcuration/contentcuration/templates/export/user_csv_email.txt:9
 #: contentcuration/contentcuration/templates/registration/password_reset_form.html:23
@@ -1353,7 +1353,7 @@ msgstr ""
 
 #: contentcuration/contentcuration/templates/registration/logout.html:20
 msgid "Login"
-msgstr ""
+msgstr "تسجيل الدخول"
 
 #: contentcuration/contentcuration/templates/registration/password_change_done.html:12
 msgid "Password changed successfully."
@@ -1533,7 +1533,7 @@ msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/account.html:33
 msgid "Change Password"
-msgstr ""
+msgstr "غيّر كلمة المرور"
 
 #: contentcuration/contentcuration/templates/settings/account.html:38
 msgid "Current Password"
@@ -1747,7 +1747,7 @@ msgstr ""
 #: contentcuration/contentcuration/utils/csv_writer.py:157
 #: contentcuration/contentcuration/utils/export_writer.py:577
 msgid "Description"
-msgstr ""
+msgstr "التّوصيف"
 
 #: contentcuration/contentcuration/templates/settings/issues.html:99
 msgid "SUBMIT REPORT"
@@ -1781,7 +1781,7 @@ msgstr ""
 #: contentcuration/contentcuration/templates/settings/preferences.html:93
 #: contentcuration/contentcuration/views/settings.py:242
 msgid "Exercises"
-msgstr ""
+msgstr "التمارين"
 
 #: contentcuration/contentcuration/templates/settings/preferences.html:96
 msgid "Mastery At"
@@ -1819,7 +1819,7 @@ msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/profile.html:30
 msgid "Username"
-msgstr ""
+msgstr "اسم المستخدم"
 
 #: contentcuration/contentcuration/templates/settings/settings.html:10
 msgid "Home"
@@ -1831,7 +1831,7 @@ msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/settings.html:16
 msgid "Profile"
-msgstr ""
+msgstr "الملف الشخصي"
 
 #: contentcuration/contentcuration/templates/settings/settings.html:17
 msgid "Account"
@@ -2135,7 +2135,7 @@ msgstr ""
 
 #: contentcuration/contentcuration/utils/csv_writer.py:157
 msgid "Title"
-msgstr ""
+msgstr "العنوان"
 
 #: contentcuration/contentcuration/utils/csv_writer.py:157
 msgid "Kind"
@@ -2328,7 +2328,7 @@ msgstr ""
 
 #: contentcuration/contentcuration/utils/export_writer.py:577
 msgid "Name"
-msgstr ""
+msgstr "الاسم"
 
 #: contentcuration/contentcuration/utils/export_writer.py:577
 msgid "Token"
@@ -2336,11 +2336,11 @@ msgstr ""
 
 #: contentcuration/contentcuration/utils/export_writer.py:577
 msgid "Size"
-msgstr ""
+msgstr "الحجم"
 
 #: contentcuration/contentcuration/utils/export_writer.py:577
 msgid "Resources"
-msgstr ""
+msgstr "المصادر"
 
 #: contentcuration/contentcuration/utils/export_writer.py:578
 msgid "Coach Content?"
@@ -2381,12 +2381,12 @@ msgstr ""
 #: contentcuration/contentcuration/utils/export_writer.py:591
 #: contentcuration/contentcuration/utils/export_writer.py:592
 msgid "Yes"
-msgstr ""
+msgstr "نعم"
 
 #: contentcuration/contentcuration/utils/export_writer.py:591
 #: contentcuration/contentcuration/utils/export_writer.py:592
 msgid "No"
-msgstr ""
+msgstr "لا"
 
 #: contentcuration/contentcuration/utils/format.py:12
 msgid "B"
@@ -2432,21 +2432,21 @@ msgstr ""
 msgid "We are encountering issues with our data center. This means you may encounter networking problems while using Studio. We appreciate your patience while these issues are being resolved. To check the status of this service, please visit <a target='_blank' href='https://status.cloud.google.com/'>here</a>"
 msgstr ""
 
-#: contentcuration/contentcuration/utils/publish.py:59
+#: contentcuration/contentcuration/utils/nodes.py:250
+#: contentcuration/contentcuration/utils/nodes.py:251
+msgid " (Copy)"
+msgstr " (نسخ)"
+
+#: contentcuration/contentcuration/utils/publish.py:60
 msgid "Kolibri Studio Channel Published"
 msgstr ""
 
-#: contentcuration/contentcuration/views/nodes.py:328
-#: contentcuration/contentcuration/views/nodes.py:329
-msgid " (Copy)"
-msgstr ""
-
-#: contentcuration/contentcuration/views/public.py:60
-#: contentcuration/contentcuration/views/public.py:71
+#: contentcuration/contentcuration/views/public.py:59
+#: contentcuration/contentcuration/views/public.py:70
 msgid "Api endpoint {} is not available"
 msgstr ""
 
-#: contentcuration/contentcuration/views/public.py:73
+#: contentcuration/contentcuration/views/public.py:72
 msgid "No channel matching {} found"
 msgstr ""
 
@@ -2484,5 +2484,5 @@ msgstr ""
 
 #: contentcuration/kolibri_content/models.py:185
 msgid "Unknown format"
-msgstr ""
+msgstr "صيغة غير معروفة"
 

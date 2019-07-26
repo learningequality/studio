@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: content-curation\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-07-23 22:02+0000\n"
-"PO-Revision-Date: 2019-07-24 22:40\n"
+"POT-Creation-Date: 2019-07-24 22:56+0000\n"
+"PO-Revision-Date: 2019-07-25 21:26\n"
 "Last-Translator: learningequality\n"
 "Language-Team: Spanish\n"
 "Language: es_ES\n"
@@ -14,37 +14,37 @@ msgstr ""
 "X-Generator: crowdin.com\n"
 "X-Crowdin-Project: content-curation\n"
 "X-Crowdin-Language: es-ES\n"
-"X-Crowdin-File: django.po\n"
+"X-Crowdin-File: /develop/django.po\n"
 
-#: contentcuration/contentcuration/api.py:276
+#: contentcuration/contentcuration/api.py:140
 msgid "Date/Time Created"
 msgstr "Fecha/Hora creación"
 
-#: contentcuration/contentcuration/api.py:277
-#: contentcuration/contentcuration/api.py:278
+#: contentcuration/contentcuration/api.py:141
+#: contentcuration/contentcuration/api.py:142
 msgid "Not Available"
-msgstr "No disponible"
+msgstr "No está disponible"
 
-#: contentcuration/contentcuration/api.py:281
+#: contentcuration/contentcuration/api.py:145
 msgid "Ricecooker Version"
 msgstr "Versión de Ricecooker"
 
-#: contentcuration/contentcuration/api.py:286
+#: contentcuration/contentcuration/api.py:150
 #: contentcuration/contentcuration/utils/csv_writer.py:157
 msgid "File Size"
 msgstr "Tamaño del archivo"
 
-#: contentcuration/contentcuration/api.py:297
+#: contentcuration/contentcuration/api.py:161
 msgid "# of {}s"
 msgstr "# de {}s"
 
-#: contentcuration/contentcuration/api.py:301
+#: contentcuration/contentcuration/api.py:165
 msgid "# of Questions"
-msgstr "# de preguntas"
+msgstr "# de Preguntas"
 
-#: contentcuration/contentcuration/api.py:311
+#: contentcuration/contentcuration/api.py:175
 msgid "# of Subtitles"
-msgstr "# de subtítulos"
+msgstr "# de Subtítulos"
 
 #: contentcuration/contentcuration/dev_settings.py:14
 msgid "Arabic"
@@ -74,7 +74,7 @@ msgstr "Contraseña"
 
 #: contentcuration/contentcuration/forms.py:64
 msgid "Password (again)"
-msgstr "Contraseña (repetir)"
+msgstr "Contraseña (otra vez)"
 
 #: contentcuration/contentcuration/forms.py:69
 msgid "Email is invalid."
@@ -178,19 +178,19 @@ msgstr "Demo personal"
 
 #: contentcuration/contentcuration/forms.py:125
 msgid "How do you plan to use Kolibri Studio? (check all that apply)"
-msgstr "¿Cómo planeas utilizar Kolibri Studio? (marcar todo que procede)"
+msgstr "¿Cómo planea utilizar Kolibri Studio? (marcar todo que procede)"
 
 #: contentcuration/contentcuration/forms.py:128
 msgid "e.g. 500MB"
-msgstr "p. ej. 500MB"
+msgstr "por ejemplo 500MB"
 
 #: contentcuration/contentcuration/forms.py:128
 msgid "How much storage do you need?"
-msgstr "¿Cuánto almacenamiento necesitas?"
+msgstr "¿Cuánto almacenamiento necesita?"
 
 #: contentcuration/contentcuration/forms.py:130
 msgid "How did you hear about us?"
-msgstr "¿Cómo nos has conocido?"
+msgstr "¿Cómo nos ha conocido?"
 
 #: contentcuration/contentcuration/forms.py:131
 msgid "Name of Organization"
@@ -202,36 +202,36 @@ msgstr "Nombre de la conferencia"
 
 #: contentcuration/contentcuration/forms.py:133
 msgid "Please describe"
-msgstr "Describe, por favor"
+msgstr "Describa en más detalle, por favor"
 
 #: contentcuration/contentcuration/forms.py:142
 msgid "Where do you plan to use Kolibri? (select all that apply)"
-msgstr "¿Dónde planeas utilizar Kolibri Studio? (marcar todo que procede)"
+msgstr "¿Dónde planea utilizar Kolibri Studio? (marcar todo que procede)"
 
 #: contentcuration/contentcuration/forms.py:161
 msgid "Describe your 'other' use(s) for Kolibri Studio"
-msgstr "Describe 'otros' usos para Kolibri Studio"
+msgstr "Describa 'otros' usos para Kolibri Studio"
 
 #: contentcuration/contentcuration/forms.py:166
 msgid "Please indicate how much storage you intend to use"
-msgstr "Por favor, indica cuánto almacenamiento vayas a utilizar"
+msgstr "Por favor, indique cuánto almacenamiento vaya a utilizar"
 
 #: contentcuration/contentcuration/forms.py:172
 msgid "Please indicate how you intend to use Kolibri Studio"
-msgstr "Por favor, indica cómo deseas utilizar Kolibri Studio"
+msgstr "Por favor, indique cómo desea utilizar Kolibri Studio"
 
 #: contentcuration/contentcuration/forms.py:173
 msgid "Please select where you plan to use Kolibri"
-msgstr "Por favor, selecciona donde deseas utilizar Kolibri"
+msgstr "Por favor, seleccione donde desea utilizar Kolibri"
 
 #: contentcuration/contentcuration/forms.py:176
 #: contentcuration/contentcuration/forms.py:184
 msgid "Please indicate how you heard about us"
-msgstr "Por favor, indica cómo nos has conocido"
+msgstr "Por favor, indique cómo nos ha conocido"
 
 #: contentcuration/contentcuration/forms.py:187
 msgid "Please accept our Privacy Policy"
-msgstr "Por favor, acepta nuestra política de privacidad"
+msgstr "Por favor, acepte nuestra política de privacidad"
 
 #: contentcuration/contentcuration/forms.py:266
 #: contentcuration/contentcuration/templates/settings/preferences.html:32
@@ -394,11 +394,11 @@ msgstr "Desconocido"
 
 #: contentcuration/contentcuration/forms.py:392
 msgid "Please indicate how much storage you need"
-msgstr "Por favor, indica cuánto almacenamiento vayas a necesitar"
+msgstr "Por favor, indique cuánto almacenamiento vaya a necesitar"
 
 #: contentcuration/contentcuration/forms.py:393
 msgid "Please indicate what kind of content you are uploading"
-msgstr "Por favor, indica qué tipo de contenido vas a subir"
+msgstr "Por favor, indique qué tipo de contenido va a subir"
 
 #: contentcuration/contentcuration/forms.py:394
 msgid "Please indicate the author, curator, and/or aggregator of your content"
@@ -410,11 +410,11 @@ msgstr "Por favor, indicar aproximadamente cuántos recursos tiene previsto subi
 
 #: contentcuration/contentcuration/forms.py:398
 msgid "Please indicate the licensing for your content"
-msgstr "Por favor, indica la licencia de tu contenido"
+msgstr "Por favor, indique la licencia para su contenido"
 
 #: contentcuration/contentcuration/forms.py:399
 msgid "Please indicate your target audience"
-msgstr "Por favor, indica tu público objetivo"
+msgstr "Por favor, indique su público objetivo"
 
 #: contentcuration/contentcuration/forms.py:400
 msgid "Please indicate how many times this content will be imported into Kolibri per month"
@@ -422,11 +422,11 @@ msgstr "Indicar cuántas veces este contenido será importado en Kolibri cada me
 
 #: contentcuration/contentcuration/forms.py:402
 msgid "Please indicate for whom you are uploading your content"
-msgstr "Por favor, indica para quién estás subiendo el contenido"
+msgstr "Por favor, indique para quién está subiendo el contenido"
 
 #: contentcuration/contentcuration/forms.py:404
 msgid "Please indicate your organization or institution"
-msgstr "Por favor, indica tu organización o institución"
+msgstr "Por favor, indique su organización o institución"
 
 #: contentcuration/contentcuration/forms.py:405
 msgid "Please indicate your organization type"
@@ -472,19 +472,19 @@ msgstr "ej. Chrome, Firefox, Safari"
 
 #: contentcuration/contentcuration/forms.py:516
 msgid "Name of the channel you were working on"
-msgstr "Nombre del canal en el que estuviste trabajando"
+msgstr "Nombre del canal en el que estuvo trabajando"
 
 #: contentcuration/contentcuration/forms.py:518
 msgid "A description of the steps you took, and what error message(s) you received, if any. \n\n"
 "For example: \n"
 "I ran into an issue while copying content from the clipboard into the Algebra topic of my Math Grade 10 channel. I selected the \"Algebra basics\" topic from from the Khan Academy channel in the Math topic, added it into my clipboard, and then opened my channel, went to the Algebra topic, then opened the clipboard and dragged the \"Algebra basics\" topic into it. It appeared to be copying for a while, but then I received an error message that said \"500 HTTP Internal Server Error\"."
-msgstr "Una descripción de los pasos que seguiste, y qué mensaje(s) de error recibiste, en caso de que haya alguno.\n\n"
+msgstr "Una descripción de los pasos que siguió, y qué mensaje(s) de error recibió, en caso de que haya habido alguno.\n\n"
 "Por ejemplo:\n"
 "Tuve un problema al copiar contenido del portapapeles en el tema de Álgebra de mi canal de Matemáticas de octavo. Elegí el tema \"Álgebra básica\" del canal de Khan Academy, lo añadí a mi portapapeles, y después abrí mi canal, fue al tema de Álgebra, abrí el portapapeles y arrastré el tema \"Álgebra básica\" encima. Parecía que se estaba copiando pero después recibí un mensaje de error que decía \"500 HTTP Internal Server Error\"."
 
 #: contentcuration/contentcuration/middleware/db_readonly.py:24
 msgid "The site is currently in read-only mode. Please try again later."
-msgstr "El sitio está actualmente en modo de solo lectura. Por favor, inténtalo más tarde."
+msgstr "El sitio está actualmente en modo de solo lectura. Por favor, inténtelo más tarde."
 
 #: contentcuration/contentcuration/models.py:120
 msgid "active"
@@ -500,7 +500,7 @@ msgstr "estatus de personal"
 
 #: contentcuration/contentcuration/models.py:123
 msgid "Designates whether the user can log into this admin site."
-msgstr "Señala si el usuario puede iniciar sesión en páginas de administración."
+msgstr "Señala si el usuario puede iniciar sesión en el sitio de administración."
 
 #: contentcuration/contentcuration/models.py:124
 msgid "date joined"
@@ -510,180 +510,184 @@ msgstr "fecha de registro"
 msgid "How many bytes a user can upload"
 msgstr "Cuantos bytes puede subir un usuario"
 
-#: contentcuration/contentcuration/models.py:164
+#: contentcuration/contentcuration/models.py:249
 msgid "Not enough space. Check your storage under Settings page."
-msgstr "No hay suficiente espacio. Comprueba el almacenamiento disponible en la página de Configuración."
+msgstr "No hay suficiente espacio. Compruebe el almacenamiento disponible en la página de Configuración."
 
-#: contentcuration/contentcuration/models.py:179
-#: contentcuration/contentcuration/models.py:186
+#: contentcuration/contentcuration/models.py:264
+#: contentcuration/contentcuration/models.py:271
 msgid "Out of storage! Request more space under Settings > Storage."
-msgstr "El espacio de almacenamiento es insuficiente. Solicita más espacio en Configuración > Almacenamiento."
+msgstr "El espacio de almacenamiento es insuficiente. Solicite más espacio en Configuración > Almacenamiento."
 
-#: contentcuration/contentcuration/models.py:261
+#: contentcuration/contentcuration/models.py:346
 msgid "User"
 msgstr "Usuario"
 
-#: contentcuration/contentcuration/models.py:262
+#: contentcuration/contentcuration/models.py:347
 msgid "Users"
 msgstr "Usuarios"
 
-#: contentcuration/contentcuration/models.py:480
-#: contentcuration/contentcuration/models.py:698
+#: contentcuration/contentcuration/models.py:565
+#: contentcuration/contentcuration/models.py:786
 msgid "editors"
 msgstr "editores"
 
-#: contentcuration/contentcuration/models.py:481
-#: contentcuration/contentcuration/models.py:699
+#: contentcuration/contentcuration/models.py:566
+#: contentcuration/contentcuration/models.py:787
 msgid "Users with edit rights"
 msgstr "Usuarios que tienen permisos de edición"
 
-#: contentcuration/contentcuration/models.py:487
+#: contentcuration/contentcuration/models.py:572
 msgid "viewers"
-msgstr "sólo modo de lectura"
+msgstr "sólo vista"
 
-#: contentcuration/contentcuration/models.py:488
+#: contentcuration/contentcuration/models.py:573
 msgid "Users with view only rights"
 msgstr "Usuarios que tienen solo permisos para ver el canal"
 
-#: contentcuration/contentcuration/models.py:501
+#: contentcuration/contentcuration/models.py:586
 msgid "bookmarked by"
 msgstr "marcado como favorito por"
 
-#: contentcuration/contentcuration/models.py:507
+#: contentcuration/contentcuration/models.py:592
 msgid "Order to display public channels"
 msgstr "Orden de visualización de canales públicos"
 
-#: contentcuration/contentcuration/models.py:512
+#: contentcuration/contentcuration/models.py:597
 msgid "secret tokens"
 msgstr "tokens secretos"
 
-#: contentcuration/contentcuration/models.py:529
+#: contentcuration/contentcuration/models.py:614
 msgid "languages"
 msgstr "idiomas"
 
-#: contentcuration/contentcuration/models.py:680
+#: contentcuration/contentcuration/models.py:768
 #: contentcuration/contentcuration/templates/settings/issues.html:86
 #: contentcuration/contentcuration/utils/csv_writer.py:157
 msgid "Channel"
 msgstr "Canal"
 
-#: contentcuration/contentcuration/models.py:681
+#: contentcuration/contentcuration/models.py:769
 msgid "Channels"
 msgstr "Canales"
 
-#: contentcuration/contentcuration/models.py:759
+#: contentcuration/contentcuration/models.py:847
 msgid "license exists"
 msgstr "licencia existe"
 
-#: contentcuration/contentcuration/models.py:760
+#: contentcuration/contentcuration/models.py:848
 msgid "Tells whether or not a content item is licensed to share"
 msgstr "Señala si un elemento de contenido tiene licencia que permite compartir"
 
-#: contentcuration/contentcuration/models.py:814
+#: contentcuration/contentcuration/models.py:902
 msgid "sort order"
 msgstr "ordenar por"
 
-#: contentcuration/contentcuration/models.py:815
+#: contentcuration/contentcuration/models.py:903
 msgid "Ascending, lowest number shown first"
 msgstr "Ascendente, el número menor aparece primero"
 
-#: contentcuration/contentcuration/models.py:817
+#: contentcuration/contentcuration/models.py:905
 msgid "Organization of person who holds the essential rights"
 msgstr "Organización de la persona que tiene los derechos esenciales"
 
-#: contentcuration/contentcuration/models.py:822
+#: contentcuration/contentcuration/models.py:912
 msgid "created"
 msgstr "creado"
 
-#: contentcuration/contentcuration/models.py:823
+#: contentcuration/contentcuration/models.py:913
 msgid "modified"
 msgstr "modificado"
 
-#: contentcuration/contentcuration/models.py:829
+#: contentcuration/contentcuration/models.py:919
 msgid "Who created this content?"
 msgstr "¿Quién creó este contenido?"
 
-#: contentcuration/contentcuration/models.py:831
+#: contentcuration/contentcuration/models.py:921
 msgid "Who gathered this content together?"
 msgstr "¿Quién reunió este contenido?"
 
-#: contentcuration/contentcuration/models.py:833
+#: contentcuration/contentcuration/models.py:923
 msgid "Who distributed this content?"
 msgstr "¿Quién distribuyó este contenido?"
 
-#: contentcuration/contentcuration/models.py:1038
+#: contentcuration/contentcuration/models.py:1128
 msgid " (Original)"
 msgstr " (Original)"
 
-#: contentcuration/contentcuration/models.py:1150
+#: contentcuration/contentcuration/models.py:1240
 msgid "Topic"
 msgstr "Tema"
 
-#: contentcuration/contentcuration/models.py:1151
+#: contentcuration/contentcuration/models.py:1241
 #: contentcuration/contentcuration/views/settings.py:239
 msgid "Topics"
 msgstr "Temas"
 
-#: contentcuration/contentcuration/models.py:1414
+#: contentcuration/contentcuration/models.py:1504
 msgid "Invitation"
 msgstr "Invitación"
 
-#: contentcuration/contentcuration/models.py:1415
+#: contentcuration/contentcuration/models.py:1505
 msgid "Invitations"
 msgstr "Invitaciones"
 
-#: contentcuration/contentcuration/settings.py:255
+#: contentcuration/contentcuration/settings.py:267
 msgid "English"
 msgstr "Inglés"
 
-#: contentcuration/contentcuration/settings.py:256
+#: contentcuration/contentcuration/settings.py:268
 msgid "Spanish"
 msgstr "Español"
 
-#: contentcuration/contentcuration/settings.py:258
+#: contentcuration/contentcuration/settings.py:270
 msgid "Spanish - Spain"
 msgstr "Español - España"
 
-#: contentcuration/contentcuration/settings.py:259
+#: contentcuration/contentcuration/settings.py:271
 msgid "Spanish - Mexico"
 msgstr "Español - México"
 
-#: contentcuration/contentcuration/templates/base.html:50
+#: contentcuration/contentcuration/tasks.py:226
+msgid "Unknown error starting task. Please contact support."
+msgstr "Error desconocido. Póngase en contacto con el servicio técnico."
+
+#: contentcuration/contentcuration/templates/base.html:95
 #: contentcuration/contentcuration/templates/registration/getting_started.html:15
 msgid "Beta"
 msgstr "Beta"
 
-#: contentcuration/contentcuration/templates/base.html:118
+#: contentcuration/contentcuration/templates/base.html:122
 msgid "(Beta)"
 msgstr "(Beta)"
 
-#: contentcuration/contentcuration/templates/base.html:122
-#: contentcuration/contentcuration/templates/base.html:128
+#: contentcuration/contentcuration/templates/base.html:126
+#: contentcuration/contentcuration/templates/base.html:132
 #, python-format
 msgid "Hello, %(name)s"
 msgstr "Hola %(name)s"
 
-#: contentcuration/contentcuration/templates/base.html:129
+#: contentcuration/contentcuration/templates/base.html:133
 msgid "Administration"
 msgstr "Administración"
 
-#: contentcuration/contentcuration/templates/base.html:130
+#: contentcuration/contentcuration/templates/base.html:134
 msgid "Settings"
 msgstr "Configuración"
 
-#: contentcuration/contentcuration/templates/base.html:131
+#: contentcuration/contentcuration/templates/base.html:135
 msgid "Help"
 msgstr "Ayuda"
 
-#: contentcuration/contentcuration/templates/base.html:132
+#: contentcuration/contentcuration/templates/base.html:136
 msgid "Log Out"
 msgstr "Cerrar la sesión"
 
-#: contentcuration/contentcuration/templates/base.html:146
+#: contentcuration/contentcuration/templates/base.html:150
 msgid "Contentworkshop.learningequality.org has been deprecated. Please go to <a href=\"https://studio.learningequality.org\">studio.learningequality.org</a> for the latest version of Studio"
 msgstr "contentworkshop.learningequality.org ya no es válido. Por favor, vaya a <a href=\"https://studio.learningequality.org\">studio.learningequality.org</a> para acceder a la última versión de Studio"
 
-#: contentcuration/contentcuration/templates/base.html:150
+#: contentcuration/contentcuration/templates/base.html:154
 #, python-format
 msgid "Kolibri Studio is undergoing active development, and during usage you may encounter unexpected behavior or problems. <a href=\"%(issue_url)s\" target=\"_blank\">Please read here</a> on best practices, known issues, and error reporting recommendations. We appreciate your patience and assistance as we work to improve the Kolibri Studio Beta!"
 msgstr "Kolibri Studio está en desarrollo activo, y al usarlo puede encontrar un comportamiento o problemas inesperados. <a href=\"%(issue_url)s\" target=\"_blank\">Por favor lea aquí</a> sobre las mejores prácticas, problemas conocidos y recomendaciones de informes de errores. ¡Apreciamos su paciencia y asistencia mientras trabajamos para mejorar Kolibri Studio Beta!"
@@ -728,10 +732,6 @@ msgstr "DESPLEGAR CANAL"
 #: contentcuration/contentcuration/templates/channel_edit.html:68
 msgid "Show Token"
 msgstr "Mostrar token"
-
-#: contentcuration/contentcuration/templates/channel_edit.html:69
-msgid "PUBLISH"
-msgstr "PUBLICAR"
 
 #: contentcuration/contentcuration/templates/channel_not_found.html:12
 msgid "We're sorry, this channel was not found."
@@ -788,7 +788,7 @@ msgstr "USANDO ESTE CANAL"
 
 #: contentcuration/contentcuration/templates/export/channel_detail_pdf.html:237
 msgid "Copy one of the following into Kolibri to import this channel:"
-msgstr "Copia uno de los siguientes en Kolibri para importar este canal:"
+msgstr "Copie uno de los siguientes en Kolibri para importar este canal:"
 
 #: contentcuration/contentcuration/templates/export/channel_detail_pdf.html:242
 msgid "Tokens (Recommended):"
@@ -1023,7 +1023,7 @@ msgstr "CSV para %(channel_name)s"
 
 #: contentcuration/contentcuration/templates/export/user_csv_email.txt:6
 msgid "Here is the information for your Kolibri Studio account"
-msgstr "Aquí tienes la información de tu cuenta de usuario en Kolibri Studio"
+msgstr "Aquí tiene la información de su cuenta de usuario en Kolibri Studio"
 
 #: contentcuration/contentcuration/templates/export/user_csv_email.txt:8
 msgid "Name:"
@@ -1052,11 +1052,11 @@ msgstr "Cómo has conocido Kolibri Studio:"
 
 #: contentcuration/contentcuration/templates/export/user_csv_email.txt:15
 msgid "Here are the channels you have edit access to: "
-msgstr "Aquí están los canales a los que tienes acceso para editar: "
+msgstr "Aquí están los canales a los que tiene acceso para editar: "
 
 #: contentcuration/contentcuration/templates/export/user_csv_email.txt:19
 msgid "Here are the channels you have view access to: "
-msgstr "Aquí están los canales a los que tienes acceso para ver: "
+msgstr "Aquí están los canales a los que tiens acceso para ver: "
 
 #: contentcuration/contentcuration/templates/export/user_csv_email.txt:23
 msgid "Information regarding items you have uploaded has been attached in a csv."
@@ -1065,7 +1065,7 @@ msgstr "Se adjunta información sobre los recursos subidos en formato CSV."
 #: contentcuration/contentcuration/templates/export/user_csv_email.txt:26
 #, python-format
 msgid "If you have any questions or concerns regarding your information, please email us at %(legal_email)s."
-msgstr "Si tienes alguna pregunta o duda con respecto a tus datos personales, por favor envíanos un correo electrónico a %(legal_email)s."
+msgstr "Si tienes alguna pregunta o duda con respecto a sus datos personales, por favor envíenos un correo electrónico a %(legal_email)s."
 
 #: contentcuration/contentcuration/templates/export/user_csv_email_subject.txt:1
 msgid "Your Kolibri Studio Account Information"
@@ -1081,7 +1081,7 @@ msgstr "Intenta ejecutar el Ricecooker otra vez."
 
 #: contentcuration/contentcuration/templates/permissions/permissions_email.html:94
 msgid "has invited you to edit a channel at"
-msgstr "te invita a editar un canal en"
+msgstr "le invita a editar un canal en"
 
 #: contentcuration/contentcuration/templates/permissions/permissions_email.html:100
 #, python-format
@@ -1090,7 +1090,7 @@ msgstr "Invitación al canal de %(share_mode)s"
 
 #: contentcuration/contentcuration/templates/permissions/permissions_email.html:104
 msgid "Click one of the following links to either accept or decline your invitation:"
-msgstr "Haz clic en uno de los siguientes enlaces para aceptar o rechazar su invitación:"
+msgstr "Haga clic en uno de los siguientes enlaces para aceptar o rechazar la invitación:"
 
 #: contentcuration/contentcuration/templates/permissions/permissions_email.html:107
 #: contentcuration/contentcuration/templates/permissions/permissions_email.html:109
@@ -1104,11 +1104,11 @@ msgstr "DECLINAR"
 #: contentcuration/contentcuration/templates/permissions/permissions_email.txt:6
 #, python-format
 msgid "has invited you to %(share_mode)s a channel at "
-msgstr "ha invitado a %(share_mode)s un canal en "
+msgstr "le ha invitado a %(share_mode)s un canal en "
 
 #: contentcuration/contentcuration/templates/permissions/permissions_email.txt:9
 msgid "Please follow this link to create an account (you must be logged in to accept or decline invitations):"
-msgstr "Por favor, seguir este enlace para crear una cuenta (tienes que iniciar sesión para aceptar o rechazar invitaciones):"
+msgstr "Por favor, seguir este enlace para crear una cuenta (tiene que iniciar sesión para aceptar o rechazar invitaciones):"
 
 #: contentcuration/contentcuration/templates/permissions/permissions_email.txt:12
 msgid "Please log in to Kolibri Studio to accept or decline your invitation:"
@@ -1117,11 +1117,11 @@ msgstr "Por favor, iniciar sesión en Kolibri Studio para aceptar o rechazar la 
 #: contentcuration/contentcuration/templates/permissions/permissions_email_subject.txt:1
 #, python-format
 msgid "You've been invited to %(share_mode)s"
-msgstr "Te han invitado a %(share_mode)s"
+msgstr "Le han invitado a %(share_mode)s"
 
 #: contentcuration/contentcuration/templates/policies/policy_accept.html:8
 msgid "We have updated our policies. Please accept the following terms to continue"
-msgstr "Hemos actualizado nuestras políticas de privacidad. Por favor, acepta los siguientes términos para continuar"
+msgstr "Hemos actualizado nuestras políticas de privacidad. Por favor, acepte los siguientes términos para continuar"
 
 #: contentcuration/contentcuration/templates/policies/policy_accept.html:18
 msgid "I have read and agree to the above terms"
@@ -1247,7 +1247,7 @@ msgstr "Actualizado: %(date)s"
 
 #: contentcuration/contentcuration/templates/registration/activate.html:13
 msgid "Failed to activate account. Please try again."
-msgstr "No se pudo activar la cuenta. Por favor, inténtalo de nuevo."
+msgstr "No se pudo activar la cuenta. Por favor, inténtelo de nuevo."
 
 #: contentcuration/contentcuration/templates/registration/activation_complete.html:12
 msgid "Your account is now activated."
@@ -1263,7 +1263,7 @@ msgstr "¡Bienvenidos a Kolibri! Aquí está el vínculo para activar la cuenta:
 
 #: contentcuration/contentcuration/templates/registration/activation_email.html:101
 msgid "Click here to activate your account."
-msgstr "Haz clic aquí para activar la cuenta."
+msgstr "Haga clic aquí para activar la cuenta."
 
 #: contentcuration/contentcuration/templates/registration/activation_email.html:102
 msgid "This link is valid for"
@@ -1296,11 +1296,11 @@ msgstr "Enlace de activación de cuenta para"
 #: contentcuration/contentcuration/templates/registration/activation_needed_email.txt:6
 #, python-format
 msgid "You requested a password reset on %(site_name)s without activating your account first."
-msgstr "Solicitaste restablecer contraseña en %(site_name)s sin primero activar tu cuenta."
+msgstr "Solicitó restablecer contraseña en %(site_name)s sin primero activar la cuenta."
 
 #: contentcuration/contentcuration/templates/registration/activation_needed_email.txt:8
 msgid "Here is a link to activate your account:"
-msgstr "Aquí está el enlace para activar tu cuenta:"
+msgstr "Aquí está el enlace para activar su cuenta:"
 
 #: contentcuration/contentcuration/templates/registration/channel_published_email.txt:6
 #, python-format
@@ -1319,7 +1319,7 @@ msgstr "Nombre: %(channel_name)s"
 
 #: contentcuration/contentcuration/templates/registration/channel_published_email.txt:18
 msgid "You are receiving this email because you are subscribed to this channel."
-msgstr "Estás recibiendo este mensaje porque tienes suscripción a este canal."
+msgstr "Está recibiendo este mensaje porque tiene la suscripción activa para este canal."
 
 #: contentcuration/contentcuration/templates/registration/getting_started.html:16
 msgid "Content Curation Tools for Kolibri"
@@ -1331,7 +1331,7 @@ msgstr "El correo electrónico o la contraseña son incorrectos"
 
 #: contentcuration/contentcuration/templates/registration/login.html:18
 msgid "Your account doesn't have access to this page. To proceed, please login with an account that has access."
-msgstr "Tu cuenta no tiene acceso a esta página. Para continuar, iniciar sesión con una cuenta que tenga acceso."
+msgstr "Su cuenta no tiene acceso a esta página. Para continuar, iniciar sesión con una cuenta que tenga acceso."
 
 #: contentcuration/contentcuration/templates/registration/login.html:20
 msgid "Please login to see this page."
@@ -1344,7 +1344,7 @@ msgstr "Iniciar sesión"
 
 #: contentcuration/contentcuration/templates/registration/login.html:40
 msgid "Lost password?"
-msgstr "¿Has olvidado tu contraseña?"
+msgstr "¿Ha olvidado su contraseña?"
 
 #: contentcuration/contentcuration/templates/registration/login.html:52
 #: contentcuration/contentcuration/templates/registration/registration_information_form.html:19
@@ -1388,7 +1388,7 @@ msgstr "Contraseña restablecida con éxito"
 
 #: contentcuration/contentcuration/templates/registration/password_reset_complete.html:13
 msgid "Your password has been set. You may go ahead and log in now."
-msgstr "Su contraseña se ha establecido. Puedes iniciar sesión."
+msgstr "Su contraseña se ha establecido. Puede iniciar sesión."
 
 #: contentcuration/contentcuration/templates/registration/password_reset_complete.html:14
 msgid "Log in"
@@ -1417,15 +1417,15 @@ msgstr "Correo electrónico para restablecimiento de contraseña enviado."
 
 #: contentcuration/contentcuration/templates/registration/password_reset_done.html:13
 msgid "We've emailed you instructions for setting your password, if an account exists with the email you entered. You should receive them shortly."
-msgstr "Hemos enviado instrucciones para configurar la contraseña. Si existe una cuenta con el correo electrónico indicado, deberías recibirlo pronto."
+msgstr "Hemos enviado instrucciones para configurar la contraseña. Si existe una cuenta con el correo electrónico indicado, debería recibirlo pronto."
 
 #: contentcuration/contentcuration/templates/registration/password_reset_done.html:14
 msgid "If you don't receive an email, please make sure you've entered the address you registered with, and check your spam folder."
-msgstr "Si no recibes un correo electrónico, asegúrate de haber introducido el correo electrónico correcto, y revisa la carpeta de correo basura."
+msgstr "Si no recibe un correo electrónico, asegúrese de haber introducido el correo electrónico correcto, y revise la carpeta de correo basura."
 
 #: contentcuration/contentcuration/templates/registration/password_reset_email.html:92
 msgid "You are receiving this e-mail because you requested a password reset for your user account at"
-msgstr "Estás recibiendo este correo electrónico porque has pedido restablecer la contraseña para tu cuenta en"
+msgstr "Está recibiendo este correo electrónico porque ha pedido restablecer la contraseña para su cuenta en"
 
 #: contentcuration/contentcuration/templates/registration/password_reset_email.html:98
 msgid "Reset my Password"
@@ -1433,7 +1433,7 @@ msgstr "Restablecer mi contraseña"
 
 #: contentcuration/contentcuration/templates/registration/password_reset_email.html:101
 msgid "Please click the button below and choose a new password."
-msgstr "Por favor, haz clic en el botón de abajo y escribe una contraseña nueva."
+msgstr "Por favor, haga clic en el botón de abajo y escriba una contraseña nueva."
 
 #: contentcuration/contentcuration/templates/registration/password_reset_email.html:102
 msgid "Your username is"
@@ -1446,19 +1446,19 @@ msgstr "RESTABLECER"
 #: contentcuration/contentcuration/templates/registration/password_reset_email.txt:5
 #, python-format
 msgid "You're receiving this e-mail because you requested a password reset for your user account at %(site_name)s."
-msgstr "Recibes este mensaje porque solicitaste un cambio de contraseña para tu cuenta en %(site_name)s."
+msgstr "Recibe este mensaje porque solicitó un cambio de contraseña para su cuenta en %(site_name)s."
 
 #: contentcuration/contentcuration/templates/registration/password_reset_email.txt:7
 msgid "Please go to the following page and choose a new password:"
-msgstr "Por favor ve a la siguiente página y elige una nueva contraseña:"
+msgstr "Por favor vaya a la siguiente página y elija una nueva contraseña:"
 
 #: contentcuration/contentcuration/templates/registration/password_reset_email.txt:12
 msgid "Your username, in case you've forgotten:"
-msgstr "Tu nombre de usuario, en caso no recuerdes:"
+msgstr "Su nombre de usuario, en caso no recuerde:"
 
 #: contentcuration/contentcuration/templates/registration/password_reset_form.html:16
 msgid "Enter your email, and we'll send instructions for setting a new password."
-msgstr "Introduce tu correo y te enviaremos las instrucciones para configurar una nueva contraseña."
+msgstr "Introduzca su correo y le enviaremos las instrucciones para configurar una nueva contraseña."
 
 #: contentcuration/contentcuration/templates/registration/password_reset_form.html:24
 msgid "Reset Password"
@@ -1470,15 +1470,15 @@ msgstr "Restablecimiento de contraseña"
 
 #: contentcuration/contentcuration/templates/registration/registration_closed.html:11
 msgid "Registration is temporarily closed. Please check back later."
-msgstr "Registro está temporalmente cerrado. Por favor, vuelve más tarde."
+msgstr "Registro está temporalmente cerrado. Por favor, vuelva más tarde."
 
 #: contentcuration/contentcuration/templates/registration/registration_complete.html:14
 msgid "Thanks for registering! Please check your email for your activation link."
-msgstr "¡Gracias por registrarse! Por favor, revisa el correo electrónico para ver el vínculo de activación."
+msgstr "¡Gracias por registrarse! Por favor, revise el correo electrónico para ver el vínculo de activación."
 
 #: contentcuration/contentcuration/templates/registration/registration_form.html:29
 msgid "Must use this email to access channel invitation"
-msgstr "Tienes que utilizar este correo electrónico para acceder a la invitación del canal"
+msgstr "Tiene que utilizar este correo electrónico para acceder a la invitación del canal"
 
 #: contentcuration/contentcuration/templates/registration/registration_form.html:39
 msgid "NEXT"
@@ -1504,11 +1504,11 @@ msgstr "He leído y acepto la <a id=\"policy_link\" data-toggle=\"modal\" data-t
 #: contentcuration/contentcuration/templates/registration/registration_information_form.html:83
 #, python-format
 msgid "Questions or concerns? Please email us at <a href=\"mailto:%(help_email)s\" class=\"login-action-text\">%(help_email)s</a>"
-msgstr "¿Preguntas? Por favor, escríbenos a <a href=\"mailto:%(help_email)s\" class=\"login-action-text\">%(help_email)s</a>"
+msgstr "¿Preguntas? Por favor, escríbanos a <a href=\"mailto:%(help_email)s\" class=\"login-action-text\">%(help_email)s</a>"
 
 #: contentcuration/contentcuration/templates/registration/registration_information_form.html:88
 msgid "Sign Up"
-msgstr "Regístrate"
+msgstr "Registrarse"
 
 #: contentcuration/contentcuration/templates/registration/registration_information_form.html:110
 msgid "CLOSE"
@@ -1517,11 +1517,11 @@ msgstr "CERRAR"
 #: contentcuration/contentcuration/templates/registration/registration_needed_email.txt:6
 #, python-format
 msgid "You requested a password reset on %(site_name)s without registering first."
-msgstr "Solicitaste restablecer contraseña en %(site_name)s sin primero activar tu cuenta."
+msgstr "Solicitó restablecer contraseña en %(site_name)s sin primero activar su cuenta."
 
 #: contentcuration/contentcuration/templates/registration/registration_needed_email.txt:8
 msgid "Please register by following the link below:"
-msgstr "Por favor, regístrate siguiendo el enlace de abajo:"
+msgstr "Por favor, regístrese siguiendo el enlace de abajo:"
 
 #: contentcuration/contentcuration/templates/settings/account.html:16
 msgid "My Account"
@@ -1569,15 +1569,15 @@ msgstr "Eliminar cuenta"
 
 #: contentcuration/contentcuration/templates/settings/account.html:61
 msgid "You are the only editor for the following channels:"
-msgstr "Eres el único editor de los siguientes canales:"
+msgstr "Usted es el único editor de los siguientes canales:"
 
 #: contentcuration/contentcuration/templates/settings/account.html:67
 msgid "You must delete these channels manually or invite others to these channels before you can delete your account."
-msgstr "Tienes que eliminar estos canales manualmente o invitar a otros a estos canales antes de poder eliminar tu cuenta."
+msgstr "Tiene que eliminar estos canales manualmente o invitar a otros a estos canales antes de poder eliminar su cuenta."
 
 #: contentcuration/contentcuration/templates/settings/account.html:69
 msgid "Remove your account from Kolibri Studio"
-msgstr "Elimina tu cuenta de Kolibri Studio"
+msgstr "Elimine su cuenta de Kolibri Studio"
 
 #: contentcuration/contentcuration/templates/settings/account.html:71
 msgid "DELETE MY ACCOUNT"
@@ -1589,7 +1589,7 @@ msgstr "Eliminando cuenta"
 
 #: contentcuration/contentcuration/templates/settings/account.html:83
 msgid "Are you sure you want to permanently delete your account?"
-msgstr "Por favor, confirma que deseas eliminar esta cuenta de forma permanente."
+msgstr "Por favor, confirme que desea eliminar esta cuenta de forma permanente."
 
 #: contentcuration/contentcuration/templates/settings/account.html:83
 msgid "THIS CANNOT BE UNDONE"
@@ -1597,16 +1597,16 @@ msgstr "ESTA ACCIÓN NO SE PUEDE DESHACER"
 
 #: contentcuration/contentcuration/templates/settings/account.html:85
 msgid "Enter your email to confirm:"
-msgstr "Introduce tu correo electrónico para confirmar:"
+msgstr "Introduzca su correo electrónico para confirmar:"
 
 #: contentcuration/contentcuration/templates/settings/account.html:91
 msgid "There was an error deleting your account. Please try again."
-msgstr "Hubo un error al eliminar la cuenta. Por favor, inténtalo nuevamente."
+msgstr "Hubo un error al eliminar la cuenta. Por favor, inténtelo nuevamente."
 
 #: contentcuration/contentcuration/templates/settings/account.html:92
 #, python-format
 msgid "If the problem persists, please email us at <a href=\"mailto:%(email)s\">%(email)s</a>"
-msgstr "Si el problema persiste, ponte en contacto con nosotros al <a href=\"mailto:%(email)s\">%(email)s</a>"
+msgstr "Si el problema persiste, póngase en contacto con nosotros al <a href=\"mailto:%(email)s\">%(email)s</a>"
 
 #: contentcuration/contentcuration/templates/settings/account.html:98
 msgid "DELETE ACCOUNT"
@@ -1622,7 +1622,7 @@ msgstr "Cancelar"
 
 #: contentcuration/contentcuration/templates/settings/account_deleted.html:12
 msgid "Your account has been deleted."
-msgstr "Hemos borrado tu cuenta de usuario."
+msgstr "Hemos borrado su cuenta de usuario."
 
 #: contentcuration/contentcuration/templates/settings/account_deleted.html:13
 msgid "Main Page"
@@ -1636,7 +1636,7 @@ msgstr "Se ha eliminado el correo %(email)s desde %(site_name)s."
 #: contentcuration/contentcuration/templates/settings/account_deleted_user_email.txt:7
 #, python-format
 msgid "If this was a mistake, please email us at %(legal_email)s by %(buffer_date)s (%(num_days)s days from now)."
-msgstr "Si esto fue un error, por favor escríbenos a %(legal_email)s hasta %(buffer_date)s (%(num_days)s días a partir de ahora)."
+msgstr "Si esto fue un error, por favor escríbanos a %(legal_email)s hasta %(buffer_date)s (%(num_days)s días a partir de ahora)."
 
 #: contentcuration/contentcuration/templates/settings/issue_report_email.txt:8
 msgid "Thank you for reporting your issue. Here is a copy of your report:"
@@ -1764,7 +1764,7 @@ msgstr "Preferencias"
 
 #: contentcuration/contentcuration/templates/settings/preferences.html:9
 msgid "Set defaults for filling out content details. Defaults will be applied when a new channel is created."
-msgstr "Establecer los valores predeterminados para llenar los datos de contenido. Se aplicarán por defecto cuando creas un canal nuevo."
+msgstr "Establecer los valores predeterminados para llenar los datos de contenido. Se aplicarán por defecto cuando crea un canal nuevo."
 
 #: contentcuration/contentcuration/templates/settings/preferences.html:12
 msgid "Your preferences have been updated."
@@ -1807,7 +1807,7 @@ msgstr "No se encontraron cambios"
 #: contentcuration/contentcuration/templates/settings/preferences.html:132
 #: contentcuration/contentcuration/templates/settings/profile.html:50
 msgid "SAVE CHANGES"
-msgstr "GUARDAR CAMBIOS"
+msgstr "GUARDAR LOS CAMBIOS"
 
 #: contentcuration/contentcuration/templates/settings/profile.html:7
 msgid "My Profile"
@@ -1849,7 +1849,7 @@ msgstr "Almacenamiento"
 
 #: contentcuration/contentcuration/templates/settings/settings.html:19
 msgid "Tokens"
-msgstr "Tokens"
+msgstr "Códigos"
 
 #: contentcuration/contentcuration/templates/settings/settings.html:22
 msgid "Beta Mode"
@@ -1857,7 +1857,7 @@ msgstr "Modo Beta"
 
 #: contentcuration/contentcuration/templates/settings/storage.html:11
 msgid "Check your storage usage and request more if needed."
-msgstr "Comprueba el uso de almacenamiento y solicitar más si es necesario."
+msgstr "Compruebe el uso de almacenamiento y solicitar más si es necesario."
 
 #: contentcuration/contentcuration/templates/settings/storage.html:14
 #, python-format
@@ -1880,7 +1880,7 @@ msgstr "%(name)s - %(percent)s%% (%(size)s)"
 
 #: contentcuration/contentcuration/templates/settings/storage.html:26
 msgid "You don't have any files uploaded"
-msgstr "No tienes archivos subidos"
+msgstr "No tiene archivos subidos"
 
 #: contentcuration/contentcuration/templates/settings/storage.html:31
 msgid "Request More Space"
@@ -1889,20 +1889,20 @@ msgstr "Solicitar más espacio"
 #: contentcuration/contentcuration/templates/settings/storage.html:32
 msgid "Kindly use this form to request additional uploading storage for your Kolibri Studio account. If you import content from our public library in your channels, this content does not count towards your storage limit. <a class=\"link-text\" target=\"_blank\" href='https://kolibri-studio.readthedocs.io/en/latest/add_content.html#import-content-from-other-channels'>Click here to learn more how to import content from other channels.</a>\n"
 "\t"
-msgstr "Utiliza este formulario para solicitar almacenamiento adicional de carga para tu cuenta de Kolibri Studio. Si importas contenido de nuestra biblioteca pública en tus canales, este contenido no entra dentro tu límite de almacenamiento. <a class=\"link-text\" target=\"_blank\" href='https://kolibri-studio.readthedocs.io/en/latest/add_content.html#import-content-from-other-channels'>Haz clic aquí para aprender más cómo importar contenido de otros canales.</a>\n"
+msgstr "Utilice este formulario para solicitar almacenamiento adicional de carga para su cuenta de Kolibri Studio. Si importa contenido de nuestra biblioteca pública en sus canales, este contenido no entra dentro tu límite de almacenamiento. <a class=\"link-text\" target=\"_blank\" href='https://kolibri-studio.readthedocs.io/en/latest/add_content.html#import-content-from-other-channels'>Haga clic aquí para aprender más cómo importar contenido de otros canales.</a>\n"
 "\t"
 
 #: contentcuration/contentcuration/templates/settings/storage.html:52
 msgid "What is the nature of your content?"
-msgstr "¿Cuál es la naturaleza de tu contenido?"
+msgstr "¿Cuál es la naturaleza de su contenido?"
 
 #: contentcuration/contentcuration/templates/settings/storage.html:54
 msgid "How much storage are you requesting?"
-msgstr "¿Cuánto almacenamiento vas a necesitar?"
+msgstr "¿Cuánto almacenamiento va a necesitar?"
 
 #: contentcuration/contentcuration/templates/settings/storage.html:55
 msgid "Approximately how many individual resources are you planning to upload?"
-msgstr "Aproximadamente ¿cuántos recursos vas a subir?"
+msgstr "Aproximadamente ¿cuántos recursos va a subir?"
 
 #: contentcuration/contentcuration/templates/settings/storage.html:56
 msgid "What is the average size of each resource?"
@@ -1910,7 +1910,7 @@ msgstr "¿Cuál es el tamaño promedio de cada recurso?"
 
 #: contentcuration/contentcuration/templates/settings/storage.html:57
 msgid "What kind of content are you uploading?"
-msgstr "¿Qué tipo de contenido vas a subir?"
+msgstr "¿Qué tipo de contenido va a subir?"
 
 #: contentcuration/contentcuration/templates/settings/storage.html:58
 msgid "Who is the author (creator), curator (organizer), and/or aggregator (maintainer) of your content? Please specify"
@@ -1937,16 +1937,16 @@ msgid "\n"
 "\t\t\t\t\tIf the content is openly licensed, would you be willing to consider making your channels <a id=\"public_help\" class='link-text' data-toggle=\"tooltip\" data-placement=\"top\" title=\"By making a channel public, you are allowing anyone on Kolibri Studio to access your content and use it in their own channels. Channels submitted for public use will be reviewed by the Learning Equality team.\">public</a> to other Kolibri users if requested in the future? (Select all that apply)\n"
 "\t\t\t\t"
 msgstr "\n"
-"Si el contenido tiene licencia abierta, ¿te gustaría hacer tus canales <a id=\"public_help\" class='link-text' data-toggle=\"tooltip\" data-placement=\"top\" title=\"Al hacer público un canal, estás permitiendo a cualquiera en Kolibri Studio acceder a su contenido y usarlo en sus propios canales. Los canales asignados para uso público serán revisados por el equipo de Learning Equality.\">públicos</a>? (Selecciona todo lo que corresponda)\n"
+"Si el contenido tiene licencia abierta, ¿le gustaría hacer sus canales <a id=\"public_help\" class='link-text' data-toggle=\"tooltip\" data-placement=\"top\" title=\"Al hacer público un canal, está permitiendo a cualquiera en Kolibri Studio acceder a su contenido y usarlo en sus propios canales. Los canales asignados para uso público serán revisados por el equipo de Learning Equality.\">públicos</a>? (Seleccione todo lo que corresponda)\n"
 "\t\t\t\t"
 
 #: contentcuration/contentcuration/templates/settings/storage.html:88
 msgid "How are you using your content?"
-msgstr "¿Cómo vas a usar tu contenido?"
+msgstr "¿Cómo va a usar su contenido?"
 
 #: contentcuration/contentcuration/templates/settings/storage.html:91
 msgid "Who is the intended audience for your channel? How big is your audience?"
-msgstr "¿Cual sería la audiencia objetivo para tu canal? ¿Cuánto es grande tu audiencia?"
+msgstr "¿Cual sería la audiencia objetivo para su canal? ¿Cuánto es grande su audiencia?"
 
 #: contentcuration/contentcuration/templates/settings/storage.html:96
 msgid "What is the target region(s) for your content (if applicable)?"
@@ -1958,7 +1958,7 @@ msgstr "¿Cuántas veces se importará este contenido desde Studio en las nuevas
 
 #: contentcuration/contentcuration/templates/settings/storage.html:102
 msgid "Tell us more about your use of Kolibri"
-msgstr "Cuéntanos más sobre tu uso de Kolibri"
+msgstr "Cuéntenos más sobre su uso de Kolibri"
 
 #: contentcuration/contentcuration/templates/settings/storage.html:105
 msgid "Organizational affiliation"
@@ -1982,11 +1982,11 @@ msgstr "ENVIAR SOLICITUD"
 
 #: contentcuration/contentcuration/templates/settings/storage_request_email.txt:8
 msgid "Thank you for your request for additional storage."
-msgstr "Gracias por tu solicitud para el almacenamiento adicional."
+msgstr "Gracias por su solicitud para el almacenamiento adicional."
 
 #: contentcuration/contentcuration/templates/settings/storage_request_email.txt:10
 msgid "Here is a copy of your request:"
-msgstr "Aquí está una copia de tu solicitud:"
+msgstr "Aquí está una copia de su solicitud:"
 
 #: contentcuration/contentcuration/templates/settings/storage_request_email.txt:43
 msgid "We are currently reviewing the information that you have provided, and will work to be in touch in a timely manner depending on the scope of your request. While Kolibri Studio is in Beta, we need to be especially mindful of how much additional storage can be provided to ensure that we can successful continue to build the Studio tool. Many thanks in advance for your understanding."
@@ -2019,7 +2019,7 @@ msgstr "No hay actualizaciones para revisar."
 
 #: contentcuration/contentcuration/templates/unauthorized.html:12
 msgid "You do not have access to this page."
-msgstr "No tienes acceso a esta página."
+msgstr "No tiene acceso a esta página."
 
 #: contentcuration/contentcuration/templates/unsupported_browser.html:12
 msgid "Unsupported Browser."
@@ -2027,7 +2027,7 @@ msgstr "Navegador no compatible."
 
 #: contentcuration/contentcuration/templates/unsupported_browser.html:13
 msgid "We're sorry, the browser you are currently using is not supported. Please try again on a different browser."
-msgstr "Lo sentimos, el navegador que está utilizando no es compatible. Por favor, inténtalo de nuevo en otro navegador."
+msgstr "Lo sentimos, el navegador que está utilizando no es compatible. Por favor, inténtelo de nuevo en otro navegador."
 
 #: contentcuration/contentcuration/templatetags/license_tags.py:10
 msgid "The Attribution License lets others distribute, remix, tweak, and build upon your work, even commercially, as long as they credit you for the original creation. This is the most accommodating of licenses offered. Recommended for maximum dissemination and use of licensed materials."
@@ -2123,7 +2123,7 @@ msgstr "Dominio Público"
 
 #: contentcuration/contentcuration/templatetags/translation_tags.py:40
 msgid "Special Permissions"
-msgstr "Permisos especiales"
+msgstr "Permisos Especiales"
 
 #: contentcuration/contentcuration/templatetags/translation_tags.py:49
 #, python-format
@@ -2403,21 +2403,21 @@ msgstr "Hubo un problema con un servicio externo. Esto significa que no es posib
 msgid "We are encountering issues with our data center. This means you may encounter networking problems while using Studio. We appreciate your patience while these issues are being resolved. To check the status of this service, please visit <a target='_blank' href='https://status.cloud.google.com/'>here</a>"
 msgstr "Estamos encontrando problemas con nuestro centro de datos. Esto significa que puede encontrar problemas de red mientras utiliza Studio. Agradecemos su paciencia mientras se resuelvenn estos problemas. Para comprobar el estado de este servicio <a target='_blank' href='https://status.cloud.google.com/'>visite este enlace</a>"
 
-#: contentcuration/contentcuration/utils/publish.py:59
-msgid "Kolibri Studio Channel Published"
-msgstr "Canal publicado en Kolibri Studio"
-
-#: contentcuration/contentcuration/views/nodes.py:328
-#: contentcuration/contentcuration/views/nodes.py:329
+#: contentcuration/contentcuration/utils/nodes.py:250
+#: contentcuration/contentcuration/utils/nodes.py:251
 msgid " (Copy)"
 msgstr " (Copiar)"
 
-#: contentcuration/contentcuration/views/public.py:60
-#: contentcuration/contentcuration/views/public.py:71
+#: contentcuration/contentcuration/utils/publish.py:60
+msgid "Kolibri Studio Channel Published"
+msgstr "Canal publicado en Kolibri Studio"
+
+#: contentcuration/contentcuration/views/public.py:59
+#: contentcuration/contentcuration/views/public.py:70
 msgid "Api endpoint {} is not available"
 msgstr "API endpoint {} no disponible"
 
-#: contentcuration/contentcuration/views/public.py:73
+#: contentcuration/contentcuration/views/public.py:72
 msgid "No channel matching {} found"
 msgstr "Ningún canal con {} encontrado"
 

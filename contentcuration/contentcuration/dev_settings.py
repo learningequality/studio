@@ -24,6 +24,15 @@ else:
     MIDDLEWARE_CLASSES += ('debug_panel.middleware.DebugPanelMiddleware',)
     DEBUG_TOOLBAR_CONFIG = {
         'SHOW_TOOLBAR_CALLBACK': custom_show_toolbar,
+
+        # When enabled, these settings significantly slow down page loads.
+        # It may be useful to temporarily enable them for specific debugging tasks,
+        # like template debugging or issues with SQL queries / caching.
+        # This URL has more details on each specific option:
+        # https://django-debug-toolbar.readthedocs.io/en/latest/configuration.html
+        'RENDER_PANELS': False,
+        'ENABLE_STACKTRACES': False,
+        'SHOW_TEMPLATE_CONTEXT': False
     }
 
 DEBUG_TOOLBAR_PANELS = [

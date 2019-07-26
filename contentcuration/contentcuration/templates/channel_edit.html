@@ -23,7 +23,7 @@
 
 {% block content %}
 	<div id="channel-edit-sortable-boundary">
-
+		<div id="channel-edit-overlay"></div>
 	<nav class="navbar" id="secondary-nav">
 		<ul class="nav">
 			<li><a href="/channels" id="back_to_home"><i class="material-icons">home</i></a></li>
@@ -66,7 +66,7 @@
 			</li>
 		{% else %}
 			<li id="hide-if-unpublished"><a id="get_published_id">{% trans "Show Token" %}</a></li>
-			{% if allow_edit %}<li><button id="channel-publish-button" class="text-center"> {%trans "PUBLISH" %}</button></li>{% endif %}
+			<li><span id="channel-publish-button"></span></li>
 		{% endif %}
 		</ul>
 	</nav>
