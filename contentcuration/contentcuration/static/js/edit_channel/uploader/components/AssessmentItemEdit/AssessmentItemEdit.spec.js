@@ -95,7 +95,7 @@ const initWrapper = (state, propsData) => {
 };
 
 const openQuestion = wrapper => {
-  wrapper.find('[data-test="editQuestionBtn"]').trigger('click');
+  wrapper.find('[data-test="questionText"]').trigger('click');
 };
 
 const updateQuestion = (wrapper, newQuestionText) => {

@@ -1,7 +1,7 @@
 <template>
   <div>
     <VLayout>
-      <VFlex xs5>
+      <VFlex xs7 lg5>
         <VSelect
           :key="kindSelectKey"
           :items="kindSelectItems"
@@ -20,44 +20,35 @@
           data-test="questionErrors"
         />
 
-        <div class="grey--text text--darken-2">
+        <div class="grey--text text--darken-2 mb-1">
           Question
         </div>
 
-        <keep-alive include="MarkdownEditor">
-          <MarkdownEditor
-            v-if="isQuestionOpen"
-            :markdown="question"
-            @update="onQuestionUpdate"
-          />
+        <transition name="fade">
+          <keep-alive include="MarkdownEditor">
+            <MarkdownEditor
+              v-if="isQuestionOpen"
+              :markdown="question"
+              @update="onQuestionUpdate"
+            />
 
-          <div
-            v-else
-            :style="{cursor: 'pointer'}"
-            data-test="editQuestionBtn"
-            @click="openQuestion"
-          >
-            <VTooltip top>
-              <template slot="activator" slot-scope="{ on }">
-                <VBtn
-                  icon
-                  class="ml-1"
-                  v-on="on"
-                >
-                  <VIcon color="#686868">
-                    edit
-                  </VIcon>
-                </VBtn>
-              </template>
-              <span>Edit</span>
-            </VTooltip>
-            <span>{{ question }}</span>
-          </div>
-        </keep-alive>
+            <div
+              v-else
+              class="pl-2 pr-2 pt-3 pb-3 question-text"
+              data-test="questionText"
+              @click="openQuestion"
+            >
+              <VIcon color="grey darken-1">
+                edit
+              </VIcon>
+              <span>{{ question }}</span>
+            </div>
+          </keep-alive>
+        </transition>
       </VFlex>
     </VLayout>
 
-    <VLayout class="mt-4">
+    <VLayout mt-4>
       <VFlex>
         <ErrorList
           :errors="answersErrors"
@@ -345,3 +336,18 @@
   };
 
 </script>
+
+<style lang="less" scoped>
+
+  @import '../../../../../less/global-variables.less';
+
+  .question-text {
+    transition: 0.7s;
+
+    &:hover {
+      cursor: pointer;
+      background-color: @gray-light;
+    }
+  }
+
+</style>

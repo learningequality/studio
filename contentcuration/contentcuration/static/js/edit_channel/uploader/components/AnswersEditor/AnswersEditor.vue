@@ -4,80 +4,86 @@
       Answers
     </div>
 
-    <div v-if="!answers || !answers.length">
+    <div
+      v-if="!answers || !answers.length"
+      class="pa-3 card-border-light"
+    >
       No answers yet
     </div>
 
-    <VCard
+    <div
       v-for="(answer, answerIdx) in answers"
       :key="answerIdx"
-      :style="cardStyle(answerIdx)"
-      flat
-      data-test="answer"
+      class="card-border-light"
       @click="onAnswerClick($event, answerIdx)"
     >
-      <div :class="getIndicatorClasses(answer)"></div>
+      <VCard
+        :class="answerClasses(answerIdx)"
+        flat
+        data-test="answer"
+      >
+        <div :class="indicatorClasses(answer)"></div>
+        <VCardText>
+          <VLayout align-top justify-space-between>
+            <VFlex xs1>
+              <!--
+                VRadio cannot be used without VRadioGroup like VCheckbox but it can
+                be solved by wrapping each VRadio to VRadioGroup
+                https://github.com/vuetifyjs/vuetify/issues/2345
+              -->
+              <VRadioGroup
+                v-if="hasOneCorrectAnswer"
+                :value="correctAnswersIndices"
+                @change="onCorrectAnswersIndicesUpdate"
+              >
+                <VRadio
+                  :value="answerIdx"
+                  :label="answerLabel(answerIdx)"
+                  data-test="answerRadio"
+                />
+              </VRadioGroup>
 
-      <VCardText>
-        <VLayout align-top justify-space-between>
-          <VFlex xs1>
-            <!--
-              VRadio cannot be used without VRadioGroup like VCheckbox but it can
-              be solved by wrapping each VRadio to VRadioGroup
-              https://github.com/vuetifyjs/vuetify/issues/2345
-            -->
-            <VRadioGroup
-              v-if="hasOneCorrectAnswer"
-              :value="correctAnswersIndices"
-              @change="onCorrectAnswersIndicesUpdate"
-            >
-              <VRadio
+              <VCheckbox
+                v-if="isMultipleSelection"
+                :key="answerIdx"
                 :value="answerIdx"
+                :input-value="correctAnswersIndices"
                 :label="answerLabel(answerIdx)"
-                data-test="answerRadio"
+                @change="onCorrectAnswersIndicesUpdate"
               />
-            </VRadioGroup>
 
-            <VCheckbox
-              v-if="isMultipleSelection"
-              :key="answerIdx"
-              :value="answerIdx"
-              :input-value="correctAnswersIndices"
-              :label="answerLabel(answerIdx)"
-              @change="onCorrectAnswersIndicesUpdate"
+              <div
+                v-if="!isAnswerOpen(answerIdx) && isInputQuestion"
+                class="input-question"
+              >
+                {{ answerLabel(answerIdx) }}
+              </div>
+            </VFlex>
+
+            <VFlex xs4 md6 lg7>
+              <keep-alive :max="5">
+                <MarkdownEditor
+                  v-if="isAnswerOpen(answerIdx)"
+                  :markdown="answer.answer"
+                  @update="updateAnswerText($event, answerIdx)"
+                />
+              </keep-alive>
+            </VFlex>
+
+            <VSpacer />
+
+            <AssessmentItemToolbar
+              :displayMenu="false"
+              :displayEditIcon="false"
+              :canMoveUp="!isAnswerFirst(answerIdx)"
+              :canMoveDown="!isAnswerLast(answerIdx)"
+              class="toolbar"
+              @click="onToolbarClick($event, answerIdx)"
             />
-
-            <div
-              v-if="!isAnswerOpen(answerIdx) && isInputQuestion"
-              class="input-question"
-            >
-              {{ answerLabel(answerIdx) }}
-            </div>
-          </VFlex>
-
-          <VFlex xs4 md6 lg7>
-            <keep-alive :max="5">
-              <MarkdownEditor
-                v-if="isAnswerOpen(answerIdx)"
-                :markdown="answer.answer"
-                @update="updateAnswerText($event, answerIdx)"
-              />
-            </keep-alive>
-          </VFlex>
-
-          <VSpacer />
-
-          <AssessmentItemToolbar
-            :displayMenu="false"
-            :displayEditIcon="false"
-            :canMoveUp="!isAnswerFirst(answerIdx)"
-            :canMoveDown="!isAnswerLast(answerIdx)"
-            class="toolbar"
-            @click="onToolbarClick($event, answerIdx)"
-          />
-        </VLayout>
-      </VCardText>
-    </VCard>
+          </VLayout>
+        </VCardText>
+      </VCard>
+    </div>
 
     <VBtn
       v-if="isEditingAllowed"
@@ -182,19 +188,26 @@
 
         return this.answers[answerIdx].answer;
       },
-      cardStyle(answerIdx) {
-        const style = {
-          border: '1px #d2d2d2 solid',
-          marginTop: '-1px',
-        };
+      answerClasses(answerIdx) {
+        const classes = ['answer'];
 
-        if (this.isEditingAllowed && !this.isAnswerOpen(answerIdx)) {
-          style.cursor = 'pointer';
+        if (this.isEditingAllowed) {
+          classes.push('editable');
         }
 
-        return style;
+        if (!this.isAnswerOpen(answerIdx)) {
+          classes.push('closed');
+        }
+
+        if (this.answers[answerIdx].correct) {
+          classes.push('correct');
+        } else {
+          classes.push('wrong');
+        }
+
+        return classes;
       },
-      getIndicatorClasses(answer) {
+      indicatorClasses(answer) {
         const classes = ['indicator'];
 
         if (answer.correct) {
@@ -364,17 +377,35 @@
 
   @import '../../../../../less/global-variables.less';
 
-  .indicator {
-    position: absolute;
-    width: 4px;
-    height: 100%;
+  .answer {
+    position: relative;
+    transition: 0.7s;
 
-    &.correct {
-      background-color: @exercise-answer-correct;
+    &.editable {
+      cursor: pointer;
     }
 
-    &.wrong {
-      background-color: @exercise-answer-wrong;
+    &.closed.correct:hover {
+      background-color: fade(@exercise-answer-correct, 15%);
+    }
+
+    &.closed.wrong:hover {
+      background-color: fade(@exercise-answer-wrong, 15%);
+    }
+
+    .indicator {
+      position: absolute;
+      z-index: 1;
+      width: 4px;
+      height: 100%;
+
+      &.correct {
+        background-color: @exercise-answer-correct;
+      }
+
+      &.wrong {
+        background-color: @exercise-answer-wrong;
+      }
     }
   }
 

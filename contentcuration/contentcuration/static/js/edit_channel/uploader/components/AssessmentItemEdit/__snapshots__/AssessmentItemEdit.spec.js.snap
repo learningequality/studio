@@ -19,7 +19,7 @@ exports[`AssessmentItemEdit for an invalid item renders all errors messages 2`] 
 exports[`AssessmentItemEdit renders 1`] = `
 <div>
   <div class="layout">
-    <div class="flex xs5">
+    <div class="flex xs7 lg5">
       <div role="combobox" class="v-input v-text-field v-select v-input--is-label-active v-input--is-dirty theme--light">
         <div class="v-input__control">
           <div class="v-input__slot">
@@ -72,102 +72,103 @@ exports[`AssessmentItemEdit renders 1`] = `
   <div class="layout">
     <div class="flex">
       <!---->
-      <div class="grey--text text--darken-2">
+      <div class="grey--text text--darken-2 mb-1">
         Question
       </div>
-      <div data-test="editQuestionBtn" style="cursor: pointer;"><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Edit</span></div><button type="button" class="ml-1 v-btn v-btn--icon theme--light">
-        <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light" style="color: rgb(104, 104, 104); caret-color: #686868;">edit</i></div>
-      </button></span> <span>Exercise 2 - Question 2</span>
+      <div data-test="questionText" class="pa-1 question-text" name="fade"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">edit</i> <span>Exercise 2 - Question 2</span></div>
     </div>
   </div>
-</div>
-<div class="layout mt-4">
-  <div class="flex">
-    <!---->
-    <div>
-      <div class="grey--text text--darken-1 mb-3">
-        Answers
-      </div>
+  <div class="layout mt-4">
+    <div class="flex">
       <!---->
-      <div class="v-card v-card--flat v-sheet theme--light" style="margin-top: -1px; cursor: pointer; border: 1px solid #d2d2d2;" data-test="answer">
-        <div class="indicator correct"></div>
-        <div class="v-card__text">
-          <div class="layout align-top justify-space-between">
-            <div class="flex xs1">
-              <div class="v-input v-input--selection-controls v-input--radio-group v-input--radio-group--column theme--light">
-                <div class="v-input__control">
-                  <div class="v-input__slot" style="height: auto;">
-                    <div role="radiogroup" class="v-input--radio-group__input">
-                      <div class="v-radio theme--light">
-                        <div class="v-input--selection-controls__input"><input aria-label="Mayonnaise (I mean you can, but...)" aria-checked="false" role="radio" type="radio" name="v-radio-29" value="0" data-test="answerRadio">
-                          <div class="v-input--selection-controls__ripple"></div><i aria-hidden="true" class="v-icon material-icons theme--light">radio_button_unchecked</i>
-                        </div><label aria-hidden="true" class="v-label theme--light" style="left: 0px; position: relative;">Mayonnaise (I mean you can, but...)</label>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="v-messages theme--light"><span name="message-transition" tag="div" class="v-messages__wrapper"></span></div>
-                </div>
-              </div>
-              <!---->
-              <!---->
-            </div>
-            <div class="flex xs4 md6 lg7">
-              <!---->
-            </div>
-            <div class="spacer"></div>
-            <div class="toolbar">
-              <!----> <span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move up</span></div><button disabled="disabled" type="button" class="v-btn v-btn--disabled v-btn--icon theme--light" data-test="toolbarIconArrowUp">
-              <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light" style="color: rgb(156, 156, 156); caret-color: #9c9c9c;">keyboard_arrow_up</i></div>
-            </button></span> <span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move down</span>
-          </div><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIconArrowDown">
-            <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light" style="color: rgb(104, 104, 104); caret-color: #686868;">keyboard_arrow_down</i></div>
-          </button></span> <span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Delete</span>
-        </div><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIconDelete">
-          <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light" style="color: rgb(104, 104, 104); caret-color: #686868;">close</i></div>
-        </button></span>
-        <!---->
-      </div>
-    </div>
-  </div>
-</div>
-<div class="v-card v-card--flat v-sheet theme--light" style="margin-top: -1px; cursor: pointer; border: 1px solid #d2d2d2;" data-test="answer">
-  <div class="indicator wrong"></div>
-  <div class="v-card__text">
-    <div class="layout align-top justify-space-between">
-      <div class="flex xs1">
-        <div class="v-input v-input--selection-controls v-input--radio-group v-input--radio-group--column theme--light">
-          <div class="v-input__control">
-            <div class="v-input__slot" style="height: auto;">
-              <div role="radiogroup" class="v-input--radio-group__input">
-                <div class="v-radio theme--light">
-                  <div class="v-input--selection-controls__input"><input aria-label="Peanut butter" aria-checked="false" role="radio" type="radio" name="v-radio-49" value="1" data-test="answerRadio">
-                    <div class="v-input--selection-controls__ripple"></div><i aria-hidden="true" class="v-icon material-icons theme--light">radio_button_unchecked</i>
-                  </div><label aria-hidden="true" class="v-label theme--light" style="left: 0px; position: relative;">Peanut butter</label>
-                </div>
-              </div>
-            </div>
-            <div class="v-messages theme--light"><span name="message-transition" tag="div" class="v-messages__wrapper"></span></div>
-          </div>
+      <div>
+        <div class="grey--text text--darken-1 mb-3">
+          Answers
         </div>
         <!---->
-        <!---->
+        <div class="card-border-light">
+          <div class="v-card v-card--flat v-sheet theme--light answer editable closed correct" data-test="answer">
+            <div class="indicator correct"></div>
+            <div class="v-card__text">
+              <div class="layout align-top justify-space-between">
+                <div class="flex xs1">
+                  <div class="v-input v-input--selection-controls v-input--radio-group v-input--radio-group--column theme--light">
+                    <div class="v-input__control">
+                      <div class="v-input__slot" style="height: auto;">
+                        <div role="radiogroup" class="v-input--radio-group__input">
+                          <div class="v-radio theme--light">
+                            <div class="v-input--selection-controls__input"><input aria-label="Mayonnaise (I mean you can, but...)" aria-checked="false" role="radio" type="radio" name="v-radio-27" value="0" data-test="answerRadio">
+                              <div class="v-input--selection-controls__ripple"></div><i aria-hidden="true" class="v-icon material-icons theme--light">radio_button_unchecked</i>
+                            </div><label aria-hidden="true" class="v-label theme--light" style="left: 0px; position: relative;">Mayonnaise (I mean you can, but...)</label>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="v-messages theme--light"><span name="message-transition" tag="div" class="v-messages__wrapper"></span></div>
+                    </div>
+                  </div>
+                  <!---->
+                  <!---->
+                </div>
+                <div class="flex xs4 md6 lg7">
+                  <!---->
+                </div>
+                <div class="spacer"></div>
+                <div class="toolbar">
+                  <!----> <span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move up</span></div><button disabled="disabled" type="button" class="v-btn v-btn--disabled v-btn--icon theme--light" data-test="toolbarIconArrowUp">
+                  <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--lighten-2">keyboard_arrow_up</i></div>
+                </button></span> <span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move down</span>
+              </div><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIconArrowDown">
+                <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">keyboard_arrow_down</i></div>
+              </button></span> <span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Delete</span>
+            </div><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIconDelete">
+              <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">close</i></div>
+            </button></span>
+            <!---->
+          </div>
+        </div>
       </div>
-      <div class="flex xs4 md6 lg7">
-        <!---->
-      </div>
-      <div class="spacer"></div>
-      <div class="toolbar">
-        <!----> <span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move up</span></div><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIconArrowUp">
-        <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light" style="color: rgb(104, 104, 104); caret-color: #686868;">keyboard_arrow_up</i></div>
-      </button></span> <span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move down</span>
-    </div><button disabled="disabled" type="button" class="v-btn v-btn--disabled v-btn--icon theme--light" data-test="toolbarIconArrowDown">
-      <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light" style="color: rgb(156, 156, 156); caret-color: #9c9c9c;">keyboard_arrow_down</i></div>
-    </button></span> <span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Delete</span>
-  </div><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIconDelete">
-    <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light" style="color: rgb(104, 104, 104); caret-color: #686868;">close</i></div>
-  </button></span>
-  <!---->
-</div>
+    </div>
+  </div>
+  <div class="card-border-light">
+    <div class="v-card v-card--flat v-sheet theme--light answer editable closed wrong" data-test="answer">
+      <div class="indicator wrong"></div>
+      <div class="v-card__text">
+        <div class="layout align-top justify-space-between">
+          <div class="flex xs1">
+            <div class="v-input v-input--selection-controls v-input--radio-group v-input--radio-group--column theme--light">
+              <div class="v-input__control">
+                <div class="v-input__slot" style="height: auto;">
+                  <div role="radiogroup" class="v-input--radio-group__input">
+                    <div class="v-radio theme--light">
+                      <div class="v-input--selection-controls__input"><input aria-label="Peanut butter" aria-checked="false" role="radio" type="radio" name="v-radio-47" value="1" data-test="answerRadio">
+                        <div class="v-input--selection-controls__ripple"></div><i aria-hidden="true" class="v-icon material-icons theme--light">radio_button_unchecked</i>
+                      </div><label aria-hidden="true" class="v-label theme--light" style="left: 0px; position: relative;">Peanut butter</label>
+                    </div>
+                  </div>
+                </div>
+                <div class="v-messages theme--light"><span name="message-transition" tag="div" class="v-messages__wrapper"></span></div>
+              </div>
+            </div>
+            <!---->
+            <!---->
+          </div>
+          <div class="flex xs4 md6 lg7">
+            <!---->
+          </div>
+          <div class="spacer"></div>
+          <div class="toolbar">
+            <!----> <span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move up</span></div><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIconArrowUp">
+            <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">keyboard_arrow_up</i></div>
+          </button></span> <span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move down</span>
+        </div><button disabled="disabled" type="button" class="v-btn v-btn--disabled v-btn--icon theme--light" data-test="toolbarIconArrowDown">
+          <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--lighten-2">keyboard_arrow_down</i></div>
+        </button></span> <span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Delete</span>
+      </div><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIconDelete">
+        <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">close</i></div>
+      </button></span>
+      <!---->
+    </div>
+  </div>
 </div>
 </div>
 </div> <button type="button" class="mt-3 ml-0 v-btn v-btn--flat theme--light primary--text" data-test="newAnswerBtn">
@@ -180,58 +181,56 @@ exports[`AssessmentItemEdit renders 1`] = `
     Hints
   </div>
   <!---->
-  <div class="v-card v-card--flat v-sheet theme--light" style="margin-top: -1px; cursor: pointer; border: 1px solid #d2d2d2;" data-test="hint">
-    <div class="v-card__text">
-      <div class="layout align-top justify-space-between">
-        <div class="flex xs1">
-          1
-        </div>
-        <div class="flex xs4 md6 lg7">
-          <p>
-            It's not healthy
-          </p>
-          <!---->
-        </div>
-        <div class="spacer"></div>
-        <div class="toolbar">
-          <!----> <span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move up</span></div><button disabled="disabled" type="button" class="v-btn v-btn--disabled v-btn--icon theme--light" data-test="toolbarIconArrowUp">
-          <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light" style="color: rgb(156, 156, 156); caret-color: #9c9c9c;">keyboard_arrow_up</i></div>
-        </button></span> <span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move down</span>
-      </div><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIconArrowDown">
-        <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light" style="color: rgb(104, 104, 104); caret-color: #686868;">keyboard_arrow_down</i></div>
-      </button></span> <span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Delete</span>
-    </div><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIconDelete">
-      <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light" style="color: rgb(104, 104, 104); caret-color: #686868;">close</i></div>
-    </button></span>
-    <!---->
+  <div data-test="hint" class="card-border-light">
+    <div class="v-card v-card--flat v-sheet theme--light hint closed">
+      <div class="v-card__text">
+        <div class="layout align-top justify-space-between">
+          <div class="flex xs1 mt-2">
+            1
+          </div>
+          <div class="flex xs4 md6 lg7 mt-2"><span name="fade">
+                  It's not healthy
+                </span></div>
+          <div class="spacer"></div>
+          <div class="toolbar">
+            <!----> <span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move up</span></div><button disabled="disabled" type="button" class="v-btn v-btn--disabled v-btn--icon theme--light" data-test="toolbarIconArrowUp">
+            <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--lighten-2">keyboard_arrow_up</i></div>
+          </button></span> <span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move down</span>
+        </div><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIconArrowDown">
+          <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">keyboard_arrow_down</i></div>
+        </button></span> <span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Delete</span>
+      </div><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIconDelete">
+        <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">close</i></div>
+      </button></span>
+      <!---->
+    </div>
   </div>
 </div>
 </div>
 </div>
-<div class="v-card v-card--flat v-sheet theme--light" style="margin-top: -1px; cursor: pointer; border: 1px solid #d2d2d2;" data-test="hint">
-  <div class="v-card__text">
-    <div class="layout align-top justify-space-between">
-      <div class="flex xs1">
-        2
-      </div>
-      <div class="flex xs4 md6 lg7">
-        <p>
-          Tasty!
-        </p>
-        <!---->
-      </div>
-      <div class="spacer"></div>
-      <div class="toolbar">
-        <!----> <span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move up</span></div><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIconArrowUp">
-        <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light" style="color: rgb(104, 104, 104); caret-color: #686868;">keyboard_arrow_up</i></div>
-      </button></span> <span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move down</span>
-    </div><button disabled="disabled" type="button" class="v-btn v-btn--disabled v-btn--icon theme--light" data-test="toolbarIconArrowDown">
-      <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light" style="color: rgb(156, 156, 156); caret-color: #9c9c9c;">keyboard_arrow_down</i></div>
-    </button></span> <span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Delete</span>
-  </div><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIconDelete">
-    <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light" style="color: rgb(104, 104, 104); caret-color: #686868;">close</i></div>
-  </button></span>
-  <!---->
+<div data-test="hint" class="card-border-light">
+  <div class="v-card v-card--flat v-sheet theme--light hint closed">
+    <div class="v-card__text">
+      <div class="layout align-top justify-space-between">
+        <div class="flex xs1 mt-2">
+          2
+        </div>
+        <div class="flex xs4 md6 lg7 mt-2"><span name="fade">
+                  Tasty!
+                </span></div>
+        <div class="spacer"></div>
+        <div class="toolbar">
+          <!----> <span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move up</span></div><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIconArrowUp">
+          <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">keyboard_arrow_up</i></div>
+        </button></span> <span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move down</span>
+      </div><button disabled="disabled" type="button" class="v-btn v-btn--disabled v-btn--icon theme--light" data-test="toolbarIconArrowDown">
+        <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--lighten-2">keyboard_arrow_down</i></div>
+      </button></span> <span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Delete</span>
+    </div><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIconDelete">
+      <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">close</i></div>
+    </button></span>
+    <!---->
+  </div>
 </div>
 </div>
 </div>

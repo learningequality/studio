@@ -4,51 +4,60 @@
       Hints
     </div>
 
-    <div v-if="!hints || !hints.length">
+    <div
+      v-if="!hints || !hints.length"
+      class="pa-3 card-border-light"
+    >
       No hints yet
     </div>
 
-    <VCard
+    <div
       v-for="(hint, hintIdx) in hints"
       :key="hintIdx"
-      :style="cardStyle(hintIdx)"
-      flat
+      class="card-border-light"
       data-test="hint"
       @click="onHintClick($event, hintIdx)"
     >
-      <VCardText>
-        <VLayout align-top justify-space-between>
-          <VFlex xs1>
-            {{ hint.order }}
-          </VFlex>
+      <VCard
+        flat
+        :class="hintClasses(hintIdx)"
+      >
+        <VCardText>
+          <VLayout align-top justify-space-between>
+            <VFlex xs1 mt-2>
+              {{ hint.order }}
+            </VFlex>
 
-          <VFlex xs4 md6 lg7>
-            <p v-if="!isHintOpen(hintIdx)">
-              {{ hint.hint }}
-            </p>
+            <VFlex xs4 md6 lg7 mt-2>
+              <transition name="fade">
+                <keep-alive :max="5" include="MarkdownEditor">
+                  <span v-if="!isHintOpen(hintIdx)">
+                    {{ hint.hint }}
+                  </span>
 
-            <keep-alive :max="5">
-              <MarkdownEditor
-                v-if="isHintOpen(hintIdx)"
-                :markdown="hint.hint"
-                @update="updateHintText($event, hintIdx)"
-              />
-            </keep-alive>
-          </VFlex>
+                  <MarkdownEditor
+                    v-else
+                    :markdown="hint.hint"
+                    @update="updateHintText($event, hintIdx)"
+                  />
+                </keep-alive>
+              </transition>
+            </VFlex>
 
-          <VSpacer />
+            <VSpacer />
 
-          <AssessmentItemToolbar
-            :displayMenu="false"
-            :displayEditIcon="false"
-            :canMoveUp="!isHintFirst(hintIdx)"
-            :canMoveDown="!isHintLast(hintIdx)"
-            class="toolbar"
-            @click="onToolbarClick($event, hintIdx)"
-          />
-        </VLayout>
-      </VCardText>
-    </VCard>
+            <AssessmentItemToolbar
+              :displayMenu="false"
+              :displayEditIcon="false"
+              :canMoveUp="!isHintFirst(hintIdx)"
+              :canMoveDown="!isHintLast(hintIdx)"
+              class="toolbar"
+              @click="onToolbarClick($event, hintIdx)"
+            />
+          </VLayout>
+        </VCardText>
+      </VCard>
+    </div>
 
     <VBtn
       flat
@@ -107,17 +116,14 @@
       isHintLast(hintIdx) {
         return hintIdx === this.hints.length - 1;
       },
-      cardStyle(hintIdx) {
-        const style = {
-          border: '1px #d2d2d2 solid',
-          marginTop: '-1px',
-        };
+      hintClasses(hintIdx) {
+        const classes = ['hint'];
 
         if (!this.isHintOpen(hintIdx)) {
-          style.cursor = 'pointer';
+          classes.push('closed');
         }
 
-        return style;
+        return classes;
       },
       moveHintUp(hintIdx) {
         if (this.isHintFirst(hintIdx)) {
@@ -233,3 +239,18 @@
   };
 
 </script>
+
+<style lang="less" scoped>
+
+  @import '../../../../../less/global-variables.less';
+
+  .hint {
+    transition: 0.7s;
+
+    &.closed:hover {
+      cursor: pointer;
+      background-color: @gray-light;
+    }
+  }
+
+</style>

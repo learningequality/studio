@@ -8,7 +8,7 @@
           v-on="on"
           @click="clickItem(actions.EDIT_ITEM)"
         >
-          <VIcon color="#686868">
+          <VIcon color="grey darken-1">
             edit
           </VIcon>
         </VBtn>
@@ -59,7 +59,7 @@
             v-on="on"
             @click="clickItem(actions.DELETE_ITEM)"
           >
-            <VIcon color="#686868">
+            <VIcon color="grey darken-1">
               close
             </VIcon>
           </VBtn>
@@ -76,7 +76,7 @@
     >
       <template slot="activator" slot-scope="{ on }">
         <VBtn icon v-on="on">
-          <VIcon color="#686868">
+          <VIcon color="grey darken-1">
             more_vert
           </VIcon>
         </VBtn>
@@ -129,9 +129,6 @@
 
   import { AssessmentItemToolbarActions } from '../../constants';
 
-  const GRAY_DARK = '#686868';
-  const GRAY_LIGHT = '#9c9c9c';
-
   export default {
     name: 'AssessmentItemToolbar',
     props: {
@@ -172,16 +169,16 @@
     computed: {
       arrowUpColor() {
         if (this.canMoveUp) {
-          return GRAY_DARK;
+          return 'grey darken-1';
         } else {
-          return GRAY_LIGHT;
+          return 'grey lighten-2';
         }
       },
       arrowDownColor() {
         if (this.canMoveDown) {
-          return GRAY_DARK;
+          return 'grey darken-1';
         } else {
-          return GRAY_LIGHT;
+          return 'grey lighten-2';
         }
       },
     },

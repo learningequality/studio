@@ -9,39 +9,11 @@
           {{ question }}
         </div>
       </VFlex>
-
-      <VFlex
-        v-if="isInvalid"
-        :style="{paddingTop: '12px'}"
-        xs1
-        lg3
-      >
-        <template v-if="$vuetify.breakpoint.lgAndUp">
-          <VIcon class="red--text">
-            error
-          </VIcon>
-          <span
-            v-if="$vuetify.breakpoint.lgAndUp"
-            class="red--text font-weight-bold"
-          >
-            Incomplete
-          </span>
-        </template>
-
-        <VTooltip v-else top>
-          <template slot="activator" slot-scope="{ on }">
-            <VIcon class="red--text" v-on="on">
-              error
-            </VIcon>
-          </template>
-          <span>Incomplete</span>
-        </VTooltip>
-      </VFlex>
     </VLayout>
 
     <VLayout v-if="detailed" mt-3>
       <VFlex>
-        <div class="caption grey--text mb-1">
+        <div class="caption grey--text mb-2">
           Answers
         </div>
 
@@ -57,7 +29,7 @@
                 :key="idx"
                 :label="answer.answer"
                 :value="idx"
-                disabled
+                readonly
               />
             </VRadioGroup>
           </template>
@@ -69,7 +41,7 @@
               v-model="correctAnswersIndices"
               :label="answer.answer"
               :value="idx"
-              disabled
+              readonly
             />
           </template>
 
@@ -83,37 +55,40 @@
           </VList>
         </template>
 
-        <!--
-          class="hints-preview" is needed for precise click
-          target detection in AssessmentView.vue
-        -->
-        <div class="hints-preview">
-          <span
-            class="hints-toggle"
-            data-test="hintsToggle"
-            @click="areHintsOpen= !areHintsOpen"
-          >
-            <span>{{ hintsToggleLabel }}</span>
-
-            <span class="icon">
-              <v-icon v-if="areHintsOpen">arrow_drop_down</v-icon>
-              <v-icon v-else>arrow_drop_up</v-icon>
-            </span>
-          </span>
-
-          <VList v-if="areHintsOpen">
-            <VListTile
-              v-for="(hint, hintIdx) in hints"
-              :key="hintIdx"
+        <div class="mt-1">
+          <!--
+            class="hints-preview" is needed for precise click
+            target detection in AssessmentView.vue
+          -->
+          <span v-if="hintsCount === 0">No hints yet</span>
+          <div v-else class="hints-preview">
+            <span
+              class="hints-toggle"
+              data-test="hintsToggle"
+              @click="areHintsOpen= !areHintsOpen"
             >
-              <VFlex xs1>
-                {{ hint.order }}
-              </VFlex>
-              <VFlex xs2>
-                {{ hint.hint }}
-              </VFlex>
-            </VListTile>
-          </VList>
+              <span>{{ hintsToggleLabel }}</span>
+
+              <span class="icon">
+                <v-icon v-if="areHintsOpen">arrow_drop_down</v-icon>
+                <v-icon v-else>arrow_drop_up</v-icon>
+              </span>
+            </span>
+
+            <VList v-if="areHintsOpen">
+              <VListTile
+                v-for="(hint, hintIdx) in hints"
+                :key="hintIdx"
+              >
+                <VFlex xs1>
+                  {{ hint.order }}
+                </VFlex>
+                <VFlex>
+                  {{ hint.hint }}
+                </VFlex>
+              </VListTile>
+            </VList>
+          </div>
         </div>
       </VFlex>
     </VLayout>
@@ -147,10 +122,6 @@
         type: Boolean,
         default: false,
       },
-      isInvalid: {
-        type: Boolean,
-        default: false,
-      },
     },
     data() {
       return {
@@ -177,6 +148,10 @@
         return getCorrectAnswersIndices(this.kind, this.answers);
       },
       hintsToggleLabel() {
+        if (this.hintsCount === 0) {
+          return 'No hints yet';
+        }
+
         if (this.areHintsOpen) {
           return 'Hide hints';
         }
@@ -207,7 +182,19 @@
 
     .icon {
       position: relative;
-      top: 3px;
+      top: 1px;
+    }
+  }
+
+  /deep/ .v-input--selection-controls {
+    margin-top: 0;
+
+    .accent--text {
+      color: gray !important;
+    }
+
+    .v-input__slot {
+      margin-bottom: 0 !important;
     }
   }
 
