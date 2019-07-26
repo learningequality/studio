@@ -48,12 +48,4 @@ describe('AssessmentItemPreview', () => {
       expect(wrapper.html()).toMatchSnapshot();
     });
   });
-
-  it('renders error indicator if invalid true', () => {
-    wrapper.setProps({
-      isInvalid: true,
-    });
-
-    expect(wrapper.html()).toMatchSnapshot();
-  });
 });

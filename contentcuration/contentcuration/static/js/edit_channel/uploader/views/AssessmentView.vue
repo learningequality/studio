@@ -13,7 +13,7 @@
     <VCheckbox
       v-model="displayAnswersPreview"
       label="Show answers"
-      class="mt-4"
+      class="mt-4 ml-0"
       data-test="showAnswersCheckbox"
     />
 
@@ -21,33 +21,28 @@
       <VCard
         v-for="(itemData, itemIdx) in assessmentItemsData"
         :key="itemIdx"
-        class="pa-1 item"
+        pa-1
+        :class="itemClasses(itemIdx)"
         data-test="assessmentItem"
-        :style="itemStyle(itemIdx)"
         @click="onItemClick($event, itemIdx)"
       >
         <VCardText>
           <VLayout align-start>
-            <VFlex xs1>
+            <VFlex xs1 mt-2>
               {{ itemData.order + 1 }}
             </VFlex>
 
-            <VFlex
-              v-if="!isItemOpen(itemIdx)"
-              xs6
-              lg8
-            >
+            <VFlex v-if="!isItemOpen(itemIdx)" xs10>
               <AssessmentItemPreview
                 :question="itemData.question"
                 :kind="itemData.type"
                 :answers="itemData.answers"
                 :hints="itemData.hints"
                 :detailed="displayAnswersPreview"
-                :isInvalid="!isItemValid(itemIdx)"
               />
             </VFlex>
 
-            <VFlex>
+            <VFlex xs10>
               <AssessmentItemEdit
                 v-if="isItemOpen(itemIdx)"
                 :nodeId="nodeId"
@@ -59,22 +54,47 @@
 
             <VSpacer />
 
-            <AssessmentItemToolbar
-              itemLabel="question"
-              :displayDeleteIcon="false"
-              :displayEditIcon="!isItemOpen(itemIdx)"
-              :canMoveUp="!isItemFirst(itemIdx)"
-              :canMoveDown="!isItemLast(itemIdx)"
-              :collapse="!$vuetify.breakpoint.mdAndUp"
-              class="toolbar"
-              @click="onToolbarClick(itemIdx, $event)"
-            />
+            <VLayout align-center class="toolbar">
+              <VFlex
+                v-if="!isItemOpen(itemIdx) && !isItemValid(itemIdx)"
+                mr-2
+              >
+                <template v-if="$vuetify.breakpoint.lgAndUp">
+                  <VIcon class="red--text">
+                    error
+                  </VIcon>
+                  <span class="red--text font-weight-bold">
+                    Incomplete
+                  </span>
+                </template>
+
+                <VTooltip v-else top>
+                  <template slot="activator" slot-scope="{ on }">
+                    <VIcon class="red--text" v-on="on">
+                      error
+                    </VIcon>
+                  </template>
+                  <span>Incomplete</span>
+                </VTooltip>
+              </VFlex>
+
+              <VFlex>
+                <AssessmentItemToolbar
+                  itemLabel="question"
+                  :displayDeleteIcon="false"
+                  :displayEditIcon="!isItemOpen(itemIdx)"
+                  :canMoveUp="!isItemFirst(itemIdx)"
+                  :canMoveDown="!isItemLast(itemIdx)"
+                  :collapse="!$vuetify.breakpoint.mdAndUp"
+                  @click="onToolbarClick(itemIdx, $event)"
+                />
+              </VFlex>
+            </VLayout>
           </VLayout>
 
           <VLayout v-if="isItemOpen(itemIdx)" justify-end>
             <VBtn
               flat
-              color="primary"
               class="close-item-btn mr-0"
               data-test="closeBtn"
               @click="closeOpenItem"
@@ -92,14 +112,16 @@
 
     <VBtn
       color="primary"
-      class="mt-3"
+      class="mt-4 ml-0"
       data-test="newQuestionBtn"
       @click="onNewItemBtnClick"
     >
       New question
     </VBtn>
 
-    <!-- TODO @MisRob: Move to EditModal and merge with existing Dialog component -->
+    <!-- TODO @MisRob: As soon as we know how dialogs should behave within the context
+    of the whole edit modal, move to a more appropriate place (EditModal.vue maybe?)
+    and merge with existing Dialog component -->
     <DialogBox
       v-model="dialog.open"
       :title="dialog.title"
@@ -232,17 +254,14 @@
           assessmentItemIdx: itemIdx,
         });
       },
-      itemStyle(itemIdx) {
-        if (this.isItemOpen(itemIdx)) {
-          return {
-            margin: '8px 0',
-          };
+      itemClasses(itemIdx) {
+        const classes = ['item'];
+
+        if (!this.isItemOpen(itemIdx)) {
+          classes.push('closed');
         }
 
-        return {
-          margin: '0 8px',
-          cursor: 'pointer',
-        };
+        return classes;
       },
       onItemClick(event, itemIdx) {
         if (this.isItemOpen(itemIdx)) {
@@ -385,12 +404,21 @@
 </script>
 
 <style lang="less" scoped>
+
+  @import '../../../../less/global-variables.less';
+
   .item {
     position: relative;
+    margin: 8px -4px;
 
     .toolbar {
       position: absolute;
       right: 10px;
+    }
+
+    &.closed {
+      margin: 0 4px;
+      cursor: pointer;
     }
   }
 

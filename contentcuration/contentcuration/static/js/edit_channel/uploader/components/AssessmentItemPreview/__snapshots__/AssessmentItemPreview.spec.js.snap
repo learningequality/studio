@@ -11,29 +11,28 @@ exports[`AssessmentItemPreview if detailed true displays answers and hints toggl
         Question
       </div>
     </div>
-    <!---->
   </div>
   <div class="layout mt-3">
     <div class="flex">
-      <div class="caption grey--text mb-1">
+      <div class="caption grey--text mb-2">
         Answers
       </div>
       <div class="v-input v-input--selection-controls v-input--radio-group v-input--radio-group--column v-input--is-label-active v-input--is-dirty theme--light">
         <div class="v-input__control">
           <div class="v-input__slot" style="height: auto;">
             <div role="radiogroup" class="v-input--radio-group__input">
-              <div class="v-radio v-radio--is-disabled theme--light">
-                <div class="v-input--selection-controls__input"><input aria-label="Answer 1" aria-checked="false" disabled="disabled" role="radio" type="radio" name="v-radio-9" value="0">
+              <div class="v-radio theme--light">
+                <div class="v-input--selection-controls__input"><input aria-label="Answer 1" aria-checked="false" role="radio" type="radio" name="v-radio-9" value="0">
                   <div class="v-input--selection-controls__ripple"></div><i aria-hidden="true" class="v-icon material-icons theme--light">radio_button_unchecked</i>
                 </div><label aria-hidden="true" class="v-label theme--light" style="left: 0px; position: relative;">Answer 1</label>
               </div>
-              <div class="v-radio v-radio--is-disabled theme--light accent--text">
-                <div class="v-input--selection-controls__input"><input aria-label="Answer 2" aria-checked="true" disabled="disabled" role="radio" type="radio" name="v-radio-9" value="1">
+              <div class="v-radio theme--light accent--text">
+                <div class="v-input--selection-controls__input"><input aria-label="Answer 2" aria-checked="true" role="radio" type="radio" name="v-radio-9" value="1">
                   <div class="v-input--selection-controls__ripple accent--text"></div><i aria-hidden="true" class="v-icon material-icons theme--light accent--text">radio_button_checked</i>
                 </div><label aria-hidden="true" class="v-label theme--light" style="left: 0px; position: relative;">Answer 2</label>
               </div>
-              <div class="v-radio v-radio--is-disabled theme--light">
-                <div class="v-input--selection-controls__input"><input aria-label="Answer 3" aria-checked="false" disabled="disabled" role="radio" type="radio" name="v-radio-9" value="2">
+              <div class="v-radio theme--light">
+                <div class="v-input--selection-controls__input"><input aria-label="Answer 3" aria-checked="false" role="radio" type="radio" name="v-radio-9" value="2">
                   <div class="v-input--selection-controls__ripple"></div><i aria-hidden="true" class="v-icon material-icons theme--light">radio_button_unchecked</i>
                 </div><label aria-hidden="true" class="v-label theme--light" style="left: 0px; position: relative;">Answer 3</label>
               </div>
@@ -44,8 +43,10 @@ exports[`AssessmentItemPreview if detailed true displays answers and hints toggl
       </div>
       <!---->
       <!---->
-      <div class="hints-preview"><span data-test="hintsToggle" class="hints-toggle"><span>Show 2 hints</span> <span class="icon"><i aria-hidden="true" class="v-icon material-icons theme--light">arrow_drop_up</i></span></span>
-        <!---->
+      <div class="mt-1">
+        <div class="hints-preview"><span data-test="hintsToggle" class="hints-toggle"><span>Show 2 hints</span> <span class="icon"><i aria-hidden="true" class="v-icon material-icons theme--light">arrow_drop_up</i></span></span>
+          <!---->
+        </div>
       </div>
     </div>
   </div>
@@ -63,29 +64,28 @@ exports[`AssessmentItemPreview if detailed true displays hints on hints toggle c
         Question
       </div>
     </div>
-    <!---->
   </div>
   <div class="layout mt-3">
     <div class="flex">
-      <div class="caption grey--text mb-1">
+      <div class="caption grey--text mb-2">
         Answers
       </div>
       <div class="v-input v-input--selection-controls v-input--radio-group v-input--radio-group--column v-input--is-label-active v-input--is-dirty theme--light">
         <div class="v-input__control">
           <div class="v-input__slot" style="height: auto;">
             <div role="radiogroup" class="v-input--radio-group__input">
-              <div class="v-radio v-radio--is-disabled theme--light">
-                <div class="v-input--selection-controls__input"><input aria-label="Answer 1" aria-checked="false" disabled="disabled" role="radio" type="radio" name="v-radio-21" value="0">
+              <div class="v-radio theme--light">
+                <div class="v-input--selection-controls__input"><input aria-label="Answer 1" aria-checked="false" role="radio" type="radio" name="v-radio-21" value="0">
                   <div class="v-input--selection-controls__ripple"></div><i aria-hidden="true" class="v-icon material-icons theme--light">radio_button_unchecked</i>
                 </div><label aria-hidden="true" class="v-label theme--light" style="left: 0px; position: relative;">Answer 1</label>
               </div>
-              <div class="v-radio v-radio--is-disabled theme--light accent--text">
-                <div class="v-input--selection-controls__input"><input aria-label="Answer 2" aria-checked="true" disabled="disabled" role="radio" type="radio" name="v-radio-21" value="1">
+              <div class="v-radio theme--light accent--text">
+                <div class="v-input--selection-controls__input"><input aria-label="Answer 2" aria-checked="true" role="radio" type="radio" name="v-radio-21" value="1">
                   <div class="v-input--selection-controls__ripple accent--text"></div><i aria-hidden="true" class="v-icon material-icons theme--light accent--text">radio_button_checked</i>
                 </div><label aria-hidden="true" class="v-label theme--light" style="left: 0px; position: relative;">Answer 2</label>
               </div>
-              <div class="v-radio v-radio--is-disabled theme--light">
-                <div class="v-input--selection-controls__input"><input aria-label="Answer 3" aria-checked="false" disabled="disabled" role="radio" type="radio" name="v-radio-21" value="2">
+              <div class="v-radio theme--light">
+                <div class="v-input--selection-controls__input"><input aria-label="Answer 3" aria-checked="false" role="radio" type="radio" name="v-radio-21" value="2">
                   <div class="v-input--selection-controls__ripple"></div><i aria-hidden="true" class="v-icon material-icons theme--light">radio_button_unchecked</i>
                 </div><label aria-hidden="true" class="v-label theme--light" style="left: 0px; position: relative;">Answer 3</label>
               </div>
@@ -96,25 +96,27 @@ exports[`AssessmentItemPreview if detailed true displays hints on hints toggle c
       </div>
       <!---->
       <!---->
-      <div class="hints-preview"><span data-test="hintsToggle" class="hints-toggle"><span>Hide hints</span> <span class="icon"><i aria-hidden="true" class="v-icon material-icons theme--light">arrow_drop_down</i></span></span>
-        <div role="list" class="v-list theme--light">
-          <div role="listitem">
-            <div class="v-list__tile theme--light">
-              <div class="flex xs1">
-                1
-              </div>
-              <div class="flex xs2">
-                Hint 1
+      <div class="mt-1">
+        <div class="hints-preview"><span data-test="hintsToggle" class="hints-toggle"><span>Hide hints</span> <span class="icon"><i aria-hidden="true" class="v-icon material-icons theme--light">arrow_drop_down</i></span></span>
+          <div role="list" class="v-list theme--light">
+            <div role="listitem">
+              <div class="v-list__tile theme--light">
+                <div class="flex xs1">
+                  1
+                </div>
+                <div class="flex">
+                  Hint 1
+                </div>
               </div>
             </div>
-          </div>
-          <div role="listitem">
-            <div class="v-list__tile theme--light">
-              <div class="flex xs1">
-                2
-              </div>
-              <div class="flex xs2">
-                Hint 2
+            <div role="listitem">
+              <div class="v-list__tile theme--light">
+                <div class="flex xs1">
+                  2
+                </div>
+                <div class="flex">
+                  Hint 2
+                </div>
               </div>
             </div>
           </div>
@@ -136,26 +138,7 @@ exports[`AssessmentItemPreview renders 1`] = `
         Question
       </div>
     </div>
-    <!---->
   </div>
   <!---->
-</div>
-`;
-
-exports[`AssessmentItemPreview renders error indicator if invalid true 1`] = `
-<div>
-  <div class="layout align-top justify-space-between">
-    <div class="flex">
-      <div class="caption grey--text mb-1">
-        Single selection
-      </div>
-      <div>
-        Question
-      </div>
-    </div>
-    <div class="flex xs1 lg3" style="padding-top: 12px;"><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Incomplete</span></div><i aria-hidden="true" class="v-icon red--text material-icons theme--light">error</i></span>
-  </div>
-</div>
-<!---->
 </div>
 `;
