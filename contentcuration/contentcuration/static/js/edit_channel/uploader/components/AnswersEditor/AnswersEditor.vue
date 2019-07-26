@@ -28,7 +28,8 @@
             -->
             <VRadioGroup
               v-if="hasOneCorrectAnswer"
-              v-model="correctAnswersIndices"
+              :value="correctAnswersIndices"
+              @change="onCorrectAnswersIndicesUpdate"
             >
               <VRadio
                 :value="answerIdx"
@@ -40,9 +41,10 @@
             <VCheckbox
               v-if="isMultipleSelection"
               :key="answerIdx"
-              v-model="correctAnswersIndices"
               :value="answerIdx"
+              :input-value="correctAnswersIndices"
               :label="answerLabel(answerIdx)"
+              @change="onCorrectAnswersIndicesUpdate"
             />
 
             <div
@@ -158,24 +160,6 @@
       answers() {
         this.correctAnswersIndices = getCorrectAnswersIndices(this.questionKind, this.answers);
       },
-      correctAnswersIndices(newValue, oldValue) {
-        if (oldValue !== null) {
-          if (this.hasOneCorrectAnswer && newValue === oldValue) {
-            return;
-          }
-
-          if (
-            !this.hasOneCorrectAnswer &&
-            JSON.stringify([...newValue].sort()) === JSON.stringify([...oldValue].sort())
-          ) {
-            return;
-          }
-        }
-
-        const updatedAnswers = mapCorrectAnswers(this.answers, this.correctAnswersIndices);
-
-        this.emitUpdate(updatedAnswers);
-      },
     },
     methods: {
       isAnswerFirst(answerIdx) {
@@ -220,6 +204,26 @@
         }
 
         return classes;
+      },
+      onCorrectAnswersIndicesUpdate(newIndices) {
+        // indices can be an array or a single value - depends on question type
+        if (this.correctAnswersIndices !== null) {
+          if (this.hasOneCorrectAnswer && newIndices === this.correctAnswersIndices) {
+            return;
+          }
+
+          if (
+            !this.hasOneCorrectAnswer &&
+            JSON.stringify([...newIndices].sort()) ===
+              JSON.stringify([...this.correctAnswersIndices].sort())
+          ) {
+            return;
+          }
+        }
+
+        const updatedAnswers = mapCorrectAnswers(this.answers, newIndices);
+
+        this.emitUpdate(updatedAnswers);
       },
       emitOpen(answerIdx) {
         if (!this.isEditingAllowed) {
