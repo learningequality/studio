@@ -2,7 +2,7 @@ import { mount, createLocalVue } from '@vue/test-utils';
 import Vuex from 'vuex';
 
 import { AssessmentItemTypes, AssessmentItemValidationErrors } from '../../constants';
-import AssessmentItemEdit from './AssessmentItemEdit';
+import AssessmentItemEditor from './AssessmentItemEditor';
 
 // TODO @MisRob: Consistent imports
 const editModalGetters = require('../../vuex/getters');
@@ -83,7 +83,7 @@ const initWrapper = (state, propsData) => {
     },
   });
 
-  return mount(AssessmentItemEdit, {
+  return mount(AssessmentItemEditor, {
     localVue,
     store,
     propsData: {
@@ -122,7 +122,7 @@ const confirmationDialogMessage = wrapper => {
   return wrapper.vm.$store.state['edit_modal'].dialog.message;
 };
 
-describe('AssessmentItemEdit', () => {
+describe('AssessmentItemEditor', () => {
   let wrapper;
 
   it('renders', () => {

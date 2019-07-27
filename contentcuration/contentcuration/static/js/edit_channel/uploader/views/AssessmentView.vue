@@ -43,11 +43,11 @@
             </VFlex>
 
             <VFlex xs10>
-              <AssessmentItemEdit
+              <AssessmentItemEditor
                 v-if="isItemOpen(itemIdx)"
                 :nodeId="nodeId"
                 :itemIdx="itemIdx"
-                data-test="assessmentItemEdit"
+                data-test="assessmentItemEditor"
                 @close="onItemClose"
               />
             </VFlex>
@@ -155,7 +155,7 @@
 
   import { AssessmentItemToolbarActions } from '../constants';
 
-  import AssessmentItemEdit from '../components/AssessmentItemEdit/AssessmentItemEdit.vue';
+  import AssessmentItemEditor from '../components/AssessmentItemEditor/AssessmentItemEditor.vue';
   import AssessmentItemPreview from '../components/AssessmentItemPreview/AssessmentItemPreview.vue';
   import AssessmentItemToolbar from '../components/AssessmentItemToolbar/AssessmentItemToolbar.vue';
   import DialogBox from '../components/DialogBox/DialogBox.vue';
@@ -163,7 +163,7 @@
   export default {
     name: 'AssessmentView',
     components: {
-      AssessmentItemEdit,
+      AssessmentItemEditor,
       AssessmentItemPreview,
       AssessmentItemToolbar,
       DialogBox,

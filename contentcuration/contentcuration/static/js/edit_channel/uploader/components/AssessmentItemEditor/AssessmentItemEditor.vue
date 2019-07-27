@@ -90,7 +90,7 @@
   import MarkdownEditor from '../MarkdownEditor/MarkdownEditor.vue';
 
   export default {
-    name: 'AssessmentItemEdit',
+    name: 'AssessmentItemEditor',
     components: {
       AnswersEditor,
       HintsEditor,

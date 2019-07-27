@@ -109,7 +109,7 @@ const getAssessmentItems = wrapper => {
 };
 
 const isAssessmentItemOpen = assessmentItemWrapper => {
-  return assessmentItemWrapper.contains('[data-test="assessmentItemEdit"]');
+  return assessmentItemWrapper.contains('[data-test="assessmentItemEditor"]');
 };
 
 const clickClose = assessmentItemWrapper => {

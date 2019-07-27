@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`AssessmentItemEdit for an invalid item renders all errors messages 1`] = `
+exports[`AssessmentItemEditor for an invalid item renders all errors messages 1`] = `
 <div role="list" class="v-list theme--light" data-test="questionErrors">
   <div role="listitem">
     <div class="v-list__tile theme--light"><span class="red--text font-weight-medium">Question cannot be blank</span></div>
@@ -8,7 +8,7 @@ exports[`AssessmentItemEdit for an invalid item renders all errors messages 1`] 
 </div>
 `;
 
-exports[`AssessmentItemEdit for an invalid item renders all errors messages 2`] = `
+exports[`AssessmentItemEditor for an invalid item renders all errors messages 2`] = `
 <div role="list" class="v-list theme--light" data-test="answersErrors">
   <div role="listitem">
     <div class="v-list__tile theme--light"><span class="red--text font-weight-medium">Choose a correct answer</span></div>
@@ -16,7 +16,7 @@ exports[`AssessmentItemEdit for an invalid item renders all errors messages 2`] 
 </div>
 `;
 
-exports[`AssessmentItemEdit renders 1`] = `
+exports[`AssessmentItemEditor renders 1`] = `
 <div>
   <div class="layout">
     <div class="flex xs7 lg5">
