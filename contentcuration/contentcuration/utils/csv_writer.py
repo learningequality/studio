@@ -8,6 +8,8 @@ import time
 from time import sleep
 
 import progressbar
+from builtins import next
+from builtins import str
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.db.models import Sum

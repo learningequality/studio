@@ -4,6 +4,8 @@ import base64
 import json
 
 import requests
+from builtins import range
+from builtins import str
 from django.core.urlresolvers import reverse_lazy
 
 from .base import BaseTestCase

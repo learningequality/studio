@@ -4,12 +4,14 @@ from __future__ import absolute_import
 import json
 
 import pytest
+from builtins import str
 from django.core.files.storage import default_storage
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.urlresolvers import reverse_lazy
 from le_utils.constants import content_kinds
 from le_utils.constants import format_presets
 from mock import patch
+from past.builtins import basestring
 
 from .base import BaseAPITestCase
 from .testdata import base64encoding

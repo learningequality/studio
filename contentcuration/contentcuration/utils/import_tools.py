@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from past.builtins import basestring
 import datetime
 import json
 import logging
@@ -9,7 +13,7 @@ import sqlite3
 import sys
 import tempfile
 import zipfile
-from cStringIO import StringIO
+from io import BytesIO
 
 import requests
 from django.conf import settings
@@ -277,7 +281,7 @@ def download_file(filename, download_url=None, contentnode=None, assessment_item
 
     # Download file if it hasn't already been downloaded
     if download_url and not default_storage.exists(filepath):
-        buffer = StringIO()
+        buffer = BytesIO()
         response = requests.get('{}/content/storage/{}/{}/{}'.format(download_url, filename[0], filename[1], filename))
         for chunk in response:
             buffer.write(chunk)

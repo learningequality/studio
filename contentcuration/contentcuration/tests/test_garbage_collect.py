@@ -5,6 +5,7 @@ from datetime import datetime
 from datetime import timedelta
 
 import requests
+from builtins import range
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage

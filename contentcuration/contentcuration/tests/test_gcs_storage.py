@@ -1,5 +1,8 @@
 #!/usr/bin/env python
-from cStringIO import StringIO
+from future import standard_library
+standard_library.install_aliases()
+from builtins import object
+from io import BytesIO
 
 import pytest
 from django.core.files import File
@@ -52,7 +55,7 @@ class GoogleCloudStorageSaveTestCase(TestCase):
         self.blob_obj = self.blob_class("blob", "blob")
         self.mock_client = create_autospec(Client)
         self.storage = gcs(client=self.mock_client())
-        self.content = StringIO("content")
+        self.content = BytesIO("content")
 
     def test_calls_upload_from_file(self):
         """
@@ -77,7 +80,7 @@ class GoogleCloudStorageSaveTestCase(TestCase):
         """
         Check that it doesn't call upload_from_file if the file is empty.
         """
-        content = StringIO("")
+        content = BytesIO("")
         self.storage.save("myfile.jpg", content, blob_object=self.blob_obj)
 
         # check that upload_from_file is never called

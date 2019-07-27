@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+from builtins import range
 from django.db.models import Count
 from rest_framework.reverse import reverse
 from rest_framework.test import APIRequestFactory

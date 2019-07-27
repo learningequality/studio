@@ -1,13 +1,18 @@
 from __future__ import absolute_import
+from __future__ import division
 
 import json
 import random
 import string
 
+from builtins import range
+from builtins import str
+from builtins import zip
 from django.conf import settings
 from django.core.urlresolvers import reverse_lazy
 from django.db.utils import DataError
 from mixer.backend.django import mixer
+from past.utils import old_div
 
 from . import testdata
 from .base import BaseAPITestCase
@@ -36,7 +41,7 @@ def _create_nodes(num_nodes, title, parent=None, levels=2):
     for i in range(num_nodes):
         new_node = ContentNode.objects.create(title=title, parent=parent, kind=topic)
         # create a couple levels for testing purposes
-        if i > 0 and levels > 1 and i % (num_nodes / levels) == 0:
+        if i > 0 and levels > 1 and i % (old_div(num_nodes, levels)) == 0:
             parent = new_node
 
 

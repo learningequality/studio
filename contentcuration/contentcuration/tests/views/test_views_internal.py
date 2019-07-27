@@ -4,6 +4,8 @@ Tests for contentcuration.views.internal functions.
 """
 import uuid
 
+from builtins import filter
+from builtins import zip
 from django.core.urlresolvers import reverse_lazy
 from mixer.main import mixer
 from mock import patch
@@ -11,11 +13,11 @@ from rest_framework.test import APIClient
 
 from ..base import BaseAPITestCase
 from ..base import StudioTestCase
+from ..testdata import channel
 from ..testdata import create_temp_file
 from ..testdata import fileobj_exercise_graphie
 from ..testdata import fileobj_exercise_image
 from ..testdata import fileobj_video
-from ..testdata import channel
 from ..testdata import tree
 from ..testdata import user
 from contentcuration import ricecooker_versions as rc
@@ -476,7 +478,7 @@ class GetStagedDiffEndpointTestCase(BaseAPITestCase):
         ]
         differences = [40, 2, 4, 1, 3]
         for field, difference in zip(fields, differences):
-            diff = filter(lambda x: x["field"] == field, response.json())[0]
+            diff = list(filter(lambda x: x["field"] == field, response.json()))[0]
             self.assertEqual(diff["difference"], difference)
 
 
@@ -498,7 +500,7 @@ class AuthenticateUserEndpointTestCase(BaseAPITestCase):
         response = self.get(reverse_lazy("authenticate_user_internal"))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["user_id"], self.user.id)
-        self.assertEqual(response.json()["username"], unicode(self.user))
+        self.assertEqual(response.json()["username"], str(self.user))
         self.assertEqual(response.json()["first_name"], self.user.first_name)
         self.assertEqual(response.json()["last_name"], self.user.last_name)
         self.assertEqual(response.json()["is_admin"], self.user.is_admin)

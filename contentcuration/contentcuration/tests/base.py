@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 import datetime
 
+from builtins import str
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command

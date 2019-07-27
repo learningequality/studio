@@ -63,5 +63,5 @@ class ChannelDetailsTestCase(BaseAPITestCase):
                    content_kinds.HTML5: '1 Html App',
                    content_kinds.SLIDESHOW: '1 Slideshow',
                    'resource': '1 Total Resource'}
-        for kind, result in to_test.items():
+        for kind, result in list(to_test.items()):
             self.assertEqual(exporter.pluralize_constant(1, kind), result)

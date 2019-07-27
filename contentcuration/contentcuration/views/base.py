@@ -1,6 +1,7 @@
 import json
 import logging
 
+from builtins import str
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.sites.shortcuts import get_current_site

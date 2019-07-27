@@ -1,10 +1,12 @@
-import xmlrpclib
+from future import standard_library
+standard_library.install_aliases()
+import xmlrpc.client
 from socket import gaierror, error
 
 VERSION_OK = "0.6.0"
 
 try:
-    pypi = xmlrpclib.ServerProxy('https://pypi.python.org/pypi')
+    pypi = xmlrpc.client.ServerProxy('https://pypi.python.org/pypi')
     VERSION_OK = pypi.package_releases('ricecooker')[0]
 except (gaierror, error):
     pass

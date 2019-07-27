@@ -1,3 +1,5 @@
+from __future__ import division
+
 import collections
 import itertools
 import json
@@ -11,6 +13,7 @@ import uuid
 import zipfile
 from itertools import chain
 
+from builtins import str
 from django.conf import settings
 from django.core.files import File
 from django.core.files.storage import default_storage as storage
@@ -31,6 +34,8 @@ from le_utils.constants import exercises
 from le_utils.constants import file_formats
 from le_utils.constants import format_presets
 from le_utils.constants import roles
+from past.builtins import cmp
+from past.utils import old_div
 
 from contentcuration import models as ccmodels
 from contentcuration.statistics import record_publish_stats
@@ -123,7 +128,7 @@ def map_content_nodes(root_node, default_language, channel_id, channel_name, use
 
     task_percent_total = 80.0
     total_nodes = root_node.get_descendant_count() + 1  # make sure we include root_node
-    percent_per_node = task_percent_total / total_nodes
+    percent_per_node = old_div(task_percent_total, total_nodes)
 
     current_node_percent = 0.0
 
@@ -465,7 +470,7 @@ def write_assessment_item(assessment_item, zf):
             answer['answer'], answer_images = process_image_strings(answer['answer'], zf)
             answer.update({'images': answer_images})
 
-    answer_data = list(filter(lambda a: a['answer'] or a['answer'] == 0, answer_data))  # Filter out empty answers, but not 0
+    answer_data = list([a for a in answer_data if a['answer'] or a['answer'] == 0])  # Filter out empty answers, but not 0
 
     hint_data = json.loads(assessment_item.hints)
     for hint in hint_data:

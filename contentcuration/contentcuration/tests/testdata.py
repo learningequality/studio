@@ -1,9 +1,11 @@
+from future import standard_library
+standard_library.install_aliases()
 import hashlib
 import json
 import os
 import random
 import string
-from cStringIO import StringIO
+from io import BytesIO
 from tempfile import TemporaryFile
 
 import pytest
@@ -214,10 +216,10 @@ def create_studio_file(filebytes, preset='document', ext='pdf', original_filenam
     Returns a dict containing the following:
     - name (str): the filename within the content storage system (= md5 hash of the contents + .ext )
     - data (bytes): file content (echo of `filebytes`)
-    - file (file): a basic StringIO file-like object that you can read/write
+    - file (file): a basic BytesIO file-like object that you can read/write
     - db_file (cc.File): a Studio File object saved in DB
     """
-    fileobj = StringIO(filebytes)
+    fileobj = BytesIO(filebytes)
     hash = hashlib.md5(filebytes)
     checksum = hash.hexdigest()
     filename = "{}.{}".format(checksum, ext)

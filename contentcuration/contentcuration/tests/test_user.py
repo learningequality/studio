@@ -6,6 +6,7 @@ import datetime
 import json
 import tempfile
 
+from builtins import range
 from django.core.management import call_command
 from django.core.urlresolvers import reverse_lazy
 from django.test import TransactionTestCase

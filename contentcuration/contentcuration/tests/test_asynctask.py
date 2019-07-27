@@ -1,5 +1,8 @@
 from __future__ import absolute_import
 
+from builtins import range
+from builtins import str
+
 from .base import BaseAPITestCase
 from contentcuration.models import ContentNode
 from contentcuration.models import Task

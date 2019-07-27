@@ -75,18 +75,18 @@ class GetPrerequisitesTestCase(BaseAPITestCase):
     def test_get_prerequisites_only_check_nodes(self):
         response = self.get(reverse("get_prerequisites", kwargs={"get_postrequisites": "false", "ids": ",".join((self.node1.id, self.node2.id))}))
         tree_nodes = response.json()["prerequisite_tree_nodes"]
-        self.assertTrue(len(filter(lambda x: x["id"] == self.node1.id, tree_nodes)) > 0)
-        self.assertTrue(len(filter(lambda x: x["id"] == self.node2.id, tree_nodes)) > 0)
-        self.assertTrue(len(filter(lambda x: x["id"] == self.prereq.id, tree_nodes)) > 0)
-        self.assertTrue(len(filter(lambda x: x["id"] == self.postreq.id, tree_nodes)) == 0)
+        self.assertTrue(len([x for x in tree_nodes if x["id"] == self.node1.id]) > 0)
+        self.assertTrue(len([x for x in tree_nodes if x["id"] == self.node2.id]) > 0)
+        self.assertTrue(len([x for x in tree_nodes if x["id"] == self.prereq.id]) > 0)
+        self.assertTrue(len([x for x in tree_nodes if x["id"] == self.postreq.id]) == 0)
 
     def test_get_postrequisites_check_nodes(self):
         response = self.get(reverse("get_prerequisites", kwargs={"get_postrequisites": "true", "ids": ",".join((self.node1.id, self.node2.id))}))
         tree_nodes = response.json()["prerequisite_tree_nodes"]
-        self.assertTrue(len(filter(lambda x: x["id"] == self.node1.id, tree_nodes)) > 0)
-        self.assertTrue(len(filter(lambda x: x["id"] == self.node2.id, tree_nodes)) > 0)
-        self.assertTrue(len(filter(lambda x: x["id"] == self.prereq.id, tree_nodes)) > 0)
-        self.assertTrue(len(filter(lambda x: x["id"] == self.postreq.id, tree_nodes)) > 0)
+        self.assertTrue(len([x for x in tree_nodes if x["id"] == self.node1.id]) > 0)
+        self.assertTrue(len([x for x in tree_nodes if x["id"] == self.node2.id]) > 0)
+        self.assertTrue(len([x for x in tree_nodes if x["id"] == self.prereq.id]) > 0)
+        self.assertTrue(len([x for x in tree_nodes if x["id"] == self.postreq.id]) > 0)
 
     def test_get_prerequisites_no_permissions(self):
         channel = Channel.objects.create()

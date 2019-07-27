@@ -1,7 +1,10 @@
 from __future__ import absolute_import
 
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
 import datetime
-from cStringIO import StringIO
+from io import BytesIO
 
 from django.conf import settings
 from django.core.files.base import ContentFile
@@ -78,7 +81,7 @@ class GetFileDiffTestCase(StudioTestCase):
 
         self.existing_content = "dowereallyexist.jpg"
         self.existing_content_path = generate_object_storage_name("dowereallyexist", self.existing_content)
-        storage.save(self.existing_content_path, StringIO("maybe"))
+        storage.save(self.existing_content_path, BytesIO("maybe"))
 
     def test_returns_empty_if_content_already_exists(self):
         """Test if get_file_diff returns an empty list if all the files we pass in are
@@ -124,7 +127,7 @@ class FileFormatsTestCase(StudioTestCase):
         Note: if this test fails, it's likely because le_utils file formats aren't synced.
         """
         from le_utils.constants import file_formats
-        known_extensions = dict(file_formats.choices).keys()
+        known_extensions = list(dict(file_formats.choices).keys())
 
         for ext in known_extensions:
             file_with_ext = File.objects.create(

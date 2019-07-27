@@ -67,7 +67,7 @@ def get_node_diff(request, channel_id):
             node_changed = node.assessment_items.count() != copied_node.assessment_items.count() or \
                 node.files.count() != copied_node.files.count() or \
                 node.tags.count() != copied_node.tags.count() or \
-                any(filter(lambda f: getattr(node, f, None) != getattr(copied_node, f, None), fields_to_check)) or \
+                any([f for f in fields_to_check if getattr(node, f, None) != getattr(copied_node, f, None)]) or \
                 node.tags.exclude(tag_name__in=copied_node.tags.values_list('tag_name', flat=True)).exists() or \
                 node.files.exclude(checksum__in=copied_node.files.values_list('checksum', flat=True)).exists() or \
                 node.assessment_items.exclude(assessment_id__in=copied_node.assessment_items.values_list('assessment_id', flat=True)).exists()
@@ -77,7 +77,7 @@ def get_node_diff(request, channel_id):
                 for ai in node.assessment_items.all():
                     source_ai = copied_node.assessment_items.filter(assessment_id=ai.assessment_id).first()
                     if source_ai:
-                        node_changed = node_changed or any(filter(lambda f: getattr(ai, f, None) != getattr(source_ai, f, None), assessment_fields_to_check))
+                        node_changed = node_changed or any([f for f in assessment_fields_to_check if getattr(ai, f, None) != getattr(source_ai, f, None)])
                         if node_changed:
                             break
 

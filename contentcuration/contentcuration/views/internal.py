@@ -3,6 +3,7 @@ import logging
 from collections import namedtuple
 from distutils.version import LooseVersion
 
+from builtins import str
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
 from django.core.exceptions import SuspiciousOperation
@@ -65,7 +66,7 @@ def authenticate_user_internal(request):
     return Response({
         'success': True,
         'user_id': request.user.id,
-        'username': unicode(request.user),
+        'username': str(request.user),
         'first_name': request.user.first_name,
         'last_name': request.user.last_name,
         'is_admin': request.user.is_admin,

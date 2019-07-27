@@ -5,6 +5,8 @@ import functools
 import json
 import os
 
+from builtins import str
+from builtins import zip
 from django.core.urlresolvers import reverse_lazy
 
 from .base import BaseAPITestCase
@@ -65,7 +67,7 @@ def compare_trees_children(nodeA, nodeB, attrs=['title'], mapA={}, mapB={}, recu
     if childrenA and not childrenB or not childrenA and childrenB:
         return ['different children']
     elif childrenA and childrenB:
-        children_pairs = zip(childrenA, childrenB)
+        children_pairs = list(zip(childrenA, childrenB))
         for children_pair in children_pairs:
             childA, childB = children_pair
             children_attr_diff = compare_node_attrs(childA, childB, attrs=attrs, mapA=mapA, mapB=mapB)

@@ -2,6 +2,8 @@ import json
 import re
 from collections import OrderedDict
 
+from builtins import object
+from builtins import zip
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import ValidationError as DjangoValidationError
@@ -163,7 +165,7 @@ class ContentKindSerializer(serializers.ModelSerializer):
     associated_presets = serializers.SerializerMethodField('retrieve_associated_presets')
 
     def retrieve_associated_presets(self, kind):
-        return FormatPreset.objects.filter(kind=kind).values()
+        return list(FormatPreset.objects.filter(kind=kind).values())
 
     class Meta:
         model = ContentKind
@@ -198,7 +200,7 @@ class CustomListSerializer(serializers.ListSerializer):
         all_tags = []
         for tag_data in unformatted_input_tags:
             # when deleting nodes, tag_data is a dict, but when adding nodes, it's a unicode string
-            if isinstance(tag_data, unicode):
+            if isinstance(tag_data, str):
                 tag_data = json.loads(tag_data)
             tag_tuple = ContentTag.objects.get_or_create(tag_name=tag_data['tag_name'], channel_id=tag_data['channel'])
             all_tags.append(tag_tuple[0])
@@ -214,17 +216,17 @@ class CustomListSerializer(serializers.ListSerializer):
 
         # Perform updates.
         if update_nodes:
-            record_node_addition_stats(update_nodes, ContentNode.objects.get(id=update_nodes.itervalues().next()['id']),
+            record_node_addition_stats(update_nodes, ContentNode.objects.get(id=iter(update_nodes.values()).next()['id']),
                                        self.context['request'].user.id)
             with transaction.atomic():
                 with ContentNode.objects.delay_mptt_updates():
-                    for node_id, data in update_nodes.items():
+                    for node_id, data in list(update_nodes.items()):
                         node, is_new = ContentNode.objects.get_or_create(pk=node_id)
 
                         taglist = []
                         for tag_data in tag_mapping.get(node_id, None):
                             # when deleting nodes, tag_data is a dict, but when adding nodes, it's a unicode string
-                            if isinstance(tag_data, unicode):
+                            if isinstance(tag_data, str):
                                 tag_data = json.loads(tag_data)
 
                             # this requires optimization
@@ -242,7 +244,7 @@ class CustomListSerializer(serializers.ListSerializer):
                                 original_parent.save()
 
                         # potential optimization opportunity
-                        for attr, value in data.items():
+                        for attr, value in list(data.items()):
                             setattr(node, attr, value)
                         node.tags = taglist
 
@@ -276,7 +278,7 @@ class AssessmentListSerializer(serializers.ListSerializer):
 
         with transaction.atomic():
             # only handle existing items
-            aitems = AssessmentItem.objects.filter(id__in=validated_data_by_id.keys())
+            aitems = AssessmentItem.objects.filter(id__in=list(validated_data_by_id.keys()))
             if len(validated_data) != aitems.count():
                 raise ValidationError('Could not find all objects to update')
             for aitem in aitems:
@@ -401,7 +403,7 @@ class SimplifiedContentNodeSerializer(BulkSerializerMixin, serializers.ModelSeri
         ModelClass = self.Meta.model
         info = model_meta.get_field_info(ModelClass)
         many_to_many = {}
-        for field_name, relation_info in info.relations.items():
+        for field_name, relation_info in list(info.relations.items()):
             if relation_info.to_many and (field_name in validated_data):
                 many_to_many[field_name] = validated_data.pop(field_name)
 
@@ -434,7 +436,7 @@ class SimplifiedContentNodeSerializer(BulkSerializerMixin, serializers.ModelSeri
             many_to_many.pop('tags')
 
         if many_to_many:
-            for field_name, value in many_to_many.items():
+            for field_name, value in list(many_to_many.items()):
                 setattr(instance, field_name, value)
 
         instance.save()
@@ -447,7 +449,7 @@ class SimplifiedContentNodeSerializer(BulkSerializerMixin, serializers.ModelSeri
         so just bypass the raise_errors_on_nested_writes().
         This may need to change in the future when we need to do crazy things on nested writable field.
         """
-        for attr, value in validated_data.items():
+        for attr, value in list(validated_data.items()):
             setattr(instance, attr, value)
         instance.save()
         return instance
@@ -468,13 +470,13 @@ class ContentNodeFieldMixin(object):
 
     def get_creators(self, descendants):
         creators = descendants.values_list('copyright_holder', 'author', 'aggregator', 'provider')
-        split_lst = zip(*creators)
+        split_lst = list(zip(*creators))
 
         return {
-            "copyright_holders": filter(lambda x: x, set(split_lst[0])) if len(split_lst) > 0 else [],
-            "authors": filter(lambda x: x, set(split_lst[1])) if len(split_lst) > 1 else [],
-            "aggregators": filter(lambda x: x, set(split_lst[2])) if len(split_lst) > 2 else [],
-            "providers": filter(lambda x: x, set(split_lst[3])) if len(split_lst) > 3 else [],
+            "copyright_holders": [x for x in set(split_lst[0]) if x] if len(split_lst) > 0 else [],
+            "authors": [x for x in set(split_lst[1]) if x] if len(split_lst) > 1 else [],
+            "aggregators": [x for x in set(split_lst[2]) if x] if len(split_lst) > 2 else [],
+            "providers": [x for x in set(split_lst[3]) if x] if len(split_lst) > 3 else [],
         }
 
     def retrieve_thumbail_src(self, node):
@@ -547,11 +549,11 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer, ContentNodeFieldMix
         elif node.kind_id == content_kinds.EXERCISE:
             for aitem in node.assessment_items.exclude(type=exercises.PERSEUS_QUESTION):
                 answers = json.loads(aitem.answers)
-                correct_answers = filter(lambda a: a['correct'], answers)
+                correct_answers = [a for a in answers if a['correct']]
                 if aitem.question == "" or len(answers) == 0 or len(correct_answers) == 0 or \
-                        any(filter(lambda a: a['answer'] == "", answers)) or \
+                        any([a for a in answers if a['answer'] == ""]) or \
                         (aitem.type == exercises.SINGLE_SELECTION and len(correct_answers) > 1) or \
-                        any(filter(lambda h: h['hint'] == "", json.loads(aitem.hints))):
+                        any([h for h in json.loads(aitem.hints) if h['hint'] == ""]):
                     return False
             return True
         else:

@@ -1,7 +1,8 @@
 import os
-import pathlib
 import subprocess
 
+import pathlib
+from builtins import str
 from django.conf import settings
 from django.test import TestCase
 
