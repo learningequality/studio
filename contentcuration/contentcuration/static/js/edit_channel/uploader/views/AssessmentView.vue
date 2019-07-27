@@ -188,31 +188,6 @@
         return '';
       },
     },
-    watch: {
-      selectedIndices(newSelectedIndices, oldSelectedIndices) {
-        // TODO: as soon as we have routing, this should be rather placed
-        // in beforeRouteLeave navigation guard and we should not allow
-        // leaving this exercise route before fixing all errors
-        // (insted of changing selected nodes index back)
-        // ------------------------------------------------------------------
-
-        // assessment view is accessible only when exactly one exercise node is selected
-        const oldNodeIndex = oldSelectedIndices[0];
-        const oldNodeId = this.getNode(oldNodeIndex).id;
-
-        this.sanitizeNodeAssessmentDraft({ nodeId: oldNodeId });
-        this.validateNodeAssessmentDraft({ nodeId: oldNodeId });
-
-        if (!this.isNodeAssessmentDraftValid(oldNodeId)) {
-          this.SELECT_NODE(oldNodeIndex);
-
-          // TODO @MisRob display dialog
-          return;
-        }
-
-        this.closeOpenItem();
-      },
-    },
     created() {
       if (this.nodeAssessmentDraft(this.nodeId) !== null) {
         return;
@@ -225,7 +200,6 @@
     },
     methods: {
       ...mapMutations('edit_modal', [
-        'SELECT_NODE',
         'addNodeAssessmentDraft',
         'sanitizeNodeAssessmentDraft',
         'validateNodeAssessmentDraft',
