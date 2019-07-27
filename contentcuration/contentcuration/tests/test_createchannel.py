@@ -1,11 +1,13 @@
+from __future__ import absolute_import
+
 import base64
 import json
 
 import requests
-from base import BaseTestCase
 from django.core.urlresolvers import reverse_lazy
-from testdata import create_studio_file
 
+from .base import BaseTestCase
+from .testdata import create_studio_file
 from contentcuration import models
 from contentcuration import models as cc
 

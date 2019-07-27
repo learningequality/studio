@@ -1,31 +1,31 @@
+from __future__ import absolute_import
+
 import datetime
 from cStringIO import StringIO
+
 from django.conf import settings
-from django.test import TestCase
-
-
-from base import StudioTestCase
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from django.core.management import call_command
-
-from contentcuration.models import ContentKind
-from contentcuration.models import File
-from contentcuration.models import FileFormat
-from contentcuration.models import FormatPreset
-from contentcuration.models import Language
-from contentcuration.models import License
-from contentcuration.models import generate_object_storage_name
-from contentcuration.models import User
-from contentcuration.utils.files import get_file_diff
-from contentcuration.utils.policies import check_policies
-from contentcuration.utils.policies import POLICIES
-
+from django.test import TestCase
 from le_utils.constants import content_kinds
 from le_utils.constants import file_formats
 from le_utils.constants import format_presets
 from le_utils.constants import languages
 from le_utils.constants import licenses
+
+from .base import StudioTestCase
+from contentcuration.models import ContentKind
+from contentcuration.models import File
+from contentcuration.models import FileFormat
+from contentcuration.models import FormatPreset
+from contentcuration.models import generate_object_storage_name
+from contentcuration.models import Language
+from contentcuration.models import License
+from contentcuration.models import User
+from contentcuration.utils.files import get_file_diff
+from contentcuration.utils.policies import check_policies
+from contentcuration.utils.policies import POLICIES
 
 
 class TestTheTestsTestCase(StudioTestCase):
@@ -181,4 +181,3 @@ class LoadConstantsManagementCommandTestCase(TestCase):
         for model in self.models:
             qset = model.objects.all()
             assert len(list(qset)) > 3, 'Only {} constants of type {} created.'.format(len(list(qset)), str(model))
-

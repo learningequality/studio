@@ -1,5 +1,6 @@
-from base import BaseAPITestCase
+from __future__ import absolute_import
 
+from .base import BaseAPITestCase
 from contentcuration.models import ContentNode
 from contentcuration.models import Task
 from contentcuration.tasks import create_async_task

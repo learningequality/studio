@@ -1,12 +1,13 @@
+from __future__ import absolute_import
 from __future__ import print_function
 
 import functools
 import json
 import os
 
-from base import BaseAPITestCase
 from django.core.urlresolvers import reverse_lazy
 
+from .base import BaseAPITestCase
 from contentcuration import models as cc
 
 

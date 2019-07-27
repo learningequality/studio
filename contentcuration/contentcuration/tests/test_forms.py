@@ -1,6 +1,8 @@
+from __future__ import absolute_import
+
 import copy
 
-from base import BaseTestCase
+from .base import BaseTestCase
 from contentcuration import forms
 
 

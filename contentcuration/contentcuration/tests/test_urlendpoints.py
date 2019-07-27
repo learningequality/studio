@@ -1,8 +1,11 @@
+from __future__ import absolute_import
+
 import importlib
 
-from base import StudioTestCase
 from django.conf import settings
 from django.core.urlresolvers import reverse
+
+from .base import StudioTestCase
 
 
 class AllUrlsTest(StudioTestCase):

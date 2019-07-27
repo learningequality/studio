@@ -1,15 +1,17 @@
+from __future__ import absolute_import
+
 import json
 import random
 import string
 
-import testdata
-from base import BaseAPITestCase
-from base import BaseTestCase
 from django.conf import settings
 from django.core.urlresolvers import reverse_lazy
 from django.db.utils import DataError
 from mixer.backend.django import mixer
 
+from . import testdata
+from .base import BaseAPITestCase
+from .base import BaseTestCase
 from .testdata import create_studio_file
 from .testdata import node_json
 from .testdata import tree

@@ -1,9 +1,11 @@
+from __future__ import absolute_import
+
 import pytest
-from base import BaseAPITestCase
 from django.core.files.storage import default_storage
 from django.core.urlresolvers import reverse_lazy
 from le_utils.constants import content_kinds
 
+from .base import BaseAPITestCase
 from contentcuration.utils.export_writer import ChannelDetailsCSVWriter
 from contentcuration.utils.export_writer import ChannelDetailsPDFWriter
 from contentcuration.utils.export_writer import ChannelDetailsPPTWriter

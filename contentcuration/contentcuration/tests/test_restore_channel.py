@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+
 import datetime
 import json
 import sys
 import uuid
 from cStringIO import StringIO
 
-from base import StudioTestCase
 from django.core.files.storage import default_storage
 from django.template.loader import render_to_string
 from le_utils.constants import exercises
@@ -13,6 +14,7 @@ from mixer.backend.django import mixer
 from mock import MagicMock
 from mock import patch
 
+from .base import StudioTestCase
 from contentcuration.models import AssessmentItem
 from contentcuration.models import generate_object_storage_name
 from contentcuration.utils.import_tools import create_channel

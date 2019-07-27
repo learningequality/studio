@@ -1,13 +1,15 @@
+from __future__ import absolute_import
+
 import json
 
 import pytest
-from base import BaseAPITestCase
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.urlresolvers import reverse_lazy
 from le_utils.constants import content_kinds
-from testdata import tree
 
+from .base import BaseAPITestCase
+from .testdata import tree
 from contentcuration import models as cc
 from contentcuration.api import activate_channel
 from contentcuration.utils.garbage_collect import clean_up_deleted_chefs

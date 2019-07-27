@@ -1,14 +1,16 @@
 #!/usr/bin/env python
+from __future__ import absolute_import
+
 from datetime import datetime
 from datetime import timedelta
 
 import requests
-from base import StudioTestCase
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from le_utils.constants import content_kinds
 
+from .base import StudioTestCase
 from contentcuration.models import ContentNode
 from contentcuration.models import File
 from contentcuration.utils.garbage_collect import clean_up_contentnodes

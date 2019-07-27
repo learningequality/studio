@@ -1,8 +1,10 @@
+from __future__ import absolute_import
+
 from io import BytesIO
 
-from base import StudioTestCase
 from django.core.urlresolvers import reverse
 
+from .base import StudioTestCase
 from contentcuration.models import AssessmentItem
 from contentcuration.models import File
 

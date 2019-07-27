@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: content-curation\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-07-25 22:12+0000\n"
+"POT-Creation-Date: 2019-07-27 00:12+0000\n"
 "PO-Revision-Date: 2019-07-25 21:26\n"
 "Last-Translator: learningequality\n"
 "Language-Team: Spanish\n"
@@ -669,14 +669,6 @@ msgstr "Inglés"
 #: contentcuration/contentcuration/settings.py:268
 msgid "Spanish"
 msgstr "Español"
-
-#: contentcuration/contentcuration/settings.py:270
-msgid "Spanish - Spain"
-msgstr "Español - España"
-
-#: contentcuration/contentcuration/settings.py:271
-msgid "Spanish - Mexico"
-msgstr "Español - México"
 
 #: contentcuration/contentcuration/tasks.py:226
 msgid "Unknown error starting task. Please contact support."
@@ -3086,3 +3078,9 @@ msgstr "El informe de problemas se ha enviado para ser procesado"
 #: contentcuration/kolibri_content/models.py:185
 msgid "Unknown format"
 msgstr "Formato desconocido"
+
+#~ msgid "Spanish - Spain"
+#~ msgstr "Español - España"
+
+#~ msgid "Spanish - Mexico"
+#~ msgstr "Español - México"

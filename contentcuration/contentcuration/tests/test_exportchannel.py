@@ -1,16 +1,18 @@
+from __future__ import absolute_import
+
 import os
 import random
 import string
 import tempfile
 
 import pytest
-from base import StudioTestCase
 from django.test.utils import override_settings
 from kolibri_content import models
 from kolibri_content.router import using_content_database
 from mixer.backend.django import mixer
 from mock import patch
 
+from .base import StudioTestCase
 from .testdata import create_studio_file
 from .testdata import exercise
 from .testdata import slideshow

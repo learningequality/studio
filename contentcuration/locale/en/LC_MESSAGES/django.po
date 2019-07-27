@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-07-25 21:27+0000\n"
+"POT-Creation-Date: 2019-07-27 00:12+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -650,14 +650,6 @@ msgstr ""
 
 #: contentcuration/contentcuration/settings.py:268
 msgid "Spanish"
-msgstr ""
-
-#: contentcuration/contentcuration/settings.py:270
-msgid "Spanish - Spain"
-msgstr ""
-
-#: contentcuration/contentcuration/settings.py:271
-msgid "Spanish - Mexico"
 msgstr ""
 
 #: contentcuration/contentcuration/tasks.py:226

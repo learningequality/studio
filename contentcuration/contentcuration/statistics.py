@@ -83,7 +83,7 @@ def record_node_addition_stats(nodes_being_added, original_first_node, user_id):
     action_attributes = dict(action_source='Human', content_source='Human', user_id=user_id)
 
     # The first node to be added in this action.
-    first_node = nodes_being_added.itervalues().next()
+    first_node = next(nodes_being_added.itervalues())
     action_attributes['content_type'] = first_node['kind'].kind.title()
 
     num_resources = 0
@@ -205,7 +205,7 @@ def record_action_stats(nodes_being_added, user_id):
     action_attributes = dict(action_source='Human', content_source='Human', user_id=user_id)
 
     # The first node to be added in this action.
-    first_node = nodes_being_added.itervalues().next()
+    first_node = next(nodes_being_added.itervalues())
     action_attributes['content_type'] = first_node['kind'].kind.title()
 
     if 'id' in first_node and ContentNode.objects.get(id=first_node['id']).parent is not None:

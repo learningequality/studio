@@ -1,13 +1,15 @@
+from __future__ import absolute_import
+
 import datetime
 import json
 
 import pytz
-from base import BaseAPITestCase
 from django.conf import settings
 from django.core.cache import cache
 from le_utils.constants import content_kinds
 from rest_framework.reverse import reverse
 
+from .base import BaseAPITestCase
 from .testdata import tree
 from contentcuration.models import Channel
 from contentcuration.models import ContentKind

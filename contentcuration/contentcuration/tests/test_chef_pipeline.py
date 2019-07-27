@@ -1,13 +1,15 @@
+from __future__ import absolute_import
+
 import json
 
-from base import BaseAPITestCase
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
-from testdata import create_test_file
-from testdata import invalid_file_json
-from testdata import node_json
-from testdata import user
 
+from .base import BaseAPITestCase
+from .testdata import create_test_file
+from .testdata import invalid_file_json
+from .testdata import node_json
+from .testdata import user
 from contentcuration import models as cc
 
 

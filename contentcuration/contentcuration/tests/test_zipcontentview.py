@@ -1,8 +1,10 @@
+from __future__ import absolute_import
+
 import os
 import tempfile
 import zipfile
 
-from base import BaseTestCase
+from .base import BaseTestCase
 
 
 class ZipFileTestCase(BaseTestCase):

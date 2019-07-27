@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: content-curation\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-07-24 22:56+0000\n"
+"POT-Creation-Date: 2019-07-27 00:12+0000\n"
 "PO-Revision-Date: 2019-07-25 21:27\n"
 "Last-Translator: learningequality\n"
 "Language-Team: Hindi\n"
@@ -405,7 +405,8 @@ msgid "Please indicate the author, curator, and/or aggregator of your content"
 msgstr ""
 
 #: contentcuration/contentcuration/forms.py:395
-msgid "Please indicate approximately how many resources you are planning to upload"
+msgid ""
+"Please indicate approximately how many resources you are planning to upload"
 msgstr ""
 
 #: contentcuration/contentcuration/forms.py:398
@@ -417,7 +418,9 @@ msgid "Please indicate your target audience"
 msgstr ""
 
 #: contentcuration/contentcuration/forms.py:400
-msgid "Please indicate how many times this content will be imported into Kolibri per month"
+msgid ""
+"Please indicate how many times this content will be imported into Kolibri "
+"per month"
 msgstr ""
 
 #: contentcuration/contentcuration/forms.py:402
@@ -475,9 +478,18 @@ msgid "Name of the channel you were working on"
 msgstr ""
 
 #: contentcuration/contentcuration/forms.py:518
-msgid "A description of the steps you took, and what error message(s) you received, if any. \n\n"
+msgid ""
+"A description of the steps you took, and what error message(s) you received, "
+"if any. \n"
+"\n"
 "For example: \n"
-"I ran into an issue while copying content from the clipboard into the Algebra topic of my Math Grade 10 channel. I selected the \"Algebra basics\" topic from from the Khan Academy channel in the Math topic, added it into my clipboard, and then opened my channel, went to the Algebra topic, then opened the clipboard and dragged the \"Algebra basics\" topic into it. It appeared to be copying for a while, but then I received an error message that said \"500 HTTP Internal Server Error\"."
+"I ran into an issue while copying content from the clipboard into the "
+"Algebra topic of my Math Grade 10 channel. I selected the \"Algebra basics\" "
+"topic from from the Khan Academy channel in the Math topic, added it into my "
+"clipboard, and then opened my channel, went to the Algebra topic, then "
+"opened the clipboard and dragged the \"Algebra basics\" topic into it. It "
+"appeared to be copying for a while, but then I received an error message "
+"that said \"500 HTTP Internal Server Error\"."
 msgstr ""
 
 #: contentcuration/contentcuration/middleware/db_readonly.py:24
@@ -638,14 +650,6 @@ msgstr ""
 msgid "Spanish"
 msgstr ""
 
-#: contentcuration/contentcuration/settings.py:270
-msgid "Spanish - Spain"
-msgstr ""
-
-#: contentcuration/contentcuration/settings.py:271
-msgid "Spanish - Mexico"
-msgstr ""
-
 #: contentcuration/contentcuration/tasks.py:226
 msgid "Unknown error starting task. Please contact support."
 msgstr ""
@@ -682,12 +686,20 @@ msgid "Log Out"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/base.html:150
-msgid "Contentworkshop.learningequality.org has been deprecated. Please go to <a href=\"https://studio.learningequality.org\">studio.learningequality.org</a> for the latest version of Studio"
+msgid ""
+"Contentworkshop.learningequality.org has been deprecated. Please go to <a "
+"href=\"https://studio.learningequality.org\">studio.learningequality.org</a> "
+"for the latest version of Studio"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/base.html:154
 #, python-format
-msgid "Kolibri Studio is undergoing active development, and during usage you may encounter unexpected behavior or problems. <a href=\"%(issue_url)s\" target=\"_blank\">Please read here</a> on best practices, known issues, and error reporting recommendations. We appreciate your patience and assistance as we work to improve the Kolibri Studio Beta!"
+msgid ""
+"Kolibri Studio is undergoing active development, and during usage you may "
+"encounter unexpected behavior or problems. <a href=\"%(issue_url)s\" target="
+"\"_blank\">Please read here</a> on best practices, known issues, and error "
+"reporting recommendations. We appreciate your patience and assistance as we "
+"work to improve the Kolibri Studio Beta!"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/channel_edit.html:30
@@ -909,8 +921,10 @@ msgstr ""
 #: contentcuration/contentcuration/templates/export/channel_detail_pdf_condensed.html:240
 #: contentcuration/contentcuration/templates/export/channel_detail_pdf_condensed.html:249
 #, python-format
-msgid "\n"
-"                                            <span class=\"no-break\">(+ %(count)s more)</span>\n"
+msgid ""
+"\n"
+"                                            <span class=\"no-break\">(+ "
+"%(count)s more)</span>\n"
 "                                        "
 msgstr ""
 
@@ -929,7 +943,8 @@ msgstr ""
 
 #: contentcuration/contentcuration/templates/export/channel_detail_pdf_condensed.html:289
 #, python-format
-msgid "\n"
+msgid ""
+"\n"
 "                                    <b>(+ %(count)s more)</b>\n"
 "                                "
 msgstr ""
@@ -942,7 +957,8 @@ msgstr ""
 #: contentcuration/contentcuration/templates/export/channel_detail_pdf_condensed.html:314
 #: contentcuration/contentcuration/templates/export/channel_detail_pdf_condensed.html:330
 #, python-format
-msgid "\n"
+msgid ""
+"\n"
 "                                <b>(+ %(count)s more)</b>\n"
 "                            "
 msgstr ""
@@ -1051,12 +1067,15 @@ msgid "Here are the channels you have view access to: "
 msgstr ""
 
 #: contentcuration/contentcuration/templates/export/user_csv_email.txt:23
-msgid "Information regarding items you have uploaded has been attached in a csv."
+msgid ""
+"Information regarding items you have uploaded has been attached in a csv."
 msgstr ""
 
 #: contentcuration/contentcuration/templates/export/user_csv_email.txt:26
 #, python-format
-msgid "If you have any questions or concerns regarding your information, please email us at %(legal_email)s."
+msgid ""
+"If you have any questions or concerns regarding your information, please "
+"email us at %(legal_email)s."
 msgstr ""
 
 #: contentcuration/contentcuration/templates/export/user_csv_email_subject.txt:1
@@ -1081,7 +1100,8 @@ msgid "Invititation to %(share_mode)s channel"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/permissions/permissions_email.html:104
-msgid "Click one of the following links to either accept or decline your invitation:"
+msgid ""
+"Click one of the following links to either accept or decline your invitation:"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/permissions/permissions_email.html:107
@@ -1099,7 +1119,9 @@ msgid "has invited you to %(share_mode)s a channel at "
 msgstr ""
 
 #: contentcuration/contentcuration/templates/permissions/permissions_email.txt:9
-msgid "Please follow this link to create an account (you must be logged in to accept or decline invitations):"
+msgid ""
+"Please follow this link to create an account (you must be logged in to "
+"accept or decline invitations):"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/permissions/permissions_email.txt:12
@@ -1112,7 +1134,8 @@ msgid "You've been invited to %(share_mode)s"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/policies/policy_accept.html:8
-msgid "We have updated our policies. Please accept the following terms to continue"
+msgid ""
+"We have updated our policies. Please accept the following terms to continue"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/policies/policy_accept.html:18
@@ -1129,11 +1152,16 @@ msgid "Privacy Notice"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/policies/text/boilerplate.html:5
-msgid " This privacy notice discloses the privacy practices for (<a link=\"#\">website</a>). This privacy notice applies solely to information collected by this website. It will notify you of the following: "
+msgid ""
+" This privacy notice discloses the privacy practices for (<a link=\"#"
+"\">website</a>). This privacy notice applies solely to information collected "
+"by this website. It will notify you of the following: "
 msgstr ""
 
 #: contentcuration/contentcuration/templates/policies/text/boilerplate.html:7
-msgid "What personally identifiable information is collected from you through the website, how it is used and with whom it may be shared."
+msgid ""
+"What personally identifiable information is collected from you through the "
+"website, how it is used and with whom it may be shared."
 msgstr ""
 
 #: contentcuration/contentcuration/templates/policies/text/boilerplate.html:8
@@ -1141,7 +1169,8 @@ msgid "What choices are available to you regarding the use of your data."
 msgstr ""
 
 #: contentcuration/contentcuration/templates/policies/text/boilerplate.html:9
-msgid "The security procedures in place to protect the misuse of your information."
+msgid ""
+"The security procedures in place to protect the misuse of your information."
 msgstr ""
 
 #: contentcuration/contentcuration/templates/policies/text/boilerplate.html:10
@@ -1153,15 +1182,26 @@ msgid "Information Collection, Use, and Sharing"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/policies/text/boilerplate.html:14
-msgid "We are the sole owners of the information collected on this site. We only have access to/collect information that you voluntarily give us via email or other direct contact from you. We will not sell or rent this information to anyone."
+msgid ""
+"We are the sole owners of the information collected on this site. We only "
+"have access to/collect information that you voluntarily give us via email or "
+"other direct contact from you. We will not sell or rent this information to "
+"anyone."
 msgstr ""
 
 #: contentcuration/contentcuration/templates/policies/text/boilerplate.html:16
-msgid "We will use your information to respond to you, regarding the reason you contacted us. We will not share your information with any third party outside of our organization, other than as necessary to fulfill your request, e.g. to ship an order."
+msgid ""
+"We will use your information to respond to you, regarding the reason you "
+"contacted us. We will not share your information with any third party "
+"outside of our organization, other than as necessary to fulfill your "
+"request, e.g. to ship an order."
 msgstr ""
 
 #: contentcuration/contentcuration/templates/policies/text/boilerplate.html:18
-msgid "Unless you ask us not to, we may contact you via email in the future to tell you about specials, new products or services, or changes to this privacy policy."
+msgid ""
+"Unless you ask us not to, we may contact you via email in the future to tell "
+"you about specials, new products or services, or changes to this privacy "
+"policy."
 msgstr ""
 
 #: contentcuration/contentcuration/templates/policies/text/boilerplate.html:20
@@ -1169,7 +1209,10 @@ msgid "Your Access to and Control Over Information"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/policies/text/boilerplate.html:21
-msgid "You may opt out of any future contacts from us at any time. You can do the following at any time by contacting us via the email address or phone number given on our website:"
+msgid ""
+"You may opt out of any future contacts from us at any time. You can do the "
+"following at any time by contacting us via the email address or phone number "
+"given on our website:"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/policies/text/boilerplate.html:23
@@ -1193,19 +1236,35 @@ msgid "Security"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/policies/text/boilerplate.html:30
-msgid "We take precautions to protect your information. When you submit sensitive information via the website, your information is protected both online and offline."
+msgid ""
+"We take precautions to protect your information. When you submit sensitive "
+"information via the website, your information is protected both online and "
+"offline."
 msgstr ""
 
 #: contentcuration/contentcuration/templates/policies/text/boilerplate.html:32
-msgid "Wherever we collect sensitive information (such as credit card data), that information is encrypted and transmitted to us in a secure way. You can verify this by looking for a lock icon in the address bar and looking for \"https\" at the beginning of the address of the Web page."
+msgid ""
+"Wherever we collect sensitive information (such as credit card data), that "
+"information is encrypted and transmitted to us in a secure way. You can "
+"verify this by looking for a lock icon in the address bar and looking for "
+"\"https\" at the beginning of the address of the Web page."
 msgstr ""
 
 #: contentcuration/contentcuration/templates/policies/text/boilerplate.html:34
-msgid "While we use encryption to protect sensitive information transmitted online, we also protect your information offline. Only employees who need the information to perform a specific job (for example, billing or customer service) are granted access to personally identifiable information. The computers/servers in which we store personally identifiable information are kept in a secure environment."
+msgid ""
+"While we use encryption to protect sensitive information transmitted online, "
+"we also protect your information offline. Only employees who need the "
+"information to perform a specific job (for example, billing or customer "
+"service) are granted access to personally identifiable information. The "
+"computers/servers in which we store personally identifiable information are "
+"kept in a secure environment."
 msgstr ""
 
 #: contentcuration/contentcuration/templates/policies/text/boilerplate.html:36
-msgid " If you feel that we are not abiding by this privacy policy, you should contact us immediately via telephone at <a\">XXX YYY-ZZZZ</a> or <a>via email</a>."
+msgid ""
+" If you feel that we are not abiding by this privacy policy, you should "
+"contact us immediately via telephone at <a\">XXX YYY-ZZZZ</a> or <a>via "
+"email</a>."
 msgstr ""
 
 #: contentcuration/contentcuration/templates/policies/text/privacy_policy_2018_5_25.html:4
@@ -1216,20 +1275,49 @@ msgid "Privacy Policy"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/policies/text/privacy_policy_2018_5_25.html:5
-msgid "This Privacy Policy informs you of our privacy practices and your choices and rights around the personal data that we collect. This Privacy Policy applies to the Kolibri application (\"Application\"), Kolibri Studio (\"Studio\"), and all related websites (herein collectively referred to as \"Kolibri\"). This Privacy Statement does not apply to third party applications or partner organizations that may use our software or be used in conjunction with our software.\n"
+msgid ""
+"This Privacy Policy informs you of our privacy practices and your choices "
+"and rights around the personal data that we collect. This Privacy Policy "
+"applies to the Kolibri application (\"Application\"), Kolibri Studio "
+"(\"Studio\"), and all related websites (herein collectively referred to as "
+"\"Kolibri\"). This Privacy Statement does not apply to third party "
+"applications or partner organizations that may use our software or be used "
+"in conjunction with our software.\n"
 " "
 msgstr ""
 
 #: contentcuration/contentcuration/templates/policies/text/privacy_policy_2018_5_25.html:8
-msgid "Learning Equality recognizes your right to privacy, and will take reasonable steps to protect this. Some parts of Kolibri allow you to give us personal information, such as your name and email address. We may use the information you provide to improve Kolibri. Where you have choices about how we use the information you provide, we will indicate this at the point of collection. Because of the way Kolibri operates, we may also use information from your browser or browsing activities to personalize or route you to relevant information. For example, we may use your IP address, browser information, cookies or web beacons in ways that help us maintain some of your preferences, or understand how our visitors navigate the site so we can improve it. We may store your personal information outside of the European Union. "
+msgid ""
+"Learning Equality recognizes your right to privacy, and will take reasonable "
+"steps to protect this. Some parts of Kolibri allow you to give us personal "
+"information, such as your name and email address. We may use the information "
+"you provide to improve Kolibri. Where you have choices about how we use the "
+"information you provide, we will indicate this at the point of collection. "
+"Because of the way Kolibri operates, we may also use information from your "
+"browser or browsing activities to personalize or route you to relevant "
+"information. For example, we may use your IP address, browser information, "
+"cookies or web beacons in ways that help us maintain some of your "
+"preferences, or understand how our visitors navigate the site so we can "
+"improve it. We may store your personal information outside of the European "
+"Union. "
 msgstr ""
 
 #: contentcuration/contentcuration/templates/policies/text/privacy_policy_2018_5_25.html:10
-msgid "Learning Equality is committed to learning constantly and improving the quality of Kolibri, and records related to your interactions with Kolibri may be used for research. Research findings will typically be reported at the aggregate level, and your personal identity will never be publicly disclosed in any research findings without your express consent. Learn more about Learning Equality's <a href=\"https://learningequality.org/about/values/\">core values</a>."
+msgid ""
+"Learning Equality is committed to learning constantly and improving the "
+"quality of Kolibri, and records related to your interactions with Kolibri "
+"may be used for research. Research findings will typically be reported at "
+"the aggregate level, and your personal identity will never be publicly "
+"disclosed in any research findings without your express consent. Learn more "
+"about Learning Equality's <a href=\"https://learningequality.org/about/"
+"values/\">core values</a>."
 msgstr ""
 
 #: contentcuration/contentcuration/templates/policies/text/privacy_policy_2018_5_25.html:14
-msgid "If you have any questions about these practices or use of your personal information, please email <a class=\"mailto:legal@learningequality.org\">legal@learningequality.org</a>."
+msgid ""
+"If you have any questions about these practices or use of your personal "
+"information, please email <a class=\"mailto:legal@learningequality.org"
+"\">legal@learningequality.org</a>."
 msgstr ""
 
 #: contentcuration/contentcuration/templates/policies/text/terms_of_service.html:9
@@ -1287,7 +1375,9 @@ msgstr ""
 
 #: contentcuration/contentcuration/templates/registration/activation_needed_email.txt:6
 #, python-format
-msgid "You requested a password reset on %(site_name)s without activating your account first."
+msgid ""
+"You requested a password reset on %(site_name)s without activating your "
+"account first."
 msgstr ""
 
 #: contentcuration/contentcuration/templates/registration/activation_needed_email.txt:8
@@ -1296,7 +1386,9 @@ msgstr ""
 
 #: contentcuration/contentcuration/templates/registration/channel_published_email.txt:6
 #, python-format
-msgid "%(channel_name)s has finished publishing! Here is the published ID (for importing this channel into Kolibri):"
+msgid ""
+"%(channel_name)s has finished publishing! Here is the published ID (for "
+"importing this channel into Kolibri):"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/registration/channel_published_email.txt:8
@@ -1310,7 +1402,8 @@ msgid "Name: %(channel_name)s"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/registration/channel_published_email.txt:18
-msgid "You are receiving this email because you are subscribed to this channel."
+msgid ""
+"You are receiving this email because you are subscribed to this channel."
 msgstr ""
 
 #: contentcuration/contentcuration/templates/registration/getting_started.html:16
@@ -1322,7 +1415,9 @@ msgid "Email or password is incorrect"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/registration/login.html:18
-msgid "Your account doesn't have access to this page. To proceed, please login with an account that has access."
+msgid ""
+"Your account doesn't have access to this page. To proceed, please login with "
+"an account that has access."
 msgstr ""
 
 #: contentcuration/contentcuration/templates/registration/login.html:20
@@ -1396,7 +1491,9 @@ msgid "Password reset unsuccessful."
 msgstr ""
 
 #: contentcuration/contentcuration/templates/registration/password_reset_confirm.html:21
-msgid "The password reset link was invalid, possibly because it has already been used. "
+msgid ""
+"The password reset link was invalid, possibly because it has already been "
+"used. "
 msgstr ""
 
 #: contentcuration/contentcuration/templates/registration/password_reset_confirm.html:22
@@ -1408,15 +1505,21 @@ msgid "Password reset email sent."
 msgstr ""
 
 #: contentcuration/contentcuration/templates/registration/password_reset_done.html:13
-msgid "We've emailed you instructions for setting your password, if an account exists with the email you entered. You should receive them shortly."
+msgid ""
+"We've emailed you instructions for setting your password, if an account "
+"exists with the email you entered. You should receive them shortly."
 msgstr ""
 
 #: contentcuration/contentcuration/templates/registration/password_reset_done.html:14
-msgid "If you don't receive an email, please make sure you've entered the address you registered with, and check your spam folder."
+msgid ""
+"If you don't receive an email, please make sure you've entered the address "
+"you registered with, and check your spam folder."
 msgstr ""
 
 #: contentcuration/contentcuration/templates/registration/password_reset_email.html:92
-msgid "You are receiving this e-mail because you requested a password reset for your user account at"
+msgid ""
+"You are receiving this e-mail because you requested a password reset for "
+"your user account at"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/registration/password_reset_email.html:98
@@ -1437,7 +1540,9 @@ msgstr ""
 
 #: contentcuration/contentcuration/templates/registration/password_reset_email.txt:5
 #, python-format
-msgid "You're receiving this e-mail because you requested a password reset for your user account at %(site_name)s."
+msgid ""
+"You're receiving this e-mail because you requested a password reset for your "
+"user account at %(site_name)s."
 msgstr ""
 
 #: contentcuration/contentcuration/templates/registration/password_reset_email.txt:7
@@ -1449,7 +1554,8 @@ msgid "Your username, in case you've forgotten:"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/registration/password_reset_form.html:16
-msgid "Enter your email, and we'll send instructions for setting a new password."
+msgid ""
+"Enter your email, and we'll send instructions for setting a new password."
 msgstr ""
 
 #: contentcuration/contentcuration/templates/registration/password_reset_form.html:24
@@ -1465,7 +1571,8 @@ msgid "Registration is temporarily closed. Please check back later."
 msgstr ""
 
 #: contentcuration/contentcuration/templates/registration/registration_complete.html:14
-msgid "Thanks for registering! Please check your email for your activation link."
+msgid ""
+"Thanks for registering! Please check your email for your activation link."
 msgstr ""
 
 #: contentcuration/contentcuration/templates/registration/registration_form.html:29
@@ -1490,12 +1597,16 @@ msgid "Select One"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/registration/registration_information_form.html:78
-msgid "I have read and agreed to the <a id=\"policy_link\" data-toggle=\"modal\" data-target=\"#policyModal\">Privacy Policy</a>"
+msgid ""
+"I have read and agreed to the <a id=\"policy_link\" data-toggle=\"modal\" "
+"data-target=\"#policyModal\">Privacy Policy</a>"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/registration/registration_information_form.html:83
 #, python-format
-msgid "Questions or concerns? Please email us at <a href=\"mailto:%(help_email)s\" class=\"login-action-text\">%(help_email)s</a>"
+msgid ""
+"Questions or concerns? Please email us at <a href=\"mailto:%(help_email)s\" "
+"class=\"login-action-text\">%(help_email)s</a>"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/registration/registration_information_form.html:88
@@ -1508,7 +1619,8 @@ msgstr ""
 
 #: contentcuration/contentcuration/templates/registration/registration_needed_email.txt:6
 #, python-format
-msgid "You requested a password reset on %(site_name)s without registering first."
+msgid ""
+"You requested a password reset on %(site_name)s without registering first."
 msgstr ""
 
 #: contentcuration/contentcuration/templates/registration/registration_needed_email.txt:8
@@ -1564,7 +1676,9 @@ msgid "You are the only editor for the following channels:"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/account.html:67
-msgid "You must delete these channels manually or invite others to these channels before you can delete your account."
+msgid ""
+"You must delete these channels manually or invite others to these channels "
+"before you can delete your account."
 msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/account.html:69
@@ -1597,7 +1711,9 @@ msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/account.html:92
 #, python-format
-msgid "If the problem persists, please email us at <a href=\"mailto:%(email)s\">%(email)s</a>"
+msgid ""
+"If the problem persists, please email us at <a href=\"mailto:%(email)s\">"
+"%(email)s</a>"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/account.html:98
@@ -1627,7 +1743,9 @@ msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/account_deleted_user_email.txt:7
 #, python-format
-msgid "If this was a mistake, please email us at %(legal_email)s by %(buffer_date)s (%(num_days)s days from now)."
+msgid ""
+"If this was a mistake, please email us at %(legal_email)s by %(buffer_date)s "
+"(%(num_days)s days from now)."
 msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/issue_report_email.txt:8
@@ -1635,11 +1753,15 @@ msgid "Thank you for reporting your issue. Here is a copy of your report:"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/issue_report_email.txt:20
-msgid "We are currently reviewing the information that you have provided, and will file your issue accordingly."
+msgid ""
+"We are currently reviewing the information that you have provided, and will "
+"file your issue accordingly."
 msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/issue_report_email.txt:21
-msgid "We appreciate your patience and assistance as we work to improve the Kolibri Studio Beta!"
+msgid ""
+"We appreciate your patience and assistance as we work to improve the Kolibri "
+"Studio Beta!"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/issues.html:10
@@ -1647,11 +1769,22 @@ msgid "About the Kolibri Studio Beta"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/issues.html:11
-msgid "Kolibri Studio is Beta software, which means it is currently undergoing active development. As such, it is being regularly updated, and some changes could cause unexpected behavior or challenges (also known as \"issues\"). While we make every effort to ensure your work is saved and backed up, <b>during active development it's possible that some issues could cause data loss</b>, so we recommend you save and publish changes regularly, and notify us of issues as soon as they occur to help us resolve them. (See below for instructions on how to report issues.)"
+msgid ""
+"Kolibri Studio is Beta software, which means it is currently undergoing "
+"active development. As such, it is being regularly updated, and some changes "
+"could cause unexpected behavior or challenges (also known as \"issues\"). "
+"While we make every effort to ensure your work is saved and backed up, "
+"<b>during active development it's possible that some issues could cause data "
+"loss</b>, so we recommend you save and publish changes regularly, and notify "
+"us of issues as soon as they occur to help us resolve them. (See below for "
+"instructions on how to report issues.)"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/issues.html:13
-msgid "We appreciate your patience and assistance as we work to improve Kolibri Studio and make it an even better tool for importing and curating educational content for Kolibri! "
+msgid ""
+"We appreciate your patience and assistance as we work to improve Kolibri "
+"Studio and make it an even better tool for importing and curating "
+"educational content for Kolibri! "
 msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/issues.html:16
@@ -1659,35 +1792,58 @@ msgid "Best Practices"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/issues.html:19
-msgid "When using import and clipboard operations, <b>work with small subsets of topics</b> instead of whole channels at once (especially for large channels)."
+msgid ""
+"When using import and clipboard operations, <b>work with small subsets of "
+"topics</b> instead of whole channels at once (especially for large channels)."
 msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/issues.html:20
-msgid "It is preferable to create multiple <b>small channels</b> rather than one giant channel with many layers of topics."
+msgid ""
+"It is preferable to create multiple <b>small channels</b> rather than one "
+"giant channel with many layers of topics."
 msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/issues.html:21
-msgid "<b>Reload the page often</b> to ensure your work was saved to the server and no network errors have occurred. Use <b>CTRL+R</b> on linux/windows or <b>⌘+R</b> on mac."
+msgid ""
+"<b>Reload the page often</b> to ensure your work was saved to the server and "
+"no network errors have occurred. Use <b>CTRL+R</b> on linux/windows or <b>⌘"
+"+R</b> on mac."
 msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/issues.html:22
-msgid "<b>Avoid concurrent edits on the same channel</b>. Channels should not be edited by multiple users at the same time or by the same user in multiple browser windows."
+msgid ""
+"<b>Avoid concurrent edits on the same channel</b>. Channels should not be "
+"edited by multiple users at the same time or by the same user in multiple "
+"browser windows."
 msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/issues.html:23
-msgid "It is possible that you will encounter <b>timeout errors</b> in your browser when performing operations like import and sync, on large channels. Don't be alarmed by this error message and <b>do not repeat the same operation again right away</b>. It doesn't mean the operation has failed—Studio is still working in the background. <b>Wait a few minutes</b> and <b>reload the page</b> before continuing your edits."
+msgid ""
+"It is possible that you will encounter <b>timeout errors</b> in your browser "
+"when performing operations like import and sync, on large channels. Don't be "
+"alarmed by this error message and <b>do not repeat the same operation again "
+"right away</b>. It doesn't mean the operation has failed—Studio is still "
+"working in the background. <b>Wait a few minutes</b> and <b>reload the page</"
+"b> before continuing your edits."
 msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/issues.html:24
-msgid "<b>Compress videos</b> before uploading them (see <a class=\"link-text\" target=\"_blank\" href=\"https://github.com/learningequality/ricecooker/blob/master/docs/video_compression.md#handbrake\">these instructions</a>)."
+msgid ""
+"<b>Compress videos</b> before uploading them (see <a class=\"link-text\" "
+"target=\"_blank\" href=\"https://github.com/learningequality/ricecooker/blob/"
+"master/docs/video_compression.md#handbrake\">these instructions</a>)."
 msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/issues.html:25
-msgid "<b>PUBLISH periodically</b> and import your channel into Kolibri to preview the content and obtain a local backup copy of your channel."
+msgid ""
+"<b>PUBLISH periodically</b> and import your channel into Kolibri to preview "
+"the content and obtain a local backup copy of your channel."
 msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/issues.html:26
-msgid "<b>Do not edit the channel after you click PUBLISH</b>. Wait for the notification email before resuming editing operations."
+msgid ""
+"<b>Do not edit the channel after you click PUBLISH</b>. Wait for the "
+"notification email before resuming editing operations."
 msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/issues.html:27
@@ -1704,7 +1860,14 @@ msgid "#1052 Reports of disappearing content"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/issues.html:33
-msgid "Two users have reported isolated incidents where content they imported from another channel disappeared, leaving only empty topics and subtopics. In one report, the content later re-appeared. They did not experience these problems consistently, and the incidents may possibly involve issues with a slow or unstable internet connection. <b>If you run into this issue, please contact us as soon as possible and let us know as much information as you can remember.</b>"
+msgid ""
+"Two users have reported isolated incidents where content they imported from "
+"another channel disappeared, leaving only empty topics and subtopics. In one "
+"report, the content later re-appeared. They did not experience these "
+"problems consistently, and the incidents may possibly involve issues with a "
+"slow or unstable internet connection. <b>If you run into this issue, please "
+"contact us as soon as possible and let us know as much information as you "
+"can remember.</b>"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/issues.html:35
@@ -1712,7 +1875,13 @@ msgid "#1072 Slow performance can lead to unexpected UI state"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/issues.html:36
-msgid "Some operations in Studio are currently very slow, and so it may appear that the change you attempted to make timed out or did not take effect. In many cases, the change is still being processed and will appear once it is complete. If, after 5-10 minutes, the change still has not taken effect even after a browser refresh, please file an issue. We are working on solutions to these issues."
+msgid ""
+"Some operations in Studio are currently very slow, and so it may appear that "
+"the change you attempted to make timed out or did not take effect. In many "
+"cases, the change is still being processed and will appear once it is "
+"complete. If, after 5-10 minutes, the change still has not taken effect even "
+"after a browser refresh, please file an issue. We are working on solutions "
+"to these issues."
 msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/issues.html:39
@@ -1720,7 +1889,12 @@ msgid "Reporting Issues"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/issues.html:40
-msgid "To report an issue, please fill out the form below. If you are familiar with GitHub and have a GitHub account, you may alternatively report issues via our <a class=\"link-text\" target=\"_blank\" href=\"https://github.com/learningequality/studio/issues\">GitHub Issue Tracker</a> (please be sure to fill out all relevant fields in the issue template)."
+msgid ""
+"To report an issue, please fill out the form below. If you are familiar with "
+"GitHub and have a GitHub account, you may alternatively report issues via "
+"our <a class=\"link-text\" target=\"_blank\" href=\"https://github.com/"
+"learningequality/studio/issues\">GitHub Issue Tracker</a> (please be sure to "
+"fill out all relevant fields in the issue template)."
 msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/issues.html:60
@@ -1755,7 +1929,9 @@ msgid "Preferences"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/preferences.html:9
-msgid "Set defaults for filling out content details. Defaults will be applied when a new channel is created."
+msgid ""
+"Set defaults for filling out content details. Defaults will be applied when "
+"a new channel is created."
 msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/preferences.html:12
@@ -1879,7 +2055,14 @@ msgid "Request More Space"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/storage.html:32
-msgid "Kindly use this form to request additional uploading storage for your Kolibri Studio account. If you import content from our public library in your channels, this content does not count towards your storage limit. <a class=\"link-text\" target=\"_blank\" href='https://kolibri-studio.readthedocs.io/en/latest/add_content.html#import-content-from-other-channels'>Click here to learn more how to import content from other channels.</a>\n"
+msgid ""
+"Kindly use this form to request additional uploading storage for your "
+"Kolibri Studio account. If you import content from our public library in "
+"your channels, this content does not count towards your storage limit. <a "
+"class=\"link-text\" target=\"_blank\" href='https://kolibri-studio."
+"readthedocs.io/en/latest/add_content.html#import-content-from-other-"
+"channels'>Click here to learn more how to import content from other channels."
+"</a>\n"
 "\t"
 msgstr ""
 
@@ -1904,11 +2087,15 @@ msgid "What kind of content are you uploading?"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/storage.html:58
-msgid "Who is the author (creator), curator (organizer), and/or aggregator (maintainer) of your content? Please specify"
+msgid ""
+"Who is the author (creator), curator (organizer), and/or aggregator "
+"(maintainer) of your content? Please specify"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/storage.html:59
-msgid "Please provide a link to a sample of your content (on Studio or from source site)"
+msgid ""
+"Please provide a link to a sample of your content (on Studio or from source "
+"site)"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/storage.html:62
@@ -1916,7 +2103,9 @@ msgid "Who can use your content?"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/storage.html:64
-msgid "What is the licensing of the content you are uploading? (Check all that apply)"
+msgid ""
+"What is the licensing of the content you are uploading? (Check all that "
+"apply)"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/storage.html:71
@@ -1924,8 +2113,15 @@ msgid "Learn More"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/storage.html:80
-msgid "\n"
-"\t\t\t\t\tIf the content is openly licensed, would you be willing to consider making your channels <a id=\"public_help\" class='link-text' data-toggle=\"tooltip\" data-placement=\"top\" title=\"By making a channel public, you are allowing anyone on Kolibri Studio to access your content and use it in their own channels. Channels submitted for public use will be reviewed by the Learning Equality team.\">public</a> to other Kolibri users if requested in the future? (Select all that apply)\n"
+msgid ""
+"\n"
+"\t\t\t\t\tIf the content is openly licensed, would you be willing to "
+"consider making your channels <a id=\"public_help\" class='link-text' data-"
+"toggle=\"tooltip\" data-placement=\"top\" title=\"By making a channel "
+"public, you are allowing anyone on Kolibri Studio to access your content and "
+"use it in their own channels. Channels submitted for public use will be "
+"reviewed by the Learning Equality team.\">public</a> to other Kolibri users "
+"if requested in the future? (Select all that apply)\n"
 "\t\t\t\t"
 msgstr ""
 
@@ -1934,7 +2130,8 @@ msgid "How are you using your content?"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/storage.html:91
-msgid "Who is the intended audience for your channel? How big is your audience?"
+msgid ""
+"Who is the intended audience for your channel? How big is your audience?"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/storage.html:96
@@ -1942,7 +2139,9 @@ msgid "What is the target region(s) for your content (if applicable)?"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/storage.html:99
-msgid "How many times will this content be imported from Studio into new Kolibri installations per month, on average?"
+msgid ""
+"How many times will this content be imported from Studio into new Kolibri "
+"installations per month, on average?"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/storage.html:102
@@ -1954,15 +2153,25 @@ msgid "Organizational affiliation"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/storage.html:119
-msgid "What type of organization or group is coordinating the use of Kolibri (if applicable)?"
+msgid ""
+"What type of organization or group is coordinating the use of Kolibri (if "
+"applicable)?"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/storage.html:134
-msgid "To better understand the time sensitive nature of your request, please indicate an approximate timeline by when you need this additional storage:"
+msgid ""
+"To better understand the time sensitive nature of your request, please "
+"indicate an approximate timeline by when you need this additional storage:"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/storage.html:137
-msgid "Please write a paragraph explaining your needs and use case for Kolibri Studio, and how it will integrate into your programs. Include information about who is curating, deploying, and using the content. Is this work being coordinated by an organization, as part of an educational program? Include justification for the additional space being requested and explanation of the time sensitive nature of your request."
+msgid ""
+"Please write a paragraph explaining your needs and use case for Kolibri "
+"Studio, and how it will integrate into your programs. Include information "
+"about who is curating, deploying, and using the content. Is this work being "
+"coordinated by an organization, as part of an educational program? Include "
+"justification for the additional space being requested and explanation of "
+"the time sensitive nature of your request."
 msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/storage.html:140
@@ -1978,7 +2187,13 @@ msgid "Here is a copy of your request:"
 msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/storage_request_email.txt:43
-msgid "We are currently reviewing the information that you have provided, and will work to be in touch in a timely manner depending on the scope of your request. While Kolibri Studio is in Beta, we need to be especially mindful of how much additional storage can be provided to ensure that we can successful continue to build the Studio tool. Many thanks in advance for your understanding."
+msgid ""
+"We are currently reviewing the information that you have provided, and will "
+"work to be in touch in a timely manner depending on the scope of your "
+"request. While Kolibri Studio is in Beta, we need to be especially mindful "
+"of how much additional storage can be provided to ensure that we can "
+"successful continue to build the Studio tool. Many thanks in advance for "
+"your understanding."
 msgstr ""
 
 #: contentcuration/contentcuration/templates/settings/tokens.html:7
@@ -2015,43 +2230,79 @@ msgid "Unsupported Browser."
 msgstr ""
 
 #: contentcuration/contentcuration/templates/unsupported_browser.html:13
-msgid "We're sorry, the browser you are currently using is not supported. Please try again on a different browser."
+msgid ""
+"We're sorry, the browser you are currently using is not supported. Please "
+"try again on a different browser."
 msgstr ""
 
 #: contentcuration/contentcuration/templatetags/license_tags.py:10
-msgid "The Attribution License lets others distribute, remix, tweak, and build upon your work, even commercially, as long as they credit you for the original creation. This is the most accommodating of licenses offered. Recommended for maximum dissemination and use of licensed materials."
+msgid ""
+"The Attribution License lets others distribute, remix, tweak, and build upon "
+"your work, even commercially, as long as they credit you for the original "
+"creation. This is the most accommodating of licenses offered. Recommended "
+"for maximum dissemination and use of licensed materials."
 msgstr ""
 
 #: contentcuration/contentcuration/templatetags/license_tags.py:15
-msgid "The Attribution-ShareAlike License lets others remix, tweak, and build upon your work even for commercial purposes, as long as they credit you and license their new creations under the identical terms. This license is often compared to \"copyleft\" free and open source software licenses. All new works based on yours will carry the same license, so any derivatives will also allow commercial use. This is the license used by Wikipedia, and is recommended for materials that would benefit from incorporating content from Wikipedia and similarly licensed projects."
+msgid ""
+"The Attribution-ShareAlike License lets others remix, tweak, and build upon "
+"your work even for commercial purposes, as long as they credit you and "
+"license their new creations under the identical terms. This license is often "
+"compared to \"copyleft\" free and open source software licenses. All new "
+"works based on yours will carry the same license, so any derivatives will "
+"also allow commercial use. This is the license used by Wikipedia, and is "
+"recommended for materials that would benefit from incorporating content from "
+"Wikipedia and similarly licensed projects."
 msgstr ""
 
 #: contentcuration/contentcuration/templatetags/license_tags.py:25
-msgid "The Attribution-NoDerivs License allows for redistribution, commercial and non-commercial, as long as it is passed along unchanged and in whole, with credit to you."
+msgid ""
+"The Attribution-NoDerivs License allows for redistribution, commercial and "
+"non-commercial, as long as it is passed along unchanged and in whole, with "
+"credit to you."
 msgstr ""
 
 #: contentcuration/contentcuration/templatetags/license_tags.py:28
-msgid "The Attribution-NonCommercial License lets others remix, tweak, and build upon your work non-commercially, and although their new works must also acknowledge you and be non-commercial, they don't have to license their derivative works on the same terms."
+msgid ""
+"The Attribution-NonCommercial License lets others remix, tweak, and build "
+"upon your work non-commercially, and although their new works must also "
+"acknowledge you and be non-commercial, they don't have to license their "
+"derivative works on the same terms."
 msgstr ""
 
 #: contentcuration/contentcuration/templatetags/license_tags.py:32
-msgid "The Attribution-NonCommercial-ShareAlike License lets others remix, tweak, and build upon your work non-commercially, as long as they credit you and license their new creations under the identical terms."
+msgid ""
+"The Attribution-NonCommercial-ShareAlike License lets others remix, tweak, "
+"and build upon your work non-commercially, as long as they credit you and "
+"license their new creations under the identical terms."
 msgstr ""
 
 #: contentcuration/contentcuration/templatetags/license_tags.py:36
-msgid "The Attribution-NonCommercial-NoDerivs License is the most restrictive of our six main licenses, only allowing others to download your works and share them with others as long as they credit you, but they can't change them in any way or use them commercially."
+msgid ""
+"The Attribution-NonCommercial-NoDerivs License is the most restrictive of "
+"our six main licenses, only allowing others to download your works and share "
+"them with others as long as they credit you, but they can't change them in "
+"any way or use them commercially."
 msgstr ""
 
 #: contentcuration/contentcuration/templatetags/license_tags.py:40
-msgid "The All Rights Reserved License indicates that the copyright holder reserves, or holds for their own use, all the rights provided by copyright law under one specific copyright treaty."
+msgid ""
+"The All Rights Reserved License indicates that the copyright holder "
+"reserves, or holds for their own use, all the rights provided by copyright "
+"law under one specific copyright treaty."
 msgstr ""
 
 #: contentcuration/contentcuration/templatetags/license_tags.py:43
-msgid "Public Domain work has been identified as being free of known restrictions under copyright law, including all related and neighboring rights."
+msgid ""
+"Public Domain work has been identified as being free of known restrictions "
+"under copyright law, including all related and neighboring rights."
 msgstr ""
 
 #: contentcuration/contentcuration/templatetags/license_tags.py:46
-msgid "Special Permissions is a custom license to use when the current licenses do not apply to the content. The owner of this license is responsible for creating a description of what this license entails."
+msgid ""
+"Special Permissions is a custom license to use when the current licenses do "
+"not apply to the content. The owner of this license is responsible for "
+"creating a description of what this license entails."
 msgstr ""
 
 #: contentcuration/contentcuration/templatetags/translation_tags.py:26
@@ -2211,9 +2462,11 @@ msgstr[1] ""
 
 #: contentcuration/contentcuration/utils/export_writer.py:201
 #, python-format
-msgid "%(count)d\n"
+msgid ""
+"%(count)d\n"
 "Total Resource"
-msgid_plural "%(count)d\n"
+msgid_plural ""
+"%(count)d\n"
 "Total Resources"
 msgstr[0] ""
 msgstr[1] ""
@@ -2240,12 +2493,16 @@ msgstr ""
 
 #: contentcuration/contentcuration/utils/export_writer.py:418
 #, python-format
-msgid "Page %(page)s of %(pagecount)s - %(channel)s can be found on Kolibri Studio, a product of Learning Equality"
+msgid ""
+"Page %(page)s of %(pagecount)s - %(channel)s can be found on Kolibri Studio, "
+"a product of Learning Equality"
 msgstr ""
 
 #: contentcuration/contentcuration/utils/export_writer.py:421
 #, python-format
-msgid "Page %(page)s of %(pagecount)s - These channels can be found on Kolibri Studio, a product of Learning Equality"
+msgid ""
+"Page %(page)s of %(pagecount)s - These channels can be found on Kolibri "
+"Studio, a product of Learning Equality"
 msgstr ""
 
 #: contentcuration/contentcuration/utils/export_writer.py:497
@@ -2283,7 +2540,9 @@ msgid "No Tags Found"
 msgstr ""
 
 #: contentcuration/contentcuration/utils/export_writer.py:568
-msgid "This slide was automatically generated by Kolibri Studio, a product of Learning Equality"
+msgid ""
+"This slide was automatically generated by Kolibri Studio, a product of "
+"Learning Equality"
 msgstr ""
 
 #: contentcuration/contentcuration/utils/export_writer.py:577
@@ -2369,27 +2628,57 @@ msgid "TB"
 msgstr ""
 
 #: contentcuration/contentcuration/utils/incidents.py:7
-msgid "There was a problem with a third-party service. This means certain operations might be blocked. We appreciate your patience while these issues are being resolved."
+msgid ""
+"There was a problem with a third-party service. This means certain "
+"operations might be blocked. We appreciate your patience while these issues "
+"are being resolved."
 msgstr ""
 
 #: contentcuration/contentcuration/utils/incidents.py:16
-msgid "<b>EMERGENCY MAINTENANCE</b> Kolibri Studio is operating on read-only mode for the time being in order for us to resolve some maintenance issues. This means all editing capabilities are disabled at the moment. We're currently working very hard to fix the issue as soon as possible. If you have any questions please contact us at content@learningequality.org. We apologize for any inconvenience caused and appreciate your patience while we resolve these issues."
+msgid ""
+"<b>EMERGENCY MAINTENANCE</b> Kolibri Studio is operating on read-only mode "
+"for the time being in order for us to resolve some maintenance issues. This "
+"means all editing capabilities are disabled at the moment. We're currently "
+"working very hard to fix the issue as soon as possible. If you have any "
+"questions please contact us at content@learningequality.org. We apologize "
+"for any inconvenience caused and appreciate your patience while we resolve "
+"these issues."
 msgstr ""
 
 #: contentcuration/contentcuration/utils/incidents.py:31
-msgid "<b>EMERGENCY MAINTENANCE</b> Kolibri Studio is operating on read-only mode for the time being in order for us to resolve some database issues. This means all editing capabilities are disabled at the moment. We're currently working very hard to fix the issue as soon as possible. If you have any questions please contact us at content@learningequality.org. We apologize for any inconvenience caused and appreciate your patience while we resolve these issues."
+msgid ""
+"<b>EMERGENCY MAINTENANCE</b> Kolibri Studio is operating on read-only mode "
+"for the time being in order for us to resolve some database issues. This "
+"means all editing capabilities are disabled at the moment. We're currently "
+"working very hard to fix the issue as soon as possible. If you have any "
+"questions please contact us at content@learningequality.org. We apologize "
+"for any inconvenience caused and appreciate your patience while we resolve "
+"these issues."
 msgstr ""
 
 #: contentcuration/contentcuration/utils/incidents.py:46
-msgid "We are encountering issues with Google Cloud Storage. This means any file uploading and publishing operations are currently unavailable. We appreciate your patience while these issues are being resolved. To check the status of this service, please visit <a target='_blank' href='https://status.cloud.google.com/'>here</a>"
+msgid ""
+"We are encountering issues with Google Cloud Storage. This means any file "
+"uploading and publishing operations are currently unavailable. We appreciate "
+"your patience while these issues are being resolved. To check the status of "
+"this service, please visit <a target='_blank' href='https://status.cloud."
+"google.com/'>here</a>"
 msgstr ""
 
 #: contentcuration/contentcuration/utils/incidents.py:57
-msgid "We are encountering issues with a third-party service. This means publishing is currently unavailable. We appreciate your patience while these issues are being resolved."
+msgid ""
+"We are encountering issues with a third-party service. This means publishing "
+"is currently unavailable. We appreciate your patience while these issues are "
+"being resolved."
 msgstr ""
 
 #: contentcuration/contentcuration/utils/incidents.py:65
-msgid "We are encountering issues with our data center. This means you may encounter networking problems while using Studio. We appreciate your patience while these issues are being resolved. To check the status of this service, please visit <a target='_blank' href='https://status.cloud.google.com/'>here</a>"
+msgid ""
+"We are encountering issues with our data center. This means you may "
+"encounter networking problems while using Studio. We appreciate your "
+"patience while these issues are being resolved. To check the status of this "
+"service, please visit <a target='_blank' href='https://status.cloud.google."
+"com/'>here</a>"
 msgstr ""
 
 #: contentcuration/contentcuration/utils/nodes.py:250
@@ -2445,4 +2734,3 @@ msgstr ""
 #: contentcuration/kolibri_content/models.py:185
 msgid "Unknown format"
 msgstr "अज्ञात स्वरूप"
-

@@ -1,6 +1,9 @@
-from base import BaseAPITestCase
+from __future__ import absolute_import
+
 from django.core.urlresolvers import reverse
-from testdata import generated_base64encoding
+
+from .base import BaseAPITestCase
+from .testdata import generated_base64encoding
 
 
 class PublicAPITestCase(BaseAPITestCase):

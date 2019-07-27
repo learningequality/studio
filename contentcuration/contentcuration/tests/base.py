@@ -1,6 +1,7 @@
+from __future__ import absolute_import
+
 import datetime
 
-import testdata
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
@@ -15,6 +16,7 @@ from rest_framework.test import APIRequestFactory
 from rest_framework.test import APITestCase
 from rest_framework.test import force_authenticate
 
+from . import testdata
 from contentcuration.models import User
 from contentcuration.utils import minio_utils
 from contentcuration.utils.policies import get_latest_policies

@@ -1,10 +1,11 @@
+from __future__ import absolute_import
+
+from . import settings as base_settings
+from .settings import *  # noqa
+from contentcuration.utils.secretmanagement import get_secret
 # production_settings.py -- production studio settings override
 #
 # noinspection PyUnresolvedReferences
-import settings as base_settings
-from settings import *  # noqa
-
-from contentcuration.utils.secretmanagement import get_secret
 
 MEDIA_ROOT = base_settings.STORAGE_ROOT
 

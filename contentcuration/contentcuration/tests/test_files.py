@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+
 import json
 
 import pytest
-from base import BaseAPITestCase
 from django.core.files.storage import default_storage
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.urlresolvers import reverse_lazy
@@ -10,6 +11,7 @@ from le_utils.constants import content_kinds
 from le_utils.constants import format_presets
 from mock import patch
 
+from .base import BaseAPITestCase
 from .testdata import base64encoding
 from .testdata import fileobj_video
 from .testdata import generated_base64encoding
