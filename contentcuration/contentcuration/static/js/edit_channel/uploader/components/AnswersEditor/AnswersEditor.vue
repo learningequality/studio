@@ -73,8 +73,7 @@
             <VSpacer />
 
             <AssessmentItemToolbar
-              :displayMenu="false"
-              :displayEditIcon="false"
+              :iconActionsConfig="toolbarIconActions"
               :canMoveUp="!isAnswerFirst(answerIdx)"
               :canMoveDown="!isAnswerLast(answerIdx)"
               class="toolbar"
@@ -140,6 +139,11 @@
     data() {
       return {
         correctAnswersIndices: getCorrectAnswersIndices(this.questionKind, this.answers),
+        toolbarIconActions: [
+          AssessmentItemToolbarActions.MOVE_ITEM_UP,
+          AssessmentItemToolbarActions.MOVE_ITEM_DOWN,
+          AssessmentItemToolbarActions.DELETE_ITEM,
+        ],
       };
     },
     computed: {

@@ -1,6 +1,6 @@
 import { shallowMount, mount } from '@vue/test-utils';
 
-import { AssessmentItemTypes } from '../../constants';
+import { AssessmentItemTypes, AssessmentItemToolbarActions } from '../../constants';
 import AnswersEditor from './AnswersEditor';
 
 jest.mock('../MarkdownEditor/MarkdownEditor.vue');
@@ -25,21 +25,21 @@ const clickAnswer = (wrapper, answerIdx) => {
 
 const clickMoveAnswerUp = (wrapper, answerIdx) => {
   wrapper
-    .findAll('[data-test="toolbarIconArrowUp"]')
+    .findAll(`[data-test="toolbarIcon-${AssessmentItemToolbarActions.MOVE_ITEM_UP}"]`)
     .at(answerIdx)
     .trigger('click');
 };
 
 const clickMoveAnswerDown = (wrapper, answerIdx) => {
   wrapper
-    .findAll('[data-test="toolbarIconArrowDown"]')
+    .findAll(`[data-test="toolbarIcon-${AssessmentItemToolbarActions.MOVE_ITEM_DOWN}"]`)
     .at(answerIdx)
     .trigger('click');
 };
 
 const clickDeleteAnswer = (wrapper, answerIdx) => {
   wrapper
-    .findAll('[data-test="toolbarIconDelete"]')
+    .findAll(`[data-test="toolbarIcon-${AssessmentItemToolbarActions.DELETE_ITEM}"]`)
     .at(answerIdx)
     .trigger('click');
 };

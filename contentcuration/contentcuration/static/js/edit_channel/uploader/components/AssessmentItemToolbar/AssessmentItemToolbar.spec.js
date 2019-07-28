@@ -6,180 +6,129 @@ import AssessmentItemToolbar from './AssessmentItemToolbar';
 describe('AssessmentItemToolbar', () => {
   let wrapper;
 
-  beforeEach(() => {
-    wrapper = mount(AssessmentItemToolbar);
-  });
-
   it('smoke test', () => {
     const wrapper = shallowMount(AssessmentItemToolbar);
 
     expect(wrapper.isVueInstance()).toBe(true);
   });
 
-  it('renders', () => {
+  it('renders icons', () => {
+    wrapper = mount(AssessmentItemToolbar, {
+      propsData: {
+        iconActionsConfig: [
+          AssessmentItemToolbarActions.EDIT_ITEM,
+          AssessmentItemToolbarActions.MOVE_ITEM_UP,
+          AssessmentItemToolbarActions.MOVE_ITEM_DOWN,
+        ],
+      },
+    });
+
     expect(wrapper.html()).toMatchSnapshot();
   });
 
-  it('uses a correct item label in menu if specified', () => {
+  it('renders move up icon as disabled if canMoveUp is false', () => {
     wrapper = mount(AssessmentItemToolbar, {
       propsData: {
-        itemLabel: 'question',
+        iconActionsConfig: [
+          AssessmentItemToolbarActions.MOVE_ITEM_UP,
+          AssessmentItemToolbarActions.MOVE_ITEM_DOWN,
+        ],
+        canMoveUp: false,
       },
     });
 
-    expect(wrapper.find('[data-test="toolbarMenu"]').html()).toContain('Add question above');
-    expect(wrapper.find('[data-test="toolbarMenu"]').html()).toContain('Add question below');
+    expect(wrapper.html()).toMatchSnapshot();
   });
 
-  it('emits click action with correct payload on arrow up icon click', () => {
-    wrapper.find('[data-test=toolbarIconArrowUp]').trigger('click');
-
-    expect(wrapper.emitted().click).toBeTruthy();
-    expect(wrapper.emitted().click.length).toBe(1);
-    expect(wrapper.emitted().click[0][0]).toEqual(AssessmentItemToolbarActions.MOVE_ITEM_UP);
-  });
-
-  it('emits click action with correct payload on arrow down icon click', () => {
-    wrapper.find('[data-test=toolbarIconArrowDown]').trigger('click');
-
-    expect(wrapper.emitted().click).toBeTruthy();
-    expect(wrapper.emitted().click.length).toBe(1);
-    expect(wrapper.emitted().click[0][0]).toEqual(AssessmentItemToolbarActions.MOVE_ITEM_DOWN);
-  });
-
-  it('emits click action with correct payload on edit icon click', () => {
-    wrapper.find('[data-test=toolbarIconEdit]').trigger('click');
-
-    expect(wrapper.emitted().click).toBeTruthy();
-    expect(wrapper.emitted().click.length).toBe(1);
-    expect(wrapper.emitted().click[0][0]).toEqual(AssessmentItemToolbarActions.EDIT_ITEM);
-  });
-
-  it('emits click action with correct payload on delete icon click', () => {
-    wrapper.find('[data-test=toolbarIconDelete]').trigger('click');
-
-    expect(wrapper.emitted().click).toBeTruthy();
-    expect(wrapper.emitted().click.length).toBe(1);
-    expect(wrapper.emitted().click[0][0]).toEqual(AssessmentItemToolbarActions.DELETE_ITEM);
-  });
-
-  it('emits click action with correct payload on "Add item above" menu item click', () => {
-    wrapper.find('[data-test=toolbarMenuAddItemAbove]').trigger('click');
-
-    expect(wrapper.emitted().click).toBeTruthy();
-    expect(wrapper.emitted().click.length).toBe(1);
-    expect(wrapper.emitted().click[0][0]).toEqual(AssessmentItemToolbarActions.ADD_ITEM_ABOVE);
-  });
-
-  it('emits click action with correct payload on "Add item below" menu item click', () => {
-    wrapper.find('[data-test=toolbarMenuAddItemBelow]').trigger('click');
-
-    expect(wrapper.emitted().click).toBeTruthy();
-    expect(wrapper.emitted().click.length).toBe(1);
-    expect(wrapper.emitted().click[0][0]).toEqual(AssessmentItemToolbarActions.ADD_ITEM_BELOW);
-  });
-
-  it("doesn't render edit icon if displayEditIcon is false", () => {
+  it('renders move down icon as disabled if canMoveDown is false', () => {
     wrapper = mount(AssessmentItemToolbar, {
       propsData: {
-        displayEditIcon: false,
+        iconActionsConfig: [
+          AssessmentItemToolbarActions.MOVE_ITEM_UP,
+          AssessmentItemToolbarActions.MOVE_ITEM_DOWN,
+        ],
+        canMoveDown: false,
       },
     });
 
-    expect(wrapper.html()).not.toContain('[data-test="toolbarIconEdit"]');
+    expect(wrapper.html()).toMatchSnapshot();
   });
 
-  describe('when displayDeleteIcon is false', () => {
-    beforeEach(() => {
-      wrapper = mount(AssessmentItemToolbar, {
-        propsData: {
-          displayDeleteIcon: false,
-        },
-      });
-    });
-
-    it("doesn't render delete icon", () => {
-      expect(wrapper.contains('[data-test="toolbarIconDelete"]')).toBe(false);
-    });
-
-    it('renders "Delete" menu item', () => {
-      expect(wrapper.contains('[data-test="toolbarMenuDeleteItem"]')).toBe(true);
-    });
-
-    it('emits click action with correct payload on "Delete" menu item click', () => {
-      wrapper.find('[data-test=toolbarMenuDeleteItem]').trigger('click');
-
-      expect(wrapper.emitted().click).toBeTruthy();
-      expect(wrapper.emitted().click.length).toBe(1);
-      expect(wrapper.emitted().click[0][0]).toEqual(AssessmentItemToolbarActions.DELETE_ITEM);
-    });
-  });
-
-  it("doesn't render menu if displayMenu is false", () => {
+  it('renders menu', () => {
     wrapper = mount(AssessmentItemToolbar, {
       propsData: {
-        displayMenu: false,
+        displayMenu: true,
+        menuActionsConfig: [
+          AssessmentItemToolbarActions.ADD_ITEM_ABOVE,
+          AssessmentItemToolbarActions.ADD_ITEM_BELOW,
+          AssessmentItemToolbarActions.DELETE_ITEM,
+        ],
       },
     });
 
-    expect(wrapper.contains('[data-test="toolbarMenu"]')).toBe(false);
+    expect(wrapper.html()).toMatchSnapshot();
   });
 
-  describe('when collapse is true', () => {
-    beforeEach(() => {
-      wrapper = mount(AssessmentItemToolbar, {
-        propsData: {
-          collapse: true,
-        },
-      });
+  it('moves collapsible icons actions above other menu items in collapse mode', () => {
+    wrapper = mount(AssessmentItemToolbar, {
+      propsData: {
+        iconActionsConfig: [
+          AssessmentItemToolbarActions.EDIT_ITEM,
+          [AssessmentItemToolbarActions.MOVE_ITEM_UP, { collapse: true }],
+          [AssessmentItemToolbarActions.MOVE_ITEM_DOWN, { collapse: true }],
+        ],
+        displayMenu: true,
+        menuActionsConfig: [
+          AssessmentItemToolbarActions.ADD_ITEM_ABOVE,
+          AssessmentItemToolbarActions.ADD_ITEM_BELOW,
+          AssessmentItemToolbarActions.DELETE_ITEM,
+        ],
+        collapse: true,
+      },
     });
 
-    it("doesn't render arrow up icon", () => {
-      expect(wrapper.contains('[data-test="toolbarIconArrowUp"]')).toBe(false);
+    expect(wrapper.html()).toMatchSnapshot();
+  });
+
+  it("doesn't render move up action in menu if it should be collapsed and `canMoveUp` is false", () => {
+    wrapper = mount(AssessmentItemToolbar, {
+      propsData: {
+        iconActionsConfig: [
+          [AssessmentItemToolbarActions.MOVE_ITEM_UP, { collapse: true }],
+          [AssessmentItemToolbarActions.MOVE_ITEM_DOWN, { collapse: true }],
+        ],
+        displayMenu: true,
+        menuActionsConfig: [
+          AssessmentItemToolbarActions.ADD_ITEM_ABOVE,
+          AssessmentItemToolbarActions.ADD_ITEM_BELOW,
+          AssessmentItemToolbarActions.DELETE_ITEM,
+        ],
+        collapse: true,
+        canMoveUp: false,
+      },
     });
 
-    it('renders "Move up" menu item', () => {
-      expect(wrapper.contains('[data-test="toolbarMenuMoveItemUp"]')).toBe(true);
+    expect(wrapper.html()).toMatchSnapshot();
+  });
+
+  it("doesn't render move down action in menu if it should be collapsed and `canMoveDown` is false", () => {
+    wrapper = mount(AssessmentItemToolbar, {
+      propsData: {
+        iconActionsConfig: [
+          [AssessmentItemToolbarActions.MOVE_ITEM_UP, { collapse: true }],
+          [AssessmentItemToolbarActions.MOVE_ITEM_DOWN, { collapse: true }],
+        ],
+        displayMenu: true,
+        menuActionsConfig: [
+          AssessmentItemToolbarActions.ADD_ITEM_ABOVE,
+          AssessmentItemToolbarActions.ADD_ITEM_BELOW,
+          AssessmentItemToolbarActions.DELETE_ITEM,
+        ],
+        collapse: true,
+        canMoveDown: false,
+      },
     });
 
-    it('emits click action with correct payload on "Move up" menu item click', () => {
-      wrapper.find('[data-test=toolbarMenuMoveItemUp]').trigger('click');
-
-      expect(wrapper.emitted().click).toBeTruthy();
-      expect(wrapper.emitted().click.length).toBe(1);
-      expect(wrapper.emitted().click[0][0]).toEqual(AssessmentItemToolbarActions.MOVE_ITEM_UP);
-    });
-
-    it("doesn't render arrow down icon", () => {
-      expect(wrapper.contains('[data-test="toolbarIconArrowDown"]')).toBe(false);
-    });
-
-    it('renders "Move down" menu item', () => {
-      expect(wrapper.contains('[data-test="toolbarMenuMoveItemDown"]')).toBe(true);
-    });
-
-    it('emits click action with correct payload on "Move down" menu item click', () => {
-      wrapper.find('[data-test=toolbarMenuMoveItemDown]').trigger('click');
-
-      expect(wrapper.emitted().click).toBeTruthy();
-      expect(wrapper.emitted().click.length).toBe(1);
-      expect(wrapper.emitted().click[0][0]).toEqual(AssessmentItemToolbarActions.MOVE_ITEM_DOWN);
-    });
-
-    it("doesn't render delete icon", () => {
-      expect(wrapper.contains('[data-test="toolbarIconDelete"]')).toBe(false);
-    });
-
-    it('renders "Delete" menu item', () => {
-      expect(wrapper.contains('[data-test="toolbarMenuDeleteItem"]')).toBe(true);
-    });
-
-    it('emits click action with correct payload on "Delete" menu item click', () => {
-      wrapper.find('[data-test=toolbarMenuDeleteItem]').trigger('click');
-
-      expect(wrapper.emitted().click).toBeTruthy();
-      expect(wrapper.emitted().click.length).toBe(1);
-      expect(wrapper.emitted().click[0][0]).toEqual(AssessmentItemToolbarActions.DELETE_ITEM);
-    });
+    expect(wrapper.html()).toMatchSnapshot();
   });
 });

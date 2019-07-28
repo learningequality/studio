@@ -14,12 +14,12 @@ export const modes = {
 };
 
 export const AssessmentItemToolbarActions = {
+  EDIT_ITEM: 'EDIT_ITEM',
   MOVE_ITEM_UP: 'MOVE_ITEM_UP',
   MOVE_ITEM_DOWN: 'MOVE_ITEM_DOWN',
-  EDIT_ITEM: 'EDIT_ITEM',
+  DELETE_ITEM: 'DELETE_ITEM',
   ADD_ITEM_ABOVE: 'ADD_ITEM_ABOVE',
   ADD_ITEM_BELOW: 'ADD_ITEM_BELOW',
-  DELETE_ITEM: 'DELETE_ITEM',
 };
 
 export const AssessmentItemValidationErrors = {

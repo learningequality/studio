@@ -1,5 +1,7 @@
 import { shallowMount, mount } from '@vue/test-utils';
 
+import { AssessmentItemToolbarActions } from '../../constants';
+
 import HintsEditor from './HintsEditor';
 
 jest.mock('../MarkdownEditor/MarkdownEditor.vue');
@@ -20,21 +22,21 @@ const clickHint = (wrapper, hintIdx) => {
 
 const clickMoveHintUp = (wrapper, hintIdx) => {
   wrapper
-    .findAll('[data-test=toolbarIconArrowUp]')
+    .findAll(`[data-test="toolbarIcon-${AssessmentItemToolbarActions.MOVE_ITEM_UP}"]`)
     .at(hintIdx)
     .trigger('click');
 };
 
 const clickMoveHintDown = (wrapper, hintIdx) => {
   wrapper
-    .findAll('[data-test=toolbarIconArrowDown]')
+    .findAll(`[data-test="toolbarIcon-${AssessmentItemToolbarActions.MOVE_ITEM_DOWN}"]`)
     .at(hintIdx)
     .trigger('click');
 };
 
 const clickDeleteHint = (wrapper, hintIdx) => {
   wrapper
-    .findAll('[data-test=toolbarIconDelete]')
+    .findAll(`[data-test="toolbarIcon-${AssessmentItemToolbarActions.DELETE_ITEM}"]`)
     .at(hintIdx)
     .trigger('click');
 };

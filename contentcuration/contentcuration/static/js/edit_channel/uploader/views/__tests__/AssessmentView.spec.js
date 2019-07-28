@@ -5,7 +5,11 @@
 import { mount, createLocalVue } from '@vue/test-utils';
 import Vuex from 'vuex';
 
-import { AssessmentItemTypes, AssessmentItemValidationErrors } from '../../constants';
+import {
+  AssessmentItemTypes,
+  AssessmentItemValidationErrors,
+  AssessmentItemToolbarActions,
+} from '../../constants';
 import AssessmentView from '../AssessmentView';
 
 // TODO @MisRob: Consistent imports
@@ -117,27 +121,39 @@ const clickClose = assessmentItemWrapper => {
 };
 
 const clickEdit = assessmentItemWrapper => {
-  assessmentItemWrapper.find('[data-test="toolbarIconEdit"]').trigger('click');
-};
-
-const clickDelete = assessmentItemWrapper => {
-  assessmentItemWrapper.find('[data-test="toolbarMenuDeleteItem"]').trigger('click');
-};
-
-const clickAddQuestionAbove = assessmentItemWrapper => {
-  assessmentItemWrapper.find('[data-test="toolbarMenuAddItemAbove"]').trigger('click');
-};
-
-const clickAddQuestionBelow = assessmentItemWrapper => {
-  assessmentItemWrapper.find('[data-test="toolbarMenuAddItemBelow"]').trigger('click');
+  assessmentItemWrapper
+    .find(`[data-test="toolbarIcon-${AssessmentItemToolbarActions.EDIT_ITEM}"]`)
+    .trigger('click');
 };
 
 const clickMoveUp = assessmentItemWrapper => {
-  assessmentItemWrapper.find('[data-test="toolbarIconArrowUp"]').trigger('click');
+  assessmentItemWrapper
+    .find(`[data-test="toolbarIcon-${AssessmentItemToolbarActions.MOVE_ITEM_UP}"]`)
+    .trigger('click');
 };
 
 const clickMoveDown = assessmentItemWrapper => {
-  assessmentItemWrapper.find('[data-test="toolbarIconArrowDown"]').trigger('click');
+  assessmentItemWrapper
+    .find(`[data-test="toolbarIcon-${AssessmentItemToolbarActions.MOVE_ITEM_DOWN}"]`)
+    .trigger('click');
+};
+
+const clickDelete = assessmentItemWrapper => {
+  assessmentItemWrapper
+    .find(`[data-test="toolbarMenuItem-${AssessmentItemToolbarActions.DELETE_ITEM}"]`)
+    .trigger('click');
+};
+
+const clickAddQuestionAbove = assessmentItemWrapper => {
+  assessmentItemWrapper
+    .find(`[data-test="toolbarMenuItem-${AssessmentItemToolbarActions.ADD_ITEM_ABOVE}"]`)
+    .trigger('click');
+};
+
+const clickAddQuestionBelow = assessmentItemWrapper => {
+  assessmentItemWrapper
+    .find(`[data-test="toolbarMenuItem-${AssessmentItemToolbarActions.ADD_ITEM_BELOW}"]`)
+    .trigger('click');
 };
 
 // would be better to use e2e tests for larger views like this
