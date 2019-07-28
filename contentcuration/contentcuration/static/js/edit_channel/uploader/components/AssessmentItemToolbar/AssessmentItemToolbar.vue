@@ -1,55 +1,61 @@
 <template>
-  <div>
-    <VTooltip
+  <VLayout justify-end>
+    <VFlex
       v-for="(action, idx) in iconActions"
       :key="idx"
-      top
+      class="toolbar-item"
     >
-      <template slot="activator" slot-scope="{ on }">
-        <VBtn
-          icon
-          :disabled="!isIconClickable(action)"
-          :data-test="`toolbarIcon-${action}`"
-          v-on="on"
-          @click="clickItem(action)"
-        >
-          <VIcon :color="iconColor(action)">
-            {{ config[action].icon }}
-          </VIcon>
-        </VBtn>
-      </template>
-      <span>{{ config[action].label }}</span>
-    </VTooltip>
+      <VTooltip top>
+        <template slot="activator" slot-scope="{ on }">
+          <VBtn
+            icon
+            :disabled="!isIconClickable(action)"
+            :data-test="`toolbarIcon-${action}`"
+            v-on="on"
+            @click="clickItem(action)"
+          >
+            <VIcon :color="iconColor(action)">
+              {{ config[action].icon }}
+            </VIcon>
+          </VBtn>
+        </template>
+        <span>{{ config[action].label }}</span>
+      </VTooltip>
+    </VFlex>
 
-    <VMenu
+    <VFlex
       v-if="displayMenu"
-      bottom
-      left
+      class="toolbar-item"
     >
-      <template slot="activator" slot-scope="{ on }">
-        <VBtn
-          icon
-          v-on="on"
-        >
-          <VIcon color="grey darken-1">
-            more_vert
-          </VIcon>
-        </VBtn>
-      </template>
-
-      <VList
-        v-for="(action, idx) in menuActions"
-        :key="idx"
+      <VMenu
+        bottom
+        left
       >
-        <VListTile
-          :data-test="`toolbarMenuItem-${action}`"
-          @click="clickItem(action)"
+        <template slot="activator" slot-scope="{ on }">
+          <VBtn
+            icon
+            v-on="on"
+          >
+            <VIcon color="grey darken-1">
+              more_vert
+            </VIcon>
+          </VBtn>
+        </template>
+
+        <VList
+          v-for="(action, idx) in menuActions"
+          :key="idx"
         >
-          <VListTileTitle>{{ config[action].label }}</VListTileTitle>
-        </VListTile>
-      </VList>
-    </VMenu>
-  </div>
+          <VListTile
+            :data-test="`toolbarMenuItem-${action}`"
+            @click="clickItem(action)"
+          >
+            <VListTileTitle>{{ config[action].label }}</VListTileTitle>
+          </VListTile>
+        </VList>
+      </VMenu>
+    </VFlex>
+  </VLayout>
 </template>
 
 <script>
@@ -246,3 +252,11 @@
   };
 
 </script>
+
+<style lang="less" scoped>
+
+  .toolbar-item {
+    max-width: 50px;
+  }
+
+</style>
