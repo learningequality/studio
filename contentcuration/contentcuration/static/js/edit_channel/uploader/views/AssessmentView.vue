@@ -64,7 +64,7 @@
                     error
                   </VIcon>
                   <span class="red--text font-weight-bold">
-                    Incomplete
+                    {{ $tr('incompleteItemIndicatorLabel') }}
                   </span>
                 </template>
 
@@ -74,7 +74,7 @@
                       error
                     </VIcon>
                   </template>
-                  <span>Incomplete</span>
+                  <span>{{ $tr('incompleteItemIndicatorLabel') }}</span>
                 </VTooltip>
               </VFlex>
 
@@ -86,7 +86,7 @@
                   :canMoveUp="!isItemFirst(itemIdx)"
                   :canMoveDown="!isItemLast(itemIdx)"
                   :collapse="!$vuetify.breakpoint.mdAndUp"
-                  itemLabel="question"
+                  :itemLabel="$tr('toolbarItemLabel')"
                   @click="onToolbarClick(itemIdx, $event)"
                 />
               </VFlex>
@@ -100,7 +100,7 @@
               data-test="closeBtn"
               @click="closeOpenItem"
             >
-              Close
+              {{ $tr('closeBtnLabel') }}
             </VBtn>
           </VLayout>
         </VCardText>
@@ -108,7 +108,7 @@
     </template>
 
     <div v-else>
-      No questions yet
+      {{ $tr('noQuestionsPlaceholder') }}
     </div>
 
     <VBtn
@@ -117,7 +117,7 @@
       data-test="newQuestionBtn"
       @click="onNewItemBtnClick"
     >
-      New question
+      {{ $tr('newQuestionBtnLabel') }}
     </VBtn>
 
     <!-- TODO @MisRob: As soon as we know how dialogs should behave within the context
@@ -134,7 +134,7 @@
           flat
           @click="dialog.onCancel"
         >
-          Cancel
+          {{ $tr('dialogCancelBtnLabel') }}
         </VBtn>
 
         <VBtn
@@ -163,6 +163,19 @@
 
   export default {
     name: 'AssessmentView',
+    $trs: {
+      incompleteItemIndicatorLabel: 'Incomplete',
+      incompleteItemsCountMessage:
+        '{invalidItemsCount} incomplete {invalidItemsCount, plural, one {question} other {questions}}',
+      toolbarItemLabel: 'question',
+      noQuestionsPlaceholder: 'No questions yet',
+      closeBtnLabel: 'Close',
+      newQuestionBtnLabel: 'New question',
+      dialogCancelBtnLabel: 'Cancel',
+      deleteDialogTitle: 'Deleting question',
+      deleteDialogMessage: 'Are you sure you want to delete this question?',
+      deleteDialogSubmitBtnLabel: 'Delete',
+    },
     components: {
       AssessmentItemEditor,
       AssessmentItemPreview,
@@ -205,15 +218,11 @@
       invalidItemsErrorMessage() {
         const invalidItemsCount = this.invalidNodeAssessmentDraftItemsCount(this.nodeId);
 
-        if (invalidItemsCount === 1) {
-          return '1 incomplete question';
+        if (!invalidItemsCount) {
+          return '';
         }
 
-        if (invalidItemsCount > 1) {
-          return `${invalidItemsCount} incomplete questions`;
-        }
-
-        return '';
+        return this.$tr('incompleteItemsCountMessage', { invalidItemsCount });
       },
     },
     created() {
@@ -306,9 +315,9 @@
 
           case AssessmentItemToolbarActions.DELETE_ITEM:
             this.openDialog({
-              title: 'Deleting question',
-              message: 'Are you sure you want to delete this question?',
-              submitLabel: 'Delete',
+              title: this.$tr('deleteDialogTitle'),
+              message: this.$tr('deleteDialogMessage'),
+              submitLabel: this.$tr('deleteDialogSubmitBtnLabel'),
               onSubmit: () => this.deleteItem(itemIdx),
             });
             break;

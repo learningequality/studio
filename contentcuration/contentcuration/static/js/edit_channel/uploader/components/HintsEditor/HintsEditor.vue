@@ -1,14 +1,14 @@
 <template>
   <div>
     <div class="grey--text text--darken-1 mb-3">
-      Hints
+      {{ $tr('hintsLabel') }}
     </div>
 
     <div
       v-if="!hints || !hints.length"
       class="pa-3 card-border-light"
     >
-      No hints yet
+      {{ $tr('noHintsPlaceholder') }}
     </div>
 
     <div
@@ -65,7 +65,7 @@
       data-test="newHintBtn"
       @click="addNewHint"
     >
-      New hint
+      {{ $tr('newHintBtnLabel') }}
     </VBtn>
   </div>
 </template>
@@ -80,6 +80,11 @@
 
   export default {
     name: 'HintsEditor',
+    $trs: {
+      hintsLabel: 'Hints',
+      noHintsPlaceholder: 'No hints yet',
+      newHintBtnLabel: 'New hint',
+    },
     components: {
       AssessmentItemToolbar,
       MarkdownEditor,

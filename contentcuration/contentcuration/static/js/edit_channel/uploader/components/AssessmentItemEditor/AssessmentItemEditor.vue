@@ -6,7 +6,7 @@
           :key="kindSelectKey"
           :items="kindSelectItems"
           :value="kind"
-          label="Question type"
+          :label="$tr('questionTypeLabel')"
           data-test="kindSelect"
           @input="onKindUpdate"
         />
@@ -21,7 +21,7 @@
         />
 
         <div class="grey--text text--darken-2 mb-1">
-          Question
+          {{ $tr('questionLabel') }}
         </div>
 
         <transition name="fade">
@@ -91,6 +91,18 @@
 
   export default {
     name: 'AssessmentItemEditor',
+    $trs: {
+      questionTypeLabel: 'Question type',
+      questionLabel: 'Question',
+      questionTypeDialogTitle: 'Changing question type',
+      questionTypeDialogSubmitBtnLabel: 'Change',
+      questionTypeDialogMessageToSingleSelection:
+        'Switching to single selection will set only one answer as correct. Continue?',
+      questionTypeDialogMessageToTrueFalse:
+        'Switching to true or false will remove any current answers. Continue?',
+      questionTypeDialogMessageToInput:
+        'Switching to numeric input will set all answers as correct and remove all non-numeric answers. Continue?',
+    },
     components: {
       AnswersEditor,
       HintsEditor,
@@ -260,10 +272,9 @@
           case AssessmentItemTypes.SINGLE_SELECTION:
             if (this.hasMoreCorrectAnswers) {
               this.openDialog({
-                title: 'Changing question type',
-                message:
-                  'Switching to single selection will set only one answer as correct. Continue?',
-                submitLabel: 'Change',
+                title: this.$tr('questionTypeDialogTitle'),
+                message: this.$tr('questionTypeDialogMessageToSingleSelection'),
+                submitLabel: this.$tr('questionTypeDialogSubmitBtnLabel'),
                 onSubmit: () => this.changeKind(newKind),
                 onCancel: this.rerenderKindSelect,
               });
@@ -275,9 +286,9 @@
 
           case AssessmentItemTypes.TRUE_FALSE:
             this.openDialog({
-              title: 'Changing question type',
-              message: 'Switching to true or false will remove any current answers. Continue?',
-              submitLabel: 'Change',
+              title: this.$tr('questionTypeDialogTitle'),
+              message: this.$tr('questionTypeDialogMessageToTrueFalse'),
+              submitLabel: this.$tr('questionTypeDialogSubmitBtnLabel'),
               onSubmit: () => this.changeKind(newKind),
               onCancel: this.rerenderKindSelect,
             });
@@ -285,10 +296,9 @@
 
           case AssessmentItemTypes.INPUT_QUESTION:
             this.openDialog({
-              title: 'Changing question type',
-              message:
-                'Switching to numeric input will set all answers as correct and remove all non-numeric answers. Continue?',
-              submitLabel: 'Change',
+              title: this.$tr('questionTypeDialogTitle'),
+              message: this.$tr('questionTypeDialogMessageToInput'),
+              submitLabel: this.$tr('questionTypeDialogSubmitBtnLabel'),
               onSubmit: () => this.changeKind(newKind),
               onCancel: this.rerenderKindSelect,
             });

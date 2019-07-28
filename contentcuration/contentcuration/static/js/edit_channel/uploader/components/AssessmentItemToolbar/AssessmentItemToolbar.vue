@@ -76,6 +76,14 @@
 
   export default {
     name: 'AssessmentItemToolbar',
+    $trs: {
+      toolbarLabelEdit: 'Edit',
+      toolbarLabelMoveUp: 'Move up',
+      toolbarLabelMoveDown: 'Move down',
+      toolbarLabelDelete: 'Delete',
+      toolbarLabelAddAbove: 'Add {itemLabel} above',
+      toolbarLabelAddBelow: 'Add {itemLabel} below',
+    },
     props: {
       /*
         An array of AssessmentItemToolbarActions
@@ -143,27 +151,27 @@
         return {
           [AssessmentItemToolbarActions.EDIT_ITEM]: {
             icon: 'edit',
-            label: 'Edit',
+            label: this.$tr('toolbarLabelEdit'),
           },
           [AssessmentItemToolbarActions.MOVE_ITEM_UP]: {
             icon: 'keyboard_arrow_up',
-            label: 'Move up',
+            label: this.$tr('toolbarLabelMoveUp'),
           },
           [AssessmentItemToolbarActions.MOVE_ITEM_DOWN]: {
             icon: 'keyboard_arrow_down',
-            label: 'Move down',
+            label: this.$tr('toolbarLabelMoveDown'),
           },
           [AssessmentItemToolbarActions.DELETE_ITEM]: {
             icon: 'close',
-            label: 'Delete',
+            label: this.$tr('toolbarLabelDelete'),
           },
           [AssessmentItemToolbarActions.ADD_ITEM_ABOVE]: {
             icon: null,
-            label: `Add ${this.itemLabel} above`,
+            label: this.$tr('toolbarLabelAddAbove', { itemLabel: this.itemLabel }),
           },
           [AssessmentItemToolbarActions.ADD_ITEM_BELOW]: {
             icon: null,
-            label: `Add ${this.itemLabel} below`,
+            label: this.$tr('toolbarLabelAddBelow', { itemLabel: this.itemLabel }),
           },
         };
       },

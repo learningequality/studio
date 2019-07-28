@@ -1,3 +1,5 @@
+import translator from './translator';
+
 export const TabNames = {
   DETAILS: 'DETAILS',
   PREVIEW: 'PREVIEW',
@@ -36,8 +38,8 @@ export const AssessmentItemTypes = {
 };
 
 export const AssessmentItemTypeLabels = {
-  [AssessmentItemTypes.SINGLE_SELECTION]: 'Single selection',
-  [AssessmentItemTypes.MULTIPLE_SELECTION]: 'Multiple selection',
-  [AssessmentItemTypes.TRUE_FALSE]: 'True/False',
-  [AssessmentItemTypes.INPUT_QUESTION]: 'Input question',
+  [AssessmentItemTypes.SINGLE_SELECTION]: translator.translate('questionTypeSingleSelection'),
+  [AssessmentItemTypes.MULTIPLE_SELECTION]: translator.translate('questionTypeMultipleSelection'),
+  [AssessmentItemTypes.TRUE_FALSE]: translator.translate('questionTypeTrueFalse'),
+  [AssessmentItemTypes.INPUT_QUESTION]: translator.translate('questionTypeInput'),
 };
