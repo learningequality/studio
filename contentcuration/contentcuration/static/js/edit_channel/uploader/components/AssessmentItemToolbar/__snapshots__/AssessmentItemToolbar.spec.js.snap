@@ -1,31 +1,159 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`AssessmentItemToolbar renders 1`] = `
-<div><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIconEdit">
-    <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">edit</i></div>
-  </button><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Edit</span></div></span> <button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIconArrowUp">
-  <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">keyboard_arrow_up</i></div>
-</button><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move up</span></div></span> <button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIconArrowDown">
-  <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">keyboard_arrow_down</i></div>
-</button><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move down</span></div></span> <button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIconDelete">
-  <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">close</i></div>
-</button><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Delete</span></div></span> <button type="button" class="v-btn v-btn--icon theme--light">
-  <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">more_vert</i></div>
-</button>
-<div class="v-menu" data-test="toolbarMenu">
-  <div class="v-menu__content theme--light " style="max-height: auto; min-width: 0px; max-width: auto; top: 12px; left: 12px; transform-origin: top left; z-index: 0; display: none;">
-    <div role="list" class="v-list theme--light">
-      <!---->
-      <!---->
-      <div role="listitem"><a data-test="toolbarMenuAddItemAbove" class="v-list__tile v-list__tile--link theme--light">
-          <div class="v-list__tile__title">Add item above</div>
-        </a></div>
-      <div role="listitem"><a data-test="toolbarMenuAddItemBelow" class="v-list__tile v-list__tile--link theme--light">
-          <div class="v-list__tile__title">Add item below</div>
-        </a></div>
-      <!---->
+exports[`AssessmentItemToolbar doesn't render move down action in menu if it should be collapsed and \`canMoveDown\` is false 1`] = `
+<div>
+  <div class="v-menu"><button type="button" class="v-btn v-btn--icon theme--light">
+      <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">more_vert</i></div>
+    </button>
+    <div class="v-menu__content theme--light " style="max-height: auto; min-width: 0px; max-width: auto; top: 12px; left: 12px; transform-origin: top left; z-index: 0; display: none;">
+      <div role="list" class="v-list theme--light">
+        <div role="listitem"><a data-test="toolbarMenuItem-MOVE_ITEM_UP" class="v-list__tile v-list__tile--link theme--light">
+            <div class="v-list__tile__title">Move up</div>
+          </a></div>
+      </div>
+      <div role="list" class="v-list theme--light">
+        <div role="listitem"><a data-test="toolbarMenuItem-ADD_ITEM_ABOVE" class="v-list__tile v-list__tile--link theme--light">
+            <div class="v-list__tile__title">Add item above</div>
+          </a></div>
+      </div>
+      <div role="list" class="v-list theme--light">
+        <div role="listitem"><a data-test="toolbarMenuItem-ADD_ITEM_BELOW" class="v-list__tile v-list__tile--link theme--light">
+            <div class="v-list__tile__title">Add item below</div>
+          </a></div>
+      </div>
+      <div role="list" class="v-list theme--light">
+        <div role="listitem"><a data-test="toolbarMenuItem-DELETE_ITEM" class="v-list__tile v-list__tile--link theme--light">
+            <div class="v-list__tile__title">Delete</div>
+          </a></div>
+      </div>
     </div>
   </div>
 </div>
+`;
+
+exports[`AssessmentItemToolbar doesn't render move up action in menu if it should be collapsed and \`canMoveUp\` is false 1`] = `
+<div>
+  <div class="v-menu"><button type="button" class="v-btn v-btn--icon theme--light">
+      <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">more_vert</i></div>
+    </button>
+    <div class="v-menu__content theme--light " style="max-height: auto; min-width: 0px; max-width: auto; top: 12px; left: 12px; transform-origin: top left; z-index: 0; display: none;">
+      <div role="list" class="v-list theme--light">
+        <div role="listitem"><a data-test="toolbarMenuItem-MOVE_ITEM_DOWN" class="v-list__tile v-list__tile--link theme--light">
+            <div class="v-list__tile__title">Move down</div>
+          </a></div>
+      </div>
+      <div role="list" class="v-list theme--light">
+        <div role="listitem"><a data-test="toolbarMenuItem-ADD_ITEM_ABOVE" class="v-list__tile v-list__tile--link theme--light">
+            <div class="v-list__tile__title">Add item above</div>
+          </a></div>
+      </div>
+      <div role="list" class="v-list theme--light">
+        <div role="listitem"><a data-test="toolbarMenuItem-ADD_ITEM_BELOW" class="v-list__tile v-list__tile--link theme--light">
+            <div class="v-list__tile__title">Add item below</div>
+          </a></div>
+      </div>
+      <div role="list" class="v-list theme--light">
+        <div role="listitem"><a data-test="toolbarMenuItem-DELETE_ITEM" class="v-list__tile v-list__tile--link theme--light">
+            <div class="v-list__tile__title">Delete</div>
+          </a></div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`AssessmentItemToolbar moves collapsible icons actions above other menu items in collapse mode 1`] = `
+<div><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Edit</span></div><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIcon-EDIT_ITEM">
+  <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">edit</i></div>
+</button></span>
+<div class="v-menu"><button type="button" class="v-btn v-btn--icon theme--light">
+    <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">more_vert</i></div>
+  </button>
+  <div class="v-menu__content theme--light " style="max-height: auto; min-width: 0px; max-width: auto; top: 12px; left: 12px; transform-origin: top left; z-index: 0; display: none;">
+    <div role="list" class="v-list theme--light">
+      <div role="listitem"><a data-test="toolbarMenuItem-MOVE_ITEM_UP" class="v-list__tile v-list__tile--link theme--light">
+          <div class="v-list__tile__title">Move up</div>
+        </a></div>
+    </div>
+    <div role="list" class="v-list theme--light">
+      <div role="listitem"><a data-test="toolbarMenuItem-MOVE_ITEM_DOWN" class="v-list__tile v-list__tile--link theme--light">
+          <div class="v-list__tile__title">Move down</div>
+        </a></div>
+    </div>
+    <div role="list" class="v-list theme--light">
+      <div role="listitem"><a data-test="toolbarMenuItem-ADD_ITEM_ABOVE" class="v-list__tile v-list__tile--link theme--light">
+          <div class="v-list__tile__title">Add item above</div>
+        </a></div>
+    </div>
+    <div role="list" class="v-list theme--light">
+      <div role="listitem"><a data-test="toolbarMenuItem-ADD_ITEM_BELOW" class="v-list__tile v-list__tile--link theme--light">
+          <div class="v-list__tile__title">Add item below</div>
+        </a></div>
+    </div>
+    <div role="list" class="v-list theme--light">
+      <div role="listitem"><a data-test="toolbarMenuItem-DELETE_ITEM" class="v-list__tile v-list__tile--link theme--light">
+          <div class="v-list__tile__title">Delete</div>
+        </a></div>
+    </div>
+  </div>
+</div>
+</div>
+`;
+
+exports[`AssessmentItemToolbar renders icons 1`] = `
+<div><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Edit</span></div><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIcon-EDIT_ITEM">
+  <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">edit</i></div>
+</button></span><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move up</span></div><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIcon-MOVE_ITEM_UP">
+  <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">keyboard_arrow_up</i></div>
+</button></span><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move down</span></div><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIcon-MOVE_ITEM_DOWN">
+  <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">keyboard_arrow_down</i></div>
+</button></span>
+<!---->
+</div>
+`;
+
+exports[`AssessmentItemToolbar renders menu 1`] = `
+<div>
+  <div class="v-menu"><button type="button" class="v-btn v-btn--icon theme--light">
+      <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">more_vert</i></div>
+    </button>
+    <div class="v-menu__content theme--light " style="max-height: auto; min-width: 0px; max-width: auto; top: 12px; left: 12px; transform-origin: top left; z-index: 0; display: none;">
+      <div role="list" class="v-list theme--light">
+        <div role="listitem"><a data-test="toolbarMenuItem-ADD_ITEM_ABOVE" class="v-list__tile v-list__tile--link theme--light">
+            <div class="v-list__tile__title">Add item above</div>
+          </a></div>
+      </div>
+      <div role="list" class="v-list theme--light">
+        <div role="listitem"><a data-test="toolbarMenuItem-ADD_ITEM_BELOW" class="v-list__tile v-list__tile--link theme--light">
+            <div class="v-list__tile__title">Add item below</div>
+          </a></div>
+      </div>
+      <div role="list" class="v-list theme--light">
+        <div role="listitem"><a data-test="toolbarMenuItem-DELETE_ITEM" class="v-list__tile v-list__tile--link theme--light">
+            <div class="v-list__tile__title">Delete</div>
+          </a></div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`AssessmentItemToolbar renders move down icon as disabled if canMoveDown is false 1`] = `
+<div><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move up</span></div><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIcon-MOVE_ITEM_UP">
+  <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">keyboard_arrow_up</i></div>
+</button></span><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move down</span></div><button disabled="disabled" type="button" class="v-btn v-btn--disabled v-btn--icon theme--light" data-test="toolbarIcon-MOVE_ITEM_DOWN">
+  <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--lighten-2">keyboard_arrow_down</i></div>
+</button></span>
+<!---->
+</div>
+`;
+
+exports[`AssessmentItemToolbar renders move up icon as disabled if canMoveUp is false 1`] = `
+<div><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move up</span></div><button disabled="disabled" type="button" class="v-btn v-btn--disabled v-btn--icon theme--light" data-test="toolbarIcon-MOVE_ITEM_UP">
+  <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--lighten-2">keyboard_arrow_up</i></div>
+</button></span><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move down</span></div><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIcon-MOVE_ITEM_DOWN">
+  <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">keyboard_arrow_down</i></div>
+</button></span>
+<!---->
 </div>
 `;

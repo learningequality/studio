@@ -47,8 +47,7 @@
             <VSpacer />
 
             <AssessmentItemToolbar
-              :displayMenu="false"
-              :displayEditIcon="false"
+              :iconActionsConfig="toolbarIconActions"
               :canMoveUp="!isHintFirst(hintIdx)"
               :canMoveDown="!isHintLast(hintIdx)"
               class="toolbar"
@@ -96,6 +95,15 @@
       openHintIdx: {
         type: Number,
       },
+    },
+    data() {
+      return {
+        toolbarIconActions: [
+          AssessmentItemToolbarActions.MOVE_ITEM_UP,
+          AssessmentItemToolbarActions.MOVE_ITEM_DOWN,
+          AssessmentItemToolbarActions.DELETE_ITEM,
+        ],
+      };
     },
     methods: {
       emitOpen(hintIdx) {

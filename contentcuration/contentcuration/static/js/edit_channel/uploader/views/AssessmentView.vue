@@ -80,12 +80,13 @@
 
               <VFlex>
                 <AssessmentItemToolbar
-                  itemLabel="question"
-                  :displayDeleteIcon="false"
-                  :displayEditIcon="!isItemOpen(itemIdx)"
+                  :iconActionsConfig="toolbarIconActions(itemIdx)"
+                  :displayMenu="true"
+                  :menuActionsConfig="toolbarMenuActions"
                   :canMoveUp="!isItemFirst(itemIdx)"
                   :canMoveDown="!isItemLast(itemIdx)"
                   :collapse="!$vuetify.breakpoint.mdAndUp"
+                  itemLabel="question"
                   @click="onToolbarClick(itemIdx, $event)"
                 />
               </VFlex>
@@ -172,6 +173,11 @@
       return {
         openItemIdx: null,
         displayAnswersPreview: false,
+        toolbarMenuActions: [
+          AssessmentItemToolbarActions.ADD_ITEM_ABOVE,
+          AssessmentItemToolbarActions.ADD_ITEM_BELOW,
+          AssessmentItemToolbarActions.DELETE_ITEM,
+        ],
       };
     },
     computed: {
@@ -262,6 +268,18 @@
         }
 
         return classes;
+      },
+      toolbarIconActions(itemIdx) {
+        const actions = [
+          [AssessmentItemToolbarActions.MOVE_ITEM_UP, { collapse: true }],
+          [AssessmentItemToolbarActions.MOVE_ITEM_DOWN, { collapse: true }],
+        ];
+
+        if (!this.isItemOpen(itemIdx)) {
+          actions.unshift([AssessmentItemToolbarActions.EDIT_ITEM, { collapse: false }]);
+        }
+
+        return actions;
       },
       onItemClick(event, itemIdx) {
         if (this.isItemOpen(itemIdx)) {
