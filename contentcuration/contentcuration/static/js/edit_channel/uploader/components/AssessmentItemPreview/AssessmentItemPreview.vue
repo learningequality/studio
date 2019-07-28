@@ -14,11 +14,11 @@
     <VLayout v-if="detailed" mt-3>
       <VFlex>
         <div class="caption grey--text mb-2">
-          Answers
+          {{ $tr('answersLabel') }}
         </div>
 
         <div v-if="!answers || !answers.length">
-          No answers yet
+          {{ $tr('noAnswersPlaceholder') }}
         </div>
 
         <template v-else>
@@ -60,7 +60,7 @@
             class="hints-preview" is needed for precise click
             target detection in AssessmentView.vue
           -->
-          <span v-if="hintsCount === 0">No hints yet</span>
+          <span v-if="hintsCount === 0">{{ $tr('No hints yet') }}</span>
           <div v-else class="hints-preview">
             <span
               class="hints-toggle"
@@ -102,6 +102,13 @@
 
   export default {
     name: 'AssessmentItemPreview',
+    $trs: {
+      answersLabel: 'Answers',
+      noAnswersPlaceholder: 'No answers yet',
+      noHintsPlaceholder: 'No hints yet',
+      hintsToggleLabelHide: 'Hide hints',
+      hintsToggleLabelShow: 'Show {hintsCount} {hintsCount, plural, one {hint} other {hints}}',
+    },
     props: {
       question: {
         type: String,
@@ -148,19 +155,11 @@
         return getCorrectAnswersIndices(this.kind, this.answers);
       },
       hintsToggleLabel() {
-        if (this.hintsCount === 0) {
-          return 'No hints yet';
-        }
-
         if (this.areHintsOpen) {
-          return 'Hide hints';
+          return this.$tr('hintsToggleLabelHide');
         }
 
-        if (this.hintsCount === 1) {
-          return 'Show 1 hint';
-        }
-
-        return `Show ${this.hintsCount} hints`;
+        return this.$tr('hintsToggleLabelShow', { hintsCount: this.hintsCount });
       },
       hintsCount() {
         if (!this.hints) {

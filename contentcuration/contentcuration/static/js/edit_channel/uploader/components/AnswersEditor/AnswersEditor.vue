@@ -1,14 +1,14 @@
 <template>
   <div>
     <div class="grey--text text--darken-1 mb-3">
-      Answers
+      {{ $tr('answersLabel') }}
     </div>
 
     <div
       v-if="!answers || !answers.length"
       class="pa-3 card-border-light"
     >
-      No answers yet
+      {{ $tr('noAnswersPlaceholder') }}
     </div>
 
     <div
@@ -95,7 +95,7 @@
       data-test="newAnswerBtn"
       @click="addNewAnswer"
     >
-      New answer
+      {{ $tr('newAnswerBtnLabel') }}
     </VBtn>
   </div>
 </template>
@@ -116,6 +116,11 @@
 
   export default {
     name: 'AnswersEditor',
+    $trs: {
+      answersLabel: 'Answers',
+      noAnswersPlaceholder: 'No answers yet',
+      newAnswerBtnLabel: 'New answer',
+    },
     components: {
       AssessmentItemToolbar,
       MarkdownEditor,

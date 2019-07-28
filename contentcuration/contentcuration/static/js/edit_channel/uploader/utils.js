@@ -1,3 +1,5 @@
+import translator from './translator';
+
 import { AssessmentItemTypes, AssessmentItemValidationErrors } from './constants';
 
 export const questionHasOneCorrectAnswer = questionKind => {
@@ -87,8 +89,8 @@ export const updateAnswersToQuestionKind = (questionKind, answers) => {
 
     case AssessmentItemTypes.TRUE_FALSE:
       newAnswers = [
-        { answer: 'True', correct: true, order: 1 },
-        { answer: 'False', correct: false, order: 2 },
+        { answer: translator.translate('true'), correct: true, order: 1 },
+        { answer: translator.translate('false'), correct: false, order: 2 },
       ];
       break;
 
@@ -248,22 +250,22 @@ export const validateAssessmentItem = assessmentItem => {
 export const getAssessmentItemErrorMessage = (error, itemKind) => {
   switch (error) {
     case AssessmentItemValidationErrors.BLANK_QUESTION:
-      return 'Question cannot be blank';
+      return translator.translate('errorBlankQuestion');
 
     case AssessmentItemValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS:
       if (
         itemKind === AssessmentItemTypes.SINGLE_SELECTION ||
         itemKind === AssessmentItemTypes.TRUE_FALSE
       ) {
-        return 'Choose a correct answer';
+        return translator.translate('errorMissingAnswer');
       }
 
       if (itemKind === AssessmentItemTypes.MULTIPLE_SELECTION) {
-        return 'Choose at least one correct answer';
+        return translator.translate('errorChooseAtLeastOneCorrectAnswer');
       }
 
       if ((itemKind = AssessmentItemTypes.INPUT_QUESTION)) {
-        return 'Provide at least one correct answer';
+        return translator.translate('errorProvideAtLeastOneCorrectAnwer');
       }
 
       break;
