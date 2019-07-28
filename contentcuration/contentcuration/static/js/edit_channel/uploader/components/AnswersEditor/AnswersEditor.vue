@@ -77,6 +77,7 @@
               :canMoveUp="!isAnswerFirst(answerIdx)"
               :canMoveDown="!isAnswerLast(answerIdx)"
               class="toolbar"
+              data-test="toolbar"
               @click="onToolbarClick($event, answerIdx)"
             />
           </VLayout>
@@ -139,11 +140,6 @@
     data() {
       return {
         correctAnswersIndices: getCorrectAnswersIndices(this.questionKind, this.answers),
-        toolbarIconActions: [
-          AssessmentItemToolbarActions.MOVE_ITEM_UP,
-          AssessmentItemToolbarActions.MOVE_ITEM_DOWN,
-          AssessmentItemToolbarActions.DELETE_ITEM,
-        ],
       };
     },
     computed: {
@@ -164,6 +160,21 @@
       },
       isEditingAllowed() {
         return !this.isTrueFalse;
+      },
+      toolbarIconActions() {
+        if (this.isSingleSelection || this.isMultipleSelection) {
+          return [
+            AssessmentItemToolbarActions.MOVE_ITEM_UP,
+            AssessmentItemToolbarActions.MOVE_ITEM_DOWN,
+            AssessmentItemToolbarActions.DELETE_ITEM,
+          ];
+        }
+
+        if (this.isInputQuestion) {
+          return [AssessmentItemToolbarActions.DELETE_ITEM];
+        }
+
+        return [];
       },
     },
     watch: {
