@@ -24,8 +24,8 @@
       >
         <div :class="indicatorClasses(answer)"></div>
         <VCardText>
-          <VLayout align-top justify-space-between>
-            <VFlex xs1>
+          <VLayout align-top>
+            <VFlex :class="{ 'xs1': isAnswerOpen(answerIdx) }">
               <!--
                 VRadio cannot be used without VRadioGroup like VCheckbox but it can
                 be solved by wrapping each VRadio to VRadioGroup
@@ -60,7 +60,7 @@
               </div>
             </VFlex>
 
-            <VFlex xs4 md6 lg7>
+            <VFlex>
               <keep-alive :max="5">
                 <MarkdownEditor
                   v-if="isAnswerOpen(answerIdx)"
@@ -72,14 +72,16 @@
 
             <VSpacer />
 
-            <AssessmentItemToolbar
-              :iconActionsConfig="toolbarIconActions"
-              :canMoveUp="!isAnswerFirst(answerIdx)"
-              :canMoveDown="!isAnswerLast(answerIdx)"
-              class="toolbar"
-              data-test="toolbar"
-              @click="onToolbarClick($event, answerIdx)"
-            />
+            <VFlex>
+              <AssessmentItemToolbar
+                :iconActionsConfig="toolbarIconActions"
+                :canMoveUp="!isAnswerFirst(answerIdx)"
+                :canMoveDown="!isAnswerLast(answerIdx)"
+                class="toolbar"
+                data-test="toolbar"
+                @click="onToolbarClick($event, answerIdx)"
+              />
+            </VFlex>
           </VLayout>
         </VCardText>
       </VCard>
