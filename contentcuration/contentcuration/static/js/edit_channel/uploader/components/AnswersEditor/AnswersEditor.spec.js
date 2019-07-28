@@ -5,6 +5,10 @@ import AnswersEditor from './AnswersEditor';
 
 jest.mock('../MarkdownEditor/MarkdownEditor.vue');
 
+const getToolbar = wrapper => {
+  return wrapper.find('[data-test="toolbar"]');
+};
+
 const clickNewAnswerBtn = wrapper => {
   wrapper
     .find('[data-test="newAnswerBtn"]')
@@ -98,6 +102,10 @@ describe('AnswersEditor', () => {
       expect(inputs.at(1).element.checked).toBe(false);
     });
 
+    it('toolbar contains move up/down and delete icons', () => {
+      expect(getToolbar(wrapper).html()).toMatchSnapshot();
+    });
+
     it('renders new answer button', () => {
       expect(rendersNewAnswerBtn(wrapper)).toBe(true);
     });
@@ -157,6 +165,10 @@ describe('AnswersEditor', () => {
       expect(inputs.at(2).element.checked).toBe(true);
     });
 
+    it('toolbar contains move up/down and delete icons', () => {
+      expect(getToolbar(wrapper).html()).toMatchSnapshot();
+    });
+
     it('renders new answer button', () => {
       expect(rendersNewAnswerBtn(wrapper)).toBe(true);
     });
@@ -214,6 +226,10 @@ describe('AnswersEditor', () => {
       expect(inputs.at(1).element.checked).toBe(true);
     });
 
+    it('renders empty toolbar', () => {
+      expect(getToolbar(wrapper).html()).toMatchSnapshot();
+    });
+
     it('does not render new answer button', () => {
       expect(rendersNewAnswerBtn(wrapper)).toBe(false);
     });
@@ -235,6 +251,10 @@ describe('AnswersEditor', () => {
     it('renders all possible answers', () => {
       expect(wrapper.html()).toContain('Mayonnaise (I mean you can, but...)');
       expect(wrapper.html()).toContain('Peanut butter');
+    });
+
+    it('toolbar contains only delete icon', () => {
+      expect(getToolbar(wrapper).html()).toMatchSnapshot();
     });
 
     it('renders new answer button', () => {
