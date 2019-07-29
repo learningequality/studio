@@ -1,11 +1,10 @@
 import { AssessmentItemTypes, AssessmentItemValidationErrors } from '../../constants';
 import {
+  nodeAssessmentItemsCount,
+  nodeAssessmentDraft,
   isNodeAssessmentDraftValid,
-  isNodeAssessmentDraftItemValid,
   invalidNodeAssessmentDraftItemsCount,
 } from '../getters';
-
-var getters = require('../getters');
 
 describe('edit_modal', () => {
   let state;
@@ -70,7 +69,7 @@ describe('edit_modal', () => {
         });
 
         it('takes number of assessment items from nodes retrieved from API', () => {
-          expect(getters.nodeAssessmentItemsCount(state)('exercise-2')).toBe(2);
+          expect(nodeAssessmentItemsCount(state)('exercise-2')).toBe(2);
         });
       });
 
@@ -170,7 +169,7 @@ describe('edit_modal', () => {
         });
 
         it('takes number of assessment items from the draft', () => {
-          expect(getters.nodeAssessmentItemsCount(state)('exercise-2')).toBe(3);
+          expect(nodeAssessmentItemsCount(state)('exercise-2')).toBe(3);
         });
       });
     });
@@ -212,11 +211,11 @@ describe('edit_modal', () => {
       });
 
       it('returns null when an assessment draft not available for a given node ID', () => {
-        expect(getters.nodeAssessmentDraft(state)('node-3')).toBeNull();
+        expect(nodeAssessmentDraft(state)('node-3')).toBeNull();
       });
 
       it('returns an assessment draft belonging to a given node ID', () => {
-        expect(getters.nodeAssessmentDraft(state)('node-2')).toEqual([
+        expect(nodeAssessmentDraft(state)('node-2')).toEqual([
           {
             data: {
               id: 2,
@@ -316,62 +315,6 @@ describe('edit_modal', () => {
       it('returns false if at least one item of correct node assessment draft is invalid', () => {
         expect(isNodeAssessmentDraftValid(state)('node-2')).toBe(false);
         expect(isNodeAssessmentDraftValid(state)('node-3')).toBe(false);
-      });
-    });
-
-    describe('isNodeAssessmentDraftItemValid', () => {
-      beforeEach(() => {
-        state = {
-          nodesAssessmentDrafts: {
-            'node-1': [
-              {
-                data: {
-                  order: 0,
-                  type: AssessmentItemTypes.SINGLE_SELECTION,
-                  question: 'Node 1 - Question 1',
-                  answers: [],
-                  hints: [],
-                },
-                validation: {},
-              },
-            ],
-            'node-2': [
-              {
-                data: {
-                  order: 0,
-                  type: AssessmentItemTypes.SINGLE_SELECTION,
-                  question: 'Node 2 - Question 2',
-                  answers: [],
-                  hints: [],
-                },
-              },
-              {
-                data: {
-                  order: 1,
-                  type: AssessmentItemTypes.SINGLE_SELECTION,
-                  question: '',
-                  answers: [{ answer: 'Answer 1', order: 1, correct: false }],
-                  hints: [],
-                },
-                validation: {
-                  questionErrors: [AssessmentItemValidationErrors.BLANK_QUESTION],
-                },
-              },
-            ],
-          },
-        };
-      });
-
-      it('returns true if an item has no validation errors', () => {
-        expect(
-          isNodeAssessmentDraftItemValid(state)({ nodeId: 'node-2', assessmentItemIdx: 0 })
-        ).toBe(true);
-      });
-
-      it('returns false if an item has at least one validation error', () => {
-        expect(
-          isNodeAssessmentDraftItemValid(state)({ nodeId: 'node-2', assessmentItemIdx: 1 })
-        ).toBe(false);
       });
     });
 

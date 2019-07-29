@@ -23,12 +23,12 @@
         :class="hintClasses(hintIdx)"
       >
         <VCardText>
-          <VLayout align-top justify-space-between>
-            <VFlex xs1 mt-2>
+          <VLayout align-top>
+            <VFlex xs1>
               {{ hint.order }}
             </VFlex>
 
-            <VFlex xs4 md6 lg7 mt-2>
+            <VFlex>
               <transition name="fade">
                 <keep-alive :max="5" include="MarkdownEditor">
                   <span v-if="!isHintOpen(hintIdx)">
@@ -46,13 +46,15 @@
 
             <VSpacer />
 
-            <AssessmentItemToolbar
-              :iconActionsConfig="toolbarIconActions"
-              :canMoveUp="!isHintFirst(hintIdx)"
-              :canMoveDown="!isHintLast(hintIdx)"
-              class="toolbar"
-              @click="onToolbarClick($event, hintIdx)"
-            />
+            <VFlex>
+              <AssessmentItemToolbar
+                :iconActionsConfig="toolbarIconActions"
+                :canMoveUp="!isHintFirst(hintIdx)"
+                :canMoveDown="!isHintLast(hintIdx)"
+                class="toolbar"
+                @click="onToolbarClick($event, hintIdx)"
+              />
+            </VFlex>
           </VLayout>
         </VCardText>
       </VCard>
@@ -73,10 +75,19 @@
 <script>
 
   import { AssessmentItemToolbarActions } from '../../constants';
-  import { swapElements, sanitizeAssessmentItemHints } from '../../utils';
+  import { swapElements } from '../../utils';
 
   import AssessmentItemToolbar from '../AssessmentItemToolbar/AssessmentItemToolbar.vue';
   import MarkdownEditor from '../MarkdownEditor/MarkdownEditor.vue';
+
+  const updateHintsOrder = hints => {
+    return hints.map((hint, idx) => {
+      return {
+        ...hint,
+        order: idx + 1,
+      };
+    });
+  };
 
   export default {
     name: 'HintsEditor',
@@ -144,12 +155,7 @@
         }
 
         let updatedHints = swapElements(this.hints, hintIdx, hintIdx - 1);
-        updatedHints = updatedHints.map((hint, hintIdx) => {
-          return {
-            ...hint,
-            order: hintIdx + 1,
-          };
-        });
+        updatedHints = updateHintsOrder(updatedHints);
 
         this.emitUpdate(updatedHints);
 
@@ -165,12 +171,7 @@
         }
 
         let updatedHints = swapElements(this.hints, hintIdx, hintIdx + 1);
-        updatedHints = updatedHints.map((hint, hintIdx) => {
-          return {
-            ...hint,
-            order: hintIdx + 1,
-          };
-        });
+        updatedHints = updateHintsOrder(updatedHints);
 
         this.emitUpdate(updatedHints);
 
@@ -184,12 +185,7 @@
         let updatedHints = JSON.parse(JSON.stringify(this.hints));
 
         updatedHints.splice(hintIdx, 1);
-        updatedHints = updatedHints.map((hint, hintIdx) => {
-          return {
-            ...hint,
-            order: hintIdx + 1,
-          };
-        });
+        updatedHints = updateHintsOrder(updatedHints);
 
         this.emitUpdate(updatedHints);
 
@@ -227,8 +223,14 @@
         }
       },
       addNewHint() {
-        // primarily to disable adding more empty hints
-        const updatedHints = sanitizeAssessmentItemHints(this.hints, true);
+        // do not allow adding more empty hints
+        let updatedHints = [];
+        if (this.hints) {
+          updatedHints = this.hints.filter(
+            hint => hint.hint !== undefined && hint.hint.trim() !== ''
+          );
+        }
+        updatedHints = updateHintsOrder(updatedHints);
 
         updatedHints.push({
           hint: '',

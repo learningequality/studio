@@ -10,119 +10,19 @@
       <span class="red--text font-weight-bold">{{ invalidItemsErrorMessage }}</span>
     </VAlert>
 
-    <VCheckbox
-      v-model="displayAnswersPreview"
-      label="Show answers"
-      class="mt-4 ml-0"
-      data-test="showAnswersCheckbox"
+    <AssessmentEditor
+      v-if="assessmentDraft"
+      ref="assessmentEditor"
+      :assessmentDraft="assessmentDraft"
+      :openDialog="openDialog"
+      @update="onAssessmentDraftUpdate"
     />
-
-    <template v-if="assessmentItemsData && assessmentItemsData.length">
-      <VCard
-        v-for="(itemData, itemIdx) in assessmentItemsData"
-        :key="itemIdx"
-        pa-1
-        :class="itemClasses(itemIdx)"
-        data-test="assessmentItem"
-        @click="onItemClick($event, itemIdx)"
-      >
-        <VCardText>
-          <VLayout align-start>
-            <VFlex xs1 mt-2>
-              {{ itemData.order + 1 }}
-            </VFlex>
-
-            <VFlex v-if="!isItemOpen(itemIdx)" xs10>
-              <AssessmentItemPreview
-                :question="itemData.question"
-                :kind="itemData.type"
-                :answers="itemData.answers"
-                :hints="itemData.hints"
-                :detailed="displayAnswersPreview"
-              />
-            </VFlex>
-
-            <VFlex xs10>
-              <AssessmentItemEditor
-                v-if="isItemOpen(itemIdx)"
-                :nodeId="nodeId"
-                :itemIdx="itemIdx"
-                data-test="assessmentItemEditor"
-                @close="onItemClose"
-              />
-            </VFlex>
-
-            <VSpacer />
-
-            <VLayout align-center class="toolbar">
-              <VFlex
-                v-if="!isItemOpen(itemIdx) && !isItemValid(itemIdx)"
-                mr-2
-              >
-                <template v-if="$vuetify.breakpoint.lgAndUp">
-                  <VIcon class="red--text">
-                    error
-                  </VIcon>
-                  <span class="red--text font-weight-bold">
-                    {{ $tr('incompleteItemIndicatorLabel') }}
-                  </span>
-                </template>
-
-                <VTooltip v-else top>
-                  <template slot="activator" slot-scope="{ on }">
-                    <VIcon class="red--text" v-on="on">
-                      error
-                    </VIcon>
-                  </template>
-                  <span>{{ $tr('incompleteItemIndicatorLabel') }}</span>
-                </VTooltip>
-              </VFlex>
-
-              <VFlex>
-                <AssessmentItemToolbar
-                  :iconActionsConfig="toolbarIconActions(itemIdx)"
-                  :displayMenu="true"
-                  :menuActionsConfig="toolbarMenuActions"
-                  :canMoveUp="!isItemFirst(itemIdx)"
-                  :canMoveDown="!isItemLast(itemIdx)"
-                  :collapse="!$vuetify.breakpoint.mdAndUp"
-                  :itemLabel="$tr('toolbarItemLabel')"
-                  @click="onToolbarClick(itemIdx, $event)"
-                />
-              </VFlex>
-            </VLayout>
-          </VLayout>
-
-          <VLayout v-if="isItemOpen(itemIdx)" justify-end>
-            <VBtn
-              flat
-              class="close-item-btn mr-0"
-              data-test="closeBtn"
-              @click="closeOpenItem"
-            >
-              {{ $tr('closeBtnLabel') }}
-            </VBtn>
-          </VLayout>
-        </VCardText>
-      </VCard>
-    </template>
-
-    <div v-else>
-      {{ $tr('noQuestionsPlaceholder') }}
-    </div>
-
-    <VBtn
-      color="primary"
-      class="mt-4 ml-0"
-      data-test="newQuestionBtn"
-      @click="onNewItemBtnClick"
-    >
-      {{ $tr('newQuestionBtnLabel') }}
-    </VBtn>
 
     <!-- TODO @MisRob: As soon as we know how dialogs should behave within the context
     of the whole edit modal, move to a more appropriate place (EditModal.vue maybe?)
-    and merge with existing Dialog component -->
+    and merge with existing Dialog component - ideally, only one dialog should be rendered
+    within a page
+    -->
     <DialogBox
       v-model="dialog.open"
       :title="dialog.title"
@@ -134,16 +34,15 @@
           flat
           @click="dialog.onCancel"
         >
-          {{ $tr('dialogCancelBtnLabel') }}
+          {{ dialog.cancelLabel || $tr('dialogCancelBtnLabel') }}
         </VBtn>
 
         <VBtn
           color="primary"
           flat
-          data-test="dialogSubmitBtn"
           @click="dialog.onSubmit"
         >
-          {{ dialog.submitLabel }}
+          {{ dialog.submitLabel || $tr('dialogSubmitBtnLabel') }}
         </VBtn>
       </template>
     </DialogBox>
@@ -154,44 +53,20 @@
 
   import { mapState, mapGetters, mapMutations } from 'vuex';
 
-  import { AssessmentItemToolbarActions } from '../constants';
-
-  import AssessmentItemEditor from '../components/AssessmentItemEditor/AssessmentItemEditor.vue';
-  import AssessmentItemPreview from '../components/AssessmentItemPreview/AssessmentItemPreview.vue';
-  import AssessmentItemToolbar from '../components/AssessmentItemToolbar/AssessmentItemToolbar.vue';
+  import AssessmentEditor from '../components/AssessmentEditor/AssessmentEditor.vue';
   import DialogBox from '../components/DialogBox/DialogBox.vue';
 
   export default {
     name: 'AssessmentView',
     $trs: {
-      incompleteItemIndicatorLabel: 'Incomplete',
       incompleteItemsCountMessage:
         '{invalidItemsCount} incomplete {invalidItemsCount, plural, one {question} other {questions}}',
-      toolbarItemLabel: 'question',
-      noQuestionsPlaceholder: 'No questions yet',
-      closeBtnLabel: 'Close',
-      newQuestionBtnLabel: 'New question',
+      dialogSubmitBtnLabel: 'Submit',
       dialogCancelBtnLabel: 'Cancel',
-      deleteDialogTitle: 'Deleting question',
-      deleteDialogMessage: 'Are you sure you want to delete this question?',
-      deleteDialogSubmitBtnLabel: 'Delete',
     },
     components: {
-      AssessmentItemEditor,
-      AssessmentItemPreview,
-      AssessmentItemToolbar,
+      AssessmentEditor,
       DialogBox,
-    },
-    data() {
-      return {
-        openItemIdx: null,
-        displayAnswersPreview: false,
-        toolbarMenuActions: [
-          AssessmentItemToolbarActions.ADD_ITEM_ABOVE,
-          AssessmentItemToolbarActions.ADD_ITEM_BELOW,
-          AssessmentItemToolbarActions.DELETE_ITEM,
-        ],
-      };
     },
     computed: {
       ...mapState('edit_modal', ['selectedIndices', 'dialog']),
@@ -199,7 +74,6 @@
         'getNode',
         'nodeAssessmentDraft',
         'isNodeAssessmentDraftValid',
-        'isNodeAssessmentDraftItemValid',
         'invalidNodeAssessmentDraftItemsCount',
       ]),
       // assessment view is accessible only when exactly one exercise node is selected
@@ -212,8 +86,8 @@
       nodeId() {
         return this.node.id;
       },
-      assessmentItemsData() {
-        return this.nodeAssessmentDraft(this.nodeId).map(item => item.data);
+      assessmentDraft() {
+        return this.nodeAssessmentDraft(this.nodeId);
       },
       invalidItemsErrorMessage() {
         const invalidItemsCount = this.invalidNodeAssessmentDraftItemsCount(this.nodeId);
@@ -225,228 +99,36 @@
         return this.$tr('incompleteItemsCountMessage', { invalidItemsCount });
       },
     },
+    watch: {
+      selectedIndices() {
+        this.$refs.assessmentEditor.reset();
+      },
+    },
     created() {
       if (this.nodeAssessmentDraft(this.nodeId) !== null) {
         return;
       }
 
-      this.addNodeAssessmentDraft({
+      this.initializeNodeAssessmentDraft({
         nodeId: this.nodeId,
         assessmentItems: this.node.assessment_items,
       });
+
+      this.sanitizeNodeAssessmentDraft({ nodeId: this.nodeId });
+      this.validateNodeAssessmentDraft({ nodeId: this.nodeId });
     },
     methods: {
       ...mapMutations('edit_modal', [
-        'addNodeAssessmentDraft',
+        'initializeNodeAssessmentDraft',
+        'setNodeAssessmentDraft',
         'sanitizeNodeAssessmentDraft',
         'validateNodeAssessmentDraft',
-        'addNodeAssessmentDraftItem',
-        'updateNodeAssessmentDraftItemData',
-        'deleteNodeAssessmentDraftItem',
-        'swapNodeAssessmentDraftItems',
-        'sanitizeNodeAssessmentDraftItem',
-        'validateNodeAssessmentDraftItem',
         'openDialog',
       ]),
-      openItem(itemIdx) {
-        this.openItemIdx = itemIdx;
-      },
-      closeOpenItem() {
-        this.openItemIdx = null;
-      },
-      isItemOpen(itemIdx) {
-        return this.openItemIdx === itemIdx;
-      },
-      isItemFirst(itemIdx) {
-        return itemIdx === 0;
-      },
-      isItemLast(itemIdx) {
-        return itemIdx === this.nodeAssessmentDraft(this.nodeId).length - 1;
-      },
-      isItemValid(itemIdx) {
-        return this.isNodeAssessmentDraftItemValid({
-          nodeId: this.nodeId,
-          assessmentItemIdx: itemIdx,
-        });
-      },
-      itemClasses(itemIdx) {
-        const classes = ['item'];
-
-        if (!this.isItemOpen(itemIdx)) {
-          classes.push('closed');
-        }
-
-        return classes;
-      },
-      toolbarIconActions(itemIdx) {
-        const actions = [
-          [AssessmentItemToolbarActions.MOVE_ITEM_UP, { collapse: true }],
-          [AssessmentItemToolbarActions.MOVE_ITEM_DOWN, { collapse: true }],
-        ];
-
-        if (!this.isItemOpen(itemIdx)) {
-          actions.unshift([AssessmentItemToolbarActions.EDIT_ITEM, { collapse: false }]);
-        }
-
-        return actions;
-      },
-      onItemClick(event, itemIdx) {
-        if (this.isItemOpen(itemIdx)) {
-          return;
-        }
-
-        if (
-          event.target.closest('.close-item-btn') !== null ||
-          event.target.closest('.toolbar') !== null ||
-          event.target.closest('.hints-preview') !== null
-        ) {
-          return;
-        }
-
-        this.validateOpenItem();
-        this.openItem(itemIdx);
-      },
-      onToolbarClick(itemIdx, action) {
-        switch (action) {
-          case AssessmentItemToolbarActions.EDIT_ITEM:
-            this.validateOpenItem();
-            this.openItem(itemIdx);
-            break;
-
-          case AssessmentItemToolbarActions.DELETE_ITEM:
-            this.openDialog({
-              title: this.$tr('deleteDialogTitle'),
-              message: this.$tr('deleteDialogMessage'),
-              submitLabel: this.$tr('deleteDialogSubmitBtnLabel'),
-              onSubmit: () => this.deleteItem(itemIdx),
-            });
-            break;
-
-          case AssessmentItemToolbarActions.ADD_ITEM_ABOVE:
-            this.validateOpenItem();
-            // primarily to disable adding more empty questions
-            this.sanitizeItems();
-
-            this.addNodeAssessmentDraftItem({
-              nodeId: this.nodeId,
-              before: itemIdx,
-            });
-
-            this.openItem(itemIdx);
-            break;
-
-          case AssessmentItemToolbarActions.ADD_ITEM_BELOW:
-            this.validateOpenItem();
-            // primarily to disable adding more empty questions
-            this.sanitizeItems();
-
-            this.addNodeAssessmentDraftItem({
-              nodeId: this.nodeId,
-              after: itemIdx,
-            });
-
-            this.openItem(itemIdx + 1);
-            break;
-
-          case AssessmentItemToolbarActions.MOVE_ITEM_UP:
-            if (this.isItemFirst(itemIdx)) {
-              break;
-            }
-
-            this.swapItems(itemIdx, itemIdx - 1);
-            break;
-
-          case AssessmentItemToolbarActions.MOVE_ITEM_DOWN:
-            if (this.isItemLast(itemIdx)) {
-              break;
-            }
-
-            this.swapItems(itemIdx, itemIdx + 1);
-            break;
-        }
-      },
-      validateOpenItem() {
-        if (this.openItemIdx !== null) {
-          this.sanitizeNodeAssessmentDraftItem({
-            nodeId: this.nodeId,
-            assessmentItemIdx: this.openItemIdx,
-            removeEmpty: true,
-          });
-
-          this.validateNodeAssessmentDraftItem({
-            nodeId: this.nodeId,
-            assessmentItemIdx: this.openItemIdx,
-          });
-        }
-      },
-      sanitizeItems() {
-        this.sanitizeNodeAssessmentDraft({ nodeId: this.nodeId });
-      },
-      deleteItem(itemIdx) {
-        this.deleteNodeAssessmentDraftItem({
-          nodeId: this.nodeId,
-          assessmentItemIdx: itemIdx,
-        });
-
-        if (this.openItemIdx === itemIdx) {
-          this.closeOpenItem();
-        } else if (this.openItemIdx > itemIdx) {
-          this.openItem(this.openItemIdx - 1);
-        }
-      },
-      swapItems(firstItemIdx, secondItemIdx) {
-        this.validateOpenItem();
-
-        this.swapNodeAssessmentDraftItems({
-          nodeId: this.nodeId,
-          firstItemIdx,
-          secondItemIdx,
-        });
-
-        if (this.openItemIdx === firstItemIdx) {
-          this.openItem(secondItemIdx);
-          return;
-        }
-        if (this.openItemIdx === secondItemIdx) {
-          this.openItem(firstItemIdx);
-          return;
-        }
-      },
-      onItemClose() {
-        this.validateOpenItem();
-        this.closeOpenItem();
-      },
-      onNewItemBtnClick() {
-        this.validateOpenItem();
-        // primarily to disable adding more empty questions
-        this.sanitizeItems();
-
-        this.addNodeAssessmentDraftItem({ nodeId: this.nodeId });
-
-        this.openItem(this.assessmentItemsData.length - 1);
+      onAssessmentDraftUpdate(assessmentDraft) {
+        this.setNodeAssessmentDraft({ nodeId: this.nodeId, assessmentDraft });
       },
     },
   };
 
 </script>
-
-<style lang="less" scoped>
-
-  @import '../../../../less/global-variables.less';
-
-  .item {
-    position: relative;
-    margin: 8px -4px;
-
-    .toolbar {
-      position: absolute;
-      right: 10px;
-    }
-
-    &.closed {
-      margin: 0 4px;
-      cursor: pointer;
-    }
-  }
-
-</style>

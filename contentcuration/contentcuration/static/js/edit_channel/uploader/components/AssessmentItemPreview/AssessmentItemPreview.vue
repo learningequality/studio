@@ -60,7 +60,7 @@
             class="hints-preview" is needed for precise click
             target detection in AssessmentView.vue
           -->
-          <span v-if="hintsCount === 0">{{ $tr('No hints yet') }}</span>
+          <span v-if="hintsCount === 0">{{ $tr('noHintsPlaceholder') }}</span>
           <div v-else class="hints-preview">
             <span
               class="hints-toggle"
@@ -110,20 +110,18 @@
       hintsToggleLabelShow: 'Show {hintsCount} {hintsCount, plural, one {hint} other {hints}}',
     },
     props: {
-      question: {
-        type: String,
-      },
-      kind: {
-        type: String,
-        validator: value => {
-          return Object.values(AssessmentItemTypes).includes(value);
-        },
-      },
-      answers: {
-        type: Array,
-      },
-      hints: {
-        type: Array,
+      /**
+       * assessment item data as retrieved from API
+       * {
+       *    question
+       *    type
+       *    answers
+       *    hints
+       *    ...
+       * }
+       */
+      itemData: {
+        type: Object,
       },
       detailed: {
         type: Boolean,
@@ -136,6 +134,34 @@
       };
     },
     computed: {
+      question() {
+        if (!this.itemData || !this.itemData.question) {
+          return '';
+        }
+
+        return this.itemData.question;
+      },
+      kind() {
+        if (!this.itemData || !this.itemData.type) {
+          return '';
+        }
+
+        return this.itemData.type;
+      },
+      answers() {
+        if (!this.itemData || !this.itemData.answers) {
+          return [];
+        }
+
+        return this.itemData.answers;
+      },
+      hints() {
+        if (!this.itemData || !this.itemData.hints) {
+          return [];
+        }
+
+        return this.itemData.hints;
+      },
       kindLabel() {
         return AssessmentItemTypeLabels[this.kind];
       },
