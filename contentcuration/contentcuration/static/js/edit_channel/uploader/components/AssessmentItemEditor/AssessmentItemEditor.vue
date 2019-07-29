@@ -251,6 +251,7 @@
       changeKind(newKind) {
         const newAnswers = updateAnswersToQuestionKind(newKind, this.answers);
 
+        this.closeAnswer();
         this.updateItem({ type: newKind, answers: newAnswers });
       },
       // question type VSelect needs to be rerended when confirmation dialog
