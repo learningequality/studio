@@ -8,7 +8,7 @@
     <VCard>
       <VCardTitle
         class="headline"
-        primaryTitle
+        primary-title
       >
         {{ title }}
       </VCardTitle>
@@ -32,7 +32,6 @@
   export default {
     name: 'DialogBox',
     props: {
-      // v-model support
       value: {
         type: Boolean,
         default: false,

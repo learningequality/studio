@@ -1,6 +1,7 @@
 import _ from 'underscore';
 import { modes } from '../constants';
-import { getSelected, isAssessmentItemInvalid } from './utils';
+import { isAssessmentDraftItemValid } from '../utils';
+import { getSelected } from './utils';
 import Constants from 'edit_channel/constants/index';
 import State from 'edit_channel/state';
 
@@ -104,7 +105,6 @@ export function tags() {
  * Return number of node assessment draft items if user has already started
  * editing the node. Otherwise return number of assessment items retrieved
  * from the last API call.
- * @param {*} state
  */
 export const nodeAssessmentItemsCount = state => nodeId => {
   const nodeAssessmentDraft = state.nodesAssessmentDrafts[nodeId];
@@ -132,18 +132,11 @@ export const nodeAssessmentDraft = state => nodeId => {
 export const isNodeAssessmentDraftValid = state => nodeId => {
   const nodeAssessmentDraft = state.nodesAssessmentDrafts[nodeId];
 
-  return !nodeAssessmentDraft.some(isAssessmentItemInvalid);
-};
-
-export const isNodeAssessmentDraftItemValid = state => ({ nodeId, assessmentItemIdx }) => {
-  const nodeAssessmentDraft = [...state.nodesAssessmentDrafts[nodeId]];
-  const item = nodeAssessmentDraft[assessmentItemIdx];
-
-  return !isAssessmentItemInvalid(item);
+  return !nodeAssessmentDraft.some(item => !isAssessmentDraftItemValid(item));
 };
 
 export const invalidNodeAssessmentDraftItemsCount = state => nodeId => {
   const nodeAssessmentDraft = state.nodesAssessmentDrafts[nodeId];
 
-  return nodeAssessmentDraft.filter(isAssessmentItemInvalid).length;
+  return nodeAssessmentDraft.filter(item => !isAssessmentDraftItemValid(item)).length;
 };

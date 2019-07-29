@@ -79,14 +79,12 @@
 
 <script>
 
-  import { mapGetters, mapMutations } from 'vuex';
-
   import { AssessmentItemTypes, AssessmentItemTypeLabels } from '../../constants';
-  import { getAssessmentItemErrorMessage, updateAnswersToQuestionKind } from '../../utils';
+  import { getAssessmentItemErrorMessage, updateAnswersToQuestionType } from '../../utils';
 
   import AnswersEditor from '../AnswersEditor/AnswersEditor.vue';
-  import HintsEditor from '../HintsEditor/HintsEditor.vue';
   import ErrorList from '../ErrorList/ErrorList.vue';
+  import HintsEditor from '../HintsEditor/HintsEditor.vue';
   import MarkdownEditor from '../MarkdownEditor/MarkdownEditor.vue';
 
   export default {
@@ -94,27 +92,64 @@
     $trs: {
       questionTypeLabel: 'Question type',
       questionLabel: 'Question',
-      questionTypeDialogTitle: 'Changing question type',
-      questionTypeDialogSubmitBtnLabel: 'Change',
-      questionTypeDialogMessageToSingleSelection:
+      dialogTitle: 'Changing question type',
+      dialogSubmitBtnLabel: 'Change',
+      dialogMessageChangeToSingleSelection:
         'Switching to single selection will set only one answer as correct. Continue?',
-      questionTypeDialogMessageToTrueFalse:
+      dialogMessageChangeToTrueFalse:
         'Switching to true or false will remove any current answers. Continue?',
-      questionTypeDialogMessageToInput:
+      dialogMessageChangeToInput:
         'Switching to numeric input will set all answers as correct and remove all non-numeric answers. Continue?',
     },
     components: {
       AnswersEditor,
-      HintsEditor,
       ErrorList,
+      HintsEditor,
       MarkdownEditor,
     },
+    model: {
+      prop: 'item',
+      event: 'update',
+    },
     props: {
-      nodeId: {
-        type: String,
+      /**
+       * {
+       *   // assessment item data as retrieved from API
+       *   data: {
+       *      question
+       *      type
+       *      order
+       *      answers
+       *      hints
+       *      ...
+       *   },
+       *   // client validation data for the assessment item
+       *   validation: {
+       *      questionErrors
+       *      answerErrors
+       *   }
+       * }
+       */
+      item: {
+        type: Object,
       },
-      itemIdx: {
-        type: Number,
+      /**
+       * Inject a function that opens a dialog that should
+       * be confirmed before certain actions can be performed.
+       * If not provided, no confirmation will be required.
+       * Expected interface:
+       *   openDialog({
+       *     title: String,
+       *     message: String,
+       *     cancelLabel: String,
+       *     submitLabel: String,
+       *     onCancel: Function,
+       *     onSubmit: Function,
+       *   })
+       * })
+       */
+      openDialog: {
+        type: Function,
       },
     },
     data() {
@@ -126,26 +161,19 @@
       };
     },
     computed: {
-      ...mapGetters('edit_modal', ['nodeAssessmentDraft']),
       itemData() {
-        if (
-          this.nodeAssessmentDraft(this.nodeId) === null ||
-          this.nodeAssessmentDraft(this.nodeId)[this.itemIdx] === undefined
-        ) {
+        if (!this.item) {
           return null;
         }
 
-        return this.nodeAssessmentDraft(this.nodeId)[this.itemIdx].data;
+        return this.item.data;
       },
       itemValidation() {
-        if (
-          this.nodeAssessmentDraft(this.nodeId) === null ||
-          this.nodeAssessmentDraft(this.nodeId)[this.itemIdx] === undefined
-        ) {
+        if (!this.item) {
           return null;
         }
 
-        return this.nodeAssessmentDraft(this.nodeId)[this.itemIdx].validation;
+        return this.item.validation;
       },
       question() {
         if (!this.itemData || !this.itemData.question) {
@@ -225,31 +253,19 @@
       }
     },
     methods: {
-      ...mapMutations('edit_modal', [
-        'updateNodeAssessmentDraftItemData',
-        'sanitizeNodeAssessmentDraftItem',
-        'validateNodeAssessmentDraftItem',
-        'openDialog',
-      ]),
       updateItem(data) {
-        this.updateNodeAssessmentDraftItemData({
-          nodeId: this.nodeId,
-          assessmentItemIdx: this.itemIdx,
-          data,
-        });
+        let newItem = {
+          ...this.item,
+          data: {
+            ...this.item.data,
+            ...data,
+          },
+        };
 
-        this.sanitizeNodeAssessmentDraftItem({
-          nodeId: this.nodeId,
-          assessmentItemIdx: this.itemIdx,
-        });
-
-        this.validateNodeAssessmentDraftItem({
-          nodeId: this.nodeId,
-          assessmentItemIdx: this.itemIdx,
-        });
+        this.$emit('update', newItem);
       },
       changeKind(newKind) {
-        const newAnswers = updateAnswersToQuestionKind(newKind, this.answers);
+        const newAnswers = updateAnswersToQuestionType(newKind, this.answers);
 
         this.closeAnswer();
         this.updateItem({ type: newKind, answers: newAnswers });
@@ -271,11 +287,11 @@
 
         switch (newKind) {
           case AssessmentItemTypes.SINGLE_SELECTION:
-            if (this.hasMoreCorrectAnswers) {
+            if (typeof this.openDialog === 'function' && this.hasMoreCorrectAnswers) {
               this.openDialog({
-                title: this.$tr('questionTypeDialogTitle'),
-                message: this.$tr('questionTypeDialogMessageToSingleSelection'),
-                submitLabel: this.$tr('questionTypeDialogSubmitBtnLabel'),
+                title: this.$tr('dialogTitle'),
+                message: this.$tr('dialogMessageChangeToSingleSelection'),
+                submitLabel: this.$tr('dialogSubmitBtnLabel'),
                 onSubmit: () => this.changeKind(newKind),
                 onCancel: this.rerenderKindSelect,
               });
@@ -286,11 +302,11 @@
             break;
 
           case AssessmentItemTypes.TRUE_FALSE:
-            if (this.answers.length > 0) {
+            if (typeof this.openDialog === 'function' && this.answers.length > 0) {
               this.openDialog({
-                title: this.$tr('questionTypeDialogTitle'),
-                message: this.$tr('questionTypeDialogMessageToTrueFalse'),
-                submitLabel: this.$tr('questionTypeDialogSubmitBtnLabel'),
+                title: this.$tr('dialogTitle'),
+                message: this.$tr('dialogMessageChangeToTrueFalse'),
+                submitLabel: this.$tr('dialogSubmitBtnLabel'),
                 onSubmit: () => this.changeKind(newKind),
                 onCancel: this.rerenderKindSelect,
               });
@@ -301,11 +317,11 @@
             break;
 
           case AssessmentItemTypes.INPUT_QUESTION:
-            if (this.answers.length > 0) {
+            if (typeof this.openDialog === 'function' && this.answers.length > 0) {
               this.openDialog({
-                title: this.$tr('questionTypeDialogTitle'),
-                message: this.$tr('questionTypeDialogMessageToInput'),
-                submitLabel: this.$tr('questionTypeDialogSubmitBtnLabel'),
+                title: this.$tr('dialogTitle'),
+                message: this.$tr('dialogMessageChangeToInput'),
+                submitLabel: this.$tr('dialogSubmitBtnLabel'),
                 onSubmit: () => this.changeKind(newKind),
                 onCancel: this.rerenderKindSelect,
               });

@@ -32,7 +32,7 @@
                 https://github.com/vuetifyjs/vuetify/issues/2345
               -->
               <VRadioGroup
-                v-if="hasOneCorrectAnswer"
+                v-if="shouldHaveOneCorrectAnswer"
                 :value="correctAnswersIndices"
                 @change="onCorrectAnswersIndicesUpdate"
               >
@@ -104,15 +104,23 @@
 
   import { AssessmentItemTypes, AssessmentItemToolbarActions } from '../../constants';
   import {
-    questionHasOneCorrectAnswer,
+    questionShouldHaveOneCorrectAnswer,
     getCorrectAnswersIndices,
     mapCorrectAnswers,
     swapElements,
-    sanitizeAssessmentItemAnswers,
   } from '../../utils';
 
   import AssessmentItemToolbar from '../AssessmentItemToolbar/AssessmentItemToolbar.vue';
   import MarkdownEditor from '../MarkdownEditor/MarkdownEditor.vue';
+
+  const updateAnswersOrder = answers => {
+    return answers.map((answer, idx) => {
+      return {
+        ...answer,
+        order: idx + 1,
+      };
+    });
+  };
 
   export default {
     name: 'AnswersEditor',
@@ -162,8 +170,8 @@
       isInputQuestion() {
         return this.questionKind === AssessmentItemTypes.INPUT_QUESTION;
       },
-      hasOneCorrectAnswer() {
-        return questionHasOneCorrectAnswer(this.questionKind);
+      shouldHaveOneCorrectAnswer() {
+        return questionShouldHaveOneCorrectAnswer(this.questionKind);
       },
       isEditingAllowed() {
         return !this.isTrueFalse;
@@ -243,12 +251,12 @@
       onCorrectAnswersIndicesUpdate(newIndices) {
         // indices can be an array or a single value - depends on question type
         if (this.correctAnswersIndices !== null) {
-          if (this.hasOneCorrectAnswer && newIndices === this.correctAnswersIndices) {
+          if (this.shouldHaveOneCorrectAnswer && newIndices === this.correctAnswersIndices) {
             return;
           }
 
           if (
-            !this.hasOneCorrectAnswer &&
+            !this.shouldHaveOneCorrectAnswer &&
             JSON.stringify([...newIndices].sort()) ===
               JSON.stringify([...this.correctAnswersIndices].sort())
           ) {
@@ -279,12 +287,7 @@
         }
 
         let updatedAnswers = swapElements(this.answers, answerIdx, answerIdx - 1);
-        updatedAnswers = updatedAnswers.map((answer, answerIdx) => {
-          return {
-            ...answer,
-            order: answerIdx + 1,
-          };
-        });
+        updatedAnswers = updateAnswersOrder(updatedAnswers);
 
         this.emitUpdate(updatedAnswers);
 
@@ -300,12 +303,7 @@
         }
 
         let updatedAnswers = swapElements(this.answers, answerIdx, answerIdx + 1);
-        updatedAnswers = updatedAnswers.map((answer, answerIdx) => {
-          return {
-            ...answer,
-            order: answerIdx + 1,
-          };
-        });
+        updatedAnswers = updateAnswersOrder(updatedAnswers);
 
         this.emitUpdate(updatedAnswers);
 
@@ -319,12 +317,7 @@
         let updatedAnswers = JSON.parse(JSON.stringify(this.answers));
 
         updatedAnswers.splice(answerIdx, 1);
-        updatedAnswers = updatedAnswers.map((answer, answerIdx) => {
-          return {
-            ...answer,
-            order: answerIdx + 1,
-          };
-        });
+        updatedAnswers = updateAnswersOrder(updatedAnswers);
 
         this.emitUpdate(updatedAnswers);
 
@@ -377,8 +370,14 @@
         this.emitUpdate(updatedAnswers);
       },
       addNewAnswer() {
-        // primarily to disable adding more empty answers
-        const updatedAnswers = sanitizeAssessmentItemAnswers(this.answers, true);
+        // do not allow adding more empty answers
+        let updatedAnswers = [];
+        if (this.answers) {
+          updatedAnswers = this.answers.filter(
+            answer => answer.answer !== undefined && answer.answer.trim() !== ''
+          );
+        }
+        updatedAnswers = updateAnswersOrder(updatedAnswers);
 
         const defaultCorrectState = this.isInputQuestion ? true : false;
         updatedAnswers.push({

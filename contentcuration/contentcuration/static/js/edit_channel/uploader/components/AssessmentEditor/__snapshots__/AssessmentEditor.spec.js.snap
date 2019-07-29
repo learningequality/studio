@@ -1,0 +1,541 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AssessmentEditor renders answers preview on show answers click 1`] = `
+<div>
+  <div class="v-input mt-4 ml-0 v-input--selection-controls v-input--checkbox v-input--is-label-active v-input--is-dirty theme--light" data-test="showAnswersCheckbox">
+    <div class="v-input__control">
+      <div class="v-input__slot">
+        <div class="v-input--selection-controls__input"><input aria-label="Show answers" aria-checked="true" role="checkbox" type="checkbox" data-test="showAnswersCheckbox" value="">
+          <div class="v-input--selection-controls__ripple accent--text"></div><i aria-hidden="true" class="v-icon material-icons theme--light accent--text">check_box</i>
+        </div><label aria-hidden="true" class="v-label theme--light" style="left: 0px; position: relative;">Show answers</label>
+      </div>
+      <div class="v-messages theme--light"><span name="message-transition" tag="div" class="v-messages__wrapper"></span></div>
+    </div>
+  </div>
+  <div class="v-card v-sheet theme--light item closed" pa-1="" data-test="item">
+    <div class="v-card__text">
+      <div class="layout align-start">
+        <div class="flex xs1 mt-2">
+          1
+        </div>
+        <div class="flex xs10">
+          <div>
+            <div class="layout align-top justify-space-between">
+              <div class="flex">
+                <div class="caption grey--text mb-1">
+                  Input question
+                </div>
+                <div>
+                  Question 1
+                </div>
+              </div>
+            </div>
+            <div class="layout mt-3">
+              <div class="flex">
+                <div class="caption grey--text mb-2">
+                  Answers
+                </div>
+                <!---->
+                <!---->
+                <div role="list" class="v-list theme--light">
+                  <div role="listitem">
+                    <div class="v-list__tile theme--light">
+                      Mayonnaise (I mean you can, but...)
+                    </div>
+                  </div>
+                  <div role="listitem">
+                    <div class="v-list__tile theme--light">
+                      Peanut butter
+                    </div>
+                  </div>
+                </div>
+                <div class="mt-1"><span>No hints yet</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="spacer"></div>
+        <div class="layout toolbar align-center">
+          <!---->
+          <div class="flex">
+            <div class="layout justify-end">
+              <div class="flex toolbar-item"><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIcon-EDIT_ITEM">
+                  <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">edit</i></div>
+                </button><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Edit</span></div></span>
+            </div>
+            <div class="flex toolbar-item"><button disabled="disabled" type="button" class="v-btn v-btn--disabled v-btn--icon theme--light" data-test="toolbarIcon-MOVE_ITEM_UP">
+                <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--lighten-2">keyboard_arrow_up</i></div>
+              </button><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move up</span></div></span>
+          </div>
+          <div class="flex toolbar-item"><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIcon-MOVE_ITEM_DOWN">
+              <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">keyboard_arrow_down</i></div>
+            </button><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move down</span></div></span>
+        </div>
+        <div class="flex toolbar-item"><button type="button" class="v-btn v-btn--icon theme--light">
+            <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">more_vert</i></div>
+          </button>
+          <div class="v-menu">
+            <div class="v-menu__content theme--light " style="max-height: auto; min-width: 0px; max-width: auto; top: 12px; left: 12px; transform-origin: top left; z-index: 0; display: none;">
+              <div role="list" class="v-list theme--light">
+                <div role="listitem"><a data-test="toolbarMenuItem-ADD_ITEM_ABOVE" class="v-list__tile v-list__tile--link theme--light">
+                    <div class="v-list__tile__title">Add question above</div>
+                  </a></div>
+              </div>
+              <div role="list" class="v-list theme--light">
+                <div role="listitem"><a data-test="toolbarMenuItem-ADD_ITEM_BELOW" class="v-list__tile v-list__tile--link theme--light">
+                    <div class="v-list__tile__title">Add question below</div>
+                  </a></div>
+              </div>
+              <div role="list" class="v-list theme--light">
+                <div role="listitem"><a data-test="toolbarMenuItem-DELETE_ITEM" class="v-list__tile v-list__tile--link theme--light">
+                    <div class="v-list__tile__title">Delete</div>
+                  </a></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!---->
+</div>
+</div>
+<div class="v-card v-sheet theme--light item closed" pa-1="" data-test="item">
+  <div class="v-card__text">
+    <div class="layout align-start">
+      <div class="flex xs1 mt-2">
+        2
+      </div>
+      <div class="flex xs10">
+        <div>
+          <div class="layout align-top justify-space-between">
+            <div class="flex">
+              <div class="caption grey--text mb-1">
+                Single selection
+              </div>
+              <div>
+                Question 2
+              </div>
+            </div>
+          </div>
+          <div class="layout mt-3">
+            <div class="flex">
+              <div class="caption grey--text mb-2">
+                Answers
+              </div>
+              <div class="v-input v-input--selection-controls v-input--radio-group v-input--radio-group--column theme--light">
+                <div class="v-input__control">
+                  <div class="v-input__slot" style="height: auto;">
+                    <div role="radiogroup" class="v-input--radio-group__input">
+                      <div class="v-radio theme--light accent--text">
+                        <div class="v-input--selection-controls__input"><input aria-label="Mayonnaise (I mean you can, but...)" aria-checked="true" role="radio" type="radio" name="v-radio-379" value="0">
+                          <div class="v-input--selection-controls__ripple accent--text"></div><i aria-hidden="true" class="v-icon material-icons theme--light accent--text">radio_button_checked</i>
+                        </div><label aria-hidden="true" class="v-label theme--light" style="left: 0px; position: relative;">Mayonnaise (I mean you can, but...)</label>
+                      </div>
+                      <div class="v-radio theme--light">
+                        <div class="v-input--selection-controls__input"><input aria-label="Peanut butter" aria-checked="false" role="radio" type="radio" name="v-radio-379" value="1">
+                          <div class="v-input--selection-controls__ripple"></div><i aria-hidden="true" class="v-icon material-icons theme--light">radio_button_unchecked</i>
+                        </div><label aria-hidden="true" class="v-label theme--light" style="left: 0px; position: relative;">Peanut butter</label>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="v-messages theme--light"><span name="message-transition" tag="div" class="v-messages__wrapper"></span></div>
+                </div>
+              </div>
+              <!---->
+              <!---->
+              <div class="mt-1">
+                <div class="hints-preview"><span data-test="hintsToggle" class="hints-toggle"><span>Show 2 hints</span> <span class="icon"><i aria-hidden="true" class="v-icon material-icons theme--light">arrow_drop_up</i></span></span>
+                  <!---->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="spacer"></div>
+      <div class="layout toolbar align-center">
+        <div class="flex mr-2"><i aria-hidden="true" class="v-icon red--text material-icons theme--light">error</i><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Incomplete</span></div></span>
+      </div>
+      <div class="flex">
+        <div class="layout justify-end">
+          <div class="flex toolbar-item"><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIcon-EDIT_ITEM">
+              <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">edit</i></div>
+            </button><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Edit</span></div></span>
+        </div>
+        <div class="flex toolbar-item"><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIcon-MOVE_ITEM_UP">
+            <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">keyboard_arrow_up</i></div>
+          </button><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move up</span></div></span>
+      </div>
+      <div class="flex toolbar-item"><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIcon-MOVE_ITEM_DOWN">
+          <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">keyboard_arrow_down</i></div>
+        </button><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move down</span></div></span>
+    </div>
+    <div class="flex toolbar-item"><button type="button" class="v-btn v-btn--icon theme--light">
+        <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">more_vert</i></div>
+      </button>
+      <div class="v-menu">
+        <div class="v-menu__content theme--light " style="max-height: auto; min-width: 0px; max-width: auto; top: 12px; left: 12px; transform-origin: top left; z-index: 0; display: none;">
+          <div role="list" class="v-list theme--light">
+            <div role="listitem"><a data-test="toolbarMenuItem-ADD_ITEM_ABOVE" class="v-list__tile v-list__tile--link theme--light">
+                <div class="v-list__tile__title">Add question above</div>
+              </a></div>
+          </div>
+          <div role="list" class="v-list theme--light">
+            <div role="listitem"><a data-test="toolbarMenuItem-ADD_ITEM_BELOW" class="v-list__tile v-list__tile--link theme--light">
+                <div class="v-list__tile__title">Add question below</div>
+              </a></div>
+          </div>
+          <div role="list" class="v-list theme--light">
+            <div role="listitem"><a data-test="toolbarMenuItem-DELETE_ITEM" class="v-list__tile v-list__tile--link theme--light">
+                <div class="v-list__tile__title">Delete</div>
+              </a></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+<!---->
+</div>
+</div>
+<div class="v-card v-sheet theme--light item closed" pa-1="" data-test="item">
+  <div class="v-card__text">
+    <div class="layout align-start">
+      <div class="flex xs1 mt-2">
+        3
+      </div>
+      <div class="flex xs10">
+        <div>
+          <div class="layout align-top justify-space-between">
+            <div class="flex">
+              <div class="caption grey--text mb-1">
+                Multiple selection
+              </div>
+              <div>
+
+              </div>
+            </div>
+          </div>
+          <div class="layout mt-3">
+            <div class="flex">
+              <div class="caption grey--text mb-2">
+                Answers
+              </div>
+              <!---->
+              <div class="v-input v-input--selection-controls v-input--checkbox v-input--is-label-active v-input--is-dirty v-input--is-readonly theme--light">
+                <div class="v-input__control">
+                  <div class="v-input__slot">
+                    <div class="v-input--selection-controls__input"><input aria-label="Mayonnaise (I mean you can, but...)" aria-checked="true" disabled="disabled" role="checkbox" type="checkbox" value="0">
+                      <div class="v-input--selection-controls__ripple accent--text"></div><i aria-hidden="true" class="v-icon material-icons theme--light accent--text">check_box</i>
+                    </div><label aria-hidden="true" class="v-label theme--light" style="left: 0px; position: relative;">Mayonnaise (I mean you can, but...)</label>
+                  </div>
+                  <div class="v-messages theme--light"><span name="message-transition" tag="div" class="v-messages__wrapper"></span></div>
+                </div>
+              </div>
+              <div class="v-input v-input--selection-controls v-input--checkbox v-input--is-readonly theme--light">
+                <div class="v-input__control">
+                  <div class="v-input__slot">
+                    <div class="v-input--selection-controls__input"><input aria-label="Peanut butter" aria-checked="false" disabled="disabled" role="checkbox" type="checkbox" value="1">
+                      <div class="v-input--selection-controls__ripple"></div><i aria-hidden="true" class="v-icon material-icons theme--light">check_box_outline_blank</i>
+                    </div><label aria-hidden="true" class="v-label theme--light" style="left: 0px; position: relative;">Peanut butter</label>
+                  </div>
+                  <div class="v-messages theme--light"><span name="message-transition" tag="div" class="v-messages__wrapper"></span></div>
+                </div>
+              </div>
+              <div class="v-input v-input--selection-controls v-input--checkbox v-input--is-label-active v-input--is-dirty v-input--is-readonly theme--light">
+                <div class="v-input__control">
+                  <div class="v-input__slot">
+                    <div class="v-input--selection-controls__input"><input aria-label="Jelly" aria-checked="true" disabled="disabled" role="checkbox" type="checkbox" value="2">
+                      <div class="v-input--selection-controls__ripple accent--text"></div><i aria-hidden="true" class="v-icon material-icons theme--light accent--text">check_box</i>
+                    </div><label aria-hidden="true" class="v-label theme--light" style="left: 0px; position: relative;">Jelly</label>
+                  </div>
+                  <div class="v-messages theme--light"><span name="message-transition" tag="div" class="v-messages__wrapper"></span></div>
+                </div>
+              </div>
+              <!---->
+              <div class="mt-1"><span>No hints yet</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="spacer"></div>
+      <div class="layout toolbar align-center">
+        <div class="flex mr-2"><i aria-hidden="true" class="v-icon red--text material-icons theme--light">error</i><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Incomplete</span></div></span>
+      </div>
+      <div class="flex">
+        <div class="layout justify-end">
+          <div class="flex toolbar-item"><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIcon-EDIT_ITEM">
+              <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">edit</i></div>
+            </button><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Edit</span></div></span>
+        </div>
+        <div class="flex toolbar-item"><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIcon-MOVE_ITEM_UP">
+            <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">keyboard_arrow_up</i></div>
+          </button><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move up</span></div></span>
+      </div>
+      <div class="flex toolbar-item"><button disabled="disabled" type="button" class="v-btn v-btn--disabled v-btn--icon theme--light" data-test="toolbarIcon-MOVE_ITEM_DOWN">
+          <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--lighten-2">keyboard_arrow_down</i></div>
+        </button><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move down</span></div></span>
+    </div>
+    <div class="flex toolbar-item"><button type="button" class="v-btn v-btn--icon theme--light">
+        <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">more_vert</i></div>
+      </button>
+      <div class="v-menu">
+        <div class="v-menu__content theme--light " style="max-height: auto; min-width: 0px; max-width: auto; top: 12px; left: 12px; transform-origin: top left; z-index: 0; display: none;">
+          <div role="list" class="v-list theme--light">
+            <div role="listitem"><a data-test="toolbarMenuItem-ADD_ITEM_ABOVE" class="v-list__tile v-list__tile--link theme--light">
+                <div class="v-list__tile__title">Add question above</div>
+              </a></div>
+          </div>
+          <div role="list" class="v-list theme--light">
+            <div role="listitem"><a data-test="toolbarMenuItem-ADD_ITEM_BELOW" class="v-list__tile v-list__tile--link theme--light">
+                <div class="v-list__tile__title">Add question below</div>
+              </a></div>
+          </div>
+          <div role="list" class="v-list theme--light">
+            <div role="listitem"><a data-test="toolbarMenuItem-DELETE_ITEM" class="v-list__tile v-list__tile--link theme--light">
+                <div class="v-list__tile__title">Delete</div>
+              </a></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+<!---->
+</div>
+</div> <button type="button" class="mt-4 ml-0 v-btn theme--light primary" data-test="newQuestionBtn">
+  <div class="v-btn__content">
+    New question
+  </div>
+</button></div>
+`;
+
+exports[`AssessmentEditor renders closed items - order, question type, text, error indicator, toolbar 1`] = `
+<div>
+  <div class="v-input mt-4 ml-0 v-input--selection-controls v-input--checkbox theme--light" data-test="showAnswersCheckbox">
+    <div class="v-input__control">
+      <div class="v-input__slot">
+        <div class="v-input--selection-controls__input"><input aria-label="Show answers" aria-checked="false" role="checkbox" type="checkbox" data-test="showAnswersCheckbox" value="">
+          <div class="v-input--selection-controls__ripple"></div><i aria-hidden="true" class="v-icon material-icons theme--light">check_box_outline_blank</i>
+        </div><label aria-hidden="true" class="v-label theme--light" style="left: 0px; position: relative;">Show answers</label>
+      </div>
+      <div class="v-messages theme--light"><span name="message-transition" tag="div" class="v-messages__wrapper"></span></div>
+    </div>
+  </div>
+  <div class="v-card v-sheet theme--light item closed" pa-1="" data-test="item">
+    <div class="v-card__text">
+      <div class="layout align-start">
+        <div class="flex xs1 mt-2">
+          1
+        </div>
+        <div class="flex xs10">
+          <div>
+            <div class="layout align-top justify-space-between">
+              <div class="flex">
+                <div class="caption grey--text mb-1">
+                  Input question
+                </div>
+                <div>
+                  Question 1
+                </div>
+              </div>
+            </div>
+            <!---->
+          </div>
+        </div>
+        <div class="spacer"></div>
+        <div class="layout toolbar align-center">
+          <!---->
+          <div class="flex">
+            <div class="layout justify-end">
+              <div class="flex toolbar-item"><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIcon-EDIT_ITEM">
+                  <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">edit</i></div>
+                </button><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Edit</span></div></span>
+            </div>
+            <div class="flex toolbar-item"><button disabled="disabled" type="button" class="v-btn v-btn--disabled v-btn--icon theme--light" data-test="toolbarIcon-MOVE_ITEM_UP">
+                <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--lighten-2">keyboard_arrow_up</i></div>
+              </button><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move up</span></div></span>
+          </div>
+          <div class="flex toolbar-item"><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIcon-MOVE_ITEM_DOWN">
+              <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">keyboard_arrow_down</i></div>
+            </button><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move down</span></div></span>
+        </div>
+        <div class="flex toolbar-item"><button type="button" class="v-btn v-btn--icon theme--light">
+            <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">more_vert</i></div>
+          </button>
+          <div class="v-menu">
+            <div class="v-menu__content theme--light " style="max-height: auto; min-width: 0px; max-width: auto; top: 12px; left: 12px; transform-origin: top left; z-index: 0; display: none;">
+              <div role="list" class="v-list theme--light">
+                <div role="listitem"><a data-test="toolbarMenuItem-ADD_ITEM_ABOVE" class="v-list__tile v-list__tile--link theme--light">
+                    <div class="v-list__tile__title">Add question above</div>
+                  </a></div>
+              </div>
+              <div role="list" class="v-list theme--light">
+                <div role="listitem"><a data-test="toolbarMenuItem-ADD_ITEM_BELOW" class="v-list__tile v-list__tile--link theme--light">
+                    <div class="v-list__tile__title">Add question below</div>
+                  </a></div>
+              </div>
+              <div role="list" class="v-list theme--light">
+                <div role="listitem"><a data-test="toolbarMenuItem-DELETE_ITEM" class="v-list__tile v-list__tile--link theme--light">
+                    <div class="v-list__tile__title">Delete</div>
+                  </a></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!---->
+</div>
+</div>
+<div class="v-card v-sheet theme--light item closed" pa-1="" data-test="item">
+  <div class="v-card__text">
+    <div class="layout align-start">
+      <div class="flex xs1 mt-2">
+        2
+      </div>
+      <div class="flex xs10">
+        <div>
+          <div class="layout align-top justify-space-between">
+            <div class="flex">
+              <div class="caption grey--text mb-1">
+                Single selection
+              </div>
+              <div>
+                Question 2
+              </div>
+            </div>
+          </div>
+          <!---->
+        </div>
+      </div>
+      <div class="spacer"></div>
+      <div class="layout toolbar align-center">
+        <div class="flex mr-2"><i aria-hidden="true" class="v-icon red--text material-icons theme--light">error</i><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Incomplete</span></div></span>
+      </div>
+      <div class="flex">
+        <div class="layout justify-end">
+          <div class="flex toolbar-item"><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIcon-EDIT_ITEM">
+              <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">edit</i></div>
+            </button><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Edit</span></div></span>
+        </div>
+        <div class="flex toolbar-item"><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIcon-MOVE_ITEM_UP">
+            <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">keyboard_arrow_up</i></div>
+          </button><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move up</span></div></span>
+      </div>
+      <div class="flex toolbar-item"><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIcon-MOVE_ITEM_DOWN">
+          <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">keyboard_arrow_down</i></div>
+        </button><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move down</span></div></span>
+    </div>
+    <div class="flex toolbar-item"><button type="button" class="v-btn v-btn--icon theme--light">
+        <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">more_vert</i></div>
+      </button>
+      <div class="v-menu">
+        <div class="v-menu__content theme--light " style="max-height: auto; min-width: 0px; max-width: auto; top: 12px; left: 12px; transform-origin: top left; z-index: 0; display: none;">
+          <div role="list" class="v-list theme--light">
+            <div role="listitem"><a data-test="toolbarMenuItem-ADD_ITEM_ABOVE" class="v-list__tile v-list__tile--link theme--light">
+                <div class="v-list__tile__title">Add question above</div>
+              </a></div>
+          </div>
+          <div role="list" class="v-list theme--light">
+            <div role="listitem"><a data-test="toolbarMenuItem-ADD_ITEM_BELOW" class="v-list__tile v-list__tile--link theme--light">
+                <div class="v-list__tile__title">Add question below</div>
+              </a></div>
+          </div>
+          <div role="list" class="v-list theme--light">
+            <div role="listitem"><a data-test="toolbarMenuItem-DELETE_ITEM" class="v-list__tile v-list__tile--link theme--light">
+                <div class="v-list__tile__title">Delete</div>
+              </a></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+<!---->
+</div>
+</div>
+<div class="v-card v-sheet theme--light item closed" pa-1="" data-test="item">
+  <div class="v-card__text">
+    <div class="layout align-start">
+      <div class="flex xs1 mt-2">
+        3
+      </div>
+      <div class="flex xs10">
+        <div>
+          <div class="layout align-top justify-space-between">
+            <div class="flex">
+              <div class="caption grey--text mb-1">
+                Multiple selection
+              </div>
+              <div>
+
+              </div>
+            </div>
+          </div>
+          <!---->
+        </div>
+      </div>
+      <div class="spacer"></div>
+      <div class="layout toolbar align-center">
+        <div class="flex mr-2"><i aria-hidden="true" class="v-icon red--text material-icons theme--light">error</i><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Incomplete</span></div></span>
+      </div>
+      <div class="flex">
+        <div class="layout justify-end">
+          <div class="flex toolbar-item"><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIcon-EDIT_ITEM">
+              <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">edit</i></div>
+            </button><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Edit</span></div></span>
+        </div>
+        <div class="flex toolbar-item"><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIcon-MOVE_ITEM_UP">
+            <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">keyboard_arrow_up</i></div>
+          </button><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move up</span></div></span>
+      </div>
+      <div class="flex toolbar-item"><button disabled="disabled" type="button" class="v-btn v-btn--disabled v-btn--icon theme--light" data-test="toolbarIcon-MOVE_ITEM_DOWN">
+          <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--lighten-2">keyboard_arrow_down</i></div>
+        </button><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move down</span></div></span>
+    </div>
+    <div class="flex toolbar-item"><button type="button" class="v-btn v-btn--icon theme--light">
+        <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">more_vert</i></div>
+      </button>
+      <div class="v-menu">
+        <div class="v-menu__content theme--light " style="max-height: auto; min-width: 0px; max-width: auto; top: 12px; left: 12px; transform-origin: top left; z-index: 0; display: none;">
+          <div role="list" class="v-list theme--light">
+            <div role="listitem"><a data-test="toolbarMenuItem-ADD_ITEM_ABOVE" class="v-list__tile v-list__tile--link theme--light">
+                <div class="v-list__tile__title">Add question above</div>
+              </a></div>
+          </div>
+          <div role="list" class="v-list theme--light">
+            <div role="listitem"><a data-test="toolbarMenuItem-ADD_ITEM_BELOW" class="v-list__tile v-list__tile--link theme--light">
+                <div class="v-list__tile__title">Add question below</div>
+              </a></div>
+          </div>
+          <div role="list" class="v-list theme--light">
+            <div role="listitem"><a data-test="toolbarMenuItem-DELETE_ITEM" class="v-list__tile v-list__tile--link theme--light">
+                <div class="v-list__tile__title">Delete</div>
+              </a></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+<!---->
+</div>
+</div> <button type="button" class="mt-4 ml-0 v-btn theme--light primary" data-test="newQuestionBtn">
+  <div class="v-btn__content">
+    New question
+  </div>
+</button></div>
+`;

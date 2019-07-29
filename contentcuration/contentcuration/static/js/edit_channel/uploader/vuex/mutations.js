@@ -1,15 +1,9 @@
 import _ from 'underscore';
 import Vue from 'vue';
 
-import { modes, AssessmentItemTypes } from '../constants';
-import {
-  sanitizeAssessmentItem,
-  validateAssessmentItem,
-  insertBefore,
-  insertAfter,
-  swapElements,
-} from '../utils';
-import { getSelected, updateAssessmentDraftOrder } from './utils';
+import { modes } from '../constants';
+import { sanitizeAssessmentDraft, validateAssessmentDraft } from '../utils';
+import { getSelected } from './utils';
 import State from 'edit_channel/state';
 import Constants from 'edit_channel/constants/index';
 
@@ -258,8 +252,10 @@ export function PREP_NODES_FOR_SAVE(state) {
 /**
  * Save assessment items to draft store in format suitable for any further work -
  * parse stringified data and make sure that everything is properly sorted by order.
+ * @param {String} nodeId
+ * @param {Array} assessmentItems Assessment items as retrieved from API
  */
-export const addNodeAssessmentDraft = (state, { nodeId, assessmentItems }) => {
+export const initializeNodeAssessmentDraft = (state, { nodeId, assessmentItems }) => {
   let items = [];
 
   if (assessmentItems && assessmentItems.length) {
@@ -297,142 +293,22 @@ export const addNodeAssessmentDraft = (state, { nodeId, assessmentItems }) => {
   Vue.set(state.nodesAssessmentDrafts, nodeId, items);
 };
 
-/**
- * Sanitize node assessment draft items
- * - sanitize each assessment item
- * - remove all empty assessment items (an assessment item is considered
- *   empty if there is no question text, no answers and no hints)
- */
+export const setNodeAssessmentDraft = (state, { nodeId, assessmentDraft }) => {
+  Vue.set(state.nodesAssessmentDrafts, nodeId, assessmentDraft);
+};
+
 export const sanitizeNodeAssessmentDraft = (state, { nodeId }) => {
-  let nodeAssessmentDraft = [...state.nodesAssessmentDrafts[nodeId]];
-
-  nodeAssessmentDraft = nodeAssessmentDraft
-    .map(item => {
-      return {
-        ...item,
-        data: sanitizeAssessmentItem(item.data, true),
-      };
-    })
-    .filter(item => {
-      const hasQuestion = item.data.question.length > 0;
-      const hasAnswers = item.data.answers.length > 0;
-      const hasHints = item.data.hints.length > 0;
-
-      return hasQuestion || hasAnswers || hasHints;
-    });
-
-  nodeAssessmentDraft = updateAssessmentDraftOrder(nodeAssessmentDraft);
-
-  Vue.set(state.nodesAssessmentDrafts, nodeId, nodeAssessmentDraft);
-};
-
-/**
- * Sanitize node assessment draft item
- */
-export const sanitizeNodeAssessmentDraftItem = (
-  state,
-  { nodeId, assessmentItemIdx, removeEmpty = false }
-) => {
   const nodeAssessmentDraft = [...state.nodesAssessmentDrafts[nodeId]];
-  const item = nodeAssessmentDraft[assessmentItemIdx];
+  const sanitizedNodeAssessmentDraft = sanitizeAssessmentDraft(nodeAssessmentDraft);
 
-  item.data = sanitizeAssessmentItem(item.data, removeEmpty);
-
-  Vue.set(state.nodesAssessmentDrafts, nodeId, nodeAssessmentDraft);
+  Vue.set(state.nodesAssessmentDrafts, nodeId, sanitizedNodeAssessmentDraft);
 };
 
-/**
- * Validate all node assessment draft items and save validation results
- * `validation` field of each item.
- */
 export const validateNodeAssessmentDraft = (state, { nodeId }) => {
-  let nodeAssessmentDraft = [...state.nodesAssessmentDrafts[nodeId]];
-
-  nodeAssessmentDraft = nodeAssessmentDraft.map(item => {
-    return {
-      ...item,
-      validation: validateAssessmentItem(item.data),
-    };
-  });
-
-  Vue.set(state.nodesAssessmentDrafts, nodeId, nodeAssessmentDraft);
-};
-
-/**
- * Validate a node assessment draft item and save validation results
- * to its `validation` field.
- */
-export const validateNodeAssessmentDraftItem = (state, { nodeId, assessmentItemIdx }) => {
   const nodeAssessmentDraft = [...state.nodesAssessmentDrafts[nodeId]];
-  const item = nodeAssessmentDraft[assessmentItemIdx];
+  const validatedNodeAssessmentDraft = validateAssessmentDraft(nodeAssessmentDraft);
 
-  item.validation = validateAssessmentItem(item.data);
-
-  Vue.set(state.nodesAssessmentDrafts, nodeId, nodeAssessmentDraft);
-};
-
-/**
- * @param {Number|null} before If specified, add a new assessment draft item
- *                                before an item with this index
- * @param {Number|null} after If specified, add a new assessment draft item
- *                                after an item with this index
- * Push a new item to the end if neither `before` nor `after` specified.
- */
-export const addNodeAssessmentDraftItem = (state, { nodeId, before, after }) => {
-  if (state.nodesAssessmentDrafts[nodeId] === undefined) {
-    Vue.set(state.nodesAssessmentDrafts, nodeId, []);
-  }
-
-  let nodeAssessmentDraft = [...state.nodesAssessmentDrafts[nodeId]];
-
-  const newItem = {
-    data: {
-      question: '',
-      type: AssessmentItemTypes.SINGLE_SELECTION,
-    },
-    validation: {},
-  };
-
-  if (after !== undefined) {
-    nodeAssessmentDraft = insertAfter(nodeAssessmentDraft, after, newItem);
-  } else if (before !== undefined) {
-    nodeAssessmentDraft = insertBefore(nodeAssessmentDraft, before, newItem);
-  } else {
-    nodeAssessmentDraft.push(newItem);
-  }
-
-  nodeAssessmentDraft = updateAssessmentDraftOrder(nodeAssessmentDraft);
-
-  Vue.set(state.nodesAssessmentDrafts, nodeId, nodeAssessmentDraft);
-};
-
-export const deleteNodeAssessmentDraftItem = (state, { nodeId, assessmentItemIdx }) => {
-  let nodeAssessmentDraft = [...state.nodesAssessmentDrafts[nodeId]];
-
-  nodeAssessmentDraft.splice(assessmentItemIdx, 1);
-  nodeAssessmentDraft = updateAssessmentDraftOrder(nodeAssessmentDraft);
-
-  Vue.set(state.nodesAssessmentDrafts, nodeId, nodeAssessmentDraft);
-};
-
-export const swapNodeAssessmentDraftItems = (state, { nodeId, firstItemIdx, secondItemIdx }) => {
-  let nodeAssessmentDraft = [...state.nodesAssessmentDrafts[nodeId]];
-
-  nodeAssessmentDraft = swapElements(nodeAssessmentDraft, firstItemIdx, secondItemIdx);
-  nodeAssessmentDraft = updateAssessmentDraftOrder(nodeAssessmentDraft);
-
-  Vue.set(state.nodesAssessmentDrafts, nodeId, nodeAssessmentDraft);
-};
-
-export const updateNodeAssessmentDraftItemData = (state, { nodeId, assessmentItemIdx, data }) => {
-  const nodeAssessmentDraft = [...state.nodesAssessmentDrafts[nodeId]];
-
-  nodeAssessmentDraft[assessmentItemIdx].data = {
-    ...nodeAssessmentDraft[assessmentItemIdx].data,
-    ...data,
-  };
-
-  Vue.set(state.nodesAssessmentDrafts, nodeId, nodeAssessmentDraft);
+  Vue.set(state.nodesAssessmentDrafts, nodeId, validatedNodeAssessmentDraft);
 };
 
 export const openDialog = (state, { title, message, submitLabel, onSubmit, onCancel }) => {

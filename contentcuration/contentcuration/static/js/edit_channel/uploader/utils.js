@@ -2,27 +2,27 @@ import translator from './translator';
 
 import { AssessmentItemTypes, AssessmentItemValidationErrors } from './constants';
 
-export const questionHasOneCorrectAnswer = questionKind => {
+export const questionShouldHaveOneCorrectAnswer = questionType => {
   return (
-    questionKind === AssessmentItemTypes.SINGLE_SELECTION ||
-    questionKind === AssessmentItemTypes.TRUE_FALSE
+    questionType === AssessmentItemTypes.SINGLE_SELECTION ||
+    questionType === AssessmentItemTypes.TRUE_FALSE
   );
 };
 
 /**
  * Get correct answer index/indices out of an array of answer objects.
+ * @param {String} questionType single/multiple selection, true/false, input question
  * @param {Array} answers An array of answer objects { answer: ..., correct: ..., ...}
- * @param {String} questionKind single/multiple selection, true/false, input question
  * @returns {Number|null|Array} Returns a correct answer index or null for single selection
  * or true/false question. Returns an array of correct answers indices for multiple selection
  * or input question.
  */
-export const getCorrectAnswersIndices = (questionKind, answers) => {
-  if (!questionKind || !answers || !answers.length) {
+export const getCorrectAnswersIndices = (questionType, answers) => {
+  if (!questionType || !answers || !answers.length) {
     return null;
   }
 
-  if (questionHasOneCorrectAnswer(questionKind)) {
+  if (questionShouldHaveOneCorrectAnswer(questionType)) {
     const idx = answers.findIndex(answer => answer.correct);
     return idx === -1 ? null : idx;
   }
@@ -59,24 +59,24 @@ export const mapCorrectAnswers = (answers, correctAnswersIndices) => {
 };
 
 /**
- * Update answers to correspond to a question kind:
+ * Update answers to correspond to a question type:
  * - multiple selection: No answers updates needed.
  * - input question: Make all answers correct.
  * - true/false: Remove answers in favour of new true/false values.
  * - single selection: Keep first correct choice only if there is any.
  *                     Otherwise mark first choice as correct.
- * @param {String} newQuestionKind single/multiple selection, true/false, input question
+ * @param {String} newQuestionType single/multiple selection, true/false, input question
  * @param {Array} answers An array of answer objects.
  * @returns {Array} An array of updated answer objects.
  */
-export const updateAnswersToQuestionKind = (questionKind, answers) => {
+export const updateAnswersToQuestionType = (questionType, answers) => {
   const NEW_TRUE_FALSE_ANSWERS = [
     { answer: translator.translate('true'), correct: true, order: 1 },
     { answer: translator.translate('false'), correct: false, order: 2 },
   ];
 
   if (!answers || !answers.length) {
-    if (questionKind === AssessmentItemTypes.TRUE_FALSE) {
+    if (questionType === AssessmentItemTypes.TRUE_FALSE) {
       return NEW_TRUE_FALSE_ANSWERS;
     } else {
       return [];
@@ -85,7 +85,7 @@ export const updateAnswersToQuestionKind = (questionKind, answers) => {
 
   let answersCopy = JSON.parse(JSON.stringify(answers));
 
-  switch (questionKind) {
+  switch (questionType) {
     case AssessmentItemTypes.MULTIPLE_SELECTION:
       return answersCopy;
 
@@ -250,24 +250,102 @@ export const validateAssessmentItem = assessmentItem => {
   return { questionErrors, answersErrors };
 };
 
-export const getAssessmentItemErrorMessage = (error, itemKind) => {
+/**
+ * Update assessment draft items `order` fields according to their position in an array.
+ * @param {Array} assessmentDraft An assessment draft
+ * @returns {Array} Assessment draft with updated `order` fields
+ */
+export const updateAssessmentDraftOrder = assessmentDraft => {
+  return assessmentDraft.map((draftItem, idx) => {
+    return {
+      ...draftItem,
+      data: {
+        ...draftItem.data,
+        order: idx,
+      },
+    };
+  });
+};
+
+/**
+ * @param {Object} draftItem Assessment draft item containing validation data
+ * @returns Boolean
+ */
+export const isAssessmentDraftItemValid = draftItem => {
+  if (!draftItem.validation) {
+    return true;
+  }
+
+  return (
+    (!draftItem.validation.questionErrors || draftItem.validation.questionErrors.length === 0) &&
+    (!draftItem.validation.answersErrors || draftItem.validation.answersErrors.length === 0)
+  );
+};
+
+/**
+ * Sanitize assessment draft items
+ * - sanitize each assessment item
+ * - remove all empty assessment items (an assessment item is considered
+ *   empty if there is no question text, no answers and no hints)
+ *
+ * @param {Array} assessmentDraft Assessment draft
+ * @returns {Array} Assessment draft with sanitized `data`
+ */
+export const sanitizeAssessmentDraft = assessmentDraft => {
+  let newAssessmentDraft = assessmentDraft
+    .map(draftItem => {
+      return {
+        ...draftItem,
+        data: sanitizeAssessmentItem(draftItem.data, true),
+      };
+    })
+    .filter(draftItem => {
+      const hasQuestion = draftItem.data.question.length > 0;
+      const hasAnswers = draftItem.data.answers.length > 0;
+      const hasHints = draftItem.data.hints.length > 0;
+
+      return hasQuestion || hasAnswers || hasHints;
+    });
+
+  newAssessmentDraft = updateAssessmentDraftOrder(newAssessmentDraft);
+
+  return newAssessmentDraft;
+};
+
+/**
+ * Validate all assessment draft items and save validation results
+ * to `validation` field of each item. Should be applied on sanitized
+ * assessment draft.
+ * @param {Array} assessmentDraft Assessment draft
+ * @returns {Array} Assessment draft with updated `validation` fields
+ */
+export const validateAssessmentDraft = assessmentDraft => {
+  return assessmentDraft.map(draftItem => {
+    return {
+      ...draftItem,
+      validation: validateAssessmentItem(draftItem.data),
+    };
+  });
+};
+
+export const getAssessmentItemErrorMessage = (error, itemType) => {
   switch (error) {
     case AssessmentItemValidationErrors.BLANK_QUESTION:
       return translator.translate('errorBlankQuestion');
 
     case AssessmentItemValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS:
       if (
-        itemKind === AssessmentItemTypes.SINGLE_SELECTION ||
-        itemKind === AssessmentItemTypes.TRUE_FALSE
+        itemType === AssessmentItemTypes.SINGLE_SELECTION ||
+        itemType === AssessmentItemTypes.TRUE_FALSE
       ) {
         return translator.translate('errorMissingAnswer');
       }
 
-      if (itemKind === AssessmentItemTypes.MULTIPLE_SELECTION) {
+      if (itemType === AssessmentItemTypes.MULTIPLE_SELECTION) {
         return translator.translate('errorChooseAtLeastOneCorrectAnswer');
       }
 
-      if ((itemKind = AssessmentItemTypes.INPUT_QUESTION)) {
+      if ((itemType = AssessmentItemTypes.INPUT_QUESTION)) {
         return translator.translate('errorProvideAtLeastOneCorrectAnwer');
       }
 

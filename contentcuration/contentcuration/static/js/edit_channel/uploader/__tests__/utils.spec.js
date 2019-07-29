@@ -1,18 +1,22 @@
 import each from 'jest-each';
 
-import { AssessmentItemTypes, AssessmentItemValidationErrors } from './constants';
+import { AssessmentItemTypes, AssessmentItemValidationErrors } from '../constants';
 import {
   getCorrectAnswersIndices,
   mapCorrectAnswers,
-  updateAnswersToQuestionKind,
+  updateAnswersToQuestionType,
   sanitizeAssessmentItemAnswers,
   sanitizeAssessmentItemHints,
   sanitizeAssessmentItem,
+  validateAssessmentItem,
+  updateAssessmentDraftOrder,
+  isAssessmentDraftItemValid,
+  sanitizeAssessmentDraft,
+  validateAssessmentDraft,
   insertBefore,
   insertAfter,
   swapElements,
-  validateAssessmentItem,
-} from './utils';
+} from '../utils';
 
 describe('utils', () => {
   describe('getCorrectAnswersIndices', () => {
@@ -159,12 +163,12 @@ describe('utils', () => {
     });
   });
 
-  describe('updateAnswersToQuestionKind', () => {
+  describe('updateAnswersToQuestionType', () => {
     let answers;
 
     describe('when converting originally empty answers to true/false', () => {
       it('returns true/false answers', () => {
-        expect(updateAnswersToQuestionKind(AssessmentItemTypes.TRUE_FALSE, [])).toEqual([
+        expect(updateAnswersToQuestionType(AssessmentItemTypes.TRUE_FALSE, [])).toEqual([
           { answer: 'True', correct: true, order: 1 },
           { answer: 'False', correct: false, order: 2 },
         ]);
@@ -183,7 +187,7 @@ describe('utils', () => {
       describe('conversion to single selection', () => {
         it('returns the same answers', () => {
           expect(
-            updateAnswersToQuestionKind(AssessmentItemTypes.SINGLE_SELECTION, answers)
+            updateAnswersToQuestionType(AssessmentItemTypes.SINGLE_SELECTION, answers)
           ).toEqual(answers);
         });
       });
@@ -191,14 +195,14 @@ describe('utils', () => {
       describe('conversion to multiple selection', () => {
         it('returns the same answers', () => {
           expect(
-            updateAnswersToQuestionKind(AssessmentItemTypes.MULTIPLE_SELECTION, answers)
+            updateAnswersToQuestionType(AssessmentItemTypes.MULTIPLE_SELECTION, answers)
           ).toEqual(answers);
         });
       });
 
       describe('conversion to input question', () => {
         it('makes all answers correct', () => {
-          expect(updateAnswersToQuestionKind(AssessmentItemTypes.INPUT_QUESTION, answers)).toEqual([
+          expect(updateAnswersToQuestionType(AssessmentItemTypes.INPUT_QUESTION, answers)).toEqual([
             { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
             { answer: 'Peanut butter', correct: true, order: 2 },
             { answer: 'Jelly', correct: true, order: 3 },
@@ -208,7 +212,7 @@ describe('utils', () => {
 
       describe('conversion to true/false', () => {
         it('returns true/false answers only', () => {
-          expect(updateAnswersToQuestionKind(AssessmentItemTypes.TRUE_FALSE, answers)).toEqual([
+          expect(updateAnswersToQuestionType(AssessmentItemTypes.TRUE_FALSE, answers)).toEqual([
             { answer: 'True', correct: true, order: 1 },
             { answer: 'False', correct: false, order: 2 },
           ]);
@@ -226,7 +230,7 @@ describe('utils', () => {
 
       describe('conversion to input question', () => {
         it('returns the same answers', () => {
-          expect(updateAnswersToQuestionKind(AssessmentItemTypes.INPUT_QUESTION, answers)).toEqual(
+          expect(updateAnswersToQuestionType(AssessmentItemTypes.INPUT_QUESTION, answers)).toEqual(
             answers
           );
         });
@@ -235,7 +239,7 @@ describe('utils', () => {
       describe('conversion to multiple selection', () => {
         it('returns the same answers', () => {
           expect(
-            updateAnswersToQuestionKind(AssessmentItemTypes.MULTIPLE_SELECTION, answers)
+            updateAnswersToQuestionType(AssessmentItemTypes.MULTIPLE_SELECTION, answers)
           ).toEqual(answers);
         });
       });
@@ -243,7 +247,7 @@ describe('utils', () => {
       describe('conversion to single selection', () => {
         it('keeps only first answer as correct', () => {
           expect(
-            updateAnswersToQuestionKind(AssessmentItemTypes.SINGLE_SELECTION, answers)
+            updateAnswersToQuestionType(AssessmentItemTypes.SINGLE_SELECTION, answers)
           ).toEqual([
             { answer: '8', correct: true, order: 1 },
             { answer: '8.0', correct: false, order: 2 },
@@ -253,7 +257,7 @@ describe('utils', () => {
 
       describe('conversion to true/false', () => {
         it('returns true/false answers only', () => {
-          expect(updateAnswersToQuestionKind(AssessmentItemTypes.TRUE_FALSE, answers)).toEqual([
+          expect(updateAnswersToQuestionType(AssessmentItemTypes.TRUE_FALSE, answers)).toEqual([
             { answer: 'True', correct: true, order: 1 },
             { answer: 'False', correct: false, order: 2 },
           ]);
@@ -272,7 +276,7 @@ describe('utils', () => {
       describe('conversion to true/false question', () => {
         it('returns the same answers', () => {
           expect(
-            updateAnswersToQuestionKind(AssessmentItemTypes.SINGLE_SELECTION, answers)
+            updateAnswersToQuestionType(AssessmentItemTypes.SINGLE_SELECTION, answers)
           ).toEqual(answers);
         });
       });
@@ -280,7 +284,7 @@ describe('utils', () => {
       describe('conversion to multiple selection', () => {
         it('returns the same answers', () => {
           expect(
-            updateAnswersToQuestionKind(AssessmentItemTypes.MULTIPLE_SELECTION, answers)
+            updateAnswersToQuestionType(AssessmentItemTypes.MULTIPLE_SELECTION, answers)
           ).toEqual(answers);
         });
       });
@@ -288,14 +292,14 @@ describe('utils', () => {
       describe('conversion to single selection', () => {
         it('returns the same answers', () => {
           expect(
-            updateAnswersToQuestionKind(AssessmentItemTypes.SINGLE_SELECTION, answers)
+            updateAnswersToQuestionType(AssessmentItemTypes.SINGLE_SELECTION, answers)
           ).toEqual(answers);
         });
       });
 
       describe('conversion to input question', () => {
         it('makes all answers correct', () => {
-          expect(updateAnswersToQuestionKind(AssessmentItemTypes.INPUT_QUESTION, answers)).toEqual([
+          expect(updateAnswersToQuestionType(AssessmentItemTypes.INPUT_QUESTION, answers)).toEqual([
             { answer: 'True', correct: true, order: 1 },
             { answer: 'False', correct: true, order: 2 },
           ]);
@@ -307,7 +311,7 @@ describe('utils', () => {
       describe('conversion to multiple selection', () => {
         it('returns the same answers', () => {
           expect(
-            updateAnswersToQuestionKind(AssessmentItemTypes.SINGLE_SELECTION, answers)
+            updateAnswersToQuestionType(AssessmentItemTypes.SINGLE_SELECTION, answers)
           ).toEqual(answers);
         });
       });
@@ -324,7 +328,7 @@ describe('utils', () => {
 
           it('keeps only first correct answer', () => {
             expect(
-              updateAnswersToQuestionKind(AssessmentItemTypes.SINGLE_SELECTION, answers)
+              updateAnswersToQuestionType(AssessmentItemTypes.SINGLE_SELECTION, answers)
             ).toEqual([
               { answer: 'Mayonnaise (I mean you can, but...)', correct: false, order: 1 },
               { answer: 'Peanut butter', correct: true, order: 2 },
@@ -344,7 +348,7 @@ describe('utils', () => {
 
           it('makes a first answer correct', () => {
             expect(
-              updateAnswersToQuestionKind(AssessmentItemTypes.SINGLE_SELECTION, answers)
+              updateAnswersToQuestionType(AssessmentItemTypes.SINGLE_SELECTION, answers)
             ).toEqual([
               { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
               { answer: 'Peanut butter', correct: false, order: 2 },
@@ -364,7 +368,7 @@ describe('utils', () => {
         });
 
         it('marks all answers to be correct', () => {
-          expect(updateAnswersToQuestionKind(AssessmentItemTypes.INPUT_QUESTION, answers)).toEqual([
+          expect(updateAnswersToQuestionType(AssessmentItemTypes.INPUT_QUESTION, answers)).toEqual([
             { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
             { answer: 'Peanut butter', correct: true, order: 2 },
             { answer: 'Jelly', correct: true, order: 3 },
@@ -382,7 +386,7 @@ describe('utils', () => {
         });
 
         it('returns true/false answers only', () => {
-          expect(updateAnswersToQuestionKind(AssessmentItemTypes.TRUE_FALSE, answers)).toEqual([
+          expect(updateAnswersToQuestionType(AssessmentItemTypes.TRUE_FALSE, answers)).toEqual([
             { answer: 'True', correct: true, order: 1 },
             { answer: 'False', correct: false, order: 2 },
           ]);
@@ -744,6 +748,210 @@ describe('utils', () => {
           answersErrors: [],
         });
       });
+    });
+  });
+
+  describe('updateAssessmentDraftOrder', () => {
+    it('updates `order` fields according to a position in an array', () => {
+      const assessmentDraft = [
+        {
+          data: {
+            order: 1,
+            question: 'Question 1',
+          },
+          validation: {},
+        },
+        {
+          data: {
+            order: 0,
+            question: 'Question 2',
+          },
+          validation: {},
+        },
+        {
+          data: {
+            order: 4,
+            question: 'Question 2',
+          },
+          validation: {},
+        },
+      ];
+
+      expect(updateAssessmentDraftOrder(assessmentDraft)).toEqual([
+        {
+          data: {
+            order: 0,
+            question: 'Question 1',
+          },
+          validation: {},
+        },
+        {
+          data: {
+            order: 1,
+            question: 'Question 2',
+          },
+          validation: {},
+        },
+        {
+          data: {
+            order: 2,
+            question: 'Question 2',
+          },
+          validation: {},
+        },
+      ]);
+    });
+  });
+
+  describe('isAssessmentDraftItemValid', () => {
+    it('returns true if an item has no validation errors', () => {
+      const item = {
+        data: {
+          question: 'Question 1',
+        },
+        validation: {},
+      };
+
+      expect(isAssessmentDraftItemValid(item)).toBe(true);
+    });
+
+    const item = {
+      data: {
+        question: 'Question 1',
+      },
+      validation: {
+        answersErrors: [AssessmentItemValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS],
+        questionErrors: [],
+      },
+    };
+
+    expect(isAssessmentDraftItemValid(item)).toBe(false);
+  });
+
+  describe('sanitizeAssessmentDraft', () => {
+    it('sanitizes questions/answers/hints texts and removes empty questions/answers/hints', () => {
+      const assessmentDraft = [
+        {
+          data: {
+            order: 0,
+            question: ' Question 1 text ',
+            answers: [
+              { answer: ' Answer 1', order: 1, correct: false },
+              { answer: '', order: 2, correct: true },
+              { answer: 'Answer 3 ', order: 3, correct: true },
+            ],
+            hints: [{ hint: ' ', order: 1 }, { hint: '', order: 2 }, { hint: ' Hint 3', order: 3 }],
+          },
+          validation: {},
+        },
+        {
+          data: {
+            order: 1,
+            question: ' ',
+            answers: [{ answer: '', order: 1, correct: true }],
+            hints: [{ hint: ' ', order: 1 }, { hint: '', order: 2 }],
+          },
+          validation: {},
+        },
+        {
+          data: {
+            order: 2,
+            question: '',
+            answers: [],
+            hints: [],
+          },
+          validation: {},
+        },
+        {
+          data: {
+            order: 3,
+            question: ' Question 4 text ',
+            answers: [{ answer: '', order: 2, correct: true }],
+            hints: [],
+          },
+          validation: {},
+        },
+      ];
+
+      expect(sanitizeAssessmentDraft(assessmentDraft)).toEqual([
+        {
+          data: {
+            order: 0,
+            question: 'Question 1 text',
+            answers: [
+              { answer: 'Answer 1', order: 1, correct: false },
+              { answer: 'Answer 3', order: 2, correct: true },
+            ],
+            hints: [{ hint: 'Hint 3', order: 1 }],
+          },
+          validation: {},
+        },
+        {
+          data: {
+            order: 1,
+            question: 'Question 4 text',
+            answers: [],
+            hints: [],
+          },
+          validation: {},
+        },
+      ]);
+    });
+  });
+
+  describe('validateAssessmentDraft', () => {
+    it('performs validation and saves results to `validation` field of each draft item', () => {
+      const assessmentDraft = [
+        {
+          data: {
+            order: 0,
+            type: AssessmentItemTypes.SINGLE_SELECTION,
+            question: 'Node 2 - Question 2',
+            answers: [],
+            hints: [],
+          },
+          validation: {},
+        },
+        {
+          data: {
+            order: 1,
+            type: AssessmentItemTypes.SINGLE_SELECTION,
+            question: '',
+            answers: [{ answer: 'Answer 1', order: 1, correct: false }],
+            hints: [],
+          },
+          validation: {},
+        },
+      ];
+
+      expect(validateAssessmentDraft(assessmentDraft)).toEqual([
+        {
+          data: {
+            order: 0,
+            type: AssessmentItemTypes.SINGLE_SELECTION,
+            question: 'Node 2 - Question 2',
+            answers: [],
+            hints: [],
+          },
+          validation: {
+            questionErrors: [],
+            answersErrors: [AssessmentItemValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS],
+          },
+        },
+        {
+          data: {
+            order: 1,
+            type: AssessmentItemTypes.SINGLE_SELECTION,
+            question: '',
+            answers: [{ answer: 'Answer 1', order: 1, correct: false }],
+            hints: [],
+          },
+          validation: {
+            questionErrors: [AssessmentItemValidationErrors.BLANK_QUESTION],
+            answersErrors: [AssessmentItemValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS],
+          },
+        },
+      ]);
     });
   });
 
