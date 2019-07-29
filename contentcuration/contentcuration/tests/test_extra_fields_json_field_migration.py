@@ -6,8 +6,8 @@ from .base import MigrationTestCase
 
 class TestForwardJSONMigration(MigrationTestCase):
 
-    migrate_from = '0097_task'
-    migrate_to = '0098_extra_fields_json_field'
+    migrate_from = '0100_calculate_included_languages'
+    migrate_to = '0101_extra_fields_json_field'
     app = 'contentcuration'
 
     def setUpBeforeMigration(self, apps):
@@ -43,8 +43,8 @@ class TestForwardJSONMigration(MigrationTestCase):
 
 class TestBackwardJSONMigration(MigrationTestCase):
 
-    migrate_from = '0098_extra_fields_json_field'
-    migrate_to = '0097_task'
+    migrate_from = '0101_extra_fields_json_field'
+    migrate_to = '0100_calculate_included_languages'
     app = 'contentcuration'
 
     def setUpBeforeMigration(self, apps):
