@@ -162,6 +162,15 @@ describe('utils', () => {
   describe('updateAnswersToQuestionKind', () => {
     let answers;
 
+    describe('when converting originally empty answers to true/false', () => {
+      it('returns true/false answers', () => {
+        expect(updateAnswersToQuestionKind(AssessmentItemTypes.TRUE_FALSE, [])).toEqual([
+          { answer: 'True', correct: true, order: 1 },
+          { answer: 'False', correct: false, order: 2 },
+        ]);
+      });
+    });
+
     describe('for originally single selection answers', () => {
       beforeEach(() => {
         answers = [
