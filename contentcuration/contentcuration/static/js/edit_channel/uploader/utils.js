@@ -70,29 +70,33 @@ export const mapCorrectAnswers = (answers, correctAnswersIndices) => {
  * @returns {Array} An array of updated answer objects.
  */
 export const updateAnswersToQuestionKind = (questionKind, answers) => {
+  const NEW_TRUE_FALSE_ANSWERS = [
+    { answer: translator.translate('true'), correct: true, order: 1 },
+    { answer: translator.translate('false'), correct: false, order: 2 },
+  ];
+
   if (!answers || !answers.length) {
-    return [];
+    if (questionKind === AssessmentItemTypes.TRUE_FALSE) {
+      return NEW_TRUE_FALSE_ANSWERS;
+    } else {
+      return [];
+    }
   }
 
-  let newAnswers = JSON.parse(JSON.stringify(answers));
+  let answersCopy = JSON.parse(JSON.stringify(answers));
 
   switch (questionKind) {
     case AssessmentItemTypes.MULTIPLE_SELECTION:
-      break;
+      return answersCopy;
 
     case AssessmentItemTypes.INPUT_QUESTION:
-      newAnswers = newAnswers.map(answer => {
+      return answersCopy.map(answer => {
         answer.correct = true;
         return answer;
       });
-      break;
 
     case AssessmentItemTypes.TRUE_FALSE:
-      newAnswers = [
-        { answer: translator.translate('true'), correct: true, order: 1 },
-        { answer: translator.translate('false'), correct: false, order: 2 },
-      ];
-      break;
+      return NEW_TRUE_FALSE_ANSWERS;
 
     case AssessmentItemTypes.SINGLE_SELECTION: {
       let firstCorrectAnswerIdx = answers.findIndex(answer => answer.correct === true);
@@ -100,17 +104,16 @@ export const updateAnswersToQuestionKind = (questionKind, answers) => {
         firstCorrectAnswerIdx = 0;
       }
 
-      newAnswers = newAnswers.map(answer => {
+      const newAnswers = answersCopy.map(answer => {
         answer.correct = false;
         return answer;
       });
 
       newAnswers[firstCorrectAnswerIdx].correct = true;
-      break;
+
+      return newAnswers;
     }
   }
-
-  return newAnswers;
 };
 
 /**
