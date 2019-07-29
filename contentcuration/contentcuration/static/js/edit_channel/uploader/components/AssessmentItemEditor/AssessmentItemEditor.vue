@@ -285,23 +285,33 @@
             break;
 
           case AssessmentItemTypes.TRUE_FALSE:
-            this.openDialog({
-              title: this.$tr('questionTypeDialogTitle'),
-              message: this.$tr('questionTypeDialogMessageToTrueFalse'),
-              submitLabel: this.$tr('questionTypeDialogSubmitBtnLabel'),
-              onSubmit: () => this.changeKind(newKind),
-              onCancel: this.rerenderKindSelect,
-            });
+            if (this.answers.length > 0) {
+              this.openDialog({
+                title: this.$tr('questionTypeDialogTitle'),
+                message: this.$tr('questionTypeDialogMessageToTrueFalse'),
+                submitLabel: this.$tr('questionTypeDialogSubmitBtnLabel'),
+                onSubmit: () => this.changeKind(newKind),
+                onCancel: this.rerenderKindSelect,
+              });
+            } else {
+              this.changeKind(newKind);
+            }
+
             break;
 
           case AssessmentItemTypes.INPUT_QUESTION:
-            this.openDialog({
-              title: this.$tr('questionTypeDialogTitle'),
-              message: this.$tr('questionTypeDialogMessageToInput'),
-              submitLabel: this.$tr('questionTypeDialogSubmitBtnLabel'),
-              onSubmit: () => this.changeKind(newKind),
-              onCancel: this.rerenderKindSelect,
-            });
+            if (this.answers.length > 0) {
+              this.openDialog({
+                title: this.$tr('questionTypeDialogTitle'),
+                message: this.$tr('questionTypeDialogMessageToInput'),
+                submitLabel: this.$tr('questionTypeDialogSubmitBtnLabel'),
+                onSubmit: () => this.changeKind(newKind),
+                onCancel: this.rerenderKindSelect,
+              });
+            } else {
+              this.changeKind(newKind);
+            }
+
             break;
 
           default:
