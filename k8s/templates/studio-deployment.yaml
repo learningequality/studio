@@ -28,7 +28,7 @@ spec:
           httpGet:
             path: /healthz
             port: {{ .Values.studioApp.appPort }}
-          initialDelaySeconds: 300
+          initialDelaySeconds: 120
           periodSeconds: 5
         ports:
         - containerPort: {{ .Values.studioApp.appPort }}
