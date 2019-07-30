@@ -54,7 +54,7 @@ $(function() {
     }
 
     // Put the URL in the main message for timeouts so we can see which timeouts are most frequent.
-    if (jqXHR.status === 504) {
+    if (jqXHR.status === 504 || jqXHR.status === 522 || jqXHR.status === 524) {
       message = 'Request Timed Out: ' + ajaxSettings.url;
     }
 
