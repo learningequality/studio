@@ -63,9 +63,9 @@
       <v-expansion-panel v-model="panel" expand>
         <v-expansion-panel-content key="audience">
           <template v-slot:header>
-            <div>
-              <v-icon>people</v-icon> {{ $tr('audienceHeader') }}
-            </div>
+            <h2>
+              {{ $tr('audienceHeader') }}
+            </h2>
           </template>
           <v-card>
             <v-layout row wrap>
@@ -94,18 +94,17 @@
             </v-layout>
           </v-card>
         </v-expansion-panel-content>
-        <v-expansion-panel-content key="assessments">
+        <v-expansion-panel-content v-if="allExercises" key="assessments">
           <template v-slot:header>
-            <div>
-              <v-icon>star</v-icon> {{ $tr('assessmentHeader') }}
-            </div>
+            <h2>
+              {{ $tr('assessmentHeader') }}
+            </h2>
           </template>
           <v-card>
             <v-layout row wrap>
               <!-- Mastery -->
               <VFlex sm12 md5>
                 <MasteryDropdown
-                  v-if="allExercises"
                   :masteryModel="changes.extra_fields.mastery_model.value"
                   :placeholder="getExtraFieldPlaceholder('mastery_model')"
                   :required="!changes.extra_fields.mastery_model.varied"
@@ -122,7 +121,6 @@
               <v-spacer />
               <VFlex sm12 md5>
                 <v-checkbox
-                  v-if="allExercises"
                   :label="$tr('randomizeQuestionLabel')"
                   :inputValue="changes.extra_fields.randomize.value"
                   :indeterminate="changes.extra_fields.randomize.varied"
@@ -136,13 +134,12 @@
         </v-expansion-panel-content>
         <v-expansion-panel-content v-if="allResources" key="source">
           <template v-slot:header>
-            <div>
-              <v-icon>copyright</v-icon>
+            <h2>
               {{ $tr('sourceHeader') }}
               <span v-if="disableAuthEdits">
                 {{ $tr('detectedImportText') }}
               </span>
-            </div>
+            </h2>
           </template>
           <v-card>
             <v-layout row wrap class="auth-section">
@@ -434,21 +431,26 @@
       /deep/ .v-expansion-panel__container {
         border: 0;
         /deep/ .v-expansion-panel__header {
-          min-height: 35px;
-          padding: 3px 15px;
-          font-size: 11pt;
-          font-weight: bold;
-          color: white;
+          // min-height: 35px;
+          padding: 0;
+          cursor: pointer;
+          // font-size: 11pt;
+          // font-weight: bold;
+          // color: white;
+          border-top: 1px solid @gray-300;
+          h2 {
+            margin: 0;
+            font-size: 16pt;
+          }
           /deep/ .v-icon,
           .v-icon {
             margin-right: 10px;
-            font-size: 14pt;
-            color: white !important;
+            font-size: 28px;
             vertical-align: bottom;
           }
         }
         /deep/ .v-expansion-panel__body {
-          padding: 15px 10px 50px;
+          padding: 5px 10px 64px;
           .layout {
             width: 100%;
             margin-left: 0;
@@ -473,16 +475,6 @@
               }
             }
           }
-        }
-
-        &:nth-child(1) .v-expansion-panel__header {
-          background-color: @video-color;
-        }
-        &:nth-child(2) .v-expansion-panel__header {
-          background-color: @exercise-color;
-        }
-        &:nth-child(3) .v-expansion-panel__header {
-          background-color: @html-color;
         }
       }
     }
