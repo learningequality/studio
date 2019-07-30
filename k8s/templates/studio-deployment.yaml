@@ -30,6 +30,8 @@ spec:
             port: {{ .Values.studioApp.appPort }}
           initialDelaySeconds: 120
           periodSeconds: 5
+          # fail 10 times before we restart the pod
+          failureThreshold: 10
         ports:
         - containerPort: {{ .Values.studioApp.appPort }}
         # readiness probes are checks for when the pod is ready to serve traffic.
