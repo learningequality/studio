@@ -24,6 +24,7 @@ spec:
           value: /app/contentworkshop_static/
         - name: SEND_USER_ACTIVATION_NOTIFICATION_EMAIL
           value: "true"
+        # liveness probes are checks for when a pod should be restarted.
         livenessProbe:
           httpGet:
             path: /healthz
