@@ -44,14 +44,14 @@ describe('editList', () => {
     });
     it('should show asterisk when node is changed', () => {
       expect(wrapper.find('.changed').exists()).toBe(false);
-      localStore.commit('edit_modal/SET_TITLE', 'New Title');
+      localStore.commit('edit_modal/UPDATE_NODE', { title: 'New Title' });
       expect(wrapper.find('.changed').exists()).toBe(true);
     });
     it('should show error icon when node is invalid', () => {
       expect(wrapper.find('.error-icon').exists()).toBe(false);
-      localStore.commit('edit_modal/SET_TITLE', null);
+      localStore.commit('edit_modal/UPDATE_NODE', { title: null });
       expect(wrapper.find('.error-icon').exists()).toBe(true);
-      localStore.commit('edit_modal/SET_TITLE', 'Node 1');
+      localStore.commit('edit_modal/UPDATE_NODE', { title: 'Node 1' });
     });
     it('should hide error icon when in view only mode', () => {
       expect(wrapper.find('.error-icon').exists()).toBe(false);

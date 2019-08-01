@@ -127,56 +127,14 @@ export function SELECT_ALL_NODES(state) {
 
 /*********** SET FIELDS ***********/
 
-export function SET_FIELD(state, fieldName, value) {
-  state.changes[fieldName].value = value;
-  state.changes[fieldName].varied = false;
+export function UPDATE_NODE(state, payload) {
   let selected = getSelected(state);
-
   _.each(selected, node => {
-    node[fieldName] = value;
+    _.assign(node, payload);
     node.changed = true;
     node.changesStaged = true;
   });
-}
-
-export function SET_TITLE(state, title) {
-  SET_FIELD(state, 'title', title);
-}
-
-export function SET_LANGUAGE(state, language) {
-  SET_FIELD(state, 'language', language);
-}
-
-export function SET_DESCRIPTION(state, description) {
-  SET_FIELD(state, 'description', description);
-}
-
-export function SET_LICENSE(state, license) {
-  SET_FIELD(state, 'license', license);
-}
-
-export function SET_LICENSE_DESCRIPTION(state, description) {
-  SET_FIELD(state, 'license_description', description);
-}
-
-export function SET_COPYRIGHT_HOLDER(state, copyrightHolder) {
-  SET_FIELD(state, 'copyright_holder', copyrightHolder);
-}
-
-export function SET_AUTHOR(state, author) {
-  SET_FIELD(state, 'author', author);
-}
-
-export function SET_PROVIDER(state, provider) {
-  SET_FIELD(state, 'provider', provider);
-}
-
-export function SET_AGGREGATOR(state, aggregator) {
-  SET_FIELD(state, 'aggregator', aggregator);
-}
-
-export function SET_VISIBILITY(state, role) {
-  SET_FIELD(state, 'role_visibility', role);
+  SET_CHANGES(state);
 }
 
 export function SET_TAGS(state, tags) {
@@ -194,7 +152,6 @@ export function SET_TAGS(state, tags) {
     node.changesStaged = true;
     node.changed = true;
   });
-  // state.changes.tags = tags;
 
   let newTags = _.difference(tags, State.Store.getters.contentTags);
   _.each(newTags, tag => {
@@ -209,7 +166,7 @@ export function SET_TAGS(state, tags) {
   SET_CHANGES(state);
 }
 
-export function SET_EXTRA_FIELDS(state, obj) {
+export function UPDATE_EXTRA_FIELDS(state, obj) {
   let selected = getSelected(state);
   _.each(selected, node => {
     if (!_.isEqual(node.extra_fields, obj)) {

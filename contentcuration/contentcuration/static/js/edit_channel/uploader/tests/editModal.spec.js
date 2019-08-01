@@ -157,7 +157,48 @@ describe('editModal', () => {
       wrapper.find({ ref: 'closebutton' }).trigger('click');
       expect(wrapper.vm.dialog).toBe(false);
     });
-    it('should catch unsaved changes', () => {});
+    it('should catch unsaved changes', () => {
+      localStore.commit('edit_modal/UPDATE_NODE', { title: 'New Title' });
+      wrapper.find({ ref: 'closebutton' }).trigger('click');
+      expect(wrapper.find({ ref: 'saveprompt' }).isVisible()).toBe(true);
+    });
+  });
+  describe('on caught unsaved changes', () => {
+    beforeEach(() => {
+      localStore.commit('edit_modal/UPDATE_NODE', { title: 'New Title' });
+      wrapper.find({ ref: 'closebutton' }).trigger('click');
+      mockFunctions.saveNodes.mockReset();
+    });
+    it('dont save should close modal', () => {
+      expect(mockFunctions.saveNodes).not.toHaveBeenCalled();
+      wrapper.find({ ref: 'savepromptdontsave' }).trigger('click');
+      expect(wrapper.vm.dialog).toBe(false);
+      expect(localStore.state.edit_modal.nodes).toHaveLength(0);
+      expect(mockFunctions.saveNodes).not.toHaveBeenCalled();
+    });
+    it('cancel should close dialog', () => {
+      expect(mockFunctions.saveNodes).not.toHaveBeenCalled();
+      wrapper.find({ ref: 'savepromptcancel' }).trigger('click');
+      expect(wrapper.find({ ref: 'saveprompt' }).vm.dialog).toBe(false);
+      expect(mockFunctions.saveNodes).not.toHaveBeenCalled();
+    });
+    it('save changes should save changes and close the modal', () => {
+      expect(mockFunctions.saveNodes).not.toHaveBeenCalled();
+      wrapper.find({ ref: 'savepromptsave' }).trigger('click');
+      expect(wrapper.vm.dialog).toBe(false);
+      expect(wrapper.find({ ref: 'saveprompt' }).vm.dialog).toBe(false);
+      expect(mockFunctions.saveNodes).toHaveBeenCalled();
+    });
+  });
+  describe('on save', () => {
+    it('clicking save button should trigger save', () => {
+      localStore.commit('edit_modal/SET_MODE', modes.EDIT);
+      localStore.commit('edit_modal/SET_NODES', [_generateNode({ title: 'Title' })]);
+      expect(mockFunctions.saveNodes).not.toHaveBeenCalled();
+      wrapper.find({ ref: 'savebutton' }).trigger('click');
+      expect(mockFunctions.saveNodes).toHaveBeenCalled();
+    });
+    it('autosaving', () => {});
   });
 });
 //       <VToolbar>
@@ -177,27 +218,8 @@ describe('editModal', () => {
 //               {{ savedMessage }}
 //             </div>
 //           </VFlex>
-//           <VBtn v-if="!isViewOnly" dark flat @click="handleSave">
-//             {{ $tr('saveButtonText') }}
-//           </VBtn>
 //         </VToolbarItems>
 //       </VToolbar>
-
-//   <!-- Dialog for catching unsaved changes -->
-//   <Dialog ref="saveprompt" :header="$tr('unsavedChanges')" :text="$tr('unsavedChangesText')">
-//     <template v-slot:buttons>
-//       <VBtn flat color="primary" @click="closeModal">
-//         {{ $tr('dontSaveButton') }}
-//       </VBtn>
-//       <VSpacer />
-//       <VBtn flat color="primary" @click="dismissPrompt">
-//         {{ $tr('cancelButton') }}
-//       </VBtn>
-//       <VBtn depressed color="primary" @click="handleSave">
-//         {{ $tr('saveButton') }}
-//       </VBtn>
-//     </template>
-//   </Dialog>
 
 //   <!-- Alert for failed save -->
 //   <Alert
@@ -316,10 +338,6 @@ describe('editModal', () => {
 //       } else {
 //         this.closeModal();
 //       }
-//     },
-//     dismissPrompt() {
-//       this.$refs.saveprompt.close();
-//       this.debouncedSave();
 //     }
 //   },
 // };

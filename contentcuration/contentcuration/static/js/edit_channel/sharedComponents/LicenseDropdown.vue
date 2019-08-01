@@ -3,7 +3,7 @@
     <VLayout class="license-dropdown" row alignCenter>
       <VSelect
         ref="license"
-        :value="selectedID"
+        v-model="license"
         :items="licenses"
         :label="$tr('licenseLabel')"
         color="primary"
@@ -15,31 +15,34 @@
         :rules="required? rules.license : []"
         :placeholder="placeholder"
         class="license-select"
-        @input="handleLicenseChange"
-      />
-      <InfoModal v-if="selectedLicense" :header="translate(selectedLicense)">
-        <template v-slot:content>
-          <p class="license-info">
-            {{ selectedLicense | translateDescription }}
-          </p>
+      >
+        <template v-slot:append-outer>
+          <InfoModal v-if="selectedLicense" :header="translate(selectedLicense)">
+            <template v-slot:content>
+              <p class="license-info">
+                {{ selectedLicense | translateDescription }}
+              </p>
+            </template>
+            <template v-if="selectedLicense.license_url" v-slot:extra-button>
+              <VBtn
+                flat
+                color="primary"
+                :href="licenseUrl"
+                target="_blank"
+                class="action-text"
+              >
+                {{ $tr('learnMoreButton') }}
+              </VBtn>
+            </template>
+          </InfoModal>
         </template>
-        <template v-if="selectedLicense.license_url" v-slot:extra-button>
-          <VBtn
-            flat
-            color="primary"
-            :href="licenseUrl"
-            target="_blank"
-            class="action-text"
-          >
-            {{ $tr('learnMoreButton') }}
-          </VBtn>
-        </template>
-      </InfoModal>
+      </VSelect>
     </VLayout>
     <VTextarea
       v-if="isCustom"
       ref="description"
-      :value="licenseDescription"
+      v-model="description"
+      class="license-description"
       maxlength="400"
       :counter="!readonly && 400"
       autoGrow
@@ -49,7 +52,6 @@
       :readonly="readonly"
       :required="descriptionRequired"
       :rules="descriptionRequired? rules.description : []"
-      @input="handleDescriptionChange"
     />
   </div>
 </template>
@@ -79,6 +81,15 @@
       },
     },
     props: {
+      value: {
+        type: Object,
+        required: false,
+        validator: value => {
+          return (
+            !value || !value.license || _.contains(_.pluck(Constants.Licenses, 'id'), value.license)
+          );
+        },
+      },
       required: {
         type: Boolean,
         default: true,
@@ -87,10 +98,6 @@
         type: Boolean,
         default: false,
       },
-      selectedID: {
-        type: Number,
-        required: false,
-      },
       placeholder: {
         type: String,
         default: '',
@@ -98,10 +105,6 @@
       readonly: {
         type: Boolean,
         default: false,
-      },
-      licenseDescription: {
-        type: String,
-        required: false,
       },
       descriptionPlaceholder: {
         type: String,
@@ -121,8 +124,27 @@
       };
     },
     computed: {
+      license: {
+        get() {
+          return this.value && this.value.license;
+        },
+        set(value) {
+          this.$emit('input', {
+            license: value,
+            description: this.value && this.value.description,
+          });
+        },
+      },
+      description: {
+        get() {
+          return this.value && this.value.description;
+        },
+        set(value) {
+          this.$emit('input', { license: this.value && this.value.license, description: value });
+        },
+      },
       selectedLicense() {
-        return _.findWhere(Constants.Licenses, { id: this.selectedID });
+        return this.value && _.findWhere(Constants.Licenses, { id: this.value.license });
       },
       isCustom() {
         return this.selectedLicense && this.selectedLicense.is_custom;
@@ -140,12 +162,6 @@
       translate(item) {
         return translate(item.license_name);
       },
-      handleLicenseChange(licenseID) {
-        this.$emit('licensechanged', licenseID);
-      },
-      handleDescriptionChange(description) {
-        this.$emit('descriptionchanged', description);
-      },
     },
   };
 
@@ -155,7 +171,7 @@
 
   @import '../../../less/global-variables.less';
 
-  .license-dropdown {
+  .license-select {
     margin: 0;
   }
 

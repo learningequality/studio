@@ -1,55 +1,52 @@
 <template>
   <VLayout grid wrap alignCenter>
-    <VFlex xs10>
-      <VSelect
-        ref="visibility"
-        :value="role"
-        :items="roles"
-        :label="$tr('labelText')"
-        :placeholder="placeholder"
-        color="primary"
-        itemValue="id"
-        :disabled="disabled"
-        :readonly="readonly"
-        :required="required"
-        :rules="required? rules : []"
-        @input="handleInput"
-      >
-        <template v-slot:selection="{ item, index }">
-          <VIcon v-if="item.icon" color="primary">
-            {{ item.icon }}
-          </VIcon>
-          {{ translate(item.id) }}
-        </template>
-        <template v-slot:item="{ item, index }">
-          <VIcon v-if="item.icon">
-            {{ item.icon }}
-          </VIcon>
-          {{ translate(item.id) }}
-        </template>
-      </VSelect>
-    </VFlex>
-    <VFlex xs2>
-      <InfoModal :header="$tr('visibilityHeader')">
-        <template v-slot:content>
-          <p>{{ $tr('visibilityDescription') }}</p>
-          <VDivider />
-          <div class="role-table">
-            <VLayout v-for="roleOption in roles" :key="roleOption.id" row>
-              <VFlex xs3 textRight class="role-label">
-                <VIcon v-if="roleOption.icon" color="primary">
-                  {{ roleOption.icon }}
-                </VIcon>
-                {{ translate(roleOption.id) }}
-              </VFlex>
-              <VFlex xs9>
-                {{ $tr(roleOption.id) }}
-              </VFlex>
-            </VLayout>
-          </div>
-        </template>
-      </InfoModal>
-    </VFlex>
+    <VSelect
+      ref="visibility"
+      v-model="role"
+      :items="roles"
+      :label="$tr('labelText')"
+      :placeholder="placeholder"
+      color="primary"
+      itemValue="id"
+      :disabled="disabled"
+      :readonly="readonly"
+      :required="required"
+      :rules="required? rules : []"
+    >
+      <template v-slot:append-outer>
+        <InfoModal :header="$tr('visibilityHeader')">
+          <template v-slot:content>
+            <p>{{ $tr('visibilityDescription') }}</p>
+            <VDivider />
+            <div class="role-table">
+              <VLayout v-for="roleOption in roles" :key="roleOption.id" row>
+                <VFlex xs3 textRight class="role-label">
+                  <VIcon v-if="roleOption.icon" color="primary">
+                    {{ roleOption.icon }}
+                  </VIcon>
+                  {{ translate(roleOption.id) }}
+                </VFlex>
+                <VFlex xs9>
+                  {{ $tr(roleOption.id) }}
+                </VFlex>
+              </VLayout>
+            </div>
+          </template>
+        </InfoModal>
+      </template>
+      <template v-slot:selection="{ item, index }">
+        <VIcon v-if="item.icon" color="primary">
+          {{ item.icon }}
+        </VIcon>
+        {{ translate(item.id) }}
+      </template>
+      <template v-slot:item="{ item, index }">
+        <VIcon v-if="item.icon">
+          {{ item.icon }}
+        </VIcon>
+        {{ translate(item.id) }}
+      </template>
+    </VSelect>
   </VLayout>
 </template>
 
@@ -86,7 +83,7 @@
       InfoModal,
     },
     props: {
-      role: {
+      value: {
         type: String,
         default: 'learner',
         validator: function(value) {
@@ -116,14 +113,19 @@
       };
     },
     computed: {
+      role: {
+        get() {
+          return this.value;
+        },
+        set(value) {
+          this.$emit('input', value);
+        },
+      },
       roles() {
         return roleMap;
       },
     },
     methods: {
-      handleInput(role) {
-        this.$emit('changed', role);
-      },
       translate(item) {
         return translate(item.id || item);
       },

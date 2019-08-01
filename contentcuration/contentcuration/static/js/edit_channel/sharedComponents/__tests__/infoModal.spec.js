@@ -28,12 +28,12 @@ describe('infoModal', () => {
   });
   it('clicking the info button should open the dialog', () => {
     expect(wrapper.find('.v-dialog').isVisible()).toBe(false);
-    let button = wrapper.find('.v-btn');
+    let button = wrapper.find('.v-icon');
     button.trigger('click');
     expect(wrapper.find('.v-dialog').isVisible()).toBe(true);
   });
   it('clicking the close button should close the dialog', () => {
-    let button = wrapper.find('.v-btn');
+    let button = wrapper.find('.v-icon');
     button.trigger('click');
     expect(wrapper.find('.v-dialog').isVisible()).toBe(true);
 

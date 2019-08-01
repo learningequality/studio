@@ -1,6 +1,6 @@
 <template>
   <VAutocomplete
-    :value="language"
+    v-model="language"
     :items="languages"
     :label="$tr('labelText')"
     color="primary"
@@ -14,7 +14,6 @@
     :readonly="readonly"
     :required="required"
     :rules="required? rules : []"
-    @input="selectedLanguage"
   />
 </template>
 
@@ -32,7 +31,7 @@
       languageRequired: 'Language is required',
     },
     props: {
-      language: {
+      value: {
         type: String,
         required: false,
         validator: function(value) {
@@ -62,6 +61,14 @@
       };
     },
     computed: {
+      language: {
+        get() {
+          return this.value;
+        },
+        set(value) {
+          this.$emit('input', value);
+        },
+      },
       languages() {
         return _.chain(Constants.Languages)
           .sortBy('native_name')
@@ -69,9 +76,6 @@
       },
     },
     methods: {
-      selectedLanguage(languageCode) {
-        this.$emit('changed', languageCode);
-      },
       languageText(item) {
         return this.$tr('languageItemText', { language: item.native_name, code: item.id });
       },

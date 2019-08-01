@@ -1,9 +1,9 @@
 <template>
   <VDialog v-model="dialog" width="550">
     <template v-slot:activator="{ on }">
-      <VBtn color="primary" icon flat v-on="on">
-        <VIcon>info</VIcon>
-      </VBtn>
+      <VIcon color="primary" v-on="on">
+        info
+      </VIcon>
     </template>
 
     <VCard>

@@ -36,7 +36,7 @@ describe('licenseDropdown', () => {
     });
     it('should render according to license prop', () => {
       function test(license) {
-        wrapper.setProps({ selectedID: license.id });
+        wrapper.setProps({ value: { license: license.id } });
         expect(wrapper.vm.$refs.license.value).toEqual(license.id);
         expect(wrapper.find('.v-textarea').exists()).toBe(license.is_custom);
       }
@@ -44,44 +44,43 @@ describe('licenseDropdown', () => {
     });
     it('should display licenseDescription prop', () => {
       wrapper.setProps({
-        licenseDescription: 'test description',
-        selectedID: specialPermissions.id,
+        value: { license: specialPermissions.id, description: 'test description' },
       });
       expect(wrapper.vm.$refs.description.value).toContain('test description');
     });
   });
   describe('props', () => {
     it('setting readonly should prevent any edits', () => {
-      wrapper.setProps({ readonly: true, selectedID: specialPermissions.id });
+      wrapper.setProps({ readonly: true, value: { license: specialPermissions.id } });
       expect(wrapper.find('input[readonly]').exists()).toBe(true);
       expect(wrapper.find('textarea[readonly]').exists()).toBe(true);
     });
     it('setting required should make fields required', () => {
       wrapper.setProps({
         required: true,
-        selectedID: specialPermissions.id,
+        value: { license: specialPermissions.id },
         descriptionRequired: true,
       });
       expect(wrapper.find('input:required').exists()).toBe(true);
       expect(wrapper.find('textarea:required').exists()).toBe(true);
     });
     it('setting disabled should make fields disabled', () => {
-      wrapper.setProps({ disabled: true, selectedID: specialPermissions.id });
+      wrapper.setProps({ disabled: true, value: { license: specialPermissions.id } });
       expect(wrapper.find('input:disabled').exists()).toBe(true);
       expect(wrapper.find('textarea:disabled').exists()).toBe(true);
     });
   });
   describe('license info modal', () => {
     it('should open the info modal when button is clicked', () => {
-      wrapper.setProps({ selectedID: specialPermissions.id });
+      wrapper.setProps({ value: { license: specialPermissions.id } });
       expect(wrapper.find('.v-dialog').isVisible()).toBe(false);
-      let button = wrapper.find(InfoModal).find('.v-btn');
+      let button = wrapper.find(InfoModal).find('.v-icon');
       button.trigger('click');
       expect(wrapper.find('.v-dialog').isVisible()).toBe(true);
     });
     it('should render the correct license description', () => {
       function test(license) {
-        wrapper.setProps({ selectedID: license.id });
+        wrapper.setProps({ value: { license: license.id } });
         expect(wrapper.find('.v-dialog').text()).toContain(license.license_name);
         expect(wrapper.find('.v-dialog').text()).toContain(license.license_description);
       }
@@ -89,7 +88,7 @@ describe('licenseDropdown', () => {
     });
     it('should render a LEARN MORE link to the license information page', () => {
       function test(license) {
-        wrapper.setProps({ selectedID: license.id });
+        wrapper.setProps({ value: { license: license.id } });
         if (license.license_url)
           expect(wrapper.find('.v-dialog a').attributes('href')).toContain(license.license_url);
         else expect(wrapper.find('.v-dialog a').exists()).toBe(false);
@@ -98,18 +97,18 @@ describe('licenseDropdown', () => {
     });
   });
   describe('change events', () => {
-    it('licensechanged should be emitted when license is changed', () => {
-      expect(wrapper.emitted('licensechanged')).toBeFalsy();
+    it('input should be emitted when license is changed', () => {
+      expect(wrapper.emitted('input')).toBeFalsy();
       wrapper.find('input').setValue(specialPermissions.id);
-      expect(wrapper.emitted('licensechanged')).toBeTruthy();
-      expect(wrapper.emitted('licensechanged')[0][0]).toEqual(specialPermissions.id.toString());
+      expect(wrapper.emitted('input')).toBeTruthy();
+      expect(wrapper.emitted('input')[0][0].license).toEqual(specialPermissions.id.toString());
     });
-    it('descriptionchanged should be emitted when description is changed', () => {
-      wrapper.setProps({ selectedID: specialPermissions.id });
-      expect(wrapper.emitted('descriptionchanged')).toBeFalsy();
+    it('input should be emitted when description is changed', () => {
+      wrapper.setProps({ value: { license: specialPermissions.id } });
+      expect(wrapper.emitted('input')).toBeFalsy();
       wrapper.find('textarea').setValue('test license description');
-      expect(wrapper.emitted('descriptionchanged')).toBeTruthy();
-      expect(wrapper.emitted('descriptionchanged')[0][0]).toEqual('test license description');
+      expect(wrapper.emitted('input')).toBeTruthy();
+      expect(wrapper.emitted('input')[0][0].description).toEqual('test license description');
     });
   });
   describe('validation', () => {
@@ -127,7 +126,7 @@ describe('licenseDropdown', () => {
           .find('.error--text')
           .exists()
       ).toBe(true);
-      wrapper.setProps({ selectedID: specialPermissions.id });
+      wrapper.setProps({ value: { license: specialPermissions.id } });
       formWrapper.vm.validate();
       expect(
         wrapper
@@ -147,7 +146,7 @@ describe('licenseDropdown', () => {
       ).toBe(false);
     });
     it('license description is required when license is custom', () => {
-      wrapper.setProps({ selectedID: specialPermissions.id });
+      wrapper.setProps({ value: { license: specialPermissions.id } });
       formWrapper.vm.validate();
       expect(
         wrapper
@@ -155,7 +154,7 @@ describe('licenseDropdown', () => {
           .find('.error--text')
           .exists()
       ).toBe(true);
-      wrapper.setProps({ licenseDescription: 'Test description' });
+      wrapper.setProps({ value: { license: specialPermissions.id, description: 'test' } });
       formWrapper.vm.validate();
       expect(
         wrapper
@@ -163,7 +162,10 @@ describe('licenseDropdown', () => {
           .find('.error--text')
           .exists()
       ).toBe(false);
-      wrapper.setProps({ licenseDescription: null, descriptionRequired: false });
+      wrapper.setProps({
+        value: { license: specialPermissions.id, description: null },
+        descriptionRequired: false,
+      });
       formWrapper.vm.validate();
       expect(
         wrapper

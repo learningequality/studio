@@ -27,15 +27,14 @@ describe('languageDropdown', () => {
     formWrapper = makeWrapper();
     wrapper = formWrapper.find(LanguageDropdown);
   });
-  it('updating the language should emit changed event', () => {
+  it('updating the language should emit input event', () => {
+    expect(wrapper.emitted('input')).toBeFalsy();
     function test(language, i) {
       // It looks like v-autocomplete doesn't trigger correctly, so call
       // method directly until resolved
-      // wrapper.find('input').setValue(language.id);
-
-      wrapper.vm.selectedLanguage(language.id);
-      expect(wrapper.emitted('changed')).toBeTruthy();
-      expect(wrapper.emitted('changed')[i][0]).toEqual(language.id);
+      wrapper.find('.v-autocomplete').vm.$emit('input', language.id);
+      expect(wrapper.emitted('input')).toBeTruthy();
+      expect(wrapper.emitted('input')[i][0]).toEqual(language.id);
     }
     _.each(testLanguages, test);
   });

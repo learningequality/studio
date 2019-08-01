@@ -1,9 +1,9 @@
 <template>
-  <VLayout grid wrap class="align-center">
-    <VFlex xs10>
+  <VLayout grid wrap alignTop>
+    <VFlex xs12 md5>
       <VSelect
         ref="masteryModel"
-        :value="masteryModel"
+        v-model="masteryModel"
         :items="masteryCriteria"
         :label="$tr('labelText')"
         color="primary"
@@ -14,73 +14,74 @@
         :readonly="readonly"
         :disabled="disabled"
         :rules="required? rules.mastery : []"
-        @input="updateMastery"
-      />
-    </VFlex>
-    <VFlex xs2>
-      <InfoModal :header="$tr('exerciseHeader')">
-        <template v-slot:content>
-          <p>{{ $tr('exerciseDescripiton') }}</p>
-          <VDivider />
-          <h3>{{ $tr('masterySubheader') }}</h3>
-          <p>{{ $tr('masteryDescripiton') }}</p>
-          <div class="mastery-table">
-            <VLayout
-              v-for="criteria in masteryCriteria"
-              :key="criteria.id"
-              row
-              class="mastery-row"
-            >
-              <VFlex xs3 class="mastery-label text-right">
-                {{ translate(criteria.id) }}
-              </VFlex>
-              <VFlex xs9>
-                {{ translate(criteria.id + '_description') }}
-              </VFlex>
-            </VLayout>
-          </div>
+      >
+        <template v-slot:append-outer>
+          <InfoModal :header="$tr('exerciseHeader')">
+            <template v-slot:content>
+              <p>{{ $tr('exerciseDescripiton') }}</p>
+              <VDivider />
+              <h3>{{ $tr('masterySubheader') }}</h3>
+              <p>{{ $tr('masteryDescripiton') }}</p>
+              <div class="mastery-table">
+                <VLayout
+                  v-for="criteria in masteryCriteria"
+                  :key="criteria.id"
+                  row
+                  class="mastery-row"
+                >
+                  <VFlex xs3 class="mastery-label text-right">
+                    {{ translate(criteria.id) }}
+                  </VFlex>
+                  <VFlex xs9>
+                    {{ translate(criteria.id + '_description') }}
+                  </VFlex>
+                </VLayout>
+              </div>
+            </template>
+          </InfoModal>
         </template>
-      </InfoModal>
+      </VSelect>
     </VFlex>
-    <VLayout v-if="showMofN" alignTop>
-      <VFlex xs5>
-        <VTextField
-          ref="mValue"
-          :value="mValue"
-          type="number"
-          min="1"
-          :max="nValue"
-          :required="mRequired"
-          :placeholder="mPlaceholder"
-          :readonly="readonly"
-          :rules="mRequired? rules.mValue : []"
-          :disabled="disabled"
-          :hint="$tr('mHint')"
-          persistentHint
-          @input="updateMValue"
-        />
-      </VFlex>
-      <VSpacer />
-      <VFlex xs2 justifyCenter class="out-of">
-        /
-      </VFlex>
-      <VFlex xs5>
-        <VTextField
-          ref="nValue"
-          :value="nValue"
-          type="number"
-          min="1"
-          :hint="$tr('nHint')"
-          persistentHint
-          :required="nRequired"
-          :readonly="readonly"
-          :placeholder="nPlaceholder"
-          :rules="nRequired? rules.nValue : []"
-          :disabled="disabled"
-          @input="updateNValue"
-        />
-      </VFlex>
-    </VLayout>
+    <VFlex md1 />
+    <VFlex v-if="showMofN" xs12 md5 class="mofn-options">
+      <VLayout row>
+        <VFlex xs5>
+          <VTextField
+            ref="mValue"
+            v-model="mValue"
+            type="number"
+            singleLine
+            min="1"
+            :required="mRequired"
+            :placeholder="mPlaceholder"
+            :readonly="readonly"
+            :rules="mRequired? rules.mValue : []"
+            :disabled="disabled"
+            :hint="$tr('mHint')"
+            persistentHint
+          />
+        </VFlex>
+        <VFlex xs2 justifyCenter class="out-of">
+          /
+        </VFlex>
+        <VFlex xs5>
+          <VTextField
+            ref="nValue"
+            v-model="nValue"
+            type="number"
+            singleLine
+            min="1"
+            :hint="$tr('nHint')"
+            persistentHint
+            :required="nRequired"
+            :readonly="readonly"
+            :placeholder="nPlaceholder"
+            :rules="nRequired? rules.nValue : []"
+            :disabled="disabled"
+          />
+        </VFlex>
+      </VLayout>
+    </VFlex>
   </VLayout>
 </template>
 
@@ -122,11 +123,15 @@
       InfoModal,
     },
     props: {
-      masteryModel: {
-        type: String,
+      value: {
+        type: Object,
         required: false,
         validator: function(value) {
-          return !value || _.contains(Constants.MasteryModels, value);
+          return (
+            !value ||
+            !value.mastery_model ||
+            _.contains(Constants.MasteryModels, value.mastery_model)
+          );
         },
       },
       placeholder: {
@@ -144,20 +149,12 @@
         type: Boolean,
         default: false,
       },
-      mValue: {
-        type: Number,
-        required: false,
-      },
       mRequired: {
         type: Boolean,
         default: true,
       },
       mPlaceholder: {
         type: String,
-      },
-      nValue: {
-        type: Number,
-        required: false,
       },
       nRequired: {
         type: Boolean,
@@ -184,6 +181,34 @@
       };
     },
     computed: {
+      masteryModel: {
+        get() {
+          return this.value && this.value.mastery_model;
+        },
+        set(value) {
+          this.handleInput({ mastery_model: value });
+        },
+      },
+      mValue: {
+        get() {
+          return this.value && this.value.m;
+        },
+        set(value) {
+          value = Number(value);
+          // Make sure n is always greater than or equal to m
+          this.handleInput(value > this.nValue ? { m: value, n: value } : { m: value });
+        },
+      },
+      nValue: {
+        get() {
+          return this.value && this.value.n;
+        },
+        set(value) {
+          value = Number(value);
+          // Make sure m is always less than or equal to n
+          this.handleInput(value < this.mValue ? { m: value, n: value } : { n: value });
+        },
+      },
       masteryCriteria() {
         return masteryMap;
       },
@@ -195,28 +220,12 @@
       translate(item) {
         return translate(item.id || item);
       },
-      updateMValue(value) {
-        value = Number(value);
-        this.handleInput({ m: value });
-      },
-      updateNValue(value) {
-        value = Number(value);
-        if (value < this.mValue) {
-          this.updateMValue(value);
-        }
-        this.handleInput({ n: value });
-      },
-      updateMastery(value) {
-        this.handleInput({ mastery_model: value });
-      },
       handleInput(newValue) {
         let data = {
-          mastery_model: this.masteryModel,
-          m: this.mValue,
-          n: this.nValue,
+          ...this.value,
           ...newValue,
         };
-        this.$emit('changed', data);
+        this.$emit('input', data);
       },
     },
   };
@@ -241,6 +250,7 @@
     margin-top: 20px;
     font-size: 16pt;
     color: @gray-500;
+    text-align: center;
   }
 
   .mastery-table {

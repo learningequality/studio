@@ -7,6 +7,7 @@
       hideOverlay
       transition="dialog-bottom-transition"
       lazy
+      scrollable
     >
       <VCard class="edit-modal-wrapper">
         <VNavigationDrawer
@@ -49,21 +50,23 @@
             </VBtn>
           </VToolbarItems>
         </VToolbar>
-        <EditView />
+        <VCardText>
+          <EditView />
+        </VCardText>
       </VCard>
     </VDialog>
 
     <!-- Dialog for catching unsaved changes -->
     <Dialog ref="saveprompt" :header="$tr('unsavedChanges')" :text="$tr('unsavedChangesText')">
       <template v-slot:buttons>
-        <VBtn flat color="primary" @click="closeModal">
+        <VBtn ref="savepromptdontsave" flat color="primary" @click="closeModal">
           {{ $tr('dontSaveButton') }}
         </VBtn>
         <VSpacer />
-        <VBtn flat color="primary" @click="dismissPrompt">
+        <VBtn ref="savepromptcancel" flat color="primary" @click="dismissPrompt">
           {{ $tr('cancelButton') }}
         </VBtn>
-        <VBtn depressed color="primary" @click="handleSave">
+        <VBtn ref="savepromptsave" depressed color="primary" @click="handleSave">
           {{ $tr('saveButton') }}
         </VBtn>
       </template>

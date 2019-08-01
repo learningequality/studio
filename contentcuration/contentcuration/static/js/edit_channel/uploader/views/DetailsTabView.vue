@@ -5,7 +5,7 @@
         <!-- Title -->
         <VFlex v-if="oneSelected" xs12>
           <VTextField
-            :value="changes.title.value"
+            v-model="title"
             :counter="(viewOnly)? null : 200"
             maxlength="200"
             :rules="rules.title"
@@ -14,19 +14,17 @@
             required
             :readonly="viewOnly"
             class="title-input"
-            @change="setTitle"
           />
         </VFlex>
 
         <!-- Description -->
         <VFlex v-if="oneSelected" xs12>
           <VTextarea
-            :value="changes.description.value"
+            v-model="description"
             :label="$tr('descriptionLabel')"
             :counter="!viewOnly && 400"
             autoGrow
             :readonly="viewOnly"
-            @change="setDescription"
           />
         </VFlex>
 
@@ -34,7 +32,7 @@
         <VFlex xs12>
           <VCombobox
             ref="tagbox"
-            :value="changes.tags"
+            v-model="contentTags"
             :items="tags"
             :searchInput.sync="tagText"
             :readonly="viewOnly"
@@ -45,7 +43,6 @@
             hideSelected
             maxlength="30"
             autoSelectFirst
-            @change="handleTags"
           >
             <template v-slot:no-data>
               <VListTile v-if="tagText && tagText.trim()">
@@ -68,30 +65,25 @@
             </h2>
           </template>
           <v-card>
-            <v-layout row wrap>
-              <!-- Language -->
-              <VFlex lg4 md5 sm12>
-                <LanguageDropdown
-                  :hint="languageHint"
-                  :language="changes.language.value"
-                  :placeholder="getPlaceholder('language')"
-                  :readonly="viewOnly"
-                  @changed="setLanguage"
-                />
-              </VFlex>
-              <VSpacer />
-
-              <!-- Visibility -->
-              <VFlex lg4 md5 sm12>
-                <VisibilityDropdown
-                  :role="changes.role_visibility.value"
-                  :placeholder="getPlaceholder('role_visibility')"
-                  :required="!changes.role_visibility.varied"
-                  :readonly="viewOnly"
-                  @changed="setVisibility"
-                />
-              </VFlex>
-            </v-layout>
+            <!-- Language -->
+            <VFlex sm12 md8 lg6>
+              <LanguageDropdown
+                v-model="language"
+                :hint="languageHint"
+                :placeholder="getPlaceholder('language')"
+                :readonly="viewOnly"
+              />
+            </VFlex>
+            <!-- Visibility -->
+            <VFlex sm12 md8 lg6>
+              <VisibilityDropdown
+                v-if="allResources"
+                v-model="role"
+                :placeholder="getPlaceholder('role_visibility')"
+                :required="!changes.role_visibility.varied"
+                :readonly="viewOnly"
+              />
+            </VFlex>
           </v-card>
         </v-expansion-panel-content>
         <v-expansion-panel-content v-if="allExercises" key="assessments">
@@ -101,35 +93,29 @@
             </h2>
           </template>
           <v-card>
-            <v-layout row wrap>
-              <!-- Mastery -->
-              <VFlex sm12 md5>
-                <MasteryDropdown
-                  :masteryModel="changes.extra_fields.mastery_model.value"
-                  :placeholder="getExtraFieldPlaceholder('mastery_model')"
-                  :required="!changes.extra_fields.mastery_model.varied"
-                  :mValue="changes.extra_fields.m.value"
-                  :mPlaceholder="getExtraFieldPlaceholder('m')"
-                  :mRequired="!changes.extra_fields.m.varied"
-                  :nValue="changes.extra_fields.n.value"
-                  :nPlaceholder="getExtraFieldPlaceholder('n')"
-                  :nRequired="!changes.extra_fields.n.varied"
-                  :readonly="viewOnly"
-                  @changed="setExtraFields"
-                />
-              </VFlex>
-              <v-spacer />
-              <VFlex sm12 md5>
-                <v-checkbox
-                  :label="$tr('randomizeQuestionLabel')"
-                  :inputValue="changes.extra_fields.randomize.value"
-                  :indeterminate="changes.extra_fields.randomize.varied"
-                  color="primary"
-                  :readonly="viewOnly"
-                  @change="setQuestionOrderRandomization"
-                />
-              </VFlex>
-            </v-layout>
+            <!-- Mastery -->
+            <VFlex sm12>
+              <MasteryDropdown
+                v-model="masteryModel"
+                :placeholder="getExtraFieldPlaceholder('mastery_model')"
+                :required="!changes.extra_fields.mastery_model.varied"
+                :mPlaceholder="getExtraFieldPlaceholder('m')"
+                :mRequired="!changes.extra_fields.m.varied"
+                :nPlaceholder="getExtraFieldPlaceholder('n')"
+                :nRequired="!changes.extra_fields.n.varied"
+                :readonly="viewOnly"
+              />
+            </VFlex>
+            <v-spacer />
+            <VFlex sm12>
+              <v-checkbox
+                v-model="randomizeOrder"
+                :label="$tr('randomizeQuestionLabel')"
+                :indeterminate="changes.extra_fields.randomize.varied"
+                color="primary"
+                :readonly="viewOnly"
+              />
+            </VFlex>
           </v-card>
         </v-expansion-panel-content>
         <v-expansion-panel-content v-if="allResources" key="source">
@@ -141,94 +127,91 @@
               </span>
             </h2>
           </template>
-          <v-card>
-            <v-layout row wrap class="auth-section">
-              <VFlex v-if="oneSelected && isImported" xs12>
-                <VBtn color="primary" flat class="import-link" :href="importUrl" target="_blank">
-                  {{ $tr('importedFromButtonText', {channel: 'Sample Channel'}) }}
-                </VBtn>
-              </VFlex>
+          <v-card class="auth-section">
+            <VFlex v-if="oneSelected && isImported" xs12>
+              <VBtn color="primary" flat class="import-link" :href="importUrl" target="_blank">
+                {{ $tr('importedFromButtonText', {channel: 'Sample Channel'}) }}
+                <v-icon>launch</v-icon>
+              </VBtn>
+            </VFlex>
+            <!-- Author -->
+            <VFlex sm12 md8 lg6>
+              <VCombobox
+                v-model="author"
+                :items="authors"
+                :label="$tr('authorLabel')"
+                :readonly="viewOnly || disableAuthEdits"
+                maxlength="200"
+                autoSelectFirst
+                :placeholder="getPlaceholder('author')"
+              >
+                <template v-slot:append-outer>
+                  <HelpTooltip :text="$tr('authorToolTip')" />
+                </template>
+              </VCombobox>
+            </VFlex>
 
-              <!-- Author -->
-              <VFlex md4 sm12 class="field-with-tooltip">
-                <VCombobox
-                  :value="changes.author.value"
-                  :items="authors"
-                  :label="$tr('authorLabel')"
-                  :readonly="viewOnly || disableAuthEdits"
-                  maxlength="200"
-                  autoSelectFirst
-                  :placeholder="getPlaceholder('author')"
-                  @change="setAuthor"
-                />
-                <HelpTooltip :text="$tr('authorToolTip')" />
-              </VFlex>
-              <VSpacer />
+            <!-- Provider -->
+            <VFlex sm12 md8 lg6>
+              <VCombobox
+                v-model="provider"
+                :items="providers"
+                :label="$tr('providerLabel')"
+                :readonly="viewOnly || disableAuthEdits"
+                maxlength="200"
+                :placeholder="getPlaceholder('provider')"
+                autoSelectFirst
+              >
+                <template v-slot:append-outer>
+                  <HelpTooltip :text="$tr('providerToolTip')" />
+                </template>
+              </VCombobox>
+            </VFlex>
 
-              <!-- Provider -->
-              <VFlex md4 sm12 class="field-with-tooltip">
-                <VCombobox
-                  :value="changes.provider.value"
-                  :items="providers"
-                  :label="$tr('providerLabel')"
-                  :readonly="viewOnly || disableAuthEdits"
-                  maxlength="200"
-                  :placeholder="getPlaceholder('provider')"
-                  autoSelectFirst
-                  @change="setProvider"
-                />
-                <HelpTooltip :text="$tr('providerToolTip')" />
-              </VFlex>
-              <VSpacer />
+            <!-- Aggregator -->
+            <VFlex sm12 md8 lg6>
+              <VCombobox
+                v-model="aggregator"
+                :items="aggregators"
+                :label="$tr('aggregatorLabel')"
+                :readonly="viewOnly || disableAuthEdits"
+                maxlength="200"
+                autoSelectFirst
+                :placeholder="getPlaceholder('aggregator')"
+              >
+                <template v-slot:append-outer>
+                  <HelpTooltip :text="$tr('aggregatorToolTip')" />
+                </template>
+              </VCombobox>
+            </VFlex>
 
-              <!-- Aggregator -->
-              <VFlex md4 sm12 class="field-with-tooltip">
-                <VCombobox
-                  :value="changes.aggregator.value"
-                  :items="aggregators"
-                  :label="$tr('aggregatorLabel')"
-                  :readonly="viewOnly || disableAuthEdits"
-                  maxlength="200"
-                  autoSelectFirst
-                  :placeholder="getPlaceholder('aggregator')"
-                  @change="setAggregator"
-                />
-                <HelpTooltip :text="$tr('aggregatorToolTip')" />
-              </VFlex>
+            <!-- License -->
+            <VFlex sm12 md8 lg6>
+              <LicenseDropdown
+                v-model="license"
+                :required="!changes.license.varied"
+                :readonly="viewOnly || disableAuthEdits"
+                :descriptionRequired="!changes.license_description.varied"
+                :placeholder="getPlaceholder('license')"
+                :descriptionPlaceholder="getPlaceholder('license_description')"
+              />
+            </VFlex>
 
-              <!-- License -->
-              <VFlex md5 sm12>
-                <LicenseDropdown
-                  :selectedID="changes.license.value"
-                  :licenseDescription="changes.license_description.value"
-                  :required="!changes.license.varied"
-                  :readonly="viewOnly || disableAuthEdits"
-                  :descriptionRequired="!changes.license_description.varied"
-                  :placeholder="getPlaceholder('license')"
-                  :descriptionPlaceholder="getPlaceholder('license_description')"
-                  @licensechanged="setLicense"
-                  @descriptionchanged="setLicenseDescription"
-                />
-              </VFlex>
-              <VSpacer />
-
-              <!-- Copyright Holder -->
-              <VFlex md5 sm12>
-                <VCombobox
-                  v-if="copyrightHolderRequired"
-                  :value="changes.copyright_holder.value"
-                  :items="copyrightHolders"
-                  :label="$tr('copyrightHolderLabel')"
-                  maxlength="200"
-                  :required="!changes.copyright_holder.varied"
-                  :rules="rules.copyrightHolder"
-                  :placeholder="getPlaceholder('copyright_holder')"
-                  autoSelectFirst
-                  :readonly="viewOnly || disableAuthEdits"
-                  @input="setCopyrightHolder"
-                />
-              </VFlex>
-            </v-layout>
+            <!-- Copyright Holder -->
+            <VFlex sm12 md8 lg6>
+              <VCombobox
+                v-if="copyrightHolderRequired"
+                v-model="copyrightHolder"
+                :items="copyrightHolders"
+                :label="$tr('copyrightHolderLabel') + (viewOnly || disableAuthEdits ? '' : ' *')"
+                maxlength="200"
+                :required="!changes.copyright_holder.varied"
+                :rules="rules.copyrightHolder"
+                :placeholder="getPlaceholder('copyright_holder')"
+                autoSelectFirst
+                :readonly="viewOnly || disableAuthEdits"
+              />
+            </VFlex>
           </v-card>
         </v-expansion-panel-content>
       </v-expansion-panel>
@@ -255,7 +238,7 @@
       languageHelpText: 'Leave blank to default to topic language',
       languageChannelHelpText: 'Leave blank to default to channel language',
       importedFromButtonText: 'Imported from {channel}',
-      detectedImportText: '[Read-only: content has been imported with view-only permission]',
+      detectedImportText: 'Read-only: content has been imported with view-only permission',
       authorLabel: 'Author',
       authorToolTip: 'Person or organization who created this content',
       providerLabel: 'Provider',
@@ -317,6 +300,114 @@
         'allResources',
         'invalidNodes',
       ]),
+      title: {
+        get() {
+          return this.changes.title.value || '';
+        },
+        set(value) {
+          this.update({ title: value });
+        },
+      },
+      description: {
+        get() {
+          return this.changes.description.value || '';
+        },
+        set(value) {
+          this.update({ description: value });
+        },
+      },
+      randomizeOrder: {
+        get() {
+          return this.changes.extra_fields.randomize.value || false;
+        },
+        set(value) {
+          this.updateExtraFields({ randomize: value || false });
+        },
+      },
+      author: {
+        get() {
+          return this.changes.author.value || '';
+        },
+        set(value) {
+          this.update({ author: value });
+        },
+      },
+      provider: {
+        get() {
+          return this.changes.provider.value || '';
+        },
+        set(value) {
+          this.update({ provider: value });
+        },
+      },
+      aggregator: {
+        get() {
+          return this.changes.aggregator.value || '';
+        },
+        set(value) {
+          this.update({ aggregator: value });
+        },
+      },
+      copyrightHolder: {
+        get() {
+          return this.changes.copyright_holder.value || '';
+        },
+        set(value) {
+          this.update({ copyright_holder: value });
+        },
+      },
+      contentTags: {
+        get() {
+          return this.changes.tags || [];
+        },
+        set(value) {
+          if (this.viewOnly) return;
+
+          // If selecting a tag, clear the text field
+          if (value.length > this.changes.tags.length) this.tagText = null;
+          this.setTags(value);
+        },
+      },
+      role: {
+        get() {
+          return this.changes.role_visibility.value || '';
+        },
+        set(value) {
+          this.update({ role_visibility: value });
+        },
+      },
+      language: {
+        get() {
+          return this.changes.language.value;
+        },
+        set(value) {
+          this.update({ language: value });
+        },
+      },
+      masteryModel: {
+        get() {
+          return {
+            mastery_model: this.changes.extra_fields.mastery_model.value,
+            m: this.changes.extra_fields.m.value,
+            n: this.changes.extra_fields.n.value,
+          };
+        },
+        set(value) {
+          this.updateExtraFields(value);
+        },
+      },
+      license: {
+        get() {
+          return {
+            license: this.changes.license.value,
+            description: this.changes.license_description.value,
+          };
+        },
+        set(value) {
+          this.update({ license: value.license, license_description: value.description });
+        },
+      },
+
       disableAuthEdits() {
         return _.some(this.selected, { freeze_authoring_data: true });
       },
@@ -365,17 +456,11 @@
     },
     methods: {
       ...mapMutations('edit_modal', {
-        setTitle: 'SET_TITLE',
-        setDescription: 'SET_DESCRIPTION',
         setLicense: 'SET_LICENSE',
         setLicenseDescription: 'SET_LICENSE_DESCRIPTION',
-        setCopyrightHolder: 'SET_COPYRIGHT_HOLDER',
-        setLanguage: 'SET_LANGUAGE',
-        setExtraFields: 'SET_EXTRA_FIELDS',
-        setAuthor: 'SET_AUTHOR',
-        setProvider: 'SET_PROVIDER',
-        setAggregator: 'SET_AGGREGATOR',
-        setVisibility: 'SET_VISIBILITY',
+
+        update: 'UPDATE_NODE',
+        updateExtraFields: 'UPDATE_EXTRA_FIELDS',
         setTags: 'SET_TAGS',
       }),
       getPlaceholder(field) {
@@ -388,16 +473,6 @@
           ? this.$tr('variedFieldPlaceholder')
           : null;
       },
-      handleTags(tags) {
-        if (this.viewOnly) return;
-
-        // If selecting a tag, clear the text field
-        if (tags.length > this.changes.tags.length) this.tagText = null;
-        this.setTags(tags);
-      },
-      setQuestionOrderRandomization(value) {
-        this.setExtraFields({ randomize: value || false });
-      },
     },
   };
 
@@ -406,6 +481,8 @@
 <style lang="less" scoped>
 
   @import '../../../../less/global-variables.less';
+
+  @space-between-sections: 64px;
 
   /deep/ a {
     .linked-list-item;
@@ -426,21 +503,27 @@
     margin: 0 auto;
 
     .v-expansion-panel {
-      margin-top: 50px;
+      margin-top: @space-between-sections;
       box-shadow: none !important;
       /deep/ .v-expansion-panel__container {
         border: 0;
+        &:hover {
+          .v-expansion-panel__header {
+            background-color: @gray-200;
+          }
+        }
         /deep/ .v-expansion-panel__header {
-          // min-height: 35px;
-          padding: 0;
+          padding: 0 15px;
           cursor: pointer;
-          // font-size: 11pt;
-          // font-weight: bold;
-          // color: white;
-          border-top: 1px solid @gray-300;
+
           h2 {
             margin: 0;
             font-size: 16pt;
+            span {
+              margin-left: 5px;
+              font-size: 11pt;
+              color: @gray-600;
+            }
           }
           /deep/ .v-icon,
           .v-icon {
@@ -450,28 +533,17 @@
           }
         }
         /deep/ .v-expansion-panel__body {
-          padding: 5px 10px 64px;
+          padding: 5px 25px @space-between-sections;
           .layout {
-            width: 100%;
             margin-left: 0;
-            &.auth-section {
-              .v-input {
-                margin-bottom: 20px;
-              }
-              .v-autocomplete {
-                /deep/ .v-input__append-inner {
-                  visibility: hidden;
-                }
-              }
-              .field-with-tooltip {
-                .v-autocomplete {
-                  display: inline-block;
-                  width: calc(100% - 70px);
-                }
-                /deep/ .v-icon {
-                  margin-left: 5px;
-                  font-size: 14pt;
-                }
+          }
+          .auth-section {
+            .flex {
+              padding-right: 30px;
+            }
+            /deep/ .v-autocomplete {
+              /deep/ .v-input__append-inner {
+                visibility: hidden;
               }
             }
           }
@@ -480,9 +552,13 @@
     }
 
     .import-link {
-      .action-text;
-
+      margin-left: -15px;
+      font-weight: bold;
       text-transform: none;
+      .v-icon {
+        margin-left: 10px;
+        font-size: 12pt;
+      }
     }
 
     .imported-disabled-warning {
@@ -492,9 +568,16 @@
     }
     .v-form {
       margin-top: 30px;
-      .flex {
-        text-align: center;
+      .flex:not(:first-child) {
+        /deep/ .v-input {
+          margin-top: 25px;
+        }
+        /deep/ .mofn-options .v-input,
+        /deep/ .license-description {
+          margin-top: 0;
+        }
       }
+
       /deep/ .v-input--is-readonly {
         /deep/ label {
           color: @gray-600 !important;

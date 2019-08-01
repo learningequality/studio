@@ -30,7 +30,7 @@ describe('masteryDropdown', () => {
   beforeEach(() => {
     formWrapper = makeWrapper();
     wrapper = formWrapper.find(MasteryDropdown);
-    wrapper.setProps({ masteryModel: 'm_of_n' });
+    wrapper.setProps({ value: { mastery_model: 'm_of_n' } });
     modelInput = wrapper.find({ ref: 'masteryModel' }).find('input');
     wrapper.vm.$nextTick(() => {
       mInput = wrapper.find({ ref: 'mValue' }).find('input');
@@ -46,7 +46,7 @@ describe('masteryDropdown', () => {
     });
     it('should render according to masteryModel prop', () => {
       function test(model) {
-        wrapper.setProps({ masteryModel: model });
+        wrapper.setProps({ value: { mastery_model: model } });
         expect(wrapper.vm.$refs.masteryModel.value).toEqual(model);
         expect(wrapper.find({ ref: 'mValue' }).exists()).toBe(model === 'm_of_n');
         expect(wrapper.find({ ref: 'nValue' }).exists()).toBe(model === 'm_of_n');
@@ -54,7 +54,7 @@ describe('masteryDropdown', () => {
       _.each(Constants.MasteryModels, test);
     });
     it('should render correct mValue and nValue props', () => {
-      wrapper.setProps({ masteryModel: 'm_of_n', mValue: 10, nValue: 20 });
+      wrapper.setProps({ value: { mastery_model: 'm_of_n', m: 10, n: 20 } });
       expect(wrapper.vm.$refs.mValue.value).toEqual(10);
       expect(wrapper.vm.$refs.nValue.value).toEqual(20);
     });
@@ -97,34 +97,34 @@ describe('masteryDropdown', () => {
   describe('mastery model info modal', () => {
     it('should open the info modal when button is clicked', () => {
       expect(wrapper.find('.v-dialog').isVisible()).toBe(false);
-      let button = wrapper.find(InfoModal).find('.v-btn');
+      let button = wrapper.find(InfoModal).find('.v-icon');
       button.trigger('click');
       expect(wrapper.find('.v-dialog').isVisible()).toBe(true);
     });
   });
   describe('emitted events', () => {
-    it('changed should be emitted when masteryModel is updated', () => {
-      expect(wrapper.emitted('changed')).toBeFalsy();
+    it('input should be emitted when masteryModel is updated', () => {
+      expect(wrapper.emitted('input')).toBeFalsy();
       modelInput.setValue('do_all');
-      expect(wrapper.emitted('changed')).toBeTruthy();
-      expect(wrapper.emitted('changed')[0][0].mastery_model).toEqual('do_all');
+      expect(wrapper.emitted('input')).toBeTruthy();
+      expect(wrapper.emitted('input')[0][0].mastery_model).toEqual('do_all');
     });
-    it('changed should be emitted when mValue is updated', () => {
-      expect(wrapper.emitted('changed')).toBeFalsy();
+    it('input should be emitted when mValue is updated', () => {
+      expect(wrapper.emitted('input')).toBeFalsy();
       mInput.setValue(10);
-      expect(wrapper.emitted('changed')).toBeTruthy();
-      expect(wrapper.emitted('changed')[0][0].m).toEqual(10);
+      expect(wrapper.emitted('input')).toBeTruthy();
+      expect(wrapper.emitted('input')[0][0].m).toEqual(10);
     });
-    it('changed should be emitted when mValue is updated', () => {
-      expect(wrapper.emitted('changed')).toBeFalsy();
+    it('input should be emitted when mValue is updated', () => {
+      expect(wrapper.emitted('input')).toBeFalsy();
       nInput.setValue(10);
-      expect(wrapper.emitted('changed')).toBeTruthy();
-      expect(wrapper.emitted('changed')[0][0].n).toEqual(10);
+      expect(wrapper.emitted('input')).toBeTruthy();
+      expect(wrapper.emitted('input')[0][0].n).toEqual(10);
     });
   });
   describe('validation', () => {
     it('should flag empty required mastery models', () => {
-      wrapper.setProps({ masteryModel: null });
+      wrapper.setProps({ value: { mastery_model: null } });
       formWrapper.vm.validate();
       expect(
         wrapper
@@ -171,7 +171,7 @@ describe('masteryDropdown', () => {
       ).toBe(false);
     });
     it('should flag if m < 1', () => {
-      wrapper.setProps({ mValue: 0, nValue: 10 });
+      wrapper.setProps({ value: { mastery_model: 'm_of_n', m: 0, n: 10 } });
       formWrapper.vm.validate();
       expect(
         wrapper
@@ -179,7 +179,7 @@ describe('masteryDropdown', () => {
           .find('.error--text')
           .exists()
       ).toBe(true);
-      wrapper.setProps({ mValue: 1 });
+      wrapper.setProps({ value: { mastery_model: 'm_of_n', m: 1, n: 10 } });
       formWrapper.vm.validate();
       expect(
         wrapper
@@ -189,7 +189,7 @@ describe('masteryDropdown', () => {
       ).toBe(false);
     });
     it('should flag if m > n', () => {
-      wrapper.setProps({ mValue: 2, nValue: 1 });
+      wrapper.setProps({ value: { mastery_model: 'm_of_n', m: 2, n: 1 } });
       formWrapper.vm.validate();
       expect(
         wrapper
@@ -197,7 +197,7 @@ describe('masteryDropdown', () => {
           .find('.error--text')
           .exists()
       ).toBe(true);
-      wrapper.setProps({ nValue: 2 });
+      wrapper.setProps({ value: { mastery_model: 'm_of_n', m: 2, n: 2 } });
       formWrapper.vm.validate();
       expect(
         wrapper

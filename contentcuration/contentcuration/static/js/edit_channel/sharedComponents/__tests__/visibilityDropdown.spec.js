@@ -36,7 +36,7 @@ describe('visibilityDropdown', () => {
     });
     it('should render according to visibility prop', () => {
       function test(visibility) {
-        wrapper.setProps({ role: visibility });
+        wrapper.setProps({ value: visibility });
         expect(wrapper.vm.$refs.visibility.value).toEqual(visibility);
       }
       _.each(Constants.Roles, test);
@@ -66,7 +66,7 @@ describe('visibilityDropdown', () => {
     it('validation should flag empty required fields', () => {
       formWrapper.vm.validate();
       expect(wrapper.find('.error--text').exists()).toBe(false);
-      wrapper.setProps({ required: true, role: null });
+      wrapper.setProps({ required: true, value: null });
       formWrapper.vm.validate();
       expect(wrapper.find('.error--text').exists()).toBe(true);
     });
@@ -89,17 +89,17 @@ describe('visibilityDropdown', () => {
   describe('visibility info modal', () => {
     it('should open the info modal when button is clicked', () => {
       expect(wrapper.find('.v-dialog').isVisible()).toBe(false);
-      let button = wrapper.find(InfoModal).find('.v-btn');
+      let button = wrapper.find(InfoModal).find('.v-icon');
       button.trigger('click');
       expect(wrapper.find('.v-dialog').isVisible()).toBe(true);
     });
   });
   describe('emitted events', () => {
     it('should emit changed event when visibility is changed', () => {
-      expect(wrapper.emitted('changed')).toBeFalsy();
+      expect(wrapper.emitted('input')).toBeFalsy();
       wrapper.find('input').setValue(Constants.Roles[0]);
-      expect(wrapper.emitted('changed')).toBeTruthy();
-      expect(wrapper.emitted('changed')[0][0]).toEqual(Constants.Roles[0]);
+      expect(wrapper.emitted('input')).toBeTruthy();
+      expect(wrapper.emitted('input')[0][0]).toEqual(Constants.Roles[0]);
     });
   });
 });
