@@ -1,9 +1,10 @@
 <template>
   <div class="publish-items">
-    <label v-if="!isChanged" class="unchanged-label">
+    <label v-if="!isReadOnly && !isChanged" class="unchanged-label">
       {{ $tr('noChangesLabel') }}
     </label>
     <VBtn
+      v-if="!isReadOnly"
       flat
       dark
       class="open-modal-button publish-button"
@@ -54,7 +55,6 @@
   import { mapActions, mapState } from 'vuex';
   import PublishView from './PublishView.vue';
   import { format_size } from 'edit_channel/utils/string_helper';
-  import { alert } from 'edit_channel/utils/dialog';
 
   export default {
     name: 'PublishModal',
@@ -88,6 +88,9 @@
       isChanged() {
         return this.channel.main_tree.metadata.has_changed_descendant;
       },
+      isReadOnly() {
+        return !this.$store.getters.canEdit;
+      },
     },
     methods: {
       ...mapActions('publish', ['publishChannel', 'setChannelLanguage', 'loadChannelSize']),
@@ -98,13 +101,9 @@
         });
       },
       handlePublish() {
-        this.publishChannel()
-          .then(() => {
-            this.dialog = false;
-          })
-          .catch(error => {
-            alert(this.$tr('publishErrorHeader'), error.responseText || error);
-          });
+        this.publishChannel().then(() => {
+          this.dialog = false;
+        });
       },
     },
   };

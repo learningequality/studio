@@ -329,11 +329,7 @@ class SimplifiedContentNodeSerializer(BulkSerializerMixin, serializers.ModelSeri
     prerequisite = serializers.PrimaryKeyRelatedField(many=True, queryset=ContentNode.objects.all())
     is_prerequisite_of = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     metadata = serializers.SerializerMethodField('retrieve_metadata')
-    parent_title = serializers.SerializerMethodField('retrive_parent_title')
     ancestors = serializers.SerializerMethodField('get_node_ancestors')
-
-    def retrive_parent_title(self, node):
-        return node.parent and node.parent.title
 
     def retrieve_metadata(self, node):
         if node.kind_id == content_kinds.TOPIC:
@@ -462,7 +458,7 @@ class SimplifiedContentNodeSerializer(BulkSerializerMixin, serializers.ModelSeri
     class Meta:
         model = ContentNode
         fields = ('title', 'id', 'sort_order', 'kind', 'children', 'parent', 'metadata', 'content_id', 'prerequisite',
-                  'is_prerequisite_of', 'parent_title', 'ancestors', 'tree_id', 'language', 'role_visibility')
+                  'is_prerequisite_of', 'ancestors', 'tree_id', 'language', 'role_visibility')
 
 
 """ Shared methods across content node serializers """
@@ -494,6 +490,14 @@ class ContentNodeFieldMixin(object):
             return generate_storage_url(str(thumbnail_file))
 
 
+class ReadOnlySimplifiedContentNodeSerializer(SimplifiedContentNodeSerializer):
+    class Meta:
+        model = ContentNode
+        fields = ('title', 'id', 'sort_order', 'kind', 'children', 'parent', 'metadata', 'content_id', 'prerequisite',
+                  'is_prerequisite_of', 'ancestors', 'tree_id', 'language', 'role_visibility')
+        read_only_fields = ('title', 'id', 'sort_order', 'kind', 'children', 'parent', 'metadata', 'content_id', 'prerequisite',
+                  'is_prerequisite_of', 'ancestors', 'tree_id', 'language', 'role_visibility')
+
 class RootNodeSerializer(SimplifiedContentNodeSerializer, ContentNodeFieldMixin):
     channel_name = serializers.SerializerMethodField('retrieve_channel_name')
 
@@ -516,7 +520,7 @@ class RootNodeSerializer(SimplifiedContentNodeSerializer, ContentNodeFieldMixin)
     class Meta:
         model = ContentNode
         fields = ('title', 'id', 'kind', 'children', 'metadata', 'published', 'publishing', 'node_id', 'channel_name',
-                  'prerequisite', 'is_prerequisite_of', 'parent_title', 'ancestors', 'tree_id', 'role_visibility')
+                  'prerequisite', 'is_prerequisite_of', 'ancestors', 'tree_id', 'role_visibility')
 
 
 class ContentNodeSerializer(SimplifiedContentNodeSerializer, ContentNodeFieldMixin):
@@ -565,7 +569,7 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer, ContentNodeFieldMix
                 "coach_count": descendants.filter(role_visibility=roles.COACH).count(),
             }
 
-            if not node.parent:  # Add extra data to root node
+            if not node.parent_id:  # Add extra data to root node
                 data.update(self.get_creators(descendants))
 
             return data
@@ -601,10 +605,47 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer, ContentNodeFieldMix
         list_serializer_class = CustomListSerializer
         model = ContentNode
         fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license', 'language',
-                  'license_description', 'assessment_items', 'slideshow_slides', 'files', 'parent_title', 'ancestors', 'modified', 'original_channel',
+                  'license_description', 'assessment_items', 'slideshow_slides', 'files', 'ancestors', 'modified', 'original_channel',
                   'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'original_source_node_id',
                   'tags', 'extra_fields', 'prerequisite', 'is_prerequisite_of', 'node_id', 'tree_id', 'publishing', 'freeze_authoring_data',
                   'role_visibility', 'provider', 'aggregator', 'thumbnail_src')
+
+
+class ReadOnlyContentNodeSerializer(ContentNodeSerializer, ContentNodeFieldMixin):
+    class Meta:
+        list_serializer_class = CustomListSerializer
+        model = ContentNode
+        fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license', 'language',
+                  'license_description', 'assessment_items', 'slideshow_slides', 'files', 'ancestors', 'modified', 'original_channel',
+                  'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'original_source_node_id',
+                  'tags', 'extra_fields', 'prerequisite', 'is_prerequisite_of', 'node_id', 'tree_id', 'publishing', 'freeze_authoring_data',
+                  'role_visibility', 'provider', 'aggregator', 'thumbnail_src')
+        read_only_fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license', 'language',
+                  'license_description', 'assessment_items', 'slideshow_slides', 'files', 'ancestors', 'modified', 'original_channel',
+                  'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'original_source_node_id',
+                  'tags', 'extra_fields', 'prerequisite', 'is_prerequisite_of', 'node_id', 'tree_id', 'publishing', 'freeze_authoring_data',
+                  'role_visibility', 'provider', 'aggregator', 'thumbnail_src')
+
+
+class ReadOnlyContentNodeFullSerializer(ContentNodeSerializer):
+    files = FileSerializer(many=True, read_only=True)
+    tags = TagSerializer(many=True)
+    assessment_items = AssessmentItemSerializer(many=True, read_only=True)
+    slideshow_slides = SlideshowSlideSerializer(many=True, read_only=True)
+
+    class Meta:
+        list_serializer_class = CustomListSerializer
+        model = ContentNode
+        fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license', 'language',
+                  'node_id', 'license_description', 'assessment_items', 'slideshow_slides', 'files', 'content_id', 'modified',
+                  'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'ancestors', 'tree_id',
+                  'tags', 'extra_fields', 'original_channel', 'prerequisite', 'is_prerequisite_of', 'thumbnail_encoding', 'thumbnail_src',
+                  'freeze_authoring_data', 'publishing', 'original_source_node_id', 'role_visibility', 'provider', 'aggregator')
+        read_only_fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license', 'language',
+                  'node_id', 'license_description', 'assessment_items', 'slideshow_slides', 'files', 'content_id', 'modified',
+                  'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'ancestors', 'tree_id',
+                  'tags', 'extra_fields', 'original_channel', 'prerequisite', 'is_prerequisite_of', 'thumbnail_encoding', 'thumbnail_src',
+                  'freeze_authoring_data', 'publishing', 'original_source_node_id', 'role_visibility', 'provider', 'aggregator')
 
 
 class ContentNodeEditSerializer(ContentNodeSerializer):
@@ -617,7 +658,7 @@ class ContentNodeEditSerializer(ContentNodeSerializer):
         list_serializer_class = CustomListSerializer
         model = ContentNode
         fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license', 'language',
-                  'node_id', 'license_description', 'assessment_items', 'slideshow_slides', 'files', 'parent_title', 'content_id', 'modified',
+                  'node_id', 'license_description', 'assessment_items', 'slideshow_slides', 'files', 'content_id', 'modified',
                   'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'ancestors', 'tree_id',
                   'tags', 'extra_fields', 'original_channel', 'prerequisite', 'is_prerequisite_of', 'thumbnail_encoding', 'thumbnail_src',
                   'freeze_authoring_data', 'publishing', 'original_source_node_id', 'role_visibility', 'provider', 'aggregator')
@@ -630,7 +671,7 @@ class ContentNodeCompleteSerializer(ContentNodeEditSerializer):
         model = ContentNode
         fields = (
             'title', 'changed', 'id', 'description', 'sort_order', 'author', 'node_id', 'copyright_holder', 'license',
-            'license_description', 'kind', 'prerequisite', 'is_prerequisite_of', 'parent_title', 'ancestors', 'language',
+            'license_description', 'kind', 'prerequisite', 'is_prerequisite_of', 'ancestors', 'language',
             'original_channel', 'original_source_node_id', 'source_node_id', 'content_id', 'original_channel_id',
             'source_channel_id', 'source_id', 'source_domain', 'thumbnail_encoding', 'publishing', 'thumbnail_src',
             'children', 'parent', 'tags', 'created', 'modified', 'published', 'extra_fields', 'assessment_items', 'slideshow_slides',
@@ -909,7 +950,7 @@ class InvitationSerializer(BulkSerializerMixin, serializers.ModelSerializer):
             'id', 'invited', 'email', 'sender', 'channel', 'first_name', 'last_name', 'share_mode', 'channel_name')
 
 
-class GetTreeDataSerizlizer(serializers.Serializer):
+class GetTreeDataSerializer(serializers.Serializer):
     """
     Used by get_*_tree_data endpoints to ontain "lightweight" tree data.
     """
@@ -948,7 +989,8 @@ class TaskSerializer(serializers.ModelSerializer):
     status = serializers.SerializerMethodField()
 
     def get_status(self, task):
-        # If CELERY_TASK_ALWAYS_EAGER is set, attempts to retrieve state will assert, so do a sanity check first.
+        # If CELERY_TASK_ALWAYS_EAGER is set, attempts to retrieve state will assert, so do a sanity
+        # check first.
         if not settings.CELERY_TASK_ALWAYS_EAGER:
             result = app.AsyncResult(task.task_id)
             if result and result.status:
@@ -961,8 +1003,12 @@ class TaskSerializer(serializers.ModelSerializer):
         # If CELERY_TASK_ALWAYS_EAGER is set, attempts to retrieve state will assert, so do a sanity check first.
         if not settings.CELERY_TASK_ALWAYS_EAGER:
             result = app.AsyncResult(task.task_id)
-            if task.is_progress_tracking and 'progress' in result.state:
-                metadata['progress'] = result.state['progress']
+
+            # Just flagging this, but this appears to be the correct way to get task metadata,
+            # even though the API is marked as private.
+            meta = result._get_task_meta()
+            if meta and 'result' in meta and meta['result'] and 'progress' in meta['result']:
+                metadata['progress'] = meta['result']['progress']
 
         return metadata
 

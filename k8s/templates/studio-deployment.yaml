@@ -45,7 +45,11 @@ spec:
         {{ include "studio.pvc.gdrive-creds" . | nindent 8 }}
         resources:
           requests:
-            cpu: 1000m
+            cpu: 0.5
+            memory: 2Gi
+          limits:
+            cpu: 0.5
+            memory: 2Gi
       - name: nginx-proxy
         image: {{ .Values.studioNginx.imageName }}
         env:
@@ -63,6 +67,21 @@ spec:
         volumeMounts:
         - mountPath: /app/contentworkshop_static/
           name: staticfiles
+      initContainers:
+      - name: db-migrate
+        image: {{ .Values.studioApp.imageName }}
+        command:
+          - make
+          - migrate
+        env: {{ include "studio.sharedEnvs" . | nindent 8 }}
+        volumeMounts: {{ include "studio.pvc.gcs-creds" . | nindent 10 }}
+        resources:
+          requests:
+            cpu: 1000m
+            memory: 2Gi
+          limits:
+            cpu: 1000m
+            memory: 2Gi
       volumes:
         - emptyDir: {}
           name: staticfiles
@@ -92,3 +111,10 @@ spec:
         volumeMounts:
         {{ include "studio.pvc.gcs-creds" . | nindent 10 }}
         env: {{ include "studio.sharedEnvs" . | nindent 10 }}
+        resources:
+          requests:
+            cpu: 0.5
+            memory: 2Gi
+          limits:
+            cpu: 0.5
+            memory: 2Gi

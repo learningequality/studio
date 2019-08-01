@@ -34,3 +34,20 @@ if key and release_commit:
         'release': release_commit,
         'environment': get_secret("BRANCH_ENVIRONMENT"),
     }
+
+# Activate django-prometheus
+INSTALLED_APPS = INSTALLED_APPS + (
+    "django_prometheus",
+)
+
+MIDDLEWARE_CLASSES = (
+    ("django_prometheus.middleware.PrometheusBeforeMiddleware",) +
+    MIDDLEWARE_CLASSES +
+    ("django_prometheus.middleware.PrometheusAfterMiddleware",)
+)
+
+CACHES["default"]["BACKEND"] = "django_prometheus.cache.backends.redis.RedisCache"
+if SITE_READ_ONLY:
+    CACHES['default']['BACKEND'] = "django_prometheus.cache.backends.locmem.LocMemCache"
+
+DATABASES["default"]["ENGINE"] = "django_prometheus.db.backends.postgresql"

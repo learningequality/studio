@@ -7,9 +7,9 @@ from celery.decorators import task
 from celery.utils.log import get_task_logger
 from django.conf import settings
 from django.core.mail import EmailMessage
-from django.core.management import call_command
 from django.db import transaction
 from django.template.loader import render_to_string
+from django.utils.translation import ugettext as _
 
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
@@ -19,6 +19,12 @@ from contentcuration.serializers import ContentNodeSerializer
 from contentcuration.utils.csv_writer import write_channel_csv_file
 from contentcuration.utils.csv_writer import write_user_csv
 from contentcuration.utils.nodes import duplicate_node_bulk
+from contentcuration.utils.nodes import duplicate_node_inline
+from contentcuration.utils.nodes import move_nodes
+from contentcuration.utils.publish import publish_channel
+from contentcuration.utils.sync import sync_channel
+from contentcuration.utils.sync import sync_nodes
+
 
 logger = get_task_logger(__name__)
 
@@ -50,21 +56,52 @@ if settings.RUNNING_TESTS:
 def duplicate_nodes_task(self, user_id, channel_id, target_parent, node_ids, sort_order=1):
     new_nodes = []
     user = User.objects.get(id=user_id)
+    self.progress = 0.0
+    self.root_nodes_to_copy = len(node_ids)
+
+    self.progress += 10.0
+    self.update_state(state='STARTED', meta={'progress': self.progress})
 
     with transaction.atomic():
         with ContentNode.objects.disable_mptt_updates():
             for node_id in node_ids:
                 new_node = duplicate_node_bulk(node_id, sort_order=sort_order, parent=target_parent,
-                                               channel_id=channel_id, user=user)
+                                               channel_id=channel_id, user=user, task_object=self)
                 new_nodes.append(new_node.pk)
                 sort_order += 1
 
     return ContentNodeSerializer(ContentNode.objects.filter(pk__in=new_nodes), many=True).data
 
 
-@task(name='exportchannel_task')
-def exportchannel_task(channel_id, user_id):
-    call_command('exportchannel', channel_id, email=True, user_id=user_id)
+@task(bind=True, name='duplicate_node_inline_task')
+def duplicate_node_inline_task(self, user_id, channel_id, node_id, target_parent):
+    user = User.objects.get(id=user_id)
+    duplicate_node_inline(channel_id, node_id, target_parent, user=user)
+
+
+@task(bind=True, name='export_channel_task')
+def export_channel_task(self, user_id, channel_id):
+    publish_channel(user_id, channel_id, send_email=True, task_object=self)
+
+
+@task(bind=True, name='move_nodes_task')
+def move_nodes_task(self, user_id, channel_id, target_parent, node_ids, min_order, max_order):
+    move_nodes(channel_id, target_parent, node_ids, min_order, max_order, task_object=self)
+
+
+@task(bind=True, name='sync_channel_task')
+def sync_channel_task(self, user_id, channel_id, sync_attributes, sync_tags,
+                      sync_files, sync_assessment_items, sync_sort_order):
+    channel = Channel.objects.get(pk=channel_id)
+    sync_channel(channel, sync_attributes, sync_tags, sync_files,
+                 sync_tags, sync_sort_order, task_object=self)
+
+
+@task(bind=True, name='sync_nodes_task')
+def sync_nodes_task(self, user_id, channel_id, node_ids, sync_attributes, sync_tags,
+                    sync_files, sync_assessment_items):
+    sync_nodes(channel_id, node_ids, sync_attributes, sync_tags, sync_files,
+               sync_tags, task_object=self)
 
 
 @task(name='generatechannelcsv_task')
@@ -111,7 +148,12 @@ def getnodedetails_task(node_id):
 
 
 type_mapping = {
-    'duplicate-nodes': {'task': duplicate_nodes_task, 'progress_tracking': True}
+    'duplicate-nodes': {'task': duplicate_nodes_task, 'progress_tracking': True},
+    'duplicate-node-inline': {'task': duplicate_node_inline_task, 'progress_tracking': False},
+    'export-channel': {'task': export_channel_task, 'progress_tracking': True},
+    'move-nodes': {'task': move_nodes_task, 'progress_tracking': True},
+    'sync-channel': {'task': sync_channel_task, 'progress_tracking': True},
+    'sync-nodes': {'task': sync_nodes_task, 'progress_tracking': True},
 }
 
 if settings.RUNNING_TESTS:
@@ -172,6 +214,22 @@ def create_async_task(task_name, task_options, task_args=None):
     )
 
     task = async_task.apply_async(kwargs=task_args, task_id=str(task_info.task_id))
-    logging.info("Created task ID = {}".format(task.id))
+    # If there was a failure to create the task, the apply_async call will return failed, but
+    # checking the status will still show PENDING. So make sure we write the failure to the
+    # db directly so the frontend can know of the failure.
+    if task.status == 'FAILURE':
+        # Error information may have gotten added to the Task object during the call.
+        task_info.refresh_from_db()
+        logging.error("Task failed to start, please check Celery status.")
+        task_info.status = 'FAILURE'
+        error_data = {
+            'message': _('Unknown error starting task. Please contact support.')
+        }
+        # The Celery on_failure handler may also add a traceback, so make sure
+        # we only create a new error object if one doesn't already exist.
+        if 'error' not in task_info.metadata:
+            task_info.metadata['error'] = {}
+        task_info.metadata['error'].update(error_data)
+        task_info.save()
 
     return task, task_info

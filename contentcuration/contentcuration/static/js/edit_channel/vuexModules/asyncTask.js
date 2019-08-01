@@ -1,71 +1,184 @@
-const DEFAULT_CHECK_INTERVAL = 5000;
-const TASKS_RUNNING_CHECK_INTERVAL = 1000;
+const DEFAULT_CHECK_INTERVAL = 3000;
+const RUNNING_TASK_INTERVAL = 1000;
 
 let timerID = null;
+let currentInterval = DEFAULT_CHECK_INTERVAL;
 
 const asyncTasksModule = {
   state: {
     asyncTasks: [],
-    runningTasks: [],
-    finishedTasks: [],
+    currentTaskError: null,
+    currentTask: null,
+    callbacks: {},
+    progressPercent: 0.0,
   },
   getters: {
     asyncTasks(state) {
       return state.asyncTasks;
     },
-    runningTasks(state) {
-      return state.runningTasks;
+    currentTaskError(state) {
+      return state.currentTaskError;
+    },
+    currentTask(state) {
+      return state.currentTask;
+    },
+    callbacks(state) {
+      return state.callbacks;
+    },
+    progressPercent(state) {
+      return state.progressPercent;
     },
   },
   actions: {
-    startTask(store, newTask) {
-      if (timerID) {
-        clearTimeout(timerID);
-      }
+    startTask(store, payload) {
       let tasks = store.getters.asyncTasks;
-      tasks.push(newTask);
+      tasks.push(payload.task);
+
+      let startPercent = 0.0;
+      if (!payload.task.is_progress_tracking) {
+        startPercent = -1;
+      }
+
+      store.commit('SET_PROGRESS', startPercent);
+      store.commit('SET_CURRENT_TASK', payload);
+      // force an immediate update to quickly get a first state update
       store.dispatch('updateTaskList');
+      if (!timerID) {
+        store.dispatch('activateTaskUpdateTimer');
+      }
     },
 
+    clearCurrentTask(store) {
+      store.commit('SET_CURRENT_TASK', null);
+      store.commit('SET_CURRENT_TASK_ERROR', null);
+      store.commit('SET_PROGRESS', 0.0);
+      store.dispatch('activateTaskUpdateTimer');
+    },
+
+    deactivateTaskUpdateTimer() {
+      if (timerID) {
+        clearInterval(timerID);
+      }
+    },
+
+    activateTaskUpdateTimer(store) {
+      const currentTask = store.getters.currentTask;
+      currentInterval = DEFAULT_CHECK_INTERVAL;
+      if (currentTask) {
+        currentInterval = RUNNING_TASK_INTERVAL;
+      }
+      if (timerID) {
+        clearInterval(timerID);
+      }
+      timerID = setInterval(function() {
+        store.dispatch('updateTaskList');
+      }, currentInterval);
+    },
+
+    deleteCurrentTask(store) {
+      const currentTask = store.getters.currentTask;
+      if (currentTask) {
+        $.ajax({
+          method: 'DELETE',
+          url: '/api/task/' + currentTask.id,
+        });
+      }
+    },
     updateTaskList(store) {
+      let currentTask = store.getters.currentTask;
+      let currentTaskError = store.getters.currentTaskError;
+      let url = '/api/task';
+      // if we have a running task, only get status on it.
+      if (currentTask && currentTask.id) {
+        url += '/' + currentTask.id;
+      }
+
+      // if we're inside a channel, make sure we only check tasks relevant to the channel.
+      // note that we do this even for specific task lookups to check channel access.
+      if (window.channel) {
+        url += '?channel_id=' + window.channel.id;
+      }
+
       $.ajax({
         method: 'GET',
-        url: '/api/task',
+        url: url,
         dataType: 'json',
         success: function(data) {
-          let runningTasks = [];
-          // We re-construct the list of running tasks each time by checking the list, as some tasks
-          // can run through the queue very quickly and skip certain statuses. This would cause
-          // quirks where we didn't properly remove a finished task.
-          let currentRunningTasks = store.getters.runningTasks;
+          let runningTask = null;
+
+          // Treat the return value as an array even though we're getting a single task
+          // because the code is expecting an array of tasks to check.
+          if (currentTask) {
+            data = [data];
+          }
+
           if (data && data.length > 0) {
             for (let i = 0; i < data.length; i++) {
               const task = data[i];
-              const runningTask = currentRunningTasks.find(function(item) {
-                return item.id === task.id;
-              });
-              if (task.status === 'STARTED') {
-                runningTasks.push(task);
-              } else if (task.status === 'SUCCESS' || task.status === 'FAILURE') {
-                if (runningTask) {
-                  store.commit('SET_TASK_FINISHED', task);
+              if (!currentTask && task.status === 'STARTED') {
+                store.commit('SET_CURRENT_TASK', { task: task });
+                currentTask = task;
+              }
+              // TODO: Figure out how to set currentTask upon page reload.
+              if (currentTask && task.id === currentTask.id) {
+                runningTask = task;
+              }
+              if (runningTask == task && (task.status === 'SUCCESS' || task.status === 'FAILURE')) {
+                if (task.status === 'SUCCESS') {
+                  store.commit('SET_PROGRESS', 100.0);
+                } else if (task.status === 'FAILURE') {
+                  if (task.metadata && task.metadata.error) {
+                    store.commit('SET_CURRENT_TASK_ERROR', task.metadata.error);
+                  }
                 }
+                let callbacks = store.getters.callbacks;
+                if (callbacks && callbacks[task.id]) {
+                  let callback = callbacks[task.id]['resolve'];
+                  if (task.status === 'FAILURE') {
+                    callback = callbacks[task.id]['reject'];
+                  }
+                  delete callbacks[task.id];
+                  if (callback) {
+                    callback();
+                  }
+                }
+
+                // We add noDialog to the JSON data to override dialog handling. This
+                // property only exists on the task that was passed in, so make sure
+                // we check that by using currentTask rather than runningTask or task.
+                if (currentTask.noDialog) {
+                  store.dispatch('clearCurrentTask');
+                }
+              } else if (runningTask == task && currentTaskError) {
+                // If the task is still running and an error was set, that means it was
+                // an error during the polling process. This call means we are again
+                // polling successfully, so clear the error.
+                store.commit('SET_CURRENT_TASK_ERROR', null);
               }
             }
           }
 
-          // In order to not overly burden the server, we turn down the task check interval when
-          // the user doesn't have any currently running tasks. When a task is started from the
-          // UI, it will trigger this to update the check interval.
-          let checkTimerInterval = DEFAULT_CHECK_INTERVAL;
-          if (runningTasks.length > 0) {
-            checkTimerInterval = TASKS_RUNNING_CHECK_INTERVAL;
+          if (
+            runningTask &&
+            currentTask.is_progress_tracking &&
+            runningTask.metadata.progress &&
+            runningTask.metadata.progress >= 0.0
+          ) {
+            store.commit('SET_PROGRESS', runningTask.metadata.progress);
           }
-          timerID = setTimeout(function() {
-            store.dispatch('updateTaskList');
-          }, checkTimerInterval);
           store.commit('SET_ASYNC_TASKS', data);
-          store.commit('SET_RUNNING_TASKS', runningTasks);
+        },
+        error: function(error) {
+          // if we can't get task status, there is likely a server failure of some sort,
+          // so assume the task failed and report that.
+          let currentTask = store.getters.currentTask;
+          let callbacks = store.getters.callbacks;
+          store.commit('SET_CURRENT_TASK_ERROR', error);
+          if (currentTask) {
+            if (callbacks[currentTask.id] && callbacks[currentTask.id]['reject']) {
+              callbacks[currentTask.id]['reject'](error);
+            }
+          }
         },
       });
     },
@@ -74,11 +187,23 @@ const asyncTasksModule = {
     SET_ASYNC_TASKS(state, asyncTasks) {
       state.asyncTasks = asyncTasks || [];
     },
-    SET_RUNNING_TASKS(state, runningTasks) {
-      state.runningTasks = runningTasks || [];
+    SET_CURRENT_TASK_ERROR(state, error) {
+      state.currentTaskError = error;
     },
-    SET_TASK_FINISHED(state, task) {
-      state.finishedTasks.push(task);
+    SET_CURRENT_TASK(state, payload) {
+      if (!payload || !payload.task || !payload.task.id) {
+        state.currentTask = null;
+        return;
+      }
+      state.currentTask = payload.task;
+      let resolveCallback = payload.resolveCallback;
+      let rejectCallback = payload.rejectCallback;
+      if (payload.task && (resolveCallback || rejectCallback)) {
+        state.callbacks[payload.task.id] = { resolve: resolveCallback, reject: rejectCallback };
+      }
+    },
+    SET_PROGRESS(state, percent) {
+      state.progressPercent = Math.min(100, percent);
     },
   },
 };

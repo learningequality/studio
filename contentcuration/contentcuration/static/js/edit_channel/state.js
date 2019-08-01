@@ -6,7 +6,7 @@ const asyncTaskModule = require('./vuexModules/asyncTask');
 const channelModule = require('./vuexModules/channel');
 const contentNodesModule = require('./vuexModules/contentNodes');
 const primaryModalModule = require('./vuexModules/primaryModal');
-const progressModule = require('./vuexModules/progress');
+const publishModule = require('./vuexModules/publish');
 
 if (Vue.default) {
   // Compatibility for differential behaviour of require import
@@ -22,7 +22,7 @@ const Store = new Vuex.Store({
     channel: channelModule,
     topicTree: contentNodesModule,
     dialog: primaryModalModule,
-    progress: progressModule,
+    publish: publishModule,
   },
 });
 

@@ -400,9 +400,15 @@ var ContentNodeModel = BaseModel.extend({
       $.ajax({
         method: 'POST',
         url: window.Urls.duplicate_node_inline(),
-        data: JSON.stringify(data),
+        data: data,
+        dataType: 'json',
         success: function(data) {
-          resolve(new ContentNodeCollection(JSON.parse(data)));
+          const payload = {
+            task: data,
+            resolveCallback: resolve,
+            rejectCallback: reject,
+          };
+          State.Store.dispatch('startTask', payload);
         },
         error: reject,
       });
@@ -477,8 +483,7 @@ var ContentNodeCollection = BaseCollection.extend({
       $.ajax({
         method: 'GET',
         url: window.Urls.get_prerequisites((get_postrequisites || false).toString(), ids.join(',')),
-        success: function(data) {
-          var nodes = JSON.parse(data);
+        success: function(nodes) {
           resolve({
             prerequisite_mapping: nodes.prerequisite_mapping,
             postrequisite_mapping: nodes.postrequisite_mapping,
@@ -495,14 +500,13 @@ var ContentNodeCollection = BaseCollection.extend({
       $.ajax({
         method: 'GET',
         url: window.Urls.get_node_path(topic_id, tree_id, node_id),
-        success: function(result) {
-          var data = JSON.parse(result);
-          var returnCollection = new ContentNodeCollection(JSON.parse(data.path));
+        success: function(data) {
+          var returnCollection = new ContentNodeCollection(data.path);
           self.add(returnCollection.toJSON());
 
           var node = null;
           if (data.node) {
-            node = new ContentNodeModel(JSON.parse(data.node));
+            node = new ContentNodeModel(data.node);
             self.add(node);
           }
           resolve({
@@ -522,7 +526,7 @@ var ContentNodeCollection = BaseCollection.extend({
         method: 'GET',
         url: window.Urls.get_total_size(self.pluck('id').join(',')),
         success: function(data) {
-          resolve(JSON.parse(data).size);
+          resolve(data.size);
         },
         error: reject,
       });
@@ -535,8 +539,10 @@ var ContentNodeCollection = BaseCollection.extend({
         method: 'POST',
         url: window.Urls.create_new_node(),
         data: JSON.stringify(data),
+        contentType: 'application/json',
+        dataType: 'json',
         success: function(data) {
-          var new_node = new ContentNodeModel(JSON.parse(data));
+          var new_node = new ContentNodeModel(data);
           self.add(new_node);
           resolve(new_node);
         },
@@ -607,9 +613,16 @@ var ContentNodeCollection = BaseCollection.extend({
       $.ajax({
         method: 'POST',
         url: window.Urls.duplicate_nodes(),
+        contentType: 'application/json',
         data: JSON.stringify(data),
+        dataType: 'json',
         success: function(data) {
-          resolve(State.Store.dispatch('startTask', data));
+          const payload = {
+            task: data,
+            resolveCallback: resolve,
+            rejectCallback: reject,
+          };
+          State.Store.dispatch('startTask', payload);
         },
         error: reject,
       });
@@ -630,9 +643,17 @@ var ContentNodeCollection = BaseCollection.extend({
         method: 'POST',
         url: window.Urls.move_nodes(),
         data: JSON.stringify(data),
+        contentType: 'application/json',
+        dataType: 'json',
         error: reject,
-        success: function(moved) {
-          resolve(new ContentNodeCollection(JSON.parse(moved)));
+        success: function(data) {
+          data.noDialog = true;
+          const payload = {
+            task: data,
+            resolveCallback: resolve,
+            rejectCallback: reject,
+          };
+          State.Store.dispatch('startTask', payload);
         },
       });
     });
@@ -647,6 +668,7 @@ var ContentNodeCollection = BaseCollection.extend({
       };
       $.ajax({
         method: 'POST',
+        contentType: 'application/json',
         url: window.Urls.delete_nodes(),
         data: JSON.stringify(data),
         success: resolve,
@@ -662,9 +684,15 @@ var ContentNodeCollection = BaseCollection.extend({
         method: 'POST',
         url: window.Urls.sync_nodes(),
         data: JSON.stringify(data),
+        dataType: 'json',
         error: reject,
-        success: function(synced) {
-          resolve(new ContentNodeCollection(JSON.parse(synced)));
+        success: function(data) {
+          const payload = {
+            task: data,
+            resolveCallback: resolve,
+            rejectCallback: reject,
+          };
+          State.Store.dispatch('startTask', payload);
         },
       });
     });
@@ -715,8 +743,8 @@ var ChannelModel = BaseModel.extend({
         success: function(data) {
           var nodes = JSON.parse(data);
           resolve({
-            original: new ContentNodeCollection(JSON.parse(nodes.original)),
-            changed: new ContentNodeCollection(JSON.parse(nodes.changed)),
+            original: new ContentNodeCollection(nodes.original),
+            changed: new ContentNodeCollection(nodes.changed),
           });
         },
         error: reject,
@@ -724,6 +752,7 @@ var ChannelModel = BaseModel.extend({
     });
   },
   sync_channel: function(options) {
+    const State = require('./state');
     var self = this;
     return new Promise(function(resolve, reject) {
       var data = {
@@ -738,8 +767,15 @@ var ChannelModel = BaseModel.extend({
         method: 'POST',
         url: window.Urls.sync_channel(),
         data: JSON.stringify(data),
+        contentType: 'application/json',
+        dataType: 'json',
         success: function(data) {
-          resolve(new ContentNodeCollection(JSON.parse(data)));
+          const payload = {
+            task: data,
+            resolveCallback: resolve,
+            rejectCallback: reject,
+          };
+          State.Store.dispatch('startTask', payload);
         },
         error: reject,
       });

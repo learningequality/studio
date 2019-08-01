@@ -21,6 +21,7 @@ function makeWrapper(channel = {}) {
     ...channel,
   };
   localStore.commit('publish/SET_CHANNEL', channelData);
+  localStore.commit('SET_EDIT_MODE', true);
 
   return mount(PublishModal, {
     store: localStore,

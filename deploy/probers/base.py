@@ -6,7 +6,7 @@ import requests
 USERNAME = os.getenv("PROBER_STUDIO_USERNAME") or "a@a.com"
 PASSWORD = os.getenv("PROBER_STUDIO_PASSWORD") or "a"
 PRODUCTION_MODE_ON = os.getenv("PROBER_STUDIO_PRODUCTION_MODE_ON") or False
-STUDIO_BASE_URL = os.getenv("PROBER_STUDIO_BASE_URL") or "https://127.0.0.1:8080/{path}"
+STUDIO_BASE_URL = os.getenv("PROBER_STUDIO_BASE_URL") or "http://127.0.0.1:8080/{path}"
 
 
 class BaseProbe(object):

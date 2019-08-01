@@ -8,7 +8,6 @@ It currently has the following responsibilities:
   - Runs the studio setup command
   - Run the CMD specified in the Dockerfile or passed in via docker compose file
 """
-
 import logging
 import os
 import subprocess
@@ -54,9 +53,14 @@ def check_minio_ready(minio_checks=CONNECT_TRIES):
     """
     while True:
         url = os.getenv("AWS_S3_ENDPOINT_URL") or "http://localhost:9000"
-        robj = requests.get(url)
-        if robj.status_code == 403:  # what we expect when we have no keys
-            return True
+
+        # Catch connection errors, as they will be thrown if minio is not ready
+        try:
+            robj = requests.get(url)
+            if robj.status_code == 403:  # what we expect when we have no keys
+                return True
+        except requests.exceptions.ConnectionError:
+            pass
 
         if not minio_checks:
             logging.error("Minio connection retries exceeded!")
@@ -83,7 +87,6 @@ def setup_studio():
 def run_cmd():
     cmd = sys.argv[1:]
     sys.exit(subprocess.call(cmd))
-
 
 
 if __name__ == "__main__":

@@ -2,8 +2,7 @@ import { createLocalVue } from '@vue/test-utils';
 import Vuex from 'vuex';
 
 const Backbone = require('backbone');
-const mutations = require('edit_channel/publish/vuex/mutations');
-const actions = require('edit_channel/publish/vuex/actions');
+const publish = require('edit_channel/vuexModules/publish');
 
 const localVue = createLocalVue();
 localVue.use(Vuex);
@@ -29,8 +28,8 @@ function createStore(channel) {
 
   return new Vuex.Store({
     state: state,
-    actions: actions,
-    mutations: mutations,
+    actions: publish.actions,
+    mutations: publish.mutations,
   });
 }
 

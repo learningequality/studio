@@ -94,12 +94,23 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
     this.staging = options.staging;
     this.path = options.path;
 
-    // Handler for any Vuex state changes we may want to listen to.
-    this.state_changed = this.state_changed.bind(this);
-    State.Store.subscribe(this.state_changed);
+    // is_edit_page is false for ricecooker channels, even when the edit page is loaded,
+    // so use the edit state set on the Store to check instead of is_edit_page.
+    if (State.Store.getters.canEdit) {
+      // Check if the user has any running tasks immediately so we know if we need to
+      // show the update dialog.
+      State.Store.dispatch('updateTaskList');
+      // Also start the update check to run the check periodically.
+      State.Store.dispatch('activateTaskUpdateTimer');
 
-    // Check if the user has any running tasks so we know if we need to show the update dialog.
-    State.Store.dispatch('updateTaskList');
+      // When the page is not active or the frontmost tab, stop polling and restore
+      // when it once again becomes frontmost.
+      this.on_visibility_change = this.on_visibility_change.bind(this);
+      // Make sure we trigger on load.
+      this.on_visibility_change();
+      document.addEventListener('visibilitychange', this.on_visibility_change);
+    }
+
     this.render();
   },
   events: {
@@ -114,6 +125,13 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
     'click .move_button': 'move_items',
     'click .approve_channel': 'activate_channel',
     'click .stats_button': 'open_stats',
+  },
+  on_visibility_change: function() {
+    if (document.visibilityState == 'hidden') {
+      State.Store.dispatch('deactivateTaskUpdateTimer');
+    } else {
+      State.Store.dispatch('activateTaskUpdateTimer');
+    }
   },
   edit_content: function() {
     this.edit_selected(this.is_edit_page);
@@ -318,37 +336,30 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
   },
   call_duplicate: function() {
     var self = this;
-    this.display_load(this.get_translation('copying_to_clipboard'), function(
-      load_resolve,
-      load_reject
-    ) {
-      var promises = [];
-      for (var i = 0; i < self.lists.length; i++) {
-        promises.push(self.lists[i].copy_selected());
-        if (self.lists[i].current_node) {
-          break;
-        }
+    var promises = [];
+    for (var i = 0; i < self.lists.length; i++) {
+      promises.push(self.lists[i].copy_selected());
+      if (self.lists[i].current_node) {
+        break;
       }
-      Promise.all(promises)
-        .then(function(lists) {
-          var nodeCollection = new Models.ContentNodeCollection();
-          lists.forEach(function(list) {
-            nodeCollection.add(list.models);
-          });
-          WorkspaceManager.get_queue_view().clipboard_queue.add_nodes(nodeCollection);
-          self.track_event_for_nodes(
-            'Clipboard',
-            'Add items from toolbar in tree view',
-            nodeCollection
-          );
-          load_resolve(true);
-        })
-        .catch(function(error) {
-          // eslint-disable-next-line no-console
-          console.warn(error);
-          load_reject(error);
+    }
+    Promise.all(promises)
+      .then(function(lists) {
+        var nodeCollection = new Models.ContentNodeCollection();
+        lists.forEach(function(list) {
+          nodeCollection.add(list.models);
         });
-    });
+        WorkspaceManager.get_queue_view().clipboard_queue.add_nodes(nodeCollection);
+        self.track_event_for_nodes(
+          'Clipboard',
+          'Add items from toolbar in tree view',
+          nodeCollection
+        );
+      })
+      .catch(function(error) {
+        // eslint-disable-next-line no-console
+        console.warn(error);
+      });
   },
   close_all_popups: function() {
     $('.content-options-dropdown').each(function() {

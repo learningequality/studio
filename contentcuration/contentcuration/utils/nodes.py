@@ -1,6 +1,7 @@
 import copy
 import json
 import logging
+import math
 import os
 import uuid
 
@@ -8,6 +9,9 @@ from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
+from django.db import transaction
+from django.db.models import Q
+from django.utils.translation import ugettext as _
 
 from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
@@ -17,6 +21,7 @@ from contentcuration.models import File
 from contentcuration.models import FormatPreset
 from contentcuration.models import generate_object_storage_name
 from contentcuration.models import Language
+from contentcuration.models import PrerequisiteContentRelationship
 from contentcuration.models import User
 from contentcuration.utils.files import duplicate_file
 from contentcuration.utils.files import get_thumbnail_encoding
@@ -160,7 +165,7 @@ def filter_out_nones(data):
     return (l for l in data if l)
 
 
-def duplicate_node_bulk(node, sort_order=None, parent=None, channel_id=None, user=None):
+def duplicate_node_bulk(node, sort_order=None, parent=None, channel_id=None, user=None, task_object=None):
     if isinstance(node, int) or isinstance(node, basestring):
         node = ContentNode.objects.get(pk=node)
 
@@ -174,6 +179,15 @@ def duplicate_node_bulk(node, sort_order=None, parent=None, channel_id=None, use
 
     # perform the actual recursive node cloning
     new_node = _duplicate_node_bulk_recursive(node=node, sort_order=sort_order, parent=parent, channel_id=channel_id, to_create=to_create, user=user)
+    node_percent = 0
+    this_node_percent = 0
+    node_copy_total_percent = 90.0
+
+    if task_object:
+        num_nodes_to_create = len(to_create["nodes"]) + 2
+        this_node_percent = node_copy_total_percent / task_object.root_nodes_to_copy
+
+        node_percent = this_node_percent / num_nodes_to_create
 
     # create nodes, one level at a time, starting from the top of the tree (so that we have IDs to pass as "parent" for next level down)
     for node_level in to_create["nodes"]:
@@ -183,6 +197,10 @@ def duplicate_node_bulk(node, sort_order=None, parent=None, channel_id=None, use
         for node in node_level:
             for tag in node._meta.tags_to_add:
                 node.tags.add(tag)
+
+        if task_object:
+            task_object.progress = min(task_object.progress + node_percent, node_copy_total_percent)
+            task_object.update_state(state='STARTED', meta={'progress': task_object.progress})
 
     # rebuild MPTT tree for this channel (since we're inside "disable_mptt_updates", and bulk_create doesn't trigger rebuild signals anyway)
     ContentNode.objects.partial_rebuild(to_create["nodes"][0][0].tree_id)
@@ -195,6 +213,10 @@ def duplicate_node_bulk(node, sort_order=None, parent=None, channel_id=None, use
         ai_node_ids.append(a.contentnode_id)
     AssessmentItem.objects.bulk_create(to_create["assessments"])
 
+    if task_object:
+        task_object.progress = min(task_object.progress + node_percent, node_copy_total_percent)
+        task_object.update_state(state='STARTED', meta={'progress': task_object.progress})
+
     # build up a mapping of contentnode/assessment_id onto assessment item IDs, so we can point files to them correctly after
     aid_mapping = {}
     for a in AssessmentItem.objects.filter(contentnode_id__in=ai_node_ids):
@@ -206,6 +228,28 @@ def duplicate_node_bulk(node, sort_order=None, parent=None, channel_id=None, use
     for f in to_create["assessment_files"]:
         f.assessment_item_id = aid_mapping[f.assessment_item.contentnode_id + ":" + f.assessment_item.assessment_id]
     File.objects.bulk_create(to_create["node_files"] + to_create["assessment_files"])
+
+    if task_object:
+        task_object.progress = min(task_object.progress + node_percent, node_copy_total_percent)
+        task_object.update_state(state='STARTED', meta={'progress': task_object.progress})
+
+    return new_node
+
+
+def duplicate_node_inline(channel_id, node_id, target_parent, user=None):
+    node = ContentNode.objects.get(pk=node_id)
+    target_parent = ContentNode.objects.get(pk=target_parent)
+
+    new_node = None
+    with transaction.atomic():
+        with ContentNode.objects.disable_mptt_updates():
+            sort_order = (
+                node.sort_order + node.get_next_sibling().sort_order) / 2 if node.get_next_sibling() else node.sort_order + 1
+            new_node = duplicate_node_bulk(node, sort_order=sort_order, parent=target_parent, channel_id=channel_id,
+                                           user=user)
+            if not new_node.title.endswith(_(" (Copy)")):
+                new_node.title = new_node.title + _(" (Copy)")
+                new_node.save()
 
     return new_node
 
@@ -278,3 +322,57 @@ def _duplicate_node_bulk_recursive(node, sort_order, parent, channel_id, to_crea
         _duplicate_node_bulk_recursive(node=child, sort_order=None, parent=new_node, channel_id=channel_id, to_create=to_create, level=level + 1, user=user)
 
     return new_node
+
+
+def move_nodes(channel_id, target_parent_id, nodes, min_order, max_order, task_object=None):
+    all_ids = []
+
+    target_parent = ContentNode.objects.get(pk=target_parent_id)
+    # last 20% is MPTT tree updates
+    total_percent = 100.0
+    percent_per_node = math.ceil(total_percent / len(nodes))
+    percent_done = 0.0
+
+    with transaction.atomic():
+        for n in nodes:
+            min_order = min_order + float(max_order - min_order) / 2
+            node = ContentNode.objects.get(pk=n['id'])
+            move_node(node, parent=target_parent, sort_order=min_order, channel_id=channel_id)
+            percent_done = min(percent_done + percent_per_node, total_percent)
+            if task_object:
+                task_object.update_state(state='STARTED', meta={'progress': percent_done})
+            all_ids.append(n['id'])
+
+    return all_ids
+
+
+def move_node(node, parent=None, sort_order=None, channel_id=None):
+    # if we move nodes, make sure the parent is marked as changed
+    if node.parent and not node.parent.changed:
+        node.parent.changed = True
+        node.parent.save()
+    node.parent = parent or node.parent
+    node.sort_order = sort_order or node.sort_order
+    node.changed = True
+    descendants = node.get_descendants(include_self=True)
+
+    if node.tree_id != parent.tree_id:
+        PrerequisiteContentRelationship.objects.filter(Q(target_node_id=node.pk) | Q(prerequisite_id=node.pk)).delete()
+
+    node.save()
+    # we need to make sure the new parent is marked as changed as well
+    if node.parent and not node.parent.changed:
+        node.parent.changed = True
+        node.parent.save()
+
+    for tag in ContentTag.objects.filter(tagged_content__in=descendants).distinct():
+        # If moving from another channel
+        if tag.channel_id != channel_id:
+            t, is_new = ContentTag.objects.get_or_create(tag_name=tag.tag_name, channel_id=channel_id)
+
+            # Set descendants with this tag to correct tag
+            for n in descendants.filter(tags=tag):
+                n.tags.remove(tag)
+                n.tags.add(t)
+
+    return node

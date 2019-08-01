@@ -65,6 +65,10 @@ flower = "*"
 kombu = "==4.3"
 singledispatch = "==3.4.0.3"
 backports-abc = "==0.5"
+whitenoise = "*"
+django-redis = "*"
+django-prometheus = "*"
+eventlet = "*"
 
 [dev-packages]
 ipdb = "*"

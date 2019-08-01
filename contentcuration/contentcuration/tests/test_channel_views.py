@@ -1,5 +1,6 @@
 from base import BaseAPITestCase
 from django.conf import settings
+from django.core.cache import cache
 from django.core.urlresolvers import reverse
 from django.core.urlresolvers import reverse_lazy
 from django.db import connection
@@ -25,6 +26,8 @@ class ChannelListTestCase(BaseAPITestCase):
 
     def tearDown(self):
         settings.DEBUG = self.debug_setting
+        # Make sure subsequent tests aren't working with cached data.
+        cache.clear()
 
     def assertHasSerializerFields(self, data, serializer):
         """

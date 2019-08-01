@@ -366,18 +366,18 @@ body {
     font-size: 14pt;
     vertical-align: sub;
   }
-  &.error {
+  &.error-banner {
     color: white;
     background-color: @darkred-color;
   }
-  &.warning {
+  &.warning-banner {
     color: black;
     background-color: @yellow-bg-color;
     i {
       color: #827b14;
     }
   }
-  &.info {
+  &.info-banner {
     color: black;
     background-color: @gray-200;
     i {
@@ -388,4 +388,18 @@ body {
     font-weight: bold;
     text-decoration: none;
   }
+}
+
+/* Undoing some problems caused by Vuetify styles bleeding over into non-Vue elements */
+select:not(.application--wrap) {
+  background-color: white;
+  border: 1px solid gray;
+  /* stylelint-disable csstree/validator */
+  appearance: menulist-button;
+  /* stylelint-enable */
+}
+
+.title:not(.application--wrap) {
+  font-family: 'Noto Sans' !important;
+  font-size: 16px !important;
 }

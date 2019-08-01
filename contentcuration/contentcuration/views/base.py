@@ -1,7 +1,5 @@
 import json
 import logging
-import random  # TODO: Remove once API is integrated
-import time  # TODO: Remove once API is integrated
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -54,13 +52,13 @@ from contentcuration.serializers import ChannelListSerializer
 from contentcuration.serializers import ChannelSerializer
 from contentcuration.serializers import ChannelSetChannelListSerializer
 from contentcuration.serializers import ChannelSetSerializer
-from contentcuration.serializers import ContentNodeSerializer
 from contentcuration.serializers import CurrentUserSerializer
 from contentcuration.serializers import InvitationSerializer
 from contentcuration.serializers import RootNodeSerializer
 from contentcuration.serializers import SimplifiedChannelProbeCheckSerializer
+from contentcuration.serializers import TaskSerializer
 from contentcuration.serializers import UserChannelListSerializer
-from contentcuration.tasks import exportchannel_task
+from contentcuration.tasks import create_async_task
 from contentcuration.tasks import generatechannelcsv_task
 from contentcuration.utils.messages import get_messages
 
@@ -342,18 +340,24 @@ def publish_channel(request):
     try:
         channel_id = data["channel_id"]
         request.user.can_edit(channel_id)
+
+        task_info = {
+            'user': request.user,
+            'metadata': {
+                'affects': {
+                    'channels': [channel_id]
+                }}
+        }
+
+        task_args = {
+            'user_id': request.user.pk,
+            'channel_id': channel_id,
+        }
+
+        task, task_info = create_async_task('export-channel', task_info, task_args)
+        return HttpResponse(JSONRenderer().render(TaskSerializer(task_info).data))
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
-
-    exportchannel_task.delay(
-        channel_id,
-        user_id=request.user.pk
-    )
-
-    return HttpResponse(json.dumps({
-        "success": True,
-        "channel": channel_id
-    }))
 
 
 @api_view(['GET'])
@@ -480,37 +484,5 @@ def save_token_to_channels(request, token):
     return HttpResponse({"success": True})
 
 
-# TODO: REMOVE ONCE TASKS ARE AVAILABLE
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
-@permission_classes((IsAuthenticated,))
-def check_progress(request, task_id):
-    time.sleep(0.5)
-    channel = Channel.objects.get(pk=task_id)
-    response = {
-        'status': 'STARTED' if channel.main_tree.publishing else 'SUCCESS',
-        'message': 'Publishing...' if channel.main_tree.publishing else 'FINISHED!',
-        'percent': random.uniform(0, 0.99) if channel.main_tree.publishing else 1,
-    }
-
-    return HttpResponse(json.dumps(response))
-
-
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
-@permission_classes((IsAuthenticated,))
-def cancel_task(request, task_id):
-    time.sleep(0.5)
-    return HttpResponse(json.dumps({'status': 'REVOKED'}))
-
-
 class SandboxView(TemplateView):
     template_name = "sandbox.html"
-
-    def get_context_data(self, **kwargs):
-        kwargs = super(SandboxView, self).get_context_data(**kwargs)
-        channel = Channel.objects.filter(deleted=False, public=True).first()
-        nodes = ContentNodeSerializer(channel.main_tree.get_descendants(), many=True)
-        kwargs.update({"nodes": JSONRenderer().render(nodes.data),
-                       "channel": channel.pk,
-                       "current_user": JSONRenderer().render(CurrentUserSerializer(self.request.user).data)
-                       })
-        return kwargs

@@ -16,6 +16,13 @@ $ make run
 This pings your localhost:8080 server with 100 clients and a 20 users/sec hatch
 rate. You can set each of these parameters for a run.
 
+You can also specify the duration to run the tests for, along with the results
+file(s), using the following parameters:
+
+```bash
+make run TIME_ARG="-t5m" RESULTS_FILE="--csv=profile_results"
+```
+
 To run this script against the Studio staging server, change the `URL`
 parameter:
 
@@ -36,4 +43,3 @@ After stopping it, Locust slaves must be stopped:
 ```bash
 $ make stop_slaves
 ```
-

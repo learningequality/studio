@@ -17,8 +17,7 @@ class BaseGetNodesByIdSerializerTestCaseMixin:
         when called without any ID arguments.
         """
         response = self.get('/api/{}/'.format(self.endpoint))
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data), 0)
+        self.assertEqual(response.status_code, 404)
 
     def test_get_nodes_by_ids_get_only(self):
         """
@@ -37,8 +36,7 @@ class BaseGetNodesByIdSerializerTestCaseMixin:
         but does not return any data.
         """
         response = self.get(reverse_lazy(self.endpoint, kwargs={"ids": ''}))
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data), 0)
+        self.assertEqual(response.status_code, 404)
 
     def test_get_nodes_by_ids_with_invalid_id(self):
         """
@@ -46,8 +44,7 @@ class BaseGetNodesByIdSerializerTestCaseMixin:
         does not return node data.
         """
         response = self.get(reverse_lazy(self.endpoint, kwargs={"ids": '1234'}))
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data), 0)
+        self.assertEqual(response.status_code, 404)
 
     def test_get_nodes_by_ids_single(self):
         """
@@ -79,7 +76,7 @@ class SimplfiedContentNodeSerializerTestCase(BaseGetNodesByIdSerializerTestCaseM
     endpoint = "get_nodes_by_ids_simplified"
     serializer_fields = (
         'title', 'id', 'sort_order', 'kind', 'children', 'parent', 'metadata', 'content_id', 'prerequisite',
-        'is_prerequisite_of', 'parent_title', 'ancestors', 'tree_id', 'language', 'role_visibility'
+        'is_prerequisite_of', 'ancestors', 'tree_id', 'language', 'role_visibility'
     )
 
 
@@ -88,7 +85,7 @@ class ContentNodeSerializerTestCase(BaseGetNodesByIdSerializerTestCaseMixin, Bas
     serializer_fields = (
         'title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder',
         'license', 'language', 'license_description', 'assessment_items', 'slideshow_slides',
-        'files', 'parent_title', 'ancestors', 'modified', 'original_channel', 'kind', 'parent',
+        'files', 'ancestors', 'modified', 'original_channel', 'kind', 'parent',
         'children', 'published', 'associated_presets', 'valid', 'metadata', 'original_source_node_id',
         'tags', 'extra_fields', 'prerequisite', 'is_prerequisite_of', 'node_id', 'tree_id',
         'publishing', 'freeze_authoring_data', 'role_visibility', 'provider', 'aggregator',
@@ -101,7 +98,7 @@ class CompleteContentNodeSerializerTestCase(BaseGetNodesByIdSerializerTestCaseMi
     serializer_fields = (
         'title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder',
         'license', 'language', 'node_id', 'license_description', 'assessment_items',
-        'slideshow_slides', 'files', 'parent_title', 'content_id', 'modified', 'kind', 'parent',
+        'slideshow_slides', 'files', 'content_id', 'modified', 'kind', 'parent',
         'children', 'published', 'associated_presets', 'valid', 'metadata', 'ancestors', 'tree_id',
         'tags', 'extra_fields', 'original_channel', 'prerequisite', 'is_prerequisite_of',
         'thumbnail_encoding', 'thumbnail_src', 'freeze_authoring_data', 'publishing',

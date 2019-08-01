@@ -29,12 +29,32 @@ $(function() {
       return;
     }
 
+    // Status 0 errors can happen for a couple different reasons:
+    // 1. An API call was made and then a navigation event happened (harmless, user-initiated)
+    // 2. The browser didn't receive a response from the server on time (error text is 'timeout')
+    // 3. DNS Resolution failed. Health checks should catch any issues on our end.
+
+    // This code does not try to send a report for non-timeout GET requests, as the notes
+    // above indicate that there is likely nothing we can do about these cases. If it is
+    // a failed PUT / POST, we still submit a report so we can make sure we are handling
+    // that case properly in the front end and aware of cases where a post may fail.
     if (jqXHR.status === 0) {
-      message = 'Network Error: ' + ajaxSettings.url;
+      if (thrownError == 'timeout' || jqXHR.statusText === 'timeout') {
+        message = 'Network Error: ' + ajaxSettings.url;
+      } else if (ajaxSettings.type != 'GET' && ajaxSettings.data) {
+        message = ajaxSettings.type + ' Error: ' + ajaxSettings.url;
+      } else {
+        return;
+      }
+    }
+
+    // If we have a signed in user, make sure we add them to the report.
+    if (window.user && window.user.id) {
+      Raven.setUserContext({ id: window.user.id, email: window.user.email });
     }
 
     // Put the URL in the main message for timeouts so we can see which timeouts are most frequent.
-    if (jqXHR.status === 504) {
+    if (jqXHR.status === 504 || jqXHR.status === 522 || jqXHR.status === 524) {
       message = 'Request Timed Out: ' + ajaxSettings.url;
     }
 

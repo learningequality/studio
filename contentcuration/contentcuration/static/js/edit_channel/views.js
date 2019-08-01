@@ -4,7 +4,6 @@ const WorkspaceManager = require('./utils/workspace_manager');
 var Models = require('./models');
 var analytics = require('utils/analytics');
 const State = require('edit_channel/state');
-let publishStore = require('edit_channel/publish/vuex/store');
 //var UndoManager = require("backbone-undo");
 
 var TABINDEX = 1;
@@ -144,17 +143,6 @@ var BaseView = Backbone.View.extend({
       $(this).attr('tabindex', TABINDEX++);
     });
   },
-  state_changed: function() {
-    // If tasks are running, show modal so that the user cannot edit during this process.
-    let runningTasks = State.Store.getters.runningTasks;
-
-    if (runningTasks.length > 0) {
-      this.show_loading_modal('Updating channel, please wait...');
-    } else if ($('#loading_modal').length > 0) {
-      this.dismiss_loading_modal();
-      this.render();
-    }
-  },
   display_load: function(message, callback) {
     if (callback) {
       this.show_loading_modal(message);
@@ -242,7 +230,7 @@ var BaseView = Backbone.View.extend({
   check_if_published: function() {
     var is_published = State.current_channel.get('main_tree').published;
     $('#hide-if-unpublished').css('display', is_published ? 'inline-block' : 'none');
-    publishStore.commit('publish/SET_CHANNEL', State.current_channel.toJSON());
+    State.Store.commit('publish/SET_CHANNEL', State.current_channel.toJSON());
   },
   set_publishing: function() {
     $('#channel-publish-button')
@@ -411,22 +399,18 @@ var BaseWorkspaceView = BaseView.extend({
       });
     });
   },
-  add_to_trash: function(collection, message) {
-    message = message != null ? message : this.get_translation('archiving');
+  add_to_trash: function(collection) {
     var self = this;
     var promise = new Promise(function(resolve) {
-      self.display_load(message, function(resolve_load) {
-        var reloadCollection = collection.clone();
-        var trash_node = State.current_channel.get_root('trash_tree');
-        collection.move(trash_node, trash_node.get('metadata').max_sort_order).then(function() {
-          self.reload_ancestors(reloadCollection, false);
-          trash_node.fetch({
-            success: function(fetched) {
-              State.current_channel.set('trash_tree', fetched.attributes);
-              resolve(collection);
-              resolve_load(true);
-            },
-          });
+      var reloadCollection = collection.clone();
+      var trash_node = State.current_channel.get_root('trash_tree');
+      collection.move(trash_node, trash_node.get('metadata').max_sort_order).then(function() {
+        self.reload_ancestors(reloadCollection, false);
+        trash_node.fetch({
+          success: function(fetched) {
+            State.current_channel.set('trash_tree', fetched.attributes);
+            resolve(collection);
+          },
         });
       });
     });
@@ -869,7 +853,6 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
   },
   copy_collection: function(copyCollection) {
     var clipboard = WorkspaceManager.get_queue_view();
-    clipboard.open_queue();
     return copyCollection.duplicate(clipboard.clipboard_queue.model);
   },
   delete_selected: function() {
@@ -1393,42 +1376,23 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
       source
     );
   },
-  copy_item: function(message, source) {
-    message = message != null ? message : this.get_translation('copying_to_clipboard');
+  copy_item: function() {
     var copyCollection = new Models.ContentNodeCollection();
     copyCollection.add(this.model);
-    var self = this;
-    this.display_load(message, function(resolve, reject) {
-      self.containing_list_view
-        .copy_collection(copyCollection)
-        .then(function(collection) {
-          self.containing_list_view.add_to_clipboard(collection, message, source);
-          resolve(collection);
-        })
-        .catch(function(error) {
-          reject(error);
-        });
-    });
+    this.containing_list_view.copy_collection(copyCollection);
   },
-  make_copy: function(message) {
+  make_copy: function() {
     // Makes inline copy
-    message = message != null ? message : this.get_translation('making_copy');
     var copyCollection = new Models.ContentNodeCollection();
     copyCollection.add(this.model);
     var self = this;
-    this.display_load(message, function(resolve) {
-      var target_parent = self.containing_list_view.model;
-      // If the target parent is a UI segment, go up a level to its parent to
-      // get the collection to make a copy into.
-      if (self.containing_list_view.is_segment()) {
-        target_parent = self.containing_list_view.content_node_view.containing_list_view.model;
-      }
-      self.model.make_copy(target_parent).then(function(collection) {
-        var new_view = self.containing_list_view.create_new_view(collection.at(0));
-        self.$el.after(new_view.el);
-        self.reload_ancestors(collection, true, resolve);
-      });
-    });
+    var target_parent = self.containing_list_view.model;
+    // If the target parent is a UI segment, go up a level to its parent to
+    // get the collection to make a copy into.
+    if (self.containing_list_view.is_segment()) {
+      target_parent = self.containing_list_view.content_node_view.containing_list_view.model;
+    }
+    self.model.make_copy(target_parent);
   },
   add_topic: function() {
     // Is this function ever actually used?
