@@ -52,6 +52,7 @@ from contentcuration.serializers import ChannelListSerializer
 from contentcuration.serializers import ChannelSerializer
 from contentcuration.serializers import ChannelSetChannelListSerializer
 from contentcuration.serializers import ChannelSetSerializer
+from contentcuration.serializers import ContentNodeSerializer
 from contentcuration.serializers import CurrentUserSerializer
 from contentcuration.serializers import InvitationSerializer
 from contentcuration.serializers import RootNodeSerializer
@@ -486,3 +487,13 @@ def save_token_to_channels(request, token):
 
 class SandboxView(TemplateView):
     template_name = "sandbox.html"
+
+    def get_context_data(self, **kwargs):
+        kwargs = super(SandboxView, self).get_context_data(**kwargs)
+        channel = Channel.objects.filter(deleted=False, public=True).first()
+        nodes = ContentNodeSerializer(channel.main_tree.get_descendants(), many=True)
+        kwargs.update({"nodes": JSONRenderer().render(nodes.data),
+                       "channel": channel.pk,
+                       "current_user": JSONRenderer().render(CurrentUserSerializer(self.request.user).data)
+                       })
+        return kwargs
