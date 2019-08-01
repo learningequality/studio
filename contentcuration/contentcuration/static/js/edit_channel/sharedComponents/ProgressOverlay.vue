@@ -140,6 +140,10 @@
       closeOverlay() {
         this.progress = false;
         window.location.reload();
+        // We keep the task set to make sure the overlay stays up,
+        // so explicitly turn off the task checking timer while we wait
+        // for refresh.
+        this.$store.dispatch('deactivateTaskUpdateTimer');
       },
       handleCancel() {
         let headerText = this.cancelHeaderText || this.$tr('cancelHeader');
