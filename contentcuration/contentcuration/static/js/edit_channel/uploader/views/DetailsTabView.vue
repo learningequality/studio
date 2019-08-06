@@ -137,7 +137,7 @@
           <v-card class="auth-section">
             <VFlex v-if="oneSelected && isImported" xs12>
               <VBtn color="primary" flat class="import-link" :href="importUrl" target="_blank">
-                {{ $tr('importedFromButtonText', {channel: selected[0].original_channel.name}) }}
+                {{ $tr('importedFromButtonText', {channel: importChannelName}) }}
                 <v-icon>launch</v-icon>
               </VBtn>
             </VFlex>
@@ -446,8 +446,12 @@
       },
       importUrl() {
         let selected = this.selected[0];
-        let baseUrl = window.Urls.channel_view_only(selected.original_channel);
+        let baseUrl = window.Urls.channel_view_only(selected.original_channel.id);
         return baseUrl + '/' + selected.original_source_node_id;
+      },
+      importChannelName() {
+        let selected = this.selected[0];
+        return selected.original_channel.name;
       },
       newContent() {
         return !!_.some(this.selected, { isNew: true });
@@ -459,10 +463,7 @@
     watch: {
       changes() {
         if (!this.viewOnly) {
-          this.$nextTick(() => {
-            if (this.$refs.form) this.$refs.form.validate();
-            this.newContent ? this.$refs.form.resetValidation() : this.$refs.form.validate();
-          });
+          this.$nextTick(this.handleValidation);
         }
       },
     },
@@ -484,6 +485,11 @@
         return this.changes.extra_fields[field].varied || this.viewOnly
           ? this.$tr('variedFieldPlaceholder')
           : null;
+      },
+      handleValidation() {
+        this.$refs.form && this.newContent
+          ? this.$refs.form.resetValidation()
+          : this.$refs.form.validate();
       },
     },
   };
