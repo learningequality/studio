@@ -55,7 +55,6 @@ describe('detailsTabView', () => {
   let exerciseIndex = _.findIndex(testNodes, { id: DEFAULT_EXERCISE.id });
   let exercise2Index = _.findIndex(testNodes, { id: DEFAULT_EXERCISE2.id });
   beforeEach(() => {
-    localStore.commit('edit_modal/RESET_SELECTED');
     localStore.commit('edit_modal/SET_NODE', exerciseIndex);
     wrapper = makeWrapper();
   });
@@ -183,22 +182,11 @@ describe('detailsTabView', () => {
   });
   describe('on input', () => {
     it('text fields should set selected node data according to their inputted values', () => {
-      // Title
-      let titleInput = wrapper.find({ ref: 'title' }).find('input');
-      titleInput.setValue('New Title');
-      titleInput.trigger('input');
+      wrapper.find({ ref: 'title' }).vm.$emit('input', 'New Title');
       expect(wrapper.vm.title).toEqual('New Title');
-
-      // Description
-      let descriptionInput = wrapper.find({ ref: 'description' }).find('textarea');
-      descriptionInput.setValue('New Description');
-      descriptionInput.trigger('input');
-      expect(wrapper.vm.description).toEqual('New Description');
     });
     it('exercise fields should set selected node data extra_fields', () => {
-      let masteryInput = wrapper.find({ ref: 'mastery_model' }).find({ ref: 'masteryModel' });
-      masteryInput.find('input').setValue('m_of_n');
-      masteryInput.trigger('input');
+      wrapper.find({ ref: 'mastery_model' }).vm.$emit('input', { mastery_model: 'm_of_n' });
       expect(wrapper.vm.masteryModel.mastery_model).toEqual('m_of_n');
     });
     it('tags should set selected node data tags list', () => {
@@ -212,36 +200,25 @@ describe('detailsTabView', () => {
     });
   });
   describe('on validation', () => {
-    let validationMethod = jest.fn();
     describe('automatic validation', () => {
-      it('should not automatically validate new items', () => {
+      let validationMethod = jest.fn();
+      beforeEach(() => {
         wrapper.setMethods({
           handleValidation: validationMethod,
-        });
-
-        DEFAULT_VIDEO.isNew = true;
-        DEFAULT_VIDEO.title = null;
-        localStore.commit('edit_modal/SET_NODE', videoIndex);
-
-        wrapper.vm.$nextTick(() => {
-          expect(validationMethod).not.toHaveBeenCalled();
-          DEFAULT_VIDEO.isNew = false;
-          DEFAULT_VIDEO.title = 'title';
         });
       });
+
+      it('should not automatically validate new items', () => {
+        DEFAULT_EXERCISE.isNew = true;
+        DEFAULT_EXERCISE.title = null;
+        expect(validationMethod).not.toHaveBeenCalled();
+        DEFAULT_EXERCISE.title = 'title';
+      });
       it('should automatically validate existing items', () => {
-        wrapper.setMethods({
-          handleValidation: validationMethod,
-        });
-
-        DEFAULT_VIDEO.isNew = false;
-        DEFAULT_VIDEO.title = null;
-        localStore.commit('edit_modal/SET_NODE', videoIndex);
-
-        wrapper.vm.$nextTick(() => {
-          expect(validationMethod).toHaveBeenCalled();
-          DEFAULT_VIDEO.title = 'title';
-        });
+        DEFAULT_EXERCISE.isNew = false;
+        DEFAULT_EXERCISE.title = null;
+        expect(validationMethod).toHaveBeenCalled();
+        DEFAULT_EXERCISE.title = 'title';
       });
     });
     describe('field validation', () => {
