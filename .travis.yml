@@ -15,6 +15,8 @@ before_install:
   - sudo mv docker-compose /usr/local/bin
   - nvm install 10
   - nvm use 10
+  # Fix https://github.com/travis-ci/travis-ci/issues/8982#issuecomment-354357640
+  - python -c "import fcntl; fcntl.fcntl(1, fcntl.F_SETFL, 0)"
 
 # install the latest version of docker
 addons:

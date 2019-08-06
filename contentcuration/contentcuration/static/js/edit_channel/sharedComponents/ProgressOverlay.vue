@@ -73,15 +73,13 @@
       defaultHeader: 'Updating Channel',
       defaultDescription: 'Update is in progress, please wait...',
       defaultErrorText:
-        'An unexpected error has occurred. Please try again, and if you continue ' +
-        'to see this message, please contact support via the Help menu.',
+        'An unexpected error has occurred. Please try again, and if you continue to see this message, please contact support via the Help menu.',
       finishedMessage: 'Operation complete! Click "Refresh" to update the page.',
       moveHeader: 'Moving Content',
       moveDescription: 'Move operation is in progress, please wait...',
       publishHeader: 'Publishing Channel',
       publishDescription:
-        'Please wait for publishing to finish to make further edits.' +
-        ' You will receive an email notice once channel publishing is complete.',
+        'Please wait for publishing to finish to make further edits. You will receive an email notice once channel publishing is complete.',
       syncHeader: 'Syncing Content',
       syncDescription: 'Content sync operation is in progress, please wait...',
       stopButton: 'Stop',
@@ -142,6 +140,10 @@
       closeOverlay() {
         this.progress = false;
         window.location.reload();
+        // We keep the task set to make sure the overlay stays up,
+        // so explicitly turn off the task checking timer while we wait
+        // for refresh.
+        this.$store.dispatch('deactivateTaskUpdateTimer');
       },
       handleCancel() {
         let headerText = this.cancelHeaderText || this.$tr('cancelHeader');
