@@ -3,6 +3,9 @@ apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
   name: {{ template "studio.fullname" . }}
+  labels:
+    tier: app
+    app: {{ template "studio.fullname" . }}
 spec:
   replicas: {{ .Values.studioApp.replicas }}
   template:
@@ -16,8 +19,7 @@ spec:
       containers:
       - name: app
         image: {{ .Values.studioApp.imageName }}
-        env:
-        {{ include "studio.sharedEnvs" . }}
+        env: {{ include "studio.sharedEnvs" . | nindent 8 }}
         - name: STATICFILES_DIR
           value: /app/contentworkshop_static/
         - name: SEND_USER_ACTIVATION_NOTIFICATION_EMAIL
@@ -39,15 +41,15 @@ spec:
         volumeMounts:
         - mountPath: /app/contentworkshop_static/
           name: staticfiles
-        - name: gcs-creds
-          mountPath: /secrets/gcs
-        {{ if .Values.studioApp.gDrive.keyJson }}
-        - name: gdrive-creds
-          mountPath: /secrets/gdrive
-        {{ end }}
+        {{ include "studio.pvc.gcs-creds" . | nindent 8 }}
+        {{ include "studio.pvc.gdrive-creds" . | nindent 8 }}
         resources:
           requests:
-            cpu: 1000m
+            cpu: 0.5
+            memory: 2Gi
+          limits:
+            cpu: 0.5
+            memory: 2Gi
       - name: nginx-proxy
         image: {{ .Values.studioNginx.imageName }}
         env:
@@ -65,15 +67,26 @@ spec:
         volumeMounts:
         - mountPath: /app/contentworkshop_static/
           name: staticfiles
+      initContainers:
+      - name: db-migrate
+        image: {{ .Values.studioApp.imageName }}
+        command:
+          - make
+          - migrate
+        env: {{ include "studio.sharedEnvs" . | nindent 8 }}
+        volumeMounts: {{ include "studio.pvc.gcs-creds" . | nindent 10 }}
+        resources:
+          requests:
+            cpu: 1000m
+            memory: 2Gi
+          limits:
+            cpu: 1000m
+            memory: 2Gi
       volumes:
-        - name: gcs-creds
-          secret:
-            secretName: {{ template "studio.fullname" . }}-gcs
         - emptyDir: {}
           name: staticfiles
-        - name: gdrive-creds
-          secret:
-            secretName: {{ template "studio.fullname" . }}-gdrive
+        {{ include "studio.volume.gcs-creds" . | nindent 8 }}
+        {{ include "studio.volume.gdrive-creds" . | nindent 8 }}
 ---
 apiVersion: apps/v1beta1
 kind: Deployment
@@ -88,9 +101,7 @@ spec:
         tier: workers
     spec:
       volumes:
-      - name: gcs-creds
-        secret:
-          secretName: {{ template "studio.fullname" . }}-gcs
+        {{ include "studio.volume.gcs-creds" . | nindent 8 }}
       containers:
       - name: worker
         image: {{ .Values.studioApp.imageName }}
@@ -98,7 +109,12 @@ spec:
         - make
         - prodceleryworkers
         volumeMounts:
-        - name: gcs-creds
-          mountPath: /secrets/gcs
-        env:
-        {{ include "studio.sharedEnvs" . }}
+        {{ include "studio.pvc.gcs-creds" . | nindent 10 }}
+        env: {{ include "studio.sharedEnvs" . | nindent 10 }}
+        resources:
+          requests:
+            cpu: 0.5
+            memory: 2Gi
+          limits:
+            cpu: 0.5
+            memory: 2Gi

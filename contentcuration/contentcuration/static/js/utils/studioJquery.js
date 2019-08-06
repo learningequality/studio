@@ -45,12 +45,12 @@ $.extend( $.expr[ ':' ], {
   data: $.expr.createPseudo ?
         $.expr.createPseudo(function( dataName ) {
           return function( elem ) {
-            return !!$.data( elem, dataName );
+            return Boolean($.data( elem, dataName ));
           };
         }) :
         // support: jQuery <1.8
         function( elem, i, match ) {
-          return !!$.data( elem, match[ 3 ] );
+          return Boolean($.data( elem, match[ 3 ] ));
         }
 });
 

@@ -22,6 +22,7 @@ from django.shortcuts import redirect
 from django.shortcuts import render
 from django.views.decorators.cache import cache_page
 from django.views.decorators.csrf import csrf_exempt
+from django.views.generic.base import TemplateView
 from enum import Enum
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.authentication import SessionAuthentication
@@ -41,13 +42,8 @@ from contentcuration.decorators import can_access_channel
 from contentcuration.decorators import can_edit_channel
 from contentcuration.decorators import has_accepted_policies
 from contentcuration.models import Channel
-from contentcuration.models import ContentKind
 from contentcuration.models import ContentNode
-from contentcuration.models import FileFormat
-from contentcuration.models import FormatPreset
 from contentcuration.models import Invitation
-from contentcuration.models import Language
-from contentcuration.models import License
 from contentcuration.models import SecretToken
 from contentcuration.models import User
 from contentcuration.models import VIEW_ACCESS
@@ -56,18 +52,14 @@ from contentcuration.serializers import ChannelListSerializer
 from contentcuration.serializers import ChannelSerializer
 from contentcuration.serializers import ChannelSetChannelListSerializer
 from contentcuration.serializers import ChannelSetSerializer
-from contentcuration.serializers import ContentKindSerializer
 from contentcuration.serializers import CurrentUserSerializer
-from contentcuration.serializers import FileFormatSerializer
-from contentcuration.serializers import FormatPresetSerializer
 from contentcuration.serializers import InvitationSerializer
-from contentcuration.serializers import LanguageSerializer
-from contentcuration.serializers import LicenseSerializer
 from contentcuration.serializers import RootNodeSerializer
+from contentcuration.serializers import SimplifiedChannelProbeCheckSerializer
+from contentcuration.serializers import TaskSerializer
 from contentcuration.serializers import UserChannelListSerializer
-from contentcuration.tasks import exportchannel_task
+from contentcuration.tasks import create_async_task
 from contentcuration.tasks import generatechannelcsv_task
-from contentcuration.utils.channelcache import ChannelCacher
 from contentcuration.utils.messages import get_messages
 
 PUBLIC_CHANNELS_CACHE_DURATION = 30  # seconds
@@ -94,6 +86,9 @@ def base(request):
         return redirect('accounts/login')
 
 
+""" HEALTH CHECKS """
+
+
 def health(request):
     c = Channel.objects.first()
     if c:
@@ -104,6 +99,23 @@ def health(request):
 
 def stealth(request):
     return HttpResponse("<3")
+
+
+@api_view(['GET'])
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
+def get_prober_channel(request):
+    if not request.user.is_admin:
+        return HttpResponseForbidden()
+
+    channel = Channel.objects.filter(editors=request.user).first()
+    if not channel:
+        channel = Channel.objects.create(name="Prober channel", editors=[request.user])
+
+    return Response(SimplifiedChannelProbeCheckSerializer(channel).data)
+
+
+""" END HEALTH CHECKS """
 
 
 def get_or_set_cached_constants(constant, serializer):
@@ -170,22 +182,9 @@ def channel_page(request, channel, allow_edit=False, staging=False):
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def channel_list(request):
-    languages = get_or_set_cached_constants(Language, LanguageSerializer)
-    fileformats = get_or_set_cached_constants(FileFormat, FileFormatSerializer)
-    licenses = get_or_set_cached_constants(License, LicenseSerializer)
-    formatpresets = get_or_set_cached_constants(FormatPreset, FormatPresetSerializer)
-    contentkinds = get_or_set_cached_constants(ContentKind, ContentKindSerializer)
-    languages = get_or_set_cached_constants(Language, LanguageSerializer)
-
     return render(request, 'channel_list.html', {"channel_name": False,
                                                  "current_user": JSONRenderer().render(UserChannelListSerializer(request.user).data),
                                                  "user_preferences": json.dumps(request.user.content_defaults),
-                                                 "langs_list": languages,
-                                                 "fileformat_list": fileformats,
-                                                 "license_list": licenses,
-                                                 "fpreset_list": formatpresets,
-                                                 "ckinds_list": contentkinds,
-                                                 "langs_list": languages,
                                                  "messages": get_messages(),
                                                  })
 
@@ -259,7 +258,7 @@ def get_channels_by_token(request, token):
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def get_user_public_channels(request):
-    channels = ChannelCacher.get_public_channels(defer_nonmain_trees=True)
+    channels = Channel.get_public_channels(defer_nonmain_trees=True)
     channel_serializer = _apply_channel_filters(channels, request.query_params, default_serializer=ChannelSerializerTypes.ALT)
     return Response(channel_serializer.data)
 
@@ -341,18 +340,24 @@ def publish_channel(request):
     try:
         channel_id = data["channel_id"]
         request.user.can_edit(channel_id)
+
+        task_info = {
+            'user': request.user,
+            'metadata': {
+                'affects': {
+                    'channels': [channel_id]
+                }}
+        }
+
+        task_args = {
+            'user_id': request.user.pk,
+            'channel_id': channel_id,
+        }
+
+        task, task_info = create_async_task('export-channel', task_info, task_args)
+        return HttpResponse(JSONRenderer().render(TaskSerializer(task_info).data))
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
-
-    exportchannel_task.delay(
-        channel_id,
-        user_id=request.user.pk
-    )
-
-    return HttpResponse(json.dumps({
-        "success": True,
-        "channel": channel_id
-    }))
 
 
 @api_view(['GET'])
@@ -370,18 +375,15 @@ def accessible_channels(request, channel_id):
     return Response(serializer.data)
 
 
+@api_view(['POST'])
 def accept_channel_invite(request):
-    if request.method != 'POST':
-        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
-
-    data = json.loads(request.body)
-    invitation = Invitation.objects.get(pk=data['invitation_id'])
+    invitation = Invitation.objects.get(pk=request.data.get('invitation_id'))
     channel = invitation.channel
     channel.is_view_only = invitation.share_mode == VIEW_ACCESS
     channel_serializer = AltChannelListSerializer(channel)
     add_editor_to_channel(invitation)
 
-    return HttpResponse(JSONRenderer().render(channel_serializer.data))
+    return Response(channel_serializer.data)
 
 
 def activate_channel_endpoint(request):
@@ -480,3 +482,7 @@ def save_token_to_channels(request, token):
     token.set_channels(channels)
 
     return HttpResponse({"success": True})
+
+
+class SandboxView(TemplateView):
+    template_name = "sandbox.html"

@@ -1,8 +1,9 @@
 var _ = require('underscore');
+var { PageTypes } = require('../constants');
 var utils = require('./importUtils');
+
 var createContentNodeCollection = utils.createContentNodeCollection;
 var fetchImportableChannels = utils.fetchImportableChannels;
-var { PageTypes } = require('../constants');
 
 // Sends a request to `get_total_size` endpoint and updates store with result
 exports.calculateImportSize = function(context) {
@@ -12,51 +13,43 @@ exports.calculateImportSize = function(context) {
     return context.commit('UPDATE_IMPORT_SIZE', 0);
   }
   return createContentNodeCollection(context.state.itemsToImport)
-  .calculate_size()
-  .then(function(size) {
-    context.commit('UPDATE_IMPORT_SIZE', size);
-  });
-}
+    .calculate_size()
+    .then(function(size) {
+      context.commit('UPDATE_IMPORT_SIZE', size);
+    });
+};
 
 // Adds a ContentNode to to-import list
 exports.addItemToImportList = function(context, contentNode) {
-  if (!_.contains(context.getters.itemsToImportIds), contentNode.id) {
-    context.commit('ADD_ITEM_TO_IMPORT_LIST', contentNode)
+  if ((!_.contains(context.getters.itemsToImportIds), contentNode.id)) {
+    context.commit('ADD_ITEM_TO_IMPORT_LIST', contentNode);
   }
-}
+};
 
 // Given a ContentNode ID, removes from to-import list
 exports.removeItemFromImportList = function(context, id) {
-  if (_.contains(context.getters.itemsToImportIds), id) {
+  if ((_.contains(context.getters.itemsToImportIds), id)) {
     context.commit('REMOVE_ITEM_FROM_IMPORT_LIST', id);
   }
-}
+};
 
 // Requests the root nodes for the importable channels
 exports.loadChannels = function(context) {
   context.commit('UPDATE_CHANNELS_ARE_LOADING', true);
-  return fetchImportableChannels()
-  .then(function onSuccess(channels) {
+  return fetchImportableChannels().then(function onSuccess(channels) {
     context.commit('UPDATE_CHANNELS', channels);
     context.commit('UPDATE_CHANNELS_ARE_LOADING', false);
   });
-}
+};
 
 // Takes the to-import list and copies/duplicates them over to the current channel
 exports.copyImportListToChannel = function(context, payload) {
+  // now that this operation is async, we only need to notify that import has started in order
+  // to close the import dialog.
   context.commit('UPDATE_IMPORT_STATUS', 'start');
   var importCollection = createContentNodeCollection(context.state.itemsToImport);
-  return importCollection
-  .duplicate(payload.baseViewModel)
-  .then(function onSuccess(collection) {
-    context.commit('UPDATE_IMPORT_STATUS', 'success');
-    payload.onConfirmImport(collection);
-  })
-  .catch(function onFailure(error) {
-    console.error(error);
-    context.commit('UPDATE_IMPORT_STATUS', 'failure');
-  });
-}
+  return importCollection.duplicate(payload.baseViewModel);
+};
 
 exports.goToPreviousPage = function(context) {
   if (context.getters.currentImportPage === PageTypes.SEARCH_RESULTS) {
@@ -74,7 +67,7 @@ exports.goToPreviousPage = function(context) {
     context.commit('UPDATE_PAGE_STATE', payload);
   }
   context.commit('RESET_IMPORT_STATE');
-}
+};
 
 exports.goToSearchResults = function(context, payload) {
   context.commit('RESET_IMPORT_STATE');
@@ -83,8 +76,8 @@ exports.goToSearchResults = function(context, payload) {
     data: {
       searchTerm: payload.searchTerm,
     },
-  })
-}
+  });
+};
 
 exports.goToImportPreview = function(context) {
   context.commit('UPDATE_PAGE_STATE', {
@@ -96,4 +89,4 @@ exports.goToImportPreview = function(context) {
       },
     },
   });
-}
+};

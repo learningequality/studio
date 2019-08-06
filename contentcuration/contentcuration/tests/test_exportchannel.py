@@ -1,117 +1,62 @@
-import md5
 import os
 import random
 import string
 import tempfile
-from cStringIO import StringIO
 
 import pytest
 from base import StudioTestCase
-from django.core.files.storage import default_storage
 from django.test.utils import override_settings
 from kolibri_content import models
 from kolibri_content.router import using_content_database
 from mixer.backend.django import mixer
 from mock import patch
 
+from .testdata import create_studio_file
+from .testdata import exercise
+from .testdata import slideshow
+from .testdata import topic
+from .testdata import video
 from contentcuration import models as cc
-from contentcuration.management.commands.exportchannel import create_content_database
-from contentcuration.management.commands.exportchannel import MIN_SCHEMA_VERSION
-from contentcuration.management.commands.exportchannel import convert_channel_thumbnail
+from contentcuration.utils.publish import convert_channel_thumbnail
+from contentcuration.utils.publish import create_bare_contentnode
+from contentcuration.utils.publish import create_content_database
+from contentcuration.utils.publish import create_slideshow_manifest
+from contentcuration.utils.publish import MIN_SCHEMA_VERSION
 
 pytestmark = pytest.mark.django_db
 
 
-def video():
-    """
-    Create a video content kind entry.
-    """
-    return mixer.blend(cc.ContentKind, kind='video')
-
-
-def preset_video():
-    """
-    Create a video format preset.
-    """
-    return mixer.blend(cc.FormatPreset, id='mp4', kind=video())
-
-
-def topic():
-    """
-    Create a topic content kind.
-    """
-    return mixer.blend(cc.ContentKind, kind='topic')
-
-
-def exercise():
-    """
-    Create a topic content kind.
-    """
-    return mixer.blend(cc.ContentKind, kind='exercise')
-
-
-def preset_exercise():
-    """
-    Create an exercise format preset.
-    """
-    return mixer.blend(cc.FormatPreset, id='exercise', kind=exercise())
-
-
-def fileformat_perseus():
-    """
-    Create a perseus FileFormat entry.
-    """
-    return mixer.blend(cc.FileFormat, extension='perseus', mimetype='application/exercise')
-
-
-def fileformat_mp4():
-    """
-    Create an mp4 FileFormat entry.
-    """
-    return mixer.blend(cc.FileFormat, extension='mp4', mimetype='application/video')
-
-
-def license_wtfpl():
-    """
-    Create a license object called WTF License.
-    """
-    return mixer.blend(cc.License, license_name="WTF License")
-
-
 def fileobj_video(contents=None):
     """
-    Create an "mp4" video file on storage, and then create a File model pointing to it.
-
-    if contents is given and is a string, then write said contents to the file. If not given,
-    a random string is generated and set as the contents of the file.
+    Create an mp4 video file in storage and then create a File model from it.
+    If contents is given and is a string, then write said contents to the file.
+    If not given, a random string is generated and set as the contents of the file.
     """
     if contents:
         filecontents = contents
     else:
         filecontents = "".join(random.sample(string.printable, 20))
-
-    fileobj = StringIO(filecontents)
-    digest = md5.new(filecontents).hexdigest()
-    filename = "{}.mp4".format(digest)
-    storage_file_path = cc.generate_object_storage_name(digest, filename)
-
-    # Write out the file bytes on to object storage, with a filename specified with randomfilename
-    default_storage.save(storage_file_path, fileobj)
-
-    # then create a File object with that
-    db_file_obj = mixer.blend(cc.File, file_format=fileformat_mp4(), preset=preset_video(), file_on_disk=storage_file_path)
-
-    return db_file_obj
+    # leverage existing function in testdata
+    file_data = create_studio_file(filecontents, preset='high_res_video', ext='mp4')
+    return file_data['db_file']
 
 
 def assessment_item():
-    answers = "[{\"correct\": false, \"answer\": \"White Rice\", \"help_text\": \"\"}, {\"correct\": true, \"answer\": \"Brown Rice\", \"help_text\": \"\"}, {\"correct\": false, \"answer\": \"Rice Krispies\", \"help_text\": \"\"}]"
-    return mixer.blend(cc.AssessmentItem, question='Which rice is the healthiest?', type='single_selection', answers=answers)
+    answers = "[{\"correct\": false, \"answer\": \"White Rice\", \"help_text\": \"\"}, " \
+              "{\"correct\": true, \"answer\": \"Brown Rice\", \"help_text\": \"\"}, " \
+              "{\"correct\": false, \"answer\": \"Rice Krispies\", \"help_text\": \"\"}]"
+    return mixer.blend(cc.AssessmentItem, question='Which rice is the healthiest?',
+                       type='single_selection', answers=answers)
 
 
 def assessment_item2():
-    answers = "[{\"correct\": true, \"answer\": \"Eggs\", \"help_text\": \"\"}, {\"correct\": true, \"answer\": \"Tofu\", \"help_text\": \"\"}, {\"correct\": true, \"answer\": \"Meat\", \"help_text\": \"\"}, {\"correct\": true, \"answer\": \"Beans\", \"help_text\": \"\"}, {\"correct\": false, \"answer\": \"Rice\", \"help_text\": \"\"}]"
-    return mixer.blend(cc.AssessmentItem, question='Which of the following are proteins?', type='multiple_selection', answers=answers)
+    answers = "[{\"correct\": true, \"answer\": \"Eggs\", \"help_text\": \"\"}, " \
+              "{\"correct\": true, \"answer\": \"Tofu\", \"help_text\": \"\"}, " \
+              "{\"correct\": true, \"answer\": \"Meat\", \"help_text\": \"\"}, " \
+              "{\"correct\": true, \"answer\": \"Beans\", \"help_text\": \"\"}, " \
+              "{\"correct\": false, \"answer\": \"Rice\", \"help_text\": \"\"}]"
+    return mixer.blend(cc.AssessmentItem, question='Which of the following are proteins?',
+                       type='multiple_selection', answers=answers)
 
 
 def assessment_item3():
@@ -121,7 +66,8 @@ def assessment_item3():
 
 def assessment_item4():
     answers = "[{\"correct\": true, \"answer\": 20, \"help_text\": \"\"}]"
-    return mixer.blend(cc.AssessmentItem, question='How many minutes does it take to cook rice?', type='input_question', answers=answers)
+    return mixer.blend(cc.AssessmentItem, question='How many minutes does it take to cook rice?',
+                       type='input_question', answers=answers)
 
 
 def channel():
@@ -132,6 +78,7 @@ def channel():
         leaf = mixer.blend(cc.ContentNode, parent=level2, kind=video())
         leaf2 = mixer.blend(cc.ContentNode, parent=level2, kind=exercise(), title='EXERCISE 1',
                             extra_fields="{\"mastery_model\":\"do_all\",\"randomize\":true}")
+        leaf3 = mixer.blend(cc.ContentNode, parent=level2, kind=slideshow(), title="SLIDESHOW 1", extra_fields="{}")
 
         video_file = fileobj_video()
         video_file.contentnode = leaf
@@ -180,10 +127,10 @@ class ExportChannelTestCase(StudioTestCase):
 
             def __exit__(self, exc_type, exc_value, traceback):
                 return
-        cls.patch_using = patch('contentcuration.management.commands.exportchannel.using_content_database.__new__',
+        cls.patch_using = patch('contentcuration.utils.publish.using_content_database.__new__',
                                 return_value=testing_content_database('alias'))
         cls.patch_using.start()
-        cls.patch_copy_db = patch('contentcuration.management.commands.exportchannel.save_export_database')
+        cls.patch_copy_db = patch('contentcuration.utils.publish.save_export_database')
         cls.patch_copy_db.start()
 
     def setUp(self):
@@ -246,6 +193,14 @@ class ChannelExportUtilityFunctionTestCase(StudioTestCase):
         self.assertEqual("flappy_bird", convert_channel_thumbnail(channel))
 
     def test_convert_channel_thumbnail_encoding_invalid(self):
-        with patch("contentcuration.management.commands.exportchannel.get_thumbnail_encoding", return_value="this is a test"):
+        with patch("contentcuration.utils.publish.get_thumbnail_encoding", return_value="this is a test"):
             channel = cc.Channel.objects.create(thumbnail="/content/kolibri_flapping_bird.png", thumbnail_encoding={})
             self.assertEquals("this is a test", convert_channel_thumbnail(channel))
+
+    def test_create_slideshow_manifest(self):
+        content_channel = cc.Channel.objects.create()
+        ccnode = cc.ContentNode.objects.create(kind_id=slideshow(), extra_fields="{}")
+        kolibrinode = create_bare_contentnode(ccnode, ccnode.language, content_channel.id, content_channel.name)
+        create_slideshow_manifest(ccnode, kolibrinode)
+        manifest_collection = cc.File.objects.filter(contentnode=ccnode, preset_id=u"slideshow_manifest")
+        assert len(manifest_collection) is 1

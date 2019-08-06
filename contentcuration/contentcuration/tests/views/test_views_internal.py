@@ -2,14 +2,26 @@
 """
 Tests for contentcuration.views.internal functions.
 """
-from mixer.main import mixer
+import uuid
 
+from django.core.urlresolvers import reverse_lazy
+from mixer.main import mixer
+from mock import patch
+from rest_framework.test import APIClient
+
+from ..base import BaseAPITestCase
 from ..base import StudioTestCase
+from ..testdata import create_temp_file
 from ..testdata import fileobj_exercise_graphie
 from ..testdata import fileobj_exercise_image
 from ..testdata import fileobj_video
+from ..testdata import channel
 from ..testdata import tree
+from ..testdata import user
+from contentcuration import ricecooker_versions as rc
+from contentcuration.models import Channel
 from contentcuration.models import ContentNode
+from contentcuration.views import internal
 
 
 class SampleContentNodeDataSchema:
@@ -18,6 +30,7 @@ class SampleContentNodeDataSchema:
     JSON data we send to api_add_nodes_to_tree. Pair this with
     mixer.blend to autogenerate the schema with random values.
     """
+
     title = str
     description = str
     node_id = str
@@ -35,12 +48,15 @@ class ApiAddNodesToTreeTestCase(StudioTestCase):
 
     def setUp(self):
         super(ApiAddNodesToTreeTestCase, self).setUp()
+        # first setup a test channel...
+        self.channel = channel()
+        self.root_node = self.channel.main_tree
+
         # get our random data from mixer
         random_data = mixer.blend(SampleContentNodeDataSchema)
-        self.root_node = tree()
         self.fileobj = fileobj_video()
         self.title = random_data.title
-        sample_data = {
+        self.sample_data = {
             "root_id": self.root_node.id,
             "content_data": [
                 {
@@ -59,7 +75,7 @@ class ApiAddNodesToTreeTestCase(StudioTestCase):
                             "filename": self.fileobj.filename(),
                             "original_filename": self.fileobj.original_filename,
                             "language": self.fileobj.language,
-                            "source_url": self.fileobj.source_url
+                            "source_url": self.fileobj.source_url,
                         }
                     ],
                     "kind": "document",
@@ -68,22 +84,30 @@ class ApiAddNodesToTreeTestCase(StudioTestCase):
                     "copyright_holder": random_data.copyright_holder,
                     "questions": [],
                     "extra_fields": "{}",
-                    "role": "learner"
+                    "role": "learner",
                 }
-            ]
+            ],
         }
         self.resp = self.admin_client().post(
-            "/api/internal/add_nodes",
-            data=sample_data,
-            format='json'
+            reverse_lazy("api_add_nodes_to_tree"), data=self.sample_data, format="json"
         )
+
+    def test_404_no_permission(self):
+        client = APIClient()
+        client.force_authenticate(user())
+        response = client.post(
+            reverse_lazy("api_add_nodes_to_tree"), self.sample_data, format="json"
+        )
+        self.assertEqual(response.status_code, 404)
 
     def test_returns_200_status_code(self):
         """
         Check that we return 200 if passed in a valid JSON.
         """
         # check that we returned 200 with that POST request
-        assert self.resp.status_code == 200, "Got a request error: {}".format(self.resp.content)
+        assert self.resp.status_code == 200, "Got a request error: {}".format(
+            self.resp.content
+        )
 
     def test_creates_nodes(self):
         """
@@ -91,7 +115,9 @@ class ApiAddNodesToTreeTestCase(StudioTestCase):
         """
 
         # make sure a node with our given self.title exists, with the given parent.
-        assert ContentNode.get_nodes_with_title(title=self.title, limit_to_children_of=self.root_node.id).exists()
+        assert ContentNode.get_nodes_with_title(
+            title=self.title, limit_to_children_of=self.root_node.id
+        ).exists()
 
     def test_associates_file_with_created_node(self):
         """
@@ -118,13 +144,18 @@ class ApiAddExerciseNodesToTreeTestCase(StudioTestCase):
 
     def setUp(self):
         super(ApiAddExerciseNodesToTreeTestCase, self).setUp()
+        # first setup a test channel...
+        self.channel = channel()
+        self.root_node = self.channel.main_tree
+
         # get our random data from mixer
         random_data = mixer.blend(SampleContentNodeDataSchema)
-        self.root_node = tree()
-        self.exercise_image = fileobj_exercise_image()          # a vanilla image file associated with question
-        self.exercise_graphie = fileobj_exercise_graphie()      # a perseus image file associated with question
+        # a vanilla image file associated with question
+        self.exercise_image = fileobj_exercise_image()
+        # a perseus image file associated with question
+        self.exercise_graphie = fileobj_exercise_graphie()
         self.title = random_data.title
-        sample_data = {
+        self.sample_data = {
             "root_id": self.root_node.id,
             "content_data": [
                 {
@@ -152,15 +183,16 @@ class ApiAddExerciseNodesToTreeTestCase(StudioTestCase):
                                     "filename": self.exercise_image.filename(),
                                     "original_filename": None,
                                     "language": None,
-                                    "source_url": None
+                                    "source_url": None,
                                 }
                             ],
-                            "question": u"Which numbers are even?\n\nTest local image include: ![](${☣ CONTENTSTORAGE}/%s)" % self.exercise_image.filename(),
+                            "question": u"Which numbers are even?\n\nTest local image include: ![](${☣ CONTENTSTORAGE}/%s)"
+                            % self.exercise_image.filename(),
                             "hints": "[]",
-                            "answers": "[{\"answer\": \"1\", \"correct\": false, \"order\": 0}, {\"answer\": \"2\", \"correct\": True, \"order\": 1}, {\"answer\": \"3\", \"correct\": false, \"order\": 2}, {\"answer\": \"4\", \"correct\": true, \"order\": 3}, {\"answer\": \"5\", \"correct\": false, \"order\": 4}]",
+                            "answers": '[{"answer": "1", "correct": false, "order": 0}, {"answer": "2", "correct": True, "order": 1}, {"answer": "3", "correct": false, "order": 2}, {"answer": "4", "correct": true, "order": 3}, {"answer": "5", "correct": false, "order": 4}]',  # noqa
                             "raw_data": "",
                             "source_url": None,
-                            "randomize": False
+                            "randomize": False,
                         },
                         {
                             "assessment_id": "98856e24d53b57ea9023782ab6018767",
@@ -172,41 +204,52 @@ class ApiAddExerciseNodesToTreeTestCase(StudioTestCase):
                                     "filename": self.exercise_graphie.filename(),
                                     "original_filename": self.exercise_graphie.original_filename,
                                     "language": None,
-                                    "source_url": None
+                                    "source_url": None,
                                 }
                             ],
                             "question": "",
                             "hints": "[]",
                             "answers": "[]",
-                            "raw_data": u"{\"question\": {\"content\": \"What was the main idea in the passage you just read?\\n\\n[[☃ radio 1]]\\n\\n Test web+graphie image ![graph](web+graphie:${☣ CONTENTSTORAGE}/%s)\", \"images\": {}, \"widgets\": {\"radio 1\": {\"type\": \"radio\", \"alignment\": \"default\", \"static\": false, \"graded\": true, \"options\": {\"choices\": [{\"content\": \"The right answer\", \"correct\": true}, {\"content\": \"Another option\", \"correct\": false}, {\"isNoneOfTheAbove\": false, \"content\": \"Nope, not this\", \"correct\": false}], \"randomize\": false, \"multipleSelect\": false, \"countChoices\": false, \"displayCount\": null, \"hasNoneOfTheAbove\": false, \"deselectEnabled\": false}, \"version\": {\"major\": 1, \"minor\": 0}}}}, \"answerArea\": {\"calculator\": false, \"chi2Table\": false, \"periodicTable\": false, \"tTable\": false, \"zTable\": false}, \"itemDataVersion\": {\"major\": 0, \"minor\": 1}, \"hints\": []}" % self.exercise_graphie.original_filename,
+                            "raw_data": u'{"question": {"content": "What was the main idea in the passage you just read?\\n\\n[[☃ radio 1]]\\n\\n Test web+graphie image ![graph](web+graphie:${☣ CONTENTSTORAGE}/%s)", "images": {}, "widgets": {"radio 1": {"type": "radio", "alignment": "default", "static": false, "graded": true, "options": {"choices": [{"content": "The right answer", "correct": true}, {"content": "Another option", "correct": false}, {"isNoneOfTheAbove": false, "content": "Nope, not this", "correct": false}], "randomize": false, "multipleSelect": false, "countChoices": false, "displayCount": null, "hasNoneOfTheAbove": false, "deselectEnabled": false}, "version": {"major": 1, "minor": 0}}}}, "answerArea": {"calculator": false, "chi2Table": false, "periodicTable": false, "tTable": false, "zTable": false}, "itemDataVersion": {"major": 0, "minor": 1}, "hints": []}'  # noqa
+                            % self.exercise_graphie.original_filename,  # noqa
                             "source_url": None,
-                            "randomize": False
-                        }
+                            "randomize": False,
+                        },
                     ],
-                    "extra_fields": "{\"mastery_model\": \"m_of_n\", \"randomize\": true, \"m\": 1, \"n\": 2}",
-                    "role": "learner"
+                    "extra_fields": '{"mastery_model": "m_of_n", "randomize": true, "m": 1, "n": 2}',
+                    "role": "learner",
                 }
-            ]
+            ],
         }
         self.resp = self.admin_client().post(
-            "/api/internal/add_nodes",
-            data=sample_data,
-            format='json'
+            reverse_lazy("api_add_nodes_to_tree"), data=self.sample_data, format="json"
         )
+
+    def test_404_no_permission(self):
+        client = APIClient()
+        client.force_authenticate(user())
+        response = client.post(
+            reverse_lazy("api_add_nodes_to_tree"), self.sample_data, format="json"
+        )
+        self.assertEqual(response.status_code, 404)
 
     def test_returns_200_status_code(self):
         """
         Check that we return 200 if passed in a valid JSON.
         """
         # check that we returned 200 with that POST request
-        assert self.resp.status_code == 200, "Got a request error: {}".format(self.resp.content)
+        assert self.resp.status_code == 200, "Got a request error: {}".format(
+            self.resp.content
+        )
 
     def test_creates_nodes(self):
         """
         Test that it creates a node with the given title and parent.
         """
         # make sure a node with our given self.title exists, with the given parent.
-        assert ContentNode.get_nodes_with_title(title=self.title, limit_to_children_of=self.root_node.id).exists()
+        assert ContentNode.get_nodes_with_title(
+            title=self.title, limit_to_children_of=self.root_node.id
+        ).exists()
 
     def test_associated_assesment_items_with_created_node(self):
         """
@@ -216,17 +259,21 @@ class ApiAddExerciseNodesToTreeTestCase(StudioTestCase):
         c = ContentNode.objects.get(title=self.title)
 
         # there shold be no files associated with the condent node
-        assert len(c.files.all()) == 0, 'unexpected files created'
+        assert len(c.files.all()) == 0, "unexpected files created"
         # get the associated assessment items...
-        assessment_items = list(c.assessment_items.order_by('order'))
+        assessment_items = list(c.assessment_items.order_by("order"))
         # there should be two assesment items associated with the condent node
-        assert len(assessment_items) == 2, 'should have two assesment items'
+        assert len(assessment_items) == 2, "should have two assesment items"
         # created in right order?
-        assert assessment_items[0].assessment_id == 'abf45e8fd7f151adb1b3df2d751e945e', 'created in wrong order'
-        assert assessment_items[1].assessment_id == '98856e24d53b57ea9023782ab6018767', 'created in wrong order'
+        assert (
+            assessment_items[0].assessment_id == "abf45e8fd7f151adb1b3df2d751e945e"
+        ), "created in wrong order"
+        assert (
+            assessment_items[1].assessment_id == "98856e24d53b57ea9023782ab6018767"
+        ), "created in wrong order"
         # associated with content node c ?
         for assessment_item in assessment_items:
-            assert assessment_item.contentnode == c, 'not associated with content node'
+            assert assessment_item.contentnode == c, "not associated with content node"
 
     def test_exercise_image_files_associated_with_assesment_items(self):
         """
@@ -235,17 +282,323 @@ class ApiAddExerciseNodesToTreeTestCase(StudioTestCase):
         """
         c = ContentNode.objects.get(title=self.title)
 
-        question1 = c.assessment_items.get(assessment_id='abf45e8fd7f151adb1b3df2d751e945e')
-        assert len(question1.files.all()) == 1, 'wrong number of files'
+        question1 = c.assessment_items.get(
+            assessment_id="abf45e8fd7f151adb1b3df2d751e945e"
+        )
+        assert len(question1.files.all()) == 1, "wrong number of files"
         file1 = question1.files.all()[0]
-        assert file1.assessment_item == question1, 'not associated with right assessment item'
-        assert file1.filename() == self.exercise_image.filename(), 'wrong file'
-        assert file1.file_on_disk.read() == self.exercise_image.file_on_disk.read(), 'different contents'
+        assert (
+            file1.assessment_item == question1
+        ), "not associated with right assessment item"
+        assert file1.filename() == self.exercise_image.filename(), "wrong file"
+        assert (
+            file1.file_on_disk.read() == self.exercise_image.file_on_disk.read()
+        ), "different contents"
 
-        question2 = c.assessment_items.get(assessment_id='98856e24d53b57ea9023782ab6018767')
-        assert len(question2.files.all()) == 1, 'wrong number of files'
+        question2 = c.assessment_items.get(
+            assessment_id="98856e24d53b57ea9023782ab6018767"
+        )
+        assert len(question2.files.all()) == 1, "wrong number of files"
         file2 = question2.files.all()[0]
-        assert file2.assessment_item == question2, 'not associated with right assessment item'
-        assert file2.filename() == self.exercise_graphie.filename(), 'wrong file'
-        assert file2.file_on_disk.read() == self.exercise_graphie.file_on_disk.read(), 'different contents'
-        assert file2.original_filename == self.exercise_graphie.original_filename, 'wrong original_filename'
+        assert (
+            file2.assessment_item == question2
+        ), "not associated with right assessment item"
+        assert file2.filename() == self.exercise_graphie.filename(), "wrong file"
+        assert (
+            file2.file_on_disk.read() == self.exercise_graphie.file_on_disk.read()
+        ), "different contents"
+        assert (
+            file2.original_filename == self.exercise_graphie.original_filename
+        ), "wrong original_filename"
+
+
+class PublishEndpointTestCase(BaseAPITestCase):
+    def test_404_non_existent(self):
+        response = self.post(
+            reverse_lazy("api_publish_channel"), {"channel_id": uuid.uuid4().hex}
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_200_publish_successful(self):
+        self.channel.editors.add(self.user)
+        response = self.post(
+            reverse_lazy("api_publish_channel"), {"channel_id": self.channel.id}
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()["success"])
+
+    def test_404_not_authorized(self):
+        new_channel = Channel.objects.create()
+        response = self.post(
+            reverse_lazy("api_publish_channel"), {"channel_id": new_channel.id}
+        )
+        self.assertEqual(response.status_code, 404)
+
+
+class VersionEndpointTestCase(BaseAPITestCase):
+    def test_better_than_OK(self):
+        with patch(
+            "contentcuration.views.internal.VERSION_OK",
+            internal.VersionStatus(
+                version="0.0.1", status=0, message=rc.VERSION_OK_MESSAGE
+            ),
+        ):
+            response = self.post(reverse_lazy("check_version"), {"version": "0.1.1"})
+            self.assertEqual(response.status_code, 200)
+            self.assertTrue(response.json()["success"])
+            self.assertEqual(response.json()["status"], internal.VERSION_OK[1])
+
+    def test_OK(self):
+        response = self.post(reverse_lazy("check_version"), {"version": rc.VERSION_OK})
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()["success"])
+        self.assertEqual(response.json()["status"], internal.VERSION_OK[1])
+
+    def test_worse_than_OK_but_better_than_soft(self):
+        with patch(
+            "contentcuration.views.internal.VERSION_OK",
+            internal.VersionStatus(
+                version="1.0.0", status=0, message=rc.VERSION_OK_MESSAGE
+            ),
+        ), patch(
+            "contentcuration.views.internal.VERSION_SOFT_WARNING",
+            internal.VersionStatus(
+                version="0.0.1", status=1, message=rc.VERSION_SOFT_WARNING_MESSAGE
+            ),
+        ):
+            response = self.post(reverse_lazy("check_version"), {"version": "0.1.1"})
+            self.assertEqual(response.status_code, 200)
+            self.assertTrue(response.json()["success"])
+            self.assertEqual(
+                response.json()["status"], internal.VERSION_SOFT_WARNING[1]
+            )
+
+    def test_soft_warning(self):
+        response = self.post(
+            reverse_lazy("check_version"), {"version": rc.VERSION_SOFT_WARNING}
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()["success"])
+        self.assertEqual(response.json()["status"], internal.VERSION_SOFT_WARNING[1])
+
+    def test_worse_than_soft_but_better_than_hard(self):
+        with patch(
+            "contentcuration.views.internal.VERSION_SOFT_WARNING",
+            internal.VersionStatus(
+                version="1.0.0", status=1, message=rc.VERSION_SOFT_WARNING_MESSAGE
+            ),
+        ), patch(
+            "contentcuration.views.internal.VERSION_HARD_WARNING",
+            internal.VersionStatus(
+                version="0.0.1", status=2, message=rc.VERSION_HARD_WARNING_MESSAGE
+            ),
+        ):
+            response = self.post(reverse_lazy("check_version"), {"version": "0.1.1"})
+            self.assertEqual(response.status_code, 200)
+            self.assertTrue(response.json()["success"])
+            self.assertEqual(
+                response.json()["status"], internal.VERSION_HARD_WARNING[1]
+            )
+
+    def test_hard_warning(self):
+        response = self.post(
+            reverse_lazy("check_version"), {"version": rc.VERSION_HARD_WARNING}
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()["success"])
+        self.assertEqual(response.json()["status"], internal.VERSION_HARD_WARNING[1])
+
+    def test_worse_than_hard(self):
+        with patch(
+            "contentcuration.views.internal.VERSION_HARD_WARNING",
+            internal.VersionStatus(
+                version="1.0.0", status=2, message=rc.VERSION_HARD_WARNING_MESSAGE
+            ),
+        ):
+            response = self.post(reverse_lazy("check_version"), {"version": "0.1.1"})
+            self.assertEqual(response.status_code, 200)
+            self.assertTrue(response.json()["success"])
+            self.assertEqual(response.json()["status"], internal.VERSION_ERROR[1])
+
+
+class FileDiffEndpointTestCase(BaseAPITestCase):
+    def test_200_no_files(self):
+        response = self.post(reverse_lazy("file_diff"), [])
+        self.assertEqual(response.status_code, 200)
+
+    def test_200_1_file_present(self):
+        file = create_temp_file(b"test")
+        response = self.post(reverse_lazy("file_diff"), [file["name"]])
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), [])
+
+    def test_200_1_file_present_1_missing(self):
+        file = create_temp_file(b"test")
+        response = self.post(reverse_lazy("file_diff"), [file["name"], "test_file"])
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), ["test_file"])
+
+    def test_401_no_auth(self):
+        self.client.logout()
+        response = self.post(reverse_lazy("file_diff"), [])
+        self.assertEqual(response.status_code, 401)
+
+
+class GetStagedDiffEndpointTestCase(BaseAPITestCase):
+    def test_200(self):
+        response = self.post(
+            reverse_lazy("get_staged_diff_internal"), {"channel_id": self.channel.id}
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_404_no_permission(self):
+        new_channel = Channel.objects.create()
+        response = self.post(
+            reverse_lazy("get_staged_diff_internal"), {"channel_id": new_channel.id}
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_200_all_new(self):
+        self.channel.staging_tree = self.channel.main_tree
+        self.channel.main_tree = None
+        self.channel.save()
+        response = self.post(
+            reverse_lazy("get_staged_diff_internal"), {"channel_id": self.channel.id}
+        )
+        self.assertEqual(response.status_code, 200)
+
+        fields = [
+            u"File Size",
+            u"# of Topics",
+            u"# of Videos",
+            u"# of Exercises",
+            u"# of Questions",
+        ]
+        differences = [40, 2, 4, 1, 3]
+        for field, difference in zip(fields, differences):
+            diff = filter(lambda x: x["field"] == field, response.json())[0]
+            self.assertEqual(diff["difference"], difference)
+
+
+class AuthenticateUserEndpointTestCase(BaseAPITestCase):
+    def test_200_get(self):
+        response = self.get(reverse_lazy("authenticate_user_internal"))
+        self.assertEqual(response.status_code, 200)
+
+    def test_200_post(self):
+        response = self.post(reverse_lazy("authenticate_user_internal"), {})
+        self.assertEqual(response.status_code, 200)
+
+    def test_401_no_auth(self):
+        self.client.logout()
+        response = self.post(reverse_lazy("authenticate_user_internal"), {})
+        self.assertEqual(response.status_code, 401)
+
+    def test_200_response(self):
+        response = self.get(reverse_lazy("authenticate_user_internal"))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["user_id"], self.user.id)
+        self.assertEqual(response.json()["username"], unicode(self.user))
+        self.assertEqual(response.json()["first_name"], self.user.first_name)
+        self.assertEqual(response.json()["last_name"], self.user.last_name)
+        self.assertEqual(response.json()["is_admin"], self.user.is_admin)
+
+
+class APICommitChannelEndpointTestCase(BaseAPITestCase):
+    def test_200_post(self):
+        self.channel.chef_tree = self.channel.main_tree
+        self.channel.staging_tree = self.channel.main_tree
+        self.channel.save()
+        response = self.post(
+            reverse_lazy("api_finish_channel"), {"channel_id": self.channel.id}
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_404_no_permission(self):
+        new_channel = Channel.objects.create()
+        response = self.post(
+            reverse_lazy("api_finish_channel"), {"channel_id": new_channel.id}
+        )
+        self.assertEqual(response.status_code, 404)
+
+
+class APIActivateChannelEndpointTestCase(BaseAPITestCase):
+    def test_200_post(self):
+        self.channel.staging_tree = self.channel.main_tree
+        self.channel.save()
+        response = self.post(
+            reverse_lazy("activate_channel_internal"), {"channel_id": self.channel.id}
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_404_no_permission(self):
+        new_channel = Channel.objects.create()
+        response = self.post(
+            reverse_lazy("activate_channel_internal"), {"channel_id": new_channel.id}
+        )
+        self.assertEqual(response.status_code, 404)
+
+
+class CheckUserIsEditorEndpointTestCase(BaseAPITestCase):
+    def test_200_post(self):
+        response = self.post(
+            reverse_lazy("check_user_is_editor"), {"channel_id": self.channel.id}
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_404_no_permission(self):
+        new_channel = Channel.objects.create()
+        response = self.post(
+            reverse_lazy("check_user_is_editor"), {"channel_id": new_channel.id}
+        )
+        self.assertEqual(response.status_code, 404)
+
+
+class GetTreeDataEndpointTestCase(BaseAPITestCase):
+    def test_200_post(self):
+        response = self.post(
+            reverse_lazy("get_tree_data"),
+            {"channel_id": self.channel.id, "tree": "main"},
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_404_no_permission(self):
+        new_channel = Channel.objects.create()
+        response = self.post(
+            reverse_lazy("get_tree_data"),
+            {"channel_id": new_channel.id, "tree": "main"},
+        )
+        self.assertEqual(response.status_code, 404)
+
+
+class GetNodeTreeDataEndpointTestCase(BaseAPITestCase):
+    def test_200_post(self):
+        response = self.post(
+            reverse_lazy("get_node_tree_data"),
+            {"channel_id": self.channel.id, "tree": "main"},
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_404_no_permission(self):
+        new_channel = Channel.objects.create()
+        response = self.post(
+            reverse_lazy("get_node_tree_data"),
+            {"channel_id": new_channel.id, "tree": "main"},
+        )
+        self.assertEqual(response.status_code, 404)
+
+
+class GetChannelStatusBulkEndpointTestCase(BaseAPITestCase):
+    def test_200_post(self):
+        response = self.post(
+            reverse_lazy("get_channel_status_bulk"), {"channel_ids": [self.channel.id]}
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_404_no_permission(self):
+        new_channel = Channel.objects.create()
+        response = self.post(
+            reverse_lazy("get_channel_status_bulk"),
+            {"channel_ids": [self.channel.id, new_channel.id]},
+        )
+        self.assertEqual(response.status_code, 404)

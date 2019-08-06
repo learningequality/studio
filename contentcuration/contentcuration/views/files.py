@@ -97,7 +97,9 @@ def file_create(request):
     )
     if license and license.is_custom:
         new_node.license_description = preferences.get('license_description')
-    new_node.save()
+    # The orphanage is not an actual tree but just a long list of items.
+    with ContentNode.objects.disable_mptt_updates():
+        new_node.save()
     file_object = File(
         file_on_disk=contentfile,
         checksum=checksum,

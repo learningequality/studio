@@ -7,7 +7,6 @@ import sys
 import tempfile
 from collections import OrderedDict
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pdfkit
 from django.conf import settings
@@ -42,12 +41,15 @@ if sys.platform.startswith("darwin"):
     if matplotlib.get_backend().lower() == "macosx":
         matplotlib.use('PS')
 
+import matplotlib.pyplot as plt  # noqa: E402
+
 
 AUDIO_COLOR = "#F06292"
 DOCUMENT_COLOR = "#FF3D00"
 EXERCISE_COLOR = "#4DB6AC"
 HTML_COLOR = "#FF8F00"
 VIDEO_COLOR = "#283593"
+SLIDESHOW_COLOR = "#4ECE90"
 
 plt.switch_backend('agg')  # Avoid using tkinter as it causes server to stall (https://discuss.erpnext.com/t/wkhtmltopdf-error-erpnext-v7/14673/10)
 os.environ['QT_QPA_PLATFORM'] = 'offscreen'  # Must be set for tests to run (https://github.com/ipython/ipython/issues/10627)
@@ -177,24 +179,28 @@ class ExportWriter(object):
     def __init__(self, *args, **kwargs):
         self.tempfiles = []
 
-    def pluralize_constant(self, count, constant, sep=' '):
-        msgargs = {'count': count, 'sep': sep}
+    def pluralize_constant(self, count, constant):
+        data = {'count': count}
         if constant == content_kinds.TOPIC:
-            return ngettext('%(count)d%(sep)sTopic', '%(count)d%(sep)sTopics', count) % msgargs
+            return ngettext('%(count)d Topic', '%(count)d Topics', count) % data
         elif constant == content_kinds.VIDEO:
-            return ngettext('%(count)d%(sep)sVideo', '%(count)d%(sep)sVideos', count) % msgargs
+            return ngettext('%(count)d Video', '%(count)d Videos', count) % data
         elif constant == content_kinds.AUDIO:
-            return ngettext('%(count)d%(sep)sAudio', '%(count)d%(sep)sAudios', count) % msgargs
+            return ngettext('%(count)d Audio', '%(count)d Audios', count) % data
         elif constant == content_kinds.EXERCISE:
-            return ngettext('%(count)d%(sep)sExercise', '%(count)d%(sep)sExercises', count) % msgargs
+            return ngettext('%(count)d Exercise', '%(count)d Exercises', count) % data
         elif constant == content_kinds.DOCUMENT:
-            return ngettext('%(count)d%(sep)sDocument', '%(count)d%(sep)sDocuments', count) % msgargs
+            return ngettext('%(count)d Document', '%(count)d Documents', count) % data
         elif constant == content_kinds.HTML5:
-            return ngettext('%(count)d%(sep)sHTML App', '%(count)d%(sep)sHTML Apps', count) % msgargs
+            return ngettext('%(count)d Html App', '%(count)d Html Apps', count) % data
+        elif constant == content_kinds.SLIDESHOW:
+            return ngettext('%(count)d Slideshow', '%(count)d Slideshows', count) % data
         elif constant == "resource":
-            return ngettext('%(count)d%(sep)sTotal Resource', '%(count)d%(sep)sTotal Resources', count) % msgargs
+            return ngettext('%(count)d Total Resource', '%(count)d Total Resources', count) % data
+        elif constant == "resource_split":
+            return ngettext('%(count)d\nTotal Resource', '%(count)d\nTotal Resources', count) % data
         else:
-            logging.warning('No translation available for {}'.format(constant))
+            logging.warning('No translation for pluralizing {}'.format(constant))
             return '{} {}'.format(count, constant)
 
     def get_write_to_path(self, ext=None):
@@ -213,7 +219,8 @@ class ExportWriter(object):
 
 
 class ChannelDetailsWriter(ExportWriter):
-    color_selection = [AUDIO_COLOR, DOCUMENT_COLOR, EXERCISE_COLOR, HTML_COLOR, VIDEO_COLOR]
+    # Needs to be alphabetized to match content kind sorting
+    color_selection = [AUDIO_COLOR, DOCUMENT_COLOR, EXERCISE_COLOR, HTML_COLOR, SLIDESHOW_COLOR, VIDEO_COLOR]
     condensed_tag_limit = 10
     size_divisor = 100000000
     scale_text = [_("Very Small")] * 2 + [_("Small")] * 2 + [_("Average")] * 3 + [_("Large")] * 2 + [_("Very Large")] * 2
@@ -354,7 +361,7 @@ class ChannelDetailsWriter(ExportWriter):
 
         # Add center circle
         circle = plt.Circle((0, 0), center_text_ratio, fc='white')
-        centertext = self.pluralize_constant(sum(sizes), "resource", sep='\n').split('\n')
+        centertext = self.pluralize_constant(sum(sizes), "resource_split").split("\n")
         plt.annotate(centertext[0], xy=(0, 0.1), fontsize=center_text_size, ha="center")
         plt.annotate(centertext[1], xy=(0, -0.15), fontsize=center_text_size - 5, ha="center")
         fig = plt.gcf()
@@ -422,6 +429,7 @@ class ChannelDetailsPDFWriter(ChannelDetailsWriter, PDFMixin):
                 "exercise": EXERCISE_COLOR,
                 "html": HTML_COLOR,
                 "video": VIDEO_COLOR,
+                "slideshow": SLIDESHOW_COLOR,
             }
         }
         try:

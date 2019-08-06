@@ -47,7 +47,7 @@ class NodeSettingTestCase(BaseAPITestCase):
         node = cc.ContentNode.objects.get(pk=node['id'])
 
         # Node should be in garbage tree
-        self.assertTrue(garbage_node.get_descendants().filter(pk=node.pk).exists())
+        self.assertEqual(node.parent, garbage_node)
         self.assertEqual(garbage_node.tree_id, node.tree_id)
 
     def test_file_move(self):

@@ -13,10 +13,10 @@ before_install:
   - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
   - chmod +x docker-compose
   - sudo mv docker-compose /usr/local/bin
-
-after_success:
-  - coverage combine
-  - codecov
+  - nvm install 10
+  - nvm use 10
+  # Fix https://github.com/travis-ci/travis-ci/issues/8982#issuecomment-354357640
+  - python -c "import fcntl; fcntl.fcntl(1, fcntl.F_SETFL, 0)"
 
 # install the latest version of docker
 addons:
@@ -26,5 +26,7 @@ addons:
 
 script:
   - make endtoendtest
+  - yarn run lint-all
+  # - yarn run lint:py
 
 cache: yarn

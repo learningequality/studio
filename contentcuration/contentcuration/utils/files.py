@@ -6,7 +6,6 @@ import random
 import shutil
 import tempfile
 import zipfile
-from fractions import Fraction
 from multiprocessing.dummy import Pool
 
 import requests
@@ -32,7 +31,7 @@ from contentcuration.models import generate_file_on_disk_name
 from contentcuration.models import generate_object_storage_name
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
-THUMBNAIL_DIMENSION = 400
+THUMBNAIL_WIDTH = 400
 
 
 def create_file_from_contents(contents, ext=None, node=None, preset_id=None, uploaded_by=None):
@@ -233,14 +232,15 @@ def generate_thumbnail_from_channel(item, dimension=200):
         return get_thumbnail_encoding(item.thumbnail, dimension=dimension)
 
 
-def get_thumbnail_encoding(filename, dimension=THUMBNAIL_DIMENSION):
+def get_thumbnail_encoding(filename, dimension=THUMBNAIL_WIDTH):
     """
         Generates a base64 encoding for a thumbnail
         Args:
             filename (str): thumbnail to generate encoding from (must be in storage already)
-            dimension (int): how big resized image should be
+            dimension (int, optional): desired width of thumbnail. Defaults to 400.
         Returns base64 encoding of resized thumbnail
     """
+
     if filename.startswith("data:image"):
         return filename
 
@@ -248,6 +248,8 @@ def get_thumbnail_encoding(filename, dimension=THUMBNAIL_DIMENSION):
     inbuffer = StringIO.StringIO()
     outbuffer = StringIO.StringIO()
 
+    # make sure the aspect ratio between width and height is 16:9
+    thumbnail_size = [dimension, round(dimension / 1.77)]
     try:
         if not filename.startswith(settings.STATIC_ROOT):
             filename = generate_object_storage_name(checksum, filename)
@@ -260,22 +262,13 @@ def get_thumbnail_encoding(filename, dimension=THUMBNAIL_DIMENSION):
 
         with Image.open(inbuffer) as image:
             image_format = image.format
-            width, height = image.size
-            dimension = min([dimension, width, height])
-            size = [dimension, dimension]
-            ratio = Fraction(*size)
 
-            # Crop image the aspect ratio is different
-            if width > ratio * height:
-                x, y = (width - ratio * height) // 2, 0
-            else:
-                x, y = 0, (height - width / ratio) // 2
-
-            image = image.crop((x, y, width - x, height - y))
-            if image.size > size:
-                image.thumbnail(size, Image.ANTIALIAS)
-            else:
-                image.thumbnail((dimension, dimension), Image.ANTIALIAS)
+            # Note: Image.thumbnail ensures that the image will fit in the
+            # specified thumbnail size, but it retains the original image's
+            # aspect ratio. So a square image will remain square rather
+            # than being distorted to a 16:9 aspect ratio. This removes
+            # the need to make any changes like cropping the image.
+            image.thumbnail(thumbnail_size, Image.ANTIALIAS)
 
             image.save(outbuffer, image_format)
         return "data:image/{};base64,{}".format(ext[1:], base64.b64encode(outbuffer.getvalue()))

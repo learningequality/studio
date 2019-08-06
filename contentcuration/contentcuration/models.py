@@ -3,13 +3,12 @@ import hashlib
 import json
 import logging
 import os
-import pytz
 import urlparse
 import uuid
 import warnings
-
 from datetime import datetime
 
+import pytz
 from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.base_user import BaseUserManager
@@ -151,8 +150,93 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def can_view(self, channel_id):
         channel = Channel.objects.filter(pk=channel_id).first()
+        if channel and channel.public:
+            return True
         if not self.is_admin and channel and not channel.editors.filter(pk=self.pk).exists() and not channel.viewers.filter(pk=self.pk).exists():
             raise PermissionDenied("Cannot view content")
+        return True
+
+    def can_view_node(self, node):
+        if self.is_admin:
+            return True
+        root = node.get_root()
+        if root == self.clipboard_tree or root.pk == settings.ORPHANAGE_ROOT_ID:
+            return True
+        channel_id = Channel.objects.filter(Q(main_tree=root)
+                                            | Q(chef_tree=root)
+                                            | Q(trash_tree=root)
+                                            | Q(staging_tree=root)
+                                            | Q(previous_tree=root)).values_list("id", flat=True).first()
+        if not channel_id:
+            # Don't let a non-admin view orphaned nodes
+            raise PermissionDenied("Cannot view content")
+        return self.can_view(channel_id)
+
+    def can_view_nodes(self, nodes):
+        if self.is_admin:
+            return True
+        root_nodes_all = ContentNode.objects.filter(parent=None, tree_id__in=nodes.values_list("tree_id", flat=True).distinct()).distinct()
+        # If all the nodes belong to the clipboard, skip the channel check.
+
+        root_nodes = root_nodes_all.exclude(tree_id=self.clipboard_tree.tree_id).exclude(pk=settings.ORPHANAGE_ROOT_ID)
+        if root_nodes.count() == 0 and root_nodes_all.count() > 0:
+            return True
+
+        channels = Channel.objects.filter(Q(main_tree__in=root_nodes)
+                                          | Q(chef_tree__in=root_nodes)
+                                          | Q(trash_tree__in=root_nodes)
+                                          | Q(staging_tree__in=root_nodes)
+                                          | Q(previous_tree__in=root_nodes))
+        channels_user_has_perms_for = channels.filter(Q(editors__id__contains=self.id) | Q(viewers__id__contains=self.id) | Q(public=True))
+        # The channel user has perms for is a subset of all the channels that were passed in.
+        # We check the count for simplicity, as if the user does not have permissions for
+        # even one of the channels the content is drawn from, then the number of channels
+        # will be smaller.
+        total_channels = channels.distinct().count()
+        # If no channels, then these nodes are orphans - do not let them be viewed except by an admin.
+        if not total_channels or total_channels > channels_user_has_perms_for.distinct().count():
+            raise PermissionDenied("Cannot view content")
+        return True
+
+    def can_edit_node(self, node):
+        if self.is_admin:
+            return True
+        root = node.get_root()
+        if root == self.clipboard_tree or root.pk == settings.ORPHANAGE_ROOT_ID:
+            return True
+
+        channel_id = Channel.objects.filter(Q(main_tree=root)
+                                            | Q(chef_tree=root)
+                                            | Q(trash_tree=root)
+                                            | Q(staging_tree=root)
+                                            | Q(previous_tree=root)).values_list("id", flat=True).first()
+        if not channel_id:
+            # Don't let a non-admin edit orphaned nodes
+            raise PermissionDenied("Cannot edit content")
+        return self.can_edit(channel_id)
+
+    def can_edit_nodes(self, nodes):
+        if self.is_admin:
+            return True
+        root_nodes_all = ContentNode.objects.filter(parent=None, tree_id__in=nodes.values_list("tree_id", flat=True).distinct()).distinct()
+        # If all the nodes belong to the clipboard, skip the channel check.
+        root_nodes = root_nodes_all.exclude(tree_id=self.clipboard_tree.tree_id).exclude(pk=settings.ORPHANAGE_ROOT_ID)
+        if root_nodes.count() == 0 and root_nodes_all.count() > 0:
+            return True
+        channels = Channel.objects.filter(Q(main_tree__in=root_nodes)
+                                          | Q(chef_tree__in=root_nodes)
+                                          | Q(trash_tree__in=root_nodes)
+                                          | Q(staging_tree__in=root_nodes)
+                                          | Q(previous_tree__in=root_nodes))
+        channels_user_can_edit = channels.filter(editors__id__contains=self.id)
+        # The channel user has perms for is a subset of all the channels that were passed in.
+        # We check the count for simplicity, as if the user does not have permissions for
+        # even one of the channels the content is drawn from, then the number of channels
+        # will be smaller.
+        total_channels = channels.distinct().count()
+        # If no channels, then these nodes are orphans - do not let them be edited except by an admin.
+        if not total_channels or total_channels > channels_user_can_edit.distinct().count():
+            raise PermissionDenied("Cannot edit content")
         return True
 
     def check_space(self, size, checksum):
@@ -623,6 +707,9 @@ class Channel(models.Model):
 
         return '/static/img/kolibri_placeholder.png'
 
+    def has_changes(self):
+        return self.main_tree.get_descendants(include_self=True).filter(changed=True).exists()
+
     def get_date_modified(self):
         return self.main_tree.get_descendants(include_self=True).aggregate(last_modified=Max('modified'))['last_modified']
 
@@ -722,7 +809,7 @@ class ChannelSet(models.Model):
 
 class ContentTag(models.Model):
     id = UUIDField(primary_key=True, default=uuid.uuid4)
-    tag_name = models.CharField(max_length=30)
+    tag_name = models.CharField(max_length=50)
     channel = models.ForeignKey('Channel', related_name='tags', blank=True, null=True, db_index=True)
 
     def __str__(self):
@@ -776,7 +863,7 @@ class ContentNode(MPTTModel, models.Model):
     """
     By default, all nodes have a title and can be used as a topic.
     """
-    # The id should be the same between the content curation server and Kolibri.
+    # Random id used internally on Studio (See `node_id` for id used in Kolibri)
     id = UUIDField(primary_key=True, default=uuid.uuid4)
 
     # the content_id is used for tracking a user's interaction with a piece of
@@ -816,8 +903,10 @@ class ContentNode(MPTTModel, models.Model):
                                    help_text=_("Ascending, lowest number shown first"))
     copyright_holder = models.CharField(max_length=200, null=True, blank=True, default="",
                                         help_text=_("Organization of person who holds the essential rights"))
-    cloned_source = TreeForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='clones')
+    # legacy field...
     original_node = TreeForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='duplicates')
+    cloned_source = TreeForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='clones')
+
     thumbnail_encoding = models.TextField(blank=True, null=True)
 
     created = models.DateTimeField(auto_now_add=True, verbose_name=_("created"))
@@ -1244,6 +1333,13 @@ class AssessmentItem(models.Model):
     deleted = models.BooleanField(default=False)
 
 
+class SlideshowSlide(models.Model):
+    contentnode = models.ForeignKey('ContentNode', related_name="slideshow_slides", blank=True, null=True,
+                                    db_index=True)
+    sort_order = models.FloatField(default=1.0)
+    metadata = JSONField(default={})
+
+
 class StagedFile(models.Model):
     """
     Keeps track of files uploaded through Ricecooker to avoid user going over disk quota limit
@@ -1265,6 +1361,7 @@ class File(models.Model):
                                     blank=True)
     contentnode = models.ForeignKey(ContentNode, related_name='files', blank=True, null=True, db_index=True)
     assessment_item = models.ForeignKey(AssessmentItem, related_name='files', blank=True, null=True, db_index=True)
+    slideshow_slide = models.ForeignKey(SlideshowSlide, related_name='files', blank=True, null=True, db_index=True)
     file_format = models.ForeignKey(FileFormat, related_name='files', blank=True, null=True, db_index=True)
     preset = models.ForeignKey(FormatPreset, related_name='files', blank=True, null=True, db_index=True)
     language = models.ForeignKey(Language, related_name='files', blank=True, null=True)
@@ -1341,6 +1438,7 @@ class PrerequisiteContentRelationship(models.Model):
 
     class Meta:
         unique_together = ['target_node', 'prerequisite']
+        auto_created = True  # Avoids `AttributeError: Cannot set values on a ManyToManyField which specifies an intermediary model`
 
     def clean(self, *args, **kwargs):
         # self reference exception
