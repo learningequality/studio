@@ -519,10 +519,14 @@ def process_image_strings(content, zf):
 
 
 def map_prerequisites(root_node):
+
     for n in ccmodels.PrerequisiteContentRelationship.objects.filter(prerequisite__tree_id=root_node.tree_id)\
             .values('prerequisite__node_id', 'target_node__node_id'):
-        target_node = kolibrimodels.ContentNode.objects.get(pk=n['target_node__node_id'])
-        target_node.has_prerequisite.add(n['prerequisite__node_id'])
+        try:
+            target_node = kolibrimodels.ContentNode.objects.get(pk=n['target_node__node_id'])
+            target_node.has_prerequisite.add(n['prerequisite__node_id'])
+        except ccmodels.CotnentNode.DoesNotExist as e:
+            logging.error('Unable to find prerequisite {}'.format(str(e)))
 
 
 def map_channel_to_kolibri_channel(channel):

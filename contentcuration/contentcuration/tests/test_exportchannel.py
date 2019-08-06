@@ -21,6 +21,7 @@ from contentcuration.utils.publish import convert_channel_thumbnail
 from contentcuration.utils.publish import create_bare_contentnode
 from contentcuration.utils.publish import create_content_database
 from contentcuration.utils.publish import create_slideshow_manifest
+from contentcuration.utils.publish import map_prerequisites
 from contentcuration.utils.publish import MIN_SCHEMA_VERSION
 
 pytestmark = pytest.mark.django_db
@@ -78,7 +79,7 @@ def channel():
         leaf = mixer.blend(cc.ContentNode, parent=level2, kind=video())
         leaf2 = mixer.blend(cc.ContentNode, parent=level2, kind=exercise(), title='EXERCISE 1',
                             extra_fields="{\"mastery_model\":\"do_all\",\"randomize\":true}")
-        leaf3 = mixer.blend(cc.ContentNode, parent=level2, kind=slideshow(), title="SLIDESHOW 1", extra_fields="{}")
+        mixer.blend(cc.ContentNode, parent=level2, kind=slideshow(), title="SLIDESHOW 1", extra_fields="{}")
 
         video_file = fileobj_video()
         video_file.contentnode = leaf
@@ -203,4 +204,12 @@ class ChannelExportUtilityFunctionTestCase(StudioTestCase):
         kolibrinode = create_bare_contentnode(ccnode, ccnode.language, content_channel.id, content_channel.name)
         create_slideshow_manifest(ccnode, kolibrinode)
         manifest_collection = cc.File.objects.filter(contentnode=ccnode, preset_id=u"slideshow_manifest")
-        assert len(manifest_collection) is 1
+        assert len(manifest_collection) == 1
+
+
+class ChannelExportPrerequisiteTestCase(StudioTestCase):
+    def test_nonexistent_prerequisites(self):
+        channel = cc.Channel.objects.create()
+        node1 = cc.ContentNode.objects.create(kind_id="exercise", parent_id=channel.main_tree.pk)
+        cc.ContentNode.objects.create(kind_id="exercise", prerequisite=[node1.pk])
+        map_prerequisites(node1)
