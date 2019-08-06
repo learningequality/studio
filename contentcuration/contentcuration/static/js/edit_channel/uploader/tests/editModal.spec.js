@@ -6,35 +6,21 @@ import { modes } from '../constants';
 import EditModal from './../views/EditModal.vue';
 import EditList from './../views/EditList.vue';
 import EditView from './../views/EditView.vue';
-import { localStore, mockFunctions } from './data.js';
+import { localStore, mockFunctions, generateNode, DEFAULT_TOPIC, DEFAULT_TOPIC2 } from './data.js';
 import State from 'edit_channel/state';
-
-const targetNode = {
-  title: 'test',
-  metadata: {},
-};
-
-State.current_channel = {
-  get: () => targetNode,
-};
-State.preferences = {};
 
 Vue.use(Vuetify);
 
 document.body.setAttribute('data-app', true); // Vuetify prints a warning without this
 
-function _generateNode(props = {}) {
-  return {
-    id: Math.random()
-      .toString(36)
-      .substring(7),
-    kind: 'topic',
-    prerequisite: [],
-    is_prerequisite_of: [],
-    ...props,
-  };
-}
-const testNodes = [_generateNode(), _generateNode()];
+const testNodes = [DEFAULT_TOPIC, DEFAULT_TOPIC2];
+State.preferences = {};
+State.currentNode = {
+  id: 'test-root',
+  metadata: {
+    max_sort_order: 0,
+  },
+};
 
 function makeWrapper(props = {}) {
   let wrapper = mount(EditModal, {
@@ -42,7 +28,6 @@ function makeWrapper(props = {}) {
     attachToDocument: true,
     propsData: props,
   });
-  // wrapper.setData({debouncedSave: jest.fn()});
   return wrapper;
 }
 
@@ -109,7 +94,7 @@ describe('editModal', () => {
           .find('.v-dialog')
           .isVisible()
       ).toBe(false);
-      localStore.commit('edit_modal/SET_NODES', [_generateNode({ prerequisite: ['test'] })]);
+      localStore.commit('edit_modal/SET_NODES', [generateNode({ prerequisite: ['test'] })]);
       wrapper.find({ ref: 'copybutton' }).trigger('click');
       expect(
         wrapper
@@ -140,6 +125,15 @@ describe('editModal', () => {
       let originalLength = localStore.state.edit_modal.nodes.length;
       wrapper.vm.openModal();
       expect(localStore.state.edit_modal.nodes.length).toEqual(originalLength + 1);
+    });
+    it('should not automatically trigger a save event on open', () => {
+      mockFunctions.saveNodes.mockReset();
+      wrapper.setData({
+        debouncedSave: mockFunctions.saveNodes,
+      });
+      localStore.commit('edit_modal/SET_MODE', modes.NEW_TOPIC);
+      wrapper.vm.openModal();
+      expect(mockFunctions.saveNodes).not.toHaveBeenCalled();
     });
     it('should automatically create a new item on NEW_EXERCISE mode', () => {
       localStore.commit('edit_modal/SET_MODE', modes.NEW_EXERCISE);
@@ -191,153 +185,35 @@ describe('editModal', () => {
     });
   });
   describe('on save', () => {
-    it('clicking save button should trigger save', () => {
+    beforeEach(() => {
       localStore.commit('edit_modal/SET_MODE', modes.EDIT);
-      localStore.commit('edit_modal/SET_NODES', [_generateNode({ title: 'Title' })]);
+      localStore.commit('edit_modal/SET_NODES', [generateNode({ title: 'Title' })]);
+      localStore.commit('edit_modal/SET_NODE', 0);
+      mockFunctions.saveNodes.mockReset();
+    });
+    it('clicking save button should trigger save', () => {
       expect(mockFunctions.saveNodes).not.toHaveBeenCalled();
       wrapper.find({ ref: 'savebutton' }).trigger('click');
       expect(mockFunctions.saveNodes).toHaveBeenCalled();
     });
-    it('autosaving', () => {});
+    it('autosaving should trigger when a change is made', () => {
+      wrapper.setData({
+        debouncedSave: mockFunctions.saveNodes,
+      });
+      expect(mockFunctions.saveNodes).not.toHaveBeenCalled();
+      localStore.commit('edit_modal/UPDATE_NODE', { title: 'Updated Title' });
+      wrapper.vm.$nextTick(() => {
+        expect(mockFunctions.saveNodes).toHaveBeenCalled();
+      });
+    });
+  });
+  describe('on create', () => {
+    it('EditList addNode emitted event should add new node to list', () => {
+      localStore.commit('edit_modal/SET_NODES', []);
+      localStore.commit('edit_modal/SET_MODE', modes.NEW_TOPIC);
+      wrapper.find(EditList).vm.$emit('addNode');
+      expect(localStore.state.edit_modal.nodes).toHaveLength(1);
+      expect(localStore.state.edit_modal.nodes[0].kind).toEqual('topic');
+    });
   });
 });
-//       <VToolbar>
-//         <VToolbarItems>
-//           <VFlex v-if="!isViewOnly" alignCenter class="last-saved-time">
-//             <div v-if="saveError">
-//               {{ $tr('saveFailedText') }}
-//             </div>
-//             <div v-else-if="invalidNodes.length">
-//               {{ $tr('autosaveDisabledMessage', {count: invalidNodes.length}) }}
-//             </div>
-//             <div v-else-if="saving">
-//               <VProgressCircular indeterminate size="15" width="2" color="white" />
-//               {{ $tr('savingIndicator') }}
-//             </div>
-//             <div v-else-if="lastSaved">
-//               {{ savedMessage }}
-//             </div>
-//           </VFlex>
-//         </VToolbarItems>
-//       </VToolbar>
-
-//   <!-- Alert for failed save -->
-//   <Alert
-//     ref="savefailedalert"
-//     :header="$tr('saveFailedHeader')"
-//     :text="$tr('saveFailedText')"
-//   />
-
-// const SAVE_TIMER = 5000;
-// const SAVE_MESSAGE_TIMER = 10000;
-
-// export default {
-//   name: 'EditModal',
-//   data() {
-//     return {
-//       dialog: false,
-//       lastSaved: null,
-//       saving: false,
-//       savedMessage: null,
-//       saveError: false,
-//       interval: null,
-//       updateInterval: null,
-//       drawer: {
-//         open: true,
-//       },
-//       debouncedSave: _.debounce(() => {
-//         if (!this.invalidNodesOverridden.length) {
-//           this.saveContent()
-//             .then(() => {
-//               this.updateSavedTime();
-//               this.updateInterval = setInterval(this.updateSavedTime, SAVE_MESSAGE_TIMER);
-//             })
-//             .catch(() => (this.saveError = true));
-//         }
-//       }, SAVE_TIMER),
-//     };
-//   },
-//   computed: {
-//     ...mapState('edit_modal', ['nodes', 'changes', 'mode', 'targetNode']),
-//     ...mapGetters('edit_modal', ['changed', 'invalidNodes', 'invalidNodesOverridden']),
-//   },
-//   watch: {
-//     changes: {
-//       deep: true,
-//       handler() {
-//         if (this.changed) this.debouncedSave();
-//       },
-//     },
-//   },
-//   methods: {
-//     ...mapActions('edit_modal', ['saveNodes', 'copyNodes']),
-//     ...mapMutations('edit_modal', {
-//       select: 'SELECT_NODE',
-//       deselectAll: 'RESET_SELECTED',
-//       reset: 'RESET_STATE',
-//       prepareForSave: 'PREP_NODES_FOR_SAVE',
-//       setNode: 'SET_NODE',
-//       addNodeToList: 'ADD_NODE',
-//     }),
-//     createNode() {
-//       let titleArgs = { parent: this.targetNode.title };
-//       if (this.mode === modes.NEW_TOPIC) {
-//         this.addNodeToList({
-//           title: this.$tr('topicDefaultTitle', titleArgs),
-//           kind: 'topic',
-//         });
-//       } else if (this.mode === modes.NEW_EXERCISE) {
-//         this.addNodeToList({
-//           title: this.$tr('exerciseDefaultTitle', titleArgs),
-//           kind: 'exercise',
-//         });
-//       }
-//     },
-//     updateSavedTime() {
-//       this.savedMessage = this.$tr('savedMessage', {
-//         relativeTime: this.$formatRelative(this.lastSaved),
-//       });
-//     },
-//     saveContent() {
-//       this.saveError = false;
-//       return new Promise((resolve, reject) => {
-//         clearInterval(this.updateInterval);
-//         if (this.invalidNodesOverridden.length) {
-//           resolve();
-//         } else {
-//           this.saving = true;
-//           this.saveNodes()
-//             .then(() => {
-//               this.lastSaved = Date.now();
-//               this.saving = false;
-//               resolve();
-//             })
-//             .catch(reject);
-//         }
-//       });
-//     },
-//     handleSave() {
-//       // Prepare for save sets all as not new and
-//       // activates validation on all nodes
-//       this.prepareForSave();
-//       if (this.invalidNodes.length) {
-//         this.setNode(this.invalidNodes[0]);
-//       } else {
-//         this.saveContent()
-//           .then(this.closeModal)
-//           .catch(() => {
-//             this.$refs.savefailedalert.prompt();
-//             this.dismissPrompt();
-//           });
-//       }
-//     },
-//     handleClose() {
-//       this.debouncedSave.cancel();
-//       if (this.changed) {
-//         this.$refs.saveprompt.prompt();
-//       } else {
-//         this.closeModal();
-//       }
-//     }
-//   },
-// };

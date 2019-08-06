@@ -41,6 +41,9 @@ if (State.current_channel) {
   State.current_channel.fetch({ async: false });
 }
 
+// TODO: update this to use proper parent tree logic
+State.currentNode = State.current_channel.get('main_tree');
+
 new Vue({
   el: 'sandbox',
   store,

@@ -25,7 +25,7 @@
         <VFlex grow>
           <VTabs v-model="currentTab" fixedTabs sliderColor="primary">
             <!-- Details tab -->
-            <VTab :href="`#${tabs.DETAILS}`">
+            <VTab ref="detailstab" :href="`#${tabs.DETAILS}`">
               {{ $tr(tabs.DETAILS) }}
               <v-tooltip v-if="invalidSelected" top>
                 <template v-slot:activator="{ on }">
@@ -38,12 +38,12 @@
             </VTab>
 
             <!-- Preview tab -->
-            <VTab v-if="showPreviewTab" :href="`#${tabs.PREVIEW}`">
+            <VTab v-if="showPreviewTab" ref="previewtab" :href="`#${tabs.PREVIEW}`">
               {{ $tr(tabs.PREVIEW) }}
             </VTab>
 
             <!-- Questions tab -->
-            <VTab v-if="showQuestionsTab" :href="`#${tabs.QUESTIONS}`">
+            <VTab v-if="showQuestionsTab" ref="questiontab" :href="`#${tabs.QUESTIONS}`">
               {{ $tr(tabs.QUESTIONS) }}
               <VChip v-if="oneSelected.assessment_items.length" color="gray" dark>
                 {{ oneSelected.assessment_items.length }}
@@ -51,7 +51,11 @@
             </VTab>
 
             <!-- Prerequisites tab -->
-            <VTab v-if="showPrerequisitesTab" :href="`#${tabs.PREREQUISITES}`">
+            <VTab
+              v-if="showPrerequisitesTab"
+              ref="prerequisitetab"
+              :href="`#${tabs.PREREQUISITES}`"
+            >
               {{ $tr(tabs.PREREQUISITES) }}
               <VChip v-if="oneSelected.prerequisite.length" color="gray" dark>
                 {{ oneSelected.prerequisite.length }}
@@ -60,7 +64,7 @@
           </VTabs>
 
           <VTabsItems v-model="currentTab">
-            <VTabItem :key="tabs.DETAILS" :value="tabs.DETAILS" lazy>
+            <VTabItem :key="tabs.DETAILS" ref="detailswindow" :value="tabs.DETAILS" lazy>
               <VAlert :value="selected.length > 1" type="info" outline>
                 {{ countText }}
               </VAlert>
@@ -69,13 +73,18 @@
               </VAlert>
               <DetailsTabView :viewOnly="viewOnly" />
             </VTabItem>
-            <VTabItem :key="tabs.PREVIEW" :value="tabs.PREVIEW" lazy>
+            <VTabItem :key="tabs.PREVIEW" ref="previewwindow" :value="tabs.PREVIEW" lazy>
               Preview
             </VTabItem>
-            <VTabItem :key="tabs.QUESTIONS" :value="tabs.QUESTIONS" lazy>
+            <VTabItem :key="tabs.QUESTIONS" ref="questionwindow" :value="tabs.QUESTIONS" lazy>
               Questions
             </VTabItem>
-            <VTabItem :key="tabs.PREREQUISITES" :value="tabs.PREREQUISITES" lazy>
+            <VTabItem
+              :key="tabs.PREREQUISITES"
+              ref="prerequisiteswindow"
+              :value="tabs.PREREQUISITES"
+              lazy
+            >
               Prerequisites
             </VTabItem>
           </VTabsItems>
@@ -113,6 +122,12 @@
     components: {
       DetailsTabView,
     },
+    props: {
+      isClipboard: {
+        type: Boolean,
+        default: false,
+      },
+    },
     data() {
       return {
         currentTab: null,
@@ -125,7 +140,7 @@
     },
     computed: {
       ...mapGetters('edit_modal', ['selected', 'allExercises', 'allResources', 'invalidNodes']),
-      ...mapState('edit_modal', ['isClipboard', 'nodes', 'selectedIndices', 'mode']),
+      ...mapState('edit_modal', ['nodes', 'selectedIndices', 'mode']),
       noItemText() {
         if (!this.nodes.length) {
           if (this.mode === modes.NEW_EXERCISE) return this.$tr('addExerciseText');

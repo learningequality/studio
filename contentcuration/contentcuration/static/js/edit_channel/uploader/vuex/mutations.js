@@ -8,9 +8,7 @@ export function RESET_STATE(state) {
   Object.assign(state, {
     nodes: [],
     selectedIndices: [],
-    isClipboard: false,
     changes: {},
-    targetNode: State.current_channel.get('main_tree'), // TODO: replace with actual target
     mode: modes.VIEW_ONLY,
   });
 }
@@ -87,6 +85,7 @@ export function SET_LOADED_NODES(state, nodes) {
     if (match) {
       _.extendOwn(match, value);
       match.changesStaged = false;
+      match['_COMPLETE'] = true;
     }
   });
 
@@ -225,8 +224,8 @@ export function ADD_NODE(state, payload) {
     role_visibility: 'learner',
     changesStaged: true,
     isNew: true,
-    parent: state.targetNode.id,
-    sort_order: state.targetNode.metadata.max_sort_order + state.nodes.length + 1,
+    parent: State.currentNode.id,
+    sort_order: State.currentNode.metadata.max_sort_order + state.nodes.length + 1,
     _COMPLETE: true,
     ...payload,
   });

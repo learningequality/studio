@@ -1,10 +1,11 @@
 <template>
-  <div class="details-edit-view">
+  <div v-if="Object.keys(changes).length" class="details-edit-view">
     <VForm ref="form" v-model="valid" :lazyValidation="newContent" :disabled="viewOnly">
       <VLayout grid wrap>
         <!-- Title -->
         <VFlex v-if="oneSelected" xs12>
           <VTextField
+            ref="title"
             v-model="title"
             :counter="(viewOnly)? null : 200"
             maxlength="200"
@@ -13,13 +14,13 @@
             autofocus
             required
             :readonly="viewOnly"
-            class="title-input"
           />
         </VFlex>
 
         <!-- Description -->
         <VFlex v-if="oneSelected" xs12>
           <VTextarea
+            ref="description"
             v-model="description"
             :label="$tr('descriptionLabel')"
             :counter="!viewOnly && 400"
@@ -31,7 +32,7 @@
         <!-- Tags -->
         <VFlex xs12>
           <VCombobox
-            ref="tagbox"
+            ref="tags"
             v-model="contentTags"
             :items="tags"
             :searchInput.sync="tagText"
@@ -68,6 +69,7 @@
             <!-- Language -->
             <VFlex sm12 md8 lg6>
               <LanguageDropdown
+                ref="language"
                 v-model="language"
                 :hint="languageHint"
                 :placeholder="getPlaceholder('language')"
@@ -78,6 +80,7 @@
             <VFlex sm12 md8 lg6>
               <VisibilityDropdown
                 v-if="allResources"
+                ref="role_visibility"
                 v-model="role"
                 :placeholder="getPlaceholder('role_visibility')"
                 :required="!changes.role_visibility.varied"
@@ -96,6 +99,8 @@
             <!-- Mastery -->
             <VFlex sm12>
               <MasteryDropdown
+                v-if="changes.extra_fields"
+                ref="mastery_model"
                 v-model="masteryModel"
                 :placeholder="getExtraFieldPlaceholder('mastery_model')"
                 :required="!changes.extra_fields.mastery_model.varied"
@@ -109,6 +114,8 @@
             <v-spacer />
             <VFlex sm12>
               <v-checkbox
+                v-if="changes.extra_fields"
+                ref="randomize"
                 v-model="randomizeOrder"
                 :label="$tr('randomizeQuestionLabel')"
                 :indeterminate="changes.extra_fields.randomize.varied"
@@ -130,13 +137,14 @@
           <v-card class="auth-section">
             <VFlex v-if="oneSelected && isImported" xs12>
               <VBtn color="primary" flat class="import-link" :href="importUrl" target="_blank">
-                {{ $tr('importedFromButtonText', {channel: 'Sample Channel'}) }}
+                {{ $tr('importedFromButtonText', {channel: selected[0].original_channel.name}) }}
                 <v-icon>launch</v-icon>
               </VBtn>
             </VFlex>
             <!-- Author -->
             <VFlex sm12 md8 lg6>
               <VCombobox
+                ref="author"
                 v-model="author"
                 :items="authors"
                 :label="$tr('authorLabel')"
@@ -154,6 +162,7 @@
             <!-- Provider -->
             <VFlex sm12 md8 lg6>
               <VCombobox
+                ref="provider"
                 v-model="provider"
                 :items="providers"
                 :label="$tr('providerLabel')"
@@ -171,6 +180,7 @@
             <!-- Aggregator -->
             <VFlex sm12 md8 lg6>
               <VCombobox
+                ref="aggregator"
                 v-model="aggregator"
                 :items="aggregators"
                 :label="$tr('aggregatorLabel')"
@@ -188,10 +198,11 @@
             <!-- License -->
             <VFlex sm12 md8 lg6>
               <LicenseDropdown
+                ref="license"
                 v-model="license"
-                :required="!changes.license.varied"
+                :required="!changes.license.varied && !disableAuthEdits"
                 :readonly="viewOnly || disableAuthEdits"
-                :descriptionRequired="!changes.license_description.varied"
+                :descriptionRequired="!changes.license_description.varied && !disableAuthEdits"
                 :placeholder="getPlaceholder('license')"
                 :descriptionPlaceholder="getPlaceholder('license_description')"
               />
@@ -201,11 +212,12 @@
             <VFlex sm12 md8 lg6>
               <VCombobox
                 v-if="copyrightHolderRequired"
+                ref="copyright_holder"
                 v-model="copyrightHolder"
                 :items="copyrightHolders"
                 :label="$tr('copyrightHolderLabel') + (viewOnly || disableAuthEdits ? '' : ' *')"
                 maxlength="200"
-                :required="!changes.copyright_holder.varied"
+                :required="!changes.copyright_holder.varied && !disableAuthEdits"
                 :rules="rules.copyrightHolder"
                 :placeholder="getPlaceholder('copyright_holder')"
                 autoSelectFirst
@@ -434,7 +446,7 @@
       },
       importUrl() {
         let selected = this.selected[0];
-        let baseUrl = window.Urls.channel_view_only(selected.original_channel.id);
+        let baseUrl = window.Urls.channel_view_only(selected.original_channel);
         return baseUrl + '/' + selected.original_source_node_id;
       },
       newContent() {
@@ -448,8 +460,8 @@
       changes() {
         if (!this.viewOnly) {
           this.$nextTick(() => {
-            if (this.$refs.form)
-              this.newContent ? this.$refs.form.resetValidation() : this.$refs.form.validate();
+            if (this.$refs.form) this.$refs.form.validate();
+            this.newContent ? this.$refs.form.resetValidation() : this.$refs.form.validate();
           });
         }
       },
@@ -498,7 +510,7 @@
   }
 
   .details-edit-view {
-    max-width: 1000px;
+    max-width: 1800px;
     padding: 30px;
     margin: 0 auto;
 
@@ -538,6 +550,15 @@
             margin-left: 0;
           }
           .auth-section {
+            .import-link {
+              margin-left: -15px;
+              font-weight: bold;
+              text-transform: none;
+              .v-icon {
+                margin-left: 10px;
+                font-size: 12pt;
+              }
+            }
             .flex {
               padding-right: 30px;
             }
@@ -551,23 +572,11 @@
       }
     }
 
-    .import-link {
-      margin-left: -15px;
-      font-weight: bold;
-      text-transform: none;
-      .v-icon {
-        margin-left: 10px;
-        font-size: 12pt;
-      }
-    }
-
-    .imported-disabled-warning {
-      font-weight: bold;
-      color: @gray-500;
-      text-align: center;
-    }
     .v-form {
       margin-top: 30px;
+      /deep/ .v-chip__content {
+        color: black; // Read-only tag box grays out tags
+      }
       .flex:not(:first-child) {
         /deep/ .v-input {
           margin-top: 25px;
@@ -592,9 +601,6 @@
           &::after {
             border: 0;
           }
-        }
-        /deep/ .v-chip {
-          color: black;
         }
       }
     }

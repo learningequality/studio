@@ -51,7 +51,7 @@
           </VToolbarItems>
         </VToolbar>
         <VCardText>
-          <EditView />
+          <EditView :isClipboard="isClipboard" />
         </VCardText>
       </VCard>
     </VDialog>
@@ -96,6 +96,7 @@
   import { modes } from '../constants';
   import EditList from './EditList.vue';
   import EditView from './EditView.vue';
+  import State from 'edit_channel/state';
   import Dialog from 'edit_channel/sharedComponents/Dialog.vue';
   import Alert from 'edit_channel/sharedComponents/Alert.vue';
 
@@ -136,6 +137,12 @@
       Dialog,
       Alert,
     },
+    props: {
+      isClipboard: {
+        type: Boolean,
+        default: false,
+      },
+    },
     data() {
       return {
         dialog: false,
@@ -161,7 +168,7 @@
       };
     },
     computed: {
-      ...mapState('edit_modal', ['nodes', 'changes', 'mode', 'targetNode']),
+      ...mapState('edit_modal', ['nodes', 'changes', 'mode']),
       ...mapGetters('edit_modal', ['changed', 'invalidNodes', 'invalidNodesOverridden']),
       isViewOnly() {
         return this.mode === modes.VIEW_ONLY;
@@ -207,7 +214,7 @@
         }
       },
       createNode() {
-        let titleArgs = { parent: this.targetNode.title };
+        let titleArgs = { parent: State.currentNode.title };
         if (this.mode === modes.NEW_TOPIC) {
           this.addNodeToList({
             title: this.$tr('topicDefaultTitle', titleArgs),

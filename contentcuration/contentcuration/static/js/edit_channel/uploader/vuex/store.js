@@ -21,9 +21,7 @@ const store = new Vuex.Store({
       state: {
         nodes: [],
         selectedIndices: [],
-        isClipboard: false,
         changes: {},
-        targetNode: State.current_channel.get('main_tree'),
         mode: modes.VIEW_ONLY,
       },
       getters: getters,
@@ -33,4 +31,5 @@ const store = new Vuex.Store({
   },
 });
 
+export default store;
 module.exports = store;

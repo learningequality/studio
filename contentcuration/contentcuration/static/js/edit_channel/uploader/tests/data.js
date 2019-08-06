@@ -1,4 +1,6 @@
+import _ from 'underscore';
 import Vue from 'vue';
+import Constants from 'edit_channel/constants';
 
 const Vuex = require('vuex');
 var mutations = require('edit_channel/uploader/vuex/mutations');
@@ -6,50 +8,58 @@ var getters = require('edit_channel/uploader/vuex/getters');
 
 Vue.use(Vuex);
 
-export const DEFAULT_TOPIC = {
-  id: Math.random()
-    .toString(36)
-    .substring(7),
-  title: Math.random()
-    .toString(36)
-    .substring(7),
-  kind: 'topic',
-};
+export const editableFields = [
+  'language',
+  'title',
+  'description',
+  'license',
+  'license_description',
+  'copyright_holder',
+  'author',
+  'role_visibility',
+  'aggregator',
+  'provider',
+];
 
-export const DEFAULT_VIDEO = {
-  id: Math.random()
-    .toString(36)
-    .substring(7),
-  title: Math.random()
-    .toString(36)
-    .substring(7),
-  kind: 'video',
-};
+let specialPermissions = _.findWhere(Constants.Licenses, { is_custom: true });
+export function generateNode(props = {}) {
+  let data = {};
+  _.each(editableFields, f => {
+    data[f] = Math.random()
+      .toString(36)
+      .substring(7);
+  });
 
-export const DEFAULT_EXERCISE = {
-  id: Math.random()
-    .toString(36)
-    .substring(7),
-  title: Math.random()
-    .toString(36)
-    .substring(7),
-  kind: 'exercise',
-};
+  let extra_fields = {
+    mastery_model: 'do_all',
+    randomize: false,
+  };
 
-// const editableFields = [
-//   'language',
-//   'title',
-//   'description',
-//   'license',
-//   'license_description',
-//   'copyright_holder',
-//   'author',
-//   'role_visibility',
-//   'aggregator',
-//   'provider',
-// ];
+  return {
+    id: Math.random()
+      .toString(36)
+      .substring(7),
+    kind: 'topic',
+    prerequisite: [],
+    is_prerequisite_of: [],
+    files: [{}],
+    assessment_items: [],
+    extra_fields: extra_fields,
+    tags: [],
+    ancestors: [],
+    ...data,
+    ...props,
+    license: specialPermissions.id,
+    language: 'en-PT',
+    role_visibility: 'coach',
+  };
+}
 
-// const extraFields = ['mastery_model', 'm', 'n', 'randomize'];
+export const DEFAULT_TOPIC = generateNode({ kind: 'topic' });
+export const DEFAULT_TOPIC2 = generateNode({ kind: 'topic' });
+export const DEFAULT_VIDEO = generateNode({ kind: 'video' });
+export const DEFAULT_EXERCISE = generateNode({ kind: 'exercise' });
+export const DEFAULT_EXERCISE2 = generateNode({ kind: 'exercise' });
 
 export const mockFunctions = {
   saveNodes: jest.fn(),
@@ -65,15 +75,19 @@ export const localStore = new Vuex.Store({
       state: {
         nodes: [],
         selectedIndices: [],
-        isClipboard: false,
         changes: {},
-        targetNode: { id: 'root-node', title: 'Root Node' },
         mode: 'VIEW_ONLY',
       },
       getters: getters,
       mutations: mutations,
       actions: {
-        loadNodes: mockFunctions.loadNodes,
+        loadNodes: context => {
+          _.each(context.state.selectedIndices, i => {
+            context.state.nodes[i]['_COMPLETE'] = true;
+          });
+          context.commit('SET_CHANGES');
+          mockFunctions.loadNodes();
+        },
         saveNodes: mockFunctions.saveNodes,
         removeNode: mockFunctions.removeNode,
         copyNodes: mockFunctions.copyNodes,
