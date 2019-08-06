@@ -525,7 +525,7 @@ def map_prerequisites(root_node):
         try:
             target_node = kolibrimodels.ContentNode.objects.get(pk=n['target_node__node_id'])
             target_node.has_prerequisite.add(n['prerequisite__node_id'])
-        except ccmodels.CotnentNode.DoesNotExist as e:
+        except ccmodels.ContentNode.DoesNotExist as e:
             logging.error('Unable to find prerequisite {}'.format(str(e)))
 
 
