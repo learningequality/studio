@@ -49,6 +49,13 @@ function recursiveIssuer(m) {
 module.exports = (env = {}) => {
   const dev = env.dev;
   const hot = env.hot;
+  const postCSSLoader = {
+    loader: 'postcss-loader',
+    options: {
+      config: { path: path.resolve(__dirname, './postcss.config.js') },
+      sourceMap: dev,
+    },
+  };
   return {
     context: bundleEntryDir,
     entry: {
@@ -117,11 +124,11 @@ module.exports = (env = {}) => {
         },
         {
           test: /\.less?$/,
-          use: [hot ? `style-loader` : MiniCssExtractPlugin.loader, `css-loader`, 'less-loader'],
+          use: [hot ? `style-loader` : MiniCssExtractPlugin.loader, `css-loader`, postCSSLoader, 'less-loader'],
         },
         {
           test: /\.css?$/,
-          use: [hot ? `style-loader` : MiniCssExtractPlugin.loader, `css-loader`],
+          use: [hot ? `style-loader` : MiniCssExtractPlugin.loader, `css-loader`, postCSSLoader],
         },
         {
           test: /\.vue?$/,

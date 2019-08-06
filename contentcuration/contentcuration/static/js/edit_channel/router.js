@@ -53,6 +53,12 @@ var ChannelEditRouter = Backbone.Router.extend({
       State.current_channel.get(data.is_staging ? 'staging_tree' : 'main_tree').node_id;
     this.update_url(data.topic, data.node);
 
+    let store = State.Store;
+
+    store.commit('SET_EDIT_MODE', data.edit_mode_on);
+    // TODO: Once topic tree has been migrated to vue, move this logic there
+    store.commit('publish/SET_CHANNEL', State.current_channel.toJSON());
+
     var EditViews = require('edit_channel/tree_edit/views');
     new EditViews.TreeEditView({
       el: $('#main-content-area'),
@@ -73,12 +79,6 @@ var ChannelEditRouter = Backbone.Router.extend({
         trash_root: State.current_channel.get_root('trash_tree'),
       });
     }
-
-    let store = State.Store;
-
-    store.commit('SET_EDIT_MODE', data.edit_mode_on);
-    // TODO: Once topic tree has been migrated to vue, move this logic there
-    store.commit('publish/SET_CHANNEL', State.current_channel.toJSON());
 
     new Vue({
       el: '#channel-publish-button',

@@ -47,8 +47,7 @@
     $trs: {
       loading: 'Loading collections...',
       noChannelSetsFound:
-        'You can package together multiple Studio channels to create a collection.' +
-        ' Use a collection token to make multiple channels available for import at once in Kolibri!',
+        'You can package together multiple Studio channels to create a collection. Use a collection token to make multiple channels available for import at once in Kolibri!',
       addChannelSetTitle: 'Create a new collection of channelsn',
       addChannelSetButton: 'Collection',
       aboutChannelSets: 'About Collections',
