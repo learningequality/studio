@@ -7,7 +7,7 @@
 
 {% blocktrans with channel_token=token %}Token: {{ channel_token }}{% endblocktrans %}
 
-{% blocktrans with channel_id=channel.pk %}ID: {{ channel_id }}{% endblocktrans %}
+{% blocktrans with channel_id=channel.pk %}ID (for Kolibri version 0.6.0 and below): {{ channel_id }}{% endblocktrans %}
 
 {% trans "Thanks for using our site!" %}
 
