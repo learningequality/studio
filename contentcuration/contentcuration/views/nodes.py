@@ -246,15 +246,13 @@ def get_nodes_by_ids_complete(request, ids):
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
 @api_view(['GET'])
-def get_topic_details(request, channel_id):
-    """ Generates data for topic contents. Used for look-inside previews
+def get_channel_details(request, channel_id):
+    """ Generates data for channel contents. Used for look-inside previews
         Keyword arguments:
-            contentnode_id (str): id of topic node to get details from
+            channel_id (str): id of channel to get details from
     """
     # Get nodes and channel
-    channel = Channel.objects.get(pk=channel_id)
-    contentnode_id = channel.main_tree.id
-    node = ContentNode.objects.get(pk=contentnode_id)
+    node = ContentNode.objects.get(channel_main=channel_id)
     try:
         request.user.can_view_node(node)
     except PermissionDenied:

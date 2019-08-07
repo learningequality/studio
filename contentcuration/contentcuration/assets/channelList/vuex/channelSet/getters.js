@@ -11,7 +11,7 @@ export function getChannelSet(state) {
   };
 }
 
-export function getChannelSetIsDirty(state) {
+export function getChannelSetIsUnsaved(state) {
   return function(channelSetId) {
     const set = state.channelSetsMap[channelSetId];
     return set ? channelSetLastSavedState.hasUnsavedChanges(set) : false;

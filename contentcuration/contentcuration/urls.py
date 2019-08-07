@@ -461,7 +461,6 @@ urlpatterns = [
     url(r'^channels/$', views.channel_list, name='channels'),
     url(r'^(?P<channel_id>[^/]+)/edit', views.redirect_to_channel_edit, name='redirect_to_channel_edit'),
     url(r'^(?P<channel_id>[^/]+)/view', views.redirect_to_channel_view, name='redirect_to_channel_view'),
-    url(r'^channels/(?P<channel_id>[^/]{32})/?$', views.redirect_to_channel, name='redirect_to_channel'),
     url(r'^channels/(?P<channel_id>[^/]{32})/edit', views.channel, name='channel'),
     url(r'^channels/(?P<channel_id>[^/]{32})/view', views.channel_view_only, name='channel_view_only'),
     url(r'^channels/(?P<channel_id>[^/]{32})/staging', views.channel_staging, name='channel_staging'),
@@ -519,7 +518,7 @@ urlpatterns += [
     url(r'^api/get_node_path/(?P<topic_id>[^/]+)/(?P<tree_id>[^/]+)/(?P<node_id>[^/]*)$', node_views.get_node_path, name='get_node_path'),
     url(r'^api/duplicate_node_inline$', node_views.duplicate_node_inline, name='duplicate_node_inline'),
     url(r'^api/delete_nodes$', node_views.delete_nodes, name='delete_nodes'),
-    url(r'^api/get_topic_details/(?P<contentnode_id>[^/]*)$', node_views.get_topic_details, name='get_topic_details'),
+    url(r'^api/get_channel_details/(?P<channel_id>[^/]*)$', node_views.get_channel_details, name='get_channel_details'),
 ]
 
 # Add file api enpoints

@@ -82,7 +82,7 @@ export function deleteChannel(context, channelId) {
 }
 
 export function loadChannelDetails(context, channelId) {
-  return client.get(window.Urls.get_topic_details(channelId)).then(response => {
+  return client.get(window.Urls.get_channel_details(channelId)).then(response => {
     return response.data;
   });
 }
