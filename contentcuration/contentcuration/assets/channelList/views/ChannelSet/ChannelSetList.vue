@@ -1,5 +1,16 @@
 <template>
   <VContainer fluid>
+    <VBtn
+      v-if="!loading"
+      color="primary"
+      fixed
+      right
+      fab
+      :title="$tr('addChannelSetTitle')"
+      @click="newChannelSet"
+    >
+      <VIcon>add</VIcon>
+    </VBtn>
     <VLayout row wrap justify-center>
       <VFlex xs12 sm10 md6>
         <VLayout row wrap justify-space-between>
@@ -24,17 +35,6 @@
                 </VBtn>
               </template>
             </PrimaryDialog>
-          </VFlex>
-          <VFlex xs2>
-            <VBtn
-              :title="$tr('addChannelSetTitle')"
-              color="primary"
-              @click="newChannelSet"
-            >
-              <VIcon>
-                add
-              </VIcon> {{ $tr('addChannelSetButton') }}
-            </VBtn>
           </VFlex>
         </VLayout>
         <VLayout row justify-center>

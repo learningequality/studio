@@ -114,7 +114,7 @@
       </VContainer>
       <VCardActions>
         <VBtn flat color="blue" @click="close">
-          {{ $tr('cancelButtonLabel') }}
+          {{ $tr('closeButtonLabel') }}
         </VBtn>
         <div style="margin-left: auto;">
           <VBtn
@@ -129,11 +129,10 @@
           >
             {{ $tr('saveButtonLabel') }}
           </VBtn>
-          <span
+          <VProgressCircular
             v-show="saving"
-            class="spinner pull-right"
-          >
-          </span>
+            indeterminate
+          />
           <span v-show="error" class="red-text error-text pull-right">
             {{ $tr('errorText') }}
           </span>
@@ -173,7 +172,7 @@
     $trs: {
       newSetHeader: 'New Collection',
       editingSetHeader: 'Editing Collection',
-      cancelButtonLabel: 'Close',
+      closeButtonLabel: 'Close',
       saveButtonLabel: 'Save',
       saveCloseButtonLabel: 'Save & Close',
       noChangesTitle: 'No changes detected',
@@ -205,7 +204,7 @@
           // Couldn't verify the channelset details, so go back!
           // We should probaly replace this with a 404 page, as
           // when navigating in from an external link (as this behaviour
-          // would often be from - it produces a confusing back step)
+          // would often be from) it produces a confusing back step
           vm.$router.back();
         }
       });
@@ -219,7 +218,7 @@
     computed: {
       ...mapGetters('channelSet', [
         'getChannelSet',
-        'getChannelSetIsDirty',
+        'getChannelSetIsUnsaved',
         'getChannelSetIsValid',
       ]),
       ...mapGetters('channelList', { availableChannels: 'channels' }),
@@ -268,7 +267,7 @@
         if (this.isNewSet) {
           return this.nameValid && this.channelCount;
         }
-        return this.getChannelSetIsDirty(this.channelSetId) && this.getChannelSetIsValid(this.channelSetId);
+        return this.getChannelSetIsUnsaved(this.channelSetId) && this.getChannelSetIsValid(this.channelSetId);
       },
       saveButtonTitle() {
         if (this.saving) {
@@ -345,27 +344,5 @@
 
 
 <style lang="less" scoped>
-
-  @import '../../../../static/less/global-variables.less';
-
-  @keyframes spin {
-    from {
-      transform: scale(1) rotate(0deg);
-    }
-    to {
-      transform: scale(1) rotate(360deg);
-    }
-  }
-  .spinner {
-    margin-right: 15px;
-    font-size: 20pt;
-    color: @blue-500;
-    vertical-align: middle;
-    animation: spin 1.5s infinite linear;
-  }
-
-  .channels-move {
-    transition: transform 1s;
-  }
 
 </style>

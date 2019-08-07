@@ -42,13 +42,10 @@
       </VBtn>
       <VSpacer/>
       <VBtn
-        flat
-        icon
         color="error"
-        :title="$tr('deleteChannelSetTitle')"
         @click.prevent="deleteDialog=true"
       >
-        <VIcon>delete</VIcon>
+        {{ $tr('deleteChannelSetTitle') }}
       </VBtn>
     </VCardActions>
     <PrimaryDialog v-model="deleteDialog" :title="$tr('deleteChannelSetTitle')">
@@ -80,7 +77,7 @@
   export default {
     name: 'ChannelSetItem',
     $trs: {
-      deleteChannelSetTitle: 'Delete Collection',
+      deleteChannelSetTitle: 'Delete',
       deleteChannelSetText: 'Are you sure you want to PERMANENTLY delete this channel collection?',
       channelCount: '{count, plural,\n =1 {# Channel}\n other {# Channels}}',
       cancel: 'Cancel',

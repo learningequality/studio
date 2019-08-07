@@ -525,7 +525,7 @@
       ...mapState(['currentLanguage']),
       ...mapGetters('channelList', ['getChannel']),
       channel() {
-        return this.getChannel(this.channelId);
+        return this.getChannel(this.channelId) || {};
       },
       canEdit() {
         return this.channel.edit && !this.channel.ricecooker_version;

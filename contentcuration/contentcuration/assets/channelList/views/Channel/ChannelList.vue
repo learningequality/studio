@@ -1,15 +1,18 @@
 <template>
   <VContainer fluid>
+    <VBtn
+      v-if="isEditable && !loading"
+      color="primary"
+      fixed
+      right
+      fab
+      :title="$tr('channel')"
+      @click="newChannel"
+    >
+      <VIcon>add</VIcon>
+    </VBtn>
     <VLayout row wrap justify-center>
       <VFlex xs12 sm10 md6>
-        <VLayout row wrap justify-end>
-          <VFlex xs2>
-            <VBtn v-if="isEditable" color="primary" @click="newChannel">
-              <VIcon>add</VIcon>
-              {{ $tr('channel') }}
-            </VBtn>
-          </VFlex>
-        </VLayout>
         <VLayout row justify-center>
           <VFlex xs12>
             <template v-if="loading">
@@ -72,7 +75,7 @@
     },
     data() {
       return {
-        loading: true,
+        loading: false,
         newSetId: generateTempId(),
       };
     },
@@ -95,15 +98,20 @@
     },
     beforeRouteEnter(to, from, next) {
       if(listTypeValidator(to.params.listType)) {
-        return next(vm => {
-          vm.loadData(to.params.listType);
-        });
+        if (to.name === RouterNames.CHANNELS) {
+          return next(vm => {
+            vm.loadData(to.params.listType);
+          });
+        }
+        return next();
       }
       return next(false);
     },
     beforeRouteUpdate(to, from, next) {
       if(listTypeValidator(to.params.listType)) {
-        this.loadData(to.params.listType);
+        if (to.name === RouterNames.CHANNELS) {
+          this.loadData(to.params.listType);
+        }
         return next();
       }
       return next(false);
