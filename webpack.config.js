@@ -16,10 +16,10 @@ const djangoProjectDir = path.resolve('contentcuration');
 const staticFilesDir = path.resolve(djangoProjectDir, 'contentcuration', 'static');
 const staticJsDir = path.resolve(staticFilesDir, 'js');
 const staticLessDir = path.resolve(staticFilesDir, 'less');
-const assetsDir = path.resolve(djangoProjectDir, 'contentcuration', 'assets');
+const srcDir = path.resolve(djangoProjectDir, 'contentcuration', 'frontend');
 
 const bundleEntryDir = path.resolve(staticJsDir, 'bundle_modules');
-const bundleOutputDir = path.resolve(staticJsDir, 'bundles');
+const bundleOutputDir = path.resolve(staticFilesDir, 'studio');
 
 const jqueryDir = path.resolve('node_modules', 'jquery');
 const studioJqueryDir = path.resolve(staticJsDir, 'utils', 'studioJquery');
@@ -63,10 +63,10 @@ module.exports = (env = {}) => {
     entry: {
       // Use arrays for every entry to allow for hot reloading.
       channel_edit: [
-        path.resolve(djangoProjectDir, 'contentcuration', 'assets/channelEdit/index.js'),
+        path.resolve(djangoProjectDir, 'contentcuration', 'frontend/channelEdit/index.js'),
       ],
       channel_list: [
-        path.resolve(djangoProjectDir, 'contentcuration', 'assets/channelList/index.js'),
+        path.resolve(djangoProjectDir, 'contentcuration', 'frontend/channelList/index.js'),
       ],
       administration: ['./administration.js'],
       settings: ['./settings.js'],
@@ -173,7 +173,7 @@ module.exports = (env = {}) => {
         edit_channel: path.resolve(staticJsDir, 'edit_channel'),
         less: path.resolve(staticJsDir, 'less'),
         utils: path.resolve(staticJsDir, 'utils'),
-        shared: path.resolve(assetsDir, 'shared'),
+        shared: path.resolve(srcDir, 'shared'),
         jquery: studioJqueryDir,
         // TODO just use modules alias
         rawJquery: jqueryDir,
