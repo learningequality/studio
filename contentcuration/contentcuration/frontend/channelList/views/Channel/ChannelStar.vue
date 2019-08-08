@@ -6,13 +6,13 @@
     color="primary"
     @click.stop.prevent="toggleStar"
   >
-    <VIcon>{{ channel.bookmark ? 'star' : 'star_border' }}</VIcon>
+    <VIcon>{{ bookmark ? 'star' : 'star_border' }}</VIcon>
   </VBtn>
 </template>
 
 <script>
 
-  import { mapActions } from 'vuex';
+  import { mapMutations } from 'vuex';
 
   export default {
     name: 'Star',
@@ -21,24 +21,26 @@
       star: 'Add Star',
     },
     props: {
-      channel: {
-        type: Object,
+      channelId: {
+        type: String,
+        required: true,
+      },
+      bookmark: {
+        type: Boolean,
         required: true,
       },
     },
     computed: {
       starText() {
-        return this.channel.bookmark ? this.$tr('unstar') : this.$tr('star');
+        return this.bookmark ? this.$tr('unstar') : this.$tr('star');
       },
     },
     methods: {
-      ...mapActions('channelList', ['addStar', 'removeStar']),
+      ...mapMutations('channelList', {
+        toggleBookmark: 'TOGGLE_BOOKMARK',
+      }),
       toggleStar() {
-        if (!this.channel.bookmark) {
-          this.addStar(this.channel.id)
-        } else {
-          this.removeStar(this.channel.id);
-        }
+        this.toggleBookmark(this.channelId);
       },
     },
   };

@@ -82,7 +82,8 @@
       </VBtn>
       <VSpacer/>
       <ChannelStar
-        :channel="channel"
+        :channelId="channelId"
+        :bookmark="channel.bookmark"
       />
     </VCardActions>
   </VCard>
@@ -114,14 +115,17 @@
       ChannelStar,
     },
     props: {
-      channel: {
-        type: Object,
+      channelId: {
+        type: String,
         required: true,
       },
     },
     computed: {
       ...mapState('channelList', ['activeChannel']),
       ...mapGetters('channelList', ['getChannel']),
+      channel() {
+        return this.getChannel(this.channelId) || {};
+      },
       picture() {
         return (
           (this.channel.thumbnail_encoding && this.channel.thumbnail_encoding.base64) ||
@@ -131,19 +135,16 @@
       language() {
         return Constants.Languages.find(language => language.id === this.channel.language);
       },
-      isSelected() {
-        return this.activeChannel && this.channel.id === this.activeChannel.id;
-      },
       channelDetailsLink() {
         return {
           name: RouterNames.CHANNEL_DETAILS,
           params: {
-            channelId: this.channel.id,
+            channelId: this.channelId,
           },
         };
       },
       openChannelLink() {
-        return window.Urls.channel() + `#/channel/${this.channel.id}`;
+        return window.Urls.channel() + `#/channel/${this.channelId}`;
       },
     },
   };

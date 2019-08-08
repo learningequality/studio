@@ -54,8 +54,8 @@ export function UPDATE_CHANNEL(
   }
 }
 
-export function SET_CHANNEL_BOOKMARK(state, { id, bookmark }) {
-  state.channelsMap[id].bookmark = bookmark;
+export function TOGGLE_BOOKMARK(state, id) {
+  state.channelsMap[id].bookmark = !state.channelsMap[id].bookmark;
 }
 
 /* INVITATION MUTATIONS */

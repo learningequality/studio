@@ -5,43 +5,26 @@ import { channelLastSavedState } from './index';
 
 
 /* CHANNEL LIST ACTIONS */
-export function loadChannelList(context, { listType, ids } = {}) {
+export function loadChannelList(context, listType) {
   const params = {};
   if (listType) {
     params[listType] = true;
   }
-  if (ids) {
-    params['ids'] = ids;
-  }
-  return client.get(window.Urls['channelslim-list'](), { params }).then(response => {
+  return client.get(window.Urls['channel-list'](), { params }).then(response => {
     const channels = response.data;
     context.commit('ADD_CHANNELS', channels);
     return channels;
   });
 }
 
-export function addStar(context, channelId) {
-  context.commit('SET_CHANNEL_BOOKMARK', { id: channelId, bookmark: true });
-  return client
-    .post(window.Urls.add_bookmark(), {
-      channel_id: channelId,
-      user_id: context.rootGetters.currentUserId,
-    })
-    .catch(() => {
-      context.commit('SET_CHANNEL_BOOKMARK', { id: channelId, bookmark: false });
-    });
-}
-
-export function removeStar(context, channelId) {
-  context.commit('SET_CHANNEL_BOOKMARK', { id: channelId, bookmark: false });
-  return client
-    .post(window.Urls.remove_bookmark(), {
-      channel_id: channelId,
-      user_id: context.rootGetters.currentUserId,
-    })
-    .catch(() => {
-      context.commit('SET_CHANNEL_BOOKMARK', { id: channelId, bookmark: true });
-    });
+export function loadChannel(context, id) {
+  return client.get(window.Urls['channel-detail'](id)).then(response => {
+    const channel = response.data;
+    context.commit('ADD_CHANNELS', [channel]);
+    return channel;
+  }).catch(() => {
+    return;
+  });
 }
 
 /* CHANNEL EDITOR ACTIONS */
@@ -65,7 +48,10 @@ export function saveChannel(context, channelId) {
       return client
         .patch(window.Urls['channel-detail'](channelId), channelData)
         .then(response => {
-          context.commit('ADD_CHANNEL', response.data);
+          // If successful the data will just be true, so update our last saved state with the current vuex state.
+          if (response.data) {
+            channelLastSavedState.storeLastSavedState(context.getters.getChannel(channelId));
+          }
           return null;
         });
     }

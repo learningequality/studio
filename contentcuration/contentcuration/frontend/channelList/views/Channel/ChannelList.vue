@@ -31,7 +31,7 @@
               <ChannelItem
                 v-for="channel in listChannels"
                 :key="channel.id"
-                :channel="channel"
+                :channelId="channel.id"
               />
             </template>
             <router-view v-if="!loading"/>
@@ -141,7 +141,7 @@
       },
       loadData(listType) {
         this.loading = true;
-        this.loadChannelList({ listType }).then(() => {
+        this.loadChannelList(listType).then(() => {
           this.loading = false;
         });
       },

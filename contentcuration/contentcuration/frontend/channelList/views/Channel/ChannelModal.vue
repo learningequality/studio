@@ -53,11 +53,15 @@
             <VBtn class="upper" color="error" @click="deleteChannel">
               {{ $tr('deleteChannel') }}
             </VBtn>
+            <VBtn class="upper" color="success" @click="save">
+              {{ $tr('save') }}
+            </VBtn>
           </template>
         </VFlex>
         <VFlex xs1>
           <ChannelStar
-            :channel="channel"
+            :channelId="channelId"
+            :bookmark="channel.bookmark"
           />
         </VFlex>
       </VLayout>
@@ -635,7 +639,7 @@
       },
     },
     methods: {
-      ...mapActions('channelList', ['saveChannel', 'addStar', 'removeStar', 'loadChannelList', 'loadChannelDetails']),
+      ...mapActions('channelList', ['saveChannel', 'loadChannel', 'loadChannelDetails']),
       ...mapMutations('channelList', {
         updateChannel: 'UPDATE_CHANNEL',
       }),
@@ -647,9 +651,9 @@
             return;
           }
           // If not, try to load the channel
-          this.loadChannelList({ids: channelId }).then(channels => {
+          this.loadChannel(channelId).then(channel => {
             // Did our fetch return any channels, then we have a channel!
-            if (channels.length) {
+            if (channel) {
               resolve();
               return;
             }
