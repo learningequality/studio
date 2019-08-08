@@ -23,6 +23,7 @@ from contentcuration.utils.publish import create_content_database
 from contentcuration.utils.publish import create_slideshow_manifest
 from contentcuration.utils.publish import map_prerequisites
 from contentcuration.utils.publish import MIN_SCHEMA_VERSION
+from contentcuration.utils.publish import set_channel_icon_encoding
 
 pytestmark = pytest.mark.django_db
 
@@ -39,6 +40,12 @@ def fileobj_video(contents=None):
         filecontents = "".join(random.sample(string.printable, 20))
     # leverage existing function in testdata
     file_data = create_studio_file(filecontents, preset='high_res_video', ext='mp4')
+    return file_data['db_file']
+
+
+def thumbnail():
+    image_data = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+    file_data = create_studio_file(image_data.decode('base64'), preset='channel_thumbnail', ext='png')
     return file_data['db_file']
 
 
@@ -101,7 +108,7 @@ def channel():
         item4.contentnode = leaf2
         item4.save()
 
-    channel = mixer.blend(cc.Channel, main_tree=root, name='testchannel', thumbnail="")
+    channel = mixer.blend(cc.Channel, main_tree=root, name='testchannel', thumbnail=str(thumbnail()))
 
     return channel
 
@@ -136,8 +143,9 @@ class ExportChannelTestCase(StudioTestCase):
 
     def setUp(self):
         super(ExportChannelTestCase, self).setUp()
-        content_channel = channel()
-        create_content_database(content_channel.id, True, None, True)
+        self.content_channel = channel()
+        set_channel_icon_encoding(self.content_channel)
+        create_content_database(self.content_channel, True, None, True)
 
     def tearDown(self):
         super(ExportChannelTestCase, self).tearDown()
@@ -172,6 +180,9 @@ class ExportChannelTestCase(StudioTestCase):
     def test_contentnode_file_size_data(self):
         for file in models.File.objects.all().prefetch_related('local_file'):
             self.assertEqual(file.file_size, file.local_file.file_size)
+
+    def test_channel_icon_encoding(self):
+        self.assertIsNotNone(self.content_channel.icon_encoding)
 
     @classmethod
     def tearDownClass(cls):
