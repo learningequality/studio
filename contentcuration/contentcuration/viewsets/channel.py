@@ -14,6 +14,7 @@ from django_filters.rest_framework import FilterSet
 from le_utils.constants import content_kinds
 from rest_framework import serializers
 from rest_framework import viewsets
+from rest_framework.status import HTTP_201_CREATED
 from rest_framework.response import Response
 
 from contentcuration.models import Channel
@@ -87,12 +88,17 @@ class ChannelSerializer(serializers.ModelSerializer):
 
     def save(self, **kwargs):
         bookmark = self.validated_data.pop("bookmark", None)
+        created = self.instance is None
         instance = super(ChannelSerializer, self).save(**kwargs)
         if "request" in self.context:
+            if created:
+                # If this has been newly created add the current user as an editor
+                instance.editors.add(self.context["request"].user)
             if bookmark:
                 instance.bookmarked_by.add(self.context["request"].user)
             else:
                 instance.bookmarked_by.remove(self.context["request"].user)
+        return instance
 
 
 class ChannelViewSet(viewsets.ModelViewSet):
@@ -202,8 +208,17 @@ class ChannelViewSet(viewsets.ModelViewSet):
         data = map(self._map_fields, self._serialize_queryset(queryset) or [])
         return Response(data)
 
-    def retrieve(self, request, pk, *args, **kwargs):
+    def serialize_object(self, pk):
         queryset = self.filter_queryset(self.get_queryset())
+        return self._map_fields(self._serialize_queryset(queryset).filter(pk=pk).get())
+
+    def retrieve(self, request, pk, *args, **kwargs):
+        return Response(self.serialize_object(pk))
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
         return Response(
-            self._map_fields(self._serialize_queryset(queryset).filter(pk=pk).get())
+            self.serialize_object(serializer.instance.id), status=HTTP_201_CREATED
         )

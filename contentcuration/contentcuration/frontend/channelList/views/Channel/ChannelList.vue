@@ -133,6 +133,8 @@
           language: this.preferences ? this.preferences.language : this.language,
           content_defaults: this.preferences,
           thumbnail_url: '',
+          bookmark: false,
+          edit: true,
         });
         this.$router.push({ name: RouterNames.CHANNEL_DETAILS, params: {channelId: this.newId }});
       },
