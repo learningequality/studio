@@ -9,8 +9,8 @@ from tempfile import TemporaryFile
 import pytest
 from django.core.files.storage import default_storage
 from le_utils.constants import format_presets
-from mixer.backend.django import mixer
 
+from contentcuration.tests.utils import mixer
 from contentcuration import models as cc
 
 pytestmark = pytest.mark.django_db
@@ -138,7 +138,12 @@ def node(data, parent=None):
 
     # Create exercises
     elif data['kind_id'] == "exercise":
-        extra_fields = "{{\"mastery_model\":\"{}\",\"randomize\":true,\"m\":{},\"n\":{}}}".format(data['mastery_model'], data.get('m') or 0, data.get('n') or 0)
+        extra_fields = {
+            'mastery_model': data['mastery_model'],
+            'randomize': True,
+            'm': data.get('m') or 0,
+            'n': data.get('n') or 0
+        }
         new_node = cc.ContentNode(
             kind=exercise(),
             parent=parent,

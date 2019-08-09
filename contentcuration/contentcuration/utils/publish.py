@@ -176,7 +176,7 @@ def create_slideshow_manifest(ccnode, kolibrinode, user_id=None):
         with tempfile.NamedTemporaryFile(prefix="slideshow_manifest_", delete=False) as temp_manifest:
             temp_filepath = temp_manifest.name
 
-            temp_manifest.write(ccnode.extra_fields)
+            temp_manifest.write(json.dumps(ccnode.extra_fields))
 
             size_on_disk = temp_manifest.tell()
             temp_manifest.seek(0)
@@ -355,8 +355,7 @@ def create_perseus_exercise(ccnode, kolibrinode, exercise_data, user_id=None):
 def process_assessment_metadata(ccnode, kolibrinode):
     # Get mastery model information, set to default if none provided
     assessment_items = ccnode.assessment_items.all().order_by('order')
-    exercise_data = json.loads(ccnode.extra_fields) if ccnode.extra_fields else {}
-
+    exercise_data = ccnode.extra_fields if ccnode.extra_fields else {}
     randomize = exercise_data.get('randomize') if exercise_data.get('randomize') is not None else True
     assessment_item_ids = [a.assessment_id for a in assessment_items]
 
