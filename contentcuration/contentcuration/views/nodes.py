@@ -148,7 +148,7 @@ def get_prerequisites(request, get_postrequisites, ids):
 @permission_classes((IsAuthenticated,))
 @api_view(['GET'])
 def get_total_size(request, ids):
-    nodes = ContentNode.objects.prefetch_related('files', 'children')\
+    nodes = ContentNode.objects.prefetch_related('assessment_items', 'files', 'children')\
                        .exclude(kind_id=content_kinds.EXERCISE, published=False)\
                        .filter(id__in=ids.split(",")).get_descendants(include_self=True)\
                        .values('files__checksum', 'files__file_size')\
