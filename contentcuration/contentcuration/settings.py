@@ -89,7 +89,7 @@ INSTALLED_APPS = (
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
 
-REDIS_URL = "redis://:{password}@{endpoint}:/".format(
+REDIS_URL = "redis://:{password}@{endpoint}/".format(
     password=os.getenv("CELERY_REDIS_PASSWORD") or "",
     endpoint=os.getenv("CELERY_BROKER_ENDPOINT") or "localhost:6379")
 
