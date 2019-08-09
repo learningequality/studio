@@ -58,15 +58,17 @@ class EarlyExit(BaseException):
 
 def send_emails(channel, user_id):
     subject = render_to_string('registration/custom_email_subject.txt', {'subject': _('Kolibri Studio Channel Published')})
+    token = channel.secret_tokens.filter(is_primary=True).first()
+    token = '{}-{}'.format(token.token[:5], token.token[-5:])
 
     if user_id:
         user = ccmodels.User.objects.get(pk=user_id)
-        message = render_to_string('registration/channel_published_email.txt', {'channel': channel, 'user': user})
+        message = render_to_string('registration/channel_published_email.txt', {'channel': channel, 'user': user, 'token': token})
         user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )
     else:
         # Email all users about updates to channel
         for user in itertools.chain(channel.editors.all(), channel.viewers.all()):
-            message = render_to_string('registration/channel_published_email.txt', {'channel': channel, 'user': user})
+            message = render_to_string('registration/channel_published_email.txt', {'channel': channel, 'user': user, 'token': token})
             user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )
 
 
