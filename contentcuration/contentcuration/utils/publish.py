@@ -175,7 +175,7 @@ def create_slideshow_manifest(ccnode, kolibrinode, user_id=None):
         with tempfile.NamedTemporaryFile(prefix="slideshow_manifest_", delete=False) as temp_manifest:
             temp_filepath = temp_manifest.name
 
-            temp_manifest.write(ccnode.extra_fields)
+            temp_manifest.write(json.dumps(ccnode.extra_fields))
 
             size_on_disk = temp_manifest.tell()
             temp_manifest.seek(0)

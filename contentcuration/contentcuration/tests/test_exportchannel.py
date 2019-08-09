@@ -79,7 +79,7 @@ def channel():
             'mastery_model': 'do_all',
             'randomize': True
         })
-        leaf3 = mixer.blend(cc.ContentNode, parent=level2, kind=slideshow(), title="SLIDESHOW 1", extra_fields=dict())
+        leaf3 = mixer.blend(cc.ContentNode, parent=level2, kind=slideshow(), title="SLIDESHOW 1", extra_fields={})
 
         video_file = fileobj_video()
         video_file.contentnode = leaf
@@ -200,7 +200,7 @@ class ChannelExportUtilityFunctionTestCase(StudioTestCase):
 
     def test_create_slideshow_manifest(self):
         content_channel = cc.Channel.objects.create()
-        ccnode = cc.ContentNode.objects.create(kind_id=slideshow(), extra_fields="{}")
+        ccnode = cc.ContentNode.objects.create(kind_id=slideshow(), extra_fields={})
         kolibrinode = create_bare_contentnode(ccnode, ccnode.language, content_channel.id, content_channel.name)
         create_slideshow_manifest(ccnode, kolibrinode)
         manifest_collection = cc.File.objects.filter(contentnode=ccnode, preset_id=u"slideshow_manifest")
