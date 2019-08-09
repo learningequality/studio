@@ -58,8 +58,8 @@ class Migration(migrations.Migration):
                 ('sort_order', models.FloatField(blank=True, null=True)),
                 ('license_owner', models.CharField(blank=True, max_length=200)),
                 ('author', models.CharField(blank=True, max_length=200)),
-                ('kind', models.CharField(blank=True, choices=[(b'topic', b'Topic'), (b'video', b'Video'), (b'audio', b'Audio'),
-                                                               (b'exercise', b'Exercise'), (b'document', b'Document'), (b'html5', b'HTML5 App')], max_length=200)),
+                ('kind', models.CharField(blank=True, choices=[('topic', b'Topic'), ('video', b'Video'), ('audio', b'Audio'),
+                                                               ('exercise', b'Exercise'), ('document', b'Document'), ('html5', b'HTML5 App')], max_length=200)),
                 ('available', models.BooleanField(default=False)),
                 ('stemmed_metaphone', models.CharField(blank=True, max_length=1800)),
                 ('lft', models.PositiveIntegerField(db_index=True, editable=False)),
@@ -84,13 +84,13 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', kolibri_content.models.UUIDField(primary_key=True, serialize=False)),
                 ('available', models.BooleanField(default=False)),
-                ('preset', models.CharField(blank=True, choices=[(b'high_res_video', b'High Resolution'), (b'low_res_video', b'Low Resolution'), (b'vector_video', b'Vectorized'), (b'video_thumbnail', b'Thumbnail'), (b'video_subtitle', b'Subtitle'), (b'audio', b'Audio'), (b'audio_thumbnail', b'Thumbnail'), (b'document', b'Document'), (b'document_thumbnail', b'Thumbnail'), (
-                    b'exercise', b'Exercise'), (b'exercise_thumbnail', b'Thumbnail'), (b'exercise_image', b'Exercise Image'), (b'exercise_graphie', b'Exercise Graphie'), (b'channel_thumbnail', b'Channel Thumbnail'), (b'topic_thumbnail', b'Thumbnail'), (b'html5_zip', b'HTML5 Zip'), (b'html5_thumbnail', b'HTML5 Thumbnail')], max_length=150)),
+                ('preset', models.CharField(blank=True, choices=[('high_res_video', b'High Resolution'), ('low_res_video', b'Low Resolution'), ('vector_video', b'Vectorized'), ('video_thumbnail', b'Thumbnail'), ('video_subtitle', b'Subtitle'), ('audio', b'Audio'), ('audio_thumbnail', b'Thumbnail'), ('document', b'Document'), ('document_thumbnail', b'Thumbnail'), (
+                    b'exercise', b'Exercise'), ('exercise_thumbnail', b'Thumbnail'), ('exercise_image', b'Exercise Image'), ('exercise_graphie', b'Exercise Graphie'), ('channel_thumbnail', b'Channel Thumbnail'), ('topic_thumbnail', b'Thumbnail'), ('html5_zip', b'HTML5 Zip'), ('html5_thumbnail', b'HTML5 Thumbnail')], max_length=150)),
                 ('supplementary', models.BooleanField(default=False)),
                 ('thumbnail', models.BooleanField(default=False)),
                 ('priority', models.IntegerField(blank=True, db_index=True, null=True)),
-                ('extension', models.CharField(blank=True, choices=[(b'mp4', b'MP4 Video'), (b'vtt', b'VTT Subtitle'), (b'srt', b'SRT Subtitle'), (b'mp3', b'MP3 Audio'), (b'pdf', b'PDF Document'), (b'jpg', b'JPG Image'), (
-                    b'jpeg', b'JPEG Image'), (b'png', b'PNG Image'), (b'gif', b'GIF Image'), (b'json', b'JSON'), (b'svg', b'SVG Image'), (b'perseus', b'Perseus Exercise'), (b'zip', b'HTML5 Zip')], max_length=40)),
+                ('extension', models.CharField(blank=True, choices=[('mp4', b'MP4 Video'), ('vtt', b'VTT Subtitle'), ('srt', b'SRT Subtitle'), ('mp3', b'MP3 Audio'), ('pdf', b'PDF Document'), ('jpg', b'JPG Image'), (
+                    b'jpeg', b'JPEG Image'), ('png', b'PNG Image'), ('gif', b'GIF Image'), ('json', b'JSON'), ('svg', b'SVG Image'), ('perseus', b'Perseus Exercise'), ('zip', b'HTML5 Zip')], max_length=40)),
                 ('file_size', models.IntegerField(blank=True, null=True)),
                 ('checksum', models.CharField(blank=True, max_length=400)),
                 ('contentnode', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='files', to='content.ContentNode')),
@@ -106,7 +106,7 @@ class Migration(migrations.Migration):
                 ('lang_code', models.CharField(db_index=True, max_length=3)),
                 ('lang_subcode', models.CharField(blank=True, db_index=True, max_length=10, null=True)),
                 ('lang_name', models.CharField(blank=True, max_length=100, null=True)),
-                ('lang_direction', models.CharField(choices=[(b'ltr', b'Left to Right'), (b'rtl', b'Right to Left')], default=b'ltr', max_length=3)),
+                ('lang_direction', models.CharField(choices=[('ltr', b'Left to Right'), ('rtl', b'Right to Left')], default='ltr', max_length=3)),
             ],
         ),
         migrations.CreateModel(
@@ -121,8 +121,8 @@ class Migration(migrations.Migration):
             name='LocalFile',
             fields=[
                 ('id', models.CharField(max_length=32, primary_key=True, serialize=False)),
-                ('extension', models.CharField(blank=True, choices=[(b'mp4', b'MP4 Video'), (b'vtt', b'VTT Subtitle'), (b'srt', b'SRT Subtitle'), (b'mp3', b'MP3 Audio'), (b'pdf', b'PDF Document'), (b'jpg', b'JPG Image'), (
-                    b'jpeg', b'JPEG Image'), (b'png', b'PNG Image'), (b'gif', b'GIF Image'), (b'json', b'JSON'), (b'svg', b'SVG Image'), (b'perseus', b'Perseus Exercise'), (b'zip', b'HTML5 Zip')], max_length=40)),
+                ('extension', models.CharField(blank=True, choices=[('mp4', b'MP4 Video'), ('vtt', b'VTT Subtitle'), ('srt', b'SRT Subtitle'), ('mp3', b'MP3 Audio'), ('pdf', b'PDF Document'), ('jpg', b'JPG Image'), (
+                    b'jpeg', b'JPEG Image'), ('png', b'PNG Image'), ('gif', b'GIF Image'), ('json', b'JSON'), ('svg', b'SVG Image'), ('perseus', b'Perseus Exercise'), ('zip', b'HTML5 Zip')], max_length=40)),
                 ('available', models.BooleanField(default=False)),
                 ('file_size', models.IntegerField(blank=True, null=True)),
             ],
