@@ -201,9 +201,9 @@ def generate_thumbnail_from_node(node, set_node=None):  # noqa
             files += [str(f) for f in file_locations]
         assert any(files), "No images available to generate thumbnail"
         thumbnail_object = create_tiled_image_wrapper(list(set(files)), format_presets.TOPIC_THUMBNAIL, node=assigned_node)
-    elif node.kind_id == content_kinds.VIDEO:
-        file_object = node.files.filter(file_format_id=file_formats.MP4).first()
-        thumbnail_object = extract_thumbnail_wrapper(file_object, preset_id=format_presets.VIDEO_THUMBNAIL, node=assigned_node)
+    # elif node.kind_id == content_kinds.VIDEO:
+    #     file_object = node.files.filter(file_format_id=file_formats.MP4).first()
+    #     thumbnail_object = extract_thumbnail_wrapper(file_object, preset_id=format_presets.VIDEO_THUMBNAIL, node=assigned_node)
     elif node.kind_id == content_kinds.EXERCISE:
         file_ids = node.assessment_items.values_list('files__id', flat=True)
         thumbnail_object = get_image_from_exercise(file_ids, preset_id=format_presets.EXERCISE_THUMBNAIL, node=assigned_node)
