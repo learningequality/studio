@@ -46,8 +46,10 @@ from contentcuration.utils.parser import load_json_string
 
 logmodule.basicConfig()
 logging = logmodule.getLogger(__name__)
-reload(sys)
-sys.setdefaultencoding('utf8')
+
+if sys.version_info.major == 2:
+    reload(sys)
+    sys.setdefaultencoding('utf8')
 
 PERSEUS_IMG_DIR = exercises.IMG_PLACEHOLDER + "/images"
 THUMBNAIL_DIMENSION = 128
@@ -492,7 +494,7 @@ def write_assessment_item(assessment_item, zf):
 
 
 def process_formulas(content):
-    for match in re.finditer(ur'\$(\$.+\$)\$', content):
+    for match in re.finditer(r'\$(\$.+\$)\$', content):
         content = content.replace(match.group(0), match.group(1))
     return content
 
@@ -500,8 +502,8 @@ def process_formulas(content):
 def process_image_strings(content, zf):
     image_list = []
     content = content.replace(exercises.CONTENT_STORAGE_PLACEHOLDER, PERSEUS_IMG_DIR)
-    for match in re.finditer(ur'!\[(?:[^\]]*)]\(([^\)]+)\)', content):
-        img_match = re.search(ur'(.+/images/[^\s]+)(?:\s=([0-9\.]+)x([0-9\.]+))*', match.group(1))
+    for match in re.finditer(r'!\[(?:[^\]]*)]\(([^\)]+)\)', content):
+        img_match = re.search(r'(.+/images/[^\s]+)(?:\s=([0-9\.]+)x([0-9\.]+))*', match.group(1))
         if img_match:
             # Add any image files that haven't been written to the zipfile
             filename = img_match.group(1).split('/')[-1]

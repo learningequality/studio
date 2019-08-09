@@ -30,8 +30,9 @@ from contentcuration.api import write_raw_content_to_storage
 from contentcuration.utils.files import create_file_from_contents
 from contentcuration.utils.garbage_collect import get_deleted_chefs_root
 
-reload(sys)
-sys.setdefaultencoding('utf8')
+if sys.version_info.major == 2:
+    reload(sys)
+    sys.setdefaultencoding('utf8')
 
 CHANNEL_TABLE = 'content_channelmetadata'
 NODE_TABLE = 'content_contentnode'

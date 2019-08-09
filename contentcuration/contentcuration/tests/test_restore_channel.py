@@ -24,8 +24,9 @@ from contentcuration.utils.import_tools import create_channel
 from contentcuration.utils.import_tools import generate_assessment_item
 from contentcuration.utils.import_tools import process_content
 
-reload(sys)
-sys.setdefaultencoding('utf8')
+if sys.version_info.major == 2:
+    reload(sys)
+    sys.setdefaultencoding('utf8')
 
 
 thumbnail_path = "/content/thumbnail.png"

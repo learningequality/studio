@@ -73,8 +73,9 @@ from contentcuration.serializers import CurrentUserSerializer
 from contentcuration.serializers import UserChannelListSerializer
 from contentcuration.utils.messages import get_messages
 
-reload(sys)
-sys.setdefaultencoding('UTF8')
+if sys.version_info.major == 2:
+    reload(sys)
+    sys.setdefaultencoding('UTF8')
 locale.setlocale(locale.LC_TIME, '')
 
 DEFAULT_ADMIN_PAGE_SIZE = 2

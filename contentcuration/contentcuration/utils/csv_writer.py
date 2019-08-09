@@ -19,8 +19,9 @@ from le_utils.constants import exercises
 
 from contentcuration.models import generate_storage_url
 
-reload(sys)
-sys.setdefaultencoding('UTF8')
+if sys.version_info.major == 2:
+    reload(sys)
+    sys.setdefaultencoding('UTF8')
 
 if not os.path.exists(settings.CSV_ROOT):
     os.makedirs(settings.CSV_ROOT)
