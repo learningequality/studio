@@ -9,13 +9,9 @@ from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse_lazy
-from django.db.models import Case
 from django.db.models import IntegerField
-from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models import Subquery
-from django.db.models import Value
-from django.db.models import When
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.http import HttpResponseForbidden
@@ -23,7 +19,6 @@ from django.http import HttpResponseNotFound
 from django.shortcuts import get_object_or_404
 from django.shortcuts import redirect
 from django.shortcuts import render
-from django.views.decorators.cache import cache_page
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic.base import TemplateView
 from enum import Enum
@@ -39,7 +34,6 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 
 from contentcuration.api import activate_channel
-from contentcuration.api import add_editor_to_channel
 from contentcuration.api import get_staged_diff
 from contentcuration.decorators import browser_is_supported
 from contentcuration.decorators import can_access_channel
@@ -47,12 +41,7 @@ from contentcuration.decorators import can_edit_channel
 from contentcuration.decorators import has_accepted_policies
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
-from contentcuration.models import Invitation
-from contentcuration.models import SecretToken
 from contentcuration.models import User
-from contentcuration.models import VIEW_ACCESS
-from contentcuration.serializers import AltChannelListSerializer
-from contentcuration.serializers import ChannelSetSerializer
 from contentcuration.serializers import ContentNodeSerializer
 from contentcuration.serializers import CurrentUserSerializer
 from contentcuration.serializers import RootNodeSerializer
@@ -126,30 +115,15 @@ def redirect_to_channel_view(request, channel_id):
 
 
 def channel_page(request, channel, allow_edit=False, staging=False):
-    channel_serializer = ChannelSerializer(channel)
-    channel_list = Channel.objects.select_related('main_tree').prefetch_related('editors').prefetch_related('viewers')\
-                          .exclude(id=channel.pk).filter(Q(deleted=False) & (Q(editors=request.user) | Q(viewers=request.user)))\
-                          .annotate(is_view_only=Case(When(editors=request.user, then=Value(0)), default=Value(1), output_field=IntegerField()))\
-                          .distinct().values("id", "name", "is_view_only").order_by('name')
-
-    token = None
-    if channel.secret_tokens.filter(is_primary=True).exists():
-        token = channel.secret_tokens.filter(is_primary=True).first().token
-        token = token[:5] + "-" + token[5:]
-
-    json_renderer = JSONRenderer()
     return render(request, 'channel_edit.html', {"allow_edit": allow_edit,
                                                  "staging": staging,
                                                  "is_public": channel.public,
-                                                 "channel": json_renderer.render(channel_serializer.data),
                                                  "channel_id": channel.pk,
                                                  "channel_name": channel.name,
                                                  "ricecooker_version": channel.ricecooker_version,
                                                  "channel_list": channel_list,
-                                                 "current_user": json_renderer.render(CurrentUserSerializer(request.user).data),
                                                  "preferences": json.dumps(channel.content_defaults),
                                                  "messages": get_messages(),
-                                                 "primary_token": token or channel.pk,
                                                  "title": settings.DEFAULT_TITLE,
                                                  })
 
@@ -165,15 +139,6 @@ def channel_list(request):
                                                  "user_preferences": json.dumps(request.user.content_defaults),
                                                  "messages": get_messages(),
                                                  })
-
-
-@api_view(['GET'])
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
-@permission_classes((IsAuthenticated,))
-def get_user_channel_sets(request):
-    sets = request.user.channel_sets.prefetch_related('secret_token__channels', 'editors').select_related('secret_token')
-    channelset_serializer = ChannelSetSerializer(sets, many=True)
-    return Response(channelset_serializer.data)
 
 
 @login_required
@@ -295,17 +260,6 @@ def accessible_channels(request, channel_id):
     return Response(map(map_channel_data, channels_data))
 
 
-@api_view(['POST'])
-def accept_channel_invite(request):
-    invitation = Invitation.objects.get(pk=request.data.get('invitation_id'))
-    channel = invitation.channel
-    channel.is_view_only = invitation.share_mode == VIEW_ACCESS
-    channel_serializer = AltChannelListSerializer(channel)
-    add_editor_to_channel(invitation)
-
-    return Response(channel_serializer.data)
-
-
 def activate_channel_endpoint(request):
     if request.method != 'POST':
         return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
@@ -389,17 +343,6 @@ def download_channel_content_csv(request, channel_id):
     """ Writes list of channels to csv, which is then emailed """
     site = get_current_site(request)
     generatechannelcsv_task.delay(channel_id, site.domain, request.user.id)
-
-    return HttpResponse({"success": True})
-
-
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
-@permission_classes((IsAuthenticated,))
-def save_token_to_channels(request, token):
-    channel_ids = json.loads(request.body)
-    channels = Channel.objects.filter(pk__in=channel_ids)
-    token = SecretToken.objects.get(token=token)
-    token.set_channels(channels)
 
     return HttpResponse({"success": True})
 

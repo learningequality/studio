@@ -13,15 +13,14 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
 from le_utils.constants import content_kinds
 from rest_framework import serializers
-from rest_framework import viewsets
-from rest_framework.status import HTTP_201_CREATED
-from rest_framework.response import Response
 
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import get_channel_thumbnail
 from contentcuration.models import SecretToken
 from contentcuration.models import User
+from contentcuration.viewsets.base import ValuesViewset
+from contentcuration.viewsets.base import WriteOnlySerializer
 
 
 class ChannelFilter(FilterSet):
@@ -59,7 +58,7 @@ class SQCount(Subquery):
     output_field = IntegerField()
 
 
-class ChannelSerializer(serializers.ModelSerializer):
+class ChannelSerializer(WriteOnlySerializer):
     """
     This is a write only serializer - we leverage it to do create and update
     operations, but read operations are handled by the Viewset.
@@ -80,12 +79,6 @@ class ChannelSerializer(serializers.ModelSerializer):
         )
         read_only_fields = ("id",)
 
-    def to_representation(self, instance):
-        """
-        Just return an empty object here, to confirm that any write operations succeeded.
-        """
-        return {}
-
     def save(self, **kwargs):
         bookmark = self.validated_data.pop("bookmark", None)
         created = self.instance is None
@@ -101,19 +94,43 @@ class ChannelSerializer(serializers.ModelSerializer):
         return instance
 
 
-class ChannelViewSet(viewsets.ModelViewSet):
+class ChannelViewSet(ValuesViewset):
     queryset = Channel.objects.all()
     serializer_class = ChannelSerializer
     filter_backends = (DjangoFilterBackend,)
     filter_class = ChannelFilter
+    values = (
+        "id",
+        "name",
+        "description",
+        "main_tree__published",
+        "thumbnail",
+        "thumbnail_encoding",
+        "language",
+        "primary_token",
+        "modified",
+        "count",
+        "view",
+        "edit",
+        "bookmark",
+        "public",
+        "version",
+        "main_tree__created",
+        "last_published",
+        "ricecooker_version",
+    )
 
-    def _map_fields(self, channel):
-        channel["thumbnail_url"] = get_channel_thumbnail(channel)
-        channel["published"] = channel["main_tree__published"]
-        channel.pop("main_tree__published")
-        channel["created"] = channel["main_tree__created"]
-        channel.pop("main_tree__created")
-        return channel
+    field_map = {
+        "thumbnail_url": get_channel_thumbnail,
+        "published": "main_tree__published",
+        "created": "main_tree__created",
+    }
+
+    def get_queryset(self):
+        queryset = Channel.objects.filter(
+            Q(editors=self.request.user) | Q(viewers=self.request.user) | Q(public=True)
+        ).distinct()
+        return self.prefetch_queryset(queryset)
 
     def prefetch_queryset(self, queryset):
         prefetch_secret_token = Prefetch(
@@ -137,7 +154,7 @@ class ChannelViewSet(viewsets.ModelViewSet):
         )
         return queryset
 
-    def _annotate_queryset(self, queryset):
+    def annotate_queryset(self, queryset):
         queryset = queryset.annotate(primary_token=Max("secret_tokens__token"))
         channel_main_tree_nodes = ContentNode.objects.filter(
             tree_id=OuterRef("main_tree__tree_id")
@@ -167,58 +184,3 @@ class ChannelViewSet(viewsets.ModelViewSet):
             bookmark=Cast(Cast(Count("bookmarked_by"), IntegerField()), BooleanField()),
         )
         return queryset
-
-    def _serialize_queryset(self, queryset):
-        queryset = self._annotate_queryset(queryset)
-        return queryset.values(
-            "id",
-            "name",
-            "description",
-            "main_tree__published",
-            "thumbnail",
-            "thumbnail_encoding",
-            "language",
-            "primary_token",
-            "modified",
-            "count",
-            "view",
-            "edit",
-            "bookmark",
-            "public",
-            "version",
-            "main_tree__created",
-            "last_published",
-            "ricecooker_version",
-        )
-
-    def get_queryset(self):
-        queryset = Channel.objects.filter(
-            Q(editors=self.request.user) | Q(viewers=self.request.user) | Q(public=True)
-        ).distinct()
-        return self.prefetch_queryset(queryset)
-
-    def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
-
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            data = map(self._map_fields, self._serialize_queryset(page) or [])
-            return self.get_paginated_response(data)
-
-        data = map(self._map_fields, self._serialize_queryset(queryset) or [])
-        return Response(data)
-
-    def serialize_object(self, pk):
-        queryset = self.filter_queryset(self.get_queryset())
-        return self._map_fields(self._serialize_queryset(queryset).filter(pk=pk).get())
-
-    def retrieve(self, request, pk, *args, **kwargs):
-        return Response(self.serialize_object(pk))
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        return Response(
-            self.serialize_object(serializer.instance.id), status=HTTP_201_CREATED
-        )

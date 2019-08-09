@@ -156,6 +156,24 @@ class User(AbstractBaseUser, PermissionsMixin):
             raise PermissionDenied("Cannot view content")
         return True
 
+    def can_view_channels(self, channels):
+        channels_user_has_perms_for = channels.filter(Q(editors__id__contains=self.id) | Q(viewers__id__contains=self.id) | Q(public=True))
+        # The channel user has perms for is a subset of all the channels that were passed in.
+        # We check the count for simplicity, as if the user does not have permissions for
+        # even one of the channels the content is drawn from, then the number of channels
+        # will be smaller.
+        total_channels = channels.distinct().count()
+        # If no channels, then these nodes are orphans - do not let them be viewed except by an admin.
+        if not total_channels or total_channels > channels_user_has_perms_for.distinct().count():
+            raise PermissionDenied("Cannot view content")
+        return True
+
+    def can_view_channel_ids(self, channel_ids):
+        if self.is_admin:
+            return True
+        channels = Channel.objects.filter(pk__in=channel_ids)
+        return self.can_view_channels(channels)
+
     def can_view_node(self, node):
         if self.is_admin:
             return True
@@ -187,16 +205,7 @@ class User(AbstractBaseUser, PermissionsMixin):
                                           | Q(trash_tree__in=root_nodes)
                                           | Q(staging_tree__in=root_nodes)
                                           | Q(previous_tree__in=root_nodes))
-        channels_user_has_perms_for = channels.filter(Q(editors__id__contains=self.id) | Q(viewers__id__contains=self.id) | Q(public=True))
-        # The channel user has perms for is a subset of all the channels that were passed in.
-        # We check the count for simplicity, as if the user does not have permissions for
-        # even one of the channels the content is drawn from, then the number of channels
-        # will be smaller.
-        total_channels = channels.distinct().count()
-        # If no channels, then these nodes are orphans - do not let them be viewed except by an admin.
-        if not total_channels or total_channels > channels_user_has_perms_for.distinct().count():
-            raise PermissionDenied("Cannot view content")
-        return True
+        return self.can_view_channels(channels)
 
     def can_edit_node(self, node):
         if self.is_admin:
@@ -535,17 +544,6 @@ class SecretToken(models.Model):
 
         # We found a unique token! Save it
         return token
-
-    def set_channels(self, channels):
-        channel_ids = channels.values_list('pk', flat=True)
-
-        # Remove token from channels that aren't in list
-        for channel in self.channels.exclude(pk__in=channel_ids):
-            channel.secret_tokens.remove(self)
-
-        # Add tokens to channels in list
-        for channel in channels.exclude(secret_tokens__token=self.token):
-            channel.secret_tokens.add(self)
 
     def __str__(self):
         return "{}-{}".format(self.token[:5], self.token[5:])
@@ -1509,6 +1507,17 @@ class Invitation(models.Model):
     class Meta:
         verbose_name = _("Invitation")
         verbose_name_plural = _("Invitations")
+
+    def accept(self):
+        if self.channel:
+            # channel is a nullable field, so check that it exists.
+            if self.share_mode == models.VIEW_ACCESS:
+                self.channel.editors.remove(self.invited)
+                self.channel.viewers.add(self.invited)
+            else:
+                self.channel.viewers.remove(self.invited)
+                self.channel.editors.add(self.invited)
+        self.delete()
 
 
 class Task(models.Model):

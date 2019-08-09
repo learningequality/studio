@@ -21,14 +21,10 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.core.urlresolvers import reverse_lazy
 from django.db.models import Q
-from django_filters.rest_framework import CharFilter
-from django_filters.rest_framework import DjangoFilterBackend
-from django_filters.rest_framework import FilterSet
 from rest_framework import permissions
 from rest_framework import routers
 from rest_framework import viewsets
 from rest_framework.exceptions import MethodNotAllowed
-from rest_framework.response import Response
 from rest_framework_bulk.generics import BulkModelViewSet
 from rest_framework_bulk.routes import BulkRouter
 
@@ -45,20 +41,20 @@ import contentcuration.views.users as registration_views
 import contentcuration.views.zip as zip_views
 
 from contentcuration.viewsets.channel import ChannelViewSet
+from contentcuration.viewsets.channelset import ChannelSetViewSet
+from contentcuration.viewsets.invitation import InvitationViewSet
 from contentcuration.celery import app
 from contentcuration.forms import ForgotPasswordForm
 from contentcuration.forms import LoginForm
 from contentcuration.forms import ResetPasswordForm
 from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
-from contentcuration.models import ChannelSet
 from contentcuration.models import ContentKind
 from contentcuration.models import ContentNode
 from contentcuration.models import ContentTag
 from contentcuration.models import File
 from contentcuration.models import FileFormat
 from contentcuration.models import FormatPreset
-from contentcuration.models import Invitation
 from contentcuration.models import Language
 from contentcuration.models import License
 from contentcuration.models import Task
@@ -82,18 +78,6 @@ class LanguageViewSet(viewsets.ModelViewSet):
     queryset = Language.objects.all()
 
     serializer_class = serializers.LanguageSerializer
-
-
-class ChannelSetViewSet(viewsets.ModelViewSet):
-    queryset = ChannelSet.objects.all()
-    serializer_class = serializers.ChannelSetSerializer
-
-    def get_queryset(self):
-        if self.request.user.is_admin:
-            return ChannelSet.objects.all()
-        return ChannelSet.objects.filter(
-            Q(editors=self.request.user) | Q(public=True)
-        ).distinct()
 
 
 class FileViewSet(BulkModelViewSet):
@@ -160,67 +144,6 @@ class UserViewSet(viewsets.ModelViewSet):
         return User.objects.filter(Q(pk=self.request.user.pk) |
                                    Q(editable_channels__pk__in=channel_list) |
                                    Q(view_only_channels__pk__in=channel_list)).distinct()
-
-
-class InvitationFilter(FilterSet):
-    invited = CharFilter(method="filter_invited")
-
-    class Meta:
-        model = Invitation
-        fields = ("invited", )
-
-    def filter_invited(self, queryset, name, value):
-        return queryset.filter(invited=value)
-
-
-class InvitationViewSet(viewsets.ModelViewSet):
-    queryset = Invitation.objects.all()
-    filter_backends = (DjangoFilterBackend,)
-    filter_class = InvitationFilter
-    serializer_class = serializers.InvitationSerializer
-
-    def get_queryset(self):
-        return Invitation.objects.filter(
-            Q(invited=self.request.user)
-            | Q(sender=self.request.user)
-            | Q(channel__editors=self.request.user)
-            | Q(channel__viewers=self.request.user)
-        ).distinct()
-
-    def _map_fields(self, invitation):
-        invitation["sender"] = {
-            "first_name": invitation["sender__first_name"],
-            "last_name": invitation["sender__last_name"]
-        }
-        invitation.pop("sender__first_name")
-        invitation.pop("sender__last_name")
-        invitation["channel_name"] = invitation["channel__name"]
-        invitation.pop("channel__name")
-        return invitation
-
-    def _serialize_queryset(self, queryset):
-        queryset = queryset.select_related("sender", "channel")
-        return queryset.values(
-            "id",
-            "invited",
-            "email",
-            "sender__first_name",
-            "sender__last_name",
-            "channel_id",
-            "share_mode",
-            "channel__name",
-        )
-
-    def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
-
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            data = map(self._map_fields, self._serialize_queryset(page) or [])
-            return self.get_paginated_response(data)
-
-        data = map(self._map_fields, self._serialize_queryset(queryset) or [])
-        return Response(data)
 
 
 class AssessmentItemViewSet(BulkModelViewSet):
@@ -307,8 +230,6 @@ urlpatterns = [
     url(r'^channels/(?P<channel_id>[^/]{32})/view', views.channel_view_only, name='channel_view_only'),
     url(r'^channels/(?P<channel_id>[^/]{32})/staging', views.channel_staging, name='channel_staging'),
     url(r'^accessible_channels/(?P<channel_id>[^/]{32})$', views.accessible_channels, name='accessible_channels'),
-    url(r'^get_user_channel_sets/$', views.get_user_channel_sets, name='get_user_channel_sets'),
-    url(r'^accept_channel_invite/$', views.accept_channel_invite, name='accept_channel_invite'),
     url(r'^api/activate_channel$', views.activate_channel_endpoint, name='activate_channel'),
     url(r'^api/get_staged_diff_endpoint$', views.get_staged_diff_endpoint, name='get_staged_diff'),
     url(r'^healthz$', views.health, name='health'),

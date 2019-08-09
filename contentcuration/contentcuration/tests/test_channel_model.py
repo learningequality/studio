@@ -190,7 +190,7 @@ class ChannelSetTestCase(BaseAPITestCase):
     def test_get_user_channel_sets(self):
         """ Make sure get_user_channel_sets returns the correct sets """
         other_channelset = mixer.blend(ChannelSet)
-        response = self.get(reverse_lazy("get_user_channel_sets"))
+        response = self.get(reverse_lazy("channelset-list"))
         self.assertEqual(response.status_code, 200)
         channelsets = json.loads(response.content)
         self.assertTrue(any(c['id'] == self.channelset.pk for c in channelsets))
@@ -229,7 +229,7 @@ class ChannelSetTestCase(BaseAPITestCase):
         token = self.channelset.secret_token
         channels = mixer.cycle(5).blend(Channel)
         channels = Channel.objects.filter(pk__in=[c.pk for c in channels])  # Make this a queryset
-        token.set_channels(channels)
+        token.channels.set(channels)
 
         # Old channels should not be included here
         for c in self.channels:
