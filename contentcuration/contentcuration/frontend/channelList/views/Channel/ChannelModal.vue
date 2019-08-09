@@ -365,7 +365,7 @@
   import { isTempId } from '../../utils';
   import { RouterNames } from '../../constants';
   import Constants from 'edit_channel/constants/index';
-  import CopyToken from 'edit_channel/sharedComponents/CopyToken';
+  import CopyToken from 'shared/views/CopyToken';
   import ChannelStar from './ChannelStar';
   import ThumbnailUpload from 'shared/views/ThumbnailUpload';
 

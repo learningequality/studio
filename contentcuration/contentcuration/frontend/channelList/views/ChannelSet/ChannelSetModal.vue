@@ -147,7 +147,7 @@
 
   import { mapGetters, mapActions, mapMutations, mapState } from 'vuex';
   import sortBy from 'lodash/sortBy';
-  import CopyToken from 'edit_channel/sharedComponents/CopyToken.vue';
+  import CopyToken from 'shared/views/CopyToken';
   import { isTempId } from '../../utils';
   import { RouterNames } from '../../constants';
 

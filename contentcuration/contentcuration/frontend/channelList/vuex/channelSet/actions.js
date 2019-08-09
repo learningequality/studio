@@ -4,7 +4,7 @@ import { channelSetLastSavedState } from './index';
 
 /* CHANNEL SET ACTIONS */
 export function loadChannelSetList(context) {
-  return client.get(window.Urls.get_user_channel_sets()).then(response => {
+  return client.get(window.Urls['channelset-list']()).then(response => {
     const channelSets = response.data;
     context.commit('SET_CHANNELSET_LIST', channelSets);
     return channelSets;
@@ -37,7 +37,7 @@ export function saveChannelSet(context, channelSetId) {
       return client
         .patch(window.Urls['channelset-detail'](channelSetId), channelSetData)
         .then(response => {
-          context.commit('ADD_CHANNELSET', response.data);
+          channelSetLastSavedState.storeLastSavedState(context.getters.getChannelSet(channelSetId));
           return null;
         });
     }

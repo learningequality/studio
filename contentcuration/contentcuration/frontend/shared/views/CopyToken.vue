@@ -1,7 +1,7 @@
 <template>
   <VTextField
     v-if="token"
-    v-model="token"
+    v-model="displayToken"
     :title="$tr('copyPrompt')"
     :prependInnerIcon="copyIcon"
     readonly
@@ -50,11 +50,14 @@
             return 'content_paste';
         }
       },
+      displayToken() {
+        return this.token.slice(0, 5) + "-" + this.token.slice(5);
+      },
     },
     methods: {
       copyToken() {
         clipboard
-          .writeText(this.token)
+          .writeText(this.displayToken)
           .then(() => {
             this.copyStatus = copyStatusCodes.SUCCESS;
           })

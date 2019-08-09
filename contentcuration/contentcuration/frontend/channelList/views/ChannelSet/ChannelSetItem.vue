@@ -19,7 +19,7 @@
             </VFlex>
             <VFlex xs4>
               <CopyToken
-                :token="channelSet.secret_token.display_token"
+                :token="channelSet.secret_token"
               />
             </VFlex>
           </VLayout>
@@ -70,7 +70,7 @@
 
   import { mapActions } from 'vuex';
   import ChannelSetModal from './ChannelSetModal';
-  import CopyToken from 'edit_channel/sharedComponents/CopyToken.vue';
+  import CopyToken from 'shared/views/CopyToken';
   import PrimaryDialog from 'shared/views/PrimaryDialog';
   import { RouterNames } from '../../constants';
 

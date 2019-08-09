@@ -94,7 +94,7 @@
   import { mapActions, mapGetters, mapState } from 'vuex';
   import { RouterNames } from '../../constants';
   import Constants from 'edit_channel/constants/index';
-  import CopyToken from 'edit_channel/sharedComponents/CopyToken';
+  import CopyToken from 'shared/views/CopyToken';
   import ChannelStar from './ChannelStar';
 
   export default {

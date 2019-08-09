@@ -84,16 +84,10 @@ export function loadInvitationList(context) {
 
 export function acceptInvitation(context, invitationId) {
   const invitation = context.getters.getInvitation(invitationId);
-  return client
-    .post(window.Urls.accept_channel_invite(), { invitation_id: invitationId })
-    .then(response => {
-      context.commit('ACCEPT_INVITATION', invitationId);
-      const channel = response.data;
-      let listType = ChannelInvitationMapping[invitation.share_mode];
-      channel[listType] = true;
-      context.commit('ADD_CHANNEL', channel);
-      return channel;
-    });
+  return client.delete(window.Urls.invitation_detail(invitationId), { params: { accepted: true }}).then(() => {
+    context.commit('ACCEPT_INVITATION', invitationId);
+    return loadChannel(context, invitation.channel_id);
+  });
 }
 
 export function declineInvitation(context, invitationId) {
