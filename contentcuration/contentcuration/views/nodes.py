@@ -230,13 +230,10 @@ def get_nodes_by_ids_simplified(request, ids):
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
 @api_view(['GET'])
-def get_nodes_by_ids_complete(request, ids):
-    nodes = ContentNode.objects.prefetch_related('children', 'files', 'assessment_items', 'tags').filter(pk__in=ids.split(","))
-    try:
-        request.user.can_view_nodes(nodes)
-    except PermissionDenied:
-        return HttpResponseNotFound("No nodes found for {}".format(ids))
-    serializer = ReadOnlyContentNodeFullSerializer(nodes, many=True)
+def get_nodes_by_ids_complete(request):
+    ids = json.loads(request.GET['nodes'])
+    nodes = ContentNode.objects.prefetch_related('children', 'files', 'assessment_items', 'tags').filter(pk__in=ids)
+    serializer = ContentNodeEditSerializer(nodes, many=True)
     return Response(serializer.data)
 
 

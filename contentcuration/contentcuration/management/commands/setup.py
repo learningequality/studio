@@ -9,6 +9,7 @@ import uuid
 from django.core.files import File as DjFile
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
+from django.db import Error as DBError
 from le_utils.constants import content_kinds
 from le_utils.constants import exercises
 from le_utils.constants import file_formats
@@ -24,8 +25,8 @@ from contentcuration.models import File
 from contentcuration.models import FormatPreset
 from contentcuration.models import Invitation
 from contentcuration.models import License
-from contentcuration.models import User
 from contentcuration.models import MultipleObjectsReturned
+from contentcuration.models import User
 from contentcuration.utils.files import duplicate_file
 from contentcuration.utils.minio_utils import ensure_storage_bucket_public
 from contentcuration.utils.nodes import duplicate_node_bulk
@@ -62,7 +63,10 @@ class Command(BaseCommand):
         ensure_storage_bucket_public()
 
         # create the cache table
-        call_command("createcachetable")
+        try:
+            call_command("createcachetable")
+        except DBError as e:
+            logging.error('Error creating cache table: {}'.format(str(e)))
 
         # Run migrations
         call_command('migrate')
@@ -225,7 +229,7 @@ def create_exercise(title, parent, license_id, description="", user=None):
         copyright_holder="{} {}".format(user.first_name, user.last_name),
         license_id=license_id,
         license_description=LICENSE_DESCRIPTION,
-        extra_fields=json.dumps(mastery_model),
+        extra_fields=mastery_model,
         sort_order=get_sort_order(),
     )
     exercise.save()

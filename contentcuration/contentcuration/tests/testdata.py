@@ -9,9 +9,9 @@ from tempfile import TemporaryFile
 import pytest
 from django.core.files.storage import default_storage
 from le_utils.constants import format_presets
-from mixer.backend.django import mixer
 
 from contentcuration import models as cc
+from contentcuration.tests.utils import mixer
 
 pytestmark = pytest.mark.django_db
 
@@ -138,7 +138,12 @@ def node(data, parent=None):
 
     # Create exercises
     elif data['kind_id'] == "exercise":
-        extra_fields = "{{\"mastery_model\":\"{}\",\"randomize\":true,\"m\":{},\"n\":{}}}".format(data['mastery_model'], data.get('m') or 0, data.get('n') or 0)
+        extra_fields = {
+            'mastery_model': data['mastery_model'],
+            'randomize': True,
+            'm': data.get('m') or 0,
+            'n': data.get('n') or 0
+        }
         new_node = cc.ContentNode(
             kind=exercise(),
             parent=parent,
@@ -148,6 +153,7 @@ def node(data, parent=None):
             extra_fields=extra_fields,
             content_id=data.get('content_id') or data['node_id'],
         )
+
         new_node.save()
         for assessment_item in data['assessment_items']:
             ai = cc.AssessmentItem(
@@ -203,6 +209,7 @@ def create_temp_file(filebytes, preset='document', ext='pdf', original_filename=
     import warnings
     warnings.warn('Deprecated function; use create_studio_file instead.', DeprecationWarning)
     return create_studio_file(filebytes, preset='document', ext='pdf', original_filename=None)
+
 
 def create_studio_file(filebytes, preset='document', ext='pdf', original_filename=None):
     """

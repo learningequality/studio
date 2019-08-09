@@ -124,7 +124,7 @@ describe('channelEditor', () => {
   it('clicking SAVE saves edits', () => {
     wrapper.find('form').trigger('submit');
     expect(mockFunctions.saveChannel).toHaveBeenCalled();
-    wrapper.vm.$nextTick(() => {
+    wrapper.vm.$nextTick().then(() => {
       expect(wrapper.emitted('submitChanges')).toBeTruthy();
     });
   });

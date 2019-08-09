@@ -26,7 +26,7 @@
           <span class="prompt">
             {{ $tr('languageRequired') }}
           </span>
-          <LanguageDropdown :language="channel.language" @changed="setLanguage" />
+          <LanguageDropdown v-model="languageID" width="150" />
         </li>
       </ul>
     </div>
@@ -68,6 +68,17 @@
     },
     computed: {
       ...mapState('publish', ['channel']),
+      languageID: {
+        get() {
+          return this.channel.language;
+        },
+        set(value) {
+          this.saving = true;
+          this.setChannelLanguage(value).then(() => {
+            this.saving = false;
+          });
+        },
+      },
       isValid() {
         return Boolean(this.channel.language);
       },
@@ -80,12 +91,6 @@
     },
     methods: {
       ...mapActions('publish', ['setChannelLanguage']),
-      setLanguage(languageID) {
-        this.saving = true;
-        this.setChannelLanguage(languageID).then(() => {
-          this.saving = false;
-        });
-      },
     },
   };
 

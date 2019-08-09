@@ -2,7 +2,6 @@
 This module contains utility functions used by API endpoints.
 """
 import hashlib
-import json
 import logging
 import os
 from cStringIO import StringIO
@@ -143,8 +142,8 @@ def get_staged_diff(channel_id):
         },
         {
             "field": _("Ricecooker Version"),
-            "live": json.loads(channel.main_tree.extra_fields).get('ricecooker_version') if has_main and channel.main_tree.extra_fields else "---",
-            "staged": json.loads(channel.staging_tree.extra_fields).get('ricecooker_version') if has_staging and channel.staging_tree.extra_fields else "---",
+            "live": channel.main_tree.extra_fields.get('ricecooker_version') if has_main and channel.main_tree.extra_fields else "---",
+            "staged": channel.staging_tree.extra_fields.get('ricecooker_version') if has_staging and channel.staging_tree.extra_fields else "---",
         },
         {
             "field": _("File Size"),
