@@ -232,9 +232,8 @@ def get_nodes_by_ids_simplified(request, ids):
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
 @api_view(['GET'])
-def get_nodes_by_ids_complete(request):
-    ids = json.loads(request.GET['nodes'])
-    nodes = ContentNode.objects.filter(pk__in=ids)
+def get_nodes_by_ids_complete(request, ids):
+    nodes = ContentNode.objects.filter(pk__in=ids.split(","))
     try:
         request.user.can_view_nodes(nodes)
     except PermissionDenied:

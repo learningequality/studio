@@ -14,8 +14,7 @@ function fetchNodes(contentNodeIDs, url) {
           if (chunkedIDs.length === 0) fetchResolve([]);
           $.ajax({
             method: 'GET',
-            url: url(),
-            data: { nodes: JSON.stringify(chunkedIDs) },
+            url: url(chunkedIDs.join(',')),
             error: fetchReject,
             success: fetchResolve,
           });
