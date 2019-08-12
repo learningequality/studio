@@ -10,7 +10,7 @@ from django.db.models import TextField
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('contentcuration', '0097_task'),
+        ('contentcuration', '0100_calculate_included_languages'),
     ]
 
     operations = [
