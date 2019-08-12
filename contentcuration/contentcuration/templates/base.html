@@ -94,11 +94,6 @@
         </script>
         {% endif %}
         {% endcache %}
-        {% block css_bundle %}
-            {% render_bundle_css 'base' %}
-        {% endblock css_bundle %}
-        {% render_offline_css LANGUAGE_CODE %}
-        <title>Kolibri Studio ({% trans 'Beta' %})</title>
       {% endblock head %}
 
       {% block analytics %}
