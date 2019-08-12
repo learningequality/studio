@@ -9,6 +9,7 @@ export default {
   namespaced: true,
   state: {
     channelsMap: {},
+    channelDetailsMap: {},
     invitationsMap: {},
   },
   getters,

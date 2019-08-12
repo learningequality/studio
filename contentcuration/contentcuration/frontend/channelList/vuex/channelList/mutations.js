@@ -58,6 +58,14 @@ export function TOGGLE_BOOKMARK(state, id) {
   state.channelsMap[id].bookmark = !state.channelsMap[id].bookmark;
 }
 
+export function ADD_CHANNEL_DETAILS(state, {id, details}) {
+  state.channelDetailsMap = {
+    ...state.channelsMap,
+    id: details,
+  };
+}
+
+
 /* INVITATION MUTATIONS */
 export function SET_INVITATION_LIST(state, invitations) {
   const invitationsMap = {};

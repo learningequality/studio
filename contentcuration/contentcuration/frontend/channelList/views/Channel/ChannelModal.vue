@@ -244,7 +244,6 @@
     data() {
       return {
         saving: false,
-        channelDetails: null,
       };
     },
     beforeRouteEnter(to, from, next) {
@@ -272,9 +271,12 @@
     },
     computed: {
       ...mapState(['currentLanguage']),
-      ...mapGetters('channelList', ['getChannel']),
+      ...mapGetters('channelList', ['getChannel', 'getChannelDetails']),
       channel() {
         return this.getChannel(this.channelId) || {};
+      },
+      channelDetails() {
+        return this.getChannelDetails(this.channelId);
       },
       canEdit() {
         return this.channel.edit && !this.channel.ricecooker_version;
@@ -414,11 +416,8 @@
         return this.channelLink(this.channelId) + nodeId;
       },
       setChannelDetails(channelId) {
-        this.channelDetails = null;
-        if (!isTempId(channelId)) {
-          this.loadChannelDetails(channelId).then(details => {
-            this.channelDetails = details;
-          });
+        if (!isTempId(channelId) && !this.channelDetails) {
+          this.loadChannelDetails(channelId);
         }
       },
       close() {
