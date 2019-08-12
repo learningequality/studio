@@ -396,11 +396,11 @@ def accessible_channels(request, channel_id):
     prefetch_viewers = Prefetch(
         "viewers", queryset=User.objects.filter(id=request.user.id)
     )
-    channels = Channel.objects.all().prefetch_related(prefetch_editors, prefetch_viewers).annotate(
+    channel_ids = Channel.objects.all().prefetch_related(prefetch_editors, prefetch_viewers).annotate(
         edit=Cast(Cast(Count("editors"), IntegerField()), BooleanField()),
         view=Cast(Cast(Count("viewers"), IntegerField()), BooleanField()),
     )
-    channels = channels.filter(Q(deleted=False) & (Q(public=True) | Q(edit=True) | Q(view=True))).exclude(pk=channel_id).select_related("main_tree")
+    channel_ids = channel_ids.filter(Q(deleted=False) & (Q(public=True) | Q(edit=True) | Q(view=True))).exclude(pk=channel_id).values_list("id", flat=True)
     channel_main_tree_nodes = ContentNode.objects.filter(
         tree_id=OuterRef("main_tree__tree_id")
     ).order_by()
@@ -408,6 +408,7 @@ def accessible_channels(request, channel_id):
     non_topic_content_ids = (
         channel_main_tree_nodes.exclude(kind_id=content_kinds.TOPIC).values("content_id")
     )
+    channels = Channel.objects.filter(id__in=channel_ids)
     channels = channels.annotate(
         resource_count=SQCountDistinct(non_topic_content_ids, field="content_id"),
         children=ArrayAgg("main_tree__children"),
