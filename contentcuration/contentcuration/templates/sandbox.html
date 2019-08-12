@@ -13,5 +13,10 @@
 {% endblock content %}
 
 {% block js_bundle %}
+	<script>
+		var channel = {id: "{{channel}}"};
+		var user = JSON.parse("{{ current_user|escapejs }}");
+		var nodes = JSON.parse('{{ nodes | escapejs }}');
+	</script>
 	{% render_bundle 'sandbox' 'js' %}
 {% endblock js_bundle %}

@@ -156,8 +156,8 @@ def get_total_size(request, ids):
     except PermissionDenied:
         return HttpResponseNotFound("No nodes found for {}".format(ids))
     nodes = nodes.prefetch_related('files').get_descendants(include_self=True)\
-                       .values('files__checksum', 'files__file_size')\
-                       .distinct()
+                 .values('files__checksum', 'files__file_size')\
+                 .distinct()
     sizes = nodes.aggregate(resource_size=Sum('files__file_size'))
 
     return Response({'success': True, 'size': sizes['resource_size'] or 0})
@@ -173,18 +173,17 @@ def get_nodes_by_ids(request, ids):
         request.user.can_view_nodes(nodes)
     except PermissionDenied:
         return HttpResponseNotFound("No nodes found for {}".format(ids))
-    nodes = nodes.prefetch_related(
-                            'children',
-                            'files',
-                            'assessment_items',
-                            'tags',
-                            'prerequisite',
-                            'license',
-                            'slideshow_slides',
-                            'is_prerequisite_of'
-                        )\
-                       .defer('node_id', 'original_source_node_id', 'source_node_id', 'content_id',
-                              'original_channel_id', 'source_channel_id', 'source_id', 'source_domain', 'created', 'modified')
+    nodes = nodes.prefetch_related('children',
+                                   'files',
+                                   'assessment_items',
+                                   'tags',
+                                   'prerequisite',
+                                   'license',
+                                   'slideshow_slides',
+                                   'is_prerequisite_of'
+                                   )\
+        .defer('node_id', 'original_source_node_id', 'source_node_id', 'content_id',
+               'original_channel_id', 'source_channel_id', 'source_id', 'source_domain', 'created', 'modified')
     serializer = ReadOnlyContentNodeSerializer(nodes, many=True)
     return Response(serializer.data)
 
@@ -233,8 +232,9 @@ def get_nodes_by_ids_simplified(request, ids):
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
 @api_view(['GET'])
-def get_nodes_by_ids_complete(request, ids):
-    nodes = ContentNode.objects.filter(pk__in=ids.split(","))
+def get_nodes_by_ids_complete(request):
+    ids = json.loads(request.GET['nodes'])
+    nodes = ContentNode.objects.filter(pk__in=ids)
     try:
         request.user.can_view_nodes(nodes)
     except PermissionDenied:

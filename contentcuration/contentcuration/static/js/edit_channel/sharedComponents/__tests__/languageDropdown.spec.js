@@ -3,36 +3,56 @@ import Vue from 'vue';
 import Vuetify from 'vuetify';
 import { mount } from '@vue/test-utils';
 import LanguageDropdown from '../LanguageDropdown.vue';
+import TestForm from './TestForm.vue';
 import Constants from 'edit_channel/constants';
 
 Vue.use(Vuetify);
 
 document.body.setAttribute('data-app', true); // Vuetify prints a warning without this
 
-function makeWrapper(props = {}) {
-  return mount(LanguageDropdown, {
-    attachToDocument: true,
-    propsData: props,
+function makeWrapper() {
+  return mount(TestForm, {
+    slots: {
+      testComponent: LanguageDropdown,
+    },
   });
 }
 
 let testLanguages = _.first(Constants.Languages, 10);
 
 describe('languageDropdown', () => {
-  it('selected language should be set to language from props', () => {
-    function test(language) {
-      let wrapper = makeWrapper({ language: language.id });
-      expect(wrapper.vm.selected).toBe(language.id);
+  let wrapper;
+  let formWrapper;
+  beforeEach(() => {
+    formWrapper = makeWrapper();
+    wrapper = formWrapper.find(LanguageDropdown);
+  });
+  it('updating the language should emit input event', () => {
+    expect(wrapper.emitted('input')).toBeFalsy();
+    function test(language, i) {
+      // It looks like v-autocomplete doesn't trigger correctly, so call
+      // method directly until resolved
+      wrapper.find('.v-autocomplete').vm.$emit('input', language.id);
+      expect(wrapper.emitted('input')).toBeTruthy();
+      expect(wrapper.emitted('input')[i][0]).toEqual(language.id);
     }
     _.each(testLanguages, test);
   });
-  it('updating the language should emit changed event', () => {
-    function test(language) {
-      let wrapper = makeWrapper();
-      wrapper.vm.selectedLanguage(language.id);
-      expect(wrapper.emitted().changed).toBeTruthy();
-      expect(wrapper.emitted().changed[0][0]).toEqual(language.id);
-    }
-    _.each(testLanguages, test);
+  it('setting readonly should prevent any edits', () => {
+    expect(wrapper.find('input[readonly]').exists()).toBe(false);
+    wrapper.setProps({ readonly: true });
+    expect(wrapper.find('input[readonly]').exists()).toBe(true);
+  });
+  it('setting required should make field required', () => {
+    expect(wrapper.find('input:required').exists()).toBe(false);
+    wrapper.setProps({ required: true });
+    expect(wrapper.find('input:required').exists()).toBe(true);
+  });
+  it('validation should catch empty required languages', () => {
+    formWrapper.vm.validate();
+    expect(wrapper.find('.error--text').exists()).toBe(false);
+    wrapper.setProps({ required: true });
+    formWrapper.vm.validate();
+    expect(wrapper.find('.error--text').exists()).toBe(true);
   });
 });

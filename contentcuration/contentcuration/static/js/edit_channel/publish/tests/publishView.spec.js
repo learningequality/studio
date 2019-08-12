@@ -59,14 +59,16 @@ describe('publishView', () => {
       mockFunctions.setChannelLanguage.mockReset();
     });
     it('should call setChannelLanguage', () => {
-      languageDropdown.vm.$emit('changed', 'en');
+      languageDropdown.vm.$emit('input', 'en');
       expect(mockFunctions.setChannelLanguage).toHaveBeenCalled();
     });
     it('should set saving to true', () => {
-      languageDropdown.vm.$emit('changed', 'en');
+      languageDropdown.vm.$emit('input', 'en');
       expect(wrapper.vm.saving).toBe(true);
       wrapper.vm.$nextTick(() => {
-        expect(wrapper.vm.saving).toBe(false);
+        wrapper.vm.$nextTick(() => {
+          expect(wrapper.vm.saving).toBe(false);
+        });
       });
     });
   });
