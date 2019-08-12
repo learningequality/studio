@@ -7,80 +7,53 @@
         </VCardTitle>
       </VFlex>
       <VFlex xs12 sm12 md9>
-        <VLayout row wrap>
-          <VFlex xs12>
-            <VCardTitle>
-              <h3 class="headline mb-0">
-                {{ channel.name }}
-              </h3>
-            </VCardTitle>
-          </VFlex>
-        </VLayout>
-        <VLayout row wrap>
-          <VFlex v-if="language" class="pa-1" shrink>
-            <VCardText>
+        <VCardTitle>
+          <h3 class="headline">{{ channel.name }}</h3>
+          <div>
+            <span v-if="language">
               {{ language.native_name }}
-            </VCardText>
-          </VFlex>
-          <VFlex class="pa-1" shrink>
-            <VCardText>
-              {{ $tr('resourceCount', {'count': channel.count}) }}
-            </VCardText>
-          </VFlex>
-          <VFlex class="pa-1" shrink>
-            <CopyToken
-              v-if="channel.published"
-              :key="channel.primary_token"
-              :token="channel.primary_token"
-            />
-            <VCardText class="font-italic" v-else>
-              {{ $tr('unpublishedText') }}
-            </VCardText>
-          </VFlex>
-        </VLayout>
-        <VLayout>
-          <VFlex xs12>
-            <VCardText>
-              {{ channel.description }}
-            </VCardText>
-          </VFlex>
-        </VLayout>
-      </VFlex>
-    </VLayout>
-    <VLayout row wrap>
-      <VFlex xs10>
-        <VCardText>
-          {{ $tr(
-            'lastUpdated',
-            {
-              'updated': $formatRelative(
-                channel.modified,
-                { now: new Date() }
-              )
-            })
-          }}
-        </VCardText>
-      </VFlex>
-      <VFlex xs2>
-        <VCardText v-if="channel.published">
-          {{ $tr("versionText", {'version': channel.version}) }}
-        </VCardText>
+            </span>
+            {{ $tr('resourceCount', {'count': channel.count}) }}
+            <span v-if="channel.published">
+              {{ $tr("versionText", {'version': channel.version}) }}
+            </span>
+          </div>
+          <div>
+            {{ channel.description }}
+          </div>
+        </VCardTitle>
       </VFlex>
     </VLayout>
     <VCardActions>
+      <VCardText v-if="channel.published">
+        {{ $tr(
+          'lastPublished',
+          {
+            'last_published': $formatRelative(
+              channel.last_published,
+              { now: new Date() }
+            )
+          })
+        }}
+      </VCardText>
+      <VCardText class="font-italic red--text" v-else>
+        {{ $tr('unpublishedText') }}
+      </VCardText>
+      <VSpacer/>
       <VBtn
+        flat
         color="primary"
         :to="channelDetailsLink"
       >
-        {{ $tr(channel.edit ? 'editDetails' : 'viewDetails')}}
+        {{ $tr('details')}}
       </VBtn>
       <VBtn
+        flat
         color="primary"
         :href="openChannelLink"
       >
-        {{ $tr(channel.edit ? 'editContents' : 'viewContents')}}
+        {{ $tr('contents')}}
       </VBtn>
-      <VSpacer/>
       <ChannelStar
         :channelId="channelId"
         :bookmark="channel.bookmark"
@@ -103,12 +76,10 @@
       openChannelTitle: "{channelName} ('CTRL' or 'CMD' + click to open in new tab)",
       resourceCount: '{count, plural,\n =1 {# Resource}\n other {# Resources}}',
       unpublishedText: 'Unpublished',
-      lastUpdated: 'Updated {updated}',
+      lastPublished: 'Published {last_published}',
       versionText: 'Version {version}',
-      editDetails: 'Edit details',
-      viewDetails: 'View details',
-      editContents: 'Edit contents',
-      viewContents: 'View contents',
+      details: 'Details',
+      contents: 'Go to channel',
     },
     components: {
       CopyToken,

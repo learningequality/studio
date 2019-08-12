@@ -9,7 +9,7 @@
       <VCardTitle
         v-if="title"
       >
-        {{ title }}
+        <p class="headline mb-0">{{ title }}</p>
       </VCardTitle>
       <VCardText>
         <slot></slot>

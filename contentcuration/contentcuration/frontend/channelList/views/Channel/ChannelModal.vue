@@ -3,6 +3,7 @@
     v-model="open"
     attach="body"
     fullscreen
+    transition="dialog-bottom-transition"
   >
     <VCard>
       <VToolbar card prominent color="blue">

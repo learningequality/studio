@@ -1,62 +1,46 @@
 <template>
   <VCard class="my-3" :to="channelSetDetailsLink">
-    <VLayout>
-      <VFlex xs1>
-        <VCardTitle>
-          <VIcon x-large>storage</VIcon>
-        </VCardTitle>
-      </VFlex>
-      <VFlex xs11>
-        <VCardTitle>
-          <VLayout row>
-            <VFlex xs4>
-              <h3 class="headline mb-0">
-                {{ channelSet.name }}
-              </h3>
-            </VFlex>
-            <VFlex xs4>
-              <p class="headline mb-0">{{ $tr('channelCount', {'count': channelSet.channels.length}) }}</p>
-            </VFlex>
-            <VFlex xs4>
-              <CopyToken
-                :token="channelSet.secret_token"
-              />
-            </VFlex>
-          </VLayout>
-        </VCardTitle>
-        <VLayout>
-          <VFlex xs12>
-            <VCardText>
-              {{ channelSet.description }}
-            </VCardText>
-          </VFlex>
-        </VLayout>
-      </VFlex>
-    </VLayout>
+    <VCardText>
+      {{ $tr('channelCount', {'count': channelSet.channels.length}) }}
+    </VCardText>
+    <VCardTitle>
+      <h3 class="headline mb-0">
+        {{ channelSet.name }}
+      </h3>
+    </VCardTitle>
+    <VCardText>
+      {{ channelSet.description }}
+    </VCardText>
     <VCardActions>
-      <VBtn
-        color="primary"
-        :to="channelSetDetailsLink"
-        >
-        {{ $tr('edit') }}
-      </VBtn>
       <VSpacer/>
       <VBtn
+        flat
         color="error"
         @click.prevent="deleteDialog=true"
       >
         {{ $tr('deleteChannelSetTitle') }}
       </VBtn>
+      <VBtn
+        flat
+        color="primary"
+        :to="channelSetDetailsLink"
+        >
+        {{ $tr('edit') }}
+      </VBtn>
     </VCardActions>
     <PrimaryDialog v-model="deleteDialog" :title="$tr('deleteChannelSetTitle')">
       {{ $tr('deleteChannelSetText') }}
       <template v-slot:actions>
+        <VSpacer/>
         <VBtn
+          color="primary"
+          flat
           @click="deleteDialog=false"
         >
           {{ $tr('cancel') }}
         </VBtn>
         <VBtn
+          color="primary"
           @click="deleteChannelSet(channelSet.id)"
         >
           {{ $tr('deleteChannelSetTitle') }}
@@ -78,10 +62,10 @@
     name: 'ChannelSetItem',
     $trs: {
       deleteChannelSetTitle: 'Delete',
-      deleteChannelSetText: 'Are you sure you want to PERMANENTLY delete this channel collection?',
+      deleteChannelSetText: 'Are you sure you want to delete this channel collection?',
       channelCount: '{count, plural,\n =1 {# Channel}\n other {# Channels}}',
       cancel: 'Cancel',
-      edit: 'Edit',
+      edit: 'Edit collection',
     },
     components: {
       CopyToken,
