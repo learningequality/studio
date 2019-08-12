@@ -390,17 +390,7 @@ def accessible_channels(request, channel_id):
     # Used for import modal
     # Returns a list of objects with the following parameters:
     # id, title, resource_count, children
-    prefetch_editors = Prefetch(
-        "editors", queryset=User.objects.filter(id=request.user.id)
-    )
-    prefetch_viewers = Prefetch(
-        "viewers", queryset=User.objects.filter(id=request.user.id)
-    )
-    channel_ids = Channel.objects.all().prefetch_related(prefetch_editors, prefetch_viewers).annotate(
-        edit=Cast(Cast(Count("editors"), IntegerField()), BooleanField()),
-        view=Cast(Cast(Count("viewers"), IntegerField()), BooleanField()),
-    )
-    channel_ids = channel_ids.filter(Q(deleted=False) & (Q(public=True) | Q(edit=True) | Q(view=True))).exclude(pk=channel_id).values_list("id", flat=True)
+    channel_ids = Channel.objects.filter(Q(deleted=False) & (Q(public=True) | Q(editors=request.user.id) | Q(viewers=request.user.id))).exclude(pk=channel_id).values_list("id", flat=True)
     channel_main_tree_nodes = ContentNode.objects.filter(
         tree_id=OuterRef("main_tree__tree_id")
     ).order_by()
