@@ -9,13 +9,17 @@ from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse_lazy
+from django.db.models import BooleanField
 from django.db.models import Case
+from django.db.models import Count
 from django.db.models import IntegerField
 from django.db.models import Q
 from django.db.models import Value
 from django.db.models import When
 from django.db.models import OuterRef
 from django.db.models import Subquery
+from django.db.models import Prefetch
+from django.db.models.functions import Cast
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.http import HttpResponseForbidden
@@ -58,7 +62,6 @@ from contentcuration.serializers import ChannelSetChannelListSerializer
 from contentcuration.serializers import ChannelSetSerializer
 from contentcuration.serializers import CurrentUserSerializer
 from contentcuration.serializers import InvitationSerializer
-from contentcuration.serializers import RootNodeSerializer
 from contentcuration.serializers import SimplifiedChannelProbeCheckSerializer
 from contentcuration.serializers import TaskSerializer
 from contentcuration.serializers import UserChannelListSerializer
@@ -364,17 +367,16 @@ def publish_channel(request):
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
 
-class SQCount(Subquery):
+class SQCountDistinct(Subquery):
     # Include ALIAS at the end to support Postgres
-    template = "(SELECT COUNT(%(field)s) FROM (%(subquery)s) AS %(field)s__sum)"
+    template = "(SELECT COUNT(DISTINCT %(field)s) FROM (%(subquery)s) AS %(field)s__sum)"
     output_field = IntegerField()
 
 
 def map_channel_data(channel):
     channel["id"] = channel.pop("main_tree__id")
     channel["title"] = channel.pop("name")
-    if len(channel["children"]) == 1 and channel["children"][0] is None:
-        channel["children"] = []
+    channel["children"] = [child for child in channel["children"] if child]
     channel["metadata"] = {
         "resource_count": channel.pop("resource_count")
     }
@@ -388,19 +390,17 @@ def accessible_channels(request, channel_id):
     # Used for import modal
     # Returns a list of objects with the following parameters:
     # id, title, resource_count, children
-    channels = Channel.objects.filter(Q(deleted=False) & (Q(public=True) | Q(editors=request.user) | Q(viewers=request.user))).exclude(pk=channel_id).select_related("main_tree")
+    channel_ids = Channel.objects.filter(Q(deleted=False) & (Q(public=True) | Q(editors=request.user.id) | Q(viewers=request.user.id))).exclude(pk=channel_id).values_list("id", flat=True)
     channel_main_tree_nodes = ContentNode.objects.filter(
         tree_id=OuterRef("main_tree__tree_id")
-    )
+    ).order_by()
     # Add the unique count of distinct non-topic node content_ids
     non_topic_content_ids = (
-        channel_main_tree_nodes.exclude(kind_id=content_kinds.TOPIC)
-        .order_by("content_id")
-        .distinct("content_id")
-        .values_list("content_id", flat=True)
+        channel_main_tree_nodes.exclude(kind_id=content_kinds.TOPIC).values("content_id")
     )
+    channels = Channel.objects.filter(id__in=channel_ids)
     channels = channels.annotate(
-        resource_count=SQCount(non_topic_content_ids, field="content_id"),
+        resource_count=SQCountDistinct(non_topic_content_ids, field="content_id"),
         children=ArrayAgg("main_tree__children"),
     )
     channels_data = channels.values("name", "resource_count", "children", "main_tree__id")
