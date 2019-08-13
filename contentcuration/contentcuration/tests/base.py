@@ -6,6 +6,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 from django.core.urlresolvers import reverse_lazy
 from django.db import connection
+from django.db import models
 from django.db.migrations.executor import MigrationExecutor
 from django.test import TestCase
 from django.test import TransactionTestCase
@@ -18,7 +19,6 @@ from rest_framework.test import force_authenticate
 from contentcuration.models import User
 from contentcuration.utils import minio_utils
 from contentcuration.utils.policies import get_latest_policies
-
 
 
 class BucketTestMixin:
@@ -191,3 +191,19 @@ class MigrationTestCase(TransactionTestCase):
         test class's selective migrations
         """
         call_command("migrate")
+
+
+class TemporaryModelTestCase(TransactionTestCase):
+    @classmethod
+    def setUpClass(cls):
+        super(TemporaryModelTestCase, cls).setUpClass()
+        cls.TempModel = cls.initTempModel()
+
+    @classmethod
+    def initTempModel(cls):
+        # hidden inside this function because otherwise it will be created during test bootstrap
+        class TempModel(models.Model):
+            id = models.AutoField(primary_key=True)
+            name = models.CharField(max_length=32)
+
+        return TempModel
