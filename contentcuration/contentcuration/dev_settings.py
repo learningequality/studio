@@ -21,7 +21,7 @@ except ImportError:
 else:
     # if debug_panel exists, add it to our INSTALLED_APPS
     INSTALLED_APPS += ('debug_panel', 'debug_toolbar', 'pympler')
-    MIDDLEWARE_CLASSES += ('debug_panel.middleware.DebugPanelMiddleware',)
+    MIDDLEWARE_CLASSES += ('debug_toolbar.middleware.DebugToolbarMiddleware',)
     DEBUG_TOOLBAR_CONFIG = {
         'SHOW_TOOLBAR_CALLBACK': custom_show_toolbar,
 
