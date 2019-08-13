@@ -12,6 +12,7 @@ from contentcuration.db.models.query import CustomQuerySet
 from contentcuration.db.models.sql.compiler import SQLInsertFromCompiler
 from contentcuration.db.models.sql.query import InsertFromQuery
 from contentcuration.db.models.sql.query import UpdateFromQuery
+from contentcuration.db.utils import temporary_model
 
 
 class CustomQuerySetTestCase(TemporaryModelTestCase):
@@ -154,3 +155,27 @@ class CustomQuerySetTestCase(TemporaryModelTestCase):
 
             clone_queryset.query.get_compiler.assert_called_once_with(using=DEFAULT_DB_ALIAS)
             compiler.execute_sql.assert_called_once()
+
+    def test_bulk_update(self):
+        with temporary_model(self.TempModel):
+            objs = [
+                self.TempModel(name='Buster'),
+                self.TempModel(name='Crash'),
+                self.TempModel(name='Dude'),
+            ]
+
+            self.TempModel.objects.bulk_create(objs)
+            updated_objs = objs[:-1]
+
+            for obj in updated_objs:
+                obj.name += 'ed'
+
+            queryset = CustomQuerySet(model=self.TempModel)
+            queryset.bulk_update(objs, ['name'])
+
+            saved_objs = self.TempModel.objects.filter(pk__in=[obj.pk for obj in updated_objs])\
+                .order_by('id')
+            for saved_obj in saved_objs:
+                updated_obj = updated_objs.pop(0)
+                self.assertEqual(updated_obj.pk, saved_obj.pk)
+                self.assertEqual(updated_obj.name, saved_obj.name)
