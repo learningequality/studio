@@ -1,11 +1,5 @@
 <template>
-  <VTooltip
-    :top="position === 'top'"
-    :bottom="position === 'bottom'"
-    :left="position === 'left'"
-    :right="position === 'right'"
-    maxWidth="150px"
-  >
+  <VTooltip maxWidth="150px" v-bind="$attrs">
     <VIcon slot="activator" color="primary">
       {{ icon }}
     </VIcon>
@@ -25,13 +19,6 @@
       icon: {
         type: String,
         default: 'help_outline',
-      },
-      position: {
-        type: String,
-        default: 'top',
-        validator: function(value) {
-          return ['top', 'bottom', 'left', 'right'].includes(value);
-        },
       },
     },
   };

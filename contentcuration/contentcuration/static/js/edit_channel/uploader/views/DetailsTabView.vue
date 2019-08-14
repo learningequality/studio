@@ -154,7 +154,7 @@
                 :placeholder="getPlaceholder('author')"
               >
                 <template v-slot:append-outer>
-                  <HelpTooltip :text="$tr('authorToolTip')" />
+                  <HelpTooltip :text="$tr('authorToolTip')" top />
                 </template>
               </VCombobox>
             </VFlex>
@@ -172,7 +172,7 @@
                 autoSelectFirst
               >
                 <template v-slot:append-outer>
-                  <HelpTooltip :text="$tr('providerToolTip')" />
+                  <HelpTooltip :text="$tr('providerToolTip')" top />
                 </template>
               </VCombobox>
             </VFlex>
@@ -190,7 +190,7 @@
                 :placeholder="getPlaceholder('aggregator')"
               >
                 <template v-slot:append-outer>
-                  <HelpTooltip :text="$tr('aggregatorToolTip')" />
+                  <HelpTooltip :text="$tr('aggregatorToolTip')" top />
                 </template>
               </VCombobox>
             </VFlex>
