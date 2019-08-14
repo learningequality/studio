@@ -19,7 +19,6 @@
 
 <script>
 
-  import _ from 'underscore';
   import Dialog from './Dialog.vue';
 
   export default {
@@ -56,7 +55,7 @@
         return (localStorage['dont_show_messages'] || '').split(',');
       },
       prompt() {
-        if (!this.messageID || !_.contains(this.getMessages(), this.messageID)) {
+        if (!this.messageID || !this.getMessages().includes(this.messageID)) {
           this.$refs.alert.prompt();
         }
       },

@@ -18,7 +18,7 @@
         type: String,
         required: true,
         validator: value => {
-          return _.contains(kinds, value);
+          return kinds.includes(value);
         },
       },
     },

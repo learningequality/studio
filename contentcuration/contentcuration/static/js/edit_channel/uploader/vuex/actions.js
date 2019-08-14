@@ -18,7 +18,7 @@ export function saveNodes(context) {
 export function loadNodes(context, indices) {
   let nodes = _.filter(
     context.state.nodes,
-    (node, i) => node.id && _.contains(indices, i) && !node._COMPLETE
+    (node, i) => node.id && indices.includes(i) && !node._COMPLETE
   );
   if (nodes.length) {
     State.Store.dispatch('loadNodesComplete', _.pluck(nodes, 'id')).then(data => {

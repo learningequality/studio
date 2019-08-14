@@ -15,8 +15,6 @@
 
 <script>
 
-  import _ from 'underscore';
-
   export default {
     name: 'HelpTooltip',
     props: {
@@ -32,7 +30,7 @@
         type: String,
         default: 'top',
         validator: function(value) {
-          return _.contains(['top', 'bottom', 'left', 'right'], value);
+          return ['top', 'bottom', 'left', 'right'].includes(value);
         },
       },
     },

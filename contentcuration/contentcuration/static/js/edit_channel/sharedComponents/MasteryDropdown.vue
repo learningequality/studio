@@ -128,9 +128,7 @@
         required: false,
         validator: function(value) {
           return (
-            !value ||
-            !value.mastery_model ||
-            _.contains(Constants.MasteryModels, value.mastery_model)
+            !value || !value.mastery_model || Constants.MasteryModels.includes(value.mastery_model)
           );
         },
       },

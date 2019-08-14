@@ -35,7 +35,7 @@
         type: String,
         required: false,
         validator: function(value) {
-          return !value || _.contains(_.pluck(Constants.Languages, 'id'), value);
+          return !value || _.pluck(Constants.Languages, 'id').includes(value);
         },
       },
       hint: {

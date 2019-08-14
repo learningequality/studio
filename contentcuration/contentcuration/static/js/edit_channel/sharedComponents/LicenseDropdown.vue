@@ -86,7 +86,7 @@
         required: false,
         validator: value => {
           return (
-            !value || !value.license || _.contains(_.pluck(Constants.Licenses, 'id'), value.license)
+            !value || !value.license || _.pluck(Constants.Licenses, 'id').includes(value.license)
           );
         },
       },

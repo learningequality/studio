@@ -87,7 +87,7 @@
         type: String,
         default: 'learner',
         validator: function(value) {
-          return !value || _.contains(Constants.Roles, value);
+          return !value || Constants.Roles.includes(value);
         },
       },
       placeholder: {

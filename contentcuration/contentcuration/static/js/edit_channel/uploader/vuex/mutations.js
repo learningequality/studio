@@ -61,7 +61,7 @@ export function SET_CHANGES(state) {
   let tags = _.map(selected, n => _.pluck(n.tags, 'tag_name'));
   state.changes.tags = _.intersection.apply(_, tags);
   _.each(state.nodes, (node, i) => {
-    if (!_.contains(state.selectedIndices, i)) node.isNew = false;
+    if (!state.selectedIndices.includes(i)) node.isNew = false;
   });
 }
 
