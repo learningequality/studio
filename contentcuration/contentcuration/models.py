@@ -390,13 +390,20 @@ def object_storage_name(instance, filename):
     :param filename: str
     :return: str
     """
-    return generate_object_storage_name(instance.checksum, filename)
+
+    default_ext = ''
+    if instance.file_format_id:
+        default_ext = '.{}'.format(instance.file_format_id)
+
+    return generate_object_storage_name(instance.checksum, filename, default_ext)
 
 
-def generate_object_storage_name(checksum, filename):
+def generate_object_storage_name(checksum, filename, default_ext=''):
     """ Separated from file_on_disk_name to allow for simple way to check if has already exists """
     h = checksum
-    basename, ext = os.path.splitext(filename)
+    basename, actual_ext = os.path.splitext(filename)
+    ext = actual_ext if actual_ext else default_ext
+
     # Use / instead of os.path.join as Windows makes this \\
     directory = "/".join([settings.STORAGE_ROOT, h[0], h[1]])
     return os.path.join(directory, h + ext.lower())
