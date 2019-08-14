@@ -74,7 +74,7 @@
       background-color: @html-color;
     }
     &.topic {
-      background-color: @gray-500;
+      background-color: @topic-color;
     }
   }
 
