@@ -1,7 +1,6 @@
 from django.db import DEFAULT_DB_ALIAS
 from django.db.models.expressions import Expression
 from django.db.models.query_utils import Q
-from mock import create_autospec
 from mock import Mock
 from mock import patch
 
@@ -53,7 +52,7 @@ class CustomQuerySetTestCase(TemporaryModelTestCase):
 
     @patch('django.db.models.sql.Query')
     def test_exclude_by_single(self, _):
-        e = create_autospec(spec=Expression, spec_set=False)()
+        e = Mock(spec_set=Expression())
         e.resolve_expression.return_value = 'test'
 
         clone = self.queryset.exclude_by(e)
@@ -70,9 +69,9 @@ class CustomQuerySetTestCase(TemporaryModelTestCase):
 
     @patch('django.db.models.sql.Query')
     def test_exclude_by_multiple(self, _):
-        e1 = create_autospec(spec=Expression, spec_set=False)()
+        e1 = Mock(spec_set=Expression())
         e1.resolve_expression.return_value = 'test1'
-        e2 = create_autospec(spec=Expression, spec_set=False)()
+        e2 = Mock(spec_set=Expression())
         e2.resolve_expression.return_value = 'test2'
 
         clone = self.queryset.exclude_by(e1, e2)
@@ -97,21 +96,17 @@ class CustomQuerySetTestCase(TemporaryModelTestCase):
 
     @patch('django.db.models.sql.Query')
     def test_joining(self, _):
-        j = create_autospec(spec=Join, spec_set=False)(None)
+        j = Mock(spec_set=Join(None))
         clone = self.queryset.joining(j)
         self.assertIsInstance(clone, CustomQuerySet)
 
         j.resolve_expression.assert_called_once_with(clone.query)
 
-    # @mark.skip('Failing: TypeError: super() argument 1 must be type, not MagicMock')
     @patch('django.db.models.sql.Query')
     def test_create_from(self, _):
-        Queryset = Mock(spec=CustomQuerySet, spec_set=False)
-        Compiler = create_autospec(spec=SQLInsertFromCompiler, spec_set=False)
-
-        from_queryset = Queryset(model=self.TempModel, using=DEFAULT_DB_ALIAS)
-        clone_queryset = Queryset(model=self.TempModel, using=DEFAULT_DB_ALIAS)
-        compiler = Compiler(from_queryset.query, None, None)
+        from_queryset = Mock(spec_set=CustomQuerySet(model=self.TempModel, using=DEFAULT_DB_ALIAS))
+        clone_queryset = Mock(spec_set=CustomQuerySet(model=self.TempModel, using=DEFAULT_DB_ALIAS))
+        compiler = Mock(spec_set=SQLInsertFromCompiler(from_queryset.query, None, None))
 
         with patch.object(self.queryset, '_clone') as mocked_clone:
             mocked_clone.return_value = clone_queryset
@@ -132,12 +127,10 @@ class CustomQuerySetTestCase(TemporaryModelTestCase):
 
     @patch('django.db.models.sql.Query')
     def test_update_from(self, _):
-        Queryset = Mock(spec=CustomQuerySet, spec_set=False)
-        Compiler = create_autospec(spec=SQLInsertFromCompiler, spec_set=False)
+        clone_queryset = Mock(spec_set=CustomQuerySet(model=self.TempModel, using=DEFAULT_DB_ALIAS))
+        compiler = Mock(spec_set=SQLInsertFromCompiler(clone_queryset.query, None, None))
 
-        j = create_autospec(spec=Join, spec_set=False)(None)
-        clone_queryset = Queryset(model=self.TempModel, using=DEFAULT_DB_ALIAS)
-        compiler = Compiler(clone_queryset.query, None, None)
+        j = Mock(spec_set=Join(None))
 
         with patch.object(self.queryset, '_clone') as mocked_clone:
             mocked_clone.return_value = clone_queryset
