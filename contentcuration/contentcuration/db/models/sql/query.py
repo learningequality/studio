@@ -33,18 +33,17 @@ class UpdateFromQuery(Query):
     def __init__(self, *args, **kwargs):
         super(UpdateFromQuery, self).__init__(*args, **kwargs)
         self._from_join = None
-        self._return_fields = []
         self._set_expressions = []
+        self._lazy = False
 
-    def set_return_fields(self, return_fields):
-        self._return_fields = return_fields
-        return self
+    def set_lazy(self, lazy):
+        self._lazy = lazy
 
     def clone(self, klass=None, memo=None, **kwargs):
         clone = super(UpdateFromQuery, self).clone(klass=klass, memo=memo, **kwargs)
         clone._from_join = self._from_join.copy()
         clone._set_expressions = [expression.copy() for expression in self._set_expressions]
-        clone._return_fields = self._return_fields
+        clone._lazy = self._lazy
         return clone
 
     def get_compiler(self, using=None, connection=None):
@@ -52,7 +51,7 @@ class UpdateFromQuery(Query):
             raise ValueError("Need either using or connection")
         if using:
             connection = connections[using]
-        return SQLUpdateFromCompiler(self, connection, using, return_fields=self._return_fields)
+        return SQLUpdateFromCompiler(self, connection, using, lazy=getattr(self, '_lazy', False))
 
     def update_from(self, join, *set_expressions, **kwargs):
         self._from_join = join

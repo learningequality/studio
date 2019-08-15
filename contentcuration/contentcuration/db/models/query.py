@@ -87,13 +87,13 @@ class CustomQuerySet(QuerySet):
         return clone.query.get_compiler(using=using).execute_sql(return_id)
     create_from.alters_data = True
 
-    def update_from(self, join, return_fields=None, using=None, *args, **kwargs):
+    def update_from(self, join, lazy=False, using=None, *args, **kwargs):
         """
         Updates models using a join from another table, accepting a mapping of columns to set
 
         :param join: A Join object
         :type join: contentcuration.db.models.expressions.Join
-        :param return_fields: A list of string field names to return from the update
+        :param lazy: A boolean indicating when the update will occur, lazy=False is immediate
         :param using: Database alias
         :param args: A list of Set expressions
         :param kwargs: Mapping of columns, update table column A from join column B
@@ -108,10 +108,9 @@ class CustomQuerySet(QuerySet):
         clone.query.update_from(join, *args, **kwargs)
         join.resolve_expression(clone.query)
 
-        if return_fields:
-            clone.query.set_return_fields(return_fields)
-            self.only(*return_fields)
-            return iter(self)
+        if lazy:
+            clone.query.set_lazy(lazy)
+            return clone
 
         return clone.query.get_compiler(using=using).execute_sql()
     update_from.alters_data = True

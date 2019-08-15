@@ -137,7 +137,7 @@ class JoinRef(BaseExpression):
         return Col(self.table_alias, JoinField(self.field_name))
 
     def as_sql(self, compiler, connection):
-        return compiler.compile(self.resolve_expression()), []
+        return compiler.compile(self.resolve_expression())
 
 
 class JoinExpression(object):

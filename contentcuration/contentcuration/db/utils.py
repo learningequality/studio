@@ -9,7 +9,7 @@ SQL_CREATE_TEMP_TABLE = "CREATE TEMP TABLE %(table)s (%(definition)s) ON COMMIT 
 
 
 @contextmanager
-def temporary_model(model, using=DEFAULT_DB_ALIAS):
+def temporary_model(model, using=DEFAULT_DB_ALIAS, atomic=True):
     connection = connections[using]
     temp_models = TEMPORARY_MODELS.get(using, [])
 
@@ -21,7 +21,7 @@ def temporary_model(model, using=DEFAULT_DB_ALIAS):
     TEMPORARY_MODELS.update({using: temp_models})
 
     # creates atomic transaction
-    with connection.schema_editor() as schema:
+    with connection.schema_editor(atomic=atomic) as schema:
         sql_create_table = schema.sql_create_table
 
         try:
