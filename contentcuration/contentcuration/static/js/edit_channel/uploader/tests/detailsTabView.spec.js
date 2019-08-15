@@ -75,7 +75,7 @@ describe('detailsTabView', () => {
       expect(wrapper.vm.aggregator).toEqual(DEFAULT_EXERCISE.aggregator);
       expect(wrapper.vm.copyrightHolder).toEqual(DEFAULT_EXERCISE.copyright_holder);
     });
-    it('varied fields should show placeholder', () => {
+    it('varied fields should have varied set to true', () => {
       DEFAULT_VIDEO.role_visibility = null;
       DEFAULT_VIDEO.language = null;
       DEFAULT_VIDEO.license = null;
