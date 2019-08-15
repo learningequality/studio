@@ -1,14 +1,19 @@
 <template>
   <VAutocomplete
-    v-model="selected"
+    v-model="language"
     :items="languages"
     :label="$tr('labelText')"
-    color="#2196f3"
+    color="primary"
     itemValue="id"
     :itemText="languageText"
-    :autoSelectFirst="true"
+    autoSelectFirst
     :allowOverflow="false"
-    @input="selectedLanguage"
+    :hint="hint"
+    persistentHint
+    :placeholder="placeholder"
+    :readonly="readonly"
+    :required="required"
+    :rules="required? rules : []"
   />
 </template>
 
@@ -23,35 +28,54 @@
     $trs: {
       labelText: 'Language',
       languageItemText: '{language} ({code})',
+      languageRequired: 'Language is required',
     },
     props: {
-      language: {
+      value: {
         type: String,
         required: false,
         validator: function(value) {
           return !value || _.contains(_.pluck(Constants.Languages, 'id'), value);
         },
       },
+      hint: {
+        type: String,
+        required: false,
+      },
+      placeholder: {
+        type: String,
+        default: '',
+      },
+      readonly: {
+        type: Boolean,
+        default: false,
+      },
+      required: {
+        type: Boolean,
+        default: false,
+      },
     },
     data() {
       return {
-        selected: '',
+        rules: [v => !!v || this.$tr('languageRequired')],
       };
     },
     computed: {
+      language: {
+        get() {
+          return this.value;
+        },
+        set(value) {
+          this.$emit('input', value);
+        },
+      },
       languages() {
         return _.chain(Constants.Languages)
           .sortBy('native_name')
           .value();
       },
     },
-    mounted() {
-      this.selected = this.language;
-    },
     methods: {
-      selectedLanguage(languageCode) {
-        this.$emit('changed', languageCode);
-      },
       languageText(item) {
         return this.$tr('languageItemText', { language: item.native_name, code: item.id });
       },
@@ -67,12 +91,12 @@
 
   .v-autocomplete {
     display: inline-block;
-    width: 150px;
+    width: 100%;
   }
 
   /deep/ .v-list__tile {
     width: 100%;
-    text-decoration: none !important;
+    .linked-list-item;
     &:hover,
     &.v-list__tile--highlighted {
       background-color: @gray-200 !important;

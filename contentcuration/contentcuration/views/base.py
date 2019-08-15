@@ -11,11 +11,11 @@ from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse_lazy
 from django.db.models import Case
 from django.db.models import IntegerField
+from django.db.models import OuterRef
 from django.db.models import Q
+from django.db.models import Subquery
 from django.db.models import Value
 from django.db.models import When
-from django.db.models import OuterRef
-from django.db.models import Subquery
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.http import HttpResponseForbidden
@@ -56,9 +56,9 @@ from contentcuration.serializers import ChannelListSerializer
 from contentcuration.serializers import ChannelSerializer
 from contentcuration.serializers import ChannelSetChannelListSerializer
 from contentcuration.serializers import ChannelSetSerializer
+from contentcuration.serializers import ContentNodeSerializer
 from contentcuration.serializers import CurrentUserSerializer
 from contentcuration.serializers import InvitationSerializer
-from contentcuration.serializers import RootNodeSerializer
 from contentcuration.serializers import SimplifiedChannelProbeCheckSerializer
 from contentcuration.serializers import TaskSerializer
 from contentcuration.serializers import UserChannelListSerializer
@@ -388,7 +388,8 @@ def accessible_channels(request, channel_id):
     # Used for import modal
     # Returns a list of objects with the following parameters:
     # id, title, resource_count, children
-    channels = Channel.objects.filter(Q(deleted=False) & (Q(public=True) | Q(editors=request.user) | Q(viewers=request.user))).exclude(pk=channel_id).select_related("main_tree")
+    channels = Channel.objects.filter(Q(deleted=False) & (Q(public=True) | Q(editors=request.user) | Q(viewers=request.user)))\
+                              .exclude(pk=channel_id).select_related("main_tree")
     channel_main_tree_nodes = ContentNode.objects.filter(
         tree_id=OuterRef("main_tree__tree_id")
     )
@@ -519,3 +520,13 @@ def save_token_to_channels(request, token):
 
 class SandboxView(TemplateView):
     template_name = "sandbox.html"
+
+    def get_context_data(self, **kwargs):
+        kwargs = super(SandboxView, self).get_context_data(**kwargs)
+        channel = Channel.objects.filter(deleted=False, public=True).first()
+        nodes = ContentNodeSerializer(channel.main_tree.get_descendants(), many=True)
+        kwargs.update({"nodes": JSONRenderer().render(nodes.data),
+                       "channel": channel.pk,
+                       "current_user": JSONRenderer().render(CurrentUserSerializer(self.request.user).data)
+                       })
+        return kwargs

@@ -60,7 +60,7 @@ var messages = {
   num_correct_in_a_row_2: '2 in a row',
   num_correct_in_a_row_3: '3 in a row',
   num_correct_in_a_row_5: '5 in a row',
-  m_of_n: 'M of N...',
+  m_of_n: 'M out of N...',
   do_all_description:
     'Learner must answer all questions in the exercise correctly (not recommended for long exercises)',
   num_correct_in_a_row_10_description: 'Learner must answer ten questions in a row correctly',

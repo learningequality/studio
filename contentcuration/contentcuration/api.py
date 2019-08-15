@@ -2,7 +2,6 @@
 This module contains utility functions used by API endpoints.
 """
 import hashlib
-import json
 import logging
 import os
 from cStringIO import StringIO

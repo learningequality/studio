@@ -27,6 +27,7 @@ from contentcuration.utils.publish import set_channel_icon_encoding
 
 pytestmark = pytest.mark.django_db
 
+
 def fileobj_video(contents=None):
     """
     Create an mp4 video file in storage and then create a File model from it.
