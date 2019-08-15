@@ -10,9 +10,6 @@ EXCLUDED_DEBUG_URLS = [
 def custom_show_toolbar(request):
     return not any(request.path.startswith(url) for url in EXCLUDED_DEBUG_URLS)
 
-# TODO: REMOVE ONCE DONE TESTING
-DEFAULT_FILE_STORAGE = 'contentcuration.utils.gcs_storage.GoogleCloudStorage'
-
 LANGUAGES += (('ar', ugettext('Arabic')),)  # noqa
 
 try:

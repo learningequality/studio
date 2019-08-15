@@ -543,7 +543,6 @@ def convert_data_to_nodes(user, content_data, parent_node):
     except KeyError as e:
         raise ObjectDoesNotExist("Error creating node: {0}".format(e.message))
 
-
 def create_node(node_data, parent_node, sort_order):
     """ Generate node based on node dict """
     # Make sure license is valid

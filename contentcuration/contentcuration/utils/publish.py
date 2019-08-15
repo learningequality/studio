@@ -58,20 +58,21 @@ class EarlyExit(BaseException):
 
 def send_emails(channel, user_id):
     subject = render_to_string('registration/custom_email_subject.txt', {'subject': _('Kolibri Studio Channel Published')})
+    token = channel.secret_tokens.filter(is_primary=True).first()
+    token = '{}-{}'.format(token.token[:5], token.token[-5:])
 
     if user_id:
         user = ccmodels.User.objects.get(pk=user_id)
-        message = render_to_string('registration/channel_published_email.txt', {'channel': channel, 'user': user})
+        message = render_to_string('registration/channel_published_email.txt', {'channel': channel, 'user': user, 'token': token})
         user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )
     else:
         # Email all users about updates to channel
         for user in itertools.chain(channel.editors.all(), channel.viewers.all()):
-            message = render_to_string('registration/channel_published_email.txt', {'channel': channel, 'user': user})
+            message = render_to_string('registration/channel_published_email.txt', {'channel': channel, 'user': user, 'token': token})
             user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )
 
 
-def create_content_database(channel_id, force, user_id, force_exercises, task_object=None):
-    channel = ccmodels.Channel.objects.get(pk=channel_id)
+def create_content_database(channel, force, user_id, force_exercises, task_object=None):
     # increment the channel version
     if not force:
         raise_if_nodes_are_all_unchanged(channel)
@@ -91,7 +92,7 @@ def create_content_database(channel_id, force, user_id, force_exercises, task_ob
         if task_object:
             task_object.update_state(state='STARTED', meta={'progress': 90.0})
         map_prerequisites(channel.main_tree)
-        save_export_database(channel_id)
+        save_export_database(channel.pk)
 
 
 def create_kolibri_license_object(ccnode):
@@ -175,7 +176,7 @@ def create_slideshow_manifest(ccnode, kolibrinode, user_id=None):
         with tempfile.NamedTemporaryFile(prefix="slideshow_manifest_", delete=False) as temp_manifest:
             temp_filepath = temp_manifest.name
 
-            temp_manifest.write(ccnode.extra_fields)
+            temp_manifest.write(json.dumps(ccnode.extra_fields))
 
             size_on_disk = temp_manifest.tell()
             temp_manifest.seek(0)
@@ -518,16 +519,18 @@ def process_image_strings(content, zf):
 
 
 def map_prerequisites(root_node):
+
     for n in ccmodels.PrerequisiteContentRelationship.objects.filter(prerequisite__tree_id=root_node.tree_id)\
             .values('prerequisite__node_id', 'target_node__node_id'):
-        target_node = kolibrimodels.ContentNode.objects.get(pk=n['target_node__node_id'])
-        target_node.has_prerequisite.add(n['prerequisite__node_id'])
+        try:
+            target_node = kolibrimodels.ContentNode.objects.get(pk=n['target_node__node_id'])
+            target_node.has_prerequisite.add(n['prerequisite__node_id'])
+        except ccmodels.ContentNode.DoesNotExist as e:
+            logging.error('Unable to find prerequisite {}'.format(str(e)))
 
 
 def map_channel_to_kolibri_channel(channel):
     logging.debug("Generating the channel metadata.")
-    channel.icon_encoding = convert_channel_thumbnail(channel)
-    channel.save()
     kolibri_channel = kolibrimodels.ChannelMetadata.objects.create(
         id=channel.id,
         name=channel.name,
@@ -541,6 +544,11 @@ def map_channel_to_kolibri_channel(channel):
     logging.info("Generated the channel metadata.")
 
     return kolibri_channel
+
+
+def set_channel_icon_encoding(channel):
+    channel.icon_encoding = convert_channel_thumbnail(channel)
+    channel.save()
 
 
 def convert_channel_thumbnail(channel):
@@ -647,7 +655,8 @@ def publish_channel(user_id, channel_id, force=False, force_exercises=False, sen
     channel = ccmodels.Channel.objects.get(pk=channel_id)
 
     try:
-        create_content_database(channel_id, force, user_id, force_exercises, task_object)
+        set_channel_icon_encoding(channel)
+        create_content_database(channel, force, user_id, force_exercises, task_object)
         increment_channel_version(channel)
         mark_all_nodes_as_published(channel)
         add_tokens_to_channel(channel)
