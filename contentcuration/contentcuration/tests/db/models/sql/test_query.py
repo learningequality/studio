@@ -62,13 +62,13 @@ class UpdateFromQueryTestCase(TemporaryModelTestCase):
 
         self.query._from_join = from_join
         self.query._set_expressions = [set_expr_1, set_expr_2]
-        self.query._return_fields = ['return_field_1', 'return_field_2']
+        self.query._lazy = True
 
         clone = self.query.clone()
         self.assertIsNot(self.query, clone)
         self.assertEqual('copy_from_join', clone._from_join)
         self.assertEqual(['set_expr_1', 'set_expr_2'], clone._set_expressions)
-        self.assertEqual(['return_field_1', 'return_field_2'], clone._return_fields)
+        self.assertTrue(clone._lazy)
 
     def test_get_compiler__needs(self):
         with self.assertRaises(ValueError):

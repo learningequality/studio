@@ -1,4 +1,5 @@
 import datetime
+from contextlib import contextmanager
 
 import testdata
 from django.conf import settings
@@ -7,6 +8,7 @@ from django.core.management import call_command
 from django.core.urlresolvers import reverse_lazy
 from django.db import connection
 from django.db import models
+from django.db import transaction
 from django.db.migrations.executor import MigrationExecutor
 from django.test import TestCase
 from django.test import TransactionTestCase
@@ -16,6 +18,7 @@ from rest_framework.test import APIRequestFactory
 from rest_framework.test import APITestCase
 from rest_framework.test import force_authenticate
 
+from contentcuration.db.utils import temporary_model
 from contentcuration.models import User
 from contentcuration.utils import minio_utils
 from contentcuration.utils.policies import get_latest_policies
@@ -207,3 +210,15 @@ class TemporaryModelTestCase(TransactionTestCase):
             name = models.CharField(max_length=32)
 
         return TempModel
+
+    @contextmanager
+    def temporary_model(self):
+        class DoRollback(RuntimeError):
+            pass
+
+        try:
+            with transaction.atomic(), temporary_model(self.TempModel, atomic=False):
+                yield
+                raise DoRollback
+        except DoRollback:
+            pass
