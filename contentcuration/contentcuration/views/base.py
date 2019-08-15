@@ -525,7 +525,7 @@ class SandboxView(TemplateView):
         kwargs = super(SandboxView, self).get_context_data(**kwargs)
         channel = Channel.objects.filter(deleted=False, public=True).first()
         nodes = ContentNodeSerializer(channel.main_tree.get_descendants(), many=True)
-        kwargs.update({"nodes": JSONRenderer().render(nodes.data),
+        kwargs.update({"nodes": JSONRenderer().render(nodes.data[:10]),
                        "channel": channel.pk,
                        "current_user": JSONRenderer().render(CurrentUserSerializer(self.request.user).data)
                        })
