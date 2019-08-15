@@ -11,7 +11,7 @@
       :disabled="disabled"
       :readonly="readonly"
       :required="required"
-      :rules="required? rules : []"
+      :rules="rules"
     >
       <template v-slot:append-outer>
         <InfoModal :header="$tr('visibilityHeader')">
@@ -21,10 +21,10 @@
             <div class="role-table">
               <VLayout v-for="roleOption in roles" :key="roleOption.id" row>
                 <VFlex xs3 textRight class="role-label">
+                  {{ translate(roleOption.id) }}
                   <VIcon v-if="roleOption.icon" color="primary">
                     {{ roleOption.icon }}
                   </VIcon>
-                  {{ translate(roleOption.id) }}
                 </VFlex>
                 <VFlex xs9>
                   {{ $tr(roleOption.id) }}
@@ -87,7 +87,7 @@
         type: String,
         default: 'learner',
         validator: function(value) {
-          return !value || _.contains(Constants.Roles, value);
+          return !value || Constants.Roles.includes(value);
         },
       },
       placeholder: {
@@ -107,11 +107,6 @@
         default: false,
       },
     },
-    data() {
-      return {
-        rules: [v => !!v || this.$tr('visibilityRequired')],
-      };
-    },
     computed: {
       role: {
         get() {
@@ -123,6 +118,9 @@
       },
       roles() {
         return roleMap;
+      },
+      rules() {
+        return this.required ? [v => !!v || this.$tr('visibilityRequired')] : [];
       },
     },
     methods: {
@@ -140,7 +138,7 @@
   @import '../../../less/global-variables.less';
 
   .v-icon {
-    margin-right: 5px;
+    margin-left: 5px;
     font-size: 12pt;
     vertical-align: text-top;
   }

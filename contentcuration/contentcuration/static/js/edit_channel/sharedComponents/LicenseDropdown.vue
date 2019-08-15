@@ -12,7 +12,7 @@
         :disabled="disabled"
         :required="required"
         :readonly="readonly"
-        :rules="required? rules.license : []"
+        :rules="licenseRules"
         :placeholder="placeholder"
         class="license-select"
       >
@@ -51,7 +51,7 @@
       :placeholder="descriptionPlaceholder"
       :readonly="readonly"
       :required="descriptionRequired"
-      :rules="descriptionRequired? rules.description : []"
+      :rules="descriptionRules"
     />
   </div>
 </template>
@@ -86,7 +86,7 @@
         required: false,
         validator: value => {
           return (
-            !value || !value.license || _.contains(_.pluck(Constants.Licenses, 'id'), value.license)
+            !value || !value.license || _.pluck(Constants.Licenses, 'id').includes(value.license)
           );
         },
       },
@@ -114,14 +114,6 @@
         type: Boolean,
         default: true,
       },
-    },
-    data() {
-      return {
-        rules: {
-          license: [v => !!v || this.$tr('licenseValidationMessage')],
-          description: [v => !!v || this.$tr('descriptionValidationMessage')],
-        },
-      };
     },
     computed: {
       license: {
@@ -156,6 +148,14 @@
         let licenseUrl = this.selectedLicense.license_url;
         let isCC = licenseUrl.includes('creativecommons.org');
         return isCC ? licenseUrl + 'deed.' + (window.languageCode || 'en') : licenseUrl;
+      },
+      licenseRules() {
+        return this.required ? [v => !!v || this.$tr('licenseValidationMessage')] : [];
+      },
+      descriptionRules() {
+        return this.descriptionRequired
+          ? [v => !!v || this.$tr('descriptionValidationMessage')]
+          : [];
       },
     },
     methods: {

@@ -9,7 +9,7 @@
             v-model="title"
             :counter="(viewOnly)? null : 200"
             maxlength="200"
-            :rules="rules.title"
+            :rules="titleRules"
             :label="$tr('titleLabel') + (viewOnly ? '' : ' *')"
             autofocus
             required
@@ -61,9 +61,9 @@
       <v-expansion-panel v-model="panel" expand>
         <v-expansion-panel-content key="audience">
           <template v-slot:header>
-            <h2>
+            <div class="headline">
               {{ $tr('audienceHeader') }}
-            </h2>
+            </div>
           </template>
           <v-card>
             <!-- Language -->
@@ -91,9 +91,9 @@
         </v-expansion-panel-content>
         <v-expansion-panel-content v-if="allExercises" key="assessments">
           <template v-slot:header>
-            <h2>
+            <div class="headline">
               {{ $tr('assessmentHeader') }}
-            </h2>
+            </div>
           </template>
           <v-card>
             <!-- Mastery -->
@@ -127,12 +127,12 @@
         </v-expansion-panel-content>
         <v-expansion-panel-content v-if="allResources" key="source">
           <template v-slot:header>
-            <h2>
+            <div class="headline">
               {{ $tr('sourceHeader') }}
               <span v-if="disableAuthEdits">
                 {{ $tr('detectedImportText') }}
               </span>
-            </h2>
+            </div>
           </template>
           <v-card class="auth-section">
             <VFlex v-if="oneSelected && isImported" xs12>
@@ -154,7 +154,7 @@
                 :placeholder="getPlaceholder('author')"
               >
                 <template v-slot:append-outer>
-                  <HelpTooltip :text="$tr('authorToolTip')" />
+                  <HelpTooltip :text="$tr('authorToolTip')" top />
                 </template>
               </VCombobox>
             </VFlex>
@@ -172,7 +172,7 @@
                 autoSelectFirst
               >
                 <template v-slot:append-outer>
-                  <HelpTooltip :text="$tr('providerToolTip')" />
+                  <HelpTooltip :text="$tr('providerToolTip')" top />
                 </template>
               </VCombobox>
             </VFlex>
@@ -190,7 +190,7 @@
                 :placeholder="getPlaceholder('aggregator')"
               >
                 <template v-slot:append-outer>
-                  <HelpTooltip :text="$tr('aggregatorToolTip')" />
+                  <HelpTooltip :text="$tr('aggregatorToolTip')" top />
                 </template>
               </VCombobox>
             </VFlex>
@@ -218,7 +218,7 @@
                 :label="$tr('copyrightHolderLabel') + (viewOnly || disableAuthEdits ? '' : ' *')"
                 maxlength="200"
                 :required="!changes.copyright_holder.varied && !disableAuthEdits"
-                :rules="rules.copyrightHolder"
+                :rules="copyrightHolderRules"
                 :placeholder="getPlaceholder('copyright_holder')"
                 autoSelectFirst
                 :readonly="viewOnly || disableAuthEdits"
@@ -287,16 +287,6 @@
         tagText: null,
         valid: true,
         panel: ['audience', 'assessments', 'source'],
-        rules: {
-          title: [v => !!v || this.$tr('titleValidationMessage')],
-          copyrightHolder: [
-            v =>
-              this.disableAuthEdits ||
-              this.changes.copyright_holder.varied ||
-              !!v ||
-              this.$tr('copyrightHolderValidationMessage'),
-          ],
-        },
       };
     },
     computed: {
@@ -459,6 +449,18 @@
       invalidSelected() {
         return _.intersection(this.selectedIndices, this.invalidNodes).length;
       },
+      titleRules() {
+        return [v => !!v || this.$tr('titleValidationMessage')];
+      },
+      copyrightHolderRules() {
+        return [
+          v =>
+            this.disableAuthEdits ||
+            this.changes.copyright_holder.varied ||
+            !!v ||
+            this.$tr('copyrightHolderValidationMessage'),
+        ];
+      },
     },
     watch: {
       changes() {
@@ -534,9 +536,8 @@
           padding: 0 15px;
           cursor: pointer;
 
-          h2 {
-            margin: 0;
-            font-size: 16pt;
+          .headline {
+            font-family: @font-family !important;
             span {
               margin-left: 5px;
               font-size: 11pt;

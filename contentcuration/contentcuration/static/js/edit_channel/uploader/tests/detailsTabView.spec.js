@@ -60,103 +60,102 @@ describe('detailsTabView', () => {
   });
   describe('on render', () => {
     it('all fields should match node field values', () => {
-      expect(wrapper.vm.title).toEqual(DEFAULT_EXERCISE.title);
-      expect(wrapper.vm.description).toEqual(DEFAULT_EXERCISE.description);
-      expect(wrapper.vm.license.license).toEqual(DEFAULT_EXERCISE.license);
-      expect(wrapper.vm.license.description).toEqual(DEFAULT_EXERCISE.license_description);
-      expect(wrapper.vm.role).toEqual(DEFAULT_EXERCISE.role_visibility);
-      expect(wrapper.vm.randomizeOrder).toEqual(DEFAULT_EXERCISE.extra_fields.randomize);
-      expect(wrapper.vm.masteryModel.mastery_model).toEqual(
-        DEFAULT_EXERCISE.extra_fields.mastery_model
-      );
-      expect(wrapper.vm.language).toEqual(DEFAULT_EXERCISE.language);
-      expect(wrapper.vm.author).toEqual(DEFAULT_EXERCISE.author);
-      expect(wrapper.vm.provider).toEqual(DEFAULT_EXERCISE.provider);
-      expect(wrapper.vm.aggregator).toEqual(DEFAULT_EXERCISE.aggregator);
-      expect(wrapper.vm.copyrightHolder).toEqual(DEFAULT_EXERCISE.copyright_holder);
+      let keys = [
+        'tags',
+        'language',
+        'title',
+        'description',
+        'author',
+        'provider',
+        'aggregator',
+        'role',
+        'license',
+        'masteryModel',
+        'randomizeOrder',
+        'copyrightHolder',
+      ];
+      expect(_.pick(wrapper.vm, keys)).toEqual({
+        ..._.pick(DEFAULT_EXERCISE, keys),
+        license: {
+          license: DEFAULT_EXERCISE.license,
+          description: DEFAULT_EXERCISE.license_description,
+        },
+        role: DEFAULT_EXERCISE.role_visibility,
+        randomizeOrder: DEFAULT_EXERCISE.extra_fields.randomize,
+        masteryModel: {
+          mastery_model: DEFAULT_EXERCISE.extra_fields.mastery_model,
+        },
+        copyrightHolder: DEFAULT_EXERCISE.copyright_holder,
+      });
     });
-    it('varied fields should show placeholder', () => {
+    it('varied fields should have varied set to true', () => {
       DEFAULT_VIDEO.role_visibility = null;
       DEFAULT_VIDEO.language = null;
       DEFAULT_VIDEO.license = null;
       localStore.commit('edit_modal/SELECT_NODE', videoIndex);
       wrapper.vm.$nextTick(() => {
-        expect(wrapper.vm.changes.license.varied).toBe(true);
-        expect(wrapper.vm.changes.role_visibility.varied).toBe(true);
-        expect(wrapper.vm.changes.language.varied).toBe(true);
-        expect(wrapper.vm.changes.author.varied).toBe(true);
-        expect(wrapper.vm.changes.provider.varied).toBe(true);
-        expect(wrapper.vm.changes.aggregator.varied).toBe(true);
-        expect(wrapper.vm.changes.copyright_holder.varied).toBe(true);
+        let keys = [
+          'license',
+          'role_visibility',
+          'language',
+          'author',
+          'provider',
+          'aggregator',
+          'copyright_holder',
+        ];
+        keys.forEach(key => {
+          expect(wrapper.vm.changes[key].varied).toBe(true);
+        });
       });
     });
     describe('field visibility', () => {
+      let keys = [
+        'title',
+        'description',
+        'tags',
+        'license',
+        'role_visibility',
+        'randomize',
+        'mastery_model',
+        'language',
+        'author',
+        'provider',
+        'aggregator',
+        'copyright_holder',
+      ];
       it('certain fields should be visible for exercise nodes', () => {
-        expect(wrapper.find({ ref: 'title' }).exists()).toBe(true);
-        expect(wrapper.find({ ref: 'description' }).exists()).toBe(true);
-        expect(wrapper.find({ ref: 'tags' }).exists()).toBe(true);
-        expect(wrapper.find({ ref: 'license' }).exists()).toBe(true);
-        expect(wrapper.find({ ref: 'role_visibility' }).exists()).toBe(true);
-        expect(wrapper.find({ ref: 'randomize' }).exists()).toBe(true);
-        expect(wrapper.find({ ref: 'mastery_model' }).exists()).toBe(true);
-        expect(wrapper.find({ ref: 'language' }).exists()).toBe(true);
-        expect(wrapper.find({ ref: 'author' }).exists()).toBe(true);
-        expect(wrapper.find({ ref: 'provider' }).exists()).toBe(true);
-        expect(wrapper.find({ ref: 'aggregator' }).exists()).toBe(true);
-        expect(wrapper.find({ ref: 'copyright_holder' }).exists()).toBe(true);
+        keys.forEach(key => {
+          expect(wrapper.find({ ref: key }).exists()).toBe(true);
+        });
       });
       it('certain fields should be visible for video nodes', () => {
         localStore.commit('edit_modal/SET_NODE', videoIndex);
         localStore.commit('edit_modal/UPDATE_NODE', { license: specialPermissions.id });
 
         wrapper.vm.$nextTick(() => {
-          expect(wrapper.find({ ref: 'title' }).exists()).toBe(true);
-          expect(wrapper.find({ ref: 'description' }).exists()).toBe(true);
-          expect(wrapper.find({ ref: 'tags' }).exists()).toBe(true);
-          expect(wrapper.find({ ref: 'license' }).exists()).toBe(true);
-          expect(wrapper.find({ ref: 'role_visibility' }).exists()).toBe(true);
-          expect(wrapper.find({ ref: 'randomize' }).exists()).toBe(false);
-          expect(wrapper.find({ ref: 'mastery_model' }).exists()).toBe(false);
-          expect(wrapper.find({ ref: 'language' }).exists()).toBe(true);
-          expect(wrapper.find({ ref: 'author' }).exists()).toBe(true);
-          expect(wrapper.find({ ref: 'provider' }).exists()).toBe(true);
-          expect(wrapper.find({ ref: 'aggregator' }).exists()).toBe(true);
-          expect(wrapper.find({ ref: 'copyright_holder' }).exists()).toBe(true);
+          let hiddenKeys = ['mastery_model', 'randomize'];
+          keys.forEach(key => {
+            expect(wrapper.find({ ref: key }).exists()).toBe(!hiddenKeys.includes(key));
+          });
         });
       });
       it('certain fields should be visible for topics', () => {
         localStore.commit('edit_modal/SET_NODE', topicIndex);
 
         wrapper.vm.$nextTick(() => {
-          expect(wrapper.find({ ref: 'title' }).exists()).toBe(true);
-          expect(wrapper.find({ ref: 'description' }).exists()).toBe(true);
-          expect(wrapper.find({ ref: 'tags' }).exists()).toBe(true);
-          expect(wrapper.find({ ref: 'license' }).exists()).toBe(false);
-          expect(wrapper.find({ ref: 'role_visibility' }).exists()).toBe(false);
-          expect(wrapper.find({ ref: 'randomize' }).exists()).toBe(false);
-          expect(wrapper.find({ ref: 'mastery_model' }).exists()).toBe(false);
-          expect(wrapper.find({ ref: 'language' }).exists()).toBe(true);
-          expect(wrapper.find({ ref: 'author' }).exists()).toBe(false);
-          expect(wrapper.find({ ref: 'provider' }).exists()).toBe(false);
-          expect(wrapper.find({ ref: 'aggregator' }).exists()).toBe(false);
-          expect(wrapper.find({ ref: 'copyright_holder' }).exists()).toBe(false);
+          let visibleKeys = ['title', 'description', 'tags', 'language'];
+          keys.forEach(key => {
+            expect(wrapper.find({ ref: key }).exists()).toBe(visibleKeys.includes(key));
+          });
         });
       });
       it('certain fields should be hidden when multiple items are selected', () => {
         localStore.commit('edit_modal/SELECT_NODE', exercise2Index);
         wrapper.vm.$nextTick(() => {
-          expect(wrapper.find({ ref: 'title' }).exists()).toBe(false);
-          expect(wrapper.find({ ref: 'description' }).exists()).toBe(false);
-          expect(wrapper.find({ ref: 'tags' }).exists()).toBe(true);
-          expect(wrapper.find({ ref: 'license' }).exists()).toBe(true);
-          expect(wrapper.find({ ref: 'role_visibility' }).exists()).toBe(true);
-          expect(wrapper.find({ ref: 'randomize' }).exists()).toBe(true);
-          expect(wrapper.find({ ref: 'mastery_model' }).exists()).toBe(true);
-          expect(wrapper.find({ ref: 'language' }).exists()).toBe(true);
-          expect(wrapper.find({ ref: 'author' }).exists()).toBe(true);
-          expect(wrapper.find({ ref: 'provider' }).exists()).toBe(true);
-          expect(wrapper.find({ ref: 'aggregator' }).exists()).toBe(true);
-          expect(wrapper.find({ ref: 'copyright_holder' }).exists()).toBe(true);
+          let hiddenKeys = ['title', 'description'];
+          keys.forEach(key => {
+            expect(wrapper.find({ ref: key }).exists()).toBe(!hiddenKeys.includes(key));
+          });
         });
       });
     });
@@ -223,19 +222,19 @@ describe('detailsTabView', () => {
     });
     describe('field validation', () => {
       it('title should be marked as required if field is blank', () => {
-        expect(wrapper.vm.rules.title[0](null)).not.toBe(true);
-        expect(wrapper.vm.rules.title[0]('title')).toBe(true);
+        expect(wrapper.vm.titleRules[0](null)).not.toBe(true);
+        expect(wrapper.vm.titleRules[0]('title')).toBe(true);
       });
       it('copyright_holder should be marked as required if license requires copyright holder', () => {
-        expect(wrapper.vm.rules.copyrightHolder[0](null)).not.toBe(true);
-        expect(wrapper.vm.rules.copyrightHolder[0]('copyright holder')).toBe(true);
+        expect(wrapper.vm.copyrightHolderRules[0](null)).not.toBe(true);
+        expect(wrapper.vm.copyrightHolderRules[0]('copyright holder')).toBe(true);
       });
       it('copyright_holder should not be marked as required if freeze_authoring_data is true', () => {
         DEFAULT_VIDEO.freeze_authoring_data = true;
         DEFAULT_VIDEO.license = specialPermissions.id;
         DEFAULT_VIDEO.copyright_holder = null;
         localStore.commit('edit_modal/SET_NODE', videoIndex);
-        expect(wrapper.vm.rules.copyrightHolder[0](null)).toBe(true);
+        expect(wrapper.vm.copyrightHolderRules[0](null)).toBe(true);
       });
     });
   });

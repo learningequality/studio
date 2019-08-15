@@ -30,11 +30,4 @@ describe('helpTooltip', () => {
     }
     _.each(['info', 'error', 'edit'], test);
   });
-  it('should show the correct position', () => {
-    function test(position) {
-      let wrapper = makeWrapper({ position: position });
-      expect(wrapper.findAll('.v-tooltip--' + position)).toHaveLength(1);
-    }
-    _.each(['top', 'bottom', 'left', 'right'], test);
-  });
 });

@@ -13,7 +13,7 @@
     :placeholder="placeholder"
     :readonly="readonly"
     :required="required"
-    :rules="required? rules : []"
+    :rules="rules"
   />
 </template>
 
@@ -35,7 +35,7 @@
         type: String,
         required: false,
         validator: function(value) {
-          return !value || _.contains(_.pluck(Constants.Languages, 'id'), value);
+          return !value || _.pluck(Constants.Languages, 'id').includes(value);
         },
       },
       hint: {
@@ -55,11 +55,6 @@
         default: false,
       },
     },
-    data() {
-      return {
-        rules: [v => !!v || this.$tr('languageRequired')],
-      };
-    },
     computed: {
       language: {
         get() {
@@ -73,6 +68,9 @@
         return _.chain(Constants.Languages)
           .sortBy('native_name')
           .value();
+      },
+      rules() {
+        return this.required ? [v => !!v || this.$tr('languageRequired')] : [];
       },
     },
     methods: {

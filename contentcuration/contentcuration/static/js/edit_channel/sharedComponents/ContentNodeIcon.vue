@@ -18,7 +18,7 @@
         type: String,
         required: true,
         validator: value => {
-          return _.contains(kinds, value);
+          return kinds.includes(value);
         },
       },
     },
@@ -74,7 +74,7 @@
       background-color: @html-color;
     }
     &.topic {
-      background-color: @gray-500;
+      background-color: @topic-color;
     }
   }
 

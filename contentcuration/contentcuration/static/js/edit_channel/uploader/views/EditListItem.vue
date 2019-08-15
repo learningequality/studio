@@ -30,7 +30,6 @@
 
 <script>
 
-  import _ from 'underscore';
   import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
   import ContentNodeIcon from 'edit_channel/sharedComponents/ContentNodeIcon.vue';
 
@@ -57,10 +56,10 @@
         return this.getNode(this.index);
       },
       isSelected() {
-        return _.contains(this.selectedIndices, this.index);
+        return this.selectedIndices.includes(this.index);
       },
       nodeIsValid() {
-        return !_.contains(this.invalidNodes, this.index);
+        return !this.invalidNodes.includes(this.index);
       },
     },
     methods: {
