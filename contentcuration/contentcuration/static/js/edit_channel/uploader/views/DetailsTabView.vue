@@ -61,9 +61,9 @@
       <v-expansion-panel v-model="panel" expand>
         <v-expansion-panel-content key="audience">
           <template v-slot:header>
-            <h2>
+            <div class="headline">
               {{ $tr('audienceHeader') }}
-            </h2>
+            </div>
           </template>
           <v-card>
             <!-- Language -->
@@ -91,9 +91,9 @@
         </v-expansion-panel-content>
         <v-expansion-panel-content v-if="allExercises" key="assessments">
           <template v-slot:header>
-            <h2>
+            <div class="headline">
               {{ $tr('assessmentHeader') }}
-            </h2>
+            </div>
           </template>
           <v-card>
             <!-- Mastery -->
@@ -127,12 +127,12 @@
         </v-expansion-panel-content>
         <v-expansion-panel-content v-if="allResources" key="source">
           <template v-slot:header>
-            <h2>
+            <div class="headline">
               {{ $tr('sourceHeader') }}
               <span v-if="disableAuthEdits">
                 {{ $tr('detectedImportText') }}
               </span>
-            </h2>
+            </div>
           </template>
           <v-card class="auth-section">
             <VFlex v-if="oneSelected && isImported" xs12>
@@ -534,9 +534,8 @@
           padding: 0 15px;
           cursor: pointer;
 
-          h2 {
-            margin: 0;
-            font-size: 16pt;
+          .headline {
+            font-family: @font-family !important;
             span {
               margin-left: 5px;
               font-size: 11pt;

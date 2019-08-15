@@ -21,10 +21,10 @@
             <div class="role-table">
               <VLayout v-for="roleOption in roles" :key="roleOption.id" row>
                 <VFlex xs3 textRight class="role-label">
+                  {{ translate(roleOption.id) }}
                   <VIcon v-if="roleOption.icon" color="primary">
                     {{ roleOption.icon }}
                   </VIcon>
-                  {{ translate(roleOption.id) }}
                 </VFlex>
                 <VFlex xs9>
                   {{ $tr(roleOption.id) }}
@@ -140,7 +140,7 @@
   @import '../../../less/global-variables.less';
 
   .v-icon {
-    margin-right: 5px;
+    margin-left: 5px;
     font-size: 12pt;
     vertical-align: text-top;
   }

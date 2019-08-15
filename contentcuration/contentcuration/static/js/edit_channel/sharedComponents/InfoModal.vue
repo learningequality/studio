@@ -7,8 +7,8 @@
     </template>
 
     <VCard>
-      <VCardTitle class="header">
-        <h1>{{ header }}</h1>
+      <VCardTitle class="headline">
+        {{ header }}
       </VCardTitle>
 
       <VCardText>
@@ -50,12 +50,13 @@
 <style lang="less" scoped>
 
   @import '../../../less/global-variables.less';
+  .v-card__title {
+    padding-bottom: 0;
+  }
 
-  h1 {
-    width: 100%;
-    margin: 0;
-    font-size: 18pt;
-    text-align: center;
+  .headline,
+  /deep/ .headline {
+    font-family: @font-family !important;
   }
 
   /deep/ p {
