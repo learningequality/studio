@@ -222,19 +222,19 @@ describe('detailsTabView', () => {
     });
     describe('field validation', () => {
       it('title should be marked as required if field is blank', () => {
-        expect(wrapper.vm.rules.title[0](null)).not.toBe(true);
-        expect(wrapper.vm.rules.title[0]('title')).toBe(true);
+        expect(wrapper.vm.titleRules[0](null)).not.toBe(true);
+        expect(wrapper.vm.titleRules[0]('title')).toBe(true);
       });
       it('copyright_holder should be marked as required if license requires copyright holder', () => {
-        expect(wrapper.vm.rules.copyrightHolder[0](null)).not.toBe(true);
-        expect(wrapper.vm.rules.copyrightHolder[0]('copyright holder')).toBe(true);
+        expect(wrapper.vm.copyrightHolderRules[0](null)).not.toBe(true);
+        expect(wrapper.vm.copyrightHolderRules[0]('copyright holder')).toBe(true);
       });
       it('copyright_holder should not be marked as required if freeze_authoring_data is true', () => {
         DEFAULT_VIDEO.freeze_authoring_data = true;
         DEFAULT_VIDEO.license = specialPermissions.id;
         DEFAULT_VIDEO.copyright_holder = null;
         localStore.commit('edit_modal/SET_NODE', videoIndex);
-        expect(wrapper.vm.rules.copyrightHolder[0](null)).toBe(true);
+        expect(wrapper.vm.copyrightHolderRules[0](null)).toBe(true);
       });
     });
   });

@@ -13,7 +13,7 @@
         :required="required"
         :readonly="readonly"
         :disabled="disabled"
-        :rules="required? rules.mastery : []"
+        :rules="masteryRules"
       >
         <template v-slot:append-outer>
           <InfoModal :header="$tr('exerciseHeader')">
@@ -57,7 +57,7 @@
             :required="mRequired"
             :placeholder="mPlaceholder"
             :readonly="readonly"
-            :rules="mRequired? rules.mValue : []"
+            :rules="mRules"
             :disabled="disabled"
             :hint="$tr('mHint')"
             persistentHint
@@ -78,7 +78,7 @@
             :required="nRequired"
             :readonly="readonly"
             :placeholder="nPlaceholder"
-            :rules="nRequired? rules.nValue : []"
+            :rules="nRules"
             :disabled="disabled"
           />
         </VFlex>
@@ -164,22 +164,6 @@
         type: String,
       },
     },
-    data() {
-      return {
-        rules: {
-          mastery: [v => !!v || this.$tr('masteryValidationMessage')],
-          mValue: [
-            v => !!v || this.$tr('requiredValidationMessage'),
-            v => v > 0 || this.$tr('mnValueValidationMessage'),
-            v => v <= this.nValue || this.$tr('mValueValidationMessage'),
-          ],
-          nValue: [
-            v => !!v || this.$tr('requiredValidationMessage'),
-            v => v > 0 || this.$tr('mnValueValidationMessage'),
-          ],
-        },
-      };
-    },
     computed: {
       masteryModel: {
         get() {
@@ -214,6 +198,26 @@
       },
       showMofN() {
         return this.masteryModel === 'm_of_n';
+      },
+      masteryRules() {
+        return this.required ? [v => !!v || this.$tr('masteryValidationMessage')] : [];
+      },
+      mRules() {
+        return this.mRequired
+          ? [
+              v => !!v || this.$tr('requiredValidationMessage'),
+              v => v > 0 || this.$tr('mnValueValidationMessage'),
+              v => v <= this.nValue || this.$tr('mValueValidationMessage'),
+            ]
+          : [];
+      },
+      nRules() {
+        return this.nRequired
+          ? [
+              v => !!v || this.$tr('requiredValidationMessage'),
+              v => v > 0 || this.$tr('mnValueValidationMessage'),
+            ]
+          : [];
       },
     },
     methods: {

@@ -11,7 +11,7 @@
       :disabled="disabled"
       :readonly="readonly"
       :required="required"
-      :rules="required? rules : []"
+      :rules="rules"
     >
       <template v-slot:append-outer>
         <InfoModal :header="$tr('visibilityHeader')">
@@ -107,11 +107,6 @@
         default: false,
       },
     },
-    data() {
-      return {
-        rules: [v => !!v || this.$tr('visibilityRequired')],
-      };
-    },
     computed: {
       role: {
         get() {
@@ -123,6 +118,9 @@
       },
       roles() {
         return roleMap;
+      },
+      rules() {
+        return this.required ? [v => !!v || this.$tr('visibilityRequired')] : [];
       },
     },
     methods: {

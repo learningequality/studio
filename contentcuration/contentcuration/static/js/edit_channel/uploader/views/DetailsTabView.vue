@@ -9,7 +9,7 @@
             v-model="title"
             :counter="(viewOnly)? null : 200"
             maxlength="200"
-            :rules="rules.title"
+            :rules="titleRules"
             :label="$tr('titleLabel') + (viewOnly ? '' : ' *')"
             autofocus
             required
@@ -218,7 +218,7 @@
                 :label="$tr('copyrightHolderLabel') + (viewOnly || disableAuthEdits ? '' : ' *')"
                 maxlength="200"
                 :required="!changes.copyright_holder.varied && !disableAuthEdits"
-                :rules="rules.copyrightHolder"
+                :rules="copyrightHolderRules"
                 :placeholder="getPlaceholder('copyright_holder')"
                 autoSelectFirst
                 :readonly="viewOnly || disableAuthEdits"
@@ -287,16 +287,6 @@
         tagText: null,
         valid: true,
         panel: ['audience', 'assessments', 'source'],
-        rules: {
-          title: [v => !!v || this.$tr('titleValidationMessage')],
-          copyrightHolder: [
-            v =>
-              this.disableAuthEdits ||
-              this.changes.copyright_holder.varied ||
-              !!v ||
-              this.$tr('copyrightHolderValidationMessage'),
-          ],
-        },
       };
     },
     computed: {
@@ -458,6 +448,18 @@
       },
       invalidSelected() {
         return _.intersection(this.selectedIndices, this.invalidNodes).length;
+      },
+      titleRules() {
+        return [v => !!v || this.$tr('titleValidationMessage')];
+      },
+      copyrightHolderRules() {
+        return [
+          v =>
+            this.disableAuthEdits ||
+            this.changes.copyright_holder.varied ||
+            !!v ||
+            this.$tr('copyrightHolderValidationMessage'),
+        ];
       },
     },
     watch: {
