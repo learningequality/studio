@@ -39,9 +39,10 @@ class SQLInsertFromCompilerTestCase(TemporaryModelTestCase):
         # hidden inside this function because otherwise it will be created during test bootstrap
         class TempInsertModel(models.Model):
             id = models.AutoField(primary_key=True)
-            file_id = models.IntegerField()
-            file_size = models.IntegerField()
-            name = models.CharField(max_length=32)
+            file_id = models.CharField(max_length=32)
+            checksum = models.CharField(max_length=400)
+            file_on_disk = models.CharField(max_length=500)
+            original_filename = models.CharField(max_length=255)
 
         return TempInsertModel
 
@@ -110,6 +111,38 @@ class SQLInsertFromCompilerTestCase(TemporaryModelTestCase):
             self.connection.ops.fetch_returned_insert_ids\
                 .assert_called_once_with(cursor)
             self.assertEqual('list of ids', result)
+
+    def test_integration(self):
+        with self.temporary_model():
+            # preset_video()
+            # fileformat_mp4()
+            initial_count = File.objects.all().count()
+
+            temp_1 = self.TempModel(
+                file_id='d41d8cd98f00b204e9800998ecf8427e',
+                checksum='checksum1',
+                file_on_disk='/path/to/file1',
+                original_filename='original1')
+            temp_2 = self.TempModel(
+                file_id='ece228ff231bae45f7125d0b335c42b0',
+                checksum='checksum2',
+                file_on_disk='/path/to/file2',
+                original_filename='original2')
+            self.TempModel.objects.bulk_create([temp_1, temp_2])
+            temps = {temp.pk: temp for temp in [temp_1, temp_2]}
+
+            queryset = CustomQuerySet(File)
+            queryset.create_from(self.TempModel.objects.filter(id__in=temps.keys()), id='file_id',
+                                 checksum='checksum', file_on_disk='file_on_disk',
+                                 original_filename='original_filename')
+
+            self.assertEqual(initial_count + 2, File.objects.all().count())
+
+            for file_obj in File.objects.filter(id__in=temps.keys()):
+                temp = temps.get(file_obj.pk)
+                self.assertEqual(temp.checksum, file_obj.checksum)
+                self.assertEqual(temp.file_on_disk, file_obj.file_on_disk)
+                self.assertEqual(temp.original_filename, file_obj.original_filename)
 
 
 class SQLUpdateFromCompilerTestCase(TemporaryModelTestCase):
