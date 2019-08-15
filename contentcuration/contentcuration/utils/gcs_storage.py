@@ -6,6 +6,7 @@ import backoff
 from django.core.files import File
 from django.core.files.storage import Storage
 from google.cloud.exceptions import InternalServerError
+from google.cloud.exceptions import NotFound
 from google.cloud.storage import Client
 from google.cloud.storage.blob import Blob
 
@@ -75,14 +76,36 @@ class GoogleCloudStorage(Storage):
         return django_file
 
     @backoff.on_exception(backoff.expo, InternalServerError, max_time=MAX_RETRY_TIME)
+    def all_exist(self, names):
+        """
+        Check if resources with the given names exist.
+        Has a maximum backoff time of MAX_RETRY_TIME.
+
+        :param names: a list of resource names to check
+        :return: Tuple of True if the resource with the name exists, or False with message
+                 otherwise.
+        """
+        try:
+            with self.client.batch():
+                for name in names:
+                    # adds request to batch
+                    self.bucket.blob(name).exists()
+        except NotFound as e:
+            return False, e
+
+        return True, None
+
+    @backoff.on_exception(backoff.expo, InternalServerError, max_time=MAX_RETRY_TIME)
     def exists(self, name):
         """
-        Check if a resource with the given name exists. Has a maximum backoff time of MAX_RETRY_TIME.
+        Check if a resource with the given name exists.
+        Has a maximum backoff time of MAX_RETRY_TIME.
+
         :param name: the name of the resource to check
         :return: True if the resource with the name exists, or False otherwise.
         """
         blob = self.bucket.get_blob(name)
-        return blob
+        return blob is not None
 
     def size(self, name):
         blob = self.bucket.get_blob(name)
