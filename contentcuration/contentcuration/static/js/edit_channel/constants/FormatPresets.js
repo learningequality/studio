@@ -234,9 +234,9 @@ module.exports = [
     display: false,
   },
   {
-    associated_mimetypes: ['.vtt'],
+    associated_mimetypes: ['.vtt', '.srt', '.scc', '.smi', '.sami', '.ttml', '.dfxp'],
     subtitle: true,
-    allowed_formats: ['vtt'],
+    allowed_formats: ['vtt', 'srt', 'scc', 'sami', 'ttml', 'dfxp'],
     readable_name: 'Subtitle',
     supplementary: true,
     thumbnail: false,

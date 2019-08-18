@@ -9,7 +9,6 @@ import pytest
 from django.test.utils import override_settings
 from kolibri_content import models
 from kolibri_content.router import using_content_database
-from mixer.backend.django import mixer
 from mock import patch
 
 from .base import StudioTestCase
@@ -19,6 +18,7 @@ from .testdata import slideshow
 from .testdata import topic
 from .testdata import video
 from contentcuration import models as cc
+from contentcuration.tests.utils import mixer
 from contentcuration.utils.publish import convert_channel_thumbnail
 from contentcuration.utils.publish import create_bare_contentnode
 from contentcuration.utils.publish import create_content_database
@@ -28,7 +28,6 @@ from contentcuration.utils.publish import MIN_SCHEMA_VERSION
 from contentcuration.utils.publish import set_channel_icon_encoding
 
 pytestmark = pytest.mark.django_db
-
 
 def fileobj_video(contents=None):
     """
@@ -86,9 +85,11 @@ def channel():
         level1 = mixer.blend(cc.ContentNode, parent=root, kind=topic())
         level2 = mixer.blend(cc.ContentNode, parent=level1, kind=topic())
         leaf = mixer.blend(cc.ContentNode, parent=level2, kind=video())
-        leaf2 = mixer.blend(cc.ContentNode, parent=level2, kind=exercise(), title='EXERCISE 1',
-                            extra_fields="{\"mastery_model\":\"do_all\",\"randomize\":true}")
-        mixer.blend(cc.ContentNode, parent=level2, kind=slideshow(), title="SLIDESHOW 1", extra_fields="{}")
+        leaf2 = mixer.blend(cc.ContentNode, parent=level2, kind=exercise(), title='EXERCISE 1', extra_fields={
+            'mastery_model': 'do_all',
+            'randomize': True
+        })
+        mixer.blend(cc.ContentNode, parent=level2, kind=slideshow(), title="SLIDESHOW 1", extra_fields={})
 
         video_file = fileobj_video()
         video_file.contentnode = leaf
@@ -213,7 +214,7 @@ class ChannelExportUtilityFunctionTestCase(StudioTestCase):
 
     def test_create_slideshow_manifest(self):
         content_channel = cc.Channel.objects.create()
-        ccnode = cc.ContentNode.objects.create(kind_id=slideshow(), extra_fields="{}")
+        ccnode = cc.ContentNode.objects.create(kind_id=slideshow(), extra_fields={})
         kolibrinode = create_bare_contentnode(ccnode, ccnode.language, content_channel.id, content_channel.name)
         create_slideshow_manifest(ccnode, kolibrinode)
         manifest_collection = cc.File.objects.filter(contentnode=ccnode, preset_id=u"slideshow_manifest")
