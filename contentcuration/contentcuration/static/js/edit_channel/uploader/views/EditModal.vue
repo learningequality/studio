@@ -40,18 +40,18 @@
             </VBtn>
           </VToolbarItems>
         </VToolbar>
-        <VNavigationDrawer
+        <ResizableNavigationDrawer
           v-if="showEditList"
-          ref="drawer"
-          v-model="drawer.open"
           stateless
           clipped
           app
           class="edit-list"
-          :width="drawer.width"
+          :open="showEditList"
         >
-          <EditList @addNode="createNode" />
-        </VNavigationDrawer>
+          <template v-slot:content>
+            <EditList @addNode="createNode" />
+          </template>
+        </ResizableNavigationDrawer>
         <VCardText>
           <EditView :isClipboard="isClipboard" />
         </VCardText>
@@ -101,6 +101,7 @@
   import State from 'edit_channel/state';
   import Dialog from 'edit_channel/sharedComponents/Dialog.vue';
   import Alert from 'edit_channel/sharedComponents/Alert.vue';
+  import ResizableNavigationDrawer from 'edit_channel/sharedComponents/ResizableNavigationDrawer.vue';
 
   const SAVE_TIMER = 5000;
   const SAVE_MESSAGE_TIMER = 10000;
@@ -138,6 +139,7 @@
       EditView,
       Dialog,
       Alert,
+      ResizableNavigationDrawer,
     },
     props: {
       isClipboard: {
@@ -154,11 +156,6 @@
         saveError: false,
         interval: null,
         updateInterval: null,
-        drawer: {
-          open: true,
-          width: localStorage['edit-modal-width'] || 300,
-          minWidth: 85,
-        },
         debouncedSave: _.debounce(() => {
           if (!this.invalidNodesOverridden.length) {
             this.saveContent()
@@ -183,13 +180,6 @@
       },
     },
     watch: {
-      dialog(val) {
-        // Temporary workaround while waiting for Vuetify bug
-        // to be fixed https://github.com/vuetifyjs/vuetify/issues/5617
-        if (val) {
-          setTimeout(() => (this.drawer.open = this.showEditList), 300);
-        }
-      },
       changes: {
         deep: true,
         handler() {
@@ -197,9 +187,6 @@
           else this.debouncedSave.cancel();
         },
       },
-    },
-    beforeMount() {
-      this.drawer.open = this.showEditList;
     },
     methods: {
       ...mapActions('edit_modal', ['saveNodes', 'copyNodes']),
@@ -217,7 +204,6 @@
         if (this.mode === modes.NEW_TOPIC || this.mode === modes.NEW_EXERCISE) {
           this.createNode();
         }
-        this.$nextTick(this.setResizeEvents);
       },
       createNode() {
         let titleArgs = { parent: State.currentNode.title };
@@ -300,42 +286,6 @@
         this.copyNodes().then(() => {
           this.closeModal();
         });
-      },
-      setResizeEvents() {
-        const el = this.$refs.drawer.$el;
-        const drawerBorder = el.querySelector('.v-navigation-drawer__border');
-        const resize = e => {
-          document.body.style.cursor = 'col-resize';
-          localStorage['edit-modal-width'] =
-            Math.min(Math.max(this.drawer.minWidth, e.clientX), window.innerWidth / 2) + 'px';
-          el.style.width = localStorage['edit-modal-width'];
-        };
-
-        drawerBorder.addEventListener(
-          'mousedown',
-          e => {
-            // Don't select items on drag
-            e.stopPropagation();
-            e.preventDefault();
-
-            if (e.offsetX < 12) {
-              el.style.transition = 'initial';
-              document.addEventListener('mousemove', resize, false);
-            }
-          },
-          false
-        );
-
-        document.addEventListener(
-          'mouseup',
-          () => {
-            el.style.transition = '';
-            this.drawer.width = el.style.width;
-            document.body.style.cursor = '';
-            document.removeEventListener('mousemove', resize, false);
-          },
-          false
-        );
       },
     },
   };
