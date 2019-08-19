@@ -47,6 +47,7 @@
           app
           class="edit-list"
           :open="showEditList"
+          :minWidth="150"
         >
           <template v-slot:content>
             <EditList @addNode="createNode" />
