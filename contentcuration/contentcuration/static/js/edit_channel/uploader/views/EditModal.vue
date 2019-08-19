@@ -10,16 +10,6 @@
       scrollable
     >
       <VCard class="edit-modal-wrapper">
-        <VNavigationDrawer
-          v-if="showEditList"
-          v-model="drawer.open"
-          stateless
-          clipped
-          app
-          class="edit-list"
-        >
-          <EditList @addNode="createNode" />
-        </VNavigationDrawer>
         <VToolbar dark color="primary" fixed clippedLeft app>
           <VBtn ref="closebutton" icon dark app @click="handleClose">
             <VIcon>close</VIcon>
@@ -50,6 +40,18 @@
             </VBtn>
           </VToolbarItems>
         </VToolbar>
+        <VNavigationDrawer
+          v-if="showEditList"
+          ref="drawer"
+          v-model="drawer.open"
+          stateless
+          clipped
+          app
+          class="edit-list"
+          :width="drawer.width"
+        >
+          <EditList @addNode="createNode" />
+        </VNavigationDrawer>
         <VCardText>
           <EditView :isClipboard="isClipboard" />
         </VCardText>
@@ -154,6 +156,8 @@
         updateInterval: null,
         drawer: {
           open: true,
+          width: localStorage['edit-modal-width'] || 300,
+          minWidth: 85,
         },
         debouncedSave: _.debounce(() => {
           if (!this.invalidNodesOverridden.length) {
@@ -190,6 +194,7 @@
         deep: true,
         handler() {
           if (this.changed) this.debouncedSave();
+          else this.debouncedSave.cancel();
         },
       },
     },
@@ -212,6 +217,7 @@
         if (this.mode === modes.NEW_TOPIC || this.mode === modes.NEW_EXERCISE) {
           this.createNode();
         }
+        this.$nextTick(this.setResizeEvents);
       },
       createNode() {
         let titleArgs = { parent: State.currentNode.title };
@@ -295,6 +301,42 @@
           this.closeModal();
         });
       },
+      setResizeEvents() {
+        const el = this.$refs.drawer.$el;
+        const drawerBorder = el.querySelector('.v-navigation-drawer__border');
+        const resize = e => {
+          document.body.style.cursor = 'col-resize';
+          localStorage['edit-modal-width'] =
+            Math.min(Math.max(this.drawer.minWidth, e.clientX), window.innerWidth / 2) + 'px';
+          el.style.width = localStorage['edit-modal-width'];
+        };
+
+        drawerBorder.addEventListener(
+          'mousedown',
+          e => {
+            // Don't select items on drag
+            e.stopPropagation();
+            e.preventDefault();
+
+            if (e.offsetX < 12) {
+              el.style.transition = 'initial';
+              document.addEventListener('mousemove', resize, false);
+            }
+          },
+          false
+        );
+
+        document.addEventListener(
+          'mouseup',
+          () => {
+            el.style.transition = '';
+            this.drawer.width = el.style.width;
+            document.body.style.cursor = '';
+            document.removeEventListener('mousemove', resize, false);
+          },
+          false
+        );
+      },
     },
   };
 
@@ -315,6 +357,10 @@
       .linked-list-item;
     }
 
+    .edit-list {
+      width: 100%;
+    }
+
     .last-saved-time {
       padding-top: 20px;
       margin-right: 15px;
@@ -323,6 +369,12 @@
         margin-right: 10px;
         vertical-align: text-top;
       }
+    }
+    /deep/ .v-navigation-drawer__border {
+      width: 10px;
+      cursor: col-resize;
+      background: transparent !important;
+      border-right: 1px solid @gray-300;
     }
   }
 
