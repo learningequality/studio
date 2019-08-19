@@ -37,11 +37,6 @@
               </v-tooltip>
             </VTab>
 
-            <!-- Preview tab -->
-            <VTab v-if="showPreviewTab" ref="previewtab" :href="`#${tabs.PREVIEW}`">
-              {{ $tr(tabs.PREVIEW) }}
-            </VTab>
-
             <!-- Questions tab -->
             <VTab v-if="showQuestionsTab" ref="questiontab" :href="`#${tabs.QUESTIONS}`">
               {{ $tr(tabs.QUESTIONS) }}
@@ -72,9 +67,6 @@
                 {{ $tr('errorBannerText') }}
               </VAlert>
               <DetailsTabView :viewOnly="viewOnly" />
-            </VTabItem>
-            <VTabItem :key="tabs.PREVIEW" ref="previewwindow" :value="tabs.PREVIEW" lazy>
-              Preview
             </VTabItem>
             <VTabItem :key="tabs.QUESTIONS" ref="questionwindow" :value="tabs.QUESTIONS" lazy>
               Questions
@@ -112,6 +104,7 @@
       noItemsToViewText: 'Please select an item or items to view',
       addTopicText: 'Please add a topic to get started',
       addExerciseText: 'Please add an exercise to get started',
+      uploadText: 'Please upload a file to get started',
       loadingText: 'Loading Content...',
       loadErrorText: 'Unable to load content',
       invalidFieldsToolTip: 'Invalid fields detected',
@@ -145,6 +138,7 @@
         if (!this.nodes.length) {
           if (this.mode === modes.NEW_EXERCISE) return this.$tr('addExerciseText');
           else if (this.mode === modes.NEW_TOPIC) return this.$tr('addTopicText');
+          else if (this.mode === modes.UPLOAD) return this.$tr('uploadText');
         }
         return this.viewOnly ? this.$tr('noItemsToViewText') : this.$tr('noItemsToEditText');
       },

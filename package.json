@@ -59,6 +59,7 @@
   "homepage": "https://github.com/learningequality/studio#readme",
   "dependencies": {
     "@vue/test-utils": "^1.0.0-beta.29",
+    "axios": "^0.19.0",
     "backbone": "^1.2.1",
     "backbone-undo": "^0.2.5",
     "backbone.paginator": "^2.0.8",

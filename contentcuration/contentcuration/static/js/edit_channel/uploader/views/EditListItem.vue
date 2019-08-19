@@ -20,6 +20,14 @@
         error
       </VIcon>
     </VListTileAction>
+    <VListTileAction v-if="uploading">
+      <v-progress-circular
+        size="20"
+        :value="uploadPercent"
+        color="primary"
+        rotate="270"
+      />
+    </VListTileAction>
     <VListTileAction v-if="removable">
       <VBtn icon small flat class="remove-item" @click.stop="removeNode(index)">
         <VIcon>clear</VIcon>
@@ -49,6 +57,12 @@
         default: false,
       },
     },
+    data() {
+      return {
+        uploading: true,
+        uploadPercent: 0,
+      };
+    },
     computed: {
       ...mapGetters('edit_modal', ['getNode', 'invalidNodes']),
       ...mapState('edit_modal', ['selectedIndices']),
@@ -62,6 +76,9 @@
         return !this.invalidNodes.includes(this.index);
       },
     },
+    mounted() {
+      this.updateLoad();
+    },
     methods: {
       ...mapMutations('edit_modal', {
         select: 'SELECT_NODE',
@@ -71,6 +88,18 @@
       ...mapActions('edit_modal', ['removeNode']),
       toggleNode() {
         this.isSelected ? this.deselect(this.index) : this.select(this.index);
+      },
+      updateLoad() {
+        if (this.uploadPercent < 100) {
+          setTimeout(() => {
+            this.uploadPercent += 10;
+            this.updateLoad();
+          }, 500);
+        } else {
+          setTimeout(() => {
+            this.uploading = false;
+          }, 3000);
+        }
       },
     },
   };

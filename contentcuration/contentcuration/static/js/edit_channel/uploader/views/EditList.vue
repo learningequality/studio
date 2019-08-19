@@ -16,7 +16,7 @@
       v-for="(node, index) in nodes"
       :key="node.id"
       :index="index"
-      :removable="allowAddTopic || allowAddExercise"
+      :removable="allowAddTopic || allowAddExercise || allowUpload"
     />
 
     <!-- Create button -->
@@ -33,6 +33,18 @@
         </VBtn>
       </VListTileContent>
     </VListTile>
+
+    <!-- Upload button -->
+    <template v-if="allowUpload">
+      <VListTile class="add-item-wrapper upload-item">
+        <VListTileContent>
+          <Uploader block depressed dark color="primary" />
+        </VListTileContent>
+      </VListTile>
+      <p class="drop-prompt">
+        {{ $tr('dropFilesText') }}
+      </p>
+    </template>
   </VList>
 </template>
 
@@ -41,6 +53,7 @@
   import { mapMutations, mapState } from 'vuex';
   import { modes } from '../constants';
   import EditListItem from './EditListItem.vue';
+  import Uploader from 'edit_channel/sharedComponents/Uploader.vue';
 
   export default {
     name: 'EditList',
@@ -48,9 +61,12 @@
       selectAllLabel: 'Select All',
       addTopic: 'Add Topic',
       addExercise: 'Add Exercise',
+      uploadButton: 'Upload',
+      dropFilesText: 'or drop files here',
     },
     components: {
       EditListItem,
+      Uploader,
     },
     data() {
       return {
@@ -69,6 +85,9 @@
         if (this.allowAddTopic) return this.$tr('addTopic');
         else if (this.allowAddExercise) return this.$tr('addExercise');
         return null;
+      },
+      allowUpload() {
+        return this.mode === modes.UPLOAD;
       },
     },
     methods: {
@@ -96,6 +115,17 @@
   .add-item-wrapper {
     padding-bottom: 50px;
     margin-top: 20px;
+    &.upload-item {
+      padding-bottom: 5px;
+    }
+  }
+
+  .drop-prompt {
+    margin-bottom: 50px;
+    font-weight: bold;
+    color: @gray-500;
+    text-align: center;
+    cursor: default;
   }
 
 </style>
