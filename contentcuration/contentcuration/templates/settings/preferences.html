@@ -136,7 +136,6 @@
 
 
 		function registerChange(event){
-			console.log(licenseInput.value)
 			licenseDescriptionInput.style.display = (licenseInput.value === 'Special Permissions')? 'block': 'none';
 			Array.from(masteryCriteriaInputs).forEach(input => {
 				input.style.display = (masteryModelInput.value === "m_of_n")?  "inline-table" : "none";
