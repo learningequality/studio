@@ -19,7 +19,7 @@
 </ul>
 <script>
 	window.addEventListener('load', function(){
-		copyButtons = document.getElementsByClassName('copy-token');
+		let copyButtons = document.getElementsByClassName('copy-token');
 
 		Array.from(copyButtons).forEach(button => {
 			button.addEventListener('click', (event) => {
