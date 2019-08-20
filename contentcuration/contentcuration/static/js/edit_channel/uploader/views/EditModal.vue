@@ -321,12 +321,6 @@
         vertical-align: text-top;
       }
     }
-    /deep/ .v-navigation-drawer__border {
-      width: 10px;
-      cursor: col-resize;
-      background: transparent !important;
-      border-right: 1px solid @gray-300;
-    }
   }
 
 </style>
