@@ -13,27 +13,31 @@
 			<div class="col-xs-10">
 				<input type="text" value="{{token}}" readonly id="{{token}}_value" >
 			</div>
-			<input type="submit" class="btn action-button copy-token col-xs-2" value="{% trans 'COPY' %}" id="{{token}}"/>
+			<input type="submit" class="copy-token btn action-button col-xs-2" value="{% trans 'COPY' %}" id="{{token}}"/>
 		</li>
 	{% endfor %}
 </ul>
 <script>
 	window.addEventListener('load', function(){
-		$(".copy-token").on("click", function(event){
-			copy_el = $("#" + event.target.id + "_value")[0];
-			copy_el.focus();
-			copy_el.select();
-			try {
-				document.execCommand("copy");
-				$(event.target).val("{% trans 'Copied!' %}");
-			} catch(e) {
-				// eslint-disable-next-line no-console
-				console.warn(e)
-				$(event.target).val("{% trans 'Copy Failed' %}");
-			}
-			setTimeout(function(){
-				$(event.target).val("{% trans 'COPY' %}");
-			}, 2500);
+		copyButtons = document.getElementsByClassName('copy-token');
+
+		Array.from(copyButtons).forEach(button => {
+			button.addEventListener('click', (event) => {
+				let copyElement = document.getElementById(event.target.id + '_value');
+				copyElement.focus();
+				copyElement.select();
+				try {
+					document.execCommand("copy");
+					button.value = "{% trans 'Copied!' %}";
+				} catch(e) {
+					// eslint-disable-next-line no-console
+					console.warn(e)
+					button.value = "{% trans 'Copy Failed' %}";
+				}
+				setTimeout(function(){
+					button.value = "{% trans 'COPY' %}";
+				}, 2500);
+			})
 		});
 	});
 </script>
