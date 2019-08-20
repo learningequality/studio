@@ -1,5 +1,5 @@
-const DEFAULT_CHECK_INTERVAL = 3000;
-const RUNNING_TASK_INTERVAL = 1000;
+const DEFAULT_CHECK_INTERVAL = 5000;
+const RUNNING_TASK_INTERVAL = 2000;
 
 let timerID = null;
 let currentInterval = DEFAULT_CHECK_INTERVAL;
@@ -43,9 +43,6 @@ const asyncTasksModule = {
       store.commit('SET_CURRENT_TASK', payload);
       // force an immediate update to quickly get a first state update
       store.dispatch('updateTaskList');
-      if (!timerID) {
-        store.dispatch('activateTaskUpdateTimer');
-      }
     },
 
     clearCurrentTask(store) {
@@ -57,7 +54,7 @@ const asyncTasksModule = {
 
     deactivateTaskUpdateTimer() {
       if (timerID) {
-        clearInterval(timerID);
+        clearTimeout(timerID);
       }
     },
 
@@ -68,9 +65,10 @@ const asyncTasksModule = {
         currentInterval = RUNNING_TASK_INTERVAL;
       }
       if (timerID) {
-        clearInterval(timerID);
+        clearTimeout(timerID);
       }
-      timerID = setInterval(function() {
+
+      timerID = setTimeout(function() {
         store.dispatch('updateTaskList');
       }, currentInterval);
     },
@@ -167,6 +165,9 @@ const asyncTasksModule = {
             store.commit('SET_PROGRESS', runningTask.metadata.progress);
           }
           store.commit('SET_ASYNC_TASKS', data);
+          // make sure we restart the timer only after the current task call completes
+          // so that task calls do not stack.
+          store.dispatch('activateTaskUpdateTimer');
         },
         error: function(error) {
           // if we can't get task status, there is likely a server failure of some sort,
@@ -179,6 +180,9 @@ const asyncTasksModule = {
               callbacks[currentTask.id]['reject'](error);
             }
           }
+          // make sure we restart the timer only after the current task call completes
+          // so that task calls do not stack.
+          store.dispatch('activateTaskUpdateTimer');
         },
       });
     },
