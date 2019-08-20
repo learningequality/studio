@@ -10,7 +10,14 @@
       scrollable
     >
       <VCard class="edit-modal-wrapper">
-        <VToolbar dark color="primary" fixed clippedLeft app>
+        <VToolbar
+          dark
+          color="primary"
+          fixed
+          clippedLeft
+          app
+          flat
+        >
           <VBtn ref="closebutton" icon dark app @click="handleClose">
             <VIcon>close</VIcon>
           </VBtn>

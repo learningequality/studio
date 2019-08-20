@@ -21,7 +21,7 @@
       },
       maxWidth: {
         type: Number,
-        default: window.innerWidth * 0.7,
+        default: window.innerWidth - 100,
       },
       open: {
         type: Boolean,
