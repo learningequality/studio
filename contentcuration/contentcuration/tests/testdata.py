@@ -14,8 +14,8 @@ import pytest
 from django.core.files.storage import default_storage
 from le_utils.constants import format_presets
 
-from contentcuration.tests.utils import mixer
 from contentcuration import models as cc
+from contentcuration.tests.utils import mixer
 
 pytestmark = pytest.mark.django_db
 
@@ -188,8 +188,8 @@ def tree(parent=None):
     return node(data, parent)
 
 
-def channel():
-    channel = cc.Channel.objects.create(name="testchannel")
+def channel(name="testchannel"):
+    channel = cc.Channel.objects.create(name=name)
     channel.save()
 
     channel.main_tree = tree()
@@ -198,8 +198,17 @@ def channel():
     return channel
 
 
-def user():
-    user, is_new = cc.User.objects.get_or_create(email='user@test.com')
+def random_string(chars=10):
+    """
+    Generate a random string
+    :param chars: Number of characters in string
+    :return: A string with [chars] random characters.
+    """
+    return ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(chars))
+
+
+def user(email='user@test.com'):
+    user, is_new = cc.User.objects.get_or_create(email=email)
     if is_new:
         user.set_password('password')
         user.is_active = True

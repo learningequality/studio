@@ -26,7 +26,7 @@ from contentcuration.utils.policies import get_latest_policies
 REGISTRATION_SALT = getattr(settings, 'REGISTRATION_SALT', 'registration')
 
 
-def get_sorted_countries(language):
+def get_sorted_countries(language="en"):
     """
     Gets the list of countries sorted by localized name.
 
