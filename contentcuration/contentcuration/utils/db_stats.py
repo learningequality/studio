@@ -1,6 +1,5 @@
 from django.conf import settings
 from django.db.models import Count
-from django.db.models import F
 from django.db.models import Q
 
 from contentcuration.models import Channel
