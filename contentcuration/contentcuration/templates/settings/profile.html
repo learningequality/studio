@@ -40,14 +40,17 @@
 			</div>
 		</div>
 		<br>
-		<input id="save" class="action-button pull-right" type="submit" value="{% trans 'No Changes Found' %}" disabled/>
+		<input id="save" class="action-button pull-right" type="submit" value="{% trans 'SAVE CHANGES' %}" disabled/>
 	</form>
 </div>
 <script>
-	window.addEventListener('load', function(){
-		$(".setting_input").on("keydown", function(event){
-			$("#save").attr("disabled", false)
-			$("#save").val("{% trans 'SAVE CHANGES' %}")
+	window.addEventListener('load', () => {
+		let saveButton = document.getElementById('save');
+		let inputs = document.getElementsByClassName('setting_input');
+		Array.from(inputs).forEach(input => {
+			input.addEventListener('keydown', (event) => {
+				saveButton.removeAttribute('disabled');
+			});
 		});
 	});
 
