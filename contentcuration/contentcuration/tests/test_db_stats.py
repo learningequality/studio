@@ -59,9 +59,9 @@ class DBStatsTestCase(StudioTestCase):
             email = '{}@{}.com'.format(random_string(), random_string())
             test_user = user(email)
             info = {}
-            info['use'] = add_random_choices(USAGES, uses_stats)
-            info['source'] = add_random_choices(SOURCES, sources_stats)
-            info['location'] = add_random_choices(countries, country_stats)
+            info['uses'] = add_random_choices(USAGES, uses_stats)
+            info['heard_from'] = add_random_choices(SOURCES, sources_stats)
+            info['locations'] = add_random_choices(countries, country_stats)
             test_user.information = info
             test_user.save()
 
