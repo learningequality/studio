@@ -26,8 +26,13 @@
 		let acceptedCheckbox = document.getElementById('id_accepted');
 		let submitButton = document.getElementById('submit');
 		acceptedCheckbox.addEventListener('change', event => {
-			event.target.checked? submitButton.removeAttribute('disabled').removeClass('disabled') :
-				submitButton.setAttribute('disabled', 'disabled').addClass('disabled');
+			if(event.target.checked) {
+				submitButton.removeAttribute('disabled');
+				submitButton.classList.remove('disabled');
+			} else {
+				submitButton.setAttribute('disabled', 'disabled');
+				submitButton.classList.add('disabled');
+			}
 		});
 	});
 </script>
