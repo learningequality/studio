@@ -143,46 +143,68 @@
 
 <script>
 	window.addEventListener('load', function(){
-		$('[data-toggle="tooltip"]').tooltip();
 
 		// Allow deselection if item is clicked, don't deselect everything on click
-		$(".multi-select-field").on("mousedown", function(ev) {
-			ev.preventDefault();
-			ev.target.selected = !ev.target.selected;
+		Array.from(document.getElementsByClassName('multi-select-field')).forEach(field => {
+			field.addEventListener('mousedown', event => {
+				event.preventDefault();
+				event.target.selected = !event.target.selected;
 
-			// Prevent select box from jumping to the top every click
-			var st = this.scrollTop;
-			var self = this;
-			setTimeout(function() {
-				self.scrollTop = st, 0;
+				// Prevent select box from jumping to the top every click
+				var st = field.scrollTop;
+				setTimeout(() => {
+					field.scrollTop = st, 0;
+				});
+				field.focus();
 			});
-			this.focus();
-		});
-		$(".multi-select-field").on("mousemove", function(ev) {
-			ev.preventDefault();
+
+			field.addEventListener('mousemove', event => {
+				event.preventDefault();
+			})
 		});
 
-		$(".license-url").on("click", function(ev) {
-			ev.stopPropagation();
+		// Don't check boxes when license url is clicked
+		Array.from(document.getElementsByClassName('license-url')).forEach(link => {
+			link.addEventListener('click', event => {
+				event.stopPropagation();
+			})
 		});
+
+
+		// Toggle disabled on organization type when organizational affiliation is updated
+		let organizationRadioOption = document.querySelector('.id_org_or_personal input[value="Organization"]');
+		let organizationOtherInputs = document.querySelectorAll("input[name='organization_type'], #id_organization_other");
+		let orgOrPersonalInputs = document.querySelectorAll("input[name='org_or_personal']");
+
 
 		function setOrgTypeDisabled() {
-			$(".id_org_or_personal input[value='Organization']").is(":checked") ?
-				$("input[name='organization_type'], #id_organization_other").removeAttr('disabled') :
-				$("input[name='organization_type'], #id_organization_other").attr('disabled', 'disabled');
+			Array.from(organizationOtherInputs, input => {
+				organizationRadioOption.checked ?
+					input.removeAttribute('disabled') :
+					input.setAttribute('disabled', 'disabled');
+				});
 		}
-		$("input[name='org_or_personal']").on("change", setOrgTypeDisabled);
+
+		Array.from(orgOrPersonalInputs).forEach( input => {
+			input.addEventListener('change', setOrgTypeDisabled);
+		});
 		setOrgTypeDisabled();
 
-		function setOtherBoxes(ev) {
-			if($(ev.target).val().trim()) {
-				var checkbox = $($(ev.target).data('checkbox'));
-				$("input[name='" + checkbox.prop("name") + "']").removeAttr("checked");
-				checkbox.prop("checked", "checked");
+
+		// Auto select radio button when text is changed in "Other" options
+		let otherTextBoxes = document.getElementsByClassName('other-textbox');
+		function setOtherBoxes(event) {
+			if(event.target.value.trim()) {
+				document.querySelector(event.target.dataset['checkbox']).checked = true;
 				setOrgTypeDisabled();
 			}
 		}
-		$(".other-textbox").on("keyup", setOtherBoxes);
+		Array.from(otherTextBoxes).forEach(input => {
+			input.addEventListener('keyup', setOtherBoxes);
+		});
+
+		// TODO: replace with something that doesn't require jquery
+		$('[data-toggle="tooltip"]').tooltip();
 	});
 </script>
 {% endblock settingscontent %}
