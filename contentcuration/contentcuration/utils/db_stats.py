@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db.models import Count
+from django.db.models import F
 from django.db.models import Q
 
 from contentcuration.models import Channel
@@ -20,8 +21,8 @@ def count_info_values(field):
         if field in item[0]:
             for value in item[0][field]:
                 if not value in results:
-                    results[value] = 0
-                results[value] += 1
+                    results[value.strip()] = 0
+                results[value.strip()] += 1
     return results
 
 
@@ -40,7 +41,7 @@ def get_user_countries():
     Gets count of users who wish to use Studio / Kolibri in each country.
     :return: A dict in {location: count} format.
     """
-    return count_info_values('location')
+    return count_info_values('locations')
 
 
 def get_studio_uses():
@@ -48,7 +49,7 @@ def get_studio_uses():
     Gets count of users who wish to use Studio for a particular use.
     :return: A dict in {use: count} format.
     """
-    return count_info_values('use')
+    return count_info_values('uses')
 
 
 def get_user_heard_from():
@@ -56,7 +57,7 @@ def get_user_heard_from():
     Gets a count of sources from which our users heard about us.
     :return: A dict in {source: count} format.
     """
-    return count_info_values('source')
+    return count_info_values('heard_from')
 
 
 def get_user_organizations():
@@ -126,7 +127,7 @@ def get_channel_stats():
     private_nodes = private_nodes.exclude(original_channel_id__in=public_channel_ids)
 
     stats = {
-        'count': ContentNode.objects.all().count(),
+        'count': Channel.objects.all().count(),
         'public': {
             'count': public.count(),
             'languages': get_field_values_sorted(public, 'language'),
