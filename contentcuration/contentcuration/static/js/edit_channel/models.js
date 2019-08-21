@@ -386,6 +386,8 @@ var ContentNodeModel = BaseModel.extend({
           ? data['randomize']
           : State.preferences.auto_randomize_questions;
       this.set('extra_fields', data);
+    } else {
+      this.set('extra_fields', {});
     }
   },
   make_copy: function(target_parent) {
