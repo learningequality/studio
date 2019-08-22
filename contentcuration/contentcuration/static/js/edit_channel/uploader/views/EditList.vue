@@ -27,6 +27,7 @@
           depressed
           color="primary"
           dark
+          textTruncate
           @click="$emit('addNode')"
         >
           {{ addButtonText }}
