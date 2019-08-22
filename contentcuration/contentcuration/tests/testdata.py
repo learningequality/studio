@@ -12,7 +12,6 @@ from le_utils.constants import format_presets
 from mixer.backend.django import mixer
 
 from contentcuration import models as cc
-from contentcuration.tests.utils import mixer
 
 pytestmark = pytest.mark.django_db
 
