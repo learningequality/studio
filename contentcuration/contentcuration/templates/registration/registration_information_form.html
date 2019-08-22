@@ -117,42 +117,54 @@
 <script>
 	window.addEventListener('load', function(){
 		// Toggle storage blank depending on whether "Storage" usage option is checked
+		let storageCheck = document.getElementsByClassName('check_storage')[0];
+		let storageInput = document.getElementById('storage');
 		function handleStorage() {
-			($(".check_storage").prop("checked"))? $("#storage").slideDown(100) : $("#storage").slideUp(100);
+			storageInput.style.display = (storageCheck.checked)? 'block' : 'none';
 		}
-		$(".check_storage").on("change", handleStorage);
+		storageCheck.addEventListener("change", handleStorage);
 		handleStorage();
 
 		// Set "Other" as selected for form.clean
+		let otherCheck = document.getElementsByClassName('check_other')[0];
+		let otherInput = document.getElementById('id_other_use');
 		function checkOther() {
-			$(".check_other").prop("checked", !!$("#id_other_use").val());
+			otherCheck.checked = !!otherInput.value;
 		}
-		$("#id_other_use").on("keypress", checkOther);
-		$("#id_other_use").on("paste", checkOther);
+		otherInput.addEventListener('keyup', checkOther);
+		otherInput.addEventListener('paste', checkOther);
 
 		// Display blanks for extra information on "Where did you hear about us" question
+		let sourceInput = document.getElementById('id_source');
 		function displaySource() {
-			$("#source .optional_field").slideUp(100);
-			$("#source_" + $("#id_source").val()).slideDown(100);
+			Array.from(document.querySelectorAll('#source .optional_field'), field => {
+				field.style.display = 'none';
+			});
+			let relatedSourceField = document.getElementById('source_' + sourceInput.value);
+			if(relatedSourceField) {
+				relatedSourceField.style.display = 'block';
+			}
 		}
-		$("#id_source").on("change", displaySource);
+		sourceInput.addEventListener('change', displaySource);
 		displaySource();
 
+
 		// Allow deselection if item is clicked, don't deselect everything on click
-		$("#id_location").on("mousedown", function(ev) {
-			ev.preventDefault();
-			ev.target.selected = !ev.target.selected;
+		let locationInput = document.getElementById('id_location')
+		locationInput.addEventListener('mousedown', event => {
+			event.preventDefault();
+			event.target.selected = !event.target.selected;
 
 			// Prevent select box from jumping to the top every click
-			var st = this.scrollTop;
-			var self = this;
-			setTimeout(function() {
-				self.scrollTop = st, 0;
+			var st = locationInput.scrollTop;
+			setTimeout(() => {
+				locationInput.scrollTo(0, st);
 			});
-			this.focus();
+			locationInput.focus();
 		});
-		$("#id_location").on("mousemove", function(ev) {
-			ev.preventDefault();
+
+		locationInput.addEventListener('mousemove', event => {
+			event.preventDefault();
 		});
 	});
 
