@@ -21,6 +21,8 @@ devserver:
 	yarn run devserver
 
 test:
+	# test for any ungenerated migrations
+	python contentcuration/manage.py makemigrations --check
 	yarn install && yarn run unittests
 	mv contentcuration/coverage.xml shared
 
