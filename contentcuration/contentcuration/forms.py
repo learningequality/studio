@@ -43,8 +43,7 @@ def get_sorted_countries(language="en"):
         fallback=True,
     )
 
-    return sorted([(c.name, translator.gettext(c.name)) for c in list(pycountry.countries)],
-                       key=lambda x: x[1])
+    return sorted([(c.name, translator.gettext(c.name)) for c in list(pycountry.countries)], key=lambda x: x[1])
 
 
 class ExtraFormMixin(object):
@@ -289,13 +288,13 @@ class PreferencesSettingsForm(forms.Form):
         class_attrs = {'class': 'form-control setting_change'}
 
         language_options = [(l['id'], _(l['readable_name'])) for l in Language.objects.values('id', 'readable_name').order_by('readable_name')]
-        language_options.insert(0, (None, _("Select a language")))  # Add default option if no language is selected
+        language_options.insert(0, (None, _("No language selected")))  # Add default option if no language is selected
         self.fields['language'] = forms.ChoiceField(required=False, widget=forms.Select(attrs=class_attrs), label=_('Language'), choices=language_options)
 
         mastery_options = tuple([(k, _(v)) for k, v in [t for t in exercises.MASTERY_MODELS] if k != "skill_check"])
         self.fields['mastery_model'] = forms.ChoiceField(widget=forms.Select(attrs=class_attrs), choices=mastery_options, label=_("Mastery at"))
 
-        license_options = ((None, _("Select a license")),) + licenses.choices
+        license_options = ((None, _("No license selected")),) + licenses.choices
         self.fields['license'] = forms.ChoiceField(required=False, widget=forms.Select(attrs=class_attrs), label=_('License'), choices=license_options)
 
     class Meta:
