@@ -213,7 +213,7 @@ def create_nodes(cursor, target_id, parent, indent=1, download_url=None):
         # Determine extra_fields
         assessment_query = "SELECT mastery_model, randomize FROM {table} WHERE contentnode_id='{node}'".format(table=ASSESSMENTMETADATA_TABLE, node=id)
         result = cursor.execute(assessment_query).fetchone()
-        extra_fields = json.loads(result[0]) if result else {}
+        extra_fields = result[0] if result else {}
         if result:
             extra_fields.update({"randomize": result[1]})
 
@@ -239,7 +239,7 @@ def create_nodes(cursor, target_id, parent, indent=1, download_url=None):
             license_description=license_description,
             language_id=lang_id,
             role_visibility=role,
-            extra_fields=json.dumps(extra_fields),
+            extra_fields=extra_fields,
             kind_id=kind,
             parent=parent,
             original_channel_id=target_id,

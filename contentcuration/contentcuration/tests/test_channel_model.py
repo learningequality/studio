@@ -5,7 +5,6 @@ import json
 from datetime import datetime
 
 from django.core.urlresolvers import reverse_lazy
-from mixer.backend.django import mixer
 from past.utils import old_div
 
 from .base import BaseAPITestCase
@@ -17,6 +16,7 @@ from contentcuration.models import Channel
 from contentcuration.models import ChannelSet
 from contentcuration.models import generate_storage_url
 from contentcuration.models import SecretToken
+from contentcuration.tests.utils import mixer
 
 
 class PublicChannelsTestCase(StudioTestCase):

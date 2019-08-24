@@ -4,16 +4,23 @@ import logging
 from builtins import str
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from django.contrib.postgres.aggregates import ArrayAgg
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse_lazy
+from django.db.models import BooleanField
 from django.db.models import Case
+from django.db.models import Count
 from django.db.models import IntegerField
+from django.db.models import OuterRef
+from django.db.models import Prefetch
 from django.db.models import Q
+from django.db.models import Subquery
 from django.db.models import Value
 from django.db.models import When
+from django.db.models.functions import Cast
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.http import HttpResponseForbidden
@@ -25,6 +32,7 @@ from django.views.decorators.cache import cache_page
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic.base import TemplateView
 from enum import Enum
+from le_utils.constants import content_kinds
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authentication import TokenAuthentication
@@ -55,7 +63,6 @@ from contentcuration.serializers import ChannelSetChannelListSerializer
 from contentcuration.serializers import ChannelSetSerializer
 from contentcuration.serializers import CurrentUserSerializer
 from contentcuration.serializers import InvitationSerializer
-from contentcuration.serializers import RootNodeSerializer
 from contentcuration.serializers import SimplifiedChannelProbeCheckSerializer
 from contentcuration.serializers import TaskSerializer
 from contentcuration.serializers import UserChannelListSerializer
@@ -361,19 +368,45 @@ def publish_channel(request):
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
 
+class SQCountDistinct(Subquery):
+    # Include ALIAS at the end to support Postgres
+    template = "(SELECT COUNT(DISTINCT %(field)s) FROM (%(subquery)s) AS %(field)s__sum)"
+    output_field = IntegerField()
+
+
+def map_channel_data(channel):
+    channel["id"] = channel.pop("main_tree__id")
+    channel["title"] = channel.pop("name")
+    channel["children"] = [child for child in channel["children"] if child]
+    channel["metadata"] = {
+        "resource_count": channel.pop("resource_count")
+    }
+    return channel
+
+
 @api_view(['GET'])
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
 def accessible_channels(request, channel_id):
     # Used for import modal
-    accessible_list = ContentNode.objects.filter(
-        pk__in=Channel.objects.select_related('main_tree')
-        .filter(Q(deleted=False) & (Q(public=True) | Q(editors=request.user) | Q(viewers=request.user)))
-        .exclude(pk=channel_id).values_list('main_tree_id', flat=True)
+    # Returns a list of objects with the following parameters:
+    # id, title, resource_count, children
+    channel_ids = Channel.objects.filter(Q(deleted=False) & (Q(public=True) | Q(editors=request.user.id) | Q(viewers=request.user.id))).exclude(pk=channel_id).values_list("id", flat=True)
+    channel_main_tree_nodes = ContentNode.objects.filter(
+        tree_id=OuterRef("main_tree__tree_id")
+    ).order_by()
+    # Add the unique count of distinct non-topic node content_ids
+    non_topic_content_ids = (
+        channel_main_tree_nodes.exclude(kind_id=content_kinds.TOPIC).values("content_id")
     )
+    channels = Channel.objects.filter(id__in=channel_ids)
+    channels = channels.annotate(
+        resource_count=SQCountDistinct(non_topic_content_ids, field="content_id"),
+        children=ArrayAgg("main_tree__children"),
+    )
+    channels_data = channels.values("name", "resource_count", "children", "main_tree__id")
 
-    serializer = RootNodeSerializer(accessible_list, many=True)
-    return Response(serializer.data)
+    return Response(map(map_channel_data, channels_data))
 
 
 @api_view(['POST'])
