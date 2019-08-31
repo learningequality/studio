@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+import base64
 import os
 import random
 import string
@@ -14,6 +15,7 @@ from mock import patch
 from .base import StudioTestCase
 from .testdata import create_studio_file
 from .testdata import exercise
+from .testdata import fileobj_video
 from .testdata import slideshow
 from .testdata import topic
 from .testdata import video
@@ -29,24 +31,11 @@ from contentcuration.utils.publish import set_channel_icon_encoding
 
 pytestmark = pytest.mark.django_db
 
-def fileobj_video(contents=None):
-    """
-    Create an mp4 video file in storage and then create a File model from it.
-    If contents is given and is a string, then write said contents to the file.
-    If not given, a random string is generated and set as the contents of the file.
-    """
-    if contents:
-        filecontents = contents
-    else:
-        filecontents = "".join(random.sample(string.printable, 20))
-    # leverage existing function in testdata
-    file_data = create_studio_file(filecontents, preset='high_res_video', ext='mp4')
-    return file_data['db_file']
-
 
 def thumbnail():
-    image_data = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
-    file_data = create_studio_file(image_data.decode('base64'), preset='channel_thumbnail', ext='png')
+    image_data = b'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+    image_data = base64.b64encode(image_data)
+    file_data = create_studio_file(image_data, preset='channel_thumbnail', ext='png')
     return file_data['db_file']
 
 
@@ -111,7 +100,7 @@ def channel():
         item4.contentnode = leaf2
         item4.save()
 
-    channel = mixer.blend(cc.Channel, main_tree=root, name='testchannel', thumbnail=str(thumbnail()))
+    channel = mixer.blend(cc.Channel, main_tree=root, name='testchannel', thumbnail=thumbnail())
 
     return channel
 

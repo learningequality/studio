@@ -55,7 +55,7 @@ class CreateChannelTestCase(BaseTestCase):
             "id": "fasdfada",
             "has_changed": True,
             "description": "coolest channel this side of the Pacific",
-            "thumbnail": base64.b64encode(":)"),
+            "thumbnail": ":)",
         }
 
     def setUp(self):
@@ -77,7 +77,7 @@ class CreateChannelTestCase(BaseTestCase):
         return response
 
     def test_api_file_upload_status(self):
-        fileobj, response = self.upload_temp_file(":)")
+        fileobj, response = self.upload_temp_file(b":)")
         assert response.status_code == requests.codes.ok
 
     def test_channel_create_channel_created(self):

@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 from future import standard_library
 standard_library.install_aliases()
+from past.builtins import basestring
 
 import hashlib
 import json
+import logging
 import os
 import random
 import string
@@ -84,9 +86,11 @@ def fileobj_video(contents=None):
     If no contents is given, a random string is generated and set as the contents of the file.
     """
     if contents:
+        logging.warning("input = {}".format(contents))
         filecontents = contents
     else:
-        filecontents = "".join(random.sample(string.printable, 20))
+        filecontents = "".join(random.sample(string.printable, 20)).encode('utf-8')
+    logging.warning("contents = {}".format(filecontents))
     temp_file_dict = create_studio_file(filecontents, preset=format_presets.VIDEO_HIGH_RES, ext='mp4')
     return temp_file_dict['db_file']
 
@@ -135,7 +139,7 @@ def node(data, parent=None):
             content_id=data.get('content_id') or data['node_id'],
         )
         new_node.save()
-        video_file = fileobj_video(contents="Video File")
+        video_file = fileobj_video(contents=b"Video File")
         video_file.contentnode = new_node
         video_file.preset_id = format_presets.VIDEO_HIGH_RES
         video_file.save()
@@ -236,6 +240,11 @@ def create_studio_file(filebytes, preset='document', ext='pdf', original_filenam
     - file (file): a basic BytesIO file-like object that you can read/write
     - db_file (cc.File): a Studio File object saved in DB
     """
+    try:
+        filebytes = filebytes.encode('utf-8')
+    except:
+        pass
+
     fileobj = BytesIO(filebytes)
     hash = hashlib.md5(filebytes)
     checksum = hash.hexdigest()
