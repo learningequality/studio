@@ -9,7 +9,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('contentcuration', '0098_auto_20190424_1709'),
+        ('contentcuration', '0101_extra_fields_json_field'),
     ]
 
     operations = [
