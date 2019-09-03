@@ -4,6 +4,7 @@ import os
 import requests
 
 PROBER_METRICS_URL = os.getenv("PROBER_METRICS_URL")
+COMMIT_SHA = os.getenv("COMMIT_SHA")
 
 
 def parse_labels(labels):
@@ -41,6 +42,7 @@ def parse_metrics_page(newrelic_key, account_id):
                 "eventType": "ProberMetrics",
                 "metric_name": name,
                 "hostname": hostname,
+                "release_commit_sha": COMMIT_SHA,
             }
             metrics.append(metric_dict)
         elif line.startswith(("total", "success", "latency", "timeouts", "resp_code")):
