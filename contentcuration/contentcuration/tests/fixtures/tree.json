@@ -68,9 +68,9 @@
 									"help_text": ""
 								}
 							],
-              "hints": [
-                "This is the first hint",
-                "This is the second hint"
+							"hints": [
+								{"order":1, "hint": "This is the first hint"},
+								{"order":2, "hint": "This is the second hint"}
 							]
 						},
 						{
@@ -94,9 +94,9 @@
 									"help_text": ""
 								}
 							],
-              "hints": [
-                "This is the first hint",
-                "This is the second hint"
+							"hints": [
+								{"order":1, "hint": "This is the first hint"},
+								{"order":2, "hint": "This is the second hint"}
 							]
 						},
 						{
