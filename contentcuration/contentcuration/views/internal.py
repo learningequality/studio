@@ -464,7 +464,7 @@ def get_status(channel_id):
 @permission_classes((IsAuthenticated,))
 def get_full_node_diff_endpoint(request, channel_id):
     channel = Channel.objects.get(pk=channel_id)
-    return HttpResponse(json.dumps(get_full_node_diff(channel)))
+    return Response(get_full_node_diff(channel))
 
 def get_full_node_diff(channel):
     """ Create dict of differences between main and staging trees
