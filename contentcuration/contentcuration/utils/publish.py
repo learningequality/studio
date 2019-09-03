@@ -1,6 +1,7 @@
 from __future__ import division
 
 import collections
+import io
 import itertools
 import json
 import logging as logmodule
@@ -183,11 +184,11 @@ def create_slideshow_manifest(ccnode, kolibrinode, user_id=None):
         with tempfile.NamedTemporaryFile(prefix="slideshow_manifest_", delete=False) as temp_manifest:
             temp_filepath = temp_manifest.name
 
-            temp_manifest.write(json.dumps(ccnode.extra_fields))
+            temp_manifest.write(json.dumps(ccnode.extra_fields).encode('utf-8'))
 
             size_on_disk = temp_manifest.tell()
             temp_manifest.seek(0)
-            file_on_disk = File(open(temp_filepath, mode='r'), name=filename)
+            file_on_disk = File(open(temp_filepath, mode='rb'), name=filename)
             # Create the file in Studio
             ccmodels.File.objects.create(
                 file_on_disk=file_on_disk,
@@ -346,7 +347,7 @@ def create_perseus_exercise(ccnode, kolibrinode, exercise_data, user_id=None):
             ccnode.files.filter(preset_id=format_presets.EXERCISE).delete()
 
             assessment_file_obj = ccmodels.File.objects.create(
-                file_on_disk=File(open(temppath, 'r'), name=filename),
+                file_on_disk=File(open(temppath, 'rb'), name=filename),
                 contentnode=ccnode,
                 file_format_id=file_formats.PERSEUS,
                 preset_id=format_presets.EXERCISE,
@@ -630,7 +631,7 @@ def save_export_database(channel_id):
     current_export_db_location = get_active_content_database()
     target_export_db_location = os.path.join(settings.DB_ROOT, "{id}.sqlite3".format(id=channel_id))
 
-    with open(current_export_db_location) as currentf:
+    with open(current_export_db_location, 'rb') as currentf:
         storage.save(target_export_db_location, currentf)
     logging.info("Successfully copied to {}".format(target_export_db_location))
 

@@ -2,8 +2,7 @@ from __future__ import absolute_import
 
 import base64
 import os
-import random
-import string
+import shutil
 import tempfile
 
 import pytest
@@ -34,8 +33,7 @@ pytestmark = pytest.mark.django_db
 
 def thumbnail():
     image_data = b'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
-    image_data = base64.b64encode(image_data)
-    file_data = create_studio_file(image_data, preset='channel_thumbnail', ext='png')
+    file_data = create_studio_file(base64.decodebytes(image_data), preset='channel_thumbnail', ext='png')
     return file_data['db_file']
 
 

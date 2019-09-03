@@ -55,7 +55,7 @@ class GoogleCloudStorageSaveTestCase(TestCase):
         self.blob_obj = self.blob_class("blob", "blob")
         self.mock_client = create_autospec(Client)
         self.storage = gcs(client=self.mock_client())
-        self.content = BytesIO("content")
+        self.content = BytesIO(b"content")
 
     def test_calls_upload_from_file(self):
         """
@@ -80,7 +80,7 @@ class GoogleCloudStorageSaveTestCase(TestCase):
         """
         Check that it doesn't call upload_from_file if the file is empty.
         """
-        content = BytesIO("")
+        content = BytesIO()
         self.storage.save("myfile.jpg", content, blob_object=self.blob_obj)
 
         # check that upload_from_file is never called

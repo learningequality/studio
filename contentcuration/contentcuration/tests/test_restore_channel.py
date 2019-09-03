@@ -126,7 +126,7 @@ class PerseusRestoreTestCase(StudioTestCase):
     def setUp(self):
         super(PerseusRestoreTestCase, self).setUp()
         image_path = generate_object_storage_name('test', 'test.png')
-        default_storage.save(image_path, BytesIO('test'))
+        default_storage.save(image_path, BytesIO(b'test'))
 
     def test_process_content(self):
         tests = [

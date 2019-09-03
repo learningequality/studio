@@ -135,10 +135,9 @@ def file_create(request):
         if thumbnail:
             thumbnail.delete()
 
-    return HttpResponse(json.dumps({
-        "success": True,
-        "node": JSONRenderer().render(ContentNodeEditSerializer(new_node).data)
-    }))
+    return HttpResponse(JSONRenderer().render(
+        {'success': True, 'node': ContentNodeEditSerializer(new_node).data})
+    )
 
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
@@ -162,7 +161,7 @@ def generate_thumbnail(request, contentnode_id):
 
     return HttpResponse(json.dumps({
         "success": True,
-        "file": JSONRenderer().render(FileSerializer(thumbnail_object).data),
+        "file": JSONRenderer().render(FileSerializer(thumbnail_object).data).decode('utf-8'),
         "path": generate_storage_url(str(thumbnail_object)),
         "encoding": get_thumbnail_encoding(str(thumbnail_object)),
     }))
@@ -213,7 +212,7 @@ def image_upload(request):
     file_object.save()
     return HttpResponse(json.dumps({
         "success": True,
-        "file": JSONRenderer().render(FileSerializer(file_object).data),
+        "file": JSONRenderer().render(FileSerializer(file_object).data).decode('utf-8'),
         "path": generate_storage_url(str(file_object)),
         "encoding": get_thumbnail_encoding(str(file_object)),
     }))
@@ -248,11 +247,11 @@ def subtitle_upload(request):
     # File will be converted to VTT format
     ext = file_formats.VTT
     language_id = request.META.get('HTTP_LANGUAGE')
-    content_file = request.FILES.values()[0]
+    content_file = list(request.FILES.values())[0]
 
     with NamedTemporaryFile() as temp_file:
         try:
-            converter = build_subtitle_converter(unicode(content_file.read(), 'utf-8'))
+            converter = build_subtitle_converter(content_file.read().decode('utf-8'))
             convert_language_code = language_id
 
             # We're making the assumption here that language the user selected is truly the caption
@@ -288,7 +287,7 @@ def subtitle_upload(request):
             file_on_disk=converted_file,
             checksum=checksum,
             file_format_id=ext,
-            original_filename=request.FILES.values()[0]._name,
+            original_filename=list(request.FILES.values())[0]._name,
             preset_id=request.META.get('HTTP_PRESET'),
             language_id=language_id,
             uploaded_by=request.user,
@@ -298,7 +297,7 @@ def subtitle_upload(request):
     return HttpResponse(json.dumps({
         "success": True,
         "filename": str(file_object),
-        "file": JSONRenderer().render(FileSerializer(file_object).data)
+        "file": JSONRenderer().render(FileSerializer(file_object).data).decode('utf-8')
     }))
 
 

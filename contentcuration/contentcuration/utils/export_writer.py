@@ -2,6 +2,7 @@
 from __future__ import division
 
 import csv
+import io
 import logging as logmodule
 import math
 import os
@@ -169,7 +170,7 @@ class PPTMixin(object):
 
 class CSVMixin(object):
     def write_csv(self, filepath, rows, header=None):
-        with open(filepath, 'wb') as csvfile:
+        with io.open(filepath, 'w', encoding='utf-8') as csvfile:
             writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_MINIMAL)
             if header:
                 writer.writerow(header)

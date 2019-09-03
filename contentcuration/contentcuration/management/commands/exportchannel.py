@@ -7,8 +7,9 @@ from contentcuration.utils import publish
 
 logmodule.basicConfig()
 logging = logmodule.getLogger(__name__)
-reload(sys)
-sys.setdefaultencoding('utf8')
+if sys.version_info.major == 2:
+    reload(sys)
+    sys.setdefaultencoding('utf8')
 
 
 class Command(BaseCommand):

@@ -246,13 +246,18 @@ def create_studio_file(filebytes, preset='document', ext='pdf', original_filenam
         pass
 
     fileobj = BytesIO(filebytes)
+    # Every time the BytesIO object is read from or appended to, we need to reset the seek position,
+    # otherwise, it will start reading from the end of the file.
+    fileobj.seek(0)
     hash = hashlib.md5(filebytes)
     checksum = hash.hexdigest()
     filename = "{}.{}".format(checksum, ext)
     storage_file_path = cc.generate_object_storage_name(checksum, filename)
 
     # 1. Write out the file bytes on to object storage
+    fileobj.seek(0)
     default_storage.save(storage_file_path, fileobj)
+    fileobj.seek(0)
     assert default_storage.exists(storage_file_path)
 
     # 2. Get the minimum required Studio meta fields for a File object

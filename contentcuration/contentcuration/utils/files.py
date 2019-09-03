@@ -249,7 +249,6 @@ def get_thumbnail_encoding(filename, dimension=THUMBNAIL_WIDTH):
         return filename
 
     checksum, ext = os.path.splitext(filename.split("?")[0])
-    inbuffer = BytesIO()
     outbuffer = BytesIO()
 
     # make sure the aspect ratio between width and height is 16:9
@@ -257,12 +256,12 @@ def get_thumbnail_encoding(filename, dimension=THUMBNAIL_WIDTH):
     try:
         if not filename.startswith(settings.STATIC_ROOT):
             filename = generate_object_storage_name(checksum, filename)
+            inbuffer = default_storage.open(filename, 'rb')
 
-            with default_storage.open(filename) as localtempf:
-                inbuffer.write(localtempf.read())
         else:
-            with open(filename, 'rb') as fobj:
-                inbuffer.write(fobj.read())
+            inbuffer = open(filename, 'rb')
+
+        assert inbuffer
 
         with Image.open(inbuffer) as image:
             image_format = image.format
@@ -275,7 +274,7 @@ def get_thumbnail_encoding(filename, dimension=THUMBNAIL_WIDTH):
             image.thumbnail(thumbnail_size, Image.ANTIALIAS)
 
             image.save(outbuffer, image_format)
-        return "data:image/{};base64,{}".format(ext[1:], base64.b64encode(outbuffer.getvalue()))
+        return "data:image/{};base64,{}".format(ext[1:], base64.b64encode(outbuffer.getvalue()).decode('utf-8'))
     finally:
         inbuffer.close()
         outbuffer.close()

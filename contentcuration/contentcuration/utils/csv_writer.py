@@ -1,4 +1,5 @@
 import csv
+import io
 import json
 import os
 import platform
@@ -31,7 +32,7 @@ def write_channel_csv_file(channel, force=False, site=None, show_progress=False)
     csv_path = _generate_csv_filename(channel)
 
     if force or not _csv_file_exists(csv_path, channel):
-        with open(csv_path, 'wb') as csvfile:
+        with io.open(csv_path, 'w', encoding='utf-8') as csvfile:
             writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_MINIMAL)
             site = site or Site.objects.get(pk=1).domain
             writer.writerow(['Path', 'Title', 'Kind', 'Description', 'URL', 'Author', 'Language', 'License',
@@ -154,7 +155,7 @@ def _write_user_row(file, writer, domain):
 def write_user_csv(user, path=None):
     csv_path = path or generate_user_csv_filename(user)
 
-    with open(csv_path, 'wb') as csvfile:
+    with io.open(csv_path, 'w', encoding='utf-8') as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_MINIMAL)
 
         writer.writerow([_('Channel'), _('Title'), _('Kind'), _('Filename'), _('File Size'), _('URL'), _('Description'),

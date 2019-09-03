@@ -282,8 +282,8 @@ def create_contentnode(title, parent, file, kind_id, license_id, description="",
 
 
 def create_file(display_name, preset_id, ext, user=None):
-    with tempfile.NamedTemporaryFile(suffix=".{}".format(ext), mode='w+t', delete=False) as f:
-        f.write(":)")
+    with tempfile.NamedTemporaryFile(suffix=".{}".format(ext), mode='wb', delete=False) as f:
+        f.write(b":)")
         f.flush()
         size = f.tell()
         filename = write_file_to_storage(f, name=f.name)

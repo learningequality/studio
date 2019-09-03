@@ -107,7 +107,7 @@ class NodeGettersTestCase(BaseTestCase):
         details = self.channel.main_tree.get_details()
         assert details['resource_count'] > 0
         assert details['resource_size'] > 0
-        assert details['kind_count'] > 0
+        assert len(details['kind_count']) > 0
 
 
 class NodeOperationsTestCase(BaseTestCase):

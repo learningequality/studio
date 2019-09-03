@@ -168,7 +168,7 @@ def api_create_channel_endpoint(request):
             "channel_id": obj.pk,
         })
     except KeyError as e:
-        return HttpResponseBadRequest("Required attribute missing: {}".format(e.message))
+        return HttpResponseBadRequest("Required attribute missing from data: {}".format(data))
     except Exception as e:
         handle_server_error(request)
         return HttpResponseServerError(content=str(e), reason=str(e))
@@ -226,7 +226,7 @@ def api_commit_channel(request):
     except (Channel.DoesNotExist, PermissionDenied):
         return HttpResponseNotFound("No channel matching: {}".format(channel_id))
     except KeyError as e:
-        return HttpResponseBadRequest("Required attribute missing: {}".format(e.message))
+        return HttpResponseBadRequest("Required attribute missing from data: {}".format(data))
     except Exception as e:
         handle_server_error(request)
         return HttpResponseServerError(content=str(e), reason=str(e))
@@ -265,7 +265,7 @@ def api_add_nodes_to_tree(request):
     except (ContentNode.DoesNotExist, PermissionDenied):
         return HttpResponseNotFound("No content matching: {}".format(parent_id))
     except KeyError as e:
-        return HttpResponseBadRequest("Required attribute missing: {}".format(e.message))
+        return HttpResponseBadRequest("Required attribute missing from data: {}".format(data))
     except Exception as e:
         handle_server_error(request)
         return HttpResponseServerError(content=str(e), reason=str(e))
@@ -542,7 +542,7 @@ def convert_data_to_nodes(user, content_data, parent_node):
             return root_mapping
 
     except KeyError as e:
-        raise ObjectDoesNotExist("Error creating node: {0}".format(e.message))
+        raise ObjectDoesNotExist("Error creating node: {0}".format(e))
 
 def create_node(node_data, parent_node, sort_order):
     """ Generate node based on node dict """

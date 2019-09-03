@@ -25,7 +25,7 @@ class NodeViewsUtilityTestCase(BaseAPITestCase):
         details = json.loads(response.content)
         assert details['resource_count'] > 0
         assert details['resource_size'] > 0
-        assert details['kind_count'] > 0
+        assert len(details['kind_count']) > 0
 
     def test_get_topic_details_cached(self):
         node = self.channel.main_tree
@@ -45,7 +45,7 @@ class NodeViewsUtilityTestCase(BaseAPITestCase):
         cache_details = json.loads(cache.get(cache_key))
         assert cache_details['resource_count'] > 0
         assert cache_details['resource_size'] > 0
-        assert cache_details['kind_count'] > 0
+        assert len(cache_details['kind_count']) > 0
 
 
 class GetPrerequisitesTestCase(BaseAPITestCase):

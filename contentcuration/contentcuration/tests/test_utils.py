@@ -81,7 +81,7 @@ class GetFileDiffTestCase(StudioTestCase):
 
         self.existing_content = "dowereallyexist.jpg"
         self.existing_content_path = generate_object_storage_name("dowereallyexist", self.existing_content)
-        storage.save(self.existing_content_path, BytesIO("maybe"))
+        storage.save(self.existing_content_path, BytesIO(b"maybe"))
 
     def test_returns_empty_if_content_already_exists(self):
         """Test if get_file_diff returns an empty list if all the files we pass in are
@@ -114,7 +114,7 @@ class FileFormatsTestCase(StudioTestCase):
 
     def test_unsupported_files_raise_error(self):
         unsupported_file = File.objects.create(
-            file_on_disk=ContentFile("test"),
+            file_on_disk=ContentFile(b"test"),
             checksum='aaa'
         )
 
@@ -131,7 +131,7 @@ class FileFormatsTestCase(StudioTestCase):
 
         for ext in known_extensions:
             file_with_ext = File.objects.create(
-                file_on_disk=ContentFile("test"),
+                file_on_disk=ContentFile(b"test"),
                 checksum="aaa"
             )
 

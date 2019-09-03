@@ -110,7 +110,7 @@ class UserAccountTestCase(BaseAPITestCase):
         with tempfile.NamedTemporaryFile(suffix=".csv") as tempf:
             write_user_csv(self.user, path=tempf.name)
 
-            with open(tempf.name, 'rb') as csv_file:
+            with open(tempf.name, 'r', encoding='utf-8') as csv_file:
                 reader = csv.reader(csv_file, delimiter=',')
                 for index, row in enumerate(reader):
                     if index == 0:

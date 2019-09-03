@@ -64,7 +64,7 @@ class CleanUpContentNodesTestCase(StudioTestCase):
         c = _create_expired_contentnode()
         f = File.objects.create(
             contentnode_id=c.pk,
-            file_on_disk=ContentFile("test"),
+            file_on_disk=ContentFile(b"test"),
             checksum="aaa",
         )
 
@@ -84,7 +84,7 @@ class CleanUpContentNodesTestCase(StudioTestCase):
         get deleted when one of the file objects gets deleted
         """
         c = _create_expired_contentnode()
-        file_on_disk = ContentFile("test")
+        file_on_disk = ContentFile(b"test")
         f = File.objects.create(
             contentnode_id=c.pk,
             file_on_disk=file_on_disk,
