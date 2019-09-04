@@ -58,6 +58,17 @@ $(function() {
       message = 'Request Timed Out: ' + ajaxSettings.url;
     }
 
+    // These two messages indicate a server-wide problem, so don't include the URL
+    // in the name to make it easier for Sentry to aggregate them.
+    // Response data will just be generic error HTML from CloudFlare.
+    if (jqXHR.status === 502) {
+      message = 'Bad Gateway (502)';
+    }
+
+    if (jqXHR.status === 503) {
+      message = 'Service Unavailable (503)';
+    }
+
     // jqXHR.responseText may be null for some reason, so make it an empty string in that case.
     let responseText = jqXHR.responseText;
     if (!responseText) {
