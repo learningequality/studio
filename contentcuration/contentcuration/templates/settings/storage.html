@@ -153,7 +153,8 @@
 				// Prevent select box from jumping to the top every click
 				var st = field.scrollTop;
 				setTimeout(() => {
-					field.scrollTo(0, st);
+					// Using scrollTop as it is the most widely supported
+					field.scrollTop = st, 0;
 				});
 				field.focus();
 			});
