@@ -24,6 +24,6 @@ spec:
         - name: PROBER_STUDIO_BASE_URL
           value: http://{{ template "studio.fullname" . }}-app.default.svc.cluster.local
         - name: CELERY_DASHBOARD_URL
-          value: http://{{ template "studio.fullname" . }}-celery-dashboard-service.default.svc.cluster.local/dashboard
+          value: http://{{ template "studio.fullname" . }}-celery-dashboard-service.default.svc.cluster.local:5555/dashboard
         - name: PROBER_STUDIO_PRODUCTION_MODE_ON
           value: "yes"
