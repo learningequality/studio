@@ -18,6 +18,7 @@ Vue.use(Vuetify, {
   rtl: window.isRTL,
   theme: {
     primary: colors.blue.base, // @blue-500
+    primaryBackground: colors.blue.lighten5,
     // secondary: colors.red.lighten4, // #FFCDD2
     // accent: colors.indigo.base // #3F51B5
   },

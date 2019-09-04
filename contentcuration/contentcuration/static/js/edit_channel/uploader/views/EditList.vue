@@ -1,52 +1,60 @@
 <template>
-  <VList>
-    <!-- Select all checkbox -->
-    <VListTile class="select-all-wrapper" @click="toggleSelectAll">
-      <VListTileAction>
-        <VCheckbox color="primary" :inputValue="selectAllChecked" @click.stop="toggleSelectAll" />
-      </VListTileAction>
-      <VListTileContent>
-        <VListTileTitle>{{ $tr('selectAllLabel') }}</VListTileTitle>
-      </VListTileContent>
-    </VListTile>
-    <VDivider />
+  <Uploader :readonly="!allowUpload">
+    <template v-slot:upload-zone>
+      <VList>
+        <!-- Select all checkbox -->
+        <VListTile class="select-all-wrapper" @click="toggleSelectAll">
+          <VListTileAction>
+            <VCheckbox
+              color="primary"
+              :inputValue="selectAllChecked"
+              @click.stop="toggleSelectAll"
+            />
+          </VListTileAction>
+          <VListTileContent>
+            <VListTileTitle>{{ $tr('selectAllLabel') }}</VListTileTitle>
+          </VListTileContent>
+        </VListTile>
+        <VDivider />
 
-    <!-- Selected items -->
-    <EditListItem
-      v-for="(node, index) in nodes"
-      :key="node.id"
-      :index="index"
-      :removable="allowAddTopic || allowAddExercise || allowUpload"
-    />
+        <!-- Selected items -->
+        <EditListItem
+          v-for="(node, index) in nodes"
+          :key="node.id"
+          :index="index"
+          :removable="allowAddTopic || allowAddExercise || allowUpload"
+        />
 
-    <!-- Create button -->
-    <VListTile v-if="allowAddTopic || allowAddExercise" class="add-item-wrapper">
-      <VListTileContent>
-        <VBtn
-          block
-          depressed
-          color="primary"
-          dark
-          textTruncate
-          @click="$emit('addNode')"
-        >
-          {{ addButtonText }}
-        </VBtn>
-      </VListTileContent>
-    </VListTile>
-
-    <!-- Upload button -->
-    <template v-if="allowUpload">
-      <VListTile class="add-item-wrapper upload-item">
+        <!-- Create button -->
+        <VListTile v-if="allowAddTopic || allowAddExercise" class="add-item-wrapper">
+          <VListTileContent>
+            <VBtn
+              block
+              depressed
+              color="primary"
+              dark
+              textTruncate
+              @click="$emit('addNode')"
+            >
+              {{ addButtonText }}
+            </VBtn>
+          </VListTileContent>
+        </VListTile>
+      </VList>
+    </template>
+    <template v-if="allowUpload" slot="upload-actions" slot-scope="uploader">
+      <VListTile>
         <VListTileContent>
-          <Uploader block depressed dark color="primary" />
+          <VBtn block depressed dark color="primary" @click="uploader.openDialog">
+            {{ $tr('uploadButton') }}
+          </VBtn>
         </VListTileContent>
       </VListTile>
       <p class="drop-prompt">
         {{ $tr('dropFilesText') }}
       </p>
     </template>
-  </VList>
+  </Uploader>
 </template>
 
 <script>
@@ -126,6 +134,7 @@
     font-weight: bold;
     color: @gray-500;
     text-align: center;
+    pointer-events: none;
     cursor: default;
   }
 

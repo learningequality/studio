@@ -1,52 +1,37 @@
 <template>
   <div
     class="wrapper"
-    :style="highlight && !readonly ? { borderColor: 'purple' } : {}"
+    :style="highlight && !readonly ? { backgroundColor: $vuetify.theme.primaryBackground } : {}"
     @dragenter.prevent="enter"
     @dragover.prevent="over"
     @dragleave.prevent="leave"
     @drop.prevent="drop"
   >
-    <template
-      v-for="f in files"
-    >
-      <VProgressCircular
-        v-if="f.progress < 100"
-        :key="f.id"
-        :size="50"
-        :width="15"
-        :value="f.progress"
-      >
-        {{ f.progress }}
-      </VProgressCircular>
-    </template>
+    <slot name="upload-zone"></slot>
+    <slot name="upload-actions" :openDialog="openUploadDialog"></slot>
+
     <input
       v-if="!readonly"
-      id="file-elem"
       ref="fileUpload"
       style="display: none;"
       type="file"
       :accept="acceptedFiles"
       @change="handleFiles($event.target.files)"
     >
-    <label for="fileElem">
-      <VImg v-if="file" contain :src="file" />
-      <VImg v-else contain />
-      <VBtn v-if="!readonly" v-bind="$attrs" @click="$refs.fileUpload.click()">
-        {{ $tr('fileUpload') }}
-      </VBtn>
-    </label>
   </div>
 </template>
 
 <script>
 
+  import _ from 'underscore';
   import client from './client';
+  import Constants from 'edit_channel/constants';
 
   export default {
     name: 'Uploader',
     $trs: {
       fileUpload: 'Upload file',
+      dropFilesText: 'or drop files here',
     },
     props: {
       value: {
@@ -61,7 +46,12 @@
       },
       acceptedFiles: {
         type: String,
-        default: '*',
+        default: _.chain(Constants.FormatPresets)
+          .where({ supplementary: false })
+          .pluck('associated_mimetypes')
+          .flatten()
+          .value()
+          .join(','),
       },
     },
     data() {
@@ -91,6 +81,9 @@
       drop(e) {
         this.highlight = false;
         this.handleFiles(e.dataTransfer.files);
+      },
+      openUploadDialog() {
+        this.$refs.fileUpload.click();
       },
       handleFiles(files) {
         if (!this.readonly) {
@@ -142,9 +135,7 @@
 <style lang="less">
   .wrapper {
     width: 100%;
-    label {
-      width: 100%;
-    }
+    height: 100%;
   }
 
 </style>
