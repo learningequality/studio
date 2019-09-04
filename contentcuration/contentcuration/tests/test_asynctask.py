@@ -75,13 +75,24 @@ class AsyncTaskTestCase(BaseAPITestCase):
         self.assertEqual(result, 42)
         self.assertEqual(Task.objects.get(task_id=task.id).status, 'SUCCESS')
 
+        # since tasks run sync in tests, we can't test it in an actual running state
+        # so simulate the running state in the task object.
+        db_task = Task.objects.get(task_id=task.id)
+        db_task.status = 'STARTED'
+        db_task.save()
         url = '{}?channel_id={}'.format(self.task_url, self.channel.id)
         response = self.get(url)
         self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]['status'], 'SUCCESS')
+        self.assertEqual(response.data[0]['status'], 'STARTED')
         self.assertEqual(response.data[0]['task_type'], 'progress-test')
         self.assertEqual(response.data[0]['metadata']['progress'], 100)
         self.assertEqual(response.data[0]['metadata']['result'], 42)
+
+        # once the task is completed, it should be removed from the list of channel tasks.
+        db_task.status = 'SUCCESS'
+        db_task.save()
+        response = self.get(url)
+        self.assertEqual(len(response.data), 0)
 
         url = '{}?channel_id={}'.format(self.task_url, task_info.id, "nope")
         response = self.get(url)
