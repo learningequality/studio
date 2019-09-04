@@ -922,7 +922,7 @@ class ContentNode(MPTTModel, models.Model):
     publishing = models.BooleanField(default=False)
 
     changed = models.BooleanField(default=True)
-    extra_fields = JSONField()
+    extra_fields = JSONField(default=dict)
     author = models.CharField(max_length=200, blank=True, default="", help_text=_("Who created this content?"),
                               null=True)
     aggregator = models.CharField(max_length=200, blank=True, default="", help_text=_("Who gathered this content together?"),
