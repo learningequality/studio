@@ -14,7 +14,7 @@ class MakeMessagesCommandRunTestCase(TestCase):
 
     # this test can make changes to committed files, so only run it
     # on the CI server
-    @pytest.mark.skipif('CI' not in os.environ or not os.environ['CI'], reason="runs only on CI server")
+    @pytest.mark.skipif('CI' not in os.environ, reason="runs only on CI server")
     def test_command_succeeds_without_postgres(self):
         """
         Test that we can run makemessages when postgres is not activated.
