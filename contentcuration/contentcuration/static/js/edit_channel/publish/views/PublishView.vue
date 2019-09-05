@@ -1,6 +1,6 @@
 <template>
   <VCard class="publish-view">
-    <v-card-title primaryTitle>
+    <VCardTitle primaryTitle>
       <div :title="channel.name" class="headline">
         {{ channel.name }}
       </div>
@@ -21,44 +21,45 @@
           {{ $tr('unpublishedText') }}
         </span>
       </div>
-    </v-card-title>
-    <v-divider />
-    <v-window v-model="step">
-      <v-window-item :key="0">
+    </VCardTitle>
+    <VDivider />
+    <VWindow v-model="step">
+      <VWindowItem :key="0">
         <VCardText>
           <div class="title">
             {{ $tr('invalidHeader') }}
           </div>
-          <v-list>
-            <v-list-tile>
-              <v-list-tile-action>
-                <v-progress-circular
+          <VList>
+            <VListTile>
+              <VListTileAction>
+                <VProgressCircular
                   v-if="savingLanguage"
                   indeterminate
                   color="primary"
                   size="20"
                 />
-                <v-icon v-else-if="languageIsValid" color="green">
+                <VIcon v-else-if="languageIsValid" color="green">
                   check
-                </v-icon>
-                <v-icon v-else color="red">
+                </VIcon>
+                <VIcon v-else color="red">
                   clear
-                </v-icon>
-              </v-list-tile-action>
+                </VIcon>
+              </VListTileAction>
 
-              <v-list-tile-content>
-                <v-list-tile-title>
+              <VListTileContent>
+                <VListTileTitle>
                   {{ $tr('languageRequired') }}
-                </v-list-tile-title>
-              </v-list-tile-content>
-              <v-list-tile-action>
+                </VListTileTitle>
+              </VListTileContent>
+              <VListTileAction>
                 <LanguageDropdown :language="channel.language" @changed="setLanguage" />
-              </v-list-tile-action>
-            </v-list-tile>
-          </v-list>
+              </VListTileAction>
+            </VListTile>
+          </VList>
         </VCardText>
         <VCardActions>
           <VBtn
+            ref="cancelbutton"
             flat
             dark
             color="primary"
@@ -66,8 +67,9 @@
           >
             {{ $tr('cancelButton') }}
           </VBtn>
-          <v-spacer />
+          <VSpacer />
           <VBtn
+            ref="nextbutton"
             depressed
             color="primary"
             class="next-button"
@@ -77,8 +79,8 @@
             {{ $tr('nextButton') }}
           </VBtn>
         </VCardActions>
-      </v-window-item>
-      <v-window-item :key="1">
+      </VWindowItem>
+      <VWindowItem :key="1">
         <VCardText>
           <VTextarea
             v-model="publishDescription"
@@ -88,6 +90,7 @@
         </VCardText>
         <VCardActions>
           <VBtn
+            ref="backbutton"
             flat
             dark
             color="primary"
@@ -95,8 +98,9 @@
           >
             {{ $tr('backButton') }}
           </VBtn>
-          <v-spacer />
+          <VSpacer />
           <VBtn
+            ref="publishbutton"
             depressed
             dark
             color="primary"
@@ -105,8 +109,8 @@
             {{ $tr('publishButton') }}
           </VBtn>
         </VCardActions>
-      </v-window-item>
-    </v-window>
+      </VWindowItem>
+    </VWindow>
   </VCard>
 </template>
 
@@ -116,8 +120,12 @@
   import _ from 'underscore';
   import { mapActions, mapState } from 'vuex';
   import Constants from 'edit_channel/constants/index';
-  import { format_size } from 'edit_channel/utils/string_helper';
   import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown.vue';
+
+  const KB = parseFloat(1024);
+  const MB = parseFloat(Math.pow(KB, 2));
+  const GB = parseFloat(Math.pow(KB, 3));
+  const TB = parseFloat(Math.pow(KB, 4));
 
   export default {
     name: 'PublishView',
@@ -134,6 +142,17 @@
       publishButton: 'PUBLISH',
       nextButton: 'Next',
       backButton: 'Back',
+      loadingSize: 'Calculating size...',
+      unitBytes: '{size}B',
+      unitKilobytes: '{size}KB',
+      unitMegabytes: '{size}MB',
+      unitGigabytes: '{size}GB',
+      unitTerabytes: '{size}TB',
+      negunitBytes: '{size}B',
+      negunitKilobytes: '{size}KB',
+      negunitMegabytes: '{size}MB',
+      negunitGigabytes: '{size}GB',
+      negunitTerabytes: '{size}TB',
     },
     components: {
       LanguageDropdown,
@@ -143,6 +162,7 @@
         savingLanguage: false,
         step: 0,
         publishDescription: '',
+        size: null,
       };
     },
     computed: {
@@ -158,14 +178,34 @@
         return _.findWhere(Constants.Languages, { id: this.channel.language });
       },
       sizeText() {
-        return this.size === null ? this.$tr('loadingSize') : format_size(this.size);
+        if (this.size === null) return this.$tr('loadingSize');
+        let size = Number(this.size);
+        let prefix = size < 0 ? 'neg' : '';
+        size = Math.abs(size);
+
+        if (size < KB) {
+          return this.$tr(prefix + 'unitBytes', { size: Math.round(size) });
+        } else if (KB <= size && size < MB) {
+          return this.$tr(prefix + 'unitKilobytes', { size: Math.round(parseFloat(size / KB)) });
+        } else if (MB <= size && size < GB) {
+          return this.$tr(prefix + 'unitMegabytes', { size: Math.round(parseFloat(size / MB)) });
+        } else if (GB <= size && size < TB) {
+          return this.$tr(prefix + 'unitGigabytes', { size: Math.round(parseFloat(size / GB)) });
+        } else {
+          return this.$tr(prefix + 'unitTerabytes', { size: Math.round(parseFloat(size / TB)) });
+        }
       },
       channelCount() {
         return this.channel.main_tree.metadata.resource_count;
       },
     },
+    mounted() {
+      this.loadChannelSize().then(size => {
+        this.size = size;
+      });
+    },
     methods: {
-      ...mapActions('publish', ['setChannelLanguage', 'publishChannel']),
+      ...mapActions('publish', ['setChannelLanguage', 'publishChannel', 'loadChannelSize']),
       setLanguage(languageID) {
         this.savingLanguage = true;
         this.setChannelLanguage(languageID).then(() => {

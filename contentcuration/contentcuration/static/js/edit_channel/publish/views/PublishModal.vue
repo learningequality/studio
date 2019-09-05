@@ -16,7 +16,7 @@
       {{ $tr('publishButton') }}
     </VBtn>
     <VDialog v-model="dialog" class="publish-modal" maxWidth="500px" attach="body">
-      <PublishView @publish="handlePublish" @cancel="dialog=false" />
+      <PublishView v-if="dialog" @publish="dialog=false" @cancel="dialog=false" />
     </VDialog>
   </div>
 </template>
@@ -31,7 +31,6 @@
     $trs: {
       modalHeader: 'Publish Channel',
       noChangesLabel: 'No changes',
-      loadingSize: 'Loading...',
       publishButton: 'Publish',
       publishButtonTitle: 'Make this channel available for download into Kolibri',
       publishErrorHeader: 'Publishing error',
@@ -42,7 +41,6 @@
     data() {
       return {
         dialog: false,
-        size: null,
       };
     },
     computed: {
@@ -58,12 +56,6 @@
       ...mapActions('publish', ['setChannelLanguage', 'loadChannelSize']),
       openModal() {
         this.dialog = true;
-        this.loadChannelSize().then(size => {
-          this.size = size;
-        });
-      },
-      handlePublish() {
-        this.dialog = false;
       },
     },
   };
