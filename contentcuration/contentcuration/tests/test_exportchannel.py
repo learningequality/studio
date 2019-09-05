@@ -27,6 +27,7 @@ from contentcuration.utils.publish import set_channel_icon_encoding
 
 pytestmark = pytest.mark.django_db
 
+
 def fileobj_video(contents=None):
     """
     Create an mp4 video file in storage and then create a File model from it.
@@ -223,5 +224,7 @@ class ChannelExportPrerequisiteTestCase(StudioTestCase):
     def test_nonexistent_prerequisites(self):
         channel = cc.Channel.objects.create()
         node1 = cc.ContentNode.objects.create(kind_id="exercise", parent_id=channel.main_tree.pk)
-        cc.ContentNode.objects.create(kind_id="exercise", prerequisite=[node1.pk])
+        exercise = cc.ContentNode.objects.create(kind_id="exercise")
+
+        cc.PrerequisiteContentRelationship.objects.create(target_node=exercise, prerequisite=node1)
         map_prerequisites(node1)
