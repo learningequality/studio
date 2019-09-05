@@ -14,9 +14,9 @@ const publishModule = {
     },
   },
   actions: {
-    publishChannel(context) {
+    publishChannel(context, description) {
       return new Promise((resolve, reject) => {
-        let data = { channel_id: context.state.channel.id };
+        let data = { channel_id: context.state.channel.id, description: description };
         $.ajax({
           method: 'POST',
           url: window.Urls.publish_channel(),

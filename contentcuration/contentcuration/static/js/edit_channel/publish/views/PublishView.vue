@@ -1,41 +1,113 @@
 <template>
-  <div class="publish-view">
-    <h1 :title="channel.name">
-      {{ channel.name }}
-    </h1>
-    <p>
-      <span v-if="language">
-        {{ language.native_name }}
-      </span>
-      <span v-if="channel.version">
-        {{ $tr('versionText', {version: channel.version}) }}
-      </span>
-      <span v-else>
-        {{ $tr('unpublishedText') }}
-      </span>
-    </p>
-    <hr>
-    <div v-if="!validOnLoad" class="invalid-section">
-      <label>{{ $tr('invalidHeader') }}</label>
-      <ul>
-        <li>
-          <span v-if="saving" class="prompt-icon spinner"></span>
-          <span v-else class="prompt-icon" :class="{valid: isValid, invalid: !isValid}">
-            {{ (isValid)? 'check' : 'clear' }}
-          </span>
-          <span class="prompt">
-            {{ $tr('languageRequired') }}
-          </span>
-          <LanguageDropdown :language="channel.language" @changed="setLanguage" />
-        </li>
-      </ul>
-    </div>
-    <div v-else class="valid-section">
-      <span class="prompt prompt-ready">
-        {{ $tr('validHeader') }}
-      </span>
-    </div>
-  </div>
+  <VCard class="publish-view">
+    <v-card-title primaryTitle>
+      <div :title="channel.name" class="headline">
+        {{ channel.name }}
+      </div>
+      <div class="subheading">
+        <span v-if="language">
+          {{ language.native_name }}
+        </span>
+        <span>
+          {{ $tr('publishingSizeText', {count: channelCount}) }}
+        </span>
+        <span>
+          {{ sizeText }}
+        </span>
+        <span v-if="channel.version">
+          {{ $tr('versionText', {version: channel.version}) }}
+        </span>
+        <span v-else>
+          {{ $tr('unpublishedText') }}
+        </span>
+      </div>
+    </v-card-title>
+    <v-divider />
+    <v-window v-model="step">
+      <v-window-item :key="0">
+        <VCardText>
+          <div class="title">
+            {{ $tr('invalidHeader') }}
+          </div>
+          <v-list>
+            <v-list-tile>
+              <v-list-tile-action>
+                <v-progress-circular
+                  v-if="savingLanguage"
+                  indeterminate
+                  color="primary"
+                  size="20"
+                />
+                <v-icon v-else-if="languageIsValid" color="green">
+                  check
+                </v-icon>
+                <v-icon v-else color="red">
+                  clear
+                </v-icon>
+              </v-list-tile-action>
+
+              <v-list-tile-content>
+                <v-list-tile-title>
+                  {{ $tr('languageRequired') }}
+                </v-list-tile-title>
+              </v-list-tile-content>
+              <v-list-tile-action>
+                <LanguageDropdown :language="channel.language" @changed="setLanguage" />
+              </v-list-tile-action>
+            </v-list-tile>
+          </v-list>
+        </VCardText>
+        <VCardActions>
+          <VBtn
+            flat
+            dark
+            color="primary"
+            @click="$emit('cancel')"
+          >
+            {{ $tr('cancelButton') }}
+          </VBtn>
+          <v-spacer />
+          <VBtn
+            depressed
+            color="primary"
+            class="next-button"
+            :disabled="!isValid"
+            @click="step++"
+          >
+            {{ $tr('nextButton') }}
+          </VBtn>
+        </VCardActions>
+      </v-window-item>
+      <v-window-item :key="1">
+        <VCardText>
+          <VTextarea
+            v-model="publishDescription"
+            :label="$tr('publishMessageLabel')"
+            autoGrow
+          />
+        </VCardText>
+        <VCardActions>
+          <VBtn
+            flat
+            dark
+            color="primary"
+            @click="step--"
+          >
+            {{ $tr('backButton') }}
+          </VBtn>
+          <v-spacer />
+          <VBtn
+            depressed
+            dark
+            color="primary"
+            @click="handlePublish"
+          >
+            {{ $tr('publishButton') }}
+          </VBtn>
+        </VCardActions>
+      </v-window-item>
+    </v-window>
+  </VCard>
 </template>
 
 
@@ -44,7 +116,7 @@
   import _ from 'underscore';
   import { mapActions, mapState } from 'vuex';
   import Constants from 'edit_channel/constants/index';
-
+  import { format_size } from 'edit_channel/utils/string_helper';
   import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown.vue';
 
   export default {
@@ -52,39 +124,57 @@
     $trs: {
       versionText: 'Current Version: {version}',
       languageRequired: 'Select a channel language',
-      invalidHeader: 'Please resolve the following before publishing:',
+      invalidHeader: 'Please resolve any invalid fields before publishing:',
       validHeader: 'Ready to publish!',
       submitLanguage: 'Set channel language',
       unpublishedText: 'Unpublished',
+      publishMessageLabel: "Describe what's new in this channel version",
+      publishingSizeText: '{count, plural, =1 {# Resource} other {# Resources}}',
+      cancelButton: 'CANCEL',
+      publishButton: 'PUBLISH',
+      nextButton: 'Next',
+      backButton: 'Back',
     },
     components: {
       LanguageDropdown,
     },
     data() {
       return {
-        validOnLoad: true,
-        saving: false,
+        savingLanguage: false,
+        step: 0,
+        publishDescription: '',
       };
     },
     computed: {
       ...mapState('publish', ['channel']),
       isValid() {
+        // Add more validation checks here
+        return this.languageIsValid;
+      },
+      languageIsValid() {
         return Boolean(this.channel.language);
       },
       language() {
         return _.findWhere(Constants.Languages, { id: this.channel.language });
       },
-    },
-    mounted() {
-      this.validOnLoad = this.isValid;
+      sizeText() {
+        return this.size === null ? this.$tr('loadingSize') : format_size(this.size);
+      },
+      channelCount() {
+        return this.channel.main_tree.metadata.resource_count;
+      },
     },
     methods: {
-      ...mapActions('publish', ['setChannelLanguage']),
+      ...mapActions('publish', ['setChannelLanguage', 'publishChannel']),
       setLanguage(languageID) {
-        this.saving = true;
+        this.savingLanguage = true;
         this.setChannelLanguage(languageID).then(() => {
-          this.saving = false;
+          this.savingLanguage = false;
         });
+      },
+      handlePublish() {
+        this.$emit('publish');
+        this.publishChannel(this.publishDescription);
       },
     },
   };
@@ -98,62 +188,26 @@
 
   .publish-view {
     min-height: 200px;
-    h1 {
-      font-size: 15pt;
+
+    .headline,
+    .title,
+    .subheading {
+      font-family: @font-family !important;
+    }
+
+    .title {
+      margin-bottom: 10px;
       font-weight: bold;
     }
-    p {
+
+    .subheading {
       color: @gray-700;
       span:not(:first-child)::before {
         content: ' • ';
       }
     }
-
-    .invalid-section {
-      ul {
-        padding: 0 10px;
-        list-style: none;
-        li {
-          max-width: unset;
-
-          .language-select {
-            vertical-align: bottom;
-          }
-        }
-      }
-    }
-
-    .prompt-icon {
-      .material-icons;
-
-      margin-right: 10px;
-      color: @gray-500;
-      vertical-align: text-bottom;
-      &.valid {
-        color: @green-success-color;
-      }
-      &.invalid {
-        color: @red-error-color;
-      }
-    }
-
-    .prompt {
-      margin-right: 20px;
-      font-size: 12pt;
-      &.prompt-ready::before {
-        .prompt-icon;
-
-        color: @green-success-color;
-        content: 'check_circle';
-      }
-    }
-
-    .submit-language {
-      .material-icons;
-
-      padding-left: 5px;
-      color: @green-success-color;
-      cursor: pointer;
+    .v-btn {
+      font-weight: bold;
     }
   }
 
