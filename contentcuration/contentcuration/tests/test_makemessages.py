@@ -1,7 +1,7 @@
 import os
-import pathlib
 import subprocess
 
+import pathlib
 from django.conf import settings
 from django.test import TestCase
 
@@ -15,6 +15,12 @@ class MakeMessagesCommandRunTestCase(TestCase):
         """
         Test that we can run makemessages when postgres is not activated.
         """
+
+        # this test can make changes to committed files, so only run it
+        # on the CI server
+        if 'CI' not in os.environ or not os.environ['CI']:
+            return
+
         repo_root = pathlib.Path(settings.BASE_DIR).parent
         cmd = ["make", "makemessages"]
         env = os.environ.copy()
