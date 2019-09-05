@@ -9,17 +9,13 @@ from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse_lazy
-from django.db.models import BooleanField
 from django.db.models import Case
-from django.db.models import Count
 from django.db.models import IntegerField
+from django.db.models import OuterRef
 from django.db.models import Q
+from django.db.models import Subquery
 from django.db.models import Value
 from django.db.models import When
-from django.db.models import OuterRef
-from django.db.models import Subquery
-from django.db.models import Prefetch
-from django.db.models.functions import Cast
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.http import HttpResponseForbidden
@@ -359,6 +355,7 @@ def publish_channel(request):
         task_args = {
             'user_id': request.user.pk,
             'channel_id': channel_id,
+            'description': data.get('description')
         }
 
         task, task_info = create_async_task('export-channel', task_info, task_args)
@@ -390,7 +387,8 @@ def accessible_channels(request, channel_id):
     # Used for import modal
     # Returns a list of objects with the following parameters:
     # id, title, resource_count, children
-    channel_ids = Channel.objects.filter(Q(deleted=False) & (Q(public=True) | Q(editors=request.user.id) | Q(viewers=request.user.id))).exclude(pk=channel_id).values_list("id", flat=True)
+    channel_ids = Channel.objects.filter(Q(deleted=False) & (Q(public=True) | Q(editors=request.user.id) | Q(viewers=request.user.id))) \
+                                 .exclude(pk=channel_id).values_list("id", flat=True)
     channel_main_tree_nodes = ContentNode.objects.filter(
         tree_id=OuterRef("main_tree__tree_id")
     ).order_by()

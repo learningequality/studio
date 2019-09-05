@@ -634,12 +634,24 @@ def add_tokens_to_channel(channel):
         channel.make_token()
 
 
-def fill_published_fields(channel):
+def fill_published_fields(channel, description):
     published_nodes = channel.main_tree.get_descendants().filter(published=True).prefetch_related('files')
     channel.total_resource_count = published_nodes.exclude(kind_id=content_kinds.TOPIC).count()
-    channel.published_kind_count = json.dumps(list(published_nodes.values('kind_id').annotate(count=Count('kind_id')).order_by('kind_id')))
+    kind_counts = list(published_nodes.values('kind_id').annotate(count=Count('kind_id')).order_by('kind_id'))
+    channel.published_kind_count = json.dumps(kind_counts)
     channel.published_size = published_nodes.values('files__checksum', 'files__file_size').distinct(
     ).aggregate(resource_size=Sum('files__file_size'))['resource_size'] or 0
+
+    # TODO: Eventually, consolidate above operations to just use this field for storing historical data
+    channel.published_data.update({
+        channel.version: {
+            'resource_count': channel.total_resource_count,
+            'kind_count': kind_counts,
+            'size': channel.published_size,
+            'date_published': channel.last_published.strftime(settings.DATE_TIME_FORMAT),
+            'description': description
+        }
+    })
 
     node_languages = published_nodes.exclude(language=None).values_list('language', flat=True)
     file_languages = published_nodes.values_list('files__language', flat=True)
@@ -651,7 +663,7 @@ def fill_published_fields(channel):
     channel.save()
 
 
-def publish_channel(user_id, channel_id, force=False, force_exercises=False, send_email=False, task_object=None):
+def publish_channel(user_id, channel_id, description='', force=False, force_exercises=False, send_email=False, task_object=None):
     channel = ccmodels.Channel.objects.get(pk=channel_id)
 
     try:
@@ -660,7 +672,7 @@ def publish_channel(user_id, channel_id, force=False, force_exercises=False, sen
         increment_channel_version(channel)
         mark_all_nodes_as_published(channel)
         add_tokens_to_channel(channel)
-        fill_published_fields(channel)
+        fill_published_fields(channel, description)
 
         # Attributes not getting set for some reason, so just save it here
         channel.main_tree.publishing = False
