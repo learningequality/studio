@@ -21,8 +21,6 @@ devserver:
 	yarn run devserver
 
 test:
-	# test for any ungenerated migrations
-	python contentcuration/manage.py makemigrations --check
 	yarn install && yarn run unittests
 	mv contentcuration/coverage.xml shared
 
@@ -43,6 +41,8 @@ collectstatic:
 
 migrate:
 	python contentcuration/manage.py migrate || true
+	# After running migrations, test for any ungenerated git diffmigrations
+	python contentcuration/manage.py makemigrations --check
 	python contentcuration/manage.py loadconstants
 
 ensurecrowdinclient:
