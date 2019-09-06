@@ -41,6 +41,8 @@ collectstatic:
 
 migrate:
 	python contentcuration/manage.py migrate || true
+	# After running migrations, test for any ungenerated git diffmigrations
+	python contentcuration/manage.py makemigrations --check
 	python contentcuration/manage.py loadconstants
 
 ensurecrowdinclient:
