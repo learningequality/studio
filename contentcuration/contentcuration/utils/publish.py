@@ -105,7 +105,6 @@ def create_kolibri_license_object(ccnode):
 
 def increment_channel_version(channel):
     channel.version += 1
-    channel.last_published = timezone.now()
     channel.save()
 
 
@@ -635,23 +634,13 @@ def add_tokens_to_channel(channel):
 
 
 def fill_published_fields(channel, description):
+    channel.last_published = timezone.now()
     published_nodes = channel.main_tree.get_descendants().filter(published=True).prefetch_related('files')
     channel.total_resource_count = published_nodes.exclude(kind_id=content_kinds.TOPIC).count()
     kind_counts = list(published_nodes.values('kind_id').annotate(count=Count('kind_id')).order_by('kind_id'))
     channel.published_kind_count = json.dumps(kind_counts)
     channel.published_size = published_nodes.values('files__checksum', 'files__file_size').distinct(
     ).aggregate(resource_size=Sum('files__file_size'))['resource_size'] or 0
-
-    # TODO: Eventually, consolidate above operations to just use this field for storing historical data
-    channel.published_data.update({
-        channel.version: {
-            'resource_count': channel.total_resource_count,
-            'kind_count': kind_counts,
-            'size': channel.published_size,
-            'date_published': channel.last_published.strftime(settings.DATE_TIME_FORMAT),
-            'description': description
-        }
-    })
 
     node_languages = published_nodes.exclude(language=None).values_list('language', flat=True)
     file_languages = published_nodes.values_list('files__language', flat=True)
@@ -660,6 +649,18 @@ def fill_published_fields(channel, description):
     for lang in language_list:
         if lang:
             channel.included_languages.add(lang)
+
+    # TODO: Eventually, consolidate above operations to just use this field for storing historical data
+    channel.published_data.update({
+        channel.version: {
+            'resource_count': channel.total_resource_count,
+            'kind_count': kind_counts,
+            'size': channel.published_size,
+            'date_published': channel.last_published.strftime(settings.DATE_TIME_FORMAT),
+            'description': description,
+            'included_languages': language_list
+        }
+    })
     channel.save()
 
 

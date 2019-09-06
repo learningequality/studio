@@ -21,11 +21,13 @@ from contentcuration.utils.publish import convert_channel_thumbnail
 from contentcuration.utils.publish import create_bare_contentnode
 from contentcuration.utils.publish import create_content_database
 from contentcuration.utils.publish import create_slideshow_manifest
+from contentcuration.utils.publish import fill_published_fields
 from contentcuration.utils.publish import map_prerequisites
 from contentcuration.utils.publish import MIN_SCHEMA_VERSION
 from contentcuration.utils.publish import set_channel_icon_encoding
 
 pytestmark = pytest.mark.django_db
+
 
 def fileobj_video(contents=None):
     """
@@ -75,6 +77,10 @@ def assessment_item4():
     answers = "[{\"correct\": true, \"answer\": 20, \"help_text\": \"\"}]"
     return mixer.blend(cc.AssessmentItem, question='How many minutes does it take to cook rice?',
                        type='input_question', answers=answers)
+
+
+def description():
+    return "".join(random.sample(string.printable, 20))
 
 
 def channel():
@@ -225,3 +231,14 @@ class ChannelExportPrerequisiteTestCase(StudioTestCase):
         node1 = cc.ContentNode.objects.create(kind_id="exercise", parent_id=channel.main_tree.pk)
         cc.ContentNode.objects.create(kind_id="exercise", prerequisite=[node1.pk])
         map_prerequisites(node1)
+
+
+class ChannelExportPublishedData(StudioTestCase):
+    def test_fill_published_fields(self):
+        channel_description = description()
+        channel = cc.Channel.objects.create()
+        channel.last_published
+        fill_published_fields(channel, channel_description)
+        self.assertTrue(channel.published_data)
+        self.assertIsNotNone(channel.published_data.get(0))
+        self.assertEqual(channel.published_data[0]['description'], channel_description)
