@@ -633,7 +633,7 @@ def add_tokens_to_channel(channel):
         channel.make_token()
 
 
-def fill_published_fields(channel, description):
+def fill_published_fields(channel, version_notes):
     channel.last_published = timezone.now()
     published_nodes = channel.main_tree.get_descendants().filter(published=True).prefetch_related('files')
     channel.total_resource_count = published_nodes.exclude(kind_id=content_kinds.TOPIC).count()
@@ -657,14 +657,14 @@ def fill_published_fields(channel, description):
             'kind_count': kind_counts,
             'size': channel.published_size,
             'date_published': channel.last_published.strftime(settings.DATE_TIME_FORMAT),
-            'description': description,
+            'version_notes': version_notes,
             'included_languages': language_list
         }
     })
     channel.save()
 
 
-def publish_channel(user_id, channel_id, description='', force=False, force_exercises=False, send_email=False, task_object=None):
+def publish_channel(user_id, channel_id, version_notes='', force=False, force_exercises=False, send_email=False, task_object=None):
     channel = ccmodels.Channel.objects.get(pk=channel_id)
 
     try:
@@ -673,7 +673,7 @@ def publish_channel(user_id, channel_id, description='', force=False, force_exer
         increment_channel_version(channel)
         mark_all_nodes_as_published(channel)
         add_tokens_to_channel(channel)
-        fill_published_fields(channel, description)
+        fill_published_fields(channel, version_notes)
 
         # Attributes not getting set for some reason, so just save it here
         channel.main_tree.publishing = False

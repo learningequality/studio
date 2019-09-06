@@ -73,7 +73,7 @@
             depressed
             color="primary"
             class="next-button"
-            :disabled="!isValid"
+            :disabled="!isValid || savingLanguage"
             @click="step++"
           >
             {{ $tr('nextButton') }}

@@ -281,7 +281,7 @@ def api_publish_channel(request):
         channel_id = data["channel_id"]
         # Ensure that the user has permission to edit this channel.
         request.user.can_edit(channel_id)
-        call_command("exportchannel", channel_id, user_id=request.user.pk, description=data.get('description'))
+        call_command("exportchannel", channel_id, user_id=request.user.pk, version_notes=data.get('version_notes'))
 
         return Response({
             "success": True,

@@ -355,7 +355,7 @@ def publish_channel(request):
         task_args = {
             'user_id': request.user.pk,
             'channel_id': channel_id,
-            'description': data.get('description')
+            'version_notes': data.get('version_notes')
         }
 
         task, task_info = create_async_task('export-channel', task_info, task_args)

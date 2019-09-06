@@ -237,10 +237,10 @@ class ChannelExportPrerequisiteTestCase(StudioTestCase):
 
 class ChannelExportPublishedData(StudioTestCase):
     def test_fill_published_fields(self):
-        channel_description = description()
+        version_notes = description()
         channel = cc.Channel.objects.create()
         channel.last_published
-        fill_published_fields(channel, channel_description)
+        fill_published_fields(channel, version_notes)
         self.assertTrue(channel.published_data)
         self.assertIsNotNone(channel.published_data.get(0))
-        self.assertEqual(channel.published_data[0]['description'], channel_description)
+        self.assertEqual(channel.published_data[0]['version_notes'], version_notes)
