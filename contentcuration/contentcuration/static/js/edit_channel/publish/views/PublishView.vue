@@ -81,34 +81,40 @@
         </VCardActions>
       </VWindowItem>
       <VWindowItem :key="1">
-        <VCardText>
-          <VTextarea
-            v-model="publishDescription"
-            :label="$tr('publishMessageLabel')"
-            autoGrow
-          />
-        </VCardText>
-        <VCardActions>
-          <VBtn
-            ref="backbutton"
-            flat
-            dark
-            color="primary"
-            @click="step--"
-          >
-            {{ $tr('backButton') }}
-          </VBtn>
-          <VSpacer />
-          <VBtn
-            ref="publishbutton"
-            depressed
-            dark
-            color="primary"
-            @click="handlePublish"
-          >
-            {{ $tr('publishButton') }}
-          </VBtn>
-        </VCardActions>
+        <VForm ref="form">
+          <VCardText>
+            <VTextarea
+              v-model="publishDescription"
+              :label="$tr('publishMessageLabel')"
+              required
+              :rules="descriptionRules"
+              autoGrow
+            />
+          </VCardText>
+          <VCardActions>
+            <VBtn
+              ref="backbutton"
+              v-model="valid"
+              flat
+              dark
+              color="primary"
+              lazyValidation
+              @click="step--"
+            >
+              {{ $tr('backButton') }}
+            </VBtn>
+            <VSpacer />
+            <VBtn
+              ref="publishbutton"
+              depressed
+              dark
+              color="primary"
+              @click="handlePublish"
+            >
+              {{ $tr('publishButton') }}
+            </VBtn>
+          </VCardActions>
+        </VForm>
       </VWindowItem>
     </VWindow>
   </VCard>
@@ -153,6 +159,7 @@
       negunitMegabytes: '{size}MB',
       negunitGigabytes: '{size}GB',
       negunitTerabytes: '{size}TB',
+      descriptionRequiredMessage: "Please describe what's new in this version before publishing",
     },
     components: {
       LanguageDropdown,
@@ -163,6 +170,7 @@
         step: 0,
         publishDescription: '',
         size: null,
+        valid: true,
       };
     },
     computed: {
@@ -198,6 +206,9 @@
       channelCount() {
         return this.channel.main_tree.metadata.resource_count;
       },
+      descriptionRules() {
+        return [v => !!v || this.$tr('descriptionRequiredMessage')];
+      },
     },
     mounted() {
       this.loadChannelSize().then(size => {
@@ -213,8 +224,10 @@
         });
       },
       handlePublish() {
-        this.$emit('publish');
-        this.publishChannel(this.publishDescription);
+        if (this.$refs.form.validate()) {
+          this.$emit('publish');
+          this.publishChannel(this.publishDescription);
+        }
       },
     },
   };

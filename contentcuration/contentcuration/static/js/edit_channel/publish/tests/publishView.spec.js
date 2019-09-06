@@ -107,9 +107,16 @@ describe('publishView', () => {
       wrapper.find({ ref: 'cancelbutton' }).trigger('click');
       expect(wrapper.emitted('cancel')).toBeTruthy();
     });
-    it('publish should call publishChannel action', () => {
+    it('publish should not go through if there is no message', () => {
       mockFunctions.publishChannel.mockReset();
       wrapper.setData({ step: steps.PUBLISH_STEP });
+      wrapper.find({ ref: 'publishbutton' }).trigger('click');
+      expect(wrapper.emitted('publish')).toBeFalsy();
+      expect(mockFunctions.publishChannel).not.toHaveBeenCalled();
+    });
+    it('publish should call publishChannel action', () => {
+      mockFunctions.publishChannel.mockReset();
+      wrapper.setData({ step: steps.PUBLISH_STEP, publishDescription: 'Test Description' });
       wrapper.find({ ref: 'publishbutton' }).trigger('click');
       expect(wrapper.emitted('publish')).toBeTruthy();
       expect(mockFunctions.publishChannel).toHaveBeenCalled();
