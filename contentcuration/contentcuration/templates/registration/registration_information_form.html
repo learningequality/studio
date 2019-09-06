@@ -158,7 +158,8 @@
 			// Prevent select box from jumping to the top every click
 			var st = locationInput.scrollTop;
 			setTimeout(() => {
-				locationInput.scrollTo(0, st);
+				// Using scrollTop as it is the most widely supported
+				locationInput.scrollTop = st;
 			});
 			locationInput.focus();
 		});
