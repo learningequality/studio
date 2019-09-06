@@ -81,7 +81,7 @@
         </VCardActions>
       </VWindowItem>
       <VWindowItem :key="1">
-        <VForm ref="form">
+        <VForm ref="form" v-model="valid">
           <VCardText>
             <VTextarea
               v-model="publishDescription"
@@ -89,12 +89,22 @@
               required
               :rules="descriptionRules"
               autoGrow
-            />
+            >
+              <template v-slot:append-outer>
+                <VTooltip top maxWidth="200">
+                  <template v-slot:activator="{ on }">
+                    <VIcon color="primary" v-on="on">
+                      help_outline
+                    </VIcon>
+                  </template>
+                  <span>{{ $tr('descriptionDescriptionTooltip') }}</span>
+                </VTooltip>
+              </template>
+            </VTextarea>
           </VCardText>
           <VCardActions>
             <VBtn
               ref="backbutton"
-              v-model="valid"
               flat
               dark
               color="primary"
@@ -160,6 +170,8 @@
       negunitGigabytes: '{size}GB',
       negunitTerabytes: '{size}TB',
       descriptionRequiredMessage: "Please describe what's new in this version before publishing",
+      descriptionDescriptionTooltip:
+        'This description will be shown to Kolibri admins before they update channel versions',
     },
     components: {
       LanguageDropdown,
