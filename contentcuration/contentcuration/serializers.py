@@ -109,11 +109,6 @@ class FileListSerializer(serializers.ListSerializer):
                 if not default_storage.exists(file_path):
                     raise OSError("Error: file {} was not found".format(str(file_obj)))
 
-                # Replace existing files
-                files_to_replace = item['contentnode'].files.exclude(pk=file_obj.pk)\
-                    .filter(preset_id=file_obj.preset_id, language_id=file_obj.language_id)
-                files_to_replace.delete()
-
                 file_obj.save()
                 ret.append(file_obj)
 
