@@ -9,17 +9,13 @@ from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse_lazy
-from django.db.models import BooleanField
 from django.db.models import Case
-from django.db.models import Count
 from django.db.models import IntegerField
+from django.db.models import OuterRef
 from django.db.models import Q
+from django.db.models import Subquery
 from django.db.models import Value
 from django.db.models import When
-from django.db.models import OuterRef
-from django.db.models import Subquery
-from django.db.models import Prefetch
-from django.db.models.functions import Cast
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.http import HttpResponseForbidden
@@ -46,6 +42,7 @@ from contentcuration.api import activate_channel
 from contentcuration.api import add_editor_to_channel
 from contentcuration.api import get_staged_diff
 from contentcuration.decorators import browser_is_supported
+from contentcuration.decorators import cache_no_user_data
 from contentcuration.decorators import can_access_channel
 from contentcuration.decorators import can_edit_channel
 from contentcuration.decorators import has_accepted_policies
@@ -68,8 +65,6 @@ from contentcuration.serializers import UserChannelListSerializer
 from contentcuration.tasks import create_async_task
 from contentcuration.tasks import generatechannelcsv_task
 from contentcuration.utils.messages import get_messages
-
-PUBLIC_CHANNELS_CACHE_DURATION = 30  # seconds
 
 
 class ChannelSerializerTypes(Enum):
@@ -260,8 +255,9 @@ def get_channels_by_token(request, token):
     return Response(channel_serializer.data)
 
 
-@cache_page(PUBLIC_CHANNELS_CACHE_DURATION)
+@cache_page(settings.PUBLIC_CHANNELS_CACHE_DURATION, key_prefix='get_user_public_channels')
 @api_view(['GET'])
+@cache_no_user_data
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def get_user_public_channels(request):
