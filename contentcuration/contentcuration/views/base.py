@@ -13,12 +13,12 @@ from django.db.models import BooleanField
 from django.db.models import Case
 from django.db.models import Count
 from django.db.models import IntegerField
+from django.db.models import OuterRef
+from django.db.models import Prefetch
 from django.db.models import Q
+from django.db.models import Subquery
 from django.db.models import Value
 from django.db.models import When
-from django.db.models import OuterRef
-from django.db.models import Subquery
-from django.db.models import Prefetch
 from django.db.models.functions import Cast
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
@@ -377,9 +377,6 @@ def map_channel_data(channel):
     channel["id"] = channel.pop("main_tree__id")
     channel["title"] = channel.pop("name")
     channel["children"] = [child for child in channel["children"] if child]
-    channel["metadata"] = {
-        "resource_count": channel.pop("resource_count")
-    }
     return channel
 
 
@@ -390,20 +387,11 @@ def accessible_channels(request, channel_id):
     # Used for import modal
     # Returns a list of objects with the following parameters:
     # id, title, resource_count, children
-    channel_ids = Channel.objects.filter(Q(deleted=False) & (Q(public=True) | Q(editors=request.user.id) | Q(viewers=request.user.id))).exclude(pk=channel_id).values_list("id", flat=True)
-    channel_main_tree_nodes = ContentNode.objects.filter(
-        tree_id=OuterRef("main_tree__tree_id")
-    ).order_by()
-    # Add the unique count of distinct non-topic node content_ids
-    non_topic_content_ids = (
-        channel_main_tree_nodes.exclude(kind_id=content_kinds.TOPIC).values("content_id")
-    )
-    channels = Channel.objects.filter(id__in=channel_ids)
+    channels = Channel.objects.filter(Q(deleted=False) & (Q(public=True) | Q(editors=request.user.id) | Q(viewers=request.user.id))).exclude(pk=channel_id)
     channels = channels.annotate(
-        resource_count=SQCountDistinct(non_topic_content_ids, field="content_id"),
         children=ArrayAgg("main_tree__children"),
     )
-    channels_data = channels.values("name", "resource_count", "children", "main_tree__id")
+    channels_data = channels.values("name", "children", "main_tree__id")
 
     return Response(map(map_channel_data, channels_data))
 
