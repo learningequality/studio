@@ -15,7 +15,7 @@ spec:
             command: ["python", "deploy/send_metrics_newrelic.py"]
             env:
             - name: PROBER_METRICS_URL
-              value: http://{{ template "studio.fullname" . }}-prober-service.default.svc.cluster.local/metrics
+              value: http://{{ template "studio.fullname" . }}-prober-service/metrics
             - name: COMMIT_SHA
               value: {{ .Values.studioApp.releaseCommit }}
             - name: PROBER_NEWRELIC_KEY

@@ -22,8 +22,8 @@ spec:
         - ./deploy/prober-entrypoint.sh
         env: {{ include "studio.sharedEnvs" . | nindent 8 }}
         - name: PROBER_STUDIO_BASE_URL
-          value: http://{{ template "studio.fullname" . }}-app.default.svc.cluster.local
+          value: http://{{ template "studio.fullname" . }}-app
         - name: CELERY_DASHBOARD_URL
-          value: http://{{ template "studio.fullname" . }}-celery-dashboard-service.default.svc.cluster.local:5555/dashboard
+          value: http://{{ template "studio.fullname" . }}-celery-dashboard-service:5555/dashboard
         - name: PROBER_STUDIO_PRODUCTION_MODE_ON
           value: "yes"
