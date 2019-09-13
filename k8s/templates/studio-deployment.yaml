@@ -60,8 +60,8 @@ spec:
             cpu: 0.5
             memory: 2Gi
           limits:
-            cpu: 0.5
-            memory: 2Gi
+            cpu: 2
+            memory: 8Gi
       - name: nginx-proxy
         image: {{ .Values.studioNginx.imageName }}
         env:
@@ -92,8 +92,8 @@ spec:
             cpu: 1000m
             memory: 2Gi
           limits:
-            cpu: 1000m
-            memory: 2Gi
+            cpu: 2000m
+            memory: 8Gi
       volumes:
         - emptyDir: {}
           name: staticfiles
@@ -128,5 +128,5 @@ spec:
             cpu: 0.5
             memory: 2Gi
           limits:
-            cpu: 0.5
-            memory: 2Gi
+            cpu: 2
+            memory: 8Gi
