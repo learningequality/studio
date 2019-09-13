@@ -1,6 +1,6 @@
 altprodserver: NUM_PROCS:=3
 altprodserver: NUM_THREADS:=5
-altprodserver: collectstatic ensurecrowdinclient downloadmessages compilemessages
+altprodserver: migrate collectstatic ensurecrowdinclient downloadmessages compilemessages
 	cd contentcuration/ && gunicorn contentcuration.wsgi:application --timeout=4000 --error-logfile=/var/log/gunicorn-error.log --workers=${NUM_PROCS} --threads=${NUM_THREADS} --bind=0.0.0.0:8081 --pid=/tmp/contentcuration.pid --log-level=debug || sleep infinity
 
 contentnodegc:
