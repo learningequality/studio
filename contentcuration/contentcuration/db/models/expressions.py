@@ -1,6 +1,11 @@
+import re
+
+from django.core.exceptions import FieldDoesNotExist
+from django.db.models import QuerySet
 from django.db.models.expressions import BaseExpression
 from django.db.models.expressions import Col
 from django.db.models.expressions import CombinedExpression
+from django.db.models.expressions import Exists as BaseExists
 from django.db.models.expressions import Expression
 from django.db.models.sql.datastructures import BaseTable
 from django.db.models.sql.datastructures import INNER
@@ -9,7 +14,26 @@ from django.db.models.sql.where import AND
 from django.db.models.sql.where import WhereNode
 
 
+class Exists(BaseExists):
+    def __init__(self, *args, **kwargs):
+        """
+        Override Django's `Exists` to modify the query so it's cleaner (and smaller) by changing
+        the SELECT columns through `.only()`
+        """
+        processed_args = []
+        for arg in args:
+            if isinstance(arg, QuerySet):
+                processed_args.append(arg.only(arg.model._meta.pk.name))
+            else:
+                processed_args.append(arg)
+        super(Exists, self).__init__(*processed_args, **kwargs)
+
+
 class Not(BaseExpression):
+    """
+    An expression to negate another expression, useful for negating expressions that do not
+    support negation inherently
+    """
     def __init__(self, expression, output_field=None):
         super(Not, self).__init__(output_field=output_field)
         self._expression = expression
@@ -25,6 +49,9 @@ class Not(BaseExpression):
 
 
 class SetExpression(CombinedExpression):
+    """
+    An expression that represents the SQL for setting field values in an UPDATE clause
+    """
     def __init__(self, lhs_field_name, rhs):
         lhs = SetRef(lhs_field_name)
         super(SetExpression, self).__init__(lhs, '=', rhs)
@@ -35,6 +62,9 @@ class SetExpression(CombinedExpression):
 
 
 class SetRef(Expression):
+    """
+    A helper expression for use in `SetExpression`
+    """
     def __init__(self, field_name):
         super(SetRef, self).__init__()
         self.field_name = field_name
@@ -53,11 +83,15 @@ class SetRef(Expression):
 
 
 class Join(BaseExpression):
+    """
+    An expression that allows for a manual SQL JOIN on any queryset, regardless of defined relations
+    within Django
+    """
     def __init__(self, queryset, *args, **kwargs):
         super(Join, self).__init__(output_field=kwargs.pop('output_field', None))
         self.queryset = queryset
         self.field_map = kwargs
-        self.extras = args
+        self.extras = args or []
         self.table_alias = None
         self.refs = []
 
@@ -107,7 +141,17 @@ class Join(BaseExpression):
         return query
 
     def get_ref(self, field_name):
-        ref = JoinRef(field_name)
+        meta = self.queryset.model._meta
+
+        try:
+            # try to get the output_field type so refs can be used for other queryset operations
+            output_field = meta.get_field(field_name)
+        except FieldDoesNotExist:
+            if re.match('_id$', field_name):
+                return field_name.replace('_id', '')
+            output_field = None
+
+        ref = JoinRef(field_name, output_field=output_field)
         ref.table_alias = self.table_alias
         self.refs.append(ref)
         return ref
@@ -119,12 +163,19 @@ class Join(BaseExpression):
         return SetExpression(field_name, ref_field)
 
 
-class JoinField(object):
-    def __init__(self, field_name):
+class JoinField(BaseExpression):
+    """
+    A helper expression that is used for referencing a particular field from a JOIN'd table
+    """
+    def __init__(self, field_name, *args, **kwargs):
+        super(JoinField, self).__init__(*args, **kwargs)
         self.column = field_name
 
 
 class JoinRef(BaseExpression):
+    """
+    An expression that represents the entire reference to a JOIN'd table's field
+    """
     def __init__(self, field_name, *args, **kwargs):
         super(JoinRef, self).__init__(*args, **kwargs)
         self.field_name = field_name
@@ -134,13 +185,16 @@ class JoinRef(BaseExpression):
         if not self.table_alias:
             raise RuntimeError('JoinRef missing table alias')
 
-        return Col(self.table_alias, JoinField(self.field_name))
+        return Col(self.table_alias, JoinField(self.field_name), output_field=self.output_field)
 
     def as_sql(self, compiler, connection):
         return compiler.compile(self.resolve_expression())
 
 
 class JoinExpression(object):
+    """
+    A conditional expression that defines how to JOIN
+    """
     def __init__(self, lhs, rhs):
         self.lhs = lhs
         self.rhs = rhs
@@ -153,6 +207,9 @@ class JoinExpression(object):
 
 
 class CompoundJoinExpression(object):
+    """
+    An expression that represents all the conditions for joining two tables
+    """
     def __init__(self, expressions, extra=None):
         self.expressions = expressions
         self.extra = extra

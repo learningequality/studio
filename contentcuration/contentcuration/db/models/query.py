@@ -15,6 +15,13 @@ from contentcuration.db.models.sql.query import UpdateFromQuery
 
 
 class CustomQuerySet(QuerySet):
+    def find(self):
+        """
+        Method that explicitly executes the query, returning a list of objects
+        :return: A list of objects
+        """
+        return [obj for obj in self]
+
     def filter_by(self, *expressions):
         """
         Filters by explicit expression(s), not like Q objs. List is ANDed
