@@ -69,9 +69,10 @@ whitenoise = "*"
 django-redis = "*"
 django-prometheus = "*"
 eventlet = "*"
-django-haystack = "*"
-elasticsearch6 = ">=6.0.0,<7.0.0"
 django-appconf = "*"
+django-haystack = "*"
+elasticsearch = ">=5.0.0,<6.0.0"
+django-haystack-elasticsearch5 = "*"
 drf-haystack = "*"
 
 [dev-packages]

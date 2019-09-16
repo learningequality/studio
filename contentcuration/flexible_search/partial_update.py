@@ -8,7 +8,8 @@
 
 from haystack.utils import get_identifier, get_model_ct
 from haystack import indexes
-from haystack.backends.elasticsearch_backend import ElasticsearchSearchBackend, ElasticsearchSearchEngine
+from haystack_elasticsearch5 import Elasticsearch5SearchBackend as ElasticsearchSearchBackend
+from haystack_elasticsearch5 import Elasticsearch5SearchEngine as ElasticsearchSearchEngine
 from celery_haystack.handler import CeleryHaystackSignalHandler
 from elasticsearch.helpers import bulk
 from haystack.constants import ID

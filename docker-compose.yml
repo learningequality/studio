@@ -73,7 +73,7 @@ services:
     image: redis:4.0.9
   
   elasticsearch:
-    image: elasticsearch:6.8.3
+    image: elasticsearch:5.6
     ports:
       - "9200:9200"
 
