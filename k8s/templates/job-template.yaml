@@ -47,8 +47,6 @@ spec:
             - make
             - migrate
             envFrom:
-            - configMapRef:
-                name: {{ template "studio.fullname" . }}-db-config
             - secretRef:
                 name: {{ template "studio.fullname" . }}-db-creds
             - configMapRef:
