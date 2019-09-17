@@ -43,7 +43,7 @@ steps:
 
 - name: 'gcr.io/$PROJECT_ID/helm'
   id: helm-deploy-studio-instance
-  waitFor: ['decrypt-gcs-service-account', 'push-app-image', 'push-nginx-image']
+  waitFor: ['decrypt-gcs-service-account', 'build-app-image']
   dir: "k8s"
   env:
   - 'CLOUDSDK_COMPUTE_ZONE=us-central1-f'

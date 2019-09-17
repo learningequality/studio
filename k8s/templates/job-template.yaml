@@ -6,7 +6,7 @@ metadata:
   labels:
     app: {{ template "studio.fullname" . }}
 data:
-  DJANGO_SETTINGS_MODULE: {{ . Values.settings }}
+  DJANGO_SETTINGS_MODULE: {{ .Values.settings }}
   DJANGO_LOG_FILE: /var/log/django.log
   MPLBACKEND: PS
   STUDIO_BETA_MODE: "yes"
