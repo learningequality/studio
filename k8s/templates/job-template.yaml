@@ -26,28 +26,22 @@ data:
   DATA_DB_NAME: {{ .Values.postgresql.postgresPassword | default "" | b64enc }}
 ---
 apiVersion: apps/v1beta1
-kind: CronJob
+kind: Job
 metadata:
-  name: {{ template "studio.fullname" . }}-job-template
+  name: {{ template "studio.fullname" . }}-migrate-job
   labels:
     app: {{ template "studio.fullname" . }}
-  annotations:
-    description: "This Cron Job isn't actually supposed to run in daily operations. Instead it's used as a template for migration jobs, that we can copy using `kubectl create job --from=<cronjob>`."
 spec:
-  schedule: "@yearly"
-  jobTemplate:
+  template:
     spec:
-      template:
-        spec:
-          restartPolicy: OnFailure
-          containers:
-          - name: dbmigrate
-            image: {{ .Values.studioApp.imageName }}
-            args:
-            - make
-            - migrate
-            envFrom:
-            - secretRef:
-                name: {{ template "studio.fullname" . }}-db-creds
-            - configMapRef:
-                name: {{ template "studio.fullname" . }}-django-config
+      containers:
+      - name: dbmigrate
+        image: {{ .Values.studioApp.imageName }}
+        args:
+        - make
+        - migrate
+        envFrom:
+        - secretRef:
+            name: {{ template "studio.fullname" . }}-db-creds
+        - configMapRef:
+            name: {{ template "studio.fullname" . }}-django-config
