@@ -63,7 +63,7 @@ sentry:
   dsnKey:
 
 studioProber:
-  imageName: gcr.io/github-learningequality-studio/app:nlatest
+  imageName: gcr.io/github-learningequality-studio/prober:nlatest
   newrelicKey:
   newrelicAccountId:
   port: 9313

@@ -29,7 +29,7 @@ helm upgrade --install $RELEASENAME . \
      -f values-prod-config.yaml \
      --set studioApp.imageName=gcr.io/$PROJECT_ID/learningequality-studio-app:$COMMIT \
      --set studioNginx.imageName=gcr.io/$PROJECT_ID/learningequality-studio-nginx:$COMMIT \
-     --set studioProber.imageName=gcr.io/$PROJECT_ID/learningequality-studio-app:$COMMIT \
+     --set studioProber.imageName=gcr.io/$PROJECT_ID/learningequality-studio-prober:$COMMIT \
      --set studioApp.releaseCommit=$COMMIT \
      --set bucketName=$BUCKET \
      --set studioApp.postmarkApiKey=$POSTMARK_KEY \

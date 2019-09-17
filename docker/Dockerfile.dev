@@ -42,13 +42,6 @@ RUN pip install --no-cache-dir -U pipenv
 RUN pipenv install --clear --dev --system --ignore-pipfile
 ################################################################################
 
-# Copy prober code #############################################################
-COPY deploy/cloudprober.cfg /src/deploy/
-COPY deploy/send_metrics_newrelic.py /src/deploy/
-COPY deploy/prober-entrypoint.sh /src/deploy/
-COPY deploy/probers /src/deploy/probers/
-################################################################################
-
 
 # Final cleanup ################################################################
 RUN apt-get -y autoremove
