@@ -38,3 +38,4 @@ helm upgrade --install $RELEASENAME . \
      --set productionIngress=$IS_PRODUCTION \
      --set studioApp.gDrive.keyJson=$(base64 $GDRIVE_SERVICE_ACCOUNT_JSON  --wrap=0) \
      --set sentry.dsnKey=$(echo "$SENTRY_DSN_KEY" | base64 --wrap=0)
+     --timeout 1500
