@@ -18,8 +18,7 @@ spec:
         image: {{ .Values.studioProber.imageName }}
         ports:
         - containerPort: {{ .Values.studioProber.port }}
-        command:
-        - ./deploy/prober-entrypoint.sh
+        command: ["/deploy/prober-entrypoint.sh"]
         env: {{ include "studio.sharedEnvs" . | nindent 8 }}
         - name: PROBER_STUDIO_BASE_URL
           value: http://{{ template "studio.fullname" . }}-app

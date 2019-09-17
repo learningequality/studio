@@ -12,7 +12,7 @@ spec:
           containers:
           - name: prober-newrelic
             image: {{ .Values.studioProber.imageName }}
-            command: ["python", "deploy/send_metrics_newrelic.py"]
+            command: ["python", "/deploy/send_metrics_newrelic.py"]
             env:
             - name: PROBER_METRICS_URL
               value: http://{{ template "studio.fullname" . }}-prober-service/metrics
