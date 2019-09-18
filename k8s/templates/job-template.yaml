@@ -38,6 +38,7 @@ spec:
   template:
     spec:
       containers:
+      restartFailure: OnFailure
       - name: dbmigrate
         image: {{ .Values.studioApp.imageName }}
         args:
