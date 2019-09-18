@@ -25,7 +25,7 @@ type: Opaque
 data:
   DATA_DB_USER: {{ .Values.postgresql.postgresUser | default "" | b64enc }}
   DATA_DB_PASS: {{ .Values.postgresql.postgresPassword | default "" | b64enc }}
-  DATA_DB_HOST: {{ .Values.postgresql.externalCloudSQL.proxyHostName | default (include "postgresql.fullname" .) }}
+  DATA_DB_HOST: {{ .Values.postgresql.externalCloudSQL.proxyHostName | default (include "postgresql.fullname" .) | b64enc }}
   DATA_DB_NAME: {{ .Values.postgresql.postgresPassword | default "" | b64enc }}
 ---
 apiVersion: batch/v1
