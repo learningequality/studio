@@ -31,6 +31,9 @@ metadata:
   name: {{ template "studio.fullname" . }}-migrate-job
   labels:
     app: {{ template "studio.fullname" . }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation
 spec:
   template:
     spec:
