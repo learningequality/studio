@@ -37,7 +37,7 @@ metadata:
 spec:
   template:
     spec:
-      restartFailure: OnFailure
+      restartPolicy: OnFailure
       containers:
       - name: dbmigrate
         image: {{ .Values.studioApp.imageName }}
