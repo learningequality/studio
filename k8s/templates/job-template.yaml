@@ -12,19 +12,6 @@ data:
   STUDIO_BETA_MODE: "yes"
   RUN_MODE: k8s
 ---
-apiVersion: v1
-kind: Secret
-metadata:
-  name: {{ template "studio.fullname" . }}-db-creds
-  labels:
-    app: {{ template "studio.fullname" . }}
-type: Opaque
-data:
-  DATA_DB_USER: {{ .Values.postgresql.postgresUser | default "" | b64enc }}
-  DATA_DB_PASS: {{ .Values.postgresql.postgresPassword | default "" | b64enc }}
-  DATA_DB_HOST: {{ .Values.postgresql.externalCloudSQL.proxyHostName | default (include "postgresql.fullname" .) | b64enc }}
-  DATA_DB_NAME: {{ .Values.postgresql.postgresPassword | default "" | b64enc }}
----
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -45,7 +32,6 @@ spec:
         - make
         - migrate
         envFrom:
-        - secretRef:
-            name: {{ template "studio.fullname" . }}-db-creds
         - configMapRef:
             name: {{ template "studio.fullname" . }}-django-config
+        env: {{ include "studio.sharedEnvs" . | nindent 8 }}
