@@ -18,6 +18,9 @@ metadata:
   name: {{ template "studio.fullname" . }}-db-creds
   labels:
     app: {{ template "studio.fullname" . }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-delete-policy": hook-succeeded
 type: Opaque
 data:
   DATA_DB_USER: {{ .Values.postgresql.postgresUser | default "" | b64enc }}
