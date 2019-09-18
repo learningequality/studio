@@ -28,7 +28,7 @@ data:
   DATA_DB_HOST: {{ .Values.postgresql.externalCloudSQL.proxyHostName | default (include "postgresql.fullname" .) }}
   DATA_DB_NAME: {{ .Values.postgresql.postgresPassword | default "" | b64enc }}
 ---
-apiVersion: apps/v1beta1
+apiVersion: batch/v1
 kind: Job
 metadata:
   name: {{ template "studio.fullname" . }}-migrate-job
