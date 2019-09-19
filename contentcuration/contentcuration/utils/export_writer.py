@@ -170,7 +170,12 @@ class PPTMixin(object):
 
 class CSVMixin(object):
     def write_csv(self, filepath, rows, header=None):
-        with io.open(filepath, 'w', encoding='utf-8') as csvfile:
+        mode='wb'
+        encoding=None
+        if sys.version_info.major == 3:
+            mode='w'
+            encoding='utf-8'
+        with io.open(filepath, mode, encoding=encoding) as csvfile:
             writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_MINIMAL)
             if header:
                 writer.writerow(header)
