@@ -35,6 +35,9 @@ spec:
         - configMapRef:
             name: {{ template "studio.fullname" . }}-django-config
         env: {{ include "studio.sharedEnvs" . | nindent 8 }}
+        volumeMounts:
+        {{ include "studio.pvc.gcs-creds" . | nindent 8 }}
+        {{ include "studio.pvc.gdrive-creds" . | nindent 8 }}
         resources:
           requests:
             cpu: 1
@@ -42,3 +45,6 @@ spec:
           limits:
             cpu: 1
             memory: 2Gi
+      volumes:
+      {{ include "studio.volume.gcs-creds" . | nindent 8 }}
+      {{ include "studio.volume.gdrive-creds" . | nindent 8 }}
