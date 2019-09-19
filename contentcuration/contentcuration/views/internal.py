@@ -44,6 +44,7 @@ from contentcuration.utils.garbage_collect import get_deleted_chefs_root
 from contentcuration.utils.nodes import map_files_to_assessment_item
 from contentcuration.utils.nodes import map_files_to_node
 from contentcuration.utils.nodes import map_files_to_slideshow_slide_item
+from contentcuration.utils.publish import publish_channel
 from contentcuration.utils.tracing import trace
 
 VersionStatus = namedtuple('VersionStatus', ['version', 'status', 'message'])
@@ -282,7 +283,7 @@ def api_publish_channel(request):
         channel_id = data["channel_id"]
         # Ensure that the user has permission to edit this channel.
         request.user.can_edit(channel_id)
-        call_command("exportchannel", channel_id, user_id=request.user.pk)
+        publish_channel(request.user.pk, channel_id)
 
         return Response({
             "success": True,

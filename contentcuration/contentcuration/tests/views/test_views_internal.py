@@ -2,11 +2,14 @@
 """
 Tests for contentcuration.views.internal functions.
 """
+import os
+import tempfile
 import uuid
 
 from builtins import filter
 from builtins import zip
 from django.core.urlresolvers import reverse_lazy
+from django.test.utils import override_settings
 from mixer.main import mixer
 from mock import patch
 from rest_framework.test import APIClient
@@ -24,6 +27,7 @@ from contentcuration import ricecooker_versions as rc
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.views import internal
+from kolibri_content.router import using_content_database
 
 
 class SampleContentNodeDataSchema:
@@ -315,6 +319,17 @@ class ApiAddExerciseNodesToTreeTestCase(StudioTestCase):
 
 
 class PublishEndpointTestCase(BaseAPITestCase):
+    @classmethod
+    def setUpClass(cls):
+        super(PublishEndpointTestCase, cls).setUpClass()
+        cls.patch_copy_db = patch('contentcuration.utils.publish.save_export_database')
+        cls.patch_copy_db.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        super(PublishEndpointTestCase, cls).tearDownClass()
+        cls.patch_copy_db.stop()
+
     def test_404_non_existent(self):
         response = self.post(
             reverse_lazy("api_publish_channel"), {"channel_id": uuid.uuid4().hex}

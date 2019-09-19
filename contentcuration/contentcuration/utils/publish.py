@@ -102,6 +102,8 @@ def create_content_database(channel, force, user_id, force_exercises, task_objec
         map_prerequisites(channel.main_tree)
         save_export_database(channel.pk)
 
+    return tempdb
+
 
 def create_kolibri_license_object(ccnode):
     use_license_description = not ccnode.license.is_custom
@@ -661,10 +663,11 @@ def fill_published_fields(channel):
 
 def publish_channel(user_id, channel_id, force=False, force_exercises=False, send_email=False, task_object=None):
     channel = ccmodels.Channel.objects.get(pk=channel_id)
+    kolibri_temp_db = None
 
     try:
         set_channel_icon_encoding(channel)
-        create_content_database(channel, force, user_id, force_exercises, task_object)
+        kolibri_temp_db = create_content_database(channel, force, user_id, force_exercises, task_object)
         increment_channel_version(channel)
         mark_all_nodes_as_published(channel)
         add_tokens_to_channel(channel)
@@ -689,5 +692,7 @@ def publish_channel(user_id, channel_id, force=False, force_exercises=False, sen
 
     # No matter what, make sure publishing is set to False once the run is done
     finally:
+        if kolibri_temp_db and os.path.exists(kolibri_temp_db):
+            os.remove(kolibri_temp_db)
         channel.main_tree.publishing = False
         channel.main_tree.save()
