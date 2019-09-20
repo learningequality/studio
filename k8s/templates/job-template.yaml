@@ -15,6 +15,28 @@ data:
   STUDIO_BETA_MODE: "yes"
   RUN_MODE: k8s
 ---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ template "studio.fullname" . }}
+  labels:
+    app: studio
+    chart: {{ .Chart.Name }}
+    release: {{ .Release.Name }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation
+type: Opaque
+data:
+  postmark-api-key: {{ .Values.studioApp.postmarkApiKey | default "" | b64enc }}
+  redis-password: {{ .Values.redis.password | default "" | b64enc }}
+  postgres-user: {{ .Values.postgresql.postgresUser | default "" | b64enc }}
+  postgres-password: {{ .Values.postgresql.postgresPassword | default "" | b64enc }}
+  postgres-database: {{ .Values.postgresql.postgresDatabase | default "" | b64enc }}
+  {{ if .Values.sentry.dsnKey }}
+  sentry-dsn-key: {{ .Values.sentry.dsnKey }}
+  {{ end }}
+---
 # this secret is for the dbmigrate job. This needs to exist alongside it
 {{- if .Values.minio.externalGoogleCloudStorage.gcsKeyJson }}
 apiVersion: v1
