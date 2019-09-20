@@ -224,6 +224,11 @@ class TaskViewSet(viewsets.ModelViewSet):
                     # If the user doesn't have channel access permissions, they can still perform certain
                     # operations, such as copy. So show them the status of any operation they started.
                     queryset = Task.objects.filter(user=user, metadata__affects__channels__contains=[channel_id])
+                # If we're getting a list of channel tasks, exclude finished tasks for now, as
+                # currently we only use this call to determine if there's a current or pending task.
+                # TODO: revisit this when we start displaying channel task history
+                if self.action == 'list':
+                    queryset = queryset.exclude(status__in=['SUCCESS', 'FAILURE'])
         else:
             queryset = Task.objects.filter(user=self.request.user)
 
