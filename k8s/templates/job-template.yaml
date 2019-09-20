@@ -79,6 +79,8 @@ spec:
         - configMapRef:
             name: {{ template "studio.fullname" . }}-django-config
         env: {{ include "studio.sharedEnvs" . | nindent 8 }}
+        - name: DJANGO_SETTINGS_MODULE
+          value: contentcuration.migration_production_settings
         volumeMounts:
         {{ include "studio.pvc.gcs-creds" . | nindent 8 }}
         resources:
