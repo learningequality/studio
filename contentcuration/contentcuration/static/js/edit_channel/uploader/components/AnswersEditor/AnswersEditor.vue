@@ -65,7 +65,7 @@
               <keep-alive :max="5">
                 <MarkdownEditor
                   v-if="isAnswerOpen(answerIdx)"
-                  :markdown="answer.answer"
+                  :value="answer.answer"
                   @update="updateAnswerText($event, answerIdx)"
                 />
               </keep-alive>

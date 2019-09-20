@@ -38,7 +38,7 @@
 
                   <MarkdownEditor
                     v-else
-                    :markdown="hint.hint"
+                    :value="hint.hint"
                     @update="updateHintText($event, hintIdx)"
                   />
                 </keep-alive>

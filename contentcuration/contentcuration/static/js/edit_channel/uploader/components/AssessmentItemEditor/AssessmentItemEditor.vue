@@ -29,7 +29,7 @@
           <keep-alive include="MarkdownEditor">
             <MarkdownEditor
               v-if="isQuestionOpen"
-              :markdown="question"
+              :value="question"
               @update="onQuestionUpdate"
             />
 

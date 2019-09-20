@@ -2,7 +2,7 @@
 
   <div>
     <div ref="editor">
-      {{ markdown }}
+      {{ value }}
     </div>
   </div>
 
@@ -13,11 +13,11 @@
   export default {
     name: 'MarkdownEditor',
     model: {
-      prop: 'markdown',
+      prop: 'value',
       event: 'update',
     },
     props: {
-      markdown: {
+      value: {
         type: String,
       },
     },
