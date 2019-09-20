@@ -5,12 +5,34 @@ metadata:
   name: {{ template "studio.fullname" . }}-django-config
   labels:
     app: {{ template "studio.fullname" . }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation
 data:
   DJANGO_SETTINGS_MODULE: {{ .Values.settings }}
   DJANGO_LOG_FILE: /var/log/django.log
   MPLBACKEND: PS
   STUDIO_BETA_MODE: "yes"
   RUN_MODE: k8s
+---
+# this secret is for the dbmigrate job. This needs to exist alongside it
+{{- if .Values.minio.externalGoogleCloudStorage.gcsKeyJson }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ template "studio.fullname" . }}-gcs-creds-for-dbmigrate
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation
+  labels:
+    app: {{ template "studio.name" . }}
+    chart: {{ template "studio.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+type: Opaque
+data:
+  gcs_key.json: {{ .Values.minio.externalGoogleCloudStorage.gcsKeyJson }}
+{{- end }}
 ---
 apiVersion: batch/v1
 kind: Job
@@ -37,7 +59,6 @@ spec:
         env: {{ include "studio.sharedEnvs" . | nindent 8 }}
         volumeMounts:
         {{ include "studio.pvc.gcs-creds" . | nindent 8 }}
-        {{ include "studio.pvc.gdrive-creds" . | nindent 8 }}
         resources:
           requests:
             cpu: 1
@@ -46,5 +67,6 @@ spec:
             cpu: 1
             memory: 2Gi
       volumes:
-      {{ include "studio.volume.gcs-creds" . | nindent 8 }}
-      {{ include "studio.volume.gdrive-creds" . | nindent 8 }}
+      - name: gcs-creds
+        secret:
+          secretName: {{ template "studio.fullname" . }}-gcs-creds-for-dbmigrate
