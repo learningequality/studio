@@ -127,7 +127,12 @@ module.exports = (env = {}) => {
         },
         {
           test: /\.less?$/,
-          use: [hot ? `style-loader` : MiniCssExtractPlugin.loader, `css-loader`, postCSSLoader, 'less-loader'],
+          use: [
+            hot ? `style-loader` : MiniCssExtractPlugin.loader,
+            `css-loader`,
+            postCSSLoader,
+            'less-loader',
+          ],
         },
         {
           test: /\.css?$/,
@@ -183,8 +188,6 @@ module.exports = (env = {}) => {
         path: path.resolve(djangoProjectDir, 'build'),
         filename: 'webpack-stats.json',
       }),
-      // ignore codemirror, error caused by summernote
-      new webpack.IgnorePlugin(/^codemirror$/),
       new webpack.ProvidePlugin({
         _: 'underscore',
         // used in most of the code we wrote
