@@ -72,7 +72,7 @@ spec:
       containers:
       - name: dbmigrate
         image: {{ .Values.studioApp.imageName }}
-        entrypoint:
+        command:
         - make
         - migrate
         envFrom:
