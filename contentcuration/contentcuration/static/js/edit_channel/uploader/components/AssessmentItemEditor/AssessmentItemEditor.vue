@@ -39,11 +39,15 @@
               data-test="questionText"
               @click="openQuestion"
             >
-              <VLayout align-center>
-                <VIcon class="pr-2" color="grey darken-1">
+              <VLayout align-top>
+                <VIcon
+                  color="grey darken-1"
+                  class="mr-2"
+                  :style="{ 'margin-top': '12px'}"
+                >
                   edit
                 </VIcon>
-                <span class="title">{{ question }}</span>
+                <MarkdownViewer :value="question" />
               </VLayout>
             </div>
           </keep-alive>
@@ -90,6 +94,7 @@
   import AnswersEditor from '../AnswersEditor/AnswersEditor.vue';
   import HintsEditor from '../HintsEditor/HintsEditor.vue';
   import MarkdownEditor from '../MarkdownEditor/MarkdownEditor.vue';
+  import MarkdownViewer from '../MarkdownViewer/MarkdownViewer.vue';
   import ErrorList from 'edit_channel/sharedComponents/ErrorList/ErrorList.vue';
 
   export default {
@@ -99,6 +104,7 @@
       ErrorList,
       HintsEditor,
       MarkdownEditor,
+      MarkdownViewer,
     },
     model: {
       prop: 'item',

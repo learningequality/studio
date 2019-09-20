@@ -2,13 +2,11 @@
 
   <div>
     <VLayout align-top justify-space-between>
-      <VFlex>
-        <div class="caption grey--text mb-1">
+      <VFlex mt-2>
+        <div class="caption grey--text mb-2">
           {{ kindLabel }}
         </div>
-        <div>
-          {{ question }}
-        </div>
+        <MarkdownViewer :value="question" />
       </VFlex>
     </VLayout>
 
@@ -102,8 +100,13 @@
   import { AssessmentItemTypes, AssessmentItemTypeLabels } from '../../constants';
   import { getCorrectAnswersIndices } from '../../utils';
 
+  import MarkdownViewer from '../MarkdownViewer/MarkdownViewer.vue';
+
   export default {
     name: 'AssessmentItemPreview',
+    components: {
+      MarkdownViewer,
+    },
     props: {
       /**
        * An assessment item as retrieved from API:

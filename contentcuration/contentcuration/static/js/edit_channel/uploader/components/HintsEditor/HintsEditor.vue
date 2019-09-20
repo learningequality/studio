@@ -25,16 +25,20 @@
       >
         <VCardText>
           <VLayout align-top>
-            <VFlex xs1>
+            <VFlex
+              xs1
+              :style="{ 'margin-top': '10px' }"
+            >
               {{ hint.order }}
             </VFlex>
 
-            <VFlex>
+            <VFlex xs7>
               <transition name="fade">
-                <keep-alive :max="5" include="MarkdownEditor">
-                  <span v-if="!isHintOpen(hintIdx)">
-                    {{ hint.hint }}
-                  </span>
+                <keep-alive :max="5">
+                  <MarkdownViewer
+                    v-if="!isHintOpen(hintIdx)"
+                    :value="hint.hint"
+                  />
 
                   <MarkdownEditor
                     v-else
@@ -81,6 +85,7 @@
 
   import AssessmentItemToolbar from '../AssessmentItemToolbar/AssessmentItemToolbar.vue';
   import MarkdownEditor from '../MarkdownEditor/MarkdownEditor.vue';
+  import MarkdownViewer from '../MarkdownViewer/MarkdownViewer.vue';
 
   const updateHintsOrder = hints => {
     return hints.map((hint, idx) => {
@@ -96,6 +101,7 @@
     components: {
       AssessmentItemToolbar,
       MarkdownEditor,
+      MarkdownViewer,
     },
     model: {
       prop: 'hints',

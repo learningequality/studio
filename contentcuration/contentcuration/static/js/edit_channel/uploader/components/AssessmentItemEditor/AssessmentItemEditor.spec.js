@@ -4,6 +4,7 @@ import { AssessmentItemTypes, ValidationErrors } from '../../constants';
 import AssessmentItemEditor from './AssessmentItemEditor';
 
 jest.mock('../MarkdownEditor/MarkdownEditor.vue');
+jest.mock('../MarkdownViewer/MarkdownViewer.vue');
 
 const ITEM = {
   question: 'Exercise 2 - Question 2',

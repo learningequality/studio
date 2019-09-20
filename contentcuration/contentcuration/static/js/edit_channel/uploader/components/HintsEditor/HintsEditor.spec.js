@@ -5,6 +5,7 @@ import { AssessmentItemToolbarActions } from '../../constants';
 import HintsEditor from './HintsEditor';
 
 jest.mock('../MarkdownEditor/MarkdownEditor.vue');
+jest.mock('../MarkdownViewer/MarkdownViewer.vue');
 
 const clickNewHintBtn = wrapper => {
   wrapper

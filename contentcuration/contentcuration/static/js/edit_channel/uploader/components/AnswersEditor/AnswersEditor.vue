@@ -26,7 +26,7 @@
         <div :class="indicatorClasses(answer)"></div>
         <VCardText>
           <VLayout align-top>
-            <VFlex :class="{ 'xs1': isAnswerOpen(answerIdx) }">
+            <VFlex xs1>
               <!--
                 VRadio cannot be used without VRadioGroup like VCheckbox but it can
                 be solved by wrapping each VRadio to VRadioGroup
@@ -39,7 +39,6 @@
               >
                 <VRadio
                   :value="answerIdx"
-                  :label="answerLabel(answerIdx)"
                   data-test="answerRadio"
                 />
               </VRadioGroup>
@@ -49,24 +48,21 @@
                 :key="answerIdx"
                 :value="answerIdx"
                 :input-value="correctAnswersIndices"
-                :label="answerLabel(answerIdx)"
                 @change="onCorrectAnswersIndicesUpdate"
               />
-
-              <div
-                v-if="!isAnswerOpen(answerIdx) && isInputQuestion"
-                class="input-question"
-              >
-                {{ answerLabel(answerIdx) }}
-              </div>
             </VFlex>
 
-            <VFlex>
+            <VFlex xs7>
               <keep-alive :max="5">
                 <MarkdownEditor
                   v-if="isAnswerOpen(answerIdx)"
+                  class="editor"
                   :value="answer.answer"
                   @update="updateAnswerText($event, answerIdx)"
+                />
+                <MarkdownViewer
+                  v-else
+                  :value="answer.answer"
                 />
               </keep-alive>
             </VFlex>
@@ -109,6 +105,7 @@
 
   import AssessmentItemToolbar from '../AssessmentItemToolbar/AssessmentItemToolbar.vue';
   import MarkdownEditor from '../MarkdownEditor/MarkdownEditor.vue';
+  import MarkdownViewer from '../MarkdownViewer/MarkdownViewer.vue';
 
   const updateAnswersOrder = answers => {
     return answers.map((answer, idx) => {
@@ -124,6 +121,7 @@
     components: {
       AssessmentItemToolbar,
       MarkdownEditor,
+      MarkdownViewer,
     },
     model: {
       prop: 'answers',
@@ -198,17 +196,6 @@
       },
       isAnswerOpen(answerIdx) {
         return answerIdx === this.openAnswerIdx;
-      },
-      answerLabel(answerIdx) {
-        if (!this.answers || !this.answers.length) {
-          return '';
-        }
-
-        if (this.isAnswerOpen(answerIdx)) {
-          return '';
-        }
-
-        return this.answers[answerIdx].answer;
       },
       answerClasses(answerIdx) {
         const classes = ['answer'];
@@ -399,7 +386,7 @@
     position: relative;
     transition: 0.7s;
 
-    &.editable {
+    &.closed.editable {
       cursor: pointer;
     }
 
@@ -427,8 +414,8 @@
     }
   }
 
-  .input-question {
-    padding: 23.5px;
+  .v-input--selection-controls {
+    margin-top: 6px;
   }
 
 </style>

@@ -8,6 +8,7 @@ import {
 import AssessmentEditor from './AssessmentEditor';
 
 jest.mock('../MarkdownEditor/MarkdownEditor.vue');
+jest.mock('../MarkdownViewer/MarkdownViewer.vue');
 
 const ITEMS = [
   {

@@ -76,7 +76,13 @@ exports[`AssessmentItemEditor renders 1`] = `
         Question
       </div>
       <div data-test="questionText" class="pl-2 pr-2 pt-3 pb-3 question-text" name="fade">
-        <div class="layout align-center"><i aria-hidden="true" class="v-icon pr-2 material-icons theme--light grey--text text--darken-1">edit</i> <span class="title">Exercise 2 - Question 2</span></div>
+        <div class="layout align-top"><i aria-hidden="true" class="v-icon mr-2 material-icons theme--light grey--text text--darken-1" style="margin-top: 12px;">edit</i>
+          <div>
+            <div>
+              Exercise 2 - Question 2
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -93,15 +99,15 @@ exports[`AssessmentItemEditor renders 1`] = `
             <div class="indicator correct"></div>
             <div class="v-card__text">
               <div class="layout align-top">
-                <div class="flex">
+                <div class="flex xs1">
                   <div class="v-input v-input--selection-controls v-input--radio-group v-input--radio-group--column theme--light">
                     <div class="v-input__control">
                       <div class="v-input__slot" style="height: auto;">
                         <div role="radiogroup" class="v-input--radio-group__input">
                           <div class="v-radio theme--light accent--text">
-                            <div class="v-input--selection-controls__input"><input aria-label="Mayonnaise (I mean you can, but...)" aria-checked="true" role="radio" type="radio" name="v-radio-32" value="0" data-test="answerRadio">
+                            <div class="v-input--selection-controls__input"><input aria-checked="true" role="radio" type="radio" name="v-radio-34" value="0" data-test="answerRadio">
                               <div class="v-input--selection-controls__ripple accent--text"></div><i aria-hidden="true" class="v-icon material-icons theme--light accent--text">radio_button_checked</i>
-                            </div><label aria-hidden="true" class="v-label theme--light" style="left: 0px; position: relative;">Mayonnaise (I mean you can, but...)</label>
+                            </div><label aria-hidden="true" class="v-label theme--light" style="left: 0px; position: relative;"></label>
                           </div>
                         </div>
                       </div>
@@ -109,10 +115,13 @@ exports[`AssessmentItemEditor renders 1`] = `
                     </div>
                   </div>
                   <!---->
-                  <!---->
                 </div>
-                <div class="flex">
-                  <!---->
+                <div class="flex xs7">
+                  <div>
+                    <div>
+                      Mayonnaise (I mean you can, but...)
+                    </div>
+                  </div>
                 </div>
                 <div class="spacer"></div>
                 <div class="flex">
@@ -141,15 +150,15 @@ exports[`AssessmentItemEditor renders 1`] = `
       <div class="indicator wrong"></div>
       <div class="v-card__text">
         <div class="layout align-top">
-          <div class="flex">
+          <div class="flex xs1">
             <div class="v-input v-input--selection-controls v-input--radio-group v-input--radio-group--column theme--light">
               <div class="v-input__control">
                 <div class="v-input__slot" style="height: auto;">
                   <div role="radiogroup" class="v-input--radio-group__input">
                     <div class="v-radio theme--light">
-                      <div class="v-input--selection-controls__input"><input aria-label="Peanut butter" aria-checked="false" role="radio" type="radio" name="v-radio-52" value="1" data-test="answerRadio">
+                      <div class="v-input--selection-controls__input"><input aria-checked="false" role="radio" type="radio" name="v-radio-55" value="1" data-test="answerRadio">
                         <div class="v-input--selection-controls__ripple"></div><i aria-hidden="true" class="v-icon material-icons theme--light">radio_button_unchecked</i>
-                      </div><label aria-hidden="true" class="v-label theme--light" style="left: 0px; position: relative;">Peanut butter</label>
+                      </div><label aria-hidden="true" class="v-label theme--light" style="left: 0px; position: relative;"></label>
                     </div>
                   </div>
                 </div>
@@ -157,10 +166,13 @@ exports[`AssessmentItemEditor renders 1`] = `
               </div>
             </div>
             <!---->
-            <!---->
           </div>
-          <div class="flex">
-            <!---->
+          <div class="flex xs7">
+            <div>
+              <div>
+                Peanut butter
+              </div>
+            </div>
           </div>
           <div class="spacer"></div>
           <div class="flex">
@@ -197,12 +209,16 @@ exports[`AssessmentItemEditor renders 1`] = `
     <div class="v-card v-card--flat v-sheet theme--light hint closed">
       <div class="v-card__text">
         <div class="layout align-top">
-          <div class="flex xs1">
+          <div class="flex xs1" style="margin-top: 10px;">
             1
           </div>
-          <div class="flex"><span name="fade">
-                  It's not healthy
-                </span></div>
+          <div class="flex xs7">
+            <div name="fade">
+              <div>
+                It's not healthy
+              </div>
+            </div>
+          </div>
           <div class="spacer"></div>
           <div class="flex">
             <div class="layout justify-end toolbar">
@@ -229,12 +245,16 @@ exports[`AssessmentItemEditor renders 1`] = `
   <div class="v-card v-card--flat v-sheet theme--light hint closed">
     <div class="v-card__text">
       <div class="layout align-top">
-        <div class="flex xs1">
+        <div class="flex xs1" style="margin-top: 10px;">
           2
         </div>
-        <div class="flex"><span name="fade">
-                  Tasty!
-                </span></div>
+        <div class="flex xs7">
+          <div name="fade">
+            <div>
+              Tasty!
+            </div>
+          </div>
+        </div>
         <div class="spacer"></div>
         <div class="flex">
           <div class="layout justify-end toolbar">
