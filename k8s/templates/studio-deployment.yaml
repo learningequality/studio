@@ -11,7 +11,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum: {{ include (print $.Template.BasePath "/studio-secrets.yaml") . | sha256sum }}
+        checksum: {{ include (print $.Template.BasePath "/job-template.yaml") . | sha256sum }}
       labels:
         app: {{ template "studio.fullname" . }}
         tier: app
