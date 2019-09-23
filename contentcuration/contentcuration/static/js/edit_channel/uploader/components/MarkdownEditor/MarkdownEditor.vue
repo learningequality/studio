@@ -18,17 +18,17 @@
   import 'tui-editor/dist/tui-editor.css';
   import 'tui-editor/dist/tui-editor-contents.css';
   import 'codemirror/lib/codemirror.css';
-
   import { Editor } from '@toast-ui/vue-editor';
   import undoRedo from './extensions/undo-redo';
-  
+  import imageUpload from './extensions/image-upload';
+
   const MODE = 'wysiwyg';
   const HEIGHT = '100px';
   const OPTIONS = {
     usageStatistics: false,
     hideModeSwitch: true,
     toolbarItems: ['bold', 'italic'],
-    exts: [undoRedo],
+    exts: [undoRedo, imageUpload],
   };
 
   export default {
