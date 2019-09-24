@@ -24,7 +24,7 @@
     "unittests:reusedb": "npm-run-all --parallel --race services pytest:reusedb",
     "apptests": "npm-run-all --parallel --race services cypress:test",
     "test": "npm-run-all unittests apptests",
-    "build:dev": "webpack-dev-server --env.dev --config webpack.config.js --watch --progress",
+    "build:dev": "webpack-dev-server --env.dev --config webpack.config.js --watch --progress --host 0.0.0.0",
     "build:dev:hot": "yarn run build:dev --hot --env.hot",
     "test-jest:dev": "yarn run test-jest --watch",
     "test-jest": "jest --config jest_config/jest.conf.js",
