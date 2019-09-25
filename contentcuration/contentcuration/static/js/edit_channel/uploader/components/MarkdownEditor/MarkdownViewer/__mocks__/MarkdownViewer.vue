@@ -2,7 +2,7 @@
 
   <div>
     <div>
-      {{ value }}
+      {{ markdown }}
     </div>
   </div>
 
@@ -13,7 +13,7 @@
   export default {
     name: 'MarkdownViewer',
     props: {
-      value: {
+      markdown: {
         type: String,
       },
     },

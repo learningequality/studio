@@ -8,7 +8,8 @@ import { AssessmentItemTypes, ValidationErrors } from '../../constants';
 const editModalGetters = require('../../vuex/getters');
 const editModalMutations = require('../../vuex/mutations');
 
-jest.mock('../../components/MarkdownEditor/MarkdownEditor.vue');
+jest.mock('../../components//MarkdownEditor/MarkdownEditor/MarkdownEditor.vue');
+jest.mock('../../components//MarkdownEditor/MarkdownViewer/MarkdownViewer.vue');
 
 const localVue = createLocalVue();
 localVue.use(Vuex);

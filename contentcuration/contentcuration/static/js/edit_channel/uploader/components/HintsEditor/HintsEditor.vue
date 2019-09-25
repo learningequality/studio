@@ -37,12 +37,12 @@
                 <keep-alive :max="5">
                   <MarkdownViewer
                     v-if="!isHintOpen(hintIdx)"
-                    :value="hint.hint"
+                    :markdown="hint.hint"
                   />
 
                   <MarkdownEditor
                     v-else
-                    :value="hint.hint"
+                    :markdown="hint.hint"
                     @update="updateHintText($event, hintIdx)"
                   />
                 </keep-alive>
@@ -84,8 +84,8 @@
   import { swapElements } from '../../utils';
 
   import AssessmentItemToolbar from '../AssessmentItemToolbar/AssessmentItemToolbar.vue';
-  import MarkdownEditor from '../MarkdownEditor/MarkdownEditor.vue';
-  import MarkdownViewer from '../MarkdownViewer/MarkdownViewer.vue';
+  import MarkdownEditor from '../MarkdownEditor/MarkdownEditor/MarkdownEditor.vue';
+  import MarkdownViewer from '../MarkdownEditor/MarkdownViewer/MarkdownViewer.vue';
 
   const updateHintsOrder = hints => {
     return hints.map((hint, idx) => {

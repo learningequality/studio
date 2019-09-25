@@ -3,8 +3,8 @@ import { shallowMount, mount } from '@vue/test-utils';
 import { AssessmentItemTypes, AssessmentItemToolbarActions } from '../../constants';
 import AnswersEditor from './AnswersEditor';
 
-jest.mock('../MarkdownEditor/MarkdownEditor.vue');
-jest.mock('../MarkdownViewer/MarkdownViewer.vue');
+jest.mock('../MarkdownEditor/MarkdownEditor/MarkdownEditor.vue');
+jest.mock('../MarkdownEditor/MarkdownViewer/MarkdownViewer.vue');
 
 const getToolbar = wrapper => {
   return wrapper.find('[data-test="toolbar"]');

@@ -6,7 +6,7 @@
         <div class="caption grey--text mb-2">
           {{ kindLabel }}
         </div>
-        <MarkdownViewer :value="question" />
+        <MarkdownViewer :markdown="question" />
       </VFlex>
     </VLayout>
 
@@ -100,7 +100,7 @@
   import { AssessmentItemTypes, AssessmentItemTypeLabels } from '../../constants';
   import { getCorrectAnswersIndices } from '../../utils';
 
-  import MarkdownViewer from '../MarkdownViewer/MarkdownViewer.vue';
+  import MarkdownViewer from '../MarkdownEditor/MarkdownViewer/MarkdownViewer.vue';
 
   export default {
     name: 'AssessmentItemPreview',

@@ -29,7 +29,7 @@
           <keep-alive include="MarkdownEditor">
             <MarkdownEditor
               v-if="isQuestionOpen"
-              :value="question"
+              :markdown="question"
               @update="onQuestionUpdate"
             />
 
@@ -47,7 +47,7 @@
                 >
                   edit
                 </VIcon>
-                <MarkdownViewer :value="question" />
+                <MarkdownViewer :markdown="question" />
               </VLayout>
             </div>
           </keep-alive>
@@ -93,8 +93,8 @@
 
   import AnswersEditor from '../AnswersEditor/AnswersEditor.vue';
   import HintsEditor from '../HintsEditor/HintsEditor.vue';
-  import MarkdownEditor from '../MarkdownEditor/MarkdownEditor.vue';
-  import MarkdownViewer from '../MarkdownViewer/MarkdownViewer.vue';
+  import MarkdownEditor from '../MarkdownEditor/MarkdownEditor/MarkdownEditor.vue';
+  import MarkdownViewer from '../MarkdownEditor/MarkdownViewer/MarkdownViewer.vue';
   import ErrorList from 'edit_channel/sharedComponents/ErrorList/ErrorList.vue';
 
   export default {

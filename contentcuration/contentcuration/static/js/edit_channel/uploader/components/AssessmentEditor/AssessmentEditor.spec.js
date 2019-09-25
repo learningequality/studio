@@ -7,8 +7,8 @@ import {
 } from '../../constants';
 import AssessmentEditor from './AssessmentEditor';
 
-jest.mock('../MarkdownEditor/MarkdownEditor.vue');
-jest.mock('../MarkdownViewer/MarkdownViewer.vue');
+jest.mock('../MarkdownEditor/MarkdownEditor/MarkdownEditor.vue');
+jest.mock('../MarkdownEditor/MarkdownViewer/MarkdownViewer.vue');
 
 const ITEMS = [
   {

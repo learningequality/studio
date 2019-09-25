@@ -57,12 +57,12 @@
                 <MarkdownEditor
                   v-if="isAnswerOpen(answerIdx)"
                   class="editor"
-                  :value="answer.answer"
+                  :markdown="answer.answer"
                   @update="updateAnswerText($event, answerIdx)"
                 />
                 <MarkdownViewer
                   v-else
-                  :value="answer.answer"
+                  :markdown="answer.answer"
                 />
               </keep-alive>
             </VFlex>
@@ -104,8 +104,8 @@
   import { getCorrectAnswersIndices, mapCorrectAnswers, swapElements } from '../../utils';
 
   import AssessmentItemToolbar from '../AssessmentItemToolbar/AssessmentItemToolbar.vue';
-  import MarkdownEditor from '../MarkdownEditor/MarkdownEditor.vue';
-  import MarkdownViewer from '../MarkdownViewer/MarkdownViewer.vue';
+  import MarkdownEditor from '../MarkdownEditor/MarkdownEditor/MarkdownEditor.vue';
+  import MarkdownViewer from '../MarkdownEditor/MarkdownViewer/MarkdownViewer.vue';
 
   const updateAnswersOrder = answers => {
     return answers.map((answer, idx) => {
