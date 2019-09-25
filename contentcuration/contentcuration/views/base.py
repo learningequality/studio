@@ -536,7 +536,7 @@ class SandboxView(TemplateView):
                 nodes.append(ContentNodeSerializer(node).data)
 
         # Add an imported node
-        imported_node = active_nodes.filter(freeze_authoring_data=True).first()
+        imported_node = active_nodes.filter(freeze_authoring_data=True).exclude(kind_id=content_kinds.TOPIC).first()
         if imported_node:
             nodes.append(ContentNodeSerializer(imported_node).data)
 
