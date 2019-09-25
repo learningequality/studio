@@ -531,7 +531,7 @@ class SandboxView(TemplateView):
 
         # Get a node of every kind
         for kind, _ in content_kinds.choices:
-            node = active_nodes.filter(kind_id=kind).first()
+            node = active_nodes.filter(kind_id=kind, freeze_authoring_data=False).first()
             if node:
                 nodes.append(ContentNodeSerializer(node).data)
 
