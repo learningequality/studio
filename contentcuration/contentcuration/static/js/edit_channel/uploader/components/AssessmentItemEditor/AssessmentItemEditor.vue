@@ -83,9 +83,9 @@
   import { getAssessmentItemErrorMessage, updateAnswersToQuestionType } from '../../utils';
 
   import AnswersEditor from '../AnswersEditor/AnswersEditor.vue';
-  import ErrorList from '../ErrorList/ErrorList.vue';
   import HintsEditor from '../HintsEditor/HintsEditor.vue';
   import MarkdownEditor from '../MarkdownEditor/MarkdownEditor.vue';
+  import ErrorList from 'edit_channel/sharedComponents/ErrorList/ErrorList.vue';
 
   export default {
     name: 'AssessmentItemEditor',
