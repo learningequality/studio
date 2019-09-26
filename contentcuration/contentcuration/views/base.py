@@ -523,10 +523,25 @@ class SandboxView(TemplateView):
 
     def get_context_data(self, **kwargs):
         kwargs = super(SandboxView, self).get_context_data(**kwargs)
-        channel = Channel.objects.filter(deleted=False, public=True).first()
-        nodes = ContentNodeSerializer(channel.main_tree.get_descendants(), many=True)
-        kwargs.update({"nodes": JSONRenderer().render(nodes.data[:10]),
-                       "channel": channel.pk,
+
+        active_channels = Channel.objects.filter(Q(editors=self.request.user) | Q(public=True))
+        active_tree_ids = active_channels.values_list('main_tree__tree_id', flat=True)
+        active_nodes = ContentNode.objects.filter(tree_id__in=active_tree_ids)
+        nodes = []
+
+        # Get a node of every kind
+        for kind, _ in content_kinds.choices:
+            node = active_nodes.filter(kind_id=kind, freeze_authoring_data=False).first()
+            if node:
+                nodes.append(ContentNodeSerializer(node).data)
+
+        # Add an imported node
+        imported_node = active_nodes.filter(freeze_authoring_data=True).exclude(kind_id=content_kinds.TOPIC).first()
+        if imported_node:
+            nodes.append(ContentNodeSerializer(imported_node).data)
+
+        kwargs.update({"nodes": JSONRenderer().render(nodes),
+                       "channel": active_channels.first().pk,
                        "current_user": JSONRenderer().render(CurrentUserSerializer(self.request.user).data)
                        })
         return kwargs
