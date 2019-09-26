@@ -118,6 +118,8 @@ export const updateAnswersToQuestionType = (questionType, answers) => {
 
 /**
  * Sanitize assesment item answers
+ * - trim answers
+ * - (optional) remove empty answers
  * @param {Array} answers Assessment item answers
  * @param {Boolean} removeEmpty Remove all empty answers?
  * @returns {Array} Cleaned answers
@@ -152,6 +154,8 @@ export const sanitizeAssessmentItemAnswers = (answers, removeEmpty = false) => {
 
 /**
  * Sanitize assesment item hints
+ *  - trim hints
+ *  - (optional) remove empty hints
  * @param {Array} hints Assessment item hints
  * @param {Boolean} removeEmpty Remove all empty hints?
  * @returns {Array} Cleaned hints
@@ -185,7 +189,7 @@ export const sanitizeAssessmentItemHints = (hints, removeEmpty = false) => {
 };
 
 /**
- * Sanitize an assesment item.
+ * Sanitize an assesment item
  *  - trim question text
  *  - sanitize answers and hints
  * @param {Array} assessmentItem An assessment item
