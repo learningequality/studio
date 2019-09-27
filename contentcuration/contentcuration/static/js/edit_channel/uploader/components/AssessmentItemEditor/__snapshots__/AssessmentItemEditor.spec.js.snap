@@ -75,7 +75,9 @@ exports[`AssessmentItemEditor renders 1`] = `
       <div class="grey--text text--darken-2 mb-1">
         Question
       </div>
-      <div data-test="questionText" class="pl-2 pr-2 pt-3 pb-3 question-text" name="fade"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">edit</i> <span>Exercise 2 - Question 2</span></div>
+      <div data-test="questionText" class="pl-2 pr-2 pt-3 pb-3 question-text" name="fade">
+        <div class="layout align-center"><i aria-hidden="true" class="v-icon pr-2 material-icons theme--light grey--text text--darken-1">edit</i> <span class="title">Exercise 2 - Question 2</span></div>
+      </div>
     </div>
   </div>
   <div class="layout mt-4">

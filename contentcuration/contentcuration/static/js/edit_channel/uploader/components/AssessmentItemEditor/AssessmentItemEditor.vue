@@ -38,10 +38,12 @@
               data-test="questionText"
               @click="openQuestion"
             >
-              <VIcon color="grey darken-1">
-                edit
-              </VIcon>
-              <span>{{ question }}</span>
+              <VLayout align-center>
+                <VIcon class="pr-2" color="grey darken-1">
+                  edit
+                </VIcon>
+                <span class="title">{{ question }}</span>
+              </VLayout>
             </div>
           </keep-alive>
         </transition>
