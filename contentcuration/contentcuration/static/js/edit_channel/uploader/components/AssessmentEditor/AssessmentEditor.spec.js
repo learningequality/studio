@@ -140,18 +140,32 @@ describe('AssessmentEditor', () => {
     expect(wrapper.isVueInstance()).toBe(true);
   });
 
-  it('renders placeholder text if exercise has no questions', () => {
-    const wrapper = mount(AssessmentEditor, {
-      propsData: {
-        assessmentDraft: [],
-      },
+  describe('for an exercise with no questions', () => {
+    let wrapper;
+
+    beforeEach(() => {
+      wrapper = mount(AssessmentEditor, {
+        propsData: {
+          assessmentDraft: [],
+        },
+      });
     });
 
-    expect(wrapper.html()).toContain('No questions yet');
+    it('renders placeholder text if exercise has no questions', () => {
+      expect(wrapper.html()).toContain('No questions yet');
+    });
+
+    it("doesn't render 'Show answers' checkbox", () => {
+      expect(wrapper.contains('[data-test="showAnswersCheckbox"]')).toBe(false);
+    });
   });
 
   it('renders closed items - order, question type, text, error indicator, toolbar', () => {
     expect(wrapper.html()).toMatchSnapshot();
+  });
+
+  it("renders 'Show answers' checkbox", () => {
+    expect(wrapper.contains('[data-test="showAnswersCheckbox"]')).toBe(true);
   });
 
   it('renders answers preview on show answers click', () => {

@@ -1,13 +1,13 @@
 <template>
   <div>
-    <VCheckbox
-      v-model="displayAnswersPreview"
-      label="Show answers"
-      class="mt-4 ml-0"
-      data-test="showAnswersCheckbox"
-    />
-
     <template v-if="assessmentDraft && assessmentDraft.length">
+      <VCheckbox
+        v-model="displayAnswersPreview"
+        label="Show answers"
+        class="mt-4 ml-0"
+        data-test="showAnswersCheckbox"
+      />
+
       <VCard
         v-for="(_, itemIdx) in assessmentDraft"
         :key="itemIdx"
