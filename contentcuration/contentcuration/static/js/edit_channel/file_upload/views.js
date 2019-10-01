@@ -45,7 +45,6 @@ var MESSAGES = {
   remove_file: 'Remove file',
   no_space: 'Not enough space. Check your storage under Settings page.',
   out_of_storage: 'Out of Storage!',
-  add_no_language: 'Please select a language',
 };
 
 var FileModalView = BaseViews.BaseModalView.extend({
@@ -791,7 +790,7 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
       }
     }
   },
-  create_dropzone: function(options) {
+  create_dropzone: function() {
     var dz_selector = '#' + this.selector();
     var clickables = [dz_selector + ' .dz-clickable'];
     if (this.file) {
@@ -799,41 +798,26 @@ var FormatSlot = BaseViews.BaseListNodeItemView.extend({
     }
     Dropzone.autoDiscover = false;
     if ($(dz_selector).length && !$(dz_selector).hasClass('dropzone_attached')) {
-      var headers = _.extend(
-        {
+      var dropzone = new Dropzone($(dz_selector).get(0), {
+        clickable: clickables,
+        acceptedFiles: this.get_accepted_files(),
+        url: window.Urls.file_upload(),
+        previewTemplate: this.dropzone_template(null, { data: this.get_intl_data() }),
+        maxFiles: 1,
+        previewsContainer: dz_selector,
+        headers: {
           'X-CSRFToken': get_cookie('csrftoken'),
           Node: this.node.get('id'),
           Preset: this.model.get('name') || this.model.id,
           Language: this.file && this.file.get('language') ? this.file.get('language').id : null,
         },
-        options && options.headers ? options.headers : {}
-      );
-
-      var url = this.model.get('multi_language')
-        ? window.Urls.multilanguage_file_upload()
-        : window.Urls.file_upload();
-
-      var dropzone = new Dropzone(
-        $(dz_selector).get(0),
-        _.extend(
-          {
-            clickable: clickables,
-            acceptedFiles: this.get_accepted_files(),
-            url: url,
-            previewTemplate: this.dropzone_template(null, { data: this.get_intl_data() }),
-            maxFiles: 1,
-            previewsContainer: dz_selector,
-            dictInvalidFileType: this.get_translation('file_not_supported'),
-            dictFileTooBig: this.get_translation('max_size_exceeded'),
-            dictResponseError: this.get_translation('processing_error'),
-            dictCancelUpload: this.get_translation('cancel_upload'),
-            dictCancelUploadConfirmation: this.get_translation('cancel_confirm'),
-            dictRemoveFile: this.get_translation('remove_file'),
-          },
-          options || {},
-          { headers }
-        )
-      );
+        dictInvalidFileType: this.get_translation('file_not_supported'),
+        dictFileTooBig: this.get_translation('max_size_exceeded'),
+        dictResponseError: this.get_translation('processing_error'),
+        dictCancelUpload: this.get_translation('cancel_upload'),
+        dictCancelUploadConfirmation: this.get_translation('cancel_confirm'),
+        dictRemoveFile: this.get_translation('remove_file'),
+      });
       dropzone.on('success', this.file_uploaded);
 
       // Only enable the submit upload files button once all files have finished uploading.
@@ -1012,7 +996,6 @@ var MultiLanguageUploadSlot = FormatSlot.extend({
           preset: this.model.toJSON(),
           selector: this.selector(),
           is_language: true,
-          has_language: Boolean(this.language),
           preset_name:
             this.file && this.file.get('display_name')
               ? this.file.get('display_name')
@@ -1023,17 +1006,7 @@ var MultiLanguageUploadSlot = FormatSlot.extend({
         }
       )
     );
-
-    if (this.language) {
-      var settings = {
-        headers: {
-          Language: this.language,
-        },
-      };
-
-      _.defer(this.create_dropzone, settings);
-    }
-
+    _.defer(this.create_dropzone);
     this.load_languages();
   },
   load_languages: function() {
@@ -1045,11 +1018,13 @@ var MultiLanguageUploadSlot = FormatSlot.extend({
         }
       )
     );
+    if (!this.file) {
+      this.language = null;
+    }
     if (this.language) this.$('.language_dropdown').val(this.language);
   },
   check_and_set_language: function() {
     this.set_language();
-    this.render();
   },
   add_language: function(language) {
     this.languages.add(language);

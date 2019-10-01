@@ -13,8 +13,8 @@ exports.createContentNodeCollection = function(contentNodes) {
 exports.fetchImportableChannels = function() {
   return State.current_channel.get_accessible_channel_roots().then(function modify(channels) {
     channels.forEach(function(channel) {
-      // All channels are topics at the top level
-      channel.set('kind', 'topic');
+      // alias title to channel_name
+      channel.set('title', channel.get('channel_name'));
     });
     return channels.toJSON();
   });

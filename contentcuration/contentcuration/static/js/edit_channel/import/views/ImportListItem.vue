@@ -5,7 +5,7 @@
         type="checkbox"
         class="list-item-checkbox"
         :checked="isChecked || parentIsChecked"
-        :disabled="parentIsChecked"
+        :disabled="isDisabled || parentIsChecked"
         @change="handleCheckboxChange"
       >
     </template>
@@ -74,6 +74,7 @@
 
   import _ from 'underscore';
   import { mapActions } from 'vuex';
+  import stringHelper from '../../utils/string_helper';
   import { fetchContentNodesById, getIconClassForKind } from '../util';
   import { pluralize } from './filters';
 
@@ -131,8 +132,11 @@
       },
       importListItemClass() {
         return {
-          disabled: this.parentIsChecked,
+          disabled: this.isDisabled || this.parentIsChecked,
         };
+      },
+      resourceSize() {
+        return stringHelper.format_size(this.node.metadata.resource_size);
       },
       hasChildren() {
         return this.node.children.length > 0;

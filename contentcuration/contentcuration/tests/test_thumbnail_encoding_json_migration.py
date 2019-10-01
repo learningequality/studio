@@ -1,4 +1,5 @@
 import json
+
 from .base import MigrationTestCase
 from contentcuration import models
 

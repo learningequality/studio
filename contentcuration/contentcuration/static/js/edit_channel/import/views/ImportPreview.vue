@@ -8,7 +8,8 @@
     <div>
       <div class="resources-msg">
         {{ $tr('resourcesSize', {
-          resources: importedItemCounts.resources
+          resources: importedItemCounts.resources,
+          fileSize: importFileSizeInWords
         })
         }}
       </div>
@@ -52,11 +53,13 @@
         },
       }
     ),
-    mounted() {},
-    methods: Object.assign(mapActions('import', ['goToPreviousPage']), {}),
+    mounted() {
+      this.calculateImportSize();
+    },
+    methods: Object.assign(mapActions('import', ['calculateImportSize', 'goToPreviousPage']), {}),
     $trs: {
       calculatingSizeText: 'Calculating Size...',
-      resourcesSize: '{ resources } Total resources selected',
+      resourcesSize: '{ resources } Total resources selected ({ fileSize })',
       back: 'Back',
       backWarning: 'Note: Your previous selections will be lost.',
     },

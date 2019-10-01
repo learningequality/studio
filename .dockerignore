@@ -5,5 +5,4 @@ node_modules/
 __pycache__
 *.pyc
 *.swp
-k8s/templates/
-cloudbuild-*.yaml
+

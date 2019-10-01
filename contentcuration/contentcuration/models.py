@@ -45,7 +45,6 @@ from mptt.models import TreeManager
 from pg_utils import DistinctSum
 
 from contentcuration.statistics import record_channel_stats
-from contentcuration.utils.cache import delete_public_channel_cache_keys
 from contentcuration.utils.parser import load_json_string
 
 EDIT_ACCESS = "edit"
@@ -391,20 +390,13 @@ def object_storage_name(instance, filename):
     :param filename: str
     :return: str
     """
-
-    default_ext = ''
-    if instance.file_format_id:
-        default_ext = '.{}'.format(instance.file_format_id)
-
-    return generate_object_storage_name(instance.checksum, filename, default_ext)
+    return generate_object_storage_name(instance.checksum, filename)
 
 
-def generate_object_storage_name(checksum, filename, default_ext=''):
+def generate_object_storage_name(checksum, filename):
     """ Separated from file_on_disk_name to allow for simple way to check if has already exists """
     h = checksum
-    basename, actual_ext = os.path.splitext(filename)
-    ext = actual_ext if actual_ext else default_ext
-
+    basename, ext = os.path.splitext(filename)
     # Use / instead of os.path.join as Windows makes this \\
     directory = "/".join([settings.STORAGE_ROOT, h[0], h[1]])
     return os.path.join(directory, h + ext.lower())
@@ -623,10 +615,6 @@ class Channel(models.Model):
         blank=True,
     )
 
-    def __init__(self, *args, **kwargs):
-        super(Channel, self).__init__(*args, **kwargs)
-        self._orig_public = self.public
-
     @classmethod
     def get_all_channels(cls):
         return cls.objects.select_related('main_tree').prefetch_related('editors', 'viewers').distinct()
@@ -708,10 +696,6 @@ class Channel(models.Model):
 
         super(Channel, self).save(*args, **kwargs)
 
-        # if this change affects the public channel list, clear the channel cache
-        if self.public or self._orig_public != self.public:
-            delete_public_channel_cache_keys()
-
     def get_thumbnail(self):
         if self.thumbnail_encoding:
             thumbnail_data = self.thumbnail_encoding
@@ -755,8 +739,6 @@ class Channel(models.Model):
         if bypass_signals:
             self.public = True     # set this attribute still, so the object will be updated
             Channel.objects.filter(id=self.id).update(public=True)
-            # clear the channel cache
-            delete_public_channel_cache_keys()
         else:
             self.public = True
             self.save()
@@ -933,7 +915,7 @@ class ContentNode(MPTTModel, models.Model):
     publishing = models.BooleanField(default=False)
 
     changed = models.BooleanField(default=True)
-    extra_fields = JSONField(default=dict)
+    extra_fields = models.TextField(blank=True, null=True)
     author = models.CharField(max_length=200, blank=True, default="", help_text=_("Who created this content?"),
                               null=True)
     aggregator = models.CharField(max_length=200, blank=True, default="", help_text=_("Who gathered this content together?"),
@@ -1456,6 +1438,7 @@ class PrerequisiteContentRelationship(models.Model):
 
     class Meta:
         unique_together = ['target_node', 'prerequisite']
+        auto_created = True  # Avoids `AttributeError: Cannot set values on a ManyToManyField which specifies an intermediary model`
 
     def clean(self, *args, **kwargs):
         # self reference exception

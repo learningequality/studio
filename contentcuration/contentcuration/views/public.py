@@ -1,20 +1,18 @@
 import json
 
-from django.conf import settings
 from django.db.models import Q
 from django.db.models import TextField
 from django.db.models import Value
 from django.http import HttpResponseNotFound
 from django.utils.translation import ugettext_lazy as _
-from django.views.decorators.cache import cache_page
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
-from contentcuration.decorators import cache_no_user_data
 from contentcuration.models import Channel
+from contentcuration.models import ContentNode
 from contentcuration.serializers import PublicChannelSerializer
 
 
@@ -51,10 +49,8 @@ def _get_channel_list_v1(params, identifier=None):
         .distinct()
 
 
-@cache_page(settings.PUBLIC_CHANNELS_CACHE_DURATION, key_prefix='get_public_channel_list')
 @api_view(['GET'])
 @permission_classes((AllowAny,))
-@cache_no_user_data
 def get_public_channel_list(request, version):
     """ Endpoint: /public/<version>/channels/?=<query params> """
     try:

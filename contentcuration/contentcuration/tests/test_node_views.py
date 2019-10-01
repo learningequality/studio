@@ -12,7 +12,6 @@ from .testdata import tree
 from contentcuration.models import Channel
 from contentcuration.models import ContentKind
 from contentcuration.models import ContentNode
-from contentcuration.models import PrerequisiteContentRelationship
 
 
 class NodeViewsUtilityTestCase(BaseAPITestCase):
@@ -54,22 +53,9 @@ class GetPrerequisitesTestCase(BaseAPITestCase):
         self.node1 = self.channel.main_tree.get_descendants().exclude(kind=ContentKind.objects.get(kind=content_kinds.TOPIC))[1:2][0]
         self.node2 = self.channel.main_tree.get_descendants().exclude(kind=ContentKind.objects.get(kind=content_kinds.TOPIC))[2:3][0]
         self.postreq = self.channel.main_tree.get_descendants().exclude(kind=ContentKind.objects.get(kind=content_kinds.TOPIC))[3:4][0]
-        self.add_prereqs(self.node1, [self.prereq])
-        self.add_prereqs(self.node2, [self.prereq])
-        self.add_prereqs(self.postreq, [self.node1, self.node2])
-
-    def add_prereqs(self, target, prereqs):
-        """
-        Add one or more prerequisites to a ContentNode.
-
-        For info on why we cannot use ContentNode.prerequisite.add, see here:
-
-        https://stackoverflow.com/questions/34394323/how-to-correctly-use-auto-created-attribute-in-django
-        :param target: ContentNode on which to set prerequisites
-        :param prereqs: list of prerequisite ContentNodes to set
-        """
-        for prereq in prereqs:
-            PrerequisiteContentRelationship.objects.create(target_node=target, prerequisite=prereq)
+        self.node1.prerequisite.add(self.prereq)
+        self.node2.prerequisite.add(self.prereq)
+        self.postreq.prerequisite.add(self.node1, self.node2)
 
     def test_get_prerequisites_only(self):
         response = self.get(reverse("get_prerequisites", kwargs={"get_postrequisites": "false", "ids": ",".join((self.node1.id, self.node2.id))}))
@@ -79,7 +65,7 @@ class GetPrerequisitesTestCase(BaseAPITestCase):
 
     def test_get_postrequisites(self):
         postpostreq = self.channel.main_tree.get_descendants().exclude(kind=ContentKind.objects.get(kind=content_kinds.TOPIC))[4:5][0]
-        PrerequisiteContentRelationship.objects.create(target_node=postpostreq, prerequisite=self.postreq)
+        postpostreq.prerequisite.add(self.postreq)
         response = self.get(reverse("get_prerequisites", kwargs={"get_postrequisites": "true", "ids": ",".join((self.node1.id, self.node2.id))}))
         postrequisites = response.json()["postrequisite_mapping"]
         self.assertTrue(postpostreq.id in postrequisites[self.postreq.id])

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import hashlib
 import json
 import os
@@ -10,9 +9,9 @@ from tempfile import TemporaryFile
 import pytest
 from django.core.files.storage import default_storage
 from le_utils.constants import format_presets
+from mixer.backend.django import mixer
 
 from contentcuration import models as cc
-from contentcuration.tests.utils import mixer
 
 pytestmark = pytest.mark.django_db
 
@@ -139,12 +138,7 @@ def node(data, parent=None):
 
     # Create exercises
     elif data['kind_id'] == "exercise":
-        extra_fields = {
-            'mastery_model': data['mastery_model'],
-            'randomize': True,
-            'm': data.get('m') or 0,
-            'n': data.get('n') or 0
-        }
+        extra_fields = "{{\"mastery_model\":\"{}\",\"randomize\":true,\"m\":{},\"n\":{}}}".format(data['mastery_model'], data.get('m') or 0, data.get('n') or 0)
         new_node = cc.ContentNode(
             kind=exercise(),
             parent=parent,
@@ -218,7 +212,6 @@ def create_temp_file(filebytes, preset='document', ext='pdf', original_filename=
     import warnings
     warnings.warn('Deprecated function; use create_studio_file instead.', DeprecationWarning)
     return create_studio_file(filebytes, preset='document', ext='pdf', original_filename=None)
-
 
 def create_studio_file(filebytes, preset='document', ext='pdf', original_filename=None):
     """
@@ -389,19 +382,3 @@ def generated_base64encoding():
         "j6OxnMjUwIHvzMLTv0bOT61Z6B7mUAACVeh9FYnbpl81btw6ZmDQCgZ6B76flfN65yy9EE908P5kYmKQDA0"\
         "OK1Ozu9htH7dEqsjyik6O0RVW/KIFM8yzoMABMAAPdg0m1exD/v4t9iY8oAAPfokw34v4JwjcxkQYIAYq5b9"\
         "+OJrg1v1uF3yITnGcV5zxcxRYhLZ3rOem9LSe+r82vB1kP1vFwEDQAAAABJRU5ErkJggg=="
-
-
-def srt_subtitle():
-    return """1
-00:00:12,464 --> 00:00:14,979
-أمضيت ما يقرب من العقدين
-
-2
-00:00:14,979 --> 00:00:18,532
-ألاحظ ما يجعل البعض أكثر حظًا من غيرهم
-
-3
-00:00:18,536 --> 00:00:22,119
-وأحاول مساعدة الناس على زيادة حظهم.
-
-    """
