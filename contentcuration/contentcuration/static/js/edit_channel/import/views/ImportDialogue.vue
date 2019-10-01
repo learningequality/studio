@@ -156,6 +156,8 @@
 
   #import-from-channel-box {
     width: @uploader-width - 30px;
+    height: 500px;
+    overflow: scroll;
   }
 
   #import-content-submit {

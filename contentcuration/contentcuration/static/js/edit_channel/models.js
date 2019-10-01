@@ -352,17 +352,11 @@ var ContentNodeModel = BaseModel.extend({
     return original_channel ? original_channel['thumbnail_url'] : '';
   },
   initialize: function() {
-    if (this.get('extra_fields') && typeof this.get('extra_fields') !== 'object') {
-      this.set('extra_fields', JSON.parse(this.get('extra_fields')));
-    }
     if (this.get('thumbnail_encoding') && typeof this.get('thumbnail_encoding') !== 'object') {
       this.set('thumbnail_encoding', JSON.parse(this.get('thumbnail_encoding')));
     }
   },
   parse: function(response) {
-    if (response !== undefined && response.extra_fields) {
-      response.extra_fields = JSON.parse(response.extra_fields);
-    }
     if (response !== undefined && response.thumbnail_encoding) {
       response.thumbnail_encoding = JSON.parse(response.thumbnail_encoding);
     }
@@ -370,9 +364,6 @@ var ContentNodeModel = BaseModel.extend({
   },
   toJSON: function() {
     var attributes = _.clone(this.attributes);
-    if (typeof attributes.extra_fields !== 'string') {
-      attributes.extra_fields = JSON.stringify(attributes.extra_fields);
-    }
     if (
       attributes.thumbnail_encoding !== null &&
       typeof attributes.thumbnail_encoding !== 'string'
@@ -383,9 +374,6 @@ var ContentNodeModel = BaseModel.extend({
   },
   setExtraFields: function() {
     const State = require('./state');
-    if (typeof this.get('extra_fields') === 'string') {
-      this.set('extra_fields', JSON.parse(this.get('extra_fields')));
-    }
     if (this.get('kind') === 'exercise') {
       var data = this.get('extra_fields') ? this.get('extra_fields') : {};
       data['mastery_model'] = data['mastery_model']
@@ -400,20 +388,6 @@ var ContentNodeModel = BaseModel.extend({
       this.set('extra_fields', data);
     }
   },
-  calculate_size: function() {
-    var self = this;
-    var promise = new Promise(function(resolve, reject) {
-      $.ajax({
-        method: 'GET',
-        url: window.Urls.get_total_size(self.id),
-        error: reject,
-        success: function(data) {
-          resolve(JSON.parse(data).size);
-        },
-      });
-    });
-    return promise;
-  },
   make_copy: function(target_parent) {
     const State = require('./state');
     var self = this;
@@ -426,9 +400,15 @@ var ContentNodeModel = BaseModel.extend({
       $.ajax({
         method: 'POST',
         url: window.Urls.duplicate_node_inline(),
-        data: JSON.stringify(data),
+        data: data,
+        dataType: 'json',
         success: function(data) {
-          resolve(new ContentNodeCollection(JSON.parse(data)));
+          const payload = {
+            task: data,
+            resolveCallback: resolve,
+            rejectCallback: reject,
+          };
+          State.Store.dispatch('startTask', payload);
         },
         error: reject,
       });
@@ -546,7 +526,7 @@ var ContentNodeCollection = BaseCollection.extend({
         method: 'GET',
         url: window.Urls.get_total_size(self.pluck('id').join(',')),
         success: function(data) {
-          resolve(JSON.parse(data).size);
+          resolve(data.size);
         },
         error: reject,
       });
@@ -559,8 +539,10 @@ var ContentNodeCollection = BaseCollection.extend({
         method: 'POST',
         url: window.Urls.create_new_node(),
         data: JSON.stringify(data),
+        contentType: 'application/json',
+        dataType: 'json',
         success: function(data) {
-          var new_node = new ContentNodeModel(JSON.parse(data));
+          var new_node = new ContentNodeModel(data);
           self.add(new_node);
           resolve(new_node);
         },
@@ -631,9 +613,16 @@ var ContentNodeCollection = BaseCollection.extend({
       $.ajax({
         method: 'POST',
         url: window.Urls.duplicate_nodes(),
+        contentType: 'application/json',
         data: JSON.stringify(data),
+        dataType: 'json',
         success: function(data) {
-          resolve(new ContentNodeCollection(JSON.parse(data)));
+          const payload = {
+            task: data,
+            resolveCallback: resolve,
+            rejectCallback: reject,
+          };
+          State.Store.dispatch('startTask', payload);
         },
         error: reject,
       });
@@ -654,9 +643,17 @@ var ContentNodeCollection = BaseCollection.extend({
         method: 'POST',
         url: window.Urls.move_nodes(),
         data: JSON.stringify(data),
+        contentType: 'application/json',
+        dataType: 'json',
         error: reject,
-        success: function(moved) {
-          resolve(new ContentNodeCollection(JSON.parse(moved)));
+        success: function(data) {
+          data.noDialog = true;
+          const payload = {
+            task: data,
+            resolveCallback: resolve,
+            rejectCallback: reject,
+          };
+          State.Store.dispatch('startTask', payload);
         },
       });
     });
@@ -671,6 +668,7 @@ var ContentNodeCollection = BaseCollection.extend({
       };
       $.ajax({
         method: 'POST',
+        contentType: 'application/json',
         url: window.Urls.delete_nodes(),
         data: JSON.stringify(data),
         success: resolve,
@@ -686,9 +684,15 @@ var ContentNodeCollection = BaseCollection.extend({
         method: 'POST',
         url: window.Urls.sync_nodes(),
         data: JSON.stringify(data),
+        dataType: 'json',
         error: reject,
-        success: function(synced) {
-          resolve(new ContentNodeCollection(JSON.parse(synced)));
+        success: function(data) {
+          const payload = {
+            task: data,
+            resolveCallback: resolve,
+            rejectCallback: reject,
+          };
+          State.Store.dispatch('startTask', payload);
         },
       });
     });
@@ -714,23 +718,6 @@ var ChannelModel = BaseModel.extend({
     var root_node = new ContentNodeModel(this.get(tree_name));
     root_node.set({ title: this.get('name') });
     return root_node;
-  },
-  publish: function() {
-    var self = this;
-    return new Promise(function(resolve, reject) {
-      var data = { channel_id: self.get('id') };
-      $.ajax({
-        method: 'POST',
-        url: window.Urls.publish_channel(),
-        data: JSON.stringify(data),
-        success: function() {
-          resolve(true);
-        },
-        error: function(error) {
-          reject(error);
-        },
-      });
-    });
   },
   get_accessible_channel_roots: function() {
     var self = this;
@@ -765,6 +752,7 @@ var ChannelModel = BaseModel.extend({
     });
   },
   sync_channel: function(options) {
+    const State = require('./state');
     var self = this;
     return new Promise(function(resolve, reject) {
       var data = {
@@ -779,8 +767,15 @@ var ChannelModel = BaseModel.extend({
         method: 'POST',
         url: window.Urls.sync_channel(),
         data: JSON.stringify(data),
+        contentType: 'application/json',
+        dataType: 'json',
         success: function(data) {
-          resolve(new ContentNodeCollection(JSON.parse(data)));
+          const payload = {
+            task: data,
+            resolveCallback: resolve,
+            rejectCallback: reject,
+          };
+          State.Store.dispatch('startTask', payload);
         },
         error: reject,
       });

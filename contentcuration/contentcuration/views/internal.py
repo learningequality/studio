@@ -486,7 +486,7 @@ def create_channel(channel_data, user):
         node_id=channel.id,
         source_id=channel.source_id,
         source_domain=channel.source_domain,
-        extra_fields=json.dumps({'ricecooker_version': channel.ricecooker_version}),
+        extra_fields={'ricecooker_version': channel.ricecooker_version},
     )
     channel.chef_tree.save()
     channel.save()
@@ -542,7 +542,6 @@ def convert_data_to_nodes(user, content_data, parent_node):
 
     except KeyError as e:
         raise ObjectDoesNotExist("Error creating node: {0}".format(e.message))
-
 
 def create_node(node_data, parent_node, sort_order):
     """ Generate node based on node dict """

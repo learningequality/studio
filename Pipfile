@@ -18,10 +18,10 @@ djangorestframework-bulk = "==0.2.1"
 django-email-extras = "==0.3.3"
 kolibri = "==0.7.0"
 validators = "*"
-le-utils = ">=0.1.17"
+le-utils = ">=0.1.19"
 gunicorn = "==19.6.0"
 django-mailgun = "==0.9.1"
-pressurecooker = ">=0.0.22"
+pressurecooker = ">=0.0.24"
 "porter2stemmer" = "==1.0"
 django-postmark = "==0.1.6"
 ddtrace = "==0.8.0"
@@ -67,6 +67,8 @@ singledispatch = "==3.4.0.3"
 backports-abc = "==0.5"
 whitenoise = "*"
 django-redis = "*"
+django-prometheus = "*"
+eventlet = "*"
 
 [dev-packages]
 ipdb = "*"
@@ -92,7 +94,7 @@ service_factory = ">=0.1.5"
 pytest-watch = "*"
 rope = "*"
 "autopep8" = "<=1.4.0"
-pre-commit= "==1.11.1"
+pre-commit= "==1.15.1"
 Faker = "==0.7.3"
 codecov = "*"
 coverage = "*"
@@ -101,3 +103,6 @@ nodeenv = "*"
 
 [requires]
 python_version = "2.7"
+
+[pipenv]
+allow_prereleases = true

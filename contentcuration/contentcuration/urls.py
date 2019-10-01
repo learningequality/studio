@@ -21,7 +21,6 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.core.urlresolvers import reverse_lazy
 from django.db.models import Q
-from django.views.i18n import javascript_catalog
 from rest_framework import permissions
 from rest_framework import routers
 from rest_framework import viewsets
@@ -40,6 +39,7 @@ import contentcuration.views.public as public_views
 import contentcuration.views.settings as settings_views
 import contentcuration.views.users as registration_views
 import contentcuration.views.zip as zip_views
+from contentcuration.celery import app
 from contentcuration.forms import ForgotPasswordForm
 from contentcuration.forms import LoginForm
 from contentcuration.forms import ResetPasswordForm
@@ -205,10 +205,34 @@ class TaskViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         # TODO: Add logic to delete the Celery task using app.control.revoke(). This will require some extensive
         # testing to ensure terminating in-progress tasks will not put the db in an indeterminate state.
+        app.control.revoke(instance.task_id, terminate=True)
         instance.delete()
 
     def get_queryset(self):
-        return Task.objects.filter(user=self.request.user)
+        queryset = Task.objects.none()
+        channel_id = self.request.query_params.get('channel_id', None)
+        if channel_id is not None:
+            user = self.request.user
+            channel = Channel.objects.filter(pk=channel_id).first()
+            if channel:
+                has_access = channel.editors.filter(pk=user.pk).exists() or \
+                         channel.viewers.filter(pk=user.pk).exists() or \
+                         user.is_admin
+                if has_access:
+                    queryset = Task.objects.filter(metadata__affects__channels__contains=[channel_id])
+                else:
+                    # If the user doesn't have channel access permissions, they can still perform certain
+                    # operations, such as copy. So show them the status of any operation they started.
+                    queryset = Task.objects.filter(user=user, metadata__affects__channels__contains=[channel_id])
+                # If we're getting a list of channel tasks, exclude finished tasks for now, as
+                # currently we only use this call to determine if there's a current or pending task.
+                # TODO: revisit this when we start displaying channel task history
+                if self.action == 'list':
+                    queryset = queryset.exclude(status__in=['SUCCESS', 'FAILURE'])
+        else:
+            queryset = Task.objects.filter(user=self.request.user)
+
+        return queryset
 
 
 router = routers.DefaultRouter(trailing_slash=False)
@@ -265,6 +289,12 @@ urlpatterns = [
     url(r'^api/probers/get_prober_channel', views.get_prober_channel, name='get_prober_channel'),
 ]
 
+# if activated, turn on django prometheus urls
+if "django_prometheus" in settings.INSTALLED_APPS:
+    urlpatterns += [
+        url('', include('django_prometheus.urls')),
+    ]
+
 
 # Add public api endpoints
 urlpatterns += [
@@ -306,6 +336,7 @@ urlpatterns += [
     url(r'^api/thumbnail_upload/', file_views.thumbnail_upload, name='thumbnail_upload'),
     url(r'^api/exercise_image_upload/', file_views.exercise_image_upload, name='exercise_image_upload'),
     url(r'^api/image_upload/', file_views.image_upload, name='image_upload'),
+    url(r'^api/multilanguage_file_upload/', file_views.multilanguage_file_upload, name='multilanguage_file_upload'),
     url(r'^zipcontent/(?P<zipped_filename>[^/]+)/(?P<embedded_filepath>.*)', zip_views.ZipContentView.as_view(), {}, "zipcontent"),
     url(r'^api/file_upload/', file_views.file_upload, name="file_upload"),
     url(r'^api/file_create/', file_views.file_create, name="file_create"),
@@ -394,7 +425,6 @@ js_info_dict = {
 }
 
 urlpatterns += [
-    url(r'^jsi18n/$', javascript_catalog, js_info_dict, name='javascript-catalog'),
     url(r'^i18n/', include('django.conf.urls.i18n')),
 ]
 

@@ -91,18 +91,9 @@ var ImportModalView = BaseViews.BaseModalView.extend({
   },
 
   _startImport: function() {
-    var self = this;
-    function onFinishImport(resolve, reject) {
-      self.once('finish_import', function(importFailed) {
-        self.ImportModal.closeModal();
-        if (importFailed) {
-          reject();
-        } else {
-          resolve(true);
-        }
-      });
-    }
-    this.listView.display_load(this.get_translation('importing_content'), onFinishImport);
+    // now that import is async, we don't want to leave the import selection dialog up
+    // while the import is happening. A seperate modal will appear to report task progress.
+    this.ImportModal.closeModal();
   },
 
   _finishImport: function() {

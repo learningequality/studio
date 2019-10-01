@@ -501,7 +501,7 @@ class SimplifiedContentNodeSerializer(BulkSerializerMixin, serializers.ModelSeri
         return instance
 
     def get_node_ancestors(self, node):
-        return node.get_ancestors().values_list('id', flat=True)
+        return list(node.get_ancestors().values_list('id', flat=True))
 
     class Meta:
         model = ContentNode
@@ -519,7 +519,6 @@ class ReadOnlySimplifiedContentNodeSerializer(SimplifiedContentNodeSerializer):
         read_only_fields = ('title', 'id', 'sort_order', 'kind', 'children', 'parent', 'metadata', 'content_id', 'prerequisite',
                   'is_prerequisite_of', 'ancestors', 'tree_id', 'language', 'role_visibility', 'description', 'valid',
                   'thumbnail_src')
-
 
 class RootNodeSerializer(SimplifiedContentNodeSerializer):
     channel_name = serializers.SerializerMethodField('retrieve_channel_name')
@@ -559,7 +558,7 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer):
         return queryset
 
     def retrieve_associated_presets(self, node):
-        return node.get_associated_presets()
+        return list(node.get_associated_presets())
 
     def retrieve_metadata(self, node):
         if node.kind_id == content_kinds.TOPIC:
@@ -712,7 +711,7 @@ class ChannelFieldMixin(object):
         return channel.get_thumbnail()
 
     def check_for_changes(self, channel):
-        return channel.main_tree and channel.main_tree.get_descendants().filter(changed=True).count() > 0
+        return channel.main_tree and channel.main_tree.get_descendants().filter(changed=True).exists()
 
     def get_resource_count(self, channel):
         return channel.get_resource_count()
@@ -990,14 +989,29 @@ class ChannelSetSerializer(serializers.ModelSerializer):
 
 class TaskSerializer(serializers.ModelSerializer):
     metadata = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()
+
+    def get_status(self, task):
+        # If CELERY_TASK_ALWAYS_EAGER is set, attempts to retrieve state will assert, so do a sanity
+        # check first.
+        if not settings.CELERY_TASK_ALWAYS_EAGER:
+            result = app.AsyncResult(task.task_id)
+            if result and result.status:
+                return result.status
+
+        return task.status
 
     def get_metadata(self, task):
         metadata = task.metadata
-        result = app.AsyncResult(task.id)
         # If CELERY_TASK_ALWAYS_EAGER is set, attempts to retrieve state will assert, so do a sanity check first.
         if not settings.CELERY_TASK_ALWAYS_EAGER:
-            if task.is_progress_tracking and 'progress' in result.state:
-                metadata['progress'] = result.state['progress']
+            result = app.AsyncResult(task.task_id)
+
+            # Just flagging this, but this appears to be the correct way to get task metadata,
+            # even though the API is marked as private.
+            meta = result._get_task_meta()
+            if meta and 'result' in meta and meta['result'] and 'progress' in meta['result']:
+                metadata['progress'] = meta['result']['progress']
 
         return metadata
 

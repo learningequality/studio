@@ -119,23 +119,42 @@
 			</div>
 		</div>
 		<br>
-		<input id="save" class="action-button pull-right" type="submit" value="{% trans 'No Changes Found' %}" disabled/>
+		<input id="save" class="action-button pull-right" type="submit" value="{% trans 'SAVE CHANGES' %}" disabled/>
 	</form>
 </div>
 <script>
-	window.addEventListener('load', function(){
-		function registerChange(){
-			$("#license_description_input").css('display', ($("#id_license").val()==="Special Permissions")? "block" : "none");
-			$(".mastery_criteria").css('display', ($("#id_mastery_model").val()==="m_of_n")? "inline-table" : "none");
-			if(Number($("#id_m_value").val()) > Number($("#id_n_value").val())) $("#id_n_value").val($("#id_m_value").val());
-			$("#save").attr("disabled", false);
-			$("#save").val("{% trans 'SAVE CHANGES' %}");
+	window.addEventListener('load', () => {
+		let licenseDescriptionInput = document.getElementById('license_description_input');
+		let licenseInput = document.getElementById('id_license');
+		let masteryCriteriaInputs = document.getElementsByClassName('mastery_criteria');
+		let masteryModelInput = document.getElementById('id_mastery_model');
+		let mValueInput = document.getElementById('id_m_value');
+		let nValueInput = document.getElementById('id_n_value');
+		let saveButton = document.getElementById('save');
+		let settingInputs = document.getElementsByClassName('setting_input');
+		let settingSelects = document.getElementsByClassName('setting_change');
+
+
+		function registerChange(event){
+			licenseDescriptionInput.style.display = (licenseInput.value === 'Special Permissions')? 'block': 'none';
+			Array.from(masteryCriteriaInputs).forEach(input => {
+				input.style.display = (masteryModelInput.value === "m_of_n")?  "inline-table" : "none";
+			})
+			if(Number(mValueInput.value) > Number(nValueInput.value))
+				nValueInput.value = mValueInput.value;
+
+			event && saveButton.removeAttribute('disabled');
 		}
-		$(".setting_input").on("keyup", registerChange);
-		$(".setting_change").on("change", registerChange);
-		$('#id_language option').each(function() { $(this).attr("disabled", !$(this).val()); });
-		$(".mastery_criteria").css('display', ($("#id_mastery_model").val()==="m_of_n")? "inline-table" : "none");
-		$("#license_description_input").css('display', ($("#id_license").val()==="Special Permissions")? "block" : "none");
+
+		Array.from(settingInputs, input => {
+			input.addEventListener('keyup', registerChange);
+		})
+
+		Array.from(settingSelects, select => {
+			select.addEventListener('change', registerChange);
+		});
+
+		registerChange();
 	});
 </script>
 {% endblock settingscontent %}

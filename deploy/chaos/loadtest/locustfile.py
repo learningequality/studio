@@ -38,10 +38,6 @@ class BaseTaskSet(TaskSet):
             }
         )
 
-    def i18n_requests(self):
-        self.client.get("/jsi18n/")
-        self.client.get("/jsreverse/")
-
 
 class ChannelListPage(BaseTaskSet):
     """
@@ -79,6 +75,18 @@ class ChannelPage(BaseTaskSet):
         :returns: id of the first available public channel or None if there are not public channels
         """
         resp = self.client.get("/get_user_public_channels/").json()
+        try:
+            channel_id = resp[0]['id']
+        except IndexError:
+            channel_id = None
+        return channel_id
+
+    def get_first_edit_channel_id(self):
+        """
+        Returns the id of the first available public channel
+        :returns: id of the first available public channel or None if there are not public channels
+        """
+        resp = self.client.get("/get_user_edit_channels/").json()
         try:
             channel_id = resp[0]['id']
         except IndexError:
@@ -125,6 +133,18 @@ class ChannelPage(BaseTaskSet):
             channel_id = self.get_first_public_channel_id()
         if channel_id:
             self.client.get('/channels/{}'.format(channel_id))
+
+    # This is hit hard during heavy usage, and is one of our slowest calls,
+    # so give it some extra weight.
+    @task(3)
+    def open_accessible_channels(self, channel_id=None):
+        """
+        Open to edit a channel, if channel_id is None it opens the first public channel
+        """
+        if not channel_id:
+            channel_id = self.get_first_edit_channel_id()
+        if channel_id:
+            self.client.get('/accessible_channels/{}'.format(channel_id))
 
     # This is the most frequently hit scenario outside of ricecooker usage, so give it more weight.
     @task(3)
@@ -174,7 +194,6 @@ class LoginPage(BaseTaskSet):
         Visit the login page and the i18n endpoints without logging in.
         """
         self.client.get("/accounts/login/")
-        self.i18n_requests()
 
 
 class StudioDesktopBrowserUser(HttpLocust):

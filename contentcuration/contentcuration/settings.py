@@ -191,10 +191,8 @@ WSGI_APPLICATION = 'contentcuration.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',  # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': os.getenv("DATA_DB_NAME") or 'kolibri-studio',  # Or path to database file if using sqlite3.
-        # The following settings are not used with sqlite3:
-
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': os.getenv("DATA_DB_NAME") or 'kolibri-studio',
         # For dev purposes only
         'USER': os.getenv('DATA_DB_USER') or 'learningequality',
         'PASSWORD': os.getenv('DATA_DB_PASS') or 'kolibri',
@@ -269,8 +267,6 @@ LANGUAGES = (
     ('en', ugettext('English')),
     ('es', ugettext('Spanish')),
     # ('ar', ugettext('Arabic')), # Uncomment when we have translations
-    ('es-es', ugettext('Spanish - Spain')),
-    ('es-mx', ugettext('Spanish - Mexico')),
     # ('en-PT', ugettext('English - Pirate')),
 )
 
@@ -346,7 +342,16 @@ CELERY_TIMEZONE = os.getenv("CELERY_TIMEZONE") or 'Africa/Nairobi'
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
+# This is needed for worker update_state calls to work so they can send progress info.
+CELERYD_STATE_DB = '/tmp/celery_state'
+# If this is True, Celery tasks are run synchronously. This is set to True in the unit tests,
+# as it is not possible to correctly test Celery tasks asynchronously currently.
+CELERY_TASK_ALWAYS_EAGER = False
+# This tells Celery to mark a task as started. Otherwise, we would have no way of tracking
+# if the task is running.
 CELERY_TASK_TRACK_STARTED = True
+# We hook into task events to update the Task DB records with the updated state.
+# See celerysignals.py for more info.
 CELERY_WORKER_SEND_TASK_EVENTS = True
 
 # When cleaning up orphan nodes, only clean up any that have been last modified
@@ -377,3 +382,6 @@ ORPHANAGE_ROOT_ID = "00000000000000000000000000000000"
 # so we must be very careful to limit code that touches this tree and to carefully check code that does. If we
 # do choose to implement restore of old chefs, we will need to ensure moving nodes does not cause a tree sort.
 DELETED_CHEFS_ROOT_ID = "11111111111111111111111111111111"
+
+# How long we should cache any APIs that return public channel list details, which change infrequently
+PUBLIC_CHANNELS_CACHE_DURATION = 300

@@ -3,6 +3,7 @@ import logging
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from django.contrib.postgres.aggregates import ArrayAgg
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
@@ -11,6 +12,7 @@ from django.core.urlresolvers import reverse_lazy
 from django.db.models import Case
 from django.db.models import IntegerField
 from django.db.models import Q
+from django.db.models import Subquery
 from django.db.models import Value
 from django.db.models import When
 from django.http import HttpResponse
@@ -24,6 +26,7 @@ from django.views.decorators.cache import cache_page
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic.base import TemplateView
 from enum import Enum
+from le_utils.constants import content_kinds
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authentication import TokenAuthentication
@@ -38,6 +41,7 @@ from contentcuration.api import activate_channel
 from contentcuration.api import add_editor_to_channel
 from contentcuration.api import get_staged_diff
 from contentcuration.decorators import browser_is_supported
+from contentcuration.decorators import cache_no_user_data
 from contentcuration.decorators import can_access_channel
 from contentcuration.decorators import can_edit_channel
 from contentcuration.decorators import has_accepted_policies
@@ -54,14 +58,12 @@ from contentcuration.serializers import ChannelSetChannelListSerializer
 from contentcuration.serializers import ChannelSetSerializer
 from contentcuration.serializers import CurrentUserSerializer
 from contentcuration.serializers import InvitationSerializer
-from contentcuration.serializers import RootNodeSerializer
 from contentcuration.serializers import SimplifiedChannelProbeCheckSerializer
+from contentcuration.serializers import TaskSerializer
 from contentcuration.serializers import UserChannelListSerializer
-from contentcuration.tasks import exportchannel_task
+from contentcuration.tasks import create_async_task
 from contentcuration.tasks import generatechannelcsv_task
 from contentcuration.utils.messages import get_messages
-
-PUBLIC_CHANNELS_CACHE_DURATION = 30  # seconds
 
 
 class ChannelSerializerTypes(Enum):
@@ -252,8 +254,9 @@ def get_channels_by_token(request, token):
     return Response(channel_serializer.data)
 
 
-@cache_page(PUBLIC_CHANNELS_CACHE_DURATION)
+@cache_page(settings.PUBLIC_CHANNELS_CACHE_DURATION, key_prefix='get_user_public_channels')
 @api_view(['GET'])
+@cache_no_user_data
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def get_user_public_channels(request):
@@ -339,18 +342,37 @@ def publish_channel(request):
     try:
         channel_id = data["channel_id"]
         request.user.can_edit(channel_id)
+
+        task_info = {
+            'user': request.user,
+            'metadata': {
+                'affects': {
+                    'channels': [channel_id]
+                }}
+        }
+
+        task_args = {
+            'user_id': request.user.pk,
+            'channel_id': channel_id,
+        }
+
+        task, task_info = create_async_task('export-channel', task_info, task_args)
+        return HttpResponse(JSONRenderer().render(TaskSerializer(task_info).data))
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
-    exportchannel_task.delay(
-        channel_id,
-        user_id=request.user.pk
-    )
 
-    return HttpResponse(json.dumps({
-        "success": True,
-        "channel": channel_id
-    }))
+class SQCountDistinct(Subquery):
+    # Include ALIAS at the end to support Postgres
+    template = "(SELECT COUNT(DISTINCT %(field)s) FROM (%(subquery)s) AS %(field)s__sum)"
+    output_field = IntegerField()
+
+
+def map_channel_data(channel):
+    channel["id"] = channel.pop("main_tree__id")
+    channel["title"] = channel.pop("name")
+    channel["children"] = [child for child in channel["children"] if child]
+    return channel
 
 
 @api_view(['GET'])
@@ -358,14 +380,15 @@ def publish_channel(request):
 @permission_classes((IsAuthenticated,))
 def accessible_channels(request, channel_id):
     # Used for import modal
-    accessible_list = ContentNode.objects.filter(
-        pk__in=Channel.objects.select_related('main_tree')
-        .filter(Q(deleted=False) & (Q(public=True) | Q(editors=request.user) | Q(viewers=request.user)))
-        .exclude(pk=channel_id).values_list('main_tree_id', flat=True)
+    # Returns a list of objects with the following parameters:
+    # id, title, resource_count, children
+    channels = Channel.objects.filter(Q(deleted=False) & (Q(public=True) | Q(editors=request.user.id) | Q(viewers=request.user.id))).exclude(pk=channel_id)
+    channels = channels.annotate(
+        children=ArrayAgg("main_tree__children"),
     )
+    channels_data = channels.values("name", "children", "main_tree__id")
 
-    serializer = RootNodeSerializer(accessible_list, many=True)
-    return Response(serializer.data)
+    return Response(map(map_channel_data, channels_data))
 
 
 @api_view(['POST'])

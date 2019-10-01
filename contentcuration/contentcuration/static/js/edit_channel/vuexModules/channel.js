@@ -1,13 +1,20 @@
 const channelModule = {
   state: {
     contentTags: [],
+    canEdit: false,
   },
   getters: {
     contentTags(state) {
       return state.contentTags;
     },
+    canEdit(state) {
+      return state.canEdit;
+    },
   },
   mutations: {
+    SET_EDIT_MODE(state, canEdit) {
+      state.canEdit = canEdit;
+    },
     SET_CONTENT_TAGS(state, contentTags) {
       state.contentTags = contentTags || [];
     },
