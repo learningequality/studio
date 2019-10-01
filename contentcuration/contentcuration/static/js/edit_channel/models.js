@@ -555,6 +555,8 @@ var ContentNodeCollection = BaseCollection.extend({
       var files = node.get('files');
       var assessmentItems = node.get('assessment_items');
 
+      // We'll assume that undefined means unloaded. An empty array would mean we have all the data,
+      // there just aren't objects of those types.
       if (files === undefined || assessmentItems === undefined) {
         return false;
       }
