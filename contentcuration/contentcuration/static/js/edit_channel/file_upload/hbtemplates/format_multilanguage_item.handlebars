@@ -17,8 +17,10 @@
         {{#if file}}
           <div class="format_editor_file_name truncate" title="{{file.original_filename}}">{{#if file.original_filename}}{{file.original_filename}}{{else}}{{formatMessage (intlGet 'messages.default_filename')}}{{/if}}</div>
           <i class="format_editor_selected_size">{{formatMessage (intlGet 'messages.parenthesis') data=(format_file_size file.file_size)}}</i>
-        {{else}}
+        {{else if has_language}}
             <a class="action-text add_format_button dz-clickable uppercase">+ {{formatMessage (intlGet 'messages.add')}}</a>
+        {{else}}
+            <span class="instructions">{{formatMessage (intlGet 'messages.add_no_language')}}</span>
         {{/if}}
       </div>
     </div>

@@ -336,6 +336,7 @@ urlpatterns += [
     url(r'^api/thumbnail_upload/', file_views.thumbnail_upload, name='thumbnail_upload'),
     url(r'^api/exercise_image_upload/', file_views.exercise_image_upload, name='exercise_image_upload'),
     url(r'^api/image_upload/', file_views.image_upload, name='image_upload'),
+    url(r'^api/multilanguage_file_upload/', file_views.multilanguage_file_upload, name='multilanguage_file_upload'),
     url(r'^zipcontent/(?P<zipped_filename>[^/]+)/(?P<embedded_filepath>.*)', zip_views.ZipContentView.as_view(), {}, "zipcontent"),
     url(r'^api/file_upload/', file_views.file_upload, name="file_upload"),
     url(r'^api/file_create/', file_views.file_create, name="file_create"),

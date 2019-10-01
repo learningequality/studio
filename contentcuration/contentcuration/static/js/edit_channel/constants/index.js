@@ -1,3 +1,4 @@
+const { sortBy } = require('underscore');
 const ContentKinds = require('./ContentKinds');
 const FormatPresets = require('./FormatPresets');
 const Languages = require('./Languages');
@@ -9,7 +10,7 @@ const Statuses = require('./Statuses');
 module.exports = {
   ContentKinds,
   FormatPresets,
-  Languages,
+  Languages: sortBy(Languages, 'native_name'),
   Licenses,
   MasteryModels,
   Roles,
