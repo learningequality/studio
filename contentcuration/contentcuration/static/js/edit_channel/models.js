@@ -552,13 +552,22 @@ var ContentNodeCollection = BaseCollection.extend({
   },
   has_all_data: function() {
     return this.every(function(node) {
-      var files_objects = _.every(node.get('files'), function(file) {
+      var files = node.get('files');
+      var assessmentItems = node.get('assessment_items');
+
+      if (files === undefined || assessmentItems === undefined) {
+        return false;
+      }
+
+      var hasFiles = _.every(files, function(file) {
         return typeof file == 'object';
       });
-      var ai_objects = _.every(node.get('assessment_items'), function(ai) {
+
+      var hasAssessments = _.every(assessmentItems, function(ai) {
         return typeof ai == 'object';
       });
-      return files_objects && ai_objects;
+
+      return hasFiles && hasAssessments;
     });
   },
   get_all_fetch: function(ids, force_fetch) {
