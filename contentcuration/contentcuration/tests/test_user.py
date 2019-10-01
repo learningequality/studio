@@ -9,10 +9,10 @@ import tempfile
 from django.core.management import call_command
 from django.core.urlresolvers import reverse_lazy
 from django.test import TransactionTestCase
+from mixer.backend.django import mixer
 
 from .base import BaseAPITestCase
 from .testdata import fileobj_video
-from contentcuration.tests.utils import mixer
 from contentcuration.models import DEFAULT_CONTENT_DEFAULTS
 from contentcuration.models import Invitation
 from contentcuration.models import User

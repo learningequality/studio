@@ -26,6 +26,7 @@ sys.path.append(cc_dir)
 os.putenv("DJANGO_SETTINGS_MODULE", "contentcuration.test_settings")
 
 from django.core.management import call_command
+# from mixer.backend.django import mixer
 
 from contentcuration.tests.testdata import channel
 from contentcuration.models import Channel, ContentNode, User
@@ -34,7 +35,7 @@ from contentcuration.models import Channel, ContentNode, User
 NUM_CHANNELS = 1000
 NUM_NODES_PER_CHANNEL = 500
 
-from contentcuration.tests.utils import mixer
+from mixer.backend.django import mixer
 
 mixer.register(
     User,

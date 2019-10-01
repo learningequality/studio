@@ -11,7 +11,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum: {{ include (print $.Template.BasePath "/job-template.yaml") . | sha256sum }}
+        checksum: {{ include (print $.Template.BasePath "/studio-secrets.yaml") . | sha256sum }}
       labels:
         app: {{ template "studio.fullname" . }}
         tier: app
@@ -24,32 +24,20 @@ spec:
           value: /app/contentworkshop_static/
         - name: SEND_USER_ACTIVATION_NOTIFICATION_EMAIL
           value: "true"
-        # liveness probes are checks for when a pod should be restarted.
         livenessProbe:
           httpGet:
             path: /healthz
             port: {{ .Values.studioApp.appPort }}
-          initialDelaySeconds: 120
+          initialDelaySeconds: 300
           periodSeconds: 5
-          # fail 10 times before we restart the pod
-          failureThreshold: 10
         ports:
         - containerPort: {{ .Values.studioApp.appPort }}
-        # readiness probes are checks for when the pod is ready to serve traffic.
-        # Note that this runs even after a pod is Ready. Reaching the failure threshold
-        # means the pod is taken off the routing rules, but then once it's passing
-        # queries, it's allowed to serve traffic once more.
         readinessProbe:
           httpGet:
-            path: /healthz
-            port: {{ .Values.studioApp.appPort }}
-          # start pinging for readiness at the 5 second mark.
-          # Once it passes, add it to the routing table
-          initialDelaySeconds: 5
-          # Query every 2 seconds for readiness
-          periodSeconds: 2
-          # fail 3 times before taking this app off the routing table
-          failureThreshold: 3
+            path: /
+            port: {{ .Values.studioNginx.port }}
+          initialDelaySeconds: 10
+          periodSeconds: 5
         volumeMounts:
         - mountPath: /app/contentworkshop_static/
           name: staticfiles
@@ -79,6 +67,21 @@ spec:
         volumeMounts:
         - mountPath: /app/contentworkshop_static/
           name: staticfiles
+      initContainers:
+      - name: db-migrate
+        image: {{ .Values.studioApp.imageName }}
+        command:
+          - make
+          - migrate
+        env: {{ include "studio.sharedEnvs" . | nindent 8 }}
+        volumeMounts: {{ include "studio.pvc.gcs-creds" . | nindent 10 }}
+        resources:
+          requests:
+            cpu: 1000m
+            memory: 2Gi
+          limits:
+            cpu: 1000m
+            memory: 2Gi
       volumes:
         - emptyDir: {}
           name: staticfiles
@@ -113,5 +116,5 @@ spec:
             cpu: 0.5
             memory: 2Gi
           limits:
-            cpu: 2
-            memory: 8Gi
+            cpu: 0.5
+            memory: 2Gi

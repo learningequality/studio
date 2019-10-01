@@ -10,11 +10,3 @@ slowtest = pytest.mark.skipif(
     "--includeslowtests" not in sys.argv,
     reason="Skipping because this test is a slow test."
 )
-
-from mixer.backend.django import mixer
-from contentcuration.models import ContentNode
-
-mixer.register(
-    ContentNode,
-    extra_fields=lambda: {'a':1, 'b': 2, 'c':{'d':3}}
-)
