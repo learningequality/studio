@@ -76,7 +76,7 @@ class SetRef(Expression):
         return self
 
     def as_sql(self, compiler, connection):
-        return '{}'.format(self.field_name), []
+        return '{}'.format(connection.ops.quote_name(self.field_name)), []
 
     def get_group_by_cols(self):
         return [self]
@@ -131,8 +131,8 @@ class Join(BaseExpression):
                 query.where.add(extra, AND)
 
             for left_field, right_field in self.field_map.items():
-                lhs = Col(self.table_alias, JoinField(left_field))
-                rhs = Col(parent_alias, JoinField(right_field))
+                lhs = Col(parent_alias, JoinField(left_field))
+                rhs = Col(self.table_alias, JoinField(right_field))
                 query.where.add(CombinedExpression(lhs, '=', rhs), AND)
 
         for ref in self.refs:

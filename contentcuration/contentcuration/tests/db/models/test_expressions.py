@@ -114,8 +114,8 @@ class JoinTestCase(TemporaryModelTestCase):
         rhs = args[0].rhs
         self.assertIsInstance(lhs, Col)
         self.assertIsInstance(rhs, Col)
-        self.assertEqual('table_alias', lhs.alias)
-        self.assertEqual('initial_alias', rhs.alias)
+        self.assertEqual('initial_alias', lhs.alias)
+        self.assertEqual('table_alias', rhs.alias)
         self.assertIsInstance(lhs.target, JoinField)
         self.assertIsInstance(rhs.target, JoinField)
         self.assertEqual('name_left', lhs.target.column)

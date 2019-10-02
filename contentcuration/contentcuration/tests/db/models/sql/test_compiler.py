@@ -282,7 +282,7 @@ class SQLUpdateFromCompilerTestCase(TemporaryModelTestCase):
 
             self.TempModel.objects.bulk_create([temp_1, temp_2, temp_3])
 
-            join = Join(self.TempModel.objects.all(), file_id='id')
+            join = Join(self.TempModel.objects.all(), id='file_id')
 
             queryset = CustomQuerySet(File)
             result = queryset.update_from(join, file_size='file_size')
@@ -311,7 +311,7 @@ class SQLUpdateFromCompilerTestCase(TemporaryModelTestCase):
 
             self.TempModel.objects.bulk_create([temp_1, temp_2])
 
-            join = Join(self.TempModel.objects.all(), file_id='id')
+            join = Join(self.TempModel.objects.all(), id='file_id')
 
             queryset = CustomQuerySet(File)
             results = queryset.update_from(join, file_size='file_size', lazy=True)
@@ -339,7 +339,7 @@ class SQLUpdateFromCompilerTestCase(TemporaryModelTestCase):
 
             self.TempModel.objects.bulk_create([temp_1, temp_2])
 
-            join = Join(self.TempModel.objects.all(), file_id='id')
+            join = Join(self.TempModel.objects.all(), id='file_id')
 
             queryset = CustomQuerySet(File)
             results = queryset.update_from(join, file_size='file_size', lazy=True)\
