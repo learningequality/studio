@@ -45,6 +45,7 @@ from mptt.models import TreeManager
 from pg_utils import DistinctSum
 
 from contentcuration.statistics import record_channel_stats
+from contentcuration.utils.cache import delete_public_channel_cache_keys
 from contentcuration.utils.parser import load_json_string
 
 EDIT_ACCESS = "edit"
@@ -150,6 +151,8 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def can_view(self, channel_id):
         channel = Channel.objects.filter(pk=channel_id).first()
+        if channel and channel.public:
+            return True
         if not self.is_admin and channel and not channel.editors.filter(pk=self.pk).exists() and not channel.viewers.filter(pk=self.pk).exists():
             raise PermissionDenied("Cannot view content")
         return True
@@ -158,7 +161,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         if self.is_admin:
             return True
         root = node.get_root()
-        if root == self.clipboard_tree:
+        if root == self.clipboard_tree or root.pk == settings.ORPHANAGE_ROOT_ID:
             return True
         channel_id = Channel.objects.filter(Q(main_tree=root)
                                             | Q(chef_tree=root)
@@ -175,15 +178,17 @@ class User(AbstractBaseUser, PermissionsMixin):
             return True
         root_nodes_all = ContentNode.objects.filter(parent=None, tree_id__in=nodes.values_list("tree_id", flat=True).distinct()).distinct()
         # If all the nodes belong to the clipboard, skip the channel check.
-        root_nodes = root_nodes_all.exclude(tree_id=self.clipboard_tree.tree_id)
+
+        root_nodes = root_nodes_all.exclude(tree_id=self.clipboard_tree.tree_id).exclude(pk=settings.ORPHANAGE_ROOT_ID)
         if root_nodes.count() == 0 and root_nodes_all.count() > 0:
             return True
+
         channels = Channel.objects.filter(Q(main_tree__in=root_nodes)
                                           | Q(chef_tree__in=root_nodes)
                                           | Q(trash_tree__in=root_nodes)
                                           | Q(staging_tree__in=root_nodes)
                                           | Q(previous_tree__in=root_nodes))
-        channels_user_has_perms_for = channels.filter(Q(editors__id__contains=self.id) | Q(viewers__id__contains=self.id))
+        channels_user_has_perms_for = channels.filter(Q(editors__id__contains=self.id) | Q(viewers__id__contains=self.id) | Q(public=True))
         # The channel user has perms for is a subset of all the channels that were passed in.
         # We check the count for simplicity, as if the user does not have permissions for
         # even one of the channels the content is drawn from, then the number of channels
@@ -198,7 +203,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         if self.is_admin:
             return True
         root = node.get_root()
-        if root == self.clipboard_tree:
+        if root == self.clipboard_tree or root.pk == settings.ORPHANAGE_ROOT_ID:
             return True
 
         channel_id = Channel.objects.filter(Q(main_tree=root)
@@ -216,7 +221,7 @@ class User(AbstractBaseUser, PermissionsMixin):
             return True
         root_nodes_all = ContentNode.objects.filter(parent=None, tree_id__in=nodes.values_list("tree_id", flat=True).distinct()).distinct()
         # If all the nodes belong to the clipboard, skip the channel check.
-        root_nodes = root_nodes_all.exclude(tree_id=self.clipboard_tree.tree_id)
+        root_nodes = root_nodes_all.exclude(tree_id=self.clipboard_tree.tree_id).exclude(pk=settings.ORPHANAGE_ROOT_ID)
         if root_nodes.count() == 0 and root_nodes_all.count() > 0:
             return True
         channels = Channel.objects.filter(Q(main_tree__in=root_nodes)
@@ -386,13 +391,20 @@ def object_storage_name(instance, filename):
     :param filename: str
     :return: str
     """
-    return generate_object_storage_name(instance.checksum, filename)
+
+    default_ext = ''
+    if instance.file_format_id:
+        default_ext = '.{}'.format(instance.file_format_id)
+
+    return generate_object_storage_name(instance.checksum, filename, default_ext)
 
 
-def generate_object_storage_name(checksum, filename):
+def generate_object_storage_name(checksum, filename, default_ext=''):
     """ Separated from file_on_disk_name to allow for simple way to check if has already exists """
     h = checksum
-    basename, ext = os.path.splitext(filename)
+    basename, actual_ext = os.path.splitext(filename)
+    ext = actual_ext if actual_ext else default_ext
+
     # Use / instead of os.path.join as Windows makes this \\
     directory = "/".join([settings.STORAGE_ROOT, h[0], h[1]])
     return os.path.join(directory, h + ext.lower())
@@ -611,6 +623,10 @@ class Channel(models.Model):
         blank=True,
     )
 
+    def __init__(self, *args, **kwargs):
+        super(Channel, self).__init__(*args, **kwargs)
+        self._orig_public = self.public
+
     @classmethod
     def get_all_channels(cls):
         return cls.objects.select_related('main_tree').prefetch_related('editors', 'viewers').distinct()
@@ -692,6 +708,10 @@ class Channel(models.Model):
 
         super(Channel, self).save(*args, **kwargs)
 
+        # if this change affects the public channel list, clear the channel cache
+        if self.public or self._orig_public != self.public:
+            delete_public_channel_cache_keys()
+
     def get_thumbnail(self):
         if self.thumbnail_encoding:
             thumbnail_data = self.thumbnail_encoding
@@ -735,6 +755,8 @@ class Channel(models.Model):
         if bypass_signals:
             self.public = True     # set this attribute still, so the object will be updated
             Channel.objects.filter(id=self.id).update(public=True)
+            # clear the channel cache
+            delete_public_channel_cache_keys()
         else:
             self.public = True
             self.save()
@@ -805,7 +827,7 @@ class ChannelSet(models.Model):
 
 class ContentTag(models.Model):
     id = UUIDField(primary_key=True, default=uuid.uuid4)
-    tag_name = models.CharField(max_length=30)
+    tag_name = models.CharField(max_length=50)
     channel = models.ForeignKey('Channel', related_name='tags', blank=True, null=True, db_index=True)
 
     def __str__(self):
@@ -911,7 +933,7 @@ class ContentNode(MPTTModel, models.Model):
     publishing = models.BooleanField(default=False)
 
     changed = models.BooleanField(default=True)
-    extra_fields = models.TextField(blank=True, null=True)
+    extra_fields = JSONField(default=dict)
     author = models.CharField(max_length=200, blank=True, default="", help_text=_("Who created this content?"),
                               null=True)
     aggregator = models.CharField(max_length=200, blank=True, default="", help_text=_("Who gathered this content together?"),
@@ -1434,7 +1456,6 @@ class PrerequisiteContentRelationship(models.Model):
 
     class Meta:
         unique_together = ['target_node', 'prerequisite']
-        auto_created = True  # Avoids `AttributeError: Cannot set values on a ManyToManyField which specifies an intermediary model`
 
     def clean(self, *args, **kwargs):
         # self reference exception

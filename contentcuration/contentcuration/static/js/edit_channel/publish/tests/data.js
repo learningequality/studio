@@ -34,6 +34,21 @@ export const localStore = new Vuex.Store({
         ...publish.actions,
       },
     },
+    channel: {
+      state: {
+        canEdit: false,
+      },
+      getters: {
+        canEdit(state) {
+          return state.canEdit;
+        },
+      },
+      mutations: {
+        SET_EDIT_MODE(state, canEdit) {
+          state.canEdit = canEdit;
+        },
+      },
+    },
     publish: {
       namespaced: true,
       state: {

@@ -26,11 +26,9 @@ from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import License
 from contentcuration.serializers import ContentNodeEditSerializer
-from contentcuration.serializers import ContentNodeSerializer
 from contentcuration.serializers import ReadOnlyContentNodeFullSerializer
 from contentcuration.serializers import ReadOnlyContentNodeSerializer
 from contentcuration.serializers import ReadOnlySimplifiedContentNodeSerializer
-from contentcuration.serializers import SimplifiedContentNodeSerializer
 from contentcuration.serializers import TaskSerializer
 from contentcuration.tasks import create_async_task
 from contentcuration.tasks import getnodedetails_task
@@ -97,7 +95,7 @@ def get_node_diff(request, channel_id):
 @permission_classes((IsAuthenticated,))
 @api_view(['POST'])
 def create_new_node(request):
-    data = json.loads(request.body)
+    data = request.data
     license = License.objects.filter(license_name=data.get('license_name')).first()  # Use filter/first in case preference hasn't been set
     license_id = license.pk if license else settings.DEFAULT_LICENSE
     new_node = ContentNode.objects.create(
@@ -150,15 +148,16 @@ def get_prerequisites(request, get_postrequisites, ids):
 @permission_classes((IsAuthenticated,))
 @api_view(['GET'])
 def get_total_size(request, ids):
-    nodes = ContentNode.objects.prefetch_related('assessment_items', 'files', 'children')\
-                       .exclude(kind_id=content_kinds.EXERCISE, published=False)\
-                       .filter(id__in=ids.split(",")).get_descendants(include_self=True)\
-                       .values('files__checksum', 'files__file_size')\
-                       .distinct()
+    # Get the minimal set of nodes that we need to check permissions on first.
+    nodes = ContentNode.objects.exclude(kind_id=content_kinds.EXERCISE, published=False)\
+                       .filter(id__in=ids.split(","))
     try:
         request.user.can_view_nodes(nodes)
     except PermissionDenied:
         return HttpResponseNotFound("No nodes found for {}".format(ids))
+    nodes = nodes.prefetch_related('files').get_descendants(include_self=True)\
+                       .values('files__checksum', 'files__file_size')\
+                       .distinct()
     sizes = nodes.aggregate(resource_size=Sum('files__file_size'))
 
     return Response({'success': True, 'size': sizes['resource_size'] or 0})
@@ -168,7 +167,13 @@ def get_total_size(request, ids):
 @permission_classes((IsAuthenticated,))
 @api_view(['GET'])
 def get_nodes_by_ids(request, ids):
-    nodes = ContentNode.objects.prefetch_related(
+    nodes = ContentNode.objects.filter(pk__in=ids.split(","))
+
+    try:
+        request.user.can_view_nodes(nodes)
+    except PermissionDenied:
+        return HttpResponseNotFound("No nodes found for {}".format(ids))
+    nodes = nodes.prefetch_related(
                             'children',
                             'files',
                             'assessment_items',
@@ -178,13 +183,8 @@ def get_nodes_by_ids(request, ids):
                             'slideshow_slides',
                             'is_prerequisite_of'
                         )\
-                       .filter(pk__in=ids.split(","))\
                        .defer('node_id', 'original_source_node_id', 'source_node_id', 'content_id',
                               'original_channel_id', 'source_channel_id', 'source_id', 'source_domain', 'created', 'modified')
-    try:
-        request.user.can_view_nodes(nodes)
-    except PermissionDenied:
-        return HttpResponseNotFound("No nodes found for {}".format(ids))
     serializer = ReadOnlyContentNodeSerializer(nodes, many=True)
     return Response(serializer.data)
 
@@ -220,11 +220,12 @@ def get_node_path(request, topic_id, tree_id, node_id):
 @permission_classes((IsAuthenticated,))
 @api_view(['GET'])
 def get_nodes_by_ids_simplified(request, ids):
-    nodes = ContentNode.objects.prefetch_related('children').filter(pk__in=ids.split(","))
+    nodes = ContentNode.objects.filter(pk__in=ids.split(","))
     try:
         request.user.can_view_nodes(nodes)
     except PermissionDenied:
         return HttpResponseNotFound("No nodes found for {}".format(ids))
+    nodes = nodes.prefetch_related('children')
     serializer = ReadOnlySimplifiedContentNodeSerializer(nodes, many=True)
     return Response(serializer.data)
 
@@ -233,11 +234,12 @@ def get_nodes_by_ids_simplified(request, ids):
 @permission_classes((IsAuthenticated,))
 @api_view(['GET'])
 def get_nodes_by_ids_complete(request, ids):
-    nodes = ContentNode.objects.prefetch_related('children', 'files', 'assessment_items', 'tags').filter(pk__in=ids.split(","))
+    nodes = ContentNode.objects.filter(pk__in=ids.split(","))
     try:
         request.user.can_view_nodes(nodes)
     except PermissionDenied:
         return HttpResponseNotFound("No nodes found for {}".format(ids))
+    nodes = nodes.prefetch_related('children', 'files', 'assessment_items', 'tags')
     serializer = ReadOnlyContentNodeFullSerializer(nodes, many=True)
     return Response(serializer.data)
 
@@ -290,7 +292,7 @@ def get_node_details_cached(node):
 @api_view(['POST'])
 def delete_nodes(request):
 
-    data = json.loads(request.body)
+    data = request.data
 
     try:
         nodes = data["nodes"]
@@ -356,7 +358,6 @@ def duplicate_nodes(request):
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
 
-@api_view(['POST'])
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
 @api_view(['POST'])
@@ -455,7 +456,7 @@ def move_nodes(request):
 def sync_nodes(request):
     logging.debug("Entering the sync_nodes endpoint")
 
-    data = json.loads(request.body)
+    data = request.data
 
     try:
         nodes = data["nodes"]

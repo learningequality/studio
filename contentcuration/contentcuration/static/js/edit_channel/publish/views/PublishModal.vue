@@ -1,9 +1,10 @@
 <template>
   <div class="publish-items">
-    <label v-if="!isChanged" class="unchanged-label">
+    <label v-if="!isReadOnly && !isChanged" class="unchanged-label">
       {{ $tr('noChangesLabel') }}
     </label>
     <VBtn
+      v-if="!isReadOnly"
       flat
       dark
       class="open-modal-button publish-button"
@@ -86,6 +87,9 @@
       },
       isChanged() {
         return this.channel.main_tree.metadata.has_changed_descendant;
+      },
+      isReadOnly() {
+        return !this.$store.getters.canEdit;
       },
     },
     methods: {

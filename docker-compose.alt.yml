@@ -1,0 +1,20 @@
+version: '3.4'
+
+# Alternate config that maps services to host ports so you can run everything but the Django
+# and webpack servers in Docker
+#
+# Usage:
+#   docker-compose -f docker-compose.yml -f docker-compose.alt.yml up minio postgres redis
+
+services:
+  minio:
+    ports:
+      - "9000:9000"
+
+  postgres:
+    ports:
+      - "5432:5432"
+
+  redis:
+    ports:
+      - "6379:6379"

@@ -1,5 +1,5 @@
-const DEFAULT_CHECK_INTERVAL = 3000;
-const RUNNING_TASK_INTERVAL = 1000;
+const DEFAULT_CHECK_INTERVAL = 5000;
+const RUNNING_TASK_INTERVAL = 2000;
 
 let timerID = null;
 let currentInterval = DEFAULT_CHECK_INTERVAL;
@@ -54,7 +54,7 @@ const asyncTasksModule = {
 
     deactivateTaskUpdateTimer() {
       if (timerID) {
-        clearInterval(timerID);
+        clearTimeout(timerID);
       }
     },
 
@@ -65,9 +65,10 @@ const asyncTasksModule = {
         currentInterval = RUNNING_TASK_INTERVAL;
       }
       if (timerID) {
-        clearInterval(timerID);
+        clearTimeout(timerID);
       }
-      timerID = setInterval(function() {
+
+      timerID = setTimeout(function() {
         store.dispatch('updateTaskList');
       }, currentInterval);
     },
@@ -83,6 +84,7 @@ const asyncTasksModule = {
     },
     updateTaskList(store) {
       let currentTask = store.getters.currentTask;
+      let currentTaskError = store.getters.currentTaskError;
       let url = '/api/task';
       // if we have a running task, only get status on it.
       if (currentTask && currentTask.id) {
@@ -138,18 +140,34 @@ const asyncTasksModule = {
                     callback();
                   }
                 }
+
+                // We add noDialog to the JSON data to override dialog handling. This
+                // property only exists on the task that was passed in, so make sure
+                // we check that by using currentTask rather than runningTask or task.
+                if (currentTask.noDialog) {
+                  store.dispatch('clearCurrentTask');
+                }
+              } else if (runningTask == task && currentTaskError) {
+                // If the task is still running and an error was set, that means it was
+                // an error during the polling process. This call means we are again
+                // polling successfully, so clear the error.
+                store.commit('SET_CURRENT_TASK_ERROR', null);
               }
             }
           }
 
           if (
             runningTask &&
+            currentTask.is_progress_tracking &&
             runningTask.metadata.progress &&
             runningTask.metadata.progress >= 0.0
           ) {
             store.commit('SET_PROGRESS', runningTask.metadata.progress);
           }
           store.commit('SET_ASYNC_TASKS', data);
+          // make sure we restart the timer only after the current task call completes
+          // so that task calls do not stack.
+          store.dispatch('activateTaskUpdateTimer');
         },
         error: function(error) {
           // if we can't get task status, there is likely a server failure of some sort,
@@ -162,6 +180,9 @@ const asyncTasksModule = {
               callbacks[currentTask.id]['reject'](error);
             }
           }
+          // make sure we restart the timer only after the current task call completes
+          // so that task calls do not stack.
+          store.dispatch('activateTaskUpdateTimer');
         },
       });
     },

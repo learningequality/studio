@@ -23,9 +23,16 @@
 </div>
 <script>
 	window.addEventListener('load', function(){
-		$("#id_accepted").on("change", function(event){
-			(event.target.checked)? $("#submit").removeAttr("disabled").removeClass("disabled") :
-				$("#submit").attr("disabled", true).addClass("disabled");
+		let acceptedCheckbox = document.getElementById('id_accepted');
+		let submitButton = document.getElementById('submit');
+		acceptedCheckbox.addEventListener('change', event => {
+			if(event.target.checked) {
+				submitButton.removeAttribute('disabled');
+				submitButton.classList.remove('disabled');
+			} else {
+				submitButton.setAttribute('disabled', 'disabled');
+				submitButton.classList.add('disabled');
+			}
 		});
 	});
 </script>

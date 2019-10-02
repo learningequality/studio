@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+from tempfile import NamedTemporaryFile
 from wsgiref.util import FileWrapper
 
 from django.conf import settings
@@ -11,7 +12,12 @@ from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from le_utils.constants import content_kinds
 from le_utils.constants import exercises
+from le_utils.constants import file_formats
 from le_utils.constants import format_presets
+from le_utils.constants.languages import getlang_by_alpha2
+from pressurecooker.subtitles import build_subtitle_converter
+from pressurecooker.subtitles import InvalidSubtitleFormatError
+from pressurecooker.subtitles import LANGUAGE_CODE_UNKNOWN
 from pressurecooker.videos import guess_video_preset_by_resolution
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authentication import TokenAuthentication
@@ -82,7 +88,6 @@ def file_create(request):
     kind = presets.first().kind
     preferences = json.loads(request.POST.get('content_defaults', None) or "{}")
 
-
     license = License.objects.filter(license_name=preferences.get('license')).first()  # Use filter/first in case preference hasn't been set
     license_id = license.pk if license else None
     new_node = ContentNode(
@@ -97,7 +102,9 @@ def file_create(request):
     )
     if license and license.is_custom:
         new_node.license_description = preferences.get('license_description')
-    new_node.save()
+    # The orphanage is not an actual tree but just a long list of items.
+    with ContentNode.objects.disable_mptt_updates():
+        new_node.save()
     file_object = File(
         file_on_disk=contentfile,
         checksum=checksum,
@@ -234,6 +241,80 @@ def exercise_image_upload(request):
         "file_id": file_object.pk,
         "path": generate_storage_url(str(file_object)),
     }))
+
+
+def subtitle_upload(request):
+    # File will be converted to VTT format
+    ext = file_formats.VTT
+    language_id = request.META.get('HTTP_LANGUAGE')
+    content_file = request.FILES.values()[0]
+
+    with NamedTemporaryFile() as temp_file:
+        try:
+            converter = build_subtitle_converter(unicode(content_file.read(), 'utf-8'))
+            convert_language_code = language_id
+
+            # We're making the assumption here that language the user selected is truly the caption
+            # file's language if it's unknown
+            if len(converter.get_language_codes()) == 1 \
+                    and converter.has_language(LANGUAGE_CODE_UNKNOWN):
+                converter.replace_unknown_language(language_id)
+
+            # determine if the request language exists by another code, otherwise we can't continue
+            if not converter.has_language(convert_language_code):
+                for language_code in converter.get_language_codes():
+                    language = getlang_by_alpha2(language_code)
+                    if language and language.code == language_id:
+                        convert_language_code = language_code
+                        break
+                else:
+                    return HttpResponseBadRequest(
+                        "Language '{}' not present in subtitle file".format(language_id))
+
+            converter.write(temp_file.name, convert_language_code)
+        except InvalidSubtitleFormatError as ex:
+            return HttpResponseBadRequest("Subtitle conversion failed: {}".format(ex))
+
+        temp_file.seek(0)
+        converted_file = DjFile(temp_file)
+
+        checksum = get_hash(converted_file)
+        size = converted_file.size
+        request.user.check_space(size, checksum)
+
+        file_object = File(
+            file_size=size,
+            file_on_disk=converted_file,
+            checksum=checksum,
+            file_format_id=ext,
+            original_filename=request.FILES.values()[0]._name,
+            preset_id=request.META.get('HTTP_PRESET'),
+            language_id=language_id,
+            uploaded_by=request.user,
+        )
+        file_object.save()
+
+    return HttpResponse(json.dumps({
+        "success": True,
+        "filename": str(file_object),
+        "file": JSONRenderer().render(FileSerializer(file_object).data)
+    }))
+
+
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
+def multilanguage_file_upload(request):
+    if request.method != 'POST':
+        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+
+    if not request.META.get('HTTP_LANGUAGE'):
+        return HttpResponseBadRequest("Language is required")
+
+    preset_id = request.META.get('HTTP_PRESET')
+    if preset_id == format_presets.VIDEO_SUBTITLE:
+        return subtitle_upload(request)
+    else:
+        return HttpResponseBadRequest("Unsupported preset" if preset_id else "Preset is required")
 
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))

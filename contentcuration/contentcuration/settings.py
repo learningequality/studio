@@ -267,8 +267,6 @@ LANGUAGES = (
     ('en', ugettext('English')),
     ('es', ugettext('Spanish')),
     # ('ar', ugettext('Arabic')), # Uncomment when we have translations
-    ('es-es', ugettext('Spanish - Spain')),
-    ('es-mx', ugettext('Spanish - Mexico')),
     # ('en-PT', ugettext('English - Pirate')),
 )
 
@@ -384,3 +382,6 @@ ORPHANAGE_ROOT_ID = "00000000000000000000000000000000"
 # so we must be very careful to limit code that touches this tree and to carefully check code that does. If we
 # do choose to implement restore of old chefs, we will need to ensure moving nodes does not cause a tree sort.
 DELETED_CHEFS_ROOT_ID = "11111111111111111111111111111111"
+
+# How long we should cache any APIs that return public channel list details, which change infrequently
+PUBLIC_CHANNELS_CACHE_DURATION = 300
