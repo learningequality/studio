@@ -436,109 +436,46 @@ var ContentNodeCollection = BaseCollection.extend({
 
   save: function() {
     var self = this;
-
-    return Promise.all([this.save_files(), this.save_assessmentitems()])
-      .then(function() {
-        return Promise.all([self.do_create(), self.do_update()]);
-      })
-      .then(function(results) {
-        var created = results[0];
-        var updated = results[1];
-
-        updated.forEach(function(node) {
-          created.push(node);
+    return new Promise(function(saveResolve, saveReject) {
+      var numParser = require('edit_channel/utils/number_parser');
+      var fileCollection = new FileCollection();
+      var assessmentCollection = new AssessmentItemCollection();
+      self.forEach(function(node) {
+        node.get('files').forEach(function(file) {
+          var to_add = new FileModel(file);
+          var preset_data = to_add.get('preset');
+          preset_data.id = file.preset.name || file.preset.id;
+          fileCollection.add(to_add);
         });
-
-        return created;
+        node.get('assessment_items').forEach(function(item) {
+          item = new AssessmentItemModel(item);
+          item.set('contentnode', node.id);
+          if (item.get('type') === 'input_question') {
+            item.get('answers').each(function(a) {
+              var answer = a.get('answer');
+              if (answer) {
+                var value = numParser.parse(answer);
+                a.set('answer', value !== null && value.toString());
+              }
+            });
+          }
+          assessmentCollection.add(item);
+        });
       });
-  },
-  do_create: function() {
-    var self = this;
-    var collection = new ContentNodeCollection(
-      this.filter(function(node) {
-        return !node.get('id');
-      })
-    );
-
-    if (!collection.length) {
-      return Promise.resolve(collection);
-    }
-
-    return new Promise(function(resolve, reject) {
-      Backbone.sync('create', collection, self.sync_options(resolve, reject));
-    });
-  },
-  do_update: function() {
-    var self = this;
-    var collection = new ContentNodeCollection(
-      this.filter(function(node) {
-        return !!node.get('id');
-      })
-    );
-
-    if (!collection.length) {
-      return Promise.resolve(collection);
-    }
-
-    return new Promise(function(resolve, reject) {
-      Backbone.sync('update', collection, self.sync_options(resolve, reject));
-    });
-  },
-  save_files: function() {
-    var fileCollection = new FileCollection();
-
-    this.forEach(function(node) {
-      // Don't add files for nodes that already exist; the nodes files will already be saved
-      if (node.get('id')) {
-        return;
-      }
-
-      node.get('files').forEach(function(file) {
-        var to_add = new FileModel(file);
-        var preset_data = to_add.get('preset');
-
-        preset_data.id = file.preset.name || file.preset.id;
-        fileCollection.add(to_add);
-      });
-    });
-
-    return fileCollection.length ? fileCollection.save() : Promise.resolve(fileCollection);
-  },
-  save_assessmentitems: function() {
-    var numParser = require('edit_channel/utils/number_parser');
-    var assessmentCollection = new AssessmentItemCollection();
-
-    this.forEach(function(node) {
-      node.get('assessment_items').forEach(function(item) {
-        item = new AssessmentItemModel(item);
-        item.set('contentnode', node.id);
-        if (item.get('type') === 'input_question') {
-          item.get('answers').each(function(a) {
-            var answer = a.get('answer');
-            if (answer) {
-              var value = numParser.parse(answer);
-              a.set('answer', value !== null && value.toString());
-            }
+      Promise.all([fileCollection.save(), assessmentCollection.save()])
+        .then(function() {
+          Backbone.sync('update', self, {
+            url: self.model.prototype.urlRoot(),
+            success: function(data) {
+              saveResolve(new ContentNodeCollection(data));
+            },
+            error: function(obj, error) {
+              saveReject(error);
+            },
           });
-        }
-        assessmentCollection.add(item);
-      });
+        })
+        .catch(saveReject);
     });
-
-    return assessmentCollection.length
-      ? assessmentCollection.save()
-      : Promise.resolve(assessmentCollection);
-  },
-  sync_options: function(resolve, reject) {
-    return {
-      url: this.model.prototype.urlRoot(),
-      success: function(data) {
-        resolve(new ContentNodeCollection(data));
-      },
-      error: function(obj, error) {
-        reject(error);
-      },
-    };
   },
   has_prerequisites: function() {
     return this.some(function(model) {
