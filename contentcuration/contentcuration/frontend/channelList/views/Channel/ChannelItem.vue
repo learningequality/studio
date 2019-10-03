@@ -8,24 +8,40 @@
       </VFlex>
       <VFlex xs12 sm12 md9>
         <VCardTitle>
-          <h3 class="headline">{{ channel.name }}</h3>
-          <div>
-            <span v-if="language">
-              {{ language.native_name }}
-            </span>
-            {{ $tr('resourceCount', {'count': channel.count}) }}
-            <span v-if="channel.published">
-              {{ $tr("versionText", {'version': channel.version}) }}
-            </span>
-          </div>
-          <div>
+            <VFlex xs12>
+            <VLayout class="grey--text" justify-space-between>
+              <VFlex xs4>
+                <span v-if="language">
+                  {{ language.native_name }}
+                </span>
+                <span v-else>
+                  &nbsp;
+                </span>
+              </VFlex>
+              <VFlex xs4>
+                {{ $tr('resourceCount', {'count': channel.count}) }}
+              </VFlex>
+              <VFlex xs4>
+                <span v-if="channel.published">
+                  {{ $tr("versionText", {'version': channel.version}) }}
+                </span>
+                <span v-else>
+                  &nbsp;
+                </span>
+              </VFlex>
+            </VLayout>
+          </VFlex>
+          <VFlex xs12>
+            <h3 class="headline">{{ channel.name }}</h3>
+          </VFlex>
+          <VFlex xs12>
             {{ channel.description }}
-          </div>
+          </VFlex>
         </VCardTitle>
       </VFlex>
     </VLayout>
     <VCardActions>
-      <VCardText v-if="channel.published">
+      <VCardText class="grey--text" v-if="channel.published">
         {{ $tr(
           'lastPublished',
           {

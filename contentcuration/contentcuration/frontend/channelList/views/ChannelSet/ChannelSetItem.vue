@@ -1,16 +1,20 @@
 <template>
   <VCard class="my-3" :to="channelSetDetailsLink">
-    <VCardText>
-      {{ $tr('channelCount', {'count': channelSet.channels.length}) }}
-    </VCardText>
     <VCardTitle>
-      <h3 class="headline mb-0">
-        {{ channelSet.name }}
-      </h3>
+      <VLayout column justify-space-between fill-height>
+        <VFlex xs12 class="grey--text">
+          {{ $tr('channelCount', {'count': channelSet.channels.length}) }}
+        </VFlex>
+        <VFlex xs12>
+          <h3 class="headline mb-0">
+            {{ channelSet.name }}
+          </h3>
+        </VFlex>
+        <VFlex xs12>
+        {{ channelSet.description }}
+        </VFlex>
+      </VLayout>
     </VCardTitle>
-    <VCardText>
-      {{ channelSet.description }}
-    </VCardText>
     <VCardActions>
       <VSpacer/>
       <VBtn
