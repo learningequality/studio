@@ -58,7 +58,9 @@
             </PrimaryDialog>
           </VList>
         </VCard>
-        <router-view />
+        <keep-alive>
+          <router-view :key="$route.params.listType || 'collections'"/>
+        </keep-alive>
       </VContainer>
     </VContent>
   </VApp>

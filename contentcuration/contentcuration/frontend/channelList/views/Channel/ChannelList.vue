@@ -34,7 +34,9 @@
                 :channelId="channel.id"
               />
             </template>
-            <router-view v-if="!loading"/>
+            <keep-alive>
+              <router-view  v-if="$route.params.channelId" :key="$route.params.channelId"/>
+            </keep-alive>
           </VFlex>
         </VLayout>
       </VFlex>
@@ -98,21 +100,9 @@
     },
     beforeRouteEnter(to, from, next) {
       if(listTypeValidator(to.params.listType)) {
-        if (to.name === RouterNames.CHANNELS) {
-          return next(vm => {
-            vm.loadData(to.params.listType);
-          });
-        }
-        return next();
-      }
-      return next(false);
-    },
-    beforeRouteUpdate(to, from, next) {
-      if(listTypeValidator(to.params.listType)) {
-        if (to.name === RouterNames.CHANNELS) {
-          this.loadData(to.params.listType);
-        }
-        return next();
+        return next(vm => {
+          vm.loadData(to.params.listType);
+        });
       }
       return next(false);
     },

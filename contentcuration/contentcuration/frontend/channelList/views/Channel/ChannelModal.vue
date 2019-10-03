@@ -1,9 +1,10 @@
 <template>
   <VDialog
-    v-model="open"
+    :value="$route.params.channelId == channelId"
     attach="body"
     fullscreen
     transition="dialog-bottom-transition"
+    :scrollable="true"
   >
     <VCard>
       <VToolbar card prominent dark color="blue">
@@ -263,15 +264,6 @@
           // would often be from - it produces a confusing back step)
           vm.$router.back();
         });
-      });
-    },
-    beforeRouteUpdate(to, from, next) {
-      const channelId = to.params.channelId;
-      return this.verifyChannel(channelId).then(() => {
-        this.setChannelDetails(channelId);
-      }).catch(() => {
-        // Couldn't verify the channel details, so go cancel navigation!
-        next(false);
       });
     },
     computed: {

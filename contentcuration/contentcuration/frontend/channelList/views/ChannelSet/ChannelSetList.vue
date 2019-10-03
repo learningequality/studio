@@ -58,7 +58,9 @@
                 :channelSet="channelSet"
               />
             </template>
-            <router-view v-if="!loading"/>
+            <keep-alive>
+              <router-view v-if="$route.params.channelSetId" :key="$route.params.channelSetId"/>
+            </keep-alive>
           </VFlex>
         </VLayout>
       </VFlex>

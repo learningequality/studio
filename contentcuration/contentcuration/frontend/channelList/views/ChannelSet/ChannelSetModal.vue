@@ -1,8 +1,9 @@
 <template>
   <VDialog
-    v-model="open"
+    :value="$route.params.channelSetId == channelSetId"
     attach="body"
     fullscreen
+    :scrollable="true"
   >
     <VCard>
       <VToolbar card prominent dark color="blue">
@@ -214,12 +215,6 @@
           vm.$router.back();
         }
       });
-    },
-    beforeRouteUpdate(to, from, next) {
-      if (!this.getChannelSet(to.params.channelSetId)) {
-        // Couldn't verify the channelset details, so cancel navigation!
-        next(false);
-      }
     },
     computed: {
       ...mapGetters('channelSet', [
