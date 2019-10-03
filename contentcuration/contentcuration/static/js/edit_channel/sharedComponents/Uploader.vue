@@ -1,21 +1,23 @@
 <template>
   <div
-    class="wrapper"
-    :style="highlight && !readonly ? { backgroundColor: $vuetify.theme.primaryBackground } : {}"
+    style="height: 100%; width: 100%; border: 2px solid transparent;"
+    :style="highlightDropzone ? {
+      backgroundColor: $vuetify.theme.primaryBackground,
+      borderColor: $vuetify.theme.primary
+    } : {borderColor:'transparent'}"
     @dragenter.prevent="enter"
     @dragover.prevent="over"
     @dragleave.prevent="leave"
     @drop.prevent="drop"
   >
-    <slot name="upload-zone"></slot>
-    <slot name="upload-actions" :openDialog="openUploadDialog"></slot>
-
+    <slot name="upload-zone" :openFileDialog="openFileDialog"></slot>
     <input
       v-if="!readonly"
       ref="fileUpload"
       style="display: none;"
       type="file"
-      :accept="acceptedFiles"
+      :accept="acceptedMimetypes"
+      :multiple="allowMultiple"
       @change="handleFiles($event.target.files)"
     >
   </div>
@@ -23,16 +25,14 @@
 
 <script>
 
+  import { mapActions, mapMutations } from 'vuex';
   import _ from 'underscore';
-  import client from './client';
+  import { getHash } from './utils';
   import Constants from 'edit_channel/constants';
 
   export default {
     name: 'Uploader',
-    $trs: {
-      fileUpload: 'Upload file',
-      dropFilesText: 'or drop files here',
-    },
+    $trs: {},
     props: {
       value: {
         type: Object,
@@ -44,31 +44,54 @@
         type: Boolean,
         default: false,
       },
-      acceptedFiles: {
+      preset: {
         type: String,
-        default: _.chain(Constants.FormatPresets)
-          .where({ supplementary: false })
-          .pluck('associated_mimetypes')
-          .flatten()
-          .value()
-          .join(','),
+        required: false,
+      },
+      acceptedFiles: {
+        type: Array,
+        default: () => {
+          return _.where(Constants.FormatPresets, { supplementary: false, display: true });
+        },
+      },
+      allowMultiple: {
+        type: Boolean,
+        default: true,
+      },
+      allowDrop: {
+        type: Boolean,
+        default: true,
       },
     },
     data() {
       return {
         highlight: false,
-        files: [],
       };
     },
     computed: {
+      acceptedMimetypes() {
+        return _.chain(this.acceptedFiles)
+          .pluck('associated_mimetypes')
+          .flatten()
+          .value()
+          .join(',');
+      },
       file() {
         if (this.files.length && this.files[0].previewSrc) {
           return this.files[0].previewSrc;
         }
         return this.value.thumbnail_url;
       },
+      highlightDropzone() {
+        return this.highlight && !this.readonly && this.allowDrop;
+      },
     },
     methods: {
+      ...mapActions('edit_modal', ['getUploadURL', 'uploadFile']),
+      ...mapMutations('edit_modal', {
+        setUploadProgress: 'SET_FILE_UPLOAD_PROGRESS',
+        setFileChecksum: 'SET_FILE_CHECKSUM',
+      }),
       enter() {
         this.highlight = true;
       },
@@ -80,44 +103,70 @@
       },
       drop(e) {
         this.highlight = false;
-        this.handleFiles(e.dataTransfer.files);
+        if (this.allowDrop) this.handleFiles(e.dataTransfer.files);
       },
-      openUploadDialog() {
+      openFileDialog() {
         this.$refs.fileUpload.click();
+      },
+      getMetadata(file) {
+        let fileparts = file.name.split('.');
+        let extension = fileparts[fileparts.length - 1].toLowerCase();
+        let kind = _.filter(this.acceptedFiles, ftype => {
+          return _.contains(ftype.allowed_formats, extension.toLowerCase());
+        })[0].kind_id;
+
+        let preset =
+          this.preset ||
+          _.findWhere(Constants.FormatPresets, {
+            kind_id: kind,
+            supplementary: false,
+            display: true,
+          });
+
+        return {
+          name: fileparts[0],
+          preset: preset,
+          file_size: file.size,
+          original_filename: file.name,
+          kind: kind,
+          file_format: extension,
+          file_on_disk: null,
+        };
       },
       handleFiles(files) {
         if (!this.readonly) {
+          let newFiles = [];
+          files = this.allowMultiple ? files : [files[0]];
+
           [...files].forEach(uploadedFile => {
             const id = String(Math.random()).slice(2);
+
             const fileDetails = {
               id,
               previewSrc: null,
-              progress: null,
+              progress: 0,
+              error: null,
+              hash: null,
+              ...this.getMetadata(uploadedFile),
             };
-            this.files.push(fileDetails);
-            const data = new FormData();
-            data.append('file', uploadedFile);
+            newFiles.push(fileDetails);
 
-            client
-              .post(window.Urls.thumbnail_upload(), data, {
-                headers: {
-                  'Content-Type': 'multipart/form-data',
-                },
-                onUploadProgress: progressEvent => {
-                  const { loaded, total } = progressEvent;
-                  fileDetails.progress = (loaded / total) * 100;
-                },
-              })
-              .then(response => {
-                this.$emit('input', {
-                  thumbnail: response.data.formatted_filename,
-                  thumbnail_url: response.data.encoding || response.data.path,
-                  thumbnail_encoding: response.data.encoding,
-                });
-              })
-              .catch(() => {
-                /* Error. Inform the user */
-              });
+            // 1. Get the checksum of the file
+            getHash(uploadedFile).then(hash => {
+              this.setFileChecksum({ fileID: id, checksum: hash });
+
+              // 2. Get the upload url
+              this.getUploadURL({ checksum: hash, size: uploadedFile.size, id: id }).then(
+                response => {
+                  // 3. Upload file
+                  this.uploadFile({ id: id, file: uploadedFile, url: response.data }).then(
+                    filepath => {
+                      this.$emit('uploaded', filepath.data);
+                    }
+                  );
+                }
+              );
+            });
 
             const reader = new FileReader();
             reader.readAsDataURL(uploadedFile);
@@ -125,17 +174,10 @@
               fileDetails.previewSrc = reader.result;
             };
           });
+          this.$emit('uploading', newFiles);
         }
       },
     },
   };
 
 </script>
-
-<style lang="less">
-  .wrapper {
-    width: 100%;
-    height: 100%;
-  }
-
-</style>

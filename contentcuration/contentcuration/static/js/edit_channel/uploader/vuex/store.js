@@ -23,6 +23,7 @@ const store = new Vuex.Store({
         selectedIndices: [],
         changes: {},
         mode: modes.VIEW_ONLY,
+        files: [],
       },
       getters: getters,
       mutations: mutations,

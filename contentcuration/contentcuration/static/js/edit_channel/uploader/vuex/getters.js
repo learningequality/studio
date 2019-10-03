@@ -99,3 +99,15 @@ export function copyrightHolders() {
 export function tags() {
   return _.pluck(State.Store.getters.contentTags, 'tag_name');
 }
+
+export function fileIDs(state) {
+  return _.chain(state.nodes)
+    .pluck('files')
+    .flatten()
+    .pluck('id')
+    .value();
+}
+
+export function totalFileSize(state) {
+  return _.reduce(state.nodes, (sum, node) => sum + (node.metadata.resource_size || 0), 0);
+}

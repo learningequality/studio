@@ -10,6 +10,7 @@ export function RESET_STATE(state) {
     selectedIndices: [],
     changes: {},
     mode: modes.VIEW_ONLY,
+    files: [],
   });
 }
 
@@ -244,4 +245,60 @@ export function REMOVE_NODE(state, index) {
 
 export function PREP_NODES_FOR_SAVE(state) {
   _.each(state.nodes, node => (node.isNew = false));
+}
+
+/*********** FILE OPERATIONS ***********/
+export function ADD_NODES_FROM_FILES(state, newFiles) {
+  newFiles.forEach(file => {
+    ADD_NODE(state, {
+      title: file.name,
+      kind: file.kind,
+      metadata: {
+        resource_size: file.file_size,
+      },
+      files: [
+        {
+          ...file,
+          uploading: true,
+        },
+      ],
+    });
+  });
+}
+
+export function SET_FILE_UPLOAD_PROGRESS(state, payload) {
+  state.nodes.forEach(node => {
+    let updated = _.where(node.files, { id: payload.fileID });
+    updated.forEach(file => {
+      file.progress = payload.progress;
+      file.uploading = file.progress >= 100;
+    });
+  });
+}
+
+export function SET_FILE_CHECKSUM(state, payload) {
+  state.nodes.forEach(node => {
+    let updated = _.where(node.files, { id: payload.fileID });
+    updated.forEach(file => {
+      file.checksum = payload.checksum;
+    });
+  });
+}
+
+export function SET_FILE_ERROR(state, payload) {
+  state.nodes.forEach(node => {
+    let updated = _.where(node.files, { id: payload.fileID });
+    updated.forEach(file => {
+      file.error = payload.error;
+    });
+  });
+}
+
+export function SET_FILE_PATH(state, payload) {
+  state.nodes.forEach(node => {
+    let updated = _.where(node.files, { id: payload.fileID });
+    updated.forEach(file => {
+      file.file_on_disk = payload.path;
+    });
+  });
 }

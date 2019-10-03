@@ -20,7 +20,11 @@ client.interceptors.response.use(
       // we should silence those on the front end and try
       // to catch legitimate request issues in the backend.
       if (error.response.status === 403 || error.response.status === 404) {
-        return;
+        return Promise.reject(error);
+      }
+
+      if (error.response.status === 418) {
+        return Promise.reject(error);
       }
 
       if (error.response.status === 0) {
