@@ -85,20 +85,12 @@
   @border-color: @gray-200;
 
   /deep/ .v-navigation-drawer__border {
-    width: 9px;
+    width: 10px;
     height: 100%;
-    // width: 10px;
-    // cursor: col-resize;
-    // background: transparent !important;
-    // border-right: 1px solid @gray-300;
     margin-left: 10px;
     cursor: col-resize;
-    background-color: @gray-100 !important;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='9' height='30'><path d='M3 0 v30 M6 0 v30' fill='none' stroke='darkgray'/></svg>");
-    background-repeat: no-repeat;
-    background-position: 50% 45%;
-    border-right: 1px solid @border-color;
-    border-left: 1px solid @border-color;
+    background: transparent !important;
+    border-right: 1px solid @gray-300;
   }
 
 </style>
