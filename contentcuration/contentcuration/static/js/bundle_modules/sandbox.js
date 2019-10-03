@@ -19,17 +19,24 @@ Vue.use(Vuetify, {
   theme: {
     primary: colors.blue.base, // @blue-500
     primaryBackground: colors.blue.lighten5,
-    // secondary: colors.red.lighten4, // #FFCDD2
-    // accent: colors.indigo.base // #3F51B5
+    greyBackground: colors.grey.lighten3,
+    greenSuccess: '#4db6ac',
+    topic: colors.grey.base,
+    video: '#283593',
+    audio: '#f06292',
+    document: '#ff3d00',
+    exercise: '#4db6ac',
+    html5: '#ff8f00',
+    slideshow: '#4ece90',
   },
 });
 
 window.preferences = {
-  //   license: 'Public Domain',
-  //   author: 'Default Author',
+  // license: 'Public Domain',
+  // author: 'Default Author',
   //   provider: 'Default Provider',
   //   aggregator: 'Default Aggregator',
-  //   copyright_holder: 'Default Copyright Holder',
+  copyright_holder: 'Default Copyright Holder',
   //   license_description: 'Default License Description',
   //   mastery_model: 'm_of_n',
   //   m_value: 2,

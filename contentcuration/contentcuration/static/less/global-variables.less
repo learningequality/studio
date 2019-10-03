@@ -207,6 +207,9 @@ html {
 a {
   text-decoration: none;
 }
+.text-underlined {
+  text-decoration: underline !important;
+}
 
 body {
   background: @body-background;
@@ -396,4 +399,10 @@ select {
   &:hover {
     color: @blue-500;
   }
+}
+
+.action-link,
+.action-link:hover {
+  color: @blue-500 !important;
+  text-decoration: underline;
 }
