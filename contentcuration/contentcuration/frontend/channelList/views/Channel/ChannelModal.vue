@@ -6,7 +6,7 @@
     transition="dialog-bottom-transition"
   >
     <VCard>
-      <VToolbar card prominent color="blue">
+      <VToolbar card prominent dark color="blue">
         <VBtn icon class="hidden-xs-only" @click="close">
           <VIcon>clear</VIcon>
         </VBtn>
@@ -14,87 +14,91 @@
           {{ channel.name }}
         </VToolbarTitle>
       </VToolbar>
-      <VLayout row wrap>
-        <VFlex xs12 sm12 md3>
-          <ThumbnailUpload v-model="thumbnail" :readonly="!canEdit" />
-        </VFlex>
-        <VFlex xs12 sm12 md8>
-          <VAutocomplete
-            v-model="language"
-            :items="languages"
-            prependInnerIcon="language"
-            :readonly="!canEdit"
-            itemText="native_name"
-            itemValue="id"
-          />
-          <VTextField
-            v-model="name"
-            :label="$tr('channelName')"
-            :placeholder="$tr('channelNamePlaceholder')"
-            :readonly="!canEdit"
-            :rules="[() => name.length ? true : $tr('channelError')]"
-          />
-          <VTextarea
-            v-model="description"
-            :label="$tr('channelDescription')"
-            :placeholder="$tr('channelDescriptionPlaceholder')"
-            :readonly="!canEdit"
-            maxlength="400"
-            rows="4"
-            counter
-          />
-          <VCardText v-if="channel.created">
-            {{ $tr('created', { date: new Date(channel.created) }) }}
-          </VCardText>
-          <VCardText v-if="channel.last_published">
-            {{ $tr('published', { date: new Date(channel.last_published) }) }}
-          </VCardText>
-          <template v-if="channel.edit">
-            <p>{{ $tr('deletePrompt') }}</p>
-            <VBtn class="upper" color="error" @click="deleteChannel">
-              {{ $tr('deleteChannel') }}
-            </VBtn>
-            <VBtn class="upper" color="success" @click="save">
-              {{ $tr('save') }}
-            </VBtn>
+      <VLayout row justify-center>
+        <VFlex xs12 sm6>
+          <VLayout row wrap>
+            <VFlex xs12 sm12 md3>
+              <ThumbnailUpload v-model="thumbnail" :readonly="!canEdit" />
+            </VFlex>
+            <VFlex xs12 sm12 md8>
+              <VAutocomplete
+                v-model="language"
+                :items="languages"
+                prependInnerIcon="language"
+                :readonly="!canEdit"
+                itemText="native_name"
+                itemValue="id"
+              />
+              <VTextField
+                v-model="name"
+                :label="$tr('channelName')"
+                :placeholder="$tr('channelNamePlaceholder')"
+                :readonly="!canEdit"
+                :rules="[() => name.length ? true : $tr('channelError')]"
+              />
+              <VTextarea
+                v-model="description"
+                :label="$tr('channelDescription')"
+                :placeholder="$tr('channelDescriptionPlaceholder')"
+                :readonly="!canEdit"
+                maxlength="400"
+                rows="4"
+                counter
+              />
+              <VCardText v-if="channel.created">
+                {{ $tr('created', { date: new Date(channel.created) }) }}
+              </VCardText>
+              <VCardText v-if="channel.last_published">
+                {{ $tr('published', { date: new Date(channel.last_published) }) }}
+              </VCardText>
+              <template v-if="channel.edit">
+                <p>{{ $tr('deletePrompt') }}</p>
+                <VBtn class="upper" color="error" @click="deleteChannel">
+                  {{ $tr('deleteChannel') }}
+                </VBtn>
+                <VBtn class="upper" color="success" @click="save">
+                  {{ $tr('save') }}
+                </VBtn>
+              </template>
+            </VFlex>
+            <VFlex xs1>
+              <ChannelStar
+                :channelId="channelId"
+                :bookmark="channel.bookmark"
+              />
+            </VFlex>
+          </VLayout>
+          <VLayout v-if="channelDetails && channelDetails.resource_count" row wrap justify-center>
+            <VFlex xs4>
+              <VMenu offset-y>
+                <template v-slot:activator="{ on }">
+                  <VBtn
+                    color="primary"
+                    dark
+                    v-on="on"
+                  >
+                    {{ $tr('downloadReport') }}
+                  </VBtn>
+                </template>
+                <VList>
+                  <VListTile
+                    v-for="(item, index) in downloadOptions"
+                    :key="index"
+                    :href="item.href"
+                    download
+                  >
+                    <VListTileTitle>{{ item.title }}</VListTileTitle>
+                  </VListTile>
+                </VList>
+              </VMenu>
+            </VFlex>
+          </VLayout>
+          <ChannelDetails  v-if="channelDetails && channelDetails.resource_count"/>
+          <template v-else>
+            {{ $tr('empty_details') }}
           </template>
         </VFlex>
-        <VFlex xs1>
-          <ChannelStar
-            :channelId="channelId"
-            :bookmark="channel.bookmark"
-          />
-        </VFlex>
       </VLayout>
-      <VLayout v-if="channelDetails && channelDetails.resource_count" row wrap justify-center>
-        <VFlex xs4>
-          <VMenu offset-y>
-            <template v-slot:activator="{ on }">
-              <VBtn
-                color="primary"
-                dark
-                v-on="on"
-              >
-                {{ $tr('downloadReport') }}
-              </VBtn>
-            </template>
-            <VList>
-              <VListTile
-                v-for="(item, index) in downloadOptions"
-                :key="index"
-                :href="item.href"
-                download
-              >
-                <VListTileTitle>{{ item.title }}</VListTileTitle>
-              </VListTile>
-            </VList>
-          </VMenu>
-        </VFlex>
-      </VLayout>
-      <ChannelDetails  v-if="channelDetails && channelDetails.resource_count"/>
-      <template v-else>
-        {{ $tr('empty_details') }}
-      </template>
     </VCard>
   </VDialog>
 </template>

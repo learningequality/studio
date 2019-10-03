@@ -5,7 +5,7 @@
     fullscreen
   >
     <VCard>
-      <VToolbar card prominent color="blue">
+      <VToolbar card prominent dark color="blue">
         <VBtn icon class="hidden-xs-only" @click="close">
           <VIcon>clear</VIcon>
         </VBtn>
@@ -13,131 +13,137 @@
           {{ modalTitle }}
         </VToolbarTitle>
       </VToolbar>
-      <VLayout row wrap>
-        <VFlex xs12 sm6 md3>
+      <VLayout row justify-center>
+        <VFlex xs12 sm6>
+          <VLayout row wrap>
+            <VFlex xs12 sm6 md3>
+              <VCardText>
+                {{ $tr('channelCountText', {'channelCount': channelCount}) }}
+              </VCardText>
+            </VFlex>
+            <VFlex xs12 sm6 md3 offsetMd6>
+              <CopyToken
+                v-if="token"
+                :token="token"
+              />
+            </VFlex>
+          </VLayout>
           <VCardText>
-            {{ $tr('channelCountText', {'channelCount': channelCount}) }}
+            <VTextField
+              v-model="name"
+              :rules="[nameValid]"
+              :label="$tr('titleLabel')"
+              :placeholder="$tr('titlePlaceholder')"
+              maxlength="200"
+              counter
+            />
           </VCardText>
-        </VFlex>
-        <VFlex xs12 sm6 md3 offsetMd6>
-          <CopyToken
-            v-if="token"
-            :token="token"
-          />
+          <VCardText>
+            <VTextarea
+              v-model="description"
+              :label="$tr('descriptionLabel')"
+              :maxlength="charLimit"
+              rows="4"
+              :placeholder="$tr('descriptionPlaceholder')"
+              counter
+            />
+          </VCardText>
+          <!-- Channel list section -->
+          <VCardText v-if="loadingChannels">
+            {{ $tr('loading') }}
+          </VCardText>
+          <VContainer v-else fluid>
+            <VExpansionPanel
+              :value="expansionPanel"
+            >
+              <VExpansionPanelContent
+                v-for="(published, i) in [true, false]"
+                :key="i"
+                :lazy="true"
+              >
+                <template v-slot:header>
+                  <div>{{ published ? $tr('publishedChannels') : $tr('unpublishedChannels') }}</div>
+                </template>
+                <VLayout>
+                  <VFlex xs12>
+                    <transition-group name="channels">
+                      <VCard
+                        v-for="channel in (published ? selectableChannels : unpublishedChannels)"
+                        :key="channel.id"
+                        :raised="channels.includes(channel.id)"
+                      >
+                        <VLayout alignCenter>
+                          <VFlex xs1>
+                            <VCheckbox
+                              v-if="published"
+                              v-model="channels"
+                              :disabled="!channel.published"
+                              :value="channel.id"
+                            />
+                          </VFlex>
+                          <VFlex xs11 offsetXs1>
+                            <VLayout>
+                              <VFlex xs12 sm12 md3>
+                                <VImg :src="channel.thumbnail_url" contain />
+                              </VFlex>
+                              <VFlex xs12 sm12 md9>
+                                <VCardTitle>
+                                  <div>
+                                    <h3 class="headline mb-0">
+                                      {{ channel.name }}
+                                    </h3>
+                                    <div>{{ channel.description }}</div>
+                                  </div>
+                                </VCardTitle>
+                              </VFlex>
+                            </VLayout>
+                            <VLayout>
+                              <VFlex xs12>
+                                <VCardText v-if="published">
+                                  {{ $tr("versionText", {'version': channel.version}) }}
+                                </VCardText>
+                                <VCardText v-else class="red--text">
+                                  {{ $tr('unpublishedTitle', { channelName: channel.name }) }}
+                                </VCardText>
+                              </VFlex>
+                            </VLayout>
+                          </VFlex>
+                        </VLayout>
+                      </VCard>
+                    </transition-group>
+                  </VFlex>
+                </VLayout>
+              </VExpansionPanelContent>
+            </VExpansionPanel>
+          </VContainer>
+          <VCardActions>
+            <VBtn flat color="blue" @click="close">
+              {{ $tr('closeButtonLabel') }}
+            </VBtn>
+            <div style="margin-left: auto;">
+              <VBtn
+                :disabled="!enableSave"
+                @click="saveAndClose"
+              >
+                {{ $tr('saveCloseButtonLabel') }}
+              </VBtn>
+              <VBtn
+                :disabled="!enableSave"
+                @click="save"
+              >
+                {{ $tr('saveButtonLabel') }}
+              </VBtn>
+              <VProgressCircular
+                v-show="saving"
+                indeterminate
+              />
+              <span v-show="error" class="red-text error-text pull-right">
+                {{ $tr('errorText') }}
+              </span>
+            </div>
+          </VCardActions>
         </VFlex>
       </VLayout>
-      <VTextField
-        v-model="name"
-        :rules="[nameValid]"
-        :label="$tr('titleLabel')"
-        :placeholder="$tr('titlePlaceholder')"
-        maxlength="200"
-        counter
-      />
-      <VTextarea
-        v-model="description"
-        :label="$tr('descriptionLabel')"
-        :maxlength="charLimit"
-        rows="4"
-        :placeholder="$tr('descriptionPlaceholder')"
-        counter
-      />
-      <hr>
-
-      <!-- Channel list section -->
-      <VCardText v-if="loadingChannels">
-        {{ $tr('loading') }}
-      </VCardText>
-      <VContainer v-else fluid>
-        <VExpansionPanel
-          :value="expansionPanel"
-        >
-          <VExpansionPanelContent
-            v-for="(published, i) in [true, false]"
-            :key="i"
-            :lazy="true"
-          >
-            <template v-slot:header>
-              <div>{{ published ? $tr('publishedChannels') : $tr('unpublishedChannels') }}</div>
-            </template>
-            <VLayout>
-              <VFlex xs12>
-                <transition-group name="channels">
-                  <VCard
-                    v-for="channel in (published ? selectableChannels : unpublishedChannels)"
-                    :key="channel.id"
-                    :raised="channels.includes(channel.id)"
-                  >
-                    <VLayout alignCenter>
-                      <VFlex xs1>
-                        <VCheckbox
-                          v-if="published"
-                          v-model="channels"
-                          :disabled="!channel.published"
-                          :value="channel.id"
-                        />
-                      </VFlex>
-                      <VFlex xs11 offsetXs1>
-                        <VLayout>
-                          <VFlex xs12 sm12 md3>
-                            <VImg :src="channel.thumbnail_url" contain />
-                          </VFlex>
-                          <VFlex xs12 sm12 md9>
-                            <VCardTitle>
-                              <div>
-                                <h3 class="headline mb-0">
-                                  {{ channel.name }}
-                                </h3>
-                                <div>{{ channel.description }}</div>
-                              </div>
-                            </VCardTitle>
-                          </VFlex>
-                        </VLayout>
-                        <VLayout>
-                          <VFlex xs12>
-                            <VCardText v-if="published">
-                              {{ $tr("versionText", {'version': channel.version}) }}
-                            </VCardText>
-                            <VCardText v-else class="red--text">
-                              {{ $tr('unpublishedTitle', { channelName: channel.name }) }}
-                            </VCardText>
-                          </VFlex>
-                        </VLayout>
-                      </VFlex>
-                    </VLayout>
-                  </VCard>
-                </transition-group>
-              </VFlex>
-            </VLayout>
-          </VExpansionPanelContent>
-        </VExpansionPanel>
-      </VContainer>
-      <VCardActions>
-        <VBtn flat color="blue" @click="close">
-          {{ $tr('closeButtonLabel') }}
-        </VBtn>
-        <div style="margin-left: auto;">
-          <VBtn
-            :disabled="!enableSave"
-            @click="saveAndClose"
-          >
-            {{ $tr('saveCloseButtonLabel') }}
-          </VBtn>
-          <VBtn
-            :disabled="!enableSave"
-            @click="save"
-          >
-            {{ $tr('saveButtonLabel') }}
-          </VBtn>
-          <VProgressCircular
-            v-show="saving"
-            indeterminate
-          />
-          <span v-show="error" class="red-text error-text pull-right">
-            {{ $tr('errorText') }}
-          </span>
-        </div>
-      </VCardActions>
     </VCard>
   </VDialog>
 </template>
