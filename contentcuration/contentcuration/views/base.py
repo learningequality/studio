@@ -530,7 +530,7 @@ class SandboxView(TemplateView):
         nodes = []
 
         # Get a node of every kind
-        for kind, _ in content_kinds.choices:
+        for kind, _ in reversed(sorted(content_kinds.choices)):
             node = active_nodes.filter(kind_id=kind, freeze_authoring_data=False).first()
             if node:
                 nodes.append(ContentNodeSerializer(node).data)
