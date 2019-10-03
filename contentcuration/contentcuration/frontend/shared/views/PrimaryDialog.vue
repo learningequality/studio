@@ -3,13 +3,13 @@
     v-model="open"
     :disabled="disabled"
     attach="body"
-    maxWidth="290"
+    maxWidth="400"
   >
     <VCard>
       <VCardTitle
         v-if="title"
       >
-        <p class="headline mb-0">{{ title }}</p>
+        <p class="title mb-0">{{ title }}</p>
       </VCardTitle>
       <VCardText>
         <slot></slot>
