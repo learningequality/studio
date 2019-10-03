@@ -1,0 +1,107 @@
+<template>
+  <Uploader :readonly="readonly">
+    <template slot="upload-zone" slot-scope="uploader">
+      <v-list-tile
+        :style="{backgroundColor: isSelected? $vuetify.theme.greyBackground : 'transparent'}"
+        @click.stop="file? $emit('selected') : uploader.openFileDialog()"
+      >
+        <v-list-tile-action>
+          <v-radio v-if="file" :value="file.id" color="primary" />
+        </v-list-tile-action>
+        <v-list-tile-content>
+          <v-list-tile-sub-title>{{ preset.id | translate }}</v-list-tile-sub-title>
+          <v-list-tile-title>
+            <span v-if="file" @click.stop="uploader.openFileDialog">
+              {{ file.original_filename }}
+            </span>
+            <a v-else class="action-link" @click.stop="uploader.openFileDialog">
+              {{ $tr('uploadButton') }}
+            </a>
+          </v-list-tile-title>
+          <v-list-tile-sub-title v-if="file">
+            {{ formatFileSize(file.file_size) }}
+          </v-list-tile-sub-title>
+        </v-list-tile-content>
+        <VSpacer />
+        <v-list-tile-action v-if="file">
+          <v-btn v-if="allowFileRemove" icon class="remove-icon">
+            <v-icon color="grey">
+              clear
+            </v-icon>
+          </v-btn>
+        </v-list-tile-action>
+      </v-list-tile>
+    </template>
+  </Uploader>
+</template>
+
+<script>
+
+  import { fileSizeMixin } from '../mixins';
+  import Uploader from 'edit_channel/sharedComponents/Uploader.vue';
+  import { translate } from 'edit_channel/utils/string_helper';
+
+  export default {
+    name: 'FileUploadItem',
+    $trs: {
+      uploadButton: 'Select file',
+    },
+    components: {
+      Uploader,
+    },
+    filters: {
+      translate(text) {
+        return translate(text);
+      },
+    },
+    mixins: [fileSizeMixin],
+    props: {
+      file: {
+        type: Object,
+      },
+      preset: {
+        type: Object,
+      },
+      allowFileRemove: {
+        type: Boolean,
+        default: false,
+      },
+      readonly: {
+        type: Boolean,
+        default: false,
+      },
+      isSelected: {
+        type: Boolean,
+        default: false,
+      },
+    },
+  };
+
+</script>
+
+<style lang="less" scoped>
+
+  @import '../../../../less/global-variables.less';
+  .layout .section-header {
+    padding: 0 15px;
+    font-family: @font-family !important;
+    font-weight: bold;
+    color: @gray-700;
+  }
+
+  button {
+    margin: 0;
+  }
+  .v-list__tile {
+    .remove-icon {
+      display: none;
+    }
+    &:hover .remove-icon {
+      display: block;
+    }
+    .v-list__tile__title {
+      height: max-content;
+    }
+  }
+
+</style>
