@@ -60,19 +60,13 @@ export const fileErrorMixin = {
     getFileErrorMessage(files) {
       let firstFile = _.find(files, file => file.error);
       if (firstFile) {
-        let errorData = {
-          message: this.fileErrorStrings(firstFile.error),
-        };
+        let message = this.fileErrorStrings(firstFile.error);
         switch (firstFile.error) {
-          case fileErrors.NO_STORAGE:
-            errorData.action = this.fileErrorStrings('noStorageAction');
-            errorData.url = window.Urls.storage_settings();
-            break;
           case fileErrors.WRONG_TYPE:
-            errorData.messages.replace('{filetypes}', '');
+            message = message.replace('{filetypes}', '');
             break;
         }
-        return errorData;
+        return message;
       }
     },
   },

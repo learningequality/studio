@@ -69,7 +69,7 @@
         return this.file.file_format === 'pdf';
       },
       showFullscreenOption() {
-        return this.file && !this.isAudio && !this.file.uploading;
+        return this.file && this.file.file_on_disk && !this.isAudio && !this.file.uploading;
       },
     },
   };

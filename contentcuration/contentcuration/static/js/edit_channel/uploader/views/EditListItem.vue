@@ -14,16 +14,10 @@
         {{ node.title }}
       </VListTileTitle>
       <VListTileSubTitle v-if="firstFileError">
-        {{ firstFileError.message }}
+        {{ firstFileError }}
       </VListTileSubTitle>
       <VListTileSubTitle v-else-if="subtitleText">
         {{ subtitleText }}
-      </VListTileSubTitle>
-
-      <VListTileSubTitle v-if="firstFileError && firstFileError.action">
-        <a class="action-link" :href="firstFileError.url" target="_blank">
-          {{ firstFileError.action }}
-        </a>
       </VListTileSubTitle>
     </VListTileContent>
     <VSpacer />
