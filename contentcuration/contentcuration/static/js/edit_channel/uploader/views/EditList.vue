@@ -1,9 +1,9 @@
 <template>
-  <Uploader :readonly="!allowUpload">
-    <template v-slot:upload-zone>
-      <VList>
+  <Uploader @uploading="createNodesFromFiles">
+    <template slot="upload-zone">
+      <VList width="100%">
         <!-- Select all checkbox -->
-        <VListTile class="select-all-wrapper" @click="toggleSelectAll">
+        <VListTile @click="toggleSelectAll">
           <VListTileAction>
             <VCheckbox
               color="primary"
@@ -15,44 +15,16 @@
             <VListTileTitle>{{ $tr('selectAllLabel') }}</VListTileTitle>
           </VListTileContent>
         </VListTile>
-        <VDivider />
-
+      </VList>
+      <VList width="100%" twoLine>
         <!-- Selected items -->
         <EditListItem
           v-for="(node, index) in nodes"
           :key="node.id"
           :index="index"
-          :removable="allowAddTopic || allowAddExercise || allowUpload"
+          :removable="allowRemove"
         />
-
-        <!-- Create button -->
-        <VListTile v-if="allowAddTopic || allowAddExercise" class="add-item-wrapper">
-          <VListTileContent>
-            <VBtn
-              block
-              depressed
-              color="primary"
-              dark
-              textTruncate
-              @click="$emit('addNode')"
-            >
-              {{ addButtonText }}
-            </VBtn>
-          </VListTileContent>
-        </VListTile>
       </VList>
-    </template>
-    <template v-if="allowUpload" slot="upload-actions" slot-scope="uploader">
-      <VListTile>
-        <VListTileContent>
-          <VBtn block depressed dark color="primary" @click="uploader.openDialog">
-            {{ $tr('uploadButton') }}
-          </VBtn>
-        </VListTileContent>
-      </VListTile>
-      <p class="drop-prompt">
-        {{ $tr('dropFilesText') }}
-      </p>
     </template>
   </Uploader>
 </template>
@@ -76,6 +48,12 @@
     components: {
       EditListItem,
       Uploader,
+    },
+    props: {
+      allowRemove: {
+        type: Boolean,
+        default: false,
+      },
     },
     data() {
       return {
@@ -103,6 +81,7 @@
       ...mapMutations('edit_modal', {
         selectAll: 'SELECT_ALL_NODES',
         deselectAll: 'RESET_SELECTED',
+        createNodesFromFiles: 'ADD_NODES_FROM_FILES',
       }),
       toggleSelectAll() {
         this.selectAllChecked ? this.deselectAll() : this.selectAll();
@@ -115,27 +94,13 @@
 
 <style lang="less" scoped>
 
-  @import '../../../../less/global-variables.less';
-
-  .v-divider {
-    margin-top: 0;
-  }
-
-  .add-item-wrapper {
-    padding-bottom: 50px;
-    margin-top: 20px;
-    &.upload-item {
-      padding-bottom: 5px;
+  /deep/ .v-list {
+    width: 100%;
+    /deep/ a,
+    /deep/ a:hover {
+      color: inherit;
+      text-decoration: none;
     }
-  }
-
-  .drop-prompt {
-    margin-bottom: 50px;
-    font-weight: bold;
-    color: @gray-500;
-    text-align: center;
-    pointer-events: none;
-    cursor: default;
   }
 
 </style>

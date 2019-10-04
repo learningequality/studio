@@ -1,7 +1,20 @@
 <template>
-  <VIcon :class="kind" dark>
-    {{ icon }}
-  </VIcon>
+  <span>
+    <v-chip
+      v-if="showColor"
+      label
+      :color="kind"
+      :textColor="fontColor"
+      small
+    >
+      <v-icon small :color="fontColor">{{ icon }}</v-icon>
+      <span v-if="includeText">{{ $tr(kind) }}</span>
+    </v-chip>
+    <span v-else>
+      <v-icon :color="fontColor">{{ icon }}</v-icon>
+      <span v-if="includeText">{{ $tr(kind) }}</span>
+    </span>
+  </span>
 </template>
 
 <script>
@@ -13,6 +26,15 @@
 
   export default {
     name: 'ContentNodeIcon',
+    $trs: {
+      topic: 'Topic',
+      video: 'Video',
+      audio: 'Audio',
+      exercise: 'Exercise',
+      document: 'Document',
+      slideshow: 'Slideshow',
+      html5: 'HTML5 App',
+    },
     props: {
       kind: {
         type: String,
@@ -21,22 +43,33 @@
           return kinds.includes(value);
         },
       },
+      includeText: {
+        type: Boolean,
+        default: false,
+      },
+      showColor: {
+        type: Boolean,
+        default: true,
+      },
     },
     computed: {
+      fontColor() {
+        return this.showColor ? 'white' : 'grey darken-1';
+      },
       icon() {
         switch (this.kind) {
           case 'topic':
             return 'folder';
           case 'video':
-            return 'theaters';
+            return 'ondemand_video';
           case 'audio':
-            return 'headset';
-          case 'image':
+            return 'music_note';
+          case 'slideshow':
             return 'image';
           case 'exercise':
-            return 'star';
+            return 'assignment';
           case 'document':
-            return 'description';
+            return 'class';
           case 'html5':
             return 'widgets';
           default:
@@ -52,29 +85,13 @@
 <style lang="less" scoped>
 
   @import '../../../less/global-variables.less';
-
-  .v-icon {
-    padding: 2px;
-    font-size: 13pt !important;
-    color: white;
-    border-radius: 5px;
-    &.video {
-      background-color: @video-color;
+  .v-chip {
+    margin-right: 10px;
+    /deep/ .v-chip__content {
+      padding: 0 10px;
     }
-    &.audio {
-      background-color: @audio-color;
-    }
-    &.document {
-      background-color: @doc-color;
-    }
-    &.exercise {
-      background-color: @exercise-color;
-    }
-    &.html5 {
-      background-color: @html-color;
-    }
-    &.topic {
-      background-color: @topic-color;
+    span {
+      padding-left: 5px;
     }
   }
 
