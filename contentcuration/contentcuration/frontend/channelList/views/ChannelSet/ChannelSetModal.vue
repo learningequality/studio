@@ -1,9 +1,10 @@
 <template>
   <VDialog
     :value="$route.params.channelSetId == channelSetId"
+    ref="dialog"
     attach="body"
     fullscreen
-    :scrollable="true"
+    scrollable
   >
     <VCard>
       <VToolbar card prominent dark color="blue">
@@ -15,7 +16,7 @@
         </VToolbarTitle>
       </VToolbar>
       <VLayout row justify-center>
-        <VFlex xs12 sm6>
+        <VFlex md12 lg10 xl8>
           <VLayout row wrap>
             <VFlex xs12 sm6 md3>
               <VCardText>
@@ -204,6 +205,11 @@
     },
     created() {
       this.loadChannels();
+    },
+    mounted() {
+      // For some reason the 'hideScroll' method of the VDialog is not
+      // being called the first time the dialog is opened, so do that explicitly
+      this.$refs.dialog.hideScroll();
     },
     beforeRouteEnter(to, from, next) {
       next(vm => {
