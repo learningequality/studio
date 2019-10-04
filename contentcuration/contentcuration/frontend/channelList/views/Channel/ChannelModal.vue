@@ -101,7 +101,7 @@
       </VCardText>
       <VCardActions v-if="channel.edit">
         <VSpacer/>
-        <VBtn class="upper" color="error" @click="deleteChannel">
+        <VBtn class="upper" color="error" @click="deleteDialog=true">
           {{ $tr('deleteChannel') }}
         </VBtn>
         <VBtn class="upper" color="success" @click="save">
@@ -109,6 +109,25 @@
         </VBtn>
       </VCardActions>
     </VCard>
+    <PrimaryDialog v-model="deleteDialog" :title="$tr('deleteTitle')">
+      {{ $tr('deletePrompt') }}
+      <template v-slot:actions>
+        <VSpacer/>
+        <VBtn
+          color="primary"
+          flat
+          @click="deleteDialog=false"
+        >
+          {{ $tr('cancel') }}
+        </VBtn>
+        <VBtn
+          color="primary"
+          @click="deleteChannelAndClose"
+        >
+          {{ $tr('deleteChannel') }}
+        </VBtn>
+      </template>
+    </PrimaryDialog>
   </VDialog>
 </template>
 
@@ -117,11 +136,12 @@
 
   import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
   import pick from 'lodash/pick';
-
-  // Components
   import { isTempId } from '../../utils';
   import { RouterNames } from '../../constants';
   import Constants from 'edit_channel/constants/index';
+
+  // Components
+  import PrimaryDialog from 'shared/views/PrimaryDialog';
   import CopyToken from 'shared/views/CopyToken';
   import ChannelStar from './ChannelStar';
   import ChannelDetails from './ChannelDetails';
@@ -149,6 +169,7 @@
       CopyToken,
       ChannelStar,
       ChannelDetails,
+      PrimaryDialog,
       ThumbnailUpload,
     },
     $trs: {
@@ -165,13 +186,13 @@
       errorChannelSave: 'Error Saving Channel',
       saving: 'Saving...',
       created: 'Created {date, date, medium}',
-      published: 'Last Published {date, date, medium}',
+      published: 'Last published {date, date, medium}',
       openChannel: 'Open channel',
       editDetails: 'Edit details',
-      deleteTitle: 'Delete this Channel',
+      deleteTitle: 'Delete this channel',
       deletePrompt: 'Once you delete a channel, the channel will be permanently deleted.',
       deleteChannel: 'Delete channel',
-      deletingChannel: 'Deleting Channel...',
+      deletingChannel: 'Deleting channel...',
       deleteWarning:
         'All content under this channel will be deleted.\nAre you sure you want to delete this channel?',
       authors: 'This channel features resources created by',
@@ -259,6 +280,7 @@
       return {
         saving: false,
         loading: false,
+        deleteDialog: false,
       };
     },
     mounted() {
@@ -397,7 +419,7 @@
       },
     },
     methods: {
-      ...mapActions('channelList', ['saveChannel', 'loadChannel', 'loadChannelDetails']),
+      ...mapActions('channelList', ['saveChannel', 'loadChannel', 'loadChannelDetails', 'deleteChannel']),
       ...mapMutations('channelList', {
         updateChannel: 'UPDATE_CHANNEL',
       }),
@@ -454,7 +476,9 @@
       saveAndClose() {
         this.save().then(this.close);
       },
-      deleteChannel() {},
+      deleteChannelAndClose() {
+        this.deleteChannel(this.channelId).then(this.close);
+      },
     },
   };
 

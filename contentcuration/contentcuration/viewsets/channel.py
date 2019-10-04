@@ -76,6 +76,7 @@ class ChannelSerializer(WriteOnlySerializer):
             "thumbnail_encoding",
             "language",
             "bookmark",
+            "deleted",
         )
         read_only_fields = ("id",)
 
@@ -127,9 +128,15 @@ class ChannelViewSet(ValuesViewset):
     }
 
     def get_queryset(self):
-        queryset = Channel.objects.filter(
-            Q(editors=self.request.user) | Q(viewers=self.request.user) | Q(public=True)
-        ).distinct()
+        queryset = (
+            Channel.objects.filter(deleted=False)
+            .filter(
+                Q(editors=self.request.user)
+                | Q(viewers=self.request.user)
+                | Q(public=True)
+            )
+            .distinct()
+        )
         return self.prefetch_queryset(queryset)
 
     def prefetch_queryset(self, queryset):

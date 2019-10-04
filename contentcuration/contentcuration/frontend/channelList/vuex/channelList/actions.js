@@ -60,10 +60,9 @@ export function saveChannel(context, channelId) {
 
 export function deleteChannel(context, channelId) {
   return client
-    .patch(window.Urls['channel-details'](channelId), { deleted: true })
-    .then(response => {
-      const channel = response.data;
-      context.commit('REMOVE_CHANNEL', channel.id);
+    .patch(window.Urls['channel-detail'](channelId), { deleted: true })
+    .then(() => {
+      context.commit('REMOVE_CHANNEL', channelId);
     });
 }
 
