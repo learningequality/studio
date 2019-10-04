@@ -47,8 +47,12 @@ class ChannelSetViewSet(ValuesViewset):
 
     def get_queryset(self):
         return ChannelSet.objects.filter(
-            Q(editors=self.request.user) | Q(public=True)
-        ).distinct()
+            id__in=ChannelSet.objects.filter(
+                Q(editors=self.request.user) | Q(public=True)
+            )
+            .distinct()
+            .values_list("id", flat=True)
+        )
 
     def prefetch_queryset(self, queryset):
         queryset = queryset.select_related("secret_token")

@@ -34,13 +34,13 @@ class ChannelFilter(FilterSet):
         fields = ("edit", "view", "public", "bookmark", "ids")
 
     def filter_edit(self, queryset, name, value):
-        return queryset.filter(editors=self.request.user)
+        return queryset.filter(edit=True)
 
     def filter_view(self, queryset, name, value):
-        return queryset.filter(viewers=self.request.user)
+        return queryset.filter(view=True)
 
     def filter_bookmark(self, queryset, name, value):
-        return queryset.filter(bookmarked_by=self.request.user)
+        return queryset.filter(bookmark=True)
 
     def filter_ids(self, queryset, name, value):
         try:
@@ -128,14 +128,50 @@ class ChannelViewSet(ValuesViewset):
     }
 
     def get_queryset(self):
-        queryset = (
-            Channel.objects.filter(deleted=False)
-            .filter(
+        queryset = Channel.objects.filter(deleted=False).filter(
+            id__in=Channel.objects.filter(
                 Q(editors=self.request.user)
                 | Q(viewers=self.request.user)
                 | Q(public=True)
             )
             .distinct()
+            .values_list("id", flat=True)
+        )
+        user_queryset = User.objects.filter(id=self.request.user.id)
+        # Annotate edit, view, and bookmark onto the channels
+        # Have to cast to integer first as it initially gets set
+        # as a Big Integer, which cannot be cast directly to a Boolean
+        queryset = queryset.annotate(
+            edit=Cast(
+                Cast(
+                    SQCount(
+                        user_queryset.filter(editable_channels=OuterRef("id")),
+                        field="id",
+                    ),
+                    IntegerField(),
+                ),
+                BooleanField(),
+            ),
+            view=Cast(
+                Cast(
+                    SQCount(
+                        user_queryset.filter(view_only_channels=OuterRef("id")),
+                        field="id",
+                    ),
+                    IntegerField(),
+                ),
+                BooleanField(),
+            ),
+            bookmark=Cast(
+                Cast(
+                    SQCount(
+                        user_queryset.filter(bookmarked_channels=OuterRef("id")),
+                        field="id",
+                    ),
+                    IntegerField(),
+                ),
+                BooleanField(),
+            ),
         )
         return self.prefetch_queryset(queryset)
 
@@ -143,21 +179,8 @@ class ChannelViewSet(ValuesViewset):
         prefetch_secret_token = Prefetch(
             "secret_tokens", queryset=SecretToken.objects.filter(is_primary=True)
         )
-        prefetch_editors = Prefetch(
-            "editors", queryset=User.objects.filter(id=self.request.user.id)
-        )
-        prefetch_viewers = Prefetch(
-            "viewers", queryset=User.objects.filter(id=self.request.user.id)
-        )
-        prefetch_bookmarked = Prefetch(
-            "bookmarked_by", queryset=User.objects.filter(id=self.request.user.id)
-        )
-
         queryset = queryset.select_related("language", "main_tree").prefetch_related(
-            prefetch_secret_token,
-            prefetch_editors,
-            prefetch_viewers,
-            prefetch_bookmarked,
+            prefetch_secret_token
         )
         return queryset
 
@@ -181,13 +204,5 @@ class ChannelViewSet(ValuesViewset):
         )
         queryset = queryset.annotate(
             count=SQCount(non_topic_content_ids, field="content_id")
-        )
-        # Annotate edit, view, and bookmark onto the channels
-        # Have to cast to integer first as it initially gets set
-        # as a Big Integer, which cannot be cast directly to a Boolean
-        queryset = queryset.annotate(
-            edit=Cast(Cast(Count("editors"), IntegerField()), BooleanField()),
-            view=Cast(Cast(Count("viewers"), IntegerField()), BooleanField()),
-            bookmark=Cast(Cast(Count("bookmarked_by"), IntegerField()), BooleanField()),
         )
         return queryset
