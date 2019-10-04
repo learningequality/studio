@@ -1,7 +1,8 @@
 <template>
   <VContent>
     <VContainer fluid fillHeight>
-      <VLayout v-if="!selected.length" justifyCenter alignCenter fillHeight>
+      <FileUploadDefault v-if="uploadMode && !nodes.length" />
+      <VLayout v-else-if="!selected.length" justifyCenter alignCenter fillHeight>
         <VFlex grow class="default-content">
           {{ noItemText }}
         </VFlex>
@@ -23,7 +24,7 @@
       </VLayout>
       <VLayout v-else justifyCenter>
         <VFlex grow>
-          <VTabs v-model="currentTab" fixedTabs sliderColor="primary">
+          <VTabs v-model="currentTab" sliderColor="primary">
             <!-- Details tab -->
             <VTab ref="detailstab" :href="`#${tabs.DETAILS}`">
               {{ $tr(tabs.DETAILS) }}
@@ -57,7 +58,6 @@
               </VChip>
             </VTab>
           </VTabs>
-
           <VTabsItems v-model="currentTab">
             <VTabItem :key="tabs.DETAILS" ref="detailswindow" :value="tabs.DETAILS" lazy>
               <VAlert :value="selected.length > 1" type="info" outline>
@@ -92,6 +92,7 @@
   import { mapActions, mapGetters, mapState } from 'vuex';
   import { TabNames, modes } from '../constants';
   import DetailsTabView from './DetailsTabView.vue';
+  import FileUploadDefault from 'edit_channel/file_upload/views/FileUploadDefault.vue';
 
   export default {
     name: 'EditView',
@@ -114,6 +115,7 @@
     },
     components: {
       DetailsTabView,
+      FileUploadDefault,
     },
     props: {
       isClipboard: {
@@ -138,9 +140,11 @@
         if (!this.nodes.length) {
           if (this.mode === modes.NEW_EXERCISE) return this.$tr('addExerciseText');
           else if (this.mode === modes.NEW_TOPIC) return this.$tr('addTopicText');
-          else if (this.mode === modes.UPLOAD) return this.$tr('uploadText');
         }
         return this.viewOnly ? this.$tr('noItemsToViewText') : this.$tr('noItemsToEditText');
+      },
+      uploadMode() {
+        return this.mode === modes.UPLOAD;
       },
       tabs() {
         return TabNames;
@@ -189,6 +193,10 @@
 
   @import '../../../../less/global-variables.less';
 
+  .container {
+    width: unset;
+  }
+
   .v-alert {
     padding: 10px;
     margin: 15px;
@@ -200,8 +208,13 @@
 
     margin: 10% auto;
   }
+  .v-tabs {
+    margin: -32px -31px 0;
+    border-bottom: 1px solid @gray-300;
+  }
 
   .v-tabs__div {
+    padding: 0 20px;
     font-weight: bold;
     .v-icon {
       margin-left: 5px;

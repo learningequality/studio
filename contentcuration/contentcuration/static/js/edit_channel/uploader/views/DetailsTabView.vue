@@ -2,6 +2,13 @@
   <div v-if="Object.keys(changes).length" class="details-edit-view">
     <VForm ref="form" v-model="valid" :lazyValidation="newContent" :disabled="viewOnly">
       <VLayout grid wrap>
+        <!-- File upload and preview section -->
+        <FileUpload
+          v-if="oneSelected && allResources && !allExercises"
+          :key="selectedIndices[0]"
+          :nodeIndex="selectedIndices[0]"
+        />
+
         <!-- Title -->
         <VFlex v-if="oneSelected" xs12>
           <VTextField
@@ -34,6 +41,7 @@
           <VCombobox
             ref="tags"
             v-model="contentTags"
+            class="tagbox"
             :items="tags"
             :searchInput.sync="tagText"
             :readonly="viewOnly"
@@ -241,6 +249,7 @@
   import LicenseDropdown from 'edit_channel/sharedComponents/LicenseDropdown.vue';
   import MasteryDropdown from 'edit_channel/sharedComponents/MasteryDropdown.vue';
   import VisibilityDropdown from 'edit_channel/sharedComponents/VisibilityDropdown.vue';
+  import FileUpload from 'edit_channel/file_upload/views/FileUpload.vue';
 
   export default {
     name: 'DetailsTabView',
@@ -275,6 +284,7 @@
       LicenseDropdown,
       MasteryDropdown,
       VisibilityDropdown,
+      FileUpload,
     },
     props: {
       viewOnly: {
@@ -504,8 +514,10 @@
 
   @space-between-sections: 64px;
 
-  /deep/ a {
-    .linked-list-item;
+  /deep/ a,
+  /deep/ a:hover {
+    color: inherit;
+    text-decoration: none;
   }
 
   /deep/ .error--text {
@@ -519,8 +531,7 @@
 
   .details-edit-view {
     max-width: 1800px;
-    padding: 30px;
-    margin: 0 auto;
+    padding: 10px;
 
     .v-expansion-panel {
       margin-top: @space-between-sections;
@@ -581,7 +592,7 @@
 
     .v-form {
       margin-top: 30px;
-      /deep/ .v-chip__content {
+      .tagbox /deep/ .v-chip__content {
         color: black; // Read-only tag box grays out tags
       }
       .flex:not(:first-child) {
