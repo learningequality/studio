@@ -29,13 +29,11 @@
                 <ThumbnailUpload v-model="thumbnail" :readonly="!canEdit" />
               </VFlex>
               <VFlex xs12 sm12 md8>
-                <VAutocomplete
+                <LanguageDropdown
                   v-model="language"
-                  :items="languages"
-                  prependInnerIcon="language"
-                  :readonly="!canEdit"
-                  itemText="native_name"
-                  itemValue="id"
+                  :readonly="true"
+                  :required="canEdit"
+                  :placeholder="$tr('channelLanguagePlaceholder')"
                 />
                 <VTextField
                   v-model="name"
@@ -145,6 +143,7 @@
   import CopyToken from 'shared/views/CopyToken';
   import ChannelStar from './ChannelStar';
   import ChannelDetails from './ChannelDetails';
+  import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown';
   import ThumbnailUpload from 'shared/views/ThumbnailUpload';
 
   const SCALE_TEXT = [
@@ -169,6 +168,7 @@
       CopyToken,
       ChannelStar,
       ChannelDetails,
+      LanguageDropdown,
       PrimaryDialog,
       ThumbnailUpload,
     },
