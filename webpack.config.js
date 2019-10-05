@@ -85,14 +85,8 @@ module.exports = (env = {}) => {
       },
     },
     optimization: {
-      // builds a bundle that holds common code between the 2 entry points
       splitChunks: {
         cacheGroups: {
-          // commons: {
-          //   name: 'common',
-          //   chunks: 'initial',
-          //   minChunks: 2,
-          // },
           // Chunk css by bundle, not by dynamic split points.
           // This will add a bit to each bundle, but will mean we don't
           // have to dynamically determine which css bundle to load
