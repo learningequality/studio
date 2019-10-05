@@ -20,6 +20,8 @@
         v-if="loading"
         indeterminate
         color="primary"
+        style="margin: 0px;"
+        height="5"
       />
       <VCardText v-else>
         <VLayout row justify-center>
@@ -31,7 +33,7 @@
               <VFlex xs12 sm12 md8>
                 <LanguageDropdown
                   v-model="language"
-                  :readonly="true"
+                  :readonly="!canEdit"
                   :required="canEdit"
                   :placeholder="$tr('channelLanguagePlaceholder')"
                 />

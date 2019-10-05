@@ -25,7 +25,7 @@
       ref="fileUpload"
       style="display: none;"
       type="file"
-      accept="image/*"
+      accept="image/jpg,image/png"
       @change="handleFiles($event.target.files)"
     >
     <label for="fileElem">
@@ -88,7 +88,7 @@
         this.handleFiles(e.dataTransfer.files);
       },
       handleFiles(files) {
-        if (!readonly) {
+        if (!this.readonly) {
           [...files].forEach(file => {
             const id = String(Math.random()).slice(2);
             const fileDetails = {

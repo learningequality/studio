@@ -89,7 +89,6 @@
   export default {
     name: 'ChannelItem',
     $trs: {
-      openChannelTitle: "{channelName} ('CTRL' or 'CMD' + click to open in new tab)",
       resourceCount: '{count, plural,\n =1 {# Resource}\n other {# Resources}}',
       unpublishedText: 'Unpublished',
       lastPublished: 'Published {last_published}',

@@ -79,6 +79,7 @@
         if (!openProp && modalTracker.uid === this._uid && modalTracker.open) {
           modalTracker.open = false;
           modalTracker.name = '';
+          modalTracker.uid = null;
         } else if (openProp && modalTracker.open) {
           // eslint-disable-next-line no-console
           console.error(
