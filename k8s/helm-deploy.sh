@@ -43,3 +43,4 @@ helm upgrade --install $RELEASENAME . \
      --set sentry.dsnKey=$(echo "$SENTRY_DSN_KEY" | base64 --wrap=0) \
      --set studioProber.newrelicKey=$PROBER_NEWRELIC_KEY \
      --set-string studioProber.newrelicAccountId=$PROBER_NEWRELIC_ACCOUNT_ID  # use set-string to resolve the issue https://github.com/helm/helm/issues/1707
+     --timeout 1500

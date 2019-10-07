@@ -11,7 +11,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum: {{ include (print $.Template.BasePath "/studio-secrets.yaml") . | sha256sum }}
+        checksum: {{ include (print $.Template.BasePath "/job-template.yaml") . | sha256sum }}
       labels:
         app: {{ template "studio.fullname" . }}
         tier: app
@@ -79,21 +79,6 @@ spec:
         volumeMounts:
         - mountPath: /app/contentworkshop_static/
           name: staticfiles
-      initContainers:
-      - name: db-migrate
-        image: {{ .Values.studioApp.imageName }}
-        command:
-          - make
-          - migrate
-        env: {{ include "studio.sharedEnvs" . | nindent 8 }}
-        volumeMounts: {{ include "studio.pvc.gcs-creds" . | nindent 10 }}
-        resources:
-          requests:
-            cpu: 1000m
-            memory: 2Gi
-          limits:
-            cpu: 1000m
-            memory: 2Gi
       volumes:
         - emptyDir: {}
           name: staticfiles
@@ -128,5 +113,5 @@ spec:
             cpu: 0.5
             memory: 2Gi
           limits:
-            cpu: 0.5
-            memory: 2Gi
+            cpu: 2
+            memory: 8Gi
