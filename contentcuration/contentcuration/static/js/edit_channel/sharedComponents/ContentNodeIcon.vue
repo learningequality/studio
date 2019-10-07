@@ -1,15 +1,14 @@
 <template>
-  <VIcon :class="kind" dark>
+  <VIcon class="icon" :class="kind" dark>
     {{ icon }}
   </VIcon>
 </template>
 
 <script>
 
-  import _ from 'underscore';
   import Constants from 'edit_channel/constants';
 
-  const kinds = _.pluck(Constants.ContentKinds, 'kind');
+  const kinds = Constants.ContentKinds.map(kind => kind.kind);
 
   export default {
     name: 'ContentNodeIcon',
@@ -51,9 +50,15 @@
 
 <style lang="less" scoped>
 
-  @import '../../../less/global-variables.less';
+  @topic-color: #aaaaaa;
+  @video-color: #283593;
+  @audio-color: #f06292;
+  @doc-color: #ff3d00;
+  @exercise-color: #4db6ac;
+  @html-color: #ff8f00;
+  @slideshow-color: #4ece90;
 
-  .v-icon {
+  .icon {
     padding: 2px;
     font-size: 13pt !important;
     color: white;

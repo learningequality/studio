@@ -260,3 +260,16 @@
     </VLayout>
 
 </template>
+
+<script>
+
+  import ContentNodeIcon from 'edit_channel/sharedComponents/ContentNodeIcon';
+
+  export default {
+    name: 'ChannelDetails',
+    components: {
+      ContentNodeIcon,
+    },
+  }
+
+</script>
