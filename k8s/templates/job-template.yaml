@@ -15,9 +15,6 @@ data:
   MPLBACKEND: PS
   STUDIO_BETA_MODE: "yes"
   RUN_MODE: k8s
-  CELERY_REDIS_DB: "0"
-  CELERY_BROKER_ENDPOINT: {{ template "redis.fullname" . }}-master
-  CELERY_RESULT_BACKEND_ENDPOINT: {{ template "redis.fullname" . }}-master
   RELEASE_COMMIT_SHA: {{ .Values.studioApp.releaseCommit | default "" }}
   BRANCH_ENVIRONMENT: {{ .Release.Name }}
 ---
@@ -38,7 +35,6 @@ data:
   DATA_DB_NAME: {{ .Values.postgresql.postgresDatabase | default "" | b64enc }}
   DATA_DB_USER: {{ .Values.postgresql.postgresUser | default "" | b64enc }}
   DATA_DB_PASS: {{ .Values.postgresql.postgresPassword | default "" | b64enc }}
-  CELERY_REDIS_PASSWORD: {{ .Values.redis.password | default "" | b64enc }}
   SENTRY_DSN_KEY: {{ .Values.sentry.dsnKey | default "" | b64enc }}
 ---
 apiVersion: batch/v1
