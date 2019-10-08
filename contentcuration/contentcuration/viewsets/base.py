@@ -1,3 +1,5 @@
+from django.http import Http404
+
 from rest_framework.response import Response
 from rest_framework.serializers import ModelSerializer
 from rest_framework.status import HTTP_201_CREATED
@@ -77,7 +79,12 @@ class ValuesViewset(ModelViewSet):
 
     def serialize_object(self, pk):
         queryset = self.filter_queryset(self.get_queryset())
-        return self._map_fields(self._serialize_queryset(queryset).filter(pk=pk).get())
+        try:
+            return self._map_fields(self._serialize_queryset(queryset).get(pk=pk))
+        except queryset.model.DoesNotExist:
+            raise Http404(
+                "No %s matches the given query." % queryset.model._meta.object_name
+            )
 
     def retrieve(self, request, pk, *args, **kwargs):
         return Response(self.serialize_object(pk))

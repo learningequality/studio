@@ -204,18 +204,6 @@ class ChannelSetTestCase(BaseAPITestCase):
         self.channelset.save()
         self.assertEqual(token, self.channelset.secret_token.token)
 
-    def test_get_channels_by_token(self):
-        token = self.channelset.secret_token.token
-        response = self.get(reverse_lazy("get_channels_by_token", kwargs={'token': token}))
-        self.assertEqual(response.status_code, 200)
-        channels = json.loads(response.content)
-        for c in channels:
-            self.assertTrue(any(t['token'] == token for t in c['secret_tokens']))  # All channels should have matching token
-
-        # Make sure there aren't any channels that shouldn't be in the list
-        channel_ids = [c['id'] for c in channels]
-        self.assertFalse(self.channelset.secret_token.channels.exclude(pk__in=channel_ids).exists())
-
     def test_channelset_deletion(self):
         """ Make sure channels are preserved and tokens are deleted """
         token = self.channelset.secret_token.token
