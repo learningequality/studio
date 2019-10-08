@@ -1,7 +1,6 @@
 import omit from 'lodash/omit';
 import cloneDeep from 'lodash/cloneDeep';
 import isEqual from 'lodash/isEqual';
-import store from './store';
 
 export function lastSavedStateFactory(idKey = 'id') {
   // Return an object with methods to track the last saved state

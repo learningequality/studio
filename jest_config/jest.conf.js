@@ -4,6 +4,7 @@ const staticFilesDir = '<rootDir>/contentcuration/contentcuration/static';
 const staticJsDir = path.join(staticFilesDir, 'js');
 const staticLessDir = path.join(staticFilesDir, 'less');
 const studioJqueryDir = path.join(staticJsDir, 'utils', 'studioJquery');
+const frontendDir = '<rootDir>/contentcuration/contentcuration/frontend';
 
 module.exports = {
   globals: {
@@ -15,7 +16,7 @@ module.exports = {
   },
   rootDir: path.resolve(__dirname, '../'),
   moduleFileExtensions: ['js', 'json', 'vue'],
-  modulePaths: [staticJsDir, staticLessDir],
+  modulePaths: [frontendDir, staticJsDir, staticLessDir],
   moduleNameMapper: {
     // copied from webpack config aliases
     jquery: studioJqueryDir,

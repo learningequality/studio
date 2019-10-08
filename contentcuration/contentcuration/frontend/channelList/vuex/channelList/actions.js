@@ -85,7 +85,7 @@ export function acceptInvitation(context, invitationId) {
   const invitation = context.getters.getInvitation(invitationId);
   return client.delete(window.Urls.invitation_detail(invitationId), { params: { accepted: true }}).then(() => {
     context.commit('ACCEPT_INVITATION', invitationId);
-    return loadChannel(context, invitation.channel_id);
+    return context.dispatch('loadChannel', invitation.channel_id);
   });
 }
 

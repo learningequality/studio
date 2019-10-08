@@ -7,9 +7,9 @@ export const channelSetLastSavedState = lastSavedStateFactory();
 
 export default {
   namespaced: true,
-  state: {
+  state: () => ({
     channelSetsMap: {},
-  },
+  }),
   actions,
   mutations,
   getters,
