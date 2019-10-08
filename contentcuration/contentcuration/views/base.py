@@ -8,9 +8,9 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
-from django.core.urlresolvers import reverse_lazy
 from django.db.models import IntegerField
 from django.db.models import Q
+from django.db.models import OuterRef
 from django.db.models import Subquery
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
@@ -21,7 +21,6 @@ from django.shortcuts import redirect
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic.base import TemplateView
-from enum import Enum
 from le_utils.constants import content_kinds
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.authentication import SessionAuthentication
@@ -36,15 +35,12 @@ from rest_framework.response import Response
 from contentcuration.api import activate_channel
 from contentcuration.api import get_staged_diff
 from contentcuration.decorators import browser_is_supported
-from contentcuration.decorators import can_access_channel
-from contentcuration.decorators import can_edit_channel
 from contentcuration.decorators import has_accepted_policies
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import User
 from contentcuration.serializers import ContentNodeSerializer
 from contentcuration.serializers import CurrentUserSerializer
-from contentcuration.serializers import RootNodeSerializer
 from contentcuration.serializers import SimplifiedChannelProbeCheckSerializer
 from contentcuration.serializers import TaskSerializer
 from contentcuration.serializers import UserChannelListSerializer
@@ -106,28 +102,6 @@ def get_or_set_cached_constants(constant, serializer):
     return constant_data
 
 
-def redirect_to_channel_edit(request, channel_id):
-    return redirect(reverse_lazy('channel', kwargs={'channel_id': channel_id}))
-
-
-def redirect_to_channel_view(request, channel_id):
-    return redirect(reverse_lazy('channel_view_only', kwargs={'channel_id': channel_id}))
-
-
-def channel_page(request, channel, allow_edit=False, staging=False):
-    return render(request, 'channel_edit.html', {"allow_edit": allow_edit,
-                                                 "staging": staging,
-                                                 "is_public": channel.public,
-                                                 "channel_id": channel.pk,
-                                                 "channel_name": channel.name,
-                                                 "ricecooker_version": channel.ricecooker_version,
-                                                 "channel_list": channel_list,
-                                                 "preferences": json.dumps(channel.content_defaults),
-                                                 "messages": get_messages(),
-                                                 "title": settings.DEFAULT_TITLE,
-                                                 })
-
-
 @login_required
 @browser_is_supported
 @has_accepted_policies
@@ -150,36 +124,21 @@ def channel(request, channel_id):
     channel = get_object_or_404(Channel, id=channel_id, deleted=False)
 
     # Check user has permission to view channel
-    if not channel.editors.filter(id=request.user.id).exists() and not request.user.is_admin:
-        return redirect(reverse_lazy('channel_view_only', kwargs={'channel_id': channel_id}))
+    if not request.user.can_view(channel):
+        raise HttpResponseNotFound("Channel not found")
 
-    return channel_page(request, channel, allow_edit=True)
-
-
-@login_required
-@browser_is_supported
-@can_access_channel
-@has_accepted_policies
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
-@permission_classes((IsAuthenticated,))
-def channel_view_only(request, channel_id):
-    channel = get_object_or_404(Channel, id=channel_id, deleted=False)
-    return channel_page(request, channel)
-
-
-@login_required
-@browser_is_supported
-@can_edit_channel
-@has_accepted_policies
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
-@permission_classes((IsAuthenticated,))
-def channel_staging(request, channel_id):
-    channel = Channel.objects.get(pk=channel_id)
-
-    if not channel.staging_tree:
-        return render(request, 'staging_not_found.html')
-
-    return channel_page(request, channel, allow_edit=True, staging=True)
+    return render(request, 'channel_edit.html', {
+        "allow_edit": True,
+        "staging": False,
+        "is_public": channel.public,
+        "channel_id": channel.pk,
+        "channel_name": channel.name,
+        "ricecooker_version": channel.ricecooker_version,
+        "channel_list": channel_list,
+        "preferences": json.dumps(channel.content_defaults),
+        "messages": get_messages(),
+        "title": settings.DEFAULT_TITLE,
+    })
 
 
 @csrf_exempt

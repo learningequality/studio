@@ -436,7 +436,7 @@
       },
       importUrl() {
         let selected = this.selected[0];
-        let baseUrl = window.Urls.channel_view_only(selected.original_channel.id);
+        let baseUrl = window.Urls.channel(selected.original_channel.id);
         return baseUrl + '/' + selected.original_source_node_id;
       },
       importChannelName() {
