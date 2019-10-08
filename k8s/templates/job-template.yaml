@@ -39,9 +39,7 @@ data:
   DATA_DB_USER: {{ .Values.postgresql.postgresUser | default "" | b64enc }}
   DATA_DB_PASS: {{ .Values.postgresql.postgresPassword | default "" | b64enc }}
   CELERY_REDIS_PASSWORD: {{ .Values.redis.password | default "" | b64enc }}
-  {{ if .Values.sentry.dsnKey }}
-  SENTRY_DSN_KEY: {{ .Values.sentry.dsnKey }}
-  {{ end }}
+  SENTRY_DSN_KEY: {{ .Values.sentry.dsnKey | default "" | b64enc }}
 ---
 apiVersion: batch/v1
 kind: Job
