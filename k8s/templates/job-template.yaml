@@ -11,6 +11,7 @@ metadata:
 data:
   DJANGO_SETTINGS_MODULE: {{ .Values.settings }}
   DJANGO_LOG_FILE: /var/log/django.log
+  DATA_DB_PORT: "5432"
   MPLBACKEND: PS
   STUDIO_BETA_MODE: "yes"
   RUN_MODE: k8s
@@ -33,9 +34,8 @@ metadata:
     "helm.sh/hook-delete-policy": before-hook-creation
 type: Opaque
 data:
-  DATA_DB_HOST: {{ .Values.postgresql.externalCloudSQL.proxyHostName | default (include "postgresql.fullname" .) }}
+  DATA_DB_HOST: {{ .Values.postgresql.externalCloudSQL.proxyHostName | default (include "postgresql.fullname" .) | b64enc }}
   DATA_DB_NAME: {{ .Values.postgresql.postgresDatabase | default "" | b64enc }}
-  DATA_DB_PORT: "5432"
   DATA_DB_USER: {{ .Values.postgresql.postgresUser | default "" | b64enc }}
   DATA_DB_PASS: {{ .Values.postgresql.postgresPassword | default "" | b64enc }}
   CELERY_REDIS_PASSWORD: {{ .Values.redis.password | default "" | b64enc }}
@@ -64,12 +64,12 @@ spec:
         - migrate
         envFrom:
         - configMapRef:
-            name: {{ template "studio.fullname" . }}-django-config
+            name: {{ template "studio.fullname" . }}-db-migrate-config
+        - secretRef:
+            name: {{ template "studio.fullname" . }}-db-migrate-secrets
         env:
         - name: DJANGO_SETTINGS_MODULE
           value: contentcuration.migration_production_settings
-        volumeMounts:
-        {{ include "studio.pvc.gcs-creds" . | nindent 8 }}
         resources:
           requests:
             cpu: 1
@@ -77,8 +77,3 @@ spec:
           limits:
             cpu: 1
             memory: 2Gi
-      volumes:
-      - name: gcs-creds
-        secret:
-          secretName: {{ template "studio.fullname" . }}-gcs-creds-for-dbmigrate
-          optional: true
