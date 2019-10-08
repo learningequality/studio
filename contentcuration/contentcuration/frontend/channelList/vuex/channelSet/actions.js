@@ -37,7 +37,9 @@ export function saveChannelSet(context, channelSetId) {
       return client
         .patch(window.Urls['channelset-detail'](channelSetId), channelSetData)
         .then(response => {
-          channelSetLastSavedState.storeLastSavedState(context.getters.getChannelSet(channelSetId));
+          if (response.data) {
+            channelSetLastSavedState.storeLastSavedState(context.getters.getChannelSet(channelSetId));
+          }
           return null;
         });
     }
