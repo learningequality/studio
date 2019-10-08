@@ -60,8 +60,8 @@ export function TOGGLE_BOOKMARK(state, id) {
 
 export function ADD_CHANNEL_DETAILS(state, {id, details}) {
   state.channelDetailsMap = {
-    ...state.channelsMap,
-    id: details,
+    ...state.channelDetailsMap,
+    [id]: details,
   };
 }
 

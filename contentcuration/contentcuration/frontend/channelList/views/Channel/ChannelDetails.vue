@@ -1,7 +1,7 @@
 <template>
     
     <VLayout row wrap>
-      <VFlex xs12 sm12 md8 justifyCenter>
+      <VFlex xs12 justify-center>
         <VTabs>
           <VTab :key="0">
             {{ $tr('whats_inside') }}
@@ -9,24 +9,30 @@
           <VTabItem :key="0">
             <VLayout row wrap>
               <VFlex v-if="countBar" xs6>
-                {{ $tr('resource_size') }}
-                <span id="count_gauge" data-toggle="tooltip" data-placement="top" :title="$tr('resource_count', { count: channelDetails.resource_count}) + '-' + countBar.text">
-                  <b v-for="(fill, i) in countBar.filled" :key="i" class="count_icon" :class="fill ? 'filled' : ''">
-                    ▮
-                  </b>
-                </span>
+                <VTooltip top>
+                  <template v-slot:activator="{ on }">
+                    {{ $tr('resource_size') }}
+                    <b v-for="(fill, i) in countBar.filled" :key="i" class="count_icon" :class="fill ? 'filled' : ''">
+                      ▮
+                    </b>
+                  </template>
+                  <span>{{ $tr('resource_count', { count: channelDetails.resource_count}) + '-' + countBar.text }}</span>
+                </VTooltip>
               </VFlex>
               <VFlex v-if="sizeBar" xs6>
-                {{ $tr('storage') }}
-                <span data-toggle="tooltip" data-placement="top" :title="channelDetails.resource_size + '-' + sizeBar.text">
-                  <VIcon v-for="(fill, i) in sizeBar.filled" :key="i">
-                    sd_storage
-                  </VIcon>
-                </span>
+                <VTooltip top>
+                  <template v-slot:activator="{ on }">
+                    {{ $tr('storage') }}
+                    <VIcon v-for="(fill, i) in sizeBar.filled" :key="i">
+                      sd_storage
+                    </VIcon>
+                  </template>
+                  <span>{{ channelDetails.resource_size + '-' + sizeBar.text }}</span>
+                </VTooltip>
               </VFlex>
             </VLayout>
             <VLayout row wrap>
-              <template v-if="channelDetails.kind_count">
+              <template v-if="channelDetails.kind_count.length">
                 <VFlex xs8>
                   <!-- D3 Pie chart will be inserted here -->
                 </VFlex>
@@ -37,13 +43,18 @@
             </VLayout>
             <VLayout row wrap>
               <VFlex xs12>
-                {{ $tr('includes') }}
                 <VLayout row wrap>
-                  <VFlex v-if="channelDetails.languages" xs6>
-                    <p>{{ $tr('languages') }}</p>
-                    <VChip v-for="lang in channelDetails.languages.slice(0, 9)" :key="lang">
-                      {{ lang }}
-                    </VChip>
+                  <VFlex v-if="channelDetails.languages.length" xs12>
+                    <VLayout row wrap align-center>
+                      <VFlex xs1>
+                        <span>{{ $tr('languages') }}</span>
+                      </VFlex>
+                      <VFlex xs11>
+                        <VChip v-for="lang in channelDetails.languages.slice(0, 9)" :key="lang">
+                          {{ lang }}
+                        </VChip>
+                      </VFlex>
+                    </VLayout>
                     <VExpansionPanel v-if="channelDetails.languages.length > 10">
                       <VExpansionPanelContent>
                         <template v-slot:header>
@@ -55,7 +66,7 @@
                       </VExpansionPanelContent>
                     </VExpansionPanel>
                   </VFlex>
-                  <VFlex v-if="channelDetails.accessible_languages" xs6>
+                  <VFlex v-if="channelDetails.accessible_languages.length" xs12>
                     <p>{{ $tr('accessible_languages') }}</p>
                     <VChip v-for="lang in channelDetails.accessible_languages.slice(0, 9)" :key="lang">
                       {{ lang }}
@@ -118,7 +129,7 @@
                     </VLayout>
                     <VLayout v-if="channelDetails.tags" row wrap>
                       <VFlex xs12>
-                        <!-- Tag cloud will be inserted here -->
+                        <VueWordCloud :words="channelDetails.tags.map(tag => [tag.tag_name, tag.count])" />
                       </VFlex>
                     </VLayout>
                   </VFlex>
@@ -131,7 +142,7 @@
           </VTab>
           <VTabItem :key="1">
             <VLayout row wrap>
-              <VFlex v-if="channelDetails.authors" xs4>
+              <VFlex v-if="channelDetails.authors.length" xs12>
                 <VIcon>edit</VIcon>
                 <p>{{ $tr('authors') }}</p>
                 <VChip v-for="author in channelDetails.authors.slice(0, 9)" :key="author">
@@ -148,7 +159,7 @@
                   </VExpansionPanelContent>
                 </VExpansionPanel>
               </VFlex>
-              <VFlex v-if="channelDetails.providers" xs4>
+              <VFlex v-if="channelDetails.providers.length" xs12>
                 <VIcon>pan_tool</VIcon>
                 <p>{{ $tr('providers') }}</p>
                 <VChip v-for="provider in channelDetails.providers.slice(0, 9)" :key="provider">
@@ -165,7 +176,7 @@
                   </VExpansionPanelContent>
                 </VExpansionPanel>
               </VFlex>
-              <VFlex v-if="channelDetails.aggregators" xs4>
+              <VFlex v-if="channelDetails.aggregators.length" xs12>
                 <VIcon>inbox</VIcon>
                 <p>{{ $tr('aggregators') }}</p>
                 <VChip v-for="aggregator in channelDetails.aggregators.slice(0, 9)" :key="aggregator">
@@ -183,26 +194,17 @@
                 </VExpansionPanel>
               </VFlex>
               <VLayout row wrap>
-                <VFlex xs2>
-                  <VIcon right>
-                    copyright
-                  </VIcon>
+                <VFlex v-if="channelDetails.licenses" xs12>
+                  {{ $tr('license', { count: channelDetails.licenses.length }) }}
+                  <VChip v-for="license in channelDetails.licenses" :key="license">
+                    {{ $tr(license) }}
+                  </VChip>
                 </VFlex>
-                <VFlex xs10>
-                  <VLayout row wrap>
-                    <VFlex v-if="channelDetails.licenses" xs12>
-                      {{ $tr('license', { count: channelDetails.licenses.length }) }}
-                      <VChip v-for="license in channelDetails.licenses" :key="license">
-                        {{ $tr(license) }}
-                      </VChip>
-                    </VFlex>
-                    <VFlex v-if="channelDetails.licenses" xs12>
-                      {{ $tr('copyright_holder', { count: channelDetails.copyright_holders.length }) }}
-                      <VChip v-for="copyright_holder in channelDetails.copyright_holders" :key="copyright_holder">
-                        {{ copyright_holder }}
-                      </VChip>
-                    </VFlex>
-                  </VLayout>
+                <VFlex v-if="channelDetails.licenses" xs12>
+                  {{ $tr('copyright_holder', { count: channelDetails.copyright_holders.length }) }}
+                  <VChip v-for="copyright_holder in channelDetails.copyright_holders" :key="copyright_holder">
+                    {{ copyright_holder }}
+                  </VChip>
                 </VFlex>
               </VLayout>
               <VLayout v-if="channelDetails.original_channels" row wrap>
@@ -263,12 +265,148 @@
 
 <script>
 
+  import { mapGetters } from 'vuex';
+  import VueWordCloud from 'vuewordcloud';
+  import CopyToken from 'shared/views/CopyToken';
   import ContentNodeIcon from 'edit_channel/sharedComponents/ContentNodeIcon';
+
+  const SCALE_TEXT = [
+    'very_small',
+    'very_small',
+    'small',
+    'small',
+    'average',
+    'average',
+    'average',
+    'large',
+    'large',
+    'very_large',
+    'very_large',
+  ];
+
+  const CHANNEL_SIZE_DIVISOR = 100000000;
 
   export default {
     name: 'ChannelDetails',
+    $trs: {
+      whats_inside: "What's Inside",
+      very_small: 'Very Small',
+      small: 'Small',
+      average: 'Average',
+      large: 'Large',
+      very_large: 'Very Large',
+      includes: 'Includes',
+      coach_content: 'Coach Content',
+      assessments: 'Assessments',
+      accessible_languages: 'Subtitles',
+      instructor_resources: 'For Educators',
+      resource_count: '{count, plural,\n =1 {# Resource}\n other {# Resources}}',
+      visibility_count:
+        '{count, plural,\n =1 {# resource is}\n other {# resources are}} visible to {user}',
+      kind_count: '{count, plural,\n =1 {# {kind}}\n other {# {kind_plural}}}',
+      role_description: 'Coach content is visible to coaches only in Kolibri',
+      sample_pathway: 'Sample Pathway',
+      channel_id: 'Channel ID',
+      channel_tokens: '{count, plural,\n =1 {Channel Token}\n other {Channel Tokens}}',
+      copy: 'Copy',
+      copy_text: 'Copy the following into Kolibri to import this channel',
+      total_resource_count: '{data, plural,\n =1 {Total Resource}\n other {Total Resources}}',
+      invalid_channel: 'Cannot save invalid channel',
+      original_channels: 'Includes Content From',
+      source: 'Source',
+      topic: 'topic',
+      using_channel: 'Using this Channel',
+      recommended: '(Recommended)',
+      preview: 'Preview',
+      more: 'Show More ({more})',
+      less: 'Show Less',
+      original_content: 'Original Content',
+      authors: 'This channel features resources created by',
+      aggregators: 'Material in this channel was originally hosted at',
+      providers: 'The material in this channel was provided by',
+      empty_details: 'This channel is empty',
+      topic_author: 'This topic features resources created by',
+      topic_aggregator: 'Material in this topic was originally hosted at',
+      topic_provider: 'The material in this topic was provided by',
+      topic_empty_details: 'This topic is empty',
+      no_license: 'No license selected',
+      author_description: 'Person or organization who created the content',
+      aggregator_description:
+        'Website or org hosting the content collection but not necessarily the creator or copyright holder',
+      provider_description: 'Organization that commissioned or is distributing the content',
+      license: '{count, plural,\n =1 {License}\n other {Licenses}}',
+      copyright_holder: '{count, plural,\n =1 {Copyright Holder}\n other {Copyright Holders}}',
+      auth_info: 'Authoring Information',
+      metadata_info: 'Content Metadata',
+      summary_info: 'Summary',
+      total_resources: '# of Resources',
+      resource_size: 'Size',
+      storage: 'Storage',
+      visibility_breakdown: 'Visibility',
+      content_breakdown: 'Content Summary',
+      languages: 'Languages',
+      tags: 'Content Tags',
+    },
     components: {
       ContentNodeIcon,
+      VueWordCloud,
+      CopyToken,
+    },
+    props: {
+      channelId: {
+        required: true,
+        type: String,
+      },
+    },
+    computed: {
+      ...mapGetters('channelList', ['getChannel', 'getChannelDetails']),
+      channel() {
+        return this.getChannel(this.channelId) || {};
+      },
+      channelDetails() {
+        return this.getChannelDetails(this.channelId);
+      },
+      countBar() {
+        // Get data for count bar indicator
+        if (this.channelDetails && this.channelDetails.resource_count) {
+          const sizeIndex = Math.max(
+            1,
+            Math.min(Math.floor(Math.log(this.channelDetails.resource_count) / Math.log(2.8)), 10)
+          );
+          const bar = [];
+          for (var i = 0; i < 10; ++i) {
+            bar.push(i < sizeIndex);
+          }
+          return {
+            filled: bar,
+            text: this.$tr(SCALE_TEXT[sizeIndex]),
+          };
+        }
+      },
+      sizeBar() {
+        // Get data for count bar indicator
+        if (this.channelDetails && this.channelDetails.size) {
+          const sizeIndex = Math.max(
+            1,
+            Math.min(
+              Math.ceil(Math.log(this.channelDetails.size / CHANNEL_SIZE_DIVISOR) / Math.log(2)),
+              10
+            )
+          );
+          return {
+            filled: Array(sizeIndex),
+            text: this.$tr(SCALE_TEXT[sizeIndex]),
+          };
+        }
+      },
+    },
+    methods: {
+      channelLink(channelId) {
+        return window.Urls.channel() + `#/${channelId}/view/`;
+      },
+      nodeLink(nodeId) {
+        return this.channelLink(this.channelId) + nodeId;
+      },
     },
   }
 

@@ -256,7 +256,7 @@ def get_channel_details(request, channel_id):
     try:
         request.user.can_view_node(node)
     except PermissionDenied:
-        return HttpResponseNotFound("No topic found for {}".format(contentnode_id))
+        return HttpResponseNotFound("No topic found for {}".format(channel_id))
     data = get_node_details_cached(node)
     return HttpResponse(json.dumps(data))
 
