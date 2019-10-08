@@ -1,6 +1,7 @@
 import Vue from 'vue';
 import VueRouter from 'vue-router';
 import Vuetify from 'vuetify';
+import colors from 'vuetify/es5/util/colors';
 import ChannelListIndex from './views/ChannelListIndex.vue';
 import store from './store';
 import router from './router';
@@ -11,7 +12,12 @@ import 'vuetify/dist/vuetify.min.css';
 import 'shared/styles/main.less';
 
 Vue.use(VueRouter);
-Vue.use(Vuetify);
+Vue.use(Vuetify, {
+  rtl: window.isRTL,
+  theme: {
+    primary: colors.blue.base,
+  },
+});
 
 new Vue({
   el: '#channel-container',

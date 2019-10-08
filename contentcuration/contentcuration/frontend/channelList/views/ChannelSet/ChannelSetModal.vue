@@ -7,7 +7,7 @@
     scrollable
   >
     <VCard>
-      <VToolbar card prominent dark color="blue">
+      <VToolbar card prominent dark color="primary">
         <VBtn icon class="hidden-xs-only" @click="close">
           <VIcon>clear</VIcon>
         </VBtn>
