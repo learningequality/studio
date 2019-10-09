@@ -5,4 +5,4 @@ unzip -p cloudprober.zip > /bin/cloudprober
 chmod +x /bin/cloudprober
 
 cd deploy/
-cloudprober -config_file cloudprober.cfg
+cloudprober -logtostderr -config_file cloudprober.cfg
