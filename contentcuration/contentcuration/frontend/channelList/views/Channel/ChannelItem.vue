@@ -8,7 +8,7 @@
       </VFlex>
       <VFlex xs12 sm12 md9>
         <VCardTitle>
-            <VFlex xs12>
+          <VFlex xs12>
             <VLayout class="grey--text" justify-space-between>
               <VFlex xs4>
                 <span v-if="language">
@@ -32,7 +32,9 @@
             </VLayout>
           </VFlex>
           <VFlex xs12>
-            <h3 class="headline">{{ channel.name }}</h3>
+            <h3 class="headline">
+              {{ channel.name }}
+            </h3>
           </VFlex>
           <VFlex xs12>
             {{ channel.description }}
@@ -41,7 +43,7 @@
       </VFlex>
     </VLayout>
     <VCardActions>
-      <VCardText class="grey--text" v-if="channel.published">
+      <VCardText v-if="channel.published" class="grey--text">
         {{ $tr(
           'lastPublished',
           {
@@ -52,23 +54,23 @@
           })
         }}
       </VCardText>
-      <VCardText class="font-italic red--text" v-else>
+      <VCardText v-else class="font-italic red--text">
         {{ $tr('unpublishedText') }}
       </VCardText>
-      <VSpacer/>
+      <VSpacer />
       <VBtn
         flat
         color="primary"
         :to="channelDetailsLink"
       >
-        {{ $tr('details')}}
+        {{ $tr('details') }}
       </VBtn>
       <VBtn
         flat
         color="primary"
         :href="openChannelLink"
       >
-        {{ $tr('contents')}}
+        {{ $tr('contents') }}
       </VBtn>
       <ChannelStar
         :channelId="channelId"
@@ -80,11 +82,10 @@
 
 <script>
 
-  import { mapActions, mapGetters, mapState } from 'vuex';
+  import { mapGetters, mapState } from 'vuex';
   import { RouterNames } from '../../constants';
-  import Constants from 'edit_channel/constants/index';
-  import CopyToken from 'shared/views/CopyToken';
   import ChannelStar from './ChannelStar';
+  import Constants from 'edit_channel/constants/index';
 
   export default {
     name: 'ChannelItem',
@@ -97,7 +98,6 @@
       contents: 'Go to channel',
     },
     components: {
-      CopyToken,
       ChannelStar,
     },
     props: {

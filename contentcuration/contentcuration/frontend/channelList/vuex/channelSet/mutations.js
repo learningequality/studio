@@ -1,5 +1,4 @@
 import Vue from 'vue';
-import { PageTypes } from '../../constants';
 import { channelSetLastSavedState } from './index';
 
 /* CHANNEL SET MUTATIONS */

@@ -7,16 +7,16 @@
     @drop.prevent="drop"
   >
     <template
-      v-for="file in files"
+      v-for="fileObj in files"
     >
       <VProgressCircular
-        v-if="file.progress < 100"
-        :key="file.id"
+        v-if="fileObj.progress < 100"
+        :key="fileObj.id"
         :size="50"
         :width="15"
-        :value="file.progress"
+        :value="fileObj.progress"
       >
-        {{ file.progress }}
+        {{ fileObj.progress }}
       </VProgressCircular>
     </template>
     <input

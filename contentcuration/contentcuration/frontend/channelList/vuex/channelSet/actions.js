@@ -1,6 +1,6 @@
 import { isTempId } from '../../utils';
-import client from 'shared/client';
 import { channelSetLastSavedState } from './index';
+import client from 'shared/client';
 
 /* CHANNEL SET ACTIONS */
 export function loadChannelSetList(context) {
@@ -19,7 +19,9 @@ export function deleteChannelSet(context, channelSetId) {
 
 export function saveChannelSet(context, channelSetId) {
   if (context.getters.getChannelSetIsValid(channelSetId)) {
-    const channelSetData = channelSetLastSavedState.getUnsavedChanges(context.getters.getChannelSet(channelSetId));
+    const channelSetData = channelSetLastSavedState.getUnsavedChanges(
+      context.getters.getChannelSet(channelSetId)
+    );
     if (Object.keys(channelSetData).length) {
       if (isTempId(channelSetId)) {
         if (!channelSetData.editors || channelSetData.editors.length === 0) {
@@ -38,7 +40,9 @@ export function saveChannelSet(context, channelSetId) {
         .patch(window.Urls['channelset-detail'](channelSetId), channelSetData)
         .then(response => {
           if (response.data) {
-            channelSetLastSavedState.storeLastSavedState(context.getters.getChannelSet(channelSetId));
+            channelSetLastSavedState.storeLastSavedState(
+              context.getters.getChannelSet(channelSetId)
+            );
           }
           return null;
         });

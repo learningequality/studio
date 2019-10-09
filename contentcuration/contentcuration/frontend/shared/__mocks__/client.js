@@ -18,7 +18,7 @@ const defaultResponse = {
   // `request` is the request that generated this response
   // It is the last ClientRequest instance in node.js (in redirects)
   // and an XMLHttpRequest instance in the browser
-  request: {}
+  request: {},
 };
 
 const resolve = (options = {}) => {
@@ -26,7 +26,7 @@ const resolve = (options = {}) => {
     defaultResponse,
     ...options,
   });
-}
+};
 
 const client = {
   get: jest.fn(resolve),
@@ -36,7 +36,7 @@ const client = {
 };
 
 client.__setResponse = (method, options) => {
-  client[method.toLowerCase()].mockImplementationOnce(() => resolve(options))
-}
+  client[method.toLowerCase()].mockImplementationOnce(() => resolve(options));
+};
 
 export default client;

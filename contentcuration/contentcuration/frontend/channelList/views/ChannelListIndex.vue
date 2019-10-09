@@ -23,7 +23,7 @@
           <VList subheader>
             <VSubheader>{{ $tr('invitations') }}</VSubheader>
             <VListTile
-              v-for="(invitation, i) in invitations"
+              v-for="invitation in invitations"
               :key="invitation.id"
             >
               <VListTileContent>
@@ -32,12 +32,20 @@
 
               <VListTileAction v-if="!invitation.accepted && !invitation.declined">
                 <VBtn icon @click="acceptInvitation(invitation.id)">
-                  <VIcon color="green">check</VIcon>
+                  <VIcon color="green">
+                    check
+                  </VIcon>
                 </VBtn>
               </VListTileAction>
               <VListTileAction>
-                <VBtn icon @click="invitation.accepted || invitation.declined ? removeInvitation(invitation.id) : decline(invitation.id)">
-                  <VIcon color="red">clear</VIcon>
+                <VBtn
+                  icon
+                  @click="invitation.accepted
+                    || (invitation.declined ?
+                    removeInvitation(invitation.id) : decline(invitation.id))">
+                  <VIcon color="red">
+                    clear
+                  </VIcon>
                 </VBtn>
               </VListTileAction>
             </VListTile>
@@ -59,7 +67,7 @@
           </VList>
         </VCard>
         <keep-alive>
-          <router-view :key="$route.params.listType || 'collections'"/>
+          <router-view :key="$route.params.listType || 'collections'" />
         </keep-alive>
       </VContainer>
     </VContent>
@@ -71,8 +79,6 @@
 
   import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
   import { InvitationShareModes, ListTypes, RouterNames } from '../constants';
-  import ChannelList from './Channel/ChannelList.vue';
-  import ChannelSetList from './ChannelSet/ChannelSetList.vue';
   import AppBar from 'shared/views/AppBar';
   import PrimaryDialog from 'shared/views/PrimaryDialog';
 
@@ -100,8 +106,6 @@
     },
     components: {
       AppBar,
-      ChannelList,
-      ChannelSetList,
       PrimaryDialog,
     },
     data() {
@@ -135,7 +139,7 @@
           lastname: invitation.sender.last_name,
         };
         let messageId;
-        if(invitation.accepted) {
+        if (invitation.accepted) {
           if (invitation.share_mode === InvitationShareModes.EDIT) {
             messageId = 'acceptedEditText';
           } else {
@@ -174,7 +178,7 @@
       closeDecline() {
         this.invitationDialog = false;
         this.declineInvitationId = null;
-      }
+      },
     },
   };
 

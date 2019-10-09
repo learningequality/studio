@@ -1,15 +1,13 @@
-import storeFactory from 'shared/vuex/baseStore';
-import client from 'shared/client';
-import channelSet from '../index';
-import { channelSetLastSavedState } from '../index';
+import channelSet, { channelSetLastSavedState } from '../index';
 import { generateTempId } from '../../../utils';
-
+import client from 'shared/client';
+import storeFactory from 'shared/vuex/baseStore';
 
 jest.mock('shared/client');
 
 const id = '00000000000000000000000000000000';
 
-const userId = "testId";
+const userId = 'testId';
 
 describe('channelSet actions', () => {
   let store;
@@ -25,16 +23,22 @@ describe('channelSet actions', () => {
     it('should call client.get', () => {
       client.__setResponse('get', {
         data: [],
-      })
+      });
       return store.dispatch('channelSet/loadChannelSetList').then(() => {
         expect(client.get).toHaveBeenCalledWith('channelset-list');
       });
     });
     it('should set the returned data to the channelSets', () => {
-      const channelSets = [{id: '00000000000000000000000000000000', name: 'test', channels: ["11111111111111111111111111111111"]}];
+      const channelSets = [
+        {
+          id: '00000000000000000000000000000000',
+          name: 'test',
+          channels: ['11111111111111111111111111111111'],
+        },
+      ];
       client.__setResponse('get', {
         data: channelSets,
-      })
+      });
       return store.dispatch('channelSet/loadChannelSetList').then(() => {
         expect(store.getters['channelSet/channelSets']).toEqual(channelSets);
       });
@@ -47,7 +51,7 @@ describe('channelSet actions', () => {
         store.commit('channelSet/ADD_CHANNELSET', {
           id: tempId,
           name: 'test',
-          channels: ["11111111111111111111111111111111"],
+          channels: ['11111111111111111111111111111111'],
         });
         client.__setResponse('post', {
           data: {
@@ -56,14 +60,18 @@ describe('channelSet actions', () => {
           },
         });
         return store.dispatch('channelSet/saveChannelSet', tempId).then(() => {
-          expect(client.post).toHaveBeenCalledWith('channelset-list', {editors: [userId], name: "test", channels: ["11111111111111111111111111111111"]});
+          expect(client.post).toHaveBeenCalledWith('channelset-list', {
+            editors: [userId],
+            name: 'test',
+            channels: ['11111111111111111111111111111111'],
+          });
         });
       });
       it('should remove the original channelSet', () => {
         store.commit('channelSet/ADD_CHANNELSET', {
           id: tempId,
           name: 'test',
-          channels: ["11111111111111111111111111111111"],
+          channels: ['11111111111111111111111111111111'],
         });
         client.__setResponse('post', {
           data: {
@@ -79,20 +87,20 @@ describe('channelSet actions', () => {
         store.commit('channelSet/ADD_CHANNELSET', {
           id: tempId,
           name: 'test',
-          channels: ["11111111111111111111111111111111"],
+          channels: ['11111111111111111111111111111111'],
         });
         client.__setResponse('post', {
           data: {
             id,
             name: 'test',
-            channels: ["11111111111111111111111111111111"],
+            channels: ['11111111111111111111111111111111'],
           },
         });
         return store.dispatch('channelSet/saveChannelSet', tempId).then(() => {
           expect(store.getters['channelSet/getChannelSet'](id)).toEqual({
             id,
             name: 'test',
-            channels: ["11111111111111111111111111111111"]
+            channels: ['11111111111111111111111111111111'],
           });
         });
       });
@@ -102,7 +110,7 @@ describe('channelSet actions', () => {
         store.commit('channelSet/ADD_CHANNELSET', {
           id,
           name: 'test',
-          channels: ["11111111111111111111111111111111"]
+          channels: ['11111111111111111111111111111111'],
         });
         client.__setResponse('patch', {
           data: true,
@@ -113,7 +121,7 @@ describe('channelSet actions', () => {
         });
         return store.dispatch('channelSet/saveChannelSet', id).then(() => {
           expect(client.patch).toHaveBeenCalledWith('channelset-detail', {
-            name: "notatest",
+            name: 'notatest',
           });
         });
       });
@@ -121,7 +129,7 @@ describe('channelSet actions', () => {
         store.commit('channelSet/ADD_CHANNELSET', {
           id,
           name: 'test',
-          channels: ["11111111111111111111111111111111"],
+          channels: ['11111111111111111111111111111111'],
         });
         client.__setResponse('patch', {
           data: true,
@@ -131,7 +139,11 @@ describe('channelSet actions', () => {
           name: 'notatest',
         });
         return store.dispatch('channelSet/saveChannelSet', id).then(() => {
-          expect(channelSetLastSavedState.hasUnsavedChanges(store.getters['channelSet/getChannelSet'](id))).toBe(false);
+          expect(
+            channelSetLastSavedState.hasUnsavedChanges(
+              store.getters['channelSet/getChannelSet'](id)
+            )
+          ).toBe(false);
         });
       });
     });

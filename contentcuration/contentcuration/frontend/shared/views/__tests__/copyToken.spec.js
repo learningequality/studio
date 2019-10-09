@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
-import CopyToken from '../CopyToken.vue';
 import Vue from 'vue';
 import Vuetify from 'vuetify';
+import CopyToken from '../CopyToken.vue';
 
 Vue.use(Vuetify);
 
@@ -19,7 +19,7 @@ describe('copyToken', () => {
     wrapper = makeWrapper();
   });
   it('text should be populated on load', () => {
-    let token = wrapper.find({name: 'v-text-field'});
+    let token = wrapper.find({ name: 'v-text-field' });
     expect(token.props().value).toEqual('testt-oken');
     expect(wrapper.vm.copyStatus === 'IDLE');
   });

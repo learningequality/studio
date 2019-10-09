@@ -9,7 +9,9 @@
       <VCardTitle
         v-if="title"
       >
-        <p class="title mb-0">{{ title }}</p>
+        <p class="title mb-0">
+          {{ title }}
+        </p>
       </VCardTitle>
       <VCardText>
         <slot></slot>
@@ -83,9 +85,7 @@
         } else if (openProp && modalTracker.open) {
           // eslint-disable-next-line no-console
           console.error(
-            `${name} tried to open the primary modal, but it is in use by: ${
-              modalTracker.name
-            } component.`
+            `${name} tried to open the primary modal, but it is in use by: ${modalTracker.name} component.`
           );
           this.open = false;
         } else if (openProp && !modalTracker.open) {

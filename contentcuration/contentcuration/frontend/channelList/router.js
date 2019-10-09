@@ -38,7 +38,7 @@ const router = new VueRouter({
     // Catch-all for unrecognized URLs
     {
       path: '*',
-      redirect: { name: RouterNames.CHANNELS, params: { listType: ListTypes.EDITABLE }},
+      redirect: { name: RouterNames.CHANNELS, params: { listType: ListTypes.EDITABLE } },
     },
   ],
 });

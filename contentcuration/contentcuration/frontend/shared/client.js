@@ -27,7 +27,8 @@ client.interceptors.response.use(
         message = 'Network Error: ' + url;
       }
 
-      // Put the URL in the main message for timeouts so we can see which timeouts are most frequent.
+      // Put the URL in the main message for timeouts
+      // so we can see which timeouts are most frequent.
       if (error.response.status === 504) {
         message = 'Request Timed Out: ' + url;
       }

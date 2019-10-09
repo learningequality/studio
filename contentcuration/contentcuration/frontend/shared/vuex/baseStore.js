@@ -4,14 +4,16 @@ import session from './session';
 
 Vue.use(Vuex);
 
-export default function storeFactory({state, actions, getters, mutations, modules, plugins} = {
-  state: {},
-  actions: {},
-  getters: {},
-  mutations: {},
-  modules: {},
-  plugins: [],
-}) {
+export default function storeFactory(
+  { state, actions, getters, mutations, modules, plugins } = {
+    state: {},
+    actions: {},
+    getters: {},
+    mutations: {},
+    modules: {},
+    plugins: [],
+  }
+) {
   return new Vuex.Store({
     state,
     actions,

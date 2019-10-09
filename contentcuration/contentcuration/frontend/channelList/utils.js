@@ -1,4 +1,3 @@
-import omit from 'lodash/omit';
 import cloneDeep from 'lodash/cloneDeep';
 import isEqual from 'lodash/isEqual';
 

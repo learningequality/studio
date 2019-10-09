@@ -35,7 +35,7 @@
               />
             </template>
             <keep-alive>
-              <router-view  v-if="$route.params.channelId" :key="$route.params.channelId"/>
+              <router-view v-if="$route.params.channelId" :key="$route.params.channelId" />
             </keep-alive>
           </VFlex>
         </VLayout>
@@ -50,8 +50,8 @@
   import sortBy from 'lodash/sortBy';
   import { mapGetters, mapActions, mapState, mapMutations } from 'vuex';
   import { ListTypes, RouterNames } from '../../constants';
+  import { generateTempId } from '../../utils';
   import ChannelItem from './ChannelItem.vue';
-  import { generateTempId, isTempId } from '../../utils';
 
   function listTypeValidator(value) {
     // The value must match one of the ListTypes
@@ -99,7 +99,7 @@
       },
     },
     beforeRouteEnter(to, from, next) {
-      if(listTypeValidator(to.params.listType)) {
+      if (listTypeValidator(to.params.listType)) {
         return next(vm => {
           vm.loadData(to.params.listType);
         });
@@ -126,7 +126,7 @@
           bookmark: false,
           edit: true,
         });
-        this.$router.push({ name: RouterNames.CHANNEL_DETAILS, params: {channelId: this.newId }});
+        this.$router.push({ name: RouterNames.CHANNEL_DETAILS, params: { channelId: this.newId } });
       },
       createChannel() {
         this.setChannel('');

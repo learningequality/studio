@@ -15,7 +15,7 @@
   import { mapMutations } from 'vuex';
 
   export default {
-    name: 'Star',
+    name: 'ChannelStar',
     $trs: {
       unstar: 'Remove Star',
       star: 'Add Star',

@@ -1,7 +1,7 @@
 <template>
   <VDialog
-    :value="$route.params.channelId == channelId"
     ref="dialog"
+    :value="$route.params.channelId == channelId"
     attach="body"
     fullscreen
     scrollable
@@ -67,7 +67,7 @@
                 />
               </VFlex>
             </VLayout>
-            <ChannelDetails  v-if="channelDetails && channel.count" :channelId="channelId"/>
+            <ChannelDetails v-if="channelDetails && channel.count" :channelId="channelId" />
             <template v-else>
               {{ $tr('empty_details') }}
             </template>
@@ -96,7 +96,7 @@
             </VListTile>
           </VList>
         </VMenu>
-        <VSpacer/>
+        <VSpacer />
         <VBtn class="upper" color="error" @click="deleteDialog=true">
           {{ $tr('deleteChannel') }}
         </VBtn>
@@ -108,7 +108,7 @@
     <PrimaryDialog v-model="deleteDialog" :title="$tr('deleteTitle')">
       {{ $tr('deletePrompt') }}
       <template v-slot:actions>
-        <VSpacer/>
+        <VSpacer />
         <VBtn
           color="primary"
           flat
@@ -134,12 +134,12 @@
   import pick from 'lodash/pick';
   import { isTempId } from '../../utils';
   import { RouterNames } from '../../constants';
+  import ChannelStar from './ChannelStar';
+  import ChannelDetails from './ChannelDetails';
   import Constants from 'edit_channel/constants/index';
 
   // Components
   import PrimaryDialog from 'shared/views/PrimaryDialog';
-  import ChannelStar from './ChannelStar';
-  import ChannelDetails from './ChannelDetails';
   import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown';
   import ThumbnailUpload from 'shared/views/ThumbnailUpload';
 
@@ -206,23 +206,20 @@
         deleteDialog: false,
       };
     },
-    mounted() {
-      // For some reason the 'hideScroll' method of the VDialog is not
-      // being called the first time the dialog is opened, so do that explicitly
-      this.$refs.dialog.hideScroll();
-    },
     beforeRouteEnter(to, from, next) {
       next(vm => {
         const channelId = to.params.channelId;
-        vm.verifyChannel(channelId).then(() => {
-          vm.setChannelDetails(channelId);
-        }).catch(() => {
-          // Couldn't verify the channel details, so go back!
-          // We should probaly replace this with a 404 page, as
-          // when navigating in from an external link (as this behaviour
-          // would often be from - it produces a confusing back step)
-          vm.$router.back();
-        });
+        vm.verifyChannel(channelId)
+          .then(() => {
+            vm.setChannelDetails(channelId);
+          })
+          .catch(() => {
+            // Couldn't verify the channel details, so go back!
+            // We should probaly replace this with a 404 page, as
+            // when navigating in from an external link (as this behaviour
+            // would often be from - it produces a confusing back step)
+            vm.$router.back();
+          });
       });
     },
     computed: {
@@ -308,8 +305,18 @@
         ];
       },
     },
+    mounted() {
+      // For some reason the 'hideScroll' method of the VDialog is not
+      // being called the first time the dialog is opened, so do that explicitly
+      this.$refs.dialog.hideScroll();
+    },
     methods: {
-      ...mapActions('channelList', ['saveChannel', 'loadChannel', 'loadChannelDetails', 'deleteChannel']),
+      ...mapActions('channelList', [
+        'saveChannel',
+        'loadChannel',
+        'loadChannelDetails',
+        'deleteChannel',
+      ]),
       ...mapMutations('channelList', {
         updateChannel: 'UPDATE_CHANNEL',
       }),
@@ -331,7 +338,7 @@
             }
             // If not, reject!
             reject();
-          })
+          });
         });
       },
       setChannelDetails(channelId) {

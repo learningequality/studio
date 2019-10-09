@@ -51,7 +51,7 @@
         }
       },
       displayToken() {
-        return this.token.slice(0, 5) + "-" + this.token.slice(5);
+        return this.token.slice(0, 5) + '-' + this.token.slice(5);
       },
     },
     methods: {

@@ -1,8 +1,5 @@
-import omit from 'lodash/omit';
-import isEqual from 'lodash/isEqual';
 import { isTempId } from '../../utils';
 import { channelLastSavedState } from './index';
-
 
 export function channels(state) {
   return Object.values(state.channelsMap).filter(channel => !isTempId(channel.id));

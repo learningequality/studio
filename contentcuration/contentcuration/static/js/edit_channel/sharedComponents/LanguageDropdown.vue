@@ -1,7 +1,7 @@
 <template>
   <VAutocomplete
-    class="language-dropdown"
     v-model="language"
+    class="language-dropdown"
     v-bind="$attrs"
     :items="languages"
     :label="$tr('labelText')"

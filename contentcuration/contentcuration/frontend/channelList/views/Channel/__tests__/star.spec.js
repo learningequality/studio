@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
 import ChannelStar from '../ChannelStar.vue';
 
-const channelId = "testing";
+const channelId = 'testing';
 
 function makeWrapper(bookmark, toggleStub) {
   const wrapper = mount(ChannelStar, {

@@ -11,12 +11,12 @@
           </h3>
         </VFlex>
         <VFlex xs12>
-        {{ channelSet.description }}
+          {{ channelSet.description }}
         </VFlex>
       </VLayout>
     </VCardTitle>
     <VCardActions>
-      <VSpacer/>
+      <VSpacer />
       <VBtn
         flat
         color="error"
@@ -28,14 +28,14 @@
         flat
         color="primary"
         :to="channelSetDetailsLink"
-        >
+      >
         {{ $tr('edit') }}
       </VBtn>
     </VCardActions>
     <PrimaryDialog v-model="deleteDialog" :title="$tr('deleteChannelSetTitle')">
       {{ $tr('deleteChannelSetText') }}
       <template v-slot:actions>
-        <VSpacer/>
+        <VSpacer />
         <VBtn
           color="primary"
           flat
@@ -57,10 +57,8 @@
 <script>
 
   import { mapActions } from 'vuex';
-  import ChannelSetModal from './ChannelSetModal';
-  import CopyToken from 'shared/views/CopyToken';
-  import PrimaryDialog from 'shared/views/PrimaryDialog';
   import { RouterNames } from '../../constants';
+  import PrimaryDialog from 'shared/views/PrimaryDialog';
 
   export default {
     name: 'ChannelSetItem',
@@ -72,8 +70,6 @@
       edit: 'Edit collection',
     },
     components: {
-      CopyToken,
-      ChannelSetModal,
       PrimaryDialog,
     },
     props: {
@@ -89,7 +85,10 @@
     },
     computed: {
       channelSetDetailsLink() {
-        return { name: RouterNames.CHANNEL_SET_DETAILS, params: {channelSetId: this.channelSet.id }};
+        return {
+          name: RouterNames.CHANNEL_SET_DETAILS,
+          params: { channelSetId: this.channelSet.id },
+        };
       },
     },
     methods: {

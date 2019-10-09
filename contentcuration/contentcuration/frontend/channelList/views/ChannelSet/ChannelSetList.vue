@@ -59,7 +59,7 @@
               />
             </template>
             <keep-alive>
-              <router-view v-if="$route.params.channelSetId" :key="$route.params.channelSetId"/>
+              <router-view v-if="$route.params.channelSetId" :key="$route.params.channelSetId" />
             </keep-alive>
           </VFlex>
         </VLayout>
@@ -71,18 +71,18 @@
 <script>
 
   import { mapGetters, mapActions, mapMutations } from 'vuex';
-  import { generateTempId, isTempId } from '../../utils';
-  import ChannelSetItem from './ChannelSetItem.vue';
-  import ChannelSetModal from './ChannelSetModal';
-  import PrimaryDialog from 'shared/views/PrimaryDialog';
+  import { generateTempId } from '../../utils';
   import { RouterNames } from '../../constants';
+  import ChannelSetItem from './ChannelSetItem.vue';
+  import PrimaryDialog from 'shared/views/PrimaryDialog';
 
   export default {
     name: 'ChannelSetList',
     $trs: {
       loading: 'Loading collections...',
       cancelButtonLabel: 'Close',
-      noChannelSetsFound: 'You can package together multiple Studio channels to create a collection. Use a collection token to make multiple channels available for import at once in Kolibri!',
+      noChannelSetsFound:
+        'You can package together multiple Studio channels to create a collection. Use a collection token to make multiple channels available for import at once in Kolibri!',
       addChannelSetTitle: 'Create a new collection of channels',
       addChannelSetButton: 'Collection',
       aboutChannelSets: 'About Collections',
@@ -98,7 +98,6 @@
     },
     components: {
       ChannelSetItem,
-      ChannelSetModal,
       PrimaryDialog,
     },
     data() {
@@ -133,7 +132,10 @@
           description: '',
           channels: [],
         });
-        this.$router.push({ name: RouterNames.CHANNEL_SET_DETAILS, params: {channelSetId: this.newSetId }});
+        this.$router.push({
+          name: RouterNames.CHANNEL_SET_DETAILS,
+          params: { channelSetId: this.newSetId },
+        });
       },
     },
   };

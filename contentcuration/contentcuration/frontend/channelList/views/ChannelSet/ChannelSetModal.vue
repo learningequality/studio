@@ -1,7 +1,7 @@
 <template>
   <VDialog
-    :value="$route.params.channelSetId == channelSetId"
     ref="dialog"
+    :value="$route.params.channelSetId == channelSetId"
     attach="body"
     fullscreen
     scrollable
@@ -155,9 +155,9 @@
 
   import { mapGetters, mapActions, mapMutations, mapState } from 'vuex';
   import sortBy from 'lodash/sortBy';
-  import CopyToken from 'shared/views/CopyToken';
   import { isTempId } from '../../utils';
   import { RouterNames } from '../../constants';
+  import CopyToken from 'shared/views/CopyToken';
 
   export default {
     name: 'ChannelSetModal',
@@ -203,14 +203,6 @@
       publishedChannels: 'Published channels that can be imported into Kolibri',
       unpublishedChannels: 'These channels must be published to import them into Kolibri',
     },
-    created() {
-      this.loadChannels();
-    },
-    mounted() {
-      // For some reason the 'hideScroll' method of the VDialog is not
-      // being called the first time the dialog is opened, so do that explicitly
-      this.$refs.dialog.hideScroll();
-    },
     beforeRouteEnter(to, from, next) {
       next(vm => {
         if (!vm.getChannelSet(to.params.channelSetId)) {
@@ -243,7 +235,7 @@
         set(open) {
           if (!open) {
             this.close();
-          };
+          }
         },
       },
       name: {
@@ -274,7 +266,10 @@
         if (this.isNewSet) {
           return this.nameValid && this.channelCount;
         }
-        return this.getChannelSetIsUnsaved(this.channelSetId) && this.getChannelSetIsValid(this.channelSetId);
+        return (
+          this.getChannelSetIsUnsaved(this.channelSetId) &&
+          this.getChannelSetIsValid(this.channelSetId)
+        );
       },
       saveButtonTitle() {
         if (this.saving) {
@@ -311,8 +306,16 @@
         return this.channels.length;
       },
       isNewSet() {
-        return isTempId(this.channelSetId)
-      }
+        return isTempId(this.channelSetId);
+      },
+    },
+    created() {
+      this.loadChannels();
+    },
+    mounted() {
+      // For some reason the 'hideScroll' method of the VDialog is not
+      // being called the first time the dialog is opened, so do that explicitly
+      this.$refs.dialog.hideScroll();
     },
     methods: {
       ...mapActions('channelList', ['loadChannelList']),
@@ -336,7 +339,10 @@
         this.saving = true;
         return this.saveChannelSet(this.channelSetId).then(newId => {
           if (newId) {
-            this.$router.replace({ name: RouterNames.CHANNEL_SET_DETAILS, params: { channelSetId: newId } });
+            this.$router.replace({
+              name: RouterNames.CHANNEL_SET_DETAILS,
+              params: { channelSetId: newId },
+            });
           }
           this.saving = false;
         });
