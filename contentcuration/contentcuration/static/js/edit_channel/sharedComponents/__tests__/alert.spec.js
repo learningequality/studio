@@ -33,7 +33,6 @@ describe('alert', () => {
     wrapper.vm.prompt();
     let button = wrapper.find('.v-dialog .v-btn');
     button.trigger('click');
-    expect(wrapper.vm.dialog).toBe(false);
     expect(wrapper.find('.v-dialog').isVisible()).toBe(false);
   });
   it("should not prompt if don't show again is submitted", () => {
