@@ -1,4 +1,5 @@
 <template>
+
   <VContent>
     <VContainer fluid fillHeight>
       <VLayout v-if="!selected.length" justifyCenter alignCenter fillHeight>
@@ -92,6 +93,7 @@
       </VLayout>
     </VContainer>
   </VContent>
+
 </template>
 
 <script>
@@ -103,22 +105,6 @@
 
   export default {
     name: 'EditView',
-    $trs: {
-      [TabNames.DETAILS]: 'Details',
-      [TabNames.PREVIEW]: 'Preview',
-      [TabNames.QUESTIONS]: 'Questions',
-      [TabNames.PREREQUISITES]: 'Prerequisites',
-      noItemsToEditText: 'Please select an item or items to edit',
-      noItemsToViewText: 'Please select an item or items to view',
-      addTopicText: 'Please add a topic to get started',
-      addExerciseText: 'Please add an exercise to get started',
-      loadingText: 'Loading Content...',
-      loadErrorText: 'Unable to load content',
-      invalidFieldsToolTip: 'Invalid fields detected',
-      errorBannerText: 'Please address invalid fields',
-      editingMultipleCount: 'Editing details for {count, plural,\n =1 {# item}\n other {# items}}',
-      viewingMultipleCount: 'Viewing details for {count, plural,\n =1 {# item}\n other {# items}}',
-    },
     components: {
       DetailsTabView,
     },
@@ -186,6 +172,22 @@
     },
     methods: {
       ...mapActions('edit_modal', ['loadNodes']),
+    },
+    $trs: {
+      [TabNames.DETAILS]: 'Details',
+      [TabNames.PREVIEW]: 'Preview',
+      [TabNames.QUESTIONS]: 'Questions',
+      [TabNames.PREREQUISITES]: 'Prerequisites',
+      noItemsToEditText: 'Please select an item or items to edit',
+      noItemsToViewText: 'Please select an item or items to view',
+      addTopicText: 'Please add a topic to get started',
+      addExerciseText: 'Please add an exercise to get started',
+      loadingText: 'Loading Content...',
+      loadErrorText: 'Unable to load content',
+      invalidFieldsToolTip: 'Invalid fields detected',
+      errorBannerText: 'Please address invalid fields',
+      editingMultipleCount: 'Editing details for {count, plural,\n =1 {# item}\n other {# items}}',
+      viewingMultipleCount: 'Viewing details for {count, plural,\n =1 {# item}\n other {# items}}',
     },
   };
 

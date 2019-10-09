@@ -5,8 +5,8 @@ require('queue.less');
 const WorkspaceManager = require('../utils/workspace_manager');
 var Models = require('./../models');
 var BaseViews = require('./../views');
-var dialog = require('edit_channel/utils/dialog');
 var DragHelper = require('edit_channel/utils/drag_drop');
+var dialog = require('edit_channel/utils/dialog');
 
 var NAMESPACE = 'queue';
 var MESSAGES = {

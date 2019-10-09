@@ -1,4 +1,5 @@
 <template>
+
   <VDialog v-model="dialog" width="400">
     <VCard>
       <VCardTitle class="header">
@@ -14,13 +15,13 @@
       </VCardActions>
     </VCard>
   </VDialog>
+
 </template>
 
 <script>
 
   export default {
     name: 'Dialog',
-    $trs: {},
     props: {
       header: {
         type: String,
@@ -37,9 +38,15 @@
       };
     },
     methods: {
+      /*
+       * @public
+       */
       prompt() {
         this.dialog = true;
       },
+      /*
+       * @public
+       */
       close() {
         this.dialog = false;
       },

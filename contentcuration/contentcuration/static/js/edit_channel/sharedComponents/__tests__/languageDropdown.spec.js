@@ -40,7 +40,11 @@ describe('languageDropdown', () => {
   });
   it('setting readonly should prevent any edits', () => {
     expect(wrapper.find('input[readonly]').exists()).toBe(false);
-    wrapper.setProps({ readonly: true });
+    wrapper = mount(LanguageDropdown, {
+      attrs: {
+        readonly: true,
+      },
+    });
     expect(wrapper.find('input[readonly]').exists()).toBe(true);
   });
   it('setting required should make field required', () => {
