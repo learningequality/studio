@@ -12,6 +12,7 @@
     :allowOverflow="false"
     persistentHint
     :rules="rules"
+    :required="required"
   />
 </template>
 
