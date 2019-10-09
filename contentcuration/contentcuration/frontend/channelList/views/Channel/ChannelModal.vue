@@ -138,7 +138,6 @@
   import { RouterNames } from '../../constants';
   import ChannelStar from './ChannelStar';
   import ChannelDetails from './ChannelDetails';
-  import Constants from 'edit_channel/constants/index';
   import PrimaryDialog from 'shared/views/PrimaryDialog';
   import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown';
   import ThumbnailUpload from 'shared/views/ThumbnailUpload';
@@ -166,63 +165,6 @@
         loading: false,
         deleteDialog: false,
       };
-    },
-    beforeRouteEnter(to, from, next) {
-      next(vm => {
-        const channelId = to.params.channelId;
-        vm.verifyChannel(channelId)
-          .then(() => {
-            vm.setChannelDetails(channelId);
-          })
-          .catch(() => {
-            // Couldn't verify the channel details, so go back!
-            // We should probaly replace this with a 404 page, as
-            // when navigating in from an external link (as this behaviour
-            // would often be from - it produces a confusing back step)
-            vm.$router.back();
-          });
-      });
-    },
-    $trs: {
-      channelName: 'Channel Name',
-      channelError: 'Channel name cannot be blank',
-      channelNamePlaceholder: 'Enter channel name...',
-      channelDescription: 'Channel Description',
-      channelDescriptionPlaceholder: 'Enter channel description...',
-      channelLanguagePlaceholder: 'Select a language...',
-      create: 'Create',
-      save: 'Save',
-      cancel: 'Cancel',
-      invalidChannel: 'Must fill out required fields',
-      errorChannelSave: 'Error Saving Channel',
-      saving: 'Saving...',
-      created: 'Created {date, date, medium}',
-      published: 'Last published {date, date, medium}',
-      openChannel: 'Open channel',
-      editDetails: 'Edit details',
-      deleteTitle: 'Delete this channel',
-      deletePrompt: 'Once you delete a channel, the channel will be permanently deleted.',
-      deleteChannel: 'Delete channel',
-      deletingChannel: 'Deleting channel...',
-      deleteWarning:
-        'All content under this channel will be deleted.\nAre you sure you want to delete this channel?',
-      empty_details: 'This channel is empty',
-      downloadReport: 'Download Channel Report',
-      downloadDetailedPDF: 'Download Detailed PDF',
-      downloadPDF: 'Download PDF',
-      downloadCSV: 'Download CSV',
-      downloadPPT: 'Download PPT',
-      downloadStartedHeader: 'Download Started',
-      downloadStartedTextPDF:
-        'Generating a PDF for {channelName}. Download will start automatically.',
-      downloadStartedTextPPT:
-        'Generating a PPT for {channelName}. Download will start automatically.',
-      downloadStartedTextCSV:
-        'Generating a CSV for {channelName}. Download will start automatically.',
-      downloadFailedHeader: 'Download Failed',
-      downloadFailedTextPDF: 'Failed to download a PDF for {channelName}',
-      downloadFailedTextPPT: 'Failed to download a PPT for {channelName}',
-      downloadFailedTextCSV: 'Failed to download a CSV for {channelName}',
     },
     computed: {
       ...mapState(['currentLanguage']),
@@ -268,24 +210,6 @@
           this.updateChannel({ id: this.channelId, thumbnailData });
         },
       },
-      languages() {
-        return Constants.Languages.sort((langA, langB) =>
-          langA.native_name.localeCompare(langB.native_name)
-        );
-      },
-      isNew() {
-        return isTempId(this.channelId);
-      },
-      open: {
-        get() {
-          return true;
-        },
-        set(open) {
-          if (!open) {
-            this.close();
-          }
-        },
-      },
       downloadOptions() {
         return [
           {
@@ -306,6 +230,22 @@
           },
         ];
       },
+    },
+    beforeRouteEnter(to, from, next) {
+      next(vm => {
+        const channelId = to.params.channelId;
+        vm.verifyChannel(channelId)
+          .then(() => {
+            vm.setChannelDetails(channelId);
+          })
+          .catch(() => {
+            // Couldn't verify the channel details, so go back!
+            // We should probaly replace this with a 404 page, as
+            // when navigating in from an external link (as this behaviour
+            // would often be from - it produces a confusing back step)
+            vm.$router.back();
+          });
+      });
     },
     mounted() {
       // For some reason the 'hideScroll' method of the VDialog is not
@@ -366,12 +306,30 @@
           this.saving = false;
         });
       },
-      saveAndClose() {
-        this.save().then(this.close);
-      },
       deleteChannelAndClose() {
         this.deleteChannel(this.channelId).then(this.close);
       },
+    },
+    $trs: {
+      channelName: 'Channel Name',
+      channelError: 'Channel name cannot be blank',
+      channelNamePlaceholder: 'Enter channel name...',
+      channelDescription: 'Channel Description',
+      channelDescriptionPlaceholder: 'Enter channel description...',
+      channelLanguagePlaceholder: 'Select a language...',
+      save: 'Save',
+      cancel: 'Cancel',
+      created: 'Created {date, date, medium}',
+      published: 'Last published {date, date, medium}',
+      deleteTitle: 'Delete this channel',
+      deletePrompt: 'Once you delete a channel, the channel will be permanently deleted.',
+      deleteChannel: 'Delete channel',
+      empty_details: 'This channel is empty',
+      downloadReport: 'Download Channel Report',
+      downloadDetailedPDF: 'Download Detailed PDF',
+      downloadPDF: 'Download PDF',
+      downloadCSV: 'Download CSV',
+      downloadPPT: 'Download PPT',
     },
   };
 

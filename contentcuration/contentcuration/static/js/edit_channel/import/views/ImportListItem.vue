@@ -93,10 +93,6 @@
         type: Boolean,
         default: false,
       },
-      isRoot: {
-        type: Boolean,
-        default: false,
-      },
       parentIsChecked: {
         type: Boolean,
         default: false,
@@ -147,43 +143,41 @@
     mounted() {
       this.isChecked = this.parentIsChecked;
     },
+    methods: {
+      ...mapActions('import', ['addItemToImportList', 'removeItemFromImportList']),
+      fetchChildData() {
+        // If children are loaded once, then do nothing
+        if (this.childrenAreLoaded) return;
+        this.isLoading = true;
+        return fetchContentNodesById(this.node.children).then(childData => {
+          this.isLoading = false;
+          this.childrenAreLoaded = true;
+          this.subFiles = childData;
+        });
+      },
+      handleClickLabel() {
+        const isToggleable = this.isChannel || this.hasChildren;
+        if (isToggleable) {
+          this.isExpanded = !this.isExpanded;
+          if (this.isExpanded) {
+            this.fetchChildData();
+          }
+        }
+      },
+      handleCheckboxChange() {
+        this.isChecked = !this.isChecked;
+        if (this.isChecked) {
+          this.addItemToImportList(_.clone(this.node));
+        } else {
+          this.removeItemFromImportList(this.node.id);
+        }
+      },
+    },
     $trs: {
       loading: 'Loading',
       empty: '(empty)',
       resourceCount: '{resourceCount, plural, =1 {# Resource} other {# Resources}}',
     },
-    methods: Object.assign(
-      mapActions('import', ['addItemToImportList', 'removeItemFromImportList']),
-      {
-        fetchChildData() {
-          // If children are loaded once, then do nothing
-          if (this.childrenAreLoaded) return;
-          this.isLoading = true;
-          return fetchContentNodesById(this.node.children).then(childData => {
-            this.isLoading = false;
-            this.childrenAreLoaded = true;
-            this.subFiles = childData;
-          });
-        },
-        handleClickLabel() {
-          const isToggleable = this.isChannel || this.hasChildren;
-          if (isToggleable) {
-            this.isExpanded = !this.isExpanded;
-            if (this.isExpanded) {
-              this.fetchChildData();
-            }
-          }
-        },
-        handleCheckboxChange() {
-          this.isChecked = !this.isChecked;
-          if (this.isChecked) {
-            this.addItemToImportList(_.clone(this.node));
-          } else {
-            this.removeItemFromImportList(this.node.id);
-          }
-        },
-      }
-    ),
   };
 
 </script>

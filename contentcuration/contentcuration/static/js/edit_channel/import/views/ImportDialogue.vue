@@ -71,16 +71,6 @@
         searchTerm: '',
       };
     },
-    $trs: {
-      cancelButtonLabel: 'Cancel',
-      continue: 'Continue',
-      import: 'Import',
-      importCountText:
-        '{topicCount, plural, =1 {# Topic} other {# Topics}}, {resourceCount, plural, =1 {# Resource} other {# Resources}}',
-      searchButtonLabel: 'Search',
-      searchPrompt: 'What are you looking for?',
-      selectContentPrompt: 'Select content to import...',
-    },
     computed: Object.assign(
       mapState('import', ['itemsToImport']),
       mapGetters('import', ['importedItemCounts', 'currentSearchTerm', 'currentImportPage']),
@@ -116,36 +106,43 @@
         }
       },
     },
-    methods: Object.assign(
-      mapMutations('import', {
+    methods: {
+      ...mapMutations('import', {
         updateImportStatus: 'UPDATE_IMPORT_STATUS',
       }),
-      mapActions('import', ['goToSearchResults', 'goToImportPreview']),
-      {
-        submitSearch() {
-          // Do nothing if searching for what's currently in results, or double clicking
-          if (this.currentSearchTerm === this.searchTerm) return;
-          this.goToSearchResults({ searchTerm: this.searchTerm });
-        },
-        handleClickNext() {
-          if (
-            this.currentImportPage === PageTypes.SEARCH_RESULTS ||
-            this.currentImportPage === PageTypes.TREE_VIEW
-          ) {
-            return this.goToImportPreview();
+      ...mapActions('import', ['goToSearchResults', 'goToImportPreview']),
+      submitSearch() {
+        // Do nothing if searching for what's currently in results, or double clicking
+        if (this.currentSearchTerm === this.searchTerm) return;
+        this.goToSearchResults({ searchTerm: this.searchTerm });
+      },
+      handleClickNext() {
+        if (
+          this.currentImportPage === PageTypes.SEARCH_RESULTS ||
+          this.currentImportPage === PageTypes.TREE_VIEW
+        ) {
+          return this.goToImportPreview();
+        }
+        if (this.currentImportPage === PageTypes.IMPORT_PREVIEW) {
+          // Check to see if imports have related content
+          if (hasRelatedContent(this.itemsToImport)) {
+            return this.updateImportStatus('show_warning');
+          } else {
+            // Triggers import action from ImportModal BB View
+            return this.updateImportStatus('import_confirmed');
           }
-          if (this.currentImportPage === PageTypes.IMPORT_PREVIEW) {
-            // Check to see if imports have related content
-            if (hasRelatedContent(this.itemsToImport)) {
-              return this.updateImportStatus('show_warning');
-            } else {
-              // Triggers import action from ImportModal BB View
-              return this.updateImportStatus('import_confirmed');
-            }
-          }
-        },
-      }
-    ),
+        }
+      },
+    },
+    $trs: {
+      cancelButtonLabel: 'Cancel',
+      continue: 'Continue',
+      import: 'Import',
+      importCountText:
+        '{topicCount, plural, =1 {# Topic} other {# Topics}}, {resourceCount, plural, =1 {# Resource} other {# Resources}}',
+      searchButtonLabel: 'Search',
+      searchPrompt: 'What are you looking for?',
+    },
   };
 
 </script>

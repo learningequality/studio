@@ -86,15 +86,15 @@
         };
       },
     },
+    methods: {
+      ...mapActions('channelSet', ['deleteChannelSet']),
+    },
     $trs: {
       deleteChannelSetTitle: 'Delete',
       deleteChannelSetText: 'Are you sure you want to delete this channel collection?',
       channelCount: '{count, plural,\n =1 {# Channel}\n other {# Channels}}',
       cancel: 'Cancel',
       edit: 'Edit collection',
-    },
-    methods: {
-      ...mapActions('channelSet', ['deleteChannelSet']),
     },
   };
 

@@ -74,14 +74,7 @@
     data() {
       return {
         loading: false,
-        newSetId: generateTempId(),
       };
-    },
-    $trs: {
-      loading: 'Loading channels...',
-      noChannelsFound: 'No channels found',
-      channel: 'Channel',
-      addChannel: 'Create a new channel',
     },
     computed: {
       ...mapGetters('channelList', ['channels']),
@@ -130,15 +123,17 @@
         });
         this.$router.push({ name: RouterNames.CHANNEL_DETAILS, params: { channelId: this.newId } });
       },
-      createChannel() {
-        this.setChannel('');
-      },
       loadData(listType) {
         this.loading = true;
         this.loadChannelList(listType).then(() => {
           this.loading = false;
         });
       },
+    },
+    $trs: {
+      loading: 'Loading channels...',
+      noChannelsFound: 'No channels found',
+      channel: 'Channel',
     },
   };
 

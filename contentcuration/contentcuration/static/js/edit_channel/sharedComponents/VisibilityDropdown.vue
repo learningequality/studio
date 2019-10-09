@@ -125,8 +125,10 @@
       visibilityHeader: 'What is content visibility?',
       visibilityDescription:
         'Content visibility determines what type of Kolibri users can see this content.',
+      /* eslint-disable kolibri/vue-no-unused-translations */
       coach:
         'This is support content and is visible only to coaches (teachers, facilitators, administrators)',
+      /* eslint-enable */
       learner: 'This content is visible to anyone',
       visibilityRequired: 'Visibility is required',
     },

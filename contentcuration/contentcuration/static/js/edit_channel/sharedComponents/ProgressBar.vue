@@ -26,14 +26,14 @@
 
   export default {
     name: 'ProgressBar',
-    $trs: {
-      progressText: '{percent}%',
-    },
     computed: {
       ...mapGetters(['currentTaskError', 'progressPercent']),
       isDone() {
         return this.progressPercent >= 100;
       },
+    },
+    $trs: {
+      progressText: '{percent}%',
     },
   };
 

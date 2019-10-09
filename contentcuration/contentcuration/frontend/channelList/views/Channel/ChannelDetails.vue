@@ -328,7 +328,60 @@
         type: String,
       },
     },
+    computed: {
+      ...mapGetters('channelList', ['getChannel', 'getChannelDetails']),
+      channel() {
+        return this.getChannel(this.channelId) || {};
+      },
+      channelDetails() {
+        return this.getChannelDetails(this.channelId);
+      },
+      countBar() {
+        // Get data for count bar indicator
+        if (this.channelDetails && this.channelDetails.resource_count) {
+          const sizeIndex = Math.max(
+            1,
+            Math.min(Math.floor(Math.log(this.channelDetails.resource_count) / Math.log(2.8)), 10)
+          );
+          const bar = [];
+          for (var i = 0; i < 10; ++i) {
+            bar.push(i < sizeIndex);
+          }
+          return {
+            filled: bar,
+            text: this.$tr(SCALE_TEXT[sizeIndex]),
+          };
+        }
+        return null;
+      },
+      sizeBar() {
+        // Get data for count bar indicator
+        if (this.channelDetails && this.channelDetails.size) {
+          const sizeIndex = Math.max(
+            1,
+            Math.min(
+              Math.ceil(Math.log(this.channelDetails.size / CHANNEL_SIZE_DIVISOR) / Math.log(2)),
+              10
+            )
+          );
+          return {
+            filled: Array(sizeIndex),
+            text: this.$tr(SCALE_TEXT[sizeIndex]),
+          };
+        }
+        return null;
+      },
+    },
+    methods: {
+      channelLink(channelId) {
+        return window.Urls.channel() + `#/${channelId}/view/`;
+      },
+      nodeLink(nodeId) {
+        return this.channelLink(this.channelId) + nodeId;
+      },
+    },
     $trs: {
+      /* eslint-disable kolibri/vue-no-unused-translations */
       whats_inside: "What's Inside",
       very_small: 'Very Small',
       small: 'Small',
@@ -386,58 +439,7 @@
       content_breakdown: 'Content Summary',
       languages: 'Languages',
       tags: 'Content Tags',
-    },
-    computed: {
-      ...mapGetters('channelList', ['getChannel', 'getChannelDetails']),
-      channel() {
-        return this.getChannel(this.channelId) || {};
-      },
-      channelDetails() {
-        return this.getChannelDetails(this.channelId);
-      },
-      countBar() {
-        // Get data for count bar indicator
-        if (this.channelDetails && this.channelDetails.resource_count) {
-          const sizeIndex = Math.max(
-            1,
-            Math.min(Math.floor(Math.log(this.channelDetails.resource_count) / Math.log(2.8)), 10)
-          );
-          const bar = [];
-          for (var i = 0; i < 10; ++i) {
-            bar.push(i < sizeIndex);
-          }
-          return {
-            filled: bar,
-            text: this.$tr(SCALE_TEXT[sizeIndex]),
-          };
-        }
-        return null;
-      },
-      sizeBar() {
-        // Get data for count bar indicator
-        if (this.channelDetails && this.channelDetails.size) {
-          const sizeIndex = Math.max(
-            1,
-            Math.min(
-              Math.ceil(Math.log(this.channelDetails.size / CHANNEL_SIZE_DIVISOR) / Math.log(2)),
-              10
-            )
-          );
-          return {
-            filled: Array(sizeIndex),
-            text: this.$tr(SCALE_TEXT[sizeIndex]),
-          };
-        }
-        return null;
-      },
-    },
-    methods: {
-      channelLink(channelId) {
-        return window.Urls.channel() + `#/${channelId}/view/`;
-      },
-      nodeLink(nodeId) {
-        return this.channelLink(this.channelId) + nodeId;
-      },
+      /* eslint-enable */
     },
   };
 

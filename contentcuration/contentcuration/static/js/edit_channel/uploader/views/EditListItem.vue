@@ -50,7 +50,6 @@
         default: false,
       },
     },
-    $trs: {},
     computed: {
       ...mapGetters('edit_modal', ['getNode', 'invalidNodes']),
       ...mapState('edit_modal', ['selectedIndices']),

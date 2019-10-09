@@ -13,9 +13,15 @@
   export default {
     name: 'TestForm',
     methods: {
+      /*
+       * @public
+       */
       validate() {
         this.$refs.form.validate();
       },
+      /*
+       * @public
+       */
       reset() {
         this.$refs.form.reset();
         this.$refs.form.resetValidation();

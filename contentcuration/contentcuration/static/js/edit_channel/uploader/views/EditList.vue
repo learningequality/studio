@@ -54,11 +54,6 @@
         selectAllChecked: false,
       };
     },
-    $trs: {
-      selectAllLabel: 'Select All',
-      addTopic: 'Add Topic',
-      addExercise: 'Add Exercise',
-    },
     computed: {
       ...mapState('edit_modal', ['nodes', 'mode']),
       allowAddTopic() {
@@ -82,6 +77,11 @@
         this.selectAllChecked ? this.deselectAll() : this.selectAll();
         this.selectAllChecked = !this.selectAllChecked;
       },
+    },
+    $trs: {
+      selectAllLabel: 'Select All',
+      addTopic: 'Add Topic',
+      addExercise: 'Add Exercise',
     },
   };
 

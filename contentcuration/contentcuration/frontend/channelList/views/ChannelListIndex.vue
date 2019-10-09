@@ -32,7 +32,7 @@
               </VListTileContent>
 
               <VListTileAction v-if="!invitation.accepted && !invitation.declined">
-                <VBtn icon @click="acceptInvitation(invitation.id)">
+                <VBtn icon :aria-label="$tr('accept')" @click="acceptInvitation(invitation.id)">
                   <VIcon color="green">
                     check
                   </VIcon>
@@ -40,10 +40,22 @@
               </VListTileAction>
               <VListTileAction>
                 <VBtn
+                  v-if="invitation.accepted || invitation.declined"
                   icon
+                  :aria-label="$tr('clear')"
                   @click="invitation.accepted
                     || (invitation.declined ?
                       removeInvitation(invitation.id) : decline(invitation.id))"
+                >
+                  <VIcon color="red">
+                    clear
+                  </VIcon>
+                </VBtn>
+                <VBtn
+                  v-else
+                  icon
+                  :aria-label="$tr('decline')"
+                  @click="decline(invitation.id)"
                 >
                   <VIcon color="red">
                     clear
@@ -80,7 +92,7 @@
 
 <script>
 
-  import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
+  import { mapActions, mapGetters, mapMutations } from 'vuex';
   import { InvitationShareModes, ListTypes, RouterNames } from '../constants';
   import AppBar from 'shared/views/AppBar';
   import PrimaryDialog from 'shared/views/PrimaryDialog';
@@ -97,29 +109,8 @@
         declineInvitationId: null,
       };
     },
-    $trs: {
-      [ListTypes.EDITABLE]: 'My Channels',
-      [ListTypes.VIEW_ONLY]: 'View-Only',
-      [ListTypes.PUBLIC]: 'Public',
-      [ListTypes.STARRED]: 'Starred',
-      channelSets: 'Collections',
-      editText: '{firstname} {lastname} has invited you to edit {channel}',
-      viewText: '{firstname} {lastname} has invited you to view {channel}',
-      acceptedEditText: 'Accepted invitation to edit {channel}',
-      declinedEditText: 'Declined invitation to edit {channel}',
-      acceptedViewText: 'Accepted invitation to view {channel}',
-      declinedViewText: 'Declined invitation to view {channel}',
-      accept: 'Accept',
-      decline: 'Decline',
-      cancel: 'Cancel',
-      invitations: 'Channel invitations',
-      invitationError: 'Invitation Error',
-      decliningInvitation: 'Declining Invitation',
-      decliningInvitationMessage: 'Are you sure you want to decline this invitation?',
-    },
     computed: {
       ...mapGetters('channelList', ['invitations']),
-      ...mapState('channelList', ['activeChannel']),
       lists() {
         return Object.values(ListTypes);
       },
@@ -182,6 +173,28 @@
         this.invitationDialog = false;
         this.declineInvitationId = null;
       },
+    },
+    $trs: {
+      [ListTypes.EDITABLE]: 'My Channels',
+      [ListTypes.VIEW_ONLY]: 'View-Only',
+      [ListTypes.PUBLIC]: 'Public',
+      [ListTypes.STARRED]: 'Starred',
+      channelSets: 'Collections',
+      /* eslint-disable kolibri/vue-no-unused-translations */
+      editText: '{firstname} {lastname} has invited you to edit {channel}',
+      viewText: '{firstname} {lastname} has invited you to view {channel}',
+      acceptedEditText: 'Accepted invitation to edit {channel}',
+      declinedEditText: 'Declined invitation to edit {channel}',
+      acceptedViewText: 'Accepted invitation to view {channel}',
+      declinedViewText: 'Declined invitation to view {channel}',
+      /* eslint-enable */
+      accept: 'Accept',
+      decline: 'Decline',
+      cancel: 'Cancel',
+      clear: 'Clear',
+      invitations: 'Channel invitations',
+      decliningInvitation: 'Declining Invitation',
+      decliningInvitationMessage: 'Are you sure you want to decline this invitation?',
     },
   };
 

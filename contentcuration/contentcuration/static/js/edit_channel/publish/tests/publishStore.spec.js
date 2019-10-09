@@ -1,5 +1,5 @@
 import { createLocalVue } from '@vue/test-utils';
-import Vuex from 'vuex';
+import Vuex, { Store } from 'vuex';
 
 const Backbone = require('backbone');
 const publish = require('edit_channel/vuexModules/publish');
@@ -26,7 +26,7 @@ function createStore(channel) {
     channel: channel || testChannel,
   };
 
-  return new Vuex.Store({
+  return new Store({
     state: state,
     actions: publish.actions,
     mutations: publish.mutations,

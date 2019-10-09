@@ -84,7 +84,7 @@
 
 <script>
 
-  import { mapGetters, mapState } from 'vuex';
+  import { mapGetters } from 'vuex';
   import { RouterNames } from '../../constants';
   import ChannelStar from './ChannelStar';
   import Constants from 'edit_channel/constants/index';
@@ -100,25 +100,10 @@
         required: true,
       },
     },
-    $trs: {
-      resourceCount: '{count, plural,\n =1 {# Resource}\n other {# Resources}}',
-      unpublishedText: 'Unpublished',
-      lastPublished: 'Published {last_published}',
-      versionText: 'Version {version}',
-      details: 'Details',
-      contents: 'Go to channel',
-    },
     computed: {
-      ...mapState('channelList', ['activeChannel']),
       ...mapGetters('channelList', ['getChannel']),
       channel() {
         return this.getChannel(this.channelId) || {};
-      },
-      picture() {
-        return (
-          (this.channel.thumbnail_encoding && this.channel.thumbnail_encoding.base64) ||
-          this.channel.thumbnail_url
-        );
       },
       language() {
         return Constants.Languages.find(language => language.id === this.channel.language);
@@ -134,6 +119,14 @@
       openChannelLink() {
         return window.Urls.channel() + `#/channel/${this.channelId}`;
       },
+    },
+    $trs: {
+      resourceCount: '{count, plural,\n =1 {# Resource}\n other {# Resources}}',
+      unpublishedText: 'Unpublished',
+      lastPublished: 'Published {last_published}',
+      versionText: 'Version {version}',
+      details: 'Details',
+      contents: 'Go to channel',
     },
   };
 

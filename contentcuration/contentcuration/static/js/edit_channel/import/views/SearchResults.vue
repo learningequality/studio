@@ -86,16 +86,6 @@
         resultsLoading: false,
       };
     },
-    $trs: {
-      showingResultsText: 'Showing top results for "{currentSearchTerm}"',
-      loadingResultsText: 'Loading results for "{currentSearchTerm}"...',
-      backToBrowseButton: 'Go Back To Browse',
-      resourcesLabel: 'Resources',
-      noContentFoundText:
-        'No documents, exercises, or other files matching "{ currentSearchTerm }"',
-      topicsLabel: 'Topics',
-      noTopicsText: 'No topics matching "{ currentSearchTerm }"',
-    },
     computed: mapGetters('import', ['currentSearchTerm', 'currentChannelId']),
     watch: {
       currentSearchTerm() {
@@ -120,6 +110,16 @@
         );
       },
     }),
+    $trs: {
+      showingResultsText: 'Showing top results for "{currentSearchTerm}"',
+      loadingResultsText: 'Loading results for "{currentSearchTerm}"...',
+      backToBrowseButton: 'Go Back To Browse',
+      resourcesLabel: 'Resources',
+      noContentFoundText:
+        'No documents, exercises, or other files matching "{ currentSearchTerm }"',
+      topicsLabel: 'Topics',
+      noTopicsText: 'No topics matching "{ currentSearchTerm }"',
+    },
   };
 
 </script>

@@ -38,14 +38,19 @@
       };
     },
     methods: {
+      /*
+       * @public
+       */
       prompt() {
         this.dialog = true;
       },
+      /*
+       * @public
+       */
       close() {
         this.dialog = false;
       },
     },
-    $trs: {},
   };
 
 </script>

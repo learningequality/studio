@@ -33,10 +33,6 @@
         return this.bookmark ? this.$tr('unstar') : this.$tr('star');
       },
     },
-    $trs: {
-      unstar: 'Remove Star',
-      star: 'Add Star',
-    },
     methods: {
       ...mapMutations('channelList', {
         toggleBookmark: 'TOGGLE_BOOKMARK',
@@ -44,6 +40,10 @@
       toggleStar() {
         this.toggleBookmark(this.channelId);
       },
+    },
+    $trs: {
+      unstar: 'Remove Star',
+      star: 'Add Star',
     },
   };
 

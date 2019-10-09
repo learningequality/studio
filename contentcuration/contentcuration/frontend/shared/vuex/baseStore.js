@@ -1,5 +1,5 @@
 import Vue from 'vue';
-import Vuex from 'vuex';
+import Vuex, { Store } from 'vuex';
 import session from './session';
 
 Vue.use(Vuex);
@@ -14,7 +14,7 @@ export default function storeFactory(
     plugins: [],
   }
 ) {
-  return new Vuex.Store({
+  return new Store({
     state,
     actions,
     getters,

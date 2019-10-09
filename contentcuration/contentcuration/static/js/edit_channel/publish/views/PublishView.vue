@@ -60,14 +60,6 @@
         saving: false,
       };
     },
-    $trs: {
-      versionText: 'Current Version: {version}',
-      languageRequired: 'Select a channel language',
-      invalidHeader: 'Please resolve the following before publishing:',
-      validHeader: 'Ready to publish!',
-      submitLanguage: 'Set channel language',
-      unpublishedText: 'Unpublished',
-    },
     computed: {
       ...mapState('publish', ['channel']),
       languageID: {
@@ -93,6 +85,13 @@
     },
     methods: {
       ...mapActions('publish', ['setChannelLanguage']),
+    },
+    $trs: {
+      versionText: 'Current Version: {version}',
+      languageRequired: 'Select a channel language',
+      invalidHeader: 'Please resolve the following before publishing:',
+      validHeader: 'Ready to publish!',
+      unpublishedText: 'Unpublished',
     },
   };
 

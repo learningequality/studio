@@ -45,7 +45,7 @@
             <VTextarea
               v-model="description"
               :label="$tr('descriptionLabel')"
-              :maxlength="charLimit"
+              :maxlength="400"
               rows="4"
               :placeholder="$tr('descriptionPlaceholder')"
               counter
@@ -179,43 +179,6 @@
         expansionPanel: 0,
       };
     },
-    beforeRouteEnter(to, from, next) {
-      next(vm => {
-        if (!vm.getChannelSet(to.params.channelSetId)) {
-          // Couldn't verify the channelset details, so go back!
-          // We should probaly replace this with a 404 page, as
-          // when navigating in from an external link (as this behaviour
-          // would often be from) it produces a confusing back step
-          vm.$router.back();
-        }
-      });
-    },
-    $trs: {
-      newSetHeader: 'New Collection',
-      editingSetHeader: 'Editing Collection',
-      closeButtonLabel: 'Close',
-      saveButtonLabel: 'Save',
-      saveCloseButtonLabel: 'Save & Close',
-      noChangesTitle: 'No changes detected',
-      invalidCollection: 'Must enter all required fields',
-      saving: 'Saving...',
-      errorText: 'There was a problem saving your collection',
-      loading: 'Loading...',
-      titleLabel: 'Title',
-      titlePlaceholder: 'Title your collection',
-      descriptionLabel: 'Description',
-      descriptionPlaceholder: 'Describe your collection',
-      selectButtonLabel: 'Select',
-      backButtonLabel: 'Back to details',
-      channelCountText:
-        '{channelCount, plural, =1 {# channel in your collection} other {# channels in your collection}}',
-      titleRequiredText: 'Title is required',
-      charCount: '{charCount, plural, =1 {# character left} other {# characters left}}',
-      versionText: 'Version {version}',
-      unpublishedTitle: '{channelName} must be published to import it into Kolibri',
-      publishedChannels: 'Published channels that can be imported into Kolibri',
-      unpublishedChannels: 'These channels must be published to import them into Kolibri',
-    },
     computed: {
       ...mapGetters('channelSet', [
         'getChannelSet',
@@ -229,16 +192,6 @@
           return this.$tr('newSetHeader');
         }
         return this.$tr('editingSetHeader');
-      },
-      open: {
-        get() {
-          return true;
-        },
-        set(open) {
-          if (!open) {
-            this.close();
-          }
-        },
       },
       name: {
         get() {
@@ -273,15 +226,6 @@
           this.getChannelSetIsValid(this.channelSetId)
         );
       },
-      saveButtonTitle() {
-        if (this.saving) {
-          return this.$tr('saving');
-        } else if (!this.isValid) {
-          return this.$tr('invalidCollection');
-        } else if (!this.changed) {
-          return this.$tr('noChangesTitle');
-        } else return this.$tr('saveButtonLabel');
-      },
       selectableChannels() {
         return sortBy(this.availableChannels.filter(channel => channel.published), [
           channel => !this.channels.includes(channel.id),
@@ -290,12 +234,6 @@
       },
       unpublishedChannels() {
         return sortBy(this.availableChannels, 'name');
-      },
-      charsLeft() {
-        return this.charLimit - this.description.length;
-      },
-      charLimit() {
-        return 400;
       },
       token() {
         let token = this.channelSet.secret_token;
@@ -310,6 +248,17 @@
       isNewSet() {
         return isTempId(this.channelSetId);
       },
+    },
+    beforeRouteEnter(to, from, next) {
+      next(vm => {
+        if (!vm.getChannelSet(to.params.channelSetId)) {
+          // Couldn't verify the channelset details, so go back!
+          // We should probaly replace this with a 404 page, as
+          // when navigating in from an external link (as this behaviour
+          // would often be from) it produces a confusing back step
+          vm.$router.back();
+        }
+      });
     },
     created() {
       this.loadChannels();
@@ -352,6 +301,26 @@
       saveAndClose() {
         this.save().then(this.close);
       },
+    },
+    $trs: {
+      newSetHeader: 'New Collection',
+      editingSetHeader: 'Editing Collection',
+      closeButtonLabel: 'Close',
+      saveButtonLabel: 'Save',
+      saveCloseButtonLabel: 'Save & Close',
+      errorText: 'There was a problem saving your collection',
+      loading: 'Loading...',
+      titleLabel: 'Title',
+      titlePlaceholder: 'Title your collection',
+      descriptionLabel: 'Description',
+      descriptionPlaceholder: 'Describe your collection',
+      channelCountText:
+        '{channelCount, plural, =1 {# channel in your collection} other {# channels in your collection}}',
+      titleRequiredText: 'Title is required',
+      versionText: 'Version {version}',
+      unpublishedTitle: '{channelName} must be published to import it into Kolibri',
+      publishedChannels: 'Published channels that can be imported into Kolibri',
+      unpublishedChannels: 'These channels must be published to import them into Kolibri',
     },
   };
 

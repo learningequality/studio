@@ -34,11 +34,11 @@
     components: {
       ImportListItem,
     },
+    computed: mapState('import', ['channels', 'channelsAreLoading']),
     $trs: {
       channelLoadingText: 'Channels are loading...',
       noChannelsText: 'No channels available to import from',
     },
-    computed: mapState('import', ['channels', 'channelsAreLoading']),
   };
 
 </script>

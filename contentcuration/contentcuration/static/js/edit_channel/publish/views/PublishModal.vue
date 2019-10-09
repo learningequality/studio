@@ -69,16 +69,6 @@
         size: null,
       };
     },
-    $trs: {
-      modalHeader: 'Publish Channel',
-      cancelButton: 'CANCEL',
-      publishButton: 'PUBLISH',
-      noChangesLabel: 'No changes',
-      loadingSize: 'Loading...',
-      publishingSizeText: '{count, plural, =1 {# Resource} other {# Resources}} ({size})',
-      publishButtonTitle: 'Make this channel available for download into Kolibri',
-      publishErrorHeader: 'Publishing error',
-    },
     computed: {
       ...mapState('publish', ['channel']),
       sizeText() {
@@ -95,7 +85,7 @@
       },
     },
     methods: {
-      ...mapActions('publish', ['publishChannel', 'setChannelLanguage', 'loadChannelSize']),
+      ...mapActions('publish', ['publishChannel', 'loadChannelSize']),
       openModal() {
         this.dialog = true;
         this.loadChannelSize().then(size => {
@@ -107,6 +97,14 @@
           this.dialog = false;
         });
       },
+    },
+    $trs: {
+      cancelButton: 'CANCEL',
+      publishButton: 'PUBLISH',
+      noChangesLabel: 'No changes',
+      loadingSize: 'Loading...',
+      publishingSizeText: '{count, plural, =1 {# Resource} other {# Resources}} ({size})',
+      publishButtonTitle: 'Make this channel available for download into Kolibri',
     },
   };
 

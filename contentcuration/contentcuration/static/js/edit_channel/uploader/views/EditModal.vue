@@ -126,7 +126,6 @@
         saving: false,
         savedMessage: null,
         saveError: false,
-        interval: null,
         updateInterval: null,
         drawer: {
           open: true,
@@ -142,32 +141,6 @@
           }
         }, SAVE_TIMER),
       };
-    },
-    $trs: {
-      [modes.EDIT]: 'Editing Content Details',
-      [modes.VIEW_ONLY]: 'Viewing Content Details',
-      [modes.NEW_TOPIC]: 'Adding Topics',
-      [modes.NEW_EXERCISE]: 'Adding Exercises',
-      [modes.UPLOAD]: 'Uploading Files',
-      saveButtonText: 'Save & Close',
-      copyButtonText:
-        '{count, plural,\n =1 {Copy to clipboard}\n other {Copy # items to clipboard}}',
-      savedMessage: 'Saved {relativeTime}',
-      savingIndicator: 'Saving...',
-      unsavedChanges: 'Save your changes?',
-      unsavedChangesText: "Your changes will be lost if you don't save them",
-      dontSaveButton: "Don't save",
-      cancelButton: 'Cancel',
-      saveButton: 'Save changes',
-      relatedContentHeader: 'Related content detected',
-      relatedContentText: 'Related content will not be included in the copy of this content.',
-      invalidItemsDetected: 'Saving disabled (invalid content detected)',
-      saveFailedHeader: 'Save failed',
-      saveFailedText: 'There was a problem saving your content',
-      autosaveDisabledMessage:
-        'Autosave paused ({count, plural,\n =1 {# error}\n other {# errors}} detected)',
-      topicDefaultTitle: '{parent} Topic',
-      exerciseDefaultTitle: '{parent} Exercise',
     },
     computed: {
       ...mapState('edit_modal', ['nodes', 'changes', 'mode']),
@@ -202,12 +175,14 @@
       ...mapActions('edit_modal', ['saveNodes', 'copyNodes']),
       ...mapMutations('edit_modal', {
         select: 'SELECT_NODE',
-        deselectAll: 'RESET_SELECTED',
         reset: 'RESET_STATE',
         prepareForSave: 'PREP_NODES_FOR_SAVE',
         setNode: 'SET_NODE',
         addNodeToList: 'ADD_NODE',
       }),
+      /*
+       * @public
+       */
       openModal() {
         this.dialog = true;
         if (this.nodes.length > 0) this.$nextTick(() => this.select(0));
@@ -297,6 +272,31 @@
           this.closeModal();
         });
       },
+    },
+    $trs: {
+      [modes.EDIT]: 'Editing Content Details',
+      [modes.VIEW_ONLY]: 'Viewing Content Details',
+      [modes.NEW_TOPIC]: 'Adding Topics',
+      [modes.NEW_EXERCISE]: 'Adding Exercises',
+      [modes.UPLOAD]: 'Uploading Files',
+      saveButtonText: 'Save & Close',
+      copyButtonText:
+        '{count, plural,\n =1 {Copy to clipboard}\n other {Copy # items to clipboard}}',
+      savedMessage: 'Saved {relativeTime}',
+      savingIndicator: 'Saving...',
+      unsavedChanges: 'Save your changes?',
+      unsavedChangesText: "Your changes will be lost if you don't save them",
+      dontSaveButton: "Don't save",
+      cancelButton: 'Cancel',
+      saveButton: 'Save changes',
+      relatedContentHeader: 'Related content detected',
+      relatedContentText: 'Related content will not be included in the copy of this content.',
+      saveFailedHeader: 'Save failed',
+      saveFailedText: 'There was a problem saving your content',
+      autosaveDisabledMessage:
+        'Autosave paused ({count, plural,\n =1 {# error}\n other {# errors}} detected)',
+      topicDefaultTitle: '{parent} Topic',
+      exerciseDefaultTitle: '{parent} Exercise',
     },
   };
 

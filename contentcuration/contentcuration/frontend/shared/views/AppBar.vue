@@ -51,13 +51,6 @@
 
   export default {
     name: 'AppBar',
-    $trs: {
-      administration: 'Administration',
-      settings: 'Settings',
-      help: 'Help',
-      logOut: 'Log Out',
-      helloUser: 'Hello, { username }',
-    },
     computed: {
       ...mapState({ user: state => state.session.currentUser }),
       menuItems() {
@@ -84,6 +77,13 @@
         }
         return items;
       },
+    },
+    $trs: {
+      administration: 'Administration',
+      settings: 'Settings',
+      help: 'Help',
+      logOut: 'Log Out',
+      helloUser: 'Hello, { username }',
     },
   };
 

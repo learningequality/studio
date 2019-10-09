@@ -44,7 +44,6 @@
     },
     data() {
       return {
-        dialog: false,
         dontShowAgain: false,
       };
     },
@@ -52,6 +51,9 @@
       getMessages() {
         return (localStorage['dont_show_messages'] || '').split(',');
       },
+      /*
+       * @public
+       */
       prompt() {
         if (!this.messageID || !this.getMessages().includes(this.messageID)) {
           this.$refs.alert.prompt();
