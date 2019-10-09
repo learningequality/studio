@@ -1,4 +1,5 @@
 <template>
+
   <VContainer fluid>
     <VBtn
       v-if="isEditable && !loading"
@@ -42,6 +43,7 @@
       </VFlex>
     </VLayout>
   </VContainer>
+
 </template>
 
 
@@ -60,12 +62,6 @@
 
   export default {
     name: 'ChannelList',
-    $trs: {
-      loading: 'Loading channels...',
-      noChannelsFound: 'No channels found',
-      channel: 'Channel',
-      addChannel: 'Create a new channel',
-    },
     components: {
       ChannelItem,
     },
@@ -80,6 +76,12 @@
         loading: false,
         newSetId: generateTempId(),
       };
+    },
+    $trs: {
+      loading: 'Loading channels...',
+      noChannelsFound: 'No channels found',
+      channel: 'Channel',
+      addChannel: 'Create a new channel',
     },
     computed: {
       ...mapGetters('channelList', ['channels']),

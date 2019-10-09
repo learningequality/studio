@@ -1,4 +1,5 @@
 <template>
+
   <div class="publish-items">
     <label v-if="!isReadOnly && !isChanged" class="unchanged-label">
       {{ $tr('noChangesLabel') }}
@@ -48,6 +49,7 @@
       </VCard>
     </VDialog>
   </div>
+
 </template>
 
 <script>
@@ -58,6 +60,15 @@
 
   export default {
     name: 'PublishModal',
+    components: {
+      PublishView,
+    },
+    data() {
+      return {
+        dialog: false,
+        size: null,
+      };
+    },
     $trs: {
       modalHeader: 'Publish Channel',
       cancelButton: 'CANCEL',
@@ -67,15 +78,6 @@
       publishingSizeText: '{count, plural, =1 {# Resource} other {# Resources}} ({size})',
       publishButtonTitle: 'Make this channel available for download into Kolibri',
       publishErrorHeader: 'Publishing error',
-    },
-    components: {
-      PublishView,
-    },
-    data() {
-      return {
-        dialog: false,
-        size: null,
-      };
     },
     computed: {
       ...mapState('publish', ['channel']),

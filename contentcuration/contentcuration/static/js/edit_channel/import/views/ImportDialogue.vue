@@ -1,4 +1,5 @@
 <template>
+
   <div>
     <!-- SEARCH FORM -->
     <div v-if="!isImportPreview">
@@ -49,6 +50,7 @@
       </span>
     </div>
   </div>
+
 </template>
 
 
@@ -61,6 +63,14 @@
 
   export default {
     name: 'ImportDialogue',
+    filters: {
+      pluralize,
+    },
+    data() {
+      return {
+        searchTerm: '',
+      };
+    },
     $trs: {
       cancelButtonLabel: 'Cancel',
       continue: 'Continue',
@@ -70,14 +80,6 @@
       searchButtonLabel: 'Search',
       searchPrompt: 'What are you looking for?',
       selectContentPrompt: 'Select content to import...',
-    },
-    filters: {
-      pluralize,
-    },
-    data() {
-      return {
-        searchTerm: '',
-      };
     },
     computed: Object.assign(
       mapState('import', ['itemsToImport']),

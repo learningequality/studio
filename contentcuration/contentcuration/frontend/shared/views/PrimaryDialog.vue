@@ -1,4 +1,5 @@
 <template>
+
   <VDialog
     v-model="open"
     :disabled="disabled"
@@ -21,6 +22,7 @@
       </VCardActions>
     </VCard>
   </VDialog>
+
 </template>
 
 <script>

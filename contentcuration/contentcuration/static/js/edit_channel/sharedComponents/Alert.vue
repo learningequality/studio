@@ -1,4 +1,5 @@
 <template>
+
   <Dialog ref="alert" :header="header" :text="text">
     <template v-slot:content>
       <VCheckbox
@@ -15,6 +16,7 @@
       </VBtn>
     </template>
   </Dialog>
+
 </template>
 
 <script>
@@ -23,10 +25,6 @@
 
   export default {
     name: 'Alert',
-    $trs: {
-      closeButtonLabel: 'OK',
-      dontShowAgain: "Don't show this message again",
-    },
     components: {
       Dialog,
     },
@@ -67,6 +65,10 @@
         }
         this.$refs.alert.close();
       },
+    },
+    $trs: {
+      closeButtonLabel: 'OK',
+      dontShowAgain: "Don't show this message again",
     },
   };
 

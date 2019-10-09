@@ -1,4 +1,5 @@
 <template>
+
   <VApp>
     <AppBar>
       <template #tabs>
@@ -42,7 +43,8 @@
                   icon
                   @click="invitation.accepted
                     || (invitation.declined ?
-                    removeInvitation(invitation.id) : decline(invitation.id))">
+                      removeInvitation(invitation.id) : decline(invitation.id))"
+                >
                   <VIcon color="red">
                     clear
                   </VIcon>
@@ -72,6 +74,7 @@
       </VContainer>
     </VContent>
   </VApp>
+
 </template>
 
 
@@ -84,6 +87,16 @@
 
   export default {
     name: 'ChannelListIndex',
+    components: {
+      AppBar,
+      PrimaryDialog,
+    },
+    data() {
+      return {
+        invitationDialog: false,
+        declineInvitationId: null,
+      };
+    },
     $trs: {
       [ListTypes.EDITABLE]: 'My Channels',
       [ListTypes.VIEW_ONLY]: 'View-Only',
@@ -103,16 +116,6 @@
       invitationError: 'Invitation Error',
       decliningInvitation: 'Declining Invitation',
       decliningInvitationMessage: 'Are you sure you want to decline this invitation?',
-    },
-    components: {
-      AppBar,
-      PrimaryDialog,
-    },
-    data() {
-      return {
-        invitationDialog: false,
-        declineInvitationId: null,
-      };
     },
     computed: {
       ...mapGetters('channelList', ['invitations']),

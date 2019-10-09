@@ -1,4 +1,5 @@
 <template>
+
   <div>
     <VLayout class="license-dropdown" row alignCenter>
       <VSelect
@@ -54,6 +55,7 @@
       :rules="descriptionRules"
     />
   </div>
+
 </template>
 
 <script>
@@ -65,13 +67,6 @@
 
   export default {
     name: 'LicenseDropdown',
-    $trs: {
-      licenseLabel: 'License',
-      licenseValidationMessage: 'License is required',
-      licenseDescriptionLabel: 'Description of License',
-      descriptionValidationMessage: 'Special permissions license must have a description',
-      learnMoreButton: 'Learn More',
-    },
     components: {
       InfoModal,
     },
@@ -162,6 +157,13 @@
       translate(item) {
         return translate(item.license_name);
       },
+    },
+    $trs: {
+      licenseLabel: 'License',
+      licenseValidationMessage: 'License is required',
+      licenseDescriptionLabel: 'Description of License',
+      descriptionValidationMessage: 'Special permissions license must have a description',
+      learnMoreButton: 'Learn More',
     },
   };
 

@@ -1,9 +1,11 @@
 <template>
+
   <VApp>
     <VForm ref="form">
       <slot name="testComponent"></slot>
     </VForm>
   </VApp>
+
 </template>
 
 <script>

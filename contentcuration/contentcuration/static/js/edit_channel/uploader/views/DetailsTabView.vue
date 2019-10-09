@@ -1,4 +1,5 @@
 <template>
+
   <div v-if="Object.keys(changes).length" class="details-edit-view">
     <VForm ref="form" v-model="valid" :lazyValidation="newContent" :disabled="viewOnly">
       <VLayout grid wrap>
@@ -229,6 +230,7 @@
       </v-expansion-panel>
     </VForm>
   </div>
+
 </template>
 
 <script>
@@ -244,6 +246,26 @@
 
   export default {
     name: 'DetailsTabView',
+    components: {
+      LanguageDropdown,
+      HelpTooltip,
+      LicenseDropdown,
+      MasteryDropdown,
+      VisibilityDropdown,
+    },
+    props: {
+      viewOnly: {
+        type: Boolean,
+        default: true,
+      },
+    },
+    data() {
+      return {
+        tagText: null,
+        valid: true,
+        panel: ['audience', 'assessments', 'source'],
+      };
+    },
     $trs: {
       titleLabel: 'Title',
       titleValidationMessage: 'Title is required',
@@ -268,26 +290,6 @@
       audienceHeader: 'Audience',
       assessmentHeader: 'Assessment Options',
       sourceHeader: 'Source',
-    },
-    components: {
-      LanguageDropdown,
-      HelpTooltip,
-      LicenseDropdown,
-      MasteryDropdown,
-      VisibilityDropdown,
-    },
-    props: {
-      viewOnly: {
-        type: Boolean,
-        default: true,
-      },
-    },
-    data() {
-      return {
-        tagText: null,
-        valid: true,
-        panel: ['audience', 'assessments', 'source'],
-      };
     },
     computed: {
       ...mapState('edit_modal', ['changes', 'selectedIndices']),

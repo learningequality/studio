@@ -1,11 +1,11 @@
 var _ = require('underscore');
-const WorkspaceManager = require('../utils/workspace_manager');
 var BaseViews = require('edit_channel/views');
 var Models = require('edit_channel/models');
 require('archive.less');
 var stringHelper = require('edit_channel/utils/string_helper');
 var dialog = require('edit_channel/utils/dialog');
 const State = require('edit_channel/state');
+const WorkspaceManager = require('../utils/workspace_manager');
 
 var NAMESPACE = 'archive';
 var MESSAGES = {

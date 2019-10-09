@@ -1,4 +1,5 @@
 <template>
+
   <VToolbar app dark color="purple" :tabs="Boolean($slots.tabs)">
     <VToolbarSideIcon href="/channels">
       <VImg maxHeight="35" contain :src="require('../images/kolibri-logo.svg')" />
@@ -40,6 +41,7 @@
       </VTabs>
     </template>
   </VToolbar>
+
 </template>
 
 

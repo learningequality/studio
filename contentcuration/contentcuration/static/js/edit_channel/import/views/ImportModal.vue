@@ -1,4 +1,5 @@
 <template>
+
   <div ref="topmodal" class="modal fade" tabindex="-1">
     <div class="modal-dialog">
       <div id="import-modal-content" class="modal-content modal-dialog-default">
@@ -20,6 +21,7 @@
       </div>
     </div>
   </div>
+
 </template>
 
 
@@ -40,15 +42,15 @@
 
   export default {
     name: 'ImportModal',
-    $trs: {
-      importHeader: 'Import from Other Channels',
-      importPreviewHeader: 'Review selections for import',
-    },
     components: {
       ImportChannelList, // eslint-disable-line vue/no-unused-components
       ImportDialogue,
       ImportPreview, // eslint-disable-line vue/no-unused-components
       SearchResults, // eslint-disable-line vue/no-unused-components
+    },
+    $trs: {
+      importHeader: 'Import from Other Channels',
+      importPreviewHeader: 'Review selections for import',
     },
     computed: Object.assign(
       mapGetters({

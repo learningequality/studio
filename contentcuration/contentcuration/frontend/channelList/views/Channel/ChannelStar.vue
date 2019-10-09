@@ -1,4 +1,5 @@
 <template>
+
   <VBtn
     :title="starText"
     icon
@@ -8,6 +9,7 @@
   >
     <VIcon>{{ bookmark ? 'star' : 'star_border' }}</VIcon>
   </VBtn>
+
 </template>
 
 <script>
@@ -16,10 +18,6 @@
 
   export default {
     name: 'ChannelStar',
-    $trs: {
-      unstar: 'Remove Star',
-      star: 'Add Star',
-    },
     props: {
       channelId: {
         type: String,
@@ -34,6 +32,10 @@
       starText() {
         return this.bookmark ? this.$tr('unstar') : this.$tr('star');
       },
+    },
+    $trs: {
+      unstar: 'Remove Star',
+      star: 'Add Star',
     },
     methods: {
       ...mapMutations('channelList', {

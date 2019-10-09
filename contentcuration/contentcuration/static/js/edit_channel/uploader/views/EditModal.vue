@@ -1,4 +1,5 @@
 <template>
+
   <div>
     <VDialog
       ref="editmodal"
@@ -87,6 +88,7 @@
       :text="$tr('saveFailedText')"
     />
   </div>
+
 </template>
 
 <script>
@@ -105,32 +107,6 @@
 
   export default {
     name: 'EditModal',
-    $trs: {
-      [modes.EDIT]: 'Editing Content Details',
-      [modes.VIEW_ONLY]: 'Viewing Content Details',
-      [modes.NEW_TOPIC]: 'Adding Topics',
-      [modes.NEW_EXERCISE]: 'Adding Exercises',
-      [modes.UPLOAD]: 'Uploading Files',
-      saveButtonText: 'Save & Close',
-      copyButtonText:
-        '{count, plural,\n =1 {Copy to clipboard}\n other {Copy # items to clipboard}}',
-      savedMessage: 'Saved {relativeTime}',
-      savingIndicator: 'Saving...',
-      unsavedChanges: 'Save your changes?',
-      unsavedChangesText: "Your changes will be lost if you don't save them",
-      dontSaveButton: "Don't save",
-      cancelButton: 'Cancel',
-      saveButton: 'Save changes',
-      relatedContentHeader: 'Related content detected',
-      relatedContentText: 'Related content will not be included in the copy of this content.',
-      invalidItemsDetected: 'Saving disabled (invalid content detected)',
-      saveFailedHeader: 'Save failed',
-      saveFailedText: 'There was a problem saving your content',
-      autosaveDisabledMessage:
-        'Autosave paused ({count, plural,\n =1 {# error}\n other {# errors}} detected)',
-      topicDefaultTitle: '{parent} Topic',
-      exerciseDefaultTitle: '{parent} Exercise',
-    },
     components: {
       EditList,
       EditView,
@@ -166,6 +142,32 @@
           }
         }, SAVE_TIMER),
       };
+    },
+    $trs: {
+      [modes.EDIT]: 'Editing Content Details',
+      [modes.VIEW_ONLY]: 'Viewing Content Details',
+      [modes.NEW_TOPIC]: 'Adding Topics',
+      [modes.NEW_EXERCISE]: 'Adding Exercises',
+      [modes.UPLOAD]: 'Uploading Files',
+      saveButtonText: 'Save & Close',
+      copyButtonText:
+        '{count, plural,\n =1 {Copy to clipboard}\n other {Copy # items to clipboard}}',
+      savedMessage: 'Saved {relativeTime}',
+      savingIndicator: 'Saving...',
+      unsavedChanges: 'Save your changes?',
+      unsavedChangesText: "Your changes will be lost if you don't save them",
+      dontSaveButton: "Don't save",
+      cancelButton: 'Cancel',
+      saveButton: 'Save changes',
+      relatedContentHeader: 'Related content detected',
+      relatedContentText: 'Related content will not be included in the copy of this content.',
+      invalidItemsDetected: 'Saving disabled (invalid content detected)',
+      saveFailedHeader: 'Save failed',
+      saveFailedText: 'There was a problem saving your content',
+      autosaveDisabledMessage:
+        'Autosave paused ({count, plural,\n =1 {# error}\n other {# errors}} detected)',
+      topicDefaultTitle: '{parent} Topic',
+      exerciseDefaultTitle: '{parent} Exercise',
     },
     computed: {
       ...mapState('edit_modal', ['nodes', 'changes', 'mode']),

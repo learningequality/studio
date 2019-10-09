@@ -1,4 +1,5 @@
 <template>
+
   <ProgressOverlay
     :taskID="taskID"
     :headerText="$tr('headerText')"
@@ -7,6 +8,7 @@
     :cancelHeaderText="$tr('cancelHeader')"
     :cancelText="$tr('cancelText')"
   />
+
 </template>
 <script>
 
@@ -15,6 +17,9 @@
 
   export default {
     name: 'PublishingOverlay',
+    components: {
+      ProgressOverlay,
+    },
     $trs: {
       headerText: 'Publishing Channel',
       descriptionText:
@@ -24,9 +29,6 @@
       cancelHeader: 'Stop publishing channel',
       cancelText: 'Are you sure you would like to stop publishing your channel?',
       emailText: 'You will get an email once the channel finishes publishing',
-    },
-    components: {
-      ProgressOverlay,
     },
     computed: {
       ...mapState('publish', ['channel']),

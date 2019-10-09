@@ -1,4 +1,5 @@
 <template>
+
   <div class="publish-view">
     <h1 :title="channel.name">
       {{ channel.name }}
@@ -36,6 +37,7 @@
       </span>
     </div>
   </div>
+
 </template>
 
 
@@ -49,14 +51,6 @@
 
   export default {
     name: 'PublishView',
-    $trs: {
-      versionText: 'Current Version: {version}',
-      languageRequired: 'Select a channel language',
-      invalidHeader: 'Please resolve the following before publishing:',
-      validHeader: 'Ready to publish!',
-      submitLanguage: 'Set channel language',
-      unpublishedText: 'Unpublished',
-    },
     components: {
       LanguageDropdown,
     },
@@ -65,6 +59,14 @@
         validOnLoad: true,
         saving: false,
       };
+    },
+    $trs: {
+      versionText: 'Current Version: {version}',
+      languageRequired: 'Select a channel language',
+      invalidHeader: 'Please resolve the following before publishing:',
+      validHeader: 'Ready to publish!',
+      submitLanguage: 'Set channel language',
+      unpublishedText: 'Unpublished',
     },
     computed: {
       ...mapState('publish', ['channel']),

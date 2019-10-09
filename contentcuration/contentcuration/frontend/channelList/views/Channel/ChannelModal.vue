@@ -1,4 +1,5 @@
 <template>
+
   <VDialog
     ref="dialog"
     :value="$route.params.channelId == channelId"
@@ -125,6 +126,7 @@
       </template>
     </PrimaryDialog>
   </VDialog>
+
 </template>
 
 
@@ -137,11 +139,11 @@
   import ChannelStar from './ChannelStar';
   import ChannelDetails from './ChannelDetails';
   import Constants from 'edit_channel/constants/index';
-
-  // Components
   import PrimaryDialog from 'shared/views/PrimaryDialog';
   import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown';
   import ThumbnailUpload from 'shared/views/ThumbnailUpload';
+
+  // Components
 
   export default {
     name: 'ChannelModal',
@@ -151,6 +153,35 @@
       LanguageDropdown,
       PrimaryDialog,
       ThumbnailUpload,
+    },
+    props: {
+      channelId: {
+        type: String,
+        required: true,
+      },
+    },
+    data() {
+      return {
+        saving: false,
+        loading: false,
+        deleteDialog: false,
+      };
+    },
+    beforeRouteEnter(to, from, next) {
+      next(vm => {
+        const channelId = to.params.channelId;
+        vm.verifyChannel(channelId)
+          .then(() => {
+            vm.setChannelDetails(channelId);
+          })
+          .catch(() => {
+            // Couldn't verify the channel details, so go back!
+            // We should probaly replace this with a 404 page, as
+            // when navigating in from an external link (as this behaviour
+            // would often be from - it produces a confusing back step)
+            vm.$router.back();
+          });
+      });
     },
     $trs: {
       channelName: 'Channel Name',
@@ -192,35 +223,6 @@
       downloadFailedTextPDF: 'Failed to download a PDF for {channelName}',
       downloadFailedTextPPT: 'Failed to download a PPT for {channelName}',
       downloadFailedTextCSV: 'Failed to download a CSV for {channelName}',
-    },
-    props: {
-      channelId: {
-        type: String,
-        required: true,
-      },
-    },
-    data() {
-      return {
-        saving: false,
-        loading: false,
-        deleteDialog: false,
-      };
-    },
-    beforeRouteEnter(to, from, next) {
-      next(vm => {
-        const channelId = to.params.channelId;
-        vm.verifyChannel(channelId)
-          .then(() => {
-            vm.setChannelDetails(channelId);
-          })
-          .catch(() => {
-            // Couldn't verify the channel details, so go back!
-            // We should probaly replace this with a 404 page, as
-            // when navigating in from an external link (as this behaviour
-            // would often be from - it produces a confusing back step)
-            vm.$router.back();
-          });
-      });
     },
     computed: {
       ...mapState(['currentLanguage']),

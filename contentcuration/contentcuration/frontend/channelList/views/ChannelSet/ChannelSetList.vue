@@ -1,4 +1,5 @@
 <template>
+
   <VContainer fluid>
     <VBtn
       v-if="!loading"
@@ -66,6 +67,7 @@
       </VFlex>
     </VLayout>
   </VContainer>
+
 </template>
 
 <script>
@@ -78,6 +80,18 @@
 
   export default {
     name: 'ChannelSetList',
+    components: {
+      ChannelSetItem,
+      PrimaryDialog,
+    },
+    data() {
+      return {
+        loading: true,
+        newSetDialog: false,
+        infoDialog: false,
+        newSetId: generateTempId(),
+      };
+    },
     $trs: {
       loading: 'Loading collections...',
       cancelButtonLabel: 'Close',
@@ -95,18 +109,6 @@
         'want to package together. Remember to give your collection a title.',
       channelSetsDisclaimer:
         'You will need Kolibri version 0.12.0 or higher to import channel collections',
-    },
-    components: {
-      ChannelSetItem,
-      PrimaryDialog,
-    },
-    data() {
-      return {
-        loading: true,
-        newSetDialog: false,
-        infoDialog: false,
-        newSetId: generateTempId(),
-      };
     },
     computed: {
       ...mapGetters('channelSet', ['channelSets']),

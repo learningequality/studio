@@ -1,4 +1,5 @@
 <template>
+
   <VLayout row wrap>
     <VFlex xs12 justify-center>
       <VTabs>
@@ -15,7 +16,8 @@
                     v-for="(fill, i) in countBar.filled"
                     :key="i"
                     class="count_icon"
-                    :class="fill ? 'filled' : ''">
+                    :class="fill ? 'filled' : ''"
+                  >
                     ▮
                   </b>
                 </template>
@@ -76,7 +78,8 @@
                   <p>{{ $tr('accessible_languages') }}</p>
                   <VChip
                     v-for="lang in channelDetails.accessible_languages.slice(0, 9)"
-                    :key="lang">
+                    :key="lang"
+                  >
                     {{ lang }}
                   </VChip>
                   <VExpansionPanel v-if="channelDetails.accessible_languages.length > 10">
@@ -86,7 +89,8 @@
                       </template>
                       <VChip
                         v-for="lang in channelDetails.accessible_languages.slice(10)"
-                        :key="lang">
+                        :key="lang"
+                      >
                         {{ lang }}
                       </VChip>
                     </VExpansionPanelContent>
@@ -96,7 +100,8 @@
               <VLayout
                 v-if="channelDetails.includes.coach_content || channelDetails.includes.exercises"
                 row
-                wrap>
+                wrap
+              >
                 <VFlex xs4>
                   {{ $tr('instructor_resources') }}
                 </VFlex>
@@ -196,7 +201,8 @@
               <p>{{ $tr('aggregators') }}</p>
               <VChip
                 v-for="aggregator in channelDetails.aggregators.slice(0, 9)"
-                :key="aggregator">
+                :key="aggregator"
+              >
                 {{ aggregator }}
               </VChip>
               <VExpansionPanel v-if="channelDetails.aggregators.length > 10">
@@ -206,7 +212,8 @@
                   </template>
                   <VChip
                     v-for="aggregator in channelDetails.aggregators.slice(10)"
-                    :key="aggregator">
+                    :key="aggregator"
+                  >
                     {{ aggregator }}
                   </VChip>
                 </VExpansionPanelContent>
@@ -223,7 +230,8 @@
                 {{ $tr('copyright_holder', { count: channelDetails.copyright_holders.length }) }}
                 <VChip
                   v-for="copyright_holder in channelDetails.copyright_holders"
-                  :key="copyright_holder">
+                  :key="copyright_holder"
+                >
                   {{ copyright_holder }}
                 </VChip>
               </VFlex>
@@ -283,6 +291,7 @@
       </VTabs>
     </VFlex>
   </VLayout>
+
 </template>
 
 <script>
@@ -309,6 +318,16 @@
 
   export default {
     name: 'ChannelDetails',
+    components: {
+      VueWordCloud,
+      CopyToken,
+    },
+    props: {
+      channelId: {
+        required: true,
+        type: String,
+      },
+    },
     $trs: {
       whats_inside: "What's Inside",
       very_small: 'Very Small',
@@ -367,16 +386,6 @@
       content_breakdown: 'Content Summary',
       languages: 'Languages',
       tags: 'Content Tags',
-    },
-    components: {
-      VueWordCloud,
-      CopyToken,
-    },
-    props: {
-      channelId: {
-        required: true,
-        type: String,
-      },
     },
     computed: {
       ...mapGetters('channelList', ['getChannel', 'getChannelDetails']),

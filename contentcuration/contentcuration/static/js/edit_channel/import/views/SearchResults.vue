@@ -1,4 +1,5 @@
 <template>
+
   <div class="search-results">
     <div>
       <p v-show="!resultsLoading" class="top-results wordwrap">
@@ -63,6 +64,7 @@
       </template>
     </div>
   </div>
+
 </template>
 
 
@@ -74,16 +76,6 @@
 
   export default {
     name: 'SearchResults',
-    $trs: {
-      showingResultsText: 'Showing top results for "{currentSearchTerm}"',
-      loadingResultsText: 'Loading results for "{currentSearchTerm}"...',
-      backToBrowseButton: 'Go Back To Browse',
-      resourcesLabel: 'Resources',
-      noContentFoundText:
-        'No documents, exercises, or other files matching "{ currentSearchTerm }"',
-      topicsLabel: 'Topics',
-      noTopicsText: 'No topics matching "{ currentSearchTerm }"',
-    },
     components: {
       ImportListItem,
     },
@@ -93,6 +85,16 @@
         topicResults: [],
         resultsLoading: false,
       };
+    },
+    $trs: {
+      showingResultsText: 'Showing top results for "{currentSearchTerm}"',
+      loadingResultsText: 'Loading results for "{currentSearchTerm}"...',
+      backToBrowseButton: 'Go Back To Browse',
+      resourcesLabel: 'Resources',
+      noContentFoundText:
+        'No documents, exercises, or other files matching "{ currentSearchTerm }"',
+      topicsLabel: 'Topics',
+      noTopicsText: 'No topics matching "{ currentSearchTerm }"',
     },
     computed: mapGetters('import', ['currentSearchTerm', 'currentChannelId']),
     watch: {

@@ -1,4 +1,5 @@
 <template>
+
   <VAutocomplete
     v-model="language"
     class="language-dropdown"
@@ -14,6 +15,7 @@
     :rules="rules"
     :required="required"
   />
+
 </template>
 
 
@@ -23,11 +25,6 @@
 
   export default {
     name: 'LanguageDropdown',
-    $trs: {
-      labelText: 'Language',
-      languageItemText: '{language} ({code})',
-      languageRequired: 'Language is required',
-    },
     props: {
       value: {
         type: String,
@@ -63,6 +60,11 @@
       languageText(item) {
         return this.$tr('languageItemText', { language: item.native_name, code: item.id });
       },
+    },
+    $trs: {
+      labelText: 'Language',
+      languageItemText: '{language} ({code})',
+      languageRequired: 'Language is required',
     },
   };
 

@@ -1,4 +1,5 @@
 <template>
+
   <VCard class="my-3" :to="channelDetailsLink">
     <VLayout>
       <VFlex xs12 sm12 md3>
@@ -78,6 +79,7 @@
       />
     </VCardActions>
   </VCard>
+
 </template>
 
 <script>
@@ -89,14 +91,6 @@
 
   export default {
     name: 'ChannelItem',
-    $trs: {
-      resourceCount: '{count, plural,\n =1 {# Resource}\n other {# Resources}}',
-      unpublishedText: 'Unpublished',
-      lastPublished: 'Published {last_published}',
-      versionText: 'Version {version}',
-      details: 'Details',
-      contents: 'Go to channel',
-    },
     components: {
       ChannelStar,
     },
@@ -105,6 +99,14 @@
         type: String,
         required: true,
       },
+    },
+    $trs: {
+      resourceCount: '{count, plural,\n =1 {# Resource}\n other {# Resources}}',
+      unpublishedText: 'Unpublished',
+      lastPublished: 'Published {last_published}',
+      versionText: 'Version {version}',
+      details: 'Details',
+      contents: 'Go to channel',
     },
     computed: {
       ...mapState('channelList', ['activeChannel']),

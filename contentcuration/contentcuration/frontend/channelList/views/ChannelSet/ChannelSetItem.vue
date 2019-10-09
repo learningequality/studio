@@ -1,4 +1,5 @@
 <template>
+
   <VCard class="my-3" :to="channelSetDetailsLink">
     <VCardTitle>
       <VLayout column justify-space-between fill-height>
@@ -52,6 +53,7 @@
       </template>
     </PrimaryDialog>
   </VCard>
+
 </template>
 
 <script>
@@ -62,13 +64,6 @@
 
   export default {
     name: 'ChannelSetItem',
-    $trs: {
-      deleteChannelSetTitle: 'Delete',
-      deleteChannelSetText: 'Are you sure you want to delete this channel collection?',
-      channelCount: '{count, plural,\n =1 {# Channel}\n other {# Channels}}',
-      cancel: 'Cancel',
-      edit: 'Edit collection',
-    },
     components: {
       PrimaryDialog,
     },
@@ -90,6 +85,13 @@
           params: { channelSetId: this.channelSet.id },
         };
       },
+    },
+    $trs: {
+      deleteChannelSetTitle: 'Delete',
+      deleteChannelSetText: 'Are you sure you want to delete this channel collection?',
+      channelCount: '{count, plural,\n =1 {# Channel}\n other {# Channels}}',
+      cancel: 'Cancel',
+      edit: 'Edit collection',
     },
     methods: {
       ...mapActions('channelSet', ['deleteChannelSet']),

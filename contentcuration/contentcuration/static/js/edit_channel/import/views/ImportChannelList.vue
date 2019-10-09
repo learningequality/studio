@@ -1,4 +1,5 @@
 <template>
+
   <div>
     <div v-if="channelsAreLoading">
       {{ $tr('channelLoadingText') }}
@@ -19,6 +20,7 @@
       />
     </ul>
   </div>
+
 </template>
 
 
@@ -29,12 +31,12 @@
 
   export default {
     name: 'ImportChannelList',
+    components: {
+      ImportListItem,
+    },
     $trs: {
       channelLoadingText: 'Channels are loading...',
       noChannelsText: 'No channels available to import from',
-    },
-    components: {
-      ImportListItem,
     },
     computed: mapState('import', ['channels', 'channelsAreLoading']),
   };

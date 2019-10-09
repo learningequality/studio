@@ -1,4 +1,5 @@
 <template>
+
   <li class="list-item" :class="importListItemClass">
     <template v-if="!isChannel && !readOnly">
       <input
@@ -67,6 +68,7 @@
       </ul>
     </div>
   </li>
+
 </template>
 
 
@@ -81,11 +83,6 @@
 
   export default {
     name: 'ImportListItem',
-    $trs: {
-      loading: 'Loading',
-      empty: '(empty)',
-      resourceCount: '{resourceCount, plural, =1 {# Resource} other {# Resources}}',
-    },
     filters: {
       pluralize,
     },
@@ -149,6 +146,11 @@
     },
     mounted() {
       this.isChecked = this.parentIsChecked;
+    },
+    $trs: {
+      loading: 'Loading',
+      empty: '(empty)',
+      resourceCount: '{resourceCount, plural, =1 {# Resource} other {# Resources}}',
     },
     methods: Object.assign(
       mapActions('import', ['addItemToImportList', 'removeItemFromImportList']),

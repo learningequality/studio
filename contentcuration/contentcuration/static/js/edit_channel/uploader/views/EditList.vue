@@ -1,4 +1,5 @@
 <template>
+
   <VList>
     <!-- Select all checkbox -->
     <VListTile class="select-all-wrapper" @click="toggleSelectAll">
@@ -34,6 +35,7 @@
       </VListTileContent>
     </VListTile>
   </VList>
+
 </template>
 
 <script>
@@ -44,11 +46,6 @@
 
   export default {
     name: 'EditList',
-    $trs: {
-      selectAllLabel: 'Select All',
-      addTopic: 'Add Topic',
-      addExercise: 'Add Exercise',
-    },
     components: {
       EditListItem,
     },
@@ -56,6 +53,11 @@
       return {
         selectAllChecked: false,
       };
+    },
+    $trs: {
+      selectAllLabel: 'Select All',
+      addTopic: 'Add Topic',
+      addExercise: 'Add Exercise',
     },
     computed: {
       ...mapState('edit_modal', ['nodes', 'mode']),

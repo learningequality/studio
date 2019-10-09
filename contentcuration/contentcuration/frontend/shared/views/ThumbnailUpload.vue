@@ -1,4 +1,5 @@
 <template>
+
   <div
     :style="highlight && !readonly ? { borderColor: 'purple' } : {}"
     @dragenter.prevent="enter"
@@ -36,6 +37,7 @@
       </VBtn>
     </label>
   </div>
+
 </template>
 
 <script>
@@ -44,9 +46,6 @@
 
   export default {
     name: 'ThumbnailUpload',
-    $trs: {
-      fileUpload: 'Upload file',
-    },
     props: {
       value: {
         type: Object,
@@ -129,6 +128,9 @@
           });
         }
       },
+    },
+    $trs: {
+      fileUpload: 'Upload file',
     },
   };
 

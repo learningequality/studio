@@ -1,4 +1,5 @@
 <template>
+
   <VDialog
     ref="dialog"
     :value="$route.params.channelSetId == channelSetId"
@@ -148,6 +149,7 @@
       </VLayout>
     </VCard>
   </VDialog>
+
 </template>
 
 
@@ -177,6 +179,17 @@
         expansionPanel: 0,
       };
     },
+    beforeRouteEnter(to, from, next) {
+      next(vm => {
+        if (!vm.getChannelSet(to.params.channelSetId)) {
+          // Couldn't verify the channelset details, so go back!
+          // We should probaly replace this with a 404 page, as
+          // when navigating in from an external link (as this behaviour
+          // would often be from) it produces a confusing back step
+          vm.$router.back();
+        }
+      });
+    },
     $trs: {
       newSetHeader: 'New Collection',
       editingSetHeader: 'Editing Collection',
@@ -202,17 +215,6 @@
       unpublishedTitle: '{channelName} must be published to import it into Kolibri',
       publishedChannels: 'Published channels that can be imported into Kolibri',
       unpublishedChannels: 'These channels must be published to import them into Kolibri',
-    },
-    beforeRouteEnter(to, from, next) {
-      next(vm => {
-        if (!vm.getChannelSet(to.params.channelSetId)) {
-          // Couldn't verify the channelset details, so go back!
-          // We should probaly replace this with a 404 page, as
-          // when navigating in from an external link (as this behaviour
-          // would often be from) it produces a confusing back step
-          vm.$router.back();
-        }
-      });
     },
     computed: {
       ...mapGetters('channelSet', [

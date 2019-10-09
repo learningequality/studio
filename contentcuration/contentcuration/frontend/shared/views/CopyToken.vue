@@ -1,4 +1,5 @@
 <template>
+
   <VTextField
     v-if="token"
     v-model="displayToken"
@@ -11,6 +12,7 @@
     @click:prepend-inner.stop="copyToken"
     @click.stop
   />
+
 </template>
 
 <script>
@@ -25,9 +27,6 @@
 
   export default {
     name: 'CopyToken',
-    $trs: {
-      copyPrompt: 'Copy token to import channel into Kolibri',
-    },
     props: {
       token: {
         type: String,
@@ -70,6 +69,9 @@
             }, 2500);
           });
       },
+    },
+    $trs: {
+      copyPrompt: 'Copy token to import channel into Kolibri',
     },
   };
 

@@ -1,7 +1,9 @@
 <template>
+
   <VIcon class="icon" :class="kind" dark>
     {{ icon }}
   </VIcon>
+
 </template>
 
 <script>
