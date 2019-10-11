@@ -38,12 +38,16 @@ class ChannelSetSerializer(WriteOnlySerializer):
         read_only_fields = ("id",)
 
 
+def clean_channels(item):
+    return filter(lambda x: x is not None, item["channels"])
+
+
 class ChannelSetViewSet(ValuesViewset):
     queryset = ChannelSet.objects.all()
     serializer_class = ChannelSetSerializer
     values = ("id", "name", "description", "channels", "secret_token__token")
 
-    field_map = {"secret_token": "secret_token__token"}
+    field_map = {"secret_token": "secret_token__token", "channels": clean_channels}
 
     def get_queryset(self):
         return ChannelSet.objects.filter(
