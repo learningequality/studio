@@ -12,7 +12,7 @@ from django.test import TransactionTestCase
 
 from .base import BaseAPITestCase
 from .testdata import fileobj_video
-from contentcuration.tests.utils import mixer
+from contentcuration.tests.testutils import mixer
 from contentcuration.models import DEFAULT_CONTENT_DEFAULTS
 from contentcuration.models import Invitation
 from contentcuration.models import User
