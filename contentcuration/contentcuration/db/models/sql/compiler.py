@@ -2,6 +2,11 @@ from django.db.models.sql.compiler import SQLCompiler
 
 
 class SQLInsertFromCompiler(SQLCompiler):
+    """
+    The SQL compiler for the `contentcuration.db.models.sql.query.InsertFromQuery` class. This
+    is responsible for generating the SQL for the query. This supports generating SQL to  return the
+    PK values of the inserted rows.
+    """
     def __init__(self, *args, **kwargs):
         super(SQLInsertFromCompiler, self).__init__(*args, **kwargs)
         self.return_id = False
@@ -25,6 +30,10 @@ class SQLInsertFromCompiler(SQLCompiler):
         return ' '.join(result), from_params
 
     def execute_sql(self, return_id=True, *args, **kwargs):
+        """
+        :param return_id: Boolean indicating whether to attempt returning PK's of the inserted rows
+        :return: The PK's of the inserted rows or void
+        """
         assert not (
             return_id and
             not self.connection.features.can_return_ids_from_bulk_insert
@@ -41,6 +50,11 @@ class SQLInsertFromCompiler(SQLCompiler):
 
 
 class SQLUpdateFromCompiler(SQLCompiler):
+    """
+    The SQL compiler for the `contentcuration.db.models.sql.query.UpdateFromQuery` class. This
+    is responsible for generating the SQL for the query. This supports generating SQL to return the
+    PK values of the inserted rows.
+    """
     def __init__(self, *args, **kwargs):
         self._lazy = kwargs.pop('lazy', False)
         super(SQLUpdateFromCompiler, self).__init__(*args, **kwargs)
@@ -73,6 +87,7 @@ class SQLUpdateFromCompiler(SQLCompiler):
             result.append('WHERE {}'.format(where))
             all_params.extend(where_params or [])
 
+        # Add columns for RETURNING clause so the updated objects can be iterated over higher up
         if self._lazy:
             result.append('RETURNING')
             returning = []
@@ -91,6 +106,7 @@ class SQLUpdateFromCompiler(SQLCompiler):
             not self.connection.features.can_return_ids_from_bulk_insert
         )
 
+        # When not lazy, we'll execute this immediately and return the updated count
         if not self._lazy:
             with self.connection.cursor() as cursor:
                 sql, params = self.as_sql()
@@ -103,4 +119,6 @@ class SQLUpdateFromCompiler(SQLCompiler):
         if len(self.annotation_col_map):
             raise NotImplementedError('Annotations are not allowed in an UPDATE')
 
+        # When we are lazy, we'll leave it to the default behavior of the compiler which is to
+        # return a result that can be used in the ModelIterator
         return super(SQLUpdateFromCompiler, self).execute_sql(*args, **kwargs)

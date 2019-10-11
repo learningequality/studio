@@ -10,9 +10,21 @@ SQL_CREATE_TEMP_TABLE = "CREATE TEMP TABLE %(table)s (%(definition)s) ON COMMIT 
 
 @contextmanager
 def temporary_model(model, using=DEFAULT_DB_ALIAS, atomic=True):
+    """
+    Creates a temporary database table, using a temporary model class, such that the implementer
+    is able to use Django ORM tooling to interact with the short-lived instance of the table.
+
+    :param model: The temporary model used to create the TEMP TABLE
+    :type model: contentcuration.db.models.base.TemporaryModel
+    :param using: The database connection alias
+    :type using: str
+    :param atomic: Bool indicating whether this will also initiate a transaction, as is default
+    :type atomic: bool
+    """
     connection = connections[using]
     temp_models = TEMPORARY_MODELS.get(using, [])
 
+    # Avoid attempting to re-create temporary models
     if model in temp_models:
         yield model
         return
