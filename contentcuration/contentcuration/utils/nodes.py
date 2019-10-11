@@ -10,9 +10,28 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
 from django.db import transaction
+from django.db.models import BooleanField
+from django.db.models import IntegerField
 from django.db.models import Q
+from django.db.models.aggregates import Count
+from django.db.models.aggregates import Max
+from django.db.models.expressions import Case
+from django.db.models.expressions import Col
+from django.db.models.expressions import CombinedExpression
+from django.db.models.expressions import Expression
+from django.db.models.expressions import Value
+from django.db.models.expressions import When
+from django.db.models.functions import Coalesce
+from django.db.models.sql.where import WhereNode
 from django.utils.translation import ugettext as _
+from le_utils.constants import content_kinds
+from le_utils.constants import roles
 
+from contentcuration.db.models.aggregates import BoolOr
+from contentcuration.db.models.expressions import get_output_field
+from contentcuration.db.models.expressions import Join
+from contentcuration.db.models.expressions import JoinField
+from contentcuration.db.models.expressions import WhenQ
 from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
@@ -165,7 +184,7 @@ def filter_out_nones(data):
     return (l for l in data if l)
 
 
-def duplicate_node_bulk(node, sort_order=None, parent=None, channel_id=None, user=None, task_object=None):
+def duplicate_node_bulk(node, sort_order=None, parent=None, channel_id=None, user=None, task_object=None):  # noqa:C901
     if isinstance(node, int) or isinstance(node, basestring):
         node = ContentNode.objects.get(pk=node)
 
@@ -376,3 +395,250 @@ def move_node(node, parent=None, sort_order=None, channel_id=None):
                 n.tags.add(t)
 
     return node
+
+
+MPTT_FIELDS = [
+    'left',
+    'right',
+    'tree_id',
+    'level',
+    'parent',
+]
+
+
+class MPTTFieldHelper(object):
+    def __init__(self, query):
+        """
+        :param query: A query for a model's table
+        """
+        self.query = query
+        self.table_alias = query.get_initial_alias()
+
+    def get_mptt_field_name(self, field_name):
+        """
+        @see MPTTModel._mpttfield()
+        """
+        return getattr(getattr(self.query.model, '_mptt_meta'), field_name + '_attr', field_name)
+
+    def resolve_field(self, field_name):
+        """
+        Determines the real field name and output field type, using the query which references a
+        model class, handling both MPTT fields and normal fields
+
+        :param field_name: String name of a field
+        :return: A tuple of the real field name and output field instance
+        """
+        output_field = None
+
+        if field_name in MPTT_FIELDS:
+            suffix = ''
+            if field_name == 'parent':
+                suffix = '_id'
+
+            field_name = self.get_mptt_field_name(field_name) + suffix
+            output_field = IntegerField()
+
+        if not output_field:
+            output_field = get_output_field(self.query.model, field_name)
+
+        return field_name, output_field
+
+    def __getattr__(self, field_name):
+        """
+        Builds a column expression for a field, using the query which references a model class,
+        handling both MPTT fields and normal fields
+
+        :param field_name: String name of a field
+        :return: A `Col` expression for the table field
+        """
+        field_name, output_field = self.resolve_field(field_name)
+        return Col(self.table_alias, JoinField(field_name), output_field=output_field)
+
+
+class DescendantJoin(Join):
+    def __init__(self, queryset, *args, **kwargs):
+        super(DescendantJoin, self).__init__(queryset, *args, **kwargs)
+        self.helper = MPTTFieldHelper(queryset.query)
+
+    def __getattr__(self, field_name):
+        """
+        Gets a join ref for the field_name, using the query which references a
+        model class, handling both MPTT fields and normal fields
+
+        :param field_name: String name of a field
+        :return: A join field reference
+        """
+        field_name, output_field = self.helper.resolve_field(field_name)
+        return self.get_ref(field_name, output_field)
+
+
+class DescendantExpression(Expression):
+    def filter_condition(self, lhs, comparator, rhs):
+        return CombinedExpression(lhs, comparator, rhs, output_field=BooleanField())
+
+    def resolve_expression(self, query=None, *args, **kwargs):
+        if query is None:
+            return self
+
+        return WhereNode(self.resolve_conditions(MPTTFieldHelper(query)))
+
+    def resolve_conditions(self, helper):
+        return []
+
+
+class DescendantCount(Expression):
+    _output_field = IntegerField()
+
+    def resolve_expression(self, query=None, *args, **kwargs):
+        if query is None:
+            return self
+
+        helper = MPTTFieldHelper(query)
+        diff = helper.right - helper.left - Value(1)
+
+        # integer division floors the result in postgres
+        return diff / Value(2)
+
+
+class DescendantJoinExpression(DescendantExpression):
+    def __init__(self, *args, **kwargs):
+        self.join = kwargs.pop('join')
+        super(DescendantJoinExpression, self).__init__(*args, **kwargs)
+
+
+class IsChildCondition(DescendantJoinExpression):
+    def resolve_conditions(self, helper):
+        return [
+            self.filter_condition(self.join.parent, '=', helper.id)
+        ]
+
+
+class IsDescendantCondition(DescendantJoinExpression):
+    def __init__(self, *args, **kwargs):
+        self.include_self = kwargs.pop('include_self', False)
+        super(IsDescendantCondition, self).__init__(*args, **kwargs)
+
+    def resolve_conditions(self, helper):
+        left_op = '>='
+        right_op = '<='
+
+        if not self.include_self:
+            left_op = '>'
+            right_op = '<'
+
+        return [
+            self.filter_condition(self.join.left, left_op, helper.left),
+            self.filter_condition(self.join.left, right_op, helper.right),
+        ]
+
+
+class IsResourceDescendantCondition(IsDescendantCondition):
+    def resolve_conditions(self, helper):
+        conditions = super(IsResourceDescendantCondition, self).resolve_conditions(helper)
+        conditions.append(self.filter_condition(self.join.kind_id, '!=', Value(content_kinds.TOPIC)))
+        return conditions
+
+
+class IsCoachDescendantCondition(IsDescendantCondition):
+    def resolve_conditions(self, helper):
+        conditions = super(IsCoachDescendantCondition, self).resolve_conditions(helper)
+        conditions.append(CombinedExpression(self.join.role_visibility, '=', Value(roles.COACH)))
+        return conditions
+
+
+class HasChangedDescendantCondition(IsDescendantCondition):
+    def resolve_conditions(self, helper):
+        conditions = super(HasChangedDescendantCondition, self).resolve_conditions(helper)
+        conditions.append(CombinedExpression(helper.changed, 'IS', Value(True)))
+        return conditions
+
+
+DESCENDANT_COUNT = 'descendant_count'
+RESOURCE_COUNT = 'resource_count'
+COACH_COUNT = 'coach_count'
+MAX_SORT_ORDER = 'max_sort_order'
+HAS_CHANGED_DESCENDANT = 'has_changed_descendant'
+
+
+class MetadataQuery(object):
+    """
+    Helper class to query for various ContentNode metadata, for multiple node-trees, in a single
+    database query
+    """
+    def __init__(self, node_pks):
+        """
+        :param node_pks: list of ContentNode ID's
+        """
+        self.node_pks = node_pks
+        self.query = ContentNode.objects.filter(pk__in=self.node_pks)
+        self.annotations = {}
+        self.join = None
+
+    def get_join(self):
+        if self.join:
+            return self.join
+
+        # be sure to clear ordering, to avoid influencing GROUP BY
+        self.join = DescendantJoin(ContentNode.objects.all().order_by(), tree_id='tree_id')
+        self.query = self.query.joining(self.join)
+        return self.join
+
+    def build_count_case_expression(self, condition):
+        return Count(
+            Case(
+                When(WhenQ(condition), self.join.id),
+                default=Value(None)
+            ),
+            distinct=True
+        )
+
+    def add_descendant_count(self):
+        """
+        @see MPTTModel.get_descendant_count()
+        """
+        # Use MAX to trigger aggregating, and GROUP BY in Django
+        self.annotations[DESCENDANT_COUNT] = Max(DescendantCount())
+        return self
+
+    def add_resource_count(self):
+        self.annotations[RESOURCE_COUNT] = self.build_count_case_expression(
+            IsResourceDescendantCondition(join=self.get_join()))
+        return self
+
+    def add_coach_count(self):
+        self.annotations[COACH_COUNT] = self.build_count_case_expression(
+            IsCoachDescendantCondition(join=self.get_join()))
+        return self
+
+    def add_max_sort_order(self):
+        join = self.get_join()
+        self.annotations[MAX_SORT_ORDER] = Coalesce(
+            Max(
+                Case(
+                    When(WhenQ(IsChildCondition(join=join)), join.sort_order),
+                    default=Value(None)
+                )
+            ),
+            Value(1)
+        )
+        return self
+
+    def add_has_changed_descendant(self):
+        join = self.get_join()
+        self.annotations[HAS_CHANGED_DESCENDANT] = Coalesce(
+            BoolOr(
+                Case(
+                    When(WhenQ(IsDescendantCondition(join=join)), join.changed),
+                    default=Value(None)
+                )
+            ),
+            Value(False)
+        )
+        return self
+
+    def retrieve_metadata(self):
+        if len(self.annotations) == 0:
+            raise ValueError('No metadata to retrieve')
+
+        results = self.query.values('id').annotate(**self.annotations).order_by()
+        return {result.pop('id'): result for result in results}
