@@ -39,6 +39,7 @@ import contentcuration.views.public as public_views
 import contentcuration.views.settings as settings_views
 import contentcuration.views.users as registration_views
 import contentcuration.views.zip as zip_views
+
 from contentcuration.celery import app
 from contentcuration.forms import ForgotPasswordForm
 from contentcuration.forms import LoginForm
@@ -55,6 +56,8 @@ from contentcuration.models import Language
 from contentcuration.models import License
 from contentcuration.models import Task
 from contentcuration.models import User
+from contentcuration.viewsets.contentnode import SummaryContentNodeViewSet
+from contentcuration.viewsets.contentnode import ContentNodeViewSet
 from contentcuration.viewsets.channel import ChannelViewSet
 from contentcuration.viewsets.channelset import ChannelSetViewSet
 from contentcuration.viewsets.invitation import InvitationViewSet
@@ -103,20 +106,6 @@ class FormatPresetViewSet(viewsets.ModelViewSet):
 class ContentKindViewSet(viewsets.ModelViewSet):
     queryset = ContentKind.objects.all()
     serializer_class = serializers.ContentKindSerializer
-
-
-class ContentNodeViewSet(BulkModelViewSet):
-    queryset = ContentNode.objects.all()
-    serializer_class = serializers.ContentNodeCompleteSerializer
-
-    def get_queryset(self):
-        if self.request.user.is_admin:
-            return ContentNode.objects.all()
-
-        # Set up eager loading to avoid N+1 selects
-        tree_ids = get_channel_tree_ids(self.request.user)
-        return ContentNode.objects.prefetch_related('children').prefetch_related('files') \
-                                  .prefetch_related('assessment_items').filter(tree_id__in=tree_ids).distinct()
 
 
 class TagViewSet(viewsets.ModelViewSet):
@@ -207,6 +196,7 @@ router.register(r'license', LicenseViewSet)
 router.register(r'language', LanguageViewSet)
 router.register(r'channel', ChannelViewSet)
 router.register(r'channelset', ChannelSetViewSet)
+router.register(r'summarycontentnode', SummaryContentNodeViewSet)
 router.register(r'fileformat', FileFormatViewSet)
 router.register(r'preset', FormatPresetViewSet)
 router.register(r'tag', TagViewSet)
