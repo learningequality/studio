@@ -6,7 +6,7 @@ const router = new VueRouter({
   routes: [
     {
       name: RouterNames.SANDBOX,
-      path: '/',
+      path: '/sandbox/',
       component: Sandbox,
     },
   ],

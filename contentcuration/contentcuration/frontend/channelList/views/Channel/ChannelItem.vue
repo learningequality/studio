@@ -225,7 +225,7 @@
         // TODO: update if we decide to make channel edit page accessible
         // without an account
         if (this.loggedIn) {
-          return window.Urls.channel() + `#/channel/${this.channelId}`;
+          return window.Urls.channel(this.channelId);
         }
         return this.channelDetailsLink;
       },
