@@ -4,21 +4,15 @@ from django.contrib.postgres.aggregates import ArrayAgg
 from django.db.models import IntegerField
 from django.db.models import F
 from django.db.models import OuterRef
-from django.db.models import Prefetch
-from django.db.models import Q
 from django.db.models import Subquery
-from django.db.models import BooleanField
-from django.db.models.functions import Cast
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
 from le_utils.constants import content_kinds
 from le_utils.constants import roles
-from rest_framework import serializers
 
 from contentcuration.models import ContentNode
 from contentcuration.models import File
-from contentcuration.models import User
 from contentcuration.models import generate_storage_url
 from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.base import WriteOnlySerializer

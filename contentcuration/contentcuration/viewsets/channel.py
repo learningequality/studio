@@ -29,20 +29,22 @@ from contentcuration.viewsets.base import ValuesViewset
 
 class ChannelListPagination(PageNumberPagination):
     page_size = None
-    page_size_query_param = 'page_size'
+    page_size_query_param = "page_size"
     max_page_size = 100
 
     def get_paginated_response(self, data):
-        return Response({
-            'links': {
-                'next': self.get_next_link(),
-                'previous': self.get_previous_link()
-            },
-            'page_number': self.page.number,
-            'count': self.page.paginator.count,
-            'total_pages': self.page.paginator.num_pages,
-            'results': data
-        })
+        return Response(
+            {
+                "links": {
+                    "next": self.get_next_link(),
+                    "previous": self.get_previous_link(),
+                },
+                "page_number": self.page.number,
+                "count": self.page.paginator.count,
+                "total_pages": self.page.paginator.num_pages,
+                "results": data,
+            }
+        )
 
 
 class ChannelFilter(FilterSet):
@@ -68,27 +70,28 @@ class ChannelFilter(FilterSet):
         )
 
     def filter_keywords(self, queryset, name, value):
-        keywords_query = (
-            self.main_tree_query.filter(
-                Q(tags__tag_name__icontains=value) |
-                Q(author__icontains=value) |
-                Q(aggregator__icontains=value) |
-                Q(provider__icontains=value)
-            )
+        keywords_query = self.main_tree_query.filter(
+            Q(tags__tag_name__icontains=value)
+            | Q(author__icontains=value)
+            | Q(aggregator__icontains=value)
+            | Q(provider__icontains=value)
         )
         return queryset.annotate(
             keyword_match_count=SQCount(keywords_query, field="content_id"),
-            primary_token=Max("secret_tokens__token")
+            primary_token=Max("secret_tokens__token"),
         ).filter(
-            Q(name__icontains=value) | Q(description__icontains=value) |
-            Q(pk__istartswith=value) | Q(primary_token=value.replace('-', '')) |
-            Q(keyword_match_count__gt=0)
+            Q(name__icontains=value)
+            | Q(description__icontains=value)
+            | Q(pk__istartswith=value)
+            | Q(primary_token=value.replace("-", ""))
+            | Q(keyword_match_count__gt=0)
         )
 
     def filter_language(self, queryset, name, value):
         language_query = (
             self.main_tree_query.filter(language_id=value)
-            .values("content_id").distinct()
+            .values("content_id")
+            .distinct()
         )
         return queryset.annotate(
             language_count=SQCount(language_query, field="content_id")
@@ -96,8 +99,11 @@ class ChannelFilter(FilterSet):
 
     def filter_licenses(self, queryset, name, value):
         license_query = (
-            self.main_tree_query.filter(license_id__in=[int(l) for l in value.split(',')])
-            .values("content_id").distinct()
+            self.main_tree_query.filter(
+                license_id__in=[int(l) for l in value.split(",")]
+            )
+            .values("content_id")
+            .distinct()
         )
         return queryset.annotate(
             license_count=SQCount(license_query, field="content_id")
@@ -105,33 +111,28 @@ class ChannelFilter(FilterSet):
 
     def filter_kinds(self, queryset, name, value):
         kinds_query = (
-            self.main_tree_query.filter(kind_id__in=value.split(','))
-            .values("content_id").distinct()
+            self.main_tree_query.filter(kind_id__in=value.split(","))
+            .values("content_id")
+            .distinct()
         )
         return queryset.annotate(
             kind_match_count=SQCount(kinds_query, field="content_id")
         ).exclude(kind_match_count=0)
 
     def filter_coach(self, queryset, name, value):
-        coach_query = (
-            self.main_tree_query.filter(role_visibility=roles.COACH)
-        )
+        coach_query = self.main_tree_query.filter(role_visibility=roles.COACH)
         return queryset.annotate(
             coach_count=SQCount(coach_query, field="content_id")
         ).exclude(coach_count=0)
 
     def filter_assessments(self, queryset, name, value):
-        assessment_query = (
-            self.main_tree_query.filter(kind_id=content_kinds.EXERCISE)
-        )
+        assessment_query = self.main_tree_query.filter(kind_id=content_kinds.EXERCISE)
         return queryset.annotate(
             assessment_count=SQCount(assessment_query, field="content_id")
         ).exclude(assessment_count=0)
 
     def filter_subtitles(self, queryset, name, value):
-        subtitle_query = (
-            self.main_tree_query.filter(files__preset__subtitle=True)
-        )
+        subtitle_query = self.main_tree_query.filter(files__preset__subtitle=True)
         return queryset.annotate(
             subtitle_count=SQCount(subtitle_query, field="content_id")
         ).exclude(subtitle_count=0)
@@ -159,7 +160,21 @@ class ChannelFilter(FilterSet):
 
     class Meta:
         model = Channel
-        fields = ("keywords", "published", "language", "licenses", "kinds", "coach", "assessments", "subtitles", "bookmark", "edit", "view", "public", "ids")
+        fields = (
+            "keywords",
+            "published",
+            "language",
+            "licenses",
+            "kinds",
+            "coach",
+            "assessments",
+            "subtitles",
+            "bookmark",
+            "edit",
+            "view",
+            "public",
+            "ids",
+        )
 
 
 class SQCount(Subquery):
@@ -242,16 +257,16 @@ class ChannelViewSet(ValuesViewset):
         "thumbnail_url": get_channel_thumbnail,
         "published": "main_tree__published",
         "created": "main_tree__created",
-        "root_id": "main_tree__id"
+        "root_id": "main_tree__id",
     }
 
     def get_queryset(self):
         user_id = not self.request.user.is_anonymous() and self.request.user.id
-        queryset = Channel.objects.filter(deleted=False).filter(
-            Q(editors=user_id)
-            | Q(viewers=user_id)
-            | Q(public=True)
-        ).distinct()
+        queryset = (
+            Channel.objects.filter(deleted=False)
+            .filter(Q(editors=user_id) | Q(viewers=user_id) | Q(public=True))
+            .distinct()
+        )
 
         # Annotate edit, view, and bookmark onto the channels
         # Have to cast to integer first as it initially gets set
@@ -290,7 +305,7 @@ class ChannelViewSet(ValuesViewset):
             ),
         )
 
-        return self.prefetch_queryset(queryset).order_by('-priority', 'name')
+        return self.prefetch_queryset(queryset).order_by("-priority", "name")
 
     def prefetch_queryset(self, queryset):
         prefetch_secret_token = Prefetch(
