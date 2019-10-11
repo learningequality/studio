@@ -1,3 +1,5 @@
+import json
+
 from django.contrib.postgres.aggregates import ArrayAgg
 from django.db.models import IntegerField
 from django.db.models import F
@@ -15,7 +17,9 @@ from le_utils.constants import roles
 from rest_framework import serializers
 
 from contentcuration.models import ContentNode
+from contentcuration.models import File
 from contentcuration.models import User
+from contentcuration.models import generate_storage_url
 from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.base import WriteOnlySerializer
 
@@ -55,6 +59,23 @@ class ContentNodeSerializer(WriteOnlySerializer):
         read_only_fields = ("id",)
 
 
+def retrieve_thumbail_src(item):
+    """ Get either the encoding or the url to use as the <img> src attribute """
+    try:
+        if item.get("thumbnail_encoding"):
+            return json.loads(item.get("thumbnail_encoding")).get("base64")
+    except ValueError:
+        pass
+    if (
+        item["thumbnail_checksum"] is not None
+        and item["thumbnail_extension"] is not None
+    ):
+        return generate_storage_url(
+            "{}.{}".format(item["thumbnail_checksum"], item["thumbnail_extension"])
+        )
+    return None
+
+
 class SummaryContentNodeViewSet(ValuesViewset):
     queryset = ContentNode.objects.all()
     serializer_class = ContentNodeSerializer
@@ -70,9 +91,15 @@ class SummaryContentNodeViewSet(ValuesViewset):
         "total_count",
         "resource_count",
         "coach_count",
+        "thumbnail_checksum",
+        "thumbnail_extension",
+        "thumbnail_encoding",
+        "published",
+        "modified",
+        # "valid",
     )
 
-    field_map = {"language": "language_id"}
+    field_map = {"language": "language_id", "thumbnail_src": retrieve_thumbail_src}
 
     def get_queryset(self):
         queryset = ContentNode.objects.all()
@@ -91,11 +118,18 @@ class SummaryContentNodeViewSet(ValuesViewset):
             .distinct("content_id")
             .values_list("content_id", flat=True)
         )
+        thumbnails = File.objects.filter(
+            contentnode=OuterRef("id"), preset__thumbnail=True
+        )
         queryset = queryset.annotate(
             resource_count=SQCount(descendant_resources, field="content_id"),
             coach_count=SQCount(
                 descendant_resources.filter(role_visibility=roles.COACH),
                 field="content_id",
+            ),
+            thumbnail_checksum=Subquery(thumbnails.values("checksum")[:1]),
+            thumbnail_extension=Subquery(
+                thumbnails.values("file_format__extension")[:1]
             ),
         )
         return queryset
