@@ -82,6 +82,11 @@
             <script src="{% url 'js_reverse' %}" type="text/javascript"></script>
         {% endif %}
 
+      <script>
+        var user = JSON.parse("{{ current_user|escapejs }}");
+        var user_preferences = JSON.parse("{{ user_preferences|escapejs }}");
+      </script>
+
         <!-- fullstory integration, only on develop until we add an opt-in option. -->
         {% if request.get_host == 'develop.studio.learningequality.org' %}
         <script>
@@ -146,6 +151,8 @@
       </div>
     {% endif %}
     {% endblock nav %}
+
+    <app></app>
 
     <!-- Site content gets injected here -->
     {% block content %}{% endblock content %}
