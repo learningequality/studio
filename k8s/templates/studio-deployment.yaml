@@ -19,6 +19,16 @@ spec:
       containers:
       - name: app
         image: {{ .Values.studioApp.imageName }}
+        workingDir: /contentcuration/contentcuration/
+        command:
+        - gunicorn
+        args:
+        - contentcuration.wsgi:application
+        - --timeout=4000
+        - --workers=3
+        - --threads=5
+        - --bind=0.0.0.0:8081
+        - --pid=/tmp/contentcuration.pid
         env: {{ include "studio.sharedEnvs" . | nindent 8 }}
         - name: STATICFILES_DIR
           value: /app/contentworkshop_static/
