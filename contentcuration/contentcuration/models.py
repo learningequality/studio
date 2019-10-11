@@ -1293,9 +1293,6 @@ class ContentNode(MPTTModel, models.Model):
         except (ContentNode.DoesNotExist, MultipleObjectsReturned) as e:
             logging.warn(str(e))
 
-    class MPTTMeta:
-        order_insertion_by = ['sort_order']
-
     class Meta:
         verbose_name = _("Topic")
         verbose_name_plural = _("Topics")
