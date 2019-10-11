@@ -7,11 +7,29 @@ from django.db.models.expressions import Col
 from django.db.models.expressions import CombinedExpression
 from django.db.models.expressions import Exists as BaseExists
 from django.db.models.expressions import Expression
+from django.db.models.expressions import Q
 from django.db.models.sql.datastructures import BaseTable
 from django.db.models.sql.datastructures import INNER
 from django.db.models.sql.datastructures import Join as DjangoJoin
 from django.db.models.sql.where import AND
 from django.db.models.sql.where import WhereNode
+
+
+def get_output_field(model, field_name):
+    """
+    :param model: The model class
+    :param field_name: The string name of the field
+    :return: A field instance for use as `output_field` in Expressions
+    """
+    try:
+        # try to get the output_field type so refs can be used for other queryset operations
+        output_field = model._meta.get_field(field_name)
+    except FieldDoesNotExist:
+        if re.match('_id$', field_name):
+            return get_output_field(model, field_name.replace('_id', ''))
+        output_field = None
+
+    return output_field
 
 
 class Exists(BaseExists):
@@ -140,17 +158,8 @@ class Join(BaseExpression):
 
         return query
 
-    def get_ref(self, field_name):
-        meta = self.queryset.model._meta
-
-        try:
-            # try to get the output_field type so refs can be used for other queryset operations
-            output_field = meta.get_field(field_name)
-        except FieldDoesNotExist:
-            if re.match('_id$', field_name):
-                return field_name.replace('_id', '')
-            output_field = None
-
+    def get_ref(self, field_name, output_field=None):
+        output_field = output_field or get_output_field(self.queryset.model, field_name)
         ref = JoinRef(field_name, output_field=output_field)
         ref.table_alias = self.table_alias
         self.refs.append(ref)
@@ -167,9 +176,12 @@ class JoinField(BaseExpression):
     """
     A helper expression that is used for referencing a particular field from a JOIN'd table
     """
-    def __init__(self, field_name, *args, **kwargs):
+    contains_aggregate = False
+
+    def __init__(self, field_name, primary_key=None, *args, **kwargs):
         super(JoinField, self).__init__(*args, **kwargs)
         self.column = field_name
+        self.primary_key = primary_key
 
 
 class JoinRef(BaseExpression):
@@ -219,3 +231,8 @@ class CompoundJoinExpression(object):
 
     def get_extra_restriction(self, *args, **kwargs):
         return self.extra
+
+
+class WhenQ(Q):
+    def resolve_expression(self, *args, **kwargs):
+        return WhereNode([child.resolve_expression(*args, **kwargs) for child in self.children])
