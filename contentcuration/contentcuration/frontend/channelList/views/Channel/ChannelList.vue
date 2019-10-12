@@ -59,8 +59,8 @@
   import sortBy from 'lodash/sortBy';
   import { mapGetters, mapActions, mapState, mapMutations } from 'vuex';
   import { ListTypes, RouterNames } from '../../constants';
-  import { generateTempId } from '../../utils';
   import ChannelItem from './ChannelItem.vue';
+  import { generateTempId } from 'shared/utils';
 
   function listTypeValidator(value) {
     // The value must match one of the ListTypes

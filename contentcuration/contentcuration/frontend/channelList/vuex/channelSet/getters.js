@@ -1,5 +1,5 @@
-import { isTempId } from '../../utils';
 import { channelSetLastSavedState } from './utils';
+import { isTempId } from 'shared/utils';
 
 export function channelSets(state) {
   return Object.values(state.channelSetsMap).filter(set => !isTempId(set.id));

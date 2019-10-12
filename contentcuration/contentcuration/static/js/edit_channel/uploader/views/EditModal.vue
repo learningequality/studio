@@ -3,7 +3,7 @@
   <div>
     <VDialog
       ref="editmodal"
-      v-model="dialog"
+      :value="$route.params.nodeId == nodeId"
       fullscreen
       hide-overlay
       transition="dialog-bottom-transition"
@@ -98,7 +98,6 @@
   import { modes } from '../constants';
   import EditList from './EditList.vue';
   import EditView from './EditView.vue';
-  import State from 'edit_channel/state';
   import Dialog from 'edit_channel/sharedComponents/Dialog.vue';
   import Alert from 'edit_channel/sharedComponents/Alert.vue';
 
@@ -114,9 +113,13 @@
       Alert,
     },
     props: {
-      isClipboard: {
-        type: Boolean,
-        default: false,
+      nodeId: {
+        type: String,
+        default: '',
+      },
+      nodeIds: {
+        type: Array,
+        default: () => [],
       },
     },
     data() {
@@ -143,8 +146,8 @@
       };
     },
     computed: {
-      ...mapState('edit_modal', ['nodes', 'changes', 'mode']),
-      ...mapGetters('edit_modal', ['changed', 'invalidNodes']),
+      ...mapState('edit_modal', ['changes', 'mode']),
+      ...mapGetters('contentNode', ['getContentNode']),
       isViewOnly() {
         return this.mode === modes.VIEW_ONLY;
       },
@@ -152,8 +155,13 @@
         // Only hide drawer when editing a single item
         return (this.mode !== modes.EDIT && !this.isViewOnly) || this.nodes.length > 1;
       },
-      invalidNodesWithoutNewNodes() {
-        return this.invalidNodes({ ignoreNewNodes: true });
+      nodes() {
+        if (this.nodeId) {
+          return [this.getContentNode(this.nodeId)];
+        } else if (this.nodeIds.length) {
+          return this.nodeIds.map(nodeId => this.getContentNode(nodeId));
+        }
+        return [];
       },
     },
     watch: {

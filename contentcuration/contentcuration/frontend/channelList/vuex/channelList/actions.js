@@ -1,5 +1,5 @@
-import { isTempId } from '../../utils';
 import { channelLastSavedState } from './utils';
+import { isTempId } from 'shared/utils';
 import client from 'shared/client';
 
 /* CHANNEL LIST ACTIONS */
@@ -20,7 +20,7 @@ export function loadChannel(context, id) {
     .get(window.Urls['channel-detail'](id))
     .then(response => {
       const channel = response.data;
-      context.commit('ADD_CHANNELS', [channel]);
+      context.commit('ADD_CHANNEL', channel);
       return channel;
     })
     .catch(() => {

@@ -82,9 +82,9 @@
 <script>
 
   import { mapGetters, mapActions, mapMutations } from 'vuex';
-  import { generateTempId } from '../../utils';
   import { RouterNames } from '../../constants';
   import ChannelSetItem from './ChannelSetItem.vue';
+  import { generateTempId } from 'shared/utils';
   import PrimaryDialog from 'shared/views/PrimaryDialog';
 
   export default {
