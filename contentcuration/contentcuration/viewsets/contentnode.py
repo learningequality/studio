@@ -1,6 +1,7 @@
 import json
 
 from django.contrib.postgres.aggregates import ArrayAgg
+from django.db.models import Exists
 from django.db.models import IntegerField
 from django.db.models import F
 from django.db.models import OuterRef
@@ -11,6 +12,7 @@ from django_filters.rest_framework import FilterSet
 from le_utils.constants import content_kinds
 from le_utils.constants import roles
 
+from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import File
 from contentcuration.models import generate_storage_url
@@ -20,10 +22,11 @@ from contentcuration.viewsets.base import WriteOnlySerializer
 
 class ContentNodeFilter(FilterSet):
     ids = CharFilter(method="filter_ids")
+    channel_root = CharFilter(method="filter_channel_root")
 
     class Meta:
         model = ContentNode
-        fields = ("parent", "ids", "kind")
+        fields = ("parent", "ids", "kind", "channel_root")
 
     def filter_ids(self, queryset, name, value):
         try:
@@ -33,6 +36,13 @@ class ContentNodeFilter(FilterSet):
         except ValueError:
             # Catch in case of a poorly formed UUID
             return queryset.none()
+
+    def filter_channel_root(self, queryset, name, value):
+        return queryset.filter(
+            parent=Channel.objects.filter(pk=value).values_list(
+                "main_tree__id", flat=True
+            )
+        )
 
 
 class SQCount(Subquery):
@@ -90,6 +100,8 @@ class SummaryContentNodeViewSet(ValuesViewset):
         "thumbnail_encoding",
         "published",
         "modified",
+        "parent",
+        "has_children",
         # "valid",
     )
 
@@ -125,6 +137,7 @@ class SummaryContentNodeViewSet(ValuesViewset):
             thumbnail_extension=Subquery(
                 thumbnails.values("file_format__extension")[:1]
             ),
+            has_children=Exists(ContentNode.objects.filter(parent=OuterRef("id"))),
         )
         return queryset
 
@@ -157,6 +170,7 @@ class ContentNodeViewSet(ValuesViewset):
         "node_id",
         "original_source_node_id",
         "original_channel_id",
+        "parent",
     )
 
     field_map = {

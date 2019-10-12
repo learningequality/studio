@@ -234,6 +234,7 @@ class ChannelViewSet(ValuesViewset):
         "name",
         "description",
         "main_tree__published",
+        "main_tree",
         "thumbnail",
         "thumbnail_encoding",
         "language",
