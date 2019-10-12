@@ -6,6 +6,7 @@ import os
 import uuid
 
 from django.conf import settings
+from django.contrib.postgres.aggregates.general import BoolOr
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
@@ -27,7 +28,6 @@ from django.utils.translation import ugettext as _
 from le_utils.constants import content_kinds
 from le_utils.constants import roles
 
-from contentcuration.db.models.aggregates import BoolOr
 from contentcuration.db.models.expressions import get_output_field
 from contentcuration.db.models.expressions import Join
 from contentcuration.db.models.expressions import JoinField
