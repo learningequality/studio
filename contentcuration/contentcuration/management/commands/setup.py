@@ -6,29 +6,19 @@ import sys
 import tempfile
 import uuid
 
-from django.core.files import File as DjFile
-from django.core.management import call_command
-from django.core.management.base import BaseCommand
-from le_utils.constants import content_kinds
-from le_utils.constants import exercises
-from le_utils.constants import file_formats
-from le_utils.constants import format_presets
-from le_utils.constants import licenses
-
 from contentcuration.api import write_file_to_storage
-from contentcuration.models import AssessmentItem
-from contentcuration.models import Channel
-from contentcuration.models import ContentNode
-from contentcuration.models import ContentTag
-from contentcuration.models import File
-from contentcuration.models import FormatPreset
-from contentcuration.models import Invitation
-from contentcuration.models import License
-from contentcuration.models import User
-from contentcuration.models import MultipleObjectsReturned
+from contentcuration.models import (AssessmentItem, Channel, ContentNode,
+                                    ContentTag, File, FormatPreset, Invitation,
+                                    License, MultipleObjectsReturned, User)
 from contentcuration.utils.files import duplicate_file
 from contentcuration.utils.minio_utils import ensure_storage_bucket_public
 from contentcuration.utils.nodes import duplicate_node_bulk
+from django.core.files import File as DjFile
+from django.core.management import call_command
+from django.core.management.base import BaseCommand
+from le_utils.constants import (content_kinds, exercises, file_formats,
+                                format_presets, licenses)
+
 logmodule.basicConfig()
 logging = logmodule.getLogger(__name__)
 
@@ -93,11 +83,11 @@ class Command(BaseCommand):
                 channel=channel3,
                 email=admin.email,
             )
+            invitation.share_mode = "edit"
+            invitation.save()
         except MultipleObjectsReturned:
             # we don't care, just continue
             pass
-        invitation.share_mode = "edit"
-        invitation.save()
 
         # Create pool of tags
         tags = []
