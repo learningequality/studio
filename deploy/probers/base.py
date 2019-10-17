@@ -45,6 +45,11 @@ class BaseProbe(object):
         )
         r.raise_for_status()
 
+        # Since logging into Studio with wrong username and password also returns 200
+        # status code, check the response url to see whether we have logged in or not.
+        if r.url == url:
+            raise Exception("Cannot log into Studio.")
+
         return r
 
     def _construct_studio_url(self, path):
