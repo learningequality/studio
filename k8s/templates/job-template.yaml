@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ template "studio.fullname" . }}-django-config
+  name: {{ template "studio.fullname" . }}-db-migrate-config
   labels:
     app: {{ template "studio.fullname" . }}
   annotations:
@@ -11,14 +11,17 @@ metadata:
 data:
   DJANGO_SETTINGS_MODULE: {{ .Values.settings }}
   DJANGO_LOG_FILE: /var/log/django.log
+  DATA_DB_PORT: "5432"
   MPLBACKEND: PS
   STUDIO_BETA_MODE: "yes"
   RUN_MODE: k8s
+  RELEASE_COMMIT_SHA: {{ .Values.studioApp.releaseCommit | default "" }}
+  BRANCH_ENVIRONMENT: {{ .Release.Name }}
 ---
 apiVersion: v1
 kind: Secret
 metadata:
-  name: {{ template "studio.fullname" . }}
+  name: {{ template "studio.fullname" . }}-db-migrate-secrets
   labels:
     app: studio
     chart: {{ .Chart.Name }}
@@ -28,37 +31,11 @@ metadata:
     "helm.sh/hook-delete-policy": before-hook-creation
 type: Opaque
 data:
-  postmark-api-key: {{ .Values.studioApp.postmarkApiKey | default "" | b64enc }}
-  redis-password: {{ .Values.redis.password | default "" | b64enc }}
-  postgres-user: {{ .Values.postgresql.postgresUser | default "" | b64enc }}
-  postgres-password: {{ .Values.postgresql.postgresPassword | default "" | b64enc }}
-  postgres-database: {{ .Values.postgresql.postgresDatabase | default "" | b64enc }}
-  {{ if .Values.sentry.dsnKey }}
-  sentry-dsn-key: {{ .Values.sentry.dsnKey }}
-  {{ end }}
-  {{ if .Values.studioProber.newrelicKey }}
-  newrelic-key: {{ .Values.studioProber.newrelicKey | default "" | b64enc }}
-  newrelic-account-id: {{ .Values.studioProber.newrelicAccountId | default "" | b64enc}}
-  {{ end }}
----
-# this secret is for the dbmigrate job. This needs to exist alongside it
-{{- if .Values.minio.externalGoogleCloudStorage.gcsKeyJson }}
-apiVersion: v1
-kind: Secret
-metadata:
-  name: {{ template "studio.fullname" . }}-gcs-creds-for-dbmigrate
-  annotations:
-    "helm.sh/hook": pre-install,pre-upgrade
-    "helm.sh/hook-delete-policy": before-hook-creation
-  labels:
-    app: {{ template "studio.name" . }}
-    chart: {{ template "studio.chart" . }}
-    release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
-type: Opaque
-data:
-  gcs_key.json: {{ .Values.minio.externalGoogleCloudStorage.gcsKeyJson }}
-{{- end }}
+  DATA_DB_HOST: {{ .Values.postgresql.externalCloudSQL.proxyHostName | default (include "postgresql.fullname" .) | b64enc }}
+  DATA_DB_NAME: {{ .Values.postgresql.postgresDatabase | default "" | b64enc }}
+  DATA_DB_USER: {{ .Values.postgresql.postgresUser | default "" | b64enc }}
+  DATA_DB_PASS: {{ .Values.postgresql.postgresPassword | default "" | b64enc }}
+  SENTRY_DSN_KEY: {{ .Values.sentry.dsnKey | default "" | b64enc }}
 ---
 apiVersion: batch/v1
 kind: Job
@@ -67,7 +44,7 @@ metadata:
   labels:
     app: {{ template "studio.fullname" . }}
   annotations:
-    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook": post-install,pre-upgrade
     "helm.sh/hook-delete-policy": before-hook-creation
 spec:
   template:
@@ -81,12 +58,12 @@ spec:
         - migrate
         envFrom:
         - configMapRef:
-            name: {{ template "studio.fullname" . }}-django-config
-        env: {{ include "studio.sharedEnvs" . | nindent 8 }}
+            name: {{ template "studio.fullname" . }}-db-migrate-config
+        - secretRef:
+            name: {{ template "studio.fullname" . }}-db-migrate-secrets
+        env:
         - name: DJANGO_SETTINGS_MODULE
           value: contentcuration.migration_production_settings
-        volumeMounts:
-        {{ include "studio.pvc.gcs-creds" . | nindent 8 }}
         resources:
           requests:
             cpu: 1
@@ -94,7 +71,3 @@ spec:
           limits:
             cpu: 1
             memory: 2Gi
-      volumes:
-      - name: gcs-creds
-        secret:
-          secretName: {{ template "studio.fullname" . }}-gcs-creds-for-dbmigrate
