@@ -7,6 +7,8 @@ from base import BaseProbe
 class ChannelUpdateProbe(BaseProbe):
 
     metric = "channel_update_latency_msec"
+    prober_name = "CHANNEL-UPDATE-PROBER"
+    develop_only = True
 
     def _get_channel(self):
         response = self.request('api/probers/get_prober_channel')
