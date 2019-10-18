@@ -1,11 +1,11 @@
+from contentcuration.models import License
 from django import template
 from django.template.defaultfilters import stringfilter
 from django.utils.translation import ugettext_lazy as _
 
-from contentcuration.models import License
 register = template.Library()
 
-LICENSE_MAPPING = {l.license_name: l.license_url for l in License.objects.all()}
+LICENSE_MAPPING = None
 
 DESCRIPTION_MAPPING = {"CC BY": _("The Attribution License lets others distribute, "
                                   "remix, tweak, and build upon your work, even commercially, "
@@ -53,6 +53,9 @@ DESCRIPTION_MAPPING = {"CC BY": _("The Attribution License lets others distribut
 @register.filter(is_safe=True)
 @stringfilter
 def get_license_url(value):
+    if not LICENSE_MAPPING:
+        LICENSE_MAPPING = {l.license_name: l.license_url for l in License.objects.all()}
+
     return LICENSE_MAPPING.get(value)
 
 
