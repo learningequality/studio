@@ -9,7 +9,7 @@ RUN ln -fs /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
 RUN curl -sL https://deb.nodesource.com/setup_10.x | bash -
 
 ENV DEBIAN_FRONTEND noninteractive
-RUN apt-get update && apt-get -y install nodejs python python-dev python-pip gcc libpq-dev ffmpeg imagemagick ghostscript python-tk make git gettext openjdk-9-jre-headless curl libjpeg-dev wkhtmltopdf google-cloud-sdk fonts-freefont-ttf xfonts-75dpi poppler-utils
+RUN apt-get update && apt-get -y install nodejs python python-dev python-pip gcc libpq-dev ffmpeg imagemagick ghostscript python-tk make git gettext curl libjpeg-dev wkhtmltopdf fonts-freefont-ttf xfonts-75dpi poppler-utils
 
 # install wkhtml, and libpng12 (its dependency)
 RUN curl -L -o libpng12.deb http://security.ubuntu.com/ubuntu/pool/main/libp/libpng/libpng12-0_1.2.54-1ubuntu1.1_amd64.deb && dpkg -i libpng12.deb
