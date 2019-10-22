@@ -14,7 +14,7 @@ settings: contentcuration.production_settings
 productionIngress: false
 
 studioApp:
-  imageName: "REPLACEME"        
+  imageName: "REPLACEME"
   postmarkApiKey: "REPLACEME"
   releaseCommit:
   replicas: 3
@@ -47,3 +47,9 @@ minio:
 
 redis:
   internalRedisEnabled: true
+
+studioProber:
+  imageName: "REPLACEME"
+  newrelicKey: "REPLACEME"
+  newrelicAccountId: "REPLACEME"
+  port: 9313

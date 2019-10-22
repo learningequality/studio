@@ -30,7 +30,6 @@ from contentcuration.utils.publish import set_channel_icon_encoding
 
 pytestmark = pytest.mark.django_db
 
-
 def thumbnail():
     image_data = b'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
     file_data = create_studio_file(base64.decodebytes(image_data), preset='channel_thumbnail', ext='png')
@@ -212,5 +211,7 @@ class ChannelExportPrerequisiteTestCase(StudioTestCase):
     def test_nonexistent_prerequisites(self):
         channel = cc.Channel.objects.create()
         node1 = cc.ContentNode.objects.create(kind_id="exercise", parent_id=channel.main_tree.pk)
-        cc.ContentNode.objects.create(kind_id="exercise", prerequisite=[node1.pk])
+        exercise = cc.ContentNode.objects.create(kind_id="exercise")
+
+        cc.PrerequisiteContentRelationship.objects.create(target_node=exercise, prerequisite=node1)
         map_prerequisites(node1)

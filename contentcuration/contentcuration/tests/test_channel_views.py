@@ -7,13 +7,13 @@ from django.core.urlresolvers import reverse_lazy
 from django.db import connection
 from django.db import reset_queries
 
+from . import testdata
 from .base import BaseAPITestCase
 from contentcuration.models import SecretToken
 from contentcuration.serializers import StudioChannelListSerializer
 from contentcuration.views.base import get_channels_by_token
 from contentcuration.views.base import get_user_bookmarked_channels
 from contentcuration.views.base import get_user_edit_channels
-from contentcuration.views.base import get_user_public_channels
 from contentcuration.views.base import get_user_view_channels
 
 
@@ -59,11 +59,19 @@ class ChannelListTestCase(BaseAPITestCase):
         response = self.client.get(reverse('get_user_public_channels'))
         self.assertEqual(len(response.data), 0)
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Cache-Control'], 'max-age={}'.format(settings.PUBLIC_CHANNELS_CACHE_DURATION))
+        # we can't test the Vary header, because it will not match what we set it to
+        # see info in contentcuration.decorators.cache_no_user_data notes.
 
     def test_get_public_channel_list(self):
         """
         Ensure we get a valid response with channel information when we have one or more public channels.
         """
+        response = self.client.get(reverse('get_user_public_channels'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 0)
+
+        # get_user_public_channels is cached, but changing public state blows the cache
         self.channel.make_public(bypass_signals=True)
 
         response = self.client.get(reverse('get_user_public_channels'))
@@ -79,14 +87,29 @@ class ChannelListTestCase(BaseAPITestCase):
         settings.DEBUG = True
 
         reset_queries()
-        request = self.create_get_request(reverse('get_user_public_channels'))
-        response = get_user_public_channels(request)
+        response = self.client.get(reverse('get_user_public_channels'))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data), 1)
 
         # This is a warning sign for performance problems, so if the number of queries goes above this
         # number, we need to evaluate the change and see if we can do something to optimize.
         self.assertQueriesLessThan(10)
+
+        # assert that subsequent calls hit the cache
+        reset_queries()
+        response = self.client.get(reverse('get_user_public_channels'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(len(connection.queries), 0)
+
+        # assert that calls by other users also hit the cache
+        reset_queries()
+        new_user = testdata.user('me@work.com')
+        self.client.force_authenticate(new_user)
+        response = self.client.get(reverse('get_user_public_channels'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(len(connection.queries), 0)
 
     def test_no_editable_channels(self):
         """

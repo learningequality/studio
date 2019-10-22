@@ -19,9 +19,10 @@ def count_info_values(field):
     for item in items:
         if field in item[0]:
             for value in item[0][field]:
+                value = value.strip()
                 if not value in results:
-                    results[value.strip()] = 0
-                results[value.strip()] += 1
+                    results[value] = 0
+                results[value] += 1
     return results
 
 

@@ -6,27 +6,30 @@ RELEASENAME=$1
 BUCKET=$2
 COMMIT=$3
 POSTMARK_KEY=$4
-POSTGRES_USER=$5
-POSTGRES_DATABASE=$6
-POSTGRES_PASSWORD=$7
-GCLOUD_PROXY_HOSTNAME=$8
-GCS_SERVICE_ACCOUNT_JSON=$9
-PROJECT_ID=${10}
+PROBER_NEWRELIC_KEY=$5
+PROBER_NEWRELIC_ACCOUNT_ID=$6
+POSTGRES_USER=$7
+POSTGRES_DATABASE=$8
+POSTGRES_PASSWORD=$9
+GCLOUD_PROXY_HOSTNAME=${10}
+GCS_SERVICE_ACCOUNT_JSON=${11}
+PROJECT_ID=${12}
 
-if [ "${11}" ]
+if [ "${13}" ]
 then
     IS_PRODUCTION=true
 else
     IS_PRODUCTION=false
 fi
 
-GDRIVE_SERVICE_ACCOUNT_JSON=${12}
-SENTRY_DSN_KEY=${13}
+GDRIVE_SERVICE_ACCOUNT_JSON=${14}
+SENTRY_DSN_KEY=${15}
 
 helm upgrade --install $RELEASENAME . \
      -f values-prod-config.yaml \
      --set studioApp.imageName=gcr.io/$PROJECT_ID/learningequality-studio-app:$COMMIT \
      --set studioNginx.imageName=gcr.io/$PROJECT_ID/learningequality-studio-nginx:$COMMIT \
+     --set studioProber.imageName=gcr.io/$PROJECT_ID/learningequality-studio-prober:$COMMIT \
      --set studioApp.releaseCommit=$COMMIT \
      --set bucketName=$BUCKET \
      --set studioApp.postmarkApiKey=$POSTMARK_KEY \
@@ -37,4 +40,7 @@ helm upgrade --install $RELEASENAME . \
      --set minio.externalGoogleCloudStorage.gcsKeyJson=$(base64 $GCS_SERVICE_ACCOUNT_JSON --wrap=0) \
      --set productionIngress=$IS_PRODUCTION \
      --set studioApp.gDrive.keyJson=$(base64 $GDRIVE_SERVICE_ACCOUNT_JSON  --wrap=0) \
-     --set sentry.dsnKey=$(echo "$SENTRY_DSN_KEY" | base64 --wrap=0)
+     --set sentry.dsnKey=$(echo "$SENTRY_DSN_KEY" | base64 --wrap=0) \
+     --timeout 1500 \
+     --set studioProber.newrelicKey=$PROBER_NEWRELIC_KEY \
+     --set-string studioProber.newrelicAccountId=$PROBER_NEWRELIC_ACCOUNT_ID  # use set-string to resolve the issue https://github.com/helm/helm/issues/1707

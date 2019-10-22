@@ -10,9 +10,7 @@ from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse_lazy
-from django.db.models import BooleanField
 from django.db.models import Case
-from django.db.models import Count
 from django.db.models import IntegerField
 from django.db.models import OuterRef
 from django.db.models import Prefetch
@@ -20,7 +18,6 @@ from django.db.models import Q
 from django.db.models import Subquery
 from django.db.models import Value
 from django.db.models import When
-from django.db.models.functions import Cast
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.http import HttpResponseForbidden
@@ -47,6 +44,7 @@ from contentcuration.api import activate_channel
 from contentcuration.api import add_editor_to_channel
 from contentcuration.api import get_staged_diff
 from contentcuration.decorators import browser_is_supported
+from contentcuration.decorators import cache_no_user_data
 from contentcuration.decorators import can_access_channel
 from contentcuration.decorators import can_edit_channel
 from contentcuration.decorators import has_accepted_policies
@@ -69,8 +67,6 @@ from contentcuration.serializers import UserChannelListSerializer
 from contentcuration.tasks import create_async_task
 from contentcuration.tasks import generatechannelcsv_task
 from contentcuration.utils.messages import get_messages
-
-PUBLIC_CHANNELS_CACHE_DURATION = 30  # seconds
 
 
 class ChannelSerializerTypes(Enum):
@@ -261,8 +257,9 @@ def get_channels_by_token(request, token):
     return Response(channel_serializer.data)
 
 
-@cache_page(PUBLIC_CHANNELS_CACHE_DURATION)
+@cache_page(settings.PUBLIC_CHANNELS_CACHE_DURATION, key_prefix='get_user_public_channels')
 @api_view(['GET'])
+@cache_no_user_data
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def get_user_public_channels(request):
@@ -378,9 +375,6 @@ def map_channel_data(channel):
     channel["id"] = channel.pop("main_tree__id")
     channel["title"] = channel.pop("name")
     channel["children"] = [child for child in channel["children"] if child]
-    channel["metadata"] = {
-        "resource_count": channel.pop("resource_count")
-    }
     return channel
 
 
@@ -391,20 +385,11 @@ def accessible_channels(request, channel_id):
     # Used for import modal
     # Returns a list of objects with the following parameters:
     # id, title, resource_count, children
-    channel_ids = Channel.objects.filter(Q(deleted=False) & (Q(public=True) | Q(editors=request.user.id) | Q(viewers=request.user.id))).exclude(pk=channel_id).values_list("id", flat=True)
-    channel_main_tree_nodes = ContentNode.objects.filter(
-        tree_id=OuterRef("main_tree__tree_id")
-    ).order_by()
-    # Add the unique count of distinct non-topic node content_ids
-    non_topic_content_ids = (
-        channel_main_tree_nodes.exclude(kind_id=content_kinds.TOPIC).values("content_id")
-    )
-    channels = Channel.objects.filter(id__in=channel_ids)
+    channels = Channel.objects.filter(Q(deleted=False) & (Q(public=True) | Q(editors=request.user.id) | Q(viewers=request.user.id))).exclude(pk=channel_id)
     channels = channels.annotate(
-        resource_count=SQCountDistinct(non_topic_content_ids, field="content_id"),
         children=ArrayAgg("main_tree__children"),
     )
-    channels_data = channels.values("name", "resource_count", "children", "main_tree__id")
+    channels_data = channels.values("name", "children", "main_tree__id")
 
     return Response(map(map_channel_data, channels_data))
 

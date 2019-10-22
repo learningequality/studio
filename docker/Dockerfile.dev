@@ -43,13 +43,6 @@ RUN pipenv install --clear --dev --system --ignore-pipfile
 ################################################################################
 
 
-# Cloudprober binary ###########################################################
-RUN curl -L -o /cloudprober.zip https://github.com/google/cloudprober/releases/download/v0.10.2/cloudprober-v0.10.2-linux-x86_64.zip
-RUN unzip -p /cloudprober.zip > /bin/cloudprober && rm /cloudprober.zip
-RUN chmod +x /bin/cloudprober
-################################################################################
-
-
 # Final cleanup ################################################################
 RUN apt-get -y autoremove
 ################################################################################
