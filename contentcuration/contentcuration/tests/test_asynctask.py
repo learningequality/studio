@@ -5,6 +5,18 @@ from contentcuration.models import Task
 from contentcuration.tasks import create_async_task
 from contentcuration.tasks_test import non_async_test_task
 
+from mock import patch
+
+import celery
+
+class EagerTask(celery.app.task.Task):
+    def apply_async(self, *args, **kwargs):
+        result = self.apply(*args, **kwargs)
+
+        return result
+
+def run_tasks_eagerly(fn):
+    return patch('celery.app.task.Task', EagerTask)(fn)
 
 class AsyncTaskTestCase(BaseAPITestCase):
     """
@@ -133,6 +145,7 @@ class AsyncTaskTestCase(BaseAPITestCase):
         self.assertEquals(result, 42)
         self.assertEquals(Task.objects.filter(task_id=task.id).count(), 0)
 
+    @run_tasks_eagerly
     def test_duplicate_nodes_task(self):
         metadata = {'test': True}
         task_options = {
@@ -154,7 +167,7 @@ class AsyncTaskTestCase(BaseAPITestCase):
             'user_id': self.user.pk,
             'channel_id': self.channel.pk,
             'node_ids': ids,
-            'target_parent': parent_node
+            'target_parent': parent_node.pk
         }
         task, task_info = create_async_task('duplicate-nodes', task_options, task_args)
 
@@ -162,6 +175,7 @@ class AsyncTaskTestCase(BaseAPITestCase):
         # use an API call rather than checking the db directly for progress.
         url = '{}/{}'.format(self.task_url, task_info.id)
         response = self.get(url)
+        # import ipdb; ipdb.set_trace()
         assert response.data['status'] == 'SUCCESS', "Task failed, exception: {}".format(response.data['metadata']['error']['traceback'])
         self.assertEqual(response.data['status'], 'SUCCESS')
         self.assertEqual(response.data['task_type'], 'duplicate-nodes')

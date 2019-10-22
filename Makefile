@@ -93,8 +93,6 @@ dcup:
 	# run all services except for cloudprober
 	docker-compose up elasticsearch studio-app celery-worker indexing-worker
 
-dctestup:
-
 
 dcup-cloudprober:
 	# run all services including cloudprober
@@ -113,19 +111,22 @@ dcshell:
 	# bash shell inside studio-app container
 	docker-compose exec studio-app /usr/bin/fish 
 
-dctestup: COMPOSE_PROJECT_NAME=studio_test
-dctestup:
-	# launch all studio's dependent services using docker-compose, and then run the tests
-	docker-compose up -d --renew-anon-volumes studio-app celery-worker indexing-worker
+export COMPOSE_PROJECT_NAME=studio_test_$(shell git rev-parse --abbrev-ref HEAD)
 
-dctestshell: dcshell
+dctestup: 
+	# launch all studio's dependent services using docker-compose, and then run the tests
+	docker-compose up -d --renew-anon-volumes studio-app
+
+dctestclean: dcclean
+
+dctestshell: 
 	docker-compose exec studio-app /usr/bin/fish
 
 dctestrun: dctestup
 	# launch all studio's dependent services using docker-compose, and then run the tests	
 	docker-compose run studio-app make test -e DJANGO_SETTINGS_MODULE=contentcuration.test_settings
 
-dctestdown:
+dctestdown: 
 	docker-compose down --volumes
 
 endtoendtest: dctestrun dctestdown
