@@ -12,7 +12,7 @@ const MESSAGES = {
   questionTypeMultipleSelection: 'Multiple selection',
   questionTypeTrueFalse: 'True/False',
   questionTypeInput: 'Input question',
-  errorBlankQuestion: 'Question cannot be blank',
+  errorQuestionRequired: 'Question cannot be blank',
   errorMissingAnswer: 'Choose a correct answer',
   errorChooseAtLeastOneCorrectAnswer: 'Choose at least one correct answer',
   errorProvideAtLeastOneCorrectAnwer: 'Provide at least one correct answer',

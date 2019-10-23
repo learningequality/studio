@@ -1,7 +1,7 @@
 <template>
   <div>
     <VAlert
-      :value="!isNodeAssessmentDraftValid(nodeId)"
+      :value="!areAssessmentItemsValid"
       icon="error"
       type="error"
       outline
@@ -11,11 +11,10 @@
     </VAlert>
 
     <AssessmentEditor
-      v-if="assessmentDraft"
       ref="assessmentEditor"
-      :assessmentDraft="assessmentDraft"
+      v-model="assessmentItems"
+      :itemsValidation="assessmentItemsValidation"
       :openDialog="openDialog"
-      @update="onAssessmentDraftUpdate"
     />
 
     <!-- TODO @MisRob: As soon as we know how dialogs should behave within the context
@@ -72,25 +71,39 @@
       ...mapState('edit_modal', ['selectedIndices', 'dialog']),
       ...mapGetters('edit_modal', [
         'getNode',
-        'nodeAssessmentDraft',
-        'isNodeAssessmentDraftValid',
-        'invalidNodeAssessmentDraftItemsCount',
+        'nodeAssessmentItems',
+        'nodeErrors',
+        'areNodeAssessmentItemsValid',
+        'invalidNodeAssessmentItemsCount',
       ]),
       // assessment view is accessible only when exactly one exercise node is selected
-      nodeIndex() {
+      nodeIdx() {
         return this.selectedIndices[0];
       },
       node() {
-        return this.getNode(this.nodeIndex);
+        return this.getNode(this.nodeIdx);
       },
-      nodeId() {
-        return this.node.id;
+      assessmentItems: {
+        get() {
+          return this.nodeAssessmentItems(this.nodeIdx);
+        },
+        set(value) {
+          this.setNodeAssessmentItems({ nodeIdx: this.nodeIdx, assessmentItems: value });
+          this.validateNodeAssessmentItems({ nodeIdx: this.nodeIdx });
+        },
       },
-      assessmentDraft() {
-        return this.nodeAssessmentDraft(this.nodeId);
+      assessmentItemsValidation() {
+        if (!this.nodeErrors(this.nodeIdx) || !this.nodeErrors(this.nodeIdx).assessment_items) {
+          return [];
+        }
+
+        return this.nodeErrors(this.nodeIdx).assessment_items;
+      },
+      areAssessmentItemsValid() {
+        return this.areNodeAssessmentItemsValid(this.nodeIdx);
       },
       invalidItemsErrorMessage() {
-        const invalidItemsCount = this.invalidNodeAssessmentDraftItemsCount(this.nodeId);
+        const invalidItemsCount = this.invalidNodeAssessmentItemsCount(this.nodeIdx);
 
         if (!invalidItemsCount) {
           return '';
@@ -104,30 +117,12 @@
         this.$refs.assessmentEditor.reset();
       },
     },
-    created() {
-      if (this.nodeAssessmentDraft(this.nodeId) !== null) {
-        return;
-      }
-
-      this.initializeNodeAssessmentDraft({
-        nodeId: this.nodeId,
-        assessmentItems: this.node.assessment_items,
-      });
-
-      this.sanitizeNodeAssessmentDraft({ nodeId: this.nodeId });
-      this.validateNodeAssessmentDraft({ nodeId: this.nodeId });
-    },
     methods: {
-      ...mapMutations('edit_modal', [
-        'initializeNodeAssessmentDraft',
-        'setNodeAssessmentDraft',
-        'sanitizeNodeAssessmentDraft',
-        'validateNodeAssessmentDraft',
-        'openDialog',
-      ]),
-      onAssessmentDraftUpdate(assessmentDraft) {
-        this.setNodeAssessmentDraft({ nodeId: this.nodeId, assessmentDraft });
-      },
+      ...mapMutations('edit_modal', {
+        openDialog: 'OPEN_DIALOG',
+        setNodeAssessmentItems: 'SET_NODE_ASSESSMENT_ITEMS',
+        validateNodeAssessmentItems: 'VALIDATE_NODE_ASSESSMENT_ITEMS',
+      }),
     },
   };
 

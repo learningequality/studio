@@ -73,26 +73,6 @@ describe('editModalStore', () => {
       store.commit('edit_modal/SELECT_NODE', topic2Index);
       expect(store.getters['edit_modal/allResources']).toBe(false);
     });
-    it('invalidNodes should return any invalid nodes that are not marked as new', () => {
-      store.commit('edit_modal/SET_NODES', [DEFAULT_TOPIC, DEFAULT_TOPIC2]);
-      store.commit('edit_modal/SET_NODE', topic1Index);
-      store.commit('edit_modal/UPDATE_NODE', { title: null });
-      store.commit('edit_modal/SET_NODE', topic2Index);
-      store.commit('edit_modal/UPDATE_NODE', { title: null, isNew: true });
-      expect(store.getters['edit_modal/invalidNodes']).toHaveLength(1);
-      expect(store.getters['edit_modal/invalidNodes']).toContain(0);
-      expect(store.getters['edit_modal/invalidNodes']).not.toContain(1);
-    });
-    it('invalidNodesOverridden should return any invalid nodes', () => {
-      store.commit('edit_modal/SET_NODES', [DEFAULT_TOPIC, DEFAULT_TOPIC2]);
-      store.commit('edit_modal/SET_NODE', topic1Index);
-      store.commit('edit_modal/UPDATE_NODE', { title: null });
-      store.commit('edit_modal/SET_NODE', topic2Index);
-      store.commit('edit_modal/UPDATE_NODE', { title: null, isNew: true });
-      expect(store.getters['edit_modal/invalidNodesOverridden']).toHaveLength(2);
-      expect(store.getters['edit_modal/invalidNodesOverridden']).toContain(0);
-      expect(store.getters['edit_modal/invalidNodesOverridden']).toContain(1);
-    });
     it('changed should return whether any of the nodes have been changed', () => {
       store.commit('edit_modal/SET_NODE', _.findIndex(testNodes, { id: DEFAULT_TOPIC.id }));
       expect(store.getters['edit_modal/changed']).toBe(false);
@@ -265,15 +245,6 @@ describe('editModalStore', () => {
         expect(store.state.edit_modal.nodes).toHaveLength(testNodes.length);
         store.commit('edit_modal/REMOVE_NODE', topic1Index);
         expect(store.state.edit_modal.nodes).toHaveLength(testNodes.length - 1);
-      });
-      it('PREP_NODES_FOR_SAVE should mark all nodes isNew as false', () => {
-        _.each(testNodes, n => {
-          n.isNew = true;
-        });
-        store.commit('edit_modal/PREP_NODES_FOR_SAVE');
-        _.each(testNodes, n => {
-          expect(n.isNew).toBe(false);
-        });
       });
     });
   });

@@ -1,13 +1,7 @@
 import translator from './translator';
 
-import { AssessmentItemTypes, AssessmentItemValidationErrors } from './constants';
-
-export const questionShouldHaveOneCorrectAnswer = questionType => {
-  return (
-    questionType === AssessmentItemTypes.SINGLE_SELECTION ||
-    questionType === AssessmentItemTypes.TRUE_FALSE
-  );
-};
+import { AssessmentItemTypes, ValidationErrors } from './constants';
+import Constants from 'edit_channel/constants/index';
 
 /**
  * Get correct answer index/indices out of an array of answer objects.
@@ -22,7 +16,10 @@ export const getCorrectAnswersIndices = (questionType, answers) => {
     return null;
   }
 
-  if (questionShouldHaveOneCorrectAnswer(questionType)) {
+  if (
+    questionType === AssessmentItemTypes.SINGLE_SELECTION ||
+    questionType === AssessmentItemTypes.TRUE_FALSE
+  ) {
     const idx = answers.findIndex(answer => answer.correct);
     return idx === -1 ? null : idx;
   }
@@ -35,10 +32,10 @@ export const getCorrectAnswersIndices = (questionType, answers) => {
 };
 
 /**
- * Updates `correct` fields of answers based on index/indexes stored in `correctAnswersIndice`.
+ * Updates `correct` fields of answers based on index/indexes stored in `correctAnswersIndices`.
  * @param {Array} answers An array of answer objects { answer: ..., correct: ..., ...}
- * @param {Number|null|Array} correctAnswersIndices A correct answer index or an array of
- * correct answers indexes.
+ * @param {Number|null|Array} correctAnswersIndices A correct answer index or an array
+ * of correct answers indexes.
  * @returns {Array} An array of answer objects with updated `correct` fields.
  */
 export const mapCorrectAnswers = (answers, correctAnswersIndices) => {
@@ -214,150 +211,159 @@ export const sanitizeAssessmentItem = (assessmentItem, removeEmpty = false) => {
 };
 
 /**
+ * Validate node details - title, licence etc.
+ * @param {Object} node A node.
+ * @returns {Array} An array of error codes.
+ */
+export const validateNodeDetails = node => {
+  const errors = [];
+
+  // title is required
+  if (!node.title) {
+    errors.push(ValidationErrors.TITLE_REQUIRED);
+  }
+
+  // authoring information is required for resources
+  if (!node.freeze_authoring_data && node.kind !== 'topic') {
+    const licenseId = node.license && (node.license.id || node.license);
+    const license = node.license && Constants.Licenses.find(license => license.id === licenseId);
+
+    if (!license) {
+      // license is required
+      errors.push(ValidationErrors.LICENCE_REQUIRED);
+    } else if (license.copyright_holder_required && !node.copyright_holder) {
+      // copyright holder is required for certain licenses
+      errors.push(ValidationErrors.COPYRIGHT_HOLDER_REQUIRED);
+    } else if (license.is_custom && !node.license_description) {
+      // license description is required for certain licenses
+      errors.push(ValidationErrors.LICENCE_DESCRIPTION_REQUIRED);
+    }
+  }
+
+  // mastery is required on exercises
+  if (node.kind === 'exercise') {
+    const mastery = node.extra_fields;
+    if (!mastery || !mastery.mastery_model) {
+      errors.push(ValidationErrors.MASTERY_MODEL_REQUIRED);
+    } else if (
+      mastery.mastery_model === 'm_of_n' &&
+      (!mastery.m || !mastery.n || mastery.m > mastery.n)
+    ) {
+      errors.push(ValidationErrors.MASTERY_MODEL_INVALID);
+    }
+  }
+
+  return errors;
+};
+
+/**
  * Validate an assessment item.
- * @param {Object} assessmentItem An assessment item. Should be sanitized first.
- * @returns {Object} { questionErrors, answersErrors } where
- *                   `questionErrors`{Array} Codes of errors related to a question
- *                   `answersErrors` {Array} Codes of errors related to answers
+ * @param {Object} assessmentItem An assessment item.
+ * @returns {Array} An array of error codes.
  */
 export const validateAssessmentItem = assessmentItem => {
-  const questionErrors = [];
-  const answersErrors = [];
+  const errors = [];
 
   const hasOneCorrectAnswer =
     assessmentItem.answers &&
-    assessmentItem.answers.filter(answer => answer.correct === true).length === 1;
+    assessmentItem.answers.filter(
+      answer => answer.answer && answer.answer.trim() && answer.correct === true
+    ).length === 1;
   const hasAtLeatOneCorrectAnswer =
     assessmentItem.answers &&
-    assessmentItem.answers.filter(answer => answer.correct === true).length > 0;
+    assessmentItem.answers.filter(
+      answer => answer.answer && answer.answer.trim() && answer.correct === true
+    ).length > 0;
 
-  if (!assessmentItem.question) {
-    questionErrors.push(AssessmentItemValidationErrors.BLANK_QUESTION);
+  if (!assessmentItem.question || !assessmentItem.question.trim()) {
+    errors.push(ValidationErrors.QUESTION_REQUIRED);
   }
 
   switch (assessmentItem.type) {
     case AssessmentItemTypes.MULTIPLE_SELECTION:
     case AssessmentItemTypes.INPUT_QUESTION:
       if (!hasAtLeatOneCorrectAnswer) {
-        answersErrors.push(AssessmentItemValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS);
+        errors.push(ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS);
       }
       break;
 
     case AssessmentItemTypes.TRUE_FALSE:
     case AssessmentItemTypes.SINGLE_SELECTION:
       if (!hasOneCorrectAnswer) {
-        answersErrors.push(AssessmentItemValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS);
+        errors.push(ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS);
       }
       break;
   }
 
-  return { questionErrors, answersErrors };
+  return errors;
 };
 
 /**
- * Update assessment draft items `order` fields according to their position in an array.
- * @param {Array} assessmentDraft An assessment draft
- * @returns {Array} Assessment draft with updated `order` fields
- */
-export const updateAssessmentDraftOrder = assessmentDraft => {
-  return assessmentDraft.map((draftItem, idx) => {
-    return {
-      ...draftItem,
-      data: {
-        ...draftItem.data,
-        order: idx,
-      },
-    };
-  });
-};
-
-/**
- * @param {Object} draftItem Assessment draft item containing validation data
- * @returns Boolean
- */
-export const isAssessmentDraftItemValid = draftItem => {
-  if (!draftItem.validation) {
-    return true;
-  }
-
-  return (
-    (!draftItem.validation.questionErrors || draftItem.validation.questionErrors.length === 0) &&
-    (!draftItem.validation.answersErrors || draftItem.validation.answersErrors.length === 0)
-  );
-};
-
-/**
- * Sanitize assessment draft items
+ * Sanitize assessment items
  * - sanitize each assessment item
  * - remove all empty assessment items (an assessment item is considered
  *   empty if there is no question text, no answers and no hints)
  *
- * @param {Array} assessmentDraft Assessment draft
- * @returns {Array} Assessment draft with sanitized `data`
+ * @param {Array} assessmentItems Assessment items
+ * @returns {Array} Sanitized assessment items
  */
-export const sanitizeAssessmentDraft = assessmentDraft => {
-  let newAssessmentDraft = assessmentDraft
-    .map(draftItem => {
-      return {
-        ...draftItem,
-        data: sanitizeAssessmentItem(draftItem.data, true),
-      };
-    })
-    .filter(draftItem => {
-      const hasQuestion = draftItem.data.question.length > 0;
-      const hasAnswers = draftItem.data.answers.length > 0;
-      const hasHints = draftItem.data.hints.length > 0;
+export const sanitizeAssessmentItems = assessmentItems => {
+  return assessmentItems
+    .map(item => sanitizeAssessmentItem(item, true))
+    .filter(item => {
+      const hasQuestion = item.question.length > 0;
+      const hasAnswers = item.answers.length > 0;
+      const hasHints = item.hints.length > 0;
 
       return hasQuestion || hasAnswers || hasHints;
+    })
+    .map((item, itemIdx) => {
+      return {
+        ...item,
+        order: itemIdx,
+      };
     });
-
-  newAssessmentDraft = updateAssessmentDraftOrder(newAssessmentDraft);
-
-  return newAssessmentDraft;
 };
 
 /**
- * Validate all assessment draft items and save validation results
- * to `validation` field of each item. Should be applied on sanitized
- * assessment draft.
- * @param {Array} assessmentDraft Assessment draft
- * @returns {Array} Assessment draft with updated `validation` fields
+ * Convert a node retrieved from API to a format suitable for any
+ * further client-side work:
+ * - if node has some assessment items, parse stringified data
+ * - make sure that everything is properly sorted by order
  */
-export const validateAssessmentDraft = assessmentDraft => {
-  return assessmentDraft.map(draftItem => {
-    return {
-      ...draftItem,
-      validation: validateAssessmentItem(draftItem.data),
-    };
-  });
-};
+export const parseNode = node => {
+  if (node.assessment_items && node.assessment_items.length) {
+    node.assessment_items = node.assessment_items.map(item => {
+      let answers;
+      let hints;
 
-export const getAssessmentItemErrorMessage = (error, itemType) => {
-  switch (error) {
-    case AssessmentItemValidationErrors.BLANK_QUESTION:
-      return translator.translate('errorBlankQuestion');
-
-    case AssessmentItemValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS:
-      if (
-        itemType === AssessmentItemTypes.SINGLE_SELECTION ||
-        itemType === AssessmentItemTypes.TRUE_FALSE
-      ) {
-        return translator.translate('errorMissingAnswer');
+      // data can come from API that returns answers and hints as string
+      if (typeof item.answers === 'string') {
+        answers = JSON.parse(item.answers);
+      } else {
+        answers = item.answers ? item.answers : [];
       }
 
-      if (itemType === AssessmentItemTypes.MULTIPLE_SELECTION) {
-        return translator.translate('errorChooseAtLeastOneCorrectAnswer');
+      if (typeof item.hints === 'string') {
+        hints = JSON.parse(item.hints);
+      } else {
+        hints = item.hints ? item.hints : [];
       }
 
-      if ((itemType = AssessmentItemTypes.INPUT_QUESTION)) {
-        return translator.translate('errorProvideAtLeastOneCorrectAnwer');
-      }
+      answers.sort((answer1, answer2) => (answer1.order > answer2.order ? 1 : -1));
+      hints.sort((hint1, hint2) => (hint1.order > hint2.order ? 1 : -1));
 
-      break;
+      return {
+        ...item,
+        answers,
+        hints,
+      };
+    });
 
-    default:
-      return null;
+    node.assessment_items.sort((item1, item2) => (item1.order > item2.order ? 1 : -1));
   }
+
+  return node;
 };
 
 // TODO @MisRob: Utilities below are not specific to exercise creation.

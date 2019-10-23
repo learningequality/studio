@@ -31,6 +31,7 @@
 <script>
 
   import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
+  import { modes } from '../constants';
   import ContentNodeIcon from 'edit_channel/sharedComponents/ContentNodeIcon.vue';
 
   export default {
@@ -51,7 +52,7 @@
     },
     computed: {
       ...mapGetters('edit_modal', ['getNode', 'invalidNodes']),
-      ...mapState('edit_modal', ['selectedIndices']),
+      ...mapState('edit_modal', ['mode', 'selectedIndices']),
       node() {
         return this.getNode(this.index);
       },
@@ -59,7 +60,11 @@
         return this.selectedIndices.includes(this.index);
       },
       nodeIsValid() {
-        return !this.invalidNodes.includes(this.index);
+        if (this.mode === modes.VIEW_ONLY) {
+          return true;
+        }
+
+        return !this.invalidNodes({ ignoreNewNodes: true }).includes(this.index);
       },
     },
     methods: {

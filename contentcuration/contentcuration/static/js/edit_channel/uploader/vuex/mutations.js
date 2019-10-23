@@ -2,7 +2,12 @@ import _ from 'underscore';
 import Vue from 'vue';
 
 import { modes } from '../constants';
-import { sanitizeAssessmentDraft, validateAssessmentDraft } from '../utils';
+import {
+  sanitizeAssessmentItems,
+  validateAssessmentItem,
+  validateNodeDetails,
+  parseNode,
+} from '../utils';
 import { getSelected } from './utils';
 import State from 'edit_channel/state';
 import Constants from 'edit_channel/constants/index';
@@ -19,6 +24,38 @@ export function RESET_STATE(state) {
 export function SET_MODE(state, mode) {
   state.mode = mode;
 }
+
+export const OPEN_DIALOG = (state, { title, message, submitLabel, onSubmit, onCancel }) => {
+  const closeDialog = () => {
+    state.dialog = {
+      open: false,
+      title: '',
+      message: '',
+      submitLabel: '',
+      onSubmit: () => {},
+      onCancel: () => {},
+    };
+  };
+
+  state.dialog = {
+    open: true,
+    title,
+    message,
+    submitLabel,
+    onSubmit: () => {
+      if (typeof onSubmit === 'function') {
+        onSubmit();
+      }
+      closeDialog();
+    },
+    onCancel: () => {
+      if (typeof onCancel === 'function') {
+        onCancel();
+      }
+      closeDialog();
+    },
+  };
+};
 
 /*********** AGGREGATE CHANGES ***********/
 
@@ -72,10 +109,10 @@ export function SET_CHANGES(state) {
 
 export function SET_NODES(state, nodes) {
   _.each(nodes, node => {
+    node = parseNode(node);
     node.changesStaged = false;
     node['_COMPLETE'] = false;
   });
-
   state.nodes = nodes;
 }
 
@@ -86,7 +123,7 @@ export function SET_LOADED_NODES(state, nodes) {
       _.findWhere(state.nodes, { id: value.id }) ||
       _.findWhere(state.nodes, { sort_order: value.sort_order });
     if (match) {
-      _.extendOwn(match, value);
+      _.extendOwn(match, parseNode(value));
       match.changesStaged = false;
       match['_COMPLETE'] = true;
     }
@@ -94,6 +131,101 @@ export function SET_LOADED_NODES(state, nodes) {
 
   _.defer(() => SET_CHANGES(state));
 }
+
+/**
+ * Save new assessment items data to a node with a given index
+ * in an array of all nodes.
+ */
+export const SET_NODE_ASSESSMENT_ITEMS = (state, { nodeIdx, assessmentItems }) => {
+  const nodes = [...state.nodes];
+
+  nodes[nodeIdx] = {
+    ...nodes[nodeIdx],
+    assessment_items: assessmentItems,
+  };
+
+  Vue.set(state, 'nodes', nodes);
+};
+
+/*********** VALIDATE NODES ***********/
+
+/**
+ * Sanitize assessment items of a node with a given index.
+ */
+export const SANITIZE_NODE_ASSESSMENT_ITEMS = (state, { nodeIdx }) => {
+  let assessmentItems = [];
+
+  if (state.nodes[nodeIdx].assessment_items) {
+    assessmentItems = [...state.nodes[nodeIdx].assessment_items];
+  }
+  const sanitizedAssessmentItems = sanitizeAssessmentItems(assessmentItems);
+
+  Vue.set(state.nodes[nodeIdx], 'assessment_items', sanitizedAssessmentItems);
+};
+
+/**
+ * Validate node details (title, licence etc.) and save validation results
+ * to state.validation.
+ */
+export const VALIDATE_NODE_DETAILS = (state, { nodeIdx }) => {
+  // cleanup previous node details validation
+  // setup a new node validation object if there is none
+  const previousValidationIdx = state.validation.findIndex(
+    nodeValidation => nodeValidation.nodeIdx === nodeIdx
+  );
+  let validationIdx;
+  if (previousValidationIdx === -1) {
+    state.validation.push({
+      nodeIdx,
+      errors: {},
+    });
+    validationIdx = state.validation.length - 1;
+  } else {
+    Vue.set(state.validation[previousValidationIdx].errors, 'details', []);
+    validationIdx = previousValidationIdx;
+  }
+
+  const node = state.nodes[nodeIdx];
+
+  Vue.set(state.validation[validationIdx].errors, 'details', validateNodeDetails(node));
+};
+
+/**
+ * Validate node assessment items and save validation results
+ * to state.validation. Assessment items to be validated should
+ * be already sanitized.
+ */
+export const VALIDATE_NODE_ASSESSMENT_ITEMS = (state, { nodeIdx }) => {
+  // cleanup previous node assessment items validation
+  // setup a new node validation object if there is none
+  const previousValidationIdx = state.validation.findIndex(
+    nodeValidation => nodeValidation.nodeIdx === nodeIdx
+  );
+  let validationIdx;
+  if (previousValidationIdx === -1) {
+    state.validation.push({
+      nodeIdx,
+      errors: {},
+    });
+    validationIdx = state.validation.length - 1;
+  } else {
+    Vue.set(state.validation[previousValidationIdx].errors, 'assessment_items', []);
+    validationIdx = previousValidationIdx;
+  }
+
+  if (!state.nodes[nodeIdx].assessment_items || !state.nodes[nodeIdx].assessment_items.length) {
+    return;
+  }
+
+  const assessmentItems = state.nodes[nodeIdx].assessment_items;
+  const assessmentItemsErrors = [];
+
+  assessmentItems.forEach(item => {
+    assessmentItemsErrors.push(validateAssessmentItem(item));
+  });
+
+  Vue.set(state.validation[validationIdx].errors, 'assessment_items', assessmentItemsErrors);
+};
 
 /*********** SELECT NODES ***********/
 
@@ -244,101 +376,3 @@ export function REMOVE_NODE(state, index) {
   state.selectedIndices = _.reject(state.selectedIndices, i => i === index);
   SET_CHANGES(state);
 }
-
-export function PREP_NODES_FOR_SAVE(state) {
-  _.each(state.nodes, node => (node.isNew = false));
-}
-
-/**
- * Save assessment items to draft store in format suitable for any further work -
- * parse stringified data and make sure that everything is properly sorted by order.
- * @param {String} nodeId
- * @param {Array} assessmentItems Assessment items as retrieved from API
- */
-export const initializeNodeAssessmentDraft = (state, { nodeId, assessmentItems }) => {
-  let items = [];
-
-  if (assessmentItems && assessmentItems.length) {
-    items = JSON.parse(JSON.stringify(assessmentItems));
-  }
-
-  items = items.map(item => {
-    let answers = [];
-    let hints = [];
-
-    // API returns answers and hints as string
-    if (item.answers) {
-      answers = JSON.parse(item.answers);
-    }
-
-    if (item.hints) {
-      hints = JSON.parse(item.hints);
-    }
-
-    answers.sort((answer1, answer2) => (answer1.order > answer2.order ? 1 : -1));
-    hints.sort((hint1, hint2) => (hint1.order > hint2.order ? 1 : -1));
-
-    return {
-      data: {
-        ...item,
-        answers,
-        hints,
-      },
-      validation: {},
-    };
-  });
-
-  items.sort((item1, item2) => (item1.data.order > item2.data.order ? 1 : -1));
-
-  Vue.set(state.nodesAssessmentDrafts, nodeId, items);
-};
-
-export const setNodeAssessmentDraft = (state, { nodeId, assessmentDraft }) => {
-  Vue.set(state.nodesAssessmentDrafts, nodeId, assessmentDraft);
-};
-
-export const sanitizeNodeAssessmentDraft = (state, { nodeId }) => {
-  const nodeAssessmentDraft = [...state.nodesAssessmentDrafts[nodeId]];
-  const sanitizedNodeAssessmentDraft = sanitizeAssessmentDraft(nodeAssessmentDraft);
-
-  Vue.set(state.nodesAssessmentDrafts, nodeId, sanitizedNodeAssessmentDraft);
-};
-
-export const validateNodeAssessmentDraft = (state, { nodeId }) => {
-  const nodeAssessmentDraft = [...state.nodesAssessmentDrafts[nodeId]];
-  const validatedNodeAssessmentDraft = validateAssessmentDraft(nodeAssessmentDraft);
-
-  Vue.set(state.nodesAssessmentDrafts, nodeId, validatedNodeAssessmentDraft);
-};
-
-export const openDialog = (state, { title, message, submitLabel, onSubmit, onCancel }) => {
-  const closeDialog = () => {
-    state.dialog = {
-      open: false,
-      title: '',
-      message: '',
-      submitLabel: '',
-      onSubmit: () => {},
-      onCancel: () => {},
-    };
-  };
-
-  state.dialog = {
-    open: true,
-    title,
-    message,
-    submitLabel,
-    onSubmit: () => {
-      if (typeof onSubmit === 'function') {
-        onSubmit();
-      }
-      closeDialog();
-    },
-    onCancel: () => {
-      if (typeof onCancel === 'function') {
-        onCancel();
-      }
-      closeDialog();
-    },
-  };
-};

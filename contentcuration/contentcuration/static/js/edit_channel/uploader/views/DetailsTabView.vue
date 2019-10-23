@@ -235,6 +235,7 @@
 
   import _ from 'underscore';
   import { mapGetters, mapMutations, mapState } from 'vuex';
+  import { modes } from '../constants';
   import Constants from 'edit_channel/constants';
   import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown.vue';
   import HelpTooltip from 'edit_channel/sharedComponents/HelpTooltip.vue';
@@ -290,7 +291,7 @@
       };
     },
     computed: {
-      ...mapState('edit_modal', ['changes', 'selectedIndices']),
+      ...mapState('edit_modal', ['changes', 'selectedIndices', 'mode']),
       ...mapGetters('edit_modal', [
         'selected',
         'authors',
@@ -447,7 +448,12 @@
         return !!_.some(this.selected, { isNew: true });
       },
       invalidSelected() {
-        return _.intersection(this.selectedIndices, this.invalidNodes).length;
+        if (this.mode === modes.VIEW_ONLY) {
+          return 0;
+        }
+
+        return _.intersection(this.selectedIndices, this.invalidNodes({ ignoreNewNodes: true }))
+          .length;
       },
       titleRules() {
         return [v => !!v || this.$tr('titleValidationMessage')];
@@ -473,11 +479,29 @@
       ...mapMutations('edit_modal', {
         setLicense: 'SET_LICENSE',
         setLicenseDescription: 'SET_LICENSE_DESCRIPTION',
-
-        update: 'UPDATE_NODE',
-        updateExtraFields: 'UPDATE_EXTRA_FIELDS',
+        updateNode: 'UPDATE_NODE',
+        updateNodeExtraFields: 'UPDATE_EXTRA_FIELDS',
+        validateNodeDetails: 'VALIDATE_NODE_DETAILS',
         setTags: 'SET_TAGS',
       }),
+      update(payload) {
+        // this mutation actually mutates all selected nodes
+        // TODO: consistent naming and behaviour of old and new mutations
+        this.updateNode(payload);
+
+        this.selectedIndices.forEach(nodeIdx => {
+          this.validateNodeDetails({ nodeIdx });
+        });
+      },
+      updateExtraFields(payload) {
+        // this mutation actually mutates extra fields of all selected nodes
+        // TODO: consistent naming and behaviour of old and new mutations
+        this.updateNodeExtraFields(payload);
+
+        this.selectedIndices.forEach(nodeIdx => {
+          this.validateNodeDetails({ nodeIdx });
+        });
+      },
       getPlaceholder(field) {
         return this.changes[field].varied || this.viewOnly
           ? this.$tr('variedFieldPlaceholder')

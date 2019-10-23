@@ -9,7 +9,7 @@ describe('AssessmentItemPreview', () => {
   beforeEach(() => {
     wrapper = mount(AssessmentItemPreview, {
       propsData: {
-        itemData: {
+        item: {
           question: 'Question',
           type: AssessmentItemTypes.SINGLE_SELECTION,
           answers: [

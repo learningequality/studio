@@ -1,405 +1,319 @@
-import { AssessmentItemTypes, AssessmentItemValidationErrors } from '../../constants';
 import {
+  nodeAssessmentItems,
   nodeAssessmentItemsCount,
-  nodeAssessmentDraft,
-  isNodeAssessmentDraftValid,
-  invalidNodeAssessmentDraftItemsCount,
+  nodeErrors,
+  invalidNodeAssessmentItemsCount,
+  areNodeDetailsValid,
+  areNodeAssessmentItemsValid,
+  isNodeValid,
+  invalidNodes,
 } from '../getters';
+import { ValidationErrors } from '../../constants';
 
 describe('edit_modal', () => {
-  let state;
-
   describe('getters', () => {
+    describe('nodeAssessmentItems', () => {
+      let state;
+
+      beforeEach(() => {
+        state = {
+          nodes: [
+            {
+              title: 'Node 1',
+            },
+            {
+              title: 'Node 2',
+              assessment_items: [{ id: 1 }, { id: 2 }],
+            },
+          ],
+        };
+      });
+
+      it('returns assessment items of a correct node', () => {
+        expect(nodeAssessmentItems(state)(1)).toEqual([{ id: 1 }, { id: 2 }]);
+      });
+
+      it('returns an empty array if a node has no assessment items', () => {
+        expect(nodeAssessmentItems(state)(0)).toEqual([]);
+      });
+    });
+
     describe('nodeAssessmentItemsCount', () => {
-      describe('when there is no draft for a node', () => {
-        beforeEach(() => {
-          state = {
-            nodes: [
-              {
-                title: 'Exercise 1',
-                id: 'exercise-1',
-                assessment_items: [
-                  {
-                    id: 0,
-                    question: 'Exercise 1 - Question 1',
-                    type: AssessmentItemTypes.SINGLE_SELECTION,
-                    order: 0,
-                    answers: JSON.stringify([
-                      { answer: 'Blue', correct: false, order: 1 },
-                      { answer: 'Yellow', correct: true, order: 2 },
-                    ]),
-                    hints: JSON.stringify([{ hint: 'Not red', order: 1 }]),
-                  },
-                ],
-              },
-              {
-                title: 'Exercise 2',
-                id: 'exercise-2',
-                assessment_items: [
-                  {
-                    id: 1,
-                    question: 'Exercise 2 - Question 2',
-                    type: AssessmentItemTypes.SINGLE_SELECTION,
-                    order: 1,
-                    answers: JSON.stringify([
-                      { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-                      { answer: 'Peanut butter', correct: false, order: 2 },
-                    ]),
-                    hints: JSON.stringify([
-                      { hint: "It's not healthy", order: 1 },
-                      { hint: 'Tasty!', order: 2 },
-                    ]),
-                  },
-                  {
-                    id: 2,
-                    question: 'Exercise 2 - Question 3',
-                    type: AssessmentItemTypes.MULTIPLE_SELECTION,
-                    order: 2,
-                    answers: JSON.stringify([
-                      { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-                      { answer: 'Peanut butter', correct: false, order: 2 },
-                      { answer: 'Jelly', correct: true, order: 3 },
-                    ]),
-                  },
-                ],
-              },
-            ],
-            nodesAssessmentDrafts: {},
-          };
-        });
+      let state;
 
-        it('takes number of assessment items from nodes retrieved from API', () => {
-          expect(nodeAssessmentItemsCount(state)('exercise-2')).toBe(2);
-        });
-      });
-
-      describe('when there is a draft for a node', () => {
-        beforeEach(() => {
-          state = {
-            nodes: [
-              {
-                title: 'Exercise 1',
-                id: 'exercise-1',
-                assessment_items: [
-                  {
-                    id: 0,
-                    question: 'Exercise 1 - Question 1',
-                    type: AssessmentItemTypes.SINGLE_SELECTION,
-                    order: 0,
-                    answers: JSON.stringify([
-                      { answer: 'Blue', correct: false, order: 1 },
-                      { answer: 'Yellow', correct: true, order: 2 },
-                    ]),
-                    hints: JSON.stringify([{ hint: 'Not red', order: 1 }]),
-                  },
-                ],
-              },
-              {
-                title: 'Exercise 2',
-                id: 'exercise-2',
-                assessment_items: [
-                  {
-                    id: 1,
-                    question: 'Exercise 2 - Question 2',
-                    type: AssessmentItemTypes.SINGLE_SELECTION,
-                    order: 1,
-                    answers: JSON.stringify([
-                      { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-                      { answer: 'Peanut butter', correct: false, order: 2 },
-                    ]),
-                    hints: JSON.stringify([
-                      { hint: "It's not healthy", order: 1 },
-                      { hint: 'Tasty!', order: 2 },
-                    ]),
-                  },
-                  {
-                    id: 2,
-                    question: 'Exercise 2 - Question 3',
-                    type: AssessmentItemTypes.MULTIPLE_SELECTION,
-                    order: 2,
-                    answers: JSON.stringify([
-                      { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-                      { answer: 'Peanut butter', correct: false, order: 2 },
-                      { answer: 'Jelly', correct: true, order: 3 },
-                    ]),
-                  },
-                ],
-              },
-            ],
-            nodesAssessmentDrafts: {
-              'exercise-2': [
-                {
-                  data: {
-                    id: 1,
-                    question: 'Exercise 2 - Question 2',
-                    type: AssessmentItemTypes.SINGLE_SELECTION,
-                    order: 1,
-                    answers: [
-                      { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-                      { answer: 'Peanut butter', correct: false, order: 2 },
-                    ],
-                    hints: [{ hint: "It's not healthy", order: 1 }, { hint: 'Tasty!', order: 2 }],
-                  },
-                  validation: {},
-                },
-                {
-                  data: {
-                    id: 2,
-                    question: 'Exercise 2 - Question 3',
-                    type: AssessmentItemTypes.MULTIPLE_SELECTION,
-                    order: 2,
-                    answers: [
-                      { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-                      { answer: 'Peanut butter', correct: false, order: 2 },
-                      { answer: 'Jelly', correct: true, order: 3 },
-                    ],
-                  },
-                  validation: {},
-                },
-                {
-                  data: {
-                    question: 'New question!',
-                    answers: [{ answer: 'Answert', correct: true, order: 1 }],
-                  },
-                  validation: {},
-                },
-              ],
-            },
-          };
-        });
-
-        it('takes number of assessment items from the draft', () => {
-          expect(nodeAssessmentItemsCount(state)('exercise-2')).toBe(3);
-        });
-      });
-    });
-
-    describe('nodeAssessmentDraft', () => {
       beforeEach(() => {
         state = {
-          nodesAssessmentDrafts: {
-            'node-1': [
-              {
-                data: {
-                  id: 1,
-                  order: 0,
-                  question: 'Node 1 - Question 1',
-                },
-                validation: {},
-              },
-            ],
-            'node-2': [
-              {
-                data: {
-                  id: 2,
-                  order: 0,
-                  question: 'Node 2 - Question 1',
-                },
-                validation: {},
-              },
-              {
-                data: {
-                  id: 3,
-                  order: 1,
-                  question: 'Node 2 - Question 2',
-                },
-                validation: {},
-              },
-            ],
-          },
+          nodes: [
+            {
+              title: 'Node 1',
+            },
+            {
+              title: 'Node 2',
+              assessment_items: [{ id: 1 }, { id: 2 }],
+            },
+          ],
         };
       });
 
-      it('returns null when an assessment draft not available for a given node ID', () => {
-        expect(nodeAssessmentDraft(state)('node-3')).toBeNull();
+      it('returns a correct number of assessment items of a correct node', () => {
+        expect(nodeAssessmentItemsCount(state)(1)).toBe(2);
       });
 
-      it('returns an assessment draft belonging to a given node ID', () => {
-        expect(nodeAssessmentDraft(state)('node-2')).toEqual([
-          {
-            data: {
-              id: 2,
-              order: 0,
-              question: 'Node 2 - Question 1',
-            },
-            validation: {},
-          },
-          {
-            data: {
-              id: 3,
-              order: 1,
-              question: 'Node 2 - Question 2',
-            },
-            validation: {},
-          },
-        ]);
+      it('returns 0 if a node has no assessment items', () => {
+        expect(nodeAssessmentItemsCount(state)(0)).toBe(0);
       });
     });
 
-    describe('isNodeAssessmentDraftValid', () => {
+    describe('nodeErrors', () => {
+      let state;
+
       beforeEach(() => {
         state = {
-          nodesAssessmentDrafts: {
-            'node-1': [
-              {
-                data: {
-                  type: AssessmentItemTypes.SINGLE_SELECTION,
-                  order: 0,
-                  question: 'Node 1 - Question 1',
-                  answers: [{ answer: 'Answer 1', order: 1, correct: true }],
-                },
-                validation: {},
+          validation: [
+            {
+              nodeIdx: 1,
+              errors: {
+                details: [ValidationErrors.TITLE_REQUIRED],
               },
-              {
-                data: {
-                  type: AssessmentItemTypes.SINGLE_SELECTION,
-                  order: 1,
-                  question: 'Node 1 - Question 2',
-                  answers: [{ answer: 'Answer 1', order: 1, correct: true }],
-                },
-                validation: {},
+            },
+            {
+              nodeIdx: 0,
+              errors: {
+                details: [ValidationErrors.LICENCE_REQUIRED],
+                assessment_items: [
+                  [ValidationErrors.QUESTION_REQUIRED],
+                  [
+                    ValidationErrors.QUESTION_REQUIRED,
+                    ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS,
+                  ],
+                ],
               },
-            ],
-            'node-2': [
-              {
-                data: {
-                  type: AssessmentItemTypes.SINGLE_SELECTION,
-                  order: 0,
-                  question: '',
-                  answers: [{ answer: 'Answer 1', order: 1, correct: true }],
-                },
-                validation: {
-                  questionErrors: [AssessmentItemValidationErrors.BLANK_QUESTION],
-                },
-              },
-              {
-                data: {
-                  type: AssessmentItemTypes.SINGLE_SELECTION,
-                  order: 1,
-                  question: 'Node 1 - Question 2',
-                  answers: [{ answer: 'Answer 1', order: 1, correct: true }],
-                },
-                validation: {},
-              },
-            ],
-            'node-3': [
-              {
-                data: {
-                  type: AssessmentItemTypes.SINGLE_SELECTION,
-                  order: 0,
-                  question: '',
-                  answers: [{ answer: 'Answer 1', order: 1, correct: false }],
-                },
-                validation: {
-                  answersErrors: [AssessmentItemValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS],
-                },
-              },
-              {
-                data: {
-                  type: AssessmentItemTypes.SINGLE_SELECTION,
-                  order: 1,
-                  question: 'Node 1 - Question 2',
-                  answers: [{ answer: 'Answer 1', order: 1, correct: true }],
-                },
-                validation: {},
-              },
-            ],
-          },
+            },
+          ],
         };
       });
 
-      it('returns true if all items of a correct node assessment draft are valid', () => {
-        expect(isNodeAssessmentDraftValid(state)('node-1')).toBe(true);
+      it('returns a correct errors object', () => {
+        expect(nodeErrors(state)(0)).toEqual({
+          details: [ValidationErrors.LICENCE_REQUIRED],
+          assessment_items: [
+            [ValidationErrors.QUESTION_REQUIRED],
+            [
+              ValidationErrors.QUESTION_REQUIRED,
+              ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS,
+            ],
+          ],
+        });
       });
 
-      it('returns false if at least one item of correct node assessment draft is invalid', () => {
-        expect(isNodeAssessmentDraftValid(state)('node-2')).toBe(false);
-        expect(isNodeAssessmentDraftValid(state)('node-3')).toBe(false);
+      it('returns `null` if there are no validation data for the node', () => {
+        expect(nodeErrors(state)(2)).toBeNull();
       });
     });
 
-    describe('invalidNodeAssessmentDraftItemsCount', () => {
+    describe('invalidNodeAssessmentItemsCount', () => {
+      let state;
+
       beforeEach(() => {
         state = {
-          nodesAssessmentDrafts: {
-            'node-1': [
-              {
-                data: {
-                  type: AssessmentItemTypes.SINGLE_SELECTION,
-                  order: 0,
-                  question: 'Question',
-                  answers: [{ answer: 'Answer 1', order: 1, correct: false }],
-                },
-                validation: {
-                  answersErrors: [AssessmentItemValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS],
-                },
+          validation: [
+            {
+              nodeIdx: 1,
+              errors: {
+                assessment_items: [[], []],
               },
-              {
-                data: {
-                  type: AssessmentItemTypes.SINGLE_SELECTION,
-                  order: 1,
-                  question: '',
-                  answers: [{ answer: 'Answer 1', order: 1, correct: false }],
-                },
-                validation: {
-                  questionErrors: [AssessmentItemValidationErrors.BLANK_QUESTION],
-                  answersErrors: [AssessmentItemValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS],
-                },
+            },
+            {
+              nodeIdx: 0,
+              errors: {
+                assessment_items: [
+                  [ValidationErrors.QUESTION_REQUIRED],
+                  [],
+                  [
+                    ValidationErrors.QUESTION_REQUIRED,
+                    ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS,
+                  ],
+                  [],
+                ],
               },
-            ],
-            'node-2': [
-              {
-                data: {
-                  type: AssessmentItemTypes.SINGLE_SELECTION,
-                  order: 0,
-                  question: 'Question',
-                  answers: [{ answer: 'Answer 1', order: 1, correct: true }],
-                },
-                validation: {},
-              },
-              {
-                data: {
-                  type: AssessmentItemTypes.SINGLE_SELECTION,
-                  order: 1,
-                  question: 'Question',
-                  answers: [{ answer: 'Answer 1', order: 1, correct: true }],
-                },
-                validation: {},
-              },
-            ],
-            'node-3': [
-              {
-                data: {
-                  type: AssessmentItemTypes.SINGLE_SELECTION,
-                  order: 0,
-                  question: '',
-                  answers: [{ answer: 'Answer 1', order: 1, correct: true }],
-                },
-                validation: {
-                  questionErrors: [AssessmentItemValidationErrors.BLANK_QUESTION],
-                },
-              },
-              {
-                data: {
-                  type: AssessmentItemTypes.SINGLE_SELECTION,
-                  order: 1,
-                  question: 'Question',
-                  answers: [{ answer: 'Answer 1', order: 1, correct: true }],
-                },
-                validation: {},
-              },
-            ],
-          },
+            },
+          ],
         };
       });
 
-      it("returns 0 if a node assessment doesn't contain any invalid items", () => {
-        expect(invalidNodeAssessmentDraftItemsCount(state)('node-2')).toBe(0);
+      it('returns a number of invalid assessment items of a correct node', () => {
+        expect(invalidNodeAssessmentItemsCount(state)(0)).toBe(2);
       });
 
-      it('returns a correct number of invalid items if a node assessment contains some', () => {
-        expect(invalidNodeAssessmentDraftItemsCount(state)('node-1')).toBe(2);
-        expect(invalidNodeAssessmentDraftItemsCount(state)('node-3')).toBe(1);
+      it('returns 0 if all assessment items of a node are valid', () => {
+        expect(invalidNodeAssessmentItemsCount(state)(1)).toBe(0);
+      });
+
+      it('returns 0 if there are no validation data for assessment items', () => {
+        expect(invalidNodeAssessmentItemsCount(state)(2)).toBe(0);
+      });
+    });
+
+    describe('areNodeDetailsValid', () => {
+      let state;
+
+      beforeEach(() => {
+        state = {
+          validation: [
+            {
+              nodeIdx: 1,
+              errors: {
+                details: [ValidationErrors.TITLE_REQUIRED],
+              },
+            },
+            {
+              nodeIdx: 0,
+              errors: {
+                details: [],
+              },
+            },
+          ],
+        };
+      });
+
+      it('returns `true` if all details of a node are valid', () => {
+        expect(areNodeDetailsValid(state)(0)).toBe(true);
+      });
+
+      it('returns `false` if there is at least one detail of a node that is invalid', () => {
+        expect(areNodeDetailsValid(state)(1)).toBe(false);
+      });
+    });
+
+    describe('areNodeAssessmentItemsValid', () => {
+      let state;
+
+      beforeEach(() => {
+        state = {
+          validation: [
+            {
+              nodeIdx: 1,
+              errors: {
+                assessment_items: [[], []],
+              },
+            },
+            {
+              nodeIdx: 0,
+              errors: {
+                assessment_items: [[], [ValidationErrors.QUESTION_REQUIRED], []],
+              },
+            },
+          ],
+        };
+      });
+
+      it('returns `true` if all assessment items of a node are valid', () => {
+        expect(areNodeAssessmentItemsValid(state)(1)).toBe(true);
+      });
+
+      it('returns `false` if there is at least one assessment item of a node that is invalid', () => {
+        expect(areNodeAssessmentItemsValid(state)(0)).toBe(false);
+      });
+    });
+
+    describe('isNodeValid', () => {
+      let state;
+
+      beforeEach(() => {
+        state = {
+          validation: [
+            {
+              nodeIdx: 1,
+              errors: {
+                details: [ValidationErrors.LICENCE_REQUIRED],
+              },
+            },
+            {
+              nodeIdx: 0,
+              errors: {
+                details: [],
+                assessment_items: [],
+              },
+            },
+            {
+              nodeIdx: 2,
+              errors: {
+                assessment_items: [[], [ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS], []],
+              },
+            },
+          ],
+        };
+      });
+
+      it('returns `false` if a given node has invalid details', () => {
+        expect(isNodeValid(state)(1)).toBe(false);
+      });
+
+      it('returns `false` if a given node has invalid assessment items', () => {
+        expect(isNodeValid(state)(2)).toBe(false);
+      });
+
+      it('returns `true` when both details and assessment items are valid', () => {
+        expect(isNodeValid(state)(0)).toBe(true);
+      });
+    });
+
+    describe('invalidNodes', () => {
+      let state;
+
+      beforeEach(() => {
+        state = {
+          nodes: [
+            { title: 'Node 0' },
+            { title: 'Node 1' },
+            { title: 'Node 2' },
+            { title: 'Node 3', isNew: true },
+          ],
+          validation: [
+            {
+              nodeIdx: 1,
+              errors: {
+                details: [],
+                assessment_items: [],
+              },
+            },
+            {
+              nodeIdx: 0,
+              errors: {
+                details: [ValidationErrors.TITLE_REQUIRED, ValidationErrors.LICENCE_REQUIRED],
+                assessment_items: [],
+              },
+            },
+            {
+              nodeIdx: 3,
+              errors: {
+                details: [ValidationErrors.LICENCE_REQUIRED],
+                assessment_items: [
+                  [
+                    ValidationErrors.QUESTION_REQUIRED,
+                    ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS,
+                  ],
+                  [],
+                  [ValidationErrors.QUESTION_REQUIRED],
+                ],
+              },
+            },
+            {
+              nodeIdx: 2,
+              errors: {
+                assessment_items: [[], [ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS], []],
+              },
+            },
+          ],
+        };
+      });
+
+      it('returns an array of all invalid nodes by default', () => {
+        expect(invalidNodes(state)()).toEqual([0, 2, 3]);
+      });
+
+      it('ignores all invalid nodes marked by new if `ignoreNewNodes` set to `true`', () => {
+        expect(invalidNodes(state)({ ignoreNewNodes: true })).toEqual([0, 2]);
       });
     });
   });

@@ -16,7 +16,7 @@
     <VLayout>
       <VFlex>
         <ErrorList
-          :errors="questionErrors"
+          :errors="questionErrorMessages"
           data-test="questionErrors"
         />
 
@@ -53,7 +53,7 @@
     <VLayout mt-4>
       <VFlex>
         <ErrorList
-          :errors="answersErrors"
+          :errors="answersErrorMessages"
           data-test="answersErrors"
         />
 
@@ -81,8 +81,9 @@
 
 <script>
 
-  import { AssessmentItemTypes, AssessmentItemTypeLabels } from '../../constants';
-  import { getAssessmentItemErrorMessage, updateAnswersToQuestionType } from '../../utils';
+  import { AssessmentItemTypes, AssessmentItemTypeLabels, ValidationErrors } from '../../constants';
+  import { updateAnswersToQuestionType } from '../../utils';
+  import translator from '../../translator';
 
   import AnswersEditor from '../AnswersEditor/AnswersEditor.vue';
   import HintsEditor from '../HintsEditor/HintsEditor.vue';
@@ -115,25 +116,24 @@
     },
     props: {
       /**
+       * An assessment item as retrieved from API:
        * {
-       *   // assessment item data as retrieved from API
-       *   data: {
-       *      question
-       *      type
-       *      order
-       *      answers
-       *      hints
-       *      ...
-       *   },
-       *   // client validation data for the assessment item
-       *   validation: {
-       *      questionErrors
-       *      answerErrors
-       *   }
+       *    question
+       *    type
+       *    order
+       *    answers
+       *    hints
+       *    ...
        * }
        */
       item: {
         type: Object,
+      },
+      /**
+       * An array of error codes related to the item.
+       */
+      errors: {
+        type: Array,
       },
       /**
        * Inject a function that opens a dialog that should
@@ -163,33 +163,19 @@
       };
     },
     computed: {
-      itemData() {
-        if (!this.item) {
-          return null;
-        }
-
-        return this.item.data;
-      },
-      itemValidation() {
-        if (!this.item) {
-          return null;
-        }
-
-        return this.item.validation;
-      },
       question() {
-        if (!this.itemData || !this.itemData.question) {
+        if (!this.item || !this.item.question) {
           return '';
         }
 
-        return this.itemData.question;
+        return this.item.question;
       },
       kind() {
-        if (!this.itemData || !this.itemData.type) {
+        if (!this.item || !this.item.type) {
           return AssessmentItemTypes.SINGLE_SELECTION;
         }
 
-        return this.itemData.type;
+        return this.item.type;
       },
       kindSelectItems() {
         return [
@@ -212,36 +198,54 @@
         ];
       },
       answers() {
-        if (!this.itemData || !this.itemData.answers) {
+        if (!this.item || !this.item.answers) {
           return [];
         }
 
-        return this.itemData.answers;
+        return this.item.answers;
       },
       hints() {
-        if (!this.itemData || !this.itemData.hints) {
+        if (!this.item || !this.item.hints) {
           return [];
         }
 
-        return this.itemData.hints;
+        return this.item.hints;
       },
-      questionErrors() {
-        if (!this.itemValidation || !this.itemValidation.questionErrors) {
-          return [];
+      questionErrorMessages() {
+        const errorMessages = [];
+
+        if (this.errors && this.errors.includes(ValidationErrors.QUESTION_REQUIRED)) {
+          errorMessages.push(translator.translate('errorQuestionRequired'));
         }
 
-        return this.itemValidation.questionErrors.map(error =>
-          getAssessmentItemErrorMessage(error, this.kind)
-        );
+        return errorMessages;
       },
-      answersErrors() {
-        if (!this.itemValidation || !this.itemValidation.answersErrors) {
+      answersErrorMessages() {
+        if (
+          !this.errors ||
+          !this.errors.includes(ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS)
+        ) {
           return [];
         }
 
-        return this.itemValidation.answersErrors.map(error =>
-          getAssessmentItemErrorMessage(error, this.kind)
-        );
+        const errorMessages = [];
+
+        switch (this.kind) {
+          case AssessmentItemTypes.SINGLE_SELECTION:
+          case AssessmentItemTypes.TRUE_FALSE:
+            errorMessages.push(translator.translate('errorMissingAnswer'));
+            break;
+
+          case AssessmentItemTypes.MULTIPLE_SELECTION:
+            errorMessages.push(translator.translate('errorChooseAtLeastOneCorrectAnswer'));
+            break;
+
+          case AssessmentItemTypes.INPUT_QUESTION:
+            errorMessages.push(translator.translate('errorProvideAtLeastOneCorrectAnwer'));
+            break;
+        }
+
+        return errorMessages;
       },
       hasMoreCorrectAnswers() {
         const correctAnswers = this.answers.filter(answer => answer.correct === true);
@@ -255,13 +259,10 @@
       }
     },
     methods: {
-      updateItem(data) {
+      updateItem(payload) {
         let newItem = {
           ...this.item,
-          data: {
-            ...this.item.data,
-            ...data,
-          },
+          ...payload,
         };
 
         this.$emit('update', newItem);

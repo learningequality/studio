@@ -1,9 +1,81 @@
 import _ from 'underscore';
-import { modes } from '../constants';
-import { isAssessmentDraftItemValid } from '../utils';
+
 import { getSelected } from './utils';
-import Constants from 'edit_channel/constants/index';
 import State from 'edit_channel/state';
+
+/**
+ * Return assessment items of a node with a given index.
+ */
+const _nodeAssessmentItems = (state, nodeIdx) => {
+  if (!state.nodes[nodeIdx].assessment_items) {
+    return [];
+  }
+
+  return state.nodes[nodeIdx].assessment_items;
+};
+
+/**
+ * Return errors of a node with a given index.
+ * Return `null` if there are no validation data for the node.
+ */
+const _nodeErrors = (state, nodeIdx) => {
+  const nodeValidation = state.validation.find(validation => validation.nodeIdx === nodeIdx);
+
+  if (!nodeValidation || !nodeValidation.errors) {
+    return null;
+  }
+
+  return nodeValidation.errors;
+};
+
+/**
+ * Return a number of invalid assessment items of a node with a given index.
+ */
+const _invalidNodeAssessmentItemsCount = (state, nodeIdx) => {
+  const nodeErrors = _nodeErrors(state, nodeIdx);
+
+  if (nodeErrors === null) {
+    return 0;
+  }
+
+  if (!nodeErrors.assessment_items || !nodeErrors.assessment_items.length) {
+    return 0;
+  }
+
+  return nodeErrors.assessment_items.reduce((accumulator, itemValidation) => {
+    return itemValidation.length ? accumulator + 1 : accumulator;
+  }, 0);
+};
+
+/**
+ * Return `true`/`false` if node details (title, description, license etc.)
+ * are valid/invalid.
+ */
+const _areNodeDetailsValid = (state, nodeIdx) => {
+  const nodeErrors = _nodeErrors(state, nodeIdx);
+
+  if (nodeErrors === null) {
+    return true;
+  }
+
+  return !nodeErrors.details || nodeErrors.details.length === 0;
+};
+
+/**
+ * Return `false` if there is at least one assessment item of a node with a given index
+ * that is invalid. Return `true` if all assessment items of the node are valid.
+ */
+const _areNodeAssessmentItemsValid = (state, nodeIdx) => {
+  return _invalidNodeAssessmentItemsCount(state, nodeIdx) === 0;
+};
+
+/**
+ * Return `true` if both details and assessment items of a given node are valid.
+ * Otherwise return `false`.
+ */
+const _isNodeValid = (state, nodeIdx) => {
+  return _areNodeDetailsValid(state, nodeIdx) && _areNodeAssessmentItemsValid(state, nodeIdx);
+};
 
 export function getNode(state) {
   return function(index) {
@@ -18,57 +90,6 @@ export function selected(state) {
 export function allExercises(state) {
   let selected = getSelected(state);
   return _.every(selected, { kind: 'exercise' });
-}
-
-function _validateNode(node, index) {
-  // Title is required
-  if (!node.title) return index;
-
-  // Authoring information is required for resources
-  if (!node.freeze_authoring_data && node.kind !== 'topic') {
-    let license =
-      node.license && _.findWhere(Constants.Licenses, { id: node.license.id || node.license });
-    // License is required
-    if (!license) return index;
-    // Copyright holder is required for certain licenses
-    else if (license.copyright_holder_required && !node.copyright_holder) return index;
-    // License description is required for certain licenses
-    else if (license.is_custom && !node.license_description) return index;
-  }
-
-  // Mastery is required on exercises
-  if (node.kind === 'exercise') {
-    let mastery = node.extra_fields;
-    if (!mastery.mastery_model) return index;
-    else if (
-      mastery.mastery_model === 'm_of_n' &&
-      (!mastery.m || !mastery.n || mastery.m > mastery.n)
-    )
-      return index;
-  }
-
-  return -1;
-}
-
-export function invalidNodes(state) {
-  // Skip validation on view only mode
-  if (state.mode === modes.VIEW_ONLY) return [];
-
-  return _.chain(state.nodes)
-    .map((node, index) => {
-      // Don't automatically validate new nodes
-      if (node.isNew) return -1;
-      return _validateNode(node, index);
-    })
-    .filter(num => num !== -1)
-    .value();
-}
-
-export function invalidNodesOverridden(state) {
-  return _.chain(state.nodes)
-    .map(_validateNode)
-    .filter(num => num !== -1)
-    .value();
 }
 
 export function allResources(state) {
@@ -102,41 +123,75 @@ export function tags() {
 }
 
 /**
- * Return number of node assessment draft items if user has already started
- * editing the node. Otherwise return number of assessment items retrieved
- * from the last API call.
+ * See _nodeAssessmentItems
  */
-export const nodeAssessmentItemsCount = state => nodeId => {
-  const nodeAssessmentDraft = state.nodesAssessmentDrafts[nodeId];
-
-  if (nodeAssessmentDraft !== undefined) {
-    return nodeAssessmentDraft.length;
-  }
-
-  const node = state.nodes.find(node => node.id === nodeId);
-  if (node === undefined) {
-    return 0;
-  }
-
-  return node.assessment_items.length;
+export const nodeAssessmentItems = state => nodeIdx => {
+  return _nodeAssessmentItems(state, nodeIdx);
 };
 
-export const nodeAssessmentDraft = state => nodeId => {
-  if (!Object.keys(state.nodesAssessmentDrafts).includes(nodeId)) {
-    return null;
-  }
-
-  return state.nodesAssessmentDrafts[nodeId];
+/**
+ * See _nodeErrors
+ */
+export const nodeErrors = state => nodeIdx => {
+  return _nodeErrors(state, nodeIdx);
 };
 
-export const isNodeAssessmentDraftValid = state => nodeId => {
-  const nodeAssessmentDraft = state.nodesAssessmentDrafts[nodeId];
-
-  return !nodeAssessmentDraft.some(item => !isAssessmentDraftItemValid(item));
+/**
+ * See _invalidNodeAssessmentItemsCount
+ */
+export const invalidNodeAssessmentItemsCount = state => nodeIdx => {
+  return _invalidNodeAssessmentItemsCount(state, nodeIdx);
 };
 
-export const invalidNodeAssessmentDraftItemsCount = state => nodeId => {
-  const nodeAssessmentDraft = state.nodesAssessmentDrafts[nodeId];
+/**
+ * Return number of assessment items of a node with a given index.
+ */
+export const nodeAssessmentItemsCount = state => nodeIdx => {
+  return _nodeAssessmentItems(state, nodeIdx).length;
+};
 
-  return nodeAssessmentDraft.filter(item => !isAssessmentDraftItemValid(item)).length;
+/**
+ * See _areNodeDetailsValid
+ */
+export const areNodeDetailsValid = state => nodeIdx => {
+  return _areNodeDetailsValid(state, nodeIdx);
+};
+
+/**
+ * See _areNodeAssessmentItemsValid
+ */
+export const areNodeAssessmentItemsValid = state => nodeIdx => {
+  return _areNodeAssessmentItemsValid(state, nodeIdx);
+};
+
+/**
+ * See _isNodeValid
+ */
+export const isNodeValid = state => nodeIdx => {
+  return _isNodeValid(state, nodeIdx);
+};
+
+export const isNodeNew = state => nodeIdx => {
+  return state.nodes[nodeIdx].isNew;
+};
+
+/**
+ * Returns an array of invalid nodes indices.
+ * @param {Boolean} ignoreNewNodes All nodes marked as new will be skipped
+ *                                 if set to `true`.
+ */
+export const invalidNodes = state => ({ ignoreNewNodes = false } = {}) => {
+  return state.nodes
+    .map((node, nodeIdx) => {
+      if (ignoreNewNodes && node.isNew) {
+        return undefined;
+      }
+
+      if (!_isNodeValid(state, nodeIdx)) {
+        return nodeIdx;
+      }
+
+      return undefined;
+    })
+    .filter(nodeIdx => nodeIdx !== undefined);
 };

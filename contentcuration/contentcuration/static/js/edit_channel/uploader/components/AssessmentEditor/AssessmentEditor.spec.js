@@ -2,63 +2,51 @@ import { shallowMount, mount } from '@vue/test-utils';
 
 import {
   AssessmentItemTypes,
-  AssessmentItemValidationErrors,
   AssessmentItemToolbarActions,
+  ValidationErrors,
 } from '../../constants';
 import AssessmentEditor from './AssessmentEditor';
 
 jest.mock('../MarkdownEditor/MarkdownEditor.vue');
 
-const ASSESSMENT_DRAFT = [
+const ITEMS = [
   {
-    data: {
-      question: 'Question 1',
-      type: AssessmentItemTypes.INPUT_QUESTION,
-      order: 0,
-      answers: [
-        { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-        { answer: 'Peanut butter', correct: true, order: 2 },
-      ],
-      hints: [],
-    },
-    validation: {
-      answersErrors: [],
-      questionErrors: [],
-    },
+    question: 'Question 1',
+    type: AssessmentItemTypes.INPUT_QUESTION,
+    order: 0,
+    answers: [
+      { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+      { answer: 'Peanut butter', correct: true, order: 2 },
+    ],
+    hints: [],
   },
   {
-    data: {
-      question: 'Question 2',
-      type: AssessmentItemTypes.SINGLE_SELECTION,
-      order: 1,
-      answers: [
-        { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-        { answer: 'Peanut butter', correct: true, order: 2 },
-      ],
-      hints: [{ hint: "It's not healthy", order: 1 }, { hint: 'Tasty!', order: 2 }],
-    },
-    validation: {
-      questionErrors: [],
-      answersErrors: [AssessmentItemValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS],
-    },
+    question: 'Question 2',
+    type: AssessmentItemTypes.SINGLE_SELECTION,
+    order: 1,
+    answers: [
+      { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+      { answer: 'Peanut butter', correct: true, order: 2 },
+    ],
+    hints: [{ hint: "It's not healthy", order: 1 }, { hint: 'Tasty!', order: 2 }],
   },
   {
-    data: {
-      question: '',
-      type: AssessmentItemTypes.MULTIPLE_SELECTION,
-      order: 2,
-      answers: [
-        { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-        { answer: 'Peanut butter', correct: false, order: 2 },
-        { answer: 'Jelly', correct: true, order: 3 },
-      ],
-      hints: [],
-    },
-    validation: {
-      questionErrors: [AssessmentItemValidationErrors.BLANK_QUESTION],
-      answersErrors: [],
-    },
+    question: '',
+    type: AssessmentItemTypes.MULTIPLE_SELECTION,
+    order: 2,
+    answers: [
+      { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+      { answer: 'Peanut butter', correct: false, order: 2 },
+      { answer: 'Jelly', correct: true, order: 3 },
+    ],
+    hints: [],
   },
+];
+
+const ITEMS_VALIDATION = [
+  [],
+  [ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS],
+  [ValidationErrors.QUESTION_REQUIRED],
 ];
 
 const checkShowAnswers = wrapper => {
@@ -68,11 +56,11 @@ const checkShowAnswers = wrapper => {
     .setChecked(true);
 };
 
-const getAssessmentItems = wrapper => {
+const getItems = wrapper => {
   return wrapper.findAll('[data-test="item"]');
 };
 
-const isAssessmentItemOpen = assessmentItemWrapper => {
+const isItemOpen = assessmentItemWrapper => {
   return assessmentItemWrapper.contains('[data-test="editor"]');
 };
 
@@ -129,7 +117,8 @@ describe('AssessmentEditor', () => {
   beforeEach(() => {
     wrapper = mount(AssessmentEditor, {
       propsData: {
-        assessmentDraft: ASSESSMENT_DRAFT,
+        items: ITEMS,
+        itemsValidation: ITEMS_VALIDATION,
       },
     });
   });
@@ -146,7 +135,7 @@ describe('AssessmentEditor', () => {
     beforeEach(() => {
       wrapper = mount(AssessmentEditor, {
         propsData: {
-          assessmentDraft: [],
+          items: [],
         },
       });
     });
@@ -175,411 +164,294 @@ describe('AssessmentEditor', () => {
   });
 
   it('opens an item on item click', () => {
-    const assessmentItems = getAssessmentItems(wrapper);
-    assessmentItems.at(1).trigger('click');
+    const items = getItems(wrapper);
+    items.at(1).trigger('click');
 
-    expect(isAssessmentItemOpen(assessmentItems.at(0))).toBe(false);
-    expect(isAssessmentItemOpen(assessmentItems.at(1))).toBe(true);
-    expect(isAssessmentItemOpen(assessmentItems.at(2))).toBe(false);
+    expect(isItemOpen(items.at(0))).toBe(false);
+    expect(isItemOpen(items.at(1))).toBe(true);
+    expect(isItemOpen(items.at(2))).toBe(false);
   });
 
   it('opens an item on toolbar edit icon click', () => {
-    const assessmentItems = getAssessmentItems(wrapper);
-    clickEdit(assessmentItems.at(1));
+    const items = getItems(wrapper);
+    clickEdit(items.at(1));
 
-    expect(isAssessmentItemOpen(assessmentItems.at(0))).toBe(false);
-    expect(isAssessmentItemOpen(assessmentItems.at(1))).toBe(true);
-    expect(isAssessmentItemOpen(assessmentItems.at(2))).toBe(false);
+    expect(isItemOpen(items.at(0))).toBe(false);
+    expect(isItemOpen(items.at(1))).toBe(true);
+    expect(isItemOpen(items.at(2))).toBe(false);
   });
 
   it('closes an item on close button click', () => {
     // open an item at first
-    const assessmentItems = getAssessmentItems(wrapper);
-    assessmentItems.at(1).trigger('click');
-    expect(isAssessmentItemOpen(assessmentItems.at(1))).toBe(true);
+    const items = getItems(wrapper);
+    items.at(1).trigger('click');
+    expect(isItemOpen(items.at(1))).toBe(true);
 
     // now close it
-    clickClose(assessmentItems.at(1));
-    expect(isAssessmentItemOpen(assessmentItems.at(1))).toBe(false);
+    clickClose(items.at(1));
+    expect(isItemOpen(items.at(1))).toBe(false);
   });
 
-  it('emits update event with updated assessment draft on item "Delete" click', () => {
-    const assessmentItems = getAssessmentItems(wrapper);
+  it('emits update event with updated assessment items on item "Delete" click', () => {
+    const items = getItems(wrapper);
 
-    clickDelete(assessmentItems.at(1));
+    clickDelete(items.at(1));
 
     expect(wrapper.emitted().update).toBeTruthy();
     const lastUpdate = wrapper.emitted().update.length - 1;
     expect(wrapper.emitted().update[lastUpdate][0]).toEqual([
       {
-        data: {
-          question: 'Question 1',
-          type: AssessmentItemTypes.INPUT_QUESTION,
-          order: 0,
-          answers: [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-            { answer: 'Peanut butter', correct: true, order: 2 },
-          ],
-          hints: [],
-        },
-        validation: {
-          answersErrors: [],
-          questionErrors: [],
-        },
+        question: 'Question 1',
+        type: AssessmentItemTypes.INPUT_QUESTION,
+        order: 0,
+        answers: [
+          { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+          { answer: 'Peanut butter', correct: true, order: 2 },
+        ],
+        hints: [],
       },
       {
-        data: {
-          question: '',
-          type: AssessmentItemTypes.MULTIPLE_SELECTION,
-          order: 1,
-          answers: [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-            { answer: 'Peanut butter', correct: false, order: 2 },
-            { answer: 'Jelly', correct: true, order: 3 },
-          ],
-          hints: [],
-        },
-        validation: {
-          questionErrors: [AssessmentItemValidationErrors.BLANK_QUESTION],
-          answersErrors: [],
-        },
+        question: '',
+        type: AssessmentItemTypes.MULTIPLE_SELECTION,
+        order: 1,
+        answers: [
+          { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+          { answer: 'Peanut butter', correct: false, order: 2 },
+          { answer: 'Jelly', correct: true, order: 3 },
+        ],
+        hints: [],
       },
     ]);
   });
 
-  it('emits update event with updated assessment draft on item "Add question above" click', () => {
-    const assessmentItems = getAssessmentItems(wrapper);
+  it('emits update event with updated assessment items on item "Add question above" click', () => {
+    const items = getItems(wrapper);
 
-    clickAddQuestionAbove(assessmentItems.at(1));
+    clickAddQuestionAbove(items.at(1));
 
     expect(wrapper.emitted().update).toBeTruthy();
     const lastUpdate = wrapper.emitted().update.length - 1;
     expect(wrapper.emitted().update[lastUpdate][0]).toEqual([
       {
-        data: {
-          question: 'Question 1',
-          type: AssessmentItemTypes.INPUT_QUESTION,
-          order: 0,
-          answers: [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-            { answer: 'Peanut butter', correct: true, order: 2 },
-          ],
-          hints: [],
-        },
-        validation: {
-          answersErrors: [],
-          questionErrors: [],
-        },
+        question: 'Question 1',
+        type: AssessmentItemTypes.INPUT_QUESTION,
+        order: 0,
+        answers: [
+          { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+          { answer: 'Peanut butter', correct: true, order: 2 },
+        ],
+        hints: [],
       },
       {
-        data: {
-          question: '',
-          type: AssessmentItemTypes.SINGLE_SELECTION,
-          order: 1,
-          answers: [],
-          hints: [],
-        },
-        validation: {
-          questionErrors: [AssessmentItemValidationErrors.BLANK_QUESTION],
-          answersErrors: [AssessmentItemValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS],
-        },
+        question: '',
+        type: AssessmentItemTypes.SINGLE_SELECTION,
+        order: 1,
+        answers: [],
+        hints: [],
+        isNew: true,
       },
       {
-        data: {
-          question: 'Question 2',
-          type: AssessmentItemTypes.SINGLE_SELECTION,
-          order: 2,
-          answers: [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-            { answer: 'Peanut butter', correct: true, order: 2 },
-          ],
-          hints: [{ hint: "It's not healthy", order: 1 }, { hint: 'Tasty!', order: 2 }],
-        },
-        validation: {
-          questionErrors: [],
-          answersErrors: [AssessmentItemValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS],
-        },
+        question: 'Question 2',
+        type: AssessmentItemTypes.SINGLE_SELECTION,
+        order: 2,
+        answers: [
+          { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+          { answer: 'Peanut butter', correct: true, order: 2 },
+        ],
+        hints: [{ hint: "It's not healthy", order: 1 }, { hint: 'Tasty!', order: 2 }],
       },
       {
-        data: {
-          question: '',
-          type: AssessmentItemTypes.MULTIPLE_SELECTION,
-          order: 3,
-          answers: [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-            { answer: 'Peanut butter', correct: false, order: 2 },
-            { answer: 'Jelly', correct: true, order: 3 },
-          ],
-          hints: [],
-        },
-        validation: {
-          questionErrors: [AssessmentItemValidationErrors.BLANK_QUESTION],
-          answersErrors: [],
-        },
+        question: '',
+        type: AssessmentItemTypes.MULTIPLE_SELECTION,
+        order: 3,
+        answers: [
+          { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+          { answer: 'Peanut butter', correct: false, order: 2 },
+          { answer: 'Jelly', correct: true, order: 3 },
+        ],
+        hints: [],
       },
     ]);
   });
 
-  it('emits update event with updated assessment draft on item "Add question below" click', () => {
-    const assessmentItems = getAssessmentItems(wrapper);
+  it('emits update event with updated assessment items on item "Add question below" click', () => {
+    const items = getItems(wrapper);
 
-    clickAddQuestionBelow(assessmentItems.at(1));
+    clickAddQuestionBelow(items.at(1));
 
     expect(wrapper.emitted().update).toBeTruthy();
     const lastUpdate = wrapper.emitted().update.length - 1;
     expect(wrapper.emitted().update[lastUpdate][0]).toEqual([
       {
-        data: {
-          question: 'Question 1',
-          type: AssessmentItemTypes.INPUT_QUESTION,
-          order: 0,
-          answers: [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-            { answer: 'Peanut butter', correct: true, order: 2 },
-          ],
-          hints: [],
-        },
-        validation: {
-          answersErrors: [],
-          questionErrors: [],
-        },
+        question: 'Question 1',
+        type: AssessmentItemTypes.INPUT_QUESTION,
+        order: 0,
+        answers: [
+          { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+          { answer: 'Peanut butter', correct: true, order: 2 },
+        ],
+        hints: [],
       },
       {
-        data: {
-          question: 'Question 2',
-          type: AssessmentItemTypes.SINGLE_SELECTION,
-          order: 1,
-          answers: [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-            { answer: 'Peanut butter', correct: true, order: 2 },
-          ],
-          hints: [{ hint: "It's not healthy", order: 1 }, { hint: 'Tasty!', order: 2 }],
-        },
-        validation: {
-          questionErrors: [],
-          answersErrors: [AssessmentItemValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS],
-        },
+        question: 'Question 2',
+        type: AssessmentItemTypes.SINGLE_SELECTION,
+        order: 1,
+        answers: [
+          { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+          { answer: 'Peanut butter', correct: true, order: 2 },
+        ],
+        hints: [{ hint: "It's not healthy", order: 1 }, { hint: 'Tasty!', order: 2 }],
       },
       {
-        data: {
-          question: '',
-          type: AssessmentItemTypes.SINGLE_SELECTION,
-          order: 2,
-          answers: [],
-          hints: [],
-        },
-        validation: {
-          questionErrors: [AssessmentItemValidationErrors.BLANK_QUESTION],
-          answersErrors: [AssessmentItemValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS],
-        },
+        question: '',
+        type: AssessmentItemTypes.SINGLE_SELECTION,
+        order: 2,
+        answers: [],
+        hints: [],
+        isNew: true,
       },
       {
-        data: {
-          question: '',
-          type: AssessmentItemTypes.MULTIPLE_SELECTION,
-          order: 3,
-          answers: [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-            { answer: 'Peanut butter', correct: false, order: 2 },
-            { answer: 'Jelly', correct: true, order: 3 },
-          ],
-          hints: [],
-        },
-        validation: {
-          questionErrors: [AssessmentItemValidationErrors.BLANK_QUESTION],
-          answersErrors: [],
-        },
+        question: '',
+        type: AssessmentItemTypes.MULTIPLE_SELECTION,
+        order: 3,
+        answers: [
+          { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+          { answer: 'Peanut butter', correct: false, order: 2 },
+          { answer: 'Jelly', correct: true, order: 3 },
+        ],
+        hints: [],
       },
     ]);
   });
 
-  it('emits update event with updated assessment draft on item "Move up" click', () => {
-    const assessmentItems = getAssessmentItems(wrapper);
+  it('emits update event with updated assessment items on item "Move up" click', () => {
+    const items = getItems(wrapper);
 
-    clickMoveUp(assessmentItems.at(1));
+    clickMoveUp(items.at(1));
 
     expect(wrapper.emitted().update).toBeTruthy();
     const lastUpdate = wrapper.emitted().update.length - 1;
     expect(wrapper.emitted().update[lastUpdate][0]).toEqual([
       {
-        data: {
-          question: 'Question 2',
-          type: AssessmentItemTypes.SINGLE_SELECTION,
-          order: 0,
-          answers: [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-            { answer: 'Peanut butter', correct: true, order: 2 },
-          ],
-          hints: [{ hint: "It's not healthy", order: 1 }, { hint: 'Tasty!', order: 2 }],
-        },
-        validation: {
-          questionErrors: [],
-          answersErrors: [AssessmentItemValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS],
-        },
+        question: 'Question 2',
+        type: AssessmentItemTypes.SINGLE_SELECTION,
+        order: 0,
+        answers: [
+          { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+          { answer: 'Peanut butter', correct: true, order: 2 },
+        ],
+        hints: [{ hint: "It's not healthy", order: 1 }, { hint: 'Tasty!', order: 2 }],
       },
       {
-        data: {
-          question: 'Question 1',
-          type: AssessmentItemTypes.INPUT_QUESTION,
-          order: 1,
-          answers: [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-            { answer: 'Peanut butter', correct: true, order: 2 },
-          ],
-          hints: [],
-        },
-        validation: {
-          answersErrors: [],
-          questionErrors: [],
-        },
+        question: 'Question 1',
+        type: AssessmentItemTypes.INPUT_QUESTION,
+        order: 1,
+        answers: [
+          { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+          { answer: 'Peanut butter', correct: true, order: 2 },
+        ],
+        hints: [],
       },
       {
-        data: {
-          question: '',
-          type: AssessmentItemTypes.MULTIPLE_SELECTION,
-          order: 2,
-          answers: [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-            { answer: 'Peanut butter', correct: false, order: 2 },
-            { answer: 'Jelly', correct: true, order: 3 },
-          ],
-          hints: [],
-        },
-        validation: {
-          questionErrors: [AssessmentItemValidationErrors.BLANK_QUESTION],
-          answersErrors: [],
-        },
+        question: '',
+        type: AssessmentItemTypes.MULTIPLE_SELECTION,
+        order: 2,
+        answers: [
+          { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+          { answer: 'Peanut butter', correct: false, order: 2 },
+          { answer: 'Jelly', correct: true, order: 3 },
+        ],
+        hints: [],
       },
     ]);
   });
 
-  it('emits update event with updated assessment draft on item "Move down" click', () => {
-    const assessmentItems = getAssessmentItems(wrapper);
+  it('emits update event with updated assessment items on item "Move down" click', () => {
+    const items = getItems(wrapper);
 
-    clickMoveDown(assessmentItems.at(1));
+    clickMoveDown(items.at(1));
 
     expect(wrapper.emitted().update).toBeTruthy();
     const lastUpdate = wrapper.emitted().update.length - 1;
     expect(wrapper.emitted().update[lastUpdate][0]).toEqual([
       {
-        data: {
-          question: 'Question 1',
-          type: AssessmentItemTypes.INPUT_QUESTION,
-          order: 0,
-          answers: [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-            { answer: 'Peanut butter', correct: true, order: 2 },
-          ],
-          hints: [],
-        },
-        validation: {
-          answersErrors: [],
-          questionErrors: [],
-        },
+        question: 'Question 1',
+        type: AssessmentItemTypes.INPUT_QUESTION,
+        order: 0,
+        answers: [
+          { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+          { answer: 'Peanut butter', correct: true, order: 2 },
+        ],
+        hints: [],
       },
       {
-        data: {
-          question: '',
-          type: AssessmentItemTypes.MULTIPLE_SELECTION,
-          order: 1,
-          answers: [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-            { answer: 'Peanut butter', correct: false, order: 2 },
-            { answer: 'Jelly', correct: true, order: 3 },
-          ],
-          hints: [],
-        },
-        validation: {
-          questionErrors: [AssessmentItemValidationErrors.BLANK_QUESTION],
-          answersErrors: [],
-        },
+        question: '',
+        type: AssessmentItemTypes.MULTIPLE_SELECTION,
+        order: 1,
+        answers: [
+          { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+          { answer: 'Peanut butter', correct: false, order: 2 },
+          { answer: 'Jelly', correct: true, order: 3 },
+        ],
+        hints: [],
       },
       {
-        data: {
-          question: 'Question 2',
-          type: AssessmentItemTypes.SINGLE_SELECTION,
-          order: 2,
-          answers: [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-            { answer: 'Peanut butter', correct: true, order: 2 },
-          ],
-          hints: [{ hint: "It's not healthy", order: 1 }, { hint: 'Tasty!', order: 2 }],
-        },
-        validation: {
-          questionErrors: [],
-          answersErrors: [AssessmentItemValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS],
-        },
+        question: 'Question 2',
+        type: AssessmentItemTypes.SINGLE_SELECTION,
+        order: 2,
+        answers: [
+          { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+          { answer: 'Peanut butter', correct: true, order: 2 },
+        ],
+        hints: [{ hint: "It's not healthy", order: 1 }, { hint: 'Tasty!', order: 2 }],
       },
     ]);
   });
 
-  it('emits update event with updated assessment draft on new question button click', () => {
+  it('emits update event with updated assessment items on new question button click', () => {
     clickNewQuestionBtn(wrapper);
 
     expect(wrapper.emitted().update).toBeTruthy();
     const lastUpdate = wrapper.emitted().update.length - 1;
     expect(wrapper.emitted().update[lastUpdate][0]).toEqual([
       {
-        data: {
-          question: 'Question 1',
-          type: AssessmentItemTypes.INPUT_QUESTION,
-          order: 0,
-          answers: [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-            { answer: 'Peanut butter', correct: true, order: 2 },
-          ],
-          hints: [],
-        },
-        validation: {
-          answersErrors: [],
-          questionErrors: [],
-        },
+        question: 'Question 1',
+        type: AssessmentItemTypes.INPUT_QUESTION,
+        order: 0,
+        answers: [
+          { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+          { answer: 'Peanut butter', correct: true, order: 2 },
+        ],
+        hints: [],
       },
       {
-        data: {
-          question: 'Question 2',
-          type: AssessmentItemTypes.SINGLE_SELECTION,
-          order: 1,
-          answers: [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-            { answer: 'Peanut butter', correct: true, order: 2 },
-          ],
-          hints: [{ hint: "It's not healthy", order: 1 }, { hint: 'Tasty!', order: 2 }],
-        },
-        validation: {
-          questionErrors: [],
-          answersErrors: [AssessmentItemValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS],
-        },
+        question: 'Question 2',
+        type: AssessmentItemTypes.SINGLE_SELECTION,
+        order: 1,
+        answers: [
+          { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+          { answer: 'Peanut butter', correct: true, order: 2 },
+        ],
+        hints: [{ hint: "It's not healthy", order: 1 }, { hint: 'Tasty!', order: 2 }],
       },
       {
-        data: {
-          question: '',
-          type: AssessmentItemTypes.MULTIPLE_SELECTION,
-          order: 2,
-          answers: [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-            { answer: 'Peanut butter', correct: false, order: 2 },
-            { answer: 'Jelly', correct: true, order: 3 },
-          ],
-          hints: [],
-        },
-        validation: {
-          questionErrors: [AssessmentItemValidationErrors.BLANK_QUESTION],
-          answersErrors: [],
-        },
+        question: '',
+        type: AssessmentItemTypes.MULTIPLE_SELECTION,
+        order: 2,
+        answers: [
+          { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+          { answer: 'Peanut butter', correct: false, order: 2 },
+          { answer: 'Jelly', correct: true, order: 3 },
+        ],
+        hints: [],
       },
       {
-        data: {
-          question: '',
-          type: AssessmentItemTypes.SINGLE_SELECTION,
-          order: 3,
-          answers: [],
-          hints: [],
-        },
-        validation: {
-          questionErrors: [AssessmentItemValidationErrors.BLANK_QUESTION],
-          answersErrors: [AssessmentItemValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS],
-        },
+        question: '',
+        type: AssessmentItemTypes.SINGLE_SELECTION,
+        order: 3,
+        answers: [],
+        hints: [],
+        isNew: true,
       },
     ]);
   });

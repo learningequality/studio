@@ -103,12 +103,7 @@
 <script>
 
   import { AssessmentItemTypes, AssessmentItemToolbarActions } from '../../constants';
-  import {
-    questionShouldHaveOneCorrectAnswer,
-    getCorrectAnswersIndices,
-    mapCorrectAnswers,
-    swapElements,
-  } from '../../utils';
+  import { getCorrectAnswersIndices, mapCorrectAnswers, swapElements } from '../../utils';
 
   import AssessmentItemToolbar from '../AssessmentItemToolbar/AssessmentItemToolbar.vue';
   import MarkdownEditor from '../MarkdownEditor/MarkdownEditor.vue';
@@ -171,7 +166,7 @@
         return this.questionKind === AssessmentItemTypes.INPUT_QUESTION;
       },
       shouldHaveOneCorrectAnswer() {
-        return questionShouldHaveOneCorrectAnswer(this.questionKind);
+        return this.isSingleSelection || this.isTrueFalse;
       },
       isEditingAllowed() {
         return !this.isTrueFalse;

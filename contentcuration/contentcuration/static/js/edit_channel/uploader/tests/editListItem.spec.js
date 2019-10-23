@@ -50,8 +50,10 @@ describe('editList', () => {
     it('should show error icon when node is invalid', () => {
       expect(wrapper.find('.error-icon').exists()).toBe(false);
       localStore.commit('edit_modal/UPDATE_NODE', { title: null });
+      localStore.commit('edit_modal/VALIDATE_NODE_DETAILS', { nodeIdx: 0 });
       expect(wrapper.find('.error-icon').exists()).toBe(true);
       localStore.commit('edit_modal/UPDATE_NODE', { title: 'Node 1' });
+      localStore.commit('edit_modal/VALIDATE_NODE_DETAILS', { nodeIdx: 0 });
     });
     it('should hide error icon when in view only mode', () => {
       expect(wrapper.find('.error-icon').exists()).toBe(false);

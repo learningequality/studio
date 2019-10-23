@@ -45,7 +45,7 @@
             <!-- Questions tab -->
             <VTab v-if="showQuestionsTab" ref="questiontab" :href="`#${tabs.QUESTIONS}`">
               {{ $tr(tabs.QUESTIONS) }}
-              <VTooltip v-if="isAssessmentDraftInvalid" top>
+              <VTooltip v-if="!areAssessmentItemsValid" top>
                 <template v-slot:activator="{ on }">
                   <VIcon color="red" dark v-on="on">
                     error
@@ -153,9 +153,9 @@
         'selected',
         'allExercises',
         'allResources',
-        'invalidNodes',
-        'nodeAssessmentDraft',
-        'isNodeAssessmentDraftValid',
+        'isNodeNew',
+        'areNodeDetailsValid',
+        'areNodeAssessmentItemsValid',
         'nodeAssessmentItemsCount',
       ]),
       ...mapState('edit_modal', ['nodes', 'selectedIndices', 'mode']),
@@ -188,25 +188,27 @@
         return _.all(this.selected, '_COMPLETE');
       },
       invalidSelected() {
-        return !this.viewOnly && _.intersection(this.selectedIndices, this.invalidNodes).length;
+        return (
+          !this.viewOnly &&
+          this.selectedIndices.some(
+            nodeIdx => !this.isNodeNew(nodeIdx) && !this.areNodeDetailsValid(nodeIdx)
+          )
+        );
       },
       countText() {
         let messageArgs = { count: this.selected.length };
         if (this.viewOnly) return this.$tr('viewingMultipleCount', messageArgs);
         return this.$tr('editingMultipleCount', messageArgs);
       },
-      isAssessmentDraftInvalid() {
-        return (
-          this.nodeAssessmentDraft(this.selected[0].id) !== null &&
-          !this.isNodeAssessmentDraftValid(this.selected[0].id)
-        );
+      areAssessmentItemsValid() {
+        return this.areNodeAssessmentItemsValid(this.selectedIndices[0]);
       },
       assessmentItemsCount() {
-        return this.nodeAssessmentItemsCount(this.selected[0].id);
+        return this.nodeAssessmentItemsCount(this.selectedIndices[0]);
       },
     },
     watch: {
-      selected() {
+      selectedIndices() {
         this.currentTab = TabNames.DETAILS;
         this.loadNodesDebounced();
       },

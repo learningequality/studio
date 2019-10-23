@@ -1,6 +1,6 @@
 import each from 'jest-each';
 
-import { AssessmentItemTypes, AssessmentItemValidationErrors } from '../constants';
+import { AssessmentItemTypes, ValidationErrors } from '../constants';
 import {
   getCorrectAnswersIndices,
   mapCorrectAnswers,
@@ -9,13 +9,12 @@ import {
   sanitizeAssessmentItemHints,
   sanitizeAssessmentItem,
   validateAssessmentItem,
-  updateAssessmentDraftOrder,
-  isAssessmentDraftItemValid,
-  sanitizeAssessmentDraft,
-  validateAssessmentDraft,
+  sanitizeAssessmentItems,
+  parseNode,
   insertBefore,
   insertAfter,
   swapElements,
+  validateNodeDetails,
 } from '../utils';
 
 describe('utils', () => {
@@ -498,6 +497,164 @@ describe('utils', () => {
     });
   });
 
+  describe('validateNodeDetails', () => {
+    it('returns a correct error code when title missing', () => {
+      // copyright holder is not required for Public Domain
+      expect(
+        validateNodeDetails({
+          title: '',
+          kind: 'document',
+          license: 8,
+        })
+      ).toEqual([ValidationErrors.TITLE_REQUIRED]);
+    });
+
+    each([
+      [
+        {
+          title: 'Title',
+          kind: 'document',
+          license: null,
+        },
+        [ValidationErrors.LICENCE_REQUIRED],
+      ],
+      [
+        {
+          title: 'Title',
+          kind: 'document',
+          license: 8,
+        },
+        [],
+      ],
+      // license is not required for topics
+      [
+        {
+          title: 'Title',
+          kind: 'topic',
+          license: null,
+        },
+        [],
+      ],
+      // license is not required when authoring data freezed
+      [
+        {
+          title: 'Title',
+          freeze_authoring_data: true,
+          license: null,
+        },
+        [],
+      ],
+    ]).it('validates license presence', (node, errors) => {
+      expect(validateNodeDetails(node)).toEqual(errors);
+    });
+
+    each([
+      // copyright holder is required for licences other than Public Domain
+      [
+        {
+          title: 'Title',
+          license: 1,
+        },
+        [ValidationErrors.COPYRIGHT_HOLDER_REQUIRED],
+      ],
+      [
+        {
+          title: 'Title',
+          license: 1,
+          copyright_holder: 'Copyright holder',
+        },
+        [],
+      ],
+    ]).it('validates copyright holder', (node, errors) => {
+      expect(validateNodeDetails(node)).toEqual(errors);
+    });
+
+    each([
+      // description is required for a custom license
+      [
+        {
+          title: 'Title',
+          license: 9,
+          copyright_holder: 'Copyright holder',
+        },
+        [ValidationErrors.LICENCE_DESCRIPTION_REQUIRED],
+      ],
+      [
+        {
+          title: 'Title',
+          license: 9,
+          copyright_holder: 'Copyright holder',
+          license_description: 'My custom license',
+        },
+        [],
+      ],
+    ]).it('validates license description', (node, errors) => {
+      expect(validateNodeDetails(node)).toEqual(errors);
+    });
+
+    each([
+      [
+        {
+          title: 'Title',
+          kind: 'exercise',
+          license: 8,
+        },
+        [ValidationErrors.MASTERY_MODEL_REQUIRED],
+      ],
+      [
+        {
+          title: 'Title',
+          kind: 'exercise',
+          license: 8,
+          extra_fields: {
+            mastery_model: 'do_all',
+          },
+        },
+        [],
+      ],
+      [
+        {
+          title: 'Title',
+          kind: 'exercise',
+          license: 8,
+          extra_fields: {
+            mastery_model: 'm_of_n',
+            m: 3,
+          },
+        },
+        [ValidationErrors.MASTERY_MODEL_INVALID],
+      ],
+      [
+        {
+          title: 'Title',
+          kind: 'exercise',
+          license: 8,
+          extra_fields: {
+            mastery_model: 'm_of_n',
+            m: 3,
+            n: 2,
+          },
+        },
+        [ValidationErrors.MASTERY_MODEL_INVALID],
+      ],
+      [
+        {
+          title: 'Title',
+          kind: 'exercise',
+          license: 8,
+          extra_fields: {
+            mastery_model: 'm_of_n',
+            m: 2,
+            n: 3,
+          },
+        },
+        [],
+      ],
+    ]).it('validates mastery model for exercises', (node, errors) => {
+      expect(validateNodeDetails(node)).toEqual(errors);
+    });
+  });
+
   describe('validateAssessmentItem', () => {
     describe('when question text is missing', () => {
       it('returns negative validation results', () => {
@@ -506,10 +663,9 @@ describe('utils', () => {
           answers: [{ answer: 'Answer', correct: true, order: 1 }],
         };
 
-        expect(validateAssessmentItem(assessmentItem)).toEqual({
-          questionErrors: [AssessmentItemValidationErrors.BLANK_QUESTION],
-          answersErrors: [],
-        });
+        expect(validateAssessmentItem(assessmentItem)).toEqual([
+          ValidationErrors.QUESTION_REQUIRED,
+        ]);
       });
     });
 
@@ -521,10 +677,9 @@ describe('utils', () => {
           answers: [],
         };
 
-        expect(validateAssessmentItem(assessmentItem)).toEqual({
-          questionErrors: [],
-          answersErrors: [AssessmentItemValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS],
-        });
+        expect(validateAssessmentItem(assessmentItem)).toEqual([
+          ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS,
+        ]);
       });
     });
 
@@ -536,10 +691,9 @@ describe('utils', () => {
           answers: [{ answer: 'Answer', correct: false, order: 1 }],
         };
 
-        expect(validateAssessmentItem(assessmentItem)).toEqual({
-          questionErrors: [],
-          answersErrors: [AssessmentItemValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS],
-        });
+        expect(validateAssessmentItem(assessmentItem)).toEqual([
+          ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS,
+        ]);
       });
     });
 
@@ -554,10 +708,9 @@ describe('utils', () => {
           ],
         };
 
-        expect(validateAssessmentItem(assessmentItem)).toEqual({
-          questionErrors: [],
-          answersErrors: [AssessmentItemValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS],
-        });
+        expect(validateAssessmentItem(assessmentItem)).toEqual([
+          ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS,
+        ]);
       });
     });
 
@@ -572,10 +725,7 @@ describe('utils', () => {
           ],
         };
 
-        expect(validateAssessmentItem(assessmentItem)).toEqual({
-          questionErrors: [],
-          answersErrors: [],
-        });
+        expect(validateAssessmentItem(assessmentItem)).toEqual([]);
       });
     });
 
@@ -587,10 +737,9 @@ describe('utils', () => {
           answers: [],
         };
 
-        expect(validateAssessmentItem(assessmentItem)).toEqual({
-          questionErrors: [],
-          answersErrors: [AssessmentItemValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS],
-        });
+        expect(validateAssessmentItem(assessmentItem)).toEqual([
+          ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS,
+        ]);
       });
     });
 
@@ -605,10 +754,9 @@ describe('utils', () => {
           ],
         };
 
-        expect(validateAssessmentItem(assessmentItem)).toEqual({
-          questionErrors: [],
-          answersErrors: [AssessmentItemValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS],
-        });
+        expect(validateAssessmentItem(assessmentItem)).toEqual([
+          ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS,
+        ]);
       });
     });
 
@@ -623,10 +771,7 @@ describe('utils', () => {
           ],
         };
 
-        expect(validateAssessmentItem(assessmentItem)).toEqual({
-          questionErrors: [],
-          answersErrors: [],
-        });
+        expect(validateAssessmentItem(assessmentItem)).toEqual([]);
       });
     });
 
@@ -638,10 +783,9 @@ describe('utils', () => {
           answers: [],
         };
 
-        expect(validateAssessmentItem(assessmentItem)).toEqual({
-          questionErrors: [],
-          answersErrors: [AssessmentItemValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS],
-        });
+        expect(validateAssessmentItem(assessmentItem)).toEqual([
+          ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS,
+        ]);
       });
     });
 
@@ -656,10 +800,9 @@ describe('utils', () => {
           ],
         };
 
-        expect(validateAssessmentItem(assessmentItem)).toEqual({
-          questionErrors: [],
-          answersErrors: [AssessmentItemValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS],
-        });
+        expect(validateAssessmentItem(assessmentItem)).toEqual([
+          ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS,
+        ]);
       });
     });
 
@@ -674,10 +817,7 @@ describe('utils', () => {
           ],
         };
 
-        expect(validateAssessmentItem(assessmentItem)).toEqual({
-          questionErrors: [],
-          answersErrors: [],
-        });
+        expect(validateAssessmentItem(assessmentItem)).toEqual([]);
       });
     });
 
@@ -689,10 +829,9 @@ describe('utils', () => {
           answers: [],
         };
 
-        expect(validateAssessmentItem(assessmentItem)).toEqual({
-          questionErrors: [],
-          answersErrors: [AssessmentItemValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS],
-        });
+        expect(validateAssessmentItem(assessmentItem)).toEqual([
+          ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS,
+        ]);
       });
     });
 
@@ -707,10 +846,9 @@ describe('utils', () => {
           ],
         };
 
-        expect(validateAssessmentItem(assessmentItem)).toEqual({
-          questionErrors: [],
-          answersErrors: [AssessmentItemValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS],
-        });
+        expect(validateAssessmentItem(assessmentItem)).toEqual([
+          ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS,
+        ]);
       });
     });
 
@@ -725,10 +863,9 @@ describe('utils', () => {
           ],
         };
 
-        expect(validateAssessmentItem(assessmentItem)).toEqual({
-          questionErrors: [],
-          answersErrors: [AssessmentItemValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS],
-        });
+        expect(validateAssessmentItem(assessmentItem)).toEqual([
+          ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS,
+        ]);
       });
     });
 
@@ -743,215 +880,127 @@ describe('utils', () => {
           ],
         };
 
-        expect(validateAssessmentItem(assessmentItem)).toEqual({
-          questionErrors: [],
-          answersErrors: [],
-        });
+        expect(validateAssessmentItem(assessmentItem)).toEqual([]);
       });
     });
   });
 
-  describe('updateAssessmentDraftOrder', () => {
-    it('updates `order` fields according to a position in an array', () => {
-      const assessmentDraft = [
+  describe('sanitizeAssessmentItems', () => {
+    it('sanitizes questions/answers/hints texts and removes empty questions/answers/hints', () => {
+      const assessmentItems = [
         {
-          data: {
-            order: 1,
-            question: 'Question 1',
-          },
-          validation: {},
+          order: 0,
+          question: ' Question 1 text ',
+          answers: [
+            { answer: ' Answer 1', order: 1, correct: false },
+            { answer: '', order: 2, correct: true },
+            { answer: 'Answer 3 ', order: 3, correct: true },
+          ],
+          hints: [{ hint: ' ', order: 1 }, { hint: '', order: 2 }, { hint: ' Hint 3', order: 3 }],
         },
         {
-          data: {
-            order: 0,
-            question: 'Question 2',
-          },
-          validation: {},
+          order: 1,
+          question: ' ',
+          answers: [{ answer: '', order: 1, correct: true }],
+          hints: [{ hint: ' ', order: 1 }, { hint: '', order: 2 }],
         },
         {
-          data: {
-            order: 4,
-            question: 'Question 2',
-          },
-          validation: {},
+          order: 2,
+          question: '',
+          answers: [],
+          hints: [],
+        },
+        {
+          order: 3,
+          question: ' Question 4 text ',
+          answers: [{ answer: '', order: 2, correct: true }],
+          hints: [],
         },
       ];
 
-      expect(updateAssessmentDraftOrder(assessmentDraft)).toEqual([
+      expect(sanitizeAssessmentItems(assessmentItems)).toEqual([
         {
-          data: {
-            order: 0,
-            question: 'Question 1',
-          },
-          validation: {},
+          order: 0,
+          question: 'Question 1 text',
+          answers: [
+            { answer: 'Answer 1', order: 1, correct: false },
+            { answer: 'Answer 3', order: 2, correct: true },
+          ],
+          hints: [{ hint: 'Hint 3', order: 1 }],
         },
         {
-          data: {
-            order: 1,
-            question: 'Question 2',
-          },
-          validation: {},
-        },
-        {
-          data: {
-            order: 2,
-            question: 'Question 2',
-          },
-          validation: {},
+          order: 1,
+          question: 'Question 4 text',
+          answers: [],
+          hints: [],
         },
       ]);
     });
   });
 
-  describe('isAssessmentDraftItemValid', () => {
-    it('returns true if an item has no validation errors', () => {
-      const item = {
-        data: {
-          question: 'Question 1',
-        },
-        validation: {},
+  describe('parseNode', () => {
+    it('parses and sorts assessment items data', () => {
+      const node = {
+        assessment_items: [
+          {
+            order: 1,
+            question: 'Question 2',
+            answers: JSON.stringify([
+              { answer: 'Question 2 - Answer 1', correct: true, order: 1 },
+              { answer: 'Question 2 - Answer 2', correct: false, order: 2 },
+            ]),
+            hints: JSON.stringify([
+              { hint: 'Question 1 - Hint 3', order: 3 },
+              { hint: 'Question 1 - Hint 2', order: 2 },
+              { hint: 'Question 1 - Hint 1', order: 1 },
+            ]),
+          },
+          {
+            order: 0,
+            question: 'Question 1',
+            answers: JSON.stringify([
+              { answer: 'Question 1 - Answer 3', correct: false, order: 3 },
+              { answer: 'Question 1 - Answer 1', correct: true, order: 1 },
+              { answer: 'Question 1 - Answer 2', correct: false, order: 2 },
+            ]),
+            hints: JSON.stringify([
+              { hint: 'Question 2 - Hint 2', order: 2 },
+              { hint: 'Question 2 - Hint 1', order: 1 },
+            ]),
+          },
+        ],
       };
 
-      expect(isAssessmentDraftItemValid(item)).toBe(true);
-    });
-
-    const item = {
-      data: {
-        question: 'Question 1',
-      },
-      validation: {
-        answersErrors: [AssessmentItemValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS],
-        questionErrors: [],
-      },
-    };
-
-    expect(isAssessmentDraftItemValid(item)).toBe(false);
-  });
-
-  describe('sanitizeAssessmentDraft', () => {
-    it('sanitizes questions/answers/hints texts and removes empty questions/answers/hints', () => {
-      const assessmentDraft = [
-        {
-          data: {
+      expect(parseNode(node)).toEqual({
+        assessment_items: [
+          {
             order: 0,
-            question: ' Question 1 text ',
+            question: 'Question 1',
             answers: [
-              { answer: ' Answer 1', order: 1, correct: false },
-              { answer: '', order: 2, correct: true },
-              { answer: 'Answer 3 ', order: 3, correct: true },
+              { answer: 'Question 1 - Answer 1', correct: true, order: 1 },
+              { answer: 'Question 1 - Answer 2', correct: false, order: 2 },
+              { answer: 'Question 1 - Answer 3', correct: false, order: 3 },
             ],
-            hints: [{ hint: ' ', order: 1 }, { hint: '', order: 2 }, { hint: ' Hint 3', order: 3 }],
+            hints: [
+              { hint: 'Question 2 - Hint 1', order: 1 },
+              { hint: 'Question 2 - Hint 2', order: 2 },
+            ],
           },
-          validation: {},
-        },
-        {
-          data: {
+          {
             order: 1,
-            question: ' ',
-            answers: [{ answer: '', order: 1, correct: true }],
-            hints: [{ hint: ' ', order: 1 }, { hint: '', order: 2 }],
-          },
-          validation: {},
-        },
-        {
-          data: {
-            order: 2,
-            question: '',
-            answers: [],
-            hints: [],
-          },
-          validation: {},
-        },
-        {
-          data: {
-            order: 3,
-            question: ' Question 4 text ',
-            answers: [{ answer: '', order: 2, correct: true }],
-            hints: [],
-          },
-          validation: {},
-        },
-      ];
-
-      expect(sanitizeAssessmentDraft(assessmentDraft)).toEqual([
-        {
-          data: {
-            order: 0,
-            question: 'Question 1 text',
+            question: 'Question 2',
             answers: [
-              { answer: 'Answer 1', order: 1, correct: false },
-              { answer: 'Answer 3', order: 2, correct: true },
+              { answer: 'Question 2 - Answer 1', correct: true, order: 1 },
+              { answer: 'Question 2 - Answer 2', correct: false, order: 2 },
             ],
-            hints: [{ hint: 'Hint 3', order: 1 }],
+            hints: [
+              { hint: 'Question 1 - Hint 1', order: 1 },
+              { hint: 'Question 1 - Hint 2', order: 2 },
+              { hint: 'Question 1 - Hint 3', order: 3 },
+            ],
           },
-          validation: {},
-        },
-        {
-          data: {
-            order: 1,
-            question: 'Question 4 text',
-            answers: [],
-            hints: [],
-          },
-          validation: {},
-        },
-      ]);
-    });
-  });
-
-  describe('validateAssessmentDraft', () => {
-    it('performs validation and saves results to `validation` field of each draft item', () => {
-      const assessmentDraft = [
-        {
-          data: {
-            order: 0,
-            type: AssessmentItemTypes.SINGLE_SELECTION,
-            question: 'Node 2 - Question 2',
-            answers: [],
-            hints: [],
-          },
-          validation: {},
-        },
-        {
-          data: {
-            order: 1,
-            type: AssessmentItemTypes.SINGLE_SELECTION,
-            question: '',
-            answers: [{ answer: 'Answer 1', order: 1, correct: false }],
-            hints: [],
-          },
-          validation: {},
-        },
-      ];
-
-      expect(validateAssessmentDraft(assessmentDraft)).toEqual([
-        {
-          data: {
-            order: 0,
-            type: AssessmentItemTypes.SINGLE_SELECTION,
-            question: 'Node 2 - Question 2',
-            answers: [],
-            hints: [],
-          },
-          validation: {
-            questionErrors: [],
-            answersErrors: [AssessmentItemValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS],
-          },
-        },
-        {
-          data: {
-            order: 1,
-            type: AssessmentItemTypes.SINGLE_SELECTION,
-            question: '',
-            answers: [{ answer: 'Answer 1', order: 1, correct: false }],
-            hints: [],
-          },
-          validation: {
-            questionErrors: [AssessmentItemValidationErrors.BLANK_QUESTION],
-            answersErrors: [AssessmentItemValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS],
-          },
-        },
-      ]);
+        ],
+      });
     });
   });
 

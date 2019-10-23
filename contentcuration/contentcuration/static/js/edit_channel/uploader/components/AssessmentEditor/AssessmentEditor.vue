@@ -1,6 +1,6 @@
 <template>
   <div>
-    <template v-if="assessmentDraft && assessmentDraft.length">
+    <template v-if="items && items.length">
       <VCheckbox
         v-model="displayAnswersPreview"
         label="Show answers"
@@ -9,7 +9,7 @@
       />
 
       <VCard
-        v-for="(_, itemIdx) in assessmentDraft"
+        v-for="(_, itemIdx) in items"
         :key="itemIdx"
         pa-1
         :class="itemClasses(itemIdx)"
@@ -27,7 +27,7 @@
               xs10
             >
               <AssessmentItemPreview
-                :itemData="assessmentDraft[itemIdx].data"
+                :item="items[itemIdx]"
                 :detailed="displayAnswersPreview"
               />
             </VFlex>
@@ -37,11 +37,12 @@
               xs10
             >
               <AssessmentItemEditor
-                :item="assessmentDraft[itemIdx]"
+                :item="items[itemIdx]"
+                :errors="itemErrors(itemIdx)"
                 :openDialog="openDialog"
                 data-test="editor"
                 @update="updateItem($event, itemIdx)"
-                @close="onItemClose"
+                @close="closeOpenItem"
               />
             </VFlex>
 
@@ -118,21 +119,20 @@
 <script>
 
   import { AssessmentItemTypes, AssessmentItemToolbarActions } from '../../constants';
-  import {
-    isAssessmentDraftItemValid,
-    updateAssessmentDraftOrder,
-    sanitizeAssessmentDraft,
-    validateAssessmentDraft,
-    sanitizeAssessmentItem,
-    validateAssessmentItem,
-    insertAfter,
-    insertBefore,
-    swapElements,
-  } from '../../utils';
+  import { insertAfter, insertBefore, swapElements } from '../../utils';
 
   import AssessmentItemEditor from '../AssessmentItemEditor/AssessmentItemEditor.vue';
   import AssessmentItemPreview from '../AssessmentItemPreview/AssessmentItemPreview.vue';
   import AssessmentItemToolbar from '../AssessmentItemToolbar/AssessmentItemToolbar.vue';
+
+  const orderAssessmentItems = items => {
+    return items.map((item, itemIdx) => {
+      return {
+        ...item,
+        order: itemIdx,
+      };
+    });
+  };
 
   export default {
     name: 'AssessmentEditor',
@@ -154,30 +154,42 @@
       AssessmentItemToolbar,
     },
     model: {
-      prop: 'assessmentDraft',
+      prop: 'items',
       event: 'update',
     },
     props: {
       /**
-       * An array of assessment draft items where item looks like
-       * {
-       *   // assessment item data as retrieved from API
-       *   data: {
-       *      question
-       *      type
-       *      order
-       *      answers
-       *      hints
-       *      ...
+       * An array of assessment items:
+       * [
+       *   // an assessment item as retrieved from API
+       *   {
+       *     question
+       *     type
+       *     order
+       *     answers
+       *     hints
+       *     ...
        *   },
-       *   // client validation data for the assessment item
-       *   validation: {
-       *      questionErrors
-       *      answerErrors
-       *   }
-       * }
+       *   {
+       *     question
+       *     ...
+       *   },
+       *   ...
+       * ]
        */
-      assessmentDraft: {
+      items: {
+        type: Array,
+      },
+      /**
+       * An array of assessment items errors.
+       * Each assessment item is assigned an array containing
+       * all validation errors related to that item:
+       * [
+       *   [], // first assessment item errors
+       *   []  // second assessment item errors
+       * ]
+       */
+      itemsValidation: {
         type: Array,
       },
       /**
@@ -210,17 +222,6 @@
         ],
       };
     },
-    mounted() {
-      if (!this.assessmentDraft) {
-        return;
-      }
-
-      let newAssessmentDraft = [...this.assessmentDraft];
-      newAssessmentDraft = sanitizeAssessmentDraft(newAssessmentDraft);
-      newAssessmentDraft = validateAssessmentDraft(newAssessmentDraft);
-
-      this.$emit('update', newAssessmentDraft);
-    },
     methods: {
       /**
        * @public
@@ -242,17 +243,24 @@
         return itemIdx === 0;
       },
       isItemLast(itemIdx) {
-        return itemIdx === this.assessmentDraft.length - 1;
+        return itemIdx === this.items.length - 1;
       },
-      isItemValid(itemIdx) {
-        return isAssessmentDraftItemValid(this.assessmentDraft[itemIdx]);
-      },
-      itemOrder(itemIdx) {
-        if (!this.assessmentDraft[itemIdx].data) {
-          return '1';
+      itemErrors(itemIdx) {
+        if (!this.itemsValidation || !this.itemsValidation[itemIdx]) {
+          return [];
         }
 
-        return this.assessmentDraft[itemIdx].data.order + 1;
+        return this.itemsValidation[itemIdx];
+      },
+      isItemValid(itemIdx) {
+        return this.itemErrors(itemIdx).length === 0;
+      },
+      itemOrder(itemIdx) {
+        if (!this.items[itemIdx] || this.items[itemIdx].order === undefined) {
+          return 1;
+        }
+
+        return this.items[itemIdx].order + 1;
       },
       itemClasses(itemIdx) {
         const classes = ['item'];
@@ -275,94 +283,58 @@
 
         return actions;
       },
-      beforeItemClose() {
-        if (
-          this.openItemIdx === null ||
-          !this.assessmentDraft ||
-          this.assessmentDraft[this.openItemIdx] === undefined
-        ) {
-          return;
-        }
-
-        const openItem = { ...this.assessmentDraft[this.openItemIdx] };
-        openItem.data = sanitizeAssessmentItem(openItem.data, true);
-        openItem.validation = validateAssessmentItem(openItem.data);
-
-        const newAssessmentDraft = [...this.assessmentDraft];
-        newAssessmentDraft[this.openItemIdx] = openItem;
-
-        this.$emit('update', newAssessmentDraft);
-      },
       editItem(itemIdx) {
-        this.beforeItemClose();
         this.openItem(itemIdx);
       },
       updateItem(newItem, itemIdx) {
         const item = { ...newItem };
-        item.data = sanitizeAssessmentItem(item.data);
-        item.validation = validateAssessmentItem(item.data);
 
-        const newAssessmentDraft = [...this.assessmentDraft];
-        newAssessmentDraft[itemIdx] = item;
+        const newItems = [...this.items];
+        newItems[itemIdx] = item;
 
-        this.$emit('update', newAssessmentDraft);
+        this.$emit('update', newItems);
       },
       addNewItem({ before, after }) {
-        this.beforeItemClose();
-
-        let newAssessmentDraft = [];
-        if (this.assessmentDraft) {
-          newAssessmentDraft = [...this.assessmentDraft];
+        let newItems = [];
+        if (this.items) {
+          newItems = [...this.items];
         }
-
-        // disable adding more empty items
-        newAssessmentDraft = sanitizeAssessmentDraft(newAssessmentDraft);
 
         const newItem = {
-          data: {
-            question: '',
-            type: AssessmentItemTypes.SINGLE_SELECTION,
-            answers: [],
-            hints: [],
-          },
-          validation: {},
+          question: '',
+          type: AssessmentItemTypes.SINGLE_SELECTION,
+          answers: [],
+          hints: [],
+          isNew: true,
         };
-        newItem.validation = validateAssessmentItem(newItem.data);
 
         if (after !== undefined) {
-          newAssessmentDraft = insertAfter(newAssessmentDraft, after, newItem);
+          newItems = insertAfter(newItems, after, newItem);
         } else if (before !== undefined) {
-          newAssessmentDraft = insertBefore(newAssessmentDraft, before, newItem);
+          newItems = insertBefore(newItems, before, newItem);
         } else {
-          newAssessmentDraft.push(newItem);
+          newItems.push(newItem);
         }
 
-        newAssessmentDraft = updateAssessmentDraftOrder(newAssessmentDraft);
+        newItems = orderAssessmentItems(newItems);
 
-        this.$emit('update', newAssessmentDraft);
+        this.$emit('update', newItems);
 
         if (after !== undefined) {
-          // this happens when adding a new item below an empty item
-          // because in such situation, the first empty item is removed
-          // to disable displaying more empty items
-          if (newAssessmentDraft.length === 1) {
-            this.openItem(0);
-          } else {
-            this.openItem(after + 1);
-          }
+          this.openItem(after + 1);
         } else if (before !== undefined) {
           this.openItem(before);
         } else {
-          this.openItem(newAssessmentDraft.length - 1);
+          this.openItem(newItems.length - 1);
         }
       },
       deleteItem(itemIdx) {
-        let newAssessmentDraft = [...this.assessmentDraft];
+        let newItems = [...this.items];
 
-        newAssessmentDraft.splice(itemIdx, 1);
-        newAssessmentDraft = updateAssessmentDraftOrder(newAssessmentDraft);
+        newItems.splice(itemIdx, 1);
+        newItems = orderAssessmentItems(newItems);
 
-        this.$emit('update', newAssessmentDraft);
+        this.$emit('update', newItems);
 
         if (this.openItemIdx === itemIdx) {
           this.closeOpenItem();
@@ -371,14 +343,12 @@
         }
       },
       swapItems(firstItemIdx, secondItemIdx) {
-        this.beforeItemClose();
+        let newItems = [...this.items];
 
-        let newAssessmentDraft = [...this.assessmentDraft];
+        newItems = swapElements(newItems, firstItemIdx, secondItemIdx);
+        newItems = orderAssessmentItems(newItems);
 
-        newAssessmentDraft = swapElements(newAssessmentDraft, firstItemIdx, secondItemIdx);
-        newAssessmentDraft = updateAssessmentDraftOrder(newAssessmentDraft);
-
-        this.$emit('update', newAssessmentDraft);
+        this.$emit('update', newItems);
 
         if (this.openItemIdx === firstItemIdx) {
           this.openItem(secondItemIdx);
@@ -449,10 +419,6 @@
             this.swapItems(itemIdx, itemIdx + 1);
             break;
         }
-      },
-      onItemClose() {
-        this.beforeItemClose();
-        this.closeOpenItem();
       },
     },
   };

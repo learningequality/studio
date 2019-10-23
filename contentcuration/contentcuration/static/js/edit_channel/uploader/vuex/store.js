@@ -23,8 +23,22 @@ const store = new Vuex.Store({
         selectedIndices: [],
         changes: {},
         mode: modes.VIEW_ONLY,
-        // <node ID> : <to be updated or new assessment draft items> map
-        nodesAssessmentDrafts: {},
+        /* Nodes validation errors in form of an array consisting
+           of objects with the following interface:
+           {
+              // index of a node in state.nodes
+              nodeIdx: <Number>,
+              errors: {
+                // errors related to node details like title, licence, etc.
+                details: [],
+                assessment_items: [
+                  [], // first assessment item errors
+                  []  // second assessment item errors
+                ]
+              }
+            }
+        */
+        validation: [],
         dialog: {
           open: false,
           title: '',

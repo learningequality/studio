@@ -31,8 +31,8 @@
               <div v-if="saveError">
                 {{ $tr('saveFailedText') }}
               </div>
-              <div v-else-if="invalidNodes.length">
-                {{ $tr('autosaveDisabledMessage', {count: invalidNodes.length}) }}
+              <div v-else-if="invalidNodesWithoutNewNodes.length">
+                {{ $tr('autosaveDisabledMessage', {count: invalidNodesWithoutNewNodes.length}) }}
               </div>
               <div v-else-if="saving">
                 <VProgressCircular indeterminate size="15" width="2" color="white" />
@@ -156,7 +156,7 @@
           open: true,
         },
         debouncedSave: _.debounce(() => {
-          if (!this.invalidNodesOverridden.length) {
+          if (!this.invalidNodes.length) {
             this.saveContent()
               .then(() => {
                 this.updateSavedTime();
@@ -169,13 +169,16 @@
     },
     computed: {
       ...mapState('edit_modal', ['nodes', 'changes', 'mode']),
-      ...mapGetters('edit_modal', ['changed', 'invalidNodes', 'invalidNodesOverridden']),
+      ...mapGetters('edit_modal', ['changed', 'invalidNodes']),
       isViewOnly() {
         return this.mode === modes.VIEW_ONLY;
       },
       showEditList() {
         // Only hide drawer when editing a single item
         return (this.mode !== modes.EDIT && !this.isViewOnly) || this.nodes.length > 1;
+      },
+      invalidNodesWithoutNewNodes() {
+        return this.invalidNodes({ ignoreNewNodes: true });
       },
     },
     watch: {
@@ -235,7 +238,7 @@
         this.saveError = false;
         return new Promise((resolve, reject) => {
           clearInterval(this.updateInterval);
-          if (this.invalidNodesOverridden.length) {
+          if (this.invalidNodes.length) {
             resolve();
           } else {
             this.saving = true;

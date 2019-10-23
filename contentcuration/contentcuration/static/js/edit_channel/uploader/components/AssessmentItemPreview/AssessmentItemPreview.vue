@@ -111,16 +111,17 @@
     },
     props: {
       /**
-       * assessment item data as retrieved from API
+       * An assessment item as retrieved from API:
        * {
        *    question
        *    type
+       *    order
        *    answers
        *    hints
        *    ...
        * }
        */
-      itemData: {
+      item: {
         type: Object,
       },
       detailed: {
@@ -135,32 +136,32 @@
     },
     computed: {
       question() {
-        if (!this.itemData || !this.itemData.question) {
+        if (!this.item || !this.item.question) {
           return '';
         }
 
-        return this.itemData.question;
+        return this.item.question;
       },
       kind() {
-        if (!this.itemData || !this.itemData.type) {
+        if (!this.item || !this.item.type) {
           return '';
         }
 
-        return this.itemData.type;
+        return this.item.type;
       },
       answers() {
-        if (!this.itemData || !this.itemData.answers) {
+        if (!this.item || !this.item.answers) {
           return [];
         }
 
-        return this.itemData.answers;
+        return this.item.answers;
       },
       hints() {
-        if (!this.itemData || !this.itemData.hints) {
+        if (!this.item || !this.item.hints) {
           return [];
         }
 
-        return this.itemData.hints;
+        return this.item.hints;
       },
       kindLabel() {
         return AssessmentItemTypeLabels[this.kind];
