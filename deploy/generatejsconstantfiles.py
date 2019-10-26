@@ -1,11 +1,12 @@
 import json
 import os
+
 from le_utils.constants import content_kinds
+from le_utils.constants import exercises
 from le_utils.constants import file_formats
 from le_utils.constants import format_presets
 from le_utils.constants import languages
 from le_utils.constants import licenses
-from le_utils.constants import exercises
 from le_utils.constants import roles
 
 
@@ -72,7 +73,7 @@ def generate_constants_file(constant_list, constant_name, mapper=None):
             output += json.dumps(constant)
         output += ",\n"
 
-    output += "];\n\n"
+    output += "];\nexport default module.exports;\n\n"
 
     with open(os.path.join(constants_path, constant_name + '.js'), 'w') as f:
         f.write(output)

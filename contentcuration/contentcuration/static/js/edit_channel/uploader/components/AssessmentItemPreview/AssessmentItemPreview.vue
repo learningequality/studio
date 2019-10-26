@@ -1,4 +1,5 @@
 <template>
+
   <div>
     <VLayout align-top justify-space-between>
       <VFlex>
@@ -93,6 +94,7 @@
       </VFlex>
     </VLayout>
   </div>
+
 </template>
 
 <script>
@@ -102,13 +104,6 @@
 
   export default {
     name: 'AssessmentItemPreview',
-    $trs: {
-      answersLabel: 'Answers',
-      noAnswersPlaceholder: 'No answers yet',
-      noHintsPlaceholder: 'No hints yet',
-      hintsToggleLabelHide: 'Hide hints',
-      hintsToggleLabelShow: 'Show {hintsCount} {hintsCount, plural, one {hint} other {hints}}',
-    },
     props: {
       /**
        * An assessment item as retrieved from API:
@@ -195,6 +190,13 @@
 
         return this.hints.length;
       },
+    },
+    $trs: {
+      answersLabel: 'Answers',
+      noAnswersPlaceholder: 'No answers yet',
+      noHintsPlaceholder: 'No hints yet',
+      hintsToggleLabelHide: 'Hide hints',
+      hintsToggleLabelShow: 'Show {hintsCount} {hintsCount, plural, one {hint} other {hints}}',
     },
   };
 

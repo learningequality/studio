@@ -1,4 +1,5 @@
 <template>
+
   <VDialog
     :value="value"
     width="500"
@@ -25,6 +26,7 @@
       </VCardActions>
     </VCard>
   </VDialog>
+
 </template>
 
 <script>

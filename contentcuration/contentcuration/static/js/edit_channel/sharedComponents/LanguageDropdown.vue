@@ -1,6 +1,9 @@
 <template>
+
   <VAutocomplete
     v-model="language"
+    class="language-dropdown"
+    v-bind="$attrs"
     :items="languages"
     :label="$tr('labelText')"
     color="primary"
@@ -8,47 +11,27 @@
     :itemText="languageText"
     autoSelectFirst
     :allowOverflow="false"
-    :hint="hint"
     persistentHint
-    :placeholder="placeholder"
-    :readonly="readonly"
-    :required="required"
     :rules="rules"
+    :required="required"
   />
+
 </template>
 
 
 <script>
 
-  import _ from 'underscore';
   import Constants from 'edit_channel/constants/index';
 
   export default {
     name: 'LanguageDropdown',
-    $trs: {
-      labelText: 'Language',
-      languageItemText: '{language} ({code})',
-      languageRequired: 'Language is required',
-    },
     props: {
       value: {
         type: String,
         required: false,
         validator: function(value) {
-          return !value || _.pluck(Constants.Languages, 'id').includes(value);
+          return !value || Constants.Languages.map(lang => lang.id).includes(value);
         },
-      },
-      hint: {
-        type: String,
-        required: false,
-      },
-      placeholder: {
-        type: String,
-        default: '',
-      },
-      readonly: {
-        type: Boolean,
-        default: false,
       },
       required: {
         type: Boolean,
@@ -65,18 +48,23 @@
         },
       },
       languages() {
-        return _.chain(Constants.Languages)
-          .sortBy('native_name')
-          .value();
+        return Constants.Languages.sort((langA, langB) =>
+          langA.native_name.localeCompare(langB.native_name)
+        );
       },
       rules() {
-        return this.required ? [v => !!v || this.$tr('languageRequired')] : [];
+        return this.required ? [v => Boolean(v) || this.$tr('languageRequired')] : [];
       },
     },
     methods: {
       languageText(item) {
         return this.$tr('languageItemText', { language: item.native_name, code: item.id });
       },
+    },
+    $trs: {
+      labelText: 'Language',
+      languageItemText: '{language} ({code})',
+      languageRequired: 'Language is required',
     },
   };
 
@@ -85,20 +73,9 @@
 
 <style lang="less" scoped>
 
-  @import '../../../less/global-variables.less';
-
-  .v-autocomplete {
+  .language-dropdown {
     display: inline-block;
     width: 100%;
-  }
-
-  /deep/ .v-list__tile {
-    width: 100%;
-    .linked-list-item;
-    &:hover,
-    &.v-list__tile--highlighted {
-      background-color: @gray-200 !important;
-    }
   }
 
 </style>

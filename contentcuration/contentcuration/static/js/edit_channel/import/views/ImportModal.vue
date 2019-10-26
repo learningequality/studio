@@ -1,4 +1,5 @@
 <template>
+
   <div ref="topmodal" class="modal fade" tabindex="-1">
     <div class="modal-dialog">
       <div id="import-modal-content" class="modal-content modal-dialog-default">
@@ -20,6 +21,7 @@
       </div>
     </div>
   </div>
+
 </template>
 
 
@@ -40,38 +42,32 @@
 
   export default {
     name: 'ImportModal',
-    $trs: {
-      importHeader: 'Import from Other Channels',
-      importPreviewHeader: 'Review selections for import',
-    },
     components: {
       ImportChannelList, // eslint-disable-line vue/no-unused-components
       ImportDialogue,
       ImportPreview, // eslint-disable-line vue/no-unused-components
       SearchResults, // eslint-disable-line vue/no-unused-components
     },
-    computed: Object.assign(
-      mapGetters({
+    computed: {
+      ...mapGetters({
         currentImportPage: 'import/currentImportPage',
-        channels: 'import/channels',
       }),
-      {
-        pageType() {
-          return pageNameToComponentMap[this.currentImportPage];
-        },
-        modalTitle() {
-          if (this.currentImportPage === PageTypes.IMPORT_PREVIEW) {
-            return this.$tr('importPreviewHeader');
-          }
-          return this.$tr('importHeader');
-        },
-      }
-    ),
+      pageType() {
+        return pageNameToComponentMap[this.currentImportPage];
+      },
+      modalTitle() {
+        if (this.currentImportPage === PageTypes.IMPORT_PREVIEW) {
+          return this.$tr('importPreviewHeader');
+        }
+        return this.$tr('importHeader');
+      },
+    },
     mounted() {
       this.openModal();
       this.loadChannels();
     },
-    methods: Object.assign(mapActions('import', ['loadChannels']), {
+    methods: {
+      ...mapActions('import', ['loadChannels']),
       openModal() {
         $(this.$refs.topmodal)
           .modal({ show: true })
@@ -80,10 +76,17 @@
             this.$emit('modalclosed');
           });
       },
+      /*
+       * @public
+       */
       closeModal() {
         $(this.$refs.topmodal).modal('hide');
       },
-    }),
+    },
+    $trs: {
+      importHeader: 'Import from Other Channels',
+      importPreviewHeader: 'Review selections for import',
+    },
   };
 
 </script>

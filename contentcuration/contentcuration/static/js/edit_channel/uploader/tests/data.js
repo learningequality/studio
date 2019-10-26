@@ -78,7 +78,6 @@ export const localStore = new Vuex.Store({
         selectedIndices: [],
         changes: {},
         mode: 'VIEW_ONLY',
-        nodesAssessmentDrafts: {},
       },
       getters: getters,
       mutations: mutations,

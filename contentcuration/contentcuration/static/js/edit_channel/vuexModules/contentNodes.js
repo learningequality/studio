@@ -127,6 +127,8 @@ const contentNodesModule = {
 
     /* Content node operations */
     saveNodes(context, payload) {
+      // Some nodes may have extra_fields set to null, so make an empty dict instead
+      _.each(payload, n => (n.extra_fields = n.extra_fields || {}));
       return new Promise((resolve, reject) => {
         $.ajax({
           method: 'PUT',

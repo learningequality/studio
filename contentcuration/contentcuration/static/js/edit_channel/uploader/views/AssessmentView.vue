@@ -1,4 +1,5 @@
 <template>
+
   <div>
     <VAlert
       :value="!areAssessmentItemsValid"
@@ -46,6 +47,7 @@
       </template>
     </DialogBox>
   </div>
+
 </template>
 
 <script>
@@ -57,12 +59,6 @@
 
   export default {
     name: 'AssessmentView',
-    $trs: {
-      incompleteItemsCountMessage:
-        '{invalidItemsCount} incomplete {invalidItemsCount, plural, one {question} other {questions}}',
-      dialogSubmitBtnLabel: 'Submit',
-      dialogCancelBtnLabel: 'Cancel',
-    },
     components: {
       AssessmentEditor,
       DialogBox,
@@ -70,7 +66,6 @@
     computed: {
       ...mapState('edit_modal', ['selectedIndices', 'dialog']),
       ...mapGetters('edit_modal', [
-        'getNode',
         'nodeAssessmentItems',
         'nodeErrors',
         'areNodeAssessmentItemsValid',
@@ -79,9 +74,6 @@
       // assessment view is accessible only when exactly one exercise node is selected
       nodeIdx() {
         return this.selectedIndices[0];
-      },
-      node() {
-        return this.getNode(this.nodeIdx);
       },
       assessmentItems: {
         get() {
@@ -123,6 +115,12 @@
         setNodeAssessmentItems: 'SET_NODE_ASSESSMENT_ITEMS',
         validateNodeAssessmentItems: 'VALIDATE_NODE_ASSESSMENT_ITEMS',
       }),
+    },
+    $trs: {
+      incompleteItemsCountMessage:
+        '{invalidItemsCount} incomplete {invalidItemsCount, plural, one {question} other {questions}}',
+      dialogSubmitBtnLabel: 'Submit',
+      dialogCancelBtnLabel: 'Cancel',
     },
   };
 

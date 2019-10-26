@@ -1,4 +1,5 @@
 <template>
+
   <VLayout justify-end>
     <VFlex
       v-for="(action, idx) in iconActions"
@@ -56,6 +57,7 @@
       </VMenu>
     </VFlex>
   </VLayout>
+
 </template>
 
 <script>
@@ -76,14 +78,6 @@
 
   export default {
     name: 'AssessmentItemToolbar',
-    $trs: {
-      toolbarLabelEdit: 'Edit',
-      toolbarLabelMoveUp: 'Move up',
-      toolbarLabelMoveDown: 'Move down',
-      toolbarLabelDelete: 'Delete',
-      toolbarLabelAddAbove: 'Add {itemLabel} above',
-      toolbarLabelAddBelow: 'Add {itemLabel} below',
-    },
     props: {
       /*
         An array of AssessmentItemToolbarActions
@@ -256,6 +250,14 @@
       clickItem(action) {
         this.$emit('click', action);
       },
+    },
+    $trs: {
+      toolbarLabelEdit: 'Edit',
+      toolbarLabelMoveUp: 'Move up',
+      toolbarLabelMoveDown: 'Move down',
+      toolbarLabelDelete: 'Delete',
+      toolbarLabelAddAbove: 'Add {itemLabel} above',
+      toolbarLabelAddBelow: 'Add {itemLabel} below',
     },
   };
 

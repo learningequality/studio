@@ -1,9 +1,11 @@
 <template>
+
   <div>
     <div ref="editor">
       {{ markdown }}
     </div>
   </div>
+
 </template>
 
 <script>

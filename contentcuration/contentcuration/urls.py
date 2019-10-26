@@ -39,20 +39,22 @@ import contentcuration.views.public as public_views
 import contentcuration.views.settings as settings_views
 import contentcuration.views.users as registration_views
 import contentcuration.views.zip as zip_views
+
+from contentcuration.viewsets.channel import ChannelViewSet
+from contentcuration.viewsets.channelset import ChannelSetViewSet
+from contentcuration.viewsets.invitation import InvitationViewSet
 from contentcuration.celery import app
 from contentcuration.forms import ForgotPasswordForm
 from contentcuration.forms import LoginForm
 from contentcuration.forms import ResetPasswordForm
 from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
-from contentcuration.models import ChannelSet
 from contentcuration.models import ContentKind
 from contentcuration.models import ContentNode
 from contentcuration.models import ContentTag
 from contentcuration.models import File
 from contentcuration.models import FileFormat
 from contentcuration.models import FormatPreset
-from contentcuration.models import Invitation
 from contentcuration.models import Language
 from contentcuration.models import License
 from contentcuration.models import Task
@@ -76,26 +78,6 @@ class LanguageViewSet(viewsets.ModelViewSet):
     queryset = Language.objects.all()
 
     serializer_class = serializers.LanguageSerializer
-
-
-class ChannelViewSet(viewsets.ModelViewSet):
-    queryset = Channel.objects.all()
-    serializer_class = serializers.ChannelSerializer
-
-    def get_queryset(self):
-        if self.request.user.is_admin:
-            return Channel.objects.all()
-        return Channel.objects.filter(Q(editors=self.request.user) | Q(viewers=self.request.user) | Q(public=True)).distinct()
-
-
-class ChannelSetViewSet(viewsets.ModelViewSet):
-    queryset = ChannelSet.objects.all()
-    serializer_class = serializers.ChannelSetSerializer
-
-    def get_queryset(self):
-        if self.request.user.is_admin:
-            return ChannelSet.objects.all()
-        return ChannelSet.objects.filter(Q(editors=self.request.user) | Q(public=True)).distinct()
 
 
 class FileViewSet(BulkModelViewSet):
@@ -162,20 +144,6 @@ class UserViewSet(viewsets.ModelViewSet):
         return User.objects.filter(Q(pk=self.request.user.pk) |
                                    Q(editable_channels__pk__in=channel_list) |
                                    Q(view_only_channels__pk__in=channel_list)).distinct()
-
-
-class InvitationViewSet(viewsets.ModelViewSet):
-    queryset = Invitation.objects.all()
-
-    serializer_class = serializers.InvitationSerializer
-
-    def get_queryset(self):
-        if self.request.user.is_admin:
-            return Invitation.objects.all()
-        return Invitation.objects.filter(Q(invited=self.request.user) |
-                                         Q(sender=self.request.user) |
-                                         Q(channel__editors=self.request.user) |
-                                         Q(channel__viewers=self.request.user)).distinct()
 
 
 class AssessmentItemViewSet(BulkModelViewSet):
@@ -256,22 +224,8 @@ urlpatterns = [
     url(r'^api/publish_channel/$', views.publish_channel, name='publish_channel'),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^channels/$', views.channel_list, name='channels'),
-    url(r'^(?P<channel_id>[^/]+)/edit', views.redirect_to_channel_edit, name='redirect_to_channel_edit'),
-    url(r'^(?P<channel_id>[^/]+)/view', views.redirect_to_channel_view, name='redirect_to_channel_view'),
-    url(r'^channels/(?P<channel_id>[^/]{32})/?$', views.redirect_to_channel, name='redirect_to_channel'),
-    url(r'^channels/(?P<channel_id>[^/]{32})/edit', views.channel, name='channel'),
-    url(r'^channels/(?P<channel_id>[^/]{32})/view', views.channel_view_only, name='channel_view_only'),
-    url(r'^channels/(?P<channel_id>[^/]{32})/staging', views.channel_staging, name='channel_staging'),
+    url(r'^channels/(?P<channel_id>[^/]{32})', views.channel, name='channel'),
     url(r'^accessible_channels/(?P<channel_id>[^/]{32})$', views.accessible_channels, name='accessible_channels'),
-    url(r'^get_user_channels/$', views.get_user_channels, name='get_user_channels'),
-    url(r'^get_user_bookmarked_channels/$', views.get_user_bookmarked_channels, name='get_user_bookmarked_channels'),
-    url(r'^get_user_edit_channels/$', views.get_user_edit_channels, name='get_user_edit_channels'),
-    url(r'^get_user_view_channels/$', views.get_user_view_channels, name='get_user_view_channels'),
-    url(r'^get_user_public_channels/$', views.get_user_public_channels, name='get_user_public_channels'),
-    url(r'^get_user_pending_channels/$', views.get_user_pending_channels, name='get_user_pending_channels'),
-    url(r'^get_user_channel_sets/$', views.get_user_channel_sets, name='get_user_channel_sets'),
-    url(r'^get_channels_by_token/(?P<token>[^/]+)$', views.get_channels_by_token, name='get_channels_by_token'),
-    url(r'^accept_channel_invite/$', views.accept_channel_invite, name='accept_channel_invite'),
     url(r'^api/activate_channel$', views.activate_channel_endpoint, name='activate_channel'),
     url(r'^api/get_staged_diff_endpoint$', views.get_staged_diff_endpoint, name='get_staged_diff'),
     url(r'^healthz$', views.health, name='health'),
@@ -323,7 +277,7 @@ urlpatterns += [
     url(r'^api/get_node_path/(?P<topic_id>[^/]+)/(?P<tree_id>[^/]+)/(?P<node_id>[^/]*)$', node_views.get_node_path, name='get_node_path'),
     url(r'^api/duplicate_node_inline$', node_views.duplicate_node_inline, name='duplicate_node_inline'),
     url(r'^api/delete_nodes$', node_views.delete_nodes, name='delete_nodes'),
-    url(r'^api/get_topic_details/(?P<contentnode_id>[^/]*)$', node_views.get_topic_details, name='get_topic_details'),
+    url(r'^api/get_channel_details/(?P<channel_id>[^/]*)$', node_views.get_channel_details, name='get_channel_details'),
 ]
 
 # Add file api enpoints

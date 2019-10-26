@@ -1,4 +1,5 @@
 <template>
+
   <div>
     <div class="grey--text text--darken-1 mb-3">
       {{ $tr('hintsLabel') }}
@@ -70,6 +71,7 @@
       {{ $tr('newHintBtnLabel') }}
     </VBtn>
   </div>
+
 </template>
 
 <script>
@@ -91,11 +93,6 @@
 
   export default {
     name: 'HintsEditor',
-    $trs: {
-      hintsLabel: 'Hints',
-      noHintsPlaceholder: 'No hints yet',
-      newHintBtnLabel: 'New hint',
-    },
     components: {
       AssessmentItemToolbar,
       MarkdownEditor,
@@ -250,6 +247,11 @@
 
         this.emitUpdate(updatedHints);
       },
+    },
+    $trs: {
+      hintsLabel: 'Hints',
+      noHintsPlaceholder: 'No hints yet',
+      newHintBtnLabel: 'New hint',
     },
   };
 

@@ -1,7 +1,9 @@
 <template>
+
   <div>
     <div ref="editor"></div>
   </div>
+
 </template>
 
 <script>

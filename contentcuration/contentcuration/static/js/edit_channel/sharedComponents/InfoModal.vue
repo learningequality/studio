@@ -1,4 +1,5 @@
 <template>
+
   <VDialog v-model="dialog" width="550">
     <template v-slot:activator="{ on }">
       <VIcon color="primary" v-on="on">
@@ -23,15 +24,13 @@
       </VCardActions>
     </VCard>
   </VDialog>
+
 </template>
 
 <script>
 
   export default {
     name: 'InfoModal',
-    $trs: {
-      closeButtonLabel: 'Close',
-    },
     props: {
       header: {
         type: String,
@@ -42,6 +41,9 @@
       return {
         dialog: false,
       };
+    },
+    $trs: {
+      closeButtonLabel: 'Close',
     },
   };
 

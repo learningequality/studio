@@ -1,4 +1,5 @@
 <template>
+
   <div>
     <VLayout>
       <VFlex xs7 lg5>
@@ -77,6 +78,7 @@
       </VFlex>
     </VLayout>
   </div>
+
 </template>
 
 <script>
@@ -92,18 +94,6 @@
 
   export default {
     name: 'AssessmentItemEditor',
-    $trs: {
-      questionTypeLabel: 'Question type',
-      questionLabel: 'Question',
-      dialogTitle: 'Changing question type',
-      dialogSubmitBtnLabel: 'Change',
-      dialogMessageChangeToSingleSelection:
-        'Switching to single selection will set only one answer as correct. Continue?',
-      dialogMessageChangeToTrueFalse:
-        'Switching to true or false will remove any current answers. Continue?',
-      dialogMessageChangeToInput:
-        'Switching to numeric input will set all answers as correct and remove all non-numeric answers. Continue?',
-    },
     components: {
       AnswersEditor,
       ErrorList,
@@ -372,6 +362,18 @@
       closeAnswer() {
         this.openAnswerIdx = null;
       },
+    },
+    $trs: {
+      questionTypeLabel: 'Question type',
+      questionLabel: 'Question',
+      dialogTitle: 'Changing question type',
+      dialogSubmitBtnLabel: 'Change',
+      dialogMessageChangeToSingleSelection:
+        'Switching to single selection will set only one answer as correct. Continue?',
+      dialogMessageChangeToTrueFalse:
+        'Switching to true or false will remove any current answers. Continue?',
+      dialogMessageChangeToInput:
+        'Switching to numeric input will set all answers as correct and remove all non-numeric answers. Continue?',
     },
   };
 

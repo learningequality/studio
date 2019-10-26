@@ -1,4 +1,5 @@
 <template>
+
   <VContent>
     <VContainer fluid fill-height>
       <VLayout v-if="!selected.length" justify-center align-center fill-height>
@@ -8,9 +9,9 @@
       </VLayout>
       <VLayout v-else-if="loadError" justify-center align-center fill-height>
         <VFlex grow class="default-content">
-          <v-icon color="red" class="error-icon">
+          <VIcon color="red" class="error-icon">
             error
-          </v-icon>
+          </VIcon>
           <p>{{ $tr('loadErrorText') }}</p>
         </VFlex>
       </VLayout>
@@ -27,14 +28,14 @@
             <!-- Details tab -->
             <VTab ref="detailstab" :href="`#${tabs.DETAILS}`">
               {{ $tr(tabs.DETAILS) }}
-              <v-tooltip v-if="invalidSelected" top>
+              <VTooltip v-if="invalidSelected" top>
                 <template v-slot:activator="{ on }">
-                  <v-icon color="red" dark v-on="on">
+                  <VIcon color="red" dark v-on="on">
                     error
-                  </v-icon>
+                  </VIcon>
                 </template>
                 <span>{{ $tr('invalidFieldsToolTip') }}</span>
-              </v-tooltip>
+              </VTooltip>
             </VTab>
 
             <!-- Preview tab -->
@@ -100,6 +101,7 @@
       </VLayout>
     </VContainer>
   </VContent>
+
 </template>
 
 <script>
@@ -112,22 +114,6 @@
 
   export default {
     name: 'EditView',
-    $trs: {
-      [TabNames.DETAILS]: 'Details',
-      [TabNames.PREVIEW]: 'Preview',
-      [TabNames.QUESTIONS]: 'Questions',
-      [TabNames.PREREQUISITES]: 'Prerequisites',
-      noItemsToEditText: 'Please select an item or items to edit',
-      noItemsToViewText: 'Please select an item or items to view',
-      addTopicText: 'Please add a topic to get started',
-      addExerciseText: 'Please add an exercise to get started',
-      loadingText: 'Loading Content...',
-      loadErrorText: 'Unable to load content',
-      invalidFieldsToolTip: 'Invalid fields detected',
-      errorBannerText: 'Please address invalid fields',
-      editingMultipleCount: 'Editing details for {count, plural,\n =1 {# item}\n other {# items}}',
-      viewingMultipleCount: 'Viewing details for {count, plural,\n =1 {# item}\n other {# items}}',
-    },
     components: {
       DetailsTabView,
       AssessmentView,
@@ -215,6 +201,22 @@
     },
     methods: {
       ...mapActions('edit_modal', ['loadNodes']),
+    },
+    $trs: {
+      [TabNames.DETAILS]: 'Details',
+      [TabNames.PREVIEW]: 'Preview',
+      [TabNames.QUESTIONS]: 'Questions',
+      [TabNames.PREREQUISITES]: 'Prerequisites',
+      noItemsToEditText: 'Please select an item or items to edit',
+      noItemsToViewText: 'Please select an item or items to view',
+      addTopicText: 'Please add a topic to get started',
+      addExerciseText: 'Please add an exercise to get started',
+      loadingText: 'Loading Content...',
+      loadErrorText: 'Unable to load content',
+      invalidFieldsToolTip: 'Invalid fields detected',
+      errorBannerText: 'Please address invalid fields',
+      editingMultipleCount: 'Editing details for {count, plural,\n =1 {# item}\n other {# items}}',
+      viewingMultipleCount: 'Viewing details for {count, plural,\n =1 {# item}\n other {# items}}',
     },
   };
 

@@ -27,6 +27,9 @@ const store = new Vuex.Store({
            of objects with the following interface:
            {
               // index of a node in state.nodes
+              // (TODO - switch to node and assessment items IDs when possible
+              // will require migration to a new data structure since everything
+              // is currently built on indexes)
               nodeIdx: <Number>,
               errors: {
                 // errors related to node details like title, licence, etc.

@@ -5,8 +5,8 @@ import { mount } from '@vue/test-utils';
 import InfoModal from '../InfoModal.vue';
 import VisibilityDropdown from '../VisibilityDropdown.vue';
 import TestForm from './TestForm.vue';
-import { translate } from 'edit_channel/utils/string_helper';
 import Constants from 'edit_channel/constants';
+import { translate } from 'edit_channel/utils/string_helper';
 
 Vue.use(Vuetify);
 

@@ -192,8 +192,7 @@ export const VALIDATE_NODE_DETAILS = (state, { nodeIdx }) => {
 
 /**
  * Validate node assessment items and save validation results
- * to state.validation. Assessment items to be validated should
- * be already sanitized.
+ * to state.validation.
  */
 export const VALIDATE_NODE_ASSESSMENT_ITEMS = (state, { nodeIdx }) => {
   // cleanup previous node assessment items validation

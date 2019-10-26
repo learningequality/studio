@@ -32,7 +32,6 @@ export function loadNodes(context, indices) {
  * validation results to state.validation.
  */
 export const validateNode = ({ commit }, nodeIdx) => {
-  // assessment items to be validated should be sanitized first
   commit('SANITIZE_NODE_ASSESSMENT_ITEMS', { nodeIdx });
 
   commit('VALIDATE_NODE_ASSESSMENT_ITEMS', { nodeIdx });

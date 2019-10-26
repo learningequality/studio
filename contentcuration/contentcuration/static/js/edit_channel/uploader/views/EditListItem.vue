@@ -1,4 +1,5 @@
 <template>
+
   <VListTile :class="{selected: isSelected}" @click.stop="setNode(index)">
     <VListTileAction>
       <VCheckbox color="primary" :inputValue="isSelected" @click.stop="toggleNode" />
@@ -26,6 +27,7 @@
       </VBtn>
     </VListTileAction>
   </VListTile>
+
 </template>
 
 <script>
@@ -36,7 +38,6 @@
 
   export default {
     name: 'EditListItem',
-    $trs: {},
     components: {
       ContentNodeIcon,
     },

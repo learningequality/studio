@@ -1,4 +1,5 @@
 <template>
+
   <VApp>
     <VBtn @click="openModal('EDIT')">
       Edit Modal
@@ -29,6 +30,7 @@
 
     <EditModal v-if="mode" ref="editmodal" @modalclosed="reset" />
   </VApp>
+
 </template>
 <script>
 

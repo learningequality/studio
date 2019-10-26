@@ -1,4 +1,5 @@
 <template>
+
   <VList>
     <!-- Select all checkbox -->
     <VListTile class="select-all-wrapper" @click="toggleSelectAll">
@@ -34,6 +35,7 @@
       </VListTileContent>
     </VListTile>
   </VList>
+
 </template>
 
 <script>
@@ -44,11 +46,6 @@
 
   export default {
     name: 'EditList',
-    $trs: {
-      selectAllLabel: 'Select All',
-      addTopic: 'Add Topic',
-      addExercise: 'Add Exercise',
-    },
     components: {
       EditListItem,
     },
@@ -80,6 +77,11 @@
         this.selectAllChecked ? this.deselectAll() : this.selectAll();
         this.selectAllChecked = !this.selectAllChecked;
       },
+    },
+    $trs: {
+      selectAllLabel: 'Select All',
+      addTopic: 'Add Topic',
+      addExercise: 'Add Exercise',
     },
   };
 

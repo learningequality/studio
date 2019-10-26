@@ -1,5 +1,5 @@
 import { mount, createLocalVue } from '@vue/test-utils';
-import Vuex from 'vuex';
+import Vuex, { Store } from 'vuex';
 
 import AssessmentView from '../AssessmentView';
 import { AssessmentItemTypes, ValidationErrors } from '../../constants';
@@ -93,7 +93,7 @@ const EDIT_MODAL_STATE = {
 };
 
 const initWrapper = state => {
-  const store = new Vuex.Store({
+  const store = new Store({
     modules: {
       edit_modal: {
         namespaced: true,

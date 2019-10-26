@@ -1,4 +1,5 @@
 <template>
+
   <div>
     <template v-if="items && items.length">
       <VCheckbox
@@ -114,6 +115,7 @@
       {{ $tr('newQuestionBtnLabel') }}
     </VBtn>
   </div>
+
 </template>
 
 <script>
@@ -136,18 +138,6 @@
 
   export default {
     name: 'AssessmentEditor',
-    $trs: {
-      incompleteItemIndicatorLabel: 'Incomplete',
-      incompleteItemsCountMessage:
-        '{invalidItemsCount} incomplete {invalidItemsCount, plural, one {question} other {questions}}',
-      toolbarItemLabel: 'question',
-      noQuestionsPlaceholder: 'No questions yet',
-      closeBtnLabel: 'Close',
-      newQuestionBtnLabel: 'New question',
-      dialogTitle: 'Deleting question',
-      dialogMessage: 'Are you sure you want to delete this question?',
-      dialogSubmitBtnLabel: 'Delete',
-    },
     components: {
       AssessmentItemEditor,
       AssessmentItemPreview,
@@ -420,6 +410,16 @@
             break;
         }
       },
+    },
+    $trs: {
+      incompleteItemIndicatorLabel: 'Incomplete',
+      toolbarItemLabel: 'question',
+      noQuestionsPlaceholder: 'No questions yet',
+      closeBtnLabel: 'Close',
+      newQuestionBtnLabel: 'New question',
+      dialogTitle: 'Deleting question',
+      dialogMessage: 'Are you sure you want to delete this question?',
+      dialogSubmitBtnLabel: 'Delete',
     },
   };
 

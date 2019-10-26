@@ -1,4 +1,5 @@
 <template>
+
   <div>
     <div class="grey--text text--darken-1 mb-3">
       {{ $tr('answersLabel') }}
@@ -98,6 +99,7 @@
       {{ $tr('newAnswerBtnLabel') }}
     </VBtn>
   </div>
+
 </template>
 
 <script>
@@ -119,11 +121,6 @@
 
   export default {
     name: 'AnswersEditor',
-    $trs: {
-      answersLabel: 'Answers',
-      noAnswersPlaceholder: 'No answers yet',
-      newAnswerBtnLabel: 'New answer',
-    },
     components: {
       AssessmentItemToolbar,
       MarkdownEditor,
@@ -384,6 +381,11 @@
         this.emitUpdate(updatedAnswers);
         this.emitOpen(updatedAnswers.length - 1);
       },
+    },
+    $trs: {
+      answersLabel: 'Answers',
+      noAnswersPlaceholder: 'No answers yet',
+      newAnswerBtnLabel: 'New answer',
     },
   };
 

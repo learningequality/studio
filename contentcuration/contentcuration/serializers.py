@@ -726,61 +726,6 @@ class ChannelFieldMixin(object):
         return channel.main_tree.publishing
 
 
-class ChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
-    has_changed = serializers.SerializerMethodField('check_for_changes')
-    main_tree = RootNodeSerializer(read_only=True)
-    staging_tree = RootNodeSerializer(read_only=True)
-    trash_tree = RootNodeSerializer(read_only=True)
-    thumbnail_url = serializers.SerializerMethodField('generate_thumbnail_url')
-    created = serializers.SerializerMethodField('get_date_created')
-    updated = serializers.SerializerMethodField('get_date_updated')
-    tags = TagSerializer(many=True, read_only=True)
-    primary_token = serializers.SerializerMethodField('get_channel_primary_token')
-    content_defaults = serializers.JSONField()
-    thumbnail_encoding = serializers.JSONField(required=False)
-
-    def get_date_created(self, channel):
-        return channel.main_tree.created.strftime("%X %x")
-
-    def get_date_updated(self, channel):
-        return channel.staging_tree.created.strftime("%X %x") if channel.staging_tree else None
-
-    @staticmethod
-    def setup_eager_loading(queryset):
-        """ Perform necessary eager loading of data. """
-        queryset = queryset.select_related('main_tree')
-        return queryset
-
-    class Meta:
-        model = Channel
-        fields = (
-            'id', 'created', 'updated', 'name', 'description', 'has_changed', 'editors', 'main_tree', 'trash_tree',
-            'staging_tree', 'source_id', 'source_domain', 'ricecooker_version', 'thumbnail', 'version', 'deleted',
-            'public', 'thumbnail_url', 'thumbnail_encoding', 'pending_editors', 'viewers', 'tags', 'content_defaults',
-            'language', 'primary_token', 'priority', 'published_size')
-        read_only_fields = ('id', 'version')
-
-
-class ChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
-    """
-    Primarily used by ricecooker, exposes fields not necessarily needed by Studio consumers, such as deleted state
-    and viewers.
-    """
-    thumbnail_url = serializers.SerializerMethodField('generate_thumbnail_url')
-    published = serializers.SerializerMethodField('check_published')
-    publishing = serializers.SerializerMethodField('check_publishing')
-    count = serializers.SerializerMethodField("get_resource_count")
-    created = serializers.SerializerMethodField('get_date_created')
-    modified = serializers.SerializerMethodField('get_date_modified')
-    primary_token = serializers.SerializerMethodField('get_channel_primary_token')
-    content_defaults = serializers.JSONField()
-
-    class Meta:
-        model = Channel
-        fields = ('id', 'created', 'name', 'published', 'pending_editors', 'editors', 'viewers', 'modified', 'language', 'primary_token', 'priority',
-                  'description', 'count', 'version', 'public', 'thumbnail_url', 'thumbnail', 'thumbnail_encoding', 'deleted', 'content_defaults', 'publishing')
-
-
 class StudioChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
     """
     Primarily used for the channel list APIs in Studio, called by the channels list page.
@@ -877,7 +822,7 @@ class UserChannelListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('email', 'first_name', 'last_name', 'id', 'is_active', 'bookmarks')
+        fields = ('email', 'first_name', 'last_name', 'id', 'is_active', 'bookmarks', 'is_admin')
 
 
 class AdminChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
@@ -937,19 +882,6 @@ class AdminUserListSerializer(serializers.ModelSerializer):
                   'is_admin', 'date_joined', 'is_active', 'disk_space', 'mb_space', 'chef_channels_count')
 
 
-class InvitationSerializer(BulkSerializerMixin, serializers.ModelSerializer):
-    channel_name = serializers.SerializerMethodField('retrieve_channel_name')
-    sender = UserSerializer(read_only=True)
-
-    def retrieve_channel_name(self, invitation):
-        return invitation and invitation.channel.name
-
-    class Meta:
-        model = Invitation
-        fields = (
-            'id', 'invited', 'email', 'sender', 'channel', 'first_name', 'last_name', 'share_mode', 'channel_name')
-
-
 class GetTreeDataSerializer(serializers.Serializer):
     """
     Used by get_*_tree_data endpoints to ontain "lightweight" tree data.
@@ -957,31 +889,6 @@ class GetTreeDataSerializer(serializers.Serializer):
     channel_id = serializers.CharField(required=True)
     tree = serializers.CharField(required=False, default='main')
     node_id = serializers.CharField(required=False)
-
-
-class ChannelSetSerializer(serializers.ModelSerializer):
-    secret_token = TokenSerializer(required=False)
-    channels = serializers.SerializerMethodField('get_channel_ids')
-
-    def create(self, validated_data):
-        channelset = super(ChannelSetSerializer, self).create(validated_data)
-        channels = Channel.objects.filter(pk__in=self.initial_data['channels'])
-        channelset.secret_token.set_channels(channels)
-        return channelset
-
-    def update(self, instance, validated_data):
-        channelset = super(ChannelSetSerializer, self).update(instance, validated_data)
-        channels = Channel.objects.filter(pk__in=self.initial_data['channels'])
-        channelset.secret_token.set_channels(channels)
-        return channelset
-
-    def get_channel_ids(self, channelset):
-        channels = channelset.get_channels()
-        return channels and channels.values_list('id', flat=True)
-
-    class Meta:
-        model = ChannelSet
-        fields = ('id', 'name', 'description', 'public', 'editors', 'channels', 'secret_token')
 
 
 class TaskSerializer(serializers.ModelSerializer):

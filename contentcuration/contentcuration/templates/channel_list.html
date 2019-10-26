@@ -9,16 +9,7 @@
 	{% render_bundle_css 'channel_list' %}
 {% endblock css_bundle %}
 
-{% block js_bundle %}
-	<script>
-		var user = JSON.parse("{{ current_user|escapejs }}");
-		var user_preferences = JSON.parse("{{ user_preferences|escapejs }}");
-		var url = "{% url 'channels' %}";
-	</script>
-
-	{% render_bundle 'channel_list' 'js' %}
-{% endblock js_bundle %}
-
 {% block content %}
 	<div id="channel-container" class="container-fluid"></div>
+	{% render_bundle 'channel_list' 'js' %}
 {% endblock content %}
