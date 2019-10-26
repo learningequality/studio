@@ -10,7 +10,7 @@ esLintConfig.globals = {
   Raven: false,
   jest: false,
 };
-esLintConfig.settings['import/resolver'] = "webpack";
+esLintConfig.settings['import/resolver'] = 'webpack';
 
 // Vuetify's helper attributes use hyphens and they would
 // not be recognized if auto-formatted to camel case

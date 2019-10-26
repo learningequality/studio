@@ -74,6 +74,7 @@ export const localStore = new Vuex.Store({
       namespaced: true,
       state: {
         nodes: [],
+        validation: [],
         selectedIndices: [],
         changes: {},
         mode: 'VIEW_ONLY',

@@ -267,7 +267,7 @@
       };
     },
     computed: {
-      ...mapState('edit_modal', ['changes']),
+      ...mapState('edit_modal', ['changes', 'selectedIndices']),
       ...mapGetters('edit_modal', [
         'selected',
         'authors',
@@ -444,10 +444,29 @@
     },
     methods: {
       ...mapMutations('edit_modal', {
-        update: 'UPDATE_NODE',
-        updateExtraFields: 'UPDATE_EXTRA_FIELDS',
+        updateNode: 'UPDATE_NODE',
+        updateNodeExtraFields: 'UPDATE_EXTRA_FIELDS',
+        validateNodeDetails: 'VALIDATE_NODE_DETAILS',
         setTags: 'SET_TAGS',
       }),
+      update(payload) {
+        // this mutation actually mutates all selected nodes
+        // TODO: consistent naming and behaviour of old and new mutations
+        this.updateNode(payload);
+
+        this.selectedIndices.forEach(nodeIdx => {
+          this.validateNodeDetails({ nodeIdx });
+        });
+      },
+      updateExtraFields(payload) {
+        // this mutation actually mutates extra fields of all selected nodes
+        // TODO: consistent naming and behaviour of old and new mutations
+        this.updateNodeExtraFields(payload);
+
+        this.selectedIndices.forEach(nodeIdx => {
+          this.validateNodeDetails({ nodeIdx });
+        });
+      },
       getPlaceholder(field) {
         return this.changes[field].varied || this.viewOnly
           ? this.$tr('variedFieldPlaceholder')

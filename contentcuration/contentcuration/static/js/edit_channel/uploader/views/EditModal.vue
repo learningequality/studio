@@ -5,7 +5,7 @@
       ref="editmodal"
       v-model="dialog"
       fullscreen
-      hideOverlay
+      hide-overlay
       transition="dialog-bottom-transition"
       lazy
       scrollable
@@ -21,19 +21,19 @@
         >
           <EditList @addNode="createNode" />
         </VNavigationDrawer>
-        <VToolbar dark color="primary" fixed clippedLeft app>
+        <VToolbar dark color="primary" fixed clipped-left app>
           <VBtn ref="closebutton" icon dark app @click="handleClose">
             <VIcon>close</VIcon>
           </VBtn>
           <VToolbarTitle>{{ mode && $tr(mode) }}</VToolbarTitle>
           <VSpacer />
           <VToolbarItems>
-            <VFlex v-if="!isViewOnly" alignCenter class="last-saved-time">
+            <VFlex v-if="!isViewOnly" align-center class="last-saved-time">
               <div v-if="saveError">
                 {{ $tr('saveFailedText') }}
               </div>
-              <div v-else-if="invalidNodes.length">
-                {{ $tr('autosaveDisabledMessage', {count: invalidNodes.length}) }}
+              <div v-else-if="invalidNodesWithoutNewNodes.length">
+                {{ $tr('autosaveDisabledMessage', {count: invalidNodesWithoutNewNodes.length}) }}
               </div>
               <div v-else-if="saving">
                 <VProgressCircular indeterminate size="15" width="2" color="white" />
@@ -131,7 +131,7 @@
           open: true,
         },
         debouncedSave: _.debounce(() => {
-          if (!this.invalidNodesOverridden.length) {
+          if (!this.invalidNodes.length) {
             this.saveContent()
               .then(() => {
                 this.updateSavedTime();
@@ -144,13 +144,16 @@
     },
     computed: {
       ...mapState('edit_modal', ['nodes', 'changes', 'mode']),
-      ...mapGetters('edit_modal', ['changed', 'invalidNodes', 'invalidNodesOverridden']),
+      ...mapGetters('edit_modal', ['changed', 'invalidNodes']),
       isViewOnly() {
         return this.mode === modes.VIEW_ONLY;
       },
       showEditList() {
         // Only hide drawer when editing a single item
         return (this.mode !== modes.EDIT && !this.isViewOnly) || this.nodes.length > 1;
+      },
+      invalidNodesWithoutNewNodes() {
+        return this.invalidNodes({ ignoreNewNodes: true });
       },
     },
     watch: {
@@ -172,11 +175,10 @@
       this.drawer.open = this.showEditList;
     },
     methods: {
-      ...mapActions('edit_modal', ['saveNodes', 'copyNodes']),
+      ...mapActions('edit_modal', ['saveNodes', 'copyNodes', 'prepareForSave']),
       ...mapMutations('edit_modal', {
         select: 'SELECT_NODE',
         reset: 'RESET_STATE',
-        prepareForSave: 'PREP_NODES_FOR_SAVE',
         setNode: 'SET_NODE',
         addNodeToList: 'ADD_NODE',
       }),
@@ -213,7 +215,7 @@
         this.saveError = false;
         return new Promise((resolve, reject) => {
           clearInterval(this.updateInterval);
-          if (this.invalidNodesOverridden.length) {
+          if (this.invalidNodes.length) {
             resolve();
           } else {
             this.saving = true;
@@ -325,6 +327,14 @@
         margin-right: 10px;
         vertical-align: text-top;
       }
+    }
+
+    // there is a conflicting style for .row class in common styles
+    // that sets left and right margin to -15px which breaks Vuetify
+    // elements using Vuetify's .row class
+    .row {
+      margin-right: 0;
+      margin-left: 0;
     }
   }
 

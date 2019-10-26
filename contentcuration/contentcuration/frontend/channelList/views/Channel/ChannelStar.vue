@@ -5,9 +5,12 @@
     icon
     flat
     color="primary"
+    data-test="button"
     @click.stop.prevent="toggleStar"
   >
-    <VIcon>{{ bookmark ? 'star' : 'star_border' }}</VIcon>
+    <VIcon data-test="icon">
+      {{ bookmark ? 'star' : 'star_border' }}
+    </VIcon>
   </VBtn>
 
 </template>

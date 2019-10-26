@@ -25,11 +25,11 @@ describe('star', () => {
     unstarredWrapper = makeWrapper(false, toggleStub);
   });
   it('should reflect correct star on load', () => {
-    expect(starredWrapper.find('VIcon').text()).toBe('star');
-    expect(unstarredWrapper.find('VIcon').text()).toBe('star_border');
+    expect(starredWrapper.find('[data-test="icon"]').text()).toBe('star');
+    expect(unstarredWrapper.find('[data-test="icon"]').text()).toBe('star_border');
   });
   it('toggle the bookmark when clicked', () => {
-    starredWrapper.find('VBtn').trigger('click');
+    starredWrapper.find('[data-test="button"]').trigger('click');
     expect(toggleStub).toHaveBeenCalledWith(channelId);
   });
 });

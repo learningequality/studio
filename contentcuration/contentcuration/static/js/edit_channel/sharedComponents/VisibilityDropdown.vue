@@ -1,6 +1,6 @@
 <template>
 
-  <VLayout grid wrap alignCenter>
+  <VLayout grid wrap align-center>
     <VSelect
       ref="visibility"
       v-model="role"
@@ -21,7 +21,7 @@
             <VDivider />
             <div class="role-table">
               <VLayout v-for="roleOption in roles" :key="roleOption.id" row>
-                <VFlex xs3 textRight class="role-label">
+                <VFlex xs3 text-right class="role-label">
                   {{ translate(roleOption.id) }}
                   <VIcon v-if="roleOption.icon" color="primary">
                     {{ roleOption.icon }}

@@ -147,6 +147,7 @@ const contentNodesModule = {
           },
         });
       });
+
       // // Load if node isn't in list or complete data hasn't been loaded
       // let fetchIDs = _.filter(contentNodeIDs, id =>
       //   !context.state.contentNodes[id] || !context.state.contentNodes[id][NODE_COMPLETE_LOAD]

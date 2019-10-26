@@ -1,7 +1,7 @@
 <template>
 
   <div>
-    <VLayout class="license-dropdown" row alignCenter>
+    <VLayout class="license-dropdown" row align-center>
       <VSelect
         ref="license"
         v-model="license"

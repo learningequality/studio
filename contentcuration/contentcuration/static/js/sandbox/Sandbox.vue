@@ -35,6 +35,10 @@
 <script>
 
   import _ from 'underscore';
+
+  import 'summernote';
+  import 'summernote/dist/summernote.css';
+
   import { mapMutations, mapState } from 'vuex';
   import EditModal from 'edit_channel/uploader/views/EditModal.vue';
 

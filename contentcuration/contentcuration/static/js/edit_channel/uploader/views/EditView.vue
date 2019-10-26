@@ -1,41 +1,41 @@
 <template>
 
   <VContent>
-    <VContainer fluid fillHeight>
-      <VLayout v-if="!selected.length" justifyCenter alignCenter fillHeight>
+    <VContainer fluid fill-height>
+      <VLayout v-if="!selected.length" justify-center align-center fill-height>
         <VFlex grow class="default-content">
           {{ noItemText }}
         </VFlex>
       </VLayout>
-      <VLayout v-else-if="loadError" justifyCenter alignCenter fillHeight>
+      <VLayout v-else-if="loadError" justify-center align-center fill-height>
         <VFlex grow class="default-content">
-          <v-icon color="red" class="error-icon">
+          <VIcon color="red" class="error-icon">
             error
-          </v-icon>
+          </VIcon>
           <p>{{ $tr('loadErrorText') }}</p>
         </VFlex>
       </VLayout>
-      <VLayout v-else-if="!allLoaded" justifyCenter alignCenter fillHeight>
+      <VLayout v-else-if="!allLoaded" justify-center align-center fill-height>
         <VFlex grow class="default-content">
           <VProgressCircular :indeterminate="true" size="50" color="primary" />
           <br><br>
           <p>{{ $tr('loadingText') }}</p>
         </VFlex>
       </VLayout>
-      <VLayout v-else justifyCenter>
+      <VLayout v-else justify-center>
         <VFlex grow>
-          <VTabs v-model="currentTab" fixedTabs sliderColor="primary">
+          <VTabs v-model="currentTab" fixed-tabs slider-color="primary">
             <!-- Details tab -->
             <VTab ref="detailstab" :href="`#${tabs.DETAILS}`">
               {{ $tr(tabs.DETAILS) }}
-              <v-tooltip v-if="invalidSelected" top>
+              <VTooltip v-if="invalidSelected" top>
                 <template v-slot:activator="{ on }">
-                  <v-icon color="red" dark v-on="on">
+                  <VIcon color="red" dark v-on="on">
                     error
-                  </v-icon>
+                  </VIcon>
                 </template>
                 <span>{{ $tr('invalidFieldsToolTip') }}</span>
-              </v-tooltip>
+              </VTooltip>
             </VTab>
 
             <!-- Preview tab -->
@@ -46,8 +46,16 @@
             <!-- Questions tab -->
             <VTab v-if="showQuestionsTab" ref="questiontab" :href="`#${tabs.QUESTIONS}`">
               {{ $tr(tabs.QUESTIONS) }}
-              <VChip v-if="oneSelected.assessment_items.length" color="gray" dark>
-                {{ oneSelected.assessment_items.length }}
+              <VTooltip v-if="!areAssessmentItemsValid" top>
+                <template v-slot:activator="{ on }">
+                  <VIcon color="red" dark v-on="on">
+                    error
+                  </VIcon>
+                </template>
+                <span>{{ $tr('invalidFieldsToolTip') }}</span>
+              </VTooltip>
+              <VChip v-else color="gray" dark>
+                {{ assessmentItemsCount }}
               </VChip>
             </VTab>
 
@@ -78,7 +86,7 @@
               Preview
             </VTabItem>
             <VTabItem :key="tabs.QUESTIONS" ref="questionwindow" :value="tabs.QUESTIONS" lazy>
-              Questions
+              <AssessmentView />
             </VTabItem>
             <VTabItem
               :key="tabs.PREREQUISITES"
@@ -102,11 +110,13 @@
   import { mapActions, mapGetters, mapState } from 'vuex';
   import { TabNames, modes } from '../constants';
   import DetailsTabView from './DetailsTabView.vue';
+  import AssessmentView from './AssessmentView.vue';
 
   export default {
     name: 'EditView',
     components: {
       DetailsTabView,
+      AssessmentView,
     },
     props: {
       isClipboard: {
@@ -125,7 +135,15 @@
       };
     },
     computed: {
-      ...mapGetters('edit_modal', ['selected', 'allExercises', 'allResources', 'invalidNodes']),
+      ...mapGetters('edit_modal', [
+        'selected',
+        'allExercises',
+        'allResources',
+        'isNodeNew',
+        'areNodeDetailsValid',
+        'areNodeAssessmentItemsValid',
+        'nodeAssessmentItemsCount',
+      ]),
       ...mapState('edit_modal', ['nodes', 'selectedIndices', 'mode']),
       noItemText() {
         if (!this.nodes.length) {
@@ -156,16 +174,27 @@
         return _.all(this.selected, '_COMPLETE');
       },
       invalidSelected() {
-        return !this.viewOnly && _.intersection(this.selectedIndices, this.invalidNodes).length;
+        return (
+          !this.viewOnly &&
+          this.selectedIndices.some(
+            nodeIdx => !this.isNodeNew(nodeIdx) && !this.areNodeDetailsValid(nodeIdx)
+          )
+        );
       },
       countText() {
         let messageArgs = { count: this.selected.length };
         if (this.viewOnly) return this.$tr('viewingMultipleCount', messageArgs);
         return this.$tr('editingMultipleCount', messageArgs);
       },
+      areAssessmentItemsValid() {
+        return this.areNodeAssessmentItemsValid(this.selectedIndices[0]);
+      },
+      assessmentItemsCount() {
+        return this.nodeAssessmentItemsCount(this.selectedIndices[0]);
+      },
     },
     watch: {
-      selected() {
+      selectedIndices() {
         this.currentTab = TabNames.DETAILS;
         this.loadNodesDebounced();
       },
