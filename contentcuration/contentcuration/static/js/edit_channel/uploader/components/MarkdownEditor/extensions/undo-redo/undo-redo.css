@@ -1,0 +1,13 @@
+.tui-toolbar-btn-undo,
+.tui-toolbar-btn-redo {
+  background-repeat: no-repeat;
+  background-size: 18px;
+}
+
+.tui-toolbar-btn-undo {
+  background: url('./toolbar-icon-undo.svg');
+}
+
+.tui-toolbar-btn-redo {
+  background: url('./toolbar-icon-redo.svg');
+}

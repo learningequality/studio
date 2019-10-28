@@ -20,13 +20,15 @@
   import 'codemirror/lib/codemirror.css';
 
   import { Editor } from '@toast-ui/vue-editor';
-
+  import undoRedo from './extensions/undo-redo';
+  
   const MODE = 'wysiwyg';
   const HEIGHT = '100px';
   const OPTIONS = {
     usageStatistics: false,
     hideModeSwitch: true,
     toolbarItems: ['bold', 'italic'],
+    exts: [undoRedo],
   };
 
   export default {
