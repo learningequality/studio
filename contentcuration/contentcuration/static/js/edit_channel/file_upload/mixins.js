@@ -44,7 +44,7 @@ const fileErrorStrings = createTranslator('FileErrorStrings', {
   [fileErrors.NO_STORAGE]: 'Out of storage',
   noStorageAction: 'Request',
   [fileErrors.WRONG_TYPE]: 'Invalid file type (must be {filetypes})',
-  [fileErrors.TOO_LARGE]: 'File too large. Must be under 500MB',
+  [fileErrors.TOO_LARGE]: 'File too large. Must be under {size}',
   [fileErrors.UPLOAD_FAILED]: 'Upload failed',
   fileUploadAction: 'Retry',
   [fileErrors.URL_EXPIRED]: 'Upload failed',
@@ -55,7 +55,11 @@ export const fileErrorMixin = {
     fileErrorStrings() {
       return fileErrorStrings;
     },
+    maxSize() {
+      return 524288000;
+    },
   },
+  mixins: [fileSizeMixin],
   methods: {
     getFileErrorMessage(files) {
       let firstFile = _.find(files, file => file.error);
@@ -65,6 +69,8 @@ export const fileErrorMixin = {
           case fileErrors.WRONG_TYPE:
             message = message.replace('{filetypes}', '');
             break;
+          case fileErrors.TOO_LARGE:
+            message = message.replace('{size}', this.formatFileSize(this.maxSize));
         }
         return message;
       }

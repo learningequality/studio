@@ -209,6 +209,9 @@
     .v-list__tile__content {
       padding-left: 8px;
     }
+    .v-list__tile__sub-title {
+      white-space: unset;
+    }
   }
 
   .error-icon {

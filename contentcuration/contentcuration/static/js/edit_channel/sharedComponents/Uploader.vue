@@ -29,10 +29,13 @@
   import _ from 'underscore';
   import { getHash } from './utils';
   import Constants from 'edit_channel/constants';
+  import { fileErrors } from 'edit_channel/file_upload/constants';
+  import { fileErrorMixin } from 'edit_channel/file_upload/mixins';
 
   export default {
     name: 'Uploader',
     $trs: {},
+    mixins: [fileErrorMixin],
     props: {
       value: {
         type: Object,
@@ -76,6 +79,12 @@
           .value()
           .join(',');
       },
+      acceptedExtensions() {
+        return _.chain(this.acceptedFiles)
+          .pluck('allowed_formats')
+          .flatten()
+          .value();
+      },
       file() {
         if (this.files.length && this.files[0].previewSrc) {
           return this.files[0].previewSrc;
@@ -91,6 +100,7 @@
       ...mapMutations('edit_modal', {
         setUploadProgress: 'SET_FILE_UPLOAD_PROGRESS',
         setFileChecksum: 'SET_FILE_CHECKSUM',
+        setFileError: 'SET_FILE_ERROR',
       }),
       enter() {
         this.highlight = true;
@@ -150,6 +160,15 @@
               ...this.getMetadata(uploadedFile),
             };
             newFiles.push(fileDetails);
+
+            // Catch upload too large and wrong extension errors
+            if (uploadedFile.size > this.maxSize) {
+              fileDetails.error = fileErrors.TOO_LARGE;
+              return;
+            } else if (!this.acceptedExtensions.includes(fileDetails.file_format)) {
+              fileDetails.error = fileErrors.WRONG_TYPE;
+              return;
+            }
 
             // 1. Get the checksum of the file
             getHash(uploadedFile).then(hash => {
