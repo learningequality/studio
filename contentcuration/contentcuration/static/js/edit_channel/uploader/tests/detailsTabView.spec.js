@@ -43,7 +43,7 @@ function makeWrapper(props = {}) {
 }
 
 window.Urls = {
-  channel_view_only: id => {
+  channel: id => {
     return id;
   },
 };

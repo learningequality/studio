@@ -1,4 +1,5 @@
 <template>
+
   <span>
     <v-chip
       v-if="showColor"
@@ -8,33 +9,24 @@
       small
     >
       <v-icon small :color="fontColor">{{ icon }}</v-icon>
-      <span v-if="includeText">{{ $tr(kind) }}</span>
+      <span v-if="includeText">{{ text }}</span>
     </v-chip>
     <span v-else>
       <v-icon :color="fontColor">{{ icon }}</v-icon>
-      <span v-if="includeText">{{ $tr(kind) }}</span>
+      <span v-if="includeText">{{ text }}</span>
     </span>
   </span>
+
 </template>
 
 <script>
 
-  import _ from 'underscore';
   import Constants from 'edit_channel/constants';
 
-  const kinds = _.pluck(Constants.ContentKinds, 'kind');
+  const kinds = Constants.ContentKinds.map(kind => kind.kind);
 
   export default {
     name: 'ContentNodeIcon',
-    $trs: {
-      topic: 'Topic',
-      video: 'Video',
-      audio: 'Audio',
-      exercise: 'Exercise',
-      document: 'Document',
-      slideshow: 'Slideshow',
-      html5: 'HTML5 App',
-    },
     props: {
       kind: {
         type: String,
@@ -76,6 +68,36 @@
             return 'error';
         }
       },
+      text() {
+        switch (this.kind) {
+          case 'topic':
+            return this.$tr('topic');
+          case 'video':
+            return this.$tr('video');
+          case 'audio':
+            return this.$tr('audio');
+          case 'slideshow':
+            return this.$tr('slideshow');
+          case 'exercise':
+            return this.$tr('exercise');
+          case 'document':
+            return this.$tr('document');
+          case 'html5':
+            return this.$tr('html5');
+          default:
+            return this.$tr('unsupported');
+        }
+      },
+    },
+    $trs: {
+      topic: 'Topic',
+      video: 'Video',
+      audio: 'Audio',
+      exercise: 'Exercise',
+      document: 'Document',
+      slideshow: 'Slideshow',
+      html5: 'HTML5 App',
+      unsupported: 'Unsupported',
     },
   };
 
@@ -84,7 +106,6 @@
 
 <style lang="less" scoped>
 
-  @import '../../../less/global-variables.less';
   .v-chip {
     margin-right: 10px;
     /deep/ .v-chip__content {

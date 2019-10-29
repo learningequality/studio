@@ -1,4 +1,5 @@
 <template>
+
   <div class="toggle-text">
     <div>{{ trimmedText.substring(0, splitIndex) }}</div>
     <div class="overflow" :class="{expanded: expanded}">
@@ -10,6 +11,7 @@
       </a>
     </p>
   </div>
+
 </template>
 
 
@@ -19,10 +21,6 @@
 
   export default {
     name: 'ToggleText',
-    $trs: {
-      more: '... More',
-      less: 'Less',
-    },
     props: {
       text: {
         type: String,
@@ -70,6 +68,10 @@
       toggle() {
         this.expanded = !this.expanded;
       },
+    },
+    $trs: {
+      more: '... More',
+      less: 'Less',
     },
   };
 

@@ -1,10 +1,11 @@
 <template>
+
   <VDialog
     v-if="currentTask && !currentTask.noDialog"
     v-model="dialog"
     persistent
     light
-    maxWidth="575"
+    max-width="575"
     attach="body"
   >
     <VCard v-if="progress" class="message">
@@ -48,6 +49,7 @@
       </VCardActions>
     </VCard>
   </VDialog>
+
 </template>
 
 <script>
@@ -67,28 +69,6 @@
 
   export default {
     name: 'ProgressOverlay',
-    $trs: {
-      copyHeader: 'Copying Content',
-      copyDescription: 'Copy operation is in progress, please wait...',
-      defaultHeader: 'Updating Channel',
-      defaultDescription: 'Update is in progress, please wait...',
-      defaultErrorText:
-        'An unexpected error has occurred. Please try again, and if you continue to see this message, please contact support via the Help menu.',
-      finishedMessage: 'Operation complete! Click "Refresh" to update the page.',
-      moveHeader: 'Moving Content',
-      moveDescription: 'Move operation is in progress, please wait...',
-      publishHeader: 'Publishing Channel',
-      publishDescription:
-        'Please wait for publishing to finish to make further edits. You will receive an email notice once channel publishing is complete.',
-      syncHeader: 'Syncing Content',
-      syncDescription: 'Content sync operation is in progress, please wait...',
-      stopButton: 'Stop',
-      doneButton: 'Close',
-      refreshButton: 'Refresh',
-      cancel: 'Cancel',
-      cancelHeader: 'Cancelling Task',
-      cancelText: 'Are you sure you would like to cancel this task?',
-    },
     components: {
       ProgressBar,
     },
@@ -114,8 +94,6 @@
       return {
         dialog: true,
         progress: true,
-        done: false,
-        failed: false,
         message: '',
         errorText: this.$tr('defaultErrorText'),
         headerText: this.$tr('defaultHeader'),
@@ -160,6 +138,18 @@
         this.$store.dispatch('deleteCurrentTask');
         this.closeOverlay();
       },
+    },
+    $trs: {
+      defaultHeader: 'Updating Channel',
+      defaultDescription: 'Update is in progress, please wait...',
+      defaultErrorText:
+        'An unexpected error has occurred. Please try again, and if you continue to see this message, please contact support via the Help menu.',
+      finishedMessage: 'Operation complete! Click "Refresh" to update the page.',
+      stopButton: 'Stop',
+      refreshButton: 'Refresh',
+      cancel: 'Cancel',
+      cancelHeader: 'Cancelling Task',
+      cancelText: 'Are you sure you would like to cancel this task?',
     },
   };
 

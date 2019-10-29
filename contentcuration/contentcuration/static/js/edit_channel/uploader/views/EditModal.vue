@@ -1,10 +1,11 @@
 <template>
+
   <div>
     <VDialog
       ref="editmodal"
       v-model="dialog"
       fullscreen
-      hideOverlay
+      hide-overlay
       transition="dialog-bottom-transition"
       lazy
     >
@@ -13,7 +14,7 @@
           dark
           color="primary"
           fixed
-          clippedLeft
+          clipped-left
           app
           flat
         >
@@ -23,12 +24,12 @@
           <VToolbarTitle>{{ mode && $tr(mode) }}</VToolbarTitle>
           <VSpacer />
           <VToolbarItems>
-            <VFlex v-if="!isViewOnly" alignCenter class="last-saved-time">
+            <VFlex v-if="!isViewOnly" align-center class="last-saved-time">
               <div v-if="saveError">
                 {{ $tr('saveFailedText') }}
               </div>
-              <div v-else-if="invalidNodes.length">
-                {{ $tr('autosaveDisabledMessage', {count: invalidNodes.length}) }}
+              <div v-else-if="invalidNodesWithoutNewNodes.length">
+                {{ $tr('autosaveDisabledMessage', {count: invalidNodesWithoutNewNodes.length}) }}
               </div>
               <div v-else-if="saving">
                 <VProgressCircular indeterminate size="15" width="2" color="white" />
@@ -141,6 +142,7 @@
       :text="$tr('saveFailedText')"
     />
   </div>
+
 </template>
 
 <script>
@@ -163,36 +165,6 @@
 
   export default {
     name: 'EditModal',
-    $trs: {
-      [modes.EDIT]: 'Editing Content Details',
-      [modes.VIEW_ONLY]: 'Viewing Content Details',
-      [modes.NEW_TOPIC]: 'Adding Topics',
-      [modes.NEW_EXERCISE]: 'Adding Exercises',
-      [modes.UPLOAD]: 'Uploading Files',
-      saveButtonText: 'Save & Close',
-      copyButtonText:
-        '{count, plural,\n =1 {Copy to clipboard}\n other {Copy # items to clipboard}} ({size})',
-      savedMessage: 'Saved {relativeTime}',
-      savingIndicator: 'Saving...',
-      unsavedChanges: 'Save your changes?',
-      unsavedChangesText: "Your changes will be lost if you don't save them",
-      dontSaveButton: "Don't save",
-      cancelButton: 'Cancel',
-      saveButton: 'Save changes',
-      relatedContentHeader: 'Related content detected',
-      relatedContentText: 'Related content will not be included in the copy of this content.',
-      invalidItemsDetected: 'Saving disabled (invalid content detected)',
-      saveFailedHeader: 'Save failed',
-      saveFailedText: 'There was a problem saving your content',
-      autosaveDisabledMessage:
-        'Autosave paused ({count, plural,\n =1 {# error}\n other {# errors}} detected)',
-      topicDefaultTitle: '{parent} Topic',
-      exerciseDefaultTitle: '{parent} Exercise',
-      addTopic: 'Add Topic',
-      addExercise: 'Add Exercise',
-      uploadButton: 'Upload More',
-      dropFilesText: 'or drop files here',
-    },
     components: {
       EditList,
       EditView,
@@ -216,10 +188,9 @@
         saving: false,
         savedMessage: null,
         saveError: false,
-        interval: null,
         updateInterval: null,
         debouncedSave: _.debounce(() => {
-          if (!this.invalidNodesOverridden.length) {
+          if (!this.invalidNodes.length) {
             this.saveContent()
               .then(() => {
                 this.updateSavedTime();
@@ -231,14 +202,8 @@
       };
     },
     computed: {
-      ...mapState('edit_modal', ['nodes', 'changes', 'mode', 'files']),
-      ...mapGetters('edit_modal', [
-        'changed',
-        'invalidNodes',
-        'invalidNodesOverridden',
-        'fileIDs',
-        'totalFileSize',
-      ]),
+      ...mapState('edit_modal', ['nodes', 'changes', 'mode']),
+      ...mapGetters('edit_modal', ['changed', 'invalidNodes', 'totalFileSize']),
       isViewOnly() {
         return this.mode === modes.VIEW_ONLY;
       },
@@ -263,6 +228,9 @@
       newContentMode() {
         return this.allowUpload || this.allowAddExercise || this.allowAddTopic;
       },
+      invalidNodesWithoutNewNodes() {
+        return this.invalidNodes({ ignoreNewNodes: true });
+      },
     },
     watch: {
       changes: {
@@ -274,16 +242,17 @@
       },
     },
     methods: {
-      ...mapActions('edit_modal', ['saveNodes', 'copyNodes']),
+      ...mapActions('edit_modal', ['saveNodes', 'copyNodes', 'prepareForSave']),
       ...mapMutations('edit_modal', {
         select: 'SELECT_NODE',
-        deselectAll: 'RESET_SELECTED',
         reset: 'RESET_STATE',
-        prepareForSave: 'PREP_NODES_FOR_SAVE',
         setNode: 'SET_NODE',
         addNodeToList: 'ADD_NODE',
         createNodesFromFiles: 'ADD_NODES_FROM_FILES',
       }),
+      /*
+       * @public
+       */
       openModal() {
         this.dialog = true;
         if (this.nodes.length > 0) this.$nextTick(() => this.select(0));
@@ -325,7 +294,7 @@
         this.saveError = false;
         return new Promise((resolve, reject) => {
           clearInterval(this.updateInterval);
-          if (this.invalidNodesOverridden.length) {
+          if (this.invalidNodes.length) {
             resolve();
           } else {
             this.saving = true;
@@ -385,6 +354,34 @@
         });
       },
     },
+    $trs: {
+      [modes.EDIT]: 'Editing Content Details',
+      [modes.VIEW_ONLY]: 'Viewing Content Details',
+      [modes.NEW_TOPIC]: 'Adding Topics',
+      [modes.NEW_EXERCISE]: 'Adding Exercises',
+      [modes.UPLOAD]: 'Uploading Files',
+      saveButtonText: 'Save & Close',
+      copyButtonText:
+        '{count, plural,\n =1 {Copy to clipboard}\n other {Copy # items to clipboard}} ({size})',
+      savedMessage: 'Saved {relativeTime}',
+      savingIndicator: 'Saving...',
+      unsavedChanges: 'Save your changes?',
+      unsavedChangesText: "Your changes will be lost if you don't save them",
+      dontSaveButton: "Don't save",
+      cancelButton: 'Cancel',
+      saveButton: 'Save changes',
+      relatedContentHeader: 'Related content detected',
+      relatedContentText: 'Related content will not be included in the copy of this content.',
+      saveFailedHeader: 'Save failed',
+      saveFailedText: 'There was a problem saving your content',
+      autosaveDisabledMessage:
+        'Autosave paused ({count, plural,\n =1 {# error}\n other {# errors}} detected)',
+      topicDefaultTitle: '{parent} Topic',
+      exerciseDefaultTitle: '{parent} Exercise',
+      addTopic: 'Add Topic',
+      addExercise: 'Add Exercise',
+      uploadButton: 'Upload More',
+    },
   };
 
 </script>
@@ -418,6 +415,14 @@
       .v-toolbar__content {
         border-bottom: 1px solid @gray-300;
       }
+    }
+
+    // there is a conflicting style for .row class in common styles
+    // that sets left and right margin to -15px which breaks Vuetify
+    // elements using Vuetify's .row class
+    .row {
+      margin-right: 0;
+      margin-left: 0;
     }
   }
 

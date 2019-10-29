@@ -1,4 +1,5 @@
 <template>
+
   <Dialog ref="alert" :header="header" :text="text">
     <template v-slot:content>
       <VCheckbox
@@ -15,6 +16,7 @@
       </VBtn>
     </template>
   </Dialog>
+
 </template>
 
 <script>
@@ -23,10 +25,6 @@
 
   export default {
     name: 'Alert',
-    $trs: {
-      closeButtonLabel: 'OK',
-      dontShowAgain: "Don't show this message again",
-    },
     components: {
       Dialog,
     },
@@ -46,7 +44,6 @@
     },
     data() {
       return {
-        dialog: false,
         dontShowAgain: false,
       };
     },
@@ -54,6 +51,9 @@
       getMessages() {
         return (localStorage['dont_show_messages'] || '').split(',');
       },
+      /*
+       * @public
+       */
       prompt() {
         if (!this.messageID || !this.getMessages().includes(this.messageID)) {
           this.$refs.alert.prompt();
@@ -67,6 +67,10 @@
         }
         this.$refs.alert.close();
       },
+    },
+    $trs: {
+      closeButtonLabel: 'OK',
+      dontShowAgain: "Don't show this message again",
     },
   };
 

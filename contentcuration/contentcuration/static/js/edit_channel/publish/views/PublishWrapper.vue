@@ -1,8 +1,10 @@
 <template>
+
   <VApp>
     <PublishModal />
     <ProgressOverlay v-if="currentTask" />
   </VApp>
+
 </template>
 
 <script>
@@ -26,6 +28,7 @@
 
 
 <style lang="less" scoped>
+
   @import '../../../../less/global-variables.less';
   /deep/ .application--wrap {
     min-height: 0;

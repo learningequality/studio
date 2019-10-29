@@ -5,8 +5,8 @@ import { mount } from '@vue/test-utils';
 import MasteryDropdown from '../MasteryDropdown.vue';
 import InfoModal from '../InfoModal.vue';
 import TestForm from './TestForm.vue';
-import Constants from 'edit_channel/constants';
 import { translate } from 'edit_channel/utils/string_helper';
+import Constants from 'edit_channel/constants';
 
 Vue.use(Vuetify);
 

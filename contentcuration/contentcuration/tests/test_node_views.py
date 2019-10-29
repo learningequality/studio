@@ -2,6 +2,8 @@ import datetime
 import json
 
 import pytz
+from mock import patch
+
 from base import BaseAPITestCase
 from django.conf import settings
 from django.core.cache import cache
@@ -15,9 +17,8 @@ from contentcuration.models import ContentNode
 
 
 class NodeViewsUtilityTestCase(BaseAPITestCase):
-    def test_get_topic_details(self):
-        node_pk = self.channel.main_tree.pk
-        url = reverse('get_topic_details', [node_pk])
+    def test_get_channel_details(self):
+        url = reverse('get_channel_details', [self.channel.id])
         response = self.get(url)
 
         details = json.loads(response.content)
@@ -25,25 +26,19 @@ class NodeViewsUtilityTestCase(BaseAPITestCase):
         assert details['resource_size'] > 0
         assert details['kind_count'] > 0
 
-    def test_get_topic_details_cached(self):
-        node = self.channel.main_tree
-        node_pk = self.channel.main_tree.pk
-        cache_key = "details_{}".format(node.node_id)
+    def test_get_channel_details_cached(self):
+        cache_key = "details_{}".format(self.channel.main_tree.id)
 
         # force the cache to update by adding a very old cache entry. Since Celery tasks run sync in the test suite,
-        # get_topic_details will return an updated cache value rather than generate it async.
+        # get_channel_details will return an updated cache value rather than generate it async.
         data = {"last_update": pytz.utc.localize(datetime.datetime(1990, 1, 1)).strftime(settings.DATE_TIME_FORMAT)}
         cache.set(cache_key, json.dumps(data))
 
-        url = reverse('get_topic_details', [node_pk])
-        self.get(url)
-
-        # the response will contain the invalid cache entry that we set above, but if we retrieve the cache
-        # now it will be updated with the correct values.
-        cache_details = json.loads(cache.get(cache_key))
-        assert cache_details['resource_count'] > 0
-        assert cache_details['resource_size'] > 0
-        assert cache_details['kind_count'] > 0
+        with patch("contentcuration.views.nodes.getnodedetails_task") as task_mock:
+            url = reverse('get_channel_details', [self.channel.id])
+            self.get(url)
+            # Check that the outdated cache prompts an asynchronous cache update
+            task_mock.apply_async.assert_called_once_with((self.channel.main_tree.id,))
 
 
 class GetPrerequisitesTestCase(BaseAPITestCase):
@@ -215,7 +210,7 @@ class GetNodesByIdsCompleteEndpointTestCase(BaseAPITestCase):
 class GetTopicDetailsEndpointTestCase(BaseAPITestCase):
     def test_200_post(self):
         response = self.get(
-            reverse("get_topic_details", kwargs={"contentnode_id": self.channel.main_tree.id})
+            reverse("get_channel_details", kwargs={"channel_id": self.channel.id})
         )
         self.assertEqual(response.status_code, 200)
 
@@ -224,6 +219,6 @@ class GetTopicDetailsEndpointTestCase(BaseAPITestCase):
         new_channel.main_tree = tree()
         new_channel.save()
         response = self.get(
-            reverse("get_topic_details", kwargs={"contentnode_id": new_channel.main_tree.id}),
+            reverse("get_channel_details", kwargs={"channel_id": new_channel.id}),
         )
         self.assertEqual(response.status_code, 404)

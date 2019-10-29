@@ -1,4 +1,5 @@
 <template>
+
   <div v-if="Object.keys(changes).length" class="details-edit-view">
     <VForm ref="form" v-model="valid" :lazyValidation="newContent" :disabled="viewOnly">
       <VLayout grid wrap>
@@ -237,6 +238,7 @@
       </v-expansion-panel>
     </VForm>
   </div>
+
 </template>
 
 <script>
@@ -253,31 +255,6 @@
 
   export default {
     name: 'DetailsTabView',
-    $trs: {
-      titleLabel: 'Title',
-      titleValidationMessage: 'Title is required',
-      languageHelpText: 'Leave blank to default to topic language',
-      languageChannelHelpText: 'Leave blank to default to channel language',
-      importedFromButtonText: 'Imported from {channel}',
-      detectedImportText: 'Read-only: content has been imported with view-only permission',
-      authorLabel: 'Author',
-      authorToolTip: 'Person or organization who created this content',
-      providerLabel: 'Provider',
-      providerToolTip: 'Organization that commissioned or is distributing the content',
-      aggregatorLabel: 'Aggregator',
-      aggregatorToolTip:
-        'Website or org hosting the content collection but not necessarily the creator or copyright holder',
-      copyrightHolderLabel: 'Copyright Holder',
-      copyrightHolderValidationMessage: 'Copyright holder is required',
-      descriptionLabel: 'Description',
-      tagsLabel: 'Tags',
-      variedFieldPlaceholder: '---',
-      noTagsFoundText: 'No results matching "{text}". Press \'enter\'to create a new tag',
-      randomizeQuestionLabel: 'Randomize question order for learners',
-      audienceHeader: 'Audience',
-      assessmentHeader: 'Assessment Options',
-      sourceHeader: 'Source',
-    },
     components: {
       LanguageDropdown,
       HelpTooltip,
@@ -310,7 +287,6 @@
         'tags',
         'allExercises',
         'allResources',
-        'invalidNodes',
       ]),
       title: {
         get() {
@@ -446,7 +422,7 @@
       },
       importUrl() {
         let selected = this.selected[0];
-        let baseUrl = window.Urls.channel_view_only(selected.original_channel.id);
+        let baseUrl = window.Urls.channel(selected.original_channel.id);
         return baseUrl + '/' + selected.original_source_node_id;
       },
       importChannelName() {
@@ -455,9 +431,6 @@
       },
       newContent() {
         return !!_.some(this.selected, { isNew: true });
-      },
-      invalidSelected() {
-        return _.intersection(this.selectedIndices, this.invalidNodes).length;
       },
       titleRules() {
         return [v => !!v || this.$tr('titleValidationMessage')];
@@ -481,13 +454,29 @@
     },
     methods: {
       ...mapMutations('edit_modal', {
-        setLicense: 'SET_LICENSE',
-        setLicenseDescription: 'SET_LICENSE_DESCRIPTION',
-
-        update: 'UPDATE_NODE',
-        updateExtraFields: 'UPDATE_EXTRA_FIELDS',
+        updateNode: 'UPDATE_NODE',
+        updateNodeExtraFields: 'UPDATE_EXTRA_FIELDS',
+        validateNodeDetails: 'VALIDATE_NODE_DETAILS',
         setTags: 'SET_TAGS',
       }),
+      update(payload) {
+        // this mutation actually mutates all selected nodes
+        // TODO: consistent naming and behaviour of old and new mutations
+        this.updateNode(payload);
+
+        this.selectedIndices.forEach(nodeIdx => {
+          this.validateNodeDetails({ nodeIdx });
+        });
+      },
+      updateExtraFields(payload) {
+        // this mutation actually mutates extra fields of all selected nodes
+        // TODO: consistent naming and behaviour of old and new mutations
+        this.updateNodeExtraFields(payload);
+
+        this.selectedIndices.forEach(nodeIdx => {
+          this.validateNodeDetails({ nodeIdx });
+        });
+      },
       getPlaceholder(field) {
         return this.changes[field].varied || this.viewOnly
           ? this.$tr('variedFieldPlaceholder')
@@ -503,6 +492,31 @@
           ? this.$refs.form.resetValidation()
           : this.$refs.form.validate();
       },
+    },
+    $trs: {
+      titleLabel: 'Title',
+      titleValidationMessage: 'Title is required',
+      languageHelpText: 'Leave blank to default to topic language',
+      languageChannelHelpText: 'Leave blank to default to channel language',
+      importedFromButtonText: 'Imported from {channel}',
+      detectedImportText: 'Read-only: content has been imported with view-only permission',
+      authorLabel: 'Author',
+      authorToolTip: 'Person or organization who created this content',
+      providerLabel: 'Provider',
+      providerToolTip: 'Organization that commissioned or is distributing the content',
+      aggregatorLabel: 'Aggregator',
+      aggregatorToolTip:
+        'Website or org hosting the content collection but not necessarily the creator or copyright holder',
+      copyrightHolderLabel: 'Copyright Holder',
+      copyrightHolderValidationMessage: 'Copyright holder is required',
+      descriptionLabel: 'Description',
+      tagsLabel: 'Tags',
+      variedFieldPlaceholder: '---',
+      noTagsFoundText: 'No results matching "{text}". Press \'enter\'to create a new tag',
+      randomizeQuestionLabel: 'Randomize question order for learners',
+      audienceHeader: 'Audience',
+      assessmentHeader: 'Assessment Options',
+      sourceHeader: 'Source',
     },
   };
 

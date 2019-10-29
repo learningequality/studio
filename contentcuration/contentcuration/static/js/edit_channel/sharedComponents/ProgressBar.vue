@@ -1,4 +1,5 @@
 <template>
+
   <div class="progress-wrapper">
     <div>
       <!-- Setting the colors to avoid styling with !important tags -->
@@ -15,6 +16,7 @@
       {{ $tr('progressText', {percent: Math.round(progressPercent)}) }}
     </div>
   </div>
+
 </template>
 
 
@@ -24,14 +26,14 @@
 
   export default {
     name: 'ProgressBar',
-    $trs: {
-      progressText: '{percent}%',
-    },
     computed: {
       ...mapGetters(['currentTaskError', 'progressPercent']),
       isDone() {
         return this.progressPercent >= 100;
       },
+    },
+    $trs: {
+      progressText: '{percent}%',
     },
   };
 

@@ -1,4 +1,5 @@
 <template>
+
   <VListTile :style="{backgroundColor: backgroundColor}" @click.stop="setNode(index)">
     <VListTileAction>
       <VCheckbox color="primary" :inputValue="isSelected" @click.stop="toggleNode" />
@@ -58,20 +59,18 @@
       </VBtn>
     </VListTileAction>
   </VListTile>
+
 </template>
 
 <script>
 
   import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
+  import { modes } from '../constants';
   import ContentNodeIcon from 'edit_channel/sharedComponents/ContentNodeIcon.vue';
   import { fileSizeMixin, fileErrorMixin } from 'edit_channel/file_upload/mixins';
 
   export default {
     name: 'EditListItem',
-    $trs: {
-      uploadFileSize: '{uploaded} of {total}',
-      questionCount: '{count, plural,\n =1 {# Question}\n other {# Questions}}',
-    },
     components: {
       ContentNodeIcon,
     },
@@ -93,7 +92,7 @@
     },
     computed: {
       ...mapGetters('edit_modal', ['getNode', 'invalidNodes']),
-      ...mapState('edit_modal', ['selectedIndices']),
+      ...mapState('edit_modal', ['mode', 'selectedIndices']),
       node() {
         return this.getNode(this.index);
       },
@@ -101,7 +100,13 @@
         return this.selectedIndices.includes(this.index);
       },
       nodeIsValid() {
-        return !this.invalidNodes.includes(this.index) && !this.firstFileError;
+        if (this.mode === modes.VIEW_ONLY) {
+          return true;
+        }
+
+        return (
+          !this.invalidNodes({ ignoreNewNodes: true }).includes(this.index) && !this.firstFileError
+        );
       },
       uploads() {
         return _.reject(
@@ -176,6 +181,10 @@
       toggleNode() {
         this.isSelected ? this.deselect(this.index) : this.select(this.index);
       },
+    },
+    $trs: {
+      uploadFileSize: '{uploaded} of {total}',
+      questionCount: '{count, plural,\n =1 {# Question}\n other {# Questions}}',
     },
   };
 

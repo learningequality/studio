@@ -89,7 +89,7 @@ html {
 }
 
 .red-action-button {
-  .action-button;
+  .action-button();
 
   color: white;
   background: @darkred-color;
@@ -197,6 +197,20 @@ html {
 @exercise-color: @green-success-color;
 @html-color: #ff8f00;
 @slideshow-color: #4ece90;
+@exercise-answer-correct: #4caf50;
+@exercise-answer-wrong: #ef5350;
+@gray-light: #f2f2f2;
+
+/* TRANSITIONS */
+
+.fade-enter-active {
+  transition: opacity 0.7s;
+}
+
+.fade-enter,
+.fade-leave-active {
+  opacity: 0;
+}
 
 /* GLOBAL STYLES */
 
@@ -369,7 +383,7 @@ a {
 }
 
 .spinner {
-  .material-icons;
+  .material-icons();
 
   animation: spin 1.5s infinite linear;
   &::before {
@@ -405,4 +419,9 @@ select {
 .action-link:hover {
   color: @blue-500 !important;
   text-decoration: underline;
+}
+
+.card-border-light {
+  margin-top: -1px;
+  border: 1px #d2d2d2 solid;
 }

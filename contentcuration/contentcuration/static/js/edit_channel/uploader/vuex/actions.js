@@ -29,6 +29,27 @@ export function loadNodes(context, indices) {
   }
 }
 
+/**
+ * Validate node details and assessment items and save
+ * validation results to state.validation.
+ */
+export const validateNode = ({ commit }, nodeIdx) => {
+  commit('SANITIZE_NODE_ASSESSMENT_ITEMS', { nodeIdx });
+
+  commit('VALIDATE_NODE_ASSESSMENT_ITEMS', { nodeIdx });
+  commit('VALIDATE_NODE_DETAILS', { nodeIdx });
+};
+
+/**
+ * Validate nodes and mark them as not new.
+ */
+export const prepareForSave = ({ dispatch, state }) => {
+  state.nodes.forEach((node, nodeIdx) => {
+    dispatch('validateNode', nodeIdx);
+    node.isNew = false;
+  });
+};
+
 export function removeNode(context, index) {
   let node = context.state.nodes[index];
   if (node.id) {

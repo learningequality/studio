@@ -1,5 +1,6 @@
 <template>
-  <VLayout grid wrap alignCenter>
+
+  <VLayout grid wrap align-center>
     <VSelect
       ref="visibility"
       v-model="role"
@@ -20,7 +21,7 @@
             <VDivider />
             <div class="role-table">
               <VLayout v-for="roleOption in roles" :key="roleOption.id" row>
-                <VFlex xs3 textRight class="role-label">
+                <VFlex xs3 text-right class="role-label">
                   {{ translate(roleOption.id) }}
                   <VIcon v-if="roleOption.icon" color="primary">
                     {{ roleOption.icon }}
@@ -48,6 +49,7 @@
       </template>
     </VSelect>
   </VLayout>
+
 </template>
 
 <script>
@@ -69,16 +71,6 @@
 
   export default {
     name: 'VisibilityDropdown',
-    $trs: {
-      labelText: 'Visible to',
-      visibilityHeader: 'What is content visibility?',
-      visibilityDescription:
-        'Content visibility determines what type of Kolibri users can see this content.',
-      coach:
-        'This is support content and is visible only to coaches (teachers, facilitators, administrators)',
-      learner: 'This content is visible to anyone',
-      visibilityRequired: 'Visibility is required',
-    },
     components: {
       InfoModal,
     },
@@ -127,6 +119,18 @@
       translate(item) {
         return translate(item.id || item);
       },
+    },
+    $trs: {
+      labelText: 'Visible to',
+      visibilityHeader: 'What is content visibility?',
+      visibilityDescription:
+        'Content visibility determines what type of Kolibri users can see this content.',
+      /* eslint-disable kolibri/vue-no-unused-translations */
+      coach:
+        'This is support content and is visible only to coaches (teachers, facilitators, administrators)',
+      /* eslint-enable */
+      learner: 'This content is visible to anyone',
+      visibilityRequired: 'Visibility is required',
     },
   };
 

@@ -1,4 +1,5 @@
 <template>
+
   <Uploader @uploading="createNodesFromFiles">
     <template slot="upload-zone">
       <VList width="100%">
@@ -27,24 +28,17 @@
       </VList>
     </template>
   </Uploader>
+
 </template>
 
 <script>
 
   import { mapMutations, mapState } from 'vuex';
-  import { modes } from '../constants';
   import EditListItem from './EditListItem.vue';
   import Uploader from 'edit_channel/sharedComponents/Uploader.vue';
 
   export default {
     name: 'EditList',
-    $trs: {
-      selectAllLabel: 'Select All',
-      addTopic: 'Add Topic',
-      addExercise: 'Add Exercise',
-      uploadButton: 'Upload',
-      dropFilesText: 'or drop files here',
-    },
     components: {
       EditListItem,
       Uploader,
@@ -61,21 +55,7 @@
       };
     },
     computed: {
-      ...mapState('edit_modal', ['nodes', 'mode']),
-      allowAddTopic() {
-        return this.mode === modes.NEW_TOPIC;
-      },
-      allowAddExercise() {
-        return this.mode === modes.NEW_EXERCISE;
-      },
-      addButtonText() {
-        if (this.allowAddTopic) return this.$tr('addTopic');
-        else if (this.allowAddExercise) return this.$tr('addExercise');
-        return null;
-      },
-      allowUpload() {
-        return this.mode === modes.UPLOAD;
-      },
+      ...mapState('edit_modal', ['nodes']),
     },
     methods: {
       ...mapMutations('edit_modal', {
@@ -87,6 +67,9 @@
         this.selectAllChecked ? this.deselectAll() : this.selectAll();
         this.selectAllChecked = !this.selectAllChecked;
       },
+    },
+    $trs: {
+      selectAllLabel: 'Select All',
     },
   };
 

@@ -1,4 +1,5 @@
 <template>
+
   <VApp>
     <VBtn @click="openModal('EDIT')">
       Edit Modal
@@ -29,10 +30,15 @@
 
     <EditModal v-if="mode" ref="editmodal" @modalclosed="reset" />
   </VApp>
+
 </template>
 <script>
 
   import _ from 'underscore';
+
+  import 'summernote';
+  import 'summernote/dist/summernote.css';
+
   import { mapMutations, mapState } from 'vuex';
   import EditModal from 'edit_channel/uploader/views/EditModal.vue';
 
