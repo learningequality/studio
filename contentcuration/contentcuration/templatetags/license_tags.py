@@ -53,6 +53,7 @@ DESCRIPTION_MAPPING = {"CC BY": _("The Attribution License lets others distribut
 @register.filter(is_safe=True)
 @stringfilter
 def get_license_url(value):
+    global LICENSE_MAPPING
     if not LICENSE_MAPPING:
         LICENSE_MAPPING = {l.license_name: l.license_url for l in License.objects.all()}
 
