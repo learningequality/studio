@@ -88,6 +88,7 @@ var messages = {
   svg: 'SVG Image',
   perseus: 'Perseus Exercise',
   zip: 'HTML5 Zip',
+  h5p: 'H5P',
   high_res_video: 'High Resolution',
   low_res_video: 'Low Resolution',
   vector_video: 'Vectorized',
