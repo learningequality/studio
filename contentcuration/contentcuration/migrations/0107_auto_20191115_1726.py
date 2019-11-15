@@ -13,10 +13,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='mptttreeidmanager',
-            name='current',
-        ),
         migrations.AlterField(
             model_name='fileformat',
             name='extension',

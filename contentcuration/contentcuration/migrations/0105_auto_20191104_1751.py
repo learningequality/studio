@@ -17,7 +17,6 @@ class Migration(migrations.Migration):
             name='MPTTTreeIDManager',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('current', models.BooleanField(default=False)),
             ],
         ),
         migrations.AlterField(
