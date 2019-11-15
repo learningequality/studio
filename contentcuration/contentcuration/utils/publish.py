@@ -135,7 +135,7 @@ def map_content_nodes(root_node, default_language, channel_id, channel_name, use
             return None
 
     with transaction.atomic():
-        with ccmodels.ContentNode.objects.delay_mptt_updates(), kolibrimodels.ContentNode.objects.disable_mptt_updates():
+        with ccmodels.ContentNode.objects.delay_mptt_updates(), kolibrimodels.ContentNode.objects.delay_mptt_updates():
             for node in iter(queue_get_return_none_when_empty, None):
                 logging.debug("Mapping node with id {id}".format(
                     id=node.pk))
@@ -225,10 +225,6 @@ def create_bare_contentnode(ccnode, default_language, channel_id, channel_name):
             'license_name': kolibri_license.license_name if kolibri_license is not None else None,
             'license_description': kolibri_license.license_description if kolibri_license is not None else None,
             'coach_content': ccnode.role_visibility == roles.COACH,
-            'lft': ccnode.lft,
-            'rght': ccnode.rght,
-            'tree_id': ccnode.tree_id,
-            'level': ccnode.level
         }
     )
 
