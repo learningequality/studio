@@ -3,7 +3,6 @@ import datetime
 from le_utils.constants import content_kinds
 
 from .base import MigrationTestCase
-from contentcuration import models
 
 included_languages_deploy_date = datetime.datetime(2017, 11, 30)
 included_languages_should_up_date = datetime.datetime(2016, 11, 30)
@@ -31,7 +30,8 @@ class TestForwardIncludedLanguagesMigrationPublishedChannel(MigrationTestCase):
         ContentNode.objects.create(tree_id=self.channel.main_tree.tree_id, language=unpublished_language, lft=2, rght=3, level=1, kind=topic, published=False)
 
     def test_include_language(self):
-        included_languages = models.Channel.objects.filter(last_published__isnull=False).first().included_languages
+        Channel = self.apps.get_model(self.app, 'Channel')
+        included_languages = Channel.objects.filter(last_published__isnull=False).first().included_languages
         self.assertEqual(included_languages.count(), 1)
         self.assertEqual(included_languages.first().id, self.language.id)
         self.assertEqual(included_languages.first().lang_code, self.language.lang_code)
@@ -60,7 +60,8 @@ class TestForwardIncludedLanguagesMigrationNewlyPublishedChannel(MigrationTestCa
         ContentNode.objects.create(tree_id=self.channel.main_tree.tree_id, language=unpublished_language, lft=2, rght=3, level=1, kind=topic, published=False)
 
     def test_include_language_no_changes(self):
-        included_languages = models.Channel.objects.filter(last_published__isnull=True).first().included_languages
+        Channel = self.apps.get_model(self.app, 'Channel')
+        included_languages = Channel.objects.filter(last_published__isnull=True).first().included_languages
         self.assertEqual(included_languages.count(), 0)
 
 
@@ -85,7 +86,8 @@ class TestForwardIncludedLanguagesMigrationUnpublishedChannel(MigrationTestCase)
             language=self.language, lft=2, rght=3, level=1, kind=topic, published=True)
 
     def test_unpublished_no_include_language(self):
-        included_languages = models.Channel.objects.filter(last_published__isnull=True).first().included_languages
+        Channel = self.apps.get_model(self.app, 'Channel')
+        included_languages = Channel.objects.filter(last_published__isnull=True).first().included_languages
         self.assertEqual(included_languages.count(), 0)
 
 
@@ -111,7 +113,8 @@ class TestForwardIncludedLanguagesMigrationFile(MigrationTestCase):
         File.objects.create(contentnode=published_node, language=self.language)
 
     def test_include_language(self):
-        included_languages = models.Channel.objects.filter(last_published__isnull=False).first().included_languages
+        Channel = self.apps.get_model(self.app, 'Channel')
+        included_languages = Channel.objects.filter(last_published__isnull=False).first().included_languages
         self.assertEqual(included_languages.count(), 1)
         self.assertEqual(included_languages.first().id, self.language.id)
         self.assertEqual(included_languages.first().lang_code, self.language.lang_code)

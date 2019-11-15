@@ -281,7 +281,7 @@ def api_publish_channel(request):
         channel_id = data["channel_id"]
         # Ensure that the user has permission to edit this channel.
         request.user.can_edit(channel_id)
-        call_command("exportchannel", channel_id, user_id=request.user.pk)
+        call_command("exportchannel", channel_id, user_id=request.user.pk, version_notes=data.get('version_notes'))
 
         return Response({
             "success": True,
@@ -542,6 +542,7 @@ def convert_data_to_nodes(user, content_data, parent_node):
 
     except KeyError as e:
         raise ObjectDoesNotExist("Error creating node: {0}".format(e.message))
+
 
 def create_node(node_data, parent_node, sort_order):
     """ Generate node based on node dict """
