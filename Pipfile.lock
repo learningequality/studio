@@ -650,10 +650,10 @@
         },
         "le-utils": {
             "hashes": [
-                "sha256:958d55a501a1e230228af7f9bd221cef532d88dbc648cfab535e64fd62d890a9"
+                "sha256:57a0d91d556c70d8d69c10cc76ab8ee572441f1b04b0b09291e3058c4cddd40c"
             ],
             "index": "pypi",
-            "version": "==0.1.19"
+            "version": "==0.1.23"
         },
         "livereload": {
             "hashes": [
