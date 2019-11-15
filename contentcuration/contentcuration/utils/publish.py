@@ -135,7 +135,7 @@ def map_content_nodes(root_node, default_language, channel_id, channel_name, use
             return None
 
     with transaction.atomic():
-        with ccmodels.ContentNode.objects.delay_mptt_updates():
+        with ccmodels.ContentNode.objects.delay_mptt_updates(), kolibrimodels.ContentNode.objects.delay_mptt_updates():
             for node in iter(queue_get_return_none_when_empty, None):
                 logging.debug("Mapping node with id {id}".format(
                     id=node.pk))
