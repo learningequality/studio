@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
+import LanguageDropdown from './../../sharedComponents/LanguageDropdown.vue';
 import PublishView from './../views/PublishView.vue';
 import { localStore, mockFunctions } from './data.js';
-import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown.vue';
 
 document.body.setAttribute('data-app', true); // Vuetify prints a warning without this
 
@@ -29,6 +29,7 @@ function makeWrapper(channel = {}) {
   });
   return mount(PublishView, {
     store: localStore,
+    sync: false,
   });
 }
 
@@ -70,25 +71,14 @@ describe('publishView', () => {
     it('should set savingLanguage to true', () => {
       languageDropdown.vm.$emit('changed', 'en');
       expect(wrapper.vm.savingLanguage).toBe(true);
-      wrapper.vm.$nextTick(() => {
-        expect(wrapper.vm.savingLanguage).toBe(false);
-      });
     });
   });
   describe('buttons', () => {
-    it('buttons should change based on step', () => {
+    it('buttons should not all be shown immediately', () => {
       expect(wrapper.find({ ref: 'cancelbutton' }).isVisible()).toBe(true);
       expect(wrapper.find({ ref: 'nextbutton' }).isVisible()).toBe(true);
       expect(wrapper.find({ ref: 'backbutton' }).isVisible()).toBe(false);
       expect(wrapper.find({ ref: 'publishbutton' }).isVisible()).toBe(false);
-
-      wrapper.setData({ step: steps.PUBLISH_STEP });
-      wrapper.vm.$nextTick(() => {
-        expect(wrapper.find({ ref: 'cancelbutton' }).isVisible()).toBe(false);
-        expect(wrapper.find({ ref: 'nextbutton' }).isVisible()).toBe(false);
-        expect(wrapper.find({ ref: 'backbutton' }).isVisible()).toBe(true);
-        expect(wrapper.find({ ref: 'publishbutton' }).isVisible()).toBe(true);
-      });
     });
     it('next should be disabled if channel is invalid', () => {
       let testWrapper = makeWrapper({ language: null });
@@ -109,17 +99,18 @@ describe('publishView', () => {
     });
     it('publish should not go through if there is no message', () => {
       mockFunctions.publishChannel.mockReset();
-      wrapper.setData({ step: steps.PUBLISH_STEP });
       wrapper.find({ ref: 'publishbutton' }).trigger('click');
       expect(wrapper.emitted('publish')).toBeFalsy();
       expect(mockFunctions.publishChannel).not.toHaveBeenCalled();
     });
     it('publish should call publishChannel action', () => {
       mockFunctions.publishChannel.mockReset();
-      wrapper.setData({ step: steps.PUBLISH_STEP, publishDescription: 'Test Description' });
-      wrapper.find({ ref: 'publishbutton' }).trigger('click');
-      expect(wrapper.emitted('publish')).toBeTruthy();
-      expect(mockFunctions.publishChannel).toHaveBeenCalled();
+      wrapper.setData({ publishDescription: 'Test Description' });
+      wrapper.vm.$nextTick(() => {
+        wrapper.find({ ref: 'publishbutton' }).trigger('click');
+        expect(wrapper.emitted('publish')).toBeTruthy();
+        expect(mockFunctions.publishChannel).toHaveBeenCalled();
+      });
     });
   });
 });
