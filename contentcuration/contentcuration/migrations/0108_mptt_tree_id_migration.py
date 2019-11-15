@@ -31,7 +31,7 @@ def update_tree_id_integer(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('contentcuration', '0105_auto_20191104_1751'),
+        ('contentcuration', '0107_auto_20191115_2344'),
     ]
 
     operations = [
