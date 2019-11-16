@@ -701,9 +701,9 @@ class Channel(models.Model):
             # Delete db if channel has been deleted and mark as unpublished
             if not original_channel.deleted and self.deleted:
                 self.pending_editors.all().delete()
-                channel_db_url = os.path.join(settings.DB_ROOT, self.id) + ".sqlite3"
-                if os.path.isfile(channel_db_url):
-                    os.unlink(channel_db_url)
+                export_db_storage_path = os.path.join(settings.DB_ROOT, "{channel_id}.sqlite3".format(channel_id=self.id))
+                if default_storage.exists(export_db_storage_path):
+                    default_storage.delete(export_db_storage_path)
                     self.main_tree.published = False
             self.main_tree.save()
 
@@ -1443,9 +1443,9 @@ def auto_delete_file_on_delete(sender, instance, **kwargs):
 def delete_empty_file_reference(checksum, extension):
     filename = checksum + '.' + extension
     if not File.objects.filter(checksum=checksum).exists() and not Channel.objects.filter(thumbnail=filename).exists():
-        file_on_disk_path = generate_file_on_disk_name(checksum, filename)
-        if os.path.isfile(file_on_disk_path):
-            os.remove(file_on_disk_path)
+        storage_path = generate_object_storage_name(checksum, filename)
+        if default_storage.exists(storage_path):
+            default_storage.delete(storage_path)
 
 
 class PrerequisiteContentRelationship(models.Model):
