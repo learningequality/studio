@@ -1,9 +1,15 @@
 import Vue from 'vue';
 import Vuetify from 'vuetify';
+import colors from 'vuetify/es5/util/colors';
 
 import PublishWrapper from 'edit_channel/publish/views/PublishWrapper.vue';
 
-Vue.use(Vuetify, { rtl: window.isRTL });
+Vue.use(Vuetify, {
+  rtl: window.isRTL,
+  theme: {
+    primary: colors.blue.base, // @blue-500
+  },
+});
 
 var _ = require('underscore');
 var Backbone = require('backbone');

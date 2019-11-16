@@ -612,6 +612,7 @@ class Channel(models.Model):
     ricecooker_version = models.CharField(max_length=100, blank=True, null=True)
 
     # Fields to calculate when channel is published
+    published_data = JSONField(default=dict)
     icon_encoding = models.TextField(blank=True, null=True)
     total_resource_count = models.IntegerField(default=0)
     published_kind_count = models.TextField(blank=True, null=True)
