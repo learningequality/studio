@@ -154,7 +154,7 @@ class AsyncTaskTestCase(BaseAPITestCase):
             'user_id': self.user.pk,
             'channel_id': self.channel.pk,
             'node_ids': ids,
-            'target_parent': parent_node
+            'target_parent': parent_node.pk
         }
         task, task_info = create_async_task('duplicate-nodes', task_options, task_args)
 

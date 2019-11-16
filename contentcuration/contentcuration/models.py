@@ -86,8 +86,16 @@ def _create_tree_space(self, target_tree_id, num_trees=1):
     self._orig_create_tree_space(target_tree_id, num_trees)
 
 
+def _get_next_tree_id(self, *args, **kwargs):
+    new_id = MPTTTreeIDManager.objects.create().id
+    return new_id
+
+
 TreeManager._orig_create_tree_space = TreeManager._create_tree_space
 TreeManager._create_tree_space = _create_tree_space
+
+TreeManager._orig_get_next_tree_id = TreeManager._get_next_tree_id
+TreeManager._get_next_tree_id = _get_next_tree_id
 
 
 class UserManager(BaseUserManager):
@@ -359,6 +367,19 @@ class UUIDField(models.CharField):
         if isinstance(result, uuid.UUID):
             result = result.hex
         return result
+
+
+class MPTTTreeIDManager(models.Model):
+    """
+    Because MPTT uses plain integers for tree IDs and does not use an auto-incrementing field for them,
+    the same ID can sometimes be assigned to two trees if two channel create ops happen concurrently.
+
+    As we are using this table only for the ID generation, it does not need any fields.
+
+    We resolve this by creating a dummy table and using its ID as the tree index to take advantage of the db's
+    concurrency-friendly way of generating sequential integer IDs. There is a custom migration that ensures
+    that the number of records (and thus id) matches the max tree ID number when this table gets added.
+    """
 
 
 def file_on_disk_name(instance, filename):
@@ -675,7 +696,9 @@ class Channel(models.Model):
                 original_channel_id=self.id,
                 source_channel_id=self.id,
             )
-            self.main_tree.save()
+            # Ensure that locust or unit tests raise if there are any concurrency issues with tree ids.
+            if settings.DEBUG:
+                assert ContentNode.objects.filter(parent=None, tree_id=self.main_tree.tree_id).count() == 1
         elif self.main_tree.title != self.name:
             self.main_tree.title = self.name
             self.main_tree.save()
@@ -688,7 +711,6 @@ class Channel(models.Model):
                 content_id=self.id,
                 node_id=self.id,
             )
-            self.trash_tree.save()
         elif self.trash_tree.title != self.name:
             self.trash_tree.title = self.name
             self.trash_tree.save()
