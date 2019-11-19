@@ -916,14 +916,14 @@ var ExerciseEditableListView = BaseViews.BaseEditableListView.extend({
     return true;
   },
   set_invalid: function(invalid) {
-    this.$(this.additem_el).prop('disabled', invalid);
-    invalid
-      ? this.$(this.additem_el)
-          .addClass('disabled')
-          .attr('disabled', 'disabled')
-      : this.$(this.additem_el)
-          .removeClass('disabled')
-          .removeAttr('disabled');
+    // this.$(this.additem_el).prop('disabled', invalid);
+    // invalid
+    //   ? this.$(this.additem_el)
+    //       .addClass('disabled')
+    //       .attr('disabled', 'disabled')
+    //   : this.$(this.additem_el)
+    //       .removeClass('disabled')
+    //       .removeAttr('disabled');
     this.$(this.additem_el).prop(
       'title',
       invalid ? this.get_translation('blank_item_detected') : this.get_translation('add')
