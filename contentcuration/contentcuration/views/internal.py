@@ -282,7 +282,6 @@ def api_publish_channel(request):
         # Ensure that the user has permission to edit this channel.
         request.user.can_edit(channel_id)
         call_command("exportchannel", channel_id, user_id=request.user.pk, version_notes=data.get('version_notes'))
-
         return Response({
             "success": True,
             "channel": channel_id
@@ -555,6 +554,10 @@ def create_node(node_data, parent_node, sort_order):
         except ObjectDoesNotExist:
             raise ObjectDoesNotExist("Invalid license found")
 
+    extra_fields = node_data['extra_fields'] or {}
+    if isinstance(extra_fields, basestring):
+        extra_fields = json.loads(extra_fields)
+
     node = ContentNode.objects.create(
         title=node_data['title'],
         tree_id=parent_node.tree_id,
@@ -569,7 +572,7 @@ def create_node(node_data, parent_node, sort_order):
         license_description=node_data.get('license_description'),
         copyright_holder=node_data.get('copyright_holder') or "",
         parent=parent_node,
-        extra_fields=node_data['extra_fields'],
+        extra_fields=extra_fields,
         sort_order=sort_order,
         source_id=node_data.get('source_id'),
         source_domain=node_data.get('source_domain'),
@@ -588,6 +591,7 @@ def create_node(node_data, parent_node, sort_order):
     if len(tags) > 0:
         node.tags = tags
         node.save()
+
     return node
 
 
