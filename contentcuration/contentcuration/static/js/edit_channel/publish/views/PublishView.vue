@@ -1,27 +1,25 @@
 <template>
   <VCard class="publish-view">
-    <VCardTitle primaryTitle>
-      <div :title="channel.name" class="headline">
+    <VCardText>
+      <h1 class="headline">
         {{ channel.name }}
-      </div>
-      <div class="subheading">
-        <span v-if="language">
-          {{ language.native_name }}
-        </span>
-        <span>
-          {{ $tr('publishingSizeText', {count: channelCount}) }}
-        </span>
-        <span>
-          {{ sizeText }}
-        </span>
-        <span v-if="channel.version">
-          {{ $tr('versionText', {version: channel.version}) }}
-        </span>
-        <span v-else>
-          {{ $tr('unpublishedText') }}
-        </span>
-      </div>
-    </VCardTitle>
+      </h1>
+      <span v-if="language">
+        {{ language.native_name }}
+      </span>
+      <span>
+        {{ $tr('publishingSizeText', {count: channelCount}) }}
+      </span>
+      <span>
+        {{ sizeText }}
+      </span>
+      <span v-if="channel.version">
+        {{ $tr('versionText', {version: channel.version}) }}
+      </span>
+      <span v-else>
+        {{ $tr('unpublishedText') }}
+      </span>
+    </VCardText>
     <VDivider />
     <VWindow v-model="step">
       <VWindowItem :key="0">
