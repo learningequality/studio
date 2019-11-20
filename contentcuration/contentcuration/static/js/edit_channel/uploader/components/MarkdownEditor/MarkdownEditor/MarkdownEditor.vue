@@ -41,6 +41,9 @@
   import formulas from '../extensions/formulas';
   import formulasHtmlToMd from '../extensions/formulas/formula-html-to-md';
 
+  // Currently, we allow only WYSIWYG mode.
+  const ALLOW_MARKDOWN_MODE = true;
+
   export default {
     name: 'MarkdownEditor',
     components: {
@@ -110,7 +113,7 @@
         initialEditType: 'wysiwyg',
         usageStatistics: false,
         toolbarItems: ['bold', 'italic'],
-        hideModeSwitch: true,
+        hideModeSwitch: !ALLOW_MARKDOWN_MODE,
         exts: [undoRedo, imageUpload, formulas],
         extOptions: {
           formulas: {
@@ -127,6 +130,22 @@
         // for such cases
         if (this.markdown === this.editor.getMarkdown()) {
           return;
+        }
+
+        if (ALLOW_MARKDOWN_MODE) {
+          this.editor.on('changeModeToWysiwyg', () => {
+            const mathFieldEls = this.$el.getElementsByClassName('math-field');
+            for (let mathFieldEl of mathFieldEls) {
+              this.mathQuill.StaticMath(mathFieldEl);
+            }
+          });
+
+          this.editor.addHook('previewBeforeHook', () => {
+            const mathFieldEls = this.$el.getElementsByClassName('math-field');
+            for (let mathFieldEl of mathFieldEls) {
+              this.mathQuill.StaticMath(mathFieldEl);
+            }
+          });
         }
 
         // eslint-disable-next-line
@@ -228,6 +247,14 @@
         }
       },
       onClick(event) {
+        // ignore clicks in markdown preview tab
+        if (
+          ALLOW_MARKDOWN_MODE &&
+          (event.target.classList.contains('te-preview') || event.target.closest('.te-preview'))
+        ) {
+          return;
+        }
+
         let mathFieldEl = null;
         if (event.target.classList.contains(CLASS_MATH_FIELD)) {
           mathFieldEl = event.target;
