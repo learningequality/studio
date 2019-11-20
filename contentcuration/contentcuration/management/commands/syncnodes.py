@@ -3,7 +3,7 @@ import logging as logmodule
 from django.core.management.base import BaseCommand
 
 from contentcuration.models import Channel
-from contentcuration.views.nodes import sync_channel
+from contentcuration.utils.sync import sync_channel
 logmodule.basicConfig()
 logging = logmodule.getLogger(__name__)
 
