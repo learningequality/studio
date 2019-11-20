@@ -1,9 +1,6 @@
 <template>
 
-  <div
-    v-click-outside="closeEditableMathField"
-    :style="{ 'position': 'relative' }"
-  >
+  <div :style="{ 'position': 'relative' }">
     <div
       ref="editor"
       class="editor"
@@ -72,10 +69,16 @@
           },
         },
         mathQuill: null,
-        editableMathFieldEl: null,
         clickEventListener: null,
-        keyDownEventListener: null,
       };
+    },
+    computed: {
+      editorPosition() {
+        return {
+          top: this.$el.getBoundingClientRect().top,
+          left: this.$el.getBoundingClientRect().left,
+        };
+      },
     },
     watch: {
       markdown(newMd, previousMd) {
@@ -137,47 +140,17 @@
       this.initStaticMathFields();
 
       this.clickEventListener = this.$el.addEventListener('click', this.onClick);
-
-      // canceling default Squire key events is not documented but it's recommended here
-      // https://github.com/neilj/Squire/issues/107
-      this.keyDownEventListener = this.$el.addEventListener('keydown', this.onKeyDown, true);
     },
     beforeDestroy() {
       this.$el.removeEventListener(this.clickEventListener, this.onClick);
-      this.$el.removeEventListener(this.keyDownEventListener, this.onKeyDown);
     },
     methods: {
       onFormulasToolbarBtnClick({ editorCursorPosition }) {
-        // formulas menu position is relative to editor position
-        const editorPosition = {
-          top: this.$el.getBoundingClientRect().top,
-          left: this.$el.getBoundingClientRect().left,
-        };
+        this.formulasMenu.style.top = `${editorCursorPosition.top - this.editorPosition.top}px`;
+        this.formulasMenu.style.left = `${editorCursorPosition.left - this.editorPosition.left}px`;
 
-        // if there is an active editable math field, place the menu near the bottom of the element
-        // (editor cursor position is not so precise in this scenario)
-        if (
-          this.editableMathFieldEl !== null &&
-          this.mathQuill(this.editableMathFieldEl) !== null
-        ) {
-          this.formulasMenu.style.top = `${this.editableMathFieldEl.getBoundingClientRect().bottom -
-            editorPosition.top -
-            10}px`;
-          this.formulasMenu.style.left = `${this.editableMathFieldEl.getBoundingClientRect().left -
-            editorPosition.left +
-            10}px`;
-
-          this.formulasMenu.mathFieldEl = this.editableMathFieldEl;
-          this.formulasMenu.mathFieldFormula = this.mathQuill(this.editableMathFieldEl).latex();
-        }
-        // otherwise use an editor cursor position
-        else {
-          this.formulasMenu.style.top = `${editorCursorPosition.top - editorPosition.top}px`;
-          this.formulasMenu.style.left = `${editorCursorPosition.left - editorPosition.left}px`;
-
-          this.formulasMenu.mathFieldEl = null;
-          this.formulasMenu.mathFieldFormula = null;
-        }
+        this.formulasMenu.mathFieldEl = null;
+        this.formulasMenu.mathFieldFormula = null;
 
         this.formulasMenu.isOpen = true;
       },
@@ -214,19 +187,6 @@
         this.resetFormulasMenu();
         this.editor.focus();
       },
-      onKeyDown(event) {
-        // Squire should not handle enter key event when pressed in a math field
-        if (
-          event.key === 'Enter' &&
-          (event.target.classList.contains(CLASS_MATH_FIELD) ||
-            event.target.closest(`.${CLASS_MATH_FIELD}`))
-        ) {
-          event.preventDefault();
-          event.stopPropagation();
-
-          this.closeEditableMathField();
-        }
-      },
       onClick(event) {
         let mathFieldEl = null;
         if (event.target.classList.contains(CLASS_MATH_FIELD)) {
@@ -235,50 +195,21 @@
           mathFieldEl = event.target.closest(`.${CLASS_MATH_FIELD}`);
         }
 
-        // no need to continue if the math field clicked is already editable
-        if (
-          mathFieldEl !== null &&
-          this.mathQuill(mathFieldEl) instanceof this.mathQuill.EditableField
-        ) {
-          return;
-        }
-
-        // close any other editable math field
-        this.closeEditableMathField();
-
         if (mathFieldEl === null) {
           return;
         }
 
-        // static math field must be reverted before switch to editable field
-        if (this.mathQuill(mathFieldEl) instanceof this.mathQuill.StaticMath) {
-          this.mathQuill(mathFieldEl).revert();
-        }
+        this.formulasMenu.style.top = `${mathFieldEl.getBoundingClientRect().bottom -
+          this.editorPosition.top -
+          10}px`;
+        this.formulasMenu.style.left = `${mathFieldEl.getBoundingClientRect().left -
+          this.editorPosition.left +
+          10}px`;
 
-        const editableMathField = this.mathQuill.MathField(mathFieldEl, {
-          spaceBehavesLikeTab: true,
-        });
+        this.formulasMenu.mathFieldEl = mathFieldEl;
+        this.formulasMenu.mathFieldFormula = this.mathQuill(mathFieldEl).latex();
 
-        editableMathField.focus();
-        this.editableMathFieldEl = mathFieldEl;
-      },
-      closeEditableMathField() {
-        if (
-          this.editableMathFieldEl === null ||
-          this.mathQuill(this.editableMathFieldEl) === null
-        ) {
-          return;
-        }
-
-        const editableMathField = this.mathQuill(this.editableMathFieldEl);
-        const formula = editableMathField.latex();
-
-        editableMathField.revert();
-
-        this.editableMathFieldEl.innerHTML = formula;
-        this.mathQuill.StaticMath(this.editableMathFieldEl);
-
-        this.editableMathFieldEl = null;
+        this.formulasMenu.isOpen = true;
       },
       initStaticMathFields() {
         const mathFieldEls = this.$el.getElementsByClassName(CLASS_MATH_FIELD);
