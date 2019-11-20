@@ -4,21 +4,23 @@
       <h1 class="headline">
         {{ channel.name }}
       </h1>
-      <span v-if="language">
-        {{ language.native_name }}
-      </span>
-      <span>
-        {{ $tr('publishingSizeText', {count: channelCount}) }}
-      </span>
-      <span>
-        {{ sizeText }}
-      </span>
-      <span v-if="channel.version">
-        {{ $tr('versionText', {version: channel.version}) }}
-      </span>
-      <span v-else>
-        {{ $tr('unpublishedText') }}
-      </span>
+      <p class="subheading">
+        <span v-if="language">
+          {{ language.native_name }}
+        </span>
+        <span>
+          {{ $tr('publishingSizeText', {count: channelCount}) }}
+        </span>
+        <span>
+          {{ sizeText }}
+        </span>
+        <span v-if="channel.version">
+          {{ $tr('versionText', {version: channel.version}) }}
+        </span>
+        <span v-else>
+          {{ $tr('unpublishedText') }}
+        </span>
+      </p>
     </VCardText>
     <VDivider />
     <VWindow v-model="step">
