@@ -69,7 +69,7 @@ def sync_node(node, channel_id, sync_attributes=False, sync_tags=False, sync_fil
     original_node = node.get_original_node()
     if original_node.node_id != node.node_id:  # Only update if node is not original
         logging.info("----- Syncing: {} from {}".format(node.title,
-                                                        original_node.get_channel().name))
+                                                        original_node.get_channel().name.encode('utf-8')))
         if sync_attributes:  # Sync node metadata
             sync_node_data(node, original_node)
         if sync_tags:  # Sync node tags
