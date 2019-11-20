@@ -355,6 +355,8 @@ def process_assessment_metadata(ccnode, kolibrinode):
     # Get mastery model information, set to default if none provided
     assessment_items = ccnode.assessment_items.all().order_by('order')
     exercise_data = ccnode.extra_fields if ccnode.extra_fields else {}
+    if isinstance(exercise_data, basestring):
+        exercise_data = json.loads(exercise_data)
     randomize = exercise_data.get('randomize') if exercise_data.get('randomize') is not None else True
     assessment_item_ids = [a.assessment_id for a in assessment_items]
 
