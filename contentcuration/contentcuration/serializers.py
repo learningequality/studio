@@ -496,7 +496,8 @@ class ReadOnlySimplifiedContentNodeSerializer(SimplifiedContentNodeSerializer):
         fields = ('title', 'id', 'sort_order', 'kind', 'children', 'parent', 'metadata', 'content_id', 'prerequisite',
                   'is_prerequisite_of', 'ancestors', 'tree_id', 'language', 'role_visibility')
         read_only_fields = ('title', 'id', 'sort_order', 'kind', 'children', 'parent', 'metadata', 'content_id', 'prerequisite',
-                  'is_prerequisite_of', 'ancestors', 'tree_id', 'language', 'role_visibility')
+                            'is_prerequisite_of', 'ancestors', 'tree_id', 'language', 'role_visibility')
+
 
 class RootNodeSerializer(SimplifiedContentNodeSerializer, ContentNodeFieldMixin):
     channel_name = serializers.SerializerMethodField('retrieve_channel_name')
@@ -504,11 +505,11 @@ class RootNodeSerializer(SimplifiedContentNodeSerializer, ContentNodeFieldMixin)
     def retrieve_metadata(self, node):
         descendants = node.get_descendants()
         data = {
-            "total_count": node.get_descendant_count(),
-            "resource_count": descendants.exclude(kind_id=content_kinds.TOPIC).count(),
-            "max_sort_order": node.children.aggregate(max_sort_order=Max('sort_order'))['max_sort_order'] or 1,
-            "resource_size": 0,
-            "has_changed_descendant": node.changed or descendants.filter(changed=True).exists(),
+                "total_count": node.get_descendant_count(),
+                "resource_count": descendants.exclude(kind_id=content_kinds.TOPIC).count(),
+                "max_sort_order": node.children.aggregate(max_sort_order=Max('sort_order'))['max_sort_order'] or 1,
+                "resource_size": 0,
+                "has_changed_descendant": node.changed or descendants.filter(changed=True).exists(),
         }
         data.update(self.get_creators(descendants))
         return data
@@ -621,10 +622,10 @@ class ReadOnlyContentNodeSerializer(ContentNodeSerializer, ContentNodeFieldMixin
                   'tags', 'extra_fields', 'prerequisite', 'is_prerequisite_of', 'node_id', 'tree_id', 'publishing', 'freeze_authoring_data',
                   'role_visibility', 'provider', 'aggregator', 'thumbnail_src')
         read_only_fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license', 'language',
-                  'license_description', 'assessment_items', 'slideshow_slides', 'files', 'ancestors', 'modified', 'original_channel',
-                  'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'original_source_node_id',
-                  'tags', 'extra_fields', 'prerequisite', 'is_prerequisite_of', 'node_id', 'tree_id', 'publishing', 'freeze_authoring_data',
-                  'role_visibility', 'provider', 'aggregator', 'thumbnail_src')
+                            'license_description', 'assessment_items', 'slideshow_slides', 'files', 'ancestors', 'modified', 'original_channel',
+                            'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'original_source_node_id',
+                            'tags', 'extra_fields', 'prerequisite', 'is_prerequisite_of', 'node_id', 'tree_id', 'publishing', 'freeze_authoring_data',
+                            'role_visibility', 'provider', 'aggregator', 'thumbnail_src')
 
 
 class ReadOnlyContentNodeFullSerializer(ContentNodeSerializer):
@@ -642,10 +643,10 @@ class ReadOnlyContentNodeFullSerializer(ContentNodeSerializer):
                   'tags', 'extra_fields', 'original_channel', 'prerequisite', 'is_prerequisite_of', 'thumbnail_encoding', 'thumbnail_src',
                   'freeze_authoring_data', 'publishing', 'original_source_node_id', 'role_visibility', 'provider', 'aggregator')
         read_only_fields = ('title', 'changed', 'id', 'description', 'sort_order', 'author', 'copyright_holder', 'license', 'language',
-                  'node_id', 'license_description', 'assessment_items', 'slideshow_slides', 'files', 'content_id', 'modified',
-                  'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'ancestors', 'tree_id',
-                  'tags', 'extra_fields', 'original_channel', 'prerequisite', 'is_prerequisite_of', 'thumbnail_encoding', 'thumbnail_src',
-                  'freeze_authoring_data', 'publishing', 'original_source_node_id', 'role_visibility', 'provider', 'aggregator')
+                            'node_id', 'license_description', 'assessment_items', 'slideshow_slides', 'files', 'content_id', 'modified',
+                            'kind', 'parent', 'children', 'published', 'associated_presets', 'valid', 'metadata', 'ancestors', 'tree_id',
+                            'tags', 'extra_fields', 'original_channel', 'prerequisite', 'is_prerequisite_of', 'thumbnail_encoding', 'thumbnail_src',
+                            'freeze_authoring_data', 'publishing', 'original_source_node_id', 'role_visibility', 'provider', 'aggregator')
 
 
 class ContentNodeEditSerializer(ContentNodeSerializer):
@@ -757,7 +758,7 @@ class ChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
             'id', 'created', 'updated', 'name', 'description', 'has_changed', 'editors', 'main_tree', 'trash_tree',
             'staging_tree', 'source_id', 'source_domain', 'ricecooker_version', 'thumbnail', 'version', 'deleted',
             'public', 'thumbnail_url', 'thumbnail_encoding', 'pending_editors', 'viewers', 'tags', 'content_defaults',
-            'language', 'primary_token', 'priority', 'published_size')
+            'language', 'primary_token', 'priority', 'published_size', 'published_data')
         read_only_fields = ('id', 'version')
 
 

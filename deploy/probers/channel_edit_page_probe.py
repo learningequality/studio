@@ -7,6 +7,7 @@ from base import BaseProbe
 class ChannelEditPageProbe(BaseProbe):
 
     metric = "channel_edit_page_latency_msec"
+    prober_name = "CHANNEL-EDIT-PAGE-PROBER"
 
     def _get_channel(self):
         response = self.request('api/probers/get_prober_channel')
