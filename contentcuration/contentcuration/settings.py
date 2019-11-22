@@ -40,7 +40,7 @@ RUNNING_TESTS = (sys.argv[1:2] == ['test'] or os.path.basename(sys.argv[0]) == '
 WEBPACK_LOADER = {
     'DEFAULT': {
         # trailing empty string to include trailing /
-        'BUNDLE_DIR_NAME': os.path.join('js', 'bundles', ''),
+        'BUNDLE_DIR_NAME': os.path.join('studio', ''),
         'STATS_FILE': os.path.join(BASE_DIR, 'build', 'webpack-stats.json'),
     }
 }
