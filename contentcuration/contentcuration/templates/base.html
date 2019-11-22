@@ -57,8 +57,6 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
 			<title>Kolibri Studio ({% trans 'Beta' %})</title>
-      {% block css_bundle %}
-      {% endblock css_bundle %}
 
         {% if not debug %}
             <script src={% static 'django_js_reverse/js/reverse.js' %}></script>
@@ -94,6 +92,8 @@
         </script>
         {% endif %}
         {% endcache %}
+        {% block css_bundle %}
+        {% endblock css_bundle %}
       {% endblock head %}
 
       {% block analytics %}
