@@ -72,14 +72,6 @@
         clickEventListener: null,
       };
     },
-    computed: {
-      editorPosition() {
-        return {
-          top: this.$el.getBoundingClientRect().top,
-          left: this.$el.getBoundingClientRect().left,
-        };
-      },
-    },
     watch: {
       markdown(newMd, previousMd) {
         if (newMd !== previousMd && newMd !== this.editor.getMarkdown()) {
@@ -146,8 +138,10 @@
     },
     methods: {
       onFormulasToolbarBtnClick({ editorCursorPosition }) {
-        this.formulasMenu.style.top = `${editorCursorPosition.top - this.editorPosition.top}px`;
-        this.formulasMenu.style.left = `${editorCursorPosition.left - this.editorPosition.left}px`;
+        this.formulasMenu.style.top = `${editorCursorPosition.top -
+          this.getEditorPosition().top}px`;
+        this.formulasMenu.style.left = `${editorCursorPosition.left -
+          this.getEditorPosition().left}px`;
 
         this.formulasMenu.mathFieldEl = null;
         this.formulasMenu.mathFieldFormula = null;
@@ -200,16 +194,22 @@
         }
 
         this.formulasMenu.style.top = `${mathFieldEl.getBoundingClientRect().bottom -
-          this.editorPosition.top -
+          this.getEditorPosition().top -
           10}px`;
         this.formulasMenu.style.left = `${mathFieldEl.getBoundingClientRect().left -
-          this.editorPosition.left +
+          this.getEditorPosition().left +
           10}px`;
 
         this.formulasMenu.mathFieldEl = mathFieldEl;
         this.formulasMenu.mathFieldFormula = this.mathQuill(mathFieldEl).latex();
 
         this.formulasMenu.isOpen = true;
+      },
+      getEditorPosition() {
+        return {
+          top: this.$el.getBoundingClientRect().top,
+          left: this.$el.getBoundingClientRect().left,
+        };
       },
       initStaticMathFields() {
         const mathFieldEls = this.$el.getElementsByClassName(CLASS_MATH_FIELD);
