@@ -23,7 +23,7 @@
 
       <div class="symbol-editor pl-3 pr-3 text-center">
         <Formula
-          v-if="formula"
+          ref="symbolEditor"
           v-model="formula"
           :editable="true"
           :mathQuill="mathQuill"
@@ -96,6 +96,7 @@
     },
     mounted() {
       this.formula = this.initialFormula;
+      this.$refs.symbolEditor.focus();
     },
     methods: {
       symbol(symbolsGroupIdx, symbolIdx) {

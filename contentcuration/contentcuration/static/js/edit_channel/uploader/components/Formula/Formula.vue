@@ -13,6 +13,7 @@
     props: {
       value: {
         type: String,
+        default: '',
       },
       editable: {
         type: Boolean,
@@ -49,6 +50,16 @@
       } else {
         this.mathQuill.StaticMath(this.$el);
       }
+    },
+    methods: {
+      /**
+       * @public
+       */
+      focus() {
+        if (this.mathField && this.mathField instanceof this.mathQuill.EditableField) {
+          this.mathField.focus();
+        }
+      },
     },
   };
 

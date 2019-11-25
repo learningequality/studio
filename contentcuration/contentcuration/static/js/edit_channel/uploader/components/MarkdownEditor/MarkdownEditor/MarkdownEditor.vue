@@ -144,7 +144,7 @@
           this.getEditorPosition().left}px`;
 
         this.formulasMenu.mathFieldEl = null;
-        this.formulasMenu.mathFieldFormula = null;
+        this.formulasMenu.mathFieldFormula = '';
 
         this.formulasMenu.isOpen = true;
       },
