@@ -1,70 +1,84 @@
 <template>
 
-  <VCard>
-    <VCardTitle class="pt-1 pb-1">
-      <VLayout align-center justify-space-between>
-        <VFlex class="font-weight-bold">
-          Special characters
-        </VFlex>
-        <VFlex xs4>
-          <VBtn
-            flat
-            color="primary"
-            @click="onInsertClick"
-          >
-            Insert
-          </VBtn>
-        </VFlex>
-      </VLayout>
-    </VCardTitle>
+  <div class="formulas-menu">
+    <div :class="anchorArrowClasses"></div>
 
-    <VCardText class="pa-0">
-      <VDivider class="mt-0" />
-
-      <div class="symbol-editor pl-3 pr-3 text-center">
-        <Formula
-          ref="symbolEditor"
-          v-model="formula"
-          :editable="true"
-          :mathQuill="mathQuill"
-        />
-      </div>
-
-      <VDivider class="mb-0" />
-
-      <div class="info-bar grey lighten-3 pa-2">
-        {{ infoText }}
-      </div>
-
-      <div class="symbols-list pa-2">
-        <div
-          v-for="(symbolsGroup, symbolsGroupIdx) in symbols"
-          :key="symbolsGroupIdx"
-          class="mt-3"
-        >
-          <div class="pa-2 mb-2 font-weight-bold">
-            {{ symbolsGroup.title }}
-          </div>
-
-          <VLayout row wrap>
-            <VFlex
-              v-for="(_, symbolIdx) in symbolsGroup.symbols"
-              :key="symbolIdx"
-              :class="symbolClasses(symbolsGroup)"
-              @click="onSymbolClick(symbolsGroupIdx, symbolIdx)"
-              @mouseenter="onSymbolMouseEnter(symbolsGroupIdx, symbolIdx)"
-              @mouseleave="onSymbolMouseLeave"
+    <VCard elevation="20">
+      <VCardTitle class="pt-1 pb-1">
+        <VLayout align-center justify-space-between>
+          <VFlex class="font-weight-bold">
+            Special characters
+          </VFlex>
+          <VFlex text-center>
+            <VBtn
+              flat
+              color="primary"
+              @click="onInsertClick"
             >
-              <Formula
-                :value="symbol(symbolsGroupIdx, symbolIdx).preview"
-                :mathQuill="mathQuill"
-              />
-            </VFlex>
-          </VLayout>
+              Insert
+            </VBtn>
+          </VFlex>
+          <VFlex text-center>
+            <VBtn
+              flat
+              color="secondary"
+              @click="onCancelClick"
+            >
+              Cancel
+            </VBtn>
+          </VFlex>
+        </VLayout>
+      </VCardTitle>
+
+      <VCardText class="pa-0">
+        <VDivider class="mt-0" />
+
+        <div class="symbol-editor pl-3 pr-3 text-center">
+          <Formula
+            ref="symbolEditor"
+            :value="value"
+            :editable="true"
+            :mathQuill="mathQuill"
+            @input="onSymbolEditorInput"
+          />
         </div>
-      </div>
-    </VCardText>
-  </VCard>
+
+        <VDivider class="mb-0" />
+
+        <div class="info-bar grey lighten-3 pa-2">
+          {{ infoText }}
+        </div>
+
+        <div class="symbols-list pa-2">
+          <div
+            v-for="(symbolsGroup, symbolsGroupIdx) in symbols"
+            :key="symbolsGroupIdx"
+            class="mt-3"
+          >
+            <div class="pa-2 mb-2 font-weight-bold">
+              {{ symbolsGroup.title }}
+            </div>
+
+            <VLayout row wrap>
+              <VFlex
+                v-for="(_, symbolIdx) in symbolsGroup.symbols"
+                :key="symbolIdx"
+                :class="symbolClasses(symbolsGroup)"
+                @click="onSymbolClick(symbolsGroupIdx, symbolIdx)"
+                @mouseenter="onSymbolMouseEnter(symbolsGroupIdx, symbolIdx)"
+                @mouseleave="onSymbolMouseLeave"
+              >
+                <Formula
+                  :value="symbol(symbolsGroupIdx, symbolIdx).preview"
+                  :mathQuill="mathQuill"
+                />
+              </VFlex>
+            </VLayout>
+          </div>
+        </div>
+      </VCardText>
+    </VCard>
+  </div>
 
 </template>
 
@@ -73,29 +87,48 @@
   import Formula from '../Formula/Formula';
   import SYMBOLS from './symbols.json';
 
+  const ANCHOR_ARROW_SIDE_LEFT = 'left';
+  const ANCHOR_ARROW_SIDE_RIGHT = 'right';
+
   export default {
     name: 'FormulasMenu',
     components: {
       Formula,
     },
     props: {
-      initialFormula: {
+      value: {
         type: String,
         default: '',
       },
       mathQuill: {
         type: Function,
       },
+      anchorArrowSide: {
+        type: String,
+        default: ANCHOR_ARROW_SIDE_LEFT,
+        validator: value => {
+          return [ANCHOR_ARROW_SIDE_LEFT, ANCHOR_ARROW_SIDE_RIGHT].includes(value);
+        },
+      },
     },
     data() {
       return {
         symbols: SYMBOLS,
-        formula: '',
         infoText: '',
       };
     },
+    computed: {
+      anchorArrowClasses() {
+        const classes = ['anchor-arrow'];
+
+        if (this.anchorArrowSide === ANCHOR_ARROW_SIDE_RIGHT) {
+          classes.push('anchor-arrow-right');
+        }
+
+        return classes;
+      },
+    },
     mounted() {
-      this.formula = this.initialFormula;
       this.$refs.symbolEditor.focus();
     },
     methods: {
@@ -122,13 +155,18 @@
       onSymbolMouseLeave() {
         this.infoText = '';
       },
+      onSymbolEditorInput(formula) {
+        this.$emit('input', formula);
+      },
       onSymbolClick(symbolsGroupIdx, symbolIdx) {
-        this.formula = this.symbol(symbolsGroupIdx, symbolIdx).preview;
+        const formula = this.symbol(symbolsGroupIdx, symbolIdx).preview;
+        this.$emit('input', formula);
       },
       onInsertClick() {
-        if (this.formula) {
-          this.$emit('insert', this.formula);
-        }
+        this.$emit('insert');
+      },
+      onCancelClick() {
+        this.$emit('cancel');
       },
     },
   };
@@ -139,10 +177,43 @@
 
   @import '../../../../../less/global-variables.less';
 
-  .v-card {
-    z-index: 2;
-    min-width: 320px;
+  .formulas-menu {
+    position: relative;
     max-width: 500px;
+    // to make positioning from a parent element easier - this
+    // makes sure that the tip of the anchor will be considered
+    // as top right/left corner
+    margin-top: 16px;
+    margin-right: -30px;
+    margin-left: -30px;
+  }
+
+  .anchor-arrow {
+    position: absolute;
+    top: -40px;
+    left: 10px;
+    z-index: 3;
+    width: 40px;
+    height: 40px;
+    overflow: hidden;
+
+    &::after {
+      position: absolute;
+      top: 28px;
+      right: 0;
+      left: 6px;
+      width: 25px;
+      height: 25px;
+      content: '';
+      background: #ffffff;
+      box-shadow: -1px -1px 10px -2px rgba(0, 0, 0, 0.3);
+      transform: rotate(45deg);
+    }
+
+    &.anchor-arrow-right {
+      right: 10px;
+      left: initial;
+    }
   }
 
   .v-card__text {

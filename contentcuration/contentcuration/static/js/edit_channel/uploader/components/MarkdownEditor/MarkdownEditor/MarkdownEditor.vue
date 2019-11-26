@@ -1,6 +1,7 @@
 <template>
 
   <div :style="{ 'position': 'relative' }">
+
     <div
       ref="editor"
       class="editor"
@@ -8,13 +9,15 @@
 
     <FormulasMenu
       v-if="formulasMenu.isOpen"
-      v-click-outside="resetFormulasMenu"
-      :initialFormula="formulasMenu.mathFieldFormula"
+      v-model="formulasMenu.formula"
+      v-click-outside="onFormulasMenuClickOutside"
+      class="formulas-menu"
+      :anchorArrowSide="formulasMenu.anchorArrowSide"
       :mathQuill="mathQuill"
       :style="formulasMenu.style"
-      @insert="insertFormula"
+      @insert="onFormulasMenuInsert"
+      @cancel="onFormulasMenuCancel"
     />
-
   </div>
 
 </template>
@@ -60,12 +63,14 @@
         editor: null,
         formulasMenu: {
           isOpen: false,
+          anchorArrowSide: null,
           mathFieldEl: null, // a math field being edited in formulas menu
-          mathFieldFormula: '', // latex formula of a math field being edited in formulas menu
+          formula: '', // latex formula of a math field being edited in formulas menu
           style: {
             position: 'absolute',
-            top: 0,
-            left: 0,
+            top: 'initial',
+            left: 'initial',
+            right: 'initial',
           },
         },
         mathQuill: null,
@@ -138,17 +143,71 @@
     },
     methods: {
       onFormulasToolbarBtnClick({ editorCursorPosition }) {
-        this.formulasMenu.style.top = `${editorCursorPosition.top -
-          this.getEditorPosition().top}px`;
-        this.formulasMenu.style.left = `${editorCursorPosition.left -
-          this.getEditorPosition().left}px`;
+        const formulasMenuPos = this.getFormulasMenuPos({
+          targetX: editorCursorPosition.left,
+          targetY: editorCursorPosition.bottom,
+        });
+
+        this.formulasMenu.style.top = `${formulasMenuPos.top}px`;
+        if (formulasMenuPos.left !== null) {
+          this.formulasMenu.style.right = 'initial';
+          this.formulasMenu.style.left = `${formulasMenuPos.left}px`;
+          this.formulasMenu.anchorArrowSide = 'left';
+        } else {
+          this.formulasMenu.style.left = 'initial';
+          this.formulasMenu.style.right = `${formulasMenuPos.right}px`;
+          this.formulasMenu.anchorArrowSide = 'right';
+        }
 
         this.formulasMenu.mathFieldEl = null;
-        this.formulasMenu.mathFieldFormula = '';
+        this.formulasMenu.formula = '';
 
         this.formulasMenu.isOpen = true;
       },
-      insertFormula(formula) {
+      onFormulasMenuClickOutside() {
+        this.insertFormula();
+      },
+      onFormulasMenuInsert() {
+        this.insertFormula();
+      },
+      onFormulasMenuCancel() {
+        this.resetFormulasMenu();
+      },
+      onClick(event) {
+        let mathFieldEl = null;
+        if (event.target.classList.contains(CLASS_MATH_FIELD)) {
+          mathFieldEl = event.target;
+        } else {
+          mathFieldEl = event.target.closest(`.${CLASS_MATH_FIELD}`);
+        }
+
+        if (mathFieldEl === null) {
+          return;
+        }
+
+        const formulasMenuPos = this.getFormulasMenuPos({
+          targetX: mathFieldEl.getBoundingClientRect().left,
+          targetY: mathFieldEl.getBoundingClientRect().bottom,
+        });
+
+        this.formulasMenu.style.top = `${formulasMenuPos.top}px`;
+        if (formulasMenuPos.left !== null) {
+          this.formulasMenu.style.right = 'initial';
+          this.formulasMenu.style.left = `${formulasMenuPos.left + 10}px`;
+          this.formulasMenu.anchorArrowSide = 'left';
+        } else {
+          this.formulasMenu.style.left = 'initial';
+          this.formulasMenu.style.right = `${formulasMenuPos.right - 10}px`;
+          this.formulasMenu.anchorArrowSide = 'right';
+        }
+
+        this.formulasMenu.mathFieldEl = mathFieldEl;
+        this.formulasMenu.formula = this.mathQuill(mathFieldEl).latex();
+
+        this.formulasMenu.isOpen = true;
+      },
+      insertFormula() {
+        const formula = this.formulasMenu.formula;
         const CLASS_MATH_FIELD_NEW = `${CLASS_MATH_FIELD}-new`;
 
         const formulaEl = document.createElement('span');
@@ -181,34 +240,42 @@
         this.resetFormulasMenu();
         this.editor.focus();
       },
-      onClick(event) {
-        let mathFieldEl = null;
-        if (event.target.classList.contains(CLASS_MATH_FIELD)) {
-          mathFieldEl = event.target;
+      /**
+       * Calculate the formulas menu position.
+       * If the formulas menu is to be shown in the second half (horizontally)
+       * of the editor, it's right corner should be clipped to the target
+       * => this position of the right corner is returned as `right`.
+       * Otherwise left corner is used to clip the menu and position
+       * of the left corner is return as `left`.
+       * Position returned is relative to editor element.
+       * @param {Number} targetX Viewport X position of a point in editor
+       *                         to which formulas menu should be clipped to
+       *
+       * @param {Number} targetY Viewport Y position of a point in editor
+       *                         to which formulas menu should be clipped to
+       */
+      getFormulasMenuPos({ targetX, targetY }) {
+        const editorWidth = this.$el.getBoundingClientRect().width;
+        const editorTop = this.$el.getBoundingClientRect().top;
+        const editorLeft = this.$el.getBoundingClientRect().left;
+        const editorRight = this.$el.getBoundingClientRect().right;
+        const editorMiddle = editorLeft + editorWidth / 2;
+
+        const menuTop = targetY - editorTop;
+
+        let menuLeft = null;
+        let menuRight = null;
+
+        if (targetX < editorMiddle) {
+          menuLeft = targetX - editorLeft;
         } else {
-          mathFieldEl = event.target.closest(`.${CLASS_MATH_FIELD}`);
+          menuRight = editorRight - targetX;
         }
 
-        if (mathFieldEl === null) {
-          return;
-        }
-
-        this.formulasMenu.style.top = `${mathFieldEl.getBoundingClientRect().bottom -
-          this.getEditorPosition().top -
-          10}px`;
-        this.formulasMenu.style.left = `${mathFieldEl.getBoundingClientRect().left -
-          this.getEditorPosition().left +
-          10}px`;
-
-        this.formulasMenu.mathFieldEl = mathFieldEl;
-        this.formulasMenu.mathFieldFormula = this.mathQuill(mathFieldEl).latex();
-
-        this.formulasMenu.isOpen = true;
-      },
-      getEditorPosition() {
         return {
-          top: this.$el.getBoundingClientRect().top,
-          left: this.$el.getBoundingClientRect().left,
+          top: menuTop,
+          left: menuLeft,
+          right: menuRight,
         };
       },
       initStaticMathFields() {
@@ -220,12 +287,14 @@
       resetFormulasMenu() {
         this.formulasMenu = {
           isOpen: false,
+          anchorArrowSide: null,
           mathFieldEl: null,
-          mathFieldFormula: '',
+          formula: '',
           style: {
             position: 'absolute',
-            top: 0,
-            left: 0,
+            top: 'initial',
+            left: 'initial',
+            right: 'initial',
           },
         };
       },
@@ -235,6 +304,12 @@
 </script>
 
 <style lang="less" scoped>
+
+  .editor,
+  .formulas-menu {
+    position: relative;
+    z-index: 2;
+  }
 
   /deep/ .editor .mq-math-mode {
     padding: 4px 4px 2px 0;
@@ -247,7 +322,8 @@
       0 1px 3px 0 rgba(0, 0, 0, 0.12);
   }
 
-  // TODO: find better location for following styles that
+  // TODO (when updating to new frontend files structure)
+  // find better location for following styles that
   // are supposed to be common to all editable fields
   /deep/ .mq-editable-field {
     border: 0;

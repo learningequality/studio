@@ -400,7 +400,6 @@
 
     .indicator {
       position: absolute;
-      z-index: 1;
       width: 4px;
       height: 100%;
 

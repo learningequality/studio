@@ -5,7 +5,7 @@ const onFormulasToolbarBtnClick = editor => {
 
   editor.options.extOptions.formulas.onFormulasToolbarBtnClick({
     editorCursorPosition: {
-      top: cursor.y + cursor.height, // bottom of the cursor
+      bottom: cursor.y + cursor.height,
       left: cursor.x,
     },
   });
