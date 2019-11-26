@@ -80,8 +80,8 @@ def duplicate_node_inline_task(self, user_id, channel_id, node_id, target_parent
 
 
 @task(bind=True, name='export_channel_task')
-def export_channel_task(self, user_id, channel_id):
-    publish_channel(user_id, channel_id, send_email=True, task_object=self)
+def export_channel_task(self, user_id, channel_id, version_notes=''):
+    publish_channel(user_id, channel_id, version_notes=version_notes, send_email=True, task_object=self)
 
 
 @task(bind=True, name='move_nodes_task')
