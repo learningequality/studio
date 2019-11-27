@@ -1,10 +1,10 @@
 <template>
   <VCard class="publish-view">
-    <VCardTitle primaryTitle>
-      <div :title="channel.name" class="headline">
+    <VCardText>
+      <h1 class="headline">
         {{ channel.name }}
-      </div>
-      <div class="subheading">
+      </h1>
+      <p class="subheading">
         <span v-if="language">
           {{ language.native_name }}
         </span>
@@ -20,8 +20,8 @@
         <span v-else>
           {{ $tr('unpublishedText') }}
         </span>
-      </div>
-    </VCardTitle>
+      </p>
+    </VCardText>
     <VDivider />
     <VWindow v-model="step">
       <VWindowItem :key="0">
@@ -145,34 +145,6 @@
 
   export default {
     name: 'PublishView',
-    $trs: {
-      versionText: 'Current Version: {version}',
-      languageRequired: 'Select a channel language',
-      invalidHeader: 'Please resolve any invalid fields before publishing:',
-      validHeader: 'Ready to publish!',
-      submitLanguage: 'Set channel language',
-      unpublishedText: 'Unpublished',
-      publishMessageLabel: "Describe what's new in this channel version",
-      publishingSizeText: '{count, plural, =1 {# Resource} other {# Resources}}',
-      cancelButton: 'CANCEL',
-      publishButton: 'PUBLISH',
-      nextButton: 'Next',
-      backButton: 'Back',
-      loadingSize: 'Calculating size...',
-      unitBytes: '{size}B',
-      unitKilobytes: '{size}KB',
-      unitMegabytes: '{size}MB',
-      unitGigabytes: '{size}GB',
-      unitTerabytes: '{size}TB',
-      negunitBytes: '{size}B',
-      negunitKilobytes: '{size}KB',
-      negunitMegabytes: '{size}MB',
-      negunitGigabytes: '{size}GB',
-      negunitTerabytes: '{size}TB',
-      descriptionRequiredMessage: "Please describe what's new in this version before publishing",
-      descriptionDescriptionTooltip:
-        'This description will be shown to Kolibri admins before they update channel versions',
-    },
     components: {
       LanguageDropdown,
     },
@@ -200,19 +172,18 @@
       sizeText() {
         if (this.size === null) return this.$tr('loadingSize');
         let size = Number(this.size);
-        let prefix = size < 0 ? 'neg' : '';
         size = Math.abs(size);
 
         if (size < KB) {
-          return this.$tr(prefix + 'unitBytes', { size: Math.round(size) });
+          return this.$tr('unitBytes', { size: Math.round(size).toString() });
         } else if (KB <= size && size < MB) {
-          return this.$tr(prefix + 'unitKilobytes', { size: Math.round(parseFloat(size / KB)) });
+          return this.$tr('unitKilobytes', { size: Math.round(parseFloat(size / KB)) });
         } else if (MB <= size && size < GB) {
-          return this.$tr(prefix + 'unitMegabytes', { size: Math.round(parseFloat(size / MB)) });
+          return this.$tr('unitMegabytes', { size: Math.round(parseFloat(size / MB)) });
         } else if (GB <= size && size < TB) {
-          return this.$tr(prefix + 'unitGigabytes', { size: Math.round(parseFloat(size / GB)) });
+          return this.$tr('unitGigabytes', { size: Math.round(parseFloat(size / GB)) });
         } else {
-          return this.$tr(prefix + 'unitTerabytes', { size: Math.round(parseFloat(size / TB)) });
+          return this.$tr('unitTerabytes', { size: Math.round(parseFloat(size / TB)) });
         }
       },
       channelCount() {
@@ -241,6 +212,27 @@
           this.publishChannel(this.publishDescription);
         }
       },
+    },
+    $trs: {
+      versionText: 'Current Version: {version}',
+      languageRequired: 'Select a channel language',
+      invalidHeader: 'Please resolve any invalid fields before publishing:',
+      unpublishedText: 'Unpublished',
+      publishMessageLabel: "Describe what's new in this channel version",
+      publishingSizeText: '{count, plural, =1 {# Resource} other {# Resources}}',
+      cancelButton: 'CANCEL',
+      publishButton: 'PUBLISH',
+      nextButton: 'Next',
+      backButton: 'Back',
+      loadingSize: 'Calculating size...',
+      unitBytes: '{size}B',
+      unitKilobytes: '{size}KB',
+      unitMegabytes: '{size}MB',
+      unitGigabytes: '{size}GB',
+      unitTerabytes: '{size}TB',
+      descriptionRequiredMessage: "Please describe what's new in this version before publishing",
+      descriptionDescriptionTooltip:
+        'This description will be shown to Kolibri admins before they update channel versions',
     },
   };
 

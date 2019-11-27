@@ -134,7 +134,7 @@ def map_content_nodes(root_node, default_language, channel_id, channel_name, use
             return None
 
     with transaction.atomic():
-        with ccmodels.ContentNode.objects.delay_mptt_updates():
+        with ccmodels.ContentNode.objects.delay_mptt_updates(), kolibrimodels.ContentNode.objects.delay_mptt_updates():
             for node in iter(queue_get_return_none_when_empty, None):
                 logging.debug("Mapping node with id {id}".format(
                     id=node.pk))
@@ -355,6 +355,8 @@ def process_assessment_metadata(ccnode, kolibrinode):
     # Get mastery model information, set to default if none provided
     assessment_items = ccnode.assessment_items.all().order_by('order')
     exercise_data = ccnode.extra_fields if ccnode.extra_fields else {}
+    if isinstance(exercise_data, basestring):
+        exercise_data = json.loads(exercise_data)
     randomize = exercise_data.get('randomize') if exercise_data.get('randomize') is not None else True
     assessment_item_ids = [a.assessment_id for a in assessment_items]
 

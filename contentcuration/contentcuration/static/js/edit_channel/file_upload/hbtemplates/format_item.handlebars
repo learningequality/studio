@@ -24,7 +24,7 @@
     {{else}}
       {{#if file}}
       <div class="format_editor_file_name truncate" title="{{file.original_filename}}">
-        <a href="{{src}}" class="format_link" download="{{#if file.original_filename}}{{file.original_filename}}{{else}}{{formatMessage (intlGet 'messages.default_filename')}}{{/if}}">{{#if file.original_filename}}{{file.original_filename}}{{else}}{{formatMessage (intlGet 'messages.default_filename')}}{{/if}}</a>
+        {{#if file.original_filename}}{{file.original_filename}}{{else}}{{formatMessage (intlGet 'messages.default_filename')}}{{/if}}
       </div>
       <i class="format_editor_selected_size">({{{format_file_size file.file_size}}})</i>
       {{else}}

@@ -3,6 +3,7 @@ import json
 
 import pytest
 from base import BaseAPITestCase
+from base import StudioTestCase
 from django.core.files.storage import default_storage
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.urlresolvers import reverse_lazy
@@ -15,9 +16,11 @@ from .testdata import fileobj_video
 from .testdata import generated_base64encoding
 from .testdata import node
 from .testdata import srt_subtitle
+from contentcuration.api import write_raw_content_to_storage
 from contentcuration.models import AssessmentItem
 from contentcuration.models import ContentNode
 from contentcuration.models import DEFAULT_CONTENT_DEFAULTS
+from contentcuration.models import delete_empty_file_reference
 from contentcuration.models import File
 from contentcuration.models import generate_object_storage_name
 from contentcuration.serializers import FileSerializer
@@ -30,6 +33,7 @@ from contentcuration.views.files import generate_thumbnail
 from contentcuration.views.files import image_upload
 from contentcuration.views.files import multilanguage_file_upload
 from contentcuration.views.files import thumbnail_upload
+
 
 pytestmark = pytest.mark.django_db
 
@@ -237,3 +241,14 @@ class FileSubtitleTestCase(BaseAPITestCase):
 
         file_response = multilanguage_file_upload(request)
         self.assertEqual(file_response.status_code, 200)
+
+
+class NodeFileDeletionTestCase(StudioTestCase):
+
+    def test_delete_empty_file_reference(self):
+        checksum, _, storage_path = write_raw_content_to_storage('some fake PDF data', ext='.pdf')
+        assert default_storage.exists(storage_path), 'file should be saved'
+        delete_empty_file_reference(checksum, 'pdf')
+        assert not default_storage.exists(storage_path), 'file should be deleted'
+
+
