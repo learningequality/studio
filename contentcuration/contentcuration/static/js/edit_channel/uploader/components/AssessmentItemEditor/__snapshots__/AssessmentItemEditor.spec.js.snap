@@ -97,7 +97,7 @@ exports[`AssessmentItemEditor renders 1`] = `
         <div class="card-border-light">
           <div class="v-card v-card--flat v-sheet theme--light answer editable closed correct" data-test="answer">
             <div class="indicator correct"></div>
-            <div class="v-card__text">
+            <div class="v-card__text pb-0">
               <div class="layout align-top">
                 <div class="flex xs1">
                   <div class="v-input v-input--selection-controls v-input--radio-group v-input--radio-group--column theme--light">
@@ -148,7 +148,7 @@ exports[`AssessmentItemEditor renders 1`] = `
   <div class="card-border-light">
     <div class="v-card v-card--flat v-sheet theme--light answer editable closed wrong" data-test="answer">
       <div class="indicator wrong"></div>
-      <div class="v-card__text">
+      <div class="v-card__text pb-0">
         <div class="layout align-top">
           <div class="flex xs1">
             <div class="v-input v-input--selection-controls v-input--radio-group v-input--radio-group--column theme--light">
@@ -207,7 +207,7 @@ exports[`AssessmentItemEditor renders 1`] = `
   <!---->
   <div data-test="hint" class="card-border-light">
     <div class="v-card v-card--flat v-sheet theme--light hint closed">
-      <div class="v-card__text">
+      <div class="v-card__text pt-0 pb-0">
         <div class="layout align-top">
           <div class="flex xs1" style="margin-top: 10px;">
             1
@@ -243,7 +243,7 @@ exports[`AssessmentItemEditor renders 1`] = `
 </div>
 <div data-test="hint" class="card-border-light">
   <div class="v-card v-card--flat v-sheet theme--light hint closed">
-    <div class="v-card__text">
+    <div class="v-card__text pt-0 pb-0">
       <div class="layout align-top">
         <div class="flex xs1" style="margin-top: 10px;">
           2

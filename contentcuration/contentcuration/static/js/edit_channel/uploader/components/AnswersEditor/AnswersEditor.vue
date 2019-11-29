@@ -24,7 +24,7 @@
         data-test="answer"
       >
         <div :class="indicatorClasses(answer)"></div>
-        <VCardText>
+        <VCardText :class="{ 'pb-0': !isAnswerOpen(answerIdx) }">
           <VLayout align-top>
             <VFlex xs1>
               <!--

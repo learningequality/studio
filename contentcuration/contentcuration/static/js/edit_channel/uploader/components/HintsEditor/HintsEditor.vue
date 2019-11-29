@@ -23,7 +23,7 @@
         flat
         :class="hintClasses(hintIdx)"
       >
-        <VCardText>
+        <VCardText :class="{ 'pt-0 pb-0': !isHintOpen(hintIdx) }">
           <VLayout align-top>
             <VFlex
               xs1
