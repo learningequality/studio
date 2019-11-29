@@ -39,15 +39,15 @@
               data-test="questionText"
               @click="openQuestion"
             >
-              <VLayout align-top>
+              <VLayout align-center justify-space-between>
+                <MarkdownViewer :markdown="question" />
+
                 <VIcon
                   color="grey darken-1"
                   class="mr-2"
-                  :style="{ 'margin-top': '12px'}"
                 >
                   edit
                 </VIcon>
-                <MarkdownViewer :markdown="question" />
               </VLayout>
             </div>
           </keep-alive>
