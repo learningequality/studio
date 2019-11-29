@@ -44,7 +44,7 @@
 
       this.viewer = new Viewer({
         el: this.$refs.viewer,
-        height: '150px',
+        height: 'auto',
         initialValue: this.markdown,
         exts: [formulas],
       });

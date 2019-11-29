@@ -105,7 +105,8 @@
 
       const options = {
         el: this.$refs.editor,
-        height: '170px',
+        minHeight: '240px',
+        height: 'auto',
         initialValue: this.markdown,
         initialEditType: 'wysiwyg',
         usageStatistics: false,
