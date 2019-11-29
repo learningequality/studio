@@ -121,6 +121,8 @@
       };
 
       this.editor = new Editor(options);
+      this.editor.focus();
+
       this.editor.on('change', () => {
         // TUI editor emits 'change' event not only on content updates
         // but also on cursor clicks - there is no need to emit update
@@ -137,6 +139,9 @@
       this.initStaticMathFields();
 
       this.clickEventListener = this.$el.addEventListener('click', this.onClick);
+    },
+    activated() {
+      this.editor.focus();
     },
     beforeDestroy() {
       this.$el.removeEventListener(this.clickEventListener, this.onClick);
