@@ -36,7 +36,6 @@
   import FormulasMenu from '../../FormulasMenu/FormulasMenu';
 
   import { CLASS_MATH_FIELD } from '../constants';
-  import undoRedo from '../extensions/undo-redo';
   import imageUpload from '../extensions/image-upload';
   import formulas from '../extensions/formulas';
   import formulasHtmlToMd from '../extensions/formulas/formula-html-to-md';
@@ -112,7 +111,7 @@
         usageStatistics: false,
         toolbarItems: ['bold', 'italic'],
         hideModeSwitch: true,
-        exts: [undoRedo, imageUpload, formulas],
+        exts: [imageUpload, formulas],
         extOptions: {
           formulas: {
             onFormulasToolbarBtnClick: this.onFormulasToolbarBtnClick,
@@ -221,8 +220,6 @@
         formulaEl.classList.add(CLASS_MATH_FIELD, CLASS_MATH_FIELD_NEW);
 
         if (this.formulasMenu.mathFieldEl) {
-          this.editor.getSquire().saveUndoState();
-
           this.formulasMenu.mathFieldEl.parentNode.replaceChild(
             formulaEl,
             this.formulasMenu.mathFieldEl
