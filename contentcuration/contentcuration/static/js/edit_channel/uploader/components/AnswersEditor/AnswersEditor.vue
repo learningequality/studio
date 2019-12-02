@@ -59,6 +59,7 @@
                   class="editor"
                   :markdown="answer.answer"
                   @update="updateAnswerText($event, answerIdx)"
+                  @minimize="emitClose"
                 />
                 <MarkdownViewer
                   v-else
@@ -307,16 +308,20 @@
         }
       },
       onAnswerClick(event, answerIdx) {
-        // do not open answer on toolbar click
+        // do not open on toolbar click
         if (event.target.closest('.toolbar') !== null) {
           return;
         }
 
-        // do not open an answer on checkbox or radio click
+        // do not open on editor minimize button click
+        if (event.target.classList.contains('tui-toolbar-btn-minimize')) {
+          return;
+        }
+
+        // do not open on checkbox or radio click
         if (
-          event.target &&
-          (event.target.classList.contains('v-label') ||
-            event.target.classList.contains('v-input--selection-controls__ripple'))
+          event.target.classList.contains('v-label') ||
+          event.target.classList.contains('v-input--selection-controls__ripple')
         ) {
           return;
         }

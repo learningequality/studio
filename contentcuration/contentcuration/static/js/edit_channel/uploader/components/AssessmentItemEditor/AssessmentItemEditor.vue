@@ -31,6 +31,7 @@
               v-if="isQuestionOpen"
               :markdown="question"
               @update="onQuestionUpdate"
+              @minimize="closeQuestion"
             />
 
             <div

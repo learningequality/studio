@@ -44,6 +44,7 @@
                     v-else
                     :markdown="hint.hint"
                     @update="updateHintText($event, hintIdx)"
+                    @minimize="emitClose"
                   />
                 </keep-alive>
               </transition>
@@ -205,6 +206,11 @@
 
         // do not open hint on toolbar click
         if (event.target.closest('.toolbar') !== null) {
+          return;
+        }
+
+        // do not open on editor minimize button click
+        if (event.target.classList.contains('tui-toolbar-btn-minimize')) {
           return;
         }
 

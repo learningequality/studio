@@ -38,6 +38,7 @@
   import { CLASS_MATH_FIELD } from '../constants';
   import imageUpload from '../extensions/image-upload';
   import formulas from '../extensions/formulas';
+  import minimize from '../extensions/minimize';
   import formulasHtmlToMd from '../extensions/formulas/formula-html-to-md';
 
   export default {
@@ -111,10 +112,13 @@
         usageStatistics: false,
         toolbarItems: ['bold', 'italic'],
         hideModeSwitch: true,
-        exts: [imageUpload, formulas],
+        exts: [imageUpload, formulas, minimize],
         extOptions: {
           formulas: {
             onFormulasToolbarBtnClick: this.onFormulasToolbarBtnClick,
+          },
+          minimize: {
+            onMinimizeToolbarBtnClick: this.onMinimizeToolbarBtnClick,
           },
         },
         customConvertor: CustomConvertor,
@@ -147,6 +151,9 @@
       this.$el.removeEventListener(this.clickEventListener, this.onClick);
     },
     methods: {
+      onMinimizeToolbarBtnClick() {
+        this.$emit('minimize');
+      },
       onFormulasToolbarBtnClick({ editorCursorPosition }) {
         const formulasMenuPos = this.getFormulasMenuPos({
           targetX: editorCursorPosition.left,
