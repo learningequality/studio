@@ -3,9 +3,11 @@
 from __future__ import unicode_literals
 
 import django.contrib.postgres.fields.jsonb
-from django.db import migrations, connection
-from contentcuration.models import ContentNode
+from django.db import connection
+from django.db import migrations
 from django.db.models import TextField
+
+from contentcuration.models import ContentNode
 
 class Migration(migrations.Migration):
 
@@ -28,7 +30,11 @@ class Migration(migrations.Migration):
             ],
             # converts the extra_fields column from jsonb to text
             # (...not as critical, but needed to make the migration reversable for the test!)
-            reverse_sql="ALTER TABLE %s ALTER COLUMN extra_fields TYPE text USING extra_fields #>> '{}';" % ContentNode._meta.db_table,
+            # make sure we also drop the not null constraint as the TextField version did allow nulls,
+            # as otherwise pre-conversion migration tests can fail if we allow null.
+            reverse_sql="""ALTER TABLE %s ALTER COLUMN extra_fields TYPE text USING extra_fields #>> '{}';
+            ALTER TABLE %s ALTER COLUMN extra_fields DROP NOT NULL;
+            """ % (ContentNode._meta.db_table, ContentNode._meta.db_table),
         ),
 
         # This is to update `ContentNode` entries with `extra_fields=="null"` to actual NULL values
@@ -37,4 +43,3 @@ class Migration(migrations.Migration):
             migrations.RunSQL.noop # don't bother to reverse this
         )
     ]
-
