@@ -73,7 +73,6 @@ spec:
             cpu: 0.5
             memory: 2Gi
           limits:
-            cpu: 0.5
             memory: 2Gi
       - name: nginx-proxy
         image: {{ .Values.studioNginx.imageName }}
