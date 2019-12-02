@@ -10,13 +10,17 @@ settings: contentcuration.settings
 studioApp:
   appPort: 8081
   imageName: gcr.io/github-learningequality-studio/app:nlatest
-  replicas: 1
+  replicas: 3
   type: NodePort
   postmarkApiKey:
   ingress:
     enabled: true
   gDrive:
     keyJson:
+  pgbouncer:
+    replicas: 1
+    pool_size: 10
+    reserve_pool_size: 5
 
 
 studioNginx:
