@@ -81,8 +81,6 @@ Generate the shared environment variables between studio app and workers
   value: "yes"
 - name: RUN_MODE
   value: k8s
-- name: DATA_DB_HOST
-  value: {{ .Values.postgresql.externalCloudSQL.proxyHostName | default (include "postgresql.fullname" .) }}
 - name: DATA_DB_NAME
   valueFrom:
     secretKeyRef:
