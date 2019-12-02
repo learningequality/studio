@@ -76,12 +76,12 @@ exports[`AssessmentItemEditor renders 1`] = `
         Question
       </div>
       <div data-test="questionText" class="pl-2 pr-2 pt-3 pb-3 question-text" name="fade">
-        <div class="layout align-top"><i aria-hidden="true" class="v-icon mr-2 material-icons theme--light grey--text text--darken-1" style="margin-top: 12px;">edit</i>
+        <div class="layout align-center justify-space-between">
           <div>
             <div>
               Exercise 2 - Question 2
             </div>
-          </div>
+          </div> <i aria-hidden="true" class="v-icon mr-2 material-icons theme--light grey--text text--darken-1">edit</i>
         </div>
       </div>
     </div>
