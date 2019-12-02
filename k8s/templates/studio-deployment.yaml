@@ -41,8 +41,7 @@ spec:
         args:
         - contentcuration.wsgi:application
         - --timeout=4000
-        - --workers=3
-        - --threads=5
+        - --workers=2
         - --bind=0.0.0.0:8081
         - --pid=/tmp/contentcuration.pid
         env: {{ include "studio.sharedEnvs" . | nindent 8 }}
