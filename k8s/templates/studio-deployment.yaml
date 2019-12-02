@@ -92,6 +92,12 @@ spec:
         volumeMounts:
         - mountPath: /app/contentworkshop_static/
           name: staticfiles
+        resources:
+          requests:
+            cpu: 0.2
+            memory: 256Mi
+          limits:
+            memory: 512Mi
       volumes:
         - emptyDir: {}
           name: staticfiles
