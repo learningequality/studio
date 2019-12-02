@@ -47,15 +47,6 @@ spec:
         env: {{ include "studio.sharedEnvs" . | nindent 8 }}
         - name: SEND_USER_ACTIVATION_NOTIFICATION_EMAIL
           value: "true"
-        # liveness probes are checks for when a pod should be restarted.
-        livenessProbe:
-          httpGet:
-            path: /healthz
-            port: {{ .Values.studioApp.appPort }}
-          initialDelaySeconds: 120
-          periodSeconds: 5
-          # fail 10 times before we restart the pod
-          failureThreshold: 10
         ports:
         - containerPort: {{ .Values.studioApp.appPort }}
         # readiness probes are checks for when the pod is ready to serve traffic.
