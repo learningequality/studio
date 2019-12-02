@@ -5,9 +5,9 @@
     </label>
     <VBtn
       v-if="!isReadOnly"
-      flat
-      dark
-      class="open-modal-button publish-button"
+      ref="open-modal-button"
+      depressed
+      color="primary"
       :class="{disabled: !isChanged}"
       :disabled="!isChanged"
       :title="$tr('publishButtonTitle')"
@@ -16,36 +16,7 @@
       {{ $tr('publishButton') }}
     </VBtn>
     <VDialog v-model="dialog" class="publish-modal" maxWidth="500px" attach="body">
-      <VCard>
-        <VCardText>
-          <PublishView />
-        </VCardText>
-        <VCardActions>
-          <VBtn
-            flat
-            dark
-            class="cancel-button"
-            @click="dialog = false"
-          >
-            {{ $tr('cancelButton') }}
-          </VBtn>
-          <div>
-            <span class="size-text">
-              {{ $tr('publishingSizeText', {count: channelCount, size: sizeText}) }}
-            </span>
-            <VBtn
-              flat
-              dark
-              class="main-publish-button publish-button"
-              :class="{disabled: !channel.language}"
-              :disabled="!channel.language"
-              @click="handlePublish"
-            >
-              {{ $tr('publishButton') }}
-            </VBtn>
-          </div>
-        </VCardActions>
-      </VCard>
+      <PublishView v-if="dialog" @publish="dialog=false" @cancel="dialog=false" />
     </VDialog>
   </div>
 </template>
@@ -54,17 +25,13 @@
 
   import { mapActions, mapState } from 'vuex';
   import PublishView from './PublishView.vue';
-  import { format_size } from 'edit_channel/utils/string_helper';
 
   export default {
     name: 'PublishModal',
     $trs: {
       modalHeader: 'Publish Channel',
-      cancelButton: 'CANCEL',
-      publishButton: 'PUBLISH',
       noChangesLabel: 'No changes',
-      loadingSize: 'Loading...',
-      publishingSizeText: '{count, plural, =1 {# Resource} other {# Resources}} ({size})',
+      publishButton: 'Publish',
       publishButtonTitle: 'Make this channel available for download into Kolibri',
       publishErrorHeader: 'Publishing error',
     },
@@ -74,17 +41,10 @@
     data() {
       return {
         dialog: false,
-        size: null,
       };
     },
     computed: {
       ...mapState('publish', ['channel']),
-      sizeText() {
-        return this.size === null ? this.$tr('loadingSize') : format_size(this.size);
-      },
-      channelCount() {
-        return this.channel.main_tree.metadata.resource_count;
-      },
       isChanged() {
         return this.channel.main_tree.metadata.has_changed_descendant;
       },
@@ -93,17 +53,9 @@
       },
     },
     methods: {
-      ...mapActions('publish', ['publishChannel', 'setChannelLanguage', 'loadChannelSize']),
+      ...mapActions('publish', ['setChannelLanguage', 'loadChannelSize']),
       openModal() {
         this.dialog = true;
-        this.loadChannelSize().then(size => {
-          this.size = size;
-        });
-      },
-      handlePublish() {
-        this.publishChannel().then(() => {
-          this.dialog = false;
-        });
       },
     },
   };
@@ -123,30 +75,8 @@
     color: @gray-500;
   }
 
-  .publish-button {
-    .action-button;
-
+  .v-btn {
     font-weight: bold;
-    color: white;
-  }
-
-  .size-text {
-    margin-right: 5px;
-    font-size: 10pt;
-    font-style: italic;
-    color: @gray-500;
-  }
-
-  .cancel-button {
-    .action-text;
-
-    color: @blue-500 !important;
-  }
-
-  .v-card__actions {
-    display: grid;
-    grid-auto-flow: column;
-    justify-content: space-between;
   }
 
   .publish-items {

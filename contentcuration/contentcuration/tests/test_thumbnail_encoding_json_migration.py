@@ -1,6 +1,6 @@
 import json
+
 from .base import MigrationTestCase
-from contentcuration import models
 
 
 class TestForwardJSONMigration(MigrationTestCase):
@@ -19,13 +19,16 @@ class TestForwardJSONMigration(MigrationTestCase):
         self.single_quotes_id = channel_encoding_single_quotes.id
 
     def test_no_encoding_empty_dict(self):
-        self.assertEqual({}, models.Channel.objects.get(id=self.no_encoding_id).thumbnail_encoding)
+        Channel = self.apps.get_model(self.app, 'Channel')
+        self.assertEqual({}, Channel.objects.get(id=self.no_encoding_id).thumbnail_encoding)
 
     def test_encoding_dict(self):
-        self.assertEqual({'base64': 'base64string'}, models.Channel.objects.get(id=self.encoding_id).thumbnail_encoding)
+        Channel = self.apps.get_model(self.app, 'Channel')
+        self.assertEqual({'base64': 'base64string'}, Channel.objects.get(id=self.encoding_id).thumbnail_encoding)
 
     def test_encoding_bad_json(self):
-        self.assertEqual({'base64': 'base64string'}, models.Channel.objects.get(id=self.single_quotes_id).thumbnail_encoding)
+        Channel = self.apps.get_model(self.app, 'Channel')
+        self.assertEqual({'base64': 'base64string'}, Channel.objects.get(id=self.single_quotes_id).thumbnail_encoding)
 
 
 class TestBackwardJSONMigration(MigrationTestCase):
@@ -42,7 +45,9 @@ class TestBackwardJSONMigration(MigrationTestCase):
         self.encoding_id = channel_encoding.id
 
     def test_no_encoding_empty_dict(self):
-        self.assertEqual(None, models.Channel.objects.get(id=self.no_encoding_id).thumbnail_encoding)
+        Channel = self.apps.get_model(self.app, 'Channel')
+        self.assertEqual(None, Channel.objects.get(id=self.no_encoding_id).thumbnail_encoding)
 
     def test_encoding_dict(self):
-        self.assertEqual(json.dumps({'base64': 'base64string'}), models.Channel.objects.get(id=self.encoding_id).thumbnail_encoding)
+        Channel = self.apps.get_model(self.app, 'Channel')
+        self.assertEqual(json.dumps({'base64': 'base64string'}), Channel.objects.get(id=self.encoding_id).thumbnail_encoding)
