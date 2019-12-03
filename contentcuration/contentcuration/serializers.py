@@ -330,14 +330,6 @@ class SimplifiedContentNodeSerializer(BulkSerializerMixin, serializers.ModelSeri
     is_prerequisite_of = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     metadata = serializers.SerializerMethodField('retrieve_metadata')
     ancestors = serializers.SerializerMethodField('get_node_ancestors')
-    extra_fields = serializers.SerializerMethodField()
-
-    def get_extra_fields(self, node):
-        if node.extra_fields:
-            return node.extra_fields
-
-        # Return an empty dict instead of null so the frontend does not need to handle the null case
-        return {}
 
     def retrieve_metadata(self, node):
         if node.kind_id == content_kinds.TOPIC:
