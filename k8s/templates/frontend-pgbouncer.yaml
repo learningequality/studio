@@ -77,3 +77,23 @@ spec:
           requests:
             cpu: 0.5
             memory: 512Mi
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - {{ template "studio.fullname" . }}
+                - key: db
+                  operator: In
+                  values:
+                  - db
+                - key: "pooler-for"
+                  operator: In
+                  values:
+                  - frontend
+              topologyKey: failure-domain.beta.kubernetes.io/zone
