@@ -72,6 +72,7 @@ module.exports = (env = {}) => {
       settings: ['./settings.js'],
       // A simple code sandbox to play with components in
       sandbox: ['./sandbox.js'],
+      catalog: ['./catalog.js'],
     },
     output: {
       filename: '[name]-[hash].js',
@@ -127,7 +128,12 @@ module.exports = (env = {}) => {
         },
         {
           test: /\.less?$/,
-          use: [hot ? `style-loader` : MiniCssExtractPlugin.loader, `css-loader`, postCSSLoader, 'less-loader'],
+          use: [
+            hot ? `style-loader` : MiniCssExtractPlugin.loader,
+            `css-loader`,
+            postCSSLoader,
+            'less-loader',
+          ],
         },
         {
           test: /\.css?$/,

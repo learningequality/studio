@@ -39,10 +39,6 @@ import contentcuration.views.public as public_views
 import contentcuration.views.settings as settings_views
 import contentcuration.views.users as registration_views
 import contentcuration.views.zip as zip_views
-
-from contentcuration.viewsets.channel import ChannelViewSet
-from contentcuration.viewsets.channelset import ChannelSetViewSet
-from contentcuration.viewsets.invitation import InvitationViewSet
 from contentcuration.celery import app
 from contentcuration.forms import ForgotPasswordForm
 from contentcuration.forms import LoginForm
@@ -59,6 +55,9 @@ from contentcuration.models import Language
 from contentcuration.models import License
 from contentcuration.models import Task
 from contentcuration.models import User
+from contentcuration.viewsets.channel import ChannelViewSet
+from contentcuration.viewsets.channelset import ChannelSetViewSet
+from contentcuration.viewsets.invitation import InvitationViewSet
 
 
 def get_channel_tree_ids(user):
@@ -236,6 +235,7 @@ urlpatterns = [
     url(r'^api/set_channel_priority/$', views.set_channel_priority, name='set_channel_priority'),
     url(r'^api/download_channel_content_csv/(?P<channel_id>[^/]{32})$', views.download_channel_content_csv, name='download_channel_content_csv'),
     url(r'^api/probers/get_prober_channel', views.get_prober_channel, name='get_prober_channel'),
+    url(r'^catalog/$', views.CatalogView.as_view()),
 ]
 
 # if activated, turn on django prometheus urls

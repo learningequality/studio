@@ -113,8 +113,6 @@
       {% endblock %}
 	</head>
   <body data-app>
-      {% block nav %}
-      <!-- Navigation bar -->
     {% if INCIDENT %}
       <div id="emergency-banner" class="text-center main-banner {% if INCIDENT.readonly %}error-banner{% else %}warning-banner{% endif %}">
         <i class="material-icons">error</i> {{INCIDENT.message | safe}}

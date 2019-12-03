@@ -9,8 +9,8 @@ from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
 from django.db.models import IntegerField
-from django.db.models import Q
 from django.db.models import OuterRef
+from django.db.models import Q
 from django.db.models import Subquery
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
@@ -318,7 +318,7 @@ class SandboxView(TemplateView):
         nodes = []
 
         # Get a node of every kind
-        for kind, _ in content_kinds.choices:
+        for kind, _ in reversed(sorted(content_kinds.choices)):
             node = active_nodes.filter(kind_id=kind, freeze_authoring_data=False).first()
             if node:
                 nodes.append(ContentNodeSerializer(node).data)
@@ -333,3 +333,7 @@ class SandboxView(TemplateView):
                        "current_user": JSONRenderer().render(CurrentUserSerializer(self.request.user).data)
                        })
         return kwargs
+
+
+class CatalogView(TemplateView):
+    template_name = "catalog.html"
