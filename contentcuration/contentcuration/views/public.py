@@ -12,7 +12,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from contentcuration.models import Channel
-from contentcuration.models import ContentNode
+from contentcuration.serializers import CatalogSerializer
 from contentcuration.serializers import PublicChannelSerializer
 
 
@@ -107,3 +107,10 @@ class InfoViewSet(viewsets.ViewSet):
                 'operating_system': None,
                 }
         return Response(info)
+
+
+@api_view(['GET'])
+@permission_classes((AllowAny,))
+def get_catalog_details(request, channel_id):
+    channel = Channel.objects.get(pk=channel_id)
+    return Response(CatalogSerializer(channel).data)
