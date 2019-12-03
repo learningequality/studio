@@ -74,6 +74,7 @@ spec:
           periodSeconds: 2
           # fail 3 times before taking this app off the routing table
           failureThreshold: 3
+        volumeMounts:
         {{ include "studio.pvc.gcs-creds" . | nindent 8 }}
         {{ include "studio.pvc.gdrive-creds" . | nindent 8 }}
         resources:
