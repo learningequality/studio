@@ -47,7 +47,7 @@
       loadCatalogChannel() {
         this.loading = true;
         return client
-          .get(window.Urls.get_catalog_details(this.$route.params.channelID))
+          .get(window.Urls.get_catalog_details(this.$route.params.itemID))
           .then(response => {
             this.loading = false;
             this.channel = response.data;

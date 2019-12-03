@@ -56,7 +56,9 @@
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-			<title>Kolibri Studio ({% trans 'Beta' %})</title>
+      <title>Kolibri Studio ({% trans 'Beta' %})</title>
+      {% block css_bundle %}
+      {% endblock css_bundle %}
 
         {% if not debug %}
             <script src={% static 'django_js_reverse/js/reverse.js' %}></script>
@@ -92,8 +94,6 @@
         </script>
         {% endif %}
         {% endcache %}
-        {% block css_bundle %}
-        {% endblock css_bundle %}
       {% endblock head %}
 
       {% block analytics %}
@@ -111,8 +111,10 @@
         {% endif %}
         {% endcache %}
       {% endblock %}
-	</head>
+  </head>
   <body data-app>
+      {% block nav %}
+      <!-- Navigation bar -->
     {% if INCIDENT %}
       <div id="emergency-banner" class="text-center main-banner {% if INCIDENT.readonly %}error-banner{% else %}warning-banner{% endif %}">
         <i class="material-icons">error</i> {{INCIDENT.message | safe}}
@@ -132,5 +134,5 @@
     {% block content %}{% endblock content %}
     <!-- prevent more than 1 bundle per page -->
     {% block js_bundle %} {% endblock js_bundle %}
-	</body>
+  </body>
 </html>

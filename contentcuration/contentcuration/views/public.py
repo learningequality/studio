@@ -11,9 +11,10 @@ from rest_framework.decorators import permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
+from contentcuration.models import CatalogItem
 from contentcuration.models import Channel
-from contentcuration.serializers import CatalogSerializer
 from contentcuration.serializers import PublicChannelSerializer
+from contentcuration.viewsets.catalog import CatalogSerializer
 
 
 def _get_channel_list(version, params, identifier=None):
@@ -111,6 +112,6 @@ class InfoViewSet(viewsets.ViewSet):
 
 @api_view(['GET'])
 @permission_classes((AllowAny,))
-def get_catalog_details(request, channel_id):
-    channel = Channel.objects.get(pk=channel_id)
-    return Response(CatalogSerializer(channel).data)
+def get_catalog_details(request, item_id):
+    catalog_item = CatalogItem.objects.get(pk=item_id)
+    return Response(CatalogSerializer(catalog_item).data)

@@ -3,58 +3,50 @@ from django.db.models import Max
 from django.db.models import OuterRef
 from django.db.models import Prefetch
 from django.db.models import Subquery
-from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DjangoFilterBackend
-from django_filters.rest_framework import FilterSet
 from le_utils.constants import content_kinds
 from rest_framework import serializers
 from rest_framework.permissions import AllowAny
+from rest_framework.viewsets import ModelViewSet
 
-from contentcuration.models import Channel
+from contentcuration.models import CatalogItem
 from contentcuration.models import ContentNode
-from contentcuration.models import get_channel_thumbnail
 from contentcuration.models import SecretToken
-from contentcuration.viewsets.base import ValuesViewset
+from contentcuration.serializers import StudioChannelListSerializer
 
 
-class CatalogFilter(FilterSet):
-    ids = CharFilter(method="filter_ids")
+# class CatalogFilter(FilterSet):
+#     ids = CharFilter(method="filter_ids")
 
-    class Meta:
-        model = Channel
-        fields = ("ids",)
+#     class Meta:
+#         model = CatalogItem
+#         fields = ("ids",)
 
-    def filter_ids(self, queryset, name, value):
-        try:
-            # Limit SQL params to 50 - shouldn't be fetching this many
-            # ids at once
-            return queryset.filter(pk__in=value.split(",")[:50])
-        except ValueError:
-            # Catch in case of a poorly formed UUID
-            return queryset.none()
+#     def filter_ids(self, queryset, name, value):
+#         try:
+#             # Limit SQL params to 50 - shouldn't be fetching this many
+#             # ids at once
+#             return queryset.filter(pk__in=value.split(",")[:50])
+#         except ValueError:
+#             # Catch in case of a poorly formed UUID
+#             return queryset.none()
 
 
 class CatalogSerializer(serializers.ModelSerializer):
+    details = serializers.SerializerMethodField()
+    thumbnail_url = serializers.SerializerMethodField()
+    channel = StudioChannelListSerializer(read_only=True)
+
+    def get_details(self, item):
+        return item.channel and item.channel.main_tree.get_details()
+
+    def get_thumbnail_url(self, item):
+        return item.channel and item.channel.get_thumbnail()
+
     class Meta:
-        model = Channel
-        fields = (
-            "id",
-            "name",
-            "description",
-            "thumbnail",
-            "thumbnail_encoding",
-            "language",
-            "deleted",
-        )
-        read_only_fields = (
-            "id",
-            "name",
-            "description",
-            "thumbnail",
-            "thumbnail_encoding",
-            "language",
-            "deleted",
-        )
+        model = CatalogItem
+        fields = ('__all__')
+        read_only_fields = ('id', 'channel', 'details', 'thumbnail_url')
 
 
 class SQCount(Subquery):
@@ -63,52 +55,30 @@ class SQCount(Subquery):
     output_field = IntegerField()
 
 
-class CatalogViewSet(ValuesViewset):
-    queryset = Channel.objects.all()
+class CatalogViewSet(ModelViewSet):
+    queryset = CatalogItem.objects.all()
     serializer_class = CatalogSerializer
     filter_backends = (DjangoFilterBackend,)
-    filter_class = CatalogFilter
+    # filter_class = CatalogFilter
     permission_classes = [AllowAny]
-    values = (
-        "id",
-        "name",
-        "description",
-        "main_tree__published",
-        "thumbnail",
-        "thumbnail_encoding",
-        "language",
-        "primary_token",
-        "modified",
-        "count",
-        "version",
-        "main_tree__created",
-        "last_published",
-        "ricecooker_version",
-    )
-
-    field_map = {
-        "thumbnail_url": get_channel_thumbnail,
-        "published": "main_tree__published",
-        "created": "main_tree__created",
-    }
 
     def get_queryset(self):
-        queryset = Channel.objects.filter(deleted=False, public=True)
+        queryset = CatalogItem.objects.all()
         return self.prefetch_queryset(queryset)
 
     def prefetch_queryset(self, queryset):
         prefetch_secret_token = Prefetch(
-            "secret_tokens", queryset=SecretToken.objects.filter(is_primary=True)
+            "channel__secret_tokens", queryset=SecretToken.objects.filter(is_primary=True)
         )
-        queryset = queryset.select_related("language", "main_tree").prefetch_related(
+        queryset = queryset.select_related("channel", "channel__language", "channel__main_tree").prefetch_related(
             prefetch_secret_token
         )
         return queryset
 
     def annotate_queryset(self, queryset):
-        queryset = queryset.annotate(primary_token=Max("secret_tokens__token"))
+        queryset = queryset.annotate(primary_token=Max("channel__secret_tokens__token"))
         channel_main_tree_nodes = ContentNode.objects.filter(
-            tree_id=OuterRef("main_tree__tree_id")
+            tree_id=OuterRef("channel__main_tree__tree_id")
         )
         # Add the last modified node modified value as the channel last modified
         queryset = queryset.annotate(

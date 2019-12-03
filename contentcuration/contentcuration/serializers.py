@@ -787,19 +787,6 @@ class PublicChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
                   'kind_count', 'published_size', 'last_published', 'icon_encoding', 'matching_tokens', 'public')
 
 
-class CatalogSerializer(ChannelFieldMixin, serializers.ModelSerializer):
-    details = serializers.SerializerMethodField()
-    thumbnail_url = serializers.SerializerMethodField('generate_thumbnail_url')
-
-    def get_details(self, channel):
-        return channel.main_tree.get_details()
-
-    class Meta:
-        model = Channel
-        fields = ('id', 'name', 'language', 'included_languages', 'description', 'version', 'published_size',
-                  'last_published', 'thumbnail_url', 'details')
-
-
 class UserSerializer(serializers.ModelSerializer):
     content_defaults = serializers.JSONField()
     mb_space = serializers.SerializerMethodField('calculate_space')

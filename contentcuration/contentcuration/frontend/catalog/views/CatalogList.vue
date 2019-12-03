@@ -9,20 +9,14 @@
               <VImg src="/static/img/kolibri_login.png" contain max-width="32" />
             </v-list-tile-action>
             <v-list-tile-title>
-              Kolibri Channel Catalog
+              {{ $tr('catalogTitle') }}
             </v-list-tile-title>
           </v-list-tile>
         </v-list>
       </v-toolbar>
 
       <v-divider />
-      <v-container>
-        <v-text-field
-          :label="$tr('searchLabel')"
-          prepend-inner-icon="search"
-        />
-        <LanguageDropdown />
-      </v-container>
+      <CatalogFilters />
 
     </v-navigation-drawer>
     <v-content>
@@ -41,29 +35,12 @@
         <v-layout v-else grid wrap>
           <v-flex xs12>
             <p class="title">
-              {{ $tr('resultsText', {count: channels.length}) }}
+              {{ $tr('resultsText', {count: items.length}) }}
             </p>
           </v-flex>
-          <v-flex v-for="channel in channels" :key="channel.id" xs12>
-            <v-card :to="{name: 'CatalogDetails', params: {channelID: channel.id}}">
-              <v-container>
-                <v-layout row>
-                  <v-flex xs3>
-                    <VImg :src="channel.thumbnail_url" :aspect-ratio="16/9" />
-                  </v-flex>
-                  <v-flex xs9>
-                    <h1 class="display-1">
-                      {{ channel.name }}
-                    </h1>
-                    <br>
-                    <p>{{ channel.description }}</p>
-                  </v-flex>
-                </v-layout>
-              </v-container>
-            </v-card>
+          <v-flex xs12>
+            <CatalogListItem v-for="item in items" :key="item.id" :item="item" />
           </v-flex>
-
-
         </v-layout>
       </v-container>
     </v-content>
@@ -74,18 +51,20 @@
 
 <script>
 
+  import CatalogListItem from './CatalogListItem';
+  import CatalogFilters from './CatalogFilters';
   import client from 'shared/client';
-  import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown';
 
   export default {
     name: 'CatalogList',
     components: {
-      LanguageDropdown,
+      CatalogFilters,
+      CatalogListItem,
     },
     data() {
       return {
         loading: false,
-        channels: [],
+        items: [],
         loadError: false,
       };
     },
@@ -99,7 +78,7 @@
           .get(window.Urls.catalog_list())
           .then(response => {
             this.loading = false;
-            this.channels = response.data;
+            this.items = response.data;
           })
           .catch(() => {
             this.loadError = true;
@@ -107,9 +86,9 @@
       },
     },
     $trs: {
+      catalogTitle: 'Kolibri Channel Catalog',
       loadingText: 'Loading',
-      searchLabel: 'Keywords',
-      resultsText: '{count, plural,\n =1 {# channel found}\n other {# channels found}}',
+      resultsText: '{count, plural,\n =1 {# result found}\n other {# results found}}',
     },
   };
 

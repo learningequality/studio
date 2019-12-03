@@ -23,7 +23,9 @@
   html {
     overflow-y: auto !important;
     .title,
-    .display-1 {
+    .display,
+    .display-1,
+    .subheading {
       font-family: 'Noto Sans' !important;
     }
   }

@@ -1529,3 +1529,12 @@ class Task(models.Model):
     is_progress_tracking = models.BooleanField(default=False)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="task")
     metadata = JSONField()
+
+
+class CatalogItem(models.Model):
+    id = UUIDField(primary_key=True, default=uuid.uuid4)
+    name = models.CharField(max_length=200)
+    description = models.CharField(max_length=400, blank=True)
+    channel = models.ForeignKey(Channel, related_name='catalog_items', blank=True, null=True, db_index=True, on_delete=models.SET_NULL)
+    language = models.ForeignKey(Language, related_name='catalog_items', blank=True, null=True)
+    metadata = JSONField(default=dict)

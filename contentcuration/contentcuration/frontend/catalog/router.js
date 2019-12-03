@@ -14,7 +14,7 @@ const router = new VueRouter({
       component: CatalogList,
     },
     {
-      path: '/:channelID',
+      path: '/:itemID',
       name: 'CatalogDetails',
       component: CatalogDetailsPage,
     },

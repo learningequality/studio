@@ -253,7 +253,7 @@ urlpatterns += [
     url(r'^api/public/(?P<version>[^/]+)/channels$', public_views.get_public_channel_list, name='get_public_channel_list'),
     url(r'^api/public/(?P<version>[^/]+)/channels/lookup/(?P<identifier>[^/]+)', public_views.get_public_channel_lookup, name='get_public_channel_lookup'),
     url(r'^api/public/info', public_views.InfoViewSet.as_view({'get': 'list'}), name='info'),
-    url(r'^api/catalog/details/(?P<channel_id>[^/]{32})$', public_views.get_catalog_details, name="get_catalog_details"),
+    url(r'^api/catalog/details/(?P<item_id>[^/]{32})$', public_views.get_catalog_details, name="get_catalog_details"),
 ]
 
 # Add channel endpoints
