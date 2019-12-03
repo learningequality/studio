@@ -16,12 +16,36 @@ spec:
         app: {{ template "studio.fullname" . }}
         tier: app
     spec:
+      initContainers:
+      - name: collectstatic
+        image: {{ .Values.studioApp.imageName }}
+        workingDir: /contentcuration/
+        command:
+        - make
+        args:
+        - collectstatic
+        env:
+        - name: DJANGO_SETTINGS_MODULE
+          value: contentcuration.collectstatic_settings
+        - name: STATICFILES_DIR
+          value: /app/contentworkshop_static/
+        volumeMounts:
+        - mountPath: /app/contentworkshop_static/
+          name: staticfiles
       containers:
       - name: app
         image: {{ .Values.studioApp.imageName }}
+        workingDir: /contentcuration/contentcuration/
+        command:
+        - gunicorn
+        args:
+        - contentcuration.wsgi:application
+        - --timeout=4000
+        - --workers=3
+        - --threads=5
+        - --bind=0.0.0.0:8081
+        - --pid=/tmp/contentcuration.pid
         env: {{ include "studio.sharedEnvs" . | nindent 8 }}
-        - name: STATICFILES_DIR
-          value: /app/contentworkshop_static/
         - name: SEND_USER_ACTIVATION_NOTIFICATION_EMAIL
           value: "true"
         # liveness probes are checks for when a pod should be restarted.
@@ -51,8 +75,6 @@ spec:
           # fail 3 times before taking this app off the routing table
           failureThreshold: 3
         volumeMounts:
-        - mountPath: /app/contentworkshop_static/
-          name: staticfiles
         {{ include "studio.pvc.gcs-creds" . | nindent 8 }}
         {{ include "studio.pvc.gdrive-creds" . | nindent 8 }}
         resources:
