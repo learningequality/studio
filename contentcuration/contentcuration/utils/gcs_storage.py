@@ -111,7 +111,7 @@ class GoogleCloudStorage(Storage):
 
         # set a max-age of 5 if we're uploading to content/databases
         if self.is_database_file(name):
-            blob.cache_control = 'public, max-age={}'.format(CONTENT_DATABASES_MAX_AGE)
+            blob.cache_control = 'private, max-age={}, no-transform'.format(CONTENT_DATABASES_MAX_AGE)
 
         blob.upload_from_file(
             fobj,
