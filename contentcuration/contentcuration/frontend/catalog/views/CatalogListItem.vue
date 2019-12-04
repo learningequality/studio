@@ -3,17 +3,18 @@
   <v-container>
     <v-card :to="{name: 'CatalogDetails', params: {itemID: item.id}}">
       <v-container>
-        <v-layout row>
-          <v-flex xs3 class="image-wrapper">
+        <h2 v-if="!item.channel" class="subheading draft-text">
+          {{ $tr('draftItem') }}
+        </h2>
+        <v-layout row wrap>
+          <v-flex xs12 sm3 class="image-wrapper">
             <VImg
               :src="item.thumbnail_url || '/static/img/kolibri_placeholder.png'"
               :aspect-ratio="16/9"
             />
           </v-flex>
-          <v-flex xs9>
-            <h2 v-if="!item.channel" class="subheading draft-text">
-              {{ $tr('draftItem') }}
-            </h2>
+          <v-flex xs12 sm9>
+
             <h1 class="display">
               {{ item.name }}
             </h1>

@@ -29,6 +29,9 @@
             />
             <br>
             <h1>{{ item.channel && item.channel.name || item.name }}</h1>
+            <h2 v-if="!item.channel" class="draft-header">
+              {{ $tr('draftChannel') }}
+            </h2>
             <p>{{ item.description }}</p>
             <div v-if="item.channel">
               <p class="subheading subheader">
@@ -81,8 +84,9 @@
             lg9
             xl10
             class="secondary-panel"
+            :style="{paddingLeft: $vuetify.breakpoint.smAndUp? '48px': '0'}"
           >
-            <div v-if="item.details">
+            <div v-if="hasDetails">
               <div class="tags-area">
                 <v-chip
                   v-for="tag in item.details.tags"
@@ -106,8 +110,8 @@
                     <span>{{ translateConstant(props.item.kind_id) }}</span>
                   </td>
                   <td>{{ $formatNumber(props.item.count) }}</td>
-                  <td></td>
-                  <td></td>
+                  <td v-if="$vuetify.breakpoint.mdAndUp"></td>
+                  <td v-if="$vuetify.breakpoint.lgAndUp"></td>
                 </template>
               </v-data-table>
               <br>
@@ -128,7 +132,7 @@
               </v-layout>
             </div>
           </v-flex>
-          <v-flex v-if="item.details" xs12>
+          <v-flex v-if="hasDetails" xs12>
             <br><br>
             <v-layout row wrap>
               <v-flex v-for="(node, index) in item.details.sample_nodes" :key="index" xs6 sm3>
@@ -256,6 +260,9 @@
           day: 'numeric',
         });
       },
+      hasDetails() {
+        return Object.keys(this.item.details).length;
+      },
     },
     mounted() {
       this.loadCatalogChannel();
@@ -268,12 +275,6 @@
           .then(response => {
             this.item = response.data;
 
-            this.item.details.tags = [
-              { tag_name: 'Hello' },
-              { tag_name: 'World' },
-              { tag_name: '!!!' },
-            ];
-
             let v = new Vibrant(this.thumbnail);
             v.getPalette((err, palette) => {
               if (!err && palette && palette.DarkVibrant) {
@@ -283,6 +284,7 @@
             });
           })
           .catch(() => {
+            this.loading = false;
             this.loadError = true;
           });
       },
@@ -309,6 +311,7 @@
       [SCALE_TEXT.LARGE]: 'Large',
       [SCALE_TEXT.VERY_LARGE]: 'Very Large',
       notAvailable: 'Information not available',
+      draftChannel: 'Coming soon!',
     },
   };
 
@@ -321,10 +324,9 @@
     font-weight: bold;
   }
 
-  .secondary-panel {
-    padding-left: 48px;
+  .draft-header {
+    color: gray;
   }
-
   .subheader {
     margin-top: 20px;
     margin-bottom: 0;

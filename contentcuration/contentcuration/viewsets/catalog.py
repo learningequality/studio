@@ -40,7 +40,10 @@ class CatalogSerializer(serializers.ModelSerializer):
     coach_count = serializers.SerializerMethodField()
 
     def get_details(self, item):
-        return item.channel and item.channel.main_tree.get_details()
+        details = item.metadata
+        if item.channel:
+            details.update(item.channel.main_tree.get_details())
+        return details
 
     def get_thumbnail_url(self, item):
         return item.channel and item.channel.get_thumbnail()

@@ -11,13 +11,11 @@
             {{ expanded ? $tr('less') : $tr('more', {more: items.length - max}) }}
           </li>
         </ul>
-        <v-expand-y-transition>
-          <ul class="inline-list">
-            <li v-for="item in items.slice(max)" v-show="expanded" :key="item">
-              {{ item }}
-            </li>
-          </ul>
-        </v-expand-y-transition>
+        <ul class="inline-list">
+          <li v-for="item in items.slice(max)" v-show="expanded" :key="item">
+            {{ item }}
+          </li>
+        </ul>
       </div>
       <div v-else>
         <div v-for="item in items.slice(0, max)" :key="item">
