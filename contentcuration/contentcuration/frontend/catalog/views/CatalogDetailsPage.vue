@@ -361,6 +361,9 @@
     label {
       font-weight: bold;
     }
+    .flex:last-child {
+      padding-left: 10px;
+    }
   }
 
 </style>
