@@ -65,6 +65,10 @@
     font-family: 'Noto Sans';
   }
 
+  .v-content {
+    background-color: white;
+  }
+
   .fade-enter-active,
   .fade-leave-active {
     transition-timing-function: ease;
