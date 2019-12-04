@@ -5,6 +5,7 @@ from django.db.models import Prefetch
 from django.db.models import Subquery
 from django_filters.rest_framework import DjangoFilterBackend
 from le_utils.constants import content_kinds
+from le_utils.constants import roles
 from rest_framework import serializers
 from rest_framework.permissions import AllowAny
 from rest_framework.viewsets import ModelViewSet
@@ -36,6 +37,7 @@ class CatalogSerializer(serializers.ModelSerializer):
     details = serializers.SerializerMethodField()
     thumbnail_url = serializers.SerializerMethodField()
     channel = StudioChannelListSerializer(read_only=True)
+    coach_count = serializers.SerializerMethodField()
 
     def get_details(self, item):
         return item.channel and item.channel.main_tree.get_details()
@@ -43,10 +45,13 @@ class CatalogSerializer(serializers.ModelSerializer):
     def get_thumbnail_url(self, item):
         return item.channel and item.channel.get_thumbnail()
 
+    def get_coach_count(self, item):
+        return item.channel and item.channel.main_tree.get_descendants().filter(role_visibility=roles.COACH).count()
+
     class Meta:
         model = CatalogItem
         fields = ('__all__')
-        read_only_fields = ('id', 'channel', 'details', 'thumbnail_url')
+        read_only_fields = ('id', 'channel', 'details', 'thumbnail_url', 'coach_count')
 
 
 class SQCount(Subquery):

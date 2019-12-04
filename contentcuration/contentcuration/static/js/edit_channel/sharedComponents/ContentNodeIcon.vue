@@ -62,7 +62,6 @@
 
   .icon {
     padding: 2px;
-    font-size: 13pt !important;
     color: white;
     border-radius: 5px;
     &.video {

@@ -1,6 +1,8 @@
 import Vue from 'vue';
 import Vuetify from 'vuetify';
 import VueRouter from 'vue-router';
+import VueIntl from 'vue-intl';
+
 import colors from 'vuetify/es5/util/colors';
 import 'shared/i18n/setup';
 
@@ -9,7 +11,6 @@ import 'shared/styles/main.less';
 
 import Catalog from './views/Catalog.vue';
 
-var VueIntl = require('vue-intl');
 require('utils/translations');
 
 const router = require('./router');
