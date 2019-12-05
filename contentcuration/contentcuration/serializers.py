@@ -330,14 +330,6 @@ class SimplifiedContentNodeSerializer(BulkSerializerMixin, serializers.ModelSeri
     is_prerequisite_of = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     metadata = serializers.SerializerMethodField('retrieve_metadata')
     ancestors = serializers.SerializerMethodField('get_node_ancestors')
-    extra_fields = serializers.SerializerMethodField()
-
-    def get_extra_fields(self, node):
-        if node.extra_fields:
-            return node.extra_fields
-
-        # Return an empty dict instead of null so the frontend does not need to handle the null case
-        return {}
 
     def retrieve_metadata(self, node):
         if node.kind_id == content_kinds.TOPIC:
@@ -824,6 +816,7 @@ class PublicChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
     kind_count = serializers.SerializerMethodField('generate_kind_count')
     matching_tokens = serializers.SerializerMethodField('match_tokens')
     icon_encoding = serializers.SerializerMethodField('get_thumbnail_encoding')
+    version_notes = serializers.SerializerMethodField('sort_published_data')
 
     def match_tokens(self, channel):
         tokens = json.loads(channel.tokens) if hasattr(channel, 'tokens') else []
@@ -847,10 +840,15 @@ class PublicChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
     def generate_kind_count(self, channel):
         return channel.published_kind_count and json.loads(channel.published_kind_count)
 
+    def sort_published_data(self, channel):
+        data = {int(k): v['version_notes'] for k, v in channel.published_data.items()}
+        return OrderedDict(sorted(data.items()))
+
     class Meta:
         model = Channel
         fields = ('id', 'name', 'language', 'included_languages', 'description', 'total_resource_count', 'version',
-                  'kind_count', 'published_size', 'last_published', 'icon_encoding', 'matching_tokens', 'public')
+                  'kind_count', 'published_size', 'last_published', 'icon_encoding', 'matching_tokens', 'public',
+                  'version_notes')
 
 
 class UserSerializer(serializers.ModelSerializer):
