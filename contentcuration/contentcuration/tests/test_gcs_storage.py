@@ -87,9 +87,18 @@ class GoogleCloudStorageSaveTestCase(TestCase):
         """
         Check that we set a max-age of 5 if we're uploading a content database
         """
-        filename = "content/databases/myfile.jpg"
+        filename = "content/databases/myfile.sqlite3"
         self.storage.save(filename, self.content, blob_object=self.blob_obj)
         assert "max-age=5" in self.blob_obj.cache_control
+
+    def test_uploads_cache_control_private_if_content_database(self):
+        """
+        Check that set set a cache-control of private if we're uploading a content database.
+        This ensures that no proxy will cache this file.
+        """
+        filename = "content/databases/myfile.sqlite3"
+        self.storage.save(filename, self.content, blob_object=self.blob_obj)
+        assert "private" in self.blob_obj.cache_control
 
 
 
