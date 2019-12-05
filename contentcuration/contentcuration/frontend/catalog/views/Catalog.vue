@@ -1,26 +1,11 @@
 <template>
 
   <v-app>
-    <v-navigation-drawer absolute app>
-      <v-toolbar flat>
-        <v-list>
-          <v-list-tile>
-            <v-list-tile-action>
-              <VImg src="/static/img/kolibri_login.png" contain max-width="32" />
-            </v-list-tile-action>
-            <v-list-tile-title>
-              {{ $tr('catalogTitle') }}
-            </v-list-tile-title>
-          </v-list-tile>
-        </v-list>
-      </v-toolbar>
-
-      <v-divider />
+    <AppBar />
+    <v-navigation-drawer clipped app>
       <CatalogFilters />
-
     </v-navigation-drawer>
     <v-content>
-
       <transition name="fade">
         <router-view />
       </transition>
@@ -32,15 +17,14 @@
 
 <script>
 
+  import AppBar from '../../shared/views/AppBar';
   import CatalogFilters from './CatalogFilters';
 
   export default {
     name: 'Catalog',
     components: {
+      AppBar,
       CatalogFilters,
-    },
-    $trs: {
-      catalogTitle: 'Kolibri Channel Catalog',
     },
   };
 

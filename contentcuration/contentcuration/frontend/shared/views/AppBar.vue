@@ -1,36 +1,42 @@
 <template>
 
-  <VToolbar app dark color="purple" :tabs="Boolean($slots.tabs)">
+  <VToolbar app dark clipped-left color="purple" :tabs="Boolean($slots.tabs)">
     <VToolbarSideIcon href="/channels">
       <VImg maxHeight="35" contain :src="require('../images/kolibri-logo.svg')" />
     </VToolbarSideIcon>
 
     <VToolbarTitle class="white--text">
-      Kolibri Studio Beta
+      {{ $tr('title') }}
     </VToolbarTitle>
     <VSpacer />
 
-    <VToolbarTitle class="white--text">
-      {{ $tr('helloUser', { username: user.first_name }) }}
-    </VToolbarTitle>
-    <VMenu offsetY>
-      <template v-slot:activator="{ on }">
-        <VBtn icon v-on="on">
-          <VIcon>account_circle</VIcon>
-        </VBtn>
-      </template>
+    <template v-if="user.username">
+      <VToolbarTitle class="white--text">
+        {{ $tr('helloUser', { username: user.first_name }) }}
+      </VToolbarTitle>
+      <VMenu offsetY>
+        <template v-slot:activator="{ on }">
+          <VBtn icon v-on="on">
+            <VIcon>account_circle</VIcon>
+          </VBtn>
+        </template>
 
-      <VList>
-        <VListTile
-          v-for="item in menuItems"
-          :key="item.url"
-          :href="item.url"
-          :target="item.target"
-        >
-          <VListTileTitle v-text="item.label" />
-        </VListTile>
-      </VList>
-    </VMenu>
+        <VList>
+          <VListTile
+            v-for="item in menuItems"
+            :key="item.url"
+            :href="item.url"
+            :target="item.target"
+          >
+            <VListTileTitle v-text="item.label" />
+          </VListTile>
+        </VList>
+      </VMenu>
+    </template>
+    <VBtn v-else href="/accounts/login" flat>
+      {{ $tr('logIn') }}
+    </VBtn>
+
     <template v-if="$slots.tabs" #extension>
       <VTabs
         fixedTabs
@@ -79,9 +85,11 @@
       },
     },
     $trs: {
+      title: 'Kolibri Studio Beta',
       administration: 'Administration',
       settings: 'Settings',
       help: 'Help',
+      logIn: 'Log In',
       logOut: 'Log Out',
       helloUser: 'Hello, { username }',
     },

@@ -15,7 +15,7 @@
       </label>
 
     </v-flex>
-    <v-flex xs12 sm9 md10 xl1>
+    <v-flex xs12 sm9 md10 xl11>
       <slot>
         {{ text }}
       </slot>

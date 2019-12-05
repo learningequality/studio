@@ -9,15 +9,17 @@ import 'shared/i18n/setup';
 import 'vuetify/dist/vuetify.min.css';
 import 'shared/styles/main.less';
 
+import store from '../channelList/store';
 import Catalog from './views/Catalog.vue';
 
-require('utils/translations');
+import router from './router';
 
-const router = require('./router');
+require('utils/translations');
 
 Vue.use(Vuetify, {
   rtl: window.isRTL,
   theme: {
+    purple: '#996189',
     primary: colors.blue.base, // @blue-500
     primaryBackground: colors.blue.lighten5,
     greyBackground: colors.grey.lighten3,
@@ -37,5 +39,6 @@ Vue.use(VueRouter);
 new Vue({
   el: 'catalog',
   router,
+  store,
   ...Catalog,
 });

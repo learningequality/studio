@@ -7,6 +7,8 @@
       color="primary"
       :label="$tr('searchLabel')"
       prepend-inner-icon="search"
+      single-line
+      outline
     />
 
     <!-- View -->
@@ -16,14 +18,31 @@
       item-text="text"
       item-value="key"
       single-line
+      outline
     />
 
     <!-- Language -->
-    <LanguageDropdown v-model="filters.language" />
+    <LanguageDropdown
+      v-model="filters.language"
+      single-line
+      outline
+    />
 
     <!-- License -->
-    <LicenseDropdown v-model="filters.license" :required="false" />
-
+    <v-select
+      :items="licenses"
+      :label="$tr('licenseLabel')"
+      item-value="id"
+      single-line
+      outline
+    >
+      <template v-slot:selection="{ item, index }">
+        {{ translateConstant(item.license_name) }}
+      </template>
+      <template v-slot:item="{ item, index }">
+        {{ translateConstant(item.license_name) }}
+      </template>
+    </v-select>
 
     <!-- Types -->
     <div class="subheading">
@@ -64,16 +83,16 @@
 
 <script>
 
+  import { constantsTranslationMixin } from '../../shared/mixins';
   import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown';
-  import LicenseDropdown from 'edit_channel/sharedComponents/LicenseDropdown';
   import Constants from 'edit_channel/constants/index';
 
   export default {
     name: 'CatalogFilters',
     components: {
       LanguageDropdown,
-      LicenseDropdown,
     },
+    mixins: [constantsTranslationMixin],
     data() {
       return {
         filters: {
@@ -92,6 +111,9 @@
           { key: 'available', text: this.$tr('availableLabel') },
           { key: 'picks', text: this.$tr('picksLabel') },
         ];
+      },
+      licenses() {
+        return Constants.Licenses;
       },
     },
     methods: {
@@ -134,6 +156,7 @@
       draftsLabel: 'Coming Soon',
       availableLabel: 'Available',
       picksLabel: 'Learning Equality Picks',
+      licenseLabel: 'License',
     },
   };
 

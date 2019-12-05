@@ -16,6 +16,7 @@ Vue.use(Vuetify, {
   rtl: window.isRTL,
   theme: {
     primary: colors.blue.base,
+    purple: '#996189',
   },
 });
 
