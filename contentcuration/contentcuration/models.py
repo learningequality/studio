@@ -1156,13 +1156,14 @@ class ContentNode(MPTTModel, models.Model):
 
         # Add "For Educators" booleans
         for_educators = {
-            "coach_content": resources.filter(role_visibility=roles.COACH).exists(),
-            "exercises": resources.filter(kind_id=content_kinds.EXERCISE).exists(),
+            "coach_content": resources.filter(role_visibility=roles.COACH).count(),
+            "exercises": resources.filter(kind_id=content_kinds.EXERCISE).count(),
         }
 
         # Serialize data
         data = {
             "last_update": pytz.utc.localize(datetime.now()).strftime(settings.DATE_TIME_FORMAT),
+            "created": n.created.strftime(settings.DATE_TIME_FORMAT),
             "resource_count": resource_count,
             "resource_size": resource_size,
             "includes": for_educators,

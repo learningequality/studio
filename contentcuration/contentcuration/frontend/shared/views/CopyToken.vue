@@ -4,12 +4,12 @@
     v-if="token"
     v-model="displayToken"
     :title="$tr('copyPrompt')"
-    :prependInnerIcon="copyIcon"
+    :appendIcon="copyIcon"
     readonly
     color="primary"
     :hideDetails="true"
     style="padding: 0px;"
-    @click:prepend-inner.stop="copyToken"
+    @click:append.stop="copyToken"
     @click.stop
   />
 
@@ -50,7 +50,7 @@
         }
       },
       displayToken() {
-        return this.token.slice(0, 5) + '-' + this.token.slice(5);
+        return this.token;
       },
     },
     methods: {

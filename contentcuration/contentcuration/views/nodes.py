@@ -261,6 +261,19 @@ def get_channel_details(request, channel_id):
     return HttpResponse(json.dumps(data))
 
 
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
+@api_view(['GET'])
+def get_node_details(request, node_id):
+    node = ContentNode.objects.get(pk=node_id)
+    try:
+        request.user.can_view_node(node)
+    except PermissionDenied:
+        return HttpResponseNotFound("No topic found for {}".format(node_id))
+    data = get_node_details_cached(node)
+    return HttpResponse(json.dumps(data))
+
+
 def get_node_details_cached(node):
     cached_data = cache.get("details_{}".format(node.node_id))
 

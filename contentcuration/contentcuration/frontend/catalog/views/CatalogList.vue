@@ -19,8 +19,8 @@
 
 <script>
 
+  import LoadingText from '../../shared/views/LoadingText';
   import CatalogListItem from './CatalogListItem';
-  import LoadingText from './LoadingText';
   import client from 'shared/client';
 
   export default {

@@ -65,6 +65,11 @@
     font-family: 'Noto Sans';
   }
 
+  .v-tooltip__content {
+    max-width: 200px;
+    text-align: center;
+  }
+
   .v-content {
     background-color: white;
   }
