@@ -166,7 +166,7 @@ class GoogleCloudStorage(Storage):
     # Aron: note: move to a studio_storage object, since this is studio-specific logic
     @staticmethod
     def is_database_file(filename):
-        return "content/databases" in filename
+        return filename.endswith(".sqlite3")
 
     @staticmethod
     def _is_file_empty(fobj):
