@@ -87,7 +87,7 @@ class GoogleCloudStorageSaveTestCase(TestCase):
         """
         Check that we set a max-age of 5 if we're uploading a content database
         """
-        filename = "content/databases/myfile.jpg"
+        filename = "content/databases/myfile.sqlite3"
         self.storage.save(filename, self.content, blob_object=self.blob_obj)
         assert "max-age=5" in self.blob_obj.cache_control
 
