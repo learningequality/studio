@@ -167,9 +167,9 @@
 
   .v-input--checkbox {
     margin: 0;
-    /deep/ .v-messages {
-      display: none;
-    }
+  }
+  /deep/ .v-messages {
+    display: none;
   }
 
   .subheading {

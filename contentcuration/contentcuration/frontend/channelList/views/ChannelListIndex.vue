@@ -127,7 +127,7 @@
         return { name: RouterNames.CATALOG_ITEMS };
       },
       isLoggedIn() {
-        return Boolean(this.user);
+        return Boolean(this.user.email);
       },
     },
     created() {

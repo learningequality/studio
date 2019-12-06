@@ -9,17 +9,19 @@
     transition="dialog-bottom-transition"
   >
     <VCard class="catalog-item-wrapper">
+      <v-toolbar flat dark fixed :color="dominantColor">
+        <v-toolbar-items>
+          <v-btn flat icon :to="backLink">
+            <v-icon>arrow_back</v-icon>
+          </v-btn>
+        </v-toolbar-items>
+        <v-spacer />
+        <v-toolbar-title v-if="item">
+          {{ item.channel && item.channel.name || item.name }}
+        </v-toolbar-title>
+      </v-toolbar>
       <LoadingText v-if="loading" />
       <div v-else>
-        <v-toolbar flat dark fixed :color="dominantColor">
-          <v-toolbar-items>
-            <v-btn flat icon :to="backLink">
-              <v-icon>arrow_back</v-icon>
-            </v-btn>
-          </v-toolbar-items>
-          <v-spacer />
-          <v-toolbar-title>{{ item.channel && item.channel.name || item.name }}</v-toolbar-title>
-        </v-toolbar>
         <VCardText>
           <v-layout>
             <v-spacer />
@@ -117,7 +119,7 @@
       return {
         loading: true,
         loadError: false,
-        dominantColor: 'primary',
+        dominantColor: 'grey darken-2',
       };
     },
     computed: {
@@ -169,12 +171,12 @@
       load() {
         this.loading = true;
         this.loadCatalogItem(this.itemID).then(() => {
+          this.loading = false;
           let v = new Vibrant(this.thumbnail);
           v.getPalette((err, palette) => {
             if (!err && palette && palette.DarkVibrant) {
-              this.dominantColor = palette ? palette.DarkVibrant.getHex() : 'primary';
+              this.dominantColor = palette.DarkVibrant.getHex();
             }
-            this.loading = false;
           }).catch(() => {
             this.loading = false;
             this.loadError = true;
@@ -206,6 +208,7 @@
   }
 
   .draft-header {
+    padding-right: 10px;
     font-style: italic;
     color: gray;
   }

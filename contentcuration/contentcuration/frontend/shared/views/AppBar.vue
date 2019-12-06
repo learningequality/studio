@@ -84,7 +84,7 @@
         return items;
       },
       isLoggedIn() {
-        return Boolean(this.user);
+        return Boolean(this.user.email);
       },
     },
     $trs: {
