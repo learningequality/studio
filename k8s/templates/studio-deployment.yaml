@@ -41,22 +41,14 @@ spec:
         args:
         - contentcuration.wsgi:application
         - --timeout=4000
-        - --workers=3
-        - --threads=5
+        - --workers=2
         - --bind=0.0.0.0:8081
         - --pid=/tmp/contentcuration.pid
         env: {{ include "studio.sharedEnvs" . | nindent 8 }}
         - name: SEND_USER_ACTIVATION_NOTIFICATION_EMAIL
           value: "true"
-        # liveness probes are checks for when a pod should be restarted.
-        livenessProbe:
-          httpGet:
-            path: /healthz
-            port: {{ .Values.studioApp.appPort }}
-          initialDelaySeconds: 120
-          periodSeconds: 5
-          # fail 10 times before we restart the pod
-          failureThreshold: 10
+        - name: DATA_DB_HOST
+          value: {{ template "studio.fullname" . }}-frontend-db-conn-pool-service
         ports:
         - containerPort: {{ .Values.studioApp.appPort }}
         # readiness probes are checks for when the pod is ready to serve traffic.
@@ -82,7 +74,6 @@ spec:
             cpu: 0.5
             memory: 2Gi
           limits:
-            cpu: 0.5
             memory: 2Gi
       - name: nginx-proxy
         image: {{ .Values.studioNginx.imageName }}
@@ -101,6 +92,12 @@ spec:
         volumeMounts:
         - mountPath: /app/contentworkshop_static/
           name: staticfiles
+        resources:
+          requests:
+            cpu: 0.2
+            memory: 256Mi
+          limits:
+            memory: 512Mi
       volumes:
         - emptyDir: {}
           name: staticfiles
@@ -129,7 +126,9 @@ spec:
         - prodceleryworkers
         volumeMounts:
         {{ include "studio.pvc.gcs-creds" . | nindent 10 }}
-        env: {{ include "studio.sharedEnvs" . | nindent 10 }}
+        env: {{ include "studio.sharedEnvs" . | nindent 8 }}
+        - name: DATA_DB_HOST
+          value: {{ .Values.postgresql.externalCloudSQL.proxyHostName | default (include "postgresql.fullname" .) }}
         resources:
           requests:
             cpu: 0.5
