@@ -10,7 +10,7 @@
     </VToolbarTitle>
     <VSpacer />
 
-    <template v-if="user.username">
+    <template v-if="isLoggedIn">
       <VToolbarTitle class="white--text">
         {{ $tr('helloUser', { username: user.first_name }) }}
       </VToolbarTitle>
@@ -82,6 +82,9 @@
           });
         }
         return items;
+      },
+      isLoggedIn() {
+        return Boolean(this.user);
       },
     },
     $trs: {

@@ -4,7 +4,9 @@ import ChannelList from './views/Channel/ChannelList';
 import ChannelModal from './views/Channel/ChannelModal';
 import ChannelSetList from './views/ChannelSet/ChannelSetList';
 import ChannelSetModal from './views/ChannelSet/ChannelSetModal';
-import { ListTypes, RouterNames } from './constants';
+import CatalogList from './views/Catalog/CatalogList';
+import CatalogDetailsPage from './views/Catalog/CatalogDetailsPage';
+import { RouterNames } from './constants';
 
 const router = new VueRouter({
   routes: [
@@ -35,10 +37,29 @@ const router = new VueRouter({
         },
       ],
     },
+    {
+      name: RouterNames.CATALOG_ITEMS,
+      path: '/catalog',
+      component: CatalogList,
+      children: [
+        {
+          name: RouterNames.CATALOG_DETAILS,
+          path: ':itemID',
+          component: CatalogDetailsPage,
+          props: true,
+        },
+      ],
+    },
+    // {
+    //   name: RouterNames.CATALOG_DETAILS,
+    //   path: '/catalog/:itemID',
+    //   component: CatalogDetailsPage,
+    //   props: true
+    // },
     // Catch-all for unrecognized URLs
     {
       path: '*',
-      redirect: { name: RouterNames.CHANNELS, params: { listType: ListTypes.EDITABLE } },
+      redirect: { name: RouterNames.CATALOG_ITEMS },
     },
   ],
 });

@@ -68,7 +68,6 @@ module.exports = (env = {}) => {
       channel_list: [
         path.resolve(djangoProjectDir, 'contentcuration', 'frontend/channelList/index.js'),
       ],
-      catalog: [path.resolve(djangoProjectDir, 'contentcuration', 'frontend/catalog/index.js')],
       administration: ['./administration.js'],
       settings: ['./settings.js'],
       // A simple code sandbox to play with components in

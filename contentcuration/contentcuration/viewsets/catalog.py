@@ -33,7 +33,6 @@ from contentcuration.serializers import StudioChannelListSerializer
 
 
 class CatalogSerializer(serializers.ModelSerializer):
-    details = serializers.SerializerMethodField()
     thumbnail_url = serializers.SerializerMethodField()
     channel = StudioChannelListSerializer(read_only=True)
 
@@ -49,7 +48,7 @@ class CatalogSerializer(serializers.ModelSerializer):
     class Meta:
         model = CatalogItem
         fields = ('__all__')
-        read_only_fields = ('id', 'channel', 'details', 'thumbnail_url')
+        read_only_fields = ('id', 'channel', 'thumbnail_url')
 
 
 class SQCount(Subquery):

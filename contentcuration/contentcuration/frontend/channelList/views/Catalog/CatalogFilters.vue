@@ -83,7 +83,7 @@
 
 <script>
 
-  import { constantsTranslationMixin } from '../../shared/mixins';
+  import { constantsTranslationMixin } from 'shared/mixins';
   import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown';
   import Constants from 'edit_channel/constants/index';
 

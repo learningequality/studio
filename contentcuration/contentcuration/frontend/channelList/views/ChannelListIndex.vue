@@ -2,7 +2,12 @@
 
   <VApp>
     <AppBar>
-      <template #tabs>
+      <template v-if="isLoggedIn" #tabs>
+        <VTab
+          :to="catalogLink"
+        >
+          {{ $tr("catalog") }}
+        </VTab>
         <VTab
           v-for="listType in lists"
           :key="listType.id"
@@ -92,7 +97,7 @@
 
 <script>
 
-  import { mapActions, mapGetters, mapMutations } from 'vuex';
+  import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
   import { InvitationShareModes, ListTypes, RouterNames } from '../constants';
   import AppBar from 'shared/views/AppBar';
   import PrimaryDialog from 'shared/views/PrimaryDialog';
@@ -110,12 +115,19 @@
       };
     },
     computed: {
+      ...mapState({ user: state => state.session.currentUser }),
       ...mapGetters('channelList', ['invitations']),
       lists() {
         return Object.values(ListTypes);
       },
       channelSetLink() {
         return { name: RouterNames.CHANNEL_SETS };
+      },
+      catalogLink() {
+        return { name: RouterNames.CATALOG_ITEMS };
+      },
+      isLoggedIn() {
+        return Boolean(this.user);
       },
     },
     created() {
@@ -180,6 +192,7 @@
       [ListTypes.PUBLIC]: 'Public',
       [ListTypes.STARRED]: 'Starred',
       channelSets: 'Collections',
+      catalog: 'Catalog',
       /* eslint-disable kolibri/vue-no-unused-translations */
       editText: '{firstname} {lastname} has invited you to edit {channel}',
       viewText: '{firstname} {lastname} has invited you to view {channel}',
@@ -201,6 +214,27 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="less">
+
+  html {
+    overflow-y: auto !important;
+    .title,
+    .display,
+    .display-1,
+    .subheading,
+    .v-toolbar__title,
+    .v-chip__content {
+      font-family: 'Noto Sans' !important;
+    }
+  }
+
+  body * {
+    font-family: 'Noto Sans';
+  }
+
+  .v-tooltip__content {
+    max-width: 200px;
+    text-align: center;
+  }
 
 </style>

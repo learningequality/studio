@@ -1,7 +1,7 @@
 <template>
 
   <v-container>
-    <v-card :to="{name: 'CatalogDetails', params: {itemID: item.id}}">
+    <v-card :to="catalogDetailsLink">
       <v-container>
         <h2 v-if="!item.channel" class="subheading draft-text">
           {{ $tr('draftItem') }}
@@ -31,11 +31,28 @@
 
 <script>
 
+  import { mapGetters } from 'vuex';
+  import { RouterNames } from '../../constants';
+
   export default {
     name: 'CatalogListItem',
     props: {
-      item: {
-        type: Object,
+      itemID: {
+        type: String,
+      },
+    },
+    computed: {
+      ...mapGetters('catalog', ['getCatalogItem']),
+      item() {
+        return this.getCatalogItem(this.itemID);
+      },
+      catalogDetailsLink() {
+        return {
+          name: RouterNames.CATALOG_DETAILS,
+          params: {
+            itemID: this.itemID,
+          },
+        };
       },
     },
     $trs: {

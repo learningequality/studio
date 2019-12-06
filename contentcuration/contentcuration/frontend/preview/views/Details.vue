@@ -13,7 +13,7 @@
       />
       <DetailsRow :label="$tr('resourceHeading')">
         <template v-slot>
-          {{ $formatNumber(details.resource_count) }}
+          <p>{{ $formatNumber(details.resource_count) }}</p>
           <!-- Using a table here instead of a list as the counts are better aligned -->
           <v-data-table :items="kindCount" hide-actions hide-headers>
             <template v-slot:items="props">
@@ -24,6 +24,8 @@
               <td>{{ $formatNumber(props.item.count) }}</td>
               <td v-if="$vuetify.breakpoint.smAndUp"></td>
               <td v-if="$vuetify.breakpoint.mdAndUp"></td>
+              <td v-if="$vuetify.breakpoint.lgAndUp"></td>
+              <td v-if="$vuetify.breakpoint.xlAndUp"></td>
             </template>
           </v-data-table>
         </template>
@@ -170,7 +172,7 @@
 
 <script>
 
-  import _ from 'lodash';
+  import sortBy from 'lodash/sortBy';
   import { fileSizeMixin, constantsTranslationMixin } from '../../shared/mixins';
   import { SCALE_TEXT, SCALE, CHANNEL_SIZE_DIVISOR } from '../constants';
   import LoadingText from '../../shared/views/LoadingText';
@@ -214,7 +216,7 @@
         });
       },
       kindCount() {
-        return _.sortBy(this.details.kind_count, ['-count', 'kind_id']);
+        return sortBy(this.details.kind_count, ['-count', 'kind_id']);
       },
       createdDate() {
         return this.$formatDate(this.details.created, {
@@ -227,7 +229,7 @@
         return Object.keys(this.details).length;
       },
       sortedTags() {
-        return _.sortBy(this.details.tags, '-count');
+        return sortBy(this.details.tags, '-count');
       },
     },
     mounted() {
