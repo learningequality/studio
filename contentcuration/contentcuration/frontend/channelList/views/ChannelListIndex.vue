@@ -131,7 +131,7 @@
       },
     },
     created() {
-      this.loadInvitationList();
+      this.isLoggedIn && this.loadInvitationList();
     },
     methods: {
       ...mapMutations('channelList', {

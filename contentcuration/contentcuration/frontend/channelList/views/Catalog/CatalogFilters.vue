@@ -3,7 +3,7 @@
   <v-container>
     <!-- Keyword search -->
     <v-text-field
-      v-model="filters.keywords"
+      v-model="keywords"
       color="primary"
       :label="$tr('searchLabel')"
       prepend-inner-icon="search"
@@ -13,6 +13,7 @@
 
     <!-- View -->
     <v-select
+      v-model="filters.view"
       :items="catalogTypes"
       :label="$tr('filterLabel')"
       item-text="text"
@@ -53,7 +54,7 @@
       :key="kind.kind"
       v-model="filters.formats[kind.kind]"
       color="primary"
-      :label="translateKind(kind.kind)"
+      :label="translateConstant(kind.kind)"
       single-line
     />
 
@@ -62,17 +63,17 @@
       Includes
     </div>
     <v-checkbox
-      v-model="filters.coach"
+      v-model="filters.includes.coach"
       color="primary"
       :label="$tr('coachLabel')"
     />
     <v-checkbox
-      v-model="filters.assessments"
+      v-model="filters.includes.assessments"
       color="primary"
       :label="$tr('assessmentsLabel')"
     />
     <v-checkbox
-      v-model="filters.assessments"
+      v-model="filters.includes.subtitles"
       color="primary"
       :label="$tr('subtitlesLabel')"
     />
@@ -83,6 +84,8 @@
 
 <script>
 
+  import debounce from 'lodash/debounce';
+  import sortBy from 'lodash/sortBy';
   import { constantsTranslationMixin } from 'shared/mixins';
   import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown';
   import Constants from 'edit_channel/constants/index';
@@ -97,12 +100,17 @@
       return {
         filters: {
           formats: {},
+          includes: {},
         },
+        keywords: '',
       };
     },
     computed: {
       kinds() {
-        return Constants.ContentKinds;
+        return sortBy(Constants.ContentKinds, 'kind');
+      },
+      licenses() {
+        return sortBy(Constants.Licenses, 'id');
       },
       catalogTypes() {
         return [
@@ -112,42 +120,28 @@
           { key: 'picks', text: this.$tr('picksLabel') },
         ];
       },
-      licenses() {
-        return Constants.Licenses;
+      debouncedSearch() {
+        return debounce(this.search, 1000);
+      },
+    },
+    watch: {
+      keywords() {
+        this.debouncedSearch();
+      },
+      filters: {
+        deep: true,
+        handler() {
+          this.search();
+        },
       },
     },
     methods: {
-      translateKind(kind) {
-        switch (kind) {
-          case 'topic':
-            return this.$tr('topic');
-          case 'video':
-            return this.$tr('video');
-          case 'audio':
-            return this.$tr('audio');
-          case 'slideshow':
-            return this.$tr('slideshow');
-          case 'exercise':
-            return this.$tr('exercise');
-          case 'document':
-            return this.$tr('document');
-          case 'html5':
-            return this.$tr('html5');
-          default:
-            return this.$tr('unsupported');
-        }
+      search() {
+        // console.log('SEARCHING', this.filters, this.keywords);
       },
     },
     $trs: {
       searchLabel: 'Keywords',
-      topic: 'Topic',
-      video: 'Video',
-      audio: 'Audio',
-      exercise: 'Exercise',
-      document: 'Document',
-      slideshow: 'Slideshow',
-      html5: 'HTML5 App',
-      unsupported: 'Unsupported',
       coachLabel: 'Coach content',
       assessmentsLabel: 'Assessments',
       subtitlesLabel: 'Subtitles',

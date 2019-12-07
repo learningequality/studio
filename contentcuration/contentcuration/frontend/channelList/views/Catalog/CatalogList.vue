@@ -1,7 +1,27 @@
 <template>
 
   <div>
-    <v-navigation-drawer clipped app>
+    <v-btn
+      v-if="$vuetify.breakpoint.smAndDown"
+      color="primary"
+      flat
+      @click.stop="drawer = true"
+    >
+      {{ $tr('searchText') }}
+    </v-btn>
+    <v-navigation-drawer
+      v-model="drawer"
+      :permanent="$vuetify.breakpoint.mdAndUp"
+      app
+      clipped
+    >
+      <div v-if="$vuetify.breakpoint.smAndDown" style="text-align: right;">
+        <v-btn icon flat>
+          <v-icon @click="drawer = false">
+            clear
+          </v-icon>
+        </v-btn>
+      </div>
       <CatalogFilters />
     </v-navigation-drawer>
     <v-container fluid>
@@ -43,6 +63,7 @@
       return {
         loading: true,
         loadError: false,
+        drawer: false,
       };
     },
     computed: {
@@ -67,6 +88,7 @@
     },
     $trs: {
       resultsText: '{count, plural,\n =1 {# result found}\n other {# results found}}',
+      searchText: 'Search',
     },
   };
 

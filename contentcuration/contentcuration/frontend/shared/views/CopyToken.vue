@@ -3,11 +3,11 @@
   <VTextField
     v-if="token"
     v-model="displayToken"
+    v-bind="$attrs"
     :title="$tr('copyPrompt')"
     :appendIcon="copyIcon"
     readonly
     color="primary"
-    :hideDetails="true"
     style="padding: 0px;"
     @click:append.stop="copyToken"
     @click.stop
@@ -50,7 +50,7 @@
         }
       },
       displayToken() {
-        return this.token;
+        return this.token.slice(0, 5) + '-' + this.token.slice(5);
       },
     },
     methods: {

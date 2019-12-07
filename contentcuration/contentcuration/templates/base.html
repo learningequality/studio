@@ -67,8 +67,8 @@
         {% endif %}
 
       <script>
-        var user = JSON.parse("{{ current_user|escapejs }}");
-        var user_preferences = JSON.parse("{{ user_preferences|escapejs }}");
+        var user = "{{ current_user }}" !== "False" && JSON.parse("{{ current_user|escapejs }}");
+        var user_preferences = "{{ user_preferences }}" !== "False" && JSON.parse("{{ user_preferences|escapejs }}");
         var url = "{% url 'channels' %}";
       </script>
 

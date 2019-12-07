@@ -9,7 +9,7 @@
     transition="dialog-bottom-transition"
   >
     <VCard class="catalog-item-wrapper">
-      <v-toolbar flat dark fixed :color="dominantColor">
+      <v-toolbar flat :dark="Boolean(dominantColor)" fixed :color="dominantColor">
         <v-toolbar-items>
           <v-btn flat icon :to="backLink">
             <v-icon>arrow_back</v-icon>
@@ -17,7 +17,7 @@
         </v-toolbar-items>
         <v-spacer />
         <v-toolbar-title v-if="item">
-          {{ item.channel && item.channel.name || item.name }}
+          {{ item.name }}
         </v-toolbar-title>
       </v-toolbar>
       <LoadingText v-if="loading" />
@@ -25,7 +25,7 @@
         <VCardText>
           <v-layout>
             <v-spacer />
-            <v-menu v-if="item.channel" offset-y>
+            <v-menu offset-y>
               <template v-slot:activator="{ on }">
                 <v-btn
                   color="primary"
@@ -48,9 +48,6 @@
                 </VListTile>
               </VList>
             </v-menu>
-            <h2 v-else class="draft-header">
-              {{ $tr('draftChannel') }}
-            </h2>
           </v-layout>
           <VImg
             :src="item.thumbnail_url || '/static/img/kolibri_placeholder.png'"
@@ -58,30 +55,31 @@
             max-width="300"
           />
           <br>
-          <h1>{{ item.channel && item.channel.name || item.name }}</h1>
+          <h1>{{ item.name }}</h1>
           <p>{{ item.description }}</p>
           <br>
 
           <DetailsRow
+            v-if="item.language"
             :label="$tr('primaryLanguageHeading')"
-            :text="translateLanguage(item.channel && item.channel.language || item.language)"
+            :text="translateLanguage(item.language)"
           />
 
-          <template v-if="item.channel">
-            <DetailsRow v-if="item.channel.published" :label="$tr('tokenHeading')">
+          <template>
+            <DetailsRow v-if="item.published" :label="$tr('tokenHeading')">
               <template v-slot>
                 <CopyToken
-                  :token="item.channel.primary_token"
+                  :token="item.primary_token"
                   style="max-width:max-content;"
                 />
               </template>
             </DetailsRow>
             <DetailsRow :label="$tr('publishedHeading')">
-              <span v-if="item.channel.published">{{ publishedDate }}</span>
+              <span v-if="item.published">{{ publishedDate }}</span>
               <em v-else>{{ $tr('unpublishedText') }}</em>
             </DetailsRow>
           </template>
-          <Details v-if="item.channel" :nodeID="item.channel.main_tree" />
+          <Details :nodeID="item.root_id" />
         </VCardText>
       </div>
     </VCard>
@@ -119,7 +117,7 @@
       return {
         loading: true,
         loadError: false,
-        dominantColor: 'grey darken-2',
+        dominantColor: '',
       };
     },
     computed: {
@@ -131,7 +129,7 @@
         return this.item.thumbnail_url || '/static/img/kolibri_placeholder.png';
       },
       publishedDate() {
-        return this.$formatDate(this.item.channel.last_published, {
+        return this.$formatDate(this.item.last_published, {
           year: 'numeric',
           month: 'long',
           day: 'numeric',
@@ -144,21 +142,19 @@
         return [
           {
             title: this.$tr('downloadCSV'),
-            href: window.Urls.get_channel_details_csv_endpoint(this.item.channel.id),
+            href: window.Urls.get_channel_details_csv_endpoint(this.item.id),
           },
           {
             title: this.$tr('downloadDetailedPDF'),
-            href: window.Urls.get_channel_details_pdf_endpoint(this.item.channel.id),
+            href: window.Urls.get_channel_details_pdf_endpoint(this.item.id),
           },
           {
             title: this.$tr('downloadPDF'),
-            href:
-              window.Urls.get_channel_details_pdf_endpoint(this.item.channel.id) +
-              '?condensed=true',
+            href: window.Urls.get_channel_details_pdf_endpoint(this.item.id) + '?condensed=true',
           },
           {
             title: this.$tr('downloadPPT'),
-            href: window.Urls.get_channel_details_ppt_endpoint(this.item.channel.id),
+            href: window.Urls.get_channel_details_ppt_endpoint(this.item.id),
           },
         ];
       },
@@ -193,7 +189,6 @@
       tokenHeading: 'Channel Token',
       publishedHeading: 'Published date',
       primaryLanguageHeading: 'Primary language',
-      draftChannel: 'Coming soon!',
       unpublishedText: 'Unpublished',
     },
   };
