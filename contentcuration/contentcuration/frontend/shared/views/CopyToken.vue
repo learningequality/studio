@@ -3,14 +3,15 @@
   <VTextField
     v-if="token"
     v-model="displayToken"
-    v-bind="$attrs"
     :title="$tr('copyPrompt')"
     :appendIcon="copyIcon"
     readonly
     color="primary"
-    style="padding: 0px;"
+    :hideDetails="true"
+    single-line
+    style="max-width: max-content;"
     @click:append.stop="copyToken"
-    @click.stop
+    @click.stop.prevent=""
   />
 
 </template>

@@ -63,11 +63,17 @@ class ChannelSerializer(serializers.ModelSerializer):
             "thumbnail",
             "thumbnail_encoding",
             "language",
-            "bookmark",
-            "deleted",
             "catalog_item",
         )
-        read_only_fields = ("id", "name", "description", "thumbnail", "language", "catalog_item")
+        read_only_fields = (
+            "id",
+            "name",
+            "description",
+            "thumbnail",
+            "thumbnail_encoding",
+            "language",
+            "catalog_item",
+        )
 
 
 class CatalogChannelViewSet(ValuesViewset):

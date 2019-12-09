@@ -20,3 +20,9 @@ export function loadCatalogDetails(context, itemID) {
     return response.data;
   });
 }
+
+export function searchCatalog(context, filters) {
+  return client.get(window.Urls.catalog_list(), filters).then(response => {
+    context.commit('SET_CATALOG_LIST', response.data);
+  });
+}

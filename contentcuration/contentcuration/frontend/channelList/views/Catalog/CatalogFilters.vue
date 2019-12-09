@@ -11,56 +11,38 @@
       outline
     />
 
-    <!-- View -->
-    <v-select
-      v-model="filters.view"
-      :items="catalogTypes"
-      :label="$tr('filterLabel')"
-      item-text="text"
-      item-value="key"
-      single-line
-      outline
-    />
-
     <!-- Language -->
     <LanguageDropdown
       v-model="filters.language"
-      single-line
       outline
     />
 
     <!-- License -->
     <v-select
+      v-model="filters.licenses"
       :items="licenses"
       :label="$tr('licenseLabel')"
       item-value="id"
-      single-line
+      :item-text="licenseText"
+      multiple
       outline
-    >
-      <template v-slot:selection="{ item, index }">
-        {{ translateConstant(item.license_name) }}
-      </template>
-      <template v-slot:item="{ item, index }">
-        {{ translateConstant(item.license_name) }}
-      </template>
-    </v-select>
+    />
 
-    <!-- Types -->
-    <div class="subheading">
-      Type
-    </div>
-    <v-checkbox
-      v-for="kind in kinds"
-      :key="kind.kind"
-      v-model="filters.formats[kind.kind]"
-      color="primary"
-      :label="translateConstant(kind.kind)"
-      single-line
+    <!-- Formats -->
+    <v-select
+      v-model="filters.kinds"
+      :items="kinds"
+      item-value="kind"
+      :item-text="kindText"
+      :menu-props="{ maxHeight: '400' }"
+      :label="$tr('formatLabel')"
+      multiple
+      outline
     />
 
     <!-- Includes -->
     <div class="subheading">
-      Includes
+      {{ $tr('includesLabel') }}
     </div>
     <v-checkbox
       v-model="filters.includes.coach"
@@ -77,6 +59,7 @@
       color="primary"
       :label="$tr('subtitlesLabel')"
     />
+
   </v-container>
 
 </template>
@@ -84,6 +67,7 @@
 
 <script>
 
+  import { mapActions } from 'vuex';
   import debounce from 'lodash/debounce';
   import sortBy from 'lodash/sortBy';
   import { constantsTranslationMixin } from 'shared/mixins';
@@ -99,7 +83,8 @@
     data() {
       return {
         filters: {
-          formats: {},
+          kinds: [],
+          licenses: [],
           includes: {},
         },
         keywords: '',
@@ -111,14 +96,6 @@
       },
       licenses() {
         return sortBy(Constants.Licenses, 'id');
-      },
-      catalogTypes() {
-        return [
-          { key: 'all', text: this.$tr('allLabel') },
-          { key: 'drafts', text: this.$tr('draftsLabel') },
-          { key: 'available', text: this.$tr('availableLabel') },
-          { key: 'picks', text: this.$tr('picksLabel') },
-        ];
       },
       debouncedSearch() {
         return debounce(this.search, 1000);
@@ -136,8 +113,18 @@
       },
     },
     methods: {
+      ...mapActions('catalog', ['searchCatalog']),
+      licenseText(license) {
+        return this.translateConstant(license.license_name);
+      },
+      kindText(kind) {
+        return this.translateConstant(kind.kind);
+      },
       search() {
-        // console.log('SEARCHING', this.filters, this.keywords);
+        this.searchCatalog({
+          ...this.filters,
+          keywords: this.keywords,
+        });
       },
     },
     $trs: {
@@ -145,12 +132,9 @@
       coachLabel: 'Coach content',
       assessmentsLabel: 'Assessments',
       subtitlesLabel: 'Subtitles',
-      filterLabel: 'View',
-      allLabel: 'All',
-      draftsLabel: 'Coming Soon',
-      availableLabel: 'Available',
-      picksLabel: 'Learning Equality Picks',
-      licenseLabel: 'License',
+      licenseLabel: 'Licenses',
+      formatLabel: 'Formats',
+      includesLabel: 'Includes',
     },
   };
 
