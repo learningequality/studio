@@ -294,10 +294,14 @@ function fetch_nodes(ids, url) {
           if (id_list.length === 0) {
             promise_resolve([]); // No need to make a call to the server
           }
+          var transactionId = setTransactionId();
           $.ajax({
             method: 'GET',
             url: url(id_list.join(',')),
             error: promise_reject,
+            headers: {
+              'X-Transaction-ID': transactionId,
+            },
             success: promise_resolve,
           });
         });
