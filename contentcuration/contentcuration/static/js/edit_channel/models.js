@@ -8,6 +8,19 @@ const DEFAULT_ADMIN_PAGE_SIZE = 25;
 
 /**** BASE MODELS ****/
 
+// Override the original backbone.sync code to include custom request transaction
+// headers.
+var _origBackboneSync = Backbone.sync
+Backbone.sync = function(method, model, options) {
+  options.beforeSend = function(xhr) {
+    // create a transaction ID, and associate this to this request.
+    var transactionId = Math.random().toString(36).substr(2, 9);
+    Raven.setTagsContext("transaction_id", transactionId);
+    xhr.setRequestHeader("X-Transaction-ID", transactionId);
+  };
+  _origBackboneSync.call(this, method, model, options);
+};
+
 var BaseModel = Backbone.Model.extend({
   root_list: null,
   model_name: 'Model',
