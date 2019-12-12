@@ -58,6 +58,7 @@
   },
   "homepage": "https://github.com/learningequality/studio#readme",
   "dependencies": {
+    "@sentry/browser": "^5.9.1",
     "@vue/test-utils": "^1.0.0-beta.29",
     "backbone": "^1.2.1",
     "backbone-undo": "^0.2.5",
