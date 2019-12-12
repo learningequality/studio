@@ -9,6 +9,7 @@ export default {
   namespaced: true,
   state: () => ({
     catalogMap: {},
+    page: {},
   }),
   actions,
   mutations,

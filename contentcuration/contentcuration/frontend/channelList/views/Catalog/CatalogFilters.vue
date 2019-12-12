@@ -1,75 +1,106 @@
 <template>
 
-  <v-container>
-    <!-- Keyword search -->
-    <v-text-field
-      v-model="keywords"
+  <div>
+    <v-btn
+      v-if="$vuetify.breakpoint.smAndDown"
       color="primary"
-      :label="$tr('searchLabel')"
-      prepend-inner-icon="search"
-      single-line
-      outline
-    />
+      flat
+      @click.stop="drawer = true"
+    >
+      {{ $tr('searchText', {count: filtersCount}) }}
+    </v-btn>
+    <v-navigation-drawer
+      v-model="drawer"
+      :permanent="$vuetify.breakpoint.mdAndUp"
+      app
+      disable-route-watcher
+      clipped
+    >
+      <div v-if="$vuetify.breakpoint.smAndDown" style="text-align: right;">
+        <v-btn icon flat>
+          <v-icon @click="drawer = false">
+            clear
+          </v-icon>
+        </v-btn>
+      </div>
+      <v-container>
+        <!-- Keyword search -->
+        <v-text-field
+          :value="keywords"
+          color="primary"
+          :label="$tr('searchLabel')"
+          single-line
+          outline
+          clearable
+          prepend-inner-icon="search"
+          @blur="setKeywords"
+        />
 
-    <!-- Language -->
-    <LanguageDropdown
-      v-model="filters.language"
-      outline
-    />
+        <!-- Language -->
+        <LanguageDropdown
+          v-model="language"
+          clearable
+          outline
+        />
 
-    <!-- License -->
-    <v-select
-      v-model="filters.licenses"
-      :items="licenses"
-      :label="$tr('licenseLabel')"
-      item-value="id"
-      :item-text="licenseText"
-      multiple
-      outline
-    />
+        <!-- License -->
+        <v-select
+          v-model="licenses"
+          :items="licenseOptions"
+          :label="$tr('licenseLabel')"
+          item-value="id"
+          :item-text="licenseText"
+          multiple
+          outline
+          @click.stop.prevent
+        />
 
-    <!-- Formats -->
-    <v-select
-      v-model="filters.kinds"
-      :items="kinds"
-      item-value="kind"
-      :item-text="kindText"
-      :menu-props="{ maxHeight: '400' }"
-      :label="$tr('formatLabel')"
-      multiple
-      outline
-    />
+        <!-- Formats -->
+        <v-select
+          v-model="kinds"
+          :items="kindOptions"
+          item-value="kind"
+          :item-text="kindText"
+          :menu-props="{ maxHeight: '400' }"
+          :label="$tr('formatLabel')"
+          multiple
+          outline
+        />
 
-    <!-- Includes -->
-    <div class="subheading">
-      {{ $tr('includesLabel') }}
-    </div>
-    <v-checkbox
-      v-model="filters.includes.coach"
-      color="primary"
-      :label="$tr('coachLabel')"
-    />
-    <v-checkbox
-      v-model="filters.includes.assessments"
-      color="primary"
-      :label="$tr('assessmentsLabel')"
-    />
-    <v-checkbox
-      v-model="filters.includes.subtitles"
-      color="primary"
-      :label="$tr('subtitlesLabel')"
-    />
+        <!-- Includes -->
+        <div class="subheading">
+          {{ $tr('includesLabel') }}
+        </div>
+        <v-checkbox
+          v-model="coach"
+          color="primary"
+          :label="$tr('coachLabel')"
+        />
+        <v-checkbox
+          v-model="assessments"
+          color="primary"
+          :label="$tr('assessmentsLabel')"
+        />
+        <v-checkbox
+          v-model="subtitles"
+          color="primary"
+          :label="$tr('subtitlesLabel')"
+        />
 
-  </v-container>
+      </v-container>
+    </v-navigation-drawer>
+  </div>
 
 </template>
 
 
 <script>
 
-  import { mapActions } from 'vuex';
-  import debounce from 'lodash/debounce';
+  import map from 'lodash/map';
+  import uniq from 'lodash/uniq';
+  import reduce from 'lodash/reduce';
   import sortBy from 'lodash/sortBy';
+  import { RouterNames } from '../../constants';
   import { constantsTranslationMixin } from 'shared/mixins';
   import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown';
   import Constants from 'edit_channel/constants/index';
@@ -82,49 +113,122 @@
     mixins: [constantsTranslationMixin],
     data() {
       return {
-        filters: {
-          kinds: [],
-          licenses: [],
-          includes: {},
-        },
-        keywords: '',
+        drawer: false,
       };
     },
     computed: {
-      kinds() {
+      kindOptions() {
         return sortBy(Constants.ContentKinds, 'kind');
       },
-      licenses() {
+      licenseOptions() {
         return sortBy(Constants.Licenses, 'id');
       },
-      debouncedSearch() {
-        return debounce(this.search, 1000);
+      filtersCount() {
+        let fields = [
+          this.keywords,
+          this.language,
+          this.licenses.length,
+          this.kinds.length,
+          this.coach,
+          this.assessments,
+          this.subtitles,
+        ];
+        return reduce(
+          fields,
+          (sum, item) => {
+            return sum + Number(Boolean(item));
+          },
+          0
+        );
       },
-    },
-    watch: {
       keywords() {
-        this.debouncedSearch();
+        return this.$route.query.keywords;
       },
-      filters: {
-        deep: true,
-        handler() {
-          this.search();
+      language: {
+        get() {
+          return this.$route.query.language;
+        },
+        set(value) {
+          this.setQueryParam('language', value);
+        },
+      },
+      licenses: {
+        get() {
+          let licenses = this.$route.query.licenses;
+          return licenses
+            ? map(licenses.split(','), l => {
+                return Number(l);
+              })
+            : [];
+        },
+        set(value) {
+          this.setQueryParam('licenses', uniq(value).join(','));
+        },
+      },
+      kinds: {
+        get() {
+          let kinds = this.$route.query.kinds;
+          return kinds ? kinds.split(',') : [];
+        },
+        set(value) {
+          this.setQueryParam('kinds', uniq(value).join(','));
+        },
+      },
+      coach: {
+        get() {
+          return this.$route.query.coach;
+        },
+        set(value) {
+          this.setQueryParam('coach', value);
+        },
+      },
+      assessments: {
+        get() {
+          return this.$route.query.assessments;
+        },
+        set(value) {
+          this.setQueryParam('assessments', value);
+        },
+      },
+      subtitles: {
+        get() {
+          return this.$route.query.subtitles;
+        },
+        set(value) {
+          this.setQueryParam('subtitles', value);
         },
       },
     },
     methods: {
-      ...mapActions('catalog', ['searchCatalog']),
+      setKeywords(event) {
+        this.setQueryParam('keywords', event.target.value);
+      },
+      setQueryParam(field, value) {
+        let params = this.$route.query;
+        if (value) {
+          params[field] = value;
+        } else {
+          delete params[field];
+        }
+
+        this.$router.push({
+          ...this.$route,
+          name: RouterNames.CATALOG_LIST,
+          query: {
+            ...params,
+            // Getting NavigationDuplicated for any query,
+            // so just get a unique string to make it always unique
+            query_id: Math.random()
+              .toString(36)
+              .substring(7),
+          },
+        });
+      },
       licenseText(license) {
         return this.translateConstant(license.license_name);
       },
       kindText(kind) {
         return this.translateConstant(kind.kind);
-      },
-      search() {
-        this.searchCatalog({
-          ...this.filters,
-          keywords: this.keywords,
-        });
       },
     },
     $trs: {
@@ -135,6 +239,8 @@
       licenseLabel: 'Licenses',
       formatLabel: 'Formats',
       includesLabel: 'Includes',
+      searchText:
+        '{count, plural,\n =0 {Search} \n =1 {Search (# filter)}\n other {Search (# filters)}}',
     },
   };
 

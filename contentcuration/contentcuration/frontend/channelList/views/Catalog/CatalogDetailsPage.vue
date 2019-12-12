@@ -6,12 +6,14 @@
     attach="body"
     fullscreen
     scrollable
+    app
+    persistent
     transition="dialog-bottom-transition"
   >
     <VCard class="catalog-item-wrapper">
       <v-toolbar flat :dark="Boolean(dominantColor)" fixed :color="dominantColor">
         <v-toolbar-items>
-          <v-btn flat icon :to="backLink">
+          <v-btn flat icon :to="backLink" replace>
             <v-icon>arrow_back</v-icon>
           </v-btn>
         </v-toolbar-items>
@@ -59,12 +61,6 @@
           <p>{{ item.description }}</p>
           <br>
 
-          <DetailsRow
-            v-if="item.language"
-            :label="$tr('primaryLanguageHeading')"
-            :text="translateLanguage(item.language)"
-          />
-
           <template>
             <DetailsRow v-if="item.published" :label="$tr('tokenHeading')">
               <template v-slot>
@@ -79,6 +75,23 @@
               <em v-else>{{ $tr('unpublishedText') }}</em>
             </DetailsRow>
           </template>
+
+          <DetailsRow
+            v-if="item.language"
+            :label="$tr('primaryLanguageHeading')"
+            :text="translateLanguage(item.language)"
+          />
+          <DetailsRow
+            v-if="item.download_count"
+            :label="$tr('downloadsHeading')"
+            :text="$tr('downloadsText', {count: item.download_count})"
+          />
+
+          <DetailsRow
+            v-if="item.language"
+            :label="$tr('primaryLanguageHeading')"
+            :text="translateLanguage(item.language)"
+          />
           <Details :nodeID="item.root_id" />
         </VCardText>
       </div>
@@ -136,7 +149,13 @@
         });
       },
       backLink() {
-        return { name: RouterNames.CATALOG_ITEMS };
+        return {
+          name: RouterNames.CATALOG_ITEMS,
+          query: this.$route.query,
+        };
+      },
+      routeParamID() {
+        return this.$route.params.itemID;
       },
       downloadOptions() {
         return [
@@ -159,8 +178,14 @@
         ];
       },
     },
+    watch: {
+      routeParamID(val) {
+        this.hideHTMLScroll(!!val);
+      },
+    },
     mounted() {
       this.load();
+      this.hideHTMLScroll(true);
     },
     methods: {
       ...mapActions('catalog', ['loadCatalogItem']),
@@ -179,6 +204,11 @@
           });
         });
       },
+      hideHTMLScroll(hidden) {
+        document.querySelector('html').style = hidden
+          ? 'overflow-y: hidden !important;'
+          : 'overflow-y: auto !important';
+      },
     },
     $trs: {
       downloadButton: 'Download channel report',
@@ -190,6 +220,9 @@
       publishedHeading: 'Published date',
       primaryLanguageHeading: 'Primary language',
       unpublishedText: 'Unpublished',
+      downloadsHeading: 'Imports',
+      downloadsText:
+        '{count, plural,\n =1 {Imported into # channel}\n other {Imported into # channels}}',
     },
   };
 

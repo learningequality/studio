@@ -66,6 +66,7 @@
           params: {
             itemID: this.itemID,
           },
+          query: this.$route.query,
         };
       },
     },

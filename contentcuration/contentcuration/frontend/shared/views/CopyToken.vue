@@ -9,7 +9,7 @@
     color="primary"
     :hideDetails="true"
     single-line
-    style="max-width: max-content;"
+    style="max-width: max-content; padding: 0;"
     @click:append.stop="copyToken"
     @click.stop.prevent=""
   />

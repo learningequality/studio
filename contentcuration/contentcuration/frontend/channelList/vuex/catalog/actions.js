@@ -8,7 +8,7 @@ export function loadCatalogList(context) {
 }
 
 export function loadCatalogItem(context, id) {
-  return client.get(window.Urls.catalog_detail(id)).then(response => {
+  return client.get(window.Urls.get_catalog_details(id)).then(response => {
     context.commit('SET_CATALOG_ITEM', response.data);
     return response.data;
   });
@@ -22,7 +22,7 @@ export function loadCatalogDetails(context, itemID) {
 }
 
 export function searchCatalog(context, filters) {
-  return client.get(window.Urls.catalog_list(), filters).then(response => {
+  return client.get(window.Urls.catalog_list(), { params: filters }).then(response => {
     context.commit('SET_CATALOG_LIST', response.data);
   });
 }

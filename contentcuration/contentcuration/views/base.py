@@ -333,7 +333,3 @@ class SandboxView(TemplateView):
                        "current_user": JSONRenderer().render(CurrentUserSerializer(self.request.user).data)
                        })
         return kwargs
-
-
-class CatalogView(TemplateView):
-    template_name = "catalog.html"

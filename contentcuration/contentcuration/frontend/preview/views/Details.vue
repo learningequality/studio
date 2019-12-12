@@ -15,7 +15,12 @@
         <template v-slot>
           <p>{{ $formatNumber(details.resource_count) }}</p>
           <!-- Using a table here instead of a list as the counts are better aligned -->
-          <v-data-table :items="kindCount" hide-actions hide-headers>
+          <v-data-table
+            v-if="kindCount.length"
+            :items="kindCount"
+            hide-actions
+            hide-headers
+          >
             <template v-slot:items="props">
               <td>
                 <ContentNodeIcon :kind="props.item.kind_id" />
