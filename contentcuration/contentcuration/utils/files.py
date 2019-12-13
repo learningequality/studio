@@ -211,10 +211,10 @@ def generate_thumbnail_from_node(node, set_node=None):  # noqa
         htmlfile = node.files.filter(preset_id=format_presets.HTML5_ZIP).first()
         if htmlfile:
             thumbnail_object = get_image_from_htmlnode(htmlfile, preset_id=format_presets.HTML5_THUMBNAIL, node=assigned_node)
-    elif node.kind_id == content_kinds.DOCUMENT:
-        document = node.files.filter(preset_id=format_presets.DOCUMENT).first()
-        if document:
-            thumbnail_object = get_image_from_pdf(document, preset_id=format_presets.DOCUMENT_THUMBNAIL, node=assigned_node)
+    # elif node.kind_id == content_kinds.DOCUMENT:
+    #     document = node.files.filter(preset_id=format_presets.DOCUMENT).first()
+    #     if document:
+    #         thumbnail_object = get_image_from_pdf(document, preset_id=format_presets.DOCUMENT_THUMBNAIL, node=assigned_node)
     elif node.kind_id == content_kinds.AUDIO:
         audio = node.files.filter(preset_id=format_presets.AUDIO).first()
         if audio:

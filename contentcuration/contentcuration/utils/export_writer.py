@@ -480,7 +480,7 @@ class ChannelDetailsPPTWriter(ChannelDetailsWriter, PPTMixin):
         padding = 0.2
         thumbnail_width = 1.1
         if data['thumbnail']:
-            thumbnail = self.add_picture(data['thumbnail'], padding, padding, thumbnail_width, thumbnail_width)
+            thumbnail = self.add_picture(data['thumbnail'], padding, padding, thumbnail_width, thumbnail_width * 9/16)
             thumbnail.line.color.rgb = self.gray
             thumbnail.line.width = Inches(0.01)
 

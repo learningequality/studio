@@ -65,11 +65,12 @@ flower = "*"
 kombu = "==4.3"
 singledispatch = "==3.4.0.3"
 backports-abc = "==0.5"
-whitenoise = "*"
+whitenoise = "==4.1.4"
 django-redis = "*"
 django-prometheus = "*"
 eventlet = "*"
 future = "*"
+sentry-sdk = "*"
 
 [dev-packages]
 ipdb = "*"

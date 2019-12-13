@@ -16,23 +16,39 @@ spec:
         app: {{ template "studio.fullname" . }}
         tier: app
     spec:
+      initContainers:
+      - name: collectstatic
+        image: {{ .Values.studioApp.imageName }}
+        workingDir: /contentcuration/
+        command:
+        - make
+        args:
+        - collectstatic
+        env:
+        - name: DJANGO_SETTINGS_MODULE
+          value: contentcuration.collectstatic_settings
+        - name: STATICFILES_DIR
+          value: /app/contentworkshop_static/
+        volumeMounts:
+        - mountPath: /app/contentworkshop_static/
+          name: staticfiles
       containers:
       - name: app
         image: {{ .Values.studioApp.imageName }}
+        workingDir: /contentcuration/contentcuration/
+        command:
+        - gunicorn
+        args:
+        - contentcuration.wsgi:application
+        - --timeout=4000
+        - --workers=2
+        - --bind=0.0.0.0:8081
+        - --pid=/tmp/contentcuration.pid
         env: {{ include "studio.sharedEnvs" . | nindent 8 }}
-        - name: STATICFILES_DIR
-          value: /app/contentworkshop_static/
         - name: SEND_USER_ACTIVATION_NOTIFICATION_EMAIL
           value: "true"
-        # liveness probes are checks for when a pod should be restarted.
-        livenessProbe:
-          httpGet:
-            path: /healthz
-            port: {{ .Values.studioApp.appPort }}
-          initialDelaySeconds: 120
-          periodSeconds: 5
-          # fail 10 times before we restart the pod
-          failureThreshold: 10
+        - name: DATA_DB_HOST
+          value: {{ template "studio.fullname" . }}-frontend-db-conn-pool-service
         ports:
         - containerPort: {{ .Values.studioApp.appPort }}
         # readiness probes are checks for when the pod is ready to serve traffic.
@@ -51,8 +67,6 @@ spec:
           # fail 3 times before taking this app off the routing table
           failureThreshold: 3
         volumeMounts:
-        - mountPath: /app/contentworkshop_static/
-          name: staticfiles
         {{ include "studio.pvc.gcs-creds" . | nindent 8 }}
         {{ include "studio.pvc.gdrive-creds" . | nindent 8 }}
         resources:
@@ -60,7 +74,6 @@ spec:
             cpu: 0.5
             memory: 2Gi
           limits:
-            cpu: 0.5
             memory: 2Gi
       - name: nginx-proxy
         image: {{ .Values.studioNginx.imageName }}
@@ -79,6 +92,12 @@ spec:
         volumeMounts:
         - mountPath: /app/contentworkshop_static/
           name: staticfiles
+        resources:
+          requests:
+            cpu: 0.2
+            memory: 256Mi
+          limits:
+            memory: 512Mi
       volumes:
         - emptyDir: {}
           name: staticfiles
@@ -107,7 +126,9 @@ spec:
         - prodceleryworkers
         volumeMounts:
         {{ include "studio.pvc.gcs-creds" . | nindent 10 }}
-        env: {{ include "studio.sharedEnvs" . | nindent 10 }}
+        env: {{ include "studio.sharedEnvs" . | nindent 8 }}
+        - name: DATA_DB_HOST
+          value: {{ .Values.postgresql.externalCloudSQL.proxyHostName | default (include "postgresql.fullname" .) }}
         resources:
           requests:
             cpu: 0.5

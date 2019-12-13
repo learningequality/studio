@@ -29,7 +29,6 @@ from django.views.decorators.cache import cache_page
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic.base import TemplateView
 from enum import Enum
-from le_utils.constants import content_kinds
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authentication import TokenAuthentication
@@ -49,7 +48,6 @@ from contentcuration.decorators import can_access_channel
 from contentcuration.decorators import can_edit_channel
 from contentcuration.decorators import has_accepted_policies
 from contentcuration.models import Channel
-from contentcuration.models import ContentNode
 from contentcuration.models import Invitation
 from contentcuration.models import SecretToken
 from contentcuration.models import User
@@ -94,11 +92,7 @@ def base(request):
 
 
 def health(request):
-    c = Channel.objects.first()
-    if c:
-        return HttpResponse(c.name)
-    else:
-        return HttpResponse("No channels created yet!")
+    return HttpResponse("Healthy!")
 
 
 def stealth(request):
@@ -357,6 +351,7 @@ def publish_channel(request):
         task_args = {
             'user_id': request.user.pk,
             'channel_id': channel_id,
+            'version_notes': data.get('version_notes')
         }
 
         task, task_info = create_async_task('export-channel', task_info, task_args)

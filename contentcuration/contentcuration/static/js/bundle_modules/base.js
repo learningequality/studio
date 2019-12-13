@@ -50,7 +50,7 @@ $(function() {
 
     // If we have a signed in user, make sure we add them to the report.
     if (window.user && window.user.id) {
-      Raven.setUserContext({ id: window.user.id, email: window.user.email });
+      Sentry.setUser({ id: window.user.id, email: window.user.email });
     }
 
     // Put the URL in the main message for timeouts so we can see which timeouts are most frequent.
@@ -86,8 +86,8 @@ $(function() {
 
     console.warn('AJAX Request Error: ' + message); // eslint-disable-line no-console
     console.warn('Error data: ' + JSON.stringify(extraData)); // eslint-disable-line no-console
-    if (Raven && Raven.captureMessage) {
-      Raven.captureMessage(message, {
+    if (Sentry && Sentry.captureMessage) {
+      Sentry.captureMessage(message, {
         extra: extraData,
       });
     }

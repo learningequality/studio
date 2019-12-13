@@ -42,5 +42,5 @@ helm upgrade --install $RELEASENAME . \
      --set studioApp.gDrive.keyJson=$(base64 $GDRIVE_SERVICE_ACCOUNT_JSON  --wrap=0) \
      --set sentry.dsnKey=$(echo "$SENTRY_DSN_KEY" | base64 --wrap=0) \
      --timeout 1500 \
-     --set studioProber.newrelicKey=$PROBER_NEWRELIC_KEY \
+     --set-string studioProber.newrelicKey=$PROBER_NEWRELIC_KEY \
      --set-string studioProber.newrelicAccountId=$PROBER_NEWRELIC_ACCOUNT_ID  # use set-string to resolve the issue https://github.com/helm/helm/issues/1707

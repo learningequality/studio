@@ -4,15 +4,15 @@ standard_library.install_aliases()
 from builtins import object
 from io import BytesIO
 
-import pytest
-from django.core.files import File
-from django.test import TestCase
 from google.cloud.storage import Client
 from google.cloud.storage.blob import Blob
+
+import pytest
+from contentcuration.utils.gcs_storage import GoogleCloudStorage as gcs
+from django.core.files import File
+from django.test import TestCase
 from mixer.main import mixer
 from mock import create_autospec
-
-from contentcuration.utils.gcs_storage import GoogleCloudStorage as gcs
 
 
 class MimeTypesTestCase(TestCase):
@@ -85,6 +85,24 @@ class GoogleCloudStorageSaveTestCase(TestCase):
 
         # check that upload_from_file is never called
         self.blob_obj.upload_from_file.assert_not_called()
+
+    def test_uploads_max_age_of_5_if_content_database(self):
+        """
+        Check that we set a max-age of 5 if we're uploading a content database
+        """
+        filename = "content/databases/myfile.sqlite3"
+        self.storage.save(filename, self.content, blob_object=self.blob_obj)
+        assert "max-age=5" in self.blob_obj.cache_control
+
+    def test_uploads_cache_control_private_if_content_database(self):
+        """
+        Check that set set a cache-control of private if we're uploading a content database.
+        This ensures that no proxy will cache this file.
+        """
+        filename = "content/databases/myfile.sqlite3"
+        self.storage.save(filename, self.content, blob_object=self.blob_obj)
+        assert "private" in self.blob_obj.cache_control
+
 
 
 class GoogleCloudStorageOpenTestCase(TestCase):

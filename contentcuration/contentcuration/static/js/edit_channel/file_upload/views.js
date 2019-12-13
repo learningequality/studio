@@ -500,7 +500,10 @@ var FormatEditorItem = BaseViews.BaseListNodeItemView.extend({
   },
   create_thumbnail_view: function(onstart, onfinish, onerror) {
     if (!this.thumbnail_view) {
-      var preset_id = _.findWhere(this.model.get('associated_presets'), { thumbnail: true }).id;
+      var preset_id = _.findWhere(Constants.FormatPresets, {
+        kind_id: this.model.get('kind'),
+        thumbnail: true,
+      }).id;
       this.thumbnail_view = new ImageViews.ThumbnailUploadView({
         model: this.model,
         preset_id: preset_id,

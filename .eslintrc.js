@@ -7,7 +7,7 @@ esLintConfig.globals = {
   MathQuill: false,
   HandlebarsIntl: false,
   MathJax: false,
-  Raven: false,
+  Sentry: false,
   jest: false,
 };
 esLintConfig.settings['import/resolver'].alias = {

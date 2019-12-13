@@ -8,6 +8,7 @@
     :itemText="languageText"
     :autoSelectFirst="true"
     :allowOverflow="false"
+    :no-data-text="$tr('noDataText')"
     @input="selectedLanguage"
   />
 </template>
@@ -20,10 +21,6 @@
 
   export default {
     name: 'LanguageDropdown',
-    $trs: {
-      labelText: 'Language',
-      languageItemText: '{language} ({code})',
-    },
     props: {
       language: {
         type: String,
@@ -55,6 +52,11 @@
       languageText(item) {
         return this.$tr('languageItemText', { language: item.native_name, code: item.id });
       },
+    },
+    $trs: {
+      labelText: 'Language',
+      languageItemText: '{language} ({code})',
+      noDataText: 'No languages found',
     },
   };
 
