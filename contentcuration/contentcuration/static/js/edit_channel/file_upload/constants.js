@@ -5,3 +5,5 @@ export const fileErrors = {
   UPLOAD_FAILED: 'UPLOAD_FAILED',
   URL_EXPIRED: 'URL_EXPIRED',
 };
+
+export const MAX_FILE_SIZE = 524288000;

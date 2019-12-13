@@ -1,4 +1,4 @@
-import { fileErrors } from './constants';
+import { mapGetters } from 'vuex';
 import { createTranslator } from 'utils/i18n';
 
 const KB = parseFloat(1024);
@@ -12,6 +12,7 @@ const sizeStrings = createTranslator('SizeStrings', {
   megabytes: '{size}MB',
   gigabytes: '{size}GB',
   terabytes: '{size}TB',
+  uploadFileSize: '{uploaded} of {total}',
 });
 
 export const fileSizeMixin = {
@@ -40,39 +41,22 @@ export const fileSizeMixin = {
   },
 };
 
-const fileErrorStrings = createTranslator('FileErrorStrings', {
-  [fileErrors.NO_STORAGE]: 'Out of storage',
-  noStorageAction: 'Request',
-  [fileErrors.WRONG_TYPE]: 'Invalid file type (must be {filetypes})',
-  [fileErrors.TOO_LARGE]: 'File too large. Must be under {size}',
-  [fileErrors.UPLOAD_FAILED]: 'Upload failed',
-  fileUploadAction: 'Retry',
-  [fileErrors.URL_EXPIRED]: 'Upload failed',
-});
-
-export const fileErrorMixin = {
-  computed: {
-    fileErrorStrings() {
-      return fileErrorStrings;
-    },
-    maxSize() {
-      return 524288000;
-    },
-  },
+export const fileStatusMixin = {
   mixins: [fileSizeMixin],
+  computed: {
+    ...mapGetters('fileUploads', ['getStatusMessage', 'getProgress']),
+  },
   methods: {
-    getFileErrorMessage(files) {
-      let firstFile = _.find(files, file => file.error);
-      if (firstFile) {
-        let message = this.fileErrorStrings(firstFile.error);
-        switch (firstFile.error) {
-          case fileErrors.WRONG_TYPE:
-            message = message.replace('{filetypes}', '');
-            break;
-          case fileErrors.TOO_LARGE:
-            message = message.replace('{size}', this.formatFileSize(this.maxSize));
-        }
-        return message;
+    statusMessage(fileIDs) {
+      let errorMessage = this.getStatusMessage(fileIDs);
+      if (errorMessage) {
+        return errorMessage;
+      }
+      let progress = this.getProgress(fileIDs);
+      if (progress.total) {
+        return this.sizeStrings('uploadFileSize')
+          .replace('{uploaded}', this.formatFileSize(progress.uploaded))
+          .replace('{total}', this.formatFileSize(progress.total));
       }
     },
   },

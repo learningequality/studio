@@ -315,7 +315,7 @@ export function UPDATE_EXTRA_FIELDS(state, obj) {
 /*********** NODE OPERATIONS ***********/
 
 export function ADD_NODE(state, payload) {
-  let preferences = payload.kind === 'topic' ? {} : State.preferences;
+  let preferences = payload.kind === 'topic' ? {} : window.preferences;
   let data = _.reduce(
     editableFields,
     (dict, field) => {
@@ -359,8 +359,8 @@ export function ADD_NODE(state, payload) {
     role_visibility: 'learner',
     changesStaged: true,
     isNew: true,
-    parent: State.currentNode.id,
-    sort_order: State.currentNode.metadata.max_sort_order + state.nodes.length + 1,
+    parent: state.currentNode.id,
+    sort_order: state.currentNode.metadata.max_sort_order + state.nodes.length + 1,
     _COMPLETE: true,
     ...payload,
   });
@@ -382,6 +382,16 @@ export function PREP_NODES_FOR_SAVE(state) {
 }
 
 /*********** FILE OPERATIONS ***********/
+
+export function SET_FILES(state, file) {
+  state.nodes.forEach(node => {
+    let match = _.where(node.files, { id: file.id });
+    if (match) {
+      _.assign(match, file);
+    }
+  });
+}
+
 export function ADD_NODES_FROM_FILES(state, newFiles) {
   newFiles.forEach(file => {
     ADD_NODE(state, {
@@ -390,49 +400,20 @@ export function ADD_NODES_FROM_FILES(state, newFiles) {
       metadata: {
         resource_size: file.file_size,
       },
-      files: [
-        {
-          ...file,
-          uploading: true,
-        },
-      ],
+      files: [file],
     });
   });
 }
 
-export function SET_FILE_UPLOAD_PROGRESS(state, payload) {
-  state.nodes.forEach(node => {
-    let updated = _.where(node.files, { id: payload.fileID });
-    updated.forEach(file => {
-      file.progress = payload.progress;
-      file.uploading = file.progress >= 100;
-    });
+export function ADD_FILES_TO_NODE(state, payload) {
+  let presets = _.chain(payload.files)
+    .pluck('preset')
+    .pluck('id')
+    .value();
+  state.nodes[payload.index].files = _.reject(state.nodes[payload.index].files, f => {
+    return _.contains(presets, f.preset.id);
   });
-}
-
-export function SET_FILE_CHECKSUM(state, payload) {
-  state.nodes.forEach(node => {
-    let updated = _.where(node.files, { id: payload.fileID });
-    updated.forEach(file => {
-      file.checksum = payload.checksum;
-    });
-  });
-}
-
-export function SET_FILE_ERROR(state, payload) {
-  state.nodes.forEach(node => {
-    let updated = _.where(node.files, { id: payload.fileID });
-    updated.forEach(file => {
-      file.error = payload.error;
-    });
-  });
-}
-
-export function SET_FILE_PATH(state, payload) {
-  state.nodes.forEach(node => {
-    let updated = _.where(node.files, { id: payload.fileID });
-    updated.forEach(file => {
-      file.file_on_disk = payload.path;
-    });
+  payload.files.forEach(file => {
+    state.nodes[payload.index].files.push(file);
   });
 }

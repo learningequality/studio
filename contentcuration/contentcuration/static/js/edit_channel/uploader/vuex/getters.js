@@ -1,7 +1,6 @@
 import _ from 'underscore';
 
 import { getSelected } from './utils';
-import State from 'edit_channel/state';
 
 /**
  * Return assessment items of a node with a given index.
@@ -119,7 +118,7 @@ export function copyrightHolders() {
 }
 
 export function tags() {
-  return _.pluck(State.Store.getters.contentTags, 'tag_name');
+  return ['Tauros', 'Tangela'];
 }
 
 export function fileIDs(state) {

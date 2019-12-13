@@ -7,6 +7,9 @@ const channelModule = require('./vuexModules/channel');
 const contentNodesModule = require('./vuexModules/contentNodes');
 const primaryModalModule = require('./vuexModules/primaryModal');
 const publishModule = require('./vuexModules/publish');
+const fileUploadsModule = require('./vuexModules/fileUpload');
+
+var editChannelStore = require('edit_channel/uploader/vuex/store');
 
 if (Vue.default) {
   // Compatibility for differential behaviour of require import
@@ -23,6 +26,8 @@ const Store = new Vuex.Store({
     topicTree: contentNodesModule,
     dialog: primaryModalModule,
     publish: publishModule,
+    fileUpload: fileUploadsModule,
+    edit_modal: editChannelStore,
   },
 });
 
