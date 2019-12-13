@@ -1,6 +1,6 @@
 <template>
 
-  <Uploader :readonly="readonly" :presetID="preset.id" @uploading="handleUploading">
+  <Uploader :readonly="viewOnly" :presetID="preset.id" @uploading="handleUploading">
     <template slot="upload-zone" slot-scope="uploader">
       <v-list-tile
         :style="{backgroundColor: isSelected? $vuetify.theme.greyBackground : 'transparent'}"
@@ -40,7 +40,12 @@
         </v-list-tile-content>
         <VSpacer />
         <v-list-tile-action v-if="file">
-          <v-btn v-if="allowFileRemove" icon class="remove-icon">
+          <v-btn
+            v-if="allowFileRemove"
+            icon
+            class="remove-icon"
+            @click.stop="$emit('remove', file.id)"
+          >
             <v-icon color="grey">
               clear
             </v-icon>
@@ -81,7 +86,7 @@
         type: Boolean,
         default: false,
       },
-      readonly: {
+      viewOnly: {
         type: Boolean,
         default: false,
       },
@@ -98,7 +103,7 @@
     },
     methods: {
       handleUploading(files) {
-        this.$emit('uploading', files);
+        this.$emit('uploading', files[0]);
       },
     },
     $trs: {

@@ -65,7 +65,7 @@
           case 'html5':
             return 'widgets';
           default:
-            return 'error';
+            return 'error_outline';
         }
       },
       text() {

@@ -16,17 +16,24 @@
       <VFlex sm12 md6 lg7 xl8>
         <VContainer fluid>
           <VLayout alignStart>
-            <v-radio-group v-model="selected" :label="$tr('filesHeader')">
+            <v-radio-group
+              :value="currentPreview && currentPreview.id"
+              :label="$tr('filesHeader')"
+              @input="selectPreview"
+            >
               <v-list threeLine>
                 <FileUploadItem
                   v-for="item in primaryFileMapping"
+                  v-show="!viewOnly || item.file"
                   :key="item.preset.id"
+                  :viewOnly="viewOnly"
                   :file="item.file"
                   :preset="item.preset"
                   :allowFileRemove="allowFileRemove"
-                  :isSelected="!!item.file && selected === item.file.id"
+                  :isSelected="!!item.file && currentPreview && currentPreview.id === item.file.id"
                   @selected="selectPreview(item.file.id)"
                   @uploading="handleUploading"
+                  @remove="handleRemoveFile"
                 />
               </v-list>
             </v-radio-group>
@@ -57,6 +64,10 @@
     props: {
       nodeIndex: {
         type: Number,
+      },
+      viewOnly: {
+        type: Boolean,
+        default: true,
       },
     },
     data() {
@@ -93,15 +104,29 @@
       },
     },
     mounted() {
-      if (this.primaryFileMapping.length) this.selectPreview(this.primaryFileMapping[0].file.id);
+      this.selectFirstFile();
     },
     methods: {
-      ...mapMutations('edit_modal', { addFilesToNode: 'ADD_FILES_TO_NODE' }),
+      ...mapMutations('edit_modal', {
+        addFileToNode: 'ADD_FILE_TO_NODE',
+        removeFileFromNode: 'REMOVE_FILE_FROM_NODE',
+      }),
+      selectFirstFile() {
+        let firstFile = _.find(this.primaryFileMapping, p => p.file);
+        this.selectPreview(firstFile && firstFile.file.id);
+      },
       selectPreview(fileID) {
         this.selected = fileID;
       },
-      handleUploading(files) {
-        this.addFilesToNode({ index: this.nodeIndex, files: files });
+      handleUploading(file) {
+        this.addFileToNode({ index: this.nodeIndex, file: file });
+        this.selectPreview(file.id);
+      },
+      handleRemoveFile(fileID) {
+        this.removeFileFromNode({ index: this.nodeIndex, fileID: fileID });
+        if (fileID === this.selected) {
+          this.selectFirstFile();
+        }
       },
     },
     $trs: {
