@@ -1,19 +1,22 @@
 <template>
+
   <VNavigationDrawer
     ref="drawer"
     v-model="drawer.open"
     v-bind="$attrs"
     :width="drawer.width"
   >
-    <slot name="content"></slot>
+    <div class="drawer-contents">
+      <slot name="content"></slot>
+    </div>
   </VNavigationDrawer>
+
 </template>
 
 <script>
 
   export default {
     name: 'ResizableNavigationDrawer',
-    $trs: {},
     props: {
       minWidth: {
         type: Number,
@@ -62,6 +65,11 @@
         event.stopPropagation();
         event.preventDefault();
 
+        document.body.style.pointerEvents = 'none';
+        document.querySelectorAll('iframe, embed').forEach(iframe => {
+          iframe.style.pointerEvents = 'none';
+        });
+
         if (event.offsetX < 12) {
           this.drawerElement.style.transition = 'initial';
           document.addEventListener('mousemove', this.resize, false);
@@ -71,9 +79,14 @@
         this.drawerElement.style.transition = '';
         this.drawer.width = this.drawerElement.style.width;
         document.body.style.cursor = '';
+        document.body.style.pointerEvents = 'unset';
+        document.querySelectorAll('iframe, embed').forEach(iframe => {
+          iframe.style.pointerEvents = 'unset';
+        });
         document.removeEventListener('mousemove', this.resize, false);
       },
     },
+    $trs: {},
   };
 
 </script>
@@ -85,12 +98,17 @@
   @border-color: @gray-200;
 
   /deep/ .v-navigation-drawer__border {
-    width: 10px;
+    width: 3px;
     height: 100%;
-    margin-left: 10px;
+    margin-left: 3px;
     cursor: col-resize;
     background: transparent !important;
     border-right: 1px solid @gray-300;
+  }
+
+  .drawer-contents {
+    height: inherit;
+    overflow: auto;
   }
 
 </style>
