@@ -28,7 +28,7 @@
         <!-- for some reason, load raven commmand doesn't actually load the raven JS library, so do so here
              TODO: Should we install and bundle this as a dep using yarn?
         -->
-        {% if "studio.learningequality.org" in request.get_host %}
+        {%  if not debug %}
         <script
           src="https://browser.sentry-cdn.com/5.10.2/bundle.min.js"
           integrity="sha384-ssBfXiBvlVC7bdA/VX03S88B5MwXQWdnpJRbUYFPgswlOBwETwTp6F3SMUNpo9M9"
