@@ -1,6 +1,6 @@
 <template>
 
-  <span>
+  <span v-if="icon">
     <v-chip
       v-if="showColor"
       label
@@ -30,10 +30,10 @@
     props: {
       kind: {
         type: String,
-        required: true,
         validator: value => {
-          return kinds.includes(value);
+          return value === 'unsupported' || kinds.includes(value);
         },
+        default: 'unsupported',
       },
       includeText: {
         type: Boolean,

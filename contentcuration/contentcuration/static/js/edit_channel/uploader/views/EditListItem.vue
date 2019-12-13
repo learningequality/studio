@@ -7,44 +7,26 @@
     <VListTileAction v-if="node.changesStaged" class="changed">
       *
     </VListTileAction>
-    <VListTileAction>
+    <VListTileAction style="min-width:min-content;">
       <ContentNodeIcon :kind="node.kind" :showColor="false" />
     </VListTileAction>
     <VListTileContent>
       <VListTileTitle>
         {{ node.title }}
       </VListTileTitle>
-      <VListTileSubTitle v-if="firstFileError">
-        {{ firstFileError }}
-      </VListTileSubTitle>
-      <VListTileSubTitle v-else-if="subtitleText">
+      <VListTileSubTitle v-if="subtitleText">
         {{ subtitleText }}
       </VListTileSubTitle>
     </VListTileContent>
     <VSpacer />
-    <VListTileAction v-if="!nodeIsValid">
-      <VIcon color="red" class="error-icon">
-        error
-      </VIcon>
-    </VListTileAction>
-    <VListTileAction v-else-if="showUploadComplete">
-      <VIcon color="greenSuccess">
-        check_circle
-      </VIcon>
-    </VListTileAction>
-    <VListTileAction v-else-if="uploads.length && uploadProgress === 0">
-      <VIcon color="grey">
-        query_builder
-      </VIcon>
-    </VListTileAction>
-    <VListTileAction v-else-if="uploads.length">
-      <v-progress-circular
-        slot="activator"
-        size="20"
-        :value="uploadProgress"
-        color="greenSuccess"
-        rotate="270"
-      />
+    <VListTileAction class="status-indicator">
+      <FileStatus :fileIDs="fileIDs">
+        <slot name="default">
+          <VIcon v-if="!nodeIsValid" color="red" class="error-icon">
+            error
+          </VIcon>
+        </slot>
+      </FileStatus>
     </VListTileAction>
     <VListTileAction v-if="removable">
       <VBtn
@@ -67,14 +49,16 @@
   import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
   import { modes } from '../constants';
   import ContentNodeIcon from 'edit_channel/sharedComponents/ContentNodeIcon.vue';
-  import { fileSizeMixin, fileErrorMixin } from 'edit_channel/file_upload/mixins';
+  import { fileSizeMixin, fileStatusMixin } from 'edit_channel/file_upload/mixins';
+  import FileStatus from 'edit_channel/file_upload/views/FileStatus.vue';
 
   export default {
     name: 'EditListItem',
     components: {
       ContentNodeIcon,
+      FileStatus,
     },
-    mixins: [fileSizeMixin, fileErrorMixin],
+    mixins: [fileSizeMixin, fileStatusMixin],
     props: {
       index: {
         type: Number,
@@ -84,11 +68,6 @@
         type: Boolean,
         default: false,
       },
-    },
-    data() {
-      return {
-        showUploadComplete: false,
-      };
     },
     computed: {
       ...mapGetters('edit_modal', ['getNode', 'invalidNodes']),
@@ -108,12 +87,6 @@
           !this.invalidNodes({ ignoreNewNodes: true }).includes(this.index) && !this.firstFileError
         );
       },
-      uploads() {
-        return _.reject(
-          this.node.files,
-          file => file.progress === undefined || file.progress === null
-        );
-      },
       backgroundColor() {
         if (this.selectedIndices.length > 1 && this.isSelected) {
           return this.$vuetify.theme.primaryBackground;
@@ -122,52 +95,14 @@
         }
         return 'transparent';
       },
-      uploadProgress() {
-        let sum = _.reduce(
-          this.uploads,
-          (sum, file) => {
-            return file.progress + sum;
-          },
-          0
-        );
-        return sum / this.uploads.length;
-      },
-      firstFileError() {
-        return this.getFileErrorMessage(this.node.files);
+      fileIDs() {
+        return _.pluck(this.node.files, 'id');
       },
       subtitleText() {
         if (this.node.kind === 'exercise') {
           return this.$tr('questionCount', { count: this.node.assessment_items.length });
-        } else if (this.node.kind !== 'topic' && this.uploads.length) {
-          let uploadedSize = _.reduce(
-            this.uploads,
-            (sum, file) => {
-              return (file.progress / 100) * file.file_size + sum;
-            },
-            0
-          );
-          return this.$tr('uploadFileSize', {
-            uploaded: this.formatFileSize(uploadedSize),
-            total: this.formatFileSize(this.node.metadata.resource_size),
-          });
         }
-        return null;
-      },
-    },
-    watch: {
-      uploadProgress(newVal) {
-        if (newVal >= 100) {
-          this.showUploadComplete = true;
-          this.uploads.forEach(file => {
-            this.setFileUploadProgress({
-              fileID: file.id,
-              progress: null,
-            });
-          });
-          setTimeout(() => {
-            this.showUploadComplete = false;
-          }, 5000);
-        }
+        return this.statusMessage(_.pluck(this.node.files, 'id'));
       },
     },
     methods: {
@@ -175,7 +110,6 @@
         select: 'SELECT_NODE',
         deselect: 'DESELECT_NODE',
         setNode: 'SET_NODE',
-        setFileUploadProgress: 'SET_FILE_UPLOAD_PROGRESS',
       }),
       ...mapActions('edit_modal', ['removeNode']),
       toggleNode() {
@@ -183,7 +117,6 @@
       },
     },
     $trs: {
-      uploadFileSize: '{uploaded} of {total}',
       questionCount: '{count, plural,\n =1 {# Question}\n other {# Questions}}',
     },
   };
@@ -212,11 +145,14 @@
   }
 
   /deep/ .v-list__tile {
+    height: max-content !important;
+    min-height: 64px;
+    padding: 5px 16px;
     &:hover .remove-item {
       display: block;
     }
     .v-list__tile__content {
-      padding-left: 8px;
+      padding: 0 8px;
     }
     .v-list__tile__sub-title {
       white-space: unset;
@@ -225,6 +161,10 @@
 
   .error-icon {
     font-size: 14pt !important;
+  }
+
+  .status-indicator {
+    min-width: max-content;
   }
 
 </style>

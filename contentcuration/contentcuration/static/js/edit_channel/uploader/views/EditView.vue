@@ -3,7 +3,7 @@
   <VContent>
     <VContainer fluid fill-height>
       <FileUploadDefault v-if="uploadMode && !nodes.length" />
-      <VLayout v-if="!selected.length" justify-center align-center fill-height>
+      <VLayout v-else-if="!selected.length" justify-center align-center fill-height>
         <VFlex grow class="default-content">
           {{ noItemText }}
         </VFlex>
@@ -25,7 +25,7 @@
       </VLayout>
       <VLayout v-else justify-center>
         <VFlex grow>
-          <VTabs v-model="currentTab" fixed-tabs slider-color="primary">
+          <VTabs v-model="currentTab" slider-color="primary">
             <!-- Details tab -->
             <VTab ref="detailstab" :href="`#${tabs.DETAILS}`">
               {{ $tr(tabs.DETAILS) }}

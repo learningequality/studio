@@ -17,7 +17,7 @@
           </VListTileContent>
         </VListTile>
       </VList>
-      <VList width="100%" twoLine>
+      <VList width="100%" two-line>
         <!-- Selected items -->
         <EditListItem
           v-for="(node, index) in nodes"
