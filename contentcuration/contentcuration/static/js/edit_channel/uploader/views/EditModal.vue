@@ -202,7 +202,7 @@
       };
     },
     computed: {
-      ...mapState('edit_modal', ['nodes', 'changes', 'mode']),
+      ...mapState('edit_modal', ['nodes', 'changes', 'mode', 'validation']),
       ...mapGetters('edit_modal', ['changed', 'invalidNodes', 'totalFileSize']),
       isViewOnly() {
         return this.mode === modes.VIEW_ONLY;
@@ -312,8 +312,8 @@
         // Prepare for save sets all as not new and
         // activates validation on all nodes
         this.prepareForSave();
-        if (this.invalidNodes.length) {
-          this.setNode(this.invalidNodes[0]);
+        if (this.validation.length) {
+          this.setNode(this.validation[0].nodeIdx);
         } else {
           this.saveContent()
             .then(this.closeModal)
