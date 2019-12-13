@@ -3,7 +3,12 @@ import Vuetify from 'vuetify';
 import colors from 'vuetify/es5/util/colors';
 import Sandbox from '../sandbox/Sandbox.vue';
 
+const Vuex = require('vuex');
+
 var VueIntl = require('vue-intl');
+const editModal = require('edit_channel/uploader/vuex/store');
+const fileUpload = require('edit_channel/vuexModules/fileUpload');
+const contentNodesModule = require('edit_channel/vuexModules/contentNodes');
 
 require('vuetify/dist/vuetify.min.css');
 require('../../less/styles.less');
@@ -11,7 +16,21 @@ require('../../less/styles.less');
 require('utils/translations');
 const State = require('edit_channel/state');
 
-var store = require('edit_channel/uploader/vuex/store');
+// if (Vue.default) {
+//   // Compatibility for differential behaviour of require import
+//   // of ES6 export default in webpack vs Jest
+//   Vue = Vue.default;
+// }
+
+Vue.use(Vuex);
+
+const store = new Vuex.Store({
+  modules: {
+    edit_modal: editModal,
+    fileUploads: fileUpload,
+    topicTree: contentNodesModule,
+  },
+});
 
 Vue.use(VueIntl);
 Vue.use(Vuetify, {
@@ -28,6 +47,7 @@ Vue.use(Vuetify, {
     exercise: '#4db6ac',
     html5: '#ff8f00',
     slideshow: '#4ece90',
+    unsupported: colors.red.base,
   },
 });
 
@@ -50,7 +70,13 @@ if (State.current_channel) {
 }
 
 // TODO: update this to use proper parent tree logic
-State.currentNode = State.current_channel.get('main_tree');
+State.currentNode = {
+  id: 'test',
+  title: 'Sandbox Topic',
+  metadata: {
+    max_sort_order: 0,
+  },
+};
 
 new Vue({
   el: 'sandbox',

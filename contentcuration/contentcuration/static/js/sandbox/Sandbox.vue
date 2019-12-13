@@ -47,6 +47,9 @@
     components: {
       EditModal,
     },
+    mounted() {
+      this.openModal('UPLOAD');
+    },
     methods: {
       ...mapMutations('edit_modal', {
         setNodes: 'SET_NODES',
