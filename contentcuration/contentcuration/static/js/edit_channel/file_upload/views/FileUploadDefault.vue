@@ -1,6 +1,7 @@
 <template>
-  <VContainer fluid>
-    <VLayout row wrap class="file-upload-wrapper">
+
+  <VContainer fluid fill-height>
+    <VLayout wrap align-center justify-center class="file-upload-wrapper">
       <VSpacer />
       <VFlex xs12 md6>
         <FileStorage showProgress />
@@ -9,9 +10,9 @@
         <VCard flat height="100%">
           <Uploader @uploading="createNodesFromFiles">
             <template slot="upload-zone" slot-scope="uploader">
-              <VLayout alignCenter fillHeight>
+              <VLayout align-center fill-height>
                 <VCardText class="text-center align-center">
-                  <p class="title upload-to-text">
+                  <p v-if="currentNode" class="title upload-to-text">
                     {{ $tr('uploadToText', {title: currentNode.title}) }}
                   </p>
                   <p class="headline">
@@ -36,12 +37,13 @@
       </VFlex>
     </VLayout>
   </VContainer>
+
 </template>
 
 <script>
 
   import _ from 'underscore';
-  import { mapMutations, mapState } from 'vuex';
+  import { mapMutations } from 'vuex';
   import FileStorage from './FileStorage.vue';
   import Uploader from 'edit_channel/sharedComponents/Uploader.vue';
   import Constants from 'edit_channel/constants/index';
@@ -49,19 +51,11 @@
 
   export default {
     name: 'FileUploadDefault',
-    $trs: {
-      acceptsHelp: 'Accepts {extensions}',
-      uploadToText: "Upload to '{title}'",
-      dropHereText: 'Drag and drop your files here',
-      orText: 'or',
-      chooseFilesButton: 'Choose Files',
-    },
     components: {
       Uploader,
       FileStorage,
     },
     computed: {
-      ...mapState('edit_modal', ['files']),
       acceptedFiles() {
         return _.chain(Constants.FormatPresets)
           .where({ supplementary: false, display: true })
@@ -78,6 +72,13 @@
     methods: {
       ...mapMutations('edit_modal', { createNodesFromFiles: 'ADD_NODES_FROM_FILES' }),
     },
+    $trs: {
+      acceptsHelp: 'Accepts {extensions}',
+      uploadToText: "Upload to '{title}'",
+      dropHereText: 'Drag and drop your files here',
+      orText: 'or',
+      chooseFilesButton: 'Choose Files',
+    },
   };
 
 </script>
@@ -86,9 +87,15 @@
 
   @import '../../../../less/global-variables.less';
   /deep/ .v-card {
+    position: relative;
     min-height: 50vh;
     margin-top: 20px;
+    overflow: hidden;
     border: 1px solid @gray-300 !important;
+  }
+
+  /deep/ .uploader {
+    position: absolute;
   }
   .file-upload-wrapper {
     max-width: 900px;

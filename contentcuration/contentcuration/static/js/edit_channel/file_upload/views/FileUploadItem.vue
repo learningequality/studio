@@ -1,5 +1,6 @@
 <template>
-  <Uploader :readonly="readonly">
+
+  <Uploader :readonly="readonly" :presetID="preset.id" @uploading="handleUploading">
     <template slot="upload-zone" slot-scope="uploader">
       <v-list-tile
         :style="{backgroundColor: isSelected? $vuetify.theme.greyBackground : 'transparent'}"
@@ -18,9 +19,24 @@
               {{ $tr('uploadButton') }}
             </a>
           </v-list-tile-title>
-          <v-list-tile-sub-title v-if="file">
+          <v-list-tile-sub-title v-if="file && file.error">
+            {{ statusMessage([file.id]) }}
+            &nbsp;
+            <a
+              v-if="file.error.type !== 'NO_STORAGE'"
+              class="action-link"
+              @click.stop="uploader.openFileDialog"
+            >
+              {{ $tr('uploadButton') }}
+            </a>
+          </v-list-tile-sub-title>
+          <v-list-tile-sub-title v-else-if="file && uploading">
+            {{ statusMessage([file.id]) }}
+          </v-list-tile-sub-title>
+          <v-list-tile-sub-title v-else-if="file">
             {{ formatFileSize(file.file_size) }}
           </v-list-tile-sub-title>
+
         </v-list-tile-content>
         <VSpacer />
         <v-list-tile-action v-if="file">
@@ -33,19 +49,18 @@
       </v-list-tile>
     </template>
   </Uploader>
+
 </template>
 
 <script>
 
-  import { fileSizeMixin } from '../mixins';
+  import { mapGetters } from 'vuex';
+  import { fileSizeMixin, fileStatusMixin } from '../mixins';
   import Uploader from 'edit_channel/sharedComponents/Uploader.vue';
   import { translate } from 'edit_channel/utils/string_helper';
 
   export default {
     name: 'FileUploadItem',
-    $trs: {
-      uploadButton: 'Select file',
-    },
     components: {
       Uploader,
     },
@@ -54,7 +69,7 @@
         return translate(text);
       },
     },
-    mixins: [fileSizeMixin],
+    mixins: [fileSizeMixin, fileStatusMixin],
     props: {
       file: {
         type: Object,
@@ -75,6 +90,20 @@
         default: false,
       },
     },
+    computed: {
+      ...mapGetters('fileUploads', ['getFile']),
+      uploading() {
+        return this.file && !!this.getFile(this.file.id);
+      },
+    },
+    methods: {
+      handleUploading(files) {
+        this.$emit('uploading', files);
+      },
+    },
+    $trs: {
+      uploadButton: 'Select file',
+    },
   };
 
 </script>
@@ -92,7 +121,10 @@
   button {
     margin: 0;
   }
-  .v-list__tile {
+  /deep/ .v-list__tile {
+    height: max-content !important;
+    min-height: 64px;
+    padding: 5px 16px;
     .remove-icon {
       display: none;
     }
@@ -101,6 +133,9 @@
     }
     .v-list__tile__title {
       height: max-content;
+    }
+    .v-list__tile__sub-title {
+      white-space: unset;
     }
   }
 

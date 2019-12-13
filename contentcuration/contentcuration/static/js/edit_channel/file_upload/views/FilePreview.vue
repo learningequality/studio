@@ -1,4 +1,5 @@
 <template>
+
   <v-scale-transition origin="center center">
     <VCard
       tabindex="0"
@@ -6,6 +7,7 @@
       flat
       class="preview-area"
       :class="{'fullscreen-mode': fullscreen}"
+      app
       @keydown.esc="fullscreen = false"
     >
       <v-toolbar v-if="fullscreen" dark color="grey darken-3" dense>
@@ -26,6 +28,7 @@
       </p>
     </VCard>
   </v-scale-transition>
+
 </template>
 
 <script>
@@ -34,11 +37,6 @@
 
   export default {
     name: 'FilePreview',
-    $trs: {
-      viewFullscreen: 'View Fullscreen',
-      exitFullscreen: 'Exit Fullscreen',
-      fullscreenModeText: 'Fullscreen mode',
-    },
     components: {
       ContentRenderer,
     },
@@ -56,21 +54,17 @@
       };
     },
     computed: {
-      isVideo() {
-        return this.file.file_format === 'mp4';
-      },
       isAudio() {
         return this.file.file_format === 'mp3';
-      },
-      isHTML() {
-        return this.file.file_format === 'zip';
-      },
-      isPDF() {
-        return this.file.file_format === 'pdf';
       },
       showFullscreenOption() {
         return this.file && this.file.file_on_disk && !this.isAudio && !this.file.uploading;
       },
+    },
+    $trs: {
+      viewFullscreen: 'View Fullscreen',
+      exitFullscreen: 'Exit Fullscreen',
+      fullscreenModeText: 'Fullscreen mode',
     },
   };
 

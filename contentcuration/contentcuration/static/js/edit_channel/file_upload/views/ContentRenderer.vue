@@ -1,46 +1,28 @@
 <template>
+
   <VLayout :key="file && file.file_on_disk" :class="{fullscreen: fullscreen, renderer: loading}">
     <VCard v-if="!file" color="grey lighten-4" flat>
-      <VLayout alignCenter justifyCenter fillHeight>
+      <VLayout align-center justify-center fill-height>
         {{ $tr('noFileText') }}
       </VLayout>
     </VCard>
-    <VCard v-else-if="file.error" color="grey lighten-4" flat>
-      <VLayout alignCenter justifyCenter fillHeight>
-        <VIcon size="32px" color="red">
-          error
-        </VIcon>
+    <VCard v-else-if="uploading" color="grey lighten-4" flat>
+      <VLayout align-center justify-center fill-height>
+        <FileStatus :fileIDs="[file.id]" large />
       </VLayout>
     </VCard>
-    <VCard v-else-if="isPending" color="grey lighten-4" flat>
-      <VLayout alignCenter justifyCenter fillHeight>
-        <VIcon size="32px" color="grey">
-          query_builder
-        </VIcon>
-      </VLayout>
-    </VCard>
-    <VCard v-else-if="isUploading || !file.file_on_disk" color="grey lighten-4" flat>
-      <VLayout alignCenter justifyCenter fillHeight>
-        <v-progress-circular
-          slot="activator"
-          size="28"
-          :value="file.progress"
-          color="greenSuccess"
-          rotate="270"
-        />
-      </VLayout>
-    </VCard>
-    <video
-      v-else-if="isVideo"
-      controls
-      preload="metadata"
-      controlsList="nodownload"
-      @load="loading = false"
-    >
-      <source :src="src" :type="file.mimetype">
-    </video>
+    <v-flex v-else-if="isVideo">
+      <video
+        controls
+        preload="metadata"
+        controlsList="nodownload"
+        @load="loading = false"
+      >
+        <source :src="src" :type="file.mimetype">
+      </video>
+    </v-flex>
     <VCard v-else-if="isAudio" flat>
-      <VLayout alignCenter fillHeight>
+      <VLayout align-center justify-center fill-height>
         <audio controls :src="src" :type="file.mimetype" @loadeddata="loading = false"></audio>
       </VLayout>
     </VCard>
@@ -52,20 +34,23 @@
     ></iframe>
     <embed v-else-if="isPDF" :src="src" @load="loading = false">
     <VCard v-else color="grey lighten-4" flat>
-      <VLayout alignCenter justifyCenter fillHeight>
+      <VLayout align-center justify-center fill-height>
         {{ $tr('previewNotSupported') }}
       </VLayout>
     </VCard>
   </VLayout>
+
 </template>
 
 <script>
 
+  import { mapGetters } from 'vuex';
+  import FileStatus from 'edit_channel/file_upload/views/FileStatus.vue';
+
   export default {
     name: 'ContentRenderer',
-    $trs: {
-      noFileText: 'Select a file to preview',
-      previewNotSupported: 'No preview available for this file',
+    components: {
+      FileStatus,
     },
     props: {
       file: {
@@ -83,6 +68,7 @@
       };
     },
     computed: {
+      ...mapGetters('fileUploads', ['getFile']),
       isVideo() {
         return this.file.file_format === 'mp4';
       },
@@ -95,21 +81,25 @@
       isPDF() {
         return this.file.file_format === 'pdf';
       },
-      isPending() {
-        return this.file.progress === 0;
-      },
-      isUploading() {
-        return this.file.progress && this.file.progress < 100;
-      },
       htmlPath() {
         return '/zipcontent/' + this.file.checksum + '.' + this.file.file_format;
       },
+      uploading() {
+        return !!this.getFile(this.file.id);
+      },
     },
     watch: {
-      file(newFile) {
-        this.src = newFile && newFile.file_on_disk;
-        this.loading = true;
+      file: {
+        handler(newFile) {
+          this.src = newFile && newFile.file_on_disk;
+          this.loading = true;
+        },
+        deep: true,
       },
+    },
+    $trs: {
+      noFileText: 'Select a file to preview',
+      previewNotSupported: 'No preview available for this file',
     },
   };
 
@@ -146,6 +136,11 @@
     embed,
     iframe {
       min-height: @max-height;
+    }
+    embed,
+    iframe {
+      // Make room for scrollbar
+      margin-right: 15px;
     }
   }
 

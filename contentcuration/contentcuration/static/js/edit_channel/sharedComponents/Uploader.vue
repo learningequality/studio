@@ -1,6 +1,8 @@
 <template>
+
   <div
     style="height: 100%; width: 100%; border: 2px solid transparent;"
+    class="uploader"
     :style="highlightDropzone ? {
       backgroundColor: $vuetify.theme.primaryBackground,
       borderColor: $vuetify.theme.primary
@@ -21,41 +23,35 @@
       @change="handleFiles($event.target.files)"
     >
   </div>
+
 </template>
 
 <script>
 
-  import { mapActions, mapMutations } from 'vuex';
+  import { mapActions, mapGetters, mapMutations } from 'vuex';
   import _ from 'underscore';
   import { getHash } from './utils';
   import Constants from 'edit_channel/constants';
-  import { fileErrors } from 'edit_channel/file_upload/constants';
-  import { fileErrorMixin } from 'edit_channel/file_upload/mixins';
+  import { fileErrors, MAX_FILE_SIZE } from 'edit_channel/file_upload/constants';
+  import { fileSizeMixin } from 'edit_channel/file_upload/mixins';
 
   export default {
     name: 'Uploader',
-    $trs: {},
-    mixins: [fileErrorMixin],
+    mixins: [fileSizeMixin],
     props: {
-      value: {
-        type: Object,
-        default() {
-          return {};
-        },
-      },
+      // value: {
+      //   type: Object,
+      //   default() {
+      //     return {};
+      //   },
+      // },
       readonly: {
         type: Boolean,
         default: false,
       },
-      preset: {
+      presetID: {
         type: String,
         required: false,
-      },
-      acceptedFiles: {
-        type: Array,
-        default: () => {
-          return _.where(Constants.FormatPresets, { supplementary: false, display: true });
-        },
       },
       allowMultiple: {
         type: Boolean,
@@ -72,6 +68,14 @@
       };
     },
     computed: {
+      ...mapGetters('fileUploads', ['getFile']),
+      acceptedFiles() {
+        let filter = { supplementary: false, display: true };
+        if (this.presetID) {
+          filter.id = this.presetID;
+        }
+        return _.where(Constants.FormatPresets, filter);
+      },
       acceptedMimetypes() {
         return _.chain(this.acceptedFiles)
           .pluck('associated_mimetypes')
@@ -85,22 +89,24 @@
           .flatten()
           .value();
       },
-      file() {
-        if (this.files.length && this.files[0].previewSrc) {
-          return this.files[0].previewSrc;
-        }
-        return this.value.thumbnail_url;
-      },
+      // file() {
+      //   if (this.files.length && this.files[0].previewSrc) {
+      //     return this.files[0].previewSrc;
+      //   }
+      //   return this.value.thumbnail_url;
+      // },
       highlightDropzone() {
         return this.highlight && !this.readonly && this.allowDrop;
       },
     },
     methods: {
-      ...mapActions('edit_modal', ['getUploadURL', 'uploadFile']),
-      ...mapMutations('edit_modal', {
-        setUploadProgress: 'SET_FILE_UPLOAD_PROGRESS',
+      // Add in once global store is properly set up
+      ...mapActions('fileUploads', ['getUploadURL', 'uploadFile']),
+      ...mapMutations('fileUploads', {
+        addFile: 'ADD_FILE',
         setFileChecksum: 'SET_FILE_CHECKSUM',
         setFileError: 'SET_FILE_ERROR',
+        setPreviewSrc: 'SET_FILE_PREVIEW_SOURCE',
       }),
       enter() {
         this.highlight = true;
@@ -118,30 +124,24 @@
       openFileDialog() {
         this.$refs.fileUpload.click();
       },
-      getMetadata(file) {
-        let fileparts = file.name.split('.');
-        let extension = fileparts[fileparts.length - 1].toLowerCase();
-        let kind = _.filter(this.acceptedFiles, ftype => {
-          return _.contains(ftype.allowed_formats, extension.toLowerCase());
-        })[0].kind_id;
-
-        let preset =
-          this.preset ||
-          _.findWhere(Constants.FormatPresets, {
-            kind_id: kind,
-            supplementary: false,
-            display: true,
-          });
-
-        return {
-          name: fileparts[0],
-          preset: preset,
-          file_size: file.size,
-          original_filename: file.name,
-          kind: kind,
-          file_format: extension,
-          file_on_disk: null,
-        };
+      setError(fileID, errorType) {
+        let message;
+        switch (errorType) {
+          case fileErrors.TOO_LARGE:
+            message = this.$tr(fileErrors.TOO_LARGE, { size: this.formatFileSize(MAX_FILE_SIZE) });
+            break;
+          case fileErrors.WRONG_TYPE:
+            message = this.$tr(fileErrors.WRONG_TYPE, {
+              filetypes: this.acceptedExtensions.join(', '),
+            });
+            break;
+          case fileErrors.NO_STORAGE:
+            message = this.$tr(fileErrors.NO_STORAGE);
+            break;
+          default:
+            message = this.$tr(fileErrors.UPLOAD_FAILED);
+        }
+        this.setFileError({ id: fileID, error: errorType, message: message });
       },
       handleFiles(files) {
         if (!this.readonly) {
@@ -149,53 +149,54 @@
           files = this.allowMultiple ? files : [files[0]];
 
           [...files].forEach(uploadedFile => {
-            const id = String(Math.random()).slice(2);
+            let fileID = String(Math.random()).slice(2);
+            this.addFile({ id: fileID, file: uploadedFile, preset: this.presetID });
+            let file = this.getFile(fileID);
+            newFiles.push(file);
 
-            const fileDetails = {
-              id,
-              previewSrc: null,
-              progress: 0,
-              error: null,
-              hash: null,
-              ...this.getMetadata(uploadedFile),
-            };
-            newFiles.push(fileDetails);
-
-            // Catch upload too large and wrong extension errors
-            if (uploadedFile.size > this.maxSize) {
-              fileDetails.error = fileErrors.TOO_LARGE;
+            /* Validation for max file size and wrong file type*/
+            if (file.file_size > MAX_FILE_SIZE) {
+              this.setError(fileID, fileErrors.TOO_LARGE);
               return;
-            } else if (!this.acceptedExtensions.includes(fileDetails.file_format)) {
-              fileDetails.error = fileErrors.WRONG_TYPE;
+            } else if (!this.acceptedExtensions.includes(file.file_format)) {
+              this.setError(fileID, fileErrors.WRONG_TYPE);
               return;
             }
 
             // 1. Get the checksum of the file
             getHash(uploadedFile).then(hash => {
-              this.setFileChecksum({ fileID: id, checksum: hash });
+              this.setFileChecksum({ id: fileID, checksum: hash });
 
               // 2. Get the upload url
-              this.getUploadURL({ checksum: hash, size: uploadedFile.size, id: id }).then(
-                response => {
+              this.getUploadURL({ checksum: hash, size: uploadedFile.size, id: fileID })
+                .then(response => {
                   // 3. Upload file
-                  this.uploadFile({ id: id, file: uploadedFile, url: response.data }).then(
+                  this.uploadFile({ id: fileID, file: uploadedFile, url: response.data }).then(
                     filepath => {
                       this.$emit('uploaded', filepath.data);
                     }
                   );
-                }
-              );
+                })
+                .catch(error => {
+                  this.setError(fileID, error);
+                });
             });
 
             const reader = new FileReader();
             reader.readAsDataURL(uploadedFile);
             reader.onloadend = () => {
-              fileDetails.previewSrc = reader.result;
+              this.setPreviewSrc({ id: fileID, previewSrc: reader.result });
             };
           });
           this.$emit('uploading', newFiles);
         }
       },
+    },
+    $trs: {
+      [fileErrors.NO_STORAGE]: 'Out of storage',
+      [fileErrors.WRONG_TYPE]: 'Invalid file type (must be {filetypes})',
+      [fileErrors.TOO_LARGE]: 'File too large. Must be under {size}',
+      [fileErrors.UPLOAD_FAILED]: 'Upload failed',
     },
   };
 
