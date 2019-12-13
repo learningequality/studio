@@ -7,9 +7,8 @@ import string
 import tempfile
 
 import pytest
-from django.test.utils import override_settings
 from kolibri_content import models
-from kolibri_content.router import using_content_database
+from kolibri_content.router import set_active_content_database
 from mock import patch
 
 from .base import StudioTestCase
@@ -28,9 +27,11 @@ from contentcuration.utils.publish import create_slideshow_manifest
 from contentcuration.utils.publish import fill_published_fields
 from contentcuration.utils.publish import map_prerequisites
 from contentcuration.utils.publish import MIN_SCHEMA_VERSION
+from contentcuration.utils.publish import prepare_export_database
 from contentcuration.utils.publish import set_channel_icon_encoding
 
 pytestmark = pytest.mark.django_db
+
 
 def thumbnail():
     image_data = b'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
@@ -108,42 +109,32 @@ def channel():
     return channel
 
 
-CONTENT_DATABASE_DIR_TEMP = tempfile.mkdtemp()
-
-
-@override_settings(
-    CONTENT_DATABASE_DIR=CONTENT_DATABASE_DIR_TEMP,
-)
 class ExportChannelTestCase(StudioTestCase):
 
     @classmethod
     def setUpClass(cls):
         super(ExportChannelTestCase, cls).setUpClass()
-        fh, output_db = tempfile.mkstemp(suffix=".sqlite3", dir=CONTENT_DATABASE_DIR_TEMP)
-        output_db = output_db
-        output_db_alias = os.path.splitext(os.path.basename(output_db))[0]
-
-        class testing_content_database(using_content_database):
-
-            def __init__(self, alias):
-                self.alias = output_db_alias
-
-            def __exit__(self, exc_type, exc_value, traceback):
-                return
-        cls.patch_using = patch('contentcuration.utils.publish.using_content_database.__new__',
-                                return_value=testing_content_database('alias'))
-        cls.patch_using.start()
         cls.patch_copy_db = patch('contentcuration.utils.publish.save_export_database')
         cls.patch_copy_db.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        super(ExportChannelTestCase, cls).tearDownClass()
+        cls.patch_copy_db.stop()
 
     def setUp(self):
         super(ExportChannelTestCase, self).setUp()
         self.content_channel = channel()
         set_channel_icon_encoding(self.content_channel)
-        create_content_database(self.content_channel, True, None, True)
+        self.tempdb = create_content_database(self.content_channel, True, None, True)
+
+        set_active_content_database(self.tempdb)
 
     def tearDown(self):
         super(ExportChannelTestCase, self).tearDown()
+        set_active_content_database(None)
+        if os.path.exists(self.tempdb):
+            os.remove(self.tempdb)
 
     def test_channel_rootnode_data(self):
         channel = models.ChannelMetadata.objects.first()
@@ -179,14 +170,32 @@ class ExportChannelTestCase(StudioTestCase):
     def test_channel_icon_encoding(self):
         self.assertIsNotNone(self.content_channel.icon_encoding)
 
-    @classmethod
-    def tearDownClass(cls):
-        super(ExportChannelTestCase, cls).tearDownClass()
-        cls.patch_using.stop()
-        cls.patch_copy_db.stop()
-
 
 class ChannelExportUtilityFunctionTestCase(StudioTestCase):
+    @classmethod
+    def setUpClass(cls):
+        super(ChannelExportUtilityFunctionTestCase, cls).setUpClass()
+        cls.patch_copy_db = patch('contentcuration.utils.publish.save_export_database')
+        cls.patch_copy_db.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        super(ChannelExportUtilityFunctionTestCase, cls).tearDownClass()
+        cls.patch_copy_db.stop()
+
+    def setUp(self):
+        super(ChannelExportUtilityFunctionTestCase, self).setUp()
+        fh, output_db = tempfile.mkstemp(suffix=".sqlite3")
+        self.output_db = output_db
+        set_active_content_database(self.output_db)
+        prepare_export_database(self.output_db)
+
+    def tearDown(self):
+        super(ChannelExportUtilityFunctionTestCase, self).tearDown()
+        set_active_content_database(None)
+        if os.path.exists(self.output_db):
+            os.remove(self.output_db)
+
     def test_convert_channel_thumbnail_empty_thumbnail(self):
         channel = cc.Channel.objects.create()
         self.assertEqual("", convert_channel_thumbnail(channel))
