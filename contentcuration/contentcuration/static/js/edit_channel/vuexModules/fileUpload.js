@@ -4,12 +4,46 @@ import Constants from 'edit_channel/constants';
 import client from 'edit_channel/sharedComponents/client';
 import { fileErrors } from 'edit_channel/file_upload/constants';
 
+const SparkMD5 = require('spark-md5');
+
 const REMOVE_FILE_DELAY = 2500;
+const BLOB_SLICE = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice;
+const CHUNK_SIZE = 2097152;
+
+export function getHash(file) {
+  return new Promise((resolve, reject) => {
+    let fileReader = new FileReader();
+    let spark = new SparkMD5.ArrayBuffer();
+    let currentChunk = 0;
+    let chunks = Math.ceil(file.size / CHUNK_SIZE);
+    fileReader.onload = function(e) {
+      spark.append(e.target.result);
+      currentChunk++;
+
+      if (currentChunk < chunks) {
+        loadNext();
+      } else {
+        resolve(spark.end());
+      }
+    };
+    fileReader.onerror = reject;
+
+    function loadNext() {
+      var start = currentChunk * CHUNK_SIZE,
+        end = start + CHUNK_SIZE >= file.size ? file.size : start + CHUNK_SIZE;
+
+      fileReader.readAsArrayBuffer(BLOB_SLICE.call(file, start, end));
+    }
+
+    loadNext();
+  });
+}
 
 const fileUploadsModule = {
   namespaced: true,
   state: {
     files: {},
+    queuedUploads: [],
   },
   getters: {
     getFile(state) {
@@ -44,6 +78,9 @@ const fileUploadsModule = {
         );
         return { total: totalSize, uploaded: uploadedSize };
       };
+    },
+    nextUpload(state) {
+      return _.findWhere(_.values(state.files), { progress: 0 });
     },
   },
   mutations: {
@@ -124,7 +161,7 @@ const fileUploadsModule = {
           });
       });
     },
-    uploadFile(context, payload) {
+    uploadFileToStorage(context, payload) {
       return new Promise((resolve, reject) => {
         const data = new FormData();
         data.append('file', payload.file);
@@ -152,6 +189,34 @@ const fileUploadsModule = {
             setTimeout(() => {
               context.commit('REMOVE_FILE', payload.id);
             }, REMOVE_FILE_DELAY);
+          })
+          .catch(reject);
+      });
+    },
+    uploadFile(context, payload) {
+      return new Promise((resolve, reject) => {
+        // 1. Get the checksum of the file
+        getHash(payload.file)
+          .then(hash => {
+            context.commit('SET_FILE_CHECKSUM', { id: payload.id, checksum: hash });
+
+            // 2. Get the upload url
+            context
+              .dispatch('getUploadURL', { checksum: hash, size: payload.file.size, id: payload.id })
+              .then(response => {
+                // 3. Upload file
+                context
+                  .dispatch('uploadFileToStorage', {
+                    id: payload.id,
+                    file: payload.file,
+                    url: response.data,
+                  })
+                  .then(response => {
+                    resolve(response.data);
+                  })
+                  .catch(reject);
+              })
+              .catch(reject);
           })
           .catch(reject);
       });

@@ -30,7 +30,6 @@
 
   import { mapActions, mapGetters, mapMutations } from 'vuex';
   import _ from 'underscore';
-  import { getHash } from './utils';
   import Constants from 'edit_channel/constants';
   import { fileErrors, MAX_FILE_SIZE } from 'edit_channel/file_upload/constants';
   import { fileSizeMixin } from 'edit_channel/file_upload/mixins';
@@ -39,12 +38,6 @@
     name: 'Uploader',
     mixins: [fileSizeMixin],
     props: {
-      // value: {
-      //   type: Object,
-      //   default() {
-      //     return {};
-      //   },
-      // },
       readonly: {
         type: Boolean,
         default: false,
@@ -89,24 +82,16 @@
           .flatten()
           .value();
       },
-      // file() {
-      //   if (this.files.length && this.files[0].previewSrc) {
-      //     return this.files[0].previewSrc;
-      //   }
-      //   return this.value.thumbnail_url;
-      // },
       highlightDropzone() {
         return this.highlight && !this.readonly && this.allowDrop;
       },
     },
     methods: {
       // Add in once global store is properly set up
-      ...mapActions('fileUploads', ['getUploadURL', 'uploadFile']),
+      ...mapActions('fileUploads', ['uploadFile']),
       ...mapMutations('fileUploads', {
         addFile: 'ADD_FILE',
-        setFileChecksum: 'SET_FILE_CHECKSUM',
         setFileError: 'SET_FILE_ERROR',
-        setPreviewSrc: 'SET_FILE_PREVIEW_SOURCE',
       }),
       enter() {
         this.highlight = true;
@@ -122,7 +107,9 @@
         if (this.allowDrop) this.handleFiles(e.dataTransfer.files);
       },
       openFileDialog() {
-        this.$refs.fileUpload.click();
+        if (!this.readonly) {
+          this.$refs.fileUpload.click();
+        }
       },
       setError(fileID, errorType) {
         let message;
@@ -162,33 +149,17 @@
               this.setError(fileID, fileErrors.WRONG_TYPE);
               return;
             }
-
-            // 1. Get the checksum of the file
-            getHash(uploadedFile).then(hash => {
-              this.setFileChecksum({ id: fileID, checksum: hash });
-
-              // 2. Get the upload url
-              this.getUploadURL({ checksum: hash, size: uploadedFile.size, id: fileID })
-                .then(response => {
-                  // 3. Upload file
-                  this.uploadFile({ id: fileID, file: uploadedFile, url: response.data }).then(
-                    filepath => {
-                      this.$emit('uploaded', filepath.data);
-                    }
-                  );
-                })
-                .catch(error => {
-                  this.setError(fileID, error);
-                });
-            });
-
-            const reader = new FileReader();
-            reader.readAsDataURL(uploadedFile);
-            reader.onloadend = () => {
-              this.setPreviewSrc({ id: fileID, previewSrc: reader.result });
-            };
+            this.uploadFile({ file: uploadedFile, id: fileID })
+              .then(filepath => {
+                this.$emit('uploaded', filepath);
+              })
+              .catch(error => {
+                this.setError(fileID, error);
+              });
           });
-          this.$emit('uploading', newFiles);
+          if (newFiles.length) {
+            this.$emit('uploading', newFiles);
+          }
         }
       },
     },

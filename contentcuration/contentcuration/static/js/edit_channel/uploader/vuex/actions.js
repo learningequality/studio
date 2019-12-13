@@ -43,8 +43,8 @@ export const validateNode = ({ commit }, nodeIdx) => {
  */
 export const prepareForSave = ({ dispatch, state }) => {
   state.nodes.forEach((node, nodeIdx) => {
-    dispatch('validateNode', nodeIdx);
     node.isNew = false;
+    dispatch('validateNode', nodeIdx);
   });
 };
 

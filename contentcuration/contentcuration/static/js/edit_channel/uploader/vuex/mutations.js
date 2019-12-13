@@ -99,8 +99,13 @@ export function SET_CHANGES(state) {
   let extraFieldItems = _.pluck(selected, 'extra_fields');
   state.changes.extra_fields = _generateSharedData(extraFieldItems, extraFields);
 
-  let tags = _.map(selected, n => _.pluck(n.tags, 'tag_name'));
-  state.changes.tags = _.intersection.apply(_, tags);
+  if (state.selectedIndices) {
+    let tags = _.map(selected, n => _.pluck(n.tags, 'tag_name'));
+    state.changes.tags = _.intersection.apply(_, tags);
+  } else {
+    state.changes.tags = [];
+  }
+
   _.each(state.nodes, (node, i) => {
     if (!state.selectedIndices.includes(i)) node.isNew = false;
   });
@@ -405,15 +410,17 @@ export function ADD_NODES_FROM_FILES(state, newFiles) {
   });
 }
 
-export function ADD_FILES_TO_NODE(state, payload) {
-  let presets = _.chain(payload.files)
-    .pluck('preset')
-    .pluck('id')
-    .value();
+export function ADD_FILE_TO_NODE(state, payload) {
+  if (payload.file) {
+    state.nodes[payload.index].files = _.reject(state.nodes[payload.index].files, f => {
+      return f.preset.id === payload.file.preset.id;
+    });
+    state.nodes[payload.index].files.push(payload.file);
+  }
+}
+
+export function REMOVE_FILE_FROM_NODE(state, payload) {
   state.nodes[payload.index].files = _.reject(state.nodes[payload.index].files, f => {
-    return _.contains(presets, f.preset.id);
-  });
-  payload.files.forEach(file => {
-    state.nodes[payload.index].files.push(file);
+    return f.id === payload.fileID;
   });
 }
