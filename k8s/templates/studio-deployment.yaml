@@ -128,7 +128,7 @@ spec:
         {{ include "studio.pvc.gcs-creds" . | nindent 10 }}
         env: {{ include "studio.sharedEnvs" . | nindent 8 }}
         - name: DATA_DB_HOST
-          value: {{ .Values.postgresql.externalCloudSQL.proxyHostName | default (include "postgresql.fullname" .) }}
+          value: {{ template "studio.fullname" . }}-frontend-db-conn-pool-service
         resources:
           requests:
             cpu: 0.5

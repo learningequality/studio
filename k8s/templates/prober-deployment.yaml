@@ -30,3 +30,5 @@ spec:
           value: lingyi+prober@learningequality.org
         - name: PROBER_STUDIO_PASSWORD
           value: "123456789"
+        - name: DATA_DB_HOST
+          value: {{ template "studio.fullname" . }}-frontend-db-conn-pool-service
