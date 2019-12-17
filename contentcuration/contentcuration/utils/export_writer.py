@@ -48,6 +48,7 @@ AUDIO_COLOR = "#F06292"
 DOCUMENT_COLOR = "#FF3D00"
 EXERCISE_COLOR = "#4DB6AC"
 HTML_COLOR = "#FF8F00"
+H5P_COLOR = HTML_COLOR
 VIDEO_COLOR = "#283593"
 SLIDESHOW_COLOR = "#4ECE90"
 
@@ -179,7 +180,7 @@ class ExportWriter(object):
     def __init__(self, *args, **kwargs):
         self.tempfiles = []
 
-    def pluralize_constant(self, count, constant):
+    def pluralize_constant(self, count, constant):  # noqa
         data = {'count': count}
         if constant == content_kinds.TOPIC:
             return ngettext('%(count)d Topic', '%(count)d Topics', count) % data
@@ -193,6 +194,8 @@ class ExportWriter(object):
             return ngettext('%(count)d Document', '%(count)d Documents', count) % data
         elif constant == content_kinds.HTML5:
             return ngettext('%(count)d Html App', '%(count)d Html Apps', count) % data
+        elif constant == content_kinds.H5P:
+            return ngettext('%(count)d H5P App', '%(count)d H5P Apps', count) % data
         elif constant == content_kinds.SLIDESHOW:
             return ngettext('%(count)d Slideshow', '%(count)d Slideshows', count) % data
         elif constant == "resource":
@@ -220,7 +223,7 @@ class ExportWriter(object):
 
 class ChannelDetailsWriter(ExportWriter):
     # Needs to be alphabetized to match content kind sorting
-    color_selection = [AUDIO_COLOR, DOCUMENT_COLOR, EXERCISE_COLOR, HTML_COLOR, SLIDESHOW_COLOR, VIDEO_COLOR]
+    color_selection = [AUDIO_COLOR, DOCUMENT_COLOR, EXERCISE_COLOR, HTML_COLOR, H5P_COLOR, SLIDESHOW_COLOR, VIDEO_COLOR]
     condensed_tag_limit = 10
     size_divisor = 100000000
     scale_text = [_("Very Small")] * 2 + [_("Small")] * 2 + [_("Average")] * 3 + [_("Large")] * 2 + [_("Very Large")] * 2
@@ -428,6 +431,7 @@ class ChannelDetailsPDFWriter(ChannelDetailsWriter, PDFMixin):
                 "document": DOCUMENT_COLOR,
                 "exercise": EXERCISE_COLOR,
                 "html": HTML_COLOR,
+                "h5p": H5P_COLOR,
                 "video": VIDEO_COLOR,
                 "slideshow": SLIDESHOW_COLOR,
             }
