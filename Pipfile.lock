@@ -675,10 +675,10 @@
         },
         "le-utils": {
             "hashes": [
-                "sha256:57a0d91d556c70d8d69c10cc76ab8ee572441f1b04b0b09291e3058c4cddd40c"
+                "sha256:1d8d1d7f7ded96ae12e21de5f32b70e978fd15e79dc23d43dc60e3d3045d8c71"
             ],
             "index": "pypi",
-            "version": "==0.1.23"
+            "version": "==0.1.24"
         },
         "livereload": {
             "hashes": [
@@ -1525,10 +1525,10 @@
         },
         "colorama": {
             "hashes": [
-                "sha256:05eed71e2e327246ad6b38c540c4a3117230b19679b875190486ddd2d721422d",
-                "sha256:f8ac84de7840f5b9c4e3347b3c1eaa50f7e49c2b07596221daec5edaabbd7c48"
+                "sha256:7d73d2a99753107a36ac6b455ee49046802e59d9d076ef8e47b61499fa29afff",
+                "sha256:e96da0d330793e2cb9485e9ddfd918d456036c7149416295932478192f4436a1"
             ],
-            "version": "==0.4.1"
+            "version": "==0.4.3"
         },
         "configparser": {
             "hashes": [
