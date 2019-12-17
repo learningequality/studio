@@ -235,7 +235,7 @@ class ChannelCreate(BaseTaskSet):
 
 
 class LoginPage(BaseTaskSet):
-    tasks = [ChannelListPage, ChannelPage, ChannelCreate]
+    tasks = [ChannelListPage, ChannelPage]
 
     # This is by far our most hit endpoint, over 50% of all calls, so
     # weight it accordingly.
