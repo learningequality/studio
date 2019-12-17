@@ -105,7 +105,6 @@ def create_kolibri_license_object(ccnode):
 
 def increment_channel_version(channel):
     channel.version += 1
-    channel.last_published = timezone.now()
     channel.save()
 
 
@@ -135,7 +134,7 @@ def map_content_nodes(root_node, default_language, channel_id, channel_name, use
             return None
 
     with transaction.atomic():
-        with ccmodels.ContentNode.objects.delay_mptt_updates():
+        with ccmodels.ContentNode.objects.delay_mptt_updates(), kolibrimodels.ContentNode.objects.delay_mptt_updates():
             for node in iter(queue_get_return_none_when_empty, None):
                 logging.debug("Mapping node with id {id}".format(
                     id=node.pk))
@@ -356,6 +355,8 @@ def process_assessment_metadata(ccnode, kolibrinode):
     # Get mastery model information, set to default if none provided
     assessment_items = ccnode.assessment_items.all().order_by('order')
     exercise_data = ccnode.extra_fields if ccnode.extra_fields else {}
+    if isinstance(exercise_data, basestring):
+        exercise_data = json.loads(exercise_data)
     randomize = exercise_data.get('randomize') if exercise_data.get('randomize') is not None else True
     assessment_item_ids = [a.assessment_id for a in assessment_items]
 
@@ -634,10 +635,12 @@ def add_tokens_to_channel(channel):
         channel.make_token()
 
 
-def fill_published_fields(channel):
+def fill_published_fields(channel, version_notes):
+    channel.last_published = timezone.now()
     published_nodes = channel.main_tree.get_descendants().filter(published=True).prefetch_related('files')
     channel.total_resource_count = published_nodes.exclude(kind_id=content_kinds.TOPIC).count()
-    channel.published_kind_count = json.dumps(list(published_nodes.values('kind_id').annotate(count=Count('kind_id')).order_by('kind_id')))
+    kind_counts = list(published_nodes.values('kind_id').annotate(count=Count('kind_id')).order_by('kind_id'))
+    channel.published_kind_count = json.dumps(kind_counts)
     channel.published_size = published_nodes.values('files__checksum', 'files__file_size').distinct(
     ).aggregate(resource_size=Sum('files__file_size'))['resource_size'] or 0
 
@@ -648,10 +651,22 @@ def fill_published_fields(channel):
     for lang in language_list:
         if lang:
             channel.included_languages.add(lang)
+
+    # TODO: Eventually, consolidate above operations to just use this field for storing historical data
+    channel.published_data.update({
+        channel.version: {
+            'resource_count': channel.total_resource_count,
+            'kind_count': kind_counts,
+            'size': channel.published_size,
+            'date_published': channel.last_published.strftime(settings.DATE_TIME_FORMAT),
+            'version_notes': version_notes,
+            'included_languages': language_list
+        }
+    })
     channel.save()
 
 
-def publish_channel(user_id, channel_id, force=False, force_exercises=False, send_email=False, task_object=None):
+def publish_channel(user_id, channel_id, version_notes='', force=False, force_exercises=False, send_email=False, task_object=None):
     channel = ccmodels.Channel.objects.get(pk=channel_id)
 
     try:
@@ -660,7 +675,7 @@ def publish_channel(user_id, channel_id, force=False, force_exercises=False, sen
         increment_channel_version(channel)
         mark_all_nodes_as_published(channel)
         add_tokens_to_channel(channel)
-        fill_published_fields(channel)
+        fill_published_fields(channel, version_notes)
 
         # Attributes not getting set for some reason, so just save it here
         channel.main_tree.publishing = False
