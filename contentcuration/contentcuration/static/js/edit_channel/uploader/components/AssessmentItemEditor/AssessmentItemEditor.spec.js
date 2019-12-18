@@ -3,7 +3,8 @@ import { shallowMount, mount } from '@vue/test-utils';
 import { AssessmentItemTypes, ValidationErrors } from '../../constants';
 import AssessmentItemEditor from './AssessmentItemEditor';
 
-jest.mock('../MarkdownEditor/MarkdownEditor.vue');
+jest.mock('../MarkdownEditor/MarkdownEditor/MarkdownEditor.vue');
+jest.mock('../MarkdownEditor/MarkdownViewer/MarkdownViewer.vue');
 
 const ITEM = {
   question: 'Exercise 2 - Question 2',

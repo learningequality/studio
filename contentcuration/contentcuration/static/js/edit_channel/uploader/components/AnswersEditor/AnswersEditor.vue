@@ -24,9 +24,9 @@
         data-test="answer"
       >
         <div :class="indicatorClasses(answer)"></div>
-        <VCardText>
+        <VCardText :class="{ 'pb-0': !isAnswerOpen(answerIdx) }">
           <VLayout align-top>
-            <VFlex :class="{ 'xs1': isAnswerOpen(answerIdx) }">
+            <VFlex xs1>
               <!--
                 VRadio cannot be used without VRadioGroup like VCheckbox but it can
                 be solved by wrapping each VRadio to VRadioGroup
@@ -39,7 +39,6 @@
               >
                 <VRadio
                   :value="answerIdx"
-                  :label="answerLabel(answerIdx)"
                   data-test="answerRadio"
                 />
               </VRadioGroup>
@@ -49,24 +48,22 @@
                 :key="answerIdx"
                 :value="answerIdx"
                 :input-value="correctAnswersIndices"
-                :label="answerLabel(answerIdx)"
                 @change="onCorrectAnswersIndicesUpdate"
               />
-
-              <div
-                v-if="!isAnswerOpen(answerIdx) && isInputQuestion"
-                class="input-question"
-              >
-                {{ answerLabel(answerIdx) }}
-              </div>
             </VFlex>
 
-            <VFlex>
+            <VFlex xs7>
               <keep-alive :max="5">
                 <MarkdownEditor
                   v-if="isAnswerOpen(answerIdx)"
+                  class="editor"
                   :markdown="answer.answer"
                   @update="updateAnswerText($event, answerIdx)"
+                  @minimize="emitClose"
+                />
+                <MarkdownViewer
+                  v-else
+                  :markdown="answer.answer"
                 />
               </keep-alive>
             </VFlex>
@@ -108,7 +105,8 @@
   import { getCorrectAnswersIndices, mapCorrectAnswers, swapElements } from '../../utils';
 
   import AssessmentItemToolbar from '../AssessmentItemToolbar/AssessmentItemToolbar.vue';
-  import MarkdownEditor from '../MarkdownEditor/MarkdownEditor.vue';
+  import MarkdownEditor from '../MarkdownEditor/MarkdownEditor/MarkdownEditor.vue';
+  import MarkdownViewer from '../MarkdownEditor/MarkdownViewer/MarkdownViewer.vue';
 
   const updateAnswersOrder = answers => {
     return answers.map((answer, idx) => {
@@ -124,6 +122,7 @@
     components: {
       AssessmentItemToolbar,
       MarkdownEditor,
+      MarkdownViewer,
     },
     model: {
       prop: 'answers',
@@ -198,17 +197,6 @@
       },
       isAnswerOpen(answerIdx) {
         return answerIdx === this.openAnswerIdx;
-      },
-      answerLabel(answerIdx) {
-        if (!this.answers || !this.answers.length) {
-          return '';
-        }
-
-        if (this.isAnswerOpen(answerIdx)) {
-          return '';
-        }
-
-        return this.answers[answerIdx].answer;
       },
       answerClasses(answerIdx) {
         const classes = ['answer'];
@@ -320,16 +308,20 @@
         }
       },
       onAnswerClick(event, answerIdx) {
-        // do not open answer on toolbar click
+        // do not open on toolbar click
         if (event.target.closest('.toolbar') !== null) {
           return;
         }
 
-        // do not open an answer on checkbox or radio click
+        // do not open on editor minimize button click
+        if (event.target.classList.contains('tui-toolbar-btn-minimize')) {
+          return;
+        }
+
+        // do not open on checkbox or radio click
         if (
-          event.target &&
-          (event.target.classList.contains('v-label') ||
-            event.target.classList.contains('v-input--selection-controls__ripple'))
+          event.target.classList.contains('v-label') ||
+          event.target.classList.contains('v-input--selection-controls__ripple')
         ) {
           return;
         }
@@ -399,7 +391,7 @@
     position: relative;
     transition: 0.7s;
 
-    &.editable {
+    &.closed.editable {
       cursor: pointer;
     }
 
@@ -413,7 +405,6 @@
 
     .indicator {
       position: absolute;
-      z-index: 1;
       width: 4px;
       height: 100%;
 
@@ -427,8 +418,8 @@
     }
   }
 
-  .input-question {
-    padding: 23.5px;
+  .v-input--selection-controls {
+    margin-top: 6px;
   }
 
 </style>

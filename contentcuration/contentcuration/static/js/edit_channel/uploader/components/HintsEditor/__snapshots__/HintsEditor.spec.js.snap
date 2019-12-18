@@ -8,14 +8,18 @@ exports[`HintsEditor renders all hints 1`] = `
   <!---->
   <div data-test="hint" class="card-border-light">
     <div class="v-card v-card--flat v-sheet theme--light hint closed">
-      <div class="v-card__text">
+      <div class="v-card__text pt-0 pb-0">
         <div class="layout align-top">
-          <div class="flex xs1">
+          <div class="flex xs1" style="margin-top: 10px;">
             1
           </div>
-          <div class="flex"><span name="fade">
-                  First hint
-                </span></div>
+          <div class="flex xs7">
+            <div name="fade">
+              <div>
+                First hint
+              </div>
+            </div>
+          </div>
           <div class="spacer"></div>
           <div class="flex">
             <div class="layout justify-end toolbar">
@@ -40,14 +44,18 @@ exports[`HintsEditor renders all hints 1`] = `
 </div>
 <div data-test="hint" class="card-border-light">
   <div class="v-card v-card--flat v-sheet theme--light hint closed">
-    <div class="v-card__text">
+    <div class="v-card__text pt-0 pb-0">
       <div class="layout align-top">
-        <div class="flex xs1">
+        <div class="flex xs1" style="margin-top: 10px;">
           2
         </div>
-        <div class="flex"><span name="fade">
-                  Second hint
-                </span></div>
+        <div class="flex xs7">
+          <div name="fade">
+            <div>
+              Second hint
+            </div>
+          </div>
+        </div>
         <div class="spacer"></div>
         <div class="flex">
           <div class="layout justify-end toolbar">

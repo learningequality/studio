@@ -96,6 +96,7 @@
     "promise-polyfill": "^6.0.2",
     "summernote": "0.8.10",
     "to-markdown": "^3.0.3",
+    "tui-editor": "^1.4.7",
     "underscore": "^1.9.0",
     "vue": "^2.5.17",
     "vue-intl": "^3.0.0",

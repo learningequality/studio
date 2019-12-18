@@ -242,10 +242,10 @@ def create_exercise(title, parent, license_id, description="", user=None, empty=
             {"answer": "Blue", "correct": True, "order": 3},
         ])
 
-        create_question(exercise, "Which equations add up to 4", exercises.MULTIPLE_SELECTION, [
-            {"answer": "2+2", "correct": True, "order": 1},
+        create_question(exercise, "Which equations add up to $$\\frac{2^3}{\\surd\\overline{16}}$$ ?", exercises.MULTIPLE_SELECTION, [
+            {"answer": "1+1", "correct": True, "order": 1},
             {"answer": "9+1", "correct": False, "order": 2},
-            {"answer": "1+3", "correct": True, "order": 3},
+            {"answer": "0+2", "correct": True, "order": 3},
         ])
 
         create_question(exercise, "Hot pink is a color in the rainbow", 'true_false', [
