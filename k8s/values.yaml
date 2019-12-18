@@ -19,6 +19,7 @@ studioApp:
     keyJson:
   pgbouncer:
     replicas: 1
+    max_client_conn: 100
     pool_size: 10
     reserve_pool_size: 5
 
