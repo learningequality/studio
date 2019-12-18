@@ -7,7 +7,7 @@
       <VCardTitle class="pt-1 pb-1">
         <VLayout align-center justify-space-between>
           <VFlex class="font-weight-bold">
-            Special characters
+            {{ $tr('formulasMenuTitle') }}
           </VFlex>
           <VFlex text-center>
             <VBtn
@@ -15,7 +15,7 @@
               color="primary"
               @click="onInsertClick"
             >
-              Insert
+              {{ $tr('btnLabelInsert') }}
             </VBtn>
           </VFlex>
           <VFlex text-center>
@@ -24,7 +24,7 @@
               color="secondary"
               @click="onCancelClick"
             >
-              Cancel
+              {{ $tr('btnLabelCancel') }}
             </VBtn>
           </VFlex>
         </VLayout>
@@ -168,6 +168,11 @@
       onCancelClick() {
         this.$emit('cancel');
       },
+    },
+    $trs: {
+      formulasMenuTitle: 'Special characters',
+      btnLabelInsert: 'Insert',
+      btnLabelCancel: 'Cancel',
     },
   };
 
