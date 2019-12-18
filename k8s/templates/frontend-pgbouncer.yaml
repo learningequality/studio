@@ -17,7 +17,7 @@ data:
   LISTEN_BACKLOG: "16384"
   MAX_CLIENT_CONN: !!str {{ .Values.studioApp.pgbouncer.max_client_conn | default 100 }}
   # set min pool size to the default, so the connections are held in pool if no activity
-  MIN_POOL_SIZE: !!str {{ .Values.studioApp.pgbouncer.min_pool_size | default .Values.studioApp.pgbouncer.pool_size | default 10 }}
+  MIN_POOL_SIZE: !!str {{ .Values.studioApp.pgbouncer.min_pool_size | default 5 }}
   DEFAULT_POOL_SIZE: !!str {{ .Values.studioApp.pgbouncer.pool_size | default 10 }}
   RESERVE_POOL_SIZE: !!str {{ .Values.studioApp.pgbouncer.reserve_pool_size | default 5 }}
 ---

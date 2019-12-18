@@ -24,10 +24,11 @@ studioApp:
     keyJson:
   pgbouncer:
     replicas: 3
-    # 3 * 133 ~= 400 clients
+    # 3 * 133 ~= 400 requests/clients
     max_client_conn: 133
-    pool_size: 50
-    reserve_pool_size: 10
+    min_pool_size: 10
+    pool_size: 25
+    reserve_pool_size: 15
 
 sentry:
   dsnKey: ""
