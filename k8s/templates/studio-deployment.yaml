@@ -47,8 +47,8 @@ spec:
         env: {{ include "studio.sharedEnvs" . | nindent 8 }}
         - name: SEND_USER_ACTIVATION_NOTIFICATION_EMAIL
           value: "true"
-        - name: DATA_DB_HOST
-          value: {{ template "studio.fullname" . }}-frontend-db-conn-pool-service
+#        - name: DATA_DB_HOST
+#          value: {{ template "studio.fullname" . }}-frontend-db-conn-pool-service
         ports:
         - containerPort: {{ .Values.studioApp.appPort }}
         # readiness probes are checks for when the pod is ready to serve traffic.
