@@ -3,7 +3,6 @@ export const ListTypes = {
   EDITABLE: 'edit',
   STARRED: 'bookmark',
   VIEW_ONLY: 'view',
-  PUBLIC: 'public',
 };
 
 export const InvitationShareModes = {

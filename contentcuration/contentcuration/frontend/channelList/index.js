@@ -19,7 +19,7 @@ Vue.use(Vuetify, {
   rtl: window.isRTL,
   theme: {
     purple: '#996189',
-    primary: colors.blue.base, // @blue-500
+    primary: '#996189', //colors.blue.base, // @blue-500
     primaryBackground: colors.blue.lighten5,
     greyBackground: colors.grey.lighten3,
     greenSuccess: '#4db6ac',

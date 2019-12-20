@@ -40,6 +40,7 @@
     <template v-if="$slots.tabs" #extension>
       <VTabs
         fixedTabs
+        showArrows
         color="transparent"
         sliderColor="white"
       >
@@ -99,3 +100,12 @@
   };
 
 </script>
+
+<style lang="less" scoped>
+
+  /deep/ .v-tabs__icon--next,
+  /deep/ .v-tabs__icon--prev {
+    margin-top: 10px;
+  }
+
+</style>

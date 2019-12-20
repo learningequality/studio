@@ -39,7 +39,7 @@ const router = new VueRouter({
     },
     {
       name: RouterNames.CATALOG_ITEMS,
-      path: '/catalog',
+      path: '/public',
       component: CatalogList,
       children: [
         {
@@ -50,12 +50,6 @@ const router = new VueRouter({
         },
       ],
     },
-    // {
-    //   name: RouterNames.CATALOG_DETAILS,
-    //   path: '/catalog/:itemID',
-    //   component: CatalogDetailsPage,
-    //   props: true
-    // },
     // Catch-all for unrecognized URLs
     {
       path: '*',

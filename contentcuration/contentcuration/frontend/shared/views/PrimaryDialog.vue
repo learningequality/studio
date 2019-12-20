@@ -5,6 +5,7 @@
     :disabled="disabled"
     attach="body"
     maxWidth="400"
+    v-bind="$attrs"
   >
     <VCard>
       <VCardTitle

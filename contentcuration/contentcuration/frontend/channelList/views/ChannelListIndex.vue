@@ -2,10 +2,8 @@
 
   <VApp>
     <AppBar>
-      <template v-if="isLoggedIn" #tabs>
-        <VTab
-          :to="catalogLink"
-        >
+      <template v-if="isLoggedIn" #tabs show-arrows>
+        <VTab :to="catalogLink">
           {{ $tr("catalog") }}
         </VTab>
         <VTab
@@ -16,9 +14,7 @@
           <span v-if="listType === 'STARRED'"></span>
           {{ $tr(listType) }}
         </VTab>
-        <VTab
-          :to="channelSetLink"
-        >
+        <VTab :to="channelSetLink">
           {{ $tr("channelSets") }}
         </VTab>
       </template>
@@ -27,66 +23,16 @@
       <VContainer fluid>
         <VCard v-if="invitations.length">
           <VList subheader>
-            <VSubheader>{{ $tr('invitations') }}</VSubheader>
-            <VListTile
+            <VSubheader>{{ $tr('invitations', {count: invitations.length}) }}</VSubheader>
+            <ChannelInvitation
               v-for="invitation in invitations"
               :key="invitation.id"
-            >
-              <VListTileContent>
-                <VListTileTitle>{{ getInvitationText(invitation) }}</VListTileTitle>
-              </VListTileContent>
-
-              <VListTileAction v-if="!invitation.accepted && !invitation.declined">
-                <VBtn icon :aria-label="$tr('accept')" @click="acceptInvitation(invitation.id)">
-                  <VIcon color="green">
-                    check
-                  </VIcon>
-                </VBtn>
-              </VListTileAction>
-              <VListTileAction>
-                <VBtn
-                  v-if="invitation.accepted || invitation.declined"
-                  icon
-                  :aria-label="$tr('clear')"
-                  @click="invitation.accepted
-                    || (invitation.declined ?
-                      removeInvitation(invitation.id) : decline(invitation.id))"
-                >
-                  <VIcon color="red">
-                    clear
-                  </VIcon>
-                </VBtn>
-                <VBtn
-                  v-else
-                  icon
-                  :aria-label="$tr('decline')"
-                  @click="decline(invitation.id)"
-                >
-                  <VIcon color="red">
-                    clear
-                  </VIcon>
-                </VBtn>
-              </VListTileAction>
-            </VListTile>
-            <PrimaryDialog v-model="invitationDialog" :title="$tr('decliningInvitation')">
-              {{ $tr('decliningInvitationMessage') }}
-              <template v-slot:actions>
-                <VBtn
-                  @click="closeDecline"
-                >
-                  {{ $tr('cancel') }}
-                </VBtn>
-                <VBtn
-                  @click="declineAndClose"
-                >
-                  {{ $tr('decline') }}
-                </VBtn>
-              </template>
-            </PrimaryDialog>
+              :invitationID="invitation.id"
+            />
           </VList>
         </VCard>
         <keep-alive>
-          <router-view :key="$route.params.listType || 'collections'" />
+          <router-view :key="$route.name" />
         </keep-alive>
       </VContainer>
     </VContent>
@@ -97,22 +43,16 @@
 
 <script>
 
-  import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
-  import { InvitationShareModes, ListTypes, RouterNames } from '../constants';
+  import { mapActions, mapGetters, mapState } from 'vuex';
+  import { ListTypes, RouterNames } from '../constants';
+  import ChannelInvitation from './Channel/ChannelInvitation';
   import AppBar from 'shared/views/AppBar';
-  import PrimaryDialog from 'shared/views/PrimaryDialog';
 
   export default {
     name: 'ChannelListIndex',
     components: {
       AppBar,
-      PrimaryDialog,
-    },
-    data() {
-      return {
-        invitationDialog: false,
-        declineInvitationId: null,
-      };
+      ChannelInvitation,
     },
     computed: {
       ...mapState({ user: state => state.session.currentUser }),
@@ -134,56 +74,10 @@
       this.isLoggedIn && this.loadInvitationList();
     },
     methods: {
-      ...mapMutations('channelList', {
-        removeInvitation: 'REMOVE_INVITATION',
-      }),
-      ...mapActions('channelList', ['loadInvitationList', 'acceptInvitation', 'declineInvitation']),
-      getInvitationText(invitation) {
-        const messageParams = {
-          channel: invitation.channel_name,
-          firstname: invitation.sender.first_name,
-          lastname: invitation.sender.last_name,
-        };
-        let messageId;
-        if (invitation.accepted) {
-          if (invitation.share_mode === InvitationShareModes.EDIT) {
-            messageId = 'acceptedEditText';
-          } else {
-            messageId = 'acceptedViewText';
-          }
-        } else if (invitation.declined) {
-          if (invitation.share_mode === InvitationShareModes.EDIT) {
-            messageId = 'declinedEditText';
-          } else {
-            messageId = 'declinedViewText';
-          }
-        } else {
-          messageParams.firstname = invitation.sender.first_name;
-          messageParams.lastname = invitation.sender.last_name;
-          if (invitation.share_mode === InvitationShareModes.EDIT) {
-            messageId = 'editText';
-          } else {
-            messageId = 'viewText';
-          }
-        }
-        return this.$tr(messageId, messageParams);
-      },
+      ...mapActions('channelList', ['loadInvitationList']),
       getChannelLink(listType) {
         const name = RouterNames.CHANNELS;
         return { name, params: { listType } };
-      },
-      decline(invitationId) {
-        this.declineInvitationId = invitationId;
-        this.invitationDialog = true;
-      },
-      declineAndClose() {
-        this.declineInvitation(this.declineInvitationId).then(() => {
-          this.closeDecline();
-        });
-      },
-      closeDecline() {
-        this.invitationDialog = false;
-        this.declineInvitationId = null;
       },
     },
     $trs: {
@@ -192,22 +86,8 @@
       [ListTypes.PUBLIC]: 'Public',
       [ListTypes.STARRED]: 'Starred',
       channelSets: 'Collections',
-      catalog: 'Catalog',
-      /* eslint-disable kolibri/vue-no-unused-translations */
-      editText: '{firstname} {lastname} has invited you to edit {channel}',
-      viewText: '{firstname} {lastname} has invited you to view {channel}',
-      acceptedEditText: 'Accepted invitation to edit {channel}',
-      declinedEditText: 'Declined invitation to edit {channel}',
-      acceptedViewText: 'Accepted invitation to view {channel}',
-      declinedViewText: 'Declined invitation to view {channel}',
-      /* eslint-enable */
-      accept: 'Accept',
-      decline: 'Decline',
-      cancel: 'Cancel',
-      clear: 'Clear',
-      invitations: 'Channel invitations',
-      decliningInvitation: 'Declining Invitation',
-      decliningInvitationMessage: 'Are you sure you want to decline this invitation?',
+      catalog: 'Public',
+      invitations: 'You have {count, plural,\n =1 {# invitation}\n other {# invitations}}',
     },
   };
 
@@ -219,6 +99,7 @@
   html {
     overflow-y: auto !important;
     .title,
+    .headline,
     .display,
     .display-1,
     .subheading,
@@ -230,6 +111,10 @@
 
   body * {
     font-family: 'Noto Sans';
+  }
+
+  .v-card {
+    outline-color: #8dc5b6;
   }
 
   .v-tooltip__content {
