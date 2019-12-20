@@ -11,7 +11,7 @@
           <VTooltip bottom>
             <template v-slot:activator="{ on }">
               <VBtn icon v-on="on" @click="acceptInvitation(invitationID)">
-                <VIcon color="green">
+                <VIcon color="green" class="notranslate">
                   check
                 </VIcon>
               </VBtn>
@@ -27,7 +27,7 @@
                 v-on="on"
                 @click="dialog = true"
               >
-                <VIcon color="red">
+                <VIcon color="red" class="notranslate">
                   clear
                 </VIcon>
               </VBtn>
@@ -45,7 +45,7 @@
               @click="invitation.accepted || invitation.declined ?
                 removeInvitation(invitationID) : dialog = true"
             >
-              <VIcon color="grey">
+              <VIcon color="grey" class="notranslate">
                 clear
               </VIcon>
             </VBtn>
