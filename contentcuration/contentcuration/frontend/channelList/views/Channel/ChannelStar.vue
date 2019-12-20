@@ -1,17 +1,22 @@
 <template>
 
-  <VBtn
-    :title="starText"
-    icon
-    flat
-    color="primary"
-    data-test="button"
-    @click.stop.prevent="toggleStar"
-  >
-    <VIcon data-test="icon">
-      {{ bookmark ? 'star' : 'star_border' }}
-    </VIcon>
-  </VBtn>
+  <VTooltip bottom>
+    <template v-slot:activator="{ on }">
+      <VBtn
+        icon
+        flat
+        v-bind="$attrs"
+        data-test="button"
+        v-on="on"
+        @click.stop.prevent="toggleStar"
+      >
+        <VIcon data-test="icon">
+          {{ bookmark ? 'star' : 'star_border' }}
+        </VIcon>
+      </VBtn>
+    </template>
+    <span>{{ starText }}</span>
+  </VTooltip>
 
 </template>
 

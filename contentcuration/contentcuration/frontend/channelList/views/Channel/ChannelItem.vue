@@ -1,17 +1,17 @@
 <template>
 
-  <VCard class="my-3" :to="channelDetailsLink">
-    <VLayout>
-      <VFlex xs12 sm12 md3>
+  <VCard class="my-3" :to="openChannelLink">
+    <VLayout row wrap>
+      <VFlex xs12 sm3>
         <VCardTitle>
-          <VImg :src="channel.thumbnail_url" contain />
+          <VImg :src="channel.thumbnail_url" contain :aspect-ratio="16/9" />
         </VCardTitle>
       </VFlex>
-      <VFlex xs12 sm12 md9>
+      <VFlex xs12 sm9>
         <VCardTitle>
           <VFlex xs12>
             <VLayout class="grey--text" justify-space-between>
-              <VFlex xs4>
+              <VFlex xs6 sm4>
                 <span v-if="language">
                   {{ language.native_name }}
                 </span>
@@ -19,17 +19,10 @@
                   &nbsp;
                 </span>
               </VFlex>
-              <VFlex xs4>
-                {{ $tr('resourceCount', {'count': channel.count}) }}
+              <VFlex xs6 sm4>
+                {{ $tr('resourceCount', {'count': $formatNumber(channel.count)}) }}
               </VFlex>
-              <VFlex xs4>
-                <span v-if="channel.published">
-                  {{ $tr("versionText", {'version': channel.version}) }}
-                </span>
-                <span v-else>
-                  &nbsp;
-                </span>
-              </VFlex>
+              <VFlex v-if="$vuetify.breakpoint.smAndUp" sm4 />
             </VLayout>
           </VFlex>
           <VFlex xs12>
@@ -55,28 +48,55 @@
           })
         }}
       </VCardText>
-      <VCardText v-else class="font-italic red--text">
+      <VCardText v-else class="font-italic grey--text">
         {{ $tr('unpublishedText') }}
       </VCardText>
       <VSpacer />
-      <VBtn
-        flat
-        color="primary"
-        :to="channelDetailsLink"
-      >
-        {{ $tr('details') }}
-      </VBtn>
-      <VBtn
-        flat
-        color="primary"
-        :href="openChannelLink"
-      >
-        {{ $tr('contents') }}
-      </VBtn>
+      <VTooltip bottom>
+        <template v-slot:activator="{ on }">
+          <VBtn
+            flat
+            color="primary"
+            icon
+            :to="channelDetailsLink"
+            v-on="on"
+          >
+            <VIcon>info</VIcon>
+          </VBtn>
+        </template>
+        <span>{{ $tr('details') }}</span>
+      </VTooltip>
       <ChannelStar
         :channelId="channelId"
         :bookmark="channel.bookmark"
       />
+      <VMenu offset-y>
+        <template v-slot:activator="{ on }">
+          <VBtn icon flat v-on="on" @click.stop.prevent>
+            <VIcon>more_vert</VIcon>
+          </VBtn>
+        </template>
+        <VList>
+          <VListTile @click.stop>
+            <VListTileAction>
+              <VIcon>edit</VIcon>
+            </VListTileAction>
+            <VListTileTitle>{{ $tr('editChannel') }}</VListTileTitle>
+          </VListTile>
+          <VListTile @click.stop>
+            <VListTileAction>
+              <VIcon>content_paste</VIcon>
+            </VListTileAction>
+            <VListTileTitle>{{ $tr('copyToken') }}</VListTileTitle>
+          </VListTile>
+          <VListTile @click.stop>
+            <VListTileAction>
+              <VIcon>delete</VIcon>
+            </VListTileAction>
+            <VListTileTitle>{{ $tr('deleteChannel') }}</VListTileTitle>
+          </VListTile>
+        </VList>
+      </VMenu>
     </VCardActions>
   </VCard>
 
@@ -124,10 +144,22 @@
       resourceCount: '{count, plural,\n =1 {# Resource}\n other {# Resources}}',
       unpublishedText: 'Unpublished',
       lastPublished: 'Published {last_published}',
-      versionText: 'Version {version}',
       details: 'Details',
-      contents: 'Go to channel',
+      editChannel: 'Edit channel',
+      copyToken: 'Copy channel token',
+      deleteChannel: 'Delete channel',
     },
   };
 
 </script>
+
+<style lang="less" scoped>
+
+  .v-card {
+    width: 100%;
+    .headline {
+      font-weight: bold;
+    }
+  }
+
+</style>

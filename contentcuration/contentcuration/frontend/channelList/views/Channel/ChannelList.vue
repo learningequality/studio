@@ -1,19 +1,26 @@
 <template>
 
   <VContainer fluid>
-    <VBtn
-      v-if="isEditable && !loading"
-      color="primary"
-      fixed
-      right
-      fab
-      :title="$tr('channel')"
-      @click="newChannel"
-    >
-      <VIcon>add</VIcon>
-    </VBtn>
     <VLayout row wrap justify-center>
-      <VFlex xs12 sm10 md6>
+      <VFlex xs12 sm10 md8 lg6>
+        <VLayout>
+          <VSpacer />
+          <VBtn
+            v-if="isEditable && !loading"
+            color="primary"
+            class="add-channel-button"
+            depressed
+            @click="newChannel"
+          >
+            <VIcon>add</VIcon>
+            &nbsp; {{ $tr('channel') }}
+          </VBtn>
+        </VLayout>
+      </VFlex>
+    </VLayout>
+
+    <VLayout row wrap justify-center>
+      <VFlex xs12 sm10 md8 lg6>
         <VLayout row justify-center>
           <VFlex xs12>
             <template v-if="loading">
@@ -142,5 +149,8 @@
 
 <style lang="less" scoped>
 
+  .add-channel-button {
+    margin: 0;
+  }
 
 </style>
