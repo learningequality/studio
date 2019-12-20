@@ -10,6 +10,7 @@
     :hideDetails="true"
     single-line
     style="max-width: max-content; padding: 0;"
+    class="notranslate"
     @click:append.stop="copyToken"
     @click.stop.prevent=""
   />

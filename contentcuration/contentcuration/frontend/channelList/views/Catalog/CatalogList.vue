@@ -25,7 +25,7 @@
       </v-layout>
     </v-container>
     <keep-alive>
-      <router-view v-if="$route.params.itemID" :key="$route.params.itemID" />
+      <router-view v-if="$route.params.channelId" :key="$route.params.channelId" />
     </keep-alive>
   </div>
 

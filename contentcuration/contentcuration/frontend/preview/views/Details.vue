@@ -15,7 +15,7 @@
         <template v-slot>
           <p>{{ $formatNumber(details.resource_count) }}</p>
           <!-- Using a table here instead of a list as the counts are better aligned -->
-          <v-data-table
+          <VDataTable
             v-if="kindCount.length"
             :items="kindCount"
             hide-actions
@@ -32,22 +32,22 @@
               <td v-if="$vuetify.breakpoint.lgAndUp"></td>
               <td v-if="$vuetify.breakpoint.xlAndUp"></td>
             </template>
-          </v-data-table>
+          </VDataTable>
         </template>
       </DetailsRow>
       <DetailsRow :label="$tr('containsHeading')">
         <template v-slot>
-          <v-chip v-if="details.includes.coach_content" color="grey lighten-2">
+          <VChip v-if="details.includes.coach_content" color="grey lighten-2">
             {{ $tr('coachHeading') }}
-          </v-chip>
-          <v-chip v-if="details.includes.exercises" color="grey lighten-2">
+          </VChip>
+          <VChip v-if="details.includes.exercises" color="grey lighten-2">
             {{ $tr('assessmentsIncludedText') }}
-          </v-chip>
+          </VChip>
         </template>
       </DetailsRow>
       <DetailsRow
         :label="$tr('coachHeading')"
-        :text="details.includes.coach_content.toString()"
+        :text="(details.includes.coach_content || 0).toString()"
         :definition="$tr('coachDescription')"
       />
       <DetailsRow :label="$tr('tagsHeading')">
@@ -55,14 +55,14 @@
           <div v-if="!sortedTags.length">
             {{ $tr('defaultNoItemsText') }}
           </div>
-          <v-chip
+          <VChip
             v-for="tag in sortedTags"
             v-else
             :key="tag.tag_name"
             color="grey lighten-2"
           >
             {{ tag.tag_name }}
-          </v-chip>
+          </VChip>
         </template>
       </DetailsRow>
       <DetailsRow :label="$tr('languagesHeading')">
@@ -123,14 +123,14 @@
 
       <DetailsRow :label="$tr('licensesLabel')">
         <template v-slot>
-          <v-tooltip v-for="license in details.licenses" :key="license" top>
+          <VTooltip v-for="license in details.licenses" :key="license" top>
             <template v-slot:activator="{ on }">
-              <v-chip color="grey lighten-2" v-on="on">
+              <VChip color="grey lighten-2" v-on="on">
                 {{ translateConstant(license) }}
-              </v-chip>
+              </VChip>
             </template>
             <span>{{ translateConstant(license + '_description') }}</span>
-          </v-tooltip>
+          </VTooltip>
         </template>
       </DetailsRow>
       <DetailsRow :label="$tr('copyrightHoldersLabel')">
@@ -148,28 +148,39 @@
         :label="$tr('containsContentHeading')"
       >
         <template v-slot>
-          <v-layout
+          <VLayout
             v-for="channel in details.original_channels"
             :key="channel.id"
             class="preview-row"
           >
             <VImg :src="channel.thumbnail" contain max-width="200" :aspect-ratio="16/9" />
-            <v-flex>
-              <v-layout align-center fill-height>
-                <v-btn
+            <VFlex>
+              <VLayout align-center fill-height>
+                <VBtn
                   :href="`/channels/${channel.id}/view`"
                   target="_blank"
                   flat
                   color="primary"
                   large
+                  class="notranslate"
                 >
                   {{ channel.name }}
-                </v-btn>
-              </v-layout>
-            </v-flex>
-          </v-layout>
+                </VBtn>
+              </VLayout>
+            </VFlex>
+          </VLayout>
         </template>
       </DetailsRow>
+      <VLayout row wrap class="sample-nodes">
+        <VFlex v-for="node in details.sample_nodes" :key="node.node_id" xs12 sm3>
+          <VCard height="100%">
+            <VImg :src="node.thumbnail" :aspect-ratio="16/9" />
+            <h3 class="notranslate">
+              {{ node.title }}
+            </h3>
+          </VCard>
+        </VFlex>
+      </VLayout>
     </div>
   </div>
 
@@ -340,6 +351,15 @@
       padding: 0 5px;
       font-weight: bold;
       text-transform: none;
+    }
+  }
+
+  .sample-nodes {
+    margin-top: 24px;
+    .v-card {
+      h3 {
+        padding: 8px;
+      }
     }
   }
 

@@ -2,7 +2,7 @@
 
   <VDialog
     ref="dialog"
-    :value="$route.params.itemID == itemID"
+    :value="channelId && $route.params.channelId === channelId"
     attach="body"
     fullscreen
     scrollable
@@ -10,34 +10,42 @@
     persistent
     transition="dialog-bottom-transition"
   >
-    <VCard class="catalog-item-wrapper">
-      <v-toolbar flat :dark="Boolean(dominantColor)" fixed :color="dominantColor">
-        <v-toolbar-items>
-          <v-btn flat icon :to="backLink" replace>
-            <v-icon>arrow_back</v-icon>
-          </v-btn>
-        </v-toolbar-items>
-        <v-spacer />
-        <v-toolbar-title v-if="item">
-          {{ item.name }}
-        </v-toolbar-title>
-      </v-toolbar>
+    <VCard class="channel-wrapper">
+      <VToolbar
+        flat
+        :dark="Boolean(dominantColor)"
+        fixed
+        :color="dominantColor"
+        class="notranslate"
+      >
+        <VToolbarItems>
+          <VBtn flat icon :to="backLink" replace>
+            <VIcon>clear</VIcon>
+          </VBtn>
+        </VToolbarItems>
+        <VSpacer />
+        <VToolbarTitle v-if="channel">
+          {{ channel.name }}
+        </VToolbarTitle>
+      </VToolbar>
       <LoadingText v-if="loading" />
-      <div v-else>
+      <div v-else-if="channel">
         <VCardText>
-          <v-layout>
-            <v-spacer />
-            <v-menu offset-y>
+          <VLayout>
+            <VSpacer />
+            <VMenu offset-y>
               <template v-slot:activator="{ on }">
-                <v-btn
+                <VBtn
                   color="primary"
                   flat
                   v-on="on"
                 >
                   {{ $tr('downloadButton') }}
                   &nbsp;
-                  <v-icon>arrow_drop_down</v-icon>
-                </v-btn>
+                  <VIcon class="notranslate">
+                    arrow_drop_down
+                  </VIcon>
+                </VBtn>
               </template>
               <VList>
                 <VListTile
@@ -49,50 +57,56 @@
                   <VListTileTitle>{{ option.title }}</VListTileTitle>
                 </VListTile>
               </VList>
-            </v-menu>
-          </v-layout>
-          <VImg
-            :src="item.thumbnail_url || '/static/img/kolibri_placeholder.png'"
-            :aspect-ratio="16/9"
-            max-width="300"
-          />
-          <br>
-          <h1>{{ item.name }}</h1>
-          <p>{{ item.description }}</p>
-          <br>
+            </VMenu>
+          </VLayout>
+          <div class="channel-details-wrapper">
+            <VImg
+              :src="channel.thumbnail_url || '/static/img/kolibri_placeholder.png'"
+              :aspect-ratio="16/9"
+              max-width="300"
+            />
+            <br>
+            <h1 class="notranslate">
+              {{ channel.name }}
+            </h1>
+            <p class="notranslate">
+              {{ channel.description }}
+            </p>
+            <br>
 
-          <template>
-            <DetailsRow v-if="item.published" :label="$tr('tokenHeading')">
-              <template v-slot>
-                <CopyToken
-                  :token="item.primary_token"
-                  style="max-width:max-content;"
-                />
-              </template>
-            </DetailsRow>
-            <DetailsRow :label="$tr('publishedHeading')">
-              <span v-if="item.published">{{ publishedDate }}</span>
-              <em v-else>{{ $tr('unpublishedText') }}</em>
-            </DetailsRow>
-          </template>
+            <template>
+              <DetailsRow v-if="channel.published" :label="$tr('tokenHeading')">
+                <template v-slot>
+                  <CopyToken
+                    :token="channel.primary_token"
+                    style="max-width:max-content;"
+                  />
+                </template>
+              </DetailsRow>
+              <DetailsRow :label="$tr('publishedHeading')">
+                <span v-if="channel.published">{{ publishedDate }}</span>
+                <em v-else>{{ $tr('unpublishedText') }}</em>
+              </DetailsRow>
+            </template>
 
-          <DetailsRow
-            v-if="item.language"
-            :label="$tr('primaryLanguageHeading')"
-            :text="translateLanguage(item.language)"
-          />
-          <DetailsRow
-            v-if="item.download_count"
-            :label="$tr('downloadsHeading')"
-            :text="$tr('downloadsText', {count: item.download_count})"
-          />
+            <DetailsRow
+              v-if="channel.language"
+              :label="$tr('primaryLanguageHeading')"
+              :text="translateLanguage(channel.language)"
+            />
+            <DetailsRow
+              v-if="channel.download_count"
+              :label="$tr('downloadsHeading')"
+              :text="$tr('downloadsText', {count: channel.download_count})"
+            />
 
-          <DetailsRow
-            v-if="item.language"
-            :label="$tr('primaryLanguageHeading')"
-            :text="translateLanguage(item.language)"
-          />
-          <Details :nodeID="item.root_id" />
+            <DetailsRow
+              v-if="channel.language"
+              :label="$tr('primaryLanguageHeading')"
+              :text="translateLanguage(channel.language)"
+            />
+            <Details :nodeID="channel.root_id" />
+          </div>
         </VCardText>
       </div>
     </VCard>
@@ -104,7 +118,6 @@
 
   import { mapActions, mapGetters } from 'vuex';
   import Vibrant from 'node-vibrant';
-  import { RouterNames } from '../../constants';
   import Details from '../../../preview/views/Details';
   import DetailsRow from '../../../preview/views/DetailsRow';
   import { fileSizeMixin, constantsTranslationMixin } from 'shared/mixins';
@@ -112,7 +125,7 @@
   import CopyToken from 'shared/views/CopyToken';
 
   export default {
-    name: 'CatalogDetailsPage',
+    name: 'ChannelDetailsModal',
     components: {
       Details,
       LoadingText,
@@ -121,9 +134,8 @@
     },
     mixins: [fileSizeMixin, constantsTranslationMixin],
     props: {
-      itemID: {
+      channelId: {
         type: String,
-        required: true,
       },
     },
     data() {
@@ -134,15 +146,15 @@
       };
     },
     computed: {
-      ...mapGetters('catalog', ['getCatalogItem']),
-      item() {
-        return this.getCatalogItem(this.itemID);
+      ...mapGetters('channelList', ['getChannel']),
+      channel() {
+        return this.getChannel(this.channelId);
       },
       thumbnail() {
-        return this.item.thumbnail_url || '/static/img/kolibri_placeholder.png';
+        return this.channel.thumbnail_url || '/static/img/kolibri_placeholder.png';
       },
       publishedDate() {
-        return this.$formatDate(this.item.last_published, {
+        return this.$formatDate(this.channel.last_published, {
           year: 'numeric',
           month: 'long',
           day: 'numeric',
@@ -150,30 +162,30 @@
       },
       backLink() {
         return {
-          name: RouterNames.CATALOG_ITEMS,
+          name: this.$route.matched[0].name,
           query: this.$route.query,
         };
       },
       routeParamID() {
-        return this.$route.params.itemID;
+        return this.$route.params.channelId;
       },
       downloadOptions() {
         return [
           {
             title: this.$tr('downloadCSV'),
-            href: window.Urls.get_channel_details_csv_endpoint(this.item.id),
+            href: window.Urls.get_channel_details_csv_endpoint(this.channel.id),
           },
           {
             title: this.$tr('downloadDetailedPDF'),
-            href: window.Urls.get_channel_details_pdf_endpoint(this.item.id),
+            href: window.Urls.get_channel_details_pdf_endpoint(this.channel.id),
           },
           {
             title: this.$tr('downloadPDF'),
-            href: window.Urls.get_channel_details_pdf_endpoint(this.item.id) + '?condensed=true',
+            href: window.Urls.get_channel_details_pdf_endpoint(this.channel.id) + '?condensed=true',
           },
           {
             title: this.$tr('downloadPPT'),
-            href: window.Urls.get_channel_details_ppt_endpoint(this.item.id),
+            href: window.Urls.get_channel_details_ppt_endpoint(this.channel.id),
           },
         ];
       },
@@ -188,10 +200,10 @@
       this.hideHTMLScroll(true);
     },
     methods: {
-      ...mapActions('catalog', ['loadCatalogItem']),
+      ...mapActions('channelList', ['loadChannel']),
       load() {
         this.loading = true;
-        this.loadCatalogItem(this.itemID).then(() => {
+        this.loadChannel(this.channelId).then(() => {
           this.loading = false;
           let v = new Vibrant(this.thumbnail);
           v.getPalette((err, palette) => {
@@ -241,11 +253,16 @@
     color: gray;
   }
 
-  .catalog-item-wrapper {
+  .channel-wrapper {
     overflow-y: auto;
     .v-card__text {
       padding-top: 72px;
     }
+  }
+
+  .channel-details-wrapper {
+    max-width: 900px;
+    margin: 0 auto;
   }
 
 </style>

@@ -1,26 +1,26 @@
 <template>
 
-  <v-layout row wrap class="auth-row">
-    <v-flex xs12 sm3 md2 xl1>
+  <VLayout row wrap class="auth-row">
+    <VFlex xs12 sm3 md2 xl1>
       <label>
         {{ label }}
-        <v-tooltip v-if="definition" top>
+        <VTooltip v-if="definition" top>
           <template v-slot:activator="{ on }">
-            <v-icon color="primary" dark small v-on="on">
+            <VIcon color="primary" dark small class="notranslate" v-on="on">
               help_outline
-            </v-icon>
+            </VIcon>
           </template>
           <span>{{ definition }}</span>
-        </v-tooltip>
+        </VTooltip>
       </label>
 
-    </v-flex>
-    <v-flex xs12 sm9 md10 xl11>
+    </VFlex>
+    <VFlex xs12 sm9 md10 xl11>
       <slot>
         {{ text }}
       </slot>
-    </v-flex>
-  </v-layout>
+    </VFlex>
+  </VLayout>
 
 </template>
 

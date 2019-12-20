@@ -1,6 +1,6 @@
 <template>
 
-  <div>
+  <div class="notranslate">
     <template v-if="items.length">
       <div v-if="inline">
         <ul class="inline-list">

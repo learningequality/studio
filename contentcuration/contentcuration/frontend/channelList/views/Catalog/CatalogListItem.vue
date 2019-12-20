@@ -64,9 +64,8 @@
         return {
           name: RouterNames.CATALOG_DETAILS,
           params: {
-            itemID: this.itemID,
+            channelId: this.itemID,
           },
-          query: this.$route.query,
         };
       },
     },

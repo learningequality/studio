@@ -1,6 +1,6 @@
 <template>
 
-  <VIcon class="icon" :class="kind" dark>
+  <VIcon class="icon notranslate" :class="kind" dark>
     {{ icon }}
   </VIcon>
 
