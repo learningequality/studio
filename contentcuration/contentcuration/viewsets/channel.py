@@ -1,11 +1,10 @@
-from django.db.models import Count
+from django.db.models import BooleanField
 from django.db.models import IntegerField
 from django.db.models import Max
 from django.db.models import OuterRef
 from django.db.models import Prefetch
 from django.db.models import Q
 from django.db.models import Subquery
-from django.db.models import BooleanField
 from django.db.models.functions import Cast
 from django_filters.rest_framework import BooleanFilter
 from django_filters.rest_framework import CharFilter
@@ -119,12 +118,15 @@ class ChannelViewSet(ValuesViewset):
         "main_tree__created",
         "last_published",
         "ricecooker_version",
+        "download_count",
+        "main_tree__id",
     )
 
     field_map = {
         "thumbnail_url": get_channel_thumbnail,
         "published": "main_tree__published",
         "created": "main_tree__created",
+        "root_id": "main_tree__id"
     }
 
     def get_queryset(self):
@@ -137,6 +139,7 @@ class ChannelViewSet(ValuesViewset):
             .distinct()
             .values_list("id", flat=True)
         )
+
         user_queryset = User.objects.filter(id=self.request.user.id)
         # Annotate edit, view, and bookmark onto the channels
         # Have to cast to integer first as it initially gets set
@@ -202,7 +205,16 @@ class ChannelViewSet(ValuesViewset):
             .distinct("content_id")
             .values_list("content_id", flat=True)
         )
+
+        active_tree_ids = Channel.objects.filter(deleted=False).values_list('main_tree__tree_id', flat=True)
+        imports = (
+            ContentNode.objects.filter(tree_id__in=active_tree_ids, original_channel_id=OuterRef('pk'))
+            .exclude(tree_id=OuterRef("main_tree__tree_id"))
+            .values('tree_id')
+            .distinct("tree_id")
+        )
         queryset = queryset.annotate(
+            download_count=SQCount(imports, field="tree_id"),
             count=SQCount(non_topic_content_ids, field="content_id")
         )
         return queryset
