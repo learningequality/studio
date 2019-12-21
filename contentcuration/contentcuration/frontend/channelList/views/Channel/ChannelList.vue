@@ -9,11 +9,9 @@
             v-if="isEditable && !loading"
             color="primary"
             class="add-channel-button"
-            depressed
             @click="newChannel"
           >
-            <VIcon>add</VIcon>
-            &nbsp; {{ $tr('channel') }}
+            {{ $tr('channel') }}
           </VBtn>
         </VLayout>
       </VFlex>
@@ -40,6 +38,7 @@
                 v-for="channel in listChannels"
                 :key="channel.id"
                 :channelId="channel.id"
+                allowEdit
               />
             </template>
             <keep-alive>
@@ -128,11 +127,11 @@
           bookmark: false,
           edit: true,
         });
-        this.$router.push({ name: RouterNames.CHANNEL_DETAILS, params: { channelId: this.newId } });
+        this.$router.push({ name: RouterNames.CHANNEL_EDIT, params: { channelId: this.newId } });
       },
       loadData(listType) {
         this.loading = true;
-        this.loadChannelList(listType).then(() => {
+        this.loadChannelList({ payload: listType }).then(() => {
           this.loading = false;
         });
       },
@@ -140,7 +139,7 @@
     $trs: {
       loading: 'Loading channels...',
       noChannelsFound: 'No channels found',
-      channel: 'Channel',
+      channel: ' New channel',
     },
   };
 

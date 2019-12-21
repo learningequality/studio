@@ -10,7 +10,7 @@
         v-on="on"
         @click.stop.prevent="toggleStar"
       >
-        <VIcon data-test="icon">
+        <VIcon data-test="icon" class="notranslate">
           {{ bookmark ? 'star' : 'star_border' }}
         </VIcon>
       </VBtn>
@@ -22,7 +22,7 @@
 
 <script>
 
-  import { mapMutations } from 'vuex';
+  import { mapActions } from 'vuex';
 
   export default {
     name: 'ChannelStar',
@@ -42,11 +42,9 @@
       },
     },
     methods: {
-      ...mapMutations('channelList', {
-        toggleBookmark: 'TOGGLE_BOOKMARK',
-      }),
+      ...mapActions('channelList', ['bookmarkChannel']),
       toggleStar() {
-        this.toggleBookmark(this.channelId);
+        this.bookmarkChannel({ id: this.channelId, bookmark: !this.bookmark });
       },
     },
     $trs: {

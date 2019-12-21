@@ -2,7 +2,7 @@
 
   <VDialog
     ref="dialog"
-    :value="channelId && $route.params.channelId === channelId"
+    :value="channelId && routeParamID === channelId"
     attach="body"
     fullscreen
     scrollable
