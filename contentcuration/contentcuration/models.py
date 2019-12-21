@@ -1512,7 +1512,7 @@ class Invitation(models.Model):
     def accept(self):
         if self.channel:
             # channel is a nullable field, so check that it exists.
-            if self.share_mode == models.VIEW_ACCESS:
+            if self.share_mode == VIEW_ACCESS:
                 self.channel.editors.remove(self.invited)
                 self.channel.viewers.add(self.invited)
             else:
