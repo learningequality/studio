@@ -6,7 +6,7 @@ import ChannelDetailsModal from './views/Channel/ChannelDetailsModal';
 import ChannelSetList from './views/ChannelSet/ChannelSetList';
 import ChannelSetModal from './views/ChannelSet/ChannelSetModal';
 import CatalogList from './views/Catalog/CatalogList';
-import { RouterNames } from './constants';
+import { RouterNames, ListTypes } from './constants';
 
 const router = new VueRouter({
   routes: [
@@ -59,7 +59,7 @@ const router = new VueRouter({
     // Catch-all for unrecognized URLs
     {
       path: '*',
-      redirect: { name: RouterNames.CATALOG_ITEMS },
+      redirect: { name: RouterNames.CHANNELS, params: { listType: ListTypes.EDITABLE } },
     },
   ],
 });
