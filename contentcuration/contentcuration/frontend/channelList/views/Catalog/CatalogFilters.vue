@@ -1,15 +1,15 @@
 <template>
 
   <div>
-    <v-btn
+    <VBtn
       v-if="$vuetify.breakpoint.smAndDown"
       color="primary"
       flat
       @click.stop="drawer = true"
     >
       {{ $tr('searchText', {count: filtersCount}) }}
-    </v-btn>
-    <v-navigation-drawer
+    </VBtn>
+    <VNavigationDrawer
       v-model="drawer"
       :permanent="$vuetify.breakpoint.mdAndUp"
       app
@@ -17,21 +17,30 @@
       clipped
     >
       <div v-if="$vuetify.breakpoint.smAndDown" style="text-align: right;">
-        <v-btn icon flat>
-          <v-icon @click="drawer = false">
+        <VBtn icon flat>
+          <VIcon class="notranslate" @click="drawer = false">
             clear
-          </v-icon>
-        </v-btn>
+          </VIcon>
+        </VBtn>
       </div>
-      <v-container>
+      <VContainer class="filters notranslate">
+        <!-- Starred -->
+        <VCheckbox
+          v-if="loggedIn"
+          v-model="bookmark"
+          color="primary"
+          :label="$tr('starredLabel')"
+        />
+
         <!-- Keyword search -->
-        <v-text-field
+        <VTextField
           :value="keywords"
           color="primary"
           :label="$tr('searchLabel')"
           single-line
           outline
           clearable
+          class="notranslate"
           prepend-inner-icon="search"
           @blur="setKeywords"
         />
@@ -43,8 +52,8 @@
           outline
         />
 
-        <!-- License -->
-        <v-select
+        <!-- License (attach to self to keep in notranslate class) -->
+        <VSelect
           v-model="licenses"
           :items="licenseOptions"
           :label="$tr('licenseLabel')"
@@ -52,17 +61,21 @@
           :item-text="licenseText"
           multiple
           outline
+          class="licenses"
+          attach=".licenses"
           @click.stop.prevent
         />
 
-        <!-- Formats -->
-        <v-select
+        <!-- Formats (attach to self to keep in notranslate class) -->
+        <VSelect
           v-model="kinds"
           :items="kindOptions"
           item-value="kind"
           :item-text="kindText"
           :menu-props="{ maxHeight: '400' }"
           :label="$tr('formatLabel')"
+          class="formats"
+          attach=".formats"
           multiple
           outline
         />
@@ -71,24 +84,24 @@
         <div class="subheading">
           {{ $tr('includesLabel') }}
         </div>
-        <v-checkbox
+        <VCheckbox
           v-model="coach"
           color="primary"
           :label="$tr('coachLabel')"
         />
-        <v-checkbox
+        <VCheckbox
           v-model="assessments"
           color="primary"
           :label="$tr('assessmentsLabel')"
         />
-        <v-checkbox
+        <VCheckbox
           v-model="subtitles"
           color="primary"
           :label="$tr('subtitlesLabel')"
         />
 
-      </v-container>
-    </v-navigation-drawer>
+      </VContainer>
+    </VNavigationDrawer>
   </div>
 
 </template>
@@ -96,6 +109,7 @@
 
 <script>
 
+  import { mapState } from 'vuex';
   import map from 'lodash/map';
   import uniq from 'lodash/uniq';
   import reduce from 'lodash/reduce';
@@ -117,6 +131,9 @@
       };
     },
     computed: {
+      ...mapState({
+        loggedIn: state => state.session.loggedIn,
+      }),
       kindOptions() {
         return sortBy(Constants.ContentKinds, 'kind');
       },
@@ -198,6 +215,14 @@
           this.setQueryParam('subtitles', value);
         },
       },
+      bookmark: {
+        get() {
+          return this.$route.query.bookmark;
+        },
+        set(value) {
+          this.setQueryParam('bookmark', value);
+        },
+      },
     },
     methods: {
       setKeywords(event) {
@@ -236,6 +261,7 @@
       coachLabel: 'Coach content',
       assessmentsLabel: 'Assessments',
       subtitlesLabel: 'Subtitles',
+      starredLabel: 'Starred',
       licenseLabel: 'Licenses',
       formatLabel: 'Formats',
       includesLabel: 'Includes',

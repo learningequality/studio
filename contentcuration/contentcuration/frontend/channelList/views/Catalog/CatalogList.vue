@@ -2,28 +2,33 @@
 
   <div>
     <CatalogFilters />
-    <v-container fluid class="list-wrapper">
+    <VContainer fluid>
       <LoadingText v-if="loading" />
-      <v-layout v-else grid wrap>
-        <v-flex xs12>
+      <VLayout v-else grid wrap class="list-wrapper">
+        <VFlex xs12>
           <p class="title">
             {{ $tr('resultsText', {count: page.count}) }}
           </p>
-        </v-flex>
-        <v-flex xs12>
-          <CatalogListItem v-for="item in page.results" :key="item.id" :itemID="item.id" />
-        </v-flex>
-        <v-flex xs12>
-          <v-layout justify-center>
+        </VFlex>
+        <VFlex xs12>
+          <ChannelItem
+            v-for="item in page.results"
+            :key="item.id"
+            :channelId="item.id"
+            :detailsRouteName="detailsRouteName"
+          />
+        </VFlex>
+        <VFlex xs12>
+          <VLayout justify-center>
             <Pagination
               :pageNumber="page.page_number"
               :totalPages="page.total_pages"
               @input="navigateToPage"
             />
-          </v-layout>
-        </v-flex>
-      </v-layout>
-    </v-container>
+          </VLayout>
+        </VFlex>
+      </VLayout>
+    </VContainer>
     <keep-alive>
       <router-view v-if="$route.params.channelId" :key="$route.params.channelId" />
     </keep-alive>
@@ -36,7 +41,8 @@
   import { mapActions, mapState } from 'vuex';
   import debounce from 'lodash/debounce';
   import isEqual from 'lodash/isEqual';
-  import CatalogListItem from './CatalogListItem';
+  import ChannelItem from '../Channel/ChannelItem';
+  import { RouterNames } from '../../constants';
   import CatalogFilters from './CatalogFilters';
   import LoadingText from 'shared/views/LoadingText';
   import Pagination from 'shared/views/Pagination';
@@ -44,7 +50,7 @@
   export default {
     name: 'CatalogList',
     components: {
-      CatalogListItem,
+      ChannelItem,
       LoadingText,
       CatalogFilters,
       Pagination,
@@ -56,9 +62,12 @@
       };
     },
     computed: {
-      ...mapState('catalog', ['page']),
+      ...mapState('channelList', { page: 'catalogPage' }),
       debouncedSearch() {
         return debounce(this.loadCatalog, 1000);
+      },
+      detailsRouteName() {
+        return RouterNames.CATALOG_DETAILS;
       },
     },
     watch: {
@@ -70,7 +79,7 @@
       this.loadCatalog();
     },
     methods: {
-      ...mapActions('catalog', ['searchCatalog']),
+      ...mapActions('channelList', ['searchCatalog']),
       loadCatalog() {
         this.loading = true;
         return this.searchCatalog(this.$route.query)
@@ -98,3 +107,11 @@
   };
 
 </script>
+<style lang="less" scoped>
+
+  .list-wrapper {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+</style>
