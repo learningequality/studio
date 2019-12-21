@@ -5,19 +5,21 @@
       <VImg maxHeight="35" contain :src="require('../images/kolibri-logo.svg')" />
     </VToolbarSideIcon>
 
-    <VToolbarTitle class="white--text">
+    <VToolbarTitle class="white--text notranslate">
       {{ $tr('title') }}
     </VToolbarTitle>
     <VSpacer />
 
-    <template v-if="isLoggedIn">
+    <template v-if="loggedIn">
       <VToolbarTitle class="white--text">
         {{ $tr('helloUser', { username: user.first_name }) }}
       </VToolbarTitle>
       <VMenu offsetY>
         <template v-slot:activator="{ on }">
           <VBtn icon v-on="on">
-            <VIcon>account_circle</VIcon>
+            <VIcon class="notranslate">
+              account_circle
+            </VIcon>
           </VBtn>
         </template>
 
@@ -59,7 +61,10 @@
   export default {
     name: 'AppBar',
     computed: {
-      ...mapState({ user: state => state.session.currentUser }),
+      ...mapState({
+        user: state => state.session.currentUser,
+        loggedIn: state => state.session.loggedIn,
+      }),
       menuItems() {
         const items = [
           {
@@ -83,9 +88,6 @@
           });
         }
         return items;
-      },
-      isLoggedIn() {
-        return Boolean(this.user.email);
       },
     },
     $trs: {

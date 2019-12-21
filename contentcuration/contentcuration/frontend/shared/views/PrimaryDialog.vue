@@ -8,19 +8,19 @@
     v-bind="$attrs"
   >
     <VCard>
-      <VCardTitle
-        v-if="title"
-      >
-        <p class="title mb-0">
-          {{ title }}
-        </p>
-      </VCardTitle>
-      <VCardText>
-        <slot></slot>
-      </VCardText>
-      <VCardActions>
-        <slot name="actions"></slot>
-      </VCardActions>
+      <VContainer>
+        <VCardTitle v-if="title">
+          <p class="title mb-0">
+            <b>{{ title }}</b>
+          </p>
+        </VCardTitle>
+        <VCardText>
+          <slot></slot>
+        </VCardText>
+        <VCardActions>
+          <slot name="actions"></slot>
+        </VCardActions>
+      </VContainer>
     </VCard>
   </VDialog>
 

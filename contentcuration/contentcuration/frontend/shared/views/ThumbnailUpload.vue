@@ -30,8 +30,8 @@
       @change="handleFiles($event.target.files)"
     >
     <label for="fileElem">
-      <VImg v-if="file" contain :src="file" />
-      <VImg v-else contain :src="require('../images/kolibri-logo.svg')" />
+      <VImg v-if="file" contain :src="file" v-bind="$attrs" />
+      <VImg v-else contain :src="require('../images/kolibri-logo.svg')" v-bind="$attrs" />
       <VBtn v-if="!readonly" @click="$refs.fileUpload.click()">
         {{ $tr('fileUpload') }}
       </VBtn>

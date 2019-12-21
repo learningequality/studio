@@ -1,8 +1,9 @@
 <template>
 
-  <v-pagination
+  <VPagination
     v-model="page"
     color="primary"
+    class="notranslate"
     :length="totalPages"
     :total-visible="7"
   />

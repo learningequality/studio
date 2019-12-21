@@ -175,9 +175,9 @@
         <VFlex v-for="node in details.sample_nodes" :key="node.node_id" xs12 sm3>
           <VCard height="100%">
             <VImg :src="node.thumbnail" :aspect-ratio="16/9" />
-            <h3 class="notranslate">
+            <VCardText class="notranslate">
               {{ node.title }}
-            </h3>
+            </VCardText>
           </VCard>
         </VFlex>
       </VLayout>
@@ -356,10 +356,9 @@
 
   .sample-nodes {
     margin-top: 24px;
-    .v-card {
-      h3 {
-        padding: 8px;
-      }
+    .v-card__text {
+      font-weight: bold;
+      word-break: break-word;
     }
   }
 

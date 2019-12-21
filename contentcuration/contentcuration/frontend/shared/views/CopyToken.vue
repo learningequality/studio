@@ -4,14 +4,14 @@
     v-if="token"
     v-model="displayToken"
     :title="$tr('copyPrompt')"
-    :appendIcon="copyIcon"
+    :appendOuterIcon="copyIcon"
     readonly
     color="primary"
     :hideDetails="true"
     single-line
-    style="max-width: max-content; padding: 0;"
+    style="padding: 0;"
     class="notranslate"
-    @click:append.stop="copyToken"
+    @click:append-outer.stop="copyToken"
     @click.stop.prevent=""
   />
 
@@ -34,6 +34,10 @@
         type: String,
         required: true,
       },
+      hyphenate: {
+        type: Boolean,
+        default: true,
+      },
     },
     data() {
       return {
@@ -48,11 +52,11 @@
           case copyStatusCodes.FAILED:
             return 'clear';
           default:
-            return 'content_paste';
+            return 'content_copy';
         }
       },
       displayToken() {
-        return this.token.slice(0, 5) + '-' + this.token.slice(5);
+        return this.hyphenate ? this.token.slice(0, 5) + '-' + this.token.slice(5) : this.token;
       },
     },
     methods: {
