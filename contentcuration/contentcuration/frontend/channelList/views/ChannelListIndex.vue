@@ -2,10 +2,7 @@
 
   <VApp>
     <AppBar>
-      <template v-if="isLoggedIn" #tabs show-arrows>
-        <VTab :to="catalogLink">
-          {{ $tr("catalog") }}
-        </VTab>
+      <template v-if="loggedIn" #tabs show-arrows>
         <VTab
           v-for="listType in lists"
           :key="listType.id"
@@ -14,6 +11,9 @@
           <span v-if="listType === 'STARRED'"></span>
           {{ $tr(listType) }}
         </VTab>
+        <VTab :to="catalogLink">
+          {{ $tr("catalog") }}
+        </VTab>
         <VTab :to="channelSetLink">
           {{ $tr("channelSets") }}
         </VTab>
@@ -21,7 +21,7 @@
     </AppBar>
     <VContent>
       <VContainer fluid>
-        <VCard v-if="invitations.length">
+        <VCard v-if="invitations.length" v-show="isChannelList">
           <VList subheader>
             <VSubheader>{{ $tr('invitations', {count: invitations.length}) }}</VSubheader>
             <ChannelInvitation
@@ -55,7 +55,9 @@
       ChannelInvitation,
     },
     computed: {
-      ...mapState({ user: state => state.session.currentUser }),
+      ...mapState({
+        loggedIn: state => state.session.loggedIn,
+      }),
       ...mapGetters('channelList', ['invitations']),
       lists() {
         return Object.values(ListTypes);
@@ -66,12 +68,18 @@
       catalogLink() {
         return { name: RouterNames.CATALOG_ITEMS };
       },
-      isLoggedIn() {
-        return Boolean(this.user.email);
+      isChannelList() {
+        return this.lists.includes(this.$route.params.listType);
       },
     },
     created() {
-      this.isLoggedIn && this.loadInvitationList();
+      if (this.loggedIn) {
+        this.loadInvitationList();
+      } else {
+        this.$router.push({
+          name: RouterNames.CATALOG_ITEMS,
+        });
+      }
     },
     methods: {
       ...mapActions('channelList', ['loadInvitationList']),
