@@ -41,8 +41,8 @@
   import { mapActions, mapState } from 'vuex';
   import debounce from 'lodash/debounce';
   import isEqual from 'lodash/isEqual';
-  import ChannelItem from '../Channel/ChannelItem';
   import { RouterNames } from '../../constants';
+  import ChannelItem from './ChannelItem';
   import CatalogFilters from './CatalogFilters';
   import LoadingText from 'shared/views/LoadingText';
   import Pagination from 'shared/views/Pagination';
