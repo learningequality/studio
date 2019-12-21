@@ -28,6 +28,12 @@ export function loadChannel(context, id) {
     });
 }
 
+export function searchCatalog(context, filters) {
+  return client.get(window.Urls.catalog_list(), { params: filters }).then(response => {
+    context.commit('SET_CATALOG_LIST', response.data);
+  });
+}
+
 /* CHANNEL EDITOR ACTIONS */
 export function saveChannel(context, channelId) {
   if (context.getters.getChannelIsValid(channelId)) {
@@ -58,6 +64,14 @@ export function saveChannel(context, channelId) {
       });
     }
   }
+}
+
+export function bookmarkChannel(context, payload) {
+  return client
+    .patch(window.Urls['channel-detail'](payload.id), { bookmark: payload.bookmark })
+    .then(() => {
+      context.commit('TOGGLE_BOOKMARK', payload.id);
+    });
 }
 
 export function deleteChannel(context, channelId) {

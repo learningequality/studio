@@ -65,6 +65,11 @@ export function ADD_CHANNEL_DETAILS(state, { id, details }) {
   };
 }
 
+export function SET_CATALOG_LIST(state, catalogData) {
+  ADD_CHANNELS(state, catalogData.results);
+  state.catalogPage = catalogData;
+}
+
 /* INVITATION MUTATIONS */
 export function SET_INVITATION_LIST(state, invitations) {
   const invitationsMap = {};
