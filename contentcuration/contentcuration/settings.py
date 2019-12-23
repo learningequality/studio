@@ -387,10 +387,11 @@ DELETED_CHEFS_ROOT_ID = "11111111111111111111111111111111"
 PUBLIC_CHANNELS_CACHE_DURATION = 300
 
 # Sentry settings, if enabled, error reports for this instance will be sent to Sentry. Use with caution.
-key = get_secret("SENTRY_DSN_KEY")                # strip any possible trailing newline
+key = get_secret("SENTRY_DSN_KEY")
+if key:
+    key = key.strip()  # strip any possible whitespace or trailing newline
 release_commit = get_secret("RELEASE_COMMIT_SHA")
 if key and len(key) > 0 and release_commit:
-    key = key.strip()
     import sentry_sdk
     # TODO: there are also Celery and Redis integrations, but since they are new
     # I left them as a separate task so we can spend more time on testing.
