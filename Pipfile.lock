@@ -671,10 +671,10 @@
         },
         "le-utils": {
             "hashes": [
-                "sha256:57a0d91d556c70d8d69c10cc76ab8ee572441f1b04b0b09291e3058c4cddd40c"
+                "sha256:1d8d1d7f7ded96ae12e21de5f32b70e978fd15e79dc23d43dc60e3d3045d8c71"
             ],
             "index": "pypi",
-            "version": "==0.1.23"
+            "version": "==0.1.24"
         },
         "livereload": {
             "hashes": [
