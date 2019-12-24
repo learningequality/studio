@@ -48,7 +48,7 @@ spec:
         - name: SEND_USER_ACTIVATION_NOTIFICATION_EMAIL
           value: "true"
         - name: DATA_DB_HOST
-          value: {{ template "studio.fullname" . }}-frontend-db-conn-pool-service
+          value: {{ .Values.postgresql.externalCloudSQL.proxyHostName | default (include "postgresql.fullname" .) }}
         ports:
         - containerPort: {{ .Values.studioApp.appPort }}
         # readiness probes are checks for when the pod is ready to serve traffic.
