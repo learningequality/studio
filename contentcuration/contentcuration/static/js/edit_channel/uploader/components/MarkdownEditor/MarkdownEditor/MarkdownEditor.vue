@@ -142,12 +142,20 @@
 
       this.initStaticMathFields();
 
+      // TUI's `addKeyEventHandler` is not sufficient because they internally
+      // override some of actions that need to be customized from here
+      // needs to be set on Squire level
+      // modifying default Squire key events is not documented but there's
+      // a recommended solution here https://github.com/neilj/Squire/issues/107
+      this.keyDownEventListener = this.$el.addEventListener('keydown', this.onKeyDown, true);
+
       this.clickEventListener = this.$el.addEventListener('click', this.onClick);
     },
     activated() {
       this.editor.focus();
     },
     beforeDestroy() {
+      this.$el.removeEventListener(this.keyDownEventListener, this.onKeyDown);
       this.$el.removeEventListener(this.clickEventListener, this.onClick);
     },
     methods: {
@@ -184,6 +192,24 @@
       },
       onFormulasMenuCancel() {
         this.resetFormulasMenu();
+      },
+      /**
+       * Allow default keyboard shortcut handlers
+       * only for supported actions:
+       * bold (ctrl+b), italics (ctrl+i), select all (ctrl+a)
+       * copy (ctrl+c), cut (ctrl+x), paste (ctrl+v)
+       *
+       * Disable all remaining shortcuts.
+       */
+      onKeyDown(event) {
+        if (event.ctrlKey === true && ['b', 'i', 'a', 'c', 'x', 'v'].includes(event.key)) {
+          return;
+        }
+
+        if (event.ctrlKey === true) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
       },
       onClick(event) {
         let mathFieldEl = null;
