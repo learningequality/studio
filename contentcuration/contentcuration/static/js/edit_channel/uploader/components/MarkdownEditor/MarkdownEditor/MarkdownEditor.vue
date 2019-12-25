@@ -142,6 +142,8 @@
 
       this.initStaticMathFields();
 
+      this.editor.getSquire().addEventListener('willPaste', this.onPaste);
+
       // TUI's `addKeyEventHandler` is not sufficient because they internally
       // override some of actions that need to be customized from here
       // needs to be set on Squire level
@@ -155,6 +157,8 @@
       this.editor.focus();
     },
     beforeDestroy() {
+      this.editor.getSquire().removeEventListener('willPaste', this.onPaste);
+
       this.$el.removeEventListener(this.keyDownEventListener, this.onKeyDown);
       this.$el.removeEventListener(this.clickEventListener, this.onClick);
     },
@@ -192,6 +196,26 @@
       },
       onFormulasMenuCancel() {
         this.resetFormulasMenu();
+      },
+      /**
+       * Remove all formatting on paste.
+       */
+      onPaste(event) {
+        event.preventDefault();
+
+        let fragmentHTML = '';
+        event.fragment.childNodes.forEach(childNode => {
+          if (childNode.nodeType === childNode.TEXT_NODE) {
+            fragmentHTML += childNode.textContent;
+          } else {
+            fragmentHTML += childNode.outerHTML;
+          }
+        });
+
+        const doc = new DOMParser().parseFromString(fragmentHTML, 'text/html');
+        const text = doc.body.textContent || '';
+
+        this.editor.getSquire().insertHTML(text);
       },
       /**
        * Allow default keyboard shortcut handlers
