@@ -1,7 +1,8 @@
 <template>
 
-  <div :style="{ 'position': 'relative' }">
-
+  <div
+    :style="{ 'position': 'relative' }"
+  >
     <div
       ref="editor"
       class="editor"
@@ -10,10 +11,11 @@
     <FormulasMenu
       v-if="formulasMenu.isOpen"
       v-model="formulasMenu.formula"
-      v-click-outside="onFormulasMenuClickOutside"
+      v-click-outside="onClick"
       class="formulas-menu"
       :anchorArrowSide="formulasMenu.anchorArrowSide"
       :mathQuill="mathQuill"
+      style="position:absolute"
       :style="formulasMenu.style"
       @insert="onFormulasMenuInsert"
       @cancel="onFormulasMenuCancel"
@@ -33,9 +35,10 @@
   import '../../../../../../css/mathquill.css';
 
   import ClickOutside from '../../../directives/click-outside';
+
   import FormulasMenu from '../../FormulasMenu/FormulasMenu';
 
-  import { CLASS_MATH_FIELD } from '../constants';
+  import { CLASS_MATH_FIELD, CLASS_MATH_FIELD_ACTIVE, CLASS_MATH_FIELD_NEW } from '../constants';
   import imageUpload from '../extensions/image-upload';
   import formulas from '../extensions/formulas';
   import minimize from '../extensions/minimize';
@@ -47,7 +50,7 @@
       FormulasMenu,
     },
     directives: {
-      'click-outside': ClickOutside,
+      ClickOutside,
     },
     model: {
       prop: 'markdown',
@@ -63,17 +66,16 @@
         editor: null,
         formulasMenu: {
           isOpen: false,
+          formula: '',
           anchorArrowSide: null,
-          mathFieldEl: null, // a math field being edited in formulas menu
-          formula: '', // latex formula of a math field being edited in formulas menu
           style: {
-            position: 'absolute',
             top: 'initial',
             left: 'initial',
             right: 'initial',
           },
         },
         mathQuill: null,
+        keyDownEventListener: null,
         clickEventListener: null,
       };
     },
@@ -135,8 +137,6 @@
           return;
         }
 
-        // eslint-disable-next-line
-        console.log(this.editor.getMarkdown());
         this.$emit('update', this.editor.getMarkdown());
       });
 
@@ -146,8 +146,8 @@
 
       // TUI's `addKeyEventHandler` is not sufficient because they internally
       // override some of actions that need to be customized from here
-      // needs to be set on Squire level
-      // modifying default Squire key events is not documented but there's
+      // => needs to be set on Squire level
+      // Modifying default Squire key events is not documented but there's
       // a recommended solution here https://github.com/neilj/Squire/issues/107
       this.keyDownEventListener = this.$el.addEventListener('keydown', this.onKeyDown, true);
 
@@ -163,39 +163,23 @@
       this.$el.removeEventListener(this.clickEventListener, this.onClick);
     },
     methods: {
-      onMinimizeToolbarBtnClick() {
-        this.$emit('minimize');
-      },
-      onFormulasToolbarBtnClick({ editorCursorPosition }) {
-        const formulasMenuPos = this.getFormulasMenuPos({
-          targetX: editorCursorPosition.left,
-          targetY: editorCursorPosition.bottom,
-        });
-
-        this.formulasMenu.style.top = `${formulasMenuPos.top}px`;
-        if (formulasMenuPos.left !== null) {
-          this.formulasMenu.style.right = 'initial';
-          this.formulasMenu.style.left = `${formulasMenuPos.left}px`;
-          this.formulasMenu.anchorArrowSide = 'left';
-        } else {
-          this.formulasMenu.style.left = 'initial';
-          this.formulasMenu.style.right = `${formulasMenuPos.right}px`;
-          this.formulasMenu.anchorArrowSide = 'right';
+      /**
+       * Allow default keyboard shortcut handlers
+       * only for supported actions:
+       * bold (ctrl+b), italics (ctrl+i), select all (ctrl+a)
+       * copy (ctrl+c), cut (ctrl+x), paste (ctrl+v)
+       *
+       * Disable all remaining keyboard shortcuts.
+       */
+      onKeyDown(event) {
+        if (event.ctrlKey === true && ['b', 'i', 'a', 'c', 'x', 'v'].includes(event.key)) {
+          return;
         }
 
-        this.formulasMenu.mathFieldEl = null;
-        this.formulasMenu.formula = '';
-
-        this.formulasMenu.isOpen = true;
-      },
-      onFormulasMenuClickOutside() {
-        this.insertFormula();
-      },
-      onFormulasMenuInsert() {
-        this.insertFormula();
-      },
-      onFormulasMenuCancel() {
-        this.resetFormulasMenu();
+        if (event.ctrlKey === true) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
       },
       /**
        * Remove all formatting on paste.
@@ -217,75 +201,186 @@
 
         this.editor.getSquire().insertHTML(text);
       },
-      /**
-       * Allow default keyboard shortcut handlers
-       * only for supported actions:
-       * bold (ctrl+b), italics (ctrl+i), select all (ctrl+a)
-       * copy (ctrl+c), cut (ctrl+x), paste (ctrl+v)
-       *
-       * Disable all remaining shortcuts.
-       */
-      onKeyDown(event) {
-        if (event.ctrlKey === true && ['b', 'i', 'a', 'c', 'x', 'v'].includes(event.key)) {
+      onMinimizeToolbarBtnClick() {
+        this.$emit('minimize');
+      },
+      onFormulasToolbarBtnClick({ editorCursorPosition }) {
+        if (this.formulasMenu.isOpen === true) {
           return;
         }
 
-        if (event.ctrlKey === true) {
-          event.preventDefault();
-          event.stopPropagation();
-        }
+        const formulasMenuPosition = this.getFormulasMenuPosition({
+          targetX: editorCursorPosition.left,
+          targetY: editorCursorPosition.bottom,
+        });
+
+        this.resetFormulasMenu();
+        this.openFormulasMenu({ position: formulasMenuPosition });
       },
       onClick(event) {
+        const target = event.target;
+
         let mathFieldEl = null;
-        if (event.target.classList.contains(CLASS_MATH_FIELD)) {
-          mathFieldEl = event.target;
+        if (target.classList.contains(CLASS_MATH_FIELD)) {
+          mathFieldEl = target;
         } else {
-          mathFieldEl = event.target.closest(`.${CLASS_MATH_FIELD}`);
+          mathFieldEl = target.closest(`.${CLASS_MATH_FIELD}`);
         }
 
-        if (mathFieldEl === null) {
+        const clickedOnMathField = mathFieldEl !== null;
+        const clickedOnActiveMathField =
+          clickedOnMathField && mathFieldEl.classList.contains(CLASS_MATH_FIELD_ACTIVE);
+        const clickedOnFormulasMenu =
+          target.classList.contains('formulas-menu') || target.closest('.formulas-menu');
+        const clickedOnEditorToolbarBtn = target.classList.contains('tui-toolbar-icons');
+
+        // skip markdown editor toolbar buttons clicks
+        // they have their own handlers defined
+        if (clickedOnEditorToolbarBtn) {
           return;
         }
 
-        const formulasMenuPos = this.getFormulasMenuPos({
+        // no need to do anything when the formulas menu clicked
+        if (clickedOnFormulasMenu) {
+          return;
+        }
+
+        // no need to do anything when an active math field clicked
+        if (clickedOnActiveMathField) {
+          return;
+        }
+
+        // if clicked outside of open formulas menu
+        // and active math field then close the formulas
+        // menu and clear data related to its previous state
+        if (this.formulasMenu.isOpen) {
+          this.insertFormulaToEditor();
+          this.removeMathFieldActiveClass();
+          this.resetFormulasMenu();
+        }
+
+        // no need to continue if regular text clicked
+        if (!clickedOnMathField) {
+          return;
+        }
+
+        // open formulas menu if a math field clicked
+        const formulasMenuFormula = this.mathQuill(mathFieldEl).latex();
+        const formulasMenuPosition = this.getFormulasMenuPosition({
           targetX: mathFieldEl.getBoundingClientRect().left,
           targetY: mathFieldEl.getBoundingClientRect().bottom,
         });
-
-        this.formulasMenu.style.top = `${formulasMenuPos.top}px`;
-        if (formulasMenuPos.left !== null) {
-          this.formulasMenu.style.right = 'initial';
-          this.formulasMenu.style.left = `${formulasMenuPos.left + 10}px`;
-          this.formulasMenu.anchorArrowSide = 'left';
-        } else {
-          this.formulasMenu.style.left = 'initial';
-          this.formulasMenu.style.right = `${formulasMenuPos.right - 10}px`;
-          this.formulasMenu.anchorArrowSide = 'right';
+        // just a little visual enhancement to make clear
+        // that the formula menu is linked to a math field
+        // element being edited
+        if (formulasMenuPosition.left !== null) {
+          formulasMenuPosition.left += 10;
+        }
+        if (formulasMenuPosition.right !== null) {
+          formulasMenuPosition.right -= 10;
         }
 
-        this.formulasMenu.mathFieldEl = mathFieldEl;
-        this.formulasMenu.formula = this.mathQuill(mathFieldEl).latex();
+        mathFieldEl.classList.add(CLASS_MATH_FIELD_ACTIVE);
 
-        this.formulasMenu.isOpen = true;
+        // `nextTick` - to be sure that the formula
+        // was reset before a new formula set
+        // important when a math field is being edited in open
+        // formulas menu and another math field is clicked
+        this.$nextTick(() => {
+          this.openFormulasMenu({
+            position: formulasMenuPosition,
+            formula: formulasMenuFormula,
+          });
+        });
       },
-      insertFormula() {
+      onFormulasMenuInsert() {
+        this.insertFormulaToEditor();
+
+        this.resetFormulasMenu();
+        this.removeMathFieldActiveClass();
+        this.editor.focus();
+      },
+      onFormulasMenuCancel() {
+        this.removeMathFieldActiveClass();
+        this.resetFormulasMenu();
+        this.editor.focus();
+      },
+      /**
+       * Initialize elements with math field class
+       * as MathQuill static math fields.
+       * If `newOnly` true, initialize only elemenets
+       * marked as new math fields and remove new class
+       * after the initialization.
+       */
+      initStaticMathFields({ newOnly = false } = {}) {
+        const className = newOnly === true ? CLASS_MATH_FIELD_NEW : CLASS_MATH_FIELD;
+
+        const mathFieldEls = this.$el.getElementsByClassName(className);
+        for (let mathFieldEl of mathFieldEls) {
+          this.mathQuill.StaticMath(mathFieldEl);
+
+          if (newOnly) {
+            mathFieldEl.classList.remove(CLASS_MATH_FIELD_NEW);
+          }
+        }
+      },
+      findActiveMathField() {
+        return this.$el.getElementsByClassName(CLASS_MATH_FIELD_ACTIVE)[0] || null;
+      },
+      removeMathFieldActiveClass() {
+        const activeMathField = this.findActiveMathField();
+
+        if (activeMathField !== null) {
+          activeMathField.classList.remove(CLASS_MATH_FIELD_ACTIVE);
+        }
+      },
+      openFormulasMenu({ position, formula = null }) {
+        const top = `${position.top}px`;
+
+        let left, right, anchorArrowSide;
+
+        if (position.left !== null) {
+          right = 'initial';
+          left = `${position.left}px`;
+          anchorArrowSide = 'left';
+        } else {
+          left = 'initial';
+          right = `${position.right}px`;
+          anchorArrowSide = 'right';
+        }
+
+        this.formulasMenu = {
+          isOpen: true,
+          formula: formula !== null ? formula : '',
+          anchorArrowSide,
+          style: {
+            top,
+            left,
+            right,
+          },
+        };
+      },
+      /**
+       * Insert formula from formulas menu to markdown editor.
+       * If there is an active math field, replace it by a new
+       * element with the updated formula. Otherwise insert a new
+       * element with the formula on a current cursor position.
+       */
+      insertFormulaToEditor() {
         const formula = this.formulasMenu.formula;
 
         if (!formula) {
           return;
         }
 
-        const CLASS_MATH_FIELD_NEW = `${CLASS_MATH_FIELD}-new`;
-
         const formulaEl = document.createElement('span');
         formulaEl.innerHTML = formula;
         formulaEl.classList.add(CLASS_MATH_FIELD, CLASS_MATH_FIELD_NEW);
 
-        if (this.formulasMenu.mathFieldEl) {
-          this.formulasMenu.mathFieldEl.parentNode.replaceChild(
-            formulaEl,
-            this.formulasMenu.mathFieldEl
-          );
+        const activeMathFieldEl = this.findActiveMathField();
+
+        if (activeMathFieldEl !== null) {
+          activeMathFieldEl.parentNode.replaceChild(formulaEl, activeMathFieldEl);
         } else {
           // if creating a new element, insert a non-breaking space to allow users
           // continue writing a text (otherwise cursor would stay stuck in a formula
@@ -293,17 +388,7 @@
           this.editor.getSquire().insertHTML(formulaEl.outerHTML + '&nbsp;');
         }
 
-        const newMathFieldEls = this.$el.getElementsByClassName(CLASS_MATH_FIELD_NEW);
-        // It should be actually always one element but more of them might
-        // get there - maybe in case of some unexpected runtime error? Let's make
-        // sure every field is rendered beautifully.
-        for (let newMathFieldEl of newMathFieldEls) {
-          this.mathQuill.StaticMath(newMathFieldEl);
-          newMathFieldEl.classList.remove(CLASS_MATH_FIELD_NEW);
-        }
-
-        this.resetFormulasMenu();
-        this.editor.focus();
+        this.initStaticMathFields({ newOnly: true });
       },
       /**
        * Calculate the formulas menu position.
@@ -319,7 +404,7 @@
        * @param {Number} targetY Viewport Y position of a point in editor
        *                         to which formulas menu should be clipped to
        */
-      getFormulasMenuPos({ targetX, targetY }) {
+      getFormulasMenuPosition({ targetX, targetY }) {
         const editorWidth = this.$el.getBoundingClientRect().width;
         const editorTop = this.$el.getBoundingClientRect().top;
         const editorLeft = this.$el.getBoundingClientRect().left;
@@ -343,20 +428,12 @@
           right: menuRight,
         };
       },
-      initStaticMathFields() {
-        const mathFieldEls = this.$el.getElementsByClassName(CLASS_MATH_FIELD);
-        for (let mathFieldEl of mathFieldEls) {
-          this.mathQuill.StaticMath(mathFieldEl);
-        }
-      },
       resetFormulasMenu() {
         this.formulasMenu = {
           isOpen: false,
-          anchorArrowSide: null,
-          mathFieldEl: null,
           formula: '',
+          anchorArrowSide: null,
           style: {
-            position: 'absolute',
             top: 'initial',
             left: 'initial',
             right: 'initial',
