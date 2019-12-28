@@ -73,7 +73,7 @@
     "factor-bundle": "^2.4.1",
     "fastclick": "^1.0.6",
     "get-installed-path": "^2.0.3",
-    "handlebars": "^4.0.11",
+    "handlebars": "^4.3.0",
     "handlebars-intl": "^1.1.2",
     "jqcloud2": "^2.0.3",
     "jquery": "^2.2.4",
