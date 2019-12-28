@@ -270,6 +270,11 @@
       },
       insertFormula() {
         const formula = this.formulasMenu.formula;
+
+        if (!formula) {
+          return;
+        }
+
         const CLASS_MATH_FIELD_NEW = `${CLASS_MATH_FIELD}-new`;
 
         const formulaEl = document.createElement('span');
