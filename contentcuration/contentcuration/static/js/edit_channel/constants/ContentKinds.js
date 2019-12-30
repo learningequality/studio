@@ -15,6 +15,9 @@ module.exports = [
     kind: 'html5',
   },
   {
+    kind: 'h5p',
+  },
+  {
     kind: 'audio',
   },
   {

@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import json
 import os
 from random import choice
 
@@ -178,9 +179,59 @@ class ChannelPage(BaseTaskSet):
                         urlrequest.urlopen(storage_url).read()
 
 
-class ChannelClone(BaseTaskSet):
+class ChannelCreate(BaseTaskSet):
+    # This flag was recommended to ensure on_stop is always called, but it seems not to be enough
+    # on its own to ensure this behavior. Leaving as it's possible this is needed, but along with
+    # something else.
+    always_run_on_stop = True
+
     def on_start(self):
         self._login()
+        self.created_channels = []
+
+    def on_stop(self):
+        # FIXME: This is not being called when the run completes, need to find out why.
+        # Note that until this is fixed, any channel with the name "Locust Test Channel"
+        # in the database needs to be manually deleted.
+        for channel in self.created_channels:
+            self.client.delete(
+                "/api/channel/{}/".format(channel),
+                headers={
+                    "content-type": "application/json",
+                    'X-CSRFToken': self.client.cookies.get('csrftoken'),
+                }
+            )
+
+            # TODO: check for deletion issues and report so that manual cleanup can be performed if needed.
+
+    @task(6)
+    def create_channel(self):
+        """
+        Load the channel page and the important endpoints.
+        """
+        formdata = {
+            "name": "Locust Test Channel",
+            "description": "Description of locust test channel",
+            "thumbnail_url": '/static/img/kolibri_placeholder.png',
+            "count": 0,
+            "size": 0,
+            "published": False,
+            "view_only": False,
+            "viewers": [],
+            "content_defaults": {},
+            "pending_editors": []
+        }
+        resp = self.client.post(
+            "/api/channel",
+            data=json.dumps(formdata),
+            headers={
+                "content-type": "application/json",
+                'X-CSRFToken': self.client.cookies.get('csrftoken'),
+            }
+        )
+
+        data = resp.json()
+        self.created_channels.append(data['id'])
 
 
 class LoginPage(BaseTaskSet):

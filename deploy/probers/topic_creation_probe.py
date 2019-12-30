@@ -9,6 +9,7 @@ class TopicCreationProbe(BaseProbe):
 
     metric = "topic_creation_latency_msec"
     develop_only = True
+    prober_name = "TOPIC-CREATION-PROBER"
 
     def _get_channel(self):
         response = self.request('api/probers/get_prober_channel')

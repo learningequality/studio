@@ -12,6 +12,8 @@ from google.cloud.storage.blob import Blob
 
 OLD_STUDIO_STORAGE_PREFIX = "/contentworkshop_content/"
 
+CONTENT_DATABASES_MAX_AGE = 5  # seconds
+
 MAX_RETRY_TIME = 60  # seconds
 
 
@@ -129,6 +131,10 @@ class GoogleCloudStorage(Storage):
             logging.warning("Stopping the upload of an empty file: {}".format(name))
             return name
 
+        # set a max-age of 5 if we're uploading to content/databases
+        if self.is_database_file(name):
+            blob.cache_control = 'private, max-age={}, no-transform'.format(CONTENT_DATABASES_MAX_AGE)
+
         blob.upload_from_file(
             fobj,
             content_type=content_type,
@@ -178,6 +184,11 @@ class GoogleCloudStorage(Storage):
     def generate_filename(self, filename):
         # TODO(aron): can we move the generate_object_storage_name logic to here?
         return filename
+
+    # Aron: note: move to a studio_storage object, since this is studio-specific logic
+    @staticmethod
+    def is_database_file(filename):
+        return filename.endswith(".sqlite3")
 
     @staticmethod
     def _is_file_empty(fobj):

@@ -21,6 +21,7 @@ from contentcuration.utils.publish import convert_channel_thumbnail
 from contentcuration.utils.publish import create_bare_contentnode
 from contentcuration.utils.publish import create_content_database
 from contentcuration.utils.publish import create_slideshow_manifest
+from contentcuration.utils.publish import fill_published_fields
 from contentcuration.utils.publish import map_prerequisites
 from contentcuration.utils.publish import MIN_SCHEMA_VERSION
 from contentcuration.utils.publish import set_channel_icon_encoding
@@ -76,6 +77,10 @@ def assessment_item4():
     answers = "[{\"correct\": true, \"answer\": 20, \"help_text\": \"\"}]"
     return mixer.blend(cc.AssessmentItem, question='How many minutes does it take to cook rice?',
                        type='input_question', answers=answers)
+
+
+def description():
+    return "".join(random.sample(string.printable, 20))
 
 
 def channel():
@@ -228,3 +233,14 @@ class ChannelExportPrerequisiteTestCase(StudioTestCase):
 
         cc.PrerequisiteContentRelationship.objects.create(target_node=exercise, prerequisite=node1)
         map_prerequisites(node1)
+
+
+class ChannelExportPublishedData(StudioTestCase):
+    def test_fill_published_fields(self):
+        version_notes = description()
+        channel = cc.Channel.objects.create()
+        channel.last_published
+        fill_published_fields(channel, version_notes)
+        self.assertTrue(channel.published_data)
+        self.assertIsNotNone(channel.published_data.get(0))
+        self.assertEqual(channel.published_data[0]['version_notes'], version_notes)
