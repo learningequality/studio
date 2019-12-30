@@ -17,9 +17,10 @@ const minimizeExtension = editor => {
       type: 'button',
       options: {
         name: 'minimize',
+        // should match ./minimize.css
         className: 'tui-toolbar-btn-minimize',
         event: EVENT_MINIMIZE_TOOLBAR_BTN_CLICK,
-        tooltip: 'Minimize',
+        tooltip: editor.options.extOptions.minimize.toolbarBtnTooltip,
       },
     });
 };

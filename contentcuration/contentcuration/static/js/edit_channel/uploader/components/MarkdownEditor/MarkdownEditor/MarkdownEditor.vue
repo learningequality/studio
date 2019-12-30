@@ -90,6 +90,12 @@
     mounted() {
       this.mathQuill = MathQuill.getInterface(2);
 
+      // customize default editor buttons labels
+      // https://github.com/nhn/tui.editor/issues/524
+      const labels = Editor.i18n._langs.get('en_US');
+      labels['Bold'] = `${labels['Bold']} (Ctrl+B)`;
+      labels['Italic'] = `${labels['Italic']} (Ctrl+I)`;
+
       // This is currently the only way of inheriting and adjusting
       // default TUI's convertor methods
       // see https://github.com/nhn/tui.editor/issues/615
@@ -116,11 +122,18 @@
         hideModeSwitch: true,
         exts: [imageUpload, formulas, minimize],
         extOptions: {
+          imageUpload: {
+            onImageDrop: this.onImageDrop,
+            onImageUploadToolbarBtnClick: this.onImageUploadToolbarBtnClick,
+            toolbarBtnTooltip: 'Insert image (Ctrl+P)',
+          },
           formulas: {
             onFormulasToolbarBtnClick: this.onFormulasToolbarBtnClick,
+            toolbarBtnTooltip: 'Insert formula (Ctrl+F)',
           },
           minimize: {
             onMinimizeToolbarBtnClick: this.onMinimizeToolbarBtnClick,
+            toolbarBtnTooltip: 'Minimize (Ctrl+M)',
           },
         },
         customConvertor: CustomConvertor,
@@ -168,12 +181,30 @@
        * only for supported actions:
        * bold (ctrl+b), italics (ctrl+i), select all (ctrl+a)
        * copy (ctrl+c), cut (ctrl+x), paste (ctrl+v)
+       * Disable all remaining default keyboard shortcuts.
        *
-       * Disable all remaining keyboard shortcuts.
+       * Add keyboard shortcuts handlers for custom markdown
+       * editor toolbar buttons: image upload (ctrl+p),
+       * formulas (ctrl+f), minimize (ctrl+m)
+       * Needs to be done here because TUI editor currently
+       * doesn't support customizing shortcuts
+       * https://github.com/nhn/tui.editor/issues/281
        */
       onKeyDown(event) {
         if (event.ctrlKey === true && ['b', 'i', 'a', 'c', 'x', 'v'].includes(event.key)) {
           return;
+        }
+
+        if (event.ctrlKey === true && event.key === 'p') {
+          this.onImageUploadToolbarBtnClick();
+        }
+
+        if (event.ctrlKey === true && event.key === 'f') {
+          this.onFormulasToolbarBtnClick();
+        }
+
+        if (event.ctrlKey === true && event.key === 'm') {
+          this.onMinimizeToolbarBtnClick();
         }
 
         if (event.ctrlKey === true) {
@@ -201,21 +232,28 @@
 
         this.editor.getSquire().insertHTML(text);
       },
-      onMinimizeToolbarBtnClick() {
-        this.$emit('minimize');
+      onImageDrop() {
+        alert('TBD - see onImageDrop');
       },
-      onFormulasToolbarBtnClick({ editorCursorPosition }) {
+      onImageUploadToolbarBtnClick() {
+        alert('TBD - see onImageUploadToolbarBtnClick');
+      },
+      onFormulasToolbarBtnClick() {
         if (this.formulasMenu.isOpen === true) {
           return;
         }
 
+        const cursor = this.editor.getSquire().getCursorPosition();
         const formulasMenuPosition = this.getFormulasMenuPosition({
-          targetX: editorCursorPosition.left,
-          targetY: editorCursorPosition.bottom,
+          targetX: cursor.x,
+          targetY: cursor.y + cursor.height,
         });
 
         this.resetFormulasMenu();
         this.openFormulasMenu({ position: formulasMenuPosition });
+      },
+      onMinimizeToolbarBtnClick() {
+        this.$emit('minimize');
       },
       onClick(event) {
         const target = event.target;

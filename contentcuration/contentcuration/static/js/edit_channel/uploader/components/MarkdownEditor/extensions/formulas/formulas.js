@@ -1,14 +1,7 @@
 const EVENT_FORMULAS_TOOLBAR_BTN_CLICK = 'FormulasToolbarBtnClick';
 
 const onFormulasToolbarBtnClick = editor => {
-  let cursor = editor.wwEditor.getEditor().getCursorPosition();
-
-  editor.options.extOptions.formulas.onFormulasToolbarBtnClick({
-    editorCursorPosition: {
-      bottom: cursor.y + cursor.height,
-      left: cursor.x,
-    },
-  });
+  editor.options.extOptions.formulas.onFormulasToolbarBtnClick();
 };
 
 const formulasExtension = editor => {
@@ -28,9 +21,10 @@ const formulasExtension = editor => {
       type: 'button',
       options: {
         name: 'formulas',
+        // should match ./formulas.css
         className: 'tui-toolbar-btn-formulas',
         event: EVENT_FORMULAS_TOOLBAR_BTN_CLICK,
-        tooltip: 'Insert formula',
+        tooltip: editor.options.extOptions.formulas.toolbarBtnTooltip,
       },
     });
 };
