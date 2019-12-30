@@ -496,6 +496,7 @@
     margin: 4px;
     font-family: Symbola;
     color: #333333;
+    cursor: pointer;
     background-color: #f9f2f4;
     border-radius: 4px;
     box-shadow: 0 2px 1px -1px rgba(0, 0, 0, 0.2), 0 1px 1px 0 rgba(0, 0, 0, 0.14),
