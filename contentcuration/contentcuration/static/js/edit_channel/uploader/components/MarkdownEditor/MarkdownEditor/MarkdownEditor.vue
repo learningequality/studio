@@ -157,11 +157,6 @@
 
       this.editor.getSquire().addEventListener('willPaste', this.onPaste);
 
-      // TUI's `addKeyEventHandler` is not sufficient because they internally
-      // override some of actions that need to be customized from here
-      // => needs to be set on Squire level
-      // Modifying default Squire key events is not documented but there's
-      // a recommended solution here https://github.com/neilj/Squire/issues/107
       this.keyDownEventListener = this.$el.addEventListener('keydown', this.onKeyDown, true);
 
       this.clickEventListener = this.$el.addEventListener('click', this.onClick);
@@ -177,24 +172,73 @@
     },
     methods: {
       /**
-       * Allow default keyboard shortcut handlers
-       * only for supported actions:
-       * bold (ctrl+b), italics (ctrl+i), select all (ctrl+a)
-       * copy (ctrl+c), cut (ctrl+x), paste (ctrl+v)
-       * Disable all remaining default keyboard shortcuts.
-       *
-       * Add keyboard shortcuts handlers for custom markdown
-       * editor toolbar buttons: image upload (ctrl+p),
-       * formulas (ctrl+f), minimize (ctrl+m)
-       * Needs to be done here because TUI editor currently
-       * doesn't support customizing shortcuts
-       * https://github.com/nhn/tui.editor/issues/281
+       * Handle Squire keydown events (TUI WYSIWYG editor is built on top of Squire
+       * and provides its instance including API methods)
+       * TUI's `addKeyEventHandler` is not sufficient because they internally
+       * override some of the actions that need to be customized from here
+       * => needs to be set on Squire level
+       * Modifying default Squire key events is not documented but there's
+       * a recommended solution here https://github.com/neilj/Squire/issues/107
        */
       onKeyDown(event) {
-        if (event.ctrlKey === true && ['b', 'i', 'a', 'c', 'x', 'v'].includes(event.key)) {
-          return;
+        // Handle cursor behaviour around math fields:
+        // - when arrow right pressed and next element is a math field
+        //   move cursor to a first position after the math field
+        // - when arrow left pressed and previous element is a math field
+        //   move cursor to a last position before the math field
+        // - when backspace pressed and previous element is a math field
+        //   remove the math field
+        const selection = this.editor.getSquire().getSelection();
+
+        if (event.key === 'ArrowRight') {
+          if (
+            selection &&
+            selection.startContainer.nextSibling &&
+            selection.startOffset === selection.startContainer.length &&
+            selection.startContainer.nextSibling.classList.contains('math-field')
+          ) {
+            const rangeAfterMathField = new Range();
+            rangeAfterMathField.setStartAfter(selection.startContainer.nextSibling);
+
+            this.editor.getSquire().setSelection(rangeAfterMathField);
+          }
         }
 
+        if (event.key === 'ArrowLeft') {
+          if (
+            selection &&
+            selection.startContainer.previousSibling &&
+            selection.startOffset === 1 &&
+            selection.startContainer.previousSibling.classList.contains('math-field')
+          ) {
+            const rangeBeforeMathField = new Range();
+            rangeBeforeMathField.setStartBefore(selection.startContainer.previousSibling);
+
+            this.editor.getSquire().setSelection(rangeBeforeMathField);
+          }
+        }
+
+        if (event.key === 'Backspace') {
+          if (
+            selection &&
+            selection.startContainer.previousSibling &&
+            selection.startOffset === 1 &&
+            selection.startContainer.previousSibling.classList.contains('math-field')
+          ) {
+            const mathFieldRange = new Range();
+            mathFieldRange.setStartBefore(selection.startContainer.previousSibling);
+            mathFieldRange.setEndBefore(selection.startContainer);
+
+            mathFieldRange.deleteContents();
+          }
+        }
+
+        // Add keyboard shortcuts handlers for custom markdown
+        // editor toolbar buttons: image upload (ctrl+p),
+        // formulas (ctrl+f), minimize (ctrl+m)
+        // Needs to be done here because TUI editor currently
+        // doesn't support customizing shortcuts
+        // https://github.com/nhn/tui.editor/issues/281
         if (event.ctrlKey === true && event.key === 'p') {
           this.onImageUploadToolbarBtnClick();
         }
@@ -207,6 +251,15 @@
           this.onMinimizeToolbarBtnClick();
         }
 
+        // Allow default keyboard shortcut handlers supported actions:
+        // bold (ctrl+b), italics (ctrl+i), select all (ctrl+a)
+        // copy (ctrl+c), cut (ctrl+x), paste (ctrl+v)
+        // Disable all remaining default keyboard shortcuts.
+        if (event.ctrlKey === true && ['b', 'i', 'a', 'c', 'x', 'v'].includes(event.key)) {
+          return;
+        }
+
+        // Disable all remaining Ctrl key shortcuts
         if (event.ctrlKey === true) {
           event.preventDefault();
           event.stopPropagation();
