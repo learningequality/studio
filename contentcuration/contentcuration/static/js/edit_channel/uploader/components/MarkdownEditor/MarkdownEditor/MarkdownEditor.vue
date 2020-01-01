@@ -44,6 +44,9 @@
   import minimize from '../extensions/minimize';
   import formulasHtmlToMd from '../extensions/formulas/formula-html-to-md';
 
+  import keyHandlers from './keyHandlers';
+  import { getFormulasMenuPosition, getFragmentText } from './utils';
+
   export default {
     name: 'MarkdownEditor',
     components: {
@@ -156,9 +159,7 @@
       this.initStaticMathFields();
 
       this.editor.getSquire().addEventListener('willPaste', this.onPaste);
-
       this.keyDownEventListener = this.$el.addEventListener('keydown', this.onKeyDown, true);
-
       this.clickEventListener = this.$el.addEventListener('click', this.onClick);
     },
     activated() {
@@ -166,71 +167,26 @@
     },
     beforeDestroy() {
       this.editor.getSquire().removeEventListener('willPaste', this.onPaste);
-
-      this.$el.removeEventListener(this.keyDownEventListener, this.onKeyDown);
+      this.$el.removeEventListener(this.keyDownEventListener, this.onKeyDown, true);
       this.$el.removeEventListener(this.clickEventListener, this.onClick);
     },
     methods: {
       /**
-       * Handle Squire keydown events (TUI WYSIWYG editor is built on top of Squire
-       * and provides its instance including API methods)
-       * TUI's `addKeyEventHandler` is not sufficient because they internally
-       * override some of the actions that need to be customized from here
-       * => needs to be set on Squire level
+       * Handle Squire keydown events - TUI WYSIWYG editor is built
+       * on top of Squire (https://github.com/neilj/Squire)
+       * and provides its instance including API methods
+       *
+       * TUI's `addKeyEventHandler` is not sufficient because they
+       * internally override some of the actions that need to be
+       * customized from here => needs to be set on Squire level
        * Modifying default Squire key events is not documented but there's
        * a recommended solution here https://github.com/neilj/Squire/issues/107
        */
       onKeyDown(event) {
-        // Handle cursor behaviour around math fields:
-        // - when arrow right pressed and next element is a math field
-        //   move cursor to a first position after the math field
-        // - when arrow left pressed and previous element is a math field
-        //   move cursor to a last position before the math field
-        // - when backspace pressed and previous element is a math field
-        //   remove the math field
-        const selection = this.editor.getSquire().getSelection();
+        const squire = this.editor.getSquire();
 
-        if (event.key === 'ArrowRight') {
-          if (
-            selection &&
-            selection.startContainer.nextSibling &&
-            selection.startOffset === selection.startContainer.length &&
-            selection.startContainer.nextSibling.classList.contains('math-field')
-          ) {
-            const rangeAfterMathField = new Range();
-            rangeAfterMathField.setStartAfter(selection.startContainer.nextSibling);
-
-            this.editor.getSquire().setSelection(rangeAfterMathField);
-          }
-        }
-
-        if (event.key === 'ArrowLeft') {
-          if (
-            selection &&
-            selection.startContainer.previousSibling &&
-            selection.startOffset === 1 &&
-            selection.startContainer.previousSibling.classList.contains('math-field')
-          ) {
-            const rangeBeforeMathField = new Range();
-            rangeBeforeMathField.setStartBefore(selection.startContainer.previousSibling);
-
-            this.editor.getSquire().setSelection(rangeBeforeMathField);
-          }
-        }
-
-        if (event.key === 'Backspace') {
-          if (
-            selection &&
-            selection.startContainer.previousSibling &&
-            selection.startOffset === 1 &&
-            selection.startContainer.previousSibling.classList.contains('math-field')
-          ) {
-            const mathFieldRange = new Range();
-            mathFieldRange.setStartBefore(selection.startContainer.previousSibling);
-            mathFieldRange.setEndBefore(selection.startContainer);
-
-            mathFieldRange.deleteContents();
-          }
+        if (event.key in keyHandlers) {
+          keyHandlers[event.key](squire);
         }
 
         // Add keyboard shortcuts handlers for custom markdown
@@ -251,9 +207,10 @@
           this.onMinimizeToolbarBtnClick();
         }
 
-        // Allow default keyboard shortcut handlers supported actions:
-        // bold (ctrl+b), italics (ctrl+i), select all (ctrl+a)
-        // copy (ctrl+c), cut (ctrl+x), paste (ctrl+v)
+        // Allow default keyboard shortcut handlers
+        // for supported actions: bold (ctrl+b), italics (ctrl+i),
+        // select all (ctrl+a), copy (ctrl+c),
+        // cut (ctrl+x), paste (ctrl+v)
         // Disable all remaining default keyboard shortcuts.
         if (event.ctrlKey === true && ['b', 'i', 'a', 'c', 'x', 'v'].includes(event.key)) {
           return;
@@ -271,18 +228,7 @@
       onPaste(event) {
         event.preventDefault();
 
-        let fragmentHTML = '';
-        event.fragment.childNodes.forEach(childNode => {
-          if (childNode.nodeType === childNode.TEXT_NODE) {
-            fragmentHTML += childNode.textContent;
-          } else {
-            fragmentHTML += childNode.outerHTML;
-          }
-        });
-
-        const doc = new DOMParser().parseFromString(fragmentHTML, 'text/html');
-        const text = doc.body.textContent || '';
-
+        const text = getFragmentText(event.fragment);
         this.editor.getSquire().insertHTML(text);
       },
       onImageDrop() {
@@ -297,7 +243,8 @@
         }
 
         const cursor = this.editor.getSquire().getCursorPosition();
-        const formulasMenuPosition = this.getFormulasMenuPosition({
+        const formulasMenuPosition = getFormulasMenuPosition({
+          editorEl: this.$el,
           targetX: cursor.x,
           targetY: cursor.y + cursor.height,
         });
@@ -357,7 +304,8 @@
 
         // open formulas menu if a math field clicked
         const formulasMenuFormula = this.mathQuill(mathFieldEl).latex();
-        const formulasMenuPosition = this.getFormulasMenuPosition({
+        const formulasMenuPosition = getFormulasMenuPosition({
+          editorEl: this.$el,
           targetX: mathFieldEl.getBoundingClientRect().left,
           targetY: mathFieldEl.getBoundingClientRect().bottom,
         });
@@ -480,44 +428,6 @@
         }
 
         this.initStaticMathFields({ newOnly: true });
-      },
-      /**
-       * Calculate the formulas menu position.
-       * If the formulas menu is to be shown in the second half (horizontally)
-       * of the editor, it's right corner should be clipped to the target
-       * => this position of the right corner is returned as `right`.
-       * Otherwise left corner is used to clip the menu and position
-       * of the left corner is return as `left`.
-       * Position returned is relative to editor element.
-       * @param {Number} targetX Viewport X position of a point in editor
-       *                         to which formulas menu should be clipped to
-       *
-       * @param {Number} targetY Viewport Y position of a point in editor
-       *                         to which formulas menu should be clipped to
-       */
-      getFormulasMenuPosition({ targetX, targetY }) {
-        const editorWidth = this.$el.getBoundingClientRect().width;
-        const editorTop = this.$el.getBoundingClientRect().top;
-        const editorLeft = this.$el.getBoundingClientRect().left;
-        const editorRight = this.$el.getBoundingClientRect().right;
-        const editorMiddle = editorLeft + editorWidth / 2;
-
-        const menuTop = targetY - editorTop;
-
-        let menuLeft = null;
-        let menuRight = null;
-
-        if (targetX < editorMiddle) {
-          menuLeft = targetX - editorLeft;
-        } else {
-          menuRight = editorRight - targetX;
-        }
-
-        return {
-          top: menuTop,
-          left: menuLeft,
-          right: menuRight,
-        };
       },
       resetFormulasMenu() {
         this.formulasMenu = {
