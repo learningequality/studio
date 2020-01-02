@@ -45,7 +45,7 @@
   import formulasHtmlToMd from '../extensions/formulas/formula-html-to-md';
 
   import keyHandlers from './keyHandlers';
-  import { getFormulasMenuPosition, getFragmentText } from './utils';
+  import { clearNodeFormat, getFormulasMenuPosition } from './utils';
 
   export default {
     name: 'MarkdownEditor',
@@ -222,14 +222,12 @@
           event.stopPropagation();
         }
       },
-      /**
-       * Remove all formatting on paste.
-       */
       onPaste(event) {
-        event.preventDefault();
-
-        const text = getFragmentText(event.fragment);
-        this.editor.getSquire().insertHTML(text);
+        const fragment = clearNodeFormat({
+          node: event.fragment,
+          ignore: ['b', 'i'],
+        });
+        event.fragment = fragment;
       },
       onImageDrop() {
         alert('TBD - see onImageDrop');

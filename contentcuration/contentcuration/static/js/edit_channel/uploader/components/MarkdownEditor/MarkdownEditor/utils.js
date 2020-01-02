@@ -1,4 +1,41 @@
 /**
+ * Clear DOM node by keeping only its text content.
+ *
+ * @param {Node} node
+ * @param {Array} ignore An array of selectors. All nodes
+ *                       corresponding to these selectors
+ *                       won't be changed.
+ */
+export const clearNodeFormat = ({ node, ignore = [] }) => {
+  let clonedNode = node.cloneNode(true);
+
+  if (clonedNode.hasChildNodes()) {
+    clonedNode.querySelectorAll('*').forEach(childNode => {
+      childNode.parentNode.replaceChild(clearNodeFormat({ node: childNode, ignore }), childNode);
+    });
+  }
+
+  if (
+    clonedNode.nodeType === clonedNode.ELEMENT_NODE &&
+    !ignore.some(selector => clonedNode.matches(selector))
+  ) {
+    const textNode = document.createTextNode(clonedNode.innerHTML);
+
+    if (clonedNode.parentNode) {
+      clonedNode.parentNode.replaceChild(textNode, clonedNode);
+    } else {
+      // use `document.createDocumentFragment` insted of `new DocumentFragment
+      // otherwise Jest test for this helper would fail
+      // https://github.com/jsdom/jsdom/issues/2274
+      clonedNode = document.createDocumentFragment();
+      clonedNode.appendChild(textNode);
+    }
+  }
+
+  return clonedNode;
+};
+
+/**
  * Calculate the formulas menu position within markdown editor.
  * If the formulas menu is to be shown in the second half (horizontally)
  * of the editor, it's right corner should be clipped to the target
@@ -36,25 +73,4 @@ export const getFormulasMenuPosition = ({ editorEl, targetX, targetY }) => {
     left: menuLeft,
     right: menuRight,
   };
-};
-
-/**
- * Extracts text content from document fragment
- *
- * @param {DocumentFragment} fragment
- */
-export const getFragmentText = fragment => {
-  let fragmentHTML = '';
-  fragment.childNodes.forEach(childNode => {
-    if (childNode.nodeType === childNode.TEXT_NODE) {
-      fragmentHTML += childNode.textContent;
-    } else {
-      fragmentHTML += childNode.outerHTML;
-    }
-  });
-
-  const doc = new DOMParser().parseFromString(fragmentHTML, 'text/html');
-  const text = doc.body.textContent || '';
-
-  return text;
 };
