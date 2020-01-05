@@ -3,7 +3,7 @@
   <div>
     <VDialog
       ref="editmodal"
-      :value="$route.params.nodeId == nodeId"
+      :value="$route.params.detailNodeId == detailNodeId"
       fullscreen
       hide-overlay
       transition="dialog-bottom-transition"
@@ -12,28 +12,28 @@
     >
       <VCard class="edit-modal-wrapper">
         <VNavigationDrawer
-          v-if="showEditList"
+          v-if="multipleNodes"
           v-model="drawer.open"
           stateless
           clipped
           app
           class="edit-list"
         >
-          <EditList @addNode="createNode" />
+          <EditList v-model="selected" :nodeIds="detailNodeIds" />
         </VNavigationDrawer>
         <VToolbar dark color="primary" fixed clipped-left app>
           <VBtn ref="closebutton" icon dark app @click="handleClose">
             <VIcon>close</VIcon>
           </VBtn>
-          <VToolbarTitle>{{ mode && $tr(mode) }}</VToolbarTitle>
+          <VToolbarTitle>{{ modalTitle }}</VToolbarTitle>
           <VSpacer />
           <VToolbarItems>
             <VFlex v-if="!isViewOnly" align-center class="last-saved-time">
               <div v-if="saveError">
                 {{ $tr('saveFailedText') }}
               </div>
-              <div v-else-if="invalidNodesWithoutNewNodes.length">
-                {{ $tr('autosaveDisabledMessage', {count: invalidNodesWithoutNewNodes.length}) }}
+              <div v-else-if="invalidNodeCount">
+                {{ $tr('autosaveDisabledMessage', {count: invalidNodeCount}) }}
               </div>
               <div v-else-if="saving">
                 <VProgressCircular indeterminate size="15" width="2" color="white" />
@@ -52,7 +52,14 @@
           </VToolbarItems>
         </VToolbar>
         <VCardText>
-          <EditView :isClipboard="isClipboard" />
+          <template v-if="loadError">
+            <VIcon color="red" class="error-icon">
+              error
+            </VIcon>
+            <p>{{ $tr('loadErrorText') }}</p>
+            </VFlex>
+          </template>
+          <EditView v-else :nodeIds="detailNodeIds"/>
         </VCardText>
       </VCard>
     </VDialog>
@@ -100,6 +107,7 @@
   import EditView from './EditView.vue';
   import Dialog from 'edit_channel/sharedComponents/Dialog.vue';
   import Alert from 'edit_channel/sharedComponents/Alert.vue';
+  import { RouterNames } from 'frontend/channelEdit/constants';
 
   const SAVE_TIMER = 5000;
   const SAVE_MESSAGE_TIMER = 10000;
@@ -113,28 +121,25 @@
       Alert,
     },
     props: {
-      nodeId: {
+      detailNodeId: {
         type: String,
         default: '',
-      },
-      nodeIds: {
-        type: Array,
-        default: () => [],
       },
     },
     data() {
       return {
-        dialog: false,
         lastSaved: null,
         saving: false,
         savedMessage: null,
         saveError: false,
+        loadError: false,
         updateInterval: null,
+        selected: this.detailNodeIds,
         drawer: {
           open: true,
         },
         debouncedSave: _.debounce(() => {
-          if (!this.invalidNodes.length) {
+          if (!this.invalidNodeCount) {
             this.saveContent()
               .then(() => {
                 this.updateSavedTime();
@@ -145,44 +150,55 @@
         }, SAVE_TIMER),
       };
     },
+    beforeRouteEnter(to, from, next) {
+      if (to.name === RouterNames.CONTENTNODE_DETAILS) {
+        return next(vm => {
+          vm.loadContentNode(to.params.detailNodeId).catch(
+            () => {
+              vm.loadError = true
+          });
+        });
+      } else if (to.name === RouterNames.MULTI_CONTENTNODE_DETAILS) {
+        return next(vm => {
+          vm.loadContentNode(to.params.detailNodeIds.split(',')).catch(
+            () => {
+              vm.loadError = true
+          });
+        });
+      }
+      return next(false);
+    },
     computed: {
-      ...mapState('edit_modal', ['changes', 'mode']),
-      ...mapGetters('contentNode', ['getContentNode']),
+      ...mapGetters('contentNode', ['getContentNode', 'getContentNodeIsValid']),
+      ...mapGetters('currentChannel', ['canEdit']),
       isViewOnly() {
-        return this.mode === modes.VIEW_ONLY;
+        return !this.canEdit;
       },
-      showEditList() {
+      multipleNodes() {
         // Only hide drawer when editing a single item
-        return (this.mode !== modes.EDIT && !this.isViewOnly) || this.nodes.length > 1;
+        return this.nodes.length > 1;
       },
-      nodes() {
-        if (this.nodeId) {
-          return [this.getContentNode(this.nodeId)];
-        } else if (this.nodeIds.length) {
-          return this.nodeIds.map(nodeId => this.getContentNode(nodeId));
+      detailNodeIds() {
+        if (this.detailNodeId) {
+          return [this.detailNodeId];
         }
         return [];
       },
-    },
-    watch: {
-      dialog(val) {
-        // Temporary workaround while waiting for Vuetify bug
-        // to be fixed https://github.com/vuetifyjs/vuetify/issues/5617
-        if (val) {
-          setTimeout(() => (this.drawer.open = this.showEditList), 300);
-        }
+      nodes() {
+        return this.detailNodeIds.map(detailNodeId => this.getContentNode(detailNodeId));
       },
-      changes: {
-        deep: true,
-        handler() {
-          if (this.changed) this.debouncedSave();
-        },
+      invalidNodeCount() {
+        return this.detailNodeIds.reduce((invalid, detailNodeId) => invalid + Number(!this.getContentNodeIsValid(detailNodeId)), 0);
       },
+      modalTitle() {
+        return this.$tr(modes.EDIT);
+      }
     },
     beforeMount() {
-      this.drawer.open = this.showEditList;
+      this.drawer.open = this.multipleNodes;
     },
     methods: {
+      ...mapActions('contentNode', ['loadContentNodes', 'loadContentNode']),
       ...mapActions('edit_modal', ['saveNodes', 'copyNodes', 'prepareForSave']),
       ...mapMutations('edit_modal', {
         select: 'SELECT_NODE',
@@ -190,16 +206,6 @@
         setNode: 'SET_NODE',
         addNodeToList: 'ADD_NODE',
       }),
-      /*
-       * @public
-       */
-      openModal() {
-        this.dialog = true;
-        if (this.nodes.length > 0) this.$nextTick(() => this.select(0));
-        if (this.mode === modes.NEW_TOPIC || this.mode === modes.NEW_EXERCISE) {
-          this.createNode();
-        }
-      },
       createNode() {
         let titleArgs = { parent: State.currentNode.title };
         if (this.mode === modes.NEW_TOPIC) {
@@ -223,7 +229,7 @@
         this.saveError = false;
         return new Promise((resolve, reject) => {
           clearInterval(this.updateInterval);
-          if (this.invalidNodes.length) {
+          if (this.invalidNodeCount) {
             resolve();
           } else {
             this.saving = true;
@@ -241,7 +247,7 @@
         // Prepare for save sets all as not new and
         // activates validation on all nodes
         this.prepareForSave();
-        if (this.invalidNodes.length) {
+        if (this.invalidNodeCount) {
           this.setNode(this.invalidNodes[0]);
         } else {
           this.saveContent()
@@ -299,6 +305,7 @@
       dontSaveButton: "Don't save",
       cancelButton: 'Cancel',
       saveButton: 'Save changes',
+      loadErrorText: 'Unable to load content',
       relatedContentHeader: 'Related content detected',
       relatedContentText: 'Related content will not be included in the copy of this content.',
       saveFailedHeader: 'Save failed',
@@ -312,29 +319,15 @@
 
 </script>
 
-<style lang="less">
+<style lang="less" scoped>
 
-  @import '../../../../less/global-variables.less';
-
-  .edit-modal-wrapper {
-    * {
-      font-family: @font-family;
-      &.v-icon {
-        .material-icons;
-      }
-    }
-    a {
-      .linked-list-item;
-    }
-
-    .last-saved-time {
-      padding-top: 20px;
-      margin-right: 15px;
-      font-style: italic;
-      .v-progress-circular {
-        margin-right: 10px;
-        vertical-align: text-top;
-      }
+  .last-saved-time {
+    padding-top: 20px;
+    margin-right: 15px;
+    font-style: italic;
+    .v-progress-circular {
+      margin-right: 10px;
+      vertical-align: text-top;
     }
 
     // there is a conflicting style for .row class in common styles

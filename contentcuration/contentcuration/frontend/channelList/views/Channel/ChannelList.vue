@@ -84,7 +84,7 @@
       };
     },
     computed: {
-      ...mapGetters('channelList', ['channels']),
+      ...mapGetters('channel', ['channels']),
       ...mapState({
         language: state => state.session.currentLanguage,
         preferences: state => state.session.preferences,
@@ -109,8 +109,8 @@
       return next(false);
     },
     methods: {
-      ...mapActions('channelList', ['loadChannelList']),
-      ...mapMutations('channelList', {
+      ...mapActions('channel', ['loadChannelList']),
+      ...mapMutations('channel', {
         addChannel: 'ADD_CHANNEL',
         removeChannel: 'REMOVE_CHANNEL',
       }),

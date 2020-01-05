@@ -61,7 +61,7 @@
       };
     },
     computed: {
-      ...mapGetters('channelList', ['getChannels']),
+      ...mapGetters('channel', ['getChannels']),
       ...mapState('channelList', ['page']),
       debouncedSearch() {
         return debounce(this.loadCatalog, 1000);

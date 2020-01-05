@@ -1,7 +1,7 @@
 <template>
 
-  <div v-if="Object.keys(changes).length" class="details-edit-view">
-    <VForm ref="form" v-model="valid" :lazyValidation="newContent" :disabled="viewOnly">
+  <div v-if="nodes.length" class="details-edit-view">
+    <VForm ref="form" v-model="valid" :disabled="viewOnly">
       <VLayout grid wrap>
         <!-- Title -->
         <VFlex v-if="oneSelected" xs12>
@@ -11,7 +11,7 @@
             :counter="(viewOnly)? null : 200"
             maxlength="200"
             :rules="titleRules"
-            :label="$tr('titleLabel') + (viewOnly ? '' : ' *')"
+            :label="$tr('titleLabel')"
             autofocus
             required
             :readonly="viewOnly"
@@ -84,7 +84,7 @@
                 ref="role_visibility"
                 v-model="role"
                 :placeholder="getPlaceholder('role_visibility')"
-                :required="!changes.role_visibility.varied"
+                :required="isUnique(role)"
                 :readonly="viewOnly"
               />
             </VFlex>
@@ -100,26 +100,26 @@
             <!-- Mastery -->
             <VFlex sm12>
               <MasteryDropdown
-                v-if="changes.extra_fields"
+                v-if="extra_fields"
                 ref="mastery_model"
-                v-model="masteryModel"
-                :placeholder="getExtraFieldPlaceholder('mastery_model')"
-                :required="!changes.extra_fields.mastery_model.varied"
-                :mPlaceholder="getExtraFieldPlaceholder('m')"
-                :mRequired="!changes.extra_fields.m.varied"
-                :nPlaceholder="getExtraFieldPlaceholder('n')"
-                :nRequired="!changes.extra_fields.n.varied"
+                v-model="masteryModelItem"
+                :placeholder="getPlaceholder('mastery_model')"
+                :required="isUnique(mastery_model)"
+                :mPlaceholder="getPlaceholder('m')"
+                :mRequired="isUnique(m)"
+                :nPlaceholder="getPlaceholder('n')"
+                :nRequired="isUnique(n)"
                 :readonly="viewOnly"
               />
             </VFlex>
             <v-spacer />
             <VFlex sm12>
               <v-checkbox
-                v-if="changes.extra_fields"
+                v-if="extra_fields"
                 ref="randomize"
                 v-model="randomizeOrder"
                 :label="$tr('randomizeQuestionLabel')"
-                :indeterminate="changes.extra_fields.randomize.varied"
+                :indeterminate="!isUnique(randomizeOrder)"
                 color="primary"
                 :readonly="viewOnly"
               />
@@ -200,10 +200,9 @@
             <VFlex sm12 md8 lg6>
               <LicenseDropdown
                 ref="license"
-                v-model="license"
-                :required="!changes.license.varied && !disableAuthEdits"
+                v-model="licenseItem"
+                :required="isUnique(license) && isUnique(license_description) && !disableAuthEdits"
                 :readonly="viewOnly || disableAuthEdits"
-                :descriptionRequired="!changes.license_description.varied && !disableAuthEdits"
                 :placeholder="getPlaceholder('license')"
                 :descriptionPlaceholder="getPlaceholder('license_description')"
               />
@@ -214,11 +213,11 @@
               <VCombobox
                 v-if="copyrightHolderRequired"
                 ref="copyright_holder"
-                v-model="copyrightHolder"
+                v-model="copyright_holder"
                 :items="copyrightHolders"
-                :label="$tr('copyrightHolderLabel') + (viewOnly || disableAuthEdits ? '' : ' *')"
+                :label="$tr('copyrightHolderLabel')"
                 maxlength="200"
-                :required="!changes.copyright_holder.varied && !disableAuthEdits"
+                :required="isUnique(copyright_holder) && !disableAuthEdits"
                 :rules="copyrightHolderRules"
                 :placeholder="getPlaceholder('copyright_holder')"
                 autoSelectFirst
@@ -235,6 +234,10 @@
 
 <script>
 
+  import difference from 'lodash/difference';
+  import intersection from 'lodash/intersection';
+  import uniq from 'lodash/uniq';
+  import uniqBy from 'lodash/uniqBy';
   import _ from 'underscore';
   import { mapGetters, mapMutations, mapState } from 'vuex';
   import Constants from 'edit_channel/constants';
@@ -243,6 +246,47 @@
   import LicenseDropdown from 'edit_channel/sharedComponents/LicenseDropdown.vue';
   import MasteryDropdown from 'edit_channel/sharedComponents/MasteryDropdown.vue';
   import VisibilityDropdown from 'edit_channel/sharedComponents/VisibilityDropdown.vue';
+
+
+  // Define an object to act as the place holder for non unique values.
+  const nonUniqueValue = {};
+  nonUniqueValue.toString = () => '';
+
+  function getValueFromResults(results) {
+    if (results.length === 0) {
+      return null;
+    } else if (results.length === 1) {
+      return results[0];
+    } else {
+      return nonUniqueValue;
+    }
+  }
+
+  function generateGetterSetter(key) {
+    return {
+      get() {
+        return this.getValueFromNodes(key);
+      },
+      set(value) {
+        if (!this.viewOnly) {
+          this.update({ [key]: value });
+        }
+      },
+    };
+  }
+
+  function generateExtraFieldsGetterSetter(key) {
+    return {
+      get() {
+        return this.getExtraFieldsValueFromNodes(key);
+      },
+      set(value) {
+        if (!this.viewOnly) {
+          this.updateExtraFields({ [key]: value });
+        }
+      },
+    };
+  }
 
   export default {
     name: 'DetailsTabView',
@@ -258,6 +302,10 @@
         type: Boolean,
         default: true,
       },
+      nodeIds: {
+        type: Array,
+        default: () => [],
+      },
     },
     data() {
       return {
@@ -267,160 +315,118 @@
       };
     },
     computed: {
-      ...mapState('edit_modal', ['changes', 'selectedIndices']),
-      ...mapGetters('edit_modal', [
-        'selected',
+      ...mapGetters('contentNode', [
+        'getContentNodes',
         'authors',
         'providers',
         'aggregators',
         'copyrightHolders',
         'tags',
-        'allExercises',
-        'allResources',
       ]),
-      title: {
-        get() {
-          return this.changes.title.value || '';
-        },
-        set(value) {
-          this.update({ title: value });
-        },
+      ...mapGetters('currentChannel', ['currentChannel']),
+      nodes() {
+        return this.getContentNodes(this.nodeIds);
       },
-      description: {
-        get() {
-          return this.changes.description.value || '';
-        },
-        set(value) {
-          this.update({ description: value });
-        },
+      firstNode() {
+        return this.nodes.length ? this.nodes[0] : null;
       },
-      randomizeOrder: {
-        get() {
-          return this.changes.extra_fields.randomize.value || false;
-        },
-        set(value) {
-          this.updateExtraFields({ randomize: value || false });
-        },
+      allExercises() {
+        return this.nodes.every(node => node.kind === 'exercise');
       },
-      author: {
-        get() {
-          return this.changes.author.value || '';
-        },
-        set(value) {
-          this.update({ author: value });
-        },
+      allResources() {
+        return !this.nodes.some(node => node.kind === "topic");
       },
-      provider: {
-        get() {
-          return this.changes.provider.value || '';
-        },
-        set(value) {
-          this.update({ provider: value });
-        },
-      },
-      aggregator: {
-        get() {
-          return this.changes.aggregator.value || '';
-        },
-        set(value) {
-          this.update({ aggregator: value });
-        },
-      },
-      copyrightHolder: {
-        get() {
-          return this.changes.copyright_holder.value || '';
-        },
-        set(value) {
-          this.update({ copyright_holder: value });
-        },
-      },
+      title: generateGetterSetter('title'),
+      description: generateGetterSetter('description'),
+      randomizeOrder: generateExtraFieldsGetterSetter('randomize'),
+      author: generateGetterSetter('author'),
+      provider: generateGetterSetter('provider'),
+      aggregator: generateGetterSetter('aggregator'),
+      copyright_holder: generateGetterSetter('copyright_holder'),
       contentTags: {
         get() {
-          return this.changes.tags || [];
+          return intersection(...this.nodes.map(node => node.tags));
         },
-        set(value) {
-          if (this.viewOnly) return;
+        set(newValue, oldValue) {
+          if (!this.viewOnly) return;
 
           // If selecting a tag, clear the text field
-          if (value.length > this.changes.tags.length) this.tagText = null;
-          this.setTags(value);
+          if (newValue.length > oldValue.length) {
+            this.tagText = null;
+            this.addTags(difference(newValue, oldValue));
+          } else {
+            this.removeTags(difference(oldValue, newVale));
+          }
         },
       },
-      role: {
-        get() {
-          return this.changes.role_visibility.value || '';
-        },
-        set(value) {
-          this.update({ role_visibility: value });
-        },
+      role: generateGetterSetter('role_visibility'),
+      language: generateGetterSetter('language'),
+      mastery_model() {
+        return this.getExtraFieldsValueFromNodes('mastery_model');
       },
-      language: {
-        get() {
-          return this.changes.language.value;
-        },
-        set(value) {
-          this.update({ language: value });
-        },
+      m() {
+        return this.getExtraFieldsValueFromNodes('m');
       },
-      masteryModel: {
+      n() {
+        return this.getExtraFieldsValueFromNodes('n');
+      },
+      masteryModelItem: {
         get() {
           return {
-            mastery_model: this.changes.extra_fields.mastery_model.value,
-            m: this.changes.extra_fields.m.value,
-            n: this.changes.extra_fields.n.value,
+            mastery_model: this.mastery_model,
+            m: this.m,
+            n: this.n,
           };
         },
         set(value) {
           this.updateExtraFields(value);
         },
       },
-      license: {
+      license() {
+        return this.getValueFromNodes('license');
+      },
+      license_description() {
+        return this.getValueFromNodes('license_description');
+      },
+      licenseItem: {
         get() {
           return {
-            license: this.changes.license.value,
-            description: this.changes.license_description.value,
+            license: this.license,
+            license_description: this.license_description,
           };
         },
         set(value) {
-          this.update({ license: value.license, license_description: value.description });
+          this.update(value);
         },
       },
-
+      extra_fields() {
+        return this.getValueFromNodes('extra_fields');
+      },
       disableAuthEdits() {
-        return _.some(this.selected, { freeze_authoring_data: true });
+        return this.nodes.some(node => node.freeze_authoring_data);
       },
       oneSelected() {
-        return this.selected.length === 1;
+        return this.nodeIds.length === 1;
       },
       languageHint() {
         if (this.viewOnly) return '';
-        let topLevel = !_.some(this.selected, item => item && item.ancestors.length > 1);
+        let topLevel = this.nodes.some(node => node.parent === this.currentChannel.main_tree);
         return topLevel ? this.$tr('languageChannelHelpText') : this.$tr('languageHelpText');
       },
       copyrightHolderRequired() {
         // Needs to appear when any of the selected licenses require a copyright holder
-        return _.some(this.selected, node => {
-          return !!_.findWhere(Constants.Licenses, {
-            id: node.license,
-            copyright_holder_required: true,
-          });
+        return this.nodes.some(node => {
+          return Boolean(Constants.Licenses.find(license => license.id === node.license && license.copyright_holder_required));
         });
       },
       isImported() {
-        let selected = this.selected[0];
-        return selected && selected.node_id !== selected.original_source_node_id;
+        return this.firstNode && this.firstNode.node_id !== this.firstNode.original_source_node_id;
       },
       importUrl() {
-        let selected = this.selected[0];
-        let baseUrl = window.Urls.channel(selected.original_channel.id);
-        return baseUrl + '/' + selected.original_source_node_id;
+        return this.firstNode && window.Urls.channel(this.firstNode.original_channel.id); + '/' + this.firstNode.original_source_node_id;
       },
       importChannelName() {
-        let selected = this.selected[0];
-        return selected.original_channel.name;
-      },
-      newContent() {
-        return !!_.some(this.selected, { isNew: true });
+        return this.firstNode && this.firstNode.original_channel.name;
       },
       titleRules() {
         return [v => !!v || this.$tr('titleValidationMessage')];
@@ -429,58 +435,41 @@
         return [
           v =>
             this.disableAuthEdits ||
-            this.changes.copyright_holder.varied ||
-            !!v ||
+            !this.isUnique(this.copyright_holder) ||
+            Boolean(v) ||
             this.$tr('copyrightHolderValidationMessage'),
         ];
       },
     },
-    watch: {
-      changes() {
-        if (!this.viewOnly) {
-          this.$nextTick(this.handleValidation);
-        }
-      },
-    },
     methods: {
-      ...mapMutations('edit_modal', {
-        updateNode: 'UPDATE_NODE',
-        updateNodeExtraFields: 'UPDATE_EXTRA_FIELDS',
-        validateNodeDetails: 'VALIDATE_NODE_DETAILS',
-        setTags: 'SET_TAGS',
-      }),
+      ...mapMutations('contentNode', ['UPDATE_CONTENTNODES', 'ADD_TAGS', 'REMOVE_TAGS']),
       update(payload) {
-        // this mutation actually mutates all selected nodes
-        // TODO: consistent naming and behaviour of old and new mutations
-        this.updateNode(payload);
-
-        this.selectedIndices.forEach(nodeIdx => {
-          this.validateNodeDetails({ nodeIdx });
-        });
+        this.UPDATE_CONTENTNODES(this.nodeIds, payload);
       },
       updateExtraFields(payload) {
-        // this mutation actually mutates extra fields of all selected nodes
-        // TODO: consistent naming and behaviour of old and new mutations
-        this.updateNodeExtraFields(payload);
-
-        this.selectedIndices.forEach(nodeIdx => {
-          this.validateNodeDetails({ nodeIdx });
-        });
+        this.UPDATE_CONTENTNODES(this.nodeIds, { extra_fields: payload });
+      },
+      addTags(tags) {
+        this.ADD_TAGS(this.nodeIds, tags);
+      },
+      removeTags(tags) {
+        this.REMOVE_TAGS(this.nodeIds, tags);
+      },
+      isUnique(value) {
+        return value !== nonUniqueValue;
+      },
+      getValueFromNodes(key) {
+        let results = uniq(this.nodes.map(node => node[key]));
+        return getValueFromResults(results);
+      },
+      getExtraFieldsValueFromNodes(key) {
+        let results = uniq(this.nodes.map(node => node.extra_fields[key]));
+        return getValueFromResults(results);
       },
       getPlaceholder(field) {
-        return this.changes[field].varied || this.viewOnly
+        return this.isUnique(this[field]) || this.viewOnly
           ? this.$tr('variedFieldPlaceholder')
           : null;
-      },
-      getExtraFieldPlaceholder(field) {
-        return this.changes.extra_fields[field].varied || this.viewOnly
-          ? this.$tr('variedFieldPlaceholder')
-          : null;
-      },
-      handleValidation() {
-        this.$refs.form && this.newContent
-          ? this.$refs.form.resetValidation()
-          : this.$refs.form.validate();
       },
     },
     $trs: {

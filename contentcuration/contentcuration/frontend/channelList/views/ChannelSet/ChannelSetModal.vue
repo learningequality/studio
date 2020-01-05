@@ -240,7 +240,7 @@
       this.$refs.dialog.hideScroll();
     },
     methods: {
-      ...mapActions('channelList', ['loadChannelList']),
+      ...mapActions('channel', ['loadChannelList']),
       ...mapActions('channelSet', ['saveChannelSet', 'loadChannelSet']),
       ...mapMutations('channelSet', {
         updateChannelSet: 'UPDATE_CHANNELSET',

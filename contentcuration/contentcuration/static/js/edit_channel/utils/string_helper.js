@@ -1,29 +1,4 @@
 var i18n = require('../../utils/i18n');
-const State = require('edit_channel/state');
-
-function format_size(text) {
-  if (!text) {
-    return get_translation(messages, 'unit_bytes', '0');
-  }
-  var value = Number(text);
-  var prefix = value < 0 ? 'neg_' : '';
-  value = Math.abs(value);
-
-  var KB = parseFloat(1024);
-  var MB = parseFloat(Math.pow(KB, 2));
-  var GB = parseFloat(Math.pow(KB, 3));
-  var TB = parseFloat(Math.pow(KB, 4));
-
-  if (value < KB) return get_translation(messages, prefix + 'unit_bytes', Math.round(value));
-  else if (KB <= value && value < MB)
-    return get_translation(messages, prefix + 'unit_kilobytes', Math.round(parseFloat(value / KB)));
-  else if (MB <= value && value < GB)
-    return get_translation(messages, prefix + 'unit_megabytes', Math.round(parseFloat(value / MB)));
-  else if (GB <= value && value < TB)
-    return get_translation(messages, prefix + 'unit_gigabytes', Math.round(parseFloat(value / GB)));
-  else if (TB <= value)
-    return get_translation(messages, prefix + 'unit_terabytes', Math.round(parseFloat(value / TB)));
-}
 
 function escape_str(text) {
   return text
@@ -350,99 +325,47 @@ var messages = {
 
 var translate = i18n.createTranslator(namespace, messages);
 
-function format_count(text, count) {
-  var template = require('edit_channel/utils/hbtemplates/count.handlebars');
-  var div = document.createElement('DIV');
-  div.id = 'intl_wrapper';
-  var language = State.currentLanguage;
-  $(div).html(
-    template(
-      {
-        count: count,
-        text: text,
-      },
-      {
-        data: {
-          intl: {
-            locales: [(language && language.id) || 'en-US'],
-            messages: { count: '{count, plural,\n =0 {text}\n =1 {# {text}}\n other {# {text}s}}' },
-          },
-        },
-      }
-    )
-  );
-  var contents = div.innerHTML;
-  div.remove();
-  return contents;
-}
 
-function format_number(number) {
-  var template = require('edit_channel/utils/hbtemplates/number.handlebars');
-  var div = document.createElement('DIV');
-  div.id = 'intl_wrapper';
-  var language = State.currentLanguage;
-  $(div).html(
-    template(
-      {
-        number: number,
-      },
-      {
-        data: {
-          intl: {
-            locales: [(language && language.id) || 'en-US'],
-            messages: {},
-          },
-        },
-      }
-    )
-  );
-  var contents = div.innerHTML;
-  div.remove();
-  return contents;
-}
+const KB = parseFloat(1024);
+const MB = parseFloat(Math.pow(KB, 2));
+const GB = parseFloat(Math.pow(KB, 3));
+const TB = parseFloat(Math.pow(KB, 4));
 
-function get_translation(messages, message_id, data, data2, data3, data4) {
-  // Get dynamically generated messages
-  if (data !== undefined) {
-    var template = require('edit_channel/utils/hbtemplates/intl.handlebars');
-    var div = document.createElement('DIV');
-    div.id = 'intl_wrapper';
-    var language = State.currentLanguage;
-    var intl_data = {
-      intl: {
-        locales: [(language && language.id) || 'en-US'],
-        messages: messages,
-      },
-    };
-
-    $(div).html(
-      template(
-        {
-          data: data,
-          data2: data2,
-          data3: data3,
-          data4: data4,
-          message_id: message_id,
-        },
-        {
-          data: intl_data,
-        }
-      )
-    );
-    var contents = div.innerHTML;
-    div.remove();
-    return contents;
-  } else {
-    return messages[message_id];
+function format_size(text) {
+  let data;
+  let message;
+  if (!text) {
+    text = '0';
   }
+  let value = Number(text);
+  const prefix = value < 0 ? 'neg_' : '';
+  value = Math.abs(value);
+
+  if (value < KB) {
+    message = 'unit_bytes';
+    data = Math.round(value);
+  } else if (KB <= value && value < MB){
+    message = 'unit_kilobytes';
+    data = Math.round(parseFloat(value / KB));
+  }
+  else if (MB <= value && value < GB){
+    message = 'unit_megabytes';
+    data = Math.round(parseFloat(value / MB));
+  }
+  else if (GB <= value && value < TB){
+    message = 'unit_gigabytes';
+    data = Math.round(parseFloat(value / GB));
+  }
+  else if (TB <= value){
+    message = 'unit_terabytes';
+    data = Math.round(parseFloat(value / TB));
+  }
+  return translate(prefix + message, { data });
 }
 
 module.exports = {
   format_size: format_size,
   escape_str: escape_str,
-  format_count: format_count,
   translate: translate,
   unescape: unescape,
-  get_translation: get_translation,
-  format_number: format_number,
 };

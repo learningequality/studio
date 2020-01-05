@@ -49,7 +49,7 @@
       },
     },
     computed: {
-      ...mapGetters('channelList', ['getChannel']),
+      ...mapGetters('channel', ['getChannel']),
       channel() {
         return this.getChannel(this.channelId);
       },

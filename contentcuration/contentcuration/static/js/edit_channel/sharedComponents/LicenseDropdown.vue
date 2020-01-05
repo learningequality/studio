@@ -51,7 +51,7 @@
       :disabled="disabled"
       :placeholder="descriptionPlaceholder"
       :readonly="readonly"
-      :required="descriptionRequired"
+      :required="!readonly"
       :rules="descriptionRules"
     />
   </div>
@@ -105,10 +105,6 @@
         type: String,
         default: '',
       },
-      descriptionRequired: {
-        type: Boolean,
-        default: true,
-      },
     },
     computed: {
       license: {
@@ -118,16 +114,16 @@
         set(value) {
           this.$emit('input', {
             license: value,
-            description: this.value && this.value.description,
+            license_description: this.isCustom ? this.description : '',
           });
         },
       },
       description: {
         get() {
-          return this.value && this.value.description;
+          return this.value && this.value.license_description;
         },
         set(value) {
-          this.$emit('input', { license: this.value && this.value.license, description: value });
+          this.$emit('input', { license: this.value && this.value.license, license_description: this.isCustom ? value : '' });
         },
       },
       selectedLicense() {
@@ -148,7 +144,7 @@
         return this.required ? [v => !!v || this.$tr('licenseValidationMessage')] : [];
       },
       descriptionRules() {
-        return this.descriptionRequired
+        return this.isCustom && !this.readonly
           ? [v => !!v || this.$tr('descriptionValidationMessage')]
           : [];
       },

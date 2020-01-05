@@ -105,7 +105,7 @@
     },
     computed: {
       ...mapState(['currentLanguage']),
-      ...mapGetters('channelList', ['getChannel']),
+      ...mapGetters('channel', ['getChannel']),
       channel() {
         return this.getChannel(this.channelId) || {};
       },
@@ -175,8 +175,14 @@
       this.$refs.dialog.hideScroll();
     },
     methods: {
-      ...mapActions('channelList', ['saveChannel', 'loadChannel']),
-      ...mapMutations('channelList', {
+      ...mapActions('channel', [
+        'saveChannel',
+        'loadChannel',
+      ]),
+      ...mapActions('channelList', [
+        'loadChannelDetails',
+      ]),
+      ...mapMutations('channel', {
         updateChannel: 'UPDATE_CHANNEL',
       }),
       hideHTMLScroll(hidden) {

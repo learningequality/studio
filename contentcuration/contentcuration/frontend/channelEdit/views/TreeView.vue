@@ -1,14 +1,18 @@
 <template>
 
   <div>
-    <VTreeview v-if="nodes.length" :items="nodes" item-text="title" :selectable="true" :load-children="fetchChildren">
-      <template v-slot:label="{ item }">
-        <VBtn :to="editNodeLink(item.id)">
-          <ContentNodeIcon :kind="item.kind" />
-          <span>{{ item.title }}</span>
-        </VBtn>
-      </template>
-    </VTreeview>
+    <VBtn
+      v-if="canEdit"
+      color="primary"
+      fixed
+      right
+      fab
+      :title="$tr('addNode')"
+      @click="newContentNode"
+    >
+      <VIcon>add</VIcon>
+    </VBtn>
+    <StudioTree :nodeId="nodeId" :root="true"/>
     <router-view/>
   </div>
 
@@ -17,14 +21,15 @@
 
 <script>
 
-  import { mapActions, mapGetters } from 'vuex';
+  import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
+  import { generateTempId } from 'shared/utils';
   import { RouterNames } from '../constants';
-  import ContentNodeIcon from 'shared/views/ContentNodeIcon';
+  import StudioTree from './StudioTree';
 
   export default {
     name: 'TreeView',
     components: {
-      ContentNodeIcon
+      StudioTree,
     },
     props: {
       nodeId: {
@@ -33,32 +38,33 @@
       },
     },
     computed: {
-      ...mapGetters('contentNode', ['getContentNodeChildren']),
-      nodes() {
-        // The root nodes for the tree view
-        return this.getContentNodeChildren(this.nodeId);
-      },
-    },
-    created() {
-      return this.loadSummaryContentNodes({parent: this.nodeId});
+      ...mapGetters('currentChannel', ['canEdit']),
+      ...mapState({
+        language: state => state.session.currentLanguage,
+        preferences: state => state.session.preferences,
+      }),
     },
     methods: {
-      ...mapActions('contentNode', ['loadSummaryContentNodes']),
-      fetchChildren(node) {
-        return this.loadSummaryContentNodes({ parent: node.id }).then(nodes => {
-          node.children.push(...nodes);
-          return nodes;
+      ...mapMutations('contentNode', {
+        addContentNode: 'ADD_CONTENTNODE',
+        removeContentNode: 'REMOVE_CONTENTNODE',
+      }),
+      newContentNode() {
+        // Clear any previously existing dummy channelset
+        this.removeContentNode(this.newId);
+        this.newId = generateTempId();
+        this.addContentNode({
+          id: this.newId,
+          name: '',
+          description: '',
+          language: this.preferences ? this.preferences.language : this.language,
         });
+        this.$router.push({ name: RouterNames.CONTENTNODE_DETAILS, params: { detailNodeId: this.newId } });
       },
-      editNodeLink(id) {
-        return {
-          name: RouterNames.CONTENTNODE_DETAILS,
-          params: {
-            nodeId: id,
-          },
-        };
-      }
-    }
+    },
+    $trs: {
+      addNode: 'Add node',
+    },
   };
 
 </script>

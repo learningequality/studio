@@ -192,7 +192,7 @@
       };
     },
     computed: {
-      ...mapGetters('channelList', ['getChannel']),
+      ...mapGetters('channel', ['getChannel']),
       ...mapState({
         loggedIn: state => state.session.loggedIn,
       }),
@@ -231,7 +231,7 @@
       },
     },
     methods: {
-      ...mapActions('channelList', ['deleteChannel']),
+      ...mapActions('channel', ['deleteChannel']),
       handleDelete() {
         this.deleteChannel(this.channelId).then(() => {
           this.deleteDialog = false;

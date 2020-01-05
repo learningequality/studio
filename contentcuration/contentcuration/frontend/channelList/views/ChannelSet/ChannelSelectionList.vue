@@ -90,7 +90,7 @@
       };
     },
     computed: {
-      ...mapGetters('channelList', ['channels']),
+      ...mapGetters('channel', ['channels']),
       ...mapGetters('channelSet', ['getChannelSet']),
       channelSet() {
         return this.getChannelSet(this.channelSetId) || { channels: [] };
@@ -130,7 +130,7 @@
       });
     },
     methods: {
-      ...mapActions('channelList', ['loadChannelList']),
+      ...mapActions('channel', ['loadChannelList']),
       ...mapMutations('channelSet', {
         updateChannelSet: 'UPDATE_CHANNELSET',
       }),
