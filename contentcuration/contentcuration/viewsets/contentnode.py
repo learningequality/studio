@@ -5,19 +5,27 @@ from django.db.models import Exists
 from django.db.models import IntegerField
 from django.db.models import F
 from django.db.models import OuterRef
+from django.db.models import Q
 from django.db.models import Subquery
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
 from le_utils.constants import content_kinds
 from le_utils.constants import roles
+from rest_framework.serializers import ModelSerializer
 
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import File
 from contentcuration.models import generate_storage_url
 from contentcuration.viewsets.base import ValuesViewset
-from contentcuration.viewsets.base import WriteOnlySerializer
+
+
+class NotNullArrayAgg(ArrayAgg):
+    def convert_value(self, value, expression, connection, context):
+        if not value:
+            return []
+        return filter(lambda x: x is not None, value)
 
 
 class ContentNodeFilter(FilterSet):
@@ -51,7 +59,7 @@ class SQCount(Subquery):
     output_field = IntegerField()
 
 
-class ContentNodeSerializer(WriteOnlySerializer):
+class ContentNodeSerializer(ModelSerializer):
     """
     This is a write only serializer - we leverage it to do create and update
     operations, but read operations are handled by the Viewset.
@@ -157,9 +165,11 @@ class ContentNodeViewSet(ValuesViewset):
         "title",
         "description",
         "author",
+        "file_ids",
+        "assessment_items_ids",
+        "prerequisite_ids",
         "provider",
         "aggregator",
-        "copyright_holder",
         "content_tags",
         "role_visibility",
         "language_id",
@@ -177,6 +187,9 @@ class ContentNodeViewSet(ValuesViewset):
         "language": "language_id",
         "license": "license_id",
         "tags": clean_content_tags,
+        "files": "file_ids",
+        "prerequisite": "prerequisite_ids",
+        "assessment_items": "assessment_items_ids",
     }
 
     def get_queryset(self):
@@ -184,5 +197,12 @@ class ContentNodeViewSet(ValuesViewset):
         return self.prefetch_queryset(queryset)
 
     def annotate_queryset(self, queryset):
-        queryset = queryset.annotate(content_tags=ArrayAgg("tags__tag_name"))
+        queryset = queryset.annotate(content_tags=NotNullArrayAgg("tags__tag_name"))
+        queryset = queryset.annotate(file_ids=NotNullArrayAgg("files__id"))
+        queryset = queryset.annotate(
+            prerequisite_ids=NotNullArrayAgg("prerequisite__id")
+        )
+        queryset = queryset.annotate(
+            assessment_items_ids=NotNullArrayAgg("assessment_items__id")
+        )
         return queryset

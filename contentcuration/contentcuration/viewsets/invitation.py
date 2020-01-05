@@ -10,10 +10,9 @@ from rest_framework_bulk import BulkSerializerMixin
 from contentcuration.models import Invitation
 from contentcuration.models import User
 from contentcuration.viewsets.base import ValuesViewset
-from contentcuration.viewsets.base import WriteOnlySerializer
 
 
-class InvitationSerializer(BulkSerializerMixin, WriteOnlySerializer):
+class InvitationSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     accepted = serializers.BooleanField(default=False)
 
     class Meta:

@@ -6,10 +6,9 @@ from rest_framework import serializers
 from contentcuration.models import Channel
 from contentcuration.models import ChannelSet
 from contentcuration.viewsets.base import ValuesViewset
-from contentcuration.viewsets.base import WriteOnlySerializer
 
 
-class ChannelSetSerializer(WriteOnlySerializer):
+class ChannelSetSerializer(serializers.ModelSerializer):
     channels = serializers.PrimaryKeyRelatedField(
         many=True, queryset=Channel.objects.all()
     )
