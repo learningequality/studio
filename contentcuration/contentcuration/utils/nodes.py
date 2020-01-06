@@ -17,7 +17,6 @@ from django.db.models import Q
 from django.db.models.aggregates import Count
 from django.db.models.aggregates import Max
 from django.db.models.expressions import Case
-from django.db.models.expressions import CombinedExpression
 from django.db.models.expressions import F
 from django.db.models.expressions import Value
 from django.db.models.expressions import When
@@ -27,6 +26,7 @@ from django_cte import With
 from le_utils.constants import content_kinds
 from le_utils.constants import roles
 
+from contentcuration.db.models.expressions import BooleanComparison
 from contentcuration.db.models.expressions import WhenQ
 from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
@@ -393,10 +393,6 @@ def move_node(node, parent=None, sort_order=None, channel_id=None):
     return node
 
 
-def filter_condition(lhs, comparator, rhs):
-    return CombinedExpression(lhs, comparator, rhs, output_field=BooleanField())
-
-
 class MetadataAnnotation(object):
     requires_cte = False
     cte_columns = ()
@@ -436,8 +432,8 @@ class DescendantAnnotation(MetadataAnnotation):
             right_op = '<'
 
         return [
-            filter_condition(cte.col.lft, left_op, F('lft')),
-            filter_condition(cte.col.lft, right_op, F('rght')),
+            BooleanComparison(cte.col.lft, left_op, F('lft')),
+            BooleanComparison(cte.col.lft, right_op, F('rght')),
         ]
 
     def get_condition(self, cte):
@@ -458,7 +454,7 @@ class ResourceCount(DescendantAnnotation):
 
     def resolve_conditions(self, cte):
         conditions = super(ResourceCount, self).resolve_conditions(cte)
-        conditions.append(filter_condition(cte.col.kind_id, '!=', Value(content_kinds.TOPIC)))
+        conditions.append(BooleanComparison(cte.col.kind_id, '!=', Value(content_kinds.TOPIC)))
         return conditions
 
 
@@ -476,7 +472,7 @@ class CoachCount(DescendantAnnotation):
 
     def resolve_conditions(self, cte):
         conditions = super(CoachCount, self).resolve_conditions(cte)
-        conditions.append(filter_condition(cte.col.role_visibility, '=', Value(roles.COACH)))
+        conditions.append(BooleanComparison(cte.col.role_visibility, '=', Value(roles.COACH)))
         return conditions
 
 
@@ -513,7 +509,7 @@ class SortOrderMax(DescendantAnnotation):
 
     def resolve_conditions(self, cte):
         return [
-            filter_condition(cte.col.parent_id, '=', F('id'))
+            BooleanComparison(cte.col.parent_id, '=', F('id'))
         ]
 
 
@@ -581,7 +577,7 @@ class Metadata(object):
             )
             query = cte.join(ContentNode, tree_id=cte.col.tree_id).with_cte(cte)
         else:
-            query = ContentNode.objects
+            query = ContentNode.objects.all()
 
         query = query.filter(pk__in=self.node_pks)\
             .values('id')\
