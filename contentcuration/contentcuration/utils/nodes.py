@@ -563,6 +563,9 @@ class Metadata(object):
         cte_columns = ['tree_id']
 
         for field_name, annotation in self.annotations.items():
+            if not isinstance(annotation, MetadataAnnotation):
+                continue
+
             if annotation.requires_cte:
                 requires_cte = True
 
@@ -585,6 +588,7 @@ class Metadata(object):
             .values('id')\
             .annotate(**{
                 field_name: annotation.get_annotation(cte)
+                if isinstance(annotation, MetadataAnnotation) else annotation
                 for field_name, annotation in self.annotations.items()
             })
 
