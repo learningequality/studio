@@ -16,5 +16,5 @@ from contentcuration.models import ContentNode
 
 mixer.register(
     ContentNode,
-    extra_fields=lambda: {'a':1, 'b': 2, 'c':{'d':3}}
+    extra_fields=lambda: {'a': 1, 'b': 2, 'c': {'d': 3}}
 )
