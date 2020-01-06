@@ -9,11 +9,11 @@ from .base import StudioTestCase
 from .testdata import base64encoding
 from .testdata import channel
 from .testdata import node
-from contentcuration.tests.utils import mixer
 from contentcuration.models import Channel
 from contentcuration.models import ChannelSet
 from contentcuration.models import generate_storage_url
 from contentcuration.models import SecretToken
+from contentcuration.tests.testutils import mixer
 
 
 class PublicChannelsTestCase(StudioTestCase):

@@ -12,7 +12,7 @@ from django.core.files.storage import default_storage
 from le_utils.constants import format_presets
 
 from contentcuration import models as cc
-from contentcuration.tests.utils import mixer
+from contentcuration.tests.testutils import mixer
 
 pytestmark = pytest.mark.django_db
 
@@ -114,7 +114,8 @@ def node(data, parent=None):
             parent=parent,
             title=data['title'],
             node_id=data['node_id'],
-            content_id=data.get('content_id') or data['node_id']
+            content_id=data.get('content_id') or data['node_id'],
+            sort_order=data.get('sort_order', 1),
         )
         new_node.save()
 
@@ -130,6 +131,7 @@ def node(data, parent=None):
             node_id=data['node_id'],
             license=license_wtfpl(),
             content_id=data.get('content_id') or data['node_id'],
+            sort_order=data.get('sort_order', 1),
         )
         new_node.save()
         video_file = fileobj_video(contents="Video File")
@@ -153,6 +155,7 @@ def node(data, parent=None):
             license=license_wtfpl(),
             extra_fields=extra_fields,
             content_id=data.get('content_id') or data['node_id'],
+            sort_order=data.get('sort_order', 1),
         )
         new_node.save()
         for assessment_item in data['assessment_items']:
