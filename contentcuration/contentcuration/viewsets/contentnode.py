@@ -173,6 +173,7 @@ class ContentNodeViewSet(ValuesViewset):
         "content_tags",
         "role_visibility",
         "language_id",
+        "lft",
         "license_id",
         "license_description",
         "copyright_holder",
@@ -190,6 +191,7 @@ class ContentNodeViewSet(ValuesViewset):
         "files": "file_ids",
         "prerequisite": "prerequisite_ids",
         "assessment_items": "assessment_items_ids",
+        "sort_order": "lft",
     }
 
     def get_queryset(self):

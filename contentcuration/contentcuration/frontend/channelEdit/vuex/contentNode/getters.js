@@ -1,11 +1,17 @@
 import flatMap from 'lodash/flatMap';
+import sortBy from 'lodash/sortBy';
 import uniq from 'lodash/uniq';
 import uniqBy from 'lodash/uniqBy';
 import { contentNodeLastSavedState } from './index';
 import { isTempId } from 'shared/utils';
 
+function sorted(nodes) {
+  return sortBy(nodes, ['sort_order']);
+}
+
+
 export function contentNodes(state) {
-  return Object.values(state.contentNodesMap).filter(contentNode => !isTempId(contentNode.id));
+  return sorted(Object.values(state.contentNodesMap).filter(contentNode => !isTempId(contentNode.id)));
 }
 
 export function getContentNode(state) {
@@ -16,13 +22,13 @@ export function getContentNode(state) {
 
 export function getContentNodes(state) {
   return function (contentNodeIds) {
-    return contentNodeIds.map(id => getContentNode(state)(id)).filter(node => node);
+    return sorted(contentNodeIds.map(id => getContentNode(state)(id)).filter(node => node));
   };
 }
 
 export function getContentNodeChildren(state) {
   return function(contentNodeId) {
-    return Object.values(state.contentNodesMap).filter(contentNode => contentNode.parent === contentNodeId);
+    return sorted(Object.values(state.contentNodesMap).filter(contentNode => contentNode.parent === contentNodeId));
   };
 }
 
