@@ -271,14 +271,10 @@
         this.debouncedSave();
       },
       closeModal() {
-        this.debouncedSave.cancel();
-        this.dismissPrompt();
-        this.dialog = false;
-        this.lastSaved = null;
-        this.savedMessage = '';
-        this.reset();
-        this.$emit('modalclosed');
-        // TODO: Update router
+        this.$router.push({
+          name: RouterNames.TREE_VIEW,
+          params: { nodeId: this.$route.params.nodeId },
+        });
       },
       copyContent() {
         if (_.some(this.nodes, n => n.prerequisite.length || n.is_prerequisite_of.length)) {
