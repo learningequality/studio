@@ -15,8 +15,8 @@
             clear
           </VIcon>
         </VBtn>
-        <VToolbarTitle class="notranslate">
-          {{ channel.name }}
+        <VToolbarTitle v-if="isNewChannel">
+          {{ $tr('newChannelHeader') }}
         </VToolbarTitle>
         <VSpacer />
         <VBtn flat @click="save">
@@ -33,49 +33,42 @@
       <VCardText v-else>
         <VLayout row justify-center>
           <VFlex md12 lg10 xl8>
-            <VLayout row wrap>
-              <VFlex xs12 sm12 md3>
-                <VContainer fluid>
-                  <ThumbnailUpload
-                    v-model="thumbnail"
-                    :aspect-ratio="16/9"
-                    max-width="350px"
-                  />
-                </VContainer>
-              </VFlex>
-              <VFlex xs12 sm12 md8>
-                <h1 class="title">
-                  {{ $tr('details') }}
-                </h1>
-                <VForm ref="detailsform">
-                  <VTextField
-                    v-model="name"
-                    outline
-                    :label="$tr('channelName')"
-                    :placeholder="$tr('channelNamePlaceholder')"
-                    :rules="[() => name.length ? true : $tr('channelError')]"
-                    required
-                  />
-                  <LanguageDropdown
-                    v-model="language"
-                    class="notranslate"
-                    outline
-                    :placeholder="$tr('channelLanguagePlaceholder')"
-                    required
-                  />
-                  <VTextarea
-                    v-model="description"
-                    outline
-                    :label="$tr('channelDescription')"
-                    :placeholder="$tr('channelDescriptionPlaceholder')"
-                    maxlength="400"
-                    rows="4"
-                    auto-grow
-                    counter
-                  />
-                </VForm>
-              </VFlex>
-            </VLayout>
+            <VForm ref="detailsform">
+              <ThumbnailUpload
+                v-model="thumbnail"
+                :aspect-ratio="16/9"
+                max-width="350px"
+              />
+              <h1 class="title">
+                {{ $tr('details') }}
+              </h1>
+
+              <VTextField
+                v-model="name"
+                outline
+                :label="$tr('channelName')"
+                :placeholder="$tr('channelNamePlaceholder')"
+                :rules="[() => name.length ? true : $tr('channelError')]"
+                required
+              />
+              <LanguageDropdown
+                v-model="language"
+                class="notranslate"
+                outline
+                :placeholder="$tr('channelLanguagePlaceholder')"
+                required
+              />
+              <VTextarea
+                v-model="description"
+                outline
+                :label="$tr('channelDescription')"
+                :placeholder="$tr('channelDescriptionPlaceholder')"
+                maxlength="400"
+                rows="4"
+                auto-grow
+                counter
+              />
+            </VForm>
           </VFlex>
         </VLayout>
       </VCardText>
@@ -90,6 +83,7 @@
 
   import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
   import pick from 'lodash/pick';
+  import { isTempId } from '../../utils';
   import { RouterNames } from '../../constants';
   import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown';
   import ThumbnailUpload from 'shared/views/ThumbnailUpload';
@@ -153,6 +147,9 @@
         set(thumbnailData) {
           this.updateChannel({ id: this.channelId, thumbnailData });
         },
+      },
+      isNewChannel() {
+        return isTempId(this.channelId);
       },
     },
     watch: {
@@ -229,6 +226,7 @@
       },
     },
     $trs: {
+      newChannelHeader: 'New channel',
       details: 'Channel details',
       channelName: 'Name',
       channelError: 'Channel name cannot be blank',
