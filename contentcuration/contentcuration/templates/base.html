@@ -66,12 +66,6 @@
             <script src="{% url 'js_reverse' %}" type="text/javascript"></script>
         {% endif %}
 
-      <script>
-        var user = "{{ current_user }}" !== "False" && JSON.parse("{{ current_user|escapejs }}");
-        var user_preferences = "{{ user_preferences }}" !== "False" && JSON.parse("{{ user_preferences|escapejs }}");
-        var url = "{% url 'channels' %}";
-      </script>
-
         <!-- fullstory integration, only on develop until we add an opt-in option. -->
         {% if request.get_host == 'develop.studio.learningequality.org' %}
         <script>
@@ -94,6 +88,13 @@
         </script>
         {% endif %}
         {% endcache %}
+
+        <!-- Session variables (need to keep outside of cache) -->
+        <script>
+          var user = "{{ current_user }}" !== "False" && JSON.parse("{{ current_user|escapejs }}");
+          var user_preferences = "{{ user_preferences }}" !== "False" && JSON.parse("{{ user_preferences|escapejs }}");
+          var url = "{% url 'channels' %}";
+        </script>
       {% endblock head %}
 
       {% block analytics %}
@@ -113,7 +114,7 @@
       {% endblock %}
   </head>
   <body data-app>
-      {% block nav %}
+    {% block nav %}
       <!-- Navigation bar -->
     {% if INCIDENT %}
       <div id="emergency-banner" class="text-center main-banner {% if INCIDENT.readonly %}error-banner{% else %}warning-banner{% endif %}">

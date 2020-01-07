@@ -100,10 +100,8 @@ def get_or_set_cached_constants(constant, serializer):
     return constant_data
 
 
-# @login_required
 @browser_is_supported
 @has_accepted_policies
-# @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((AllowAny,))
 def channel_list(request):
     current_user = not request.user.is_anonymous() and JSONRenderer().render(UserChannelListSerializer(request.user).data)
