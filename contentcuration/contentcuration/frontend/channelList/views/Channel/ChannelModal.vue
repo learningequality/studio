@@ -228,10 +228,10 @@
     $trs: {
       newChannelHeader: 'New channel',
       details: 'Channel details',
-      channelName: 'Name',
+      channelName: 'Channel name',
       channelError: 'Channel name cannot be blank',
       channelNamePlaceholder: 'Enter channel name...',
-      channelDescription: 'Description',
+      channelDescription: 'Channel description',
       channelDescriptionPlaceholder: 'Enter channel description...',
       channelLanguagePlaceholder: 'Select a language...',
       save: 'Save changes',

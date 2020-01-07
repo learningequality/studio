@@ -1,58 +1,65 @@
 <template>
 
-  <VCard class="my-3" :to="channelSetDetailsLink">
-    <VCardTitle>
-      <VLayout column justify-space-between fill-height>
-        <VFlex xs12 class="grey--text">
-          {{ $tr('channelCount', {'count': channelSet.channels.length}) }}
-        </VFlex>
-        <VFlex xs12>
-          <h3 class="headline mb-0">
-            {{ channelSet.name }}
-          </h3>
-        </VFlex>
-        <VFlex xs12>
-          {{ channelSet.description }}
-        </VFlex>
-      </VLayout>
-    </VCardTitle>
-    <VCardActions>
-      <VSpacer />
-      <VBtn
-        flat
-        color="error"
-        @click.prevent="deleteDialog=true"
-      >
-        {{ $tr('deleteChannelSetTitle') }}
-      </VBtn>
-      <VBtn
-        flat
-        color="primary"
-        :to="channelSetDetailsLink"
-      >
-        {{ $tr('edit') }}
-      </VBtn>
-    </VCardActions>
-    <PrimaryDialog v-model="deleteDialog" :title="$tr('deleteChannelSetTitle')">
-      {{ $tr('deleteChannelSetText') }}
-      <template v-slot:actions>
-        <VSpacer />
-        <VBtn
-          color="primary"
-          flat
-          @click="deleteDialog=false"
-        >
-          {{ $tr('cancel') }}
-        </VBtn>
-        <VBtn
-          color="primary"
-          @click="deleteChannelSet(channelSet.id)"
-        >
-          {{ $tr('deleteChannelSetTitle') }}
-        </VBtn>
-      </template>
-    </PrimaryDialog>
-  </VCard>
+  <tr>
+    <td class="notranslate">
+      {{ channelSet.name }}
+    </td>
+    <td>
+      <CopyToken :token="channelSet.secret_token" />
+    </td>
+    <td class="text-xs-right">
+      {{ $formatNumber(channelSet.channels.length) }}
+    </td>
+    <td class="text-xs-right">
+      <VMenu offset-y>
+        <template v-slot:activator="{ on }">
+          <VBtn flat block v-on="on">
+            {{ $tr('options') }}
+            <VIcon class="notranslate">
+              arrow_drop_down
+            </VIcon>
+          </VBtn>
+        </template>
+        <VList>
+          <VListTile :to="channelSetDetailsLink">
+            <VListTileAction>
+              <VIcon class="notranslate">
+                edit
+              </VIcon>
+            </VListTileAction>
+            <VListTileTitle>{{ $tr('edit') }}</VListTileTitle>
+          </VListTile>
+          <VListTile @click.prevent="deleteDialog=true">
+            <VListTileAction>
+              <VIcon class="notranslate">
+                delete
+              </VIcon>
+            </VListTileAction>
+            <VListTileTitle>{{ $tr('delete') }}</VListTileTitle>
+          </VListTile>
+        </VList>
+      </VMenu>
+      <PrimaryDialog v-model="deleteDialog" :title="$tr('deleteChannelSetTitle')">
+        {{ $tr('deleteChannelSetText') }}
+        <template v-slot:actions>
+          <VSpacer />
+          <VBtn
+            color="primary"
+            flat
+            @click="deleteDialog=false"
+          >
+            {{ $tr('cancel') }}
+          </VBtn>
+          <VBtn
+            color="primary"
+            @click="deleteChannelSet(channelSet.id)"
+          >
+            {{ $tr('deleteChannelSetTitle') }}
+          </VBtn>
+        </template>
+      </PrimaryDialog>
+    </td>
+  </tr>
 
 </template>
 
@@ -61,11 +68,13 @@
   import { mapActions } from 'vuex';
   import { RouterNames } from '../../constants';
   import PrimaryDialog from 'shared/views/PrimaryDialog';
+  import CopyToken from 'shared/views/CopyToken';
 
   export default {
     name: 'ChannelSetItem',
     components: {
       PrimaryDialog,
+      CopyToken,
     },
     props: {
       channelSet: {
@@ -92,9 +101,10 @@
     $trs: {
       deleteChannelSetTitle: 'Delete',
       deleteChannelSetText: 'Are you sure you want to delete this channel collection?',
-      channelCount: '{count, plural,\n =1 {# Channel}\n other {# Channels}}',
       cancel: 'Cancel',
       edit: 'Edit collection',
+      delete: 'Delete collection',
+      options: 'Options',
     },
   };
 
@@ -102,5 +112,9 @@
 
 
 <style lang="less" scoped>
+
+  td {
+    font-size: 12pt !important;
+  }
 
 </style>

@@ -1,24 +1,16 @@
 <template>
 
   <VContainer fluid>
-    <VBtn
-      v-if="!loading"
-      color="primary"
-      fixed
-      right
-      fab
-      :title="$tr('addChannelSetTitle')"
-      @click="newChannelSet"
-    >
-      <VIcon>add</VIcon>
-    </VBtn>
+
     <VLayout row wrap justify-center>
-      <VFlex xs12 sm10 md6>
-        <VLayout row wrap justify-space-between>
-          <VFlex xs2>
+      <VFlex xs12 sm10 md8 lg10>
+        <VLayout row wrap justify-space-between class="list-actions">
+          <VFlex>
             <VBtn flat color="primary" @click="infoDialog=true">
-              <VIcon>info</VIcon>
-              {{ $tr('aboutChannelSets') }}
+              <VIcon class="notranslate">
+                info
+              </VIcon>
+              &nbsp;{{ $tr('aboutChannelSets') }}
             </VBtn>
             <PrimaryDialog v-model="infoDialog" :title="$tr('aboutChannelSets')">
               <p>
@@ -37,6 +29,16 @@
               </template>
             </PrimaryDialog>
           </VFlex>
+          <VSpacer />
+          <VFlex class="text-xs-right">
+            <VBtn
+              v-if="!loading"
+              color="primary"
+              @click="newChannelSet"
+            >
+              {{ $tr('addChannelSetTitle') }}
+            </VBtn>
+          </VFlex>
         </VLayout>
         <VLayout row justify-center>
           <VFlex xs12>
@@ -49,15 +51,21 @@
                 {{ $tr('loading') }}
               </p>
             </template>
-            <p v-else-if="channelSets && !channelSets.length" class="headline mb-0">
+            <p v-else-if="channelSets && !channelSets.length" class="text-xs-center mb-0">
               {{ $tr('noChannelSetsFound') }}
             </p>
             <template v-else>
-              <ChannelSetItem
-                v-for="channelSet in channelSets"
-                :key="channelSet.id"
-                :channelSet="channelSet"
-              />
+              <VDataTable
+                :headers="headers"
+                :items="channelSets"
+                hide-actions
+              >
+                <template v-slot:items="props">
+                  <ChannelSetItem
+                    :channelSet="props.item"
+                  />
+                </template>
+              </VDataTable>
             </template>
             <keep-alive>
               <router-view v-if="$route.params.channelSetId" :key="$route.params.channelSetId" />
@@ -93,6 +101,14 @@
     },
     computed: {
       ...mapGetters('channelSet', ['channelSets']),
+      headers() {
+        return [
+          { text: this.$tr('title'), value: 'name' },
+          { text: this.$tr('token'), value: 'secret_token', width: '200px' },
+          { text: this.$tr('channelNumber'), sortable: false, align: 'right', width: '50px' },
+          { text: this.$tr('options'), sortable: false, align: 'center', width: '100px' },
+        ];
+      },
     },
     mounted() {
       this.loadChannelSetList().then(() => {
@@ -126,7 +142,7 @@
       cancelButtonLabel: 'Close',
       noChannelSetsFound:
         'You can package together multiple Studio channels to create a collection. Use a collection token to make multiple channels available for import at once in Kolibri!',
-      addChannelSetTitle: 'Create a new collection of channels',
+      addChannelSetTitle: 'New collection',
       aboutChannelSets: 'About Collections',
       channelSetsDescriptionText:
         'A collection is a package of multiple Studio channels all associated with one ' +
@@ -137,6 +153,10 @@
         'want to package together. Remember to give your collection a title.',
       channelSetsDisclaimer:
         'You will need Kolibri version 0.12.0 or higher to import channel collections',
+      title: 'Collection title',
+      token: 'Token ID',
+      channelNumber: 'Number of channels',
+      options: 'Options',
     },
   };
 
@@ -145,5 +165,11 @@
 
 <style lang="less" scoped>
 
+  .list-actions {
+    margin-bottom: 32px;
+    .v-btn {
+      margin: 0;
+    }
+  }
 
 </style>
