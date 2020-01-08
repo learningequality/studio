@@ -1,18 +1,23 @@
 import json
 
 from django.contrib.postgres.aggregates import ArrayAgg
+from django.db import transaction
 from django.db.models import Exists
 from django.db.models import IntegerField
 from django.db.models import F
 from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models import Subquery
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
 from le_utils.constants import content_kinds
 from le_utils.constants import roles
+from rest_framework.decorators import detail_route
+from rest_framework.response import Response
 from rest_framework.serializers import ModelSerializer
+from rest_framework.serializers import ValidationError
 
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
@@ -208,3 +213,35 @@ class ContentNodeViewSet(ValuesViewset):
             assessment_items_ids=NotNullArrayAgg("assessment_items__id")
         )
         return queryset
+
+    @detail_route(methods=["post"])
+    def move_node(self, pk):
+        contentnode = get_object_or_404(ContentNode, pk=pk)
+        target = self.request.data.pop("target", None)
+        if target is None:
+            raise ValidationError("A target content node must be specified")
+        try:
+            target = ContentNode.get(pk=target)
+        except ContentNode.DoesNotExist:
+            raise ValidationError(
+                "Target content node: {} does not exist".format(target)
+            )
+        except ValueError:
+            raise ValidationError(
+                "Invalid target content node specified: {}".format(target)
+            )
+        position = self.request.data.pop("position", "first-child")
+        try:
+            with transaction.atomic():
+                # Lock only MPTT columns for updates on this tree and the target tree
+                # until the end of this transaction
+                ContentNode.objects.select_for_update().order_by().filter(
+                    Q(tree_id=contentnode.tree_id) | Q(tree_id=target.tree_id)
+                ).values("tree_id", "lft", "rght")
+                contentnode.move_to(target, position)
+
+        except ValueError:
+            raise ValidationError(
+                "Invalid position argument specified: {}".format(position)
+            )
+        return Response({})
