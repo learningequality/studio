@@ -26,11 +26,12 @@ class ChannelFilter(FilterSet):
     edit = BooleanFilter(method="filter_edit")
     view = BooleanFilter(method="filter_view")
     bookmark = BooleanFilter(method="filter_bookmark")
+    published = BooleanFilter(method="filter_published")
     ids = CharFilter(method="filter_ids")
 
     class Meta:
         model = Channel
-        fields = ("edit", "view", "public", "bookmark", "ids")
+        fields = ("edit", "view", "public", "bookmark", "published", "ids")
 
     def filter_edit(self, queryset, name, value):
         return queryset.filter(edit=True)
@@ -40,6 +41,9 @@ class ChannelFilter(FilterSet):
 
     def filter_bookmark(self, queryset, name, value):
         return queryset.filter(bookmark=True)
+
+    def filter_published(self, queryset, name, value):
+        return queryset.filter(main_tree__published=True)
 
     def filter_ids(self, queryset, name, value):
         try:

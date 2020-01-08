@@ -8,7 +8,13 @@
           :key="listType.id"
           :to="getChannelLink(listType)"
         >
-          <span v-if="listType === 'STARRED'"></span>
+          <VIcon
+            v-if="listType === 'bookmark'"
+            style="margin-right: 8px;"
+            class="notranslate"
+          >
+            star
+          </VIcon>
           {{ $tr(listType) }}
         </VTab>
         <VTab :to="catalogLink">
@@ -60,7 +66,7 @@
       }),
       ...mapGetters('channelList', ['invitations']),
       lists() {
-        return Object.values(ListTypes);
+        return Object.values(ListTypes).filter(l => l !== 'public');
       },
       channelSetLink() {
         return { name: RouterNames.CHANNEL_SETS };
@@ -114,6 +120,11 @@
     .v-toolbar__title,
     .v-chip__content {
       font-family: 'Noto Sans' !important;
+    }
+    .v-btn--flat,
+    .v-tabs__item {
+      font-weight: bold;
+      cursor: pointer;
     }
   }
 

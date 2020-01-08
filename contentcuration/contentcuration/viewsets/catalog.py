@@ -39,6 +39,7 @@ class ChannelFilter(FilterSet):
     assessments = BooleanFilter(method="filter_assessments")
     subtitles = BooleanFilter(method="filter_subtitles")
     bookmark = BooleanFilter(method="filter_bookmarked")
+    published = BooleanFilter(method="filter_published")
 
     def __init__(self, *args, **kwargs):
         super(ChannelFilter, self).__init__(*args, **kwargs)
@@ -48,7 +49,7 @@ class ChannelFilter(FilterSet):
 
     class Meta:
         model = Channel
-        fields = ("keywords", "language", "licenses", "kinds", "coach", "assessments", "subtitles", "bookmark")
+        fields = ("keywords", "published", "language", "licenses", "kinds", "coach", "assessments", "subtitles", "bookmark")
 
     def filter_keywords(self, queryset, name, value):
         keywords_query = (
@@ -66,6 +67,9 @@ class ChannelFilter(FilterSet):
             Q(pk__istartswith=value) | Q(primary_token=value.replace('-', '')) |
             Q(keyword_match_count__gt=0)
         )
+
+    def filter_published(self, queryset, name, value):
+        return queryset.filter(main_tree__published=True)
 
     def filter_language(self, queryset, name, value):
         language_query = (

@@ -32,6 +32,13 @@
           :label="$tr('starredLabel')"
         />
 
+        <!-- Published -->
+        <VCheckbox
+          v-model="published"
+          color="primary"
+          :label="$tr('publishedLabel')"
+        />
+
         <!-- Keyword search -->
         <VTextField
           :value="keywords"
@@ -223,6 +230,14 @@
           this.setQueryParam('bookmark', value);
         },
       },
+      published: {
+        get() {
+          return this.$route.query.published;
+        },
+        set(value) {
+          this.setQueryParam('published', value);
+        },
+      },
     },
     methods: {
       setKeywords(event) {
@@ -265,6 +280,7 @@
       licenseLabel: 'Licenses',
       formatLabel: 'Formats',
       includesLabel: 'Includes',
+      publishedLabel: 'Published',
       searchText:
         '{count, plural,\n =0 {Search} \n =1 {Search (# filter)}\n other {Search (# filters)}}',
     },

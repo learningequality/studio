@@ -131,7 +131,7 @@
       },
       loadData(listType) {
         this.loading = true;
-        this.loadChannelList({ payload: listType }).then(() => {
+        this.loadChannelList({ listType: listType }).then(() => {
           this.loading = false;
         });
       },
