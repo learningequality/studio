@@ -11,6 +11,19 @@ export function loadChannelSetList(context) {
   });
 }
 
+export function loadChannelSet(context, id) {
+  return client
+    .get(window.Urls['channelset-detail'](id))
+    .then(response => {
+      const channelSet = response.data;
+      context.commit('SET_CHANNELSET_LIST', [channelSet]);
+      return channelSet;
+    })
+    .catch(() => {
+      return;
+    });
+}
+
 export function deleteChannelSet(context, channelSetId) {
   return client.delete(window.Urls['channelset-detail'](channelSetId)).then(() => {
     context.commit('REMOVE_CHANNELSET', channelSetId);

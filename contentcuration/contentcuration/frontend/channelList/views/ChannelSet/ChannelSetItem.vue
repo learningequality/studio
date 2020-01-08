@@ -8,7 +8,7 @@
       <CopyToken :token="channelSet.secret_token" />
     </td>
     <td class="text-xs-right">
-      {{ $formatNumber(channelSet.channels.length) }}
+      {{ $formatNumber(channelCount) }}
     </td>
     <td class="text-xs-right">
       <VMenu offset-y>
@@ -93,6 +93,9 @@
           name: RouterNames.CHANNEL_SET_DETAILS,
           params: { channelSetId: this.channelSet.id },
         };
+      },
+      channelCount() {
+        return this.channelSet.channels.filter(c => c).length;
       },
     },
     methods: {

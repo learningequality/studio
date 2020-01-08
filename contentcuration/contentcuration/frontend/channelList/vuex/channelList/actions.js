@@ -3,10 +3,10 @@ import { channelLastSavedState } from './index';
 import client from 'shared/client';
 
 /* CHANNEL LIST ACTIONS */
-export function loadChannelList(context, listType) {
-  const params = {};
-  if (listType) {
-    params[listType] = true;
+export function loadChannelList(context, payload) {
+  const params = payload || {};
+  if (payload && payload.listType) {
+    params[payload.listType] = true;
   }
   return client.get(window.Urls['channel-list'](), { params }).then(response => {
     const channels = response.data;

@@ -171,5 +171,8 @@
       margin: 0;
     }
   }
+  /deep/ .v-datatable {
+    background-color: transparent !important;
+  }
 
 </style>
