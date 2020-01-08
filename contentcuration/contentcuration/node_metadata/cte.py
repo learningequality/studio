@@ -61,11 +61,11 @@ class FileMetadataCTE(MetadataCTE):
         files = nodes.values(
             'content_id',
             **{column: F('files__{}'.format(column)) for column in columns}
-        )
+        ).distinct()
         assessment_files = nodes.values(
             'content_id',
             **{column: F('assessment_items__files__{}'.format(column)) for column in columns}
-        )
+        ).distinct()
 
         return With(files.union(assessment_files).values(*columns), name='file_cte')
 
