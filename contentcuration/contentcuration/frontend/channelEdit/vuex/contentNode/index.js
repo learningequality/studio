@@ -7,9 +7,16 @@ export const contentNodeLastSavedState = lastSavedStateFactory();
 
 export default {
   namespaced: true,
-  state: () => ({
-    contentNodesMap: {},
-  }),
+  state: () => {
+    let expandedNodes = {};
+    if (window.sessionStorage) {
+      expandedNodes = JSON.parse(window.sessionStorage.getItem('expandedNodes') || '{}');
+    }
+    return {
+      contentNodesMap: {},
+      expandedNodes,
+    }
+  },
   getters,
   mutations,
   actions,

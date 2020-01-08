@@ -12,7 +12,14 @@
     >
       <VIcon>add</VIcon>
     </VBtn>
-    <StudioTree :nodeId="nodeId" :root="true"/>
+    <VLayout row wrap>
+      <VFlex xs6>
+        <StudioTree :nodeId="rootId" :root="true"/>
+      </VFlex>
+      <VFlex xs6>
+        <NodePanel :parentId="nodeId"/>
+      </VFlex>
+    </VLayout>
     <router-view/>
   </div>
 
@@ -25,10 +32,12 @@
   import { generateTempId } from 'shared/utils';
   import { RouterNames } from '../constants';
   import StudioTree from './StudioTree';
+  import NodePanel from './NodePanel';
 
   export default {
     name: 'TreeView',
     components: {
+      NodePanel,
       StudioTree,
     },
     props: {
@@ -38,7 +47,7 @@
       },
     },
     computed: {
-      ...mapGetters('currentChannel', ['canEdit']),
+      ...mapGetters('currentChannel', ['canEdit', 'rootId']),
       ...mapState({
         language: state => state.session.currentLanguage,
         preferences: state => state.session.preferences,

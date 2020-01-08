@@ -1,26 +1,29 @@
 import Vue from 'vue';
 import difference from 'lodash/difference';
 import union from 'lodash/union';
+import { NODE_COMPLETE_KEY } from '../../constants';
 import { contentNodeLastSavedState } from './index';
 
-function mergeContentNode(contentNodesMap, contentNode) {
+function mergeContentNode(contentNodesMap, contentNode, complete) {
   contentNodeLastSavedState.storeLastSavedState(contentNode);
+  const currentlyComplete = contentNodesMap[contentNode.id] ? contentNodesMap[contentNode.id][NODE_COMPLETE_KEY] : false;
   return {
     ...contentNodesMap,
     [contentNode.id]: {
       ...contentNodesMap[contentNode.id],
       ...contentNode,
+      [NODE_COMPLETE_KEY]: currentlyComplete || complete,
     },
   };
 }
 
-export function ADD_CONTENTNODE(state, contentNode) {
-  state.contentNodesMap = mergeContentNode(state.contentNodesMap, contentNode);
+export function ADD_CONTENTNODE(state, { contentNode, complete = false }) {
+  state.contentNodesMap = mergeContentNode(state.contentNodesMap, contentNode, complete);
 }
 
-export function ADD_CONTENTNODES(state, contentNodes = []) {
+export function ADD_CONTENTNODES(state, { contentNodes = [], complete = false }) {
   state.contentNodesMap = contentNodes.reduce((contentNodesMap, contentNode) => {
-    return mergeContentNode(contentNodesMap, contentNode);
+    return mergeContentNode(contentNodesMap, contentNode, complete);
   }, state.contentNodesMap);
 }
 
@@ -111,4 +114,16 @@ export function REMOVE_TAGS(state, ids, tags) {
     const contentNode = state.contentNodesMap[id];
     contentNode.tags = difference(contentNode.tags, tags);
   });
+}
+
+
+export function TOGGLE_EXPANSION(state, id) {
+  if (state.expandedNodes[id]) {
+    Vue.delete(state.expandedNodes, id);
+  } else {
+    state.expandedNodes[id] = true;
+  }
+  if (window.sessionStorage) {
+    window.sessionStorage.setItem("expandedNodes", JSON.stringify(state.expandedNodes));
+  }
 }

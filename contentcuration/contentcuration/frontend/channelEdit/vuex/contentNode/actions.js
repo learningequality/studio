@@ -5,7 +5,7 @@ import client from 'shared/client';
 export function loadSummaryContentNodes(context, params) {
   return client.get(window.Urls['summarycontentnode-list'](), { params }).then(response => {
     const contentNodes = response.data;
-    context.commit('ADD_CONTENTNODES', contentNodes);
+    context.commit('ADD_CONTENTNODES', { contentNodes });
     return contentNodes;
   });
 }
@@ -15,7 +15,7 @@ export function loadSummaryContentNode(context, id) {
     .get(window.Urls['summarycontentnode-detail'](id))
     .then(response => {
       const contentNode = response.data;
-      context.commit('ADD_CONTENTNODE', contentNode);
+      context.commit('ADD_CONTENTNODE', { contentNode });
       return contentNode;
     })
     .catch(() => {
@@ -26,7 +26,7 @@ export function loadSummaryContentNode(context, id) {
 export function loadContentNodes(context, params) {
   return client.get(window.Urls['contentnode-list'](), { params }).then(response => {
     const contentNodes = response.data;
-    context.commit('ADD_CONTENTNODES', contentNodes);
+    context.commit('ADD_CONTENTNODES', { contentNodes, complete: true });
     return contentNodes;
   });
 }
@@ -36,7 +36,7 @@ export function loadContentNode(context, id) {
     .get(window.Urls['contentnode-detail'](id))
     .then(response => {
       const contentNode = response.data;
-      context.commit('ADD_CONTENTNODE', contentNode);
+      context.commit('ADD_CONTENTNODE', { contentNode, complete: true });
       return contentNode;
     })
     .catch(() => {
@@ -58,7 +58,7 @@ export function saveContentNode(context, contentNodeId) {
         delete contentNodeData.id;
         return client.post(window.Urls['contentnode-list'](), contentNodeData).then(response => {
           const contentNode = response.data;
-          context.commit('ADD_CONTENTNODE', contentNode);
+          context.commit('ADD_CONTENTNODE', { contentNode, complete: true });
           context.commit('REMOVE_CONTENTNODE', contentNodeId);
           return contentNode.id;
         });
