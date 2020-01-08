@@ -16,11 +16,13 @@ from django.db.models import IntegerField
 from django.db.models import Q
 from django.db.models.aggregates import Count
 from django.db.models.aggregates import Max
+from django.db.models.aggregates import Sum
 from django.db.models.expressions import Case
 from django.db.models.expressions import F
 from django.db.models.expressions import Value
 from django.db.models.expressions import When
 from django.db.models.functions import Coalesce
+from django.db.models.sql.constants import LOUTER
 from django.utils.translation import ugettext as _
 from django_cte import With
 from le_utils.constants import content_kinds
@@ -393,15 +395,94 @@ def move_node(node, parent=None, sort_order=None, channel_id=None):
     return node
 
 
+class MetadataCTE(object):
+    columns = []
+
+    def __init__(self, node_pks):
+        """
+        :param node_pks: list of ContentNode ID's
+        """
+        self.node_pks = node_pks
+        self.cte = None
+
+    def add_columns(self, columns):
+        self.columns.extend(columns)
+
+    def get(self):
+        if self.cte is None:
+            self.cte = self.build()
+        return self.cte
+
+    def build(self):
+        raise NotImplementedError('Build method must create CTE')
+
+    def join(self, query):
+        raise NotImplementedError('Join method must join query with CTE')
+
+    @property
+    def col(self):
+        return self.get().col
+
+
+class TreeMetadataCTE(MetadataCTE):
+    columns = ['tree_id']
+
+    def build(self):
+        tree_ids = ContentNode.objects.filter(pk__in=self.node_pks).values('tree_id')
+        return With(
+            ContentNode.objects.filter(tree_id__in=tree_ids).values(*set(self.columns)),
+            name='tree_cte'
+        )
+
+    def join(self, query):
+        cte = self.get()
+        return cte.join(query, tree_id=cte.col.tree_id).with_cte(cte)
+
+
+class FileMetadataCTE(MetadataCTE):
+    columns = ['content_id']
+
+    def build(self):
+        nodes = ContentNode.objects.filter(pk__in=self.node_pks)\
+            .exclude(kind_id=content_kinds.TOPIC)
+        files = nodes.values(
+            'content_id',
+            file_size=F('files__file_size'),
+            checksum=F('files__checksum')
+        )
+        assessment_files = nodes.values(
+            'content_id',
+            file_size=F('assessment_items__files__file_size'),
+            checksum=F('assessment_items__files__checksum')
+        )
+
+        return With(files.union(assessment_files).values(*set(self.columns)), name='file_cte')
+
+    def join(self, query):
+        cte = self.get()
+        return cte.join(query, content_id=cte.col.content_id, _join_type=LOUTER).with_cte(cte)
+        # query = sub_cte.join(nodes, _join_type=LOUTER, content_id=sub_cte.col.content_id)\
+        #     .values(*set(self.columns))\
+        #     .annotate(resource_size=Coalesce(Sum('file_size'), Value(0)))
+        #
+        # return With(query.with_cte(sub_cte))
+
+
 class MetadataAnnotation(object):
-    requires_cte = False
+    cte = None
     cte_columns = ()
 
-    def get_annotation(self, cte=None):
+    def get_annotation(self, cte):
         """
         :type cte: With|None
         """
         raise NotImplementedError('Metadata annotation needs to implement this method')
+
+    def build_kind_condition(self, kind_id, value, comparison='='):
+        return [BooleanComparison(kind_id, comparison, Value(value))]
+
+    def build_topic_condition(self, kind_id, comparison='='):
+        return self.build_kind_condition(kind_id, content_kinds.TOPIC, comparison)
 
 
 class DescendantCount(MetadataAnnotation):
@@ -409,21 +490,31 @@ class DescendantCount(MetadataAnnotation):
         """
         @see MPTTModel.get_descendant_count()
         """
-        diff = F('rght') - F('lft') - Value(1)
-
-        # integer division floors the result in postgres
-        return Max(diff / Value(2))
+        return Max(
+            Case(
+                # when selected node is topic, use algorithm to get descendant count
+                When(
+                    condition=WhenQ(*self.build_topic_condition(F('kind_id'))),
+                    then=(F('rght') - F('lft') - Value(1)) / Value(2)
+                ),
+                # integer division floors the result in postgres
+                default=Value(1)
+            )
+        )
 
 
 class DescendantAnnotation(MetadataAnnotation):
-    requires_cte = True
+    cte = TreeMetadataCTE
     cte_columns = ('lft', 'rght')
 
     def __init__(self, *args, **kwargs):
         self.include_self = kwargs.pop('include_self', False)
         super(DescendantAnnotation, self).__init__(*args, **kwargs)
 
-    def resolve_conditions(self, cte):
+    def build_descendant_condition(self, cte):
+        """
+        @see MPTTModel.get_descendants()
+        """
         left_op = '>='
         right_op = '<='
 
@@ -436,55 +527,75 @@ class DescendantAnnotation(MetadataAnnotation):
             BooleanComparison(cte.col.lft, right_op, F('rght')),
         ]
 
-    def get_condition(self, cte):
-        return WhenQ(*self.resolve_conditions(cte))
-
 
 class ResourceCount(DescendantAnnotation):
-    cte_columns = ('id', 'kind_id') + DescendantAnnotation.cte_columns
+    cte_columns = ('content_id', 'kind_id') + DescendantAnnotation.cte_columns
 
-    def get_annotation(self, cte=None):
+    def get_annotation(self, cte):
+        resource_condition = self.build_topic_condition(F('kind_id'), '!=')
+
+        topic_condition = self.build_topic_condition(cte.col.kind_id, '!=')
+        topic_condition += self.build_descendant_condition(cte)
+
         return Count(
             Case(
-                When(condition=self.get_condition(cte), then=cte.col.id),
+                # when selected node is not a topic, then count = 1
+                When(condition=WhenQ(*resource_condition), then=F('content_id')),
+                # when it is a topic, then count descendants
+                When(condition=WhenQ(*topic_condition), then=cte.col.content_id),
                 default=Value(None)
             ),
             distinct=True
         )
-
-    def resolve_conditions(self, cte):
-        conditions = super(ResourceCount, self).resolve_conditions(cte)
-        conditions.append(BooleanComparison(cte.col.kind_id, '!=', Value(content_kinds.TOPIC)))
-        return conditions
 
 
 class CoachCount(DescendantAnnotation):
-    cte_columns = ('id', 'role_visibility') + DescendantAnnotation.cte_columns
+    cte_columns = ('content_id', 'role_visibility') + DescendantAnnotation.cte_columns
 
-    def get_annotation(self, cte=None):
+    def get_annotation(self, cte):
+        topic_condition = self.build_topic_condition(F('kind_id'))
+        topic_condition += self.build_descendant_condition(cte)
+        topic_condition += self.build_coach_condition(cte.col.role_visibility)
+
+        resource_condition = self.build_topic_condition(F('kind_id'), '!=')
+        resource_condition += self.build_coach_condition(F('role_visibility'))
+
         return Count(
             Case(
-                When(condition=self.get_condition(cte), then=cte.col.id),
+                # when selected node is a coach topic, then count descendent content_id's
+                When(condition=WhenQ(*topic_condition), then=cte.col.content_id),
+                # when selected node is not a topic, count its content_id
+                When(condition=WhenQ(*resource_condition), then=F('content_id')),
                 default=Value(None)
             ),
             distinct=True
         )
 
-    def resolve_conditions(self, cte):
-        conditions = super(CoachCount, self).resolve_conditions(cte)
-        conditions.append(BooleanComparison(cte.col.role_visibility, '=', Value(roles.COACH)))
-        return conditions
+    def build_coach_condition(self, role_visibility):
+        return [BooleanComparison(role_visibility, '=', Value(roles.COACH))]
 
 
 class HasChanged(DescendantAnnotation):
     cte_columns = ('changed',) + DescendantAnnotation.cte_columns
 
-    def get_annotation(self, cte=None):
+    def get_annotation(self, cte):
+        resource_condition = self.build_topic_condition(F('kind_id'), '!=')
+
+        whens = [
+            # when selected node is not a topic, just use its changed status
+            When(condition=WhenQ(*resource_condition), then=F('changed')),
+        ]
+
+        if self.include_self:
+            # when selected node is a topic and it's changed and including self, then return that
+            whens.append(When(condition=WhenQ(*[F('changed')]), then=F('changed')))
+
         return Coalesce(
             BoolOr(
                 Case(
-                    When(condition=self.get_condition(cte), then=cte.col.changed),
-                    default=Value(None)
+                    *whens,
+                    # fallback to aggregating descendant changed status when a unchanged topic
+                    default=cte.col.changed
                 )
             ),
             Value(False),
@@ -495,11 +606,17 @@ class HasChanged(DescendantAnnotation):
 class SortOrderMax(DescendantAnnotation):
     cte_columns = ('parent_id', 'sort_order') + DescendantAnnotation.cte_columns
 
-    def get_annotation(self, cte=None):
+    def get_annotation(self, cte):
+        resource_condition = self.build_topic_condition(F('kind_id'), '!=')
+        topic_condition = self.build_child_condition(cte)
+
         return Coalesce(
             Max(
                 Case(
-                    When(condition=self.get_condition(cte), then=cte.col.sort_order),
+                    # when selected node is not a topic, use its sort_order
+                    When(condition=WhenQ(*resource_condition), then=F('sort_order')),
+                    # when selected node is a topic, then find max of children
+                    When(condition=WhenQ(*topic_condition), then=cte.col.sort_order),
                     default=Value(None)
                 )
             ),
@@ -507,10 +624,30 @@ class SortOrderMax(DescendantAnnotation):
             output_field=IntegerField()
         )
 
-    def resolve_conditions(self, cte):
+    def build_child_condition(self, cte):
         return [
             BooleanComparison(cte.col.parent_id, '=', F('id'))
         ]
+
+
+class ResourceSize(DescendantAnnotation):
+    cte = FileMetadataCTE
+    cte_columns = ('file_size',)
+
+    def get_annotation(self, cte):
+        resource_condition = self.build_topic_condition(F('kind_id'), '!=')
+
+        return Sum(
+            Case(
+                # aggregate file_size when selected node is not a topic
+                When(
+                    condition=WhenQ(*resource_condition),
+                    then=Coalesce(cte.col.file_size, Value(0)),
+                ),
+                default=Value(0)
+            ),
+            output_field=IntegerField()
+        )
 
 
 class Metadata(object):
@@ -557,38 +694,42 @@ class Metadata(object):
         if len(self.annotations) == 0:
             raise ValueError('No metadata to retrieve')
 
-        requires_cte = False
-        cte_columns = ['tree_id']
+        ctes = []
 
         for field_name, annotation in self.annotations.items():
-            if not isinstance(annotation, MetadataAnnotation):
+            if not isinstance(annotation, MetadataAnnotation) or annotation.cte is None:
                 continue
 
-            if annotation.requires_cte:
-                requires_cte = True
+            if any(isinstance(cte, annotation.cte) for cte in ctes):
+                cte = next(cte for cte in ctes if isinstance(cte, annotation.cte))
+            else:
+                cte = annotation.cte(self.node_pks)
+                ctes.append(annotation.cte(self.node_pks))
 
             if annotation.cte_columns:
-                cte_columns.extend(list(annotation.cte_columns))
+                cte.add_columns(list(annotation.cte_columns))
 
         cte = None
+        query = ContentNode.objects.filter(pk__in=self.node_pks)
+        annotations = {}
 
-        if requires_cte:
-            tree_ids = ContentNode.objects.filter(pk__in=self.node_pks).values('tree_id')
-            cte = With(
-                ContentNode.objects.filter(tree_id__in=tree_ids)
-                .values(*set(cte_columns))
-            )
-            query = cte.join(ContentNode, tree_id=cte.col.tree_id).with_cte(cte)
-        else:
-            query = ContentNode.objects.all()
+        if len(ctes) > 0:
+            for cte in ctes:
+                query = cte.join(query)
+                annotations.update({
+                    field_name: annotation.get_annotation(cte)
+                    for field_name, annotation in self.annotations.items()
+                    if isinstance(annotation, MetadataAnnotation)
+                    and annotation.cte and isinstance(cte, annotation.cte)
+                })
 
-        query = query.filter(pk__in=self.node_pks)\
-            .values('id')\
-            .annotate(**{
-                field_name: annotation.get_annotation(cte)
-                if isinstance(annotation, MetadataAnnotation) else annotation
-                for field_name, annotation in self.annotations.items()
-            })
+        annotations.update({
+            field_name: annotation.get_annotation(cte)
+            for field_name, annotation in self.annotations.items()
+            if not isinstance(annotation, MetadataAnnotation) or annotation.cte is None
+        })
+
+        query = query.values('id').annotate(**annotations)
 
         self.metadata = {}
 
