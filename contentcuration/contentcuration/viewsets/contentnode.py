@@ -72,7 +72,21 @@ class ContentNodeSerializer(ModelSerializer):
 
     class Meta:
         model = ContentNode
-        fields = ("id", "title", "kind", "content_id", "language", "role_visibility")
+        fields = (
+            "id",
+            "title",
+            "description",
+            "kind",
+            "language",
+            "license",
+            "license_description",
+            "copyright_holder",
+            "author",
+            "role_visibility",
+            "aggregator",
+            "provider",
+            "extra_fields",
+        )
         read_only_fields = ("id",)
 
 
@@ -93,18 +107,39 @@ def retrieve_thumbail_src(item):
     return None
 
 
-class SummaryContentNodeViewSet(ValuesViewset):
+def clean_content_tags(item):
+    tags = item.pop("content_tags")
+    return filter(lambda x: x is not None, tags)
+
+
+class ContentNodeViewSet(ValuesViewset):
     queryset = ContentNode.objects.all()
     serializer_class = ContentNodeSerializer
     filter_backends = (DjangoFilterBackend,)
     filter_class = ContentNodeFilter
     values = (
         "id",
-        "title",
-        "kind",
         "content_id",
-        "language_id",
+        "title",
+        "description",
+        "author",
+        "file_ids",
+        "assessment_items_ids",
+        "prerequisite_ids",
+        "provider",
+        "aggregator",
+        "content_tags",
         "role_visibility",
+        "language_id",
+        "lft",
+        "license_id",
+        "license_description",
+        "copyright_holder",
+        "extra_fields",
+        "node_id",
+        "original_source_node_id",
+        "original_channel_id",
+        "parent",
         "total_count",
         "resource_count",
         "coach_count",
@@ -113,19 +148,22 @@ class SummaryContentNodeViewSet(ValuesViewset):
         "thumbnail_encoding",
         "published",
         "modified",
-        "parent",
         "has_children",
-        # "valid",
     )
 
-    field_map = {"language": "language_id", "thumbnail_src": retrieve_thumbail_src}
-
-    def get_queryset(self):
-        queryset = ContentNode.objects.all()
-        return self.prefetch_queryset(queryset)
+    field_map = {
+        "language": "language_id",
+        "license": "license_id",
+        "tags": clean_content_tags,
+        "files": "file_ids",
+        "prerequisite": "prerequisite_ids",
+        "assessment_items": "assessment_items_ids",
+        "sort_order": "lft",
+        "thumbnail_src": retrieve_thumbail_src,
+    }
 
     def annotate_queryset(self, queryset):
-        queryset = queryset.annotate(total_count=(F("rght") - F("lft")) / 2)
+        queryset = queryset.annotate(total_count=(F("rght") - F("lft") - 1) / 2)
         descendant_resources = (
             ContentNode.objects.filter(
                 tree_id=OuterRef("tree_id"),
@@ -152,58 +190,6 @@ class SummaryContentNodeViewSet(ValuesViewset):
             ),
             has_children=Exists(ContentNode.objects.filter(parent=OuterRef("id"))),
         )
-        return queryset
-
-
-def clean_content_tags(item):
-    tags = item.pop("content_tags")
-    return filter(lambda x: x is not None, tags)
-
-
-class ContentNodeViewSet(ValuesViewset):
-    queryset = ContentNode.objects.all()
-    serializer_class = ContentNodeSerializer
-    filter_backends = (DjangoFilterBackend,)
-    filter_class = ContentNodeFilter
-    values = (
-        "id",
-        "title",
-        "description",
-        "author",
-        "file_ids",
-        "assessment_items_ids",
-        "prerequisite_ids",
-        "provider",
-        "aggregator",
-        "content_tags",
-        "role_visibility",
-        "language_id",
-        "lft",
-        "license_id",
-        "license_description",
-        "copyright_holder",
-        "extra_fields",
-        "node_id",
-        "original_source_node_id",
-        "original_channel_id",
-        "parent",
-    )
-
-    field_map = {
-        "language": "language_id",
-        "license": "license_id",
-        "tags": clean_content_tags,
-        "files": "file_ids",
-        "prerequisite": "prerequisite_ids",
-        "assessment_items": "assessment_items_ids",
-        "sort_order": "lft",
-    }
-
-    def get_queryset(self):
-        queryset = ContentNode.objects.all()
-        return self.prefetch_queryset(queryset)
-
-    def annotate_queryset(self, queryset):
         queryset = queryset.annotate(content_tags=NotNullArrayAgg("tags__tag_name"))
         queryset = queryset.annotate(file_ids=NotNullArrayAgg("files__id"))
         queryset = queryset.annotate(

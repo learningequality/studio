@@ -47,7 +47,6 @@ from contentcuration.forms import ResetPasswordForm
 from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
 from contentcuration.models import ContentKind
-from contentcuration.models import ContentNode
 from contentcuration.models import ContentTag
 from contentcuration.models import File
 from contentcuration.models import FileFormat
@@ -56,7 +55,6 @@ from contentcuration.models import Language
 from contentcuration.models import License
 from contentcuration.models import Task
 from contentcuration.models import User
-from contentcuration.viewsets.contentnode import SummaryContentNodeViewSet
 from contentcuration.viewsets.contentnode import ContentNodeViewSet
 from contentcuration.viewsets.channel import ChannelViewSet
 from contentcuration.viewsets.channelset import ChannelSetViewSet
@@ -196,7 +194,6 @@ router.register(r'license', LicenseViewSet)
 router.register(r'language', LanguageViewSet)
 router.register(r'channel', ChannelViewSet)
 router.register(r'channelset', ChannelSetViewSet)
-router.register(r'summarycontentnode', SummaryContentNodeViewSet, base_name="summarycontentnode")
 router.register(r'fileformat', FileFormatViewSet)
 router.register(r'preset', FormatPresetViewSet)
 router.register(r'tag', TagViewSet)
