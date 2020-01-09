@@ -5,6 +5,7 @@ from le_utils.constants import roles
 from ..base import StudioTestCase
 from ..testdata import node
 from ..testdata import tree
+from contentcuration.models import ContentNode
 from contentcuration.node_metadata.annotations import CoachCount
 from contentcuration.node_metadata.annotations import DescendantCount
 from contentcuration.node_metadata.annotations import HasChanged
@@ -43,7 +44,7 @@ class MetadataTest(StudioTestCase):
 
     def test_descendant_count(self):
         topic_tree_node = tree()
-        query = Metadata([topic_tree_node.pk])
+        query = Metadata(topic_tree_node)
 
         results = query.annotate(**{DESCENDANT_COUNT: DescendantCount()})
         serialized = ContentNodeSerializer(topic_tree_node).data
@@ -54,7 +55,7 @@ class MetadataTest(StudioTestCase):
 
     def test_resource_count(self):
         topic_tree_node = tree()
-        query = Metadata([topic_tree_node.pk])
+        query = Metadata(topic_tree_node)
 
         results = query.annotate(**{RESOURCE_COUNT: ResourceCount()})
         serialized = ContentNodeSerializer(topic_tree_node).data
@@ -68,7 +69,7 @@ class MetadataTest(StudioTestCase):
         nested_topic = topic_tree_node.get_descendants().filter(kind=content_kinds.TOPIC).first()
         self.create_coach_node(nested_topic)
 
-        query = Metadata([topic_tree_node.pk])
+        query = Metadata(topic_tree_node)
         results = query.annotate(**{RESOURCE_SIZE: ResourceSize()})
         serialized = ContentNodeSerializer(topic_tree_node).data
 
@@ -81,7 +82,7 @@ class MetadataTest(StudioTestCase):
         nested_topic = topic_tree_node.get_descendants().filter(kind=content_kinds.TOPIC).first()
         video_node = self.create_coach_node(nested_topic)
 
-        query = Metadata([video_node.pk])
+        query = Metadata(video_node)
         results = query.annotate(**{RESOURCE_SIZE: ResourceSize()})
         serialized = ContentNodeSerializer(video_node).data
 
@@ -96,7 +97,7 @@ class MetadataTest(StudioTestCase):
         nested_topic = topic_tree_node.get_descendants().filter(kind=content_kinds.TOPIC).first()
         self.create_coach_node(nested_topic)
 
-        query = Metadata([topic_tree_node.pk])
+        query = Metadata(topic_tree_node)
 
         results = query.annotate(**{COACH_COUNT: CoachCount()})
         serialized = ContentNodeSerializer(topic_tree_node).data
@@ -107,7 +108,7 @@ class MetadataTest(StudioTestCase):
 
     def test_max_sort_order(self):
         topic_tree_node = tree()
-        query = Metadata([topic_tree_node.pk])
+        query = Metadata(topic_tree_node)
 
         results = query.annotate(**{MAX_SORT_ORDER: SortOrderMax()})
         serialized = RootNodeSerializer(topic_tree_node).data
@@ -118,7 +119,7 @@ class MetadataTest(StudioTestCase):
 
     def test_max_sort_order__alternate(self):
         topic_tree_node = tree().get_descendants().filter(kind=content_kinds.TOPIC).first()
-        query = Metadata([topic_tree_node.pk])
+        query = Metadata(topic_tree_node)
 
         results = query.annotate(**{MAX_SORT_ORDER: SortOrderMax()})
         serialized = RootNodeSerializer(topic_tree_node).data
@@ -129,7 +130,7 @@ class MetadataTest(StudioTestCase):
 
     def test_has_changed_descendant(self):
         topic_tree_node = tree()
-        query = Metadata([topic_tree_node.pk])
+        query = Metadata(topic_tree_node)
 
         results = query.annotate(**{HAS_CHANGED_DESCENDANT: HasChanged()})
         serialized = RootNodeSerializer(topic_tree_node).data
@@ -140,7 +141,7 @@ class MetadataTest(StudioTestCase):
 
     def test_has_changed_descendant__forced(self):
         topic_tree_node = tree()
-        query = Metadata([topic_tree_node.pk])
+        query = Metadata(topic_tree_node)
 
         self.set_tree_changed(topic_tree_node, False)
 
@@ -175,7 +176,12 @@ class MetadataTest(StudioTestCase):
         self.set_tree_changed(topic_tree_node2, False)
         topic_tree1_topics.last().delete()
 
-        query = Metadata([topic_tree_node1.pk, topic_tree_node2.pk, video_node.pk], **{
+        nodes = ContentNode.objects.filter(pk__in=[
+            topic_tree_node1.pk,
+            topic_tree_node2.pk,
+            video_node.pk,
+        ])
+        query = Metadata(nodes, **{
             DESCENDANT_COUNT: DescendantCount(),
             RESOURCE_COUNT: ResourceCount(),
             RESOURCE_SIZE: ResourceSize(),
@@ -187,7 +193,6 @@ class MetadataTest(StudioTestCase):
         topic_tree1_results = query.get(topic_tree_node1.pk)
         topic_tree2_results = query.get(topic_tree_node2.pk)
         video_node_results = query.get(video_node.pk)
-        print(video_node_results)
 
         self.assertEqual(6, topic_tree1_results.get(DESCENDANT_COUNT))
         self.assertEqual(5, topic_tree1_results.get(RESOURCE_COUNT))
