@@ -6,6 +6,7 @@ from ..base import StudioTestCase
 from ..testdata import node
 from ..testdata import tree
 from contentcuration.models import ContentNode
+from contentcuration.node_metadata.annotations import AssessmentCount
 from contentcuration.node_metadata.annotations import CoachCount
 from contentcuration.node_metadata.annotations import DescendantCount
 from contentcuration.node_metadata.annotations import HasChanged
@@ -19,6 +20,7 @@ from contentcuration.serializers import RootNodeSerializer
 
 DESCENDANT_COUNT = 'descendant_count'
 RESOURCE_COUNT = 'resource_count'
+ASSESSMENT_COUNT = 'assessment_count'
 RESOURCE_SIZE = 'resource_size'
 COACH_COUNT = 'coach_count'
 MAX_SORT_ORDER = 'max_sort_order'
@@ -52,6 +54,18 @@ class MetadataTest(StudioTestCase):
         self.assertEqual(serialized.get('metadata').get('total_count'),
                          results.get(serialized.get('id')).get(DESCENDANT_COUNT))
         self.assertEqual(7, results.get(serialized.get('id')).get(DESCENDANT_COUNT))
+
+    def test_assessment_count(self):
+        tree()
+        node = ContentNode.objects.get(node_id='00000000000000000000000000000005')
+        query = Metadata(node)
+
+        results = query.annotate(**{ASSESSMENT_COUNT: AssessmentCount()})
+        serialized = ContentNodeSerializer(node).data
+
+        self.assertEqual(serialized.get('metadata').get('resource_count'),
+                         results.get(serialized.get('id')).get(ASSESSMENT_COUNT))
+        self.assertEqual(3, results.get(serialized.get('id')).get(ASSESSMENT_COUNT))
 
     def test_resource_count(self):
         topic_tree_node = tree()
@@ -172,6 +186,9 @@ class MetadataTest(StudioTestCase):
 
         topic_tree1_topics = topic_tree_node1.get_descendants().filter(kind=content_kinds.TOPIC)
         video_node = self.create_coach_node(topic_tree1_topics.first())
+        exercise_node = ContentNode.objects.get(tree_id=topic_tree_node2.tree_id,
+                                                node_id='00000000000000000000000000000005')
+
         self.set_tree_changed(topic_tree_node1, False)
         self.set_tree_changed(topic_tree_node2, False)
         topic_tree1_topics.last().delete()
@@ -180,10 +197,12 @@ class MetadataTest(StudioTestCase):
             topic_tree_node1.pk,
             topic_tree_node2.pk,
             video_node.pk,
+            exercise_node.pk,
         ])
         query = Metadata(nodes, **{
             DESCENDANT_COUNT: DescendantCount(),
             RESOURCE_COUNT: ResourceCount(),
+            ASSESSMENT_COUNT: AssessmentCount(),
             RESOURCE_SIZE: ResourceSize(),
             COACH_COUNT: CoachCount(),
             HAS_CHANGED_DESCENDANT: HasChanged(include_self=True),
@@ -193,25 +212,41 @@ class MetadataTest(StudioTestCase):
         topic_tree1_results = query.get(topic_tree_node1.pk)
         topic_tree2_results = query.get(topic_tree_node2.pk)
         video_node_results = query.get(video_node.pk)
+        exercise_node_results = query.get(exercise_node.pk)
 
+        self.assertIsNotNone(topic_tree1_results)
         self.assertEqual(6, topic_tree1_results.get(DESCENDANT_COUNT))
         self.assertEqual(5, topic_tree1_results.get(RESOURCE_COUNT))
+        self.assertEqual(0, topic_tree1_results.get(ASSESSMENT_COUNT))
         self.assertEqual(0, topic_tree1_results.get(RESOURCE_SIZE))
         self.assertEqual(1, topic_tree1_results.get(COACH_COUNT))
         self.assertTrue(topic_tree1_results.get(HAS_CHANGED_DESCENDANT))
         self.assertEqual(1, topic_tree1_results.get(MAX_SORT_ORDER))
 
+        self.assertIsNotNone(topic_tree2_results)
         self.assertEqual(7, topic_tree2_results.get(DESCENDANT_COUNT))
         self.assertEqual(5, topic_tree2_results.get(RESOURCE_COUNT))
+        self.assertEqual(0, topic_tree2_results.get(ASSESSMENT_COUNT))
         self.assertEqual(0, topic_tree2_results.get(RESOURCE_SIZE))
         self.assertEqual(0, topic_tree2_results.get(COACH_COUNT))
         self.assertFalse(topic_tree2_results.get(HAS_CHANGED_DESCENDANT))
         self.assertEqual(2, topic_tree2_results.get(MAX_SORT_ORDER))
 
+        self.assertIsNotNone(video_node_results)
         self.assertEqual(1, video_node_results.get(DESCENDANT_COUNT))
         self.assertEqual(1, video_node_results.get(RESOURCE_COUNT))
+        self.assertEqual(0, video_node_results.get(ASSESSMENT_COUNT))
         self.assertEqual(video_node.files.aggregate(size=Sum('file_size')).get('size'),
                          video_node_results.get(RESOURCE_SIZE))
         self.assertEqual(1, video_node_results.get(COACH_COUNT))
         self.assertFalse(video_node_results.get(HAS_CHANGED_DESCENDANT))
         self.assertEqual(video_node.sort_order, video_node_results.get(MAX_SORT_ORDER))
+
+        self.assertIsNotNone(exercise_node_results)
+        self.assertEqual(1, exercise_node_results.get(DESCENDANT_COUNT))
+        self.assertEqual(1, exercise_node_results.get(RESOURCE_COUNT))
+        self.assertEqual(3, exercise_node_results.get(ASSESSMENT_COUNT))
+        self.assertEqual(0, exercise_node_results.get(RESOURCE_SIZE))
+        self.assertEqual(0, exercise_node_results.get(COACH_COUNT))
+        self.assertFalse(exercise_node_results.get(HAS_CHANGED_DESCENDANT))
+        self.assertEqual(exercise_node.sort_order, exercise_node_results.get(MAX_SORT_ORDER))

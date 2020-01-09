@@ -13,6 +13,7 @@ from le_utils.constants import roles
 
 from contentcuration.db.models.expressions import BooleanComparison
 from contentcuration.db.models.expressions import WhenQ
+from contentcuration.node_metadata.cte import AssessmentCountCTE
 from contentcuration.node_metadata.cte import ResourceSizeCTE
 from contentcuration.node_metadata.cte import TreeMetadataCTE
 
@@ -75,6 +76,14 @@ class DescendantAnnotation(MetadataAnnotation):
             BooleanComparison(cte.col.lft, left_op, F('lft')),
             BooleanComparison(cte.col.lft, right_op, F('rght')),
         ]
+
+
+class AssessmentCount(DescendantAnnotation):
+    cte = AssessmentCountCTE
+    cte_columns = ('content_id', 'assessment_count')
+
+    def get_annotation(self, cte):
+        return Coalesce(cte.col.assessment_count, Value(0), output_field=IntegerField())
 
 
 class ResourceCount(DescendantAnnotation):

@@ -1,4 +1,5 @@
 from django.db.models import IntegerField
+from django.db.models.aggregates import Count
 from django.db.models.aggregates import Sum
 from django.db.models.expressions import Case
 from django.db.models.expressions import F
@@ -43,6 +44,12 @@ class MetadataCTE(object):
         return self.get().col
 
 
+class LeftContentCTE(MetadataCTE):
+    def join(self, query):
+        cte = self.get()
+        return cte.join(query, content_id=cte.col.content_id, _join_type=LOUTER).with_cte(cte)
+
+
 class TreeMetadataCTE(MetadataCTE):
     columns = ['tree_id']
 
@@ -58,7 +65,17 @@ class TreeMetadataCTE(MetadataCTE):
         return cte.join(query, tree_id=cte.col.tree_id).with_cte(cte)
 
 
-class FileMetadataCTE(MetadataCTE):
+class AssessmentCountCTE(LeftContentCTE):
+    columns = ['content_id']
+
+    def build(self):
+        q = self.query.filter(kind_id=content_kinds.EXERCISE, assessment_items__deleted=False)\
+            .annotate(assessment_count=Count(F('assessment_items__id'), distinct=True))
+
+        return With(q.values(*set(self.columns)), name='assessment_count_cte')
+
+
+class FileMetadataCTE(LeftContentCTE):
     columns = []
 
     def build(self):
@@ -76,12 +93,8 @@ class FileMetadataCTE(MetadataCTE):
 
         return With(files.union(assessment_files).values(*columns), name='file_cte')
 
-    def join(self, query):
-        cte = self.get()
-        return cte.join(query, content_id=cte.col.content_id, _join_type=LOUTER).with_cte(cte)
 
-
-class ResourceSizeCTE(FileMetadataCTE):
+class ResourceSizeCTE(LeftContentCTE):
     columns = ['content_id']
 
     def build(self):
