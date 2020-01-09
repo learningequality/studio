@@ -152,7 +152,7 @@
   }
 
   .v-card {
-    margin-bottom: 48px;
+    margin-bottom: 24px;
     /deep/ .v-label {
       color: rgba(0, 0, 0, 1) !important;
     }
