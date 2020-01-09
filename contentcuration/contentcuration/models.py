@@ -1163,7 +1163,7 @@ class ContentNode(MPTTModel, models.Model):
         # Serialize data
         data = {
             "last_update": pytz.utc.localize(datetime.now()).strftime(settings.DATE_TIME_FORMAT),
-            "created": n.created.strftime(settings.DATE_TIME_FORMAT),
+            "created": self.created.strftime(settings.DATE_TIME_FORMAT),
             "resource_count": resource_count,
             "resource_size": resource_size,
             "includes": for_educators,

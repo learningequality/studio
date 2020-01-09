@@ -176,12 +176,12 @@
             href: window.Urls.get_channel_details_csv_endpoint(this.channel.id),
           },
           {
-            title: this.$tr('downloadDetailedPDF'),
-            href: window.Urls.get_channel_details_pdf_endpoint(this.channel.id),
-          },
-          {
             title: this.$tr('downloadPDF'),
             href: window.Urls.get_channel_details_pdf_endpoint(this.channel.id) + '?condensed=true',
+          },
+          {
+            title: this.$tr('downloadDetailedPDF'),
+            href: window.Urls.get_channel_details_pdf_endpoint(this.channel.id),
           },
           {
             title: this.$tr('downloadPPT'),
