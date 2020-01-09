@@ -103,8 +103,8 @@
       ...mapGetters('channelSet', ['channelSets']),
       headers() {
         return [
-          { text: this.$tr('title'), value: 'name' },
-          { text: this.$tr('token'), value: 'secret_token', width: '200px' },
+          { text: this.$tr('title'), sortable: false, value: 'name' },
+          { text: this.$tr('token'), sortable: false, value: 'secret_token', width: '200px' },
           { text: this.$tr('channelNumber'), sortable: false, align: 'right', width: '50px' },
           { text: this.$tr('options'), sortable: false, align: 'center', width: '100px' },
         ];

@@ -8,13 +8,15 @@
         </VFlex>
         <VFlex xs12 sm7 md7 lg8>
           <VCardText>
-            <h3 class="headline mb-0">
+            <h3 class="headline mb-0 notranslate">
               {{ channel.name }}
             </h3>
             <p class="grey--text subheading">
               {{ $tr("versionText", {'version': channel.version}) }}
             </p>
-            {{ channel.description }}
+            <p class="notranslate">
+              {{ channel.description }}
+            </p>
           </VCardText>
         </VFlex>
         <VFlex xs12 sm2 md2 lg2>

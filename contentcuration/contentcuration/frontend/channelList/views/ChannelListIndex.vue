@@ -27,16 +27,20 @@
     </AppBar>
     <VContent>
       <VContainer fluid>
-        <VCard v-if="invitations.length" v-show="isChannelList">
-          <VList subheader>
-            <VSubheader>{{ $tr('invitations', {count: invitations.length}) }}</VSubheader>
-            <ChannelInvitation
-              v-for="invitation in invitations"
-              :key="invitation.id"
-              :invitationID="invitation.id"
-            />
-          </VList>
-        </VCard>
+        <VLayout row wrap justify-center>
+          <VFlex xs12 sm10 md8 lg6>
+            <VCard v-if="invitations.length" v-show="isChannelList">
+              <VList subheader>
+                <VSubheader>{{ $tr('invitations', {count: invitations.length}) }}</VSubheader>
+                <ChannelInvitation
+                  v-for="invitation in invitations"
+                  :key="invitation.id"
+                  :invitationID="invitation.id"
+                />
+              </VList>
+            </VCard>
+          </VFlex>
+        </VLayout>
         <keep-alive>
           <router-view :key="$route.name" />
         </keep-alive>
