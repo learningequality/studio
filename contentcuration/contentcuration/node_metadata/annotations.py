@@ -3,7 +3,6 @@ from django.db.models import BooleanField
 from django.db.models import IntegerField
 from django.db.models.aggregates import Count
 from django.db.models.aggregates import Max
-from django.db.models.aggregates import Sum
 from django.db.models.expressions import Case
 from django.db.models.expressions import F
 from django.db.models.expressions import Value
@@ -14,7 +13,6 @@ from le_utils.constants import roles
 
 from contentcuration.db.models.expressions import BooleanComparison
 from contentcuration.db.models.expressions import WhenQ
-from contentcuration.node_metadata.cte import FileMetadataCTE
 from contentcuration.node_metadata.cte import ResourceSizeCTE
 from contentcuration.node_metadata.cte import TreeMetadataCTE
 
@@ -177,26 +175,6 @@ class SortOrderMax(DescendantAnnotation):
         return [
             BooleanComparison(cte.col.parent_id, '=', F('id'))
         ]
-
-
-class RawResourceSize(DescendantAnnotation):
-    cte = FileMetadataCTE
-    cte_columns = ('file_size', 'checksum')
-
-    def get_annotation(self, cte):
-        resource_condition = self.build_topic_condition(F('kind_id'), '!=')
-
-        return Sum(
-            Case(
-                # aggregate file_size when selected node is not a topic
-                When(
-                    condition=WhenQ(*resource_condition),
-                    then=Coalesce(cte.col.file_size, Value(0)),
-                ),
-                default=Value(0)
-            ),
-            output_field=IntegerField()
-        )
 
 
 class ResourceSize(DescendantAnnotation):

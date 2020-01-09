@@ -1,19 +1,27 @@
+from django.db.models import IntegerField
+from django.db.models.aggregates import Sum
+from django.db.models.expressions import Case
 from django.db.models.expressions import F
+from django.db.models.expressions import Value
+from django.db.models.expressions import When
+from django.db.models.functions import Coalesce
 from django.db.models.sql.constants import LOUTER
 from django_cte import With
 from le_utils.constants import content_kinds
 
+from contentcuration.db.models.expressions import BooleanComparison
+from contentcuration.db.models.expressions import WhenQ
 from contentcuration.models import ContentNode
 
 
 class MetadataCTE(object):
     columns = []
 
-    def __init__(self, node_pks):
+    def __init__(self, queryset):
         """
-        :param node_pks: list of ContentNode ID's
+        :param queryset: A ContentNode queryset
         """
-        self.node_pks = node_pks
+        self.query = queryset
         self.cte = None
 
     def add_columns(self, columns):
@@ -39,7 +47,7 @@ class TreeMetadataCTE(MetadataCTE):
     columns = ['tree_id']
 
     def build(self):
-        tree_ids = ContentNode.objects.filter(pk__in=self.node_pks).values('tree_id')
+        tree_ids = self.query.values('tree_id')
         return With(
             ContentNode.objects.filter(tree_id__in=tree_ids).values(*set(self.columns)),
             name='tree_cte'
@@ -54,8 +62,7 @@ class FileMetadataCTE(MetadataCTE):
     columns = []
 
     def build(self):
-        nodes = ContentNode.objects.filter(pk__in=self.node_pks)\
-            .exclude(kind_id=content_kinds.TOPIC)
+        nodes = self.query.exclude(kind_id=content_kinds.TOPIC)
 
         columns = set(self.columns)
         files = nodes.values(
@@ -78,12 +85,25 @@ class ResourceSizeCTE(FileMetadataCTE):
     columns = ['content_id']
 
     def build(self):
-        from contentcuration.node_metadata.annotations import RawResourceSize
-        from contentcuration.node_metadata.query import Metadata
+        """
+        Creates special nested CTE since all other metadata works of nodes, and joining on multiple
+        file records would produce incorrect result for resource sizes due to summing.
+        """
+        files_cte = FileMetadataCTE(self.query)
+        files_cte.add_columns(('file_size', 'checksum'))
 
-        q = Metadata(self.node_pks)
+        resource_condition = BooleanComparison(F('kind_id'), '!=', Value(content_kinds.TOPIC))
 
-        if 'resource_size' in self.columns:
-            q = q.annotate(resource_size=RawResourceSize())
+        q = files_cte.join(self.query).annotate(resource_size=Sum(
+            Case(
+                # aggregate file_size when selected node is not a topic
+                When(
+                    condition=WhenQ(resource_condition),
+                    then=Coalesce(files_cte.col.file_size, Value(0)),
+                ),
+                default=Value(0)
+            ),
+            output_field=IntegerField()
+        ))
 
-        return With(q.build().values(*set(self.columns)), name='resource_size_cte')
+        return With(q.values(*set(self.columns)), name='resource_size_cte')

@@ -11,11 +11,15 @@ class Metadata(object):
         md = Metadata(['123...abc']).annotate(some_thing=MetadataAnnotation())
         data = md.get('123...abc')
     """
-    def __init__(self, node_pks, **annotations):
+    def __init__(self, queryset_or_model, **annotations):
         """
-        :param node_pks: list of ContentNode ID's
+        :param queryset_or_model: A ContentNode or queryset
+        :param annotations: A dict of annotations
         """
-        self.node_pks = node_pks
+        if isinstance(queryset_or_model, ContentNode):
+            self.query = ContentNode.objects.filter(pk=queryset_or_model.pk)
+        else:
+            self.query = queryset_or_model
         self.annotations = annotations
         self.metadata = None
 
@@ -24,7 +28,7 @@ class Metadata(object):
         :param annotations: Dict of annotations that should be instances of MetadataAnnotation
         :return: A clone of Metadata with the new annotations
         """
-        clone = Metadata(self.node_pks, **self.annotations)
+        clone = Metadata(self.query, **self.annotations)
         clone.annotations.update(annotations)
         return clone
 
@@ -60,14 +64,14 @@ class Metadata(object):
             if any(isinstance(cte, annotation.cte) for cte in ctes):
                 cte = next(cte for cte in ctes if isinstance(cte, annotation.cte))
             else:
-                cte = annotation.cte(self.node_pks)
+                cte = annotation.cte(self.query)
                 ctes.append(cte)
 
             if annotation.cte_columns:
                 cte.add_columns(list(annotation.cte_columns))
 
         cte = None
-        query = ContentNode.objects.filter(pk__in=self.node_pks)
+        query = self.query
         annotations = {}
 
         if len(ctes) > 0:
