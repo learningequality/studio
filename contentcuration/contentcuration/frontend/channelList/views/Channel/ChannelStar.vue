@@ -1,22 +1,24 @@
 <template>
 
-  <VTooltip bottom>
-    <template v-slot:activator="{ on }">
-      <VBtn
-        icon
-        flat
-        v-bind="$attrs"
-        data-test="button"
-        v-on="on"
-        @click.stop.prevent="toggleStar"
-      >
-        <VIcon data-test="icon" class="notranslate">
-          {{ bookmark ? 'star' : 'star_border' }}
-        </VIcon>
-      </VBtn>
-    </template>
-    <span>{{ starText }}</span>
-  </VTooltip>
+  <!-- Adding div wrapper as tests fail when VTooltip is the root -->
+  <div>
+    <VTooltip bottom>
+      <template v-slot:activator="{ on }">
+        <VBtn
+          icon
+          flat
+          v-bind="$attrs"
+          data-test="button"
+          @click.stop.prevent="toggleStar"
+        >
+          <VIcon data-test="icon" class="notranslate">
+            {{ bookmark ? 'star' : 'star_border' }}
+          </VIcon>
+        </VBtn>
+      </template>
+      <span>{{ starText }}</span>
+    </VTooltip>
+  </div>
 
 </template>
 
