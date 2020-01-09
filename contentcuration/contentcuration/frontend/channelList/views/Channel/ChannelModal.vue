@@ -176,15 +176,12 @@
     },
     methods: {
       ...mapActions('channel', [
-        'saveChannel',
+        'updateChannel',
         'loadChannel',
       ]),
       ...mapActions('channelList', [
         'loadChannelDetails',
       ]),
-      ...mapMutations('channel', {
-        updateChannel: 'UPDATE_CHANNEL',
-      }),
       hideHTMLScroll(hidden) {
         document.querySelector('html').style = hidden
           ? 'overflow-y: hidden !important;'

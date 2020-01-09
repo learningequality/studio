@@ -1,6 +1,4 @@
-import { channelLastSavedState } from './index';
-import { isTempId } from 'shared/utils';
-import client from 'shared/client';
+import { Channel } from 'shared/data';
 
 /* CHANNEL LIST ACTIONS */
 export function loadChannelList(context, payload) {
@@ -8,18 +6,16 @@ export function loadChannelList(context, payload) {
   if (payload && payload.listType) {
     params[payload.listType] = true;
   }
-  return client.get(window.Urls['channel-list'](), { params }).then(response => {
-    const channels = response.data;
+  return Channel.where(params).then(channels => {
     context.commit('ADD_CHANNELS', channels);
     return channels;
   });
 }
 
 export function loadChannel(context, id) {
-  return client
-    .get(window.Urls['channel-detail'](id))
-    .then(response => {
-      const channel = response.data;
+  return Channel
+    .get(id)
+    .then(channel => {
       context.commit('ADD_CHANNEL', channel);
       return channel;
     })
@@ -28,36 +24,32 @@ export function loadChannel(context, id) {
     });
 }
 
-/* CHANNEL EDITOR ACTIONS */
-export function saveChannel(context, channelId) {
-  if (context.getters.getChannelIsValid(channelId)) {
-    const channelData = channelLastSavedState.getUnsavedChanges(
-      context.getters.getChannel(channelId)
-    );
-    if (Object.keys(channelData).length) {
-      if (isTempId(channelId)) {
-        if (!channelData.editors || channelData.editors.length === 0) {
-          channelData.editors = [context.rootGetters.currentUserId];
-        }
-        delete channelData.id;
-        return client.post(window.Urls['channel-list'](), channelData).then(response => {
-          const channel = response.data;
-          context.commit('ADD_CHANNEL', channel);
-          context.commit('REMOVE_CHANNEL', channelId);
-          return channel.id;
-        });
-      }
 
-      return client.patch(window.Urls['channel-detail'](channelId), channelData).then(response => {
-        // If successful the data will just be true,
-        // so update our last saved state with the current vuex state.
-        if (response.data) {
-          channelLastSavedState.storeLastSavedState(context.getters.getChannel(channelId));
-        }
-        return null;
-      });
-    }
-  }
+/* CHANNEL EDITOR ACTIONS */
+
+export function createChannel(context) {
+  const session = context.rootState.session;
+  const channelData = {
+    name: '',
+    description: '',
+    language: session.preferences ? session.preferences.language : session.currentLanguage,
+    content_defaults: session.preferences,
+    thumbnail_url: '',
+    bookmark: false,
+    edit: true,
+  };
+  return Channel.put(channelData).then(id => {
+    context.commit('ADD_CHANNEL', {
+      id,
+      ...channelData,
+    });
+    return id;
+  });
+}
+
+export function updateChannel(context, channelData) {
+  context.commit('UPDATE_CHANNEL', channelData );
+  return Channel.update(channelData.id, channelData);
 }
 
 export function bookmarkChannel(context, payload) {
@@ -69,7 +61,7 @@ export function bookmarkChannel(context, payload) {
 }
 
 export function deleteChannel(context, channelId) {
-  return client.patch(window.Urls['channel-detail'](channelId), { deleted: true }).then(() => {
+  return Channel.update(channelId, { deleted: true }).then(() => {
     context.commit('REMOVE_CHANNEL', channelId);
   });
 }

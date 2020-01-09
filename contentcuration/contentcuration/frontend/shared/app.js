@@ -8,6 +8,8 @@ import 'shared/i18n/setup';
 import 'vuetify/dist/vuetify.min.css';
 import 'shared/styles/main.less';
 
+import { initializeDB } from 'shared/data';
+
 Vue.use(VueRouter);
 Vue.use(Vuetify, {
   rtl: window.isRTL,
@@ -22,10 +24,12 @@ export default function startApp({
   router,
   index,
 }) {
-  rootVue = new Vue({
-    el: 'app',
-    store,
-    router,
-    ...index,
+  initializeDB().then(() => {
+    rootVue = new Vue({
+      el: 'app',
+      store,
+      router,
+      ...index,
+    });
   });
 }

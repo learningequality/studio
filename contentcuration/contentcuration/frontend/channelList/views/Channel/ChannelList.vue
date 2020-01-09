@@ -85,10 +85,6 @@
     },
     computed: {
       ...mapGetters('channel', ['channels']),
-      ...mapState({
-        language: state => state.session.currentLanguage,
-        preferences: state => state.session.preferences,
-      }),
       listChannels() {
         const sortFields = ['-modified'];
         if (this.listType === ListTypes.PUBLIC) {
@@ -109,28 +105,13 @@
       return next(false);
     },
     methods: {
-      ...mapActions('channel', ['loadChannelList']),
-      ...mapMutations('channel', {
-        addChannel: 'ADD_CHANNEL',
-        removeChannel: 'REMOVE_CHANNEL',
-      }),
+      ...mapActions('channel', ['loadChannelList', 'createChannel']),
       newChannel() {
-        // Clear any previously existing dummy channelset
-        this.removeChannel(this.newId);
-        this.newId = generateTempId();
-        this.addChannel({
-          id: this.newId,
-          name: '',
-          description: '',
-          language: this.preferences ? this.preferences.language : this.language,
-          content_defaults: this.preferences,
-          thumbnail_url: '',
-          bookmark: false,
-          edit: true,
-        });
-        this.$router.push({
-          name: RouterNames.CHANNEL_EDIT,
-          params: { channelId: this.newId },
+        this.createChannel().then(id => {
+          this.$router.push({
+            name: RouterNames.CHANNEL_EDIT,
+            params: { channelId: id },
+          });
         });
       },
       loadData(listType) {
