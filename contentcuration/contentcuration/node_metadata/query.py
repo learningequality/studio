@@ -8,8 +8,18 @@ class Metadata(object):
     minimizing database query volume.
 
     Example:
-        md = Metadata(['123...abc']).annotate(some_thing=MetadataAnnotation())
+        nodes = ContentNode.objects.filter(pk__in=['123...abc', ...])
+        md = Metadata(nodes, some_thing=MetadataAnnotation())
         data = md.get('123...abc')
+
+    Example:
+        node = ContentNode.objects.get(pk='123...abc')
+        md = Metadata(node)
+        data = md.annotate(some_thing=MetadataAnnotation()).get(node.pk)
+
+    Example:
+        node = ContentNode.objects.get(pk='123...abc')
+        data = Metadata(some_thing=MetadataAnnotation()).get(node.pk)
     """
     def __init__(self, queryset_or_model=None, **annotations):
         """
