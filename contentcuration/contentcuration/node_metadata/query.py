@@ -63,7 +63,7 @@ class Metadata(object):
 
     def build(self):
         """
-        :return: A dict of the metadata indexed by the node's ID
+        :return: A complete queryset to return the metadata
         """
         if len(self.annotations) == 0:
             raise ValueError('No metadata to retrieve')
