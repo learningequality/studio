@@ -24,20 +24,6 @@
         </VBtn>
       </div>
       <VContainer class="filters notranslate">
-        <!-- Starred -->
-        <VCheckbox
-          v-if="loggedIn"
-          v-model="bookmark"
-          color="primary"
-          :label="$tr('starredLabel')"
-        />
-
-        <!-- Published -->
-        <VCheckbox
-          v-model="published"
-          color="primary"
-          :label="$tr('publishedLabel')"
-        />
 
         <!-- Keyword search -->
         <VTextField
@@ -85,6 +71,25 @@
           attach=".formats"
           multiple
           outline
+        />
+
+        <div class="subheading">
+          {{ $tr('categoryLabel') }}
+        </div>
+
+        <!-- Starred -->
+        <VCheckbox
+          v-if="loggedIn"
+          v-model="bookmark"
+          color="primary"
+          :label="$tr('starredLabel')"
+        />
+
+        <!-- Published -->
+        <VCheckbox
+          v-model="published"
+          color="primary"
+          :label="$tr('publishedLabel')"
         />
 
         <!-- Includes -->
@@ -281,6 +286,7 @@
       formatLabel: 'Formats',
       includesLabel: 'Includes',
       publishedLabel: 'Published',
+      categoryLabel: 'Category',
       searchText:
         '{count, plural,\n =0 {Search} \n =1 {Search (# filter)}\n other {Search (# filters)}}',
     },
