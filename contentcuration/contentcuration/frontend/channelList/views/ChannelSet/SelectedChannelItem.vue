@@ -3,7 +3,7 @@
   <VCard flat>
     <VContainer>
       <VLayout align-center>
-        <VFlex xs12 sm3 md3 lg2>
+        <VFlex xs12 sm3 md3 lg2 style="padding: 8px;">
           <VImg :src="channel.thumbnail_url" contain :aspect-ratio="16/9" />
         </VFlex>
         <VFlex xs12 sm7 md7 lg8>

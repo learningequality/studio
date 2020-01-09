@@ -35,7 +35,7 @@
         >
           <template v-slot:label>
             <VLayout align-center>
-              <VFlex xs12 sm4 md3 lg2>
+              <VFlex xs12 sm4 md3 lg2 style="padding: 8px;">
                 <VImg :src="channel.thumbnail_url" contain :aspect-ratio="16/9" />
               </VFlex>
               <VFlex xs12 sm8 md9 lg10>

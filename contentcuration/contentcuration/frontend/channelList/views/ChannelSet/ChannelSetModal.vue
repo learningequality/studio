@@ -6,6 +6,7 @@
     attach="body"
     fullscreen
     scrollable
+    transition="dialog-bottom-transition"
   >
     <VCard>
       <VWindow v-model="step">
