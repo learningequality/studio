@@ -11,7 +11,7 @@ class Metadata(object):
         md = Metadata(['123...abc']).annotate(some_thing=MetadataAnnotation())
         data = md.get('123...abc')
     """
-    def __init__(self, queryset_or_model, **annotations):
+    def __init__(self, queryset_or_model=None, **annotations):
         """
         :param queryset_or_model: A ContentNode or queryset
         :param annotations: A dict of annotations
@@ -38,6 +38,9 @@ class Metadata(object):
         :param node_pk: An int
         :return: A dict of metadata for the node identified by `node_pk`
         """
+        if self.query is None:
+            return Metadata(ContentNode.objects.filter(pk=node_pk), **self.annotations).get(node_pk)
+
         if self.metadata is None:
             self.metadata = {}
             query = self.build()
@@ -70,7 +73,6 @@ class Metadata(object):
             if annotation.cte_columns:
                 cte.add_columns(list(annotation.cte_columns))
 
-        cte = None
         query = self.query
         annotations = {}
 
@@ -84,8 +86,9 @@ class Metadata(object):
                     and annotation.cte and isinstance(cte, annotation.cte)
                 })
 
-        annotations.update({
-            field_name: annotation.get_annotation(cte)
+        annotations.update(**{
+            field_name: annotation.get_annotation(None)
+            if isinstance(annotation, MetadataAnnotation) else annotation
             for field_name, annotation in self.annotations.items()
             if not isinstance(annotation, MetadataAnnotation) or annotation.cte is None
         })
