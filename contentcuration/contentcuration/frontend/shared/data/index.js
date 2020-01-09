@@ -9,9 +9,11 @@ import pick from 'lodash/pick';
 import client from 'shared/client';
 
 
-const CREATED = 1;
-const UPDATED = 2;
-const DELETED = 3;
+export const CHANGE_TYPES = {
+  CREATED: 1,
+  UPDATED: 2,
+  DELETED: 3,
+}
 
 function uuid4() {
   return uuidv4().replace(/-/g, '');
@@ -51,9 +53,10 @@ export function initializeDB() {
   return db.open();
 }
 
-function registerListener(table, change, callback) {
-  if (![CREATED, UPDATED, DELETED].includes(change)) {
-    throw RangeError(`Change must be ${CREATED}, ${UPDATED}, or ${DELETED}`);
+export function registerListener(table, change, callback) {
+  change = Number(change);
+  if (!Object.values(CHANGE_TYPES).includes(change)) {
+    throw RangeError(`Change must be ${CHANGE_TYPES.CREATED}, ${CHANGE_TYPES.UPDATED}, or ${CHANGE_TYPES.DELETED}`);
   }
   if (!isFunction(callback)) {
     throw TypeError("Callback argument must be a function");
@@ -67,7 +70,7 @@ function registerListener(table, change, callback) {
   LISTENERS[table][change].set(callback, callback);
 }
 
-function removeListener(table, change, callback) {
+export function removeListener(table, change, callback) {
   if (LISTENERS[table]) {
     if (LISTENERS[table][change]) {
       return LISTENERS[table][change].delete(callback);
@@ -202,31 +205,22 @@ class Resource {
   deleteModel(id) {
     return client.delete(this.modelUrl(id));
   }
-
-  onCreate(callback) {
-    registerListener(this.tableName, CREATED, callback);
-    return () => removeListener(this.tableName, CREATED, callback);
-  }
-
-  onUpdate(callback) {
-    registerListener(this.tableName, UPDATED, callback);
-    return () => removeListener(this.tableName, UPDATED, callback);
-  }
-
-  onDelete(callback) {
-    registerListener(this.tableName, DELETED, callback);
-    return () => removeListener(this.tableName, DELETED, callback);
-  }
 }
 
+
+export const TABLE_NAMES = {
+  CHANNEL: 'channel',
+  CONTENTNODE: 'contentnode',
+};
+
 export const Channel = new Resource({
-  tableName: 'channel',
+  tableName: TABLE_NAMES.CHANNEL,
   urlName: 'channel',
   indexFields: ['name', 'language'],
 });
 
 export const ContentNode = new Resource({
-  tableName: 'contentNode',
+  tableName: TABLE_NAMES.CONTENTNODE,
   urlName: 'contentnode',
   indexFields: ['title', 'language', 'parent'],
 });
