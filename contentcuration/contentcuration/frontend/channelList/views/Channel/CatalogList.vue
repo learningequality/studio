@@ -12,7 +12,7 @@
         </VFlex>
         <VFlex xs12>
           <ChannelItem
-            v-for="item in page.results"
+            v-for="item in channels"
             :key="item.id"
             :channelId="item.id"
             :detailsRouteName="detailsRouteName"
@@ -23,7 +23,6 @@
             <Pagination
               :pageNumber="page.page_number"
               :totalPages="page.total_pages"
-              @input="navigateToPage"
             />
           </VLayout>
         </VFlex>
@@ -38,7 +37,7 @@
 
 <script>
 
-  import { mapActions, mapState } from 'vuex';
+  import { mapActions, mapGetters, mapState } from 'vuex';
   import debounce from 'lodash/debounce';
   import isEqual from 'lodash/isEqual';
   import { RouterNames } from '../../constants';
@@ -62,12 +61,16 @@
       };
     },
     computed: {
-      ...mapState('channelList', { page: 'catalogPage' }),
+      ...mapGetters('channelList', ['getChannels']),
+      ...mapState('channelList', ['page']),
       debouncedSearch() {
         return debounce(this.loadCatalog, 1000);
       },
       detailsRouteName() {
         return RouterNames.CATALOG_DETAILS;
+      },
+      channels() {
+        return this.getChannels(this.page.results);
       },
     },
     watch: {
@@ -90,15 +93,6 @@
             this.loadError = true;
             this.loading = false;
           });
-      },
-      navigateToPage(page) {
-        this.$router.push({
-          ...this.$route,
-          query: {
-            ...this.$route.query,
-            page_num: page,
-          },
-        });
       },
     },
     $trs: {

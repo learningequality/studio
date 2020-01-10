@@ -1,4 +1,5 @@
 import Vue from 'vue';
+import map from 'lodash/map';
 import { channelLastSavedState } from './index';
 
 /* CHANNEL LIST MUTATIONS */
@@ -21,6 +22,12 @@ export function ADD_CHANNELS(state, channels = []) {
   state.channelsMap = channels.reduce((channelsMap, channel) => {
     return mergeChannel(channelsMap, channel);
   }, state.channelsMap);
+}
+
+export function SET_PAGE(state, pageData) {
+  state.page = pageData;
+  ADD_CHANNELS(state, pageData.results);
+  state.page.results = map(pageData.results, r => r.id);
 }
 
 export function REMOVE_CHANNEL(state, channelId) {

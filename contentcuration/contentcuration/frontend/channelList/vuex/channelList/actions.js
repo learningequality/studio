@@ -28,9 +28,11 @@ export function loadChannel(context, id) {
     });
 }
 
-export function searchCatalog(context, filters) {
-  return client.get(window.Urls.catalog_list(), { params: filters }).then(response => {
-    context.commit('SET_CATALOG_LIST', response.data);
+export function searchCatalog(context, params) {
+  params.page_size = params.page_size || 25;
+  params.public = true;
+  return client.get(window.Urls['channel-list'](), { params }).then(response => {
+    context.commit('SET_PAGE', response.data);
   });
 }
 

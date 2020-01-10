@@ -11,7 +11,12 @@ from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
 from le_utils.constants import content_kinds
+from le_utils.constants import roles
 from rest_framework import serializers
+from rest_framework.filters import SearchFilter
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
 
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
@@ -19,7 +24,24 @@ from contentcuration.models import get_channel_thumbnail
 from contentcuration.models import SecretToken
 from contentcuration.models import User
 from contentcuration.viewsets.base import ValuesViewset
-from contentcuration.viewsets.base import WriteOnlySerializer
+
+
+class ChannelListPagination(PageNumberPagination):
+    page_size = None
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+    def get_paginated_response(self, data):
+        return Response({
+            'links': {
+                'next': self.get_next_link(),
+                'previous': self.get_previous_link()
+            },
+            'page_number': self.page.number,
+            'count': self.page.paginator.count,
+            'total_pages': self.page.paginator.num_pages,
+            'results': data
+        })
 
 
 class ChannelFilter(FilterSet):
@@ -28,10 +50,90 @@ class ChannelFilter(FilterSet):
     bookmark = BooleanFilter(method="filter_bookmark")
     published = BooleanFilter(method="filter_published")
     ids = CharFilter(method="filter_ids")
+    keywords = CharFilter(method="filter_keywords")
+    language = CharFilter(method="filter_language")
+    licenses = CharFilter(method="filter_licenses")
+    kinds = CharFilter(method="filter_kinds")
+    coach = BooleanFilter(method="filter_coach")
+    assessments = BooleanFilter(method="filter_assessments")
+    subtitles = BooleanFilter(method="filter_subtitles")
+    bookmark = BooleanFilter(method="filter_bookmark")
+    published = BooleanFilter(method="filter_published")
 
-    class Meta:
-        model = Channel
-        fields = ("edit", "view", "public", "bookmark", "published", "ids")
+    def __init__(self, *args, **kwargs):
+        super(ChannelFilter, self).__init__(*args, **kwargs)
+        self.main_tree_query = ContentNode.objects.filter(
+            tree_id=OuterRef("main_tree__tree_id")
+        )
+
+    def filter_keywords(self, queryset, name, value):
+        keywords_query = (
+            self.main_tree_query.filter(
+                Q(tags__tag_name__icontains=value) |
+                Q(author__icontains=value) |
+                Q(aggregator__icontains=value) |
+                Q(provider__icontains=value)
+            )
+        )
+        return queryset.annotate(
+            keyword_match_count=SQCount(keywords_query, field="content_id"),
+            primary_token=Max("secret_tokens__token")
+        ).filter(
+            Q(name__icontains=value) | Q(description__icontains=value) |
+            Q(pk__istartswith=value) | Q(primary_token=value.replace('-', '')) |
+            Q(keyword_match_count__gt=0)
+        )
+
+    def filter_language(self, queryset, name, value):
+        language_query = (
+            self.main_tree_query.filter(language_id=value)
+            .values("content_id").distinct()
+        )
+        return queryset.annotate(
+            language_count=SQCount(language_query, field="content_id")
+        ).filter(Q(language_id=value) | Q(language_count__gt=0))
+
+    def filter_licenses(self, queryset, name, value):
+        license_query = (
+            self.main_tree_query.filter(license_id__in=[int(l) for l in value.split(',')])
+            .values("content_id").distinct()
+        )
+        return queryset.annotate(
+            license_count=SQCount(license_query, field="content_id")
+        ).exclude(license_count=0)
+
+    def filter_kinds(self, queryset, name, value):
+        kinds_query = (
+            self.main_tree_query.filter(kind_id__in=value.split(','))
+            .values("content_id").distinct()
+        )
+        return queryset.annotate(
+            kind_match_count=SQCount(kinds_query, field="content_id")
+        ).exclude(kind_match_count=0)
+
+    def filter_coach(self, queryset, name, value):
+        coach_query = (
+            self.main_tree_query.filter(role_visibility=roles.COACH)
+        )
+        return queryset.annotate(
+            coach_count=SQCount(coach_query, field="content_id")
+        ).exclude(coach_count=0)
+
+    def filter_assessments(self, queryset, name, value):
+        assessment_query = (
+            self.main_tree_query.filter(kind_id=content_kinds.EXERCISE)
+        )
+        return queryset.annotate(
+            assessment_count=SQCount(assessment_query, field="content_id")
+        ).exclude(assessment_count=0)
+
+    def filter_subtitles(self, queryset, name, value):
+        subtitle_query = (
+            self.main_tree_query.filter(files__preset__subtitle=True)
+        )
+        return queryset.annotate(
+            subtitle_count=SQCount(subtitle_query, field="content_id")
+        ).exclude(subtitle_count=0)
 
     def filter_edit(self, queryset, name, value):
         return queryset.filter(edit=True)
@@ -54,6 +156,10 @@ class ChannelFilter(FilterSet):
             # Catch in case of a poorly formed UUID
             return queryset.none()
 
+    class Meta:
+        model = Channel
+        fields = ("keywords", "published", "language", "licenses", "kinds", "coach", "assessments", "subtitles", "bookmark", "edit", "view", "public", "ids")
+
 
 class SQCount(Subquery):
     # Include ALIAS at the end to support Postgres
@@ -61,7 +167,7 @@ class SQCount(Subquery):
     output_field = IntegerField()
 
 
-class ChannelSerializer(WriteOnlySerializer):
+class ChannelSerializer(serializers.ModelSerializer):
     """
     This is a write only serializer - we leverage it to do create and update
     operations, but read operations are handled by the Viewset.
@@ -77,9 +183,9 @@ class ChannelSerializer(WriteOnlySerializer):
             "description",
             "thumbnail",
             "thumbnail_encoding",
+            "version",
             "language",
             "bookmark",
-            "deleted",
         )
         read_only_fields = ("id",)
 
@@ -101,7 +207,9 @@ class ChannelSerializer(WriteOnlySerializer):
 class ChannelViewSet(ValuesViewset):
     queryset = Channel.objects.all()
     serializer_class = ChannelSerializer
-    filter_backends = (DjangoFilterBackend,)
+    pagination_class = ChannelListPagination
+    filter_backends = (DjangoFilterBackend, SearchFilter)
+    permission_classes = [AllowAny]
     filter_class = ChannelFilter
     values = (
         "id",
@@ -112,6 +220,7 @@ class ChannelViewSet(ValuesViewset):
         "thumbnail_encoding",
         "language",
         "primary_token",
+        "count",
         "modified",
         "count",
         "view",
@@ -122,7 +231,6 @@ class ChannelViewSet(ValuesViewset):
         "main_tree__created",
         "last_published",
         "ricecooker_version",
-        "download_count",
         "main_tree__id",
     )
 
@@ -135,19 +243,16 @@ class ChannelViewSet(ValuesViewset):
 
     def get_queryset(self):
         queryset = Channel.objects.filter(deleted=False).filter(
-            id__in=Channel.objects.filter(
-                Q(editors=self.request.user)
-                | Q(viewers=self.request.user)
-                | Q(public=True)
-            )
-            .distinct()
-            .values_list("id", flat=True)
-        )
+            Q(editors=self.request.user)
+            | Q(viewers=self.request.user)
+            | Q(public=True)
+        ).distinct()
 
-        user_queryset = User.objects.filter(id=self.request.user.id)
         # Annotate edit, view, and bookmark onto the channels
         # Have to cast to integer first as it initially gets set
         # as a Big Integer, which cannot be cast directly to a Boolean
+        user_id = not self.request.user.is_anonymous() and self.request.user.id
+        user_queryset = User.objects.filter(id=user_id)
         queryset = queryset.annotate(
             edit=Cast(
                 Cast(
@@ -180,7 +285,8 @@ class ChannelViewSet(ValuesViewset):
                 BooleanField(),
             ),
         )
-        return self.prefetch_queryset(queryset)
+
+        return self.prefetch_queryset(queryset).order_by('-priority', 'name')
 
     def prefetch_queryset(self, queryset):
         prefetch_secret_token = Prefetch(
@@ -210,15 +316,7 @@ class ChannelViewSet(ValuesViewset):
             .values_list("content_id", flat=True)
         )
 
-        active_tree_ids = Channel.objects.filter(deleted=False).values_list('main_tree__tree_id', flat=True)
-        imports = (
-            ContentNode.objects.filter(tree_id__in=active_tree_ids, original_channel_id=OuterRef('pk'))
-            .exclude(tree_id=OuterRef("main_tree__tree_id"))
-            .values('tree_id')
-            .distinct("tree_id")
-        )
         queryset = queryset.annotate(
-            download_count=SQCount(imports, field="tree_id"),
             count=SQCount(non_topic_content_ids, field="content_id")
         )
         return queryset

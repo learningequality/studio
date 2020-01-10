@@ -11,7 +11,7 @@ export default {
     channelsMap: {},
     channelDetailsMap: {},
     invitationsMap: {},
-    catalogPage: {},
+    page: {},
   }),
   getters,
   mutations,

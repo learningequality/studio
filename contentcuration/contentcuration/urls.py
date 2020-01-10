@@ -55,7 +55,6 @@ from contentcuration.models import Language
 from contentcuration.models import License
 from contentcuration.models import Task
 from contentcuration.models import User
-from contentcuration.viewsets.catalog import CatalogChannelViewSet
 from contentcuration.viewsets.channel import ChannelViewSet
 from contentcuration.viewsets.channelset import ChannelSetViewSet
 from contentcuration.viewsets.invitation import InvitationViewSet
@@ -201,7 +200,6 @@ class TaskViewSet(viewsets.ModelViewSet):
 router = routers.DefaultRouter(trailing_slash=False)
 router.register(r'license', LicenseViewSet)
 router.register(r'language', LanguageViewSet)
-router.register(r'catalog', CatalogChannelViewSet, base_name="catalog")
 router.register(r'channel', ChannelViewSet)
 router.register(r'channelset', ChannelSetViewSet)
 router.register(r'fileformat', FileFormatViewSet)
@@ -252,7 +250,6 @@ urlpatterns += [
     url(r'^api/public/(?P<version>[^/]+)/channels$', public_views.get_public_channel_list, name='get_public_channel_list'),
     url(r'^api/public/(?P<version>[^/]+)/channels/lookup/(?P<identifier>[^/]+)', public_views.get_public_channel_lookup, name='get_public_channel_lookup'),
     url(r'^api/public/info', public_views.InfoViewSet.as_view({'get': 'list'}), name='info'),
-    url(r'^api/catalog/details/(?P<item_id>[^/]{32})$', public_views.get_catalog_details, name="get_catalog_details"),
 ]
 
 # Add channel endpoints

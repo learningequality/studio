@@ -13,8 +13,6 @@ from rest_framework.response import Response
 
 from contentcuration.models import Channel
 from contentcuration.serializers import PublicChannelSerializer
-from contentcuration.viewsets.catalog import ChannelSerializer as CatalogChannelSerializer
-from contentcuration.viewsets.catalog import get_catalog_queryset
 
 
 def _get_channel_list(version, params, identifier=None):
@@ -108,10 +106,3 @@ class InfoViewSet(viewsets.ViewSet):
                 'operating_system': None,
                 }
         return Response(info)
-
-
-@api_view(['GET'])
-@permission_classes((AllowAny,))
-def get_catalog_details(request, item_id):
-    catalog_item = get_catalog_queryset().get(pk=item_id, public=True)
-    return Response(CatalogChannelSerializer(catalog_item).data)

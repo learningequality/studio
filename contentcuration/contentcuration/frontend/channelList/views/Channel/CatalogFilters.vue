@@ -35,7 +35,16 @@
           clearable
           class="notranslate"
           prepend-inner-icon="search"
+          data-test="keywords"
           @blur="setKeywords"
+        />
+
+        <!-- Show per page -->
+        <VSelect
+          v-model="pageSize"
+          outline
+          :items="pageSizeOptions"
+          :label="$tr('pageSize')"
         />
 
         <!-- Language -->
@@ -152,6 +161,9 @@
       licenseOptions() {
         return sortBy(Constants.Licenses, 'id');
       },
+      pageSizeOptions() {
+        return [5, 10, 25, 50];
+      },
       filtersCount() {
         let fields = [
           this.keywords,
@@ -172,6 +184,14 @@
       },
       keywords() {
         return this.$route.query.keywords;
+      },
+      pageSize: {
+        get() {
+          return Number(this.$route.query.page_size) || 25;
+        },
+        set(value) {
+          this.setQueryParam('page_size', value);
+        },
       },
       language: {
         get() {
@@ -289,6 +309,7 @@
       categoryLabel: 'Category',
       searchText:
         '{count, plural,\n =0 {Search} \n =1 {Search (# filter)}\n other {Search (# filters)}}',
+      pageSize: 'Show per page',
     },
   };
 

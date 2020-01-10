@@ -1,3 +1,4 @@
+import pick from 'lodash/pick';
 import { isTempId } from '../../utils';
 import { channelLastSavedState } from './index';
 
@@ -12,6 +13,12 @@ export function invitations(state) {
 export function getChannel(state) {
   return function(channelId) {
     return state.channelsMap[channelId];
+  };
+}
+
+export function getChannels(state) {
+  return function(channelIds) {
+    return Object.values(pick(state.channelsMap, channelIds));
   };
 }
 
