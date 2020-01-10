@@ -922,6 +922,7 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
               last_elem.after(item_view.el);
               last_elem = item_view.$el;
               to_delete.remove();
+              reload_list.add(node);
             });
             collection
               .move(self.model, max, min)
