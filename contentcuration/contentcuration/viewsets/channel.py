@@ -242,16 +242,16 @@ class ChannelViewSet(ValuesViewset):
     }
 
     def get_queryset(self):
+        user_id = not self.request.user.is_anonymous() and self.request.user.id
         queryset = Channel.objects.filter(deleted=False).filter(
-            Q(editors=self.request.user)
-            | Q(viewers=self.request.user)
+            Q(editors=user_id)
+            | Q(viewers=user_id)
             | Q(public=True)
         ).distinct()
 
         # Annotate edit, view, and bookmark onto the channels
         # Have to cast to integer first as it initially gets set
         # as a Big Integer, which cannot be cast directly to a Boolean
-        user_id = not self.request.user.is_anonymous() and self.request.user.id
         user_queryset = User.objects.filter(id=user_id)
         queryset = queryset.annotate(
             edit=Cast(
