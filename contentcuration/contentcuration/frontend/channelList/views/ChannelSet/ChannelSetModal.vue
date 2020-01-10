@@ -12,7 +12,7 @@
       <VWindow v-model="step">
         <VWindowItem :value="1">
           <VToolbar card prominent dark color="primary">
-            <VBtn icon @click="close">
+            <VBtn icon data-test="close" @click="close">
               <VIcon class="notranslate">
                 clear
               </VIcon>
@@ -30,6 +30,7 @@
             </span>
             <VBtn
               flat
+              data-test="save"
               @click="saveAndClose"
             >
               {{ saveButtonLabel }}
@@ -72,7 +73,7 @@
                   {{ $tr('loading') }}
                 </VCardText>
                 <div v-else fluid>
-                  <VBtn color="primary" @click="step ++">
+                  <VBtn color="primary" data-test="select" @click="step ++">
                     {{ $tr('selectChannelsHeader') }}
                   </VBtn>
                   <SelectedChannelItem
@@ -120,6 +121,7 @@
                       lazy
                     >
                       <ChannelSelectionList
+                        v-if="channelSet"
                         :channelSetId="channelSetId"
                         :listType="listType"
                       />
@@ -135,6 +137,7 @@
             </div>
             <VBtn
               color="primary"
+              data-test="finish"
               @click="step --"
             >
               {{ $tr('finish') }}

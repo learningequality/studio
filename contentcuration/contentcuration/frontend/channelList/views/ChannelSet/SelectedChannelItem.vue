@@ -20,7 +20,12 @@
           </VCardText>
         </VFlex>
         <VFlex xs12 sm2 md2 lg2>
-          <VBtn flat color="primary" @click="$emit('remove', channelId)">
+          <VBtn
+            flat
+            color="primary"
+            data-test="remove"
+            @click="$emit('remove', channelId)"
+          >
             {{ $tr('removeText') }}
           </VBtn>
         </VFlex>

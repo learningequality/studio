@@ -34,6 +34,7 @@
             <VBtn
               v-if="!loading"
               color="primary"
+              data-test="add-channelset"
               @click="newChannelSet"
             >
               {{ $tr('addChannelSetTitle') }}

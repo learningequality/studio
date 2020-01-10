@@ -1,6 +1,6 @@
 <template>
 
-  <tr>
+  <tr :to="channelSetDetailsLink">
     <td class="notranslate">
       {{ channelSet.name }}
     </td>
@@ -21,7 +21,7 @@
           </VBtn>
         </template>
         <VList>
-          <VListTile :to="channelSetDetailsLink">
+          <VListTile data-test="edit" :to="channelSetDetailsLink">
             <VListTileAction>
               <VIcon class="notranslate">
                 edit
@@ -52,6 +52,7 @@
           </VBtn>
           <VBtn
             color="primary"
+            data-test="delete"
             @click="deleteChannelSet(channelSet.id)"
           >
             {{ $tr('deleteChannelSetTitle') }}

@@ -30,6 +30,7 @@
         <VCheckbox
           v-model="selectedChannels"
           color="primary"
+          data-test="checkbox"
           :value="channel.id"
           class="notranslate"
         >
@@ -92,7 +93,7 @@
       ...mapGetters('channelList', ['channels']),
       ...mapGetters('channelSet', ['getChannelSet']),
       channelSet() {
-        return this.getChannelSet(this.channelSetId) || {};
+        return this.getChannelSet(this.channelSetId) || { channels: [] };
       },
       listChannels() {
         const sortFields = ['-modified'];
