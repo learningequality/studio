@@ -47,7 +47,7 @@
       </DetailsRow>
       <DetailsRow
         :label="$tr('coachHeading')"
-        :text="(details.includes.coach_content || 0).toString()"
+        :text="$formatNumber(details.includes.coach_content || 0)"
         :definition="$tr('coachDescription')"
       />
       <DetailsRow :label="$tr('tagsHeading')">
