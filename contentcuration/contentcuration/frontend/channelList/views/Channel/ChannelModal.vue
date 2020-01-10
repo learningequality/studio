@@ -10,7 +10,7 @@
   >
     <VCard>
       <VToolbar card prominent dark color="primary">
-        <VBtn icon @click="close">
+        <VBtn icon data-test="close" @click="close">
           <VIcon class="notranslate">
             clear
           </VIcon>
@@ -19,7 +19,7 @@
           {{ $tr('newChannelHeader') }}
         </VToolbarTitle>
         <VSpacer />
-        <VBtn flat @click="save">
+        <VBtn flat data-test="save" @click="save">
           {{ $tr('save') }}
         </VBtn>
       </VToolbar>
@@ -34,11 +34,8 @@
         <VLayout row justify-center>
           <VFlex md12 lg10 xl8>
             <VForm ref="detailsform">
-              <ThumbnailUpload
-                v-model="thumbnail"
-                :aspect-ratio="16/9"
-                max-width="350px"
-              />
+              <!-- TODO: Insert thumbnail here once the uploader is ready -->
+
               <h1 class="title">
                 {{ $tr('details') }}
               </h1>
@@ -82,19 +79,14 @@
 <script>
 
   import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
-  import pick from 'lodash/pick';
   import { isTempId } from '../../utils';
   import { RouterNames } from '../../constants';
   import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown';
-  import ThumbnailUpload from 'shared/views/ThumbnailUpload';
-
-  // Components
 
   export default {
     name: 'ChannelModal',
     components: {
       LanguageDropdown,
-      ThumbnailUpload,
     },
     props: {
       channelId: {
@@ -138,14 +130,6 @@
         },
         set(language) {
           this.updateChannel({ id: this.channelId, language });
-        },
-      },
-      thumbnail: {
-        get() {
-          return pick(this.channel, ['thumbnail', 'thumbnail_url', 'thumbnail_encoding']);
-        },
-        set(thumbnailData) {
-          this.updateChannel({ id: this.channelId, thumbnailData });
         },
       },
       isNewChannel() {

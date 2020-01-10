@@ -95,12 +95,6 @@
               :text="translateLanguage(channel.language)"
             />
             <DetailsRow
-              v-if="channel.download_count"
-              :label="$tr('downloadsHeading')"
-              :text="$tr('downloadsText', {count: channel.download_count})"
-            />
-
-            <DetailsRow
               v-if="channel.language"
               :label="$tr('primaryLanguageHeading')"
               :text="translateLanguage(channel.language)"
@@ -232,9 +226,6 @@
       publishedHeading: 'Published date',
       primaryLanguageHeading: 'Primary language',
       unpublishedText: 'Unpublished',
-      downloadsHeading: 'Imports',
-      downloadsText:
-        '{count, plural,\n =1 {Imported into # channel}\n other {Imported into # channels}}',
     },
   };
 
@@ -262,6 +253,7 @@
 
   .channel-details-wrapper {
     max-width: 900px;
+    padding-bottom: 100px;
     margin: 0 auto;
   }
 

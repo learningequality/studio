@@ -1,6 +1,6 @@
 <template>
 
-  <VCard class="my-3" :to="openChannelLink">
+  <VCard class="my-3" :to="openChannelLink" data-test="channel-card">
     <VLayout row wrap>
       <VFlex xs12 sm3>
         <VCardTitle>
@@ -59,6 +59,7 @@
             color="primary"
             icon
             :to="channelDetailsLink"
+            data-test="details-button"
             v-on="on"
             @click.stop
           >
@@ -78,14 +79,19 @@
       &nbsp;
       <VMenu offset-y>
         <template v-slot:activator="{ on }">
-          <VBtn icon flat v-on="on" @click.stop.prevent>
+          <VBtn icon flat data-test="menu" v-on="on" @click.stop.prevent>
             <VIcon class="notranslate">
               more_vert
             </VIcon>
           </VBtn>
         </template>
         <VList>
-          <VListTile v-if="canEdit" :to="channelEditLink" @click.stop>
+          <VListTile
+            v-if="canEdit"
+            :to="channelEditLink"
+            data-test="edit-channel"
+            @click.stop
+          >
             <VListTileAction>
               <VIcon class="notranslate">
                 edit
@@ -121,7 +127,7 @@
         <VBtn color="primary" flat @click="deleteDialog=false">
           {{ $tr('cancel') }}
         </VBtn>
-        <VBtn color="primary" @click="handleDelete">
+        <VBtn color="primary" data-test="delete" @click="handleDelete">
           {{ $tr('deleteChannel') }}
         </VBtn>
       </template>

@@ -10,7 +10,12 @@
         <VListTileAction>
           <VTooltip bottom>
             <template v-slot:activator="{ on }">
-              <VBtn icon v-on="on" @click="acceptInvitation(invitationID)">
+              <VBtn
+                icon
+                data-test="accept"
+                v-on="on"
+                @click="acceptInvitation(invitationID)"
+              >
                 <VIcon color="green" class="notranslate">
                   check
                 </VIcon>
@@ -24,6 +29,7 @@
             <template v-slot:activator="{ on }">
               <VBtn
                 icon
+                data-test="decline"
                 v-on="on"
                 @click="dialog = true"
               >
@@ -61,7 +67,7 @@
         <VBtn flat color="primary" @click="dialog = false">
           {{ $tr('cancel') }}
         </VBtn>
-        <VBtn color="primary" @click="declineAndClose">
+        <VBtn data-test="decline-close" color="primary" @click="declineAndClose">
           {{ $tr('decline') }}
         </VBtn>
       </template>

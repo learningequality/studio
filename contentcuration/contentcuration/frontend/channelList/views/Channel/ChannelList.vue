@@ -9,6 +9,7 @@
             v-if="isEditable && !loading"
             color="primary"
             class="add-channel-button"
+            data-test="add-channel"
             @click="newChannel"
           >
             {{ $tr('channel') }}
@@ -127,11 +128,14 @@
           bookmark: false,
           edit: true,
         });
-        this.$router.push({ name: RouterNames.CHANNEL_EDIT, params: { channelId: this.newId } });
+        this.$router.push({
+          name: RouterNames.CHANNEL_EDIT,
+          params: { channelId: this.newId },
+        });
       },
       loadData(listType) {
         this.loading = true;
-        this.loadChannelList({ listType: listType }).then(() => {
+        this.loadChannelList({ listType }).then(() => {
           this.loading = false;
         });
       },
@@ -139,7 +143,7 @@
     $trs: {
       loading: 'Loading channels...',
       noChannelsFound: 'No channels found',
-      channel: ' New channel',
+      channel: 'New channel',
     },
   };
 
