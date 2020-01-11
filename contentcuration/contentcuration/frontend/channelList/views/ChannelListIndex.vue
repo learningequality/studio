@@ -8,14 +8,21 @@
           :key="listType.id"
           :to="getChannelLink(listType)"
         >
-          <VIcon
-            v-if="listType === 'bookmark'"
-            style="margin-right: 8px;"
-            class="notranslate"
-          >
-            star
-          </VIcon>
-          {{ $tr(listType) }}
+          <VBadge :value="invitationsByListCounts[listType]" color="secondary">
+            <template v-slot:badge>
+              <span>{{ $formatNumber(invitationsByListCounts[listType]) }}</span>
+            </template>
+            <span>
+              <VIcon
+                v-if="listType === 'bookmark'"
+                style="margin-right: 8px;"
+                class="notranslate"
+              >
+                star
+              </VIcon>
+              {{ $tr(listType) }}
+            </span>
+          </VBadge>
         </VTab>
         <VTab :to="catalogLink">
           {{ $tr("catalog") }}
@@ -29,11 +36,11 @@
       <VContainer fluid>
         <VLayout row wrap justify-center>
           <VFlex xs12 sm10 md8 lg6>
-            <VCard v-if="invitations.length" v-show="isChannelList">
+            <VCard v-if="invitationList.length" v-show="isChannelList">
               <VList subheader>
-                <VSubheader>{{ $tr('invitations', {count: invitations.length}) }}</VSubheader>
+                <VSubheader>{{ $tr('invitations', {count: invitationList.length}) }}</VSubheader>
                 <ChannelInvitation
-                  v-for="invitation in invitations"
+                  v-for="invitation in invitationList"
                   :key="invitation.id"
                   :invitationID="invitation.id"
                 />
@@ -54,7 +61,7 @@
 <script>
 
   import { mapActions, mapGetters, mapState } from 'vuex';
-  import { ListTypes, RouterNames } from '../constants';
+  import { ListTypes, RouterNames, ChannelInvitationMapping } from '../constants';
   import ChannelInvitation from './Channel/ChannelInvitation';
   import AppBar from 'shared/views/AppBar';
 
@@ -71,6 +78,22 @@
       ...mapGetters('channelList', ['invitations']),
       lists() {
         return Object.values(ListTypes).filter(l => l !== 'public');
+      },
+      invitationList() {
+        return (
+          this.invitations.filter(
+            i => ChannelInvitationMapping[i.share_mode] === this.$route.params.listType
+          ) || []
+        );
+      },
+      invitationsByListCounts() {
+        let inviteMap = {};
+        Object.values(ListTypes).forEach(type => {
+          inviteMap[type] = this.invitations.filter(
+            i => !i.accepted && !i.declined && ChannelInvitationMapping[i.share_mode] === type
+          ).length;
+        });
+        return inviteMap;
       },
       channelSetLink() {
         return { name: RouterNames.CHANNEL_SETS };
