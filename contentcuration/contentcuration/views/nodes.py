@@ -18,6 +18,7 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import api_view
 from rest_framework.decorators import authentication_classes
 from rest_framework.decorators import permission_classes
+from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
@@ -257,6 +258,17 @@ def get_channel_details(request, channel_id):
         request.user.can_view_node(node)
     except PermissionDenied:
         return HttpResponseNotFound("No topic found for {}".format(channel_id))
+    data = get_node_details_cached(node)
+    return HttpResponse(json.dumps(data))
+
+
+@api_view(['GET'])
+@permission_classes((AllowAny,))
+def get_node_details(request, node_id):
+    node = ContentNode.objects.get(pk=node_id)
+    channel = node.get_channel()
+    if channel and not channel.public:
+        return HttpResponseNotFound("No topic found for {}".format(node_id))
     data = get_node_details_cached(node)
     return HttpResponse(json.dumps(data))
 

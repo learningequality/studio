@@ -5,4 +5,5 @@ def site_variables(request):
     return {'INCIDENT': settings.INCIDENT,
             'BETA_MODE': settings.BETA_MODE,
             'DEPRECATED': "contentworkshop" in request.get_host(),
-            'DEBUG': settings.DEBUG}
+            'DEBUG': settings.DEBUG,
+            'LOGGED_IN': not request.user.is_anonymous()}

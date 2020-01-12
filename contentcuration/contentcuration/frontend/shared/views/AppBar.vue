@@ -1,39 +1,48 @@
 <template>
 
-  <VToolbar app dark color="purple" :tabs="Boolean($slots.tabs)">
+  <VToolbar app dark clipped-left color="purple" :tabs="Boolean($slots.tabs)">
     <VToolbarSideIcon href="/channels">
       <VImg maxHeight="35" contain :src="require('../images/kolibri-logo.svg')" />
     </VToolbarSideIcon>
 
-    <VToolbarTitle class="white--text">
-      Kolibri Studio Beta
+    <VToolbarTitle class="white--text notranslate">
+      {{ $tr('title') }}
     </VToolbarTitle>
     <VSpacer />
 
-    <VToolbarTitle class="white--text">
-      {{ $tr('helloUser', { username: user.first_name }) }}
-    </VToolbarTitle>
-    <VMenu offsetY>
-      <template v-slot:activator="{ on }">
-        <VBtn icon v-on="on">
-          <VIcon>account_circle</VIcon>
-        </VBtn>
-      </template>
+    <template v-if="loggedIn">
+      <VToolbarTitle class="white--text">
+        {{ $tr('helloUser', { username: user.first_name }) }}
+      </VToolbarTitle>
+      <VMenu offsetY>
+        <template v-slot:activator="{ on }">
+          <VBtn icon v-on="on">
+            <VIcon class="notranslate">
+              account_circle
+            </VIcon>
+          </VBtn>
+        </template>
 
-      <VList>
-        <VListTile
-          v-for="item in menuItems"
-          :key="item.url"
-          :href="item.url"
-          :target="item.target"
-        >
-          <VListTileTitle v-text="item.label" />
-        </VListTile>
-      </VList>
-    </VMenu>
+        <VList>
+          <VListTile
+            v-for="item in menuItems"
+            :key="item.url"
+            :href="item.url"
+            :target="item.target"
+          >
+            <VListTileTitle v-text="item.label" />
+          </VListTile>
+        </VList>
+      </VMenu>
+    </template>
+    <VBtn v-else href="/accounts/login" flat>
+      {{ $tr('logIn') }}
+    </VBtn>
+
     <template v-if="$slots.tabs" #extension>
       <VTabs
         fixedTabs
+        showArrows
         color="transparent"
         sliderColor="white"
       >
@@ -52,7 +61,10 @@
   export default {
     name: 'AppBar',
     computed: {
-      ...mapState({ user: state => state.session.currentUser }),
+      ...mapState({
+        user: state => state.session.currentUser,
+        loggedIn: state => state.session.loggedIn,
+      }),
       menuItems() {
         const items = [
           {
@@ -79,12 +91,23 @@
       },
     },
     $trs: {
+      title: 'Kolibri Studio Beta',
       administration: 'Administration',
       settings: 'Settings',
       help: 'Help',
+      logIn: 'Log In',
       logOut: 'Log Out',
       helloUser: 'Hello, { username }',
     },
   };
 
 </script>
+
+<style lang="less" scoped>
+
+  /deep/ .v-tabs__icon--next,
+  /deep/ .v-tabs__icon--prev {
+    margin-top: 10px;
+  }
+
+</style>

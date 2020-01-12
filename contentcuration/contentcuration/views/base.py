@@ -9,8 +9,8 @@ from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
 from django.db.models import IntegerField
-from django.db.models import Q
 from django.db.models import OuterRef
+from django.db.models import Q
 from django.db.models import Subquery
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
@@ -28,6 +28,7 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import api_view
 from rest_framework.decorators import authentication_classes
 from rest_framework.decorators import permission_classes
+from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
@@ -53,10 +54,7 @@ PUBLIC_CHANNELS_CACHE_DURATION = 30  # seconds
 
 @browser_is_supported
 def base(request):
-    if request.user.is_authenticated():
-        return redirect('channels')
-    else:
-        return redirect('accounts/login')
+    return redirect('channels')
 
 
 """ HEALTH CHECKS """
@@ -102,15 +100,15 @@ def get_or_set_cached_constants(constant, serializer):
     return constant_data
 
 
-@login_required
 @browser_is_supported
 @has_accepted_policies
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
-@permission_classes((IsAuthenticated,))
+@permission_classes((AllowAny,))
 def channel_list(request):
+    current_user = not request.user.is_anonymous() and JSONRenderer().render(UserChannelListSerializer(request.user).data)
+    preferences = not request.user.is_anonymous() and json.dumps(request.user.content_defaults)
     return render(request, 'channel_list.html', {"channel_name": False,
-                                                 "current_user": JSONRenderer().render(UserChannelListSerializer(request.user).data),
-                                                 "user_preferences": json.dumps(request.user.content_defaults),
+                                                 "current_user": current_user,
+                                                 "user_preferences": preferences,
                                                  "messages": get_messages(),
                                                  })
 
@@ -318,7 +316,7 @@ class SandboxView(TemplateView):
         nodes = []
 
         # Get a node of every kind
-        for kind, _ in content_kinds.choices:
+        for kind, _ in reversed(sorted(content_kinds.choices)):
             node = active_nodes.filter(kind_id=kind, freeze_authoring_data=False).first()
             if node:
                 nodes.append(ContentNodeSerializer(node).data)

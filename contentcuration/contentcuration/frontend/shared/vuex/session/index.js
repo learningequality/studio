@@ -6,6 +6,7 @@ export default {
       first_name: 'Guest',
       ...(window.user || {}),
     },
+    loggedIn: Boolean(window.user),
     preferences:
       window.user_preferences === 'string'
         ? JSON.parse(window.user_preferences)
@@ -19,6 +20,7 @@ export default {
       state.currentUser = {
         ...currentUser,
       };
+      state.loggedIn = Boolean(currentUser);
     },
   },
   getters: {

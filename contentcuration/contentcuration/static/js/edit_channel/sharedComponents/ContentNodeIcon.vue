@@ -1,6 +1,6 @@
 <template>
 
-  <VIcon class="icon" :class="kind" dark>
+  <VIcon class="icon notranslate" :class="kind" dark>
     {{ icon }}
   </VIcon>
 
@@ -62,7 +62,6 @@
 
   .icon {
     padding: 2px;
-    font-size: 13pt !important;
     color: white;
     border-radius: 5px;
     &.video {

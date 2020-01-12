@@ -1,19 +1,25 @@
 <template>
 
   <VContainer fluid>
-    <VBtn
-      v-if="isEditable && !loading"
-      color="primary"
-      fixed
-      right
-      fab
-      :title="$tr('channel')"
-      @click="newChannel"
-    >
-      <VIcon>add</VIcon>
-    </VBtn>
     <VLayout row wrap justify-center>
-      <VFlex xs12 sm10 md6>
+      <VFlex xs12 sm10 md8 lg6>
+        <VLayout>
+          <VSpacer />
+          <VBtn
+            v-if="isEditable && !loading"
+            color="primary"
+            class="add-channel-button"
+            data-test="add-channel"
+            @click="newChannel"
+          >
+            {{ $tr('channel') }}
+          </VBtn>
+        </VLayout>
+      </VFlex>
+    </VLayout>
+
+    <VLayout row wrap justify-center>
+      <VFlex xs12 sm10 md8 lg6>
         <VLayout row justify-center>
           <VFlex xs12>
             <template v-if="loading">
@@ -33,6 +39,7 @@
                 v-for="channel in listChannels"
                 :key="channel.id"
                 :channelId="channel.id"
+                allowEdit
               />
             </template>
             <keep-alive>
@@ -121,11 +128,14 @@
           bookmark: false,
           edit: true,
         });
-        this.$router.push({ name: RouterNames.CHANNEL_DETAILS, params: { channelId: this.newId } });
+        this.$router.push({
+          name: RouterNames.CHANNEL_EDIT,
+          params: { channelId: this.newId },
+        });
       },
       loadData(listType) {
         this.loading = true;
-        this.loadChannelList(listType).then(() => {
+        this.loadChannelList({ listType }).then(() => {
           this.loading = false;
         });
       },
@@ -133,7 +143,7 @@
     $trs: {
       loading: 'Loading channels...',
       noChannelsFound: 'No channels found',
-      channel: 'Channel',
+      channel: 'New channel',
     },
   };
 
@@ -142,5 +152,8 @@
 
 <style lang="less" scoped>
 
+  .add-channel-button {
+    margin: 0;
+  }
 
 </style>

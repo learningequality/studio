@@ -1,5 +1,4 @@
 from django.http import Http404
-
 from rest_framework.response import Response
 from rest_framework.serializers import ModelSerializer
 from rest_framework.status import HTTP_201_CREATED
@@ -68,13 +67,15 @@ class ValuesViewset(ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
+        queryset = self._serialize_queryset(queryset)
 
         page = self.paginate_queryset(queryset)
+
         if page is not None:
-            data = map(self._map_fields, self._serialize_queryset(page) or [])
+            data = map(self._map_fields, page or [])
             return self.get_paginated_response(data)
 
-        data = map(self._map_fields, self._serialize_queryset(queryset) or [])
+        data = map(self._map_fields, queryset or [])
         return Response(data)
 
     def serialize_object(self, pk):

@@ -39,10 +39,6 @@ import contentcuration.views.public as public_views
 import contentcuration.views.settings as settings_views
 import contentcuration.views.users as registration_views
 import contentcuration.views.zip as zip_views
-
-from contentcuration.viewsets.channel import ChannelViewSet
-from contentcuration.viewsets.channelset import ChannelSetViewSet
-from contentcuration.viewsets.invitation import InvitationViewSet
 from contentcuration.celery import app
 from contentcuration.forms import ForgotPasswordForm
 from contentcuration.forms import LoginForm
@@ -59,6 +55,9 @@ from contentcuration.models import Language
 from contentcuration.models import License
 from contentcuration.models import Task
 from contentcuration.models import User
+from contentcuration.viewsets.channel import ChannelViewSet
+from contentcuration.viewsets.channelset import ChannelSetViewSet
+from contentcuration.viewsets.invitation import InvitationViewSet
 
 
 def get_channel_tree_ids(user):
@@ -278,6 +277,7 @@ urlpatterns += [
     url(r'^api/duplicate_node_inline$', node_views.duplicate_node_inline, name='duplicate_node_inline'),
     url(r'^api/delete_nodes$', node_views.delete_nodes, name='delete_nodes'),
     url(r'^api/get_channel_details/(?P<channel_id>[^/]*)$', node_views.get_channel_details, name='get_channel_details'),
+    url(r'^api/get_node_details/(?P<node_id>[^/]*)$', node_views.get_node_details, name='get_node_details'),
 ]
 
 # Add file api enpoints
