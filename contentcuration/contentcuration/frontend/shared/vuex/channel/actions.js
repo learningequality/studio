@@ -58,11 +58,9 @@ export function updateChannel(context, channelData) {
 }
 
 export function bookmarkChannel(context, payload) {
-  return client
-    .patch(window.Urls['channel-detail'](payload.id), { bookmark: payload.bookmark })
-    .then(() => {
-      context.commit('TOGGLE_BOOKMARK', payload.id);
-    });
+  return Channel.update(payload.id, { bookmark: payload.bookmark }).then(() => {
+    context.commit('TOGGLE_BOOKMARK', payload.id);
+  });
 }
 
 export function deleteChannel(context, channelId) {
