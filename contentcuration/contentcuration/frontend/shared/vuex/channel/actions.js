@@ -2,10 +2,15 @@ import { Channel } from 'shared/data';
 
 /* CHANNEL LIST ACTIONS */
 export function loadChannelList(context, payload) {
-  const params = payload || {};
   if (payload && payload.listType) {
-    params[payload.listType] = true;
+    payload[payload.listType] = true;
+    delete payload.listType;
   }
+  const params = {
+    // Default to getting not deleted channels
+    deleted: false,
+    ...payload,
+  };
   return Channel.where(params).then(channels => {
     context.commit('ADD_CHANNELS', channels);
     return channels;
@@ -62,6 +67,6 @@ export function bookmarkChannel(context, payload) {
 
 export function deleteChannel(context, channelId) {
   return Channel.update(channelId, { deleted: true }).then(() => {
-    context.commit('REMOVE_CHANNEL', channelId);
+    context.commit('REMOVE_CHANNEL', { id: channelId });
   });
 }

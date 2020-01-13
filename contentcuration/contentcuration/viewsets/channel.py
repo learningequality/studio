@@ -234,7 +234,6 @@ class ChannelViewSet(ValuesViewset):
         "name",
         "description",
         "main_tree__published",
-        "main_tree",
         "thumbnail",
         "thumbnail_encoding",
         "language",
@@ -252,6 +251,7 @@ class ChannelViewSet(ValuesViewset):
         "ricecooker_version",
         "main_tree__id",
         "content_defaults",
+        "deleted",
     )
 
     field_map = {

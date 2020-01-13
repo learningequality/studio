@@ -65,6 +65,7 @@
     "backbone-undo": "^0.2.5",
     "backbone.paginator": "^2.0.8",
     "bootstrap": "^3.3.5",
+    "broadcast-channel": "^3.0.3",
     "browser-filesaver": "^1.1.0",
     "clipboard-polyfill": "^2.8.1",
     "croppie": "^2.4.1",

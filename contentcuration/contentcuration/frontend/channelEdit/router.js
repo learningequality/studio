@@ -17,7 +17,7 @@ const router = new VueRouter({
       path: '/',
       beforeEnter: (to, from, next) => {
         return store.dispatch('channel/loadChannel', store.state.currentChannel.currentChannelId).then(channel => {
-          const nodeId = channel.main_tree;
+          const nodeId = channel.root_id;
           return next({
             name: RouterNames.TREE_VIEW,
             params: {

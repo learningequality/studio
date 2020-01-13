@@ -2,6 +2,7 @@ import * as getters from './getters';
 import * as mutations from './mutations';
 import * as actions from './actions';
 import { lastSavedStateFactory } from 'shared/utils';
+import { TABLE_NAMES, CHANGE_TYPES } from 'shared/data';
 
 export const contentNodeLastSavedState = lastSavedStateFactory();
 
@@ -20,4 +21,11 @@ export default {
   getters,
   mutations,
   actions,
+  listeners: {
+    [TABLE_NAMES.CONTENTNODE]: {
+      [CHANGE_TYPES.CREATED]: 'ADD_CONTENTNODE',
+      [CHANGE_TYPES.UPDATED]: 'UPDATE_CONTENTNODE',
+      [CHANGE_TYPES.DELETED]: 'REMOVE_CONTENTNODE',
+    },
+  },
 };

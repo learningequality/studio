@@ -6,17 +6,21 @@ import mapValues from 'lodash/mapValues';
 import matches from 'lodash/matches';
 import omit from 'lodash/omit';
 import pick from 'lodash/pick';
+import { BroadcastChannel, createLeaderElection } from 'broadcast-channel';
+import { CHANGE_TYPES, MESSAGES, STATUS } from './constants';
 import client from 'shared/client';
 
+// Re-export for ease of reference.
+export { CHANGE_TYPES } from './constants';
 
-export const CHANGE_TYPES = {
-  CREATED: 1,
-  UPDATED: 2,
-  DELETED: 3,
-}
-
+// Custom uuid4 function to match our dashless uuids on the server side
 function uuid4() {
   return uuidv4().replace(/-/g, '');
+}
+
+if (process.env.NODE_ENV !== 'production') {
+  // If not in production mode, turn Dexie's debug mode on.
+  Dexie.debug = true;
 }
 
 // A UUID to distinguish this JS client from others in the same browser.
@@ -26,26 +30,85 @@ const RESOURCES = {};
 
 const LISTENERS = {};
 
-const db = new Dexie("KolibriStudio");
+const appId = "KolibriStudio";
+
+const db = new Dexie(appId);
+
+const channel = new BroadcastChannel(appId);
+
+// Number of seconds after which data is considered stale.
+const REFRESH_INTERVAL = 60;
+
+const LAST_FETCHED = '__last_fetch';
+
+const CHANGES_TABLE = '__changesTable';
 
 export function initializeDB() {
 
-  db.version(1).stores(mapValues(RESOURCES, value => value.schema));
+  db.version(1).stores({
+    ...mapValues(RESOURCES, value => value.schema)
+  });
+
   db.on('changes', function (changes) {
     changes.forEach(function (change) {
-      // Don't invoke listeners if their client originated the change
-      if (CLIENTID !== change.source) {
-        const tableListeners = LISTENERS[change.table];
-        if (tableListeners) {
-          const changeListeners = tableListeners[change.type];
-          if (changeListeners) {
-            for (let listener of changeListeners.values()) {
-              // Always invoke the callback with the full object representation
-              // It is up to the callbacks to know how to parse this.
-              listener(change.obj);
-            };
+      // Don't do anything for changes from the special changes table
+      // or we might get into a little bit of a recursive loop.
+      if (change.table !== CHANGES_TABLE) {
+        // Don't invoke listeners if their client originated the change
+        if (CLIENTID !== change.source) {
+          const tableListeners = LISTENERS[change.table];
+          if (tableListeners) {
+            const changeListeners = tableListeners[change.type];
+            if (changeListeners) {
+              for (let listener of changeListeners.values()) {
+                // Always invoke the callback with the full object representation
+                // It is up to the callbacks to know how to parse this.
+                listener(change.obj);
+              };
+            }
           }
         }
+      }
+    });
+  });
+
+  const elector = createLeaderElection(channel);
+
+  elector.awaitLeadership().then(()=> {
+    channel.addEventListener('message', function(msg) {
+      if (msg.type === MESSAGES.FETCH_COLLECTION && msg.tableName && msg.params) {
+        RESOURCES[msg.tableName].fetchCollection(msg.params).then(data => {
+          channel.postMessage({
+            messageId: msg.messageId,
+            type: MESSAGES.REQUEST_RESPONSE,
+            status: STATUS.SUCCESS,
+            data,
+          })
+        }).catch(err => {
+          channel.postMessage({
+            messageId: msg.messageId,
+            type: MESSAGES.REQUEST_RESPONSE,
+            status: STATUS.FAILURE,
+            err,
+          })
+        });
+      }
+      if (msg.type === MESSAGES.FETCH_MODEL && msg.tableName && msg.id) {
+        RESOURCES[msg.tableName].fetchModel(msg.id).then(data => {
+          channel.postMessage({
+            messageId: msg.messageId,
+            type: MESSAGES.REQUEST_RESPONSE,
+            status: STATUS.SUCCESS,
+            data,
+          })
+        }).catch(err => {
+          channel.postMessage({
+            messageId: msg.messageId,
+            type: MESSAGES.REQUEST_RESPONSE,
+            status: STATUS.FAILURE,
+            err,
+          })
+        });
       }
     });
   });
@@ -81,7 +144,7 @@ export function removeListener(table, change, callback) {
 
 
 class Resource {
-  constructor({ tableName, urlName, idField = 'id', uuid = true, indexFields = [] } = {}) {
+  constructor({ tableName, urlName, idField = 'id', uuid = true, indexFields = [], ...options } = {}) {
     this.tableName = tableName;
     this.urlName = urlName;
     this.idField = idField;
@@ -89,12 +152,24 @@ class Resource {
     this.schema = [`${uuid ? '' : '++'}${idField}`, ...indexFields].join(',');
     this.indexFields = [idField, ...indexFields];
     RESOURCES[tableName] = this;
+    // Allow instantiated resources to define their own custom properties and methods if needed
+    // This is similar to how vue uses the options object to create a component definition
+    // where 'this' ends up referring to the correct thing.
+    const optionsDefinitions = Object.getOwnPropertyDescriptors(options);
+    Object.keys(optionsDefinitions).forEach(key => {
+      Object.defineProperty(this, key, optionsDefinitions[key]);
+    });
   }
 
   get table() {
     return db[this.tableName];
   }
 
+  /*
+   * Transaction method used to invoke updates, creates and deletes
+   * in a way that doesn't trigger listeners from the client that
+   * initiated it by setting the CLIENTID.
+   */
   transaction(mode, callback) {
     return db.transaction(mode, this.tableName, () => {
       Dexie.currentTransaction.source = CLIENTID;
@@ -116,12 +191,46 @@ class Resource {
     return this.getUrlFunction('list')();
   }
 
+  makeRequest(request) {
+    return new Promise((resolve, reject) => {
+      const messageId = uuidv4();
+      function handler(msg) {
+        if (msg.messageId === messageId && msg.type === MESSAGES.REQUEST_RESPONSE) {
+          channel.removeEventListener('message', handler);
+          if (msg.status === STATUS.SUCCESS) {
+            return resolve(msg.data);
+          } else if (msg.status === STATUS.FAILURE && msg.err) {
+            return reject(msg.err);
+          }
+          // Otherwise something unsepcified happened
+          return reject();
+        }
+      }
+      channel.addEventListener('message', handler);
+      channel.postMessage({
+        ...request,
+        tableName: this.tableName,
+        messageId,
+      });
+    });
+  }
+
+  requestCollection(params) {
+    return this.makeRequest({
+      type: MESSAGES.FETCH_COLLECTION,
+      params,
+    });
+  }
+
   fetchCollection(params) {
     return client.get(this.collectionUrl(), { params }).then(response => {
-      return this.transaction('rw', () => {
-        return this.table.bulkPut(response.data).then(() => {
-          return response.data;
-        });
+      const now = Date.now();
+      const data = response.data.map(datum => {
+        datum[LAST_FETCHED] = now;
+        return datum
+      });
+      return this.table.bulkPut(data).then(() => {
+        return data;
       });
     });
   }
@@ -141,23 +250,34 @@ class Resource {
       collection = collection.filter(filterFn);
     }
     return collection.toArray(objs => {
-      const refresh = false;
-      if (!objs) {
-        return this.fetchCollection(params);
+      if (!objs.length) {
+        return this.requestCollection(params);
       }
-      if (refresh) {
-        this.fetchCollection(params);
+      const now = Date.now();
+      if (objs.some(obj => {
+        const refresh = obj[LAST_FETCHED] + REFRESH_INTERVAL * 1000;
+        return refresh < now
+      })) {
+        this.requestCollection(params);
       }
       return objs;
     });
   }
 
+  requestModel(id) {
+    return this.makeRequest({
+      type: MESSAGES.FETCH_MODEL,
+      id,
+    });
+  }
+
   fetchModel(id) {
     return client.get(this.modelUrl(id)).then(response => {
-      return this.transaction('rw', () => {
-        return this.table.put(response.data).then(() => {
-          return response.data;
-        });
+      const now = Date.now();
+      const data = response.data;
+      data[LAST_FETCHED] = now;
+      return this.table.put(data).then(() => {
+        return data;
       });
     });
   }
@@ -167,7 +287,7 @@ class Resource {
       if (obj) {
         return obj;
       }
-      return this.fetchModel(id);
+      return this.requestModel(id);
     });
   }
 

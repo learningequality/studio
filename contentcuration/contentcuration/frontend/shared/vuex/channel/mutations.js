@@ -24,8 +24,8 @@ export function ADD_CHANNELS(state, channels = []) {
   }, state.channelsMap);
 }
 
-export function REMOVE_CHANNEL(state, channelId) {
-  Vue.delete(state.channelsMap, channelId);
+export function REMOVE_CHANNEL(state, channel) {
+  Vue.delete(state.channelsMap, channel.id);
 }
 
 export function UPDATE_CHANNEL(

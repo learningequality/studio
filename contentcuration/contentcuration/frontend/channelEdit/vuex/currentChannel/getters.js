@@ -7,5 +7,5 @@ export function canEdit(state, getters) {
 }
 
 export function rootId(state, getters) {
-  return getters.currentChannel && getters.currentChannel.main_tree;
+  return getters.currentChannel && getters.currentChannel.root_id;
 }
