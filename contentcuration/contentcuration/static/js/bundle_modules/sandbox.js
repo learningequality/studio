@@ -39,7 +39,7 @@ Vue.use(Vuetify, {
     primary: colors.blue.base, // @blue-500
     primaryBackground: colors.blue.lighten5,
     greyBackground: colors.grey.lighten3,
-    greenSuccess: '#4db6ac',
+    greenSuccess: '#4CAF50',
     topic: colors.grey.base,
     video: '#283593',
     audio: '#f06292',
@@ -52,7 +52,7 @@ Vue.use(Vuetify, {
 });
 
 window.preferences = {
-  // license: 'Public Domain',
+  license: 'Public Domain',
   // author: 'Default Author',
   //   provider: 'Default Provider',
   //   aggregator: 'Default Aggregator',
@@ -71,7 +71,7 @@ if (State.current_channel) {
 
 // TODO: update this to use proper parent tree logic
 State.currentNode = {
-  id: 'test',
+  id: window.root_id,
   title: 'Sandbox Topic',
   metadata: {
     max_sort_order: 0,

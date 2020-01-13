@@ -17,6 +17,7 @@
 		var channel = {id: "{{channel}}"};
 		var user = JSON.parse("{{ current_user|escapejs }}");
 		var nodes = JSON.parse('{{ nodes | escapejs }}');
+		var root_id = "{{root_id}}";
 	</script>
 	{% render_bundle 'sandbox' 'js' %}
 {% endblock js_bundle %}

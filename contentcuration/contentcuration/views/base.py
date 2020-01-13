@@ -327,9 +327,9 @@ class SandboxView(TemplateView):
         imported_node = active_nodes.filter(freeze_authoring_data=True).exclude(kind_id=content_kinds.TOPIC).first()
         if imported_node:
             nodes.append(ContentNodeSerializer(imported_node).data)
-
         kwargs.update({"nodes": JSONRenderer().render(nodes),
                        "channel": active_channels.first().pk,
-                       "current_user": JSONRenderer().render(CurrentUserSerializer(self.request.user).data)
+                       "current_user": JSONRenderer().render(CurrentUserSerializer(self.request.user).data),
+                       "root_id": self.request.user.clipboard_tree.pk,
                        })
         return kwargs
