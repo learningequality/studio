@@ -2,7 +2,7 @@ export default {
   inserted: (el, binding) => {
     window.event = event => {
       if (el !== event.target && !el.contains(event.target)) {
-        binding.value();
+        binding.value(event);
       }
     };
 
