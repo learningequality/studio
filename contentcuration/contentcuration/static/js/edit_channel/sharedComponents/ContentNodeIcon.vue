@@ -107,6 +107,7 @@
 <style lang="less" scoped>
 
   .v-chip {
+    margin: 0;
     margin-right: 10px;
     /deep/ .v-chip__content {
       padding: 0 10px;
