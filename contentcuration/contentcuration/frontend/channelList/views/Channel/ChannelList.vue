@@ -60,7 +60,6 @@
   import { mapGetters, mapActions, mapState, mapMutations } from 'vuex';
   import { ListTypes, RouterNames } from '../../constants';
   import ChannelItem from './ChannelItem.vue';
-  import { generateTempId } from 'shared/utils';
 
   function listTypeValidator(value) {
     // The value must match one of the ListTypes
@@ -90,7 +89,7 @@
         if (this.listType === ListTypes.PUBLIC) {
           sortFields.shift('-priority');
         }
-        return sortBy(this.channels.filter(channel => channel[this.listType]), sortFields);
+        return sortBy(this.channels.filter(channel => channel[this.listType] && !channel.deleted), sortFields);
       },
       isEditable() {
         return this.listType === ListTypes.EDITABLE;
