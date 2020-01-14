@@ -54,11 +54,21 @@
       };
     },
     computed: {
+      isPreviewable() {
+        let availablePreviewFormats = ['mp4', 'mp3', 'zip', 'pdf'];
+        return _.contains(availablePreviewFormats, this.file.file_format);
+      },
       isAudio() {
         return this.file.file_format === 'mp3';
       },
       showFullscreenOption() {
-        return this.file && this.file.file_on_disk && !this.isAudio && !this.file.uploading;
+        return (
+          this.file &&
+          this.file.file_on_disk &&
+          this.isPreviewable &&
+          !this.isAudio &&
+          !this.file.uploading
+        );
       },
     },
     $trs: {
