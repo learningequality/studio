@@ -259,9 +259,9 @@ class ValuesViewset(ReadOnlyModelViewSet):
 
     def bulk_create(self, request, *args, **kwargs):
         data = kwargs.pop("data", request.data)
-        serializer = self.get_serializer(data=data)
+        serializer = self.get_serializer(data=data, many=True)
         serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
+        self.perform_bulk_create(serializer)
         return True
 
     def perform_bulk_create(self, serializer):

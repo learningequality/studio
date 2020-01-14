@@ -43,6 +43,7 @@ def sync(request):
     for table_name, group in groupby(data, get_table):
         if table_name in viewset_mapping:
             viewset_class = viewset_mapping[table_name]
+            id_attr = viewset_class.serializer_class.id_attr()
             group = sorted(group, key=get_change_type)
             for change_type, changes in groupby(group, get_change_type):
                 try:
@@ -60,7 +61,6 @@ def sync(request):
                         )
                         viewset.bulk_create(request, data=new_data)
                     elif change_type == UPDATED:
-                        id_attr = viewset.serializer_class.id_attr()
                         change_data = list(
                             map(
                                 lambda x: dict(

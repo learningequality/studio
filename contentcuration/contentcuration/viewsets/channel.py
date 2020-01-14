@@ -211,7 +211,7 @@ class ChannelSerializer(ContentDefaultsSerializerMixin, BulkModelSerializer):
         read_only_fields = ("id",)
         list_serializer_class = BulkListSerializer
 
-    def bulk_create(self, validated_data):
+    def create(self, validated_data):
         bookmark = validated_data.pop("bookmark", None)
         if "request" in self.context:
             user_id = self.context["request"].user.id
@@ -219,9 +219,9 @@ class ChannelSerializer(ContentDefaultsSerializerMixin, BulkModelSerializer):
             validated_data["editors"] = [user_id]
             if bookmark:
                 validated_data["bookmarked_by"] = [user_id]
-        return super(ChannelSerializer, self).bulk_create(validated_data)
+        return super(ChannelSerializer, self).create(validated_data)
 
-    def bulk_update(self, instance, validated_data):
+    def update(self, instance, validated_data):
         bookmark = validated_data.pop("bookmark", None)
         if "request" in self.context:
             user_id = self.context["request"].user.id
@@ -237,7 +237,7 @@ class ChannelSerializer(ContentDefaultsSerializerMixin, BulkModelSerializer):
                 instance.bookmarked_by.add(user_id)
             elif bookmark is not None:
                 instance.bookmarked_by.remove(user_id)
-        return super(ChannelSerializer, self).bulk_create(instance, validated_data)
+        return super(ChannelSerializer, self).create(instance, validated_data)
 
 
 class ChannelViewSet(ValuesViewset):
