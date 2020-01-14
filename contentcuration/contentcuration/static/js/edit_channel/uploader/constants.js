@@ -1,4 +1,5 @@
 import translator from './translator';
+import { fileErrors } from 'edit_channel/file_upload/constants';
 
 export const TabNames = {
   DETAILS: 'DETAILS',
@@ -24,6 +25,7 @@ export const ValidationErrors = {
   MASTERY_MODEL_INVALID: 'MASTERY_MODEL_INVALID',
   QUESTION_REQUIRED: 'QUESTION_REQUIRED',
   INVALID_NUMBER_OF_CORRECT_ANSWERS: 'INVALID_NUMBER_OF_CORRECT_ANSWERS',
+  ...fileErrors,
 };
 
 export const AssessmentItemToolbarActions = {

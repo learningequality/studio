@@ -22,6 +22,28 @@
       :multiple="allowMultiple"
       @change="handleFiles($event.target.files)"
     >
+    <Alert
+      ref="unsupportedfiles"
+      :header="$tr('unsupportedFilesHeader')"
+      :text="unsupportedFilesText"
+    />
+    <Alert
+      ref="storageexceeded"
+      :header="$tr('noStorageHeader')"
+      text=""
+    >
+      <template v-slot>
+        <div class="storage-alert">
+          <p>{{ $tr('uploadSize', {size: formatFileSize(totalUploadSize)}) }}</p>
+          <p>
+            {{ $tr('remainingStorage', {size: formatFileSize(availableSpace)}) }}
+          </p>
+          <div class="storage-usage">
+            <FileStorage />
+          </div>
+        </div>
+      </template>
+    </Alert>
   </div>
 
 </template>
@@ -31,11 +53,19 @@
   import { mapActions, mapGetters, mapMutations } from 'vuex';
   import _ from 'underscore';
   import Constants from 'edit_channel/constants';
+  import Alert from 'edit_channel/sharedComponents/Alert.vue';
+
   import { fileErrors, MAX_FILE_SIZE } from 'edit_channel/file_upload/constants';
   import { fileSizeMixin } from 'edit_channel/file_upload/mixins';
+  import FileStorage from 'edit_channel/file_upload/views/FileStorage.vue';
+  import State from 'edit_channel/state';
 
   export default {
     name: 'Uploader',
+    components: {
+      Alert,
+      FileStorage,
+    },
     mixins: [fileSizeMixin],
     props: {
       readonly: {
@@ -48,7 +78,7 @@
       },
       allowMultiple: {
         type: Boolean,
-        default: true,
+        default: false,
       },
       allowDrop: {
         type: Boolean,
@@ -58,6 +88,8 @@
     data() {
       return {
         highlight: false,
+        unsupportedFiles: [],
+        totalUploadSize: 0,
       };
     },
     computed: {
@@ -80,7 +112,18 @@
         return _.chain(this.acceptedFiles)
           .pluck('allowed_formats')
           .flatten()
+          .uniq()
           .value();
+      },
+      unsupportedFilesText() {
+        return this.$tr('unsupportedFilesText', {
+          count: this.unsupportedFiles.length,
+          extensions: this.acceptedExtensions.join(this.$tr('listDelimiter')),
+          extensionCount: this.acceptedExtensions.length,
+        });
+      },
+      availableSpace() {
+        return State.current_user.get('available_space');
       },
       highlightDropzone() {
         return this.highlight && !this.readonly && this.allowDrop;
@@ -135,8 +178,25 @@
           let newFiles = [];
           files = this.allowMultiple ? files : [files[0]];
 
+          let partition = _.partition(files, f => {
+            let extension = _.last(f.name.split('.'));
+            return _.contains(this.acceptedExtensions, extension.toLowerCase());
+          });
+          files = partition[0];
+          this.unsupportedFiles = partition[1];
+
+          this.totalUploadSize = _.reduce(files, (sum, f) => sum + f.size, 0);
+
+          if (this.totalUploadSize > this.availableSpace) {
+            this.$refs.storageexceeded.prompt();
+            return;
+          } else if (this.unsupportedFiles.length) {
+            this.$refs.unsupportedfiles.prompt();
+          }
+
           [...files].forEach(uploadedFile => {
             let fileID = String(Math.random()).slice(2);
+
             this.addFile({ id: fileID, file: uploadedFile, preset: this.presetID });
             let file = this.getFile(fileID);
             newFiles.push(file);
@@ -168,7 +228,28 @@
       [fileErrors.WRONG_TYPE]: 'Invalid file type (must be {filetypes})',
       [fileErrors.TOO_LARGE]: 'File too large. Must be under {size}',
       [fileErrors.UPLOAD_FAILED]: 'Upload failed',
+      unsupportedFilesHeader: 'Unsupported files',
+      unsupportedFilesText:
+        '{count, plural,\n =1 {File}\n other {# files}} will not be uploaded.\n' +
+        ' {extensionCount, plural,\n =1 {Accepted file type is}\n other {Accepted file types are}} {extensions}',
+      listDelimiter: ', ',
+      noStorageHeader: 'Not enough space',
+      uploadSize: 'Upload is too large: {size}',
+      remainingStorage: 'Remaining storage: {size}',
     },
   };
 
 </script>
+
+<style lang="less" scoped>
+
+  .storage-alert {
+    font-size: 12pt;
+    .storage-usage {
+      margin-top: -5px;
+      font-size: 10pt;
+      color: gray;
+    }
+  }
+
+</style>

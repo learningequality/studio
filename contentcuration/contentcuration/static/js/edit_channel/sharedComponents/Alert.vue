@@ -2,6 +2,7 @@
 
   <Dialog ref="alert" :header="header" :text="text">
     <template v-slot:content>
+      <slot></slot>
       <VCheckbox
         v-if="messageID"
         v-model="dontShowAgain"
