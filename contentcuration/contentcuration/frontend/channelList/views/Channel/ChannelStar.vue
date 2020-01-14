@@ -1,23 +1,30 @@
 <template>
 
-  <VBtn
-    :title="starText"
-    icon
-    flat
-    color="primary"
-    data-test="button"
-    @click.stop.prevent="toggleStar"
-  >
-    <VIcon data-test="icon">
-      {{ bookmark ? 'star' : 'star_border' }}
-    </VIcon>
-  </VBtn>
+  <!-- Adding div wrapper as tests fail when VTooltip is the root -->
+  <div>
+    <VTooltip bottom>
+      <template v-slot:activator="{ on }">
+        <VBtn
+          icon
+          flat
+          v-bind="$attrs"
+          data-test="button"
+          @click.stop.prevent="toggleStar"
+        >
+          <VIcon data-test="icon" class="notranslate">
+            {{ bookmark ? 'star' : 'star_border' }}
+          </VIcon>
+        </VBtn>
+      </template>
+      <span>{{ starText }}</span>
+    </VTooltip>
+  </div>
 
 </template>
 
 <script>
 
-  import { mapMutations } from 'vuex';
+  import { mapActions } from 'vuex';
 
   export default {
     name: 'ChannelStar',
@@ -28,7 +35,7 @@
       },
       bookmark: {
         type: Boolean,
-        required: true,
+        default: false,
       },
     },
     computed: {
@@ -37,11 +44,9 @@
       },
     },
     methods: {
-      ...mapMutations('channelList', {
-        toggleBookmark: 'TOGGLE_BOOKMARK',
-      }),
+      ...mapActions('channelList', ['bookmarkChannel']),
       toggleStar() {
-        this.toggleBookmark(this.channelId);
+        this.bookmarkChannel({ id: this.channelId, bookmark: !this.bookmark });
       },
     },
     $trs: {

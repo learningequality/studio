@@ -3,10 +3,10 @@ import { channelLastSavedState } from './index';
 import client from 'shared/client';
 
 /* CHANNEL LIST ACTIONS */
-export function loadChannelList(context, listType) {
-  const params = {};
-  if (listType) {
-    params[listType] = true;
+export function loadChannelList(context, payload) {
+  const params = payload || {};
+  if (payload && payload.listType) {
+    params[payload.listType] = true;
   }
   return client.get(window.Urls['channel-list'](), { params }).then(response => {
     const channels = response.data;
@@ -26,6 +26,14 @@ export function loadChannel(context, id) {
     .catch(() => {
       return;
     });
+}
+
+export function searchCatalog(context, params) {
+  params.page_size = params.page_size || 25;
+  params.public = true;
+  return client.get(window.Urls['channel-list'](), { params }).then(response => {
+    context.commit('SET_PAGE', response.data);
+  });
 }
 
 /* CHANNEL EDITOR ACTIONS */
@@ -58,6 +66,14 @@ export function saveChannel(context, channelId) {
       });
     }
   }
+}
+
+export function bookmarkChannel(context, payload) {
+  return client
+    .patch(window.Urls['channel-detail'](payload.id), { bookmark: payload.bookmark })
+    .then(() => {
+      context.commit('TOGGLE_BOOKMARK', payload.id);
+    });
 }
 
 export function deleteChannel(context, channelId) {

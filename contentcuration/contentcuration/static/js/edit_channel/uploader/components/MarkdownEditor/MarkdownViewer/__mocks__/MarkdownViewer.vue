@@ -1,7 +1,7 @@
 <template>
 
   <div>
-    <div ref="editor">
+    <div>
       {{ markdown }}
     </div>
   </div>
@@ -11,11 +11,7 @@
 <script>
 
   export default {
-    name: 'MarkdownEditor',
-    model: {
-      prop: 'markdown',
-      event: 'update',
-    },
+    name: 'MarkdownViewer',
     props: {
       markdown: {
         type: String,

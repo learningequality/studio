@@ -23,23 +23,28 @@
         flat
         :class="hintClasses(hintIdx)"
       >
-        <VCardText>
+        <VCardText :class="{ 'pt-0 pb-0': !isHintOpen(hintIdx) }">
           <VLayout align-top>
-            <VFlex xs1>
+            <VFlex
+              xs1
+              :style="{ 'margin-top': '10px' }"
+            >
               {{ hint.order }}
             </VFlex>
 
-            <VFlex>
+            <VFlex xs7>
               <transition name="fade">
-                <keep-alive :max="5" include="MarkdownEditor">
-                  <span v-if="!isHintOpen(hintIdx)">
-                    {{ hint.hint }}
-                  </span>
+                <keep-alive :max="5">
+                  <MarkdownViewer
+                    v-if="!isHintOpen(hintIdx)"
+                    :markdown="hint.hint"
+                  />
 
                   <MarkdownEditor
                     v-else
                     :markdown="hint.hint"
                     @update="updateHintText($event, hintIdx)"
+                    @minimize="emitClose"
                   />
                 </keep-alive>
               </transition>
@@ -80,7 +85,8 @@
   import { swapElements } from '../../utils';
 
   import AssessmentItemToolbar from '../AssessmentItemToolbar/AssessmentItemToolbar.vue';
-  import MarkdownEditor from '../MarkdownEditor/MarkdownEditor.vue';
+  import MarkdownEditor from '../MarkdownEditor/MarkdownEditor/MarkdownEditor.vue';
+  import MarkdownViewer from '../MarkdownEditor/MarkdownViewer/MarkdownViewer.vue';
 
   const updateHintsOrder = hints => {
     return hints.map((hint, idx) => {
@@ -96,6 +102,7 @@
     components: {
       AssessmentItemToolbar,
       MarkdownEditor,
+      MarkdownViewer,
     },
     model: {
       prop: 'hints',
@@ -199,6 +206,11 @@
 
         // do not open hint on toolbar click
         if (event.target.closest('.toolbar') !== null) {
+          return;
+        }
+
+        // do not open on editor minimize button click
+        if (event.target.classList.contains('tui-toolbar-btn-minimize')) {
           return;
         }
 

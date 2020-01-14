@@ -31,6 +31,7 @@
               v-if="isQuestionOpen"
               :markdown="question"
               @update="onQuestionUpdate"
+              @minimize="closeQuestion"
             />
 
             <div
@@ -39,11 +40,15 @@
               data-test="questionText"
               @click="openQuestion"
             >
-              <VLayout align-center>
-                <VIcon class="pr-2" color="grey darken-1">
+              <VLayout align-center justify-space-between>
+                <MarkdownViewer :markdown="question" />
+
+                <VIcon
+                  color="grey darken-1"
+                  class="mr-2"
+                >
                   edit
                 </VIcon>
-                <span class="title">{{ question }}</span>
               </VLayout>
             </div>
           </keep-alive>
@@ -89,7 +94,8 @@
 
   import AnswersEditor from '../AnswersEditor/AnswersEditor.vue';
   import HintsEditor from '../HintsEditor/HintsEditor.vue';
-  import MarkdownEditor from '../MarkdownEditor/MarkdownEditor.vue';
+  import MarkdownEditor from '../MarkdownEditor/MarkdownEditor/MarkdownEditor.vue';
+  import MarkdownViewer from '../MarkdownEditor/MarkdownViewer/MarkdownViewer.vue';
   import ErrorList from 'edit_channel/sharedComponents/ErrorList/ErrorList.vue';
 
   export default {
@@ -99,6 +105,7 @@
       ErrorList,
       HintsEditor,
       MarkdownEditor,
+      MarkdownViewer,
     },
     model: {
       prop: 'item',

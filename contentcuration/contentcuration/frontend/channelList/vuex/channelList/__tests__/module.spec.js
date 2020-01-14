@@ -27,7 +27,7 @@ describe('channel actions', () => {
     });
     it('should call client.get with a specific listType', () => {
       return store.dispatch('channelList/loadChannelList', 'edit').then(() => {
-        expect(client.get).toHaveBeenCalledWith('channel-list', { params: { edit: true } });
+        expect(client.get).toHaveBeenCalledWith('channel-list', { params: 'edit' });
       });
     });
     it('should set the returned data to the channels', () => {

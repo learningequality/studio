@@ -3,7 +3,8 @@ import { shallowMount, mount } from '@vue/test-utils';
 import { AssessmentItemTypes, AssessmentItemToolbarActions } from '../../constants';
 import AnswersEditor from './AnswersEditor';
 
-jest.mock('../MarkdownEditor/MarkdownEditor.vue');
+jest.mock('../MarkdownEditor/MarkdownEditor/MarkdownEditor.vue');
+jest.mock('../MarkdownEditor/MarkdownViewer/MarkdownViewer.vue');
 
 const getToolbar = wrapper => {
   return wrapper.find('[data-test="toolbar"]');
@@ -82,17 +83,11 @@ describe('AnswersEditor', () => {
 
     it('renders answers as radio selects', () => {
       const inputs = wrapper.findAll('input');
-      const labels = wrapper.findAll('label');
 
       expect(inputs.length).toBe(2);
-      expect(labels.length).toBe(2);
-
       for (let n in [0, 1]) {
         expect(inputs.at(n).attributes()['type']).toBe('radio');
       }
-
-      expect(labels.at(0).text()).toBe('Mayonnaise (I mean you can, but...)');
-      expect(labels.at(1).text()).toBe('Peanut butter');
     });
 
     it('renders a correct answer as checked', () => {
@@ -143,18 +138,11 @@ describe('AnswersEditor', () => {
 
     it('renders answers as checkboxes', () => {
       const inputs = wrapper.findAll('input');
-      const labels = wrapper.findAll('label');
 
       expect(inputs.length).toBe(3);
-      expect(labels.length).toBe(3);
-
       for (let n in [0, 1, 2]) {
         expect(inputs.at(n).attributes()['type']).toBe('checkbox');
       }
-
-      expect(labels.at(0).text()).toBe('Mayonnaise (I mean you can, but...)');
-      expect(labels.at(1).text()).toBe('Peanut butter');
-      expect(labels.at(2).text()).toBe('Jelly');
     });
 
     it('renders all correct answers as checked', () => {
@@ -206,17 +194,11 @@ describe('AnswersEditor', () => {
 
     it('renders answers as radio selects', () => {
       const inputs = wrapper.findAll('input');
-      const labels = wrapper.findAll('label');
 
       expect(inputs.length).toBe(2);
-      expect(labels.length).toBe(2);
-
       for (let n in [0, 1]) {
         expect(inputs.at(n).attributes()['type']).toBe('radio');
       }
-
-      expect(labels.at(0).text()).toBe('True');
-      expect(labels.at(1).text()).toBe('False');
     });
 
     it('renders a correct answer as checked', () => {

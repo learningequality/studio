@@ -1,18 +1,22 @@
 <template>
 
   <span v-if="icon">
-    <v-chip
+    <VChip
       v-if="showColor"
       label
       :color="kind"
       :textColor="fontColor"
       small
     >
-      <v-icon small :color="fontColor">{{ icon }}</v-icon>
+      <VIcon small class="notranslate" :color="fontColor">
+        {{ icon }}
+      </VIcon>
       <span v-if="includeText">{{ text }}</span>
-    </v-chip>
+    </VChip>
     <span v-else>
-      <v-icon :color="fontColor">{{ icon }}</v-icon>
+      <VIcon class="notranslate" :color="fontColor">
+        {{ icon }}
+      </VIcon>
       <span v-if="includeText">{{ text }}</span>
     </span>
   </span>

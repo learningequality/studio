@@ -11,7 +11,7 @@ function makeWrapper(bookmark, toggleStub) {
     },
   });
   wrapper.setMethods({
-    toggleBookmark: toggleStub,
+    toggleStar: toggleStub,
   });
   return wrapper;
 }
@@ -30,6 +30,6 @@ describe('star', () => {
   });
   it('toggle the bookmark when clicked', () => {
     starredWrapper.find('[data-test="button"]').trigger('click');
-    expect(toggleStub).toHaveBeenCalledWith(channelId);
+    expect(toggleStub).toHaveBeenCalled();
   });
 });
