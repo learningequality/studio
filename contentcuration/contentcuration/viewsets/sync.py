@@ -50,7 +50,14 @@ def sync(request):
                     viewset = viewset_class(request=request)
                     viewset.initial(request)
                     if change_type == CREATED:
-                        new_data = list(map(lambda x: x["obj"], changes))
+                        new_data = list(
+                            map(
+                                lambda x: dict(
+                                    x["obj"].items() + [(id_attr, x["key"])]
+                                ),
+                                changes,
+                            )
+                        )
                         viewset.bulk_create(request, data=new_data)
                     elif change_type == UPDATED:
                         id_attr = viewset.serializer_class.id_attr()
