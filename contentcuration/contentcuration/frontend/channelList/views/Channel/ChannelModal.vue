@@ -15,8 +15,13 @@
             clear
           </VIcon>
         </VBtn>
-        <VToolbarTitle v-if="isNewChannel">
-          {{ $tr('newChannelHeader') }}
+        <VToolbarTitle>
+          <template v-if="!name">
+            {{ $tr('untitledChannelHeader') }}
+          </template>
+          <template v-else>
+            {{ name }}
+          </template>
         </VToolbarTitle>
         <VSpacer />
         <VBtn flat data-test="save" @click="save">
@@ -81,7 +86,6 @@
 <script>
 
   import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
-  import { isTempId } from '../../utils';
   import { RouterNames } from '../../constants';
   import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown';
   import ContentDefaults from 'shared/views/form/ContentDefaults';
@@ -143,9 +147,6 @@
         set(content_defaults) {
           this.updateChannel({ id: this.channelId, content_defaults });
         },
-      },
-      isNewChannel() {
-        return isTempId(this.channelId);
       },
     },
     watch: {
@@ -225,7 +226,7 @@
       },
     },
     $trs: {
-      newChannelHeader: 'New channel',
+      untitledChannelHeader: 'Untitled channel',
       details: 'Channel details',
       channelName: 'Channel name',
       channelError: 'Channel name cannot be blank',

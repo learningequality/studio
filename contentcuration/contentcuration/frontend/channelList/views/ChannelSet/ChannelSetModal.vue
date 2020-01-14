@@ -155,7 +155,7 @@
 
   import { mapGetters, mapActions, mapMutations, mapState } from 'vuex';
   import reject from 'lodash/reject';
-  import { isTempId } from '../../utils';
+  import { isTempId } from 'shared/utils';
   import { RouterNames, ListTypes } from '../../constants';
   import SelectedChannelItem from './SelectedChannelItem';
   import ChannelSelectionList from './ChannelSelectionList';
