@@ -1,9 +1,16 @@
 <template>
 
   <div style="width: 100%;">
-    <VAlert v-if="!primaryFileMapping.length" :value="true" type="error" outline icon="error">
-      {{ $tr('fileError') }}
-    </VAlert>
+    <VCard v-if="!primaryFileMapping.length" color="grey lighten-4" flat>
+      <VCardText>
+        <VLayout align-center justify-center fill-height>
+          <v-icon color="red">
+            error
+          </v-icon>
+          &nbsp; {{ $tr('fileError') }}
+        </VLayout>
+      </VCardText>
+    </VCard>
     <VLayout v-else row wrap>
       <VFlex sm12 md6 lg5 xl4>
         <p>
@@ -30,7 +37,7 @@
                   :file="item.file"
                   :preset="item.preset"
                   :allowFileRemove="allowFileRemove"
-                  :isSelected="!!item.file && currentPreview && currentPreview.id === item.file.id"
+                  :isSelected="isSelected(item)"
                   @selected="selectPreview(item.file.id)"
                   @uploading="handleUploading"
                   @remove="handleRemoveFile"
@@ -83,10 +90,11 @@
       presets() {
         return _.filter(Constants.FormatPresets, { kind_id: this.node.kind });
       },
+      fileCount() {
+        return _.filter(this.node.files, file => !file.preset.supplementary && !file.error).length;
+      },
       allowFileRemove() {
-        return (
-          _.filter(this.node.files, file => !file.preset.supplementary && !file.error).length > 1
-        );
+        return this.fileCount > 1;
       },
       currentPreview() {
         return _.findWhere(this.node.files, { id: this.selected });
@@ -127,6 +135,11 @@
         if (fileID === this.selected) {
           this.selectFirstFile();
         }
+      },
+      isSelected(item) {
+        return this.viewOnly
+          ? this.fileCount > 1
+          : !!item.file && this.currentPreview && this.currentPreview.id === item.file.id;
       },
     },
     $trs: {

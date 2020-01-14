@@ -4,9 +4,9 @@
     <template slot="upload-zone" slot-scope="uploader">
       <v-list-tile
         :style="{backgroundColor: isSelected? $vuetify.theme.greyBackground : 'transparent'}"
-        @click.stop="file? $emit('selected') : uploader.openFileDialog()"
+        @click.stop="viewOnly? $emit('selected') : uploader.openFileDialog()"
       >
-        <v-list-tile-action>
+        <v-list-tile-action v-show="!viewOnly" @click.stop="$emit('selected')">
           <v-radio v-if="file" :value="file.id" color="primary" />
         </v-list-tile-action>
         <v-list-tile-content>
@@ -41,7 +41,7 @@
         <VSpacer />
         <v-list-tile-action v-if="file">
           <v-btn
-            v-if="allowFileRemove"
+            v-if="allowFileRemove || file.error"
             icon
             class="remove-icon"
             @click.stop="$emit('remove', file.id)"
@@ -88,7 +88,7 @@
       },
       viewOnly: {
         type: Boolean,
-        default: false,
+        default: true,
       },
       isSelected: {
         type: Boolean,

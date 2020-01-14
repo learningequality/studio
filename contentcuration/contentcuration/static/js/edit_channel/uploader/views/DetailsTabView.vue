@@ -8,6 +8,7 @@
           v-if="oneSelected && allResources && !allExercises"
           :key="selectedIndices[0]"
           :nodeIndex="selectedIndices[0]"
+          :viewOnly="viewOnly"
         />
 
         <!-- Title -->
