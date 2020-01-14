@@ -95,7 +95,7 @@ class FileListSerializer(serializers.ListSerializer):
         with transaction.atomic():
             # Get files that have the same contentnode, preset, and language as the files that are now attached to this node
             for item in validated_data:
-                file_obj = File.objects.get(pk=item['id'])
+                file_obj, _new = File.objects.get_or_create(pk=item['id'])
                 file_obj.language_id = item.get('language') and item['language']['id']
                 file_obj.contentnode = item['contentnode']
 
