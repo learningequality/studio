@@ -59,6 +59,7 @@ from contentcuration.viewsets.contentnode import ContentNodeViewSet
 from contentcuration.viewsets.channel import ChannelViewSet
 from contentcuration.viewsets.channelset import ChannelSetViewSet
 from contentcuration.viewsets.invitation import InvitationViewSet
+from contentcuration.viewsets.sync import sync
 
 
 def get_channel_tree_ids(user):
@@ -227,6 +228,7 @@ urlpatterns = [
     url(r'^api/set_channel_priority/$', views.set_channel_priority, name='set_channel_priority'),
     url(r'^api/download_channel_content_csv/(?P<channel_id>[^/]{32})$', views.download_channel_content_csv, name='download_channel_content_csv'),
     url(r'^api/probers/get_prober_channel', views.get_prober_channel, name='get_prober_channel'),
+    url(r'^^api/sync/$', sync, name="sync"),
 ]
 
 # if activated, turn on django prometheus urls

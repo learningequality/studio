@@ -24,6 +24,8 @@ from contentcuration.models import get_channel_thumbnail
 from contentcuration.models import SecretToken
 from contentcuration.models import User
 from contentcuration.serializers import ContentDefaultsSerializerMixin
+from contentcuration.viewsets.base import BulkModelSerializer
+from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import ValuesViewset
 
 
@@ -183,7 +185,7 @@ class SQCount(Subquery):
     output_field = IntegerField()
 
 
-class ChannelSerializer(ContentDefaultsSerializerMixin, serializers.ModelSerializer):
+class ChannelSerializer(ContentDefaultsSerializerMixin, BulkModelSerializer):
     """
     This is a write only serializer - we leverage it to do create and update
     operations, but read operations are handled by the Viewset.
@@ -196,6 +198,7 @@ class ChannelSerializer(ContentDefaultsSerializerMixin, serializers.ModelSeriali
         model = Channel
         fields = (
             "id",
+            "deleted",
             "name",
             "description",
             "thumbnail",
@@ -206,20 +209,35 @@ class ChannelSerializer(ContentDefaultsSerializerMixin, serializers.ModelSeriali
             "content_defaults",
         )
         read_only_fields = ("id",)
+        list_serializer_class = BulkListSerializer
 
-    def save(self, **kwargs):
-        bookmark = self.validated_data.pop("bookmark", None)
-        created = self.instance is None
-        instance = super(ChannelSerializer, self).save(**kwargs)
+    def bulk_create(self, validated_data):
+        bookmark = validated_data.pop("bookmark", None)
         if "request" in self.context:
-            if created:
-                # If this has been newly created add the current user as an editor
-                instance.editors.add(self.context["request"].user)
+            user_id = self.context["request"].user.id
+            # This has been newly created so add the current user as an editor
+            validated_data["editors"] = [user_id]
             if bookmark:
-                instance.bookmarked_by.add(self.context["request"].user)
-            else:
-                instance.bookmarked_by.remove(self.context["request"].user)
-        return instance
+                validated_data["bookmarked_by"] = [user_id]
+        return super(ChannelSerializer, self).bulk_create(validated_data)
+
+    def bulk_update(self, instance, validated_data):
+        bookmark = validated_data.pop("bookmark", None)
+        if "request" in self.context:
+            user_id = self.context["request"].user.id
+            # We could possibly do this in bulk later in the process,
+            # but bulk creating many to many through table models
+            # would be required, and that would need us to be able to
+            # efficiently ignore conflicts with existing models.
+            # When we have upgraded to Django 2.2, we can do the bulk
+            # creation of many to many models to make this more efficient
+            # and use the `ignore_conflicts=True` kwarg to ignore
+            # any conflicts.
+            if bookmark is not None and bookmark:
+                instance.bookmarked_by.add(user_id)
+            elif bookmark is not None:
+                instance.bookmarked_by.remove(user_id)
+        return super(ChannelSerializer, self).bulk_create(instance, validated_data)
 
 
 class ChannelViewSet(ValuesViewset):
@@ -263,15 +281,18 @@ class ChannelViewSet(ValuesViewset):
 
     def get_queryset(self):
         user_id = not self.request.user.is_anonymous() and self.request.user.id
-        queryset = (
-            Channel.objects.filter(deleted=False)
+        queryset = Channel.objects.filter(
+            id__in=Channel.objects.filter(deleted=False)
             .filter(Q(editors=user_id) | Q(viewers=user_id) | Q(public=True))
+            .values_list("id", flat=True)
             .distinct()
         )
 
         # Annotate edit, view, and bookmark onto the channels
         # Have to cast to integer first as it initially gets set
         # as a Big Integer, which cannot be cast directly to a Boolean
+        # We do this here, rather than in the annotate_queryset as these are
+        # used during the filtering of the queryset also.
         user_queryset = User.objects.filter(id=user_id)
         queryset = queryset.annotate(
             edit=Cast(
@@ -306,7 +327,7 @@ class ChannelViewSet(ValuesViewset):
             ),
         )
 
-        return self.prefetch_queryset(queryset).order_by("-priority", "name")
+        return queryset.order_by("-priority", "name")
 
     def prefetch_queryset(self, queryset):
         prefetch_secret_token = Prefetch(
