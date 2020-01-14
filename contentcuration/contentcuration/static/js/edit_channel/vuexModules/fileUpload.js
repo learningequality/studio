@@ -88,7 +88,7 @@ const fileUploadsModule = {
       let fileID = payload.id;
       let file = payload.file;
       let fileparts = file.name.split('.');
-      let extension = fileparts[fileparts.length - 1].toLowerCase();
+      let extension = _.last(fileparts).toLowerCase();
 
       let preset;
       if (payload.preset) {
@@ -106,7 +106,7 @@ const fileUploadsModule = {
         error: null,
         hash: null,
         file_on_disk: null,
-        name: fileparts[0],
+        name: fileparts.slice(0, fileparts.length - 1).join('.'),
         preset: preset,
         file_size: file.size,
         original_filename: file.name,
