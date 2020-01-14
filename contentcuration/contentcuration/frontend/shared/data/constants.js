@@ -14,3 +14,9 @@ export const STATUS = {
   SUCCESS: 'SUCCESS',
   FAILURE: 'FAILURE',
 }
+
+export const APP_ID = "KolibriStudio";
+
+export const FETCH_SOURCE = 'FETCH_SOURCE';
+
+export const CHANGES_TABLE = '__changesForSyncing';

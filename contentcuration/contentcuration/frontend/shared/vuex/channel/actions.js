@@ -1,4 +1,4 @@
-import { Channel } from 'shared/data';
+import { Channel } from 'shared/data/resources';
 
 /* CHANNEL LIST ACTIONS */
 export function loadChannelList(context, payload) {
