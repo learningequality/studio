@@ -65,10 +65,6 @@ function isSyncableChange(change) {
   return change.source !== FETCH_SOURCE && RESOURCES[change.table]
 }
 
-function hasSyncableChanges(changes) {
-  return changes.filter(isSyncableChange).length > 0;
-}
-
 const commonFields = ['type', 'key', 'table'];
 const createFields = commonFields.concat(['obj']);
 const updateFields = commonFields.concat(['mods']);

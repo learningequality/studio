@@ -202,18 +202,6 @@ class Resource {
       return this.table.delete(id);
     });
   }
-
-  postModel(data) {
-    return client.post(this.collectionUrl(), data);
-  }
-
-  patchModel(data) {
-    return client.post(this.modelUrl(data[this.idField]), data);
-  }
-
-  deleteModel(id) {
-    return client.delete(this.modelUrl(id));
-  }
 }
 
 
