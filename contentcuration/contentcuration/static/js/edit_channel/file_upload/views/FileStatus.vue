@@ -4,9 +4,6 @@
     <div v-if="!uploads.length">
       <slot name="default"></slot>
     </div>
-    <VIcon v-else-if="progress >= 100" :large="large" color="greenSuccess">
-      check_circle
-    </VIcon>
     <v-tooltip v-else-if="hasErrors" top>
       <template v-slot:activator="{ on }">
         <VIcon color="red" :large="large" v-on="on">
@@ -15,6 +12,9 @@
       </template>
       <span>{{ statusMessage(fileIDs) }}</span>
     </v-tooltip>
+    <VIcon v-else-if="progress >= 100" :large="large" color="greenSuccess">
+      check_circle
+    </VIcon>
     <v-progress-circular
       v-else
       :size="large? 60 : 20"
