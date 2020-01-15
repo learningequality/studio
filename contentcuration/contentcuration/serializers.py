@@ -7,11 +7,12 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.files.storage import default_storage
 from django.db import transaction
-from django.db.models import Max
-from django.db.models import Sum
+from django.db.models import IntegerField
+from django.db.models import Manager
+from django.db.models import QuerySet
+from django.db.models import Value
 from le_utils.constants import content_kinds
 from le_utils.constants import exercises
-from le_utils.constants import roles
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import set_value
@@ -38,6 +39,14 @@ from contentcuration.models import SecretToken
 from contentcuration.models import SlideshowSlide
 from contentcuration.models import Task
 from contentcuration.models import User
+from contentcuration.node_metadata.annotations import AssessmentCount
+from contentcuration.node_metadata.annotations import CoachCount
+from contentcuration.node_metadata.annotations import DescendantCount
+from contentcuration.node_metadata.annotations import HasChanged
+from contentcuration.node_metadata.annotations import ResourceCount
+from contentcuration.node_metadata.annotations import ResourceSize
+from contentcuration.node_metadata.annotations import SortOrderMax
+from contentcuration.node_metadata.query import Metadata
 from contentcuration.statistics import record_node_addition_stats
 from contentcuration.utils.format import format_size
 
@@ -253,6 +262,19 @@ class CustomListSerializer(serializers.ListSerializer):
                         ret.append(node)
         return ret
 
+    def to_representation(self, data):
+        if self.child and hasattr(self.child, 'metadata_query'):
+            query = data
+
+            if isinstance(data, Manager):
+                query = data.all()
+            elif not isinstance(data, QuerySet) and isinstance(data, (list, tuple)):
+                query = ContentNode.objects.filter(pk__in=[n.pk for n in data])
+
+            # update metadata_query with queryset for all data such that it minimizes queries
+            self.child.metadata_query = Metadata(query, **self.child.metadata_query.annotations)
+        return super(CustomListSerializer, self).to_representation(data)
+
 
 class TagSerializer(serializers.ModelSerializer):
 
@@ -328,24 +350,14 @@ class SimplifiedContentNodeSerializer(BulkSerializerMixin, serializers.ModelSeri
     is_prerequisite_of = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     metadata = serializers.SerializerMethodField('retrieve_metadata')
     ancestors = serializers.SerializerMethodField('get_node_ancestors')
+    metadata_query = Metadata(
+        total_count=DescendantCount(),
+        resource_count=ResourceCount(),
+        coach_count=CoachCount(),
+    )
 
     def retrieve_metadata(self, node):
-        if node.kind_id == content_kinds.TOPIC:
-            # descendants = node.get_descendants(include_self=True)
-            # aggregated = descendants.aggregate(resource_size=Sum('files__file_size'), assessment_size=Sum('assessment_items__files__file_size'))
-            return {
-                "total_count": node.get_descendant_count(),
-                "resource_count": node.get_descendants().exclude(kind=content_kinds.TOPIC).count(),
-                "coach_count": node.get_descendants().filter(role_visibility=roles.COACH).count(),
-                # "resource_size" : (aggregated.get('resource_size') or 0) + (aggregated.get('assessment_size') or 0),
-            }
-        else:
-            # assessment_size = node.assessment_items.aggregate(resource_size=Sum('files__file_size'))['resource_size'] or 0
-            # resource_size = node.files.aggregate(resource_size=Sum('file_size')).get('resource_size') or 0
-            return {
-                "total_count": 1,
-                "resource_count": 1,
-            }
+        return self.metadata_query.get(node.pk)
 
     @staticmethod
     def setup_eager_loading(queryset):
@@ -499,17 +511,17 @@ class ReadOnlySimplifiedContentNodeSerializer(SimplifiedContentNodeSerializer):
 
 class RootNodeSerializer(SimplifiedContentNodeSerializer, ContentNodeFieldMixin):
     channel_name = serializers.SerializerMethodField('retrieve_channel_name')
+    metadata_query = Metadata(
+        total_count=DescendantCount(),
+        resource_count=ResourceCount(),
+        max_sort_order=SortOrderMax(),
+        resource_size=Value(0, output_field=IntegerField()),
+        has_changed_descendant=HasChanged()
+    )
 
     def retrieve_metadata(self, node):
-        descendants = node.get_descendants()
-        data = {
-            "total_count": node.get_descendant_count(),
-            "resource_count": descendants.exclude(kind_id=content_kinds.TOPIC).count(),
-            "max_sort_order": node.children.aggregate(max_sort_order=Max('sort_order'))['max_sort_order'] or 1,
-            "resource_size": 0,
-            "has_changed_descendant": node.changed or descendants.filter(changed=True).exists(),
-        }
-        data.update(self.get_creators(descendants))
+        data = self.metadata_query.get(node.pk)
+        data.update(self.get_creators(node.get_descendants()))
         return data
 
     def retrieve_channel_name(self, node):
@@ -529,6 +541,15 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer, ContentNodeFieldMix
     original_channel = serializers.SerializerMethodField('retrieve_original_channel')
     thumbnail_src = serializers.SerializerMethodField('retrieve_thumbail_src')
     tags = TagSerializer(many=True, read_only=False)
+    metadata_query = Metadata(
+        total_count=DescendantCount(),
+        resource_count=ResourceCount(include_self=True),
+        assessment_count=AssessmentCount(include_self=True),
+        max_sort_order=SortOrderMax(include_self=True),
+        resource_size=ResourceSize(include_self=True),
+        has_changed_descendant=HasChanged(include_self=True),
+        coach_count=CoachCount(include_self=True),
+    )
 
     def retrieve_associated_presets(self, node):
         return list(node.get_associated_presets())
@@ -557,38 +578,18 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer, ContentNodeFieldMix
             return node.files.filter(preset__supplementary=False).exists()
 
     def retrieve_metadata(self, node):
-        if node.kind_id == content_kinds.TOPIC:
-            descendants = node.get_descendants(include_self=True)
-            data = {
-                "total_count": node.get_descendant_count(),
-                "resource_count": descendants.exclude(kind=content_kinds.TOPIC).count(),
-                "max_sort_order": node.children.aggregate(max_sort_order=Max('sort_order'))['max_sort_order'] or 1,
-                "resource_size": 0,  # Make separate request
-                "has_changed_descendant": descendants.filter(changed=True).exists(),
-                "coach_count": descendants.filter(role_visibility=roles.COACH).count(),
-            }
+        data = self.metadata_query.get(node.pk)
 
-            if not node.parent_id:  # Add extra data to root node
-                data.update(self.get_creators(descendants))
+        if node.kind_id == content_kinds.EXERCISE:
+            data.update(resource_count=data.get('assessment_count'))
 
+        if node.kind_id != content_kinds.TOPIC:
             return data
 
-        else:
-            assessment_size = node.assessment_items.values('files__checksum', 'files__file_size').distinct()\
-                .aggregate(resource_size=Sum('files__file_size')).get('resource_size') or 0
-            resource_size = node.files.values('file_size', 'checksum').distinct()\
-                .aggregate(resource_size=Sum('file_size')).get('resource_size') or 0
-            resource_count = 1
-            if node.kind_id == content_kinds.EXERCISE:
-                resource_count = node.assessment_items.filter(deleted=False).count()
+        if not node.parent_id:  # Add extra data to root node
+            data.update(self.get_creators(node.get_descendants(include_self=True)))
 
-            return {
-                "total_count": 1,
-                "resource_count": resource_count,
-                "max_sort_order": node.sort_order,
-                "resource_size": assessment_size + resource_size,
-                "has_changed_descendant": node.changed,
-            }
+        return data
 
     def retrieve_original_channel(self, node):
         channel_id = node.original_channel_id
@@ -758,6 +759,7 @@ class PublicChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
     kind_count = serializers.SerializerMethodField('generate_kind_count')
     matching_tokens = serializers.SerializerMethodField('match_tokens')
     icon_encoding = serializers.SerializerMethodField('get_thumbnail_encoding')
+    version_notes = serializers.SerializerMethodField('sort_published_data')
 
     def match_tokens(self, channel):
         tokens = json.loads(channel.tokens) if hasattr(channel, 'tokens') else []
@@ -781,10 +783,15 @@ class PublicChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
     def generate_kind_count(self, channel):
         return channel.published_kind_count and json.loads(channel.published_kind_count)
 
+    def sort_published_data(self, channel):
+        data = {int(k): v['version_notes'] for k, v in channel.published_data.items()}
+        return OrderedDict(sorted(data.items()))
+
     class Meta:
         model = Channel
         fields = ('id', 'name', 'language', 'included_languages', 'description', 'total_resource_count', 'version',
-                  'kind_count', 'published_size', 'last_published', 'icon_encoding', 'matching_tokens', 'public')
+                  'kind_count', 'published_size', 'last_published', 'icon_encoding', 'matching_tokens', 'public',
+                  'version_notes')
 
 
 class UserSerializer(serializers.ModelSerializer):

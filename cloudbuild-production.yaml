@@ -33,13 +33,31 @@ steps:
   ]
 
 - name: 'gcr.io/cloud-builders/docker'
+  id: build-prober-image
+  waitFor: ['-']              # don't wait for previous steps
+  args: [
+    'build',
+    '-f', 'k8s/images/prober/Dockerfile',
+    '--cache-from', 'gcr.io/$PROJECT_ID/learningequality-studio-prober:latest',
+    '-t', 'gcr.io/$PROJECT_ID/learningequality-studio-prober:$COMMIT_SHA',
+    '-t', 'gcr.io/$PROJECT_ID/learningequality-studio-prober:latest',
+    '.'
+  ]
+
+- name: 'gcr.io/cloud-builders/docker'
   id: push-app-image
   waitFor: ['build-app-image']
   args: ['push', 'gcr.io/$PROJECT_ID/learningequality-studio-app:$COMMIT_SHA']
+
 - name: 'gcr.io/cloud-builders/docker'
   id: push-nginx-image
   waitFor: ['build-nginx-image']
   args: ['push', 'gcr.io/$PROJECT_ID/learningequality-studio-nginx:$COMMIT_SHA']
+
+- name: 'gcr.io/cloud-builders/docker'
+  id: push-prober-image
+  waitFor: ['build-prober-image']
+  args: ['push', 'gcr.io/$PROJECT_ID/learningequality-studio-prober:$COMMIT_SHA']
 
 - name: 'gcr.io/cloud-builders/gcloud'
   id: decrypt-gcs-service-account
@@ -67,7 +85,7 @@ steps:
   env:
   - 'CLOUDSDK_COMPUTE_ZONE=us-central1-f'
   - 'CLOUDSDK_CONTAINER_CLUSTER=contentworkshop-central'
-  secretEnv: ['POSTMARK_API_KEY', 'POSTGRES_USERNAME', 'POSTGRES_DATABASE', 'POSTGRES_PASSWORD', 'SENTRY_DSN_KEY']
+  secretEnv: ['POSTMARK_API_KEY', 'PROBER_NEWRELIC_KEY', 'PROBER_NEWRELIC_ACCOUNT_ID', 'POSTGRES_USERNAME', 'POSTGRES_DATABASE', 'POSTGRES_PASSWORD', 'SENTRY_DSN_KEY']
   entrypoint: 'bash'
   args:
     - -c
@@ -78,6 +96,8 @@ steps:
       $_STORAGE_BUCKET
       $COMMIT_SHA
       $$POSTMARK_API_KEY
+      $$PROBER_NEWRELIC_KEY
+      $$PROBER_NEWRELIC_ACCOUNT_ID
       $$POSTGRES_USERNAME
       $$POSTGRES_DATABASE
       $$POSTGRES_PASSWORD
@@ -116,9 +136,17 @@ secrets:
 - kmsKeyName: projects/contentworkshop-159920/locations/global/keyRings/prod-secrets/cryptoKeys/sentryKey
   secretEnv:
     SENTRY_DSN_KEY: CiQAymGxx8tU8G23aFWKz52KLPvwY+EnKDPDMI4WZtVGtw7CJi8SagAaZGpaLvlDDdn2Nr4zJLLOxy3tpnzdteSDe8NJsQiIv8iSiULHOeA9wtZKSyzNWOv+gZrIAqgjipz7Sznm1sXC//qusnMFntzLOlRE3nJy9jp5h0XtCIY5grq/xUIW5MCeEDVf66sWO5U=
+- kmsKeyName: projects/contentworkshop-159920/locations/global/keyRings/prod-secrets/cryptoKeys/proberNewrelicKey
+  secretEnv:
+    PROBER_NEWRELIC_KEY: CiQABIA8K+uUYphwngTqjgAaGUEngHCI3ZdeYOtveAR7BI+Ib+MSSgCGM7/vMrlgRCmR4gPHaZIu3CB33966RmE2fHDBGH02qFXl7xuvh2DVisYt69T/V8vTrAHH9RE83uluFjbUELhp4WUYqIiFxM9G
+- kmsKeyName: projects/contentworkshop-159920/locations/global/keyRings/prod-secrets/cryptoKeys/proberNewrelicAccountId
+  secretEnv:
+    PROBER_NEWRELIC_ACCOUNT_ID: CiQABHUEtnX2wWjYdaZqsxEoZ6nWfuX1eY6Ht8frTZYcCXCqSkESMQCySb5xJhy4EPt0AFsAJZwkkZEqL8T9XsWtTMafvau2UXFDiHCZtneBxPocRdzMEIQ=
 
 images:
   - gcr.io/$PROJECT_ID/learningequality-studio-nginx:latest
   - gcr.io/$PROJECT_ID/learningequality-studio-nginx:$COMMIT_SHA
   - gcr.io/$PROJECT_ID/learningequality-studio-app:latest
   - gcr.io/$PROJECT_ID/learningequality-studio-app:$COMMIT_SHA
+  - 'gcr.io/$PROJECT_ID/learningequality-studio-prober:$COMMIT_SHA'
+  - 'gcr.io/$PROJECT_ID/learningequality-studio-prober:latest'

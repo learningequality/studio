@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import hashlib
 import json
 import os
@@ -113,7 +114,8 @@ def node(data, parent=None):
             parent=parent,
             title=data['title'],
             node_id=data['node_id'],
-            content_id=data.get('content_id') or data['node_id']
+            content_id=data.get('content_id') or data['node_id'],
+            sort_order=data.get('sort_order', 1),
         )
         new_node.save()
 
@@ -129,6 +131,7 @@ def node(data, parent=None):
             node_id=data['node_id'],
             license=license_wtfpl(),
             content_id=data.get('content_id') or data['node_id'],
+            sort_order=data.get('sort_order', 1),
         )
         new_node.save()
         video_file = fileobj_video(contents="Video File")
@@ -152,6 +155,7 @@ def node(data, parent=None):
             license=license_wtfpl(),
             extra_fields=extra_fields,
             content_id=data.get('content_id') or data['node_id'],
+            sort_order=data.get('sort_order', 1),
         )
 
         new_node.save()
@@ -185,8 +189,8 @@ def tree(parent=None):
     return node(data, parent)
 
 
-def channel():
-    channel = cc.Channel.objects.create(name="testchannel")
+def channel(name="testchannel"):
+    channel = cc.Channel.objects.create(name=name)
     channel.save()
 
     channel.main_tree = tree()
@@ -195,8 +199,17 @@ def channel():
     return channel
 
 
-def user():
-    user, is_new = cc.User.objects.get_or_create(email='user@test.com')
+def random_string(chars=10):
+    """
+    Generate a random string
+    :param chars: Number of characters in string
+    :return: A string with [chars] random characters.
+    """
+    return ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(chars))
+
+
+def user(email='user@test.com'):
+    user, is_new = cc.User.objects.get_or_create(email=email)
     if is_new:
         user.set_password('password')
         user.is_active = True
@@ -380,3 +393,19 @@ def generated_base64encoding():
         "j6OxnMjUwIHvzMLTv0bOT61Z6B7mUAACVeh9FYnbpl81btw6ZmDQCgZ6B76flfN65yy9EE908P5kYmKQDA0"\
         "OK1Ozu9htH7dEqsjyik6O0RVW/KIFM8yzoMABMAAPdg0m1exD/v4t9iY8oAAPfokw34v4JwjcxkQYIAYq5b9"\
         "+OJrg1v1uF3yITnGcV5zxcxRYhLZ3rOem9LSe+r82vB1kP1vFwEDQAAAABJRU5ErkJggg=="
+
+
+def srt_subtitle():
+    return """1
+00:00:12,464 --> 00:00:14,979
+أمضيت ما يقرب من العقدين
+
+2
+00:00:14,979 --> 00:00:18,532
+ألاحظ ما يجعل البعض أكثر حظًا من غيرهم
+
+3
+00:00:18,536 --> 00:00:22,119
+وأحاول مساعدة الناس على زيادة حظهم.
+
+    """

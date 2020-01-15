@@ -30,6 +30,7 @@ from contentcuration.models import User
 from contentcuration.utils.files import duplicate_file
 from contentcuration.utils.minio_utils import ensure_storage_bucket_public
 from contentcuration.utils.nodes import duplicate_node_bulk
+
 logmodule.basicConfig()
 logging = logmodule.getLogger(__name__)
 
@@ -97,11 +98,11 @@ class Command(BaseCommand):
                 channel=channel3,
                 email=admin.email,
             )
+            invitation.share_mode = "edit"
+            invitation.save()
         except MultipleObjectsReturned:
             # we don't care, just continue
             pass
-        invitation.share_mode = "edit"
-        invitation.save()
 
         # Create pool of tags
         tags = []
