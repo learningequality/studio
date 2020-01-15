@@ -28,6 +28,13 @@
       :text="unsupportedFilesText"
     />
     <Alert
+      ref="toolargefiles"
+      :header="$tr('tooLargeFilesHeader')"
+      :text="$tr('maxFileSizeText', {
+        count: tooLargeFiles.length, size: formatFileSize(maxFileSize)
+      })"
+    />
+    <Alert
       ref="storageexceeded"
       :header="$tr('noStorageHeader')"
       text=""
@@ -89,6 +96,7 @@
       return {
         highlight: false,
         unsupportedFiles: [],
+        tooLargeFiles: [],
         totalUploadSize: 0,
       };
     },
@@ -127,6 +135,9 @@
       },
       highlightDropzone() {
         return this.highlight && !this.readonly && this.allowDrop;
+      },
+      maxFileSize() {
+        return MAX_FILE_SIZE;
       },
     },
     methods: {
@@ -173,25 +184,37 @@
         }
         this.setFileError({ id: fileID, error: errorType, message: message });
       },
+      validateFiles(files) {
+        // Get unsupported file types
+        let partition = _.partition(files, f =>
+          _.contains(this.acceptedExtensions, _.last(f.name.split('.')).toLowerCase())
+        );
+        files = partition[0];
+        this.unsupportedFiles = partition[1];
+
+        // Get files that exceed the max file size
+        partition = _.partition(files, f => f.size < MAX_FILE_SIZE);
+        files = partition[0];
+        this.tooLargeFiles = partition[1];
+
+        // Get the total file size
+        this.totalUploadSize = _.reduce(files, (sum, f) => sum + f.size, 0);
+        return files;
+      },
       handleFiles(files) {
         if (!this.readonly) {
           let newFiles = [];
           files = this.allowMultiple ? files : [files[0]];
+          files = this.validateFiles(files);
 
-          let partition = _.partition(files, f => {
-            let extension = _.last(f.name.split('.'));
-            return _.contains(this.acceptedExtensions, extension.toLowerCase());
-          });
-          files = partition[0];
-          this.unsupportedFiles = partition[1];
-
-          this.totalUploadSize = _.reduce(files, (sum, f) => sum + f.size, 0);
-
+          // Show errors if relevant
           if (this.totalUploadSize > this.availableSpace) {
             this.$refs.storageexceeded.prompt();
             return;
           } else if (this.unsupportedFiles.length) {
             this.$refs.unsupportedfiles.prompt();
+          } else if (this.tooLargeFiles.length) {
+            this.$refs.toolargefiles.prompt();
           }
 
           [...files].forEach(uploadedFile => {
@@ -201,14 +224,6 @@
             let file = this.getFile(fileID);
             newFiles.push(file);
 
-            /* Validation for max file size and wrong file type*/
-            if (file.file_size > MAX_FILE_SIZE) {
-              this.setError(fileID, fileErrors.TOO_LARGE);
-              return;
-            } else if (!this.acceptedExtensions.includes(file.file_format)) {
-              this.setError(fileID, fileErrors.WRONG_TYPE);
-              return;
-            }
             this.uploadFile({ file: uploadedFile, id: fileID })
               .then(filepath => {
                 this.$emit('uploaded', filepath);
@@ -236,6 +251,9 @@
       noStorageHeader: 'Not enough space',
       uploadSize: 'Upload is too large: {size}',
       remainingStorage: 'Remaining storage: {size}',
+      tooLargeFilesHeader: 'Max file size exceeded',
+      maxFileSizeText:
+        '{count, plural,\n =1 {File}\n other {# files}} will not be uploaded. File size must be under {size}',
     },
   };
 
