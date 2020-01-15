@@ -12,7 +12,8 @@ from rest_framework.decorators import authentication_classes
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.status import HTTP_202_ACCEPTED
+from rest_framework.status import HTTP_207_MULTI_STATUS
+from rest_framework.status import HTTP_400_BAD_REQUEST
 
 from contentcuration.viewsets.channel import ChannelViewSet
 
@@ -39,6 +40,9 @@ def get_change_type(obj):
 @permission_classes((IsAuthenticated,))
 @api_view(["POST"])
 def sync(request):
+    # Collect all error objects, which consist of the original change
+    # plus any validation errors raised.
+    errors = []
     data = sorted(request.data, key=get_table)
     for table_name, group in groupby(data, get_table):
         if table_name in viewset_mapping:
@@ -59,7 +63,7 @@ def sync(request):
                                 changes,
                             )
                         )
-                        viewset.bulk_create(request, data=new_data)
+                        errors.extend(viewset.bulk_create(request, data=new_data))
                     elif change_type == UPDATED:
                         change_data = list(
                             map(
@@ -69,10 +73,17 @@ def sync(request):
                                 changes,
                             )
                         )
-                        viewset.bulk_update(request, data=change_data)
+                        errors.extend(viewset.bulk_update(request, data=change_data))
                     elif change_type == DELETED:
                         ids_to_delete = list(map(lambda x: x["key"], changes))
                         viewset.bulk_delete(ids_to_delete)
                 except ValueError:
                     pass
-    return Response(status=HTTP_202_ACCEPTED)
+    if not errors:
+        return Response()
+    elif len(errors) < len(data):
+        # If there are some errors, but not all, return a mixed response
+        return Response(errors, status=HTTP_207_MULTI_STATUS)
+    else:
+        # If the errors are total, reject the response outright!
+        return Response(errors, status=HTTP_400_BAD_REQUEST)

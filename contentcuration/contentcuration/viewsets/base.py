@@ -253,16 +253,46 @@ class ValuesViewset(ReadOnlyModelViewSet):
         data = kwargs.pop("data", request.data)
         instance = self.get_queryset().order_by()
         serializer = self.get_serializer(instance, data=data, many=True, partial=True)
-        serializer.is_valid(raise_exception=True)
-        self.perform_bulk_update(serializer)
-        return True
+        errors = []
+        if serializer.is_valid():
+            self.perform_bulk_update(serializer)
+        else:
+            valid_data = []
+            for error, datum in zip(serializer.errors, data):
+                if error:
+                    datum.update({"errors": error})
+                    errors.append(datum)
+                else:
+                    valid_data.append(datum)
+            serializer = self.get_serializer(data=valid_data, many=True, partial=True)
+            # This should now not raise an exception as we have filtered
+            # all the invalid objects, but we still need to call is_valid
+            # before DRF will let us save them.
+            serializer.is_valid(raise_exception=True)
+            self.perform_bulk_update(serializer)
+        return errors
 
     def bulk_create(self, request, *args, **kwargs):
         data = kwargs.pop("data", request.data)
         serializer = self.get_serializer(data=data, many=True)
-        serializer.is_valid(raise_exception=True)
-        self.perform_bulk_create(serializer)
-        return True
+        errors = []
+        if serializer.is_valid():
+            self.perform_bulk_create(serializer)
+        else:
+            valid_data = []
+            for error, datum in zip(serializer.errors, data):
+                if error:
+                    datum.update({"errors": error})
+                    errors.append(datum)
+                else:
+                    valid_data.append(datum)
+            serializer = self.get_serializer(data=valid_data, many=True)
+            # This should now not raise an exception as we have filtered
+            # all the invalid objects, but we still need to call is_valid
+            # before DRF will let us save them.
+            serializer.is_valid(raise_exception=True)
+            self.perform_bulk_create(serializer)
+        return errors
 
     def perform_bulk_create(self, serializer):
         serializer.save()
