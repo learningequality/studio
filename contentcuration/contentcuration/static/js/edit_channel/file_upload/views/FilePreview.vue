@@ -11,7 +11,9 @@
       @keydown.esc="fullscreen = false"
     >
       <VToolbar v-if="fullscreen" dark color="grey darken-3" dense>
-        <VToolbarTitle>{{ nodeTitle }}</VToolbarTitle>
+        <VToolbarTitle class="notranslate">
+          {{ nodeTitle }}
+        </VToolbarTitle>
       </VToolbar>
       <VToolbar v-if="fullscreen" light dense>
         {{ $tr('fullscreenModeText') }}

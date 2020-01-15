@@ -1,7 +1,7 @@
 <template>
 
   <VTooltip maxWidth="150px" v-bind="$attrs">
-    <VIcon slot="activator" color="primary">
+    <VIcon slot="activator" color="primary" class="notranslate">
       {{ icon }}
     </VIcon>
     <span>{{ text }}</span>

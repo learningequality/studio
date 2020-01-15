@@ -4,7 +4,7 @@
     <VCard v-if="!primaryFileMapping.length" color="grey lighten-4" flat>
       <VCardText>
         <VLayout align-center justify-center fill-height>
-          <VIcon color="red">
+          <VIcon color="red" class="notranslate">
             error
           </VIcon>
           &nbsp; {{ $tr('fileError') }}

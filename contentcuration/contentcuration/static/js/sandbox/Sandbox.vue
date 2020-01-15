@@ -90,6 +90,9 @@
       font-weight: bold;
       cursor: pointer;
     }
+    .material-icons * {
+      font-family: 'Material Icons';
+    }
   }
 
   body * {

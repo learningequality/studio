@@ -7,12 +7,12 @@
         @click.stop="viewOnly? $emit('selected') : uploader.openFileDialog()"
       >
         <VListTileAction v-show="!viewOnly" @click.stop="$emit('selected')">
-          <VRadio v-if="file" :key="file.id" :value="file.id" color="primary" />
+          <VRadio v-if="file" :key="file.id" class="notranslate" :value="file.id" color="primary" />
         </VListTileAction>
         <VListTileContent>
           <VListTileSubTitle>{{ preset.id | translate }}</VListTileSubTitle>
           <VListTileTitle>
-            <span v-if="file" @click.stop="uploader.openFileDialog">
+            <span v-if="file" class="notranslate" @click.stop="uploader.openFileDialog">
               {{ file.original_filename }}
             </span>
             <a v-else class="action-link" @click.stop="uploader.openFileDialog">

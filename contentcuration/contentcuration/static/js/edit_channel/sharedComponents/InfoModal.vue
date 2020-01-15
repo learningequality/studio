@@ -2,7 +2,7 @@
 
   <VDialog v-model="dialog" width="550">
     <template v-slot:activator="{ on }">
-      <VIcon color="primary" v-on="on">
+      <VIcon color="primary" class="notranslate" v-on="on">
         info
       </VIcon>
     </template>

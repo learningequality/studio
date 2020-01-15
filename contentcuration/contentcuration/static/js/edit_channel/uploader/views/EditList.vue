@@ -7,6 +7,7 @@
         <VListTile @click="toggleSelectAll">
           <VListTileAction>
             <VCheckbox
+              class="notranslate"
               color="primary"
               :inputValue="selectAllChecked"
               @click.stop="toggleSelectAll"
