@@ -190,7 +190,9 @@ const fileUploadsModule = {
               context.commit('REMOVE_FILE', payload.id);
             }, REMOVE_FILE_DELAY);
           })
-          .catch(reject);
+          .catch(() => {
+            reject(fileErrors.UPLOAD_FAILED);
+          });
       });
     },
     uploadFile(context, payload) {
@@ -204,6 +206,10 @@ const fileUploadsModule = {
             context
               .dispatch('getUploadURL', { checksum: hash, size: payload.file.size, id: payload.id })
               .then(response => {
+                if (!response) {
+                  reject(fileErrors.UPLOAD_FAILED);
+                  return;
+                }
                 // 3. Upload file
                 context
                   .dispatch('uploadFileToStorage', {

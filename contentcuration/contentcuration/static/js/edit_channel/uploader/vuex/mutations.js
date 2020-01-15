@@ -3,7 +3,9 @@ import Vue from 'vue';
 
 import { modes } from '../constants';
 import {
+  sanitizeFiles,
   sanitizeAssessmentItems,
+  validateNodeFiles,
   validateAssessmentItem,
   validateNodeDetails,
   parseNode,
@@ -170,6 +172,20 @@ export const SANITIZE_NODE_ASSESSMENT_ITEMS = (state, { nodeIdx }) => {
 };
 
 /**
+ * Sanitize files of a node with a given index.
+ */
+export const SANITIZE_NODE_FILES = (state, { nodeIdx }) => {
+  let files = [];
+
+  if (state.nodes[nodeIdx].files && state.nodes[nodeIdx]['_COMPLETE']) {
+    files = [...state.nodes[nodeIdx].files];
+  }
+
+  const sanitizedFiles = sanitizeFiles(files);
+  Vue.set(state.nodes[nodeIdx], 'files', sanitizedFiles);
+};
+
+/**
  * Validate node details (title, licence etc.) and save validation results
  * to state.validation.
  */
@@ -194,6 +210,33 @@ export const VALIDATE_NODE_DETAILS = (state, { nodeIdx }) => {
   const node = state.nodes[nodeIdx];
 
   Vue.set(state.validation[validationIdx].errors, 'details', validateNodeDetails(node));
+};
+
+/**
+ * Validate node files and save validation results
+ * to state.validation.
+ */
+export const VALIDATE_NODE_FILES = (state, { nodeIdx }) => {
+  // cleanup previous node details validation
+  // setup a new node validation object if there is none
+  const previousValidationIdx = state.validation.findIndex(
+    nodeValidation => nodeValidation.nodeIdx === nodeIdx
+  );
+  let validationIdx;
+  if (previousValidationIdx === -1) {
+    state.validation.push({
+      nodeIdx,
+      errors: {},
+    });
+    validationIdx = state.validation.length - 1;
+  } else {
+    Vue.set(state.validation[previousValidationIdx].errors, 'files', []);
+    validationIdx = previousValidationIdx;
+  }
+
+  const node = state.nodes[nodeIdx];
+
+  Vue.set(state.validation[validationIdx].errors, 'files', validateNodeFiles(node));
 };
 
 /**
@@ -416,6 +459,8 @@ export function ADD_FILE_TO_NODE(state, payload) {
       return f.preset.id === payload.file.preset.id;
     });
     state.nodes[payload.index].files.push(payload.file);
+    state.nodes[payload.index].changesStaged = true;
+    SET_CHANGES(state);
   }
 }
 
@@ -423,4 +468,6 @@ export function REMOVE_FILE_FROM_NODE(state, payload) {
   state.nodes[payload.index].files = _.reject(state.nodes[payload.index].files, f => {
     return f.id === payload.fileID;
   });
+  state.nodes[payload.index].changesStaged = true;
+  SET_CHANGES(state);
 }

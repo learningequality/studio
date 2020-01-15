@@ -28,15 +28,9 @@
               <div v-if="saveError">
                 {{ $tr('saveFailedText') }}
               </div>
-              <div v-else-if="invalidNodesWithoutNewNodes.length">
-                {{ $tr('autosaveDisabledMessage', {count: invalidNodesWithoutNewNodes.length}) }}
-              </div>
               <div v-else-if="saving">
                 <VProgressCircular indeterminate size="15" width="2" color="white" />
                 {{ $tr('savingIndicator') }}
-              </div>
-              <div v-else-if="lastSaved">
-                {{ savedMessage }}
               </div>
             </VFlex>
             <VBtn v-if="!isViewOnly" ref="savebutton" dark flat @click="handleSave">
@@ -66,6 +60,7 @@
                 <Uploader
                   :readonly="!allowUpload"
                   :allowDrop="false"
+                  allowMultiple
                   @uploading="createNodesFromFiles"
                 >
                   <template slot="upload-zone" slot-scope="uploader">
@@ -112,17 +107,35 @@
     </VDialog>
 
     <!-- Dialog for catching unsaved changes -->
-    <Dialog ref="saveprompt" :header="$tr('unsavedChanges')" :text="$tr('unsavedChangesText')">
-      <template v-slot:buttons>
-        <VBtn ref="savepromptdontsave" flat color="primary" @click="closeModal">
-          {{ $tr('dontSaveButton') }}
+    <Dialog
+      ref="saveprompt"
+      :header="$tr('invalidNodesFound', {count: invalidNodes().length})"
+      :text="$tr('invalidNodesFoundText')"
+    >
+      <template slot="buttons" slot-scope="messagedialog">
+        <VBtn flat color="primary" @click="handleForceSave">
+          {{ $tr('saveAnywaysButton') }}
         </VBtn>
         <VSpacer />
-        <VBtn ref="savepromptcancel" flat color="primary" @click="dismissPrompt">
-          {{ $tr('cancelButton') }}
+        <VBtn depressed color="primary" @click="messagedialog.close">
+          {{ $tr('keepEditingButton') }}
         </VBtn>
-        <VBtn ref="savepromptsave" depressed color="primary" @click="handleSave">
-          {{ $tr('saveButton') }}
+      </template>
+    </Dialog>
+
+    <!-- Dialog for catching in-progress file uploads -->
+    <Dialog
+      ref="uploadsprompt"
+      :header="$tr('uploadInProgressHeader')"
+      :text="$tr('uploadInProgressText')"
+    >
+      <template slot="buttons" slot-scope="messagedialog">
+        <VBtn flat color="primary" @click="handleForceSave">
+          {{ $tr('cancelUploadsButton') }}
+        </VBtn>
+        <VSpacer />
+        <VBtn depressed color="primary" @click="messagedialog.close">
+          {{ $tr('keepEditingButton') }}
         </VBtn>
       </template>
     </Dialog>
@@ -160,8 +173,7 @@
   import FileStorage from 'edit_channel/file_upload/views/FileStorage.vue';
   import { fileSizeMixin } from 'edit_channel/file_upload/mixins';
 
-  const SAVE_TIMER = 5000;
-  const SAVE_MESSAGE_TIMER = 10000;
+  const SAVE_TIMER = 2000;
 
   export default {
     name: 'EditModal',
@@ -184,26 +196,13 @@
     data() {
       return {
         dialog: false,
-        lastSaved: null,
         saving: false,
-        savedMessage: null,
         saveError: false,
-        updateInterval: null,
-        debouncedSave: _.debounce(() => {
-          if (!this.invalidNodes.length) {
-            this.saveContent()
-              .then(() => {
-                this.updateSavedTime();
-                this.updateInterval = setInterval(this.updateSavedTime, SAVE_MESSAGE_TIMER);
-              })
-              .catch(() => (this.saveError = true));
-          }
-        }, SAVE_TIMER),
       };
     },
     computed: {
-      ...mapState('edit_modal', ['nodes', 'changes', 'mode', 'validation']),
-      ...mapGetters('edit_modal', ['changed', 'invalidNodes', 'totalFileSize']),
+      ...mapState('edit_modal', ['nodes', 'changes', 'mode']),
+      ...mapGetters('edit_modal', ['changed', 'invalidNodes', 'totalFileSize', 'filesUploading']),
       isViewOnly() {
         return this.mode === modes.VIEW_ONLY;
       },
@@ -228,8 +227,8 @@
       newContentMode() {
         return this.allowUpload || this.allowAddExercise || this.allowAddTopic;
       },
-      invalidNodesWithoutNewNodes() {
-        return this.invalidNodes({ ignoreNewNodes: true });
+      debouncedSave() {
+        return _.debounce(this.saveContent, SAVE_TIMER);
       },
     },
     watch: {
@@ -237,7 +236,6 @@
         deep: true,
         handler() {
           if (this.changed) this.debouncedSave();
-          else this.debouncedSave.cancel();
         },
       },
     },
@@ -260,7 +258,77 @@
           this.createNode();
         }
       },
+      closeModal() {
+        this.dialog = false;
+        this.$refs.uploadsprompt.close();
+        this.$refs.saveprompt.close();
+        this.$emit('modalclosed');
+        this.reset();
+        // TODO: Update router
+      },
+
+      /* Button actions */
+      copyContent() {
+        // Main action when modal is opened in view only mode
+        if (_.some(this.nodes, n => n.prerequisite.length || n.is_prerequisite_of.length)) {
+          this.$refs.relatedalert.prompt();
+        }
+        this.copyNodes().then(() => {
+          this.closeModal();
+        });
+      },
+      handleClose() {
+        // X button action
+        if (this.isViewOnly) {
+          this.closeModal();
+        } else {
+          this.handleSave();
+        }
+      },
+      handleSave() {
+        // Main action when modal is opened in edit mode
+        // Prepare for save sets all as not new and
+        // activates validation on all nodes
+        this.prepareForSave();
+        let invalidNodes = this.invalidNodes();
+
+        // Check if there are any files uploading
+        if (this.filesUploading) {
+          this.$refs.uploadsprompt.prompt();
+        }
+
+        // Check if there are any invalid nodes
+        else if (invalidNodes.length) {
+          this.setNode(invalidNodes[0]);
+          this.$refs.saveprompt.prompt();
+        } else {
+          this.handleForceSave();
+        }
+      },
+      handleForceSave() {
+        // Save anyways button action
+        this.saveContent()
+          .then(this.closeModal)
+          .catch(() => {
+            this.$refs.savefailedalert.prompt();
+          });
+      },
+      saveContent() {
+        this.saveError = false;
+        return new Promise((resolve, reject) => {
+          this.saving = true;
+          this.saveNodes()
+            .then(() => {
+              this.saving = false;
+              resolve();
+            })
+            .catch(reject);
+        });
+      },
+
+      /* Creation actions */
       createNode() {
+        this.prepareForSave();
         let titleArgs = { parent: State.currentNode.title };
         if (this.mode === modes.NEW_TOPIC) {
           this.addNodeToList({
@@ -275,6 +343,7 @@
         }
       },
       uploadStarted(data) {
+        this.prepareForSave();
         this.addNodeToList({
           title: data.name,
           kind: data.kind,
@@ -285,74 +354,6 @@
           ],
         });
       },
-      updateSavedTime() {
-        this.savedMessage = this.$tr('savedMessage', {
-          relativeTime: this.$formatRelative(this.lastSaved),
-        });
-      },
-      saveContent() {
-        this.saveError = false;
-        return new Promise((resolve, reject) => {
-          clearInterval(this.updateInterval);
-          if (this.invalidNodes.length) {
-            resolve();
-          } else {
-            this.saving = true;
-            this.saveNodes()
-              .then(() => {
-                this.lastSaved = Date.now();
-                this.saving = false;
-                resolve();
-              })
-              .catch(reject);
-          }
-        });
-      },
-      handleSave() {
-        // Prepare for save sets all as not new and
-        // activates validation on all nodes
-        this.prepareForSave();
-        if (this.validation.length) {
-          this.setNode(this.validation[0].nodeIdx);
-        } else {
-          this.saveContent()
-            .then(this.closeModal)
-            .catch(() => {
-              this.$refs.savefailedalert.prompt();
-              this.dismissPrompt();
-            });
-        }
-      },
-      handleClose() {
-        this.debouncedSave.cancel();
-        if (this.changed) {
-          this.$refs.saveprompt.prompt();
-        } else {
-          this.closeModal();
-        }
-      },
-      dismissPrompt() {
-        this.$refs.saveprompt.close();
-        this.debouncedSave();
-      },
-      closeModal() {
-        this.debouncedSave.cancel();
-        this.dismissPrompt();
-        this.dialog = false;
-        this.lastSaved = null;
-        this.savedMessage = '';
-        this.reset();
-        this.$emit('modalclosed');
-        // TODO: Update router
-      },
-      copyContent() {
-        if (_.some(this.nodes, n => n.prerequisite.length || n.is_prerequisite_of.length)) {
-          this.$refs.relatedalert.prompt();
-        }
-        this.copyNodes().then(() => {
-          this.closeModal();
-        });
-      },
     },
     $trs: {
       [modes.EDIT]: 'Editing Content Details',
@@ -360,27 +361,28 @@
       [modes.NEW_TOPIC]: 'Adding Topics',
       [modes.NEW_EXERCISE]: 'Adding Exercises',
       [modes.UPLOAD]: 'Uploading Files',
-      saveButtonText: 'Save & Close',
+      saveButtonText: 'Finish',
       copyButtonText:
         '{count, plural,\n =1 {Copy to clipboard}\n other {Copy # items to clipboard}} ({size})',
-      savedMessage: 'Saved {relativeTime}',
       savingIndicator: 'Saving...',
-      unsavedChanges: 'Save your changes?',
-      unsavedChangesText: "Your changes will be lost if you don't save them",
-      dontSaveButton: "Don't save",
-      cancelButton: 'Cancel',
-      saveButton: 'Save changes',
+      invalidNodesFound: '{count} errors found',
+      invalidNodesFoundText:
+        "You won't be able to publish your channel until these errors are resolved",
+      saveAnywaysButton: 'Save anyway',
+      keepEditingButton: 'Keep editing',
       relatedContentHeader: 'Related content detected',
       relatedContentText: 'Related content will not be included in the copy of this content.',
       saveFailedHeader: 'Save failed',
       saveFailedText: 'There was a problem saving your content',
-      autosaveDisabledMessage:
-        'Autosave paused ({count, plural,\n =1 {# error}\n other {# errors}} detected)',
       topicDefaultTitle: '{parent} Topic',
       exerciseDefaultTitle: '{parent} Exercise',
       addTopic: 'Add Topic',
       addExercise: 'Add Exercise',
       uploadButton: 'Upload More',
+      uploadInProgressHeader: 'Upload in progress',
+      uploadInProgressText:
+        'Files that have not finished uploading will be removed if you finish now',
+      cancelUploadsButton: 'Cancel uploads',
     },
   };
 
@@ -391,12 +393,6 @@
   @import '../../../../less/global-variables.less';
 
   .edit-modal-wrapper {
-    * {
-      font-family: @font-family;
-      &.v-icon {
-        .material-icons;
-      }
-    }
     .edit-list {
       width: 100%;
     }

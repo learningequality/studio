@@ -29,7 +29,7 @@
             <!-- Details tab -->
             <VTab ref="detailstab" :href="`#${tabs.DETAILS}`">
               {{ $tr(tabs.DETAILS) }}
-              <VTooltip v-if="invalidSelected" top>
+              <VTooltip v-if="invalidSelected || !areFilesValid" top>
                 <template v-slot:activator="{ on }">
                   <VIcon color="red" dark v-on="on">
                     error
@@ -72,7 +72,7 @@
               <VAlert :value="selected.length > 1" type="info" outline>
                 {{ countText }}
               </VAlert>
-              <VAlert :value="invalidSelected" type="error" outline icon="error">
+              <VAlert v-if="invalidSelected" :value="true" type="error" outline icon="error">
                 {{ $tr('errorBannerText') }}
               </VAlert>
               <DetailsTabView :viewOnly="viewOnly" />
@@ -135,6 +135,7 @@
         'allResources',
         'isNodeNew',
         'areNodeDetailsValid',
+        'areNodeFilesValid',
         'areNodeAssessmentItemsValid',
         'nodeAssessmentItemsCount',
       ]),
@@ -182,6 +183,9 @@
       },
       areAssessmentItemsValid() {
         return this.areNodeAssessmentItemsValid(this.selectedIndices[0]);
+      },
+      areFilesValid() {
+        return this.areNodeFilesValid(this.selectedIndices[0]);
       },
       assessmentItemsCount() {
         return this.nodeAssessmentItemsCount(this.selectedIndices[0]);

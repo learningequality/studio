@@ -1,9 +1,20 @@
 import _ from 'underscore';
 
+function filesAreValid(files) {
+  let validPrimaryFiles = _.filter(
+    files,
+    f => !f.preset.supplementary && !f.error && f.progress >= 100
+  );
+  return validPrimaryFiles.length > 0;
+}
+
 export function saveNodes(context) {
   // Setting this before in case changes happen between saving start and finish
   return new Promise((resolve, reject) => {
-    let changed = _.where(context.state.nodes, { changesStaged: true });
+    let changed = _.filter(context.state.nodes, n => {
+      // Skip uploads
+      return n.changesStaged && filesAreValid(n.files);
+    });
 
     context
       .dispatch('saveNodes', changed, { root: true })
@@ -33,7 +44,9 @@ export function loadNodes(context, indices) {
  */
 export const validateNode = ({ commit }, nodeIdx) => {
   commit('SANITIZE_NODE_ASSESSMENT_ITEMS', { nodeIdx });
+  commit('SANITIZE_NODE_FILES', { nodeIdx });
 
+  commit('VALIDATE_NODE_FILES', { nodeIdx });
   commit('VALIDATE_NODE_ASSESSMENT_ITEMS', { nodeIdx });
   commit('VALIDATE_NODE_DETAILS', { nodeIdx });
 };

@@ -83,9 +83,7 @@
           return true;
         }
 
-        return (
-          !this.invalidNodes({ ignoreNewNodes: true }).includes(this.index) && !this.firstFileError
-        );
+        return !this.invalidNodes({ ignoreNewNodes: true }).includes(this.index);
       },
       backgroundColor() {
         if (this.selectedIndices.length > 1 && this.isSelected) {

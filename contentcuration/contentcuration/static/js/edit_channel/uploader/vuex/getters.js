@@ -47,6 +47,25 @@ const _invalidNodeAssessmentItemsCount = (state, nodeIdx) => {
 };
 
 /**
+ * Return a number of invalid files of a node with a given index.
+ */
+const _invalidNodeFilesCount = (state, nodeIdx) => {
+  const nodeErrors = _nodeErrors(state, nodeIdx);
+
+  if (nodeErrors === null) {
+    return 0;
+  }
+
+  if (!nodeErrors.files || !nodeErrors.files.length) {
+    return 0;
+  }
+
+  return nodeErrors.files.reduce((accumulator, itemValidation) => {
+    return itemValidation.length ? accumulator + 1 : accumulator;
+  }, 0);
+};
+
+/**
  * Return `true`/`false` if node details (title, description, license etc.)
  * are valid/invalid.
  */
@@ -69,11 +88,23 @@ const _areNodeAssessmentItemsValid = (state, nodeIdx) => {
 };
 
 /**
+ * Return `false` if there is at least one file of a node with a given index
+ * that is invalid. Return `true` if all files of the node are valid.
+ */
+const _areNodeFilesValid = (state, nodeIdx) => {
+  return _invalidNodeFilesCount(state, nodeIdx) === 0;
+};
+
+/**
  * Return `true` if both details and assessment items of a given node are valid.
  * Otherwise return `false`.
  */
 const _isNodeValid = (state, nodeIdx) => {
-  return _areNodeDetailsValid(state, nodeIdx) && _areNodeAssessmentItemsValid(state, nodeIdx);
+  return (
+    _areNodeDetailsValid(state, nodeIdx) &&
+    _areNodeAssessmentItemsValid(state, nodeIdx) &&
+    _areNodeFilesValid(state, nodeIdx)
+  );
 };
 
 export function getNode(state) {
@@ -176,6 +207,13 @@ export const areNodeAssessmentItemsValid = state => nodeIdx => {
 };
 
 /**
+ * See _areNodeFilesValid
+ */
+export const areNodeFilesValid = state => nodeIdx => {
+  return _areNodeFilesValid(state, nodeIdx);
+};
+
+/**
  * See _isNodeValid
  */
 export const isNodeValid = state => nodeIdx => {
@@ -205,4 +243,12 @@ export const invalidNodes = state => ({ ignoreNewNodes = false } = {}) => {
       return undefined;
     })
     .filter(nodeIdx => nodeIdx !== undefined);
+};
+
+export const filesUploading = state => {
+  return _.chain(state.nodes)
+    .pluck('files')
+    .flatten()
+    .some(f => f.progress < 100)
+    .value();
 };
