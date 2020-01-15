@@ -16,10 +16,10 @@ module.exports = [
     id: 'gu',
   },
   {
-    readable_name: 'Chinese, Traditional',
+    readable_name: 'Chinese, Taiwan',
     lang_subcode: 'TW',
     lang_direction: 'ltr',
-    native_name: '\u6b63\u9ad4\u5b57/\u7e41\u9ad4\u5b57',
+    native_name: '\u6f22\u8a9e (\u81fa\u7063)',
     lang_code: 'zh',
     id: 'zh-TW',
   },
@@ -46,6 +46,14 @@ module.exports = [
     native_name: 'Scots',
     lang_code: 'sco',
     id: 'sco',
+  },
+  {
+    readable_name: 'Chinese, Traditional',
+    lang_subcode: 'Hant',
+    lang_direction: 'ltr',
+    native_name: '\u6f22\u8a9e (\u7e41\u9ad4\u5b57)',
+    lang_code: 'zh',
+    id: 'zh-Hant',
   },
   {
     readable_name: 'Scottish Gaelic; Gaelic',
@@ -445,7 +453,7 @@ module.exports = [
     readable_name: 'Chinese',
     lang_subcode: null,
     lang_direction: 'ltr',
-    native_name: '\u4e2d\u6587 (Zh\u014dngw\u00e9n), \u6c49\u8bed, \u6f22\u8a9e',
+    native_name: '\u4e2d\u6587, \u6c49\u8bed, \u6f22\u8a9e',
     lang_code: 'zh',
     id: 'zh',
   },
@@ -627,6 +635,15 @@ module.exports = [
     id: 'wa',
   },
   {
+    readable_name: 'Marwari; Marwadi',
+    lang_subcode: null,
+    lang_direction: 'ltr',
+    native_name:
+      '\u092e\u093e\u0930\u0935\u093e\u0921\u093c\u0940, \u0645\u0627\u0631\u0648\u0627\u0691\u06cc',
+    lang_code: 'mwr',
+    id: 'mwr',
+  },
+  {
     readable_name: 'Wolof',
     lang_subcode: null,
     lang_direction: 'ltr',
@@ -790,12 +807,12 @@ module.exports = [
   },
   {
     readable_name: 'Belarusian, Classical Orthography',
-    lang_subcode: 'tar',
+    lang_subcode: 'tara',
     lang_direction: 'ltr',
     native_name:
       'Tara\u0161kievica, \u0442\u0430\u0440\u0430\u0448\u043a\u0435\u0432\u0456\u0446\u0430, \u0411\u0435\u043b\u0430\u0440\u0443\u0441\u043a\u0430\u044f \u043a\u043b\u044f\u0441\u044b\u0447\u043d\u044b \u043f\u0440\u0430\u0432\u0430\u043f\u0456\u0441',
     lang_code: 'be',
-    id: 'be-tar',
+    id: 'be-tara',
   },
   {
     readable_name: 'Southern Sotho',
@@ -1011,8 +1028,7 @@ module.exports = [
     readable_name: 'Tagalog',
     lang_subcode: null,
     lang_direction: 'ltr',
-    native_name:
-      'Wikang Tagalog, \u170f\u1712\u1703\u1705\u1714 \u1706\u1704\u170e\u1713\u1704\u1714',
+    native_name: 'Wikang Tagalog',
     lang_code: 'tl',
     id: 'tl',
   },
@@ -1369,6 +1385,14 @@ module.exports = [
     id: 'ss',
   },
   {
+    readable_name: 'Bhojpuri; Bajpuri; Bhojapuri',
+    lang_subcode: null,
+    lang_direction: 'ltr',
+    native_name: '\u092d\u094b\u091c\u092a\u0941\u0930\u0940',
+    lang_code: 'bho',
+    id: 'bho',
+  },
+  {
     readable_name: 'Afrikaans',
     lang_subcode: null,
     lang_direction: 'ltr',
@@ -1458,11 +1482,11 @@ module.exports = [
   },
   {
     readable_name: 'Serbian, Latin',
-    lang_subcode: 'LAT',
+    lang_subcode: 'LATN',
     lang_direction: 'ltr',
     native_name: '\u0441\u0440\u043f\u0441\u043a\u0438 \u0458\u0435\u0437\u0438\u043a',
     lang_code: 'sr',
-    id: 'sr-LAT',
+    id: 'sr-LATN',
   },
   {
     readable_name: 'Sundanese',

@@ -22,16 +22,18 @@
 	</form>
 </div>
 <script>
-	var submitBtn = document.getElementById("submit")
-
-	document.getElementById('id_accepted').addEventListener('change', function(event){
-		if (event.target.checked) {
-			submitBtn.removeAttribute('disabled')
-			submitBtn.classList.remove('disabled')
-		} else {
-			submitBtn.setAttribute('disabled', '')
-			submitBtn.classList.add('disabled')
-		}
-	})
+	window.addEventListener('load', function(){
+		let acceptedCheckbox = document.getElementById('id_accepted');
+		let submitButton = document.getElementById('submit');
+		acceptedCheckbox.addEventListener('change', event => {
+			if(event.target.checked) {
+				submitButton.removeAttribute('disabled');
+				submitButton.classList.remove('disabled');
+			} else {
+				submitButton.setAttribute('disabled', 'disabled');
+				submitButton.classList.add('disabled');
+			}
+		});
+	});
 </script>
 {% endblock content %}

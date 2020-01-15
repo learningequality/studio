@@ -20,6 +20,7 @@ from datetime import timedelta
 import pycountry
 
 from contentcuration.utils.incidents import INCIDENTS
+from contentcuration.utils.secretmanagement import get_secret
 
 logging.getLogger("newrelic").setLevel(logging.CRITICAL)
 logging.getLogger("botocore").setLevel(logging.WARNING)
@@ -73,7 +74,6 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.staticfiles',
     'rest_framework',
-    'raven.contrib.django.raven_compat',
     'django_js_reverse',
     'kolibri_content',
     'readonly',
@@ -382,3 +382,24 @@ ORPHANAGE_ROOT_ID = "00000000000000000000000000000000"
 # so we must be very careful to limit code that touches this tree and to carefully check code that does. If we
 # do choose to implement restore of old chefs, we will need to ensure moving nodes does not cause a tree sort.
 DELETED_CHEFS_ROOT_ID = "11111111111111111111111111111111"
+
+# How long we should cache any APIs that return public channel list details, which change infrequently
+PUBLIC_CHANNELS_CACHE_DURATION = 300
+
+# Sentry settings, if enabled, error reports for this instance will be sent to Sentry. Use with caution.
+key = get_secret("SENTRY_DSN_KEY")
+if key:
+    key = key.strip()  # strip any possible whitespace or trailing newline
+release_commit = get_secret("RELEASE_COMMIT_SHA")
+if key and len(key) > 0 and release_commit:
+    import sentry_sdk
+    # TODO: there are also Celery and Redis integrations, but since they are new
+    # I left them as a separate task so we can spend more time on testing.
+    from sentry_sdk.integrations.django import DjangoIntegration
+
+    sentry_sdk.init(
+        dsn='https://{secret}@sentry.io/1252819'.format(secret=key),
+        integrations=[DjangoIntegration()],
+        release=release_commit,
+        environment=get_secret("BRANCH_ENVIRONMENT"),
+    )

@@ -5,6 +5,7 @@ from django.test import TransactionTestCase
 
 # Modified from https://www.caktusgroup.com/blog/2016/02/02/writing-unit-tests-django-migrations/
 
+
 class MigrationTestCase(TransactionTestCase):
     migrate_from = None
     migrate_to = None

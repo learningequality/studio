@@ -10,6 +10,7 @@ const COLOR_MAP = {
   document: '#ff3d00',
   exercise: '#4db6ac',
   html5: '#ff8f00',
+  h5p: '#ff8f00',
   slideshow: '#4ece90',
 };
 

@@ -50,12 +50,23 @@ $(function() {
 
     // If we have a signed in user, make sure we add them to the report.
     if (window.user && window.user.id) {
-      Raven.setUserContext({ id: window.user.id, email: window.user.email });
+      Sentry.setUser({ id: window.user.id, email: window.user.email });
     }
 
     // Put the URL in the main message for timeouts so we can see which timeouts are most frequent.
     if (jqXHR.status === 504 || jqXHR.status === 522 || jqXHR.status === 524) {
       message = 'Request Timed Out: ' + ajaxSettings.url;
+    }
+
+    // These two messages indicate a server-wide problem, so don't include the URL
+    // in the name to make it easier for Sentry to aggregate them.
+    // Response data will just be generic error HTML from CloudFlare.
+    if (jqXHR.status === 502) {
+      message = 'Bad Gateway (502)';
+    }
+
+    if (jqXHR.status === 503) {
+      message = 'Service Unavailable (503)';
     }
 
     // jqXHR.responseText may be null for some reason, so make it an empty string in that case.
@@ -75,8 +86,8 @@ $(function() {
 
     console.warn('AJAX Request Error: ' + message); // eslint-disable-line no-console
     console.warn('Error data: ' + JSON.stringify(extraData)); // eslint-disable-line no-console
-    if (Raven && Raven.captureMessage) {
-      Raven.captureMessage(message, {
+    if (Sentry && Sentry.captureMessage) {
+      Sentry.captureMessage(message, {
         extra: extraData,
       });
     }

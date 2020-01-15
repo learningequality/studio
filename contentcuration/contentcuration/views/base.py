@@ -49,8 +49,6 @@ from contentcuration.tasks import create_async_task
 from contentcuration.tasks import generatechannelcsv_task
 from contentcuration.utils.messages import get_messages
 
-PUBLIC_CHANNELS_CACHE_DURATION = 30  # seconds
-
 
 @browser_is_supported
 def base(request):
@@ -61,11 +59,7 @@ def base(request):
 
 
 def health(request):
-    c = Channel.objects.first()
-    if c:
-        return HttpResponse(c.name)
-    else:
-        return HttpResponse("No channels created yet!")
+    return HttpResponse("Healthy!")
 
 
 def stealth(request):
@@ -164,6 +158,7 @@ def publish_channel(request):
         task_args = {
             'user_id': request.user.pk,
             'channel_id': channel_id,
+            'version_notes': data.get('version_notes')
         }
 
         task, task_info = create_async_task('export-channel', task_info, task_args)
@@ -172,20 +167,16 @@ def publish_channel(request):
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
 
-class SQCount(Subquery):
+class SQCountDistinct(Subquery):
     # Include ALIAS at the end to support Postgres
-    template = "(SELECT COUNT(%(field)s) FROM (%(subquery)s) AS %(field)s__sum)"
+    template = "(SELECT COUNT(DISTINCT %(field)s) FROM (%(subquery)s) AS %(field)s__sum)"
     output_field = IntegerField()
 
 
 def map_channel_data(channel):
     channel["id"] = channel.pop("main_tree__id")
     channel["title"] = channel.pop("name")
-    if len(channel["children"]) == 1 and channel["children"][0] is None:
-        channel["children"] = []
-    channel["metadata"] = {
-        "resource_count": channel.pop("resource_count")
-    }
+    channel["children"] = [child for child in channel["children"] if child]
     return channel
 
 
@@ -209,10 +200,9 @@ def accessible_channels(request, channel_id):
         .values_list("content_id", flat=True)
     )
     channels = channels.annotate(
-        resource_count=SQCount(non_topic_content_ids, field="content_id"),
         children=ArrayAgg("main_tree__children"),
     )
-    channels_data = channels.values("name", "resource_count", "children", "main_tree__id")
+    channels_data = channels.values("name", "children", "main_tree__id")
 
     return Response(map(map_channel_data, channels_data))
 

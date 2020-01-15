@@ -100,8 +100,6 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
       // Check if the user has any running tasks immediately so we know if we need to
       // show the update dialog.
       State.Store.dispatch('updateTaskList');
-      // Also start the update check to run the check periodically.
-      State.Store.dispatch('activateTaskUpdateTimer');
 
       // When the page is not active or the frontmost tab, stop polling and restore
       // when it once again becomes frontmost.
@@ -130,7 +128,7 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
     if (document.visibilityState == 'hidden') {
       State.Store.dispatch('deactivateTaskUpdateTimer');
     } else {
-      State.Store.dispatch('activateTaskUpdateTimer');
+      State.Store.dispatch('updateTaskList');
     }
   },
   edit_content: function() {
