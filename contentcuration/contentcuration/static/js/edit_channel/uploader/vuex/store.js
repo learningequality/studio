@@ -9,7 +9,7 @@ const editModalModule = {
   state: {
     // Temporary root node
     currentNode: {
-      id: 'test',
+      id: window.root_id,
       title: 'Sandbox Topic',
       metadata: {
         max_sort_order: 0,
