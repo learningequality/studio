@@ -2,24 +2,24 @@
 
   <Uploader :readonly="viewOnly" :presetID="preset.id" @uploading="handleUploading">
     <template slot="upload-zone" slot-scope="uploader">
-      <v-list-tile
+      <VListTile
         :style="{backgroundColor: isSelected? $vuetify.theme.greyBackground : 'transparent'}"
         @click.stop="viewOnly? $emit('selected') : uploader.openFileDialog()"
       >
-        <v-list-tile-action v-show="!viewOnly" @click.stop="$emit('selected')">
-          <v-radio v-if="file" :value="file.id" color="primary" />
-        </v-list-tile-action>
-        <v-list-tile-content>
-          <v-list-tile-sub-title>{{ preset.id | translate }}</v-list-tile-sub-title>
-          <v-list-tile-title>
+        <VListTileAction v-show="!viewOnly" @click.stop="$emit('selected')">
+          <VRadio v-if="file" :key="file.id" :value="file.id" color="primary" />
+        </VListTileAction>
+        <VListTileContent>
+          <VListTileSubTitle>{{ preset.id | translate }}</VListTileSubTitle>
+          <VListTileTitle>
             <span v-if="file" @click.stop="uploader.openFileDialog">
               {{ file.original_filename }}
             </span>
             <a v-else class="action-link" @click.stop="uploader.openFileDialog">
               {{ $tr('uploadButton') }}
             </a>
-          </v-list-tile-title>
-          <v-list-tile-sub-title v-if="file && file.error">
+          </VListTileTitle>
+          <VListTileSubTitle v-if="file && file.error">
             {{ statusMessage([file.id]) }}
             &nbsp;
             <a
@@ -29,29 +29,29 @@
             >
               {{ $tr('uploadButton') }}
             </a>
-          </v-list-tile-sub-title>
-          <v-list-tile-sub-title v-else-if="file && uploading">
+          </VListTileSubTitle>
+          <VListTileSubTitle v-else-if="file && uploading">
             {{ statusMessage([file.id]) }}
-          </v-list-tile-sub-title>
-          <v-list-tile-sub-title v-else-if="file">
+          </VListTileSubTitle>
+          <VListTileSubTitle v-else-if="file">
             {{ formatFileSize(file.file_size) }}
-          </v-list-tile-sub-title>
+          </VListTileSubTitle>
 
-        </v-list-tile-content>
+        </VListTileContent>
         <VSpacer />
-        <v-list-tile-action v-if="file">
-          <v-btn
+        <VListTileAction v-if="file">
+          <VBtn
             v-if="allowFileRemove || file.error"
             icon
             class="remove-icon"
             @click.stop="$emit('remove', file.id)"
           >
-            <v-icon color="grey">
+            <VIcon color="grey">
               clear
-            </v-icon>
-          </v-btn>
-        </v-list-tile-action>
-      </v-list-tile>
+            </VIcon>
+          </VBtn>
+        </VListTileAction>
+      </VListTile>
     </template>
   </Uploader>
 

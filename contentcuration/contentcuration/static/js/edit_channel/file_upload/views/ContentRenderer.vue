@@ -11,7 +11,7 @@
         <FileStatus :fileIDs="[file.id]" large />
       </VLayout>
     </VCard>
-    <v-flex v-else-if="isVideo">
+    <VFlex v-else-if="isVideo">
       <video
         controls
         preload="metadata"
@@ -20,7 +20,7 @@
       >
         <source :src="src" :type="file.mimetype">
       </video>
-    </v-flex>
+    </VFlex>
     <VCard v-else-if="isAudio" flat>
       <VLayout align-center justify-center fill-height>
         <audio controls :src="src" :type="file.mimetype" @loadeddata="loading = false"></audio>

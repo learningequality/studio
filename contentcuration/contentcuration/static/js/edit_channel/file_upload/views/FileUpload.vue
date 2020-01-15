@@ -4,9 +4,9 @@
     <VCard v-if="!primaryFileMapping.length" color="grey lighten-4" flat>
       <VCardText>
         <VLayout align-center justify-center fill-height>
-          <v-icon color="red">
+          <VIcon color="red">
             error
-          </v-icon>
+          </VIcon>
           &nbsp; {{ $tr('fileError') }}
         </VLayout>
       </VCardText>
@@ -23,12 +23,12 @@
       <VFlex sm12 md6 lg7 xl8>
         <VContainer fluid>
           <VLayout alignStart>
-            <v-radio-group
+            <VRadioGroup
               :value="currentPreview && currentPreview.id"
               :label="$tr('filesHeader')"
               @input="selectPreview"
             >
-              <v-list threeLine>
+              <VList threeLine>
                 <FileUploadItem
                   v-for="item in primaryFileMapping"
                   v-show="!viewOnly || item.file"
@@ -42,8 +42,8 @@
                   @uploading="handleUploading"
                   @remove="handleRemoveFile"
                 />
-              </v-list>
-            </v-radio-group>
+              </VList>
+            </VRadioGroup>
           </VLayout>
         </VContainer>
       </VFlex>

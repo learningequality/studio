@@ -1,6 +1,6 @@
 <template>
 
-  <v-scale-transition origin="center center">
+  <VScaleTransition origin="center center">
     <VCard
       tabindex="0"
       :dark="fullscreen"
@@ -10,16 +10,16 @@
       app
       @keydown.esc="fullscreen = false"
     >
-      <v-toolbar v-if="fullscreen" dark color="grey darken-3" dense>
-        <v-toolbar-title>{{ nodeTitle }}</v-toolbar-title>
-      </v-toolbar>
-      <v-toolbar v-if="fullscreen" light dense>
+      <VToolbar v-if="fullscreen" dark color="grey darken-3" dense>
+        <VToolbarTitle>{{ nodeTitle }}</VToolbarTitle>
+      </VToolbar>
+      <VToolbar v-if="fullscreen" light dense>
         {{ $tr('fullscreenModeText') }}
-        <v-spacer />
-        <v-btn flat @click="fullscreen = false">
+        <VSpacer />
+        <VBtn flat @click="fullscreen = false">
           {{ $tr('exitFullscreen') }}
-        </v-btn>
-      </v-toolbar>
+        </VBtn>
+      </VToolbar>
       <ContentRenderer :file="file" :fullscreen="fullscreen" />
       <p v-if="!fullscreen" class="fullscreen-toggle">
         <a v-if="showFullscreenOption" class="action-link" @click="fullscreen = true">
@@ -27,7 +27,7 @@
         </a>
       </p>
     </VCard>
-  </v-scale-transition>
+  </VScaleTransition>
 
 </template>
 

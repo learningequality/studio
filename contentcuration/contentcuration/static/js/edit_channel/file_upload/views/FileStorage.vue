@@ -1,4 +1,5 @@
 <template>
+
   <div>
     <span v-if="(!storageIsFull && !showWarning) || showProgress">
       {{ $tr('storageUsed', {
@@ -7,13 +8,13 @@
     </span>
 
 
-    <v-progress-linear
+    <VProgressLinear
       v-if="showProgress"
       :color="progressBarColor"
       :value="storagePercent"
     />
     <span v-if="storageIsFull">
-      <v-icon color="red" small>error</v-icon>
+      <VIcon color="red" small>error</VIcon>
       <span v-if="showProgress">{{ $tr('storageFull') }}</span>
       <span v-else>
         {{ $tr('storageFullWithSize', {
@@ -23,7 +24,7 @@
       </span>
     </span>
     <span v-else-if="showWarning">
-      <v-icon color="amber" small>warning</v-icon>
+      <VIcon color="amber" small>warning</VIcon>
       <span v-if="showProgress">{{ $tr('storageLow') }}</span>
       <span v-else>
         {{ $tr('storageLowWithSize', {
@@ -41,6 +42,7 @@
       {{ $tr('requestStorage') }}
     </a>
   </div>
+
 </template>
 
 <script>
@@ -50,14 +52,6 @@
 
   export default {
     name: 'FileStorage',
-    $trs: {
-      storageUsed: 'Storage used: {used} of {total}',
-      requestStorage: 'Request storage',
-      storageFull: 'Storage limit reached',
-      storageFullWithSize: 'Storage limit reached: {used} of {total}',
-      storageLow: 'Storage is running low',
-      storageLowWithSize: 'Storage is running low: {used} of {total}',
-    },
     mixins: [fileSizeMixin],
     props: {
       showProgress: {
@@ -92,6 +86,14 @@
       storageRequestUrl() {
         return window.Urls.storage_settings();
       },
+    },
+    $trs: {
+      storageUsed: 'Storage used: {used} of {total}',
+      requestStorage: 'Request storage',
+      storageFull: 'Storage limit reached',
+      storageFullWithSize: 'Storage limit reached: {used} of {total}',
+      storageLow: 'Storage is running low',
+      storageLowWithSize: 'Storage is running low: {used} of {total}',
     },
   };
 
