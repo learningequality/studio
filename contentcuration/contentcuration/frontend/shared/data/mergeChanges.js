@@ -19,7 +19,9 @@
  * limitations under the License.
  */
 import Dexie from 'dexie';
+import flatMap from 'lodash/flatMap';
 import { CHANGE_TYPES } from './constants';
+import RESOURCES from './resources';
 
 
 function applyModifications(obj, modifications) {
@@ -69,7 +71,7 @@ function combineUpdateAndUpdate(oldChange, newChange) {
 /*
  * Function to merge changes for the same object from Dexie.js
  */
-export default function mergeChanges(oldChange, newChange) {
+function mergeChanges(oldChange, newChange) {
   switch (oldChange.type) {
       case CHANGE_TYPES.CREATED:
           switch (newChange.type) {
@@ -114,4 +116,39 @@ export default function mergeChanges(oldChange, newChange) {
           }
           break;
   }
+}
+
+
+export default function mergeAllChanges(changes, flatten = false, changesToSync = null) {
+  if (!changesToSync) {
+    // Initialize a changesToSync object if one has not been passed in.
+    // Create an empty object with blank entries for every RESOURCE table.
+    changesToSync = Object.fromEntries(Object.keys(RESOURCES).map(key => [key, {}]))
+  }
+  changes.forEach(change => {
+    // Ignore changes initiated by non-Resource registered tables
+    if (changesToSync[change.table]) {
+      if (!changesToSync[change.table][change.key]) {
+        // If we have no changes for this object already, just put this straight in
+        changesToSync[change.table][change.key] = change;
+      } else {
+        // Otherwise we need to reconcile the changes.
+        const updatedChange = mergeChanges(
+          changesToSync[change.table][change.key],
+          change
+        );
+        if (updatedChange) {
+          changesToSync[change.table][change.key] = updatedChange;
+        } else {
+          // If the mergeChanges function returned a null value,
+          // means we should delete the change entirely.
+          delete changesToSync[change.table][change.key];
+        }
+      }
+    }
+  });
+  if (flatten) {
+    return flatMap(changesToSync, obj => Object.values(obj));
+  }
+  return changesToSync;
 }

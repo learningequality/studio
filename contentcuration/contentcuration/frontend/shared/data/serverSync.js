@@ -1,10 +1,10 @@
 import debounce from 'lodash/debounce';
-import flatMap from 'lodash/flatMap';
+import matches from 'lodash/matches';
 import pick from 'lodash/pick';
 import { createChannel } from './broadcastChannel';
 import { CHANGE_TYPES, CHANGES_TABLE, FETCH_SOURCE, MESSAGES, STATUS } from './constants';
 import db from './db';
-import mergeChanges from './mergeChanges';
+import mergeAllChanges from './mergeChanges';
 import RESOURCES from './resources';
 import client from 'shared/client';
 
@@ -90,14 +90,6 @@ function syncChanges() {
   // revisions. We will do this for now, but we have the option of doing
   // something more involved and better architectured in the future.
 
-  // Filter out any changes that are the result of fetching from the server,
-  // no need to sync these.
-  const discardChanges = db[CHANGES_TABLE].toCollection().filter(
-    change => change.source === FETCH_SOURCE);
-  // Delete all these changes as cleanup
-  discardChanges.delete();
-  // Create an empty object with blank entries for every RESOURCE table.
-  const changesToSync = Object.fromEntries(Object.keys(RESOURCES).map(key => [key, {}]));
   // Track the maxRevision at this moment so that we can ignore any changes that
   // might have come in during processing - leave them for the next cycle.
   // This is the primary key of the change objects, so the collection is ordered by this
@@ -108,53 +100,48 @@ function syncChanges() {
       const syncableChanges = db[CHANGES_TABLE].where('rev').belowOrEqual(maxRevision);
       return syncableChanges.count(count => {
         let i = 0;
-        function processNextChunk() {
+        function processNextChunk(changesToSync) {
+          // If our starting point plus the SYNC_BUFFER value
+          // is greater than or equal to the count, then this
+          // is our final recursion through.
+          const finalRecursion = (i + SYNC_BUFFER >= count);
           return syncableChanges.offset(i).limit(SYNC_BUFFER).toArray().then(changes => {
-            changes.forEach(change => {
-              // Ignore changes initiated by our fetching logic putting
-              // or updating objects in the DB, or by non-Resource registered tables
-              if (isSyncableChange(change)) {
-                if (!changesToSync[change.table][change.key]) {
-                  // If we have no changes for this object already, just put this straight in
-                  changesToSync[change.table][change.key] = change;
-                } else {
-                  // Otherwise we need to reconcile the changes.
-                  const updatedChange = mergeChanges(
-                    changesToSync[change.table][change.key],
-                    change
-                  );
-                  if (updatedChange) {
-                    changesToSync[change.table][change.key] = updatedChange;
-                  } else {
-                    // If the mergeChanges function returned a null value,
-                    // means we should delete the change entirely.
-                    delete changesToSync[change.table][change.key];
-                  }
-                }
-              }
-            });
-            // We've handled all the changes in this chunk,
-            // so now let's increment and do the next one.
-            i += SYNC_BUFFER;
-            if (i < count) {
-              return processNextChunk();
+            // Continue to merge on to the existing changes we have merged
+            changesToSync = mergeAllChanges(changes, finalRecursion, changesToSync);
+            // Check that we have not got all of the records in this last pass
+            if (!finalRecursion) {
+              // We've handled all the changes in this chunk,
+              // so now let's increment and do the next one.
+              i += SYNC_BUFFER;
+              return processNextChunk(changesToSync);
             } else {
-              return;
+              return changesToSync;
             }
           });
         }
-        return processNextChunk().then(() => {
-          // By the time we get here, our changesToSync object should
+        return processNextChunk().then(changesToSync => {
+          // By the time we get here, our changesToSync Array should
           // have every change we want to sync to the server, so we
-          // can now do that resource by resource.
-          const changes = flatMap(changesToSync, obj => Object.values(obj).map(trimChangeForSync));
+          // can now trim it down to only what is needed to transmit over the wire.
+          const changes = changesToSync.map(trimChangeForSync);
+          // TODO: Log validation errors from the server somewhere for use in the frontend.
           return client.post(window.Urls['sync'](), changes).then(response => {
-            if (!response) {
-              return;
+            let changesToDelete = syncableChanges;
+            // If there is any data attached to the response, these will be
+            // errors for specific changes, which means that we should keep
+            // them until they get accepted by the server.
+            if (response.data && response.data.length) {
+              // Keep all changes that are related to this key/table pair,
+              // so that they can be reaggregated later.
+              // Create a match function for each rejected change to use for filtering.
+              const rejectedChangesMatchFunctions = response.data.map(
+                change => matches(pick(change, ['key', 'table'])));
+              changesToDelete = changesToDelete.filter(
+                change => rejectedChangesMatchFunctions.some(fn => fn(change)));
             }
             // Our synchronization was successful,
             // can delete all the changes for this table
-            return syncableChanges.delete().catch(() => {
+            return changesToDelete.delete().catch(() => {
               console.error('There was an error deleting changes'); // eslint-disable-line no-console
             });
           }).catch(err => {
@@ -171,10 +158,14 @@ const debouncedSyncChanges = debounce(syncChanges, SYNC_IF_NO_CHANGES_FOR * 1000
 
 export default function startSyncing() {
   startChannelFetchListener();
+  // Initiate a sync immediately in case any data
+  // is left over in the database.
+  debouncedSyncChanges();
   db.on('changes', function (changes) {
     const syncableChanges = changes.filter(isSyncableChange);
     if (syncableChanges.length) {
-      db[CHANGES_TABLE].bulkPut(syncableChanges).then(() => {
+      // Flatten any changes before we store them in the changes table.
+      db[CHANGES_TABLE].bulkPut(mergeAllChanges(syncableChanges, true)).then(() => {
         debouncedSyncChanges();
       });
     }
