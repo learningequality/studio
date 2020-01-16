@@ -19,11 +19,12 @@ Vagrant.configure("2") do |config|
       docker.cmd = ["minio", "server", "/data"]
       docker.env = env
       docker.create_args = ["-v", "minio_data:/data"]
-      docker.has_ssh = true
     end
 
     minio.vm.provider "virtualbox" do |virtualbox, override|
       override.vm.box = "elegoev/ubuntu-18.04-minio"
+      virtualbox.memory = 1024
+      virtualbox.cpus = 2
 
       override.vm.provision "shell" do |s|
         s.path = "./vagrant/provision_minio.sh"
@@ -48,21 +49,12 @@ Vagrant.configure("2") do |config|
       docker.image = "postgres:9.6"
       docker.env = env
       docker.create_args = ["-v", "pgdata:/var/lib/postgresql/data/pgdata"]
-      docker.has_ssh = true
-
-      override.vm.provision "provision_postgres", type: "shell" do |s|
-        s.path = "./vagrant/provision_postgres.sh"
-        s.env = env
-      end
     end
 
     postgres.vm.provider "virtualbox" do |virtualbox, override|
       override.vm.box = "ubuntu/bionic64"
-
-      override.vm.provision "provision_postgres_virtualbox", type: "shell" do |s|
-        s.path = "./vagrant/provision_postgres_virtualbox.sh"
-        s.env = env
-      end
+      virtualbox.memory = 1024
+      virtualbox.cpus = 2
 
       override.vm.provision "provision_postgres", type: "shell" do |s|
         s.path = "./vagrant/provision_postgres.sh"
@@ -78,11 +70,12 @@ Vagrant.configure("2") do |config|
 
     redis.vm.provider "docker" do |docker, override|
       docker.image = "redis:4.0.9"
-      docker.has_ssh = true
     end
 
     redis.vm.provider "virtualbox" do |virtualbox, override|
       override.vm.box = "ubuntu/bionic64"
+      virtualbox.memory = 1024
+      virtualbox.cpus = 2
 
       override.vm.provision "shell" do |s|
         s.path = "./vagrant/provision_redis.sh"
