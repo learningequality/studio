@@ -20,6 +20,8 @@
               window.ALL_MESSAGES = JSON.parse("{{ messages|escapejs}}");
             } catch (error) { /* Page does not require front-end translations */ }
         </script>
+        {% block variables %}
+        {% endblock variables %}
         {% cache 60 head_cache %}
         <!--[if lt IE 9]>
             <script src="{% static "js/html5shiv.js" %}"></script>

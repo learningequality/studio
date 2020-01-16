@@ -328,6 +328,7 @@ class SandboxView(TemplateView):
 
         kwargs.update({"nodes": JSONRenderer().render(nodes),
                        "channel": active_channels.first().pk,
-                       "current_user": JSONRenderer().render(CurrentUserSerializer(self.request.user).data)
+                       "current_user": JSONRenderer().render(CurrentUserSerializer(self.request.user).data),
+                       "messages": get_messages(),
                        })
         return kwargs
