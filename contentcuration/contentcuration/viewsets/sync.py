@@ -26,6 +26,7 @@ viewset_mapping = {
 CREATED = 1
 UPDATED = 2
 DELETED = 3
+MOVED = 4
 
 
 def get_table(obj):
@@ -77,6 +78,14 @@ def sync(request):
                     elif change_type == DELETED:
                         ids_to_delete = list(map(lambda x: x["key"], changes))
                         viewset.bulk_delete(ids_to_delete)
+                    elif change_type == MOVED and hasattr(viewset, "move"):
+                        for move in changes:
+                            # Move change will have key, must also have target property
+                            # optionally can include the desired position.
+                            move_error = viewset.move(move["key"], **move)
+                            if move_error:
+                                move.update({"errors": [move_error]})
+                                errors.append(move)
                 except ValueError:
                     pass
     if not errors:

@@ -200,34 +200,36 @@ class ContentNodeViewSet(ValuesViewset):
         )
         return queryset
 
-    @detail_route(methods=["post"])
-    def move_node(self, pk):
+    def move(self, pk, *args, **kwargs):
         contentnode = get_object_or_404(ContentNode, pk=pk)
-        target = self.request.data.pop("target", None)
-        if target is None:
-            raise ValidationError("A target content node must be specified")
+        target = kwargs.pop("target", None)
         try:
-            target = ContentNode.get(pk=target)
-        except ContentNode.DoesNotExist:
-            raise ValidationError(
-                "Target content node: {} does not exist".format(target)
-            )
-        except ValueError:
-            raise ValidationError(
-                "Invalid target content node specified: {}".format(target)
-            )
-        position = self.request.data.pop("position", "first-child")
-        try:
-            with transaction.atomic():
-                # Lock only MPTT columns for updates on this tree and the target tree
-                # until the end of this transaction
-                ContentNode.objects.select_for_update().order_by().filter(
-                    Q(tree_id=contentnode.tree_id) | Q(tree_id=target.tree_id)
-                ).values("tree_id", "lft", "rght")
-                contentnode.move_to(target, position)
+            if target is None:
+                raise ValidationError("A target content node must be specified")
+            try:
+                target = ContentNode.get(pk=target)
+            except ContentNode.DoesNotExist:
+                raise ValidationError(
+                    "Target content node: {} does not exist".format(target)
+                )
+            except ValueError:
+                raise ValidationError(
+                    "Invalid target content node specified: {}".format(target)
+                )
+            position = kwargs.pop("position", "first-child")
+            try:
+                with transaction.atomic():
+                    # Lock only MPTT columns for updates on this tree and the target tree
+                    # until the end of this transaction
+                    ContentNode.objects.select_for_update().order_by().filter(
+                        Q(tree_id=contentnode.tree_id) | Q(tree_id=target.tree_id)
+                    ).values("tree_id", "lft", "rght")
+                    contentnode.move_to(target, position)
 
-        except ValueError:
-            raise ValidationError(
-                "Invalid position argument specified: {}".format(position)
-            )
-        return Response({})
+            except ValueError:
+                raise ValidationError(
+                    "Invalid position argument specified: {}".format(position)
+                )
+            return None
+        except ValidationError as e:
+            return str(e)
