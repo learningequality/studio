@@ -2,7 +2,7 @@ import isFunction from 'lodash/isFunction';
 import mapValues from 'lodash/mapValues';
 import { createLeaderElection } from 'broadcast-channel';
 import channel from './broadcastChannel';
-import { CHANGE_TYPES, CHANGES_TABLE } from './constants';
+import { CHANGE_TYPES, CHANGES_TABLE, MOVES_TABLE } from './constants';
 import db, { CLIENTID } from './db';
 import RESOURCES from './resources';
 import startSyncing from './serverSync';
@@ -11,11 +11,9 @@ import startSyncing from './serverSync';
 export { CHANGE_TYPES } from './constants';
 export { TABLE_NAMES, default as RESOURCES } from './resources';
 
-
 const LISTENERS = {};
 
 export function initializeDB() {
-
   db.version(1).stores({
     // A special table for logging unsynced changes
     // Dexie.js appears to have a table for this,
@@ -23,11 +21,16 @@ export function initializeDB() {
     // that I do not currently understand, so we engage
     // in somewhat duplicative behaviour instead.
     [CHANGES_TABLE]: 'rev++',
-    ...mapValues(RESOURCES, value => value.schema)
+    // A special special table for logging move changes
+    // that is only currently used for the tree changes in
+    // the ContentNode table - do this completely separately
+    // as we don't want to merge move changes with non-move
+    [MOVES_TABLE]: 'rev++',
+    ...mapValues(RESOURCES, value => value.schema),
   });
 
-  db.on('changes', function (changes) {
-    changes.forEach(function (change) {
+  db.on('changes', function(changes) {
+    changes.forEach(function(change) {
       // Don't invoke listeners if their client originated the change
       if (CLIENTID !== change.source) {
         const tableListeners = LISTENERS[change.table];
@@ -38,7 +41,7 @@ export function initializeDB() {
               // Always invoke the callback with the full object representation
               // It is up to the callbacks to know how to parse this.
               listener(change.obj);
-            };
+            }
           }
         }
       }
@@ -47,7 +50,7 @@ export function initializeDB() {
 
   const elector = createLeaderElection(channel);
 
-  elector.awaitLeadership().then(()=> {
+  elector.awaitLeadership().then(() => {
     startSyncing();
   });
 
@@ -57,10 +60,12 @@ export function initializeDB() {
 export function registerListener(table, change, callback) {
   change = Number(change);
   if (!Object.values(CHANGE_TYPES).includes(change)) {
-    throw RangeError(`Change must be ${CHANGE_TYPES.CREATED}, ${CHANGE_TYPES.UPDATED}, or ${CHANGE_TYPES.DELETED}`);
+    throw RangeError(
+      `Change must be ${CHANGE_TYPES.CREATED}, ${CHANGE_TYPES.UPDATED}, or ${CHANGE_TYPES.DELETED}`
+    );
   }
   if (!isFunction(callback)) {
-    throw TypeError("Callback argument must be a function");
+    throw TypeError('Callback argument must be a function');
   }
   if (!LISTENERS[table]) {
     LISTENERS[table] = {};

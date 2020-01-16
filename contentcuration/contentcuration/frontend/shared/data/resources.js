@@ -4,7 +4,7 @@ import omit from 'lodash/omit';
 import pick from 'lodash/pick';
 import uuidv4 from 'uuid/v4';
 import channel from './broadcastChannel';
-import { FETCH_SOURCE, MESSAGES, STATUS } from './constants';
+import { CHANGE_TYPES, FETCH_SOURCE, MESSAGES, MOVES_TABLE, STATUS } from './constants';
 import db, { CLIENTID } from './db';
 import client from 'shared/client';
 
@@ -21,7 +21,14 @@ function uuid4() {
 }
 
 class Resource {
-  constructor({ tableName, urlName, idField = 'id', uuid = true, indexFields = [], ...options } = {}) {
+  constructor({
+    tableName,
+    urlName,
+    idField = 'id',
+    uuid = true,
+    indexFields = [],
+    ...options
+  } = {}) {
     this.tableName = tableName;
     this.urlName = urlName;
     this.idField = idField;
@@ -104,7 +111,7 @@ class Resource {
       const now = Date.now();
       const data = response.data.map(datum => {
         datum[LAST_FETCHED] = now;
-        return datum
+        return datum;
       });
       return db.transaction('rw', this.tableName, () => {
         // Explicitly set the source of this as a fetch
@@ -122,13 +129,13 @@ class Resource {
     const table = db[this.tableName];
     const whereParams = pick(params, this.indexFields);
     let collection;
-    if (Object.keys(whereParams).length ==! 0) {
+    if (Object.keys(whereParams).length == !0) {
       collection = table.where(whereParams);
     } else {
       collection = table.toCollection();
     }
     const filterParams = omit(params, this.indexFields);
-    if (Object.keys(filterParams).length ==! 0) {
+    if (Object.keys(filterParams).length == !0) {
       const filterFn = matches(filterParams);
       collection = collection.filter(filterFn);
     }
@@ -137,10 +144,12 @@ class Resource {
         return this.requestCollection(params);
       }
       const now = Date.now();
-      if (objs.some(obj => {
-        const refresh = obj[LAST_FETCHED] + REFRESH_INTERVAL * 1000;
-        return refresh < now
-      })) {
+      if (
+        objs.some(obj => {
+          const refresh = obj[LAST_FETCHED] + REFRESH_INTERVAL * 1000;
+          return refresh < now;
+        })
+      ) {
         this.requestCollection(params);
       }
       return objs;
@@ -202,8 +211,19 @@ class Resource {
       return this.table.delete(id);
     });
   }
-}
 
+  move(id, target, position = 'first-child') {
+    return this.transaction('rw', () => {
+      return db[MOVES_TABLE].put({
+        key: id,
+        target,
+        position,
+        table: this.tableName,
+        type: CHANGE_TYPES,
+      });
+    });
+  }
+}
 
 export const TABLE_NAMES = {
   CHANNEL: 'channel',
@@ -221,6 +241,5 @@ export const ContentNode = new Resource({
   urlName: 'contentnode',
   indexFields: ['title', 'language', 'parent'],
 });
-
 
 export default RESOURCES;
