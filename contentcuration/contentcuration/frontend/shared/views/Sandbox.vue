@@ -1,19 +1,19 @@
-<Template>
+<template>
 
   <div>
     Insert component here for testing!
-    <Template />
+    <TemplateComponent />
   </div>
 
-</Template>
+</template>
 <script>
 
-  import Template from '../../channelEdit/views/template/Template';
+  import TemplateComponent from '../../channelEdit/views/template/Template';
 
   export default {
     name: 'Sandbox',
     components: {
-      Template,
+      TemplateComponent,
     },
   };
 
