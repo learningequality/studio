@@ -85,7 +85,7 @@
 
 <script>
 
-  import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
+  import { mapActions, mapGetters, mapState } from 'vuex';
   import { RouterNames } from '../../constants';
   import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown';
   import ContentDefaults from 'shared/views/form/ContentDefaults';
@@ -176,13 +176,7 @@
       this.$refs.dialog.hideScroll();
     },
     methods: {
-      ...mapActions('channel', [
-        'updateChannel',
-        'loadChannel',
-      ]),
-      ...mapActions('channelList', [
-        'loadChannelDetails',
-      ]),
+      ...mapActions('channel', ['updateChannel', 'loadChannel']),
       hideHTMLScroll(hidden) {
         document.querySelector('html').style = hidden
           ? 'overflow-y: hidden !important;'

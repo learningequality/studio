@@ -123,7 +123,10 @@
           return this.value && this.value.license_description;
         },
         set(value) {
-          this.$emit('input', { license: this.value && this.value.license, license_description: this.isCustom ? value : '' });
+          this.$emit('input', {
+            license: this.value && this.value.license,
+            license_description: this.isCustom ? value : '',
+          });
         },
       },
       selectedLicense() {

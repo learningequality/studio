@@ -1,12 +1,14 @@
 <template>
+
   <VLayout row wrap>
     <VFlex
+      v-if="node"
       xs12
     >
       <template
         v-for="child in children"
       >
-        <VLayout row wrap :key="child.id">
+        <VLayout :key="child.id" row wrap>
           <VFlex xs10>
             <router-link :to="treeLink(child.id)">
               <ContentNodeIcon :kind="child.kind" />
@@ -22,53 +24,55 @@
       </template>
     </VFlex>
   </VLayout>
+
 </template>
 
 <script>
 
-import { mapActions, mapGetters } from 'vuex';
-import { RouterNames } from '../constants';
-import ContentNodeIcon from 'shared/views/ContentNodeIcon';
+  import { mapGetters } from 'vuex';
+  import { RouterNames } from '../constants';
+  import ContentNodeIcon from 'shared/views/ContentNodeIcon';
 
-export default {
-  name: "NodePanel",
-  components: {
-    ContentNodeIcon,
-  },
-  props: {
-    parentId: {
-      type: String,
-      required: true
+  export default {
+    name: 'NodePanel',
+    components: {
+      ContentNodeIcon,
     },
-  },
-  computed: {
-    ...mapGetters('contentNode', ['getSummaryContentNode', 'getSummaryContentNodeChildren']),
-    node() {
-      return this.getSummaryContentNode(this.parentId);
+    props: {
+      parentId: {
+        type: String,
+        required: true,
+      },
     },
-    children() {
-      return this.getSummaryContentNodeChildren(this.parentId);
+    computed: {
+      ...mapGetters('contentNode', ['getSummaryContentNode', 'getSummaryContentNodeChildren']),
+      node() {
+        return this.getSummaryContentNode(this.parentId);
+      },
+      children() {
+        return this.getSummaryContentNodeChildren(this.parentId);
+      },
     },
-  },
-  methods: {
-    editNodeLink(id) {
-      return {
-        name: RouterNames.CONTENTNODE_DETAILS,
-        params: {
-          detailNodeId: id,
-        },
-      };
+    methods: {
+      editNodeLink(id) {
+        return {
+          name: RouterNames.CONTENTNODE_DETAILS,
+          params: {
+            detailNodeId: id,
+          },
+        };
+      },
+      treeLink(id) {
+        return {
+          name: RouterNames.TREE_VIEW,
+          params: {
+            nodeId: id,
+          },
+        };
+      },
     },
-    treeLink(id) {
-      return {
-        name: RouterNames.TREE_VIEW,
-        params: {
-          nodeId: id,
-        },
-      };
-    },
-  }
-};
+  };
+
 </script>
 
 <style scoped>

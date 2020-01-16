@@ -3,7 +3,6 @@ import map from 'lodash/map';
 
 export function SET_PAGE(state, pageData) {
   state.page = pageData;
-  ADD_CHANNELS(state, pageData.results);
   state.page.results = map(pageData.results, r => r.id);
 }
 
@@ -12,11 +11,6 @@ export function ADD_CHANNEL_DETAILS(state, { id, details }) {
     ...state.channelDetailsMap,
     [id]: details,
   };
-}
-
-export function SET_CATALOG_LIST(state, catalogData) {
-  ADD_CHANNELS(state, catalogData.results);
-  state.catalogPage = catalogData;
 }
 
 /* INVITATION MUTATIONS */

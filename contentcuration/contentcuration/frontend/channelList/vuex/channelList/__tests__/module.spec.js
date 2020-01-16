@@ -1,6 +1,4 @@
 import channelList from '../index';
-import { channelLastSavedState } from '../utils';
-import { generateTempId } from 'shared/utils';
 import client from 'shared/client';
 import storeFactory from 'shared/vuex/baseStore';
 
@@ -10,37 +8,6 @@ jest.mock('shared/vuex/connectionPlugin');
 const id = '00000000000000000000000000000000';
 
 const userId = 'testId';
-
-describe('channel actions', () => {
-  let store;
-  beforeEach(() => {
-    store = storeFactory({
-      modules: {
-        channelList,
-      },
-    });
-    store.state.session.currentUser.id = userId;
-  });
-  describe('loadChannelDetails action', () => {
-    it('should call client.get', () => {
-      return store.dispatch('channelList/loadChannelDetails', id).then(() => {
-        expect(client.get).toHaveBeenCalledWith('get_channel_details');
-      });
-    });
-    it('should add the details to the channelDetailsMap', () => {
-      client.__setResponse('get', {
-        data: {
-          details: 'details',
-        },
-      });
-      return store.dispatch('channelList/loadChannelDetails', id).then(() => {
-        expect(store.getters['channelList/getChannelDetails'](id)).toEqual({
-          details: 'details',
-        });
-      });
-    });
-  });
-});
 
 describe('invitation actions', () => {
   let store;

@@ -155,10 +155,10 @@
 
   import { mapGetters, mapActions, mapMutations, mapState } from 'vuex';
   import reject from 'lodash/reject';
-  import { isTempId } from 'shared/utils';
   import { RouterNames, ListTypes } from '../../constants';
   import SelectedChannelItem from './SelectedChannelItem';
   import ChannelSelectionList from './ChannelSelectionList';
+  import { isTempId } from 'shared/utils';
   import CopyToken from 'shared/views/CopyToken';
   import BottomToolBar from 'shared/views/BottomToolBar';
 

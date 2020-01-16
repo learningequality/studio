@@ -13,7 +13,7 @@ export function getContentNode(state) {
   return function(contentNodeId) {
     const node = state.contentNodesMap[contentNodeId];
     if (node && node[NODE_COMPLETE_KEY]) {
-      return node
+      return node;
     }
   };
 }
@@ -25,26 +25,34 @@ export function getSummaryContentNode(state) {
 }
 
 export function getContentNodes(state) {
-  return function (contentNodeIds) {
+  return function(contentNodeIds) {
     return sorted(contentNodeIds.map(id => getContentNode(state)(id)).filter(node => node));
   };
 }
 
 export function getSummaryContentNodes(state) {
-  return function (contentNodeIds) {
+  return function(contentNodeIds) {
     return sorted(contentNodeIds.map(id => getSummaryContentNode(state)(id)).filter(node => node));
   };
 }
 
 export function getContentNodeChildren(state) {
   return function(contentNodeId) {
-    return sorted(Object.values(state.contentNodesMap).filter(contentNode => contentNode.parent === contentNodeId && contentNode[NODE_COMPLETE_KEY]));
+    return sorted(
+      Object.values(state.contentNodesMap).filter(
+        contentNode => contentNode.parent === contentNodeId && contentNode[NODE_COMPLETE_KEY]
+      )
+    );
   };
 }
 
 export function getSummaryContentNodeChildren(state) {
   return function(contentNodeId) {
-    return sorted(Object.values(state.contentNodesMap).filter(contentNode => contentNode.parent === contentNodeId));
+    return sorted(
+      Object.values(state.contentNodesMap).filter(
+        contentNode => contentNode.parent === contentNodeId
+      )
+    );
   };
 }
 
@@ -62,9 +70,10 @@ export function getContentNodeIsValid(state) {
   };
 }
 
-
 function uniqListByKey(state, key) {
-  return uniqBy(Object.values(state.contentNodesMap), key).map(node => node[key]).filter(node => node);
+  return uniqBy(Object.values(state.contentNodesMap), key)
+    .map(node => node[key])
+    .filter(node => node);
 }
 
 export function authors(state) {
@@ -89,6 +98,6 @@ export function tags(state) {
 
 export function nodeExpanded(state) {
   return function(id) {
-    return Boolean(state.expandedNodes[id])
-  }
+    return Boolean(state.expandedNodes[id]);
+  };
 }

@@ -1,16 +1,17 @@
 <template>
+
   <VLayout row wrap>
     <VFlex
+      v-if="!root"
       xs12
       class="node-item"
       :class="{ selected: selected }"
-      v-if="!root"
     >
       <VLayout row wrap>
         <VFlex xs6>
           <VLayout row wrap>
             <VFlex xs1>
-              <VBtn icon v-if="node.has_children" @click.stop="toggle">
+              <VBtn v-if="node.has_children" icon @click.stop="toggle">
                 <VIcon>{{ expanded ? "expand_more" : "expand_less" }}</VIcon>
               </VBtn>
             </VFlex>
@@ -30,19 +31,19 @@
         <VSpacer />
         <VFlex xs1>
           <VProgressCircular
+            v-if="loading"
             indeterminate
             size="15"
             width="2"
-            v-if="loading"
           />
         </VFlex>
       </VLayout>
     </VFlex>
     <VFlex
-      xs12
-      class="subtree"
       v-if="root || node.has_children"
       v-show="expanded"
+      xs12
+      class="subtree"
       transition="slide-y-transition"
     >
       <StudioTree
@@ -53,100 +54,106 @@
       />
     </VFlex>
   </VLayout>
+
 </template>
 
 <script>
 
-import { mapActions, mapGetters, mapMutations } from 'vuex';
-import { RouterNames } from '../constants';
-import ContentNodeIcon from 'shared/views/ContentNodeIcon';
+  import { mapActions, mapGetters, mapMutations } from 'vuex';
+  import { RouterNames } from '../constants';
+  import ContentNodeIcon from 'shared/views/ContentNodeIcon';
 
-export default {
-  name: "StudioTree",
-  components: {
-    ContentNodeIcon,
-  },
-  data: () => {
-    return {
-      loading: false,
-    };
-  },
-  props: {
-    nodeId: {
-      type: String,
-      required: true
+  export default {
+    name: 'StudioTree',
+    components: {
+      ContentNodeIcon,
     },
-    root: {
-      type: Boolean,
-      default: false,
-    }
-  },
-  created() {
-    if (this.expanded) {
-      if (!this.node) {
-        const loadChildren = () => {
-          const getChildrenPromise = this.getChildren();
-          if (getChildrenPromise || this.node && !this.node.has_children) {
-            unwatch();
-          }
+    props: {
+      nodeId: {
+        type: String,
+        required: true,
+      },
+      root: {
+        type: Boolean,
+        default: false,
+      },
+    },
+    data: () => {
+      return {
+        loading: false,
+      };
+    },
+    computed: {
+      ...mapGetters('contentNode', [
+        'getSummaryContentNode',
+        'getSummaryContentNodeChildren',
+        'nodeExpanded',
+      ]),
+      node() {
+        return this.getSummaryContentNode(this.nodeId);
+      },
+      children() {
+        return this.getSummaryContentNodeChildren(this.nodeId);
+      },
+      expanded() {
+        return this.root || this.nodeExpanded(this.nodeId);
+      },
+      selected() {
+        return this.nodeId === this.$route.params.nodeId;
+      },
+      editNodeLink() {
+        return {
+          name: RouterNames.CONTENTNODE_DETAILS,
+          params: {
+            detailNodeId: this.nodeId,
+          },
         };
-        const unwatch = this.$watch('node', loadChildren);
-      } else {
-        this.getChildren();
-      }
-    }
-  },
-  computed: {
-    ...mapGetters('contentNode', ['getSummaryContentNode', 'getSummaryContentNodeChildren', 'nodeExpanded']),
-    node() {
-      return this.getSummaryContentNode(this.nodeId);
+      },
+      treeLink() {
+        return {
+          name: RouterNames.TREE_VIEW,
+          params: {
+            nodeId: this.nodeId,
+          },
+        };
+      },
     },
-    children() {
-      return this.getSummaryContentNodeChildren(this.nodeId);
-    },
-    expanded() {
-      return this.root || this.nodeExpanded(this.nodeId);
-    },
-    selected() {
-      return this.nodeId === this.$route.params.nodeId;
-    },
-    editNodeLink() {
-      return {
-        name: RouterNames.CONTENTNODE_DETAILS,
-        params: {
-          detailNodeId: this.nodeId,
-        },
-      };
-    },
-    treeLink() {
-      return {
-        name: RouterNames.TREE_VIEW,
-        params: {
-          nodeId: this.nodeId,
-        },
-      };
-    },
-  },
-  methods: {
-    ...mapActions('contentNode', ['loadSummaryContentNodes']),
-    ...mapMutations('contentNode', {toggleExpansion: 'TOGGLE_EXPANSION'}),
-    getChildren() {
-      if (this.node && this.node.has_children) {
-        return this.loadSummaryContentNodes({ parent: this.nodeId });
-      }
-    },
-    toggle() {
-      if (this.root || this.node.has_children) {
-        const currentlyExpanded = this.expanded;
-        this.toggleExpansion(this.nodeId)
-        if (!currentlyExpanded && !this.children.length) {
-          return this.getChildren();
+    created() {
+      if (this.expanded) {
+        if (!this.node) {
+          const loadChildren = () => {
+            const getChildrenPromise = this.getChildren();
+            if (getChildrenPromise || (this.node && !this.node.has_children)) {
+              unwatch();
+            }
+          };
+          const unwatch = this.$watch('node', loadChildren);
+        } else {
+          this.getChildren();
         }
       }
-      return Promise.resolve();
     },
-  }
-};
+    methods: {
+      ...mapActions('contentNode', ['loadSummaryContentNodes']),
+      ...mapMutations('contentNode', { toggleExpansion: 'TOGGLE_EXPANSION' }),
+      getChildren() {
+        if (this.node && this.node.has_children) {
+          return this.loadSummaryContentNodes({ parent: this.nodeId });
+        }
+      },
+      toggle() {
+        if (this.root || this.node.has_children) {
+          const currentlyExpanded = this.expanded;
+          this.toggleExpansion(this.nodeId);
+          if (!currentlyExpanded && !this.children.length) {
+            return this.getChildren();
+          }
+        }
+        return Promise.resolve();
+      },
+    },
+  };
+
 </script>
 
 <style scoped>

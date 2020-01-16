@@ -1,11 +1,10 @@
 <template>
 
   <VApp>
-    <AppBar>
-    </AppBar>
+    <AppBar />
     <VContent>
       <VContainer fluid>
-        <router-view/>
+        <router-view />
       </VContainer>
     </VContent>
   </VApp>
@@ -15,7 +14,6 @@
 
 <script>
 
-  import { mapActions, mapGetters } from 'vuex';
   import AppBar from 'shared/views/AppBar';
 
   export default {

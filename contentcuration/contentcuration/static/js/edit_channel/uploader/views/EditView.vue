@@ -91,8 +91,8 @@
 
 <script>
 
-  import { mapActions, mapGetters, mapState } from 'vuex';
-  import { TabNames, modes } from '../constants';
+  import { mapGetters } from 'vuex';
+  import { TabNames } from '../constants';
   import DetailsTabView from './DetailsTabView.vue';
   import AssessmentView from './AssessmentView.vue';
   import { isTempId } from 'shared/utils';
@@ -129,11 +129,13 @@
       },
       noItemText() {
         if (!this.nodes.length) {
+          /* eslint-disable no-constant-condition */
           if (true) {
             return this.$tr('addExerciseText');
           } else if (false) {
             return this.$tr('addTopicText');
           }
+          /* eslint-enable */
         }
         return this.viewOnly ? this.$tr('noItemsToViewText') : this.$tr('noItemsToEditText');
       },
@@ -153,14 +155,14 @@
         return this.oneSelected && this.firstNode && this.firstNode.kind === 'exercise';
       },
       showPrerequisitesTab() {
-        return this.oneSelected && !this.isClipboard && this.firstNode && this.firstNode.kind !== 'topic';
+        return (
+          this.oneSelected && !this.isClipboard && this.firstNode && this.firstNode.kind !== 'topic'
+        );
       },
       invalidSelected() {
         return (
           !this.viewOnly &&
-          this.nodeIds.some(
-            nodeId => !isTempId(nodeId) && !this.getContentNodeIsValid(nodeId)
-          )
+          this.nodeIds.some(nodeId => !isTempId(nodeId) && !this.getContentNodeIsValid(nodeId))
         );
       },
       countText() {
@@ -174,9 +176,6 @@
       assessmentItemsCount() {
         return 0;
       },
-    },
-    methods: {
-      ...mapActions('contentNode', ['loadContentNodes']),
     },
     $trs: {
       [TabNames.DETAILS]: 'Details',

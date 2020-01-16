@@ -189,11 +189,11 @@
 <script>
 
   import sortBy from 'lodash/sortBy';
-  import { fileSizeMixin, constantsTranslationMixin } from 'shared/mixins';
   import { SCALE_TEXT, SCALE, CHANNEL_SIZE_DIVISOR } from '../constants';
+  import DetailsRow from './DetailsRow';
+  import { fileSizeMixin, constantsTranslationMixin } from 'shared/mixins';
   import LoadingText from 'shared/views/LoadingText';
   import ExpandableList from 'shared/views/ExpandableList';
-  import DetailsRow from './DetailsRow';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import client from 'shared/client';
 

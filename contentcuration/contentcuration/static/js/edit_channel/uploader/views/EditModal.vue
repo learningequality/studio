@@ -57,9 +57,8 @@
               error
             </VIcon>
             <p>{{ $tr('loadErrorText') }}</p>
-            </VFlex>
           </template>
-          <EditView v-else :nodeIds="detailNodeIds"/>
+          <EditView v-else :nodeIds="detailNodeIds" />
         </VCardText>
       </VCard>
     </VDialog>
@@ -101,7 +100,7 @@
 <script>
 
   import _ from 'underscore';
-  import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
+  import { mapActions, mapGetters, mapMutations } from 'vuex';
   import { modes } from '../constants';
   import EditList from './EditList.vue';
   import EditView from './EditView.vue';
@@ -150,24 +149,6 @@
         }, SAVE_TIMER),
       };
     },
-    beforeRouteEnter(to, from, next) {
-      if (to.name === RouterNames.CONTENTNODE_DETAILS) {
-        return next(vm => {
-          vm.loadContentNode(to.params.detailNodeId).catch(
-            () => {
-              vm.loadError = true
-          });
-        });
-      } else if (to.name === RouterNames.MULTI_CONTENTNODE_DETAILS) {
-        return next(vm => {
-          vm.loadContentNode(to.params.detailNodeIds.split(',')).catch(
-            () => {
-              vm.loadError = true
-          });
-        });
-      }
-      return next(false);
-    },
     computed: {
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodeIsValid']),
       ...mapGetters('currentChannel', ['canEdit']),
@@ -188,38 +169,40 @@
         return this.detailNodeIds.map(detailNodeId => this.getContentNode(detailNodeId));
       },
       invalidNodeCount() {
-        return this.detailNodeIds.reduce((invalid, detailNodeId) => invalid + Number(!this.getContentNodeIsValid(detailNodeId)), 0);
+        return this.detailNodeIds.reduce(
+          (invalid, detailNodeId) => invalid + Number(!this.getContentNodeIsValid(detailNodeId)),
+          0
+        );
       },
       modalTitle() {
         return this.$tr(modes.EDIT);
+      },
+    },
+    beforeRouteEnter(to, from, next) {
+      if (to.name === RouterNames.CONTENTNODE_DETAILS) {
+        return next(vm => {
+          vm.loadContentNode(to.params.detailNodeId).catch(() => {
+            vm.loadError = true;
+          });
+        });
+      } else if (to.name === RouterNames.MULTI_CONTENTNODE_DETAILS) {
+        return next(vm => {
+          vm.loadContentNode(to.params.detailNodeIds.split(',')).catch(() => {
+            vm.loadError = true;
+          });
+        });
       }
+      return next(false);
     },
     beforeMount() {
       this.drawer.open = this.multipleNodes;
     },
     methods: {
-      ...mapActions('contentNode', ['loadContentNodes', 'loadContentNode']),
+      ...mapActions('contentNode', ['loadContentNode']),
       ...mapActions('edit_modal', ['saveNodes', 'copyNodes', 'prepareForSave']),
       ...mapMutations('edit_modal', {
-        select: 'SELECT_NODE',
-        reset: 'RESET_STATE',
         setNode: 'SET_NODE',
-        addNodeToList: 'ADD_NODE',
       }),
-      createNode() {
-        let titleArgs = { parent: State.currentNode.title };
-        if (this.mode === modes.NEW_TOPIC) {
-          this.addNodeToList({
-            title: this.$tr('topicDefaultTitle', titleArgs),
-            kind: 'topic',
-          });
-        } else if (this.mode === modes.NEW_EXERCISE) {
-          this.addNodeToList({
-            title: this.$tr('exerciseDefaultTitle', titleArgs),
-            kind: 'exercise',
-          });
-        }
-      },
       updateSavedTime() {
         this.savedMessage = this.$tr('savedMessage', {
           relativeTime: this.$formatRelative(this.lastSaved),
@@ -286,6 +269,7 @@
       },
     },
     $trs: {
+      /* eslint-disable kolibri/vue-no-unused-translations */
       [modes.EDIT]: 'Editing Content Details',
       [modes.VIEW_ONLY]: 'Viewing Content Details',
       [modes.NEW_TOPIC]: 'Adding Topics',
@@ -310,6 +294,7 @@
         'Autosave paused ({count, plural,\n =1 {# error}\n other {# errors}} detected)',
       topicDefaultTitle: '{parent} Topic',
       exerciseDefaultTitle: '{parent} Exercise',
+      /* eslint-enable */
     },
   };
 

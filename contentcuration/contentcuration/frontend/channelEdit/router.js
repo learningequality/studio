@@ -16,15 +16,17 @@ const router = new VueRouter({
       name: RouterNames.TREE_ROOT_VIEW,
       path: '/',
       beforeEnter: (to, from, next) => {
-        return store.dispatch('channel/loadChannel', store.state.currentChannel.currentChannelId).then(channel => {
-          const nodeId = channel.root_id;
-          return next({
-            name: RouterNames.TREE_VIEW,
-            params: {
-              nodeId,
-            },
+        return store
+          .dispatch('channel/loadChannel', store.state.currentChannel.currentChannelId)
+          .then(channel => {
+            const nodeId = channel.root_id;
+            return next({
+              name: RouterNames.TREE_VIEW,
+              params: {
+                nodeId,
+              },
+            });
           });
-        });
       },
     },
     {
@@ -33,9 +35,14 @@ const router = new VueRouter({
       props: true,
       component: TreeView,
       beforeEnter: (to, from, next) => {
-        const channelPromise = store.dispatch('channel/loadChannel', store.state.currentChannel.currentChannelId);
+        const channelPromise = store.dispatch(
+          'channel/loadChannel',
+          store.state.currentChannel.currentChannelId
+        );
         const nodePromise = store.dispatch('contentNode/loadSummaryContentNode', to.params.nodeId);
-        return Promise.all([channelPromise, nodePromise]).then(([channel, contentNode]) => next()).catch(err => console.log(err));
+        return Promise.all([channelPromise, nodePromise])
+          .then(() => next())
+          .catch(err => console.log(err)); // eslint-disable-line no-console
       },
       children: [
         {

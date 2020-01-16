@@ -19,11 +19,7 @@ Vue.use(Vuetify, {
 
 export let rootVue;
 
-export default function startApp({
-  store,
-  router,
-  index,
-}) {
+export default function startApp({ store, router, index }) {
   initializeDB().then(() => {
     rootVue = new Vue({
       el: 'app',

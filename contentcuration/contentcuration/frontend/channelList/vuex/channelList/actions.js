@@ -3,14 +3,11 @@ import client from 'shared/client';
 export function searchCatalog(context, params) {
   params.page_size = params.page_size || 25;
   params.public = true;
+  // TODO: Migrate this to using indexeddb
   return client.get(window.Urls['channel-list'](), { params }).then(response => {
     context.commit('SET_PAGE', response.data);
-  });
-}
-
-export function loadChannelDetails(context, channelId) {
-  return client.get(window.Urls.get_channel_details(channelId)).then(response => {
-    context.commit('ADD_CHANNEL_DETAILS', { id: channelId, details: response.data });
+    // Also put this in our global channels map
+    context.commit('channel/ADD_CHANNELS', response.data.results);
   });
 }
 

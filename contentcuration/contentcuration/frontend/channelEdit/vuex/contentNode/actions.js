@@ -64,20 +64,26 @@ export function saveContentNode(context, contentNodeId) {
         });
       }
 
-      return client.patch(window.Urls['contentnode-detail'](contentNodeId), contentNodeData).then(response => {
-        // If successful the data will just be true,
-        // so update our last saved state with the current vuex state.
-        if (response.data) {
-          contentNodeLastSavedState.storeLastSavedState(context.getters.getContentNode(contentNodeId));
-        }
-        return null;
-      });
+      return client
+        .patch(window.Urls['contentnode-detail'](contentNodeId), contentNodeData)
+        .then(response => {
+          // If successful the data will just be true,
+          // so update our last saved state with the current vuex state.
+          if (response.data) {
+            contentNodeLastSavedState.storeLastSavedState(
+              context.getters.getContentNode(contentNodeId)
+            );
+          }
+          return null;
+        });
     }
   }
 }
 
 export function deleteContentNode(context, contentNodeId) {
-  return client.patch(window.Urls['contentnode-detail'](contentNodeId), { deleted: true }).then(() => {
-    context.commit('REMOVE_CONTENTNODE', contentNodeId);
-  });
+  return client
+    .patch(window.Urls['contentnode-detail'](contentNodeId), { deleted: true })
+    .then(() => {
+      context.commit('REMOVE_CONTENTNODE', contentNodeId);
+    });
 }

@@ -325,7 +325,6 @@ var messages = {
 
 var translate = i18n.createTranslator(namespace, messages);
 
-
 const KB = parseFloat(1024);
 const MB = parseFloat(Math.pow(KB, 2));
 const GB = parseFloat(Math.pow(KB, 3));
@@ -344,19 +343,16 @@ function format_size(text) {
   if (value < KB) {
     message = 'unit_bytes';
     data = Math.round(value);
-  } else if (KB <= value && value < MB){
+  } else if (KB <= value && value < MB) {
     message = 'unit_kilobytes';
     data = Math.round(parseFloat(value / KB));
-  }
-  else if (MB <= value && value < GB){
+  } else if (MB <= value && value < GB) {
     message = 'unit_megabytes';
     data = Math.round(parseFloat(value / MB));
-  }
-  else if (GB <= value && value < TB){
+  } else if (GB <= value && value < TB) {
     message = 'unit_gigabytes';
     data = Math.round(parseFloat(value / GB));
-  }
-  else if (TB <= value){
+  } else if (TB <= value) {
     message = 'unit_terabytes';
     data = Math.round(parseFloat(value / TB));
   }

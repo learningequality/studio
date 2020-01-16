@@ -6,7 +6,9 @@ import { contentNodeLastSavedState } from './index';
 
 function mergeContentNode(contentNodesMap, contentNode, complete) {
   contentNodeLastSavedState.storeLastSavedState(contentNode);
-  const currentlyComplete = contentNodesMap[contentNode.id] ? contentNodesMap[contentNode.id][NODE_COMPLETE_KEY] : false;
+  const currentlyComplete = contentNodesMap[contentNode.id]
+    ? contentNodesMap[contentNode.id][NODE_COMPLETE_KEY]
+    : false;
   return {
     ...contentNodesMap,
     [contentNode.id]: {
@@ -33,7 +35,21 @@ export function REMOVE_CONTENTNODE(state, contentNodeId) {
 
 export function UPDATE_CONTENTNODE(
   state,
-  { id, title = null, description = null, thumbnailData = null, language = null, license = null, license_description = null, copyright_holder = null, author = null, role_visibility = null, aggregator = null, provider = null, extra_fields = null } = {}
+  {
+    id,
+    title = null,
+    description = null,
+    thumbnailData = null,
+    language = null,
+    license = null,
+    license_description = null,
+    copyright_holder = null,
+    author = null,
+    role_visibility = null,
+    aggregator = null,
+    provider = null,
+    extra_fields = null,
+  } = {}
 ) {
   if (!id) {
     throw ReferenceError('id must be defined to update a contentNode set');
@@ -116,7 +132,6 @@ export function REMOVE_TAGS(state, ids, tags) {
   });
 }
 
-
 export function TOGGLE_EXPANSION(state, id) {
   if (state.expandedNodes[id]) {
     Vue.delete(state.expandedNodes, id);
@@ -124,6 +139,6 @@ export function TOGGLE_EXPANSION(state, id) {
     state.expandedNodes[id] = true;
   }
   if (window.sessionStorage) {
-    window.sessionStorage.setItem("expandedNodes", JSON.stringify(state.expandedNodes));
+    window.sessionStorage.setItem('expandedNodes', JSON.stringify(state.expandedNodes));
   }
 }

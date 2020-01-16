@@ -2,7 +2,7 @@
 
   <VList>
     <!-- Select all checkbox -->
-    <VCheckbox color="primary" v-model="selectAll">
+    <VCheckbox v-model="selectAll" color="primary">
       <template #label>
         <VListTile class="select-all-wrapper">
           <VListTileContent>
@@ -13,11 +13,17 @@
     </VCheckbox>
     <VDivider />
 
-    <VCheckbox v-for="nodeId in nodeIds" :class="{selected: isSelected}" :key="nodeId" color="primary" v-model="selected" :value="nodeId">
+    <VCheckbox
+      v-for="nodeId in nodeIds"
+      :key="nodeId"
+      v-model="selected"
+      :class="{selected: isSelected}"
+      color="primary"
+      :value="nodeId"
+    >
       <template #label>
         <VListTile>
-          <VListTileAction>
-          </VListTileAction>
+          <VListTileAction />
           <VListTileAction v-if="node.changesStaged" class="changed">
             *
           </VListTileAction>
@@ -51,7 +57,6 @@
 <script>
 
   import { mapGetters } from 'vuex';
-  import { modes } from '../constants';
 
   export default {
     name: 'EditList',

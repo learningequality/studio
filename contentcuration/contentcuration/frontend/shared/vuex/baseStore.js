@@ -17,11 +17,18 @@ function createIndexedDBPlugin(listeners) {
         });
       }
     }
-  }
+  };
 }
 
-export default function storeFactory(
-  { state = {}, actions = {}, getters = {}, mutations = {}, modules = {}, plugins = [], listeners = {} } = {}) {
+export default function storeFactory({
+  state = {},
+  actions = {},
+  getters = {},
+  mutations = {},
+  modules = {},
+  plugins = [],
+  listeners = {},
+} = {}) {
   modules = {
     session,
     snackbar,

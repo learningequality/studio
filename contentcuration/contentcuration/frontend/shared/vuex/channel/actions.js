@@ -18,8 +18,7 @@ export function loadChannelList(context, payload) {
 }
 
 export function loadChannel(context, id) {
-  return Channel
-    .get(id)
+  return Channel.get(id)
     .then(channel => {
       context.commit('ADD_CHANNEL', channel);
       return channel;
@@ -28,7 +27,6 @@ export function loadChannel(context, id) {
       return;
     });
 }
-
 
 /* CHANNEL EDITOR ACTIONS */
 
@@ -53,7 +51,7 @@ export function createChannel(context) {
 }
 
 export function updateChannel(context, channelData) {
-  context.commit('UPDATE_CHANNEL', channelData );
+  context.commit('UPDATE_CHANNEL', channelData);
   return Channel.update(channelData.id, channelData);
 }
 

@@ -57,7 +57,7 @@
 <script>
 
   import sortBy from 'lodash/sortBy';
-  import { mapGetters, mapActions, mapState, mapMutations } from 'vuex';
+  import { mapGetters, mapActions } from 'vuex';
   import { ListTypes, RouterNames } from '../../constants';
   import ChannelItem from './ChannelItem.vue';
 
@@ -89,7 +89,10 @@
         if (this.listType === ListTypes.PUBLIC) {
           sortFields.shift('-priority');
         }
-        return sortBy(this.channels.filter(channel => channel[this.listType] && !channel.deleted), sortFields);
+        return sortBy(
+          this.channels.filter(channel => channel[this.listType] && !channel.deleted),
+          sortFields
+        );
       },
       isEditable() {
         return this.listType === ListTypes.EDITABLE;

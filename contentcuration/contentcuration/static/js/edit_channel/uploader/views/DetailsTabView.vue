@@ -237,16 +237,13 @@
   import difference from 'lodash/difference';
   import intersection from 'lodash/intersection';
   import uniq from 'lodash/uniq';
-  import uniqBy from 'lodash/uniqBy';
-  import _ from 'underscore';
-  import { mapGetters, mapMutations, mapState } from 'vuex';
+  import { mapGetters, mapMutations } from 'vuex';
   import Constants from 'edit_channel/constants';
   import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown.vue';
   import HelpTooltip from 'edit_channel/sharedComponents/HelpTooltip.vue';
   import LicenseDropdown from 'edit_channel/sharedComponents/LicenseDropdown.vue';
   import MasteryDropdown from 'edit_channel/sharedComponents/MasteryDropdown.vue';
   import VisibilityDropdown from 'edit_channel/sharedComponents/VisibilityDropdown.vue';
-
 
   // Define an object to act as the place holder for non unique values.
   const nonUniqueValue = {};
@@ -334,7 +331,7 @@
         return this.nodes.every(node => node.kind === 'exercise');
       },
       allResources() {
-        return !this.nodes.some(node => node.kind === "topic");
+        return !this.nodes.some(node => node.kind === 'topic');
       },
       title: generateGetterSetter('title'),
       description: generateGetterSetter('description'),
@@ -355,7 +352,7 @@
             this.tagText = null;
             this.addTags(difference(newValue, oldValue));
           } else {
-            this.removeTags(difference(oldValue, newVale));
+            this.removeTags(difference(oldValue, newValue));
           }
         },
       },
@@ -416,14 +413,23 @@
       copyrightHolderRequired() {
         // Needs to appear when any of the selected licenses require a copyright holder
         return this.nodes.some(node => {
-          return Boolean(Constants.Licenses.find(license => license.id === node.license && license.copyright_holder_required));
+          return Boolean(
+            Constants.Licenses.find(
+              license => license.id === node.license && license.copyright_holder_required
+            )
+          );
         });
       },
       isImported() {
         return this.firstNode && this.firstNode.node_id !== this.firstNode.original_source_node_id;
       },
       importUrl() {
-        return this.firstNode && window.Urls.channel(this.firstNode.original_channel.id); + '/' + this.firstNode.original_source_node_id;
+        return (
+          this.firstNode &&
+          window.Urls.channel(this.firstNode.original_channel.id) +
+            '/' +
+            this.firstNode.original_source_node_id
+        );
       },
       importChannelName() {
         return this.firstNode && this.firstNode.original_channel.name;
