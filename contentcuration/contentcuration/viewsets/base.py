@@ -99,7 +99,7 @@ class BulkListSerializer(ListSerializer):
             obj_id = obj.pop(id_attr)
             if obj.keys():
                 all_validated_data_by_id[obj_id] = obj
-                properties_to_update.add(*obj.keys())
+                properties_to_update.update(obj.keys())
 
         # since this method is given a queryset which can have many
         # model instances, first find all objects to update

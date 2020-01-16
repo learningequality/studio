@@ -237,7 +237,7 @@ class ChannelSerializer(ContentDefaultsSerializerMixin, BulkModelSerializer):
                 instance.bookmarked_by.add(user_id)
             elif bookmark is not None:
                 instance.bookmarked_by.remove(user_id)
-        return super(ChannelSerializer, self).create(instance, validated_data)
+        return super(ChannelSerializer, self).update(instance, validated_data)
 
 
 class ChannelViewSet(ValuesViewset):
