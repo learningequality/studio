@@ -11,6 +11,7 @@ from django.core.files.storage import default_storage
 from django.http import Http404
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
+from django.http import HttpResponseForbidden
 from django.views.decorators.http import require_http_methods
 from le_utils.constants import content_kinds
 from le_utils.constants import exercises
@@ -46,6 +47,9 @@ from contentcuration.utils.files import get_thumbnail_encoding
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
 def get_upload_url(request):
+    # Smoke test is bypassing the authentication, so handle here for now
+    if request.user.is_anonymous():
+        return HttpResponseForbidden()
     try:
         request.user.check_space(float(request.GET['size']), request.GET['checksum'])
 
