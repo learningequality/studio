@@ -17,7 +17,7 @@ PASSING_POSTMARK_STATUSES = {
 
 class PostmarkProbe(BaseProbe):
 
-    metric = "login_latency_msec"
+    metric = "postmark_api_latency_msec"
 
     def do_probe(self):
         r = requests.get(url=POSTMARK_SERVICE_STATUS_URL)

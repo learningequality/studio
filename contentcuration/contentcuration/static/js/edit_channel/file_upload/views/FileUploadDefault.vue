@@ -11,7 +11,7 @@
           <Uploader allowMultiple @uploading="createNodesFromFiles">
             <template slot="upload-zone" slot-scope="uploader">
               <VLayout align-center fill-height>
-                <VCardText class="text-center align-center">
+                <VCardText class="text-center align-center text-xs-center">
                   <p v-if="currentNode" class="title upload-to-text">
                     {{ $tr('uploadToText', {title: currentNode.title}) }}
                   </p>

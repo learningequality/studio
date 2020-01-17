@@ -151,11 +151,21 @@
     />
 
     <!-- Alert for failed save -->
-    <Alert
+    <Dialog
       ref="savefailedalert"
       :header="$tr('saveFailedHeader')"
       :text="$tr('saveFailedText')"
-    />
+    >
+      <template slot="buttons" slot-scope="messagedialog">
+        <VBtn flat color="primary" @click="closeModal">
+          {{ $tr('closeWithoutSavingButton') }}
+        </VBtn>
+        <VSpacer />
+        <VBtn depressed color="primary" @click="messagedialog.close">
+          {{ $tr('okButton') }}
+        </VBtn>
+      </template>
+    </Dialog>
   </div>
 
 </template>
@@ -240,6 +250,12 @@
           if (this.changed) this.debouncedSave();
         },
       },
+      dialog(val) {
+        this.hideHTMLScroll(!!val);
+      },
+    },
+    mounted() {
+      this.hideHTMLScroll(true);
     },
     methods: {
       ...mapActions('edit_modal', ['saveNodes', 'copyNodes', 'prepareForSave']),
@@ -264,9 +280,15 @@
         this.dialog = false;
         this.$refs.uploadsprompt.close();
         this.$refs.saveprompt.close();
+        this.$refs.savefailedalert.close();
         this.$emit('modalclosed');
         this.reset();
         // TODO: Update router
+      },
+      hideHTMLScroll(hidden) {
+        document.querySelector('html').style = hidden
+          ? 'overflow-y: hidden !important;'
+          : 'overflow-y: auto !important';
       },
 
       /* Button actions */
@@ -312,6 +334,7 @@
         this.saveContent()
           .then(this.closeModal)
           .catch(() => {
+            this.saveError = true;
             this.$refs.savefailedalert.prompt();
           });
       },
@@ -324,7 +347,10 @@
               this.saving = false;
               resolve();
             })
-            .catch(reject);
+            .catch(error => {
+              this.saveError = true;
+              reject(error);
+            });
         });
       },
 
@@ -357,6 +383,7 @@
         });
       },
     },
+
     $trs: {
       [modes.EDIT]: 'Editing Content Details',
       [modes.VIEW_ONLY]: 'Viewing Content Details',
@@ -385,6 +412,8 @@
       uploadInProgressText:
         'Files that have not finished uploading will be removed if you finish now',
       cancelUploadsButton: 'Cancel uploads',
+      closeWithoutSavingButton: 'Close without saving',
+      okButton: 'OK',
     },
   };
 

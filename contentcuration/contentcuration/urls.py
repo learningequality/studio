@@ -191,6 +191,11 @@ class TaskViewSet(viewsets.ModelViewSet):
                     # If the user doesn't have channel access permissions, they can still perform certain
                     # operations, such as copy. So show them the status of any operation they started.
                     queryset = Task.objects.filter(user=user, metadata__affects__channels__contains=[channel_id])
+                # If we're getting a list of channel tasks, exclude finished tasks for now, as
+                # currently we only use this call to determine if there's a current or pending task.
+                # TODO: revisit this when we start displaying channel task history
+                if self.action == 'list':
+                    queryset = queryset.exclude(status__in=['SUCCESS', 'FAILURE'])
         else:
             queryset = Task.objects.filter(user=self.request.user)
 
@@ -285,6 +290,7 @@ urlpatterns += [
     url(r'^api/thumbnail_upload/', file_views.thumbnail_upload, name='thumbnail_upload'),
     url(r'^api/exercise_image_upload/', file_views.exercise_image_upload, name='exercise_image_upload'),
     url(r'^api/image_upload/', file_views.image_upload, name='image_upload'),
+    url(r'^api/multilanguage_file_upload/', file_views.multilanguage_file_upload, name='multilanguage_file_upload'),
     url(r'^zipcontent/(?P<zipped_filename>[^/]+)/(?P<embedded_filepath>.*)', zip_views.ZipContentView.as_view(), {}, "zipcontent"),
     url(r'^api/file_upload/', file_views.file_upload, name="file_upload"),
     url(r'^api/file_create/', file_views.file_create, name="file_create"),

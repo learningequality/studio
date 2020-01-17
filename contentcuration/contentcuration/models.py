@@ -44,7 +44,9 @@ from mptt.models import TreeForeignKey
 from mptt.models import TreeManager
 from pg_utils import DistinctSum
 
+from contentcuration.db.models.manager import CustomTreeManager
 from contentcuration.statistics import record_channel_stats
+from contentcuration.utils.cache import delete_public_channel_cache_keys
 from contentcuration.utils.parser import load_json_string
 
 EDIT_ACCESS = "edit"
@@ -85,8 +87,16 @@ def _create_tree_space(self, target_tree_id, num_trees=1):
     self._orig_create_tree_space(target_tree_id, num_trees)
 
 
+def _get_next_tree_id(self, *args, **kwargs):
+    new_id = MPTTTreeIDManager.objects.create().id
+    return new_id
+
+
 TreeManager._orig_create_tree_space = TreeManager._create_tree_space
 TreeManager._create_tree_space = _create_tree_space
+
+TreeManager._orig_get_next_tree_id = TreeManager._get_next_tree_id
+TreeManager._get_next_tree_id = _get_next_tree_id
 
 
 class UserManager(BaseUserManager):
@@ -369,6 +379,19 @@ class UUIDField(models.CharField):
         return result
 
 
+class MPTTTreeIDManager(models.Model):
+    """
+    Because MPTT uses plain integers for tree IDs and does not use an auto-incrementing field for them,
+    the same ID can sometimes be assigned to two trees if two channel create ops happen concurrently.
+
+    As we are using this table only for the ID generation, it does not need any fields.
+
+    We resolve this by creating a dummy table and using its ID as the tree index to take advantage of the db's
+    concurrency-friendly way of generating sequential integer IDs. There is a custom migration that ensures
+    that the number of records (and thus id) matches the max tree ID number when this table gets added.
+    """
+
+
 def file_on_disk_name(instance, filename):
     """
     Create a name spaced file path from the File obejct's checksum property.
@@ -399,13 +422,20 @@ def object_storage_name(instance, filename):
     :param filename: str
     :return: str
     """
-    return generate_object_storage_name(instance.checksum, filename)
+
+    default_ext = ''
+    if instance.file_format_id:
+        default_ext = '.{}'.format(instance.file_format_id)
+
+    return generate_object_storage_name(instance.checksum, filename, default_ext)
 
 
-def generate_object_storage_name(checksum, filename):
+def generate_object_storage_name(checksum, filename, default_ext=''):
     """ Separated from file_on_disk_name to allow for simple way to check if has already exists """
     h = checksum
-    basename, ext = os.path.splitext(filename)
+    basename, actual_ext = os.path.splitext(filename)
+    ext = actual_ext if actual_ext else default_ext
+
     # Use / instead of os.path.join as Windows makes this \\
     directory = "/".join([settings.STORAGE_ROOT, h[0], h[1]])
     return os.path.join(directory, h + ext.lower())
@@ -616,6 +646,7 @@ class Channel(models.Model):
     ricecooker_version = models.CharField(max_length=100, blank=True, null=True)
 
     # Fields to calculate when channel is published
+    published_data = JSONField(default=dict)
     icon_encoding = models.TextField(blank=True, null=True)
     total_resource_count = models.IntegerField(default=0)
     published_kind_count = models.TextField(blank=True, null=True)
@@ -626,6 +657,10 @@ class Channel(models.Model):
         verbose_name=_("languages"),
         blank=True,
     )
+
+    def __init__(self, *args, **kwargs):
+        super(Channel, self).__init__(*args, **kwargs)
+        self._orig_public = self.public
 
     @classmethod
     def get_all_channels(cls):
@@ -674,7 +709,9 @@ class Channel(models.Model):
                 original_channel_id=self.id,
                 source_channel_id=self.id,
             )
-            self.main_tree.save()
+            # Ensure that locust or unit tests raise if there are any concurrency issues with tree ids.
+            if settings.DEBUG:
+                assert ContentNode.objects.filter(parent=None, tree_id=self.main_tree.tree_id).count() == 1
         elif self.main_tree.title != self.name:
             self.main_tree.title = self.name
             self.main_tree.save()
@@ -687,7 +724,6 @@ class Channel(models.Model):
                 content_id=self.id,
                 node_id=self.id,
             )
-            self.trash_tree.save()
         elif self.trash_tree.title != self.name:
             self.trash_tree.title = self.name
             self.trash_tree.save()
@@ -700,13 +736,17 @@ class Channel(models.Model):
             # Delete db if channel has been deleted and mark as unpublished
             if not original_channel.deleted and self.deleted:
                 self.pending_editors.all().delete()
-                channel_db_url = os.path.join(settings.DB_ROOT, self.id) + ".sqlite3"
-                if os.path.isfile(channel_db_url):
-                    os.unlink(channel_db_url)
+                export_db_storage_path = os.path.join(settings.DB_ROOT, "{channel_id}.sqlite3".format(channel_id=self.id))
+                if default_storage.exists(export_db_storage_path):
+                    default_storage.delete(export_db_storage_path)
                     self.main_tree.published = False
             self.main_tree.save()
 
         super(Channel, self).save(*args, **kwargs)
+
+        # if this change affects the public channel list, clear the channel cache
+        if self.public or self._orig_public != self.public:
+            delete_public_channel_cache_keys()
 
     def get_thumbnail(self):
         return get_channel_thumbnail(self)
@@ -743,6 +783,8 @@ class Channel(models.Model):
         if bypass_signals:
             self.public = True     # set this attribute still, so the object will be updated
             Channel.objects.filter(id=self.id).update(public=True)
+            # clear the channel cache
+            delete_public_channel_cache_keys()
         else:
             self.public = True
             self.save()
@@ -919,7 +961,7 @@ class ContentNode(MPTTModel, models.Model):
     publishing = models.BooleanField(default=False)
 
     changed = models.BooleanField(default=True)
-    extra_fields = JSONField()
+    extra_fields = JSONField(default=dict, blank=True, null=True)
     author = models.CharField(max_length=200, blank=True, default="", help_text=_("Who created this content?"),
                               null=True)
     aggregator = models.CharField(max_length=200, blank=True, default="", help_text=_("Who gathered this content together?"),
@@ -930,7 +972,7 @@ class ContentNode(MPTTModel, models.Model):
     role_visibility = models.CharField(max_length=50, choices=roles.choices, default=roles.LEARNER)
     freeze_authoring_data = models.BooleanField(default=False)
 
-    objects = TreeManager()
+    objects = CustomTreeManager()
 
     @raise_if_unsaved
     def get_root(self):
@@ -1429,9 +1471,9 @@ def auto_delete_file_on_delete(sender, instance, **kwargs):
 def delete_empty_file_reference(checksum, extension):
     filename = checksum + '.' + extension
     if not File.objects.filter(checksum=checksum).exists() and not Channel.objects.filter(thumbnail=filename).exists():
-        file_on_disk_path = generate_file_on_disk_name(checksum, filename)
-        if os.path.isfile(file_on_disk_path):
-            os.remove(file_on_disk_path)
+        storage_path = generate_object_storage_name(checksum, filename)
+        if default_storage.exists(storage_path):
+            default_storage.delete(storage_path)
 
 
 class PrerequisiteContentRelationship(models.Model):
@@ -1443,7 +1485,6 @@ class PrerequisiteContentRelationship(models.Model):
 
     class Meta:
         unique_together = ['target_node', 'prerequisite']
-        auto_created = True  # Avoids `AttributeError: Cannot set values on a ManyToManyField which specifies an intermediary model`
 
     def clean(self, *args, **kwargs):
         # self reference exception

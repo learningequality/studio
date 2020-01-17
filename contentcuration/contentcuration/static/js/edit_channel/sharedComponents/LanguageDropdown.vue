@@ -14,6 +14,7 @@
     persistentHint
     :rules="rules"
     :required="required"
+    :no-data-text="$tr('noDataText')"
   />
 
 </template>
@@ -65,6 +66,7 @@
       labelText: 'Language',
       languageItemText: '{language} ({code})',
       languageRequired: 'Language is required',
+      noDataText: 'No languages found',
     },
   };
 

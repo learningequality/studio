@@ -92,3 +92,32 @@ def has_accepted_policies(function):
     wrap.__doc__ = function.__doc__
     wrap.__name__ = function.__name__
     return wrap
+
+
+# NOTE: This approach only works because of a seeming bug in Django
+# https://code.djangoproject.com/ticket/15855
+# Essentially, what happens is that this decorator sets the Vary headers
+# that cache_page uses to generate the full cache key. After this, however,
+# middleware such as SessionMiddleware and LocaleMiddleware add their own
+# Vary headers to the response. These headers are NOT included in the cache key,
+# so we cannot currently use this decorator on calls that utilizes those
+# middleware to customize the response. Also, if the caching function ever
+# changes to incorporate the headers set by middleware, we will need to change this.
+def cache_no_user_data(view_func):
+    """
+    Set appropriate Vary on headers on a view that specify there is
+    no user specific data being rendered in the view.
+    In order to ensure that the correct Vary headers are set,
+    the session is deleted from the request, as otherwise Vary cookies
+    will always be set by the Django session middleware.
+    This should not be used on any view that bootstraps user specific
+    data into it - this will remove the headers that will make this vary
+    on a per user basis.
+    """
+
+    def wrap(request, *args, **kwargs):
+        response = view_func(request, *args, **kwargs)
+        response["vary"] = "accept-encoding, accept"
+        return response
+
+    return wrap

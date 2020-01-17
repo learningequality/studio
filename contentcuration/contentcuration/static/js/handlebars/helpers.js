@@ -114,6 +114,7 @@ Handlebars.registerHelper('get_icon', function(kind) {
     case 'document':
       return 'description';
     case 'html5':
+    case 'h5p':
       return 'widgets';
     case 'slideshow':
       return 'photo_library';
