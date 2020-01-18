@@ -25,10 +25,10 @@ describe('ContentNodeIcon', () => {
     }
     let testIcons = [
       { value: 'topic', icon: 'folder' },
-      { value: 'video', icon: 'theaters' },
-      { value: 'audio', icon: 'headset' },
-      { value: 'exercise', icon: 'star' },
-      { value: 'document', icon: 'description' },
+      { value: 'video', icon: 'ondemand_video' },
+      { value: 'audio', icon: 'music_note' },
+      { value: 'exercise', icon: 'assignment' },
+      { value: 'document', icon: 'class' },
       { value: 'html5', icon: 'widgets' },
     ];
     _.each(testIcons, test);
