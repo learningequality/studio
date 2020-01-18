@@ -9,6 +9,7 @@
             <VCheckbox
               class="notranslate"
               color="primary"
+              data-test="select-all"
               :inputValue="selectAllChecked"
               @click.stop="toggleSelectAll"
             />

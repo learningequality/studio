@@ -1,6 +1,7 @@
+import Vue from 'vue';
 import _ from 'underscore';
 import { modes } from '../constants';
-import store from './../vuex/store';
+import editModalModule from './../vuex/store';
 import {
   DEFAULT_TOPIC,
   DEFAULT_TOPIC2,
@@ -8,7 +9,19 @@ import {
   DEFAULT_EXERCISE,
   DEFAULT_EXERCISE2,
 } from './data';
+import fileUploadsModule from 'edit_channel/vuexModules/fileUpload';
 import State from 'edit_channel/state';
+
+const Vuex = require('vuex');
+
+Vue.use(Vuex);
+
+const store = new Vuex.Store({
+  modules: {
+    edit_modal: editModalModule,
+    fileUploads: fileUploadsModule,
+  },
+});
 
 /*
   TODO: there are some issues trying to mock jquery.ajax as it

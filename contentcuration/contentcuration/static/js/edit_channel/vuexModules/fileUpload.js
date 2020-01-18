@@ -231,3 +231,4 @@ const fileUploadsModule = {
 };
 
 module.exports = fileUploadsModule;
+export default fileUploadsModule;

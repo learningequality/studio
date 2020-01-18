@@ -1,14 +1,8 @@
-import Vue from 'vue';
-import Vuetify from 'vuetify';
 import { mount } from '@vue/test-utils';
 import { modes } from '../constants';
 import EditListItem from './../views/EditListItem.vue';
 import { localStore, mockFunctions } from './data.js';
 import ContentNodeIcon from 'edit_channel/sharedComponents/ContentNodeIcon.vue';
-
-Vue.use(Vuetify);
-
-document.body.setAttribute('data-app', true); // Vuetify prints a warning without this
 
 const ContentNode = {
   id: 'node-1',
@@ -31,7 +25,7 @@ function makeWrapper(props = {}) {
   });
 }
 
-describe('editList', () => {
+describe('editListItem', () => {
   let wrapper;
   beforeEach(() => {
     localStore.commit('edit_modal/SET_MODE', modes.EDIT);
@@ -45,20 +39,19 @@ describe('editList', () => {
     it('should show asterisk when node is changed', () => {
       expect(wrapper.find('.changed').exists()).toBe(false);
       localStore.commit('edit_modal/UPDATE_NODE', { title: 'New Title' });
-      expect(wrapper.find('.changed').exists()).toBe(true);
+      expect(wrapper.vm.node.changesStaged).toBe(true);
     });
     it('should show error icon when node is invalid', () => {
       expect(wrapper.find('.error-icon').exists()).toBe(false);
       localStore.commit('edit_modal/UPDATE_NODE', { title: null });
       localStore.commit('edit_modal/VALIDATE_NODE_DETAILS', { nodeIdx: 0 });
-      expect(wrapper.find('.error-icon').exists()).toBe(true);
+      expect(wrapper.vm.nodeIsValid).toBe(false);
       localStore.commit('edit_modal/UPDATE_NODE', { title: 'Node 1' });
       localStore.commit('edit_modal/VALIDATE_NODE_DETAILS', { nodeIdx: 0 });
     });
     it('should hide error icon when in view only mode', () => {
-      expect(wrapper.find('.error-icon').exists()).toBe(false);
       localStore.commit('edit_modal/SET_MODE', modes.VIEW_ONLY);
-      expect(wrapper.find('.error-icon').exists()).toBe(false);
+      expect(wrapper.vm.nodeIsValid).toBe(true);
     });
   });
   describe('selection', () => {
@@ -87,11 +80,6 @@ describe('editList', () => {
     beforeEach(() => {
       wrapper = makeWrapper({ removable: true });
       mockFunctions.removeNode.mockReset();
-    });
-    it('should be displayed when removable is set to true', () => {
-      expect(wrapper.find('.remove-item').exists()).toBe(true);
-      wrapper.setProps({ removable: false });
-      expect(wrapper.find('.remove-item').exists()).toBe(false);
     });
     it('should remove the node from the list', () => {
       wrapper.find('.remove-item').trigger('click');

@@ -9,8 +9,6 @@ const primaryModalModule = require('./vuexModules/primaryModal');
 const publishModule = require('./vuexModules/publish');
 const fileUploadsModule = require('./vuexModules/fileUpload');
 
-var editChannelStore = require('edit_channel/uploader/vuex/store');
-
 if (Vue.default) {
   // Compatibility for differential behaviour of require import
   // of ES6 export default in webpack vs Jest
@@ -27,7 +25,6 @@ const Store = new Vuex.Store({
     dialog: primaryModalModule,
     publish: publishModule,
     fileUpload: fileUploadsModule,
-    edit_modal: editChannelStore,
   },
 });
 

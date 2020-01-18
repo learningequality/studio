@@ -1,17 +1,10 @@
-import _ from 'underscore';
-import Vue from 'vue';
-import Vuetify from 'vuetify';
 import { mount } from '@vue/test-utils';
 import { modes } from '../constants';
 import EditModal from './../views/EditModal.vue';
 import EditList from './../views/EditList.vue';
-import EditView from './../views/EditView.vue';
 import { localStore, mockFunctions, generateNode, DEFAULT_TOPIC, DEFAULT_TOPIC2 } from './data.js';
+import Uploader from 'edit_channel/sharedComponents/Uploader.vue';
 import State from 'edit_channel/state';
-
-Vue.use(Vuetify);
-
-document.body.setAttribute('data-app', true); // Vuetify prints a warning without this
 
 const testNodes = [DEFAULT_TOPIC, DEFAULT_TOPIC2];
 State.preferences = {};
@@ -41,30 +34,29 @@ describe('editModal', () => {
     mockFunctions.saveNodes.mockReset();
   });
   describe('on render', () => {
-    it('should show correct header', () => {
-      _.each(_.values(modes), mode => {
-        localStore.commit('edit_modal/SET_MODE', mode);
-        expect(wrapper.find('.v-toolbar__title').text()).toContain(wrapper.vm.$tr(mode));
-        expect(wrapper.find({ ref: 'savebutton' }).exists()).toBe(mode !== modes.VIEW_ONLY);
-        expect(wrapper.find({ ref: 'copybutton' }).exists()).toBe(mode === modes.VIEW_ONLY);
+    it('should show the correct buttons based on the mode', () => {
+      // View only mode by default
+      expect(wrapper.find('[data-test="save"]').exists()).toBe(false);
+      expect(wrapper.find('[data-test="copy"]').exists()).toBe(true);
+      localStore.commit('edit_modal/SET_MODE', modes.EDIT);
+      wrapper.vm.$nextTick(() => {
+        expect(wrapper.find('[data-test="save"]').exists()).toBe(true);
+        expect(wrapper.find('[data-test="copy"]').exists()).toBe(false);
       });
-    });
-    it('should have EditList and EditView components', () => {
-      expect(wrapper.find(EditView).exists()).toBe(true);
-      expect(wrapper.find(EditList).exists()).toBe(true);
     });
   });
   describe('navigation drawer', () => {
     it("should be hidden if there's one item in edit or view only mode", () => {
       localStore.commit('edit_modal/SET_NODES', [testNodes[0]]);
-      localStore.commit('edit_modal/SET_MODE', modes.VIEW_ONLY);
-      expect(wrapper.find(EditList).exists()).toBe(false);
       localStore.commit('edit_modal/SET_MODE', modes.EDIT);
-      expect(wrapper.find(EditList).exists()).toBe(false);
-      localStore.commit('edit_modal/SET_MODE', modes.NEW_EXERCISE);
-      expect(wrapper.find(EditList).exists()).toBe(true);
-      localStore.commit('edit_modal/SET_MODE', modes.NEW_TOPIC);
-      expect(wrapper.find(EditList).exists()).toBe(true);
+
+      wrapper.vm.$nextTick(() => {
+        expect(wrapper.find(EditList).exists()).toBe(false);
+        localStore.commit('edit_modal/SET_MODE', modes.NEW_EXERCISE);
+        wrapper.vm.$nextTick(() => {
+          expect(wrapper.find(EditList).exists()).toBe(true);
+        });
+      });
     });
     it('should be shown in all modes if there are more than one nodes', () => {
       localStore.commit('edit_modal/SET_MODE', modes.VIEW_ONLY);
@@ -83,29 +75,22 @@ describe('editModal', () => {
     });
     it('should call copyNodes on click', () => {
       expect(mockFunctions.copyNodes).not.toHaveBeenCalled();
-      wrapper.find({ ref: 'copybutton' }).trigger('click');
+      wrapper.find('[data-test="copy"]').trigger('click');
       expect(mockFunctions.copyNodes).toHaveBeenCalled();
     });
     it('should open an alert when there is related content', () => {
-      wrapper.find({ ref: 'copybutton' }).trigger('click');
-      expect(
-        wrapper
-          .find({ ref: 'relatedalert' })
-          .find('.v-dialog')
-          .isVisible()
-      ).toBe(false);
+      let alert = wrapper.find({ ref: 'relatedalert' }).find({ ref: 'alert' });
+      wrapper.find('[data-test="copy"]').trigger('click');
+      expect(alert.vm.dialog).toBe(false);
       localStore.commit('edit_modal/SET_NODES', [generateNode({ prerequisite: ['test'] })]);
-      wrapper.find({ ref: 'copybutton' }).trigger('click');
-      expect(
-        wrapper
-          .find({ ref: 'relatedalert' })
-          .find('.v-dialog')
-          .isVisible()
-      ).toBe(true);
+      wrapper.find('[data-test="copy"]').trigger('click');
+      expect(alert.vm.dialog).toBe(true);
     });
   });
   describe('on open', () => {
+    let addStub = jest.fn();
     beforeEach(() => {
+      addStub.mockReset();
       localStore.commit('edit_modal/SET_MODE', modes.EDIT);
     });
     it('should not automatically create a new item on EDIT mode', () => {
@@ -122,66 +107,56 @@ describe('editModal', () => {
     });
     it('should automatically create a new item on NEW_TOPIC mode', () => {
       localStore.commit('edit_modal/SET_MODE', modes.NEW_TOPIC);
-      let originalLength = localStore.state.edit_modal.nodes.length;
-      wrapper.vm.openModal();
-      expect(localStore.state.edit_modal.nodes.length).toEqual(originalLength + 1);
-    });
-    it('should not automatically trigger a save event on open', () => {
-      mockFunctions.saveNodes.mockReset();
-      wrapper.setData({
-        debouncedSave: mockFunctions.saveNodes,
+      wrapper.setMethods({
+        addNodeToList: addStub,
       });
-      localStore.commit('edit_modal/SET_MODE', modes.NEW_TOPIC);
       wrapper.vm.openModal();
-      expect(mockFunctions.saveNodes).not.toHaveBeenCalled();
+      expect(addStub).toHaveBeenCalled();
+      expect(addStub.mock.calls[0][0].kind).toBe('topic');
     });
     it('should automatically create a new item on NEW_EXERCISE mode', () => {
+      wrapper.setMethods({
+        addNodeToList: addStub,
+      });
       localStore.commit('edit_modal/SET_MODE', modes.NEW_EXERCISE);
-      let originalLength = localStore.state.edit_modal.nodes.length;
       wrapper.vm.openModal();
-      expect(localStore.state.edit_modal.nodes.length).toEqual(originalLength + 1);
+      expect(addStub).toHaveBeenCalled();
+      expect(addStub.mock.calls[0][0].kind).toBe('exercise');
+    });
+    it('should create a new item when files are uploaded', () => {
+      wrapper.setMethods({
+        createNodesFromFiles: addStub,
+      });
+      localStore.commit('edit_modal/SET_MODE', modes.UPLOAD);
+      wrapper.vm.$nextTick(() => {
+        wrapper.find(Uploader).vm.$emit('uploading');
+        expect(addStub).toHaveBeenCalled();
+      });
     });
   });
   describe('on close', () => {
-    beforeEach(() => {
-      localStore.commit('edit_modal/SET_MODE', modes.EDIT);
-    });
     it('should trigger when closebutton is clicked', () => {
-      expect(wrapper.find({ ref: 'editmodal' }).isVisible()).toBe(true);
-      wrapper.find({ ref: 'closebutton' }).trigger('click');
+      localStore.commit('edit_modal/SET_MODE', modes.VIEW_ONLY);
+      wrapper.find('[data-test="close"]').trigger('click');
       expect(wrapper.vm.dialog).toBe(false);
     });
-    it('should catch unsaved changes', () => {
-      localStore.commit('edit_modal/UPDATE_NODE', { title: 'New Title' });
-      wrapper.find({ ref: 'closebutton' }).trigger('click');
+    it('should catch invalid changes', () => {
+      localStore.commit('edit_modal/SET_MODE', modes.EDIT);
+      localStore.commit('edit_modal/UPDATE_NODE', { title: '' });
+      wrapper.find('[data-test="close"]').trigger('click');
       expect(wrapper.find({ ref: 'saveprompt' }).isVisible()).toBe(true);
     });
-  });
-  describe('on caught unsaved changes', () => {
-    beforeEach(() => {
-      localStore.commit('edit_modal/UPDATE_NODE', { title: 'New Title' });
-      wrapper.find({ ref: 'closebutton' }).trigger('click');
+    it('should call save when save anyways is called', () => {
       mockFunctions.saveNodes.mockReset();
-    });
-    it('dont save should close modal', () => {
-      expect(mockFunctions.saveNodes).not.toHaveBeenCalled();
-      wrapper.find({ ref: 'savepromptdontsave' }).trigger('click');
-      expect(wrapper.vm.dialog).toBe(false);
-      expect(localStore.state.edit_modal.nodes).toHaveLength(0);
-      expect(mockFunctions.saveNodes).not.toHaveBeenCalled();
-    });
-    it('cancel should close dialog', () => {
-      expect(mockFunctions.saveNodes).not.toHaveBeenCalled();
-      wrapper.find({ ref: 'savepromptcancel' }).trigger('click');
-      expect(wrapper.find({ ref: 'saveprompt' }).vm.dialog).toBe(false);
-      expect(mockFunctions.saveNodes).not.toHaveBeenCalled();
-    });
-    it('save changes should save changes and close the modal', () => {
-      expect(mockFunctions.saveNodes).not.toHaveBeenCalled();
-      wrapper.find({ ref: 'savepromptsave' }).trigger('click');
-      expect(wrapper.vm.dialog).toBe(false);
-      expect(wrapper.find({ ref: 'saveprompt' }).vm.dialog).toBe(false);
+      wrapper.setMethods({ handleForceSave: mockFunctions.saveNodes });
+      wrapper.find('[data-test="saveanyways"]').trigger('click');
       expect(mockFunctions.saveNodes).toHaveBeenCalled();
+    });
+    it('should catch uploads in progress', () => {
+      localStore.commit('edit_modal/UPDATE_NODE', { files: [{ progress: 50 }] });
+      wrapper.find('[data-test="close"]').trigger('click');
+      expect(mockFunctions.saveNodes).not.toHaveBeenCalled();
+      expect(wrapper.find({ ref: 'uploadsprompt' }).isVisible()).toBe(true);
     });
   });
   describe('on save', () => {
@@ -192,28 +167,11 @@ describe('editModal', () => {
       mockFunctions.saveNodes.mockReset();
     });
     it('clicking save button should trigger save', () => {
-      expect(mockFunctions.saveNodes).not.toHaveBeenCalled();
-      wrapper.find({ ref: 'savebutton' }).trigger('click');
+      wrapper.setMethods({
+        handleSave: mockFunctions.saveNodes,
+      });
+      wrapper.find('[data-test="save"]').trigger('click');
       expect(mockFunctions.saveNodes).toHaveBeenCalled();
-    });
-    it('autosaving should trigger when a change is made', () => {
-      wrapper.setData({
-        debouncedSave: mockFunctions.saveNodes,
-      });
-      expect(mockFunctions.saveNodes).not.toHaveBeenCalled();
-      localStore.commit('edit_modal/UPDATE_NODE', { title: 'Updated Title' });
-      wrapper.vm.$nextTick(() => {
-        expect(mockFunctions.saveNodes).toHaveBeenCalled();
-      });
-    });
-  });
-  describe('on create', () => {
-    it('EditList addNode emitted event should add new node to list', () => {
-      localStore.commit('edit_modal/SET_NODES', []);
-      localStore.commit('edit_modal/SET_MODE', modes.NEW_TOPIC);
-      wrapper.find(EditList).vm.$emit('addNode');
-      expect(localStore.state.edit_modal.nodes).toHaveLength(1);
-      expect(localStore.state.edit_modal.nodes[0].kind).toEqual('topic');
     });
   });
 });

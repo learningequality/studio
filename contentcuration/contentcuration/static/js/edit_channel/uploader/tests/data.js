@@ -5,6 +5,8 @@ import Constants from 'edit_channel/constants';
 const Vuex = require('vuex');
 var mutations = require('edit_channel/uploader/vuex/mutations');
 var getters = require('edit_channel/uploader/vuex/getters');
+var actions = require('edit_channel/uploader/vuex/actions');
+const fileUploadsModule = require('edit_channel/vuexModules/fileUpload');
 
 Vue.use(Vuex);
 
@@ -42,7 +44,8 @@ export function generateNode(props = {}) {
     kind: 'topic',
     prerequisite: [],
     is_prerequisite_of: [],
-    files: [{}],
+    files: [{ preset: {} }],
+    metadata: { resource_size: 0 },
     assessment_items: [],
     extra_fields: extra_fields,
     tags: [],
@@ -80,8 +83,12 @@ export const localStore = new Vuex.Store({
         mode: 'VIEW_ONLY',
       },
       getters: getters,
-      mutations: mutations,
+      mutations: {
+        ...mutations,
+        OPEN_DIALOG() {},
+      },
       actions: {
+        ...actions,
         loadNodes: context => {
           _.each(context.state.selectedIndices, i => {
             context.state.nodes[i]['_COMPLETE'] = true;
@@ -94,5 +101,6 @@ export const localStore = new Vuex.Store({
         copyNodes: mockFunctions.copyNodes,
       },
     },
+    fileUploads: fileUploadsModule,
   },
 });

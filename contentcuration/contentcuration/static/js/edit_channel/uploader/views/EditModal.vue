@@ -18,7 +18,7 @@
           app
           flat
         >
-          <VBtn ref="closebutton" icon dark app @click="handleClose">
+          <VBtn data-test="close" icon dark app @click="handleClose">
             <VIcon class="notranslate">
               close
             </VIcon>
@@ -35,10 +35,17 @@
                 {{ $tr('savingIndicator') }}
               </div>
             </VFlex>
-            <VBtn v-if="!isViewOnly" ref="savebutton" dark flat @click="handleSave">
+            <VBtn v-if="!isViewOnly" data-test="save" dark flat @click="handleSave">
               {{ $tr('saveButtonText') }}
             </VBtn>
-            <VBtn v-else ref="copybutton" dark flat @click="copyContent">
+            <VBtn
+              v-else
+              ref="copybutton"
+              data-test="copy"
+              dark
+              flat
+              @click="copyContent"
+            >
               {{ $tr('copyButtonText', {
                 count: nodes.length, size: formatFileSize(totalFileSize)}) }}
             </VBtn>
@@ -115,7 +122,7 @@
       :text="$tr('invalidNodesFoundText')"
     >
       <template slot="buttons" slot-scope="messagedialog">
-        <VBtn flat color="primary" @click="handleForceSave">
+        <VBtn flat data-test="saveanyways" color="primary" @click="handleForceSave">
           {{ $tr('saveAnywaysButton') }}
         </VBtn>
         <VSpacer />
@@ -132,7 +139,7 @@
       :text="$tr('uploadInProgressText')"
     >
       <template slot="buttons" slot-scope="messagedialog">
-        <VBtn flat color="primary" @click="handleForceSave">
+        <VBtn flat data-test="canceluploads" color="primary" @click="handleForceSave">
           {{ $tr('cancelUploadsButton') }}
         </VBtn>
         <VSpacer />

@@ -1,5 +1,5 @@
+import _ from 'underscore';
 import translator from './translator';
-
 import { AssessmentItemTypes, ValidationErrors } from './constants';
 import Constants from 'edit_channel/constants/index';
 

@@ -53,3 +53,4 @@ const editModalModule = {
 };
 
 module.exports = editModalModule;
+export default editModalModule;

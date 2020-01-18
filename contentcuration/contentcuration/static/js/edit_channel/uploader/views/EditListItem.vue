@@ -53,6 +53,7 @@
 
 <script>
 
+  import _ from 'underscore';
   import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
   import { modes } from '../constants';
   import ContentNodeIcon from 'edit_channel/sharedComponents/ContentNodeIcon.vue';
