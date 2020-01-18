@@ -250,7 +250,7 @@ describe('editModalStore', () => {
         expect(store.state.edit_modal.nodes[length].kind).toEqual('topic');
       });
       it('ADD_NODE should create a node based on window.preferences', () => {
-        State.preferences = { author: 'Test author' };
+        window.preferences = { author: 'Test author' };
         store.commit('edit_modal/ADD_NODE', { kind: 'exercise' });
         expect(store.state.edit_modal.nodes[testNodes.length - 1].author).toEqual('Test author');
       });
@@ -259,25 +259,6 @@ describe('editModalStore', () => {
         store.commit('edit_modal/REMOVE_NODE', topic1Index);
         expect(store.state.edit_modal.nodes).toHaveLength(testNodes.length - 1);
       });
-    });
-  });
-
-  describe('actions', () => {
-    it('saveNodes should call api/contentnode endpoint', () => {
-      store.dispatch('edit_modal/saveNodes');
-      // TODO: api/contentnode endpoint should be called
-    });
-    it('loadNodes should call get_nodes_by_ids_complete endpoint', () => {
-      store.dispatch('edit_modal/loadNodes', [0, 1]);
-      // TODO: get_nodes_by_ids_complete endpoint should be called
-    });
-    it('removeNode should call delete_nodes endpoint', () => {
-      store.dispatch('edit_modal/removeNode', 0);
-      // TODO: delete_nodes endpoint should be called
-    });
-    it('copyNodes should call duplicate_nodes endpoint', () => {
-      store.dispatch('edit_modal/copyNodes');
-      // TODO: duplicate_nodes endpoint should be called
     });
   });
 });
