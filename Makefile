@@ -114,4 +114,8 @@ dctest: endtoendtest
 
 dcservicesup:
 	# launch all studio's dependent services using docker-compose
-	docker-compose -f docker-compose.yml -f docker-compose.alt.yml up minio postgres redis celery-worker
+	docker-compose -f docker-compose.yml -f docker-compose.alt.yml up minio postgres redis
+
+dcservicesdown:
+	# stop services that were started using dcservicesup
+	docker-compose -f docker-compose.yml -f docker-compose.alt.yml down

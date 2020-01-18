@@ -14,7 +14,9 @@ Kolibri Studio is a web application designed to deliver educational materials to
 Kolibri Studio uses [Django](https://www.djangoproject.com/) for the backend and is transitioning from [Backbone.js](https://backbonejs.org/) to [Vue.js](https://vuejs.org/) for the frontend.
 
 
-## Get the code
+## Getting started
+
+### Get the code
 
 - Install and set up [Git](https://help.github.com/articles/set-up-git/) on your computer. Try [this tutorial](http://learngitbranching.js.org/) if you need more practice
 - [Sign up and configure your GitHub account](https://github.com/join) if you don't have one already.
@@ -24,14 +26,13 @@ Kolibri Studio uses [Django](https://www.djangoproject.com/) for the backend and
 Tip: [Register your SSH keys](https://help.github.com/en/articles/connecting-to-github-with-ssh) on GitHub to avoid having to repeatedly enter your password.
 
 
-## Install and run services
+### Install and run services
 
 Studio requires some background services to be running:
 
 * Minio
 * Postgres
 * Redis
-* Celery
 
 The instructions below show how to set up the services using Docker. This works for many people, but not everyone. If docker is giving you issues, you can also [manually install](docs/manual_setup.md) the services either on your host machine or in a virtual machine (for example, using Vagrant with Virtualbox or VMWare).
 
@@ -45,19 +46,24 @@ make dcservicesup
 
 This will take a while the first time it's run, and might need to be restarted a couple times if it errors out initially.
 
-To confirm that the services are running, run `docker ps`, and you should see four containers, for example:
+To confirm that the services are running, run `docker ps`, and you should see three containers, for example:
 
 ```bash
 > docker ps
 CONTAINER ID        IMAGE                             COMMAND                  CREATED             STATUS              PORTS                    NAMES
-18ec55dab38b        learningequality/studio-app-dev   "make prodcelerywork…"   50 seconds ago      Up 48 seconds                                studio_vue-refactor_celery-worker_1
 e09c5c203b93        redis:4.0.9                       "docker-entrypoint.s…"   51 seconds ago      Up 49 seconds       0.0.0.0:6379->6379/tcp   studio_vue-refactor_redis_1
 6164371efb6b        minio/minio                       "minio server /data"     51 seconds ago      Up 49 seconds       0.0.0.0:9000->9000/tcp   studio_vue-refactor_minio_1
 c86bbfa3a59e        postgres:9.6                      "docker-entrypoint.s…"   51 seconds ago      Up 49 seconds       0.0.0.0:5432->5432/tcp   studio_vue-refactor_postgres_1
 ```
 
 
-## Pipenv and Python dependencies
+To shut down the services, run
+
+```bash
+make dcservicesdown
+```
+
+### Pipenv and Python dependencies
 
 To develop on Kolibri, you'll need:
 
@@ -82,7 +88,7 @@ pre-commit install
 Exit the virtual environment by running `exit`. Reactivate it by running `pipenv shell` again.
 
 
-## Yarn and Javascript dependencies
+### Yarn and Javascript dependencies
 
 As described above, Kolibri Studio has dependencies that rely on Node.js version 10.x. You'll also need [yarn](https://yarnpkg.com/lang/en/docs/install) installed.
 
@@ -95,7 +101,7 @@ yarn install --network-timeout 1000000
 The `network-timeout` helps avoid a timeout issue with the Material Icons dependency.
 
 
-## Initial setup
+### Initial setup
 
 To set up the database, run:
 
@@ -103,9 +109,16 @@ To set up the database, run:
 yarn run devsetup
 ```
 
-## Running the development server
+### Running the development server
 
-Run:
+In one tab, start `celery` using:
+
+```bash
+make prodceleryworkers
+```
+
+In another tab, start Django and the webpack build using:
+
 
 ```bash
 yarn run devserver:hot  # with Vue hot module reloading
@@ -116,7 +129,9 @@ yarn run devserver  # without hot module reloading
 This will take a few mins to build the frontend. When it's done, you can log in with `a@a.com` password `a` at h[ttp://localhost:8080/accounts/login/](http://localhost:8080/accounts/login/)
 
 
-## Running tests
+## Additional tools
+
+### Running tests
 
 You can run tests using the following command:
 
@@ -127,7 +142,7 @@ yarn run test
 View [more testing tips](docs/running_tests.md)
 
 
-## Profiling and local production testing
+### Profiling and local production testing
 
 If you want to test the performance of your changes, you can start up a local server
 with settings closer to a production environment like so:
@@ -145,7 +160,8 @@ make timed_run
 make stop_slaves  # mac: killall python
 ```
 
-## Linting
+### Linting
+
 Front-end linting is run using:
 
 ```bash
