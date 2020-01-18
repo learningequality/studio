@@ -4,15 +4,14 @@ exports[`AnswersEditor for a multiple selection question toolbar contains move u
 <div class="layout justify-end toolbar" data-test="toolbar">
   <div class="flex toolbar-item"><button disabled="disabled" type="button" class="v-btn v-btn--disabled v-btn--icon theme--light" data-test="toolbarIcon-MOVE_ITEM_UP">
       <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--lighten-2">keyboard_arrow_up</i></div>
-    </button><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move up</span></div></span>
-</div>
-<div class="flex toolbar-item"><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIcon-MOVE_ITEM_DOWN">
-    <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">keyboard_arrow_down</i></div>
-  </button><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move down</span></div></span></div>
-<div class="flex toolbar-item"><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIcon-DELETE_ITEM">
-    <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">close</i></div>
-  </button><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Delete</span></div></span></div>
-<!---->
+    </button><span class="v-tooltip v-tooltip--top"></span></div>
+  <div class="flex toolbar-item"><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIcon-MOVE_ITEM_DOWN">
+      <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">keyboard_arrow_down</i></div>
+    </button><span class="v-tooltip v-tooltip--top"></span></div>
+  <div class="flex toolbar-item"><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIcon-DELETE_ITEM">
+      <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">close</i></div>
+    </button><span class="v-tooltip v-tooltip--top"></span></div>
+  <!---->
 </div>
 `;
 
@@ -20,15 +19,14 @@ exports[`AnswersEditor for a single selection question toolbar contains move up/
 <div class="layout justify-end toolbar" data-test="toolbar">
   <div class="flex toolbar-item"><button disabled="disabled" type="button" class="v-btn v-btn--disabled v-btn--icon theme--light" data-test="toolbarIcon-MOVE_ITEM_UP">
       <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--lighten-2">keyboard_arrow_up</i></div>
-    </button><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move up</span></div></span>
-</div>
-<div class="flex toolbar-item"><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIcon-MOVE_ITEM_DOWN">
-    <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">keyboard_arrow_down</i></div>
-  </button><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move down</span></div></span></div>
-<div class="flex toolbar-item"><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIcon-DELETE_ITEM">
-    <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">close</i></div>
-  </button><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Delete</span></div></span></div>
-<!---->
+    </button><span class="v-tooltip v-tooltip--top"></span></div>
+  <div class="flex toolbar-item"><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIcon-MOVE_ITEM_DOWN">
+      <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">keyboard_arrow_down</i></div>
+    </button><span class="v-tooltip v-tooltip--top"></span></div>
+  <div class="flex toolbar-item"><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIcon-DELETE_ITEM">
+      <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">close</i></div>
+    </button><span class="v-tooltip v-tooltip--top"></span></div>
+  <!---->
 </div>
 `;
 
@@ -42,8 +40,7 @@ exports[`AnswersEditor for an input question toolbar contains only delete icon 1
 <div class="layout justify-end toolbar" data-test="toolbar">
   <div class="flex toolbar-item"><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIcon-DELETE_ITEM">
       <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">close</i></div>
-    </button><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Delete</span></div></span>
-</div>
-<!---->
+    </button><span class="v-tooltip v-tooltip--top"></span></div>
+  <!---->
 </div>
 `;
