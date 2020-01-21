@@ -27,43 +27,48 @@
         v-if="loading"
         indeterminate
         color="primary"
-        style="margin: 0px;"
+        style="margin: 0;"
         height="5"
       />
       <VCardText v-else>
-        <VLayout row justify-center>
+        <VLayout row justify-center class="pb-5">
           <VFlex md12 lg10 xl8>
             <VForm ref="detailsform">
               <!-- TODO: Insert thumbnail here once the uploader is ready -->
+              <fieldset class="py-1 mt-3">
+                <legend class="py-1 mb-2 title font-weight-bold">
+                  {{ $tr('details') }}
+                </legend>
 
-              <h1 class="title">
-                {{ $tr('details') }}
-              </h1>
+                <VTextField
+                  v-model="name"
+                  outline
+                  :label="$tr('channelName')"
+                  :placeholder="$tr('channelNamePlaceholder')"
+                  :rules="[() => name.length ? true : $tr('channelError')]"
+                  required
+                />
+                <LanguageDropdown
+                  v-model="language"
+                  class="notranslate"
+                  outline
+                  :placeholder="$tr('channelLanguagePlaceholder')"
+                  required
+                />
+                <VTextarea
+                  v-model="description"
+                  outline
+                  :label="$tr('channelDescription')"
+                  :placeholder="$tr('channelDescriptionPlaceholder')"
+                  maxlength="400"
+                  rows="4"
+                  auto-grow
+                  counter
+                />
+              </fieldset>
 
-              <VTextField
-                v-model="name"
-                outline
-                :label="$tr('channelName')"
-                :placeholder="$tr('channelNamePlaceholder')"
-                :rules="[() => name.length ? true : $tr('channelError')]"
-                required
-              />
-              <LanguageDropdown
-                v-model="language"
-                class="notranslate"
-                outline
-                :placeholder="$tr('channelLanguagePlaceholder')"
-                required
-              />
-              <VTextarea
-                v-model="description"
-                outline
-                :label="$tr('channelDescription')"
-                :placeholder="$tr('channelDescriptionPlaceholder')"
-                maxlength="400"
-                rows="4"
-                auto-grow
-                counter
+              <ContentDefaults
+                v-model="contentDefaults"
               />
             </VForm>
           </VFlex>
@@ -82,11 +87,13 @@
   import { isTempId } from '../../utils';
   import { RouterNames } from '../../constants';
   import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown';
+  import ContentDefaults from 'shared/views/form/ContentDefaults';
 
   export default {
     name: 'ChannelModal',
     components: {
       LanguageDropdown,
+      ContentDefaults,
     },
     props: {
       channelId: {
@@ -130,6 +137,14 @@
         },
         set(language) {
           this.updateChannel({ id: this.channelId, language });
+        },
+      },
+      contentDefaults: {
+        get() {
+          return this.channel.content_defaults || {};
+        },
+        set(content_defaults) {
+          this.updateChannel({ id: this.channelId, content_defaults });
         },
       },
       isNewChannel() {
@@ -227,9 +242,12 @@
 
 <style lang="less" scoped>
 
-  .title {
-    margin: 25px 0 10px;
-    font-weight: bold;
+  /deep/ fieldset {
+    border: 0;
+
+    .title {
+      font-size: 18px !important;
+    }
   }
 
 </style>
