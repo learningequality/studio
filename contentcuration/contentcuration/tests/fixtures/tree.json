@@ -7,26 +7,31 @@
 			"node_id": "00000000000000000000000000000001",
 			"kind_id": "topic",
 			"title": "Topic A",
+			"sort_order": 1,
 			"children": [
 				{
 					"node_id": "00000000000000000000000000000003",
 					"kind_id": "video",
-					"title": "Video 1"
+					"title": "Video 1",
+					"sort_order": 1
 				},
 				{
 					"node_id": "00000000000000000000000000000004",
 					"kind_id": "video",
-					"title": "Video 2"
+					"title": "Video 2",
+					"sort_order": 2
 				},
 				{
 					"node_id": "00000000000000000000000000000006",
 					"kind_id": "video",
-					"title": "Video 3"
+					"title": "Video 3",
+					"sort_order": 3
 				},
 				{
 					"node_id": "00000000000000000000000000000007",
 					"kind_id": "video",
-					"title": "Video 4"
+					"title": "Video 4",
+					"sort_order": 4
 				}
 			]
 		},
@@ -34,12 +39,14 @@
 			"node_id": "00000000000000000000000000000002",
 			"kind_id": "topic",
 			"title": "Topic B",
+			"sort_order": 2,
 			"children": [
 				{
 					"node_id": "00000000000000000000000000000005",
 					"kind_id": "exercise",
 					"title": "Exercise 1",
 					"mastery_model": "do_all",
+					"sort_order": 1,
 					"assessment_items": [
 						{
 							"type": "single_selection",

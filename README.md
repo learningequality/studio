@@ -4,99 +4,73 @@
 
 Check out our [beta site](https://studio.learningequality.org)!
 
-Kolibri Studio is a web application designed to deliver educational materials to [Kolibri](http://learningequality.org/kolibri/).
-Kolibri Studio supports the following workflows:
+Kolibri Studio is a web application designed to deliver educational materials to [Kolibri](http://learningequality.org/kolibri/). It supports:
 
-- Organizing and publishing content channels in the format suitable for import from Kolibri.
-
-- Curating content and remixing of existing channels into custom channels aligned to various educational standards, country curricula, and special needs.
-
-- Creating learning pathways and assessments.
-
-- Uploading new content through the web interface or programatically using [ricecooker-powered](https://github.com/learningequality/ricecooker) content import scripts.
+- Organizing and publishing content channels in the format suitable for import from Kolibri
+- Curating content and remixing of existing channels into custom channels aligned to various educational standards, country curricula, and special needs
+- Creating learning pathways and assessments
+- Uploading new content through the web interface or programatically using [ricecooker-powered](https://github.com/learningequality/ricecooker) content import scripts
 
 Kolibri Studio uses [Django](https://www.djangoproject.com/) for the backend and is transitioning from [Backbone.js](https://backbonejs.org/) to [Vue.js](https://vuejs.org/) for the frontend.
 
 
-## Developer Instructions
+## Getting started
 
-Follow the instructions below to setup your dev environment and get started. (Note: [docs/docker_setup](docs/docker_setup.md) has instructions for setting up your environment using [docker](https://www.docker.com/), but this is currently a work in progress.)
+### Get the code
 
+- Install and set up [Git](https://help.github.com/articles/set-up-git/) on your computer. Try [this tutorial](http://learngitbranching.js.org/) if you need more practice
+- [Sign up and configure your GitHub account](https://github.com/join) if you don't have one already.
+- Fork the [studio repo](https://github.com/learningequality/studio) to create a copy of the studio repository under your own github username. This will make it easier to [submit pull requests](https://help.github.com/articles/using-pull-requests/>). Read more details [about forking](https://help.github.com/articles/fork-a-repo/) from GitHub
+- Clone your repo locally
 
-### 0. Get the code
-
-  - Fork the [studio repo](https://github.com/learningequality/studio) to create a copy of the studio repository under your own github username.
-
-      ```bash
-      cd <project directory>
-      git clone git@github.com:<yourusername>/studio.git
-      ```
-
-  - The folder `<project directory>/studio` now contains the latest Studio code.
-  - For more information on using git, please check out [docs/git_setup](docs/git_setup.md)
+Tip: [Register your SSH keys](https://help.github.com/en/articles/connecting-to-github-with-ssh) on GitHub to avoid having to repeatedly enter your password.
 
 
+### Install and run services
 
-### 1. Install software prerequisites
+Studio requires some background services to be running:
 
-You need the following software installed on your machine to run Studio:
+* Minio
+* Postgres
+* Redis
 
-  - [python (2.7)](https://www.python.org/downloads/release/python-2713/)
-  - [python-pip](https://pip.pypa.io/en/stable/installing/)
-  - [nodejs (10.x)](https://nodejs.org/en/download/)
-  - [Postgres DB](https://www.postgresql.org/download/)
-  - [redis](https://redis.io/topics/quickstart)
-  - [minio server](https://www.minio.io/downloads.html)
-  - [nginx](https://www.nginx.com/resources/wiki/start/topics/tutorials/install/)
-  - [ffmpeg](https://www.ffmpeg.org/)
-  - [python-tk](https://wiki.python.org/moin/TkInter)
-  - [libmagickwand-dev](http://docs.wand-py.org/en/0.2.4/guide/install.html)
-  - [yarn](https://yarnpkg.com/lang/en/docs/install)
+The instructions below show how to set up the services using Docker. This works for many people, but not everyone. If docker is giving you issues, you can also [manually install](docs/manual_setup.md) the services either on your host machine or in a virtual machine (for example, using Vagrant with Virtualbox or VMWare).
 
-You can also use `nodeenv` (which is included as a python development dependency below) or `nvm` to install Node.js 10.x if you need to maintain multiple versions of node:
+First, [install Docker](https://docs.docker.com/install/).
 
-* http://ekalinin.github.io/nodeenv/
-* https://github.com/creationix/nvm
-
-**Ubuntu or Debian**
-You can install all the necessary packages using these commands (you may need to add `sudo` if you receive `Permission Denied` errors:
+Next, run
 
 ```bash
-# Install minio
-wget https://dl.minio.io/server/minio/release/linux-amd64/minio -O /usr/local/bin/minio
-chmod +x /usr/local/bin/minio
-
-# Install node PPA
-curl -sL https://deb.nodesource.com/setup_10.x | bash -
-
-# Install packages
-apt-get install -y  python python-pip python-dev python-tk \
-    postgresql-server-dev-all postgresql-contrib postgresql-client postgresql \
-    ffmpeg nodejs libmagickwand-dev nginx redis-server wkhtmltopdf
+make dcservicesup
 ```
 
-**Mac OS X**
-You can install the corresponding packages using Homebrew:
+This will take a while the first time it's run, and might need to be restarted a couple times if it errors out initially.
+
+To confirm that the services are running, run `docker ps`, and you should see three containers, for example:
 
 ```bash
-brew install  postgresql@9.6 redis node ffmpeg imagemagick@6 gs
-brew install minio/stable/minio
-brew link --force postgresql@9.6
-brew link --force imagemagick@6
+> docker ps
+CONTAINER ID        IMAGE                             COMMAND                  CREATED             STATUS              PORTS                    NAMES
+e09c5c203b93        redis:4.0.9                       "docker-entrypoint.s…"   51 seconds ago      Up 49 seconds       0.0.0.0:6379->6379/tcp   studio_vue-refactor_redis_1
+6164371efb6b        minio/minio                       "minio server /data"     51 seconds ago      Up 49 seconds       0.0.0.0:9000->9000/tcp   studio_vue-refactor_minio_1
+c86bbfa3a59e        postgres:9.6                      "docker-entrypoint.s…"   51 seconds ago      Up 49 seconds       0.0.0.0:5432->5432/tcp   studio_vue-refactor_postgres_1
 ```
 
-**Windows**
-Windows is no longer supported due to incompatibilities with some of the required packages.
 
-
-
-### 2. Set up python dependencies through pipenv
-
-If you haven't installed pipenv,
+To shut down the services, run
 
 ```bash
-pip install -U pipenv
+make dcservicesdown
 ```
+
+### Pipenv and Python dependencies
+
+To develop on Kolibri, you'll need:
+
+* Python 2.7
+* [Pipenv](https://pipenv.readthedocs.io/en/latest/)
+
+Managing Python installations can be quite tricky. We *highly* recommend using package managers like `Homebrew <http://brew.sh/>`__ on Mac or ``apt`` on Debian for this. Never modify your system's built-in version of Python
 
 Then set up:
 
@@ -106,131 +80,58 @@ pipenv shell
 
 # Ensure your environment matches the one specified in Pipfile.lock
 pipenv sync --dev
+
+# Set up pre-commit hooks
+pre-commit install
 ```
 
 Exit the virtual environment by running `exit`. Reactivate it by running `pipenv shell` again.
 
 
-### 3. Set up pre-commit hooks
-
-We use [pre-commit](http://pre-commit.com/) to help ensure consistent, clean code. The pip package should already be installed from a prior setup step, but you need to install the git hooks using this command.
-
-```bash
-pre-commit install
-```
-
-_Note: you may need to run `pip install pre-commit` if you see `pre-commit command not found`_
-
-
-
-### 4. Install javascript dependencies
+### Yarn and Javascript dependencies
 
 As described above, Kolibri Studio has dependencies that rely on Node.js version 10.x. You'll also need [yarn](https://yarnpkg.com/lang/en/docs/install) installed.
 
 All the javascript dependencies are listed in `package.json`. To install them run the following [yarn](https://yarnpkg.com/en/) command:
 
 ```bash
-yarn install
+yarn install --network-timeout 1000000
 ```
 
-This may take a long time.
-
-If you encounter a `ESOCKETTIMEDOUT` error related to `material-design-icons`, you can increase your timeout by setting `network-timeout 600000` inside `~/.yarnrc`.
+The `network-timeout` helps avoid a timeout issue with the Material Icons dependency.
 
 
-### 5. Set up the database and start redis
+### Initial setup
 
-Install [postgres](https://www.postgresql.org/download/) if you don't have it already. If you're using a package manager, you need to make sure you install the following packages: `postgresql`, `postgresql-contrib`, and `postgresql-server-dev-all` which will be required to build `psycopg2` python driver.
-
-Make sure postgres is running:
-
-```bash
-service postgresql start
-# alternatively: pg_ctl -D /usr/local/var/postgresql@9.6 start
-```
-
-Start the client with:
-
-```bash
-sudo su postgres  # switch to the postgres account
-psql  # mac: psql postgres
-```
-
-Create a database user with username `learningequality` and password `kolibri`:
-
-```sql
-CREATE USER learningequality with NOSUPERUSER INHERIT NOCREATEROLE CREATEDB LOGIN NOREPLICATION NOBYPASSRLS PASSWORD 'kolibri';
-  ```
-
-Create a database called `kolibri-studio`:
-
-```sql
-CREATE DATABASE "kolibri-studio" WITH TEMPLATE = template0 ENCODING = "UTF8" OWNER = "learningequality";
-```
-
-Press <kbd>Ctrl</kbd>+<kbd>D</kbd> to exit the `psql` client. Finally
-
-```bash
-exit  # leave the postgres account
-```
-
-To start redis on Linux-based systems, run the following command
-
-```bash
-service redis-server start
-```
-
-On Mac, it will be started as part of the `yarn run services` command (detailed below).
-
-### 6. Run all database migrations and load constants
-
-These commands setup the necessary tables and contents in the database.
-
-
-In one terminal, run all external services:
-
-```bash
-yarn run services
-```
-
-In another terminal, run devsetup to create all the necessary tables and buckets:
+To set up the database, run:
 
 ```bash
 yarn run devsetup
 ```
 
-When this completes, close the second tab and kill the services.
+### Running the development server
 
-
-### 7. Start the dev server
-
-You're all set up now, and ready to start the Studio local development server:
-
-On *Macs only* run this in another terminal first:
+In one tab, start `celery` using:
 
 ```bash
-yarn run services
+make prodceleryworkers
 ```
 
-Start the server:
+In another tab, start Django and the webpack build using:
+
 
 ```bash
-yarn run devserver
+yarn run devserver:hot  # with Vue hot module reloading
+# or
+yarn run devserver  # without hot module reloading
 ```
 
-Once you see the following output in your terminal, the server is ready:
-
-```
-Starting development server at http://0.0.0.0:8080/
-Quit the server with CONTROL-C.
-```
-
-You should be able to login at http://127.0.0.1:8080 using email `a@a.com`, password `a`.
-
-_Note: If you are using a Linux environment, you may need to increase the amount of listeners to allow the `watch` command to automatically rebuild static assets when you edit them. Please see [here for instructions](https://github.com/guard/listen/wiki/Increasing-the-amount-of-inotify-watchers) on how to do so._
+This will take a few mins to build the frontend. When it's done, you can log in with `a@a.com` password `a` at h[ttp://localhost:8080/accounts/login/](http://localhost:8080/accounts/login/)
 
 
-## Running tests
+## Additional tools
+
+### Running tests
 
 You can run tests using the following command:
 
@@ -238,10 +139,10 @@ You can run tests using the following command:
 yarn run test
 ```
 
-For more testing tips, please check out [docs/running_tests](docs/running_tests.md).
+View [more testing tips](docs/running_tests.md)
 
 
-## Profiling and local production testing
+### Profiling and local production testing
 
 If you want to test the performance of your changes, you can start up a local server
 with settings closer to a production environment like so:
@@ -259,8 +160,8 @@ make timed_run
 make stop_slaves  # mac: killall python
 ```
 
+### Linting
 
-## Linting
 Front-end linting is run using:
 
 ```bash
@@ -273,4 +174,4 @@ Some linting errors can be fixed automatically by running:
 yarn run lint-all:fix
 ```
 
-Make sure you've set up pre-commit hooks by following the instructions [here](#3-install-pre-commit-hooks).  This will ensure that linting is automatically run on staged changes before every commit.
+Make sure you've set up pre-commit hooks as described above. This will ensure that linting is automatically run on staged changes before every commit.

@@ -51,6 +51,7 @@ from mptt.models import TreeForeignKey
 from mptt.models import TreeManager
 from pg_utils import DistinctSum
 
+from contentcuration.db.models.manager import CustomTreeManager
 from contentcuration.statistics import record_channel_stats
 from contentcuration.utils.cache import delete_public_channel_cache_keys
 from contentcuration.utils.parser import load_json_string
@@ -974,7 +975,7 @@ class ContentNode(MPTTModel, models.Model):
     role_visibility = models.CharField(max_length=50, choices=roles.choices, default=roles.LEARNER)
     freeze_authoring_data = models.BooleanField(default=False)
 
-    objects = TreeManager()
+    objects = CustomTreeManager()
 
     @raise_if_unsaved
     def get_root(self):

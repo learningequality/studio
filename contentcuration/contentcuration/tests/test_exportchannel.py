@@ -19,7 +19,7 @@ from .testdata import slideshow
 from .testdata import topic
 from .testdata import video
 from contentcuration import models as cc
-from contentcuration.tests.utils import mixer
+from contentcuration.tests.testutils import mixer
 from contentcuration.utils.publish import convert_channel_thumbnail
 from contentcuration.utils.publish import create_bare_contentnode
 from contentcuration.utils.publish import create_content_database
