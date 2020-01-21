@@ -1,9 +1,9 @@
 import random
 
-from base import StudioTestCase
-from testdata import channel
-from testdata import random_string
-from testdata import user
+from .base import StudioTestCase
+from .testdata import channel
+from .testdata import random_string
+from .testdata import user
 
 from contentcuration.forms import get_sorted_countries
 from contentcuration.forms import SOURCES

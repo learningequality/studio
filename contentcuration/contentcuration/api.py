@@ -1,10 +1,12 @@
 """
 This module contains utility functions used by API endpoints.
 """
+from future import standard_library
+standard_library.install_aliases()
 import hashlib
 import logging
 import os
-from cStringIO import StringIO
+from io import BytesIO
 
 from django.core.exceptions import SuspiciousOperation
 from django.core.files.storage import default_storage
@@ -60,7 +62,7 @@ def write_raw_content_to_storage(contents, ext=None):
     if storage.exists(file_path):
         logging.info("{} exists in Google Cloud Storage, so it's not saved again.".format(file_path))
     else:
-        storage.save(file_path, StringIO(contents))
+        storage.save(file_path, BytesIO(contents))
 
     return hashed_filename, full_filename, file_path
 

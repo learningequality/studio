@@ -1,6 +1,7 @@
-from base import BaseTestCase
-from testdata import create_temp_file
+from __future__ import absolute_import
 
+from .base import BaseTestCase
+from .testdata import create_temp_file
 from contentcuration.models import Channel
 from contentcuration.utils.nodes import duplicate_node_bulk
 from contentcuration.utils.publish import mark_all_nodes_as_published

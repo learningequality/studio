@@ -1,6 +1,10 @@
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from past.builtins import basestring
 import base64
 import copy
-import cStringIO as StringIO
+from io import BytesIO
 import os
 import random
 import shutil
@@ -149,7 +153,7 @@ def get_image_from_exercise(file_ids, node=None, preset_id=None):
 def get_image_from_htmlnode(htmlfile, node=None, preset_id=None):
     with zipfile.ZipFile(htmlfile.file_on_disk, 'r') as zf:
         image_exts = [file_formats.PNG, file_formats.JPEG, file_formats.JPG]
-        names = filter(lambda f: os.path.splitext(f)[1][1:] in image_exts, zf.namelist())
+        names = [f for f in zf.namelist() if os.path.splitext(f)[1][1:] in image_exts]
         if len(names):
             image_name = random.choice(names)
             _, ext = os.path.splitext(image_name)
@@ -245,20 +249,19 @@ def get_thumbnail_encoding(filename, dimension=THUMBNAIL_WIDTH):
         return filename
 
     checksum, ext = os.path.splitext(filename.split("?")[0])
-    inbuffer = StringIO.StringIO()
-    outbuffer = StringIO.StringIO()
+    outbuffer = BytesIO()
 
     # make sure the aspect ratio between width and height is 16:9
     thumbnail_size = [dimension, round(dimension / 1.77)]
     try:
         if not filename.startswith(settings.STATIC_ROOT):
             filename = generate_object_storage_name(checksum, filename)
+            inbuffer = default_storage.open(filename, 'rb')
 
-            with default_storage.open(filename) as localtempf:
-                inbuffer.write(localtempf.read())
         else:
-            with open(filename, 'rb') as fobj:
-                inbuffer.write(fobj.read())
+            inbuffer = open(filename, 'rb')
+
+        assert inbuffer
 
         with Image.open(inbuffer) as image:
             image_format = image.format
@@ -271,7 +274,7 @@ def get_thumbnail_encoding(filename, dimension=THUMBNAIL_WIDTH):
             image.thumbnail(thumbnail_size, Image.ANTIALIAS)
 
             image.save(outbuffer, image_format)
-        return "data:image/{};base64,{}".format(ext[1:], base64.b64encode(outbuffer.getvalue()))
+        return "data:image/{};base64,{}".format(ext[1:], base64.b64encode(outbuffer.getvalue()).decode('utf-8'))
     finally:
         inbuffer.close()
         outbuffer.close()

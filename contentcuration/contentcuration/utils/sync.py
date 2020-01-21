@@ -1,9 +1,12 @@
+from __future__ import division
+
 import copy
 import logging
 
 from django.db import transaction
 from le_utils.constants import content_kinds
 from le_utils.constants import format_presets
+from past.utils import old_div
 
 from contentcuration.models import ContentNode
 from contentcuration.models import ContentTag
@@ -17,7 +20,7 @@ def sync_channel(channel, sync_attributes=False, sync_tags=False, sync_files=Fal
     sync_node_count = channel.main_tree.get_descendant_count()
     # last 20% is MPTT tree updates
     total_percent = 80.0
-    percent_per_node = total_percent / sync_node_count
+    percent_per_node = old_div(total_percent, sync_node_count)
     percent_done = 0.0
     with transaction.atomic():
         with ContentNode.objects.delay_mptt_updates():

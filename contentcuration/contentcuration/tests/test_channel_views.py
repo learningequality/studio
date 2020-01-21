@@ -1,9 +1,12 @@
-from base import BaseAPITestCase
+from __future__ import absolute_import
+
 from django.conf import settings
 from django.core.cache import cache
 from django.core.urlresolvers import reverse
 from django.db import connection
 from django.db import reset_queries
+
+from .base import BaseAPITestCase
 
 
 class ChannelListTestCase(BaseAPITestCase):
