@@ -19,6 +19,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='assessmentitem',
             name='hints',
-            field=models.TextField(default=b'[]'),
+            field=models.TextField(default='[]'),
         ),
     ]

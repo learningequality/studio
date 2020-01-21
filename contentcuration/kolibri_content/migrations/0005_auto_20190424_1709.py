@@ -16,11 +16,11 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='contentnode',
             name='kind',
-            field=models.CharField(blank=True, choices=[(b'topic', b'Topic'), (b'video', b'Video'), (b'audio', b'Audio'), (b'exercise', b'Exercise'), (b'document', b'Document'), (b'html5', b'HTML5 App'), (b'slideshow', b'Slideshow')], max_length=200),
+            field=models.CharField(blank=True, choices=[('topic', b'Topic'), ('video', b'Video'), ('audio', b'Audio'), ('exercise', b'Exercise'), ('document', b'Document'), ('html5', b'HTML5 App'), ('slideshow', b'Slideshow')], max_length=200),
         ),
         migrations.AlterField(
             model_name='file',
             name='preset',
-            field=models.CharField(blank=True, choices=[(b'high_res_video', b'High Resolution'), (b'low_res_video', b'Low Resolution'), (b'video_thumbnail', b'Thumbnail'), (b'video_subtitle', b'Subtitle'), (b'video_dependency', b'Video (dependency)'), (b'audio', b'Audio'), (b'audio_thumbnail', b'Thumbnail'), (b'document', b'Document'), (b'epub', b'ePub Document'), (b'document_thumbnail', b'Thumbnail'), (b'exercise', b'Exercise'), (b'exercise_thumbnail', b'Thumbnail'), (b'exercise_image', b'Exercise Image'), (b'exercise_graphie', b'Exercise Graphie'), (b'channel_thumbnail', b'Channel Thumbnail'), (b'topic_thumbnail', b'Thumbnail'), (b'html5_zip', b'HTML5 Zip'), (b'html5_dependency', b'HTML5 Dependency (Zip format)'), (b'html5_thumbnail', b'HTML5 Thumbnail'), (b'slideshow_image', b'Slideshow Image'), (b'slideshow_thumbnail', b'Slideshow Thumbnail'), (b'slideshow_manifest', b'Slideshow Manifest')], max_length=150),
+            field=models.CharField(blank=True, choices=[('high_res_video', b'High Resolution'), ('low_res_video', b'Low Resolution'), ('video_thumbnail', b'Thumbnail'), ('video_subtitle', b'Subtitle'), ('video_dependency', b'Video (dependency)'), ('audio', b'Audio'), ('audio_thumbnail', b'Thumbnail'), ('document', b'Document'), ('epub', b'ePub Document'), ('document_thumbnail', b'Thumbnail'), ('exercise', b'Exercise'), ('exercise_thumbnail', b'Thumbnail'), ('exercise_image', b'Exercise Image'), ('exercise_graphie', b'Exercise Graphie'), ('channel_thumbnail', b'Channel Thumbnail'), ('topic_thumbnail', b'Thumbnail'), ('html5_zip', b'HTML5 Zip'), ('html5_dependency', b'HTML5 Dependency (Zip format)'), ('html5_thumbnail', b'HTML5 Thumbnail'), ('slideshow_image', b'Slideshow Image'), ('slideshow_thumbnail', b'Slideshow Thumbnail'), ('slideshow_manifest', b'Slideshow Manifest')], max_length=150),
         ),
     ]

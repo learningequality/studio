@@ -1,6 +1,8 @@
 import datetime
 import json
 
+from past.builtins import basestring
+
 POLICIES = {
     "privacy_policy": {
         "latest": "2018_5_25",
@@ -39,7 +41,7 @@ def check_policies(user):
         # Sometimes the json gets converted to a string, so catch that case here
         policies = user.policies
 
-    for k, v in POLICIES.items():
+    for k, v in list(POLICIES.items()):
         policy_name = "{}_{}".format(k, v["latest"])
         if not policies.get(policy_name):
             policies_to_accept.update({policy_name: v["policies"][v["latest"]]})
@@ -47,4 +49,4 @@ def check_policies(user):
 
 
 def get_latest_policies():
-    return {"{}_{}".format(k, v["latest"]): v["policies"][v["latest"]] for k, v in POLICIES.items()}
+    return {"{}_{}".format(k, v["latest"]): v["policies"][v["latest"]] for k, v in list(POLICIES.items())}

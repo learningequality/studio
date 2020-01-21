@@ -1,12 +1,13 @@
+from __future__ import absolute_import
+
 import json
 
 import pytest
-from base import BaseAPITestCase
 from django.core.urlresolvers import reverse_lazy
-
 from le_utils.constants import content_kinds
 from le_utils.constants import exercises
 
+from .base import BaseAPITestCase
 from contentcuration.models import AssessmentItem
 from contentcuration.models import ContentNode
 from contentcuration.models import File

@@ -27,28 +27,28 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='channel',
             name='content_defaults',
-            field=jsonfield.fields.JSONField(default={b'aggregator': None, b'author': None, b'auto_derive_audio_thumbnail': True, b'auto_derive_document_thumbnail': True, b'auto_derive_exercise_thumbnail': True, b'auto_derive_html5_thumbnail': True,
-                                                      b'auto_derive_video_thumbnail': True, b'auto_randomize_questions': True, b'copyright_holder': None, b'language': None, b'license': None, b'license_description': None, b'm_value': 5, b'mastery_model': b'num_correct_in_a_row_5', b'n_value': 5, b'provider': None}),
+            field=jsonfield.fields.JSONField(default={b'aggregator': None, 'author': None, 'auto_derive_audio_thumbnail': True, 'auto_derive_document_thumbnail': True, 'auto_derive_exercise_thumbnail': True, 'auto_derive_html5_thumbnail': True,
+                                                      'auto_derive_video_thumbnail': True, 'auto_randomize_questions': True, 'copyright_holder': None, 'language': None, 'license': None, 'license_description': None, 'm_value': 5, 'mastery_model': 'num_correct_in_a_row_5', 'n_value': 5, 'provider': None}),
         ),
         migrations.AlterField(
             model_name='channel',
             name='preferences',
-            field=models.TextField(default=b'{"auto_derive_exercise_thumbnail": true, "auto_derive_video_thumbnail": true, "m_value": 5, "language": null, "license": null, "author": null, "aggregator": null, "auto_randomize_questions": true, "auto_derive_document_thumbnail": true, "copyright_holder": null, "auto_derive_html5_thumbnail": true, "provider": null, "auto_derive_audio_thumbnail": true, "license_description": null, "n_value": 5, "mastery_model": "num_correct_in_a_row_5"}'),
+            field=models.TextField(default='{"auto_derive_exercise_thumbnail": true, "auto_derive_video_thumbnail": true, "m_value": 5, "language": null, "license": null, "author": null, "aggregator": null, "auto_randomize_questions": true, "auto_derive_document_thumbnail": true, "copyright_holder": null, "auto_derive_html5_thumbnail": true, "provider": null, "auto_derive_audio_thumbnail": true, "license_description": null, "n_value": 5, "mastery_model": "num_correct_in_a_row_5"}'),
         ),
         migrations.AlterField(
             model_name='contentnode',
             name='author',
-            field=models.CharField(blank=True, default=b'', help_text='Who created this content?', max_length=200, null=True),
+            field=models.CharField(blank=True, default='', help_text='Who created this content?', max_length=200, null=True),
         ),
         migrations.AlterField(
             model_name='user',
             name='content_defaults',
-            field=jsonfield.fields.JSONField(default={b'aggregator': None, b'author': None, b'auto_derive_audio_thumbnail': True, b'auto_derive_document_thumbnail': True, b'auto_derive_exercise_thumbnail': True, b'auto_derive_html5_thumbnail': True,
-                                                      b'auto_derive_video_thumbnail': True, b'auto_randomize_questions': True, b'copyright_holder': None, b'language': None, b'license': None, b'license_description': None, b'm_value': 5, b'mastery_model': b'num_correct_in_a_row_5', b'n_value': 5, b'provider': None}),
+            field=jsonfield.fields.JSONField(default={b'aggregator': None, 'author': None, 'auto_derive_audio_thumbnail': True, 'auto_derive_document_thumbnail': True, 'auto_derive_exercise_thumbnail': True, 'auto_derive_html5_thumbnail': True,
+                                                      'auto_derive_video_thumbnail': True, 'auto_randomize_questions': True, 'copyright_holder': None, 'language': None, 'license': None, 'license_description': None, 'm_value': 5, 'mastery_model': 'num_correct_in_a_row_5', 'n_value': 5, 'provider': None}),
         ),
         migrations.AlterField(
             model_name='user',
             name='preferences',
-            field=models.TextField(default=b'{"auto_derive_exercise_thumbnail": true, "auto_derive_video_thumbnail": true, "m_value": 5, "language": null, "license": null, "author": null, "aggregator": null, "auto_randomize_questions": true, "auto_derive_document_thumbnail": true, "copyright_holder": null, "auto_derive_html5_thumbnail": true, "provider": null, "auto_derive_audio_thumbnail": true, "license_description": null, "n_value": 5, "mastery_model": "num_correct_in_a_row_5"}'),
+            field=models.TextField(default='{"auto_derive_exercise_thumbnail": true, "auto_derive_video_thumbnail": true, "m_value": 5, "language": null, "license": null, "author": null, "aggregator": null, "auto_randomize_questions": true, "auto_derive_document_thumbnail": true, "copyright_holder": null, "auto_derive_html5_thumbnail": true, "provider": null, "auto_derive_audio_thumbnail": true, "license_description": null, "n_value": 5, "mastery_model": "num_correct_in_a_row_5"}'),
         ),
     ]

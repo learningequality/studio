@@ -1,4 +1,6 @@
-import xmlrpclib
+from future import standard_library
+standard_library.install_aliases()
+import xmlrpc.client
 from socket import error
 from socket import gaierror
 
@@ -11,7 +13,7 @@ the version is "up to date" (log level = info)
 VERSION_OK = "0.6.32"  # this gets overwritten to current v. after XML RPC call
 
 try:
-    pypi = xmlrpclib.ServerProxy('https://pypi.python.org/pypi')
+    pypi = xmlrpc.client.ServerProxy('https://pypi.python.org/pypi')
     VERSION_OK = pypi.package_releases('ricecooker')[0]
 except (gaierror, error):
     pass

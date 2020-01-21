@@ -1,10 +1,11 @@
+from builtins import object
 from django.core.urlresolvers import reverse_lazy
 
 from ..base import BaseAPITestCase
 from contentcuration.models import ContentNode
 
 
-class BaseGetNodesByIdSerializerTestCaseMixin:
+class BaseGetNodesByIdSerializerTestCaseMixin(object):
     """
     We have several content node serializer endpoints, which differ primarily only
     in the fields they return. This class contains some basic tests that can be

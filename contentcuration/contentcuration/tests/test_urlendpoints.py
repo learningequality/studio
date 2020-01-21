@@ -1,8 +1,12 @@
+from __future__ import absolute_import
+
 import importlib
 
-from base import StudioTestCase
+from builtins import str
 from django.conf import settings
 from django.core.urlresolvers import reverse
+
+from .base import StudioTestCase
 
 
 class AllUrlsTest(StudioTestCase):
@@ -54,7 +58,7 @@ class AllUrlsTest(StudioTestCase):
                 if regex.groups > 0:
                     # the url expects parameters
                     # use default_kwargs supplied
-                    if regex.groups > len(regex.groupindex.keys()) \
+                    if regex.groups > len(list(regex.groupindex.keys())) \
                             or set(regex.groupindex.keys()) - set(default_kwargs.keys()):
                         # there are positional parameters OR
                         # keyword parameters that are not supplied in default_kwargs

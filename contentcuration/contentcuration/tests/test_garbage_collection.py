@@ -1,13 +1,15 @@
+from __future__ import absolute_import
+
 import json
 
 import pytest
-from base import BaseAPITestCase
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.urlresolvers import reverse_lazy
 from le_utils.constants import content_kinds
-from testdata import tree
 
+from .base import BaseAPITestCase
+from .testdata import tree
 from contentcuration import models as cc
 from contentcuration.api import activate_channel
 from contentcuration.utils.garbage_collect import clean_up_deleted_chefs
@@ -43,7 +45,7 @@ class NodeSettingTestCase(BaseAPITestCase):
         self.assertEqual(self.file_response.status_code, 200)
         garbage_node = cc.ContentNode.objects.get(pk=settings.ORPHANAGE_ROOT_ID)
         data = json.loads(self.file_response.content)
-        node = json.loads(data['node'])
+        node = data['node']
         node = cc.ContentNode.objects.get(pk=node['id'])
 
         # Node should be in garbage tree
@@ -53,7 +55,7 @@ class NodeSettingTestCase(BaseAPITestCase):
     def test_file_move(self):
         self.assertEqual(self.file_response.status_code, 200)
         data = json.loads(self.file_response.content)
-        node = json.loads(data['node'])
+        node = data['node']
         node = cc.ContentNode.objects.get(pk=node['id'])
 
         # Move node and check if it's still in the garbage tree
