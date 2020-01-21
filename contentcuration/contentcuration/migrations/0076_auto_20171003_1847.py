@@ -31,7 +31,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='channel',
             name='preferences',
-            field=models.TextField(default=b'{"auto_derive_video_thumbnail": true, "auto_randomize_questions": true, "copyright_holder": null, "auto_derive_document_thumbnail": true, "license_description": null, "mastery_model": "num_correct_in_a_row_5", "m_value": 5, "license": null, "language": null, "author": null, "auto_derive_exercise_thumbnail": true, "auto_derive_html5_thumbnail": true, "auto_derive_audio_thumbnail": true, "n_value": 5}'),
+            field=models.TextField(default='{"auto_derive_video_thumbnail": true, "auto_randomize_questions": true, "copyright_holder": null, "auto_derive_document_thumbnail": true, "license_description": null, "mastery_model": "num_correct_in_a_row_5", "m_value": 5, "license": null, "language": null, "author": null, "auto_derive_exercise_thumbnail": true, "auto_derive_html5_thumbnail": true, "auto_derive_audio_thumbnail": true, "n_value": 5}'),
         ),
         migrations.AlterField(
             model_name='channel',
@@ -51,6 +51,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='user',
             name='preferences',
-            field=models.TextField(default=b'{"auto_derive_video_thumbnail": true, "auto_randomize_questions": true, "copyright_holder": null, "auto_derive_document_thumbnail": true, "license_description": null, "mastery_model": "num_correct_in_a_row_5", "m_value": 5, "license": null, "language": null, "author": null, "auto_derive_exercise_thumbnail": true, "auto_derive_html5_thumbnail": true, "auto_derive_audio_thumbnail": true, "n_value": 5}'),
+            field=models.TextField(default='{"auto_derive_video_thumbnail": true, "auto_randomize_questions": true, "copyright_holder": null, "auto_derive_document_thumbnail": true, "license_description": null, "mastery_model": "num_correct_in_a_row_5", "m_value": 5, "license": null, "language": null, "author": null, "auto_derive_exercise_thumbnail": true, "auto_derive_html5_thumbnail": true, "auto_derive_audio_thumbnail": true, "n_value": 5}'),
         ),
     ]

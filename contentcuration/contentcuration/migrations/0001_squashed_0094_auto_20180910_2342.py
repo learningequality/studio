@@ -17,8 +17,8 @@ import contentcuration.models
 
 class Migration(migrations.Migration):
 
-    replaces = [(b'contentcuration', '0001_initial'), (b'contentcuration', '0002_language_readable_name'), (b'contentcuration', '0003_user_clipboard_tree'), (b'contentcuration', '0004_auto_20160720_1220'), (b'contentcuration', '0005_auto_20160816_1720'), (b'contentcuration', '0006_contentnode_published'), (b'contentcuration', '0005_formatpreset_thumbnail'), (b'contentcuration', '0007_merge'), (b'contentcuration', '0008_channel_published'), (b'contentcuration', '0009_remove_channel_published'), (b'contentcuration', '0010_auto_20160830_1740'), (b'contentcuration', '0011_file_source_url'), (b'contentcuration', '0012_auto_20160907_1444'), (b'contentcuration', '0013_contentnode_node_id'), (b'contentcuration', '0014_channel_language'), (b'contentcuration', '0015_auto_20160914_1640'), (b'contentcuration', '0016_auto_20160915_1206'), (b'contentcuration', '0015_auto_20160916_1349'), (b'contentcuration', '0017_merge'), (b'contentcuration', '0018_auto_20160919_1533'), (b'contentcuration', '0019_auto_20160919_1559'), (b'contentcuration', '0020_auto_20160919_1617'), (b'contentcuration', '0021_auto_20160919_1620'), (b'contentcuration', '0022_auto_20160920_1119'), (b'contentcuration', '0023_contentnode_extra_fields'), (b'contentcuration', '0024_auto_20160920_1136'), (b'contentcuration', '0025_auto_20160921_1356'), (b'contentcuration', '0026_merge'), (b'contentcuration', '0027_auto_20160926_0945'), (b'contentcuration', '0028_auto_20160926_1527'), (b'contentcuration', '0029_auto_20161005_0933'), (b'contentcuration', '0030_auto_20161005_0935'), (b'contentcuration', '0031_auto_20161010_1143'), (b'contentcuration', '0032_auto_20161010_1202'), (b'contentcuration', '0033_auto_20161012_1344'), (b'contentcuration', '0034_auto_20161014_1509'), (b'contentcuration', '0035_auto_20161018_1438'), (b'contentcuration', '0036_auto_20161018_1536'), (b'contentcuration', '0037_remove_contentnode_author'), (b'contentcuration', '0038_contentnode_author'), (b'contentcuration', '0039_auto_20161101_1555'), (b'contentcuration', '0040_file_assessment_item'), (b'contentcuration', '0041_channel_previous_tree'), (b'contentcuration', '0042_auto_20161206_1641'), (b'contentcuration', '0043_channel_viewers'), (b'contentcuration', '0042_auto_20161205_1622'), (b'contentcuration', '0044_merge'), (b'contentcuration', '0045_invitation_viewonly'), (b'contentcuration', '0046_auto_20161222_1210'), (b'contentcuration', '0042_auto_20161130_1446'), (b'contentcuration', '0043_merge'), (b'contentcuration', '0044_auto_20170119_1033'), (b'contentcuration', '0045_auto_20170119_1429'), (b'contentcuration', '0047_merge'), (b'contentcuration', '0048_auto_20170119_1732'), (b'contentcuration',
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            '0049_merge'), (b'contentcuration', '0050_auto_20170125_1018'), (b'contentcuration', '0051_auto_20170126_1633'), (b'contentcuration', '0052_auto_20170201_1155'), (b'contentcuration', '0051_auto_20170126_1012'), (b'contentcuration', '0053_merge'), (b'contentcuration', '0054_language_native_name'), (b'contentcuration', '0052_auto_20170130_0931'), (b'contentcuration', '0055_merge'), (b'contentcuration', '0056_assessmentitem_randomize'), (b'contentcuration', '0057_auto_20170223_1558'), (b'contentcuration', '0058_auto_20170223_1636'), (b'contentcuration', '0057_assessmentitem_deleted'), (b'contentcuration', '0059_merge'), (b'contentcuration', '0059_channelresourcesize'), (b'contentcuration', '0059_auto_20170402_1504'), (b'contentcuration', '0060_merge'), (b'contentcuration', '0061_auto_20170327_1344'), (b'contentcuration', '0062_merge'), (b'contentcuration', '0063_auto_20170411_1249'), (b'contentcuration', '0064_auto_20170411_1328'), (b'contentcuration', '0065_auto_20170411_1609'), (b'contentcuration', '0066_auto_20170412_0015'), (b'contentcuration', '0067_auto_20170427_1442'), (b'contentcuration', '0068_auto_20170519_1337'), (b'contentcuration', '0069_channel_preferences'), (b'contentcuration', '0068_auto_20170509_1456'), (b'contentcuration', '0070_merge'), (b'contentcuration', '0069_auto_20170605_2122'), (b'contentcuration', '0071_merge'), (b'contentcuration', '0072_contentnode_language'), (b'contentcuration', '0072_auto_20170731_2153'), (b'contentcuration', '0073_merge'), (b'contentcuration', '0074_channel_priority'), (b'contentcuration', '0073_auto_20170911_1837'), (b'contentcuration', '0075_merge'), (b'contentcuration', '0076_auto_20171003_1847'), (b'contentcuration', '0076_auto_20170927_1817'), (b'contentcuration', '0077_merge'), (b'contentcuration', '0078_auto_20171024_1207'), (b'contentcuration', '0079_contentnode_publishing'), (b'contentcuration', '0080_user_information'), (b'contentcuration', '0081_auto_20180314_1631'), (b'contentcuration', '0080_auto_20180314_1756'), (b'contentcuration', '0082_merge'), (b'contentcuration', '0079_auto_20180326_1448'), (b'contentcuration', '0083_merge'), (b'contentcuration', '0084_auto_20180329_1051'), (b'contentcuration', '0085_user_policies'), (b'contentcuration', '0086_auto_20180626_1055'), (b'contentcuration', '0085_auto_20180605_1714'), (b'contentcuration', '0087_merge'), (b'contentcuration', '0088_auto_20180705_2007'), (b'contentcuration', '0089_auto_20180706_2242'), (b'contentcuration', '0091_auto_20180724_2243'), (b'contentcuration', '0092_auto_20180731_1024'), (b'contentcuration', '0093_auto_20180831_0745'), (b'contentcuration', '0094_auto_20180910_2342')]
+    replaces = [('contentcuration', '0001_initial'), ('contentcuration', '0002_language_readable_name'), ('contentcuration', '0003_user_clipboard_tree'), ('contentcuration', '0004_auto_20160720_1220'), ('contentcuration', '0005_auto_20160816_1720'), ('contentcuration', '0006_contentnode_published'), ('contentcuration', '0005_formatpreset_thumbnail'), ('contentcuration', '0007_merge'), ('contentcuration', '0008_channel_published'), ('contentcuration', '0009_remove_channel_published'), ('contentcuration', '0010_auto_20160830_1740'), ('contentcuration', '0011_file_source_url'), ('contentcuration', '0012_auto_20160907_1444'), ('contentcuration', '0013_contentnode_node_id'), ('contentcuration', '0014_channel_language'), ('contentcuration', '0015_auto_20160914_1640'), ('contentcuration', '0016_auto_20160915_1206'), ('contentcuration', '0015_auto_20160916_1349'), ('contentcuration', '0017_merge'), ('contentcuration', '0018_auto_20160919_1533'), ('contentcuration', '0019_auto_20160919_1559'), ('contentcuration', '0020_auto_20160919_1617'), ('contentcuration', '0021_auto_20160919_1620'), ('contentcuration', '0022_auto_20160920_1119'), ('contentcuration', '0023_contentnode_extra_fields'), ('contentcuration', '0024_auto_20160920_1136'), ('contentcuration', '0025_auto_20160921_1356'), ('contentcuration', '0026_merge'), ('contentcuration', '0027_auto_20160926_0945'), ('contentcuration', '0028_auto_20160926_1527'), ('contentcuration', '0029_auto_20161005_0933'), ('contentcuration', '0030_auto_20161005_0935'), ('contentcuration', '0031_auto_20161010_1143'), ('contentcuration', '0032_auto_20161010_1202'), ('contentcuration', '0033_auto_20161012_1344'), ('contentcuration', '0034_auto_20161014_1509'), ('contentcuration', '0035_auto_20161018_1438'), ('contentcuration', '0036_auto_20161018_1536'), ('contentcuration', '0037_remove_contentnode_author'), ('contentcuration', '0038_contentnode_author'), ('contentcuration', '0039_auto_20161101_1555'), ('contentcuration', '0040_file_assessment_item'), ('contentcuration', '0041_channel_previous_tree'), ('contentcuration', '0042_auto_20161206_1641'), ('contentcuration', '0043_channel_viewers'), ('contentcuration', '0042_auto_20161205_1622'), ('contentcuration', '0044_merge'), ('contentcuration', '0045_invitation_viewonly'), ('contentcuration', '0046_auto_20161222_1210'), ('contentcuration', '0042_auto_20161130_1446'), ('contentcuration', '0043_merge'), ('contentcuration', '0044_auto_20170119_1033'), ('contentcuration', '0045_auto_20170119_1429'), ('contentcuration', '0047_merge'), ('contentcuration', '0048_auto_20170119_1732'), ('contentcuration',
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            '0049_merge'), ('contentcuration', '0050_auto_20170125_1018'), ('contentcuration', '0051_auto_20170126_1633'), ('contentcuration', '0052_auto_20170201_1155'), ('contentcuration', '0051_auto_20170126_1012'), ('contentcuration', '0053_merge'), ('contentcuration', '0054_language_native_name'), ('contentcuration', '0052_auto_20170130_0931'), ('contentcuration', '0055_merge'), ('contentcuration', '0056_assessmentitem_randomize'), ('contentcuration', '0057_auto_20170223_1558'), ('contentcuration', '0058_auto_20170223_1636'), ('contentcuration', '0057_assessmentitem_deleted'), ('contentcuration', '0059_merge'), ('contentcuration', '0059_channelresourcesize'), ('contentcuration', '0059_auto_20170402_1504'), ('contentcuration', '0060_merge'), ('contentcuration', '0061_auto_20170327_1344'), ('contentcuration', '0062_merge'), ('contentcuration', '0063_auto_20170411_1249'), ('contentcuration', '0064_auto_20170411_1328'), ('contentcuration', '0065_auto_20170411_1609'), ('contentcuration', '0066_auto_20170412_0015'), ('contentcuration', '0067_auto_20170427_1442'), ('contentcuration', '0068_auto_20170519_1337'), ('contentcuration', '0069_channel_preferences'), ('contentcuration', '0068_auto_20170509_1456'), ('contentcuration', '0070_merge'), ('contentcuration', '0069_auto_20170605_2122'), ('contentcuration', '0071_merge'), ('contentcuration', '0072_contentnode_language'), ('contentcuration', '0072_auto_20170731_2153'), ('contentcuration', '0073_merge'), ('contentcuration', '0074_channel_priority'), ('contentcuration', '0073_auto_20170911_1837'), ('contentcuration', '0075_merge'), ('contentcuration', '0076_auto_20171003_1847'), ('contentcuration', '0076_auto_20170927_1817'), ('contentcuration', '0077_merge'), ('contentcuration', '0078_auto_20171024_1207'), ('contentcuration', '0079_contentnode_publishing'), ('contentcuration', '0080_user_information'), ('contentcuration', '0081_auto_20180314_1631'), ('contentcuration', '0080_auto_20180314_1756'), ('contentcuration', '0082_merge'), ('contentcuration', '0079_auto_20180326_1448'), ('contentcuration', '0083_merge'), ('contentcuration', '0084_auto_20180329_1051'), ('contentcuration', '0085_user_policies'), ('contentcuration', '0086_auto_20180626_1055'), ('contentcuration', '0085_auto_20180605_1714'), ('contentcuration', '0087_merge'), ('contentcuration', '0088_auto_20180705_2007'), ('contentcuration', '0089_auto_20180706_2242'), ('contentcuration', '0091_auto_20180724_2243'), ('contentcuration', '0092_auto_20180731_1024'), ('contentcuration', '0093_auto_20180831_0745'), ('contentcuration', '0094_auto_20180910_2342')]
 
     initial = True
 
@@ -48,9 +48,9 @@ class Migration(migrations.Migration):
             name='AssessmentItem',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('type', models.CharField(default=b'multiplechoice', max_length=50)),
+                ('type', models.CharField(default='multiplechoice', max_length=50)),
                 ('question', models.TextField(blank=True)),
-                ('answers', models.TextField(default=b'[]')),
+                ('answers', models.TextField(default='[]')),
             ],
         ),
         migrations.CreateModel(
@@ -73,8 +73,8 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='ContentKind',
             fields=[
-                ('kind', models.CharField(choices=[(b'topic', 'Topic'), (b'video', 'Video'), (b'audio', 'Audio'), (b'exercise',
-                                                                                                                   'Exercise'), (b'document', 'Document'), (b'image', 'Image')], max_length=200, primary_key=True, serialize=False)),
+                ('kind', models.CharField(choices=[('topic', 'Topic'), ('video', 'Video'), ('audio', 'Audio'), ('exercise',
+                                                                                                                   'Exercise'), ('document', 'Document'), ('image', 'Image')], max_length=200, primary_key=True, serialize=False)),
             ],
         ),
         migrations.CreateModel(
@@ -131,21 +131,21 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='FileFormat',
             fields=[
-                ('extension', models.CharField(choices=[(b'mp4', 'mp4'), (b'vtt', 'vtt'), (b'srt', 'srt'),
-                                                        (b'mp3', 'mp3'), (b'pdf', 'pdf')], max_length=40, primary_key=True, serialize=False)),
+                ('extension', models.CharField(choices=[('mp4', 'mp4'), ('vtt', 'vtt'), ('srt', 'srt'),
+                                                        ('mp3', 'mp3'), ('pdf', 'pdf')], max_length=40, primary_key=True, serialize=False)),
                 ('mimetype', models.CharField(blank=True, max_length=200)),
             ],
         ),
         migrations.CreateModel(
             name='FormatPreset',
             fields=[
-                ('id', models.CharField(choices=[(b'high_res_video', b'High Resolution'), (b'low_res_video', b'Low Resolution'), (b'vector_video', b'Vectorized'), (b'video_thumbnail', b'Thumbnail'), (b'video_subtitle', b'Subtitle'), (b'video_dependency', b'Video (dependency)'), (b'audio', b'Audio'), (b'audio_thumbnail', b'Thumbnail'), (b'document', b'Document'), (b'epub', b'ePub Document'), (b'document_thumbnail', b'Thumbnail'), (
-                    b'exercise', b'Exercise'), (b'exercise_thumbnail', b'Thumbnail'), (b'exercise_image', b'Exercise Image'), (b'exercise_graphie', b'Exercise Graphie'), (b'channel_thumbnail', b'Channel Thumbnail'), (b'topic_thumbnail', b'Thumbnail'), (b'html5_zip', b'HTML5 Zip'), (b'html5_dependency', b'HTML5 Dependency (Zip format)'), (b'html5_thumbnail', b'HTML5 Thumbnail')], max_length=150, primary_key=True, serialize=False)),
+                ('id', models.CharField(choices=[('high_res_video', 'High Resolution'), ('low_res_video', 'Low Resolution'), ('vector_video', 'Vectorized'), ('video_thumbnail', 'Thumbnail'), ('video_subtitle', 'Subtitle'), ('video_dependency', 'Video (dependency)'), ('audio', 'Audio'), ('audio_thumbnail', 'Thumbnail'), ('document', 'Document'), ('epub', 'ePub Document'), ('document_thumbnail', 'Thumbnail'), (
+                    'exercise', 'Exercise'), ('exercise_thumbnail', 'Thumbnail'), ('exercise_image', 'Exercise Image'), ('exercise_graphie', 'Exercise Graphie'), ('channel_thumbnail', 'Channel Thumbnail'), ('topic_thumbnail', 'Thumbnail'), ('html5_zip', 'HTML5 Zip'), ('html5_dependency', 'HTML5 Dependency (Zip format)'), ('html5_thumbnail', 'HTML5 Thumbnail')], max_length=150, primary_key=True, serialize=False)),
                 ('readable_name', models.CharField(max_length=400)),
                 ('multi_language', models.BooleanField(default=False)),
                 ('supplementary', models.BooleanField(default=False)),
                 ('order', models.IntegerField(default=0)),
-                ('allowed_formats', models.ManyToManyField(blank=True, to=b'contentcuration.FileFormat')),
+                ('allowed_formats', models.ManyToManyField(blank=True, to='contentcuration.FileFormat')),
                 ('kind', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='format_presets', to='contentcuration.ContentKind')),
                 ('thumbnail', models.BooleanField(default=False)),
                 ('display', models.BooleanField(default=True)),
@@ -157,12 +157,12 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', contentcuration.models.UUIDField(default=uuid.uuid4, max_length=32, primary_key=True, serialize=False)),
                 ('email', models.EmailField(max_length=100, null=True)),
-                ('first_name', models.CharField(default=b'Guest', max_length=100)),
+                ('first_name', models.CharField(default='Guest', max_length=100)),
                 ('last_name', models.CharField(blank=True, max_length=100, null=True)),
                 ('channel', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='pending_editors', to='contentcuration.Channel')),
                 ('invited', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='sent_to', to=settings.AUTH_USER_MODEL)),
                 ('sender', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='sent_by', to=settings.AUTH_USER_MODEL)),
-                ('share_mode', models.CharField(default=b'edit', max_length=50)),
+                ('share_mode', models.CharField(default='edit', max_length=50)),
             ],
             options={
                 'verbose_name': 'Invitation',
@@ -177,7 +177,7 @@ class Migration(migrations.Migration):
                 ('lang_subcode', models.CharField(blank=True, db_index=True, max_length=10, null=True)),
                 ('readable_name', models.CharField(blank=True, max_length=100)),
                 ('native_name', models.CharField(blank=True, max_length=100)),
-                ('lang_direction', models.CharField(choices=[(b'ltr', b'Left to Right'), (b'rtl', b'Right to Left')], default=b'ltr', max_length=3)),
+                ('lang_direction', models.CharField(choices=[('ltr', 'Left to Right'), ('rtl', 'Right to Left')], default='ltr', max_length=3)),
             ],
         ),
         migrations.CreateModel(
@@ -232,7 +232,7 @@ class Migration(migrations.Migration):
             model_name='contentnode',
             name='is_related',
             field=models.ManyToManyField(blank=True, related_name='relate_to',
-                                         through='contentcuration.RelatedContentRelationship', to=b'contentcuration.ContentNode'),
+                                         through='contentcuration.RelatedContentRelationship', to='contentcuration.ContentNode'),
         ),
         migrations.AddField(
             model_name='contentnode',
@@ -260,12 +260,12 @@ class Migration(migrations.Migration):
             model_name='contentnode',
             name='prerequisite',
             field=models.ManyToManyField(blank=True, related_name='is_prerequisite_of',
-                                         through='contentcuration.PrerequisiteContentRelationship', to=b'contentcuration.ContentNode'),
+                                         through='contentcuration.PrerequisiteContentRelationship', to='contentcuration.ContentNode'),
         ),
         migrations.AddField(
             model_name='contentnode',
             name='tags',
-            field=models.ManyToManyField(blank=True, related_name='tagged_content', to=b'contentcuration.ContentTag'),
+            field=models.ManyToManyField(blank=True, related_name='tagged_content', to='contentcuration.ContentTag'),
         ),
         migrations.AddField(
             model_name='channel',
@@ -343,14 +343,14 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='contentkind',
             name='kind',
-            field=models.CharField(choices=[(b'topic', 'Topic'), (b'video', 'Video'), (b'audio', 'Audio'), (b'exercise',
-                                                                                                            'Exercise'), (b'document', 'Document')], max_length=200, primary_key=True, serialize=False),
+            field=models.CharField(choices=[('topic', 'Topic'), ('video', 'Video'), ('audio', 'Audio'), ('exercise',
+                                                                                                            'Exercise'), ('document', 'Document')], max_length=200, primary_key=True, serialize=False),
         ),
         migrations.AlterField(
             model_name='fileformat',
             name='extension',
-            field=models.CharField(choices=[(b'mp4', 'mp4'), (b'vtt', 'vtt'), (b'srt', 'srt'), (b'mp3', 'mp3'), (b'wav', 'wav'), (b'pdf', 'pdf'),
-                                            (b'jpg', 'jpg'), (b'jpeg', 'jpeg'), (b'png', 'png'), (b'perseus', 'perseus')], max_length=40, primary_key=True, serialize=False),
+            field=models.CharField(choices=[('mp4', 'mp4'), ('vtt', 'vtt'), ('srt', 'srt'), ('mp3', 'mp3'), ('wav', 'wav'), ('pdf', 'pdf'),
+                                            ('jpg', 'jpg'), ('jpeg', 'jpeg'), ('png', 'png'), ('perseus', 'perseus')], max_length=40, primary_key=True, serialize=False),
         ),
         migrations.AddField(
             model_name='contentnode',
@@ -376,8 +376,8 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='exercise',
             name='mastery_model',
-            field=models.CharField(choices=[(b'do_all', b'Do all'), (b'num_correct_in_a_row_2', b'2 in a row'), (b'num_correct_in_a_row_10', b'10 in a row'), (
-                b'num_correct_in_a_row_3', b'3 in a row'), (b'num_correct_in_a_row_5', b'5 in a row'), (b'skill_check', b'Skill check'), (b'm_of_n', b'M out of N')], default=b'do_all', max_length=200),
+            field=models.CharField(choices=[('do_all', 'Do all'), ('num_correct_in_a_row_2', '2 in a row'), ('num_correct_in_a_row_10', '10 in a row'), (
+                'num_correct_in_a_row_3', '3 in a row'), ('num_correct_in_a_row_5', '5 in a row'), ('skill_check', 'Skill check'), ('m_of_n', 'M out of N')], default='do_all', max_length=200),
         ),
         migrations.AddField(
             model_name='assessmentitem',
@@ -413,13 +413,13 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='assessmentitem',
             name='hints',
-            field=models.TextField(default=b'[]'),
+            field=models.TextField(default='[]'),
         ),
         migrations.AlterField(
             model_name='fileformat',
             name='extension',
-            field=models.CharField(choices=[(b'mp4', b'mp4'), (b'vtt', b'vtt'), (b'srt', b'srt'), (b'mp3', b'mp3'), (b'wav', b'wav'), (b'pdf', b'pdf'), (b'jpg', b'jpg'), (
-                b'jpeg', b'jpeg'), (b'png', b'png'), (b'json', b'json'), (b'svg', b'svg'), (b'perseus', b'perseus')], max_length=40, primary_key=True, serialize=False),
+            field=models.CharField(choices=[('mp4', 'mp4'), ('vtt', 'vtt'), ('srt', 'srt'), ('mp3', 'mp3'), ('wav', 'wav'), ('pdf', 'pdf'), ('jpg', 'jpg'), (
+                'jpeg', 'jpeg'), ('png', 'png'), ('json', 'json'), ('svg', 'svg'), ('perseus', 'perseus')], max_length=40, primary_key=True, serialize=False),
         ),
         migrations.RemoveField(
             model_name='contentnode',
@@ -428,7 +428,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='contentnode',
             name='author',
-            field=models.CharField(blank=True, default=b'', help_text='Who created this content?', max_length=200, null=True),
+            field=models.CharField(blank=True, default='', help_text='Who created this content?', max_length=200, null=True),
         ),
         migrations.AddField(
             model_name='file',
@@ -450,14 +450,14 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='contentkind',
             name='kind',
-            field=models.CharField(choices=[(b'topic', b'Topic'), (b'video', b'Video'), (b'audio', b'Audio'), (b'exercise', b'Exercise'),
-                                            (b'document', b'Document'), (b'html5', b'HTML5 App')], max_length=200, primary_key=True, serialize=False),
+            field=models.CharField(choices=[('topic', 'Topic'), ('video', 'Video'), ('audio', 'Audio'), ('exercise', 'Exercise'),
+                                            ('document', 'Document'), ('html5', 'HTML5 App')], max_length=200, primary_key=True, serialize=False),
         ),
         migrations.AlterField(
             model_name='fileformat',
             name='extension',
-            field=models.CharField(choices=[(b'mp4', b'MP4 Video'), (b'vtt', b'VTT Subtitle'), (b'srt', b'SRT Subtitle'), (b'mp3', b'MP3 Audio'), (b'wav', b'WAV Audio'), (b'pdf', b'PDF Document'), (b'jpg', b'JPG Image'), (
-                b'jpeg', b'JPEG Image'), (b'png', b'PNG Image'), (b'json', b'JSON'), (b'svg', b'SVG Image'), (b'perseus', b'Perseus Exercise'), (b'zip', b'HTML5 Zip')], max_length=40, primary_key=True, serialize=False),
+            field=models.CharField(choices=[('mp4', 'MP4 Video'), ('vtt', 'VTT Subtitle'), ('srt', 'SRT Subtitle'), ('mp3', 'MP3 Audio'), ('wav', 'WAV Audio'), ('pdf', 'PDF Document'), ('jpg', 'JPG Image'), (
+                'jpeg', 'JPEG Image'), ('png', 'PNG Image'), ('json', 'JSON'), ('svg', 'SVG Image'), ('perseus', 'Perseus Exercise'), ('zip', 'HTML5 Zip')], max_length=40, primary_key=True, serialize=False),
         ),
         migrations.AddField(
             model_name='channel',
@@ -473,8 +473,8 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='contentkind',
             name='kind',
-            field=models.CharField(choices=[(b'topic', b'Topic'), (b'video', b'Video'), (b'audio', b'Audio'), (b'exercise', b'Exercise'),
-                                            (b'document', b'Document'), (b'html5', b'HTML5 App')], max_length=200, primary_key=True, serialize=False),
+            field=models.CharField(choices=[('topic', 'Topic'), ('video', 'Video'), ('audio', 'Audio'), ('exercise', 'Exercise'),
+                                            ('document', 'Document'), ('html5', 'HTML5 App')], max_length=200, primary_key=True, serialize=False),
         ),
         migrations.AlterField(
             model_name='contentnode',
@@ -484,8 +484,8 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='fileformat',
             name='extension',
-            field=models.CharField(choices=[(b'mp4', b'MP4 Video'), (b'vtt', b'VTT Subtitle'), (b'srt', b'SRT Subtitle'), (b'mp3', b'MP3 Audio'), (b'wav', b'WAV Audio'), (b'pdf', b'PDF Document'), (b'jpg', b'JPG Image'), (
-                b'jpeg', b'JPEG Image'), (b'png', b'PNG Image'), (b'json', b'JSON'), (b'svg', b'SVG Image'), (b'perseus', b'Perseus Exercise'), (b'zip', b'HTML5 Zip')], max_length=40, primary_key=True, serialize=False),
+            field=models.CharField(choices=[('mp4', 'MP4 Video'), ('vtt', 'VTT Subtitle'), ('srt', 'SRT Subtitle'), ('mp3', 'MP3 Audio'), ('wav', 'WAV Audio'), ('pdf', 'PDF Document'), ('jpg', 'JPG Image'), (
+                'jpeg', 'JPEG Image'), ('png', 'PNG Image'), ('json', 'JSON'), ('svg', 'SVG Image'), ('perseus', 'Perseus Exercise'), ('zip', 'HTML5 Zip')], max_length=40, primary_key=True, serialize=False),
         ),
         migrations.AlterField(
             model_name='channel',
@@ -495,14 +495,14 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='contentkind',
             name='kind',
-            field=models.CharField(choices=[(b'topic', b'Topic'), (b'video', b'Video'), (b'audio', b'Audio'), (b'exercise', b'Exercise'),
-                                            (b'document', b'Document'), (b'html5', b'HTML5 App')], max_length=200, primary_key=True, serialize=False),
+            field=models.CharField(choices=[('topic', 'Topic'), ('video', 'Video'), ('audio', 'Audio'), ('exercise', 'Exercise'),
+                                            ('document', 'Document'), ('html5', 'HTML5 App')], max_length=200, primary_key=True, serialize=False),
         ),
         migrations.AlterField(
             model_name='fileformat',
             name='extension',
-            field=models.CharField(choices=[(b'mp4', b'MP4 Video'), (b'vtt', b'VTT Subtitle'), (b'srt', b'SRT Subtitle'), (b'mp3', b'MP3 Audio'), (b'wav', b'WAV Audio'), (b'pdf', b'PDF Document'), (b'jpg', b'JPG Image'), (
-                b'jpeg', b'JPEG Image'), (b'png', b'PNG Image'), (b'json', b'JSON'), (b'svg', b'SVG Image'), (b'perseus', b'Perseus Exercise'), (b'zip', b'HTML5 Zip')], max_length=40, primary_key=True, serialize=False),
+            field=models.CharField(choices=[('mp4', 'MP4 Video'), ('vtt', 'VTT Subtitle'), ('srt', 'SRT Subtitle'), ('mp3', 'MP3 Audio'), ('wav', 'WAV Audio'), ('pdf', 'PDF Document'), ('jpg', 'JPG Image'), (
+                'jpeg', 'JPEG Image'), ('png', 'PNG Image'), ('json', 'JSON'), ('svg', 'SVG Image'), ('perseus', 'Perseus Exercise'), ('zip', 'HTML5 Zip')], max_length=40, primary_key=True, serialize=False),
         ),
         migrations.AddField(
             model_name='contentnode',
@@ -517,7 +517,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='contentnode',
             name='copyright_holder',
-            field=models.CharField(blank=True, default=b'', help_text='Organization of person who holds the essential rights', max_length=200),
+            field=models.CharField(blank=True, default='', help_text='Organization of person who holds the essential rights', max_length=200),
         ),
         migrations.AddField(
             model_name='contentnode',
@@ -537,8 +537,8 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='fileformat',
             name='extension',
-            field=models.CharField(choices=[(b'mp4', b'MP4 Video'), (b'vtt', b'VTT Subtitle'), (b'srt', b'SRT Subtitle'), (b'mp3', b'MP3 Audio'), (b'pdf', b'PDF Document'), (b'jpg', b'JPG Image'), (b'jpeg', b'JPEG Image'), (
-                b'png', b'PNG Image'), (b'gif', b'GIF Image'), (b'json', b'JSON'), (b'svg', b'SVG Image'), (b'perseus', b'Perseus Exercise'), (b'zip', b'HTML5 Zip')], max_length=40, primary_key=True, serialize=False),
+            field=models.CharField(choices=[('mp4', 'MP4 Video'), ('vtt', 'VTT Subtitle'), ('srt', 'SRT Subtitle'), ('mp3', 'MP3 Audio'), ('pdf', 'PDF Document'), ('jpg', 'JPG Image'), ('jpeg', 'JPEG Image'), (
+                'png', 'PNG Image'), ('gif', 'GIF Image'), ('json', 'JSON'), ('svg', 'SVG Image'), ('perseus', 'Perseus Exercise'), ('zip', 'HTML5 Zip')], max_length=40, primary_key=True, serialize=False),
         ),
         migrations.AddField(
             model_name='channel',
@@ -622,7 +622,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='user',
             name='preferences',
-            field=models.TextField(default=b'{"auto_derive_exercise_thumbnail": true, "auto_derive_video_thumbnail": true, "m_value": 5, "language": null, "license": null, "author": null, "aggregator": null, "auto_randomize_questions": true, "auto_derive_document_thumbnail": true, "copyright_holder": null, "auto_derive_html5_thumbnail": true, "provider": null, "auto_derive_audio_thumbnail": true, "license_description": null, "n_value": 5, "mastery_model": "num_correct_in_a_row_5"}'),
+            field=models.TextField(default='{"auto_derive_exercise_thumbnail": true, "auto_derive_video_thumbnail": true, "m_value": 5, "language": null, "license": null, "author": null, "aggregator": null, "auto_randomize_questions": true, "auto_derive_document_thumbnail": true, "copyright_holder": null, "auto_derive_html5_thumbnail": true, "provider": null, "auto_derive_audio_thumbnail": true, "license_description": null, "n_value": 5, "mastery_model": "num_correct_in_a_row_5"}'),
         ),
         migrations.AddField(
             model_name='contentnode',
@@ -632,7 +632,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='contentnode',
             name='copyright_holder',
-            field=models.CharField(blank=True, default=b'', help_text='Organization of person who holds the essential rights', max_length=200, null=True),
+            field=models.CharField(blank=True, default='', help_text='Organization of person who holds the essential rights', max_length=200, null=True),
         ),
         migrations.AddField(
             model_name='user',
@@ -643,7 +643,7 @@ class Migration(migrations.Migration):
             model_name='user',
             name='groups',
             field=models.ManyToManyField(blank=True, help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.',
-                                         related_name='user_set', related_query_name='user', to=b'auth.Group', verbose_name='groups'),
+                                         related_name='user_set', related_query_name='user', to='auth.Group', verbose_name='groups'),
         ),
         migrations.AddField(
             model_name='user',
@@ -660,7 +660,7 @@ class Migration(migrations.Migration):
             model_name='user',
             name='user_permissions',
             field=models.ManyToManyField(blank=True, help_text='Specific permissions for this user.', related_name='user_set',
-                                         related_query_name='user', to=b'auth.Permission', verbose_name='user permissions'),
+                                         related_query_name='user', to='auth.Permission', verbose_name='user permissions'),
         ),
         migrations.AlterField(
             model_name='user',
@@ -676,7 +676,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='channel',
             name='preferences',
-            field=models.TextField(default=b'{"auto_derive_exercise_thumbnail": true, "auto_derive_video_thumbnail": true, "m_value": 5, "language": null, "license": null, "author": null, "aggregator": null, "auto_randomize_questions": true, "auto_derive_document_thumbnail": true, "copyright_holder": null, "auto_derive_html5_thumbnail": true, "provider": null, "auto_derive_audio_thumbnail": true, "license_description": null, "n_value": 5, "mastery_model": "num_correct_in_a_row_5"}'),
+            field=models.TextField(default='{"auto_derive_exercise_thumbnail": true, "auto_derive_video_thumbnail": true, "m_value": 5, "language": null, "license": null, "author": null, "aggregator": null, "auto_randomize_questions": true, "auto_derive_document_thumbnail": true, "copyright_holder": null, "auto_derive_html5_thumbnail": true, "provider": null, "auto_derive_audio_thumbnail": true, "license_description": null, "n_value": 5, "mastery_model": "num_correct_in_a_row_5"}'),
         ),
         migrations.AddField(
             model_name='channel',
@@ -710,7 +710,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='channel',
             name='secret_tokens',
-            field=models.ManyToManyField(blank=True, related_name='channels', to=b'contentcuration.SecretToken', verbose_name='secret tokens'),
+            field=models.ManyToManyField(blank=True, related_name='channels', to='contentcuration.SecretToken', verbose_name='secret tokens'),
         ),
         migrations.AddField(
             model_name='channel',
@@ -764,7 +764,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='channel',
             name='included_languages',
-            field=models.ManyToManyField(blank=True, related_name='channels', to=b'contentcuration.Language', verbose_name='languages'),
+            field=models.ManyToManyField(blank=True, related_name='channels', to='contentcuration.Language', verbose_name='languages'),
         ),
         migrations.AddField(
             model_name='channel',
@@ -794,14 +794,14 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='fileformat',
             name='extension',
-            field=models.CharField(choices=[(b'mp4', b'MP4 Video'), (b'vtt', b'VTT Subtitle'), (b'srt', b'SRT Subtitle'), (b'mp3', b'MP3 Audio'), (b'pdf', b'PDF Document'), (b'jpg', b'JPG Image'), (b'jpeg', b'JPEG Image'), (
-                b'png', b'PNG Image'), (b'gif', b'GIF Image'), (b'json', b'JSON'), (b'svg', b'SVG Image'), (b'perseus', b'Perseus Exercise'), (b'zip', b'HTML5 Zip'), (b'epub', b'ePub Document')], max_length=40, primary_key=True, serialize=False),
+            field=models.CharField(choices=[('mp4', 'MP4 Video'), ('vtt', 'VTT Subtitle'), ('srt', 'SRT Subtitle'), ('mp3', 'MP3 Audio'), ('pdf', 'PDF Document'), ('jpg', 'JPG Image'), ('jpeg', 'JPEG Image'), (
+                'png', 'PNG Image'), ('gif', 'GIF Image'), ('json', 'JSON'), ('svg', 'SVG Image'), ('perseus', 'Perseus Exercise'), ('zip', 'HTML5 Zip'), ('epub', 'ePub Document')], max_length=40, primary_key=True, serialize=False),
         ),
         migrations.AlterField(
             model_name='fileformat',
             name='extension',
-            field=models.CharField(choices=[(b'mp4', b'MP4 Video'), (b'vtt', b'VTT Subtitle'), (b'srt', b'SRT Subtitle'), (b'mp3', b'MP3 Audio'), (b'pdf', b'PDF Document'), (b'jpg', b'JPG Image'), (b'jpeg', b'JPEG Image'), (
-                b'png', b'PNG Image'), (b'gif', b'GIF Image'), (b'json', b'JSON'), (b'svg', b'SVG Image'), (b'perseus', b'Perseus Exercise'), (b'zip', b'HTML5 Zip'), (b'epub', b'ePub Document')], max_length=40, primary_key=True, serialize=False),
+            field=models.CharField(choices=[('mp4', 'MP4 Video'), ('vtt', 'VTT Subtitle'), ('srt', 'SRT Subtitle'), ('mp3', 'MP3 Audio'), ('pdf', 'PDF Document'), ('jpg', 'JPG Image'), ('jpeg', 'JPEG Image'), (
+                'png', 'PNG Image'), ('gif', 'GIF Image'), ('json', 'JSON'), ('svg', 'SVG Image'), ('perseus', 'Perseus Exercise'), ('zip', 'HTML5 Zip'), ('epub', 'ePub Document')], max_length=40, primary_key=True, serialize=False),
         ),
         migrations.AddField(
             model_name='channel',
@@ -815,13 +815,13 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='contentnode',
             name='role_visibility',
-            field=models.CharField(choices=[(b'coach', b'Coach'), (b'learner', b'Learner')], default=b'learner', max_length=50),
+            field=models.CharField(choices=[('coach', 'Coach'), ('learner', 'Learner')], default='learner', max_length=50),
         ),
         migrations.AlterField(
             model_name='fileformat',
             name='extension',
-            field=models.CharField(choices=[(b'mp4', b'MP4 Video'), (b'vtt', b'VTT Subtitle'), (b'srt', b'SRT Subtitle'), (b'mp3', b'MP3 Audio'), (b'pdf', b'PDF Document'), (b'jpg', b'JPG Image'), (b'jpeg', b'JPEG Image'), (
-                b'png', b'PNG Image'), (b'gif', b'GIF Image'), (b'json', b'JSON'), (b'svg', b'SVG Image'), (b'perseus', b'Perseus Exercise'), (b'zip', b'HTML5 Zip'), (b'epub', b'ePub Document')], max_length=40, primary_key=True, serialize=False),
+            field=models.CharField(choices=[('mp4', 'MP4 Video'), ('vtt', 'VTT Subtitle'), ('srt', 'SRT Subtitle'), ('mp3', 'MP3 Audio'), ('pdf', 'PDF Document'), ('jpg', 'JPG Image'), ('jpeg', 'JPEG Image'), (
+                'png', 'PNG Image'), ('gif', 'GIF Image'), ('json', 'JSON'), ('svg', 'SVG Image'), ('perseus', 'Perseus Exercise'), ('zip', 'HTML5 Zip'), ('epub', 'ePub Document')], max_length=40, primary_key=True, serialize=False),
         ),
         migrations.AddField(
             model_name='user',
@@ -836,12 +836,12 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='contentnode',
             name='aggregator',
-            field=models.CharField(blank=True, default=b'', help_text='Who gathered this content together?', max_length=200, null=True),
+            field=models.CharField(blank=True, default='', help_text='Who gathered this content together?', max_length=200, null=True),
         ),
         migrations.AddField(
             model_name='contentnode',
             name='provider',
-            field=models.CharField(blank=True, default=b'', help_text='Who distributed this content?', max_length=200, null=True),
+            field=models.CharField(blank=True, default='', help_text='Who distributed this content?', max_length=200, null=True),
         ),
         migrations.AlterField(
             model_name='contentnode',
@@ -856,7 +856,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='fileformat',
             name='extension',
-            field=models.CharField(choices=[(b'mp4', b'MP4 Video'), (b'vtt', b'VTT Subtitle'), (b'mp3', b'MP3 Audio'), (b'pdf', b'PDF Document'), (b'jpg', b'JPG Image'), (b'jpeg', b'JPEG Image'), (b'png', b'PNG Image'), (b'gif', b'GIF Image'), (
-                b'json', b'JSON'), (b'svg', b'SVG Image'), (b'perseus', b'Perseus Exercise'), (b'graphie', b'Graphie Exercise'), (b'zip', b'HTML5 Zip'), (b'epub', b'ePub Document')], max_length=40, primary_key=True, serialize=False),
+            field=models.CharField(choices=[('mp4', 'MP4 Video'), ('vtt', 'VTT Subtitle'), ('mp3', 'MP3 Audio'), ('pdf', 'PDF Document'), ('jpg', 'JPG Image'), ('jpeg', 'JPEG Image'), ('png', 'PNG Image'), ('gif', 'GIF Image'), (
+                'json', 'JSON'), ('svg', 'SVG Image'), ('perseus', 'Perseus Exercise'), ('graphie', 'Graphie Exercise'), ('zip', 'HTML5 Zip'), ('epub', 'ePub Document')], max_length=40, primary_key=True, serialize=False),
         ),
     ]

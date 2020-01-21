@@ -1,13 +1,15 @@
+from __future__ import absolute_import
+
 import json
 
-from base import BaseAPITestCase
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
-from testdata import create_test_file
-from testdata import invalid_file_json
-from testdata import node_json
-from testdata import user
 
+from .base import BaseAPITestCase
+from .testdata import create_test_file
+from .testdata import invalid_file_json
+from .testdata import node_json
+from .testdata import user
 from contentcuration import models as cc
 
 
@@ -116,14 +118,14 @@ class ChefTestCase(BaseAPITestCase):
         assert response.status_code == 500
 
     def test_file_upload_bad_hash(self):
-        file_data = create_test_file("Just some data.")
+        file_data = create_test_file(b"Just some data.")
         f = SimpleUploadedFile("myfile.txt", file_data['data'])
         response = self.post(self.file_upload_url, {'file': f}, format='multipart')
         # shoulf fail because api_file_upload calls write_file_to_storage with check_valid=True
         assert response.status_code == 500
 
     def test_file_upload(self):
-        file_data = create_test_file("Just some data.")
+        file_data = create_test_file(b"Just some data.")
         f = SimpleUploadedFile(file_data['name'], file_data['data'])
         response = self.post(self.file_upload_url, {'file': f}, format='multipart')
         # TODO: check file content saved to storage

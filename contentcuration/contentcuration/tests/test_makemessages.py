@@ -3,6 +3,7 @@ import subprocess
 
 import pathlib
 import pytest
+from builtins import str
 from django.conf import settings
 from django.test import TestCase
 

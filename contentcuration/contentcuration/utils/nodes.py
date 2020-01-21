@@ -1,3 +1,5 @@
+from __future__ import division
+
 import copy
 import json
 import logging
@@ -5,6 +7,8 @@ import math
 import os
 import uuid
 
+from builtins import next
+from builtins import str
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import ValidationError
@@ -12,6 +16,8 @@ from django.core.files.storage import default_storage
 from django.db import transaction
 from django.db.models import Q
 from django.utils.translation import ugettext as _
+from past.builtins import basestring
+from past.utils import old_div
 
 from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
@@ -185,9 +191,9 @@ def duplicate_node_bulk(node, sort_order=None, parent=None, channel_id=None, use
 
     if task_object:
         num_nodes_to_create = len(to_create["nodes"]) + 2
-        this_node_percent = node_copy_total_percent / task_object.root_nodes_to_copy
+        this_node_percent = old_div(node_copy_total_percent, task_object.root_nodes_to_copy)
 
-        node_percent = this_node_percent / num_nodes_to_create
+        node_percent = old_div(this_node_percent, num_nodes_to_create)
 
     # create nodes, one level at a time, starting from the top of the tree (so that we have IDs to pass as "parent" for next level down)
     for node_level in to_create["nodes"]:
@@ -243,8 +249,8 @@ def duplicate_node_inline(channel_id, node_id, target_parent, user=None):
     new_node = None
     with transaction.atomic():
         with ContentNode.objects.disable_mptt_updates():
-            sort_order = (
-                node.sort_order + node.get_next_sibling().sort_order) / 2 if node.get_next_sibling() else node.sort_order + 1
+            sort_order = old_div((
+                node.sort_order + node.get_next_sibling().sort_order), 2) if node.get_next_sibling() else node.sort_order + 1
             new_node = duplicate_node_bulk(node, sort_order=sort_order, parent=target_parent, channel_id=channel_id,
                                            user=user)
             if not new_node.title.endswith(_(" (Copy)")):
@@ -330,7 +336,7 @@ def move_nodes(channel_id, target_parent_id, nodes, min_order, max_order, task_o
     target_parent = ContentNode.objects.get(pk=target_parent_id)
     # last 20% is MPTT tree updates
     total_percent = 100.0
-    percent_per_node = math.ceil(total_percent / len(nodes))
+    percent_per_node = math.ceil(old_div(total_percent, len(nodes)))
     percent_done = 0.0
 
     with transaction.atomic():

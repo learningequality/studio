@@ -1,31 +1,34 @@
+from __future__ import absolute_import
+
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
 import datetime
-from cStringIO import StringIO
+from io import BytesIO
+
 from django.conf import settings
-from django.test import TestCase
-
-
-from base import StudioTestCase
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from django.core.management import call_command
-
-from contentcuration.models import ContentKind
-from contentcuration.models import File
-from contentcuration.models import FileFormat
-from contentcuration.models import FormatPreset
-from contentcuration.models import Language
-from contentcuration.models import License
-from contentcuration.models import generate_object_storage_name
-from contentcuration.models import User
-from contentcuration.utils.files import get_file_diff
-from contentcuration.utils.policies import check_policies
-from contentcuration.utils.policies import POLICIES
-
+from django.test import TestCase
 from le_utils.constants import content_kinds
 from le_utils.constants import file_formats
 from le_utils.constants import format_presets
 from le_utils.constants import languages
 from le_utils.constants import licenses
+
+from .base import StudioTestCase
+from contentcuration.models import ContentKind
+from contentcuration.models import File
+from contentcuration.models import FileFormat
+from contentcuration.models import FormatPreset
+from contentcuration.models import generate_object_storage_name
+from contentcuration.models import Language
+from contentcuration.models import License
+from contentcuration.models import User
+from contentcuration.utils.files import get_file_diff
+from contentcuration.utils.policies import check_policies
+from contentcuration.utils.policies import POLICIES
 
 
 class TestTheTestsTestCase(StudioTestCase):
@@ -78,7 +81,7 @@ class GetFileDiffTestCase(StudioTestCase):
 
         self.existing_content = "dowereallyexist.jpg"
         self.existing_content_path = generate_object_storage_name("dowereallyexist", self.existing_content)
-        storage.save(self.existing_content_path, StringIO("maybe"))
+        storage.save(self.existing_content_path, BytesIO(b"maybe"))
 
     def test_returns_empty_if_content_already_exists(self):
         """Test if get_file_diff returns an empty list if all the files we pass in are
@@ -111,7 +114,7 @@ class FileFormatsTestCase(StudioTestCase):
 
     def test_unsupported_files_raise_error(self):
         unsupported_file = File.objects.create(
-            file_on_disk=ContentFile("test"),
+            file_on_disk=ContentFile(b"test"),
             checksum='aaa'
         )
 
@@ -124,11 +127,11 @@ class FileFormatsTestCase(StudioTestCase):
         Note: if this test fails, it's likely because le_utils file formats aren't synced.
         """
         from le_utils.constants import file_formats
-        known_extensions = dict(file_formats.choices).keys()
+        known_extensions = list(dict(file_formats.choices).keys())
 
         for ext in known_extensions:
             file_with_ext = File.objects.create(
-                file_on_disk=ContentFile("test"),
+                file_on_disk=ContentFile(b"test"),
                 checksum="aaa"
             )
 
@@ -181,4 +184,3 @@ class LoadConstantsManagementCommandTestCase(TestCase):
         for model in self.models:
             qset = model.objects.all()
             assert len(list(qset)) > 3, 'Only {} constants of type {} created.'.format(len(list(qset)), str(model))
-

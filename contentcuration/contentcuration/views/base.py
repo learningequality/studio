@@ -1,6 +1,7 @@
 import json
 import logging
 
+from builtins import str
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.postgres.aggregates import ArrayAgg
@@ -11,6 +12,8 @@ from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse_lazy
 from django.db.models import Case
 from django.db.models import IntegerField
+from django.db.models import OuterRef
+from django.db.models import Prefetch
 from django.db.models import Q
 from django.db.models import Subquery
 from django.db.models import Value

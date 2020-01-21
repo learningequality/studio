@@ -1,5 +1,9 @@
-from base import BaseAPITestCase
+from __future__ import absolute_import
 
+from builtins import range
+from builtins import str
+
+from .base import BaseAPITestCase
 from contentcuration.models import ContentNode
 from contentcuration.models import Task
 from contentcuration.tasks import create_async_task
@@ -115,6 +119,11 @@ class AsyncTaskTestCase(BaseAPITestCase):
         self.assertTrue('error' in task.metadata)
 
         error = task.metadata['error']
+        # Python 3 has assertCountEqual, so add an alias for compatibility
+        try:
+            self.assertItemsEqual
+        except:
+            self.assertItemsEqual = self.assertCountEqual
         self.assertItemsEqual(list(error.keys()), ['message', 'task_args', 'task_kwargs', 'traceback'])
         self.assertEqual(len(error['task_args']), 0)
         self.assertEqual(len(error['task_kwargs']), 0)

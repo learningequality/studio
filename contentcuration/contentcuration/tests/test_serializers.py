@@ -1,10 +1,11 @@
+from __future__ import absolute_import
+
 import inspect
 import logging
 
 from django.db.models.query import QuerySet
 
-from base import BaseAPITestCase
-
+from .base import BaseAPITestCase
 from contentcuration.models import ContentNode
 from contentcuration.serializers import ContentNodeSerializer
 
