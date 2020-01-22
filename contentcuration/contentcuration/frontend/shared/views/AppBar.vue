@@ -2,7 +2,8 @@
 
   <VToolbar app dark clipped-left color="purple" :tabs="Boolean($slots.tabs)">
     <VToolbarSideIcon href="/channels">
-      <VImg maxHeight="35" contain :src="require('../images/kolibri-logo.svg')" />
+      <VImg v-if="online" maxHeight="35" contain :src="require('../images/kolibri-logo.svg')" />
+      <VImg v-else maxHeight="35" contain :src="require('../images/flightless-kolibri.jpg')" />
     </VToolbarSideIcon>
 
     <VToolbarTitle class="white--text notranslate">
@@ -64,6 +65,7 @@
       ...mapState({
         user: state => state.session.currentUser,
         loggedIn: state => state.session.loggedIn,
+        online: state => state.connection.online,
       }),
       menuItems() {
         const items = [
