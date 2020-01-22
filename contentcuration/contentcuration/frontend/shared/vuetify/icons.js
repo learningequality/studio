@@ -1,5 +1,8 @@
+import Vue from 'vue';
 import vuetifyIcons from 'vuetify/lib/components/Vuetify/mixins/icons';
-import Icon from 'shared/views/Icon';
+import MDIcon from 'shared/views/MDIcon';
+
+Vue.component(MDIcon.name, MDIcon);
 
 export default function icons(additional = {}) {
   const iconMap = vuetifyIcons('md', additional);
@@ -8,9 +11,9 @@ export default function icons(additional = {}) {
     .map(([name, mdName]) => {
       return {
         [name]: {
-          component: Icon,
+          component: MDIcon.name,
           props: {
-            icon: mdName,
+            iconName: mdName,
           },
         },
       };
