@@ -2,6 +2,7 @@ import Vue from 'vue';
 import Vuex, { Store } from 'vuex';
 import session from './session';
 import ConnectionPlugin from './connectionPlugin';
+import snackbar from './snackbar';
 
 Vue.use(Vuex);
 
@@ -23,6 +24,7 @@ export default function storeFactory(
     plugins: [ConnectionPlugin, ...(plugins || [])],
     modules: {
       session,
+      snackbar,
       ...modules,
     },
   });
