@@ -1,5 +1,5 @@
-import clientFactory from '../shared/baseClient'
+import clientFactory from '../shared/baseClient';
 
-const client = clientFactory()
+const client = clientFactory();
 
-export default client
+export default client;

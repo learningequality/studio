@@ -42,7 +42,9 @@
 
 <script>
 
-  import client from '../client';
+// todo:  use the vuex-aware client
+  import clientFactory from 'shared/baseClient';
+  let client = clientFactory()
 
   export default {
     name: 'ThumbnailUpload',

@@ -1,10 +1,9 @@
-import axios from "axios";
-import storeFactory from "./vuex/baseStore";
+import axios from 'axios';
 
 export default function clientFactory() {
   let client = axios.create({
-    xsrfCookieName: "csrftoken",
-    xsrfHeaderName: "X-CSRFToken"
+    xsrfCookieName: 'csrftoken',
+    xsrfHeaderName: 'X-CSRFToken',
   });
 
   client.interceptors.response.use(
@@ -26,19 +25,19 @@ export default function clientFactory() {
         }
 
         if (error.response.status === 0) {
-          message = "Network Error: " + url;
+          message = 'Network Error: ' + url;
         }
 
         // Put the URL in the main message for timeouts
         // so we can see which timeouts are most frequent.
         if (error.response.status === 504) {
-          message = "Request Timed Out: " + url;
+          message = 'Request Timed Out: ' + url;
         }
       } else if (error.request && error.request.config) {
         // Request was sent but no response received
         config = error.request.config;
         url = config.url;
-        message = "Network Error: " + url;
+        message = 'Network Error: ' + url;
       } else {
         message = error.message;
       }
@@ -49,14 +48,14 @@ export default function clientFactory() {
         data: config ? config.data : null,
         status: error.response ? error.response.status : null,
         error: message,
-        response: error.response ? error.response.data : null
+        response: error.response ? error.response.data : null,
       };
 
-      console.warn("AJAX Request Error: " + message); // eslint-disable-line no-console
-      console.warn("Error data: " + JSON.stringify(extraData)); // eslint-disable-line no-console
+      console.warn('AJAX Request Error: ' + message); // eslint-disable-line no-console
+      console.warn('Error data: ' + JSON.stringify(extraData)); // eslint-disable-line no-console
       if (Raven && Raven.captureMessage) {
         Raven.captureMessage(message, {
-          extra: extraData
+          extra: extraData,
         });
       }
 
