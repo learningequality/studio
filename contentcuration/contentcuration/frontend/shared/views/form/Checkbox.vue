@@ -9,7 +9,7 @@
       /* eslint-disable kolibri/vue-no-unused-properties */
       color: {
         type: String,
-        default: 'purple',
+        default: 'primary',
       },
       hideDetails: {
         type: Boolean,
