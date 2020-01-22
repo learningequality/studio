@@ -1,4 +1,4 @@
-import client from 'shared/client';
+import client from '../../client';
 
 export function loadSampleNodes(context, params) {
   return client.get(window.Urls['healthz'](), { params }).then(response => {

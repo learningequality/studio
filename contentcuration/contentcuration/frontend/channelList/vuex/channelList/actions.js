@@ -1,6 +1,6 @@
 import { isTempId } from '../../utils';
 import { channelLastSavedState } from './index';
-import client from 'shared/client';
+import client from '../../client';
 
 /* CHANNEL LIST ACTIONS */
 export function loadChannelList(context, payload) {

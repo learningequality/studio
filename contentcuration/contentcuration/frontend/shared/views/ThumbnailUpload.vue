@@ -42,7 +42,7 @@
 
 <script>
 
-  import client from 'shared/client';
+  import client from '../client';
 
   export default {
     name: 'ThumbnailUpload',

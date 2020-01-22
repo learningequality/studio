@@ -1,6 +1,6 @@
 import channelSet, { channelSetLastSavedState } from '../index';
 import { generateTempId } from '../../../utils';
-import client from 'shared/client';
+import client from '../../../client';
 import storeFactory from 'shared/vuex/baseStore';
 
 jest.mock('shared/client');

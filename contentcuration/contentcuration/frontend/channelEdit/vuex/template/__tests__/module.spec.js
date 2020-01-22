@@ -1,4 +1,4 @@
-import client from 'shared/client';
+import client from '../../../client';
 
 jest.mock('shared/client');
 

@@ -8,9 +8,15 @@ import 'vuetify/dist/vuetify.min.css';
 import 'shared/styles/main.less';
 
 import ChannelEditIndex from './views/ChannelEditIndex.vue';
-import store from './store';
 import router from './router';
 
+import store from './store';
+import client from './client';
+
+import ConnectionCheckerPlugin from 'shared/vuex/connectionCheckerPlugin'
+ConnectionCheckerPlugin(client)(store)
+
+Vue.prototype.client = client
 Vue.use(VueIntl);
 Vue.use(VueRouter);
 Vue.use(Vuetify, {

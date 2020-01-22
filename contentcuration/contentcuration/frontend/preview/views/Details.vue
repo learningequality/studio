@@ -195,7 +195,6 @@
   import ExpandableList from '../../shared/views/ExpandableList';
   import DetailsRow from './DetailsRow';
   import ContentNodeIcon from 'edit_channel/sharedComponents/ContentNodeIcon';
-  import client from 'shared/client';
 
   export default {
     name: 'Details',
@@ -254,7 +253,7 @@
     methods: {
       loadDetails() {
         this.loading = true;
-        return client
+        return this.$client
           .get(window.Urls.get_node_details(this.nodeID))
           .then(response => {
             this.details = response.data;
