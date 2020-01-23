@@ -7,6 +7,7 @@
         <VListTile @click="toggleSelectAll">
           <VListTileAction>
             <VCheckbox
+              hide-details
               class="notranslate"
               color="primary"
               data-test="select-all"

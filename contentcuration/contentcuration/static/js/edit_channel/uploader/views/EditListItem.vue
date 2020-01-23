@@ -5,6 +5,7 @@
       <VCheckbox
         class="notranslate"
         color="primary"
+        hide-details
         :inputValue="isSelected"
         @click.stop="toggleNode"
       />
