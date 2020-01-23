@@ -10,13 +10,14 @@ import router from './router';
 import store from './store';
 import client from './client';
 
-import ConnectionCheckerPlugin from 'shared/vuex/connectionCheckerPlugin';
-ConnectionCheckerPlugin(client)(store);
+import registerConnectionChecker from 'shared/vuex/connectionCheckerPlugin';
 
 import 'shared/i18n/setup';
 
 import 'vuetify/dist/vuetify.min.css';
 import 'shared/styles/main.less';
+
+registerConnectionChecker(client, store);
 
 Vue.prototype.client = client;
 Vue.use(VueIntl);

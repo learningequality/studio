@@ -12,8 +12,9 @@ import store from './store';
 import router from './router';
 import client from './client';
 
-import ConnectionCheckerPlugin from 'shared/vuex/connectionCheckerPlugin';
-ConnectionCheckerPlugin(client)(store);
+import registerConnectionChecker from 'shared/vuex/connectionCheckerPlugin';
+
+registerConnectionChecker(client, store);
 
 Vue.use(VueIntl);
 Vue.use(VueRouter);

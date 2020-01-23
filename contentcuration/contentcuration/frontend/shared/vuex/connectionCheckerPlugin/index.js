@@ -1,6 +1,6 @@
 import connectionModule from './connectionModule';
 
-export default function(client) {
+export function ConnectionCheckerPlugin(client) {
   return store => {
     // dynamically register the connection module to the vuex store
     store.registerModule('connection', connectionModule);
@@ -24,6 +24,10 @@ export default function(client) {
     client.interceptors.response.handlers.reverse();
   };
 }
+
+const registerConnectionChecker = (client, store) => ConnectionCheckerPlugin(client)(store);
+
+export default registerConnectionChecker;
 
 function isNetworkError(err) {
   return !!err.isAxiosError && !err.response;

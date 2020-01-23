@@ -50,25 +50,25 @@ export default {
       }
 
       const stealth = window.Urls.stealth();
-      const connectionChecker = axios.create();
+      const pollingClient = axios.create();
 
       let attempt = 0;
-      connectionChecker.interceptors.request.use(request => {
+      pollingClient.interceptors.request.use(request => {
         attempt++;
         return request;
       });
 
-      connectionChecker.interceptors.response.use(
+      pollingClient.interceptors.response.use(
         () => dispatch('handleReconnection'),
         error => {
           if (state.polling) {
-            setTimeout(() => connectionChecker.get(stealth), 1000 * delaySeconds(attempt));
+            setTimeout(() => pollingClient.get(stealth), 1000 * delaySeconds(attempt));
           }
           Promise.reject(error);
         }
       );
 
-      connectionChecker.get(stealth);
+      pollingClient.get(stealth);
     },
   },
 };
