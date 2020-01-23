@@ -1,6 +1,6 @@
 <script>
 
-  import { VCheckbox } from 'vuetify/lib';
+  import { VCheckbox } from 'vuetify/lib/components/VCheckbox';
 
   export default {
     name: 'Checkbox',

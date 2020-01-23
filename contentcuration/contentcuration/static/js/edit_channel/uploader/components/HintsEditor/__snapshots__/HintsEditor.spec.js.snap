@@ -23,63 +23,46 @@ exports[`HintsEditor renders all hints 1`] = `
           <div class="spacer"></div>
           <div class="flex">
             <div class="layout justify-end toolbar">
-              <div class="flex toolbar-item"><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move up</span></div><button disabled="disabled" type="button" class="v-btn v-btn--disabled v-btn--icon theme--light" data-test="toolbarIcon-MOVE_ITEM_UP">
-                <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--lighten-2">keyboard_arrow_up</i></div>
-              </button></span>
-            </div>
-            <div class="flex toolbar-item"><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move down</span></div><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIcon-MOVE_ITEM_DOWN">
-              <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">keyboard_arrow_down</i></div>
-            </button></span>
-          </div>
-          <div class="flex toolbar-item"><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Delete</span></div><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIcon-DELETE_ITEM">
-            <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">close</i></div>
-          </button></span>
-        </div>
-        <!---->
-      </div>
-    </div>
-  </div>
-</div>
-</div>
-</div>
-<div data-test="hint" class="card-border-light">
-  <div class="v-card v-card--flat v-sheet theme--light hint closed">
-    <div class="v-card__text pt-0 pb-0">
-      <div class="layout align-top">
-        <div class="flex xs1" style="margin-top: 10px;">
-          2
-        </div>
-        <div class="flex xs7">
-          <div name="fade">
-            <div>
-              Second hint
+              <div class="flex toolbar-item"><span class="v-tooltip v-tooltip--top"><button disabled="disabled" type="button" class="v-btn v-btn--disabled v-btn--icon theme--light" data-test="toolbarIcon-MOVE_ITEM_UP"><div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--lighten-2">keyboard_arrow_up</i></div></button></span></div>
+              <div class="flex toolbar-item"><span class="v-tooltip v-tooltip--top"><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIcon-MOVE_ITEM_DOWN"><div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">keyboard_arrow_down</i></div></button></span></div>
+              <div class="flex toolbar-item"><span class="v-tooltip v-tooltip--top"><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIcon-DELETE_ITEM"><div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">close</i></div></button></span></div>
+              <!---->
             </div>
           </div>
         </div>
-        <div class="spacer"></div>
-        <div class="flex">
-          <div class="layout justify-end toolbar">
-            <div class="flex toolbar-item"><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move up</span></div><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIcon-MOVE_ITEM_UP">
-              <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">keyboard_arrow_up</i></div>
-            </button></span>
-          </div>
-          <div class="flex toolbar-item"><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Move down</span></div><button disabled="disabled" type="button" class="v-btn v-btn--disabled v-btn--icon theme--light" data-test="toolbarIcon-MOVE_ITEM_DOWN">
-            <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--lighten-2">keyboard_arrow_down</i></div>
-          </button></span>
-        </div>
-        <div class="flex toolbar-item"><span class="v-tooltip v-tooltip--top"><div class="v-tooltip__content" style="left: 0px; max-width: auto; opacity: 0; top: 12px; z-index: 0; display: none;"> <span>Delete</span></div><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIcon-DELETE_ITEM">
-          <div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">close</i></div>
-        </button></span>
       </div>
-      <!---->
     </div>
   </div>
+  <div data-test="hint" class="card-border-light">
+    <div class="v-card v-card--flat v-sheet theme--light hint closed">
+      <div class="v-card__text pt-0 pb-0">
+        <div class="layout align-top">
+          <div class="flex xs1" style="margin-top: 10px;">
+            2
+          </div>
+          <div class="flex xs7">
+            <div name="fade">
+              <div>
+                Second hint
+              </div>
+            </div>
+          </div>
+          <div class="spacer"></div>
+          <div class="flex">
+            <div class="layout justify-end toolbar">
+              <div class="flex toolbar-item"><span class="v-tooltip v-tooltip--top"><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIcon-MOVE_ITEM_UP"><div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">keyboard_arrow_up</i></div></button></span></div>
+              <div class="flex toolbar-item"><span class="v-tooltip v-tooltip--top"><button disabled="disabled" type="button" class="v-btn v-btn--disabled v-btn--icon theme--light" data-test="toolbarIcon-MOVE_ITEM_DOWN"><div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--lighten-2">keyboard_arrow_down</i></div></button></span></div>
+              <div class="flex toolbar-item"><span class="v-tooltip v-tooltip--top"><button type="button" class="v-btn v-btn--icon theme--light" data-test="toolbarIcon-DELETE_ITEM"><div class="v-btn__content"><i aria-hidden="true" class="v-icon material-icons theme--light grey--text text--darken-1">close</i></div></button></span></div>
+              <!---->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div> <button type="button" class="mt-3 ml-0 v-btn v-btn--flat theme--light primary--text" data-test="newHintBtn">
+    <div class="v-btn__content">
+      New hint
+    </div>
+  </button>
 </div>
-</div>
-</div>
-</div> <button type="button" class="mt-3 ml-0 v-btn v-btn--flat theme--light primary--text" data-test="newHintBtn">
-  <div class="v-btn__content">
-    New hint
-  </div>
-</button></div>
 `;

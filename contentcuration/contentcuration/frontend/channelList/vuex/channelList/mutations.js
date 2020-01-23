@@ -67,7 +67,9 @@ export function UPDATE_CHANNEL(
   if (language !== null) {
     channel.language = language;
   }
-
+  if (!channel.content_defaults) {
+    channel.content_defaults = {};
+  }
   Object.assign(
     channel.content_defaults,
     Object.entries(content_defaults)

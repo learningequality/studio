@@ -8,11 +8,9 @@ const frontendDir = '<rootDir>/contentcuration/contentcuration/frontend';
 
 module.exports = {
   globals: {
-    "handlebars-jest": {
-      helperDirs: [
-        path.join(staticJsDir, 'handlebars')
-      ],
-    }
+    'handlebars-jest': {
+      helperDirs: [path.join(staticJsDir, 'handlebars')],
+    },
   },
   rootDir: path.resolve(__dirname, '../'),
   moduleFileExtensions: ['js', 'json', 'vue'],
@@ -28,8 +26,9 @@ module.exports = {
     '^.+\\.js$': '<rootDir>/node_modules/babel-jest',
     '.*\\.(vue)$': '<rootDir>/node_modules/vue-jest',
     '.*\\.handlebars$': '<rootDir>/node_modules/handlebars-jest',
+    '\\.(styl)$': '<rootDir>/node_modules/jest-css-modules',
   },
-  transformIgnorePatterns: ['/node_modules/'],
+  transformIgnorePatterns: ['/node_modules/(?!vuetify)'],
   snapshotSerializers: ['<rootDir>/node_modules/jest-serializer-vue'],
   setupFiles: [path.resolve(__dirname, './setup')],
   coverageDirectory: '<rootDir>/coverage',

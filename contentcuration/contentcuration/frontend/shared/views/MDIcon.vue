@@ -2,7 +2,7 @@
 
   import isArray from 'lodash/isArray';
   import isObject from 'lodash/isObject';
-  import { VIcon } from 'vuetify/lib';
+  import { VIcon } from 'vuetify/lib/components/VIcon';
 
   const NO_TRANSLATE = 'notranslate';
 
