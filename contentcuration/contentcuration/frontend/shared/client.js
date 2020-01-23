@@ -42,8 +42,8 @@ client.interceptors.response.use(
     }
 
     const extraData = {
+      url,
       type: config ? config.responseType : null,
-      url: url,
       data: config ? config.data : null,
       status: error.response ? error.response.status : null,
       error: message,
