@@ -7,6 +7,7 @@
       backgroundColor: $vuetify.theme.primaryBackground,
       borderColor: $vuetify.theme.primary
     } : {borderColor:'transparent'}"
+    data-test="dropzone"
     @dragenter.prevent="enter"
     @dragover.prevent="over"
     @dragleave.prevent="leave"
@@ -20,6 +21,7 @@
       type="file"
       :accept="acceptedMimetypes"
       :multiple="allowMultiple"
+      data-test="upload-dialog"
       @change="handleFiles($event.target.files)"
     >
     <Alert
@@ -103,9 +105,11 @@
     computed: {
       ...mapGetters('fileUploads', ['getFile']),
       acceptedFiles() {
-        let filter = { supplementary: false, display: true };
+        let filter = { display: true };
         if (this.presetID) {
           filter.id = this.presetID;
+        } else {
+          filter.supplementary = false;
         }
         return _.where(Constants.FormatPresets, filter);
       },
@@ -219,7 +223,6 @@
 
           [...files].forEach(uploadedFile => {
             let fileID = String(Math.random()).slice(2);
-
             this.addFile({ id: fileID, file: uploadedFile, preset: this.presetID });
             let file = this.getFile(fileID);
             newFiles.push(file);
