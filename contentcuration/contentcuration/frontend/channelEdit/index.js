@@ -10,11 +10,6 @@ import 'shared/styles/main.less';
 import ChannelEditIndex from './views/ChannelEditIndex.vue';
 import store from './store';
 import router from './router';
-import client from './client';
-
-import registerConnectionChecker from 'shared/vuex/connectionCheckerPlugin';
-
-registerConnectionChecker(client, store);
 
 Vue.use(VueIntl);
 Vue.use(VueRouter);

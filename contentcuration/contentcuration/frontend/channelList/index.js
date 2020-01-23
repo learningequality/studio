@@ -8,18 +8,12 @@ import ChannelListIndex from './views/ChannelListIndex.vue';
 
 import router from './router';
 import store from './store';
-import client from './client';
-
-import registerConnectionChecker from 'shared/vuex/connectionCheckerPlugin';
 
 import 'shared/i18n/setup';
 
 import 'vuetify/dist/vuetify.min.css';
 import 'shared/styles/main.less';
 
-registerConnectionChecker(client, store);
-
-Vue.prototype.client = client;
 Vue.use(VueIntl);
 Vue.use(VueRouter);
 Vue.use(Vuetify, {

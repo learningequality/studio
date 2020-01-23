@@ -2,16 +2,11 @@ import axios from 'axios';
 
 export default {
   state: () => ({
-    online: true,
+    online: true && navigator.onLine,
     timeLastWentOffline: null,
     timeLastCameOnline: null,
     polling: false,
   }),
-  getters: {
-    online(state) {
-      return state.online && navigator.onLine;
-    },
-  },
   mutations: {
     SET_ONLINE_STATUS(state, online) {
       if (state.online != online) {
@@ -29,7 +24,7 @@ export default {
     },
   },
   actions: {
-    handleBrokenConnection({ commit, dispatch }) {
+    handleDisconnection({ commit, dispatch }) {
       commit('SET_ONLINE_STATUS', false);
       dispatch('checkConnection');
     },
