@@ -92,23 +92,10 @@
 <script>
 
   import defaultTo from 'lodash/defaultTo';
-  import snakeCase from 'lodash/snakeCase';
   import { constantsTranslationMixin } from '../../../shared/mixins';
   import Checkbox from './Checkbox';
   import Constants from 'edit_channel/constants/index';
-
-  const CONTENT_DEFAULT_KEYS = [
-    'author',
-    'provider',
-    'aggregator',
-    'copyrightHolder',
-    'license',
-    'licenseDescription',
-    'autoDeriveAudioThumbnail',
-    'autoDeriveDocumentThumbnail',
-    'autoDeriveHtml5Thumbnail',
-    'autoDeriveVideoThumbnail',
-  ];
+  import { ContentDefaults } from 'shared/constants';
 
   export default {
     name: 'ContentDefaults',
@@ -140,7 +127,7 @@
         provider: this.contentDefaults.provider || '',
         aggregator: this.contentDefaults.aggregator || '',
         copyrightHolder: this.contentDefaults.copyright_holder || '',
-        license: this.contentDefaults.license || '',
+        license: parseInt(this.contentDefaults.license, 10) || '',
         licenseDescription: this.contentDefaults.license_description || '',
 
         autoDeriveAudioThumbnail: defaultTo(this.contentDefaults.auto_derive_audio_thumbnail, true),
@@ -154,10 +141,16 @@
     },
     computed: {
       licenseOpts() {
-        return Constants.Licenses.map(license => ({
+        const licenseOpts = Constants.Licenses.map(license => ({
           value: license.id,
           text: this.translateConstant(license.license_name),
         }));
+
+        licenseOpts.unshift({
+          value: '',
+          text: this.$tr('noLicense'),
+        });
+        return licenseOpts;
       },
       isCustomLicense() {
         const licenseId = parseInt(this.license, 10) || 0;
@@ -170,8 +163,9 @@
         this.$nextTick(() => {
           this.$emit(
             'change',
-            CONTENT_DEFAULT_KEYS.reduce((data, name) => {
-              return Object.assign(data, { [snakeCase(name)]: this[name] });
+            Object.entries(ContentDefaults).reduce((data, [snakeCaseName, camelCaseName]) => {
+              const value = this[camelCaseName] === '' ? null : this[camelCaseName];
+              return Object.assign(data, { [snakeCaseName]: value });
             }, {})
           );
         });
@@ -189,6 +183,7 @@
       license: 'License',
       licenseDescription: 'License description',
       licenseDescriptionPlaceholder: 'Enter license description...',
+      noLicense: 'No license selected',
       copyrightHolder: 'Copyright Holder',
       copyrightHolderPlaceholder: 'Enter copyright holder name...',
       thumbnailsTitle: 'Automatically generate thumbnails for the following:',

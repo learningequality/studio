@@ -1,6 +1,7 @@
 import Vue from 'vue';
 import map from 'lodash/map';
 import { channelLastSavedState } from './index';
+import { ContentDefaults } from 'shared/constants';
 
 /* CHANNEL LIST MUTATIONS */
 function mergeChannel(channelsMap, channel) {
@@ -36,7 +37,14 @@ export function REMOVE_CHANNEL(state, channelId) {
 
 export function UPDATE_CHANNEL(
   state,
-  { id, name = null, description = null, thumbnailData = null, language = null } = {}
+  {
+    id,
+    name = null,
+    description = null,
+    thumbnailData = null,
+    language = null,
+    content_defaults = {},
+  } = {}
 ) {
   if (!id) {
     throw ReferenceError('id must be defined to update a channel set');
@@ -59,6 +67,13 @@ export function UPDATE_CHANNEL(
   if (language !== null) {
     channel.language = language;
   }
+
+  Object.assign(
+    channel.content_defaults,
+    Object.entries(content_defaults)
+      .filter(([key]) => key in ContentDefaults)
+      .reduce((defaults, [key, value]) => ({ ...defaults, [key]: value }), {})
+  );
 }
 
 export function TOGGLE_BOOKMARK(state, id) {
