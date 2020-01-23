@@ -7,7 +7,7 @@
       </VLayout>
     </VCard>
     <VCard v-else-if="uploading" color="grey lighten-4" flat>
-      <VLayout align-center justify-center fill-height>
+      <VLayout align-center justify-center fill-height data-test="progress">
         <FileStatus :fileIDs="[file.id]" large />
       </VLayout>
     </VCard>
@@ -34,7 +34,7 @@
     ></iframe>
     <embed v-else-if="isPDF" :src="src" @load="loading = false">
     <VCard v-else color="grey lighten-4" flat>
-      <VLayout align-center justify-center fill-height>
+      <VLayout align-center justify-center fill-height data-test="not-supported">
         {{ $tr('previewNotSupported') }}
       </VLayout>
     </VCard>

@@ -1,7 +1,7 @@
 <template>
 
   <div style="width: 100%;">
-    <VCard v-if="!primaryFileMapping.length" color="grey lighten-4" flat>
+    <VCard v-if="!primaryFileMapping.length" data-test="error" color="grey lighten-4" flat>
       <VCardText>
         <VLayout align-center justify-center fill-height>
           <VIcon color="red" class="notranslate">
@@ -102,6 +102,7 @@
       primaryFileMapping() {
         return _.chain(this.presets)
           .where({ supplementary: false })
+          .sortBy('order')
           .map(preset => {
             return {
               preset: preset,
@@ -137,9 +138,12 @@
         }
       },
       isSelected(item) {
-        return this.viewOnly
-          ? this.fileCount > 1
-          : !!item.file && this.currentPreview && this.currentPreview.id === item.file.id;
+        return (
+          item.file &&
+          this.currentPreview &&
+          (!this.viewOnly || this.fileCount > 1) &&
+          this.currentPreview.id === item.file.id
+        );
       },
     },
     $trs: {

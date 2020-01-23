@@ -3,11 +3,19 @@
   <Uploader :readonly="viewOnly" :presetID="preset.id" @uploading="handleUploading">
     <template slot="upload-zone" slot-scope="uploader">
       <VListTile
+        data-test="list-item"
         :style="{backgroundColor: isSelected? $vuetify.theme.greyBackground : 'transparent'}"
         @click.stop="viewOnly? $emit('selected') : uploader.openFileDialog()"
       >
         <VListTileAction v-show="!viewOnly" @click.stop="$emit('selected')">
-          <VRadio v-if="file" :key="file.id" class="notranslate" :value="file.id" color="primary" />
+          <VRadio
+            v-if="file"
+            :key="file.id"
+            class="notranslate"
+            :value="file.id"
+            color="primary"
+            data-test="radio"
+          />
         </VListTileAction>
         <VListTileContent>
           <VListTileSubTitle>{{ preset.id | translate }}</VListTileSubTitle>
@@ -15,7 +23,13 @@
             <span v-if="file" class="notranslate" @click.stop="uploader.openFileDialog">
               {{ file.original_filename }}
             </span>
-            <a v-else class="action-link" @click.stop="uploader.openFileDialog">
+            <a
+              v-else
+              data-test="upload-link"
+              class="action-link"
+              :style="{color: $vuetify.theme.primary}"
+              @click.stop="uploader.openFileDialog"
+            >
               {{ $tr('uploadButton') }}
             </a>
           </VListTileTitle>
@@ -25,6 +39,8 @@
             <a
               v-if="file.error.type !== 'NO_STORAGE'"
               class="action-link"
+              data-test="error-upload-link"
+              :style="{color: $vuetify.theme.primary}"
               @click.stop="uploader.openFileDialog"
             >
               {{ $tr('uploadButton') }}
@@ -39,14 +55,15 @@
 
         </VListTileContent>
         <VSpacer />
-        <VListTileAction v-if="file">
+        <VListTileAction v-if="file && !viewOnly">
           <VBtn
             v-if="allowFileRemove || file.error"
             icon
             class="remove-icon"
+            data-test="remove"
             @click.stop="$emit('remove', file.id)"
           >
-            <VIcon color="grey">
+            <VIcon color="grey" class="notranslate">
               clear
             </VIcon>
           </VBtn>

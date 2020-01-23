@@ -18,13 +18,19 @@
       <VToolbar v-if="fullscreen" light dense>
         {{ $tr('fullscreenModeText') }}
         <VSpacer />
-        <VBtn flat @click="fullscreen = false">
+        <VBtn data-test="closefullscreen" flat @click="fullscreen = false">
           {{ $tr('exitFullscreen') }}
         </VBtn>
       </VToolbar>
       <ContentRenderer :file="file" :fullscreen="fullscreen" />
       <p v-if="!fullscreen" class="fullscreen-toggle">
-        <a v-if="showFullscreenOption" class="action-link" @click="fullscreen = true">
+        <a
+          v-if="showFullscreenOption"
+          class="action-link"
+          data-test="openfullscreen"
+          :style="{color: $vuetify.theme.primary}"
+          @click="fullscreen = true"
+        >
           {{ $tr('viewFullscreen') }}
         </a>
       </p>
@@ -35,7 +41,9 @@
 
 <script>
 
+  import _ from 'underscore';
   import ContentRenderer from './ContentRenderer.vue';
+  import Constants from 'edit_channel/constants/index';
 
   export default {
     name: 'FilePreview',
@@ -57,8 +65,13 @@
     },
     computed: {
       isPreviewable() {
-        let availablePreviewFormats = ['mp4', 'mp3', 'zip', 'pdf'];
-        return _.contains(availablePreviewFormats, this.file.file_format);
+        let availablePreviewFormats = _.chain(Constants.FormatPresets)
+          .filter(f => f.display && !f.supplementary)
+          .pluck('allowed_formats')
+          .flatten()
+          .uniq()
+          .value();
+        return availablePreviewFormats.includes(this.file.file_format);
       },
       isAudio() {
         return this.file.file_format === 'mp3';
