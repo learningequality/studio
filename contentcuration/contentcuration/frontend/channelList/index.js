@@ -5,9 +5,8 @@ import VueIntl from 'vue-intl';
 
 import colors from 'vuetify/es5/util/colors';
 import ChannelListIndex from './views/ChannelListIndex.vue';
-
-import router from './router';
 import store from './store';
+import router from './router';
 
 import 'shared/i18n/setup';
 
