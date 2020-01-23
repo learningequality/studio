@@ -27,6 +27,7 @@ data:
   DB_USER: {{ .Values.postgresql.postgresUser | default "" | b64enc }}
   DB_PASSWORD: {{ .Values.postgresql.postgresPassword | default "" | b64enc }}
   DB_NAME: {{ .Values.postgresql.postgresDatabase | default "" | b64enc }}
+  STATS_USERS: {{ .Values.postgresql.postgresUser | default "" | b64enc }}
 ---
 apiVersion: v1
 kind: Service
