@@ -54,7 +54,10 @@ const EDIT_MODAL_STATE = {
             { answer: 'Peanut butter', correct: true, order: 2 },
             { answer: 'Mayonnaise (I mean you can, but...)', correct: false, order: 1 },
           ],
-          hints: [{ hint: 'Tasty!', order: 2 }, { hint: "It's not healthy", order: 1 }],
+          hints: [
+            { hint: 'Tasty!', order: 2 },
+            { hint: "It's not healthy", order: 1 },
+          ],
         },
         {
           question: 'Exercise 2 - Question 3',

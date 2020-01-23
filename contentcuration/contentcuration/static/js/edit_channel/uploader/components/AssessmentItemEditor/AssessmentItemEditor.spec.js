@@ -13,7 +13,10 @@ const ITEM = {
     { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
     { answer: 'Peanut butter', correct: false, order: 2 },
   ],
-  hints: [{ hint: "It's not healthy", order: 1 }, { hint: 'Tasty!', order: 2 }],
+  hints: [
+    { hint: "It's not healthy", order: 1 },
+    { hint: 'Tasty!', order: 2 },
+  ],
 };
 
 const openQuestion = wrapper => {
@@ -262,7 +265,10 @@ describe('AssessmentItemEditor', () => {
         },
       });
 
-      const newHints = [{ hint: 'Hint 1', order: 1 }, { hint: 'Hint 2', order: 2 }];
+      const newHints = [
+        { hint: 'Hint 1', order: 1 },
+        { hint: 'Hint 2', order: 2 },
+      ];
 
       wrapper.find({ name: 'HintsEditor' }).vm.$emit('update', newHints);
     });
@@ -272,7 +278,10 @@ describe('AssessmentItemEditor', () => {
       expect(wrapper.emitted().update.length).toBe(1);
       expect(wrapper.emitted().update[0][0]).toEqual({
         ...ITEM,
-        hints: [{ hint: 'Hint 1', order: 1 }, { hint: 'Hint 2', order: 2 }],
+        hints: [
+          { hint: 'Hint 1', order: 1 },
+          { hint: 'Hint 2', order: 2 },
+        ],
       });
     });
   });

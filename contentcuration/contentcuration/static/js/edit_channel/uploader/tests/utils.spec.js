@@ -458,7 +458,11 @@ describe('utils', () => {
           { answer: '', order: 2, correct: true },
           { answer: 'Answer 3    ', order: 3, correct: true },
         ],
-        hints: [{ hint: ' ', order: 1 }, { hint: '', order: 2 }, { hint: ' Hint 3', order: 3 }],
+        hints: [
+          { hint: ' ', order: 1 },
+          { hint: '', order: 2 },
+          { hint: ' Hint 3', order: 3 },
+        ],
       };
 
       expect(sanitizeAssessmentItem(assessmentItem)).toEqual({
@@ -469,7 +473,11 @@ describe('utils', () => {
           { answer: '', order: 2, correct: true },
           { answer: 'Answer 3', order: 3, correct: true },
         ],
-        hints: [{ hint: '', order: 1 }, { hint: '', order: 2 }, { hint: 'Hint 3', order: 3 }],
+        hints: [
+          { hint: '', order: 1 },
+          { hint: '', order: 2 },
+          { hint: 'Hint 3', order: 3 },
+        ],
       });
     });
 
@@ -482,7 +490,11 @@ describe('utils', () => {
           { answer: '', order: 2, correct: true },
           { answer: 'Answer 3    ', order: 3, correct: true },
         ],
-        hints: [{ hint: ' ', order: 1 }, { hint: '', order: 2 }, { hint: ' Hint 3', order: 3 }],
+        hints: [
+          { hint: ' ', order: 1 },
+          { hint: '', order: 2 },
+          { hint: ' Hint 3', order: 3 },
+        ],
       };
 
       expect(sanitizeAssessmentItem(assessmentItem, true)).toEqual({
@@ -896,13 +908,20 @@ describe('utils', () => {
             { answer: '', order: 2, correct: true },
             { answer: 'Answer 3 ', order: 3, correct: true },
           ],
-          hints: [{ hint: ' ', order: 1 }, { hint: '', order: 2 }, { hint: ' Hint 3', order: 3 }],
+          hints: [
+            { hint: ' ', order: 1 },
+            { hint: '', order: 2 },
+            { hint: ' Hint 3', order: 3 },
+          ],
         },
         {
           order: 1,
           question: ' ',
           answers: [{ answer: '', order: 1, correct: true }],
-          hints: [{ hint: ' ', order: 1 }, { hint: '', order: 2 }],
+          hints: [
+            { hint: ' ', order: 1 },
+            { hint: '', order: 2 },
+          ],
         },
         {
           order: 2,

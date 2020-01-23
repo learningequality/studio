@@ -94,7 +94,10 @@
         if (this.listType === ListTypes.PUBLIC) {
           sortFields.shift('-priority');
         }
-        return sortBy(this.channels.filter(channel => channel[this.listType]), sortFields);
+        return sortBy(
+          this.channels.filter(channel => channel[this.listType]),
+          sortFields
+        );
       },
       isEditable() {
         return this.listType === ListTypes.EDITABLE;
