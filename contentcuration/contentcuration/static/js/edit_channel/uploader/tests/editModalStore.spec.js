@@ -259,6 +259,67 @@ describe('editModalStore', () => {
         store.commit('edit_modal/REMOVE_NODE', topic1Index);
         expect(store.state.edit_modal.nodes).toHaveLength(testNodes.length - 1);
       });
+      it('REMOVE_NODE should remove a node from the list of nodes', () => {
+        expect(store.state.edit_modal.nodes).toHaveLength(testNodes.length);
+        store.commit('edit_modal/REMOVE_NODE', topic1Index);
+        expect(store.state.edit_modal.nodes).toHaveLength(testNodes.length - 1);
+      });
+    });
+    describe('file mutations', () => {
+      it('ADD_NODES_FROM_FILES should add a new node for each file', () => {
+        let testFiles = [
+          { id: 'file-1', kind: 'video' },
+          { id: 'file-2', kind: 'audio' },
+        ];
+        store.commit('edit_modal/ADD_NODES_FROM_FILES', testFiles);
+        let nodesCount = store.state.edit_modal.nodes.length;
+        expect(store.state.edit_modal.nodes[nodesCount - 2].kind).toBe('video');
+        expect(store.state.edit_modal.nodes[nodesCount - 2].files[0].id).toBe('file-1');
+        expect(store.state.edit_modal.nodes[nodesCount - 1].kind).toBe('audio');
+        expect(store.state.edit_modal.nodes[nodesCount - 1].files[0].id).toBe('file-2');
+      });
+      it('ADD_FILE_TO_NODE should replace files with the same preset', () => {
+        let payload = {
+          index: videoIndex,
+          file: {
+            id: 'new-file',
+            preset: { id: 'preset' },
+          },
+        };
+        store.commit('edit_modal/ADD_FILE_TO_NODE', payload);
+        expect(store.state.edit_modal.nodes[videoIndex].files).toHaveLength(1);
+        expect(store.state.edit_modal.nodes[videoIndex].files[0].id).toBe('new-file');
+      });
+      it('ADD_FILE_TO_NODE should add a file with unique preset to the node', () => {
+        let payload = {
+          index: videoIndex,
+          file: {
+            id: 'new-file',
+            preset: { id: 'subtitle' },
+          },
+        };
+        store.commit('edit_modal/ADD_FILE_TO_NODE', payload);
+        expect(store.state.edit_modal.nodes[videoIndex].files).toHaveLength(2);
+        expect(store.state.edit_modal.nodes[videoIndex].files[1].id).toBe('new-file');
+      });
+      it('REMOVE_FILE_FROM_NODE should remove the file from the node', () => {
+        let payload = {
+          index: videoIndex,
+          file: {
+            id: 'test-file',
+            preset: { id: 'subtitle' },
+          },
+        };
+        store.commit('edit_modal/ADD_FILE_TO_NODE', payload);
+        expect(store.state.edit_modal.nodes[videoIndex].files).toHaveLength(2);
+
+        payload = {
+          index: videoIndex,
+          fileID: 'test-file',
+        };
+        store.commit('edit_modal/REMOVE_FILE_FROM_NODE', payload);
+        expect(store.state.edit_modal.nodes[videoIndex].files).toHaveLength(1);
+      });
     });
   });
 });

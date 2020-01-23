@@ -138,61 +138,30 @@ const fileUploadsModule = {
   },
   actions: {
     getUploadURL(context, payload) {
-      return new Promise((resolve, reject) => {
-        client
-          .get(
-            window.Urls.get_upload_url(),
-            { params: payload },
-            {
-              headers: {
-                'Content-type': 'application/form-url-encode',
-              },
-            }
-          )
-          .then(resolve)
-          .catch(error => {
-            switch (error.response && error.response.status) {
-              case 418:
-                reject(fileErrors.NO_STORAGE);
-                break;
-              default:
-                reject(fileErrors.UPLOAD_FAILED);
-            }
-          });
-      });
+      return client.get(
+        window.Urls.get_upload_url(),
+        { params: payload },
+        {
+          headers: {
+            'Content-type': 'application/form-url-encode',
+          },
+        }
+      );
     },
     uploadFileToStorage(context, payload) {
-      return new Promise((resolve, reject) => {
-        const data = new FormData();
-        data.append('file', payload.file);
-        client
-          .post(payload.url, data, {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-            onUploadProgress: progressEvent => {
-              const { loaded, total } = progressEvent;
-              context.commit('SET_FILE_UPLOAD_PROGRESS', {
-                id: payload.id,
-                progress: (loaded / total) * 100,
-              });
-            },
-          })
-          .then(response => {
-            context.commit('SET_FILE_PATH', {
-              id: payload.id,
-              path: response.data,
-            });
-
-            resolve(context.state.files[payload.id]);
-
-            setTimeout(() => {
-              context.commit('REMOVE_FILE', payload.id);
-            }, REMOVE_FILE_DELAY);
-          })
-          .catch(() => {
-            reject(fileErrors.UPLOAD_FAILED);
+      const data = new FormData();
+      data.append('file', payload.file);
+      return client.post(payload.url, data, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        onUploadProgress: progressEvent => {
+          const { loaded, total } = progressEvent;
+          context.commit('SET_FILE_UPLOAD_PROGRESS', {
+            id: payload.id,
+            progress: (loaded / total) * 100,
           });
+        },
       });
     },
     uploadFile(context, payload) {
@@ -218,13 +187,31 @@ const fileUploadsModule = {
                     url: response.data,
                   })
                   .then(response => {
+                    context.commit('SET_FILE_PATH', {
+                      id: payload.id,
+                      path: response.data,
+                    });
+
+                    resolve(context.state.files[payload.id]);
+
+                    setTimeout(() => {
+                      context.commit('REMOVE_FILE', payload.id);
+                    }, REMOVE_FILE_DELAY);
                     resolve(response.data);
                   })
-                  .catch(reject);
+                  .catch(reject); // End upload file
               })
-              .catch(reject);
+              .catch(reject); // End get upload url
           })
-          .catch(reject);
+          .catch(error => {
+            switch (error.response && error.response.status) {
+              case 418:
+                reject(fileErrors.NO_STORAGE);
+                break;
+              default:
+                reject(fileErrors.UPLOAD_FAILED);
+            }
+          }); // End get hash
       });
     },
   },

@@ -431,15 +431,6 @@ export function PREP_NODES_FOR_SAVE(state) {
 
 /*********** FILE OPERATIONS ***********/
 
-export function SET_FILES(state, file) {
-  state.nodes.forEach(node => {
-    let match = _.where(node.files, { id: file.id });
-    if (match) {
-      _.assign(match, file);
-    }
-  });
-}
-
 export function ADD_NODES_FROM_FILES(state, newFiles) {
   newFiles.forEach(file => {
     ADD_NODE(state, {
