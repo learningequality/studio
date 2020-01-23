@@ -33,16 +33,12 @@ export default {
       if (state.polling) commit('STOP_POLLING');
     },
     checkConnection({ state, commit, dispatch }) {
+      if (state.polling) return; // polling has already been initiated
+
       // used https://github.com/Aupajo/backoff-calculator to tune this
       let maximumPollingDelay = 30 * 60; // 30 minutes
       let initialPollingDelay = 1; // 1 second
       let delaySeconds = i => Math.min(i ** 2 + initialPollingDelay, maximumPollingDelay);
-
-      if (state.polling) {
-        return; // polling has already been initiated
-      } else {
-        commit('START_POLLING');
-      }
 
       const stealth = window.Urls.stealth();
       const pollingClient = axios.create();
@@ -64,6 +60,7 @@ export default {
       );
 
       pollingClient.get(stealth);
+      commit('START_POLLING');
     },
   },
 };
