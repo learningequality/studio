@@ -70,6 +70,7 @@ whitenoise = "==4.1.4"
 django-redis = "*"
 django-prometheus = "*"
 eventlet = "*"
+future = "*"
 sentry-sdk = "*"
 
 [dev-packages]

@@ -4,6 +4,7 @@ import os
 from tempfile import NamedTemporaryFile
 from wsgiref.util import FileWrapper
 
+from builtins import str
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.core.files import File as DjFile
@@ -73,9 +74,9 @@ def file_upload(request):
         return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
 
     # Implement logic for switching out files without saving it yet
-    filename, ext = os.path.splitext(request.FILES.values()[0]._name)
-    size = request.FILES.values()[0]._size
-    contentfile = DjFile(request.FILES.values()[0])
+    filename, ext = os.path.splitext(list(request.FILES.values())[0]._name)
+    size = list(request.FILES.values())[0]._size
+    contentfile = DjFile(list(request.FILES.values())[0])
     checksum = get_hash(contentfile)
     request.user.check_space(size, checksum)
 
@@ -84,7 +85,7 @@ def file_upload(request):
         file_on_disk=contentfile,
         checksum=checksum,
         file_format_id=ext[1:].lower(),
-        original_filename=request.FILES.values()[0]._name,
+        original_filename=list(request.FILES.values())[0]._name,
         preset_id=request.META.get('HTTP_PRESET'),
         language_id=request.META.get('HTTP_LANGUAGE'),
         uploaded_by=request.user,
@@ -104,9 +105,9 @@ def file_create(request):
     if request.method != 'POST':
         return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
 
-    original_filename, ext = os.path.splitext(request.FILES.values()[0]._name)
-    size = request.FILES.values()[0]._size
-    contentfile = DjFile(request.FILES.values()[0])
+    original_filename, ext = os.path.splitext(list(request.FILES.values())[0]._name)
+    size = list(request.FILES.values())[0]._size
+    contentfile = DjFile(list(request.FILES.values())[0])
     checksum = get_hash(contentfile)
     request.user.check_space(size, checksum)
 
@@ -135,7 +136,7 @@ def file_create(request):
         file_on_disk=contentfile,
         checksum=checksum,
         file_format_id=ext[1:].lower(),
-        original_filename=request.FILES.values()[0]._name,
+        original_filename=list(request.FILES.values())[0]._name,
         contentnode=new_node,
         file_size=size,
         uploaded_by=request.user,
@@ -160,10 +161,9 @@ def file_create(request):
         if thumbnail:
             thumbnail.delete()
 
-    return HttpResponse(json.dumps({
-        "success": True,
-        "node": JSONRenderer().render(ContentNodeEditSerializer(new_node).data)
-    }))
+    return HttpResponse(JSONRenderer().render(
+        {'success': True, 'node': ContentNodeEditSerializer(new_node).data})
+    )
 
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
@@ -187,7 +187,7 @@ def generate_thumbnail(request, contentnode_id):
 
     return HttpResponse(json.dumps({
         "success": True,
-        "file": JSONRenderer().render(FileSerializer(thumbnail_object).data),
+        "file": JSONRenderer().render(FileSerializer(thumbnail_object).data).decode('utf-8'),
         "path": generate_storage_url(str(thumbnail_object)),
         "encoding": get_thumbnail_encoding(str(thumbnail_object)),
     }))
@@ -200,7 +200,7 @@ def thumbnail_upload(request):
     if request.method != 'POST':
         return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
 
-    fobj = request.FILES.values()[0]
+    fobj = list(request.FILES.values())[0]
     checksum = get_hash(DjFile(fobj))
     request.user.check_space(fobj._size, checksum)
 
@@ -222,7 +222,7 @@ def image_upload(request):
     if request.method != 'POST':
         return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
 
-    fobj = request.FILES.values()[0]
+    fobj = list(request.FILES.values())[0]
     name, ext = os.path.splitext(fobj._name)  # gets file extension without leading period
     checksum = get_hash(DjFile(fobj))
     request.user.check_space(fobj._size, checksum)
@@ -231,14 +231,14 @@ def image_upload(request):
         contentnode_id=request.META.get('HTTP_NODE'),
         original_filename=name,
         preset_id=request.META.get('HTTP_PRESET'),
-        file_on_disk=DjFile(request.FILES.values()[0]),
+        file_on_disk=DjFile(list(request.FILES.values())[0]),
         file_format_id=ext[1:].lower(),
         uploaded_by=request.user
     )
     file_object.save()
     return HttpResponse(json.dumps({
         "success": True,
-        "file": JSONRenderer().render(FileSerializer(file_object).data),
+        "file": JSONRenderer().render(FileSerializer(file_object).data).decode('utf-8'),
         "path": generate_storage_url(str(file_object)),
         "encoding": get_thumbnail_encoding(str(file_object)),
     }))
@@ -250,13 +250,13 @@ def exercise_image_upload(request):
     if request.method != 'POST':
         return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
 
-    fobj = request.FILES.values()[0]
+    fobj = list(request.FILES.values())[0]
     assessment_item_id = request.POST.get('assessment_item_id', None)
     name, ext = os.path.splitext(fobj._name)
     get_hash(DjFile(fobj))
     file_object = File(
         preset_id=format_presets.EXERCISE_IMAGE,
-        file_on_disk=DjFile(request.FILES.values()[0]),
+        file_on_disk=DjFile(list(request.FILES.values())[0]),
         file_format_id=ext[1:].lower(),
         assessment_item_id=assessment_item_id,
     )
@@ -273,11 +273,11 @@ def subtitle_upload(request):
     # File will be converted to VTT format
     ext = file_formats.VTT
     language_id = request.META.get('HTTP_LANGUAGE')
-    content_file = request.FILES.values()[0]
+    content_file = list(request.FILES.values())[0]
 
     with NamedTemporaryFile() as temp_file:
         try:
-            converter = build_subtitle_converter(unicode(content_file.read(), 'utf-8'))
+            converter = build_subtitle_converter(content_file.read().decode('utf-8'))
             convert_language_code = language_id
 
             # We're making the assumption here that language the user selected is truly the caption
@@ -313,7 +313,7 @@ def subtitle_upload(request):
             file_on_disk=converted_file,
             checksum=checksum,
             file_format_id=ext,
-            original_filename=request.FILES.values()[0]._name,
+            original_filename=list(request.FILES.values())[0]._name,
             preset_id=request.META.get('HTTP_PRESET'),
             language_id=language_id,
             uploaded_by=request.user,
@@ -323,7 +323,7 @@ def subtitle_upload(request):
     return HttpResponse(json.dumps({
         "success": True,
         "filename": str(file_object),
-        "file": JSONRenderer().render(FileSerializer(file_object).data)
+        "file": JSONRenderer().render(FileSerializer(file_object).data).decode('utf-8')
     }))
 
 

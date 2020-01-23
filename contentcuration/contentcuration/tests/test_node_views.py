@@ -1,15 +1,16 @@
+from __future__ import absolute_import
+
 import datetime
 import json
 
 import pytz
-from mock import patch
-
-from base import BaseAPITestCase
 from django.conf import settings
 from django.core.cache import cache
 from le_utils.constants import content_kinds
+from mock import patch
 from rest_framework.reverse import reverse
 
+from .base import BaseAPITestCase
 from .testdata import tree
 from contentcuration.models import Channel
 from contentcuration.models import ContentKind
@@ -25,7 +26,7 @@ class NodeViewsUtilityTestCase(BaseAPITestCase):
         details = json.loads(response.content)
         assert details['resource_count'] > 0
         assert details['resource_size'] > 0
-        assert details['kind_count'] > 0
+        assert len(details['kind_count']) > 0
 
     def test_get_channel_details_cached(self):
         cache_key = "details_{}".format(self.channel.main_tree.id)
@@ -82,18 +83,18 @@ class GetPrerequisitesTestCase(BaseAPITestCase):
     def test_get_prerequisites_only_check_nodes(self):
         response = self.get(reverse("get_prerequisites", kwargs={"get_postrequisites": "false", "ids": ",".join((self.node1.id, self.node2.id))}))
         tree_nodes = response.json()["prerequisite_tree_nodes"]
-        self.assertTrue(len(filter(lambda x: x["id"] == self.node1.id, tree_nodes)) > 0)
-        self.assertTrue(len(filter(lambda x: x["id"] == self.node2.id, tree_nodes)) > 0)
-        self.assertTrue(len(filter(lambda x: x["id"] == self.prereq.id, tree_nodes)) > 0)
-        self.assertTrue(len(filter(lambda x: x["id"] == self.postreq.id, tree_nodes)) == 0)
+        self.assertTrue(len([x for x in tree_nodes if x["id"] == self.node1.id]) > 0)
+        self.assertTrue(len([x for x in tree_nodes if x["id"] == self.node2.id]) > 0)
+        self.assertTrue(len([x for x in tree_nodes if x["id"] == self.prereq.id]) > 0)
+        self.assertTrue(len([x for x in tree_nodes if x["id"] == self.postreq.id]) == 0)
 
     def test_get_postrequisites_check_nodes(self):
         response = self.get(reverse("get_prerequisites", kwargs={"get_postrequisites": "true", "ids": ",".join((self.node1.id, self.node2.id))}))
         tree_nodes = response.json()["prerequisite_tree_nodes"]
-        self.assertTrue(len(filter(lambda x: x["id"] == self.node1.id, tree_nodes)) > 0)
-        self.assertTrue(len(filter(lambda x: x["id"] == self.node2.id, tree_nodes)) > 0)
-        self.assertTrue(len(filter(lambda x: x["id"] == self.prereq.id, tree_nodes)) > 0)
-        self.assertTrue(len(filter(lambda x: x["id"] == self.postreq.id, tree_nodes)) > 0)
+        self.assertTrue(len([x for x in tree_nodes if x["id"] == self.node1.id]) > 0)
+        self.assertTrue(len([x for x in tree_nodes if x["id"] == self.node2.id]) > 0)
+        self.assertTrue(len([x for x in tree_nodes if x["id"] == self.prereq.id]) > 0)
+        self.assertTrue(len([x for x in tree_nodes if x["id"] == self.postreq.id]) > 0)
 
     def test_get_prerequisites_no_permissions(self):
         channel = Channel.objects.create()

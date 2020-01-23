@@ -4,6 +4,7 @@ from datetime import date
 from datetime import datetime
 from datetime import timedelta
 
+from builtins import str
 from django.conf import settings as ccsettings
 from django.contrib import messages
 from django.contrib.auth import update_session_auth_hash
@@ -21,6 +22,7 @@ from django.template.loader import render_to_string
 from django.utils.translation import ugettext as _
 from django.views.generic.edit import FormView
 from le_utils.constants import content_kinds
+from past.builtins import basestring
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view
 
@@ -309,7 +311,7 @@ class StorageSettingsView(LoginRequiredMixin, FormView):
             "name": KIND_TRANSLATIONS.get(k),
             "size": v,
             "percent": "%.2f" % (min(float(v) / float(self.request.user.disk_space), 1) * 100)
-        } for k, v in self.request.user.get_space_used_by_kind().items()]
+        } for k, v in list(self.request.user.get_space_used_by_kind().items())]
 
         kwargs.update({
             "current_user": self.request.user,

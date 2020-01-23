@@ -1,12 +1,17 @@
+from __future__ import division
+
+from future import standard_library
+standard_library.install_aliases()
+from past.utils import old_div
 import ast
 import base64
-import cStringIO as StringIO
 import csv
 import json
 import locale
 import os
 import sys
 import time
+from io import BytesIO
 from itertools import chain
 
 import django_filters
@@ -68,8 +73,9 @@ from contentcuration.serializers import CurrentUserSerializer
 from contentcuration.serializers import UserChannelListSerializer
 from contentcuration.utils.messages import get_messages
 
-reload(sys)
-sys.setdefaultencoding('UTF8')
+if sys.version_info.major == 2:
+    reload(sys)
+    sys.setdefaultencoding('UTF8')
 locale.setlocale(locale.LC_TIME, '')
 
 DEFAULT_ADMIN_PAGE_SIZE = 2
@@ -246,7 +252,7 @@ class AdminChannelListView(generics.ListAPIView):
         queryset = queryset.select_related('main_tree').prefetch_related('editors', 'viewers')\
             .annotate(editors_count=Count('editors'))\
             .annotate(viewers_count=Count('viewers'))\
-            .annotate(resource_count=F("main_tree__rght")/2 - 1)\
+            .annotate(resource_count=old_div(F("main_tree__rght"),2) - 1)\
             .annotate(created=F('main_tree__created'))
 
         if self.request.GET.get('can_edit') == 'True':
@@ -412,7 +418,7 @@ def generate_thumbnail(channel):
         try:
             checksum, ext = os.path.splitext(channel.thumbnail)
             filepath = generate_file_on_disk_name(checksum, channel.thumbnail)
-            buffer = StringIO.StringIO()
+            buffer = BytesIO()
 
             with Image.open(filepath) as image:
                 width, height = image.size
@@ -471,9 +477,9 @@ def get_channel_data(channel, site, default_thumbnail=None):
     node_languages = descendants.exclude(language=None).values_list('language__readable_name', flat=True).distinct()
     file_languages = descendants.exclude(files__language=None).values_list('files__language__readable_name', flat=True)
     language_list = list(set(chain(node_languages, file_languages)))
-    language_list = filter(lambda l: l is not None and l is not data['language'], language_list)
-    language_list = map(lambda l: l.replace(",", " -"), language_list)
-    language_list = sorted(map(lambda l: l.replace(",", " -"), language_list))
+    language_list = [l for l in language_list if l is not None and l is not data['language']]
+    language_list = [l.replace(",", " -") for l in language_list]
+    language_list = sorted([l.replace(",", " -") for l in language_list])
     data["languages"] = ", ".join(language_list)
     data["languages"] = ""
 
@@ -574,8 +580,8 @@ def download_channel_pdf(request):
 
     html = template.render(context)
 
-    result = StringIO.StringIO()
-    pdf = pisa.pisaDocument(StringIO.StringIO(html.encode("UTF-8")), result, encoding='UTF-8', path=settings.STATIC_ROOT)
+    result = BytesIO()
+    pdf = pisa.pisaDocument(BytesIO(html.encode("UTF-8")), result, encoding='UTF-8', path=settings.STATIC_ROOT)
     if not pdf.err:
         response = FileResponse(result.getvalue())
         response['Content-Type'] = 'application/pdf'

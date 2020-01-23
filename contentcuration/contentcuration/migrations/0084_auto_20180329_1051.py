@@ -16,13 +16,13 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='channel',
             name='content_defaults',
-            field=jsonfield.fields.JSONField(default={b'author': None, b'auto_derive_audio_thumbnail': True, b'auto_derive_document_thumbnail': True, b'auto_derive_exercise_thumbnail': True, b'auto_derive_html5_thumbnail': True,
-                                                      b'auto_derive_video_thumbnail': True, b'auto_randomize_questions': True, b'copyright_holder': None, b'language': None, b'license': None, b'license_description': None, b'm_value': 5, b'mastery_model': b'num_correct_in_a_row_5', b'n_value': 5}),
+            field=jsonfield.fields.JSONField(default={b'author': None, 'auto_derive_audio_thumbnail': True, 'auto_derive_document_thumbnail': True, 'auto_derive_exercise_thumbnail': True, 'auto_derive_html5_thumbnail': True,
+                                                      'auto_derive_video_thumbnail': True, 'auto_randomize_questions': True, 'copyright_holder': None, 'language': None, 'license': None, 'license_description': None, 'm_value': 5, 'mastery_model': 'num_correct_in_a_row_5', 'n_value': 5}),
         ),
         migrations.AddField(
             model_name='user',
             name='content_defaults',
-            field=jsonfield.fields.JSONField(default={b'author': None, b'auto_derive_audio_thumbnail': True, b'auto_derive_document_thumbnail': True, b'auto_derive_exercise_thumbnail': True, b'auto_derive_html5_thumbnail': True,
-                                                      b'auto_derive_video_thumbnail': True, b'auto_randomize_questions': True, b'copyright_holder': None, b'language': None, b'license': None, b'license_description': None, b'm_value': 5, b'mastery_model': b'num_correct_in_a_row_5', b'n_value': 5}),
+            field=jsonfield.fields.JSONField(default={b'author': None, 'auto_derive_audio_thumbnail': True, 'auto_derive_document_thumbnail': True, 'auto_derive_exercise_thumbnail': True, 'auto_derive_html5_thumbnail': True,
+                                                      'auto_derive_video_thumbnail': True, 'auto_randomize_questions': True, 'copyright_holder': None, 'language': None, 'license': None, 'license_description': None, 'm_value': 5, 'mastery_model': 'num_correct_in_a_row_5', 'n_value': 5}),
         ),
     ]

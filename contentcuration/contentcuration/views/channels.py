@@ -24,8 +24,7 @@ def generate_response(filepath, content_type, filename=None):
     response = StreamingHttpResponse(export_iterator(filepath), content_type=content_type)
     response['Content-Length'] = default_storage.size(filepath)
     response['Content-Disposition'] = "attachment; filename=%s" % filename
-    response.set_cookie(key='fileDownload', value="true")
-    response.set_cookie(key='path', value="/")
+    response.set_cookie(key='fileDownload', value="true", path="/")
     return response
 
 

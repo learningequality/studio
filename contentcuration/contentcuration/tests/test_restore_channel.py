@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
 import datetime
 import json
 import sys
 import uuid
-from cStringIO import StringIO
+from io import BytesIO
 
-from base import StudioTestCase
 from django.core.files.storage import default_storage
 from django.template.loader import render_to_string
 from le_utils.constants import exercises
@@ -13,14 +17,16 @@ from mixer.backend.django import mixer
 from mock import MagicMock
 from mock import patch
 
+from .base import StudioTestCase
 from contentcuration.models import AssessmentItem
 from contentcuration.models import generate_object_storage_name
 from contentcuration.utils.import_tools import create_channel
 from contentcuration.utils.import_tools import generate_assessment_item
 from contentcuration.utils.import_tools import process_content
 
-reload(sys)
-sys.setdefaultencoding('utf8')
+if sys.version_info.major == 2:
+    reload(sys)
+    sys.setdefaultencoding('utf8')
 
 
 thumbnail_path = "/content/thumbnail.png"
@@ -120,7 +126,7 @@ class PerseusRestoreTestCase(StudioTestCase):
     def setUp(self):
         super(PerseusRestoreTestCase, self).setUp()
         image_path = generate_object_storage_name('test', 'test.png')
-        default_storage.save(image_path, StringIO('test'))
+        default_storage.save(image_path, BytesIO(b'test'))
 
     def test_process_content(self):
         tests = [
@@ -165,7 +171,7 @@ class PerseusRestoreTestCase(StudioTestCase):
             self.assertEqual(result, test['output'])
 
     def test_generate_assessment_item(self):
-        for assessment_id, data in ASSESSMENT_DATA.items():
+        for assessment_id, data in list(ASSESSMENT_DATA.items()):
             assessment_data = json.loads(render_to_string(data['template'], data).encode('utf-8', "ignore"))
             assessment_item = generate_assessment_item(assessment_id, data['order'], data['type'], assessment_data)
             self.assertEqual(assessment_item.type, data['type'])

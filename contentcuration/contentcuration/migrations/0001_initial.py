@@ -43,9 +43,9 @@ class Migration(migrations.Migration):
             name='AssessmentItem',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('type', models.CharField(default=b'multiplechoice', max_length=50)),
+                ('type', models.CharField(default='multiplechoice', max_length=50)),
                 ('question', models.TextField(blank=True)),
-                ('answers', models.TextField(default=b'[]')),
+                ('answers', models.TextField(default='[]')),
             ],
         ),
         migrations.CreateModel(
@@ -68,8 +68,8 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='ContentKind',
             fields=[
-                ('kind', models.CharField(choices=[(b'topic', 'Topic'), (b'video', 'Video'), (b'audio', 'Audio'), (b'exercise',
-                                                                                                                   'Exercise'), (b'document', 'Document'), (b'image', 'Image')], max_length=200, primary_key=True, serialize=False)),
+                ('kind', models.CharField(choices=[('topic', 'Topic'), ('video', 'Video'), ('audio', 'Audio'), ('exercise',
+                                                                                                                   'Exercise'), ('document', 'Document'), ('image', 'Image')], max_length=200, primary_key=True, serialize=False)),
             ],
         ),
         migrations.CreateModel(
@@ -128,16 +128,16 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='FileFormat',
             fields=[
-                ('extension', models.CharField(choices=[(b'mp4', 'mp4'), (b'vtt', 'vtt'), (b'srt', 'srt'),
-                                                        (b'mp3', 'mp3'), (b'pdf', 'pdf')], max_length=40, primary_key=True, serialize=False)),
+                ('extension', models.CharField(choices=[('mp4', 'mp4'), ('vtt', 'vtt'), ('srt', 'srt'),
+                                                        ('mp3', 'mp3'), ('pdf', 'pdf')], max_length=40, primary_key=True, serialize=False)),
                 ('mimetype', models.CharField(blank=True, max_length=200)),
             ],
         ),
         migrations.CreateModel(
             name='FormatPreset',
             fields=[
-                ('id', models.CharField(choices=[(b'high_res_video', 'High resolution video'), (b'low_res_video', 'Low resolution video'), (b'vector_video', 'Vertor video'), (
-                    b'thumbnail', 'Thumbnail'), (b'thumbnail', 'Thumbnail'), (b'caption', 'Caption')], max_length=150, primary_key=True, serialize=False)),
+                ('id', models.CharField(choices=[('high_res_video', 'High resolution video'), ('low_res_video', 'Low resolution video'), ('vector_video', 'Vertor video'), (
+                    'thumbnail', 'Thumbnail'), ('thumbnail', 'Thumbnail'), ('caption', 'Caption')], max_length=150, primary_key=True, serialize=False)),
                 ('readable_name', models.CharField(max_length=400)),
                 ('multi_language', models.BooleanField(default=False)),
                 ('supplementary', models.BooleanField(default=False)),
@@ -151,7 +151,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', contentcuration.models.UUIDField(default=uuid.uuid4, max_length=32, primary_key=True, serialize=False)),
                 ('email', models.EmailField(max_length=100)),
-                ('first_name', models.CharField(default=b'Guest', max_length=100)),
+                ('first_name', models.CharField(default='Guest', max_length=100)),
                 ('last_name', models.CharField(blank=True, max_length=100, null=True)),
                 ('channel', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='pending_editors', to='contentcuration.Channel')),
                 ('invited', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='sent_to', to=settings.AUTH_USER_MODEL)),
