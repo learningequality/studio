@@ -3,6 +3,7 @@ import axios from 'axios';
 const client = axios.create({
   xsrfCookieName: 'csrftoken',
   xsrfHeaderName: 'X-CSRFToken',
+  timeout: 2000,
 });
 
 client.interceptors.response.use(
@@ -58,7 +59,7 @@ client.interceptors.response.use(
       });
     }
 
-    Promise.reject(error);
+    return Promise.reject(error);
   }
 );
 

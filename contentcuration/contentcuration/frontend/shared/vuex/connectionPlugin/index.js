@@ -17,7 +17,7 @@ const ConnectionPlugin = store => {
       if (isNetworkError(error)) {
         store.dispatch('handleDisconnection');
       }
-      Promise.reject(error);
+      return Promise.reject(error);
     }
   );
   client.interceptors.response.handlers.reverse();
