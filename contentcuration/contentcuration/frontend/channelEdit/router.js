@@ -1,8 +1,8 @@
 import VueRouter from 'vue-router';
 import { RouterNames } from './constants';
-import Sandbox from 'shared/views/Sandbox';
 import TreeView from './views/TreeView';
 import store from './store';
+import Sandbox from 'shared/views/Sandbox';
 import EditModal from 'edit_channel/uploader/views/EditModal';
 
 const router = new VueRouter({
@@ -39,7 +39,7 @@ const router = new VueRouter({
           'channel/loadChannel',
           store.state.currentChannel.currentChannelId
         );
-        const nodePromise = store.dispatch('contentNode/loadSummaryContentNode', to.params.nodeId);
+        const nodePromise = store.dispatch('contentNode/loadContentNode', to.params.nodeId);
         return Promise.all([channelPromise, nodePromise])
           .then(() => next())
           .catch(err => console.log(err)); // eslint-disable-line no-console

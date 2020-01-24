@@ -85,15 +85,15 @@
     },
     computed: {
       ...mapGetters('contentNode', [
-        'getSummaryContentNode',
-        'getSummaryContentNodeChildren',
+        'getContentNode',
+        'getContentNodeChildren',
         'nodeExpanded',
       ]),
       node() {
-        return this.getSummaryContentNode(this.nodeId);
+        return this.getContentNode(this.nodeId);
       },
       children() {
-        return this.getSummaryContentNodeChildren(this.nodeId);
+        return this.getContentNodeChildren(this.nodeId);
       },
       expanded() {
         return this.root || this.nodeExpanded(this.nodeId);
@@ -134,11 +134,11 @@
       }
     },
     methods: {
-      ...mapActions('contentNode', ['loadSummaryContentNodes']),
+      ...mapActions('contentNode', ['loadContentNodes']),
       ...mapMutations('contentNode', { toggleExpansion: 'TOGGLE_EXPANSION' }),
       getChildren() {
         if (this.node && this.node.has_children) {
-          return this.loadSummaryContentNodes({ parent: this.nodeId });
+          return this.loadContentNodes({ parent: this.nodeId });
         }
       },
       toggle() {

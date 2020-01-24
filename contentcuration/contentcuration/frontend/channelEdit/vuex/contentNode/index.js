@@ -1,10 +1,7 @@
 import * as getters from './getters';
 import * as mutations from './mutations';
 import * as actions from './actions';
-import { lastSavedStateFactory } from 'shared/utils';
 import { TABLE_NAMES, CHANGE_TYPES } from 'shared/data';
-
-export const contentNodeLastSavedState = lastSavedStateFactory();
 
 export default {
   namespaced: true,

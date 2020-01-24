@@ -45,12 +45,12 @@
       },
     },
     computed: {
-      ...mapGetters('contentNode', ['getSummaryContentNode', 'getSummaryContentNodeChildren']),
+      ...mapGetters('contentNode', ['getContentNode', 'getContentNodeChildren']),
       node() {
-        return this.getSummaryContentNode(this.parentId);
+        return this.getContentNode(this.parentId);
       },
       children() {
-        return this.getSummaryContentNodeChildren(this.parentId);
+        return this.getContentNodeChildren(this.parentId);
       },
     },
     methods: {
