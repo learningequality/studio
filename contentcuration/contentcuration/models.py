@@ -896,9 +896,9 @@ class License(models.Model):
     )
 
     @classmethod
-    def validate(cls, pk):
-        if cls.objects.filter(pk=pk).count() == 0:
-            raise ValidationError('License `{}` does not exist'.format(pk))
+    def validate_name(cls, name):
+        if cls.objects.filter(license_name=name).count() == 0:
+            raise ValidationError('License `{}` does not exist'.format(name))
 
     def __str__(self):
         return self.license_name

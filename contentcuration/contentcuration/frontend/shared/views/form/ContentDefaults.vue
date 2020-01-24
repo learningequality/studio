@@ -97,6 +97,10 @@
   import Constants from 'edit_channel/constants/index';
   import { ContentDefaults } from 'shared/constants';
 
+  function findLicense(name, defaultValue = {}) {
+    return Constants.Licenses.find(license => license.license_name === name) || defaultValue;
+  }
+
   export default {
     name: 'ContentDefaults',
     components: {
@@ -127,7 +131,7 @@
         provider: this.contentDefaults.provider || '',
         aggregator: this.contentDefaults.aggregator || '',
         copyrightHolder: this.contentDefaults.copyright_holder || '',
-        license: parseInt(this.contentDefaults.license, 10) || '',
+        license: findLicense(this.contentDefaults.license, { license_name: '' }).license_name,
         licenseDescription: this.contentDefaults.license_description || '',
 
         autoDeriveAudioThumbnail: defaultTo(this.contentDefaults.auto_derive_audio_thumbnail, true),
@@ -142,7 +146,7 @@
     computed: {
       licenseOpts() {
         const licenseOpts = Constants.Licenses.map(license => ({
-          value: license.id,
+          value: license.license_name,
           text: this.translateConstant(license.license_name),
         }));
 
@@ -153,9 +157,7 @@
         return licenseOpts;
       },
       isCustomLicense() {
-        const licenseId = parseInt(this.license, 10) || 0;
-        const license = Constants.Licenses.find(license => license.id === licenseId);
-        return license && license.is_custom;
+        return findLicense(this.license, { is_custom: false }).is_custom;
       },
     },
     methods: {

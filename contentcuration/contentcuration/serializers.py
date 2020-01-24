@@ -183,8 +183,8 @@ class ContentDefaultsSerializer(serializers.Serializer):
     aggregator = serializers.CharField(allow_null=True, required=False)
     provider = serializers.CharField(allow_null=True, required=False)
     copyright_holder = serializers.CharField(allow_null=True, required=False)
-    license = serializers.IntegerField(allow_null=True, required=False,
-                                       validators=[License.validate])
+    license = serializers.CharField(allow_null=True, required=False,
+                                    validators=[License.validate_name])
     license_description = serializers.CharField(allow_null=True, required=False)
     auto_derive_video_thumbnail = serializers.BooleanField(required=False)
     auto_derive_audio_thumbnail = serializers.BooleanField(required=False)
