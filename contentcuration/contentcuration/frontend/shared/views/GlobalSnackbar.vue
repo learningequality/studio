@@ -45,7 +45,7 @@
         if (this.snackbarOptions.hideCallback) {
           this.snackbarOptions.hideCallback();
         }
-        this.$store.commit('CORE_CLEAR_SNACKBAR')
+        this.$store.commit('CORE_CLEAR_SNACKBAR');
       },
     },
   };
