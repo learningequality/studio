@@ -1,1 +1,1 @@
-node_modules/kolibri-tools/.prettierrc.js
+./node_modules/kolibri-tools/.prettierrc.js
