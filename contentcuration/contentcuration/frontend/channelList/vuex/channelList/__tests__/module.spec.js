@@ -4,6 +4,7 @@ import client from 'shared/client';
 import storeFactory from 'shared/vuex/baseStore';
 
 jest.mock('shared/client');
+jest.mock('shared/vuex/connectionPlugin');
 
 const id = '00000000000000000000000000000000';
 
