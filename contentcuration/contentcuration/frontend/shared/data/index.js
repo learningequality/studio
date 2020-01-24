@@ -13,7 +13,7 @@ export { TABLE_NAMES, default as RESOURCES } from './resources';
 
 const LISTENERS = {};
 
-export function initializeDB() {
+export function setupSchema() {
   db.version(1).stores({
     // A special table for logging unsynced changes
     // Dexie.js appears to have a table for this,
@@ -28,7 +28,9 @@ export function initializeDB() {
     [MOVES_TABLE]: 'rev++',
     ...mapValues(RESOURCES, value => value.schema),
   });
+}
 
+function setupListeners() {
   db.on('changes', function(changes) {
     changes.forEach(function(change) {
       // Don't invoke listeners if their client originated the change
@@ -47,15 +49,24 @@ export function initializeDB() {
       }
     });
   });
+}
 
+function runElection() {
   const elector = createLeaderElection(channel);
 
   elector.awaitLeadership().then(() => {
     startSyncing();
   });
+}
+
+export function initializeDB() {
+  setupSchema();
+  setupListeners();
+  runElection();
 
   return db.open();
 }
+
 
 export function registerListener(table, change, callback) {
   change = Number(change);

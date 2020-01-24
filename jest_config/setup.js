@@ -1,5 +1,8 @@
 import Vue from 'vue';
 import Vuetify from 'vuetify';
+// Polyfill indexeddb
+import "fake-indexeddb/auto";
+import { setupSchema } from 'shared/data';
 
 Vue.use(Vuetify);
 
@@ -16,3 +19,5 @@ global.window.Urls = new Proxy(
     },
   }
 );
+
+setupSchema();

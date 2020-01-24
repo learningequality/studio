@@ -1,10 +1,7 @@
 import Vue from 'vue';
-import { channelLastSavedState } from './index';
-import { ContentDefaults } from 'shared/constants';
 
 /* CHANNEL LIST MUTATIONS */
 function mergeChannel(channelsMap, channel) {
-  channelLastSavedState.storeLastSavedState(channel);
   return {
     ...channelsMap,
     [channel.id]: {
@@ -30,41 +27,17 @@ export function REMOVE_CHANNEL(state, channel) {
 
 export function UPDATE_CHANNEL(
   state,
-  { id, name = null, description = null, thumbnailData = null, language = null, content_defaults = {} } = {}
+  { id, ...payload } = {}
 ) {
   if (!id) {
-    throw ReferenceError('id must be defined to update a channel set');
+    throw ReferenceError('id must be defined to update a channel');
   }
-  const channel = state.channelsMap[id];
-  if (name !== null) {
-    channel.name = name;
-  }
-  if (description !== null) {
-    channel.description = description;
-  }
-  if (
-    thumbnailData !== null &&
-    ['thumbnail', 'thumbnail_url', 'thumbnail_encoding'].every(attr => thumbnailData[attr])
-  ) {
-    channel.thumbnail = thumbnailData.thumbnail;
-    channel.thumbnail_url = thumbnailData.thumbnail_url;
-    channel.thumbnail_encoding = thumbnailData.thumbnail_encoding;
-  }
-  if (language !== null) {
-    channel.language = language;
-  }
-  if (!channel.content_defaults) {
-    channel.content_defaults = {};
-  }
-  // Assign all acceptable content defaults into the channel defaults
-  Object.assign(
-    channel.content_defaults,
-    Object.entries(content_defaults)
-      .filter(([key]) => key in ContentDefaults)
-      .reduce((defaults, [key, value]) => ({ ...defaults, [key]: value }), {})
-  );
+  state.channelsMap[id] = {
+    ...state.channelsMap[id],
+    ...payload,
+  };
 }
 
-export function TOGGLE_BOOKMARK(state, id) {
-  state.channelsMap[id].bookmark = !state.channelsMap[id].bookmark;
+export function SET_BOOKMARK(state, { id, bookmark }) {
+  state.channelsMap[id].bookmark = bookmark;
 }

@@ -1,202 +1,154 @@
-import channelList, { channelLastSavedState } from '../index';
-import { generateTempId } from 'shared/utils';
-import client from 'shared/client';
+import channel from '../index';
+import { Channel } from 'shared/data/resources';
 import storeFactory from 'shared/vuex/baseStore';
-
-jest.mock('shared/client');
-
-const id = '00000000000000000000000000000000';
 
 const userId = 'testId';
 
 describe('channel actions', () => {
   let store;
+  let id;
+  const channelDatum = { name: 'test', deleted: false, edit: true };
   beforeEach(() => {
-    store = storeFactory({
-      modules: {
-        channelList,
-      },
+    return Channel.put(channelDatum).then(newId => {
+      id = newId;
+      store = storeFactory({
+        modules: {
+          channel,
+        },
+      });
+      store.state.session.currentUser.id = userId;
     });
-    store.state.session.currentUser.id = userId;
+  });
+  afterEach(() => {
+    return Channel.table.toCollection().delete();
   });
   describe('loadChannelList action', () => {
-    it('should call client.get', () => {
-      return store.dispatch('channelList/loadChannelList').then(() => {
-        expect(client.get).toHaveBeenCalledWith('channel-list', { params: {} });
+    it('should call Channel.where', () => {
+      const whereSpy = jest.spyOn(Channel, 'where');
+      return store.dispatch('channel/loadChannelList').then(() => {
+        expect(whereSpy).toHaveBeenCalledWith({ deleted: false });
+        whereSpy.mockRestore();
       });
     });
-    it('should call client.get with a specific listType', () => {
-      return store.dispatch('channelList/loadChannelList', 'edit').then(() => {
-        expect(client.get).toHaveBeenCalledWith('channel-list', { params: 'edit' });
+    it('should call Channel.where with a specific listType', () => {
+      const whereSpy = jest.spyOn(Channel, 'where');
+      return store.dispatch('channel/loadChannelList', { listType: 'edit' }).then(() => {
+        expect(whereSpy).toHaveBeenCalledWith({ edit: true, deleted: false });
+        whereSpy.mockRestore();
       });
     });
     it('should set the returned data to the channels', () => {
-      const channels = [{ id: '00000000000000000000000000000000', name: 'test' }];
-      client.__setResponse('get', {
-        data: channels,
-      });
-      return store.dispatch('channelList/loadChannelList').then(() => {
-        expect(store.getters['channelList/channels']).toEqual(channels);
+      return store.dispatch('channel/loadChannelList').then(() => {
+        expect(store.getters['channel/channels']).toEqual([channelDatum]);
       });
     });
   });
   describe('loadChannel action', () => {
-    it('should call client.get', () => {
-      return store.dispatch('channelList/loadChannel', id).then(() => {
-        expect(client.get).toHaveBeenCalledWith('channel-detail');
+    it('should call Channel.get', () => {
+      const getSpy = jest.spyOn(Channel, 'get');
+      return store.dispatch('channel/loadChannel', id).then(() => {
+        expect(getSpy).toHaveBeenCalledWith(id);
+        getSpy.mockRestore();
       });
     });
     it('should set the returned data to the channels', () => {
-      const channel = { id: '00000000000000000000000000000000', name: 'test' };
-      client.__setResponse('get', {
-        data: channel,
-      });
-      return store.dispatch('channelList/loadChannel', id).then(() => {
-        expect(store.getters['channelList/channels']).toEqual([channel]);
+      return store.dispatch('channel/loadChannel', id).then(() => {
+        expect(store.getters['channel/channels']).toEqual([channelDatum]);
       });
     });
   });
-  describe('saveChannel action', () => {
-    describe('for a new channel', () => {
-      const tempId = generateTempId();
-      it('should call client.post', () => {
-        store.commit('channelList/ADD_CHANNEL', {
-          id: tempId,
-          name: 'test',
-        });
-        client.__setResponse('post', {
-          data: {
-            id,
-            name: 'test',
-          },
-        });
-        return store.dispatch('channelList/saveChannel', tempId).then(() => {
-          expect(client.post).toHaveBeenCalledWith('channel-list', {
-            editors: [userId],
-            name: 'test',
-          });
-        });
-      });
-      it('should remove the original channel', () => {
-        store.commit('channelList/ADD_CHANNEL', {
-          id: tempId,
-          name: 'test',
-        });
-        client.__setResponse('post', {
-          data: {
-            id,
-            name: 'test',
-          },
-        });
-        return store.dispatch('channelList/saveChannel', tempId).then(() => {
-          expect(store.getters['channelList/getChannel'](tempId)).toBeUndefined();
-        });
-      });
-      it('should add the new channel', () => {
-        store.commit('channelList/ADD_CHANNEL', {
-          id: tempId,
-          name: 'test',
-        });
-        client.__setResponse('post', {
-          data: {
-            id,
-            name: 'test',
-          },
-        });
-        return store.dispatch('channelList/saveChannel', tempId).then(() => {
-          expect(store.getters['channelList/getChannel'](id)).toEqual({
-            id,
-            name: 'test',
-          });
-        });
+  describe('createChannel action for a new channel', () => {
+    it('should add a new channel with an id', () => {
+      return store.dispatch('channel/createChannel').then(id => {
+        expect(store.getters['channel/getChannel'](id)).not.toBeUndefined();
       });
     });
-    describe('for an existing channel', () => {
-      it('should call client.patch', () => {
-        store.commit('channelList/ADD_CHANNEL', {
-          id,
-          name: 'test',
-        });
-        client.__setResponse('patch', {
-          data: true,
-        });
-        store.commit('channelList/UPDATE_CHANNEL', {
-          id,
+  });
+  describe('updateChannel action for an existing channel', () => {
+    it('should call Channel.update', () => {
+      store.commit('channel/ADD_CHANNEL', {
+        id,
+        name: 'test',
+      });
+      const updateSpy = jest.spyOn(Channel, 'update');
+      return store.dispatch('channel/updateChannel', {
+        id,
+        name: 'notatest',
+        description: 'very',
+        language: 'no',
+      }).then(() => {
+        expect(updateSpy).toHaveBeenCalledWith(id, {
           name: 'notatest',
           description: 'very',
           language: 'no',
         });
-        return store.dispatch('channelList/saveChannel', id).then(() => {
-          expect(client.patch).toHaveBeenCalledWith('channel-detail', {
-            name: 'notatest',
-            description: 'very',
-            language: 'no',
-            content_defaults: {},
-          });
-        });
+        updateSpy.mockRestore();
       });
-      it('should set channel last saved state so that there is no diff', () => {
-        store.commit('channelList/ADD_CHANNEL', {
-          id,
-          name: 'test',
-        });
-        client.__setResponse('patch', {
-          data: true,
-        });
-        store.commit('channelList/UPDATE_CHANNEL', {
-          id,
-          name: 'notatest',
-        });
-        return store.dispatch('channelList/saveChannel', id).then(() => {
-          expect(
-            channelLastSavedState.hasUnsavedChanges(store.getters['channelList/getChannel'](id))
-          ).toBe(false);
-        });
+    });
+    it('should call parse thumbnail options properly', () => {
+      store.commit('channel/ADD_CHANNEL', {
+        id,
+        name: 'test',
       });
-      it('should call parse thumbnail options properly', () => {
-        store.commit('channelList/ADD_CHANNEL', {
-          id,
-          name: 'test',
+      const updateSpy = jest.spyOn(Channel, 'update');
+      return store.dispatch('channel/updateChannel', {
+        id,
+        thumbnailData: {
+          thumbnail: 'test',
+          thumbnail_url: 'testUrl',
+          thumbnail_encoding: 'testEncoding',
+        }
+      }).then(() => {
+        expect(updateSpy).toHaveBeenCalledWith(id, {
+          thumbnail: 'test',
+          thumbnail_url: 'testUrl',
+          thumbnail_encoding: 'testEncoding',
         });
-        client.__setResponse('patch', {
-          data: true,
-        });
-        store.commit('channelList/UPDATE_CHANNEL', {
-          id,
-          thumbnailData: {
-            thumbnail: 'test',
-            thumbnail_url: 'testUrl',
-            thumbnail_encoding: 'testEncoding',
-          },
-        });
-        return store.dispatch('channelList/saveChannel', id).then(() => {
-          expect(client.patch).toHaveBeenCalledWith('channel-detail', {
-            thumbnail: 'test',
-            thumbnail_url: 'testUrl',
-            thumbnail_encoding: 'testEncoding',
-            content_defaults: {},
-          });
-        });
+        updateSpy.mockRestore();
       });
     });
   });
   describe('deleteChannel action', () => {
-    it('should call client.patch', () => {
-      store.commit('channelList/ADD_CHANNEL', {
+    it('should call Channel.update', () => {
+      const updateSpy = jest.spyOn(Channel, 'update');
+      store.commit('channel/ADD_CHANNEL', {
         id,
         name: 'test',
       });
-      return store.dispatch('channelList/deleteChannel', id).then(() => {
-        expect(client.patch).toHaveBeenCalledWith('channel-detail', { deleted: true });
+      return store.dispatch('channel/deleteChannel', id).then(() => {
+        expect(updateSpy).toHaveBeenCalledWith(id, { deleted: true });
       });
     });
     it('should remove the channel from vuex state', () => {
-      store.commit('channelList/ADD_CHANNEL', {
+      store.commit('channel/ADD_CHANNEL', {
         id,
         name: 'test',
       });
-      return store.dispatch('channelList/deleteChannel', id).then(() => {
-        expect(store.getters['channelList/getChannel'](id)).toBeUndefined();
+      return store.dispatch('channel/deleteChannel', id).then(() => {
+        expect(store.getters['channel/getChannel'](id)).toBeUndefined();
+      });
+    });
+  });
+  describe('bookmarkChannel action', () => {
+    it('should call Channel.update', () => {
+      const updateSpy = jest.spyOn(Channel, 'update');
+      store.commit('channel/ADD_CHANNEL', {
+        id,
+        name: 'test',
+        bookmark: false,
+      });
+      return store.dispatch('channel/bookmarkChannel', { id, bookmark: true }).then(() => {
+        expect(updateSpy).toHaveBeenCalledWith(id, { bookmark: true });
+      });
+    });
+    it('should set the channel as bookmarked in vuex state', () => {
+      store.commit('channel/ADD_CHANNEL', {
+        id,
+        name: 'test',
+        bookmark: false,
+      });
+      return store.dispatch('channel/bookmarkChannel', { id, bookmark: true }).then(() => {
+        expect(store.getters['channel/getChannel'](id).bookmark).toBe(true);
       });
     });
   });

@@ -1,8 +1,10 @@
+import pick from 'lodash/pick';
+import { ContentDefaults } from 'shared/constants';
 import { Channel } from 'shared/data/resources';
 
 /* CHANNEL LIST ACTIONS */
-export function loadChannelList(context, payload) {
-  if (payload && payload.listType) {
+export function loadChannelList(context, payload = {}) {
+  if (payload.listType) {
     payload[payload.listType] = true;
     delete payload.listType;
   }
@@ -40,6 +42,7 @@ export function createChannel(context) {
     thumbnail_url: '',
     bookmark: false,
     edit: true,
+    deleted: false,
   };
   return Channel.put(channelData).then(id => {
     context.commit('ADD_CHANNEL', {
@@ -50,14 +53,43 @@ export function createChannel(context) {
   });
 }
 
-export function updateChannel(context, channelData) {
-  context.commit('UPDATE_CHANNEL', channelData);
-  return Channel.update(channelData.id, channelData);
+export function updateChannel(context, { id, name = null, description = null, thumbnailData = null, language = null, contentDefaults = null } = {}) {
+  const channelData = {};
+  if (!id) {
+    throw ReferenceError('id must be defined to update a channel');
+  }
+  if (name !== null) {
+    channelData.name = name;
+  }
+  if (description !== null) {
+    channelData.description = description;
+  }
+  if (
+    thumbnailData !== null &&
+    ['thumbnail', 'thumbnail_url', 'thumbnail_encoding'].every(attr => thumbnailData[attr])
+  ) {
+    channelData.thumbnail = thumbnailData.thumbnail;
+    channelData.thumbnail_url = thumbnailData.thumbnail_url;
+    channelData.thumbnail_encoding = thumbnailData.thumbnail_encoding;
+  }
+  if (language !== null) {
+    channelData.language = language;
+  }
+  if (contentDefaults !== null) {
+    channelData.content_defaults = {};
+    // Assign all acceptable content defaults into the channel defaults
+    Object.assign(
+      channelData.content_defaults,
+      pick(contentDefaults, Object.keys(ContentDefaults)),
+    );
+  }
+  context.commit('UPDATE_CHANNEL', { id, ...channelData });
+  return Channel.update(id, channelData);
 }
 
-export function bookmarkChannel(context, payload) {
-  return Channel.update(payload.id, { bookmark: payload.bookmark }).then(() => {
-    context.commit('TOGGLE_BOOKMARK', payload.id);
+export function bookmarkChannel(context, { id, bookmark }) {
+  return Channel.update(id, { bookmark }).then(() => {
+    context.commit('SET_BOOKMARK', { id, bookmark });
   });
 }
 
