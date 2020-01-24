@@ -1,12 +1,13 @@
-import inspect
-import logging
-
-from django.db.models.query import QuerySet
-
 from base import BaseAPITestCase
+from django.db.models.query import QuerySet
+from rest_framework import serializers
 
+from contentcuration.models import Channel
 from contentcuration.models import ContentNode
+from contentcuration.serializers import ContentDefaultsSerializer
+from contentcuration.serializers import ContentDefaultsSerializerMixin
 from contentcuration.serializers import ContentNodeSerializer
+from contentcuration.serializers import DEFAULT_CONTENT_DEFAULTS
 
 
 def ensure_no_querysets_in_serializer(object):
@@ -27,3 +28,113 @@ class ContentNodeSErializerTestCase(BaseAPITestCase):
         objects = ContentNodeSerializer(ContentNode.objects.filter(node_id__in=node_ids), many=True).data
         for object in objects:
             ensure_no_querysets_in_serializer(object)
+
+
+class ContentDefaultsSerializerTestCase(BaseAPITestCase):
+    def test_create(self):
+        s = ContentDefaultsSerializer(data={})
+        self.assertTrue(s.is_valid())
+        self.assertEqual(DEFAULT_CONTENT_DEFAULTS, s.save())
+
+    def test_create__merge(self):
+        defaults = dict(
+            author='Buster',
+            aggregator='Aggregators R US',
+            provider='USA',
+            copyright_holder='Learning Equality',
+            license='Special Permissions',
+            license_description='Things go here',
+            auto_derive_video_thumbnail=False,
+        )
+        s = ContentDefaultsSerializer(data=defaults)
+        self.assertTrue(s.is_valid())
+
+        defaults.update(
+            auto_derive_audio_thumbnail=True,
+            auto_derive_document_thumbnail=True,
+            auto_derive_html5_thumbnail=True,
+            auto_derive_exercise_thumbnail=True,
+            auto_randomize_questions=True,
+            mastery_model='num_correct_in_a_row_5',
+            m_value=5,
+            n_value=5,
+            language=None,
+        )
+        self.assertEqual(defaults, s.save())
+
+    def test_update(self):
+        defaults = dict(author='Buster')
+        s = ContentDefaultsSerializer(defaults, data={})
+        self.assertTrue(s.is_valid())
+        self.assertEqual(defaults, s.save())
+
+    def test_update__merge(self):
+        defaults = dict(
+            author='Buster',
+            aggregator='Aggregators R US',
+            provider='USA',
+        )
+        s = ContentDefaultsSerializer(defaults, data=dict(
+            author='Duster',
+            provider='Canada',
+        ))
+        self.assertTrue(s.is_valid())
+        self.assertEqual(dict(
+            author='Duster',
+            aggregator='Aggregators R US',
+            provider='Canada',
+        ), s.save())
+
+    def test_validate_license(self):
+        defaults = dict(
+            license=''
+        )
+        s = ContentDefaultsSerializer(defaults, data=dict(
+            license='This license does not exist'
+        ))
+        self.assertFalse(s.is_valid())
+
+
+class ContentDefaultsSerializerMixinTestCase(BaseAPITestCase):
+    class ChannelSerializer(ContentDefaultsSerializerMixin, serializers.ModelSerializer):
+        content_defaults = serializers.DictField()
+
+        class Meta:
+            model = Channel
+            fields = (
+                "id",
+                "content_defaults",
+            )
+            read_only_fields = ("id",)
+
+    def test_save__create(self):
+        s = self.ChannelSerializer(data=dict(
+            name='New test channel',
+            description='This is the best test channel',
+            content_defaults=dict(author='Buster')
+        ))
+
+        self.assertTrue(s.is_valid())
+        c = s.save()
+
+        defaults = DEFAULT_CONTENT_DEFAULTS.copy()
+        defaults.update(author='Buster')
+        self.assertEqual(defaults, c.content_defaults)
+
+    def test_save__update(self):
+        c = Channel(
+            name='New test channel',
+            description='This is the best test channel',
+            content_defaults=dict(author='Buster')
+        )
+        c.save()
+
+        s = self.ChannelSerializer(c, data=dict(
+            content_defaults=dict(license='Special Permissions')
+        ))
+
+        self.assertTrue(s.is_valid())
+        self.assertEqual(dict(
+            author='Buster',
+            license='Special Permissions'
+        ), s.save().content_defaults)
