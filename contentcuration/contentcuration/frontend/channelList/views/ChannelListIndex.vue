@@ -33,7 +33,6 @@
       </template>
     </AppBar>
     <VContent>
-      <VBtn large color="primary" @click="$store.commit('CORE_CREATE_SNACKBAR', { text: 'SNACKY', duration: 10000, actionText: 'nah'})">Show Snackbar!</VBtn>
       <VContainer fluid>
         <VLayout row wrap justify-center>
           <VFlex xs12 sm10 md8 lg6>
@@ -54,7 +53,6 @@
         </keep-alive>
       </VContainer>
     </VContent>
-    <GlobalSnackbar />
   </VApp>
 
 </template>
@@ -66,14 +64,12 @@
   import { ListTypes, RouterNames, ChannelInvitationMapping } from '../constants';
   import ChannelInvitation from './Channel/ChannelInvitation';
   import AppBar from 'shared/views/AppBar';
-  import GlobalSnackbar from 'shared/views/GlobalSnackbar';
 
   export default {
     name: 'ChannelListIndex',
     components: {
       AppBar,
       ChannelInvitation,
-      GlobalSnackbar,
     },
     computed: {
       ...mapState({
