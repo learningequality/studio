@@ -63,7 +63,7 @@
 <script>
 
   import sortBy from 'lodash/sortBy';
-  import { mapGetters, mapActions, mapMutations } from 'vuex';
+  import { mapGetters, mapActions } from 'vuex';
   import { ListTypes } from '../../constants';
 
   function listTypeValidator(value) {
@@ -130,10 +130,7 @@
       });
     },
     methods: {
-      ...mapActions('channel', ['loadChannelList']),
-      ...mapMutations('channelSet', {
-        updateChannelSet: 'UPDATE_CHANNELSET',
-      }),
+      ...mapActions('channel', ['loadChannelList', 'updateChannelSet']),
     },
     $trs: {
       searchText: 'Search for a channel',

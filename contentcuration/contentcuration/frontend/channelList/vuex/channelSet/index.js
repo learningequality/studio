@@ -1,7 +1,7 @@
 import * as mutations from './mutations';
 import * as actions from './actions';
 import * as getters from './getters';
-import { lastSavedStateFactory } from 'shared/utils';
+import { TABLE_NAMES, CHANGE_TYPES } from 'shared/data';
 
 export default {
   namespaced: true,
@@ -11,4 +11,12 @@ export default {
   actions,
   mutations,
   getters,
+  // Mutations that should be called for these events on the specified tables.
+  listeners: {
+    [TABLE_NAMES.CHANNEL]: {
+      [CHANGE_TYPES.CREATED]: 'ADD_CHANNELSET',
+      [CHANGE_TYPES.UPDATED]: 'UPDATE_CHANNELSET',
+      [CHANGE_TYPES.DELETED]: 'REMOVE_CHANNELSET',
+    },
+  },
 };

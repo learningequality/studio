@@ -81,10 +81,9 @@
 
 <script>
 
-  import { mapGetters, mapActions, mapMutations } from 'vuex';
+  import { mapGetters, mapActions } from 'vuex';
   import { RouterNames } from '../../constants';
   import ChannelSetItem from './ChannelSetItem.vue';
-  import { generateTempId } from 'shared/utils';
   import PrimaryDialog from 'shared/views/PrimaryDialog';
 
   export default {
@@ -97,7 +96,6 @@
       return {
         loading: true,
         infoDialog: false,
-        newSetId: generateTempId(),
       };
     },
     computed: {
@@ -117,24 +115,13 @@
       });
     },
     methods: {
-      ...mapActions('channelSet', ['loadChannelSetList']),
-      ...mapMutations('channelSet', {
-        addChannelSet: 'ADD_CHANNELSET',
-        removeChannelSet: 'REMOVE_CHANNELSET',
-      }),
+      ...mapActions('channelSet', ['loadChannelSetList', 'createChannelSet']),
       newChannelSet() {
-        // Clear any previously existing dummy channelset
-        this.removeChannelSet(this.newSetId);
-        this.newSetId = generateTempId();
-        this.addChannelSet({
-          id: this.newSetId,
-          name: '',
-          description: '',
-          channels: [],
-        });
-        this.$router.push({
-          name: RouterNames.CHANNEL_SET_DETAILS,
-          params: { channelSetId: this.newSetId },
+        this.createChannelSet().then(id => {
+          this.$router.push({
+            name: RouterNames.CHANNEL_SET_DETAILS,
+            params: { channelSetId: id },
+          });
         });
       },
     },

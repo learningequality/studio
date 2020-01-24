@@ -125,7 +125,7 @@ class Resource {
     });
   }
 
-  where(params) {
+  where(params = {}) {
     const table = db[this.tableName];
     const whereParams = pick(params, this.indexFields);
     let collection;
@@ -228,6 +228,7 @@ class Resource {
 export const TABLE_NAMES = {
   CHANNEL: 'channel',
   CONTENTNODE: 'contentnode',
+  CHANNELSET: 'channelset',
 };
 
 export const Channel = new Resource({
@@ -240,6 +241,11 @@ export const ContentNode = new Resource({
   tableName: TABLE_NAMES.CONTENTNODE,
   urlName: 'contentnode',
   indexFields: ['title', 'language', 'parent'],
+});
+
+export const ChannelSet = new Resource({
+  tableName: TABLE_NAMES.CHANNELSET,
+  urlName: 'channelset',
 });
 
 export default RESOURCES;
