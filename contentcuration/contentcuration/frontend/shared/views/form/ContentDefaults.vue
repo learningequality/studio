@@ -12,6 +12,7 @@
       <VTextField
         v-model="author"
         outline
+        data-name="author"
         :label="$tr('author')"
         :placeholder="$tr('authorPlaceholder')"
         @change="emitChange"
@@ -19,6 +20,7 @@
       <VTextField
         v-model="provider"
         outline
+        data-name="provider"
         :label="$tr('provider')"
         :placeholder="$tr('providerPlaceholder')"
         @change="emitChange"
@@ -26,6 +28,7 @@
       <VTextField
         v-model="aggregator"
         outline
+        data-name="aggregator"
         :label="$tr('aggregator')"
         :placeholder="$tr('aggregatorPlaceholder')"
         @change="emitChange"
@@ -33,6 +36,7 @@
       <VTextField
         v-model="copyrightHolder"
         outline
+        data-name="copyrightHolder"
         :label="$tr('copyrightHolder')"
         :placeholder="$tr('copyrightHolderPlaceholder')"
         @change="emitChange"
@@ -40,6 +44,7 @@
       <VSelect
         v-model="license"
         outline
+        data-name="license"
         :items="licenseOpts"
         :label="$tr('license')"
         @change="emitChange"
@@ -48,6 +53,7 @@
         v-if="isCustomLicense"
         v-model="licenseDescription"
         outline
+        data-name="licenseDescription"
         :label="$tr('licenseDescription')"
         :placeholder="$tr('licenseDescriptionPlaceholder')"
         @change="emitChange"
@@ -59,27 +65,31 @@
         {{ thumbnailsSubTitle || $tr('thumbnailsTitle') }}
       </legend>
 
-      <Checkbox
+      <AppCheckbox
         v-model="autoDeriveVideoThumbnail"
         class="mt-2"
+        data-name="autoDeriveVideoThumbnail"
         :label="$tr('videos')"
         @change="emitChange"
       />
-      <Checkbox
+      <AppCheckbox
         v-model="autoDeriveAudioThumbnail"
         class="mt-2"
+        data-name="autoDeriveAudioThumbnail"
         :label="constantStrings('audio')"
         @change="emitChange"
       />
-      <Checkbox
+      <AppCheckbox
         v-model="autoDeriveHtml5Thumbnail"
         class="mt-2"
+        data-name="autoDeriveHtml5Thumbnail"
         :label="$tr('html5')"
         @change="emitChange"
       />
-      <Checkbox
+      <AppCheckbox
         v-model="autoDeriveDocumentThumbnail"
         class="mt-2"
+        data-name="autoDeriveDocumentThumbnail"
         :label="$tr('documents')"
         @change="emitChange"
       />
@@ -93,7 +103,7 @@
 
   import defaultTo from 'lodash/defaultTo';
   import { constantsTranslationMixin } from '../../../shared/mixins';
-  import Checkbox from './Checkbox';
+  import AppCheckbox from './AppCheckbox';
   import Constants from 'edit_channel/constants/index';
   import { ContentDefaults } from 'shared/constants';
 
@@ -104,7 +114,7 @@
   export default {
     name: 'ContentDefaults',
     components: {
-      Checkbox,
+      AppCheckbox,
     },
     mixins: [constantsTranslationMixin],
     model: {

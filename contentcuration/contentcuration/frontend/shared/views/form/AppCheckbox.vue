@@ -3,7 +3,7 @@
   import { VCheckbox } from 'vuetify/lib/components/VCheckbox';
 
   export default {
-    name: 'Checkbox',
+    name: 'AppCheckbox',
     extends: VCheckbox,
     props: {
       /* eslint-disable kolibri/vue-no-unused-properties */

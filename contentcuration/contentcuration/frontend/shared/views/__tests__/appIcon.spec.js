@@ -1,0 +1,40 @@
+import { mount } from '@vue/test-utils';
+import Vue from 'vue';
+import Vuetify from 'vuetify';
+import AppIcon from '../AppIcon.vue';
+
+Vue.use(Vuetify);
+
+function makeWrapper(options) {
+  return mount(AppIcon, options);
+}
+
+describe('appIcon', () => {
+  it('should have the `notranslate` CSS class', () => {
+    const wrapper = makeWrapper({});
+    const icon = wrapper.find({ name: 'v-icon' });
+    expect(icon.classes('notranslate')).toEqual(true);
+  });
+
+  it('should set the icon properly from the slot', () => {
+    const wrapper = makeWrapper({
+      context: {
+        children: ['circle'],
+      },
+    });
+    const icon = wrapper.find({ name: 'v-icon' });
+    expect(icon.text()).toEqual('circle');
+  });
+
+  it('should set the icon properly from the prop', () => {
+    const wrapper = makeWrapper({
+      context: {
+        props: {
+          iconName: 'circle',
+        },
+      },
+    });
+    const icon = wrapper.find({ name: 'v-icon' });
+    expect(icon.text()).toEqual('circle');
+  });
+});
