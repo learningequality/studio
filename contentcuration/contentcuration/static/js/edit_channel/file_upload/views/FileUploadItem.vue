@@ -23,28 +23,22 @@
             <span v-if="file" class="notranslate" @click.stop="uploader.openFileDialog">
               {{ file.original_filename }}
             </span>
-            <a
+            <ActionLink
               v-else
+              class="notranslate"
               data-test="upload-link"
-              class="action-link"
-              :style="{color: $vuetify.theme.primary}"
-              @click.stop="uploader.openFileDialog"
-            >
-              {{ $tr('uploadButton') }}
-            </a>
+              :text="$tr('uploadButton')"
+              @click="uploader.openFileDialog"
+            />
           </VListTileTitle>
           <VListTileSubTitle v-if="file && file.error">
             {{ statusMessage([file.id]) }}
             &nbsp;
-            <a
+            <ActionLink
               v-if="file.error.type !== 'NO_STORAGE'"
-              class="action-link"
               data-test="error-upload-link"
-              :style="{color: $vuetify.theme.primary}"
-              @click.stop="uploader.openFileDialog"
-            >
-              {{ $tr('uploadButton') }}
-            </a>
+              @click="uploader.openFileDialog"
+            />
           </VListTileSubTitle>
           <VListTileSubTitle v-else-if="file && uploading">
             {{ statusMessage([file.id]) }}
@@ -79,12 +73,14 @@
   import { mapGetters } from 'vuex';
   import { fileSizeMixin, fileStatusMixin } from '../mixins';
   import Uploader from 'edit_channel/sharedComponents/Uploader.vue';
+  import ActionLink from 'edit_channel/sharedComponents/ActionLink.vue';
   import { translate } from 'edit_channel/utils/string_helper';
 
   export default {
     name: 'FileUploadItem',
     components: {
       Uploader,
+      ActionLink,
     },
     filters: {
       translate(text) {
@@ -95,9 +91,11 @@
     props: {
       file: {
         type: Object,
+        required: false,
       },
       preset: {
         type: Object,
+        required: true,
       },
       allowFileRemove: {
         type: Boolean,

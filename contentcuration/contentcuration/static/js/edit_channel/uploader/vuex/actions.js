@@ -1,9 +1,10 @@
 import _ from 'underscore';
 
 function filesAreValid(files) {
+  // Using f.progress < 100 in case progress is undefined (already uploaded)
   let validPrimaryFiles = _.filter(
     files,
-    f => !f.preset.supplementary && !f.error && f.progress >= 100
+    f => !f.preset.supplementary && !f.error && !(f.progress < 100)
   );
   return validPrimaryFiles.length > 0;
 }
@@ -15,7 +16,6 @@ export function saveNodes(context) {
       // Skip uploads
       return n.changesStaged && filesAreValid(n.files);
     });
-
     context
       .dispatch('saveNodes', changed, { root: true })
       .then(data => {

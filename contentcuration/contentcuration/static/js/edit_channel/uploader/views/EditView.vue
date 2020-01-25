@@ -69,7 +69,7 @@
           </VTabs>
           <VTabsItems v-model="currentTab">
             <VTabItem :key="tabs.DETAILS" ref="detailswindow" :value="tabs.DETAILS" lazy>
-              <VAlert :value="selected.length > 1" type="info" outline>
+              <VAlert :value="selected.length > 1" type="info" color="primary" outline>
                 {{ countText }}
               </VAlert>
               <VAlert v-if="invalidSelected" :value="true" type="error" outline icon="error">

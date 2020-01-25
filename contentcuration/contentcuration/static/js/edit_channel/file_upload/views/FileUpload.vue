@@ -17,13 +17,14 @@
           <ContentNodeIcon :kind="node.kind" includeText />
         </p>
         <div class="preview-wrapper">
-          <FilePreview :file="currentPreview" :nodeTitle="node.title" />
+          <FilePreview :file="currentPreview" :node="node" />
         </div>
       </VFlex>
       <VFlex sm12 md6 lg7 xl8>
         <VContainer fluid>
           <VLayout alignStart>
             <VRadioGroup
+              hide-details
               :value="currentPreview && currentPreview.id"
               :label="$tr('filesHeader')"
               @input="selectPreview"
@@ -71,6 +72,7 @@
     props: {
       nodeIndex: {
         type: Number,
+        required: true,
       },
       viewOnly: {
         type: Boolean,

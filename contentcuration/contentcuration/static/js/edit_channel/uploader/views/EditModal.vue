@@ -86,7 +86,7 @@
                 </Uploader>
               </VFlex>
               <VSpacer />
-              <VFlex v-if="allowUpload" class="text-right">
+              <VFlex v-if="allowUpload" class="text-xs-right">
                 <FileStorage />
               </VFlex>
             </VToolbar>

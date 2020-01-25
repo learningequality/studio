@@ -55,6 +55,7 @@
     props: {
       file: {
         type: Object,
+        required: false,
       },
       fullscreen: {
         type: Boolean,

@@ -12,7 +12,7 @@
     >
       <VToolbar v-if="fullscreen" dark color="grey darken-3" dense>
         <VToolbarTitle class="notranslate">
-          {{ nodeTitle }}
+          {{ node.title }}
         </VToolbarTitle>
       </VToolbar>
       <VToolbar v-if="fullscreen" light dense>
@@ -22,17 +22,17 @@
           {{ $tr('exitFullscreen') }}
         </VBtn>
       </VToolbar>
-      <ContentRenderer :file="file" :fullscreen="fullscreen" />
+      <ContentRenderer
+        :file="file"
+        :fullscreen="fullscreen"
+      />
       <p v-if="!fullscreen" class="fullscreen-toggle">
-        <a
+        <ActionLink
           v-if="showFullscreenOption"
-          class="action-link"
           data-test="openfullscreen"
-          :style="{color: $vuetify.theme.primary}"
+          :text="$tr('viewFullscreen')"
           @click="fullscreen = true"
-        >
-          {{ $tr('viewFullscreen') }}
-        </a>
+        />
       </p>
     </VCard>
   </VScaleTransition>
@@ -44,18 +44,22 @@
   import _ from 'underscore';
   import ContentRenderer from './ContentRenderer.vue';
   import Constants from 'edit_channel/constants/index';
+  import ActionLink from 'edit_channel/sharedComponents/ActionLink.vue';
 
   export default {
     name: 'FilePreview',
     components: {
       ContentRenderer,
+      ActionLink,
     },
     props: {
       file: {
         type: Object,
+        required: false,
       },
-      nodeTitle: {
-        type: String,
+      node: {
+        type: Object,
+        required: true,
       },
     },
     data() {

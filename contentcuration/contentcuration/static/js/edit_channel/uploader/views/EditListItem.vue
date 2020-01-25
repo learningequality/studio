@@ -10,7 +10,11 @@
         @click.stop="toggleNode"
       />
     </VListTileAction>
-    <VListTileAction v-if="node.changesStaged" class="changed">
+    <VListTileAction
+      v-if="node.changesStaged"
+      :style="{color: $vuetify.theme.primary}"
+      class="changed"
+    >
       *
     </VListTileAction>
     <VListTileAction style="min-width:min-content;">
@@ -139,7 +143,6 @@
     &.changed {
       min-width: 15px;
       font-weight: bold;
-      color: @blue-500;
     }
   }
 

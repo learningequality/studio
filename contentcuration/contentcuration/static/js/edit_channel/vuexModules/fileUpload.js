@@ -201,17 +201,17 @@ const fileUploadsModule = {
                   })
                   .catch(reject); // End upload file
               })
-              .catch(reject); // End get upload url
+              .catch(error => {
+                switch (error.response && error.response.status) {
+                  case 418:
+                    reject(fileErrors.NO_STORAGE);
+                    break;
+                  default:
+                    reject(fileErrors.UPLOAD_FAILED);
+                }
+              }); // End get upload url
           })
-          .catch(error => {
-            switch (error.response && error.response.status) {
-              case 418:
-                reject(fileErrors.NO_STORAGE);
-                break;
-              default:
-                reject(fileErrors.UPLOAD_FAILED);
-            }
-          }); // End get hash
+          .catch(reject); // End get hash
       });
     },
   },

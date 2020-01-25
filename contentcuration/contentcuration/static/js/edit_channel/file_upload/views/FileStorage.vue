@@ -33,14 +33,13 @@
         }}
       </span>
     </span>
-    <a
+    <ActionLink
       v-if="storageIsFull || showWarning"
-      class="action-link"
       target="_blank"
+      class="action-link"
+      :text="$tr('requestStorage')"
       :href="storageRequestUrl"
-    >
-      {{ $tr('requestStorage') }}
-    </a>
+    />
   </div>
 
 </template>
@@ -49,9 +48,13 @@
 
   import { fileSizeMixin } from '../mixins';
   import State from 'edit_channel/state';
+  import ActionLink from 'edit_channel/sharedComponents/ActionLink.vue';
 
   export default {
     name: 'FileStorage',
+    components: {
+      ActionLink,
+    },
     mixins: [fileSizeMixin],
     props: {
       showProgress: {
