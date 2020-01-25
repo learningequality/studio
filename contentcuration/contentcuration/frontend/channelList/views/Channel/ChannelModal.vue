@@ -20,7 +20,7 @@
         </VToolbarTitle>
         <VSpacer />
         <VBtn flat data-test="save" @click="save">
-          {{ $tr('save') }}
+          {{ isNewChannel ? $tr('create') : $tr('save') }}
         </VBtn>
       </VToolbar>
       <VProgressLinear
@@ -234,6 +234,7 @@
       channelDescriptionPlaceholder: 'Enter channel description...',
       channelLanguagePlaceholder: 'Select a language...',
       save: 'Save changes',
+      create: 'Create',
     },
   };
 
