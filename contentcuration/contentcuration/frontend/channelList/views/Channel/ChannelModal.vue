@@ -32,7 +32,7 @@
       />
       <VCardText v-else>
         <VLayout row justify-center class="pb-5">
-          <VFlex md12 lg10 xl8>
+          <VFlex style="max-width: 800px;">
             <VForm ref="detailsform">
               <!-- TODO: Insert thumbnail here once the uploader is ready -->
               <fieldset class="py-1 mt-3">
@@ -248,6 +248,10 @@
     .title {
       font-size: 18px !important;
     }
+  }
+
+  /deep/ .v-select {
+    max-width: 400px;
   }
 
 </style>
