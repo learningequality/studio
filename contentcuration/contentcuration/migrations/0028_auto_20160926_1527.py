@@ -16,13 +16,13 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='exercise',
             name='mastery_model',
-            field=models.CharField(choices=[(b'do_all', b'Do all'), (b'num_correct_in_a_row_10', b'10 in a row'), (b'num_correct_in_a_row_3',
-                                                                                                                   b'3 in a row'), (b'num_correct_in_a_row_5', b'5 in a row'), (b'skill_check', b'Skill check')], default=b'do_all', max_length=200),
+            field=models.CharField(choices=[('do_all', 'Do all'), ('num_correct_in_a_row_10', '10 in a row'), ('num_correct_in_a_row_3',
+                                                                                                                   '3 in a row'), ('num_correct_in_a_row_5', '5 in a row'), ('skill_check', 'Skill check')], default='do_all', max_length=200),
         ),
         migrations.AlterField(
             model_name='formatpreset',
             name='id',
-            field=models.CharField(choices=[(b'high_res_video', b'High resolution video'), (b'low_res_video', b'Low resolution video'), (b'vector_video', b'Vector video'), (b'video_thumbnail', b'Thumbnail'), (b'video_subtitle', b'Subtitle'), (
-                b'audio', b'Audio'), (b'audio_thumbnail', b'Thumbnail'), (b'document', b'Document'), (b'document_thumbnail', b'Thumbnail'), (b'exercise', b'Exercise'), (b'exercise_thumbnail', b'Thumbnail')], max_length=150, primary_key=True, serialize=False),
+            field=models.CharField(choices=[('high_res_video', 'High resolution video'), ('low_res_video', 'Low resolution video'), ('vector_video', 'Vector video'), ('video_thumbnail', 'Thumbnail'), ('video_subtitle', 'Subtitle'), (
+                'audio', 'Audio'), ('audio_thumbnail', 'Thumbnail'), ('document', 'Document'), ('document_thumbnail', 'Thumbnail'), ('exercise', 'Exercise'), ('exercise_thumbnail', 'Thumbnail')], max_length=150, primary_key=True, serialize=False),
         ),
     ]

@@ -1,7 +1,8 @@
+from __future__ import absolute_import
+
 from django.core.urlresolvers import reverse
 
-from base import BaseTestCase
-
+from .base import BaseTestCase
 from contentcuration.utils.policies import check_policies
 
 

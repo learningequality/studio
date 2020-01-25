@@ -1,9 +1,11 @@
+from __future__ import absolute_import
+
 import pytest
-from base import BaseAPITestCase
 from django.core.files.storage import default_storage
 from django.core.urlresolvers import reverse_lazy
 from le_utils.constants import content_kinds
 
+from .base import BaseAPITestCase
 from contentcuration.utils.export_writer import ChannelDetailsCSVWriter
 from contentcuration.utils.export_writer import ChannelDetailsPDFWriter
 from contentcuration.utils.export_writer import ChannelDetailsPPTWriter
@@ -61,5 +63,5 @@ class ChannelDetailsTestCase(BaseAPITestCase):
                    content_kinds.HTML5: '1 Html App',
                    content_kinds.SLIDESHOW: '1 Slideshow',
                    'resource': '1 Total Resource'}
-        for kind, result in to_test.items():
+        for kind, result in list(to_test.items()):
             self.assertEqual(exporter.pluralize_constant(1, kind), result)

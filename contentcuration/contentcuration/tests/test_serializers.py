@@ -1,4 +1,6 @@
-from base import BaseAPITestCase
+from __future__ import absolute_import
+
+from .base import BaseAPITestCase
 from django.db.models.query import QuerySet
 from rest_framework import serializers
 

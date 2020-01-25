@@ -1,16 +1,20 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+
 import json
 
 import pytest
-from base import BaseAPITestCase
-from base import StudioTestCase
+from builtins import str
 from django.core.files.storage import default_storage
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.urlresolvers import reverse_lazy
 from le_utils.constants import content_kinds
 from le_utils.constants import format_presets
 from mock import patch
+from past.builtins import basestring
 
+from .base import BaseAPITestCase
+from .base import StudioTestCase
 from .testdata import base64encoding
 from .testdata import fileobj_video
 from .testdata import generated_base64encoding
@@ -205,36 +209,36 @@ class FileThumbnailTestCase(BaseAPITestCase):
 
 class FileMultilanguageTestCase(BaseAPITestCase):
     def test_upload_no_language(self):
-        upload_file = SimpleUploadedFile("test_file.txt", "file contents")
+        upload_file = SimpleUploadedFile("test_file.txt", b"file contents")
         request = self.create_post_request(reverse_lazy('multilanguage_file_upload'), {'file': upload_file})
 
         file_response = multilanguage_file_upload(request)
         self.assertEqual(file_response.status_code, 400)
-        self.assertEqual(file_response.content, 'Language is required')
+        self.assertEqual(file_response.content.decode('utf-8'), 'Language is required')
 
     def test_upload_no_preset(self):
-        upload_file = SimpleUploadedFile("test_file.txt", "file contents")
+        upload_file = SimpleUploadedFile("test_file.txt", b"file contents")
         request = self.create_post_request(reverse_lazy('multilanguage_file_upload'), {'file': upload_file})
         request.META.update({'HTTP_LANGUAGE': 'en'})
 
         file_response = multilanguage_file_upload(request)
         self.assertEqual(file_response.status_code, 400)
-        self.assertEqual(file_response.content, 'Preset is required')
+        self.assertEqual(file_response.content.decode('utf-8'), 'Preset is required')
 
     def test_upload_unsupported_preset(self):
-        upload_file = SimpleUploadedFile("test_file.txt", "file contents")
+        upload_file = SimpleUploadedFile("test_file.txt", b"file contents")
         request = self.create_post_request(reverse_lazy('multilanguage_file_upload'), {'file': upload_file})
         request.META.update({'HTTP_LANGUAGE': 'en'})
         request.META.update({'HTTP_PRESET': 'unsupported_preset'})
 
         file_response = multilanguage_file_upload(request)
         self.assertEqual(file_response.status_code, 400)
-        self.assertEqual(file_response.content, 'Unsupported preset')
+        self.assertEqual(file_response.content.decode('utf-8'), 'Unsupported preset')
 
 
 class FileSubtitleTestCase(BaseAPITestCase):
     def test_upload(self):
-        upload_file = SimpleUploadedFile("test.srt", srt_subtitle())
+        upload_file = SimpleUploadedFile("test.srt", srt_subtitle().encode('utf-8'))
         request = self.create_post_request(reverse_lazy('multilanguage_file_upload'), {'file': upload_file})
         request.META.update({'HTTP_LANGUAGE': 'ar'})
         request.META.update({'HTTP_PRESET': format_presets.VIDEO_SUBTITLE})
@@ -250,5 +254,3 @@ class NodeFileDeletionTestCase(StudioTestCase):
         assert default_storage.exists(storage_path), 'file should be saved'
         delete_empty_file_reference(checksum, 'pdf')
         assert not default_storage.exists(storage_path), 'file should be deleted'
-
-

@@ -1,13 +1,17 @@
+from __future__ import division
+
 import logging as logmodule
 from abc import abstractmethod
 
+from builtins import object
 from django.core.management.base import BaseCommand
+from past.utils import old_div
 
 logmodule.basicConfig()
 logging = logmodule.getLogger(__name__)
 
 
-class Progress():
+class Progress(object):
     """
     A Progress contains the progress of the tasks, the total number of expected
     tasks/data, and the fraction which equals to progress divided by total.
@@ -28,8 +32,8 @@ class Progress():
         self.fraction = 1.0 * self.progress / self.total
 
         logging.info("\rProgress: [{}{}] ({}%)".format(
-            "=" * (int(self.fraction * 100) / 2),
-            " " * (50 - int(self.fraction * 100) / 2),
+            "=" * (old_div(int(self.fraction * 100), 2)),
+            " " * (50 - old_div(int(self.fraction * 100), 2)),
             int(self.fraction * 100),
         ))
 

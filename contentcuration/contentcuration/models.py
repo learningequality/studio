@@ -1,9 +1,16 @@
+from future import standard_library
+standard_library.install_aliases()
+from builtins import zip
+from builtins import filter
+from builtins import str
+from builtins import range
+from builtins import object
 import functools
 import hashlib
 import json
 import logging
 import os
-import urlparse
+import urllib.parse
 import uuid
 import warnings
 from datetime import datetime
@@ -476,7 +483,7 @@ def generate_storage_url(filename, request=None, *args):
     elif run_mode == "docker-compose" or run_mode is None:
         # generate the minio storage URL, so we can get the GET parameters that give everyone
         # access even if they don't need to log in
-        params = urlparse.urlparse(default_storage.url(path)).query
+        params = urllib.parse.urlparse(default_storage.url(path)).query
         host = "localhost"
         port = 9000  # hardcoded to the default minio IP address
         url = "http://{host}:{port}/{bucket}/{path}?{params}".format(
@@ -1019,7 +1026,7 @@ class ContentNode(MPTTModel, models.Model):
             del self._original_fields['modified']
             del self._original_fields['publishing']
 
-        return dict([(key, value) for key, value in self._original_fields.iteritems() if value != new_state[key]])
+        return dict([(key, value) for key, value in self._original_fields.items() if value != new_state[key]])
 
     def get_tree_data(self, levels=float('inf')):
         """
@@ -1071,7 +1078,7 @@ class ContentNode(MPTTModel, models.Model):
         cached_data = cache.get(key)
         if cached_data:
             return cached_data
-        presets = FormatPreset.objects.filter(kind=self.kind).values()
+        presets = list(FormatPreset.objects.filter(kind=self.kind).values())
         cache.set(key, presets, None)
         return presets
 
@@ -1144,11 +1151,11 @@ class ContentNode(MPTTModel, models.Model):
 
         # Get all copyright holders, authors, aggregators, and providers and split into lists
         creators = resources.values_list('copyright_holder', 'author', 'aggregator', 'provider')
-        split_lst = zip(*creators)
-        copyright_holders = filter(bool, set(split_lst[0])) if len(split_lst) > 0 else []
-        authors = filter(bool, set(split_lst[1])) if len(split_lst) > 1 else []
-        aggregators = filter(bool, set(split_lst[2])) if len(split_lst) > 2 else []
-        providers = filter(bool, set(split_lst[3])) if len(split_lst) > 3 else []
+        split_lst = list(zip(*creators))
+        copyright_holders = list(filter(bool, set(split_lst[0]))) if len(split_lst) > 0 else []
+        authors = list(filter(bool, set(split_lst[1]))) if len(split_lst) > 1 else []
+        aggregators = list(filter(bool, set(split_lst[2]))) if len(split_lst) > 2 else []
+        providers = list(filter(bool, set(split_lst[3]))) if len(split_lst) > 3 else []
 
         # Get sample pathway by getting longest path
         # Using resources.aggregate adds a lot of time, use values that have already been fetched
@@ -1174,7 +1181,7 @@ class ContentNode(MPTTModel, models.Model):
             .order_by("original_channel_id")
         originals = {c['original_channel_id']: c['count'] for c in originals}
         original_channels = Channel.objects.exclude(pk=channel_id) \
-            .filter(pk__in=[k for k, v in originals.items()], deleted=False)
+            .filter(pk__in=[k for k, v in list(originals.items())], deleted=False)
         original_channels = [{
             "id": c.id,
             "name": "{}{}".format(c.name, _(" (Original)") if channel_id == c.id else ""),
@@ -1454,12 +1461,16 @@ class File(models.Model):
                 self.checksum = md5.hexdigest()
             if not self.file_size:
                 self.file_size = self.file_on_disk.size
+            print("checksum = {}".format(self.checksum))
             if not self.file_format_id:
                 ext = os.path.splitext(self.file_on_disk.name)[1].lstrip('.')
-                if ext in dict(file_formats.choices).keys():
+                print("setting ext to {}".format(ext))
+                if ext in list(dict(file_formats.choices).keys()):
                     self.file_format_id = ext
                 else:
                     raise ValueError("Files of type `{}` are not supported.".format(ext))
+            else:
+                print("file_format_id = {}".format(self.file_format_id))
 
         super(File, self).save(*args, **kwargs)
 
@@ -1471,6 +1482,7 @@ def auto_delete_file_on_delete(sender, instance, **kwargs):
     when corresponding `File` object is deleted.
     Be careful! we don't know if this will work when perform bash delete on File obejcts.
     """
+    print("in delete, checksum = {}".format(instance.checksum))
     delete_empty_file_reference(instance.checksum, instance.file_format.extension)
 
 
