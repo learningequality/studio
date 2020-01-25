@@ -2,6 +2,13 @@ import cloneDeep from 'lodash/cloneDeep';
 import isEqual from 'lodash/isEqual';
 import isObject from 'lodash/isObject';
 
+/**
+ * Recursively finds the differences between two objects
+ *
+ * @param {Object} objectA
+ * @param {Object} objectB
+ * @return {Object}
+ */
 function objectDifference(objectA, objectB) {
   const diff = {};
   Object.entries(objectA).forEach(([key, value]) => {
@@ -28,8 +35,7 @@ export function lastSavedStateFactory(idKey = 'id') {
       return !isEqual(object, lastSavedStore[object[idKey]]);
     },
     getUnsavedChanges(object) {
-      // Get top level keys that are different between
-      // the last saved state and the current state
+      // Get keys that are different between the last saved state and the current state
       const id = object[idKey];
       return isTempId(id) ? object : objectDifference(object, lastSavedStore[id]);
     },

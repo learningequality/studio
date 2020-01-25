@@ -5,8 +5,11 @@ import AppIcon from 'shared/views/AppIcon';
 Vue.component(AppIcon.name, AppIcon);
 
 export default function icons(additional = {}) {
+  // Grab icon name mapping from Vuetify. `md` is default icon font set
   const iconMap = vuetifyIcons('md', additional);
 
+  // Update icons to use our custom `AppIcon` component which adds a layer between implementation
+  // within Vuetify and our code, and the underlying `VIcon` component
   return Object.entries(iconMap)
     .map(([name, mdName]) => {
       return {

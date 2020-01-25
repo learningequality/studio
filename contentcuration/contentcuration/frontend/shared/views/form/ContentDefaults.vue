@@ -172,6 +172,9 @@
     },
     methods: {
       emitChange() {
+        // When any field in our component changes, this gets triggered which then triggers the
+        // event that updates the prop passed into us as `contentDefaults` in the parent component.
+        // This assigns the data into a object, with snake cased keys instead of camel cased here
         this.$nextTick(() => {
           this.$emit(
             'change',

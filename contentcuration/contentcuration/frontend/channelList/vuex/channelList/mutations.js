@@ -70,6 +70,7 @@ export function UPDATE_CHANNEL(
   if (!channel.content_defaults) {
     channel.content_defaults = {};
   }
+  // Assign all acceptable content defaults into the channel defaults
   Object.assign(
     channel.content_defaults,
     Object.entries(content_defaults)
