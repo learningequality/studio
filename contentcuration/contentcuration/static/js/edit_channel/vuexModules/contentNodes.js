@@ -220,3 +220,4 @@ const contentNodesModule = {
 };
 
 module.exports = contentNodesModule;
+export default contentNodesModule;

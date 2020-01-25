@@ -1,8 +1,8 @@
 import storeFactory from 'shared/vuex/baseStore';
 
-const editModal = require('edit_channel/uploader/vuex/store');
-const fileUpload = require('edit_channel/vuexModules/fileUpload');
-const contentNodesModule = require('edit_channel/vuexModules/contentNodes');
+import editModal from 'edit_channel/uploader/vuex/store';
+import fileUpload from 'edit_channel/vuexModules/fileUpload';
+import contentNodesModule from 'edit_channel/vuexModules/contentNodes';
 
 const store = storeFactory({
   modules: {
