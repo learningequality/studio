@@ -41,6 +41,7 @@ function makeWrapper(props = {}) {
     },
     stubs: {
       FileUpload: true,
+      FileStorage: true,
     },
   });
 }

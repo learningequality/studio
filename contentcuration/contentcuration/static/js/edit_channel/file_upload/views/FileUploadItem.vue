@@ -96,6 +96,9 @@
       preset: {
         type: Object,
         required: true,
+        validator: preset => {
+          return preset.id && preset.kind_id && preset.display;
+        },
       },
       allowFileRemove: {
         type: Boolean,

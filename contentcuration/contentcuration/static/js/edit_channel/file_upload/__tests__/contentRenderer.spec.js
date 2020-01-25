@@ -17,6 +17,10 @@ function makeWrapper(props = {}) {
     attachToDocument: true,
     propsData: {
       file: {
+        id: 'test',
+        file_on_disk: 'path',
+        checksum: 'checksum',
+        file_format: 'mp3',
         preset: {},
         ...props,
       },

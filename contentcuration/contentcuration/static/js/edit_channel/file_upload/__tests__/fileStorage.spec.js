@@ -13,6 +13,11 @@ function makeWrapper(user) {
   };
   return mount(FileStorage, {
     attachToDocument: true,
+    computed: {
+      storageRequestUrl() {
+        return '';
+      },
+    },
   });
 }
 

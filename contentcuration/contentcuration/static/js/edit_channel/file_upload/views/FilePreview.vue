@@ -56,10 +56,16 @@
       file: {
         type: Object,
         required: false,
+        validator: file => {
+          return file.id && file.file_on_disk;
+        },
       },
       node: {
         type: Object,
         required: true,
+        validator: node => {
+          return node.files && node.title;
+        },
       },
     },
     data() {

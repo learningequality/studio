@@ -56,6 +56,9 @@
       file: {
         type: Object,
         required: false,
+        validator: file => {
+          return file.id && file.file_on_disk && file.checksum && file.file_format;
+        },
       },
       fullscreen: {
         type: Boolean,

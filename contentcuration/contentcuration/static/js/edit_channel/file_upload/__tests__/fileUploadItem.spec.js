@@ -33,7 +33,11 @@ function makeWrapper(props = {}, file = {}) {
               ...testFile,
               ...file,
             },
-      preset: {},
+      preset: {
+        id: 'document',
+        kind_id: 'document',
+        display: true,
+      },
       ...props,
     },
   });

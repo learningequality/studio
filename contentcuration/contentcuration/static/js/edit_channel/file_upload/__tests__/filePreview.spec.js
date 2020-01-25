@@ -6,9 +6,16 @@ function makeWrapper(props = {}) {
     attachToDocument: true,
     propsData: {
       file: {
+        id: 'test',
         preset: {},
-        file_on_disk: {},
+        checksum: 'checksum',
+        file_on_disk: 'path',
+        file_format: 'mp3',
         ...props,
+      },
+      node: {
+        files: [],
+        title: 'Testing Node',
       },
     },
     stubs: {

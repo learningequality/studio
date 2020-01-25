@@ -39,12 +39,20 @@ const testFiles = [
 ];
 
 function makeWrapper(files) {
+  files.forEach(f => {
+    f.checksum = 'checksum';
+    f.file_on_disk = 'path';
+    f.file_format = 'mp3';
+  });
   return mount(FileUpload, {
     store,
     attachToDocument: true,
+    propsData: {
+      nodeIndex: 1,
+    },
     computed: {
       node() {
-        return { kind: 'document', files };
+        return { kind: 'document', files, title: 'test' };
       },
     },
   });
@@ -56,6 +64,9 @@ describe('fileUpload', () => {
     wrapper = makeWrapper(testFiles, {
       propsData: {
         viewOnly: false,
+      },
+      stubs: {
+        FilePreview: true,
       },
     });
   });
@@ -96,9 +107,12 @@ describe('fileUpload', () => {
       let testWrapper = mount(FileUpload, {
         store,
         attachToDocument: true,
+        propsData: {
+          nodeIndex: 1,
+        },
         computed: {
           node() {
-            return { kind: 'something', files: [] };
+            return { kind: 'something', files: [], title: 'test' };
           },
         },
       });
