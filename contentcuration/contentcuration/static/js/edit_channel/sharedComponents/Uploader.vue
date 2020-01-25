@@ -169,24 +169,16 @@
           this.$refs.fileUpload.click();
         }
       },
-      setError(fileID, errorType) {
-        let message;
-        switch (errorType) {
-          case fileErrors.TOO_LARGE:
-            message = this.$tr(fileErrors.TOO_LARGE, { size: this.formatFileSize(MAX_FILE_SIZE) });
-            break;
-          case fileErrors.WRONG_TYPE:
-            message = this.$tr(fileErrors.WRONG_TYPE, {
-              filetypes: this.acceptedExtensions.join(', '),
-            });
-            break;
-          case fileErrors.NO_STORAGE:
-            message = this.$tr(fileErrors.NO_STORAGE);
-            break;
-          default:
-            message = this.$tr(fileErrors.UPLOAD_FAILED);
+      setError(id, error) {
+        let message = this.$tr('uploadFailedError');
+        if (error === fileErrors.TOO_LARGE) {
+          message = this.$tr('tooLargeError', { size: this.formatFileSize(MAX_FILE_SIZE) });
+        } else if (error === fileErrors.WRONG_TYPE) {
+          message = this.$tr('wrongTypeError', { filetypes: this.acceptedExtensions.join(', ') });
+        } else if (error === fileErrors.NO_STORAGE) {
+          message = this.$tr('noStorageError');
         }
-        this.setFileError({ id: fileID, error: errorType, message: message });
+        this.setFileError({ id, error, message });
       },
       validateFiles(files) {
         // Get unsupported file types
@@ -242,10 +234,10 @@
       },
     },
     $trs: {
-      [fileErrors.NO_STORAGE]: 'Out of storage',
-      [fileErrors.WRONG_TYPE]: 'Invalid file type (must be {filetypes})',
-      [fileErrors.TOO_LARGE]: 'File too large. Must be under {size}',
-      [fileErrors.UPLOAD_FAILED]: 'Upload failed',
+      noStorageError: 'Out of storage',
+      wrongTypeError: 'Invalid file type (must be {filetypes})',
+      tooLargeError: 'File too large. Must be under {size}',
+      uploadFailedError: 'Upload failed',
       unsupportedFilesHeader: 'Unsupported files',
       unsupportedFilesText:
         '{count, plural,\n =1 {File}\n other {# files}} will not be uploaded.\n' +
@@ -266,11 +258,11 @@
 
   .storage-alert {
     font-size: 12pt;
-    .storage-usage {
-      margin-top: -5px;
-      font-size: 10pt;
-      color: gray;
-    }
+  }
+  .storage-usage {
+    margin-top: -5px;
+    font-size: 10pt;
+    color: gray;
   }
 
 </style>
