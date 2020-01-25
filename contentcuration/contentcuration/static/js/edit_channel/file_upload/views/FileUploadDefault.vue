@@ -94,7 +94,7 @@
     border: 1px solid @gray-300 !important;
   }
 
-  /deep/ .uploader {
+  .uploader {
     position: absolute;
   }
   .file-upload-wrapper {
