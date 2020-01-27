@@ -1,14 +1,10 @@
 import { mount } from '@vue/test-utils';
 import Vue from 'vue';
-import Vuetify from 'vuetify';
 import camelCase from 'lodash/camelCase';
 import ContentDefaults from '../ContentDefaults.vue';
 
-Vue.use(Vuetify);
-
 function makeWrapper(contentDefaults) {
   return mount(ContentDefaults, {
-    sync: true,
     propsData: {
       contentDefaults,
     },

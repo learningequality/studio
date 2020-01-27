@@ -1,12 +1,8 @@
-import Vue from 'vue';
 import { mount } from '@vue/test-utils';
 import find from 'lodash/find';
-import Vuetify from 'vuetify';
 import store from '../../../store';
 import { ListTypes } from '../../../constants';
 import ChannelSelectionList from '../ChannelSelectionList.vue';
-
-Vue.use(Vuetify);
 
 const channelSetId = 'testing';
 const channelSet = {

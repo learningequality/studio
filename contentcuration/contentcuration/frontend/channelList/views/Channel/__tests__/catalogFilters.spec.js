@@ -1,12 +1,10 @@
 import Vue from 'vue';
 import { mount } from '@vue/test-utils';
 import VueRouter from 'vue-router';
-import Vuetify from 'vuetify';
 import store from '../../../store';
 import CatalogFilters from '../CatalogFilters.vue';
 
 Vue.use(VueRouter);
-Vue.use(Vuetify);
 const router = new VueRouter();
 
 function makeWrapper(setQueryStub) {

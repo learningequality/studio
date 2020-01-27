@@ -1,9 +1,5 @@
 import { mount } from '@vue/test-utils';
-import Vue from 'vue';
-import Vuetify from 'vuetify';
 import AppIcon from '../AppIcon.vue';
-
-Vue.use(Vuetify);
 
 function makeWrapper(options) {
   return mount(AppIcon, options);

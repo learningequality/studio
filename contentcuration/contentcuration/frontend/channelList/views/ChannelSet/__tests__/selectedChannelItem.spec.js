@@ -1,10 +1,7 @@
-import Vue from 'vue';
 import { mount } from '@vue/test-utils';
-import Vuetify from 'vuetify';
 import store from '../../../store';
 import SelectedChannelItem from '../SelectedChannelItem.vue';
 
-Vue.use(Vuetify);
 const channelId = 'testing';
 store.commit('channelList/ADD_CHANNEL', { id: channelId });
 
