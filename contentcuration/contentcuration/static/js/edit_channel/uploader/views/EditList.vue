@@ -1,35 +1,33 @@
 <template>
 
   <Uploader @uploading="createNodesFromFiles">
-    <template slot="upload-zone">
-      <VList width="100%">
-        <!-- Select all checkbox -->
-        <VListTile @click="toggleSelectAll">
-          <VListTileAction>
-            <VCheckbox
-              hide-details
-              class="notranslate"
-              color="primary"
-              data-test="select-all"
-              :inputValue="selectAllChecked"
-              @click.stop="toggleSelectAll"
-            />
-          </VListTileAction>
-          <VListTileContent>
-            <VListTileTitle>{{ $tr('selectAllLabel') }}</VListTileTitle>
-          </VListTileContent>
-        </VListTile>
-      </VList>
-      <VList width="100%" two-line>
-        <!-- Selected items -->
-        <EditListItem
-          v-for="(node, index) in nodes"
-          :key="node.id"
-          :index="index"
-          :removable="allowRemove"
-        />
-      </VList>
-    </template>
+    <VList width="100%">
+      <!-- Select all checkbox -->
+      <VListTile @click="toggleSelectAll">
+        <VListTileAction>
+          <VCheckbox
+            hide-details
+            class="notranslate"
+            color="primary"
+            data-test="select-all"
+            :inputValue="selectAllChecked"
+            @click.stop="toggleSelectAll"
+          />
+        </VListTileAction>
+        <VListTileContent>
+          <VListTileTitle>{{ $tr('selectAllLabel') }}</VListTileTitle>
+        </VListTileContent>
+      </VListTile>
+    </VList>
+    <VList width="100%" two-line>
+      <!-- Selected items -->
+      <EditListItem
+        v-for="(node, index) in nodes"
+        :key="node.id"
+        :index="index"
+        :removable="allowRemove"
+      />
+    </VList>
   </Uploader>
 
 </template>

@@ -1,7 +1,7 @@
 <template>
 
   <Uploader :readonly="viewOnly" :presetID="preset.id" @uploading="handleUploading">
-    <template slot="upload-zone" slot-scope="uploader">
+    <template v-slot:default="uploader">
       <VListTile
         data-test="list-item"
         :style="{backgroundColor: isSelected? $vuetify.theme.greyBackground : 'transparent'}"

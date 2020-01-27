@@ -13,7 +13,7 @@
     @dragleave.prevent="leave"
     @drop.prevent="drop"
   >
-    <slot name="upload-zone" :openFileDialog="openFileDialog"></slot>
+    <slot :openFileDialog="openFileDialog"></slot>
     <input
       v-if="!readonly"
       ref="fileUpload"

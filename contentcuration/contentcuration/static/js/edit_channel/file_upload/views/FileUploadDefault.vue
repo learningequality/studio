@@ -9,7 +9,7 @@
       <VFlex xs12>
         <VCard flat height="100%">
           <Uploader allowMultiple @uploading="createNodesFromFiles">
-            <template slot="upload-zone" slot-scope="uploader">
+            <template v-slot:default="uploader">
               <VLayout align-center fill-height>
                 <VCardText class="text-center align-center text-xs-center">
                   <p v-if="currentNode" class="title upload-to-text">

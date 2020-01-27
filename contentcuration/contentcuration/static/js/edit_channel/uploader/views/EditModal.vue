@@ -72,7 +72,7 @@
                   allowMultiple
                   @uploading="createNodesFromFiles"
                 >
-                  <template slot="upload-zone" slot-scope="uploader">
+                  <template v-slot:default="uploader">
                     <VBtn
                       v-if="allowUpload"
                       depressed
