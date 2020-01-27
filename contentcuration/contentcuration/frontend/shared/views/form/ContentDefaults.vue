@@ -105,10 +105,19 @@
   import { constantsTranslationMixin } from '../../../shared/mixins';
   import AppCheckbox from './AppCheckbox';
   import Constants from 'edit_channel/constants/index';
-  import { ContentDefaults } from 'shared/constants';
+  import { ContentDefaults, ContentDefaultsDefaults } from 'shared/constants';
 
   function findLicense(name, defaultValue = {}) {
     return Constants.Licenses.find(license => license.license_name === name) || defaultValue;
+  }
+
+  function normalizeContentDefaults(contentDefaults) {
+    return Object.entries(ContentDefaultsDefaults).reduce((normalized, [key, defaultValue]) => {
+      return {
+        ...normalized,
+        [ContentDefaults[key]]: defaultTo(contentDefaults[key], defaultValue),
+      };
+    }, {});
   }
 
   export default {
@@ -124,6 +133,9 @@
     props: {
       contentDefaults: {
         type: Object,
+        default() {
+          return { ...ContentDefaultsDefaults };
+        },
       },
       defaultsTitle: {
         type: String,
@@ -136,21 +148,19 @@
       },
     },
     data() {
-      return {
-        author: this.contentDefaults.author || '',
-        provider: this.contentDefaults.provider || '',
-        aggregator: this.contentDefaults.aggregator || '',
-        copyrightHolder: this.contentDefaults.copyright_holder || '',
-        license: findLicense(this.contentDefaults.license, { license_name: '' }).license_name,
-        licenseDescription: this.contentDefaults.license_description || '',
+      const normalized = normalizeContentDefaults(this.contentDefaults);
 
-        autoDeriveAudioThumbnail: defaultTo(this.contentDefaults.auto_derive_audio_thumbnail, true),
-        autoDeriveDocumentThumbnail: defaultTo(
-          this.contentDefaults.auto_derive_document_thumbnail,
-          true
-        ),
-        autoDeriveHtml5Thumbnail: defaultTo(this.contentDefaults.auto_derive_html5_thumbnail, true),
-        autoDeriveVideoThumbnail: defaultTo(this.contentDefaults.auto_derive_video_thumbnail, true),
+      return {
+        author: normalized.author,
+        provider: normalized.provider,
+        aggregator: normalized.aggregator,
+        copyrightHolder: normalized.copyrightHolder,
+        license: findLicense(normalized.license, { license_name: '' }).license_name,
+        licenseDescription: normalized.licenseDescription,
+        autoDeriveAudioThumbnail: normalized.autoDeriveAudioThumbnail,
+        autoDeriveDocumentThumbnail: normalized.autoDeriveDocumentThumbnail,
+        autoDeriveHtml5Thumbnail: normalized.autoDeriveHtml5Thumbnail,
+        autoDeriveVideoThumbnail: normalized.autoDeriveVideoThumbnail,
       };
     },
     computed: {

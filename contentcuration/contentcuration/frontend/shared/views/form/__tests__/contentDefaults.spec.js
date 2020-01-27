@@ -1,6 +1,7 @@
 import { mount } from '@vue/test-utils';
 import Vue from 'vue';
 import camelCase from 'lodash/camelCase';
+import * as constants from '../../../constants';
 import ContentDefaults from '../ContentDefaults.vue';
 
 function makeWrapper(contentDefaults) {
@@ -99,19 +100,6 @@ function updateFormValues(wrapper, contentDefaults) {
 
 describe('contentDefaults', () => {
   describe('initial state', () => {
-    const defaultFormValues = {
-      author: '',
-      provider: '',
-      aggregator: '',
-      copyright_holder: '',
-      license: '',
-      license_description: '',
-      auto_derive_audio_thumbnail: true,
-      auto_derive_document_thumbnail: true,
-      auto_derive_html5_thumbnail: true,
-      auto_derive_video_thumbnail: true,
-    };
-
     it('should fill fields with defaults', () => {
       const contentDefaults = {
         author: 'Buster McTester',
@@ -131,14 +119,14 @@ describe('contentDefaults', () => {
 
     it('should fill fields with defaults', () => {
       const wrapper = makeWrapper({});
-      assertFormValues(wrapper, defaultFormValues);
+      assertFormValues(wrapper, constants.ContentDefaultsDefaults);
     });
 
     it('should pre-validate license value', () => {
       const wrapper = makeWrapper({
         license: 'This license does not exist',
       });
-      assertFormValues(wrapper, defaultFormValues);
+      assertFormValues(wrapper, constants.ContentDefaultsDefaults);
     });
   });
 
