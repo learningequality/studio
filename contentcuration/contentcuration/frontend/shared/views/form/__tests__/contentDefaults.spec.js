@@ -54,7 +54,7 @@ function assertFormValues(wrapper, contentDefaults) {
     assertFieldValues(['license_description'], textAreas, contentDefaults);
   }
 
-  const checkboxes = wrapper.findAll({ name: 'AppCheckbox' });
+  const checkboxes = wrapper.findAll({ name: 'Checkbox' });
   expect(checkboxes.length).toEqual(4);
   assertFieldValues(
     [
@@ -85,7 +85,7 @@ function updateFormValues(wrapper, contentDefaults) {
     updateFieldValues(['license_description'], textAreas, contentDefaults);
   }
 
-  const checkboxes = wrapper.findAll({ name: 'AppCheckbox' });
+  const checkboxes = wrapper.findAll({ name: 'Checkbox' });
   updateFieldValues(
     [
       'auto_derive_audio_thumbnail',

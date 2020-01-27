@@ -1,8 +1,8 @@
 import { mount } from '@vue/test-utils';
-import AppIcon from '../AppIcon.vue';
+import Icon from '../Icon.vue';
 
 function makeWrapper(options) {
-  return mount(AppIcon, options);
+  return mount(Icon, options);
 }
 
 describe('appIcon', () => {

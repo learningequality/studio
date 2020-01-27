@@ -65,28 +65,28 @@
         {{ thumbnailsSubTitle || $tr('thumbnailsTitle') }}
       </legend>
 
-      <AppCheckbox
+      <Checkbox
         v-model="autoDeriveVideoThumbnail"
         class="mt-2"
         data-name="autoDeriveVideoThumbnail"
         :label="$tr('videos')"
         @change="emitChange"
       />
-      <AppCheckbox
+      <Checkbox
         v-model="autoDeriveAudioThumbnail"
         class="mt-2"
         data-name="autoDeriveAudioThumbnail"
         :label="constantStrings('audio')"
         @change="emitChange"
       />
-      <AppCheckbox
+      <Checkbox
         v-model="autoDeriveHtml5Thumbnail"
         class="mt-2"
         data-name="autoDeriveHtml5Thumbnail"
         :label="$tr('html5')"
         @change="emitChange"
       />
-      <AppCheckbox
+      <Checkbox
         v-model="autoDeriveDocumentThumbnail"
         class="mt-2"
         data-name="autoDeriveDocumentThumbnail"
@@ -103,7 +103,7 @@
 
   import defaultTo from 'lodash/defaultTo';
   import { constantsTranslationMixin } from '../../../shared/mixins';
-  import AppCheckbox from './AppCheckbox';
+  import Checkbox from './Checkbox';
   import Constants from 'edit_channel/constants/index';
   import { ContentDefaults, ContentDefaultsDefaults } from 'shared/constants';
 
@@ -123,7 +123,7 @@
   export default {
     name: 'ContentDefaults',
     components: {
-      AppCheckbox,
+      Checkbox,
     },
     mixins: [constantsTranslationMixin],
     model: {

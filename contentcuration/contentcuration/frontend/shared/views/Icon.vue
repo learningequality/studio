@@ -8,7 +8,7 @@
 
   // Follows example of https://github.com/vuetifyjs/vuetify/blob/v1.5.22/packages/vuetify/src/components/VIcon/VIcon.ts#L142
   export default {
-    name: 'AppIcon',
+    name: 'Icon',
     functional: true,
 
     render(createElement, { data, children }) {
