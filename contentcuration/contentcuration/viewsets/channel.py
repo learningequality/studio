@@ -23,6 +23,7 @@ from contentcuration.models import ContentNode
 from contentcuration.models import get_channel_thumbnail
 from contentcuration.models import SecretToken
 from contentcuration.models import User
+from contentcuration.serializers import ContentDefaultsSerializerMixin
 from contentcuration.viewsets.base import ValuesViewset
 
 
@@ -167,13 +168,14 @@ class SQCount(Subquery):
     output_field = IntegerField()
 
 
-class ChannelSerializer(serializers.ModelSerializer):
+class ChannelSerializer(ContentDefaultsSerializerMixin, serializers.ModelSerializer):
     """
     This is a write only serializer - we leverage it to do create and update
     operations, but read operations are handled by the Viewset.
     """
 
     bookmark = serializers.BooleanField()
+    content_defaults = serializers.DictField()
 
     class Meta:
         model = Channel
@@ -186,6 +188,7 @@ class ChannelSerializer(serializers.ModelSerializer):
             "version",
             "language",
             "bookmark",
+            "content_defaults",
         )
         read_only_fields = ("id",)
 
@@ -232,6 +235,7 @@ class ChannelViewSet(ValuesViewset):
         "last_published",
         "ricecooker_version",
         "main_tree__id",
+        "content_defaults",
     )
 
     field_map = {

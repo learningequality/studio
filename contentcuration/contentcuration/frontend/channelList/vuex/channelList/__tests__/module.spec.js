@@ -132,6 +132,7 @@ describe('channel actions', () => {
             name: 'notatest',
             description: 'very',
             language: 'no',
+            content_defaults: {},
           });
         });
       });
@@ -174,6 +175,7 @@ describe('channel actions', () => {
             thumbnail: 'test',
             thumbnail_url: 'testUrl',
             thumbnail_encoding: 'testEncoding',
+            content_defaults: {},
           });
         });
       });

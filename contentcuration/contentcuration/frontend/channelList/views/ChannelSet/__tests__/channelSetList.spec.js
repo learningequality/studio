@@ -1,13 +1,11 @@
 import Vue from 'vue';
 import { mount } from '@vue/test-utils';
-import Vuetify from 'vuetify';
 import VueRouter from 'vue-router';
 import store from '../../../store';
 import router from '../../../router';
 import { RouterNames } from '../../../constants';
 import ChannelSetList from '../ChannelSetList.vue';
 
-Vue.use(Vuetify);
 Vue.use(VueRouter);
 
 function makeWrapper() {

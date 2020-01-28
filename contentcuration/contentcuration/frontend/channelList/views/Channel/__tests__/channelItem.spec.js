@@ -1,13 +1,11 @@
 import Vue from 'vue';
 import { mount } from '@vue/test-utils';
 import VueRouter from 'vue-router';
-import Vuetify from 'vuetify';
 import store from '../../../store';
 import router from '../../../router';
 import { RouterNames } from '../../../constants';
 import ChannelItem from '../ChannelItem.vue';
 
-Vue.use(Vuetify);
 Vue.use(VueRouter);
 const channelId = 'testing';
 
