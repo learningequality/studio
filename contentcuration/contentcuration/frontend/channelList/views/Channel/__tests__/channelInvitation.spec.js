@@ -1,10 +1,6 @@
-import Vue from 'vue';
 import { mount } from '@vue/test-utils';
-import Vuetify from 'vuetify';
 import store from '../../../store';
 import ChannelInvitation from '../ChannelInvitation.vue';
-
-Vue.use(Vuetify);
 
 const invitationID = 'testing';
 store.commit('channelList/SET_INVITATION_LIST', [

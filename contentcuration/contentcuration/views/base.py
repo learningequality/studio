@@ -173,9 +173,9 @@ def publish_channel(request):
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
 
-class SQCount(Subquery):
+class SQCountDistinct(Subquery):
     # Include ALIAS at the end to support Postgres
-    template = "(SELECT COUNT(%(field)s) FROM (%(subquery)s) AS %(field)s__sum)"
+    template = "(SELECT COUNT(DISTINCT %(field)s) FROM (%(subquery)s) AS %(field)s__sum)"
     output_field = IntegerField()
 
 
@@ -210,7 +210,7 @@ def accessible_channels(request, channel_id):
         .values_list("content_id", flat=True)
     )
     channels = channels.annotate(
-        resource_count=SQCount(non_topic_content_ids, field="content_id"),
+        resource_count=SQCountDistinct(non_topic_content_ids, field="content_id"),
         children=ArrayAgg("main_tree__children"),
     )
     channels_data = channels.values("name", "resource_count", "children", "main_tree__id")

@@ -4,6 +4,7 @@ import client from 'shared/client';
 import storeFactory from 'shared/vuex/baseStore';
 
 jest.mock('shared/client');
+jest.mock('shared/vuex/connectionPlugin');
 
 const id = '00000000000000000000000000000000';
 
@@ -131,6 +132,7 @@ describe('channel actions', () => {
             name: 'notatest',
             description: 'very',
             language: 'no',
+            content_defaults: {},
           });
         });
       });
@@ -173,6 +175,7 @@ describe('channel actions', () => {
             thumbnail: 'test',
             thumbnail_url: 'testUrl',
             thumbnail_encoding: 'testEncoding',
+            content_defaults: {},
           });
         });
       });

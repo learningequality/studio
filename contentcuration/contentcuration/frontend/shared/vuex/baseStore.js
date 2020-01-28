@@ -1,6 +1,7 @@
 import Vue from 'vue';
 import Vuex, { Store } from 'vuex';
 import session from './session';
+import ConnectionPlugin from './connectionPlugin';
 
 Vue.use(Vuex);
 
@@ -19,7 +20,7 @@ export default function storeFactory(
     actions,
     getters,
     mutations,
-    plugins,
+    plugins: [ConnectionPlugin, ...(plugins || [])],
     modules: {
       session,
       ...modules,

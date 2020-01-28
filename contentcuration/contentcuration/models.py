@@ -25,6 +25,7 @@ from django.core.cache import cache
 from django.core.exceptions import MultipleObjectsReturned
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
+from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
 from django.core.files.storage import FileSystemStorage
 from django.core.mail import send_mail
@@ -900,6 +901,11 @@ class License(models.Model):
         verbose_name=_("license exists"),
         help_text=_("Tells whether or not a content item is licensed to share"),
     )
+
+    @classmethod
+    def validate_name(cls, name):
+        if cls.objects.filter(license_name=name).count() == 0:
+            raise ValidationError('License `{}` does not exist'.format(name))
 
     def __str__(self):
         return self.license_name

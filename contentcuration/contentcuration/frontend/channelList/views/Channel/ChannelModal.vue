@@ -20,50 +20,52 @@
         </VToolbarTitle>
         <VSpacer />
         <VBtn flat data-test="save" @click="save">
-          {{ $tr('save') }}
+          {{ isNewChannel ? $tr('create') : $tr('save') }}
         </VBtn>
       </VToolbar>
       <VProgressLinear
         v-if="loading"
         indeterminate
         color="primary"
-        style="margin: 0px;"
+        style="margin: 0;"
         height="5"
       />
       <VCardText v-else>
-        <VLayout row justify-center>
-          <VFlex md12 lg10 xl8>
+        <VLayout row justify-center class="pb-5">
+          <VFlex style="max-width: 800px;">
             <VForm ref="detailsform">
               <!-- TODO: Insert thumbnail here once the uploader is ready -->
+              <fieldset class="py-1 mt-3 channel-info">
+                <legend class="py-1 mb-2 legend-title font-weight-bold">
+                  {{ $tr('details') }}
+                </legend>
 
-              <h1 class="title">
-                {{ $tr('details') }}
-              </h1>
+                <VTextField
+                  v-model="name"
+                  outline
+                  :label="$tr('channelName')"
+                  :rules="[() => name.length ? true : $tr('channelError')]"
+                  required
+                />
+                <LanguageDropdown
+                  v-model="language"
+                  class="notranslate"
+                  outline
+                  required
+                />
+                <VTextarea
+                  v-model="description"
+                  outline
+                  :label="$tr('channelDescription')"
+                  maxlength="400"
+                  rows="4"
+                  auto-grow
+                  counter
+                />
+              </fieldset>
 
-              <VTextField
-                v-model="name"
-                outline
-                :label="$tr('channelName')"
-                :placeholder="$tr('channelNamePlaceholder')"
-                :rules="[() => name.length ? true : $tr('channelError')]"
-                required
-              />
-              <LanguageDropdown
-                v-model="language"
-                class="notranslate"
-                outline
-                :placeholder="$tr('channelLanguagePlaceholder')"
-                required
-              />
-              <VTextarea
-                v-model="description"
-                outline
-                :label="$tr('channelDescription')"
-                :placeholder="$tr('channelDescriptionPlaceholder')"
-                maxlength="400"
-                rows="4"
-                auto-grow
-                counter
+              <ContentDefaults
+                v-model="contentDefaults"
               />
             </VForm>
           </VFlex>
@@ -82,11 +84,13 @@
   import { isTempId } from '../../utils';
   import { RouterNames } from '../../constants';
   import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown';
+  import ContentDefaults from 'shared/views/form/ContentDefaults';
 
   export default {
     name: 'ChannelModal',
     components: {
       LanguageDropdown,
+      ContentDefaults,
     },
     props: {
       channelId: {
@@ -130,6 +134,14 @@
         },
         set(language) {
           this.updateChannel({ id: this.channelId, language });
+        },
+      },
+      contentDefaults: {
+        get() {
+          return this.channel.content_defaults || {};
+        },
+        set(content_defaults) {
+          this.updateChannel({ id: this.channelId, content_defaults });
         },
       },
       isNewChannel() {
@@ -214,11 +226,9 @@
       details: 'Channel details',
       channelName: 'Channel name',
       channelError: 'Channel name cannot be blank',
-      channelNamePlaceholder: 'Enter channel name...',
       channelDescription: 'Channel description',
-      channelDescriptionPlaceholder: 'Enter channel description...',
-      channelLanguagePlaceholder: 'Select a language...',
       save: 'Save changes',
+      create: 'Create',
     },
   };
 
@@ -227,9 +237,18 @@
 
 <style lang="less" scoped>
 
-  .title {
-    margin: 25px 0 10px;
-    font-weight: bold;
+  .channel-info {
+    border: 0;
+  }
+
+  .legend-title {
+    font-size: 18px;
+    line-height: 1;
+    letter-spacing: 0.02em;
+  }
+
+  .v-select {
+    max-width: 400px;
   }
 
 </style>

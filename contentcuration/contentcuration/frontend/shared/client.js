@@ -3,6 +3,7 @@ import axios from 'axios';
 const client = axios.create({
   xsrfCookieName: 'csrftoken',
   xsrfHeaderName: 'X-CSRFToken',
+  timeout: 2000,
 });
 
 client.interceptors.response.use(
@@ -32,7 +33,7 @@ client.interceptors.response.use(
       if (error.response.status === 504) {
         message = 'Request Timed Out: ' + url;
       }
-    } else if (error.request) {
+    } else if (error.request && error.request.config) {
       // Request was sent but no response received
       config = error.request.config;
       url = config.url;
@@ -42,8 +43,8 @@ client.interceptors.response.use(
     }
 
     const extraData = {
+      url,
       type: config ? config.responseType : null,
-      url: url,
       data: config ? config.data : null,
       status: error.response ? error.response.status : null,
       error: message,
@@ -57,6 +58,8 @@ client.interceptors.response.use(
         extra: extraData,
       });
     }
+
+    return Promise.reject(error);
   }
 );
 
