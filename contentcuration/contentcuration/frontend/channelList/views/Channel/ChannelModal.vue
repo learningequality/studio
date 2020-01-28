@@ -35,8 +35,8 @@
           <VFlex style="max-width: 800px;">
             <VForm ref="detailsform">
               <!-- TODO: Insert thumbnail here once the uploader is ready -->
-              <fieldset class="py-1 mt-3">
-                <legend class="py-1 mb-2 title font-weight-bold">
+              <fieldset class="py-1 mt-3 channel-info">
+                <legend class="py-1 mb-2 legend-title font-weight-bold">
                   {{ $tr('details') }}
                 </legend>
 
@@ -237,15 +237,17 @@
 
 <style lang="less" scoped>
 
-  /deep/ fieldset {
+  .channel-info {
     border: 0;
-
-    .title {
-      font-size: 18px !important;
-    }
   }
 
-  /deep/ .v-select {
+  .legend-title {
+    font-size: 18px;
+    line-height: 1;
+    letter-spacing: 0.02em;
+  }
+
+  .v-select {
     max-width: 400px;
   }
 
