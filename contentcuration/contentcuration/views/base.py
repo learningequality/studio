@@ -182,11 +182,7 @@ class SQCountDistinct(Subquery):
 def map_channel_data(channel):
     channel["id"] = channel.pop("main_tree__id")
     channel["title"] = channel.pop("name")
-    if len(channel["children"]) == 1 and channel["children"][0] is None:
-        channel["children"] = []
-    channel["metadata"] = {
-        "resource_count": channel.pop("resource_count")
-    }
+    channel["children"] = [child for child in channel["children"] if child]
     return channel
 
 
