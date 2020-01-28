@@ -77,10 +77,10 @@ module.exports = (env = {}) => {
     output: {
       filename: '[name]-[hash].js',
       path: bundleOutputDir,
-      publicPath: dev ? 'http://127.0.0.1:3000/dist/' : undefined,
+      publicPath: dev ? 'http://127.0.0.1:4000/dist/' : undefined,
     },
     devServer: {
-      port: 3000,
+      port: 4000,
       headers: {
         'Access-Control-Allow-Origin': '*',
       },
