@@ -11,7 +11,6 @@
           <VRadio
             v-if="file"
             :key="file.id"
-            class="notranslate"
             :value="file.id"
             color="primary"
             data-test="radio"
@@ -57,9 +56,9 @@
             data-test="remove"
             @click.stop="$emit('remove', file.id)"
           >
-            <VIcon color="grey" class="notranslate">
+            <Icon color="grey">
               clear
-            </VIcon>
+            </Icon>
           </VBtn>
         </VListTileAction>
       </VListTile>

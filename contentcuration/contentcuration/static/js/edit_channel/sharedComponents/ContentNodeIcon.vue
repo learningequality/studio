@@ -8,15 +8,15 @@
       :textColor="fontColor"
       small
     >
-      <VIcon small class="notranslate" :color="fontColor">
+      <Icon small :color="fontColor">
         {{ icon }}
-      </VIcon>
+      </Icon>
       <span v-if="includeText">{{ text }}</span>
     </VChip>
     <span v-else>
-      <VIcon class="notranslate" :color="fontColor">
+      <Icon :color="fontColor">
         {{ icon }}
-      </VIcon>
+      </Icon>
       <span v-if="includeText">{{ text }}</span>
     </span>
   </span>

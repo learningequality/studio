@@ -19,9 +19,9 @@
           flat
         >
           <VBtn data-test="close" icon dark app @click="handleClose">
-            <VIcon class="notranslate">
+            <Icon>
               close
-            </VIcon>
+            </Icon>
           </VBtn>
           <VToolbarTitle>{{ mode && $tr(mode) }}</VToolbarTitle>
           <VSpacer />

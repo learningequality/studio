@@ -3,7 +3,6 @@
   <VListTile :style="{backgroundColor: backgroundColor}" @click.stop="setNode(index)">
     <VListTileAction>
       <VCheckbox
-        class="notranslate"
         color="primary"
         hide-details
         :inputValue="isSelected"
@@ -32,9 +31,9 @@
     <VListTileAction class="status-indicator">
       <FileStatus :fileIDs="fileIDs">
         <slot name="default">
-          <VIcon v-if="!nodeIsValid" color="red" class="error-icon notranslate">
+          <Icon v-if="!nodeIsValid" color="red" class="error-icon">
             error
-          </VIcon>
+          </Icon>
         </slot>
       </FileStatus>
     </VListTileAction>
@@ -47,9 +46,9 @@
         class="remove-item"
         @click.stop="removeNode(index)"
       >
-        <VIcon class="notranslate">
+        <Icon>
           clear
-        </VIcon>
+        </Icon>
       </VBtn>
     </VListTileAction>
   </VListTile>

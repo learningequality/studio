@@ -10,9 +10,9 @@
       </VLayout>
       <VLayout v-else-if="loadError" justify-center align-center fill-height>
         <VFlex grow class="default-content">
-          <VIcon color="red" class="error-icon notranslate">
+          <Icon color="red" class="error-icon">
             error
-          </VIcon>
+          </Icon>
           <p>{{ $tr('loadErrorText') }}</p>
         </VFlex>
       </VLayout>
@@ -31,9 +31,9 @@
               {{ $tr(tabs.DETAILS) }}
               <VTooltip v-if="invalidSelected || !areFilesValid" top>
                 <template v-slot:activator="{ on }">
-                  <VIcon color="red" class="notranslate" dark v-on="on">
+                  <Icon color="red" dark v-on="on">
                     error
-                  </VIcon>
+                  </Icon>
                 </template>
                 <span>{{ $tr('invalidFieldsToolTip') }}</span>
               </VTooltip>
@@ -44,9 +44,9 @@
               {{ $tr(tabs.QUESTIONS) }}
               <VTooltip v-if="!areAssessmentItemsValid" top>
                 <template v-slot:activator="{ on }">
-                  <VIcon color="red" class="notranslate" dark v-on="on">
+                  <Icon color="red" dark v-on="on">
                     error
-                  </VIcon>
+                  </Icon>
                 </template>
                 <span>{{ $tr('invalidFieldsToolTip') }}</span>
               </VTooltip>

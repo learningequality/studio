@@ -6,15 +6,15 @@
     </div>
     <VTooltip v-else-if="hasErrors" top>
       <template v-slot:activator="{ on }">
-        <VIcon class="notranslate" color="red" :large="large" v-on="on">
+        <Icon color="red" :large="large" v-on="on">
           error
-        </VIcon>
+        </Icon>
       </template>
       <span>{{ statusMessage(fileIDs) }}</span>
     </VTooltip>
-    <VIcon v-else-if="progress >= 100" class="notranslate" :large="large" color="greenSuccess">
+    <Icon v-else-if="progress >= 100" :large="large" color="greenSuccess">
       check_circle
-    </VIcon>
+    </Icon>
     <VProgressCircular
       v-else
       :size="large? 60 : 20"
