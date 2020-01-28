@@ -44,9 +44,6 @@
     components: {
       EditModal,
     },
-    mounted() {
-      this.openModal('UPLOAD');
-    },
     methods: {
       ...mapMutations('edit_modal', {
         setNodes: 'SET_NODES',
@@ -72,40 +69,6 @@
 </script>
 
 
-<style lang="less">
-
-  html {
-    overflow-y: auto !important;
-    .title,
-    .headline,
-    .display,
-    .display-1,
-    .subheading,
-    .v-toolbar__title,
-    .v-chip__content {
-      font-family: 'Noto Sans' !important;
-    }
-    .v-btn--flat,
-    .v-tabs__item {
-      font-weight: bold;
-      cursor: pointer;
-    }
-    .material-icons * {
-      font-family: 'Material Icons';
-    }
-  }
-
-  body * {
-    font-family: 'Noto Sans';
-  }
-
-  .v-card {
-    outline-color: #8dc5b6;
-  }
-
-  .v-tooltip__content {
-    max-width: 200px;
-    text-align: center;
-  }
+<style lang="less" scoped>
 
 </style>

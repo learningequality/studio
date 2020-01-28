@@ -20,7 +20,6 @@ export function RESET_STATE(state) {
     selectedIndices: [],
     changes: {},
     mode: modes.VIEW_ONLY,
-    files: [],
   });
 }
 
