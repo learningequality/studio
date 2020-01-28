@@ -1,9 +1,9 @@
 import Vue from 'vue';
 import Vuex, { Store } from 'vuex';
 import fileUploadsModule from 'edit_channel/vuexModules/fileUpload';
-import client from 'edit_channel/sharedComponents/client';
+import client from 'shared/client';
 
-jest.mock('edit_channel/sharedComponents/client');
+jest.mock('shared/client');
 
 Vue.use(Vuex);
 

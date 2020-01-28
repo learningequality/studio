@@ -1,7 +1,7 @@
 import _ from 'underscore';
 import Vue from 'vue';
 import Constants from 'edit_channel/constants';
-import client from 'edit_channel/sharedComponents/client';
+import client from 'shared/client';
 import { fileErrors } from 'edit_channel/file_upload/constants';
 
 const SparkMD5 = require('spark-md5');
