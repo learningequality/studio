@@ -44,7 +44,6 @@
                   v-model="name"
                   outline
                   :label="$tr('channelName')"
-                  :placeholder="$tr('channelNamePlaceholder')"
                   :rules="[() => name.length ? true : $tr('channelError')]"
                   required
                 />
@@ -52,14 +51,12 @@
                   v-model="language"
                   class="notranslate"
                   outline
-                  :placeholder="$tr('channelLanguagePlaceholder')"
                   required
                 />
                 <VTextarea
                   v-model="description"
                   outline
                   :label="$tr('channelDescription')"
-                  :placeholder="$tr('channelDescriptionPlaceholder')"
                   maxlength="400"
                   rows="4"
                   auto-grow
@@ -229,10 +226,7 @@
       details: 'Channel details',
       channelName: 'Channel name',
       channelError: 'Channel name cannot be blank',
-      channelNamePlaceholder: 'Enter channel name...',
       channelDescription: 'Channel description',
-      channelDescriptionPlaceholder: 'Enter channel description...',
-      channelLanguagePlaceholder: 'Select a language...',
       save: 'Save changes',
       create: 'Create',
     },

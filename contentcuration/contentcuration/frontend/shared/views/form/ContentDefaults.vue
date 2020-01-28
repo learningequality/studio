@@ -14,7 +14,6 @@
         outline
         data-name="author"
         :label="$tr('author')"
-        :placeholder="$tr('authorPlaceholder')"
         @change="emitChange"
       />
       <VTextField
@@ -22,7 +21,6 @@
         outline
         data-name="provider"
         :label="$tr('provider')"
-        :placeholder="$tr('providerPlaceholder')"
         @change="emitChange"
       />
       <VTextField
@@ -30,7 +28,6 @@
         outline
         data-name="aggregator"
         :label="$tr('aggregator')"
-        :placeholder="$tr('aggregatorPlaceholder')"
         @change="emitChange"
       />
       <VTextField
@@ -38,7 +35,6 @@
         outline
         data-name="copyrightHolder"
         :label="$tr('copyrightHolder')"
-        :placeholder="$tr('copyrightHolderPlaceholder')"
         @change="emitChange"
       />
       <VSelect
@@ -55,7 +51,6 @@
         outline
         data-name="licenseDescription"
         :label="$tr('licenseDescription')"
-        :placeholder="$tr('licenseDescriptionPlaceholder')"
         @change="emitChange"
       />
     </fieldset>
@@ -200,17 +195,12 @@
       defaultsTitle: 'New resource defaults (optional)',
       defaultsSubTitle: 'New resources you create will be automatically given these fields',
       author: 'Author',
-      authorPlaceholder: 'Enter author name...',
       aggregator: 'Aggregator',
-      aggregatorPlaceholder: 'Enter aggregator name...',
       provider: 'Provider',
-      providerPlaceholder: 'Enter provider name...',
       license: 'License',
       licenseDescription: 'License description',
-      licenseDescriptionPlaceholder: 'Enter license description...',
       noLicense: 'No license selected',
       copyrightHolder: 'Copyright Holder',
-      copyrightHolderPlaceholder: 'Enter copyright holder name...',
       thumbnailsTitle: 'Automatically generate thumbnails for the following:',
       videos: 'Videos',
       html5: 'HTML5 Apps',
