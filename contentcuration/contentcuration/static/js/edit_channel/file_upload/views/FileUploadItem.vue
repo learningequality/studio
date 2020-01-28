@@ -1,11 +1,11 @@
 <template>
 
   <Uploader :readonly="viewOnly" :presetID="preset.id" @uploading="handleUploading">
-    <template v-slot:default="uploader">
+    <template #default="{openFileDialog}">
       <VListTile
         data-test="list-item"
         :style="{backgroundColor: isSelected? $vuetify.theme.greyBackground : 'transparent'}"
-        @click.stop="viewOnly? $emit('selected') : uploader.openFileDialog()"
+        @click.stop="viewOnly? $emit('selected') : openFileDialog()"
       >
         <VListTileAction v-show="!viewOnly" @click.stop="$emit('selected')">
           <VRadio
@@ -20,7 +20,7 @@
         <VListTileContent>
           <VListTileSubTitle>{{ preset.id | translate }}</VListTileSubTitle>
           <VListTileTitle>
-            <span v-if="file" class="notranslate" @click.stop="uploader.openFileDialog">
+            <span v-if="file" class="notranslate" @click.stop="openFileDialog">
               {{ file.original_filename }}
             </span>
             <ActionLink
@@ -28,7 +28,7 @@
               class="notranslate"
               data-test="upload-link"
               :text="$tr('uploadButton')"
-              @click="uploader.openFileDialog"
+              @click="openFileDialog"
             />
           </VListTileTitle>
           <VListTileSubTitle v-if="file && file.error">
@@ -37,7 +37,7 @@
             <ActionLink
               v-if="file.error.type !== 'NO_STORAGE'"
               data-test="error-upload-link"
-              @click="uploader.openFileDialog"
+              @click="openFileDialog"
             />
           </VListTileSubTitle>
           <VListTileSubTitle v-else-if="file && uploading">

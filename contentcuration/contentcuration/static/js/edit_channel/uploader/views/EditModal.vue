@@ -72,13 +72,13 @@
                   allowMultiple
                   @uploading="createNodesFromFiles"
                 >
-                  <template v-slot:default="uploader">
+                  <template #default="{openFileDialog}">
                     <VBtn
                       v-if="allowUpload"
                       depressed
                       dark
                       color="primary"
-                      @click="uploader.openFileDialog"
+                      @click="openFileDialog"
                     >
                       {{ $tr('uploadButton') }}
                     </VBtn>
@@ -101,13 +101,11 @@
           :open="showEditList"
           :minWidth="150"
         >
-          <template v-slot:content>
-            <EditList
-              :allowRemove="newContentMode"
-              @addNode="createNode"
-              @uploadStarted="uploadStarted"
-            />
-          </template>
+          <EditList
+            :allowRemove="newContentMode"
+            @addNode="createNode"
+            @uploadStarted="uploadStarted"
+          />
         </ResizableNavigationDrawer>
         <VCardText>
           <EditView :isClipboard="isClipboard" />

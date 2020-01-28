@@ -9,7 +9,7 @@
       <VFlex xs12>
         <VCard flat height="100%">
           <Uploader allowMultiple @uploading="createNodesFromFiles">
-            <template v-slot:default="uploader">
+            <template #default="{openFileDialog}">
               <VLayout align-center fill-height>
                 <VCardText class="text-center align-center text-xs-center">
                   <p v-if="currentNode" class="title upload-to-text">
@@ -23,7 +23,7 @@
                     {{ $tr('orText') }}
                   </div>
                   <br>
-                  <VBtn color="primary" depressed @click="uploader.openFileDialog">
+                  <VBtn color="primary" depressed @click="openFileDialog">
                     {{ $tr('chooseFilesButton') }}
                   </VBtn>
                   <p class="small text-center accepts-text">

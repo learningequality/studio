@@ -7,7 +7,7 @@
     :width="drawer.width"
   >
     <div class="drawer-contents">
-      <slot name="content"></slot>
+      <slot></slot>
     </div>
   </VNavigationDrawer>
 
