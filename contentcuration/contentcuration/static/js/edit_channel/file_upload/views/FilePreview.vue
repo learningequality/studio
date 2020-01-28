@@ -57,7 +57,8 @@
         type: Object,
         required: false,
         validator: file => {
-          return file.id && file.file_on_disk;
+          // Might be in the process of uploading, so can't have file_on_disk
+          return file.id;
         },
       },
       node: {
