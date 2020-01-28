@@ -5,6 +5,7 @@ const webpack = require('webpack');
 
 const BundleTracker = require('webpack-bundle-tracker');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
+const CircularDependencyPlugin = require('circular-dependency-plugin')
 
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
@@ -204,6 +205,19 @@ module.exports = (env = {}) => {
       new webpack.SourceMapDevToolPlugin({
         filename: '[name]-[hash].js.map',
       }),
+      new CircularDependencyPlugin({
+        // exclude detection of files based on a RegExp
+        exclude: /a\.js|node_modules/,
+        // include specific files based on a RegExp
+        include: /frontend/,
+        // add errors to webpack instead of warnings
+        failOnError: false,
+        // allow import cycles that include an asyncronous import,
+        // e.g. via import(/* webpackMode: "weak" */ './file.js')
+        allowAsyncCycles: false,
+        // set the current working directory for displaying module paths
+        cwd: process.cwd(),
+      })
     ],
     // new in webpack 4. Specifies the default bundle type
     mode: 'development',
