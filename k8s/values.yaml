@@ -76,6 +76,7 @@ studioProber:
 # we only enable prometheus and grafana in here, and disable everything else.
 prometheusOperator:
   enabled: false
+  createCustomResource: false
 kubeStateMetrics:
   enabled: false
 coreDns:
