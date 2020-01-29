@@ -26,13 +26,7 @@ export function REMOVE_CONTENTNODE(state, contentNodeId) {
   Vue.delete(state.contentNodesMap, contentNodeId);
 }
 
-export function UPDATE_CONTENTNODE(
-  state,
-  {
-    id,
-    ...payload
-  } = {}
-) {
+export function UPDATE_CONTENTNODE(state, { id, ...payload } = {}) {
   if (!id) {
     throw ReferenceError('id must be defined to update a contentNode set');
   }

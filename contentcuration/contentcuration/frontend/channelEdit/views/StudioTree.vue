@@ -84,11 +84,7 @@
       };
     },
     computed: {
-      ...mapGetters('contentNode', [
-        'getContentNode',
-        'getContentNodeChildren',
-        'nodeExpanded',
-      ]),
+      ...mapGetters('contentNode', ['getContentNode', 'getContentNodeChildren', 'nodeExpanded']),
       node() {
         return this.getContentNode(this.nodeId);
       },

@@ -9,9 +9,8 @@ require('vuetify/dist/vuetify.min.css');
 require('../../less/styles.less');
 
 require('utils/translations');
-const State = require('edit_channel/state');
-
 var store = require('edit_channel/uploader/vuex/store');
+const State = require('edit_channel/state');
 
 Vue.use(VueIntl);
 Vue.use(Vuetify, {

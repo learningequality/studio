@@ -53,7 +53,17 @@ export function createChannel(context) {
   });
 }
 
-export function updateChannel(context, { id, name = null, description = null, thumbnailData = null, language = null, contentDefaults = null } = {}) {
+export function updateChannel(
+  context,
+  {
+    id,
+    name = null,
+    description = null,
+    thumbnailData = null,
+    language = null,
+    contentDefaults = null,
+  } = {}
+) {
   const channelData = {};
   if (!id) {
     throw ReferenceError('id must be defined to update a channel');
@@ -80,7 +90,7 @@ export function updateChannel(context, { id, name = null, description = null, th
     // Assign all acceptable content defaults into the channel defaults
     Object.assign(
       channelData.content_defaults,
-      pick(contentDefaults, Object.keys(ContentDefaults)),
+      pick(contentDefaults, Object.keys(ContentDefaults))
     );
   }
   context.commit('UPDATE_CHANNEL', { id, ...channelData });

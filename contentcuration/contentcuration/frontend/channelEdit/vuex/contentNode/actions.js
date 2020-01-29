@@ -8,8 +8,7 @@ export function loadContentNodes(context, params = {}) {
 }
 
 export function loadContentNode(context, id) {
-  return ContentNode
-    .get(id)
+  return ContentNode.get(id)
     .then(contentNode => {
       context.commit('ADD_CONTENTNODE', contentNode);
       return contentNode;
@@ -36,7 +35,9 @@ export function createContentNode(context) {
   });
 }
 
-export function updateContentNode(context, {
+export function updateContentNode(
+  context,
+  {
     id,
     title = null,
     description = null,
@@ -50,7 +51,8 @@ export function updateContentNode(context, {
     aggregator = null,
     provider = null,
     extra_fields = null,
-  } = {}) {
+  } = {}
+) {
   const contentNodeData = {};
   if (!id) {
     throw ReferenceError('id must be defined to update a contentNode');

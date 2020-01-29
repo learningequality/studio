@@ -67,7 +67,6 @@ export function initializeDB() {
   return db.open();
 }
 
-
 export function registerListener(table, change, callback) {
   change = Number(change);
   if (!Object.values(CHANGE_TYPES).includes(change)) {

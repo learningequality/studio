@@ -71,19 +71,21 @@ describe('channel actions', () => {
         name: 'test',
       });
       const updateSpy = jest.spyOn(Channel, 'update');
-      return store.dispatch('channel/updateChannel', {
-        id,
-        name: 'notatest',
-        description: 'very',
-        language: 'no',
-      }).then(() => {
-        expect(updateSpy).toHaveBeenCalledWith(id, {
+      return store
+        .dispatch('channel/updateChannel', {
+          id,
           name: 'notatest',
           description: 'very',
           language: 'no',
+        })
+        .then(() => {
+          expect(updateSpy).toHaveBeenCalledWith(id, {
+            name: 'notatest',
+            description: 'very',
+            language: 'no',
+          });
+          updateSpy.mockRestore();
         });
-        updateSpy.mockRestore();
-      });
     });
     it('should call parse thumbnail options properly', () => {
       store.commit('channel/ADD_CHANNEL', {
@@ -91,21 +93,23 @@ describe('channel actions', () => {
         name: 'test',
       });
       const updateSpy = jest.spyOn(Channel, 'update');
-      return store.dispatch('channel/updateChannel', {
-        id,
-        thumbnailData: {
-          thumbnail: 'test',
-          thumbnail_url: 'testUrl',
-          thumbnail_encoding: 'testEncoding',
-        }
-      }).then(() => {
-        expect(updateSpy).toHaveBeenCalledWith(id, {
-          thumbnail: 'test',
-          thumbnail_url: 'testUrl',
-          thumbnail_encoding: 'testEncoding',
+      return store
+        .dispatch('channel/updateChannel', {
+          id,
+          thumbnailData: {
+            thumbnail: 'test',
+            thumbnail_url: 'testUrl',
+            thumbnail_encoding: 'testEncoding',
+          },
+        })
+        .then(() => {
+          expect(updateSpy).toHaveBeenCalledWith(id, {
+            thumbnail: 'test',
+            thumbnail_url: 'testUrl',
+            thumbnail_encoding: 'testEncoding',
+          });
+          updateSpy.mockRestore();
         });
-        updateSpy.mockRestore();
-      });
     });
   });
   describe('deleteChannel action', () => {

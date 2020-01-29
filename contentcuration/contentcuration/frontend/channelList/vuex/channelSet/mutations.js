@@ -20,10 +20,7 @@ export function REMOVE_CHANNELSET(state, channelSetId) {
   Vue.delete(state.channelSetsMap, channelSetId);
 }
 
-export function UPDATE_CHANNELSET(
-  state,
-  { id, ...payload }
-) {
+export function UPDATE_CHANNELSET(state, { id, ...payload }) {
   if (!id) {
     throw ReferenceError('id must be defined to update a channel set');
   }

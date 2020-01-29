@@ -13,7 +13,7 @@ describe('contentNode actions', () => {
   beforeEach(() => {
     return ContentNode.put(contentNodeDatum).then(newId => {
       id = newId;
-      return ContentNode.put({ title: 'notatest', parent: newId}).then(() => {
+      return ContentNode.put({ title: 'notatest', parent: newId }).then(() => {
         store = storeFactory({
           modules: {
             contentNode,
@@ -75,19 +75,21 @@ describe('contentNode actions', () => {
         title: 'test',
       });
       const updateSpy = jest.spyOn(ContentNode, 'update');
-      return store.dispatch('contentNode/updateContentNode', {
-        id,
-        title: 'notatest',
-        description: 'very',
-        language: 'no',
-      }).then(() => {
-        expect(updateSpy).toHaveBeenCalledWith(id, {
+      return store
+        .dispatch('contentNode/updateContentNode', {
+          id,
           title: 'notatest',
           description: 'very',
           language: 'no',
+        })
+        .then(() => {
+          expect(updateSpy).toHaveBeenCalledWith(id, {
+            title: 'notatest',
+            description: 'very',
+            language: 'no',
+          });
+          updateSpy.mockRestore();
         });
-        updateSpy.mockRestore();
-      });
     });
     it('should call parse thumbnail options properly', () => {
       store.commit('contentNode/ADD_CONTENTNODE', {
@@ -95,21 +97,23 @@ describe('contentNode actions', () => {
         title: 'test',
       });
       const updateSpy = jest.spyOn(ContentNode, 'update');
-      return store.dispatch('contentNode/updateContentNode', {
-        id,
-        thumbnailData: {
-          thumbnail: 'test',
-          thumbnail_url: 'testUrl',
-          thumbnail_encoding: 'testEncoding',
-        }
-      }).then(() => {
-        expect(updateSpy).toHaveBeenCalledWith(id, {
-          thumbnail: 'test',
-          thumbnail_url: 'testUrl',
-          thumbnail_encoding: 'testEncoding',
+      return store
+        .dispatch('contentNode/updateContentNode', {
+          id,
+          thumbnailData: {
+            thumbnail: 'test',
+            thumbnail_url: 'testUrl',
+            thumbnail_encoding: 'testEncoding',
+          },
+        })
+        .then(() => {
+          expect(updateSpy).toHaveBeenCalledWith(id, {
+            thumbnail: 'test',
+            thumbnail_url: 'testUrl',
+            thumbnail_encoding: 'testEncoding',
+          });
+          updateSpy.mockRestore();
         });
-        updateSpy.mockRestore();
-      });
     });
   });
   describe('deleteContentNode action', () => {

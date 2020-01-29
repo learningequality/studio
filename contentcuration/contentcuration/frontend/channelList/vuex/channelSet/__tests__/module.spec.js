@@ -41,26 +41,28 @@ describe('channelSet actions', () => {
     });
   });
   describe('createChannelSet action for a new channelSet', () => {
-      it('should add a new channelSet with an id', () => {
-        return store.dispatch('channelSet/createChannelSet').then(id => {
-          expect(store.getters['channelSet/getChannelSet'](id)).not.toBeUndefined();
-        });
+    it('should add a new channelSet with an id', () => {
+      return store.dispatch('channelSet/createChannelSet').then(id => {
+        expect(store.getters['channelSet/getChannelSet'](id)).not.toBeUndefined();
       });
     });
-    describe('updateChannelSet action for an existing channelSet', () => {
-      it('should call ChannelSet.update', () => {
-        store.commit('channelSet/ADD_CHANNELSET', {
-          id,
-          name: 'test',
-          channels: [],
-        });
-        const updateSpy = jest.spyOn(ChannelSet, 'update');
-        return store.dispatch('channelSet/updateChannelSet', {
+  });
+  describe('updateChannelSet action for an existing channelSet', () => {
+    it('should call ChannelSet.update', () => {
+      store.commit('channelSet/ADD_CHANNELSET', {
+        id,
+        name: 'test',
+        channels: [],
+      });
+      const updateSpy = jest.spyOn(ChannelSet, 'update');
+      return store
+        .dispatch('channelSet/updateChannelSet', {
           id,
           name: 'notatest',
           description: 'very',
           channels: ['no'],
-        }).then(() => {
+        })
+        .then(() => {
           expect(updateSpy).toHaveBeenCalledWith(id, {
             name: 'notatest',
             description: 'very',
@@ -68,8 +70,8 @@ describe('channelSet actions', () => {
           });
           updateSpy.mockRestore();
         });
-      });
     });
+  });
   describe('deleteChannelSet action', () => {
     it('should call ChannelSet.delete', () => {
       store.commit('channelSet/ADD_CHANNELSET', {

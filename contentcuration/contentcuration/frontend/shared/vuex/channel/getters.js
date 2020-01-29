@@ -1,8 +1,5 @@
-import { channelLastSavedState } from './index';
-import { isTempId } from 'shared/utils';
-
 export function channels(state) {
-  return Object.values(state.channelsMap).filter(channel => !isTempId(channel.id));
+  return Object.values(state.channelsMap);
 }
 
 export function getChannel(state) {
@@ -14,13 +11,6 @@ export function getChannel(state) {
 export function getChannels(state) {
   return function(channelIds) {
     return channelIds.map(key => state.channelsMap[key]).filter(channel => channel);
-  };
-}
-
-export function getChannelUnsaved(state) {
-  return function(channelId) {
-    const channel = state.channelsMap[channelId];
-    return channel ? channelLastSavedState.hasUnsavedChanges(channel) : false;
   };
 }
 

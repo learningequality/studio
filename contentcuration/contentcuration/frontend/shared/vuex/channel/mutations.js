@@ -25,10 +25,7 @@ export function REMOVE_CHANNEL(state, channel) {
   Vue.delete(state.channelsMap, channel.id);
 }
 
-export function UPDATE_CHANNEL(
-  state,
-  { id, ...payload } = {}
-) {
+export function UPDATE_CHANNEL(state, { id, ...payload } = {}) {
   if (!id) {
     throw ReferenceError('id must be defined to update a channel');
   }

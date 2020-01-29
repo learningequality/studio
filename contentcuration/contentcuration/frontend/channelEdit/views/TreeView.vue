@@ -28,11 +28,10 @@
 
 <script>
 
-  import { mapGetters, mapMutations, mapState } from 'vuex';
+  import { mapGetters, mapActions } from 'vuex';
   import { RouterNames } from '../constants';
   import StudioTree from './StudioTree';
   import NodePanel from './NodePanel';
-  import { generateTempId } from 'shared/utils';
 
   export default {
     name: 'TreeView',
@@ -48,29 +47,15 @@
     },
     computed: {
       ...mapGetters('currentChannel', ['canEdit', 'rootId']),
-      ...mapState({
-        language: state => state.session.currentLanguage,
-        preferences: state => state.session.preferences,
-      }),
     },
     methods: {
-      ...mapMutations('contentNode', {
-        addContentNode: 'ADD_CONTENTNODE',
-        removeContentNode: 'REMOVE_CONTENTNODE',
-      }),
+      ...mapActions('contentNode', ['createContentNode']),
       newContentNode() {
-        // Clear any previously existing dummy channelset
-        this.removeContentNode(this.newId);
-        this.newId = generateTempId();
-        this.addContentNode({
-          id: this.newId,
-          name: '',
-          description: '',
-          language: this.preferences ? this.preferences.language : this.language,
-        });
-        this.$router.push({
-          name: RouterNames.CONTENTNODE_DETAILS,
-          params: { detailNodeId: this.newId },
+        this.createContentNode().then(newId => {
+          this.$router.push({
+            name: RouterNames.CONTENTNODE_DETAILS,
+            params: { detailNodeId: newId },
+          });
         });
       },
     },

@@ -95,7 +95,6 @@
   import { TabNames } from '../constants';
   import DetailsTabView from './DetailsTabView.vue';
   import AssessmentView from './AssessmentView.vue';
-  import { isTempId } from 'shared/utils';
 
   export default {
     name: 'EditView',
@@ -160,10 +159,7 @@
         );
       },
       invalidSelected() {
-        return (
-          !this.viewOnly &&
-          this.nodeIds.some(nodeId => !isTempId(nodeId) && !this.getContentNodeIsValid(nodeId))
-        );
+        return !this.viewOnly && this.nodeIds.some(nodeId => !this.getContentNodeIsValid(nodeId));
       },
       countText() {
         let messageArgs = { count: this.nodeIds.length };

@@ -9,8 +9,7 @@ export function loadChannelSetList(context) {
 }
 
 export function loadChannelSet(context, id) {
-  return ChannelSet
-    .get(id)
+  return ChannelSet.get(id)
     .then(channelSet => {
       context.commit('SET_CHANNELSET_LIST', [channelSet]);
       return channelSet;
@@ -41,7 +40,10 @@ export function createChannelSet(context) {
   });
 }
 
-export function updateChannelSet(context, { id, name = null, description = null, channels = null } = {}) {
+export function updateChannelSet(
+  context,
+  { id, name = null, description = null, channels = null } = {}
+) {
   const channelSetData = {};
   if (!id) {
     throw ReferenceError('id must be defined to update a channel');
