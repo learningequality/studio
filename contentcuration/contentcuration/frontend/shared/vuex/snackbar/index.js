@@ -3,7 +3,10 @@ export default {
     isVisible: false,
     options: {
       text: '',
-      autoDismiss: true,
+      // duration in ms, 0 indicates it should not automatically dismiss
+      duration: 6000,
+      actionText: '',
+      actionCallback: null,
     },
   },
   getters: {
@@ -14,6 +17,14 @@ export default {
       return state.options;
     },
   },
+  actions: {
+    showSnackbar({ commit }, { text, duration, actionText, actionCallback }) {
+      commit('CORE_CREATE_SNACKBAR', { text, duration, actionText, actionCallback });
+    },
+    clearSnackbar({ commit }) {
+      commit('CORE_CLEAR_SNACKBAR');
+    }
+  },
   mutations: {
     CORE_CREATE_SNACKBAR(state, snackbarOptions = {}) {
       // reset
@@ -21,7 +32,7 @@ export default {
       state.options = {};
       // set new options
       state.isVisible = true;
-      // options include text, autoDismiss, duration, actionText, actionCallback,
+      // options include text, duration, actionText, actionCallback,
       // hideCallback, bottomPosition
       state.options = snackbarOptions;
     },
