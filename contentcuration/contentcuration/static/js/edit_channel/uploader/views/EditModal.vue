@@ -1,123 +1,58 @@
 <template>
 
-  <div>
-    <VDialog
-      ref="editmodal"
-      :value="$route.params.detailNodeId == detailNodeId"
-      fullscreen
-      hide-overlay
-      transition="dialog-bottom-transition"
-      lazy
-      scrollable
-    >
-      <VCard class="edit-modal-wrapper">
-        <VNavigationDrawer
-          v-if="multipleNodes"
-          v-model="drawer.open"
-          stateless
-          clipped
-          app
-          class="edit-list"
-        >
-          <EditList v-model="selected" :nodeIds="detailNodeIds" />
-        </VNavigationDrawer>
-        <VToolbar dark color="primary" fixed clipped-left app>
-          <VBtn ref="closebutton" icon dark app @click="handleClose">
-            <VIcon>close</VIcon>
-          </VBtn>
-          <VToolbarTitle>{{ modalTitle }}</VToolbarTitle>
-          <VSpacer />
-          <VToolbarItems>
-            <VFlex v-if="!isViewOnly" align-center class="last-saved-time">
-              <div v-if="saveError">
-                {{ $tr('saveFailedText') }}
-              </div>
-              <div v-else-if="invalidNodeCount">
-                {{ $tr('autosaveDisabledMessage', {count: invalidNodeCount}) }}
-              </div>
-              <div v-else-if="saving">
-                <VProgressCircular indeterminate size="15" width="2" color="white" />
-                {{ $tr('savingIndicator') }}
-              </div>
-              <div v-else-if="lastSaved">
-                {{ savedMessage }}
-              </div>
-            </VFlex>
-            <VBtn v-if="!isViewOnly" ref="savebutton" dark flat @click="handleSave">
-              {{ $tr('saveButtonText') }}
-            </VBtn>
-            <VBtn v-else ref="copybutton" dark flat @click="copyContent">
-              {{ $tr('copyButtonText', {count: nodes.length}) }}
-            </VBtn>
-          </VToolbarItems>
-        </VToolbar>
-        <VCardText>
-          <template v-if="loadError">
-            <VIcon color="red" class="error-icon">
-              error
-            </VIcon>
-            <p>{{ $tr('loadErrorText') }}</p>
-          </template>
-          <EditView v-else :nodeIds="detailNodeIds" />
-        </VCardText>
-      </VCard>
-    </VDialog>
-
-    <!-- Dialog for catching unsaved changes -->
-    <Dialog ref="saveprompt" :header="$tr('unsavedChanges')" :text="$tr('unsavedChangesText')">
-      <template v-slot:buttons>
-        <VBtn ref="savepromptdontsave" flat color="primary" @click="closeModal">
-          {{ $tr('dontSaveButton') }}
+  <VDialog
+    ref="editmodal"
+    :value="$route.params.detailNodeId == detailNodeId"
+    fullscreen
+    hide-overlay
+    transition="dialog-bottom-transition"
+    lazy
+    scrollable
+  >
+    <VCard class="edit-modal-wrapper">
+      <VNavigationDrawer
+        v-if="multipleNodes"
+        v-model="drawerOpen"
+        stateless
+        clipped
+        app
+        class="edit-list"
+      >
+        <EditList v-model="selected" :nodeIds="detailNodeIds" />
+      </VNavigationDrawer>
+      <VToolbar dark color="primary" fixed clipped-left app>
+        <VBtn ref="closebutton" icon dark app @click="closeModal">
+          <VIcon>close</VIcon>
         </VBtn>
-        <VSpacer />
-        <VBtn ref="savepromptcancel" flat color="primary" @click="dismissPrompt">
-          {{ $tr('cancelButton') }}
-        </VBtn>
-        <VBtn ref="savepromptsave" depressed color="primary" @click="handleSave">
-          {{ $tr('saveButton') }}
-        </VBtn>
-      </template>
-    </Dialog>
-
-    <!-- Alert for related content -->
-    <Alert
-      ref="relatedalert"
-      :header="$tr('relatedContentHeader')"
-      :text="$tr('relatedContentText')"
-      messageID="relatedContentAlertOnCopyFromEditModal"
-    />
-
-    <!-- Alert for failed save -->
-    <Alert
-      ref="savefailedalert"
-      :header="$tr('saveFailedHeader')"
-      :text="$tr('saveFailedText')"
-    />
-  </div>
+        <VToolbarTitle>{{ modalTitle }}</VToolbarTitle>
+      </VToolbar>
+      <VCardText>
+        <template v-if="loadError">
+          <VIcon color="red" class="error-icon">
+            error
+          </VIcon>
+          <p>{{ $tr('loadErrorText') }}</p>
+        </template>
+        <EditView v-else :nodeIds="detailNodeIds" />
+      </VCardText>
+    </VCard>
+  </VDialog>
 
 </template>
 
 <script>
 
-  import _ from 'underscore';
-  import { mapActions, mapGetters, mapMutations } from 'vuex';
+  import { mapActions, mapGetters } from 'vuex';
   import { modes } from '../constants';
   import EditList from './EditList.vue';
   import EditView from './EditView.vue';
-  import Dialog from 'edit_channel/sharedComponents/Dialog.vue';
-  import Alert from 'edit_channel/sharedComponents/Alert.vue';
   import { RouterNames } from 'frontend/channelEdit/constants';
-
-  const SAVE_TIMER = 5000;
-  const SAVE_MESSAGE_TIMER = 10000;
 
   export default {
     name: 'EditModal',
     components: {
       EditList,
       EditView,
-      Dialog,
-      Alert,
     },
     props: {
       detailNodeId: {
@@ -127,26 +62,9 @@
     },
     data() {
       return {
-        lastSaved: null,
-        saving: false,
-        savedMessage: null,
-        saveError: false,
         loadError: false,
-        updateInterval: null,
         selected: this.detailNodeIds,
-        drawer: {
-          open: true,
-        },
-        debouncedSave: _.debounce(() => {
-          if (!this.invalidNodeCount) {
-            this.saveContent()
-              .then(() => {
-                this.updateSavedTime();
-                this.updateInterval = setInterval(this.updateSavedTime, SAVE_MESSAGE_TIMER);
-              })
-              .catch(() => (this.saveError = true));
-          }
-        }, SAVE_TIMER),
+        drawerOpen: this.multipleNodes,
       };
     },
     computed: {
@@ -194,77 +112,12 @@
       }
       return next(false);
     },
-    beforeMount() {
-      this.drawer.open = this.multipleNodes;
-    },
     methods: {
       ...mapActions('contentNode', ['loadContentNode']),
-      ...mapActions('edit_modal', ['saveNodes', 'copyNodes', 'prepareForSave']),
-      ...mapMutations('edit_modal', {
-        setNode: 'SET_NODE',
-      }),
-      updateSavedTime() {
-        this.savedMessage = this.$tr('savedMessage', {
-          relativeTime: this.$formatRelative(this.lastSaved),
-        });
-      },
-      saveContent() {
-        this.saveError = false;
-        return new Promise((resolve, reject) => {
-          clearInterval(this.updateInterval);
-          if (this.invalidNodeCount) {
-            resolve();
-          } else {
-            this.saving = true;
-            this.saveNodes()
-              .then(() => {
-                this.lastSaved = Date.now();
-                this.saving = false;
-                resolve();
-              })
-              .catch(reject);
-          }
-        });
-      },
-      handleSave() {
-        // Prepare for save sets all as not new and
-        // activates validation on all nodes
-        this.prepareForSave();
-        if (this.invalidNodeCount) {
-          this.setNode(this.invalidNodes[0]);
-        } else {
-          this.saveContent()
-            .then(this.closeModal)
-            .catch(() => {
-              this.$refs.savefailedalert.prompt();
-              this.dismissPrompt();
-            });
-        }
-      },
-      handleClose() {
-        this.debouncedSave.cancel();
-        if (this.changed) {
-          this.$refs.saveprompt.prompt();
-        } else {
-          this.closeModal();
-        }
-      },
-      dismissPrompt() {
-        this.$refs.saveprompt.close();
-        this.debouncedSave();
-      },
       closeModal() {
         this.$router.push({
           name: RouterNames.TREE_VIEW,
           params: { nodeId: this.$route.params.nodeId },
-        });
-      },
-      copyContent() {
-        if (_.some(this.nodes, n => n.prerequisite.length || n.is_prerequisite_of.length)) {
-          this.$refs.relatedalert.prompt();
-        }
-        this.copyNodes().then(() => {
-          this.closeModal();
         });
       },
     },
@@ -275,10 +128,7 @@
       [modes.NEW_TOPIC]: 'Adding Topics',
       [modes.NEW_EXERCISE]: 'Adding Exercises',
       [modes.UPLOAD]: 'Uploading Files',
-      saveButtonText: 'Save & Close',
-      copyButtonText:
-        '{count, plural,\n =1 {Copy to clipboard}\n other {Copy # items to clipboard}}',
-      savedMessage: 'Saved {relativeTime}',
+      /* eslint-enable */
       savingIndicator: 'Saving...',
       unsavedChanges: 'Save your changes?',
       unsavedChangesText: "Your changes will be lost if you don't save them",
@@ -294,7 +144,6 @@
         'Autosave paused ({count, plural,\n =1 {# error}\n other {# errors}} detected)',
       topicDefaultTitle: '{parent} Topic',
       exerciseDefaultTitle: '{parent} Exercise',
-      /* eslint-enable */
     },
   };
 
