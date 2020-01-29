@@ -3,7 +3,7 @@ export default {
     isVisible: false,
     options: {
       text: '',
-      // duration in ms, 0 indicates it should not automatically dismiss
+      // duration in ms, null indicates it should not automatically dismiss
       duration: 6000,
       actionText: '',
       actionCallback: null,
@@ -23,7 +23,7 @@ export default {
     },
     clearSnackbar({ commit }) {
       commit('CORE_CLEAR_SNACKBAR');
-    }
+    },
   },
   mutations: {
     CORE_CREATE_SNACKBAR(state, snackbarOptions = {}) {
