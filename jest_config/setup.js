@@ -1,7 +1,10 @@
 import Vue from 'vue';
 import Vuetify from 'vuetify';
+import icons from 'shared/vuetify/icons';
 
-Vue.use(Vuetify);
+Vue.use(Vuetify, {
+  icons: icons(),
+});
 
 const csrf = global.document.createElement('input');
 csrf.name = 'csrfmiddlewaretoken';
