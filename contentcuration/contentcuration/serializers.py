@@ -202,7 +202,9 @@ class ContentDefaultsSerializer(serializers.Serializer):
         return instance
 
     def validate_license(self, license):
-        return license is None or License.validate_name(license)
+        if license is not None:
+            License.validate_name(license)
+        return license
 
 
 class ContentDefaultsSerializerMixin(object):
