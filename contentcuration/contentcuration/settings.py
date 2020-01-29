@@ -189,6 +189,7 @@ WSGI_APPLICATION = 'contentcuration.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
+CONN_MAX_AGE = 0
 
 DATABASES = {
     'default': {
