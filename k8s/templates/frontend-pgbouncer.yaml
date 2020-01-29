@@ -32,7 +32,7 @@ data:
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ template "studio.fullname" . }}-frontend-db-conn-pool-service
+  name: {{ template "studio.fullname" . }}-frontend-db-conn-pool
   labels:
     app: {{ template "studio.fullname" . }}
 spec:
