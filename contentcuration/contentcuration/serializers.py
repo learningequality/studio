@@ -185,8 +185,7 @@ class ContentDefaultsSerializer(serializers.Serializer):
     aggregator = serializers.CharField(allow_null=True, required=False)
     provider = serializers.CharField(allow_null=True, required=False)
     copyright_holder = serializers.CharField(allow_null=True, required=False)
-    license = serializers.CharField(allow_null=True, required=False,
-                                    validators=[License.validate_name])
+    license = serializers.CharField(allow_null=True, required=False)
     license_description = serializers.CharField(allow_null=True, required=False)
     auto_derive_video_thumbnail = serializers.BooleanField(required=False)
     auto_derive_audio_thumbnail = serializers.BooleanField(required=False)
@@ -201,6 +200,9 @@ class ContentDefaultsSerializer(serializers.Serializer):
     def update(self, instance, validated_data):
         instance.update(validated_data)
         return instance
+
+    def validate_license(self, license):
+        return license is None or License.validate_name(license)
 
 
 class ContentDefaultsSerializerMixin(object):
