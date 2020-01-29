@@ -1,4 +1,5 @@
-import channelList, { channelLastSavedState } from '../index';
+import channelList from '../index';
+import { channelLastSavedState } from '../utils';
 import { generateTempId } from '../../../utils';
 import client from 'shared/client';
 import storeFactory from 'shared/vuex/baseStore';
