@@ -78,6 +78,13 @@ spec:
           requests:
             cpu: 0.5
             memory: 512Mi
+      - name: prometheus-exporter
+        image: spreaker/prometheus-pgbouncer-exporter:2.0.3
+        envFrom:
+        - configMapRef:
+            name: {{ template "studio.fullname" . }}-dbpool-prometheus-exporter-config
+        - secretRef:
+            name: {{ template "studio.fullname" . }}-dbpool-prometheus-exporter-secrets
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
