@@ -23,7 +23,7 @@ def get_messages():
             with open(locale_data_file(locale), 'rb') as data:
                 message_json = json.load(data)
                 translation_dict = {}
-                for key, value in message_json.items():
+                for key, value in list(message_json.items()):
                     namespace, key = key.split(".")
                     translation_dict[namespace] = translation_dict.get(namespace) or {}
                     translation_dict[namespace][key] = value

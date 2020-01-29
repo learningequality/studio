@@ -1,3 +1,5 @@
+from __future__ import division
+
 import collections
 import itertools
 import json
@@ -11,6 +13,7 @@ import uuid
 import zipfile
 from itertools import chain
 
+from builtins import str
 from django.conf import settings
 from django.core.files import File
 from django.core.files.storage import default_storage as storage
@@ -31,6 +34,8 @@ from le_utils.constants import exercises
 from le_utils.constants import file_formats
 from le_utils.constants import format_presets
 from le_utils.constants import roles
+from past.builtins import cmp
+from past.utils import old_div
 
 from contentcuration import models as ccmodels
 from contentcuration.statistics import record_publish_stats
@@ -41,8 +46,10 @@ from contentcuration.utils.parser import load_json_string
 
 logmodule.basicConfig()
 logging = logmodule.getLogger(__name__)
-reload(sys)
-sys.setdefaultencoding('utf8')
+
+if sys.version_info.major == 2:
+    reload(sys)
+    sys.setdefaultencoding('utf8')
 
 PERSEUS_IMG_DIR = exercises.IMG_PLACEHOLDER + "/images"
 THUMBNAIL_DIMENSION = 128
@@ -94,6 +101,8 @@ def create_content_database(channel, force, user_id, force_exercises, task_objec
         map_prerequisites(channel.main_tree)
         save_export_database(channel.pk)
 
+    return tempdb
+
 
 def create_kolibri_license_object(ccnode):
     use_license_description = not ccnode.license.is_custom
@@ -123,7 +132,7 @@ def map_content_nodes(root_node, default_language, channel_id, channel_name, use
 
     task_percent_total = 80.0
     total_nodes = root_node.get_descendant_count() + 1  # make sure we include root_node
-    percent_per_node = task_percent_total / total_nodes
+    percent_per_node = old_div(task_percent_total, total_nodes)
 
     current_node_percent = 0.0
 
@@ -175,11 +184,11 @@ def create_slideshow_manifest(ccnode, kolibrinode, user_id=None):
         with tempfile.NamedTemporaryFile(prefix="slideshow_manifest_", delete=False) as temp_manifest:
             temp_filepath = temp_manifest.name
 
-            temp_manifest.write(json.dumps(ccnode.extra_fields))
+            temp_manifest.write(json.dumps(ccnode.extra_fields).encode('utf-8'))
 
             size_on_disk = temp_manifest.tell()
             temp_manifest.seek(0)
-            file_on_disk = File(open(temp_filepath, mode='r'), name=filename)
+            file_on_disk = File(open(temp_filepath, mode='rb'), name=filename)
             # Create the file in Studio
             ccmodels.File.objects.create(
                 file_on_disk=file_on_disk,
@@ -338,7 +347,7 @@ def create_perseus_exercise(ccnode, kolibrinode, exercise_data, user_id=None):
             ccnode.files.filter(preset_id=format_presets.EXERCISE).delete()
 
             assessment_file_obj = ccmodels.File.objects.create(
-                file_on_disk=File(open(temppath, 'r'), name=filename),
+                file_on_disk=File(open(temppath, 'rb'), name=filename),
                 contentnode=ccnode,
                 file_format_id=file_formats.PERSEUS,
                 preset_id=format_presets.EXERCISE,
@@ -466,7 +475,7 @@ def write_assessment_item(assessment_item, zf):
             answer['answer'], answer_images = process_image_strings(answer['answer'], zf)
             answer.update({'images': answer_images})
 
-    answer_data = list(filter(lambda a: a['answer'] or a['answer'] == 0, answer_data))  # Filter out empty answers, but not 0
+    answer_data = list([a for a in answer_data if a['answer'] or a['answer'] == 0])  # Filter out empty answers, but not 0
 
     hint_data = json.loads(assessment_item.hints)
     for hint in hint_data:
@@ -489,7 +498,7 @@ def write_assessment_item(assessment_item, zf):
 
 
 def process_formulas(content):
-    for match in re.finditer(ur'\$(\$.+\$)\$', content):
+    for match in re.finditer(r'\$(\$.+\$)\$', content):
         content = content.replace(match.group(0), match.group(1))
     return content
 
@@ -497,8 +506,8 @@ def process_formulas(content):
 def process_image_strings(content, zf):
     image_list = []
     content = content.replace(exercises.CONTENT_STORAGE_PLACEHOLDER, PERSEUS_IMG_DIR)
-    for match in re.finditer(ur'!\[(?:[^\]]*)]\(([^\)]+)\)', content):
-        img_match = re.search(ur'(.+/images/[^\s]+)(?:\s=([0-9\.]+)x([0-9\.]+))*', match.group(1))
+    for match in re.finditer(r'!\[(?:[^\]]*)]\(([^\)]+)\)', content):
+        img_match = re.search(r'(.+/images/[^\s]+)(?:\s=([0-9\.]+)x([0-9\.]+))*', match.group(1))
         if img_match:
             # Add any image files that haven't been written to the zipfile
             filename = img_match.group(1).split('/')[-1]
@@ -624,7 +633,7 @@ def save_export_database(channel_id):
     current_export_db_location = get_active_content_database()
     target_export_db_location = os.path.join(settings.DB_ROOT, "{id}.sqlite3".format(id=channel_id))
 
-    with open(current_export_db_location) as currentf:
+    with open(current_export_db_location, 'rb') as currentf:
         storage.save(target_export_db_location, currentf)
     logging.info("Successfully copied to {}".format(target_export_db_location))
 
@@ -668,10 +677,11 @@ def fill_published_fields(channel, version_notes):
 
 def publish_channel(user_id, channel_id, version_notes='', force=False, force_exercises=False, send_email=False, task_object=None):
     channel = ccmodels.Channel.objects.get(pk=channel_id)
+    kolibri_temp_db = None
 
     try:
         set_channel_icon_encoding(channel)
-        create_content_database(channel, force, user_id, force_exercises, task_object)
+        kolibri_temp_db = create_content_database(channel, force, user_id, force_exercises, task_object)
         increment_channel_version(channel)
         mark_all_nodes_as_published(channel)
         add_tokens_to_channel(channel)
@@ -696,5 +706,7 @@ def publish_channel(user_id, channel_id, version_notes='', force=False, force_ex
 
     # No matter what, make sure publishing is set to False once the run is done
     finally:
+        if kolibri_temp_db and os.path.exists(kolibri_temp_db):
+            os.remove(kolibri_temp_db)
         channel.main_tree.publishing = False
         channel.main_tree.save()

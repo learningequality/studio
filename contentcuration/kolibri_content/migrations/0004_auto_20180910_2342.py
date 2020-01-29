@@ -16,19 +16,19 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='file',
             name='extension',
-            field=models.CharField(blank=True, choices=[(b'mp4', b'MP4 Video'), (b'vtt', b'VTT Subtitle'), (b'mp3', b'MP3 Audio'), (b'pdf', b'PDF Document'), (b'jpg', b'JPG Image'), (b'jpeg', b'JPEG Image'), (b'png', b'PNG Image'), (
-                b'gif', b'GIF Image'), (b'json', b'JSON'), (b'svg', b'SVG Image'), (b'perseus', b'Perseus Exercise'), (b'graphie', b'Graphie Exercise'), (b'zip', b'HTML5 Zip'), (b'epub', b'ePub Document')], max_length=40),
+            field=models.CharField(blank=True, choices=[('mp4', b'MP4 Video'), ('vtt', b'VTT Subtitle'), ('mp3', b'MP3 Audio'), ('pdf', b'PDF Document'), ('jpg', b'JPG Image'), ('jpeg', b'JPEG Image'), ('png', b'PNG Image'), (
+                b'gif', b'GIF Image'), ('json', b'JSON'), ('svg', b'SVG Image'), ('perseus', b'Perseus Exercise'), ('graphie', b'Graphie Exercise'), ('zip', b'HTML5 Zip'), ('epub', b'ePub Document')], max_length=40),
         ),
         migrations.AlterField(
             model_name='file',
             name='preset',
-            field=models.CharField(blank=True, choices=[(b'high_res_video', b'High Resolution'), (b'low_res_video', b'Low Resolution'), (b'vector_video', b'Vectorized'), (b'video_thumbnail', b'Thumbnail'), (b'video_subtitle', b'Subtitle'), (b'video_dependency', b'Video (dependency)'), (b'audio', b'Audio'), (b'audio_thumbnail', b'Thumbnail'), (b'document', b'Document'), (b'epub', b'ePub Document'), (
-                b'document_thumbnail', b'Thumbnail'), (b'exercise', b'Exercise'), (b'exercise_thumbnail', b'Thumbnail'), (b'exercise_image', b'Exercise Image'), (b'exercise_graphie', b'Exercise Graphie'), (b'channel_thumbnail', b'Channel Thumbnail'), (b'topic_thumbnail', b'Thumbnail'), (b'html5_zip', b'HTML5 Zip'), (b'html5_dependency', b'HTML5 Dependency (Zip format)'), (b'html5_thumbnail', b'HTML5 Thumbnail')], max_length=150),
+            field=models.CharField(blank=True, choices=[('high_res_video', b'High Resolution'), ('low_res_video', b'Low Resolution'), ('vector_video', b'Vectorized'), ('video_thumbnail', b'Thumbnail'), ('video_subtitle', b'Subtitle'), ('video_dependency', b'Video (dependency)'), ('audio', b'Audio'), ('audio_thumbnail', b'Thumbnail'), ('document', b'Document'), ('epub', b'ePub Document'), (
+                b'document_thumbnail', b'Thumbnail'), ('exercise', b'Exercise'), ('exercise_thumbnail', b'Thumbnail'), ('exercise_image', b'Exercise Image'), ('exercise_graphie', b'Exercise Graphie'), ('channel_thumbnail', b'Channel Thumbnail'), ('topic_thumbnail', b'Thumbnail'), ('html5_zip', b'HTML5 Zip'), ('html5_dependency', b'HTML5 Dependency (Zip format)'), ('html5_thumbnail', b'HTML5 Thumbnail')], max_length=150),
         ),
         migrations.AlterField(
             model_name='localfile',
             name='extension',
-            field=models.CharField(blank=True, choices=[(b'mp4', b'MP4 Video'), (b'vtt', b'VTT Subtitle'), (b'mp3', b'MP3 Audio'), (b'pdf', b'PDF Document'), (b'jpg', b'JPG Image'), (b'jpeg', b'JPEG Image'), (b'png', b'PNG Image'), (
-                b'gif', b'GIF Image'), (b'json', b'JSON'), (b'svg', b'SVG Image'), (b'perseus', b'Perseus Exercise'), (b'graphie', b'Graphie Exercise'), (b'zip', b'HTML5 Zip'), (b'epub', b'ePub Document')], max_length=40),
+            field=models.CharField(blank=True, choices=[('mp4', b'MP4 Video'), ('vtt', b'VTT Subtitle'), ('mp3', b'MP3 Audio'), ('pdf', b'PDF Document'), ('jpg', b'JPG Image'), ('jpeg', b'JPEG Image'), ('png', b'PNG Image'), (
+                b'gif', b'GIF Image'), ('json', b'JSON'), ('svg', b'SVG Image'), ('perseus', b'Perseus Exercise'), ('graphie', b'Graphie Exercise'), ('zip', b'HTML5 Zip'), ('epub', b'ePub Document')], max_length=40),
         ),
     ]

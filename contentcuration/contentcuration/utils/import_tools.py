@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from past.builtins import basestring
 import datetime
 import json
 import logging
@@ -9,7 +13,7 @@ import sqlite3
 import sys
 import tempfile
 import zipfile
-from cStringIO import StringIO
+from io import BytesIO
 
 import requests
 from django.conf import settings
@@ -26,8 +30,9 @@ from contentcuration.api import write_raw_content_to_storage
 from contentcuration.utils.files import create_file_from_contents
 from contentcuration.utils.garbage_collect import get_deleted_chefs_root
 
-reload(sys)
-sys.setdefaultencoding('utf8')
+if sys.version_info.major == 2:
+    reload(sys)
+    sys.setdefaultencoding('utf8')
 
 CHANNEL_TABLE = 'content_channelmetadata'
 NODE_TABLE = 'content_contentnode'
@@ -279,7 +284,7 @@ def download_file(filename, download_url=None, contentnode=None, assessment_item
 
     # Download file if it hasn't already been downloaded
     if download_url and not default_storage.exists(filepath):
-        buffer = StringIO()
+        buffer = BytesIO()
         response = requests.get('{}/content/storage/{}/{}/{}'.format(download_url, filename[0], filename[1], filename))
         for chunk in response:
             buffer.write(chunk)

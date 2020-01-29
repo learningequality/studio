@@ -3,19 +3,22 @@ Simple User model creation tests.
 """
 import csv
 import datetime
+import io
 import json
+import sys
 import tempfile
 
+from builtins import range
 from django.core.management import call_command
 from django.core.urlresolvers import reverse_lazy
 from django.test import TransactionTestCase
 
 from .base import BaseAPITestCase
 from .testdata import fileobj_video
-from contentcuration.tests.utils import mixer
 from contentcuration.models import DEFAULT_CONTENT_DEFAULTS
 from contentcuration.models import Invitation
 from contentcuration.models import User
+from contentcuration.tests.testutils import mixer
 from contentcuration.utils.csv_writer import _format_size
 from contentcuration.utils.csv_writer import write_user_csv
 from contentcuration.views.users import send_invitation_email
@@ -109,7 +112,12 @@ class UserAccountTestCase(BaseAPITestCase):
         with tempfile.NamedTemporaryFile(suffix=".csv") as tempf:
             write_user_csv(self.user, path=tempf.name)
 
-            with open(tempf.name, 'rb') as csv_file:
+            mode = 'rb'
+            encoding = None
+            if sys.version_info.major == 3:
+                mode = 'r'
+                encoding = 'utf-8'
+            with io.open(tempf.name, mode, encoding=encoding) as csv_file:
                 reader = csv.reader(csv_file, delimiter=',')
                 for index, row in enumerate(reader):
                     if index == 0:

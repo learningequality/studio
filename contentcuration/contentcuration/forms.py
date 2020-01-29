@@ -3,6 +3,7 @@ import gettext
 import re
 
 import pycountry
+from builtins import object
 from django import forms
 from django.conf import settings
 from django.contrib.auth import password_validation
@@ -200,7 +201,7 @@ class RegistrationInformationForm(UserCreationForm, ExtraFormMixin):
         }
 
         latest_policies = get_latest_policies()
-        user.policies = {k: datetime.datetime.now().strftime("%d/%m/%y %H:%M") for k, v in latest_policies.items()}
+        user.policies = {k: datetime.datetime.now().strftime("%d/%m/%y %H:%M") for k, v in list(latest_policies.items())}
 
         if commit:
             user.save()

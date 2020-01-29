@@ -1,5 +1,6 @@
 # Functions for recording various statistics
 import newrelic.agent
+from builtins import next
 from le_utils.constants import content_kinds
 
 
@@ -83,7 +84,7 @@ def record_node_addition_stats(nodes_being_added, original_first_node, user_id):
     action_attributes = dict(action_source='Human', content_source='Human', user_id=user_id)
 
     # The first node to be added in this action.
-    first_node = nodes_being_added.itervalues().next()
+    first_node = next(iter(nodes_being_added.values()))
     action_attributes['content_type'] = first_node['kind'].kind.title()
 
     num_resources = 0
@@ -92,7 +93,7 @@ def record_node_addition_stats(nodes_being_added, original_first_node, user_id):
     else:
         action_attributes['action'] = 'Create'
         action_attributes['num_nodes_added'] = len(nodes_being_added)
-        for id, node in nodes_being_added.items():
+        for id, node in list(nodes_being_added.items()):
             if node['kind'].kind != content_kinds.TOPIC:
                 num_resources += 1
         action_attributes['num_resources_added'] = num_resources
@@ -205,7 +206,7 @@ def record_action_stats(nodes_being_added, user_id):
     action_attributes = dict(action_source='Human', content_source='Human', user_id=user_id)
 
     # The first node to be added in this action.
-    first_node = nodes_being_added.itervalues().next()
+    first_node = next(iter(nodes_being_added.values()))
     action_attributes['content_type'] = first_node['kind'].kind.title()
 
     if 'id' in first_node and ContentNode.objects.get(id=first_node['id']).parent is not None:
@@ -214,7 +215,7 @@ def record_action_stats(nodes_being_added, user_id):
         action_attributes['action'] = 'Create'
         action_attributes['num_nodes_added'] = len(nodes_being_added)
         num_resources = 0
-        for id, node in nodes_being_added.items():
+        for id, node in list(nodes_being_added.items()):
             if node['kind'].kind != content_kinds.TOPIC:
                 num_resources += 1
         action_attributes['num_resources_added'] = num_resources

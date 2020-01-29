@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
+from __future__ import division
+
 import csv
+import io
 import logging as logmodule
 import math
 import os
@@ -9,6 +12,10 @@ from collections import OrderedDict
 
 import numpy as np
 import pdfkit
+from builtins import next
+from builtins import object
+from builtins import range
+from builtins import str
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.files.storage import default_storage
@@ -16,6 +23,7 @@ from django.template.loader import get_template
 from django.utils.translation import ngettext
 from django.utils.translation import ugettext as _
 from le_utils.constants import content_kinds
+from past.utils import old_div
 from pptx import Presentation
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE
@@ -48,6 +56,7 @@ AUDIO_COLOR = "#F06292"
 DOCUMENT_COLOR = "#FF3D00"
 EXERCISE_COLOR = "#4DB6AC"
 HTML_COLOR = "#FF8F00"
+H5P_COLOR = HTML_COLOR
 VIDEO_COLOR = "#283593"
 SLIDESHOW_COLOR = "#4ECE90"
 
@@ -162,7 +171,12 @@ class PPTMixin(object):
 
 class CSVMixin(object):
     def write_csv(self, filepath, rows, header=None):
-        with open(filepath, 'wb') as csvfile:
+        mode='wb'
+        encoding=None
+        if sys.version_info.major == 3:
+            mode='w'
+            encoding='utf-8'
+        with io.open(filepath, mode, encoding=encoding) as csvfile:
             writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_MINIMAL)
             if header:
                 writer.writerow(header)
@@ -179,7 +193,7 @@ class ExportWriter(object):
     def __init__(self, *args, **kwargs):
         self.tempfiles = []
 
-    def pluralize_constant(self, count, constant):
+    def pluralize_constant(self, count, constant):  # noqa
         data = {'count': count}
         if constant == content_kinds.TOPIC:
             return ngettext('%(count)d Topic', '%(count)d Topics', count) % data
@@ -193,6 +207,8 @@ class ExportWriter(object):
             return ngettext('%(count)d Document', '%(count)d Documents', count) % data
         elif constant == content_kinds.HTML5:
             return ngettext('%(count)d Html App', '%(count)d Html Apps', count) % data
+        elif constant == content_kinds.H5P:
+            return ngettext('%(count)d H5P App', '%(count)d H5P Apps', count) % data
         elif constant == content_kinds.SLIDESHOW:
             return ngettext('%(count)d Slideshow', '%(count)d Slideshows', count) % data
         elif constant == "resource":
@@ -220,7 +236,7 @@ class ExportWriter(object):
 
 class ChannelDetailsWriter(ExportWriter):
     # Needs to be alphabetized to match content kind sorting
-    color_selection = [AUDIO_COLOR, DOCUMENT_COLOR, EXERCISE_COLOR, HTML_COLOR, SLIDESHOW_COLOR, VIDEO_COLOR]
+    color_selection = [AUDIO_COLOR, DOCUMENT_COLOR, EXERCISE_COLOR, HTML_COLOR, H5P_COLOR, SLIDESHOW_COLOR, VIDEO_COLOR]
     condensed_tag_limit = 10
     size_divisor = 100000000
     scale_text = [_("Very Small")] * 2 + [_("Small")] * 2 + [_("Average")] * 3 + [_("Large")] * 2 + [_("Very Large")] * 2
@@ -283,11 +299,11 @@ class ChannelDetailsWriter(ExportWriter):
 
     def get_storage_bar(self, size):
         try:
-            size_index = int(max(1, min(math.ceil(math.log(size/self.size_divisor, 2)), 10)))
+            size_index = int(max(1, min(math.ceil(math.log(old_div(size,self.size_divisor), 2)), 10)))
         except ValueError:
             size_index = 1
         return {
-            "filled": range(size_index),
+            "filled": list(range(size_index)),
             "text": self.scale_text[size_index],
             "storage": "{} {}".format(*format_size(size)),
         }
@@ -300,7 +316,7 @@ class ChannelDetailsWriter(ExportWriter):
 
         return {
             "filled": size_index,
-            "scale": range(len(self.scale_text)),
+            "scale": list(range(len(self.scale_text))),
             "text": self.scale_text[size_index]
         }
 
@@ -311,7 +327,7 @@ class ChannelDetailsWriter(ExportWriter):
                                 .values_list('kind', flat=True))
         kind_vals = {k: next((c['count'] for c in counts if c['kind_id'] == k), 0) for k in kinds}
         kind_vals = OrderedDict(sorted(kind_vals.items()))
-        sizes = [v for k, v in kind_vals.items()]
+        sizes = [v for k, v in list(kind_vals.items())]
         total = max(sum(sizes), 1)
 
         labels = [{
@@ -320,7 +336,7 @@ class ChannelDetailsWriter(ExportWriter):
                     p=float(v)/total * 100.0
             ),
             "count": v
-        } for k, v in kind_vals.items()]
+        } for k, v in list(kind_vals.items())]
 
         # Create pie chart
         fig, ax = plt.subplots(subplot_kw=dict(aspect="equal"))
@@ -386,12 +402,12 @@ class ChannelDetailsWriter(ExportWriter):
             min_font_size=10,
             max_font_size=60,
             width=self.tagcloud_width,
-            height=self.tagcloud_height or 30 * len(tags) / 2 + 10,
+            height=self.tagcloud_height or old_div(30 * len(tags), 2) + 10,
             font_path=os.path.sep.join([settings.STATIC_ROOT, 'fonts', 'OpenSans-Regular.ttf'])
         ).generate_from_frequencies(tag_dict)
 
         tag_counts = [t['count'] for t in tags]
-        step = (float(max(tag_counts))) / len(self.color_selection)
+        step = old_div((float(max(tag_counts))), len(self.color_selection))
         thresholds = list(reversed([int(round(i * step)) for i in range(len(self.color_selection))]))
 
         def get_color(word, font_size, position, orientation, random_state=None, **kwargs):
@@ -428,6 +444,7 @@ class ChannelDetailsPDFWriter(ChannelDetailsWriter, PDFMixin):
                 "document": DOCUMENT_COLOR,
                 "exercise": EXERCISE_COLOR,
                 "html": HTML_COLOR,
+                "h5p": H5P_COLOR,
                 "video": VIDEO_COLOR,
                 "slideshow": SLIDESHOW_COLOR,
             }
@@ -525,29 +542,29 @@ class ChannelDetailsPPTWriter(ChannelDetailsWriter, PPTMixin):
 
         # Add separator with headers
         separator_height = 0.3
-        self.add_shape(left=0, top=next_line, width=self.width/2, height=separator_height, color=self.get_rgb_from_hex(EXERCISE_COLOR))
-        resource_header = self.generate_textbox(padding, next_line, self.width / 2 - padding, separator_height)
+        self.add_shape(left=0, top=next_line, width=old_div(self.width,2), height=separator_height, color=self.get_rgb_from_hex(EXERCISE_COLOR))
+        resource_header = self.generate_textbox(padding, next_line, old_div(self.width, 2) - padding, separator_height)
         self.add_line(resource_header, _("Resource Breakdown"), bold=True, color=self.get_rgb_from_hex("#FFFFFF"), append=False)
 
-        self.add_shape(left=self.width/2, top=next_line, width=self.width/2, height=separator_height, color=self.get_rgb_from_hex("#595959"))
-        tag_header = self.generate_textbox(padding + self.width / 2 - padding, next_line, self.width / 2 - padding, separator_height)
+        self.add_shape(left=old_div(self.width,2), top=next_line, width=old_div(self.width,2), height=separator_height, color=self.get_rgb_from_hex("#595959"))
+        tag_header = self.generate_textbox(padding + old_div(self.width, 2) - padding, next_line, old_div(self.width, 2) - padding, separator_height)
         self.add_line(tag_header, _("Most Common Tags"), bold=True, color=self.get_rgb_from_hex("#FFFFFF"), append=False)
         next_line += separator_height + 0.05
 
         # Add piechart
         chart_height = 2.3
         if data['resource_count']:
-            self.add_picture(data['piechart'], 0, next_line, self.width / 2 - 1, height=chart_height)
+            self.add_picture(data['piechart'], 0, next_line, old_div(self.width, 2) - 1, height=chart_height)
         else:
-            empty_tf = self.generate_textbox(0,  next_line, self.width / 2, chart_height)
+            empty_tf = self.generate_textbox(0,  next_line, old_div(self.width, 2), chart_height)
             empty_line = self.add_line(empty_tf, _("No Resources Found"), color=self.gray, fontsize=14, italic=True)
             empty_line.alignment = PP_ALIGN.CENTER
 
         # Add tagcloud
         if data['tags']:
-            self.add_picture(data['tagcloud'], self.width/2 + padding, next_line + 0.1, self.width / 2 - 1, chart_height - padding * 2)
+            self.add_picture(data['tagcloud'], old_div(self.width,2) + padding, next_line + 0.1, old_div(self.width, 2) - 1, chart_height - padding * 2)
         else:
-            empty_tf = self.generate_textbox(self.width / 2,  next_line, self.width / 2, chart_height)
+            empty_tf = self.generate_textbox(old_div(self.width, 2),  next_line, old_div(self.width, 2), chart_height)
             empty_line = self.add_line(empty_tf, _("No Tags Found"), color=self.gray, fontsize=14, italic=True)
             empty_line.alignment = PP_ALIGN.CENTER
         next_line += chart_height + 0.01
@@ -555,7 +572,7 @@ class ChannelDetailsPPTWriter(ChannelDetailsWriter, PPTMixin):
         # Add logo
         logo_width = 0.9
         logo_height = 0.25
-        logo_left = Inches(self.width / 2 - logo_width / 2)
+        logo_left = Inches(old_div(self.width, 2) - old_div(logo_width, 2))
         try:
             logo_url = os.path.join(settings.STATIC_ROOT, 'img', 'le_login.png')
             self.slide.shapes.add_picture(logo_url, logo_left, Inches(next_line), width=Inches(logo_width), height=Inches(logo_height))

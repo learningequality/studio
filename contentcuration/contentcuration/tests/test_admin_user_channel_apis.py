@@ -1,13 +1,17 @@
-from rest_framework.test import APIRequestFactory
-from rest_framework.reverse import reverse
+from __future__ import absolute_import
+
+from builtins import range
 from django.db.models import Count
-from contentcuration.management.commands.setup import create_user
+from rest_framework.reverse import reverse
+from rest_framework.test import APIRequestFactory
+
+from .base import BaseAPITestCase
 from contentcuration.management.commands.setup import create_channel
-from contentcuration.models import User
+from contentcuration.management.commands.setup import create_user
 from contentcuration.models import Channel
-from contentcuration.views.admin import AdminUserListView
+from contentcuration.models import User
 from contentcuration.views.admin import AdminChannelListView
-from base import BaseAPITestCase
+from contentcuration.views.admin import AdminUserListView
 
 get_users = AdminUserListView.as_view()
 get_channels = AdminChannelListView.as_view()

@@ -7,7 +7,6 @@ It does the following:
 - Creates an admin user.
 - Creates 1000 channels. Create 3 users for each channel, and assign 1 as the editor and the other two as viewers.
 """
-import json
 import logging
 import os
 import subprocess
@@ -27,14 +26,13 @@ os.putenv("DJANGO_SETTINGS_MODULE", "contentcuration.test_settings")
 
 from django.core.management import call_command
 
-from contentcuration.tests.testdata import channel
-from contentcuration.models import Channel, ContentNode, User
+from contentcuration.models import Channel, User
 
 # CONSTANTS
 NUM_CHANNELS = 1000
 NUM_NODES_PER_CHANNEL = 500
 
-from contentcuration.tests.utils import mixer
+from contentcuration.tests.testutils import mixer
 
 mixer.register(
     User,
@@ -69,4 +67,3 @@ if __name__ == "__main__":
 
     # start the server in prod mode
     subprocess.call(["yarn", "run", "devserver"])
-

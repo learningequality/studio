@@ -23,7 +23,9 @@ spec:
           ports:
             - name: webui
               containerPort: 5555
-          env: {{ include "studio.sharedEnvs" . | nindent 12 }}
+          env: {{ include "studio.sharedEnvs" . | nindent 10 }}
+          - name: DATA_DB_HOST
+            value: {{ .Values.postgresql.externalCloudSQL.proxyHostName | default (include "postgresql.fullname" .) }}
           workingDir: /contentcuration/contentcuration
           command:
           - celery

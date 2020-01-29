@@ -7,10 +7,10 @@ One of Kolibri Studio's deployment methods use Kubernetes and Docker. If you wou
 
 You need to install the latest [Docker edition](https://hub.docker.com/search/?type=edition&offering=community). Make sure it comes with the `docker-compose` executable.
 
-To set up your environment, run 
+To set up your environment, run
 
     docker-compose up
-    
+
 This will download all service images needed, and build the dev environment for Studio under another image. Once all images are pulled, built and containers started from them, visit `localhost:8080` in your browser, and you should see the Studio interface!
 
 
@@ -93,4 +93,3 @@ in a cluster on your local machine:
   ```
 
   and open the IP address displayed, in to your browser. You should now see the Studio login page!
-  

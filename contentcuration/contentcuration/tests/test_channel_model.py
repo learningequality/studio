@@ -1,19 +1,22 @@
 #!/usr/bin/env python
+from __future__ import division
+
 import json
 from datetime import datetime
 
 from django.core.urlresolvers import reverse_lazy
+from past.utils import old_div
 
 from .base import BaseAPITestCase
 from .base import StudioTestCase
 from .testdata import base64encoding
 from .testdata import channel
 from .testdata import node
-from contentcuration.tests.utils import mixer
 from contentcuration.models import Channel
 from contentcuration.models import ChannelSet
 from contentcuration.models import generate_storage_url
 from contentcuration.models import SecretToken
+from contentcuration.tests.testutils import mixer
 
 
 class PublicChannelsTestCase(StudioTestCase):
@@ -243,7 +246,7 @@ class ChannelSetTestCase(BaseAPITestCase):
 
     def test_public_endpoint(self):
         """ Make sure public endpoint returns all the channels under the token """
-        published_channel_count = int(len(self.channels)/2)
+        published_channel_count = int(old_div(len(self.channels),2))
         for c in self.channels[:published_channel_count]:
             c.main_tree.published = True
             c.main_tree.save()
