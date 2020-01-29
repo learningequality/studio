@@ -1,6 +1,6 @@
 import pick from 'lodash/pick';
 import { isTempId } from '../../utils';
-import { channelLastSavedState } from './index';
+import { channelLastSavedState } from './utils';
 
 export function channels(state) {
   return Object.values(state.channelsMap).filter(channel => !isTempId(channel.id));

@@ -162,7 +162,7 @@
           })
           .catch(() => {
             // Couldn't verify the channel details, so go back!
-            // We should probaly replace this with a 404 page, as
+            // We should probably replace this with a 404 page, as
             // when navigating in from an external link (as this behaviour
             // would often be from - it produces a confusing back step)
             vm.$router.back();

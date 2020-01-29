@@ -1,5 +1,5 @@
 import Vue from 'vue';
-import { channelSetLastSavedState } from './index';
+import { channelSetLastSavedState } from './utils';
 
 /* CHANNEL SET MUTATIONS */
 export function SET_CHANNELSET_LIST(state, channelSets) {
