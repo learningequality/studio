@@ -71,3 +71,35 @@ studioProber:
   newrelicKey:
   newrelicAccountId:
   port: 9313
+
+# we should install the prometheus-operator manually, so we don't get duplicates.
+# we only enable prometheus and grafana in here, and disable everything else.
+prometheusOperator:
+  enabled: false
+kubeStateMetrics:
+  enabled: false
+coreDns:
+  enabled: false
+kubeControllerManager:
+  enabled: false
+kubeDns:
+  enabled: false
+kubeEtcd:
+  enabled: false
+kubeProxy:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubelet:
+  enabled: false
+
+# enable the node exporter, so we can get node USE stats in the same grafana dashboard
+nodeExporter:
+  enabled: true
+
+prometheus:
+  # if you want a servicemonitor scanned, make sure to set release={{ .Release.Name }}
+  # in its label
+  enabled: true
+grafana:
+  enabled: true
