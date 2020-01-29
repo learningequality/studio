@@ -6,6 +6,7 @@
     :timeout="snackbarOptions.duration"
     bottom
     :value="snackbarIsVisible"
+    @input="visibilityToggled"
   >
     {{ snackbarOptions.text }}
     <v-btn
@@ -47,6 +48,11 @@
           this.snackbarOptions.hideCallback();
         }
         this.$store.dispatch('clearSnackbar');
+      },
+      visibilityToggled(visible) {
+        if (!visible) {
+          this.$store.commit('CORE_CLEAR_SNACKBAR');
+        }
       },
     },
   };
