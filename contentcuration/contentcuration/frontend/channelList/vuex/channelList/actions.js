@@ -1,5 +1,5 @@
 import { isTempId } from '../../utils';
-import { channelLastSavedState } from './index';
+import { channelLastSavedState } from './utils';
 import client from 'shared/client';
 
 /* CHANNEL LIST ACTIONS */

@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import map from 'lodash/map';
-import { channelLastSavedState } from './index';
+import { channelLastSavedState } from './utils';
 import { ContentDefaults } from 'shared/constants';
 
 /* CHANNEL LIST MUTATIONS */
