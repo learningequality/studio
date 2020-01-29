@@ -14,11 +14,9 @@ import logging
 import os
 import re
 import sys
-from datetime import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 import pycountry
-
 from contentcuration.utils.incidents import INCIDENTS
 from contentcuration.utils.secretmanagement import get_secret
 
@@ -77,6 +75,7 @@ INSTALLED_APPS = (
     'django_js_reverse',
     'kolibri_content',
     'readonly',
+    'django_prometheus',
     'email_extras',
     'le_utils',
     'rest_framework.authtoken',
@@ -120,6 +119,7 @@ if SITE_READ_ONLY:
 
 MIDDLEWARE_CLASSES = (
     # 'django.middleware.cache.UpdateCacheMiddleware',
+    'django_prometheus.middleware.PrometheusBeforeMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -132,6 +132,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'contentcuration.middleware.db_readonly.DatabaseReadOnlyMiddleware',
+    'django_prometheus.middleware.PrometheusAfterMiddleware',
     # 'django.middleware.cache.FetchFromCacheMiddleware',
 )
 

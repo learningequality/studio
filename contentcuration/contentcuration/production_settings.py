@@ -1,8 +1,10 @@
 from __future__ import absolute_import
 
+from contentcuration.utils.secretmanagement import get_secret
+
 from . import settings as base_settings
 from .settings import *  # noqa
-from contentcuration.utils.secretmanagement import get_secret
+
 # production_settings.py -- production studio settings override
 #
 # noinspection PyUnresolvedReferences
@@ -27,12 +29,6 @@ GOOGLE_AUTH_JSON = get_secret("GOOGLE_DRIVE_AUTH_JSON") or base_settings.GOOGLE_
 # Activate django-prometheus
 INSTALLED_APPS = INSTALLED_APPS + (
     "django_prometheus",
-)
-
-MIDDLEWARE_CLASSES = (
-    ("django_prometheus.middleware.PrometheusBeforeMiddleware",) +
-    MIDDLEWARE_CLASSES +
-    ("django_prometheus.middleware.PrometheusAfterMiddleware",)
 )
 
 CACHES["default"]["BACKEND"] = "django_prometheus.cache.backends.redis.RedisCache"
