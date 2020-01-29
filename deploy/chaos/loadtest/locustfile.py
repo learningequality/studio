@@ -40,6 +40,30 @@ class BaseTaskSet(TaskSet):
             }
         )
 
+    def _run_async_task(self, url, channel_id, data):
+        copy_resp = self.client.post(url,
+                                     data=json.dumps(data),
+                                     headers={
+                                         "content-type": "application/json",
+                                         'X-CSRFToken': self.client.cookies.get('csrftoken'),
+                                         'Referer': self.client.base_url
+                                     })
+        copy_resp_data = copy_resp.json()
+        task_id = copy_resp_data["id"]
+        finished = False
+        time_elapsed = 0
+        status = 'QUEUED'
+        while not finished:
+            time.sleep(1)
+            time_elapsed += 1
+            task_resp = self.client.get("/api/task/{}?channel_id={}".format(task_id, channel_id))
+            task_data = task_resp.json()
+            if task_data["status"] in ["SUCCESS", "FAILED"] or time_elapsed > 120:
+                finished = True
+                status = task_data["status"]
+
+        return status
+
 
 class ChannelListPage(BaseTaskSet):
     """
@@ -244,24 +268,7 @@ class ChannelEdit(BaseTaskSet):
                 "channel_id": channel_id
             }
 
-            copy_resp = self.client.post("/api/duplicate_nodes/",
-                                         data=json.dumps(copy_data),
-                                         headers={
-                                             "content-type": "application/json",
-                                             'X-CSRFToken': self.client.cookies.get('csrftoken'),
-                                             'Referer': self.client.base_url
-                                         })
-            copy_resp_data = copy_resp.json()
-            task_id = copy_resp_data["id"]
-            finished = False
-            time_elapsed = 0
-            while not finished:
-                time.sleep(1)
-                time_elapsed += 1
-                task_resp = self.client.get("/api/task/{}?channel_id={}".format(task_id, channel_id))
-                task_data = task_resp.json()
-                if task_data["status"] in ["SUCCESS", "FAILED"] or time_elapsed > 120:
-                    finished = True
+            self._run_async_task('/api/duplicate_nodes/', channel_id, copy_data)
 
         finally:
             self.client.delete(
