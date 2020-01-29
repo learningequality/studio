@@ -14,8 +14,6 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
 from le_utils.constants import content_kinds
 from le_utils.constants import roles
-from rest_framework.decorators import detail_route
-from rest_framework.response import Response
 from rest_framework.serializers import ModelSerializer
 from rest_framework.serializers import ValidationError
 
