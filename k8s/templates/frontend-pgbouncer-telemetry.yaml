@@ -1,0 +1,62 @@
+---
+# The secret and configmap are used by the prometheus-exporter sidecar
+# inside the pgbouncer Deployment.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ template "studio.fullname" . }}-dbpool-prometheus-exporter-secrets
+  labels:
+    app: {{ template "studio.fullname" . }}
+data:
+  PGBOUNCER_USER: {{ .Values.postgresql.postgresUser | default "" | b64enc }}
+  PGBOUNCER_PASS: {{ .Values.postgresql.postgresPassword | default "" | b64enc }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "studio.fullname" . }}-dbpool-prometheus-exporter-config
+  labels:
+    app: {{ template "studio.fullname" . }}
+data:
+  PGBOUNCER_PORT: "5432"
+  PGBOUNCER_EXPORTER_PORT: "9127"
+  PGBOUNCER_EXPORTER_HOST: "0.0.0.0"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "studio.fullname" . }}-dbpool-exporter
+  labels:
+    app: {{ template "studio.fullname" . }}
+    tier: db
+    "pooler-for": frontend
+    "monitor-for": {{ template "studio.fullname" . }}-frontend-db-conn-pool
+spec:
+  ports:
+  - port: 9127
+    targetPort: 9127
+  selector:
+    app: {{ template "studio.fullname" . }}
+    tier: db
+    "pooler-for": frontend
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ template "studio.fullname" . }}-dbpool-prometheus-svc-monitor
+  labels:
+    release: {{ .Release.Name }}
+    app: {{ template "studio.fullname" . }}
+    tier: db
+    monitoring: prometheus
+spec:
+  endpoints:
+  - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+    interval: 15s
+    port: ""
+  selector:
+    matchLabels:
+      app: {{ template "studio.fullname" . }}
+      tier: db
+      "pooler-for": frontend
+      "monitor-for": {{ template "studio.fullname" . }}-frontend-db-conn-pool
