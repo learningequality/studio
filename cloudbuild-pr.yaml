@@ -87,6 +87,7 @@ steps:
     - -c
     - >
       /builder/helm.bash &&
+      helm version &&
       ./helm-deploy.sh
       $_RELEASE_NAME
       $_STORAGE_BUCKET
