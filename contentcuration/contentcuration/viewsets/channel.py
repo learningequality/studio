@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db.models import BooleanField
 from django.db.models import IntegerField
 from django.db.models import Max
@@ -5,7 +6,10 @@ from django.db.models import OuterRef
 from django.db.models import Prefetch
 from django.db.models import Q
 from django.db.models import Subquery
+from django.db.models import Value
 from django.db.models.functions import Cast
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from django_filters.rest_framework import BooleanFilter
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DjangoFilterBackend
@@ -18,6 +22,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
+from contentcuration.decorators import cache_no_user_data
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import get_channel_thumbnail
@@ -29,18 +34,16 @@ from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import ValuesViewset
 
 
-class ChannelListPagination(PageNumberPagination):
-    page_size = None
+class CatalogListPagination(PageNumberPagination):
+    page_size = 25
     page_size_query_param = "page_size"
     max_page_size = 100
 
     def get_paginated_response(self, data):
         return Response(
             {
-                "links": {
-                    "next": self.get_next_link(),
-                    "previous": self.get_previous_link(),
-                },
+                "next": self.get_next_link(),
+                "previous": self.get_previous_link(),
                 "page_number": self.page.number,
                 "count": self.page.paginator.count,
                 "total_pages": self.page.paginator.num_pages,
@@ -243,7 +246,6 @@ class ChannelSerializer(ContentDefaultsSerializerMixin, BulkModelSerializer):
 class ChannelViewSet(ValuesViewset):
     queryset = Channel.objects.all()
     serializer_class = ChannelSerializer
-    pagination_class = ChannelListPagination
     filter_backends = (DjangoFilterBackend, SearchFilter)
     permission_classes = [AllowAny]
     filter_class = ChannelFilter
@@ -361,3 +363,28 @@ class ChannelViewSet(ValuesViewset):
             count=SQCount(non_topic_content_ids, field="content_id")
         )
         return queryset
+
+
+@method_decorator(cache_page(settings.PUBLIC_CHANNELS_CACHE_DURATION, key_prefix='public_catalog_list'), name="dispatch")
+@method_decorator(cache_no_user_data, name="dispatch")
+class CatalogViewSet(ChannelViewSet):
+    pagination_class = CatalogListPagination
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        queryset = Channel.objects.filter(public=True).annotate(
+            edit=Value(
+                False,
+                BooleanField(),
+            ),
+            view=Value(
+                False,
+                BooleanField(),
+            ),
+            bookmark=Value(
+                False,
+                BooleanField(),
+            ),
+        )
+
+        return queryset.order_by("-priority", "name")

@@ -7,7 +7,14 @@ export default {
   state: () => ({
     channelDetailsMap: {},
     invitationsMap: {},
-    page: {},
+    page: {
+      next: null,
+      previous: null,
+      page_number: null,
+      count: null,
+      total_pages: null,
+      results: [],
+    },
   }),
   getters,
   mutations,

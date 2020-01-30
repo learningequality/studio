@@ -75,7 +75,9 @@
     },
     watch: {
       $route(to, from) {
-        if (!isEqual(to.query, from.query)) this.debouncedSearch();
+        if (!isEqual(to.query, from.query) && to.name === RouterNames.CATALOG_ITEMS) {
+          this.debouncedSearch();
+        }
       },
     },
     mounted() {

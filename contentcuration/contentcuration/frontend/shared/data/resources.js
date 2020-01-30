@@ -235,6 +235,23 @@ export const Channel = new Resource({
   tableName: TABLE_NAMES.CHANNEL,
   urlName: 'channel',
   indexFields: ['name', 'language'],
+  searchCatalog(params) {
+    // Because this is a heavily cached endpoint, we can just directly request
+    // it and rely on browser caching to prevent excessive requests to the server.
+    return client.get(window.Urls[`catalog_list`](), { params }).then(response => {
+      const pageData = response.data;
+      const channelData = Array.isArray(pageData)? pageData : pageData.results;
+      return db.transaction('rw', this.tableName, () => {
+        // Explicitly set the source of this as a fetch
+        // from the server, to prevent us from trying
+        // to sync these changes back to the server!
+        Dexie.currentTransaction.source = FETCH_SOURCE;
+        return this.table.bulkPut(channelData).then(() => {
+          return pageData;
+        });
+      });
+    });
+  }
 });
 
 export const ContentNode = new Resource({

@@ -1,13 +1,14 @@
 import client from 'shared/client';
+import { Channel } from 'shared/data/resources';
 
 export function searchCatalog(context, params) {
   params.page_size = params.page_size || 25;
   params.public = true;
   // TODO: Migrate this to using indexeddb
-  return client.get(window.Urls['channel-list'](), { params }).then(response => {
-    context.commit('SET_PAGE', response.data);
-    // Also put this in our global channels map
-    context.commit('channel/ADD_CHANNELS', response.data.results);
+  return Channel.searchCatalog(params).then(pageData => {
+    context.commit('SET_PAGE', pageData);
+    // Put channel data in our global channels map
+    context.commit('channel/ADD_CHANNELS', pageData.results, { root: true });
   });
 }
 

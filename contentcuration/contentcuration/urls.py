@@ -57,6 +57,7 @@ from contentcuration.models import Task
 from contentcuration.models import User
 from contentcuration.viewsets.contentnode import ContentNodeViewSet
 from contentcuration.viewsets.channel import ChannelViewSet
+from contentcuration.viewsets.channel import CatalogViewSet
 from contentcuration.viewsets.channelset import ChannelSetViewSet
 from contentcuration.viewsets.invitation import InvitationViewSet
 from contentcuration.viewsets.sync import sync
@@ -194,6 +195,7 @@ router = routers.DefaultRouter(trailing_slash=False)
 router.register(r'license', LicenseViewSet)
 router.register(r'language', LanguageViewSet)
 router.register(r'channel', ChannelViewSet)
+router.register(r'catalog', CatalogViewSet, base_name='catalog')
 router.register(r'channelset', ChannelSetViewSet)
 router.register(r'fileformat', FileFormatViewSet)
 router.register(r'preset', FormatPresetViewSet)

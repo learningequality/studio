@@ -1,9 +1,20 @@
 import Vue from 'vue';
 import map from 'lodash/map';
 
-export function SET_PAGE(state, pageData) {
-  state.page = pageData;
-  state.page.results = map(pageData.results, r => r.id);
+export function SET_PAGE(state, {
+  next = null,
+  previous = null,
+  page_number = null,
+  count = null,
+  total_pages = null,
+  results = [],
+} = {}) {
+  state.page.next = next;
+  state.page.previous = previous;
+  state.page.page_number = page_number;
+  state.page.count = count;
+  state.page.total_pages = total_pages;
+  state.page.results = map(results, r => r.id);
 }
 
 export function ADD_CHANNEL_DETAILS(state, { id, details }) {
