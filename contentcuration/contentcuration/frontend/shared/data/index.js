@@ -52,19 +52,24 @@ function setupListeners() {
 }
 
 function runElection() {
-  const elector = createLeaderElection(channel);
+  const responseTime = 100;
+  const elector = createLeaderElection(channel, {
+    responseTime,
+  });
 
   elector.awaitLeadership().then(() => {
     startSyncing();
+  });
+  return new Promise(resolve => {
+    setTimeout(resolve, responseTime);
   });
 }
 
 export function initializeDB() {
   setupSchema();
   setupListeners();
-  runElection();
 
-  return db.open();
+  return runElection().then(db.open);
 }
 
 export function registerListener(table, change, callback) {
