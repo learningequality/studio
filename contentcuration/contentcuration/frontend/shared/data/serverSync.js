@@ -162,9 +162,11 @@ function syncChanges() {
       // TODO: remove moves when a delete change is present for an object,
       // because a delete will wipe out the move.
       const changes = changesToSync.concat(movesToSync).map(trimChangeForSync);
+      // Create a promise for the sync - if there is nothing to sync just resolve immediately,
+      // in order to still call our change cleanup code.
+      const syncPromise = changes.length ? client.post(window.Urls['sync'](), changes) : Promise.resolve({});
       // TODO: Log validation errors from the server somewhere for use in the frontend.
-      return client
-        .post(window.Urls['sync'](), changes)
+      return syncPromise
         .then(response => {
           let changesToDelete = db[CHANGES_TABLE].where('rev').belowOrEqual(changesMaxRevision);
           let movesToDelete = db[MOVES_TABLE].where('rev').belowOrEqual(movesMaxRevision);
