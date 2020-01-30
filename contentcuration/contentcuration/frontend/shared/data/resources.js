@@ -129,13 +129,13 @@ class Resource {
     const table = db[this.tableName];
     const whereParams = pick(params, this.indexFields);
     let collection;
-    if (Object.keys(whereParams).length == !0) {
+    if (Object.keys(whereParams).length !== 0) {
       collection = table.where(whereParams);
     } else {
       collection = table.toCollection();
     }
     const filterParams = omit(params, this.indexFields);
-    if (Object.keys(filterParams).length == !0) {
+    if (Object.keys(filterParams).length !== 0) {
       const filterFn = matches(filterParams);
       collection = collection.filter(filterFn);
     }
