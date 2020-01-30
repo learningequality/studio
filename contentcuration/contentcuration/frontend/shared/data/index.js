@@ -1,6 +1,6 @@
 import isFunction from 'lodash/isFunction';
 import mapValues from 'lodash/mapValues';
-import { createLeaderElection } from 'broadcast-channel';
+import { createLeaderElection } from './leaderElection';
 import channel from './broadcastChannel';
 import { CHANGE_TYPES, CHANGES_TABLE, MOVES_TABLE } from './constants';
 import db, { CLIENTID } from './db';
@@ -60,9 +60,7 @@ function runElection() {
   elector.awaitLeadership().then(() => {
     startSyncing();
   });
-  return new Promise(resolve => {
-    setTimeout(resolve, responseTime);
-  });
+  return elector.waitForLeader();
 }
 
 export function initializeDB() {
