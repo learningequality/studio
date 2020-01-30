@@ -30,49 +30,55 @@ const SYNC_IF_NO_CHANGES_FOR = 10;
 // already instantiated in the broadcastChannel module.
 const channel = createChannel();
 
+function handleFetchMessages(msg) {
+  if (msg.type === MESSAGES.FETCH_COLLECTION && msg.tableName && msg.params) {
+    RESOURCES[msg.tableName]
+      .fetchCollection(msg.params)
+      .then(data => {
+        channel.postMessage({
+          messageId: msg.messageId,
+          type: MESSAGES.REQUEST_RESPONSE,
+          status: STATUS.SUCCESS,
+          data,
+        });
+      })
+      .catch(err => {
+        channel.postMessage({
+          messageId: msg.messageId,
+          type: MESSAGES.REQUEST_RESPONSE,
+          status: STATUS.FAILURE,
+          err,
+        });
+      });
+  }
+  if (msg.type === MESSAGES.FETCH_MODEL && msg.tableName && msg.id) {
+    RESOURCES[msg.tableName]
+      .fetchModel(msg.id)
+      .then(data => {
+        channel.postMessage({
+          messageId: msg.messageId,
+          type: MESSAGES.REQUEST_RESPONSE,
+          status: STATUS.SUCCESS,
+          data,
+        });
+      })
+      .catch(err => {
+        channel.postMessage({
+          messageId: msg.messageId,
+          type: MESSAGES.REQUEST_RESPONSE,
+          status: STATUS.FAILURE,
+          err,
+        });
+      });
+  }
+}
+
 function startChannelFetchListener() {
-  channel.addEventListener('message', function(msg) {
-    if (msg.type === MESSAGES.FETCH_COLLECTION && msg.tableName && msg.params) {
-      RESOURCES[msg.tableName]
-        .fetchCollection(msg.params)
-        .then(data => {
-          channel.postMessage({
-            messageId: msg.messageId,
-            type: MESSAGES.REQUEST_RESPONSE,
-            status: STATUS.SUCCESS,
-            data,
-          });
-        })
-        .catch(err => {
-          channel.postMessage({
-            messageId: msg.messageId,
-            type: MESSAGES.REQUEST_RESPONSE,
-            status: STATUS.FAILURE,
-            err,
-          });
-        });
-    }
-    if (msg.type === MESSAGES.FETCH_MODEL && msg.tableName && msg.id) {
-      RESOURCES[msg.tableName]
-        .fetchModel(msg.id)
-        .then(data => {
-          channel.postMessage({
-            messageId: msg.messageId,
-            type: MESSAGES.REQUEST_RESPONSE,
-            status: STATUS.SUCCESS,
-            data,
-          });
-        })
-        .catch(err => {
-          channel.postMessage({
-            messageId: msg.messageId,
-            type: MESSAGES.REQUEST_RESPONSE,
-            status: STATUS.FAILURE,
-            err,
-          });
-        });
-    }
-  });
+  channel.addEventListener('message', handleFetchMessages);
+}
+
+function stopChannelFetchListener() {
+  channel.removeEventListener('message', handleFetchMessages);
 }
 
 function isSyncableChange(change) {
@@ -214,20 +220,29 @@ function syncChanges() {
 
 const debouncedSyncChanges = debounce(syncChanges, SYNC_IF_NO_CHANGES_FOR * 1000);
 
-export default function startSyncing() {
+function handleChanges(changes) {
+  const syncableChanges = changes.filter(isSyncableChange);
+  if (syncableChanges.length) {
+    // Flatten any changes before we store them in the changes table.
+    db[CHANGES_TABLE].bulkPut(mergeAllChanges(syncableChanges, true)).then(() => {
+      debouncedSyncChanges();
+    });
+  } else if (changes.some(change => change.table === MOVES_TABLE)) {
+    debouncedSyncChanges();
+  }
+}
+
+export function startSyncing() {
   startChannelFetchListener();
   // Initiate a sync immediately in case any data
   // is left over in the database.
   debouncedSyncChanges();
-  db.on('changes', function(changes) {
-    const syncableChanges = changes.filter(isSyncableChange);
-    if (syncableChanges.length) {
-      // Flatten any changes before we store them in the changes table.
-      db[CHANGES_TABLE].bulkPut(mergeAllChanges(syncableChanges, true)).then(() => {
-        debouncedSyncChanges();
-      });
-    } else if (changes.some(change => change.table === MOVES_TABLE)) {
-      debouncedSyncChanges();
-    }
-  });
+  db.on('changes', handleChanges);
+}
+
+export function stopSyncing() {
+  stopChannelFetchListener();
+  debouncedSyncChanges.cancel();
+  // Dexie's slightly counterintuitive method for unsubscribing from events
+  db.on('changes').unsubscribe(handleChanges);
 }

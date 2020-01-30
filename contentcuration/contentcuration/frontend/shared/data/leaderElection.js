@@ -9,11 +9,24 @@
 
 import { add } from 'unload';
 import uuidv4 from 'uuid/v4';
+import isFunction from 'lodash/isFunction';
 
 function sleep(time) {
     if (!time) time = 0;
     return new Promise(res => setTimeout(res, time));
 }
+
+const MESSAGES = {
+    APPLY: 'APPLY',
+    DEATH: 'DEATH',
+    TELL: 'TELL',
+};
+
+const LEADER_CONTEXT = 'LEADER_ELECTION_CONTEXT';
+
+// This is defined in the broadcast channel source
+// for the postInternal method and should not be changed.
+const INTERNAL_CHANNEL = 'internal';
 
 
 const LeaderElection = function (channel, options) {
@@ -54,35 +67,41 @@ LeaderElection.prototype = {
         this._isApl = true;
 
         let stopCriteria = false;
-        const recieved = [];
+
+        const isDictator = this._options.dictator;
 
         const handleMessage = (msg) => {
-            if (msg.context === 'leader' && msg.token != this.token) {
-                recieved.push(msg);
+            if (msg.context === LEADER_CONTEXT && msg.token != this.token) {
+                const submit = !isDictator && msg.dictator;
+                const ignore = isDictator && !msg.dictator;
+                if (!ignore) {
+                    // Ignore any messages from other non-dictatorial leaders if
+                    // this is a dictatorial context.
+                    if (msg.action === MESSAGES.APPLY) {
+                        // other is applying
+                        if (submit || msg.token > this.token) {
+                            // other has higher token, or is a dictator and we are not
+                            // stop applying
+                            stopCriteria = true;
+                        }
+                    }
 
-                if (msg.action === 'apply') {
-                    // other is applying
-                    if (msg.token > this.token) {
-                        // other has higher token, stop applying
+                    if (msg.action === MESSAGES.TELL) {
+                        // other is already leader
                         stopCriteria = true;
                     }
                 }
-
-                if (msg.action === 'tell') {
-                    // other is already leader
-                    stopCriteria = true;
-                }
             }
         };
-        this._channel.addEventListener('internal', handleMessage);
+        this._channel.addEventListener(INTERNAL_CHANNEL, handleMessage);
 
 
 
-        const ret = _sendMessage(this, 'apply') // send out that this one is applying
+        const ret = _sendMessage(this, MESSAGES.APPLY) // send out that this one is applying
             .then(() => sleep(this._options.responseTime)) // let others time to respond
             .then(() => {
                 if (stopCriteria) return Promise.reject(new Error());
-                else return _sendMessage(this, 'apply');
+                else return _sendMessage(this, MESSAGES.APPLY);
             })
             .then(() => sleep(this._options.responseTime)) // let others time to respond
             .then(() => {
@@ -93,7 +112,7 @@ LeaderElection.prototype = {
             .then(() => true)
             .catch(() => false) // apply not successfull
             .then(success => {
-                this._channel.removeEventListener('internal', handleMessage);
+                this._channel.removeEventListener(INTERNAL_CHANNEL, handleMessage);
                 this._isApl = false;
                 if (!success && this._reApply) {
                     this._reApply = false;
@@ -103,7 +122,9 @@ LeaderElection.prototype = {
         return ret;
     },
 
-    awaitLeadership() {
+    awaitLeadership({ success = null, cleanup = null } = {}) {
+        this.electedCallback = success;
+        this.deposedCallback = cleanup;
         if (
             /* _awaitLeadershipPromise */
             !this._aLP
@@ -144,16 +165,24 @@ LeaderElection.prototype = {
         return this._waitingForLeaderPromise;
     },
 
-    die() {
-        if (this.isDead) return;
-        this.isDead = true;
-
-        this._lstns.forEach(listener => this._channel.removeEventListener('internal', listener));
+    depose() {
+        this.isLeader = false;
+        if (isFunction(this.deposedCallback)) {
+            this.deposedCallback();
+        }
+        this._lstns.forEach(listener => this._channel.removeEventListener(INTERNAL_CHANNEL, listener));
         this._invs.forEach(interval => clearInterval(interval));
         this._unl.forEach(uFn => {
             uFn.remove();
         });
-        return _sendMessage(this, 'death');
+    },
+
+    die() {
+        if (this.isDead) return;
+        this.isDead = true;
+        this.depose();
+
+        return _sendMessage(this, MESSAGES.DEATH);
     }
 };
 
@@ -171,7 +200,7 @@ function _awaitLeadershipOnce(leaderElector) {
             if (leaderElector.isLeader) {
                 resolved = true;
                 clearInterval(interval);
-                leaderElector._channel.removeEventListener('internal', whenDeathListener);
+                leaderElector._channel.removeEventListener(INTERNAL_CHANNEL, whenDeathListener);
                 res(true);
             }
         };
@@ -187,13 +216,13 @@ function _awaitLeadershipOnce(leaderElector) {
 
         // try when other leader dies
         const whenDeathListener = msg => {
-            if (msg.context === 'leader' && msg.action === 'death') {
+            if (msg.context === LEADER_CONTEXT && msg.action === MESSAGES.DEATH) {
                 // Leader has died, so there is now no leader.
                 leaderElector.leaderExists = false;
                 leaderElector.applyOnce().then(finish);
             }
         };
-        leaderElector._channel.addEventListener('internal', whenDeathListener);
+        leaderElector._channel.addEventListener(INTERNAL_CHANNEL, whenDeathListener);
         leaderElector._lstns.push(whenDeathListener);
     });
 }
@@ -203,26 +232,43 @@ function _awaitLeadershipOnce(leaderElector) {
  */
 function _sendMessage(leaderElector, action) {
     const msgJson = {
-        context: 'leader',
+        context: LEADER_CONTEXT,
         action,
-        token: leaderElector.token
+        token: leaderElector.token,
+        dictator: leaderElector._options.dictator,
     };
     return leaderElector._channel.postInternal(msgJson);
 }
 
 function _beLeader(leaderElector) {
-    leaderElector.isLeader = true;
-    const unloadFn = add(() => leaderElector.die());
-    leaderElector._unl.push(unloadFn);
-
-    const isLeaderListener = msg => {
-        if (msg.context === 'leader' && msg.action === 'apply') {
-            _sendMessage(leaderElector, 'tell');
+    if (!leaderElector.isLeader) {
+        leaderElector.isLeader = true;
+        if (isFunction(leaderElector.electedCallback)) {
+            leaderElector.electedCallback();
         }
-    };
-    leaderElector._channel.addEventListener('internal', isLeaderListener);
-    leaderElector._lstns.push(isLeaderListener);
-    return _sendMessage(leaderElector, 'tell');
+        const unloadFn = add(() => leaderElector.die());
+        leaderElector._unl.push(unloadFn);
+
+        const isLeaderListener = msg => {
+            if (msg.context === LEADER_CONTEXT && msg.action === MESSAGES.APPLY) {
+                _sendMessage(leaderElector, MESSAGES.TELL);
+            }
+        };
+        const isDictator = this._options.dictator;
+        if (!isDictator) {
+            const coupListener = msg => {
+                if (msg.context === LEADER_CONTEXT && msg.action === MESSAGES.APPLY && !isDictator && msg.dictator) {
+                    leaderElector.depose();
+                }
+            }
+            leaderElector._channel.addEventListener(INTERNAL_CHANNEL, coupListener);
+            leaderElector._lstns.push(coupListener);
+        }
+        leaderElector._channel.addEventListener(INTERNAL_CHANNEL, isLeaderListener);
+        leaderElector._lstns.push(isLeaderListener);
+        return _sendMessage(leaderElector, MESSAGES.TELL);
+    }
+    return Promise.resolve();
 }
 
 
@@ -236,6 +282,10 @@ function fillOptionsWithDefaults(options, channel) {
 
     if (!options.responseTime) {
         options.responseTime = channel.method.averageResponseTime(channel.options);
+    }
+
+    if (!options.dictator) {
+        options.dictator = false;
     }
 
     return options;

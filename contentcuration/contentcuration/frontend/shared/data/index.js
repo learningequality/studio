@@ -5,7 +5,7 @@ import channel from './broadcastChannel';
 import { CHANGE_TYPES, CHANGES_TABLE, MOVES_TABLE } from './constants';
 import db, { CLIENTID } from './db';
 import RESOURCES from './resources';
-import startSyncing from './serverSync';
+import { startSyncing, stopSyncing } from './serverSync';
 
 // Re-export for ease of reference.
 export { CHANGE_TYPES } from './constants';
@@ -52,13 +52,11 @@ function setupListeners() {
 }
 
 function runElection() {
-  const responseTime = 100;
-  const elector = createLeaderElection(channel, {
-    responseTime,
-  });
+  const elector = createLeaderElection(channel);
 
-  elector.awaitLeadership().then(() => {
-    startSyncing();
+  elector.awaitLeadership({
+    success: startSyncing,
+    cleanup: stopSyncing,
   });
   return elector.waitForLeader();
 }
