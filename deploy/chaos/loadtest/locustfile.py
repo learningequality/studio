@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import json
 import os
+import time
 from random import choice
 
 from locust import HttpLocust
@@ -35,9 +36,33 @@ class BaseTaskSet(TaskSet):
             data=formdata,
             headers={
                 "content-type": "application/x-www-form-urlencoded",
-                "referer": "https://develop.studio.learningequality.org/accounts/login/"
+                "referer": "{}/accounts/login/".format(self.client.base_url)
             }
         )
+
+    def _run_async_task(self, url, channel_id, data):
+        copy_resp = self.client.post(url,
+                                     data=json.dumps(data),
+                                     headers={
+                                         "content-type": "application/json",
+                                         'X-CSRFToken': self.client.cookies.get('csrftoken'),
+                                         'Referer': self.client.base_url
+                                     })
+        copy_resp_data = copy_resp.json()
+        task_id = copy_resp_data["id"]
+        finished = False
+        time_elapsed = 0
+        status = 'QUEUED'
+        while not finished:
+            time.sleep(1)
+            time_elapsed += 1
+            task_resp = self.client.get("/api/task/{}?channel_id={}".format(task_id, channel_id))
+            task_data = task_resp.json()
+            if task_data["status"] in ["SUCCESS", "FAILED"] or time_elapsed > 120:
+                finished = True
+                status = task_data["status"]
+
+        return status
 
 
 class ChannelListPage(BaseTaskSet):
@@ -179,7 +204,7 @@ class ChannelPage(BaseTaskSet):
                         urlrequest.urlopen(storage_url).read()
 
 
-class ChannelCreate(BaseTaskSet):
+class ChannelEdit(BaseTaskSet):
     # This flag was recommended to ensure on_stop is always called, but it seems not to be enough
     # on its own to ensure this behavior. Leaving as it's possible this is needed, but along with
     # something else.
@@ -205,7 +230,7 @@ class ChannelCreate(BaseTaskSet):
             # TODO: check for deletion issues and report so that manual cleanup can be performed if needed.
 
     @task(6)
-    def create_channel(self):
+    def create_channel_and_copy_content(self):
         """
         Load the channel page and the important endpoints.
         """
@@ -227,15 +252,37 @@ class ChannelCreate(BaseTaskSet):
             headers={
                 "content-type": "application/json",
                 'X-CSRFToken': self.client.cookies.get('csrftoken'),
+                'Referer': self.client.base_url
             }
         )
 
         data = resp.json()
-        self.created_channels.append(data['id'])
+        channel_id = data["id"]
+
+        try:
+            copy_data = {
+                # KA Computing root node.
+                "node_ids": ["76d5fd8636004b459a09aecbb2f8294e"],
+                "sort_order": 1,
+                "target_parent": data["main_tree"]["id"],
+                "channel_id": channel_id
+            }
+
+            self._run_async_task('/api/duplicate_nodes/', channel_id, copy_data)
+
+        finally:
+            self.client.delete(
+                "/api/channel/{}".format(channel_id),
+                headers={
+                    "content-type": "application/json",
+                    'X-CSRFToken': self.client.cookies.get('csrftoken'),
+                    'Referer': self.client.base_url
+                }
+            )
 
 
 class LoginPage(BaseTaskSet):
-    tasks = [ChannelListPage, ChannelPage]
+    tasks = [ChannelListPage, ChannelPage, ChannelEdit]
 
     # This is by far our most hit endpoint, over 50% of all calls, so
     # weight it accordingly.
