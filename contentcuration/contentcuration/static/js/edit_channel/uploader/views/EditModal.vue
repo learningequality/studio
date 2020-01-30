@@ -330,8 +330,10 @@
         else if (invalidNodes.length) {
           this.setNode(invalidNodes[0]);
           this.$refs.saveprompt.prompt();
-        } else {
+        } else if (this.changed) {
           this.handleForceSave();
+        } else {
+          this.closeModal();
         }
       },
       handleForceSave() {

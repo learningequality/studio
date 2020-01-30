@@ -2,6 +2,9 @@ import Vue from 'vue';
 import VueRouter from 'vue-router';
 import Vuetify from 'vuetify';
 import VueIntl from 'vue-intl';
+
+import Croppa from 'vue-croppa';
+
 import 'shared/i18n/setup';
 import 'vuetify/dist/vuetify.min.css';
 import 'shared/styles/main.less';
@@ -13,10 +16,16 @@ import { theme, icons } from 'shared/vuetify';
 
 const State = require('edit_channel/state');
 
+Vue.use(Croppa);
+
 Vue.use(VueIntl);
 Vue.use(VueRouter);
 Vue.use(Vuetify, {
   rtl: window.isRTL,
+  // Enable css variables (e.g. `var(--v-grey-darken1)`)
+  options: {
+    customProperties: true,
+  },
   theme: theme(),
   icons: icons(),
 });

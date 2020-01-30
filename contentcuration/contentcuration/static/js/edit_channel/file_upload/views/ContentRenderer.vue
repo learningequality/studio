@@ -58,7 +58,7 @@
         required: false,
         validator: file => {
           // Might be in the process of uploading, so can't have file_on_disk
-          return file.id && file.checksum && file.file_format;
+          return file.id && file.file_format;
         },
       },
       fullscreen: {

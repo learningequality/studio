@@ -1,14 +1,16 @@
 <template>
 
-  <a
+  <VBtn
     :style="{color: $vuetify.theme.primary}"
     v-bind="$attrs"
+    flat
+    @keyup.enter.stop="$emit('click')"
     @click.stop="$emit('click')"
   >
     <slot>
       {{ text }}
     </slot>
-  </a>
+  </VBtn>
 
 </template>
 <script>
@@ -25,9 +27,15 @@
 </script>
 <style lang="less" scoped>
 
-  a,
-  a:hover {
+  .v-btn {
+    min-width: min-content;
+    height: unset;
+    min-height: min-content;
+    padding: 0;
+    margin: 0;
+    font-weight: normal;
     text-decoration: underline !important;
+    text-transform: none;
   }
 
 </style>
