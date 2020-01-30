@@ -249,9 +249,10 @@ class CustomListSerializer(serializers.ListSerializer):
                     prerequisite_mapping.update({item['id']: item.pop('prerequisite')})
                 else:
                     # create new nodes
+                    prerequisite = item.pop('prerequisite')
                     new_node = ContentNode.objects.create(**item)
                     ret.append(new_node)
-                    prerequisite_mapping.update({new_node.pk: item.pop('prerequisite')})
+                    prerequisite_mapping.update({new_node.pk: prerequisite})
 
         # get all ContentTag objects, if doesn't exist, create them.
         all_tags = []
