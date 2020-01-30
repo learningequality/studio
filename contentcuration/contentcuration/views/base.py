@@ -37,6 +37,7 @@ from contentcuration.api import activate_channel
 from contentcuration.api import get_staged_diff
 from contentcuration.decorators import browser_is_supported
 from contentcuration.decorators import has_accepted_policies
+from contentcuration.models import DEFAULT_USER_PREFERENCES
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import User
@@ -98,8 +99,8 @@ def get_or_set_cached_constants(constant, serializer):
 @has_accepted_policies
 @permission_classes((AllowAny,))
 def channel_list(request):
-    return render(request, 'channel_list.html', {"current_user": JSONRenderer().render(UserChannelListSerializer(request.user).data),
-                                                 "user_preferences": json.dumps(request.user.content_defaults),
+    return render(request, 'channel_list.html', {"current_user": "null" if request.user.is_anonymous else JSONRenderer().render(UserChannelListSerializer(request.user).data),
+                                                 "user_preferences": DEFAULT_USER_PREFERENCES if request.user.is_anonymous else json.dumps(request.user.content_defaults),
                                                  "messages": get_messages(),
                                                  })
 
