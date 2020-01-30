@@ -10,7 +10,6 @@ Vue.use(Vuex);
 describe('fileUploadStore', () => {
   let store;
   beforeEach(() => {
-    client.mockReset();
     store = new Store({
       modules: {
         fileUploads: fileUploadsModule,
