@@ -3,8 +3,6 @@ import VueRouter from 'vue-router';
 import Vuetify from 'vuetify';
 import VueIntl from 'vue-intl';
 
-import Croppa from 'vue-croppa';
-
 import 'shared/i18n/setup';
 import 'vuetify/dist/vuetify.min.css';
 import 'shared/styles/main.less';
@@ -15,8 +13,6 @@ import router from './router';
 import { theme, icons } from 'shared/vuetify';
 
 const State = require('edit_channel/state');
-
-Vue.use(Croppa);
 
 Vue.use(VueIntl);
 Vue.use(VueRouter);
