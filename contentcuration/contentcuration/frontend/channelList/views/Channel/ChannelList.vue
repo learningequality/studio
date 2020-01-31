@@ -106,6 +106,13 @@
       }
       return next(false);
     },
+    beforeRouteUpdate(to, from, next) {
+      if (listTypeValidator(to.params.listType)) {
+        this.loadData(to.params.listType);
+        return next();
+      }
+      return next(false);
+    },
     methods: {
       ...mapActions('channel', ['loadChannelList', 'createChannel']),
       newChannel() {

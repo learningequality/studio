@@ -58,12 +58,12 @@
             <template v-else>
               <VDataTable
                 :headers="headers"
-                :items="channelSets"
+                :items="channelSets.map(set => set.id)"
                 hide-actions
               >
                 <template v-slot:items="props">
                   <ChannelSetItem
-                    :channelSet="props.item"
+                    :channelSetId="props.item"
                   />
                 </template>
               </VDataTable>
