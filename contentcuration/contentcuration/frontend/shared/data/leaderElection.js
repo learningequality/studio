@@ -228,7 +228,7 @@ function _awaitLeadershipOnce(leaderElector) {
 }
 
 /**
- * sends and internal message over the broadcast-channel
+ * sends an internal message over the broadcast-channel
  */
 function _sendMessage(leaderElector, action) {
     const msgJson = {
