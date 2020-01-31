@@ -130,7 +130,8 @@
       });
     },
     methods: {
-      ...mapActions('channel', ['loadChannelList', 'updateChannelSet']),
+      ...mapActions('channel', ['loadChannelList']),
+      ...mapActions('channelSet', ['updateChannelSet']),
     },
     $trs: {
       searchText: 'Search for a channel',

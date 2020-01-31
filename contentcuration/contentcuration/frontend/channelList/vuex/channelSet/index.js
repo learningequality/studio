@@ -13,7 +13,7 @@ export default {
   getters,
   // Mutations that should be called for these events on the specified tables.
   listeners: {
-    [TABLE_NAMES.CHANNEL]: {
+    [TABLE_NAMES.CHANNELSET]: {
       [CHANGE_TYPES.CREATED]: 'ADD_CHANNELSET',
       [CHANGE_TYPES.UPDATED]: 'UPDATE_CHANNELSET',
       [CHANGE_TYPES.DELETED]: 'REMOVE_CHANNELSET',
