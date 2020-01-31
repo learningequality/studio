@@ -1,6 +1,6 @@
 <template>
 
-  <VCard class="my-3" :to="openChannelLink" data-test="channel-card">
+  <VCard class="my-3" :href="openChannelLink" data-test="channel-card">
     <VLayout row wrap>
       <VFlex xs12 sm3>
         <VCardTitle>
