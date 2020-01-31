@@ -1,5 +1,4 @@
-import pick from 'lodash/pick';
-import { ContentDefaults } from 'shared/constants';
+import pickBy from 'lodash/pickBy';
 import { Channel } from 'shared/data/resources';
 
 /* CHANNEL LIST ACTIONS */
@@ -86,12 +85,12 @@ export function updateChannel(
     channelData.language = language;
   }
   if (contentDefaults !== null) {
-    channelData.content_defaults = {};
-    // Assign all acceptable content defaults into the channel defaults
-    Object.assign(
-      channelData.content_defaults,
-      pick(contentDefaults, Object.keys(ContentDefaults))
-    );
+    const originalData = context.state.channelsMap[id].content_defaults;
+    // Pick out only content defaults that have been changed.
+    contentDefaults = pickBy(contentDefaults, (value, key) => value !== originalData[key]);
+    if (Object.keys(contentDefaults).length) {
+      channelData.content_defaults = contentDefaults;
+    }
   }
   context.commit('UPDATE_CHANNEL', { id, ...channelData });
   return Channel.update(id, channelData);

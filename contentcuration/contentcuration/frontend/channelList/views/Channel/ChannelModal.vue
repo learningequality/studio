@@ -23,10 +23,6 @@
             {{ name }}
           </template>
         </VToolbarTitle>
-        <VSpacer />
-        <VBtn flat data-test="save" @click="save">
-          {{ isNewChannel ? $tr('create') : $tr('save') }}
-        </VBtn>
       </VToolbar>
       <VProgressLinear
         v-if="loading"
@@ -144,8 +140,8 @@
         get() {
           return this.channel.content_defaults || {};
         },
-        set(content_defaults) {
-          this.updateChannel({ id: this.channelId, content_defaults });
+        set(contentDefaults) {
+          this.updateChannel({ id: this.channelId, contentDefaults });
         },
       },
     },
