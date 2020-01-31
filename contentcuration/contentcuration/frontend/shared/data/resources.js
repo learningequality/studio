@@ -206,6 +206,12 @@ class Resource {
     });
   }
 
+  modifyByIds(ids, changes) {
+    return this.transaction('rw', () => {
+      return this.table.where(this.idField).anyOf(ids).modify(changes);
+    });
+  }
+
   put(obj) {
     if (this.uuid) {
       obj[this.idField] = uuid4();

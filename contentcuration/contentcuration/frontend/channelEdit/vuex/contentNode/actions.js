@@ -1,4 +1,6 @@
 import { ContentNode } from 'shared/data/resources';
+import difference from 'lodash/difference';
+import union from 'lodash/union';
 
 export function loadContentNodes(context, params = {}) {
   return ContentNode.where(params).then(contentNodes => {
@@ -35,10 +37,7 @@ export function createContentNode(context) {
   });
 }
 
-export function updateContentNode(
-  context,
-  {
-    id,
+function generateContentNodeData({
     title = null,
     description = null,
     thumbnailData = null,
@@ -51,12 +50,8 @@ export function updateContentNode(
     aggregator = null,
     provider = null,
     extra_fields = null,
-  } = {}
-) {
+  } = {}) {
   const contentNodeData = {};
-  if (!id) {
-    throw ReferenceError('id must be defined to update a contentNode');
-  }
   if (title !== null) {
     contentNodeData.title = title;
   }
@@ -109,8 +104,56 @@ export function updateContentNode(
       contentNodeData.extra_fields.randomize = extra_fields.randomize;
     }
   }
+  return contentNodeData;
+}
+
+export function updateContentNode(
+  context,
+  {
+    id,
+    ...payload
+  } = {}
+) {
+  if (!id) {
+    throw ReferenceError('id must be defined to update a contentNode');
+  }
+  const contentNodeData = generateContentNodeData(payload);
   context.commit('UPDATE_CONTENTNODE', { id, ...contentNodeData });
   return ContentNode.update(id, contentNodeData);
+}
+
+export function updateContentNodes(
+  context,
+  {
+    ids,
+    ...payload
+  } = {}
+) {
+  if (!ids) {
+    throw ReferenceError('ids must be defined to update contentNodes');
+  }
+  if (!Array.isArray(ids)) {
+    throw TypeError('ids must be an array of ids');
+  }
+  const contentNodeData = generateContentNodeData(payload);
+  context.commit('UPDATE_CONTENTNODES', { ids, ...contentNodeData });
+  return ContentNode.modifyByIds(ids, contentNodeData);
+}
+
+export function addTags(context, { ids, tags }) {
+  return ids.map(id => {
+    const newTags = union(context.state.contentNodesMap[id].tags, tags);
+    context.commit('SET_TAGS', { id, tags: newTags });
+    return ContentNode.update(id, { tags: newTags });
+  });
+}
+
+export function removeTags(context, { ids, tags }) {
+  return ids.map(id => {
+    const newTags = difference(context.state.contentNodesMap[id].tags, tags);
+    context.commit('SET_TAGS', { id, tags: newTags });
+    return ContentNode.update(id, { tags: newTags });
+  });
 }
 
 export function deleteContentNode(context, contentNodeId) {

@@ -22,6 +22,8 @@ from contentcuration.models import ContentNode
 from contentcuration.models import File
 from contentcuration.models import generate_storage_url
 from contentcuration.viewsets.base import ValuesViewset
+from contentcuration.viewsets.base import BulkModelSerializer
+from contentcuration.viewsets.base import BulkListSerializer
 
 
 class NotNullArrayAgg(ArrayAgg):
@@ -62,7 +64,7 @@ class SQCount(Subquery):
     output_field = IntegerField()
 
 
-class ContentNodeSerializer(ModelSerializer):
+class ContentNodeSerializer(BulkModelSerializer):
     """
     This is a write only serializer - we leverage it to do create and update
     operations, but read operations are handled by the Viewset.
@@ -86,6 +88,7 @@ class ContentNodeSerializer(ModelSerializer):
             "extra_fields",
         )
         read_only_fields = ("id",)
+        list_serializer_class = BulkListSerializer
 
 
 def retrieve_thumbail_src(item):

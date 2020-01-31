@@ -17,11 +17,13 @@ from rest_framework.status import HTTP_400_BAD_REQUEST
 
 from contentcuration.viewsets.channel import ChannelViewSet
 from contentcuration.viewsets.channelset import ChannelSetViewSet
+from contentcuration.viewsets.contentnode import ContentNodeViewSet
 
 
 viewset_mapping = {
     "channel": ChannelViewSet,
     "channelset": ChannelSetViewSet,
+    "contentnode": ContentNodeViewSet,
 }
 
 # Change type constants

@@ -237,7 +237,7 @@
   import difference from 'lodash/difference';
   import intersection from 'lodash/intersection';
   import uniq from 'lodash/uniq';
-  import { mapGetters, mapMutations } from 'vuex';
+  import { mapGetters, mapActions } from 'vuex';
   import Constants from 'edit_channel/constants';
   import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown.vue';
   import HelpTooltip from 'edit_channel/sharedComponents/HelpTooltip.vue';
@@ -448,18 +448,18 @@
       },
     },
     methods: {
-      ...mapMutations('contentNode', ['UPDATE_CONTENTNODES', 'ADD_TAGS', 'REMOVE_TAGS']),
+      ...mapActions('contentNode', ['updateContentNodes', 'addTags', 'removeTags']),
       update(payload) {
-        this.UPDATE_CONTENTNODES(this.nodeIds, payload);
+        this.updateContentNodes({ ids: this.nodeIds, ...payload });
       },
       updateExtraFields(payload) {
-        this.UPDATE_CONTENTNODES(this.nodeIds, { extra_fields: payload });
+        this.updateContentNodes({ ids: this.nodeIds, extra_fields: payload });
       },
       addTags(tags) {
-        this.ADD_TAGS(this.nodeIds, tags);
+        this.addTags({ ids: this.nodeIds, tags });
       },
       removeTags(tags) {
-        this.REMOVE_TAGS(this.nodeIds, tags);
+        this.removeTags({ ids: this.nodeIds, tags });
       },
       isUnique(value) {
         return value !== nonUniqueValue;

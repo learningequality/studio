@@ -36,7 +36,7 @@ export function UPDATE_CONTENTNODE(state, { id, ...payload } = {}) {
   };
 }
 
-export function UPDATE_CONTENTNODES(state, ids, payload) {
+export function UPDATE_CONTENTNODES(state, { ids, ...payload }) {
   ids.forEach(id => {
     UPDATE_CONTENTNODE(state, {
       id,
@@ -45,18 +45,8 @@ export function UPDATE_CONTENTNODES(state, ids, payload) {
   });
 }
 
-export function ADD_TAGS(state, ids, tags) {
-  ids.forEach(id => {
-    const contentNode = state.contentNodesMap[id];
-    contentNode.tags = union(contentNode.tags, tags);
-  });
-}
-
-export function REMOVE_TAGS(state, ids, tags) {
-  ids.forEach(id => {
-    const contentNode = state.contentNodesMap[id];
-    contentNode.tags = difference(contentNode.tags, tags);
-  });
+export function SET_TAGS(state, { id, tags }) {
+  state.contentNodesMap[id].tags = tags;
 }
 
 export function TOGGLE_EXPANSION(state, id) {
