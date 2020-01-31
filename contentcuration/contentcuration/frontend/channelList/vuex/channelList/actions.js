@@ -4,8 +4,13 @@ import { Channel } from 'shared/data/resources';
 export function searchCatalog(context, params) {
   params.page_size = params.page_size || 25;
   params.public = true;
-  // TODO: Migrate this to using indexeddb
-  return Channel.searchCatalog(params).then(pageData => {
+  let promise;
+  if (context.rootState.session.loggedIn) {
+    promise = Channel.requestCollection(params);
+  } else {
+    promise = Channel.searchCatalog(params);
+  }
+  return promise.then(pageData => {
     context.commit('SET_PAGE', pageData);
     // Put channel data in our global channels map
     context.commit('channel/ADD_CHANNELS', pageData.results, { root: true });

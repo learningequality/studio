@@ -109,7 +109,15 @@ class Resource {
   fetchCollection(params) {
     return client.get(this.collectionUrl(), { params }).then(response => {
       const now = Date.now();
-      const data = response.data.map(datum => {
+      let itemData;
+      let pageData;
+      if (Array.isArray(response.data)) {
+        itemData = response.data;
+      } else {
+        pageData = response.data;
+        itemData = pageData.results;
+      }
+      const data = itemData.map(datum => {
         datum[LAST_FETCHED] = now;
         return datum;
       });
@@ -119,7 +127,10 @@ class Resource {
         // to sync these changes back to the server!
         Dexie.currentTransaction.source = FETCH_SOURCE;
         return this.table.bulkPut(data).then(() => {
-          return data;
+          // If someone has requested a paginated response,
+          // they will be expecting the page data object,
+          // not the results object.
+          return pageData ? pageData : itemData;
         });
       });
     });
@@ -236,6 +247,8 @@ export const Channel = new Resource({
   urlName: 'channel',
   indexFields: ['name', 'language'],
   searchCatalog(params) {
+    params.page_size = params.page_size || 25;
+    params.public = true;
     // Because this is a heavily cached endpoint, we can just directly request
     // it and rely on browser caching to prevent excessive requests to the server.
     return client.get(window.Urls[`catalog_list`](), { params }).then(response => {
