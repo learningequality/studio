@@ -2,12 +2,11 @@ from __future__ import absolute_import
 
 from .base import BaseAPITestCase
 from django.db.models.query import QuerySet
-from rest_framework import serializers
 
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
-from contentcuration.serializers import ContentDefaultsSerializer
-from contentcuration.serializers import ContentDefaultsSerializerMixin
+from contentcuration.viewsets.common import ContentDefaultsSerializer
+from contentcuration.viewsets.channel import ChannelSerializer as BaseChannelSerializer
 from contentcuration.serializers import ContentNodeSerializer
 from contentcuration.serializers import DEFAULT_CONTENT_DEFAULTS
 
@@ -97,9 +96,9 @@ class ContentDefaultsSerializerTestCase(BaseAPITestCase):
         self.assertFalse(s.is_valid())
 
 
-class ContentDefaultsSerializerMixinTestCase(BaseAPITestCase):
-    class ChannelSerializer(ContentDefaultsSerializerMixin, serializers.ModelSerializer):
-        content_defaults = serializers.DictField()
+class ContentDefaultsSerializerUseTestCase(BaseAPITestCase):
+    class ChannelSerializer(BaseChannelSerializer):
+        content_defaults = ContentDefaultsSerializer(partial=True)
 
         class Meta:
             model = Channel
@@ -108,6 +107,7 @@ class ContentDefaultsSerializerMixinTestCase(BaseAPITestCase):
                 "content_defaults",
             )
             read_only_fields = ("id",)
+            nested_writes = True
 
     def test_save__create(self):
         s = self.ChannelSerializer(data=dict(
@@ -117,7 +117,7 @@ class ContentDefaultsSerializerMixinTestCase(BaseAPITestCase):
         ))
 
         self.assertTrue(s.is_valid())
-        c = s.save()
+        c, _ = s.save()
 
         defaults = DEFAULT_CONTENT_DEFAULTS.copy()
         defaults.update(author='Buster')
@@ -136,7 +136,8 @@ class ContentDefaultsSerializerMixinTestCase(BaseAPITestCase):
         ))
 
         self.assertTrue(s.is_valid())
+        c, _ = s.save()
         self.assertEqual(dict(
             author='Buster',
             license='Special Permissions'
-        ), s.save().content_defaults)
+        ), c.content_defaults)

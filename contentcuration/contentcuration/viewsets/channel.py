@@ -28,14 +28,14 @@ from contentcuration.models import ContentNode
 from contentcuration.models import get_channel_thumbnail
 from contentcuration.models import SecretToken
 from contentcuration.models import User
-from contentcuration.serializers import ContentDefaultsSerializerMixin
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import ValuesViewset
+from contentcuration.viewsets.common import ContentDefaultsSerializer
 
 
 class CatalogListPagination(PageNumberPagination):
-    page_size = 25
+    page_size = None
     page_size_query_param = "page_size"
     max_page_size = 100
 
@@ -188,14 +188,14 @@ class SQCount(Subquery):
     output_field = IntegerField()
 
 
-class ChannelSerializer(ContentDefaultsSerializerMixin, BulkModelSerializer):
+class ChannelSerializer(BulkModelSerializer):
     """
     This is a write only serializer - we leverage it to do create and update
     operations, but read operations are handled by the Viewset.
     """
 
     bookmark = serializers.BooleanField()
-    content_defaults = serializers.DictField()
+    content_defaults = ContentDefaultsSerializer(partial=True)
 
     class Meta:
         model = Channel
@@ -213,9 +213,12 @@ class ChannelSerializer(ContentDefaultsSerializerMixin, BulkModelSerializer):
         )
         read_only_fields = ("id",)
         list_serializer_class = BulkListSerializer
+        nested_writes = True
 
     def create(self, validated_data):
         bookmark = validated_data.pop("bookmark", None)
+        content_defaults = validated_data.pop("content_defaults", {})
+        validated_data["content_defaults"] = self.fields["content_defaults"].create(content_defaults)
         if "request" in self.context:
             user_id = self.context["request"].user.id
             # This has been newly created so add the current user as an editor
@@ -226,6 +229,9 @@ class ChannelSerializer(ContentDefaultsSerializerMixin, BulkModelSerializer):
 
     def update(self, instance, validated_data):
         bookmark = validated_data.pop("bookmark", None)
+        content_defaults = validated_data.pop("content_defaults", None)
+        if content_defaults is not None:
+            validated_data["content_defaults"] = self.fields["content_defaults"].update(instance.content_defaults, content_defaults)
         if "request" in self.context:
             user_id = self.context["request"].user.id
             # We could possibly do this in bulk later in the process,
@@ -248,6 +254,7 @@ class ChannelViewSet(ValuesViewset):
     serializer_class = ChannelSerializer
     filter_backends = (DjangoFilterBackend, SearchFilter)
     permission_classes = [AllowAny]
+    pagination_class = CatalogListPagination
     filter_class = ChannelFilter
     values = (
         "id",
@@ -372,7 +379,7 @@ class CatalogViewSet(ChannelViewSet):
     permission_classes = [AllowAny]
 
     def get_queryset(self):
-        queryset = Channel.objects.filter(public=True).annotate(
+        queryset = Channel.objects.filter(deleted=False, public=True).annotate(
             edit=Value(
                 False,
                 BooleanField(),

@@ -36,7 +36,9 @@ class BulkModelSerializer(ModelSerializer):
         return ret
 
     def update(self, instance, validated_data):
-        raise_errors_on_nested_writes("update", self, validated_data)
+        # To ensure caution, require nested_writes to be explicitly allowed
+        if not (hasattr(self.Meta, "nested_writes") and self.Meta.nested_writes):
+            raise_errors_on_nested_writes("update", self, validated_data)
         info = model_meta.get_field_info(instance)
 
         # Simply set each attribute on the instance, and then save it.
@@ -61,7 +63,9 @@ class BulkModelSerializer(ModelSerializer):
             field.set(value)
 
     def create(self, validated_data):
-        raise_errors_on_nested_writes("create", self, validated_data)
+        # To ensure caution, require nested_writes to be explicitly allowed
+        if not (hasattr(self.Meta, "nested_writes") and self.Meta.nested_writes):
+            raise_errors_on_nested_writes("create", self, validated_data)
 
         ModelClass = self.Meta.model
 
@@ -90,6 +94,7 @@ class BulkListSerializer(ListSerializer):
     def update(self, queryset, all_validated_data):
         all_validated_data = self.validated_data
         id_attr = self.child.id_attr()
+        concrete_fields = set(f.name for f in self.child.Meta.model._meta.concrete_fields)
 
         all_validated_data_by_id = {}
 
@@ -100,6 +105,8 @@ class BulkListSerializer(ListSerializer):
             if obj.keys():
                 all_validated_data_by_id[obj_id] = obj
                 properties_to_update.update(obj.keys())
+
+        properties_to_update = properties_to_update.intersection(concrete_fields)
 
         # since this method is given a queryset which can have many
         # model instances, first find all objects to update
@@ -264,7 +271,7 @@ class ValuesViewset(ReadOnlyModelViewSet):
                     errors.append(datum)
                 else:
                     valid_data.append(datum)
-            serializer = self.get_serializer(data=valid_data, many=True, partial=True)
+            serializer = self.get_serializer(instance, data=valid_data, many=True, partial=True)
             # This should now not raise an exception as we have filtered
             # all the invalid objects, but we still need to call is_valid
             # before DRF will let us save them.
