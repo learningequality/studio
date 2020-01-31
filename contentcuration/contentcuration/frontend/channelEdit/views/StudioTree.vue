@@ -2,7 +2,7 @@
 
   <VLayout row wrap>
     <VFlex
-      v-if="!root"
+      v-if="node && !root"
       xs12
       class="node-item"
       :class="{ selected: selected }"
@@ -40,7 +40,7 @@
       </VLayout>
     </VFlex>
     <VFlex
-      v-if="root || node.has_children"
+      v-if="node && (root || node.has_children)"
       v-show="expanded"
       xs12
       class="subtree"
@@ -136,6 +136,7 @@
         if (this.node && this.node.has_children) {
           return this.loadContentNodes({ parent: this.nodeId });
         }
+        return Promise.resolve();
       },
       toggle() {
         if (this.root || this.node.has_children) {
