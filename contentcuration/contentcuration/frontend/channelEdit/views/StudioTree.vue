@@ -117,20 +117,14 @@
     created() {
       if (this.expanded) {
         if (!this.node) {
-          const loadChildren = () => {
-            const getChildrenPromise = this.getChildren();
-            if (getChildrenPromise || (this.node && !this.node.has_children)) {
-              unwatch();
-            }
-          };
-          const unwatch = this.$watch('node', loadChildren);
+          this.loadContentNode(this.nodeId).then(this.getChildren);
         } else {
           this.getChildren();
         }
       }
     },
     methods: {
-      ...mapActions('contentNode', ['loadContentNodes']),
+      ...mapActions('contentNode', ['loadContentNodes', 'loadContentNode']),
       ...mapMutations('contentNode', { toggleExpansion: 'TOGGLE_EXPANSION' }),
       getChildren() {
         if (this.node && this.node.has_children) {
