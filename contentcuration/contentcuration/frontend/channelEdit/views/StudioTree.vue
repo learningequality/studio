@@ -11,7 +11,7 @@
         <VFlex xs6>
           <VLayout row wrap>
             <VFlex xs1>
-              <VBtn v-if="node.has_children" icon @click.stop="toggle">
+              <VBtn v-if="showExpansion" icon @click.stop="toggle">
                 <VIcon>{{ expanded ? "expand_more" : "expand_less" }}</VIcon>
               </VBtn>
             </VFlex>
@@ -90,6 +90,9 @@
       },
       children() {
         return this.getContentNodeChildren(this.nodeId);
+      },
+      showExpansion() {
+        return this.node && this.node.has_children && (!this.children || this.children.some(c => c.kind === 'topic'));
       },
       expanded() {
         return this.root || this.nodeExpanded(this.nodeId);
