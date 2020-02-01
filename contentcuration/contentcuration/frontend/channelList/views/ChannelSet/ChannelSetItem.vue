@@ -100,7 +100,9 @@
         };
       },
       channelCount() {
-        return this.channelSet && this.channelSet.channels ? this.channelSet.channels.filter(c => c).length : 0;
+        return this.channelSet && this.channelSet.channels
+          ? this.channelSet.channels.filter(c => c).length
+          : 0;
       },
     },
     methods: {

@@ -1,14 +1,17 @@
 import Vue from 'vue';
 import map from 'lodash/map';
 
-export function SET_PAGE(state, {
-  next = null,
-  previous = null,
-  page_number = null,
-  count = null,
-  total_pages = null,
-  results = [],
-} = {}) {
+export function SET_PAGE(
+  state,
+  {
+    next = null,
+    previous = null,
+    page_number = null,
+    count = null,
+    total_pages = null,
+    results = [],
+  } = {}
+) {
   state.page.next = next;
   state.page.previous = previous;
   state.page.page_number = page_number;

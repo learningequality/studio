@@ -38,19 +38,19 @@ export function createContentNode(context) {
 }
 
 function generateContentNodeData({
-    title = null,
-    description = null,
-    thumbnailData = null,
-    language = null,
-    license = null,
-    license_description = null,
-    copyright_holder = null,
-    author = null,
-    role_visibility = null,
-    aggregator = null,
-    provider = null,
-    extra_fields = null,
-  } = {}) {
+  title = null,
+  description = null,
+  thumbnailData = null,
+  language = null,
+  license = null,
+  license_description = null,
+  copyright_holder = null,
+  author = null,
+  role_visibility = null,
+  aggregator = null,
+  provider = null,
+  extra_fields = null,
+} = {}) {
   const contentNodeData = {};
   if (title !== null) {
     contentNodeData.title = title;
@@ -107,13 +107,7 @@ function generateContentNodeData({
   return contentNodeData;
 }
 
-export function updateContentNode(
-  context,
-  {
-    id,
-    ...payload
-  } = {}
-) {
+export function updateContentNode(context, { id, ...payload } = {}) {
   if (!id) {
     throw ReferenceError('id must be defined to update a contentNode');
   }
@@ -122,13 +116,7 @@ export function updateContentNode(
   return ContentNode.update(id, contentNodeData);
 }
 
-export function updateContentNodes(
-  context,
-  {
-    ids,
-    ...payload
-  } = {}
-) {
+export function updateContentNodes(context, { ids, ...payload } = {}) {
   if (!ids) {
     throw ReferenceError('ids must be defined to update contentNodes');
   }

@@ -39,9 +39,7 @@ const router = new VueRouter({
           'channel/loadChannel',
           store.state.currentChannel.currentChannelId
         );
-        return channelPromise
-          .then(() => next())
-          .catch(err => console.log(err)); // eslint-disable-line no-console
+        return channelPromise.then(() => next()).catch(() => {});
       },
       children: [
         {

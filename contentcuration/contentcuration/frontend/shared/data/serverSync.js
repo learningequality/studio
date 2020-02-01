@@ -170,7 +170,9 @@ function syncChanges() {
       const changes = changesToSync.concat(movesToSync).map(trimChangeForSync);
       // Create a promise for the sync - if there is nothing to sync just resolve immediately,
       // in order to still call our change cleanup code.
-      const syncPromise = changes.length ? client.post(window.Urls['sync'](), changes) : Promise.resolve({});
+      const syncPromise = changes.length
+        ? client.post(window.Urls['sync'](), changes)
+        : Promise.resolve({});
       // TODO: Log validation errors from the server somewhere for use in the frontend.
       return syncPromise
         .then(response => {

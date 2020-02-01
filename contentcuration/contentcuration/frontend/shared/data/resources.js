@@ -208,7 +208,10 @@ class Resource {
 
   modifyByIds(ids, changes) {
     return this.transaction('rw', () => {
-      return this.table.where(this.idField).anyOf(ids).modify(changes);
+      return this.table
+        .where(this.idField)
+        .anyOf(ids)
+        .modify(changes);
     });
   }
 
@@ -259,7 +262,7 @@ export const Channel = new Resource({
     // it and rely on browser caching to prevent excessive requests to the server.
     return client.get(window.Urls[`catalog_list`](), { params }).then(response => {
       const pageData = response.data;
-      const channelData = Array.isArray(pageData)? pageData : pageData.results;
+      const channelData = Array.isArray(pageData) ? pageData : pageData.results;
       return db.transaction('rw', this.tableName, () => {
         // Explicitly set the source of this as a fetch
         // from the server, to prevent us from trying
@@ -270,7 +273,7 @@ export const Channel = new Resource({
         });
       });
     });
-  }
+  },
 });
 
 export const ContentNode = new Resource({

@@ -99,7 +99,6 @@
     },
     data() {
       return {
-        saving: false,
         loading: false,
       };
     },
@@ -205,15 +204,6 @@
           params: { listType: this.$route.params.listType },
         });
       },
-      save() {
-        if (this.$refs.detailsform.validate()) {
-          this.saving = true;
-          return this.saveChannel(this.channelId).then(() => {
-            this.close();
-            this.saving = false;
-          });
-        }
-      },
     },
     $trs: {
       untitledChannelHeader: 'Untitled channel',
@@ -221,8 +211,6 @@
       channelName: 'Channel name',
       channelError: 'Channel name cannot be blank',
       channelDescription: 'Channel description',
-      save: 'Save changes',
-      create: 'Create',
     },
   };
 

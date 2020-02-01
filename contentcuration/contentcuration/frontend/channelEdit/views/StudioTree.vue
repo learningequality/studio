@@ -92,7 +92,11 @@
         return this.getContentNodeChildren(this.nodeId);
       },
       showExpansion() {
-        return this.node && this.node.has_children && (!this.children || this.children.some(c => c.kind === 'topic'));
+        return (
+          this.node &&
+          this.node.has_children &&
+          (!this.children || this.children.some(c => c.kind === 'topic'))
+        );
       },
       expanded() {
         return this.root || this.nodeExpanded(this.nodeId);
@@ -132,7 +136,10 @@
     },
     methods: {
       ...mapActions('contentNode', ['loadContentNodes', 'loadContentNode']),
-      ...mapMutations('contentNode', { toggleExpansion: 'TOGGLE_EXPANSION', setExpansion: 'SET_EXPANSION' }),
+      ...mapMutations('contentNode', {
+        toggleExpansion: 'TOGGLE_EXPANSION',
+        setExpansion: 'SET_EXPANSION',
+      }),
       getChildren() {
         if (this.node && this.node.has_children) {
           return this.loadContentNodes({ parent: this.nodeId });

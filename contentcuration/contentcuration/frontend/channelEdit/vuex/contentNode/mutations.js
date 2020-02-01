@@ -1,6 +1,4 @@
 import Vue from 'vue';
-import difference from 'lodash/difference';
-import union from 'lodash/union';
 
 function mergeContentNode(contentNodesMap, contentNode) {
   return {
@@ -61,5 +59,5 @@ export function SET_EXPANSION(state, { id, expanded }) {
 }
 
 export function TOGGLE_EXPANSION(state, id) {
-  SET_EXPANSION(state, { id, expanded: !state.expandedNodes[id]});
+  SET_EXPANSION(state, { id, expanded: !state.expandedNodes[id] });
 }
