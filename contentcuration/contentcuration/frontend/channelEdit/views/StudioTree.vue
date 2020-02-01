@@ -115,17 +115,21 @@
       },
     },
     created() {
-      if (this.expanded) {
+      if (this.expanded || this.selected) {
         if (!this.node) {
           this.loadContentNode(this.nodeId).then(this.getChildren);
         } else {
           this.getChildren();
         }
       }
+      if (this.selected) {
+        // Always expand the selected node
+        this.setExpansion({ id: this.nodeId, expanded: true });
+      }
     },
     methods: {
       ...mapActions('contentNode', ['loadContentNodes', 'loadContentNode']),
-      ...mapMutations('contentNode', { toggleExpansion: 'TOGGLE_EXPANSION' }),
+      ...mapMutations('contentNode', { toggleExpansion: 'TOGGLE_EXPANSION', setExpansion: 'SET_EXPANSION' }),
       getChildren() {
         if (this.node && this.node.has_children) {
           return this.loadContentNodes({ parent: this.nodeId });

@@ -49,8 +49,8 @@ export function SET_TAGS(state, { id, tags }) {
   state.contentNodesMap[id].tags = tags;
 }
 
-export function TOGGLE_EXPANSION(state, id) {
-  if (state.expandedNodes[id]) {
+export function SET_EXPANSION(state, { id, expanded }) {
+  if (!expanded) {
     Vue.delete(state.expandedNodes, id);
   } else {
     state.expandedNodes[id] = true;
@@ -58,4 +58,8 @@ export function TOGGLE_EXPANSION(state, id) {
   if (window.sessionStorage) {
     window.sessionStorage.setItem('expandedNodes', JSON.stringify(state.expandedNodes));
   }
+}
+
+export function TOGGLE_EXPANSION(state, id) {
+  SET_EXPANSION(state, { id, expanded: !state.expandedNodes[id]});
 }

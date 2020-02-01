@@ -1,6 +1,6 @@
-import { ContentNode } from 'shared/data/resources';
 import difference from 'lodash/difference';
 import union from 'lodash/union';
+import { ContentNode } from 'shared/data/resources';
 
 export function loadContentNodes(context, params = {}) {
   return ContentNode.where(params).then(contentNodes => {
