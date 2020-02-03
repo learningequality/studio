@@ -5,10 +5,10 @@ from django.db.models.query import QuerySet
 
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
+from contentcuration.models import DEFAULT_CONTENT_DEFAULTS
 from contentcuration.viewsets.common import ContentDefaultsSerializer
 from contentcuration.viewsets.channel import ChannelSerializer as BaseChannelSerializer
 from contentcuration.serializers import ContentNodeSerializer
-from contentcuration.serializers import DEFAULT_CONTENT_DEFAULTS
 
 
 def ensure_no_querysets_in_serializer(object):
