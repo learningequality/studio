@@ -1,3 +1,4 @@
+import { NOVALUE } from 'shared/constants';
 import { ChannelSet } from 'shared/data/resources';
 
 /* CHANNEL SET ACTIONS */
@@ -42,19 +43,19 @@ export function createChannelSet(context) {
 
 export function updateChannelSet(
   context,
-  { id, name = null, description = null, channels = null } = {}
+  { id, name = NOVALUE, description = NOVALUE, channels = NOVALUE } = {}
 ) {
   const channelSetData = {};
   if (!id) {
     throw ReferenceError('id must be defined to update a channel');
   }
-  if (name !== null) {
+  if (name !== NOVALUE) {
     channelSetData.name = name;
   }
-  if (description !== null) {
+  if (description !== NOVALUE) {
     channelSetData.description = description;
   }
-  if (channels !== null) {
+  if (channels !== NOVALUE) {
     channelSetData.channels = channels;
   }
   context.commit('UPDATE_CHANNELSET', { id, ...channelSetData });

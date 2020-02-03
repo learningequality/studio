@@ -23,3 +23,8 @@ export const ContentDefaultsDefaults = {
   auto_derive_html5_thumbnail: true,
   auto_derive_video_thumbnail: true,
 };
+
+
+// This symbol is used in cases where we want to set a default value
+// for a symbol but have it be identifiable as a fill in.
+export const NOVALUE = Symbol('No value default');

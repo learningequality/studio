@@ -1,5 +1,6 @@
 import difference from 'lodash/difference';
 import union from 'lodash/union';
+import { NOVALUE } from 'shared/constants';
 import { ContentNode } from 'shared/data/resources';
 
 export function loadContentNodes(context, params = {}) {
@@ -38,69 +39,69 @@ export function createContentNode(context) {
 }
 
 function generateContentNodeData({
-  title = null,
-  description = null,
-  thumbnailData = null,
-  language = null,
-  license = null,
-  license_description = null,
-  copyright_holder = null,
-  author = null,
-  role_visibility = null,
-  aggregator = null,
-  provider = null,
-  extra_fields = null,
+  title = NOVALUE,
+  description = NOVALUE,
+  thumbnailData = NOVALUE,
+  language = NOVALUE,
+  license = NOVALUE,
+  license_description = NOVALUE,
+  copyright_holder = NOVALUE,
+  author = NOVALUE,
+  role_visibility = NOVALUE,
+  aggregator = NOVALUE,
+  provider = NOVALUE,
+  extra_fields = NOVALUE,
 } = {}) {
   const contentNodeData = {};
-  if (title !== null) {
+  if (title !== NOVALUE) {
     contentNodeData.title = title;
   }
-  if (description !== null) {
+  if (description !== NOVALUE) {
     contentNodeData.description = description;
   }
   if (
-    thumbnailData !== null &&
+    thumbnailData !== NOVALUE &&
     ['thumbnail', 'thumbnail_url', 'thumbnail_encoding'].every(attr => thumbnailData[attr])
   ) {
     contentNodeData.thumbnail = thumbnailData.thumbnail;
     contentNodeData.thumbnail_url = thumbnailData.thumbnail_url;
     contentNodeData.thumbnail_encoding = thumbnailData.thumbnail_encoding;
   }
-  if (language !== null) {
+  if (language !== NOVALUE) {
     contentNodeData.language = language;
   }
-  if (license !== null) {
+  if (license !== NOVALUE) {
     contentNodeData.license = license;
   }
-  if (license_description !== null) {
+  if (license_description !== NOVALUE) {
     contentNodeData.license_description = license_description;
   }
-  if (copyright_holder !== null) {
+  if (copyright_holder !== NOVALUE) {
     contentNodeData.copyright_holder = copyright_holder;
   }
-  if (author !== null) {
+  if (author !== NOVALUE) {
     contentNodeData.author = author;
   }
-  if (role_visibility !== null) {
+  if (role_visibility !== NOVALUE) {
     contentNodeData.role_visibility = role_visibility;
   }
-  if (aggregator !== null) {
+  if (aggregator !== NOVALUE) {
     contentNodeData.aggregator = aggregator;
   }
-  if (provider !== null) {
+  if (provider !== NOVALUE) {
     contentNodeData.provider = provider;
   }
-  if (extra_fields !== null) {
-    if (extra_fields.mastery_model !== null) {
+  if (extra_fields !== NOVALUE) {
+    if (extra_fields.mastery_model) {
       contentNodeData.extra_fields.mastery_model = extra_fields.mastery_model;
     }
-    if (extra_fields.m !== null) {
+    if (extra_fields.m) {
       contentNodeData.extra_fields.m = extra_fields.m;
     }
-    if (extra_fields.n !== null) {
+    if (extra_fields.n) {
       contentNodeData.extra_fields.n = extra_fields.n;
     }
-    if (extra_fields.randomize !== null) {
+    if (extra_fields.randomize) {
       contentNodeData.extra_fields.randomize = extra_fields.randomize;
     }
   }

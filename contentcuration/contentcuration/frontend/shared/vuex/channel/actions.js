@@ -1,4 +1,5 @@
 import pickBy from 'lodash/pickBy';
+import { NOVALUE } from 'shared/constants';
 import { Channel } from 'shared/data/resources';
 
 /* CHANNEL LIST ACTIONS */
@@ -56,35 +57,35 @@ export function updateChannel(
   context,
   {
     id,
-    name = null,
-    description = null,
-    thumbnailData = null,
-    language = null,
-    contentDefaults = null,
+    name = NOVALUE,
+    description = NOVALUE,
+    thumbnailData = NOVALUE,
+    language = NOVALUE,
+    contentDefaults = NOVALUE,
   } = {}
 ) {
   const channelData = {};
   if (!id) {
     throw ReferenceError('id must be defined to update a channel');
   }
-  if (name !== null) {
+  if (name !== NOVALUE) {
     channelData.name = name;
   }
-  if (description !== null) {
+  if (description !== NOVALUE) {
     channelData.description = description;
   }
   if (
-    thumbnailData !== null &&
+    thumbnailData !== NOVALUE &&
     ['thumbnail', 'thumbnail_url', 'thumbnail_encoding'].every(attr => thumbnailData[attr])
   ) {
     channelData.thumbnail = thumbnailData.thumbnail;
     channelData.thumbnail_url = thumbnailData.thumbnail_url;
     channelData.thumbnail_encoding = thumbnailData.thumbnail_encoding;
   }
-  if (language !== null) {
+  if (language !== NOVALUE) {
     channelData.language = language;
   }
-  if (contentDefaults !== null) {
+  if (contentDefaults !== NOVALUE) {
     const originalData = context.state.channelsMap[id].content_defaults;
     // Pick out only content defaults that have been changed.
     contentDefaults = pickBy(contentDefaults, (value, key) => value !== originalData[key]);
