@@ -292,6 +292,13 @@ export const Tree = new Resource({
   tableName: TABLE_NAMES.TREE,
   urlName: 'tree',
   indexFields: ['channel_id', 'parent', '[channel_id+parent]'],
+  // Any changes made to the tree table should only be propagated to the
+  // backend via moves, so that we can make local tree changes in the frontend
+  // and have them replicated in the backend on the global tree state.
+  syncable: false,
+  // ids have to exactly correlate with content node ids, so don't auto
+  // set uuids on this table.
+  uuid: false,
   move(id, target, position = 'first-child') {
     if (!validPositions.has(position)) {
       throw TypeError(`${position} is not a valid position`);
