@@ -166,7 +166,6 @@ describe('uploader', () => {
         wrapper.vm.handleFiles(testFiles);
         expect(addFile).toHaveBeenCalled();
         expect(uploadFileMock).toHaveBeenCalled();
-        expect(wrapper.emitted('uploading')).toHaveLength(1);
       });
     });
   });
