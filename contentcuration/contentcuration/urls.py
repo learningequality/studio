@@ -60,6 +60,7 @@ from contentcuration.viewsets.channel import ChannelViewSet
 from contentcuration.viewsets.channel import CatalogViewSet
 from contentcuration.viewsets.channelset import ChannelSetViewSet
 from contentcuration.viewsets.invitation import InvitationViewSet
+from contentcuration.viewsets.tree import TreeViewSet
 from contentcuration.viewsets.sync import sync
 
 
@@ -204,10 +205,11 @@ router.register(r'contentkind', ContentKindViewSet)
 router.register(r'task', TaskViewSet)
 router.register(r'user', UserViewSet)
 router.register(r'invitation', InvitationViewSet)
+router.register(r'contentnode', ContentNodeViewSet)
+router.register(r'tree', TreeViewSet, base_name='tree')
 
 bulkrouter = BulkRouter(trailing_slash=False)
 bulkrouter.register(r'assessmentitem', AssessmentItemViewSet)
-bulkrouter.register(r'contentnode', ContentNodeViewSet)
 bulkrouter.register(r'file', FileViewSet)
 
 urlpatterns = [

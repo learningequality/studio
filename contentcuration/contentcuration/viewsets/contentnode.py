@@ -1,21 +1,16 @@
 import json
 
 from django.contrib.postgres.aggregates import ArrayAgg
-from django.db import transaction
 from django.db.models import Exists
 from django.db.models import IntegerField
 from django.db.models import F
 from django.db.models import OuterRef
-from django.db.models import Q
 from django.db.models import Subquery
-from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
 from le_utils.constants import content_kinds
 from le_utils.constants import roles
-from rest_framework.serializers import ModelSerializer
-from rest_framework.serializers import ValidationError
 
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
@@ -133,7 +128,6 @@ class ContentNodeViewSet(ValuesViewset):
         "role_visibility",
         "kind__kind",
         "language_id",
-        "lft",
         "license_id",
         "license_description",
         "copyright_holder",
@@ -141,7 +135,6 @@ class ContentNodeViewSet(ValuesViewset):
         "node_id",
         "original_source_node_id",
         "original_channel_id",
-        "parent",
         "total_count",
         "resource_count",
         "coach_count",
@@ -161,7 +154,6 @@ class ContentNodeViewSet(ValuesViewset):
         "kind": "kind__kind",
         "prerequisite": "prerequisite_ids",
         "assessment_items": "assessment_items_ids",
-        "sort_order": "lft",
         "thumbnail_src": retrieve_thumbail_src,
     }
 
@@ -202,37 +194,3 @@ class ContentNodeViewSet(ValuesViewset):
             assessment_items_ids=NotNullArrayAgg("assessment_items__id")
         )
         return queryset
-
-    def move(self, pk, *args, **kwargs):
-        contentnode = get_object_or_404(ContentNode, pk=pk)
-        target = kwargs.pop("target", None)
-        try:
-            if target is None:
-                raise ValidationError("A target content node must be specified")
-            try:
-                target = ContentNode.get(pk=target)
-            except ContentNode.DoesNotExist:
-                raise ValidationError(
-                    "Target content node: {} does not exist".format(target)
-                )
-            except ValueError:
-                raise ValidationError(
-                    "Invalid target content node specified: {}".format(target)
-                )
-            position = kwargs.pop("position", "first-child")
-            try:
-                with transaction.atomic():
-                    # Lock only MPTT columns for updates on this tree and the target tree
-                    # until the end of this transaction
-                    ContentNode.objects.select_for_update().order_by().filter(
-                        Q(tree_id=contentnode.tree_id) | Q(tree_id=target.tree_id)
-                    ).values("tree_id", "lft", "rght")
-                    contentnode.move_to(target, position)
-
-            except ValueError:
-                raise ValidationError(
-                    "Invalid position argument specified: {}".format(position)
-                )
-            return None
-        except ValidationError as e:
-            return str(e)
