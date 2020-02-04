@@ -169,7 +169,8 @@ class BulkListSerializer(ListSerializer):
                 )
             )
             raise TypeError(msg)
-        map(self.child.post_save_create, zip(created_objects, many_to_many_tuple))
+        for instance, many_to_many in zip(created_objects, many_to_many_tuple):
+            self.child.post_save_create(instance, many_to_many)
         return created_objects
 
 

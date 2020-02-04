@@ -211,7 +211,6 @@ class ChannelSerializer(BulkModelSerializer):
             "bookmark",
             "content_defaults",
         )
-        read_only_fields = ("id",)
         list_serializer_class = BulkListSerializer
         nested_writes = True
 

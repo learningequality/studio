@@ -82,7 +82,6 @@ class ContentNodeSerializer(BulkModelSerializer):
             "provider",
             "extra_fields",
         )
-        read_only_fields = ("id",)
         list_serializer_class = BulkListSerializer
 
 
