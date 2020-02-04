@@ -8,7 +8,7 @@
       </VFlex>
       <VFlex xs12>
         <VCard flat height="100%">
-          <Uploader allowMultiple @uploading="createNodesFromFiles">
+          <Uploader fill allowMultiple @uploading="createNodesFromFiles">
             <template #default="{openFileDialog}">
               <VLayout align-center fill-height>
                 <VCardText class="text-center align-center text-xs-center">

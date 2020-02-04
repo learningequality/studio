@@ -1,12 +1,14 @@
 <template>
 
   <div
-    style="height: 100%; width: 100%; border: 2px solid transparent;"
+    style="border: 2px solid transparent;"
     class="uploader"
-    :style="highlightDropzone ? {
-      backgroundColor: $vuetify.theme.primaryBackground,
-      borderColor: $vuetify.theme.primary
-    } : {borderColor:'transparent'}"
+    :style="{
+      backgroundColor: highlightDropzone? $vuetify.theme.primaryBackground : 'transparent',
+      borderColor: highlightDropzone? $vuetify.theme.primary : borderColor,
+      width: fill? '100%' : 'unset',
+      height: fill? '100%' : 'unset',
+    }"
     data-test="dropzone"
     @dragenter.prevent="enter"
     @dragover.prevent="over"
@@ -92,6 +94,14 @@
       allowDrop: {
         type: Boolean,
         default: true,
+      },
+      borderColor: {
+        type: String,
+        default: 'transparent',
+      },
+      fill: {
+        type: Boolean,
+        default: false,
       },
     },
     data() {
@@ -199,7 +209,6 @@
       },
       handleFiles(files) {
         if (!this.readonly) {
-          let newFiles = [];
           files = this.allowMultiple ? files : [files[0]];
           files = this.validateFiles(files);
 
@@ -212,7 +221,16 @@
           } else if (this.tooLargeFiles.length) {
             this.$refs.toolargefiles.prompt();
           }
-
+          this.handleUploads(files).then(newFiles => {
+            if (newFiles.length) {
+              this.$emit('uploading', newFiles);
+            }
+          });
+        }
+      },
+      handleUploads(files) {
+        return new Promise(resolve => {
+          let newFiles = [];
           [...files].forEach(uploadedFile => {
             let fileID = String(Math.random()).slice(2);
             this.addFile({ id: fileID, file: uploadedFile, preset: this.presetID });
@@ -227,10 +245,9 @@
                 this.setError(fileID, error);
               });
           });
-          if (newFiles.length) {
-            this.$emit('uploading', newFiles);
-          }
-        }
+
+          resolve(newFiles);
+        });
       },
     },
     $trs: {

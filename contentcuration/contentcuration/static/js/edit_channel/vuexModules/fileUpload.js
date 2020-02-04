@@ -48,7 +48,7 @@ const fileUploadsModule = {
   getters: {
     getFile(state) {
       return fileID => {
-        return _.findWhere(state.files, { id: fileID });
+        return state.files[fileID];
       };
     },
     getStatusMessage(state) {
@@ -79,9 +79,6 @@ const fileUploadsModule = {
         return { total: totalSize, uploaded: uploadedSize };
       };
     },
-    nextUpload(state) {
-      return _.findWhere(_.values(state.files), { progress: 0 });
-    },
   },
   mutations: {
     ADD_FILE(state, payload) {
@@ -92,14 +89,14 @@ const fileUploadsModule = {
 
       let preset;
       if (payload.preset) {
-        preset = _.findWhere(Constants.FormatPresets, { id: payload.preset });
+        preset = Constants.FormatPresets.find(p => p.id === payload.preset);
       } else {
-        preset = _.find(Constants.FormatPresets, ftype => {
-          return _.contains(ftype.allowed_formats, extension.toLowerCase()) && ftype.display;
+        preset = Constants.FormatPresets.find(ftype => {
+          return ftype.allowed_formats.includes(extension.toLowerCase()) && ftype.display;
         });
       }
 
-      state.files[fileID] = {
+      Vue.set(state.files, fileID, {
         id: fileID,
         previewSrc: null,
         progress: 0,
@@ -112,7 +109,7 @@ const fileUploadsModule = {
         original_filename: file.name,
         kind: preset && preset.kind_id,
         file_format: extension,
-      };
+      });
     },
     REMOVE_FILE(state, fileID) {
       Vue.delete(state.files, fileID);

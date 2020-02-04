@@ -1,6 +1,6 @@
 <template>
 
-  <Uploader @uploading="createNodesFromFiles">
+  <Uploader fill @uploading="createNodesFromFiles">
     <VList width="100%">
       <!-- Select all checkbox -->
       <VListTile @click="toggleSelectAll">

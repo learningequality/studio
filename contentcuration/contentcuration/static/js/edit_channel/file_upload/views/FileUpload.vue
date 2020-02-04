@@ -27,6 +27,7 @@
               hide-details
               :value="currentPreview && currentPreview.id"
               :label="$tr('filesHeader')"
+              class="subheading"
               @input="selectPreview"
             >
               <VList threeLine>
