@@ -11,6 +11,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
 from le_utils.constants import content_kinds
 from le_utils.constants import roles
+from rest_framework.serializers import PrimaryKeyRelatedField
 
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
@@ -64,6 +65,8 @@ class ContentNodeSerializer(BulkModelSerializer):
     This is a write only serializer - we leverage it to do create and update
     operations, but read operations are handled by the Viewset.
     """
+    files = PrimaryKeyRelatedField(many=True, queryset=File.objects.all())
+    prerequisite = PrimaryKeyRelatedField(many=True, queryset=ContentNode.objects.all())
 
     class Meta:
         model = ContentNode
@@ -71,6 +74,8 @@ class ContentNodeSerializer(BulkModelSerializer):
             "id",
             "title",
             "description",
+            "files",
+            "prerequisite",
             "kind",
             "language",
             "license",
