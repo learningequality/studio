@@ -21,10 +21,12 @@ export function getContentNodes(state) {
 
 export function getContentNodeChildren(state) {
   return function(contentNodeId) {
-    return sorted(
-      Object.values(state.contentNodesMap).filter(
-        contentNode => contentNode.parent === contentNodeId
-      )
+    return getContentNodes(state)(
+      sorted(
+        Object.values(state.treeNodesMap).filter(
+          contentNode => contentNode.parent === contentNodeId
+        )
+      ).map(node => node.id)
     );
   };
 }

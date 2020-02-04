@@ -96,6 +96,7 @@
     "node-vibrant": "^3.0.0",
     "offline-js": "^0.7.19",
     "promise-polyfill": "^6.0.2",
+    "qs": "^6.9.1",
     "summernote": "0.8.10",
     "to-markdown": "^3.0.3",
     "tui-editor": "^1.4.7",

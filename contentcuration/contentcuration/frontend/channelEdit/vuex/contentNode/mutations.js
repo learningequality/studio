@@ -1,22 +1,22 @@
 import Vue from 'vue';
 
-function mergeContentNode(contentNodesMap, contentNode) {
+function mergeNode(nodesMap, node) {
   return {
-    ...contentNodesMap,
-    [contentNode.id]: {
-      ...contentNodesMap[contentNode.id],
-      ...contentNode,
+    ...nodesMap,
+    [node.id]: {
+      ...nodesMap[node.id],
+      ...node,
     },
   };
 }
 
 export function ADD_CONTENTNODE(state, contentNode) {
-  state.contentNodesMap = mergeContentNode(state.contentNodesMap, contentNode);
+  state.contentNodesMap = mergeNode(state.contentNodesMap, contentNode);
 }
 
 export function ADD_CONTENTNODES(state, contentNodes = []) {
   state.contentNodesMap = contentNodes.reduce((contentNodesMap, contentNode) => {
-    return mergeContentNode(contentNodesMap, contentNode);
+    return mergeNode(contentNodesMap, contentNode);
   }, state.contentNodesMap);
 }
 
@@ -60,4 +60,28 @@ export function SET_EXPANSION(state, { id, expanded }) {
 
 export function TOGGLE_EXPANSION(state, id) {
   SET_EXPANSION(state, { id, expanded: !state.expandedNodes[id] });
+}
+
+export function ADD_TREENODE(state, treeNode) {
+  state.treeNodesMap = mergeNode(state.treeNodesMap, treeNode);
+}
+
+export function ADD_TREENODES(state, treeNodes = []) {
+  state.treeNodesMap = treeNodes.reduce((treeNodesMap, treeNode) => {
+    return mergeNode(treeNodesMap, treeNode);
+  }, state.treeNodesMap);
+}
+
+export function REMOVE_TREENODE(state, treeNodeId) {
+  Vue.delete(state.treeNodesMap, treeNodeId);
+}
+
+export function UPDATE_TREENODE(state, { id, ...payload } = {}) {
+  if (!id) {
+    throw ReferenceError('id must be defined to update a tree node');
+  }
+  state.treeNodesMap[id] = {
+    ...state.treeNodesMap[id],
+    ...payload,
+  };
 }

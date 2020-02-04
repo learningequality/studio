@@ -82,7 +82,9 @@ function stopChannelFetchListener() {
 }
 
 function isSyncableChange(change) {
-  return change.source !== FETCH_SOURCE && RESOURCES[change.table];
+  return (
+    change.source !== FETCH_SOURCE && RESOURCES[change.table] && RESOURCES[change.table].syncable
+  );
 }
 
 const commonFields = ['type', 'key', 'table', 'rev'];

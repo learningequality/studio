@@ -135,14 +135,17 @@
       }
     },
     methods: {
-      ...mapActions('contentNode', ['loadContentNodes', 'loadContentNode']),
+      ...mapActions('contentNode', ['loadChildren', 'loadContentNode']),
       ...mapMutations('contentNode', {
         toggleExpansion: 'TOGGLE_EXPANSION',
         setExpansion: 'SET_EXPANSION',
       }),
       getChildren() {
         if (this.node && this.node.has_children) {
-          return this.loadContentNodes({ parent: this.nodeId });
+          return this.loadChildren({
+            parent: this.nodeId,
+            channel_id: this.$store.state.currentChannel.currentChannelId,
+          });
         }
         return Promise.resolve();
       },

@@ -23,3 +23,10 @@ export const FETCH_SOURCE = 'FETCH_SOURCE';
 export const CHANGES_TABLE = '__changesForSyncing';
 
 export const MOVES_TABLE = '__movesForSyncing';
+
+export const MOVE_POSITIONS = {
+  FIRST_CHILD: 'first-child',
+  LAST_CHILD: 'last-child',
+  LEFT: 'left',
+  RIGHT: 'right',
+};

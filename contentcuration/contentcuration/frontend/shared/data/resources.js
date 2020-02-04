@@ -1,10 +1,18 @@
 import Dexie from 'dexie';
+import findIndex from 'lodash/findIndex';
 import matches from 'lodash/matches';
 import omit from 'lodash/omit';
 import pick from 'lodash/pick';
 import uuidv4 from 'uuid/v4';
 import channel from './broadcastChannel';
-import { CHANGE_TYPES, FETCH_SOURCE, MESSAGES, MOVES_TABLE, STATUS } from './constants';
+import {
+  CHANGE_TYPES,
+  FETCH_SOURCE,
+  MESSAGES,
+  MOVE_POSITIONS,
+  MOVES_TABLE,
+  STATUS,
+} from './constants';
 import db, { CLIENTID } from './db';
 import client from 'shared/client';
 
@@ -27,6 +35,7 @@ class Resource {
     idField = 'id',
     uuid = true,
     indexFields = [],
+    syncable = true,
     ...options
   } = {}) {
     this.tableName = tableName;
@@ -35,6 +44,7 @@ class Resource {
     this.uuid = uuid;
     this.schema = [`${uuid ? '' : '++'}${idField}`, ...indexFields].join(',');
     this.indexFields = [idField, ...indexFields];
+    this.syncable = syncable;
     RESOURCES[tableName] = this;
     // Allow instantiated resources to define their own custom properties and methods if needed
     // This is similar to how vue uses the options object to create a component definition
@@ -231,24 +241,13 @@ class Resource {
       return this.table.delete(id);
     });
   }
-
-  move(id, target, position = 'first-child') {
-    return this.transaction('rw', () => {
-      return db[MOVES_TABLE].put({
-        key: id,
-        target,
-        position,
-        table: this.tableName,
-        type: CHANGE_TYPES,
-      });
-    });
-  }
 }
 
 export const TABLE_NAMES = {
   CHANNEL: 'channel',
   CONTENTNODE: 'contentnode',
   CHANNELSET: 'channelset',
+  TREE: 'tree',
 };
 
 export const Channel = new Resource({
@@ -279,12 +278,121 @@ export const Channel = new Resource({
 export const ContentNode = new Resource({
   tableName: TABLE_NAMES.CONTENTNODE,
   urlName: 'contentnode',
-  indexFields: ['title', 'language', 'parent'],
+  indexFields: ['title', 'language'],
 });
 
 export const ChannelSet = new Resource({
   tableName: TABLE_NAMES.CHANNELSET,
   urlName: 'channelset',
+});
+
+const validPositions = new Set(Object.values(MOVE_POSITIONS));
+
+export const Tree = new Resource({
+  tableName: TABLE_NAMES.TREE,
+  urlName: 'tree',
+  indexFields: ['channel_id', 'parent', '[channel_id+parent]'],
+  move(id, target, position = 'first-child') {
+    if (!validPositions.has(position)) {
+      throw TypeError(`${position} is not a valid position`);
+    }
+    return this.transaction('rw', () => {
+      // This implements a 'parent local' algorithm
+      // to produce locally consistent node moves
+      let parentPromise;
+      if (position === MOVE_POSITIONS.FIRST_CHILD || position === MOVE_POSITIONS.LAST_CHILD) {
+        parentPromise = Promise.resolve(target);
+      } else {
+        parentPromise = this.table.get(target).then(node => {
+          if (node) {
+            return node.parent;
+          } else {
+            throw RangeError(`Target ${target} does not exist`);
+          }
+        });
+      }
+      return parentPromise.then(parent => {
+        return this.table
+          .where({ parent })
+          .sortBy('sort_order')
+          .then(nodes => {
+            // Check if this is a no-op
+            const targetNodeIndex = findIndex(nodes, { id: target });
+            if (
+              // We are trying to move it to the first child, and it is already the first child
+              // when sorted by sort_order
+              (position === MOVE_POSITIONS.FIRST_CHILD && nodes[0].id === id) ||
+              // We are trying to move it to the last child, and it is already the last child
+              // when sorted by sort_order
+              (position === MOVE_POSITIONS.LAST_CHILD && nodes.slice(-1)[0].id === id) ||
+              // We are trying to move it to the immediate left of the target node,
+              // but it is already to the immediate left of the target node.
+              (position === MOVE_POSITIONS.LEFT &&
+                targetNodeIndex > 0 &&
+                nodes[targetNodeIndex - 1].id === id) ||
+              // We are trying to move it to the immediate right of the target node,
+              // but it is already to the immediate right of the target node.
+              (position === MOVE_POSITIONS.RIGHT &&
+                targetNodeIndex < nodes.length - 2 &&
+                nodes[targetNodeIndex + 1].id === id)
+            ) {
+              return;
+            }
+            let sort_order;
+            if (position === MOVE_POSITIONS.FIRST_CHILD) {
+              // For first child, just halve the first child sort order.
+              sort_order = nodes[0].sort_order / 2;
+            } else if (position === MOVE_POSITIONS.LAST_CHILD) {
+              // For the last child, just add one to the final child sort order.
+              sort_order = nodes.slice(-1)[0].sort_order + 1;
+            } else if (position === MOVE_POSITIONS.LEFT) {
+              // For left insertion, either find the middle value between the node that would be to
+              // the left of the newly inserted node and the node that we are inserting to the
+              // left of.
+              // If the node we are inserting to the left of is already the leftmost node of this
+              // parent, then we fallback to the same calculation as a first child insert.
+              const leftSort = nodes[targetNodeIndex - 1]
+                ? nodes[targetNodeIndex - 1].sort_order
+                : 0;
+              sort_order = (leftSort + nodes[targetNodeIndex].sort_order) / 2;
+            } else if (position === MOVE_POSITIONS.RIGHT) {
+              // For right insertion, similarly to left insertion, we find the middle value between
+              // the node that will be to the right of the inserted node and the node we are
+              // inserting to the right of.
+              // If there is no node to the right, and the target node is already the rightmost node,
+              // we produce a sort order value that is the same as we would calculate for a last
+              // child insertion.
+              const rightSort = nodes[targetNodeIndex + 1]
+                ? nodes[targetNodeIndex + 1].sort_order
+                : nodes[targetNodeIndex].sort_order + 2;
+              sort_order = (nodes[targetNodeIndex].sort_order + rightSort) / 2;
+            }
+            return this.table
+              .update(id, { parent, sort_order })
+              .then(updated => {
+                if (updated) {
+                  // Update succeeded
+                  return;
+                }
+                // Update didn't succeed, this node probably doesn't exist, do a put instead, but need to add
+                // in other parent info.
+                return this.table.get(parent).then(parentNode => {
+                  this.table.put({ id, parent, sort_order, tree_id: parentNode.tree_id });
+                });
+              })
+              .then(() => {
+                db[MOVES_TABLE].put({
+                  key: id,
+                  target,
+                  position,
+                  table: this.tableName,
+                  type: CHANGE_TYPES.MOVED,
+                });
+              });
+          });
+      });
+    });
+  },
 });
 
 export default RESOURCES;

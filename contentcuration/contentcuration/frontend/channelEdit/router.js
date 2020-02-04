@@ -39,7 +39,13 @@ const router = new VueRouter({
           'channel/loadChannel',
           store.state.currentChannel.currentChannelId
         );
-        return channelPromise.then(() => next()).catch(() => {});
+        const treePromise = store.dispatch(
+          'contentNode/loadTree',
+          store.state.currentChannel.currentChannelId
+        );
+        return Promise.all([channelPromise, treePromise])
+          .then(() => next())
+          .catch(() => {});
       },
       children: [
         {

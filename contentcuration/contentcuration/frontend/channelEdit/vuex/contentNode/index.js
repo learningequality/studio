@@ -12,6 +12,7 @@ export default {
     }
     return {
       contentNodesMap: {},
+      treeNodesMap: {},
       expandedNodes,
     };
   },
@@ -23,6 +24,11 @@ export default {
       [CHANGE_TYPES.CREATED]: 'ADD_CONTENTNODE',
       [CHANGE_TYPES.UPDATED]: 'UPDATE_CONTENTNODE',
       [CHANGE_TYPES.DELETED]: 'REMOVE_CONTENTNODE',
+    },
+    [TABLE_NAMES.TREE]: {
+      [CHANGE_TYPES.CREATED]: 'ADD_TREENODE',
+      [CHANGE_TYPES.UPDATED]: 'UPDATE_TREENODE',
+      [CHANGE_TYPES.DELETED]: 'REMOVE_TREENODE',
     },
   },
 };

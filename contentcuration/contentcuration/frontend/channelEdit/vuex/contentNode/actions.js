@@ -1,7 +1,7 @@
 import difference from 'lodash/difference';
 import union from 'lodash/union';
 import { NOVALUE } from 'shared/constants';
-import { ContentNode } from 'shared/data/resources';
+import { ContentNode, Tree } from 'shared/data/resources';
 
 export function loadContentNodes(context, params = {}) {
   return ContentNode.where(params).then(contentNodes => {
@@ -19,6 +19,18 @@ export function loadContentNode(context, id) {
     .catch(() => {
       return;
     });
+}
+
+export function loadTree(context, channel_id) {
+  return Tree.where({ channel_id }).then(nodes => {
+    context.commit('ADD_TREENODES', nodes);
+  });
+}
+
+export function loadChildren(context, { parent, channel_id }) {
+  return Tree.where({ parent, channel_id }).then(nodes => {
+    return loadContentNodes(context, { ids: nodes.map(node => node.id) });
+  });
 }
 
 /* CONTENTNODE EDITOR ACTIONS */
