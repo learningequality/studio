@@ -1,6 +1,7 @@
 import difference from 'lodash/difference';
 import union from 'lodash/union';
 import { NOVALUE } from 'shared/constants';
+import { MOVE_POSITIONS } from 'shared/data/constants';
 import { ContentNode, Tree } from 'shared/data/resources';
 
 export function loadContentNodes(context, params = {}) {
@@ -34,19 +35,26 @@ export function loadChildren(context, { parent, channel_id }) {
 }
 
 /* CONTENTNODE EDITOR ACTIONS */
-export function createContentNode(context) {
+export function createContentNode(context, parent) {
   const session = context.rootState.session;
   const contentNodeData = {
     title: '',
     description: '',
+    kind: '',
+    files: [],
+    prerequisite: [],
     language: session.preferences ? session.preferences.language : session.currentLanguage,
+    ...context.rootGetters['currentChannel/currentChannel'].content_defaults,
   };
   return ContentNode.put(contentNodeData).then(id => {
-    context.commit('ADD_CONTENTNODE', {
-      id,
-      ...contentNodeData,
+    return Tree.move(id, parent, MOVE_POSITIONS.LAST_CHILD).then(treeNode => {
+      context.commit('ADD_CONTENTNODE', {
+        id,
+        ...contentNodeData,
+      });
+      context.commit('ADD_TREENODE', treeNode);
+      return id;
     });
-    return id;
   });
 }
 

@@ -296,7 +296,8 @@ export const Tree = new Resource({
     if (!validPositions.has(position)) {
       throw TypeError(`${position} is not a valid position`);
     }
-    return this.transaction('rw', () => {
+    return db.transaction('rw', this.tableName, MOVES_TABLE, () => {
+      Dexie.currentTransaction.source = CLIENTID;
       // This implements a 'parent local' algorithm
       // to produce locally consistent node moves
       let parentPromise;
@@ -359,25 +360,27 @@ export const Tree = new Resource({
               // For right insertion, similarly to left insertion, we find the middle value between
               // the node that will be to the right of the inserted node and the node we are
               // inserting to the right of.
-              // If there is no node to the right, and the target node is already the rightmost node,
-              // we produce a sort order value that is the same as we would calculate for a last
-              // child insertion.
+              // If there is no node to the right, and the target node is already the rightmost
+              // node, we produce a sort order value that is the same as we would calculate for a
+              // last child insertion.
               const rightSort = nodes[targetNodeIndex + 1]
                 ? nodes[targetNodeIndex + 1].sort_order
                 : nodes[targetNodeIndex].sort_order + 2;
               sort_order = (nodes[targetNodeIndex].sort_order + rightSort) / 2;
             }
+            let data = { parent, sort_order };
             return this.table
-              .update(id, { parent, sort_order })
+              .update(id, data)
               .then(updated => {
                 if (updated) {
                   // Update succeeded
-                  return;
+                  return { id, ...data };
                 }
-                // Update didn't succeed, this node probably doesn't exist, do a put instead, but need to add
-                // in other parent info.
+                // Update didn't succeed, this node probably doesn't exist, do a put instead,
+                // but need to add in other parent info.
                 return this.table.get(parent).then(parentNode => {
-                  this.table.put({ id, parent, sort_order, tree_id: parentNode.tree_id });
+                  data = { id, parent, sort_order, tree_id: parentNode.tree_id };
+                  return this.table.put(data);
                 });
               })
               .then(() => {
@@ -388,6 +391,7 @@ export const Tree = new Resource({
                   table: this.tableName,
                   type: CHANGE_TYPES.MOVED,
                 });
+                return data;
               });
           });
       });
