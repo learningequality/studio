@@ -22,7 +22,7 @@ export function loadChannelSet(context, id) {
 
 export function deleteChannelSet(context, channelSetId) {
   return ChannelSet.delete(channelSetId).then(() => {
-    context.commit('REMOVE_CHANNELSET', channelSetId);
+    context.commit('REMOVE_CHANNELSET', { id: channelSetId });
   });
 }
 

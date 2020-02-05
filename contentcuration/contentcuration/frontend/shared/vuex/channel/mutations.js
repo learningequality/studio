@@ -29,7 +29,7 @@ export function UPDATE_CHANNEL(state, { id, content_defaults = {}, ...payload } 
     ...payload,
     // Assign all acceptable content defaults into the channel defaults
     content_defaults: Object.assign(
-      state.channelsMap[id].content_defaults,
+      state.channelsMap[id].content_defaults || {},
       pick(content_defaults, Object.keys(ContentDefaults))
     ),
   };

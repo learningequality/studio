@@ -34,7 +34,7 @@ const publicChannel = {
   published: true,
 };
 
-store.commit('channelList/ADD_CHANNELS', [editChannel, editChannel2, publicChannel]);
+store.commit('channel/ADD_CHANNELS', [editChannel, editChannel2, publicChannel]);
 store.commit('channelSet/ADD_CHANNELSET', channelSet);
 
 function makeWrapper() {

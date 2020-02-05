@@ -5,12 +5,13 @@ import store from '../../../store';
 import router from '../../../router';
 import { RouterNames, ListTypes } from '../../../constants';
 import ChannelModal from '../ChannelModal.vue';
+import { Channel } from 'shared/data/resources';
 
 Vue.use(VueRouter);
 
-const channelId = 'testing';
+const channelId = '11111111111111111111111111111111';
 
-function makeWrapper(saveStub, closeStub) {
+function makeWrapper(closeStub) {
   router.push({
     name: RouterNames.CHANNEL_EDIT,
     params: {
@@ -26,7 +27,6 @@ function makeWrapper(saveStub, closeStub) {
     },
   });
   wrapper.setMethods({
-    save: saveStub,
     close: closeStub,
   });
   return wrapper;
@@ -34,19 +34,15 @@ function makeWrapper(saveStub, closeStub) {
 
 describe('channelModal', () => {
   let wrapper;
-  let saveStub = jest.fn();
-  let closeStub = jest.fn();
+  let closeStub;
   beforeEach(() => {
-    saveStub.mockReset();
-    closeStub.mockReset();
-    wrapper = makeWrapper(saveStub, closeStub);
+    return Channel.put({ name: 'test', deleted: false, edit: true, id: channelId, content_defaults: {} }).then(() => {
+      closeStub = jest.fn();
+      wrapper = makeWrapper(closeStub);
+    });
   });
   it('clicking close should close the modal', () => {
     wrapper.find('[data-test="close"]').trigger('click');
     expect(closeStub).toHaveBeenCalled();
-  });
-  it('clicking save button should save and close the modal', () => {
-    wrapper.find('[data-test="save"]').trigger('click');
-    expect(saveStub).toHaveBeenCalled();
   });
 });

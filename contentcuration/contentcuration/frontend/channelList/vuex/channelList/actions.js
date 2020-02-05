@@ -34,7 +34,7 @@ export function acceptInvitation(context, invitationId) {
     .delete(window.Urls.invitation_detail(invitationId), { params: { accepted: true } })
     .then(() => {
       context.commit('ACCEPT_INVITATION', invitationId);
-      return context.dispatch('loadChannel', invitation.channel_id);
+      return context.dispatch('channel/loadChannel', invitation.channel_id, { root: true });
     });
 }
 

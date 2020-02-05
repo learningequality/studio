@@ -1,24 +1,22 @@
-import Vue from 'vue';
 import { mount } from '@vue/test-utils';
-import VueRouter from 'vue-router';
 import store from '../../../store';
 import router from '../../../router';
 import { RouterNames } from '../../../constants';
 import ChannelSetItem from '../ChannelSetItem.vue';
 
-Vue.use(VueRouter);
 const channelSet = {
   id: 'testing',
   channels: [],
   secret_token: '1234567890',
 };
+store.commit('channelSet/ADD_CHANNELSET', channelSet);
 
 function makeWrapper(deleteStub) {
   const wrapper = mount(ChannelSetItem, {
     router,
     store,
     sync: false,
-    propsData: { channelSet },
+    propsData: { channelSetId: channelSet.id },
   });
   wrapper.setMethods({
     deleteChannelSet: deleteStub,

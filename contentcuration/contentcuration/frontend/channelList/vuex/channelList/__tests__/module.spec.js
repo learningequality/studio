@@ -1,5 +1,6 @@
 import channelList from '../index';
 import client from 'shared/client';
+import { Channel } from 'shared/data/resources';
 import storeFactory from 'shared/vuex/baseStore';
 
 jest.mock('shared/client');
@@ -45,6 +46,15 @@ describe('invitation actions', () => {
     });
   });
   describe('acceptInvitation action', () => {
+    const channel_id = '11111111111111111111111111111111';
+    const invitations = [{ id, channel_id }];
+    const channel = { id: channel_id, name: 'test', deleted: false, edit: true };
+    beforeEach(() => {
+      return Channel.put(channel);
+    });
+    afterEach(() => {
+      return Channel.table.toCollection().delete();
+    });
     it('should call client.delete', () => {
       const channel_id = '11111111111111111111111111111111';
       const invitations = [{ id, channel_id }];
@@ -56,15 +66,9 @@ describe('invitation actions', () => {
       });
     });
     it('should load and set the invited channel', () => {
-      const channel_id = '11111111111111111111111111111111';
-      const invitations = [{ id, channel_id }];
       store.commit('channelList/SET_INVITATION_LIST', invitations);
-      const channel = { id: channel_id, name: 'test' };
-      client.__setResponse('get', {
-        data: channel,
-      });
       return store.dispatch('channelList/acceptInvitation', id).then(() => {
-        expect(store.getters['channelList/getChannel'](channel_id)).toEqual(channel);
+        expect(store.getters['channel/getChannel'](channel_id)).toEqual(channel);
       });
     });
     it('should set the invitation to accepted', () => {
@@ -91,7 +95,7 @@ describe('invitation actions', () => {
       const invitations = [{ id, channel_id }];
       store.commit('channelList/SET_INVITATION_LIST', invitations);
       return store.dispatch('channelList/declineInvitation', id).then(() => {
-        expect(store.getters['channelList/getChannel'](channel_id)).toBeUndefined();
+        expect(store.getters['channel/getChannel'](channel_id)).toBeUndefined();
       });
     });
     it('should set the invitation to declined', () => {

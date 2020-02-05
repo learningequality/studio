@@ -64,37 +64,39 @@ export function updateChannel(
     contentDefaults = NOVALUE,
   } = {}
 ) {
-  const channelData = {};
-  if (!id) {
-    throw ReferenceError('id must be defined to update a channel');
-  }
-  if (name !== NOVALUE) {
-    channelData.name = name;
-  }
-  if (description !== NOVALUE) {
-    channelData.description = description;
-  }
-  if (
-    thumbnailData !== NOVALUE &&
-    ['thumbnail', 'thumbnail_url', 'thumbnail_encoding'].every(attr => thumbnailData[attr])
-  ) {
-    channelData.thumbnail = thumbnailData.thumbnail;
-    channelData.thumbnail_url = thumbnailData.thumbnail_url;
-    channelData.thumbnail_encoding = thumbnailData.thumbnail_encoding;
-  }
-  if (language !== NOVALUE) {
-    channelData.language = language;
-  }
-  if (contentDefaults !== NOVALUE) {
-    const originalData = context.state.channelsMap[id].content_defaults;
-    // Pick out only content defaults that have been changed.
-    contentDefaults = pickBy(contentDefaults, (value, key) => value !== originalData[key]);
-    if (Object.keys(contentDefaults).length) {
-      channelData.content_defaults = contentDefaults;
+  if (context.state.channelsMap[id]) {
+    const channelData = {};
+    if (!id) {
+      throw ReferenceError('id must be defined to update a channel');
     }
+    if (name !== NOVALUE) {
+      channelData.name = name;
+    }
+    if (description !== NOVALUE) {
+      channelData.description = description;
+    }
+    if (
+      thumbnailData !== NOVALUE &&
+      ['thumbnail', 'thumbnail_url', 'thumbnail_encoding'].every(attr => thumbnailData[attr])
+    ) {
+      channelData.thumbnail = thumbnailData.thumbnail;
+      channelData.thumbnail_url = thumbnailData.thumbnail_url;
+      channelData.thumbnail_encoding = thumbnailData.thumbnail_encoding;
+    }
+    if (language !== NOVALUE) {
+      channelData.language = language;
+    }
+    if (contentDefaults !== NOVALUE) {
+      const originalData = context.state.channelsMap[id].content_defaults;
+      // Pick out only content defaults that have been changed.
+      contentDefaults = pickBy(contentDefaults, (value, key) => value !== originalData[key]);
+      if (Object.keys(contentDefaults).length) {
+        channelData.content_defaults = contentDefaults;
+      }
+    }
+    context.commit('UPDATE_CHANNEL', { id, ...channelData });
+    return Channel.update(id, channelData);
   }
-  context.commit('UPDATE_CHANNEL', { id, ...channelData });
-  return Channel.update(id, channelData);
 }
 
 export function bookmarkChannel(context, { id, bookmark }) {
