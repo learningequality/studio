@@ -26,7 +26,6 @@ from rest_framework import routers
 from rest_framework import viewsets
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework_bulk.generics import BulkModelViewSet
-from rest_framework_bulk.routes import BulkRouter
 
 import contentcuration.serializers as serializers
 import contentcuration.views.admin as admin_views
@@ -44,7 +43,6 @@ from contentcuration.celery import app
 from contentcuration.forms import ForgotPasswordForm
 from contentcuration.forms import LoginForm
 from contentcuration.forms import ResetPasswordForm
-from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
 from contentcuration.models import ContentKind
 from contentcuration.models import ContentTag
@@ -55,6 +53,7 @@ from contentcuration.models import Language
 from contentcuration.models import License
 from contentcuration.models import Task
 from contentcuration.models import User
+from contentcuration.viewsets.assessmentitem import AssessmentItemViewSet
 from contentcuration.viewsets.contentnode import ContentNodeViewSet
 from contentcuration.viewsets.channel import ChannelViewSet
 from contentcuration.viewsets.channel import CatalogViewSet
@@ -135,18 +134,6 @@ class UserViewSet(viewsets.ModelViewSet):
                                    Q(view_only_channels__pk__in=channel_list)).distinct()
 
 
-class AssessmentItemViewSet(BulkModelViewSet):
-    queryset = AssessmentItem.objects.all()
-
-    serializer_class = serializers.AssessmentItemSerializer
-
-    def get_queryset(self):
-        if self.request.user.is_admin:
-            return AssessmentItem.objects.all()
-        tree_ids = get_channel_tree_ids(self.request.user)
-        return AssessmentItem.objects.select_related('contentnode').filter(contentnode__tree_id__in=tree_ids).distinct()
-
-
 class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.all()
     serializer_class = serializers.TaskSerializer
@@ -206,17 +193,14 @@ router.register(r'task', TaskViewSet)
 router.register(r'user', UserViewSet)
 router.register(r'invitation', InvitationViewSet)
 router.register(r'contentnode', ContentNodeViewSet)
+router.register(r'assessmentitem', AssessmentItemViewSet)
 router.register(r'tree', TreeViewSet, base_name='tree')
 
-bulkrouter = BulkRouter(trailing_slash=False)
-bulkrouter.register(r'assessmentitem', AssessmentItemViewSet)
-bulkrouter.register(r'file', FileViewSet)
 
 urlpatterns = [
     url(r'^$', views.base, name='base'),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^api/', include(router.urls)),
-    url(r'^api/', include(bulkrouter.urls)),
     url(r'^api/publish_channel/$', views.publish_channel, name='publish_channel'),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^channels/$', views.channel_list, name='channels'),

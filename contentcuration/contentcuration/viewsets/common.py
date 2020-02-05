@@ -1,6 +1,14 @@
+from django.contrib.postgres.aggregates import ArrayAgg
 from rest_framework import serializers
 from contentcuration.models import DEFAULT_CONTENT_DEFAULTS
 from contentcuration.models import License
+
+
+class NotNullArrayAgg(ArrayAgg):
+    def convert_value(self, value, expression, connection, context):
+        if not value:
+            return []
+        return filter(lambda x: x is not None, value)
 
 
 class ContentDefaultsSerializer(serializers.Serializer):

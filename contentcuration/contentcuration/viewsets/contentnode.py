@@ -1,6 +1,5 @@
 import json
 
-from django.contrib.postgres.aggregates import ArrayAgg
 from django.db.models import Exists
 from django.db.models import IntegerField
 from django.db.models import F
@@ -20,13 +19,7 @@ from contentcuration.models import generate_storage_url
 from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import BulkListSerializer
-
-
-class NotNullArrayAgg(ArrayAgg):
-    def convert_value(self, value, expression, connection, context):
-        if not value:
-            return []
-        return filter(lambda x: x is not None, value)
+from contentcuration.viewsets.common import NotNullArrayAgg
 
 
 class ContentNodeFilter(FilterSet):
