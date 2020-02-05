@@ -1,25 +1,18 @@
 import Vue from 'vue';
 import pick from 'lodash/pick';
 import { ContentDefaults } from 'shared/constants';
+import { mergeMapItem } from 'shared/vuex/utils';
 
 /* CHANNEL LIST MUTATIONS */
-function mergeChannel(channelsMap, channel) {
-  return {
-    ...channelsMap,
-    [channel.id]: {
-      ...channelsMap[channel.id],
-      ...channel,
-    },
-  };
-}
+
 
 export function ADD_CHANNEL(state, channel) {
-  state.channelsMap = mergeChannel(state.channelsMap, channel);
+  state.channelsMap = mergeMapItem(state.channelsMap, channel);
 }
 
 export function ADD_CHANNELS(state, channels = []) {
   state.channelsMap = channels.reduce((channelsMap, channel) => {
-    return mergeChannel(channelsMap, channel);
+    return mergeMapItem(channelsMap, channel);
   }, state.channelsMap);
 }
 

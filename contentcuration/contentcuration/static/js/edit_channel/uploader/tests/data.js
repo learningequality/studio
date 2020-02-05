@@ -1,12 +1,7 @@
-import _ from 'underscore';
-import Vue from 'vue';
+import find from 'lodash/find';
 import Constants from 'edit_channel/constants';
-
-const Vuex = require('vuex');
-var mutations = require('edit_channel/uploader/vuex/mutations');
-var getters = require('edit_channel/uploader/vuex/getters');
-
-Vue.use(Vuex);
+import contentNode from 'frontend/channelEdit/vuex/contentNode';
+import storeFactory from 'shared/vuex/baseStore';
 
 export const editableFields = [
   'language',
@@ -21,10 +16,10 @@ export const editableFields = [
   'provider',
 ];
 
-let specialPermissions = _.findWhere(Constants.Licenses, { is_custom: true });
+let specialPermissions = find(Constants.Licenses, { is_custom: true });
 export function generateNode(props = {}) {
   let data = {};
-  _.each(editableFields, f => {
+  editableFields.forEach(f => {
     data[f] = Math.random()
       .toString(36)
       .substring(7);
@@ -68,31 +63,8 @@ export const mockFunctions = {
   loadNodes: jest.fn(),
 };
 
-export const localStore = new Vuex.Store({
+export const localStore = storeFactory({
   modules: {
-    edit_modal: {
-      namespaced: true,
-      state: {
-        nodes: [],
-        validation: [],
-        selectedIndices: [],
-        changes: {},
-        mode: 'VIEW_ONLY',
-      },
-      getters: getters,
-      mutations: mutations,
-      actions: {
-        loadNodes: context => {
-          _.each(context.state.selectedIndices, i => {
-            context.state.nodes[i]['_COMPLETE'] = true;
-          });
-          context.commit('SET_CHANGES');
-          mockFunctions.loadNodes();
-        },
-        saveNodes: mockFunctions.saveNodes,
-        removeNode: mockFunctions.removeNode,
-        copyNodes: mockFunctions.copyNodes,
-      },
-    },
+    contentNode,
   },
 });

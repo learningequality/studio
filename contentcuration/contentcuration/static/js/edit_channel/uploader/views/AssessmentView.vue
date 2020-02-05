@@ -52,7 +52,7 @@
 
 <script>
 
-  import { mapState, mapGetters, mapMutations } from 'vuex';
+  import { mapGetters, mapActions } from 'vuex';
 
   import AssessmentEditor from '../components/AssessmentEditor/AssessmentEditor.vue';
   import DialogBox from '../components/DialogBox/DialogBox.vue';
@@ -63,39 +63,48 @@
       AssessmentEditor,
       DialogBox,
     },
-    computed: {
-      ...mapState('edit_modal', ['selectedIndices', 'dialog']),
-      ...mapGetters('edit_modal', [
-        'nodeAssessmentItems',
-        'nodeErrors',
-        'areNodeAssessmentItemsValid',
-        'invalidNodeAssessmentItemsCount',
-      ]),
-      // assessment view is accessible only when exactly one exercise node is selected
-      nodeIdx() {
-        return this.selectedIndices[0];
+    data() {
+      return {
+        dialog: {
+          open: false,
+          title: null,
+          message: null,
+          onCancel: null,
+          cancelLabel: null,
+          onSubmit: null,
+          submitLabel: null,
+        }
+      };
+    },
+    props: {
+      nodeId: {
+        type: String,
+        required: true,
       },
+    },
+    computed: {
+      ...mapGetters('assessmentItem', [
+        'getNodeAssessmentItems',
+        'getNodeAssessmentItemErrors',
+        'areNodeAssessmentItemsValid',
+        'getInvalidNodeAssessmentItemsCount',
+      ]),
       assessmentItems: {
         get() {
-          return this.nodeAssessmentItems(this.nodeIdx);
+          return this.getNodeAssessmentItems(this.nodeId);
         },
         set(value) {
-          this.setNodeAssessmentItems({ nodeIdx: this.nodeIdx, assessmentItems: value });
-          this.validateNodeAssessmentItems({ nodeIdx: this.nodeIdx });
+          this.updateAssessmentItems(value);
         },
       },
-      assessmentItemsValidation() {
-        if (!this.nodeErrors(this.nodeIdx) || !this.nodeErrors(this.nodeIdx).assessment_items) {
-          return [];
-        }
-
-        return this.nodeErrors(this.nodeIdx).assessment_items;
-      },
       areAssessmentItemsValid() {
-        return this.areNodeAssessmentItemsValid(this.nodeIdx);
+        return this.areNodeAssessmentItemsValid(this.nodeId);
+      },
+      assessmentItemsValidation() {
+        return this.getNodeAssessmentItemErrors(this.nodeId);
       },
       invalidItemsErrorMessage() {
-        const invalidItemsCount = this.invalidNodeAssessmentItemsCount(this.nodeIdx);
+        const invalidItemsCount = this.getInvalidNodeAssessmentItemsCount(this.nodeId);
 
         if (!invalidItemsCount) {
           return '';
@@ -110,11 +119,25 @@
       },
     },
     methods: {
-      ...mapMutations('edit_modal', {
-        openDialog: 'OPEN_DIALOG',
-        setNodeAssessmentItems: 'SET_NODE_ASSESSMENT_ITEMS',
-        validateNodeAssessmentItems: 'VALIDATE_NODE_ASSESSMENT_ITEMS',
-      }),
+      ...mapActions('assessmentItem', ['updateAssessmentItems']),
+      openDialog({
+         title = null,
+         message = null,
+         cancelLabel = null,
+         submitLabel = null,
+         onCancel = null,
+         onSubmit = null,
+       } = {}) {
+        Object.assign(this.dialog, {
+          title,
+          message,
+          cancelLabel,
+          submitLabel,
+          onCancel,
+          onSubmit,
+        });
+        this.dialog.open = true;
+      },
     },
     $trs: {
       incompleteItemsCountMessage:

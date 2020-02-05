@@ -1,4 +1,7 @@
 import translator from './translator';
+import { AssessmentItemTypes } from 'frontend/channelEdit/constants';
+
+export { AssessmentItemTypes, ValidationErrors } from 'frontend/channelEdit/constants';
 
 export const TabNames = {
   DETAILS: 'DETAILS',
@@ -15,17 +18,6 @@ export const modes = {
   VIEW_ONLY: 'VIEW_ONLY',
 };
 
-export const ValidationErrors = {
-  TITLE_REQUIRED: 'TITLE_REQUIRED',
-  LICENCE_REQUIRED: 'LICENCE_REQUIRED',
-  COPYRIGHT_HOLDER_REQUIRED: 'COPYRIGHT_HOLDER_REQUIRED',
-  LICENCE_DESCRIPTION_REQUIRED: 'LICENCE_DESCRIPTION_REQUIRED',
-  MASTERY_MODEL_REQUIRED: 'MASTERY_MODEL_REQUIRED',
-  MASTERY_MODEL_INVALID: 'MASTERY_MODEL_INVALID',
-  QUESTION_REQUIRED: 'QUESTION_REQUIRED',
-  INVALID_NUMBER_OF_CORRECT_ANSWERS: 'INVALID_NUMBER_OF_CORRECT_ANSWERS',
-};
-
 export const AssessmentItemToolbarActions = {
   EDIT_ITEM: 'EDIT_ITEM',
   MOVE_ITEM_UP: 'MOVE_ITEM_UP',
@@ -33,14 +25,6 @@ export const AssessmentItemToolbarActions = {
   DELETE_ITEM: 'DELETE_ITEM',
   ADD_ITEM_ABOVE: 'ADD_ITEM_ABOVE',
   ADD_ITEM_BELOW: 'ADD_ITEM_BELOW',
-};
-
-// should correspond to backend types
-export const AssessmentItemTypes = {
-  SINGLE_SELECTION: 'single_selection',
-  MULTIPLE_SELECTION: 'multiple_selection',
-  TRUE_FALSE: 'true_false',
-  INPUT_QUESTION: 'input_question',
 };
 
 export const AssessmentItemTypeLabels = {

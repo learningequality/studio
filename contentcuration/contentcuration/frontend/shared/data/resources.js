@@ -226,7 +226,7 @@ class Resource {
   }
 
   put(obj) {
-    if (this.uuid) {
+    if (this.uuid && !obj[this.idField]) {
       obj[this.idField] = uuid4();
     }
     return this.transaction('rw', () => {
@@ -248,6 +248,7 @@ export const TABLE_NAMES = {
   CONTENTNODE: 'contentnode',
   CHANNELSET: 'channelset',
   TREE: 'tree',
+  ASSESSMENTITEM: 'assessmentitem',
 };
 
 export const Channel = new Resource({
@@ -284,6 +285,13 @@ export const ContentNode = new Resource({
 export const ChannelSet = new Resource({
   tableName: TABLE_NAMES.CHANNELSET,
   urlName: 'channelset',
+});
+
+export const AssessmentItem = new Resource({
+  tableName: TABLE_NAMES.ASSESSMENTITEM,
+  urlName: 'assessmentitem',
+  idField: 'assessment_id',
+  indexFields: ['contentnode'],
 });
 
 const validPositions = new Set(Object.values(MOVE_POSITIONS));

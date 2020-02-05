@@ -16,8 +16,8 @@ export function ADD_CHANNELSET(state, channelSet) {
   };
 }
 
-export function REMOVE_CHANNELSET(state, channelSetId) {
-  Vue.delete(state.channelSetsMap, channelSetId);
+export function REMOVE_CHANNELSET(state, channelSet) {
+  Vue.delete(state.channelSetsMap, channelSet.id);
 }
 
 export function UPDATE_CHANNELSET(state, { id, ...payload }) {
