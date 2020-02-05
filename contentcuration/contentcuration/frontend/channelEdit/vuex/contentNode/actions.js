@@ -167,6 +167,9 @@ export function removeTags(context, { ids, tags }) {
 
 export function deleteContentNode(context, contentNodeId) {
   return ContentNode.delete(contentNodeId).then(() => {
-    context.commit('REMOVE_CONTENTNODE', contentNodeId);
+    return Tree.delete(contentNodeId).then(() => {
+      context.commit('REMOVE_CONTENTNODE', { id: contentNodeId });
+      context.commit('REMOVE_TREENODE', { id: contentNodeId });
+    });
   });
 }

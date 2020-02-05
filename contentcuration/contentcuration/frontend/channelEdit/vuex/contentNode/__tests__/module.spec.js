@@ -1,6 +1,9 @@
 import contentNode from '../index';
-import { ContentNode } from 'shared/data/resources';
+import currentChannel from '../../currentChannel/index';
+import { ContentNode, Tree } from 'shared/data/resources';
 import storeFactory from 'shared/vuex/baseStore';
+
+jest.mock('../../currentChannel/index');
 
 const userId = 'testId';
 
@@ -13,13 +16,16 @@ describe('contentNode actions', () => {
   beforeEach(() => {
     return ContentNode.put(contentNodeDatum).then(newId => {
       id = newId;
-      return ContentNode.put({ title: 'notatest', parent: newId }).then(() => {
-        store = storeFactory({
-          modules: {
-            contentNode,
-          },
+      return ContentNode.put({ title: 'notatest', parent: newId }).then(childId => {
+        return Tree.table.bulkPut([{ id: childId, parent: newId, sort_order: 2 }, { id: newId, parent: null, sort_order: 1 }]).then(() => {
+          store = storeFactory({
+            modules: {
+              contentNode,
+              currentChannel,
+            },
+          });
+          store.state.session.currentUser.id = userId;
         });
-        store.state.session.currentUser.id = userId;
       });
     });
   });
@@ -63,8 +69,8 @@ describe('contentNode actions', () => {
   });
   describe('createContentNode action for a new contentNode', () => {
     it('should add a new contentNode with an id', () => {
-      return store.dispatch('contentNode/createContentNode').then(id => {
-        expect(store.getters['contentNode/getContentNode'](id)).not.toBeUndefined();
+      return store.dispatch('contentNode/createContentNode', id).then(newId => {
+        expect(store.getters['contentNode/getContentNode'](newId)).not.toBeUndefined();
       });
     });
   });
