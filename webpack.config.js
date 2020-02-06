@@ -5,7 +5,7 @@ const webpack = require('webpack');
 
 const BundleTracker = require('webpack-bundle-tracker');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
-const CircularDependencyPlugin = require('circular-dependency-plugin')
+const CircularDependencyPlugin = require('circular-dependency-plugin');
 
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
@@ -71,8 +71,7 @@ module.exports = (env = {}) => {
       ],
       administration: ['./administration.js'],
       settings: ['./settings.js'],
-      // A simple code sandbox to play with components in
-      sandbox: ['./sandbox.js'],
+      pdfJSWorker: ['pdfjs-dist/build/pdf.worker.entry.js'],
     },
     output: {
       filename: '[name]-[hash].js',
@@ -217,7 +216,7 @@ module.exports = (env = {}) => {
         allowAsyncCycles: false,
         // set the current working directory for displaying module paths
         cwd: process.cwd(),
-      })
+      }),
     ],
     // new in webpack 4. Specifies the default bundle type
     mode: 'development',
