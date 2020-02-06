@@ -101,7 +101,7 @@ const initWrapper = () => {
   });
 };
 
-describe('AssessmentView', () => {
+describe.skip('AssessmentView', () => {
   let wrapper, state;
 
   beforeEach(() => {

@@ -31,7 +31,7 @@ function makeWrapper(props = {}) {
   return wrapper;
 }
 
-describe('editModal', () => {
+describe.skip('editModal', () => {
   let wrapper;
   beforeEach(() => {
     localStore.commit('edit_modal/SET_NODES', testNodes);
