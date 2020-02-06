@@ -446,7 +446,10 @@ export function ADD_NODES_FROM_FILES(state, newFiles) {
 export function ADD_FILE_TO_NODE(state, payload) {
   if (payload.file) {
     state.nodes[payload.index].files = _.reject(state.nodes[payload.index].files, f => {
-      return f.preset.id === payload.file.preset.id;
+      return (
+        f.preset.id === payload.file.preset.id &&
+        (!payload.file.preset.multi_language || payload.file.language.id === f.language.id)
+      );
     });
     state.nodes[payload.index].files.push(payload.file);
     state.nodes[payload.index].changesStaged = true;
