@@ -5,7 +5,6 @@ import { mergeMapItem } from 'shared/vuex/utils';
 
 /* CHANNEL LIST MUTATIONS */
 
-
 export function ADD_CHANNEL(state, channel) {
   state.channelsMap = mergeMapItem(state.channelsMap, channel);
 }

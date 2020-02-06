@@ -8,7 +8,6 @@ import {
 } from '../utils';
 
 describe('utils', () => {
-
   describe('sanitizeAssessmentItemAnswers', () => {
     it('trims answers', () => {
       const answers = [

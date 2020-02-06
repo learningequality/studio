@@ -17,15 +17,20 @@ describe('contentNode actions', () => {
     return ContentNode.put(contentNodeDatum).then(newId => {
       id = newId;
       return ContentNode.put({ title: 'notatest', parent: newId }).then(childId => {
-        return Tree.table.bulkPut([{ id: childId, parent: newId, sort_order: 2 }, { id: newId, parent: null, sort_order: 1 }]).then(() => {
-          store = storeFactory({
-            modules: {
-              contentNode,
-              currentChannel,
-            },
+        return Tree.table
+          .bulkPut([
+            { id: childId, parent: newId, sort_order: 2 },
+            { id: newId, parent: null, sort_order: 1 },
+          ])
+          .then(() => {
+            store = storeFactory({
+              modules: {
+                contentNode,
+                currentChannel,
+              },
+            });
+            store.state.session.currentUser.id = userId;
           });
-          store.state.session.currentUser.id = userId;
-        });
       });
     });
   });

@@ -70,9 +70,17 @@
     computed: {
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodeIsValid']),
       ...mapGetters('currentChannel', ['canEdit']),
+      /* eslint-disable kolibri/vue-no-unused-properties */
       isViewOnly() {
         return !this.canEdit;
       },
+      invalidNodeCount() {
+        return this.detailNodeIds.reduce(
+          (invalid, detailNodeId) => invalid + Number(!this.getContentNodeIsValid(detailNodeId)),
+          0
+        );
+      },
+      /* eslint-enable */
       multipleNodes() {
         // Only hide drawer when editing a single item
         return this.nodes.length > 1;
@@ -85,12 +93,6 @@
       },
       nodes() {
         return this.detailNodeIds.map(detailNodeId => this.getContentNode(detailNodeId));
-      },
-      invalidNodeCount() {
-        return this.detailNodeIds.reduce(
-          (invalid, detailNodeId) => invalid + Number(!this.getContentNodeIsValid(detailNodeId)),
-          0
-        );
       },
       modalTitle() {
         return this.$tr(modes.EDIT);
@@ -128,7 +130,6 @@
       [modes.NEW_TOPIC]: 'Adding Topics',
       [modes.NEW_EXERCISE]: 'Adding Exercises',
       [modes.UPLOAD]: 'Uploading Files',
-      /* eslint-enable */
       savingIndicator: 'Saving...',
       unsavedChanges: 'Save your changes?',
       unsavedChangesText: "Your changes will be lost if you don't save them",
@@ -144,6 +145,7 @@
         'Autosave paused ({count, plural,\n =1 {# error}\n other {# errors}} detected)',
       topicDefaultTitle: '{parent} Topic',
       exerciseDefaultTitle: '{parent} Exercise',
+      /* eslint-enable */
     },
   };
 

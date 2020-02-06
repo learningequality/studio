@@ -1,9 +1,7 @@
 import each from 'jest-each';
 
 import { ValidationErrors } from '../../../constants';
-import {
-  validateNodeDetails,
-} from '../utils';
+import { validateNodeDetails } from '../utils';
 
 describe('utils', () => {
   describe('validateNodeDetails', () => {

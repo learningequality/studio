@@ -97,7 +97,6 @@ export const sanitizeAssessmentItem = (assessmentItem, removeEmpty = false) => {
   };
 };
 
-
 /**
  * Validate an assessment item.
  * @param {Object} assessmentItem An assessment item.
@@ -140,8 +139,6 @@ export const validateAssessmentItem = assessmentItem => {
   return errors;
 };
 
-
-
 /**
  * Sanitize assessment items
  * - sanitize each assessment item
@@ -168,4 +165,3 @@ export const sanitizeAssessmentItems = assessmentItems => {
       };
     });
 };
-

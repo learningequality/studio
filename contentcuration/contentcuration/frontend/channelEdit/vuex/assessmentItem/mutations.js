@@ -8,7 +8,11 @@ export function ADD_ASSESSMENTITEM(state, assessmentItem) {
   if (!assessmentItem.contentnode) {
     throw ReferenceError('contentnode must be defined to update an assessment item');
   }
-  state.assessmentItemsMap[assessmentItem.contentnode] = mergeMapItem(state.assessmentItemsMap[assessmentItem.contentnode] || {}, assessmentItem, 'assessment_id');
+  state.assessmentItemsMap[assessmentItem.contentnode] = mergeMapItem(
+    state.assessmentItemsMap[assessmentItem.contentnode] || {},
+    assessmentItem,
+    'assessment_id'
+  );
 }
 
 export function ADD_ASSESSMENTITEMS(state, assessmentItems = []) {

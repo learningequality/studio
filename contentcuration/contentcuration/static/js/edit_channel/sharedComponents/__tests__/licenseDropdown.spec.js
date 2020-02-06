@@ -107,7 +107,9 @@ describe('licenseDropdown', () => {
       expect(wrapper.emitted('input')).toBeFalsy();
       wrapper.find('textarea').setValue('test license description');
       expect(wrapper.emitted('input')).toBeTruthy();
-      expect(wrapper.emitted('input')[0][0].license_description).toEqual('test license description');
+      expect(wrapper.emitted('input')[0][0].license_description).toEqual(
+        'test license description'
+      );
     });
   });
   describe('validation', () => {

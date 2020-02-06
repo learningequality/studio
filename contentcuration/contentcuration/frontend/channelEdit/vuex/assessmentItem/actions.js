@@ -27,7 +27,11 @@ export function updateAssessmentItems(context, assessmentItems) {
   // Keep all assessment items in vuex state
   context.commit('ADD_ASSESSMENTITEMS', assessmentItems);
   // Only commit assessment items that pass sanitization
-  return Promise.all(sanitizeAssessmentItems(assessmentItems).map(assessmentItem => AssessmentItem.put(assessmentItem)));
+  return Promise.all(
+    sanitizeAssessmentItems(assessmentItems).map(assessmentItem =>
+      AssessmentItem.put(assessmentItem)
+    )
+  );
 }
 
 export function deleteAssessmentItem(context, assesmentItemId) {

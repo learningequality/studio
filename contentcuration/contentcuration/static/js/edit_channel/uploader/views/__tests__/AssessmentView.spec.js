@@ -93,7 +93,7 @@ const initWrapper = () => {
     modules: {
       assessmentItem,
       contentNode,
-    }
+    },
   });
 
   return mount(AssessmentView, {

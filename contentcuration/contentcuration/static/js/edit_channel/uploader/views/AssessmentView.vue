@@ -63,6 +63,12 @@
       AssessmentEditor,
       DialogBox,
     },
+    props: {
+      nodeId: {
+        type: String,
+        required: true,
+      },
+    },
     data() {
       return {
         dialog: {
@@ -73,14 +79,8 @@
           cancelLabel: null,
           onSubmit: null,
           submitLabel: null,
-        }
+        },
       };
-    },
-    props: {
-      nodeId: {
-        type: String,
-        required: true,
-      },
     },
     computed: {
       ...mapGetters('assessmentItem', [
@@ -121,13 +121,13 @@
     methods: {
       ...mapActions('assessmentItem', ['updateAssessmentItems']),
       openDialog({
-         title = null,
-         message = null,
-         cancelLabel = null,
-         submitLabel = null,
-         onCancel = null,
-         onSubmit = null,
-       } = {}) {
+        title = null,
+        message = null,
+        cancelLabel = null,
+        submitLabel = null,
+        onCancel = null,
+        onSubmit = null,
+      } = {}) {
         Object.assign(this.dialog, {
           title,
           message,

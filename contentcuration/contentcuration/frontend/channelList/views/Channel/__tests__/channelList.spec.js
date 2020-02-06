@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils';
-import flushPromises from 'flush-promises'
+import flushPromises from 'flush-promises';
 import store from '../../../store';
 import router from '../../../router';
 import { RouterNames, ListTypes } from '../../../constants';

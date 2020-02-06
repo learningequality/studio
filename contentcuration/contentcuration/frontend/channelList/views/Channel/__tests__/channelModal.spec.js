@@ -36,7 +36,13 @@ describe('channelModal', () => {
   let wrapper;
   let closeStub;
   beforeEach(() => {
-    return Channel.put({ name: 'test', deleted: false, edit: true, id: channelId, content_defaults: {} }).then(() => {
+    return Channel.put({
+      name: 'test',
+      deleted: false,
+      edit: true,
+      id: channelId,
+      content_defaults: {},
+    }).then(() => {
       closeStub = jest.fn();
       wrapper = makeWrapper(closeStub);
     });
