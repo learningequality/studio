@@ -208,6 +208,7 @@
         return files;
       },
       handleFiles(files) {
+        let newFiles = [];
         if (!this.readonly) {
           files = this.allowMultiple ? files : [files[0]];
           files = this.validateFiles(files);
@@ -221,16 +222,7 @@
           } else if (this.tooLargeFiles.length) {
             this.$refs.toolargefiles.prompt();
           }
-          this.handleUploads(files).then(newFiles => {
-            if (newFiles.length) {
-              this.$emit('uploading', newFiles);
-            }
-          });
-        }
-      },
-      handleUploads(files) {
-        return new Promise(resolve => {
-          let newFiles = [];
+
           [...files].forEach(uploadedFile => {
             let fileID = String(Math.random()).slice(2);
             this.addFile({ id: fileID, file: uploadedFile, preset: this.presetID });
@@ -245,9 +237,11 @@
                 this.setError(fileID, error);
               });
           });
-
-          resolve(newFiles);
-        });
+          if (newFiles.length) {
+            this.$emit('uploading', newFiles);
+          }
+        }
+        return newFiles;
       },
     },
     $trs: {
