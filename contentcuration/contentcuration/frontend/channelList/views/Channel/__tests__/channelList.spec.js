@@ -13,7 +13,7 @@ function makeWrapper(listType, newChannelStub) {
     },
     methods: {
       newChannel: newChannelStub,
-    }
+    },
   });
 }
 
