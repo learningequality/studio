@@ -15,13 +15,14 @@
             clear
           </VIcon>
         </VBtn>
-        <VToolbarTitle v-if="isNewChannel">
-          {{ $tr('newChannelHeader') }}
+        <VToolbarTitle>
+          <template v-if="!name">
+            {{ $tr('untitledChannelHeader') }}
+          </template>
+          <template v-else>
+            {{ name }}
+          </template>
         </VToolbarTitle>
-        <VSpacer />
-        <VBtn flat data-test="save" @click="save">
-          {{ isNewChannel ? $tr('create') : $tr('save') }}
-        </VBtn>
       </VToolbar>
       <VProgressLinear
         v-if="loading"
@@ -80,8 +81,7 @@
 
 <script>
 
-  import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
-  import { isTempId } from '../../utils';
+  import { mapActions, mapGetters, mapState } from 'vuex';
   import { RouterNames } from '../../constants';
   import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown';
   import ContentDefaults from 'shared/views/form/ContentDefaults';
@@ -99,13 +99,12 @@
     },
     data() {
       return {
-        saving: false,
         loading: false,
       };
     },
     computed: {
       ...mapState(['currentLanguage']),
-      ...mapGetters('channelList', ['getChannel']),
+      ...mapGetters('channel', ['getChannel']),
       channel() {
         return this.getChannel(this.channelId) || {};
       },
@@ -140,12 +139,9 @@
         get() {
           return this.channel.content_defaults || {};
         },
-        set(content_defaults) {
-          this.updateChannel({ id: this.channelId, content_defaults });
+        set(contentDefaults) {
+          this.updateChannel({ id: this.channelId, contentDefaults });
         },
-      },
-      isNewChannel() {
-        return isTempId(this.channelId);
       },
     },
     watch: {
@@ -175,10 +171,7 @@
       this.$refs.dialog.hideScroll();
     },
     methods: {
-      ...mapActions('channelList', ['saveChannel', 'loadChannel']),
-      ...mapMutations('channelList', {
-        updateChannel: 'UPDATE_CHANNEL',
-      }),
+      ...mapActions('channel', ['updateChannel', 'loadChannel']),
       hideHTMLScroll(hidden) {
         document.querySelector('html').style = hidden
           ? 'overflow-y: hidden !important;'
@@ -211,24 +204,13 @@
           params: { listType: this.$route.params.listType },
         });
       },
-      save() {
-        if (this.$refs.detailsform.validate()) {
-          this.saving = true;
-          return this.saveChannel(this.channelId).then(() => {
-            this.close();
-            this.saving = false;
-          });
-        }
-      },
     },
     $trs: {
-      newChannelHeader: 'New channel',
+      untitledChannelHeader: 'Untitled channel',
       details: 'Channel details',
       channelName: 'Channel name',
       channelError: 'Channel name cannot be blank',
       channelDescription: 'Channel description',
-      save: 'Save changes',
-      create: 'Create',
     },
   };
 

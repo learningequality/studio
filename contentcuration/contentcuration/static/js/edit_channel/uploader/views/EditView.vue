@@ -2,24 +2,9 @@
 
   <VContent>
     <VContainer fluid fill-height>
-      <VLayout v-if="!selected.length" justify-center align-center fill-height>
+      <VLayout v-if="!nodeIds.length" justify-center align-center fill-height>
         <VFlex grow class="default-content">
           {{ noItemText }}
-        </VFlex>
-      </VLayout>
-      <VLayout v-else-if="loadError" justify-center align-center fill-height>
-        <VFlex grow class="default-content">
-          <VIcon color="red" class="error-icon">
-            error
-          </VIcon>
-          <p>{{ $tr('loadErrorText') }}</p>
-        </VFlex>
-      </VLayout>
-      <VLayout v-else-if="!allLoaded" justify-center align-center fill-height>
-        <VFlex grow class="default-content">
-          <VProgressCircular :indeterminate="true" size="50" color="primary" />
-          <br><br>
-          <p>{{ $tr('loadingText') }}</p>
         </VFlex>
       </VLayout>
       <VLayout v-else justify-center>
@@ -66,21 +51,21 @@
               :href="`#${tabs.PREREQUISITES}`"
             >
               {{ $tr(tabs.PREREQUISITES) }}
-              <VChip v-if="oneSelected.prerequisite.length" color="gray" dark>
-                {{ oneSelected.prerequisite.length }}
+              <VChip v-if="firstNode.prerequisite.length" color="gray" dark>
+                {{ firstNode.prerequisite.length }}
               </VChip>
             </VTab>
           </VTabs>
 
           <VTabsItems v-model="currentTab">
             <VTabItem :key="tabs.DETAILS" ref="detailswindow" :value="tabs.DETAILS" lazy>
-              <VAlert :value="selected.length > 1" type="info" outline>
+              <VAlert :value="nodeIds.length > 1" type="info" outline>
                 {{ countText }}
               </VAlert>
               <VAlert :value="invalidSelected" type="error" outline icon="error">
                 {{ $tr('errorBannerText') }}
               </VAlert>
-              <DetailsTabView :viewOnly="viewOnly" />
+              <DetailsTabView :viewOnly="viewOnly" :nodeIds="nodeIds" />
             </VTabItem>
             <VTabItem :key="tabs.PREVIEW" ref="previewwindow" :value="tabs.PREVIEW" lazy>
               Preview
@@ -106,9 +91,8 @@
 
 <script>
 
-  import _ from 'underscore';
-  import { mapActions, mapGetters, mapState } from 'vuex';
-  import { TabNames, modes } from '../constants';
+  import { mapGetters } from 'vuex';
+  import { TabNames } from '../constants';
   import DetailsTabView from './DetailsTabView.vue';
   import AssessmentView from './AssessmentView.vue';
 
@@ -123,32 +107,34 @@
         type: Boolean,
         default: false,
       },
+      nodeIds: {
+        type: Array,
+        default: () => [],
+      },
     },
     data() {
       return {
         currentTab: null,
-        loadError: false,
-        loadNodesDebounced: _.debounce(() => {
-          this.loadError = false;
-          this.loadNodes(this.selectedIndices).catch(() => (this.loadError = true));
-        }, 1000),
       };
     },
     computed: {
-      ...mapGetters('edit_modal', [
-        'selected',
-        'allExercises',
-        'allResources',
-        'isNodeNew',
-        'areNodeDetailsValid',
-        'areNodeAssessmentItemsValid',
-        'nodeAssessmentItemsCount',
-      ]),
-      ...mapState('edit_modal', ['nodes', 'selectedIndices', 'mode']),
+      ...mapGetters('contentNode', ['getContentNodes', 'getContentNodeIsValid']),
+      ...mapGetters('currentChannel', ['canEdit']),
+      firstNode() {
+        return this.nodes.length ? this.nodes[0] : null;
+      },
+      nodes() {
+        return this.getContentNodes(this.nodeIds);
+      },
       noItemText() {
         if (!this.nodes.length) {
-          if (this.mode === modes.NEW_EXERCISE) return this.$tr('addExerciseText');
-          else if (this.mode === modes.NEW_TOPIC) return this.$tr('addTopicText');
+          /* eslint-disable no-constant-condition */
+          if (true) {
+            return this.$tr('addExerciseText');
+          } else if (false) {
+            return this.$tr('addTopicText');
+          }
+          /* eslint-enable */
         }
         return this.viewOnly ? this.$tr('noItemsToViewText') : this.$tr('noItemsToEditText');
       },
@@ -156,51 +142,36 @@
         return TabNames;
       },
       viewOnly() {
-        return this.mode === modes.VIEW_ONLY;
+        return !this.canEdit;
       },
       oneSelected() {
-        return this.selected.length === 1 && this.selected[0];
+        return this.nodeIds.length === 1;
       },
       showPreviewTab() {
-        return this.oneSelected && this.oneSelected.files.length;
+        return this.oneSelected && this.firstNode && this.firstNode.files.length;
       },
       showQuestionsTab() {
-        return this.oneSelected && this.allExercises;
+        return this.oneSelected && this.firstNode && this.firstNode.kind === 'exercise';
       },
       showPrerequisitesTab() {
-        return this.oneSelected && !this.isClipboard && this.allResources;
-      },
-      allLoaded() {
-        return _.all(this.selected, '_COMPLETE');
-      },
-      invalidSelected() {
         return (
-          !this.viewOnly &&
-          this.selectedIndices.some(
-            nodeIdx => !this.isNodeNew(nodeIdx) && !this.areNodeDetailsValid(nodeIdx)
-          )
+          this.oneSelected && !this.isClipboard && this.firstNode && this.firstNode.kind !== 'topic'
         );
       },
+      invalidSelected() {
+        return !this.viewOnly && this.nodeIds.some(nodeId => !this.getContentNodeIsValid(nodeId));
+      },
       countText() {
-        let messageArgs = { count: this.selected.length };
+        let messageArgs = { count: this.nodeIds.length };
         if (this.viewOnly) return this.$tr('viewingMultipleCount', messageArgs);
         return this.$tr('editingMultipleCount', messageArgs);
       },
       areAssessmentItemsValid() {
-        return this.areNodeAssessmentItemsValid(this.selectedIndices[0]);
+        return true;
       },
       assessmentItemsCount() {
-        return this.nodeAssessmentItemsCount(this.selectedIndices[0]);
+        return 0;
       },
-    },
-    watch: {
-      selectedIndices() {
-        this.currentTab = TabNames.DETAILS;
-        this.loadNodesDebounced();
-      },
-    },
-    methods: {
-      ...mapActions('edit_modal', ['loadNodes']),
     },
     $trs: {
       [TabNames.DETAILS]: 'Details',
@@ -211,8 +182,6 @@
       noItemsToViewText: 'Please select an item or items to view',
       addTopicText: 'Please add a topic to get started',
       addExerciseText: 'Please add an exercise to get started',
-      loadingText: 'Loading Content...',
-      loadErrorText: 'Unable to load content',
       invalidFieldsToolTip: 'Invalid fields detected',
       errorBannerText: 'Please address invalid fields',
       editingMultipleCount: 'Editing details for {count, plural,\n =1 {# item}\n other {# items}}',

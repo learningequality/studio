@@ -60,19 +60,19 @@ module.exports = (env = {}) => {
     },
   };
   return {
-    context: bundleEntryDir,
+    context: srcDir,
     entry: {
       // Use arrays for every entry to allow for hot reloading.
       channel_edit: [
-        path.resolve(djangoProjectDir, 'contentcuration', 'frontend/channelEdit/index.js'),
+        './channelEdit/index.js',
       ],
       channel_list: [
-        path.resolve(djangoProjectDir, 'contentcuration', 'frontend/channelList/index.js'),
+        './channelList/index.js',
       ],
-      administration: ['./administration.js'],
-      settings: ['./settings.js'],
+      administration: [path.resolve(bundleEntryDir, 'administration.js')],
+      settings: [path.resolve(bundleEntryDir, 'settings.js')],
       // A simple code sandbox to play with components in
-      sandbox: ['./sandbox.js'],
+      sandbox: [path.resolve(bundleEntryDir, 'sandbox.js')],
     },
     output: {
       filename: '[name]-[hash].js',
@@ -174,6 +174,7 @@ module.exports = (env = {}) => {
         less: path.resolve(staticJsDir, 'less'),
         utils: path.resolve(staticJsDir, 'utils'),
         shared: path.resolve(srcDir, 'shared'),
+        frontend: srcDir,
         jquery: studioJqueryDir,
         // TODO just use modules alias
         rawJquery: jqueryDir,

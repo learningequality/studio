@@ -15,6 +15,7 @@ export default {
   currentLanguage: Constants.Languages.find(
     l => l.id && l.id.toLowerCase() === (window.languageCode || 'en')
   ),
+  currentChannelId: window.channel_id || null,
   mutations: {
     SET_CURRENT_USER(state, currentUser) {
       state.currentUser = {

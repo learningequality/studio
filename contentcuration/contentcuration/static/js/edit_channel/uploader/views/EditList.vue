@@ -2,94 +2,105 @@
 
   <VList>
     <!-- Select all checkbox -->
-    <VListTile class="select-all-wrapper" @click="toggleSelectAll">
-      <VListTileAction>
-        <VCheckbox color="primary" :inputValue="selectAllChecked" @click.stop="toggleSelectAll" />
-      </VListTileAction>
-      <VListTileContent>
-        <VListTileTitle>{{ $tr('selectAllLabel') }}</VListTileTitle>
-      </VListTileContent>
-    </VListTile>
+    <VCheckbox v-model="selectAll" color="primary">
+      <template #label>
+        <VListTile class="select-all-wrapper">
+          <VListTileContent>
+            <VListTileTitle>{{ $tr('selectAllLabel') }}</VListTileTitle>
+          </VListTileContent>
+        </VListTile>
+      </template>
+    </VCheckbox>
     <VDivider />
 
-    <!-- Selected items -->
-    <EditListItem
-      v-for="(node, index) in nodes"
-      :key="node.id"
-      :index="index"
-      :removable="allowAddTopic || allowAddExercise"
-    />
+    <VCheckbox
+      v-for="nodeId in nodeIds"
+      :key="nodeId"
+      v-model="selected"
+      :class="{selected: isSelected}"
+      color="primary"
+      :value="nodeId"
+    >
+      <template #label>
+        <VListTile>
+          <VListTileAction />
+          <VListTileAction v-if="node.changesStaged" class="changed">
+            *
+          </VListTileAction>
+          <VListTileAvatar>
+            <ContentNodeIcon :kind="node.kind" />
+          </VListTileAvatar>
+          <VListTileContent>
+            <VListTileTitle>
+              {{ node.title }}
+            </VListTileTitle>
+          </VListTileContent>
+          <VSpacer />
+          <VListTileAction v-if="!nodeIsValid">
+            <VIcon color="red" class="error-icon">
+              error
+            </VIcon>
+          </VListTileAction>
+          <VListTileAction v-if="canEdit">
+            <VBtn icon small flat class="remove-item" @click.stop="removeNode(index)">
+              <VIcon>clear</VIcon>
+            </VBtn>
+          </VListTileAction>
+        </VListTile>
+      </template>
+    </VCheckbox>
 
-    <!-- Create button -->
-    <VListTile v-if="allowAddTopic || allowAddExercise" class="add-item-wrapper">
-      <VListTileContent>
-        <VBtn
-          block
-          depressed
-          color="primary"
-          dark
-          @click="$emit('addNode')"
-        >
-          {{ addButtonText }}
-        </VBtn>
-      </VListTileContent>
-    </VListTile>
   </VList>
 
 </template>
 
 <script>
 
-  import { mapMutations, mapState } from 'vuex';
-  import { modes } from '../constants';
-  import EditListItem from './EditListItem.vue';
+  import { mapGetters } from 'vuex';
 
   export default {
     name: 'EditList',
-    components: {
-      EditListItem,
-    },
-    data() {
-      return {
-        selectAllChecked: false,
-      };
+    props: {
+      value: {
+        type: Array,
+        default: () => [],
+      },
+      nodeIds: {
+        type: Array,
+        default: () => [],
+      },
     },
     computed: {
-      ...mapState('edit_modal', ['nodes', 'mode']),
-      allowAddTopic() {
-        return this.mode === modes.NEW_TOPIC;
+      ...mapGetters('currentChannel', ['canEdit']),
+      selected: {
+        get() {
+          return this.value;
+        },
+        set(items) {
+          this.$emit('input', items);
+        },
       },
-      allowAddExercise() {
-        return this.mode === modes.NEW_EXERCISE;
-      },
-      addButtonText() {
-        if (this.allowAddTopic) return this.$tr('addTopic');
-        else if (this.allowAddExercise) return this.$tr('addExercise');
-        return null;
-      },
-    },
-    methods: {
-      ...mapMutations('edit_modal', {
-        selectAll: 'SELECT_ALL_NODES',
-        deselectAll: 'RESET_SELECTED',
-      }),
-      toggleSelectAll() {
-        this.selectAllChecked ? this.deselectAll() : this.selectAll();
-        this.selectAllChecked = !this.selectAllChecked;
+      selectAll: {
+        get() {
+          return this.nodeIds.every(nodeId => this.selected.includes(nodeId));
+        },
+        set(value) {
+          if (value) {
+            this.selected = this.nodeIds;
+          } else {
+            this.selected = [];
+          }
+        },
       },
     },
     $trs: {
       selectAllLabel: 'Select All',
-      addTopic: 'Add Topic',
-      addExercise: 'Add Exercise',
     },
   };
 
 </script>
 
 <style lang="less" scoped>
-
-  @import '../../../../less/global-variables.less';
 
   .v-divider {
     margin-top: 0;
@@ -98,6 +109,10 @@
   .add-item-wrapper {
     padding-bottom: 50px;
     margin-top: 20px;
+  }
+
+  .selected {
+    background-color: #eeeeee;
   }
 
 </style>

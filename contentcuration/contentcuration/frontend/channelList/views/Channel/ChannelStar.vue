@@ -44,7 +44,7 @@
       },
     },
     methods: {
-      ...mapActions('channelList', ['bookmarkChannel']),
+      ...mapActions('channel', ['bookmarkChannel']),
       toggleStar() {
         this.bookmarkChannel({ id: this.channelId, bookmark: !this.bookmark });
       },

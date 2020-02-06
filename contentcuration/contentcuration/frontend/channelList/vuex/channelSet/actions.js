@@ -1,21 +1,17 @@
-import { isTempId } from '../../utils';
-import { channelSetLastSavedState } from './utils';
-import client from 'shared/client';
+import { NOVALUE } from 'shared/constants';
+import { ChannelSet } from 'shared/data/resources';
 
 /* CHANNEL SET ACTIONS */
 export function loadChannelSetList(context) {
-  return client.get(window.Urls['channelset-list']()).then(response => {
-    const channelSets = response.data;
+  return ChannelSet.where().then(channelSets => {
     context.commit('SET_CHANNELSET_LIST', channelSets);
     return channelSets;
   });
 }
 
 export function loadChannelSet(context, id) {
-  return client
-    .get(window.Urls['channelset-detail'](id))
-    .then(response => {
-      const channelSet = response.data;
+  return ChannelSet.get(id)
+    .then(channelSet => {
       context.commit('SET_CHANNELSET_LIST', [channelSet]);
       return channelSet;
     })
@@ -25,40 +21,43 @@ export function loadChannelSet(context, id) {
 }
 
 export function deleteChannelSet(context, channelSetId) {
-  return client.delete(window.Urls['channelset-detail'](channelSetId)).then(() => {
-    context.commit('REMOVE_CHANNELSET', channelSetId);
+  return ChannelSet.delete(channelSetId).then(() => {
+    context.commit('REMOVE_CHANNELSET', { id: channelSetId });
   });
 }
 
-export function saveChannelSet(context, channelSetId) {
-  if (context.getters.getChannelSetIsValid(channelSetId)) {
-    const channelSetData = channelSetLastSavedState.getUnsavedChanges(
-      context.getters.getChannelSet(channelSetId)
-    );
-    if (Object.keys(channelSetData).length) {
-      if (isTempId(channelSetId)) {
-        if (!channelSetData.editors || channelSetData.editors.length === 0) {
-          channelSetData.editors = [context.rootGetters.currentUserId];
-        }
-        delete channelSetData.id;
-        return client.post(window.Urls['channelset-list'](), channelSetData).then(response => {
-          const channelSet = response.data;
-          context.commit('ADD_CHANNELSET', channelSet);
-          context.commit('REMOVE_CHANNELSET', channelSetId);
-          return channelSet.id;
-        });
-      }
+export function createChannelSet(context) {
+  const channelSetData = {
+    name: '',
+    description: '',
+    channels: [],
+  };
+  return ChannelSet.put(channelSetData).then(id => {
+    context.commit('ADD_CHANNELSET', {
+      id,
+      ...channelSetData,
+    });
+    return id;
+  });
+}
 
-      return client
-        .patch(window.Urls['channelset-detail'](channelSetId), channelSetData)
-        .then(response => {
-          if (response.data) {
-            channelSetLastSavedState.storeLastSavedState(
-              context.getters.getChannelSet(channelSetId)
-            );
-          }
-          return null;
-        });
-    }
+export function updateChannelSet(
+  context,
+  { id, name = NOVALUE, description = NOVALUE, channels = NOVALUE } = {}
+) {
+  const channelSetData = {};
+  if (!id) {
+    throw ReferenceError('id must be defined to update a channel');
   }
+  if (name !== NOVALUE) {
+    channelSetData.name = name;
+  }
+  if (description !== NOVALUE) {
+    channelSetData.description = description;
+  }
+  if (channels !== NOVALUE) {
+    channelSetData.channels = channels;
+  }
+  context.commit('UPDATE_CHANNELSET', { id, ...channelSetData });
+  return ChannelSet.update(id, channelSetData);
 }

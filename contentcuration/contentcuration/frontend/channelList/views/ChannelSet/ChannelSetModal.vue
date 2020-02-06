@@ -20,21 +20,6 @@
             <VToolbarTitle>
               {{ headerText }}
             </VToolbarTitle>
-            <VSpacer />
-            <VProgressCircular
-              v-show="saving"
-              indeterminate
-            />
-            <span v-show="error">
-              {{ $tr('errorText') }}
-            </span>
-            <VBtn
-              flat
-              data-test="save"
-              @click="saveAndClose"
-            >
-              {{ saveButtonLabel }}
-            </VBtn>
           </VToolbar>
           <VContainer>
             <VLayout row justify-center>
@@ -153,9 +138,8 @@
 
 <script>
 
-  import { mapGetters, mapActions, mapMutations, mapState } from 'vuex';
+  import { mapGetters, mapActions } from 'vuex';
   import reject from 'lodash/reject';
-  import { isTempId } from '../../utils';
   import { RouterNames, ListTypes } from '../../constants';
   import SelectedChannelItem from './SelectedChannelItem';
   import ChannelSelectionList from './ChannelSelectionList';
@@ -178,20 +162,12 @@
     },
     data() {
       return {
-        saving: false,
         loadingChannels: true,
         step: 1,
       };
     },
     computed: {
       ...mapGetters('channelSet', ['getChannelSet']),
-      ...mapState('channelSet', ['error']),
-      saveButtonLabel() {
-        if (this.isNewSet) {
-          return this.$tr('createButtonLabel');
-        }
-        return this.$tr('saveButtonLabel');
-      },
       name: {
         get() {
           return this.channelSet.name || '';
@@ -213,10 +189,7 @@
         return this.selectedChannels.length;
       },
       headerText() {
-        return this.isNewSet ? this.$tr('newSetHeader') : this.$tr('editingSetHeader');
-      },
-      isNewSet() {
-        return isTempId(this.channelSetId);
+        return this.name ? this.name : this.$tr('unnamedChannelSet');
       },
     },
     beforeRouteEnter(to, from, next) {
@@ -240,11 +213,8 @@
       this.$refs.dialog.hideScroll();
     },
     methods: {
-      ...mapActions('channelList', ['loadChannelList']),
-      ...mapActions('channelSet', ['saveChannelSet', 'loadChannelSet']),
-      ...mapMutations('channelSet', {
-        updateChannelSet: 'UPDATE_CHANNELSET',
-      }),
+      ...mapActions('channel', ['loadChannelList']),
+      ...mapActions('channelSet', ['updateChannelSet', 'loadChannelSet']),
       nameValid(name) {
         return name && name.length > 0 ? true : this.$tr('titleRequiredText');
       },
@@ -260,23 +230,6 @@
       },
       close() {
         this.$router.push({ name: RouterNames.CHANNEL_SETS });
-      },
-      save() {
-        this.saving = true;
-        return this.saveChannelSet(this.channelSetId).then(newId => {
-          if (newId) {
-            this.$router.replace({
-              name: RouterNames.CHANNEL_SET_DETAILS,
-              params: { channelSetId: newId },
-            });
-          }
-          this.saving = false;
-        });
-      },
-      saveAndClose() {
-        if (this.$refs.channelsetform.validate()) {
-          this.save().then(this.close);
-        }
       },
       verifyChannelSet(channelSetId) {
         return new Promise((resolve, reject) => {
@@ -301,11 +254,7 @@
       },
     },
     $trs: {
-      newSetHeader: 'New Collection',
-      editingSetHeader: 'Editing Collection',
-      saveButtonLabel: 'Save changes',
-      createButtonLabel: 'Create',
-      errorText: 'There was a problem saving your collection',
+      unnamedChannelSet: 'Unnamed collection',
       loading: 'Loading...',
       titleLabel: 'Collection name',
       channelCountText:

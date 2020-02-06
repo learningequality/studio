@@ -4,9 +4,7 @@
     <AppBar />
     <VContent>
       <VContainer fluid>
-        <keep-alive>
-          <router-view :key="$route.name" />
-        </keep-alive>
+        <router-view />
       </VContainer>
     </VContent>
   </VApp>
@@ -28,6 +26,6 @@
 </script>
 
 
-<style lang="less">
+<style lang="less" scoped>
 
 </style>

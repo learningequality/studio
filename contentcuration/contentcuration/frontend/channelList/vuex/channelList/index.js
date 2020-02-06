@@ -5,10 +5,16 @@ import * as actions from './actions';
 export default {
   namespaced: true,
   state: () => ({
-    channelsMap: {},
     channelDetailsMap: {},
     invitationsMap: {},
-    page: {},
+    page: {
+      next: null,
+      previous: null,
+      page_number: null,
+      count: null,
+      total_pages: null,
+      results: [],
+    },
   }),
   getters,
   mutations,

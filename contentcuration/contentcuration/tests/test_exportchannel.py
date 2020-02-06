@@ -223,6 +223,25 @@ class ChannelExportUtilityFunctionTestCase(StudioTestCase):
 
 
 class ChannelExportPrerequisiteTestCase(StudioTestCase):
+    @classmethod
+    def setUpClass(cls):
+        super(ChannelExportPrerequisiteTestCase, cls).setUpClass()
+        cls.patch_copy_db = patch('contentcuration.utils.publish.save_export_database')
+        cls.patch_copy_db.start()
+
+    def setUp(self):
+        super(ChannelExportPrerequisiteTestCase, self).setUp()
+        fh, output_db = tempfile.mkstemp(suffix=".sqlite3")
+        self.output_db = output_db
+        set_active_content_database(self.output_db)
+        prepare_export_database(self.output_db)
+
+    def tearDown(self):
+        super(ChannelExportPrerequisiteTestCase, self).tearDown()
+        set_active_content_database(None)
+        if os.path.exists(self.output_db):
+            os.remove(self.output_db)
+
     def test_nonexistent_prerequisites(self):
         channel = cc.Channel.objects.create()
         node1 = cc.ContentNode.objects.create(kind_id="exercise", parent_id=channel.main_tree.pk)

@@ -44,7 +44,7 @@ describe('licenseDropdown', () => {
     });
     it('should display licenseDescription prop', () => {
       wrapper.setProps({
-        value: { license: specialPermissions.id, description: 'test description' },
+        value: { license: specialPermissions.id, license_description: 'test description' },
       });
       expect(wrapper.vm.$refs.description.value).toContain('test description');
     });
@@ -59,7 +59,6 @@ describe('licenseDropdown', () => {
       wrapper.setProps({
         required: true,
         value: { license: specialPermissions.id },
-        descriptionRequired: true,
       });
       expect(wrapper.find('input:required').exists()).toBe(true);
       expect(wrapper.find('textarea:required').exists()).toBe(true);
@@ -108,7 +107,9 @@ describe('licenseDropdown', () => {
       expect(wrapper.emitted('input')).toBeFalsy();
       wrapper.find('textarea').setValue('test license description');
       expect(wrapper.emitted('input')).toBeTruthy();
-      expect(wrapper.emitted('input')[0][0].description).toEqual('test license description');
+      expect(wrapper.emitted('input')[0][0].license_description).toEqual(
+        'test license description'
+      );
     });
   });
   describe('validation', () => {
@@ -154,7 +155,7 @@ describe('licenseDropdown', () => {
           .find('.error--text')
           .exists()
       ).toBe(true);
-      wrapper.setProps({ value: { license: specialPermissions.id, description: 'test' } });
+      wrapper.setProps({ value: { license: specialPermissions.id, license_description: 'test' } });
       formWrapper.vm.validate();
       expect(
         wrapper
@@ -163,8 +164,7 @@ describe('licenseDropdown', () => {
           .exists()
       ).toBe(false);
       wrapper.setProps({
-        value: { license: specialPermissions.id, description: null },
-        descriptionRequired: false,
+        value: { license: specialPermissions.id, license_description: null },
       });
       formWrapper.vm.validate();
       expect(
@@ -172,7 +172,7 @@ describe('licenseDropdown', () => {
           .find('.v-textarea')
           .find('.error--text')
           .exists()
-      ).toBe(false);
+      ).toBe(true);
     });
   });
 });

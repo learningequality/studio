@@ -12,6 +12,7 @@ from django.db.models import Sum
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.http import HttpResponseNotFound
+from django.shortcuts import get_object_or_404
 from le_utils.constants import content_kinds
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authentication import TokenAuthentication
@@ -253,7 +254,7 @@ def get_channel_details(request, channel_id):
             channel_id (str): id of channel to get details from
     """
     # Get nodes and channel
-    node = ContentNode.objects.get(channel_main=channel_id)
+    node = get_object_or_404(ContentNode, channel_main=channel_id)
     try:
         request.user.can_view_node(node)
     except PermissionDenied:

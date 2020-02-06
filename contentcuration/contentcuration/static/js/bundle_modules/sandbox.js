@@ -11,8 +11,6 @@ require('../../less/styles.less');
 require('utils/translations');
 const State = require('edit_channel/state');
 
-var store = require('edit_channel/uploader/vuex/store');
-
 Vue.use(VueIntl);
 Vue.use(Vuetify, {
   rtl: window.isRTL,
@@ -46,6 +44,5 @@ State.currentNode = State.current_channel.get('main_tree');
 
 new Vue({
   el: 'sandbox',
-  store,
   ...Sandbox,
 });

@@ -42,51 +42,6 @@ from contentcuration.views.files import thumbnail_upload
 pytestmark = pytest.mark.django_db
 
 
-class FileSaveTestCase(BaseAPITestCase):
-
-    def setUp(self):
-        super(FileSaveTestCase, self).setUp()
-        self.video = self.channel.main_tree.get_descendants().filter(kind_id='video').first()
-        self.video_file = self.video.files.first()
-        self.testnode = node({"kind_id": "video", "title": "test node", "node_id": "abcdef"})
-        self.newfile = fileobj_video()
-        self.newfile.contentnode = self.testnode
-        self.newfile.save()
-
-    def test_file_update(self):
-        self.video_file.contentnode = self.testnode
-        response = self.put("/api/file", FileSerializer([self.video_file], many=True).data)
-        self.assertEqual(response.status_code, 200)
-        self.video_file.refresh_from_db()
-        self.assertEqual(self.video_file.contentnode.pk, self.testnode.pk)
-
-    def test_file_add(self):
-        self.newfile.preset_id = 'low_res_video'
-        self.newfile.save()
-        self.newfile.contentnode = self.video
-        self.put("/api/file", FileSerializer([self.video_file, self.newfile], many=True).data)
-        self.video.refresh_from_db()
-        self.assertTrue(self.video.files.filter(pk=self.newfile.pk).exists())
-        self.assertTrue(self.video.files.filter(pk=self.video_file.pk).exists())
-
-    def test_file_replace(self):
-        self.newfile.contentnode = self.video
-        self.put("/api/file", FileSerializer([self.video_file, self.newfile], many=True).data)
-        self.video.refresh_from_db()
-        self.assertTrue(self.video.files.filter(pk=self.newfile.pk).exists())
-        self.assertFalse(self.video.files.filter(pk=self.video_file.pk).exists())
-        self.assertFalse(File.objects.filter(pk=self.video_file.pk).exists())
-
-    def test_file_delete(self):
-        self.newfile.contentnode = self.video
-        self.put("/api/file", FileSerializer([self.video_file, self.newfile], many=True).data)  # Add the file
-        self.put("/api/file", FileSerializer([self.newfile], many=True).data)  # Now delete the file
-        self.video.refresh_from_db()
-        self.assertTrue(self.video.files.filter(pk=self.newfile.pk).exists())
-        self.assertFalse(self.video.files.filter(pk=self.video_file.pk).exists())
-        self.assertFalse(File.objects.filter(pk=self.video_file.pk).exists())
-
-
 class FileCreateTestCase(BaseAPITestCase):
     def test_file_create_no_content_defaults(self):
         post_data = {'file': SimpleUploadedFile("file.pdf", b"contents")}

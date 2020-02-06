@@ -10,7 +10,7 @@ Vue.use(VueRouter);
 const channelId = 'testing';
 
 store.state.session.loggedIn = true;
-store.commit('channelList/ADD_CHANNEL', {
+store.commit('channel/ADD_CHANNEL', {
   id: channelId,
   edit: true,
 });

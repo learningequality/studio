@@ -2,7 +2,6 @@ import json
 import logging
 
 from builtins import str
-from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.postgres.aggregates import ArrayAgg
 from django.contrib.sites.shortcuts import get_current_site
@@ -38,6 +37,7 @@ from contentcuration.api import activate_channel
 from contentcuration.api import get_staged_diff
 from contentcuration.decorators import browser_is_supported
 from contentcuration.decorators import has_accepted_policies
+from contentcuration.models import DEFAULT_USER_PREFERENCES
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import User
@@ -99,11 +99,8 @@ def get_or_set_cached_constants(constant, serializer):
 @has_accepted_policies
 @permission_classes((AllowAny,))
 def channel_list(request):
-    current_user = not request.user.is_anonymous() and JSONRenderer().render(UserChannelListSerializer(request.user).data)
-    preferences = not request.user.is_anonymous() and json.dumps(request.user.content_defaults)
-    return render(request, 'channel_list.html', {"channel_name": False,
-                                                 "current_user": current_user,
-                                                 "user_preferences": preferences,
+    return render(request, 'channel_list.html', {"current_user": "null" if request.user.is_anonymous else JSONRenderer().render(UserChannelListSerializer(request.user).data),
+                                                 "user_preferences": DEFAULT_USER_PREFERENCES if request.user.is_anonymous else json.dumps(request.user.content_defaults),
                                                  "messages": get_messages(),
                                                  })
 
@@ -121,16 +118,10 @@ def channel(request, channel_id):
         raise HttpResponseNotFound("Channel not found")
 
     return render(request, 'channel_edit.html', {
-        "allow_edit": True,
-        "staging": False,
-        "is_public": channel.public,
-        "channel_id": channel.pk,
-        "channel_name": channel.name,
-        "ricecooker_version": channel.ricecooker_version,
-        "channel_list": channel_list,
-        "preferences": json.dumps(channel.content_defaults),
+        "channel_id": channel_id,
+        "current_user": JSONRenderer().render(UserChannelListSerializer(request.user).data),
+        "user_preferences": json.dumps(request.user.content_defaults),
         "messages": get_messages(),
-        "title": settings.DEFAULT_TITLE,
     })
 
 

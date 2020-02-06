@@ -57,9 +57,8 @@
 <script>
 
   import sortBy from 'lodash/sortBy';
-  import { mapGetters, mapActions, mapState, mapMutations } from 'vuex';
+  import { mapGetters, mapActions } from 'vuex';
   import { ListTypes, RouterNames } from '../../constants';
-  import { generateTempId } from '../../utils';
   import ChannelItem from './ChannelItem.vue';
 
   function listTypeValidator(value) {
@@ -84,17 +83,16 @@
       };
     },
     computed: {
-      ...mapGetters('channelList', ['channels']),
-      ...mapState({
-        language: state => state.session.currentLanguage,
-        preferences: state => state.session.preferences,
-      }),
+      ...mapGetters('channel', ['channels']),
       listChannels() {
         const sortFields = ['-modified'];
         if (this.listType === ListTypes.PUBLIC) {
           sortFields.shift('-priority');
         }
-        return sortBy(this.channels.filter(channel => channel[this.listType]), sortFields);
+        return sortBy(
+          this.channels.filter(channel => channel[this.listType] && !channel.deleted),
+          sortFields
+        );
       },
       isEditable() {
         return this.listType === ListTypes.EDITABLE;
@@ -108,29 +106,21 @@
       }
       return next(false);
     },
+    beforeRouteUpdate(to, from, next) {
+      if (listTypeValidator(to.params.listType)) {
+        this.loadData(to.params.listType);
+        return next();
+      }
+      return next(false);
+    },
     methods: {
-      ...mapActions('channelList', ['loadChannelList']),
-      ...mapMutations('channelList', {
-        addChannel: 'ADD_CHANNEL',
-        removeChannel: 'REMOVE_CHANNEL',
-      }),
+      ...mapActions('channel', ['loadChannelList', 'createChannel']),
       newChannel() {
-        // Clear any previously existing dummy channelset
-        this.removeChannel(this.newId);
-        this.newId = generateTempId();
-        this.addChannel({
-          id: this.newId,
-          name: '',
-          description: '',
-          language: this.preferences ? this.preferences.language : this.language,
-          content_defaults: this.preferences,
-          thumbnail_url: '',
-          bookmark: false,
-          edit: true,
-        });
-        this.$router.push({
-          name: RouterNames.CHANNEL_EDIT,
-          params: { channelId: this.newId },
+        this.createChannel().then(id => {
+          this.$router.push({
+            name: RouterNames.CHANNEL_EDIT,
+            params: { channelId: id },
+          });
         });
       },
       loadData(listType) {
