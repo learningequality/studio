@@ -40,6 +40,8 @@ from contentcuration.models import generate_storage_url
 from contentcuration.models import License
 from contentcuration.serializers import ContentNodeEditSerializer
 from contentcuration.serializers import FileSerializer
+from contentcuration.serializers import TaskSerializer
+from contentcuration.tasks import create_async_task
 from contentcuration.utils.files import generate_thumbnail_from_node
 from contentcuration.utils.files import get_thumbnail_encoding
 
@@ -65,6 +67,24 @@ def get_upload_url(request):
 def temp_file_upload(request):
     filename = write_file_to_storage(request.FILES.values()[0])
     return HttpResponse(generate_storage_url(filename))
+
+
+@require_http_methods(['GET'])
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
+def create_thumbnail(request, channel_id, filename):
+    task_info = {
+        'user': request.user,
+        'metadata': {
+            'affects': {
+                'channels': [channel_id]
+            }
+        }
+    }
+    task_args = {'filename': filename}
+
+    task, task_info = create_async_task('generate-thumbnail', task_info, task_args)
+    return HttpResponse(JSONRenderer().render(TaskSerializer(task_info).data))
 
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
