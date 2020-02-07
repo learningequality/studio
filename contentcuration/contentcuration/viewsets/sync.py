@@ -62,6 +62,35 @@ def get_change_type(obj):
     return obj["type"]
 
 
+def apply_changes(request, viewset, change_type, id_attr, changes):
+    errors = []
+    changes = []
+    if change_type == CREATED:
+        new_data = list(
+            map(lambda x: dict(x["obj"].items() + [(id_attr, x["key"])]), changes,)
+        )
+        errors, changes = viewset.bulk_create(request, data=new_data)
+    elif change_type == UPDATED:
+        change_data = list(
+            map(lambda x: dict(x["mods"].items() + [(id_attr, x["key"])]), changes,)
+        )
+        errors, changes = viewset.bulk_update(request, data=change_data)
+    elif change_type == DELETED:
+        ids_to_delete = list(map(lambda x: x["key"], changes))
+        errors, changes = viewset.bulk_delete(ids_to_delete)
+    elif change_type == MOVED and hasattr(viewset, "move"):
+        for move in changes:
+            # Move change will have key, must also have target property
+            # optionally can include the desired position.
+            move_error, move_change = viewset.move(move["key"], **move)
+            if move_error:
+                move.update({"errors": [move_error]})
+                errors.append(move)
+            if move_change:
+                changes.append(move_change)
+    return errors, changes
+
+
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
 @api_view(["POST"])
@@ -81,44 +110,12 @@ def sync(request):
             group = sorted(group, key=get_change_type)
             for change_type, changes in groupby(group, get_change_type):
                 try:
-                    es = []
-                    cs = []
                     change_type = int(change_type)
                     viewset = viewset_class(request=request)
                     viewset.initial(request)
-                    if change_type == CREATED:
-                        new_data = list(
-                            map(
-                                lambda x: dict(
-                                    x["obj"].items() + [(id_attr, x["key"])]
-                                ),
-                                changes,
-                            )
-                        )
-                        es, cs = viewset.bulk_create(request, data=new_data)
-                    elif change_type == UPDATED:
-                        change_data = list(
-                            map(
-                                lambda x: dict(
-                                    x["mods"].items() + [(id_attr, x["key"])]
-                                ),
-                                changes,
-                            )
-                        )
-                        es, cs = viewset.bulk_update(request, data=change_data)
-                    elif change_type == DELETED:
-                        ids_to_delete = list(map(lambda x: x["key"], changes))
-                        es, cs = viewset.bulk_delete(ids_to_delete)
-                    elif change_type == MOVED and hasattr(viewset, "move"):
-                        for move in changes:
-                            # Move change will have key, must also have target property
-                            # optionally can include the desired position.
-                            move_error, move_change = viewset.move(move["key"], **move)
-                            if move_error:
-                                move.update({"errors": [move_error]})
-                                es.append(move)
-                            if move_change:
-                                cs.append(move_change)
+                    es, cs = apply_changes(
+                        request, viewset, change_type, id_attr, changes
+                    )
                     errors.extend(es)
                     client_changes.extend(cs)
                 except ValueError:
