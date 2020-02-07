@@ -93,6 +93,6 @@ class TreeViewSet(GenericViewSet):
                 raise ValidationError(
                     "Invalid position argument specified: {}".format(position)
                 )
-            return None
+            return None, None
         except ValidationError as e:
-            return str(e)
+            return None, str(e)

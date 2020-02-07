@@ -72,7 +72,7 @@ def sync(request):
     # Collect all changes that should be propagated back to the client
     # this allows internal validation to take place and fields to be added
     # if needed by the server.
-    changes = []
+    client_changes = []
     data = sorted(request.data, key=get_table_sort_order)
     for table_name, group in groupby(data, get_table):
         if table_name in viewset_mapping:
@@ -81,6 +81,8 @@ def sync(request):
             group = sorted(group, key=get_change_type)
             for change_type, changes in groupby(group, get_change_type):
                 try:
+                    es = []
+                    cs = []
                     change_type = int(change_type)
                     viewset = viewset_class(request=request)
                     viewset.initial(request)
@@ -93,7 +95,7 @@ def sync(request):
                                 changes,
                             )
                         )
-                        errors.extend(viewset.bulk_create(request, data=new_data))
+                        es, cs = viewset.bulk_create(request, data=new_data)
                     elif change_type == UPDATED:
                         change_data = list(
                             map(
@@ -103,25 +105,31 @@ def sync(request):
                                 changes,
                             )
                         )
-                        errors.extend(viewset.bulk_update(request, data=change_data))
+                        es, cs = viewset.bulk_update(request, data=change_data)
                     elif change_type == DELETED:
                         ids_to_delete = list(map(lambda x: x["key"], changes))
-                        viewset.bulk_delete(ids_to_delete)
+                        es, cs = viewset.bulk_delete(ids_to_delete)
                     elif change_type == MOVED and hasattr(viewset, "move"):
                         for move in changes:
                             # Move change will have key, must also have target property
                             # optionally can include the desired position.
-                            move_error = viewset.move(move["key"], **move)
+                            move_error, move_change = viewset.move(move["key"], **move)
                             if move_error:
                                 move.update({"errors": [move_error]})
-                                errors.append(move)
+                                es.append(move)
+                            if move_change:
+                                cs.append(move_change)
+                    errors.extend(es)
+                    client_changes.extend(cs)
                 except ValueError:
                     pass
     if not errors:
-        return Response()
-    elif len(errors) < len(data):
-        # If there are some errors, but not all, return a mixed response
-        return Response(errors, status=HTTP_207_MULTI_STATUS)
+        return Response({"changes": client_changes})
+    elif len(errors) < len(data) or len(client_changes):
+        # If there are some errors, but not all, or all errors and some changes return a mixed response
+        return Response(
+            {"changes": client_changes, "errors": errors}, status=HTTP_207_MULTI_STATUS
+        )
     else:
-        # If the errors are total, reject the response outright!
-        return Response(errors, status=HTTP_400_BAD_REQUEST)
+        # If the errors are total, and there are no changes reject the response outright!
+        return Response({"errors": errors}, status=HTTP_400_BAD_REQUEST)

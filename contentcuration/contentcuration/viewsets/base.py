@@ -91,10 +91,17 @@ class BulkModelSerializer(ModelSerializer):
 
 
 class BulkListSerializer(ListSerializer):
+    def __init__(self, *args, **kwargs):
+        super(BulkListSerializer, self).__init__(*args, **kwargs)
+        # Track any changes that should be propagated back to the frontend
+        self.changes = []
+
     def update(self, queryset, all_validated_data):
         all_validated_data = self.validated_data
         id_attr = self.child.id_attr()
-        concrete_fields = set(f.name for f in self.child.Meta.model._meta.concrete_fields)
+        concrete_fields = set(
+            f.name for f in self.child.Meta.model._meta.concrete_fields
+        )
 
         all_validated_data_by_id = {}
 
@@ -272,13 +279,15 @@ class ValuesViewset(ReadOnlyModelViewSet):
                     errors.append(datum)
                 else:
                     valid_data.append(datum)
-            serializer = self.get_serializer(instance, data=valid_data, many=True, partial=True)
+            serializer = self.get_serializer(
+                instance, data=valid_data, many=True, partial=True
+            )
             # This should now not raise an exception as we have filtered
             # all the invalid objects, but we still need to call is_valid
             # before DRF will let us save them.
             serializer.is_valid(raise_exception=True)
             self.perform_bulk_update(serializer)
-        return errors
+        return errors, serializer.changes
 
     def bulk_create(self, request, *args, **kwargs):
         data = kwargs.pop("data", request.data)
@@ -300,11 +309,23 @@ class ValuesViewset(ReadOnlyModelViewSet):
             # before DRF will let us save them.
             serializer.is_valid(raise_exception=True)
             self.perform_bulk_create(serializer)
-        return errors
+        return errors, serializer.changes
 
     def perform_bulk_create(self, serializer):
         serializer.save()
 
     def bulk_delete(self, ids):
         id_attr = self.serializer_class.id_attr()
-        return self.get_queryset().filter(**{"{}__in".format(id_attr): ids}).delete()
+        errors = []
+        changes = []
+        try:
+            self.get_queryset().filter(**{"{}__in".format(id_attr): ids}).delete()
+        except Exception as e:
+            errors = [
+                {
+                    "key": not_deleted_id,
+                    "errors": [ValidationError("Could not be deleted").details],
+                }
+                for not_deleted_id in ids
+            ]
+        return errors, changes
