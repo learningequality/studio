@@ -17,13 +17,33 @@ class MissingRequiredParamsException(APIException):
     default_code = "missing_parameters"
 
 
-_valid_positions = set(["first-child", "last-child", "left", "right",])
+_valid_positions = set(["first-child", "last-child", "left", "right"])
 
 
 class TreeFilter(FilterSet):
     class Meta:
         model = ContentNode
         fields = ("parent",)
+
+
+def validate_move_args(target, position):
+    if target is None:
+        raise ValidationError("A target content node must be specified")
+    try:
+        target = ContentNode.get(pk=target)
+    except ContentNode.DoesNotExist:
+        raise ValidationError("Target content node: {} does not exist".format(target))
+    except ValueError:
+        raise ValidationError(
+            "Invalid target content node specified: {}".format(target)
+        )
+    if position not in _valid_positions:
+        raise ValidationError(
+            "Invalid node position specified, must be one of {}".format(
+                ", ".join(_valid_positions)
+            )
+        )
+    return target, position
 
 
 class TreeViewSet(GenericViewSet):
@@ -60,26 +80,9 @@ class TreeViewSet(GenericViewSet):
     def move(self, pk, *args, **kwargs):
         contentnode = get_object_or_404(ContentNode, pk=pk)
         target = kwargs.pop("target", None)
+        position = kwargs.pop("position", "first-child")
         try:
-            if target is None:
-                raise ValidationError("A target content node must be specified")
-            try:
-                target = ContentNode.get(pk=target)
-            except ContentNode.DoesNotExist:
-                raise ValidationError(
-                    "Target content node: {} does not exist".format(target)
-                )
-            except ValueError:
-                raise ValidationError(
-                    "Invalid target content node specified: {}".format(target)
-                )
-            position = kwargs.pop("position", "first-child")
-            if position not in _valid_positions:
-                raise ValidationError(
-                    "Invalid node position specified, must be one of {}".format(
-                        ", ".join(_valid_positions)
-                    )
-                )
+            target, position = validate_move_args(target, position)
             try:
                 with transaction.atomic():
                     # Lock only MPTT columns for updates on this tree and the target tree
