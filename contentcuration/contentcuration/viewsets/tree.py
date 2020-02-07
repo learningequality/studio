@@ -84,13 +84,24 @@ class TreeViewSet(GenericViewSet):
         try:
             target, position = validate_move_args(target, position)
             try:
+                original_parent_id = contentnode.parent_id
                 with transaction.atomic():
                     # Lock only MPTT columns for updates on this tree and the target tree
                     # until the end of this transaction
                     ContentNode.objects.select_for_update().order_by().filter(
                         Q(tree_id=contentnode.tree_id) | Q(tree_id=target.tree_id)
                     ).values("tree_id", "lft", "rght")
+                    contentnode.changed = True
                     contentnode.move_to(target, position)
+                new_parent_id = (
+                    ContentNode.objects.all()
+                    .values_list("parent_id", flat=True)
+                    .get(id=contentnode.id)
+                )
+                if original_parent_id != new_parent_id:
+                    ContentNode.objects.filter(id=original_parent_id).update(
+                        changed=True
+                    )
 
             except ValueError:
                 raise ValidationError(

@@ -58,6 +58,7 @@ class ContentNodeSerializer(BulkModelSerializer):
     This is a write only serializer - we leverage it to do create and update
     operations, but read operations are handled by the Viewset.
     """
+
     files = PrimaryKeyRelatedField(many=True, queryset=File.objects.all())
     prerequisite = PrimaryKeyRelatedField(many=True, queryset=ContentNode.objects.all())
 
@@ -191,3 +192,9 @@ class ContentNodeViewSet(ValuesViewset):
             assessment_items_ids=NotNullArrayAgg("assessment_items__id")
         )
         return queryset
+
+    def perform_bulk_update(self, serializer):
+        serializer.save(changed=True)
+
+    def perform_bulk_create(self, serializer):
+        serializer.save(changed=True)
