@@ -3,6 +3,7 @@ A view that handles synchronization of changes from the frontend
 and deals with processing all the changes to make appropriate
 bulk creates, updates, and deletes.
 """
+from collections import OrderedDict
 from itertools import groupby
 
 from rest_framework.authentication import SessionAuthentication
@@ -19,13 +20,27 @@ from contentcuration.viewsets.assessmentitem import AssessmentItemViewSet
 from contentcuration.viewsets.channel import ChannelViewSet
 from contentcuration.viewsets.channelset import ChannelSetViewSet
 from contentcuration.viewsets.contentnode import ContentNodeViewSet
+from contentcuration.viewsets.tree import TreeViewSet
 
 
-viewset_mapping = {
-    "assessmentitem": AssessmentItemViewSet,
-    "channel": ChannelViewSet,
-    "channelset": ChannelSetViewSet,
-    "contentnode": ContentNodeViewSet,
+# Uses ordered dict behaviour to enforce operation orders
+viewset_mapping = OrderedDict(
+    [
+        # If a new channel has been created, then any other operations that happen
+        # within that channel depend on that, so we prioritize channel operations
+        ("channel", ChannelViewSet),
+        # Tree operations require content nodes to exist, and any new assessment items
+        # need to point to an existing content node
+        ("contentnode", ContentNodeViewSet),
+        # The exact order of these three is not important.
+        ("assessmentitem", AssessmentItemViewSet),
+        ("channelset", ChannelSetViewSet),
+        ("tree", TreeViewSet),
+    ]
+)
+
+table_name_indices = {
+    table_name: i for i, table_name in enumerate(viewset_mapping.keys())
 }
 
 # Change type constants
@@ -39,6 +54,10 @@ def get_table(obj):
     return obj["table"]
 
 
+def get_table_sort_order(obj):
+    return table_name_indices[get_table(obj)]
+
+
 def get_change_type(obj):
     return obj["type"]
 
@@ -50,7 +69,11 @@ def sync(request):
     # Collect all error objects, which consist of the original change
     # plus any validation errors raised.
     errors = []
-    data = sorted(request.data, key=get_table)
+    # Collect all changes that should be propagated back to the client
+    # this allows internal validation to take place and fields to be added
+    # if needed by the server.
+    changes = []
+    data = sorted(request.data, key=get_table_sort_order)
     for table_name, group in groupby(data, get_table):
         if table_name in viewset_mapping:
             viewset_class = viewset_mapping[table_name]

@@ -17,19 +17,13 @@ class MissingRequiredParamsException(APIException):
     default_code = "missing_parameters"
 
 
-_valid_positions = set([
-    "first-child",
-    "last-child",
-    "left",
-    "right",
-])
+_valid_positions = set(["first-child", "last-child", "left", "right",])
 
 
 class TreeFilter(FilterSet):
-
     class Meta:
         model = ContentNode
-        fields = ("parent", )
+        fields = ("parent",)
 
 
 class TreeViewSet(GenericViewSet):
@@ -49,13 +43,16 @@ class TreeViewSet(GenericViewSet):
     def list(self, request, *args, **kwargs):
         channel_id = request.query_params.get("channel_id")
         if channel_id is None:
-            raise MissingRequiredParamsException("channel_id query parameter is required but was missing from the request")
+            raise MissingRequiredParamsException(
+                "channel_id query parameter is required but was missing from the request"
+            )
         root = get_object_or_404(ContentNode, channel_main=channel_id)
 
         def map_data(item):
             item["sort_order"] = item.pop("lft")
             item["channel_id"] = channel_id
             return item
+
         queryset = self.filter_queryset(root.get_descendants())
         tree = map(map_data, queryset.values(*self.values))
         return Response(tree)
@@ -78,7 +75,11 @@ class TreeViewSet(GenericViewSet):
                 )
             position = kwargs.pop("position", "first-child")
             if position not in _valid_positions:
-                raise ValidationError("Invalid node position specified, must be one of {}".format(", ".join(_valid_positions)))
+                raise ValidationError(
+                    "Invalid node position specified, must be one of {}".format(
+                        ", ".join(_valid_positions)
+                    )
+                )
             try:
                 with transaction.atomic():
                     # Lock only MPTT columns for updates on this tree and the target tree
