@@ -121,7 +121,10 @@ def sync(request):
                 except ValueError:
                     pass
     if not errors:
-        return Response({"changes": client_changes})
+        if client_changes:
+            return Response({"changes": client_changes})
+        else:
+            return Response({})
     elif len(errors) < len(data) or len(client_changes):
         # If there are some errors, but not all, or all errors and some changes return a mixed response
         return Response(
