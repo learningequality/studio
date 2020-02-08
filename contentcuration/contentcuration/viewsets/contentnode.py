@@ -1,5 +1,7 @@
 import json
 
+from django.conf import settings
+from django.core.cache import cache
 from django.db.models import Exists
 from django.db.models import IntegerField
 from django.db.models import F
@@ -106,6 +108,9 @@ def clean_content_tags(item):
     return filter(lambda x: x is not None, tags)
 
 
+ORPHAN_TREE_ID_CACHE_KEY = "orphan_tree_id_cache_key"
+
+
 class ContentNodeViewSet(ValuesViewset):
     queryset = ContentNode.objects.all()
     serializer_class = ContentNodeSerializer
@@ -197,4 +202,21 @@ class ContentNodeViewSet(ValuesViewset):
         serializer.save(changed=True)
 
     def perform_bulk_create(self, serializer):
-        serializer.save(changed=True)
+        if ORPHAN_TREE_ID_CACHE_KEY not in cache:
+            tree_id = (
+                ContentNode.objects.filter(id=settings.ORPHANAGE_ROOT_ID)
+                .values_list("tree_id", flat=True)
+                .get()
+            )
+            # No reason for this to change so can cache for a long time
+            cache.set(ORPHAN_TREE_ID_CACHE_KEY, 24 * 60 * 60)
+        else:
+            tree_id = cache.get(ORPHAN_TREE_ID_CACHE_KEY)
+        # Creating a new node, by default put it in the orphanage on initial creation.
+        serializer.save(
+            changed=True,
+            tree_id=tree_id,
+            parent_id=settings.ORPHANAGE_ROOT_ID,
+            lft=1,
+            rght=2,
+        )
