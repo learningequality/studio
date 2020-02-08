@@ -60,6 +60,10 @@ class TreeViewSet(GenericViewSet):
         "sort_order": "lft",
     }
 
+    @classmethod
+    def id_attr(cls):
+        return None
+
     def list(self, request, *args, **kwargs):
         channel_id = request.query_params.get("channel_id")
         if channel_id is None:

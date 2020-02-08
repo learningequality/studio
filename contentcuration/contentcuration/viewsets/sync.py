@@ -106,7 +106,7 @@ def sync(request):
     for table_name, group in groupby(data, get_table):
         if table_name in viewset_mapping:
             viewset_class = viewset_mapping[table_name]
-            id_attr = viewset_class.serializer_class.id_attr()
+            id_attr = viewset_class.id_attr()
             group = sorted(group, key=get_change_type)
             for change_type, changes in groupby(group, get_change_type):
                 try:

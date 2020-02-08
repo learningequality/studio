@@ -204,6 +204,14 @@ class ValuesViewset(ReadOnlyModelViewSet):
         self._field_map = self.field_map.copy()
         return viewset
 
+    @classmethod
+    def id_attr(cls):
+        if cls.serializer_class is not None and hasattr(
+            cls.serializer_class, "id_attr"
+        ):
+            return cls.serializer_class.id_attr()
+        return None
+
     def get_serializer_class(self):
         if self.serializer_class is not None:
             return self.serializer_class
