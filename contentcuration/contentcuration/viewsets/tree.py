@@ -82,7 +82,11 @@ class TreeViewSet(GenericViewSet):
         return Response(tree)
 
     def move(self, pk, *args, **kwargs):
-        contentnode = get_object_or_404(ContentNode, pk=pk)
+        try:
+            contentnode = ContentNode.objects.get(pk=pk)
+        except ContentNode.DoesNotExist:
+            error = ValidationError("Specified node does not exist")
+            return str(error), None
         target = kwargs.pop("target", None)
         position = kwargs.pop("position", "first-child")
         try:
@@ -113,4 +117,4 @@ class TreeViewSet(GenericViewSet):
                 )
             return None, None
         except ValidationError as e:
-            return None, str(e)
+            return str(e), None
