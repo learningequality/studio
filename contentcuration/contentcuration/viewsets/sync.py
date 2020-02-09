@@ -62,24 +62,30 @@ def get_change_type(obj):
     return obj["type"]
 
 
-def apply_changes(request, viewset, change_type, id_attr, changes):
+def apply_changes(request, viewset, change_type, id_attr, changes_from_client):
     errors = []
-    changes = []
+    changes_to_return = []
     if change_type == CREATED:
         new_data = list(
-            map(lambda x: dict(x["obj"].items() + [(id_attr, x["key"])]), changes,)
+            map(
+                lambda x: dict(x["obj"].items() + [(id_attr, x["key"])]),
+                changes_from_client,
+            )
         )
-        errors, changes = viewset.bulk_create(request, data=new_data)
+        errors, changes_to_return = viewset.bulk_create(request, data=new_data)
     elif change_type == UPDATED:
         change_data = list(
-            map(lambda x: dict(x["mods"].items() + [(id_attr, x["key"])]), changes,)
+            map(
+                lambda x: dict(x["mods"].items() + [(id_attr, x["key"])]),
+                changes_from_client,
+            )
         )
-        errors, changes = viewset.bulk_update(request, data=change_data)
+        errors, changes_to_return = viewset.bulk_update(request, data=change_data)
     elif change_type == DELETED:
-        ids_to_delete = list(map(lambda x: x["key"], changes))
-        errors, changes = viewset.bulk_delete(ids_to_delete)
+        ids_to_delete = list(map(lambda x: x["key"], changes_from_client))
+        errors, changes_to_return = viewset.bulk_delete(ids_to_delete)
     elif change_type == MOVED and hasattr(viewset, "move"):
-        for move in changes:
+        for move in changes_from_client:
             # Move change will have key, must also have target property
             # optionally can include the desired position.
             move_error, move_change = viewset.move(move["key"], **move)
@@ -87,8 +93,8 @@ def apply_changes(request, viewset, change_type, id_attr, changes):
                 move.update({"errors": [move_error]})
                 errors.append(move)
             if move_change:
-                changes.append(move_change)
-    return errors, changes
+                changes_to_return.append(move_change)
+    return errors, changes_to_return
 
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
@@ -101,7 +107,7 @@ def sync(request):
     # Collect all changes that should be propagated back to the client
     # this allows internal validation to take place and fields to be added
     # if needed by the server.
-    client_changes = []
+    changes_to_return = []
     data = sorted(request.data, key=get_table_sort_order)
     for table_name, group in groupby(data, get_table):
         if table_name in viewset_mapping:
@@ -111,24 +117,26 @@ def sync(request):
             for change_type, changes in groupby(group, get_change_type):
                 try:
                     change_type = int(change_type)
+                except ValueError:
+                    pass
+                else:
                     viewset = viewset_class(request=request)
                     viewset.initial(request)
                     es, cs = apply_changes(
                         request, viewset, change_type, id_attr, changes
                     )
                     errors.extend(es)
-                    client_changes.extend(cs)
-                except ValueError:
-                    pass
+                    changes_to_return.extend(cs)
     if not errors:
-        if client_changes:
-            return Response({"changes": client_changes})
+        if changes_to_return:
+            return Response({"changes": changes_to_return})
         else:
             return Response({})
-    elif len(errors) < len(data) or len(client_changes):
+    elif len(errors) < len(data) or len(changes_to_return):
         # If there are some errors, but not all, or all errors and some changes return a mixed response
         return Response(
-            {"changes": client_changes, "errors": errors}, status=HTTP_207_MULTI_STATUS
+            {"changes": changes_to_return, "errors": errors},
+            status=HTTP_207_MULTI_STATUS,
         )
     else:
         # If the errors are total, and there are no changes reject the response outright!
