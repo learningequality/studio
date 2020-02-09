@@ -8,6 +8,8 @@ from rest_framework.serializers import ListSerializer
 from rest_framework.serializers import ModelSerializer
 from rest_framework.serializers import ValidationError
 from rest_framework.serializers import raise_errors_on_nested_writes
+from rest_framework.settings import api_settings
+from rest_framework.utils import html
 from rest_framework.utils import model_meta
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
@@ -95,6 +97,54 @@ class BulkListSerializer(ListSerializer):
         super(BulkListSerializer, self).__init__(*args, **kwargs)
         # Track any changes that should be propagated back to the frontend
         self.changes = []
+
+    def to_internal_value(self, data):
+        """
+        List of dicts of native values <- List of dicts of primitive datatypes.
+        Modified from https://github.com/encode/django-rest-framework/blob/master/rest_framework/serializers.py
+        based on suggestions from https://github.com/miki725/django-rest-framework-bulk/issues/68
+        This is to prevent an error whereby the DRF Unique validator fails when the instance on the child
+        serializer is a queryset and not an object.
+        """
+        if html.is_html_input(data):
+            data = html.parse_html_list(data, default=[])
+
+        if not isinstance(data, list):
+            message = self.error_messages["not_a_list"].format(
+                input_type=type(data).__name__
+            )
+            raise ValidationError(
+                {api_settings.NON_FIELD_ERRORS_KEY: [message]}, code="not_a_list"
+            )
+
+        if not self.allow_empty and len(data) == 0:
+            message = self.error_messages["empty"]
+            raise ValidationError(
+                {api_settings.NON_FIELD_ERRORS_KEY: [message]}, code="empty"
+            )
+
+        ret = []
+        errors = []
+
+        data_lookup = self.instance.in_bulk() if self.instance else {}
+        id_attr = self.child.id_attr()
+
+        for item in data:
+            try:
+                # prepare child serializer to only handle one instance
+                self.child.instance = data_lookup.get(item[id_attr])
+                self.child.initial_data = item
+                validated = self.child.run_validation(item)
+            except ValidationError as exc:
+                errors.append(exc.detail)
+            else:
+                ret.append(validated)
+                errors.append({})
+
+        if any(errors):
+            raise ValidationError(errors)
+
+        return ret
 
     def update(self, queryset, all_validated_data):
         all_validated_data = self.validated_data
