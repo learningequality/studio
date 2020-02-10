@@ -109,6 +109,10 @@ class AssessmentItemSerializer(BulkModelSerializer):
             "deleted",
         )
         list_serializer_class = AssessmentListSerializer
+        # Use the assessment_id as the lookup field for updates
+        # this may cause poor performance on updates as this field is not
+        # indexed. Monitor and potentially add an index.
+        update_lookup_field = "assessment_id"
 
 
 class AssessmentItemViewSet(ValuesViewset):
