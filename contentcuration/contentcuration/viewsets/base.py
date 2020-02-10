@@ -147,7 +147,6 @@ class BulkListSerializer(ListSerializer):
         return ret
 
     def update(self, queryset, all_validated_data):
-        all_validated_data = self.validated_data
         id_attr = self.child.id_attr()
         concrete_fields = set(
             f.name for f in self.child.Meta.model._meta.concrete_fields
@@ -200,7 +199,6 @@ class BulkListSerializer(ListSerializer):
         return updated_objects
 
     def create(self, validated_data):
-        validated_data = self.validated_data
         ModelClass = self.child.Meta.model
         objects_to_create, many_to_many_tuple = zip(
             *map(self.child.create, validated_data)

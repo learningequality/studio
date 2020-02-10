@@ -75,7 +75,7 @@ describe('contentNode actions', () => {
   describe('createContentNode action for a new contentNode', () => {
     it('should add a new contentNode with an id', () => {
       return store.dispatch('contentNode/createContentNode', id).then(newId => {
-        expect(store.getters['contentNode/getContentNode'](newId)).not.toBeUndefined();
+        expect(store.getters['contentNode/getContentNode']({ parent: newId })).not.toBeUndefined();
       });
     });
   });

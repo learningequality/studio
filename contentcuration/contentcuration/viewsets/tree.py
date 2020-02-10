@@ -30,7 +30,7 @@ def validate_move_args(target, position):
     if target is None:
         raise ValidationError("A target content node must be specified")
     try:
-        target = ContentNode.get(pk=target)
+        target = ContentNode.objects.get(pk=target)
     except ContentNode.DoesNotExist:
         raise ValidationError("Target content node: {} does not exist".format(target))
     except ValueError:
