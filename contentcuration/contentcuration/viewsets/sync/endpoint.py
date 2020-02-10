@@ -21,6 +21,10 @@ from contentcuration.viewsets.channel import ChannelViewSet
 from contentcuration.viewsets.channelset import ChannelSetViewSet
 from contentcuration.viewsets.contentnode import ContentNodeViewSet
 from contentcuration.viewsets.tree import TreeViewSet
+from contentcuration.viewsets.sync.constants import CREATED
+from contentcuration.viewsets.sync.constants import UPDATED
+from contentcuration.viewsets.sync.constants import DELETED
+from contentcuration.viewsets.sync.constants import MOVED
 
 
 # Uses ordered dict behaviour to enforce operation orders
@@ -42,12 +46,6 @@ viewset_mapping = OrderedDict(
 table_name_indices = {
     table_name: i for i, table_name in enumerate(viewset_mapping.keys())
 }
-
-# Change type constants
-CREATED = 1
-UPDATED = 2
-DELETED = 3
-MOVED = 4
 
 
 def get_table(obj):
