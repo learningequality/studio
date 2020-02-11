@@ -77,6 +77,7 @@ Thumbs.db
 
 # Ignore Django collected static files
 /contentcuration/static/*
+contentcuration/contentcuration/static
 
 # Ignore node_modules
 /node_modules
