@@ -51,7 +51,7 @@
     methods: {
       ...mapActions('contentNode', ['createContentNode']),
       newContentNode() {
-        this.createContentNode(this.nodeId).then(newId => {
+        this.createContentNode({ parent: this.nodeId }).then(newId => {
           this.$router.push({
             name: RouterNames.CONTENTNODE_DETAILS,
             params: { detailNodeId: newId },

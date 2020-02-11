@@ -2,6 +2,7 @@ import debounce from 'lodash/debounce';
 import matches from 'lodash/matches';
 import partition from 'lodash/partition';
 import pick from 'lodash/pick';
+import applyChanges from './applyRemoteChanges';
 import { createChannel } from './broadcastChannel';
 import {
   CHANGE_TYPES,
@@ -180,13 +181,23 @@ function syncChanges() {
         .then(response => {
           let changesToDelete = db[CHANGES_TABLE].where('rev').belowOrEqual(changesMaxRevision);
           let movesToDelete = db[MOVES_TABLE].where('rev').belowOrEqual(movesMaxRevision);
-          // If there is any data attached to the response, these will be
-          // errors for specific changes, which means that we should keep
-          // them until they get accepted by the server.
-          if (response.data && response.data.length) {
+          // The response from the sync endpoint has the format:
+          // {
+          //    "changes": [],
+          //    "errors": [],
+          // }
+          // The changes property is an array of any changes from the server to apply in the
+          // client.
+          // The errors property is an array of any changes that were sent to the server,
+          // that were rejected, with an additional errors property that describes
+          // the error.
+          const returnedChanges =
+            response.data && response.data.changes ? response.data.changes : [];
+          const errors = response.data && response.data.errors ? response.data.errors : [];
+          if (errors.length) {
             // Keep all changes that are related to this key/table pair,
             // so that they can be reaggregated later.
-            const [rejectedMoves, rejectedChanges] = partition(response.data, {
+            const [rejectedMoves, rejectedChanges] = partition(errors, {
               type: CHANGE_TYPES.MOVED,
             });
             if (rejectedChanges.length) {
@@ -208,9 +219,16 @@ function syncChanges() {
           }
           const deleteChangesPromise = lastChange ? changesToDelete.delete() : Promise.resolve();
           const deleteMovesPromise = lastMove ? movesToDelete.delete() : Promise.resolve();
+          const returnedChangesPromise = returnedChanges.length
+            ? applyChanges(returnedChanges)
+            : Promise.resolve();
           // Our synchronization was successful,
           // can delete all the changes for this table
-          return Promise.all([deleteChangesPromise, deleteMovesPromise]).catch(() => {
+          return Promise.all([
+            deleteChangesPromise,
+            deleteMovesPromise,
+            returnedChangesPromise,
+          ]).catch(() => {
             console.error('There was an error deleting changes'); // eslint-disable-line no-console
           });
         })

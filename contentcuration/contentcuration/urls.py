@@ -60,7 +60,7 @@ from contentcuration.viewsets.channel import CatalogViewSet
 from contentcuration.viewsets.channelset import ChannelSetViewSet
 from contentcuration.viewsets.invitation import InvitationViewSet
 from contentcuration.viewsets.tree import TreeViewSet
-from contentcuration.viewsets.sync import sync
+from contentcuration.viewsets.sync.endpoint import sync
 
 
 def get_channel_tree_ids(user):

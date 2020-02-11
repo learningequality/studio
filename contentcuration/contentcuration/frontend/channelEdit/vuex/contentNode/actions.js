@@ -35,12 +35,12 @@ export function loadChildren(context, { parent, channel_id }) {
 }
 
 /* CONTENTNODE EDITOR ACTIONS */
-export function createContentNode(context, parent) {
+export function createContentNode(context, { parent, kind = 'topic' } = {}) {
   const session = context.rootState.session;
   const contentNodeData = {
     title: '',
     description: '',
-    kind: '',
+    kind,
     files: [],
     prerequisite: [],
     language: session.preferences ? session.preferences.language : session.currentLanguage,

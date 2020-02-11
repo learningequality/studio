@@ -1,9 +1,12 @@
 import json
 
+from django.conf import settings
+from django.core.cache import cache
 from django.db.models import Exists
 from django.db.models import IntegerField
 from django.db.models import F
 from django.db.models import OuterRef
+from django.db.models import Q
 from django.db.models import Subquery
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DjangoFilterBackend
@@ -15,6 +18,7 @@ from rest_framework.serializers import PrimaryKeyRelatedField
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import File
+from contentcuration.models import PrerequisiteContentRelationship
 from contentcuration.models import generate_storage_url
 from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.base import BulkModelSerializer
@@ -53,11 +57,77 @@ class SQCount(Subquery):
     output_field = IntegerField()
 
 
+class ContentNodeListSerializer(BulkListSerializer):
+    def gather_prerequisites(self, validated_data, add_empty=True):
+        prerequisites_by_id = {}
+
+        for obj in validated_data:
+            try:
+                prerequisite_ids = obj.pop("prerequisite")
+            except KeyError:
+                pass
+            else:
+                if add_empty or prerequisite_ids:
+                    prerequisites_by_id[obj["id"]] = prerequisite_ids
+        return prerequisites_by_id
+
+    def set_prerequisites(self, prerequisite_ids_by_id):
+        prereqs_to_create = []
+        prereqs_to_delete = []
+        current_prereqs = PrerequisiteContentRelationship.objects.filter(
+            target_node__in=prerequisite_ids_by_id.keys()
+        )
+        current_prereqs_by_id = {}
+        for prereq in current_prereqs:
+            if prereq.target_node not in current_prereqs_by_id:
+                current_prereqs_by_id[prereq.target_node] = []
+            current_prereqs_by_id[prereq.target_node].append(prereq)
+        for target_node_id, prereq_ids in prerequisite_ids_by_id.items():
+            current = current_prereqs_by_id.get(target_node_id, [])
+            ids_set = set(prereq_ids)
+            current_set = set()
+            for prereq in current:
+                if prereq.prerequisite not in ids_set:
+                    prereqs_to_delete.append(prereq)
+                else:
+                    current_set.add(prereq.prerequisite)
+            prereqs_to_create.extend(
+                [
+                    PrerequisiteContentRelationship(
+                        target_node=target_node_id, prerequisite=prereq_id
+                    )
+                    for prereq_id in ids_set - current_set
+                ]
+            )
+        PrerequisiteContentRelationship.objects.filter(
+            id__in=[p.id for p in prereqs_to_delete]
+        ).delete()
+        # Can simplify this in Django 2.2 by using bulk_create with ignore_conflicts
+        # and just setting all required objects.
+        PrerequisiteContentRelationship.objects.bulk_create(prereqs_to_create)
+
+    def create(self, validated_data):
+        prereqs = self.gather_prerequisites(validated_data, add_empty=False)
+        all_objects = super(ContentNodeListSerializer, self).create(validated_data)
+        if prereqs:
+            self.set_prerequisites(prereqs)
+        return all_objects
+
+    def update(self, queryset, all_validated_data):
+        prereqs = self.gather_prerequisites(all_validated_data)
+        all_objects = super(ContentNodeListSerializer, self).update(
+            queryset, all_validated_data
+        )
+        self.set_prerequisites(prereqs)
+        return all_objects
+
+
 class ContentNodeSerializer(BulkModelSerializer):
     """
     This is a write only serializer - we leverage it to do create and update
     operations, but read operations are handled by the Viewset.
     """
+
     files = PrimaryKeyRelatedField(many=True, queryset=File.objects.all())
     prerequisite = PrimaryKeyRelatedField(many=True, queryset=ContentNode.objects.all())
 
@@ -80,7 +150,7 @@ class ContentNodeSerializer(BulkModelSerializer):
             "provider",
             "extra_fields",
         )
-        list_serializer_class = BulkListSerializer
+        list_serializer_class = ContentNodeListSerializer
 
 
 def retrieve_thumbail_src(item):
@@ -103,6 +173,9 @@ def retrieve_thumbail_src(item):
 def clean_content_tags(item):
     tags = item.pop("content_tags")
     return filter(lambda x: x is not None, tags)
+
+
+ORPHAN_TREE_ID_CACHE_KEY = "orphan_tree_id_cache_key"
 
 
 class ContentNodeViewSet(ValuesViewset):
@@ -191,3 +264,27 @@ class ContentNodeViewSet(ValuesViewset):
             assessment_items_ids=NotNullArrayAgg("assessment_items__id")
         )
         return queryset
+
+    def perform_bulk_update(self, serializer):
+        serializer.save(changed=True)
+
+    def perform_bulk_create(self, serializer):
+        if ORPHAN_TREE_ID_CACHE_KEY not in cache:
+            tree_id = (
+                ContentNode.objects.filter(id=settings.ORPHANAGE_ROOT_ID)
+                .values_list("tree_id", flat=True)
+                .get()
+            )
+            # No reason for this to change so can cache for a long time
+            cache.set(ORPHAN_TREE_ID_CACHE_KEY, 24 * 60 * 60)
+        else:
+            tree_id = cache.get(ORPHAN_TREE_ID_CACHE_KEY)
+        # Creating a new node, by default put it in the orphanage on initial creation.
+        serializer.save(
+            changed=True,
+            tree_id=tree_id,
+            parent_id=settings.ORPHANAGE_ROOT_ID,
+            lft=1,
+            rght=2,
+            level=1,
+        )
