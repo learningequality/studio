@@ -8,6 +8,8 @@ from rest_framework.serializers import ListSerializer
 from rest_framework.serializers import ModelSerializer
 from rest_framework.serializers import ValidationError
 from rest_framework.serializers import raise_errors_on_nested_writes
+from rest_framework.settings import api_settings
+from rest_framework.utils import html
 from rest_framework.utils import model_meta
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
@@ -91,10 +93,64 @@ class BulkModelSerializer(ModelSerializer):
 
 
 class BulkListSerializer(ListSerializer):
-    def update(self, queryset, all_validated_data):
-        all_validated_data = self.validated_data
+    def __init__(self, *args, **kwargs):
+        super(BulkListSerializer, self).__init__(*args, **kwargs)
+        # Track any changes that should be propagated back to the frontend
+        self.changes = []
+
+    def to_internal_value(self, data):
+        """
+        List of dicts of native values <- List of dicts of primitive datatypes.
+        Modified from https://github.com/encode/django-rest-framework/blob/master/rest_framework/serializers.py
+        based on suggestions from https://github.com/miki725/django-rest-framework-bulk/issues/68
+        This is to prevent an error whereby the DRF Unique validator fails when the instance on the child
+        serializer is a queryset and not an object.
+        """
+        if html.is_html_input(data):
+            data = html.parse_html_list(data, default=[])
+
+        if not isinstance(data, list):
+            message = self.error_messages["not_a_list"].format(
+                input_type=type(data).__name__
+            )
+            raise ValidationError(
+                {api_settings.NON_FIELD_ERRORS_KEY: [message]}, code="not_a_list"
+            )
+
+        if not self.allow_empty and len(data) == 0:
+            message = self.error_messages["empty"]
+            raise ValidationError(
+                {api_settings.NON_FIELD_ERRORS_KEY: [message]}, code="empty"
+            )
+
+        ret = []
+        errors = []
+
+        data_lookup = self.instance.in_bulk() if self.instance else {}
         id_attr = self.child.id_attr()
-        concrete_fields = set(f.name for f in self.child.Meta.model._meta.concrete_fields)
+
+        for item in data:
+            try:
+                # prepare child serializer to only handle one instance
+                self.child.instance = data_lookup.get(item[id_attr])
+                self.child.initial_data = item
+                validated = self.child.run_validation(item)
+            except ValidationError as exc:
+                errors.append(exc.detail)
+            else:
+                ret.append(validated)
+                errors.append({})
+
+        if any(errors):
+            raise ValidationError(errors)
+
+        return ret
+
+    def update(self, queryset, all_validated_data):
+        id_attr = self.child.id_attr()
+        concrete_fields = set(
+            f.name for f in self.child.Meta.model._meta.concrete_fields
+        )
 
         all_validated_data_by_id = {}
 
@@ -143,7 +199,6 @@ class BulkListSerializer(ListSerializer):
         return updated_objects
 
     def create(self, validated_data):
-        validated_data = self.validated_data
         ModelClass = self.child.Meta.model
         objects_to_create, many_to_many_tuple = zip(
             *map(self.child.create, validated_data)
@@ -185,6 +240,9 @@ class ValuesViewset(ReadOnlyModelViewSet):
     values = None
     # A map of target_key, source_key where target_key is the final target_key that will be set
     # and source_key is the key on the object retrieved from the values call.
+    # Alternatively, the source_key can be a callable that will be passed the object and return
+    # the value for the target_key. This callable can also pop unwanted values from the obj
+    # to remove unneeded keys from the object as a side effect.
     field_map = {}
 
     def __init__(self, *args, **kwargs):
@@ -196,6 +254,14 @@ class ValuesViewset(ReadOnlyModelViewSet):
             raise TypeError("field_map must be defined as a dict")
         self._field_map = self.field_map.copy()
         return viewset
+
+    @classmethod
+    def id_attr(cls):
+        if cls.serializer_class is not None and hasattr(
+            cls.serializer_class, "id_attr"
+        ):
+            return cls.serializer_class.id_attr()
+        return None
 
     def get_serializer_class(self):
         if self.serializer_class is not None:
@@ -272,13 +338,16 @@ class ValuesViewset(ReadOnlyModelViewSet):
                     errors.append(datum)
                 else:
                     valid_data.append(datum)
-            serializer = self.get_serializer(instance, data=valid_data, many=True, partial=True)
-            # This should now not raise an exception as we have filtered
-            # all the invalid objects, but we still need to call is_valid
-            # before DRF will let us save them.
-            serializer.is_valid(raise_exception=True)
-            self.perform_bulk_update(serializer)
-        return errors
+            if valid_data:
+                serializer = self.get_serializer(
+                    instance, data=valid_data, many=True, partial=True
+                )
+                # This should now not raise an exception as we have filtered
+                # all the invalid objects, but we still need to call is_valid
+                # before DRF will let us save them.
+                serializer.is_valid(raise_exception=True)
+                self.perform_bulk_update(serializer)
+        return errors, serializer.changes
 
     def bulk_create(self, request, *args, **kwargs):
         data = kwargs.pop("data", request.data)
@@ -294,17 +363,30 @@ class ValuesViewset(ReadOnlyModelViewSet):
                     errors.append(datum)
                 else:
                     valid_data.append(datum)
-            serializer = self.get_serializer(data=valid_data, many=True)
-            # This should now not raise an exception as we have filtered
-            # all the invalid objects, but we still need to call is_valid
-            # before DRF will let us save them.
-            serializer.is_valid(raise_exception=True)
-            self.perform_bulk_create(serializer)
-        return errors
+            if valid_data:
+                serializer = self.get_serializer(data=valid_data, many=True)
+                # This should now not raise an exception as we have filtered
+                # all the invalid objects, but we still need to call is_valid
+                # before DRF will let us save them.
+                serializer.is_valid(raise_exception=True)
+                self.perform_bulk_create(serializer)
+        return errors, serializer.changes
 
     def perform_bulk_create(self, serializer):
         serializer.save()
 
     def bulk_delete(self, ids):
         id_attr = self.serializer_class.id_attr()
-        return self.get_queryset().filter(**{"{}__in".format(id_attr): ids}).delete()
+        errors = []
+        changes = []
+        try:
+            self.get_queryset().filter(**{"{}__in".format(id_attr): ids}).delete()
+        except Exception as e:
+            errors = [
+                {
+                    "key": not_deleted_id,
+                    "errors": [ValidationError("Could not be deleted").details],
+                }
+                for not_deleted_id in ids
+            ]
+        return errors, changes

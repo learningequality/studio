@@ -57,7 +57,7 @@ from contentcuration.viewsets.channelset import ChannelSetViewSet
 from contentcuration.viewsets.contentnode import ContentNodeViewSet
 from contentcuration.viewsets.file import FileViewSet
 from contentcuration.viewsets.invitation import InvitationViewSet
-from contentcuration.viewsets.sync import sync
+from contentcuration.viewsets.sync.endpoint import sync
 from contentcuration.viewsets.tree import TreeViewSet
 
 

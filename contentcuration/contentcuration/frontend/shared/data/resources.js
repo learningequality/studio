@@ -314,12 +314,8 @@ export const Tree = new Resource({
   // ids have to exactly correlate with content node ids, so don't auto
   // set uuids on this table.
   uuid: false,
-  move(id, target, position = 'first-child') {
-    if (!validPositions.has(position)) {
-      throw TypeError(`${position} is not a valid position`);
-    }
-    return db.transaction('rw', this.tableName, MOVES_TABLE, () => {
-      Dexie.currentTransaction.source = CLIENTID;
+  tableMove(id, target, position) {
+    if (validPositions.has(position)) {
       // This implements a 'parent local' algorithm
       // to produce locally consistent node moves
       let parentPromise;
@@ -417,6 +413,16 @@ export const Tree = new Resource({
               });
           });
       });
+    }
+    return Promise.resolve();
+  },
+  move(id, target, position = 'first-child') {
+    if (!validPositions.has(position)) {
+      throw TypeError(`${position} is not a valid position`);
+    }
+    return db.transaction('rw', this.tableName, MOVES_TABLE, () => {
+      Dexie.currentTransaction.source = CLIENTID;
+      return this.tableMove(id, target, position);
     });
   },
 });
