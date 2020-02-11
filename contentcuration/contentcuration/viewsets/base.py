@@ -240,6 +240,9 @@ class ValuesViewset(ReadOnlyModelViewSet):
     values = None
     # A map of target_key, source_key where target_key is the final target_key that will be set
     # and source_key is the key on the object retrieved from the values call.
+    # Alternatively, the source_key can be a callable that will be passed the object and return
+    # the value for the target_key. This callable can also pop unwanted values from the obj
+    # to remove unneeded keys from the object as a side effect.
     field_map = {}
 
     def __init__(self, *args, **kwargs):
