@@ -52,7 +52,7 @@ window.Urls = {
   },
 };
 
-describe('detailsTabView', () => {
+describe.skip('detailsTabView', () => {
   let wrapper;
   let topicIndex = _.findIndex(testNodes, { id: DEFAULT_TOPIC.id });
   let videoIndex = _.findIndex(testNodes, { id: DEFAULT_VIDEO.id });

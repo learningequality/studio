@@ -35,7 +35,7 @@ function makeWrapper() {
   });
 }
 
-describe('editList', () => {
+describe.skip('editList', () => {
   let wrapper;
   beforeEach(() => {
     localStore.commit('edit_modal/SET_MODE', modes.VIEW_ONLY);

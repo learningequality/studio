@@ -49,7 +49,7 @@
           </VFlex>
         </VLayout>
         <keep-alive>
-          <router-view :key="$route.name" />
+          <router-view :key="$route.name + $route.params.listType ? $route.params.listType : ''" />
         </keep-alive>
       </VContainer>
     </VContent>

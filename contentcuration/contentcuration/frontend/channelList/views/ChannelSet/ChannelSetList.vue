@@ -58,12 +58,12 @@
             <template v-else>
               <VDataTable
                 :headers="headers"
-                :items="channelSets"
+                :items="channelSets.map(set => set.id)"
                 hide-actions
               >
                 <template v-slot:items="props">
                   <ChannelSetItem
-                    :channelSet="props.item"
+                    :channelSetId="props.item"
                   />
                 </template>
               </VDataTable>
@@ -81,8 +81,7 @@
 
 <script>
 
-  import { mapGetters, mapActions, mapMutations } from 'vuex';
-  import { generateTempId } from '../../utils';
+  import { mapGetters, mapActions } from 'vuex';
   import { RouterNames } from '../../constants';
   import ChannelSetItem from './ChannelSetItem.vue';
   import PrimaryDialog from 'shared/views/PrimaryDialog';
@@ -97,7 +96,6 @@
       return {
         loading: true,
         infoDialog: false,
-        newSetId: generateTempId(),
       };
     },
     computed: {
@@ -117,24 +115,13 @@
       });
     },
     methods: {
-      ...mapActions('channelSet', ['loadChannelSetList']),
-      ...mapMutations('channelSet', {
-        addChannelSet: 'ADD_CHANNELSET',
-        removeChannelSet: 'REMOVE_CHANNELSET',
-      }),
+      ...mapActions('channelSet', ['loadChannelSetList', 'createChannelSet']),
       newChannelSet() {
-        // Clear any previously existing dummy channelset
-        this.removeChannelSet(this.newSetId);
-        this.newSetId = generateTempId();
-        this.addChannelSet({
-          id: this.newSetId,
-          name: '',
-          description: '',
-          channels: [],
-        });
-        this.$router.push({
-          name: RouterNames.CHANNEL_SET_DETAILS,
-          params: { channelSetId: this.newSetId },
+        this.createChannelSet().then(id => {
+          this.$router.push({
+            name: RouterNames.CHANNEL_SET_DETAILS,
+            params: { channelSetId: id },
+          });
         });
       },
     },

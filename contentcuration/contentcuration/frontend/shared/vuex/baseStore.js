@@ -2,28 +2,59 @@ import Vue from 'vue';
 import Vuex, { Store } from 'vuex';
 import session from './session';
 import ConnectionPlugin from './connectionPlugin';
+import snackbar from './snackbar';
+import channel from './channel';
+import { registerListener } from 'shared/data';
 
 Vue.use(Vuex);
 
-export default function storeFactory(
-  { state, actions, getters, mutations, modules, plugins } = {
-    state: {},
-    actions: {},
-    getters: {},
-    mutations: {},
-    modules: {},
-    plugins: [],
+function createIndexedDBPlugin(listeners) {
+  return store => {
+    for (let [tableName, tableListeners] of Object.entries(listeners)) {
+      for (let [changeType, mutation] of Object.entries(tableListeners)) {
+        registerListener(tableName, changeType, obj => {
+          store.commit(mutation, obj);
+        });
+      }
+    }
+  };
+}
+
+export default function storeFactory({
+  state = {},
+  actions = {},
+  getters = {},
+  mutations = {},
+  modules = {},
+  plugins = [],
+  listeners = {},
+} = {}) {
+  modules = {
+    session,
+    snackbar,
+    channel,
+    ...modules,
+  };
+  for (let [moduleName, module] of Object.entries(modules)) {
+    if (module.listeners) {
+      const namespacePrefix = module.namespaced ? `${moduleName}/` : '';
+      for (let [tableName, tableListeners] of Object.entries(module.listeners)) {
+        if (!listeners[tableName]) {
+          listeners[tableName] = {};
+        }
+        for (let [changeType, mutation] of Object.entries(tableListeners)) {
+          listeners[tableName][changeType] = `${namespacePrefix}${mutation}`;
+        }
+      }
+      delete module.listeners;
+    }
   }
-) {
   return new Store({
     state,
     actions,
     getters,
     mutations,
-    plugins: [ConnectionPlugin, ...(plugins || [])],
-    modules: {
-      session,
-      ...modules,
-    },
+    plugins: [ConnectionPlugin, createIndexedDBPlugin(listeners), ...plugins],
+    modules,
   });
 }

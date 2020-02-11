@@ -3,112 +3,102 @@
   <div>
     <VDialog
       ref="editmodal"
-      v-model="dialog"
+      :value="$route.params.detailNodeId == detailNodeId"
       fullscreen
       hide-overlay
       transition="dialog-bottom-transition"
       lazy
+      scrollable
     >
       <VCard class="edit-modal-wrapper">
         <VToolbar
           dark
           color="primary"
           fixed
+          flat
           clipped-left
           app
-          flat
         >
           <VBtn data-test="close" icon dark app @click="handleClose">
-            <Icon>
-              close
-            </Icon>
+            <Icon>close</Icon>
           </VBtn>
-          <VToolbarTitle>{{ mode && $tr(mode) }}</VToolbarTitle>
+          <VToolbarTitle>{{ modalTitle }}</VToolbarTitle>
           <VSpacer />
-          <VToolbarItems>
-            <VFlex v-if="!isViewOnly" align-center class="last-saved-time">
-              <div v-if="saveError">
-                {{ $tr('saveFailedText') }}
-              </div>
-              <div v-else-if="saving">
-                <VProgressCircular indeterminate size="15" width="2" color="white" />
-                {{ $tr('savingIndicator') }}
-              </div>
-            </VFlex>
-            <VBtn v-if="!isViewOnly" data-test="save" dark flat @click="handleSave">
-              {{ $tr('saveButtonText') }}
-            </VBtn>
-            <VBtn
-              v-else
-              ref="copybutton"
-              data-test="copy"
-              dark
-              flat
-              @click="copyContent"
-            >
-              {{ $tr('copyButtonText', {
-                count: nodes.length, size: formatFileSize(totalFileSize)}) }}
-            </VBtn>
-          </VToolbarItems>
-          <template v-if="newContentMode && nodes.length" v-slot:extension>
+          <VBtn v-if="canEdit" data-test="save" dark flat @click="handleSave">
+            {{ $tr('saveButtonText') }}
+          </VBtn>
+          <VBtn v-else data-test="copy" dark flat @click="copyContent">
+            {{ $tr('copyButtonText', {
+              count: nodes.length, size: formatFileSize(totalFileSize)}) }}
+          </VBtn>
+          <template v-if="canEdit" #extension>
             <VToolbar light color="white" flat>
-              <!-- Create button -->
-              <VBtn
-                v-if="allowAddTopic || allowAddExercise"
-                depressed
-                color="primary"
-                dark
-                textTruncate
-                @click="createNode"
-              >
-                {{ addButtonText }}
-              </VBtn>
-
-              <!-- Upload button -->
-              <VFlex xs6 lg8>
-                <Uploader
-                  :readonly="!allowUpload"
-                  :allowDrop="false"
-                  allowMultiple
-                  @uploading="createNodesFromFiles"
-                >
-                  <template #default="{openFileDialog}">
-                    <VBtn
-                      v-if="allowUpload"
-                      depressed
-                      dark
-                      color="primary"
-                      @click="openFileDialog"
-                    >
-                      {{ $tr('uploadButton') }}
-                    </VBtn>
-                  </template>
-                </Uploader>
-              </VFlex>
+              <VMenu style="z-index: 300;">
+                <VBtn slot="activator" color="primary">
+                  {{ $tr('addItemDropdown' ) }}
+                </VBtn>
+                <VList>
+                  <VListTile @click="createNode('topic')">
+                    <VListTileTitle>{{ $tr('addTopic') }}</VListTileTitle>
+                  </VListTile>
+                  <VListTile @click="createNode('exercise')">
+                    <VListTileTitle>{{ $tr('addExercise') }}</VListTileTitle>
+                  </VListTile>
+                  <Uploader allowMultiple @uploading="createNodesFromFiles">
+                    <template #default="{openFileDialog}">
+                      <VListTile @click="openFileDialog">
+                        <VListTileTitle>{{ $tr('uploadButton') }}</VListTileTitle>
+                      </VListTile>
+                    </template>
+                  </Uploader>
+                </VList>
+              </VMenu>
               <VSpacer />
-              <VFlex v-if="allowUpload" class="text-xs-right">
+              <VFlex class="text-xs-right">
                 <FileStorage />
               </VFlex>
             </VToolbar>
           </template>
         </VToolbar>
         <ResizableNavigationDrawer
-          v-if="showEditList"
+          v-if="multipleNodes"
           stateless
           clipped
           app
-          class="edit-list"
-          :open="showEditList"
+          :open="drawerOpen"
           :minWidth="150"
         >
-          <EditList
-            :allowRemove="newContentMode"
-            @addNode="createNode"
-            @uploadStarted="uploadStarted"
-          />
+          <Uploader
+            fill
+            allowMultiple
+            @uploading="createNodesFromFiles"
+          >
+            <EditList
+              v-model="selected"
+              :nodeIds="detailNodeIds"
+            />
+          </Uploader>
         </ResizableNavigationDrawer>
         <VCardText>
-          <EditView :isClipboard="isClipboard" />
+          <VContent>
+            <VLayout v-if="loadError" align-center justify-center>
+              <VFlex class="text-xs-center">
+                <Icon color="red">
+                  error
+                </Icon>
+                <p>{{ $tr('loadErrorText') }}</p>
+              </VFlex>
+            </VLayout>
+            <VLayout v-else-if="loading" align-center justify-center>
+              <VFlex class="text-xs-center">
+                <VProgressCircular indeterminate color="grey" />
+                <p class="title mt-4">
+                  {{ $tr('loading') }}
+                </p>
+              </VFlex>
+            </VLayout>
+            <EditView v-else :nodeIds="selected" />
+          </VContent>
         </VCardText>
       </VCard>
     </VDialog>
@@ -177,20 +167,16 @@
 
 <script>
 
-  import _ from 'underscore';
-  import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
-  import { modes } from '../constants';
+  import { mapActions, mapGetters } from 'vuex';
   import EditList from './EditList.vue';
   import EditView from './EditView.vue';
-  import State from 'edit_channel/state';
   import Dialog from 'edit_channel/sharedComponents/Dialog.vue';
   import Alert from 'edit_channel/sharedComponents/Alert.vue';
-  import ResizableNavigationDrawer from 'edit_channel/sharedComponents/ResizableNavigationDrawer.vue';
-  import Uploader from 'edit_channel/sharedComponents/Uploader.vue';
-  import FileStorage from 'edit_channel/file_upload/views/FileStorage.vue';
+  import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
+  import Uploader from 'frontend/channelEdit/views/files/Uploader';
+  import FileStorage from 'frontend/channelEdit/views/files/FileStorage';
   import { fileSizeMixin } from 'edit_channel/file_upload/mixins';
-
-  const SAVE_TIMER = 2000;
+  import { RouterNames } from 'frontend/channelEdit/constants';
 
   export default {
     name: 'EditModal',
@@ -205,90 +191,98 @@
     },
     mixins: [fileSizeMixin],
     props: {
-      isClipboard: {
-        type: Boolean,
-        default: false,
+      detailNodeId: {
+        type: String,
+        default: '',
       },
     },
     data() {
       return {
-        dialog: false,
-        saving: false,
-        saveError: false,
+        loading: false,
+        loadError: false,
+        selected: this.detailNodeIds,
+        drawerOpen: this.multipleNodes,
       };
     },
     computed: {
-      ...mapState('edit_modal', ['nodes', 'changes', 'mode']),
-      ...mapGetters('edit_modal', ['changed', 'invalidNodes', 'totalFileSize', 'filesUploading']),
+      // ...mapGetters('contentNode', ['getContentNodeIsValid']),
+      ...mapGetters('currentChannel', ['canEdit']),
+      // ...mapGetters('edit_modal', ['changed',
+      //'invalidNodes', 'totalFileSize', 'filesUploading']),
       isViewOnly() {
-        return this.mode === modes.VIEW_ONLY;
+        return !this.canEdit;
       },
-      showEditList() {
+      // invalidNodeCount() {
+      //   return this.detailNodeIds.reduce(
+      //     (invalid, detailNodeId) => invalid + Number(!this.getContentNodeIsValid(detailNodeId)),
+      //     0
+      //   );
+      // },
+      multipleNodes() {
         // Only hide drawer when editing a single item
-        return Boolean(this.newContentMode && this.nodes.length) || this.nodes.length > 1;
+        return this.nodes.length > 1;
       },
-      allowAddTopic() {
-        return this.mode === modes.NEW_TOPIC;
+      detailNodeIds() {
+        if (this.detailNodeId) {
+          return [this.detailNodeId];
+        }
+        return [];
       },
-      allowAddExercise() {
-        return this.mode === modes.NEW_EXERCISE;
-      },
-      addButtonText() {
-        if (this.allowAddTopic) return this.$tr('addTopic');
-        else if (this.allowAddExercise) return this.$tr('addExercise');
-        return null;
-      },
-      allowUpload() {
-        return this.mode === modes.UPLOAD;
-      },
-      newContentMode() {
-        return this.allowUpload || this.allowAddExercise || this.allowAddTopic;
-      },
-      debouncedSave() {
-        return _.debounce(this.saveContent, SAVE_TIMER);
+      // nodes() {
+      //   return this.detailNodeIds.map(detailNodeId => this.getContentNode(detailNodeId));
+      // },
+      modalTitle() {
+        return this.canEdit ? this.$tr('editingDetailsHeader') : this.$tr('viewingDetailsHeader');
       },
     },
-    watch: {
-      changes: {
-        deep: true,
-        handler() {
-          if (this.changed) this.debouncedSave();
-        },
-      },
-      dialog(val) {
-        this.hideHTMLScroll(!!val);
-      },
+    beforeRouteEnter(to, from, next) {
+      if (to.name === RouterNames.CONTENTNODE_DETAILS) {
+        return next(vm => {
+          vm.loading = true;
+          vm.loadContentNode(to.params.detailNodeId)
+            .then(() => {
+              vm.loading = false;
+              vm.selected = [to.params.detailNodeId];
+            })
+            .catch(() => {
+              vm.loading = false;
+              vm.loadError = true;
+            });
+        });
+      } else if (to.name === RouterNames.MULTI_CONTENTNODE_DETAILS) {
+        return next(vm => {
+          vm.loading = true;
+          let nodeIds = to.params.detailNodeIds.split(',');
+          vm.loadContentNode(nodeIds)
+            .then(() => {
+              vm.loading = false;
+              vm.selected = [nodeIds[0]];
+            })
+            .catch(() => {
+              vm.loading = false;
+              vm.loadError = true;
+            });
+        });
+      }
+      return next(false);
     },
     mounted() {
       this.hideHTMLScroll(true);
     },
     methods: {
-      ...mapActions('edit_modal', ['saveNodes', 'copyNodes', 'prepareForSave']),
-      ...mapMutations('edit_modal', {
-        select: 'SELECT_NODE',
-        reset: 'RESET_STATE',
-        setNode: 'SET_NODE',
-        addNodeToList: 'ADD_NODE',
-        createNodesFromFiles: 'ADD_NODES_FROM_FILES',
-      }),
-      /*
-       * @public
-       */
-      openModal() {
-        this.dialog = true;
-        if (this.nodes.length > 0) this.$nextTick(() => this.select(0));
-        if (this.mode === modes.NEW_TOPIC || this.mode === modes.NEW_EXERCISE) {
-          this.createNode();
-        }
-      },
+      // ...mapActions('edit_modal', ['saveNodes', 'copyNodes', 'prepareForSave']),
+      ...mapActions('contentNode', ['loadContentNode', 'createContentNode']),
       closeModal() {
-        this.dialog = false;
         this.$refs.uploadsprompt.close();
         this.$refs.saveprompt.close();
         this.$refs.savefailedalert.close();
         this.$emit('modalclosed');
         this.reset();
-        // TODO: Update router
+        this.hideHTMLScroll(false);
+        this.$router.push({
+          name: RouterNames.TREE_VIEW,
+          params: { nodeId: this.$route.params.nodeId },
+        });
       },
       hideHTMLScroll(hidden) {
         document.querySelector('html').style = hidden
@@ -362,45 +356,39 @@
       },
 
       /* Creation actions */
-      createNode() {
-        this.prepareForSave();
-        let titleArgs = { parent: State.currentNode.title };
-        if (this.mode === modes.NEW_TOPIC) {
-          this.addNodeToList({
-            title: this.$tr('topicDefaultTitle', titleArgs),
-            kind: 'topic',
-          });
-        } else if (this.mode === modes.NEW_EXERCISE) {
-          this.addNodeToList({
-            title: this.$tr('exerciseDefaultTitle', titleArgs),
-            kind: 'exercise',
-          });
-        }
-      },
-      uploadStarted(data) {
-        this.prepareForSave();
-        this.addNodeToList({
-          title: data.name,
-          kind: data.kind,
-          files: [
-            {
-              ...data,
-            },
-          ],
+      createNode(kind) {
+        this.createContentNode({
+          kind,
+          parent: this.$route.params.nodeId,
         });
       },
+      createNodesFromFiles(files) {
+        files.forEach(file => {
+          this.createContentNode({
+            kind: file.kind,
+            parent: this.$route.params.nodeId,
+          });
+        });
+      },
+      // uploadStarted(data) {
+      //   this.prepareForSave();
+      //   this.addNodeToList({
+      //     title: data.name,
+      //     kind: data.kind,
+      //     files: [
+      //       {
+      //         ...data,
+      //       },
+      //     ],
+      //   });
+      // },
     },
-
     $trs: {
-      [modes.EDIT]: 'Editing Content Details',
-      [modes.VIEW_ONLY]: 'Viewing Content Details',
-      [modes.NEW_TOPIC]: 'Adding Topics',
-      [modes.NEW_EXERCISE]: 'Adding Exercises',
-      [modes.UPLOAD]: 'Uploading Files',
+      editingDetailsHeader: 'Editing Content Details',
+      viewingDetailsHeader: 'Viewing Content Details',
       saveButtonText: 'Finish',
       copyButtonText:
         '{count, plural,\n =1 {Copy to clipboard}\n other {Copy # items to clipboard}} ({size})',
-      savingIndicator: 'Saving...',
       invalidNodesFound: '{count} errors found',
       invalidNodesFoundText:
         "You won't be able to publish your channel until these errors are resolved",
@@ -410,54 +398,44 @@
       relatedContentText: 'Related content will not be included in the copy of this content.',
       saveFailedHeader: 'Save failed',
       saveFailedText: 'There was a problem saving your content',
-      topicDefaultTitle: '{parent} Topic',
-      exerciseDefaultTitle: '{parent} Exercise',
+      // topicDefaultTitle: '{parent} Topic',
+      // exerciseDefaultTitle: '{parent} Exercise',
+      addItemDropdown: 'Add item',
       addTopic: 'Add Topic',
       addExercise: 'Add Exercise',
-      uploadButton: 'Upload More',
+      uploadButton: 'Upload Files',
       uploadInProgressHeader: 'Upload in progress',
       uploadInProgressText:
         'Files that have not finished uploading will be removed if you finish now',
       cancelUploadsButton: 'Cancel uploads',
       closeWithoutSavingButton: 'Close without saving',
       okButton: 'OK',
+      loading: 'Loading...',
+      loadErrorText: 'Failed to load content',
     },
   };
 
 </script>
 
-<style lang="less">
+<style lang="less" scoped>
 
-  @import '../../../../less/global-variables.less';
+  // .edit-modal-wrapper {
+  //   .edit-list {
+  //     width: 100%;
+  //   }
+  /deep/ .v-toolbar__extension {
+    padding: 0;
+    .v-toolbar__content {
+      border-bottom: 1px solid var(--v-grey-lighten4);
+    }
+  }
 
-  .edit-modal-wrapper {
-    .edit-list {
-      width: 100%;
-    }
-
-    .last-saved-time {
-      padding-top: 20px;
-      margin-right: 15px;
-      font-style: italic;
-      .v-progress-circular {
-        margin-right: 10px;
-        vertical-align: text-top;
-      }
-    }
-    .v-toolbar__extension {
-      padding: 0;
-      .v-toolbar__content {
-        border-bottom: 1px solid @gray-300;
-      }
-    }
-
-    // there is a conflicting style for .row class in common styles
-    // that sets left and right margin to -15px which breaks Vuetify
-    // elements using Vuetify's .row class
-    .row {
-      margin-right: 0;
-      margin-left: 0;
-    }
+  // there is a conflicting style for .row class in common styles
+  // that sets left and right margin to -15px which breaks Vuetify
+  // elements using Vuetify's .row class
+  .row {
+    margin-right: 0;
+    margin-left: 0;
   }
 
 </style>

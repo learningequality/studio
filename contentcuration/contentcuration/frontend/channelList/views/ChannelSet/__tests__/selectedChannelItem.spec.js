@@ -3,15 +3,14 @@ import store from '../../../store';
 import SelectedChannelItem from '../SelectedChannelItem.vue';
 
 const channelId = 'testing';
-store.commit('channelList/ADD_CHANNEL', { id: channelId });
+store.commit('channel/ADD_CHANNEL', { id: channelId });
 
 function makeWrapper() {
-  const wrapper = mount(SelectedChannelItem, {
+  return mount(SelectedChannelItem, {
     store,
     sync: false,
     propsData: { channelId },
   });
-  return wrapper;
 }
 
 describe('selectedChannelItem', () => {

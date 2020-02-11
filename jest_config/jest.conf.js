@@ -19,14 +19,14 @@ module.exports = {
     // copied from webpack config aliases
     jquery: studioJqueryDir,
     '^rawJquery$': '<rootDir>/node_modules/jquery',
-    '\\.(css|less)$': path.resolve(__dirname, './styleMock.js'),
+    '\\.(css|less|styl)$': 'identity-obj-proxy',
+    '^frontend/(.*)': '<rootDir>/contentcuration/contentcuration/frontend/$1',
   },
   testURL: 'http://studio.time',
   transform: {
     '^.+\\.js$': '<rootDir>/node_modules/babel-jest',
     '.*\\.(vue)$': '<rootDir>/node_modules/vue-jest',
     '.*\\.handlebars$': '<rootDir>/node_modules/handlebars-jest',
-    '\\.(styl)$': '<rootDir>/node_modules/jest-css-modules',
   },
   transformIgnorePatterns: ['/node_modules/(?!vuetify)'],
   snapshotSerializers: ['<rootDir>/node_modules/jest-serializer-vue'],

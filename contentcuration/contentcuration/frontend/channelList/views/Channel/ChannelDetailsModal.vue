@@ -140,7 +140,7 @@
       };
     },
     computed: {
-      ...mapGetters('channelList', ['getChannel']),
+      ...mapGetters('channel', ['getChannel']),
       channel() {
         return this.getChannel(this.channelId);
       },
@@ -194,7 +194,7 @@
       this.hideHTMLScroll(true);
     },
     methods: {
-      ...mapActions('channelList', ['loadChannel']),
+      ...mapActions('channel', ['loadChannel']),
       load() {
         this.loading = true;
         this.loadChannel(this.channelId).then(() => {

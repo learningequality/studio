@@ -1,71 +1,68 @@
 <template>
 
-  <Uploader fill @uploading="createNodesFromFiles">
-    <VList width="100%">
-      <!-- Select all checkbox -->
-      <VListTile @click="toggleSelectAll">
-        <VListTileAction>
-          <VCheckbox
-            hide-details
-            color="primary"
-            data-test="select-all"
-            :inputValue="selectAllChecked"
-            @click.stop="toggleSelectAll"
-          />
-        </VListTileAction>
-        <VListTileContent>
-          <VListTileTitle>{{ $tr('selectAllLabel') }}</VListTileTitle>
-        </VListTileContent>
-      </VListTile>
-    </VList>
-    <VList width="100%" two-line>
-      <!-- Selected items -->
-      <EditListItem
-        v-for="(node, index) in nodes"
-        :key="node.id"
-        :index="index"
-        :removable="allowRemove"
-      />
-    </VList>
-  </Uploader>
+  <VList two-line>
+    <!-- Select all checkbox -->
+    <VCheckbox
+      v-model="selectAll"
+      color="primary"
+      hide-details
+      class="mt-0 mb-2 pa-2"
+      :label="$tr('selectAllLabel')"
+    />
+    <VDivider />
+    <EditListItem
+      v-for="nodeId in nodeIds"
+      :key="nodeId"
+      v-model="selected"
+      :nodeId="nodeId"
+      :removable="canEdit"
+    />
+
+  </VList>
 
 </template>
 
 <script>
 
-  import { mapMutations, mapState } from 'vuex';
+  import { mapGetters } from 'vuex';
   import EditListItem from './EditListItem.vue';
-  import Uploader from 'edit_channel/sharedComponents/Uploader.vue';
 
   export default {
     name: 'EditList',
     components: {
       EditListItem,
-      Uploader,
     },
     props: {
-      allowRemove: {
-        type: Boolean,
-        default: false,
+      value: {
+        type: Array,
+        default: () => [],
+      },
+      nodeIds: {
+        type: Array,
+        default: () => [],
       },
     },
-    data() {
-      return {
-        selectAllChecked: false,
-      };
-    },
     computed: {
-      ...mapState('edit_modal', ['nodes']),
-    },
-    methods: {
-      ...mapMutations('edit_modal', {
-        selectAll: 'SELECT_ALL_NODES',
-        deselectAll: 'RESET_SELECTED',
-        createNodesFromFiles: 'ADD_NODES_FROM_FILES',
-      }),
-      toggleSelectAll() {
-        this.selectAllChecked ? this.deselectAll() : this.selectAll();
-        this.selectAllChecked = !this.selectAllChecked;
+      ...mapGetters('currentChannel', ['canEdit']),
+      selected: {
+        get() {
+          return this.value;
+        },
+        set(items) {
+          this.$emit('input', items);
+        },
+      },
+      selectAll: {
+        get() {
+          return this.nodeIds.every(nodeId => this.selected.includes(nodeId));
+        },
+        set(value) {
+          if (value) {
+            this.selected = this.nodeIds;
+          } else {
+            this.selected = [];
+          }
+        },
       },
     },
     $trs: {
@@ -77,13 +74,8 @@
 
 <style lang="less" scoped>
 
-  /deep/ .v-list {
-    width: 100%;
-    /deep/ a,
-    /deep/ a:hover {
-      color: inherit;
-      text-decoration: none;
-    }
+  .v-divider {
+    margin-top: 0;
   }
 
 </style>

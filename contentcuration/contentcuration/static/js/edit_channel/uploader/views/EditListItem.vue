@@ -1,21 +1,21 @@
 <template>
 
-  <VListTile :style="{backgroundColor: backgroundColor}" @click.stop="setNode(index)">
-    <VListTileAction>
+  <!-- Wait for node to load before listing -->
+  <VListTile
+    v-if="node"
+    :style="{backgroundColor}"
+    @click.stop="selected = [nodeId]"
+  >
+    <VListTileAction style="min-width:min-content;" @click.stop>
       <VCheckbox
+        v-model="selected"
         color="primary"
+        :value="nodeId"
         hide-details
-        :inputValue="isSelected"
-        @click.stop="toggleNode"
+        class="ma-0"
       />
     </VListTileAction>
-    <VListTileAction
-      v-if="node.changesStaged"
-      :style="{color: $vuetify.theme.primary}"
-      class="changed"
-    >
-      *
-    </VListTileAction>
+
     <VListTileAction style="min-width:min-content;">
       <ContentNodeIcon :kind="node.kind" :showColor="false" />
     </VListTileAction>
@@ -38,17 +38,8 @@
       </FileStatus>
     </VListTileAction>
     <VListTileAction v-if="removable">
-      <VBtn
-        icon
-        small
-        flat
-        color="grey"
-        class="remove-item"
-        @click.stop="removeNode(index)"
-      >
-        <Icon>
-          clear
-        </Icon>
+      <VBtn icon small flat class="remove-item" @click.stop="deleteContentNode(nodeId)">
+        <Icon>clear</Icon>
       </VBtn>
     </VListTileAction>
   </VListTile>
@@ -57,12 +48,11 @@
 
 <script>
 
-  import _ from 'underscore';
-  import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
-  import { modes } from '../constants';
-  import ContentNodeIcon from 'edit_channel/sharedComponents/ContentNodeIcon.vue';
+  // import reject from 'lodash/reject';
+  import { mapActions, mapGetters } from 'vuex';
   import { fileSizeMixin, fileStatusMixin } from 'edit_channel/file_upload/mixins';
-  import FileStatus from 'edit_channel/file_upload/views/FileStatus.vue';
+  import FileStatus from 'frontend/channelEdit/views/files/FileStatus';
+  import ContentNodeIcon from 'shared/views/ContentNodeIcon';
 
   export default {
     name: 'EditListItem',
@@ -72,8 +62,12 @@
     },
     mixins: [fileSizeMixin, fileStatusMixin],
     props: {
-      index: {
-        type: Number,
+      value: {
+        type: Array,
+        default: () => [],
+      },
+      nodeId: {
+        type: String,
         required: true,
       },
       removable: {
@@ -82,26 +76,26 @@
       },
     },
     computed: {
-      ...mapGetters('edit_modal', ['getNode', 'invalidNodes']),
-      ...mapState('edit_modal', ['mode', 'selectedIndices']),
-      node() {
-        return this.getNode(this.index);
+      ...mapGetters('contentNode', ['getContentNode', 'getContentNodeIsValid']),
+      selected: {
+        get() {
+          return this.value;
+        },
+        set(value) {
+          this.$emit('input', value);
+        },
       },
-      isSelected() {
-        return this.selectedIndices.includes(this.index);
+      node() {
+        return this.getContentNode(this.nodeId);
       },
       nodeIsValid() {
-        if (this.mode === modes.VIEW_ONLY) {
-          return true;
-        }
-
-        return !this.invalidNodes({ ignoreNewNodes: true }).includes(this.index);
+        return !this.canEdit || this.getContentNodeIsValid(this.nodeId);
       },
       backgroundColor() {
-        if (this.selectedIndices.length > 1 && this.isSelected) {
-          return this.$vuetify.theme.primaryBackground;
-        } else if (this.isSelected) {
-          return this.$vuetify.theme.greyBackground;
+        if (this.selected.includes(this.nodeId)) {
+          return this.selected.length > 1
+            ? this.$vuetify.theme.primaryBackground
+            : this.$vuetify.theme.greyBackground;
         }
         return 'transparent';
       },
@@ -116,15 +110,7 @@
       },
     },
     methods: {
-      ...mapMutations('edit_modal', {
-        select: 'SELECT_NODE',
-        deselect: 'DESELECT_NODE',
-        setNode: 'SET_NODE',
-      }),
-      ...mapActions('edit_modal', ['removeNode']),
-      toggleNode() {
-        this.isSelected ? this.deselect(this.index) : this.select(this.index);
-      },
+      ...mapActions('contentNode', ['deleteContentNode']),
     },
     $trs: {
       questionCount: '{count, plural,\n =1 {# Question}\n other {# Questions}}',
@@ -143,10 +129,6 @@
       min-width: 15px;
       font-weight: bold;
     }
-  }
-
-  .selected {
-    background-color: @gray-200;
   }
 
   .remove-item {

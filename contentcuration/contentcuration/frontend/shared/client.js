@@ -1,9 +1,14 @@
 import axios from 'axios';
+import qs from 'qs';
 
 const client = axios.create({
   xsrfCookieName: 'csrftoken',
   xsrfHeaderName: 'X-CSRFToken',
   timeout: 2000,
+  paramsSerializer: function(params) {
+    // Do custom querystring stingifying to comma separate array params
+    return qs.stringify(params, { arrayFormat: 'comma' });
+  },
 });
 
 client.interceptors.response.use(
@@ -21,7 +26,7 @@ client.interceptors.response.use(
       // we should silence those on the front end and try
       // to catch legitimate request issues in the backend.
       if (error.response.status === 403 || error.response.status === 404) {
-        return;
+        return Promise.reject(error);
       }
 
       if (error.response.status === 0) {
@@ -50,15 +55,16 @@ client.interceptors.response.use(
       error: message,
       response: error.response ? error.response.data : null,
     };
-
-    console.warn('AJAX Request Error: ' + message); // eslint-disable-line no-console
-    console.warn('Error data: ' + JSON.stringify(extraData)); // eslint-disable-line no-console
+    if (process.env.NODE_ENV !== 'production') {
+      // In dev build log warnings to console for developer use
+      console.warn('AJAX Request Error: ' + message); // eslint-disable-line no-console
+      console.warn('Error data: ' + JSON.stringify(extraData)); // eslint-disable-line no-console
+    }
     if (Raven && Raven.captureMessage) {
       Raven.captureMessage(message, {
         extra: extraData,
       });
     }
-
     return Promise.reject(error);
   }
 );

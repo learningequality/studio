@@ -1,6 +1,6 @@
 <template>
 
-  <VCard class="my-3" :to="openChannelLink" data-test="channel-card">
+  <VCard class="my-3" :href="openChannelLink" data-test="channel-card">
     <VLayout row wrap>
       <VFlex xs12 sm3>
         <VCardTitle>
@@ -192,7 +192,7 @@
       };
     },
     computed: {
-      ...mapGetters('channelList', ['getChannel']),
+      ...mapGetters('channel', ['getChannel']),
       ...mapState({
         loggedIn: state => state.session.loggedIn,
       }),
@@ -225,13 +225,13 @@
         // TODO: update if we decide to make channel edit page accessible
         // without an account
         if (this.loggedIn) {
-          return window.Urls.channel() + `#/channel/${this.channelId}`;
+          return window.Urls.channel(this.channelId);
         }
         return this.channelDetailsLink;
       },
     },
     methods: {
-      ...mapActions('channelList', ['deleteChannel']),
+      ...mapActions('channel', ['deleteChannel']),
       handleDelete() {
         this.deleteChannel(this.channelId).then(() => {
           this.deleteDialog = false;

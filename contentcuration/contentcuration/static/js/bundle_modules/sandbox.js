@@ -3,12 +3,12 @@ import Vuetify from 'vuetify';
 import colors from 'vuetify/es5/util/colors';
 import Sandbox from '../sandbox/Sandbox.vue';
 
-const Vuex = require('vuex');
+// const Vuex = require('vuex');
 
 var VueIntl = require('vue-intl');
-const editModal = require('edit_channel/uploader/vuex/store');
-const fileUpload = require('edit_channel/vuexModules/fileUpload');
-const contentNodesModule = require('edit_channel/vuexModules/contentNodes');
+// const editModal = require('edit_channel/uploader/vuex/store');
+// const fileUpload = require('edit_channel/vuexModules/fileUpload');
+// const contentNodesModule = require('edit_channel/vuexModules/contentNodes');
 
 require('vuetify/dist/vuetify.min.css');
 require('../../less/styles.less');
@@ -21,16 +21,6 @@ const State = require('edit_channel/state');
 //   // of ES6 export default in webpack vs Jest
 //   Vue = Vue.default;
 // }
-
-Vue.use(Vuex);
-
-const store = new Vuex.Store({
-  modules: {
-    edit_modal: editModal,
-    fileUploads: fileUpload,
-    topicTree: contentNodesModule,
-  },
-});
 
 Vue.use(VueIntl);
 Vue.use(Vuetify, {
@@ -80,6 +70,5 @@ State.currentNode = {
 
 new Vue({
   el: 'sandbox',
-  store,
   ...Sandbox,
 });

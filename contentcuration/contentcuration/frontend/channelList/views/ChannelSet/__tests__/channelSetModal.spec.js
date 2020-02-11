@@ -10,7 +10,7 @@ Vue.use(VueRouter);
 
 const channelSetId = 'testing';
 
-function makeWrapper(saveStub, closeStub) {
+function makeWrapper(closeStub) {
   router.push({
     name: RouterNames.CHANNEL_SET_DETAILS,
     params: {
@@ -25,7 +25,6 @@ function makeWrapper(saveStub, closeStub) {
     },
   });
   wrapper.setMethods({
-    saveAndClose: saveStub,
     close: closeStub,
   });
   return wrapper;
@@ -33,20 +32,14 @@ function makeWrapper(saveStub, closeStub) {
 
 describe('channelSetModal', () => {
   let wrapper;
-  let saveStub = jest.fn();
   let closeStub = jest.fn();
   beforeEach(() => {
-    saveStub.mockReset();
     closeStub.mockReset();
-    wrapper = makeWrapper(saveStub, closeStub);
+    wrapper = makeWrapper(closeStub);
   });
   it('clicking close should close the modal', () => {
     wrapper.find('[data-test="close"]').trigger('click');
     expect(closeStub).toHaveBeenCalled();
-  });
-  it('clicking save button should call save method', () => {
-    wrapper.find('[data-test="save"]').trigger('click');
-    expect(saveStub).toHaveBeenCalled();
   });
   it('clicking select channels button should navigate to channel selection view', () => {
     wrapper.setData({ loadingChannels: false });

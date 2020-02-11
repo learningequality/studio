@@ -29,7 +29,6 @@ from contentcuration.models import Channel
 from contentcuration.models import ContentKind
 from contentcuration.models import ContentNode
 from contentcuration.models import ContentTag
-from contentcuration.models import DEFAULT_CONTENT_DEFAULTS
 from contentcuration.models import File
 from contentcuration.models import FileFormat
 from contentcuration.models import FormatPreset
@@ -178,55 +177,6 @@ class ContentKindSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContentKind
         fields = ("kind", 'associated_presets')
-
-
-class ContentDefaultsSerializer(serializers.Serializer):
-    author = serializers.CharField(allow_null=True, required=False)
-    aggregator = serializers.CharField(allow_null=True, required=False)
-    provider = serializers.CharField(allow_null=True, required=False)
-    copyright_holder = serializers.CharField(allow_null=True, required=False)
-    license = serializers.CharField(allow_null=True, required=False,
-                                    validators=[License.validate_name])
-    license_description = serializers.CharField(allow_null=True, required=False)
-    auto_derive_video_thumbnail = serializers.BooleanField(required=False)
-    auto_derive_audio_thumbnail = serializers.BooleanField(required=False)
-    auto_derive_document_thumbnail = serializers.BooleanField(required=False)
-    auto_derive_html5_thumbnail = serializers.BooleanField(required=False)
-
-    def create(self, validated_data):
-        instance = DEFAULT_CONTENT_DEFAULTS.copy()
-        instance.update(validated_data)
-        return instance
-
-    def update(self, instance, validated_data):
-        instance.update(validated_data)
-        return instance
-
-
-class ContentDefaultsSerializerMixin(object):
-    def is_valid(self, raise_exception=False):
-        is_valid = super(ContentDefaultsSerializerMixin, self).is_valid(raise_exception)
-
-        content_defaults = self.validated_data.pop('content_defaults', {})
-        if self.instance:
-            self.content_defaults = ContentDefaultsSerializer(self.instance.content_defaults,
-                                                              data=content_defaults)
-        else:
-            self.content_defaults = ContentDefaultsSerializer(data=content_defaults)
-
-        if not self.content_defaults.is_valid(raise_exception):
-            self._errors = self.content_defaults.errors
-            return False
-
-        return is_valid
-
-    def create(self, validated_data):
-        validated_data.update(content_defaults=self.content_defaults.save())
-        return super(ContentDefaultsSerializerMixin, self).create(validated_data)
-
-    def update(self, instance, validated_data):
-        validated_data.update(content_defaults=self.content_defaults.save())
-        return super(ContentDefaultsSerializerMixin, self).update(instance, validated_data)
 
 
 class CustomListSerializer(serializers.ListSerializer):
@@ -874,13 +824,17 @@ class CurrentUserSerializer(serializers.ModelSerializer):
 
 class UserChannelListSerializer(serializers.ModelSerializer):
     bookmarks = serializers.SerializerMethodField('retrieve_bookmarks')
+    available_space = serializers.SerializerMethodField()
+
+    def get_available_space(self, user):
+        return user.get_available_space()
 
     def retrieve_bookmarks(self, user):
         return user.bookmarked_channels.values_list('id', flat=True)
 
     class Meta:
         model = User
-        fields = ('email', 'first_name', 'last_name', 'id', 'is_active', 'bookmarks', 'is_admin')
+        fields = ('email', 'first_name', 'last_name', 'id', 'is_active', 'bookmarks', 'is_admin', 'available_space', 'disk_space')
 
 
 class AdminChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):

@@ -1,115 +1,94 @@
 <template>
 
-  <VContent>
-    <VContainer fluid fill-height>
-      <FileUploadDefault v-if="uploadMode && !nodes.length" />
-      <VLayout v-else-if="!selected.length" justify-center align-center fill-height>
-        <VFlex grow class="default-content">
-          {{ noItemText }}
-        </VFlex>
-      </VLayout>
-      <VLayout v-else-if="loadError" justify-center align-center fill-height>
-        <VFlex grow class="default-content">
-          <Icon color="red" class="error-icon">
-            error
-          </Icon>
-          <p>{{ $tr('loadErrorText') }}</p>
-        </VFlex>
-      </VLayout>
-      <VLayout v-else-if="!allLoaded" justify-center align-center fill-height>
-        <VFlex grow class="default-content">
-          <VProgressCircular :indeterminate="true" size="50" color="primary" />
-          <br><br>
-          <p>{{ $tr('loadingText') }}</p>
-        </VFlex>
-      </VLayout>
-      <VLayout v-else justify-center>
-        <VFlex grow>
-          <VTabs v-model="currentTab" slider-color="primary">
-            <!-- Details tab -->
-            <VTab ref="detailstab" :href="`#${tabs.DETAILS}`">
-              {{ $tr(tabs.DETAILS) }}
-              <VTooltip v-if="invalidSelected || !areFilesValid" top>
-                <template v-slot:activator="{ on }">
-                  <Icon color="red" dark v-on="on">
-                    error
-                  </Icon>
-                </template>
-                <span>{{ $tr('invalidFieldsToolTip') }}</span>
-              </VTooltip>
-            </VTab>
+  <VContainer fluid fill-height>
+    <VLayout v-if="!nodeIds.length" justify-center align-center fill-height>
+      <VFlex grow class="text-xs-center title grey--text">
+        {{ noItemText }}
+      </VFlex>
+    </VLayout>
+    <VLayout v-else justify-center>
+      <VFlex grow>
+        <VTabs v-model="currentTab" slider-color="primary">
+          <!-- Details tab -->
+          <VTab ref="detailstab" :href="`#${tabs.DETAILS}`">
+            {{ $tr(tabs.DETAILS) }}
+            <VTooltip v-if="invalidSelected || !areFilesValid" top>
+              <template v-slot:activator="{ on }">
+                <Icon color="red" dark small class="ml-2" v-on="on">
+                  error
+                </Icon>
+              </template>
+              <span>{{ $tr('invalidFieldsToolTip') }}</span>
+            </VTooltip>
+          </VTab>
 
-            <!-- Questions tab -->
-            <VTab v-if="showQuestionsTab" ref="questiontab" :href="`#${tabs.QUESTIONS}`">
-              {{ $tr(tabs.QUESTIONS) }}
-              <VTooltip v-if="!areAssessmentItemsValid" top>
-                <template v-slot:activator="{ on }">
-                  <Icon color="red" dark v-on="on">
-                    error
-                  </Icon>
-                </template>
-                <span>{{ $tr('invalidFieldsToolTip') }}</span>
-              </VTooltip>
-              <VChip v-else color="gray" dark>
-                {{ assessmentItemsCount }}
-              </VChip>
-            </VTab>
+          <!-- Questions tab -->
+          <VTab v-if="showQuestionsTab" ref="questiontab" :href="`#${tabs.QUESTIONS}`">
+            {{ $tr(tabs.QUESTIONS) }}
+            <VTooltip v-if="!areAssessmentItemsValid" top>
+              <template v-slot:activator="{ on }">
+                <Icon color="red" dark v-on="on">
+                  error
+                </Icon>
+              </template>
+              <span>{{ $tr('invalidFieldsToolTip') }}</span>
+            </VTooltip>
+            <VChip v-else color="gray" dark>
+              {{ assessmentItemsCount }}
+            </VChip>
+          </VTab>
 
-            <!-- Prerequisites tab -->
-            <VTab
-              v-if="showPrerequisitesTab"
-              ref="prerequisitetab"
-              :href="`#${tabs.PREREQUISITES}`"
-            >
-              {{ $tr(tabs.PREREQUISITES) }}
-              <VChip v-if="oneSelected.prerequisite.length" color="gray" dark>
-                {{ oneSelected.prerequisite.length }}
-              </VChip>
-            </VTab>
-          </VTabs>
-          <VTabsItems v-model="currentTab">
-            <VTabItem :key="tabs.DETAILS" ref="detailswindow" :value="tabs.DETAILS" lazy>
-              <VAlert :value="selected.length > 1" type="info" color="primary" outline>
-                {{ countText }}
-              </VAlert>
-              <VAlert v-if="invalidSelected" :value="true" type="error" outline icon="error">
-                {{ $tr('errorBannerText') }}
-              </VAlert>
-              <DetailsTabView :viewOnly="viewOnly" />
-            </VTabItem>
-            <VTabItem :key="tabs.QUESTIONS" ref="questionwindow" :value="tabs.QUESTIONS" lazy>
-              <AssessmentView />
-            </VTabItem>
-            <VTabItem
-              :key="tabs.PREREQUISITES"
-              ref="prerequisiteswindow"
-              :value="tabs.PREREQUISITES"
-              lazy
-            >
-              Prerequisites
-            </VTabItem>
-          </VTabsItems>
-        </VFlex>
-      </VLayout>
-    </VContainer>
-  </VContent>
+          <!-- Prerequisites tab -->
+          <VTab
+            v-if="showPrerequisitesTab"
+            ref="prerequisitetab"
+            :href="`#${tabs.PREREQUISITES}`"
+          >
+            {{ $tr(tabs.PREREQUISITES) }}
+            <VChip v-if="firstNode.prerequisite.length" color="gray" dark>
+              {{ firstNode.prerequisite.length }}
+            </VChip>
+          </VTab>
+        </VTabs>
+        <VTabsItems v-model="currentTab">
+          <VTabItem :key="tabs.DETAILS" ref="detailswindow" :value="tabs.DETAILS" lazy>
+            <VAlert :value="nodeIds.length > 1" type="info" color="primary" outline>
+              {{ countText }}
+            </VAlert>
+            <VAlert v-if="invalidSelected" :value="true" type="error" outline icon="error">
+              {{ $tr('errorBannerText') }}
+            </VAlert>
+            <DetailsTabView :viewOnly="!canEdit" :nodeIds="nodeIds" />
+          </VTabItem>
+          <VTabItem :key="tabs.QUESTIONS" ref="questionwindow" :value="tabs.QUESTIONS" lazy>
+            <AssessmentView />
+          </VTabItem>
+          <VTabItem
+            :key="tabs.PREREQUISITES"
+            ref="prerequisiteswindow"
+            :value="tabs.PREREQUISITES"
+            lazy
+          >
+            Prerequisites
+          </VTabItem>
+        </VTabsItems>
+      </VFlex>
+    </VLayout>
+  </VContainer>
 
 </template>
 
 <script>
 
-  import _ from 'underscore';
-  import { mapActions, mapGetters, mapState } from 'vuex';
-  import { TabNames, modes } from '../constants';
-  import DetailsTabView from './DetailsTabView.vue';
-  import AssessmentView from './AssessmentView.vue';
-  import FileUploadDefault from 'edit_channel/file_upload/views/FileUploadDefault.vue';
+  import { mapGetters } from 'vuex';
+  import { TabNames } from '../constants';
+  import DetailsTabView from './DetailsTabView';
+  import AssessmentView from './AssessmentView';
 
   export default {
     name: 'EditView',
     components: {
       DetailsTabView,
-      FileUploadDefault,
       AssessmentView,
     },
     props: {
@@ -117,88 +96,66 @@
         type: Boolean,
         default: false,
       },
+      nodeIds: {
+        type: Array,
+        default: () => [],
+      },
     },
     data() {
       return {
         currentTab: null,
-        loadError: false,
-        loadNodesDebounced: _.debounce(() => {
-          this.loadError = false;
-          this.loadNodes(this.selectedIndices).catch(() => (this.loadError = true));
-        }, 1000),
       };
     },
     computed: {
-      ...mapGetters('edit_modal', [
-        'selected',
-        'allExercises',
-        'allResources',
-        'isNodeNew',
-        'areNodeDetailsValid',
-        'areNodeFilesValid',
-        'areNodeAssessmentItemsValid',
-        'nodeAssessmentItemsCount',
+      ...mapGetters('contentNode', [
+        'getContentNodes',
+        'getContentNodeDetailsAreValid',
+        'getContentNodeFilesAreValid',
       ]),
-      ...mapState('edit_modal', ['nodes', 'selectedIndices', 'mode']),
-      noItemText() {
-        if (!this.nodes.length) {
-          if (this.mode === modes.NEW_EXERCISE) return this.$tr('addExerciseText');
-          else if (this.mode === modes.NEW_TOPIC) return this.$tr('addTopicText');
-        }
-        return this.viewOnly ? this.$tr('noItemsToViewText') : this.$tr('noItemsToEditText');
+      ...mapGetters('currentChannel', ['canEdit']),
+      firstNode() {
+        return this.nodes.length ? this.nodes[0] : null;
       },
-      uploadMode() {
-        return this.mode === modes.UPLOAD;
+      nodes() {
+        return this.getContentNodes(this.nodeIds);
+      },
+
+      noItemText() {
+        return this.canEdit ? this.$tr('noItemsToEditText') : this.$tr('noItemsToViewText');
       },
       tabs() {
         return TabNames;
       },
-      viewOnly() {
-        return this.mode === modes.VIEW_ONLY;
-      },
       oneSelected() {
-        return this.selected.length === 1 && this.selected[0];
+        return this.nodeIds.length === 1;
       },
       showQuestionsTab() {
-        return this.oneSelected && this.allExercises;
+        return this.oneSelected && this.firstNode && this.firstNode.kind === 'exercise';
       },
       showPrerequisitesTab() {
-        return this.oneSelected && !this.isClipboard && this.allResources;
-      },
-      allLoaded() {
-        return _.all(this.selected, '_COMPLETE');
+        return (
+          this.oneSelected && !this.isClipboard && this.firstNode && this.firstNode.kind !== 'topic'
+        );
       },
       invalidSelected() {
         return (
-          !this.viewOnly &&
-          this.selectedIndices.some(
-            nodeIdx => !this.isNodeNew(nodeIdx) && !this.areNodeDetailsValid(nodeIdx)
-          )
+          this.canEdit && this.nodeIds.some(nodeId => !this.getContentNodeDetailsAreValid(nodeId))
         );
       },
       countText() {
-        let messageArgs = { count: this.selected.length };
-        if (this.viewOnly) return this.$tr('viewingMultipleCount', messageArgs);
-        return this.$tr('editingMultipleCount', messageArgs);
+        let messageArgs = { count: this.nodeIds.length };
+        if (this.canEdit) return this.$tr('editingMultipleCount', messageArgs);
+        return this.$tr('viewingMultipleCount', messageArgs);
       },
       areAssessmentItemsValid() {
-        return this.areNodeAssessmentItemsValid(this.selectedIndices[0]);
+        return true;
       },
       areFilesValid() {
-        return this.areNodeFilesValid(this.selectedIndices[0]);
+        return !this.oneSelected || this.getContentNodeFilesAreValid(this.nodeIds[0]);
       },
       assessmentItemsCount() {
-        return this.nodeAssessmentItemsCount(this.selectedIndices[0]);
+        return 0;
       },
-    },
-    watch: {
-      selectedIndices() {
-        this.currentTab = TabNames.DETAILS;
-        this.loadNodesDebounced();
-      },
-    },
-    methods: {
-      ...mapActions('edit_modal', ['loadNodes']),
     },
     $trs: {
       [TabNames.DETAILS]: 'Details',
@@ -207,10 +164,6 @@
       [TabNames.PREREQUISITES]: 'Prerequisites',
       noItemsToEditText: 'Please select an item or items to edit',
       noItemsToViewText: 'Please select an item or items to view',
-      addTopicText: 'Please add a topic to get started',
-      addExerciseText: 'Please add an exercise to get started',
-      loadingText: 'Loading Content...',
-      loadErrorText: 'Unable to load content',
       invalidFieldsToolTip: 'Invalid fields detected',
       errorBannerText: 'Please address invalid fields',
       editingMultipleCount: 'Editing details for {count, plural,\n =1 {# item}\n other {# items}}',
@@ -222,8 +175,6 @@
 
 <style lang="less" scoped>
 
-  @import '../../../../less/global-variables.less';
-
   .container {
     width: unset;
   }
@@ -234,18 +185,13 @@
     font-weight: bold;
   }
 
-  .default-content {
-    .empty_default;
-
-    margin: 10% auto;
-  }
   .v-tabs {
-    margin: -32px -31px 0;
-    border-bottom: 1px solid @gray-300;
+    margin: -32px -32px 0;
+    border-bottom: 1px solid var(--v-grey-lighten3);
   }
 
   .v-tabs__div {
-    padding: 0 20px;
+    padding: 20px;
     font-weight: bold;
     .v-icon {
       margin-left: 5px;

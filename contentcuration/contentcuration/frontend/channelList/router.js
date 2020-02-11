@@ -1,4 +1,3 @@
-// include all logic in "base" entrypoint
 import VueRouter from 'vue-router';
 import ChannelList from './views/Channel/ChannelList';
 import ChannelModal from './views/Channel/ChannelModal';

@@ -1,17 +1,20 @@
-import { lastSavedStateFactory } from '../../utils';
 import * as getters from './getters';
 import * as mutations from './mutations';
 import * as actions from './actions';
 
-export const channelLastSavedState = lastSavedStateFactory();
-
 export default {
   namespaced: true,
   state: () => ({
-    channelsMap: {},
     channelDetailsMap: {},
     invitationsMap: {},
-    page: {},
+    page: {
+      next: null,
+      previous: null,
+      page_number: null,
+      count: null,
+      total_pages: null,
+      results: [],
+    },
   }),
   getters,
   mutations,

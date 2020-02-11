@@ -66,7 +66,7 @@
 
 <script>
 
-  import { mapActions } from 'vuex';
+  import { mapActions, mapGetters } from 'vuex';
   import { RouterNames } from '../../constants';
   import PrimaryDialog from 'shared/views/PrimaryDialog';
   import CopyToken from 'shared/views/CopyToken';
@@ -78,8 +78,8 @@
       CopyToken,
     },
     props: {
-      channelSet: {
-        type: Object,
+      channelSetId: {
+        type: String,
         required: true,
       },
     },
@@ -89,6 +89,10 @@
       };
     },
     computed: {
+      ...mapGetters('channelSet', ['getChannelSet']),
+      channelSet() {
+        return this.getChannelSet(this.channelSetId);
+      },
       channelSetDetailsLink() {
         return {
           name: RouterNames.CHANNEL_SET_DETAILS,
@@ -96,7 +100,9 @@
         };
       },
       channelCount() {
-        return this.channelSet.channels.filter(c => c).length;
+        return this.channelSet && this.channelSet.channels
+          ? this.channelSet.channels.filter(c => c).length
+          : 0;
       },
     },
     methods: {

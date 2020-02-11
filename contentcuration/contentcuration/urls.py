@@ -25,8 +25,6 @@ from rest_framework import permissions
 from rest_framework import routers
 from rest_framework import viewsets
 from rest_framework.exceptions import MethodNotAllowed
-from rest_framework_bulk.generics import BulkModelViewSet
-from rest_framework_bulk.routes import BulkRouter
 
 import contentcuration.serializers as serializers
 import contentcuration.views.admin as admin_views
@@ -43,21 +41,24 @@ from contentcuration.celery import app
 from contentcuration.forms import ForgotPasswordForm
 from contentcuration.forms import LoginForm
 from contentcuration.forms import ResetPasswordForm
-from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
 from contentcuration.models import ContentKind
-from contentcuration.models import ContentNode
 from contentcuration.models import ContentTag
-from contentcuration.models import File
 from contentcuration.models import FileFormat
 from contentcuration.models import FormatPreset
 from contentcuration.models import Language
 from contentcuration.models import License
 from contentcuration.models import Task
 from contentcuration.models import User
+from contentcuration.viewsets.assessmentitem import AssessmentItemViewSet
+from contentcuration.viewsets.channel import CatalogViewSet
 from contentcuration.viewsets.channel import ChannelViewSet
 from contentcuration.viewsets.channelset import ChannelSetViewSet
+from contentcuration.viewsets.contentnode import ContentNodeViewSet
+from contentcuration.viewsets.file import FileViewSet
 from contentcuration.viewsets.invitation import InvitationViewSet
+from contentcuration.viewsets.sync import sync
+from contentcuration.viewsets.tree import TreeViewSet
 
 
 def get_channel_tree_ids(user):
@@ -79,17 +80,6 @@ class LanguageViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.LanguageSerializer
 
 
-class FileViewSet(BulkModelViewSet):
-    queryset = File.objects.all()
-    serializer_class = serializers.FileSerializer
-
-    def get_queryset(self):
-        if self.request.user.is_admin:
-            return File.objects.all()
-        tree_ids = get_channel_tree_ids(self.request.user)
-        return File.objects.select_related('contentnode').filter(contentnode__tree_id__in=tree_ids).distinct()
-
-
 class FileFormatViewSet(viewsets.ModelViewSet):
     queryset = FileFormat.objects.all()
     serializer_class = serializers.FileFormatSerializer
@@ -103,20 +93,6 @@ class FormatPresetViewSet(viewsets.ModelViewSet):
 class ContentKindViewSet(viewsets.ModelViewSet):
     queryset = ContentKind.objects.all()
     serializer_class = serializers.ContentKindSerializer
-
-
-class ContentNodeViewSet(BulkModelViewSet):
-    queryset = ContentNode.objects.all()
-    serializer_class = serializers.ContentNodeCompleteSerializer
-
-    def get_queryset(self):
-        if self.request.user.is_admin:
-            return ContentNode.objects.all()
-
-        # Set up eager loading to avoid N+1 selects
-        tree_ids = get_channel_tree_ids(self.request.user)
-        return ContentNode.objects.prefetch_related('children').prefetch_related('files') \
-                                  .prefetch_related('assessment_items').filter(tree_id__in=tree_ids).distinct()
 
 
 class TagViewSet(viewsets.ModelViewSet):
@@ -143,18 +119,6 @@ class UserViewSet(viewsets.ModelViewSet):
         return User.objects.filter(Q(pk=self.request.user.pk) |
                                    Q(editable_channels__pk__in=channel_list) |
                                    Q(view_only_channels__pk__in=channel_list)).distinct()
-
-
-class AssessmentItemViewSet(BulkModelViewSet):
-    queryset = AssessmentItem.objects.all()
-
-    serializer_class = serializers.AssessmentItemSerializer
-
-    def get_queryset(self):
-        if self.request.user.is_admin:
-            return AssessmentItem.objects.all()
-        tree_ids = get_channel_tree_ids(self.request.user)
-        return AssessmentItem.objects.select_related('contentnode').filter(contentnode__tree_id__in=tree_ids).distinct()
 
 
 class TaskViewSet(viewsets.ModelViewSet):
@@ -207,6 +171,9 @@ router.register(r'license', LicenseViewSet)
 router.register(r'language', LanguageViewSet)
 router.register(r'channel', ChannelViewSet)
 router.register(r'channelset', ChannelSetViewSet)
+router.register(r'catalog', CatalogViewSet, base_name='catalog')
+router.register(r'file', FileViewSet)
+router.register(r'fileformat', FileFormatViewSet)
 router.register(r'fileformat', FileFormatViewSet)
 router.register(r'preset', FormatPresetViewSet)
 router.register(r'tag', TagViewSet)
@@ -214,21 +181,19 @@ router.register(r'contentkind', ContentKindViewSet)
 router.register(r'task', TaskViewSet)
 router.register(r'user', UserViewSet)
 router.register(r'invitation', InvitationViewSet)
+router.register(r'contentnode', ContentNodeViewSet)
+router.register(r'assessmentitem', AssessmentItemViewSet)
+router.register(r'tree', TreeViewSet, base_name='tree')
 
-bulkrouter = BulkRouter(trailing_slash=False)
-bulkrouter.register(r'assessmentitem', AssessmentItemViewSet)
-bulkrouter.register(r'contentnode', ContentNodeViewSet)
-bulkrouter.register(r'file', FileViewSet)
 
 urlpatterns = [
     url(r'^$', views.base, name='base'),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^api/', include(router.urls)),
-    url(r'^api/', include(bulkrouter.urls)),
     url(r'^api/publish_channel/$', views.publish_channel, name='publish_channel'),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^channels/$', views.channel_list, name='channels'),
-    url(r'^channels/(?P<channel_id>[^/]{32})', views.channel, name='channel'),
+    url(r'^channels/(?P<channel_id>[^/]{32})/$', views.channel, name='channel'),
     url(r'^accessible_channels/(?P<channel_id>[^/]{32})$', views.accessible_channels, name='accessible_channels'),
     url(r'^api/activate_channel$', views.activate_channel_endpoint, name='activate_channel'),
     url(r'^api/get_staged_diff_endpoint$', views.get_staged_diff_endpoint, name='get_staged_diff'),
@@ -240,6 +205,7 @@ urlpatterns = [
     url(r'^api/set_channel_priority/$', views.set_channel_priority, name='set_channel_priority'),
     url(r'^api/download_channel_content_csv/(?P<channel_id>[^/]{32})$', views.download_channel_content_csv, name='download_channel_content_csv'),
     url(r'^api/probers/get_prober_channel', views.get_prober_channel, name='get_prober_channel'),
+    url(r'^^api/sync/$', sync, name="sync"),
 ]
 
 # if activated, turn on django prometheus urls

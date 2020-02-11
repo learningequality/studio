@@ -93,17 +93,13 @@
 
 <style lang="less" scoped>
 
-  @import '../../../less/global-variables.less';
-
-  @border-color: @gray-200;
-
   /deep/ .v-navigation-drawer__border {
     width: 3px;
     height: 100%;
     margin-left: 3px;
     cursor: col-resize;
     background: transparent !important;
-    border-right: 1px solid @gray-300;
+    border-right: 1px solid var(--v-grey-lighten4);
   }
 
   .drawer-contents {

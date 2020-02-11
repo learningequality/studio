@@ -4,7 +4,6 @@ from builtins import zip
 from builtins import filter
 from builtins import str
 from builtins import range
-from builtins import object
 import functools
 import hashlib
 import json
@@ -1046,7 +1045,7 @@ class ContentNode(MPTTModel, models.Model):
             }
             children = self.children.all()
             if levels > 0:
-                node_data["children"] = [c.get_tree_data(levels=levels-1) for c in children]
+                node_data["children"] = [c.get_tree_data(levels=levels - 1) for c in children]
             return node_data
         elif self.kind_id == content_kinds.EXERCISE:
             return {
@@ -1292,9 +1291,6 @@ class ContentNode(MPTTModel, models.Model):
                 PrerequisiteContentRelationship.objects.filter(Q(prerequisite_id=self.id) | Q(target_node_id=self.id)).delete()
         except (ContentNode.DoesNotExist, MultipleObjectsReturned) as e:
             logging.warn(str(e))
-
-    class MPTTMeta:
-        order_insertion_by = ['sort_order']
 
     class Meta:
         verbose_name = _("Topic")
