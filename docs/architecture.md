@@ -1,112 +1,135 @@
 # Studio Architecture
 
-*N.B.* This is an aspirational document, and describes how parts of Studio currently are, and the basic framework that has been put in place to facilitate that. It does not describe everything about the current Studio code, its structure, data architecture or anything else.
+*N.B.* This document provisionally describes the basic framework that has been put in place. It does not comprehensively describe everything about the current Studio codebase.
+
+## External documentation
+
+* [Vue](https://vuejs.org/v2/guide/)
+* [Vue Router](https://router.vuejs.org/guide/)
+* [Vuex](https://vuex.vuejs.org/guide/)
+* [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API)
+* [Jest](https://jestjs.io/docs/en/getting-started)
+* [Django](https://docs.djangoproject.com/en/1.11/)
+* [Django Rest Framework](https://www.django-rest-framework.org/tutorial/quickstart/)
+* [Postgresql](https://www.postgresql.org/docs/)
 
 ## Frontend Architecture
 
-Studio is divided into multiple single page applications - each one has a distinct function and purpose. It is plausible that one day, this will be collapsed into one SPA to rule them all, but today is not that day.
+Studio is currently divided into multiple single-page-applications - each one has a distinct function and purpose. It is plausible that one day, this will be collapsed into one SPA to rule them all, but today is not that day.
 
-*The main SPAs are:*
-Channel List - this is responsible for showing over all listings of channels under different categories (public, editable, etc.) and also for creating new channels, and creating and editing collections of channels.
+The main SPAs currently are:
 
-Channel Edit - this is responsible for showing the contents of an individual channel and allowing a user with the appropriate permissions to edit the contents and structure of that channel, it is the primary workhorse of the Studio user interface.
-
-Administration - this is an admin only page that allows people with staff privileges to see extensive information about user accounts, user created channels, and other detailed information in order to support users in using Studio.
-
-Settings - this allows a user to modify their user account settings, this could potentially be included in the other SPAs rather than having its own SPA.
-
-Each SPA has its own dedicated Django template that sets up the environment for the SPA. The templates for these can be found in `contentcuration/contentcuration/templates/`.
+* Channel List - responsible for showing over all listings of channels under different categories (public, editable, etc.) and also for creating new channels, and creating and editing collections of channels.
+* Channel Edit - responsible for showing the contents of an individual channel and allowing a user with the appropriate permissions to edit the contents and structure of that channel, it is the primary workhorse of the Studio user interface.
+* Administration - an admin only page that allows people with staff privileges to see extensive information about user accounts, user created channels, and other detailed information in order to support users in using Studio.
+* Settings - allows a user to modify their user account settings, this could potentially be included in the other SPAs rather than having its own SPA.
 
 ## Where does the frontend code live?
 
-All code for SPAs should live in `contentcuration/contentcuration/frontend/<spaName>` e.g. the Channel List code lives in [`contentcuration/contentcuration/frontend/channelList`](../contentcuration/contentcuration/frontend/channelList).
+Most frontend code lives under [`contentcuration/contentcuration/`](../contentcuration/contentcuration/). Paths referenced below are relative to this directory.
 
-Code that is common across multiple SPAs is in the [`contentcuration/contentcuration/frontend/shared`](../contentcuration/contentcuration/frontend/shared) folder - this can be referenced with the [Webpack](https://webpack.js.org/concepts/) alias `shared/...` in ES6 imports.
+Each SPA has its own dedicated Django template that sets up the environment for the SPA. The templates for these can be found in [`templates`](../contentcuration/contentcuration/templates)
 
-Anything in the frontend folder can also be referenced with `frontend/...` although this is mostly for convenience to prevent very long relative paths while code is still being migrated from the [`contentcuration/contentcuration/static/js`](../contentcuration/contentcuration/static/js) folder. Relative imports are to be preferred within the SPA folders.
 
-Currently, some code is still housed inside [`contentcuration/contentcuration/static/js`](../contentcuration/contentcuration/static/js) - but this should be migrated into the `frontend` folder as soon as possible.
+All code for SPAs should live in `frontend/<spaName>`. For example, the Channel List code lives in: [`frontend/channelList`](../contentcuration/contentcuration/frontend/channelList)
 
-Within each of these folders, [Vuex](https://vuex.vuejs.org/guide/) modules are stored in `vuex`, [Vue](https://vuejs.org/v2/guide/) components are stored in `views` and the [Vuex](https://vuex.vuejs.org/guide/) store, [Vue Router](https://router.vuejs.org/guide/), and entry point for the application are all defined in the root of the relevant SPA folder.
+Code that is common across multiple SPAs is in the [`frontend/shared`](../contentcuration/contentcuration/frontend/shared) folder. This can be referenced with the [Webpack](https://webpack.js.org/concepts/) alias `shared/...` in ES6 imports.
 
-Tests should be defined in line with [Jest](https://jestjs.io/docs/en/getting-started) conventions inside a folder named `__tests__` inside the same folder as the code they are testing. This allows the use of relative imports to quickly access the relevant code. Some efforts have been made to systematically setup the test environment to handle most scenarios in the root folder [`jest_config/setup.js`](../jest_config/setup.js), so any test should not need to setup any [Vue](https://vuejs.org/v2/guide/) plugins such as [Vuex](https://vuex.vuejs.org/guide/), or [Vue Router](https://router.vuejs.org/guide/).
+Currently, some code is still housed inside [`static/js`](../contentcuration/contentcuration/static/js). This should be migrated into the `frontend` folder as soon as possible. As a temporary convenience during this migration, anything in the frontend folder can also be referenced with `frontend/...`. Relative imports are to be preferred within the SPA folders.
 
-Mocks live inside `__mocks__` folders parallel to the code they are mocking - this is a [Jest](https://jestjs.io/docs/en/getting-started) rule rather than convention so is best not to be flouted.
+Within each of the `frontend` folders, Vuex modules are stored in `vuex`, Vue components are stored in `views` and the Vuex store, [Vue Router](https://router.vuejs.org/guide/), and entry point for the application are all defined in the root of the relevant SPA folder.
+
+Tests should be defined in line with Jest conventions inside a folder named `__tests__` inside the same folder as the code they are testing. This allows the use of relative imports to quickly access the relevant code. Some efforts have been made to systematically setup the test environment to handle most scenarios in the *root* folder [`/jest_config/setup.js`](../jest_config/setup.js), so any test should not need to setup any Vue plugins such as Vuex or Vue Router.
+
+Mocks must live inside `__mocks__` folders parallel to the code they are mocking: this is a Jest rule, not a convention.
 
 ## Data flow
 
-All persisted data in Studio is stored in a [Postgresql](https://www.postgresql.org/docs/) database, using tables defined through [Django](https://docs.djangoproject.com/en/1.11/) Models.
+All persisted data in Studio is stored in a Postgresql database, using tables defined through Django Models.
 
-Data is retrieved by the frontend from readonly REST endpoints implemented using [Django Rest Framework](https://www.django-rest-framework.org/tutorial/quickstart/). These are defined in [`contentcuration/contentcuration/viewsets/`](../contentcuration/contentcuration/viewsets/) - common logic for the [Viewsets](https://www.django-rest-framework.org/api-guide/viewsets/) and [Serializers](https://www.django-rest-framework.org/api-guide/serializers/) is defined in [`contentcuration/contentcuration/viewsets/base.py`](../contentcuration/contentcuration/viewsets/base.py).
+Data is retrieved by the frontend from read-only REST endpoints implemented using Django Rest Framework. These are defined in [`viewsets/`](../contentcuration/contentcuration/viewsets/). Common logic for the DRF [viewsets](https://www.django-rest-framework.org/api-guide/viewsets/) and [serializers](https://www.django-rest-framework.org/api-guide/serializers/) is defined in [`viewsets/base.py`](../contentcuration/contentcuration/viewsets/base.py).
 
-In order to avoid common read performance issues with [Django Rest Framework Serializers](https://www.django-rest-framework.org/api-guide/serializers/), the base Viewset defined in [`contentcuration/contentcuration/viewsets/base.py`](../contentcuration/contentcuration/viewsets/base.py) avoids using the serializer for reads, and only uses it to deserialize and validate incoming writes.
+In order to avoid common read performance issues with DRF Serializers, the base Viewset defined in [`viewsets/base.py`](../contentcuration/contentcuration/viewsets/base.py) avoids using the serializer for reads, and only uses it to deserialize and validate incoming writes.
 
 ### Read behaviour
 
-The [ValuesViewset](../contentcuration/contentcuration/viewsets/base.py) defines a `values` tuple, that defines the keys that will be cast from the queryset with a `values` call - e.g.:
-`ContentNode.objects.all().values('title', 'description')`
-This ensures that only the data required for reading is read from the database. 
-To map field names, a `field_map` dictionary can also be defined which will define mappings of:
-`<target_key>: <source_key>`
-`<source_key>` will be removed from the object and set as `<target_key>` on the object instead. In addition, `<source_key>` can be a callable which receives the whole object as an argument and will return the value for `<target_key>` - side effects on the object will persist, so unwanted attributes can be `.pop`ped off here.
+To ensure that only the data required for reading is read from the database, the `ValuesViewset` in [`viewsets/base.py`](../contentcuration/contentcuration/viewsets/base.py) contains a `values` tuple which that defines the keys that will be returned from the queryset with a `values` call.
+
+For example:
+
+```
+ContentNode.objects.all().values('title', 'description')
+```
+
+To map field names to new names in the serialized output, a `field_map` dictionary can also be defined which will define mappings of:
+
+```
+<target_key>: <source_key>
+```
+
+Here, `<source_key>` will be removed from the object and set as `<target_key>` on the output.
+
+In addition, `<source_key>` can be a callable which receives the whole object as an argument and will return the value for `<target_key>`. Side effects on the object will persist, so unwanted attributes can be `.pop`ped off here.
 
 Four different methods are also available to change how the read process goes on:
 
-`get_queryset` - this is the same as the standard [Viewsets](https://www.django-rest-framework.org/api-guide/viewsets/) method. This should return the queryset that will be filtered against - so if any defined [filters](https://www.django-rest-framework.org/api-guide/filtering/) need access to computer or custom properties, they can be defined on the queryset here with e.g. `annotate` methods.
-
-`prefetch_queryset` - anything that happens in here can also be done inside `get_queryset` and `prefetch_queryset` is executed on the results of `get_queryset` immediately, before any filtering happens, so in some ways this is a redundant method, but it is a useful place to keep any prefetches that might be needed to prevent extra queries by querying foreign key or many to many fields. Always profile after adding `prefetch` and `select_related` to ensure that it does improve query performance, `GROUP BY` statements generated by [Django](https://docs.djangoproject.com/en/1.11/) can sometimes cause an unexpected nose dive in query performance.
-
-`annotate_queryset` - any additional properties that need to be annotated onto the queryset before the `values` call and for serialization, but are not needed for filtering, can be added here. It takes the queryset as its argument and returns the annotated queryset. This is the last stage at which the queryset is available for modification.
-
-`consolidate` - this method is parsed the resulting list of dictionaries from the `values` call after each dictionary has had its attributes mapped by the mappings specified in the `field_map` dictionary. This is a place where consolidated post-processing that requires access to all the available data, or collapsing multiple rows from a one to many field into a single row may be done.
+* `get_queryset` - this is the same as the standard [Viewsets](https://www.django-rest-framework.org/api-guide/viewsets/) method. This should return the queryset that will be filtered against. If any defined [filters](https://www.django-rest-framework.org/api-guide/filtering/) need access to computer or custom properties, they can be defined on the queryset here with e.g. `annotate` methods.
+* `prefetch_queryset` - anything that happens in here can also be done inside `get_queryset`. Note that `prefetch_queryset` is executed on the results of `get_queryset` immediately, before any filtering happens, so in some ways this is a redundant method, but it is a useful place to keep any prefetches that might be needed to prevent extra queries by querying foreign key or many to many fields. *Caution:* Always profile after adding `prefetch` and `select_related` to ensure that it does improve query performance, `GROUP BY` statements generated by [Django](https://docs.djangoproject.com/en/1.11/) can sometimes cause an unexpected nose dive in query performance.
+* `annotate_queryset` - any additional properties that need to be annotated onto the queryset before the `values` call and for serialization, but are not needed for filtering, can be added here. It takes the queryset as its argument and returns the annotated queryset. This is the last stage at which the queryset is available for modification.
+* `consolidate` - this method is parsed the resulting list of dictionaries from the `values` call after each dictionary has had its attributes mapped by the mappings specified in the `field_map` dictionary. This is a place where consolidated post-processing that requires access to all the available data, or collapsing multiple rows from a one to many field into a single row may be done.
 
 ### Write behaviour
 
-All write behaviour is also mediated by the [Viewsets](https://www.django-rest-framework.org/api-guide/viewsets/), in spite of their being readonly. Three methods on the base [ValuesViewset](../contentcuration/contentcuration/viewsets/base.py), `bulk_create`, `bulk_update`, and `bulk_delete` are used to perform these operations on multiple instances at once to reduce database queries.
+All write behaviour is also mediated by the Viewsets, in spite of their being read-only. Three methods on the base [`ValuesViewset`](../contentcuration/contentcuration/viewsets/base.py), `bulk_create`, `bulk_update`, and `bulk_delete` are used to perform these operations on multiple instances at once to reduce database queries.
 
-Following the usual pattern, most create and update behaviour is delegated to the [Django Rest Framework Serializers](https://www.django-rest-framework.org/api-guide/serializers/). Two different base classes are defined that should be subclassed in order to implement create and update behaviour. Simply subclassing [BulkModelSerializer](../contentcuration/contentcuration/viewsets/base.py) in the same way as a regular [Django Rest Framework Serializers](https://www.django-rest-framework.org/api-guide/serializers/), while also adding the [BulkListSerializer](../contentcuration/contentcuration/viewsets/base.py) as the `list_serializer_class` under the `class Meta`should be sufficient if no special behaviour is required.
+Following the usual conventions, most create and update behaviour is delegated to the DRF Serializers. Two different base classes are defined that should be subclassed in order to implement create and update behaviour. Simply subclassing [`BulkModelSerializer`](../contentcuration/contentcuration/viewsets/base.py) in the same way as a regular DRF Serializer, while also adding the `BulkListSerializer` as the `list_serializer_class` under the `class Meta`should be sufficient if no special behaviour is required.
 
-For behaviour specific for creating and updating specific [Django](https://docs.djangoproject.com/en/1.11/) Models, different options are available.
+For behaviour specific for creating and updating specific Django Models, different options are available. Some specific examples:
 
- One example is in [`contentcuration/contentcuration/viewsets/contentnode.py`](..contentcuration/contentcuration/viewsets/contentnode.py) - here in order to ensure that some properties are always set on every create or update, the `perform_bulk_update` and `perform_bulk_create` methods of the viewset have been overridden to pass additional arguments to the serializer's `save` method.
-
-Another example is found in [`contentcuration/contentcuration/viewsets/channel.py`](..contentcuration/contentcuration/viewsets/channel.py) - here both the `update` and `create` methods of the `ChannelSerializer` (subclassed from `BulkModelSerializer`) have been overridden in order to add specific processing to create and update.
-
-A final example is found in [`contentcuration/contentcuration/viewsets/assessmentitem.py`](..contentcuration/contentcuration/viewsets/assessmentitem.py) - instead of overwriting the `update` and `create` methods on the `AssessmentItemSerializer` (subclassed from `BulkModelSerializer`), here the `BulkListSerializer` is subclassed in addition (as `AssessmentListSerializer`), and the `create` and `update` methods are overridden to provide special handling for the `files` field. The `list_serializer_class` of the main `AssessmentItemSerializer` `Meta` is then set to this new subclassed `AssessmentListSerializer`.
+* In [`viewsets/contentnode.py`](..contentcuration/contentcuration/viewsets/contentnode.py) - here in order to ensure that some properties are always set on every create or update, the `perform_bulk_update` and `perform_bulk_create` methods of the viewset have been overridden to pass additional arguments to the serializer's `save` method.
+* In [`viewsets/channel.py`](..contentcuration/contentcuration/viewsets/channel.py) - here both the `update` and `create` methods of the `ChannelSerializer` (subclassed from `BulkModelSerializer`) have been overridden in order to add specific processing to create and update.
+* In [`viewsets/assessmentitem.py`](..contentcuration/contentcuration/viewsets/assessmentitem.py) - instead of overwriting the `update` and `create` methods on the `AssessmentItemSerializer` (subclassed from `BulkModelSerializer`), here the `BulkListSerializer` is subclassed in addition (as `AssessmentListSerializer`), and the `create` and `update` methods are overridden to provide special handling for the `files` field. The `list_serializer_class` of the main `AssessmentItemSerializer` `Meta` is then set to this new subclassed `AssessmentListSerializer`.
 
 ### Sync behaviour
 
-One slight point of confusion remains - these endpoints are all readonly, so how is any of this used? In order to allow users on unreliable connections to still use Studio effectively without always being interrupted with conncetion drops, timeouts, or other connection errors, the frontend synchronizes data back in batches in a fault tolerant way. Much of the data written back to the server by the frontend client, therefore, comes through a single endpoint - this is defined in [`contentcuration/contentcuration/viewsets/sync/endpoint.py`](../contentcuration/contentcuration/viewsets/sync/endpoint.py). In here is an `OrderedDict` of mappings from frontend table names in IndexedDB to [Viewsets](https://www.django-rest-framework.org/api-guide/viewsets/) that can handle write operations for these tables.
+One slight point of confusion remains - these endpoints are all read-only, so how is any of this used?
 
-As change events (`CREATED`, `UPDATED`, `DELETED`, `MOVED` see: [`contentcuration/contentcuration/viewsets/sync/constants.py`](../contentcuration/contentcuration/viewsets/sync/constants.py)) are synchronized back to the server, they are processed in the `sync` endpoint, and batched to the relevant Viewset for bulk creation, bulk update, bulk deletion, and for move operations (which are not currently implemented in bulk).
+In order to allow users on unreliable connections to still use Studio effectively without always being interrupted with conncetion drops, timeouts, or other connection errors, the frontend synchronizes data back in batches in a fault tolerant way. Much of the data written back to the server by the frontend client comes through a single endpoint defined in [`viewsets/sync/endpoint.py`](../contentcuration/contentcuration/viewsets/sync/endpoint.py). In here is an `OrderedDict` of mappings from frontend table names in IndexedDB to [Viewsets](https://www.django-rest-framework.org/api-guide/viewsets/) that can handle write operations for these tables.
 
-Changes are first validated to ensure they can be applied, any invalid changes are rejected and returned to the client as errors, valid changes are applied to the database. During the update process, serializers or viewsets can add changes to the `serializer.changes` list in order to propagate changes back to the frontend. Utils for formatting these correctly for frontend parsing are found in [`contentcuration/contentcuration/viewsets/sync/utils.py`](../contentcuration/contentcuration/viewsets/sync/utils.py).
+There are four change events defined in [`viewsets/sync/constants.py`](../contentcuration/contentcuration/viewsets/sync/constants.py): `CREATED`, `UPDATED`, `DELETED`, and `MOVED`.
+
+As these change events are synchronized back to the server, they are processed in the `sync` endpoint, and batched to the relevant Viewset for bulk creation, bulk update, bulk deletion, and for move operations (which are not currently implemented in bulk):
+
+1. Changes are first validated to ensure they can be applied
+2. Any invalid changes are rejected and returned to the client as errors
+3. Valid changes are applied to the database
+
+During the update process, serializers or viewsets can add changes to the `serializer.changes` list in order to propagate changes back to the frontend. Utils for formatting these correctly for frontend parsing are found in [`viewsets/sync/utils.py`](../contentcuration/contentcuration/viewsets/sync/utils.py).
 
 ### Frontend data handling
 
-In the frontend data is persisted using [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API). Because the API of IndexedDB is not hugely user friendly, we interface with it through [Dexie.js](https://dexie.org/docs/) - a wrapper library that makes using IndexedDB more user friendly. To track changes in the IndexedDB database, we use the [Dexie.js](https://dexie.org/docs/) addon, [Dexie Observable](https://dexie.org/docs/Observable/Dexie.Observable), which automatically generates events for creation, update, and deletion in the IndexedDB stores that we define.
+In the frontend, data is persisted using [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API). Because the API of IndexedDB is not hugely developer-friendly, we interface with it through [Dexie.js](https://dexie.org/docs/) - a wrapper library that makes using IndexedDB cleaner. To track changes in the IndexedDB database, we use [Dexie Observable](https://dexie.org/docs/Observable/Dexie.Observable), which automatically generates events for creation, update, and deletion in the IndexedDB stores that we define.
 
-In order to interact with these IndexedDB tables, there is a minimal Resource API defined in [`contentcuration/contentcuration/frontend/shared/data/resource.js`](../contentcuration/contentcuration/frontend/shared/data/resource.js) which allows querying data preferentially from IndexedDB (with a rudimentary caching system that will refetch resources if they are stale), and also allows updates, puts etc. to be performed in order to change the data.
+In order to interact with these IndexedDB tables, there is a minimal Resource API defined in [`frontend/shared/data/resource.js`](../contentcuration/contentcuration/frontend/shared/data/resource.js) which allows querying data preferentially from IndexedDB (with a rudimentary caching system that will refetch resources if they are stale), and also allows updates, puts etc. to be performed in order to modify the data.
 
-New resources for interacting with a different backend endpoint can be defined by instantiating the `Resource` class defined in [`contentcuration/contentcuration/frontend/shared/data/resource.js`](../contentcuration/contentcuration/frontend/shared/data/resource.js) with an appropriate name for the `tableName` and a `urlName` that matches the Django Rest Framework `base_name` defined in the backend. The `tableName` should also be added to the `TABLE_NAMES` constant object.
+New resources for interacting with a different backend endpoint can be defined by instantiating the `Resource` class defined in [`frontend/shared/data/resource.js`](../contentcuration/contentcuration/frontend/shared/data/resource.js) with an appropriate name for the `tableName` and a `urlName` that matches the Django Rest Framework `base_name` defined in the backend. The `tableName` should also be added to the `TABLE_NAMES` constant object.
 
 Optional fields include:
 
-`idField` which should usually be the primary key of the model on the backend, but see the `assessmentItem` resource and backend viewset for an interesting example of where this differs.
-
-`indexFields` fields or combinations of fields that should be used to generate an index - these should be attributes that are used most frequently for running queries against - cannot be used on Boolean fields.
-
-`uuid` which takes a Boolean value, if it is set to `true` then new entries in the table for this will be assigned a `uuid4` value as their primary key on creation.
-
-`syncable` which takes a Boolean value, if it is set to `false` then changes in this table will not be propagated to the backend (currently this is only used for the `Tree` resource, which is special).
+* `idField` which should usually be the primary key of the model on the backend, but see the `assessmentItem` resource and backend viewset for an interesting example of where this differs.
+* `indexFields` fields or combinations of fields that should be used to generate an index - these should be attributes that are used most frequently for running queries against - cannot be used on Boolean fields.
+* `uuid` which takes a Boolean value, if it is set to `true` then new entries in the table for this will be assigned a `uuid4` value as their primary key on creation.
+* `syncable` which takes a Boolean value, if it is set to `false` then changes in this table will not be propagated to the backend (currently this is only used for the `Tree` resource, which is special).
 
 When creating a new Resource during development, then the local IndexedDB will need to be deleted in order to let it be created - once this is in production, we will need to run schema migrations in order to add new tables. To delete the database for local development, go to Browser Dev tools -> Application -> Indexeddb, click on the `KolibriStudio` database and press the `Delete database` button.
 
-For an example of this Resource API being used in this way see [`contentcuration/contentcuration/frontend/shared/vuex/channel/actions.js`](../contentcuration/contentcuration/frontend/shared/vuex/channel/actions.js).
+For an example of this Resource API being used in this way see [`frontend/shared/vuex/channel/actions.js`](../contentcuration/contentcuration/frontend/shared/vuex/channel/actions.js).
 
-When updates are made, these are then registered by [Dexie Observable](https://dexie.org/docs/Observable/Dexie.Observable), and a debounced synchronization function (found in [`contentcuration/contentcuration/frontend/shared/data/serverSync.js`](../contentcuration/contentcuration/frontend/shared/data/serverSync.js)) consolidates and synchronizes these changes to the backend.
+When updates are made, these are then registered by Dexie Observable, and a debounced synchronization function (found in [`frontend/shared/data/serverSync.js`](../contentcuration/contentcuration/frontend/shared/data/serverSync.js)) consolidates and synchronizes these changes to the backend.
 
-In addition, a custom [Vuex](https://vuex.vuejs.org/guide/) [plugin](../contentcuration/contentcuration/frontend/shared/vuex/baseStore.js) allows us to define listeners to [Dexie Observable](https://dexie.org/docs/Observable/Dexie.Observable) change events, meaning that any time a change is made to a relevant [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) then a [Vuex](https://vuex.vuejs.org/guide/) mutation can be fired to propagate those changes into the [Vuex](https://vuex.vuejs.org/guide/) store to allow for instant update of UI state. These listeners will currently ignore any changes coming from themselves, meaning that the [Vuex](https://vuex.vuejs.org/guide/) must be updated in this context.
+In addition, a [custom Vuex plugin](../contentcuration/contentcuration/frontend/shared/vuex/baseStore.js) allows us to define listeners to Dexie Observable change events, meaning that any time a change is made to a relevant IndexedDB then a Vuex mutation can be fired to propagate those changes into the Vuex store to allow for instant update of UI state. These listeners will currently ignore any changes coming from themselves, meaning that the Vuex must be updated in this context.
+
+### Data flow diagram
 
 The overall flow of data through the frontend and backend is summarized in this diagram.
 
