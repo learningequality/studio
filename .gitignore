@@ -78,11 +78,6 @@ Thumbs.db
 # The following line doesn't do anything since currently `collectstatic` writes to /contentcuration/contentcuration/static
 /contentcuration/static/*
 
-# Ignore Django collectstatic output directories
-/contentcuration/contentcuration/static/admin
-/contentcuration/contentcuration/static/django_js_reverse
-/contentcuration/contentcuration/static/rest_framework
-
 # Ignore node_modules
 /node_modules
 nodeenv
