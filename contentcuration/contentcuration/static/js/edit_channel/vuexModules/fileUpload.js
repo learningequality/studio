@@ -192,7 +192,10 @@ const fileUploadsModule = {
                     resolve(context.state.files[payload.id]);
 
                     setTimeout(() => {
-                      context.commit('REMOVE_FILE', payload.id);
+                      context.commit('SET_FILE_UPLOAD_PROGRESS', {
+                        id: payload.id,
+                        progress: null,
+                      });
                     }, REMOVE_FILE_DELAY);
                     resolve(response.data);
                   })
