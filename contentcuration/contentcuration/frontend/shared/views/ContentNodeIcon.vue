@@ -8,13 +8,13 @@
       :textColor="fontColor"
       small
     >
-      <Icon small :color="fontColor">
+      <Icon small :color="fontColor" v-bind="$attrs">
         {{ icon }}
       </Icon>
       <span v-if="includeText">{{ text }}</span>
     </VChip>
     <span v-else>
-      <Icon :color="fontColor">
+      <Icon :color="fontColor" v-bind="$attrs">
         {{ icon }}
       </Icon>
       <span v-if="includeText">{{ text }}</span>

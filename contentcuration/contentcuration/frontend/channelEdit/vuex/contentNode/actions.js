@@ -35,7 +35,7 @@ export function loadChildren(context, { parent, channel_id }) {
 }
 
 /* CONTENTNODE EDITOR ACTIONS */
-export function createContentNode(context, { parent, kind = 'topic', data }) {
+export function createContentNode(context, { parent, kind = 'topic', ...payload }) {
   const session = context.rootState.session;
   const contentNodeData = {
     title: '',
@@ -43,9 +43,10 @@ export function createContentNode(context, { parent, kind = 'topic', data }) {
     kind,
     files: [],
     prerequisite: [],
+    assessment_items: [],
     language: session.preferences ? session.preferences.language : session.currentLanguage,
     ...context.rootGetters['currentChannel/currentChannel'].content_defaults,
-    ...data,
+    ...payload,
   };
   return ContentNode.put(contentNodeData).then(id => {
     return Tree.move(id, parent, MOVE_POSITIONS.LAST_CHILD).then(treeNode => {
@@ -166,6 +167,32 @@ export function removeTags(context, { ids, tags }) {
   });
 }
 
+export function addFiles(context, { id, files }) {
+  let node = context.state.contentNodesMap[id];
+  let currentFiles = context.rootGetters['file/getFiles'](node.files);
+  let newFiles = currentFiles.map(file => {
+    // Replace files with matching preset
+    return (files.find(f => f.preset.id === file.preset.id) || file).id;
+  });
+
+  // Add new files
+  files.forEach(file => {
+    if (!newFiles.includes(file.id)) newFiles.push(file.id);
+  });
+
+  context.commit('SET_FILES', { id, files: newFiles });
+  return ContentNode.update(id, { files: newFiles });
+}
+
+export function removeFiles(context, { id, files }) {
+  let currentFiles = context.state.contentNodesMap[id].files;
+  let newFiles = currentFiles.filter(fileID => {
+    return !files.find(f => f.id === fileID);
+  });
+  context.commit('SET_FILES', { id, files: newFiles });
+  return ContentNode.update(id, { files: newFiles });
+}
+
 export function deleteContentNode(context, contentNodeId) {
   return ContentNode.delete(contentNodeId).then(() => {
     return Tree.delete(contentNodeId).then(() => {
@@ -173,4 +200,9 @@ export function deleteContentNode(context, contentNodeId) {
       context.commit('REMOVE_TREENODE', { id: contentNodeId });
     });
   });
+}
+
+export function copyNodes(context, contentNodeIds) {
+  // TODO: Implement copy nodes endpoint
+  return new Promise(resolve => resolve(context, contentNodeIds));
 }

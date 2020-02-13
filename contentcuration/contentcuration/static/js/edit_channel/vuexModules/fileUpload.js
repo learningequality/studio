@@ -6,7 +6,7 @@ import { fileErrors } from 'edit_channel/file_upload/constants';
 
 const SparkMD5 = require('spark-md5');
 
-const REMOVE_FILE_DELAY = 2500;
+const REMOVE_FILE_DELAY = 1500;
 const BLOB_SLICE = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice;
 const CHUNK_SIZE = 2097152;
 
@@ -213,6 +213,24 @@ const fileUploadsModule = {
           })
           .catch(reject); // End get hash
       });
+    },
+    getAudioData(context, url) {
+      return new Promise((resolve, reject) => {
+        client
+          .get(url, { responseType: 'arraybuffer' })
+          .then(response => {
+            let audioContext = new AudioContext();
+            audioContext
+              .decodeAudioData(response.data, buffer => {
+                resolve(buffer.getChannelData(0));
+              })
+              .catch(reject);
+          })
+          .catch(reject);
+      });
+    },
+    generateThumbnail(context, filename) {
+      return client.get(window.Urls.create_thumbnail(window.channel.id, filename));
     },
   },
 };

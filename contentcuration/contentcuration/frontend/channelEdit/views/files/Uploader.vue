@@ -68,7 +68,7 @@
 
   import { fileErrors, MAX_FILE_SIZE } from 'edit_channel/file_upload/constants';
   import { fileSizeMixin } from 'edit_channel/file_upload/mixins';
-  import FileStorage from 'edit_channel/file_upload/views/FileStorage.vue';
+  import FileStorage from 'frontend/channelEdit/views/files/FileStorage';
   import State from 'edit_channel/state';
 
   export default {
@@ -113,7 +113,7 @@
       };
     },
     computed: {
-      ...mapGetters('fileUploads', ['getFile']),
+      ...mapGetters('file', ['getFile']),
       acceptedFiles() {
         let filter = { display: true };
         if (this.presetID) {
@@ -156,10 +156,10 @@
     },
     methods: {
       // Add in once global store is properly set up
-      ...mapActions('fileUploads', ['uploadFile']),
-      ...mapMutations('fileUploads', {
-        addFile: 'ADD_FILE',
-        setFileError: 'SET_FILE_ERROR',
+      ...mapActions('file', ['uploadFile']),
+      ...mapMutations('file', {
+        addFile: 'CREATE_FILE',
+        setFileError: 'UPDATE_FILE',
       }),
       enter() {
         this.highlight = true;
@@ -179,21 +179,23 @@
           this.$refs.fileUpload.click();
         }
       },
-      setError(id, error) {
+      setError(id, type) {
         let message = this.$tr('uploadFailedError');
-        if (error === fileErrors.TOO_LARGE) {
+        if (type === fileErrors.TOO_LARGE) {
           message = this.$tr('tooLargeError', { size: this.formatFileSize(MAX_FILE_SIZE) });
-        } else if (error === fileErrors.WRONG_TYPE) {
+        } else if (type === fileErrors.WRONG_TYPE) {
           message = this.$tr('wrongTypeError', { filetypes: this.acceptedExtensions.join(', ') });
-        } else if (error === fileErrors.NO_STORAGE) {
+        } else if (type === fileErrors.NO_STORAGE) {
           message = this.$tr('noStorageError');
+        } else {
+          type = fileErrors.UPLOAD_FAILED;
         }
-        this.setFileError({ id, error, message });
+        this.setFileError({ id, error: { type, message } });
       },
       validateFiles(files) {
         // Get unsupported file types
         let partition = _.partition(files, f =>
-          _.contains(this.acceptedExtensions, _.last(f.name.split('.')).toLowerCase())
+          this.acceptedExtensions.includes(_.last(f.name.split('.')).toLowerCase())
         );
         files = partition[0];
         this.unsupportedFiles = partition[1];

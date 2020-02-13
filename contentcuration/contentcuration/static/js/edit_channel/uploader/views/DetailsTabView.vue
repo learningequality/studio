@@ -2,17 +2,24 @@
 
   <div v-if="nodes.length" class="details-edit-view">
     <VForm ref="form" v-model="valid" :disabled="viewOnly">
-      <VLayout grid wrap>
-        <!-- File upload and preview section -->
+      <!-- File upload and preview section -->
+      <template v-if="oneSelected && allResources && !allExercises">
         <FileUpload
           v-if="oneSelected && allResources && !allExercises"
           :key="firstNode.id"
           :nodeId="firstNode.id"
           :viewOnly="viewOnly"
         />
+        <VDivider />
+      </template>
 
-        <!-- Title -->
-        <VFlex v-if="oneSelected" xs12>
+      <!-- Basic information + audience -->
+      <VLayout row wrap class="section">
+        <VFlex v-if="oneSelected" xs12 md6 lg7>
+          <h1 class="subheading">
+            {{ $tr('basicInfoHeader') }}
+          </h1>
+          <!-- Title -->
           <VTextField
             ref="title"
             v-model="title"
@@ -24,10 +31,7 @@
             required
             :readonly="viewOnly"
           />
-        </VFlex>
-
-        <!-- Description -->
-        <VFlex v-if="oneSelected" xs12>
+          <!-- Description -->
           <VTextarea
             ref="description"
             v-model="description"
@@ -37,9 +41,33 @@
             :readonly="viewOnly"
           />
         </VFlex>
+        <VSpacer v-if="oneSelected" />
+        <VFlex xs12 md5 lg4 xl3>
+          <h1 class="subheading">
+            {{ $tr('audienceHeader') }}
+          </h1>
+          <!-- Language -->
+          <LanguageDropdown
+            ref="language"
+            v-model="language"
+            class="mb-2"
+            :hint="languageHint"
+            :placeholder="getPlaceholder('language')"
+            :readonly="viewOnly"
+          />
 
-        <!-- Tags -->
+          <!-- Visibility -->
+          <VisibilityDropdown
+            v-if="allResources"
+            ref="role_visibility"
+            v-model="role"
+            :placeholder="getPlaceholder('role_visibility')"
+            :required="isUnique(role)"
+            :readonly="viewOnly"
+          />
+        </VFlex>
         <VFlex xs12>
+          <!-- Tags -->
           <VCombobox
             ref="tags"
             v-model="contentTags"
@@ -68,174 +96,167 @@
         </VFlex>
       </VLayout>
 
-      <v-expansion-panel v-model="panel" expand>
-        <v-expansion-panel-content key="audience">
-          <template v-slot:header>
-            <div class="headline">
-              {{ $tr('audienceHeader') }}
-            </div>
-          </template>
-          <v-card>
-            <!-- Language -->
-            <VFlex sm12 md8 lg6>
-              <LanguageDropdown
-                ref="language"
-                v-model="language"
-                :hint="languageHint"
-                :placeholder="getPlaceholder('language')"
-                :readonly="viewOnly"
-              />
-            </VFlex>
-            <!-- Visibility -->
-            <VFlex sm12 md8 lg6>
-              <VisibilityDropdown
-                v-if="allResources"
-                ref="role_visibility"
-                v-model="role"
-                :placeholder="getPlaceholder('role_visibility')"
-                :required="isUnique(role)"
-                :readonly="viewOnly"
-              />
-            </VFlex>
-          </v-card>
-        </v-expansion-panel-content>
-        <v-expansion-panel-content v-if="allExercises" key="assessments">
-          <template v-slot:header>
-            <div class="headline">
-              {{ $tr('assessmentHeader') }}
-            </div>
-          </template>
-          <v-card>
-            <!-- Mastery -->
-            <VFlex sm12>
-              <MasteryDropdown
-                v-if="extra_fields"
-                ref="mastery_model"
-                v-model="masteryModelItem"
-                :placeholder="getPlaceholder('mastery_model')"
-                :required="isUnique(mastery_model)"
-                :mPlaceholder="getPlaceholder('m')"
-                :mRequired="isUnique(m)"
-                :nPlaceholder="getPlaceholder('n')"
-                :nRequired="isUnique(n)"
-                :readonly="viewOnly"
-              />
-            </VFlex>
-            <v-spacer />
-            <VFlex sm12>
-              <v-checkbox
-                v-if="extra_fields"
-                ref="randomize"
-                v-model="randomizeOrder"
-                :label="$tr('randomizeQuestionLabel')"
-                :indeterminate="!isUnique(randomizeOrder)"
-                color="primary"
-                :readonly="viewOnly"
-              />
-            </VFlex>
-          </v-card>
-        </v-expansion-panel-content>
-        <v-expansion-panel-content v-if="allResources" key="source">
-          <template v-slot:header>
-            <div class="headline">
+
+      <!-- Source + thumbnail -->
+      <VLayout row wrap class="section">
+        <template v-if="allResources">
+          <VFlex xs12>
+            <VDivider />
+          </VFlex>
+          <VFlex xs12 md6 class="auth-section">
+            <h1 class="subheading">
               {{ $tr('sourceHeader') }}
-              <span v-if="disableAuthEdits">
-                {{ $tr('detectedImportText') }}
-              </span>
-            </div>
-          </template>
-          <v-card class="auth-section">
-            <VFlex v-if="oneSelected && isImported" xs12>
-              <VBtn color="primary" flat class="import-link" :href="importUrl" target="_blank">
-                {{ $tr('importedFromButtonText', {channel: importChannelName}) }}
-                <v-icon>launch</v-icon>
-              </VBtn>
-            </VFlex>
+            </h1>
+            <p v-if="disableAuthEdits" class="grey--text">
+              {{ $tr('detectedImportText') }}
+            </p>
+            <p v-if="oneSelected && isImported">
+              <ActionLink
+                :href="importUrl"
+                target="_blank"
+                :text="$tr('importedFromButtonText', {channel: importChannelName})"
+              />
+            </p>
+
             <!-- Author -->
-            <VFlex sm12 md8 lg6>
-              <VCombobox
-                ref="author"
-                v-model="author"
-                :items="authors"
-                :label="$tr('authorLabel')"
-                :readonly="viewOnly || disableAuthEdits"
-                maxlength="200"
-                autoSelectFirst
-                :placeholder="getPlaceholder('author')"
-              >
-                <template v-slot:append-outer>
-                  <HelpTooltip :text="$tr('authorToolTip')" top />
-                </template>
-              </VCombobox>
-            </VFlex>
+            <VCombobox
+              ref="author"
+              v-model="author"
+              :items="authors"
+              :label="$tr('authorLabel')"
+              :readonly="viewOnly || disableAuthEdits"
+              maxlength="200"
+              autoSelectFirst
+              :placeholder="getPlaceholder('author')"
+            >
+              <template v-slot:append-outer>
+                <HelpTooltip :text="$tr('authorToolTip')" top />
+              </template>
+            </VCombobox>
 
             <!-- Provider -->
-            <VFlex sm12 md8 lg6>
-              <VCombobox
-                ref="provider"
-                v-model="provider"
-                :items="providers"
-                :label="$tr('providerLabel')"
-                :readonly="viewOnly || disableAuthEdits"
-                maxlength="200"
-                :placeholder="getPlaceholder('provider')"
-                autoSelectFirst
-              >
-                <template v-slot:append-outer>
-                  <HelpTooltip :text="$tr('providerToolTip')" top />
-                </template>
-              </VCombobox>
-            </VFlex>
+            <VCombobox
+              ref="provider"
+              v-model="provider"
+              :items="providers"
+              :label="$tr('providerLabel')"
+              :readonly="viewOnly || disableAuthEdits"
+              maxlength="200"
+              :placeholder="getPlaceholder('provider')"
+              autoSelectFirst
+            >
+              <template v-slot:append-outer>
+                <HelpTooltip :text="$tr('providerToolTip')" top />
+              </template>
+            </VCombobox>
 
             <!-- Aggregator -->
-            <VFlex sm12 md8 lg6>
-              <VCombobox
-                ref="aggregator"
-                v-model="aggregator"
-                :items="aggregators"
-                :label="$tr('aggregatorLabel')"
-                :readonly="viewOnly || disableAuthEdits"
-                maxlength="200"
-                autoSelectFirst
-                :placeholder="getPlaceholder('aggregator')"
-              >
-                <template v-slot:append-outer>
-                  <HelpTooltip :text="$tr('aggregatorToolTip')" top />
-                </template>
-              </VCombobox>
-            </VFlex>
+            <VCombobox
+              ref="aggregator"
+              v-model="aggregator"
+              :items="aggregators"
+              :label="$tr('aggregatorLabel')"
+              :readonly="viewOnly || disableAuthEdits"
+              maxlength="200"
+              autoSelectFirst
+              :placeholder="getPlaceholder('aggregator')"
+            >
+              <template v-slot:append-outer>
+                <HelpTooltip :text="$tr('aggregatorToolTip')" top />
+              </template>
+            </VCombobox>
 
             <!-- License -->
-            <VFlex sm12 md8 lg6>
-              <LicenseDropdown
-                ref="license"
-                v-model="licenseItem"
-                :required="isUnique(license) && isUnique(license_description) && !disableAuthEdits"
-                :readonly="viewOnly || disableAuthEdits"
-                :placeholder="getPlaceholder('license')"
-                :descriptionPlaceholder="getPlaceholder('license_description')"
-              />
-            </VFlex>
+            <LicenseDropdown
+              ref="license"
+              v-model="licenseItem"
+              :required="isUnique(license) && isUnique(license_description) && !disableAuthEdits"
+              :readonly="viewOnly || disableAuthEdits"
+              :placeholder="getPlaceholder('license')"
+              :descriptionPlaceholder="getPlaceholder('license_description')"
+            />
 
             <!-- Copyright Holder -->
-            <VFlex sm12 md8 lg6>
-              <VCombobox
-                v-if="copyrightHolderRequired"
-                ref="copyright_holder"
-                v-model="copyright_holder"
-                :items="copyrightHolders"
-                :label="$tr('copyrightHolderLabel')"
-                maxlength="200"
-                :required="isUnique(copyright_holder) && !disableAuthEdits"
-                :rules="copyrightHolderRules"
-                :placeholder="getPlaceholder('copyright_holder')"
-                autoSelectFirst
-                :readonly="viewOnly || disableAuthEdits"
-              />
-            </VFlex>
-          </v-card>
-        </v-expansion-panel-content>
-      </v-expansion-panel>
+            <VCombobox
+              v-if="copyrightHolderRequired"
+              ref="copyright_holder"
+              v-model="copyright_holder"
+              :items="copyrightHolders"
+              :label="$tr('copyrightHolderLabel')"
+              maxlength="200"
+              :required="isUnique(copyright_holder) && !disableAuthEdits"
+              :rules="copyrightHolderRules"
+              :placeholder="getPlaceholder('copyright_holder')"
+              autoSelectFirst
+              :readonly="viewOnly || disableAuthEdits"
+            />
+          </VFlex>
+          <VSpacer />
+        </template>
+
+        <VFlex v-if="oneSelected" xs12 md5 lg4 xl3>
+          <h1 class="subheading">
+            {{ $tr('thumbnailHeader') }}
+          </h1>
+          <!-- Thumbnail -->
+          <div style="width:250px;">
+            <Thumbnail
+              v-model="thumbnail"
+              :kind="firstNode.kind"
+              :primaryFilePath="primaryFile"
+              :encoding="thumbnailEncoding"
+              @encoded="setEncoding"
+            />
+          </div>
+        </VFlex>
+      </VLayout>
+
+      <!-- Assessment options -->
+      <VLayout v-if="allExercises" row wrap class="section">
+        <VFlex xs12>
+          <VDivider />
+        </VFlex>
+        <VFlex xs12>
+          <h1 class="subheading">
+            {{ $tr('assessmentHeader') }}
+          </h1>
+
+          <!-- Mastery -->
+          <MasteryDropdown
+            v-if="extra_fields"
+            ref="mastery_model"
+            v-model="masteryModelItem"
+            :placeholder="getPlaceholder('mastery_model')"
+            :required="isUnique(mastery_model)"
+            :mPlaceholder="getPlaceholder('m')"
+            :mRequired="isUnique(m)"
+            :nPlaceholder="getPlaceholder('n')"
+            :nRequired="isUnique(n)"
+            :readonly="viewOnly"
+          />
+
+          <!-- Randomize question order -->
+          <VCheckbox
+            ref="randomize"
+            v-model="randomizeOrder"
+            :label="$tr('randomizeQuestionLabel')"
+            :indeterminate="!isUnique(randomizeOrder)"
+            color="primary"
+            hide-details
+            :readonly="viewOnly"
+          />
+        </VFlex>
+      </VLayout>
+
+      <!-- Subtitles -->
+      <VLayout v-if="videoSelected" row wrap class="section">
+        <VFlex xs12>
+          <VDivider />
+        </VFlex>
+        <VFlex xs12 md8 lg7>
+          <SubtitlesList :nodeId="firstNode.id" :readonly="viewOnly" />
+        </VFlex>
+      </VLayout>
     </VForm>
   </div>
 
@@ -254,6 +275,9 @@
   import MasteryDropdown from 'edit_channel/sharedComponents/MasteryDropdown';
   import VisibilityDropdown from 'edit_channel/sharedComponents/VisibilityDropdown';
   import FileUpload from 'frontend/channelEdit/views/files/FileUpload';
+  import ActionLink from 'edit_channel/sharedComponents/ActionLink';
+  import SubtitlesList from 'frontend/channelEdit/views/files/supplementaryLists/SubtitlesList';
+  import Thumbnail from 'frontend/channelEdit/views/files/thumbnails/Thumbnail';
 
   // Define an object to act as the place holder for non unique values.
   const nonUniqueValue = {};
@@ -304,6 +328,9 @@
       MasteryDropdown,
       VisibilityDropdown,
       FileUpload,
+      ActionLink,
+      SubtitlesList,
+      Thumbnail,
     },
     props: {
       viewOnly: {
@@ -319,7 +346,6 @@
       return {
         tagText: null,
         valid: true,
-        panel: ['audience', 'assessments', 'source'],
       };
     },
     computed: {
@@ -332,6 +358,7 @@
         'tags',
       ]),
       ...mapGetters('currentChannel', ['currentChannel']),
+      ...mapGetters('file', ['getFiles']),
       nodes() {
         return this.getContentNodes(this.nodeIds);
       },
@@ -344,6 +371,8 @@
       allResources() {
         return !this.nodes.some(node => node.kind === 'topic');
       },
+
+      /* FORM FIELDS */
       title: generateGetterSetter('title'),
       description: generateGetterSetter('description'),
       randomizeOrder: generateExtraFieldsGetterSetter('randomize'),
@@ -410,6 +439,26 @@
       extra_fields() {
         return this.getValueFromNodes('extra_fields');
       },
+      thumbnail: {
+        get() {
+          return this.getFiles(this.firstNode.files).find(f => f.preset.thumbnail);
+        },
+        set(file) {
+          file
+            ? this.addFiles({ id: this.firstNode.id, files: [file] })
+            : this.removeFiles({ id: this.firstNode.id, files: [this.thumbnail.id] });
+        },
+      },
+      thumbnailEncoding: {
+        get() {
+          return this.firstNode.thumbnail_encoding;
+        },
+        set(encoding) {
+          this.update({ thumbnail_encoding: encoding });
+        },
+      },
+
+      /* COMPUTED PROPS */
       disableAuthEdits() {
         return this.nodes.some(node => node.freeze_authoring_data);
       },
@@ -457,9 +506,34 @@
             this.$tr('copyrightHolderValidationMessage'),
         ];
       },
+      primaryFile() {
+        // let file =
+        //   this.oneSelected &&
+        //   this.getFiles(this.firstNode.files)
+        //     .find(f => !f.preset.supplementary && f.file_on_disk);
+        // return (file && file.file_on_disk.split('?')[0]) || '';
+        return '';
+      },
+      videoSelected() {
+        return this.oneSelected && this.firstNode.kind === 'video';
+      },
     },
     methods: {
-      ...mapActions('contentNode', ['updateContentNodes', 'addTags', 'removeTags']),
+      ...mapActions('contentNode', [
+        'updateContentNodes',
+        'addTags',
+        'removeTags',
+        'addFiles',
+        'removeFiles',
+      ]),
+      // ...mapMutations('edit_modal', {
+      //   updateNode: 'UPDATE_NODE',
+      //   updateNodeExtraFields: 'UPDATE_EXTRA_FIELDS',
+      //   validateNodeDetails: 'VALIDATE_NODE_DETAILS',
+      //   setTags: 'SET_TAGS',
+      //   addFileToNode: 'ADD_FILE_TO_NODE',
+      //   removeFileFromNode: 'REMOVE_FILE_FROM_NODE',
+      // }),
       update(payload) {
         this.updateContentNodes({ ids: this.nodeIds, ...payload });
       },
@@ -488,8 +562,21 @@
           ? this.$tr('variedFieldPlaceholder')
           : null;
       },
+      // handleValidation() {
+      //   this.$refs.form && this.newContent
+      //     ? this.$refs.form.resetValidation()
+      //     : this.$refs.form.validate();
+      // },
+      setEncoding(encoding) {
+        this.thumbnail_encoding = encoding;
+      },
     },
     $trs: {
+      basicInfoHeader: 'Basic information',
+      audienceHeader: 'Audience',
+      sourceHeader: 'Source',
+      assessmentHeader: 'Assessment options',
+      thumbnailHeader: 'Thumbnail',
       titleLabel: 'Title',
       titleValidationMessage: 'Title is required',
       languageHelpText: 'Leave blank to default to topic language',
@@ -510,9 +597,6 @@
       variedFieldPlaceholder: '---',
       noTagsFoundText: 'No results matching "{text}". Press \'enter\'to create a new tag',
       randomizeQuestionLabel: 'Randomize question order for learners',
-      audienceHeader: 'Audience',
-      assessmentHeader: 'Assessment Options',
-      sourceHeader: 'Source',
     },
   };
 
@@ -532,67 +616,21 @@
     font-weight: bold;
   }
 
-  /deep/ .v-input--checkbox .v-label {
-    margin-bottom: 0;
-    font-weight: normal;
-  }
-
   .details-edit-view {
     max-width: 1800px;
     padding: 10px;
 
-    .v-expansion-panel {
-      margin-top: @space-between-sections;
-      box-shadow: none !important;
-      /deep/ .v-expansion-panel__container {
-        border: 0;
-        &:hover {
-          .v-expansion-panel__header {
-            background-color: var(--v-lighten-2);
-          }
-        }
-        /deep/ .v-expansion-panel__header {
-          padding: 0 15px;
-          cursor: pointer;
-
-          .headline {
-            span {
-              margin-left: 5px;
-              font-size: 11pt;
-              color: var(--v-darken-2);
-            }
-          }
-          /deep/ .v-icon,
-          .v-icon {
-            margin-right: 10px;
-            font-size: 28px;
-            vertical-align: bottom;
-          }
-        }
-        /deep/ .v-expansion-panel__body {
-          padding: 5px 25px @space-between-sections;
-          .layout {
-            margin-left: 0;
-          }
-          .auth-section {
-            .import-link {
-              margin-left: -15px;
-              font-weight: bold;
-              text-transform: none;
-              .v-icon {
-                margin-left: 10px;
-                font-size: 12pt;
-              }
-            }
-            .flex {
-              padding-right: 30px;
-            }
-            /deep/ .v-autocomplete {
-              /deep/ .v-input__append-inner {
-                visibility: hidden;
-              }
-            }
-          }
+    /deep/ .subheading {
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+    .section .flex {
+      margin: 24px 0 !important;
+    }
+    .auth-section {
+      /deep/ .v-autocomplete {
+        /deep/ .v-input__append-inner {
+          visibility: hidden;
         }
       }
     }
@@ -601,15 +639,6 @@
       margin-top: 30px;
       .tagbox /deep/ .v-chip__content {
         color: black; // Read-only tag box grays out tags
-      }
-      .flex:not(:first-child) {
-        /deep/ .v-input {
-          margin-top: 25px;
-        }
-        /deep/ .mofn-options .v-input,
-        /deep/ .license-description {
-          margin-top: 0;
-        }
       }
 
       /deep/ .v-input--is-readonly {

@@ -260,7 +260,8 @@ LOCALE_PATHS = (
 )
 
 
-def ugettext(s): return s
+def ugettext(s):
+    return s
 
 
 LANGUAGES = (
@@ -369,6 +370,8 @@ AWS_S3_ENDPOINT_URL = os.getenv('AWS_S3_ENDPOINT_URL') or 'http://localhost:9000
 AWS_AUTO_CREATE_BUCKET = False
 AWS_S3_FILE_OVERWRITE = True
 AWS_S3_BUCKET_AUTH = False
+
+PHANTOMJS_PATH = os.getenv('PHANTOMJS_PATH', None)
 
 # GOOGLE DRIVE SETTINGS
 GOOGLE_AUTH_JSON = "credentials/client_secret.json"

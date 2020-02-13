@@ -116,9 +116,8 @@ class UserViewSet(viewsets.ModelViewSet):
             return User.objects.all()
         channel_list = list(self.request.user.editable_channels.values_list('pk', flat=True))
         channel_list.extend(list(self.request.user.view_only_channels.values_list('pk', flat=True)))
-        return User.objects.filter(Q(pk=self.request.user.pk) |
-                                   Q(editable_channels__pk__in=channel_list) |
-                                   Q(view_only_channels__pk__in=channel_list)).distinct()
+        return User.objects.filter(Q(pk=self.request.user.pk) | Q(editable_channels__pk__in=channel_list) | Q(view_only_channels__pk__in=channel_list)) \
+                           .distinct()
 
 
 class TaskViewSet(viewsets.ModelViewSet):
@@ -146,9 +145,7 @@ class TaskViewSet(viewsets.ModelViewSet):
             user = self.request.user
             channel = Channel.objects.filter(pk=channel_id).first()
             if channel:
-                has_access = channel.editors.filter(pk=user.pk).exists() or \
-                         channel.viewers.filter(pk=user.pk).exists() or \
-                         user.is_admin
+                has_access = channel.editors.filter(pk=user.pk).exists() or channel.viewers.filter(pk=user.pk).exists() or user.is_admin
                 if has_access:
                     queryset = Task.objects.filter(metadata__affects__channels__contains=[channel_id])
                 else:
@@ -260,9 +257,10 @@ urlpatterns += [
     url(r'^zipcontent/(?P<zipped_filename>[^/]+)/(?P<embedded_filepath>.*)', zip_views.ZipContentView.as_view(), {}, "zipcontent"),
     url(r'^api/file_upload/', file_views.file_upload, name="file_upload"),
     url(r'^api/file_create/', file_views.file_create, name="file_create"),
-    url(r'^api/generate_thumbnail/(?P<contentnode_id>[^/]*)$', file_views.generate_thumbnail, name='generate_thumbnail'),
+    # url(r'^api/generate_thumbnail/(?P<contentnode_id>[^/]*)$', file_views.generate_thumbnail, name='generate_thumbnail'),
     url(r'^api/get_upload_url/', file_views.get_upload_url, name='get_upload_url'),
     url(r'^api/temp_file_upload', file_views.temp_file_upload, name='temp_file_upload'),
+    url(r'^api/create_thumbnail/(?P<channel_id>[^/]*)/(?P<filename>[^/]*)$', file_views.create_thumbnail, name='create_thumbnail'),
 ]
 
 # Add account/registration endpoints

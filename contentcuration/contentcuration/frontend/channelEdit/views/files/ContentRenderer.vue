@@ -45,7 +45,7 @@
 <script>
 
   import { mapGetters } from 'vuex';
-  import FileStatus from 'edit_channel/file_upload/views/FileStatus.vue';
+  import FileStatus from './FileStatus.vue';
 
   export default {
     name: 'ContentRenderer',
@@ -53,13 +53,9 @@
       FileStatus,
     },
     props: {
-      file: {
-        type: Object,
+      fileId: {
+        type: String,
         required: false,
-        validator: file => {
-          // Might be in the process of uploading, so can't have file_on_disk
-          return file.id && file.file_format;
-        },
       },
       fullscreen: {
         type: Boolean,
@@ -73,7 +69,10 @@
       };
     },
     computed: {
-      ...mapGetters('fileUploads', ['getFile']),
+      ...mapGetters('file', ['getFile']),
+      file() {
+        return this.getFile(this.fileId);
+      },
       isVideo() {
         return this.file.file_format === 'mp4';
       },
@@ -90,7 +89,7 @@
         return '/zipcontent/' + this.file.checksum + '.' + this.file.file_format;
       },
       uploading() {
-        return !!this.getFile(this.file.id);
+        return this.file.progress !== undefined;
       },
     },
     watch: {
@@ -111,8 +110,6 @@
 </script>
 
 <style lang="less" scoped>
-
-  @import '../../../../less/global-variables.less';
 
   @max-height: calc(100vh - 96px);
 

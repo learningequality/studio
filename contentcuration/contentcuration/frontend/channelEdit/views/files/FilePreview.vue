@@ -23,7 +23,8 @@
         </VBtn>
       </VToolbar>
       <ContentRenderer
-        :file="file"
+        :key="fileId"
+        :fileId="fileId"
         :fullscreen="fullscreen"
       />
       <p v-if="!fullscreen" class="fullscreen-toggle">
@@ -41,6 +42,7 @@
 
 <script>
 
+  import { mapGetters } from 'vuex';
   import _ from 'underscore';
   import ContentRenderer from './ContentRenderer.vue';
   import Constants from 'edit_channel/constants/index';
@@ -53,13 +55,9 @@
       ActionLink,
     },
     props: {
-      file: {
-        type: Object,
+      fileId: {
+        type: String,
         required: false,
-        validator: file => {
-          // Might be in the process of uploading, so can't have file_on_disk
-          return file.id;
-        },
       },
       node: {
         type: Object,
@@ -75,6 +73,10 @@
       };
     },
     computed: {
+      ...mapGetters('file', ['getFile']),
+      file() {
+        return this.getFile(this.fileId);
+      },
       isPreviewable() {
         let availablePreviewFormats = _.chain(Constants.FormatPresets)
           .filter(f => f.display && !f.supplementary)
@@ -107,8 +109,6 @@
 </script>
 
 <style lang="less" scoped>
-
-  @import '../../../../less/global-variables.less';
 
   .fullscreen-toggle {
     margin-top: 8px;

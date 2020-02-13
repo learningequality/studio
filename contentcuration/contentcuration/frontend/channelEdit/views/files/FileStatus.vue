@@ -31,7 +31,7 @@
 
   import _ from 'underscore';
   import { mapState } from 'vuex';
-  import { fileSizeMixin, fileStatusMixin } from 'edit_channel/file_upload/mixins';
+  import { fileSizeMixin, fileStatusMixin } from './mixins';
 
   export default {
     name: 'FileStatus',

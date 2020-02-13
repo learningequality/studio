@@ -2,6 +2,7 @@ import Vue from 'vue';
 import VueRouter from 'vue-router';
 import Vuetify from 'vuetify';
 import VueIntl from 'vue-intl';
+import Croppa from 'vue-croppa';
 import { theme, icons } from 'shared/vuetify';
 
 import 'shared/i18n/setup';
@@ -11,6 +12,7 @@ import 'shared/styles/main.less';
 
 import { initializeDB } from 'shared/data';
 
+Vue.use(Croppa);
 Vue.use(VueIntl);
 Vue.use(VueRouter);
 Vue.use(Vuetify, {

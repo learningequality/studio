@@ -46,8 +46,8 @@
 
 <script>
 
-  import { fileSizeMixin } from '../mixins';
-  import State from 'edit_channel/state';
+  import { mapState } from 'vuex';
+  import { fileSizeMixin } from './mixins';
   import ActionLink from 'edit_channel/sharedComponents/ActionLink.vue';
 
   export default {
@@ -63,11 +63,14 @@
       },
     },
     computed: {
+      ...mapState({
+        user: state => state.session.currentUser,
+      }),
       totalStorage() {
-        return State.current_user.get('disk_space');
+        return this.user.disk_space;
       },
       usedStorage() {
-        return this.totalStorage - State.current_user.get('available_space');
+        return this.totalStorage - this.user.available_space;
       },
       storagePercent() {
         return this.totalStorage ? (this.usedStorage / this.totalStorage) * 100 : 100;

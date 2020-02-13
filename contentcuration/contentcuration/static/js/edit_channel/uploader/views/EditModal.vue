@@ -3,7 +3,7 @@
   <div>
     <VDialog
       ref="editmodal"
-      :value="$route.params.detailNodeId == detailNodeId"
+      :value="true"
       fullscreen
       hide-overlay
       transition="dialog-bottom-transition"
@@ -19,29 +19,29 @@
           clipped-left
           app
         >
-          <VBtn data-test="close" icon dark app @click="handleClose">
+          <VBtn data-test="close" icon dark @click="handleClose">
             <Icon>close</Icon>
           </VBtn>
           <VToolbarTitle>{{ modalTitle }}</VToolbarTitle>
           <VSpacer />
-          <VBtn v-if="canEdit" data-test="save" dark flat @click="handleSave">
+          <VBtn v-if="canEdit" data-test="save" dark flat @click="handleClose">
             {{ $tr('saveButtonText') }}
           </VBtn>
           <VBtn v-else data-test="copy" dark flat @click="copyContent">
             {{ $tr('copyButtonText', {
               count: nodes.length, size: formatFileSize(totalFileSize)}) }}
           </VBtn>
-          <template v-if="canEdit" #extension>
+          <template v-if="canEdit && $route.params.nodeId" #extension>
             <VToolbar light color="white" flat>
               <VMenu style="z-index: 300;">
                 <VBtn slot="activator" color="primary">
                   {{ $tr('addItemDropdown' ) }}
                 </VBtn>
                 <VList>
-                  <VListTile @click="createNode('topic')">
+                  <VListTile @click="createTopic">
                     <VListTileTitle>{{ $tr('addTopic') }}</VListTileTitle>
                   </VListTile>
-                  <VListTile @click="createNode('exercise')">
+                  <VListTile @click="createExercise">
                     <VListTileTitle>{{ $tr('addExercise') }}</VListTileTitle>
                   </VListTile>
                   <Uploader allowMultiple @uploading="createNodesFromFiles">
@@ -65,7 +65,7 @@
           stateless
           clipped
           app
-          :open="drawerOpen"
+          :open="multipleNodes"
           :minWidth="150"
         >
           <Uploader
@@ -75,7 +75,7 @@
           >
             <EditList
               v-model="selected"
-              :nodeIds="detailNodeIds"
+              :nodeIds="nodeIds"
             />
           </Uploader>
         </ResizableNavigationDrawer>
@@ -106,11 +106,11 @@
     <!-- Dialog for catching unsaved changes -->
     <Dialog
       ref="saveprompt"
-      :header="$tr('invalidNodesFound', {count: invalidNodes().length})"
+      :header="$tr('invalidNodesFound', {count: 100})"
       :text="$tr('invalidNodesFoundText')"
     >
       <template slot="buttons" slot-scope="messagedialog">
-        <VBtn flat data-test="saveanyways" color="primary" @click="handleForceSave">
+        <VBtn flat data-test="saveanyways" color="primary" @click="closeModal">
           {{ $tr('saveAnywaysButton') }}
         </VBtn>
         <VSpacer />
@@ -127,7 +127,7 @@
       :text="$tr('uploadInProgressText')"
     >
       <template slot="buttons" slot-scope="messagedialog">
-        <VBtn flat data-test="canceluploads" color="primary" @click="handleForceSave">
+        <VBtn flat data-test="canceluploads" color="primary" @click="closeModal">
           {{ $tr('cancelUploadsButton') }}
         </VBtn>
         <VSpacer />
@@ -195,17 +195,20 @@
         type: String,
         default: '',
       },
+      detailNodeIds: {
+        type: String,
+        default: '',
+      },
     },
     data() {
       return {
         loading: false,
         loadError: false,
-        selected: this.detailNodeIds,
-        drawerOpen: this.multipleNodes,
+        selected: this.nodeIds,
       };
     },
     computed: {
-      // ...mapGetters('contentNode', ['getContentNodeIsValid']),
+      ...mapGetters('contentNode', ['getContentNode']),
       ...mapGetters('currentChannel', ['canEdit']),
       // ...mapGetters('edit_modal', ['changed',
       //'invalidNodes', 'totalFileSize', 'filesUploading']),
@@ -213,7 +216,7 @@
         return !this.canEdit;
       },
       // invalidNodeCount() {
-      //   return this.detailNodeIds.reduce(
+      //   return this.nodeIds.reduce(
       //     (invalid, detailNodeId) => invalid + Number(!this.getContentNodeIsValid(detailNodeId)),
       //     0
       //   );
@@ -222,23 +225,29 @@
         // Only hide drawer when editing a single item
         return this.nodes.length > 1;
       },
-      detailNodeIds() {
+      nodeIds() {
         if (this.detailNodeId) {
           return [this.detailNodeId];
         }
-        return [];
+        return this.detailNodeIds.split(',') || [];
       },
-      // nodes() {
-      //   return this.detailNodeIds.map(detailNodeId => this.getContentNode(detailNodeId));
-      // },
+      nodes() {
+        return this.nodeIds.map(detailNodeId => this.getContentNode(detailNodeId));
+      },
       modalTitle() {
         return this.canEdit ? this.$tr('editingDetailsHeader') : this.$tr('viewingDetailsHeader');
+      },
+      parentTitle() {
+        let node = this.$route.params.nodeId
+          ? this.getContentNode(this.$route.params.nodeId)
+          : { title: '' };
+        return node.title;
       },
     },
     beforeRouteEnter(to, from, next) {
       if (to.name === RouterNames.CONTENTNODE_DETAILS) {
         return next(vm => {
-          vm.loading = true;
+          // vm.loading = true;
           vm.loadContentNode(to.params.detailNodeId)
             .then(() => {
               vm.loading = false;
@@ -251,7 +260,7 @@
         });
       } else if (to.name === RouterNames.MULTI_CONTENTNODE_DETAILS) {
         return next(vm => {
-          vm.loading = true;
+          // vm.loading = true;
           let nodeIds = to.params.detailNodeIds.split(',');
           vm.loadContentNode(nodeIds)
             .then(() => {
@@ -270,14 +279,12 @@
       this.hideHTMLScroll(true);
     },
     methods: {
-      // ...mapActions('edit_modal', ['saveNodes', 'copyNodes', 'prepareForSave']),
-      ...mapActions('contentNode', ['loadContentNode', 'createContentNode']),
+      ...mapActions('contentNode', ['loadContentNode', 'createContentNode', 'copyNodes']),
       closeModal() {
         this.$refs.uploadsprompt.close();
         this.$refs.saveprompt.close();
         this.$refs.savefailedalert.close();
-        this.$emit('modalclosed');
-        this.reset();
+        // this.reset();
         this.hideHTMLScroll(false);
         this.$router.push({
           name: RouterNames.TREE_VIEW,
@@ -296,7 +303,7 @@
         if (_.some(this.nodes, n => n.prerequisite.length || n.is_prerequisite_of.length)) {
           this.$refs.relatedalert.prompt();
         }
-        this.copyNodes().then(() => {
+        this.copyNodes(this.detailNodeIds).then(() => {
           this.closeModal();
         });
       },
@@ -305,83 +312,65 @@
         if (this.isViewOnly) {
           this.closeModal();
         } else {
-          this.handleSave();
-        }
-      },
-      handleSave() {
-        // Main action when modal is opened in edit mode
-        // Prepare for save sets all as not new and
-        // activates validation on all nodes
-        this.prepareForSave();
-        let invalidNodes = this.invalidNodes();
-
-        // Check if there are any files uploading
-        if (this.filesUploading) {
-          this.$refs.uploadsprompt.prompt();
-        }
-
-        // Check if there are any invalid nodes
-        else if (invalidNodes.length) {
-          this.setNode(invalidNodes[0]);
-          this.$refs.saveprompt.prompt();
-        } else if (this.changed) {
-          this.handleForceSave();
-        } else {
           this.closeModal();
+          // Main action when modal is opened in edit mode
+          // Prepare for save sets all as not new and
+          // activates validation on all nodes
+          // this.prepareForSave();
+          // let invalidNodes = this.invalidNodes();
+          // // Check if there are any files uploading
+          // if (this.filesUploading) {
+          //   this.$refs.uploadsprompt.prompt();
+          // }
+          // // Check if there are any invalid nodes
+          // else if (invalidNodes.length) {
+          //   this.setNode(invalidNodes[0]);
+          //   this.$refs.saveprompt.prompt();
+          // } else if (this.changed) {
+          //   this.handleForceSave();
+          // } else {
+          //   this.closeModal();
+          // }
         }
-      },
-      handleForceSave() {
-        // Save anyways button action
-        this.saveContent()
-          .then(this.closeModal)
-          .catch(() => {
-            this.saveError = true;
-            this.$refs.savefailedalert.prompt();
-          });
-      },
-      saveContent() {
-        this.saveError = false;
-        return new Promise((resolve, reject) => {
-          this.saving = true;
-          this.saveNodes()
-            .then(() => {
-              this.saving = false;
-              resolve();
-            })
-            .catch(error => {
-              this.saveError = true;
-              reject(error);
-            });
-        });
       },
 
       /* Creation actions */
-      createNode(kind) {
+      createNode(kind, payload = {}) {
         this.createContentNode({
           kind,
           parent: this.$route.params.nodeId,
+          ...payload,
+        }).then(newNodeId => {
+          this.$router.push({
+            name: RouterNames.MULTI_CONTENTNODE_DETAILS,
+            params: {
+              ...this.$route.params,
+              detailNodeIds: this.nodeIds.concat(newNodeId).join(','),
+            },
+          });
+          this.selected = [newNodeId];
+        });
+      },
+      createTopic() {
+        this.createNode('topic', {
+          title: this.$tr('topicDefaultTitle', { parentTitle: this.parentTitle }),
+        });
+      },
+      createExercise() {
+        this.createNode('exercise', {
+          title: this.$tr('exerciseDefaultTitle', { parentTitle: this.parentTitle }),
+          extra_fields: {},
         });
       },
       createNodesFromFiles(files) {
         files.forEach(file => {
-          this.createContentNode({
-            kind: file.kind,
-            parent: this.$route.params.nodeId,
-          });
+          let payload = {
+            title: file.name,
+            files: [file.id],
+          };
+          this.createNode(file.kind, payload);
         });
       },
-      // uploadStarted(data) {
-      //   this.prepareForSave();
-      //   this.addNodeToList({
-      //     title: data.name,
-      //     kind: data.kind,
-      //     files: [
-      //       {
-      //         ...data,
-      //       },
-      //     ],
-      //   });
-      // },
     },
     $trs: {
       editingDetailsHeader: 'Editing Content Details',
@@ -398,8 +387,8 @@
       relatedContentText: 'Related content will not be included in the copy of this content.',
       saveFailedHeader: 'Save failed',
       saveFailedText: 'There was a problem saving your content',
-      // topicDefaultTitle: '{parent} Topic',
-      // exerciseDefaultTitle: '{parent} Exercise',
+      topicDefaultTitle: '{parentTitle} topic',
+      exerciseDefaultTitle: '{parentTitle} exercise',
       addItemDropdown: 'Add item',
       addTopic: 'Add Topic',
       addExercise: 'Add Exercise',

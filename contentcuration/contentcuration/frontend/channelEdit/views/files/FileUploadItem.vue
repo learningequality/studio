@@ -4,7 +4,7 @@
     <template #default="{openFileDialog}">
       <VListTile
         data-test="list-item"
-        :style="{backgroundColor: isSelected? $vuetify.theme.greyBackground : 'transparent'}"
+        v-bind="$attrs"
         @click.stop="viewOnly? $emit('selected') : openFileDialog()"
       >
         <VListTileAction v-show="!viewOnly" @click.stop="$emit('selected')">
@@ -24,7 +24,6 @@
             </span>
             <ActionLink
               v-else
-              class="notranslate"
               data-test="upload-link"
               :text="$tr('uploadButton')"
               @click="openFileDialog"
@@ -54,7 +53,7 @@
             icon
             class="remove-icon"
             data-test="remove"
-            @click.stop="$emit('remove', file.id)"
+            @click.stop="$emit('remove', file)"
           >
             <Icon color="grey">
               clear
@@ -70,8 +69,8 @@
 <script>
 
   import { mapGetters } from 'vuex';
-  import { fileSizeMixin, fileStatusMixin } from '../mixins';
-  import Uploader from 'edit_channel/sharedComponents/Uploader.vue';
+  import { fileSizeMixin, fileStatusMixin } from './mixins';
+  import Uploader from './Uploader';
   import ActionLink from 'edit_channel/sharedComponents/ActionLink.vue';
   import { translate } from 'edit_channel/utils/string_helper';
 
@@ -107,15 +106,15 @@
         type: Boolean,
         default: true,
       },
-      isSelected: {
-        type: Boolean,
-        default: false,
-      },
     },
     computed: {
-      ...mapGetters('fileUploads', ['getFile']),
+      ...mapGetters('file', ['getProgress']),
       uploading() {
-        return this.file && !!this.getFile(this.file.id);
+        if (this.file) {
+          let progress = this.getProgress([this.file.id]);
+          return progress.total !== progress.uploaded;
+        }
+        return false;
       },
     },
     methods: {
@@ -132,12 +131,10 @@
 
 <style lang="less" scoped>
 
-  @import '../../../../less/global-variables.less';
   .layout .section-header {
     padding: 0 15px;
-    font-family: @font-family !important;
     font-weight: bold;
-    color: @gray-700;
+    color: var(--v-darken-3);
   }
 
   button {
