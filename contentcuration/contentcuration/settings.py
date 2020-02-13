@@ -118,7 +118,7 @@ if SITE_READ_ONLY:
     CACHES['default']['LOCATION'] = 'readonly_cache'
 
 
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = (
     # 'django.middleware.cache.UpdateCacheMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
@@ -136,9 +136,9 @@ MIDDLEWARE_CLASSES = (
 )
 
 if os.getenv("GCLOUD_ERROR_REPORTING"):
-    MIDDLEWARE_CLASSES = (
+    MIDDLEWARE = (
         "contentcuration.middleware.error_reporting.ErrorReportingMiddleware",
-    ) + MIDDLEWARE_CLASSES
+    ) + MIDDLEWARE
 
 SUPPORTED_BROWSERS = [
     'Chrome',

@@ -29,9 +29,9 @@ INSTALLED_APPS = INSTALLED_APPS + (
     "django_prometheus",
 )
 
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = (
     ("django_prometheus.middleware.PrometheusBeforeMiddleware",) +
-    MIDDLEWARE_CLASSES +
+    MIDDLEWARE +
     ("django_prometheus.middleware.PrometheusAfterMiddleware",)
 )
 
