@@ -68,7 +68,7 @@
             :value="tabs.RELATED_RESOURCES"
             lazy
           >
-            Related resources
+            <RelatedResourcesView :nodeId="nodeIds[0]" />
           </VTabItem>
         </VTabsItems>
       </VFlex>
@@ -80,15 +80,18 @@
 <script>
 
   import { mapGetters } from 'vuex';
+
   import { TabNames } from '../constants';
   import DetailsTabView from './DetailsTabView';
   import AssessmentView from './AssessmentView';
+  import RelatedResourcesView from 'frontend/channelEdit/views/related-resources/RelatedResourcesView';
 
   export default {
     name: 'EditView',
     components: {
       DetailsTabView,
       AssessmentView,
+      RelatedResourcesView,
     },
     props: {
       isClipboard: {
