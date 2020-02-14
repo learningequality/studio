@@ -38,13 +38,13 @@
             </VChip>
           </VTab>
 
-          <!-- Prerequisites tab -->
+          <!-- Related resources tab -->
           <VTab
-            v-if="showPrerequisitesTab"
-            ref="prerequisitetab"
-            :href="`#${tabs.PREREQUISITES}`"
+            v-if="showRelatedResourcesTab"
+            ref="related-resources-tab"
+            :href="`#${tabs.RELATED_RESOURCES}`"
           >
-            {{ $tr(tabs.PREREQUISITES) }}
+            {{ $tr(tabs.RELATED_RESOURCES) }}
             <VChip v-if="firstNode.prerequisite.length" color="gray" dark>
               {{ firstNode.prerequisite.length }}
             </VChip>
@@ -64,12 +64,11 @@
             <AssessmentView />
           </VTabItem>
           <VTabItem
-            :key="tabs.PREREQUISITES"
-            ref="prerequisiteswindow"
-            :value="tabs.PREREQUISITES"
+            :key="tabs.RELATED_RESOURCES"
+            :value="tabs.RELATED_RESOURCES"
             lazy
           >
-            Prerequisites
+            Related resources
           </VTabItem>
         </VTabsItems>
       </VFlex>
@@ -132,7 +131,7 @@
       showQuestionsTab() {
         return this.oneSelected && this.firstNode && this.firstNode.kind === 'exercise';
       },
-      showPrerequisitesTab() {
+      showRelatedResourcesTab() {
         return (
           this.oneSelected && !this.isClipboard && this.firstNode && this.firstNode.kind !== 'topic'
         );
@@ -164,7 +163,7 @@
       [TabNames.DETAILS]: 'Details',
       [TabNames.PREVIEW]: 'Preview',
       [TabNames.QUESTIONS]: 'Questions',
-      [TabNames.PREREQUISITES]: 'Prerequisites',
+      [TabNames.RELATED_RESOURCES]: 'Related',
       noItemsToEditText: 'Please select an item or items to edit',
       noItemsToViewText: 'Please select an item or items to view',
       invalidFieldsToolTip: 'Invalid fields detected',

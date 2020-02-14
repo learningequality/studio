@@ -7,7 +7,7 @@ export const TabNames = {
   DETAILS: 'DETAILS',
   PREVIEW: 'PREVIEW',
   QUESTIONS: 'QUESTIONS',
-  PREREQUISITES: 'PREREQUISITES',
+  RELATED_RESOURCES: 'RELATED_RESOURCES',
 };
 
 export const modes = {
