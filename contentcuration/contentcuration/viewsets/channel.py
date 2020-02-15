@@ -31,6 +31,8 @@ from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.common import ContentDefaultsSerializer
+from contentcuration.viewsets.sync.constants import CHANNEL
+from contentcuration.viewsets.sync.utils import generate_update_event
 
 
 class CatalogListPagination(PageNumberPagination):
@@ -227,12 +229,33 @@ class ChannelSerializer(BulkModelSerializer):
         validated_data["content_defaults"] = self.fields["content_defaults"].create(
             content_defaults
         )
+        channel_id = validated_data["id"]
+        main_tree = ContentNode.objects.create(
+            title=validated_data["name"],
+            kind_id=content_kinds.TOPIC,
+            content_id=channel_id,
+            node_id=channel_id,
+            original_channel_id=channel_id,
+            source_channel_id=channel_id,
+        )
+        validated_data["main_tree_id"] = main_tree.id
         if "request" in self.context:
             user_id = self.context["request"].user.id
             # This has been newly created so add the current user as an editor
             validated_data["editors"] = [user_id]
             if bookmark:
                 validated_data["bookmarked_by"] = [user_id]
+        self.changes.append(
+            generate_update_event(
+                channel_id,
+                CHANNEL,
+                {
+                    "root_id": main_tree.id,
+                    "created": main_tree.created,
+                    "published": main_tree.published,
+                },
+            )
+        )
         return super(ChannelSerializer, self).create(validated_data)
 
     def update(self, instance, validated_data):
