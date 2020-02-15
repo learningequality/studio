@@ -21,11 +21,17 @@ from contentcuration.viewsets.channel import ChannelViewSet
 from contentcuration.viewsets.channelset import ChannelSetViewSet
 from contentcuration.viewsets.contentnode import ContentNodeViewSet
 from contentcuration.viewsets.file import FileViewSet
+from contentcuration.viewsets.tree import TreeViewSet
 from contentcuration.viewsets.sync.constants import CREATED
 from contentcuration.viewsets.sync.constants import DELETED
 from contentcuration.viewsets.sync.constants import MOVED
 from contentcuration.viewsets.sync.constants import UPDATED
-from contentcuration.viewsets.tree import TreeViewSet
+from contentcuration.viewsets.sync.constants import CHANNEL
+from contentcuration.viewsets.sync.constants import CONTENTNODE
+from contentcuration.viewsets.sync.constants import ASSESSMENTITEM
+from contentcuration.viewsets.sync.constants import CHANNELSET
+from contentcuration.viewsets.sync.constants import FILE
+from contentcuration.viewsets.sync.constants import TREE
 
 
 # Uses ordered dict behaviour to enforce operation orders
@@ -33,15 +39,15 @@ viewset_mapping = OrderedDict(
     [
         # If a new channel has been created, then any other operations that happen
         # within that channel depend on that, so we prioritize channel operations
-        ("channel", ChannelViewSet),
+        (CHANNEL, ChannelViewSet),
         # Tree operations require content nodes to exist, and any new assessment items
         # need to point to an existing content node
-        ("contentnode", ContentNodeViewSet),
+        (CONTENTNODE, ContentNodeViewSet),
         # The exact order of these three is not important.
-        ("assessmentitem", AssessmentItemViewSet),
-        ("channelset", ChannelSetViewSet),
-        ("tree", TreeViewSet),
-        ("file", FileViewSet),
+        (ASSESSMENTITEM, AssessmentItemViewSet),
+        (CHANNELSET, ChannelSetViewSet),
+        (TREE, TreeViewSet),
+        (FILE, FileViewSet),
     ]
 )
 
