@@ -15,6 +15,11 @@ from rest_framework.viewsets import ReadOnlyModelViewSet
 
 
 class BulkModelSerializer(ModelSerializer):
+    def __init__(self, *args, **kwargs):
+        super(BulkModelSerializer, self).__init__(*args, **kwargs)
+        # Track any changes that should be propagated back to the frontend
+        self.changes = []
+
     @classmethod
     def id_attr(cls):
         ModelClass = cls.Meta.model
@@ -182,12 +187,16 @@ class BulkListSerializer(ListSerializer):
             obj_id = getattr(obj, id_attr)
             obj_validated_data = all_validated_data_by_id.get(obj_id)
 
+            # Reset the child serializer changes attribute
+            self.child.changes = []
             # use model serializer to actually update the model
             # in case that method is overwritten
             instance, m2m_fields_by_id[obj_id] = self.child.update(
                 obj, obj_validated_data
             )
             updated_objects.append(instance)
+            # Collect any registered changes from this run of the loop
+            self.changes.extend(self.child.changes)
 
         bulk_update(objects_to_update, update_fields=properties_to_update)
 
@@ -200,9 +209,16 @@ class BulkListSerializer(ListSerializer):
 
     def create(self, validated_data):
         ModelClass = self.child.Meta.model
-        objects_to_create, many_to_many_tuple = zip(
-            *map(self.child.create, validated_data)
-        )
+        objects_to_create = []
+        many_to_many_tuples = []
+        for model_data in validated_data:
+            # Reset the child serializer changes attribute
+            self.child.changes = []
+            object_to_create, many_to_many = self.child.create(model_data)
+            objects_to_create.append(object_to_create)
+            many_to_many_tuples.append(many_to_many)
+            # Collect any registered changes from this run of the loop
+            self.changes.extend(self.child.changes)
         try:
             created_objects = ModelClass._default_manager.bulk_create(objects_to_create)
         except TypeError:
@@ -224,7 +240,7 @@ class BulkListSerializer(ListSerializer):
                 )
             )
             raise TypeError(msg)
-        for instance, many_to_many in zip(created_objects, many_to_many_tuple):
+        for instance, many_to_many in zip(created_objects, many_to_many_tuples):
             self.child.post_save_create(instance, many_to_many)
         return created_objects
 
