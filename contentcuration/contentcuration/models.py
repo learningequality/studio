@@ -360,8 +360,7 @@ class User(AbstractBaseUser, PermissionsMixin):
             changed = True
 
         if not self.clipboard_tree:
-            self.clipboard_tree = ContentNode.objects.create(title=self.email + " clipboard", kind_id=content_kinds.TOPIC,
-                                                             sort_order=get_next_sort_order())
+            self.clipboard_tree = ContentNode.objects.create(title=self.email + " clipboard", kind_id=content_kinds.TOPIC)
             self.clipboard_tree.save()
             changed = True
 
@@ -710,7 +709,6 @@ class Channel(models.Model):
             self.main_tree = ContentNode.objects.create(
                 title=self.name,
                 kind_id=content_kinds.TOPIC,
-                sort_order=get_next_sort_order(),
                 content_id=self.id,
                 node_id=self.id,
                 original_channel_id=self.id,
@@ -727,7 +725,6 @@ class Channel(models.Model):
             self.trash_tree = ContentNode.objects.create(
                 title=self.name,
                 kind_id=content_kinds.TOPIC,
-                sort_order=get_next_sort_order(),
                 content_id=self.id,
                 node_id=self.id,
             )
@@ -908,13 +905,6 @@ class License(models.Model):
 
     def __str__(self):
         return self.license_name
-
-
-def get_next_sort_order(node=None):
-    # Get the next sort order under parent (roots if None)
-    # Based on Kevin's findings, we want to append node as prepending causes all other root sort_orders to get incremented
-    max_order = ContentNode.objects.filter(parent=node).aggregate(max_order=Max('sort_order'))['max_order'] or 0
-    return max_order + 1
 
 
 class ContentNode(MPTTModel, models.Model):
