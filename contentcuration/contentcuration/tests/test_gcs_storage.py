@@ -1,18 +1,19 @@
 #!/usr/bin/env python
 from future import standard_library
+
 standard_library.install_aliases()
-from builtins import object
 from io import BytesIO
 
-from google.cloud.storage import Client
-from google.cloud.storage.blob import Blob
-
 import pytest
-from contentcuration.utils.gcs_storage import GoogleCloudStorage as gcs
 from django.core.files import File
 from django.test import TestCase
+from google.cloud.storage import Client
+from google.cloud.storage.blob import Blob
 from mixer.main import mixer
 from mock import create_autospec
+from mock import patch
+
+from contentcuration.utils.gcs_storage import GoogleCloudStorage as gcs
 
 
 class MimeTypesTestCase(TestCase):
@@ -74,7 +75,9 @@ class GoogleCloudStorageSaveTestCase(TestCase):
         self.storage.save("myfile.jpg", self.content, blob_object=self.blob_obj)
 
         # Check that we pass self.content file_object to upload_from_file
-        self.blob_obj.upload_from_file.assert_called_once_with(self.content, content_type="image/jpeg")
+        self.blob_obj.upload_from_file.assert_called_once_with(
+            self.content, content_type="image/jpeg"
+        )
 
     def test_checks_does_not_upload_file_if_empty(self):
         """
@@ -103,6 +106,20 @@ class GoogleCloudStorageSaveTestCase(TestCase):
         self.storage.save(filename, self.content, blob_object=self.blob_obj)
         assert "private" in self.blob_obj.cache_control
 
+    @patch("contentcuration.utils.gcs_storage.StringIO")
+    @patch(
+        "contentcuration.utils.gcs_storage.GoogleCloudStorage._is_file_empty",
+        return_value=False,
+    )
+    def test_gzip_if_content_database(self, stringio_mock, file_empty_mock):
+        """
+        Check that if we're uploading a gzipped content database and
+        if the StringIO object has been closed.
+        """
+        filename = "content/databases/myfile.sqlite3"
+        self.storage.save(filename, self.content, blob_object=self.blob_obj)
+        assert self.blob_obj.content_encoding == "gzip"
+        assert stringio_mock.called
 
 
 class GoogleCloudStorageOpenTestCase(TestCase):
@@ -114,6 +131,7 @@ class GoogleCloudStorageOpenTestCase(TestCase):
         """
         A schema for a file we're about to upload.
         """
+
         contents = str
         filename = str
 
