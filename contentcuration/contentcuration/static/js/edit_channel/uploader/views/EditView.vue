@@ -84,7 +84,7 @@
   import { TabNames } from '../constants';
   import DetailsTabView from './DetailsTabView';
   import AssessmentView from './AssessmentView';
-  import RelatedResourcesView from 'frontend/channelEdit/views/related-resources/RelatedResourcesView';
+  import RelatedResourcesView from 'frontend/channelEdit/views/related-resources/RelatedResourcesView/RelatedResourcesView';
 
   export default {
     name: 'EditView',
