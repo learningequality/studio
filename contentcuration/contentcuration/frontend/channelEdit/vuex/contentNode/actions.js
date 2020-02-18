@@ -2,6 +2,7 @@ import difference from 'lodash/difference';
 import union from 'lodash/union';
 import { sanitizeFiles } from '../file/utils';
 import { NOVALUE } from 'shared/constants';
+import client from 'shared/client';
 import { MOVE_POSITIONS } from 'shared/data/constants';
 import { ContentNode, Tree, File } from 'shared/data/resources';
 
@@ -33,6 +34,56 @@ export function loadChildren(context, { parent, channel_id }) {
   return Tree.where({ parent, channel_id }).then(nodes => {
     return loadContentNodes(context, { ids: nodes.map(node => node.id) });
   });
+}
+
+/**
+ * Retrieve related resources of a node from API.
+ * Save all previous/next steps (pre/post-requisites)
+ * to next steps map.
+ * Fetch and save data of immediate related resources
+ * and their parents.
+ */
+export async function loadRelatedResources(context, nodeId) {
+  let response;
+
+  try {
+    response = await client.get(window.Urls['get_prerequisites']('true', nodeId));
+  } catch (error) {
+    return Promise.reject(error);
+  }
+
+  const prerequisite_tree_nodes = response.data.prerequisite_tree_nodes;
+  const prerequisite_mapping = response.data.prerequisite_mapping;
+  const postrequisite_mapping = response.data.postrequisite_mapping;
+
+  context.commit('SAVE_NEXT_STEPS', {
+    nodeId,
+    prerequisite_mapping,
+    postrequisite_mapping,
+  });
+
+  // Ids of immediate previous/next steps
+  let relatedNodesIds = [
+    ...Object.keys(prerequisite_mapping),
+    ...Object.keys(postrequisite_mapping),
+  ];
+  // + ids of their parent nodes
+  prerequisite_tree_nodes.forEach(node => {
+    if (relatedNodesIds.includes(node.id)) {
+      relatedNodesIds.push(node.parent);
+    }
+  });
+  // remove duplicate ids if any
+  relatedNodesIds = [...new Set(relatedNodesIds)];
+
+  // Make sure that client has all related nodes data available
+  try {
+    await loadContentNodes(context, { ids: relatedNodesIds });
+  } catch (error) {
+    return Promise.reject(error);
+  }
+
+  return Promise.resolve();
 }
 
 /* CONTENTNODE EDITOR ACTIONS */

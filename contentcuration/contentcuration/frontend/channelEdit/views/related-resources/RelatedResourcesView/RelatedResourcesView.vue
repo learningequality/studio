@@ -3,12 +3,12 @@
   <div>
     <div class="title mt-4 mb-4">
       <ContentNodeIcon
-        v-if="node.kind"
+        v-if="node && node.kind"
         :kind="node.kind"
         class="mr-1"
       />
       <h2
-        v-if="node.title"
+        v-if="node && node.title"
         class="headline"
         data-test="title"
       >
@@ -69,11 +69,25 @@
     </VDialog>
 
     <VLayout justify-start mt-3 wrap>
-      <VFlex xs12 md5>
+      <VFlex
+        xs12
+        md5
+        data-test="previousSteps"
+      >
         <h3 class="title font-weight-bold">
           {{ $tr('previousStepsTitle') }}
         </h3>
         <p>{{ $tr('previousStepsExplanation') }}</p>
+
+        <RelatedResourcesList
+          v-if="previousSteps"
+          :items="previousSteps"
+          :removeResourceBtnLabel="$tr('removePreviousStepBtnLabel')"
+          class="mt-3"
+          @itemClick="onStepClick"
+          @removeItemClick="onRemovePreviousStepClick"
+        />
+
         <div
           class="mt-3 text-uppercase primary--text font-weight-bold"
           :style="{ 'cursor': 'pointer' }"
@@ -82,11 +96,26 @@
         </div>
       </VFlex>
 
-      <VFlex xs12 md5 offset-md1>
+      <VFlex
+        xs12
+        md5
+        offset-md1
+        data-test="nextSteps"
+      >
         <h3 class="title font-weight-bold">
           {{ $tr('nextStepsTitle') }}
         </h3>
         <p>{{ $tr('nextStepsExplanation') }}</p>
+
+        <RelatedResourcesList
+          v-if="nextSteps"
+          :items="nextSteps"
+          :removeResourceBtnLabel="$tr('removeNextStepBtnLabel')"
+          class="mt-3"
+          @itemClick="onStepClick"
+          @removeItemClick="onRemoveNextStepClick"
+        />
+
         <div
           class="mt-3 text-uppercase primary--text font-weight-bold"
           :style="{ 'cursor': 'pointer' }"
@@ -103,6 +132,7 @@
 
   import { mapGetters } from 'vuex';
 
+  import RelatedResourcesList from '../RelatedResourcesList/RelatedResourcesList';
   import ContentNodeIcon from 'frontend/shared/views/ContentNodeIcon.vue';
   import IconLightBulb from 'frontend/shared/views/IconLightBulb.vue';
 
@@ -111,6 +141,7 @@
     components: {
       ContentNodeIcon,
       IconLightBulb,
+      RelatedResourcesList,
     },
     props: {
       nodeId: {
@@ -124,9 +155,30 @@
       };
     },
     computed: {
-      ...mapGetters('contentNode', ['getContentNode']),
+      ...mapGetters('contentNode', [
+        'getContentNode',
+        'getImmediatePreviousStepsList',
+        'getImmediateNextStepsList',
+      ]),
       node() {
         return this.getContentNode(this.nodeId);
+      },
+      previousSteps() {
+        return this.getImmediatePreviousStepsList(this.nodeId);
+      },
+      nextSteps() {
+        return this.getImmediateNextStepsList(this.nodeId);
+      },
+    },
+    methods: {
+      onStepClick(nodeId) {
+        alert(`TBD: step click ${nodeId}`);
+      },
+      onRemovePreviousStepClick() {
+        alert('TBD: remove previous step click');
+      },
+      onRemoveNextStepClick() {
+        alert('TBD: remove next step click');
       },
     },
     $trs: {
@@ -145,6 +197,8 @@
       nextStepsExplanation: `Next steps recommend resources that build on skills
         or concepts learned in this resource`,
       addNextStepBtnLabel: 'Add next step',
+      removePreviousStepBtnLabel: 'Remove previous step',
+      removeNextStepBtnLabel: 'Remove next step',
     },
   };
 

@@ -79,6 +79,57 @@ export function getContentNodeFilesAreValid(state, getters, rootState, rootGette
   };
 }
 
+function getStepDetail(state, contentNodeId) {
+  const stepDetail = {
+    id: contentNodeId,
+    title: '',
+    kind: '',
+    parentTitle: '',
+  };
+
+  const node = getContentNode(state)(contentNodeId);
+
+  if (!node) {
+    return stepDetail;
+  }
+
+  const parentNode = getContentNode(state)(node.parent);
+
+  stepDetail.title = node.title;
+  stepDetail.kind = node.kind;
+  if (parentNode) {
+    stepDetail.parentTitle = parentNode.title;
+  }
+
+  return stepDetail;
+}
+
+/**
+ * Return a list of immediate previous steps of a node
+ * where a step has following interface:
+ * { id, title, kind, parentTitle }
+ */
+export function getImmediatePreviousStepsList(state) {
+  return function(contentNodeId) {
+    return state.nextStepsMap
+      .filter(([, nextStepId]) => nextStepId === contentNodeId)
+      .map(([targetId]) => getStepDetail(state, targetId));
+  };
+}
+
+/**
+ * Return a list of immediate next steps of a node
+ * where a step has following interface:
+ * { id, title, kind, parentTitle }
+ */
+export function getImmediateNextStepsList(state) {
+  return function(contentNodeId) {
+    return state.nextStepsMap
+      .filter(([targetId]) => targetId === contentNodeId)
+      .map(([, nextStepId]) => getStepDetail(state, nextStepId));
+  };
+}
+
 function uniqListByKey(state, key) {
   return uniqBy(Object.values(state.contentNodesMap), key)
     .map(node => node[key])
