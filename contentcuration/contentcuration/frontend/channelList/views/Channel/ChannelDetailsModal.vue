@@ -28,7 +28,7 @@
           {{ channel.name }}
         </VToolbarTitle>
       </VToolbar>
-      <LoadingText v-if="loading" />
+      <LoadingText v-if="loading" absolute />
       <div v-else-if="channel">
         <VCardText>
           <VLayout>
@@ -112,8 +112,8 @@
 
   import { mapActions, mapGetters } from 'vuex';
   import Vibrant from 'node-vibrant';
-  import Details from '../../../preview/views/Details';
-  import DetailsRow from '../../../preview/views/DetailsRow';
+  import Details from 'shared/views/details/Details';
+  import DetailsRow from 'shared/views/details/DetailsRow';
   import { fileSizeMixin, constantsTranslationMixin } from 'shared/mixins';
   import LoadingText from 'shared/views/LoadingText';
   import CopyToken from 'shared/views/CopyToken';

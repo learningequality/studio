@@ -48,6 +48,8 @@ const constantStrings = createTranslator('ConstantStrings', {
   exercise: 'Exercise',
   html5: 'HTML5 App',
   slideshow: 'Slideshow',
+  coach: 'Coaches',
+  learner: 'Anyone',
   'CC BY': 'CC BY',
   'CC BY-SA': 'CC BY-SA',
   'CC BY-ND': 'CC BY-ND',

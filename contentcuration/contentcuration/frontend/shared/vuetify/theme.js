@@ -3,10 +3,12 @@ import colors from 'vuetify/es5/util/colors';
 export default function theme() {
   return {
     purple: '#996189',
-    primary: '#996189', //colors.blue.base, // @blue-500
+    primary: '#996189',
     secondary: '#8DC5B6',
     primaryBackground: colors.blue.lighten5,
     greyBackground: colors.grey.lighten3,
+    grey: colors.grey.base,
+    darkGrey: colors.grey.darken2,
     greenSuccess: '#4db6ac',
     topic: colors.grey.base,
     video: '#283593',
