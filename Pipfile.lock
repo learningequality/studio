@@ -902,9 +902,9 @@
         },
         "pdf2image": {
             "hashes": [
-                "sha256:478ead1a27cbd094ff9e9301e5c6c111fec6ebe5346496a5ad7092ef733632fc"
+                "sha256:a0d9906f5507192210a8d5d7ead63145e9dec4bccc4564b1fb644e923913c31c"
             ],
-            "version": "==1.12.0"
+            "version": "==1.12.1"
         },
         "pdfkit": {
             "hashes": [
