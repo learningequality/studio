@@ -12,7 +12,7 @@
     >
       <VToolbar v-if="fullscreen" dark color="grey darken-3" dense>
         <VToolbarTitle class="notranslate">
-          {{ node.title }}
+          {{ nodeTitle }}
         </VToolbarTitle>
       </VToolbar>
       <VToolbar v-if="fullscreen" light dense>
@@ -59,12 +59,9 @@
         type: String,
         required: false,
       },
-      node: {
-        type: Object,
-        required: true,
-        validator: node => {
-          return node.files && node.title;
-        },
+      nodeTitle: {
+        type: String,
+        required: false,
       },
     },
     data() {

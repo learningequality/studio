@@ -66,7 +66,7 @@
     },
     methods: {
       ...mapActions(['startTask', 'clearCurrentTask']),
-      ...mapActions('fileUploads', ['getAudioData', 'generateThumbnail']),
+      ...mapActions('file', ['getAudioData', 'generateThumbnail']),
       handleError(error) {
         this.$emit('error', error);
         this.$refs.error.prompt();
@@ -166,12 +166,16 @@
         );
         let filename = this.$tr('generatedDefaultFilename') + '.png';
         let file = new File(byteArrays, filename, { type: 'image/png' });
-        let files = this.$refs.uploader.handleFiles([file]);
-        if (files.length) {
-          this.$emit('uploading', files);
-        } else {
-          this.handleError();
-        }
+        this.$refs.uploader
+          .handleUploads([file])
+          .then(files => {
+            if (files.length) {
+              this.$emit('uploading', files);
+            } else {
+              this.handleError();
+            }
+          })
+          .catch(this.handleError);
       },
       generate() {
         this.$emit('generating');

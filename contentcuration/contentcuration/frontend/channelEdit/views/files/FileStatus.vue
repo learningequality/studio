@@ -6,7 +6,7 @@
     </div>
     <VTooltip v-else-if="hasErrors" top>
       <template v-slot:activator="{ on }">
-        <Icon color="red" :large="large" v-on="on">
+        <Icon color="red" :large="large" :small="!large" v-on="on">
           error
         </Icon>
       </template>

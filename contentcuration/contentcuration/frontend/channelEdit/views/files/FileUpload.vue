@@ -34,7 +34,7 @@
           <ContentNodeIcon :kind="node.kind" includeText />
         </p>
         <div class="preview-wrapper">
-          <FilePreview :fileId="selected" :node="node" />
+          <FilePreview :fileId="selected" :nodeTitle="node.title" />
         </div>
       </VFlex>
       <VFlex sm12 md6 lg7 xl8>

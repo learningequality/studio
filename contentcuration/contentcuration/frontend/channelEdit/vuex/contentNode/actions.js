@@ -66,7 +66,7 @@ export function createContentNode(context, { parent, kind = 'topic', ...payload 
 function generateContentNodeData({
   title = NOVALUE,
   description = NOVALUE,
-  thumbnailData = NOVALUE,
+  thumbnail_encoding = NOVALUE,
   language = NOVALUE,
   license = NOVALUE,
   license_description = NOVALUE,
@@ -84,13 +84,8 @@ function generateContentNodeData({
   if (description !== NOVALUE) {
     contentNodeData.description = description;
   }
-  if (
-    thumbnailData !== NOVALUE &&
-    ['thumbnail', 'thumbnail_url', 'thumbnail_encoding'].every(attr => thumbnailData[attr])
-  ) {
-    contentNodeData.thumbnail = thumbnailData.thumbnail;
-    contentNodeData.thumbnail_url = thumbnailData.thumbnail_url;
-    contentNodeData.thumbnail_encoding = thumbnailData.thumbnail_encoding;
+  if (thumbnail_encoding !== NOVALUE) {
+    contentNodeData.thumbnail_encoding = thumbnail_encoding;
   }
   if (language !== NOVALUE) {
     contentNodeData.language = language;

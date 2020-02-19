@@ -1,7 +1,7 @@
 <template>
 
   <VTooltip bottom>
-    <template v-slot:activator="{ on }">
+    <template #activator="{ on }">
       <VBtn
         icon
         flat

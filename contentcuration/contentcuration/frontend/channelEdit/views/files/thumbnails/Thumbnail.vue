@@ -78,8 +78,8 @@
             v-else
             ref="thumbnail"
             :aspect-ratio="16/9"
-            :src="thumbnailEncoding.base64 || thumbnailSrc"
-            :lazy-src="thumbnailEncoding.base64 || thumbnailSrc"
+            :src="encoding && encoding.base64 || thumbnailSrc"
+            :lazy-src="encoding && encoding.base64 || thumbnailSrc"
             contain
             :class="{editing: !readonly}"
             @click="openFileDialog"
@@ -234,14 +234,6 @@
     },
     computed: {
       ...mapGetters('file', ['getUploadsInProgress']),
-      thumbnailEncoding: {
-        get() {
-          return this.encoding;
-        },
-        set(encoding) {
-          this.$emit('encoded', encoding);
-        },
-      },
       allowGeneration() {
         // Not allowed for channels, when operations are in progress, or in cropping mode
         return this.kind && !this.loading && (!this.cropping || this.generated);
@@ -301,7 +293,7 @@
         this.cropping = true;
       },
       cropperLoaded() {
-        this.Cropper.applyMetadata(this.thumbnailEncoding);
+        this.Cropper.applyMetadata(this.encoding);
       },
       cropZoomIn() {
         if (!this.zoomInterval) {
@@ -324,10 +316,10 @@
       },
       save() {
         // Calls setter method
-        this.thumbnailEncoding = {
+        this.$emit('encoded', {
           ...this.Cropper.getMetadata(),
           base64: this.Cropper.generateDataUrl(),
-        };
+        });
         this.reset();
       },
     },

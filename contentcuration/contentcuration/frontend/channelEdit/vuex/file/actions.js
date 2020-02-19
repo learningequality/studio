@@ -105,3 +105,24 @@ export function uploadFile(context, payload) {
       .catch(reject); // End get hash
   });
 }
+
+export function getAudioData(context, url) {
+  return new Promise((resolve, reject) => {
+    client
+      .get(url, { responseType: 'arraybuffer' })
+      .then(response => {
+        let audioContext = new AudioContext();
+        audioContext
+          .decodeAudioData(response.data, buffer => {
+            resolve(buffer.getChannelData(0));
+          })
+          .catch(reject);
+      })
+      .catch(reject);
+  });
+}
+
+export function generateThumbnail(context, filename) {
+  let channel = context.rootGetters['currentChannel/currentChannel'];
+  return client.get(window.Urls.create_thumbnail(channel.id, filename));
+}

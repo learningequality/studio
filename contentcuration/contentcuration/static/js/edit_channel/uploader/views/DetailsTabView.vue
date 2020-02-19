@@ -442,7 +442,7 @@
       },
       thumbnail: {
         get() {
-          return this.getFiles(this.firstNode.files).find(f => f.preset.thumbnail);
+          return this.nodeFiles.find(f => f.preset.thumbnail);
         },
         set(file) {
           file
@@ -450,14 +450,7 @@
             : this.removeFiles({ id: this.firstNode.id, files: [this.thumbnail.id] });
         },
       },
-      thumbnailEncoding: {
-        get() {
-          return this.firstNode.thumbnail_encoding;
-        },
-        set(encoding) {
-          this.update({ thumbnail_encoding: encoding });
-        },
-      },
+      thumbnailEncoding: generateGetterSetter('thumbnail_encoding'),
 
       /* COMPUTED PROPS */
       disableAuthEdits() {
@@ -507,13 +500,12 @@
             this.$tr('copyrightHolderValidationMessage'),
         ];
       },
+      nodeFiles() {
+        return (this.firstNode && this.getFiles(this.firstNode.files)) || [];
+      },
       primaryFile() {
-        // let file =
-        //   this.oneSelected &&
-        //   this.getFiles(this.firstNode.files)
-        //     .find(f => !f.preset.supplementary && f.file_on_disk);
-        // return (file && file.file_on_disk.split('?')[0]) || '';
-        return '';
+        let file = this.nodeFiles.find(f => !f.preset.supplementary && f.file_on_disk);
+        return (file && file.file_on_disk.split('?')[0]) || '';
       },
       videoSelected() {
         return this.oneSelected && this.firstNode.kind === 'video';
@@ -523,12 +515,16 @@
       },
     },
     watch: {
-      nodeIds() {
-        this.$nextTick(this.handleValidation);
+      nodes: {
+        deep: true,
+        handler() {
+          // Handles both when loading a node and when making a change
+          this.$nextTick(this.handleValidation);
+        },
       },
     },
     mounted() {
-      this.handleValidation();
+      this.$nextTick(this.handleValidation);
     },
     methods: {
       ...mapActions('contentNode', [
@@ -569,12 +565,12 @@
           : this.$tr('variedFieldPlaceholder');
       },
       handleValidation() {
-        this.$refs.form && !this.newContent && !this.viewOnly
-          ? this.$refs.form.resetValidation()
-          : this.$refs.form.validate();
+        if (this.$refs.form && !this.viewOnly) {
+          !this.newContent ? this.$refs.form.resetValidation() : this.$refs.form.validate();
+        }
       },
       setEncoding(encoding) {
-        this.thumbnail_encoding = encoding;
+        this.thumbnailEncoding = encoding;
       },
     },
     $trs: {
