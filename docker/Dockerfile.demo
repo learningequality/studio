@@ -9,6 +9,8 @@ RUN ln -fs /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
 RUN curl -sL https://deb.nodesource.com/setup_10.x | bash -
 
 ENV DEBIAN_FRONTEND noninteractive
+# Default Python file.open file encoding to UTF-8 instead of ASCII, workaround for le-utils setup.py issue
+ENV LANG C.UTF-8
 RUN apt-get update && apt-get -y install nodejs python-minimal python3.6 python3-pip python3-dev gcc libpq-dev ffmpeg imagemagick ghostscript python-tk make git gettext curl libjpeg-dev wkhtmltopdf fonts-freefont-ttf xfonts-75dpi poppler-utils
 
 # Ensure that python is using python3
