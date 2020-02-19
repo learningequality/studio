@@ -9,7 +9,7 @@
         <VFlex>
           <div class="mb-1">
             <!-- Slot for elements like "Back" link -->
-            <slot name="header-actions"></slot>
+            <slot name="navigation"></slot>
           </div>
           <ContentNodeIcon :kind="node.kind" includeText />
         </VFlex>
@@ -25,7 +25,7 @@
         <VSpacer />
         <div>
           <!-- Slot for elements like edit button -->
-          <slot name="main-actions"></slot>
+          <slot name="actions"></slot>
         </div>
       </VLayout>
 
