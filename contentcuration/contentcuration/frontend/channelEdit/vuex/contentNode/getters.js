@@ -38,8 +38,9 @@ export function getContentNodeIsValid(state) {
     const contentNode = state.contentNodesMap[contentNodeId];
     return (
       contentNode &&
-      getContentNodeDetailsAreValid(state)(contentNodeId) &&
-      getContentNodeFilesAreValid(state)(contentNodeId)
+      (contentNode.isNew ||
+        (getContentNodeDetailsAreValid(state)(contentNodeId) &&
+          getContentNodeFilesAreValid(state)(contentNodeId)))
     );
   };
 }
@@ -47,7 +48,7 @@ export function getContentNodeIsValid(state) {
 export function getContentNodeDetailsAreValid(state) {
   return function(contentNodeId) {
     const contentNode = state.contentNodesMap[contentNodeId];
-    return contentNode && !validateNodeDetails(contentNode).length;
+    return contentNode && (contentNode.isNew || !validateNodeDetails(contentNode).length);
   };
 }
 
@@ -81,7 +82,7 @@ export function copyrightHolders(state) {
 }
 
 export function tags(state) {
-  return uniq(flatMap(Object.values(state.contentNodesMap), node => node['tags']));
+  return uniq(flatMap(Object.values(state.contentNodesMap), node => node['tags']).filter(t => t));
 }
 
 export function nodeExpanded(state) {

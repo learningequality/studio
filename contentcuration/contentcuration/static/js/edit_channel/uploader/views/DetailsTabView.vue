@@ -1,7 +1,7 @@
 <template>
 
   <div v-if="nodes.length" class="details-edit-view">
-    <VForm ref="form" v-model="valid" :disabled="viewOnly">
+    <VForm ref="form" v-model="valid" :disabled="viewOnly" :lazy-validation="newContent">
       <!-- File upload and preview section -->
       <template v-if="oneSelected && allResources && !allExercises">
         <FileUpload
@@ -54,6 +54,7 @@
             :hint="languageHint"
             :placeholder="getPlaceholder('language')"
             :readonly="viewOnly"
+            :clearable="!viewOnly"
           />
 
           <!-- Visibility -->
@@ -517,6 +518,17 @@
       videoSelected() {
         return this.oneSelected && this.firstNode.kind === 'video';
       },
+      newContent() {
+        return !this.nodes.some(n => n.isNew);
+      },
+    },
+    watch: {
+      nodeIds() {
+        this.$nextTick(this.handleValidation);
+      },
+    },
+    mounted() {
+      this.handleValidation();
     },
     methods: {
       ...mapActions('contentNode', [
@@ -526,14 +538,6 @@
         'addFiles',
         'removeFiles',
       ]),
-      // ...mapMutations('edit_modal', {
-      //   updateNode: 'UPDATE_NODE',
-      //   updateNodeExtraFields: 'UPDATE_EXTRA_FIELDS',
-      //   validateNodeDetails: 'VALIDATE_NODE_DETAILS',
-      //   setTags: 'SET_TAGS',
-      //   addFileToNode: 'ADD_FILE_TO_NODE',
-      //   removeFileFromNode: 'REMOVE_FILE_FROM_NODE',
-      // }),
       update(payload) {
         this.updateContentNodes({ ids: this.nodeIds, ...payload });
       },
@@ -558,15 +562,17 @@
         return getValueFromResults(results);
       },
       getPlaceholder(field) {
-        return this.isUnique(this[field]) || this.viewOnly
-          ? this.$tr('variedFieldPlaceholder')
-          : null;
+        // Should only show if multiple nodes are selected with different
+        // values for the field (e.g. if author field is different on the selected nodes)
+        return this.oneSelected || this.isUnique(this[field])
+          ? ''
+          : this.$tr('variedFieldPlaceholder');
       },
-      // handleValidation() {
-      //   this.$refs.form && this.newContent
-      //     ? this.$refs.form.resetValidation()
-      //     : this.$refs.form.validate();
-      // },
+      handleValidation() {
+        this.$refs.form && !this.newContent && !this.viewOnly
+          ? this.$refs.form.resetValidation()
+          : this.$refs.form.validate();
+      },
       setEncoding(encoding) {
         this.thumbnail_encoding = encoding;
       },

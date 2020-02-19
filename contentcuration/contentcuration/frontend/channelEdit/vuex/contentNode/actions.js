@@ -44,16 +44,19 @@ export function createContentNode(context, { parent, kind = 'topic', ...payload 
     files: [],
     prerequisite: [],
     assessment_items: [],
+    isNew: true,
     language: session.preferences ? session.preferences.language : session.currentLanguage,
     ...context.rootGetters['currentChannel/currentChannel'].content_defaults,
     ...payload,
   };
+
   return ContentNode.put(contentNodeData).then(id => {
     return Tree.move(id, parent, MOVE_POSITIONS.LAST_CHILD).then(treeNode => {
       context.commit('ADD_CONTENTNODE', {
         id,
         ...contentNodeData,
       });
+
       context.commit('ADD_TREENODE', treeNode);
       return id;
     });

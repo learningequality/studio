@@ -56,7 +56,7 @@
                   :preset="item.preset"
                   :allowFileRemove="allowFileRemove"
                   :style="{backgroundColor:
-                    viewOnly && item.file && item.file.id === selected ?
+                    viewOnly && item.file && item.file.id === selected && fileCount > 1 ?
                       $vuetify.theme.greyBackground : 'transparent'}"
                   @uploading="handleUploading"
                   @remove="handleRemoveFile"
@@ -74,7 +74,7 @@
 <script>
 
   import sortBy from 'lodash/sortBy';
-  import { mapActions, mapGetters } from 'vuex';
+  import { mapActions, mapGetters, mapMutations } from 'vuex';
   import FilePreview from './FilePreview';
   import FileUploadItem from './FileUploadItem';
   import Constants from 'edit_channel/constants';
@@ -151,12 +151,14 @@
     methods: {
       ...mapActions('file', ['loadFiles']),
       ...mapActions('contentNode', ['addFiles', 'removeFiles']),
+      ...mapMutations('file', { updateFile: 'UPDATE_FILE' }),
       selectFirstFile() {
         let firstFile = sortBy(this.files, f => f.preset.order)[0];
         this.selected = firstFile && firstFile.id;
       },
       handleUploading(file) {
         this.selected = file.id;
+        this.updateFile({ id: file.id, contentnode: this.nodeId });
         this.addFiles({ id: this.nodeId, files: [file] });
       },
       handleRemoveFile(file) {

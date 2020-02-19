@@ -24,14 +24,20 @@ export function getFiles(state) {
 
 export function getStatusMessage(state) {
   return fileIDs => {
-    let match = state.files.find(f => fileIDs.includes(f.id) && f.error);
+    let match = getFiles(state)(fileIDs).find(f => f.error);
     return match && match.error.message;
+  };
+}
+
+export function getUploadsInProgress(state) {
+  return fileIDs => {
+    return getFiles(state)(fileIDs).filter(f => f.progress !== undefined);
   };
 }
 
 export function getProgress(state) {
   return fileIDs => {
-    let files = fileIDs.filter(id => state.fileMap[id] && state.fileMap[id].progress !== undefined);
+    let files = getUploadsInProgress(state)(fileIDs);
     let uploadedSize = reduce(
       files,
       (sum, file) => {
@@ -47,6 +53,19 @@ export function getProgress(state) {
       0
     );
     return { total: totalSize, uploaded: uploadedSize };
+  };
+}
+
+export function getTotalSize(state) {
+  return fileIDs => {
+    let files = getFiles(state)(fileIDs).filter(f => f);
+    return reduce(
+      files,
+      (sum, f) => {
+        return sum + f.file_size;
+      },
+      0
+    );
   };
 }
 

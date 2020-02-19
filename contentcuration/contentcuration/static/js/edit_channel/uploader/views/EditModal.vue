@@ -3,7 +3,7 @@
   <div>
     <VDialog
       ref="editmodal"
-      :value="true"
+      :value="showDialog"
       fullscreen
       hide-overlay
       transition="dialog-bottom-transition"
@@ -33,6 +33,7 @@
           </VBtn>
           <template v-if="canEdit && $route.params.nodeId" #extension>
             <VToolbar light color="white" flat>
+              <!-- Menu appears behind the modal, so set the z-index to be above 201 -->
               <VMenu style="z-index: 300;">
                 <VBtn slot="activator" color="primary">
                   {{ $tr('addItemDropdown' ) }}
@@ -62,10 +63,10 @@
         </VToolbar>
         <ResizableNavigationDrawer
           v-if="multipleNodes"
+          :open="multipleNodes"
           stateless
           clipped
           app
-          :open="multipleNodes"
           :minWidth="150"
         >
           <Uploader
@@ -76,6 +77,7 @@
             <EditList
               v-model="selected"
               :nodeIds="nodeIds"
+              @input="enableValidation(nodeIds);"
             />
           </Uploader>
         </ResizableNavigationDrawer>
@@ -106,7 +108,7 @@
     <!-- Dialog for catching unsaved changes -->
     <Dialog
       ref="saveprompt"
-      :header="$tr('invalidNodesFound', {count: 100})"
+      :header="$tr('invalidNodesFound', {count: invalidNodes.length})"
       :text="$tr('invalidNodesFoundText')"
     >
       <template slot="buttons" slot-scope="messagedialog">
@@ -127,7 +129,7 @@
       :text="$tr('uploadInProgressText')"
     >
       <template slot="buttons" slot-scope="messagedialog">
-        <VBtn flat data-test="canceluploads" color="primary" @click="closeModal">
+        <VBtn flat data-test="canceluploads" color="primary" @click="cancelUploads">
           {{ $tr('cancelUploadsButton') }}
         </VBtn>
         <VSpacer />
@@ -167,11 +169,12 @@
 
 <script>
 
-  import { mapActions, mapGetters } from 'vuex';
-  import EditList from './EditList.vue';
-  import EditView from './EditView.vue';
-  import Dialog from 'edit_channel/sharedComponents/Dialog.vue';
-  import Alert from 'edit_channel/sharedComponents/Alert.vue';
+  import flatten from 'lodash/flatten';
+  import { mapActions, mapGetters, mapMutations } from 'vuex';
+  import EditList from './EditList';
+  import EditView from './EditView';
+  import Dialog from 'edit_channel/sharedComponents/Dialog';
+  import Alert from 'edit_channel/sharedComponents/Alert';
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
   import Uploader from 'frontend/channelEdit/views/files/Uploader';
   import FileStorage from 'frontend/channelEdit/views/files/FileStorage';
@@ -208,22 +211,19 @@
       };
     },
     computed: {
-      ...mapGetters('contentNode', ['getContentNode']),
+      ...mapGetters('contentNode', ['getContentNode', 'getContentNodes', 'getContentNodeIsValid']),
       ...mapGetters('currentChannel', ['canEdit']),
-      // ...mapGetters('edit_modal', ['changed',
-      //'invalidNodes', 'totalFileSize', 'filesUploading']),
-      isViewOnly() {
-        return !this.canEdit;
+      ...mapGetters('file', ['getTotalSize', 'getUploadsInProgress']),
+      showDialog() {
+        return (
+          this.$route.name === RouterNames.CONTENTNODE_DETAILS ||
+          this.$route.name === RouterNames.MULTI_CONTENTNODE_DETAILS
+        );
       },
-      // invalidNodeCount() {
-      //   return this.nodeIds.reduce(
-      //     (invalid, detailNodeId) => invalid + Number(!this.getContentNodeIsValid(detailNodeId)),
-      //     0
-      //   );
-      // },
       multipleNodes() {
+        // return true;
         // Only hide drawer when editing a single item
-        return this.nodes.length > 1;
+        return this.nodeIds.length > 1;
       },
       nodeIds() {
         if (this.detailNodeId) {
@@ -232,7 +232,10 @@
         return this.detailNodeIds.split(',') || [];
       },
       nodes() {
-        return this.nodeIds.map(detailNodeId => this.getContentNode(detailNodeId));
+        return this.getContentNodes(this.nodeIds);
+      },
+      totalFileSize() {
+        return this.getTotalSize(flatten(this.nodes.map(n => n.files || [])));
       },
       modalTitle() {
         return this.canEdit ? this.$tr('editingDetailsHeader') : this.$tr('viewingDetailsHeader');
@@ -243,15 +246,17 @@
           : { title: '' };
         return node.title;
       },
+      invalidNodes() {
+        return this.nodeIds.filter(id => !this.getContentNodeIsValid(id));
+      },
     },
     beforeRouteEnter(to, from, next) {
       if (to.name === RouterNames.CONTENTNODE_DETAILS) {
         return next(vm => {
-          // vm.loading = true;
+          vm.loading = true;
           vm.loadContentNode(to.params.detailNodeId)
             .then(() => {
               vm.loading = false;
-              vm.selected = [to.params.detailNodeId];
             })
             .catch(() => {
               vm.loading = false;
@@ -260,12 +265,11 @@
         });
       } else if (to.name === RouterNames.MULTI_CONTENTNODE_DETAILS) {
         return next(vm => {
-          // vm.loading = true;
+          vm.loading = true;
           let nodeIds = to.params.detailNodeIds.split(',');
-          vm.loadContentNode(nodeIds)
+          vm.loadContentNodes({ ids: nodeIds })
             .then(() => {
               vm.loading = false;
-              vm.selected = [nodeIds[0]];
             })
             .catch(() => {
               vm.loading = false;
@@ -277,9 +281,16 @@
     },
     mounted() {
       this.hideHTMLScroll(true);
+      this.selected = this.nodeIds;
     },
     methods: {
-      ...mapActions('contentNode', ['loadContentNode', 'createContentNode', 'copyNodes']),
+      ...mapActions('contentNode', [
+        'loadContentNode',
+        'loadContentNodes',
+        'createContentNode',
+        'copyNodes',
+      ]),
+      ...mapMutations('contentNode', { enableValidation: 'ENABLE_VALIDATION_ON_NODES' }),
       closeModal() {
         this.$refs.uploadsprompt.close();
         this.$refs.saveprompt.close();
@@ -303,39 +314,35 @@
         if (_.some(this.nodes, n => n.prerequisite.length || n.is_prerequisite_of.length)) {
           this.$refs.relatedalert.prompt();
         }
-        this.copyNodes(this.detailNodeIds).then(() => {
+        this.copyNodes(this.nodeIds).then(() => {
           this.closeModal();
         });
       },
       handleClose() {
         // X button action
-        if (this.isViewOnly) {
+        if (!this.canEdit) {
           this.closeModal();
         } else {
-          this.closeModal();
-          // Main action when modal is opened in edit mode
-          // Prepare for save sets all as not new and
-          // activates validation on all nodes
-          // this.prepareForSave();
-          // let invalidNodes = this.invalidNodes();
-          // // Check if there are any files uploading
-          // if (this.filesUploading) {
-          //   this.$refs.uploadsprompt.prompt();
-          // }
-          // // Check if there are any invalid nodes
-          // else if (invalidNodes.length) {
-          //   this.setNode(invalidNodes[0]);
-          //   this.$refs.saveprompt.prompt();
-          // } else if (this.changed) {
-          //   this.handleForceSave();
-          // } else {
-          //   this.closeModal();
-          // }
+          this.enableValidation(this.nodeIds);
+          // Catch uploads in progress and invalid nodes
+          if (this.getUploadsInProgress(this.nodes.flatMap(n => n.files)).length) {
+            this.$refs.uploadsprompt.prompt();
+          } else if (this.invalidNodes.length) {
+            this.selected = [this.invalidNodes[0]];
+            this.$refs.saveprompt.prompt();
+          } else {
+            this.closeModal();
+          }
         }
+      },
+      cancelUploads() {
+        // TODO: Delete items that are still being uploaded
+        this.cloaseModal();
       },
 
       /* Creation actions */
       createNode(kind, payload = {}) {
+        this.enableValidation(this.nodeIds);
         this.createContentNode({
           kind,
           parent: this.$route.params.nodeId,
@@ -378,7 +385,7 @@
       saveButtonText: 'Finish',
       copyButtonText:
         '{count, plural,\n =1 {Copy to clipboard}\n other {Copy # items to clipboard}} ({size})',
-      invalidNodesFound: '{count} errors found',
+      invalidNodesFound: '{count, plural,\n =1 {# error found}\n other {# errors found}}',
       invalidNodesFoundText:
         "You won't be able to publish your channel until these errors are resolved",
       saveAnywaysButton: 'Save anyway',

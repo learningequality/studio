@@ -1,7 +1,9 @@
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
+from rest_framework.serializers import PrimaryKeyRelatedField
 
+from contentcuration.models import ContentNode
 from contentcuration.models import File
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import ValuesViewset
@@ -25,6 +27,8 @@ class FileFilter(FilterSet):
 
 
 class FileSerializer(BulkModelSerializer):
+    contentnode = PrimaryKeyRelatedField(queryset=ContentNode.objects.all())
+
     class Meta:
         model = File
         fields = (
@@ -51,6 +55,7 @@ class FileViewSet(ValuesViewset):
         "file_size",
         "language",
         "file_format",
+        "contentnode",
         "file_on_disk",
         "preset",
         "original_filename",

@@ -15,7 +15,7 @@
     <div class="my-2 image-wrapper">
       <div v-if="loading" style="border: 2px solid transparent;">
         <VCard
-          ref="loading"
+          ref="thumbnail"
           color="grey lighten-4"
           style="padding: 28% 0;"
           flat
@@ -56,14 +56,16 @@
         :presetID="thumbnailPresetID"
         :readonly="readonly"
         :borderColor="$vuetify.theme.grey.lighten2"
-        @uploaded="handleUploading"
+        @uploading="handleUploading"
       >
         <template #default="{openFileDialog}">
           <VCard
             v-if="!thumbnailSrc"
+            ref="thumbnail"
             color="grey lighten-4"
             style="padding: 28% 0;"
             flat
+            @click="openFileDialog"
           >
             <VLayout row wrap align-center justify-center style="max-height: 0px;">
               <div style="position: absolute;">
@@ -130,7 +132,7 @@
       <!-- Default options -->
       <template v-else-if="!loading">
         <div style="margin: -3px;">
-          <Uploader :allowDrop="false" :presetID="thumbnailPresetID" @uploaded="handleUploading">
+          <Uploader :allowDrop="false" :presetID="thumbnailPresetID" @uploading="handleUploading">
             <template #default="{openFileDialog}">
               <ThumbnailToolbarIcon
                 icon="image"
@@ -231,7 +233,7 @@
       };
     },
     computed: {
-      ...mapGetters('fileUploads', ['getFile']),
+      ...mapGetters('file', ['getUploadsInProgress']),
       thumbnailEncoding: {
         get() {
           return this.encoding;
@@ -272,13 +274,13 @@
         );
       },
       uploading() {
-        return this.value && !!this.getFile(this.value.id);
+        return this.value && this.getUploadsInProgress([this.value.id]).length;
       },
     },
     methods: {
       handleUploading(file) {
         this.lastThumbnail = this.value;
-        this.$emit('input', file);
+        this.$emit('input', file[0]);
         this.startCropping();
         this.generating = false;
       },
@@ -294,13 +296,8 @@
 
       /* CROPPING FUNCTION */
       startCropping() {
-        if (this.loading) {
-          this.cropDimensions.width = this.$refs.loading.$el.clientWidth - 4;
-          this.cropDimensions.height = (this.cropDimensions.width * 9) / 16;
-        } else {
-          this.cropDimensions.width = this.$refs.thumbnail.$el.clientWidth;
-          this.cropDimensions.height = (this.cropDimensions.width * 9) / 16;
-        }
+        this.cropDimensions.width = this.$refs.thumbnail.$el.clientWidth;
+        this.cropDimensions.height = (this.cropDimensions.width * 9) / 16;
         this.cropping = true;
       },
       cropperLoaded() {

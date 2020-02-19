@@ -168,7 +168,7 @@
         let file = new File(byteArrays, filename, { type: 'image/png' });
         let files = this.$refs.uploader.handleFiles([file]);
         if (files.length) {
-          this.$emit('uploading', files[0]);
+          this.$emit('uploading', files);
         } else {
           this.handleError();
         }

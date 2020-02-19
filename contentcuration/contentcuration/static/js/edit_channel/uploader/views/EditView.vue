@@ -12,7 +12,7 @@
           <!-- Details tab -->
           <VTab ref="detailstab" :href="`#${tabs.DETAILS}`">
             {{ $tr(tabs.DETAILS) }}
-            <VTooltip v-if="invalidSelected || !areFilesValid" top>
+            <VTooltip v-if="!areDetailsValid || !areFilesValid" top>
               <template v-slot:activator="{ on }">
                 <Icon color="red" dark small class="ml-2" v-on="on">
                   error
@@ -52,10 +52,10 @@
         </VTabs>
         <VTabsItems v-model="currentTab">
           <VTabItem :key="tabs.DETAILS" ref="detailswindow" :value="tabs.DETAILS" lazy>
-            <VAlert :value="nodeIds.length > 1" type="info" color="primary" outline>
+            <VAlert v-if="nodeIds.length > 1" :value="true" type="info" color="primary" outline>
               {{ countText }}
             </VAlert>
-            <VAlert v-if="invalidSelected" :value="true" type="error" outline icon="error">
+            <VAlert v-else-if="!areDetailsValid" :value="true" type="error" outline icon="error">
               {{ $tr('errorBannerText') }}
             </VAlert>
             <DetailsTabView :viewOnly="!canEdit" :nodeIds="nodeIds" />
@@ -137,15 +137,13 @@
           this.oneSelected && !this.isClipboard && this.firstNode && this.firstNode.kind !== 'topic'
         );
       },
-      invalidSelected() {
-        return (
-          this.canEdit && this.nodeIds.some(nodeId => !this.getContentNodeDetailsAreValid(nodeId))
-        );
-      },
       countText() {
         let messageArgs = { count: this.nodeIds.length };
         if (this.canEdit) return this.$tr('editingMultipleCount', messageArgs);
         return this.$tr('viewingMultipleCount', messageArgs);
+      },
+      areDetailsValid() {
+        return !this.oneSelected || this.getContentNodeDetailsAreValid(this.nodeIds[0]);
       },
       areAssessmentItemsValid() {
         return true;

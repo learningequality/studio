@@ -2,7 +2,7 @@
 
   <div>
     <div v-if="!uploads.length">
-      <slot name="default"></slot>
+      <slot></slot>
     </div>
     <VTooltip v-else-if="hasErrors" top>
       <template v-slot:activator="{ on }">
@@ -29,8 +29,7 @@
 
 <script>
 
-  import _ from 'underscore';
-  import { mapState } from 'vuex';
+  import { mapGetters } from 'vuex';
   import { fileSizeMixin, fileStatusMixin } from './mixins';
 
   export default {
@@ -49,25 +48,16 @@
       },
     },
     computed: {
-      ...mapState('fileUploads', ['files']),
+      ...mapGetters('file', ['getProgress', 'getFiles']),
       uploads() {
-        return _.chain(this.fileIDs)
-          .map(f => this.files[f])
-          .reject(f => !f)
-          .value();
+        return this.getFiles(this.fileIDs).filter(f => f.progress !== undefined);
       },
       progress() {
-        let sum = _.reduce(
-          this.uploads,
-          (sum, file) => {
-            return file.progress + sum;
-          },
-          0
-        );
-        return sum / (this.uploads.length || 1);
+        let progress = this.getProgress(this.fileIDs);
+        return (progress.uploaded / (progress.total || 1)) * 100;
       },
       hasErrors() {
-        return _.some(this.uploads, u => u.error);
+        return this.uploads.some(u => u.error);
       },
     },
   };

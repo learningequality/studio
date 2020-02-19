@@ -44,7 +44,7 @@ export const fileSizeMixin = {
 export const fileStatusMixin = {
   mixins: [fileSizeMixin],
   computed: {
-    ...mapGetters('fileUploads', ['getStatusMessage', 'getProgress']),
+    ...mapGetters('file', ['getStatusMessage', 'getProgress']),
   },
   methods: {
     statusMessage(fileIDs) {

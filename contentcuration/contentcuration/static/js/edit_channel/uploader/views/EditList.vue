@@ -15,7 +15,7 @@
       :key="nodeId"
       v-model="selected"
       :nodeId="nodeId"
-      :removable="canEdit"
+      :canEdit="canEdit"
     />
 
   </VList>

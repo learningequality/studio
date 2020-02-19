@@ -29,15 +29,13 @@
     </VListTileContent>
     <VSpacer />
     <VListTileAction class="status-indicator">
-      <FileStatus :fileIDs="fileIDs">
-        <slot name="default">
-          <Icon v-if="!nodeIsValid" color="red" class="error-icon">
-            error
-          </Icon>
-        </slot>
+      <FileStatus :fileIDs="node.files">
+        <Icon v-if="!nodeIsValid" color="red" class="error-icon">
+          error
+        </Icon>
       </FileStatus>
     </VListTileAction>
-    <VListTileAction v-if="removable">
+    <VListTileAction v-if="canEdit">
       <VBtn icon small flat class="remove-item" @click.stop="deleteContentNode(nodeId)">
         <Icon>clear</Icon>
       </VBtn>
@@ -48,7 +46,6 @@
 
 <script>
 
-  // import reject from 'lodash/reject';
   import { mapActions, mapGetters } from 'vuex';
   import { fileSizeMixin, fileStatusMixin } from 'edit_channel/file_upload/mixins';
   import FileStatus from 'frontend/channelEdit/views/files/FileStatus';
@@ -70,7 +67,7 @@
         type: String,
         required: true,
       },
-      removable: {
+      canEdit: {
         type: Boolean,
         default: false,
       },
@@ -98,9 +95,6 @@
             : this.$vuetify.theme.greyBackground;
         }
         return 'transparent';
-      },
-      fileIDs() {
-        return _.pluck(this.node.files, 'id');
       },
       subtitleText() {
         if (this.node.kind === 'exercise') {

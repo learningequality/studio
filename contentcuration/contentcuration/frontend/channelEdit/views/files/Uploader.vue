@@ -1,7 +1,7 @@
 <template>
 
   <div
-    style="border: 2px solid transparent;"
+    style="border: 4px solid transparent;"
     class="uploader"
     :style="{
       backgroundColor: highlightDropzone? $vuetify.theme.primaryBackground : 'transparent',
