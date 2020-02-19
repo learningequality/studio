@@ -104,17 +104,17 @@ class GoogleCloudStorageSaveTestCase(TestCase):
         self.storage.save(filename, self.content, blob_object=self.blob_obj)
         assert "private" in self.blob_obj.cache_control
 
-    @patch("contentcuration.utils.gcs_storage.StringIO")
+    @patch("contentcuration.utils.gcs_storage.BytesIO")
     @patch("contentcuration.utils.gcs_storage.GoogleCloudStorage._is_file_empty", return_value=False)
-    def test_gzip_if_content_database(self, stringio_mock, file_empty_mock):
+    def test_gzip_if_content_database(self, bytesio_mock, file_empty_mock):
         """
         Check that if we're uploading a gzipped content database and
-        if the StringIO object has been closed.
+        if the BytesIO object has been closed.
         """
         filename = "content/databases/myfile.sqlite3"
         self.storage.save(filename, self.content, blob_object=self.blob_obj)
         assert self.blob_obj.content_encoding == "gzip"
-        assert stringio_mock.called
+        assert bytesio_mock.called
 
 
 class GoogleCloudStorageOpenTestCase(TestCase):
