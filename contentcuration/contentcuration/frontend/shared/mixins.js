@@ -46,6 +46,7 @@ const constantStrings = createTranslator('ConstantStrings', {
   audio: 'Audio',
   document: 'Document',
   exercise: 'Exercise',
+  h5p: 'H5P App',
   html5: 'HTML5 App',
   slideshow: 'Slideshow',
   'CC BY': 'CC BY',
