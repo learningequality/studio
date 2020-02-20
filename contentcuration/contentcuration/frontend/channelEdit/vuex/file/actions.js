@@ -3,6 +3,7 @@ import { File as ContentFile } from 'shared/data/resources';
 import client from 'shared/client';
 import { fileErrors } from 'edit_channel/file_upload/constants';
 import Constants from 'edit_channel/constants/index';
+import { NOVALUE } from 'shared/constants';
 
 const UPLOAD_DONE_DELAY = 1500;
 
@@ -28,6 +29,93 @@ export function loadFile(context, id) {
     });
 }
 
+export function createFile(context, { file, presetId }) {
+  let extension = file.name
+    .split('.')
+    .pop()
+    .toLowerCase();
+  let preset =
+    presetId ||
+    Constants.FormatPresets.find(
+      ftype => ftype.allowed_formats.includes(extension.toLowerCase()) && ftype.display
+    ).id;
+
+  let uploadfile = {
+    preset,
+    progress: 0,
+    file_size: file.size,
+    original_filename: file.name,
+    file_format: extension,
+  };
+  return ContentFile.put(uploadfile).then(id => {
+    context.commit('ADD_FILE', { id, ...uploadfile });
+    return id;
+  });
+}
+
+function generateFileData({
+  checksum = NOVALUE,
+  file_size = NOVALUE,
+  file_on_disk = NOVALUE,
+  contentnode = NOVALUE,
+  assessment_item = NOVALUE,
+  slideshow_slide = NOVALUE,
+  file_format = NOVALUE,
+  preset = NOVALUE,
+  language = NOVALUE,
+  original_filename = NOVALUE,
+  source_url = NOVALUE,
+  error = NOVALUE,
+} = {}) {
+  const fileData = {};
+  if (checksum !== NOVALUE) {
+    fileData.checksum = checksum;
+  }
+  if (file_size !== NOVALUE) {
+    fileData.file_size = file_size;
+  }
+  if (file_on_disk !== NOVALUE) {
+    fileData.file_on_disk = file_on_disk;
+  }
+  if (contentnode !== NOVALUE) {
+    fileData.contentnode = contentnode;
+  }
+  if (assessment_item !== NOVALUE) {
+    fileData.assessment_item = assessment_item;
+  }
+  if (slideshow_slide !== NOVALUE) {
+    fileData.slideshow_slide = slideshow_slide;
+  }
+  if (file_format !== NOVALUE) {
+    fileData.file_format = file_format;
+  }
+  if (preset !== NOVALUE) {
+    fileData.preset = preset;
+  }
+  if (language !== NOVALUE) {
+    fileData.language = language;
+  }
+  if (original_filename !== NOVALUE) {
+    fileData.original_filename = original_filename;
+  }
+  if (source_url !== NOVALUE) {
+    fileData.source_url = source_url;
+  }
+  if (error !== NOVALUE) {
+    fileData.error = error;
+  }
+  return fileData;
+}
+
+export function updateFile(context, { id, ...payload }) {
+  if (!id) {
+    throw ReferenceError('id must be defined to update a file');
+  }
+  const fileData = generateFileData(payload);
+  context.commit('UPDATE_FILE', { id, ...fileData });
+  return ContentFile.update(id, fileData);
+}
+
 export function getUploadURL(context, payload) {
   return client.get(
     window.Urls.get_upload_url(),
@@ -40,57 +128,54 @@ export function getUploadURL(context, payload) {
   );
 }
 
-export function uploadFileToStorage(context, payload) {
+export function uploadFileToStorage(context, { id, file, url }) {
   const data = new FormData();
-  data.append('file', payload.file);
-  return client.post(payload.url, data, {
+  data.append('file', file);
+  return client.post(url, data, {
     headers: {
       'Content-Type': 'multipart/form-data',
     },
     onUploadProgress: progressEvent => {
-      const { loaded, total } = progressEvent;
-      context.commit('UPDATE_FILE', {
-        id: payload.id,
-        progress: (loaded / total) * 100,
-      });
+      let progress = (progressEvent.loaded / progressEvent.total) * 100;
+      context.commit('UPDATE_FILE', { id, progress });
+      return ContentFile.update(id, { progress });
     },
   });
 }
 
-export function uploadFile(context, payload) {
+export function uploadFile(context, { id, file }) {
   return new Promise((resolve, reject) => {
     // 1. Get the checksum of the file
-    getHash(payload.file)
-      .then(hash => {
-        context.commit('UPDATE_FILE', { id: payload.id, checksum: hash });
+    getHash(file)
+      .then(checksum => {
+        context.dispatch('updateFile', { id, checksum });
 
         // 2. Get the upload url
-        context
-          .dispatch('getUploadURL', { checksum: hash, size: payload.file.size, id: payload.id })
+        return context
+          .dispatch('getUploadURL', { id, checksum, size: file.size })
           .then(response => {
             if (!response) {
               reject(fileErrors.UPLOAD_FAILED);
               return;
             }
             // 3. Upload file
-            context
-              .dispatch('uploadFileToStorage', {
-                id: payload.id,
-                file: payload.file,
-                url: response.data,
-              })
+            return context
+              .dispatch('uploadFileToStorage', { id, file, url: response.data })
               .then(response => {
-                context.commit('UPDATE_FILE', {
-                  id: payload.id,
+                context.dispatch('updateFile', {
+                  id,
                   file_on_disk: response.data,
                 });
 
                 setTimeout(() => {
-                  context.commit('UPDATE_FILE', { id: payload.id, progress: undefined });
+                  context.commit('UPDATE_FILE', { id, progress: undefined });
+                  ContentFile.update(id, { progress: undefined });
                 }, UPLOAD_DONE_DELAY);
                 resolve(response.data);
               })
-              .catch(reject); // End upload file
+              .catch(() => {
+                reject(fileErrors.UPLOAD_FAILED);
+              }); // End upload file
           })
           .catch(error => {
             switch (error.response && error.response.status) {
@@ -102,7 +187,9 @@ export function uploadFile(context, payload) {
             }
           }); // End get upload url
       })
-      .catch(reject); // End get hash
+      .catch(() => {
+        reject(fileErrors.UPLOAD_FAILED);
+      }); // End get hash
   });
 }
 

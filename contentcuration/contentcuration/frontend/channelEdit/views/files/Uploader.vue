@@ -61,13 +61,13 @@
 
 <script>
 
-  import { mapActions, mapGetters, mapMutations } from 'vuex';
+  import { mapActions, mapGetters } from 'vuex';
   import _ from 'underscore';
+  import { fileSizeMixin } from './mixins';
   import Constants from 'edit_channel/constants';
   import Alert from 'edit_channel/sharedComponents/Alert.vue';
 
   import { fileErrors, MAX_FILE_SIZE } from 'edit_channel/file_upload/constants';
-  import { fileSizeMixin } from 'edit_channel/file_upload/mixins';
   import FileStorage from 'frontend/channelEdit/views/files/FileStorage';
   import State from 'edit_channel/state';
 
@@ -113,7 +113,7 @@
       };
     },
     computed: {
-      ...mapGetters('file', ['getFile']),
+      ...mapGetters('file', ['getFiles']),
       acceptedFiles() {
         let filter = { display: true };
         if (this.presetID) {
@@ -156,11 +156,7 @@
     },
     methods: {
       // Add in once global store is properly set up
-      ...mapActions('file', ['uploadFile']),
-      ...mapMutations('file', {
-        addFile: 'CREATE_FILE',
-        setFileError: 'UPDATE_FILE',
-      }),
+      ...mapActions('file', ['uploadFile', 'updateFile', 'createFile']),
       enter() {
         this.highlight = true;
       },
@@ -190,7 +186,7 @@
         } else {
           type = fileErrors.UPLOAD_FAILED;
         }
-        this.setFileError({ id, error: { type, message } });
+        this.updateFile({ id, error: { type, message } });
       },
       validateFiles(files) {
         // Get unsupported file types
@@ -223,32 +219,29 @@
           } else if (this.tooLargeFiles.length) {
             this.$refs.toolargefiles.prompt();
           }
-          this.handleUploads(files).then(newFiles => {
-            if (newFiles.length) {
-              this.$emit('uploading', newFiles);
-            }
+          this.handleUploads(files).then(uploadedFiles => {
+            this.$emit('uploading', uploadedFiles);
           });
         }
       },
       handleUploads(files) {
         return new Promise(resolve => {
-          let newFiles = [];
-          [...files].forEach(uploadedFile => {
-            let fileID = String(Math.random()).slice(2);
-            this.addFile({ id: fileID, file: uploadedFile, preset: this.presetID });
-            let file = this.getFile(fileID);
-            newFiles.push(file);
-
-            this.uploadFile({ file: uploadedFile, id: fileID })
-              .then(filepath => {
-                this.$emit('uploaded', filepath);
+          let promises = [];
+          [...files].forEach(file => {
+            promises.push(
+              new Promise(fileResolve => {
+                this.createFile({ file, presetId: this.presetID }).then(id => {
+                  fileResolve(id);
+                  this.uploadFile({ id, file }).catch(error => {
+                    this.setError(id, error);
+                  });
+                });
               })
-              .catch(error => {
-                this.setError(fileID, error);
-              });
+            );
           });
-
-          resolve(newFiles);
+          Promise.all(promises).then(ids => {
+            resolve(this.getFiles(ids));
+          });
         });
       },
     },

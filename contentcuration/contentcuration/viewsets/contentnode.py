@@ -3,10 +3,9 @@ import json
 from django.conf import settings
 from django.core.cache import cache
 from django.db.models import Exists
-from django.db.models import IntegerField
 from django.db.models import F
+from django.db.models import IntegerField
 from django.db.models import OuterRef
-from django.db.models import Q
 from django.db.models import Subquery
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DjangoFilterBackend
@@ -18,11 +17,11 @@ from rest_framework.serializers import PrimaryKeyRelatedField
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import File
-from contentcuration.models import PrerequisiteContentRelationship
 from contentcuration.models import generate_storage_url
-from contentcuration.viewsets.base import ValuesViewset
-from contentcuration.viewsets.base import BulkModelSerializer
+from contentcuration.models import PrerequisiteContentRelationship
 from contentcuration.viewsets.base import BulkListSerializer
+from contentcuration.viewsets.base import BulkModelSerializer
+from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.common import NotNullArrayAgg
 
 
@@ -149,6 +148,7 @@ class ContentNodeSerializer(BulkModelSerializer):
             "aggregator",
             "provider",
             "extra_fields",
+            "thumbnail_encoding",
         )
         list_serializer_class = ContentNodeListSerializer
 

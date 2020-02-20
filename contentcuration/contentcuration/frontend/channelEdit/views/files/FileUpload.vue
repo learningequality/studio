@@ -74,7 +74,7 @@
 <script>
 
   import sortBy from 'lodash/sortBy';
-  import { mapActions, mapGetters, mapMutations } from 'vuex';
+  import { mapActions, mapGetters } from 'vuex';
   import FilePreview from './FilePreview';
   import FileUploadItem from './FileUploadItem';
   import Constants from 'edit_channel/constants';
@@ -149,9 +149,8 @@
         });
     },
     methods: {
-      ...mapActions('file', ['loadFiles']),
+      ...mapActions('file', ['loadFiles', 'updateFile']),
       ...mapActions('contentNode', ['addFiles', 'removeFiles']),
-      ...mapMutations('file', { updateFile: 'UPDATE_FILE' }),
       selectFirstFile() {
         let firstFile = sortBy(this.files, f => f.preset.order)[0];
         this.selected = firstFile && firstFile.id;

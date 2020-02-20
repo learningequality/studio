@@ -44,9 +44,9 @@
 
   import { mapGetters } from 'vuex';
   import _ from 'underscore';
-  import ContentRenderer from './ContentRenderer.vue';
+  import ContentRenderer from './ContentRenderer';
   import Constants from 'edit_channel/constants/index';
-  import ActionLink from 'edit_channel/sharedComponents/ActionLink.vue';
+  import ActionLink from 'edit_channel/sharedComponents/ActionLink';
 
   export default {
     name: 'FilePreview',

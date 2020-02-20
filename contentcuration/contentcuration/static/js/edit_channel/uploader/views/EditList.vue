@@ -16,6 +16,7 @@
       v-model="selected"
       :nodeId="nodeId"
       :canEdit="canEdit"
+      @removed="handleRemoved"
     />
 
   </VList>
@@ -25,7 +26,8 @@
 <script>
 
   import { mapGetters } from 'vuex';
-  import EditListItem from './EditListItem.vue';
+  import EditListItem from './EditListItem';
+  import { RouterNames } from 'frontend/channelEdit/constants';
 
   export default {
     name: 'EditList',
@@ -63,6 +65,27 @@
             this.selected = [];
           }
         },
+      },
+    },
+    methods: {
+      handleRemoved(nodeId) {
+        let nodeIds = this.$route.params.detailNodeIds.split(',').filter(id => id !== nodeId);
+
+        this.$router.push({
+          name: RouterNames.MULTI_CONTENTNODE_DETAILS,
+          params: {
+            nodeId: this.$route.params.nodeId,
+            detailNodeIds: nodeIds.join(','),
+          },
+        });
+        if (this.selected.includes(nodeId)) {
+          if (this.selected.length === 1) {
+            let viableNodes = this.nodeIds.filter(id => id !== nodeId);
+            this.selected = [viableNodes[viableNodes.length - 1]];
+          } else {
+            this.selected = this.selected.filter(id => id !== nodeId);
+          }
+        }
       },
     },
     $trs: {

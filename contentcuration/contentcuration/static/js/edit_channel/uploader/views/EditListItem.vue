@@ -36,7 +36,7 @@
       </FileStatus>
     </VListTileAction>
     <VListTileAction v-if="canEdit">
-      <VBtn icon small flat class="remove-item" @click.stop="deleteContentNode(nodeId)">
+      <VBtn icon flat class="remove-item" @click.stop="removeNode">
         <Icon>clear</Icon>
       </VBtn>
     </VListTileAction>
@@ -47,7 +47,7 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
-  import { fileSizeMixin, fileStatusMixin } from 'edit_channel/file_upload/mixins';
+  import { fileSizeMixin, fileStatusMixin } from 'frontend/channelEdit/views/files/mixins';
   import FileStatus from 'frontend/channelEdit/views/files/FileStatus';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
 
@@ -100,11 +100,16 @@
         if (this.node.kind === 'exercise') {
           return this.$tr('questionCount', { count: this.node.assessment_items.length });
         }
-        return this.statusMessage(_.pluck(this.node.files, 'id'));
+        return this.statusMessage(this.node.files);
       },
     },
     methods: {
       ...mapActions('contentNode', ['deleteContentNode']),
+      removeNode() {
+        this.deleteContentNode(this.nodeId).then(() => {
+          this.$emit('removed', this.nodeId);
+        });
+      },
     },
     $trs: {
       questionCount: '{count, plural,\n =1 {# Question}\n other {# Questions}}',
@@ -114,8 +119,6 @@
 </script>
 
 <style lang="less" scoped>
-
-  @import '../../../../less/global-variables.less';
 
   .v-list__tile__action {
     min-width: 30px;
@@ -142,10 +145,6 @@
     .v-list__tile__sub-title {
       white-space: unset;
     }
-  }
-
-  .error-icon {
-    font-size: 14pt !important;
   }
 
   .status-indicator {

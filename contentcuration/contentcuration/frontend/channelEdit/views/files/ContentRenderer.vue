@@ -38,6 +38,7 @@
         {{ $tr('previewNotSupported') }}
       </VLayout>
     </VCard>
+
   </VLayout>
 
 </template>
@@ -64,7 +65,6 @@
     },
     data() {
       return {
-        src: null,
         loading: true,
       };
     },
@@ -88,17 +88,16 @@
       htmlPath() {
         return '/zipcontent/' + this.file.checksum + '.' + this.file.file_format;
       },
+      src() {
+        return this.file && this.file.file_on_disk;
+      },
       uploading() {
         return this.file.progress !== undefined;
       },
     },
     watch: {
-      file: {
-        handler(newFile) {
-          this.src = newFile && newFile.file_on_disk;
-          this.loading = true;
-        },
-        deep: true,
+      src(newFileId) {
+        this.loading = Boolean(newFileId);
       },
     },
     $trs: {

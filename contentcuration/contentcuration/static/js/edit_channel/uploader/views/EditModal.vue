@@ -3,7 +3,7 @@
   <div>
     <VDialog
       ref="editmodal"
-      :value="showDialog"
+      :value="true"
       fullscreen
       hide-overlay
       transition="dialog-bottom-transition"
@@ -63,7 +63,6 @@
         </VToolbar>
         <ResizableNavigationDrawer
           v-if="multipleNodes"
-          :open="multipleNodes"
           stateless
           clipped
           app
@@ -178,7 +177,7 @@
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
   import Uploader from 'frontend/channelEdit/views/files/Uploader';
   import FileStorage from 'frontend/channelEdit/views/files/FileStorage';
-  import { fileSizeMixin } from 'edit_channel/file_upload/mixins';
+  import { fileSizeMixin } from 'frontend/channelEdit/views/files/mixins';
   import { RouterNames } from 'frontend/channelEdit/constants';
 
   export default {
@@ -214,14 +213,7 @@
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodes', 'getContentNodeIsValid']),
       ...mapGetters('currentChannel', ['canEdit']),
       ...mapGetters('file', ['getTotalSize', 'getUploadsInProgress']),
-      showDialog() {
-        return (
-          this.$route.name === RouterNames.CONTENTNODE_DETAILS ||
-          this.$route.name === RouterNames.MULTI_CONTENTNODE_DETAILS
-        );
-      },
       multipleNodes() {
-        // return true;
         // Only hide drawer when editing a single item
         return this.nodeIds.length > 1;
       },
@@ -292,6 +284,7 @@
       ]),
       ...mapMutations('contentNode', { enableValidation: 'ENABLE_VALIDATION_ON_NODES' }),
       closeModal() {
+        // TODO: sanitize assessment items and files
         this.$refs.uploadsprompt.close();
         this.$refs.saveprompt.close();
         this.$refs.savefailedalert.close();
@@ -311,7 +304,7 @@
       /* Button actions */
       copyContent() {
         // Main action when modal is opened in view only mode
-        if (_.some(this.nodes, n => n.prerequisite.length || n.is_prerequisite_of.length)) {
+        if (this.nodes.some(n => n.prerequisite.length || n.is_prerequisite_of.length)) {
           this.$refs.relatedalert.prompt();
         }
         this.copyNodes(this.nodeIds).then(() => {
@@ -337,7 +330,7 @@
       },
       cancelUploads() {
         // TODO: Delete items that are still being uploaded
-        this.cloaseModal();
+        this.closeModal();
       },
 
       /* Creation actions */
@@ -351,7 +344,7 @@
           this.$router.push({
             name: RouterNames.MULTI_CONTENTNODE_DETAILS,
             params: {
-              ...this.$route.params,
+              nodeId: this.$route.params.nodeId,
               detailNodeIds: this.nodeIds.concat(newNodeId).join(','),
             },
           });
@@ -371,11 +364,12 @@
       },
       createNodesFromFiles(files) {
         files.forEach(file => {
+          let title = file.original_filename.split('.');
           let payload = {
-            title: file.name,
+            title: title.slice(0, title.length - 1).join('.'),
             files: [file.id],
           };
-          this.createNode(file.kind, payload);
+          this.createNode(file.preset.kind_id, payload);
         });
       },
     },
@@ -415,10 +409,6 @@
 
 <style lang="less" scoped>
 
-  // .edit-modal-wrapper {
-  //   .edit-list {
-  //     width: 100%;
-  //   }
   /deep/ .v-toolbar__extension {
     padding: 0;
     .v-toolbar__content {

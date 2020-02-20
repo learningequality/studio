@@ -171,6 +171,7 @@
 <script>
 
   import { mapGetters } from 'vuex';
+  import { fileSizeMixin } from '../mixins';
   import ThumbnailToolbarIcon from './ThumbnailToolbarIcon';
   import ThumbnailGenerator from './ThumbnailGenerator';
   import Constants from 'edit_channel/constants/index';
@@ -178,7 +179,6 @@
   import ActionLink from 'edit_channel/sharedComponents/ActionLink.vue';
   import FileStatus from 'frontend/channelEdit/views/files/FileStatus';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
-  import { fileSizeMixin } from 'edit_channel/file_upload/mixins';
 
   export default {
     name: 'Thumbnail',
