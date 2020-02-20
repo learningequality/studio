@@ -20,11 +20,12 @@ from contentcuration.viewsets.assessmentitem import AssessmentItemViewSet
 from contentcuration.viewsets.channel import ChannelViewSet
 from contentcuration.viewsets.channelset import ChannelSetViewSet
 from contentcuration.viewsets.contentnode import ContentNodeViewSet
-from contentcuration.viewsets.tree import TreeViewSet
+from contentcuration.viewsets.file import FileViewSet
 from contentcuration.viewsets.sync.constants import CREATED
-from contentcuration.viewsets.sync.constants import UPDATED
 from contentcuration.viewsets.sync.constants import DELETED
 from contentcuration.viewsets.sync.constants import MOVED
+from contentcuration.viewsets.sync.constants import UPDATED
+from contentcuration.viewsets.tree import TreeViewSet
 
 
 # Uses ordered dict behaviour to enforce operation orders
@@ -40,6 +41,7 @@ viewset_mapping = OrderedDict(
         ("assessmentitem", AssessmentItemViewSet),
         ("channelset", ChannelSetViewSet),
         ("tree", TreeViewSet),
+        ("file", FileViewSet),
     ]
 )
 

@@ -5,6 +5,7 @@ from rest_framework.serializers import PrimaryKeyRelatedField
 
 from contentcuration.models import ContentNode
 from contentcuration.models import File
+from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import ValuesViewset
 
@@ -42,6 +43,7 @@ class FileSerializer(BulkModelSerializer):
             "preset",
             "original_filename",
         )
+        list_serializer_class = BulkListSerializer
 
 
 class FileViewSet(ValuesViewset):
