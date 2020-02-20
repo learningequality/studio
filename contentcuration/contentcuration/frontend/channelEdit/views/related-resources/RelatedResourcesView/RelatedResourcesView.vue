@@ -88,6 +88,10 @@
           @removeItemClick="onRemovePreviousStepClick"
         />
 
+        <p v-if="previousSteps && previousSteps.length > 4">
+          {{ $tr('tooManyPreviousStepsWarning') }}
+        </p>
+
         <div
           class="mt-3 text-uppercase primary--text font-weight-bold"
           :style="{ 'cursor': 'pointer' }"
@@ -115,6 +119,10 @@
           @itemClick="onStepClick"
           @removeItemClick="onRemoveNextStepClick"
         />
+
+        <p v-if="nextSteps && nextSteps.length > 4">
+          {{ $tr('tooManyNextStepsWarning') }}
+        </p>
 
         <div
           class="mt-3 text-uppercase primary--text font-weight-bold"
@@ -199,6 +207,10 @@
       addNextStepBtnLabel: 'Add next step',
       removePreviousStepBtnLabel: 'Remove previous step',
       removeNextStepBtnLabel: 'Remove next step',
+      tooManyPreviousStepsWarning: `Limit the number of previous steps to create
+        a more guided learning experience`,
+      tooManyNextStepsWarning: `Limit the number of next steps to create
+        a more guided learning experience`,
     },
   };
 

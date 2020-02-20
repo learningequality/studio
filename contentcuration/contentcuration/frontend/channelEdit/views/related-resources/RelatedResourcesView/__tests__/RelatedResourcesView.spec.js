@@ -107,4 +107,84 @@ describe('RelatedResourcesView', () => {
     expect(nextSteps.at(1).html()).toContain('Geography');
     expect(nextSteps.at(1).html()).toContain('Science');
   });
+
+  describe('with less than 5 previous steps', () => {
+    it('does not render a warning', () => {
+      const getters = {
+        ...GETTERS,
+        getImmediatePreviousStepsList: () => () => [
+          { id: 'id-alphabet' },
+          { id: 'id-chemistry' },
+          { id: 'id-biology' },
+          { id: 'id-physics' },
+        ],
+      };
+      const wrapper = initWrapper({ getters });
+
+      expect(wrapper.find('[data-test="previousSteps"]').html()).not.toContain(
+        'Limit the number of previous steps'
+      );
+    });
+  });
+
+  describe('with 5 previous steps and more', () => {
+    it('renders a warning', () => {
+      const getters = {
+        ...GETTERS,
+        getImmediatePreviousStepsList: () => () => [
+          { id: 'id-alphabet' },
+          { id: 'id-chemistry' },
+          { id: 'id-biology' },
+          { id: 'id-physics' },
+          { id: 'id-math' },
+          { id: 'id-reading' },
+        ],
+      };
+      const wrapper = initWrapper({ getters });
+
+      expect(wrapper.find('[data-test="previousSteps"]').html()).toContain(
+        'Limit the number of previous steps'
+      );
+    });
+  });
+
+  describe('with less than 5 next steps', () => {
+    it('does not render a warning', () => {
+      const getters = {
+        ...GETTERS,
+        getImmediateNextStepsList: () => () => [
+          { id: 'id-alphabet' },
+          { id: 'id-chemistry' },
+          { id: 'id-biology' },
+          { id: 'id-physics' },
+        ],
+      };
+      const wrapper = initWrapper({ getters });
+
+      expect(wrapper.find('[data-test="nextSteps"]').html()).not.toContain(
+        'Limit the number of next steps'
+      );
+    });
+  });
+
+  describe('with 5 next steps and more', () => {
+    it('renders a warning', () => {
+      const getters = {
+        ...GETTERS,
+        getImmediateNextStepsList: () => () => [
+          { id: 'id-alphabet' },
+          { id: 'id-chemistry' },
+          { id: 'id-biology' },
+          { id: 'id-physics' },
+          { id: 'id-math' },
+          { id: 'id-reading' },
+        ],
+      };
+      const wrapper = initWrapper({ getters });
+
+      expect(wrapper.find('[data-test="nextSteps"]').html()).toContain(
+        'Limit the number of next steps'
+      );
+    });
+  });
 });
