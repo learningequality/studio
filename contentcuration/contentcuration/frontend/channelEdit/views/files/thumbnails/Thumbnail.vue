@@ -1,6 +1,6 @@
 <template>
 
-  <div>
+  <div :key="nodeId">
     <!-- Thumbnail status -->
     <VLayout row align-center class="grey--text" style="font-size: 12pt;">
       <VFlex class="text-truncate" shrink style="line-height: unset !important;">
@@ -213,7 +213,7 @@
           return {};
         },
       },
-      primaryFilePath: {
+      nodeId: {
         type: String,
         required: false,
       },
@@ -233,7 +233,8 @@
       };
     },
     computed: {
-      ...mapGetters('file', ['getUploadsInProgress']),
+      ...mapGetters('contentNode', ['getContentNode']),
+      ...mapGetters('file', ['getUploadsInProgress', 'getFiles']),
       allowGeneration() {
         // Not allowed for channels, when operations are in progress, or in cropping mode
         return this.kind && !this.loading && (!this.cropping || this.generated);
@@ -267,6 +268,25 @@
       },
       uploading() {
         return this.value && this.getUploadsInProgress([this.value.id]).length;
+      },
+      node() {
+        return this.getContentNode(this.nodeId);
+      },
+      primaryFilePath() {
+        if (!this.nodeId) {
+          return null;
+        }
+        let file = this.getFiles(this.node.files).find(
+          f => !f.preset.supplementary && f.file_on_disk
+        );
+        return (file && file.file_on_disk.split('?')[0]) || '';
+      },
+    },
+    watch: {
+      nodeId(id) {
+        if (id) {
+          this.reset();
+        }
       },
     },
     methods: {

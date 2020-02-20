@@ -204,7 +204,7 @@
             <Thumbnail
               v-model="thumbnail"
               :kind="firstNode.kind"
-              :primaryFilePath="primaryFile"
+              :nodeId="firstNode.id"
               :encoding="thumbnailEncoding"
               @encoded="setEncoding"
             />
@@ -447,7 +447,7 @@
         set(file) {
           file
             ? this.addFiles({ id: this.firstNode.id, files: [file] })
-            : this.removeFiles({ id: this.firstNode.id, files: [this.thumbnail.id] });
+            : this.removeFiles({ id: this.firstNode.id, files: [this.thumbnail] });
         },
       },
       thumbnailEncoding: generateGetterSetter('thumbnail_encoding'),
@@ -502,10 +502,6 @@
       },
       nodeFiles() {
         return (this.firstNode && this.getFiles(this.firstNode.files)) || [];
-      },
-      primaryFile() {
-        let file = this.nodeFiles.find(f => !f.preset.supplementary && f.file_on_disk);
-        return (file && file.file_on_disk.split('?')[0]) || '';
       },
       videoSelected() {
         return this.oneSelected && this.firstNode.kind === 'video';
