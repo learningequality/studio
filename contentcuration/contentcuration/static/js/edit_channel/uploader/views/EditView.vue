@@ -45,8 +45,8 @@
             :href="`#${tabs.RELATED_RESOURCES}`"
           >
             {{ $tr(tabs.RELATED_RESOURCES) }}
-            <VChip v-if="firstNode.prerequisite.length" color="gray" dark>
-              {{ firstNode.prerequisite.length }}
+            <VChip color="gray" dark>
+              {{ relatedResourcesCount }}
             </VChip>
           </VTab>
         </VTabs>
@@ -113,6 +113,7 @@
         'getContentNodes',
         'getContentNodeDetailsAreValid',
         'getContentNodeFilesAreValid',
+        'getImmediateRelatedResourcesCount',
       ]),
       ...mapGetters('currentChannel', ['canEdit']),
       firstNode() {
@@ -155,6 +156,13 @@
       },
       assessmentItemsCount() {
         return 0;
+      },
+      relatedResourcesCount() {
+        if (!this.oneSelected) {
+          return;
+        }
+
+        return this.getImmediateRelatedResourcesCount(this.firstNode.id);
       },
     },
     watch: {

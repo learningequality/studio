@@ -1,4 +1,8 @@
-import { getImmediatePreviousStepsList, getImmediateNextStepsList } from '../getters';
+import {
+  getImmediatePreviousStepsList,
+  getImmediateNextStepsList,
+  getImmediateRelatedResourcesCount,
+} from '../getters';
 
 describe('contentNode getters', () => {
   describe('', () => {
@@ -95,6 +99,28 @@ describe('contentNode getters', () => {
           },
         ]);
       });
+    });
+  });
+
+  describe('getImmediateRelatedResourcesCount', () => {
+    let state;
+
+    beforeEach(() => {
+      state = {
+        nextStepsMap: [
+          ['id-reading', 'id-chemistry'],
+          ['id-chemistry', 'id-biology'],
+          ['id-chemistry', 'id-physics'],
+        ],
+      };
+    });
+
+    it('returns 0 if neither previous nor next step found', () => {
+      expect(getImmediateRelatedResourcesCount(state)('id-literacy')).toBe(0);
+    });
+
+    it('returns a correct count of related resources', () => {
+      expect(getImmediateRelatedResourcesCount(state)('id-chemistry')).toBe(3);
     });
   });
 });

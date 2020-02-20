@@ -104,6 +104,22 @@ function getStepDetail(state, contentNodeId) {
   return stepDetail;
 }
 
+function getImmediatePreviousStepsIds(state) {
+  return function(contentNodeId) {
+    return state.nextStepsMap
+      .filter(([, nextStepId]) => nextStepId === contentNodeId)
+      .map(([targetId]) => targetId);
+  };
+}
+
+function getImmediateNextStepsIds(state) {
+  return function(contentNodeId) {
+    return state.nextStepsMap
+      .filter(([targetId]) => targetId === contentNodeId)
+      .map(([, nextStepId]) => nextStepId);
+  };
+}
+
 /**
  * Return a list of immediate previous steps of a node
  * where a step has following interface:
@@ -111,9 +127,9 @@ function getStepDetail(state, contentNodeId) {
  */
 export function getImmediatePreviousStepsList(state) {
   return function(contentNodeId) {
-    return state.nextStepsMap
-      .filter(([, nextStepId]) => nextStepId === contentNodeId)
-      .map(([targetId]) => getStepDetail(state, targetId));
+    return getImmediatePreviousStepsIds(state)(contentNodeId).map(stepId =>
+      getStepDetail(state, stepId)
+    );
   };
 }
 
@@ -124,9 +140,22 @@ export function getImmediatePreviousStepsList(state) {
  */
 export function getImmediateNextStepsList(state) {
   return function(contentNodeId) {
-    return state.nextStepsMap
-      .filter(([targetId]) => targetId === contentNodeId)
-      .map(([, nextStepId]) => getStepDetail(state, nextStepId));
+    return getImmediateNextStepsIds(state)(contentNodeId).map(stepId =>
+      getStepDetail(state, stepId)
+    );
+  };
+}
+
+/**
+ * Return count of immediate previous and next steps
+ * of a node.
+ */
+export function getImmediateRelatedResourcesCount(state) {
+  return function(contentNodeId) {
+    const previousStepsCount = getImmediatePreviousStepsIds(state)(contentNodeId).length;
+    const nextStepsCount = getImmediateNextStepsIds(state)(contentNodeId).length;
+
+    return previousStepsCount + nextStepsCount;
   };
 }
 
