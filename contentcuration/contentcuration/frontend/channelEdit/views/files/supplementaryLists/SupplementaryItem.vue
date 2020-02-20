@@ -52,9 +52,11 @@
 
 <script>
 
+  import { mapGetters } from 'vuex';
+  import { fileSizeMixin, fileStatusMixin } from '../mixins';
   import Uploader from 'frontend/channelEdit/views/files/Uploader';
   import ActionLink from 'edit_channel/sharedComponents/ActionLink';
-  import { fileSizeMixin, fileStatusMixin } from 'edit_channel/file_upload/mixins';
+  import Constants from 'edit_channel/constants/index';
 
   export default {
     name: 'SupplementaryItem',
@@ -64,12 +66,13 @@
     },
     mixins: [fileSizeMixin, fileStatusMixin],
     props: {
-      file: {
-        type: Object,
-        validator: value => {
-          // File must have a language specified
-          return value.language;
-        },
+      fileId: {
+        type: String,
+        required: true,
+      },
+      languageId: {
+        type: String,
+        required: true,
       },
       presetID: {
         type: String,
@@ -80,8 +83,15 @@
       },
     },
     computed: {
+      ...mapGetters('file', ['getFile']),
+      file() {
+        return this.getFile(this.fileId);
+      },
+      language() {
+        return Constants.Languages.find(l => l.id === this.languageId);
+      },
       uploading() {
-        return this.file.progress < 100;
+        return this.file.progress !== undefined;
       },
       uploadStatus() {
         return this.statusMessage([this.file.id]);
@@ -89,8 +99,10 @@
     },
     methods: {
       handleUploading(files) {
-        files[0].language = this.file.language;
-        this.$emit('uploading', files[0]);
+        this.$emit('uploading', {
+          ...files[0],
+          language: this.language,
+        });
       },
     },
     $trs: {

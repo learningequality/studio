@@ -7,9 +7,11 @@ export function getFile(state) {
     let file = state.fileMap[fileId];
     if (file) {
       let preset = file.preset.id || file.preset;
+      let language = file.language && (file.language.id || file.language);
       return {
         ...file,
         preset: Constants.FormatPresets.find(p => p.id === preset),
+        language: Constants.Languages.find(l => l.id === language),
       };
     }
     return null;

@@ -62,7 +62,7 @@
           </template>
         </VToolbar>
         <ResizableNavigationDrawer
-          v-if="multipleNodes"
+          v-if="multipleNodes && !loading"
           stateless
           clipped
           app

@@ -149,7 +149,7 @@
         });
     },
     methods: {
-      ...mapActions('file', ['loadFiles', 'updateFile']),
+      ...mapActions('file', ['loadFiles']),
       ...mapActions('contentNode', ['addFiles', 'removeFiles']),
       selectFirstFile() {
         let firstFile = sortBy(this.files, f => f.preset.order)[0];
@@ -157,7 +157,6 @@
       },
       handleUploading(file) {
         this.selected = file.id;
-        this.updateFile({ id: file.id, contentnode: this.nodeId });
         this.addFiles({ id: this.nodeId, files: [file] });
       },
       handleRemoveFile(file) {

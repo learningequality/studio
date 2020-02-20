@@ -51,6 +51,11 @@ export function createContentNode(context, { parent, kind = 'topic', ...payload 
   };
 
   return ContentNode.put(contentNodeData).then(id => {
+    // Add files to content node
+    contentNodeData.files.forEach(file => {
+      context.dispatch('file/updateFile', { id: file, contentnode: id }, { root: true });
+    });
+
     return Tree.move(id, parent, MOVE_POSITIONS.LAST_CHILD).then(treeNode => {
       context.commit('ADD_CONTENTNODE', {
         id,
@@ -169,13 +174,23 @@ export function addFiles(context, { id, files }) {
   let node = context.state.contentNodesMap[id];
   let currentFiles = context.rootGetters['file/getFiles'](node.files);
   let newFiles = currentFiles.map(file => {
-    // Replace files with matching preset
-    return (files.find(f => f.preset.id === file.preset.id) || file).id;
+    // Replace files with matching preset and language
+    let match = files.find(
+      f =>
+        f.preset.id === file.preset.id &&
+        (!file.preset.multi_language || file.language.id === f.language.id)
+    );
+    return (match || file).id;
   });
 
   // Add new files
   files.forEach(file => {
     if (!newFiles.includes(file.id)) newFiles.push(file.id);
+  });
+
+  // Set contentnode on new files
+  newFiles.forEach(file => {
+    context.dispatch('file/updateFile', { id: file, contentnode: id }, { root: true });
   });
 
   context.commit('SET_FILES', { id, files: newFiles });

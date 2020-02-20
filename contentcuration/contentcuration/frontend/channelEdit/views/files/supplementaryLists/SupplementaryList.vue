@@ -4,11 +4,12 @@
     <SupplementaryItem
       v-for="file in files"
       :key="file.id"
-      :file="file"
+      :fileId="file.id"
+      :languageId="file.language.id"
       :presetID="presetID"
       :readonly="readonly"
       @uploading="replace"
-      @remove="remove"
+      @remove="remove(file)"
     />
     <Uploader
       v-if="!readonly"
@@ -59,10 +60,9 @@
 
 <script>
 
-  import { mapGetters, mapMutations } from 'vuex';
+  import { mapActions, mapGetters } from 'vuex';
   import sortBy from 'lodash/sortBy';
   import SupplementaryItem from './SupplementaryItem';
-  import Constants from 'edit_channel/constants/index';
   import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown';
   import ActionLink from 'edit_channel/sharedComponents/ActionLink';
   import Uploader from 'frontend/channelEdit/views/files/Uploader';
@@ -112,33 +112,26 @@
         );
       },
       currentLanguages() {
-        return this.files.map(f => f.language);
+        return this.files.map(f => f.language.id);
       },
     },
     methods: {
-      ...mapMutations('edit_modal', {
-        addFileToNode: 'ADD_FILE_TO_NODE',
-        removeFileFromNode: 'REMOVE_FILE_FROM_NODE',
-      }),
+      ...mapActions('contentNode', ['addFiles', 'removeFiles']),
+      ...mapActions('file', ['updateFile']),
       add(files) {
-        files[0].language = Constants.Languages.filter(l => l.id === this.selectedLanguage)[0];
-        this.addFileToNode({
-          index: this.nodeIndex,
-          file: files[0],
+        this.updateFile({ id: files[0].id, language: this.selectedLanguage });
+        this.addFiles({
+          id: this.nodeId,
+          files: this.getFiles([files[0].id]),
         });
         this.reset();
       },
       replace(newFile) {
-        this.addFileToNode({
-          index: this.nodeIndex,
-          file: newFile,
-        });
+        this.updateFile({ id: newFile.id, ...newFile });
+        this.addFiles({ id: this.nodeId, files: [newFile] });
       },
-      remove(fileID) {
-        this.removeFileFromNode({
-          fileID,
-          index: this.nodeIndex,
-        });
+      remove(file) {
+        this.removeFiles({ id: this.nodeId, files: [file] });
       },
       reset() {
         this.addingFile = false;
