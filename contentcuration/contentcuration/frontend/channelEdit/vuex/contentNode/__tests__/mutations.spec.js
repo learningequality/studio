@@ -1,4 +1,4 @@
-import { SAVE_NEXT_STEPS, REMOVE_PREVIOUS_STEP } from '../mutations';
+import { SAVE_NEXT_STEPS, REMOVE_PREVIOUS_STEP, ADD_PREVIOUS_STEP } from '../mutations';
 
 describe('contentNode mutations', () => {
   describe('SAVE_NEXT_STEPS', () => {
@@ -87,6 +87,47 @@ describe('contentNode mutations', () => {
       expect(state.nextStepsMap).toEqual([
         ['id-reading', 'id-physics'],
         ['id-physics', 'id-astronomy'],
+      ]);
+    });
+  });
+
+  describe('ADD_PREVIOUS_STEP', () => {
+    let state;
+
+    beforeEach(() => {
+      state = {
+        nextStepsMap: [
+          ['id-integrals', 'id-physics'],
+          ['id-reading', 'id-physics'],
+          ['id-physics', 'id-astronomy'],
+        ],
+      };
+    });
+
+    it("doesn't add an entry to next steps map if it's there already", () => {
+      ADD_PREVIOUS_STEP(state, {
+        targetId: 'id-physics',
+        previousStepId: 'id-reading',
+      });
+
+      expect(state.nextStepsMap).toEqual([
+        ['id-integrals', 'id-physics'],
+        ['id-reading', 'id-physics'],
+        ['id-physics', 'id-astronomy'],
+      ]);
+    });
+
+    it('adds an entry to next steps map', () => {
+      ADD_PREVIOUS_STEP(state, {
+        targetId: 'id-spaceships-engineering',
+        previousStepId: 'id-astronomy',
+      });
+
+      expect(state.nextStepsMap).toEqual([
+        ['id-integrals', 'id-physics'],
+        ['id-reading', 'id-physics'],
+        ['id-physics', 'id-astronomy'],
+        ['id-astronomy', 'id-spaceships-engineering'],
       ]);
     });
   });

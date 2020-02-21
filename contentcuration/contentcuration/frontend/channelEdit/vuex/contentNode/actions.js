@@ -37,6 +37,30 @@ export function loadChildren(context, { parent, channel_id }) {
 }
 
 /**
+ * Load a whole chain of parent nodes of a node.
+ */
+export async function loadParents(context, { id, channel_id }) {
+  const parentsIds = [];
+
+  let treeNodes = await Tree.where({ id, channel_id });
+
+  while (treeNodes && treeNodes.length && treeNodes[0].parent) {
+    const parentId = treeNodes[0].parent;
+    parentsIds.push(parentId);
+
+    treeNodes = await Tree.where({ id: parentId, channel_id });
+
+    // the end of the chain has been reached
+    // if the node is its own parent
+    if (treeNodes && treeNodes.length && treeNodes[0].parent === parentId) {
+      break;
+    }
+  }
+
+  return loadContentNodes(context, { ids: parentsIds });
+}
+
+/**
  * Retrieve related resources of a node from API.
  * Save all previous/next steps (pre/post-requisites)
  * to next steps map.
@@ -126,6 +150,47 @@ export function removeNextStepFromNode(context, { targetId, nextStepId }) {
   });
 }
 
+/**
+ * Add a previous step to a target content node.
+ *
+ * @param {String} targetId ID of a target content node.
+ * @param {String} previousStepId ID of a content node to be added
+ *                                to target's content node previous steps.
+ */
+export async function addPreviousStepToNode(context, { targetId, previousStepId }) {
+  const targetNode = context.state.contentNodesMap[targetId];
+  const targetNodePreviousSteps = targetNode.prerequisite || [];
+
+  if (!targetNodePreviousSteps.includes(previousStepId)) {
+    targetNodePreviousSteps.push(previousStepId);
+  }
+
+  await updateContentNode(context, {
+    id: targetId,
+    prerequisite: targetNodePreviousSteps,
+  });
+
+  // (re)load the previous step node to be sure that we have its
+  // `is_prerequisite_of` field up-to-date on client
+  loadContentNode(context, previousStepId);
+
+  context.commit('ADD_PREVIOUS_STEP', { targetId, previousStepId });
+}
+
+/**
+ * Add a next step to a target content node.
+ *
+ * @param {String} targetId ID of a target content node.
+ * @param {String} nextStepId ID of a content node to be added
+ *                            to target's content node next steps.
+ */
+export function addNextStepToNode(context, { targetId, nextStepId }) {
+  addPreviousStepToNode(context, {
+    targetId: nextStepId,
+    previousStepId: targetId,
+  });
+}
+
 /* CONTENTNODE EDITOR ACTIONS */
 export function createContentNode(context, { parent, kind = 'topic', ...payload }) {
   const session = context.rootState.session;
@@ -174,6 +239,7 @@ function generateContentNodeData({
   aggregator = NOVALUE,
   provider = NOVALUE,
   extra_fields = NOVALUE,
+  prerequisite = NOVALUE,
 } = {}) {
   const contentNodeData = {};
   if (title !== NOVALUE) {
@@ -223,6 +289,10 @@ function generateContentNodeData({
       contentNodeData.extra_fields.randomize = extra_fields.randomize;
     }
   }
+  if (prerequisite !== NOVALUE) {
+    contentNodeData.prerequisite = prerequisite;
+  }
+
   return contentNodeData;
 }
 

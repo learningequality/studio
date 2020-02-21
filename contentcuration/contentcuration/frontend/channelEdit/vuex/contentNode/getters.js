@@ -5,6 +5,7 @@ import uniqBy from 'lodash/uniqBy';
 
 import { validateNodeFiles } from '../file/utils';
 import { validateNodeDetails } from './utils';
+import { isSuccessor } from 'shared/utils';
 
 function sorted(nodes) {
   return sortBy(nodes, ['sort_order']);
@@ -43,6 +44,37 @@ export function getContentNodeChildren(state) {
         )
       ).map(node => node.id)
     );
+  };
+}
+
+/**
+ * Returns an array of all parent nodes of a node.
+ * Parent nodes are sorted from the immmediate parent
+ * to the most distant parent.
+ */
+export function getContentNodeParents(state) {
+  return function(contentNodeId) {
+    const getParentId = nodeId => {
+      const treeNode = Object.values(state.treeNodesMap).find(
+        contentNode => contentNode.id === nodeId
+      );
+
+      if (!treeNode || !treeNode.parent) {
+        return null;
+      }
+
+      return treeNode.parent;
+    };
+
+    const parents = [];
+    let parentId = getParentId(contentNodeId);
+
+    while (parentId !== null) {
+      parents.push(getContentNode(state)(parentId));
+      parentId = getParentId(parentId);
+    }
+
+    return parents;
   };
 }
 
@@ -156,6 +188,31 @@ export function getImmediateRelatedResourcesCount(state) {
     const nextStepsCount = getImmediateNextStepsIds(state)(contentNodeId).length;
 
     return previousStepsCount + nextStepsCount;
+  };
+}
+
+/**
+ * Does a node belongs to next steps of a root node?
+ */
+export function isNextStep(state) {
+  return function({ rootNodeId, nodeId }) {
+    return isSuccessor({
+      rootVertex: rootNodeId,
+      vertexToCheck: nodeId,
+      graph: state.nextStepsMap,
+    });
+  };
+}
+
+/**
+ * Does a node belongs to previous steps of a root node?
+ */
+export function isPreviousStep(state) {
+  return function({ rootNodeId, nodeId }) {
+    return isNextStep(state)({
+      rootNodeId: nodeId,
+      nodeId: rootNodeId,
+    });
   };
 }
 

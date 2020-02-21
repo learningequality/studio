@@ -177,3 +177,18 @@ export function REMOVE_PREVIOUS_STEP(state, { targetId, previousStepId }) {
     return !(entry[0] === previousStepId && entry[1] === targetId);
   });
 }
+
+/**
+ * Add an entry to next steps map.
+ */
+export function ADD_PREVIOUS_STEP(state, { targetId, previousStepId }) {
+  if (
+    state.nextStepsMap.find(entry => {
+      return entry[0] === previousStepId && entry[1] === targetId;
+    })
+  ) {
+    return;
+  }
+
+  state.nextStepsMap = [...state.nextStepsMap, [previousStepId, targetId]];
+}

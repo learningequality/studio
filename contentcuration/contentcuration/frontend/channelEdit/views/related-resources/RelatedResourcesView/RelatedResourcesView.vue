@@ -92,12 +92,14 @@
           {{ $tr('tooManyPreviousStepsWarning') }}
         </p>
 
-        <div
-          class="mt-3 text-uppercase primary--text font-weight-bold"
-          :style="{ 'cursor': 'pointer' }"
+        <VBtn
+          flat
+          color="primary"
+          class="font-weight-bold ml-0"
+          @click="onAddPreviousStepClick"
         >
           {{ $tr('addPreviousStepBtnLabel') }}
-        </div>
+        </VBtn>
       </VFlex>
 
       <VFlex
@@ -124,12 +126,14 @@
           {{ $tr('tooManyNextStepsWarning') }}
         </p>
 
-        <div
-          class="mt-3 text-uppercase primary--text font-weight-bold"
-          :style="{ 'cursor': 'pointer' }"
+        <VBtn
+          flat
+          color="primary"
+          class="font-weight-bold ml-0"
+          @click="onAddNextStepClick"
         >
           {{ $tr('addNextStepBtnLabel') }}
-        </div>
+        </VBtn>
       </VFlex>
     </VLayout>
   </div>
@@ -141,8 +145,8 @@
   import { mapGetters, mapActions } from 'vuex';
 
   import RelatedResourcesList from '../RelatedResourcesList/RelatedResourcesList';
-  import ContentNodeIcon from 'frontend/shared/views/ContentNodeIcon.vue';
-  import IconLightBulb from 'frontend/shared/views/IconLightBulb.vue';
+  import ContentNodeIcon from 'shared/views/ContentNodeIcon.vue';
+  import IconLightBulb from 'shared/views/IconLightBulb.vue';
 
   export default {
     name: 'RelatedResourcesView',
@@ -188,6 +192,12 @@
       },
       onRemoveNextStepClick(nextStepId) {
         this.removeNextStepFromNode({ targetId: this.nodeId, nextStepId });
+      },
+      onAddPreviousStepClick() {
+        alert('Add previous step!');
+      },
+      onAddNextStepClick() {
+        alert('Add next step!');
       },
     },
     $trs: {
