@@ -58,17 +58,18 @@ class SQCount(Subquery):
 
 class ContentNodeListSerializer(BulkListSerializer):
     def gather_prerequisites(self, validated_data, add_empty=True):
-        prerequisites_by_id = {}
+        prerequisite_ids_by_id = {}
 
         for obj in validated_data:
             try:
-                prerequisite_ids = obj.pop("prerequisite")
+                prerequisites = obj.pop("prerequisite")
+                prerequisite_ids = [prereq.id for prereq in prerequisites]
             except KeyError:
                 pass
             else:
                 if add_empty or prerequisite_ids:
-                    prerequisites_by_id[obj["id"]] = prerequisite_ids
-        return prerequisites_by_id
+                    prerequisite_ids_by_id[obj["id"]] = prerequisite_ids
+        return prerequisite_ids_by_id
 
     def set_prerequisites(self, prerequisite_ids_by_id):
         prereqs_to_create = []
@@ -78,22 +79,23 @@ class ContentNodeListSerializer(BulkListSerializer):
         )
         current_prereqs_by_id = {}
         for prereq in current_prereqs:
-            if prereq.target_node not in current_prereqs_by_id:
-                current_prereqs_by_id[prereq.target_node] = []
-            current_prereqs_by_id[prereq.target_node].append(prereq)
+            if prereq.target_node.id not in current_prereqs_by_id:
+                current_prereqs_by_id[prereq.target_node.id] = []
+            current_prereqs_by_id[prereq.target_node.id].append(prereq)
         for target_node_id, prereq_ids in prerequisite_ids_by_id.items():
             current = current_prereqs_by_id.get(target_node_id, [])
             ids_set = set(prereq_ids)
             current_set = set()
             for prereq in current:
-                if prereq.prerequisite not in ids_set:
+                if prereq.prerequisite.id not in ids_set:
                     prereqs_to_delete.append(prereq)
                 else:
                     current_set.add(prereq.prerequisite)
             prereqs_to_create.extend(
                 [
                     PrerequisiteContentRelationship(
-                        target_node=target_node_id, prerequisite=prereq_id
+                        target_node=ContentNode.objects.get(pk=target_node_id),
+                        prerequisite=ContentNode.objects.get(pk=prereq_id)
                     )
                     for prereq_id in ids_set - current_set
                 ]
