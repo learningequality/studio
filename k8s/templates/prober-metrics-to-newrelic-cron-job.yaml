@@ -1,3 +1,5 @@
+# Deploy probers only in production environment.
+{{- if .Values.productionIngress -}}
 ---
 apiVersion: batch/v1beta1
 kind: CronJob
@@ -29,3 +31,4 @@ spec:
                   key: newrelic-account-id
                   name: {{ template "studio.fullname" . }}
           restartPolicy: OnFailure
+{{- end }}
