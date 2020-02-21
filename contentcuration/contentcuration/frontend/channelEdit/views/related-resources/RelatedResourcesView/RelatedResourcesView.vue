@@ -138,7 +138,7 @@
 
 <script>
 
-  import { mapGetters } from 'vuex';
+  import { mapGetters, mapActions } from 'vuex';
 
   import RelatedResourcesList from '../RelatedResourcesList/RelatedResourcesList';
   import ContentNodeIcon from 'frontend/shared/views/ContentNodeIcon.vue';
@@ -179,14 +179,15 @@
       },
     },
     methods: {
+      ...mapActions('contentNode', ['removePreviousStepFromNode', 'removeNextStepFromNode']),
       onStepClick(nodeId) {
         alert(`TBD: step click ${nodeId}`);
       },
-      onRemovePreviousStepClick() {
-        alert('TBD: remove previous step click');
+      onRemovePreviousStepClick(previousStepId) {
+        this.removePreviousStepFromNode({ targetId: this.nodeId, previousStepId });
       },
-      onRemoveNextStepClick() {
-        alert('TBD: remove next step click');
+      onRemoveNextStepClick(nextStepId) {
+        this.removeNextStepFromNode({ targetId: this.nodeId, nextStepId });
       },
     },
     $trs: {

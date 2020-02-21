@@ -168,3 +168,12 @@ export function SAVE_NEXT_STEPS(
 
   state.nextStepsMap = removeDuplicatePairs(nextStepsMap);
 }
+
+/**
+ * Remove an entry from next steps map.
+ */
+export function REMOVE_PREVIOUS_STEP(state, { targetId, previousStepId }) {
+  state.nextStepsMap = state.nextStepsMap.filter(entry => {
+    return !(entry[0] === previousStepId && entry[1] === targetId);
+  });
+}

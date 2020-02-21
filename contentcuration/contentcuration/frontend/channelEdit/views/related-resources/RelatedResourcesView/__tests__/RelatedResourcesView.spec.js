@@ -17,13 +17,19 @@ const GETTERS = {
   getImmediateNextStepsList: () => jest.fn(),
 };
 
-const initWrapper = ({ getters = GETTERS } = {}) => {
+const ACTIONS = {
+  removePreviousStepFromNode: () => jest.fn(),
+  removeNextStepFromNode: () => jest.fn(),
+};
+
+const initWrapper = ({ getters = GETTERS, actions = ACTIONS } = {}) => {
   const router = new VueRouter();
   const store = new Store({
     modules: {
       contentNode: {
         namespaced: true,
         getters,
+        actions,
       },
     },
   });
@@ -185,6 +191,64 @@ describe('RelatedResourcesView', () => {
       expect(wrapper.find('[data-test="nextSteps"]').html()).toContain(
         'Limit the number of next steps'
       );
+    });
+  });
+
+  describe('on remove previous step button click', () => {
+    it('dispatches remove previous step action with correct nodes ids', () => {
+      const getters = {
+        ...GETTERS,
+        getImmediatePreviousStepsList: () => () => [{ id: 'id-counting' }, { id: 'id-chemistry' }],
+      };
+
+      const mockRemovePreviousStepFromNode = jest.fn();
+      const actions = {
+        ...ACTIONS,
+        removePreviousStepFromNode: mockRemovePreviousStepFromNode,
+      };
+
+      const wrapper = initWrapper({ getters, actions });
+
+      wrapper
+        .find('[data-test="previousSteps"]')
+        .findAll('[data-test="removeBtn"]')
+        .at(1)
+        .trigger('click');
+
+      expect(mockRemovePreviousStepFromNode.mock.calls.length).toBe(1);
+      expect(mockRemovePreviousStepFromNode.mock.calls[0][1]).toEqual({
+        targetId: 'id-reading',
+        previousStepId: 'id-chemistry',
+      });
+    });
+  });
+
+  describe('on remove next step button click', () => {
+    it('dispatches next previous step action with correct nodes ids', () => {
+      const getters = {
+        ...GETTERS,
+        getImmediateNextStepsList: () => () => [{ id: 'id-counting' }, { id: 'id-chemistry' }],
+      };
+
+      const mockRemoveNextStepFromNode = jest.fn();
+      const actions = {
+        ...ACTIONS,
+        removeNextStepFromNode: mockRemoveNextStepFromNode,
+      };
+
+      const wrapper = initWrapper({ getters, actions });
+
+      wrapper
+        .find('[data-test="nextSteps"]')
+        .findAll('[data-test="removeBtn"]')
+        .at(1)
+        .trigger('click');
+
+      expect(mockRemoveNextStepFromNode.mock.calls.length).toBe(1);
+      expect(mockRemoveNextStepFromNode.mock.calls[0][1]).toEqual({
+        targetId: 'id-reading',
+        nextStepId: 'id-chemistry',
+      });
     });
   });
 });

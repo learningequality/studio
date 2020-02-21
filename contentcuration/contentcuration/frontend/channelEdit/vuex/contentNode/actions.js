@@ -86,6 +86,46 @@ export async function loadRelatedResources(context, nodeId) {
   return Promise.resolve();
 }
 
+/**
+ * Remove a previous step from a target content node.
+ *
+ * @param {String} targetId ID of a target content node.
+ * @param {String} previousStepId ID of a content node to be removed
+ *                                from target's content node previous steps.
+ */
+export function removePreviousStepFromNode(context, { targetId, previousStepId }) {
+  const targetNode = context.state.contentNodesMap[targetId];
+  const targetNodePreviousSteps = targetNode.prerequisite
+    ? targetNode.prerequisite.filter(id => id !== previousStepId)
+    : [];
+
+  context.commit('REMOVE_PREVIOUS_STEP', { targetId, previousStepId });
+  context.commit('UPDATE_CONTENTNODE', {
+    id: targetId,
+    ...{ prerequisite: targetNodePreviousSteps },
+  });
+
+  ContentNode.update(targetId, { prerequisite: targetNodePreviousSteps });
+
+  // (re)load the previous step node to be sure that we have its
+  // `is_prerequisite_of` field up-to-date on client
+  loadContentNode(context, previousStepId);
+}
+
+/**
+ * Remove a next step from a target content node.
+ *
+ * @param {String} targetId ID of a target content node.
+ * @param {String} nextStepId ID of a content node to be removed
+ *                            from target's content node next steps.
+ */
+export function removeNextStepFromNode(context, { targetId, nextStepId }) {
+  removePreviousStepFromNode(context, {
+    targetId: nextStepId,
+    previousStepId: targetId,
+  });
+}
+
 /* CONTENTNODE EDITOR ACTIONS */
 export function createContentNode(context, { parent, kind = 'topic', ...payload }) {
   const session = context.rootState.session;

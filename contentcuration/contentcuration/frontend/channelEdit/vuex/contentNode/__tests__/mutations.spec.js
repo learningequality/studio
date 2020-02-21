@@ -1,4 +1,4 @@
-import { SAVE_NEXT_STEPS } from '../mutations';
+import { SAVE_NEXT_STEPS, REMOVE_PREVIOUS_STEP } from '../mutations';
 
 describe('contentNode mutations', () => {
   describe('SAVE_NEXT_STEPS', () => {
@@ -63,6 +63,30 @@ describe('contentNode mutations', () => {
         ['id-chemistry', 'id-lab'],
         ['id-elementary-math', 'id-integrals'],
         ['id-reading', 'id-elementary-math'],
+      ]);
+    });
+  });
+
+  describe('REMOVE_PREVIOUS_STEP', () => {
+    let state;
+
+    it('removes a corresponding entry from next steps map', () => {
+      state = {
+        nextStepsMap: [
+          ['id-integrals', 'id-physics'],
+          ['id-reading', 'id-physics'],
+          ['id-physics', 'id-astronomy'],
+        ],
+      };
+
+      REMOVE_PREVIOUS_STEP(state, {
+        targetId: 'id-physics',
+        previousStepId: 'id-integrals',
+      });
+
+      expect(state.nextStepsMap).toEqual([
+        ['id-reading', 'id-physics'],
+        ['id-physics', 'id-astronomy'],
       ]);
     });
   });
