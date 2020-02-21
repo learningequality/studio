@@ -1,7 +1,7 @@
 import logging
 import mimetypes
 import tempfile
-from cStringIO import StringIO
+from io import BytesIO
 from gzip import GzipFile
 
 import backoff
@@ -104,7 +104,7 @@ class GoogleCloudStorage(Storage):
             blob.cache_control = 'private, max-age={}, no-transform'.format(CONTENT_DATABASES_MAX_AGE)
 
             # Compress the database file so that users can save bandwith and download faster.
-            buffer = StringIO()
+            buffer = BytesIO()
             compressed = GzipFile(fileobj=buffer, mode="w")
             compressed.write(fobj.read())
             compressed.close()

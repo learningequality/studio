@@ -1,4 +1,5 @@
 from __future__ import division
+from past.builtins import basestring
 
 import collections
 import itertools
