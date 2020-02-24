@@ -1,3 +1,5 @@
+# Deploy probers only in production environment.
+{{- if .Values.productionIngress -}}
 ---
 apiVersion: v1
 kind: Service
@@ -11,4 +13,5 @@ spec:
     targetPort: {{ .Values.studioProber.port }}
   selector:
     app: {{ template "studio.fullname" . }}-prober
-  type: NodePort
+  type: ClusterIP
+{{- end }}
