@@ -221,20 +221,17 @@
         return [];
       },
     },
-    beforeMount() {
-      this.loading = true;
-      this.loadContentNode(this.nodeId).then(node => {
-        if (node.prerequisite.length) {
-          this.loadContentNodes({ ids: node.prerequisite }).then(() => {
-            this.loading = false;
-          });
-        } else {
+    mounted() {
+      // Load related models
+      if (this.node.prerequisite.length) {
+        this.loading = true;
+        this.loadContentNodes({ ids: this.node.prerequisite }).then(() => {
           this.loading = false;
-        }
-      });
+        });
+      }
     },
     methods: {
-      ...mapActions('contentNode', ['loadContentNode']),
+      ...mapActions('contentNode', ['loadContentNodes']),
       getText(field) {
         return this.node[field] || this.$tr('defaultNoItemsText');
       },
