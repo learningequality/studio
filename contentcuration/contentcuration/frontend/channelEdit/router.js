@@ -21,10 +21,7 @@ const router = new VueRouter({
           'contentNode/loadTree',
           store.state.currentChannel.currentChannelId
         );
-        const nodePromise = store.dispatch(
-          'contentNode/loadContentNode',
-          to.params.nodeId
-        );
+        const nodePromise = store.dispatch('contentNode/loadContentNode', to.params.nodeId);
         // api call to get ancestors if nodeId is a child descendant???
         return Promise.all([channelPromise, treePromise, nodePromise])
           .then(() => next())

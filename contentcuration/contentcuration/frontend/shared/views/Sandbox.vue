@@ -1,4 +1,5 @@
 <template>
+
   <div>
     Insert component here for testing!
     <TemplateComponent />
@@ -10,29 +11,32 @@
       @cancelMove="showMoveModal = false"
     />
   </div>
+
 </template>
 <script>
-import TemplateComponent from '../../channelEdit/views/template/Template';
-import MoveModal from '../../channelEdit/move/MoveModal';
 
-export default {
-  name: 'Sandbox',
-  components: {
-    TemplateComponent,
-    MoveModal,
-  },
-  props: {
-    nodeId: {
-      type: String,
-      required: true,
+  import TemplateComponent from '../../channelEdit/views/template/Template';
+  import MoveModal from '../../channelEdit/move/MoveModal';
+
+  export default {
+    name: 'Sandbox',
+    components: {
+      TemplateComponent,
+      MoveModal,
     },
-  },
-  data() {
-    return {
-      showMoveModal: true,
-    };
-  },
-};
+    props: {
+      nodeId: {
+        type: String,
+        required: true,
+      },
+    },
+    data() {
+      return {
+        showMoveModal: true,
+      };
+    },
+  };
+
 </script>
 
 

@@ -1,4 +1,5 @@
 <template>
+
   <VLayout row justify-center>
     <VDialog v-model="showDialog" width="400">
       <VCard>
@@ -26,28 +27,31 @@
       </VCard>
     </VDialog>
   </VLayout>
+
 </template>
 
 <script>
-export default {
-  name: 'NewTopicModal',
-  props: {
-    showDialog: {
-      type: Boolean,
+
+  export default {
+    name: 'NewTopicModal',
+    props: {
+      showDialog: {
+        type: Boolean,
+      },
     },
-  },
-  data() {
-    return {
-      title: '',
-    };
-  },
-  $trs: {
-    topicTitle: 'Topic title',
-    createTopic: 'Create new topic',
-    cancel: 'Cancel',
-    create: 'Create',
-  },
-};
+    data() {
+      return {
+        title: '',
+      };
+    },
+    $trs: {
+      topicTitle: 'Topic title',
+      createTopic: 'Create new topic',
+      cancel: 'Cancel',
+      create: 'Create',
+    },
+  };
+
 </script>
 
 <style lang="less" scoped>

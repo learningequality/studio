@@ -1,4 +1,5 @@
 <template>
+
   <VContainer grid-list-md>
     <NewTopicModal
       :showDialog="showNewTopicModal"
@@ -87,144 +88,149 @@
       </VDialog>
     </VLayout>
   </VContainer>
+
 </template>
 
 <script>
-import { mapGetters, mapActions } from 'vuex';
-import { RouterNames } from '../constants';
-import BottomToolBar from '../../shared/views/BottomToolBar';
-import NewTopicModal from './NewTopicModal';
 
-export default {
-  name: 'MoveModal',
-  components: {
-    NewTopicModal,
-    BottomToolBar,
-  },
-  props: {
-    nodeId: {
-      type: String,
-      required: true,
+  import { mapGetters, mapActions } from 'vuex';
+  import { RouterNames } from '../constants';
+  import BottomToolBar from '../../shared/views/BottomToolBar';
+  import NewTopicModal from './NewTopicModal';
+
+  export default {
+    name: 'MoveModal',
+    components: {
+      NewTopicModal,
+      BottomToolBar,
     },
-    showDialog: {
-      type: Boolean,
+    props: {
+      nodeId: {
+        type: String,
+        required: true,
+      },
+      showDialog: {
+        type: Boolean,
+      },
     },
-  },
-  data() {
-    return {
-      showNewTopicModal: false,
-    };
-  },
-  computed: {
-    ...mapGetters('contentNode', ['getContentNode', 'getContentNodeChildren', 'getTreeNode']),
-    currentNode() {
-      return this.getContentNode(this.nodeId);
+    data() {
+      return {
+        showNewTopicModal: false,
+      };
     },
-    children() {
-      return this.getContentNodeChildren(this.nodeId);
-    },
-    crumbs() {
-      const trail = [];
-      var node = this.getContentNode(this.nodeId);
-      var inTree = this.getTreeNode(node.id);
-      trail.unshift({
-        text: node.title,
-        disabled: false,
-        to: this.nextItem(node),
-      });
-      while (inTree !== undefined) {
-        node = this.getContentNode(inTree.parent);
-        inTree = this.getTreeNode(node.id);
+    computed: {
+      ...mapGetters('contentNode', ['getContentNode', 'getContentNodeChildren', 'getTreeNode']),
+      currentNode() {
+        return this.getContentNode(this.nodeId);
+      },
+      children() {
+        return this.getContentNodeChildren(this.nodeId);
+      },
+      crumbs() {
+        const trail = [];
+        var node = this.getContentNode(this.nodeId);
+        var inTree = this.getTreeNode(node.id);
         trail.unshift({
           text: node.title,
           disabled: false,
           to: this.nextItem(node),
         });
+        while (inTree !== undefined) {
+          node = this.getContentNode(inTree.parent);
+          inTree = this.getTreeNode(node.id);
+          trail.unshift({
+            text: node.title,
+            disabled: false,
+            to: this.nextItem(node),
+          });
+        }
+        return trail;
+      },
+    },
+    created() {
+      if (!this.currentNode) {
+        this.loadContentNode(this.nodeId).then(this.getChildren);
+        var node = this.getContentNode(this.nodeId);
+        while (node.parent !== null) {
+          this.loadContentNode(node.parent).then(() => {
+            node = this.getContentNode(node.parent);
+          });
+        }
+      } else {
+        this.getChildren();
       }
-      return trail;
     },
-  },
-  created() {
-    if (!this.currentNode) {
-      this.loadContentNode(this.nodeId).then(this.getChildren);
-      var node = this.getContentNode(this.nodeId);
-      while (node.parent !== null) {
-        this.loadContentNode(node.parent).then(() => {
-          node = this.getContentNode(node.parent);
-        });
-      }
-    } else {
-      this.getChildren();
-    }
-  },
-  methods: {
-    ...mapActions('contentNode', ['createContentNode', 'loadContentNode', 'loadChildren']),
-    nextItem(child) {
-      return {
-        name: RouterNames.SANDBOX,
-        params: {
-          nodeId: child.id,
-        },
-      };
-    },
-    getChildren() {
-      if (this.currentNode && this.currentNode.has_children) {
-        return this.loadChildren({
-          parent: this.nodeId,
-          channel_id: this.$store.state.currentChannel.currentChannelId,
-        });
-      }
-      return Promise.resolve();
-    },
-    showTopicModal() {
-      this.showNewTopicModal = true;
-    },
-    cancelTopic() {
-      this.showNewTopicModal = false;
-    },
-    createTopic(title) {
-      this.createContentNode({ parent: this.nodeId, kind: 'topic', title }).then(() => {
+    methods: {
+      ...mapActions('contentNode', ['createContentNode', 'loadContentNode', 'loadChildren']),
+      nextItem(child) {
+        return {
+          name: RouterNames.SANDBOX,
+          params: {
+            nodeId: child.id,
+          },
+        };
+      },
+      getChildren() {
+        if (this.currentNode && this.currentNode.has_children) {
+          return this.loadChildren({
+            parent: this.nodeId,
+            channel_id: this.$store.state.currentChannel.currentChannelId,
+          });
+        }
+        return Promise.resolve();
+      },
+      showTopicModal() {
+        this.showNewTopicModal = true;
+      },
+      cancelTopic() {
         this.showNewTopicModal = false;
-      });
+      },
+      createTopic(title) {
+        this.createContentNode({ parent: this.nodeId, kind: 'topic', title }).then(() => {
+          this.showNewTopicModal = false;
+        });
+      },
+      moveNodes() {
+        // TODO: connect to vuex action
+      },
     },
-    moveNodes() {
-      // TODO: connect to vuex action
+    $trs: {
+      moveClipboard: 'Or move to clipboard',
+      moveItems: 'Moving {x} selections into: {title}',
+      addTopic: 'Add new topic',
+      cancel: 'Cancel',
+      moveHere: 'Move here',
+      resources: '{x} resources',
     },
-  },
-  $trs: {
-    moveClipboard: 'Or move to clipboard',
-    moveItems: 'Moving {x} selections into: {title}',
-    addTopic: 'Add new topic',
-    cancel: 'Cancel',
-    moveHere: 'Move here',
-    resources: '{x} resources',
-  },
-};
+  };
+
 </script>
 
 <style lang="less" scoped>
-.button {
-  text-transform: none;
-  color: purple;
-  text-decoration: underline;
-}
 
-.list {
-  border: 1px solid rgb(192, 192, 192);
-}
+  .button {
+    color: purple;
+    text-decoration: underline;
+    text-transform: none;
+  }
 
-.card {
-  max-height: 118px;
-}
+  .list {
+    border: 1px solid rgb(192, 192, 192);
+  }
 
-.card:hover {
-  background: #eeeeee;
-}
+  .card {
+    max-height: 118px;
+  }
 
-.description {
-  width: 539px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
+  .card:hover {
+    background: #eeeeee;
+  }
+
+  .description {
+    width: 539px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
 </style>
