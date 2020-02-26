@@ -1,8 +1,27 @@
 <template>
 
-  <VIcon class="icon notranslate" :class="kind" dark>
-    {{ icon }}
-  </VIcon>
+  <span>
+    <VChip
+      v-if="showColor"
+      label
+      :color="kind"
+      :textColor="fontColor"
+      small
+      class="ma-0 pa-0"
+      :class="{iconOnly: !includeText}"
+    >
+      <Icon small :color="fontColor" v-bind="$attrs">
+        {{ icon }}
+      </Icon>
+      <span v-if="includeText" class="ml-2">{{ text }}</span>
+    </VChip>
+    <span v-else>
+      <Icon :color="fontColor" v-bind="$attrs">
+        {{ icon }}
+      </Icon>
+      <span v-if="includeText">{{ text }}</span>
+    </span>
+  </span>
 
 </template>
 
@@ -22,65 +41,79 @@
           return kinds.includes(value);
         },
       },
+      includeText: {
+        type: Boolean,
+        default: false,
+      },
+      showColor: {
+        type: Boolean,
+        default: true,
+      },
     },
     computed: {
+      fontColor() {
+        return this.showColor ? 'white' : 'grey darken-1';
+      },
       icon() {
         switch (this.kind) {
           case 'topic':
             return 'folder';
           case 'video':
-            return 'theaters';
+            return 'ondemand_video';
           case 'audio':
-            return 'headset';
-          case 'image':
+            return 'music_note';
+          case 'slideshow':
             return 'image';
           case 'exercise':
-            return 'star';
+            return 'assignment';
           case 'document':
-            return 'description';
+            return 'class';
           case 'html5':
             return 'widgets';
           default:
-            return 'error';
+            return 'error_outline';
         }
       },
+      text() {
+        switch (this.kind) {
+          case 'topic':
+            return this.$tr('topic');
+          case 'video':
+            return this.$tr('video');
+          case 'audio':
+            return this.$tr('audio');
+          case 'slideshow':
+            return this.$tr('slideshow');
+          case 'exercise':
+            return this.$tr('exercise');
+          case 'document':
+            return this.$tr('document');
+          case 'html5':
+            return this.$tr('html5');
+          default:
+            return this.$tr('unsupported');
+        }
+      },
+    },
+    $trs: {
+      topic: 'Topic',
+      video: 'Video',
+      audio: 'Audio',
+      exercise: 'Exercise',
+      document: 'Document',
+      slideshow: 'Slideshow',
+      html5: 'HTML5 App',
+      unsupported: 'Unsupported',
     },
   };
 
 </script>
 
-
 <style lang="less" scoped>
 
-  @topic-color: #aaaaaa;
-  @video-color: #283593;
-  @audio-color: #f06292;
-  @doc-color: #ff3d00;
-  @exercise-color: #4db6ac;
-  @html-color: #ff8f00;
-  @slideshow-color: #4ece90;
-
-  .icon {
-    padding: 2px;
-    color: white;
-    border-radius: 5px;
-    &.video {
-      background-color: @video-color;
-    }
-    &.audio {
-      background-color: @audio-color;
-    }
-    &.document {
-      background-color: @doc-color;
-    }
-    &.exercise {
-      background-color: @exercise-color;
-    }
-    &.html5 {
-      background-color: @html-color;
-    }
-    &.topic {
-      background-color: @topic-color;
+  .iconOnly {
+    /deep/ .v-chip__content {
+      padding: 0 5px;
     }
   }
 

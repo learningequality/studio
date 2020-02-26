@@ -1,6 +1,12 @@
 <template>
 
-  <v-layout align-center justify-center fill-height class="loading-text">
+  <v-layout
+    align-center
+    justify-center
+    fill-height
+    class="loading-text pa-4"
+    :style="{position: absolute? 'absolute' : 'unset'}"
+  >
     <v-flex xs12>
       <v-progress-circular
         :size="70"
@@ -19,6 +25,12 @@
 
   export default {
     name: 'LoadingText',
+    props: {
+      absolute: {
+        type: Boolean,
+        default: false,
+      },
+    },
     $trs: {
       loadingText: 'Loading',
     },
@@ -30,7 +42,6 @@
 <style lang="less" scoped>
 
   .loading-text {
-    position: absolute;
     top: 0;
     left: 0;
     width: 100%;
