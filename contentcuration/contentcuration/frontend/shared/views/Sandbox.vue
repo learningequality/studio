@@ -13,7 +13,7 @@
 </template>
 <script>
 import TemplateComponent from '../../channelEdit/views/template/Template';
-import MoveModal from '../../channelEdit/views/template/MoveModal';
+import MoveModal from '../../channelEdit/move/MoveModal';
 
 export default {
   name: 'Sandbox',

@@ -1,83 +1,98 @@
 <template>
-  <v-container grid-list-md>
+  <VContainer grid-list-md>
     <NewTopicModal
       :showDialog="showNewTopicModal"
       @createTopic="createTopic"
       @cancelTopic="cancelTopic()"
     />
 
-    <v-layout wrap>
+    <VLayout wrap>
       <VDialog v-model="showDialog" fullscreen width="500" persistent>
-        <v-toolbar dark color="primary">
+        <VToolbar dark color="primary">
           <VBtn icon dark @click="$emit('cancelMove')">
-            <VIcon>close</VIcon>
+            <Icon>close</Icon>
           </VBtn>
-          <v-toolbar-title>
+          <VToolbar-title>
             <b>{{ $tr("moveItems", {x: 2, title: currentNode.title}) }}</b>
-          </v-toolbar-title>
-          <v-spacer />
-        </v-toolbar>
-        <v-card>
+          </VToolbar-title>
+          <VSpacer />
+        </VToolbar>
+        <VCard>
           <!-- header items -->
-          <v-layout wrap>
-            <v-flex md8 justify-start>
+          <VLayout wrap>
+            <VFlex md8 justify-start>
               <v-breadcrumbs :items="crumbs" divider=">" />
-            </v-flex>
-            <v-spacer />
-            <v-flex shrink>
-              <VBtn flat @click="showTopicModal()">{{ $tr("addTopic") }}</VBtn>
-            </v-flex>
-          </v-layout>
+            </VFlex>
+            <VSpacer />
+            <VFlex shrink>
+              <VBtn flat @click="showTopicModal()">
+                {{ $tr("addTopic") }}
+              </VBtn>
+            </VFlex>
+          </VLayout>
           <!-- list of children content -->
-          <v-card v-for="node in children" :key="node.id">
-            <v-layout class="card">
-              <v-flex xs2 align-self-center>
-                <v-img
+          <VCard v-for="node in children" :key="node.id">
+            <VLayout class="card">
+              <VFlex xs2 align-self-center>
+                <!-- TODO: Add the appropriate thumbnail or card -->
+                <VImg
                   src="https://cdn.vuetifyjs.com/images/cards/foster.jpg"
                   height="68px"
                   contain
                 />
-              </v-flex>
-              <v-flex xs8 align-self-center>
-                <v-card-title primary-title>
+              </VFlex>
+              <VFlex xs8 align-self-center>
+                <VCardTitle primary-title>
                   <div>
-                    <div class="headline">{{ node.title }}</div>
+                    <div class="headline">
+                      {{ node.title }}
+                    </div>
                     <div>{{ $tr('resources', {x: node.resource_count}) }}</div>
-                    <div class="description">{{ node.description }}</div>
+                    <div class="description">
+                      {{ node.description }}
+                    </div>
                   </div>
-                </v-card-title>
-              </v-flex>
-              <v-flex align-self-center>
-                <v-card-actions>
+                </VCardTitle>
+              </VFlex>
+              <VFlex align-self-center>
+                <VCardActions>
                   <VBtn icon>
-                    <VIcon small color="primary">info</VIcon>
+                    <Icon small color="primary">
+                      info
+                    </Icon>
                   </VBtn>
                   <VBtn v-if="node.kind === 'topic'" icon :to="nextItem(node)">
-                    <VIcon>keyboard_arrow_right</VIcon>
+                    <Icon>keyboard_arrow_right</Icon>
                   </VBtn>
-                </v-card-actions>
-              </v-flex>
-            </v-layout>
-          </v-card>
+                </VCardActions>
+              </VFlex>
+            </VLayout>
+          </VCard>
 
           <!-- footer buttons -->
           <BottomToolBar color="white" flat>
-            <VIcon>assignment</VIcon>
-            <VBtn flat color="primary" class="button">{{ $tr("moveClipboard") }}</VBtn>
-            <v-spacer />
-            <VBtn flat @click="$emit('cancelMove')">{{ $tr("cancel") }}</VBtn>
-            <VBtn color="primary" class="white--text" @click="moveNodes">{{ $tr("moveHere") }}</VBtn>
+            <Icon>assignment</Icon>
+            <VBtn flat color="primary" class="button">
+              {{ $tr("moveClipboard") }}
+            </VBtn>
+            <VSpacer />
+            <VBtn flat @click="$emit('cancelMove')">
+              {{ $tr("cancel") }}
+            </VBtn>
+            <VBtn color="primary" class="white--text" @click="moveNodes">
+              {{ $tr("moveHere") }}
+            </VBtn>
           </BottomToolBar>
-        </v-card>
+        </VCard>
       </VDialog>
-    </v-layout>
-  </v-container>
+    </VLayout>
+  </VContainer>
 </template>
 
 <script>
-import { mapGetters, mapActions, mapState } from 'vuex';
-import { RouterNames } from '../../constants';
-import BottomToolBar from '../../../shared/views/BottomToolBar';
+import { mapGetters, mapActions } from 'vuex';
+import { RouterNames } from '../constants';
+import BottomToolBar from '../../shared/views/BottomToolBar';
 import NewTopicModal from './NewTopicModal';
 
 export default {
@@ -168,10 +183,12 @@ export default {
       this.showNewTopicModal = false;
     },
     createTopic(title) {
-      console.log('create title!');
+      this.createContentNode({ parent: this.nodeId, kind: 'topic', title }).then(() => {
+        this.showNewTopicModal = false;
+      });
     },
     moveNodes() {
-      console.log('move!');
+      // TODO: connect to vuex action
     },
   },
   $trs: {

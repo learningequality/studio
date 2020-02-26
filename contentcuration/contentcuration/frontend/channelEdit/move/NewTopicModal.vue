@@ -1,27 +1,31 @@
 <template>
-  <v-layout row justify-center>
+  <VLayout row justify-center>
     <VDialog v-model="showDialog" width="400">
-      <v-card>
-        <v-card-title primary-title class="headline">
+      <VCard>
+        <VCardTitle primary-title class="headline">
           <strong>{{ $tr('createTopic') }}</strong>
-        </v-card-title>
-        <v-container grid-list-md>
-          <v-layout wrap>
+        </VCardTitle>
+        <VContainer grid-list-md>
+          <VLayout wrap>
             <VTextField v-model="title" :label="$tr('topicTitle')" outline />
-          </v-layout>
-        </v-container>
-        <v-card-actions>
-          <v-spacer />
-          <VBtn flat @click="$emit('cancelTopic')">{{ $tr("cancel") }}</VBtn>
+          </VLayout>
+        </VContainer>
+        <VCardActions>
+          <VSpacer />
+          <VBtn flat @click="$emit('cancelTopic')">
+            {{ $tr("cancel") }}
+          </VBtn>
           <VBtn
             color="purple"
             class="white--text"
             @click="$emit('createTopic', title)"
-          >{{ $tr("create") }}</VBtn>
-        </v-card-actions>
-      </v-card>
+          >
+            {{ $tr("create") }}
+          </VBtn>
+        </VCardActions>
+      </VCard>
     </VDialog>
-  </v-layout>
+  </VLayout>
 </template>
 
 <script>
