@@ -76,6 +76,7 @@ function generateFileData({
   }
   if (file_on_disk !== NOVALUE) {
     fileData.file_on_disk = file_on_disk;
+    fileData.url = file_on_disk;
   }
   if (contentnode !== NOVALUE) {
     fileData.contentnode = contentnode;
@@ -90,10 +91,10 @@ function generateFileData({
     fileData.file_format = file_format;
   }
   if (preset !== NOVALUE) {
-    fileData.preset = preset;
+    fileData.preset = preset.id || preset;
   }
   if (language !== NOVALUE) {
-    fileData.language = language;
+    fileData.language = language.id || language;
   }
   if (original_filename !== NOVALUE) {
     fileData.original_filename = original_filename;

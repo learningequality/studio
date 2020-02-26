@@ -33,7 +33,7 @@ export function getStatusMessage(state) {
 
 export function getUploadsInProgress(state) {
   return fileIDs => {
-    return getFiles(state)(fileIDs).filter(f => f.progress !== undefined);
+    return getFiles(state)(fileIDs).filter(f => f.progress !== undefined && !f.error);
   };
 }
 

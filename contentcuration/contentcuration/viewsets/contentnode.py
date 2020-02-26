@@ -113,6 +113,7 @@ class ContentNodeListSerializer(BulkListSerializer):
         return all_objects
 
     def update(self, queryset, all_validated_data):
+        # TODO: delete files that are no longer referenced
         prereqs = self.gather_prerequisites(all_validated_data)
         all_objects = super(ContentNodeListSerializer, self).update(
             queryset, all_validated_data

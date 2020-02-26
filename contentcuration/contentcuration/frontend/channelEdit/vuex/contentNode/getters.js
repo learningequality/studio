@@ -3,7 +3,8 @@ import sortBy from 'lodash/sortBy';
 import uniq from 'lodash/uniq';
 import uniqBy from 'lodash/uniqBy';
 
-import { validateNodeDetails, validateNodeFiles } from './utils';
+import { validateNodeFiles } from '../file/utils';
+import { validateNodeDetails } from './utils';
 
 function sorted(nodes) {
   return sortBy(nodes, ['sort_order']);
@@ -11,7 +12,14 @@ function sorted(nodes) {
 
 export function getContentNode(state) {
   return function(contentNodeId) {
-    return state.contentNodesMap[contentNodeId];
+    let node = state.contentNodesMap[contentNodeId];
+    if (node) {
+      let thumbnail_encoding = JSON.parse(node.thumbnail_encoding || '{}');
+      return {
+        ...node,
+        thumbnail_encoding,
+      };
+    }
   };
 }
 
@@ -33,14 +41,14 @@ export function getContentNodeChildren(state) {
   };
 }
 
-export function getContentNodeIsValid(state) {
+export function getContentNodeIsValid(state, getters, rootState, rootGetters) {
   return function(contentNodeId) {
     const contentNode = state.contentNodesMap[contentNodeId];
     return (
       contentNode &&
       (contentNode.isNew ||
         (getContentNodeDetailsAreValid(state)(contentNodeId) &&
-          getContentNodeFilesAreValid(state)(contentNodeId)))
+          getContentNodeFilesAreValid(state, getters, rootState, rootGetters)(contentNodeId)))
     );
   };
 }
@@ -52,10 +60,17 @@ export function getContentNodeDetailsAreValid(state) {
   };
 }
 
-export function getContentNodeFilesAreValid(state) {
+export function getContentNodeFilesAreValid(state, getters, rootState, rootGetters) {
   return function(contentNodeId) {
     const contentNode = state.contentNodesMap[contentNodeId];
-    return contentNode && !validateNodeFiles(contentNode).length;
+    if (contentNode) {
+      let files = rootGetters['file/getFiles'](contentNode.files);
+      if (files.length) {
+        // Don't count errros before files have loaded
+        return !validateNodeFiles(files).length;
+      }
+    }
+    return true;
   };
 }
 

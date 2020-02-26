@@ -46,12 +46,3 @@ export function validateNodeDetails(node) {
 
   return errors;
 }
-
-/**
- * Validate node files - correct types, no associated errors, etc.
- * @param {Object} node A node.
- * @returns {Array} An array of error codes.
- */
-export function validateNodeFiles(node) {
-  return node.files.filter(f => f.error).map(f => f.error.type);
-}

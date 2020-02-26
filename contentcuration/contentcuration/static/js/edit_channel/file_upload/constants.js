@@ -6,4 +6,4 @@ export const fileErrors = {
   URL_EXPIRED: 'URL_EXPIRED',
 };
 
-export const MAX_FILE_SIZE = 524288000;
+export const MAX_FILE_SIZE = 209715200;

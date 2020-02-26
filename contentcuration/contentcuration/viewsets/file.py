@@ -5,6 +5,7 @@ from rest_framework.serializers import PrimaryKeyRelatedField
 
 from contentcuration.models import ContentNode
 from contentcuration.models import File
+from contentcuration.models import generate_storage_url
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import ValuesViewset
@@ -37,13 +38,19 @@ class FileSerializer(BulkModelSerializer):
             "checksum",
             "file_size",
             "language",
-            "file_on_disk",
             "contentnode",
             "file_format",
             "preset",
             "original_filename",
         )
         list_serializer_class = BulkListSerializer
+
+
+def retrieve_storage_url(item):
+    """ Get the file_on_disk url """
+    return generate_storage_url(
+        "{}.{}".format(item["checksum"], item["file_format"])
+    )
 
 
 class FileViewSet(ValuesViewset):
@@ -59,6 +66,13 @@ class FileViewSet(ValuesViewset):
         "file_format",
         "contentnode",
         "file_on_disk",
-        "preset",
+        "preset_id",
+        "language_id",
         "original_filename",
     )
+
+    field_map = {
+        "url": retrieve_storage_url,
+        "preset": "preset_id",
+        "language": "language_id"
+    }

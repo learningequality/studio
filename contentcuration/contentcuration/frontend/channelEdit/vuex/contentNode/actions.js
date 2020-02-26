@@ -1,5 +1,6 @@
 import difference from 'lodash/difference';
 import union from 'lodash/union';
+import { sanitizeFiles } from '../file/utils';
 import { NOVALUE } from 'shared/constants';
 import { MOVE_POSITIONS } from 'shared/data/constants';
 import { ContentNode, Tree } from 'shared/data/resources';
@@ -44,6 +45,7 @@ export function createContentNode(context, { parent, kind = 'topic', ...payload 
     files: [],
     prerequisite: [],
     assessment_items: [],
+    extra_fields: {},
     isNew: true,
     language: session.preferences ? session.preferences.language : session.currentLanguage,
     ...context.rootGetters['currentChannel/currentChannel'].content_defaults,
@@ -90,7 +92,7 @@ function generateContentNodeData({
     contentNodeData.description = description;
   }
   if (thumbnail_encoding !== NOVALUE) {
-    contentNodeData.thumbnail_encoding = thumbnail_encoding;
+    contentNodeData.thumbnail_encoding = JSON.stringify(thumbnail_encoding);
   }
   if (language !== NOVALUE) {
     contentNodeData.language = language;
@@ -215,7 +217,29 @@ export function deleteContentNode(context, contentNodeId) {
   });
 }
 
-export function copyNodes(context, contentNodeIds) {
+export function copyContentNodes(context, contentNodeIds) {
   // TODO: Implement copy nodes endpoint
   return new Promise(resolve => resolve(context, contentNodeIds));
+}
+
+export function sanitizeContentNodes(context, contentNodeIds, removeInvalid = false) {
+  let promises = [];
+  context.getters.getContentNodes(contentNodeIds).forEach(node => {
+    let files = context.rootGetters['file/getFiles'](node.files);
+    let validFiles = sanitizeFiles(files);
+    if (
+      removeInvalid &&
+      !validFiles.filter(f => !f.preset.supplementary).length &&
+      node.kind !== 'topic' &&
+      node.kind !== 'exercise'
+    ) {
+      promises.push(context.dispatch('deleteContentNode', node.id));
+    } else if (files.length !== validFiles.length) {
+      // Remove uploading and failed files
+      promises.push(
+        context.dispatch('updateContentNode', { id: node.id, files: validFiles.map(f => f.id) })
+      );
+    }
+  });
+  return Promise.all(promises);
 }
