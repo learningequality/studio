@@ -7,11 +7,11 @@ const GB = parseFloat(Math.pow(KB, 3));
 const TB = parseFloat(Math.pow(KB, 4));
 
 const sizeStrings = createTranslator('SizeStrings', {
-  bytes: '{size}B',
-  kilobytes: '{size}KB',
-  megabytes: '{size}MB',
-  gigabytes: '{size}GB',
-  terabytes: '{size}TB',
+  bytes: '{size} B',
+  kilobytes: '{size} KB',
+  megabytes: '{size} MB',
+  gigabytes: '{size} GB',
+  terabytes: '{size} TB',
   uploadFileSize: '{uploaded} of {total}',
 });
 
