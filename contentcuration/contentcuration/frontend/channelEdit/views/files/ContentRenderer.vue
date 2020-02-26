@@ -1,6 +1,6 @@
 <template>
 
-  <VLayout :key="file && file.file_on_disk" :class="{fullscreen: fullscreen, renderer: loading}">
+  <VLayout :key="fileId" :class="{fullscreen: fullscreen, renderer: loading}">
     <VCard v-if="!file" color="grey lighten-4" flat>
       <VLayout align-center justify-center fill-height>
         {{ $tr('noFileText') }}
@@ -16,9 +16,18 @@
         controls
         preload="metadata"
         controlsList="nodownload"
+        crossOrigin
         @load="loading = false"
       >
         <source :src="src" :type="file.mimetype">
+        <track
+          v-for="subtitle in subtitles"
+          :key="subtitle.id"
+          :src="subtitle.url"
+          kind="subtitles"
+          :srclang="subtitle.language.id"
+          :label="subtitle.language.native_name"
+        >
       </video>
     </VFlex>
     <VCard v-else-if="isAudio" flat>
@@ -38,7 +47,6 @@
         {{ $tr('previewNotSupported') }}
       </VLayout>
     </VCard>
-
   </VLayout>
 
 </template>
@@ -62,6 +70,12 @@
         type: Boolean,
         default: false,
       },
+      supplementaryFileIds: {
+        type: Array,
+        default() {
+          return [];
+        },
+      },
     },
     data() {
       return {
@@ -69,9 +83,15 @@
       };
     },
     computed: {
-      ...mapGetters('file', ['getFile']),
+      ...mapGetters('file', ['getFile', 'getFiles']),
       file() {
         return this.getFile(this.fileId);
+      },
+      supplementaryFiles() {
+        return this.getFiles(this.supplementaryFileIds);
+      },
+      subtitles() {
+        return this.supplementaryFiles.filter(f => f.preset.subtitle);
       },
       isVideo() {
         return this.file.file_format === 'mp4';
@@ -89,14 +109,14 @@
         return '/zipcontent/' + this.file.checksum + '.' + this.file.file_format;
       },
       src() {
-        return this.file && this.file.file_on_disk;
+        return this.file && this.file.url;
       },
       uploading() {
         return this.file.progress !== undefined;
       },
     },
     watch: {
-      src(newFileId) {
+      fileId(newFileId) {
         this.loading = Boolean(newFileId);
       },
     },

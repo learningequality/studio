@@ -23,9 +23,9 @@
         </VBtn>
       </VToolbar>
       <ContentRenderer
-        :key="fileId"
         :fileId="fileId"
         :fullscreen="fullscreen"
+        :supplementaryFileIds="supplementaryFileIds"
       />
       <p v-if="!fullscreen" class="fullscreen-toggle">
         <ActionLink
@@ -59,7 +59,7 @@
         type: String,
         required: false,
       },
-      nodeTitle: {
+      nodeId: {
         type: String,
         required: false,
       },
@@ -70,9 +70,20 @@
       };
     },
     computed: {
-      ...mapGetters('file', ['getFile']),
+      ...mapGetters('file', ['getFile', 'getFiles']),
+      ...mapGetters('contentNode', ['getContentNode']),
+      node() {
+        return this.getContentNode(this.nodeId);
+      },
       file() {
         return this.getFile(this.fileId);
+      },
+      nodeTitle() {
+        return this.node && this.node.title;
+      },
+      supplementaryFileIds() {
+        let files = this.node ? this.getFiles(this.node.files) : [];
+        return files.filter(f => f.preset.supplementary).map(f => f.id);
       },
       isPreviewable() {
         let availablePreviewFormats = _.chain(Constants.FormatPresets)
@@ -88,11 +99,7 @@
       },
       showFullscreenOption() {
         return (
-          this.file &&
-          this.file.file_on_disk &&
-          this.isPreviewable &&
-          !this.isAudio &&
-          !this.file.uploading
+          this.file && this.file.url && this.isPreviewable && !this.isAudio && !this.file.uploading
         );
       },
     },
