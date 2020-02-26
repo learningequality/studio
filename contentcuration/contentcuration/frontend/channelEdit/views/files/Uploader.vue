@@ -62,7 +62,10 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
-  import _ from 'underscore';
+  import last from 'lodash/last';
+  import partition from 'lodash/partition';
+  import uniq from 'lodash/uniq';
+
   import { fileSizeMixin } from './mixins';
   import Constants from 'edit_channel/constants';
   import Alert from 'edit_channel/sharedComponents/Alert.vue';
@@ -115,27 +118,15 @@
     computed: {
       ...mapGetters('file', ['getFiles']),
       acceptedFiles() {
-        let filter = { display: true };
-        if (this.presetID) {
-          filter.id = this.presetID;
-        } else {
-          filter.supplementary = false;
-        }
-        return _.where(Constants.FormatPresets, filter);
+        return Constants.FormatPresets.filter(
+          fp => fp.display && (this.presetID ? this.presetID === fp.id : !fp.supplementary)
+        );
       },
       acceptedMimetypes() {
-        return _.chain(this.acceptedFiles)
-          .pluck('associated_mimetypes')
-          .flatten()
-          .value()
-          .join(',');
+        return this.acceptedFiles.flatMap(f => f.associated_mimetypes).join(',');
       },
       acceptedExtensions() {
-        return _.chain(this.acceptedFiles)
-          .pluck('allowed_formats')
-          .flatten()
-          .uniq()
-          .value();
+        return uniq(this.acceptedFiles.flatMap(f => f.allowed_formats));
       },
       unsupportedFilesText() {
         return this.$tr('unsupportedFilesText', {
@@ -190,19 +181,21 @@
       },
       validateFiles(files) {
         // Get unsupported file types
-        let partition = _.partition(files, f =>
-          this.acceptedExtensions.includes(_.last(f.name.split('.')).toLowerCase())
+        let partitionedFiles = partition(files, f =>
+          this.acceptedExtensions.includes(last(f.name.split('.')).toLowerCase())
         );
-        files = partition[0];
-        this.unsupportedFiles = partition[1];
+        files = partitionedFiles[0];
+        this.unsupportedFiles = partitionedFiles[1];
 
         // Get files that exceed the max file size
-        partition = _.partition(files, f => f.size < MAX_FILE_SIZE);
-        files = partition[0];
-        this.tooLargeFiles = partition[1];
+        partitionedFiles = partition(files, f => f.size < MAX_FILE_SIZE);
+        files = partitionedFiles[0];
+        this.tooLargeFiles = partitionedFiles[1];
 
         // Get the total file size
-        this.totalUploadSize = _.reduce(files, (sum, f) => sum + f.size, 0);
+        this.totalUploadSize = files.reduce((sum, f) => {
+          return sum + f.size;
+        }, 0);
         return files;
       },
       handleFiles(files) {
