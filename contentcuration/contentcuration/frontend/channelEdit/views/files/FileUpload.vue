@@ -1,20 +1,8 @@
 <template>
 
   <div style="width: 100%;">
-    <VCard v-if="loading" flat>
-      <VCardText>
-        <VLayout align-center class="text-xs-center" fill-height wrap>
-          <VFlex xs12>
-            <VProgressCircular indeterminate color="primary" />
-          </VFlex>
-          <VFlex xs12 class="mt-4 title grey--text">
-            {{ $tr('loadingFiles') }}
-          </VFlex>
-        </VLayout>
-      </VCardText>
-    </VCard>
     <VCard
-      v-else-if="!primaryFileMapping.length || loadError"
+      v-if="!primaryFileMapping.length"
       data-test="error"
       color="grey lighten-4"
       flat
@@ -34,7 +22,7 @@
           <ContentNodeIcon :kind="node.kind" includeText />
         </p>
         <div class="preview-wrapper">
-          <FilePreview :fileId="selected" :nodeTitle="node.title" />
+          <FilePreview :fileId="selected" :nodeId="nodeId" />
         </div>
       </VFlex>
       <VFlex sm12 md6 lg7 xl8>
@@ -99,8 +87,6 @@
     },
     data() {
       return {
-        loading: true,
-        loadError: null,
         selected: null,
       };
     },
@@ -138,18 +124,9 @@
       },
     },
     mounted() {
-      this.loading = true;
-      this.loadFiles({ ids: this.node.files.join(',') })
-        .then(() => {
-          this.loading = false;
-          this.selectFirstFile();
-        })
-        .catch(error => {
-          this.loadError = error;
-        });
+      this.selectFirstFile();
     },
     methods: {
-      ...mapActions('file', ['loadFiles']),
       ...mapActions('contentNode', ['addFiles', 'removeFiles']),
       selectFirstFile() {
         let firstFile = sortBy(this.files, f => f.preset.order)[0];
@@ -169,7 +146,6 @@
     $trs: {
       filesHeader: 'Preview Files',
       fileError: 'Invalid file type found',
-      loadingFiles: 'Loading files',
     },
   };
 
