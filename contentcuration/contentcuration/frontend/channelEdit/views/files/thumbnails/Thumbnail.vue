@@ -2,18 +2,31 @@
 
   <div :key="nodeId">
     <!-- Thumbnail status -->
-    <VLayout row align-center class="grey--text" style="font-size: 12pt;">
-      <VFlex class="text-truncate" shrink style="line-height: unset !important;">
-        {{ headerText }}
-      </VFlex>
-      <VFlex v-if="value && !loading && !cropping" class="text-xs-right" grow>
-        {{ formatFileSize(value.file_size) }}
-      </VFlex>
+    <VLayout row align-center :class="hasError? 'red--text' : 'grey--text'" class="body-1">
+      <template v-if="value && value.error || uploading">
+        <Uploader :allowDrop="false" :presetID="thumbnailPresetID" @uploading="handleUploading">
+          <template #default="{openFileDialog}">
+            <FileStatusText
+              :fileIds="value && [value.id]"
+              :readonly="readonly"
+              @open="openFileDialog"
+            />
+          </template>
+        </Uploader>
+      </template>
+      <template v-else>
+        <VFlex class="text-truncate" shrink style="line-height: unset !important;">
+          {{ headerText }}
+        </VFlex>
+        <VFlex v-if="showFileSize" class="text-xs-right" grow>
+          {{ formatFileSize(value.file_size) }}
+        </VFlex>
+      </template>
     </VLayout>
 
     <!-- Thumbnail area -->
     <div class="my-2 image-wrapper">
-      <div v-if="loading" style="border: 2px solid transparent;">
+      <div v-if="loading || hasError" style="border: 2px solid transparent;">
         <VCard
           ref="thumbnail"
           color="grey lighten-4"
@@ -32,7 +45,7 @@
                 />
                 <FileStatus v-else :fileIDs="[value.id]" large />
               </p>
-              <ActionLink :text="$tr('cancel')" @click="cancelPendingFile" />
+              <ActionLink v-if="!hasError" :text="$tr('cancel')" @click="cancelPendingFile" />
             </div>
           </VLayout>
         </VCard>
@@ -48,7 +61,7 @@
         :initial-image="thumbnailSrc"
         initial-size="contain"
         :style="{borderColor: $vuetify.theme.darkGrey}"
-        @init="cropperLoaded"
+        @new-image-drawn="cropperLoaded"
       />
 
       <Uploader
@@ -143,7 +156,7 @@
           </Uploader>
         </div>
         <ThumbnailToolbarIcon
-          v-if="value"
+          v-if="!hasError"
           icon="crop"
           :tooltip="$tr('crop')"
           @click="startCropping"
@@ -152,12 +165,12 @@
 
       <VSpacer />
       <div v-if="!loading">
-        <span v-if="generated || cropping">
+        <span v-if="!hasError && (generated || cropping)">
           <ActionLink class="mr-3" :text="$tr('cancel')" @click="reset" />
           <ActionLink :text="$tr('save')" @click="save" />
         </span>
         <ThumbnailToolbarIcon
-          v-else-if="value"
+          v-else
           icon="clear"
           :tooltip="$tr('remove')"
           @click="$emit('input', null)"
@@ -171,13 +184,14 @@
 <script>
 
   import { mapGetters } from 'vuex';
-  import { fileSizeMixin } from '../mixins';
+  import { fileSizeMixin, fileStatusMixin } from '../mixins';
   import ThumbnailToolbarIcon from './ThumbnailToolbarIcon';
   import ThumbnailGenerator from './ThumbnailGenerator';
   import Constants from 'edit_channel/constants/index';
   import Uploader from 'frontend/channelEdit/views/files/Uploader';
   import ActionLink from 'edit_channel/sharedComponents/ActionLink.vue';
   import FileStatus from 'frontend/channelEdit/views/files/FileStatus';
+  import FileStatusText from 'frontend/channelEdit/views/files/FileStatusText';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
 
   export default {
@@ -187,10 +201,11 @@
       ThumbnailToolbarIcon,
       ActionLink,
       FileStatus,
+      FileStatusText,
       ThumbnailGenerator,
       ContentNodeIcon,
     },
-    mixins: [fileSizeMixin],
+    mixins: [fileSizeMixin, fileStatusMixin],
     props: {
       value: {
         type: Object,
@@ -246,9 +261,17 @@
       loading() {
         return this.uploading || this.generating;
       },
+      hasError() {
+        return this.value && this.value.error;
+      },
+      showFileSize() {
+        return this.hasError && !this.loading && !this.cropping;
+      },
       headerText() {
         if (this.generating) {
           return this.$tr('generatingThumbnail');
+        } else if (this.hasError) {
+          return this.statusMessage([this.value.id]);
         } else if (this.uploading) {
           return this.$tr('uploadingThumbnail');
         } else if (!this.value) {
@@ -261,7 +284,7 @@
       },
       thumbnailSrc() {
         return (
-          (this.value && this.value.file_on_disk) ||
+          (this.value && this.value.url) ||
           (!this.kind && '/static/img/kolibri_placeholder.png') ||
           ''
         );
@@ -276,10 +299,8 @@
         if (!this.nodeId) {
           return null;
         }
-        let file = this.getFiles(this.node.files).find(
-          f => !f.preset.supplementary && f.file_on_disk
-        );
-        return (file && file.file_on_disk.split('?')[0]) || '';
+        let file = this.getFiles(this.node.files).find(f => !f.preset.supplementary && f.url);
+        return (file && file.url.split('?')[0]) || '';
       },
     },
     watch: {
@@ -287,6 +308,9 @@
         if (id) {
           this.reset();
         }
+      },
+      hasError(error) {
+        if (error) this.reset();
       },
     },
     methods: {

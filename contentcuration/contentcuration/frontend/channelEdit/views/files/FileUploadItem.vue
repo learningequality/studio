@@ -29,17 +29,8 @@
               @click="openFileDialog"
             />
           </VListTileTitle>
-          <VListTileSubTitle v-if="file && file.error">
-            {{ statusMessage([file.id]) }}
-            &nbsp;
-            <ActionLink
-              v-if="file.error.type !== 'NO_STORAGE'"
-              data-test="error-upload-link"
-              @click="openFileDialog"
-            />
-          </VListTileSubTitle>
-          <VListTileSubTitle v-else-if="file && uploading">
-            {{ statusMessage([file.id]) }}
+          <VListTileSubTitle v-if="file && (file.error || uploading)">
+            <FileStatusText :fileIds="[file.id]" :readonly="viewOnly" @open="openFileDialog" />
           </VListTileSubTitle>
           <VListTileSubTitle v-else-if="file">
             {{ formatFileSize(file.file_size) }}
@@ -49,7 +40,7 @@
         <VSpacer />
         <VListTileAction v-if="file && !viewOnly">
           <VBtn
-            v-if="allowFileRemove || file.error"
+            v-if="allowFileRemove"
             icon
             class="remove-icon"
             data-test="remove"
@@ -71,7 +62,8 @@
   import { mapGetters } from 'vuex';
   import { fileSizeMixin, fileStatusMixin } from './mixins';
   import Uploader from './Uploader';
-  import ActionLink from 'edit_channel/sharedComponents/ActionLink.vue';
+  import FileStatusText from './FileStatusText';
+  import ActionLink from 'edit_channel/sharedComponents/ActionLink';
   import { translate } from 'edit_channel/utils/string_helper';
 
   export default {
@@ -79,6 +71,7 @@
     components: {
       Uploader,
       ActionLink,
+      FileStatusText,
     },
     filters: {
       translate(text) {
@@ -119,7 +112,7 @@
     },
     methods: {
       handleUploading(files) {
-        this.$emit('uploading', files[0]);
+        if (files.length) this.$emit('uploading', files[0]);
       },
     },
     $trs: {

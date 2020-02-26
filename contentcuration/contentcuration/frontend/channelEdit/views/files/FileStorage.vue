@@ -13,8 +13,7 @@
       :color="progressBarColor"
       :value="storagePercent"
     />
-    <span v-if="storageIsFull">
-      <VIcon color="red" small>error</VIcon>
+    <span v-if="storageIsFull" class="red--text">
       <span v-if="showProgress">{{ $tr('storageFull') }}</span>
       <span v-else>
         {{ $tr('storageFullWithSize', {
@@ -36,7 +35,7 @@
     <ActionLink
       v-if="storageIsFull || showWarning"
       target="_blank"
-      class="action-link"
+      class="ml-3"
       :text="$tr('requestStorage')"
       :href="storageRequestUrl"
     />
@@ -69,14 +68,23 @@
       totalStorage() {
         return this.user.disk_space;
       },
+      availableStorage() {
+        return this.user.available_space;
+      },
       usedStorage() {
-        return this.totalStorage - this.user.available_space;
+        // If availableStorage is negative, user has exceeded storage limit
+        // (e.g. limit was decreased at some point, but files were
+        // uploaded before then)
+        if (this.availableStorage > this.totalStorage) {
+          return this.totalStorage + this.availableStorage;
+        }
+        return this.totalStorage - this.availableStorage;
       },
       storagePercent() {
-        return this.totalStorage ? (this.usedStorage / this.totalStorage) * 100 : 100;
+        return this.totalStorage ? Math.min(1, this.usedStorage / this.totalStorage) * 100 : 100;
       },
       storageIsFull() {
-        return this.usedStorage >= this.totalStorage;
+        return this.storagePercent >= 100;
       },
       showWarning() {
         return this.storagePercent >= 90;
@@ -94,22 +102,18 @@
       },
     },
     $trs: {
-      storageUsed: 'Storage used: {used} of {total}',
+      storageUsed: 'Total storage used: {used} of {total}',
       requestStorage: 'Request storage',
       storageFull: 'Storage limit reached',
-      storageFullWithSize: 'Storage limit reached: {used} of {total}',
+      storageFullWithSize: 'Total storage limit reached: {used} of {total}',
       storageLow: 'Storage is running low',
-      storageLowWithSize: 'Storage is running low: {used} of {total}',
+      storageLowWithSize: 'Total storage is running low: {used} of {total}',
     },
   };
 
 </script>
 
 <style lang="less" scoped>
-
-  .action-link {
-    margin-left: 10px;
-  }
 
   .v-icon {
     margin-right: 5px;

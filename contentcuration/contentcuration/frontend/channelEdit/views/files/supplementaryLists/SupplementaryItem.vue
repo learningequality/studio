@@ -12,8 +12,8 @@
           <VListTileTitle v-if="readonly">
             {{ file.original_filename }}
           </VListTileTitle>
-          <VListTileTitle v-else-if="uploading" class="grey--text">
-            {{ $tr('uploadingFileText') }}
+          <VListTileTitle v-if="file.error">
+            <FileStatusText :fileIds="[file.id]" @open="openFileDialog" />
           </VListTileTitle>
           <VListTileTitle v-else>
             <ActionLink
@@ -26,13 +26,14 @@
             {{ $tr('languageText', {
               language: file.language.native_name, code: file.language.id}) }}
           </VListTileSubTitle>
+
         </VListTileContent>
         <VListTileContent>
           <VListTileTitle class="text-xs-right grey--text">
             <span v-if="uploading">
-              {{ uploadStatus }}
+              <FileStatusText :fileIds="[file.id]" />
             </span>
-            <span v-else>
+            <span v-else-if="!file.error">
               {{ formatFileSize(file.file_size) }}
             </span>
           </VListTileTitle>
@@ -53,7 +54,8 @@
 <script>
 
   import { mapGetters } from 'vuex';
-  import { fileSizeMixin, fileStatusMixin } from '../mixins';
+  import { fileSizeMixin } from '../mixins';
+  import FileStatusText from '../FileStatusText';
   import Uploader from 'frontend/channelEdit/views/files/Uploader';
   import ActionLink from 'edit_channel/sharedComponents/ActionLink';
   import Constants from 'edit_channel/constants/index';
@@ -63,8 +65,9 @@
     components: {
       Uploader,
       ActionLink,
+      FileStatusText,
     },
-    mixins: [fileSizeMixin, fileStatusMixin],
+    mixins: [fileSizeMixin],
     props: {
       fileId: {
         type: String,
@@ -83,7 +86,7 @@
       },
     },
     computed: {
-      ...mapGetters('file', ['getFile']),
+      ...mapGetters('file', ['getFile', 'getUploadsInProgress']),
       file() {
         return this.getFile(this.fileId);
       },
@@ -91,10 +94,7 @@
         return Constants.Languages.find(l => l.id === this.languageId);
       },
       uploading() {
-        return this.file.progress !== undefined;
-      },
-      uploadStatus() {
-        return this.statusMessage([this.file.id]);
+        return this.getUploadsInProgress([this.fileId]).length;
       },
     },
     methods: {
@@ -107,7 +107,6 @@
     },
     $trs: {
       languageText: '{language} ({code})',
-      uploadingFileText: 'Uploading file',
     },
   };
 
