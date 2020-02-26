@@ -1,7 +1,7 @@
 import { getHash } from './utils';
 import { File as ContentFile } from 'shared/data/resources';
 import client from 'shared/client';
-import { fileErrors } from 'edit_channel/file_upload/constants';
+import { fileErrors } from 'frontend/channelEdit/constants';
 import Constants from 'edit_channel/constants/index';
 import { NOVALUE } from 'shared/constants';
 

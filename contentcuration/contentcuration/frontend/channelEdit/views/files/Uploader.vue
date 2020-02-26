@@ -66,11 +66,11 @@
   import partition from 'lodash/partition';
   import uniq from 'lodash/uniq';
 
+  import { fileErrors, MAX_FILE_SIZE } from '../../constants';
   import { fileSizeMixin } from './mixins';
   import Constants from 'edit_channel/constants';
   import Alert from 'edit_channel/sharedComponents/Alert.vue';
 
-  import { fileErrors, MAX_FILE_SIZE } from 'edit_channel/file_upload/constants';
   import FileStorage from 'frontend/channelEdit/views/files/FileStorage';
   import State from 'edit_channel/state';
 

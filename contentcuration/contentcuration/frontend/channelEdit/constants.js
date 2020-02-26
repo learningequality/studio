@@ -1,5 +1,3 @@
-import { fileErrors } from 'edit_channel/file_upload/constants';
-
 export const RouterNames = {
   SANDBOX: 'SANDBOX',
   TREE_ROOT_VIEW: 'TREE_ROOT_VIEW',
@@ -10,6 +8,17 @@ export const RouterNames = {
   ADD_EXERCISE: 'ADD_EXERCISE',
   UPLOAD_FILES: 'UPLOAD_FILES',
 };
+
+// File constants
+export const fileErrors = {
+  NO_STORAGE: 'NO_STORAGE',
+  WRONG_TYPE: 'WRONG_TYPE',
+  TOO_LARGE: 'TOO_LARGE',
+  UPLOAD_FAILED: 'UPLOAD_FAILED',
+  URL_EXPIRED: 'URL_EXPIRED',
+};
+
+export const MAX_FILE_SIZE = 209715200;
 
 export const ValidationErrors = {
   TITLE_REQUIRED: 'TITLE_REQUIRED',
