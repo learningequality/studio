@@ -48,15 +48,35 @@ const router = new VueRouter({
           .catch(() => {});
       },
       children: [
+        // TODO: instead of linking to the edit modal, this should link to
+        // the ResourcePanel
+        // {
+        //   name: RouterNames.CONTENTNODE_DETAILS,
+        //   path: 'details/:detailNodeId',
+        //   props: true,
+        //   component: EditModal,
+        // },
         {
-          name: RouterNames.CONTENTNODE_DETAILS,
-          path: 'details/:detailNodeId',
+          name: RouterNames.VIEW_CONTENTNODES,
+          path: 'view/:detailNodeIds',
           props: true,
           component: EditModal,
         },
         {
-          name: RouterNames.MULTI_CONTENTNODE_DETAILS,
-          path: 'multidetails/:detailNodeIds',
+          name: RouterNames.ADD_TOPICS,
+          path: 'topics/:detailNodeIds',
+          props: true,
+          component: EditModal,
+        },
+        {
+          name: RouterNames.ADD_EXERCISE,
+          path: 'exercise/:detailNodeIds',
+          props: true,
+          component: EditModal,
+        },
+        {
+          name: RouterNames.UPLOAD_FILES,
+          path: 'upload/:detailNodeIds?',
           props: true,
           component: EditModal,
         },

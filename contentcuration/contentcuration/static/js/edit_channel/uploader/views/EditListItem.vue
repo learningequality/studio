@@ -4,6 +4,7 @@
   <VListTile
     v-if="node"
     :style="{backgroundColor}"
+    class="py-0 px-1"
     @click.stop="selected = [nodeId]"
   >
     <VListTileAction style="min-width:min-content;" @click.stop>
@@ -19,7 +20,7 @@
     <VListTileAction style="min-width:min-content;">
       <ContentNodeIcon :kind="node.kind" :showColor="false" />
     </VListTileAction>
-    <VListTileContent>
+    <VListTileContent class="py-0 px-2">
       <VListTileTitle class="notranslate">
         {{ node.title }}
       </VListTileTitle>
@@ -28,18 +29,19 @@
       </VListTileSubTitle>
     </VListTileContent>
     <VSpacer />
-    <VListTileAction class="status-indicator">
+    <VListTileAction class="status-indicator mr-1">
       <FileStatus :fileIDs="node.files">
         <Icon v-if="!nodeIsValid" color="red" class="error-icon">
           error
         </Icon>
       </FileStatus>
     </VListTileAction>
-    <VListTileAction v-if="canEdit">
+    <VListTileAction v-if="canRemove">
       <VBtn icon flat class="remove-item" @click.stop="removeNode">
         <Icon>clear</Icon>
       </VBtn>
     </VListTileAction>
+
   </VListTile>
 
 </template>
@@ -50,6 +52,7 @@
   import { fileSizeMixin, fileStatusMixin } from 'frontend/channelEdit/views/files/mixins';
   import FileStatus from 'frontend/channelEdit/views/files/FileStatus';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
+  import { RouterNames } from 'frontend/channelEdit/constants';
 
   export default {
     name: 'EditListItem',
@@ -67,12 +70,9 @@
         type: String,
         required: true,
       },
-      canEdit: {
-        type: Boolean,
-        default: false,
-      },
     },
     computed: {
+      ...mapGetters('currentChannel', ['canEdit']),
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodeIsValid']),
       selected: {
         get() {
@@ -101,6 +101,14 @@
           return this.$tr('questionCount', { count: this.node.assessment_items.length });
         }
         return this.statusMessage(this.node.files);
+      },
+      canRemove() {
+        return (
+          this.canEdit &&
+          (this.$route.name === RouterNames.ADD_TOPICS ||
+            this.$route.name === RouterNames.UPLOAD_FILES ||
+            this.$route.name === RouterNames.ADD_EXERCISE)
+        );
       },
     },
     methods: {
@@ -135,12 +143,8 @@
   /deep/ .v-list__tile {
     height: max-content !important;
     min-height: 64px;
-    padding: 5px 16px;
     &:hover .remove-item {
       display: block;
-    }
-    .v-list__tile__content {
-      padding: 0 8px;
     }
     .v-list__tile__sub-title {
       white-space: unset;

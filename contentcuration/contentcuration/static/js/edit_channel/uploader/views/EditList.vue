@@ -15,7 +15,6 @@
       :key="nodeId"
       v-model="selected"
       :nodeId="nodeId"
-      :canEdit="canEdit"
       @removed="handleRemoved"
     />
 
@@ -25,9 +24,7 @@
 
 <script>
 
-  import { mapGetters } from 'vuex';
   import EditListItem from './EditListItem';
-  import { RouterNames } from 'frontend/channelEdit/constants';
 
   export default {
     name: 'EditList',
@@ -45,7 +42,6 @@
       },
     },
     computed: {
-      ...mapGetters('currentChannel', ['canEdit']),
       selected: {
         get() {
           return this.value;
@@ -72,7 +68,7 @@
         let nodeIds = this.$route.params.detailNodeIds.split(',').filter(id => id !== nodeId);
 
         this.$router.push({
-          name: RouterNames.MULTI_CONTENTNODE_DETAILS,
+          name: this.$route.name,
           params: {
             nodeId: this.$route.params.nodeId,
             detailNodeIds: nodeIds.join(','),

@@ -15,7 +15,7 @@
 
       <!-- Basic information + audience -->
       <VLayout row wrap class="section">
-        <VFlex v-if="oneSelected" xs12 md6 lg7>
+        <VFlex v-if="oneSelected" xs12 sm6 lg7>
           <h1 class="subheading">
             {{ $tr('basicInfoHeader') }}
           </h1>
@@ -42,7 +42,7 @@
           />
         </VFlex>
         <VSpacer v-if="oneSelected" />
-        <VFlex xs12 md5 lg4 xl3>
+        <VFlex xs12 sm5 lg4 xl3>
           <h1 class="subheading">
             {{ $tr('audienceHeader') }}
           </h1>
@@ -104,7 +104,7 @@
           <VFlex xs12>
             <VDivider />
           </VFlex>
-          <VFlex xs12 md6 class="auth-section">
+          <VFlex xs12 sm6 class="auth-section">
             <h1 class="subheading">
               {{ $tr('sourceHeader') }}
             </h1>
@@ -195,7 +195,7 @@
           <VSpacer />
         </template>
 
-        <VFlex v-if="oneSelected" xs12 md5 lg4 xl3>
+        <VFlex v-if="oneSelected" xs12 sm5 lg4 xl3>
           <h1 class="subheading">
             {{ $tr('thumbnailHeader') }}
           </h1>
@@ -457,7 +457,7 @@
         return this.nodes.some(node => node.freeze_authoring_data);
       },
       oneSelected() {
-        return this.nodeIds.length === 1;
+        return this.nodes.length === 1;
       },
       languageHint() {
         if (this.viewOnly) return '';
@@ -615,7 +615,6 @@
   }
 
   .details-edit-view {
-    max-width: 1800px;
     padding: 10px;
 
     /deep/ .subheading {

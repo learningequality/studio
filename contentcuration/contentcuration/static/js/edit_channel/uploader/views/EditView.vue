@@ -1,6 +1,6 @@
 <template>
 
-  <VContainer fluid fill-height>
+  <VContainer ref="editview" fluid fill-height>
     <VLayout v-if="!nodeIds.length" justify-center align-center fill-height>
       <VFlex grow class="text-xs-center title grey--text">
         {{ noItemText }}
@@ -127,7 +127,7 @@
         return TabNames;
       },
       oneSelected() {
-        return this.nodeIds.length === 1;
+        return this.nodes.length === 1;
       },
       showQuestionsTab() {
         return this.oneSelected && this.firstNode && this.firstNode.kind === 'exercise';
@@ -138,7 +138,7 @@
         );
       },
       countText() {
-        let messageArgs = { count: this.nodeIds.length };
+        let messageArgs = { count: this.nodes.length };
         if (this.canEdit) return this.$tr('editingMultipleCount', messageArgs);
         return this.$tr('viewingMultipleCount', messageArgs);
       },
@@ -153,6 +153,11 @@
       },
       assessmentItemsCount() {
         return 0;
+      },
+    },
+    watch: {
+      nodeIds() {
+        this.$refs.editview.scrollTop = 0;
       },
     },
     $trs: {
