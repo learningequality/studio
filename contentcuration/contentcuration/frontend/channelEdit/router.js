@@ -9,8 +9,27 @@ const router = new VueRouter({
   routes: [
     {
       name: RouterNames.SANDBOX,
-      path: '/sandbox/',
+      path: '/sandbox/:nodeId',
+      props: true,
       component: Sandbox,
+      beforeEnter: (to, from, next) => {
+        const channelPromise = store.dispatch(
+          'channel/loadChannel',
+          store.state.currentChannel.currentChannelId
+        );
+        const treePromise = store.dispatch(
+          'contentNode/loadTree',
+          store.state.currentChannel.currentChannelId
+        );
+        const nodePromise = store.dispatch(
+          'contentNode/loadContentNode',
+          to.params.nodeId
+        );
+        // api call to get ancestors if nodeId is a child descendant???
+        return Promise.all([channelPromise, treePromise, nodePromise])
+          .then(() => next())
+          .catch(() => {});
+      },
     },
     {
       name: RouterNames.TREE_ROOT_VIEW,
