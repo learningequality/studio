@@ -6,6 +6,7 @@ from rest_framework.serializers import PrimaryKeyRelatedField
 from contentcuration.models import ContentNode
 from contentcuration.models import File
 from contentcuration.models import generate_storage_url
+from contentcuration.models import User
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import ValuesViewset
@@ -30,6 +31,7 @@ class FileFilter(FilterSet):
 
 class FileSerializer(BulkModelSerializer):
     contentnode = PrimaryKeyRelatedField(queryset=ContentNode.objects.all())
+    uploaded_by = PrimaryKeyRelatedField(queryset=User.objects.all())
 
     class Meta:
         model = File
@@ -42,6 +44,7 @@ class FileSerializer(BulkModelSerializer):
             "file_format",
             "preset",
             "original_filename",
+            "uploaded_by",
         )
         list_serializer_class = BulkListSerializer
 
@@ -69,6 +72,7 @@ class FileViewSet(ValuesViewset):
         "preset_id",
         "language_id",
         "original_filename",
+        "uploaded_by",
     )
 
     field_map = {

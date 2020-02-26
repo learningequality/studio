@@ -39,13 +39,14 @@ export function createFile(context, { file, presetId }) {
     Constants.FormatPresets.find(
       ftype => ftype.allowed_formats.includes(extension.toLowerCase()) && ftype.display
     ).id;
-
+  let user = context.rootState.session.currentUser;
   let uploadfile = {
     preset,
     progress: 0,
     file_size: file.size,
     original_filename: file.name,
     file_format: extension,
+    uploaded_by: user && user.id,
   };
   return ContentFile.put(uploadfile).then(id => {
     context.commit('ADD_FILE', { id, ...uploadfile });
