@@ -1,11 +1,6 @@
 <template>
 
-  <VToolbar
-    v-bind="$attrs"
-    style="top: unset; bottom: 0em;"
-    fixed
-  >
-    <VSpacer />
+  <VToolbar v-bind="$attrs" style="top: unset; bottom: 0em;" fixed>
     <slot></slot>
   </VToolbar>
 

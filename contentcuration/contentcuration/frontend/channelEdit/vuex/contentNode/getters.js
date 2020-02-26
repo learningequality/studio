@@ -13,6 +13,11 @@ export function getContentNode(state) {
   };
 }
 
+export function getTreeNode(state) {
+  return function(contentNodeId) {
+    return state.treeNodesMap[contentNodeId];
+  };
+}
 export function getContentNodes(state) {
   return function(contentNodeIds) {
     return sorted(contentNodeIds.map(id => getContentNode(state)(id)).filter(node => node));
