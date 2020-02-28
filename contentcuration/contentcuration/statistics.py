@@ -7,7 +7,7 @@ from le_utils.constants import content_kinds
 def record_channel_stats(channel, original_channel):  # noqa: C901
     """
     :param channel: The channel the current action is being performed on.
-    :param original_channel: The `channel` before the action was performed.
+    :param original_channel: The dict of `channel` attributes before the action was performed.
     """
     action_attributes = dict(channel_id=channel.id, content_type='Channel')
     # TODO: Determine the user_id when a human creates a channel
@@ -47,8 +47,8 @@ def record_channel_stats(channel, original_channel):  # noqa: C901
             # chef_tree only exists on ricecooker uploads
             # channel's main_tree differs from original_channel's on ricecooker uploads
             # channel's version differs from original_channel's on publish calls
-            elif not channel.chef_tree and channel.main_tree == original_channel.main_tree \
-                    and channel.version == original_channel.version:
+            elif not channel.chef_tree and channel.main_tree_id == original_channel["main_tree_id"] \
+                    and channel.version == original_channel["version"]:
                 action_attributes['action'] = 'Update'
                 action_attributes['action_type'] = 'Metadata'
     else:
@@ -68,7 +68,7 @@ def record_channel_stats(channel, original_channel):  # noqa: C901
                 action_attributes['action'] = 'Create'
         elif channel.deleted:
             action_attributes['action'] = 'Delete'
-        elif channel.version == original_channel.version:
+        elif channel.version == original_channel["version"]:
             action_attributes['action'] = 'Update'
             action_attributes['action_type'] = 'Metadata'
 

@@ -690,20 +690,17 @@ class Channel(models.Model):
         cache.set(self.resource_size_key(), files['resource_size'] or 0, None)
         return files['resource_size'] or 0
 
-    def save(self, *args, **kwargs):  # noqa: C901
-        original_channel = None
-        if self.pk and Channel.objects.filter(pk=self.pk).exists():
-            original_channel = Channel.objects.get(pk=self.pk)
+    @classmethod
+    def from_db(cls, db, field_names, values):
+        instance = super(Channel, cls).from_db(db, field_names, values)
+        # customization to store the original field values on the instance
+        instance._original_fields = dict(zip(field_names, values))
+        return instance
 
+    def on_create(self):
+        record_channel_stats(self, None)
         if not self.content_defaults:
             self.content_defaults = DEFAULT_CONTENT_DEFAULTS
-
-        record_channel_stats(self, original_channel)
-
-        # Check if original thumbnail is no longer referenced
-        if original_channel and original_channel.thumbnail and 'static' not in original_channel.thumbnail:
-            filename, ext = os.path.splitext(original_channel.thumbnail)
-            delete_empty_file_reference(filename, ext[1:])
 
         if not self.main_tree:
             self.main_tree = ContentNode.objects.create(
@@ -713,13 +710,11 @@ class Channel(models.Model):
                 node_id=self.id,
                 original_channel_id=self.id,
                 source_channel_id=self.id,
+                changed=True,
             )
             # Ensure that locust or unit tests raise if there are any concurrency issues with tree ids.
             if settings.DEBUG:
                 assert ContentNode.objects.filter(parent=None, tree_id=self.main_tree.tree_id).count() == 1
-        elif self.main_tree.title != self.name:
-            self.main_tree.title = self.name
-            self.main_tree.save()
 
         if not self.trash_tree:
             self.trash_tree = ContentNode.objects.create(
@@ -728,17 +723,27 @@ class Channel(models.Model):
                 content_id=self.id,
                 node_id=self.id,
             )
-        elif self.trash_tree.title != self.name:
-            self.trash_tree.title = self.name
-            self.trash_tree.save()
 
-        if original_channel and not self.main_tree.changed:
+        # if this change affects the public channel list, clear the channel cache
+        if self.public:
+            delete_public_channel_cache_keys()
+
+    def on_update(self):
+        record_channel_stats(self, self._original_fields)
+        # Check if original thumbnail is no longer referenced
+        if self.thumbnail != self._original_fields["thumbnail"] and self._original_fields["thumbnail"] and 'static' not in self._original_fields["thumbnail"]:
+            filename, ext = os.path.splitext(self._original_fields["thumbnail"])
+            delete_empty_file_reference(filename, ext[1:])
+
+        fields_to_check = ['description', 'language_id', 'thumbnail', 'name', 'thumbnail_encoding', 'deleted']
+        changed = any([f for f in fields_to_check if getattr(self, f) != self._original_fields[f]])
+
+        if changed:
             # Changing channel metadata should also mark main_tree as changed
-            fields_to_check = ['description', 'language_id', 'thumbnail', 'name', 'thumbnail_encoding', 'deleted']
-            self.main_tree.changed = any([f for f in fields_to_check if getattr(self, f) != getattr(original_channel, f)])
+            self.main_tree.changed = True
 
             # Delete db if channel has been deleted and mark as unpublished
-            if not original_channel.deleted and self.deleted:
+            if not self._original_fields["deleted"] and self.deleted:
                 self.pending_editors.all().delete()
                 export_db_storage_path = os.path.join(settings.DB_ROOT, "{channel_id}.sqlite3".format(channel_id=self.id))
                 if default_storage.exists(export_db_storage_path):
@@ -746,11 +751,17 @@ class Channel(models.Model):
                     self.main_tree.published = False
             self.main_tree.save()
 
-        super(Channel, self).save(*args, **kwargs)
-
         # if this change affects the public channel list, clear the channel cache
-        if self.public or self._orig_public != self.public:
+        if self.public or self._original_fields["public"] != self.public:
             delete_public_channel_cache_keys()
+
+    def save(self, *args, **kwargs):
+        if self._state.adding:
+            self.on_create()
+        else:
+            self.on_update()
+
+        super(Channel, self).save(*args, **kwargs)
 
     def get_thumbnail(self):
         return get_channel_thumbnail(self)
