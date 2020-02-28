@@ -12,6 +12,7 @@ export default function theme() {
     greenSuccess: '#4db6ac',
     topic: colors.grey.base,
     video: '#283593',
+    image: '#283593', // IDK what this is supposed to be
     audio: '#f06292',
     document: '#ff3d00',
     exercise: '#4db6ac',

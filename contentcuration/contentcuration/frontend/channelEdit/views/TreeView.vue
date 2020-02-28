@@ -21,6 +21,15 @@
       </VFlex>
     </VLayout>
     <router-view />
+    <ImportContentProgressModal
+      v-if="showImportModal"
+      :watchTaskId="$route.query.watchTask"
+      @cancel="handleProgressCancel"
+    />
+
+    <RouterLink :to="importFromChannelsRoute">
+      Import from channels
+    </RouterLink>
   </div>
 
 </template>
@@ -32,12 +41,14 @@
   import { RouterNames } from '../constants';
   import StudioTree from './StudioTree';
   import NodePanel from './NodePanel';
+  import ImportContentProgressModal from './ImportFromChannels/ImportContentProgressModal';
 
   export default {
     name: 'TreeView',
     components: {
       NodePanel,
       StudioTree,
+      ImportContentProgressModal,
     },
     props: {
       nodeId: {
@@ -45,8 +56,26 @@
         required: true,
       },
     },
+    data() {
+      return {
+        showImportModal: false,
+      };
+    },
     computed: {
       ...mapGetters('currentChannel', ['canEdit', 'rootId']),
+      importFromChannelsRoute() {
+        return {
+          name: 'IMPORT_FROM_CHANNELS_BROWSE',
+          params: {
+            destNodeId: this.$route.params.nodeId,
+          },
+        };
+      },
+    },
+    mounted() {
+      if (this.$route.query.watchTask) {
+        this.showImportModal = true;
+      }
     },
     methods: {
       ...mapActions('contentNode', ['createContentNode']),
@@ -57,6 +86,14 @@
             params: { detailNodeId: newId },
           });
         });
+      },
+      handleProgressCancel() {
+        this.showImportModal = false;
+        this.$router.replace({
+          query: {},
+        });
+        // FIXME refreshing page doesn't reload the latest resources
+        this.$router.go(0);
       },
     },
     $trs: {
