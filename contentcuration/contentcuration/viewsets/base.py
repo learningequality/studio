@@ -59,6 +59,8 @@ class BulkModelSerializer(ModelSerializer):
             else:
                 setattr(instance, attr, value)
 
+        if hasattr(instance, "on_update") and callable(instance.on_update):
+            instance.on_update()
         return instance, m2m_fields
 
     def post_save_update(self, instance, m2m_fields):
@@ -87,6 +89,8 @@ class BulkModelSerializer(ModelSerializer):
 
         instance = ModelClass(**validated_data)
 
+        if hasattr(instance, "on_create") and callable(instance.on_create):
+            instance.on_create()
         return instance, many_to_many
 
     def post_save_create(self, instance, many_to_many):
