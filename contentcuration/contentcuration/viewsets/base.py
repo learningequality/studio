@@ -52,16 +52,17 @@ class BulkModelSerializer(ModelSerializer):
         # Note that unlike `.create()` we don't need to treat many-to-many
         # relationships as being a special case. During updates we already
         # have an instance pk for the relationships to be associated with.
-        m2m_fields = []
+        self.m2m_fields = []
         for attr, value in validated_data.items():
             if attr in info.relations and info.relations[attr].to_many:
-                m2m_fields.append((attr, value))
+                self.m2m_fields.append((attr, value))
             else:
                 setattr(instance, attr, value)
 
         if hasattr(instance, "on_update") and callable(instance.on_update):
             instance.on_update()
-        return instance, m2m_fields
+
+        return instance
 
     def post_save_update(self, instance, m2m_fields):
         # Note that many-to-many fields are set after updating instance.
@@ -82,16 +83,17 @@ class BulkModelSerializer(ModelSerializer):
         # They are not valid arguments to the default `.create()` method,
         # as they require that the instance has already been saved.
         info = model_meta.get_field_info(ModelClass)
-        many_to_many = {}
+        self.many_to_many = {}
         for field_name, relation_info in info.relations.items():
             if relation_info.to_many and (field_name in validated_data):
-                many_to_many[field_name] = validated_data.pop(field_name)
+                self.many_to_many[field_name] = validated_data.pop(field_name)
 
         instance = ModelClass(**validated_data)
 
         if hasattr(instance, "on_create") and callable(instance.on_create):
             instance.on_create()
-        return instance, many_to_many
+
+        return instance
 
     def post_save_create(self, instance, many_to_many):
         # Save many-to-many relationships after the instance is created.
@@ -195,9 +197,8 @@ class BulkListSerializer(ListSerializer):
             self.child.changes = []
             # use model serializer to actually update the model
             # in case that method is overwritten
-            instance, m2m_fields_by_id[obj_id] = self.child.update(
-                obj, obj_validated_data
-            )
+            instance = self.child.update(obj, obj_validated_data)
+            m2m_fields_by_id[obj_id] = self.child.m2m_fields
             updated_objects.append(instance)
             # Collect any registered changes from this run of the loop
             self.changes.extend(self.child.changes)
@@ -218,9 +219,9 @@ class BulkListSerializer(ListSerializer):
         for model_data in validated_data:
             # Reset the child serializer changes attribute
             self.child.changes = []
-            object_to_create, many_to_many = self.child.create(model_data)
+            object_to_create = self.child.create(model_data)
             objects_to_create.append(object_to_create)
-            many_to_many_tuples.append(many_to_many)
+            many_to_many_tuples.append(self.child.many_to_many)
             # Collect any registered changes from this run of the loop
             self.changes.extend(self.child.changes)
         try:
