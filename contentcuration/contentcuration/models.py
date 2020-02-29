@@ -664,9 +664,19 @@ class Channel(models.Model):
         blank=True,
     )
 
-    def __init__(self, *args, **kwargs):
-        super(Channel, self).__init__(*args, **kwargs)
-        self._orig_public = self.public
+    def _as_dict(self):
+        opts = self._meta
+        data = {}
+        for f in opts.concrete_fields:
+            data[f.name] = f.value_from_object(self)
+            if f.is_relation:
+                # For relations, also set the DB column so that we can reference
+                # the foreign key by _id
+                data[f.column] = data[f.name]
+        return data
+
+    def _set_original_fields(self):
+        self._original_fields = self._as_dict()
 
     @classmethod
     def get_all_channels(cls):
@@ -694,7 +704,7 @@ class Channel(models.Model):
     def from_db(cls, db, field_names, values):
         instance = super(Channel, cls).from_db(db, field_names, values)
         # customization to store the original field values on the instance
-        instance._original_fields = dict(zip(field_names, values))
+        instance._set_original_fields()
         return instance
 
     def on_create(self):
@@ -762,6 +772,8 @@ class Channel(models.Model):
             self.on_update()
 
         super(Channel, self).save(*args, **kwargs)
+        # Update the _original_fields after save
+        self._set_original_fields()
 
     def get_thumbnail(self):
         return get_channel_thumbnail(self)
