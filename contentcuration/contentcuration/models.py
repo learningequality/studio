@@ -31,6 +31,7 @@ from django.core.mail import send_mail
 from django.db import connection
 from django.db import IntegrityError
 from django.db import models
+from django.db import transaction
 from django.db.models import Count
 from django.db.models import Max
 from django.db.models import Q
@@ -1252,58 +1253,34 @@ class ContentNode(MPTTModel, models.Model):
         cache.set("details_{}".format(self.node_id), json.dumps(data), None)
         return data
 
-    def save(self, *args, **kwargs):  # noqa: C901
+    def move_to(self, target, position="first-child"):
+        original_parent_id = self.parent_id
+        tree_changed = self.tree_id != target.tree_id
+        with transaction.atomic():
+            # Lock only MPTT columns for updates on this tree and the target tree
+            # until the end of this transaction
+            ContentNode.objects.select_for_update().order_by().filter(
+                Q(tree_id=self.tree_id) | Q(tree_id=target.tree_id)
+            ).values("tree_id", "lft", "rght")
+            self.changed = True
+            super(ContentNode, self).move_to(target, position)
+        new_parent_id = (
+            ContentNode.objects.all()
+            .values_list("parent_id", flat=True)
+            .get(id=self.id)
+        )
+        if original_parent_id != new_parent_id:
+            ContentNode.objects.filter(id=original_parent_id).update(
+                changed=True
+            )
+        if tree_changed:
+            PrerequisiteContentRelationship.objects.filter(Q(prerequisite_id=self.id) | Q(target_node_id=self.id)).delete()
 
-        channel_id = None
-        if kwargs.get('request'):
-            request = kwargs.pop('request')
-            channel = self.get_channel()
-            request.user.can_edit(channel and channel.pk)
-            if channel:
-                channel_id = channel.pk
+    def save(self, *args, **kwargs):
 
         self.changed = self.changed or len(self.get_changed_fields()) > 0
 
-        # Detect if node has been moved to another tree (if the original parent has not already been marked as changed, mark as changed)
-        # Necessary if nodes get deleted/moved to clipboard- user needs to be able to publish "changed" nodes
-        if self.pk and ContentNode.objects.filter(pk=self.pk, parent__changed=False).exclude(parent_id=self.parent_id).exists():
-            original = ContentNode.objects.get(pk=self.pk)
-            original.parent.changed = True
-            original.parent.save()
-
-        if self.original_node is None:
-            self.original_node = self
-        if self.cloned_source is None:
-            self.cloned_source = self
-
-        # Getting the channel is an expensive call, so warn about it so that we can reduce the number of cases in which
-        # we need to do this.
-        if not channel_id and (not self.original_channel_id or not self.source_channel_id):
-            warnings.warn("Determining node's channel is an expensive operation. Please set original_channel_id and "
-                          "source_channel_id to the parent's values when creating child nodes.", stacklevel=2)
-
-            channel = (self.parent and self.parent.get_channel()) or self.get_channel()
-            if channel:
-                channel_id = channel.pk
-            if self.original_channel_id is None:
-                self.original_channel_id = channel_id
-            if self.source_channel_id is None:
-                self.source_channel_id = channel_id
-
-        if self.original_source_node_id is None:
-            self.original_source_node_id = self.node_id
-        if self.source_node_id is None:
-            self.source_node_id = self.node_id
-
         super(ContentNode, self).save(*args, **kwargs)
-
-        try:
-            # During saving for fixtures, this fails to find the root node
-            root = self.get_root()
-            if self.is_prerequisite_of.exists() and (root.channel_trash.exists() or root.user_clipboard.exists()):
-                PrerequisiteContentRelationship.objects.filter(Q(prerequisite_id=self.id) | Q(target_node_id=self.id)).delete()
-        except (ContentNode.DoesNotExist, MultipleObjectsReturned) as e:
-            logging.warn(str(e))
 
     class Meta:
         verbose_name = _("Topic")
