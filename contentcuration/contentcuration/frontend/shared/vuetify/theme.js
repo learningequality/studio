@@ -8,6 +8,8 @@ export default function theme() {
     primaryBackground: colors.purple.lighten5,
     greyBackground: colors.grey.lighten3,
     greyBorder: colors.grey.lighten1,
+    grey: colors.grey.darken1,
+    darkGrey: colors.grey.darken2,
     greenSuccess: '#4db6ac',
     topic: colors.grey.base,
     video: '#283593',
@@ -16,7 +18,5 @@ export default function theme() {
     exercise: '#4db6ac',
     html5: '#ff8f00',
     slideshow: '#4ece90',
-    grey: colors.grey.darken1,
-    darkGrey: colors.grey.darken3,
   };
 }

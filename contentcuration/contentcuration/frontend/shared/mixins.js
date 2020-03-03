@@ -49,6 +49,8 @@ const constantStrings = createTranslator('ConstantStrings', {
   h5p: 'H5P App',
   html5: 'HTML5 App',
   slideshow: 'Slideshow',
+  coach: 'Coaches',
+  learner: 'Anyone',
   'CC BY': 'CC BY',
   'CC BY-SA': 'CC BY-SA',
   'CC BY-ND': 'CC BY-ND',

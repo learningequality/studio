@@ -1,7 +1,7 @@
 <template>
 
   <div>
-    <LoadingText v-if="loading" />
+    <LoadingText v-if="loading" absolute />
     <div v-else-if="hasDetails">
       <DetailsRow
         :label="$tr('creationHeading')"
@@ -37,10 +37,10 @@
       </DetailsRow>
       <DetailsRow :label="$tr('containsHeading')">
         <template v-slot>
-          <VChip v-if="details.includes.coach_content" color="grey lighten-2">
+          <VChip v-if="details.includes.coach_content" color="grey lighten-2 tag">
             {{ $tr('coachHeading') }}
           </VChip>
-          <VChip v-if="details.includes.exercises" color="grey lighten-2">
+          <VChip v-if="details.includes.exercises" color="grey lighten-2 tag">
             {{ $tr('assessmentsIncludedText') }}
           </VChip>
         </template>
@@ -59,7 +59,7 @@
             v-for="tag in sortedTags"
             v-else
             :key="tag.tag_name"
-            color="grey lighten-2"
+            color="grey lighten-2 tag"
           >
             {{ tag.tag_name }}
           </VChip>
@@ -125,7 +125,7 @@
         <template v-slot>
           <VTooltip v-for="license in details.licenses" :key="license" top>
             <template v-slot:activator="{ on }">
-              <VChip color="grey lighten-2" v-on="on">
+              <VChip color="grey lighten-2 tag" v-on="on">
                 {{ translateConstant(license) }}
               </VChip>
             </template>
@@ -189,7 +189,7 @@
 <script>
 
   import sortBy from 'lodash/sortBy';
-  import { SCALE_TEXT, SCALE, CHANNEL_SIZE_DIVISOR } from '../constants';
+  import { SCALE_TEXT, SCALE, CHANNEL_SIZE_DIVISOR } from './constants';
   import DetailsRow from './DetailsRow';
   import { fileSizeMixin, constantsTranslationMixin } from 'shared/mixins';
   import LoadingText from 'shared/views/LoadingText';
@@ -323,7 +323,7 @@
     font-weight: bold;
   }
 
-  .v-chip {
+  .tag {
     padding: 0 8px;
     font-weight: bold;
     border-radius: 10px;
@@ -335,9 +335,6 @@
       border-bottom: 0 !important;
       td {
         font-size: 12pt;
-        .text {
-          margin-left: 20px;
-        }
       }
     }
   }

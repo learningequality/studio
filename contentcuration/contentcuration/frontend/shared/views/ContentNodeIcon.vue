@@ -7,11 +7,13 @@
       :color="kind"
       :textColor="fontColor"
       small
+      class="ma-0 pa-0"
+      :class="{iconOnly: !includeText}"
     >
       <Icon small :color="fontColor" v-bind="$attrs">
         {{ icon }}
       </Icon>
-      <span v-if="includeText">{{ text }}</span>
+      <span v-if="includeText" class="ml-2">{{ text }}</span>
     </VChip>
     <span v-else>
       <Icon :color="fontColor" v-bind="$attrs">
@@ -107,17 +109,11 @@
 
 </script>
 
-
 <style lang="less" scoped>
 
-  .v-chip {
-    margin: 0;
-    margin-right: 10px;
+  .iconOnly {
     /deep/ .v-chip__content {
-      padding: 0 10px;
-    }
-    span {
-      padding-left: 5px;
+      padding: 0 5px;
     }
   }
 
