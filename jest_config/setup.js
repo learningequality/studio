@@ -2,6 +2,7 @@ import Vue from 'vue';
 import Vuetify from 'vuetify';
 import VueRouter from 'vue-router';
 import Vuex from 'vuex';
+import 'shared/i18n/setup';
 // Do this to enable async/await in tests
 import 'babel-polyfill';
 // Polyfill indexeddb
@@ -14,6 +15,9 @@ Vue.use(Vuex);
 Vue.use(Vuetify, {
   icons: icons(),
 });
+
+Vue.config.silent = true;
+Vue.config.productionTip = false;
 
 const csrf = global.document.createElement('input');
 csrf.name = 'csrfmiddlewaretoken';
