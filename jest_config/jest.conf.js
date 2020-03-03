@@ -25,6 +25,10 @@ module.exports = {
       __dirname,
       './fileMock.js',
     ),
+    'broadcast-channel$': path.resolve(
+      __dirname,
+      './broadcastChannelMock.js',
+    ),
   },
   testURL: 'http://studio.time',
   transform: {
