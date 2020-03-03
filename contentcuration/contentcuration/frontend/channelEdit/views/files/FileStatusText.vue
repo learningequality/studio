@@ -1,16 +1,17 @@
 <template>
 
-  <span v-if="uploading" class="grey--text">
-    {{ message }}
-  </span>
-  <span v-else-if="invalidFile" class="red--text">
+  <span v-if="invalidFile" class="red--text" data-test="error">
     {{ message }}
     <ActionLink
       v-if="showSelectFile"
+      data-test="upload"
       :text="$tr('selectFile')"
       class="ml-2"
       @click="$emit('open')"
     />
+  </span>
+  <span v-else-if="uploading" class="grey--text" data-test="progress">
+    {{ message }}
   </span>
 
 </template>
@@ -42,8 +43,11 @@
     },
     computed: {
       ...mapGetters('file', ['getFiles', 'getUploadsInProgress']),
+      files() {
+        return this.getFiles(this.fileIds);
+      },
       invalidFile() {
-        return this.getFiles(this.fileIds).find(f => f.error);
+        return this.files.find(f => f.error);
       },
       uploading() {
         return this.getUploadsInProgress(this.fileIds).length;

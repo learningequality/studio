@@ -7,6 +7,7 @@
         flat
         class="ma-0 mr-1"
         color="darkGrey"
+        data-test="button"
         v-on="on"
         @click="$emit('click')"
         @keydown.enter="$emit('mousedown')"

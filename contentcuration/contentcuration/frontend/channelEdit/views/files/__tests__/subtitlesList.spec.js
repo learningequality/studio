@@ -1,11 +1,11 @@
 import { mount } from '@vue/test-utils';
-import SubtitlesList from '../views/SubtitlesList.vue';
+import SubtitlesList from '../supplementaryLists/SubtitlesList.vue';
 
 function makeWrapper() {
   return mount(SubtitlesList, {
     attachToDocument: true,
     propsData: {
-      nodeIndex: 1,
+      nodeId: 'test',
     },
     stubs: {
       SupplementaryList: true,

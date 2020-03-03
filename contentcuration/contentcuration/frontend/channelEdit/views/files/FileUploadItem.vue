@@ -19,17 +19,20 @@
         <VListTileContent>
           <VListTileSubTitle>{{ preset.id | translate }}</VListTileSubTitle>
           <VListTileTitle>
-            <span v-if="file" class="notranslate" @click.stop="openFileDialog">
+            <span v-if="file && viewOnly" class="notranslate">
+              {{ file.original_filename }}
+            </span>
+            <span v-else-if="file" class="notranslate" @click.stop="openFileDialog">
               {{ file.original_filename }}
             </span>
             <ActionLink
-              v-else
+              v-else-if="!viewOnly"
               data-test="upload-link"
               :text="$tr('uploadButton')"
               @click="openFileDialog"
             />
           </VListTileTitle>
-          <VListTileSubTitle v-if="file && (file.error || uploading)">
+          <VListTileSubTitle v-if="file && (file.error || uploading)" data-test="status">
             <FileStatusText :fileIds="[file.id]" :readonly="viewOnly" @open="openFileDialog" />
           </VListTileSubTitle>
           <VListTileSubTitle v-else-if="file">
@@ -40,7 +43,7 @@
         <VSpacer />
         <VListTileAction v-if="file && !viewOnly">
           <VBtn
-            v-if="allowFileRemove"
+            v-if="(file.error && !viewOnly) || allowFileRemove"
             icon
             class="remove-icon"
             data-test="remove"

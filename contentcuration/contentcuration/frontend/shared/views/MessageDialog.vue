@@ -8,11 +8,11 @@
         </h1>
       </VCardTitle>
 
-      <VCardText class="pt-3 pb-4">
+      <VCardText class="pt-3 pb-4" data-test="text">
         <p>{{ text }}</p>
         <slot></slot>
       </VCardText>
-      <VCardActions>
+      <VCardActions data-test="buttons">
         <VSpacer />
         <slot name="buttons" :close="close"></slot>
       </VCardActions>
@@ -36,7 +36,7 @@
       },
       text: {
         type: String,
-        required: true,
+        required: false,
       },
     },
     computed: {

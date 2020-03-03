@@ -1,15 +1,11 @@
-import Vue from 'vue';
-import Vuex, { Store } from 'vuex';
 import { mount } from '@vue/test-utils';
-import ContentRenderer from '../views/ContentRenderer.vue';
-import fileUploadsModule from 'edit_channel/vuexModules/fileUpload';
+import ContentRenderer from '../ContentRenderer.vue';
+import store from '../../../store';
 
-Vue.use(Vuex);
-const store = new Store({
-  modules: {
-    fileUploads: fileUploadsModule,
-  },
-});
+const testFile = {
+  id: 'test',
+  url: '',
+};
 
 function makeWrapper(props = {}) {
   return mount(ContentRenderer, {
@@ -26,8 +22,13 @@ function makeWrapper(props = {}) {
       },
     },
     computed: {
-      uploading() {
-        return this.file.progress !== 100;
+      getFile() {
+        return () => {
+          return {
+            ...testFile,
+            ...props,
+          };
+        };
       },
     },
   });
@@ -39,7 +40,11 @@ describe('contentRenderer', () => {
     expect(wrapper.find('[data-test="progress"]').exists()).toBe(true);
   });
   it('should display preview not supported if file is not supported', () => {
-    let wrapper = makeWrapper({ file_format: 'wut', progress: 100 });
+    let wrapper = makeWrapper({ file_format: 'wut' });
     expect(wrapper.find('[data-test="not-supported"]').exists()).toBe(true);
+  });
+  it('should display an error if file failed', () => {
+    let wrapper = makeWrapper({ error: 'nope' });
+    expect(wrapper.find('[data-test="progress"]').exists()).toBe(true);
   });
 });

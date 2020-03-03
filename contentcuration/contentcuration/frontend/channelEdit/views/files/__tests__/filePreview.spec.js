@@ -1,25 +1,31 @@
 import { mount } from '@vue/test-utils';
-import FilePreview from '../views/FilePreview.vue';
+import FilePreview from '../FilePreview.vue';
+import store from '../../../store';
 
 function makeWrapper(props = {}) {
   return mount(FilePreview, {
+    store,
     attachToDocument: true,
-    propsData: {
-      file: {
-        id: 'test',
-        preset: {},
-        checksum: 'checksum',
-        file_on_disk: 'path',
-        file_format: 'mp3',
-        ...props,
-      },
-      node: {
-        files: [],
-        title: 'Testing Node',
-      },
-    },
     stubs: {
       ContentRenderer: true,
+    },
+    computed: {
+      file() {
+        return {
+          id: 'test',
+          preset: {},
+          checksum: 'checksum',
+          url: 'path',
+          file_format: 'mp4',
+          ...props,
+        };
+      },
+      node() {
+        return {
+          files: ['test'],
+          title: 'Testing Node',
+        };
+      },
     },
   });
 }
@@ -44,7 +50,7 @@ describe('filePreview', () => {
   });
   it('clicking close fullscreen button should set fullscreen to false', () => {
     let wrapper = makeWrapper({ file_format: 'mp4' });
-    wrapper.find('[data-test="openfullscreen"]').trigger('click');
+    wrapper.setData({ fullscreen: true });
     wrapper.find('[data-test="closefullscreen"]').trigger('click');
     expect(wrapper.vm.fullscreen).toBe(false);
   });

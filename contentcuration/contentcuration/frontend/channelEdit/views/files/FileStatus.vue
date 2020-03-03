@@ -12,7 +12,12 @@
       </template>
       <span>{{ statusMessage(fileIDs) }}</span>
     </VTooltip>
-    <Icon v-else-if="progress >= 100" :large="large" color="greenSuccess">
+    <Icon
+      v-else-if="progress >= 100"
+      :large="large"
+      color="greenSuccess"
+      data-test="done"
+    >
       check_circle
     </Icon>
     <VProgressCircular
@@ -22,6 +27,7 @@
       :value="progress"
       color="greenSuccess"
       rotate="270"
+      data-test="progress"
     />
   </div>
 
@@ -49,15 +55,18 @@
     },
     computed: {
       ...mapGetters('file', ['getProgress', 'getFiles']),
+      files() {
+        return this.getFiles(this.fileIDs);
+      },
       uploads() {
-        return this.getFiles(this.fileIDs).filter(f => f.progress !== undefined);
+        return this.files.filter(f => f.progress !== undefined);
       },
       progress() {
         let progress = this.getProgress(this.fileIDs);
         return (progress.uploaded / (progress.total || 1)) * 100;
       },
       hasErrors() {
-        return this.uploads.some(u => u.error);
+        return this.files.some(u => u.error);
       },
     },
   };

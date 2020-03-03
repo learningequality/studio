@@ -1,21 +1,19 @@
 import { mount } from '@vue/test-utils';
-import FileStorage from '../views/FileStorage.vue';
-import State from 'edit_channel/state';
+import FileStorage from '../FileStorage';
 
 function makeWrapper(user) {
-  State.current_user = {
-    disk_space: 100,
-    available_space: 50,
-    ...user,
-    get: function(field) {
-      return this[field];
-    },
-  };
   return mount(FileStorage, {
     attachToDocument: true,
     computed: {
       storageRequestUrl() {
         return '';
+      },
+      user() {
+        return {
+          disk_space: 100,
+          available_space: 50,
+          ...user,
+        };
       },
     },
   });

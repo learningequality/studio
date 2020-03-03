@@ -9,10 +9,6 @@ const UPLOAD_DONE_DELAY = 1500;
 
 export function loadFiles(context, params = {}) {
   return ContentFile.where(params).then(files => {
-    files.forEach(file => {
-      file.preset = Constants.FormatPresets.find(p => p.id === file.preset);
-    });
-
     context.commit('ADD_FILES', files);
     return files;
   });

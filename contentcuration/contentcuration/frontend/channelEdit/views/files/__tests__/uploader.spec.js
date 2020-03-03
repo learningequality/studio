@@ -1,16 +1,6 @@
-import Vue from 'vue';
-import Vuex, { Store } from 'vuex';
-
 import { mount } from '@vue/test-utils';
-import Uploader from '../Uploader.vue';
-import fileUploadsModule from 'edit_channel/vuexModules/fileUpload';
-
-Vue.use(Vuex);
-const store = new Store({
-  modules: {
-    fileUploads: fileUploadsModule,
-  },
-});
+import Uploader from '../Uploader';
+import store from '../../../store';
 
 function makeWrapper(propsData = {}) {
   return mount(Uploader, {
@@ -84,13 +74,13 @@ describe('uploader', () => {
       expect(handleFiles).toHaveBeenCalledWith('hello');
     });
     it('setError should set the file error in the vuex store', () => {
-      let setFileError = jest.fn();
-      wrapper.setMethods({ setFileError });
+      let updateFile = jest.fn();
+      wrapper.setMethods({ updateFile });
 
-      wrapper.vm.setError('test', 'SOME_ERROR');
-      expect(setFileError).toHaveBeenCalled();
-      expect(setFileError.mock.calls[0][0].id).toBe('test');
-      expect(setFileError.mock.calls[0][0].error).toBe('SOME_ERROR');
+      wrapper.vm.setError('test', 'UPLOAD_FAILED');
+      expect(updateFile).toHaveBeenCalled();
+      expect(updateFile.mock.calls[0][0].id).toBe('test');
+      expect(updateFile.mock.calls[0][0].error.type).toBe('UPLOAD_FAILED');
     });
     describe('validateFiles', () => {
       it('should handle unsupported files', () => {
@@ -148,24 +138,16 @@ describe('uploader', () => {
           true
         );
       });
-      it('should call addFile with the valid files and emit an uploading event', () => {
-        let addFile = jest.fn();
-        let uploadFileMock = jest.fn();
-        let uploadFile = () => {
-          return new Promise(resolve => {
-            uploadFileMock();
-            resolve();
-          });
-        };
-        wrapper.setMethods({ addFile, uploadFile });
+      it('should call createFile with the valid files and emit an uploading event', () => {
+        let createFile = jest.fn();
+        wrapper.setMethods({ createFile });
 
         let testFiles = [
           { id: 'invalid file', name: 'file.wut', size: 10 },
           { id: 'valid file', name: 'file.mp4', size: 10 },
         ];
         wrapper.vm.handleFiles(testFiles);
-        expect(addFile).toHaveBeenCalled();
-        expect(uploadFileMock).toHaveBeenCalled();
+        expect(createFile).toHaveBeenCalled();
       });
     });
   });

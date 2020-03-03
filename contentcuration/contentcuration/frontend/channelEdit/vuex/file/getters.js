@@ -70,21 +70,3 @@ export function getTotalSize(state) {
     );
   };
 }
-
-// export function getNodeAssessmentItemErrors(state, getters) {
-//   return function(contentNodeId) {
-//     return getters.getNodeAssessmentItems(contentNodeId).map(validateAssessmentItem);
-//   };
-// }
-
-// export function getInvalidNodeAssessmentItemsCount(state, getters) {
-//   return function(contentNodeId) {
-//     return getters.getNodeAssessmentItemErrors(contentNodeId).filter(arr => arr.length).length;
-//   };
-// }
-
-// export function areNodeAssessmentItemsValid(state, getters) {
-//   return function(contentNodeId) {
-//     return getters.getInvalidNodeAssessmentItemsCount(contentNodeId) === 0;
-//   };
-// }

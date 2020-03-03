@@ -3,7 +3,7 @@ import union from 'lodash/union';
 import { sanitizeFiles } from '../file/utils';
 import { NOVALUE } from 'shared/constants';
 import { MOVE_POSITIONS } from 'shared/data/constants';
-import { ContentNode, Tree } from 'shared/data/resources';
+import { ContentNode, Tree, File } from 'shared/data/resources';
 
 export function loadContentNodes(context, params = {}) {
   return ContentNode.where(params).then(contentNodes => {
@@ -182,7 +182,11 @@ export function addFiles(context, { id, files }) {
         f.preset.id === file.preset.id &&
         (!file.preset.multi_language || file.language.id === f.language.id)
     );
-    return (match || file).id;
+    if (match) {
+      File.delete(file.id);
+      return match.id;
+    }
+    return file.id;
   });
 
   // Add new files
@@ -204,6 +208,8 @@ export function removeFiles(context, { id, files }) {
   let newFiles = currentFiles.filter(fileID => {
     return !files.find(f => f.id === fileID);
   });
+  files.forEach(file => File.delete(file.id));
+
   context.commit('SET_FILES', { id, files: newFiles });
   return ContentNode.update(id, { files: newFiles });
 }

@@ -3,7 +3,7 @@ import Constants from 'edit_channel/constants';
 import contentNode from 'frontend/channelEdit/vuex/contentNode';
 import storeFactory from 'shared/vuex/baseStore';
 
-const fileUploadsModule = require('edit_channel/vuexModules/fileUpload');
+import fileUploadsModule from 'frontend/channelEdit/vuex/file';
 
 export const editableFields = [
   'language',
@@ -68,7 +68,7 @@ export const mockFunctions = {
 
 export const localStore = storeFactory({
   modules: {
-    fileUploads: fileUploadsModule,
+    file: fileUploadsModule,
     contentNode,
   },
 });

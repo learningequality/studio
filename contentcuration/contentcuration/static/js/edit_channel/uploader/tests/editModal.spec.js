@@ -1,9 +1,9 @@
 import { mount } from '@vue/test-utils';
 import { modes } from '../constants';
-import EditModal from './../views/EditModal.vue';
-import EditList from './../views/EditList.vue';
+import EditModal from './../views/EditModal';
+import EditList from './../views/EditList';
 import { localStore, mockFunctions, generateNode, DEFAULT_TOPIC, DEFAULT_TOPIC2 } from './data.js';
-import Uploader from 'edit_channel/sharedComponents/Uploader.vue';
+import Uploader from 'frontend/channelEdit/views/files/Uploader';
 import State from 'edit_channel/state';
 
 const testNodes = [DEFAULT_TOPIC, DEFAULT_TOPIC2];

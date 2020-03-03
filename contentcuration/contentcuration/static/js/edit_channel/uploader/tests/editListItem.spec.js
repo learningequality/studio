@@ -1,8 +1,6 @@
 import { mount } from '@vue/test-utils';
-import { modes } from '../constants';
-import EditListItem from './../views/EditListItem.vue';
+import EditListItem from './../views/EditListItem';
 import { localStore, mockFunctions } from './data.js';
-import ContentNodeIcon from 'shared/views/ContentNodeIcon.vue';
 
 const ContentNode = {
   id: 'node-1',
@@ -12,15 +10,17 @@ const ContentNode = {
 };
 
 function makeWrapper(props = {}) {
-  let newNode = { title: 'New Node Test', kind: 'topic' }; // No id === new node
-  localStore.commit('edit_modal/SET_NODES', [ContentNode, newNode]);
-  localStore.commit('edit_modal/SET_NODE', 0);
   return mount(EditListItem, {
     store: localStore,
     attachToDocument: true,
     propsData: {
-      index: 0,
+      nodeId: 'node-1',
       ...props,
+    },
+    computed: {
+      getContentNode() {
+        return () => ContentNode;
+      },
     },
   });
 }
@@ -28,19 +28,9 @@ function makeWrapper(props = {}) {
 describe.skip('editListItem', () => {
   let wrapper;
   beforeEach(() => {
-    localStore.commit('edit_modal/SET_MODE', modes.EDIT);
     wrapper = makeWrapper();
   });
   describe('on render', () => {
-    it('should display icon and title', () => {
-      expect(wrapper.text()).toContain(ContentNode.title);
-      expect(wrapper.find(ContentNodeIcon).vm.kind).toEqual(ContentNode.kind);
-    });
-    it('should show asterisk when node is changed', () => {
-      expect(wrapper.find('.changed').exists()).toBe(false);
-      localStore.commit('edit_modal/UPDATE_NODE', { title: 'New Title' });
-      expect(wrapper.vm.node.changesStaged).toBe(true);
-    });
     it('should show error icon when node is invalid', () => {
       expect(wrapper.find('.error-icon').exists()).toBe(false);
       localStore.commit('edit_modal/UPDATE_NODE', { title: null });
@@ -48,10 +38,6 @@ describe.skip('editListItem', () => {
       expect(wrapper.vm.nodeIsValid).toBe(false);
       localStore.commit('edit_modal/UPDATE_NODE', { title: 'Node 1' });
       localStore.commit('edit_modal/VALIDATE_NODE_DETAILS', { nodeIdx: 0 });
-    });
-    it('should hide error icon when in view only mode', () => {
-      localStore.commit('edit_modal/SET_MODE', modes.VIEW_ONLY);
-      expect(wrapper.vm.nodeIsValid).toBe(true);
     });
   });
   describe('selection', () => {

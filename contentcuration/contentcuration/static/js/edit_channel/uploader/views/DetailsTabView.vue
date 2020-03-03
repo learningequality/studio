@@ -203,7 +203,6 @@
           <div style="width:250px;">
             <Thumbnail
               v-model="thumbnail"
-              :kind="firstNode.kind"
               :nodeId="firstNode.id"
               :encoding="thumbnailEncoding"
               @encoded="setEncoding"

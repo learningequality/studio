@@ -25,7 +25,3 @@ export function UPDATE_FILE(state, { id, ...payload } = {}) {
     ...payload,
   };
 }
-
-// export function REMOVE_FILE(state, file) {
-//   Vue.delete(state.fileMap[file.contentnode], file.id);
-// }

@@ -43,7 +43,7 @@
 <script>
 
   import { mapGetters } from 'vuex';
-  import _ from 'underscore';
+  import uniq from 'lodash/uniq';
   import ContentRenderer from './ContentRenderer';
   import Constants from 'edit_channel/constants/index';
   import ActionLink from 'edit_channel/sharedComponents/ActionLink';
@@ -86,12 +86,11 @@
         return files.filter(f => f.preset.supplementary).map(f => f.id);
       },
       isPreviewable() {
-        let availablePreviewFormats = _.chain(Constants.FormatPresets)
-          .filter(f => f.display && !f.supplementary)
-          .pluck('allowed_formats')
-          .flatten()
-          .uniq()
-          .value();
+        let availablePreviewFormats = uniq(
+          Constants.FormatPresets.filter(f => f.display && !f.supplementary).flatMap(
+            f => f.allowed_formats
+          )
+        );
         return availablePreviewFormats.includes(this.file.file_format);
       },
       isAudio() {

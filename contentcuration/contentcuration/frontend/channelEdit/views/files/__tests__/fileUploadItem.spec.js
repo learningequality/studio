@@ -1,17 +1,7 @@
-import Vue from 'vue';
-import Vuex, { Store } from 'vuex';
-
 import { mount } from '@vue/test-utils';
-import FileUploadItem from '../views/FileUploadItem.vue';
-import Uploader from 'edit_channel/sharedComponents/Uploader.vue';
-import fileUploadsModule from 'edit_channel/vuexModules/fileUpload';
-
-Vue.use(Vuex);
-const store = new Store({
-  modules: {
-    fileUploads: fileUploadsModule,
-  },
-});
+import FileUploadItem from '../FileUploadItem';
+import Uploader from '../Uploader';
+import store from '../../../store';
 
 const testFile = { id: 'test' };
 function makeWrapper(props = {}, file = {}) {
@@ -46,45 +36,33 @@ function makeWrapper(props = {}, file = {}) {
 describe('fileUploadItem', () => {
   describe('render', () => {
     it('should show a status error if the file has an error', () => {
-      let wrapper = makeWrapper({}, { error: { type: 'test' } });
-      expect(wrapper.find('[data-test="error-upload-link"]').exists()).toBe(true);
+      let wrapper = makeWrapper({}, { error: true });
+      expect(wrapper.find('[data-test="status"]').exists()).toBe(true);
     });
     it('should show an upload button if file is null', () => {
-      let wrapper = makeWrapper({}, null);
+      let wrapper = makeWrapper({ viewOnly: false }, null);
       expect(wrapper.find('[data-test="upload-link"]').exists()).toBe(true);
-    });
-    it('should show the remove icon only if allowFileRemove and !viewOnly is false', () => {
-      let viewOnlyWrapper = makeWrapper();
-      let noRemoveWrapper = makeWrapper({ viewOnly: false });
-      let allowRemoveWrapper = makeWrapper({ viewOnly: false, allowFileRemove: true });
-      let errorWrapper = makeWrapper({ viewOnly: false }, { error: 'test' });
-      expect(viewOnlyWrapper.find('[data-test="remove"]').exists()).toBe(false);
-      expect(noRemoveWrapper.find('[data-test="remove"]').exists()).toBe(false);
-      expect(allowRemoveWrapper.find('[data-test="remove"]').exists()).toBe(true);
-      expect(errorWrapper.find('[data-test="remove"]').exists()).toBe(true);
+      expect(wrapper.find('[data-test="radio"]').exists()).toBe(false);
     });
   });
 
   describe('props', () => {
-    it('allowFileRemove should set whether file can be removed', () => {
-      let allowRemoveWrapper = makeWrapper({ allowFileRemove: true, viewOnly: false });
-      expect(allowRemoveWrapper.find('[data-test="remove"]').exists()).toBe(true);
-
-      let disallowRemoveWrapper = makeWrapper({ allowFileRemove: false, viewOnly: false });
-      expect(disallowRemoveWrapper.find('[data-test="remove"]').exists()).toBe(false);
-
-      let errorWrapper = makeWrapper(
-        { allowFileRemove: false, viewOnly: false },
-        { error: 'error' }
-      );
-      expect(errorWrapper.find('[data-test="remove"]').exists()).toBe(true);
-    });
-    it('viewOnly should set whether file can be edited', () => {
+    it('should show the remove icon only if allowFileRemove and !viewOnly is false', () => {
       let viewOnlyWrapper = makeWrapper();
-      expect(viewOnlyWrapper.find(Uploader).vm.readonly).toBe(true);
+      expect(viewOnlyWrapper.find('[data-test="remove"]').exists()).toBe(false);
 
-      let editWrapper = makeWrapper({ viewOnly: false });
-      expect(editWrapper.find(Uploader).vm.readonly).toBe(false);
+      let noRemoveWrapper = makeWrapper({ viewOnly: false });
+      expect(noRemoveWrapper.find('[data-test="remove"]').exists()).toBe(false);
+
+      let allowRemoveWrapper = makeWrapper({ viewOnly: false, allowFileRemove: true });
+      expect(allowRemoveWrapper.find('[data-test="remove"]').exists()).toBe(true);
+    });
+    it('viewOnly should set whether file can be uploaded', () => {
+      let viewOnlyWrapper = makeWrapper({}, null);
+      expect(viewOnlyWrapper.find('[data-test="upload-link"]').exists()).toBe(false);
+
+      let editWrapper = makeWrapper({ viewOnly: false }, null);
+      expect(editWrapper.find('[data-test="upload-link"]').exists()).toBe(true);
     });
   });
   describe('methods', () => {
@@ -108,7 +86,7 @@ describe('fileUploadItem', () => {
     it('clicking remove icon should emit a remove event', () => {
       wrapper.setProps({ viewOnly: false, allowFileRemove: true });
       wrapper.find('[data-test="remove"]').trigger('click');
-      expect(wrapper.emitted('remove')[0][0]).toBe('test');
+      expect(wrapper.emitted('remove')[0][0].id).toBe('test');
     });
   });
 });

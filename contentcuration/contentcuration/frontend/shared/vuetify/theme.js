@@ -7,6 +7,7 @@ export default function theme() {
     secondary: '#8DC5B6',
     primaryBackground: colors.purple.lighten5,
     greyBackground: colors.grey.lighten3,
+    greyBorder: colors.grey.lighten1,
     greenSuccess: '#4db6ac',
     topic: colors.grey.base,
     video: '#283593',

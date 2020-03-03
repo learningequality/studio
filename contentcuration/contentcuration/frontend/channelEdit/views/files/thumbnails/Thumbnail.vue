@@ -29,6 +29,7 @@
       <div v-if="loading || hasError" style="border: 2px solid transparent;">
         <VCard
           ref="thumbnail"
+          data-test="loading"
           color="grey lighten-4"
           style="padding: 28% 0;"
           flat
@@ -41,11 +42,17 @@
                   :size="60"
                   :width="8"
                   indeterminate
+                  data-test="generating"
                   color="greenSuccess"
                 />
-                <FileStatus v-else :fileIDs="[value.id]" large />
+                <FileStatus v-else :fileIDs="[value.id]" large data-test="progress" />
               </p>
-              <ActionLink v-if="!hasError" :text="$tr('cancel')" @click="cancelPendingFile" />
+              <ActionLink
+                v-if="!hasError"
+                :text="$tr('cancel')"
+                data-test="cancel-upload"
+                @click="cancelPendingFile"
+              />
             </div>
           </VLayout>
         </VCard>
@@ -54,6 +61,7 @@
       <croppa
         v-else-if="cropping"
         v-model="Cropper"
+        data-test="cropper"
         :zoom-speed="10"
         :width="cropDimensions.width"
         :height="cropDimensions.height"
@@ -68,13 +76,14 @@
         v-else
         :presetID="thumbnailPresetID"
         :readonly="readonly"
-        :borderColor="$vuetify.theme.grey.lighten2"
+        :borderColor="$vuetify.theme.greyBorder"
         @uploading="handleUploading"
       >
         <template #default="{openFileDialog}">
           <VCard
             v-if="!thumbnailSrc"
             ref="thumbnail"
+            data-test="default-image"
             color="grey lighten-4"
             style="padding: 28% 0;"
             flat
@@ -90,6 +99,7 @@
           <VImg
             v-else
             ref="thumbnail"
+            data-test="thumbnail-image"
             :aspect-ratio="16/9"
             :src="encoding && encoding.base64 || thumbnailSrc"
             :lazy-src="encoding && encoding.base64 || thumbnailSrc"
@@ -102,7 +112,7 @@
     </div>
 
     <!-- Toolbar -->
-    <VLayout v-if="!readonly" v-show="!loading" row>
+    <VLayout v-if="!readonly" v-show="!loading" row data-test="toolbar">
       <!-- Generating option -->
       <ThumbnailGenerator
         v-show="allowGeneration"
@@ -128,6 +138,7 @@
       <span v-if="cropping">
         <ThumbnailToolbarIcon
           icon="add"
+          data-test="zoomin"
           :tooltip="$tr('zoomIn')"
           @click="Cropper && Cropper.zoomIn()"
           @mousedown="cropZoomIn"
@@ -135,6 +146,7 @@
         />
         <ThumbnailToolbarIcon
           icon="remove"
+          data-test="zoomout"
           :tooltip="$tr('zoomOut')"
           @click="Cropper && Cropper.zoomOut()"
           @mousedown="cropZoomOut"
@@ -156,7 +168,7 @@
           </Uploader>
         </div>
         <ThumbnailToolbarIcon
-          v-if="!hasError"
+          v-if="!hasError && value"
           icon="crop"
           :tooltip="$tr('crop')"
           @click="startCropping"
@@ -165,13 +177,19 @@
 
       <VSpacer />
       <div v-if="!loading">
-        <span v-if="!hasError && (generated || cropping)">
-          <ActionLink class="mr-3" :text="$tr('cancel')" @click="reset" />
-          <ActionLink :text="$tr('save')" @click="save" />
+        <span v-if="!hasError && cropping">
+          <ActionLink
+            class="mr-3"
+            data-test="cancel"
+            :text="$tr('cancel')"
+            @click="cancelPendingFile"
+          />
+          <ActionLink :text="$tr('save')" data-test="save" @click="save" />
         </span>
         <ThumbnailToolbarIcon
-          v-else
+          v-else-if="value"
           icon="clear"
+          data-test="remove"
           :tooltip="$tr('remove')"
           @click="$emit('input', null)"
         />
@@ -218,10 +236,6 @@
         type: Boolean,
         default: false,
       },
-      kind: {
-        type: String,
-        required: false,
-      },
       encoding: {
         type: Object,
         default() {
@@ -236,7 +250,6 @@
     data() {
       return {
         cropping: false,
-        generated: false,
         generating: false,
         lastThumbnail: null,
         Cropper: {},
@@ -252,7 +265,7 @@
       ...mapGetters('file', ['getUploadsInProgress', 'getFiles']),
       allowGeneration() {
         // Not allowed for channels, when operations are in progress, or in cropping mode
-        return this.kind && !this.loading && (!this.cropping || this.generated);
+        return this.kind && !this.loading && !this.cropping;
       },
       thumbnailPresetID() {
         return Constants.FormatPresets.find(p => p.thumbnail && p.kind_id === (this.kind || null))
@@ -295,6 +308,9 @@
       node() {
         return this.getContentNode(this.nodeId);
       },
+      kind() {
+        return this.node && this.node.kind;
+      },
       primaryFilePath() {
         if (!this.nodeId) {
           return null;
@@ -314,16 +330,15 @@
       },
     },
     methods: {
-      handleUploading(file) {
+      handleUploading(files) {
         this.lastThumbnail = this.value;
-        this.$emit('input', file[0]);
+        this.$emit('input', files[0]);
         this.startCropping();
         this.generating = false;
       },
       startGenerating() {
         this.lastThumbnail = this.value;
         this.generating = true;
-        this.generated = true;
       },
       cancelPendingFile() {
         this.$emit('input', this.lastThumbnail);
@@ -356,7 +371,6 @@
       reset() {
         this.cropping = false;
         this.generating = false;
-        this.generated = false;
       },
       save() {
         // Calls setter method
@@ -364,6 +378,7 @@
           ...this.Cropper.getMetadata(),
           base64: this.Cropper.generateDataUrl(),
         });
+        this.lastThumbnail = this.value;
         this.reset();
       },
     },

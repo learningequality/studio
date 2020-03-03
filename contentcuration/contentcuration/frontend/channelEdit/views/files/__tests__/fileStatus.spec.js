@@ -1,24 +1,14 @@
-import Vue from 'vue';
-import Vuex, { Store } from 'vuex';
-
 import { mount } from '@vue/test-utils';
-import FileStatus from '../views/FileStatus.vue';
-import fileUploadsModule from 'edit_channel/vuexModules/fileUpload';
+import FileStatus from '../FileStatus.vue';
+import store from '../../../store';
 
-Vue.use(Vuex);
-const store = new Store({
-  modules: {
-    fileUploads: fileUploadsModule,
-  },
-});
+const files = [
+  { id: 'file-1', progress: 100 },
+  { id: 'file-2', progress: 50 },
+  { id: 'file-3', progress: undefined, error: 'error' },
+];
 
-const files = {
-  'file-1': { progress: 100 },
-  'file-2': { progress: 50 },
-  'file-3': { progress: 100, error: 'error' },
-};
-
-function makeWrapper(fileIDs) {
+function makeWrapper(fileIDs, progress) {
   return mount(FileStatus, {
     store,
     attachToDocument: true,
@@ -27,7 +17,10 @@ function makeWrapper(fileIDs) {
     },
     computed: {
       files() {
-        return files;
+        return files.filter(f => fileIDs.includes(f.id));
+      },
+      progress() {
+        return progress;
       },
     },
   });
@@ -42,11 +35,11 @@ describe('fileStatus', () => {
     expect(wrapper.vm.hasErrors).toBe(false);
   });
   it('should indicate if one of the files is uploading', () => {
-    let wrapper = makeWrapper(['file-1', 'file-2', 'file-3']);
-    expect(wrapper.vm.progress < 100).toBe(true);
+    let wrapper = makeWrapper(['file-1', 'file-2'], 50);
+    expect(wrapper.find('[data-test="progress"]').exists()).toBe(true);
   });
   it('should indicate if all files have finished uploading', () => {
-    let wrapper = makeWrapper(['file-1', 'file-3']);
-    expect(wrapper.vm.progress).toBe(100);
+    let wrapper = makeWrapper(['file-1', 'file-2'], 100);
+    expect(wrapper.find('[data-test="done"]').exists()).toBe(true);
   });
 });

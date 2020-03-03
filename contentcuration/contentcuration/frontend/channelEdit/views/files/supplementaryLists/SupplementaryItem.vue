@@ -9,14 +9,18 @@
     <template #default="{openFileDialog}">
       <VListTile @click="!readonly && !uploading && openFileDialog()">
         <VListTileContent>
-          <VListTileTitle v-if="readonly">
-            {{ file.original_filename }}
-          </VListTileTitle>
-          <VListTileTitle v-if="file.error">
-            <FileStatusText :fileIds="[file.id]" @open="openFileDialog" />
-          </VListTileTitle>
-          <VListTileTitle v-else>
+          <VListTileTitle>
+            <span v-if="readonly || uploading">
+              {{ file.original_filename }}
+            </span>
+            <FileStatusText
+              v-else-if="file.error"
+              data-test="error"
+              :fileIds="[file.id]"
+              @open="openFileDialog"
+            />
             <ActionLink
+              v-else
               data-test="upload-file"
               :text="file.original_filename"
               @click="openFileDialog"
@@ -26,11 +30,10 @@
             {{ $tr('languageText', {
               language: file.language.native_name, code: file.language.id}) }}
           </VListTileSubTitle>
-
         </VListTileContent>
         <VListTileContent>
           <VListTileTitle class="text-xs-right grey--text">
-            <span v-if="uploading">
+            <span v-if="uploading" data-test="uploading">
               <FileStatusText :fileIds="[file.id]" />
             </span>
             <span v-else-if="!file.error">
@@ -79,6 +82,7 @@
       },
       presetID: {
         type: String,
+        required: true,
       },
       readonly: {
         type: Boolean,

@@ -10,7 +10,6 @@ import * as asyncTaskModule from 'edit_channel/vuexModules/asyncTask';
 
 const store = storeFactory({
   modules: {
-    // topicTree: contentNodesModule,
     asyncTask: asyncTaskModule,
     template,
     assessmentItem,

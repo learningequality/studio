@@ -46,6 +46,7 @@
                   :style="{backgroundColor:
                     viewOnly && item.file && item.file.id === selected && fileCount > 1 ?
                       $vuetify.theme.greyBackground : 'transparent'}"
+                  @selected="selected = item.file.id"
                   @uploading="handleUploading"
                   @remove="handleRemoveFile"
                 />
