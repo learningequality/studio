@@ -16,24 +16,19 @@ from past.builtins import basestring
 from .base import BaseAPITestCase
 from .base import StudioTestCase
 from .testdata import base64encoding
-from .testdata import fileobj_video
 from .testdata import generated_base64encoding
-from .testdata import node
 from .testdata import srt_subtitle
 from contentcuration.api import write_raw_content_to_storage
-from contentcuration.models import AssessmentItem
 from contentcuration.models import ContentNode
 from contentcuration.models import DEFAULT_CONTENT_DEFAULTS
 from contentcuration.models import delete_empty_file_reference
 from contentcuration.models import File
 from contentcuration.models import generate_object_storage_name
-from contentcuration.serializers import FileSerializer
 from contentcuration.utils.files import create_thumbnail_from_base64
 from contentcuration.utils.files import get_thumbnail_encoding
 from contentcuration.utils.nodes import map_files_to_node
 from contentcuration.utils.publish import create_associated_thumbnail
 from contentcuration.views.files import file_create
-from contentcuration.views.files import generate_thumbnail
 from contentcuration.views.files import image_upload
 from contentcuration.views.files import multilanguage_file_upload
 from contentcuration.views.files import thumbnail_upload
@@ -117,25 +112,6 @@ class FileThumbnailTestCase(BaseAPITestCase):
         create_thumbnail_from_base64(base64encoding())
         storage_exists_mock.assert_called()
         storage_save_mock.assert_not_called()
-
-    def test_generate_thumbnail(self):
-        # Create exercise node (generated images are more predictable)
-        node = ContentNode(title="Test Node", kind_id=content_kinds.EXERCISE)
-        node.save()
-
-        # Create assessment item with image
-        assessment_item = AssessmentItem(contentnode=node)
-        assessment_item.save()
-        self.thumbnail_fobj.assessment_item = assessment_item
-        self.thumbnail_fobj.preset_id = format_presets.EXERCISE_IMAGE
-        self.thumbnail_fobj.save()
-
-        # Call generate_thumbnail endpoint
-        request = self.create_post_request(reverse_lazy('generate_thumbnail', kwargs={'contentnode_id': node.pk}))
-        response = generate_thumbnail(request, node.pk)
-        self.assertEqual(response.status_code, 200)
-        file_data = json.loads(response.content)
-        self.assertEqual(file_data['encoding'], generated_base64encoding())
 
     def test_internal_thumbnail(self):
         # Create exercise node (generated images are more predictable)
