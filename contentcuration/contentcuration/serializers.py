@@ -894,15 +894,17 @@ class AdminChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer)
     editors = UserChannelListSerializer(many=True, read_only=True)
     viewers = UserChannelListSerializer(many=True, read_only=True)
     primary_token = serializers.SerializerMethodField('get_channel_primary_token')
+    editors_count = serializers.IntegerField()
+    viewers_count = serializers.IntegerField()
 
     def generate_db_url(self, channel):
         return "{path}{id}.sqlite3".format(path=settings.CONTENT_DATABASE_URL, id=channel.pk)
 
     class Meta:
         model = Channel
-        fields = ('id', 'created', 'modified', 'name', 'published', 'editors', 'viewers', 'staging_tree', 'description',
-                  'resource_count', 'version', 'public', 'deleted', 'ricecooker_version', 'download_url', 'primary_token',
-                  'priority', 'source_url', 'demo_server_url')
+        fields = ('id', 'created', 'modified', 'name', 'published', 'editors', 'editors_count', 'viewers', 'viewers_count',
+                  'staging_tree', 'description', 'resource_count', 'version', 'public', 'deleted', 'ricecooker_version',
+                  'download_url', 'primary_token', 'priority', 'source_url', 'demo_server_url')
 
 
 class SimplifiedChannelListSerializer(serializers.ModelSerializer):
@@ -925,7 +927,10 @@ class AdminUserListSerializer(serializers.ModelSerializer):
     view_only_channels = SimplifiedChannelListSerializer(many=True, read_only=True)
     mb_space = serializers.SerializerMethodField('calculate_space')
     is_chef = serializers.SerializerMethodField('check_if_chef')
+    name = serializers.SerializerMethodField('full_name')
     chef_channels_count = serializers.IntegerField()
+    editable_channels_count = serializers.IntegerField()
+    view_only_channels_count = serializers.IntegerField()
 
     def calculate_space(self, user):
         size, unit = format_size(user.disk_space)
@@ -937,10 +942,14 @@ class AdminUserListSerializer(serializers.ModelSerializer):
     def check_if_chef(self, user):
         return user.chef_channels_count > 0
 
+    def full_name(self, user):
+        return "%s %s" % (user.first_name, user.last_name)
+
     class Meta:
         model = User
-        fields = ('email', 'first_name', 'last_name', 'id', 'editable_channels', 'view_only_channels', 'is_chef',
-                  'is_admin', 'date_joined', 'is_active', 'disk_space', 'mb_space', 'chef_channels_count')
+        fields = ('email', 'first_name', 'last_name', 'name', 'id', 'editable_channels', 'view_only_channels', 'is_chef',
+                  'is_admin', 'date_joined', 'is_active', 'disk_space', 'mb_space', 'chef_channels_count',
+                  'view_only_channels_count', 'editable_channels_count')
 
 
 class GetTreeDataSerializer(serializers.Serializer):
