@@ -1,7 +1,7 @@
 <template>
 
   <VContainer class="panel pa-0">
-    <VBreadcrumbs v-if="ancestors.length" :items="ancestors">
+    <VBreadcrumbs v-if="ancestors.length" :items="ancestors" class="pa-1">
       <template v-slot:divider>
         <Icon>chevron_right</Icon>
       </template>
@@ -64,7 +64,7 @@
       </VFlex>
       <v-expand-x-transition>
         <VFlex
-          v-show="Boolean(detailNodeId)"
+          v-show="showResourceDrawer"
           style="width: 500px;max-width: 500px;border-left: 1px solid #eee;"
           class="pa-4"
         >
@@ -111,6 +111,11 @@
         required: false,
       },
     },
+    data() {
+      return {
+        showResourceDrawer: false,
+      };
+    },
     computed: {
       ...mapGetters('currentChannel', ['canEdit']),
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodeChildren']),
@@ -128,6 +133,11 @@
       },
       uploadFilesLink() {
         return { name: RouterNames.UPLOAD_FILES };
+      },
+    },
+    watch: {
+      detailNodeId(value) {
+        this.showResourceDrawer = Boolean(value);
       },
     },
     methods: {
@@ -180,15 +190,21 @@
         };
       },
       closePanel() {
-        this.$router.push({
-          name: RouterNames.TREE_VIEW,
-          params: {
-            nodeId: this.$route.params.nodeId,
-            detailNodeId: null,
-          },
-        });
+        this.showResourceDrawer = false;
+        // Setting this so the contenst of drawer don't disappear
+        // while the drawer is closing
+        setTimeout(() => {
+          this.$router.push({
+            name: RouterNames.TREE_VIEW,
+            params: {
+              nodeId: this.$route.params.nodeId,
+              detailNodeId: null,
+            },
+          });
+        }, 700);
       },
     },
+
     $trs: {
       customViewButton: 'Change view',
       addTopic: 'Add topic',
