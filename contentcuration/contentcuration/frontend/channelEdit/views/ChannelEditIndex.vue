@@ -1,7 +1,7 @@
 <template>
 
   <VApp>
-    <VToolbar v-if="currentChannel">
+    <VToolbar v-if="currentChannel" color="white">
       <VToolbarSideIcon @click="drawer = true" />
       <VToolbarTitle class="notranslate">
         {{ currentChannel.name }}

@@ -160,6 +160,7 @@
         return Promise.resolve();
       },
     },
+    $trs: {},
   };
 
 </script>

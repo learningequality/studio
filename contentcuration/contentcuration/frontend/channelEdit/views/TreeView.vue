@@ -1,6 +1,6 @@
 <template>
 
-  <div>
+  <VContainer fluid class="pa-0 fill-height">
     <VBtn
       v-if="canEdit"
       color="primary"
@@ -12,16 +12,16 @@
     >
       <VIcon>add</VIcon>
     </VBtn>
-    <VLayout row wrap>
-      <VFlex xs6>
-        <StudioTree :nodeId="rootId" :root="true" />
-      </VFlex>
-      <VFlex xs6>
-        <NodePanel :parentId="nodeId" />
-      </VFlex>
-    </VLayout>
+    <VNavigationDrawer permanent :style="{backgroundColor: $vuetify.theme.greyBackground}">
+      <VToolbar dense flat color="greyBackground">
+        <IconButton icon="remove" :text="$tr('collapseAllButton')" />
+        <VSpacer />
+      </VToolbar>
+      <StudioTree :nodeId="rootId" :root="true" />
+    </VNavigationDrawer>
+    <NodePanel :parentId="nodeId" />
     <router-view />
-  </div>
+  </VContainer>
 
 </template>
 
@@ -32,12 +32,14 @@
   import { RouterNames } from '../constants';
   import StudioTree from './StudioTree';
   import NodePanel from './NodePanel';
+  import IconButton from 'shared/views/IconButton';
 
   export default {
     name: 'TreeView',
     components: {
       NodePanel,
       StudioTree,
+      IconButton,
     },
     props: {
       nodeId: {
@@ -61,6 +63,7 @@
     },
     $trs: {
       addNode: 'Add node',
+      collapseAllButton: 'Collapse all',
     },
   };
 
