@@ -9,6 +9,7 @@ import 'shared/i18n/setup';
 
 import 'vuetify/dist/vuetify.min.css';
 import 'shared/styles/main.less';
+import Base from 'shared/views/Base.vue';
 
 import { initializeDB } from 'shared/data';
 
@@ -29,11 +30,18 @@ export let rootVue;
 
 export default function startApp({ store, router, index }) {
   initializeDB().then(() => {
-    rootVue = new Vue({
+    const config = {
       el: 'app',
       store,
       router,
-      ...index,
-    });
+    };
+
+    if (index) {
+      Object.assign(config, index);
+    } else {
+      Object.assign(config, Base);
+    }
+
+    rootVue = new Vue(config);
   });
 }
