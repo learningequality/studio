@@ -17,7 +17,10 @@ describe('AssessmentItemPreview', () => {
             { answer: 'Answer 2', correct: true, order: 2 },
             { answer: 'Answer 3', correct: false, order: 3 },
           ],
-          hints: [{ hint: 'Hint 1', order: 1 }, { hint: 'Hint 2', order: 2 }],
+          hints: [
+            { hint: 'Hint 1', order: 1 },
+            { hint: 'Hint 2', order: 2 },
+          ],
         },
       },
     });

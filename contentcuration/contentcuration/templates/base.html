@@ -73,19 +73,12 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
       <title>Kolibri Studio ({% trans 'Beta' %})</title>
-      {% block css_bundle %}
-      {% endblock css_bundle %}
 
         {% if not debug %}
             <script src={% static 'django_js_reverse/js/reverse.js' %}></script>
         {% else %}
             <script src="{% url 'js_reverse' %}" type="text/javascript"></script>
         {% endif %}
-
-      <script>
-        var user = JSON.parse("{{ current_user|escapejs }}");
-        var user_preferences = JSON.parse("{{ user_preferences|escapejs }}");
-      </script>
 
         <!-- fullstory integration, only on develop until we add an opt-in option. -->
         {% if request.get_host == 'develop.studio.learningequality.org' %}
@@ -110,10 +103,13 @@
         {% endif %}
         {% endcache %}
 
+        {% block css_bundle %}
+        {% endblock css_bundle %}
+
         <!-- Session variables (need to keep outside of cache) -->
         <script>
           var user = "{{ current_user }}" !== "False" && JSON.parse("{{ current_user|escapejs }}");
-          var user_preferences = "{{ user_preferences }}" !== "False" && JSON.parse("{{ user_preferences|escapejs }}");
+          var user_preferences = JSON.parse("{{ user_preferences|escapejs }}" || "{}");
           var url = "{% url 'channels' %}";
         </script>
       {% endblock head %}

@@ -6,7 +6,7 @@ import Constants from 'edit_channel/constants/index';
  * @param {Object} node A node.
  * @returns {Array} An array of error codes.
  */
-export const validateNodeDetails = node => {
+export function validateNodeDetails(node) {
   const errors = [];
 
   // title is required
@@ -45,4 +45,4 @@ export const validateNodeDetails = node => {
   }
 
   return errors;
-};
+}

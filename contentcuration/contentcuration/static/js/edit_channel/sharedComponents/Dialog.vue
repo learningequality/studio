@@ -11,7 +11,7 @@
         <slot name="content"></slot>
       </VCardText>
       <VCardActions>
-        <slot name="buttons"></slot>
+        <slot name="buttons" :close="close"></slot>
       </VCardActions>
     </VCard>
   </VDialog>

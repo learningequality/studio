@@ -4,7 +4,6 @@ from builtins import zip
 from builtins import filter
 from builtins import str
 from builtins import range
-from builtins import object
 import functools
 import hashlib
 import json
@@ -946,7 +945,7 @@ class ContentNode(MPTTModel, models.Model):
     source_id = models.CharField(max_length=200, blank=True, null=True)
     source_domain = models.CharField(max_length=300, blank=True, null=True)
 
-    title = models.CharField(max_length=200)
+    title = models.CharField(max_length=200, blank=True)
     description = models.TextField(blank=True)
     kind = models.ForeignKey('ContentKind', related_name='contentnodes', db_index=True)
     license = models.ForeignKey('License', null=True, blank=True)
@@ -1046,7 +1045,7 @@ class ContentNode(MPTTModel, models.Model):
             }
             children = self.children.all()
             if levels > 0:
-                node_data["children"] = [c.get_tree_data(levels=levels-1) for c in children]
+                node_data["children"] = [c.get_tree_data(levels=levels - 1) for c in children]
             return node_data
         elif self.kind_id == content_kinds.EXERCISE:
             return {

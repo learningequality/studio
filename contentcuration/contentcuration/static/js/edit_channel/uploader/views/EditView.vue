@@ -1,91 +1,80 @@
 <template>
 
-  <VContent>
-    <VContainer fluid fill-height>
-      <VLayout v-if="!nodeIds.length" justify-center align-center fill-height>
-        <VFlex grow class="default-content">
-          {{ noItemText }}
-        </VFlex>
-      </VLayout>
-      <VLayout v-else justify-center>
-        <VFlex grow>
-          <VTabs v-model="currentTab" fixed-tabs slider-color="primary">
-            <!-- Details tab -->
-            <VTab ref="detailstab" :href="`#${tabs.DETAILS}`">
-              {{ $tr(tabs.DETAILS) }}
-              <VTooltip v-if="invalidSelected" top>
-                <template v-slot:activator="{ on }">
-                  <VIcon color="red" dark v-on="on">
-                    error
-                  </VIcon>
-                </template>
-                <span>{{ $tr('invalidFieldsToolTip') }}</span>
-              </VTooltip>
-            </VTab>
+  <VContainer ref="editview" fluid fill-height>
+    <VLayout v-if="!nodeIds.length" justify-center align-center fill-height>
+      <VFlex grow class="text-xs-center title grey--text">
+        {{ noItemText }}
+      </VFlex>
+    </VLayout>
+    <VLayout v-else justify-center>
+      <VFlex grow>
+        <VTabs v-model="currentTab" slider-color="primary">
+          <!-- Details tab -->
+          <VTab ref="detailstab" :href="`#${tabs.DETAILS}`">
+            {{ $tr(tabs.DETAILS) }}
+            <VTooltip v-if="!areDetailsValid || !areFilesValid" top>
+              <template v-slot:activator="{ on }">
+                <Icon color="red" dark small class="ml-2" v-on="on">
+                  error
+                </Icon>
+              </template>
+              <span>{{ $tr('invalidFieldsToolTip') }}</span>
+            </VTooltip>
+          </VTab>
 
-            <!-- Preview tab -->
-            <VTab v-if="showPreviewTab" ref="previewtab" :href="`#${tabs.PREVIEW}`">
-              {{ $tr(tabs.PREVIEW) }}
-            </VTab>
+          <!-- Questions tab -->
+          <VTab v-if="showQuestionsTab" ref="questiontab" :href="`#${tabs.QUESTIONS}`">
+            {{ $tr(tabs.QUESTIONS) }}
+            <VTooltip v-if="!areAssessmentItemsValid" top>
+              <template v-slot:activator="{ on }">
+                <Icon color="red" dark v-on="on">
+                  error
+                </Icon>
+              </template>
+              <span>{{ $tr('invalidFieldsToolTip') }}</span>
+            </VTooltip>
+            <VChip v-else color="gray" dark>
+              {{ assessmentItemsCount }}
+            </VChip>
+          </VTab>
 
-            <!-- Questions tab -->
-            <VTab v-if="showQuestionsTab" ref="questiontab" :href="`#${tabs.QUESTIONS}`">
-              {{ $tr(tabs.QUESTIONS) }}
-              <VTooltip v-if="!areAssessmentItemsValid" top>
-                <template v-slot:activator="{ on }">
-                  <VIcon color="red" dark v-on="on">
-                    error
-                  </VIcon>
-                </template>
-                <span>{{ $tr('invalidFieldsToolTip') }}</span>
-              </VTooltip>
-              <VChip v-else color="gray" dark>
-                {{ assessmentItemsCount }}
-              </VChip>
-            </VTab>
-
-            <!-- Prerequisites tab -->
-            <VTab
-              v-if="showPrerequisitesTab"
-              ref="prerequisitetab"
-              :href="`#${tabs.PREREQUISITES}`"
-            >
-              {{ $tr(tabs.PREREQUISITES) }}
-              <VChip v-if="firstNode.prerequisite.length" color="gray" dark>
-                {{ firstNode.prerequisite.length }}
-              </VChip>
-            </VTab>
-          </VTabs>
-
-          <VTabsItems v-model="currentTab">
-            <VTabItem :key="tabs.DETAILS" ref="detailswindow" :value="tabs.DETAILS" lazy>
-              <VAlert :value="nodeIds.length > 1" type="info" outline>
-                {{ countText }}
-              </VAlert>
-              <VAlert :value="invalidSelected" type="error" outline icon="error">
-                {{ $tr('errorBannerText') }}
-              </VAlert>
-              <DetailsTabView :viewOnly="viewOnly" :nodeIds="nodeIds" />
-            </VTabItem>
-            <VTabItem :key="tabs.PREVIEW" ref="previewwindow" :value="tabs.PREVIEW" lazy>
-              Preview
-            </VTabItem>
-            <VTabItem :key="tabs.QUESTIONS" ref="questionwindow" :value="tabs.QUESTIONS" lazy>
-              <AssessmentView />
-            </VTabItem>
-            <VTabItem
-              :key="tabs.PREREQUISITES"
-              ref="prerequisiteswindow"
-              :value="tabs.PREREQUISITES"
-              lazy
-            >
-              Prerequisites
-            </VTabItem>
-          </VTabsItems>
-        </VFlex>
-      </VLayout>
-    </VContainer>
-  </VContent>
+          <!-- Prerequisites tab -->
+          <VTab
+            v-if="showPrerequisitesTab"
+            ref="prerequisitetab"
+            :href="`#${tabs.PREREQUISITES}`"
+          >
+            {{ $tr(tabs.PREREQUISITES) }}
+            <VChip v-if="firstNode.prerequisite.length" color="gray" dark>
+              {{ firstNode.prerequisite.length }}
+            </VChip>
+          </VTab>
+        </VTabs>
+        <VTabsItems v-model="currentTab">
+          <VTabItem :key="tabs.DETAILS" ref="detailswindow" :value="tabs.DETAILS" lazy>
+            <VAlert v-if="nodeIds.length > 1" :value="true" type="info" color="primary" outline>
+              {{ countText }}
+            </VAlert>
+            <VAlert v-else-if="!areDetailsValid" :value="true" type="error" outline icon="error">
+              {{ $tr('errorBannerText') }}
+            </VAlert>
+            <DetailsTabView :viewOnly="!canEdit" :nodeIds="nodeIds" />
+          </VTabItem>
+          <VTabItem :key="tabs.QUESTIONS" ref="questionwindow" :value="tabs.QUESTIONS" lazy>
+            <AssessmentView />
+          </VTabItem>
+          <VTabItem
+            :key="tabs.PREREQUISITES"
+            ref="prerequisiteswindow"
+            :value="tabs.PREREQUISITES"
+            lazy
+          >
+            Prerequisites
+          </VTabItem>
+        </VTabsItems>
+      </VFlex>
+    </VLayout>
+  </VContainer>
 
 </template>
 
@@ -93,8 +82,8 @@
 
   import { mapGetters } from 'vuex';
   import { TabNames } from '../constants';
-  import DetailsTabView from './DetailsTabView.vue';
-  import AssessmentView from './AssessmentView.vue';
+  import DetailsTabView from './DetailsTabView';
+  import AssessmentView from './AssessmentView';
 
   export default {
     name: 'EditView',
@@ -118,7 +107,11 @@
       };
     },
     computed: {
-      ...mapGetters('contentNode', ['getContentNodes', 'getContentNodeIsValid']),
+      ...mapGetters('contentNode', [
+        'getContentNodes',
+        'getContentNodeDetailsAreValid',
+        'getContentNodeFilesAreValid',
+      ]),
       ...mapGetters('currentChannel', ['canEdit']),
       firstNode() {
         return this.nodes.length ? this.nodes[0] : null;
@@ -126,29 +119,15 @@
       nodes() {
         return this.getContentNodes(this.nodeIds);
       },
+
       noItemText() {
-        if (!this.nodes.length) {
-          /* eslint-disable no-constant-condition */
-          if (true) {
-            return this.$tr('addExerciseText');
-          } else if (false) {
-            return this.$tr('addTopicText');
-          }
-          /* eslint-enable */
-        }
-        return this.viewOnly ? this.$tr('noItemsToViewText') : this.$tr('noItemsToEditText');
+        return this.canEdit ? this.$tr('noItemsToEditText') : this.$tr('noItemsToViewText');
       },
       tabs() {
         return TabNames;
       },
-      viewOnly() {
-        return !this.canEdit;
-      },
       oneSelected() {
-        return this.nodeIds.length === 1;
-      },
-      showPreviewTab() {
-        return this.oneSelected && this.firstNode && this.firstNode.files.length;
+        return this.nodes.length === 1;
       },
       showQuestionsTab() {
         return this.oneSelected && this.firstNode && this.firstNode.kind === 'exercise';
@@ -158,19 +137,27 @@
           this.oneSelected && !this.isClipboard && this.firstNode && this.firstNode.kind !== 'topic'
         );
       },
-      invalidSelected() {
-        return !this.viewOnly && this.nodeIds.some(nodeId => !this.getContentNodeIsValid(nodeId));
-      },
       countText() {
-        let messageArgs = { count: this.nodeIds.length };
-        if (this.viewOnly) return this.$tr('viewingMultipleCount', messageArgs);
-        return this.$tr('editingMultipleCount', messageArgs);
+        let messageArgs = { count: this.nodes.length };
+        if (this.canEdit) return this.$tr('editingMultipleCount', messageArgs);
+        return this.$tr('viewingMultipleCount', messageArgs);
+      },
+      areDetailsValid() {
+        return !this.oneSelected || this.getContentNodeDetailsAreValid(this.nodeIds[0]);
       },
       areAssessmentItemsValid() {
         return true;
       },
+      areFilesValid() {
+        return !this.oneSelected || this.getContentNodeFilesAreValid(this.nodeIds[0]);
+      },
       assessmentItemsCount() {
         return 0;
+      },
+    },
+    watch: {
+      nodeIds() {
+        this.$refs.editview.scrollTop = 0;
       },
     },
     $trs: {
@@ -180,8 +167,6 @@
       [TabNames.PREREQUISITES]: 'Prerequisites',
       noItemsToEditText: 'Please select an item or items to edit',
       noItemsToViewText: 'Please select an item or items to view',
-      addTopicText: 'Please add a topic to get started',
-      addExerciseText: 'Please add an exercise to get started',
       invalidFieldsToolTip: 'Invalid fields detected',
       errorBannerText: 'Please address invalid fields',
       editingMultipleCount: 'Editing details for {count, plural,\n =1 {# item}\n other {# items}}',
@@ -193,7 +178,9 @@
 
 <style lang="less" scoped>
 
-  @import '../../../../less/global-variables.less';
+  .container {
+    width: unset;
+  }
 
   .v-alert {
     padding: 10px;
@@ -201,13 +188,13 @@
     font-weight: bold;
   }
 
-  .default-content {
-    .empty_default;
-
-    margin: 10% auto;
+  .v-tabs {
+    margin: -32px -32px 0;
+    border-bottom: 1px solid var(--v-grey-lighten3);
   }
 
   .v-tabs__div {
+    padding: 20px;
     font-weight: bold;
     .v-icon {
       margin-left: 5px;

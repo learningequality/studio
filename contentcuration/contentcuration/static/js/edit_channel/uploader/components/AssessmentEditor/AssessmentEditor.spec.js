@@ -29,7 +29,10 @@ const ITEMS = [
       { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
       { answer: 'Peanut butter', correct: true, order: 2 },
     ],
-    hints: [{ hint: "It's not healthy", order: 1 }, { hint: 'Tasty!', order: 2 }],
+    hints: [
+      { hint: "It's not healthy", order: 1 },
+      { hint: 'Tasty!', order: 2 },
+    ],
   },
   {
     question: '',
@@ -259,7 +262,10 @@ describe('AssessmentEditor', () => {
           { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
           { answer: 'Peanut butter', correct: true, order: 2 },
         ],
-        hints: [{ hint: "It's not healthy", order: 1 }, { hint: 'Tasty!', order: 2 }],
+        hints: [
+          { hint: "It's not healthy", order: 1 },
+          { hint: 'Tasty!', order: 2 },
+        ],
       },
       {
         question: '',
@@ -301,7 +307,10 @@ describe('AssessmentEditor', () => {
           { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
           { answer: 'Peanut butter', correct: true, order: 2 },
         ],
-        hints: [{ hint: "It's not healthy", order: 1 }, { hint: 'Tasty!', order: 2 }],
+        hints: [
+          { hint: "It's not healthy", order: 1 },
+          { hint: 'Tasty!', order: 2 },
+        ],
       },
       {
         question: '',
@@ -341,7 +350,10 @@ describe('AssessmentEditor', () => {
           { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
           { answer: 'Peanut butter', correct: true, order: 2 },
         ],
-        hints: [{ hint: "It's not healthy", order: 1 }, { hint: 'Tasty!', order: 2 }],
+        hints: [
+          { hint: "It's not healthy", order: 1 },
+          { hint: 'Tasty!', order: 2 },
+        ],
       },
       {
         question: 'Question 1',
@@ -404,7 +416,10 @@ describe('AssessmentEditor', () => {
           { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
           { answer: 'Peanut butter', correct: true, order: 2 },
         ],
-        hints: [{ hint: "It's not healthy", order: 1 }, { hint: 'Tasty!', order: 2 }],
+        hints: [
+          { hint: "It's not healthy", order: 1 },
+          { hint: 'Tasty!', order: 2 },
+        ],
       },
     ]);
   });
@@ -433,7 +448,10 @@ describe('AssessmentEditor', () => {
           { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
           { answer: 'Peanut butter', correct: true, order: 2 },
         ],
-        hints: [{ hint: "It's not healthy", order: 1 }, { hint: 'Tasty!', order: 2 }],
+        hints: [
+          { hint: "It's not healthy", order: 1 },
+          { hint: 'Tasty!', order: 2 },
+        ],
       },
       {
         question: '',

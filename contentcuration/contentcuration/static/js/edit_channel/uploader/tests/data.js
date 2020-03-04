@@ -3,6 +3,8 @@ import Constants from 'edit_channel/constants';
 import contentNode from 'frontend/channelEdit/vuex/contentNode';
 import storeFactory from 'shared/vuex/baseStore';
 
+import fileUploadsModule from 'frontend/channelEdit/vuex/file';
+
 export const editableFields = [
   'language',
   'title',
@@ -37,7 +39,8 @@ export function generateNode(props = {}) {
     kind: 'topic',
     prerequisite: [],
     is_prerequisite_of: [],
-    files: [{}],
+    files: [{ id: 'file', preset: { id: 'preset' } }],
+    metadata: { resource_size: 0 },
     assessment_items: [],
     extra_fields: extra_fields,
     tags: [],
@@ -65,6 +68,7 @@ export const mockFunctions = {
 
 export const localStore = storeFactory({
   modules: {
+    file: fileUploadsModule,
     contentNode,
   },
 });

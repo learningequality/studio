@@ -1,83 +1,126 @@
 <template>
 
-  <VListTile :class="{selected: isSelected}" @click.stop="setNode(index)">
-    <VListTileAction>
-      <VCheckbox color="primary" :inputValue="isSelected" @click.stop="toggleNode" />
+  <!-- Wait for node to load before listing -->
+  <VListTile
+    v-if="node"
+    :style="{backgroundColor}"
+    class="py-0 px-1"
+    @click.stop="selected = [nodeId]"
+  >
+    <VListTileAction style="min-width:min-content;" @click.stop>
+      <VCheckbox
+        v-model="selected"
+        color="primary"
+        :value="nodeId"
+        hide-details
+        class="ma-0"
+      />
     </VListTileAction>
-    <VListTileAction v-if="node.changesStaged" class="changed">
-      *
+
+    <VListTileAction style="min-width:min-content;">
+      <ContentNodeIcon :kind="node.kind" :showColor="false" />
     </VListTileAction>
-    <VListTileAction>
-      <ContentNodeIcon :kind="node.kind" />
-    </VListTileAction>
-    <VListTileContent>
-      <VListTileTitle>
+    <VListTileContent class="py-0 px-2">
+      <VListTileTitle class="notranslate">
         {{ node.title }}
       </VListTileTitle>
+      <VListTileSubTitle v-if="subtitleText">
+        {{ subtitleText }}
+      </VListTileSubTitle>
     </VListTileContent>
     <VSpacer />
-    <VListTileAction v-if="!nodeIsValid">
-      <VIcon color="red" class="error-icon">
-        error
-      </VIcon>
+    <VListTileAction class="status-indicator mr-1">
+      <FileStatus :fileIDs="node.files">
+        <Icon v-if="!nodeIsValid" color="red" class="error-icon">
+          error
+        </Icon>
+      </FileStatus>
     </VListTileAction>
-    <VListTileAction v-if="removable">
-      <VBtn icon small flat class="remove-item" @click.stop="removeNode(index)">
-        <VIcon>clear</VIcon>
+    <VListTileAction v-if="canRemove">
+      <VBtn icon flat class="remove-item" @click.stop="removeNode">
+        <Icon>clear</Icon>
       </VBtn>
     </VListTileAction>
+
   </VListTile>
 
 </template>
 
 <script>
 
-  import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
-  import { modes } from '../constants';
+  import { mapActions, mapGetters } from 'vuex';
+  import { fileSizeMixin, fileStatusMixin } from 'frontend/channelEdit/views/files/mixins';
+  import FileStatus from 'frontend/channelEdit/views/files/FileStatus';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
+  import { RouterNames } from 'frontend/channelEdit/constants';
 
   export default {
     name: 'EditListItem',
     components: {
       ContentNodeIcon,
+      FileStatus,
     },
+    mixins: [fileSizeMixin, fileStatusMixin],
     props: {
-      index: {
-        type: Number,
-        required: true,
+      value: {
+        type: Array,
+        default: () => [],
       },
-      removable: {
-        type: Boolean,
-        default: false,
+      nodeId: {
+        type: String,
+        required: true,
       },
     },
     computed: {
-      ...mapGetters('edit_modal', ['getNode', 'invalidNodes']),
-      ...mapState('edit_modal', ['mode', 'selectedIndices']),
-      node() {
-        return this.getNode(this.index);
+      ...mapGetters('currentChannel', ['canEdit']),
+      ...mapGetters('contentNode', ['getContentNode', 'getContentNodeIsValid']),
+      selected: {
+        get() {
+          return this.value;
+        },
+        set(value) {
+          this.$emit('input', value);
+        },
       },
-      isSelected() {
-        return this.selectedIndices.includes(this.index);
+      node() {
+        return this.getContentNode(this.nodeId);
       },
       nodeIsValid() {
-        if (this.mode === modes.VIEW_ONLY) {
-          return true;
+        return !this.canEdit || this.getContentNodeIsValid(this.nodeId);
+      },
+      backgroundColor() {
+        if (this.selected.includes(this.nodeId)) {
+          return this.selected.length > 1
+            ? this.$vuetify.theme.primaryBackground
+            : this.$vuetify.theme.greyBackground;
         }
-
-        return !this.invalidNodes({ ignoreNewNodes: true }).includes(this.index);
+        return 'transparent';
+      },
+      subtitleText() {
+        if (this.node.kind === 'exercise') {
+          return this.$tr('questionCount', { count: this.node.assessment_items.length });
+        }
+        return this.statusMessage(this.node.files);
+      },
+      canRemove() {
+        return (
+          this.canEdit &&
+          (this.$route.name === RouterNames.ADD_TOPICS ||
+            this.$route.name === RouterNames.UPLOAD_FILES ||
+            this.$route.name === RouterNames.ADD_EXERCISE)
+        );
       },
     },
     methods: {
-      ...mapMutations('edit_modal', {
-        select: 'SELECT_NODE',
-        deselect: 'DESELECT_NODE',
-        setNode: 'SET_NODE',
-      }),
-      ...mapActions('edit_modal', ['removeNode']),
-      toggleNode() {
-        this.isSelected ? this.deselect(this.index) : this.select(this.index);
+      ...mapActions('contentNode', ['deleteContentNode']),
+      removeNode() {
+        this.deleteContentNode(this.nodeId).then(() => {
+          this.$emit('removed', this.nodeId);
+        });
       },
+    },
+    $trs: {
+      questionCount: '{count, plural,\n =1 {# Question}\n other {# Questions}}',
     },
   };
 
@@ -85,30 +128,31 @@
 
 <style lang="less" scoped>
 
-  @import '../../../../less/global-variables.less';
-
   .v-list__tile__action {
     min-width: 30px;
     &.changed {
       min-width: 15px;
       font-weight: bold;
-      color: @blue-500;
     }
-  }
-
-  .selected {
-    background-color: @gray-200;
   }
 
   .remove-item {
-    color: @gray-500 !important;
-    &:hover {
-      color: @red-error-color !important;
+    display: none;
+  }
+
+  /deep/ .v-list__tile {
+    height: max-content !important;
+    min-height: 64px;
+    &:hover .remove-item {
+      display: block;
+    }
+    .v-list__tile__sub-title {
+      white-space: unset;
     }
   }
 
-  .error-icon {
-    font-size: 14pt !important;
+  .status-indicator {
+    min-width: max-content;
   }
 
 </style>

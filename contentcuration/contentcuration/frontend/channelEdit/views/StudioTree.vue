@@ -15,16 +15,11 @@
                 <VIcon>{{ expanded ? "expand_more" : "expand_less" }}</VIcon>
               </VBtn>
             </VFlex>
-            <VFlex xs10>
+            <VFlex xs11>
               <router-link :to="treeLink">
                 <ContentNodeIcon :kind="node.kind" />
                 <span>{{ node.title }}</span>
               </router-link>
-            </VFlex>
-            <VFlex xs1>
-              <VBtn icon :to="editNodeLink">
-                <VIcon>edit</VIcon>
-              </VBtn>
             </VFlex>
           </VLayout>
         </VFlex>
@@ -103,14 +98,6 @@
       },
       selected() {
         return this.nodeId === this.$route.params.nodeId;
-      },
-      editNodeLink() {
-        return {
-          name: RouterNames.CONTENTNODE_DETAILS,
-          params: {
-            detailNodeId: this.nodeId,
-          },
-        };
       },
       treeLink() {
         return {

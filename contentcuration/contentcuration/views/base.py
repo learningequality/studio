@@ -37,9 +37,9 @@ from contentcuration.api import activate_channel
 from contentcuration.api import get_staged_diff
 from contentcuration.decorators import browser_is_supported
 from contentcuration.decorators import has_accepted_policies
-from contentcuration.models import DEFAULT_USER_PREFERENCES
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
+from contentcuration.models import DEFAULT_USER_PREFERENCES
 from contentcuration.models import User
 from contentcuration.serializers import ContentNodeSerializer
 from contentcuration.serializers import CurrentUserSerializer
@@ -49,6 +49,8 @@ from contentcuration.serializers import UserChannelListSerializer
 from contentcuration.tasks import create_async_task
 from contentcuration.tasks import generatechannelcsv_task
 from contentcuration.utils.messages import get_messages
+
+PUBLIC_CHANNELS_CACHE_DURATION = 30  # seconds
 
 
 @browser_is_supported
@@ -60,7 +62,11 @@ def base(request):
 
 
 def health(request):
-    return HttpResponse("Healthy!")
+    c = Channel.objects.first()
+    if c:
+        return HttpResponse(c.name)
+    else:
+        return HttpResponse("No channels created yet!")
 
 
 def stealth(request):
@@ -99,8 +105,10 @@ def get_or_set_cached_constants(constant, serializer):
 @has_accepted_policies
 @permission_classes((AllowAny,))
 def channel_list(request):
-    return render(request, 'channel_list.html', {"current_user": "null" if request.user.is_anonymous else JSONRenderer().render(UserChannelListSerializer(request.user).data),
-                                                 "user_preferences": DEFAULT_USER_PREFERENCES if request.user.is_anonymous else json.dumps(request.user.content_defaults),
+    current_user = "null" if request.user.is_anonymous() else JSONRenderer().render(UserChannelListSerializer(request.user).data)
+    preferences = DEFAULT_USER_PREFERENCES if request.user.is_anonymous() else json.dumps(request.user.content_defaults)
+    return render(request, 'channel_list.html', {"current_user": current_user,
+                                                 "user_preferences": preferences,
                                                  "messages": get_messages(),
                                                  })
 
@@ -150,7 +158,6 @@ def publish_channel(request):
         task_args = {
             'user_id': request.user.pk,
             'channel_id': channel_id,
-            'version_notes': data.get('version_notes')
         }
 
         task, task_info = create_async_task('export-channel', task_info, task_args)
@@ -192,9 +199,10 @@ def accessible_channels(request, channel_id):
         .values_list("content_id", flat=True)
     )
     channels = channels.annotate(
+        resource_count=SQCountDistinct(non_topic_content_ids, field="content_id"),
         children=ArrayAgg("main_tree__children"),
     )
-    channels_data = channels.values("name", "children", "main_tree__id")
+    channels_data = channels.values("name", "resource_count", "children", "main_tree__id")
 
     return Response(map(map_channel_data, channels_data))
 
@@ -307,10 +315,9 @@ class SandboxView(TemplateView):
         imported_node = active_nodes.filter(freeze_authoring_data=True).exclude(kind_id=content_kinds.TOPIC).first()
         if imported_node:
             nodes.append(ContentNodeSerializer(imported_node).data)
-
         kwargs.update({"nodes": JSONRenderer().render(nodes),
                        "channel": active_channels.first().pk,
                        "current_user": JSONRenderer().render(CurrentUserSerializer(self.request.user).data),
-                       "messages": get_messages(),
+                       "root_id": self.request.user.clipboard_tree.pk,
                        })
         return kwargs

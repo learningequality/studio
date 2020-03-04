@@ -106,7 +106,7 @@ class FileListSerializer(serializers.ListSerializer):
         with transaction.atomic():
             # Get files that have the same contentnode, preset, and language as the files that are now attached to this node
             for item in validated_data:
-                file_obj = File.objects.get(pk=item['id'])
+                file_obj, _new = File.objects.get_or_create(pk=item['id'])
                 file_obj.language_id = item.get('language') and item['language']['id']
                 file_obj.contentnode = item['contentnode']
 
@@ -199,9 +199,10 @@ class CustomListSerializer(serializers.ListSerializer):
                     prerequisite_mapping.update({item['id']: item.pop('prerequisite')})
                 else:
                     # create new nodes
+                    prerequisite = item.pop('prerequisite')
                     new_node = ContentNode.objects.create(**item)
                     ret.append(new_node)
-                    prerequisite_mapping.update({new_node.pk: item.pop('prerequisite')})
+                    prerequisite_mapping.update({new_node.pk: prerequisite})
 
         # get all ContentTag objects, if doesn't exist, create them.
         all_tags = []
@@ -818,18 +819,22 @@ class CurrentUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('email', 'first_name', 'last_name', 'is_active', 'is_admin', 'id', 'clipboard_tree', 'available_space')
+        fields = ('email', 'first_name', 'last_name', 'is_active', 'is_admin', 'id', 'clipboard_tree', 'available_space', 'disk_space')
 
 
 class UserChannelListSerializer(serializers.ModelSerializer):
     bookmarks = serializers.SerializerMethodField('retrieve_bookmarks')
+    available_space = serializers.SerializerMethodField()
+
+    def get_available_space(self, user):
+        return user.get_available_space()
 
     def retrieve_bookmarks(self, user):
         return user.bookmarked_channels.values_list('id', flat=True)
 
     class Meta:
         model = User
-        fields = ('email', 'first_name', 'last_name', 'id', 'is_active', 'bookmarks', 'is_admin')
+        fields = ('email', 'first_name', 'last_name', 'id', 'is_active', 'bookmarks', 'is_admin', 'available_space', 'disk_space')
 
 
 class AdminChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):

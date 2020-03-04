@@ -1,5 +1,5 @@
+import _ from 'underscore';
 import translator from './translator';
-
 import { AssessmentItemTypes } from 'frontend/channelEdit/constants';
 
 /**
@@ -110,6 +110,33 @@ export const updateAnswersToQuestionType = (questionType, answers) => {
       return newAnswers;
     }
   }
+};
+
+export const sanitizeFiles = files => {
+  // Remove invalid primary files if a valid primary file exists
+  let primaryFiles = _.filter(files, f => !f.preset.supplementary);
+  let invalidPrimaryFiles = _.filter(primaryFiles, f => f.error);
+  if (invalidPrimaryFiles.length < primaryFiles.length) {
+    files = _.reject(files, f => f.error && !f.preset.supplementary);
+  }
+
+  // Remove invalid supplementary files
+  files = _.reject(files, f => f.error && f.preset.supplementary);
+  return files;
+};
+
+/**
+ * Validate node files - correct types, no associated errors, etc.
+ * @param {Object} node A node.
+ * @returns {Array} An array of error codes.
+ */
+export const validateNodeFiles = node => {
+  const errors = _.chain(node.files)
+    .filter(f => f.error)
+    .map(f => f.error.type)
+    .value();
+
+  return errors;
 };
 
 /**

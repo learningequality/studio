@@ -25,7 +25,13 @@ client.interceptors.response.use(
       // Many 404s are in fact also unauthorized requests so
       // we should silence those on the front end and try
       // to catch legitimate request issues in the backend.
-      if (error.response.status === 403 || error.response.status === 404) {
+      //
+      // Allow 418 too as that's specific to out of storage checks
+      if (
+        error.response.status === 403 ||
+        error.response.status === 404 ||
+        error.response.status === 418
+      ) {
         return Promise.reject(error);
       }
 

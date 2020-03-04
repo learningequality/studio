@@ -38,6 +38,12 @@
         type: Boolean,
         default: false,
       },
+      excludeLanguages: {
+        type: Array,
+        default() {
+          return [];
+        },
+      },
     },
     computed: {
       language: {
@@ -49,9 +55,9 @@
         },
       },
       languages() {
-        return Constants.Languages.sort((langA, langB) =>
-          langA.native_name.localeCompare(langB.native_name)
-        );
+        return Constants.Languages.filter(
+          l => !this.excludeLanguages.includes(l.id)
+        ).sort((langA, langB) => langA.native_name.localeCompare(langB.native_name));
       },
       rules() {
         return this.required ? [v => Boolean(v) || this.$tr('languageRequired')] : [];

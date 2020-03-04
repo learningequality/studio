@@ -1,6 +1,6 @@
 <template>
 
-  <VToolbar app dark clipped-left color="purple" :tabs="Boolean($slots.tabs)">
+  <VToolbar app dark clipped-left color="primary" :tabs="Boolean($slots.tabs)">
     <VToolbarSideIcon href="/channels">
       <VImg v-if="online" maxHeight="35" contain :src="require('../images/kolibri-logo.svg')" />
       <VImg v-else maxHeight="35" contain :src="require('../images/flightless-kolibri.jpg')" />
