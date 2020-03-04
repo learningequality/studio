@@ -19,13 +19,19 @@
         </VListTile>
       </VList>
     </VMenu>
-    <VNavigationDrawer permanent :style="{backgroundColor: $vuetify.theme.greyBackground}">
+    <ResizableNavigationDrawer
+      permanent
+      localName="topic-tree"
+      :style="{backgroundColor: $vuetify.theme.greyBackground}"
+    >
       <VToolbar dense flat color="greyBackground">
         <IconButton icon="remove" :text="$tr('collapseAllButton')" />
         <VSpacer />
       </VToolbar>
-      <StudioTree :nodeId="rootId" :root="true" />
-    </VNavigationDrawer>
+      <div style="margin: 0px -24px;">
+        <StudioTree :nodeId="rootId" :root="true" />
+      </div>
+    </ResizableNavigationDrawer>
     <NodePanel :parentId="nodeId" />
     <router-view />
   </VContainer>
@@ -40,6 +46,7 @@
   import StudioTree from './StudioTree';
   import NodePanel from './NodePanel';
   import IconButton from 'shared/views/IconButton';
+  import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
 
   export default {
     name: 'TreeView',
@@ -47,6 +54,7 @@
       NodePanel,
       StudioTree,
       IconButton,
+      ResizableNavigationDrawer,
     },
     props: {
       nodeId: {

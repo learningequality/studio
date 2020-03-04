@@ -30,12 +30,16 @@
         type: Boolean,
         default: true,
       },
+      localName: {
+        type: String,
+        required: true,
+      },
     },
     data() {
       return {
         drawer: {
           open: true,
-          width: localStorage['edit-modal-width'] || 300,
+          width: localStorage[this.localName + '-drawer-width'] || 300,
         },
       };
     },
