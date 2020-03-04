@@ -50,7 +50,13 @@ from contentcuration.tasks import create_async_task
 from contentcuration.tasks import generatechannelcsv_task
 from contentcuration.utils.messages import get_messages
 
+from .json_dump import json_for_parse_from_data, json_for_parse_from_serializer
+
 PUBLIC_CHANNELS_CACHE_DURATION = 30  # seconds
+
+MESSAGES = "i18n_messages"
+PREFERENCES = "user_preferences"
+CURRENT_USER = "current_user"
 
 
 @browser_is_supported
@@ -105,23 +111,20 @@ def get_or_set_cached_constants(constant, serializer):
 @has_accepted_policies
 @permission_classes((AllowAny,))
 def channel_list(request):
+    anon = request.user.is_anonymous()
     current_user = (
-        "null"
-        if request.user.is_anonymous()
-        else JSONRenderer().render(UserChannelListSerializer(request.user).data)
+        None
+        if anon
+        else json_for_parse_from_serializer(UserChannelListSerializer(request.user))
     )
-    preferences = (
-        DEFAULT_USER_PREFERENCES
-        if request.user.is_anonymous()
-        else json.dumps(request.user.content_defaults)
-    )
+    preferences = DEFAULT_USER_PREFERENCES if anon else request.user.content_defaults
     return render(
         request,
         "channel_list.html",
         {
-            "current_user": current_user,
-            "user_preferences": preferences,
-            "messages": get_messages(),
+            CURRENT_USER: current_user,
+            PREFERENCES: json_for_parse_from_data(preferences),
+            MESSAGES: json_for_parse_from_data(get_messages()),
         },
     )
 
@@ -136,9 +139,8 @@ def accounts(request):
         request,
         "accounts.html",
         {
-            "current_user": None,
-            "user_preferences": DEFAULT_USER_PREFERENCES,
-            "messages": get_messages(),
+            PREFERENCES: json_for_parse_from_data(DEFAULT_USER_PREFERENCES),
+            MESSAGES: json_for_parse_from_data(get_messages()),
         },
     )
 
@@ -162,11 +164,11 @@ def channel(request, channel_id):
         "channel_edit.html",
         {
             "channel_id": channel_id,
-            "current_user": JSONRenderer().render(
-                UserChannelListSerializer(request.user).data
+            CURRENT_USER: json_for_parse_from_serializer(
+                UserChannelListSerializer(request.user)
             ),
-            "user_preferences": json.dumps(request.user.content_defaults),
-            "messages": get_messages(),
+            PREFERENCES: json_for_parse_from_data(request.user.content_defaults),
+            MESSAGES: json_for_parse_from_data(get_messages()),
         },
     )
 
