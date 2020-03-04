@@ -112,6 +112,22 @@ def channel_list(request):
                                                  "messages": get_messages(),
                                                  })
 
+@browser_is_supported
+@has_accepted_policies
+@permission_classes((AllowAny,))
+def accounts(request):
+    if not request.user.is_anonymous:
+        return redirect("channels")
+    return render(
+        request,
+        "accounts.html",
+        {
+            "current_user": None,
+            "user_preferences": DEFAULT_USER_PREFERENCES,
+            "messages": get_messages(),
+        },
+    )
+
 
 @login_required
 @browser_is_supported
