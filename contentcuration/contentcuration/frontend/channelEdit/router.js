@@ -47,7 +47,7 @@ const router = new VueRouter({
     },
     {
       name: RouterNames.TREE_VIEW,
-      path: '/:nodeId',
+      path: '/:nodeId/:detailNodeId?',
       props: true,
       component: TreeView,
       beforeEnter: (to, from, next) => {
@@ -64,14 +64,6 @@ const router = new VueRouter({
           .catch(() => {});
       },
       children: [
-        // TODO: instead of linking to the edit modal, this should link to
-        // the ResourcePanel
-        // {
-        //   name: RouterNames.CONTENTNODE_DETAILS,
-        //   path: 'details/:detailNodeId',
-        //   props: true,
-        //   component: EditModal,
-        // },
         {
           name: RouterNames.VIEW_CONTENTNODES,
           path: 'view/:detailNodeIds',

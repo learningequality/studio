@@ -14,11 +14,18 @@
           <ContentNodeIcon :kind="node.kind" includeText />
         </VFlex>
         <VSpacer />
-        <VBtn icon flat small color="grey" class="ma-0">
+        <VBtn
+          icon
+          flat
+          small
+          color="grey"
+          class="ma-0"
+          @click="$emit('close')"
+        >
           <Icon>clear</Icon>
         </VBtn>
       </VLayout>
-      <VLayout row class="my-4">
+      <VLayout row align-center class="my-2">
         <h1 class="notranslate title font-weight-bold">
           {{ node.title }}
         </h1>

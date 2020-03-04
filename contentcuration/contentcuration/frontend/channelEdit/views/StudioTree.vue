@@ -5,7 +5,7 @@
       v-if="node && !root"
       xs12
       class="node-item pa-1"
-      :class="{ selected }"
+      :style="{backgroundColor: selected? $vuetify.theme.greyBackground : 'transparent' }"
     >
       <VLayout row align-center>
         <div style="width: 40px;" class="pr-1">
@@ -150,8 +150,5 @@
 <style scoped>
 .node-item {
   cursor: pointer;
-}
-.selected {
-  background-color: white;
 }
 </style>

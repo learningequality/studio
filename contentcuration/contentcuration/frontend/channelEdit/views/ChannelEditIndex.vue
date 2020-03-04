@@ -1,7 +1,7 @@
 <template>
 
   <VApp>
-    <VToolbar v-if="currentChannel" color="white">
+    <ToolBar v-if="currentChannel" color="white">
       <VToolbarSideIcon @click="drawer = true" />
       <VToolbarTitle class="notranslate">
         {{ currentChannel.name }}
@@ -38,7 +38,7 @@
           </VList>
         </VMenu>
       </VToolbarItems>
-    </VToolbar>
+    </ToolBar>
     <ChannelNavigationDrawer v-model="drawer" />
     <VContent class="pa-0">
       <router-view />
@@ -55,6 +55,7 @@
   import ChannelNavigationDrawer from './ChannelNavigationDrawer';
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
   import IconButton from 'shared/views/IconButton';
+  import ToolBar from 'shared/views/ToolBar';
 
   export default {
     name: 'ChannelEditIndex',
@@ -62,6 +63,7 @@
       GlobalSnackbar,
       IconButton,
       ChannelNavigationDrawer,
+      ToolBar,
     },
     data() {
       return {

@@ -2,8 +2,8 @@
 
   <VTooltip maxWidth="150px" bottom color="darkGrey" v-bind="$attrs">
     <template #activator="{ on }">
-      <VBtn flat icon v-on="on">
-        <Icon>
+      <VBtn flat icon :small="small" v-on="on">
+        <Icon :small="small">
           {{ icon }}
         </Icon>
       </VBtn>
@@ -25,6 +25,10 @@
       icon: {
         type: String,
         required: true,
+      },
+      small: {
+        type: Boolean,
+        default: false,
       },
     },
   };

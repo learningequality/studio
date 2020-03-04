@@ -6,6 +6,7 @@ export default function theme() {
     primary: '#996189',
     secondary: '#8DC5B6',
     primaryBackground: colors.purple.lighten5,
+    backgroundColor: colors.grey.lighten5,
     greyBackground: colors.grey.lighten3,
     greyBorder: colors.grey.lighten1,
     grey: colors.grey.darken1,
