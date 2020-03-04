@@ -1,6 +1,3 @@
-import pathlib
-from urllib.parse import urlencode
-
 from django.conf import settings
 from django.core.files.storage import default_storage
 from django_s3_storage.storage import S3Storage
