@@ -1,8 +1,9 @@
 import difference from 'lodash/difference';
 import union from 'lodash/union';
+import { sanitizeFiles } from '../file/utils';
 import { NOVALUE } from 'shared/constants';
 import { MOVE_POSITIONS } from 'shared/data/constants';
-import { ContentNode, Tree } from 'shared/data/resources';
+import { ContentNode, Tree, File } from 'shared/data/resources';
 
 export function loadContentNodes(context, params = {}) {
   return ContentNode.where(params).then(contentNodes => {
@@ -35,7 +36,7 @@ export function loadChildren(context, { parent, channel_id }) {
 }
 
 /* CONTENTNODE EDITOR ACTIONS */
-export function createContentNode(context, { parent, kind = 'topic' } = {}) {
+export function createContentNode(context, { parent, kind = 'topic', ...payload }) {
   const session = context.rootState.session;
   const contentNodeData = {
     title: '',
@@ -43,15 +44,26 @@ export function createContentNode(context, { parent, kind = 'topic' } = {}) {
     kind,
     files: [],
     prerequisite: [],
+    assessment_items: [],
+    extra_fields: {},
+    isNew: true,
     language: session.preferences ? session.preferences.language : session.currentLanguage,
     ...context.rootGetters['currentChannel/currentChannel'].content_defaults,
+    ...payload,
   };
+
   return ContentNode.put(contentNodeData).then(id => {
+    // Add files to content node
+    contentNodeData.files.forEach(file => {
+      context.dispatch('file/updateFile', { id: file, contentnode: id }, { root: true });
+    });
+
     return Tree.move(id, parent, MOVE_POSITIONS.LAST_CHILD).then(treeNode => {
       context.commit('ADD_CONTENTNODE', {
         id,
         ...contentNodeData,
       });
+
       context.commit('ADD_TREENODE', treeNode);
       return id;
     });
@@ -61,7 +73,7 @@ export function createContentNode(context, { parent, kind = 'topic' } = {}) {
 function generateContentNodeData({
   title = NOVALUE,
   description = NOVALUE,
-  thumbnailData = NOVALUE,
+  thumbnail_encoding = NOVALUE,
   language = NOVALUE,
   license = NOVALUE,
   license_description = NOVALUE,
@@ -79,13 +91,8 @@ function generateContentNodeData({
   if (description !== NOVALUE) {
     contentNodeData.description = description;
   }
-  if (
-    thumbnailData !== NOVALUE &&
-    ['thumbnail', 'thumbnail_url', 'thumbnail_encoding'].every(attr => thumbnailData[attr])
-  ) {
-    contentNodeData.thumbnail = thumbnailData.thumbnail;
-    contentNodeData.thumbnail_url = thumbnailData.thumbnail_url;
-    contentNodeData.thumbnail_encoding = thumbnailData.thumbnail_encoding;
+  if (thumbnail_encoding !== NOVALUE) {
+    contentNodeData.thumbnail_encoding = JSON.stringify(thumbnail_encoding);
   }
   if (language !== NOVALUE) {
     contentNodeData.language = language;
@@ -165,6 +172,48 @@ export function removeTags(context, { ids, tags }) {
   });
 }
 
+export function addFiles(context, { id, files }) {
+  let node = context.state.contentNodesMap[id];
+  let currentFiles = context.rootGetters['file/getFiles'](node.files);
+  let newFiles = currentFiles.map(file => {
+    // Replace files with matching preset and language
+    let match = files.find(
+      f =>
+        f.preset.id === file.preset.id &&
+        (!file.preset.multi_language || file.language.id === f.language.id)
+    );
+    if (match) {
+      File.delete(file.id);
+      return match.id;
+    }
+    return file.id;
+  });
+
+  // Add new files
+  files.forEach(file => {
+    if (!newFiles.includes(file.id)) newFiles.push(file.id);
+  });
+
+  // Set contentnode on new files
+  newFiles.forEach(file => {
+    context.dispatch('file/updateFile', { id: file, contentnode: id }, { root: true });
+  });
+
+  context.commit('SET_FILES', { id, files: newFiles });
+  return ContentNode.update(id, { files: newFiles });
+}
+
+export function removeFiles(context, { id, files }) {
+  let currentFiles = context.state.contentNodesMap[id].files;
+  let newFiles = currentFiles.filter(fileID => {
+    return !files.find(f => f.id === fileID);
+  });
+  files.forEach(file => File.delete(file.id));
+
+  context.commit('SET_FILES', { id, files: newFiles });
+  return ContentNode.update(id, { files: newFiles });
+}
+
 export function deleteContentNode(context, contentNodeId) {
   return ContentNode.delete(contentNodeId).then(() => {
     return Tree.delete(contentNodeId).then(() => {
@@ -172,4 +221,31 @@ export function deleteContentNode(context, contentNodeId) {
       context.commit('REMOVE_TREENODE', { id: contentNodeId });
     });
   });
+}
+
+export function copyContentNodes(context, contentNodeIds) {
+  // TODO: Implement copy nodes endpoint
+  return new Promise(resolve => resolve(context, contentNodeIds));
+}
+
+export function sanitizeContentNodes(context, contentNodeIds, removeInvalid = false) {
+  let promises = [];
+  context.getters.getContentNodes(contentNodeIds).forEach(node => {
+    let files = context.rootGetters['file/getFiles'](node.files);
+    let validFiles = sanitizeFiles(files);
+    if (
+      removeInvalid &&
+      !validFiles.filter(f => !f.preset.supplementary).length &&
+      node.kind !== 'topic' &&
+      node.kind !== 'exercise'
+    ) {
+      promises.push(context.dispatch('deleteContentNode', node.id));
+    } else if (files.length !== validFiles.length) {
+      // Remove uploading and failed files
+      promises.push(
+        context.dispatch('updateContentNode', { id: node.id, files: validFiles.map(f => f.id) })
+      );
+    }
+  });
+  return Promise.all(promises);
 }

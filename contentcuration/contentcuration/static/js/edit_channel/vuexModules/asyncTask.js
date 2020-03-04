@@ -137,7 +137,7 @@ const asyncTasksModule = {
                   }
                   delete callbacks[task.id];
                   if (callback) {
-                    callback();
+                    callback(task.status === 'SUCCESS' && task.metadata.result);
                   }
                 }
 

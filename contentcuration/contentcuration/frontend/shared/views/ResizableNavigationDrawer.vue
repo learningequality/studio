@@ -1,0 +1,110 @@
+<template>
+
+  <VNavigationDrawer
+    ref="drawer"
+    v-model="drawer.open"
+    v-bind="$attrs"
+    :width="drawer.width"
+  >
+    <div class="drawer-contents">
+      <slot></slot>
+    </div>
+  </VNavigationDrawer>
+
+</template>
+
+<script>
+
+  export default {
+    name: 'ResizableNavigationDrawer',
+    props: {
+      minWidth: {
+        type: Number,
+        default: 10,
+      },
+      maxWidth: {
+        type: Number,
+        default: window.innerWidth - 100,
+      },
+      open: {
+        type: Boolean,
+        default: true,
+      },
+    },
+    data() {
+      return {
+        drawer: {
+          open: true,
+          width: localStorage['edit-modal-width'] || 300,
+        },
+      };
+    },
+    computed: {
+      drawerElement() {
+        return this.$refs.drawer.$el;
+      },
+    },
+    beforeMount() {
+      this.drawer.open = this.open;
+    },
+    mounted() {
+      this.$nextTick(() => {
+        const drawerBorder = this.drawerElement.querySelector('.v-navigation-drawer__border');
+        drawerBorder.addEventListener('mousedown', this.handleMouseDown, false);
+        document.addEventListener('mouseup', this.handleMouseUp, false);
+      });
+    },
+    methods: {
+      resize(e) {
+        document.body.style.cursor = 'col-resize';
+        let width = Math.min(Math.max(this.minWidth, e.clientX), this.maxWidth) + 'px';
+        this.drawerElement.style.width = localStorage['edit-modal-width'] = width;
+      },
+      handleMouseDown(event) {
+        // Don't select items on drag
+        event.stopPropagation();
+        event.preventDefault();
+
+        document.body.style.pointerEvents = 'none';
+        document.querySelectorAll('iframe, embed').forEach(iframe => {
+          iframe.style.pointerEvents = 'none';
+        });
+
+        if (event.offsetX < 12) {
+          this.drawerElement.style.transition = 'initial';
+          document.addEventListener('mousemove', this.resize, false);
+        }
+      },
+      handleMouseUp() {
+        this.drawerElement.style.transition = '';
+        this.drawer.width = this.drawerElement.style.width;
+        document.body.style.cursor = '';
+        document.body.style.pointerEvents = 'unset';
+        document.querySelectorAll('iframe, embed').forEach(iframe => {
+          iframe.style.pointerEvents = 'unset';
+        });
+        document.removeEventListener('mousemove', this.resize, false);
+      },
+    },
+    $trs: {},
+  };
+
+</script>
+
+<style lang="less" scoped>
+
+  /deep/ .v-navigation-drawer__border {
+    width: 3px;
+    height: 100%;
+    margin-left: 3px;
+    cursor: col-resize;
+    background: transparent !important;
+    border-right: 1px solid var(--v-grey-lighten4);
+  }
+
+  .drawer-contents {
+    height: inherit;
+    overflow: auto;
+  }
+
+</style>

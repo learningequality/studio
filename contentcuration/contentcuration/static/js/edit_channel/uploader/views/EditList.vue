@@ -1,54 +1,22 @@
 <template>
 
-  <VList>
+  <VList two-line>
     <!-- Select all checkbox -->
-    <VCheckbox v-model="selectAll" color="primary">
-      <template #label>
-        <VListTile class="select-all-wrapper">
-          <VListTileContent>
-            <VListTileTitle>{{ $tr('selectAllLabel') }}</VListTileTitle>
-          </VListTileContent>
-        </VListTile>
-      </template>
-    </VCheckbox>
-    <VDivider />
-
     <VCheckbox
+      v-model="selectAll"
+      color="primary"
+      hide-details
+      class="mt-0 mb-2 pa-2"
+      :label="$tr('selectAllLabel')"
+    />
+    <VDivider />
+    <EditListItem
       v-for="nodeId in nodeIds"
       :key="nodeId"
       v-model="selected"
-      :class="{selected: isSelected}"
-      color="primary"
-      :value="nodeId"
-    >
-      <template #label>
-        <VListTile>
-          <VListTileAction />
-          <VListTileAction v-if="node.changesStaged" class="changed">
-            *
-          </VListTileAction>
-          <VListTileAvatar>
-            <ContentNodeIcon :kind="node.kind" />
-          </VListTileAvatar>
-          <VListTileContent>
-            <VListTileTitle>
-              {{ node.title }}
-            </VListTileTitle>
-          </VListTileContent>
-          <VSpacer />
-          <VListTileAction v-if="!nodeIsValid">
-            <VIcon color="red" class="error-icon">
-              error
-            </VIcon>
-          </VListTileAction>
-          <VListTileAction v-if="canEdit">
-            <VBtn icon small flat class="remove-item" @click.stop="removeNode(index)">
-              <VIcon>clear</VIcon>
-            </VBtn>
-          </VListTileAction>
-        </VListTile>
-      </template>
-    </VCheckbox>
+      :nodeId="nodeId"
+      @removed="handleRemoved"
+    />
 
   </VList>
 
@@ -56,10 +24,13 @@
 
 <script>
 
-  import { mapGetters } from 'vuex';
+  import EditListItem from './EditListItem';
 
   export default {
     name: 'EditList',
+    components: {
+      EditListItem,
+    },
     props: {
       value: {
         type: Array,
@@ -71,7 +42,6 @@
       },
     },
     computed: {
-      ...mapGetters('currentChannel', ['canEdit']),
       selected: {
         get() {
           return this.value;
@@ -93,6 +63,27 @@
         },
       },
     },
+    methods: {
+      handleRemoved(nodeId) {
+        let nodeIds = this.$route.params.detailNodeIds.split(',').filter(id => id !== nodeId);
+
+        this.$router.push({
+          name: this.$route.name,
+          params: {
+            nodeId: this.$route.params.nodeId,
+            detailNodeIds: nodeIds.join(','),
+          },
+        });
+        if (this.selected.includes(nodeId)) {
+          if (this.selected.length === 1) {
+            let viableNodes = this.nodeIds.filter(id => id !== nodeId);
+            this.selected = [viableNodes[viableNodes.length - 1]];
+          } else {
+            this.selected = this.selected.filter(id => id !== nodeId);
+          }
+        }
+      },
+    },
     $trs: {
       selectAllLabel: 'Select All',
     },
@@ -104,15 +95,6 @@
 
   .v-divider {
     margin-top: 0;
-  }
-
-  .add-item-wrapper {
-    padding-bottom: 50px;
-    margin-top: 20px;
-  }
-
-  .selected {
-    background-color: #eeeeee;
   }
 
 </style>

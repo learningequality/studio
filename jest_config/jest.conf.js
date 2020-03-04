@@ -21,6 +21,14 @@ module.exports = {
     '^rawJquery$': '<rootDir>/node_modules/jquery',
     '\\.(css|less|styl)$': 'identity-obj-proxy',
     '^frontend/(.*)': '<rootDir>/contentcuration/contentcuration/frontend/$1',
+    '\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$': path.resolve(
+      __dirname,
+      './fileMock.js',
+    ),
+    'broadcast-channel$': path.resolve(
+      __dirname,
+      './broadcastChannelMock.js',
+    ),
   },
   testURL: 'http://studio.time',
   transform: {

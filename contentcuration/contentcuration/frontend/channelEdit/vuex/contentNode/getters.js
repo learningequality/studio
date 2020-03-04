@@ -3,13 +3,23 @@ import sortBy from 'lodash/sortBy';
 import uniq from 'lodash/uniq';
 import uniqBy from 'lodash/uniqBy';
 
+import { validateNodeFiles } from '../file/utils';
+import { validateNodeDetails } from './utils';
+
 function sorted(nodes) {
   return sortBy(nodes, ['sort_order']);
 }
 
 export function getContentNode(state) {
   return function(contentNodeId) {
-    return state.contentNodesMap[contentNodeId];
+    let node = state.contentNodesMap[contentNodeId];
+    if (node) {
+      let thumbnail_encoding = JSON.parse(node.thumbnail_encoding || '{}');
+      return {
+        ...node,
+        thumbnail_encoding,
+      };
+    }
   };
 }
 
@@ -36,10 +46,36 @@ export function getContentNodeChildren(state) {
   };
 }
 
-export function getContentNodeIsValid(state) {
+export function getContentNodeIsValid(state, getters, rootState, rootGetters) {
   return function(contentNodeId) {
     const contentNode = state.contentNodesMap[contentNodeId];
-    return contentNode && contentNode.title && contentNode.title.length > 0;
+    return (
+      contentNode &&
+      (contentNode.isNew ||
+        (getContentNodeDetailsAreValid(state)(contentNodeId) &&
+          getContentNodeFilesAreValid(state, getters, rootState, rootGetters)(contentNodeId)))
+    );
+  };
+}
+
+export function getContentNodeDetailsAreValid(state) {
+  return function(contentNodeId) {
+    const contentNode = state.contentNodesMap[contentNodeId];
+    return contentNode && (contentNode.isNew || !validateNodeDetails(contentNode).length);
+  };
+}
+
+export function getContentNodeFilesAreValid(state, getters, rootState, rootGetters) {
+  return function(contentNodeId) {
+    const contentNode = state.contentNodesMap[contentNodeId];
+    if (contentNode) {
+      let files = rootGetters['file/getFiles'](contentNode.files);
+      if (files.length) {
+        // Don't count errros before files have loaded
+        return !validateNodeFiles(files).length;
+      }
+    }
+    return true;
   };
 }
 
@@ -66,7 +102,7 @@ export function copyrightHolders(state) {
 }
 
 export function tags(state) {
-  return uniq(flatMap(Object.values(state.contentNodesMap), node => node['tags']));
+  return uniq(flatMap(Object.values(state.contentNodesMap), node => node['tags']).filter(t => t));
 }
 
 export function nodeExpanded(state) {

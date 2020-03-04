@@ -23,6 +23,10 @@
             {{ name }}
           </template>
         </VToolbarTitle>
+        <VSpacer />
+        <VBtn flat @click="close">
+          {{ $tr('saveChangesButton' ) }}
+        </VBtn>
       </VToolbar>
       <VProgressLinear
         v-if="loading"
@@ -211,6 +215,7 @@
       channelName: 'Channel name',
       channelError: 'Channel name cannot be blank',
       channelDescription: 'Channel description',
+      saveChangesButton: 'Save changes',
     },
   };
 

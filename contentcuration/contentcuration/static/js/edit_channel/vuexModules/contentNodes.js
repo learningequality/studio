@@ -125,6 +125,22 @@ const contentNodesModule = {
       });
     },
 
+    saveFiles(context, payload) {
+      return new Promise((resolve, reject) => {
+        $.ajax({
+          method: 'PUT',
+          url: window.Urls.file_list(),
+          data: JSON.stringify(payload),
+          contentType: 'application/json',
+          beforeSend: xhr => {
+            xhr.setRequestHeader('X-CSRFToken', get_cookie('csrftoken'));
+          },
+          error: reject,
+          success: resolve,
+        });
+      });
+    },
+
     /* Content node operations */
     saveNodes(context, payload) {
       // Some nodes may have extra_fields set to null, so make an empty dict instead
@@ -141,7 +157,11 @@ const contentNodesModule = {
           error: reject,
           success: data => {
             let savedData = {};
-            _.each(data, node => (savedData[node.id] = node));
+            _.each(data, (node, i) => {
+              savedData[node.id] = node;
+              payload[i].files.forEach(f => (f.contentnode = node.id));
+              savedData[node.id].files = payload[i].files;
+            });
             context.commit('SET_NODES', savedData);
             resolve(savedData);
           },
@@ -200,3 +220,4 @@ const contentNodesModule = {
 };
 
 module.exports = contentNodesModule;
+export default contentNodesModule;

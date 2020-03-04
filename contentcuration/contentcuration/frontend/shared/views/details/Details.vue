@@ -24,7 +24,7 @@
             <template v-slot:items="props">
               <td>
                 <ContentNodeIcon :kind="props.item.kind_id" />
-                <span>{{ translateConstant(props.item.kind_id) }}</span>
+                <span class="text">{{ translateConstant(props.item.kind_id) }}</span>
               </td>
               <td>{{ $formatNumber(props.item.count) }}</td>
               <td v-if="$vuetify.breakpoint.smAndUp"></td>

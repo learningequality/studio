@@ -34,8 +34,18 @@ export function UPDATE_CONTENTNODES(state, { ids, ...payload }) {
   });
 }
 
+export function ENABLE_VALIDATION_ON_NODES(state, ids) {
+  ids.forEach(id => {
+    if (state.contentNodesMap[id]) state.contentNodesMap[id].isNew = false;
+  });
+}
+
 export function SET_TAGS(state, { id, tags }) {
   state.contentNodesMap[id].tags = tags;
+}
+
+export function SET_FILES(state, { id, files }) {
+  state.contentNodesMap[id].files = files;
 }
 
 export function SET_EXPANSION(state, { id, expanded }) {

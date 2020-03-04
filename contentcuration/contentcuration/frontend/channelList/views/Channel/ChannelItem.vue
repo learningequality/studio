@@ -1,6 +1,6 @@
 <template>
 
-  <VCard class="my-3" :href="openChannelLink" data-test="channel-card">
+  <VCard class="my-3" data-test="channel-card" @click="openChannelLink">
     <VLayout row wrap>
       <VFlex xs12 sm3>
         <VCardTitle>
@@ -221,14 +221,6 @@
       canEdit() {
         return this.allowEdit && this.channel.edit && !this.channel.ricecooker_version;
       },
-      openChannelLink() {
-        // TODO: update if we decide to make channel edit page accessible
-        // without an account
-        if (this.loggedIn) {
-          return window.Urls.channel(this.channelId);
-        }
-        return this.channelDetailsLink;
-      },
     },
     methods: {
       ...mapActions('channel', ['deleteChannel']),
@@ -236,6 +228,16 @@
         this.deleteChannel(this.channelId).then(() => {
           this.deleteDialog = false;
         });
+      },
+      openChannelLink() {
+        // TODO: if we decide to make channel edit page accessible
+        // without an account, update this to be a :to computed property
+        // to take advantage of the router more
+        if (this.loggedIn) {
+          window.location = window.Urls.channel(this.channelId);
+        } else {
+          this.$router.push(this.channelDetailsLink);
+        }
       },
     },
     $trs: {

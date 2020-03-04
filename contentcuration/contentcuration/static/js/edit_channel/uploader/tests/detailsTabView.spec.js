@@ -39,6 +39,10 @@ function makeWrapper(props = {}) {
       viewOnly: false,
       ...props,
     },
+    stubs: {
+      FileUpload: true,
+      FileStorage: true,
+    },
   });
 }
 
@@ -61,7 +65,6 @@ describe.skip('detailsTabView', () => {
   describe('on render', () => {
     it('all fields should match node field values', () => {
       let keys = [
-        'tags',
         'language',
         'title',
         'description',
@@ -109,61 +112,21 @@ describe.skip('detailsTabView', () => {
       });
     });
     describe('field visibility', () => {
-      let keys = [
-        'title',
-        'description',
-        'tags',
-        'license',
-        'role_visibility',
-        'randomize',
-        'mastery_model',
-        'language',
-        'author',
-        'provider',
-        'aggregator',
-        'copyright_holder',
-      ];
       it('certain fields should be visible for exercise nodes', () => {
-        keys.forEach(key => {
-          expect(wrapper.find({ ref: key }).exists()).toBe(true);
-        });
+        expect(wrapper.vm.allExercises).toBe(true);
       });
       it('certain fields should be visible for video nodes', () => {
         localStore.commit('edit_modal/SET_NODE', videoIndex);
         localStore.commit('edit_modal/UPDATE_NODE', { license: specialPermissions.id });
-
-        wrapper.vm.$nextTick(() => {
-          let hiddenKeys = ['mastery_model', 'randomize'];
-          keys.forEach(key => {
-            expect(wrapper.find({ ref: key }).exists()).toBe(!hiddenKeys.includes(key));
-          });
-        });
+        expect(wrapper.vm.allResources).toBe(true);
       });
       it('certain fields should be visible for topics', () => {
         localStore.commit('edit_modal/SET_NODE', topicIndex);
-
-        wrapper.vm.$nextTick(() => {
-          let visibleKeys = ['title', 'description', 'tags', 'language'];
-          keys.forEach(key => {
-            expect(wrapper.find({ ref: key }).exists()).toBe(visibleKeys.includes(key));
-          });
-        });
+        expect(wrapper.vm.allResources).toBe(false);
       });
       it('certain fields should be hidden when multiple items are selected', () => {
         localStore.commit('edit_modal/SELECT_NODE', exercise2Index);
-        wrapper.vm.$nextTick(() => {
-          let hiddenKeys = ['title', 'description'];
-          keys.forEach(key => {
-            expect(wrapper.find({ ref: key }).exists()).toBe(!hiddenKeys.includes(key));
-          });
-        });
-      });
-    });
-
-    it('all fields should be readonly in view only mode', () => {
-      wrapper.setProps({ viewOnly: true });
-      wrapper.vm.$nextTick(() => {
-        expect(wrapper.find({ ref: 'title' }).vm.readonly).toBe(true);
+        expect(wrapper.vm.oneSelected).toBe(false);
       });
     });
     it('if content is imported from view-only channel, source fields should be readonly', () => {
@@ -187,15 +150,6 @@ describe.skip('detailsTabView', () => {
     it('exercise fields should set selected node data extra_fields', () => {
       wrapper.find({ ref: 'mastery_model' }).vm.$emit('input', { mastery_model: 'm_of_n' });
       expect(wrapper.vm.masteryModel.mastery_model).toEqual('m_of_n');
-    });
-    it('tags should set selected node data tags list', () => {
-      let tagInput = wrapper.find({ ref: 'tags' });
-      tagInput.vm.$emit('input', ['Tag X']);
-      expect(wrapper.vm.contentTags).toContain('Tag X');
-
-      tagInput.vm.$emit('input', ['Tag Y']);
-      expect(wrapper.vm.contentTags).not.toContain('Tag X');
-      expect(wrapper.vm.contentTags).toContain('Tag Y');
     });
   });
   describe('on validation', () => {
