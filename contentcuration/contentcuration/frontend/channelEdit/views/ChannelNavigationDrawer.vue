@@ -32,8 +32,8 @@
       </VListTile>
       <VListTile :href="viewOnlyChannelsLink">
         <VListTileAction>
-          <Icon color="red">
-            outdoor_grill
+          <Icon>
+            $vuetify.icons.view_only
           </Icon>
         </VListTileAction>
         <VListTileContent class="subheading">

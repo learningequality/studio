@@ -8,7 +8,9 @@
       :style="{backgroundColor: $vuetify.theme.backgroundColor}"
     >
       <VToolbar dense flat color="backgroundColor">
-        <IconButton icon="remove" :text="$tr('collapseAllButton')" />
+        <IconButton icon="collapse_all" :text="$tr('collapseAllButton')">
+          $vuetify.icons.collapse_all
+        </IconButton>
         <VSpacer />
       </VToolbar>
       <div style="margin: 0px -24px;">

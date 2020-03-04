@@ -4,7 +4,9 @@
     <template #activator="{ on }">
       <VBtn flat icon :small="small" v-on="on">
         <Icon :small="small">
-          {{ icon }}
+          <slot>
+            {{ icon }}
+          </slot>
         </Icon>
       </VBtn>
     </template>
