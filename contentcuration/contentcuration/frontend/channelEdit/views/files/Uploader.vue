@@ -75,8 +75,6 @@
   import Constants from 'edit_channel/constants';
   import Alert from 'edit_channel/sharedComponents/Alert.vue';
 
-  import State from 'edit_channel/state';
-
   export default {
     name: 'Uploader',
     components: {
@@ -120,6 +118,7 @@
     },
     computed: {
       ...mapGetters('file', ['getFiles']),
+      ...mapGetters(['availableSpace']),
       acceptedFiles() {
         return Constants.FormatPresets.filter(
           fp => fp.display && (this.presetID ? this.presetID === fp.id : !fp.supplementary)
@@ -137,9 +136,6 @@
           extensions: this.acceptedExtensions.join(this.$tr('listDelimiter')),
           extensionCount: this.acceptedExtensions.length,
         });
-      },
-      availableSpace() {
-        return State.current_user.get('available_space');
       },
       highlightDropzone() {
         return this.highlight && !this.readonly && this.allowDrop;

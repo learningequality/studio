@@ -28,5 +28,8 @@ export default {
     currentUserId(state) {
       return state.currentUser.id;
     },
+    availableSpace(state) {
+      return state.currentUser.available_space;
+    }
   },
 };
