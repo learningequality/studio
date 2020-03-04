@@ -89,7 +89,7 @@ class TreeViewSet(GenericViewSet):
             item["channel_id"] = channel_id
             return item
 
-        queryset = self.filter_queryset(root.get_descendants())
+        queryset = self.filter_queryset(root.get_descendants(include_self=True))
         tree = map(map_data, queryset.values(*self.values))
         return Response(tree)
 
