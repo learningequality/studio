@@ -11,7 +11,6 @@ import logging
 import os
 import urllib.parse
 import uuid
-import warnings
 from datetime import datetime
 
 import pytz
@@ -31,11 +30,11 @@ from django.core.mail import send_mail
 from django.db import connection
 from django.db import IntegrityError
 from django.db import models
-from django.db import transaction
 from django.db.models import Count
 from django.db.models import Max
 from django.db.models import Q
 from django.db.models import Sum
+from django.db.models.query_utils import DeferredAttribute
 from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.translation import ugettext as _
@@ -49,10 +48,9 @@ from le_utils.constants import roles
 from mptt.models import MPTTModel
 from mptt.models import raise_if_unsaved
 from mptt.models import TreeForeignKey
-from mptt.models import TreeManager
 from pg_utils import DistinctSum
 
-from contentcuration.db.models.manager import CustomTreeManager
+from contentcuration.db.models.manager import CustomContentNodeTreeManager
 from contentcuration.statistics import record_channel_stats
 from contentcuration.utils.cache import delete_public_channel_cache_keys
 from contentcuration.utils.parser import load_json_string
@@ -79,32 +77,6 @@ DEFAULT_CONTENT_DEFAULTS = {
     'auto_randomize_questions': True,
 }
 DEFAULT_USER_PREFERENCES = json.dumps(DEFAULT_CONTENT_DEFAULTS, ensure_ascii=False)
-
-
-# Added 7-31-2018. We can remove this once we are certain we have eliminated all cases
-# where root nodes are getting prepended rather than appended to the tree list.
-def _create_tree_space(self, target_tree_id, num_trees=1):
-    """
-    Creates space for a new tree by incrementing all tree ids
-    greater than ``target_tree_id``.
-    """
-
-    if target_tree_id == -1:
-        raise Exception("ERROR: Calling _create_tree_space with -1! Something is attempting to sort all MPTT trees root nodes!")
-
-    self._orig_create_tree_space(target_tree_id, num_trees)
-
-
-def _get_next_tree_id(self, *args, **kwargs):
-    new_id = MPTTTreeIDManager.objects.create().id
-    return new_id
-
-
-TreeManager._orig_create_tree_space = TreeManager._create_tree_space
-TreeManager._create_tree_space = _create_tree_space
-
-TreeManager._orig_get_next_tree_id = TreeManager._get_next_tree_id
-TreeManager._get_next_tree_id = _get_next_tree_id
 
 
 class UserManager(BaseUserManager):
@@ -998,7 +970,7 @@ class ContentNode(MPTTModel, models.Model):
     role_visibility = models.CharField(max_length=50, choices=roles.choices, default=roles.LEARNER)
     freeze_authoring_data = models.BooleanField(default=False)
 
-    objects = CustomTreeManager()
+    objects = CustomContentNodeTreeManager()
 
     @raise_if_unsaved
     def get_root(self):
@@ -1007,39 +979,45 @@ class ContentNode(MPTTModel, models.Model):
             return self
         return super(ContentNode, self).get_root()
 
-    def __init__(self, *args, **kwargs):
-        super(ContentNode, self).__init__(*args, **kwargs)
-        self._original_fields = None
-
     def _as_dict(self):
-        return dict([(f.name, getattr(self, f.name)) for f in self._meta.local_fields if not f.rel])
+        opts = self._meta
+        data = {}
+        for f in opts.concrete_fields:
+            data[f.name] = f.value_from_object(self)
+            if f.is_relation:
+                # For relations, also set the DB column so that we can reference
+                # the foreign key by _id
+                data[f.column] = data[f.name]
+        return data
 
-    def _mark_unchanged(self):
-        """
-        This method sets all cached fields to current values in order to force the node into an unchanged state.
-        This is a helper method for tests that let us test the behavior of marking nodes changed, as they are only
-        marked as unchanged upon publish.
-        Please do not use this for any production code.
-        """
-        if not self._original_fields:
-            self.get_changed_fields()
-        new_state = self._as_dict()
-        for field_name in self._original_fields:
-            self._original_fields[field_name] = new_state[field_name]
+    def _set_original_fields(self):
+        self._original_fields = self._as_dict()
+
+    @classmethod
+    def from_db(cls, db, field_names, values):
+        instance = super(ContentNode, cls).from_db(db, field_names, values)
+        # customization to store the original field values on the instance
+        instance._set_original_fields()
+        return instance
 
     def get_changed_fields(self):
-        """ Returns a dictionary of all of the changed (dirty) fields """
-        new_state = self._as_dict()
-        # In Django 1.11, _as_dict() can trigger a refresh_from_db is called from __init__, so just load it on
-        # first call here instead. We may want to whitelist what fields to check in the future
-        if not self._original_fields:
-            self._original_fields = ContentNode.objects.get(pk=self.pk)._as_dict()
-            # don't include the changed (dirty) field in the list of fields we check to see if the object is dirty
-            del self._original_fields['changed']
-            del self._original_fields['modified']
-            del self._original_fields['publishing']
-
-        return dict([(key, value) for key, value in self._original_fields.items() if value != new_state[key]])
+        opts = self._meta
+        mptt_opts = self._mptt_meta
+        # If this is a new object, then all its fields are changed!
+        if self._state.adding:
+            return [f.name for f in opts.concrete_fields]
+        # Ignore fields that are used for dirty tracking, and also mptt fields, as changes to these are tracked in mptt manager methods.
+        blacklist = set([
+            'changed',
+            'modified',
+            'publishing',
+            mptt_opts.tree_id_attr,
+            mptt_opts.left_attr,
+            mptt_opts.right_attr,
+            mptt_opts.level_attr,
+            mptt_opts.parent_attr,
+        ])
+        return [f.name for f in opts.concrete_fields if f.name not in blacklist and self._original_fields[f.name] != f.value_from_object(self)]
 
     def get_tree_data(self, levels=float('inf')):
         """
@@ -1253,34 +1231,43 @@ class ContentNode(MPTTModel, models.Model):
         cache.set("details_{}".format(self.node_id), json.dumps(data), None)
         return data
 
-    def move_to(self, target, position="first-child"):
-        original_parent_id = self.parent_id
-        tree_changed = self.tree_id != target.tree_id
-        with transaction.atomic():
-            # Lock only MPTT columns for updates on this tree and the target tree
-            # until the end of this transaction
-            ContentNode.objects.select_for_update().order_by().filter(
-                Q(tree_id=self.tree_id) | Q(tree_id=target.tree_id)
-            ).values("tree_id", "lft", "rght")
-            self.changed = True
-            super(ContentNode, self).move_to(target, position)
-        new_parent_id = (
-            ContentNode.objects.all()
-            .values_list("parent_id", flat=True)
-            .get(id=self.id)
-        )
-        if original_parent_id != new_parent_id:
-            ContentNode.objects.filter(id=original_parent_id).update(
-                changed=True
-            )
-        if tree_changed:
-            PrerequisiteContentRelationship.objects.filter(Q(prerequisite_id=self.id) | Q(target_node_id=self.id)).delete()
+    def on_create(self):
+        self.changed = True
 
-    def save(self, *args, **kwargs):
-
+    def on_update(self):
         self.changed = self.changed or len(self.get_changed_fields()) > 0
 
-        super(ContentNode, self).save(*args, **kwargs)
+    def save(self, *args, **kwargs):
+        if self._state.adding:
+            self.on_create()
+        else:
+            self.on_update()
+
+        # Logic borrowed from mptt - do a simple check to see if we have changed
+        # the parent of the node. We use the mptt specific cached fields here
+        # because these get updated by the mptt move methods, and so will be up to
+        # date, meaning we can avoid locking the DB twice when the fields have already
+        # been updated in the database.
+
+        # If most moves are being done independently of just changing the parent
+        # and then calling a save, locking within the save method itself should rarely
+        # be triggered - meaning updates to contentnode metadata should only rarely
+        # trigger a write lock on mptt fields.
+
+        old_parent_id = self._mptt_cached_fields.get(self._mptt_meta.parent_attr)
+        if old_parent_id is DeferredAttribute:
+            same_order = True
+        else:
+            same_order = old_parent_id == self.parent_id
+
+        if not same_order:
+            # Lock the mptt fields for the trees of the old and new parent
+            with ContentNode.objects.lock_mptt(*ContentNode.objects.filter(id__in=[old_parent_id, self.parent_id]).values_list('tree_id', flat=True).distinct()):
+                super(ContentNode, self).save(*args, **kwargs)
+        else:
+            super(ContentNode, self).save(*args, **kwargs)
+        # Update the _original_fields after save
+        self._set_original_fields()
 
     class Meta:
         verbose_name = _("Topic")

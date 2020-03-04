@@ -277,7 +277,7 @@ class ContentNodeViewSet(ValuesViewset):
         return queryset
 
     def perform_bulk_update(self, serializer):
-        serializer.save(changed=True)
+        serializer.save()
 
     def perform_bulk_create(self, serializer):
         if ORPHAN_TREE_ID_CACHE_KEY not in cache:
@@ -292,7 +292,6 @@ class ContentNodeViewSet(ValuesViewset):
             tree_id = cache.get(ORPHAN_TREE_ID_CACHE_KEY)
         # Creating a new node, by default put it in the orphanage on initial creation.
         serializer.save(
-            changed=True,
             tree_id=tree_id,
             parent_id=settings.ORPHANAGE_ROOT_ID,
             lft=1,
