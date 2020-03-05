@@ -19,7 +19,7 @@
         <StudioTree :nodeId="rootId" :root="true" />
       </div>
     </ResizableNavigationDrawer>
-    <NodePanel :parentId="nodeId" :detailNodeId="detailNodeId" />
+    <CurrentTopicView :topicId="nodeId" :detailNodeId="detailNodeId" />
     <router-view />
   </VContainer>
 
@@ -30,17 +30,17 @@
 
   import { mapGetters } from 'vuex';
   import StudioTree from './StudioTree';
-  import NodePanel from './NodePanel';
+  import CurrentTopicView from './CurrentTopicView';
   import IconButton from 'shared/views/IconButton';
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
 
   export default {
     name: 'TreeView',
     components: {
-      NodePanel,
       StudioTree,
       IconButton,
       ResizableNavigationDrawer,
+      CurrentTopicView,
     },
     props: {
       nodeId: {

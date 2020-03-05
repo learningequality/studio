@@ -9,6 +9,11 @@ export const RouterNames = {
   UPLOAD_FILES: 'UPLOAD_FILES',
 };
 
+export const viewModes = {
+  DEFAULT: 'DEFAULT_VIEW',
+  COMPACT: 'COMPACT_VIEW',
+};
+
 // File constants
 export const fileErrors = {
   NO_STORAGE: 'NO_STORAGE',

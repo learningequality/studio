@@ -228,19 +228,27 @@
         return [];
       },
     },
+    watch: {
+      node() {
+        this.loadNode();
+      },
+    },
     mounted() {
-      // Load related models
-      if (this.node.prerequisite.length) {
-        this.loading = true;
-        this.loadContentNodes({ ids: this.node.prerequisite }).then(() => {
-          this.loading = false;
-        });
-      }
+      this.loadNode();
     },
     methods: {
       ...mapActions('contentNode', ['loadContentNodes']),
       getText(field) {
         return this.node[field] || this.$tr('defaultNoItemsText');
+      },
+      loadNode() {
+        // Load related models
+        if (this.node && this.node.prerequisite.length) {
+          this.loading = true;
+          this.loadContentNodes({ ids: this.node.prerequisite }).then(() => {
+            this.loading = false;
+          });
+        }
       },
     },
     $trs: {
