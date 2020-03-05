@@ -1,8 +1,8 @@
 <template>
 
-  <VTooltip maxWidth="150px" bottom color="darkGrey" v-bind="$attrs">
+  <VTooltip maxWidth="150px" bottom color="darkGrey">
     <template #activator="{ on }">
-      <VBtn flat icon :small="small" v-on="on">
+      <VBtn flat icon :small="small" v-bind="$attrs" v-on="on">
         <Icon :small="small">
           <slot>
             {{ icon }}

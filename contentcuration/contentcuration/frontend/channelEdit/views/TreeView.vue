@@ -5,6 +5,8 @@
       permanent
       clipped
       localName="topic-tree"
+      :maxWidth="700"
+      :minWidth="175"
       :style="{backgroundColor: $vuetify.theme.backgroundColor}"
     >
       <VToolbar dense flat color="backgroundColor">
@@ -13,7 +15,7 @@
         </IconButton>
         <VSpacer />
       </VToolbar>
-      <div style="margin: 0px -24px;">
+      <div style="margin-left: -24px;">
         <StudioTree :nodeId="rootId" :root="true" />
       </div>
     </ResizableNavigationDrawer>

@@ -1,8 +1,8 @@
 <template>
 
   <VLayout>
-    <div v-if="loading">
-      <LoadingText />
+    <div v-if="loading || !node">
+      <LoadingText absolute />
     </div>
     <VFlex v-else xs12>
       <VLayout row>
