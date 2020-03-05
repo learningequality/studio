@@ -218,7 +218,7 @@
       },
       editNodeLink(id) {
         return {
-          name: RouterNames.VIEW_CONTENTNODES,
+          name: RouterNames.CONTENTNODE_DETAILS,
           params: {
             detailNodeIds: id,
           },

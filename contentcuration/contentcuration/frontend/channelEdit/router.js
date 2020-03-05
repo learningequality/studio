@@ -68,8 +68,8 @@ const router = new VueRouter({
       },
       children: [
         {
-          name: RouterNames.VIEW_CONTENTNODES,
-          path: 'view/:detailNodeIds',
+          name: RouterNames.CONTENTNODE_DETAILS,
+          path: 'details/:detailNodeIds',
           props: true,
           component: EditModal,
         },
