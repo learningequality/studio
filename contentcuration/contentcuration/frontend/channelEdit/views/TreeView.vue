@@ -20,9 +20,7 @@
       </div>
     </ResizableNavigationDrawer>
     <NodePanel :parentId="nodeId" :detailNodeId="detailNodeId" />
-    <keep-alive>
-      <router-view />
-    </keep-alive>
+    <router-view />
   </VContainer>
 
 </template>

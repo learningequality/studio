@@ -7,8 +7,8 @@
         {{ currentChannel.name }}
       </VToolbarTitle>
       <VToolbarItems class="ml-4">
-        <IconButton icon="info" :text="$tr('channelDetails')" />
-        <IconButton icon="edit" :text="$tr('editChannel')" />
+        <IconButton icon="info" :text="$tr('channelDetails')" :to="viewChannelDetailsLink" />
+        <IconButton v-if="canEdit" icon="edit" :text="$tr('editChannel')" :to="editChannelLink" />
         <IconButton icon="delete" :text="$tr('openTrash')" />
       </VToolbarItems>
       <VSpacer />
@@ -56,6 +56,7 @@
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
   import IconButton from 'shared/views/IconButton';
   import ToolBar from 'shared/views/ToolBar';
+  import { RouterNames as ChannelRouterNames } from 'frontend/channelList/constants';
 
   export default {
     name: 'ChannelEditIndex',
@@ -71,7 +72,23 @@
       };
     },
     computed: {
-      ...mapGetters('currentChannel', ['currentChannel']),
+      ...mapGetters('currentChannel', ['currentChannel', 'canEdit']),
+      viewChannelDetailsLink() {
+        return {
+          name: ChannelRouterNames.CHANNEL_DETAILS,
+          params: {
+            channelId: this.currentChannel.id,
+          },
+        };
+      },
+      editChannelLink() {
+        return {
+          name: ChannelRouterNames.CHANNEL_EDIT,
+          params: {
+            channelId: this.currentChannel.id,
+          },
+        };
+      },
     },
     $trs: {
       channelDetails: 'View channel details',

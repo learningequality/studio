@@ -158,6 +158,10 @@
         return {
           name: this.$route.matched[0].name,
           query: this.$route.query,
+          params: {
+            ...this.$route.params,
+            channelId: null,
+          },
         };
       },
       routeParamID() {
