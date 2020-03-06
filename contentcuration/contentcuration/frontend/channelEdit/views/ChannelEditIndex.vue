@@ -44,6 +44,7 @@
       <router-view />
     </VContent>
     <GlobalSnackbar />
+    <ProgressModal />
   </VApp>
 
 </template>
@@ -53,6 +54,7 @@
 
   import { mapGetters } from 'vuex';
   import ChannelNavigationDrawer from './ChannelNavigationDrawer';
+  import ProgressModal from './progress/ProgressModal';
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
   import IconButton from 'shared/views/IconButton';
   import ToolBar from 'shared/views/ToolBar';
@@ -65,6 +67,7 @@
       IconButton,
       ChannelNavigationDrawer,
       ToolBar,
+      ProgressModal,
     },
     data() {
       return {

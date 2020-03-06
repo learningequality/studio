@@ -5,6 +5,7 @@ let timerID = null;
 let currentInterval = DEFAULT_CHECK_INTERVAL;
 
 const asyncTasksModule = {
+  namespaced: true,
   state: {
     asyncTasks: [],
     currentTaskError: null,
