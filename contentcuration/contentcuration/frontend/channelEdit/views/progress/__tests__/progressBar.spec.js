@@ -26,12 +26,12 @@ describe('progressBar', () => {
     });
     expect(wrapper.find('[data-test="success"]').exists()).toBe(true);
   });
-  it('progress bar should be indeterminate if progressPercent is -1', () => {
+  it('progress bar should be hidden if task progress is not tracked', () => {
     let wrapper = makeWrapper({
       progressPercent() {
         return -1;
       },
     });
-    expect(wrapper.find('[data-test="progress"]').vm.indeterminate).toBe(true);
+    expect(wrapper.find('[data-test="progress"]').exists()).toBe(false);
   });
 });

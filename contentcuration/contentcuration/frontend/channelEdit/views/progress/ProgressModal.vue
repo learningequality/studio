@@ -16,18 +16,14 @@
               {{ headerText }}
             </VCardTitle>
             <VCardText class="py-4">
-              <p :class="currentTaskError? 'red--text' : 'black--text'">
-                {{ descriptionText }}
-              </p>
-              <ProgressBar />
+              <ProgressBar :text="descriptionText" />
             </VCardText>
 
             <VCardActions>
               <VSpacer />
               <VBtn
                 v-if="progressPercent === 100 || currentTaskError"
-                :color="currentTaskError? 'red' : 'greenSuccess'"
-                dark
+                color="primary"
                 data-test="refresh"
                 @click="closeOverlay"
               >
