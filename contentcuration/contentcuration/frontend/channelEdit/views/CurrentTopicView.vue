@@ -57,7 +57,7 @@
             </VBtn>
           </template>
           <VList>
-            <VListTile v-for="mode in viewModes" :key="mode" @click="viewMode = mode">
+            <VListTile v-for="mode in viewModes" :key="mode" @click="setViewMode(mode)">
               <VListTileAction style="min-width: 32px;">
                 <Icon v-if="mode === viewMode">
                   check
@@ -97,8 +97,11 @@
 
     <!-- Topic items and resource panel -->
     <VLayout row :style="{height: contentHeight}">
+
       <VFlex class="pa-4" style="overflow-y: auto;">
-        <NodePanel :parentId="topicId" />
+        <VFadeTransition mode="out-in" duration="100">
+          <NodePanel :key="topicId" :parentId="topicId" />
+        </VFadeTransition>
       </VFlex>
       <v-expand-x-transition>
         <ResizableNavigationDrawer
@@ -159,7 +162,7 @@
     data() {
       return {
         showResourceDrawer: false,
-        viewMode: viewModes.DEFAULT,
+        viewMode: sessionStorage['topic-tree-view'] || viewModes.DEFAULT,
       };
     },
     computed: {
@@ -247,6 +250,9 @@
             },
           });
         }, 700);
+      },
+      setViewMode(viewMode) {
+        this.viewMode = sessionStorage['topic-tree-view'] = viewMode;
       },
     },
 

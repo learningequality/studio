@@ -27,8 +27,13 @@
             {{ hasContent ? "folder" : "folder_open" }}
           </Icon>
         </VFlex>
-        <VFlex xs9 class="notranslate px-1" :style="{color: $vuetify.theme.darkGrey}">
-          {{ node.title }}
+        <VFlex xs9 class="notranslate text-truncate px-1" :style="{color: $vuetify.theme.darkGrey}">
+          <VTooltip bottom open-delay="750">
+            <template #activator="{ on }">
+              <span v-on="on">{{ node.title }}</span>
+            </template>
+            <span>{{ node.title }}</span>
+          </VTooltip>
         </VFlex>
         <VFlex shrink style="min-width: 20px;">
           <VProgressCircular
@@ -41,7 +46,7 @@
       </VLayout>
     </router-link>
     <VFlex v-if="node && (root || hasContent)" xs12>
-      <v-slide-y-transition duration="100">
+      <VSlideYTransition duration="100">
         <div v-show="expanded" class="ml-4">
           <StudioTree
             v-for="child in children"
@@ -50,7 +55,7 @@
             :nodeId="child.id"
           />
         </div>
-      </v-slide-y-transition>
+      </VSlideYTransition>
     </VFlex>
   </VLayout>
 
