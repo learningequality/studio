@@ -106,6 +106,7 @@
           right
           localName="resource-panel"
           :minWidth="400"
+          permanent
         >
           <div v-if="detailNodeId" class="pa-4">
             <ResourcePanel :nodeId="detailNodeId" @close="closePanel">
@@ -228,7 +229,7 @@
         return {
           name: RouterNames.TREE_VIEW,
           params: {
-            nodeId: this.parentId,
+            nodeId: this.topicId,
             detailNodeId: nodeId,
           },
         };

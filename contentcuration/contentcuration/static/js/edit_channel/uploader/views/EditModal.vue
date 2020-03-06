@@ -227,7 +227,7 @@
         return this.canEdit && this.$route.name === RouterNames.ADD_EXERCISE;
       },
       editMode() {
-        return this.canEdit && this.$route.name === RouterNames.VIEW_CONTENTNODES;
+        return this.canEdit && this.$route.name === RouterNames.CONTENTNODE_DETAILS;
       },
       showStorage() {
         return this.uploadMode || this.editMode;
@@ -257,7 +257,7 @@
     },
     beforeRouteEnter(to, from, next) {
       if (
-        to.name === RouterNames.VIEW_CONTENTNODES ||
+        to.name === RouterNames.CONTENTNODE_DETAILS ||
         to.name === RouterNames.ADD_TOPICS ||
         to.name === RouterNames.ADD_EXERCISE ||
         to.name === RouterNames.UPLOAD_FILES
