@@ -1,98 +1,62 @@
 <template>
 
-  <div>
-    <VMenu v-if="canEdit" offset-y>
-      <template #activator="{ on }">
-        <VBtn color="primary" fab fixed right v-on="on">
-          <Icon>add</Icon>
-        </VBtn>
-      </template>
-      <VList>
-        <VListTile @click="newTopicNode">
-          <VListTileTitle>{{ $tr('addTopic') }}</VListTileTitle>
-        </VListTile>
-        <VListTile @click="newExerciseNode">
-          <VListTileTitle>{{ $tr('addExercise') }}</VListTileTitle>
-        </VListTile>
-        <VListTile :to="uploadFilesLink">
-          <VListTileTitle>{{ $tr('uploadFiles') }}</VListTileTitle>
-        </VListTile>
-      </VList>
-    </VMenu>
-    <VLayout row wrap>
-      <VFlex xs6>
+  <VContainer fluid class="pa-0 fill-height">
+    <ResizableNavigationDrawer
+      permanent
+      clipped
+      localName="topic-tree"
+      :maxWidth="700"
+      :minWidth="175"
+      :style="{backgroundColor: $vuetify.theme.backgroundColor}"
+    >
+      <VToolbar dense flat color="backgroundColor">
+        <IconButton icon="collapse_all" :text="$tr('collapseAllButton')">
+          $vuetify.icons.collapse_all
+        </IconButton>
+        <VSpacer />
+      </VToolbar>
+      <div style="margin-left: -24px;">
         <StudioTree :nodeId="rootId" :root="true" />
-      </VFlex>
-      <VFlex xs6>
-        <NodePanel :parentId="nodeId" />
-      </VFlex>
-    </VLayout>
+      </div>
+    </ResizableNavigationDrawer>
+    <CurrentTopicView :topicId="nodeId" :detailNodeId="detailNodeId" />
     <router-view />
-  </div>
+  </VContainer>
 
 </template>
 
 
 <script>
 
-  import { mapGetters, mapActions } from 'vuex';
-  import { RouterNames } from '../constants';
+  import { mapGetters } from 'vuex';
   import StudioTree from './StudioTree';
-  import NodePanel from './NodePanel';
+  import CurrentTopicView from './CurrentTopicView';
+  import IconButton from 'shared/views/IconButton';
+  import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
 
   export default {
     name: 'TreeView',
     components: {
-      NodePanel,
       StudioTree,
+      IconButton,
+      ResizableNavigationDrawer,
+      CurrentTopicView,
     },
     props: {
       nodeId: {
         type: String,
         required: true,
       },
+      detailNodeId: {
+        type: String,
+        required: false,
+      },
     },
     computed: {
-      ...mapGetters('currentChannel', ['canEdit', 'rootId']),
-      ...mapGetters('contentNode', ['getContentNode']),
-      uploadFilesLink() {
-        return { name: RouterNames.UPLOAD_FILES };
-      },
-      parentTitle() {
-        return this.getContentNode(this.nodeId).title;
-      },
-    },
-    methods: {
-      ...mapActions('contentNode', ['createContentNode']),
-      newContentNode(route, { kind, title }) {
-        this.createContentNode({ parent: this.nodeId, kind, title }).then(newId => {
-          this.$router.push({
-            name: route,
-            params: { detailNodeIds: newId },
-          });
-        });
-      },
-      newTopicNode() {
-        let nodeData = {
-          kind: 'topic',
-          title: this.$tr('topicDefaultTitle', { parentTitle: this.parentTitle }),
-        };
-        this.newContentNode(RouterNames.ADD_TOPICS, nodeData);
-      },
-      newExerciseNode() {
-        let nodeData = {
-          kind: 'exercise',
-          title: this.$tr('exerciseDefaultTitle', { parentTitle: this.parentTitle }),
-        };
-        this.newContentNode(RouterNames.ADD_EXERCISE, nodeData);
-      },
+      ...mapGetters('currentChannel', ['rootId']),
     },
     $trs: {
-      addTopic: 'Add topic',
-      addExercise: 'Create exercise',
-      uploadFiles: 'Upload files',
-      topicDefaultTitle: '{parentTitle} topic',
-      exerciseDefaultTitle: '{parentTitle} exercise',
+      collapseAllButton: 'Collapse all',
     },
   };
 

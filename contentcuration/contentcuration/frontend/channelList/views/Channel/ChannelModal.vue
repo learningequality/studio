@@ -86,7 +86,6 @@
 <script>
 
   import { mapActions, mapGetters, mapState } from 'vuex';
-  import { RouterNames } from '../../constants';
   import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown';
   import ContentDefaults from 'shared/views/form/ContentDefaults';
 
@@ -204,8 +203,12 @@
       },
       close() {
         this.$router.push({
-          name: RouterNames.CHANNELS,
-          params: { listType: this.$route.params.listType },
+          name: this.$route.matched[0].name,
+          query: this.$route.query,
+          params: {
+            ...this.$route.params,
+            channelId: null,
+          },
         });
       },
     },

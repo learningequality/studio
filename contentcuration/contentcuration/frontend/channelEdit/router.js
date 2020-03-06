@@ -2,7 +2,10 @@ import VueRouter from 'vue-router';
 import { RouterNames } from './constants';
 import TreeView from './views/TreeView';
 import store from './store';
+import { RouterNames as ChannelRouterNames } from 'frontend/channelList/constants';
 import Sandbox from 'shared/views/Sandbox';
+import ChannelModal from 'frontend/channelList/views/Channel/ChannelModal';
+import ChannelDetailsModal from 'frontend/channelList/views/Channel/ChannelDetailsModal';
 import EditModal from 'edit_channel/uploader/views/EditModal';
 
 const router = new VueRouter({
@@ -47,7 +50,7 @@ const router = new VueRouter({
     },
     {
       name: RouterNames.TREE_VIEW,
-      path: '/:nodeId',
+      path: '/:nodeId/:detailNodeId?',
       props: true,
       component: TreeView,
       beforeEnter: (to, from, next) => {
@@ -64,17 +67,9 @@ const router = new VueRouter({
           .catch(() => {});
       },
       children: [
-        // TODO: instead of linking to the edit modal, this should link to
-        // the ResourcePanel
-        // {
-        //   name: RouterNames.CONTENTNODE_DETAILS,
-        //   path: 'details/:detailNodeId',
-        //   props: true,
-        //   component: EditModal,
-        // },
         {
-          name: RouterNames.VIEW_CONTENTNODES,
-          path: 'view/:detailNodeIds',
+          name: RouterNames.CONTENTNODE_DETAILS,
+          path: 'details/:detailNodeIds',
           props: true,
           component: EditModal,
         },
@@ -95,6 +90,18 @@ const router = new VueRouter({
           path: 'upload/:detailNodeIds?',
           props: true,
           component: EditModal,
+        },
+        {
+          name: ChannelRouterNames.CHANNEL_DETAILS,
+          path: 'channel/:channelId/details',
+          component: ChannelDetailsModal,
+          props: true,
+        },
+        {
+          name: ChannelRouterNames.CHANNEL_EDIT,
+          path: 'channel/:channelId/edit',
+          component: ChannelModal,
+          props: true,
         },
       ],
     },

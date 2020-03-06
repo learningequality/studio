@@ -56,6 +56,7 @@
         </VToolbar>
         <ResizableNavigationDrawer
           v-if="multipleNodes && !loading"
+          localName="edit-modal"
           stateless
           clipped
           app

@@ -10,7 +10,7 @@
       >
         <VLayout :key="child.id" row wrap>
           <VFlex xs9>
-            <router-link :to="treeLink(child.id)">
+            <router-link :to="treeLink(child)">
               <ContentNodeIcon :kind="child.kind" />
               <span>{{ child.title }}</span>
             </router-link>
@@ -62,17 +62,26 @@
       ...mapActions('contentNode', ['deleteContentNode']),
       editNodeLink(id) {
         return {
-          name: RouterNames.VIEW_CONTENTNODES,
+          name: RouterNames.CONTENTNODE_DETAILS,
           params: {
             detailNodeIds: id,
           },
         };
       },
-      treeLink(id) {
+      treeLink(node) {
+        if (node.kind === 'topic') {
+          return {
+            name: RouterNames.TREE_VIEW,
+            params: {
+              nodeId: node.id,
+            },
+          };
+        }
         return {
           name: RouterNames.TREE_VIEW,
           params: {
-            nodeId: id,
+            nodeId: this.parentId,
+            detailNodeId: node.id,
           },
         };
       },
@@ -82,5 +91,4 @@
 </script>
 
 <style scoped>
-
 </style>
