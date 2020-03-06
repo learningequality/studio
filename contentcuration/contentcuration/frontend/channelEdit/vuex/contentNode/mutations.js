@@ -52,7 +52,7 @@ export function SET_EXPANSION(state, { id, expanded }) {
   if (!expanded) {
     Vue.delete(state.expandedNodes, id);
   } else {
-    state.expandedNodes[id] = true;
+    Vue.set(state.expandedNodes, id, true);
   }
   if (window.sessionStorage) {
     window.sessionStorage.setItem('expandedNodes', JSON.stringify(state.expandedNodes));
