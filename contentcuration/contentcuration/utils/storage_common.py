@@ -30,6 +30,8 @@ def get_presigned_upload_url(
     """
     if isinstance(storage, GoogleCloudStorage):
         client = client or storage.client
+        bucket = settings.AWS_S3_BUCKET_NAME
+        return _get_s3_presigned_put_url(client, bucket, filepath, md5sum_b64, lifetime_sec)
     elif isinstance(storage, S3Storage):
         bucket = settings.AWS_S3_BUCKET_NAME
         client = client or storage.s3_connection
@@ -40,8 +42,16 @@ def get_presigned_upload_url(
         )
 
 
-def _get_gcs_presigned_put_url(gcs_client, filepath, md5sum, lifetime_sec):
-    pass
+def _get_gcs_presigned_put_url(gcs_client, bucket, filepath, md5sum, lifetime_sec):
+    bucket_obj = gcs_client.get_bucket(bucket)
+    blob_obj = bucket_obj.get_blob(filepath)
+
+    url = blob_obj.generate_signed_url(
+        method="PUT",
+        content_md5=md5sum,
+        expiration=lifetime_sec,
+    )
+    return url
 
 
 def _get_s3_presigned_put_url(s3_client, bucket, filepath, md5sum, lifetime_sec):
