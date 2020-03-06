@@ -144,6 +144,8 @@
 
   import { mapGetters, mapActions } from 'vuex';
 
+  import { RouterNames } from '../../../constants';
+
   import RelatedResourcesList from '../RelatedResourcesList/RelatedResourcesList';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon.vue';
   import IconLightBulb from 'shared/views/IconLightBulb.vue';
@@ -185,7 +187,13 @@
     methods: {
       ...mapActions('contentNode', ['removePreviousStepFromNode', 'removeNextStepFromNode']),
       onStepClick(nodeId) {
-        alert(`TBD: step click ${nodeId}`);
+        const route = this.$router.resolve({
+          name: RouterNames.CONTENTNODE_DETAILS,
+          params: {
+            detailNodeIds: nodeId,
+          },
+        });
+        window.open(route.href, '_blank');
       },
       onRemovePreviousStepClick(previousStepId) {
         this.removePreviousStepFromNode({ targetId: this.nodeId, previousStepId });
@@ -194,10 +202,20 @@
         this.removeNextStepFromNode({ targetId: this.nodeId, nextStepId });
       },
       onAddPreviousStepClick() {
-        alert('Add previous step!');
+        this.$router.push({
+          name: RouterNames.ADD_PREVIOUS_STEPS,
+          params: {
+            targetNodeId: this.nodeId,
+          },
+        });
       },
       onAddNextStepClick() {
-        alert('Add next step!');
+        this.$router.push({
+          name: RouterNames.ADD_NEXT_STEPS,
+          params: {
+            targetNodeId: this.nodeId,
+          },
+        });
       },
     },
     $trs: {

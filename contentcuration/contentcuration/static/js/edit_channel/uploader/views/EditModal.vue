@@ -268,9 +268,10 @@
           vm.loadContentNodes({ ids })
             .then(nodes => {
               let loadFilePromise = vm.loadFiles({ ids: nodes.flatMap(n => n.files) });
+              let relatedResourcesPromises = ids.map(nodeId => vm.loadRelatedResources(nodeId));
 
               // Add other related model load actions here
-              Promise.all([loadFilePromise]).then(() => {
+              Promise.all([loadFilePromise, ...relatedResourcesPromises]).then(() => {
                 vm.loading = false;
               });
             })
@@ -289,6 +290,7 @@
     methods: {
       ...mapActions('contentNode', [
         'loadContentNodes',
+        'loadRelatedResources',
         'createContentNode',
         'copyContentNodes',
         'sanitizeContentNodes',

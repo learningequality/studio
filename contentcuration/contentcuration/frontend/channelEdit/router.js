@@ -2,6 +2,8 @@ import VueRouter from 'vue-router';
 import { RouterNames } from './constants';
 import TreeView from './views/TreeView';
 import store from './store';
+import AddPreviousStepsModal from './views/related-resources/AddPreviousStepsModal/AddPreviousStepsModal';
+import AddNextStepsModal from './views/related-resources/AddNextStepsModal/AddNextStepsModal';
 import { RouterNames as ChannelRouterNames } from 'frontend/channelList/constants';
 import Sandbox from 'shared/views/Sandbox';
 import ChannelModal from 'frontend/channelList/views/Channel/ChannelModal';
@@ -84,6 +86,18 @@ const router = new VueRouter({
           path: 'exercise/:detailNodeIds',
           props: true,
           component: EditModal,
+        },
+        {
+          name: RouterNames.ADD_PREVIOUS_STEPS,
+          path: 'previous-steps/:targetNodeId',
+          props: true,
+          component: AddPreviousStepsModal,
+        },
+        {
+          name: RouterNames.ADD_NEXT_STEPS,
+          path: 'next-steps/:targetNodeId',
+          props: true,
+          component: AddNextStepsModal,
         },
         {
           name: RouterNames.UPLOAD_FILES,
