@@ -17,9 +17,11 @@
       </template>
     </VToolbar>
     <VContent>
-      <PageContainer class="container">
-        <slot></slot>
-      </PageContainer>
+      <div class="content-wrapper">
+        <PageContainer class="content">
+          <slot></slot>
+        </PageContainer>
+      </div>
     </VContent>
   </VApp>
 
@@ -64,7 +66,11 @@
     text-transform: initial;
   }
 
-  .container {
+  .content-wrapper {
+    margin: 32px;
+  }
+
+  .content {
     width: 500px;
     max-width: 1000px;
     margin: 64px auto;
