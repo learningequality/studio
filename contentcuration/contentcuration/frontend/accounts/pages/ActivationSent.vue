@@ -6,7 +6,7 @@
   >
     <h1>{{ $tr('header') }}</h1>
     <p>...</p>
-    <router-link to="/">
+    <router-link :to="{ name: 'Main' }">
       {{ $tr('back') }}
     </router-link>
   </ImmersiveModalLayout>

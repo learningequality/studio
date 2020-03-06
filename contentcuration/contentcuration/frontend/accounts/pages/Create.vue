@@ -26,7 +26,7 @@
     methods: {
       submit() {
         // handle account creation
-        this.$router.push('/activation-sent');
+        this.$router.push({ name: 'ActivationSent' });
       },
     },
     $trs: {
