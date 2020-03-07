@@ -5,16 +5,17 @@
       permanent
       clipped
       localName="topic-tree"
-      :maxWidth="700"
-      :minWidth="175"
+      :maxWidth="400"
+      :minWidth="200"
       :style="{backgroundColor: $vuetify.theme.backgroundColor}"
     >
-      <VToolbar dense flat color="backgroundColor">
+      <VLayout row>
         <IconButton icon="collapse_all" :text="$tr('collapseAllButton')">
           $vuetify.icons.collapse_all
         </IconButton>
         <VSpacer />
-      </VToolbar>
+        <IconButton icon="gps_fixed" :text="$tr('openCurrentLocationButton')" />
+      </VLayout>
       <div style="margin-left: -24px;">
         <StudioTree :nodeId="rootId" :root="true" />
       </div>
@@ -57,6 +58,7 @@
     },
     $trs: {
       collapseAllButton: 'Collapse all',
+      openCurrentLocationButton: 'Open to current location',
     },
   };
 

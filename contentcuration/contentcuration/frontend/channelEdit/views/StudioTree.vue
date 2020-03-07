@@ -46,7 +46,7 @@
       </VLayout>
     </router-link>
     <VFlex v-if="node && (root || hasContent)" xs12>
-      <VSlideYTransition duration="100">
+      <VSlideYTransition>
         <div v-show="expanded" class="ml-4">
           <StudioTree
             v-for="child in children"
@@ -158,6 +158,11 @@
 <style scoped>
 .node-item {
   cursor: pointer;
+}
+
+.slide-y-transition-enter-active,
+.slide-y-transition-leave-active {
+  transition-duration: .2s
 }
 
 </style>
