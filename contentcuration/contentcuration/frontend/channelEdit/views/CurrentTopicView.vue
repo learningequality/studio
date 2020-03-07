@@ -2,14 +2,22 @@
 
   <VContainer fluid class="panel pa-0 ma-0" style="height: calc(100vh - 64px);">
     <!-- Breadcrumbs -->
-    <VToolbar v-if="ancestors.length" dense color="transparent" flat>
+    <VToolbar v-if="ancestors.length && !loadingAncestors" dense color="transparent" flat>
       <VBreadcrumbs :items="ancestors" class="pa-0">
         <template #divider>
           <Icon>chevron_right</Icon>
         </template>
         <template #item="props">
-          <span class="px-2 notranslate subheading">
+          <router-link
+            tag="span"
+            class="mx-2 notranslate subheading"
+            style="cursor: pointer;"
+            :to="treeLink({nodeId: props.item.id})"
+          >
             {{ props.item.title }}
+          </router-link>
+          <span>
+
           </span>
         </template>
       </VBreadcrumbs>
@@ -26,7 +34,7 @@
           <VListTile :to="editNodeLink(topicId)">
             <VListTileTitle>{{ $tr('editTopicDetails') }}</VListTileTitle>
           </VListTile>
-          <VListTile :to="treeLink(topicId)">
+          <VListTile :to="treeLink({nodeId: topicId, detailNodeId: topicId})">
             <VListTileTitle>{{ $tr('viewDetails') }}</VListTileTitle>
           </VListTile>
           <VListTile @click.stop>
@@ -99,16 +107,17 @@
     <VLayout row :style="{height: contentHeight}">
 
       <VFlex class="pa-4" style="overflow-y: auto;">
-        <VFadeTransition mode="out-in" duration="100">
+        <VFadeTransition mode="out-in">
           <NodePanel :key="topicId" :parentId="topicId" />
         </VFadeTransition>
       </VFlex>
-      <v-expand-x-transition>
+      <VExpandXTransition>
         <ResizableNavigationDrawer
           v-show="showResourceDrawer"
           right
           localName="resource-panel"
           :minWidth="400"
+          :maxWidth="700"
           permanent
         >
           <div v-if="detailNodeId" class="pa-4">
@@ -124,7 +133,7 @@
             </ResourcePanel>
           </div>
         </ResizableNavigationDrawer>
-      </v-expand-x-transition>
+      </VExpandXTransition>
     </VLayout>
   </VContainer>
 
@@ -163,17 +172,17 @@
       return {
         showResourceDrawer: false,
         viewMode: sessionStorage['topic-tree-view'] || viewModes.DEFAULT,
+        loadingAncestors: false,
       };
     },
     computed: {
-      ...mapGetters('currentChannel', ['canEdit']),
-      ...mapGetters('contentNode', ['getContentNode']),
+      ...mapGetters('currentChannel', ['canEdit', 'currentChannel']),
+      ...mapGetters('contentNode', ['getContentNode', 'getContentNodeAncestors']),
       node() {
         return this.getContentNode(this.topicId);
       },
       ancestors() {
-        // TODO: update with actual ancestors
-        return [{ title: 'channel' }, { title: 'topic 1' }];
+        return this.getContentNodeAncestors(this.topicId);
       },
       uploadFilesLink() {
         return { name: RouterNames.UPLOAD_FILES };
@@ -192,12 +201,21 @@
       detailNodeId(value) {
         this.showResourceDrawer = Boolean(value);
       },
+      ancestors(value) {
+        // Full ancestor path hasn't been loaded
+        if (!value.some(a => a.id === this.topicId)) {
+          this.loadingAncestors = true;
+          this.loadAncestors({ id: this.topicId, channel_id: this.currentChannel.id }).then(() => {
+            this.loadingAncestors = false;
+          });
+        }
+      },
     },
     beforeMount() {
       this.showResourceDrawer = Boolean(this.detailNodeId);
     },
     methods: {
-      ...mapActions('contentNode', ['createContentNode']),
+      ...mapActions('contentNode', ['createContentNode', 'loadAncestors']),
       newContentNode(route, { kind, title }) {
         this.createContentNode({ parent: this.parentId, kind, title }).then(newId => {
           this.$router.push({
@@ -228,13 +246,10 @@
           },
         };
       },
-      treeLink(nodeId) {
+      treeLink(params) {
         return {
           name: RouterNames.TREE_VIEW,
-          params: {
-            nodeId: this.topicId,
-            detailNodeId: nodeId,
-          },
+          params,
         };
       },
       closePanel() {
@@ -288,5 +303,10 @@
   .resource-drawer {
     border-left: 1px solid var(--v-grey-lighten4);
     overflow-y: auto;
+  }
+
+  .fade-transition-enter-active,
+  .fade-transition-leave-active {
+    transition-duration: 0.1s
   }
 </style>

@@ -3,10 +3,11 @@ from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
+from django_filters.rest_framework import NumberFilter
 from rest_framework.exceptions import APIException
 from rest_framework.response import Response
-from rest_framework.viewsets import GenericViewSet
 from rest_framework.serializers import ValidationError
+from rest_framework.viewsets import GenericViewSet
 
 from contentcuration.models import ContentNode
 
@@ -21,9 +22,18 @@ _valid_positions = set(["first-child", "last-child", "left", "right"])
 
 
 class TreeFilter(FilterSet):
+    max_lft = NumberFilter(method="filter_max_lft")
+    min_rght = NumberFilter(method="filter_min_rght")
+
+    def filter_max_lft(self, queryset, name, value):
+        return queryset.filter(lft__lte=value)
+
+    def filter_min_rght(self, queryset, name, value):
+        return queryset.filter(rght__gte=value)
+
     class Meta:
         model = ContentNode
-        fields = ("parent",)
+        fields = ("parent", "max_lft", "min_rght")
 
 
 def validate_move_args(target, position):
@@ -53,6 +63,7 @@ class TreeViewSet(GenericViewSet):
         "id",
         "tree_id",
         "lft",
+        "rght",
         "parent",
     )
 

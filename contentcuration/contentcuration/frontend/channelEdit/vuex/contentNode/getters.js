@@ -46,6 +46,19 @@ export function getContentNodeChildren(state) {
   };
 }
 
+export function getContentNodeAncestors(state) {
+  return function(contentNodeId) {
+    let node = state.treeNodesMap[contentNodeId];
+    return getContentNodes(state)(
+      sorted(
+        Object.values(state.treeNodesMap).filter(
+          n => n.sort_order <= node.sort_order && n.rght >= node.rght
+        )
+      ).map(node => node.id)
+    );
+  };
+}
+
 export function getContentNodeIsValid(state, getters, rootState, rootGetters) {
   return function(contentNodeId) {
     const contentNode = state.contentNodesMap[contentNodeId];
