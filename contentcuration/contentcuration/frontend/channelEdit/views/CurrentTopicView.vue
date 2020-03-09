@@ -1,6 +1,6 @@
 <template>
 
-  <VContainer fluid class="panel pa-0 ma-0" style="height: calc(100vh - 64px);">
+  <VContainer v-if="node" fluid class="panel pa-0 ma-0" style="height: calc(100vh - 64px);">
     <!-- Breadcrumbs -->
     <VToolbar v-if="ancestors.length && !loadingAncestors" dense color="transparent" flat>
       <VBreadcrumbs :items="ancestors" class="pa-0">
@@ -21,41 +21,12 @@
           </span>
         </template>
       </VBreadcrumbs>
-      <VMenu offset-y left>
-        <template #activator="{ on }">
-          <VBtn icon flat v-on="on">
-            <Icon>arrow_drop_down</Icon>
-          </VBtn>
-        </template>
-        <VList>
-          <VListTile @click="newTopicNode">
-            <VListTileTitle>{{ $tr('newSubtopic') }}</VListTileTitle>
-          </VListTile>
-          <VListTile :to="editNodeLink(topicId)">
-            <VListTileTitle>{{ $tr('editTopicDetails') }}</VListTileTitle>
-          </VListTile>
-          <VListTile :to="treeLink({nodeId: topicId, detailNodeId: topicId})">
-            <VListTileTitle>{{ $tr('viewDetails') }}</VListTileTitle>
-          </VListTile>
-          <VListTile @click.stop>
-            <VListTileTitle>{{ $tr('move') }}</VListTileTitle>
-          </VListTile>
-          <VListTile @click.stop>
-            <VListTileTitle>{{ $tr('makeACopy') }}</VListTileTitle>
-          </VListTile>
-          <VListTile @click.stop>
-            <VListTileTitle>{{ $tr('copyToClipboard') }}</VListTileTitle>
-          </VListTile>
-          <VListTile @click.stop>
-            <VListTileTitle>{{ $tr('remove') }}</VListTileTitle>
-          </VListTile>
-        </VList>
-      </VMenu>
+      <ContentNodeOptions :nodeId="topicId" icon="arrow_drop_down" left />
     </VToolbar>
 
     <!-- Topic actions -->
     <ToolBar flat dense color="transparent">
-      <VCheckbox color="primary" hide-details />
+      <VCheckbox v-if="node.total_count" color="primary" hide-details />
       <VSpacer />
       <VToolbarItems>
         <VMenu offset-y left>
@@ -129,6 +100,7 @@
                   :text="$tr('editButton')"
                   :to="editNodeLink(detailNodeId)"
                 />
+                <ContentNodeOptions :nodeId="detailNodeId" left hideDetailsLink />
               </template>
             </ResourcePanel>
           </div>
@@ -145,6 +117,7 @@
   import { RouterNames, viewModes } from '../constants';
   import ResourcePanel from './ResourcePanel';
   import NodePanel from './NodePanel';
+  import ContentNodeOptions from './ContentNodeOptions';
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
   import IconButton from 'shared/views/IconButton';
   import ToolBar from 'shared/views/ToolBar';
@@ -157,6 +130,7 @@
       NodePanel,
       ResourcePanel,
       ResizableNavigationDrawer,
+      ContentNodeOptions,
     },
     props: {
       topicId: {
@@ -282,13 +256,6 @@
       editButton: 'Edit',
       [viewModes.DEFAULT]: 'Default',
       [viewModes.COMPACT]: 'Compact',
-      newSubtopic: 'New subtopic',
-      editTopicDetails: 'Edit topic details',
-      viewDetails: 'View details',
-      move: 'Move',
-      makeACopy: 'Make a copy',
-      copyToClipboard: 'Copy to clipboard',
-      remove: 'Remove',
     },
   };
 
