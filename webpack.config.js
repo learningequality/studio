@@ -65,6 +65,7 @@ module.exports = (env = {}) => {
       // Use arrays for every entry to allow for hot reloading.
       channel_edit: ['./channelEdit/index.js'],
       channel_list: ['./channelList/index.js'],
+      accounts: ['./accounts/index.js'],
       administration: [path.resolve(bundleEntryDir, 'administration.js')],
       settings: [path.resolve(bundleEntryDir, 'settings.js')],
       // A simple code sandbox to play with components in
