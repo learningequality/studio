@@ -20,7 +20,7 @@ Kolibri Studio uses [Django](https://www.djangoproject.com/) for the backend and
 
 - Install and set up [Git](https://help.github.com/articles/set-up-git/) on your computer. Try [this tutorial](http://learngitbranching.js.org/) if you need more practice
 - [Sign up and configure your GitHub account](https://github.com/join) if you don't have one already.
-- Fork the [studio repo](https://github.com/learningequality/studio) to create a copy of the studio repository under your own github username. This will make it easier to [submit pull requests](https://help.github.com/articles/using-pull-requests/>). Read more details [about forking](https://help.github.com/articles/fork-a-repo/) from GitHub
+- Fork the [studio repo](https://github.com/learningequality/studio) to create a copy of the studio repository under your own github username. This will make it easier to [submit pull requests](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request). Read more details [about forking](https://help.github.com/articles/fork-a-repo/) from GitHub
 - Clone your repo locally
 
 Tip: [Register your SSH keys](https://help.github.com/en/articles/connecting-to-github-with-ssh) on GitHub to avoid having to repeatedly enter your password.
