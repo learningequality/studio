@@ -2,6 +2,7 @@
 
   <VContainer fluid class="pa-0 fill-height">
     <ResizableNavigationDrawer
+      v-show="!isEmptyChannel"
       permanent
       clipped
       localName="topic-tree"
@@ -55,6 +56,10 @@
     },
     computed: {
       ...mapGetters('currentChannel', ['rootId']),
+      ...mapGetters('contentNode', ['getContentNodeChildren']),
+      isEmptyChannel() {
+        return !this.getContentNodeChildren(this.rootId).length;
+      },
     },
     $trs: {
       collapseAllButton: 'Collapse all',

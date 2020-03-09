@@ -45,7 +45,7 @@
         </VFlex>
       </VLayout>
     </router-link>
-    <VFlex v-if="node && (root || hasContent)" xs12>
+    <VFlex v-if="node && (root || hasContent) && !loading" xs12>
       <VSlideYTransition>
         <div v-show="expanded" class="ml-4">
           <StudioTree
@@ -81,6 +81,7 @@
     data: () => {
       return {
         loading: false,
+        loaded: false,
       };
     },
     computed: {
@@ -132,13 +133,14 @@
         setExpansion: 'SET_EXPANSION',
       }),
       getChildren() {
-        if (this.hasContent && !this.children.length) {
+        if (this.hasContent && !this.loaded && this.expanded) {
           this.loading = true;
           return this.loadChildren({
             parent: this.nodeId,
             channel_id: this.$store.state.currentChannel.currentChannelId,
           }).then(() => {
             this.loading = false;
+            this.loaded = true;
           });
         }
         return Promise.resolve();
