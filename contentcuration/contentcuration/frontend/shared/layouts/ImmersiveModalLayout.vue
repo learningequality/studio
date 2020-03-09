@@ -2,13 +2,13 @@
 
   <VApp>
     <VToolbar app dark color="primary">
-      <VBtn v-if="backButton" flat link :to="previousPage">
+      <VBtn v-if="backButton" flat :to="previousPage" exact>
         <Icon>arrow_back</Icon>
         <span class="back-text">{{ appBarText }}</span>
       </VBtn>
 
       <template v-else>
-        <VBtn link icon dark :to="previousPage">
+        <VBtn icon dark :to="previousPage" exact>
           <Icon>close</Icon>
         </VBtn>
         <VToolbarTitle>
@@ -38,6 +38,8 @@
       PageContainer,
     },
     props: {
+      // Should generally be a Vue Router location descriptor object. See
+      // https://router.vuejs.org/guide/essentials/navigation.html#programmatic-navigation
       previousPage: {
         type: [String, Object],
         required: true,

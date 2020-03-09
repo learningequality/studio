@@ -1,7 +1,7 @@
 <template>
 
   <ImmersiveModalLayout
-    previousPage="/"
+    :previousPage="{ name: 'Main' }"
     :appBarText="$tr('title')"
   >
     <h1>{{ $tr('header') }}</h1>
