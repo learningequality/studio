@@ -53,16 +53,18 @@
     </VSheet>
 
     <BottomToolBar>
-      <span class="mr-2">
-        {{ $tr('resourcesSelected', { count: selectedResourcesCount }) }}
-      </span>
-      <VBtn
-        :disabled="selected.length === 0"
-        color="primary"
-        @click="handleClickImport"
-      >
-        {{ $tr('importAction') }}
-      </VBtn>
+      <VLayout align-center justify-end>
+        <span class="mr-2">
+          {{ $tr('resourcesSelected', { count: selectedResourcesCount }) }}
+        </span>
+        <VBtn
+          :disabled="selected.length === 0"
+          color="primary"
+          @click="handleClickImport"
+        >
+          {{ $tr('importAction') }}
+        </VBtn>
+      </VLayout>
     </BottomToolBar>
   </div>
 

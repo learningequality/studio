@@ -78,16 +78,18 @@
     </VSheet>
 
     <BottomToolBar>
-      <span>
-        {{ $tr('resourcesSelected', { count: selectedResourcesCount }) }}
-      </span>
-      <VBtn
-        :disabled="selected.length === 0"
-        color="primary"
-        :to="{ name: RouterNames.IMPORT_FROM_CHANNELS_REVIEW }"
-      >
-        {{ $tr('reviewAction') }}
-      </VBtn>
+      <VLayout align-center justify-end>
+        <span class="mr-2">
+          {{ $tr('resourcesSelected', { count: selectedResourcesCount }) }}
+        </span>
+        <VBtn
+          :disabled="selected.length === 0"
+          color="primary"
+          :to="{ name: RouterNames.IMPORT_FROM_CHANNELS_REVIEW }"
+        >
+          {{ $tr('reviewAction') }}
+        </VBtn>
+      </VLayout>
     </BottomToolBar>
   </div>
 
