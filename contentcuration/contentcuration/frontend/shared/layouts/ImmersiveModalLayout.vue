@@ -73,7 +73,6 @@
   }
 
   .content {
-    width: 500px;
     max-width: 1000px;
     margin: 64px auto;
   }
