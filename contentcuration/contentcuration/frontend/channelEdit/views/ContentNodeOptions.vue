@@ -2,7 +2,7 @@
 
   <VMenu offset-y v-bind="$attrs">
     <template #activator="{ on }">
-      <VBtn icon flat v-on="on">
+      <VBtn icon :small="small" flat v-on="on">
         <Icon>{{ icon }}</Icon>
       </VBtn>
     </template>
@@ -52,6 +52,10 @@
         default: 'more_horiz',
       },
       hideDetailsLink: {
+        type: Boolean,
+        default: false,
+      },
+      small: {
         type: Boolean,
         default: false,
       },

@@ -5,10 +5,20 @@
     <VToolbar v-if="ancestors.length && !loadingAncestors" dense color="transparent" flat>
       <VBreadcrumbs :items="ancestors" class="pa-0">
         <template #divider>
-          <Icon>chevron_right</Icon>
+          <Icon medium>
+            chevron_right
+          </Icon>
         </template>
         <template #item="props">
+          <!-- Current item -->
+          <span v-if="props.item.id === topicId" class="subheading mx-2">
+            <span class="notranslate font-weight-bold">
+              {{ props.item.title }}
+            </span>
+            <ContentNodeOptions :nodeId="topicId" icon="arrow_drop_down" right />
+          </span>
           <router-link
+            v-else
             tag="span"
             class="mx-2 notranslate subheading"
             style="cursor: pointer;"
@@ -16,12 +26,8 @@
           >
             {{ props.item.title }}
           </router-link>
-          <span>
-
-          </span>
         </template>
       </VBreadcrumbs>
-      <ContentNodeOptions :nodeId="topicId" icon="arrow_drop_down" left />
     </VToolbar>
 
     <!-- Topic actions -->
@@ -100,7 +106,7 @@
                   :text="$tr('editButton')"
                   :to="editNodeLink(detailNodeId)"
                 />
-                <ContentNodeOptions :nodeId="detailNodeId" left hideDetailsLink />
+                <ContentNodeOptions :nodeId="detailNodeId" left hideDetailsLink small />
               </template>
             </ResourcePanel>
           </div>
