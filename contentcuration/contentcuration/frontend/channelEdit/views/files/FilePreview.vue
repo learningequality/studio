@@ -63,6 +63,10 @@
         type: String,
         required: false,
       },
+      hideFullscreenOption: {
+        type: Boolean,
+        default: false,
+      },
     },
     data() {
       return {
@@ -98,7 +102,12 @@
       },
       showFullscreenOption() {
         return (
-          this.file && this.file.url && this.isPreviewable && !this.isAudio && !this.file.uploading
+          !this.hideFullscreenOption &&
+          this.file &&
+          this.file.url &&
+          this.isPreviewable &&
+          !this.isAudio &&
+          !this.file.uploading
         );
       },
     },

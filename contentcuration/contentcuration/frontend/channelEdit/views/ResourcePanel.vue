@@ -1,12 +1,9 @@
 <template>
 
-  <VLayout>
-    <div v-if="loading || !node">
-      <LoadingText absolute />
-    </div>
-    <VFlex v-else xs12>
+  <VLayout row wrap>
+    <VFlex xs12>
       <VLayout row>
-        <VFlex>
+        <VFlex v-if="node">
           <div class="mb-1">
             <!-- Slot for elements like "Back" link -->
             <slot name="navigation"></slot>
@@ -25,6 +22,11 @@
           <Icon>clear</Icon>
         </VBtn>
       </VLayout>
+    </VFlex>
+    <div v-if="loading || !node">
+      <LoadingText absolute />
+    </div>
+    <VFlex v-else xs12>
       <VLayout row align-center class="my-2">
         <h1 class="notranslate title font-weight-bold">
           {{ node.title }}
@@ -37,16 +39,12 @@
       </VLayout>
 
       <!-- Temporary placeholder for file preview -->
-      <VCard v-if="isResource" color="grey lighten-2" flat class="my-4">
-        <VContainer style="height: 200px;">
-          <VLayout align-center justify-center fill-height>
-            <div>
-              (File preview coming soon)
-            </div>
-          </VLayout>
-        </VContainer>
-      </VCard>
-
+      <FilePreview
+        v-if="isResource"
+        :nodeId="nodeId"
+        :fileId="primaryFileId"
+        hideFullscreenOption
+      />
       <!-- Content details -->
       <DetailsRow
         v-if="isExercise"
@@ -157,6 +155,7 @@
 
   import sortBy from 'lodash/sortBy';
   import { mapActions, mapGetters } from 'vuex';
+  import FilePreview from './files/FilePreview';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import LoadingText from 'shared/views/LoadingText';
   import DetailsRow from 'shared/views/details/DetailsRow';
@@ -169,6 +168,7 @@
       ContentNodeIcon,
       LoadingText,
       DetailsRow,
+      FilePreview,
     },
     mixins: [constantsTranslationMixin],
     props: {
@@ -184,6 +184,7 @@
     },
     computed: {
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodes']),
+      ...mapGetters('file', ['getFiles']),
       node() {
         return this.getContentNode(this.nodeId);
       },
@@ -227,6 +228,9 @@
         // TODO: Add in kind counts once the data is available
         return [];
       },
+      primaryFileId() {
+        return this.getFiles(this.node.files).find(f => !f.preset.supplementary && f.url).id;
+      },
     },
     watch: {
       node() {
@@ -238,16 +242,28 @@
     },
     methods: {
       ...mapActions('contentNode', ['loadContentNodes']),
+      ...mapActions('file', ['loadFiles']),
       getText(field) {
         return this.node[field] || this.$tr('defaultNoItemsText');
       },
       loadNode() {
         // Load related models
-        if (this.node && this.node.prerequisite.length) {
-          this.loading = true;
-          this.loadContentNodes({ ids: this.node.prerequisite }).then(() => {
-            this.loading = false;
-          });
+        if (this.node) {
+          let promises = [];
+          if (this.node.prerequisite.length) {
+            promises.push(this.loadContentNodes({ ids: this.node.prerequisite }));
+          }
+
+          if (this.isResource && this.node.files.length) {
+            promises.push(this.loadFiles({ ids: this.node.files }));
+          }
+
+          if (promises.length) {
+            this.loading = true;
+            Promise.all(promises).then(() => {
+              this.loading = false;
+            });
+          }
         }
       },
     },
