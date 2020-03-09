@@ -9,7 +9,7 @@ import 'shared/i18n/setup';
 
 import 'vuetify/dist/vuetify.min.css';
 import 'shared/styles/main.less';
-import Base from 'shared/views/Base.vue';
+import Base from 'shared/Base.vue';
 
 import { initializeDB } from 'shared/data';
 

@@ -16,7 +16,7 @@
 
 <script>
 
-  import ImmersiveModalLayout from 'shared/views/ImmersiveModalLayout';
+  import ImmersiveModalLayout from 'shared/layouts/ImmersiveModalLayout';
 
   export default {
     name: 'ForgotPassword',

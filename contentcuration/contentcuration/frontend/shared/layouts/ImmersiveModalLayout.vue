@@ -30,7 +30,7 @@
 
 <script>
 
-  import PageContainer from './PageContainer';
+  import PageContainer from '../views/PageContainer';
 
   export default {
     name: 'ImmersiveModalLayout',
