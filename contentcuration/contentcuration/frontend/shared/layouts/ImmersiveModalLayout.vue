@@ -6,7 +6,6 @@
         <Icon>arrow_back</Icon>
         <span class="back-text">{{ appBarText }}</span>
       </VBtn>
-
       <template v-else>
         <VBtn icon dark :to="previousPage" exact>
           <Icon>close</Icon>
