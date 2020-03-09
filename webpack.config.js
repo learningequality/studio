@@ -181,6 +181,7 @@ module.exports = (env = {}) => {
       // carryover of path resolution from build.js
       modules: ['node_modules', staticLessDir],
     },
+    devtool: 'cheap-module-source-map',
     plugins: [
       new VueLoaderPlugin(),
       new VuetifyLoaderPlugin(),
@@ -201,9 +202,6 @@ module.exports = (env = {}) => {
         chunkFilename: '[name]-[hash]-[id].css',
       }),
       new WebpackRTLPlugin(),
-      new webpack.SourceMapDevToolPlugin({
-        filename: '[name]-[hash].js.map',
-      }),
       new CircularDependencyPlugin({
         // exclude detection of files based on a RegExp
         exclude: /a\.js|node_modules/,
