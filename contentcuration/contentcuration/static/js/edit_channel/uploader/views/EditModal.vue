@@ -98,7 +98,11 @@
               :parentTitle="parentTitle"
               @uploading="createNodesFromFiles"
             />
-            <EditView v-else :nodeIds="selected" />
+            <EditView
+              v-else
+              :nodeIds="selected"
+              :tab="tab"
+            />
           </VContent>
         </VCardText>
       </VCard>
@@ -167,6 +171,7 @@
 
   import flatten from 'lodash/flatten';
   import { mapActions, mapGetters, mapMutations } from 'vuex';
+  import { TabNames } from '../constants';
   import EditList from './EditList';
   import EditView from './EditView';
   import MessageDialog from 'shared/views/MessageDialog';
@@ -197,6 +202,10 @@
       detailNodeIds: {
         type: String,
         default: '',
+      },
+      tab: {
+        type: String,
+        default: TabNames.DETAILS,
       },
     },
     data() {

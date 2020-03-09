@@ -71,7 +71,7 @@ const router = new VueRouter({
       children: [
         {
           name: RouterNames.CONTENTNODE_DETAILS,
-          path: 'details/:detailNodeIds',
+          path: 'details/:detailNodeIds/:tab?',
           props: true,
           component: EditModal,
         },

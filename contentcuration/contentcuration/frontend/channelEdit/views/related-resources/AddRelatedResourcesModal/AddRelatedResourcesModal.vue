@@ -89,6 +89,7 @@
   import { RouterNames } from '../../../constants';
   import NodeTreeNavigation from '../NodeTreeNavigation/NodeTreeNavigation';
   import { ContentNodeKind } from 'shared/constants';
+  import { TabNames } from 'edit_channel/uploader/constants';
 
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
 
@@ -192,6 +193,7 @@
           name: RouterNames.CONTENTNODE_DETAILS,
           params: {
             detailNodeIds: this.targetNodeId,
+            tab: TabNames.RELATED,
           },
         });
       },

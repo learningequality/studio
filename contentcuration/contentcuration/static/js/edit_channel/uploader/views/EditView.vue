@@ -42,9 +42,9 @@
           <VTab
             v-if="showRelatedResourcesTab"
             ref="related-resources-tab"
-            :href="`#${tabs.RELATED_RESOURCES}`"
+            :href="`#${tabs.RELATED}`"
           >
-            {{ $tr(tabs.RELATED_RESOURCES) }}
+            {{ $tr(tabs.RELATED) }}
             <VChip color="gray" dark>
               {{ relatedResourcesCount }}
             </VChip>
@@ -64,8 +64,8 @@
             <AssessmentView />
           </VTabItem>
           <VTabItem
-            :key="tabs.RELATED_RESOURCES"
-            :value="tabs.RELATED_RESOURCES"
+            :key="tabs.RELATED"
+            :value="tabs.RELATED"
             lazy
           >
             <RelatedResourcesView :nodeId="nodeIds[0]" />
@@ -101,6 +101,10 @@
       nodeIds: {
         type: Array,
         default: () => [],
+      },
+      tab: {
+        type: String,
+        default: TabNames.DETAILS,
       },
     },
     data() {
@@ -169,12 +173,29 @@
       nodeIds() {
         this.$refs.editview.scrollTop = 0;
       },
+      currentTab(newValue, oldValue) {
+        if (newValue === oldValue) {
+          return;
+        }
+
+        this.$router
+          .push({
+            params: {
+              ...this.$route.params,
+              tab: newValue,
+            },
+          })
+          .catch(() => {}); // https://github.com/quasarframework/quasar/issues/5672
+      },
+    },
+    created() {
+      this.currentTab = this.tab ? this.tab : TabNames.DETAILS;
     },
     $trs: {
       [TabNames.DETAILS]: 'Details',
       [TabNames.PREVIEW]: 'Preview',
       [TabNames.QUESTIONS]: 'Questions',
-      [TabNames.RELATED_RESOURCES]: 'Related',
+      [TabNames.RELATED]: 'Related',
       noItemsToEditText: 'Please select an item or items to edit',
       noItemsToViewText: 'Please select an item or items to view',
       invalidFieldsToolTip: 'Invalid fields detected',
