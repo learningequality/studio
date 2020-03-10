@@ -78,6 +78,7 @@
     </VContent>
     <GlobalSnackbar />
     <PublishModal v-if="showPublishModal" v-model="showPublishModal" />
+    <ProgressModal />
   </VApp>
 
 </template>
@@ -88,6 +89,7 @@
   import { mapGetters } from 'vuex';
   import ChannelNavigationDrawer from './ChannelNavigationDrawer';
   import PublishModal from './publish/PublishModal';
+  import ProgressModal from './progress/ProgressModal';
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
   import IconButton from 'shared/views/IconButton';
   import ToolBar from 'shared/views/ToolBar';
@@ -101,6 +103,7 @@
       ChannelNavigationDrawer,
       ToolBar,
       PublishModal,
+      ProgressModal,
     },
     data() {
       return {

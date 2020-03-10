@@ -73,6 +73,8 @@ from contentcuration.serializers import CurrentUserSerializer
 from contentcuration.serializers import UserChannelListSerializer
 from contentcuration.utils.messages import get_messages
 
+from .json_dump import json_for_parse_from_data, json_for_parse_from_serializer
+
 if sys.version_info.major == 2:
     reload(sys)
     sys.setdefaultencoding('UTF8')
@@ -114,10 +116,10 @@ def send_custom_email(request):
 @is_admin
 def administration(request):
     return render(request, 'administration.html', {
-        "current_user": JSONRenderer().render(CurrentUserSerializer(request.user).data),
-        "default_sender": settings.DEFAULT_FROM_EMAIL,
-        "placeholders": json.dumps(EMAIL_PLACEHOLDERS, ensure_ascii=False),
-        "messages": get_messages(),
+        "current_user": json_for_parse_from_serializer(CurrentUserSerializer(request.user)),
+        "default_sender": json_for_parse_from_data(settings.DEFAULT_FROM_EMAIL),
+        "placeholders": json_for_parse_from_data(EMAIL_PLACEHOLDERS),
+        "messages": json_for_parse_from_data(get_messages()),
     })
 
 

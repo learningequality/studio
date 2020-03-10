@@ -4,13 +4,12 @@ import assessmentItem from './vuex/assessmentItem';
 import contentNode from './vuex/contentNode';
 import file from './vuex/file';
 import currentChannel from './vuex/currentChannel';
+import task from './vuex/task';
 import storeFactory from 'shared/vuex/baseStore';
-
-import * as asyncTaskModule from 'edit_channel/vuexModules/asyncTask';
 
 const store = storeFactory({
   modules: {
-    asyncTask: asyncTaskModule,
+    task,
     template,
     assessmentItem,
     contentNode,

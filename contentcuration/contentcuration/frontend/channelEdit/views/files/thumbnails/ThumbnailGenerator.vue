@@ -65,7 +65,7 @@
       },
     },
     methods: {
-      ...mapActions(['startTask', 'clearCurrentTask']),
+      ...mapActions('task', ['startTask', 'clearCurrentTask']),
       ...mapActions('file', ['getAudioData', 'generateThumbnail']),
       handleError(error) {
         this.$emit('error', error);
