@@ -1,61 +1,208 @@
 <template>
 
-  <div class="publish-items">
-    <label v-if="!isReadOnly && !isChanged" class="unchanged-label">
-      {{ $tr('noChangesLabel') }}
-    </label>
-    <VBtn
-      v-if="!isReadOnly"
-      ref="open-modal-button"
-      depressed
-      color="primary"
-      :class="{disabled: !isChanged}"
-      :disabled="!isChanged"
-      :title="$tr('publishButtonTitle')"
-      @click.stop="openModal"
-    >
-      {{ $tr('publishButton') }}
-    </VBtn>
-    <VDialog v-model="dialog" class="publish-modal" maxWidth="500px" attach="body">
-      <PublishView v-if="dialog" @publish="dialog=false" @cancel="dialog=false" />
-    </VDialog>
-  </div>
+  <VDialog v-model="dialog" maxWidth="500px" lazy>
+    <VCard class="pa-4">
+      <h1 class="headline">
+        {{ currentChannel.name }}
+      </h1>
+      <p v-if="loadingMetadata" class="pt-1">
+        <VProgressCircular indeterminate size="16" color="grey lighten-1" />
+      </p>
+      <p v-else class="subheading grey--text body-2">
+        <span v-if="language">
+          {{ languageName }}
+        </span>
+        <span>
+          {{ $tr('publishingSizeText', {count: node.resource_count}) }}
+        </span>
+        <span>
+          {{ sizeText }}
+        </span>
+        <span v-if="currentChannel.version">
+          {{ $tr('versionText', {version: currentChannel.version}) }}
+        </span>
+        <span v-else>
+          {{ $tr('unpublishedText') }}
+        </span>
+      </p>
+      <VDivider />
+      <VWindow v-model="step">
+        <VWindowItem :key="0">
+          <p class="body-1 pt-4 font-weight-bold">
+            {{ $tr('invalidHeader') }}
+          </p>
+          <VList>
+            <VListTile>
+              <VListTileContent>
+                <VListTileTitle>
+                  <Icon v-if="language" color="greenSuccess">
+                    check
+                  </Icon>
+                  <Icon v-else color="red">
+                    clear
+                  </Icon>
+                  <span class="ml-1">
+                    {{ $tr('languageRequired') }}
+                  </span>
+                </VListTileTitle>
+              </VListTileContent>
+              <VListTileAction style="max-width: 150px;">
+                <LanguageDropdown v-model="language" />
+              </VListTileAction>
+            </VListTile>
+          </VList>
+          <VCardActions class="pa-0 pt-4">
+            <VBtn flat @click="close">
+              {{ $tr('cancelButton') }}
+            </VBtn>
+            <VSpacer />
+            <VBtn
+              color="primary"
+              :disabled="!isValid"
+              @click="step++"
+            >
+              {{ $tr('nextButton') }}
+            </VBtn>
+          </VCardActions>
+        </VWindowItem>
+        <VWindowItem :key="1">
+          <VForm ref="form" lazy-validation>
+            <VCardText>
+              <VTextarea
+                v-model="publishDescription"
+                :label="$tr('publishMessageLabel')"
+                required
+                :rules="descriptionRules"
+                autoGrow
+              >
+                <template v-slot:append-outer>
+                  <HelpTooltip :text="$tr('descriptionDescriptionTooltip')" bottom />
+                </template>
+              </VTextarea>
+            </VCardText>
+            <VCardActions class="pa-0 pt-4">
+              <VBtn flat @click="back">
+                {{ $tr('backButton') }}
+              </VBtn>
+              <VSpacer />
+              <VBtn
+                color="primary"
+                @click="handlePublish"
+              >
+                {{ $tr('publishButton') }}
+              </VBtn>
+            </VCardActions>
+          </VForm>
+        </VWindowItem>
+      </VWindow>
+    </VCard>
+  </VDialog>
 
 </template>
 
 <script>
 
-  import { mapState } from 'vuex';
-  import PublishView from './PublishView.vue';
+  import { mapActions, mapGetters } from 'vuex';
+  import Constants from 'edit_channel/constants/index';
+  import { fileSizeMixin } from 'shared/mixins';
+  import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown';
+  import HelpTooltip from 'shared/views/HelpTooltip';
 
   export default {
     name: 'PublishModal',
     components: {
-      PublishView,
+      LanguageDropdown,
+      HelpTooltip,
+    },
+    mixins: [fileSizeMixin],
+    props: {
+      value: {
+        type: Boolean,
+        default: false,
+      },
     },
     data() {
       return {
-        dialog: false,
+        step: 0,
+        publishDescription: 'woohoo',
+        size: null,
+        loadingMetadata: false,
       };
     },
     computed: {
-      ...mapState('publish', ['channel']),
-      isChanged() {
-        return this.channel.main_tree.metadata.has_changed_descendant;
+      ...mapGetters('currentChannel', ['currentChannel', 'rootId']),
+      ...mapGetters('contentNode', ['getContentNode']),
+      dialog: {
+        get() {
+          return this.value;
+        },
+        set(value) {
+          this.$emit('input', value);
+        },
       },
-      isReadOnly() {
-        return !this.$store.getters.canEdit;
+      node() {
+        return this.getContentNode(this.rootId);
+      },
+      sizeText() {
+        return this.formatFileSize(this.size);
+      },
+      language: {
+        get() {
+          return this.currentChannel.language;
+        },
+        set(language) {
+          this.updateChannel({ id: this.currentChannel.id, language });
+        },
+      },
+      languageName() {
+        return Constants.Languages.find(lang => lang.id === this.language).native_name;
+      },
+      isValid() {
+        // Determine if channel is valid here
+        return this.language;
+      },
+      descriptionRules() {
+        return [v => !!v.trim() || this.$tr('descriptionRequiredMessage')];
       },
     },
+    mounted() {
+      this.loadingMetadata = true;
+      this.loadChannelSize(this.rootId).then(size => {
+        this.size = size;
+        this.loadingMetadata = false;
+      });
+    },
     methods: {
-      openModal() {
-        this.dialog = true;
+      ...mapActions('currentChannel', ['loadChannelSize', 'publishChannel']),
+      ...mapActions('channel', ['updateChannel']),
+      close() {
+        this.publishDescription = '';
+        this.dialog = false;
+      },
+      back() {
+        this.$refs.form.resetValidation();
+        this.step--;
+      },
+      handlePublish() {
+        if (this.$refs.form.validate()) {
+          this.publishChannel(this.publishDescription).then(this.close);
+        }
       },
     },
     $trs: {
-      noChangesLabel: 'No changes',
+      versionText: 'Current Version: {version}',
+      languageRequired: 'Select a channel language',
+      invalidHeader: 'Please resolve any invalid fields before publishing:',
+      unpublishedText: 'Unpublished',
+      publishMessageLabel: "Describe what's new in this channel version",
+      publishingSizeText: '{count, plural, =1 {# Resource} other {# Resources}}',
+      cancelButton: 'Cancel',
       publishButton: 'Publish',
-      publishButtonTitle: 'Make this channel available for download into Kolibri',
+      nextButton: 'Next',
+      backButton: 'Back',
+      descriptionRequiredMessage: "Please describe what's new in this version before publishing",
+      descriptionDescriptionTooltip:
+        'This description will be shown to Kolibri admins before they update channel versions',
     },
   };
 
@@ -64,26 +211,8 @@
 
 <style lang="less" scoped>
 
-  @import '../../../../less/global-variables.less';
-
-  * {
-    font-family: 'Noto Sans';
-  }
-
-  .unchanged-label {
-    color: @gray-500;
-  }
-
-  .v-btn {
-    font-weight: bold;
-  }
-
-  .publish-items {
-    min-width: max-content;
-  }
-
-  /deep/ .v-dialog {
-    cursor: default;
+  .subheading span:not(:first-child)::before {
+    content: ' • ';
   }
 
 </style>
