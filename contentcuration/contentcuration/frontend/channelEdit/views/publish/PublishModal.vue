@@ -16,7 +16,7 @@
           {{ $tr('publishingSizeText', {count: node.resource_count}) }}
         </span>
         <span>
-          {{ sizeText }}
+          {{ formatFileSize(size) }}
         </span>
         <span v-if="currentChannel.version">
           {{ $tr('versionText', {version: currentChannel.version}) }}
@@ -52,13 +52,14 @@
             </VListTile>
           </VList>
           <VCardActions class="pa-0 pt-4">
-            <VBtn flat @click="close">
+            <VBtn flat data-test="cancel" @click="close">
               {{ $tr('cancelButton') }}
             </VBtn>
             <VSpacer />
             <VBtn
               color="primary"
               :disabled="!isValid"
+              data-test="next"
               @click="step++"
             >
               {{ $tr('nextButton') }}
@@ -75,18 +76,19 @@
                 :rules="descriptionRules"
                 autoGrow
               >
-                <template v-slot:append-outer>
+                <template #append-outer>
                   <HelpTooltip :text="$tr('descriptionDescriptionTooltip')" bottom />
                 </template>
               </VTextarea>
             </VCardText>
             <VCardActions class="pa-0 pt-4">
-              <VBtn flat @click="back">
+              <VBtn flat data-test="back" @click="back">
                 {{ $tr('backButton') }}
               </VBtn>
               <VSpacer />
               <VBtn
                 color="primary"
+                data-test="publish"
                 @click="handlePublish"
               >
                 {{ $tr('publishButton') }}
@@ -124,8 +126,8 @@
     data() {
       return {
         step: 0,
-        publishDescription: 'woohoo',
-        size: null,
+        publishDescription: '',
+        size: 0,
         loadingMetadata: false,
       };
     },
@@ -143,9 +145,6 @@
       node() {
         return this.getContentNode(this.rootId);
       },
-      sizeText() {
-        return this.formatFileSize(this.size);
-      },
       language: {
         get() {
           return this.currentChannel.language;
@@ -157,12 +156,12 @@
       languageName() {
         return Constants.Languages.find(lang => lang.id === this.language).native_name;
       },
-      isValid() {
-        // Determine if channel is valid here
-        return this.language;
-      },
       descriptionRules() {
         return [v => !!v.trim() || this.$tr('descriptionRequiredMessage')];
+      },
+      isValid() {
+        // Determine if channel is valid here
+        return !!this.language;
       },
     },
     mounted() {
