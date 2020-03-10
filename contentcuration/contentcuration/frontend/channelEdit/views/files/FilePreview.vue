@@ -7,7 +7,6 @@
       :dark="fullscreen"
       flat
       class="preview-area"
-      :class="{'fullscreen-mode': fullscreen}"
       app
     >
       <VToolbar v-if="fullscreen" dark color="grey darken-3" dense>
@@ -27,7 +26,7 @@
         :fullscreen="fullscreen"
         :supplementaryFileIds="supplementaryFileIds"
       />
-      <p v-if="!fullscreen" class="fullscreen-toggle">
+      <p v-if="!fullscreen" class="mt-2">
         <ActionLink
           v-if="showFullscreenOption"
           data-test="openfullscreen"
@@ -173,22 +172,8 @@
 
 <style lang="less" scoped>
 
-  .fullscreen-toggle {
-    margin-top: 8px;
-  }
-
   .preview-area {
-    top: 0;
-    left: 0;
-    min-width: 0;
-    min-height: 0;
     outline: none;
-    &.fullscreen-mode {
-      position: fixed;
-      z-index: 10;
-      min-width: 100vw;
-      min-height: 100vh;
-    }
   }
 
 </style>
