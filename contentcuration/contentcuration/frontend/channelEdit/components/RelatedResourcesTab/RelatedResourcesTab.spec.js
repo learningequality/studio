@@ -2,7 +2,7 @@ import { mount, createLocalVue } from '@vue/test-utils';
 import Vuex, { Store } from 'vuex';
 import VueRouter from 'vue-router';
 
-import RelatedResourcesView from '../RelatedResourcesView';
+import RelatedResourcesTab from './RelatedResourcesTab';
 
 const localVue = createLocalVue();
 localVue.use(Vuex);
@@ -34,7 +34,7 @@ const initWrapper = ({ getters = GETTERS, actions = ACTIONS } = {}) => {
     },
   });
 
-  return mount(RelatedResourcesView, {
+  return mount(RelatedResourcesTab, {
     propsData: {
       nodeId: NODE_ID,
     },
@@ -44,7 +44,7 @@ const initWrapper = ({ getters = GETTERS, actions = ACTIONS } = {}) => {
   });
 };
 
-describe('RelatedResourcesView', () => {
+describe('RelatedResourcesTab', () => {
   it('renders a title of a selected node', () => {
     const getters = {
       ...GETTERS,

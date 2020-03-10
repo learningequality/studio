@@ -1,6 +1,6 @@
 import { shallowMount, mount } from '@vue/test-utils';
 
-import RelatedResourcesList from '../RelatedResourcesList';
+import RelatedResourcesList from './RelatedResourcesList';
 
 const getResources = wrapper => {
   return wrapper.findAll("[data-test='resource']");

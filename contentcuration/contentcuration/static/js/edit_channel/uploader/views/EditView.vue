@@ -68,7 +68,7 @@
             :value="tabs.RELATED"
             lazy
           >
-            <RelatedResourcesView :nodeId="nodeIds[0]" />
+            <RelatedResourcesTab :nodeId="nodeIds[0]" />
           </VTabItem>
         </VTabsItems>
       </VFlex>
@@ -84,14 +84,14 @@
   import { TabNames } from '../constants';
   import DetailsTabView from './DetailsTabView';
   import AssessmentView from './AssessmentView';
-  import RelatedResourcesView from 'frontend/channelEdit/views/related-resources/RelatedResourcesView/RelatedResourcesView';
+  import RelatedResourcesTab from 'frontend/channelEdit/components/RelatedResourcesTab/RelatedResourcesTab';
 
   export default {
     name: 'EditView',
     components: {
       DetailsTabView,
       AssessmentView,
-      RelatedResourcesView,
+      RelatedResourcesTab,
     },
     props: {
       isClipboard: {

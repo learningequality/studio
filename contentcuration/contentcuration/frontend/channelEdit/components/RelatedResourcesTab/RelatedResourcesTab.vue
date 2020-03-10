@@ -146,13 +146,13 @@
 
   import { mapGetters, mapActions } from 'vuex';
 
-  import { RouterNames } from '../../../constants';
+  import { RouterNames } from '../../constants';
 
   import RelatedResourcesList from '../RelatedResourcesList/RelatedResourcesList';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
 
   export default {
-    name: 'RelatedResourcesView',
+    name: 'RelatedResourcesTab',
     components: {
       ContentNodeIcon,
       RelatedResourcesList,

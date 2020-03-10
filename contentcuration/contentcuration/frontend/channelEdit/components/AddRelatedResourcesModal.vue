@@ -86,8 +86,8 @@
 
   import { mapGetters, mapActions } from 'vuex';
 
-  import { RouterNames } from '../../../constants';
-  import NodeTreeNavigation from '../NodeTreeNavigation/NodeTreeNavigation';
+  import { RouterNames } from '../constants';
+  import NodeTreeNavigation from './NodeTreeNavigation';
   import { ContentNodeKind } from 'shared/constants';
   import { TabNames } from 'edit_channel/uploader/constants';
 

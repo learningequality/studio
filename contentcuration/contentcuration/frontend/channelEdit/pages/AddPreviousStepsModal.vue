@@ -14,10 +14,10 @@
 
   import { mapActions } from 'vuex';
 
-  import AddRelatedResourcesModal from '../AddRelatedResourcesModal/AddRelatedResourcesModal';
+  import AddRelatedResourcesModal from '../components/AddRelatedResourcesModal';
 
   export default {
-    name: 'AddNextStepsModal',
+    name: 'AddPreviousStepsModal',
     components: {
       AddRelatedResourcesModal,
     },
@@ -28,19 +28,18 @@
       },
     },
     methods: {
-      ...mapActions('contentNode', ['addNextStepToNode']),
+      ...mapActions('contentNode', ['addPreviousStepToNode']),
       onAddStepClick(node) {
-        this.addNextStepToNode({
+        this.addPreviousStepToNode({
           targetId: this.targetNodeId,
-          nextStepId: node.id,
+          previousStepId: node.id,
         });
       },
     },
     $trs: {
-      toolbarTitle: 'Add next step',
-      selectedAsPreviousStep:
-        'Cannot select resources that are previous steps for the current resource',
-      selectedAsNextStep: 'Already selected as a next step',
+      toolbarTitle: 'Add previous step',
+      selectedAsPreviousStep: 'Already selected as a previous step',
+      selectedAsNextStep: 'Cannot select resources that are next steps for the current resource',
     },
   };
 
