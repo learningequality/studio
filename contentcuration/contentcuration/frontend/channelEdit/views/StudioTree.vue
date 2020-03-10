@@ -164,7 +164,7 @@
 
 .slide-y-transition-enter-active,
 .slide-y-transition-leave-active {
-  transition-duration: .2s
+  transition-duration: .25s
 }
 
 </style>
