@@ -46,7 +46,9 @@
 
           <VLayout mt-3>
             <VFlex>
-              <IconLightBulb />
+              <Icon color="primary">
+                $vuetify.icons.light_bulb
+              </Icon>
             </VFlex>
             <VFlex class="ml-1">
               <p>{{ $tr('resourcePreviewDialogHelpText') }}</p>
@@ -147,14 +149,12 @@
   import { RouterNames } from '../../../constants';
 
   import RelatedResourcesList from '../RelatedResourcesList/RelatedResourcesList';
-  import ContentNodeIcon from 'shared/views/ContentNodeIcon.vue';
-  import IconLightBulb from 'shared/views/IconLightBulb.vue';
+  import ContentNodeIcon from 'shared/views/ContentNodeIcon';
 
   export default {
     name: 'RelatedResourcesView',
     components: {
       ContentNodeIcon,
-      IconLightBulb,
       RelatedResourcesList,
     },
     props: {
