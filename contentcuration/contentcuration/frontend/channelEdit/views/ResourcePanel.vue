@@ -3,7 +3,7 @@
   <VLayout row wrap>
     <VFlex xs12>
       <VLayout row>
-        <VFlex v-if="node">
+        <VFlex v-if="!loading && node">
           <div class="mb-1">
             <!-- Slot for elements like "Back" link -->
             <slot name="navigation"></slot>
@@ -23,9 +23,7 @@
         </VBtn>
       </VLayout>
     </VFlex>
-    <div v-if="loading || !node">
-      <LoadingText absolute />
-    </div>
+    <LoadingText v-if="loading || !node" class="mt-4" />
     <VFlex v-else xs12>
       <VLayout row align-center class="my-2">
         <h1 class="notranslate title font-weight-bold">
@@ -38,13 +36,13 @@
         </div>
       </VLayout>
 
-      <!-- Temporary placeholder for file preview -->
+      <!-- File preview -->
       <FilePreview
         v-if="isResource"
         :nodeId="nodeId"
-        :fileId="primaryFileId"
-        hideFullscreenOption
+        :fileId="primaryFiles[0].id"
       />
+
       <!-- Content details -->
       <DetailsRow
         v-if="isExercise"
@@ -65,6 +63,7 @@
           {{ tag.tag_name }}
         </VChip>
       </DetailsRow>
+      <DetailsRow v-if="isResource" :label="$tr('fileSize')" :text="formatFileSize(fileSize)" />
 
       <!-- Audience section -->
       <div class="section-header">
@@ -110,11 +109,18 @@
         </DetailsRow>
       </template>
 
-      <!-- Source section -->
       <template v-if="isTopic">
+        <!-- Resource section -->
         <div class="section-header">
           {{ $tr('resources') }}
         </div>
+        <DetailsRow v-if="isImported" :label="$tr('originalChannel')">
+          <ActionLink
+            :text="node.original_channel_name"
+            :to="importedChannelLink"
+            target="_blank"
+          />
+        </DetailsRow>
         <DetailsRow :label="$tr('totalResources')">
           <p>
             {{ $formatNumber(node.resource_count) }}
@@ -132,9 +138,17 @@
         <DetailsRow :label="$tr('coachResources')" :text="$formatNumber(node.coach_count)" />
       </template>
       <template v-else>
+        <!-- Source section -->
         <div class="section-header">
           {{ $tr('source') }}
         </div>
+        <DetailsRow v-if="isImported" :label="$tr('originalChannel')">
+          <ActionLink
+            :text="node.original_channel_name"
+            :href="importedChannelLink"
+            target="_blank"
+          />
+        </DetailsRow>
         <DetailsRow :label="$tr('author')" :text="getText('author')" />
         <DetailsRow :label="$tr('provider')" :text="getText('provider')" />
         <DetailsRow :label="$tr('aggregator')" :text="getText('aggregator')" />
@@ -145,6 +159,25 @@
           </p>
         </DetailsRow>
         <DetailsRow :label="$tr('copyrightHolder')" :text="getText('copyright_holder')" />
+
+        <!-- Files section -->
+        <div class="section-header">
+          {{ $tr('files') }}
+        </div>
+        <DetailsRow v-if="primaryFiles.length" :label="$tr('availableFormats')">
+          <ExpandableList
+            :noItemsText="$tr('defaultNoItemsText')"
+            :items="availableFormats"
+            inline
+          />
+        </DetailsRow>
+        <DetailsRow v-if="node.kind === 'video'" :label="$tr('subtitles')">
+          <ExpandableList
+            :noItemsText="$tr('defaultNoItemsText')"
+            :items="subtitleFileLanguages"
+            inline
+          />
+        </DetailsRow>
       </template>
     </VFlex>
   </VLayout>
@@ -160,7 +193,9 @@
   import LoadingText from 'shared/views/LoadingText';
   import DetailsRow from 'shared/views/details/DetailsRow';
   import Constants from 'edit_channel/constants/index';
-  import { constantsTranslationMixin } from 'shared/mixins';
+  import ActionLink from 'edit_channel/sharedComponents/ActionLink';
+  import ExpandableList from 'shared/views/ExpandableList';
+  import { constantsTranslationMixin, fileSizeMixin } from 'shared/mixins';
 
   export default {
     name: 'ResourcePanel',
@@ -169,12 +204,18 @@
       LoadingText,
       DetailsRow,
       FilePreview,
+      ActionLink,
+      ExpandableList,
     },
-    mixins: [constantsTranslationMixin],
+    mixins: [constantsTranslationMixin, fileSizeMixin],
     props: {
       nodeId: {
         type: String,
         required: true,
+      },
+      channelId: {
+        type: String,
+        required: false,
       },
     },
     data() {
@@ -184,9 +225,15 @@
     },
     computed: {
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodes']),
-      ...mapGetters('file', ['getFiles']),
+      ...mapGetters('file', ['getFiles', 'getTotalSize']),
       node() {
         return this.getContentNode(this.nodeId);
+      },
+      files() {
+        return sortBy(this.getFiles(this.node.files), f => f.preset.order);
+      },
+      fileSize() {
+        return this.getTotalSize(this.node.files);
       },
       isTopic() {
         return this.node.kind === 'topic';
@@ -196,6 +243,16 @@
       },
       isResource() {
         return !this.isTopic && !this.isExercise;
+      },
+      isImported() {
+        return this.node.original_channel_id !== this.channelId;
+      },
+      importedChannelLink() {
+        // TODO: Eventually, update with this.node.original_source_node_id for correct path
+        let channelId = this.node.original_channel_id;
+        let parentId = this.node.original_parent_id;
+        let originalNodeId = this.node.original_node_id;
+        return `/channels/${channelId}/#/${parentId}/${originalNodeId}`;
       },
       sortedTags() {
         return sortBy(this.node.tags, '-count');
@@ -228,8 +285,14 @@
         // TODO: Add in kind counts once the data is available
         return [];
       },
-      primaryFileId() {
-        return this.getFiles(this.node.files).find(f => !f.preset.supplementary && f.url).id;
+      primaryFiles() {
+        return this.files.filter(f => !f.preset.supplementary);
+      },
+      availableFormats() {
+        return this.primaryFiles.map(f => this.translateConstant(f.preset.id));
+      },
+      subtitleFileLanguages() {
+        return this.files.filter(f => f.preset.subtitle).map(f => f.language.native_name);
       },
     },
     watch: {
@@ -277,6 +340,7 @@
       visibleTo: 'Visible to',
       relatedResources: 'Related resources',
       source: 'Source',
+      originalChannel: 'Imported from',
       author: 'Author',
       provider: 'Provider',
       aggregator: 'Aggregator',
@@ -287,6 +351,10 @@
       resources: 'Resources',
       totalResources: 'Total resources',
       coachResources: 'Coach resources',
+      files: 'Files',
+      availableFormats: 'Available formats',
+      subtitles: 'Subtitles',
+      fileSize: 'Size',
     },
   };
 

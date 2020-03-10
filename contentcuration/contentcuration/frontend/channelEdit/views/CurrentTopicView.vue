@@ -98,8 +98,12 @@
           permanent
         >
           <div v-if="detailNodeId" class="pa-4">
-            <ResourcePanel :nodeId="detailNodeId" @close="closePanel">
-              <template #actions>
+            <ResourcePanel
+              :nodeId="detailNodeId"
+              :channelId="currentChannel.id"
+              @close="closePanel"
+            >
+              <template v-if="canEdit" #actions>
                 <IconButton
                   small
                   icon="edit"
@@ -107,6 +111,13 @@
                   :to="editNodeLink(detailNodeId)"
                 />
                 <ContentNodeOptions :nodeId="detailNodeId" left hideDetailsLink small />
+              </template>
+              <template v-else #actions>
+                <IconButton
+                  small
+                  icon="content_copy"
+                  :text="$tr('copyToClipboardButton')"
+                />
               </template>
             </ResourcePanel>
           </div>
@@ -260,6 +271,7 @@
       exerciseDefaultTitle: '{parentTitle} exercise',
       addButton: 'Add',
       editButton: 'Edit',
+      copyToClipboardButton: 'Copy to clipboard',
       [viewModes.DEFAULT]: 'Default',
       [viewModes.COMPACT]: 'Compact',
     },
