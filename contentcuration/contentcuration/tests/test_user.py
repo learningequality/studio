@@ -12,10 +12,10 @@ from django.test import TransactionTestCase
 
 from .base import BaseAPITestCase
 from .testdata import fileobj_video
-from contentcuration.tests.utils import mixer
 from contentcuration.models import DEFAULT_CONTENT_DEFAULTS
 from contentcuration.models import Invitation
 from contentcuration.models import User
+from contentcuration.tests.testutils import mixer
 from contentcuration.utils.csv_writer import _format_size
 from contentcuration.utils.csv_writer import write_user_csv
 from contentcuration.views.users import send_invitation_email
