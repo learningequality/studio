@@ -41,6 +41,7 @@ from contentcuration.models import SecretToken
 from contentcuration.models import SlideshowSlide
 from contentcuration.models import Task
 from contentcuration.models import User
+from contentcuration.node_metadata.annotations import AncestorSubquery
 from contentcuration.node_metadata.annotations import AssessmentCount
 from contentcuration.node_metadata.annotations import CoachCount
 from contentcuration.node_metadata.annotations import DescendantCount
@@ -357,9 +358,15 @@ class SimplifiedContentNodeSerializer(BulkSerializerMixin, serializers.ModelSeri
         resource_count=ResourceCount(),
         coach_count=CoachCount(),
     )
+    ancestor_query = Metadata(
+        ancestors=AncestorSubquery()
+    )
 
     def retrieve_metadata(self, node):
         return self.metadata_query.get(node.pk)
+
+    def get_node_ancestors(self, node):
+        return filter(lambda a: a, self.ancestor_query.get(node.pk).get('ancestors', []))
 
     @staticmethod
     def setup_eager_loading(queryset):
@@ -463,9 +470,6 @@ class SimplifiedContentNodeSerializer(BulkSerializerMixin, serializers.ModelSeri
             setattr(instance, attr, value)
         instance.save()
         return instance
-
-    def get_node_ancestors(self, node):
-        return list(node.get_ancestors().values_list('id', flat=True))
 
     class Meta:
         model = ContentNode

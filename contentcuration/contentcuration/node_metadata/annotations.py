@@ -1,4 +1,5 @@
 from django.contrib.postgres.aggregates.general import BoolOr
+from django.contrib.postgres.aggregates.general import JSONBAgg
 from django.db.models import BooleanField
 from django.db.models import IntegerField
 from django.db.models.aggregates import Count
@@ -33,6 +34,49 @@ class MetadataAnnotation(object):
 
     def build_topic_condition(self, kind_id, comparison='='):
         return self.build_kind_condition(kind_id, content_kinds.TOPIC, comparison)
+
+
+class AncestorAnnotation(MetadataAnnotation):
+    cte = TreeMetadataCTE
+    cte_columns = ('lft', 'rght', 'pk')
+
+    def __init__(self, *args, **kwargs):
+        self.include_self = kwargs.pop('include_self', False)
+        super(AncestorAnnotation, self).__init__(*args, **kwargs)
+
+    def build_ancestor_condition(self, cte):
+        """
+        @see MPTTModel.get_ancestors()
+        """
+        left_op = '<='
+        right_op = '>='
+
+        if not self.include_self:
+            left_op = '<'
+            right_op = '>'
+
+        return [
+            BooleanComparison(cte.col.lft, left_op, F('lft')),
+            BooleanComparison(cte.col.rght, right_op, F('rght')),
+        ]
+
+
+class DistinctJSONBAgg(JSONBAgg):
+    # DISTINCT kwarg isn't working on JSONBAgg, so enforce here
+    template = "%(function)s(DISTINCT %(expressions)s)"
+
+
+class AncestorSubquery(AncestorAnnotation):
+    def get_annotation(self, cte):
+        ancestor_condition = self.build_ancestor_condition(cte)
+
+        return DistinctJSONBAgg(Case(
+            When(
+                condition=WhenQ(*ancestor_condition),
+                then=cte.col.pk
+            ),
+            default=Value(None)
+        ))
 
 
 class DescendantCount(MetadataAnnotation):
