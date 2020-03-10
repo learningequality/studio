@@ -37,7 +37,7 @@
                 v-on="on"
                 @click.stop.prevent="onRemoveClick(item.id)"
               >
-                <VIcon>clear</VIcon>
+                <Icon>clear</Icon>
               </VBtn>
             </template>
             <span>{{ removeBtnLabel }}</span>
@@ -53,12 +53,14 @@
 
 <script>
 
-  import ContentNodeIcon from 'shared/views/ContentNodeIcon.vue';
+  import ContentNodeIcon from 'shared/views/ContentNodeIcon';
+  import Icon from 'shared/views/Icon';
 
   export default {
     name: 'RelatedResourcesList',
     components: {
       ContentNodeIcon,
+      Icon,
     },
     props: {
       /**
