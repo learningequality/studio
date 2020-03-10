@@ -6,13 +6,28 @@ import os
 import uuid
 
 from django.conf import settings
+from django.contrib.postgres.aggregates.general import BoolOr
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
 from django.db import transaction
+from django.db.models import BooleanField
+from django.db.models import IntegerField
 from django.db.models import Q
+from django.db.models.aggregates import Count
+from django.db.models.aggregates import Max
+from django.db.models.expressions import Case
+from django.db.models.expressions import CombinedExpression
+from django.db.models.expressions import F
+from django.db.models.expressions import Value
+from django.db.models.expressions import When
+from django.db.models.functions import Coalesce
 from django.utils.translation import ugettext as _
+from django_cte import With
+from le_utils.constants import content_kinds
+from le_utils.constants import roles
 
+from contentcuration.db.models.expressions import WhenQ
 from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
@@ -165,7 +180,11 @@ def filter_out_nones(data):
     return (l for l in data if l)
 
 
+<<<<<<< HEAD
 def duplicate_node_bulk(node, sort_order=None, parent=None, channel_id=None, user=None, task_object=None):  # noqa: C901
+=======
+def duplicate_node_bulk(node, sort_order=None, parent=None, channel_id=None, user=None, task_object=None):  # noqa:C901
+>>>>>>> ce15d9c4... Foundational working metadata helper
     if isinstance(node, int) or isinstance(node, basestring):
         node = ContentNode.objects.get(pk=node)
 
@@ -378,3 +397,209 @@ def move_node(node, parent=None, sort_order=None, channel_id=None):
                 n.tags.add(t)
 
     return node
+
+
+def filter_condition(lhs, comparator, rhs):
+    return CombinedExpression(lhs, comparator, rhs, output_field=BooleanField())
+
+
+class MetadataAnnotation(object):
+    requires_cte = False
+    cte_columns = ()
+
+    def get_annotation(self, cte=None):
+        """
+        :type cte: With|None
+        """
+        raise NotImplementedError('Metadata annotation needs to implement this method')
+
+
+class DescendantCount(MetadataAnnotation):
+    def get_annotation(self, cte=None):
+        """
+        @see MPTTModel.get_descendant_count()
+        """
+        diff = F('rght') - F('lft') - Value(1)
+
+        # integer division floors the result in postgres
+        return Max(diff / Value(2))
+
+
+class DescendantAnnotation(MetadataAnnotation):
+    requires_cte = True
+    cte_columns = ('lft', 'rght')
+
+    def __init__(self, *args, **kwargs):
+        self.include_self = kwargs.pop('include_self', False)
+        super(DescendantAnnotation, self).__init__(*args, **kwargs)
+
+    def resolve_conditions(self, cte):
+        left_op = '>='
+        right_op = '<='
+
+        if not self.include_self:
+            left_op = '>'
+            right_op = '<'
+
+        return [
+            filter_condition(cte.col.lft, left_op, F('lft')),
+            filter_condition(cte.col.lft, right_op, F('rght')),
+        ]
+
+    def get_condition(self, cte):
+        return WhenQ(*self.resolve_conditions(cte))
+
+
+class ResourceCount(DescendantAnnotation):
+    cte_columns = ('id', 'kind_id') + DescendantAnnotation.cte_columns
+
+    def get_annotation(self, cte=None):
+        return Count(
+            Case(
+                When(condition=self.get_condition(cte), then=cte.col.id),
+                default=Value(None)
+            ),
+            distinct=True
+        )
+
+    def resolve_conditions(self, cte):
+        conditions = super(ResourceCount, self).resolve_conditions(cte)
+        conditions.append(filter_condition(cte.col.kind_id, '!=', Value(content_kinds.TOPIC)))
+        return conditions
+
+
+class CoachCount(DescendantAnnotation):
+    cte_columns = ('id', 'role_visibility') + DescendantAnnotation.cte_columns
+
+    def get_annotation(self, cte=None):
+        return Count(
+            Case(
+                When(condition=self.get_condition(cte), then=cte.col.id),
+                default=Value(None)
+            ),
+            distinct=True
+        )
+
+    def resolve_conditions(self, cte):
+        conditions = super(CoachCount, self).resolve_conditions(cte)
+        conditions.append(filter_condition(cte.col.role_visibility, '=', Value(roles.COACH)))
+        return conditions
+
+
+class HasChanged(DescendantAnnotation):
+    cte_columns = ('changed',) + DescendantAnnotation.cte_columns
+
+    def get_annotation(self, cte=None):
+        return Coalesce(
+            BoolOr(
+                Case(
+                    When(condition=self.get_condition(cte), then=cte.col.changed),
+                    default=Value(None)
+                )
+            ),
+            Value(False),
+            output_field=BooleanField()
+        )
+
+
+class SortOrderMax(DescendantAnnotation):
+    cte_columns = ('parent_id', 'sort_order') + DescendantAnnotation.cte_columns
+
+    def get_annotation(self, cte=None):
+        return Coalesce(
+            Max(
+                Case(
+                    When(condition=self.get_condition(cte), then=cte.col.sort_order),
+                    default=Value(None)
+                )
+            ),
+            Value(1),
+            output_field=IntegerField()
+        )
+
+    def resolve_conditions(self, cte):
+        return [
+            filter_condition(cte.col.parent_id, '=', F('id'))
+        ]
+
+
+class Metadata(object):
+    """
+    Helper class to query for various ContentNode metadata, for multiple node-trees, while
+    minimizing database query volume.
+
+    Example:
+        md = Metadata(['123...abc']).annotate(some_thing=MetadataAnnotation())
+        data = md.get('123...abc')
+    """
+    def __init__(self, node_pks, **annotations):
+        """
+        :param node_pks: list of ContentNode ID's
+        """
+        self.node_pks = node_pks
+        self.annotations = annotations
+        self.metadata = None
+
+    def annotate(self, **annotations):
+        """
+        :param annotations: Dict of annotations that should be instances of MetadataAnnotation
+        :return: A clone of Metadata with the new annotations
+        """
+        clone = Metadata(self.node_pks, **self.annotations)
+        clone.annotations.update(annotations)
+        return clone
+
+    def get(self, node_pk):
+        """
+        A dict of metadata for the node identified by `node_pk`
+        :param node_pk: An int
+        :return: A dict of metadata for the node identified by `node_pk`
+        """
+        if self.metadata is None:
+            self.retrieve_metadata()
+
+        return self.metadata.get(node_pk, None)
+
+    def retrieve_metadata(self):
+        """
+        :return: A dict of the metadata indexed by the node's ID
+        """
+        if len(self.annotations) == 0:
+            raise ValueError('No metadata to retrieve')
+
+        requires_cte = False
+        cte_columns = ['tree_id']
+
+        for field_name, annotation in self.annotations.items():
+            if annotation.requires_cte:
+                requires_cte = True
+
+            if annotation.cte_columns:
+                cte_columns.extend(list(annotation.cte_columns))
+
+        cte = None
+
+        if requires_cte:
+            tree_ids = ContentNode.objects.filter(pk__in=self.node_pks).values('tree_id')
+            cte = With(
+                ContentNode.objects.filter(tree_id__in=tree_ids)
+                .values(*set(cte_columns))
+            )
+            query = cte.join(ContentNode, tree_id=cte.col.tree_id).with_cte(cte)
+        else:
+            query = ContentNode.objects
+
+        query = query.filter(pk__in=self.node_pks)\
+            .values('id')\
+            .annotate(**{
+                field_name: annotation.get_annotation(cte)
+                for field_name, annotation in self.annotations.items()
+            })
+
+        self.metadata = {}
+
+        # Finally, clear ordering (MPTT adds ordering by default)
+        for row in query.order_by():
+            self.metadata.update({row.pop('id'): row})
+
+        return self.metadata
