@@ -5,6 +5,7 @@ let timerID = null;
 let currentInterval = DEFAULT_CHECK_INTERVAL;
 
 const asyncTasksModule = {
+  namespaced: true,
   state: {
     asyncTasks: [],
     currentTaskError: null,
@@ -93,8 +94,8 @@ const asyncTasksModule = {
 
       // if we're inside a channel, make sure we only check tasks relevant to the channel.
       // note that we do this even for specific task lookups to check channel access.
-      if (window.channel) {
-        url += '?channel_id=' + window.channel.id;
+      if (window.channel_id) {
+        url += '?channel_id=' + window.channel_id;
       }
 
       $.ajax({
