@@ -4,6 +4,7 @@
     v-if="snackbarIsVisible"
     :key="key"
     :timeout="snackbarOptions.duration"
+    left
     bottom
     :value="snackbarIsVisible"
     @input="visibilityToggled"

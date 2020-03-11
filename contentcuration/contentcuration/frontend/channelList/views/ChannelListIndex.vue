@@ -53,6 +53,7 @@
         </keep-alive>
       </VContainer>
     </VContent>
+    <GlobalSnackbar />
   </VApp>
 
 </template>
@@ -63,6 +64,7 @@
   import { mapActions, mapGetters, mapState } from 'vuex';
   import { ListTypes, RouterNames, ChannelInvitationMapping } from '../constants';
   import ChannelInvitation from './Channel/ChannelInvitation';
+  import GlobalSnackbar from 'shared/views/GlobalSnackbar';
   import AppBar from 'shared/views/AppBar';
 
   export default {
@@ -70,6 +72,7 @@
     components: {
       AppBar,
       ChannelInvitation,
+      GlobalSnackbar,
     },
     computed: {
       ...mapState({

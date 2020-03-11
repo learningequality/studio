@@ -8,7 +8,7 @@
         {{ $tr('tokenText') }}
       </p>
       <label class="grey--text">{{ $tr('channelId') }}</label>
-      <CopyToken :token="channel.id" :hyphenate="false" />
+      <CopyToken :token="channel.id" :hyphenate="false" :successText="$tr('copiedChannelID')" />
     </div>
     <template v-slot:actions>
       <VSpacer />
@@ -60,6 +60,7 @@
       tokenText: 'For Kolibri versions 0.6.0 and below',
       channelId: 'Channel ID',
       close: 'Close',
+      copiedChannelID: 'Copied channel ID',
     },
   };
 
