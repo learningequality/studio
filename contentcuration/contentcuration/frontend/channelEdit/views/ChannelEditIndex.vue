@@ -26,8 +26,9 @@
             <VListTile class="hidden-md-and-up" @click.stop>
               <VListTileTitle>{{ $tr('publishButton') }}</VListTileTitle>
             </VListTile>
-            <VListTile @click.stop>
+            <VListTile @click="showTokenModal = true;">
               <VListTileTitle>{{ $tr('getToken') }}</VListTileTitle>
+
             </VListTile>
             <VListTile @click.stop>
               <VListTileTitle>{{ $tr('shareChannel') }}</VListTileTitle>
@@ -45,6 +46,9 @@
     </VContent>
     <GlobalSnackbar />
     <ProgressModal />
+    <template v-if="currentChannel">
+      <ChannelTokenModal v-model="showTokenModal" :channel="currentChannel" />
+    </template>
   </VApp>
 
 </template>
@@ -58,6 +62,7 @@
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
   import IconButton from 'shared/views/IconButton';
   import ToolBar from 'shared/views/ToolBar';
+  import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
   import { RouterNames as ChannelRouterNames } from 'frontend/channelList/constants';
 
   export default {
@@ -68,10 +73,12 @@
       ChannelNavigationDrawer,
       ToolBar,
       ProgressModal,
+      ChannelTokenModal,
     },
     data() {
       return {
         drawer: false,
+        showTokenModal: false,
       };
     },
     computed: {

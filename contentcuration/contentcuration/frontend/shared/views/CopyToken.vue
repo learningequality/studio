@@ -9,6 +9,7 @@
     color="primary"
     :hideDetails="true"
     single-line
+    box
     style="padding: 0;"
     class="notranslate"
     @click:append-outer.stop="copyToken"

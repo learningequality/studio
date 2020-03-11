@@ -77,7 +77,7 @@
         :bookmark="channel.bookmark"
       />
       &nbsp;
-      <VMenu offset-y>
+      <VMenu v-if="canEdit || channel.published" offset-y>
         <template v-slot:activator="{ on }">
           <VBtn icon flat data-test="menu" v-on="on" @click.stop.prevent>
             <VIcon class="notranslate">
@@ -99,7 +99,7 @@
             </VListTileAction>
             <VListTileTitle>{{ $tr('editChannel') }}</VListTileTitle>
           </VListTile>
-          <VListTile @click.stop="tokenDialog=true">
+          <VListTile v-if="channel.published" @click.stop="tokenDialog=true">
             <VListTileAction>
               <VIcon class="notranslate">
                 content_copy
@@ -134,23 +134,7 @@
     </PrimaryDialog>
 
     <!-- Copy dialog -->
-    <PrimaryDialog v-model="tokenDialog" :title="$tr('copyTitle')" lazy>
-      <div style="margin-bottom: 32px;">
-        <label class="grey--text">{{ $tr('token') }}</label>
-        <CopyToken :token="channel.primary_token" />
-        <p style="margin: 48px 0px 16px;" class="subheading">
-          {{ $tr('tokenText') }}
-        </p>
-        <label class="grey--text">{{ $tr('channelId') }}</label>
-        <CopyToken :token="channel.id" :hyphenate="false" />
-      </div>
-      <template v-slot:actions>
-        <VSpacer />
-        <VBtn color="primary" @click="tokenDialog=false">
-          {{ $tr('close') }}
-        </VBtn>
-      </template>
-    </PrimaryDialog>
+    <ChannelTokenModal v-model="tokenDialog" :channel="channel" />
   </VCard>
 
 </template>
@@ -162,14 +146,14 @@
   import ChannelStar from './ChannelStar';
   import PrimaryDialog from 'shared/views/PrimaryDialog';
   import Constants from 'edit_channel/constants/index';
-  import CopyToken from 'shared/views/CopyToken';
+  import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
 
   export default {
     name: 'ChannelItem',
     components: {
       ChannelStar,
       PrimaryDialog,
-      CopyToken,
+      ChannelTokenModal,
     },
     props: {
       channelId: {
@@ -251,11 +235,6 @@
       deleteTitle: 'Delete this channel',
       deletePrompt: 'Once you delete a channel, the channel will be permanently deleted.',
       cancel: 'Cancel',
-      copyTitle: 'Copy channel token',
-      token: 'Channel token',
-      tokenText: 'For Kolibri versions 0.6.0 and below',
-      channelId: 'Channel ID',
-      close: 'Close',
     },
   };
 
