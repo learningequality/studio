@@ -1,6 +1,7 @@
+from django.contrib.postgres.aggregates.general import ArrayAgg
 from django.contrib.postgres.aggregates.general import BoolOr
-from django.contrib.postgres.aggregates.general import JSONBAgg
 from django.db.models import BooleanField
+from django.db.models import CharField
 from django.db.models import IntegerField
 from django.db.models.aggregates import Count
 from django.db.models.aggregates import Max
@@ -61,22 +62,20 @@ class AncestorAnnotation(MetadataAnnotation):
         ]
 
 
-class DistinctJSONBAgg(JSONBAgg):
-    # DISTINCT kwarg isn't working on JSONBAgg, so enforce here
-    template = "%(function)s(DISTINCT %(expressions)s)"
-
-
-class AncestorSubquery(AncestorAnnotation):
+class AncestorArrayAgg(AncestorAnnotation):
     def get_annotation(self, cte):
         ancestor_condition = self.build_ancestor_condition(cte)
 
-        return DistinctJSONBAgg(Case(
-            When(
-                condition=WhenQ(*ancestor_condition),
-                then=cte.col.pk
+        return ArrayAgg(
+            Case(
+                When(
+                    condition=WhenQ(*ancestor_condition),
+                    then=cte.col.pk
+                ),
+                default=Value(None)
             ),
-            default=Value(None)
-        ))
+            output_field=CharField()
+        )
 
 
 class DescendantCount(MetadataAnnotation):

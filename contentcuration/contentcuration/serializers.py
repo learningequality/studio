@@ -41,7 +41,7 @@ from contentcuration.models import SecretToken
 from contentcuration.models import SlideshowSlide
 from contentcuration.models import Task
 from contentcuration.models import User
-from contentcuration.node_metadata.annotations import AncestorSubquery
+from contentcuration.node_metadata.annotations import AncestorArrayAgg
 from contentcuration.node_metadata.annotations import AssessmentCount
 from contentcuration.node_metadata.annotations import CoachCount
 from contentcuration.node_metadata.annotations import DescendantCount
@@ -266,7 +266,7 @@ class CustomListSerializer(serializers.ListSerializer):
         return ret
 
     def to_representation(self, data):
-        if self.child and hasattr(self.child, 'metadata_query'):
+        if self.child:
             query = data
 
             if isinstance(data, Manager):
@@ -275,7 +275,10 @@ class CustomListSerializer(serializers.ListSerializer):
                 query = ContentNode.objects.filter(pk__in=[n.pk for n in data])
 
             # update metadata_query with queryset for all data such that it minimizes queries
-            self.child.metadata_query = Metadata(query, **self.child.metadata_query.annotations)
+            for attr_query in ('metadata_query', 'ancestor_query'):
+                attr_query_val = getattr(self.child, attr_query, None)
+                if attr_query_val:
+                    setattr(self.child, attr_query, Metadata(query.all(), **attr_query_val.annotations))
         return super(CustomListSerializer, self).to_representation(data)
 
 
@@ -359,14 +362,14 @@ class SimplifiedContentNodeSerializer(BulkSerializerMixin, serializers.ModelSeri
         coach_count=CoachCount(),
     )
     ancestor_query = Metadata(
-        ancestors=AncestorSubquery()
+        ancestors=AncestorArrayAgg()
     )
 
     def retrieve_metadata(self, node):
         return self.metadata_query.get(node.pk)
 
     def get_node_ancestors(self, node):
-        return filter(lambda a: a, self.ancestor_query.get(node.pk).get('ancestors', []))
+        return self.ancestor_query.get(node.pk).get('ancestors', [])
 
     @staticmethod
     def setup_eager_loading(queryset):
