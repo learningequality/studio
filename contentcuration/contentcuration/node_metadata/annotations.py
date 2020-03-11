@@ -1,5 +1,7 @@
+from django.contrib.postgres.aggregates.general import ArrayAgg
 from django.contrib.postgres.aggregates.general import BoolOr
 from django.db.models import BooleanField
+from django.db.models import CharField
 from django.db.models import IntegerField
 from django.db.models.aggregates import Count
 from django.db.models.aggregates import Max
@@ -33,6 +35,47 @@ class MetadataAnnotation(object):
 
     def build_topic_condition(self, kind_id, comparison='='):
         return self.build_kind_condition(kind_id, content_kinds.TOPIC, comparison)
+
+
+class AncestorAnnotation(MetadataAnnotation):
+    cte = TreeMetadataCTE
+    cte_columns = ('lft', 'rght', 'pk')
+
+    def __init__(self, *args, **kwargs):
+        self.include_self = kwargs.pop('include_self', False)
+        super(AncestorAnnotation, self).__init__(*args, **kwargs)
+
+    def build_ancestor_condition(self, cte):
+        """
+        @see MPTTModel.get_ancestors()
+        """
+        left_op = '<='
+        right_op = '>='
+
+        if not self.include_self:
+            left_op = '<'
+            right_op = '>'
+
+        return [
+            BooleanComparison(cte.col.lft, left_op, F('lft')),
+            BooleanComparison(cte.col.rght, right_op, F('rght')),
+        ]
+
+
+class AncestorArrayAgg(AncestorAnnotation):
+    def get_annotation(self, cte):
+        ancestor_condition = self.build_ancestor_condition(cte)
+
+        return ArrayAgg(
+            Case(
+                When(
+                    condition=WhenQ(*ancestor_condition),
+                    then=cte.col.pk
+                ),
+                default=Value(None)
+            ),
+            output_field=CharField()
+        )
 
 
 class DescendantCount(MetadataAnnotation):
