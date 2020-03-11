@@ -8,7 +8,6 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.files.storage import default_storage
 from django.db import transaction
 from django.db.models import IntegerField
-from django.db.models import Manager
 from django.db.models import QuerySet
 from django.db.models import Value
 from le_utils.constants import content_kinds
@@ -269,9 +268,7 @@ class CustomListSerializer(serializers.ListSerializer):
         if self.child:
             query = data
 
-            if isinstance(data, Manager):
-                query = data.all()
-            elif not isinstance(data, QuerySet) and isinstance(data, (list, tuple)):
+            if not isinstance(data, QuerySet) and isinstance(data, (list, tuple)):
                 query = ContentNode.objects.filter(pk__in=[n.pk for n in data])
 
             # update metadata_query with queryset for all data such that it minimizes queries
