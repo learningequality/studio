@@ -4,8 +4,8 @@ import TreeView from './views/TreeView';
 import store from './store';
 import { RouterNames as ChannelRouterNames } from 'frontend/channelList/constants';
 import Sandbox from 'shared/views/Sandbox';
-import ChannelModal from 'frontend/channelList/views/Channel/ChannelModal';
-import ChannelDetailsModal from 'frontend/channelList/views/Channel/ChannelDetailsModal';
+import ChannelModal from 'shared/views/channel/ChannelModal';
+import ChannelDetailsModal from 'shared/views/channel/ChannelDetailsModal';
 import EditModal from 'edit_channel/uploader/views/EditModal';
 
 const router = new VueRouter({

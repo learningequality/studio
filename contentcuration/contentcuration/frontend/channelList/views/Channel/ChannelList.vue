@@ -42,9 +42,7 @@
                 allowEdit
               />
             </template>
-            <keep-alive>
-              <router-view v-if="$route.params.channelId" :key="$route.params.channelId" />
-            </keep-alive>
+            <router-view v-if="$route.params.channelId" :key="$route.name" />
           </VFlex>
         </VLayout>
       </VFlex>

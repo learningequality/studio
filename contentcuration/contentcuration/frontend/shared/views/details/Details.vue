@@ -1,7 +1,7 @@
 <template>
 
   <div>
-    <LoadingText v-if="loading" absolute />
+    <LoadingText v-if="loading" />
     <div v-else-if="hasDetails">
       <DetailsRow
         :label="$tr('creationHeading')"

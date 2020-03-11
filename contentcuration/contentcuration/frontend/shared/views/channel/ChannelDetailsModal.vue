@@ -94,11 +94,6 @@
               :label="$tr('primaryLanguageHeading')"
               :text="translateLanguage(channel.language)"
             />
-            <DetailsRow
-              v-if="channel.language"
-              :label="$tr('primaryLanguageHeading')"
-              :text="translateLanguage(channel.language)"
-            />
             <Details :nodeID="channel.root_id" />
           </div>
         </VCardText>
