@@ -11,11 +11,20 @@
       :style="{backgroundColor: $vuetify.theme.backgroundColor}"
     >
       <VLayout row>
-        <IconButton icon="collapse_all" :text="$tr('collapseAllButton')" @click="collapseAll">
+        <IconButton
+          icon="collapse_all"
+          :text="$tr('collapseAllButton')"
+          @click="collapseAll"
+        >
           $vuetify.icons.collapse_all
         </IconButton>
         <VSpacer />
-        <IconButton icon="gps_fixed" :text="$tr('openCurrentLocationButton')" />
+        <IconButton
+          :disabled="!ancestors.length"
+          icon="gps_fixed"
+          :text="$tr('openCurrentLocationButton')"
+          @click="jumpToLocation"
+        />
       </VLayout>
       <div style="margin-left: -24px;">
         <StudioTree :nodeId="rootId" :root="true" />
@@ -56,13 +65,24 @@
     },
     computed: {
       ...mapGetters('currentChannel', ['rootId']),
-      ...mapGetters('contentNode', ['getContentNodeChildren']),
+      ...mapGetters('contentNode', ['getContentNodeChildren', 'getContentNodeAncestors']),
       isEmptyChannel() {
         return !this.getContentNodeChildren(this.rootId).length;
       },
+      ancestors() {
+        return this.getContentNodeAncestors(this.nodeId);
+      },
     },
     methods: {
-      ...mapMutations('contentNode', { collapseAll: 'COLLAPSE_ALL_EXPANDED' }),
+      ...mapMutations('contentNode', {
+        collapseAll: 'COLLAPSE_ALL_EXPANDED',
+        setExpanded: 'SET_EXPANSION',
+      }),
+      jumpToLocation() {
+        this.ancestors.forEach(ancestor => {
+          this.setExpanded({ id: ancestor.id, expanded: true });
+        });
+      },
     },
     $trs: {
       collapseAllButton: 'Collapse all',
