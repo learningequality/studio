@@ -1,6 +1,6 @@
 <template>
 
-  <div @contextmenu.prevent="showMenu">
+  <div style="width: 100%;" @contextmenu.prevent="showMenu">
     <slot></slot>
     <VMenu v-model="show" :position-x="x" :position-y="y" absolute offset-y>
       <VCard>
