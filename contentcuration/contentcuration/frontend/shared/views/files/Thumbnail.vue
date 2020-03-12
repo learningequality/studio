@@ -17,7 +17,7 @@
   <VImg
     v-else
     data-test="thumbnail-image"
-    :aspect-ratio="16/9"
+    :aspect-ratio="aspectRatio"
     :src="encoding && encoding.base64 || thumbnailSrc"
     :lazy-src="encoding && encoding.base64 || thumbnailSrc"
     contain
@@ -27,6 +27,7 @@
 
 <script>
 
+  import { ASPECT_RATIO } from './constants';
   import Constants from 'edit_channel/constants/index';
 
   export default {
@@ -55,6 +56,9 @@
         return (
           this.src || (!this.preset.kind_id && require('shared/images/kolibri_placeholder.png'))
         );
+      },
+      aspectRatio() {
+        return ASPECT_RATIO;
       },
     },
   };

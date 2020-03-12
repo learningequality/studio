@@ -4,7 +4,7 @@
     <VLayout row wrap>
       <VFlex xs12 sm3>
         <VCardTitle>
-          <Thumbnail :src="thumbnailSrc" />
+          <Thumbnail :src="channel.thumbnail_url" :encoding="channel.thumbnail_encoding" />
         </VCardTitle>
       </VFlex>
       <VFlex xs12 sm9>
@@ -188,9 +188,6 @@
       }),
       channel() {
         return this.getChannel(this.channelId) || {};
-      },
-      thumbnailSrc() {
-        return this.channel.thumbnail_encoding.base64 || this.channel.thumbnail_url;
       },
       language() {
         return Constants.Languages.find(language => language.id === this.channel.language);

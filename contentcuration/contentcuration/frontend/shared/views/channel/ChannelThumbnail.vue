@@ -34,7 +34,7 @@
             @dropped="handleFiles"
             @click="openFileDialog"
           >
-            <Thumbnail :src="thumbnailSrc" />
+            <Thumbnail :src="value.thumbnail_url" :encoding="value.thumbnail_encoding" />
           </FileDropzone>
         </div>
 
