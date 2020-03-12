@@ -25,11 +25,11 @@ from rest_framework.response import Response
 from contentcuration.decorators import cache_no_user_data
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
-from contentcuration.models import get_channel_thumbnail
+from contentcuration.models import generate_storage_url
 from contentcuration.models import SecretToken
 from contentcuration.models import User
-from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import BulkListSerializer
+from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.common import ContentDefaultsSerializer
 
@@ -248,6 +248,10 @@ class ChannelSerializer(BulkModelSerializer):
         return super(ChannelSerializer, self).update(instance, validated_data)
 
 
+def get_thumbnail_url(item):
+    return item.get('thumbnail') and generate_storage_url(item["thumbnail"])
+
+
 class ChannelViewSet(ValuesViewset):
     queryset = Channel.objects.all()
     serializer_class = ChannelSerializer
@@ -281,7 +285,7 @@ class ChannelViewSet(ValuesViewset):
     )
 
     field_map = {
-        "thumbnail_url": get_channel_thumbnail,
+        "thumbnail_url": get_thumbnail_url,
         "published": "main_tree__published",
         "created": "main_tree__created",
         "root_id": "main_tree__id",

@@ -116,7 +116,6 @@
       },
     },
     methods: {
-      // Add in once global store is properly set up
       ...mapActions('file', ['uploadFile', 'updateFile', 'createFile']),
       openFileDialog() {
         if (!this.readonly) {

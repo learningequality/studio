@@ -41,15 +41,24 @@
         <!-- Toolbar -->
         <VLayout v-if="!readonly && !uploading" align-center row data-test="toolbar">
           <!-- Upload failed-->
-          <div v-if="true" class="red--text body-1">
-            <FileStatusText
-              :fileIds="[uploadingId]"
-              @open="openFileDialog"
+          <template v-if="hasError">
+            <span class="red--text body-1">
+              <FileStatusText
+                :fileIds="[uploadingId]"
+                @open="openFileDialog"
+              />
+            </span>
+            <VSpacer />
+            <IconButton
+              icon="clear"
+              data-test="remove"
+              :text="$tr('cancel')"
+              @click="cancelPendingFile"
             />
-          </div>
+          </template>
 
           <!-- Cropping options -->
-          <div v-else-if="cropping">
+          <template v-else-if="cropping">
             <IconButton
               icon="add"
               data-test="zoomin"
@@ -66,42 +75,38 @@
               @mousedown="cropZoomOut"
               @mouseup="cropZoomStop"
             />
-          </div>
+            <VSpacer />
+            <ActionLink
+              class="mr-3"
+              data-test="cancel"
+              :text="$tr('cancel')"
+              @click="cancelPendingFile"
+            />
+            <ActionLink :text="$tr('save')" data-test="save" @click="save" />
+          </template>
 
           <!-- Default options -->
-          <template v-else-if="!uploading">
+          <template v-else>
             <IconButton
               icon="image"
               :text="$tr('upload')"
               @click="openFileDialog"
             />
             <IconButton
-              v-if="!hasError && thumbnailSrc"
+              v-if="thumbnailSrc"
               icon="crop"
               :text="$tr('crop')"
               @click="cropping = true"
             />
-          </template>
-
-          <VSpacer />
-          <div v-if="!uploading">
-            <span v-if="!hasError && cropping">
-              <ActionLink
-                class="mr-3"
-                data-test="cancel"
-                :text="$tr('cancel')"
-                @click="cancelPendingFile"
-              />
-              <ActionLink :text="$tr('save')" data-test="save" @click="save" />
-            </span>
+            <VSpacer />
             <IconButton
-              v-else-if="thumbnailSrc"
+              v-if="thumbnailSrc"
               icon="clear"
               data-test="remove"
               :text="$tr('remove')"
               @click="remove"
             />
-          </div>
+          </template>
         </VLayout>
       </template>
     </Uploader>
@@ -168,7 +173,7 @@
     computed: {
       ...mapGetters('file', ['getUploadsInProgress', 'getFiles']),
       file() {
-        return this.getFiles([this.uploadingId]);
+        return this.getFiles([this.uploadingId])[0];
       },
       hasError() {
         return this.file && this.file.error;
@@ -180,15 +185,13 @@
         return this.width / ASPECT_RATIO;
       },
       thumbnailSrc() {
-        return this.value.thumbnail_encoding.base64 || this.value.thumbnail_url;
+        let encoding = this.value.thumbnail_encoding;
+        return (encoding && encoding.base64) || this.value.thumbnail_url;
       },
     },
     watch: {
-      hasError(error) {
-        if (error) this.reset();
-      },
       uploading(uploading) {
-        if (!uploading) {
+        if (!uploading && this.uploadingId) {
           let file = this.getFiles([this.uploadingId])[0];
           this.updateThumbnail({
             thumbnail: `${file.checksum}.${file.file_format}`,
@@ -198,18 +201,19 @@
         }
       },
     },
+    mounted() {
+      this.lastThumbnail = { ...this.value };
+    },
     methods: {
       updateThumbnail(data) {
         let thumbnailData = {
           ...this.value,
           ...data,
         };
-        this.lastThumbnail = thumbnailData;
         this.$emit('input', thumbnailData);
       },
       handleUploading(files) {
         if (files[0]) {
-          this.lastThumbnail = this.value;
           this.uploadingId = files[0].id;
           this.cropping = true;
         }
@@ -239,17 +243,21 @@
       },
       reset() {
         this.cropping = false;
+        this.uploadingId = null;
       },
       remove() {
         this.updateThumbnail(DEFAULT_THUMBNAIL);
       },
       save() {
-        this.updateThumbnail({
-          thumbnail_encoding: {
-            ...this.Cropper.getMetadata(),
-            base64: this.Cropper.generateDataUrl(),
-          },
-        });
+        let thumbnail_encoding = {
+          ...this.Cropper.getMetadata(),
+          base64: this.Cropper.generateDataUrl(),
+        };
+        this.updateThumbnail({ thumbnail_encoding });
+        this.lastThumbnail = {
+          ...this.value,
+          thumbnail_encoding,
+        };
         this.reset();
       },
     },
