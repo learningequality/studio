@@ -50,6 +50,9 @@
           </VFlex>
         </VLayout>
         <template #menu>
+          <div class="caption grey--text notranslate px-3 pt-2">
+            {{ node.title }}
+          </div>
           <ContentNodeOptions :nodeId="nodeId" />
         </template>
       </ContextMenu>

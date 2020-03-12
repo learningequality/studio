@@ -5,9 +5,7 @@
     <VToolbar v-if="ancestors.length && !loadingAncestors" dense color="transparent" flat>
       <VBreadcrumbs :items="ancestors" class="pa-0">
         <template #divider>
-          <Icon medium>
-            chevron_right
-          </Icon>
+          <Icon>arrow_forward_ios</Icon>
         </template>
         <template #item="props">
           <!-- Current item -->
@@ -39,7 +37,17 @@
 
     <!-- Topic actions -->
     <ToolBar flat dense color="transparent">
-      <VCheckbox v-if="node.total_count" color="primary" hide-details />
+      <div class="mr-1">
+        <VCheckbox v-if="node.total_count" v-model="selectAll" color="primary" hide-details />
+      </div>
+      <VSlideXTransition>
+        <div v-if="selected.length">
+          <IconButton icon="edit" :text="$tr('editSelectedButton')" @click="editNodes(selected)" />
+          <IconButton icon="content_paste" :text="$tr('copySelectedButton')" />
+          <IconButton icon="sync_alt" :text="$tr('moveSelectedButton')" />
+          <IconButton icon="delete" :text="$tr('deleteSelectedButton')" />
+        </div>
+      </VSlideXTransition>
       <VSpacer />
       <VToolbarItems>
         <VMenu offset-y left>
@@ -115,7 +123,7 @@
                   small
                   icon="edit"
                   :text="$tr('editButton')"
-                  :to="editNodeLink(detailNodeId)"
+                  @click="editNodes([detailNodeId])"
                 />
                 <VMenu offset-y left>
                   <template #activator="{ on }">
@@ -178,11 +186,24 @@
         showResourceDrawer: false,
         viewMode: sessionStorage['topic-tree-view'] || viewModes.DEFAULT,
         loadingAncestors: false,
+        selected: [],
       };
     },
     computed: {
       ...mapGetters('currentChannel', ['canEdit', 'currentChannel']),
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodeAncestors']),
+      selectAll: {
+        get() {
+          return this.selected.length;
+        },
+        set(value) {
+          if (value) {
+            this.selected = [this.topicId];
+          } else {
+            this.selected = [];
+          }
+        },
+      },
       node() {
         return this.getContentNode(this.topicId);
       },
@@ -203,6 +224,9 @@
       },
     },
     watch: {
+      topicId() {
+        this.selected = [];
+      },
       detailNodeId(value) {
         this.showResourceDrawer = Boolean(value);
       },
@@ -243,13 +267,13 @@
         };
         this.newContentNode(RouterNames.ADD_EXERCISE, nodeData);
       },
-      editNodeLink(id) {
-        return {
+      editNodes(ids) {
+        this.$router.push({
           name: RouterNames.CONTENTNODE_DETAILS,
           params: {
-            detailNodeIds: id,
+            detailNodeIds: ids.join(','),
           },
-        };
+        });
       },
       treeLink(params) {
         return {
@@ -288,6 +312,10 @@
       copyToClipboardButton: 'Copy to clipboard',
       [viewModes.DEFAULT]: 'Default',
       [viewModes.COMPACT]: 'Compact',
+      editSelectedButton: 'Edit selected items',
+      copySelectedButton: 'Copy selected items to clipboard',
+      moveSelectedButton: 'Move selected items',
+      deleteSelectedButton: 'Delete selected items',
     },
   };
 
