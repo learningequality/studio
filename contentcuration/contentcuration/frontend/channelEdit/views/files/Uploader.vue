@@ -69,12 +69,12 @@
   import partition from 'lodash/partition';
   import uniq from 'lodash/uniq';
 
+  import FileStorage from './FileStorage';
   import { fileErrors, MAX_FILE_SIZE } from 'shared/views/files/constants';
   import { fileSizeMixin } from 'shared/views/files/mixins';
   import Constants from 'edit_channel/constants';
   import Alert from 'edit_channel/sharedComponents/Alert.vue';
 
-  import FileStorage from 'frontend/channelEdit/views/files/FileStorage';
   import State from 'edit_channel/state';
 
   export default {

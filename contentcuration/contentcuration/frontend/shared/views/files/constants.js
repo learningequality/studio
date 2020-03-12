@@ -8,3 +8,5 @@ export const fileErrors = {
 };
 
 export const MAX_FILE_SIZE = 209715200;
+
+export const ASPECT_RATIO = 16 / 9;

@@ -54,7 +54,7 @@
 
   import { fileErrors, MAX_FILE_SIZE } from './constants';
   import { fileSizeMixin } from './mixins';
-  import FileStorage from './FileStorage';
+  import FileStorage from 'frontend/channelEdit/views/files/FileStorage';
   import Constants from 'edit_channel/constants';
   import Alert from 'edit_channel/sharedComponents/Alert';
 

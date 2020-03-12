@@ -28,7 +28,7 @@
 
   import { mapGetters } from 'vuex';
   import ActionLink from '../ActionLink';
-  import FileStatus from './FileStatus';
+  import FileStatus from 'frontend/channelEdit/views/files/FileStatus';
 
   export default {
     name: 'FileStatusCard',

@@ -121,11 +121,11 @@
   import ActionLink from '../ActionLink';
   import Uploader from 'shared/views/files/Uploader';
   import FileStatusCard from 'shared/views/files/FileStatusCard';
-  import FileStatusText from 'shared/views/files/FileStatusText';
+  import FileStatusText from 'frontend/channelEdit/views/files/FileStatusText';
   import Thumbnail from 'shared/views/files/Thumbnail';
   import FileDropzone from 'shared/views/files/FileDropzone';
+  import { ASPECT_RATIO } from 'shared/views/files/constants';
 
-  const ASPECT_RATIO = 16 / 9;
   const DEFAULT_THUMBNAIL = {
     thumbnail: null,
     thumbnail_url: '',

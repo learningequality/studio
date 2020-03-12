@@ -49,7 +49,7 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
-  import { fileSizeMixin, fileStatusMixin } from 'frontend/channelEdit/views/files/mixins';
+  import { fileSizeMixin, fileStatusMixin } from 'shared/views/files/mixins';
   import FileStatus from 'frontend/channelEdit/views/files/FileStatus';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import { RouterNames } from 'frontend/channelEdit/constants';
