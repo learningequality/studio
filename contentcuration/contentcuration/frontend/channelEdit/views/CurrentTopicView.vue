@@ -15,7 +15,14 @@
             <span class="notranslate font-weight-bold">
               {{ props.item.title }}
             </span>
-            <ContentNodeOptions :nodeId="topicId" icon="arrow_drop_down" right />
+            <VMenu offset-y right>
+              <template #activator="{ on }">
+                <VBtn icon flat v-on="on">
+                  <Icon>arrow_drop_down</Icon>
+                </VBtn>
+              </template>
+              <ContentNodeOptions :nodeId="topicId" />
+            </VMenu>
           </span>
           <router-link
             v-else
@@ -110,7 +117,14 @@
                   :text="$tr('editButton')"
                   :to="editNodeLink(detailNodeId)"
                 />
-                <ContentNodeOptions :nodeId="detailNodeId" left hideDetailsLink small />
+                <VMenu offset-y left>
+                  <template #activator="{ on }">
+                    <VBtn small icon flat v-on="on">
+                      <Icon>more_horiz</Icon>
+                    </VBtn>
+                  </template>
+                  <ContentNodeOptions :nodeId="detailNodeId" hideDetailsLink />
+                </VMenu>
               </template>
               <template v-else #actions>
                 <IconButton

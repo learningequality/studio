@@ -38,7 +38,7 @@
 
       <!-- File preview -->
       <FilePreview
-        v-if="isResource"
+        v-if="isResource && primaryFiles[0]"
         :nodeId="nodeId"
         :fileId="primaryFiles[0].id"
       />
