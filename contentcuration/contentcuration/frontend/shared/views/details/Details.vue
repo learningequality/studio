@@ -173,7 +173,7 @@
       </DetailsRow>
       <VLayout row wrap class="sample-nodes">
         <VFlex v-for="node in details.sample_nodes" :key="node.node_id" xs12 sm3>
-          <VCard height="100%">
+          <VCard height="100%" flat>
             <VImg :src="node.thumbnail" :aspect-ratio="16/9" />
             <VCardText class="notranslate">
               {{ node.title }}
