@@ -30,7 +30,7 @@ endtoendtest:
 	# create a shared directory accessible from within Docker so that it can pass the
 	# coverage report back for uploading.
 	mkdir -p shared
-	docker-compose run -v "${PWD}/shared:/shared" studio-app make test -e DJANGO_SETTINGS_MODULE=contentcuration.test_settings
+	docker-compose run -v "${PWD}/shared:/shared" studio-app make collectstatic test -e DJANGO_SETTINGS_MODULE=contentcuration.test_settings
 	bash <(curl -s https://codecov.io/bash)
 	rm -rf shared
 

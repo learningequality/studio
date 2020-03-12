@@ -71,11 +71,11 @@ venv
 
 Thumbs.db
 
-# Ignore built javascript files
+# Ignore javascript bundle output dirs
 /contentcuration/contentcuration/static/js/bundles
 /contentcuration/contentcuration/static/studio
 
-# The following line doesn't do anything since currently `collectstatic` writes to /contentcuration/contentcuration/static
+# Ignore Django collectstatic output dir
 /contentcuration/static/*
 
 # Ignore node_modules
