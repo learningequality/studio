@@ -139,6 +139,10 @@
       channel() {
         return this.getChannel(this.channelId);
       },
+      thumbnail() {
+        let encoding = this.channel.thumbnail_encoding;
+        return (encoding && encoding.base64) || this.channel.thumbnail_url;
+      },
       publishedDate() {
         return this.$formatDate(this.channel.last_published, {
           year: 'numeric',
