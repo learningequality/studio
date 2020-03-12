@@ -4,7 +4,7 @@
     <VLayout row wrap>
       <VFlex xs12 sm3>
         <VCardTitle>
-          <VImg :src="channel.thumbnail_url" contain :aspect-ratio="16/9" />
+          <Thumbnail :src="thumbnailSrc" />
         </VCardTitle>
       </VFlex>
       <VFlex xs12 sm9>
@@ -134,7 +134,11 @@
     </PrimaryDialog>
 
     <!-- Copy dialog -->
-    <ChannelTokenModal v-model="tokenDialog" :channel="channel" />
+    <ChannelTokenModal
+      v-if="channel && channel.published"
+      v-model="tokenDialog"
+      :channel="channel"
+    />
   </VCard>
 
 </template>
@@ -147,6 +151,7 @@
   import PrimaryDialog from 'shared/views/PrimaryDialog';
   import Constants from 'edit_channel/constants/index';
   import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
+  import Thumbnail from 'shared/views/files/Thumbnail';
 
   export default {
     name: 'ChannelItem',
@@ -154,6 +159,7 @@
       ChannelStar,
       PrimaryDialog,
       ChannelTokenModal,
+      Thumbnail,
     },
     props: {
       channelId: {
@@ -182,6 +188,9 @@
       }),
       channel() {
         return this.getChannel(this.channelId) || {};
+      },
+      thumbnailSrc() {
+        return this.channel.thumbnail_encoding.base64 || this.channel.thumbnail_url;
       },
       language() {
         return Constants.Languages.find(language => language.id === this.channel.language);

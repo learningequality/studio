@@ -1,24 +1,7 @@
 <template>
 
-  <div class="uploader">
-    <slot :openFileDialog="openFileDialog">
-      <div
-        style="border: 4px solid transparent;"
-        :style="{
-          backgroundColor: highlightDropzone? $vuetify.theme.primaryBackground : 'transparent',
-          borderColor: highlightDropzone? $vuetify.theme.primary : borderColor,
-          width: fill? '100%' : 'unset',
-          height: fill? '100%' : 'unset',
-        }"
-        data-test="dropzone"
-        @dragenter.prevent="enter"
-        @dragover.prevent="over"
-        @dragleave.prevent="leave"
-        @drop.prevent="drop"
-      >
-        <slot name="dropzone"></slot>
-      </div>
-    </slot>
+  <div>
+    <slot :openFileDialog="openFileDialog" :handleFiles="handleFiles"></slot>
     <input
       v-if="!readonly"
       ref="fileUpload"
@@ -69,12 +52,12 @@
   import partition from 'lodash/partition';
   import uniq from 'lodash/uniq';
 
-  import { fileErrors, MAX_FILE_SIZE } from 'shared/views/files/constants';
-  import { fileSizeMixin } from 'shared/views/files/mixins';
+  import { fileErrors, MAX_FILE_SIZE } from './constants';
+  import { fileSizeMixin } from './mixins';
+  import FileStorage from './FileStorage';
   import Constants from 'edit_channel/constants';
-  import Alert from 'edit_channel/sharedComponents/Alert.vue';
+  import Alert from 'edit_channel/sharedComponents/Alert';
 
-  import FileStorage from 'frontend/channelEdit/views/files/FileStorage';
   import State from 'edit_channel/state';
 
   export default {
@@ -97,22 +80,9 @@
         type: Boolean,
         default: false,
       },
-      allowDrop: {
-        type: Boolean,
-        default: true,
-      },
-      borderColor: {
-        type: String,
-        default: 'transparent',
-      },
-      fill: {
-        type: Boolean,
-        default: false,
-      },
     },
     data() {
       return {
-        highlight: false,
         unsupportedFiles: [],
         tooLargeFiles: [],
         totalUploadSize: 0,
@@ -141,9 +111,6 @@
       availableSpace() {
         return State.current_user.get('available_space');
       },
-      highlightDropzone() {
-        return this.highlight && !this.readonly && this.allowDrop;
-      },
       maxFileSize() {
         return MAX_FILE_SIZE;
       },
@@ -151,19 +118,6 @@
     methods: {
       // Add in once global store is properly set up
       ...mapActions('file', ['uploadFile', 'updateFile', 'createFile']),
-      enter() {
-        this.highlight = true;
-      },
-      over() {
-        this.highlight = true;
-      },
-      leave() {
-        this.highlight = false;
-      },
-      drop(e) {
-        this.highlight = false;
-        if (this.allowDrop) this.handleFiles(e.dataTransfer.files);
-      },
       openFileDialog() {
         if (!this.readonly) {
           this.$refs.fileUpload.click();

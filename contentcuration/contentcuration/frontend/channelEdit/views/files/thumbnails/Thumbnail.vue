@@ -125,10 +125,10 @@
         @error="cancelPendingFile"
       >
         <template #default="{generate}">
-          <ThumbnailToolbarIcon
+          <IconButton
             :disabled="!primaryFilePath"
             icon="camera"
-            :tooltip="$tr('generate')"
+            :text="$tr('generate')"
             @click="generate"
           />
         </template>
@@ -136,18 +136,18 @@
 
       <!-- Cropping options -->
       <span v-if="cropping">
-        <ThumbnailToolbarIcon
+        <IconButton
           icon="add"
           data-test="zoomin"
-          :tooltip="$tr('zoomIn')"
+          :text="$tr('zoomIn')"
           @click="Cropper && Cropper.zoomIn()"
           @mousedown="cropZoomIn"
           @mouseup="cropZoomStop"
         />
-        <ThumbnailToolbarIcon
+        <IconButton
           icon="remove"
           data-test="zoomout"
-          :tooltip="$tr('zoomOut')"
+          :text="$tr('zoomOut')"
           @click="Cropper && Cropper.zoomOut()"
           @mousedown="cropZoomOut"
           @mouseup="cropZoomStop"
@@ -159,18 +159,18 @@
         <div style="margin: -3px;">
           <Uploader :allowDrop="false" :presetID="thumbnailPresetID" @uploading="handleUploading">
             <template #default="{openFileDialog}">
-              <ThumbnailToolbarIcon
+              <IconButton
                 icon="image"
-                :tooltip="$tr('upload')"
+                :text="$tr('upload')"
                 @click="openFileDialog"
               />
             </template>
           </Uploader>
         </div>
-        <ThumbnailToolbarIcon
+        <IconButton
           v-if="!hasError && value"
           icon="crop"
-          :tooltip="$tr('crop')"
+          :text="$tr('crop')"
           @click="startCropping"
         />
       </template>
@@ -186,11 +186,11 @@
           />
           <ActionLink :text="$tr('save')" data-test="save" @click="save" />
         </span>
-        <ThumbnailToolbarIcon
+        <IconButton
           v-else-if="value"
           icon="clear"
           data-test="remove"
-          :tooltip="$tr('remove')"
+          :text="$tr('remove')"
           @click="$emit('input', null)"
         />
       </div>
@@ -203,7 +203,6 @@
 
   import { mapGetters } from 'vuex';
   import { fileSizeMixin, fileStatusMixin } from '../mixins';
-  import ThumbnailToolbarIcon from './ThumbnailToolbarIcon';
   import ThumbnailGenerator from './ThumbnailGenerator';
   import Constants from 'edit_channel/constants/index';
   import Uploader from 'frontend/channelEdit/views/files/Uploader';
@@ -211,17 +210,18 @@
   import FileStatus from 'frontend/channelEdit/views/files/FileStatus';
   import FileStatusText from 'frontend/channelEdit/views/files/FileStatusText';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
+  import IconButton from 'shared/views/IconButton';
 
   export default {
     name: 'Thumbnail',
     components: {
       Uploader,
-      ThumbnailToolbarIcon,
       ActionLink,
       FileStatus,
       FileStatusText,
       ThumbnailGenerator,
       ContentNodeIcon,
+      IconButton,
     },
     mixins: [fileSizeMixin, fileStatusMixin],
     props: {

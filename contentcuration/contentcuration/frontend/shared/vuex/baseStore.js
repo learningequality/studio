@@ -4,6 +4,9 @@ import session from './session';
 import ConnectionPlugin from './connectionPlugin';
 import snackbar from './snackbar';
 import channel from './channel';
+
+// TODO: once direct file uploading is done, move that to this folder
+import file from 'frontend/channelEdit/vuex/file';
 import { registerListener } from 'shared/data';
 
 Vue.use(Vuex);
@@ -33,6 +36,7 @@ export default function storeFactory({
     session,
     snackbar,
     channel,
+    file,
     ...modules,
   };
   for (let [moduleName, module] of Object.entries(modules)) {
