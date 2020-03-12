@@ -11,7 +11,7 @@
       :style="{backgroundColor: $vuetify.theme.backgroundColor}"
     >
       <VLayout row>
-        <IconButton icon="collapse_all" :text="$tr('collapseAllButton')">
+        <IconButton icon="collapse_all" :text="$tr('collapseAllButton')" @click="collapseAll">
           $vuetify.icons.collapse_all
         </IconButton>
         <VSpacer />
@@ -30,7 +30,7 @@
 
 <script>
 
-  import { mapGetters } from 'vuex';
+  import { mapGetters, mapMutations } from 'vuex';
   import StudioTree from './StudioTree';
   import CurrentTopicView from './CurrentTopicView';
   import IconButton from 'shared/views/IconButton';
@@ -60,6 +60,9 @@
       isEmptyChannel() {
         return !this.getContentNodeChildren(this.rootId).length;
       },
+    },
+    methods: {
+      ...mapMutations('contentNode', { collapseAll: 'COLLAPSE_ALL_EXPANDED' }),
     },
     $trs: {
       collapseAllButton: 'Collapse all',

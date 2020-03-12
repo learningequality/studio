@@ -48,15 +48,20 @@ export function SET_FILES(state, { id, files }) {
   state.contentNodesMap[id].files = files;
 }
 
+export function COLLAPSE_ALL_EXPANDED(state) {
+  state.expandedNodes = {};
+}
+
 export function SET_EXPANSION(state, { id, expanded }) {
   if (!expanded) {
     Vue.delete(state.expandedNodes, id);
   } else {
     Vue.set(state.expandedNodes, id, true);
   }
-  if (window.sessionStorage) {
-    window.sessionStorage.setItem('expandedNodes', JSON.stringify(state.expandedNodes));
-  }
+  // TODO: test performance before adding this in to avoid loading a lot of data at once
+  // if (window.sessionStorage) {
+  //   window.sessionStorage.setItem('expandedNodes', JSON.stringify(state.expandedNodes));
+  // }
 }
 
 export function TOGGLE_EXPANSION(state, id) {
