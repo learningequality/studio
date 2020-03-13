@@ -282,6 +282,12 @@
       }
       return next(false);
     },
+    beforeMount() {
+      // Block view only mode from entering this route
+      if (!this.canEdit) {
+        this.navigateBack();
+      }
+    },
     mounted() {
       this.hideHTMLScroll(true);
       this.selected = this.nodeIds;
