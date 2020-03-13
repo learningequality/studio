@@ -30,8 +30,8 @@ const jsLoaders = [
     loader: 'babel-loader',
     options: {
       // might be able to limit browsers for smaller bundles
-      presets: ['env'],
-      plugins: ['transform-object-rest-spread'],
+      presets: ['@babel/preset-env'],
+      plugins: ['@babel/plugin-proposal-object-rest-spread'],
     },
   },
 ];
