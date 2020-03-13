@@ -15,7 +15,7 @@
         :readonly="readonly"
         :rules="licenseRules"
         :placeholder="placeholder"
-        class="license-select"
+        class="ma-0"
       >
         <template v-slot:append-outer>
           <InfoModal v-if="selectedLicense" :header="translate(selectedLicense)">
@@ -167,17 +167,3 @@
   };
 
 </script>
-
-<style lang="less" scoped>
-
-  @import '../../../less/global-variables.less';
-
-  .license-select {
-    margin: 0;
-  }
-
-  /deep/ a {
-    .linked-list-item;
-  }
-
-</style>

@@ -25,7 +25,6 @@ from rest_framework import permissions
 from rest_framework import routers
 from rest_framework import viewsets
 from rest_framework.exceptions import MethodNotAllowed
-from rest_framework_bulk.generics import BulkModelViewSet
 
 import contentcuration.serializers as serializers
 import contentcuration.views.admin as admin_views
@@ -38,7 +37,6 @@ import contentcuration.views.public as public_views
 import contentcuration.views.settings as settings_views
 import contentcuration.views.users as registration_views
 import contentcuration.views.zip as zip_views
-
 from contentcuration.celery import app
 from contentcuration.forms import ForgotPasswordForm
 from contentcuration.forms import LoginForm
@@ -46,7 +44,6 @@ from contentcuration.forms import ResetPasswordForm
 from contentcuration.models import Channel
 from contentcuration.models import ContentKind
 from contentcuration.models import ContentTag
-from contentcuration.models import File
 from contentcuration.models import FileFormat
 from contentcuration.models import FormatPreset
 from contentcuration.models import Language
@@ -54,13 +51,14 @@ from contentcuration.models import License
 from contentcuration.models import Task
 from contentcuration.models import User
 from contentcuration.viewsets.assessmentitem import AssessmentItemViewSet
-from contentcuration.viewsets.contentnode import ContentNodeViewSet
-from contentcuration.viewsets.channel import ChannelViewSet
 from contentcuration.viewsets.channel import CatalogViewSet
+from contentcuration.viewsets.channel import ChannelViewSet
 from contentcuration.viewsets.channelset import ChannelSetViewSet
+from contentcuration.viewsets.contentnode import ContentNodeViewSet
+from contentcuration.viewsets.file import FileViewSet
 from contentcuration.viewsets.invitation import InvitationViewSet
-from contentcuration.viewsets.tree import TreeViewSet
 from contentcuration.viewsets.sync.endpoint import sync
+from contentcuration.viewsets.tree import TreeViewSet
 
 
 def get_channel_tree_ids(user):
@@ -80,17 +78,6 @@ class LanguageViewSet(viewsets.ModelViewSet):
     queryset = Language.objects.all()
 
     serializer_class = serializers.LanguageSerializer
-
-
-class FileViewSet(BulkModelViewSet):
-    queryset = File.objects.all()
-    serializer_class = serializers.FileSerializer
-
-    def get_queryset(self):
-        if self.request.user.is_admin:
-            return File.objects.all()
-        tree_ids = get_channel_tree_ids(self.request.user)
-        return File.objects.select_related('contentnode').filter(contentnode__tree_id__in=tree_ids).distinct()
 
 
 class FileFormatViewSet(viewsets.ModelViewSet):
@@ -129,9 +116,8 @@ class UserViewSet(viewsets.ModelViewSet):
             return User.objects.all()
         channel_list = list(self.request.user.editable_channels.values_list('pk', flat=True))
         channel_list.extend(list(self.request.user.view_only_channels.values_list('pk', flat=True)))
-        return User.objects.filter(Q(pk=self.request.user.pk) |
-                                   Q(editable_channels__pk__in=channel_list) |
-                                   Q(view_only_channels__pk__in=channel_list)).distinct()
+        return User.objects.filter(Q(pk=self.request.user.pk) | Q(editable_channels__pk__in=channel_list) | Q(view_only_channels__pk__in=channel_list)) \
+                           .distinct()
 
 
 class TaskViewSet(viewsets.ModelViewSet):
@@ -159,9 +145,7 @@ class TaskViewSet(viewsets.ModelViewSet):
             user = self.request.user
             channel = Channel.objects.filter(pk=channel_id).first()
             if channel:
-                has_access = channel.editors.filter(pk=user.pk).exists() or \
-                         channel.viewers.filter(pk=user.pk).exists() or \
-                         user.is_admin
+                has_access = channel.editors.filter(pk=user.pk).exists() or channel.viewers.filter(pk=user.pk).exists() or user.is_admin
                 if has_access:
                     queryset = Task.objects.filter(metadata__affects__channels__contains=[channel_id])
                 else:
@@ -183,8 +167,10 @@ router = routers.DefaultRouter(trailing_slash=False)
 router.register(r'license', LicenseViewSet)
 router.register(r'language', LanguageViewSet)
 router.register(r'channel', ChannelViewSet)
-router.register(r'catalog', CatalogViewSet, base_name='catalog')
 router.register(r'channelset', ChannelSetViewSet)
+router.register(r'catalog', CatalogViewSet, base_name='catalog')
+router.register(r'file', FileViewSet)
+router.register(r'fileformat', FileFormatViewSet)
 router.register(r'fileformat', FileFormatViewSet)
 router.register(r'preset', FormatPresetViewSet)
 router.register(r'tag', TagViewSet)
@@ -271,13 +257,17 @@ urlpatterns += [
     url(r'^zipcontent/(?P<zipped_filename>[^/]+)/(?P<embedded_filepath>.*)', zip_views.ZipContentView.as_view(), {}, "zipcontent"),
     url(r'^api/file_upload/', file_views.file_upload, name="file_upload"),
     url(r'^api/file_create/', file_views.file_create, name="file_create"),
-    url(r'^api/generate_thumbnail/(?P<contentnode_id>[^/]*)$', file_views.generate_thumbnail, name='generate_thumbnail'),
+    # url(r'^api/generate_thumbnail/(?P<contentnode_id>[^/]*)$', file_views.generate_thumbnail, name='generate_thumbnail'),
+    url(r'^api/get_upload_url/', file_views.get_upload_url, name='get_upload_url'),
+    url(r'^api/temp_file_upload', file_views.temp_file_upload, name='temp_file_upload'),
+    url(r'^api/create_thumbnail/(?P<channel_id>[^/]*)/(?P<filename>[^/]*)$', file_views.create_thumbnail, name='create_thumbnail'),
 ]
 
 # Add account/registration endpoints
 urlpatterns += [
     url(r'^accounts/login/$', auth_views.login, {'template_name': 'registration/login.html', 'authentication_form': LoginForm}, name='login'),
     url(r'^accounts/logout/$', auth_views.logout, {'template_name': 'registration/logout.html'}, name='logout'),
+    url(r"^accounts/$", views.accounts, name="accounts"),
     url(
         r'^accounts/password/reset/$',
         registration_views.custom_password_reset,

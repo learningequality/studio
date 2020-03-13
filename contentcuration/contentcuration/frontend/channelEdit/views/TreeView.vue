@@ -1,25 +1,25 @@
 <template>
 
-  <div>
-    <VBtn
-      v-if="canEdit"
-      color="primary"
-      fixed
-      right
-      fab
-      :title="$tr('addNode')"
-      @click="newContentNode"
+  <VContainer fluid class="pa-0 fill-height">
+    <ResizableNavigationDrawer
+      permanent
+      clipped
+      localName="topic-tree"
+      :maxWidth="700"
+      :minWidth="175"
+      :style="{backgroundColor: $vuetify.theme.backgroundColor}"
     >
-      <VIcon>add</VIcon>
-    </VBtn>
-    <VLayout row wrap>
-      <VFlex xs6>
+      <VToolbar dense flat color="backgroundColor">
+        <IconButton icon="collapse_all" :text="$tr('collapseAllButton')">
+          $vuetify.icons.collapse_all
+        </IconButton>
+        <VSpacer />
+      </VToolbar>
+      <div style="margin-left: -24px;">
         <StudioTree :nodeId="rootId" :root="true" />
-      </VFlex>
-      <VFlex xs6>
-        <NodePanel :parentId="nodeId" />
-      </VFlex>
-    </VLayout>
+      </div>
+    </ResizableNavigationDrawer>
+    <CurrentTopicView :topicId="nodeId" :detailNodeId="detailNodeId" />
     <router-view />
     <ImportContentProgressModal
       v-if="showImportModal"
@@ -30,30 +30,38 @@
     <RouterLink :to="importFromChannelsRoute">
       Import from channels
     </RouterLink>
-  </div>
+  </VContainer>
 
 </template>
 
 
 <script>
 
-  import { mapGetters, mapActions } from 'vuex';
-  import { RouterNames } from '../constants';
+  import { mapGetters } from 'vuex';
   import StudioTree from './StudioTree';
   import NodePanel from './NodePanel';
   import ImportContentProgressModal from './ImportFromChannels/ImportContentProgressModal';
+  import CurrentTopicView from './CurrentTopicView';
+  import IconButton from 'shared/views/IconButton';
+  import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
 
   export default {
     name: 'TreeView',
     components: {
-      NodePanel,
       StudioTree,
       ImportContentProgressModal,
+      IconButton,
+      ResizableNavigationDrawer,
+      CurrentTopicView,
     },
     props: {
       nodeId: {
         type: String,
         required: true,
+      },
+      detailNodeId: {
+        type: String,
+        required: false,
       },
     },
     data() {
@@ -97,7 +105,7 @@
       },
     },
     $trs: {
-      addNode: 'Add node',
+      collapseAllButton: 'Collapse all',
     },
   };
 

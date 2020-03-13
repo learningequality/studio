@@ -73,6 +73,7 @@ eventlet = "*"
 future = "*"
 sentry-sdk = "*"
 django-bulk-update = "*"
+selenium = "*"
 
 [dev-packages]
 ipdb = "*"

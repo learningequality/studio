@@ -5,7 +5,7 @@ const webpack = require('webpack');
 
 const BundleTracker = require('webpack-bundle-tracker');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
-const CircularDependencyPlugin = require('circular-dependency-plugin')
+const CircularDependencyPlugin = require('circular-dependency-plugin');
 
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
@@ -63,21 +63,19 @@ module.exports = (env = {}) => {
     context: srcDir,
     entry: {
       // Use arrays for every entry to allow for hot reloading.
-      channel_edit: [
-        './channelEdit/index.js',
-      ],
-      channel_list: [
-        './channelList/index.js',
-      ],
+      channel_edit: ['./channelEdit/index.js'],
+      channel_list: ['./channelList/index.js'],
+      accounts: ['./accounts/index.js'],
       administration: [path.resolve(bundleEntryDir, 'administration.js')],
       settings: [path.resolve(bundleEntryDir, 'settings.js')],
       // A simple code sandbox to play with components in
-      sandbox: [path.resolve(bundleEntryDir, 'sandbox.js')],
+      // sandbox: [path.resolve(bundleEntryDir, 'sandbox.js')],
+      pdfJSWorker: ['pdfjs-dist/build/pdf.worker.entry.js'],
     },
     output: {
       filename: '[name]-[hash].js',
       path: bundleOutputDir,
-      publicPath: dev ? 'http://127.0.0.1:4000/dist/' : undefined,
+      publicPath: dev ? 'http://127.0.0.1:4000/dist/' : '/static/studio/',
     },
     devServer: {
       port: 4000,
@@ -183,6 +181,7 @@ module.exports = (env = {}) => {
       // carryover of path resolution from build.js
       modules: ['node_modules', staticLessDir],
     },
+    devtool: 'cheap-module-source-map',
     plugins: [
       new VueLoaderPlugin(),
       new VuetifyLoaderPlugin(),
@@ -203,9 +202,6 @@ module.exports = (env = {}) => {
         chunkFilename: '[name]-[hash]-[id].css',
       }),
       new WebpackRTLPlugin(),
-      new webpack.SourceMapDevToolPlugin({
-        filename: '[name]-[hash].js.map',
-      }),
       new CircularDependencyPlugin({
         // exclude detection of files based on a RegExp
         exclude: /a\.js|node_modules/,
@@ -218,7 +214,7 @@ module.exports = (env = {}) => {
         allowAsyncCycles: false,
         // set the current working directory for displaying module paths
         cwd: process.cwd(),
-      })
+      }),
     ],
     // new in webpack 4. Specifies the default bundle type
     mode: 'development',

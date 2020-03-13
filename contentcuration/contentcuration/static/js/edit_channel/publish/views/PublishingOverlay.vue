@@ -1,6 +1,6 @@
 <template>
 
-  <ProgressOverlay
+  <ProgressModal
     :taskID="taskID"
     :headerText="$tr('headerText')"
     :descriptionText="$tr('descriptionText')"
@@ -13,12 +13,12 @@
 <script>
 
   import { mapGetters } from 'vuex';
-  import ProgressOverlay from 'edit_channel/sharedComponents/ProgressOverlay.vue';
+  import ProgressModal from 'frontend/channelEdit/views/progress/ProgressModal';
 
   export default {
     name: 'PublishingOverlay',
     components: {
-      ProgressOverlay,
+      ProgressModal,
     },
     computed: {
       ...mapGetters('publish', ['taskID']),

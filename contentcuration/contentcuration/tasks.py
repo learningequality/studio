@@ -19,6 +19,8 @@ from contentcuration.models import User
 from contentcuration.serializers import ContentNodeSerializer
 from contentcuration.utils.csv_writer import write_channel_csv_file
 from contentcuration.utils.csv_writer import write_user_csv
+from contentcuration.utils.files import _create_epub_thumbnail
+from contentcuration.utils.files import _create_zip_thumbnail
 from contentcuration.utils.nodes import duplicate_node_bulk
 from contentcuration.utils.nodes import duplicate_node_inline
 from contentcuration.utils.nodes import move_nodes
@@ -148,6 +150,15 @@ def getnodedetails_task(node_id):
     return node.get_details()
 
 
+@task(name='generatethumbnail_task')
+def generatethumbnail_task(filename):
+    if filename.endswith('.epub'):
+        return _create_epub_thumbnail(filename)
+    elif filename.endswith('.zip'):
+        return _create_zip_thumbnail(filename)
+    raise NotImplementedError('Unable to generate thumbnail for {}'.format(filename))
+
+
 type_mapping = {
     'duplicate-nodes': {'task': duplicate_nodes_task, 'progress_tracking': True},
     'duplicate-node-inline': {'task': duplicate_node_inline_task, 'progress_tracking': False},
@@ -155,6 +166,7 @@ type_mapping = {
     'move-nodes': {'task': move_nodes_task, 'progress_tracking': True},
     'sync-channel': {'task': sync_channel_task, 'progress_tracking': True},
     'sync-nodes': {'task': sync_nodes_task, 'progress_tracking': True},
+    'generate-thumbnail': {'task': generatethumbnail_task, 'progress_tracking': False},
 }
 
 if settings.RUNNING_TESTS:

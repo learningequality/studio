@@ -4,31 +4,25 @@
     <VFlex
       v-if="node && !root"
       xs12
-      class="node-item"
-      :class="{ selected: selected }"
+      class="node-item pa-1"
+      :style="{backgroundColor: selected? $vuetify.theme.greyBackground : 'transparent' }"
     >
-      <VLayout row wrap>
-        <VFlex xs6>
-          <VLayout row wrap>
-            <VFlex xs1>
-              <VBtn v-if="showExpansion" icon @click.stop="toggle">
-                <VIcon>{{ expanded ? "expand_more" : "expand_less" }}</VIcon>
-              </VBtn>
-            </VFlex>
-            <VFlex xs10>
-              <router-link :to="treeLink">
-                <ContentNodeIcon :kind="node.kind" />
-                <span>{{ node.title }}</span>
-              </router-link>
-            </VFlex>
-            <VFlex xs1>
-              <VBtn icon :to="editNodeLink">
-                <VIcon>edit</VIcon>
-              </VBtn>
-            </VFlex>
-          </VLayout>
-        </VFlex>
-        <VSpacer />
+      <VLayout row align-center>
+        <div style="width: 40px;" class="pr-1">
+          <VBtn v-if="showExpansion" icon small @click.stop="toggle">
+            <Icon>{{ expanded ? "keyboard_arrow_down" : "keyboard_arrow_right" }}</Icon>
+          </VBtn>
+        </div>
+        <router-link :to="treeLink" tag="v-flex">
+          <Icon class="ma-1">
+            {{ showExpansion ? "folder" : "folder_open" }}
+          </Icon>
+          <span
+            style="vertical-align: super;"
+            class="notranslate"
+            :style="{color: $vuetify.theme.darkGrey}"
+          >{{ node.title }}</span>
+        </router-link>
         <VFlex xs1>
           <VProgressCircular
             v-if="loading"
@@ -43,7 +37,7 @@
       v-if="node && (root || node.has_children)"
       v-show="expanded"
       xs12
-      class="subtree"
+      class="ml-4"
       transition="slide-y-transition"
     >
       <StudioTree
@@ -61,13 +55,9 @@
 
   import { mapActions, mapGetters, mapMutations } from 'vuex';
   import { RouterNames } from '../constants';
-  import ContentNodeIcon from 'shared/views/ContentNodeIcon';
 
   export default {
     name: 'StudioTree',
-    components: {
-      ContentNodeIcon,
-    },
     props: {
       nodeId: {
         type: String,
@@ -103,14 +93,6 @@
       },
       selected() {
         return this.nodeId === this.$route.params.nodeId;
-      },
-      editNodeLink() {
-        return {
-          name: RouterNames.CONTENTNODE_DETAILS,
-          params: {
-            detailNodeId: this.nodeId,
-          },
-        };
       },
       treeLink() {
         return {
@@ -160,21 +142,13 @@
         return Promise.resolve();
       },
     },
+    $trs: {},
   };
 
 </script>
 
 <style scoped>
-.subtree {
-  padding-left: 10px;
-}
 .node-item {
-  padding: 5px;
-  padding-left: 10px;
   cursor: pointer;
-  border-left: 3px solid transparent;
-}
-.selected {
-  border-color: gray;
 }
 </style>

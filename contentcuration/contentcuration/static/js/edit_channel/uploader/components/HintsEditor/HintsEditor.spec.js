@@ -64,7 +64,10 @@ describe('HintsEditor', () => {
   it('renders all hints', () => {
     wrapper = mount(HintsEditor, {
       propsData: {
-        hints: [{ hint: 'First hint', order: 1 }, { hint: 'Second hint', order: 2 }],
+        hints: [
+          { hint: 'First hint', order: 1 },
+          { hint: 'Second hint', order: 2 },
+        ],
       },
     });
 
@@ -75,7 +78,10 @@ describe('HintsEditor', () => {
     beforeEach(() => {
       wrapper = mount(HintsEditor, {
         propsData: {
-          hints: [{ hint: 'First hint', order: 1 }, { hint: 'Second hint', order: 2 }],
+          hints: [
+            { hint: 'First hint', order: 1 },
+            { hint: 'Second hint', order: 2 },
+          ],
           openHintIdx: 1,
         },
       });
@@ -130,7 +136,10 @@ describe('HintsEditor', () => {
     beforeEach(() => {
       wrapper = mount(HintsEditor, {
         propsData: {
-          hints: [{ hint: 'First hint', order: 1 }, { hint: 'Second hint', order: 2 }],
+          hints: [
+            { hint: 'First hint', order: 1 },
+            { hint: 'Second hint', order: 2 },
+          ],
         },
       });
 
@@ -148,7 +157,10 @@ describe('HintsEditor', () => {
     beforeEach(() => {
       wrapper = mount(HintsEditor, {
         propsData: {
-          hints: [{ hint: 'First hint', order: 1 }, { hint: 'Second hint', order: 2 }],
+          hints: [
+            { hint: 'First hint', order: 1 },
+            { hint: 'Second hint', order: 2 },
+          ],
         },
       });
     });
@@ -201,7 +213,10 @@ describe('HintsEditor', () => {
     beforeEach(() => {
       wrapper = mount(HintsEditor, {
         propsData: {
-          hints: [{ hint: 'First hint', order: 1 }, { hint: 'Second hint', order: 2 }],
+          hints: [
+            { hint: 'First hint', order: 1 },
+            { hint: 'Second hint', order: 2 },
+          ],
         },
       });
     });
@@ -254,7 +269,10 @@ describe('HintsEditor', () => {
     beforeEach(() => {
       wrapper = mount(HintsEditor, {
         propsData: {
-          hints: [{ hint: 'First hint', order: 1 }, { hint: 'Second hint', order: 2 }],
+          hints: [
+            { hint: 'First hint', order: 1 },
+            { hint: 'Second hint', order: 2 },
+          ],
         },
       });
     });

@@ -1,8 +1,8 @@
 <template>
 
   <VLayout>
-    <div v-if="loading">
-      <LoadingText />
+    <div v-if="loading || !node">
+      <LoadingText absolute />
     </div>
     <VFlex v-else xs12>
       <VLayout row>
@@ -14,11 +14,18 @@
           <ContentNodeIcon :kind="node.kind" includeText />
         </VFlex>
         <VSpacer />
-        <VBtn icon flat small color="grey" class="ma-0">
+        <VBtn
+          icon
+          flat
+          small
+          color="grey"
+          class="ma-0"
+          @click="$emit('close')"
+        >
           <Icon>clear</Icon>
         </VBtn>
       </VLayout>
-      <VLayout row class="my-4">
+      <VLayout row align-center class="my-2">
         <h1 class="notranslate title font-weight-bold">
           {{ node.title }}
         </h1>
@@ -221,19 +228,27 @@
         return [];
       },
     },
+    watch: {
+      node() {
+        this.loadNode();
+      },
+    },
     mounted() {
-      // Load related models
-      if (this.node.prerequisite.length) {
-        this.loading = true;
-        this.loadContentNodes({ ids: this.node.prerequisite }).then(() => {
-          this.loading = false;
-        });
-      }
+      this.loadNode();
     },
     methods: {
       ...mapActions('contentNode', ['loadContentNodes']),
       getText(field) {
         return this.node[field] || this.$tr('defaultNoItemsText');
+      },
+      loadNode() {
+        // Load related models
+        if (this.node && this.node.prerequisite.length) {
+          this.loading = true;
+          this.loadContentNodes({ ids: this.node.prerequisite }).then(() => {
+            this.loading = false;
+          });
+        }
       },
     },
     $trs: {

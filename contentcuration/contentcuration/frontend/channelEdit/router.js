@@ -5,7 +5,10 @@ import store from './store';
 import ImportFromChannelsIndex from './views/ImportFromChannels/ImportFromChannelsIndex';
 import SearchOrBrowseWindow from './views/ImportFromChannels/SearchOrBrowseWindow';
 import ReviewSelectionsPage from './views/ImportFromChannels/ReviewSelectionsPage';
+import { RouterNames as ChannelRouterNames } from 'frontend/channelList/constants';
 import Sandbox from 'shared/views/Sandbox';
+import ChannelModal from 'frontend/channelList/views/Channel/ChannelModal';
+import ChannelDetailsModal from 'frontend/channelList/views/Channel/ChannelDetailsModal';
 import EditModal from 'edit_channel/uploader/views/EditModal';
 
 const router = new VueRouter({
@@ -81,7 +84,7 @@ const router = new VueRouter({
     },
     {
       name: RouterNames.TREE_VIEW,
-      path: '/:nodeId',
+      path: '/:nodeId/:detailNodeId?',
       props: true,
       component: TreeView,
       beforeEnter: (to, from, next) => {
@@ -100,15 +103,39 @@ const router = new VueRouter({
       children: [
         {
           name: RouterNames.CONTENTNODE_DETAILS,
-          path: 'details/:detailNodeId',
+          path: 'details/:detailNodeIds',
           props: true,
           component: EditModal,
         },
         {
-          name: RouterNames.MULTI_CONTENTNODE_DETAILS,
-          path: 'multidetails/:detailNodeIds',
+          name: RouterNames.ADD_TOPICS,
+          path: 'topics/:detailNodeIds',
           props: true,
           component: EditModal,
+        },
+        {
+          name: RouterNames.ADD_EXERCISE,
+          path: 'exercise/:detailNodeIds',
+          props: true,
+          component: EditModal,
+        },
+        {
+          name: RouterNames.UPLOAD_FILES,
+          path: 'upload/:detailNodeIds?',
+          props: true,
+          component: EditModal,
+        },
+        {
+          name: ChannelRouterNames.CHANNEL_DETAILS,
+          path: 'channel/:channelId/details',
+          component: ChannelDetailsModal,
+          props: true,
+        },
+        {
+          name: ChannelRouterNames.CHANNEL_EDIT,
+          path: 'channel/:channelId/edit',
+          component: ChannelModal,
+          props: true,
         },
       ],
     },

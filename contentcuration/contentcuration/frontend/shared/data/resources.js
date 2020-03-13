@@ -249,6 +249,7 @@ export const TABLE_NAMES = {
   CHANNELSET: 'channelset',
   TREE: 'tree',
   ASSESSMENTITEM: 'assessmentitem',
+  FILE: 'file',
 };
 
 export const Channel = new Resource({
@@ -291,6 +292,12 @@ export const AssessmentItem = new Resource({
   tableName: TABLE_NAMES.ASSESSMENTITEM,
   urlName: 'assessmentitem',
   idField: 'assessment_id',
+  indexFields: ['contentnode'],
+});
+
+export const File = new Resource({
+  tableName: TABLE_NAMES.FILE,
+  urlName: 'file',
   indexFields: ['contentnode'],
 });
 

@@ -2,25 +2,25 @@
 
   <VApp>
     <PublishModal />
-    <ProgressOverlay v-if="currentTask" />
+    <!-- <ProgressOverlay v-if="currentTask" /> -->
   </VApp>
 
 </template>
 
 <script>
 
-  import { mapGetters } from 'vuex';
-  import ProgressOverlay from '../../sharedComponents/ProgressOverlay.vue';
+  // import { mapGetters } from 'vuex';
+  // import ProgressOverlay from '../../sharedComponents/ProgressOverlay.vue';
   import PublishModal from './PublishModal.vue';
 
   export default {
     name: 'PublishWrapper',
     components: {
       PublishModal,
-      ProgressOverlay,
+      // ProgressOverlay,
     },
     computed: {
-      ...mapGetters(['currentTask']),
+      // ...mapGetters(['currentTask']),
     },
   };
 

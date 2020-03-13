@@ -155,7 +155,7 @@ html {
 @gray-600: #757575;
 @gray-700: #616161;
 @gray-800: #424242;
-@error-input-color : #F6CECE;
+@error-input-color: #f6cece;
 @delete-color: #ff5252;
 
 /* Clipboard width when it's docked to the side. */
@@ -220,6 +220,9 @@ html {
 
 a {
   text-decoration: none;
+}
+.text-underlined {
+  text-decoration: underline !important;
 }
 
 body {
@@ -410,6 +413,11 @@ select {
   &:hover {
     color: @blue-500;
   }
+}
+
+.action-link,
+.action-link:hover {
+  text-decoration: underline;
 }
 
 .card-border-light {

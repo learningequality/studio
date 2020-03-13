@@ -23,6 +23,10 @@
             {{ name }}
           </template>
         </VToolbarTitle>
+        <VSpacer />
+        <VBtn flat @click="close">
+          {{ $tr('saveChangesButton' ) }}
+        </VBtn>
       </VToolbar>
       <VProgressLinear
         v-if="loading"
@@ -82,7 +86,6 @@
 <script>
 
   import { mapActions, mapGetters, mapState } from 'vuex';
-  import { RouterNames } from '../../constants';
   import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown';
   import ContentDefaults from 'shared/views/form/ContentDefaults';
 
@@ -200,8 +203,12 @@
       },
       close() {
         this.$router.push({
-          name: RouterNames.CHANNELS,
-          params: { listType: this.$route.params.listType },
+          name: this.$route.matched[0].name,
+          query: this.$route.query,
+          params: {
+            ...this.$route.params,
+            channelId: null,
+          },
         });
       },
     },
@@ -211,6 +218,7 @@
       channelName: 'Channel name',
       channelError: 'Channel name cannot be blank',
       channelDescription: 'Channel description',
+      saveChangesButton: 'Save changes',
     },
   };
 
