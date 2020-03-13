@@ -1,38 +1,29 @@
 <template>
 
-  <VContainer v-if="node" fluid class="panel pa-0 ma-0" style="height: calc(100vh - 64px);">
+  <VContainer v-if="node" fluid class="panel pa-0 ma-0">
     <!-- Breadcrumbs -->
     <VToolbar v-if="ancestors.length && !loadingAncestors" dense color="transparent" flat>
-      <VBreadcrumbs :items="ancestors" class="pa-0">
-        <template #divider>
-          <Icon>arrow_forward_ios</Icon>
-        </template>
+      <Breadcrumbs :items="ancestors" class="pa-0">
         <template #item="props">
           <!-- Current item -->
-          <span v-if="props.item.id === topicId" class="subheading mx-2">
-            <span class="notranslate font-weight-bold">
+          <VLayout v-if="props.isLast" align-center row>
+            <VFlex class="font-weight-bold text-truncate notranslate" shrink>
               {{ props.item.title }}
-            </span>
+            </VFlex>
             <VMenu offset-y right>
               <template #activator="{ on }">
-                <VBtn icon flat v-on="on">
+                <VBtn icon flat small v-on="on">
                   <Icon>arrow_drop_down</Icon>
                 </VBtn>
               </template>
               <ContentNodeOptions :nodeId="topicId" />
             </VMenu>
-          </span>
-          <router-link
-            v-else
-            tag="span"
-            class="mx-2 notranslate subheading"
-            style="cursor: pointer;"
-            :to="treeLink({nodeId: props.item.id})"
-          >
+          </VLayout>
+          <span v-else class="notranslate grey--text">
             {{ props.item.title }}
-          </router-link>
+          </span>
         </template>
-      </VBreadcrumbs>
+      </Breadcrumbs>
     </VToolbar>
 
     <!-- Topic actions -->
@@ -160,6 +151,7 @@
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
   import IconButton from 'shared/views/IconButton';
   import ToolBar from 'shared/views/ToolBar';
+  import Breadcrumbs from 'shared/views/Breadcrumbs';
 
   export default {
     name: 'CurrentTopicView',
@@ -170,6 +162,7 @@
       ResourcePanel,
       ResizableNavigationDrawer,
       ContentNodeOptions,
+      Breadcrumbs,
     },
     props: {
       topicId: {
@@ -208,7 +201,13 @@
         return this.getContentNode(this.topicId);
       },
       ancestors() {
-        return this.getContentNodeAncestors(this.topicId);
+        return this.getContentNodeAncestors(this.topicId).map(ancestor => {
+          return {
+            id: ancestor.id,
+            to: this.treeLink({ nodeId: ancestor.id }),
+            title: ancestor.title,
+          };
+        });
       },
       uploadFilesLink() {
         return { name: RouterNames.UPLOAD_FILES };

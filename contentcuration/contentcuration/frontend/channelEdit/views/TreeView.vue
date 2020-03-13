@@ -3,9 +3,11 @@
   <VContainer fluid class="pa-0 fill-height">
     <ResizableNavigationDrawer
       v-show="!isEmptyChannel"
+      ref="hierarchy"
       permanent
       clipped
       localName="topic-tree"
+      class="hidden-xs-only"
       :maxWidth="400"
       :minWidth="200"
       :style="{backgroundColor: $vuetify.theme.backgroundColor}"
@@ -30,7 +32,9 @@
         <StudioTree :nodeId="rootId" :root="true" />
       </div>
     </ResizableNavigationDrawer>
-    <CurrentTopicView :topicId="nodeId" :detailNodeId="detailNodeId" />
+    <VContainer fluid class="pa-0 ma-0" style="height: calc(100vh - 64px);">
+      <CurrentTopicView :topicId="nodeId" :detailNodeId="detailNodeId" />
+    </VContainer>
     <router-view />
   </VContainer>
 

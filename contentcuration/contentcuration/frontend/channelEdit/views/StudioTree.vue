@@ -47,6 +47,21 @@
               size="15"
               width="2"
             />
+            <VMenu v-else offset-y right>
+              <template #activator="{ on }">
+                <VBtn
+                  class="topic-menu ma-0 mr-2"
+                  small
+                  icon
+                  flat
+                  v-on="on"
+                  @click.stop
+                >
+                  <Icon>more_horiz</Icon>
+                </VBtn>
+              </template>
+              <ContentNodeOptions :nodeId="nodeId" />
+            </VMenu>
           </VFlex>
         </VLayout>
         <template #menu>
@@ -56,7 +71,6 @@
           <ContentNodeOptions :nodeId="nodeId" />
         </template>
       </ContextMenu>
-
     </router-link>
     <VFlex v-if="node && (root || hasContent) && !loading" xs12>
       <VSlideYTransition>
@@ -176,14 +190,22 @@
 
 </script>
 
-<style scoped>
-.node-item {
-  cursor: pointer;
-}
+<style scoped lang="less">
 
-.slide-y-transition-enter-active,
-.slide-y-transition-leave-active {
-  transition-duration: .25s
-}
+  .topic-menu {
+    display: none;
+  }
+
+  .node-item {
+    cursor: pointer;
+    &:hover .topic-menu {
+      display: block;
+    }
+  }
+
+  .slide-y-transition-enter-active,
+  .slide-y-transition-leave-active {
+    transition-duration: 0.25s;
+  }
 
 </style>
