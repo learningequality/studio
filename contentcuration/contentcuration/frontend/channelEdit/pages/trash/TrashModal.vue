@@ -120,23 +120,38 @@
         <VBtn flat :disabled="!selected.length">
           {{ $tr('restoreButton') }}
         </VBtn>
-        <VBtn color="primary" :disabled="!selected.length">
+        <VBtn color="primary" :disabled="!selected.length" @click="showConfirmationDialog = true">
           {{ $tr('deleteButton') }}
         </VBtn>
       </BottomToolBar>
+      <MessageDialog
+        v-model="showConfirmationDialog"
+        :header="$tr('deleteConfirmationHeader', {count: selected.length})"
+        :text="$tr('deleteConfirmationText')"
+      >
+        <template #buttons="{close}">
+          <VBtn flat @click="close">
+            {{ $tr('deleteConfirmationCancelButton') }}
+          </VBtn>
+          <VBtn color="primary" @click="deleteNodes">
+            {{ $tr('deleteConfirmationDeleteButton') }}
+          </VBtn>
+        </template>
+      </MessageDialog>
     </VCard>
   </VDialog>
 
 </template>
 <script>
 
-  import { mapGetters } from 'vuex';
+  import { mapActions, mapGetters } from 'vuex';
   import sortBy from 'lodash/sortBy';
   import ResourcePanel from '../../views/ResourcePanel';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import BottomToolBar from 'shared/views/BottomToolBar';
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
   import ActionLink from 'edit_channel/sharedComponents/ActionLink';
+  import MessageDialog from 'shared/views/MessageDialog';
 
   export default {
     name: 'TrashModal',
@@ -146,12 +161,14 @@
       ResizableNavigationDrawer,
       ResourcePanel,
       ActionLink,
+      MessageDialog,
     },
     data() {
       return {
         loading: false,
         previewNodeId: null,
         selected: [],
+        showConfirmationDialog: false,
       };
     },
     computed: {
@@ -179,163 +196,19 @@
       items() {
         return [
           {
-            id: 'b121e6b03d8844e8aca83837e493415b',
+            id: 'test1',
             title: 'Item',
             kind: 'video',
             modified: new Date(2020, 1, 20),
           },
           {
-            id: 'a2913916f136426c8fc6e6552af05e32',
+            id: 'test2',
             title: 'Item',
             kind: 'audio',
             modified: new Date(2020, 2, 1),
           },
           {
-            id: '798ba9aa7755496db20038c112198889',
-            title: 'Topic',
-            kind: 'topic',
-            modified: new Date(2020, 1, 1),
-          },
-          {
-            id: 'b121e6b03d8844e8aca83837e493415b',
-            title: 'Item',
-            kind: 'video',
-            modified: new Date(2020, 1, 20),
-          },
-          {
-            id: 'a2913916f136426c8fc6e6552af05e32',
-            title: 'Item',
-            kind: 'audio',
-            modified: new Date(2020, 2, 1),
-          },
-          {
-            id: '798ba9aa7755496db20038c112198889',
-            title: 'Topic',
-            kind: 'topic',
-            modified: new Date(2020, 1, 1),
-          },
-          {
-            id: 'b121e6b03d8844e8aca83837e493415b',
-            title: 'Item',
-            kind: 'video',
-            modified: new Date(2020, 1, 20),
-          },
-          {
-            id: 'a2913916f136426c8fc6e6552af05e32',
-            title: 'Item',
-            kind: 'audio',
-            modified: new Date(2020, 2, 1),
-          },
-          {
-            id: '798ba9aa7755496db20038c112198889',
-            title: 'Topic',
-            kind: 'topic',
-            modified: new Date(2020, 1, 1),
-          },
-          {
-            id: 'b121e6b03d8844e8aca83837e493415b',
-            title: 'Item',
-            kind: 'video',
-            modified: new Date(2020, 1, 20),
-          },
-          {
-            id: 'a2913916f136426c8fc6e6552af05e32',
-            title: 'Item',
-            kind: 'audio',
-            modified: new Date(2020, 2, 1),
-          },
-          {
-            id: '798ba9aa7755496db20038c112198889',
-            title: 'Topic',
-            kind: 'topic',
-            modified: new Date(2020, 1, 1),
-          },
-          {
-            id: 'b121e6b03d8844e8aca83837e493415b',
-            title: 'Item',
-            kind: 'video',
-            modified: new Date(2020, 1, 20),
-          },
-          {
-            id: 'a2913916f136426c8fc6e6552af05e32',
-            title: 'Item',
-            kind: 'audio',
-            modified: new Date(2020, 2, 1),
-          },
-          {
-            id: '798ba9aa7755496db20038c112198889',
-            title: 'Topic',
-            kind: 'topic',
-            modified: new Date(2020, 1, 1),
-          },
-          {
-            id: 'b121e6b03d8844e8aca83837e493415b',
-            title: 'Item',
-            kind: 'video',
-            modified: new Date(2020, 1, 20),
-          },
-          {
-            id: 'a2913916f136426c8fc6e6552af05e32',
-            title: 'Item',
-            kind: 'audio',
-            modified: new Date(2020, 2, 1),
-          },
-          {
-            id: '798ba9aa7755496db20038c112198889',
-            title: 'Topic',
-            kind: 'topic',
-            modified: new Date(2020, 1, 1),
-          },
-          {
-            id: 'b121e6b03d8844e8aca83837e493415b',
-            title: 'Item',
-            kind: 'video',
-            modified: new Date(2020, 1, 20),
-          },
-          {
-            id: 'a2913916f136426c8fc6e6552af05e32',
-            title: 'Item',
-            kind: 'audio',
-            modified: new Date(2020, 2, 1),
-          },
-          {
-            id: '798ba9aa7755496db20038c112198889',
-            title: 'Topic',
-            kind: 'topic',
-            modified: new Date(2020, 1, 1),
-          },
-          {
-            id: 'b121e6b03d8844e8aca83837e493415b',
-            title: 'Item',
-            kind: 'video',
-            modified: new Date(2020, 1, 20),
-          },
-          {
-            id: 'a2913916f136426c8fc6e6552af05e32',
-            title: 'Item',
-            kind: 'audio',
-            modified: new Date(2020, 2, 1),
-          },
-          {
-            id: '798ba9aa7755496db20038c112198889',
-            title: 'Topic',
-            kind: 'topic',
-            modified: new Date(2020, 1, 1),
-          },
-          {
-            id: 'b121e6b03d8844e8aca83837e493415b',
-            title: 'Item',
-            kind: 'video',
-            modified: new Date(2020, 1, 20),
-          },
-          {
-            id: 'a2913916f136426c8fc6e6552af05e32',
-            title: 'Item',
-            kind: 'audio',
-            modified: new Date(2020, 2, 1),
-          },
-          {
-            id: '798ba9aa7755496db20038c112198889',
+            id: 'test3',
             title: 'Topic',
             kind: 'topic',
             modified: new Date(2020, 1, 1),
@@ -351,6 +224,16 @@
       },
     },
     methods: {
+      ...mapActions('contentNode', ['deleteContentNode']),
+      deleteNodes() {
+        let text = this.$tr('deleteSuccessMessage', { count: this.selected.length });
+        this.selected.forEach(id => {
+          this.deleteContentNode(id);
+        });
+        this.showConfirmationDialog = false;
+        this.toggleSelectAll(false);
+        this.$store.dispatch('showSnackbar', { text });
+      },
       toggleSelectAll(selectAll) {
         this.selected = selectAll ? this.items.map(i => i.id) : [];
       },
@@ -368,6 +251,12 @@
       selectedCountText: '{count, plural,\n =1 {# selection}\n other {# selections}}',
       deleteButton: 'Delete',
       restoreButton: 'Restore',
+      deleteConfirmationHeader:
+        'Permanently delete {count, plural,\n =1 {# item}\n other {# items}}?',
+      deleteConfirmationText: 'Warning: you cannot undo this action.',
+      deleteConfirmationDeleteButton: 'Delete permanently',
+      deleteConfirmationCancelButton: 'Cancel',
+      deleteSuccessMessage: 'Permanently deleted {count, plural,\n =1 {# item}\n other {# items}}',
     },
   };
 
