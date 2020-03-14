@@ -2,7 +2,14 @@
 
   <VTooltip maxWidth="150px" bottom color="darkGrey">
     <template #activator="{ on }">
-      <VBtn flat icon :small="small" v-bind="$attrs" v-on="on">
+      <VBtn
+        flat
+        icon
+        :small="small"
+        v-bind="$attrs"
+        v-on="on"
+        @click="$emit('click')"
+      >
         <Icon :small="small">
           <slot>
             {{ icon }}

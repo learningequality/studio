@@ -1,37 +1,30 @@
 <template>
 
-  <VMenu offset-y v-bind="$attrs">
-    <template #activator="{ on }">
-      <VBtn icon :small="small" flat v-on="on">
-        <Icon>{{ icon }}</Icon>
-      </VBtn>
-    </template>
-    <VList>
-      <VListTile v-if="isTopic && canEdit" @click="newTopicNode">
-        <VListTileTitle>{{ $tr('newSubtopic') }}</VListTileTitle>
-      </VListTile>
-      <VListTile v-if="canEdit" :to="editLink">
-        <VListTileTitle>
-          {{ isTopic? $tr('editTopicDetails') : $tr('editDetails') }}
-        </VListTileTitle>
-      </VListTile>
-      <VListTile v-if="!hideDetailsLink" :to="viewLink">
-        <VListTileTitle>{{ $tr('viewDetails') }}</VListTileTitle>
-      </VListTile>
-      <VListTile v-if="canEdit" @click.stop>
-        <VListTileTitle>{{ $tr('move') }}</VListTileTitle>
-      </VListTile>
-      <VListTile v-if="canEdit" @click.stop>
-        <VListTileTitle>{{ $tr('makeACopy') }}</VListTileTitle>
-      </VListTile>
-      <VListTile @click.stop>
-        <VListTileTitle>{{ $tr('copyToClipboard') }}</VListTileTitle>
-      </VListTile>
-      <VListTile v-if="canEdit" @click.stop>
-        <VListTileTitle>{{ $tr('remove') }}</VListTileTitle>
-      </VListTile>
-    </VList>
-  </VMenu>
+  <VList>
+    <VListTile v-if="isTopic && canEdit" @click="newTopicNode">
+      <VListTileTitle>{{ $tr('newSubtopic') }}</VListTileTitle>
+    </VListTile>
+    <VListTile v-if="canEdit" :to="editLink">
+      <VListTileTitle>
+        {{ isTopic? $tr('editTopicDetails') : $tr('editDetails') }}
+      </VListTileTitle>
+    </VListTile>
+    <VListTile v-if="!hideDetailsLink" :to="viewLink">
+      <VListTileTitle>{{ $tr('viewDetails') }}</VListTileTitle>
+    </VListTile>
+    <VListTile v-if="canEdit" @click.stop>
+      <VListTileTitle>{{ $tr('move') }}</VListTileTitle>
+    </VListTile>
+    <VListTile v-if="canEdit" @click.stop>
+      <VListTileTitle>{{ $tr('makeACopy') }}</VListTileTitle>
+    </VListTile>
+    <VListTile @click.stop>
+      <VListTileTitle>{{ $tr('copyToClipboard') }}</VListTileTitle>
+    </VListTile>
+    <VListTile v-if="canEdit" @click.stop>
+      <VListTileTitle>{{ $tr('remove') }}</VListTileTitle>
+    </VListTile>
+  </VList>
 
 </template>
 
@@ -47,15 +40,7 @@
         type: String,
         required: true,
       },
-      icon: {
-        type: String,
-        default: 'more_horiz',
-      },
       hideDetailsLink: {
-        type: Boolean,
-        default: false,
-      },
-      small: {
         type: Boolean,
         default: false,
       },
