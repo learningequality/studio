@@ -9,7 +9,7 @@
       <VToolbarItems class="ml-4">
         <IconButton icon="info" :text="$tr('channelDetails')" :to="viewChannelDetailsLink" />
         <IconButton v-if="canEdit" icon="edit" :text="$tr('editChannel')" :to="editChannelLink" />
-        <IconButton icon="delete" :text="$tr('openTrash')" />
+        <IconButton icon="delete" :text="$tr('openTrash')" :to="trashLink" />
       </VToolbarItems>
       <VSpacer />
       <VToolbarItems>
@@ -53,6 +53,7 @@
 <script>
 
   import { mapGetters } from 'vuex';
+  import { RouterNames } from '../constants';
   import ChannelNavigationDrawer from './ChannelNavigationDrawer';
   import ProgressModal from './progress/ProgressModal';
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
@@ -90,6 +91,11 @@
           params: {
             channelId: this.currentChannel.id,
           },
+        };
+      },
+      trashLink() {
+        return {
+          name: RouterNames.TRASH,
         };
       },
     },

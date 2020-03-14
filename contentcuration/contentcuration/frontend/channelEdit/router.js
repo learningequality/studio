@@ -2,6 +2,7 @@ import VueRouter from 'vue-router';
 import { RouterNames } from './constants';
 import TreeView from './views/TreeView';
 import store from './store';
+import TrashModal from './pages/trash/TrashModal';
 import { RouterNames as ChannelRouterNames } from 'frontend/channelList/constants';
 import Sandbox from 'shared/views/Sandbox';
 import ChannelModal from 'frontend/channelList/views/Channel/ChannelModal';
@@ -101,6 +102,12 @@ const router = new VueRouter({
           name: ChannelRouterNames.CHANNEL_EDIT,
           path: 'channel/:channelId/edit',
           component: ChannelModal,
+          props: true,
+        },
+        {
+          name: RouterNames.TRASH,
+          path: 'trash',
+          component: TrashModal,
           props: true,
         },
       ],
