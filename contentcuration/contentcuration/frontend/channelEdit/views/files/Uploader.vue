@@ -68,7 +68,7 @@
 
   import { fileErrors, MAX_FILE_SIZE } from '../../constants';
   import { fileSizeMixin } from './mixins';
-  import Constants from 'edit_channel/constants';
+  import { FormatPresets } from 'shared/constants';
   import Alert from 'edit_channel/sharedComponents/Alert.vue';
 
   import FileStorage from 'frontend/channelEdit/views/files/FileStorage';
@@ -118,7 +118,7 @@
     computed: {
       ...mapGetters('file', ['getFiles']),
       acceptedFiles() {
-        return Constants.FormatPresets.filter(
+        return FormatPresets.filter(
           fp => fp.display && (this.presetID ? this.presetID === fp.id : !fp.supplementary)
         );
       },

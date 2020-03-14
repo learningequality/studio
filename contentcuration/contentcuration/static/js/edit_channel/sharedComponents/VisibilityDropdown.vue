@@ -55,14 +55,14 @@
 <script>
 
   import _ from 'underscore';
-  import Constants from 'edit_channel/constants/index';
+  import { Roles } from 'shared/constants';
   import InfoModal from 'edit_channel/sharedComponents/InfoModal.vue';
   import { translate } from 'edit_channel/utils/string_helper';
 
   const roleIcons = { coach: 'local_library' };
 
   // Vuetify item-text property must use objects to translate
-  const roleMap = _.map(Constants.Roles, r => {
+  const roleMap = _.map(Roles, r => {
     return {
       id: r,
       icon: roleIcons[r],
@@ -79,7 +79,7 @@
         type: String,
         default: 'learner',
         validator: function(value) {
-          return !value || Constants.Roles.includes(value);
+          return !value || Roles.includes(value);
         },
       },
       placeholder: {

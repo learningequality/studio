@@ -66,7 +66,7 @@
   import { mapActions, mapGetters } from 'vuex';
   import FilePreview from './FilePreview';
   import FileUploadItem from './FileUploadItem';
-  import Constants from 'edit_channel/constants';
+  import { FormatPresets } from 'shared/constants';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
 
   export default {
@@ -101,7 +101,7 @@
         return this.getFiles(this.node.files);
       },
       presets() {
-        return Constants.FormatPresets.filter(p => p.kind_id === this.node.kind);
+        return FormatPresets.filter(p => p.kind_id === this.node.kind);
       },
       fileCount() {
         return this.primaryFileMapping.filter(item => item.file && !item.file.error).length;

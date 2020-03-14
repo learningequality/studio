@@ -45,7 +45,7 @@
   import { mapGetters } from 'vuex';
   import uniq from 'lodash/uniq';
   import ContentRenderer from './ContentRenderer';
-  import Constants from 'edit_channel/constants/index';
+  import { FormatPresets } from 'shared/constants';
   import ActionLink from 'edit_channel/sharedComponents/ActionLink';
 
   export default {
@@ -87,9 +87,7 @@
       },
       isPreviewable() {
         let availablePreviewFormats = uniq(
-          Constants.FormatPresets.filter(f => f.display && !f.supplementary).flatMap(
-            f => f.allowed_formats
-          )
+          FormatPresets.filter(f => f.display && !f.supplementary).flatMap(f => f.allowed_formats)
         );
         return availablePreviewFormats.includes(this.file.file_format);
       },

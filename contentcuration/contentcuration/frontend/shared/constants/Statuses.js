@@ -1,0 +1,6 @@
+export default {
+  STARTED: 'STARTED',
+  SUCCESS: 'SUCCESS',
+  FAILURE: 'FAILURE',
+  REVOKED: 'REVOKED',
+};

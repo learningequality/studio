@@ -22,7 +22,7 @@
 
 <script>
 
-  import Constants from 'edit_channel/constants/index';
+  import { Languages } from 'shared/constants';
 
   export default {
     name: 'LanguageDropdown',
@@ -31,7 +31,7 @@
         type: String,
         required: false,
         validator: function(value) {
-          return !value || Constants.Languages.map(lang => lang.id).includes(value);
+          return !value || Languages.map(lang => lang.id).includes(value);
         },
       },
       required: {
@@ -55,9 +55,9 @@
         },
       },
       languages() {
-        return Constants.Languages.filter(
-          l => !this.excludeLanguages.includes(l.id)
-        ).sort((langA, langB) => langA.native_name.localeCompare(langB.native_name));
+        return Languages.filter(l => !this.excludeLanguages.includes(l.id)).sort((langA, langB) =>
+          langA.native_name.localeCompare(langB.native_name)
+        );
       },
       rules() {
         return this.required ? [v => Boolean(v) || this.$tr('languageRequired')] : [];

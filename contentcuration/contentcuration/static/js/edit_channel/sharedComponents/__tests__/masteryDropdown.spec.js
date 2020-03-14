@@ -6,7 +6,7 @@ import MasteryDropdown from '../MasteryDropdown.vue';
 import InfoModal from '../InfoModal.vue';
 import TestForm from './TestForm.vue';
 import { translate } from 'edit_channel/utils/string_helper';
-import Constants from 'edit_channel/constants';
+import { MasteryModels } from 'shared/constants';
 
 Vue.use(Vuetify);
 
@@ -40,7 +40,7 @@ describe('masteryDropdown', () => {
 
   describe('on load', () => {
     it('all mastery options should be an option to select', () => {
-      _.each(Constants.MasteryModels, model => {
+      _.each(MasteryModels, model => {
         expect(wrapper.find('.v-list').text()).toContain(translate(model));
       });
     });
@@ -51,7 +51,7 @@ describe('masteryDropdown', () => {
         expect(wrapper.find({ ref: 'mValue' }).exists()).toBe(model === 'm_of_n');
         expect(wrapper.find({ ref: 'nValue' }).exists()).toBe(model === 'm_of_n');
       }
-      _.each(Constants.MasteryModels, test);
+      _.each(MasteryModels, test);
     });
     it('should render correct mValue and nValue props', () => {
       wrapper.setProps({ value: { mastery_model: 'm_of_n', m: 10, n: 20 } });

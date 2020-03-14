@@ -99,11 +99,10 @@
   import defaultTo from 'lodash/defaultTo';
   import { constantsTranslationMixin } from '../../../shared/mixins';
   import Checkbox from './Checkbox';
-  import Constants from 'edit_channel/constants/index';
-  import { ContentDefaults, ContentDefaultsDefaults } from 'shared/constants';
+  import { Licenses, ContentDefaults, ContentDefaultsDefaults } from 'shared/constants';
 
   function findLicense(name, defaultValue = {}) {
-    return Constants.Licenses.find(license => license.license_name === name) || defaultValue;
+    return Licenses.find(license => license.license_name === name) || defaultValue;
   }
 
   function normalizeContentDefaults(contentDefaults) {
@@ -160,7 +159,7 @@
     },
     computed: {
       licenseOpts() {
-        const licenseOpts = Constants.Licenses.map(license => ({
+        const licenseOpts = Licenses.map(license => ({
           value: license.license_name,
           text: this.translateConstant(license.license_name),
         }));

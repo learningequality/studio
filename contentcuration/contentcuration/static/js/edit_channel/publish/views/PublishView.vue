@@ -136,7 +136,7 @@
 <script>
 
   import { mapActions, mapState } from 'vuex';
-  import Constants from 'edit_channel/constants/index';
+  import { Languages } from 'shared/constants';
   import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown.vue';
   import { fileSizeMixin } from 'shared/mixins';
 
@@ -165,7 +165,7 @@
         return Boolean(this.channel.language);
       },
       language() {
-        return Constants.Languages.find(lang => lang.id === this.channel.language);
+        return Languages.find(lang => lang.id === this.channel.language);
       },
       sizeText() {
         if (this.size === null) {

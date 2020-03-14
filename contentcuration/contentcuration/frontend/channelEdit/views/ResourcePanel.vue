@@ -160,7 +160,7 @@
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import LoadingText from 'shared/views/LoadingText';
   import DetailsRow from 'shared/views/details/DetailsRow';
-  import Constants from 'edit_channel/constants/index';
+  import { Licenses } from 'shared/constants';
   import { constantsTranslationMixin } from 'shared/mixins';
 
   export default {
@@ -200,7 +200,7 @@
         return sortBy(this.node.tags, '-count');
       },
       license() {
-        return Constants.Licenses.find(l => l.id === this.node.license);
+        return Licenses.find(l => l.id === this.node.license);
       },
       languageName() {
         return this.translateLanguage(this.node.language) || this.$tr('defaultNoItemsText');

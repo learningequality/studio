@@ -61,7 +61,7 @@
   import FileStatusText from '../FileStatusText';
   import Uploader from 'frontend/channelEdit/views/files/Uploader';
   import ActionLink from 'edit_channel/sharedComponents/ActionLink';
-  import Constants from 'edit_channel/constants/index';
+  import { Languages } from 'shared/constants';
 
   export default {
     name: 'SupplementaryItem',
@@ -95,7 +95,7 @@
         return this.getFile(this.fileId);
       },
       language() {
-        return Constants.Languages.find(l => l.id === this.languageId);
+        return Languages.find(l => l.id === this.languageId);
       },
       uploading() {
         return this.getUploadsInProgress([this.fileId]).length;

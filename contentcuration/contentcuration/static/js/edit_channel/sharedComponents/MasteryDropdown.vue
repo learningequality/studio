@@ -92,12 +92,12 @@
 <script>
 
   import _ from 'underscore';
-  import Constants from 'edit_channel/constants/index';
+  import { MasteryModels } from 'shared/constants';
   import InfoModal from 'edit_channel/sharedComponents/InfoModal.vue';
   import { translate } from 'edit_channel/utils/string_helper';
 
   // Vuetify item-text property must use objects to translate
-  const masteryMap = _.map(Constants.MasteryModels, m => {
+  const masteryMap = _.map(MasteryModels, m => {
     return { id: m };
   });
 
@@ -111,9 +111,7 @@
         type: Object,
         required: false,
         validator: function(value) {
-          return (
-            !value || !value.mastery_model || Constants.MasteryModels.includes(value.mastery_model)
-          );
+          return !value || !value.mastery_model || MasteryModels.includes(value.mastery_model);
         },
       },
       placeholder: {

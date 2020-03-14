@@ -1,5 +1,5 @@
 import find from 'lodash/find';
-import Constants from 'edit_channel/constants';
+import { Licenses } from 'shared/constants';
 import contentNode from 'frontend/channelEdit/vuex/contentNode';
 import storeFactory from 'shared/vuex/baseStore';
 
@@ -18,7 +18,7 @@ export const editableFields = [
   'provider',
 ];
 
-let specialPermissions = find(Constants.Licenses, { is_custom: true });
+let specialPermissions = find(Licenses, { is_custom: true });
 export function generateNode(props = {}) {
   let data = {};
   editableFields.forEach(f => {

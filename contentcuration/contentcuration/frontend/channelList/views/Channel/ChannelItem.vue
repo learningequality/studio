@@ -160,8 +160,8 @@
   import { mapActions, mapGetters, mapState } from 'vuex';
   import { RouterNames } from '../../constants';
   import ChannelStar from './ChannelStar';
+  import { Languages } from 'shared/constants';
   import PrimaryDialog from 'shared/views/PrimaryDialog';
-  import Constants from 'edit_channel/constants/index';
   import CopyToken from 'shared/views/CopyToken';
 
   export default {
@@ -200,7 +200,7 @@
         return this.getChannel(this.channelId) || {};
       },
       language() {
-        return Constants.Languages.find(language => language.id === this.channel.language);
+        return Languages.find(language => language.id === this.channel.language);
       },
       channelEditLink() {
         return {

@@ -62,7 +62,7 @@
 
   import _ from 'underscore';
   import InfoModal from './InfoModal.vue';
-  import Constants from 'edit_channel/constants';
+  import { Licenses } from 'shared/constants';
   import { translate } from 'edit_channel/utils/string_helper';
 
   export default {
@@ -80,9 +80,7 @@
         type: Object,
         required: false,
         validator: value => {
-          return (
-            !value || !value.license || _.pluck(Constants.Licenses, 'id').includes(value.license)
-          );
+          return !value || !value.license || _.pluck(Licenses, 'id').includes(value.license);
         },
       },
       required: {
@@ -130,13 +128,13 @@
         },
       },
       selectedLicense() {
-        return this.value && _.findWhere(Constants.Licenses, { id: this.value.license });
+        return this.value && _.findWhere(Licenses, { id: this.value.license });
       },
       isCustom() {
         return this.selectedLicense && this.selectedLicense.is_custom;
       },
       licenses() {
-        return _.sortBy(Constants.Licenses, 'id');
+        return _.sortBy(Licenses, 'id');
       },
       licenseUrl() {
         let licenseUrl = this.selectedLicense.license_url;

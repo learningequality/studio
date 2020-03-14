@@ -1,4 +1,4 @@
-import Constants from 'edit_channel/constants/index';
+import { Languages } from 'shared/constants';
 
 export default {
   state: () => ({
@@ -12,7 +12,7 @@ export default {
         ? JSON.parse(window.user_preferences)
         : window.user_preferences,
   }),
-  currentLanguage: Constants.Languages.find(
+  currentLanguage: Languages.find(
     l => l.id && l.id.toLowerCase() === (window.languageCode || 'en')
   ),
   currentChannelId: window.channel_id || null,

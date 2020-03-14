@@ -138,7 +138,7 @@
   import { RouterNames } from '../../constants';
   import { constantsTranslationMixin } from 'shared/mixins';
   import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown';
-  import Constants from 'edit_channel/constants/index';
+  import { ContentKinds, Licenses } from 'shared/constants';
 
   export default {
     name: 'CatalogFilters',
@@ -156,10 +156,10 @@
         loggedIn: state => state.session.loggedIn,
       }),
       kindOptions() {
-        return sortBy(Constants.ContentKinds, 'kind');
+        return sortBy(ContentKinds, 'kind');
       },
       licenseOptions() {
-        return sortBy(Constants.Licenses, 'id');
+        return sortBy(Licenses, 'id');
       },
       pageSizeOptions() {
         return [5, 10, 25, 50];

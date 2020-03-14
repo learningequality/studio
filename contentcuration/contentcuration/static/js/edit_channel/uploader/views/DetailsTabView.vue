@@ -268,7 +268,7 @@
   import intersection from 'lodash/intersection';
   import uniq from 'lodash/uniq';
   import { mapGetters, mapActions } from 'vuex';
-  import Constants from 'edit_channel/constants';
+  import { Licenses } from 'shared/constants';
   import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown';
   import HelpTooltip from 'edit_channel/sharedComponents/HelpTooltip';
   import LicenseDropdown from 'edit_channel/sharedComponents/LicenseDropdown';
@@ -467,7 +467,7 @@
         // Needs to appear when any of the selected licenses require a copyright holder
         return this.nodes.some(node => {
           return Boolean(
-            Constants.Licenses.find(
+            Licenses.find(
               license => license.id === node.license && license.copyright_holder_required
             )
           );

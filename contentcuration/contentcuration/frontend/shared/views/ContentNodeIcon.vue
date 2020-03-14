@@ -27,9 +27,9 @@
 
 <script>
 
-  import Constants from 'edit_channel/constants';
+  import { ContentKinds } from 'shared/constants';
 
-  const kinds = Constants.ContentKinds.map(kind => kind.kind);
+  const kinds = ContentKinds.map(kind => kind.kind);
 
   export default {
     name: 'ContentNodeIcon',

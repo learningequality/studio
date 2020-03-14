@@ -19,7 +19,7 @@
 
   import uniq from 'lodash/uniq';
   import SupplementaryList from './SupplementaryList';
-  import Constants from 'edit_channel/constants/index';
+  import { FormatPresets } from 'shared/constants';
   import HelpTooltip from 'edit_channel/sharedComponents/HelpTooltip';
 
   export default {
@@ -43,7 +43,7 @@
         return uniq(this.subtitlePreset.allowed_formats).join(', ');
       },
       subtitlePreset() {
-        return Constants.FormatPresets.filter(p => p.subtitle)[0];
+        return FormatPresets.filter(p => p.subtitle)[0];
       },
     },
     $trs: {
