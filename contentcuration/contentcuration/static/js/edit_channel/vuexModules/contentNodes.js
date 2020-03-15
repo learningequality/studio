@@ -1,5 +1,5 @@
-import _ from 'underscore';
-import get_cookie from 'utils/get_cookie';
+var _ = require('underscore');
+var get_cookie = require('utils/get_cookie');
 
 const NODE_COMPLETE_LOAD = '_COMPLETE';
 const NODE_BASE_LOAD = '_BASE';
@@ -220,4 +220,3 @@ const contentNodesModule = {
 };
 
 module.exports = contentNodesModule;
-export default contentNodesModule;

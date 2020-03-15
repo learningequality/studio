@@ -2020,5 +2020,3 @@ module.exports = [
     id: 'sd',
   },
 ];
-
-export default module.exports;
