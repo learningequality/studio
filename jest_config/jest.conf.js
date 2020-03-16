@@ -23,12 +23,9 @@ module.exports = {
     '^frontend/(.*)': '<rootDir>/contentcuration/contentcuration/frontend/$1',
     '\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$': path.resolve(
       __dirname,
-      './fileMock.js',
+      './fileMock.js'
     ),
-    'broadcast-channel$': path.resolve(
-      __dirname,
-      './broadcastChannelMock.js',
-    ),
+    'broadcast-channel$': path.resolve(__dirname, './broadcastChannelMock.js'),
   },
   testURL: 'http://studio.time',
   transform: {
@@ -43,6 +40,8 @@ module.exports = {
   collectCoverageFrom: [
     'contentcuration/contentcuration/static/js/**/*.{js,vue}',
     '!contentcuration/contentcuration/static/js/bundles/**',
+    '!contentcuration/contentcuration/static/js/utils/mathquill.js',
+    '!contentcuration/contentcuration/static/js/utils/mathquill.min.js',
     '!**/node_modules/**',
   ],
   verbose: false,
