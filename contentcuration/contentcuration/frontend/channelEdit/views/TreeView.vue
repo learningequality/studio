@@ -41,10 +41,6 @@
       :watchTaskId="$route.query.watchTask"
       @cancel="handleProgressCancel"
     />
-
-    <RouterLink :to="importFromChannelsRoute">
-      Import from channels
-    </RouterLink>
   </VContainer>
 
 </template>
@@ -91,14 +87,6 @@
       },
       ancestors() {
         return this.getContentNodeAncestors(this.nodeId);
-      },
-      importFromChannelsRoute() {
-        return {
-          name: 'IMPORT_FROM_CHANNELS_BROWSE',
-          params: {
-            destNodeId: this.$route.params.nodeId,
-          },
-        };
       },
     },
     mounted() {
