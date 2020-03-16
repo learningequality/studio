@@ -1,0 +1,55 @@
+<template>
+
+  <div style="width: 100%;" @contextmenu.prevent="showMenu">
+    <slot></slot>
+    <VMenu v-model="show" :position-x="x" :position-y="y" absolute offset-y>
+      <VCard>
+        <slot name="menu"></slot>
+      </VCard>
+    </VMenu>
+  </div>
+
+</template>
+
+<script>
+
+  import { mapGetters, mapMutations } from 'vuex';
+
+  export default {
+    name: 'ContextMenu',
+    data: () => {
+      return {
+        x: 0,
+        y: 0,
+        show: false,
+      };
+    },
+    computed: {
+      ...mapGetters(['currentContextMenu']),
+    },
+    watch: {
+      currentContextMenu(menuID) {
+        if (menuID !== this._uid) {
+          this.show = false;
+        }
+      },
+    },
+    methods: {
+      ...mapMutations({ setMenu: 'SET_CONTEXT_MENU' }),
+      showMenu(e) {
+        this.show = false;
+        this.x = e.clientX;
+        this.y = e.clientY;
+        this.setMenu(this._uid);
+        this.$nextTick(() => {
+          this.show = true;
+        });
+      },
+    },
+  };
+
+</script>
+
+<style scoped>
+
+</style>

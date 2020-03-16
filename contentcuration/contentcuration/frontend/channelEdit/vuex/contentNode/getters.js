@@ -49,13 +49,16 @@ export function getContentNodeChildren(state) {
 export function getContentNodeAncestors(state) {
   return function(contentNodeId) {
     let node = state.treeNodesMap[contentNodeId];
-    return getContentNodes(state)(
-      sorted(
-        Object.values(state.treeNodesMap).filter(
-          n => n.sort_order <= node.sort_order && n.rght >= node.rght
-        )
-      ).map(node => node.id)
-    );
+    if (node) {
+      return getContentNodes(state)(
+        sorted(
+          Object.values(state.treeNodesMap).filter(
+            n => n.sort_order <= node.sort_order && n.rght >= node.rght
+          )
+        ).map(node => node.id)
+      );
+    }
+    return [];
   };
 }
 

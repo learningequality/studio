@@ -3,26 +3,48 @@
   <VContainer fluid class="pa-0 fill-height">
     <ResizableNavigationDrawer
       v-show="!isEmptyChannel"
+      ref="hierarchy"
       permanent
       clipped
       localName="topic-tree"
+      class="hidden-xs-only"
       :maxWidth="400"
       :minWidth="200"
       :style="{backgroundColor: $vuetify.theme.backgroundColor}"
     >
       <VLayout row>
-        <IconButton icon="collapse_all" :text="$tr('collapseAllButton')">
+        <IconButton
+          icon="collapse_all"
+          :text="$tr('collapseAllButton')"
+          @click="collapseAll"
+        >
           $vuetify.icons.collapse_all
         </IconButton>
         <VSpacer />
-        <IconButton icon="gps_fixed" :text="$tr('openCurrentLocationButton')" />
+        <IconButton
+          :disabled="!ancestors.length"
+          icon="gps_fixed"
+          :text="$tr('openCurrentLocationButton')"
+          @click="jumpToLocation"
+        />
       </VLayout>
       <div style="margin-left: -24px;">
         <StudioTree :nodeId="rootId" :root="true" />
       </div>
     </ResizableNavigationDrawer>
-    <CurrentTopicView :topicId="nodeId" :detailNodeId="detailNodeId" />
+    <VContainer fluid class="pa-0 ma-0" style="height: calc(100vh - 64px);">
+      <CurrentTopicView :topicId="nodeId" :detailNodeId="detailNodeId" />
+    </VContainer>
     <router-view />
+    <ImportContentProgressModal
+      v-if="showImportModal"
+      :watchTaskId="$route.query.watchTask"
+      @cancel="handleProgressCancel"
+    />
+
+    <RouterLink :to="importFromChannelsRoute">
+      Import from channels
+    </RouterLink>
   </VContainer>
 
 </template>
@@ -30,8 +52,9 @@
 
 <script>
 
-  import { mapGetters } from 'vuex';
+  import { mapGetters, mapMutations } from 'vuex';
   import StudioTree from './StudioTree';
+  import ImportContentProgressModal from './ImportFromChannels/ImportContentProgressModal';
   import CurrentTopicView from './CurrentTopicView';
   import IconButton from 'shared/views/IconButton';
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
@@ -40,6 +63,7 @@
     name: 'TreeView',
     components: {
       StudioTree,
+      ImportContentProgressModal,
       IconButton,
       ResizableNavigationDrawer,
       CurrentTopicView,
@@ -54,11 +78,51 @@
         required: false,
       },
     },
+    data() {
+      return {
+        showImportModal: false,
+      };
+    },
     computed: {
       ...mapGetters('currentChannel', ['rootId']),
-      ...mapGetters('contentNode', ['getContentNodeChildren']),
+      ...mapGetters('contentNode', ['getContentNodeChildren', 'getContentNodeAncestors']),
       isEmptyChannel() {
         return !this.getContentNodeChildren(this.rootId).length;
+      },
+      ancestors() {
+        return this.getContentNodeAncestors(this.nodeId);
+      },
+      importFromChannelsRoute() {
+        return {
+          name: 'IMPORT_FROM_CHANNELS_BROWSE',
+          params: {
+            destNodeId: this.$route.params.nodeId,
+          },
+        };
+      },
+    },
+    mounted() {
+      if (this.$route.query.watchTask) {
+        this.showImportModal = true;
+      }
+    },
+    methods: {
+      ...mapMutations('contentNode', {
+        collapseAll: 'COLLAPSE_ALL_EXPANDED',
+        setExpanded: 'SET_EXPANSION',
+      }),
+      jumpToLocation() {
+        this.ancestors.forEach(ancestor => {
+          this.setExpanded({ id: ancestor.id, expanded: true });
+        });
+      },
+      handleProgressCancel() {
+        this.showImportModal = false;
+        this.$router.replace({
+          query: {},
+        });
+        // FIXME refreshing page doesn't reload the latest resources
+        this.$router.go(0);
       },
     },
     $trs: {

@@ -4,6 +4,7 @@ import assessmentItem from './vuex/assessmentItem';
 import contentNode from './vuex/contentNode';
 import file from './vuex/file';
 import currentChannel from './vuex/currentChannel';
+import importFromChannels from './vuex/importFromChannels';
 import task from './vuex/task';
 import storeFactory from 'shared/vuex/baseStore';
 
@@ -14,6 +15,7 @@ const store = storeFactory({
     assessmentItem,
     contentNode,
     currentChannel,
+    importFromChannels,
     file,
   },
 });

@@ -10,40 +10,67 @@
       style="width: 100%;"
       :style="{backgroundColor: selected? $vuetify.theme.greyBackground : 'transparent' }"
     >
-      <VLayout row align-center>
-        <VFlex shrink style="min-width: 40px;">
-          <VBtn
-            v-if="showExpansion"
-            icon
-            small
-            :style="{transform: expanded? 'rotate(90deg)' : 'rotate(0deg)'}"
-            @click.stop="toggle"
+      <ContextMenu>
+        <VLayout row align-center>
+          <VFlex shrink style="min-width: 40px;">
+            <VBtn
+              v-if="showExpansion"
+              icon
+              small
+              :style="{transform: expanded? 'rotate(90deg)' : 'rotate(0deg)'}"
+              @click.stop="toggle"
+            >
+              <Icon>keyboard_arrow_right</Icon>
+            </VBtn>
+          </VFlex>
+          <VFlex shrink>
+            <Icon class="ma-1">
+              {{ hasContent ? "folder" : "folder_open" }}
+            </Icon>
+          </VFlex>
+          <VFlex
+            xs9
+            class="notranslate text-truncate px-1"
+            :style="{color: $vuetify.theme.darkGrey}"
           >
-            <Icon>keyboard_arrow_right</Icon>
-          </VBtn>
-        </VFlex>
-        <VFlex shrink>
-          <Icon class="ma-1">
-            {{ hasContent ? "folder" : "folder_open" }}
-          </Icon>
-        </VFlex>
-        <VFlex xs9 class="notranslate text-truncate px-1" :style="{color: $vuetify.theme.darkGrey}">
-          <VTooltip bottom open-delay="750">
-            <template #activator="{ on }">
-              <span v-on="on">{{ node.title }}</span>
-            </template>
-            <span>{{ node.title }}</span>
-          </VTooltip>
-        </VFlex>
-        <VFlex shrink style="min-width: 20px;">
-          <VProgressCircular
-            v-if="loading"
-            indeterminate
-            size="15"
-            width="2"
-          />
-        </VFlex>
-      </VLayout>
+            <VTooltip bottom open-delay="750">
+              <template #activator="{ on }">
+                <span v-on="on">{{ node.title }}</span>
+              </template>
+              <span>{{ node.title }}</span>
+            </VTooltip>
+          </VFlex>
+          <VFlex shrink style="min-width: 20px;">
+            <VProgressCircular
+              v-if="loading"
+              indeterminate
+              size="15"
+              width="2"
+            />
+            <VMenu v-else offset-y right>
+              <template #activator="{ on }">
+                <VBtn
+                  class="topic-menu ma-0 mr-2"
+                  small
+                  icon
+                  flat
+                  v-on="on"
+                  @click.stop
+                >
+                  <Icon>more_horiz</Icon>
+                </VBtn>
+              </template>
+              <ContentNodeOptions :nodeId="nodeId" />
+            </VMenu>
+          </VFlex>
+        </VLayout>
+        <template #menu>
+          <div class="caption grey--text notranslate px-3 pt-2">
+            {{ node.title }}
+          </div>
+          <ContentNodeOptions :nodeId="nodeId" />
+        </template>
+      </ContextMenu>
     </router-link>
     <VFlex v-if="node && (root || hasContent) && !loading" xs12>
       <VSlideYTransition>
@@ -65,9 +92,15 @@
 
   import { mapActions, mapGetters, mapMutations } from 'vuex';
   import { RouterNames } from '../constants';
+  import ContentNodeOptions from './ContentNodeOptions';
+  import ContextMenu from 'shared/views/ContextMenu';
 
   export default {
     name: 'StudioTree',
+    components: {
+      ContextMenu,
+      ContentNodeOptions,
+    },
     props: {
       nodeId: {
         type: String,
@@ -157,14 +190,22 @@
 
 </script>
 
-<style scoped>
-.node-item {
-  cursor: pointer;
-}
+<style scoped lang="less">
 
-.slide-y-transition-enter-active,
-.slide-y-transition-leave-active {
-  transition-duration: .2s
-}
+  .topic-menu {
+    display: none;
+  }
+
+  .node-item {
+    cursor: pointer;
+    &:hover .topic-menu {
+      display: block;
+    }
+  }
+
+  .slide-y-transition-enter-active,
+  .slide-y-transition-leave-active {
+    transition-duration: 0.25s;
+  }
 
 </style>
