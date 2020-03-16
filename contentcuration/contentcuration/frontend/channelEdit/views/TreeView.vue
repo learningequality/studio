@@ -39,7 +39,6 @@
 
   import { mapGetters } from 'vuex';
   import StudioTree from './StudioTree';
-  import NodePanel from './NodePanel';
   import ImportContentProgressModal from './ImportFromChannels/ImportContentProgressModal';
   import CurrentTopicView from './CurrentTopicView';
   import IconButton from 'shared/views/IconButton';
@@ -70,7 +69,7 @@
       };
     },
     computed: {
-      ...mapGetters('currentChannel', ['canEdit', 'rootId']),
+      ...mapGetters('currentChannel', ['rootId']),
       importFromChannelsRoute() {
         return {
           name: 'IMPORT_FROM_CHANNELS_BROWSE',
@@ -86,15 +85,6 @@
       }
     },
     methods: {
-      ...mapActions('contentNode', ['createContentNode']),
-      newContentNode() {
-        this.createContentNode({ parent: this.nodeId }).then(newId => {
-          this.$router.push({
-            name: RouterNames.CONTENTNODE_DETAILS,
-            params: { detailNodeId: newId },
-          });
-        });
-      },
       handleProgressCancel() {
         this.showImportModal = false;
         this.$router.replace({
