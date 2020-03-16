@@ -1,8 +1,8 @@
 import { mount } from '@vue/test-utils';
 import Thumbnail from '../thumbnails/Thumbnail';
-import ThumbnailToolbarIcon from '../thumbnails/ThumbnailToolbarIcon';
 import Uploader from '../Uploader';
 import store from '../../../store';
+import IconButton from 'shared/views/IconButton';
 
 const testThumbnail = {
   id: 'test-image',
@@ -169,7 +169,7 @@ describe('thumbnail', () => {
       wrapper.setProps({ value: testThumbnail });
       wrapper
         .find('[data-test="remove"]')
-        .find(ThumbnailToolbarIcon)
+        .find(IconButton)
         .vm.$emit('click');
       expect(wrapper.emitted('input')[0][0]).toBe(null);
     });
