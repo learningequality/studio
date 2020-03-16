@@ -149,13 +149,29 @@ class Resource {
   where(params = {}) {
     const table = db[this.tableName];
     const whereParams = pick(params, this.indexFields);
+    const filterParams = omit(params, this.indexFields);
     let collection;
     if (Object.keys(whereParams).length !== 0) {
-      collection = table.where(whereParams);
+      const arrayParam = Object.keys(whereParams).find(key => Array.isArray(whereParams[key]));
+      if (arrayParam) {
+        collection = table.where(arrayParam).anyOf(whereParams[arrayParam]);
+        if (process.env.NODE_ENV !== 'production') {
+          // Flag a warning if we tried to filter by an Array and other where params
+          /* eslint-disable no-console */
+          if (Object.keys(whereParams).length > 1) {
+            console.warning(
+              `Tried to query ${Object.keys(whereParams).join(', ')} without a compound index`
+            );
+          }
+        }
+        delete whereParams[arrayParam];
+        Object.assign(filterParams, whereParams);
+      } else {
+        collection = table.where(whereParams);
+      }
     } else {
       collection = table.toCollection();
     }
-    const filterParams = omit(params, this.indexFields);
     if (Object.keys(filterParams).length !== 0) {
       const filterFn = matches(filterParams);
       collection = collection.filter(filterFn);
