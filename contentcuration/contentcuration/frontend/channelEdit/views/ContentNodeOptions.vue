@@ -12,7 +12,7 @@
     <VListTile v-if="!hideDetailsLink" :to="viewLink">
       <VListTileTitle>{{ $tr('viewDetails') }}</VListTileTitle>
     </VListTile>
-    <VListTile v-if="canEdit" @click.stop>
+    <VListTile v-if="canEdit" :to="moveLink">
       <VListTileTitle>{{ $tr('move') }}</VListTileTitle>
     </VListTile>
     <VListTile v-if="canEdit" @click.stop>
@@ -70,6 +70,16 @@
             ...this.$route.params,
             nodeId: this.nodeId,
             detailNodeId: this.nodeId,
+          },
+        };
+      },
+      moveLink() {
+        return {
+          name: RouterNames.MOVE,
+          params: {
+            ...this.$route.params,
+            targetNodeId: this.nodeId,
+            moveNodeIds: this.nodeId,
           },
         };
       },

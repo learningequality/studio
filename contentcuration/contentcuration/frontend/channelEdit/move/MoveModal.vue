@@ -1,117 +1,126 @@
 <template>
 
-  <VContainer grid-list-md>
-    <NewTopicModal
-      :showDialog="showNewTopicModal"
-      @createTopic="createTopic"
-      @cancelTopic="cancelTopic()"
-    />
-
-    <VLayout wrap>
-      <VDialog v-model="showDialog" fullscreen width="500" persistent>
-        <VToolbar dark color="primary">
-          <VBtn icon dark @click="$emit('cancelMove')">
-            <Icon>close</Icon>
+  <VDialog
+    :value="true"
+    fullscreen
+    scrollable
+    app
+    width="500"
+    persistent
+  >
+    <VCard>
+      <VToolbar dark color="primary">
+        <VBtn icon @click="$emit('cancelMove')">
+          <Icon>close</Icon>
+        </VBtn>
+        <VToolbarTitle>
+          {{ $tr("moveItems", {count: 2}) }}
+          <b class="notranslate">{{ currentNode.title }}</b>
+        </VToolbarTitle>
+        <VSpacer />
+      </VToolbar>
+      <!-- header items -->
+      <VLayout wrap>
+        <VFlex md8 justify-start>
+          <Breadcrumbs :items="crumbs">
+            <template #item="{item}">
+              {{ item.title }}
+            </template>
+          </Breadcrumbs>
+        </VFlex>
+        <VSpacer />
+        <VFlex shrink>
+          <VBtn flat @click="showNewTopicModal = true">
+            {{ $tr("addTopic") }}
           </VBtn>
-          <VToolbar-title>
-            <b>{{ $tr("moveItems", {x: 2, title: currentNode.title}) }}</b>
-          </VToolbar-title>
-          <VSpacer />
-        </VToolbar>
-        <VCard>
-          <!-- header items -->
-          <VLayout wrap>
-            <VFlex md8 justify-start>
-              <v-breadcrumbs :items="crumbs" divider=">" />
-            </VFlex>
-            <VSpacer />
-            <VFlex shrink>
-              <VBtn flat @click="showTopicModal()">
-                {{ $tr("addTopic") }}
+        </VFlex>
+      </VLayout>
+      <!-- list of children content -->
+      <VCard v-for="node in children" :key="node.id">
+        <VLayout class="card">
+          <VFlex xs2 align-self-center>
+            <!-- TODO: Add the appropriate thumbnail or card -->
+            <VImg
+              src="https://cdn.vuetifyjs.com/images/cards/foster.jpg"
+              height="68px"
+              contain
+            />
+          </VFlex>
+          <VFlex xs8 align-self-center>
+            <VCardTitle primary-title>
+              <div class="headline notranslate">
+                {{ node.title }}
+              </div>
+              <div>{{ $tr('resourcesCount', {count: node.resource_count}) }}</div>
+              <div class="description notranslate">
+                {{ node.description }}
+              </div>
+            </VCardTitle>
+          </VFlex>
+          <VFlex align-self-center>
+            <VCardActions>
+              <VBtn icon>
+                <Icon small color="primary">
+                  info
+                </Icon>
               </VBtn>
-            </VFlex>
-          </VLayout>
-          <!-- list of children content -->
-          <VCard v-for="node in children" :key="node.id">
-            <VLayout class="card">
-              <VFlex xs2 align-self-center>
-                <!-- TODO: Add the appropriate thumbnail or card -->
-                <VImg
-                  src="https://cdn.vuetifyjs.com/images/cards/foster.jpg"
-                  height="68px"
-                  contain
-                />
-              </VFlex>
-              <VFlex xs8 align-self-center>
-                <VCardTitle primary-title>
-                  <div>
-                    <div class="headline">
-                      {{ node.title }}
-                    </div>
-                    <div>{{ $tr('resources', {x: node.resource_count}) }}</div>
-                    <div class="description">
-                      {{ node.description }}
-                    </div>
-                  </div>
-                </VCardTitle>
-              </VFlex>
-              <VFlex align-self-center>
-                <VCardActions>
-                  <VBtn icon>
-                    <Icon small color="primary">
-                      info
-                    </Icon>
-                  </VBtn>
-                  <VBtn v-if="node.kind === 'topic'" icon :to="nextItem(node)">
-                    <Icon>keyboard_arrow_right</Icon>
-                  </VBtn>
-                </VCardActions>
-              </VFlex>
-            </VLayout>
-          </VCard>
+              <VBtn v-if="node.kind === 'topic'" icon :to="nextItem(node)">
+                <Icon>keyboard_arrow_right</Icon>
+              </VBtn>
+            </VCardActions>
+          </VFlex>
+        </VLayout>
+      </VCard>
 
-          <!-- footer buttons -->
-          <BottomToolBar color="white" flat>
-            <Icon>assignment</Icon>
-            <VBtn flat color="primary" class="button">
-              {{ $tr("moveClipboard") }}
-            </VBtn>
-            <VSpacer />
-            <VBtn flat @click="$emit('cancelMove')">
-              {{ $tr("cancel") }}
-            </VBtn>
-            <VBtn color="primary" class="white--text" @click="moveNodes">
-              {{ $tr("moveHere") }}
-            </VBtn>
-          </BottomToolBar>
-        </VCard>
-      </VDialog>
-    </VLayout>
-  </VContainer>
+      <!-- footer buttons -->
+      <BottomToolBar color="white" flat>
+        <Icon class="mr-2">
+          assignment
+        </Icon>
+        <ActionLink :text="$tr('moveClipboard')" />
+        <VSpacer />
+        <VBtn flat @click="$emit('cancelMove')">
+          {{ $tr("cancel") }}
+        </VBtn>
+        <VBtn color="primary" class="white--text" @click="moveNodes">
+          {{ $tr("moveHere") }}
+        </VBtn>
+      </BottomToolBar>
+
+      <NewTopicModal
+        v-model="showNewTopicModal"
+        @createTopic="createTopic"
+      />
+    </VCard>
+  </VDialog>
 
 </template>
-
 <script>
 
   import { mapGetters, mapActions } from 'vuex';
   import { RouterNames } from '../constants';
   import BottomToolBar from '../../shared/views/BottomToolBar';
   import NewTopicModal from './NewTopicModal';
+  import ActionLink from 'edit_channel/sharedComponents/ActionLink';
+  import Breadcrumbs from 'shared/views/Breadcrumbs';
 
   export default {
     name: 'MoveModal',
     components: {
       NewTopicModal,
       BottomToolBar,
+      ActionLink,
+      Breadcrumbs,
     },
     props: {
-      nodeId: {
+      targetNodeId: {
         type: String,
         required: true,
       },
-      showDialog: {
-        type: Boolean,
-      },
+      // moveNodeIds: {
+      //   type: String,
+      //   required: true,
+      // },
     },
     data() {
       return {
@@ -119,16 +128,17 @@
       };
     },
     computed: {
+      ...mapGetters('currentChannel', ['currentChannel']),
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodeChildren', 'getTreeNode']),
       currentNode() {
-        return this.getContentNode(this.nodeId);
+        return this.getContentNode(this.targetNodeId);
       },
       children() {
-        return this.getContentNodeChildren(this.nodeId);
+        return this.getContentNodeChildren(this.targetNodeId);
       },
       crumbs() {
         const trail = [];
-        var node = this.getContentNode(this.nodeId);
+        var node = this.getContentNode(this.targetNodeId);
         var inTree = this.getTreeNode(node.id);
         trail.unshift({
           text: node.title,
@@ -164,26 +174,21 @@
       ...mapActions('contentNode', ['createContentNode', 'loadContentNode', 'loadChildren']),
       nextItem(child) {
         return {
-          name: RouterNames.SANDBOX,
+          name: RouterNames.MOVE,
           params: {
-            nodeId: child.id,
+            ...this.$route.params,
+            targetNodeId: child.id,
           },
         };
       },
       getChildren() {
-        if (this.currentNode && this.currentNode.has_children) {
+        if (this.currentNode && this.currentNode.total_count) {
           return this.loadChildren({
-            parent: this.nodeId,
-            channel_id: this.$store.state.currentChannel.currentChannelId,
+            parent: this.currentChannel,
+            channel_id: this.currentChannel.id,
           });
         }
         return Promise.resolve();
-      },
-      showTopicModal() {
-        this.showNewTopicModal = true;
-      },
-      cancelTopic() {
-        this.showNewTopicModal = false;
       },
       createTopic(title) {
         this.createContentNode({ parent: this.nodeId, kind: 'topic', title }).then(() => {
@@ -196,23 +201,17 @@
     },
     $trs: {
       moveClipboard: 'Or move to clipboard',
-      moveItems: 'Moving {x} selections into: {title}',
+      moveItems: 'Moving {count, plural,\n =1 {# selection}\n other {# selections}} into:',
       addTopic: 'Add new topic',
       cancel: 'Cancel',
       moveHere: 'Move here',
-      resources: '{x} resources',
+      resourcesCount: '{count, plural,\n =1 {# resource}\n other {# resources}}',
     },
   };
 
 </script>
 
 <style lang="less" scoped>
-
-  .button {
-    color: purple;
-    text-decoration: underline;
-    text-transform: none;
-  }
 
   .list {
     border: 1px solid rgb(192, 192, 192);
