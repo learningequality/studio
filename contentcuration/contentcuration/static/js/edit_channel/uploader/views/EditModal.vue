@@ -175,7 +175,7 @@
   import EditList from './EditList';
   import EditView from './EditView';
   import MessageDialog from 'shared/views/MessageDialog';
-  import Alert from 'edit_channel/sharedComponents/Alert';
+  import Alert from 'shared/views/Alert';
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
   import Uploader from 'frontend/channelEdit/views/files/Uploader';
   import FileStorage from 'frontend/channelEdit/views/files/FileStorage';
