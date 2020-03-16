@@ -13,6 +13,8 @@ Kolibri Studio is a web application designed to deliver educational materials to
 
 Kolibri Studio uses [Django](https://www.djangoproject.com/) for the backend and is transitioning from [Backbone.js](https://backbonejs.org/) to [Vue.js](https://vuejs.org/) for the frontend.
 
+If you are looking for help setting up custom content channels, uploading and organizing resources using Kolibri Studio, please refer to the [User Guide](https://kolibri-studio.readthedocs.io/en/latest/).
+
 
 ## Getting started
 
@@ -20,7 +22,7 @@ Kolibri Studio uses [Django](https://www.djangoproject.com/) for the backend and
 
 - Install and set up [Git](https://help.github.com/articles/set-up-git/) on your computer. Try [this tutorial](http://learngitbranching.js.org/) if you need more practice
 - [Sign up and configure your GitHub account](https://github.com/join) if you don't have one already.
-- Fork the [studio repo](https://github.com/learningequality/studio) to create a copy of the studio repository under your own github username. This will make it easier to [submit pull requests](https://help.github.com/articles/using-pull-requests/>). Read more details [about forking](https://help.github.com/articles/fork-a-repo/) from GitHub
+- Fork the [studio repo](https://github.com/learningequality/studio) to create a copy of the studio repository under your own github username. This will make it easier to [submit pull requests](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request). Read more details [about forking](https://help.github.com/articles/fork-a-repo/) from GitHub
 - Clone your repo locally
 
 Tip: [Register your SSH keys](https://help.github.com/en/articles/connecting-to-github-with-ssh) on GitHub to avoid having to repeatedly enter your password.
@@ -90,11 +92,14 @@ Exit the virtual environment by running `exit`. Reactivate it by running `pipenv
 
 ### Yarn and Javascript dependencies
 
-As described above, Kolibri Studio has dependencies that rely on Node.js version 10.x. You'll also need [yarn](https://yarnpkg.com/lang/en/docs/install) installed.
+As described above, Kolibri Studio has dependencies that rely on Node.js version 10.x. `nodeenv` is a useful tool for using specific versions of Node.js tools in Python environments. You'll also need [yarn](https://yarnpkg.com/lang/en/docs/install) installed.
 
 All the javascript dependencies are listed in `package.json`. To install them run the following [yarn](https://yarnpkg.com/en/) command:
 
 ```bash
+# Set up Node 10.x environment
+nodeenv -p --node=10.15.3
+# Install javascript dependencies
 yarn install --network-timeout 1000000
 ```
 
