@@ -4,7 +4,7 @@
     v-if="snackbarIsVisible"
     :key="key"
     :timeout="snackbarOptions.duration"
-    bottom
+    left
     :value="snackbarIsVisible"
     @input="visibilityToggled"
   >
@@ -51,7 +51,7 @@
       },
       visibilityToggled(visible) {
         if (!visible) {
-          this.$store.commit('CORE_CLEAR_SNACKBAR');
+          this.hideCallback();
         }
       },
     },
