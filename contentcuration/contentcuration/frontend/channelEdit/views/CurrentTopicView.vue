@@ -1,53 +1,44 @@
 <template>
 
-  <VContainer fluid class="panel pa-0 ma-0" style="height: calc(100vh - 64px);">
+  <VContainer v-if="node" fluid class="panel pa-0 ma-0">
     <!-- Breadcrumbs -->
-    <VToolbar v-if="ancestors.length" dense color="transparent" flat>
-      <VBreadcrumbs :items="ancestors" class="pa-0">
-        <template #divider>
-          <Icon>chevron_right</Icon>
-        </template>
+    <VToolbar v-if="ancestors.length && !loadingAncestors" dense color="transparent" flat>
+      <Breadcrumbs :items="ancestors" class="pa-0">
         <template #item="props">
-          <span class="px-2 notranslate subheading">
+          <!-- Current item -->
+          <VLayout v-if="props.isLast" align-center row>
+            <VFlex class="font-weight-bold text-truncate notranslate" shrink>
+              {{ props.item.title }}
+            </VFlex>
+            <VMenu offset-y right>
+              <template #activator="{ on }">
+                <VBtn icon flat small v-on="on">
+                  <Icon>arrow_drop_down</Icon>
+                </VBtn>
+              </template>
+              <ContentNodeOptions :nodeId="topicId" />
+            </VMenu>
+          </VLayout>
+          <span v-else class="notranslate grey--text">
             {{ props.item.title }}
           </span>
         </template>
-      </VBreadcrumbs>
-      <VMenu offset-y left>
-        <template #activator="{ on }">
-          <VBtn icon flat v-on="on">
-            <Icon>arrow_drop_down</Icon>
-          </VBtn>
-        </template>
-        <VList>
-          <VListTile @click="newTopicNode">
-            <VListTileTitle>{{ $tr('newSubtopic') }}</VListTileTitle>
-          </VListTile>
-          <VListTile :to="editNodeLink(topicId)">
-            <VListTileTitle>{{ $tr('editTopicDetails') }}</VListTileTitle>
-          </VListTile>
-          <VListTile :to="treeLink(topicId)">
-            <VListTileTitle>{{ $tr('viewDetails') }}</VListTileTitle>
-          </VListTile>
-          <VListTile @click.stop>
-            <VListTileTitle>{{ $tr('move') }}</VListTileTitle>
-          </VListTile>
-          <VListTile @click.stop>
-            <VListTileTitle>{{ $tr('makeACopy') }}</VListTileTitle>
-          </VListTile>
-          <VListTile @click.stop>
-            <VListTileTitle>{{ $tr('copyToClipboard') }}</VListTileTitle>
-          </VListTile>
-          <VListTile @click.stop>
-            <VListTileTitle>{{ $tr('remove') }}</VListTileTitle>
-          </VListTile>
-        </VList>
-      </VMenu>
+      </Breadcrumbs>
     </VToolbar>
 
     <!-- Topic actions -->
     <ToolBar flat dense color="transparent">
-      <VCheckbox color="primary" hide-details />
+      <div class="mr-1">
+        <VCheckbox v-if="node.total_count" v-model="selectAll" color="primary" hide-details />
+      </div>
+      <VSlideXTransition>
+        <div v-if="selected.length">
+          <IconButton icon="edit" :text="$tr('editSelectedButton')" @click="editNodes(selected)" />
+          <IconButton icon="content_paste" :text="$tr('copySelectedButton')" />
+          <IconButton icon="sync_alt" :text="$tr('moveSelectedButton')" />
+          <IconButton icon="delete" :text="$tr('deleteSelectedButton')" />
+        </div>
+      </VSlideXTransition>
       <VSpacer />
       <VToolbarItems>
         <VMenu offset-y left>
@@ -57,7 +48,7 @@
             </VBtn>
           </template>
           <VList>
-            <VListTile v-for="mode in viewModes" :key="mode" @click="viewMode = mode">
+            <VListTile v-for="mode in viewModes" :key="mode" @click="setViewMode(mode)">
               <VListTileAction style="min-width: 32px;">
                 <Icon v-if="mode === viewMode">
                   check
@@ -97,31 +88,54 @@
 
     <!-- Topic items and resource panel -->
     <VLayout row :style="{height: contentHeight}">
+
       <VFlex class="pa-4" style="overflow-y: auto;">
-        <NodePanel :parentId="topicId" />
+        <VFadeTransition mode="out-in">
+          <NodePanel :key="topicId" :parentId="topicId" />
+        </VFadeTransition>
       </VFlex>
-      <v-expand-x-transition>
+      <VExpandXTransition>
         <ResizableNavigationDrawer
           v-show="showResourceDrawer"
           right
           localName="resource-panel"
           :minWidth="400"
+          :maxWidth="700"
           permanent
         >
           <div v-if="detailNodeId" class="pa-4">
-            <ResourcePanel :nodeId="detailNodeId" @close="closePanel">
-              <template #actions>
+            <ResourcePanel
+              :nodeId="detailNodeId"
+              :channelId="currentChannel.id"
+              @close="closePanel"
+            >
+              <template v-if="canEdit" #actions>
                 <IconButton
                   small
                   icon="edit"
                   :text="$tr('editButton')"
-                  :to="editNodeLink(detailNodeId)"
+                  @click="editNodes([detailNodeId])"
+                />
+                <VMenu offset-y left>
+                  <template #activator="{ on }">
+                    <VBtn small icon flat v-on="on">
+                      <Icon>more_horiz</Icon>
+                    </VBtn>
+                  </template>
+                  <ContentNodeOptions :nodeId="detailNodeId" hideDetailsLink />
+                </VMenu>
+              </template>
+              <template v-else #actions>
+                <IconButton
+                  small
+                  icon="content_copy"
+                  :text="$tr('copyToClipboardButton')"
                 />
               </template>
             </ResourcePanel>
           </div>
         </ResizableNavigationDrawer>
-      </v-expand-x-transition>
+      </VExpandXTransition>
     </VLayout>
   </VContainer>
 
@@ -133,9 +147,11 @@
   import { RouterNames, viewModes } from '../constants';
   import ResourcePanel from './ResourcePanel';
   import NodePanel from './NodePanel';
+  import ContentNodeOptions from './ContentNodeOptions';
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
   import IconButton from 'shared/views/IconButton';
   import ToolBar from 'shared/views/ToolBar';
+  import Breadcrumbs from 'shared/views/Breadcrumbs';
 
   export default {
     name: 'CurrentTopicView',
@@ -145,6 +161,8 @@
       NodePanel,
       ResourcePanel,
       ResizableNavigationDrawer,
+      ContentNodeOptions,
+      Breadcrumbs,
     },
     props: {
       topicId: {
@@ -159,18 +177,37 @@
     data() {
       return {
         showResourceDrawer: false,
-        viewMode: viewModes.DEFAULT,
+        viewMode: sessionStorage['topic-tree-view'] || viewModes.DEFAULT,
+        loadingAncestors: false,
+        selected: [],
       };
     },
     computed: {
-      ...mapGetters('currentChannel', ['canEdit']),
-      ...mapGetters('contentNode', ['getContentNode']),
+      ...mapGetters('currentChannel', ['canEdit', 'currentChannel']),
+      ...mapGetters('contentNode', ['getContentNode', 'getContentNodeAncestors']),
+      selectAll: {
+        get() {
+          return this.selected.length;
+        },
+        set(value) {
+          if (value) {
+            this.selected = [this.topicId];
+          } else {
+            this.selected = [];
+          }
+        },
+      },
       node() {
         return this.getContentNode(this.topicId);
       },
       ancestors() {
-        // TODO: update with actual ancestors
-        return [{ title: 'channel' }, { title: 'topic 1' }];
+        return this.getContentNodeAncestors(this.topicId).map(ancestor => {
+          return {
+            id: ancestor.id,
+            to: this.treeLink({ nodeId: ancestor.id }),
+            title: ancestor.title,
+          };
+        });
       },
       uploadFilesLink() {
         return { name: RouterNames.UPLOAD_FILES };
@@ -186,15 +223,27 @@
       },
     },
     watch: {
+      topicId() {
+        this.selected = [];
+      },
       detailNodeId(value) {
         this.showResourceDrawer = Boolean(value);
+      },
+      ancestors(value) {
+        // Full ancestor path hasn't been loaded
+        if (!value.some(a => a.id === this.topicId)) {
+          this.loadingAncestors = true;
+          this.loadAncestors({ id: this.topicId, channel_id: this.currentChannel.id }).then(() => {
+            this.loadingAncestors = false;
+          });
+        }
       },
     },
     beforeMount() {
       this.showResourceDrawer = Boolean(this.detailNodeId);
     },
     methods: {
-      ...mapActions('contentNode', ['createContentNode']),
+      ...mapActions('contentNode', ['createContentNode', 'loadAncestors']),
       newContentNode(route, { kind, title }) {
         this.createContentNode({ parent: this.parentId, kind, title }).then(newId => {
           this.$router.push({
@@ -217,21 +266,18 @@
         };
         this.newContentNode(RouterNames.ADD_EXERCISE, nodeData);
       },
-      editNodeLink(id) {
-        return {
+      editNodes(ids) {
+        this.$router.push({
           name: RouterNames.CONTENTNODE_DETAILS,
           params: {
-            detailNodeIds: id,
+            detailNodeIds: ids.join(','),
           },
-        };
+        });
       },
-      treeLink(nodeId) {
+      treeLink(params) {
         return {
           name: RouterNames.TREE_VIEW,
-          params: {
-            nodeId: this.topicId,
-            detailNodeId: nodeId,
-          },
+          params,
         };
       },
       closePanel() {
@@ -248,6 +294,9 @@
           });
         }, 700);
       },
+      setViewMode(viewMode) {
+        this.viewMode = sessionStorage['topic-tree-view'] = viewMode;
+      },
     },
 
     $trs: {
@@ -259,15 +308,13 @@
       exerciseDefaultTitle: '{parentTitle} exercise',
       addButton: 'Add',
       editButton: 'Edit',
+      copyToClipboardButton: 'Copy to clipboard',
       [viewModes.DEFAULT]: 'Default',
       [viewModes.COMPACT]: 'Compact',
-      newSubtopic: 'New subtopic',
-      editTopicDetails: 'Edit topic details',
-      viewDetails: 'View details',
-      move: 'Move',
-      makeACopy: 'Make a copy',
-      copyToClipboard: 'Copy to clipboard',
-      remove: 'Remove',
+      editSelectedButton: 'Edit selected items',
+      copySelectedButton: 'Copy selected items to clipboard',
+      moveSelectedButton: 'Move selected items',
+      deleteSelectedButton: 'Delete selected items',
     },
   };
 
@@ -282,5 +329,10 @@
   .resource-drawer {
     border-left: 1px solid var(--v-grey-lighten4);
     overflow-y: auto;
+  }
+
+  .fade-transition-enter-active,
+  .fade-transition-leave-active {
+    transition-duration: 0.1s
   }
 </style>

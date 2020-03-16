@@ -2,13 +2,12 @@
 
   <VScaleTransition origin="center center">
     <VCard
+      ref="preview"
       tabindex="0"
       :dark="fullscreen"
       flat
       class="preview-area"
-      :class="{'fullscreen-mode': fullscreen}"
       app
-      @keydown.esc="fullscreen = false"
     >
       <VToolbar v-if="fullscreen" dark color="grey darken-3" dense>
         <VToolbarTitle class="notranslate">
@@ -27,7 +26,7 @@
         :fullscreen="fullscreen"
         :supplementaryFileIds="supplementaryFileIds"
       />
-      <p v-if="!fullscreen" class="fullscreen-toggle">
+      <p v-if="!fullscreen" class="mt-2">
         <ActionLink
           v-if="showFullscreenOption"
           data-test="openfullscreen"
@@ -62,6 +61,10 @@
       nodeId: {
         type: String,
         required: false,
+      },
+      hideFullscreenOption: {
+        type: Boolean,
+        default: false,
       },
     },
     data() {
@@ -98,8 +101,64 @@
       },
       showFullscreenOption() {
         return (
-          this.file && this.file.url && this.isPreviewable && !this.isAudio && !this.file.uploading
+          !this.hideFullscreenOption &&
+          this.file &&
+          this.file.url &&
+          this.isPreviewable &&
+          !this.isAudio &&
+          !this.file.uploading
         );
+      },
+    },
+    watch: {
+      fullscreen(isFullscreen) {
+        if (isFullscreen) {
+          let previewElement = this.$refs.preview.$el;
+          if (previewElement.requestFullscreen) {
+            previewElement.requestFullscreen();
+          } else if (previewElement.msRequestFullscreen) {
+            previewElement.msRequestFullscreen();
+          } else if (previewElement.mozRequestFullScreen) {
+            previewElement.mozRequestFullScreen();
+          } else if (previewElement.webkitRequestFullscreen) {
+            previewElement.webkitRequestFullscreen();
+          }
+
+          // Add listeners in case user presses escape key
+          document.addEventListener('webkitfullscreenchange', this.escapeFullscreen);
+          document.addEventListener('mozfullscreenchange', this.escapeFullscreen);
+          document.addEventListener('fullscreenchange', this.escapeFullscreen);
+          document.addEventListener('MSFullscreenChange', this.escapeFullscreen);
+        } else {
+          if (document.exitFullscreen) {
+            document.exitFullscreen();
+          } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+          } else if (document.mozCancelFullScreen) {
+            document.mozCancelFullScreen();
+          } else if (document.msExitFullscreen) {
+            document.msExitFullscreen();
+          }
+        }
+      },
+    },
+    methods: {
+      checkFullscreen() {
+        return !(
+          (document.fullScreenElement !== undefined && document.fullScreenElement === null) ||
+          (document.msFullscreenElement !== undefined && document.msFullscreenElement === null) ||
+          (document.mozFullScreen !== undefined && !document.mozFullScreen) ||
+          (document.webkitIsFullScreen !== undefined && !document.webkitIsFullScreen)
+        );
+      },
+      escapeFullscreen() {
+        if (!this.checkFullscreen()) {
+          this.fullscreen = false;
+          document.removeEventListener('webkitfullscreenchange', this.escapeFullscreen);
+          document.removeEventListener('mozfullscreenchange', this.escapeFullscreen);
+          document.removeEventListener('fullscreenchange', this.escapeFullscreen);
+          document.removeEventListener('MSFullscreenChange', this.escapeFullscreen);
+        }
       },
     },
     $trs: {
@@ -113,22 +172,8 @@
 
 <style lang="less" scoped>
 
-  .fullscreen-toggle {
-    margin-top: 8px;
-  }
-
   .preview-area {
-    top: 0;
-    left: 0;
-    min-width: 0;
-    min-height: 0;
     outline: none;
-    &.fullscreen-mode {
-      position: fixed;
-      z-index: 10;
-      min-width: 100vw;
-      min-height: 100vh;
-    }
   }
 
 </style>

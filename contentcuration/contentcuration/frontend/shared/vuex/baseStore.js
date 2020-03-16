@@ -3,6 +3,7 @@ import Vuex, { Store } from 'vuex';
 import session from './session';
 import ConnectionPlugin from './connectionPlugin';
 import snackbar from './snackbar';
+import contextMenu from './contextMenu';
 import channel from './channel';
 import { registerListener } from 'shared/data';
 
@@ -32,6 +33,7 @@ export default function storeFactory({
   modules = {
     session,
     snackbar,
+    contextMenu,
     channel,
     ...modules,
   };
