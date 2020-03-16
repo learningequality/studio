@@ -21,6 +21,9 @@ export default {
     showSnackbar({ commit }, { text, duration, actionText, actionCallback }) {
       commit('CORE_CREATE_SNACKBAR', { text, duration, actionText, actionCallback });
     },
+    showSnackbarSimple({ commit }, text) {
+      commit('CORE_CREATE_SNACKBAR', { text });
+    },
     clearSnackbar({ commit }) {
       commit('CORE_CLEAR_SNACKBAR');
     },

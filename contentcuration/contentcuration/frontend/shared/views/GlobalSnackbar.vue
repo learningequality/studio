@@ -5,7 +5,6 @@
     :key="key"
     :timeout="snackbarOptions.duration"
     left
-    bottom
     :value="snackbarIsVisible"
     @input="visibilityToggled"
   >
@@ -52,7 +51,7 @@
       },
       visibilityToggled(visible) {
         if (!visible) {
-          this.$store.commit('CORE_CLEAR_SNACKBAR');
+          this.hideCallback();
         }
       },
     },

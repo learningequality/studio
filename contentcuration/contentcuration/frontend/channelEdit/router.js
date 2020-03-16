@@ -2,6 +2,9 @@ import VueRouter from 'vue-router';
 import { RouterNames } from './constants';
 import TreeView from './views/TreeView';
 import store from './store';
+import ImportFromChannelsIndex from './views/ImportFromChannels/ImportFromChannelsIndex';
+import SearchOrBrowseWindow from './views/ImportFromChannels/SearchOrBrowseWindow';
+import ReviewSelectionsPage from './views/ImportFromChannels/ReviewSelectionsPage';
 import { RouterNames as ChannelRouterNames } from 'frontend/channelList/constants';
 import Sandbox from 'shared/views/Sandbox';
 import ChannelModal from 'shared/views/channel/ChannelModal';
@@ -47,6 +50,37 @@ const router = new VueRouter({
             });
           });
       },
+    },
+    {
+      name: RouterNames.IMPORT_FROM_CHANNELS,
+      path: '/import/:destNodeId',
+      component: ImportFromChannelsIndex,
+      props: {
+        isOpen: true,
+      },
+      children: [
+        {
+          name: RouterNames.IMPORT_FROM_CHANNELS_BROWSE,
+          path: 'browse/:channelId?/:nodeId?',
+          component: SearchOrBrowseWindow,
+          props: {
+            currentView: 'browse',
+          },
+        },
+        {
+          name: RouterNames.IMPORT_FROM_CHANNELS_SEARCH,
+          path: 'search/:searchTerm',
+          component: SearchOrBrowseWindow,
+          props: {
+            currentView: 'search',
+          },
+        },
+        {
+          name: RouterNames.IMPORT_FROM_CHANNELS_REVIEW,
+          path: 'review',
+          component: ReviewSelectionsPage,
+        },
+      ],
     },
     {
       name: RouterNames.TREE_VIEW,
