@@ -1,4 +1,3 @@
-from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
 from rest_framework.serializers import PrimaryKeyRelatedField
@@ -10,23 +9,16 @@ from contentcuration.models import User
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import ValuesViewset
+from contentcuration.viewsets.common import UUIDInFilter
 
 
 class FileFilter(FilterSet):
-    ids = CharFilter(method="filter_ids")
-
-    def filter_ids(self, queryset, name, value):
-        try:
-            # Limit SQL params to 50 - shouldn't be fetching this many
-            # ids at once
-            return queryset.filter(pk__in=value.split(",")[:50])
-        except ValueError:
-            # Catch in case of a poorly formed UUID
-            return queryset.none()
+    ids = UUIDInFilter(name="id")
+    contentnodes = UUIDInFilter(name="contentnode")
 
     class Meta:
         model = File
-        fields = ("ids",)
+        fields = ("ids", "contentnodes")
 
 
 class FileSerializer(BulkModelSerializer):
@@ -51,9 +43,7 @@ class FileSerializer(BulkModelSerializer):
 
 def retrieve_storage_url(item):
     """ Get the file_on_disk url """
-    return generate_storage_url(
-        "{}.{}".format(item["checksum"], item["file_format"])
-    )
+    return generate_storage_url("{}.{}".format(item["checksum"], item["file_format"]))
 
 
 class FileViewSet(ValuesViewset):
@@ -78,5 +68,5 @@ class FileViewSet(ValuesViewset):
     field_map = {
         "url": retrieve_storage_url,
         "preset": "preset_id",
-        "language": "language_id"
+        "language": "language_id",
     }

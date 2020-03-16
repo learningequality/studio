@@ -351,11 +351,21 @@ class UUIDField(models.CharField):
         kwargs['max_length'] = 32
         super(UUIDField, self).__init__(*args, **kwargs)
 
+    def prepare_value(self, value):
+        if isinstance(value, uuid.UUID):
+            return value.hex
+        return value
+
     def get_default(self):
         result = super(UUIDField, self).get_default()
         if isinstance(result, uuid.UUID):
             result = result.hex
         return result
+
+    def to_python(self, value):
+        if isinstance(value, uuid.UUID):
+            return value.hex
+        return value
 
 
 class MPTTTreeIDManager(models.Model):
