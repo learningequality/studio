@@ -36,6 +36,15 @@
       <CurrentTopicView :topicId="nodeId" :detailNodeId="detailNodeId" />
     </VContainer>
     <router-view />
+    <ImportContentProgressModal
+      v-if="showImportModal"
+      :watchTaskId="$route.query.watchTask"
+      @cancel="handleProgressCancel"
+    />
+
+    <RouterLink :to="importFromChannelsRoute">
+      Import from channels
+    </RouterLink>
   </VContainer>
 
 </template>
@@ -45,6 +54,7 @@
 
   import { mapGetters, mapMutations } from 'vuex';
   import StudioTree from './StudioTree';
+  import ImportContentProgressModal from './ImportFromChannels/ImportContentProgressModal';
   import CurrentTopicView from './CurrentTopicView';
   import IconButton from 'shared/views/IconButton';
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
@@ -53,6 +63,7 @@
     name: 'TreeView',
     components: {
       StudioTree,
+      ImportContentProgressModal,
       IconButton,
       ResizableNavigationDrawer,
       CurrentTopicView,
@@ -67,6 +78,11 @@
         required: false,
       },
     },
+    data() {
+      return {
+        showImportModal: false,
+      };
+    },
     computed: {
       ...mapGetters('currentChannel', ['rootId']),
       ...mapGetters('contentNode', ['getContentNodeChildren', 'getContentNodeAncestors']),
@@ -76,6 +92,19 @@
       ancestors() {
         return this.getContentNodeAncestors(this.nodeId);
       },
+      importFromChannelsRoute() {
+        return {
+          name: 'IMPORT_FROM_CHANNELS_BROWSE',
+          params: {
+            destNodeId: this.$route.params.nodeId,
+          },
+        };
+      },
+    },
+    mounted() {
+      if (this.$route.query.watchTask) {
+        this.showImportModal = true;
+      }
     },
     methods: {
       ...mapMutations('contentNode', {
@@ -86,6 +115,14 @@
         this.ancestors.forEach(ancestor => {
           this.setExpanded({ id: ancestor.id, expanded: true });
         });
+      },
+      handleProgressCancel() {
+        this.showImportModal = false;
+        this.$router.replace({
+          query: {},
+        });
+        // FIXME refreshing page doesn't reload the latest resources
+        this.$router.go(0);
       },
     },
     $trs: {
