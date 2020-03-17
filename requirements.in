@@ -67,3 +67,4 @@ future
 sentry-sdk
 raven
 selenium
+django-bulk-update

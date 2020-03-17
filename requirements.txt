@@ -23,6 +23,7 @@ cssutils==1.0.2           # via le-pycaption
 cycler==0.10.0            # via matplotlib
 ddtrace==0.8.0            # via -r requirements.in
 decorator==4.4.1          # via validators
+django-bulk-update==2.2.0  # via -r requirements.in
 django-cte==1.1.4         # via -r requirements.in
 django-db-readonly==0.5.0  # via -r requirements.in
 django-email-extras==0.3.3  # via -r requirements.in
@@ -40,7 +41,7 @@ django-redis==4.11.0      # via -r requirements.in
 django-registration==2.1.2  # via -r requirements.in
 django-s3-storage==0.12.4  # via -r requirements.in
 django-webpack-loader==0.6.0  # via -r requirements.in
-django==1.11.20           # via -r requirements.in, django-hashedfilenamestorage, django-js-reverse, django-mptt, django-redis, django-s3-storage, djangorestframework-bulk, jsonfield
+django==1.11.20           # via -r requirements.in, django-bulk-update, django-hashedfilenamestorage, django-js-reverse, django-mptt, django-redis, django-s3-storage, djangorestframework-bulk, jsonfield
 djangorestframework-bulk==0.2.1  # via -r requirements.in
 djangorestframework==3.8.2  # via -r requirements.in, djangorestframework-bulk
 dnspython==1.16.0         # via eventlet
