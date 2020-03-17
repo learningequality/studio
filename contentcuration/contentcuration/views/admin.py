@@ -25,14 +25,10 @@ from django.db.models import Sum
 from django.db.models import Value
 from django.db.models import When
 from django.db.models.functions import Concat
-from django.http import FileResponse
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.http import HttpResponseNotFound
-from django.http import StreamingHttpResponse
 from django.shortcuts import render
-from django.template import Context
-from django.template.loader import get_template
 from django.template.loader import render_to_string
 from django.views.decorators.cache import cache_page
 from django.views.decorators.http import condition
@@ -54,7 +50,6 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
-from xhtml2pdf import pisa
 
 from contentcuration.decorators import browser_is_supported
 from contentcuration.decorators import is_admin
@@ -66,6 +61,7 @@ from contentcuration.serializers import AdminChannelListSerializer
 from contentcuration.serializers import AdminUserListSerializer
 from contentcuration.serializers import CurrentUserSerializer
 from contentcuration.serializers import UserChannelListSerializer
+from contentcuration.tasks import exportpublicchannelsinfo_task
 from contentcuration.utils.messages import get_messages
 
 reload(sys)
@@ -537,50 +533,18 @@ def download_channel_csv(request):
     """ Writes list of channels to csv, which is then returned """
     if not request.user.is_admin:
         raise SuspiciousOperation("You are not authorized to access this endpoint")
-
-    response = StreamingHttpResponse(stream_csv_response_generator(request), content_type="text/csv")
-    response['Content-Disposition'] = 'attachment; filename="channels.csv"'
-
-    return response
+    site = get_current_site(request)
+    exportpublicchannelsinfo_task.delay(request.user.id, site_id=site.id, export_type="csv")
+    return HttpResponse({"success": True})
 
 
 @login_required
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAdminUser,))
 def download_channel_pdf(request):
-
-    import time
-    start = time.time()
-
-    template = get_template('export/channels_pdf.html')
-
-    channels = Channel.objects.prefetch_related('editors', 'secret_tokens', 'tags')\
-        .select_related('main_tree')\
-        .filter(public=True, deleted=False)\
-        .distinct()\
-        .order_by('name')
-
-    print("Channel query time:", time.time() - start)
+    if not request.user.is_admin:
+        raise SuspiciousOperation("You are not authorized to access this endpoint")
 
     site = get_current_site(request)
-
-    default_thumbnail = get_default_thumbnail()
-
-    channel_list = [get_channel_data(c, site, default_thumbnail) for c in channels]
-
-    context = Context({
-        "channels": channel_list
-    })
-
-    html = template.render(context)
-
-    result = StringIO.StringIO()
-    pdf = pisa.pisaDocument(StringIO.StringIO(html.encode("UTF-8")), result, encoding='UTF-8', path=settings.STATIC_ROOT)
-    if not pdf.err:
-        response = FileResponse(result.getvalue())
-        response['Content-Type'] = 'application/pdf'
-        response['Content-disposition'] = 'attachment;filename=channels.pdf'
-        response['Set-Cookie'] = "fileDownload=true; path=/"
-
-    print("\n\n\nTotal time:", time.time() - start, "\n\n\n")
-    return response
+    exportpublicchannelsinfo_task.delay(request.user.id, site_id=site.id)
+    return HttpResponse({"success": True})
