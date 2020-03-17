@@ -1,1 +1,0 @@
-{% load i18n %}{% blocktrans with export_type=export_type %}Your {{export_type}} has finished generating{% endblocktrans %}

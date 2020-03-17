@@ -164,7 +164,7 @@ def exportpublicchannelsinfo_task(user_id, export_type="pdf", site_id=1):
         filepath = ChannelDetailsPDFWriter(channel_ids, site=site, condensed=True, filename=filename).write()
         mimetype = "application/pdf"
 
-    subject = render_to_string('export/public_channels_subject.txt', {'export_type': export_type})
+    subject = "Your {} has finished generating".format(export_type)
     message = render_to_string('export/public_channels_email.txt', {'export_type': export_type, 'user': user})
 
     with default_storage.open(filepath) as fobj:
