@@ -4,6 +4,8 @@ from collections import namedtuple
 from distutils.version import LooseVersion
 
 from builtins import str
+from past.builtins import basestring
+
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
 from django.core.exceptions import SuspiciousOperation

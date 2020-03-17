@@ -9,7 +9,16 @@ RUN ln -fs /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
 RUN curl -sL https://deb.nodesource.com/setup_10.x | bash -
 
 ENV DEBIAN_FRONTEND noninteractive
-RUN apt-get update && apt-get -y install nodejs python python-dev python-pip gcc libpq-dev ffmpeg imagemagick ghostscript python-tk make git gettext curl libjpeg-dev wkhtmltopdf fonts-freefont-ttf xfonts-75dpi poppler-utils
+# Default Python file.open file encoding to UTF-8 instead of ASCII, workaround for le-utils setup.py issue
+ENV LANG C.UTF-8
+RUN apt-get update && apt-get -y install nodejs python-minimal python3.6 python3-pip python3-dev gcc libpq-dev ffmpeg imagemagick ghostscript python-tk make git gettext curl libjpeg-dev wkhtmltopdf fonts-freefont-ttf xfonts-75dpi poppler-utils
+
+# Ensure that python is using python3
+# copying approach from official python images
+ENV PATH /usr/local/bin:$PATH
+RUN cd /usr/local/bin && \
+  ln -s $(which python3) python && \
+  ln -s $(which pip3) pip
 
 # install wkhtml, and libpng12 (its dependency)
 RUN curl -L -o libpng12.deb http://security.ubuntu.com/ubuntu/pool/main/libp/libpng/libpng12-0_1.2.54-1ubuntu1.1_amd64.deb && dpkg -i libpng12.deb
@@ -21,13 +30,10 @@ COPY ./package.json .
 COPY ./yarn.lock .
 RUN yarn install
 
-COPY Pipfile .
-COPY Pipfile.lock .
+COPY requirements.txt .
 
 RUN pip install --upgrade pip
-RUN pip install -U pipenv
-# install the environment exactly as specified in the Pipfile.lock file
-RUN python -m pipenv install --system --ignore-pipfile --keep-outdated
+RUN pip install --ignore-installed -r requirements.txt
 
 COPY  . /contentcuration/
 WORKDIR /contentcuration

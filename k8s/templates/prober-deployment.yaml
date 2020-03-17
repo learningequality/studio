@@ -1,3 +1,5 @@
+# Deploy probers only in production environment.
+{{- if .Values.productionIngress -}}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -32,3 +34,4 @@ spec:
           value: lingyi+prober@learningequality.org
         - name: PROBER_STUDIO_PASSWORD
           value: "123456789"
+{{- end }}

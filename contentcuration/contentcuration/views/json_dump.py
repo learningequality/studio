@@ -22,5 +22,4 @@ def json_for_parse_from_data(data):
 
 
 def json_for_parse_from_serializer(serializer):
-    return _json_dumps(JSONRenderer().render(serializer.data))
-
+    return _json_dumps(JSONRenderer().render(serializer.data).decode("utf-8"))
