@@ -1,7 +1,7 @@
 <template>
 
   <VDialog
-    :value="true"
+    :value="Boolean(currentNode)"
     fullscreen
     scrollable
     app
@@ -9,7 +9,7 @@
     persistent
   >
     <VCard>
-      <VToolbar dark color="primary">
+      <VToolbar dark color="primary" app>
         <VBtn icon @click="$emit('cancelMove')">
           <Icon>close</Icon>
         </VBtn>
@@ -17,67 +17,85 @@
           {{ $tr("moveItems", {count: 2}) }}
           <b class="notranslate">{{ currentNode.title }}</b>
         </VToolbarTitle>
-        <VSpacer />
       </VToolbar>
-      <!-- header items -->
-      <VLayout wrap>
-        <VFlex md8 justify-start>
+      <VContent>
+        <!-- header items -->
+        <VToolbar color="transparent" flat>
           <Breadcrumbs :items="crumbs">
             <template #item="{item}">
-              {{ item.title }}
+              <span class="notranslate">{{ item.text }}</span>
             </template>
           </Breadcrumbs>
-        </VFlex>
-        <VSpacer />
-        <VFlex shrink>
+          <VSpacer />
           <VBtn flat @click="showNewTopicModal = true">
             {{ $tr("addTopic") }}
           </VBtn>
-        </VFlex>
-      </VLayout>
-      <!-- list of children content -->
-      <VCard v-for="node in children" :key="node.id">
-        <VLayout class="card">
-          <VFlex xs2 align-self-center>
-            <!-- TODO: Add the appropriate thumbnail or card -->
-            <VImg
-              src="https://cdn.vuetifyjs.com/images/cards/foster.jpg"
-              height="68px"
-              contain
-            />
-          </VFlex>
-          <VFlex xs8 align-self-center>
-            <VCardTitle primary-title>
-              <div class="headline notranslate">
-                {{ node.title }}
-              </div>
-              <div>{{ $tr('resourcesCount', {count: node.resource_count}) }}</div>
-              <div class="description notranslate">
-                {{ node.description }}
-              </div>
-            </VCardTitle>
-          </VFlex>
-          <VFlex align-self-center>
-            <VCardActions>
-              <VBtn icon>
-                <Icon small color="primary">
-                  info
-                </Icon>
-              </VBtn>
-              <VBtn v-if="node.kind === 'topic'" icon :to="nextItem(node)">
-                <Icon>keyboard_arrow_right</Icon>
-              </VBtn>
-            </VCardActions>
-          </VFlex>
-        </VLayout>
-      </VCard>
+        </VToolbar>
+
+        <!-- list of children content -->
+        <LoadingText v-if="loading" absolute />
+        <VContainer v-else-if="!children.length" fluid fill-height>
+          <VLayout align-center justify-center class="subheading">
+            <div>{{ $tr('emptyTopicText') }}</div>
+          </VLayout>
+        </VContainer>
+        <VContainer v-else fluid align-content-start class="pa-0">
+          <VCard
+            v-for="node in children"
+            :key="node.id"
+            flat
+            class="pa-4 card"
+            :to="node.kind === 'topic'? nextItem(node) : undefined"
+          >
+            <VLayout>
+              <VFlex xs2 align-self-center>
+                <!-- TODO: Add the appropriate thumbnail or card -->
+                <VImg
+                  src="https://cdn.vuetifyjs.com/images/cards/foster.jpg"
+                  height="68px"
+                  contain
+                  :aspect-ratio="16/9"
+                />
+              </VFlex>
+              <VFlex xs8 align-self-center>
+                <VCardTitle class="headline notranslate pb-0">
+                  {{ node.title }}
+                </VCardTitle>
+                <VCardText class="grey--text pt-0">
+                  <div>{{ $tr('resourcesCount', {count: node.resource_count}) }}</div>
+                  <div class="notranslate subheading">
+                    {{ node.description }}
+                  </div>
+                </VCardText>
+              </VFlex>
+              <VFlex align-self-center>
+                <VCardActions class="options">
+                  <VBtn icon @click.stop="previewNodeId = node.id">
+                    <Icon color="primary">
+                      info
+                    </Icon>
+                  </VBtn>
+                  <VBtn v-if="node.kind === 'topic'" icon :to="nextItem(node)">
+                    <Icon>keyboard_arrow_right</Icon>
+                  </VBtn>
+                </VCardActions>
+              </VFlex>
+            </VLayout>
+          </VCard>
+        </VContainer>
+      </VContent>
+      <ResourceDrawer
+        localName="move-resource-panel"
+        :nodeId="previewNodeId"
+        @close="previewNodeId = null"
+      />
 
       <!-- footer buttons -->
-      <BottomToolBar color="white" flat>
+      <BottomToolBar color="white" flat clipped-right app>
         <Icon class="mr-2">
           assignment
         </Icon>
-        <ActionLink :text="$tr('moveClipboard')" />
+        <ActionLink :text="$tr('moveClipboard')" @click="moveNodesToClipboard" />
         <VSpacer />
         <VBtn flat @click="$emit('cancelMove')">
           {{ $tr("cancel") }}
@@ -100,9 +118,11 @@
   import { mapGetters, mapActions } from 'vuex';
   import { RouterNames } from '../constants';
   import BottomToolBar from '../../shared/views/BottomToolBar';
+  import ResourceDrawer from '../components/ResourceDrawer';
   import NewTopicModal from './NewTopicModal';
   import ActionLink from 'edit_channel/sharedComponents/ActionLink';
   import Breadcrumbs from 'shared/views/Breadcrumbs';
+  import LoadingText from 'shared/views/LoadingText';
 
   export default {
     name: 'MoveModal',
@@ -111,6 +131,8 @@
       BottomToolBar,
       ActionLink,
       Breadcrumbs,
+      LoadingText,
+      ResourceDrawer,
     },
     props: {
       targetNodeId: {
@@ -125,6 +147,8 @@
     data() {
       return {
         showNewTopicModal: false,
+        loading: false,
+        previewNodeId: null,
       };
     },
     computed: {
@@ -142,7 +166,6 @@
         var inTree = this.getTreeNode(node.id);
         trail.unshift({
           text: node.title,
-          disabled: false,
           to: this.nextItem(node),
         });
         while (inTree !== undefined) {
@@ -150,17 +173,24 @@
           inTree = this.getTreeNode(node.id);
           trail.unshift({
             text: node.title,
-            disabled: false,
             to: this.nextItem(node),
           });
         }
         return trail;
       },
     },
+    watch: {
+      targetNodeId() {
+        this.previewNodeId = null;
+        this.$nextTick(() => {
+          this.getChildren();
+        });
+      },
+    },
     created() {
       if (!this.currentNode) {
-        this.loadContentNode(this.nodeId).then(this.getChildren);
-        var node = this.getContentNode(this.nodeId);
+        this.loadContentNode(this.targetNodeId).then(this.getChildren);
+        var node = this.getContentNode(this.targetNodeId);
         while (node.parent !== null) {
           this.loadContentNode(node.parent).then(() => {
             node = this.getContentNode(node.parent);
@@ -181,11 +211,20 @@
           },
         };
       },
+      goToLocation() {
+        this.$router.push({
+          name: RouterNames.TREE_VIEW,
+          nodeId: this.targetNodeId,
+        });
+      },
       getChildren() {
-        if (this.currentNode && this.currentNode.total_count) {
+        if (this.currentNode && this.currentNode.has_children) {
+          this.loading = true;
           return this.loadChildren({
-            parent: this.currentChannel,
+            parent: this.targetNodeId,
             channel_id: this.currentChannel.id,
+          }).then(() => {
+            this.loading = false;
           });
         }
         return Promise.resolve();
@@ -193,10 +232,19 @@
       createTopic(title) {
         this.createContentNode({ parent: this.nodeId, kind: 'topic', title }).then(() => {
           this.showNewTopicModal = false;
+          this.$store.dispatch('showSnackbar', { text: this.$tr('topicCreatedMessage') });
         });
+      },
+      moveNodesToClipboard() {
+        this.$store.dispatch('showSnackbar', { text: this.$tr('movedToClipboardMessage') });
       },
       moveNodes() {
         // TODO: connect to vuex action
+        this.$store.dispatch('showSnackbar', {
+          text: this.$tr('movedMessage', { title: this.currentNode.title }),
+          actionText: this.$tr('goToLocationButton'),
+          actionCallback: this.goToLocation,
+        });
       },
     },
     $trs: {
@@ -206,6 +254,11 @@
       cancel: 'Cancel',
       moveHere: 'Move here',
       resourcesCount: '{count, plural,\n =1 {# resource}\n other {# resources}}',
+      emptyTopicText: 'No resources found',
+      topicCreatedMessage: 'New topic created',
+      movedToClipboardMessage: 'Moved to clipboard',
+      movedMessage: 'Moved to {title}',
+      goToLocationButton: 'Go to location',
     },
   };
 
@@ -213,23 +266,20 @@
 
 <style lang="less" scoped>
 
-  .list {
-    border: 1px solid rgb(192, 192, 192);
-  }
-
   .card {
-    max-height: 118px;
-  }
-
-  .card:hover {
-    background: #eeeeee;
-  }
-
-  .description {
-    width: 539px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    border-bottom: 1px solid var(--v-grey-lighten3) !important;
+    .options {
+      display: none;
+    }
+    &:last-child {
+      border-bottom: 0 !important;
+    }
+    &:hover {
+      background-color: var(--v-grey-lighten4);
+      .options {
+        display: block;
+      }
+    }
   }
 
 </style>

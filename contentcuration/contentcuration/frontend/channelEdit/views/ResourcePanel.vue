@@ -161,7 +161,7 @@
         <DetailsRow :label="$tr('copyrightHolder')" :text="getText('copyright_holder')" />
 
         <!-- Files section -->
-        <div class="section-header">
+        <div v-if="isResource" class="section-header">
           {{ $tr('files') }}
         </div>
         <DetailsRow v-if="primaryFiles.length" :label="$tr('availableFormats')">

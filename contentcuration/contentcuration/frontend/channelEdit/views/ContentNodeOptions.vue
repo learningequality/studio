@@ -68,7 +68,6 @@
           name: RouterNames.TREE_VIEW,
           params: {
             ...this.$route.params,
-            nodeId: this.nodeId,
             detailNodeId: this.nodeId,
           },
         };
@@ -78,7 +77,7 @@
           name: RouterNames.MOVE,
           params: {
             ...this.$route.params,
-            targetNodeId: this.nodeId,
+            targetNodeId: this.$route.params.nodeId,
             moveNodeIds: this.nodeId,
           },
         };
