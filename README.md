@@ -65,12 +65,11 @@ To shut down the services, run
 make dcservicesdown
 ```
 
-### Pipenv and Python dependencies
+### Python dependencies
 
-To develop on Kolibri, you'll need:
+To develop on Kolibri Studio, you'll need:
 
-* Python 2.7
-* [Pipenv](https://pipenv.readthedocs.io/en/latest/)
+* Python 3.6
 
 Managing Python installations can be quite tricky. We *highly* recommend using package managers like `Homebrew <http://brew.sh/>`__ on Mac or ``apt`` on Debian for this. Never modify your system's built-in version of Python
 
@@ -78,17 +77,32 @@ Then set up:
 
 ```bash
 # Create virtual environment
-pipenv shell
+virtualenv venv
 
-# Ensure your environment matches the one specified in Pipfile.lock
-pipenv sync --dev
+# Activate virtual environment
+. venv/bin/activate
+
+# Install all dependencies
+pip install -r requirements.txt
+pip install -r requirements-dev.txt
 
 # Set up pre-commit hooks
 pre-commit install
 ```
 
-Exit the virtual environment by running `exit`. Reactivate it by running `pipenv shell` again.
+Exit the virtual environment by running `exit`.
 
+#### Adding or updating dependencies
+
+We use `pip-tools` to ensure all our dependencies use the same versions on all deployments.
+
+To add a dependency, add it to either `requirements.in` or `requirements-dev.in`, then
+run `pip-compile requirements[-dev].in` to generate the .txt file. Please make sure that
+both the `.in` and `.txt` file changes are part of the commit when updating dependencies.
+
+To update a dependency, use `pip-compile --upgrade-package [package-name] requirements[-dev].in`
+
+For more details, please see the [pip-tools docs on Github](https://github.com/jazzband/pip-tools).
 
 ### Yarn and Javascript dependencies
 
