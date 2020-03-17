@@ -41,3 +41,15 @@ export const ContentNodeKind = {
   SLIDESHOW: 'slideshow',
   H5P: 'h5p',
 };
+
+export const kindToIconMap = {
+  audio: 'headset',
+  channel: 'apps',
+  document: 'description',
+  exercise: 'star',
+  html5: 'widgets',
+  image: 'image',
+  slideshow: 'photo_library',
+  topic: 'folder',
+  video: 'theaters',
+};

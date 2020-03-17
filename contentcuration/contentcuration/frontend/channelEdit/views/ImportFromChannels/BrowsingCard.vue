@@ -15,7 +15,7 @@
               aspectRatio="1"
             />
             <VIcon v-else size="80px" class="icon-placeholder">
-              {{ kindToIcon(node.kind) }}
+              {{ icon }}
             </VIcon>
           </VLayout>
         </VFlex>
@@ -127,7 +127,7 @@
 
   import get from 'lodash/get';
   import ContentNodeChip from './ContentNodeChip';
-  import Constants from 'edit_channel/constants';
+  import { kindToIconMap } from 'shared/constants';
   import { constantsTranslationMixin } from 'shared/mixins';
 
   export default {
@@ -154,6 +154,9 @@
       };
     },
     computed: {
+      icon() {
+        return kindToIconMap[this.node.kind];
+      },
       languageName() {
         return this.translateLanguage(this.node.language);
       },
@@ -213,7 +216,6 @@
       emitPreview() {
         this.$emit('preview');
       },
-      kindToIcon: Constants.kindToIcon,
     },
     $trs: {
       showMoreLabel: 'Show more',
