@@ -269,7 +269,7 @@ var ChannelSetCollection = BaseCollection.extend({
 function fetch_nodes(ids, url) {
   return new Promise(function(resolve) {
     // Getting "Request Line is too large" error on some channels, so chunk the requests
-    var promises = _.chain(ids)
+    var promises = _.chain(_.uniq(ids))
       .chunk(50)
       .map(function(id_list) {
         return new Promise(function(promise_resolve, promise_reject) {
