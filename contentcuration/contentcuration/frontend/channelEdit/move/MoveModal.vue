@@ -14,7 +14,7 @@
           <Icon>close</Icon>
         </VBtn>
         <VToolbarTitle>
-          {{ $tr("moveItems", {count: 2}) }}
+          {{ $tr("moveItems", {count: moveNodesCount}) }}
           <b class="notranslate">{{ currentNode.title }}</b>
         </VToolbarTitle>
       </VToolbar>
@@ -139,10 +139,10 @@
         type: String,
         required: true,
       },
-      // moveNodeIds: {
-      //   type: String,
-      //   required: true,
-      // },
+      moveNodeIds: {
+        type: String,
+        required: true,
+      },
     },
     data() {
       return {
@@ -156,6 +156,9 @@
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodeChildren', 'getTreeNode']),
       currentNode() {
         return this.getContentNode(this.targetNodeId);
+      },
+      moveNodesCount() {
+        return this.moveNodeIds.split(',').length;
       },
       children() {
         return this.getContentNodeChildren(this.targetNodeId);
@@ -236,6 +239,7 @@
         });
       },
       moveNodesToClipboard() {
+        // TODO: connect to vuex action
         this.$store.dispatch('showSnackbar', { text: this.$tr('movedToClipboardMessage') });
       },
       moveNodes() {
