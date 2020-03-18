@@ -10,7 +10,7 @@ from contentcuration.utils.export_writer import ChannelDetailsPDFWriter
 
 def export_public_channel_info(user, export_type="pdf", site=None):
     filename = "Kolibri Studio content library.{}".format(export_type)
-    channel_ids = Channel.objects.filter(public=True).values_list('pk', flat=True)
+    channel_ids = Channel.objects.filter(public=True).order_by('name').values_list('pk', flat=True)
     if export_type == 'csv':
         filepath = ChannelDetailsCSVWriter(channel_ids, site=site, filename=filename).write()
         mimetype = "text/csv"
