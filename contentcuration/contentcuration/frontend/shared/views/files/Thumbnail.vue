@@ -3,35 +3,40 @@
   <VCard
     v-if="!thumbnailSrc"
     data-test="default-image"
-    color="grey lighten-4"
+    color="transparent"
     style="padding: 28% 0;"
     flat
   >
     <VLayout row wrap align-center justify-center style="max-height: 0px;">
       <div style="position: absolute;">
-        <ContentNodeIcon :kind="preset.kind_id" :showColor="false" size="64px" />
+        <ContentNodeIcon :kind="kind" :showColor="false" size="64px" :isEmpty="isEmptyTopic" />
       </div>
     </VLayout>
   </VCard>
 
-  <VImg
-    v-else
-    data-test="thumbnail-image"
-    :aspect-ratio="aspectRatio"
-    :src="encoding && encoding.base64 || thumbnailSrc"
-    :lazy-src="encoding && encoding.base64 || thumbnailSrc"
-    contain
-  />
+  <VLayout v-else column>
+    <ContentNodeIcon :kind="kind" includeText fillWidth />
+    <VImg
+      data-test="thumbnail-image"
+      :aspect-ratio="aspectRatio"
+      :src="encoding && encoding.base64 || thumbnailSrc"
+      :lazy-src="encoding && encoding.base64 || thumbnailSrc"
+      contain
+    />
+  </VLayout>
 
 </template>
 
 <script>
 
   import { ASPECT_RATIO } from './constants';
-  import Constants from 'edit_channel/constants/index';
+  import ContentNodeIcon from 'shared/views/ContentNodeIcon';
 
   export default {
     name: 'Thumbnail',
+    components: {
+      ContentNodeIcon,
+    },
     props: {
       src: {
         type: String,
@@ -43,19 +48,21 @@
           return {};
         },
       },
-      presetId: {
+      kind: {
         type: String,
-        default: 'channel_thumbnail',
+        required: false,
+      },
+      isEmpty: {
+        type: Boolean,
+        default: false,
       },
     },
     computed: {
-      preset() {
-        return Constants.FormatPresets.find(p => p.id === this.presetId);
+      isEmptyTopic() {
+        return this.kind === 'topic' && this.isEmpty;
       },
       thumbnailSrc() {
-        return (
-          this.src || (!this.preset.kind_id && require('shared/images/kolibri_placeholder.png'))
-        );
+        return this.src || (!this.kind && require('shared/images/kolibri_placeholder.png'));
       },
       aspectRatio() {
         return ASPECT_RATIO;

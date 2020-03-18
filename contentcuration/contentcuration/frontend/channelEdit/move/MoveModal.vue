@@ -5,11 +5,17 @@
     fullscreen
     scrollable
     app
-    width="500"
     persistent
   >
     <VCard>
-      <VToolbar dark color="primary" app>
+      <VToolbar
+        dark
+        color="primary"
+        app
+        :extended="!loading"
+        :extension-height="48"
+        flat
+      >
         <VBtn icon :to="closeLink" exact>
           <Icon>close</Icon>
         </VBtn>
@@ -17,20 +23,21 @@
           {{ $tr("moveItems", {count: moveNodesCount}) }}
           <b class="notranslate">{{ currentNode.title }}</b>
         </VToolbarTitle>
+        <template v-if="!loading" #extension>
+          <VToolbar dense flat color="white" light>
+            <Breadcrumbs :items="crumbs">
+              <template #item="{item}">
+                <span class="notranslate">{{ item.text }}</span>
+              </template>
+            </Breadcrumbs>
+            <VSpacer />
+            <VBtn flat @click="showNewTopicModal = true">
+              {{ $tr("addTopic") }}
+            </VBtn>
+          </VToolbar>
+        </template>
       </VToolbar>
-      <VContent>
-        <!-- header items -->
-        <VToolbar color="transparent" flat>
-          <Breadcrumbs :items="crumbs">
-            <template #item="{item}">
-              <span class="notranslate">{{ item.text }}</span>
-            </template>
-          </Breadcrumbs>
-          <VSpacer />
-          <VBtn flat @click="showNewTopicModal = true">
-            {{ $tr("addTopic") }}
-          </VBtn>
-        </VToolbar>
+      <VContent style="padding-top: 112px; padding-bottom: 64px; background-color: white;">
 
         <!-- list of children content -->
         <LoadingText v-if="loading" absolute />
@@ -44,20 +51,18 @@
             v-for="node in children"
             :key="node.id"
             flat
-            class="pa-4 card"
+            class="pa-4 content-card"
             :to="node.kind === 'topic'? nextItem(node) : undefined"
           >
-            <VLayout>
-              <VFlex xs2 align-self-center>
-                <!-- TODO: Add the appropriate thumbnail or card -->
-                <VImg
-                  src="https://cdn.vuetifyjs.com/images/cards/foster.jpg"
-                  height="68px"
-                  contain
-                  :aspect-ratio="16/9"
+            <VLayout align-center row>
+              <div style="min-width: 175px;">
+                <Thumbnail
+                  :src="node.thumbnail_src"
+                  :kind="node.kind"
+                  :isEmpty="!node.total_count"
                 />
-              </VFlex>
-              <VFlex xs8 align-self-center>
+              </div>
+              <VFlex class="pl-2">
                 <VCardTitle class="headline notranslate pb-0">
                   {{ node.title }}
                 </VCardTitle>
@@ -68,7 +73,8 @@
                   </div>
                 </VCardText>
               </VFlex>
-              <VFlex align-self-center>
+              <VSpacer />
+              <div style="min-width: 102px;">
                 <VCardActions class="options">
                   <VBtn icon @click.stop="previewNodeId = node.id">
                     <Icon color="primary">
@@ -79,7 +85,7 @@
                     <Icon>keyboard_arrow_right</Icon>
                   </VBtn>
                 </VCardActions>
-              </VFlex>
+              </div>
             </VLayout>
           </VCard>
         </VContainer>
@@ -123,6 +129,7 @@
   import ActionLink from 'edit_channel/sharedComponents/ActionLink';
   import Breadcrumbs from 'shared/views/Breadcrumbs';
   import LoadingText from 'shared/views/LoadingText';
+  import Thumbnail from 'shared/views/files/Thumbnail';
 
   export default {
     name: 'MoveModal',
@@ -133,6 +140,7 @@
       Breadcrumbs,
       LoadingText,
       ResourceDrawer,
+      Thumbnail,
     },
     props: {
       targetNodeId: {
@@ -223,7 +231,9 @@
       goToLocation() {
         this.$router.push({
           name: RouterNames.TREE_VIEW,
-          nodeId: this.targetNodeId,
+          params: {
+            nodeId: this.targetNodeId,
+          },
         });
       },
       getChildren() {
@@ -276,7 +286,11 @@
 
 <style lang="less" scoped>
 
-  .card {
+  /deep/ .v-toolbar__extension {
+    padding: 0;
+  }
+
+  .content-card {
     border-bottom: 1px solid var(--v-grey-lighten3) !important;
     .options {
       display: none;
