@@ -1,33 +1,31 @@
 <template>
 
-  <Dialog ref="alert" :header="header" :text="text">
-    <template v-slot:content>
-      <slot></slot>
-      <VCheckbox
-        v-if="messageID"
-        v-model="dontShowAgain"
-        color="primary"
-        :label="$tr('dontShowAgain')"
-      />
-    </template>
+  <PrimaryDialog v-model="open" :header="header" :text="text">
+    <slot></slot>
+    <VCheckbox
+      v-if="messageId"
+      v-model="dontShowAgain"
+      color="primary"
+      :label="$tr('dontShowAgain')"
+    />
     <template v-slot:buttons>
       <VSpacer />
       <VBtn depressed color="primary" @click="close">
         {{ $tr('closeButtonLabel') }}
       </VBtn>
     </template>
-  </Dialog>
+  </PrimaryDialog>
 
 </template>
 
 <script>
 
-  import Dialog from './Dialog.vue';
+  import PrimaryDialog from './PrimaryDialog';
 
   export default {
     name: 'Alert',
     components: {
-      Dialog,
+      PrimaryDialog,
     },
     props: {
       header: {
@@ -38,35 +36,53 @@
         type: String,
         required: true,
       },
-      messageID: {
+      messageId: {
         type: String,
         required: false,
       },
     },
     data() {
       return {
-        dontShowAgain: false,
+        value: false,
       };
     },
-    methods: {
-      getMessages() {
-        return (localStorage['dont_show_messages'] || '').split(',');
+    data() {
+      if (this.messageId) {
+        return {
+          dontShowAgain: window.localStorage.getItem(`dont_show_messages_${this.messageId}`),
+        };
+      }
+      return {};
+    },
+    computed: {
+      open: {
+        get() {
+          return Boolean(!this.dontShowAgain && this.value);
+        },
+        set(open) {
+          this.value = open;
+        },
       },
+    },
+    watch: {
+      dontShowAgain(newVal, oldVal) {
+        if (newVal && !oldVal && this.messageId) {
+          window.localStorage.setItem(`dont_show_messages_${this.messageId}`, true);
+        }
+      },
+    },
+    methods: {
       /*
        * @public
        */
       prompt() {
-        if (!this.messageID || !this.getMessages().includes(this.messageID)) {
-          this.$refs.alert.prompt();
-        }
+        this.open = true;
       },
+      /*
+       * @public
+       */
       close() {
-        if (this.dontShowAgain) {
-          let messages = this.getMessages();
-          messages.push(this.messageID);
-          localStorage['dont_show_messages'] = messages.join(',');
-        }
-        this.$refs.alert.close();
+        this.open = false;
       },
     },
     $trs: {
