@@ -211,7 +211,7 @@ describe('RelatedResourcesTab', () => {
 
       wrapper
         .find('[data-test="previousSteps"]')
-        .findAll('[data-test="removeBtn"]')
+        .findAll('[data-test="resourceRemoveBtn"]')
         .at(1)
         .trigger('click');
 
@@ -240,7 +240,7 @@ describe('RelatedResourcesTab', () => {
 
       wrapper
         .find('[data-test="nextSteps"]')
-        .findAll('[data-test="removeBtn"]')
+        .findAll('[data-test="resourceRemoveBtn"]')
         .at(1)
         .trigger('click');
 

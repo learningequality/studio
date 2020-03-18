@@ -8,7 +8,6 @@
       <VListTile
         :key="`list-tile-${itemIdx}`"
         data-test="resource"
-        @click="onItemClick(item.id)"
       >
         <VListTileAction>
           <ContentNodeIcon
@@ -19,11 +18,14 @@
         </VListTileAction>
 
         <VListTileContent>
-          <VListTileTitle
-            class="notranslate primary--text"
-            :style="{'text-decoration': 'underline'}"
-          >
-            {{ item.title }}
+          <VListTileTitle>
+            <ActionLink
+              class="notranslate"
+              data-test="resourceLink"
+              @click="onItemClick(item.id)"
+            >
+              {{ item.title }}
+            </ActionLink>
           </VListTileTitle>
           <VListTileSubTitle class="notranslate">
             {{ item.parentTitle }}
@@ -35,9 +37,9 @@
             <template slot="activator" slot-scope="{ on }">
               <VBtn
                 icon
-                data-test="removeBtn"
+                data-test="resourceRemoveBtn"
                 v-on="on"
-                @click.stop.prevent="onRemoveClick(item.id)"
+                @click="onRemoveClick(item.id)"
               >
                 <Icon>clear</Icon>
               </VBtn>
@@ -55,12 +57,14 @@
 
 <script>
 
+  import ActionLink from 'edit_channel/sharedComponents/ActionLink';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import Icon from 'shared/views/Icon';
 
   export default {
     name: 'RelatedResourcesList',
     components: {
+      ActionLink,
       ContentNodeIcon,
       Icon,
     },

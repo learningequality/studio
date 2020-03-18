@@ -6,16 +6,17 @@ const getResources = wrapper => {
   return wrapper.findAll("[data-test='resource']");
 };
 
-const clickResource = (wrapper, resourceIdx) => {
+const clickResourceLink = (wrapper, resourceIdx) => {
   getResources(wrapper)
     .at(resourceIdx)
+    .find("[data-test='resourceLink']")
     .trigger('click');
 };
 
 const clickResourceRemoveBtn = (wrapper, resourceIdx) => {
   getResources(wrapper)
     .at(resourceIdx)
-    .find("[data-test='removeBtn']")
+    .find("[data-test='resourceRemoveBtn']")
     .trigger('click');
 };
 
@@ -61,9 +62,9 @@ describe('RelatedResourcesList', () => {
     expect(resources.at(1).html()).toContain('Literacy');
   });
 
-  describe('on resource click', () => {
+  describe('on resource link click', () => {
     beforeEach(() => {
-      clickResource(wrapper, 1);
+      clickResourceLink(wrapper, 1);
     });
 
     it('emits click event with a corresponding node id ', () => {
@@ -76,10 +77,6 @@ describe('RelatedResourcesList', () => {
   describe('on remove resource click', () => {
     beforeEach(() => {
       clickResourceRemoveBtn(wrapper, 1);
-    });
-
-    it("doesn't emit click event", () => {
-      expect(wrapper.emitted().itemClick).toBeFalsy();
     });
 
     it('emits remove event with a corresponding node id', () => {
