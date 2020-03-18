@@ -190,6 +190,7 @@ const BASE_TAB_EVENTS = {
   'change .search_input': 'applySearch',
   'change #admin_user_select_all': 'check_all',
   'click .download_pdf': 'download_pdf',
+  'click .download_csv': 'download_csv',
   'click .page-link.page': 'goto_page',
   'click .page-link.previous': 'goto_previous',
   'click .page-link.next': 'goto_next',
@@ -271,29 +272,32 @@ var ChannelTab = BaseAdminTab.extend({
     });
   },
   download_pdf: function() {
-    var self = this;
-    if (!this.$('.download_pdf').hasClass('disabled')) {
-      this.$('.download_pdf')
-        .text('Generating PDF...')
-        .addClass('disabled');
-      $.fileDownload(window.Urls.download_channel_pdf(), {
-        successCallback: function() {
-          self
-            .$('.download_pdf')
-            .text('Download PDF')
-            .removeClass('disabled');
-        },
-        failCallback: function() {
-          self.$('.download_pdf').text('Download Failed');
-          setTimeout(function() {
-            self
-              .$('.download_pdf')
-              .text('Download PDF')
-              .removeClass('disabled');
-          }, 1500);
-        },
-      });
-    }
+    $.get({
+      url: window.Urls.download_channel_pdf(),
+      success: function() {
+        dialog.alert(
+          'Generating public channels PDF',
+          "Public channels pdf generation started. You'll receive an email with the pdf when it's done."
+        );
+      },
+      error: function() {
+        dialog.alert('PDF generation failed', 'PDF failed to generate');
+      },
+    });
+  },
+  download_csv: function() {
+    $.get({
+      url: window.Urls.download_channel_csv(),
+      success: function() {
+        dialog.alert(
+          'Generating public channels CSV',
+          "Public channels csv generation started. You'll receive an email with the csv when it's done."
+        );
+      },
+      error: function() {
+        dialog.alert('CSV generation failed', 'CSV failed to generate');
+      },
+    });
   },
 });
 
