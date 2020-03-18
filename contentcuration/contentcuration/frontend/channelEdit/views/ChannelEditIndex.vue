@@ -58,8 +58,7 @@
                 <VListTileTitle>{{ $tr('openTrash') }}</VListTileTitle>
               </VListTile>
             </template>
-
-            <VListTile @click.stop>
+            <VListTile @click="showTokenModal = true;">
               <VListTileTitle>{{ $tr('getToken') }}</VListTileTitle>
             </VListTile>
             <VListTile @click.stop>
@@ -79,6 +78,9 @@
     <GlobalSnackbar />
     <PublishModal v-if="showPublishModal" v-model="showPublishModal" />
     <ProgressModal />
+    <template v-if="currentChannel">
+      <ChannelTokenModal v-model="showTokenModal" :channel="currentChannel" />
+    </template>
   </VApp>
 
 </template>
@@ -93,6 +95,7 @@
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
   import IconButton from 'shared/views/IconButton';
   import ToolBar from 'shared/views/ToolBar';
+  import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
   import { RouterNames as ChannelRouterNames } from 'frontend/channelList/constants';
 
   export default {
@@ -104,11 +107,13 @@
       ToolBar,
       PublishModal,
       ProgressModal,
+      ChannelTokenModal,
     },
     data() {
       return {
         drawer: false,
         showPublishModal: false,
+        showTokenModal: false,
       };
     },
     computed: {

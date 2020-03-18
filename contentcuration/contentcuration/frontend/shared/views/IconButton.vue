@@ -9,6 +9,10 @@
         v-bind="$attrs"
         v-on="on"
         @click="$emit('click')"
+        @keydown.enter="$emit('mousedown')"
+        @keyup.enter="$emit('mouseup')"
+        @mousedown="$emit('mousedown')"
+        @mouseup="$emit('mouseup')"
       >
         <Icon :small="small">
           <slot>

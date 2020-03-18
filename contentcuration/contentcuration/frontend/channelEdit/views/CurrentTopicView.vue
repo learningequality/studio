@@ -78,7 +78,7 @@
             <VListTile @click="newExerciseNode">
               <VListTileTitle>{{ $tr('addExercise') }}</VListTileTitle>
             </VListTile>
-            <VListTile @click.stop>
+            <VListTile :to="importFromChannelsRoute">
               <VListTileTitle>{{ $tr('importFromChannels') }}</VListTileTitle>
             </VListTile>
           </VList>
@@ -220,6 +220,14 @@
         // this gets overwritten by the edit modal components, throwing off the
         // styling whenever the modal is opened
         return this.ancestors.length ? 'calc(100vh - 160px)' : 'calc(100vh - 112px)';
+      },
+      importFromChannelsRoute() {
+        return {
+          name: RouterNames.IMPORT_FROM_CHANNELS_BROWSE,
+          params: {
+            destNodeId: this.$route.params.nodeId,
+          },
+        };
       },
     },
     watch: {

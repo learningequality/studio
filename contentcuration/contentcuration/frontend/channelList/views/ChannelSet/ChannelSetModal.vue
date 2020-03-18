@@ -117,6 +117,7 @@
             </VLayout>
           </VContainer>
           <BottomToolBar color="white" flat>
+            <VSpacer />
             <div style="margin-right: 16px;" class="subheading">
               {{ $tr('channelSelectedCountText', {'channelCount': channelCount}) }}
             </div>
