@@ -4,12 +4,13 @@
     fullscreen
     persistent
     scrollable
-    :value="true"
+    :value="showDialog"
     transition="dialog-bottom-transition"
     attach="body"
     app
   >
     <VCard>
+      <router-view />
       <VToolbar fixed clipped-right color="primary" dark app>
         <VToolbarItems>
           <VBtn flat icon :to="backLink" exact>
@@ -126,7 +127,6 @@
           </VBtn>
         </template>
       </MessageDialog>
-      <router-view />
     </VCard>
   </VDialog>
 
@@ -160,7 +160,10 @@
       };
     },
     computed: {
-      ...mapGetters('currentChannel', ['currentChannel']),
+      ...mapGetters('currentChannel', ['currentChannel', 'rootId']),
+      showDialog() {
+        return this.$route.name === RouterNames.TRASH;
+      },
       headers() {
         return [
           {
@@ -234,10 +237,12 @@
           name: RouterNames.RESTORE_TRASH,
           params: {
             ...this.$route.params,
-            targetNodeId: this.$route.params.nodeId,
-            moveNodeIds: this.selected.map(i => i.id).join(','),
+            targetNodeId: this.rootId,
+            moveNodeIds: this.selected.join(','),
           },
         });
+        // Make this empty in case items are moved outside of trash
+        this.selected = [];
       },
     },
     $trs: {
