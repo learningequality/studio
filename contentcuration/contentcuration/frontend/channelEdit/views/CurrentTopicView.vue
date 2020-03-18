@@ -33,10 +33,15 @@
       </div>
       <VSlideXTransition>
         <div v-if="selected.length">
-          <IconButton icon="edit" :text="$tr('editSelectedButton')" @click="editNodes(selected)" />
+          <IconButton
+            v-if="canEdit"
+            icon="edit"
+            :text="$tr('editSelectedButton')"
+            @click="editNodes(selected)"
+          />
           <IconButton icon="content_paste" :text="$tr('copySelectedButton')" />
-          <IconButton icon="sync_alt" :text="$tr('moveSelectedButton')" />
-          <IconButton icon="delete" :text="$tr('deleteSelectedButton')" />
+          <IconButton v-if="canEdit" icon="sync_alt" :text="$tr('moveSelectedButton')" />
+          <IconButton v-if="canEdit" icon="delete" :text="$tr('deleteSelectedButton')" />
         </div>
       </VSlideXTransition>
       <VSpacer />

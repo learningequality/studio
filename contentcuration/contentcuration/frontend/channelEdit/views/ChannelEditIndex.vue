@@ -61,10 +61,10 @@
             <VListTile @click="showTokenModal = true;">
               <VListTileTitle>{{ $tr('getToken') }}</VListTileTitle>
             </VListTile>
-            <VListTile @click.stop>
+            <VListTile v-if="canView || canEdit" @click.stop>
               <VListTileTitle>{{ $tr('shareChannel') }}</VListTileTitle>
             </VListTile>
-            <VListTile @click.stop>
+            <VListTile v-if="canEdit" @click.stop>
               <VListTileTitle>{{ $tr('syncChannel') }}</VListTileTitle>
             </VListTile>
           </VList>
@@ -117,7 +117,7 @@
       };
     },
     computed: {
-      ...mapGetters('currentChannel', ['currentChannel', 'canEdit']),
+      ...mapGetters('currentChannel', ['currentChannel', 'canEdit', 'canView']),
       isChanged() {
         return true;
       },

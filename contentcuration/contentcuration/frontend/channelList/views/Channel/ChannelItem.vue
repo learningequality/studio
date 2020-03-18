@@ -52,7 +52,7 @@
         {{ $tr('unpublishedText') }}
       </VCardText>
       <VSpacer />
-      <VTooltip v-if="loggedIn" bottom>
+      <VTooltip sbottom>
         <template v-slot:activator="{ on }">
           <VBtn
             flat
