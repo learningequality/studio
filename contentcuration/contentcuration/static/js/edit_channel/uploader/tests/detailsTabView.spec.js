@@ -10,7 +10,7 @@ import {
   DEFAULT_EXERCISE,
   DEFAULT_EXERCISE2,
 } from './data.js';
-import Constants from 'edit_channel/constants';
+import { LicensesList } from 'shared/leUtils/Licenses';
 import State from 'edit_channel/state';
 
 Vue.use(Vuetify);
@@ -25,7 +25,7 @@ localStore.commit('edit_modal/RESET_STATE');
 localStore.commit('edit_modal/SET_NODES', testNodes);
 localStore.commit('edit_modal/SET_LOADED_NODES', testNodes);
 
-let specialPermissions = _.findWhere(Constants.Licenses, { is_custom: true });
+let specialPermissions = _.findWhere(LicensesList, { is_custom: true });
 
 function makeWrapper(props = {}) {
   return mount(DetailsTabView, {

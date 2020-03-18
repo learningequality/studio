@@ -1,5 +1,5 @@
-import Constants from 'edit_channel/constants/index';
 import { createTranslator } from 'utils/i18n';
+import Languages from 'shared/leUtils/Languages';
 
 const KB = parseFloat(1024);
 const MB = parseFloat(Math.pow(KB, 2));
@@ -102,8 +102,7 @@ export const constantsTranslationMixin = {
       return this.constantStrings(constant);
     },
     translateLanguage(language) {
-      let lang = Constants.Languages.find(l => l.id === language);
-      return lang && lang.native_name;
+      return Languages.has(language) && Languages.get(language).native_name;
     },
   },
 };

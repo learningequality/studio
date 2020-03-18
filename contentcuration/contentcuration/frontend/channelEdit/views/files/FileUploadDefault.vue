@@ -40,7 +40,11 @@
   import uniq from 'lodash/uniq';
   import FileStorage from './FileStorage';
   import Uploader from './Uploader';
-  import Constants from 'edit_channel/constants/index';
+  import { FormatPresetsList } from 'shared/leUtils/FormatPresets';
+
+  const acceptedFiles = uniq(
+    FormatPresetsList.filter(p => !p.supplementary && p.display).flatMap(p => p.allowed_formats)
+  );
 
   export default {
     name: 'FileUploadDefault',
@@ -56,11 +60,7 @@
     },
     computed: {
       acceptedFiles() {
-        return uniq(
-          Constants.FormatPresets.filter(p => !p.supplementary && p.display).flatMap(
-            p => p.allowed_formats
-          )
-        ).join(' • ');
+        return acceptedFiles.join(' • ');
       },
     },
     methods: {

@@ -2,7 +2,7 @@ import { getHash } from './utils';
 import { File as ContentFile } from 'shared/data/resources';
 import client from 'shared/client';
 import { fileErrors } from 'shared/views/files/constants';
-import Constants from 'edit_channel/constants/index';
+import { FormatPresetsList } from 'shared/leUtils/FormatPresets';
 import { NOVALUE } from 'shared/constants';
 
 const UPLOAD_DONE_DELAY = 1500;
@@ -32,7 +32,7 @@ export function createFile(context, { file, presetId }) {
     .toLowerCase();
   let preset =
     presetId ||
-    Constants.FormatPresets.find(
+    FormatPresetsList.find(
       ftype => ftype.allowed_formats.includes(extension.toLowerCase()) && ftype.display
     ).id;
   let user = context.rootState.session.currentUser;

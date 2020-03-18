@@ -204,7 +204,7 @@
   import { mapGetters } from 'vuex';
   import ThumbnailGenerator from './ThumbnailGenerator';
   import { fileSizeMixin, fileStatusMixin } from 'shared/views/files/mixins';
-  import Constants from 'edit_channel/constants/index';
+  import { FormatPresetsList } from 'shared/leUtils/FormatPresets';
   import Uploader from 'frontend/channelEdit/views/files/Uploader';
   import ActionLink from 'edit_channel/sharedComponents/ActionLink.vue';
   import FileStatus from 'frontend/channelEdit/views/files/FileStatus';
@@ -268,8 +268,7 @@
         return this.kind && !this.loading && !this.cropping;
       },
       thumbnailPresetID() {
-        return Constants.FormatPresets.find(p => p.thumbnail && p.kind_id === (this.kind || null))
-          .id;
+        return FormatPresetsList.find(p => p.thumbnail && p.kind_id === (this.kind || null)).id;
       },
       loading() {
         return this.uploading || this.generating;

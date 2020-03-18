@@ -268,7 +268,7 @@
   import intersection from 'lodash/intersection';
   import uniq from 'lodash/uniq';
   import { mapGetters, mapActions } from 'vuex';
-  import Constants from 'edit_channel/constants';
+  import Licenses from 'shared/leUtils/Licenses';
   import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown';
   import HelpTooltip from 'edit_channel/sharedComponents/HelpTooltip';
   import LicenseDropdown from 'edit_channel/sharedComponents/LicenseDropdown';
@@ -465,13 +465,9 @@
       },
       copyrightHolderRequired() {
         // Needs to appear when any of the selected licenses require a copyright holder
-        return this.nodes.some(node => {
-          return Boolean(
-            Constants.Licenses.find(
-              license => license.id === node.license && license.copyright_holder_required
-            )
-          );
-        });
+        return this.nodes.some(
+          node => Licenses.has(node.license) && Licenses.get(node.license).copyright_holder_required
+        );
       },
       isImported() {
         return this.firstNode && this.firstNode.node_id !== this.firstNode.original_source_node_id;

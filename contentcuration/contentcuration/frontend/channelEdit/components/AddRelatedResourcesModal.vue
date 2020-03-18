@@ -93,7 +93,6 @@
 
   import { RouterNames } from '../constants';
   import NodeTreeNavigation from './NodeTreeNavigation';
-  import { ContentNodeKind } from 'shared/constants';
   import { TabNames } from 'edit_channel/uploader/constants';
 
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
@@ -153,7 +152,7 @@
     methods: {
       ...mapActions('contentNode', ['loadAncestors']),
       isTopic(node) {
-        return node.kind === ContentNodeKind.TOPIC;
+        return node.kind === 'topic';
       },
       isTargetResource(node) {
         return node.id === this.targetNodeId;

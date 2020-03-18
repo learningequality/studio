@@ -41,11 +41,17 @@
 
 <script>
 
+  import fromPairs from 'lodash/fromPairs';
   import { mapGetters } from 'vuex';
-  import uniq from 'lodash/uniq';
   import ContentRenderer from './ContentRenderer';
-  import Constants from 'edit_channel/constants/index';
+  import { FormatPresetsList } from 'shared/leUtils/FormatPresets';
   import ActionLink from 'edit_channel/sharedComponents/ActionLink';
+
+  const availablePreviewFormats = fromPairs(
+    FormatPresetsList.filter(f => f.display && !f.supplementary)
+      .flatMap(f => f.allowed_formats)
+      .map(allowedFormat => [allowedFormat, allowedFormat])
+  );
 
   export default {
     name: 'FilePreview',
@@ -89,12 +95,7 @@
         return files.filter(f => f.preset.supplementary).map(f => f.id);
       },
       isPreviewable() {
-        let availablePreviewFormats = uniq(
-          Constants.FormatPresets.filter(f => f.display && !f.supplementary).flatMap(
-            f => f.allowed_formats
-          )
-        );
-        return availablePreviewFormats.includes(this.file.file_format);
+        return Boolean(availablePreviewFormats[this.file.file_format]);
       },
       isAudio() {
         return this.file.file_format === 'mp3';

@@ -193,9 +193,9 @@
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import LoadingText from 'shared/views/LoadingText';
   import DetailsRow from 'shared/views/details/DetailsRow';
-  import Constants from 'edit_channel/constants/index';
   import ActionLink from 'edit_channel/sharedComponents/ActionLink';
   import ExpandableList from 'shared/views/ExpandableList';
+  import Licenses from 'shared/leUtils/Licenses';
   import { constantsTranslationMixin, fileSizeMixin } from 'shared/mixins';
 
   export default {
@@ -263,7 +263,7 @@
         return sortBy(this.node.tags, '-count');
       },
       license() {
-        return Constants.Licenses.find(l => l.id === this.node.license);
+        return Licenses.get(this.node.license);
       },
       languageName() {
         return this.translateLanguage(this.node.language) || this.$tr('defaultNoItemsText');

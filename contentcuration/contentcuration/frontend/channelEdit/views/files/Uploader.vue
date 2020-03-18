@@ -72,7 +72,7 @@
   import FileStorage from './FileStorage';
   import { fileErrors, MAX_FILE_SIZE } from 'shared/views/files/constants';
   import { fileSizeMixin } from 'shared/views/files/mixins';
-  import Constants from 'edit_channel/constants';
+  import { FormatPresetsList } from 'shared/leUtils/FormatPresets';
   import Alert from 'edit_channel/sharedComponents/Alert.vue';
 
   export default {
@@ -120,7 +120,7 @@
       ...mapGetters('file', ['getFiles']),
       ...mapGetters(['availableSpace']),
       acceptedFiles() {
-        return Constants.FormatPresets.filter(
+        return FormatPresetsList.filter(
           fp => fp.display && (this.presetID ? this.presetID === fp.id : !fp.supplementary)
         );
       },

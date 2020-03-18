@@ -55,7 +55,7 @@
   import { fileErrors, MAX_FILE_SIZE } from './constants';
   import { fileSizeMixin } from './mixins';
   import FileStorage from 'frontend/channelEdit/views/files/FileStorage';
-  import Constants from 'edit_channel/constants';
+  import { FormatPresetsList } from 'shared/leUtils/FormatPresets';
   import Alert from 'edit_channel/sharedComponents/Alert';
 
   import State from 'edit_channel/state';
@@ -91,7 +91,7 @@
     computed: {
       ...mapGetters('file', ['getFiles']),
       acceptedFiles() {
-        return Constants.FormatPresets.filter(
+        return FormatPresetsList.filter(
           fp => fp.display && (this.presetID ? this.presetID === fp.id : !fp.supplementary)
         );
       },

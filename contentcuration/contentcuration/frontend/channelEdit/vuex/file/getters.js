@@ -1,6 +1,7 @@
 // import sortBy from 'lodash/sortBy';
 import reduce from 'lodash/reduce';
-import Constants from 'edit_channel/constants/index';
+import FormatPresets from 'shared/leUtils/FormatPresets';
+import Languages from 'shared/leUtils/Languages';
 
 export function getFile(state) {
   return function(fileId) {
@@ -10,8 +11,8 @@ export function getFile(state) {
       let language = file.language && (file.language.id || file.language);
       return {
         ...file,
-        preset: Constants.FormatPresets.find(p => p.id === preset),
-        language: Constants.Languages.find(l => l.id === language),
+        preset: FormatPresets.get(preset),
+        language: Languages.get(language),
       };
     }
     return null;

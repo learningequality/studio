@@ -91,15 +91,9 @@
 
 <script>
 
-  import _ from 'underscore';
-  import Constants from 'edit_channel/constants/index';
+  import MasteryModels from 'shared/leUtils/MasteryModels';
   import InfoModal from 'edit_channel/sharedComponents/InfoModal.vue';
   import { translate } from 'edit_channel/utils/string_helper';
-
-  // Vuetify item-text property must use objects to translate
-  const masteryMap = _.map(Constants.MasteryModels, m => {
-    return { id: m };
-  });
 
   export default {
     name: 'MasteryDropdown',
@@ -111,9 +105,7 @@
         type: Object,
         required: false,
         validator: function(value) {
-          return (
-            !value || !value.mastery_model || Constants.MasteryModels.includes(value.mastery_model)
-          );
+          return !value || !value.mastery_model || MasteryModels.has(value.mastery_model);
         },
       },
       placeholder: {
@@ -176,7 +168,7 @@
         },
       },
       masteryCriteria() {
-        return masteryMap;
+        return MasteryModels;
       },
       showMofN() {
         return this.masteryModel === 'm_of_n';
@@ -204,7 +196,7 @@
     },
     methods: {
       translate(item) {
-        return translate(item.id || item);
+        return translate(item);
       },
       handleInput(newValue) {
         let data = {

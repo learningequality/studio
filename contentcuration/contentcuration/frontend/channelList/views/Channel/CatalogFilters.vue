@@ -81,7 +81,6 @@
           <VSelect
             v-model="kinds"
             :items="kindOptions"
-            item-value="kind"
             :item-text="kindText"
             :label="$tr('formatLabel')"
             class="formats"
@@ -136,10 +135,15 @@
   import { constantsTranslationMixin } from 'shared/mixins';
   import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown';
   import ActionLink from 'shared/views/ActionLink';
-  import Constants from 'edit_channel/constants/index';
   import HelpTooltip from 'shared/views/HelpTooltip';
+  import ContentKinds from 'shared/leUtils/ContentKinds';
+  import { LicensesList } from 'shared/leUtils/Licenses'
 
-  const EXCLUDE_KINDS = ['topic', 'exercise'];
+  const FILTERED_KINDS = new Set(ContentKinds);
+
+  ['topic', 'exercise'].forEach(kind => {
+    FILTERED_KINDS.delete(kind);
+  });
 
   export default {
     name: 'CatalogFilters',
@@ -163,10 +167,10 @@
         return window.isRTL;
       },
       kindOptions() {
-        return sortBy(Constants.ContentKinds, 'kind').filter(k => !EXCLUDE_KINDS.includes(k.kind));
+        return FILTERED_KINDS;
       },
       licenseOptions() {
-        return sortBy(Constants.Licenses, 'id');
+        return LicensesList;
       },
       pageSizeOptions() {
         return [5, 10, 25, 50];
@@ -302,7 +306,7 @@
         return this.translateConstant(license.license_name);
       },
       kindText(kind) {
-        return this.translateConstant(kind.kind);
+        return this.translateConstant(kind);
       },
     },
     $trs: {
