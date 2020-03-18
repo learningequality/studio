@@ -181,7 +181,7 @@
   import FileStorage from 'frontend/channelEdit/views/files/FileStorage';
   import FileUploadDefault from 'frontend/channelEdit/views/files/FileUploadDefault';
   import LoadingText from 'shared/views/LoadingText';
-  import { fileSizeMixin } from 'frontend/channelEdit/views/files/mixins';
+  import { fileSizeMixin } from 'shared/views/files/mixins';
   import { RouterNames } from 'frontend/channelEdit/constants';
 
   export default {
@@ -291,6 +291,12 @@
         });
       }
       return next(false);
+    },
+    beforeMount() {
+      // Block view only mode from entering this route
+      if (!this.canEdit) {
+        this.navigateBack();
+      }
     },
     mounted() {
       this.hideHTMLScroll(true);

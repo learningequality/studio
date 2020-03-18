@@ -30,7 +30,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STORAGE_ROOT = "storage"
 DB_ROOT = "databases"
 
-STATIC_ROOT = os.getenv("STATICFILES_DIR") or os.path.join(BASE_DIR, "contentcuration", "static")
+STATIC_ROOT = os.getenv("STATICFILES_DIR") or os.path.join(BASE_DIR, "static")
 CSV_ROOT = "csvs"
 EXPORT_ROOT = "exports"
 
@@ -118,7 +118,7 @@ if SITE_READ_ONLY:
     CACHES['default']['LOCATION'] = 'readonly_cache'
 
 
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = (
     # 'django.middleware.cache.UpdateCacheMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
@@ -136,9 +136,9 @@ MIDDLEWARE_CLASSES = (
 )
 
 if os.getenv("GCLOUD_ERROR_REPORTING"):
-    MIDDLEWARE_CLASSES = (
+    MIDDLEWARE = (
         "contentcuration.middleware.error_reporting.ErrorReportingMiddleware",
-    ) + MIDDLEWARE_CLASSES
+    ) + MIDDLEWARE
 
 SUPPORTED_BROWSERS = [
     'Chrome',

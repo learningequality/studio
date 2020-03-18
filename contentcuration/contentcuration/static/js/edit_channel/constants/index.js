@@ -7,6 +7,27 @@ const MasteryModels = require('./MasteryModels');
 const Roles = require('./Roles');
 const Statuses = require('./Statuses');
 
+const kindToIconMap = {
+  audio: 'headset',
+  channel: 'apps',
+  document: 'description',
+  exercise: 'star',
+  html5: 'widgets',
+  image: 'image',
+  slideshow: 'photo_library',
+  topic: 'folder',
+  video: 'theaters',
+};
+
+// Given a ContentNode kind enum, returns the associated MD icon code
+function kindToIcon(kind) {
+  const icon = kindToIconMap[kind];
+  if (!icon) {
+    return Error(`kind ${kind} does not have an associated icon`);
+  }
+  return icon;
+}
+
 module.exports = {
   ContentKinds,
   FormatPresets,
@@ -15,4 +36,6 @@ module.exports = {
   MasteryModels,
   Roles,
   Statuses,
+  kindToIconMap,
+  kindToIcon,
 };

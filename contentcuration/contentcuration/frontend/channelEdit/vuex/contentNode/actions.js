@@ -36,6 +36,13 @@ export function loadChildren(context, { parent, channel_id }) {
   });
 }
 
+export function loadAncestors(context, { id, channel_id }) {
+  let node = context.state.treeNodesMap[id];
+  return Tree.where({ max_lft: node.sort_order, min_rght: node.rght, channel_id }).then(nodes => {
+    return loadContentNodes(context, { ids: nodes.map(node => node.id) });
+  });
+}
+
 /**
  * Load a whole chain of parent nodes of a node.
  */

@@ -170,4 +170,8 @@
     background-size: 150px auto;
   }
 
+  video::-webkit-media-controls-fullscreen-button {
+    display: none;
+  }
+
 </style>

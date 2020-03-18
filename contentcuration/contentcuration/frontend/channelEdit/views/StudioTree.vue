@@ -1,51 +1,88 @@
 <template>
 
   <VLayout row wrap>
-    <VFlex
+    <router-link
       v-if="node && !root"
+      :to="treeLink"
+      tag="v-flex"
       xs12
       class="node-item pa-1"
+      style="width: 100%;"
       :style="{backgroundColor: selected? $vuetify.theme.greyBackground : 'transparent' }"
     >
-      <VLayout row align-center>
-        <div style="width: 40px;" class="pr-1">
-          <VBtn v-if="showExpansion" icon small @click.stop="toggle">
-            <Icon>{{ expanded ? "keyboard_arrow_down" : "keyboard_arrow_right" }}</Icon>
-          </VBtn>
-        </div>
-        <router-link :to="treeLink" tag="v-flex">
-          <Icon class="ma-1">
-            {{ showExpansion ? "folder" : "folder_open" }}
-          </Icon>
-          <span
-            style="vertical-align: super;"
-            class="notranslate"
+      <ContextMenu>
+        <VLayout row align-center>
+          <VFlex shrink style="min-width: 40px;">
+            <VBtn
+              v-if="showExpansion"
+              icon
+              small
+              :style="{transform: expanded? 'rotate(90deg)' : 'rotate(0deg)'}"
+              @click.stop="toggle"
+            >
+              <Icon>keyboard_arrow_right</Icon>
+            </VBtn>
+          </VFlex>
+          <VFlex shrink>
+            <Icon class="ma-1">
+              {{ hasContent ? "folder" : "folder_open" }}
+            </Icon>
+          </VFlex>
+          <VFlex
+            xs9
+            class="notranslate text-truncate px-1"
             :style="{color: $vuetify.theme.darkGrey}"
-          >{{ node.title }}</span>
-        </router-link>
-        <VFlex xs1>
-          <VProgressCircular
-            v-if="loading"
-            indeterminate
-            size="15"
-            width="2"
+          >
+            <VTooltip bottom open-delay="750">
+              <template #activator="{ on }">
+                <span v-on="on">{{ node.title }}</span>
+              </template>
+              <span>{{ node.title }}</span>
+            </VTooltip>
+          </VFlex>
+          <VFlex shrink style="min-width: 20px;">
+            <VProgressCircular
+              v-if="loading"
+              indeterminate
+              size="15"
+              width="2"
+            />
+            <VMenu v-else offset-y right>
+              <template #activator="{ on }">
+                <VBtn
+                  class="topic-menu ma-0 mr-2"
+                  small
+                  icon
+                  flat
+                  v-on="on"
+                  @click.stop
+                >
+                  <Icon>more_horiz</Icon>
+                </VBtn>
+              </template>
+              <ContentNodeOptions :nodeId="nodeId" />
+            </VMenu>
+          </VFlex>
+        </VLayout>
+        <template #menu>
+          <div class="caption grey--text notranslate px-3 pt-2">
+            {{ node.title }}
+          </div>
+          <ContentNodeOptions :nodeId="nodeId" />
+        </template>
+      </ContextMenu>
+    </router-link>
+    <VFlex v-if="node && (root || hasContent) && !loading" xs12>
+      <VSlideYTransition>
+        <div v-show="expanded" class="ml-4">
+          <StudioTree
+            v-for="child in children"
+            v-show="child.kind === 'topic'"
+            :key="child.id"
+            :nodeId="child.id"
           />
-        </VFlex>
-      </VLayout>
-    </VFlex>
-    <VFlex
-      v-if="node && (root || node.has_children)"
-      v-show="expanded"
-      xs12
-      class="ml-4"
-      transition="slide-y-transition"
-    >
-      <StudioTree
-        v-for="child in children"
-        v-show="child.kind === 'topic'"
-        :key="child.id"
-        :nodeId="child.id"
-      />
+        </div>
+      </VSlideYTransition>
     </VFlex>
   </VLayout>
 
@@ -55,9 +92,15 @@
 
   import { mapActions, mapGetters, mapMutations } from 'vuex';
   import { RouterNames } from '../constants';
+  import ContentNodeOptions from './ContentNodeOptions';
+  import ContextMenu from 'shared/views/ContextMenu';
 
   export default {
     name: 'StudioTree',
+    components: {
+      ContextMenu,
+      ContentNodeOptions,
+    },
     props: {
       nodeId: {
         type: String,
@@ -71,6 +114,7 @@
     data: () => {
       return {
         loading: false,
+        loaded: false,
       };
     },
     computed: {
@@ -82,11 +126,10 @@
         return this.getContentNodeChildren(this.nodeId);
       },
       showExpansion() {
-        return (
-          this.node &&
-          this.node.has_children &&
-          (!this.children || this.children.some(c => c.kind === 'topic'))
-        );
+        return this.node && this.node.total_count > this.node.resource_count;
+      },
+      hasContent() {
+        return this.node && this.node.total_count;
       },
       expanded() {
         return this.root || this.nodeExpanded(this.nodeId);
@@ -123,23 +166,23 @@
         setExpansion: 'SET_EXPANSION',
       }),
       getChildren() {
-        if (this.node && this.node.has_children) {
+        if (this.hasContent && !this.loaded && this.expanded) {
+          this.loading = true;
           return this.loadChildren({
             parent: this.nodeId,
             channel_id: this.$store.state.currentChannel.currentChannelId,
+          }).then(() => {
+            this.loading = false;
+            this.loaded = true;
           });
         }
         return Promise.resolve();
       },
       toggle() {
-        if (this.root || this.node.has_children) {
-          const currentlyExpanded = this.expanded;
-          this.toggleExpansion(this.nodeId);
-          if (!currentlyExpanded && !this.children.length) {
-            return this.getChildren();
-          }
+        this.toggleExpansion(this.nodeId);
+        if (this.expanded) {
+          this.getChildren();
         }
-        return Promise.resolve();
       },
     },
     $trs: {},
@@ -147,8 +190,22 @@
 
 </script>
 
-<style scoped>
-.node-item {
-  cursor: pointer;
-}
+<style scoped lang="less">
+
+  .topic-menu {
+    display: none;
+  }
+
+  .node-item {
+    cursor: pointer;
+    &:hover .topic-menu {
+      display: block;
+    }
+  }
+
+  .slide-y-transition-enter-active,
+  .slide-y-transition-leave-active {
+    transition-duration: 0.25s;
+  }
+
 </style>

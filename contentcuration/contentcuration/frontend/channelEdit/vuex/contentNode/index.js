@@ -7,9 +7,10 @@ export default {
   namespaced: true,
   state: () => {
     let expandedNodes = {};
-    if (window.sessionStorage) {
-      expandedNodes = JSON.parse(window.sessionStorage.getItem('expandedNodes') || '{}');
-    }
+    // TODO: test performance before adding this in to avoid loading a lot of data at once
+    // if (window.sessionStorage) {
+    //   expandedNodes = JSON.parse(window.sessionStorage.getItem('expandedNodes') || '{}');
+    // }
     return {
       contentNodesMap: {},
       treeNodesMap: {},

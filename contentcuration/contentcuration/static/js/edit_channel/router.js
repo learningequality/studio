@@ -2,7 +2,7 @@ import Vue from 'vue';
 import Vuetify from 'vuetify';
 import colors from 'vuetify/es5/util/colors';
 
-import PublishWrapper from 'edit_channel/publish/views/PublishWrapper.vue';
+// import PublishWrapper from 'edit_channel/publish/views/PublishWrapper.vue';
 
 Vue.use(Vuetify, {
   rtl: window.isRTL,
@@ -86,11 +86,11 @@ var ChannelEditRouter = Backbone.Router.extend({
       });
     }
 
-    new Vue({
-      el: '#channel-publish-button',
-      store,
-      ...PublishWrapper,
-    });
+    // new Vue({
+    //   el: '#channel-publish-button',
+    //   store,
+    //   ...PublishWrapper,
+    // });
   },
   update_url: function(topic, node, replacement) {
     State.updateUrl(topic, node, replacement);

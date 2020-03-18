@@ -208,6 +208,9 @@ class ContentNodeViewSet(ValuesViewset):
         "node_id",
         "original_source_node_id",
         "original_channel_id",
+        "original_channel_name",
+        "original_node_id",
+        "original_parent_id",
         "total_count",
         "resource_count",
         "coach_count",
@@ -246,6 +249,8 @@ class ContentNodeViewSet(ValuesViewset):
         thumbnails = File.objects.filter(
             contentnode=OuterRef("id"), preset__thumbnail=True
         )
+        original_channel = Channel.objects.filter(pk=OuterRef('original_channel_id'))
+        original_node = ContentNode.objects.filter(node_id=OuterRef('original_source_node_id')).filter(node_id=F('original_source_node_id'))
         queryset = queryset.annotate(
             resource_count=SQCount(descendant_resources, field="content_id"),
             coach_count=SQCount(
@@ -256,6 +261,9 @@ class ContentNodeViewSet(ValuesViewset):
             thumbnail_extension=Subquery(
                 thumbnails.values("file_format__extension")[:1]
             ),
+            original_channel_name=Subquery(original_channel.values("name")[:1]),
+            original_parent_id=Subquery(original_node.values("parent_id")[:1]),
+            original_node_id=Subquery(original_node.values("pk")[:1]),
             has_children=Exists(ContentNode.objects.filter(parent=OuterRef("id"))),
         )
         queryset = queryset.annotate(content_tags=NotNullArrayAgg("tags__tag_name"))

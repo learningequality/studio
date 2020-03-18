@@ -13,6 +13,8 @@ Kolibri Studio is a web application designed to deliver educational materials to
 
 Kolibri Studio uses [Django](https://www.djangoproject.com/) for the backend and is transitioning from [Backbone.js](https://backbonejs.org/) to [Vue.js](https://vuejs.org/) for the frontend.
 
+If you are looking for help setting up custom content channels, uploading and organizing resources using Kolibri Studio, please refer to the [User Guide](https://kolibri-studio.readthedocs.io/en/latest/).
+
 
 ## Getting started
 
@@ -20,7 +22,7 @@ Kolibri Studio uses [Django](https://www.djangoproject.com/) for the backend and
 
 - Install and set up [Git](https://help.github.com/articles/set-up-git/) on your computer. Try [this tutorial](http://learngitbranching.js.org/) if you need more practice
 - [Sign up and configure your GitHub account](https://github.com/join) if you don't have one already.
-- Fork the [studio repo](https://github.com/learningequality/studio) to create a copy of the studio repository under your own github username. This will make it easier to [submit pull requests](https://help.github.com/articles/using-pull-requests/>). Read more details [about forking](https://help.github.com/articles/fork-a-repo/) from GitHub
+- Fork the [studio repo](https://github.com/learningequality/studio) to create a copy of the studio repository under your own github username. This will make it easier to [submit pull requests](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request). Read more details [about forking](https://help.github.com/articles/fork-a-repo/) from GitHub
 - Clone your repo locally
 
 Tip: [Register your SSH keys](https://help.github.com/en/articles/connecting-to-github-with-ssh) on GitHub to avoid having to repeatedly enter your password.
@@ -63,12 +65,11 @@ To shut down the services, run
 make dcservicesdown
 ```
 
-### Pipenv and Python dependencies
+### Python dependencies
 
-To develop on Kolibri, you'll need:
+To develop on Kolibri Studio, you'll need:
 
-* Python 2.7
-* [Pipenv](https://pipenv.readthedocs.io/en/latest/)
+* Python 3.6
 
 Managing Python installations can be quite tricky. We *highly* recommend using package managers like `Homebrew <http://brew.sh/>`__ on Mac or ``apt`` on Debian for this. Never modify your system's built-in version of Python
 
@@ -76,25 +77,43 @@ Then set up:
 
 ```bash
 # Create virtual environment
-pipenv shell
+virtualenv venv
 
-# Ensure your environment matches the one specified in Pipfile.lock
-pipenv sync --dev
+# Activate virtual environment
+. venv/bin/activate
+
+# Install all dependencies
+pip install -r requirements.txt
+pip install -r requirements-dev.txt
 
 # Set up pre-commit hooks
 pre-commit install
 ```
 
-Exit the virtual environment by running `exit`. Reactivate it by running `pipenv shell` again.
+Exit the virtual environment by running `exit`.
 
+#### Adding or updating dependencies
+
+We use `pip-tools` to ensure all our dependencies use the same versions on all deployments.
+
+To add a dependency, add it to either `requirements.in` or `requirements-dev.in`, then
+run `pip-compile requirements[-dev].in` to generate the .txt file. Please make sure that
+both the `.in` and `.txt` file changes are part of the commit when updating dependencies.
+
+To update a dependency, use `pip-compile --upgrade-package [package-name] requirements[-dev].in`
+
+For more details, please see the [pip-tools docs on Github](https://github.com/jazzband/pip-tools).
 
 ### Yarn and Javascript dependencies
 
-As described above, Kolibri Studio has dependencies that rely on Node.js version 10.x. You'll also need [yarn](https://yarnpkg.com/lang/en/docs/install) installed.
+As described above, Kolibri Studio has dependencies that rely on Node.js version 10.x. `nodeenv` is a useful tool for using specific versions of Node.js tools in Python environments. You'll also need [yarn](https://yarnpkg.com/lang/en/docs/install) installed.
 
 All the javascript dependencies are listed in `package.json`. To install them run the following [yarn](https://yarnpkg.com/en/) command:
 
 ```bash
+# Set up Node 10.x environment
+nodeenv -p --node=10.15.3
+# Install javascript dependencies
 yarn install --network-timeout 1000000
 ```
 

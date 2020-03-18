@@ -65,6 +65,7 @@ module.exports = (env = {}) => {
       // Use arrays for every entry to allow for hot reloading.
       channel_edit: ['./channelEdit/index.js'],
       channel_list: ['./channelList/index.js'],
+      accounts: ['./accounts/index.js'],
       administration: [path.resolve(bundleEntryDir, 'administration.js')],
       settings: [path.resolve(bundleEntryDir, 'settings.js')],
       // A simple code sandbox to play with components in
@@ -74,7 +75,7 @@ module.exports = (env = {}) => {
     output: {
       filename: '[name]-[hash].js',
       path: bundleOutputDir,
-      publicPath: dev ? 'http://127.0.0.1:4000/dist/' : undefined,
+      publicPath: dev ? 'http://127.0.0.1:4000/dist/' : '/static/studio/',
     },
     devServer: {
       port: 4000,
@@ -180,6 +181,7 @@ module.exports = (env = {}) => {
       // carryover of path resolution from build.js
       modules: ['node_modules', staticLessDir],
     },
+    devtool: 'cheap-module-source-map',
     plugins: [
       new VueLoaderPlugin(),
       new VuetifyLoaderPlugin(),
@@ -200,9 +202,6 @@ module.exports = (env = {}) => {
         chunkFilename: '[name]-[hash]-[id].css',
       }),
       new WebpackRTLPlugin(),
-      new webpack.SourceMapDevToolPlugin({
-        filename: '[name]-[hash].js.map',
-      }),
       new CircularDependencyPlugin({
         // exclude detection of files based on a RegExp
         exclude: /a\.js|node_modules/,

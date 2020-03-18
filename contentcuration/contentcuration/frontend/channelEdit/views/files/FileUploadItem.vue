@@ -63,9 +63,9 @@
 <script>
 
   import { mapGetters } from 'vuex';
-  import { fileSizeMixin, fileStatusMixin } from './mixins';
   import Uploader from './Uploader';
   import FileStatusText from './FileStatusText';
+  import { fileSizeMixin, fileStatusMixin } from 'shared/views/files/mixins';
   import ActionLink from 'edit_channel/sharedComponents/ActionLink';
   import { translate } from 'edit_channel/utils/string_helper';
 

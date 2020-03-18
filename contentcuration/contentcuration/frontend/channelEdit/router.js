@@ -4,10 +4,13 @@ import TreeView from './views/TreeView';
 import store from './store';
 import AddPreviousStepsModal from './pages/AddPreviousStepsModal';
 import AddNextStepsModal from './pages/AddNextStepsModal';
+import ImportFromChannelsIndex from './views/ImportFromChannels/ImportFromChannelsIndex';
+import SearchOrBrowseWindow from './views/ImportFromChannels/SearchOrBrowseWindow';
+import ReviewSelectionsPage from './views/ImportFromChannels/ReviewSelectionsPage';
 import { RouterNames as ChannelRouterNames } from 'frontend/channelList/constants';
 import Sandbox from 'shared/views/Sandbox';
-import ChannelModal from 'frontend/channelList/views/Channel/ChannelModal';
-import ChannelDetailsModal from 'frontend/channelList/views/Channel/ChannelDetailsModal';
+import ChannelModal from 'shared/views/channel/ChannelModal';
+import ChannelDetailsModal from 'shared/views/channel/ChannelDetailsModal';
 import EditModal from 'edit_channel/uploader/views/EditModal';
 
 const router = new VueRouter({
@@ -49,6 +52,37 @@ const router = new VueRouter({
             });
           });
       },
+    },
+    {
+      name: RouterNames.IMPORT_FROM_CHANNELS,
+      path: '/import/:destNodeId',
+      component: ImportFromChannelsIndex,
+      props: {
+        isOpen: true,
+      },
+      children: [
+        {
+          name: RouterNames.IMPORT_FROM_CHANNELS_BROWSE,
+          path: 'browse/:channelId?/:nodeId?',
+          component: SearchOrBrowseWindow,
+          props: {
+            currentView: 'browse',
+          },
+        },
+        {
+          name: RouterNames.IMPORT_FROM_CHANNELS_SEARCH,
+          path: 'search/:searchTerm',
+          component: SearchOrBrowseWindow,
+          props: {
+            currentView: 'search',
+          },
+        },
+        {
+          name: RouterNames.IMPORT_FROM_CHANNELS_REVIEW,
+          path: 'review',
+          component: ReviewSelectionsPage,
+        },
+      ],
     },
     {
       name: RouterNames.TREE_VIEW,

@@ -27,8 +27,8 @@ def get_messages():
                     namespace, key = key.split(".")
                     translation_dict[namespace] = translation_dict.get(namespace) or {}
                     translation_dict[namespace][key] = value
-                _JSON_MESSAGES_FILE_CACHE[locale] = json.dumps(translation_dict)
+                _JSON_MESSAGES_FILE_CACHE[locale] = translation_dict
         except IOError:
-            _JSON_MESSAGES_FILE_CACHE[locale] = json.dumps({})
+            _JSON_MESSAGES_FILE_CACHE[locale] = {}
 
     return _JSON_MESSAGES_FILE_CACHE[locale]

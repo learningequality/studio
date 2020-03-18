@@ -47,6 +47,22 @@ export function getContentNodeChildren(state) {
   };
 }
 
+export function getContentNodeAncestors(state) {
+  return function(contentNodeId) {
+    let node = state.treeNodesMap[contentNodeId];
+    if (node) {
+      return getContentNodes(state)(
+        sorted(
+          Object.values(state.treeNodesMap).filter(
+            n => n.sort_order <= node.sort_order && n.rght >= node.rght
+          )
+        ).map(node => node.id)
+      );
+    }
+    return [];
+  };
+}
+
 /**
  * Returns an array of all parent nodes of a node.
  * Parent nodes are sorted from the immmediate parent

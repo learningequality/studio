@@ -470,8 +470,23 @@ class SimplifiedContentNodeSerializer(BulkSerializerMixin, serializers.ModelSeri
 
     class Meta:
         model = ContentNode
-        fields = ('title', 'id', 'sort_order', 'kind', 'children', 'parent', 'metadata', 'content_id', 'prerequisite',
-                  'is_prerequisite_of', 'ancestors', 'tree_id', 'language', 'role_visibility')
+        fields = (
+            'title',
+            'id',
+            'source_channel_id',
+            'sort_order',
+            'kind',
+            'children',
+            'parent',
+            'metadata',
+            'content_id',
+            'prerequisite',
+            'is_prerequisite_of',
+            'ancestors',
+            'tree_id',
+            'language',
+            'role_visibility'
+        )
 
 
 """ Shared methods across content node serializers """
