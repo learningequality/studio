@@ -11,9 +11,9 @@
     <VCard>
       <VToolbar card prominent dark color="primary">
         <VBtn icon data-test="close" @click="close">
-          <VIcon class="notranslate">
+          <Icon class="notranslate">
             clear
-          </VIcon>
+          </Icon>
         </VBtn>
         <VToolbarTitle>
           <template v-if="!name">
@@ -39,7 +39,7 @@
         <VLayout row justify-center class="pb-5">
           <VFlex style="max-width: 800px;">
             <VForm ref="detailsform">
-              <!-- TODO: Insert thumbnail here once the uploader is ready -->
+              <ChannelThumbnail v-model="thumbnail" />
               <fieldset class="py-1 mt-3 channel-info">
                 <legend class="py-1 mb-2 legend-title font-weight-bold">
                   {{ $tr('details') }}
@@ -86,6 +86,7 @@
 <script>
 
   import { mapActions, mapGetters, mapState } from 'vuex';
+  import ChannelThumbnail from './ChannelThumbnail';
   import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown';
   import ContentDefaults from 'shared/views/form/ContentDefaults';
 
@@ -94,6 +95,7 @@
     components: {
       LanguageDropdown,
       ContentDefaults,
+      ChannelThumbnail,
     },
     props: {
       channelId: {
@@ -113,6 +115,18 @@
       },
       routeParamID() {
         return this.$route.params.channelId;
+      },
+      thumbnail: {
+        get() {
+          return {
+            thumbnail: this.channel.thumbnail,
+            thumbnail_url: this.channel.thumbnail_url,
+            thumbnail_encoding: this.channel.thumbnail_encoding,
+          };
+        },
+        set(thumbnailData) {
+          this.updateChannel({ id: this.channelId, thumbnailData });
+        },
       },
       name: {
         get() {
