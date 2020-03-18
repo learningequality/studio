@@ -6,16 +6,37 @@
       <VToolbarTitle class="notranslate">
         {{ currentChannel.name }}
       </VToolbarTitle>
-      <VToolbarItems class="ml-4">
+      <VToolbarItems v-if="$vuetify.breakpoint.smAndUp" class="ml-4">
         <IconButton icon="info" :text="$tr('channelDetails')" :to="viewChannelDetailsLink" />
         <IconButton v-if="canEdit" icon="edit" :text="$tr('editChannel')" :to="editChannelLink" />
         <IconButton v-if="canEdit" icon="delete" :text="$tr('openTrash')" />
       </VToolbarItems>
       <VSpacer />
+      <template v-if="$vuetify.breakpoint.smAndUp">
+        <VTooltip v-if="canEdit" bottom attach="body">
+          <template #activator="{ on }">
+            <!-- Need to wrap in div to enable tooltip when button is disabled -->
+            <div style="height: 100%;" v-on="on">
+              <VBtn
+                color="primary"
+                flat
+                class="ma-0"
+                :class="{disabled: !isChanged}"
+                :disabled="!isChanged"
+                style="height: inherit;"
+                @click.stop="showPublishModal = true"
+              >
+                {{ $tr('publishButton') }}
+              </VBtn>
+            </div>
+          </template>
+          <span>{{ isChanged? $tr('publishButtonTitle') : $tr('noChangesText') }}</span>
+        </VTooltip>
+        <span v-else class="subheading font-weight-bold grey--text">
+          {{ $tr('viewOnly') }}
+        </span>
+      </template>
       <VToolbarItems>
-        <VBtn v-if="canEdit" flat color="primary" class="hidden-sm-and-down">
-          {{ $tr('publishButton') }}
-        </VBtn>
         <VMenu offset-y>
           <template #activator="{ on }">
             <VBtn flat icon v-on="on">
@@ -23,12 +44,22 @@
             </VBtn>
           </template>
           <VList>
-            <VListTile v-if="canEdit" class="hidden-md-and-up" @click.stop>
-              <VListTileTitle>{{ $tr('publishButton') }}</VListTileTitle>
-            </VListTile>
+            <template v-if="$vuetify.breakpoint.xsOnly">
+              <VListTile v-if="canEdit" @click="showPublishModal = true">
+                <VListTileTitle>{{ $tr('publishButton') }}</VListTileTitle>
+              </VListTile>
+              <VListTile :to="viewChannelDetailsLink">
+                <VListTileTitle>{{ $tr('channelDetails') }}</VListTileTitle>
+              </VListTile>
+              <VListTile v-if="canEdit" :to="editChannelLink">
+                <VListTileTitle>{{ $tr('editChannel') }}</VListTileTitle>
+              </VListTile>
+              <VListTile v-if="canEdit" @click.stop>
+                <VListTileTitle>{{ $tr('openTrash') }}</VListTileTitle>
+              </VListTile>
+            </template>
             <VListTile @click="showTokenModal = true;">
               <VListTileTitle>{{ $tr('getToken') }}</VListTileTitle>
-
             </VListTile>
             <VListTile v-if="canView || canEdit" @click.stop>
               <VListTileTitle>{{ $tr('shareChannel') }}</VListTileTitle>
@@ -45,6 +76,7 @@
       <router-view />
     </VContent>
     <GlobalSnackbar />
+    <PublishModal v-if="showPublishModal" v-model="showPublishModal" />
     <ProgressModal />
     <template v-if="currentChannel">
       <ChannelTokenModal v-model="showTokenModal" :channel="currentChannel" />
@@ -58,6 +90,7 @@
 
   import { mapGetters } from 'vuex';
   import ChannelNavigationDrawer from './ChannelNavigationDrawer';
+  import PublishModal from './publish/PublishModal';
   import ProgressModal from './progress/ProgressModal';
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
   import IconButton from 'shared/views/IconButton';
@@ -72,17 +105,22 @@
       IconButton,
       ChannelNavigationDrawer,
       ToolBar,
+      PublishModal,
       ProgressModal,
       ChannelTokenModal,
     },
     data() {
       return {
         drawer: false,
+        showPublishModal: false,
         showTokenModal: false,
       };
     },
     computed: {
       ...mapGetters('currentChannel', ['currentChannel', 'canEdit', 'canView']),
+      isChanged() {
+        return true;
+      },
       viewChannelDetailsLink() {
         return {
           name: ChannelRouterNames.CHANNEL_DETAILS,
@@ -104,10 +142,13 @@
       channelDetails: 'View channel details',
       editChannel: 'Edit channel details',
       openTrash: 'Open trash',
-      publishButton: 'Publish',
       getToken: 'Get token',
       shareChannel: 'Share channel',
       syncChannel: 'Sync channel',
+      publishButton: 'Publish',
+      publishButtonTitle: 'Make this channel available for download into Kolibri',
+      viewOnly: 'View-only',
+      noChangesText: 'No changes found in channel',
     },
   };
 
