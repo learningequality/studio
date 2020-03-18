@@ -21,7 +21,7 @@
             <div class="role-table">
               <VLayout v-for="roleOption in roles" :key="roleOption" row>
                 <VFlex xs3 text-right class="role-label">
-                  {{ translate(roleOption) }}
+                  {{ translateConstant(roleOption) }}
                   <VIcon v-if="roleIcon(roleOption)" color="primary">
                     {{ roleIcon(roleOption) }}
                   </VIcon>
@@ -38,13 +38,13 @@
         <VIcon v-if="roleIcon(item)" color="primary">
           {{ roleIcon(item) }}
         </VIcon>
-        {{ translate(item) }}
+        {{ translateConstant(item) }}
       </template>
       <template v-slot:item="{ item, index }">
         <VIcon v-if="roleIcon(item)">
           {{ roleIcon(item) }}
         </VIcon>
-        {{ translate(item) }}
+        {{ translateConstant(item) }}
       </template>
     </VSelect>
   </VLayout>
@@ -55,7 +55,7 @@
 
   import Roles from 'shared/leUtils/Roles';
   import InfoModal from 'edit_channel/sharedComponents/InfoModal.vue';
-  import { translate } from 'edit_channel/utils/string_helper';
+  import { constantsTranslationMixin } from 'shared/mixins';
 
   const roleIcons = { coach: 'local_library' };
 
@@ -64,6 +64,7 @@
     components: {
       InfoModal,
     },
+    mixins: [constantsTranslationMixin],
     props: {
       value: {
         type: String,
@@ -108,9 +109,6 @@
     methods: {
       roleIcon(role) {
         return roleIcons[role];
-      },
-      translate(item) {
-        return translate(item);
       },
     },
     $trs: {

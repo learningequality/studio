@@ -62,7 +62,7 @@
 
   import InfoModal from './InfoModal.vue';
   import Licenses, { LicensesList } from 'shared/leUtils/Licenses';
-  import { translate } from 'edit_channel/utils/string_helper';
+  import { constantsTranslationMixin } from 'shared/mixins';
 
   export default {
     name: 'LicenseDropdown',
@@ -71,9 +71,10 @@
     },
     filters: {
       translateDescription(item) {
-        return translate(item.license_name + '_description');
+        return this.translateConstant(item.license_name + '_description');
       },
     },
+    mixins: [constantsTranslationMixin],
     props: {
       value: {
         type: Object,
@@ -151,7 +152,7 @@
     },
     methods: {
       translate(item) {
-        return translate(item.license_name);
+        return this.translateConstant(item.license_name);
       },
     },
     $trs: {

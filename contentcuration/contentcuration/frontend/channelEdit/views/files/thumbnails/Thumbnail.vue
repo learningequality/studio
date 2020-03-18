@@ -202,8 +202,8 @@
 <script>
 
   import { mapGetters } from 'vuex';
+  import { fileSizeMixin, fileStatusMixin } from 'shared/mixins';
   import ThumbnailGenerator from './ThumbnailGenerator';
-  import { fileSizeMixin, fileStatusMixin } from 'shared/views/files/mixins';
   import { FormatPresetsList } from 'shared/leUtils/FormatPresets';
   import Uploader from 'frontend/channelEdit/views/files/Uploader';
   import ActionLink from 'edit_channel/sharedComponents/ActionLink.vue';

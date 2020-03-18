@@ -52,11 +52,11 @@
   import partition from 'lodash/partition';
   import uniq from 'lodash/uniq';
 
+  import Alert from 'shared/views/Alert';
   import { fileErrors, MAX_FILE_SIZE } from './constants';
-  import { fileSizeMixin } from './mixins';
+  import { fileSizeMixin } from 'shared/mixins';
   import FileStorage from 'frontend/channelEdit/views/files/FileStorage';
   import { FormatPresetsList } from 'shared/leUtils/FormatPresets';
-  import Alert from 'edit_channel/sharedComponents/Alert';
 
   import State from 'edit_channel/state';
 

@@ -8,7 +8,7 @@
         :items="masteryCriteria"
         :label="$tr('labelText')"
         color="primary"
-        :itemText="translate"
+        :itemText="translateConstant"
         :placeholder="placeholder"
         itemValue="id"
         :required="required"
@@ -33,10 +33,10 @@
                   class="mastery-row"
                 >
                   <VFlex xs3 class="mastery-label text-right">
-                    {{ translate(criteria.id) }}
+                    {{ translateConstant(criteria.id) }}
                   </VFlex>
                   <VFlex xs9>
-                    {{ translate(criteria.id + '_description') }}
+                    {{ translateConstant(criteria.id + '_description') }}
                   </VFlex>
                 </VLayout>
               </div>
@@ -93,13 +93,14 @@
 
   import MasteryModels from 'shared/leUtils/MasteryModels';
   import InfoModal from 'edit_channel/sharedComponents/InfoModal.vue';
-  import { translate } from 'edit_channel/utils/string_helper';
+  import { constantsTranslationMixin } from 'shared/mixins';
 
   export default {
     name: 'MasteryDropdown',
     components: {
       InfoModal,
     },
+    mixins: [constantsTranslationMixin],
     props: {
       value: {
         type: Object,
@@ -195,9 +196,6 @@
       },
     },
     methods: {
-      translate(item) {
-        return translate(item);
-      },
       handleInput(newValue) {
         let data = {
           ...this.value,

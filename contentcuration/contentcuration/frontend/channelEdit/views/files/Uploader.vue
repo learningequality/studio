@@ -69,11 +69,11 @@
   import partition from 'lodash/partition';
   import uniq from 'lodash/uniq';
 
+  import { fileSizeMixin } from 'shared/mixins';
+  import Alert from 'shared/views/Alert.vue';
   import FileStorage from './FileStorage';
   import { fileErrors, MAX_FILE_SIZE } from 'shared/views/files/constants';
-  import { fileSizeMixin } from 'shared/views/files/mixins';
   import { FormatPresetsList } from 'shared/leUtils/FormatPresets';
-  import Alert from 'edit_channel/sharedComponents/Alert.vue';
 
   export default {
     name: 'Uploader',

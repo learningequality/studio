@@ -36,7 +36,7 @@
 <script>
 
   import { mapGetters } from 'vuex';
-  import { fileSizeMixin, fileStatusMixin } from 'shared/views/files/mixins';
+  import { fileSizeMixin, fileStatusMixin } from 'shared/mixins';
 
   export default {
     name: 'FileStatus',

@@ -19,8 +19,8 @@
 <script>
 
   import { mapGetters } from 'vuex';
+  import { fileStatusMixin } from 'shared/mixins';
   import { fileErrors } from 'shared/views/files/constants';
-  import { fileStatusMixin } from 'shared/views/files/mixins';
   import ActionLink from 'edit_channel/sharedComponents/ActionLink';
 
   export default {

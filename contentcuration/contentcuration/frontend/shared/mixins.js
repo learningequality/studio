@@ -1,46 +1,70 @@
-import { createTranslator } from 'utils/i18n';
+import { mapGetters } from 'vuex';
 import Languages from 'shared/leUtils/Languages';
+import { createTranslator } from 'shared/i18n/utils';
 
-const KB = parseFloat(1024);
-const MB = parseFloat(Math.pow(KB, 2));
-const GB = parseFloat(Math.pow(KB, 3));
-const TB = parseFloat(Math.pow(KB, 4));
-
-const sizeStrings = createTranslator('SizeStrings', {
-  bytes: '{size}B',
-  kilobytes: '{size}KB',
-  megabytes: '{size}MB',
-  gigabytes: '{size}GB',
-  terabytes: '{size}TB',
+const sizeStrings = createTranslator('BytesForHumansStrings', {
+  fileSizeInBytes: '{n, number, integer} B',
+  fileSizeInKilobytes: '{n, number, integer} KB',
+  fileSizeInMegabytes: '{n, number, integer} MB',
+  fileSizeInGigabytes: '{n, number, integer} GB',
+  fileSizeInTerabytes: '{n, number, integer} TB',
 });
 
+const ONE_B = 1;
+const ONE_KB = 10 ** 3;
+const ONE_MB = 10 ** 6;
+const ONE_GB = 10 ** 9;
+const ONE_TB = 10 ** 12;
+
+const stringMap = {
+  [ONE_B]: 'fileSizeInBytes',
+  [ONE_KB]: 'fileSizeInKilobytes',
+  [ONE_MB]: 'fileSizeInMegabytes',
+  [ONE_GB]: 'fileSizeInGigabytes',
+  [ONE_TB]: 'fileSizeInTerabytes',
+};
+
+export default function bytesForHumans(bytes) {
+  const unit = [ONE_TB, ONE_GB, ONE_MB, ONE_KB].find(x => bytes >= x) || ONE_B;
+  return sizeStrings.$tr(stringMap[unit], { n: Math.floor(bytes / unit) });
+}
+
 export const fileSizeMixin = {
-  computed: {
-    sizeStrings() {
-      return sizeStrings;
-    },
-  },
   methods: {
     formatFileSize(size) {
-      // createTranslator doesn't support string arguments, so use replace for now
-      size = size || 0;
-      let absoluteValueSize = Math.abs(size);
-      if (absoluteValueSize < KB) {
-        return this.sizeStrings('bytes').replace('{size}', Math.round(size));
-      } else if (KB <= absoluteValueSize && absoluteValueSize < MB) {
-        return this.sizeStrings('kilobytes').replace('{size}', Math.round(parseFloat(size / KB)));
-      } else if (MB <= absoluteValueSize && absoluteValueSize < GB) {
-        return this.sizeStrings('megabytes').replace('{size}', Math.round(parseFloat(size / MB)));
-      } else if (GB <= absoluteValueSize && absoluteValueSize < TB) {
-        return this.sizeStrings('gigabytes').replace('{size}', Math.round(parseFloat(size / GB)));
-      } else {
-        return this.sizeStrings('terabytes').replace('{size}', Math.round(parseFloat(size / TB)));
+      return bytesForHumans(size || 0);
+    },
+  },
+};
+
+const statusStrings = createTranslator('StatusStrings', {
+  uploadFileSize: '{uploaded} of {total}',
+  uploadFailedError: 'Upload failed',
+  noStorageHeader: 'Not enough space',
+});
+
+export const fileStatusMixin = {
+  mixins: [fileSizeMixin],
+  computed: {
+    ...mapGetters('file', ['getStatusMessage', 'getProgress']),
+  },
+  methods: {
+    statusMessage(fileIDs) {
+      let errorMessage = this.getStatusMessage(fileIDs);
+      if (errorMessage) {
+        return errorMessage;
+      }
+      let progress = this.getProgress(fileIDs);
+      if (progress.total) {
+        return this.sizeStrings('uploadFileSize')
+          .replace('{uploaded}', this.formatFileSize(progress.uploaded))
+          .replace('{total}', this.formatFileSize(progress.total));
       }
     },
   },
 };
 
-const constantStrings = createTranslator('ConstantStrings', {
+export const constantStrings = createTranslator('ConstantStrings', {
   topic: 'Topic',
   video: 'Video',
   audio: 'Audio',
@@ -92,14 +116,9 @@ const constantStrings = createTranslator('ConstantStrings', {
 });
 
 export const constantsTranslationMixin = {
-  computed: {
-    constantStrings() {
-      return constantStrings;
-    },
-  },
   methods: {
     translateConstant(constant) {
-      return this.constantStrings(constant);
+      return constantStrings.$tr(constant);
     },
     translateLanguage(language) {
       return Languages.has(language) && Languages.get(language).native_name;

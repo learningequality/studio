@@ -34,14 +34,15 @@
 <script>
 
   import { mapState, mapActions, mapGetters } from 'vuex';
-  import stringHelper from '../../utils/string_helper';
   import ImportListItem from './ImportListItem.vue';
+  import { fileSizeMixin } from 'shared/mixins';
 
   export default {
     name: 'ImportPreview',
     components: {
       ImportListItem,
     },
+    mixins: [fileSizeMixin],
     computed: Object.assign(
       mapState('import', ['itemsToImport', 'importSizeInBytes']),
       mapGetters('import', ['importedItemCounts']),
@@ -50,7 +51,7 @@
           if (this.importSizeInBytes < 0) {
             return this.$tr('calculatingSizeText');
           }
-          return `${stringHelper.format_size(this.importSizeInBytes)}`;
+          return this.formatFileSize(this.importSizeInBytes);
         },
       }
     ),

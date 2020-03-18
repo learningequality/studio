@@ -71,7 +71,7 @@
         v-model="autoDeriveAudioThumbnail"
         class="mt-2"
         data-name="autoDeriveAudioThumbnail"
-        :label="constantStrings('audio')"
+        :label="translateConstant('audio')"
         @change="emitChange"
       />
       <Checkbox

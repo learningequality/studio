@@ -1,14 +1,10 @@
 import _ from 'underscore';
-import Vue from 'vue';
-import Vuetify from 'vuetify';
 import { mount } from '@vue/test-utils';
 import InfoModal from '../InfoModal.vue';
 import VisibilityDropdown from '../VisibilityDropdown.vue';
 import TestForm from './TestForm.vue';
 import Roles from 'shared/leUtils/Roles';
-import { translate } from 'edit_channel/utils/string_helper';
-
-Vue.use(Vuetify);
+import { constantStrings } from 'shared/mixins';
 
 document.body.setAttribute('data-app', true); // Vuetify prints a warning without this
 
@@ -31,7 +27,7 @@ describe('visibilityDropdown', () => {
   describe('on load', () => {
     it('all visibility options should be an option to select', () => {
       _.each(Roles, role => {
-        expect(wrapper.find('.v-list').text()).toContain(translate(role));
+        expect(wrapper.find('.v-list').text()).toContain(constantStrings.$tr(role));
       });
     });
     it('should render according to visibility prop', () => {

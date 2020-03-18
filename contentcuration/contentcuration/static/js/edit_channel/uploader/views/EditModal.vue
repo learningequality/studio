@@ -172,6 +172,7 @@
   import flatten from 'lodash/flatten';
   import { mapActions, mapGetters, mapMutations } from 'vuex';
   import { TabNames } from '../constants';
+  import { fileSizeMixin } from 'shared/mixins';
   import EditList from './EditList';
   import EditView from './EditView';
   import MessageDialog from 'shared/views/MessageDialog';
@@ -181,7 +182,6 @@
   import FileStorage from 'frontend/channelEdit/views/files/FileStorage';
   import FileUploadDefault from 'frontend/channelEdit/views/files/FileUploadDefault';
   import LoadingText from 'shared/views/LoadingText';
-  import { fileSizeMixin } from 'shared/views/files/mixins';
   import { RouterNames } from 'frontend/channelEdit/constants';
 
   export default {

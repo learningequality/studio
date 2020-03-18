@@ -65,9 +65,8 @@
   import { mapGetters } from 'vuex';
   import Uploader from './Uploader';
   import FileStatusText from './FileStatusText';
-  import { fileSizeMixin, fileStatusMixin } from 'shared/views/files/mixins';
+  import { constantsTranslationMixin, fileSizeMixin, fileStatusMixin } from 'shared/mixins';
   import ActionLink from 'edit_channel/sharedComponents/ActionLink';
-  import { translate } from 'edit_channel/utils/string_helper';
 
   export default {
     name: 'FileUploadItem',
@@ -78,10 +77,10 @@
     },
     filters: {
       translate(text) {
-        return translate(text);
+        return this.translateConstant(text);
       },
     },
-    mixins: [fileSizeMixin, fileStatusMixin],
+    mixins: [constantsTranslationMixin, fileSizeMixin, fileStatusMixin],
     props: {
       file: {
         type: Object,

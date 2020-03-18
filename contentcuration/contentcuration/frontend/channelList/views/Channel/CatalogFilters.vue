@@ -137,7 +137,7 @@
   import ActionLink from 'shared/views/ActionLink';
   import HelpTooltip from 'shared/views/HelpTooltip';
   import ContentKinds from 'shared/leUtils/ContentKinds';
-  import { LicensesList } from 'shared/leUtils/Licenses'
+  import { LicensesList } from 'shared/leUtils/Licenses';
 
   const FILTERED_KINDS = new Set(ContentKinds);
 

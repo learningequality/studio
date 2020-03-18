@@ -1,14 +1,10 @@
 import _ from 'underscore';
-import Vue from 'vue';
-import Vuetify from 'vuetify';
 import { mount } from '@vue/test-utils';
 import MasteryDropdown from '../MasteryDropdown.vue';
 import InfoModal from '../InfoModal.vue';
 import TestForm from './TestForm.vue';
-import { translate } from 'edit_channel/utils/string_helper';
+import { constantStrings } from 'shared/mixins';
 import MasteryModels from 'shared/leUtils/MasteryModels';
-
-Vue.use(Vuetify);
 
 document.body.setAttribute('data-app', true); // Vuetify prints a warning without this
 
@@ -41,7 +37,7 @@ describe('masteryDropdown', () => {
   describe('on load', () => {
     it('all mastery options should be an option to select', () => {
       _.each(MasteryModels, model => {
-        expect(wrapper.find('.v-list').text()).toContain(translate(model));
+        expect(wrapper.find('.v-list').text()).toContain(constantStrings.$tr(model));
       });
     });
     it('should render according to masteryModel prop', () => {
