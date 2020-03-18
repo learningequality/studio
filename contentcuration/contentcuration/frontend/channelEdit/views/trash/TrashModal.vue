@@ -20,7 +20,7 @@
           {{ $tr('trashModalTitle') }}
         </VToolbarTitle>
       </VToolbar>
-      <VContent>
+      <VContent style="padding-top: 64px;">
         <LoadingText v-if="loading" absolute />
         <VContainer v-else-if="!items.length" fluid>
           <h1 class="headline font-weight-bold pt-4 mt-4 text-xs-center">
@@ -92,32 +92,20 @@
           </VCard>
         </VContainer>
       </VContent>
-      <VExpandXTransition>
-        <ResizableNavigationDrawer
-          v-if="previewNodeId"
-          right
-          localName="trash-resource-panel"
-          :minWidth="400"
-          :maxWidth="700"
-          permanent
-          app
-          clipped
-        >
-          <div class="pa-4" style="margin-bottom: 64px;">
-            <ResourcePanel
-              :nodeId="previewNodeId"
-              :channelId="currentChannel.id"
-              @close="previewNodeId = null"
-            />
-          </div>
-        </ResizableNavigationDrawer>
-      </VExpandXTransition>
+
+      <ResourceDrawer
+        localName="trash-resource-panel"
+        style="margin-top: 64px;"
+        :nodeId="previewNodeId"
+        :channelId="currentChannel.id"
+        @close="previewNodeId = null"
+      />
       <BottomToolBar flat color="white" clipped-right app>
         <VSpacer />
         <span v-if="selected.length" class="mr-4 subheading">
           {{ $tr('selectedCountText', {count: selected.length} ) }}
         </span>
-        <VBtn flat :disabled="!selected.length">
+        <VBtn flat :disabled="!selected.length" @click="restoreItems">
           {{ $tr('restoreButton') }}
         </VBtn>
         <VBtn color="primary" :disabled="!selected.length" @click="showConfirmationDialog = true">
@@ -138,6 +126,7 @@
           </VBtn>
         </template>
       </MessageDialog>
+      <router-view />
     </VCard>
   </VDialog>
 
@@ -146,10 +135,10 @@
 
   import { mapActions, mapGetters } from 'vuex';
   import sortBy from 'lodash/sortBy';
-  import ResourcePanel from '../../views/ResourcePanel';
+  import { RouterNames } from '../../constants';
+  import ResourceDrawer from '../../components/ResourceDrawer';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import BottomToolBar from 'shared/views/BottomToolBar';
-  import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
   import ActionLink from 'edit_channel/sharedComponents/ActionLink';
   import MessageDialog from 'shared/views/MessageDialog';
 
@@ -158,8 +147,7 @@
     components: {
       ContentNodeIcon,
       BottomToolBar,
-      ResizableNavigationDrawer,
-      ResourcePanel,
+      ResourceDrawer,
       ActionLink,
       MessageDialog,
     },
@@ -239,6 +227,17 @@
       },
       getItemBackground(id) {
         return this.previewNodeId === id ? this.$vuetify.theme.greyBackground : 'transparent';
+      },
+      restoreItems() {
+        this.previewNodeId = null;
+        this.$router.push({
+          name: RouterNames.RESTORE_TRASH,
+          params: {
+            ...this.$route.params,
+            targetNodeId: this.$route.params.nodeId,
+            moveNodeIds: this.selected.map(i => i.id).join(','),
+          },
+        });
       },
     },
     $trs: {

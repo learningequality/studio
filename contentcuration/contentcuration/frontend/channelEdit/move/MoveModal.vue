@@ -10,7 +10,7 @@
   >
     <VCard>
       <VToolbar dark color="primary" app>
-        <VBtn icon @click="$emit('cancelMove')">
+        <VBtn icon :to="closeLink" exact>
           <Icon>close</Icon>
         </VBtn>
         <VToolbarTitle>
@@ -97,7 +97,7 @@
         </Icon>
         <ActionLink :text="$tr('moveClipboard')" @click="moveNodesToClipboard" />
         <VSpacer />
-        <VBtn flat @click="$emit('cancelMove')">
+        <VBtn flat :to="closeLink" exact>
           {{ $tr("cancel") }}
         </VBtn>
         <VBtn color="primary" class="white--text" @click="moveNodes">
@@ -154,6 +154,12 @@
     computed: {
       ...mapGetters('currentChannel', ['currentChannel']),
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodeChildren', 'getTreeNode']),
+      closeLink() {
+        return {
+          name: this.$route.matched[this.$route.matched.length - 2].name,
+          params: this.$route.params,
+        };
+      },
       currentNode() {
         return this.getContentNode(this.targetNodeId);
       },

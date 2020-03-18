@@ -13,6 +13,7 @@ export const RouterNames = {
   UPLOAD_FILES: 'UPLOAD_FILES',
   TRASH: 'TRASH',
   MOVE: 'MOVE',
+  RESTORE_TRASH: 'RESTORE_TRASH',
 };
 
 export const viewModes = {
