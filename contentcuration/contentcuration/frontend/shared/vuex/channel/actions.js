@@ -75,13 +75,10 @@ export function updateChannel(
     if (description !== NOVALUE) {
       channelData.description = description;
     }
-    if (
-      thumbnailData !== NOVALUE &&
-      ['thumbnail', 'thumbnail_url', 'thumbnail_encoding'].every(attr => thumbnailData[attr])
-    ) {
+    if (thumbnailData !== NOVALUE) {
       channelData.thumbnail = thumbnailData.thumbnail;
       channelData.thumbnail_url = thumbnailData.thumbnail_url;
-      channelData.thumbnail_encoding = thumbnailData.thumbnail_encoding;
+      channelData.thumbnail_encoding = thumbnailData.thumbnail_encoding || {};
     }
     if (language !== NOVALUE) {
       channelData.language = language;

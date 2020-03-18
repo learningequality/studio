@@ -33,10 +33,15 @@
       </div>
       <VSlideXTransition>
         <div v-if="selected.length">
-          <IconButton icon="edit" :text="$tr('editSelectedButton')" @click="editNodes(selected)" />
+          <IconButton
+            v-if="canEdit"
+            icon="edit"
+            :text="$tr('editSelectedButton')"
+            @click="editNodes(selected)"
+          />
           <IconButton icon="content_paste" :text="$tr('copySelectedButton')" />
-          <IconButton icon="sync_alt" :text="$tr('moveSelectedButton')" />
-          <IconButton icon="clear" :text="$tr('deleteSelectedButton')" />
+          <IconButton v-if="canEdit" icon="sync_alt" :text="$tr('moveSelectedButton')" />
+          <IconButton v-if="canEdit" icon="delete" :text="$tr('deleteSelectedButton')" />
         </div>
       </VSlideXTransition>
       <VSpacer />
@@ -78,7 +83,7 @@
             <VListTile @click="newExerciseNode">
               <VListTileTitle>{{ $tr('addExercise') }}</VListTileTitle>
             </VListTile>
-            <VListTile @click.stop>
+            <VListTile :to="importFromChannelsRoute">
               <VListTileTitle>{{ $tr('importFromChannels') }}</VListTileTitle>
             </VListTile>
           </VList>
@@ -220,6 +225,14 @@
         // this gets overwritten by the edit modal components, throwing off the
         // styling whenever the modal is opened
         return this.ancestors.length ? 'calc(100vh - 160px)' : 'calc(100vh - 112px)';
+      },
+      importFromChannelsRoute() {
+        return {
+          name: RouterNames.IMPORT_FROM_CHANNELS_BROWSE,
+          params: {
+            destNodeId: this.$route.params.nodeId,
+          },
+        };
       },
     },
     watch: {

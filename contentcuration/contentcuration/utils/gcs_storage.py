@@ -1,18 +1,19 @@
 import logging
 import mimetypes
 import tempfile
-
-from google.cloud.exceptions import InternalServerError
-from google.cloud.storage import Client
-from google.cloud.storage.blob import Blob
+from io import BytesIO
+from gzip import GzipFile
 
 import backoff
 from django.core.files import File
 from django.core.files.storage import Storage
+from google.cloud.exceptions import InternalServerError
+from google.cloud.storage import Client
+from google.cloud.storage.blob import Blob
 
 OLD_STUDIO_STORAGE_PREFIX = "/contentworkshop_content/"
 
-CONTENT_DATABASES_MAX_AGE = 5 # seconds
+CONTENT_DATABASES_MAX_AGE = 5  # seconds
 
 MAX_RETRY_TIME = 60  # seconds
 
@@ -97,26 +98,40 @@ class GoogleCloudStorage(Storage):
         else:
             blob = blob_object
 
-        # force the current file to be at file location 0, to
-        # because that's what google wants
+        buffer = None
+        # set a max-age of 5 if we're uploading to content/databases
+        if self.is_database_file(name):
+            blob.cache_control = 'private, max-age={}, no-transform'.format(CONTENT_DATABASES_MAX_AGE)
+
+            # Compress the database file so that users can save bandwith and download faster.
+            buffer = BytesIO()
+            compressed = GzipFile(fileobj=buffer, mode="w")
+            compressed.write(fobj.read())
+            compressed.close()
+
+            blob.content_encoding = "gzip"
+            fobj = buffer
 
         # determine the current file's mimetype based on the name
         content_type = self._determine_content_type(name)
 
+        # force the current file to be at file location 0, to
+        # because that's what google wants
         fobj.seek(0)
 
         if self._is_file_empty(fobj):
             logging.warning("Stopping the upload of an empty file: {}".format(name))
             return name
 
-        # set a max-age of 5 if we're uploading to content/databases
-        if self.is_database_file(name):
-            blob.cache_control = 'private, max-age={}, no-transform'.format(CONTENT_DATABASES_MAX_AGE)
-
         blob.upload_from_file(
             fobj,
             content_type=content_type,
         )
+
+        # Close StringIO object and discard memory buffer if created
+        if buffer:
+            buffer.close()
+
         return name
 
     def url(self, name):

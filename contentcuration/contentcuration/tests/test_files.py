@@ -181,7 +181,7 @@ class FileSubtitleTestCase(BaseAPITestCase):
 class NodeFileDeletionTestCase(StudioTestCase):
 
     def test_delete_empty_file_reference(self):
-        checksum, _, storage_path = write_raw_content_to_storage('some fake PDF data', ext='.pdf')
+        checksum, _, storage_path = write_raw_content_to_storage(b'some fake PDF data', ext='.pdf')
         assert default_storage.exists(storage_path), 'file should be saved'
         delete_empty_file_reference(checksum, 'pdf')
         assert not default_storage.exists(storage_path), 'file should be deleted'

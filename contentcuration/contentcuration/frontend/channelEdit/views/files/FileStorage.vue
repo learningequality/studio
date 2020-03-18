@@ -46,7 +46,7 @@
 <script>
 
   import { mapState } from 'vuex';
-  import { fileSizeMixin } from './mixins';
+  import { fileSizeMixin } from 'shared/views/files/mixins';
   import ActionLink from 'edit_channel/sharedComponents/ActionLink.vue';
 
   export default {

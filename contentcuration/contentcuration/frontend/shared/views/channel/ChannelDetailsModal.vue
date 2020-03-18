@@ -60,11 +60,9 @@
             </VMenu>
           </VLayout>
           <div class="channel-details-wrapper">
-            <VImg
-              :src="channel.thumbnail_url || '/static/img/kolibri_placeholder.png'"
-              :aspect-ratio="16/9"
-              max-width="300"
-            />
+            <div style="max-width: 300px">
+              <Thumbnail :src="channel.thumbnail_url" :encoding="channel.thumbnail_encoding" />
+            </div>
             <br>
             <h1 class="notranslate">
               {{ channel.name }}
@@ -94,11 +92,6 @@
               :label="$tr('primaryLanguageHeading')"
               :text="translateLanguage(channel.language)"
             />
-            <DetailsRow
-              v-if="channel.language"
-              :label="$tr('primaryLanguageHeading')"
-              :text="translateLanguage(channel.language)"
-            />
             <Details :nodeID="channel.root_id" />
           </div>
         </VCardText>
@@ -117,6 +110,7 @@
   import { fileSizeMixin, constantsTranslationMixin } from 'shared/mixins';
   import LoadingText from 'shared/views/LoadingText';
   import CopyToken from 'shared/views/CopyToken';
+  import Thumbnail from 'shared/views/files/Thumbnail';
 
   export default {
     name: 'ChannelDetailsModal',
@@ -125,6 +119,7 @@
       LoadingText,
       DetailsRow,
       CopyToken,
+      Thumbnail,
     },
     mixins: [fileSizeMixin, constantsTranslationMixin],
     props: {
@@ -145,7 +140,8 @@
         return this.getChannel(this.channelId);
       },
       thumbnail() {
-        return this.channel.thumbnail_url || '/static/img/kolibri_placeholder.png';
+        let encoding = this.channel.thumbnail_encoding;
+        return (encoding && encoding.base64) || this.channel.thumbnail_url;
       },
       publishedDate() {
         return this.$formatDate(this.channel.last_published, {

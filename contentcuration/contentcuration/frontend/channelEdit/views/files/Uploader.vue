@@ -1,21 +1,24 @@
 <template>
 
-  <div
-    style="border: 4px solid transparent;"
-    class="uploader"
-    :style="{
-      backgroundColor: highlightDropzone? $vuetify.theme.primaryBackground : 'transparent',
-      borderColor: highlightDropzone? $vuetify.theme.primary : borderColor,
-      width: fill? '100%' : 'unset',
-      height: fill? '100%' : 'unset',
-    }"
-    data-test="dropzone"
-    @dragenter.prevent="enter"
-    @dragover.prevent="over"
-    @dragleave.prevent="leave"
-    @drop.prevent="drop"
-  >
-    <slot :openFileDialog="openFileDialog"></slot>
+  <div class="uploader">
+    <slot :openFileDialog="openFileDialog">
+      <div
+        style="border: 4px solid transparent;"
+        :style="{
+          backgroundColor: highlightDropzone? $vuetify.theme.primaryBackground : 'transparent',
+          borderColor: highlightDropzone? $vuetify.theme.primary : borderColor,
+          width: fill? '100%' : 'unset',
+          height: fill? '100%' : 'unset',
+        }"
+        data-test="dropzone"
+        @dragenter.prevent="enter"
+        @dragover.prevent="over"
+        @dragleave.prevent="leave"
+        @drop.prevent="drop"
+      >
+        <slot name="dropzone"></slot>
+      </div>
+    </slot>
     <input
       v-if="!readonly"
       ref="fileUpload"
@@ -66,12 +69,12 @@
   import partition from 'lodash/partition';
   import uniq from 'lodash/uniq';
 
-  import { fileErrors, MAX_FILE_SIZE } from '../../constants';
-  import { fileSizeMixin } from './mixins';
+  import FileStorage from './FileStorage';
+  import { fileErrors, MAX_FILE_SIZE } from 'shared/views/files/constants';
+  import { fileSizeMixin } from 'shared/views/files/mixins';
   import Constants from 'edit_channel/constants';
   import Alert from 'edit_channel/sharedComponents/Alert.vue';
 
-  import FileStorage from 'frontend/channelEdit/views/files/FileStorage';
   import State from 'edit_channel/state';
 
   export default {

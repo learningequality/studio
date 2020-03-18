@@ -4,11 +4,12 @@
     v-if="token"
     v-model="displayToken"
     :title="$tr('copyPrompt')"
-    :appendOuterIcon="copyIcon"
+    appendOuterIcon="content_copy"
     readonly
     color="primary"
     :hideDetails="true"
     single-line
+    box
     style="padding: 0;"
     class="notranslate"
     @click:append-outer.stop="copyToken"
@@ -21,12 +22,6 @@
 
   import * as clipboard from 'clipboard-polyfill';
 
-  const copyStatusCodes = {
-    IDLE: 'IDLE',
-    SUCCESS: 'SUCCESS',
-    FAILED: 'FAILED',
-  };
-
   export default {
     name: 'CopyToken',
     props: {
@@ -38,23 +33,12 @@
         type: Boolean,
         default: true,
       },
-    },
-    data() {
-      return {
-        copyStatus: copyStatusCodes.IDLE,
-      };
+      successText: {
+        type: String,
+        required: false,
+      },
     },
     computed: {
-      copyIcon() {
-        switch (this.copyStatus) {
-          case copyStatusCodes.SUCCESS:
-            return 'check';
-          case copyStatusCodes.FAILED:
-            return 'clear';
-          default:
-            return 'content_copy';
-        }
-      },
       displayToken() {
         return this.hyphenate ? this.token.slice(0, 5) + '-' + this.token.slice(5) : this.token;
       },
@@ -64,20 +48,18 @@
         clipboard
           .writeText(this.displayToken)
           .then(() => {
-            this.copyStatus = copyStatusCodes.SUCCESS;
+            let text = this.successText || this.$tr('copiedTokenId');
+            this.$store.dispatch('showSnackbar', { text });
           })
           .catch(() => {
-            this.copyStatus = copyStatusCodes.FAILED;
-          })
-          .then(() => {
-            setTimeout(() => {
-              this.copyStatus = copyStatusCodes.IDLE;
-            }, 2500);
+            this.$store.dispatch('showSnackbar', { text: this.$tr('copyFailed') });
           });
       },
     },
     $trs: {
       copyPrompt: 'Copy token to import channel into Kolibri',
+      copiedTokenId: 'Copied token ID',
+      copyFailed: 'Copy failed',
     },
   };
 
