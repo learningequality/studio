@@ -9,11 +9,11 @@
       <VToolbarItems class="ml-4">
         <IconButton icon="info" :text="$tr('channelDetails')" :to="viewChannelDetailsLink" />
         <IconButton v-if="canEdit" icon="edit" :text="$tr('editChannel')" :to="editChannelLink" />
-        <IconButton icon="delete" :text="$tr('openTrash')" />
+        <IconButton v-if="canEdit" icon="delete" :text="$tr('openTrash')" />
       </VToolbarItems>
       <VSpacer />
       <VToolbarItems>
-        <VBtn flat color="primary" class="hidden-sm-and-down">
+        <VBtn v-if="canEdit" flat color="primary" class="hidden-sm-and-down">
           {{ $tr('publishButton') }}
         </VBtn>
         <VMenu offset-y>
@@ -23,17 +23,17 @@
             </VBtn>
           </template>
           <VList>
-            <VListTile class="hidden-md-and-up" @click.stop>
+            <VListTile v-if="canEdit" class="hidden-md-and-up" @click.stop>
               <VListTileTitle>{{ $tr('publishButton') }}</VListTileTitle>
             </VListTile>
             <VListTile @click="showTokenModal = true;">
               <VListTileTitle>{{ $tr('getToken') }}</VListTileTitle>
 
             </VListTile>
-            <VListTile @click.stop>
+            <VListTile v-if="canView || canEdit" @click.stop>
               <VListTileTitle>{{ $tr('shareChannel') }}</VListTileTitle>
             </VListTile>
-            <VListTile @click.stop>
+            <VListTile v-if="canEdit" @click.stop>
               <VListTileTitle>{{ $tr('syncChannel') }}</VListTileTitle>
             </VListTile>
           </VList>
@@ -82,7 +82,7 @@
       };
     },
     computed: {
-      ...mapGetters('currentChannel', ['currentChannel', 'canEdit']),
+      ...mapGetters('currentChannel', ['currentChannel', 'canEdit', 'canView']),
       viewChannelDetailsLink() {
         return {
           name: ChannelRouterNames.CHANNEL_DETAILS,
