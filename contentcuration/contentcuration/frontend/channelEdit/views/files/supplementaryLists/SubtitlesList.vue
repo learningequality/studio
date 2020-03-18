@@ -43,7 +43,7 @@
         return uniq(this.subtitlePreset.allowed_formats).join(', ');
       },
       subtitlePreset() {
-        return FormatPresets.get("video_subtitle");
+        return FormatPresets.get('video_subtitle');
       },
     },
     $trs: {

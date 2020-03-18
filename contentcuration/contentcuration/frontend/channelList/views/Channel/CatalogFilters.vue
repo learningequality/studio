@@ -130,7 +130,6 @@
   import map from 'lodash/map';
   import uniq from 'lodash/uniq';
   import reduce from 'lodash/reduce';
-  import sortBy from 'lodash/sortBy';
   import { RouterNames } from '../../constants';
   import { constantsTranslationMixin } from 'shared/mixins';
   import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown';

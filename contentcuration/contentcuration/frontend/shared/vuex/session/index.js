@@ -6,7 +6,12 @@ function langCode(language) {
   const index = language.indexOf('-');
   if (index >= 0) {
     if (language.slice(index + 1).length > 2) {
-      return language.slice(0, index).toLowerCase() + '-' + language[index + 1].toUpperCase() + language.slice(index + 2).toLowerCase();
+      return (
+        language.slice(0, index).toLowerCase() +
+        '-' +
+        language[index + 1].toUpperCase() +
+        language.slice(index + 2).toLowerCase()
+      );
     }
     return language.slice(0, index).toLowerCase() + '-' + language.slice(index + 1).toUpperCase();
   } else {
@@ -42,6 +47,6 @@ export default {
     },
     availableSpace(state) {
       return state.currentUser.available_space;
-    }
+    },
   },
 };
