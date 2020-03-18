@@ -9,7 +9,7 @@
       />
       <h2
         v-if="node && node.title"
-        class="headline"
+        class="notranslate headline"
         data-test="title"
       >
         {{ node.title }}

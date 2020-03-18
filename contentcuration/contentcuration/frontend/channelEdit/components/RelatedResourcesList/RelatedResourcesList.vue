@@ -20,12 +20,14 @@
 
         <VListTileContent>
           <VListTileTitle
-            class="primary--text"
+            class="notranslate primary--text"
             :style="{'text-decoration': 'underline'}"
           >
             {{ item.title }}
           </VListTileTitle>
-          <VListTileSubTitle>{{ item.parentTitle }}</VListTileSubTitle>
+          <VListTileSubTitle class="notranslate">
+            {{ item.parentTitle }}
+          </VListTileSubTitle>
         </VListTileContent>
 
         <VListTileAction>

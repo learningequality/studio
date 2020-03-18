@@ -28,7 +28,7 @@
 
       <p class="mt-4 ml-2">
         {{ $tr('resourcesDisplayedText') }}
-        <span class="font-weight-bold">&apos;{{ targetNodeTitle }}&apos;</span>
+        <span class="font-weight-bold notranslate">&apos;{{ targetNodeTitle }}&apos;</span>
       </p>
 
       <NodeTreeNavigation
@@ -58,7 +58,12 @@
                 :disabled="!isListItemDisabled(childNode)"
               >
                 <template v-slot:activator="{ on }">
-                  <span v-on="on">{{ childNode.title }}</span>
+                  <span
+                    class="notranslate"
+                    v-on="on"
+                  >
+                    {{ childNode.title }}
+                  </span>
                 </template>
                 <span>{{ listItemTooltip(childNode) }}</span>
               </VTooltip>

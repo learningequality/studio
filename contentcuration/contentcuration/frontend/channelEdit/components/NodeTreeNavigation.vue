@@ -7,6 +7,7 @@
     >
       <template v-slot:item="props">
         <span
+          class="notranslate"
           :class="breadcrumbsItemClasses(props.item)"
           @click="onBreadcrumbsItemClick(props.item)"
         >
