@@ -89,7 +89,7 @@
 
 <script>
 
-  import { mapGetters, mapActions } from 'vuex';
+  import { mapState, mapGetters, mapActions } from 'vuex';
 
   import { RouterNames } from '../constants';
   import NodeTreeNavigation from './NodeTreeNavigation';
@@ -128,16 +128,13 @@
       };
     },
     computed: {
-      ...mapGetters('currentChannel', ['currentChannel']),
+      ...mapState('currentChannel', ['currentChannelId']),
       ...mapGetters('contentNode', [
         'getContentNode',
         'getContentNodeParents',
         'isPreviousStep',
         'isNextStep',
       ]),
-      currentChannelId() {
-        return this.currentChannel ? this.currentChannel.id : null;
-      },
       targetNode() {
         return this.getContentNode(this.targetNodeId);
       },
