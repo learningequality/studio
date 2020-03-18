@@ -42,7 +42,7 @@ django-s3-storage==0.12.4  # via -r requirements.in
 django-webpack-loader==0.6.0  # via -r requirements.in
 django==1.11.20           # via -r requirements.in, django-hashedfilenamestorage, django-js-reverse, django-mptt, django-redis, django-s3-storage, djangorestframework-bulk, jsonfield
 djangorestframework-bulk==0.2.1  # via -r requirements.in
-djangorestframework==3.8.2  # via -r requirements.in, djangorestframework-bulk
+djangorestframework==3.9.1  # via -r requirements.in, djangorestframework-bulk
 dnspython==1.16.0         # via eventlet
 docutils==0.15.2          # via botocore, sphinx
 ebooklib==0.17.1          # via pressurecooker
