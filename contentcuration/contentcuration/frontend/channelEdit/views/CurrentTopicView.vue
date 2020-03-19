@@ -41,7 +41,12 @@
           />
           <IconButton icon="content_paste" :text="$tr('copySelectedButton')" />
           <IconButton v-if="canEdit" icon="sync_alt" :text="$tr('moveSelectedButton')" />
-          <IconButton v-if="canEdit" icon="delete" :text="$tr('deleteSelectedButton')" />
+          <IconButton
+            v-if="canEdit"
+            icon="delete"
+            :text="$tr('deleteSelectedButton')"
+            @click="removeNodes(selected)"
+          />
         </div>
       </VSlideXTransition>
       <VSpacer />
@@ -99,48 +104,40 @@
           <NodePanel :key="topicId" :parentId="topicId" />
         </VFadeTransition>
       </VFlex>
-      <VExpandXTransition>
-        <ResizableNavigationDrawer
-          v-show="showResourceDrawer"
-          right
-          localName="resource-panel"
-          :minWidth="400"
-          :maxWidth="700"
-          permanent
-        >
-          <div v-if="detailNodeId" class="pa-4">
-            <ResourcePanel
+      <ResourceDrawer
+        :nodeId="detailNodeId"
+        :channelId="currentChannel.id"
+        localName="resource-panel"
+        @close="closePanel"
+      >
+        <template v-if="canEdit" #actions>
+          <IconButton
+            small
+            icon="edit"
+            :text="$tr('editButton')"
+            @click="editNodes([detailNodeId])"
+          />
+          <VMenu offset-y left>
+            <template #activator="{ on }">
+              <VBtn small icon flat v-on="on">
+                <Icon>more_horiz</Icon>
+              </VBtn>
+            </template>
+            <ContentNodeOptions
               :nodeId="detailNodeId"
-              :channelId="currentChannel.id"
-              @close="closePanel"
-            >
-              <template v-if="canEdit" #actions>
-                <IconButton
-                  small
-                  icon="edit"
-                  :text="$tr('editButton')"
-                  @click="editNodes([detailNodeId])"
-                />
-                <VMenu offset-y left>
-                  <template #activator="{ on }">
-                    <VBtn small icon flat v-on="on">
-                      <Icon>more_horiz</Icon>
-                    </VBtn>
-                  </template>
-                  <ContentNodeOptions :nodeId="detailNodeId" hideDetailsLink />
-                </VMenu>
-              </template>
-              <template v-else #actions>
-                <IconButton
-                  small
-                  icon="content_copy"
-                  :text="$tr('copyToClipboardButton')"
-                />
-              </template>
-            </ResourcePanel>
-          </div>
-        </ResizableNavigationDrawer>
-      </VExpandXTransition>
+              hideDetailsLink
+              @removed="closePanel"
+            />
+          </VMenu>
+        </template>
+        <template v-else #actions>
+          <IconButton
+            small
+            icon="content_copy"
+            :text="$tr('copyToClipboardButton')"
+          />
+        </template>
+      </ResourceDrawer>
     </VLayout>
   </VContainer>
 
@@ -150,10 +147,9 @@
 
   import { mapActions, mapGetters } from 'vuex';
   import { RouterNames, viewModes } from '../constants';
-  import ResourcePanel from './ResourcePanel';
+  import ResourceDrawer from '../components/ResourceDrawer';
   import NodePanel from './NodePanel';
   import ContentNodeOptions from './ContentNodeOptions';
-  import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
   import IconButton from 'shared/views/IconButton';
   import ToolBar from 'shared/views/ToolBar';
   import Breadcrumbs from 'shared/views/Breadcrumbs';
@@ -164,8 +160,7 @@
       IconButton,
       ToolBar,
       NodePanel,
-      ResourcePanel,
-      ResizableNavigationDrawer,
+      ResourceDrawer,
       ContentNodeOptions,
       Breadcrumbs,
     },
@@ -181,7 +176,6 @@
     },
     data() {
       return {
-        showResourceDrawer: false,
         viewMode: sessionStorage['topic-tree-view'] || viewModes.DEFAULT,
         loadingAncestors: false,
         selected: [],
@@ -239,9 +233,6 @@
       topicId() {
         this.selected = [];
       },
-      detailNodeId(value) {
-        this.showResourceDrawer = Boolean(value);
-      },
       ancestors(value) {
         // Full ancestor path hasn't been loaded
         if (!value.some(a => a.id === this.topicId)) {
@@ -251,9 +242,6 @@
           });
         }
       },
-    },
-    beforeMount() {
-      this.showResourceDrawer = Boolean(this.detailNodeId);
     },
     methods: {
       ...mapActions('contentNode', ['createContentNode', 'loadAncestors']),
@@ -294,21 +282,21 @@
         };
       },
       closePanel() {
-        this.showResourceDrawer = false;
-        // Setting this so the contenst of drawer don't disappear
-        // while the drawer is closing
-        setTimeout(() => {
-          this.$router.push({
-            name: RouterNames.TREE_VIEW,
-            params: {
-              nodeId: this.$route.params.nodeId,
-              detailNodeId: null,
-            },
-          });
-        }, 700);
+        this.$router.push({
+          name: RouterNames.TREE_VIEW,
+          params: {
+            nodeId: this.$route.params.nodeId,
+            detailNodeId: null,
+          },
+        });
       },
       setViewMode(viewMode) {
         this.viewMode = sessionStorage['topic-tree-view'] = viewMode;
+      },
+      removeNodes(ids) {
+        this.$store.dispatch('showSnackbar', {
+          text: this.$tr('removedItemsMessage', { count: ids.length }),
+        });
       },
     },
 
@@ -328,6 +316,7 @@
       copySelectedButton: 'Copy selected items to clipboard',
       moveSelectedButton: 'Move selected items',
       deleteSelectedButton: 'Delete selected items',
+      removedItemsMessage: 'Sent {count, plural,\n =1 {# item}\n other {# items}} to the trash',
     },
   };
 
@@ -338,10 +327,6 @@
     align-self: flex-start;
     height: 100%;
     background-color: white;
-  }
-  .resource-drawer {
-    border-left: 1px solid var(--v-grey-lighten4);
-    overflow-y: auto;
   }
 
   .fade-transition-enter-active,

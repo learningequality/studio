@@ -15,6 +15,7 @@
         :extended="!loading"
         :extension-height="48"
         flat
+        clipped-right
       >
         <VBtn icon :to="closeLink" exact>
           <Icon>close</Icon>
@@ -24,8 +25,8 @@
           <b class="notranslate">{{ currentNode.title }}</b>
         </VToolbarTitle>
         <template v-if="!loading" #extension>
-          <VToolbar dense flat color="white" light>
-            <Breadcrumbs :items="crumbs">
+          <ToolBar dense color="white" light>
+            <Breadcrumbs :items="crumbs" class="py-0">
               <template #item="{item}">
                 <span class="notranslate">{{ item.text }}</span>
               </template>
@@ -34,7 +35,7 @@
             <VBtn flat @click="showNewTopicModal = true">
               {{ $tr("addTopic") }}
             </VBtn>
-          </VToolbar>
+          </ToolBar>
         </template>
       </VToolbar>
       <VContent style="padding-top: 112px; padding-bottom: 64px; background-color: white;">
@@ -46,13 +47,19 @@
             <div>{{ $tr('emptyTopicText') }}</div>
           </VLayout>
         </VContainer>
-        <VContainer v-else fluid align-content-start class="pa-0">
+        <VContainer
+          v-else
+          fluid
+          align-content-start
+          class="pa-0"
+          style="max-height: calc(100vh - 178px); overflow-y: auto;"
+        >
           <VCard
             v-for="node in children"
             :key="node.id"
             flat
             class="pa-4 content-card"
-            :to="node.kind === 'topic'? nextItem(node) : undefined"
+            @click="openTopic(node)"
           >
             <VLayout align-center row>
               <div style="min-width: 175px;">
@@ -92,6 +99,7 @@
       </VContent>
       <ResourceDrawer
         localName="move-resource-panel"
+        app
         :nodeId="previewNodeId"
         @close="previewNodeId = null"
       />
@@ -130,6 +138,7 @@
   import Breadcrumbs from 'shared/views/Breadcrumbs';
   import LoadingText from 'shared/views/LoadingText';
   import Thumbnail from 'shared/views/files/Thumbnail';
+  import ToolBar from 'shared/views/ToolBar';
 
   export default {
     name: 'MoveModal',
@@ -141,6 +150,7 @@
       LoadingText,
       ResourceDrawer,
       Thumbnail,
+      ToolBar,
     },
     props: {
       targetNodeId: {
@@ -227,6 +237,11 @@
             targetNodeId: child.id,
           },
         };
+      },
+      openTopic(node) {
+        if (node.kind === 'topic') {
+          this.$router.push(this.nextItem(node));
+        }
       },
       goToLocation() {
         this.$router.push({

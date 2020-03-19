@@ -21,7 +21,7 @@
     <VListTile @click.stop>
       <VListTileTitle>{{ $tr('copyToClipboard') }}</VListTileTitle>
     </VListTile>
-    <VListTile v-if="canEdit" @click.stop>
+    <VListTile v-if="canEdit" @click="removeItem">
       <VListTileTitle>{{ $tr('remove') }}</VListTileTitle>
     </VListTile>
   </VList>
@@ -101,6 +101,10 @@
           });
         });
       },
+      removeItem() {
+        this.$store.dispatch('showSnackbar', { text: this.$tr('removedItemsMessage') });
+        this.$emit('removed');
+      },
     },
 
     $trs: {
@@ -113,6 +117,7 @@
       makeACopy: 'Make a copy',
       copyToClipboard: 'Copy to clipboard',
       remove: 'Remove',
+      removedItemsMessage: 'Sent 1 item to the trash',
     },
   };
 

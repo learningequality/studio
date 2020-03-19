@@ -22,85 +22,87 @@
         </VToolbarTitle>
       </VToolbar>
       <VContent style="padding-top: 64px;">
-        <LoadingText v-if="loading" absolute />
-        <VContainer v-else-if="!items.length" fluid>
-          <h1 class="headline font-weight-bold pt-4 mt-4 text-xs-center">
-            {{ $tr('trashEmptyText') }}
-          </h1>
-          <p class="subheading text-xs-center mt-3">
-            {{ $tr('trashEmptySubtext') }}
-          </p>
-        </VContainer>
-        <VContainer
-          v-else
-          fluid
-          class="pa-4"
-          style="max-height: calc(100vh - 128px); overflow-y: auto;"
-        >
-          <VCard style="width: 100%; max-width: 900px; margin: 0 auto;" flat class="pa-2">
-            <p class="title mt-4">
-              {{ $tr('itemCountText', {count: items.length}) }}
+        <VLayout row>
+          <LoadingText v-if="loading" absolute />
+          <VContainer v-else-if="!items.length" fluid>
+            <h1 class="headline font-weight-bold pt-4 mt-4 text-xs-center">
+              {{ $tr('trashEmptyText') }}
+            </h1>
+            <p class="subheading text-xs-center mt-3">
+              {{ $tr('trashEmptySubtext') }}
             </p>
-            <VDataTable :headers="headers" :items="sortedItems" hide-actions must-sort>
-              <template #headerCell="props">
-                <VLayout v-if="props.header.selectAll" row align-center>
-                  <VFlex shrink>
-                    <VCheckbox
-                      :value="Boolean(selected.length)"
-                      hide-details
-                      color="primary"
-                      :indeterminate="!!selected.length && selected.length !== items.length"
-                      @change="toggleSelectAll"
-                    />
-                  </VFlex>
-                  <VFlex>
+          </VContainer>
+          <VContainer
+            v-else
+            fluid
+            class="pa-4"
+            style="max-height: calc(100vh - 128px); overflow-y: auto;"
+          >
+            <VCard style="width: 100%; max-width: 900px; margin: 0 auto;" flat class="pa-2">
+              <p class="title mt-4">
+                {{ $tr('itemCountText', {count: items.length}) }}
+              </p>
+              <VDataTable :headers="headers" :items="sortedItems" hide-actions must-sort>
+                <template #headerCell="props">
+                  <VLayout v-if="props.header.selectAll" row align-center>
+                    <VFlex shrink>
+                      <VCheckbox
+                        :value="Boolean(selected.length)"
+                        hide-details
+                        color="primary"
+                        :indeterminate="!!selected.length && selected.length !== items.length"
+                        @change="toggleSelectAll"
+                      />
+                    </VFlex>
+                    <VFlex>
+                      {{ props.header.text }}
+                    </VFlex>
+                  </VLayout>
+                  <span v-else>
                     {{ props.header.text }}
-                  </VFlex>
-                </VLayout>
-                <span v-else>
-                  {{ props.header.text }}
-                </span>
-              </template>
-              <template #items="{item}">
-                <tr :key="item.id" :style="{backgroundColor: getItemBackground(item.id)}">
-                  <td>
-                    <VLayout row align-center>
-                      <VFlex shrink>
-                        <VCheckbox
-                          v-model="selected"
-                          color="primary"
-                          :value="item.id"
-                          hide-details
-                        />
-                      </VFlex>
-                      <VFlex shrink class="mx-3">
-                        <ContentNodeIcon :kind="item.kind" />
-                      </VFlex>
-                      <VFlex class="notranslate" grow>
-                        <ActionLink
-                          :text="item.title"
-                          @click="previewNodeId = item.id"
-                        />
-                      </VFlex>
-                    </VLayout>
-                  </td>
-                  <td class="text-xs-right">
-                    {{ $formatRelative(item.modified, { now: new Date() }) }}
-                  </td>
-                </tr>
-              </template>
-            </VDataTable>
-          </VCard>
-        </VContainer>
+                  </span>
+                </template>
+                <template #items="{item}">
+                  <tr :key="item.id" :style="{backgroundColor: getItemBackground(item.id)}">
+                    <td>
+                      <VLayout row align-center>
+                        <VFlex shrink>
+                          <VCheckbox
+                            v-model="selected"
+                            color="primary"
+                            :value="item.id"
+                            hide-details
+                          />
+                        </VFlex>
+                        <VFlex shrink class="mx-3">
+                          <ContentNodeIcon :kind="item.kind" />
+                        </VFlex>
+                        <VFlex class="notranslate" grow>
+                          <ActionLink
+                            :text="item.title"
+                            @click="previewNodeId = item.id"
+                          />
+                        </VFlex>
+                      </VLayout>
+                    </td>
+                    <td class="text-xs-right">
+                      {{ $formatRelative(item.modified, { now: new Date() }) }}
+                    </td>
+                  </tr>
+                </template>
+              </VDataTable>
+            </VCard>
+          </VContainer>
+          <ResourceDrawer
+            localName="trash-resource-panel"
+            style="margin-top: 64px;"
+            :nodeId="previewNodeId"
+            :channelId="currentChannel.id"
+            app
+            @close="previewNodeId = null"
+          />
+        </VLayout>
       </VContent>
-
-      <ResourceDrawer
-        localName="trash-resource-panel"
-        style="margin-top: 64px;"
-        :nodeId="previewNodeId"
-        :channelId="currentChannel.id"
-        @close="previewNodeId = null"
-      />
       <BottomToolBar flat color="white" clipped-right app>
         <VSpacer />
         <span v-if="selected.length" class="mr-4 subheading">

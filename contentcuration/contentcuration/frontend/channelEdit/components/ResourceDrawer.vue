@@ -8,7 +8,6 @@
       :minWidth="400"
       :maxWidth="700"
       permanent
-      app
       clipped
       v-bind="$attrs"
     >
