@@ -257,7 +257,7 @@
             detailNodeId: this.node.original_node_id,
           },
         });
-        return `/channels/${this.node.original_channel_id}/#/${clientPath}`;
+        return `/channels/${this.node.original_channel_id}/${clientPath.href}`;
       },
       sortedTags() {
         return sortBy(this.node.tags, '-count');

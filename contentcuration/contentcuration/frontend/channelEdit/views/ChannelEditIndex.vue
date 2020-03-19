@@ -37,7 +37,7 @@
         </span>
       </template>
       <VToolbarItems>
-        <VMenu offset-y>
+        <VMenu v-if="showChannelMenu" offset-y>
           <template #activator="{ on }">
             <VBtn flat icon v-on="on">
               <Icon>more_horiz</Icon>
@@ -58,7 +58,7 @@
                 <VListTileTitle>{{ $tr('openTrash') }}</VListTileTitle>
               </VListTile>
             </template>
-            <VListTile @click="showTokenModal = true;">
+            <VListTile v-if="isPublished" @click="showTokenModal = true;">
               <VListTileTitle>{{ $tr('getToken') }}</VListTileTitle>
             </VListTile>
             <VListTile v-if="canView || canEdit" @click.stop>
@@ -78,7 +78,7 @@
     <GlobalSnackbar />
     <PublishModal v-if="showPublishModal" v-model="showPublishModal" />
     <ProgressModal />
-    <template v-if="currentChannel">
+    <template v-if="isPublished">
       <ChannelTokenModal v-model="showTokenModal" :channel="currentChannel" />
     </template>
   </VApp>
@@ -121,6 +121,12 @@
       ...mapGetters('currentChannel', ['currentChannel', 'canEdit', 'canView']),
       isChanged() {
         return true;
+      },
+      isPublished() {
+        return this.currentChannel && this.currentChannel.published;
+      },
+      showChannelMenu() {
+        return this.$vuetify.breakpoint.xsOnly || this.canEdit || this.canView || this.isPublished;
       },
       viewChannelDetailsLink() {
         return {
