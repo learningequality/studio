@@ -111,13 +111,13 @@ const router = new VueRouter({
         },
         {
           name: RouterNames.ADD_TOPICS,
-          path: 'topics/:detailNodeIds',
+          path: 'topics/:detailNodeIds/:tab?',
           props: true,
           component: EditModal,
         },
         {
           name: RouterNames.ADD_EXERCISE,
-          path: 'exercise/:detailNodeIds',
+          path: 'exercise/:detailNodeIds/:tab?',
           props: true,
           component: EditModal,
         },
@@ -135,7 +135,7 @@ const router = new VueRouter({
         },
         {
           name: RouterNames.UPLOAD_FILES,
-          path: 'upload/:detailNodeIds?',
+          path: 'upload/:detailNodeIds?/:tab?',
           props: true,
           component: EditModal,
         },
