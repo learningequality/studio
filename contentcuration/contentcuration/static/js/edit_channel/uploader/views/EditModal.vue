@@ -273,7 +273,12 @@
       ) {
         return next(vm => {
           vm.loading = true;
-          let ids = (to.params.detailNodeIds || '').split(',').concat([to.params.nodeId]);
+
+          let ids = [to.params.nodeId];
+          if (to.params.detailNodeIds !== undefined) {
+            ids = ids.concat(to.params.detailNodeIds.split(','));
+          }
+
           vm.loadContentNodes({ ids })
             .then(nodes => {
               let loadFilePromise = vm.loadFiles({ ids: nodes.flatMap(n => n.files) });

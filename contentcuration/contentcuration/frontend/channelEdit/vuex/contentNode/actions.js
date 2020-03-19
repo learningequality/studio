@@ -75,6 +75,10 @@ export async function loadParents(context, { id, channel_id }) {
  * and their parents.
  */
 export async function loadRelatedResources(context, nodeId) {
+  if (!nodeId) {
+    throw ReferenceError('node id must be defined to load its related resources');
+  }
+
   let response;
 
   try {
