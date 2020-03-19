@@ -15,7 +15,7 @@
   </VCard>
 
   <VLayout v-else column>
-    <ContentNodeIcon :kind="kind" includeText fillWidth />
+    <ContentNodeIcon v-if="kind" :kind="kind" includeText fillWidth />
     <VImg
       data-test="thumbnail-image"
       :aspect-ratio="aspectRatio"
