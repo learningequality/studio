@@ -39,6 +39,7 @@ from contentcuration.serializers import TaskSerializer
 from contentcuration.tasks import create_async_task
 from contentcuration.utils.files import generate_thumbnail_from_node
 from contentcuration.utils.files import get_thumbnail_encoding
+from contentcuration.utils.storage_common import get_presigned_upload_url
 
 
 @require_http_methods(['GET'])
@@ -46,10 +47,14 @@ from contentcuration.utils.files import get_thumbnail_encoding
 @permission_classes((IsAuthenticated,))
 def get_upload_url(request):
     # Smoke test is bypassing the authentication, so handle here for now
+    size = request.GET['size']
+    checksum = request.GET['checksum']
+    filetype = request.GET['type']
+
     if request.user.is_anonymous():
         return HttpResponseForbidden()
     try:
-        request.user.check_space(float(request.GET['size']), request.GET['checksum'])
+        request.user.check_space(float(size), checksum)
 
     except PermissionDenied as e:
         return HttpResponseBadRequest(reason=str(e), status=418)
