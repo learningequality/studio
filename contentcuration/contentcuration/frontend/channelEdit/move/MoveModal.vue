@@ -231,7 +231,7 @@
       ...mapActions('contentNode', ['createContentNode', 'loadContentNode', 'loadChildren']),
       nextItem(child) {
         return {
-          name: RouterNames.MOVE,
+          name: this.$route.name,
           params: {
             ...this.$route.params,
             targetNodeId: child.id,
