@@ -31,7 +31,7 @@ def get_presigned_upload_url(
     if isinstance(storage, GoogleCloudStorage):
         client = client or storage.client
         bucket = settings.AWS_S3_BUCKET_NAME
-        return _get_s3_presigned_put_url(client, bucket, filepath, md5sum_b64, lifetime_sec)
+        return _get_gcs_presigned_put_url(client, bucket, filepath, md5sum_b64, lifetime_sec)
     elif isinstance(storage, S3Storage):
         bucket = settings.AWS_S3_BUCKET_NAME
         client = client or storage.s3_connection
