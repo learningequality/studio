@@ -47,21 +47,25 @@ from contentcuration.utils.storage_common import get_presigned_upload_url
 @permission_classes((IsAuthenticated,))
 def get_upload_url(request):
     # Smoke test is bypassing the authentication, so handle here for now
-    size = request.GET['size']
-    checksum = request.GET['checksum']
-    filetype = request.GET['type']
+    size = request.GET["size"]
+    checksum = request.GET["checksum"]
+    filetype = request.GET["type"]
+    filename = request.GET["name"]
 
-    if request.user.is_anonymous():
-        return HttpResponseForbidden()
     try:
         request.user.check_space(float(size), checksum)
 
     except PermissionDenied as e:
         return HttpResponseBadRequest(reason=str(e), status=418)
-    return HttpResponse('/api/temp_file_upload')
+
+    filepath = generate_object_storage_name(checksum, filename)
+    checksum_base64 = checksum.decode("hex").encode("base64")
+    url = get_presigned_upload_url(filepath, checksum_base64, 700000000)
+
+    return HttpResponse(url)
 
 
-@require_http_methods(['POST'])
+@require_http_methods(["POST"])
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
 def temp_file_upload(request):
