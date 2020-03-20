@@ -161,7 +161,7 @@ export function uploadFile(context, { file }) {
         context.commit('ADD_FILEUPLOAD', fileUploadObject);
         // 2. Get the upload url
         return context
-          .dispatch('getUploadURL', { id, checksum, size: file.size, type })
+          .dispatch('getUploadURL', { id, checksum, size: file.size, type: file.type, name: file.name })
           .then(response => {
             if (!response) {
               reject(fileErrors.UPLOAD_FAILED);
