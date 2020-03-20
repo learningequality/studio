@@ -17,3 +17,7 @@ export function canView(state, getters) {
 export function rootId(state, getters) {
   return getters.currentChannel && getters.currentChannel.root_id;
 }
+
+export function trashId(state, getters) {
+  return getters.currentChannel && getters.currentChannel.trash_id;
+}

@@ -44,9 +44,10 @@
       ResourcePanel,
     },
     props: {
+      // key for sessionStorage to store width data at
       localName: {
         type: String,
-        required: true,
+        default: 'resource-panel',
       },
       nodeId: {
         type: String,

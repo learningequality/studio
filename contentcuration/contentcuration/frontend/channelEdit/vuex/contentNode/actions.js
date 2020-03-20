@@ -235,6 +235,25 @@ export function copyContentNodes(context, contentNodeIds) {
   return new Promise(resolve => resolve(context, contentNodeIds));
 }
 
+export function moveContentNodes(context, { ids, parent }) {
+  let promises = [];
+  ids.forEach(id => {
+    promises.push(
+      Tree.move(id, parent, MOVE_POSITIONS.LAST_CHILD).then(treeNode => {
+        context.commit('UPDATE_TREENODE', treeNode);
+        return id;
+      })
+    );
+  });
+
+  return Promise.all(promises);
+}
+
+export function moveContentNodesToClipboard(context, contentNodeIds) {
+  // TODO: Implement move to clipboard action
+  return new Promise(resolve => resolve(context, contentNodeIds));
+}
+
 export function sanitizeContentNodes(context, contentNodeIds, removeInvalid = false) {
   let promises = [];
   context.getters.getContentNodes(contentNodeIds).forEach(node => {

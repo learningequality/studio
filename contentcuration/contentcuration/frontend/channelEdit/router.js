@@ -3,7 +3,6 @@ import { RouterNames } from './constants';
 import TreeView from './views/TreeView';
 import store from './store';
 import TrashModal from './views/trash/TrashModal';
-import MoveModal from './move/MoveModal';
 import ImportFromChannelsIndex from './views/ImportFromChannels/ImportFromChannelsIndex';
 import SearchOrBrowseWindow from './views/ImportFromChannels/SearchOrBrowseWindow';
 import ReviewSelectionsPage from './views/ImportFromChannels/ReviewSelectionsPage';
@@ -144,20 +143,6 @@ const router = new VueRouter({
           path: 'trash',
           component: TrashModal,
           props: true,
-          children: [
-            {
-              name: RouterNames.RESTORE_TRASH,
-              path: 'restore/:targetNodeId/:moveNodeIds',
-              props: true,
-              component: MoveModal,
-            },
-          ],
-        },
-        {
-          name: RouterNames.MOVE,
-          path: 'move/:targetNodeId/:moveNodeIds',
-          props: true,
-          component: MoveModal,
         },
       ],
     },

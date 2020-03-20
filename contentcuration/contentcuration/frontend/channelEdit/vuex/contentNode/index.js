@@ -15,6 +15,14 @@ export default {
       contentNodesMap: {},
       treeNodesMap: {},
       expandedNodes,
+
+      /*
+        Making this part of the vuex store as it seems like the cleanest solution for
+        managing moving nodes. Alternative solutions are:
+        - Using router to keep track of ids (too easy to hack url or too many validation cases)
+        - Adding component for every move option (too many instances of move modal everywhere)
+      */
+      moveNodes: [],
     };
   },
   getters,

@@ -78,6 +78,7 @@
     <GlobalSnackbar />
     <PublishModal v-if="showPublishModal" v-model="showPublishModal" />
     <ProgressModal />
+    <MoveModal v-if="moveNodes.length" />
     <template v-if="isPublished">
       <ChannelTokenModal v-model="showTokenModal" :channel="currentChannel" />
     </template>
@@ -88,8 +89,9 @@
 
 <script>
 
-  import { mapGetters } from 'vuex';
+  import { mapGetters, mapState } from 'vuex';
   import { RouterNames } from '../constants';
+  import MoveModal from '../move/MoveModal';
   import ChannelNavigationDrawer from './ChannelNavigationDrawer';
   import PublishModal from './publish/PublishModal';
   import ProgressModal from './progress/ProgressModal';
@@ -109,6 +111,7 @@
       PublishModal,
       ProgressModal,
       ChannelTokenModal,
+      MoveModal,
     },
     data() {
       return {
@@ -118,6 +121,7 @@
       };
     },
     computed: {
+      ...mapState('contentNode', ['moveNodes']),
       ...mapGetters('currentChannel', ['currentChannel', 'canEdit', 'canView']),
       isChanged() {
         return true;

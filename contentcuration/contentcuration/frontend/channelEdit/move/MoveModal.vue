@@ -1,11 +1,13 @@
 <template>
 
   <VDialog
-    :value="Boolean(currentNode)"
+    v-model="dialog"
     fullscreen
     scrollable
     app
+    lazy
     persistent
+    attach="body"
   >
     <VCard>
       <VToolbar
@@ -17,32 +19,38 @@
         flat
         clipped-right
       >
-        <VBtn icon :to="closeLink" exact>
+        <VBtn icon exact data-test="close" @click="dialog=false">
           <Icon>close</Icon>
         </VBtn>
         <VToolbarTitle>
-          {{ $tr("moveItems", {count: moveNodesCount}) }}
+          {{ $tr("moveItems", {count: moveNodeIds.length}) }}
           <b class="notranslate">{{ currentNode.title }}</b>
         </VToolbarTitle>
         <template v-if="!loading" #extension>
           <ToolBar dense color="white" light>
             <Breadcrumbs :items="crumbs" class="py-0">
-              <template #item="{item}">
-                <span class="notranslate">{{ item.text }}</span>
+              <template #item="{item, isLast}">
+                <span
+                  style="cursor: pointer;"
+                  class="notranslate"
+                  :class="isLast? 'font-weight-bold' : 'grey--text'"
+                  @click="targetNodeId = item.id"
+                >
+                  {{ item.title }}
+                </span>
               </template>
             </Breadcrumbs>
             <VSpacer />
-            <VBtn flat @click="showNewTopicModal = true">
+            <VBtn flat data-test="newtopic" @click="showNewTopicModal = true">
               {{ $tr("addTopic") }}
             </VBtn>
           </ToolBar>
         </template>
       </VToolbar>
       <VContent style="padding-top: 112px; padding-bottom: 64px; background-color: white;">
-
         <!-- list of children content -->
-        <LoadingText v-if="loading" absolute />
-        <VContainer v-else-if="!children.length" fluid fill-height>
+        <LoadingText v-if="loading" absolute data-test="loading" />
+        <VContainer v-else-if="!children.length" data-test="empty" fluid fill-height>
           <VLayout align-center justify-center class="subheading">
             <div>{{ $tr('emptyTopicText') }}</div>
           </VLayout>
@@ -59,6 +67,8 @@
             :key="node.id"
             flat
             class="pa-4 content-card"
+            :class="{disabled: isDisabled(node)}"
+            data-test="listitem"
             @click="openTopic(node)"
           >
             <VLayout align-center row>
@@ -74,7 +84,9 @@
                   {{ node.title }}
                 </VCardTitle>
                 <VCardText class="grey--text pt-0">
-                  <div>{{ $tr('resourcesCount', {count: node.resource_count}) }}</div>
+                  <div v-if="node.kind === 'topic'">
+                    {{ $tr('resourcesCount', {count: node.resource_count || 0}) }}
+                  </div>
                   <div class="notranslate subheading">
                     {{ node.description }}
                   </div>
@@ -83,7 +95,7 @@
               <VSpacer />
               <div style="min-width: 102px;">
                 <VCardActions class="options">
-                  <VBtn icon @click.stop="previewNodeId = node.id">
+                  <VBtn icon data-test="details" @click.stop="previewNodeId = node.id">
                     <Icon color="primary">
                       info
                     </Icon>
@@ -98,7 +110,6 @@
         </VContainer>
       </VContent>
       <ResourceDrawer
-        localName="move-resource-panel"
         app
         :nodeId="previewNodeId"
         @close="previewNodeId = null"
@@ -109,18 +120,28 @@
         <Icon class="mr-2">
           assignment
         </Icon>
-        <ActionLink :text="$tr('moveClipboard')" @click="moveNodesToClipboard" />
+        <ActionLink
+          :text="$tr('moveClipboard')"
+          data-test="clipboard"
+          @click="moveToClipboard"
+        />
         <VSpacer />
-        <VBtn flat :to="closeLink" exact>
+        <VBtn flat exact data-test="cancel" @click="dialog=false">
           {{ $tr("cancel") }}
         </VBtn>
-        <VBtn color="primary" class="white--text" @click="moveNodes">
+        <VBtn
+          color="primary"
+          data-test="move"
+          :disabled="parentId === targetNodeId"
+          @click="moveNodes"
+        >
           {{ $tr("moveHere") }}
         </VBtn>
       </BottomToolBar>
 
       <NewTopicModal
         v-model="showNewTopicModal"
+        data-test="newtopicmodal"
         @createTopic="createTopic"
       />
     </VCard>
@@ -129,7 +150,7 @@
 </template>
 <script>
 
-  import { mapGetters, mapActions } from 'vuex';
+  import { mapGetters, mapActions, mapMutations, mapState } from 'vuex';
   import { RouterNames } from '../constants';
   import BottomToolBar from '../../shared/views/BottomToolBar';
   import ResourceDrawer from '../components/ResourceDrawer';
@@ -152,58 +173,45 @@
       Thumbnail,
       ToolBar,
     },
-    props: {
-      targetNodeId: {
-        type: String,
-        required: true,
-      },
-      moveNodeIds: {
-        type: String,
-        required: true,
-      },
-    },
     data() {
       return {
         showNewTopicModal: false,
         loading: false,
+        targetNodeId: null,
         previewNodeId: null,
       };
     },
     computed: {
-      ...mapGetters('currentChannel', ['currentChannel']),
-      ...mapGetters('contentNode', ['getContentNode', 'getContentNodeChildren', 'getTreeNode']),
-      closeLink() {
-        return {
-          name: this.$route.matched[this.$route.matched.length - 2].name,
-          params: this.$route.params,
-        };
+      ...mapState('contentNode', { moveNodeIds: 'moveNodes' }),
+      ...mapGetters('currentChannel', ['currentChannel', 'rootId']),
+      ...mapGetters('contentNode', [
+        'getContentNode',
+        'getContentNodeChildren',
+        'getTreeNode',
+        'getContentNodeAncestors',
+      ]),
+      dialog: {
+        get() {
+          return Boolean(this.moveNodeIds.length);
+        },
+        set(value) {
+          if (!value) {
+            this.setMoveNodes([]);
+          }
+        },
+      },
+      parentId() {
+        let treeNode = this.getTreeNode(this.moveNodeIds[0]);
+        return treeNode && treeNode.parent;
       },
       currentNode() {
         return this.getContentNode(this.targetNodeId);
-      },
-      moveNodesCount() {
-        return this.moveNodeIds.split(',').length;
       },
       children() {
         return this.getContentNodeChildren(this.targetNodeId);
       },
       crumbs() {
-        const trail = [];
-        var node = this.getContentNode(this.targetNodeId);
-        var inTree = this.getTreeNode(node.id);
-        trail.unshift({
-          text: node.title,
-          to: this.nextItem(node),
-        });
-        while (inTree !== undefined) {
-          node = this.getContentNode(inTree.parent);
-          inTree = this.getTreeNode(node.id);
-          trail.unshift({
-            text: node.title,
-            to: this.nextItem(node),
-          });
-        }
-        return trail;
+        return this.getContentNodeAncestors(this.targetNodeId) || [];
       },
     },
     watch: {
@@ -215,20 +223,19 @@
       },
     },
     created() {
-      if (!this.currentNode) {
-        this.loadContentNode(this.targetNodeId).then(this.getChildren);
-        var node = this.getContentNode(this.targetNodeId);
-        while (node.parent !== null) {
-          this.loadContentNode(node.parent).then(() => {
-            node = this.getContentNode(node.parent);
-          });
-        }
-      } else {
-        this.getChildren();
-      }
+      this.targetNodeId = this.parentId || this.rootId;
     },
     methods: {
-      ...mapActions('contentNode', ['createContentNode', 'loadContentNode', 'loadChildren']),
+      ...mapActions('contentNode', [
+        'createContentNode',
+        'loadChildren',
+        'moveContentNodes',
+        'moveContentNodesToClipboard',
+      ]),
+      ...mapMutations('contentNode', { setMoveNodes: 'SET_MOVE_NODES' }),
+      isDisabled(node) {
+        return this.moveNodeIds.includes(node.id);
+      },
       nextItem(child) {
         return {
           name: this.$route.name,
@@ -240,7 +247,7 @@
       },
       openTopic(node) {
         if (node.kind === 'topic') {
-          this.$router.push(this.nextItem(node));
+          this.targetNodeId = node.id;
         }
       },
       goToLocation() {
@@ -264,21 +271,29 @@
         return Promise.resolve();
       },
       createTopic(title) {
-        this.createContentNode({ parent: this.nodeId, kind: 'topic', title }).then(() => {
+        this.createContentNode({ parent: this.targetNodeId, kind: 'topic', title }).then(() => {
           this.showNewTopicModal = false;
           this.$store.dispatch('showSnackbar', { text: this.$tr('topicCreatedMessage') });
         });
       },
-      moveNodesToClipboard() {
-        // TODO: connect to vuex action
-        this.$store.dispatch('showSnackbar', { text: this.$tr('movedToClipboardMessage') });
+      moveToClipboard() {
+        this.moveContentNodesToClipboard(this.moveNodeIds).then(() => {
+          this.$router.push(this.closeLink);
+          this.$store.dispatch('showSnackbar', { text: this.$tr('movedToClipboardMessage') });
+        });
       },
       moveNodes() {
-        // TODO: connect to vuex action
-        this.$store.dispatch('showSnackbar', {
-          text: this.$tr('movedMessage', { title: this.currentNode.title }),
-          actionText: this.$tr('goToLocationButton'),
-          actionCallback: this.goToLocation,
+        let payload = {
+          ids: this.moveNodeIds,
+          parent: this.targetNodeId,
+        };
+        this.moveContentNodes(payload).then(() => {
+          this.dialog = false;
+          this.$store.dispatch('showSnackbar', {
+            text: this.$tr('movedMessage', { title: this.currentNode.title }),
+            actionText: this.$tr('goToLocationButton'),
+            actionCallback: this.goToLocation,
+          });
         });
       },
     },
@@ -309,6 +324,9 @@
     border-bottom: 1px solid var(--v-grey-lighten3) !important;
     .options {
       display: none;
+    }
+    &.disabled {
+      pointer-events: none;
     }
     &:last-child {
       border-bottom: 0 !important;

@@ -42,7 +42,7 @@
               <p class="title mt-4">
                 {{ $tr('itemCountText', {count: items.length}) }}
               </p>
-              <VDataTable :headers="headers" :items="sortedItems" hide-actions must-sort>
+              <VDataTable :headers="headers" :items="items" hide-actions must-sort>
                 <template #headerCell="props">
                   <VLayout v-if="props.header.selectAll" row align-center>
                     <VFlex shrink>
@@ -94,7 +94,6 @@
             </VCard>
           </VContainer>
           <ResourceDrawer
-            localName="trash-resource-panel"
             style="margin-top: 64px;"
             :nodeId="previewNodeId"
             :channelId="currentChannel.id"
@@ -135,7 +134,7 @@
 </template>
 <script>
 
-  import { mapActions, mapGetters } from 'vuex';
+  import { mapActions, mapGetters, mapMutations } from 'vuex';
   import sortBy from 'lodash/sortBy';
   import { RouterNames } from '../../constants';
   import ResourceDrawer from '../../components/ResourceDrawer';
@@ -143,6 +142,7 @@
   import BottomToolBar from 'shared/views/BottomToolBar';
   import ActionLink from 'edit_channel/sharedComponents/ActionLink';
   import MessageDialog from 'shared/views/MessageDialog';
+  import LoadingText from 'shared/views/LoadingText';
 
   export default {
     name: 'TrashModal',
@@ -152,6 +152,7 @@
       ResourceDrawer,
       ActionLink,
       MessageDialog,
+      LoadingText,
     },
     data() {
       return {
@@ -162,7 +163,8 @@
       };
     },
     computed: {
-      ...mapGetters('currentChannel', ['currentChannel', 'rootId']),
+      ...mapGetters('currentChannel', ['currentChannel', 'trashId']),
+      ...mapGetters('contentNode', ['getContentNodeChildren']),
       showDialog() {
         return this.$route.name === RouterNames.TRASH;
       },
@@ -183,30 +185,8 @@
           },
         ];
       },
-      sortedItems() {
-        return sortBy(this.items, 'modified').reverse();
-      },
       items() {
-        return [
-          {
-            id: 'test1',
-            title: 'Item',
-            kind: 'video',
-            modified: new Date(2020, 1, 20),
-          },
-          {
-            id: 'test2',
-            title: 'Item',
-            kind: 'audio',
-            modified: new Date(2020, 2, 1),
-          },
-          {
-            id: 'test3',
-            title: 'Topic',
-            kind: 'topic',
-            modified: new Date(2020, 1, 1),
-          },
-        ];
+        return sortBy(this.getContentNodeChildren(this.trashId), 'modified').reverse();
       },
       backLink() {
         return {
@@ -216,8 +196,20 @@
         };
       },
     },
+    mounted() {
+      this.loading = true;
+      this.loadContentNode(this.trashId).then(() => {
+        this.loadChildren({
+          parent: this.trashId,
+          channel_id: this.currentChannel.id,
+        }).then(() => {
+          this.loading = false;
+        });
+      });
+    },
     methods: {
-      ...mapActions('contentNode', ['deleteContentNode']),
+      ...mapActions('contentNode', ['deleteContentNode', 'loadContentNode', 'loadChildren']),
+      ...mapMutations('contentNode', { setMoveNodes: 'SET_MOVE_NODES' }),
       deleteNodes() {
         let text = this.$tr('deleteSuccessMessage', { count: this.selected.length });
         this.selected.forEach(id => {
@@ -235,14 +227,7 @@
       },
       restoreItems() {
         this.previewNodeId = null;
-        this.$router.push({
-          name: RouterNames.RESTORE_TRASH,
-          params: {
-            ...this.$route.params,
-            targetNodeId: this.rootId,
-            moveNodeIds: this.selected.join(','),
-          },
-        });
+        this.setMoveNodes(this.selected);
         // Make this empty in case items are moved outside of trash
         this.selected = [];
       },

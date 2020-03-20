@@ -40,7 +40,12 @@
             @click="editNodes(selected)"
           />
           <IconButton icon="content_paste" :text="$tr('copySelectedButton')" />
-          <IconButton v-if="canEdit" icon="sync_alt" :text="$tr('moveSelectedButton')" />
+          <IconButton
+            v-if="canEdit"
+            icon="sync_alt"
+            :text="$tr('moveSelectedButton')"
+            @click="setMoveNodes(selected)"
+          />
           <IconButton
             v-if="canEdit"
             icon="delete"
@@ -107,7 +112,6 @@
       <ResourceDrawer
         :nodeId="detailNodeId"
         :channelId="currentChannel.id"
-        localName="resource-panel"
         @close="closePanel"
       >
         <template v-if="canEdit" #actions>
@@ -145,7 +149,7 @@
 
 <script>
 
-  import { mapActions, mapGetters } from 'vuex';
+  import { mapActions, mapGetters, mapMutations } from 'vuex';
   import { RouterNames, viewModes } from '../constants';
   import ResourceDrawer from '../components/ResourceDrawer';
   import NodePanel from './NodePanel';
@@ -182,7 +186,7 @@
       };
     },
     computed: {
-      ...mapGetters('currentChannel', ['canEdit', 'currentChannel']),
+      ...mapGetters('currentChannel', ['canEdit', 'currentChannel', 'trashId']),
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodeAncestors']),
       selectAll: {
         get() {
@@ -244,7 +248,8 @@
       },
     },
     methods: {
-      ...mapActions('contentNode', ['createContentNode', 'loadAncestors']),
+      ...mapActions('contentNode', ['createContentNode', 'loadAncestors', 'moveContentNodes']),
+      ...mapMutations('contentNode', { setMoveNodes: 'SET_MOVE_NODES' }),
       newContentNode(route, { kind, title }) {
         this.createContentNode({ parent: this.parentId, kind, title }).then(newId => {
           this.$router.push({
@@ -294,8 +299,10 @@
         this.viewMode = sessionStorage['topic-tree-view'] = viewMode;
       },
       removeNodes(ids) {
-        this.$store.dispatch('showSnackbar', {
-          text: this.$tr('removedItemsMessage', { count: ids.length }),
+        this.moveContentNodes({ ids, parent: this.trashId }).then(() => {
+          this.$store.dispatch('showSnackbar', {
+            text: this.$tr('removedItemsMessage', { count: ids.length }),
+          });
         });
       },
     },

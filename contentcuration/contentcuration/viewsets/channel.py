@@ -280,6 +280,7 @@ class ChannelViewSet(ValuesViewset):
         "last_published",
         "ricecooker_version",
         "main_tree__id",
+        "trash_tree__id",
         "content_defaults",
         "deleted",
     )
@@ -289,6 +290,7 @@ class ChannelViewSet(ValuesViewset):
         "published": "main_tree__published",
         "created": "main_tree__created",
         "root_id": "main_tree__id",
+        "trash_id": "trash_tree__id",
     }
 
     def get_queryset(self):

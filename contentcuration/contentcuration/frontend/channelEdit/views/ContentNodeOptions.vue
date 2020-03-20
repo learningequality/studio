@@ -12,7 +12,7 @@
     <VListTile v-if="!hideDetailsLink" :to="viewLink">
       <VListTileTitle>{{ $tr('viewDetails') }}</VListTileTitle>
     </VListTile>
-    <VListTile v-if="canEdit" :to="moveLink">
+    <VListTile v-if="canEdit" @click.stop="setMoveNodes([nodeId])">
       <VListTileTitle>{{ $tr('move') }}</VListTileTitle>
     </VListTile>
     <VListTile v-if="canEdit" @click.stop>
@@ -30,7 +30,7 @@
 
 <script>
 
-  import { mapActions, mapGetters } from 'vuex';
+  import { mapActions, mapGetters, mapMutations } from 'vuex';
   import { RouterNames } from '../constants';
 
   export default {
@@ -46,7 +46,7 @@
       },
     },
     computed: {
-      ...mapGetters('currentChannel', ['canEdit']),
+      ...mapGetters('currentChannel', ['canEdit', 'trashId']),
       ...mapGetters('contentNode', ['getContentNode']),
       node() {
         return this.getContentNode(this.nodeId);
@@ -72,19 +72,10 @@
           },
         };
       },
-      moveLink() {
-        return {
-          name: RouterNames.MOVE,
-          params: {
-            ...this.$route.params,
-            targetNodeId: this.$route.params.nodeId,
-            moveNodeIds: this.nodeId,
-          },
-        };
-      },
     },
     methods: {
-      ...mapActions('contentNode', ['createContentNode']),
+      ...mapActions('contentNode', ['createContentNode', 'moveContentNodes']),
+      ...mapMutations('contentNode', { setMoveNodes: 'SET_MOVE_NODES' }),
       newTopicNode() {
         let nodeData = {
           parent: this.nodeId,
@@ -102,8 +93,10 @@
         });
       },
       removeItem() {
-        this.$store.dispatch('showSnackbar', { text: this.$tr('removedItemsMessage') });
-        this.$emit('removed');
+        this.moveContentNodes({ ids: [this.nodeId], parent: this.trashId }).then(() => {
+          this.$store.dispatch('showSnackbar', { text: this.$tr('removedItemsMessage') });
+          this.$emit('removed');
+        });
       },
     },
 
