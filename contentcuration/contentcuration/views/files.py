@@ -24,7 +24,7 @@ from pressurecooker.subtitles import LANGUAGE_CODE_UNKNOWN
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import authentication_classes
-from rest_framework.decorators import permission_classes
+from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 
@@ -42,7 +42,7 @@ from contentcuration.utils.files import get_thumbnail_encoding
 from contentcuration.utils.storage_common import get_presigned_upload_url
 
 
-@require_http_methods(['GET'])
+@api_view(["GET"])
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
 def get_upload_url(request):
