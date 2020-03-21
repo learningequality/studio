@@ -230,23 +230,28 @@ export function deleteContentNode(context, contentNodeId) {
   });
 }
 
+export function deleteContentNodes(context, contentNodeIds) {
+  return Promise.all(
+    contentNodeIds.map(id => {
+      return deleteContentNode(context, id);
+    })
+  );
+}
+
 export function copyContentNodes(context, contentNodeIds) {
   // TODO: Implement copy nodes endpoint
   return new Promise(resolve => resolve(context, contentNodeIds));
 }
 
 export function moveContentNodes(context, { ids, parent }) {
-  let promises = [];
-  ids.forEach(id => {
-    promises.push(
-      Tree.move(id, parent, MOVE_POSITIONS.LAST_CHILD).then(treeNode => {
+  return Promise.all(
+    ids.map(id => {
+      return Tree.move(id, parent, MOVE_POSITIONS.LAST_CHILD).then(treeNode => {
         context.commit('UPDATE_TREENODE', treeNode);
         return id;
-      })
-    );
-  });
-
-  return Promise.all(promises);
+      });
+    })
+  );
 }
 
 export function moveContentNodesToClipboard(context, contentNodeIds) {

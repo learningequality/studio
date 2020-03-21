@@ -1,14 +1,26 @@
 <template>
 
   <MessageDialog v-model="dialog" :header="$tr('createTopic')">
-    <VTextField v-model="title" :label="$tr('topicTitle')" outline />
+    <VForm
+      ref="form"
+      lazy-validation
+    >
+      <VTextField
+        v-model="title"
+        :label="$tr('topicTitle')"
+        outline
+        :rules="titleRules"
+        required
+      />
+    </VForm>
     <template #buttons="{close}">
-      <VBtn flat @click="close">
+      <VBtn flat data-test="close" @click="close">
         {{ $tr("cancel") }}
       </VBtn>
       <VBtn
         color="primary"
-        @click="$emit('createTopic', title)"
+        data-test="create"
+        @click="create"
       >
         {{ $tr("create") }}
       </VBtn>
@@ -46,9 +58,20 @@
           this.$emit('input', value);
         },
       },
+      titleRules() {
+        return [v => !!v || this.$tr('topicTitleRequired')];
+      },
+    },
+    methods: {
+      create() {
+        if (this.$refs.form.validate()) {
+          this.$emit('createTopic', this.title);
+        }
+      },
     },
     $trs: {
       topicTitle: 'Topic title',
+      topicTitleRequired: 'Title is required',
       createTopic: 'Create new topic',
       cancel: 'Cancel',
       create: 'Create',

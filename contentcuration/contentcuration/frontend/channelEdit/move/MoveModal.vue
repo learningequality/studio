@@ -100,7 +100,7 @@
                       info
                     </Icon>
                   </VBtn>
-                  <VBtn v-if="node.kind === 'topic'" icon :to="nextItem(node)">
+                  <VBtn v-if="node.kind === 'topic'" icon @click.stop="targetNodeId = node.id">
                     <Icon>keyboard_arrow_right</Icon>
                   </VBtn>
                 </VCardActions>
@@ -132,7 +132,7 @@
         <VBtn
           color="primary"
           data-test="move"
-          :disabled="parentId === targetNodeId"
+          :disabled="currentLocationId === targetNodeId"
           @click="moveNodes"
         >
           {{ $tr("moveHere") }}
@@ -140,6 +140,7 @@
       </BottomToolBar>
 
       <NewTopicModal
+        v-if="showNewTopicModal"
         v-model="showNewTopicModal"
         data-test="newtopicmodal"
         @createTopic="createTopic"
@@ -200,7 +201,7 @@
           }
         },
       },
-      parentId() {
+      currentLocationId() {
         let treeNode = this.getTreeNode(this.moveNodeIds[0]);
         return treeNode && treeNode.parent;
       },
@@ -223,7 +224,7 @@
       },
     },
     created() {
-      this.targetNodeId = this.parentId || this.rootId;
+      this.targetNodeId = this.currentLocationId || this.rootId;
     },
     methods: {
       ...mapActions('contentNode', [
@@ -235,15 +236,6 @@
       ...mapMutations('contentNode', { setMoveNodes: 'SET_MOVE_NODES' }),
       isDisabled(node) {
         return this.moveNodeIds.includes(node.id);
-      },
-      nextItem(child) {
-        return {
-          name: this.$route.name,
-          params: {
-            ...this.$route.params,
-            targetNodeId: child.id,
-          },
-        };
       },
       openTopic(node) {
         if (node.kind === 'topic') {

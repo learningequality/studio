@@ -13,7 +13,7 @@
       <router-view />
       <VToolbar fixed clipped-right color="primary" dark app>
         <VToolbarItems>
-          <VBtn flat icon :to="backLink" exact>
+          <VBtn flat icon :to="backLink" exact data-test="close">
             <Icon>clear</Icon>
           </VBtn>
         </VToolbarItems>
@@ -23,8 +23,8 @@
       </VToolbar>
       <VContent style="padding-top: 64px;">
         <VLayout row>
-          <LoadingText v-if="loading" absolute />
-          <VContainer v-else-if="!items.length" fluid>
+          <LoadingText v-if="loading" absolute data-test="loading" />
+          <VContainer v-else-if="!items.length" fluid data-test="empty">
             <h1 class="headline font-weight-bold pt-4 mt-4 text-xs-center">
               {{ $tr('trashEmptyText') }}
             </h1>
@@ -36,6 +36,7 @@
             v-else
             fluid
             class="pa-4"
+            data-test="list"
             style="max-height: calc(100vh - 128px); overflow-y: auto;"
           >
             <VCard style="width: 100%; max-width: 900px; margin: 0 auto;" flat class="pa-2">
@@ -51,6 +52,7 @@
                         hide-details
                         color="primary"
                         :indeterminate="!!selected.length && selected.length !== items.length"
+                        data-test="selectall"
                         @change="toggleSelectAll"
                       />
                     </VFlex>
@@ -71,6 +73,7 @@
                             v-model="selected"
                             color="primary"
                             :value="item.id"
+                            data-test="checkbox"
                             hide-details
                           />
                         </VFlex>
@@ -80,6 +83,7 @@
                         <VFlex class="notranslate" grow>
                           <ActionLink
                             :text="item.title"
+                            data-test="item"
                             @click="previewNodeId = item.id"
                           />
                         </VFlex>
@@ -107,10 +111,20 @@
         <span v-if="selected.length" class="mr-4 subheading">
           {{ $tr('selectedCountText', {count: selected.length} ) }}
         </span>
-        <VBtn flat :disabled="!selected.length" @click="restoreItems">
+        <VBtn
+          flat
+          :disabled="!selected.length"
+          data-test="restore"
+          @click="restoreItems"
+        >
           {{ $tr('restoreButton') }}
         </VBtn>
-        <VBtn color="primary" :disabled="!selected.length" @click="showConfirmationDialog = true">
+        <VBtn
+          color="primary"
+          :disabled="!selected.length"
+          data-test="delete"
+          @click="showConfirmationDialog = true"
+        >
           {{ $tr('deleteButton') }}
         </VBtn>
       </BottomToolBar>
@@ -120,10 +134,10 @@
         :text="$tr('deleteConfirmationText')"
       >
         <template #buttons="{close}">
-          <VBtn flat @click="close">
+          <VBtn flat data-test="closeconfirm" @click="close">
             {{ $tr('deleteConfirmationCancelButton') }}
           </VBtn>
-          <VBtn color="primary" @click="deleteNodes">
+          <VBtn color="primary" data-test="deleteconfirm" @click="deleteNodes">
             {{ $tr('deleteConfirmationDeleteButton') }}
           </VBtn>
         </template>
@@ -189,8 +203,9 @@
         return sortBy(this.getContentNodeChildren(this.trashId), 'modified').reverse();
       },
       backLink() {
+        const lastIndex = Math.max(0, this.$route.matched.length - 2);
         return {
-          name: this.$route.matched[this.$route.matched.length - 2].name,
+          name: this.$route.matched[lastIndex].name,
           query: this.$route.query,
           params: this.$route.params,
         };
@@ -198,26 +213,27 @@
     },
     mounted() {
       this.loading = true;
-      this.loadContentNode(this.trashId).then(() => {
-        this.loadChildren({
-          parent: this.trashId,
-          channel_id: this.currentChannel.id,
-        }).then(() => {
-          this.loading = false;
-        });
+      this.loadChildren({
+        parent: this.trashId,
+        channel_id: this.currentChannel.id,
+      }).then(() => {
+        this.loading = false;
       });
     },
     methods: {
-      ...mapActions('contentNode', ['deleteContentNode', 'loadContentNode', 'loadChildren']),
+      ...mapActions('contentNode', ['deleteContentNodes', 'loadChildren']),
       ...mapMutations('contentNode', { setMoveNodes: 'SET_MOVE_NODES' }),
+      reset() {
+        this.previewNodeId = null;
+        this.toggleSelectAll(false);
+      },
       deleteNodes() {
         let text = this.$tr('deleteSuccessMessage', { count: this.selected.length });
-        this.selected.forEach(id => {
-          this.deleteContentNode(id);
+        this.deleteContentNodes(this.selected).then(() => {
+          this.showConfirmationDialog = false;
+          this.reset();
+          this.$store.dispatch('showSnackbar', { text });
         });
-        this.showConfirmationDialog = false;
-        this.toggleSelectAll(false);
-        this.$store.dispatch('showSnackbar', { text });
       },
       toggleSelectAll(selectAll) {
         this.selected = selectAll ? this.items.map(i => i.id) : [];
@@ -226,10 +242,9 @@
         return this.previewNodeId === id ? this.$vuetify.theme.greyBackground : 'transparent';
       },
       restoreItems() {
-        this.previewNodeId = null;
         this.setMoveNodes(this.selected);
-        // Make this empty in case items are moved outside of trash
-        this.selected = [];
+        // Reset in case items are moved outside of trash
+        this.reset();
       },
     },
     $trs: {
