@@ -141,11 +141,13 @@ function getStepDetail(state, contentNodeId) {
     return stepDetail;
   }
 
-  const parentNode = getContentNode(state)(node.parent);
-
   stepDetail.title = node.title;
   stepDetail.kind = node.kind;
-  if (parentNode) {
+
+  const parentNodeId = state.treeNodesMap[contentNodeId].parent;
+
+  if (parentNodeId) {
+    const parentNode = getContentNode(state)(parentNodeId);
     stepDetail.parentTitle = parentNode.title;
   }
 
