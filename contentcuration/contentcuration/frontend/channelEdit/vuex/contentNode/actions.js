@@ -44,30 +44,6 @@ export function loadAncestors(context, { id, channel_id }) {
 }
 
 /**
- * Load a whole chain of parent nodes of a node.
- */
-export async function loadParents(context, { id, channel_id }) {
-  const parentsIds = [];
-
-  let treeNodes = await Tree.where({ id, channel_id });
-
-  while (treeNodes && treeNodes.length && treeNodes[0].parent) {
-    const parentId = treeNodes[0].parent;
-    parentsIds.push(parentId);
-
-    treeNodes = await Tree.where({ id: parentId, channel_id });
-
-    // the end of the chain has been reached
-    // if the node is its own parent
-    if (treeNodes && treeNodes.length && treeNodes[0].parent === parentId) {
-      break;
-    }
-  }
-
-  return loadContentNodes(context, { ids: parentsIds });
-}
-
-/**
  * Retrieve related resources of a node from API.
  * Save all previous/next steps (pre/post-requisites)
  * to next steps map.

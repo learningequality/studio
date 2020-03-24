@@ -143,7 +143,7 @@
       },
     },
     async created() {
-      await this.loadParents({
+      await this.loadAncestors({
         id: this.targetNodeId,
         channel_id: this.currentChannelId,
       });
@@ -151,7 +151,7 @@
       this.selectedNodeId = this.getContentNodeParents(this.targetNodeId)[0].id;
     },
     methods: {
-      ...mapActions('contentNode', ['loadParents']),
+      ...mapActions('contentNode', ['loadAncestors']),
       isTopic(node) {
         return node.kind === ContentNodeKind.TOPIC;
       },

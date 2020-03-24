@@ -97,7 +97,7 @@
       this.onSelectionUpdate(this.selectedNodeId);
     },
     methods: {
-      ...mapActions('contentNode', ['loadContentNode', 'loadParents', 'loadChildren']),
+      ...mapActions('contentNode', ['loadContentNode', 'loadAncestors', 'loadChildren']),
       onSelectionUpdate(nodeId) {
         this.loadContentNode(nodeId);
 
@@ -108,7 +108,7 @@
           });
         }
 
-        this.loadParents({
+        this.loadAncestors({
           id: nodeId,
           channel_id: this.channelId,
         });
