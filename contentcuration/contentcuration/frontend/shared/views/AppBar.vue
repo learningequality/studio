@@ -18,9 +18,9 @@
       <VMenu offsetY>
         <template v-slot:activator="{ on }">
           <VBtn icon v-on="on">
-            <VIcon class="notranslate">
+            <Icon>
               account_circle
-            </VIcon>
+            </Icon>
           </VBtn>
         </template>
 
@@ -36,7 +36,7 @@
         </VList>
       </VMenu>
     </template>
-    <VBtn v-else href="/accounts/login" flat>
+    <VBtn v-else href="/accounts" flat>
       {{ $tr('logIn') }}
     </VBtn>
 

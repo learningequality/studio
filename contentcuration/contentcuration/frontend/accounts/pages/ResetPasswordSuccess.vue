@@ -4,10 +4,9 @@
     :header="$tr('header')"
     :text="$tr('text')"
   >
-    <ActionLink
-      :to="{ name: 'Main' }"
-      :text="$tr('back')"
-    />
+    <VBtn :to="{ name: 'Main' }" large block color="primary">
+      {{ $tr('back') }}
+    </VBtn>
   </MessageLayout>
 
 </template>
@@ -16,19 +15,16 @@
 <script>
 
   import MessageLayout from '../components/MessageLayout';
-  import ActionLink from 'shared/views/ActionLink';
 
   export default {
-    name: 'ActivationSent',
+    name: 'ResetPasswordSuccess',
     components: {
       MessageLayout,
-      ActionLink,
     },
     $trs: {
-      header: 'Activation link sent',
-      text:
-        'Thanks for registering! To finish creating your account, please check your email for an activation link.',
-      back: 'Back to login',
+      header: 'Password reset successfully',
+      text: 'Your password has been reset. You may sign in now.',
+      back: 'Back to sign in',
     },
   };
 

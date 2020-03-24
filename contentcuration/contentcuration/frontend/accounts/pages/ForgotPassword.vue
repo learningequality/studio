@@ -1,30 +1,50 @@
 <template>
 
-  <ImmersiveModalLayout
-    :previousPage="{ name: 'Main' }"
-    :appBarText="$tr('title')"
+  <MessageLayout
+    :header="$tr('forgotPasswordTitle')"
+    :text="$tr('forgotPasswordPrompt')"
   >
-    <h1>{{ $tr('title') }}</h1>
-    <p>...</p>
-    <VBtn primary @click="submit">
-      Submit
-    </VBtn>
-  </ImmersiveModalLayout>
+    <VForm ref="form" lazy-validation style="max-width: 400px; margin: 0 auto;">
+      <EmailField v-model="email" />
+      <VBtn block color="primary" large @click="submit">
+        {{ $tr('submitButton') }}
+      </VBtn>
+    </VForm>
+  </MessageLayout>
 
 </template>
 
 
 <script>
 
-  import ImmersiveModalLayout from 'shared/layouts/ImmersiveModalLayout';
+  import MessageLayout from '../components/MessageLayout';
+  import EmailField from '../components/EmailField';
 
   export default {
     name: 'ForgotPassword',
     components: {
-      ImmersiveModalLayout,
+      MessageLayout,
+      EmailField,
+    },
+    data() {
+      return {
+        email: '',
+      };
+    },
+    methods: {
+      submit() {
+        if (this.$refs.form.validate()) {
+          this.$router.push({
+            name: 'PasswordInstructionsSent',
+          });
+        }
+      },
     },
     $trs: {
-      title: 'Forgot password',
+      forgotPasswordTitle: 'Forgot password',
+      forgotPasswordPrompt:
+        "Provide your email address and we'll send you instructions to reset your password",
+      submitButton: 'Submit',
     },
   };
 
