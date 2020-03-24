@@ -94,8 +94,8 @@ class ContentNodeListSerializer(BulkListSerializer):
             prereqs_to_create.extend(
                 [
                     PrerequisiteContentRelationship(
-                        target_node=ContentNode.objects.get(pk=target_node_id),
-                        prerequisite=ContentNode.objects.get(pk=prereq_id)
+                        target_node_id=target_node_id,
+                        prerequisite_id=prereq_id
                     )
                     for prereq_id in ids_set - current_set
                 ]
