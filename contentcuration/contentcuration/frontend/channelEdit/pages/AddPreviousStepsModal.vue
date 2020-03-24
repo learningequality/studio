@@ -27,8 +27,11 @@
         required: true,
       },
     },
+    created() {
+      this.loadRelatedResources(this.targetNodeId);
+    },
     methods: {
-      ...mapActions('contentNode', ['addPreviousStepToNode']),
+      ...mapActions('contentNode', ['addPreviousStepToNode', 'loadRelatedResources']),
       onAddStepClick(node) {
         this.addPreviousStepToNode({
           targetId: this.targetNodeId,
