@@ -1,3 +1,4 @@
+import client from '../../client';
 import Constants from 'edit_channel/constants/index';
 
 export default {
@@ -27,6 +28,18 @@ export default {
   getters: {
     currentUserId(state) {
       return state.currentUser.id;
+    },
+  },
+  actions: {
+    login(context, credentials) {
+      return client.post(window.Urls.login(), credentials);
+    },
+    logout(context) {
+      return client.get(window.Urls.logout()).then(() => {
+        context.commit('SET_CURRENT_USER', {});
+        localStorage['loggedOut'] = true;
+        window.location = '/';
+      });
     },
   },
 };

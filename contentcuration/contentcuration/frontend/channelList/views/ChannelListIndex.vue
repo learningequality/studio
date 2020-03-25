@@ -117,6 +117,12 @@
         });
       }
     },
+    mounted() {
+      if (localStorage['loggedOut']) {
+        delete localStorage['loggedOut'];
+        this.$store.dispatch('showSnackbar', { text: this.$tr('loggedOutMessage') });
+      }
+    },
     methods: {
       ...mapActions('channelList', ['loadInvitationList']),
       getChannelLink(listType) {
@@ -132,6 +138,7 @@
       channelSets: 'Collections',
       catalog: 'Public',
       invitations: 'You have {count, plural,\n =1 {# invitation}\n other {# invitations}}',
+      loggedOutMessage: 'You have successfully logged out',
     },
   };
 

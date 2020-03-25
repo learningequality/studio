@@ -39,7 +39,6 @@ import contentcuration.views.users as registration_views
 import contentcuration.views.zip as zip_views
 from contentcuration.celery import app
 from contentcuration.forms import ForgotPasswordForm
-from contentcuration.forms import LoginForm
 from contentcuration.forms import ResetPasswordForm
 from contentcuration.models import Channel
 from contentcuration.models import ContentKind
@@ -265,8 +264,8 @@ urlpatterns += [
 
 # Add account/registration endpoints
 urlpatterns += [
-    url(r'^accounts/login/$', auth_views.login, {'template_name': 'registration/login.html', 'authentication_form': LoginForm}, name='login'),
-    url(r'^accounts/logout/$', auth_views.logout, {'template_name': 'registration/logout.html'}, name='logout'),
+    url(r'^accounts/login/$', registration_views.login, name='login'),
+    url(r'^accounts/logout/$', registration_views.logout, name='logout'),
     url(r"^accounts/$", views.accounts, name="accounts"),
     url(
         r'^accounts/password/reset/$',

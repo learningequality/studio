@@ -30,6 +30,7 @@ client.interceptors.response.use(
       if (
         error.response.status === 403 ||
         error.response.status === 404 ||
+        error.response.status === 405 ||
         error.response.status === 418
       ) {
         return Promise.reject(error);

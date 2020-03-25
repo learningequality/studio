@@ -28,7 +28,7 @@
       header: 'Activation link sent',
       text:
         'Thanks for registering! To finish creating your account, please check your email for an activation link.',
-      back: 'Back to login',
+      back: 'Back to sign in',
     },
   };
 

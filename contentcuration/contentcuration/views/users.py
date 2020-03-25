@@ -1,7 +1,9 @@
 import json
 
 from django.conf import settings
-from django.contrib.auth import logout
+from django.contrib.auth import authenticate
+from django.contrib.auth import login as djangologin
+from django.contrib.auth import logout as djangologout
 from django.contrib.auth.views import password_reset
 from django.contrib.sites.models import Site
 from django.contrib.sites.shortcuts import get_current_site
@@ -10,6 +12,7 @@ from django.core.mail import send_mail
 from django.core.urlresolvers import reverse_lazy
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
+from django.http import HttpResponseForbidden
 from django.shortcuts import redirect
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext as _
@@ -103,6 +106,31 @@ def send_invitation_email(request):
     }))
 
 
+def login(request):
+    if request.method != 'POST':
+        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+
+    data = json.loads(request.body)
+    username = data['username']
+    password = data['password']
+    user = authenticate(username=username, password=password)
+    if user is not None:
+        if user.is_active:
+            djangologin(request, user)
+            return redirect(reverse_lazy("channels"))
+        else:
+            # Return a 'disabled account' error message
+            return HttpResponseBadRequest(status=405)
+    else:
+        # Return an 'invalid login' error message.
+        return HttpResponseForbidden()
+
+
+def logout(request):
+    djangologout(request)
+    return HttpResponse()
+
+
 class UserRegistrationView(RegistrationView):
     form_class = RegistrationForm
 
@@ -192,7 +220,7 @@ def new_user_redirect(request, user_id):
     user = User.objects.get(pk=user_id)
     if user.is_active:
         return redirect(reverse_lazy("channels"))
-    logout(request)
+    djangologout(request)
     request.session["email"] = user.email
     request.session["freeze_email"] = True
 

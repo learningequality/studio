@@ -18,20 +18,16 @@
         <h2 class="text-xs-center primary--text">
           {{ $tr('kolibriStudio') }}
         </h2>
-        <VForm ref="form" lazy-validation class="py-4">
-          <EmailField v-model="email" />
-          <VTextField
-            v-model="password"
-            outline
-            required
-            type="password"
-            :rules="passwordRules"
-            :label="$tr('passwordLabel')"
-          />
+        <VAlert type="error" outline icon="error" class="mt-4" :value="loginFailed">
+          {{ $tr('loginFailed') }}
+        </VAlert>
+        <VForm ref="form" lazy-validation class="py-4" @submit.prevent="submit">
+          <EmailField v-model="credentials.username" />
+          <PasswordField v-model="credentials.password" :label="$tr('passwordLabel')" />
           <p>
             <ActionLink :to="{name: 'ForgotPassword' }" :text="$tr('forgotPasswordLink')" />
           </p>
-          <VBtn block color="primary" large @click="submit">
+          <VBtn block color="primary" large type="submit">
             {{ $tr('signInButton') }}
           </VBtn>
           <VBtn block flat color="primary" class="mt-2" :to="{name: 'Create'}">
@@ -51,7 +47,9 @@
 
 <script>
 
+  import { mapActions } from 'vuex';
   import EmailField from '../components/EmailField';
+  import PasswordField from '../components/PasswordField';
   import ActionLink from 'shared/views/ActionLink';
 
   export default {
@@ -59,33 +57,43 @@
     components: {
       ActionLink,
       EmailField,
+      PasswordField,
     },
     data() {
       return {
-        email: '',
-        password: '',
+        credentials: {
+          username: '',
+          password: '',
+        },
+        loginFailed: false,
       };
     },
-    computed: {
-      passwordRules() {
-        return [v => !!v || this.$tr('passwordRequiredMessage')];
-      },
-    },
     methods: {
+      ...mapActions(['login']),
       submit() {
         if (this.$refs.form.validate()) {
-          // sign in
+          this.login(this.credentials)
+            .then(() => {
+              let params = new URLSearchParams(window.location.href.split('?')[1]);
+              window.location = '/' + (params.get('next') || 'channels');
+            })
+            .catch(err => {
+              if (err.response.status === 405) {
+                this.$router.push({ name: 'AccountNotActivated' });
+              }
+              this.loginFailed = true;
+            });
         }
       },
     },
     $trs: {
       kolibriStudio: 'Kolibri Studio',
       passwordLabel: 'Password',
-      passwordRequiredMessage: 'Password is required',
       forgotPasswordLink: 'Forgot your password?',
       signInButton: 'Sign in',
       createAccountButton: 'Create an account',
       guestModeLink: 'Explore without an account',
+      loginFailed: 'Email or password is incorrect',
     },
   };
 

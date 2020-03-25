@@ -6,6 +6,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import PasswordInstructionsSent from './pages/PasswordInstructionsSent';
 import AccountCreated from './pages/AccountCreated';
 import ActivationExpired from './pages/ActivationExpired';
+import AccountNotActivated from './pages/AccountNotActivated';
 import ResetPassword from './pages/ResetPassword';
 import ResetPasswordSuccess from './pages/ResetPasswordSuccess';
 
@@ -25,6 +26,7 @@ const router = new VueRouter({
     pageRoute('/create', Create),
     pageRoute('/activation-sent', ActivationSent),
     pageRoute('/account-created', AccountCreated),
+    pageRoute('/account-not-active', AccountNotActivated),
     pageRoute('/activation-expired', ActivationExpired),
 
     // Forgot password routes
