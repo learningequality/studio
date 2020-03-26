@@ -7,6 +7,7 @@
     required
     :rules="emailRules"
     validate-on-blur
+    v-bind="$attrs"
   />
 
 </template>

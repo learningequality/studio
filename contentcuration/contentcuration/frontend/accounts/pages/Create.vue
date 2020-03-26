@@ -29,6 +29,7 @@
         <TextField
           v-model="form.firstName"
           :label="$tr('firstNameLabel')"
+          autofocus
         />
         <TextField
           v-model="form.lastName"
@@ -79,13 +80,7 @@
         <h1 class="font-weight-bold subheading my-2">
           {{ $tr('locationLabel') }}*
         </h1>
-        <VAutocomplete
-          v-model="form.location"
-          :items="locationOptions"
-          :label="$tr('locationPlaceholder')"
-          multiple
-          outline
-        />
+        <CountryField v-model="form.location" />
 
         <!-- Source -->
         <VInput required :rules="sourceRules" class="mt-2" />
@@ -122,12 +117,12 @@
           :text="$tr('viewPrivacyPolicyLink')"
           @click="showPolicies = true"
         />
-        <VDialog v-model="showPolicies" width="500" scrollable>
+        <VDialog v-model="showPolicies" width="500">
           <VCard>
             <VCardTitle class="headline grey lighten-4" primary-title>
               {{ $tr('privacyPolicyTitle') }}
             </VCardTitle>
-            <iframe :src="policyLink" resizable></iframe>
+            <iframe :src="policyLink"></iframe>
             <VDivider />
             <VCardActions>
               <VSpacer />
@@ -168,6 +163,7 @@
   import PasswordField from '../components/PasswordField';
   import TextArea from '../components/TextArea';
   import ActionLink from 'shared/views/ActionLink';
+  import CountryField from 'shared/views/form/CountryField';
   import ImmersiveModalLayout from 'shared/layouts/ImmersiveModalLayout';
 
   export default {
@@ -179,6 +175,7 @@
       EmailField,
       PasswordField,
       TextArea,
+      CountryField,
     },
     data() {
       return {
@@ -250,9 +247,6 @@
       },
       usageRules() {
         return [() => !!this.form.use.length || this.$tr('fieldRequiredMessage')];
-      },
-      locationOptions() {
-        return ['TODO', 'ADD', 'LOCATIONS', 'HERE'];
       },
       locationRules() {
         return [() => !!this.form.location.length || this.$tr('fieldRequiredMessage')];
@@ -336,7 +330,7 @@
       },
     },
     $trs: {
-      backToLoginButton: 'Back to sign in',
+      backToLoginButton: 'Sign in',
       createAnAccountTitle: 'Create an account',
       fieldRequiredMessage: 'Field is required',
       errorsMessage: 'Please fix the errors below',
@@ -365,7 +359,6 @@
 
       // Location question
       locationLabel: 'Where do you plan to use Kolibri Studio? (check all that apply)',
-      locationPlaceholder: 'Select all that apply',
 
       // Introduction question
       sourceLabel: 'How did you hear about us?',

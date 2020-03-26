@@ -22,7 +22,7 @@
           {{ $tr('loginFailed') }}
         </VAlert>
         <VForm ref="form" lazy-validation class="py-4" @submit.prevent="submit">
-          <EmailField v-model="credentials.username" />
+          <EmailField v-model="credentials.username" autofocus />
           <PasswordField v-model="credentials.password" :label="$tr('passwordLabel')" />
           <p>
             <ActionLink :to="{name: 'ForgotPassword' }" :text="$tr('forgotPasswordLink')" />
