@@ -1,4 +1,4 @@
-import { sanitizeAssessmentItems } from './utils';
+import { sanitizeAssessmentItems } from '../../utils';
 import { AssessmentItem } from 'shared/data/resources';
 
 export function loadAssessmentItems(context, params = {}) {

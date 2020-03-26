@@ -169,6 +169,7 @@ module.exports = (env = {}) => {
       alias: {
         // explicit alias definitions (rather than modules) for speed
         edit_channel: path.resolve(staticJsDir, 'edit_channel'),
+        static: path.resolve(staticFilesDir),
         less: path.resolve(staticJsDir, 'less'),
         utils: path.resolve(staticJsDir, 'utils'),
         shared: path.resolve(srcDir, 'shared'),
