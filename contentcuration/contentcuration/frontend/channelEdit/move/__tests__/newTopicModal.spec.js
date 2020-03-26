@@ -5,7 +5,6 @@ import store from '../../store';
 function makeWrapper() {
   return mount(NewTopicModal, {
     store,
-    attachToDocument: true,
     propsData: {
       value: true,
     },

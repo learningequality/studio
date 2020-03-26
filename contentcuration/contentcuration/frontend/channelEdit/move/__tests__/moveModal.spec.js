@@ -19,7 +19,6 @@ const testNodeMap = {
 function makeWrapper(selected) {
   return mount(MoveModal, {
     store,
-    attachToDocument: true,
     computed: {
       currentLocationId() {
         return testNodeId;
@@ -52,19 +51,6 @@ describe('moveModal', () => {
     wrapper = makeWrapper();
   });
   describe('on load', () => {
-    it('should load children', () => {
-      const loadChildrenMock = jest.fn();
-      function loadChildren() {
-        return new Promise(resolve => {
-          loadChildrenMock();
-          resolve();
-        });
-      }
-      wrapper.setMethods({ loadChildren });
-      wrapper.setData({ targetNodeId: testChildTopic.id });
-      wrapper.vm.getChildren();
-      expect(loadChildrenMock).toHaveBeenCalled();
-    });
     it('items that are selected to be moved should be disabled', () => {
       let testWrapper = makeWrapper([testVideo.id]);
       expect(

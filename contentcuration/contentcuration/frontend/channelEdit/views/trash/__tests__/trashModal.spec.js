@@ -46,7 +46,6 @@ function makeWrapper(items) {
   return mount(TrashModal, {
     store,
     router,
-    attachToDocument: true,
     computed: {
       currentChannel() {
         return {
