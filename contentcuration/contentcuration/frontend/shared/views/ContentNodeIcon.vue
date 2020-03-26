@@ -6,9 +6,9 @@
       label
       :color="kind"
       :textColor="fontColor"
-      small
       class="ma-0 pa-0"
-      :class="{iconOnly: !includeText}"
+      :class="{iconOnly: !includeText, fillWidth}"
+      :style="{width: fillWidth? '100%' : 'unset'}"
     >
       <Icon small :color="fontColor" v-bind="$attrs">
         {{ icon }}
@@ -49,6 +49,14 @@
         type: Boolean,
         default: true,
       },
+      isEmpty: {
+        type: Boolean,
+        default: false,
+      },
+      fillWidth: {
+        type: Boolean,
+        default: false,
+      },
     },
     computed: {
       fontColor() {
@@ -57,6 +65,9 @@
       icon() {
         switch (this.kind) {
           case 'topic':
+            if (this.isEmpty) {
+              return 'folder_open';
+            }
             return 'folder';
           case 'video':
             return 'ondemand_video';

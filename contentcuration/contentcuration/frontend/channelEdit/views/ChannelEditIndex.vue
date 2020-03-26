@@ -9,7 +9,7 @@
       <VToolbarItems v-if="$vuetify.breakpoint.smAndUp" class="ml-4">
         <IconButton icon="info" :text="$tr('channelDetails')" :to="viewChannelDetailsLink" />
         <IconButton v-if="canEdit" icon="edit" :text="$tr('editChannel')" :to="editChannelLink" />
-        <IconButton v-if="canEdit" icon="delete" :text="$tr('openTrash')" />
+        <IconButton v-if="canEdit" icon="delete" :text="$tr('openTrash')" :to="trashLink" />
       </VToolbarItems>
       <VSpacer />
       <template v-if="$vuetify.breakpoint.smAndUp">
@@ -37,7 +37,7 @@
         </span>
       </template>
       <VToolbarItems>
-        <VMenu offset-y>
+        <VMenu v-if="showChannelMenu" offset-y>
           <template #activator="{ on }">
             <VBtn flat icon v-on="on">
               <Icon>more_horiz</Icon>
@@ -58,7 +58,7 @@
                 <VListTileTitle>{{ $tr('openTrash') }}</VListTileTitle>
               </VListTile>
             </template>
-            <VListTile @click="showTokenModal = true;">
+            <VListTile v-if="isPublished" @click="showTokenModal = true;">
               <VListTileTitle>{{ $tr('getToken') }}</VListTileTitle>
             </VListTile>
             <VListTile v-if="canView || canEdit" @click.stop>
@@ -78,7 +78,8 @@
     <GlobalSnackbar />
     <PublishModal v-if="showPublishModal" v-model="showPublishModal" />
     <ProgressModal />
-    <template v-if="currentChannel">
+    <MoveModal v-if="moveNodes.length" />
+    <template v-if="isPublished">
       <ChannelTokenModal v-model="showTokenModal" :channel="currentChannel" />
     </template>
   </VApp>
@@ -88,7 +89,9 @@
 
 <script>
 
-  import { mapGetters } from 'vuex';
+  import { mapGetters, mapState } from 'vuex';
+  import { RouterNames } from '../constants';
+  import MoveModal from '../move/MoveModal';
   import ChannelNavigationDrawer from './ChannelNavigationDrawer';
   import PublishModal from './publish/PublishModal';
   import ProgressModal from './progress/ProgressModal';
@@ -108,6 +111,7 @@
       PublishModal,
       ProgressModal,
       ChannelTokenModal,
+      MoveModal,
     },
     data() {
       return {
@@ -117,9 +121,16 @@
       };
     },
     computed: {
+      ...mapState('contentNode', ['moveNodes']),
       ...mapGetters('currentChannel', ['currentChannel', 'canEdit', 'canView']),
       isChanged() {
         return true;
+      },
+      isPublished() {
+        return this.currentChannel && this.currentChannel.published;
+      },
+      showChannelMenu() {
+        return this.$vuetify.breakpoint.xsOnly || this.canEdit || this.canView || this.isPublished;
       },
       viewChannelDetailsLink() {
         return {
@@ -135,6 +146,11 @@
           params: {
             channelId: this.currentChannel.id,
           },
+        };
+      },
+      trashLink() {
+        return {
+          name: RouterNames.TRASH,
         };
       },
     },

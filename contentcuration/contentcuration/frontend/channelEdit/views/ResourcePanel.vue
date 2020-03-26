@@ -161,7 +161,7 @@
         <DetailsRow :label="$tr('copyrightHolder')" :text="getText('copyright_holder')" />
 
         <!-- Files section -->
-        <div class="section-header">
+        <div v-if="isResource" class="section-header">
           {{ $tr('files') }}
         </div>
         <DetailsRow v-if="primaryFiles.length" :label="$tr('availableFormats')">
@@ -188,6 +188,7 @@
 
   import sortBy from 'lodash/sortBy';
   import { mapActions, mapGetters } from 'vuex';
+  import { RouterNames } from '../constants';
   import FilePreview from './files/FilePreview';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import LoadingText from 'shared/views/LoadingText';
@@ -249,10 +250,14 @@
       },
       importedChannelLink() {
         // TODO: Eventually, update with this.node.original_source_node_id for correct path
-        let channelId = this.node.original_channel_id;
-        let parentId = this.node.original_parent_id;
-        let originalNodeId = this.node.original_node_id;
-        return `/channels/${channelId}/#/${parentId}/${originalNodeId}`;
+        const clientPath = this.$router.resolve({
+          name: RouterNames.TREE_VIEW,
+          params: {
+            nodeId: this.node.original_parent_id,
+            detailNodeId: this.node.original_node_id,
+          },
+        });
+        return `/channels/${this.node.original_channel_id}/${clientPath.href}`;
       },
       sortedTags() {
         return sortBy(this.node.tags, '-count');

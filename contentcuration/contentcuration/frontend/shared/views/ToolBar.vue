@@ -1,6 +1,6 @@
 <template>
 
-  <VToolbar v-bind="$attrs">
+  <VToolbar v-bind="$attrs" flat :color="color">
     <slot></slot>
   </VToolbar>
 
@@ -11,6 +11,12 @@
 
   export default {
     name: 'ToolBar',
+    props: {
+      color: {
+        type: String,
+        default: 'transparent',
+      },
+    },
   };
 
 </script>

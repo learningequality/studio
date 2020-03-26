@@ -13,6 +13,7 @@ export const RouterNames = {
   ADD_TOPICS: 'ADD_TOPICS',
   ADD_EXERCISE: 'ADD_EXERCISE',
   UPLOAD_FILES: 'UPLOAD_FILES',
+  TRASH: 'TRASH',
 };
 
 export const viewModes = {
