@@ -20,7 +20,7 @@
     </VAlert>
     <VLayout justify-center class="px-4">
 
-      <VForm ref="form" v-model="valid" lazy-validation>
+      <VForm ref="form" v-model="valid" lazy-validation @submit.prevent="submit">
 
         <!-- Basic information -->
         <h1 class="font-weight-bold subheading my-2">
@@ -117,7 +117,26 @@
         />
 
         <!-- Policy -->
-        <ActionLink class="mt-4" :text="$tr('viewPrivacyPolicyLink')" />
+        <ActionLink
+          class="mt-4"
+          :text="$tr('viewPrivacyPolicyLink')"
+          @click="showPolicies = true"
+        />
+        <VDialog v-model="showPolicies" width="500" scrollable>
+          <VCard>
+            <VCardTitle class="headline grey lighten-4" primary-title>
+              {{ $tr('privacyPolicyTitle') }}
+            </VCardTitle>
+            <iframe :src="policyLink" resizable></iframe>
+            <VDivider />
+            <VCardActions>
+              <VSpacer />
+              <VBtn color="primary" flat @click="showPolicies = false">
+                {{ $tr('closeButton') }}
+              </VBtn>
+            </VCardActions>
+          </VCard>
+        </VDialog>
         <VCheckbox
           v-model="form.accepted_policy"
           :label="$tr('privacyPolicyCheck')"
@@ -128,12 +147,13 @@
         />
 
         <p class="mb-4">
-          {{ $tr('questionsMessage') }}
+          {{ $tr('contactMessage') }}
         </p>
-        <VBtn color="primary" large @click="submit">
+        <VBtn color="primary" large type="submit">
           {{ $tr('finishButton') }}
         </VBtn>
       </VForm>
+
     </VLayout>
   </ImmersiveModalLayout>
 
@@ -163,6 +183,7 @@
     data() {
       return {
         valid: true,
+        showPolicies: false,
         form: {
           firstName: '',
           lastName: '',
@@ -298,6 +319,10 @@
       sourceRules() {
         return [() => !!this.form.source.length || this.$tr('fieldRequiredMessage')];
       },
+      policyLink() {
+        let path = this.$router.resolve({ name: 'Policy' });
+        return `${window.Urls.policies()}${path.href}`;
+      },
     },
     methods: {
       showStorageField(id) {
@@ -361,10 +386,12 @@
 
       // Privacy policy
       viewPrivacyPolicyLink: 'View privacy policy',
+      privacyPolicyTitle: 'Privacy policy',
       privacyPolicyCheck: 'I have read and agree to the privacy policy',
       privacyPolicyRequiredMessage: 'Please accept our privacy policy',
-      questionsMessage: 'Questions or concerns? Please email us at content@learningequality.org',
+      contactMessage: 'Questions or concerns? Please email us at content@learningequality.org',
 
+      closeButton: 'Close',
       finishButton: 'Finish',
     },
   };
@@ -385,10 +412,17 @@
 
   .policy-checkbox /deep/ .v-input__slot {
     margin-bottom: 4px !important;
-    .v-icon,
     label {
       color: var(--v-grey-darken1) !important;
     }
+  }
+
+  iframe {
+    width: 100%;
+    min-height: 400px;
+    padding: 8px;
+    padding-right: 0;
+    border: 0;
   }
 
 </style>

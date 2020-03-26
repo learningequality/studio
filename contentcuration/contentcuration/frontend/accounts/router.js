@@ -9,6 +9,7 @@ import ActivationExpired from './pages/ActivationExpired';
 import AccountNotActivated from './pages/AccountNotActivated';
 import ResetPassword from './pages/ResetPassword';
 import ResetPasswordSuccess from './pages/ResetPasswordSuccess';
+import Policy from './pages/Policy';
 
 function pageRoute(path, component) {
   return {
@@ -28,6 +29,7 @@ const router = new VueRouter({
     pageRoute('/account-created', AccountCreated),
     pageRoute('/account-not-active', AccountNotActivated),
     pageRoute('/activation-expired', ActivationExpired),
+    pageRoute('/policy', Policy),
 
     // Forgot password routes
     pageRoute('/forgot-password', ForgotPassword),

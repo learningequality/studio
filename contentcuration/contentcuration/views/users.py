@@ -14,6 +14,7 @@ from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.http import HttpResponseForbidden
 from django.shortcuts import redirect
+from django.shortcuts import render
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext as _
 from registration.backends.hmac.views import ActivationView
@@ -31,6 +32,7 @@ from contentcuration.models import Channel
 from contentcuration.models import Invitation
 from contentcuration.models import User
 from contentcuration.statistics import record_user_registration_stats
+from contentcuration.utils.policies import check_policies
 from contentcuration.utils.policies import get_latest_policies
 
 """ REGISTRATION/INVITATION ENDPOINTS """
@@ -129,6 +131,15 @@ def login(request):
 def logout(request):
     djangologout(request)
     return HttpResponse()
+
+
+def policies(request):
+    if request.user.is_anonymous() or request.GET.get('all'):
+        policies = get_latest_policies()
+    else:
+        policies = check_policies(request.user)
+
+    return render(request, "policies/text/terms_of_service.html", {"policies": policies})
 
 
 class UserRegistrationView(RegistrationView):

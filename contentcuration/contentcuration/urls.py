@@ -266,6 +266,7 @@ urlpatterns += [
 urlpatterns += [
     url(r'^accounts/login/$', registration_views.login, name='login'),
     url(r'^accounts/logout/$', registration_views.logout, name='logout'),
+    url(r'^accounts/policies/$', registration_views.policies, name='policies'),
     url(r"^accounts/$", views.accounts, name="accounts"),
     url(
         r'^accounts/password/reset/$',
