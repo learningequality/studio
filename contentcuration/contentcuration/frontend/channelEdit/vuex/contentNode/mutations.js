@@ -69,6 +69,10 @@ export function TOGGLE_EXPANSION(state, id) {
   SET_EXPANSION(state, { id, expanded: !state.expandedNodes[id] });
 }
 
+export function SET_MOVE_NODES(state, ids) {
+  state.moveNodes = ids;
+}
+
 export function ADD_TREENODE(state, treeNode) {
   state.treeNodesMap = mergeMapItem(state.treeNodesMap, treeNode);
 }

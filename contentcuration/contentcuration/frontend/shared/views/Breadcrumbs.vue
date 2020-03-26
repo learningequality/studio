@@ -9,7 +9,6 @@
     <template #divider>
       <Icon>arrow_forward_ios</Icon>
     </template>
-
     <!-- Overflow menu -->
     <VBreadcrumbsItem v-if="breadcrumbStartingIndex > 0" tag="div">
       <VMenu offset-y bottom>
@@ -57,9 +56,6 @@
         default() {
           return [];
         },
-        validator(items) {
-          return items.every(i => i.to);
-        },
       },
     },
     data() {
@@ -86,17 +82,18 @@
     methods: {
       handleOverflow() {
         let maxWidth = this.$refs.breadcrumbs.$el.offsetWidth;
-
         let totalWidth = 0;
         this.breadcrumbStartingIndex = 0;
         this.$nextTick(() => {
-          for (var i = this.$refs.breadcrumb.length - 1; i >= 0; --i) {
-            totalWidth += this.$refs.breadcrumb[i].$el.offsetWidth + 40;
+          if (this.$refs.breadcrumb) {
+            for (var i = this.$refs.breadcrumb.length - 1; i >= 0; --i) {
+              totalWidth += this.$refs.breadcrumb[i].$el.offsetWidth + 40;
 
-            // Bounds exceeded, go back to previous index
-            if (totalWidth >= maxWidth - 48) {
-              this.breadcrumbStartingIndex = Math.min(this.items.length - 1, i + 1);
-              break;
+              // Bounds exceeded, go back to previous index
+              if (totalWidth >= maxWidth - 48) {
+                this.breadcrumbStartingIndex = Math.min(this.items.length - 1, i + 1);
+                break;
+              }
             }
           }
         });

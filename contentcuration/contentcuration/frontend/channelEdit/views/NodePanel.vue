@@ -28,7 +28,7 @@
         v-for="child in children"
       >
         <VLayout :key="child.id" row wrap>
-          <VFlex xs9>
+          <VFlex xs11>
             <router-link :to="treeLink(child)">
               <ContentNodeIcon :kind="child.kind" />
               <span>{{ child.title }}</span>
@@ -37,11 +37,6 @@
           <VFlex xs1>
             <VBtn icon :to="editNodeLink(child.id)">
               <VIcon>edit</VIcon>
-            </VBtn>
-          </VFlex>
-          <VFlex xs1>
-            <VBtn icon @click="deleteContentNode(child.id)">
-              <VIcon>clear</VIcon>
             </VBtn>
           </VFlex>
         </VLayout>
@@ -99,7 +94,7 @@
       }
     },
     methods: {
-      ...mapActions('contentNode', ['deleteContentNode', 'loadChildren']),
+      ...mapActions('contentNode', ['loadChildren']),
       editNodeLink(id) {
         return {
           name: RouterNames.CONTENTNODE_DETAILS,

@@ -371,8 +371,32 @@ export function deleteContentNode(context, contentNodeId) {
   });
 }
 
+export function deleteContentNodes(context, contentNodeIds) {
+  return Promise.all(
+    contentNodeIds.map(id => {
+      return deleteContentNode(context, id);
+    })
+  );
+}
+
 export function copyContentNodes(context, contentNodeIds) {
   // TODO: Implement copy nodes endpoint
+  return new Promise(resolve => resolve(context, contentNodeIds));
+}
+
+export function moveContentNodes(context, { ids, parent }) {
+  return Promise.all(
+    ids.map(id => {
+      return Tree.move(id, parent, MOVE_POSITIONS.LAST_CHILD).then(treeNode => {
+        context.commit('UPDATE_TREENODE', treeNode);
+        return id;
+      });
+    })
+  );
+}
+
+export function moveContentNodesToClipboard(context, contentNodeIds) {
+  // TODO: Implement move to clipboard action
   return new Promise(resolve => resolve(context, contentNodeIds));
 }
 

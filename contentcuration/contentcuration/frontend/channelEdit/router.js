@@ -4,6 +4,7 @@ import TreeView from './views/TreeView';
 import store from './store';
 import AddPreviousStepsModal from './pages/AddPreviousStepsModal';
 import AddNextStepsModal from './pages/AddNextStepsModal';
+import TrashModal from './views/trash/TrashModal';
 import ImportFromChannelsIndex from './views/ImportFromChannels/ImportFromChannelsIndex';
 import SearchOrBrowseWindow from './views/ImportFromChannels/SearchOrBrowseWindow';
 import ReviewSelectionsPage from './views/ImportFromChannels/ReviewSelectionsPage';
@@ -149,6 +150,12 @@ const router = new VueRouter({
           name: ChannelRouterNames.CHANNEL_EDIT,
           path: 'channel/:channelId/edit',
           component: ChannelModal,
+          props: true,
+        },
+        {
+          name: RouterNames.TRASH,
+          path: 'trash',
+          component: TrashModal,
           props: true,
         },
       ],
