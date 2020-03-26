@@ -14,7 +14,7 @@
       <div class="pa-4" style="margin-bottom: 64px;">
         <ResourcePanel
           :nodeId="nodeId"
-          :channelId="currentChannel.id"
+          :channelId="channelId"
           @close="$emit('close')"
         >
           <template #navigation>
@@ -33,7 +33,6 @@
 </template>
 <script>
 
-  import { mapGetters } from 'vuex';
   import ResourcePanel from '../views/ResourcePanel';
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
 
@@ -53,9 +52,10 @@
         type: String,
         required: false,
       },
-    },
-    computed: {
-      ...mapGetters('currentChannel', ['currentChannel']),
+      channelId: {
+        type: String,
+        required: false,
+      },
     },
   };
 

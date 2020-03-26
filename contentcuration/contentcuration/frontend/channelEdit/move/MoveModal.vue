@@ -112,6 +112,7 @@
       <ResourceDrawer
         app
         :nodeId="previewNodeId"
+        :channelId="currentChannel.id"
         @close="previewNodeId = null"
       />
 
