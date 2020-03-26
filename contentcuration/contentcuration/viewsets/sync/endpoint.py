@@ -68,7 +68,7 @@ def apply_changes(request, viewset, change_type, id_attr, changes_from_client):
     if change_type == CREATED:
         new_data = list(
             map(
-                lambda x: dict(x["obj"].items() + [(id_attr, x["key"])]),
+                lambda x: dict([(k, v) for k, v in x["obj"].items()] + [(id_attr, x["key"])]),
                 changes_from_client,
             )
         )
@@ -76,7 +76,7 @@ def apply_changes(request, viewset, change_type, id_attr, changes_from_client):
     elif change_type == UPDATED:
         change_data = list(
             map(
-                lambda x: dict(x["mods"].items() + [(id_attr, x["key"])]),
+                lambda x: dict([(k, v) for k, v in x["mods"].items()] + [(id_attr, x["key"])]),
                 changes_from_client,
             )
         )

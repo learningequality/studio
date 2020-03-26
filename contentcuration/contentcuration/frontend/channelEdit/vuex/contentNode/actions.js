@@ -2,6 +2,7 @@ import difference from 'lodash/difference';
 import union from 'lodash/union';
 import { sanitizeFiles } from '../file/utils';
 import { NOVALUE } from 'shared/constants';
+import client from 'shared/client';
 import { MOVE_POSITIONS } from 'shared/data/constants';
 import { ContentNode, Tree, File } from 'shared/data/resources';
 
@@ -39,6 +40,141 @@ export function loadAncestors(context, { id, channel_id }) {
   let node = context.state.treeNodesMap[id];
   return Tree.where({ max_lft: node.sort_order, min_rght: node.rght, channel_id }).then(nodes => {
     return loadContentNodes(context, { ids: nodes.map(node => node.id) });
+  });
+}
+
+/**
+ * Retrieve related resources of a node from API.
+ * Save all previous/next steps (pre/post-requisites)
+ * to next steps map.
+ * Fetch and save data of immediate related resources
+ * and their parents.
+ */
+export async function loadRelatedResources(context, nodeId) {
+  if (!nodeId) {
+    throw ReferenceError('node id must be defined to load its related resources');
+  }
+
+  let response;
+
+  try {
+    response = await client.get(window.Urls['get_prerequisites']('true', nodeId));
+  } catch (error) {
+    return Promise.reject(error);
+  }
+
+  const prerequisite_tree_nodes = response.data.prerequisite_tree_nodes;
+  const prerequisite_mapping = response.data.prerequisite_mapping;
+  const postrequisite_mapping = response.data.postrequisite_mapping;
+
+  context.commit('SAVE_NEXT_STEPS', {
+    nodeId,
+    prerequisite_mapping,
+    postrequisite_mapping,
+  });
+
+  // Ids of immediate previous/next steps
+  let relatedNodesIds = [
+    ...Object.keys(prerequisite_mapping),
+    ...Object.keys(postrequisite_mapping),
+  ];
+  // + ids of their parent nodes
+  prerequisite_tree_nodes.forEach(node => {
+    if (relatedNodesIds.includes(node.id)) {
+      relatedNodesIds.push(node.parent);
+    }
+  });
+  // remove duplicate ids if any
+  relatedNodesIds = [...new Set(relatedNodesIds)];
+
+  // Make sure that client has all related nodes data available
+  try {
+    await loadContentNodes(context, { ids: relatedNodesIds });
+  } catch (error) {
+    return Promise.reject(error);
+  }
+
+  return Promise.resolve();
+}
+
+/**
+ * Remove a previous step from a target content node.
+ *
+ * @param {String} targetId ID of a target content node.
+ * @param {String} previousStepId ID of a content node to be removed
+ *                                from target's content node previous steps.
+ */
+export function removePreviousStepFromNode(context, { targetId, previousStepId }) {
+  const targetNode = context.state.contentNodesMap[targetId];
+  const targetNodePreviousSteps = targetNode.prerequisite
+    ? targetNode.prerequisite.filter(id => id !== previousStepId)
+    : [];
+
+  context.commit('REMOVE_PREVIOUS_STEP', { targetId, previousStepId });
+  context.commit('UPDATE_CONTENTNODE', {
+    id: targetId,
+    ...{ prerequisite: targetNodePreviousSteps },
+  });
+
+  ContentNode.update(targetId, { prerequisite: targetNodePreviousSteps });
+
+  // (re)load the previous step node to be sure that we have its
+  // `is_prerequisite_of` field up-to-date on client
+  loadContentNode(context, previousStepId);
+}
+
+/**
+ * Remove a next step from a target content node.
+ *
+ * @param {String} targetId ID of a target content node.
+ * @param {String} nextStepId ID of a content node to be removed
+ *                            from target's content node next steps.
+ */
+export function removeNextStepFromNode(context, { targetId, nextStepId }) {
+  removePreviousStepFromNode(context, {
+    targetId: nextStepId,
+    previousStepId: targetId,
+  });
+}
+
+/**
+ * Add a previous step to a target content node.
+ *
+ * @param {String} targetId ID of a target content node.
+ * @param {String} previousStepId ID of a content node to be added
+ *                                to target's content node previous steps.
+ */
+export async function addPreviousStepToNode(context, { targetId, previousStepId }) {
+  const targetNode = context.state.contentNodesMap[targetId];
+  const targetNodePreviousSteps = targetNode.prerequisite || [];
+
+  if (!targetNodePreviousSteps.includes(previousStepId)) {
+    targetNodePreviousSteps.push(previousStepId);
+  }
+
+  await updateContentNode(context, {
+    id: targetId,
+    prerequisite: targetNodePreviousSteps,
+  });
+
+  // (re)load the previous step node to be sure that we have its
+  // `is_prerequisite_of` field up-to-date on client
+  loadContentNode(context, previousStepId);
+
+  context.commit('ADD_PREVIOUS_STEP', { targetId, previousStepId });
+}
+
+/**
+ * Add a next step to a target content node.
+ *
+ * @param {String} targetId ID of a target content node.
+ * @param {String} nextStepId ID of a content node to be added
+ *                            to target's content node next steps.
+ */
+export function addNextStepToNode(context, { targetId, nextStepId }) {
+  addPreviousStepToNode(context, {
+    targetId: nextStepId,
+    previousStepId: targetId,
   });
 }
 
@@ -90,6 +226,7 @@ function generateContentNodeData({
   aggregator = NOVALUE,
   provider = NOVALUE,
   extra_fields = NOVALUE,
+  prerequisite = NOVALUE,
 } = {}) {
   const contentNodeData = {};
   if (title !== NOVALUE) {
@@ -139,6 +276,10 @@ function generateContentNodeData({
       contentNodeData.extra_fields.randomize = extra_fields.randomize;
     }
   }
+  if (prerequisite !== NOVALUE) {
+    contentNodeData.prerequisite = prerequisite;
+  }
+
   return contentNodeData;
 }
 

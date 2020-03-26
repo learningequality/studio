@@ -2,6 +2,8 @@ import VueRouter from 'vue-router';
 import { RouterNames } from './constants';
 import TreeView from './views/TreeView';
 import store from './store';
+import AddPreviousStepsModal from './pages/AddPreviousStepsModal';
+import AddNextStepsModal from './pages/AddNextStepsModal';
 import TrashModal from './views/trash/TrashModal';
 import ImportFromChannelsIndex from './views/ImportFromChannels/ImportFromChannelsIndex';
 import SearchOrBrowseWindow from './views/ImportFromChannels/SearchOrBrowseWindow';
@@ -104,25 +106,37 @@ const router = new VueRouter({
       children: [
         {
           name: RouterNames.CONTENTNODE_DETAILS,
-          path: 'details/:detailNodeIds',
+          path: 'details/:detailNodeIds/:tab?',
           props: true,
           component: EditModal,
         },
         {
           name: RouterNames.ADD_TOPICS,
-          path: 'topics/:detailNodeIds',
+          path: 'topics/:detailNodeIds/:tab?',
           props: true,
           component: EditModal,
         },
         {
           name: RouterNames.ADD_EXERCISE,
-          path: 'exercise/:detailNodeIds',
+          path: 'exercise/:detailNodeIds/:tab?',
           props: true,
           component: EditModal,
         },
         {
+          name: RouterNames.ADD_PREVIOUS_STEPS,
+          path: 'previous-steps/:targetNodeId',
+          props: true,
+          component: AddPreviousStepsModal,
+        },
+        {
+          name: RouterNames.ADD_NEXT_STEPS,
+          path: 'next-steps/:targetNodeId',
+          props: true,
+          component: AddNextStepsModal,
+        },
+        {
           name: RouterNames.UPLOAD_FILES,
-          path: 'upload/:detailNodeIds?',
+          path: 'upload/:detailNodeIds?/:tab?',
           props: true,
           component: EditModal,
         },

@@ -14,6 +14,8 @@ export const RouterNames = {
   ADD_EXERCISE: 'ADD_EXERCISE',
   UPLOAD_FILES: 'UPLOAD_FILES',
   TRASH: 'TRASH',
+  ADD_PREVIOUS_STEPS: 'ADD_PREVIOUS_STEPS',
+  ADD_NEXT_STEPS: 'ADD_NEXT_STEPS',
 };
 
 export const viewModes = {

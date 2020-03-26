@@ -4,10 +4,10 @@ import { AssessmentItemTypes } from 'frontend/channelEdit/constants';
 export { AssessmentItemTypes, ValidationErrors } from 'frontend/channelEdit/constants';
 
 export const TabNames = {
-  DETAILS: 'DETAILS',
-  PREVIEW: 'PREVIEW',
-  QUESTIONS: 'QUESTIONS',
-  PREREQUISITES: 'PREREQUISITES',
+  DETAILS: 'details',
+  PREVIEW: 'preview',
+  QUESTIONS: 'questions',
+  RELATED: 'related',
 };
 
 export const modes = {

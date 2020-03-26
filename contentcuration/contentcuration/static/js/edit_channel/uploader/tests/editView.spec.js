@@ -42,21 +42,21 @@ describe.skip('editView', () => {
     // Topics -> Details + Preview
     localStore.commit('edit_modal/SET_NODE', 0);
     expect(wrapper.vm.showQuestionsTab).toBe(false);
-    expect(wrapper.vm.showPrerequisitesTab).toBe(false);
+    expect(wrapper.vm.showRelatedResourcesTab).toBe(false);
 
-    // Videos -> Details + Preview + Prerequisites
+    // Videos -> Details + Preview + Related resources
     localStore.commit('edit_modal/SET_NODE', 1);
     expect(wrapper.vm.showQuestionsTab).toBe(false);
-    expect(wrapper.vm.showPrerequisitesTab).toBe(true);
+    expect(wrapper.vm.showRelatedResourcesTab).toBe(true);
 
-    // Exercises -> Details + Preview + Questions + Prerequisites
+    // Exercises -> Details + Preview + Questions + Related resources
     localStore.commit('edit_modal/SET_NODE', 2);
     expect(wrapper.vm.showQuestionsTab).toBe(true);
-    expect(wrapper.vm.showPrerequisitesTab).toBe(true);
+    expect(wrapper.vm.showRelatedResourcesTab).toBe(true);
   });
-  it('prerequisites tab should be hidden on clipboard items', () => {
+  it('related resources tab should be hidden on clipboard items', () => {
     let testWrapper = makeWrapper({ isClipboard: true });
     localStore.commit('edit_modal/SET_NODE', 1);
-    expect(testWrapper.find({ ref: 'prerequisitetab' }).exists()).toBe(false);
+    expect(testWrapper.find({ ref: 'related-resources-tab' }).exists()).toBe(false);
   });
 });

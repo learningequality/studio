@@ -26,6 +26,7 @@ from contentcuration.models import FormatPreset
 from contentcuration.models import Invitation
 from contentcuration.models import License
 from contentcuration.models import MultipleObjectsReturned
+from contentcuration.models import PrerequisiteContentRelationship
 from contentcuration.models import User
 from contentcuration.utils.files import duplicate_file
 from contentcuration.utils.minio_utils import ensure_storage_bucket_public
@@ -139,13 +140,21 @@ def generate_tree(root, document, video, subtitle, audio, html5, user=None, tags
 
     # Add files to topic 1
     license_id = License.objects.get(license_name=LICENSE).pk
-    videonode = create_contentnode("Sample Video", topic1, video, content_kinds.VIDEO, license_id, user=user, tags=tags)
-    duplicate_file(subtitle, node=videonode)
-    create_contentnode("Sample Document", topic1, document, content_kinds.DOCUMENT, license_id, user=user, tags=tags)
-    create_contentnode("Sample Audio", topic1, audio, content_kinds.AUDIO, license_id, user=user, tags=tags)
-    create_contentnode("Sample HTML", topic1, html5, content_kinds.HTML5, license_id, user=user, tags=tags)
-    create_exercise("Sample Exercise", topic1, license_id, user=user)
+    topic1_video_node = create_contentnode("Sample Video", topic1, video, content_kinds.VIDEO, license_id, user=user, tags=tags)
+    duplicate_file(subtitle, node=topic1_video_node)
+
+    topic1_document_node = create_contentnode("Sample Document", topic1, document, content_kinds.DOCUMENT, license_id, user=user, tags=tags)
+    topic1_audio_node = create_contentnode("Sample Audio", topic1, audio, content_kinds.AUDIO, license_id, user=user, tags=tags)
+    topic1_html5_node = create_contentnode("Sample HTML", topic1, html5, content_kinds.HTML5, license_id, user=user, tags=tags)
+    topic1_exercise_node = create_exercise("Sample Exercise", topic1, license_id, user=user)
     create_exercise("Sample Empty Exercise", topic1, license_id, user=user, empty=True)
+
+    # Setup pre/post-requisites around Exercise node
+    # Topic 1 Video -> Topic 1 Document -> Topic 1 Exercise -> Topic 1 Audio -> Topic 1 Html5
+    PrerequisiteContentRelationship.objects.create(target_node_id=topic1_document_node.id, prerequisite_id=topic1_video_node.id)
+    PrerequisiteContentRelationship.objects.create(target_node_id=topic1_exercise_node.id, prerequisite_id=topic1_document_node.id)
+    PrerequisiteContentRelationship.objects.create(target_node_id=topic1_audio_node.id, prerequisite_id=topic1_exercise_node.id)
+    PrerequisiteContentRelationship.objects.create(target_node_id=topic1_html5_node.id, prerequisite_id=topic1_audio_node.id)
 
 
 def create_user(email, password, first_name, last_name, admin=False):
