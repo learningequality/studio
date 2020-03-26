@@ -11,7 +11,7 @@
     {{ snackbarOptions.text }}
     <v-btn
       v-if="snackbarOptions.actionText"
-      color="red"
+      flat
       text
       @click="hideCallback"
     >
@@ -44,8 +44,8 @@
     },
     methods: {
       hideCallback() {
-        if (this.snackbarOptions.hideCallback) {
-          this.snackbarOptions.hideCallback();
+        if (this.snackbarOptions.actionCallback) {
+          this.snackbarOptions.actionCallback();
         }
         this.$store.dispatch('clearSnackbar');
       },

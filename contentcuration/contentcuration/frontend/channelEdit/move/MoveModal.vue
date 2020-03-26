@@ -1,206 +1,307 @@
 <template>
 
-  <VContainer grid-list-md>
-    <NewTopicModal
-      :showDialog="showNewTopicModal"
-      @createTopic="createTopic"
-      @cancelTopic="cancelTopic()"
-    />
-
-    <VLayout wrap>
-      <VDialog v-model="showDialog" fullscreen width="500" persistent>
-        <VToolbar dark color="primary">
-          <VBtn icon dark @click="$emit('cancelMove')">
-            <Icon>close</Icon>
-          </VBtn>
-          <VToolbar-title>
-            <b>{{ $tr("moveItems", {x: 2, title: currentNode.title}) }}</b>
-          </VToolbar-title>
-          <VSpacer />
-        </VToolbar>
-        <VCard>
-          <!-- header items -->
-          <VLayout wrap>
-            <VFlex md8 justify-start>
-              <v-breadcrumbs :items="crumbs" divider=">" />
-            </VFlex>
+  <VDialog
+    v-model="dialog"
+    fullscreen
+    scrollable
+    app
+    lazy
+    persistent
+    attach="body"
+  >
+    <VCard>
+      <VToolbar
+        dark
+        color="primary"
+        app
+        :extended="!loading"
+        :extension-height="48"
+        flat
+        clipped-right
+      >
+        <VBtn icon exact data-test="close" @click="dialog=false">
+          <Icon>close</Icon>
+        </VBtn>
+        <VToolbarTitle>
+          {{ $tr("moveItems", {count: moveNodeIds.length}) }}
+          <b class="notranslate">{{ currentNode.title }}</b>
+        </VToolbarTitle>
+        <template v-if="!loading" #extension>
+          <ToolBar dense color="white" light>
+            <Breadcrumbs :items="crumbs" class="py-0">
+              <template #item="{item, isLast}">
+                <span
+                  style="cursor: pointer;"
+                  class="notranslate"
+                  :class="isLast? 'font-weight-bold' : 'grey--text'"
+                  @click="targetNodeId = item.id"
+                >
+                  {{ item.title }}
+                </span>
+              </template>
+            </Breadcrumbs>
             <VSpacer />
-            <VFlex shrink>
-              <VBtn flat @click="showTopicModal()">
-                {{ $tr("addTopic") }}
-              </VBtn>
-            </VFlex>
+            <VBtn flat data-test="newtopic" @click="showNewTopicModal = true">
+              {{ $tr("addTopic") }}
+            </VBtn>
+          </ToolBar>
+        </template>
+      </VToolbar>
+      <VContent style="padding-top: 112px; padding-bottom: 64px; background-color: white;">
+        <!-- list of children content -->
+        <LoadingText v-if="loading" absolute data-test="loading" />
+        <VContainer v-else-if="!children.length" data-test="empty" fluid fill-height>
+          <VLayout align-center justify-center class="subheading">
+            <div>{{ $tr('emptyTopicText') }}</div>
           </VLayout>
-          <!-- list of children content -->
-          <VCard v-for="node in children" :key="node.id">
-            <VLayout class="card">
-              <VFlex xs2 align-self-center>
-                <!-- TODO: Add the appropriate thumbnail or card -->
-                <VImg
-                  src="https://cdn.vuetifyjs.com/images/cards/foster.jpg"
-                  height="68px"
-                  contain
+        </VContainer>
+        <VContainer
+          v-else
+          fluid
+          align-content-start
+          class="pa-0"
+          style="max-height: calc(100vh - 178px); overflow-y: auto;"
+        >
+          <VCard
+            v-for="node in children"
+            :key="node.id"
+            flat
+            class="pa-4 content-card"
+            :class="{disabled: isDisabled(node)}"
+            data-test="listitem"
+            @click="openTopic(node)"
+          >
+            <VLayout align-center row>
+              <div style="min-width: 175px;">
+                <Thumbnail
+                  :src="node.thumbnail_src"
+                  :kind="node.kind"
+                  :isEmpty="!node.total_count"
                 />
-              </VFlex>
-              <VFlex xs8 align-self-center>
-                <VCardTitle primary-title>
-                  <div>
-                    <div class="headline">
-                      {{ node.title }}
-                    </div>
-                    <div>{{ $tr('resources', {x: node.resource_count}) }}</div>
-                    <div class="description">
-                      {{ node.description }}
-                    </div>
-                  </div>
+              </div>
+              <VFlex class="pl-2">
+                <VCardTitle class="headline notranslate pb-0">
+                  {{ node.title }}
                 </VCardTitle>
+                <VCardText class="grey--text pt-0">
+                  <div v-if="node.kind === 'topic'">
+                    {{ $tr('resourcesCount', {count: node.resource_count || 0}) }}
+                  </div>
+                  <div class="notranslate subheading">
+                    {{ node.description }}
+                  </div>
+                </VCardText>
               </VFlex>
-              <VFlex align-self-center>
-                <VCardActions>
-                  <VBtn icon>
-                    <Icon small color="primary">
+              <VSpacer />
+              <div style="min-width: 102px;">
+                <VCardActions class="options">
+                  <VBtn icon data-test="details" @click.stop="previewNodeId = node.id">
+                    <Icon color="primary">
                       info
                     </Icon>
                   </VBtn>
-                  <VBtn v-if="node.kind === 'topic'" icon :to="nextItem(node)">
+                  <VBtn v-if="node.kind === 'topic'" icon @click.stop="targetNodeId = node.id">
                     <Icon>keyboard_arrow_right</Icon>
                   </VBtn>
                 </VCardActions>
-              </VFlex>
+              </div>
             </VLayout>
           </VCard>
+        </VContainer>
+      </VContent>
+      <ResourceDrawer
+        app
+        :nodeId="previewNodeId"
+        :channelId="currentChannel.id"
+        @close="previewNodeId = null"
+      />
 
-          <!-- footer buttons -->
-          <BottomToolBar color="white" flat>
-            <Icon>assignment</Icon>
-            <VBtn flat color="primary" class="button">
-              {{ $tr("moveClipboard") }}
-            </VBtn>
-            <VSpacer />
-            <VBtn flat @click="$emit('cancelMove')">
-              {{ $tr("cancel") }}
-            </VBtn>
-            <VBtn color="primary" class="white--text" @click="moveNodes">
-              {{ $tr("moveHere") }}
-            </VBtn>
-          </BottomToolBar>
-        </VCard>
-      </VDialog>
-    </VLayout>
-  </VContainer>
+      <!-- footer buttons -->
+      <BottomToolBar color="white" flat clipped-right app>
+        <Icon class="mr-2">
+          assignment
+        </Icon>
+        <ActionLink
+          :text="$tr('moveClipboard')"
+          data-test="clipboard"
+          @click="moveToClipboard"
+        />
+        <VSpacer />
+        <VBtn flat exact data-test="cancel" @click="dialog=false">
+          {{ $tr("cancel") }}
+        </VBtn>
+        <VBtn
+          color="primary"
+          data-test="move"
+          :disabled="currentLocationId === targetNodeId"
+          @click="moveNodes"
+        >
+          {{ $tr("moveHere") }}
+        </VBtn>
+      </BottomToolBar>
+
+      <NewTopicModal
+        v-if="showNewTopicModal"
+        v-model="showNewTopicModal"
+        data-test="newtopicmodal"
+        @createTopic="createTopic"
+      />
+    </VCard>
+  </VDialog>
 
 </template>
-
 <script>
 
-  import { mapGetters, mapActions } from 'vuex';
+  import { mapGetters, mapActions, mapMutations, mapState } from 'vuex';
   import { RouterNames } from '../constants';
   import BottomToolBar from '../../shared/views/BottomToolBar';
+  import ResourceDrawer from '../components/ResourceDrawer';
   import NewTopicModal from './NewTopicModal';
+  import ActionLink from 'edit_channel/sharedComponents/ActionLink';
+  import Breadcrumbs from 'shared/views/Breadcrumbs';
+  import LoadingText from 'shared/views/LoadingText';
+  import Thumbnail from 'shared/views/files/Thumbnail';
+  import ToolBar from 'shared/views/ToolBar';
 
   export default {
     name: 'MoveModal',
     components: {
       NewTopicModal,
       BottomToolBar,
-    },
-    props: {
-      nodeId: {
-        type: String,
-        required: true,
-      },
-      showDialog: {
-        type: Boolean,
-      },
+      ActionLink,
+      Breadcrumbs,
+      LoadingText,
+      ResourceDrawer,
+      Thumbnail,
+      ToolBar,
     },
     data() {
       return {
         showNewTopicModal: false,
+        loading: false,
+        targetNodeId: null,
+        previewNodeId: null,
       };
     },
     computed: {
-      ...mapGetters('contentNode', ['getContentNode', 'getContentNodeChildren', 'getTreeNode']),
+      ...mapState('contentNode', { moveNodeIds: 'moveNodes' }),
+      ...mapGetters('currentChannel', ['currentChannel', 'rootId']),
+      ...mapGetters('contentNode', [
+        'getContentNode',
+        'getContentNodeChildren',
+        'getTreeNode',
+        'getContentNodeAncestors',
+      ]),
+      dialog: {
+        get() {
+          return Boolean(this.moveNodeIds.length);
+        },
+        set(value) {
+          if (!value) {
+            this.setMoveNodes([]);
+          }
+        },
+      },
+      currentLocationId() {
+        let treeNode = this.getTreeNode(this.moveNodeIds[0]);
+        return treeNode && treeNode.parent;
+      },
       currentNode() {
-        return this.getContentNode(this.nodeId);
+        return this.getContentNode(this.targetNodeId);
       },
       children() {
-        return this.getContentNodeChildren(this.nodeId);
+        return this.getContentNodeChildren(this.targetNodeId);
       },
       crumbs() {
-        const trail = [];
-        var node = this.getContentNode(this.nodeId);
-        var inTree = this.getTreeNode(node.id);
-        trail.unshift({
-          text: node.title,
-          disabled: false,
-          to: this.nextItem(node),
+        return this.getContentNodeAncestors(this.targetNodeId) || [];
+      },
+    },
+    watch: {
+      targetNodeId() {
+        this.previewNodeId = null;
+        this.$nextTick(() => {
+          this.getChildren();
         });
-        while (inTree !== undefined) {
-          node = this.getContentNode(inTree.parent);
-          inTree = this.getTreeNode(node.id);
-          trail.unshift({
-            text: node.title,
-            disabled: false,
-            to: this.nextItem(node),
-          });
-        }
-        return trail;
       },
     },
     created() {
-      if (!this.currentNode) {
-        this.loadContentNode(this.nodeId).then(this.getChildren);
-        var node = this.getContentNode(this.nodeId);
-        while (node.parent !== null) {
-          this.loadContentNode(node.parent).then(() => {
-            node = this.getContentNode(node.parent);
-          });
-        }
-      } else {
-        this.getChildren();
-      }
+      this.targetNodeId = this.currentLocationId || this.rootId;
     },
     methods: {
-      ...mapActions('contentNode', ['createContentNode', 'loadContentNode', 'loadChildren']),
-      nextItem(child) {
-        return {
-          name: RouterNames.SANDBOX,
+      ...mapActions('contentNode', [
+        'createContentNode',
+        'loadChildren',
+        'moveContentNodes',
+        'moveContentNodesToClipboard',
+      ]),
+      ...mapMutations('contentNode', { setMoveNodes: 'SET_MOVE_NODES' }),
+      isDisabled(node) {
+        return this.moveNodeIds.includes(node.id);
+      },
+      openTopic(node) {
+        if (node.kind === 'topic') {
+          this.targetNodeId = node.id;
+        }
+      },
+      goToLocation() {
+        this.$router.push({
+          name: RouterNames.TREE_VIEW,
           params: {
-            nodeId: child.id,
+            nodeId: this.targetNodeId,
           },
-        };
+        });
       },
       getChildren() {
         if (this.currentNode && this.currentNode.has_children) {
+          this.loading = true;
           return this.loadChildren({
-            parent: this.nodeId,
-            channel_id: this.$store.state.currentChannel.currentChannelId,
+            parent: this.targetNodeId,
+            channel_id: this.currentChannel.id,
+          }).then(() => {
+            this.loading = false;
           });
         }
         return Promise.resolve();
       },
-      showTopicModal() {
-        this.showNewTopicModal = true;
-      },
-      cancelTopic() {
-        this.showNewTopicModal = false;
-      },
       createTopic(title) {
-        this.createContentNode({ parent: this.nodeId, kind: 'topic', title }).then(() => {
+        this.createContentNode({ parent: this.targetNodeId, kind: 'topic', title }).then(() => {
           this.showNewTopicModal = false;
+          this.$store.dispatch('showSnackbar', { text: this.$tr('topicCreatedMessage') });
+        });
+      },
+      moveToClipboard() {
+        this.moveContentNodesToClipboard(this.moveNodeIds).then(() => {
+          this.$router.push(this.closeLink);
+          this.$store.dispatch('showSnackbar', { text: this.$tr('movedToClipboardMessage') });
         });
       },
       moveNodes() {
-        // TODO: connect to vuex action
+        let payload = {
+          ids: this.moveNodeIds,
+          parent: this.targetNodeId,
+        };
+        this.moveContentNodes(payload).then(() => {
+          this.dialog = false;
+          this.$store.dispatch('showSnackbar', {
+            text: this.$tr('movedMessage', { title: this.currentNode.title }),
+            actionText: this.$tr('goToLocationButton'),
+            actionCallback: this.goToLocation,
+          });
+        });
       },
     },
     $trs: {
       moveClipboard: 'Or move to clipboard',
-      moveItems: 'Moving {x} selections into: {title}',
+      moveItems: 'Moving {count, plural,\n =1 {# selection}\n other {# selections}} into:',
       addTopic: 'Add new topic',
       cancel: 'Cancel',
       moveHere: 'Move here',
-      resources: '{x} resources',
+      resourcesCount: '{count, plural,\n =1 {# resource}\n other {# resources}}',
+      emptyTopicText: 'No resources found',
+      topicCreatedMessage: 'New topic created',
+      movedToClipboardMessage: 'Moved to clipboard',
+      movedMessage: 'Moved to {title}',
+      goToLocationButton: 'Go to location',
     },
   };
 
@@ -208,29 +309,27 @@
 
 <style lang="less" scoped>
 
-  .button {
-    color: purple;
-    text-decoration: underline;
-    text-transform: none;
+  /deep/ .v-toolbar__extension {
+    padding: 0;
   }
 
-  .list {
-    border: 1px solid rgb(192, 192, 192);
-  }
-
-  .card {
-    max-height: 118px;
-  }
-
-  .card:hover {
-    background: #eeeeee;
-  }
-
-  .description {
-    width: 539px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  .content-card {
+    border-bottom: 1px solid var(--v-grey-lighten3) !important;
+    .options {
+      display: none;
+    }
+    &.disabled {
+      pointer-events: none;
+    }
+    &:last-child {
+      border-bottom: 0 !important;
+    }
+    &:hover {
+      background-color: var(--v-grey-lighten4);
+      .options {
+        display: block;
+      }
+    }
   }
 
 </style>

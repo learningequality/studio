@@ -12,7 +12,7 @@
     <VListTile v-if="!hideDetailsLink" :to="viewLink">
       <VListTileTitle>{{ $tr('viewDetails') }}</VListTileTitle>
     </VListTile>
-    <VListTile v-if="canEdit" @click.stop>
+    <VListTile v-if="canEdit" @click.stop="setMoveNodes([nodeId])">
       <VListTileTitle>{{ $tr('move') }}</VListTileTitle>
     </VListTile>
     <VListTile v-if="canEdit" @click.stop>
@@ -21,7 +21,7 @@
     <VListTile @click.stop>
       <VListTileTitle>{{ $tr('copyToClipboard') }}</VListTileTitle>
     </VListTile>
-    <VListTile v-if="canEdit" @click.stop>
+    <VListTile v-if="canEdit" @click="removeItem">
       <VListTileTitle>{{ $tr('remove') }}</VListTileTitle>
     </VListTile>
   </VList>
@@ -30,7 +30,7 @@
 
 <script>
 
-  import { mapActions, mapGetters } from 'vuex';
+  import { mapActions, mapGetters, mapMutations } from 'vuex';
   import { RouterNames } from '../constants';
 
   export default {
@@ -46,7 +46,7 @@
       },
     },
     computed: {
-      ...mapGetters('currentChannel', ['canEdit']),
+      ...mapGetters('currentChannel', ['canEdit', 'trashId']),
       ...mapGetters('contentNode', ['getContentNode']),
       node() {
         return this.getContentNode(this.nodeId);
@@ -68,14 +68,14 @@
           name: RouterNames.TREE_VIEW,
           params: {
             ...this.$route.params,
-            nodeId: this.nodeId,
             detailNodeId: this.nodeId,
           },
         };
       },
     },
     methods: {
-      ...mapActions('contentNode', ['createContentNode']),
+      ...mapActions('contentNode', ['createContentNode', 'moveContentNodes']),
+      ...mapMutations('contentNode', { setMoveNodes: 'SET_MOVE_NODES' }),
       newTopicNode() {
         let nodeData = {
           parent: this.nodeId,
@@ -92,6 +92,12 @@
           });
         });
       },
+      removeItem() {
+        this.moveContentNodes({ ids: [this.nodeId], parent: this.trashId }).then(() => {
+          this.$store.dispatch('showSnackbar', { text: this.$tr('removedItemsMessage') });
+          this.$emit('removed');
+        });
+      },
     },
 
     $trs: {
@@ -104,6 +110,7 @@
       makeACopy: 'Make a copy',
       copyToClipboard: 'Copy to clipboard',
       remove: 'Remove',
+      removedItemsMessage: 'Sent 1 item to the trash',
     },
   };
 

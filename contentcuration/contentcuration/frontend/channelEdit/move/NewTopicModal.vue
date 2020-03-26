@@ -1,42 +1,47 @@
 <template>
 
-  <VLayout row justify-center>
-    <VDialog v-model="showDialog" width="400">
-      <VCard>
-        <VCardTitle primary-title class="headline">
-          <strong>{{ $tr('createTopic') }}</strong>
-        </VCardTitle>
-        <VContainer grid-list-md>
-          <VLayout wrap>
-            <VTextField v-model="title" :label="$tr('topicTitle')" outline />
-          </VLayout>
-        </VContainer>
-        <VCardActions>
-          <VSpacer />
-          <VBtn flat @click="$emit('cancelTopic')">
-            {{ $tr("cancel") }}
-          </VBtn>
-          <VBtn
-            color="purple"
-            class="white--text"
-            @click="$emit('createTopic', title)"
-          >
-            {{ $tr("create") }}
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
-  </VLayout>
+  <MessageDialog v-model="dialog" :header="$tr('createTopic')">
+    <VForm
+      ref="form"
+      lazy-validation
+    >
+      <VTextField
+        v-model="title"
+        :label="$tr('topicTitle')"
+        outline
+        :rules="titleRules"
+        required
+      />
+    </VForm>
+    <template #buttons="{close}">
+      <VBtn flat data-test="close" @click="close">
+        {{ $tr("cancel") }}
+      </VBtn>
+      <VBtn
+        color="primary"
+        data-test="create"
+        @click="create"
+      >
+        {{ $tr("create") }}
+      </VBtn>
+    </template>
+  </MessageDialog>
 
 </template>
 
 <script>
 
+  import MessageDialog from 'shared/views/MessageDialog';
+
   export default {
     name: 'NewTopicModal',
+    components: {
+      MessageDialog,
+    },
     props: {
-      showDialog: {
+      value: {
         type: Boolean,
+        default: false,
       },
     },
     data() {
@@ -44,8 +49,29 @@
         title: '',
       };
     },
+    computed: {
+      dialog: {
+        get() {
+          return this.value;
+        },
+        set(value) {
+          this.$emit('input', value);
+        },
+      },
+      titleRules() {
+        return [v => !!v || this.$tr('topicTitleRequired')];
+      },
+    },
+    methods: {
+      create() {
+        if (this.$refs.form.validate()) {
+          this.$emit('createTopic', this.title);
+        }
+      },
+    },
     $trs: {
       topicTitle: 'Topic title',
+      topicTitleRequired: 'Title is required',
       createTopic: 'Create new topic',
       cancel: 'Cancel',
       create: 'Create',
