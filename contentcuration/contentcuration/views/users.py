@@ -113,7 +113,7 @@ def login(request):
         return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
 
     data = json.loads(request.body)
-    username = data['username']
+    username = data['username'].lower()
     password = data['password']
     user = authenticate(username=username, password=password)
     if user is not None:
