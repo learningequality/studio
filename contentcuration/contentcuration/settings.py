@@ -389,6 +389,9 @@ DELETED_CHEFS_ROOT_ID = "11111111111111111111111111111111"
 # How long we should cache any APIs that return public channel list details, which change infrequently
 PUBLIC_CHANNELS_CACHE_DURATION = 300
 
+# Override in catalog_settings to limit Studio to public catalog page
+LIBRARY_MODE = False
+
 # Sentry settings, if enabled, error reports for this instance will be sent to Sentry. Use with caution.
 key = get_secret("SENTRY_DSN_KEY")
 if key:

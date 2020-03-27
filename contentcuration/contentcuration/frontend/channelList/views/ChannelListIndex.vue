@@ -1,7 +1,16 @@
 <template>
 
   <VApp>
-    <AppBar>
+    <VToolbar v-if="libraryMode" color="primary" clipped-left app>
+      <VToolbarSideIcon>
+        <VImg maxHeight="35" contain :src="require('shared/images/kolibri-logo.svg')" />
+      </VToolbarSideIcon>
+
+      <VToolbarTitle class="white--text notranslate">
+        {{ $tr('libraryTitle') }}
+      </VToolbarTitle>
+    </VToolbar>
+    <AppBar v-else>
       <template v-if="loggedIn" #tabs show-arrows>
         <VTab
           v-for="listType in lists"
@@ -78,6 +87,9 @@
       ...mapState({
         loggedIn: state => state.session.loggedIn,
       }),
+      libraryMode() {
+        return window.libraryMode;
+      },
       ...mapGetters('channelList', ['invitations']),
       lists() {
         return Object.values(ListTypes).filter(l => l !== 'public');
@@ -132,6 +144,7 @@
       channelSets: 'Collections',
       catalog: 'Public',
       invitations: 'You have {count, plural,\n =1 {# invitation}\n other {# invitations}}',
+      libraryTitle: 'Kolibri Library',
     },
   };
 

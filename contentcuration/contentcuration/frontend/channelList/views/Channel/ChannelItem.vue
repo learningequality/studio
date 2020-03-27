@@ -93,27 +93,31 @@
             @click.stop
           >
             <VListTileAction>
-              <VIcon class="notranslate">
-                edit
-              </VIcon>
+              <Icon>edit</Icon>
             </VListTileAction>
             <VListTileTitle>{{ $tr('editChannel') }}</VListTileTitle>
           </VListTile>
           <VListTile v-if="channel.published" @click.stop="tokenDialog=true">
             <VListTileAction>
-              <VIcon class="notranslate">
-                content_copy
-              </VIcon>
+              <Icon>content_copy</Icon>
             </VListTileAction>
             <VListTileTitle>{{ $tr('copyToken') }}</VListTileTitle>
           </VListTile>
           <VListTile v-if="canEdit" @click.stop="deleteDialog=true">
             <VListTileAction>
-              <VIcon class="notranslate">
-                delete
-              </VIcon>
+              <Icon>delete</Icon>
             </VListTileAction>
             <VListTileTitle>{{ $tr('deleteChannel') }}</VListTileTitle>
+          </VListTile>
+          <VListTile
+            v-if="libraryMode && channel.published"
+            :href="demoServerLink"
+            target="_blank"
+          >
+            <VListTileAction>
+              <Icon>launch</Icon>
+            </VListTileAction>
+            <VListTileTitle>{{ $tr('viewContent') }}</VListTileTitle>
           </VListTile>
         </VList>
       </VMenu>
@@ -211,6 +215,12 @@
       canEdit() {
         return this.allowEdit && this.channel.edit && !this.channel.ricecooker_version;
       },
+      libraryMode() {
+        return window.libraryMode;
+      },
+      demoServerLink() {
+        return `https://kolibridemo.learningequality.org/en/learn/#/topics/${this.channelId}`;
+      },
     },
     methods: {
       ...mapActions('channel', ['deleteChannel']),
@@ -223,7 +233,7 @@
         // TODO: if we decide to make channel edit page accessible
         // without an account, update this to be a :to computed property
         // to take advantage of the router more
-        if (this.loggedIn) {
+        if (this.loggedIn && !this.libraryMode) {
           window.location = window.Urls.channel(this.channelId);
         } else {
           this.$router.push(this.channelDetailsLink);
@@ -235,6 +245,7 @@
       unpublishedText: 'Unpublished',
       lastPublished: 'Published {last_published}',
       details: 'Details',
+      viewContent: 'View channel content',
       editChannel: 'Edit channel',
       copyToken: 'Copy channel token',
       deleteChannel: 'Delete channel',
