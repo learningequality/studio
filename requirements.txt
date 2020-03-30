@@ -46,7 +46,6 @@ djangorestframework==3.8.2
 dnspython==1.16.0         # via eventlet
 docutils==0.15.2          # via botocore, sphinx
 ebooklib==0.17.1          # via pressurecooker
-enum34==1.1.6             # via le-pycaption
 eventlet==0.25.1
 ffmpy==0.2.2              # via pressurecooker
 flower==0.9.3
@@ -77,7 +76,7 @@ jsonfield==2.0.2
 kiwisolver==1.1.0         # via matplotlib
 kolibri==0.7.0
 kombu==4.3.0
-le-pycaption==2.0.0a3     # via pressurecooker
+le-pycaption==2.1.0a1     # via pressurecooker
 le-utils==0.1.24
 livereload==2.6.1         # via sphinx-autobuild
 lxml==4.3.5               # via ebooklib, le-pycaption, python-pptx

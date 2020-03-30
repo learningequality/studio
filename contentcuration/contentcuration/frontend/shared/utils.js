@@ -1,4 +1,47 @@
 /**
+ * Insert an item into an array before another item.
+ * @param {Array} arr
+ * @param {Number} idx An index of an item before which
+ *                     a new item will be inserted.
+ * @param {*} item A new item to be inserted into an array.
+ */
+export function insertBefore(arr, idx, item) {
+  const newArr = JSON.parse(JSON.stringify(arr));
+  const insertAt = Math.max(0, idx);
+  newArr.splice(insertAt, 0, item);
+
+  return newArr;
+}
+
+/**
+ * Insert an item into an array after another item.
+ * @param {Array} arr
+ * @param {Number} idx An index of an item after which
+ *                     a new item will be inserted.
+ * @param {*} item A new item to be inserted into an array.
+ */
+export function insertAfter(arr, idx, item) {
+  const newArr = JSON.parse(JSON.stringify(arr));
+  const insertAt = Math.min(arr.length, idx + 1);
+  newArr.splice(insertAt, 0, item);
+
+  return newArr;
+}
+
+/**
+ * Swap two elements of an array
+ * @param {Array} arr
+ * @param {Number} idx1
+ * @param {Number} idx2
+ */
+export function swapElements(arr, idx1, idx2) {
+  const newArr = JSON.parse(JSON.stringify(arr));
+  [newArr[idx1], newArr[idx2]] = [newArr[idx2], newArr[idx1]];
+
+  return newArr;
+}
+
+/**
  * Remove identical pairs from an array.
  *
  * @param {Array} arr Example: [
