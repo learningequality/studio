@@ -75,7 +75,7 @@ pytz==2019.3              # via django
 pyyaml==5.3               # via aspy.yaml, pre-commit
 requests==2.22.0          # via codecov
 rope==0.16.0
-service-factory==0.1.5
+service-factory==0.1.6
 six==1.14.0               # via astroid, faker, packaging, pip-tools, pre-commit, python-dateutil, traitlets, virtualenv
 sqlparse==0.3.0           # via django-debug-toolbar
 toml==0.10.0              # via pre-commit
