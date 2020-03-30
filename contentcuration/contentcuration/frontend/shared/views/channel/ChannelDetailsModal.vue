@@ -16,15 +16,14 @@
         :dark="Boolean(dominantColor)"
         fixed
         :color="dominantColor"
-        class="notranslate"
       >
         <VToolbarItems>
           <VBtn flat icon :to="backLink" replace>
-            <VIcon>clear</VIcon>
+            <Icon>clear</Icon>
           </VBtn>
         </VToolbarItems>
         <VSpacer />
-        <VToolbarTitle v-if="channel">
+        <VToolbarTitle v-if="channel" class="notranslate">
           {{ channel.name }}
         </VToolbarTitle>
       </VToolbar>
@@ -42,9 +41,7 @@
                 >
                   {{ $tr('downloadButton') }}
                   &nbsp;
-                  <VIcon class="notranslate">
-                    arrow_drop_down
-                  </VIcon>
+                  <Icon>arrow_drop_down</Icon>
                 </VBtn>
               </template>
               <VList>

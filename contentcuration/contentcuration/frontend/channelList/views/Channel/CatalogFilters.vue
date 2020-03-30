@@ -18,12 +18,12 @@
     >
       <div v-if="$vuetify.breakpoint.smAndDown" style="text-align: right;">
         <VBtn icon flat>
-          <VIcon class="notranslate" @click="drawer = false">
+          <Icon @click="drawer = false">
             clear
-          </VIcon>
+          </Icon>
         </VBtn>
       </div>
-      <VContainer class="filters notranslate">
+      <VContainer class="filters">
 
         <!-- Keyword search -->
         <VTextField
@@ -33,11 +33,13 @@
           single-line
           outline
           clearable
-          class="notranslate"
-          prepend-inner-icon="search"
           data-test="keywords"
           @blur="setKeywords"
-        />
+        >
+          <template #prepend-inner>
+            <Icon>search</Icon>
+          </template>
+        </VTextField>
 
         <!-- Show per page -->
         <VSelect
@@ -305,7 +307,7 @@
       licenseLabel: 'Licenses',
       formatLabel: 'Formats',
       includesLabel: 'Includes',
-      publishedLabel: 'Published',
+      publishedLabel: 'Available on Kolibri',
       categoryLabel: 'Category',
       searchText:
         '{count, plural,\n =0 {Search} \n =1 {Search (# filter)}\n other {Search (# filters)}}',
@@ -330,6 +332,11 @@
     margin-bottom: 5px;
     font-weight: bold;
     color: gray;
+  }
+  .filters {
+    width: 100%;
+    height: inherit;
+    overflow: auto;
   }
 
 </style>
