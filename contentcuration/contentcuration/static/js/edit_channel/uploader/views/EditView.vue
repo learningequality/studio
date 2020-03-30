@@ -61,7 +61,7 @@
             <DetailsTabView :viewOnly="!canEdit" :nodeIds="nodeIds" />
           </VTabItem>
           <VTabItem :key="tabs.QUESTIONS" ref="questionwindow" :value="tabs.QUESTIONS" lazy>
-            <AssessmentView />
+            <AssessmentTab />
           </VTabItem>
           <VTabItem
             :key="tabs.RELATED"
@@ -83,14 +83,14 @@
 
   import { TabNames } from '../constants';
   import DetailsTabView from './DetailsTabView';
-  import AssessmentView from './AssessmentView';
+  import AssessmentTab from 'frontend/channelEdit/components/AssessmentTab/AssessmentTab';
   import RelatedResourcesTab from 'frontend/channelEdit/components/RelatedResourcesTab/RelatedResourcesTab';
 
   export default {
     name: 'EditView',
     components: {
       DetailsTabView,
-      AssessmentView,
+      AssessmentTab,
       RelatedResourcesTab,
     },
     props: {
