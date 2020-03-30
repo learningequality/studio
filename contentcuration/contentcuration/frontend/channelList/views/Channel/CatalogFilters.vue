@@ -307,7 +307,7 @@
       licenseLabel: 'Licenses',
       formatLabel: 'Formats',
       includesLabel: 'Includes',
-      publishedLabel: 'Published',
+      publishedLabel: 'Available on Kolibri',
       categoryLabel: 'Category',
       searchText:
         '{count, plural,\n =0 {Search} \n =1 {Search (# filter)}\n other {Search (# filters)}}',

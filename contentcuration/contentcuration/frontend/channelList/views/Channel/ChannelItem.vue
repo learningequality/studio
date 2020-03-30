@@ -52,7 +52,7 @@
         {{ $tr('unpublishedText') }}
       </VCardText>
       <VSpacer />
-      <VTooltip sbottom>
+      <VTooltip bottom>
         <template v-slot:activator="{ on }">
           <VBtn
             flat
