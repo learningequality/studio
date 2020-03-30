@@ -8,141 +8,141 @@ alabaster==0.7.12         # via sphinx
 amqp==2.5.2               # via kombu
 argh==0.26.2              # via sphinx-autobuild
 babel==2.8.0              # via flower, sphinx, sphinx-intl
-backoff==1.10.0
-backports-abc==0.5
+backoff==1.10.0           # via -r requirements.in
+backports-abc==0.5        # via -r requirements.in
 beautifulsoup4==4.8.2     # via le-pycaption, pressurecooker
 billiard==3.5.0.5         # via celery
 boto3==1.12.1             # via django-s3-storage
 botocore==1.15.1          # via boto3, s3transfer
 cachetools==4.0.0         # via google-auth
-celery==4.1.1
+celery==4.1.1             # via -r requirements.in, flower
 certifi==2019.11.28       # via minio, requests, sentry-sdk
 chardet==3.0.4            # via requests
 click==7.0                # via sphinx-intl
 cssutils==1.0.2           # via le-pycaption
 cycler==0.10.0            # via matplotlib
 decorator==4.4.1          # via validators
-django-cte==1.1.4
-django-db-readonly==0.5.0
-django-email-extras==0.3.3
-django-filter==1.0.4
-django-hashedfilenamestorage==1.0.0
+django-cte==1.1.4         # via -r requirements.in
+django-db-readonly==0.5.0  # via -r requirements.in
+django-email-extras==0.3.3  # via -r requirements.in
+django-filter==1.0.4      # via -r requirements.in
+django-hashedfilenamestorage==1.0.0  # via -r requirements.in
 django-js-asset==1.2.2    # via django-mptt
-django-js-reverse==0.9.1
-django-mailgun==0.9.1
-django-mathfilters==1.0.0
-django-mptt==0.9.1
-django-pg-utils==0.1.5
-django-postmark==0.1.6
-django-prometheus==2.0.0
-django-redis==4.11.0
-django-registration==2.1.2
-django-s3-storage==0.12.4
-django-webpack-loader==0.6.0
-django==1.11.20
-djangorestframework-bulk==0.2.1
-djangorestframework==3.9.1
+django-js-reverse==0.9.1  # via -r requirements.in
+django-mailgun==0.9.1     # via -r requirements.in
+django-mathfilters==1.0.0  # via -r requirements.in
+django-mptt==0.9.1        # via -r requirements.in
+django-pg-utils==0.1.5    # via -r requirements.in
+django-postmark==0.1.6    # via -r requirements.in
+django-prometheus==2.0.0  # via -r requirements.in
+django-redis==4.11.0      # via -r requirements.in
+django-registration==2.1.2  # via -r requirements.in
+django-s3-storage==0.12.4  # via -r requirements.in
+django-webpack-loader==0.6.0  # via -r requirements.in
+django==1.11.28           # via -r requirements.in, django-hashedfilenamestorage, django-js-reverse, django-mptt, django-redis, django-s3-storage, djangorestframework-bulk, jsonfield
+djangorestframework-bulk==0.2.1  # via -r requirements.in
+djangorestframework==3.9.1  # via -r requirements.in, djangorestframework-bulk
 dnspython==1.16.0         # via eventlet
 docutils==0.15.2          # via botocore, sphinx
 ebooklib==0.17.1          # via pressurecooker
-eventlet==0.25.1
+eventlet==0.25.1          # via -r requirements.in
 ffmpy==0.2.2              # via pressurecooker
-flower==0.9.3
-future==0.18.2
+flower==0.9.3             # via -r requirements.in
+future==0.18.2            # via -r requirements.in
 google-api-core[grpc]==1.16.0  # via google-cloud-core, google-cloud-kms, google-cloud-logging
-google-api-python-client==1.7.11
+google-api-python-client==1.7.11  # via -r requirements.in
 google-auth-httplib2==0.0.3  # via google-api-python-client
 google-auth==1.11.2       # via google-api-core, google-api-python-client, google-auth-httplib2, google-cloud-storage
-google-cloud-core==1.3.0
-google-cloud-error-reporting==0.33.0
-google-cloud-kms==0.2.1
+google-cloud-core==1.3.0  # via -r requirements.in, google-cloud-logging, google-cloud-storage
+google-cloud-error-reporting==0.33.0  # via -r requirements.in
+google-cloud-kms==0.2.1   # via -r requirements.in
 google-cloud-logging==1.14.0  # via google-cloud-error-reporting
-google-cloud-storage==1.26.0
+google-cloud-storage==1.26.0  # via -r requirements.in
 google-resumable-media==0.5.0  # via google-cloud-storage
 googleapis-common-protos[grpc]==1.51.0  # via google-api-core, grpc-google-iam-v1
 greenlet==0.4.15          # via eventlet
 grpc-google-iam-v1==0.11.4  # via google-cloud-kms
 grpcio==1.27.2            # via google-api-core, googleapis-common-protos, grpc-google-iam-v1
-gspread==3.0.1
-gunicorn==19.6.0
+gspread==3.0.1            # via -r requirements.in
+gunicorn==19.6.0          # via -r requirements.in
 html5lib==1.0b10          # via xhtml2pdf
 httplib2==0.17.0          # via django-postmark, google-api-python-client, google-auth-httplib2, oauth2client, xhtml2pdf
 idna==2.8                 # via requests
 imagesize==1.2.0          # via sphinx
 jinja2==2.11.1            # via sphinx
 jmespath==0.9.4           # via boto3, botocore
-jsonfield==2.0.2
+jsonfield==2.0.2          # via -r requirements.in
 kiwisolver==1.1.0         # via matplotlib
-kolibri==0.7.0
-kombu==4.3.0
+kolibri==0.7.0            # via -r requirements.in
+kombu==4.3.0              # via -r requirements.in, celery
 le-pycaption==2.1.0a1     # via pressurecooker
-le-utils==0.1.24
+le-utils==0.1.24          # via -r requirements.in, pressurecooker
 livereload==2.6.1         # via sphinx-autobuild
 lxml==4.3.5               # via ebooklib, le-pycaption, python-pptx
-markdown==2.6.2
+markdown==2.6.2           # via -r requirements.in
 markupsafe==1.1.1         # via jinja2
 matplotlib==2.2.3         # via pressurecooker
-metaphone==0.6
-minio==3.0.3
+metaphone==0.6            # via -r requirements.in
+minio==3.0.3              # via -r requirements.in
 monotonic==1.5            # via eventlet
-newrelic==5.6.0.135
+newrelic==5.6.0.135       # via -r requirements.in
 numpy==1.15.4             # via matplotlib, pressurecooker, wordcloud
-oauth2client==4.1.3
-pathlib==1.0.1
+oauth2client==4.1.3       # via -r requirements.in
+pathlib==1.0.1            # via -r requirements.in, pressurecooker
 pathtools==0.1.2          # via sphinx-autobuild, watchdog
 pdf2image==1.12.1         # via pressurecooker
-pdfkit==0.6.1
+pdfkit==0.6.1             # via -r requirements.in
 pillow==5.4.1             # via pdf2image, pressurecooker, python-pptx, python-resize-image, reportlab, wordcloud, xhtml2pdf
 port_for==0.3.1           # via sphinx-autobuild
-porter2stemmer==1.0
-pressurecooker==0.0.26
-progressbar2==3.38.0
+porter2stemmer==1.0       # via -r requirements.in
+pressurecooker==0.0.26    # via -r requirements.in
+progressbar2==3.38.0      # via -r requirements.in
 prometheus-client==0.7.1  # via django-prometheus
 protobuf==3.11.3          # via google-api-core, googleapis-common-protos
-psutil==3.1.1
-psycopg2-binary==2.7.4
+psutil==3.1.1             # via -r requirements.in
+psycopg2-binary==2.7.4    # via -r requirements.in
 pyasn1-modules==0.2.8     # via google-auth, oauth2client
 pyasn1==0.4.8             # via oauth2client, pyasn1-modules, rsa
-pycountry==17.5.14
+pycountry==17.5.14        # via -r requirements.in, le-utils
 pygments==2.5.2           # via sphinx
 pyparsing==2.4.6          # via matplotlib
 pypdf2==1.26.0            # via xhtml2pdf
 python-dateutil==2.8.1    # via botocore, matplotlib
 python-gnupg==0.4.5       # via django-email-extras
-python-postmark==0.5.0
-python-pptx==0.6.18
-python-resize-image==1.1.11
+python-postmark==0.5.0    # via -r requirements.in
+python-pptx==0.6.18       # via -r requirements.in
+python-resize-image==1.1.11  # via -r requirements.in
 python-utils==2.3.0       # via progressbar2
 pytz==2019.3              # via babel, celery, django, django-postmark, flower, google-api-core, matplotlib, minio
 pyyaml==5.3               # via sphinx-autobuild
-raven==6.10.0
-redis==2.10.5
-reportlab==3.4.0
-requests==2.22.0
+raven==6.10.0             # via -r requirements.in
+redis==2.10.5             # via -r requirements.in, django-redis
+reportlab==3.4.0          # via -r requirements.in, xhtml2pdf
+requests==2.22.0          # via -r requirements.in, django-mailgun, google-api-core, gspread, python-resize-image, sphinx
 rsa==4.0                  # via google-auth, oauth2client
 s3transfer==0.3.3         # via boto3
-sentry-sdk==0.14.1
-singledispatch==3.4.0.3
+sentry-sdk==0.14.1        # via -r requirements.in
+singledispatch==3.4.0.3   # via -r requirements.in
 six==1.14.0               # via cycler, django-mailgun, ebooklib, eventlet, google-api-core, google-api-python-client, google-auth, google-resumable-media, grpcio, html5lib, le-pycaption, livereload, matplotlib, oauth2client, progressbar2, protobuf, python-dateutil, python-utils, singledispatch, sphinx, validators, xhtml2pdf
 snowballstemmer==2.0.0    # via sphinx
 soupsieve==1.9.5          # via beautifulsoup4
-sphinx-autobuild==0.7.1
-sphinx-intl==2.0.0
+sphinx-autobuild==0.7.1   # via -r requirements.in
+sphinx-intl==2.0.0        # via -r requirements.in
 sphinx-me==0.3            # via django-email-extras
-sphinx-rtd-theme==0.4.3
-sphinx==1.6.4
+sphinx-rtd-theme==0.4.3   # via -r requirements.in
+sphinx==1.6.4             # via -r requirements.in, sphinx-intl, sphinx-rtd-theme
 sphinxcontrib-websupport==1.2.0  # via sphinx
-sqlalchemy==1.2.2
+sqlalchemy==1.2.2         # via -r requirements.in
 tornado==5.1.1            # via flower, livereload, sphinx-autobuild
 uritemplate==3.0.1        # via google-api-python-client
 urllib3==1.25.8           # via botocore, minio, requests, sentry-sdk
-validators==0.14.2
+validators==0.14.2        # via -r requirements.in
 vine==1.3.0               # via amqp
 watchdog==0.10.2          # via sphinx-autobuild
 webencodings==0.5.1       # via html5lib
-whitenoise==4.1.4
-wordcloud==1.5.0
-xhtml2pdf==0.2.1
+whitenoise==4.1.4         # via -r requirements.in
+wordcloud==1.5.0          # via -r requirements.in
+xhtml2pdf==0.2.1          # via -r requirements.in
 xlsxwriter==1.2.7         # via python-pptx
 youtube-dl==2020.2.16     # via pressurecooker
 
