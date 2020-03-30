@@ -7,7 +7,7 @@ const BundleTracker = require('webpack-bundle-tracker');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
 const CircularDependencyPlugin = require('circular-dependency-plugin');
 
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const WebpackRTLPlugin = require('webpack-rtl-plugin');
@@ -101,10 +101,17 @@ module.exports = (env = {}) => {
         },
       },
       minimizer: [
-        new UglifyJsPlugin({
+        new TerserPlugin({
           cache: true,
           parallel: true,
           sourceMap: true,
+          terserOptions: {
+            mangle: false,
+            safari10: false,
+            output: {
+              comments: false,
+            },
+          },
         }),
         new OptimizeCSSAssetsPlugin({}),
       ],
