@@ -90,8 +90,8 @@
         this.loading = true;
         let params = {
           ...this.$route.query,
-          query_id: false,
         };
+        delete params['query_id'];
         return this.searchCatalog(params)
           .then(() => {
             this.loading = false;
