@@ -197,6 +197,7 @@
       channelEditLink() {
         return {
           name: RouterNames.CHANNEL_EDIT,
+          query: this.$route.query,
           params: {
             channelId: this.channelId,
           },
