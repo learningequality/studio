@@ -64,7 +64,7 @@
             <VListTile v-if="canView || canEdit" @click.stop>
               <VListTileTitle>{{ $tr('shareChannel') }}</VListTileTitle>
             </VListTile>
-            <VListTile v-if="canEdit" @click.stop>
+            <VListTile v-if="canEdit" @click="showSyncModal = true;">
               <VListTileTitle>{{ $tr('syncChannel') }}</VListTileTitle>
             </VListTile>
           </VList>
@@ -82,6 +82,7 @@
     <template v-if="isPublished">
       <ChannelTokenModal v-model="showTokenModal" :channel="currentChannel" />
     </template>
+    <SyncResourcesModal v-if="currentChannel" v-model="showSyncModal" :channel="currentChannel" />
   </VApp>
 
 </template>
@@ -95,6 +96,7 @@
   import ChannelNavigationDrawer from './ChannelNavigationDrawer';
   import PublishModal from './publish/PublishModal';
   import ProgressModal from './progress/ProgressModal';
+  import SyncResourcesModal from './sync/SyncResourcesModal';
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
   import IconButton from 'shared/views/IconButton';
   import ToolBar from 'shared/views/ToolBar';
@@ -112,12 +114,14 @@
       ProgressModal,
       ChannelTokenModal,
       MoveModal,
+      SyncResourcesModal,
     },
     data() {
       return {
         drawer: false,
         showPublishModal: false,
         showTokenModal: false,
+        showSyncModal: false,
       };
     },
     computed: {
