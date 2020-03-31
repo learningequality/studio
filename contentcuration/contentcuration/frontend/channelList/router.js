@@ -69,7 +69,17 @@ function hasQueryParams(route) {
 
 router.beforeEach((to, from, next) => {
   if (!hasQueryParams(to) && hasQueryParams(from)) {
-    next({ name: to.name, query: from.query });
+    next({
+      name: to.name,
+      query: {
+        ...from.query,
+        // Getting NavigationDuplicated for any query,
+        // so just get a unique string to make it always unique
+        query_id: Math.random()
+          .toString(36)
+          .substring(7),
+      },
+    });
   } else {
     next();
   }

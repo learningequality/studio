@@ -284,11 +284,6 @@
           query: {
             ...params,
             page: 1, // Make sure we're on page 1 for every new query
-            // Getting NavigationDuplicated for any query,
-            // so just get a unique string to make it always unique
-            query_id: Math.random()
-              .toString(36)
-              .substring(7),
           },
         });
       },
