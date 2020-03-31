@@ -1,6 +1,5 @@
 import datetime
 import gettext
-import re
 
 import pycountry
 from builtins import object
@@ -29,9 +28,7 @@ REGISTRATION_SALT = getattr(settings, 'REGISTRATION_SALT', 'registration')
 def get_sorted_countries(language="en"):
     """
     Gets the list of countries sorted by localized name.
-
     NOTE: If we start adding more localization code, we should probably consolidate that code into a localization module.
-
     :param language: Language to localize into and sort
     :return: list of countries sorted by localized language
     """
@@ -54,45 +51,6 @@ class ExtraFormMixin(object):
             self.add_error(field, error)
             return False
         return self.cleaned_data.get(field)
-
-
-class RegistrationForm(forms.Form, ExtraFormMixin):
-    first_name = forms.CharField(widget=forms.TextInput(attrs={"dir": "auto"}), label=_('First Name'), required=True)
-    last_name = forms.CharField(widget=forms.TextInput(attrs={"dir": "auto"}), label=_('Last Name'), required=True)
-    email = forms.CharField(widget=forms.TextInput(attrs={"dir": "auto"}), label=_('Email'), required=True)
-    password1 = forms.CharField(widget=forms.PasswordInput(render_value=True, attrs={"dir": "auto"}), label=_('Password'), required=True,)
-    password2 = forms.CharField(widget=forms.PasswordInput(render_value=True, attrs={"dir": "auto"}), label=_('Password (again)'), required=True)
-
-    def clean_email(self):
-        email = self.cleaned_data['email'].strip()
-        if not re.match(r"[^@]+@[^@\.]+\.[^@]+", email):
-            self.add_error('email', _('Email is invalid.'))
-        elif User.objects.filter(email__iexact=email, is_active=True).exists():
-            self.add_error('email', _('Email already exists.'))
-        return email
-
-    class Meta:
-        model = User
-        fields = ('first_name', 'last_name', 'email', 'password1', 'password2')
-
-    def clean(self):
-        super(RegistrationForm, self).clean()
-
-        # For some reason, email sometimes doesn't remain in cleaned data
-        self.cleaned_data['email'] = self.data.get('email')
-
-        self.check_field('email', _('Email is required.'))
-        self.check_field('first_name', _('First name is required.'))
-        self.check_field('last_name', _('Last name is required.'))
-
-        if self.check_field('password1', _('Password is required.')):
-            if 'password2' not in self.cleaned_data or self.cleaned_data['password1'] != self.cleaned_data['password2']:
-                self.errors['password2'] = self.error_class()
-                self.add_error('password2', _('Passwords don\'t match.'))
-        else:
-            self.errors['password2'] = self.error_class()
-
-        return self.cleaned_data
 
 
 USAGES = [
@@ -120,82 +78,44 @@ SOURCES = [
 ]
 
 
-class RegistrationInformationForm(UserCreationForm, ExtraFormMixin):
-    use = forms.ChoiceField(required=False, widget=forms.CheckboxSelectMultiple, label=_(
-        'How do you plan to use Kolibri Studio? (check all that apply)'), choices=USAGES)
-    other_use = forms.CharField(required=False, widget=forms.TextInput(attrs={"dir": "auto"}))
-    storage = forms.CharField(required=False, widget=forms.TextInput(
-        attrs={"placeholder": _("e.g. 500MB"), "dir": "auto"}), label=_("How much storage do you need?"))
-
-    source = forms.ChoiceField(required=False, widget=forms.Select, label=_('How did you hear about us?'), choices=SOURCES)
-    organization = forms.CharField(required=False, widget=forms.TextInput(attrs={"dir": "auto"}), label=_("Name of Organization"))
-    conference = forms.CharField(required=False, widget=forms.TextInput(attrs={"dir": "auto"}), label=_("Name of Conference"))
-    other_source = forms.CharField(required=False, widget=forms.TextInput(attrs={"dir": "auto"}), label=_("Please describe"))
-    accepted_policy = forms.BooleanField(widget=forms.CheckboxInput())
-
-    def __init__(self, *args, **kwargs):
-        self.request = kwargs.pop('request', None)
-        super(RegistrationInformationForm, self).__init__(*args, **kwargs)
-
-        countries = get_sorted_countries(self.request.LANGUAGE_CODE)
-        self.fields['location'] = forms.ChoiceField(required=True, widget=forms.SelectMultiple, label=_(
-            'Where do you plan to use Kolibri? (select all that apply)'), choices=countries)
+class RegistrationForm(UserCreationForm, ExtraFormMixin):
+    first_name = forms.CharField(required=True)
+    last_name = forms.CharField(required=True)
+    email = forms.CharField(required=True)
+    password1 = forms.CharField(required=True)
+    password2 = forms.CharField(required=True)
+    uses = forms.CharField(required=True)
+    other_use = forms.CharField(required=False)
+    storage = forms.CharField(required=False)
+    source = forms.CharField(required=True)
+    organization = forms.CharField(required=False)
+    conference = forms.CharField(required=False)
+    other_source = forms.CharField(required=False)
+    accepted_policy = forms.BooleanField(required=True)
+    locations = forms.CharField(required=True)
 
     def clean_email(self):
-        email = self.cleaned_data['email'].strip()
+        email = self.cleaned_data['email'].strip().lower()
+        if User.objects.filter(email__iexact=email, is_active=True).exists():
+            raise UserWarning
         return email
 
-    def clean(self):  # noqa: C901
-        super(RegistrationInformationForm, self).clean()
+    def clean(self):
+        super(RegistrationForm, self).clean()
 
-        # Lots of fields get incorrectly processed, so manually validate form
+        # Errors should be caught on the frontend
+        # or a warning should be thrown if the account exists
         self.errors.clear()
-
-        # Get data from cache
-        for field in RegistrationForm.Meta.fields:
-            self.cleaned_data.update({field: self.request.session.get(field, None)})
-
-        # Check uses is set, making sure space needed is indicated if storage is selected
-        uses = self.request.POST.getlist('use')
-        if "other" in uses:
-            if self.check_field('other_use', _("Describe your 'other' use(s) for Kolibri Studio")):
-                uses.append(self.cleaned_data['other_use'])
-                uses.remove("other")
-
-        if "storage" in uses:
-            self.check_field('storage', _("Please indicate how much storage you intend to use"))
-
-        # Set cleaned_data as a string (will be blank if none are selected)
-        self.cleaned_data["use"] = ", ".join(uses)
-        self.cleaned_data["location"] = ", ".join(self.request.POST.getlist('location'))
-
-        self.check_field('use', _('Please indicate how you intend to use Kolibri Studio'))
-        self.check_field('location', _('Please select where you plan to use Kolibri'))
-
-        # Check "How did you hear about us?" has extra information if certain options are selected
-        source = self.check_field('source', _('Please indicate how you heard about us'))
-        if source:
-            if source == 'organization':
-                if self.cleaned_data.get('organization'):
-                    self.cleaned_data['source'] = "{} (organization)".format(self.cleaned_data['organization'])
-            elif source == 'conference':
-                if self.cleaned_data.get('conference'):
-                    self.cleaned_data['source'] = "{} (conference)".format(self.cleaned_data['conference'])
-            elif source == 'other' and self.check_field('other_source', _('Please indicate how you heard about us')):
-                self.cleaned_data['source'] = self.cleaned_data['other_source']
-
-        self.check_field('accepted_policy', _('Please accept our Privacy Policy'))
-
         return self.cleaned_data
 
     def save(self, commit=True):
-        user, _new = User.objects.get_or_create(email=self.cleaned_data["email"])
+        user = super(RegistrationForm, self).save(commit=commit)
         user.set_password(self.cleaned_data["password1"])
         user.first_name = self.cleaned_data["first_name"]
         user.last_name = self.cleaned_data["last_name"]
         user.information = {
-            "uses": self.cleaned_data['use'].split(','),
-            "locations": self.cleaned_data['location'].split(','),
+            "uses": self.cleaned_data['uses'].split('|'),
+            "locations": self.cleaned_data['locations'].split('|'),
             "space_needed": self.cleaned_data['storage'],
             "heard_from": self.cleaned_data['source'],
         }
@@ -210,7 +130,7 @@ class RegistrationInformationForm(UserCreationForm, ExtraFormMixin):
 
     class Meta:
         model = User
-        fields = ('first_name', 'last_name', 'password1', 'password2')
+        fields = ('first_name', 'last_name', 'email')
 
 
 class PolicyAcceptForm(forms.Form):

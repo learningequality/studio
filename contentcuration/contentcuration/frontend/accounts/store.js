@@ -1,9 +1,9 @@
-import session from 'shared/vuex/session';
+import account from './vuex';
 import storeFactory from 'shared/vuex/baseStore';
 
 const store = storeFactory({
   modules: {
-    session,
+    account,
   },
 });
 

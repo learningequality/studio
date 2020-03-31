@@ -22,10 +22,6 @@
         type: String,
         default: '',
       },
-      checkExists: {
-        type: Boolean,
-        default: false,
-      },
     },
     computed: {
       email: {
@@ -41,7 +37,6 @@
         return [
           v => !!v || this.$tr('emailRequiredMessage'),
           v => /.+@.+\..+/.test(v) || this.$tr('validEmailMessage'),
-          () => !this.checkExists || this.$tr('emailExistsMessage'),
         ];
       },
     },
@@ -49,7 +44,6 @@
       emailLabel: 'Email',
       validEmailMessage: 'Please enter a valid email',
       emailRequiredMessage: 'Field is required',
-      emailExistsMessage: 'An account with the email already exists',
     },
   };
 

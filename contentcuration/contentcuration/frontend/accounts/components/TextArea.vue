@@ -3,8 +3,8 @@
   <VTextarea
     v-model="field"
     outline
-    required
-    :rules="rules"
+    :required="required"
+    :rules="required? rules : []"
     :label="label"
     auto-grow
     validate-on-blur
@@ -32,6 +32,10 @@
       label: {
         type: String,
         required: true,
+      },
+      required: {
+        type: Boolean,
+        default: true,
       },
     },
     computed: {

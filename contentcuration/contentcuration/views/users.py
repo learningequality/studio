@@ -27,7 +27,6 @@ from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
 
 from contentcuration.forms import RegistrationForm
-from contentcuration.forms import RegistrationInformationForm
 from contentcuration.models import Channel
 from contentcuration.models import Invitation
 from contentcuration.models import User
@@ -144,65 +143,22 @@ def policies(request):
 
 class UserRegistrationView(RegistrationView):
     form_class = RegistrationForm
-
-    def get_initial(self):
-        self.initial.copy()
-        return {
-            'email': self.request.session.get('email', None),
-            'first_name': self.request.session.get('first_name', None),
-            'last_name': self.request.session.get('last_name', None),
-            'password1': self.request.session.get('password1', None),
-            'password2': self.request.session.get('password2', None),
-        }
-
-    def get_context_data(self, **kwargs):
-        kwargs = super(UserRegistrationView, self).get_context_data(**kwargs)
-        kwargs.update({"freeze_email": self.request.session.get("freeze_email"), })
-        return kwargs
-
-    def post(self, request):
-        form = self.form_class(request.POST)
-        if form.is_valid():
-            # Store information in session in case user goes back
-            self.request.session.update(form.cleaned_data)
-            return redirect(reverse_lazy('registration_information'))
-        return super(UserRegistrationView, self).post(request)
-
-
-class InformationRegistrationView(RegistrationView):
     email_body_template = 'registration/activation_email.txt'
     email_subject_template = 'registration/activation_email_subject.txt'
     email_html_template = 'registration/activation_email.html'
     template_name = 'registration/registration_information_form.html'
-    form_class = RegistrationInformationForm
 
-    def get_form_kwargs(self):
-        kw = super(InformationRegistrationView, self).get_form_kwargs()
-        kw['request'] = self.request
-        return kw
-
-    def get_context_data(self, **kwargs):
-        kwargs = super(InformationRegistrationView, self).get_context_data(**kwargs)
-        kwargs.update({"help_email": settings.HELP_EMAIL, "policies": get_latest_policies()})
-        return kwargs
-
-    def get_initial(self):
-        self.initial.copy()
-        return {
-            'email': self.request.session.get('email', None),
-            'first_name': self.request.session.get('first_name', None),
-            'last_name': self.request.session.get('last_name', None),
-            'password1': self.request.session.get('password1', None),
-            'password2': self.request.session.get('password2', None),
-        }
-
-    def register(self, form):
-        # Clear session cached fields
-        self.request.session["freeze_email"] = False
-        for field in RegistrationForm.Meta.fields:
-            self.request.session[field] = ""
-
-        return super(InformationRegistrationView, self).register(form)
+    def post(self, request):
+        form = self.form_class(json.loads(request.body))
+        try:
+            if form.is_valid():
+                self.register(form)
+                return HttpResponse()
+            elif form._errors['email']:
+                return HttpResponseBadRequest(status=405, reason="Account hasn't been activated")
+            return HttpResponseBadRequest()
+        except UserWarning:
+            return HttpResponseForbidden()
 
     def send_activation_email(self, user):
         activation_key = self.get_activation_key(user)
@@ -215,8 +171,7 @@ class InformationRegistrationView(RegistrationView):
         subject = render_to_string(self.email_subject_template, context)
         subject = ''.join(subject.splitlines())
         message = render_to_string(self.email_body_template, context)
-        # message_html = render_to_string(self.email_html_template, context)
-        user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )  # html_message=message_html,)
+        user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL)
 
         record_user_registration_stats(user)
 
@@ -239,6 +194,9 @@ def new_user_redirect(request, user_id):
 
 
 class UserActivationView(ActivationView):
+
+    def get_success_url(self, user):
+        return '/accounts/#/account-created'
 
     def activate(self, *args, **kwargs):
         user = super(UserActivationView, self).activate(*args, **kwargs)

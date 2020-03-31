@@ -16,7 +16,7 @@
       {{ $tr('createAnAccountTitle') }}
     </h2>
     <VAlert type="error" icon="error" :value="!valid" outline>
-      {{ $tr('errorsMessage') }}
+      {{ registrationFailed? $tr('registrationFailed') : $tr('errorsMessage') }}
     </VAlert>
     <VLayout justify-center class="px-4">
 
@@ -27,21 +27,25 @@
           {{ $tr('basicInformationHeader') }}
         </h1>
         <TextField
-          v-model="form.firstName"
+          v-model="form.first_name"
           :label="$tr('firstNameLabel')"
           autofocus
         />
         <TextField
-          v-model="form.lastName"
+          v-model="form.last_name"
           :label="$tr('lastNameLabel')"
         />
-        <EmailField v-model="form.email" checkExists />
+        <EmailField
+          v-model="form.email"
+          :error-messages="emailErrors"
+          @input="emailErrors = []"
+        />
         <PasswordField
-          v-model="form.password"
+          v-model="form.password1"
           :label="$tr('passwordLabel')"
         />
         <PasswordField
-          v-model="form.passwordConfirm"
+          v-model="form.password2"
           :additionalRules="passwordConfirmRules"
           :label="$tr('confirmPasswordLabel')"
         />
@@ -53,13 +57,13 @@
         </h1>
         <div v-for="option in usageOptions" :key="option.id">
           <VCheckbox
-            v-model="form.use"
+            v-model="form.uses"
             :label="option.label"
             :value="option.id"
             hide-details
             color="primary"
           />
-          <TextArea
+          <TextField
             v-if="showStorageField(option.id)"
             v-model="form.storage"
             :label="$tr('storingUsagePlaceholder')"
@@ -67,7 +71,7 @@
             class="ml-4 my-1"
           />
           <TextArea
-            v-else-if="option.id === uses.OTHER"
+            v-else-if="showOtherField(option.id)"
             v-model="form.other_use"
             :label="$tr('otherUsagePlaceholder')"
             class="ml-4 my-2"
@@ -80,7 +84,7 @@
         <h1 class="font-weight-bold subheading my-2">
           {{ $tr('locationLabel') }}*
         </h1>
-        <CountryField v-model="form.location" />
+        <CountryField v-model="form.locations" />
 
         <!-- Source -->
         <VInput required :rules="sourceRules" class="mt-2" />
@@ -157,6 +161,7 @@
 
 <script>
 
+  import { mapActions } from 'vuex';
   import { uses, sources } from '../constants';
   import TextField from '../components/TextField';
   import EmailField from '../components/EmailField';
@@ -180,34 +185,33 @@
     data() {
       return {
         valid: true,
+        registrationFailed: false,
         showPolicies: false,
+        emailErrors: [],
         form: {
-          firstName: '',
-          lastName: '',
-          email: '',
-          password: '',
-          passwordConfirm: '',
-          use: [],
+          first_name: 'Test',
+          last_name: 'User',
+          email: 'a@b.com',
+          password1: 'a',
+          password2: 'a',
+          uses: ['tagging'],
           storage: '',
           other_use: '',
-          location: [],
-          source: '',
+          locations: ['Philippines'],
+          source: 'demo',
           organization: '',
           conference: '',
           other_source: '',
-          accepted_policy: false,
+          accepted_policy: true,
         },
       };
     },
     computed: {
       passwordConfirmRules() {
-        return [v => this.form.password === v || this.$tr('passwordMatchMessage')];
+        return [v => this.form.password1 === v || this.$tr('passwordMatchMessage')];
       },
       policyRules() {
         return [v => !!v || this.$tr('privacyPolicyRequiredMessage')];
-      },
-      uses() {
-        return uses;
       },
       usageOptions() {
         return [
@@ -246,13 +250,10 @@
         ];
       },
       usageRules() {
-        return [() => !!this.form.use.length || this.$tr('fieldRequiredMessage')];
+        return [() => !!this.form.uses.length || this.$tr('fieldRequiredMessage')];
       },
       locationRules() {
-        return [() => !!this.form.location.length || this.$tr('fieldRequiredMessage')];
-      },
-      sources() {
-        return sources;
+        return [() => !!this.form.locations.length || this.$tr('fieldRequiredMessage')];
       },
       sourceOptions() {
         return [
@@ -319,13 +320,42 @@
       },
     },
     methods: {
+      ...mapActions('account', ['register']),
       showStorageField(id) {
-        return id === uses.STORING && this.form.use.includes(id);
+        return id === uses.STORING && this.form.uses.includes(id);
+      },
+      showOtherField(id) {
+        return id === uses.OTHER && this.form.uses.includes(id);
+      },
+      clean() {
+        Object.keys(this.form).forEach(key => {
+          // Trim text fields
+          if (typeof this.form[key] === 'string') {
+            this.form[key] = this.form[key].trim();
+          }
+        });
       },
       submit() {
+        this.clean();
         if (this.$refs.form.validate()) {
-          // handle account creation
-          this.$router.push({ name: 'ActivationSent' });
+          this.register({
+            ...this.form,
+            uses: this.form.uses.join('|'),
+            locations: this.form.locations.join('|'),
+          })
+            .then(() => {
+              this.$router.push({ name: 'ActivationSent' });
+            })
+            .catch(error => {
+              if (error.response.status === 403) {
+                this.emailErrors = [this.$tr('emailExistsMessage')];
+              } else if (error.response.status === 405) {
+                this.$router.push({ name: 'AccountNotActivated' });
+              } else {
+                this.registrationFailed = true;
+                this.valid = false;
+              }
+            });
         }
       },
     },
@@ -334,11 +364,13 @@
       createAnAccountTitle: 'Create an account',
       fieldRequiredMessage: 'Field is required',
       errorsMessage: 'Please fix the errors below',
+      registrationFailed: 'There was an error registering your account. Please try again',
 
       // Basic information strings
       basicInformationHeader: 'Basic information',
       firstNameLabel: 'First name',
       lastNameLabel: 'Last name',
+      emailExistsMessage: 'An account with this email already exists',
       passwordLabel: 'Password',
       confirmPasswordLabel: 'Confirm password',
       passwordMatchMessage: "Passwords don't match",
@@ -355,7 +387,7 @@
       storingUsageExample: 'e.g. 500MB',
       taggingUsageOption: 'Tagging content sources for discovery',
       otherUsageOption: 'Other',
-      otherUsagePlaceholder: 'Other reasons',
+      otherUsagePlaceholder: 'Other uses',
 
       // Location question
       locationLabel: 'Where do you plan to use Kolibri Studio? (check all that apply)',
