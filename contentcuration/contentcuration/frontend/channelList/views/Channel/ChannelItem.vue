@@ -20,7 +20,7 @@
                 </span>
               </VFlex>
               <VFlex xs6 sm4>
-                {{ $tr('resourceCount', {'count': $formatNumber(channel.count)}) }}
+                {{ $tr('resourceCount', {'count': $formatNumber(Number(channel.count))}) }}
               </VFlex>
               <VFlex v-if="$vuetify.breakpoint.smAndUp" sm4 />
             </VLayout>
@@ -37,7 +37,8 @@
       </VFlex>
     </VLayout>
     <VCardActions>
-      <VCardText v-if="channel.published" class="grey--text">
+      <!-- Some channels were published before the last_published field was added -->
+      <VCardText v-if="channel.last_published" class="grey--text">
         {{ $tr(
           'lastPublished',
           {
@@ -63,9 +64,7 @@
             v-on="on"
             @click.stop
           >
-            <VIcon class="notranslate">
-              info
-            </VIcon>
+            <Icon>info</Icon>
           </VBtn>
         </template>
         <span>{{ $tr('details') }}</span>
