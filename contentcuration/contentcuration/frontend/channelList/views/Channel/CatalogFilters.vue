@@ -15,6 +15,7 @@
       app
       disable-route-watcher
       clipped
+      :right="isRTL"
     >
       <div v-if="$vuetify.breakpoint.smAndDown" style="text-align: right;">
         <VBtn icon flat>
@@ -157,6 +158,9 @@
       ...mapState({
         loggedIn: state => state.session.loggedIn,
       }),
+      isRTL() {
+        return window.isRTL;
+      },
       kindOptions() {
         return sortBy(Constants.ContentKinds, 'kind');
       },

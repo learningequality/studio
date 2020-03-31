@@ -1,7 +1,13 @@
 <template>
 
   <VApp>
-    <VToolbar v-if="libraryMode" color="primary" clipped-left app>
+    <VToolbar
+      v-if="libraryMode"
+      color="primary"
+      :clipped-left="!isRTL"
+      :clipped-right="isRTL"
+      app
+    >
       <VToolbarSideIcon>
         <VImg maxHeight="35" contain :src="require('shared/images/kolibri-logo.svg')" />
       </VToolbarSideIcon>
@@ -42,7 +48,7 @@
       </template>
     </AppBar>
     <VContent>
-      <VContainer fluid>
+      <VContainer fluid class="main-container">
         <VLayout row wrap justify-center>
           <VFlex xs12 sm10 md8 lg6>
             <VCard v-if="invitationList.length" v-show="isChannelList">
@@ -87,6 +93,9 @@
       ...mapState({
         loggedIn: state => state.session.loggedIn,
       }),
+      isRTL() {
+        return window.isRTL;
+      },
       libraryMode() {
         return window.libraryMode;
       },
@@ -182,6 +191,11 @@
   .v-tooltip__content {
     max-width: 200px;
     text-align: center;
+  }
+
+  .main-container {
+    height: calc(100vh - 64px);
+    overflow: auto;
   }
 
 </style>

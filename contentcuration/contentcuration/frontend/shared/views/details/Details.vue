@@ -24,7 +24,7 @@
             <template v-slot:items="props">
               <td>
                 <ContentNodeIcon :kind="props.item.kind_id" />
-                <span class="text">{{ translateConstant(props.item.kind_id) }}</span>
+                <span class="text px-2">{{ translateConstant(props.item.kind_id) }}</span>
               </td>
               <td>{{ $formatNumber(props.item.count) }}</td>
               <td v-if="$vuetify.breakpoint.smAndUp"></td>
@@ -176,7 +176,9 @@
           <VCard height="100%" flat>
             <VImg :src="node.thumbnail" :aspect-ratio="16/9" />
             <VCardText class="notranslate">
-              {{ node.title }}
+              <p dir="auto">
+                {{ node.title }}
+              </p>
             </VCardText>
           </VCard>
         </VFlex>

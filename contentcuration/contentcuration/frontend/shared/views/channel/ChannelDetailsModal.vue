@@ -18,7 +18,7 @@
         :color="dominantColor"
       >
         <VToolbarItems>
-          <VBtn flat icon :to="backLink" replace>
+          <VBtn flat icon :to="backLink" replace exact>
             <Icon>clear</Icon>
           </VBtn>
         </VToolbarItems>
@@ -61,10 +61,10 @@
               <Thumbnail :src="channel.thumbnail_url" :encoding="channel.thumbnail_encoding" />
             </div>
             <br>
-            <h1 class="notranslate">
+            <h1 class="notranslate" dir="auto">
               {{ channel.name }}
             </h1>
-            <p class="notranslate">
+            <p class="notranslate" dir="auto">
               {{ channel.description }}
             </p>
             <br>

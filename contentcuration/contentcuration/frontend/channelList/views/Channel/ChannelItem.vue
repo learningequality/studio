@@ -26,12 +26,14 @@
             </VLayout>
           </VFlex>
           <VFlex xs12>
-            <h3 class="headline notranslate">
+            <h3 class="headline notranslate" dir="auto">
               {{ channel.name }}
             </h3>
           </VFlex>
           <VFlex xs12 class="notranslate">
-            {{ channel.description }}
+            <p dir="auto">
+              {{ channel.description }}
+            </p>
           </VFlex>
         </VCardTitle>
       </VFlex>
@@ -53,7 +55,7 @@
         {{ $tr('unpublishedText') }}
       </VCardText>
       <VSpacer />
-      <VTooltip bottom>
+      <VTooltip v-if="!libraryMode" bottom>
         <template v-slot:activator="{ on }">
           <VBtn
             flat
