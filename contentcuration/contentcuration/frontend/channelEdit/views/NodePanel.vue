@@ -3,6 +3,7 @@
   <LoadingText v-if="loading" />
   <VLayout
     v-else-if="node && !node.total_count"
+    class="pa-4"
     justify-center
     fill-height
     style="padding-top: 10%;"
@@ -19,44 +20,37 @@
       {{ $tr('emptyTopicText') }}
     </VFlex>
   </VLayout>
-  <VLayout v-else row wrap>
-    <VFlex
-      v-if="node"
-      xs12
+  <VFlex
+    v-else
+    tag="ol"
+    class="node-list"
+    shrink
+    :style="{backgroundColor: $vuetify.theme.backgroundColor}"
+  >
+    <template
+      v-for="child in children"
     >
-      <template
-        v-for="child in children"
-      >
-        <VLayout :key="child.id" row wrap>
-          <VFlex xs11>
-            <router-link :to="treeLink(child)">
-              <ContentNodeIcon :kind="child.kind" />
-              <span>{{ child.title }}</span>
-            </router-link>
-          </VFlex>
-          <VFlex xs1>
-            <VBtn icon :to="editNodeLink(child.id)">
-              <VIcon>edit</VIcon>
-            </VBtn>
-          </VFlex>
-        </VLayout>
-      </template>
-    </VFlex>
-  </VLayout>
+      <ContentNodeListItem
+        :key="child.id"
+        :nodeId="child.id"
+        :compact="isCompactViewMode"
+        style="flex-basis: 100%"
+      />
+    </template>
+  </VFlex>
 
 </template>
 
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
-  import { RouterNames } from '../constants';
-  import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import LoadingText from 'shared/views/LoadingText';
+  import ContentNodeListItem from 'frontend/channelEdit/views/list/ContentNodeListItem';
 
   export default {
     name: 'NodePanel',
     components: {
-      ContentNodeIcon,
+      ContentNodeListItem,
       LoadingText,
     },
     props: {
@@ -71,6 +65,7 @@
       };
     },
     computed: {
+      ...mapGetters(['isCompactViewMode']),
       ...mapGetters('currentChannel', ['currentChannel', 'rootId']),
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodeChildren']),
       node() {
@@ -95,32 +90,6 @@
     },
     methods: {
       ...mapActions('contentNode', ['loadChildren']),
-      editNodeLink(id) {
-        return {
-          name: RouterNames.CONTENTNODE_DETAILS,
-          params: {
-            nodeId: this.parentId,
-            detailNodeIds: id,
-          },
-        };
-      },
-      treeLink(node) {
-        if (node.kind === 'topic') {
-          return {
-            name: RouterNames.TREE_VIEW,
-            params: {
-              nodeId: node.id,
-            },
-          };
-        }
-        return {
-          name: RouterNames.TREE_VIEW,
-          params: {
-            nodeId: this.parentId,
-            detailNodeId: node.id,
-          },
-        };
-      },
     },
     $trs: {
       emptyTopicText: 'Nothing in this topic yet',
@@ -132,4 +101,10 @@
 </script>
 
 <style scoped>
+  .node-list {
+    width: 100%;
+    padding: 0;
+    padding-bottom: 100px;
+    overflow-y: auto;
+  }
 </style>

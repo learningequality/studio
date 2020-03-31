@@ -103,15 +103,13 @@
 
     <!-- Topic items and resource panel -->
     <VLayout row :style="{height: contentHeight}">
-
-      <VFlex class="pa-4" style="overflow-y: auto;">
-        <VFadeTransition mode="out-in">
-          <NodePanel :key="topicId" :parentId="topicId" />
-        </VFadeTransition>
-      </VFlex>
+      <VFadeTransition mode="out-in">
+        <NodePanel :key="topicId" :parentId="topicId" />
+      </VFadeTransition>
       <ResourceDrawer
         :nodeId="detailNodeId"
         :channelId="currentChannel.id"
+        class="grow"
         @close="closePanel"
       >
         <template v-if="canEdit" #actions>
@@ -149,7 +147,7 @@
 
 <script>
 
-  import { mapActions, mapGetters, mapMutations } from 'vuex';
+  import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
   import { RouterNames, viewModes } from '../constants';
   import ResourceDrawer from '../components/ResourceDrawer';
   import NodePanel from './NodePanel';
@@ -180,12 +178,12 @@
     },
     data() {
       return {
-        viewMode: sessionStorage['topic-tree-view'] || viewModes.DEFAULT,
         loadingAncestors: false,
         selected: [],
       };
     },
     computed: {
+      ...mapState(['viewMode']),
       ...mapGetters('currentChannel', ['canEdit', 'currentChannel', 'trashId']),
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodeAncestors']),
       selectAll: {
@@ -246,8 +244,21 @@
           });
         }
       },
+      detailNodeId(nodeId) {
+        if (nodeId) {
+          this.addViewModeOverride({
+            id: 'resourceDrawer',
+            viewMode: viewModes.COMPACT,
+          });
+        } else {
+          this.removeViewModeOverride({
+            id: 'resourceDrawer',
+          });
+        }
+      },
     },
     methods: {
+      ...mapActions(['setViewMode', 'addViewModeOverride', 'removeViewModeOverride']),
       ...mapActions('contentNode', ['createContentNode', 'loadAncestors', 'moveContentNodes']),
       ...mapMutations('contentNode', { setMoveNodes: 'SET_MOVE_NODES' }),
       newContentNode(route, { kind, title }) {
@@ -294,9 +305,6 @@
             detailNodeId: null,
           },
         });
-      },
-      setViewMode(viewMode) {
-        this.viewMode = sessionStorage['topic-tree-view'] = viewMode;
       },
       removeNodes(ids) {
         this.moveContentNodes({ ids, parent: this.trashId }).then(() => {

@@ -83,6 +83,20 @@
       <ChannelTokenModal v-model="showTokenModal" :channel="currentChannel" />
     </template>
     <SyncResourcesModal v-if="currentChannel" v-model="showSyncModal" :channel="currentChannel" />
+    <VSpeedDial
+      v-model="showClipboard"
+      bottom
+      right
+      direction="top"
+      transition="slide-y-reverse-transition"
+    >
+      <template #activator>
+        <VBtn v-model="showClipboard" fab>
+          <Icon>content_paste</Icon>
+        </VBtn>
+      </template>
+      <!-- TODO: Clipboard -->
+    </VSpeedDial>
   </VApp>
 
 </template>
@@ -122,6 +136,7 @@
         showPublishModal: false,
         showTokenModal: false,
         showSyncModal: false,
+        showClipboard: false,
       };
     },
     computed: {
@@ -187,5 +202,13 @@
 
 
 <style lang="less" scoped>
+
+  .v-speed-dial {
+    position: absolute;
+
+    .v-btn--floating {
+      position: relative;
+    }
+  }
 
 </style>

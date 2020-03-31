@@ -5,6 +5,40 @@ import client from 'shared/client';
 import { MOVE_POSITIONS } from 'shared/data/constants';
 import { ContentNode, Tree } from 'shared/data/resources';
 
+/**
+ * @param context
+ * @param {String} channelId
+ * @return {Promise<Object>}
+ */
+function getChannel(context, channelId) {
+  return new Promise((resolve, reject) => {
+    const channel = context.rootGetters['channel/getChannel'](channelId);
+
+    if (channel) {
+      resolve(channel);
+    } else {
+      reject();
+    }
+  });
+}
+
+/**
+ * @param {String} id
+ * @return {Promise<Object[]>}
+ */
+function loadParentRecursively(id) {
+  return Tree.get(id).then(node => {
+    if (node.parent) {
+      return loadParentRecursively(node.parent).then(nodes => {
+        nodes.push(node);
+        return nodes;
+      });
+    }
+
+    return [node];
+  });
+}
+
 export function loadContentNodes(context, params = {}) {
   return ContentNode.where(params).then(contentNodes => {
     context.commit('ADD_CONTENTNODES', contentNodes);
@@ -23,23 +57,37 @@ export function loadContentNode(context, id) {
     });
 }
 
-export function loadTree(context, channel_id) {
-  return Tree.where({ channel_id }).then(nodes => {
+export function loadTree(context, params) {
+  return Tree.where(params).then(nodes => {
     context.commit('ADD_TREENODES', nodes);
+    return nodes;
   });
 }
-
-export function loadChildren(context, { parent, channel_id, ...params }) {
-  return Tree.where({ parent, channel_id, ...params }).then(nodes => {
-    return loadContentNodes(context, { id__in: nodes.map(node => node.id) });
-  });
+export function loadChannelTree(context, channel_id) {
+  return context.dispatch('loadTree', { channel_id });
 }
 
-export function loadAncestors(context, { id, channel_id }) {
-  let node = context.state.treeNodesMap[id];
-  return Tree.where({ lft__lte: node.lft, rght__gte: node.rght, channel_id }).then(nodes => {
-    return loadContentNodes(context, { id__in: nodes.map(node => node.id) });
-  });
+export function loadTrashTree(context, channelId) {
+  return getChannel(context, channelId).then(channel =>
+    context.dispatch('loadTree', { tree_id: channel.trash_root_id })
+  );
+}
+
+export function loadClipboardTree(context) {
+  const tree_id = context.rootState.session.currentUser.clipboard_root_id;
+  return tree_id ? context.dispatch('loadTree', { tree_id }) : Promise.reject();
+}
+
+export function loadChildren(context, { parent, channel_id }) {
+  return getChannel(context, channel_id)
+    .then(channel => Tree.where({ parent, tree_id: channel.root_id }))
+    .then(nodes => loadContentNodes(context, { ids: nodes.map(node => node.id) }));
+}
+
+export function loadAncestors(context, { id }) {
+  return loadParentRecursively(id).then(nodes =>
+    loadContentNodes(context, { ids: nodes.map(node => node.id) })
+  );
 }
 
 /**

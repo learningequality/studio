@@ -3,9 +3,28 @@ import vuetifyIcons from 'vuetify/lib/components/Vuetify/mixins/icons';
 import collapseAllIcon from '../views/icons/collapseAllIcon';
 import lightBulbIcon from '../views/icons/lightBulbIcon';
 import viewOnlyIcon from '../views/icons/viewOnlyIcon';
+import contentPasteIcon from '../views/icons/contentPasteIcon';
 import Icon from 'shared/views/Icon';
+import ContentKinds from 'shared/leUtils/ContentKinds';
 
 Vue.component(Icon.name, Icon);
+
+const EMPTY = '_empty';
+export const CONTENT_KIND_ICONS = {
+  [ContentKinds.topic]: 'folder',
+  [ContentKinds.topic + EMPTY]: 'folder_open',
+  [ContentKinds.video]: 'ondemand_video',
+  [ContentKinds.audio]: 'music_note',
+  [ContentKinds.image]: 'image',
+  [ContentKinds.exercise]: 'assignment',
+  [ContentKinds.document]: 'class',
+  [ContentKinds.html5]: 'widgets',
+};
+
+export function getContentKindIcon(kind, isEmpty = false) {
+  const icon = (isEmpty ? [kind + EMPTY] : []).concat([kind]).find(k => k in CONTENT_KIND_ICONS);
+  return icon ? CONTENT_KIND_ICONS[icon] : 'error_outline';
+}
 
 const customIcons = {
   collapse_all: {
@@ -24,6 +43,12 @@ const customIcons = {
     component: viewOnlyIcon,
     props: {
       iconName: 'view_only',
+    },
+  },
+  content_paste: {
+    component: contentPasteIcon,
+    props: {
+      iconName: 'content_paste',
     },
   },
 };

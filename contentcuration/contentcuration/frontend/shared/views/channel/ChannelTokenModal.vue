@@ -4,7 +4,7 @@
     <div class="mb-4">
       <label class="grey--text">{{ $tr('token') }}</label>
       <CopyToken :token="channel.primary_token" />
-      <p style="margin: 48px 0px 16px;" class="subheading">
+      <p style="margin: 48px 0 16px;" class="subheading">
         {{ $tr('tokenText') }}
       </p>
       <label class="grey--text">{{ $tr('channelId') }}</label>

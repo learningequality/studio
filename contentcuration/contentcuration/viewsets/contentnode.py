@@ -203,6 +203,7 @@ class ContentNodeViewSet(ValuesViewset):
         "published",
         "modified",
         "has_children",
+        "parent_id",
     )
 
     field_map = {

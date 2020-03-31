@@ -14,11 +14,7 @@ _valid_positions = set(["first-child", "last-child", "left", "right"])
 class TreeFilter(FilterSet):
     class Meta:
         model = ContentNode
-        fields = {
-            'parent': ['exact'],
-            'lft': ['gt', 'gte', 'lt', 'lte'],
-            'rght': ['gt', 'gte', 'lt', 'lte'],
-        }
+        fields = ("parent")
 
 
 def validate_move_args(target, position):
@@ -47,9 +43,9 @@ class TreeViewSet(GenericViewSet):
     values = (
         "id",
         "tree_id",
-        "lft",
-        "rght",
         "parent",
+        "level",
+        "lft",
     )
 
     @classmethod
@@ -58,31 +54,44 @@ class TreeViewSet(GenericViewSet):
 
     def list(self, request, *args, **kwargs):
         channel_id = request.query_params.get("channel_id")
-        if channel_id is None:
+        tree_id = request.query_params.get("tree_id")
+
+        if channel_id is None and tree_id is None:
             raise MissingRequiredParamsException(
-                "channel_id query parameter is required but was missing from the request"
+                "tree_id or channel_id query parameter is required but was missing from the request"
             )
-        if request.query_params.get("trash"):
-            root = get_object_or_404(ContentNode, channel_trash=channel_id)
+
+        root_filter = dict()
+        if channel_id is not None:
+            root_filter.update(channel_main=channel_id)
         else:
-            root = get_object_or_404(ContentNode, channel_main=channel_id)
+            root_filter.update(pk=tree_id)
+
+        root = get_object_or_404(ContentNode, **root_filter)
+
+        if tree_id is None:
+            tree_id = root.pk
 
         def map_data(item):
             item["channel_id"] = channel_id
+            item["tree_id"] = tree_id
             return item
 
         queryset = self.filter_queryset(root.get_descendants(include_self=True))
         tree = map(map_data, queryset.values(*self.values))
         return Response(tree)
 
-    def move(self, pk, *args, **kwargs):
-        try:
-            contentnode = ContentNode.objects.get(pk=pk)
-        except ContentNode.DoesNotExist:
-            error = ValidationError("Specified node does not exist")
-            return str(error), None
-        target = kwargs.pop("target", None)
-        position = kwargs.pop("position", "first-child")
+
+def move(self, pk, *args, **kwargs):
+    try:
+        contentnode = ContentNode.objects.get(pk=pk)
+    except ContentNode.DoesNotExist:
+        error = ValidationError("Specified node does not exist")
+        return str(error), None
+    target = kwargs.pop("target", None)
+    position = kwargs.pop("position", "first-child")
+    try:
+        target, position = validate_move_args(target, position)
         try:
             target, position = validate_move_args(target, position)
             try:
@@ -91,6 +100,11 @@ class TreeViewSet(GenericViewSet):
                 raise ValidationError(
                     "Invalid position argument specified: {}".format(position)
                 )
-            return None, None
-        except ValidationError as e:
-            return str(e), None
+
+        except ValueError:
+            raise ValidationError(
+                "Invalid position argument specified: {}".format(position)
+            )
+        return None, None
+    except ValidationError as e:
+        return str(e), None

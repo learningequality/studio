@@ -216,7 +216,6 @@
       this.loadChildren({
         parent: this.trashId,
         channel_id: this.currentChannel.id,
-        trash: true,
       }).then(() => {
         this.loading = false;
       });
