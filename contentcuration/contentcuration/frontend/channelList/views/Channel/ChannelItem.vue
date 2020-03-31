@@ -20,7 +20,7 @@
                 </span>
               </VFlex>
               <VFlex xs6 sm4>
-                {{ $tr('resourceCount', {'count': $formatNumber(Number(channel.count))}) }}
+                {{ $tr('resourceCount', {'count': channel.count}) }}
               </VFlex>
               <VFlex v-if="$vuetify.breakpoint.smAndUp" sm4 />
             </VLayout>
