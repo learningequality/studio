@@ -14,7 +14,7 @@ _valid_positions = set(["first-child", "last-child", "left", "right"])
 class TreeFilter(FilterSet):
     class Meta:
         model = ContentNode
-        fields = ("parent")
+        fields = ("parent",)
 
 
 def validate_move_args(target, position):
