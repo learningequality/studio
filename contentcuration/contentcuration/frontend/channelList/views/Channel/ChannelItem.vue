@@ -80,9 +80,7 @@
       <VMenu v-if="canEdit || channel.published" offset-y>
         <template v-slot:activator="{ on }">
           <VBtn icon flat data-test="menu" v-on="on" @click.stop.prevent>
-            <VIcon class="notranslate">
-              more_vert
-            </VIcon>
+            <Icon>more_vert</Icon>
           </VBtn>
         </template>
         <VList>
@@ -207,6 +205,7 @@
       channelDetailsLink() {
         return {
           name: this.detailsRouteName,
+          query: this.$route.query,
           params: {
             channelId: this.channelId,
           },
