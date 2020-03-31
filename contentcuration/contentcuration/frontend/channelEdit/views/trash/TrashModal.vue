@@ -213,15 +213,14 @@
     },
     mounted() {
       this.loading = true;
-      this.loadChildren({
-        parent: this.trashId,
-        channel_id: this.currentChannel.id,
-      }).then(() => {
-        this.loading = false;
-      });
+      this.loadTrashTree(this.currentChannel.id)
+        .then(nodes => {
+          return nodes.length ? this.loadContentNodes({ ids: nodes.map(node => node.id) }) : [];
+        })
+        .then(() => (this.loading = false));
     },
     methods: {
-      ...mapActions('contentNode', ['deleteContentNodes', 'loadChildren']),
+      ...mapActions('contentNode', ['deleteContentNodes', 'loadTrashTree', 'loadContentNodes']),
       ...mapMutations('contentNode', { setMoveNodes: 'SET_MOVE_NODES' }),
       reset() {
         this.previewNodeId = null;
