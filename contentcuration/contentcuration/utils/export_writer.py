@@ -51,7 +51,7 @@ if sys.platform.startswith("darwin"):
 
 import matplotlib.pyplot as plt  # noqa: E402
 
-
+PRIMARY_COLOR = "#996189"
 AUDIO_COLOR = "#F06292"
 DOCUMENT_COLOR = "#FF3D00"
 EXERCISE_COLOR = "#4DB6AC"
@@ -507,9 +507,15 @@ class ChannelDetailsPPTWriter(ChannelDetailsWriter, PPTMixin):
         # Add language information
         icon_width = 0.2
         language_left = size_width + title_left + padding
-        language_icon_path = os.path.join(settings.STATIC_ROOT, 'img', 'export', 'language.png')
-        encoding = encode_file_to_base64(language_icon_path, 'data:image/png;base64,')
-        self.add_picture(encoding, language_left, next_line + 0.04, icon_width, icon_width)
+        language_encoding = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAAkCAYAAADhAJiYAAAB+klEQVR4Ae3"\
+            "WAWQbYRiH8aI4BEEwFEEwDEUAQQgAgiEoggKGQ1EMQRAMQVEMwaEIgmIYhqAIguFQFEFRBENQvHuQ8vfy5S4nOWx9+KF5Sy/f3"\
+            "fddT/6X3jvHEDMs8LQ1xxTXaOCoRYixguWUoo+D18UjrKAlWjhIQ5izhol7LOXnDf7AxCsuUbhTTGHiBV/Qc3/8DE2YaOHKXxhG"\
+            "KNQIJqaobWcL+XyItxL3+ydUxwNM7L1SPZgYy6zpVqcms0/uFn2QDTF1s9Y+u+nZfVNtLLMJfL9kHrtHQFdqiVwNYFsrVKHpbuvA"\
+            "dynzn9Dq7pnq51mdNawkKXbWgZWsgWC3sJJdI9jCnSO+JOf9H7hjwXfhNk0wfU9VMnZQG6H6GTtRj4c5gpmgo11QXeZPZVyQ3pIE"\
+            "vjN3tATTAzE64gp9lPkDgukbuwnfXYGHegTfZ5nPEGwCK9kAwbqwkp0jWAUbWElWyEzf5r8R7TirWhk7bA6t5jZOjMyq7gV7A+27n"\
+            "7nuZf51x+wRp8hVDAt8k7b737riDrxXmdf9yosu9iqBiW9y+1L5/Apv3cjnP2TFZ/l3VrgIc5hI0UbfrVIVDbc6HVxgBRN3KFwkK6V"\
+            "SmJi4U3wjF6KGOEixPOhFPKOHg1bDeM9zao0BIhytCrpIsMSLO+gWuEUHEd77t/sL4jTul7ZsQYsAAAAASUVORK5CYII="
+        self.add_picture(language_encoding, language_left, next_line + 0.04, icon_width, icon_width)
 
         includes_tf = self.generate_textbox(language_left + icon_width - 0.08, next_line, includes_width, size_height + description_height)
         language = channel.language.native_name if channel.language else _("No language set")
@@ -543,12 +549,12 @@ class ChannelDetailsPPTWriter(ChannelDetailsWriter, PPTMixin):
 
         # Add separator with headers
         separator_height = 0.3
-        self.add_shape(left=0, top=next_line, width=old_div(self.width, 2), height=separator_height, color=self.get_rgb_from_hex(EXERCISE_COLOR))
+        self.add_shape(left=0, top=next_line, width=old_div(self.width, 2), height=separator_height, color=self.get_rgb_from_hex(PRIMARY_COLOR))
         resource_header = self.generate_textbox(padding, next_line, old_div(self.width, 2) - padding, separator_height)
         self.add_line(resource_header, _("Resource Breakdown"), bold=True, color=self.get_rgb_from_hex("#FFFFFF"), append=False)
 
         divleft = old_div(self.width, 2)
-        self.add_shape(left=divleft, top=next_line, width=divleft, height=separator_height, color=self.get_rgb_from_hex("#595959"))
+        self.add_shape(left=divleft, top=next_line, width=divleft, height=separator_height, color=self.get_rgb_from_hex(EXERCISE_COLOR))
         tag_header = self.generate_textbox(padding + old_div(self.width, 2) - padding, next_line, old_div(self.width, 2) - padding, separator_height)
         self.add_line(tag_header, _("Most Common Tags"), bold=True, color=self.get_rgb_from_hex("#FFFFFF"), append=False)
         next_line += separator_height + 0.05
