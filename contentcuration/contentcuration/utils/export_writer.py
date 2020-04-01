@@ -537,7 +537,7 @@ class ChannelDetailsPPTWriter(ChannelDetailsWriter, PPTMixin):
         size_tf = self.generate_textbox(title_left, next_line, size_width, size_height)
         size_bar = self.add_line(size_tf, "", append=False)
         for i in data['size']['scale']:
-            self.add_run(size_bar, "▮", color=self.get_rgb_from_hex(EXERCISE_COLOR) if i < data['size']['filled'] else self.gray, fontsize=14)
+            self.add_run(size_bar, "▮", color=self.get_rgb_from_hex(PRIMARY_COLOR) if i < data['size']['filled'] else self.gray, fontsize=14)
         self.add_line(size_tf, _("Channel size: %(size)s") % {"size": data['size']['text'].lower()}, fontsize=8, italic=True, color=self.gray)
         next_line += size_height
 

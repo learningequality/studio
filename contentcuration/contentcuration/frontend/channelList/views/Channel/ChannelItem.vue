@@ -40,16 +40,18 @@
     </VLayout>
     <VCardActions>
       <!-- Some channels were published before the last_published field was added -->
-      <VCardText v-if="channel.last_published" class="grey--text">
-        {{ $tr(
-          'lastPublished',
-          {
-            'last_published': $formatRelative(
-              channel.last_published,
-              { now: new Date() }
-            )
-          })
-        }}
+      <VCardText v-if="channel.published" class="grey--text">
+        <span v-if="channel.last_published">
+          {{ $tr(
+            'lastPublished',
+            {
+              'last_published': $formatRelative(
+                channel.last_published,
+                { now: new Date() }
+              )
+            })
+          }}
+        </span>
       </VCardText>
       <VCardText v-else class="font-italic grey--text">
         {{ $tr('unpublishedText') }}
