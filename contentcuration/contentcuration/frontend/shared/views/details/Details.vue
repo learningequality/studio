@@ -152,29 +152,33 @@
             v-for="channel in details.original_channels"
             :key="channel.id"
             class="preview-row"
+            align-center
+            row
           >
-            <VImg :src="channel.thumbnail" contain max-width="200" :aspect-ratio="16/9" />
-            <VFlex>
-              <VLayout align-center fill-height>
-                <VBtn
-                  :href="`/channels/${channel.id}/view`"
-                  target="_blank"
-                  flat
-                  color="primary"
-                  large
-                  class="notranslate"
-                >
-                  {{ channel.name }}
-                </VBtn>
-              </VLayout>
+            <VFlex style="max-width: 200px">
+              <Thumbnail :src="channel.thumbnail" />
             </VFlex>
+            <VFlex v-if="libraryMode" class="notranslate subheading font-weight-bold px-4">
+              {{ channel.name }}
+            </VFlex>
+            <VBtn
+              v-else
+              :href="`/channels/${channel.id}/view`"
+              target="_blank"
+              flat
+              color="primary"
+              large
+              class="notranslate"
+            >
+              {{ channel.name }}
+            </VBtn>
           </VLayout>
         </template>
       </DetailsRow>
       <VLayout row wrap class="sample-nodes">
         <VFlex v-for="node in details.sample_nodes" :key="node.node_id" xs12 sm3>
           <VCard height="100%" flat>
-            <VImg :src="node.thumbnail" :aspect-ratio="16/9" />
+            <Thumbnail :src="node.thumbnail" />
             <VCardText class="notranslate">
               <p dir="auto">
                 {{ node.title }}
@@ -197,6 +201,7 @@
   import LoadingText from 'shared/views/LoadingText';
   import ExpandableList from 'shared/views/ExpandableList';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
+  import Thumbnail from 'shared/views/files/Thumbnail';
   import client from 'shared/client';
 
   export default {
@@ -206,6 +211,7 @@
       ContentNodeIcon,
       ExpandableList,
       DetailsRow,
+      Thumbnail,
     },
     mixins: [fileSizeMixin, constantsTranslationMixin],
     props: {
@@ -222,6 +228,9 @@
       };
     },
     computed: {
+      libraryMode() {
+        return window.libraryMode;
+      },
       sizeText() {
         let size = (this.details && this.details.resource_size) || 0;
         const sizeIndex = Math.max(
