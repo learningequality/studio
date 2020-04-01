@@ -45,7 +45,6 @@
                 object-fit: contain;
                 background-color: white;
                 width: 160px;
-                height: 90px;
             }
 
             #title {
@@ -180,7 +179,9 @@
                 <tbody>
                     <tr id="channel">
                         <td width="20%">
-                            {% if data.thumbnail %}<img id="channel_thumbnail" src="{{data.thumbnail}}">{% endif %}
+                            <div width="160">
+                                {% if data.thumbnail %}<img id="channel_thumbnail" src="{{data.thumbnail}}">{% endif %}
+                            </div>
                         </td>
                         <td width="2%"></td>
                         <td width="78%">
