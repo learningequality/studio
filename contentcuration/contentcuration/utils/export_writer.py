@@ -155,10 +155,11 @@ class PPTMixin(object):
         write_base64_to_file(encoding, filepath)
         return filepath
 
-    def add_picture(self, encoding, left=0, top=0, width=2, height=2):
+    def add_picture(self, encoding, left=0, top=0, width=2, height=None):
         filepath = self.get_write_to_path(ext="png")
         write_base64_to_file(encoding, filepath)
-        return self.slide.shapes.add_picture(filepath, Inches(left), Inches(top), width=Inches(width), height=Inches(height))
+        height = Inches(height) if height else None
+        return self.slide.shapes.add_picture(filepath, Inches(left), Inches(top), width=Inches(width), height=height)
 
     def add_shape(self, shape=MSO_SHAPE.RECTANGLE, left=0, top=0, width=1, height=1, color=None):
         shape = self.slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(left), Inches(top), Inches(width), Inches(height))
@@ -171,11 +172,11 @@ class PPTMixin(object):
 
 class CSVMixin(object):
     def write_csv(self, filepath, rows, header=None):
-        mode='wb'
-        encoding=None
+        mode = 'wb'
+        encoding = None
         if sys.version_info.major == 3:
-            mode='w'
-            encoding='utf-8'
+            mode = 'w'
+            encoding = 'utf-8'
         with io.open(filepath, mode, encoding=encoding) as csvfile:
             writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_MINIMAL)
             if header:
@@ -299,7 +300,7 @@ class ChannelDetailsWriter(ExportWriter):
 
     def get_storage_bar(self, size):
         try:
-            size_index = int(max(1, min(math.ceil(math.log(old_div(size,self.size_divisor), 2)), 10)))
+            size_index = int(max(1, min(math.ceil(math.log(old_div(size, self.size_divisor), 2)), 10)))
         except ValueError:
             size_index = 1
         return {
@@ -333,7 +334,7 @@ class ChannelDetailsWriter(ExportWriter):
         labels = [{
             "text": ' {text} \n{p:.1f}%'.format(
                     text=self.pluralize_constant(v, k),
-                    p=float(v)/total * 100.0
+                    p=float(v) / total * 100.0
             ),
             "count": v
         } for k, v in list(kind_vals.items())]
@@ -353,12 +354,12 @@ class ChannelDetailsWriter(ExportWriter):
                 if not labels[i]['count']:
                     continue
 
-                ang = (p.theta2 - p.theta1)/2. + p.theta1
+                ang = (p.theta2 - p.theta1) / 2. + p.theta1
                 y = np.sin(np.deg2rad(ang))
                 x = np.cos(np.deg2rad(ang))
                 connectionstyle = "angle,angleA=0,angleB={}".format(ang)
                 kw["arrowprops"].update({"connectionstyle": connectionstyle, "facecolor": "gray"})
-                ax.annotate(labels[i]['text'], xy=(x, y), xytext=(1.35*np.sign(x), 1.4*y),
+                ax.annotate(labels[i]['text'], xy=(x, y), xytext=(1.35 * np.sign(x), 1.4 * y),
                             ha="center", fontsize=10, **kw)
 
         # Add legend for the smaller layout
@@ -484,7 +485,7 @@ class ChannelDetailsPPTWriter(ChannelDetailsWriter, PPTMixin):
         padding = 0.2
         thumbnail_width = 1.1
         if data['thumbnail']:
-            thumbnail = self.add_picture(data['thumbnail'], padding, padding, thumbnail_width, thumbnail_width * 9/16)
+            thumbnail = self.add_picture(data['thumbnail'], padding, padding, thumbnail_width)
             thumbnail.line.color.rgb = self.gray
             thumbnail.line.width = Inches(0.01)
 
@@ -492,7 +493,7 @@ class ChannelDetailsPPTWriter(ChannelDetailsWriter, PPTMixin):
         title_left = thumbnail_width + padding * 2
 
         title_height = 0.5
-        title_tf = self.generate_textbox(title_left,  next_line,  self.width - title_left, title_height)
+        title_tf = self.generate_textbox(title_left, next_line, self.width - title_left, title_height)
         title_tf.auto_size = MSO_AUTO_SIZE.TEXT_TO_FIT_SHAPE
         self.add_line(title_tf, channel.name, fontsize=24, bold=True, append=False)
         next_line += title_height
@@ -510,7 +511,7 @@ class ChannelDetailsPPTWriter(ChannelDetailsWriter, PPTMixin):
         encoding = encode_file_to_base64(language_icon_path, 'data:image/png;base64,')
         self.add_picture(encoding, language_left, next_line + 0.04, icon_width, icon_width)
 
-        includes_tf = self.generate_textbox(language_left + icon_width - 0.08,  next_line,  includes_width, size_height + description_height)
+        includes_tf = self.generate_textbox(language_left + icon_width - 0.08, next_line, includes_width, size_height + description_height)
         language = channel.language.native_name if channel.language else _("No language set")
         self.add_line(includes_tf, " {}".format(language), append=False, bold=True)
         if data['accessible_languages']:
@@ -527,7 +528,7 @@ class ChannelDetailsPPTWriter(ChannelDetailsWriter, PPTMixin):
             self.add_run(assessments, _(" Assessments"))
 
         # Add size information
-        size_tf = self.generate_textbox(title_left,  next_line,  size_width, size_height)
+        size_tf = self.generate_textbox(title_left, next_line, size_width, size_height)
         size_bar = self.add_line(size_tf, "", append=False)
         for i in data['size']['scale']:
             self.add_run(size_bar, "▮", color=self.get_rgb_from_hex(EXERCISE_COLOR) if i < data['size']['filled'] else self.gray, fontsize=14)
@@ -535,18 +536,19 @@ class ChannelDetailsPPTWriter(ChannelDetailsWriter, PPTMixin):
         next_line += size_height
 
         # Add description
-        description_tf = self.generate_textbox(title_left,  next_line, size_width, description_height)
+        description_tf = self.generate_textbox(title_left, next_line, size_width, description_height)
         self.add_line(description_tf, channel.description, color=self.gray, append=False)
         description_tf.fit_text()
         next_line += description_height + 0.1
 
         # Add separator with headers
         separator_height = 0.3
-        self.add_shape(left=0, top=next_line, width=old_div(self.width,2), height=separator_height, color=self.get_rgb_from_hex(EXERCISE_COLOR))
+        self.add_shape(left=0, top=next_line, width=old_div(self.width, 2), height=separator_height, color=self.get_rgb_from_hex(EXERCISE_COLOR))
         resource_header = self.generate_textbox(padding, next_line, old_div(self.width, 2) - padding, separator_height)
         self.add_line(resource_header, _("Resource Breakdown"), bold=True, color=self.get_rgb_from_hex("#FFFFFF"), append=False)
 
-        self.add_shape(left=old_div(self.width,2), top=next_line, width=old_div(self.width,2), height=separator_height, color=self.get_rgb_from_hex("#595959"))
+        divleft = old_div(self.width, 2)
+        self.add_shape(left=divleft, top=next_line, width=divleft, height=separator_height, color=self.get_rgb_from_hex("#595959"))
         tag_header = self.generate_textbox(padding + old_div(self.width, 2) - padding, next_line, old_div(self.width, 2) - padding, separator_height)
         self.add_line(tag_header, _("Most Common Tags"), bold=True, color=self.get_rgb_from_hex("#FFFFFF"), append=False)
         next_line += separator_height + 0.05
@@ -556,15 +558,15 @@ class ChannelDetailsPPTWriter(ChannelDetailsWriter, PPTMixin):
         if data['resource_count']:
             self.add_picture(data['piechart'], 0, next_line, old_div(self.width, 2) - 1, height=chart_height)
         else:
-            empty_tf = self.generate_textbox(0,  next_line, old_div(self.width, 2), chart_height)
+            empty_tf = self.generate_textbox(0, next_line, old_div(self.width, 2), chart_height)
             empty_line = self.add_line(empty_tf, _("No Resources Found"), color=self.gray, fontsize=14, italic=True)
             empty_line.alignment = PP_ALIGN.CENTER
 
         # Add tagcloud
         if data['tags']:
-            self.add_picture(data['tagcloud'], old_div(self.width,2) + padding, next_line + 0.1, old_div(self.width, 2) - 1, chart_height - padding * 2)
+            self.add_picture(data['tagcloud'], old_div(self.width, 2) + padding, next_line + 0.1, old_div(self.width, 2) - 1, chart_height - padding * 2)
         else:
-            empty_tf = self.generate_textbox(old_div(self.width, 2),  next_line, old_div(self.width, 2), chart_height)
+            empty_tf = self.generate_textbox(old_div(self.width, 2), next_line, old_div(self.width, 2), chart_height)
             empty_line = self.add_line(empty_tf, _("No Tags Found"), color=self.gray, fontsize=14, italic=True)
             empty_line.alignment = PP_ALIGN.CENTER
         next_line += chart_height + 0.01
@@ -581,7 +583,7 @@ class ChannelDetailsPPTWriter(ChannelDetailsWriter, PPTMixin):
         next_line += logo_height
 
         # Add disclaimer
-        disclaimer_tf = self.generate_textbox(0, next_line,  self.width, 0.2)
+        disclaimer_tf = self.generate_textbox(0, next_line, self.width, 0.2)
         disclaimer_line = self.add_line(disclaimer_tf, _("This slide was automatically generated by Kolibri Studio, a product of Learning Equality"),
                                         fontsize=7, color=self.gray, append=False)
         disclaimer_line.alignment = PP_ALIGN.CENTER
