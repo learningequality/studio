@@ -7,15 +7,17 @@
           <li v-for="item in items.slice(0, max)" :key="item">
             {{ item }}
           </li>
-          <li v-if="items.length > max" class="toggle" @click="toggle">
-            {{ expanded ? $tr('less') : $tr('more', {more: items.length - max}) }}
-          </li>
-        </ul>
-        <ul class="inline-list">
           <li v-for="item in items.slice(max)" v-show="expanded" :key="item">
             {{ item }}
           </li>
+          <li v-if="items.length > max">
+            <ActionLink
+              :text="expanded ? $tr('less') : $tr('more', {more: items.length - max})"
+              @click="toggle"
+            />
+          </li>
         </ul>
+
       </div>
       <div v-else>
         <div v-for="item in items.slice(0, max)" :key="item">
@@ -45,8 +47,13 @@
 
 <script>
 
+  import ActionLink from './ActionLink';
+
   export default {
     name: 'ExpandableList',
+    components: {
+      ActionLink,
+    },
     props: {
       items: {
         type: Array,
@@ -95,10 +102,6 @@
       display: inline;
       &:not(:last-child)::after {
         content: ' • ';
-      }
-      &.toggle {
-        font-weight: bold;
-        cursor: pointer;
       }
     }
   }
