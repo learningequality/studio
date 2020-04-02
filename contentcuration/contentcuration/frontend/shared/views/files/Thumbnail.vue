@@ -45,8 +45,8 @@
       class="thumbnail-image"
     >
       <text
-        x="0"
-        y="25"
+        x="-2"
+        :y="y"
         :fill="compact ? '#ffffff' : $vuetify.theme[kind]"
         class="v-icon material-icons notranslate"
       >{{ icon }}</text>
@@ -98,6 +98,16 @@
       },
     },
     computed: {
+      y() {
+        switch (this.kind) {
+          case 'exercise':
+            return 28;
+          case 'topic':
+          case 'audio':
+          default:
+            return 26;
+        }
+      },
       icon() {
         return getContentKindIcon(this.kind, this.isEmpty);
       },
@@ -173,24 +183,16 @@
     left: 50% - (@svg-width / 2);
     width: @svg-width;
     margin: 0 auto;
+    overflow: visible;
 
     .caption + & {
       top: calc((@caption-height / 2) + @svg-top);
     }
 
     .compact & {
-      top: 12%;
-      left: 16%;
-      display: block;
-      width: 65%;
-    }
-
-    .compact.html5-kind &,
-    .compact.exercise-kind &,
-    .compact.audio-kind &,
-    .compact.video-kind & {
       top: 18%;
       left: 21%;
+      display: block;
       width: 55%;
     }
 

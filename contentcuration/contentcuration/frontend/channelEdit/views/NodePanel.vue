@@ -20,9 +20,8 @@
       {{ $tr('emptyTopicText') }}
     </VFlex>
   </VLayout>
-  <VFlex
+  <VList
     v-else
-    tag="ol"
     class="node-list"
     shrink
     :style="{backgroundColor: $vuetify.theme.backgroundColor}"
@@ -34,10 +33,12 @@
         :key="child.id"
         :nodeId="child.id"
         :compact="isCompactViewMode"
-        style="flex-basis: 100%"
+        :select="selected.indexOf(child.id) >= 0"
+        @select="$emit('select', child.id)"
+        @deselect="$emit('deselect', child.id)"
       />
     </template>
-  </VFlex>
+  </VList>
 
 </template>
 
@@ -57,6 +58,12 @@
       parentId: {
         type: String,
         required: true,
+      },
+      selected: {
+        type: Array,
+        default() {
+          return [];
+        },
       },
     },
     data() {

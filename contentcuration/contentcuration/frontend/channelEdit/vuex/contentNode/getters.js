@@ -37,12 +37,14 @@ export function getContentNodes(state) {
 
 export function getContentNodeChildren(state) {
   return function(contentNodeId) {
-    return getContentNodes(state)(
-      sorted(
-        Object.values(state.treeNodesMap).filter(
-          contentNode => contentNode.parent === contentNodeId
-        )
-      ).map(node => node.id)
+    return getContentNodes(state)(getTreeNodeChildren(state)(contentNodeId).map(node => node.id));
+  };
+}
+
+export function getTreeNodeChildren(state) {
+  return function(treeNodeId) {
+    return sorted(
+      Object.values(state.treeNodesMap).filter(contentNode => contentNode.parent === treeNodeId)
     );
   };
 }

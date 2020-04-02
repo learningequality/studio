@@ -29,7 +29,11 @@
     <!-- Topic actions -->
     <ToolBar flat dense color="transparent">
       <div class="mr-1">
-        <VCheckbox v-if="node.total_count" v-model="selectAll" color="primary" hide-details />
+        <Checkbox
+          v-if="node.total_count"
+          v-model="selectAll"
+          :indeterminate="selected.length > 0 && !selectAll"
+        />
       </div>
       <VSlideXTransition>
         <div v-if="selected.length">
@@ -104,7 +108,14 @@
     <!-- Topic items and resource panel -->
     <VLayout row :style="{height: contentHeight}">
       <VFadeTransition mode="out-in">
-        <NodePanel :key="topicId" :parentId="topicId" />
+        <NodePanel
+          ref="nodepanel"
+          :key="topicId"
+          :parentId="topicId"
+          :selected="selected"
+          @select="selected.push($event)"
+          @deselect="selected = selected.filter(id => id !== $event)"
+        />
       </VFadeTransition>
       <ResourceDrawer
         :nodeId="detailNodeId"
@@ -155,6 +166,7 @@
   import IconButton from 'shared/views/IconButton';
   import ToolBar from 'shared/views/ToolBar';
   import Breadcrumbs from 'shared/views/Breadcrumbs';
+  import Checkbox from 'shared/views/form/Checkbox';
 
   export default {
     name: 'CurrentTopicView',
@@ -165,6 +177,7 @@
       ResourceDrawer,
       ContentNodeOptions,
       Breadcrumbs,
+      Checkbox,
     },
     props: {
       topicId: {
@@ -185,14 +198,18 @@
     computed: {
       ...mapState(['viewMode']),
       ...mapGetters('currentChannel', ['canEdit', 'currentChannel', 'trashId']),
-      ...mapGetters('contentNode', ['getContentNode', 'getContentNodeAncestors']),
+      ...mapGetters('contentNode', [
+        'getContentNode',
+        'getContentNodeAncestors',
+        'getTreeNodeChildren',
+      ]),
       selectAll: {
         get() {
-          return this.selected.length;
+          return this.selected.length === this.treeChildren.length;
         },
         set(value) {
           if (value) {
-            this.selected = [this.topicId];
+            this.selected = this.treeChildren.map(node => node.id);
           } else {
             this.selected = [];
           }
@@ -209,6 +226,9 @@
             title: ancestor.title,
           };
         });
+      },
+      treeChildren() {
+        return this.getTreeNodeChildren(this.topicId);
       },
       uploadFilesLink() {
         return { name: RouterNames.UPLOAD_FILES };

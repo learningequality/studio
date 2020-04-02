@@ -1,34 +1,32 @@
 <template>
 
-  <li
-    class="content-list-item pa-0"
-    :nodeId="nodeId"
-    @dblclick="$router.push(isTopic ? treeLink : infoLink)"
-    @mouseenter="active = true"
-    @mouseover="active = true"
-    @mouseleave="active = false"
-  >
-    <VLayout
-      align-center
-      class="inline-list"
+  <VHover>
+    <VListTile
+      slot-scope="{ hover }"
+      class="content-list-item pa-0"
+      :nodeId="nodeId"
       :class="[`${contentNode.kind}-kind`, {
         'compact': isCompact,
         'py-4': !isCompact,
         'py-2': isCompact,
+        hover,
+        active: active || hover,
       }]"
+      :aria-selected="selected"
+      @dblclick="$router.push(isTopic ? treeLink : infoLink)"
     >
-      <div class="handle-col">
+      <VListTileAction class="handle-col" :aria-hidden="!hover">
         <transition name="fade">
-          <VBtn v-if="active" flat icon class="ma-0">
+          <VBtn flat icon class="ma-0">
             <Icon color="#686868">
               drag_indicator
             </Icon>
           </VBtn>
         </transition>
-      </div>
-      <div class="select-col mr-2">
-        <Checkbox v-model="checkboxSelected" class="mt-0 pt-0" />
-      </div>
+      </VListTileAction>
+      <VListTileAction class="select-col mr-2">
+        <Checkbox v-model="selected" class="mt-0 pt-0" />
+      </VListTileAction>
       <div
         class="thumbnail-col py-2"
         :class="{
@@ -41,51 +39,59 @@
           :isEmpty="contentNode.resource_count === 0"
         />
       </div>
-      <div
+      <VListTileContent
         class="description-col pa-2 grow"
         :class="{
           'mt-1': !isCompact
         }"
       >
-        <h3
-          class="text-truncate"
-          :class="{'font-weight-regular': isCompact}"
-        >
-          {{ contentNode.title }}
-        </h3>
-        <span v-if="subtitle && !isCompact" class="subtitle">
+        <VListTileTitle>
+          <h3
+            class="text-truncate"
+            :class="{'font-weight-regular': isCompact}"
+          >
+            {{ contentNode.title }}
+          </h3>
+        </VListTileTitle>
+        <VListTileSubTitle v-if="subtitle && !isCompact" class="subtitle">
           {{ subtitle }}
-        </span>
+        </VListTileSubTitle>
         <p v-show="!isCompact">
           {{ contentNode.description }}
         </p>
-      </div>
-      <div class="option-col" :style="{ opacity }">
+      </VListTileContent>
+      <VListTileAction class="option-col" :aria-hidden="!hover">
         <VBtn flat icon class="ma-0" :to="infoLink">
           <Icon color="primary">
             info
           </Icon>
         </VBtn>
-      </div>
-      <div v-if="isTopic" class="option-col" :style="{ opacity }">
+      </VListTileAction>
+      <VListTileAction v-if="isTopic" class="option-col" :aria-hidden="!hover">
         <VBtn flat icon class="ma-0" :to="treeLink">
           <Icon medium>
             chevron_right
           </Icon>
         </VBtn>
-      </div>
-      <div class="option-col" :style="{ opacity }">
-        <VMenu offset-y left>
+      </VListTileAction>
+      <VListTileAction class="option-col" :aria-hidden="!active">
+        <VMenu v-model="activated" offset-y left>
           <template #activator="{ on }">
-            <VBtn small icon flat class="ma-0" v-on="on">
+            <VBtn
+              small
+              icon
+              flat
+              class="ma-0"
+              v-on="on"
+            >
               <Icon>more_horiz</Icon>
             </VBtn>
           </template>
           <ContentNodeOptions :nodeId="nodeId" />
         </VMenu>
-      </div>
-    </VLayout>
-  </li>
+      </VListTileAction>
+    </VListTile>
+  </VHover>
 
 </template>
 
@@ -112,7 +118,7 @@
         type: String,
         required: true,
       },
-      selected: {
+      select: {
         type: Boolean,
         default: false,
       },
@@ -123,12 +129,22 @@
     },
     data() {
       return {
-        checkboxSelected: this.selected,
-        active: false,
+        activated: false,
       };
     },
     computed: {
       ...mapGetters('contentNode', ['getContentNode', 'getTreeNode']),
+      selected: {
+        get() {
+          return this.select;
+        },
+        set(value) {
+          this.$emit(value ? 'select' : 'deselect');
+        },
+      },
+      active() {
+        return this.selected || this.activated;
+      },
       isCompact() {
         return this.compact || !this.$vuetify.breakpoint.mdAndUp;
       },
@@ -176,16 +192,7 @@
           },
         };
       },
-      opacity() {
-        return this.active ? 1 : 0;
-      },
     },
-    watch: {
-      checkboxSelected(selected) {
-        this.$emit('selected', selected);
-      },
-    },
-    methods: {},
     $trs: {
       resources: '{value, number, integer} {value, plural, one {resource} other {resources}}',
       questions: '{value, number, integer} {value, plural, one {question} other {questions}}',
@@ -197,21 +204,36 @@
 
 <style lang="less" scoped>
 
-  @thumbnail-width: 20%;
+  @thumbnail-width: 16%;
   @compact-thumbnail-width: ~'20px + 0.5%';
 
   .content-list-item {
     background: #ffffff;
     border-bottom: 1px solid #dddddd;
+
+    &.active {
+      background: #fafafa;
+    }
   }
 
-  .inline-list {
-    white-space: nowrap;
+  /deep/ .v-list__tile[nodeid] {
+    display: flex;
+    flex: 1 1 auto;
+    flex-wrap: nowrap;
+    height: auto !important;
+    padding-left: 0;
+  }
 
-    > * {
-      display: inline-block;
-      white-space: normal;
-      vertical-align: middle;
+  .v-list__tile__action {
+    min-width: 0;
+    transition: opacity ease 0.3s;
+
+    &:not(.select-col) {
+      opacity: 0;
+    }
+
+    .content-list-item.hover & {
+      opacity: 1;
     }
   }
 
@@ -223,6 +245,14 @@
   .handle-col .v-btn {
     margin-left: -3px !important;
     cursor: grab;
+  }
+
+  .option-col {
+    width: 36px;
+  }
+
+  /deep/ .v-input--selection-controls__input {
+    margin-right: 0;
   }
 
   .content-list-item:not(.in-universe):hover {
@@ -257,15 +287,6 @@
   .description-col p {
     max-height: 4.5em;
     overflow: hidden;
-  }
-
-  .option-col {
-    width: 36px;
-    transition: opacity 0.3s ease;
-  }
-
-  /deep/ .v-input--selection-controls__input {
-    margin-right: 0;
   }
 
 </style>
