@@ -453,6 +453,7 @@ var BaseWorkspaceView = BaseView.extend({
         break;
       }
     }
+    selected_list = _.uniq(selected_list, true, item => item.model.id);
     return selected_list;
   },
   open_archive: function() {
