@@ -225,7 +225,7 @@
                         </td>
                         <td width="2%"></td>
                         <td width="73%">
-                            <div id="title"><a href="{{data.site}}/channels/{{data.channel.id}}/view">{{data.channel.name}}</a></div>
+                            <h1 dir="auto" id="title">{{data.channel.name}}</h1>
                             <!-- Channel creation/published dates -->
                             <div id="dates">
                                 {% trans 'Created' %} {{data.channel.main_tree.created|date:"M d, Y"}}&nbsp;|&nbsp;
@@ -233,7 +233,7 @@
                                 {% else %}<i>{% trans 'Unpublished' %}</i>{% endif %}
                             </div>
                             <!-- Channel description -->
-                            <div id="description">{{data.channel.description}}</div>
+                            <p dir="auto" id="description">{{data.channel.description}}</p>
                         </td>
                     </tr><br>
                 </tbody>
