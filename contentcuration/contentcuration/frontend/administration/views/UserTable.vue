@@ -1,13 +1,15 @@
 <template>
 
   <div>
-    <h1>{{ totalCount }} Users</h1>
+    <h1>{{ totalItems }} Users</h1>
     <UserFilters />
 
     <VDataTable
       :headers="headers"
       :items="users"
-      select-all
+      :pagination.sync="syncPagination"
+      :rows-per-page-items="syncPagination.rowsPerPageItems"
+      :total-items="totalItems"
     >
       <template v-slot:items="users">
         <td>
@@ -21,17 +23,21 @@
         <td>{{ users.item.email }}</td>
         <td>
           {{ users.item.mb_space.size +' '+ users.item.mb_space.unit }}
-          <v-btn icon>
-            <v-icon>edit</v-icon>
+          <v-btn icon small right>
+            <v-icon small>
+              edit
+            </v-icon>
           </v-btn>
         </td>
         <td>
-          {{ users.item.editable_channels_count }}
-          <v-btn icon>
-            <v-icon>launch</v-icon>
+          {{ users.item.editable_users_count }}
+          <v-btn icon small>
+            <v-icon small>
+              launch
+            </v-icon>
           </v-btn>
         </td>
-        <td>{{ users.item.view_only_channels_count }}</td>
+        <td>{{ users.item.view_only_users_count }}</td>
         <td>
           {{ $formatDate(users.item.date_joined, {
             year: 'numeric',
@@ -72,7 +78,8 @@
 
 <script>
 
-  import { mapState } from 'vuex';
+  import { mapGetters, mapActions } from 'vuex';
+  import { paginationFromRoute, queryFromPagination } from '../router';
   import UserFilters from './UserFilters';
 
   export default {
@@ -80,20 +87,22 @@
     components: {
       UserFilters,
     },
+    props: {
+      pagination: Object,
+    },
     data() {
       return {
         headers: [
           {
             text: 'User',
             align: 'left',
-            sortable: false,
-            value: 'first_name',
+            value: 'last_name',
           },
           { text: 'Email', value: 'email' },
           // { text: 'Organization', value: 'organization' }, // To-do
           { text: 'Disk Space', value: 'disk_space' },
-          { text: 'Can Edit', value: 'editable_channels_count' },
-          { text: 'Can View', value: 'view_only_channels_count' },
+          { text: 'Can Edit', value: 'editable_users_count' },
+          { text: 'Can View', value: 'view_only_users_count' },
           { text: 'Date Joined', value: 'date_joined' },
           // { text: 'Last Active', value: 'last_active' }, // To-do
           { text: 'Actions' },
@@ -101,11 +110,37 @@
       };
     },
     computed: {
-      ...mapState({ users: state => state.userTable.users }),
-      ...mapState({ totalCount: state => state.userTable.pageInfo.count }),
+      ...mapGetters('userTable', ['users', 'totalItems']),
+      syncPagination: {
+        get: function() {
+          // console.log('getting pagination', this.pagination);
+          return this.pagination;
+        },
+        set: function(pagination) {
+          this.$router
+            .push({
+              query: queryFromPagination(pagination),
+              name: this.$router.currentRoute.name,
+            })
+            .catch(error => {
+              if (error.name != 'NavigationDuplicated') {
+                throw error;
+              }
+            });
+        },
+      },
+    },
+    beforeRouteUpdate(to, from, next) {
+      // console.log('attempting to navigate to ...', paginationFromRoute(to));
+      this.fetch(paginationFromRoute(to)).then(() => {
+        next();
+      });
     },
     created() {
-      this.$store.dispatch('fetchUsers');
+      this.fetch(this.pagination);
+    },
+    methods: {
+      ...mapActions('userTable', ['fetch']),
     },
   };
 

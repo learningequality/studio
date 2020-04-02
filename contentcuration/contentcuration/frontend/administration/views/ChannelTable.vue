@@ -1,19 +1,16 @@
 <template>
 
   <div>
-    <h1>{{ totalCount }} Channels</h1>
+    <h1>{{ totalItems }} Channels</h1>
     <ChannelFilters />
-    <!--
 
-  ('id', 'created', 'modified', 'name', 'published', 'editors', 'editors_count',
-  'viewers', 'viewers_count', 'staging_tree',
-  'description', 'resource_count', 'version', 'public', 'deleted',
-  'ricecooker_version', 'download_url', 'primary_token', 'priority')
-
-  -->
     <VDataTable
       :headers="headers"
       :items="channels"
+      :pagination.sync="syncPagination"
+      :rows-per-page-items="syncPagination.rowsPerPageItems"
+      :total-items="totalItems"
+
       select-all
     >
       <template v-slot:items="channels">
@@ -25,15 +22,33 @@
           />
         </td>
         <td>{{ channels.item.name }}</td>
-        <td>{{ channels.item.primary_token }}</td>
-        <td>{{ channels.item.id }}</td>
+        <td><ClipboardChip :value="channels.item.primary_token" /></td>
+        <td><ClipboardChip :value="channels.item.id" /></td>
         <td>{{ channels.item.resource_count }}</td>
-        <td>{{ channels.item.editors_count }}</td>
+        <td>
+          {{ channels.item.editors_count }}
+          <v-btn icon small>
+            <v-icon small>
+              open_in_new
+            </v-icon>
+          </v-btn>
+        </td>
         <td>{{ channels.item.viewers_count }}</td>
         <td>{{ channels.item.priority }}</td>
-        <td>{{ channels.item.created }}</td>
-        <td>{{ channels.item.modified }}</td>
-
+        <td>
+          {{ $formatDate(channels.item.created, {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          }) }}
+        </td>
+        <td>
+          {{ $formatDate(channels.item.modified, {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          }) }}
+        </td>
         <td>
           <VMenu>
             <template v-slot:activator="{ on }">
@@ -48,11 +63,11 @@
             </template>
             <v-list>
               <v-list-tile
-                v-for="(item, index) in items"
+                v-for="(action, index) in actions"
                 :key="index"
-                @click="openItem(item)"
+                @click="action.perform(channels.item)"
               >
-                <v-list-tile-title>{{ item.title }}</v-list-tile-title>
+                <v-list-tile-title>{{ action.label }}</v-list-tile-title>
               </v-list-tile>
             </v-list>
           </VMenu>
@@ -67,13 +82,19 @@
 
 <script>
 
-  import { mapState } from 'vuex';
+  import { mapGetters, mapActions } from 'vuex';
+  import { paginationFromRoute, queryFromPagination } from '../router';
   import ChannelFilters from './ChannelFilters';
+  import ClipboardChip from './ClipboardChip';
 
   export default {
     name: 'ChannelTable',
     components: {
       ChannelFilters,
+      ClipboardChip,
+    },
+    props: {
+      pagination: Object,
     },
     data() {
       return {
@@ -81,14 +102,8 @@
           {
             text: 'Channel name',
             align: 'left',
-            sortable: false,
-            value: 'first_name',
+            value: 'name',
           },
-
-          // ('id', 'created', 'modified', 'name', 'published', 'editors', 'editors_count',
-          // 'viewers', 'viewers_count', 'staging_tree',
-          // 'description', 'resource_count', 'version', 'public', 'deleted',
-          // 'ricecooker_version', 'download_url', 'primary_token', 'priority')
 
           { text: 'Token ID', value: 'primary_token' },
           // { text: 'Organization', value: 'organization' }, // To-do
@@ -102,14 +117,44 @@
           // { text: 'Last Active', value: 'last_active' }, // To-do
           { text: 'Actions' },
         ],
+        actions: [
+          // { label: 'log', perform: console.log },
+          // { label: 'alert', perform: window.alert },
+        ],
       };
     },
     computed: {
-      ...mapState({ channels: state => state.channelTable.channels }),
-      ...mapState({ totalCount: state => state.channelTable.pageInfo.count }),
+      ...mapGetters('channelTable', ['channels', 'totalItems']),
+      syncPagination: {
+        get: function() {
+          // console.log('getting pagination', this.pagination);
+          return this.pagination;
+        },
+        set: function(pagination) {
+          this.$router
+            .push({
+              query: queryFromPagination(pagination),
+              name: this.$router.currentRoute.name,
+            })
+            .catch(error => {
+              if (error.name != 'NavigationDuplicated') {
+                throw error;
+              }
+            });
+        },
+      },
+    },
+    beforeRouteUpdate(to, from, next) {
+      // console.log('attempting to navigate to ...', paginationFromRoute(to));
+      this.fetch(paginationFromRoute(to)).then(() => {
+        next();
+      });
     },
     created() {
-      this.$store.dispatch('fetchChannels');
+      this.fetch(this.pagination);
+    },
+    methods: {
+      ...mapActions('channelTable', ['fetch']),
     },
   };
 

@@ -1,5 +1,6 @@
 import VueRouter from 'vue-router';
-import { RouterNames } from './constants';
+import { differenceWith, isEqual, toPairs, fromPairs } from 'lodash';
+import { RouterNames, defaultPagination } from './constants';
 import ChannelTable from './views/ChannelTable';
 import ChannelInfo from './views/ChannelInfo';
 import UserTable from './views/UserTable';
@@ -8,17 +9,9 @@ import UserInfo from './views/UserInfo';
 const router = new VueRouter({
   routes: [
     {
-      path: '/',
-      redirect: '/channels/1',
-    },
-    {
-      path: '/channels',
-      redirect: '/channels/1',
-    },
-    {
       name: RouterNames.CHANNEL_TABLE,
-      path: '/channels/:pageNumber',
-      props: true,
+      path: '/channels/',
+      props: route => ({ pagination: paginationFromRoute(route) }),
       component: ChannelTable,
     },
     {
@@ -27,14 +20,9 @@ const router = new VueRouter({
       component: ChannelInfo,
     },
     {
-      path: '/users',
-      redirect: '/users/1',
-      alias: '/users/',
-    },
-    {
       name: RouterNames.USER_TABLE,
-      path: '/users/:pageNumber',
-      props: true,
+      path: '/users/:page?',
+      props: route => ({ pagination: paginationFromRoute(route) }),
       component: UserTable,
     },
     {
@@ -44,5 +32,21 @@ const router = new VueRouter({
     },
   ],
 });
+
+export function paginationFromRoute(route) {
+  let pagination = defaultPagination();
+  Object.assign(pagination, route.query);
+  // console.log("building pagination for route", pagination)
+  return pagination;
+}
+
+export function queryFromPagination(pagination) {
+  let query = fromPairs(differenceWith(toPairs(pagination), toPairs(defaultPagination()), isEqual));
+  delete query.totalItems;
+  delete query.rowsPerPageItems;
+  return query;
+}
+
+export const queryFromRoute = route => queryFromPagination(paginationFromRoute(route));
 
 export default router;
