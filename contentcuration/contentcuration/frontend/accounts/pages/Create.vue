@@ -255,6 +255,9 @@
       locationRules() {
         return [() => !!this.form.locations.length || this.$tr('fieldRequiredMessage')];
       },
+      sources() {
+        return sources;
+      },
       sourceOptions() {
         return [
           {

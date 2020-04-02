@@ -24,7 +24,7 @@
     $trs: {
       activationExpiredTitle: 'Activation link expired',
       activationExpiredText: 'This activation link has been used already or has expired.',
-      requestNewLink: 'Request a new link',
+      requestNewLink: 'Try signing in',
     },
   };
 

@@ -195,6 +195,16 @@ def new_user_redirect(request, user_id):
 
 class UserActivationView(ActivationView):
 
+    def get(self, *args, **kwargs):
+        """
+        Overrite get method to redirect to failed activation url
+        page from the frontend templates
+        """
+        response = super(UserActivationView, self).get(*args, **kwargs)
+        if response.status_code == 302:
+            return response
+        return redirect('/accounts/#/activation-expired')
+
     def get_success_url(self, user):
         return '/accounts/#/account-created'
 
