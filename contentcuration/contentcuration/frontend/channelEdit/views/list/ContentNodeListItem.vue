@@ -35,52 +35,11 @@
           'px-2': !isCompact,
         }"
       >
-        <figure
-          class="thumbnail"
-          :class="{
-            [contentNode.kind]: isCompact,
-            'icon': !showThumbnail,
-            'icon-only': isCompact,
-          }"
-        >
-          <VLayout
-            v-show="showThumbnail"
-            tag="figcaption"
-            row
-            align-center
-            :class="contentNode.kind"
-          >
-            <VFlex shrink class="pr-1">
-              <Icon
-                v-if="showThumbnail"
-                dark
-                small
-                :aria-label="kindTitle"
-                v-text="icon"
-              />
-            </VFlex>
-            <VFlex shrink>
-              <span class="white--text caption">{{ kindTitle }}</span>
-            </VFlex>
-          </VLayout>
-          <img
-            v-if="showThumbnail"
-            :src="contentNode.thumbnail_src"
-            :alt="$tr('thumbnail', { title: contentNode.title })"
-          >
-          <svg
-            v-else
-            viewBox="0 0 24 24"
-            :aria-label="kindTitle"
-          >
-            <text
-              x="0"
-              y="25"
-              :fill="isCompact ? '#ffffff' : $vuetify.theme[contentNode.kind]"
-              class="v-icon material-icons notranslate"
-            >{{ icon }}</text>
-          </svg>
-        </figure>
+        <Thumbnail
+          v-bind="thumbnailAttrs"
+          :compact="isCompact"
+          :isEmpty="contentNode.resource_count === 0"
+        />
       </div>
       <div
         class="description-col pa-2 grow"
@@ -136,7 +95,7 @@
   import { mapGetters } from 'vuex';
   import ContentNodeOptions from '../ContentNodeOptions';
   import Checkbox from 'shared/views/form/Checkbox';
-  import { CONTENT_KIND_ICONS } from 'shared/vuetify/icons';
+  import Thumbnail from 'shared/views/files/Thumbnail';
   import { constantsTranslationMixin } from 'shared/mixins';
   import { RouterNames } from 'frontend/channelEdit/constants';
 
@@ -145,6 +104,7 @@
     components: {
       Checkbox,
       ContentNodeOptions,
+      Thumbnail,
     },
     mixins: [constantsTranslationMixin],
     props: {
@@ -181,20 +141,9 @@
       isTopic() {
         return this.contentNode.kind === 'topic';
       },
-      showThumbnail() {
-        return this.contentNode.thumbnail_src !== null && !this.isCompact;
-      },
-      icon() {
-        let { kind } = this.contentNode;
-
-        if (this.isTopic && this.contentNode.resource_count === 0) {
-          kind = `${kind}_empty`;
-        }
-
-        return CONTENT_KIND_ICONS[kind];
-      },
-      kindTitle() {
-        return this.translateConstant(this.contentNode.kind);
+      thumbnailAttrs() {
+        const { title, kind, thumbnail_src: src, thumbnail_encoding: encoding } = this.contentNode;
+        return { title, kind, src, encoding };
       },
       subtitle() {
         switch (this.contentNode.kind) {
@@ -238,7 +187,6 @@
     },
     methods: {},
     $trs: {
-      thumbnail: '{title} thumbnail',
       resources: '{value, number, integer} {value, plural, one {resource} other {resources}}',
       questions: '{value, number, integer} {value, plural, one {question} other {questions}}',
     },
@@ -251,7 +199,6 @@
 
   @thumbnail-width: 20%;
   @compact-thumbnail-width: ~'20px + 0.5%';
-  @caption-height: 25px;
 
   .content-list-item {
     background: #ffffff;
@@ -315,75 +262,6 @@
   .option-col {
     width: 36px;
     transition: opacity 0.3s ease;
-  }
-
-  .thumbnail {
-    position: relative;
-    /* stylelint-disable-next-line  */
-    padding-bottom: 100% * 9 / 16;
-
-    &.icon {
-      padding-top: 25px;
-    }
-
-    .compact & {
-      padding-top: 0;
-      padding-bottom: 92%;
-      margin: 0 auto;
-      border-radius: 3px;
-    }
-
-    figcaption {
-      width: 100%;
-      height: @caption-height;
-      padding: 0 5px;
-      line-height: 11px;
-    }
-
-    img,
-    svg {
-      position: absolute;
-      display: block;
-    }
-
-    img {
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: calc(100% - @caption-height);
-      object-fit: cover;
-    }
-
-    @svg-scale: 1.25;
-    @svg-width: 100% * 9 / 16 / @svg-scale;
-    @svg-top: (100% * 9 / 16 / 2) - (@svg-width / 2);
-    svg {
-      top: calc((@caption-height / 2) + @svg-top);
-      left: 50% - (@svg-width / 2);
-      width: @svg-width;
-      margin: 0 auto;
-
-      .compact & {
-        top: 12%;
-        left: 16%;
-        display: block;
-        width: 65%;
-      }
-
-      .compact.html5-kind &,
-      .compact.exercise-kind &,
-      .compact.audio-kind &,
-      .compact.video-kind & {
-        top: 18%;
-        left: 21%;
-        width: 55%;
-      }
-
-      text {
-        font-size: 1.8em;
-        line-height: 1.8em;
-      }
-    }
   }
 
   /deep/ .v-input--selection-controls__input {
