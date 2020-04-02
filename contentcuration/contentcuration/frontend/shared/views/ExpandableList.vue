@@ -12,7 +12,7 @@
           </li>
           <li v-if="items.length > max">
             <ActionLink
-              :text="expanded ? $tr('less') : $tr('more', {more: items.length - max})"
+              :text="toggleText"
               @click="toggle"
             />
           </li>
@@ -27,7 +27,7 @@
           <VExpansionPanelContent>
             <template v-slot:header>
               <span @click="toggle">
-                {{ expanded ? $tr('less') : $tr('more', {more: items.length - max}) }}
+                {{ toggleText }}
               </span>
             </template>
             <div v-for="item in items.slice(max)" :key="item">
@@ -74,6 +74,14 @@
       return {
         expanded: false,
       };
+    },
+    computed: {
+      toggleText() {
+        let moreCount = this.items.length - this.max;
+        return this.expanded
+          ? this.$tr('less')
+          : this.$tr('more', { more: this.$formatNumber(moreCount) });
+      },
     },
     methods: {
       toggle() {
