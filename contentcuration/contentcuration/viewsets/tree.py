@@ -1,6 +1,6 @@
 from django.db import transaction
 from django.db.models import Q
-from django.http import HttpResponseNotFound
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
 from django_filters.rest_framework import NumberFilter
@@ -81,9 +81,10 @@ class TreeViewSet(GenericViewSet):
             raise MissingRequiredParamsException(
                 "channel_id query parameter is required but was missing from the request"
             )
-        root = ContentNode.objects.filter(Q(channel_trash=channel_id) | Q(channel_main=channel_id)).first()
-        if not root:
-            return HttpResponseNotFound()
+        if request.query_params.get("trash"):
+            root = get_object_or_404(ContentNode, channel_trash=channel_id)
+        else:
+            root = get_object_or_404(ContentNode, channel_main=channel_id)
 
         def map_data(item):
             item["sort_order"] = item.pop("lft")
