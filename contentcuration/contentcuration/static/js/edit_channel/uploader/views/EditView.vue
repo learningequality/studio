@@ -120,7 +120,10 @@
         'getImmediateRelatedResourcesCount',
       ]),
       ...mapGetters('currentChannel', ['canEdit']),
-      ...mapGetters('assessmentItem', ['getAssessmentItemsAreValid']),
+      ...mapGetters('assessmentItem', [
+        'getAssessmentItemsAreValid',
+        'getNodeAssessmentItemsCount',
+      ]),
       firstNode() {
         return this.nodes.length ? this.nodes[0] : null;
       },
@@ -160,7 +163,11 @@
         return !this.oneSelected || this.getContentNodeFilesAreValid(this.nodeIds[0]);
       },
       assessmentItemsCount() {
-        return 0;
+        if (!this.oneSelected) {
+          return 0;
+        }
+
+        return this.getNodeAssessmentItemsCount(this.nodeIds[0]);
       },
       relatedResourcesCount() {
         if (!this.oneSelected) {

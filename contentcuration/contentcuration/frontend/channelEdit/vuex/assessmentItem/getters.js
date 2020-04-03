@@ -11,6 +11,12 @@ export function getNodeAssessmentItems(state) {
   };
 }
 
+export function getNodeAssessmentItemsCount(state) {
+  return function(contentNodeId) {
+    return getNodeAssessmentItems(state)(contentNodeId).length;
+  };
+}
+
 export function getNodeAssessmentItemErrors(state) {
   return function(contentNodeId) {
     return getNodeAssessmentItems(state)(contentNodeId).map(validateAssessmentItem);
