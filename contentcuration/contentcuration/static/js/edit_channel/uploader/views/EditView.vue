@@ -120,10 +120,7 @@
         'getImmediateRelatedResourcesCount',
       ]),
       ...mapGetters('currentChannel', ['canEdit']),
-      ...mapGetters('assessmentItem', [
-        'getAssessmentItemsAreValid',
-        'getNodeAssessmentItemsCount',
-      ]),
+      ...mapGetters('assessmentItem', ['getAssessmentItemsAreValid', 'getAssessmentItemsCount']),
       firstNode() {
         return this.nodes.length ? this.nodes[0] : null;
       },
@@ -167,7 +164,7 @@
           return 0;
         }
 
-        return this.getNodeAssessmentItemsCount(this.nodeIds[0]);
+        return this.getAssessmentItemsCount(this.nodeIds[0]);
       },
       relatedResourcesCount() {
         if (!this.oneSelected) {

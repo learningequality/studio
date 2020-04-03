@@ -79,14 +79,14 @@
     },
     computed: {
       ...mapGetters('assessmentItem', [
-        'getNodeAssessmentItems',
-        'getNodeAssessmentItemErrors',
+        'getAssessmentItems',
+        'getAssessmentItemsErrors',
         'getAssessmentItemsAreValid',
-        'getInvalidNodeAssessmentItemsCount',
+        'getInvalidAssessmentItemsCount',
       ]),
       assessmentItems: {
         get() {
-          return this.getNodeAssessmentItems(this.nodeId);
+          return this.getAssessmentItems(this.nodeId);
         },
         set(value) {
           this.updateAssessmentItems(value);
@@ -96,10 +96,10 @@
         return this.getAssessmentItemsAreValid(this.nodeId);
       },
       assessmentItemsValidation() {
-        return this.getNodeAssessmentItemErrors(this.nodeId);
+        return this.getAssessmentItemsErrors(this.nodeId);
       },
       invalidItemsErrorMessage() {
-        const invalidItemsCount = this.getInvalidNodeAssessmentItemsCount(this.nodeId);
+        const invalidItemsCount = this.getInvalidAssessmentItemsCount(this.nodeId);
 
         if (!invalidItemsCount) {
           return '';

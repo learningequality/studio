@@ -1,6 +1,6 @@
 import { validateAssessmentItem } from '../../utils';
 
-export function getNodeAssessmentItems(state) {
+export function getAssessmentItems(state) {
   return function(contentNodeId) {
     if (!state.assessmentItemsMap[contentNodeId]) {
       return [];
@@ -11,26 +11,26 @@ export function getNodeAssessmentItems(state) {
   };
 }
 
-export function getNodeAssessmentItemsCount(state) {
+export function getAssessmentItemsCount(state) {
   return function(contentNodeId) {
-    return getNodeAssessmentItems(state)(contentNodeId).length;
+    return getAssessmentItems(state)(contentNodeId).length;
   };
 }
 
-export function getNodeAssessmentItemErrors(state) {
+export function getAssessmentItemsErrors(state) {
   return function(contentNodeId) {
-    return getNodeAssessmentItems(state)(contentNodeId).map(validateAssessmentItem);
+    return getAssessmentItems(state)(contentNodeId).map(validateAssessmentItem);
   };
 }
 
-export function getInvalidNodeAssessmentItemsCount(state) {
+export function getInvalidAssessmentItemsCount(state) {
   return function(contentNodeId) {
-    return getNodeAssessmentItemErrors(state)(contentNodeId).filter(arr => arr.length).length;
+    return getAssessmentItemsErrors(state)(contentNodeId).filter(arr => arr.length).length;
   };
 }
 
 export function getAssessmentItemsAreValid(state) {
   return function(contentNodeId) {
-    return getInvalidNodeAssessmentItemsCount(state)(contentNodeId) === 0;
+    return getInvalidAssessmentItemsCount(state)(contentNodeId) === 0;
   };
 }
