@@ -61,7 +61,7 @@
             <DetailsTabView :viewOnly="!canEdit" :nodeIds="nodeIds" />
           </VTabItem>
           <VTabItem :key="tabs.QUESTIONS" ref="questionwindow" :value="tabs.QUESTIONS" lazy>
-            <AssessmentTab />
+            <AssessmentTab :nodeId="nodeIds[0]" />
           </VTabItem>
           <VTabItem
             :key="tabs.RELATED"
