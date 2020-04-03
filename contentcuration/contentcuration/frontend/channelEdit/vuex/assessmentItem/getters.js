@@ -11,20 +11,20 @@ export function getNodeAssessmentItems(state) {
   };
 }
 
-export function getNodeAssessmentItemErrors(state, getters) {
+export function getNodeAssessmentItemErrors(state) {
   return function(contentNodeId) {
-    return getters.getNodeAssessmentItems(contentNodeId).map(validateAssessmentItem);
+    return getNodeAssessmentItems(state)(contentNodeId).map(validateAssessmentItem);
   };
 }
 
-export function getInvalidNodeAssessmentItemsCount(state, getters) {
+export function getInvalidNodeAssessmentItemsCount(state) {
   return function(contentNodeId) {
-    return getters.getNodeAssessmentItemErrors(contentNodeId).filter(arr => arr.length).length;
+    return getNodeAssessmentItemErrors(state)(contentNodeId).filter(arr => arr.length).length;
   };
 }
 
-export function getAssessmentItemsAreValid(state, getters) {
+export function getAssessmentItemsAreValid(state) {
   return function(contentNodeId) {
-    return getters.getInvalidNodeAssessmentItemsCount(contentNodeId) === 0;
+    return getInvalidNodeAssessmentItemsCount(state)(contentNodeId) === 0;
   };
 }
