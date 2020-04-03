@@ -23,7 +23,7 @@ export function getInvalidNodeAssessmentItemsCount(state, getters) {
   };
 }
 
-export function areNodeAssessmentItemsValid(state, getters) {
+export function getAssessmentItemsAreValid(state, getters) {
   return function(contentNodeId) {
     return getters.getInvalidNodeAssessmentItemsCount(contentNodeId) === 0;
   };

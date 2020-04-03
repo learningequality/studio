@@ -81,7 +81,7 @@
       ...mapGetters('assessmentItem', [
         'getNodeAssessmentItems',
         'getNodeAssessmentItemErrors',
-        'areNodeAssessmentItemsValid',
+        'getAssessmentItemsAreValid',
         'getInvalidNodeAssessmentItemsCount',
       ]),
       assessmentItems: {
@@ -93,7 +93,7 @@
         },
       },
       areAssessmentItemsValid() {
-        return this.areNodeAssessmentItemsValid(this.nodeId);
+        return this.getAssessmentItemsAreValid(this.nodeId);
       },
       assessmentItemsValidation() {
         return this.getNodeAssessmentItemErrors(this.nodeId);
