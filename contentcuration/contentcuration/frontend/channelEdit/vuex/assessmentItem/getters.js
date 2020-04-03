@@ -1,13 +1,13 @@
-import sortBy from 'lodash/sortBy';
 import { validateAssessmentItem } from '../../utils';
-
-function sorted(items) {
-  return sortBy(items, ['order']);
-}
 
 export function getNodeAssessmentItems(state) {
   return function(contentNodeId) {
-    return sorted(Object.values(state.assessmentItemsMap[contentNodeId]));
+    if (!state.assessmentItemsMap[contentNodeId]) {
+      return [];
+    }
+
+    const items = Object.values(state.assessmentItemsMap[contentNodeId]);
+    return items.sort((item1, item2) => (item1.order > item2.order ? 1 : -1));
   };
 }
 
