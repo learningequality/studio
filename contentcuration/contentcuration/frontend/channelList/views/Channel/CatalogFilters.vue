@@ -46,6 +46,7 @@
         <VSelect
           v-model="pageSize"
           outline
+          offset-y
           :items="pageSizeOptions"
           :label="$tr('pageSize')"
         />
@@ -66,6 +67,7 @@
           :item-text="licenseText"
           multiple
           outline
+          offset-y
           class="licenses"
           attach=".licenses"
           @click.stop.prevent
@@ -83,6 +85,7 @@
           attach=".formats"
           multiple
           outline
+          offset-y
         />
 
         <div class="subheading">
