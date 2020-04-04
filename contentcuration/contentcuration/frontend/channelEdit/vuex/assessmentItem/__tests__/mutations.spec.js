@@ -25,6 +25,7 @@ describe('assessmentItem mutations', () => {
                 order: 2,
               },
             ],
+            hints: [],
           },
         },
         'content-node-id-2': {
@@ -34,6 +35,7 @@ describe('assessmentItem mutations', () => {
             type: AssessmentItemTypes.SINGLE_SELECTION,
             question: '',
             answers: [],
+            hints: [],
           },
           'assessment-id-3': {
             assessment_id: 'assessment-id-3',
@@ -52,6 +54,7 @@ describe('assessmentItem mutations', () => {
                 order: 2,
               },
             ],
+            hints: [],
           },
         },
       },
@@ -66,6 +69,7 @@ describe('assessmentItem mutations', () => {
         type: AssessmentItemTypes.SINGLE_SELECTION,
         question: '',
         answers: [],
+        hints: [],
       });
 
       expect(state.assessmentItemsMap['content-node-id-1']['assessment-id-4']).toEqual({
@@ -74,6 +78,7 @@ describe('assessmentItem mutations', () => {
         type: AssessmentItemTypes.SINGLE_SELECTION,
         question: '',
         answers: [],
+        hints: [],
       });
     });
 
@@ -95,6 +100,7 @@ describe('assessmentItem mutations', () => {
             order: 2,
           },
         ],
+        hints: [],
       });
 
       expect(state.assessmentItemsMap['content-node-id-2']['assessment-id-3']).toEqual({
@@ -114,6 +120,67 @@ describe('assessmentItem mutations', () => {
             order: 2,
           },
         ],
+        hints: [],
+      });
+    });
+
+    it('parses and sorts answers and hints before saving', () => {
+      const state = {
+        assessmentItemsMap: {},
+      };
+
+      ADD_ASSESSMENTITEM(state, {
+        assessment_id: 'assessment-id-1',
+        contentnode: 'content-node-id-1',
+        answers: JSON.stringify([
+          {
+            answer: 'Answer 2',
+            correct: false,
+            order: 2,
+          },
+          {
+            answer: 'Answer 1',
+            correct: true,
+            order: 1,
+          },
+        ]),
+        hints: JSON.stringify([
+          {
+            answer: 'Hint 2',
+            order: 2,
+          },
+          {
+            answer: 'Hint 1',
+            order: 1,
+          },
+        ]),
+      });
+
+      expect(state.assessmentItemsMap['content-node-id-1']['assessment-id-1']).toEqual({
+        assessment_id: 'assessment-id-1',
+        contentnode: 'content-node-id-1',
+        answers: [
+          {
+            answer: 'Answer 1',
+            correct: true,
+            order: 1,
+          },
+          {
+            answer: 'Answer 2',
+            correct: false,
+            order: 2,
+          },
+        ],
+        hints: [
+          {
+            answer: 'Hint 1',
+            order: 1,
+          },
+          {
+            answer: 'Hint 2',
+            order: 2,
+          },
+        ],
       });
     });
   });
@@ -127,6 +194,7 @@ describe('assessmentItem mutations', () => {
           type: AssessmentItemTypes.SINGLE_SELECTION,
           question: '',
           answers: [],
+          hints: [],
         },
         {
           assessment_id: 'assessment-id-3',
@@ -145,6 +213,7 @@ describe('assessmentItem mutations', () => {
               order: 2,
             },
           ],
+          hints: [],
         },
       ]);
 
@@ -167,6 +236,7 @@ describe('assessmentItem mutations', () => {
                 order: 2,
               },
             ],
+            hints: [],
           },
           'assessment-id-4': {
             assessment_id: 'assessment-id-4',
@@ -174,6 +244,7 @@ describe('assessmentItem mutations', () => {
             type: AssessmentItemTypes.SINGLE_SELECTION,
             question: '',
             answers: [],
+            hints: [],
           },
         },
         'content-node-id-2': {
@@ -183,6 +254,7 @@ describe('assessmentItem mutations', () => {
             type: AssessmentItemTypes.SINGLE_SELECTION,
             question: '',
             answers: [],
+            hints: [],
           },
           'assessment-id-3': {
             assessment_id: 'assessment-id-3',
@@ -198,6 +270,73 @@ describe('assessmentItem mutations', () => {
               {
                 answer: 'Blue',
                 correct: false,
+                order: 2,
+              },
+            ],
+            hints: [],
+          },
+        },
+      });
+    });
+
+    it('parses and sorts answers and hints before saving', () => {
+      const state = {
+        assessmentItemsMap: {},
+      };
+
+      ADD_ASSESSMENTITEMS(state, [
+        {
+          assessment_id: 'assessment-id-1',
+          contentnode: 'content-node-id-1',
+          answers: JSON.stringify([
+            {
+              answer: 'Answer 2',
+              correct: false,
+              order: 2,
+            },
+            {
+              answer: 'Answer 1',
+              correct: true,
+              order: 1,
+            },
+          ]),
+          hints: JSON.stringify([
+            {
+              answer: 'Hint 2',
+              order: 2,
+            },
+            {
+              answer: 'Hint 1',
+              order: 1,
+            },
+          ]),
+        },
+      ]);
+
+      expect(state.assessmentItemsMap).toEqual({
+        'content-node-id-1': {
+          'assessment-id-1': {
+            assessment_id: 'assessment-id-1',
+            contentnode: 'content-node-id-1',
+            answers: [
+              {
+                answer: 'Answer 1',
+                correct: true,
+                order: 1,
+              },
+              {
+                answer: 'Answer 2',
+                correct: false,
+                order: 2,
+              },
+            ],
+            hints: [
+              {
+                answer: 'Hint 1',
+                order: 1,
+              },
+              {
+                answer: 'Hint 2',
                 order: 2,
               },
             ],
@@ -226,6 +365,7 @@ describe('assessmentItem mutations', () => {
             order: 2,
           },
         ],
+        hints: [],
       });
 
       expect(state.assessmentItemsMap['content-node-id-2']).toEqual({
@@ -235,6 +375,7 @@ describe('assessmentItem mutations', () => {
           type: AssessmentItemTypes.SINGLE_SELECTION,
           question: '',
           answers: [],
+          hints: [],
         },
       });
     });
