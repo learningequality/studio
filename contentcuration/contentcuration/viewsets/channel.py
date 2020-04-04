@@ -51,6 +51,13 @@ class CatalogListPagination(PageNumberPagination):
         )
 
 
+primary_token_subquery = Subquery(
+    SecretToken.objects.filter(channels=OuterRef("id"), is_primary=True)
+    .values("token")
+    .order_by("-token")[:1]
+)
+
+
 class ChannelFilter(FilterSet):
     edit = BooleanFilter(method="filter_edit")
     view = BooleanFilter(method="filter_view")
@@ -82,7 +89,7 @@ class ChannelFilter(FilterSet):
         )
         return queryset.annotate(
             keyword_match_count=SQCount(keywords_query, field="content_id"),
-            primary_token=Max("secret_tokens__token"),
+            primary_token=primary_token_subquery,
         ).filter(
             Q(name__icontains=value)
             | Q(description__icontains=value)
@@ -345,9 +352,8 @@ class ChannelViewSet(ValuesViewset):
 
         return queryset.order_by("-priority", "name")
 
-
     def annotate_queryset(self, queryset):
-        queryset = queryset.annotate(primary_token=Max("secret_tokens__token"))
+        queryset = queryset.annotate(primary_token=primary_token_subquery)
         channel_main_tree_nodes = ContentNode.objects.filter(
             tree_id=OuterRef("main_tree__tree_id")
         )
