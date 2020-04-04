@@ -109,11 +109,6 @@
         return this.$tr('incompleteItemsCountMessage', { invalidItemsCount });
       },
     },
-    watch: {
-      selectedIndices() {
-        this.$refs.assessmentEditor.reset();
-      },
-    },
     methods: {
       ...mapActions('assessmentItem', ['updateAssessmentItems']),
       openDialog({
