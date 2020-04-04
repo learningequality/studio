@@ -148,6 +148,10 @@
       event: 'update',
     },
     props: {
+      nodeId: {
+        type: String,
+        required: true,
+      },
       /**
        * An array of assessment items:
        * [
@@ -291,6 +295,7 @@
         }
 
         const newItem = {
+          contentnode: this.nodeId,
           question: '',
           type: AssessmentItemTypes.SINGLE_SELECTION,
           answers: [],

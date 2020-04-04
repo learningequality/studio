@@ -14,6 +14,7 @@
     <AssessmentEditor
       ref="assessmentEditor"
       v-model="assessmentItems"
+      :nodeId="nodeId"
       :itemsValidation="assessmentItemsValidation"
       :openDialog="openDialog"
     />
