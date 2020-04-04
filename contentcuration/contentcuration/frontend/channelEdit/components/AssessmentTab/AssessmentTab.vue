@@ -68,12 +68,12 @@
       return {
         dialog: {
           open: false,
-          title: null,
-          message: null,
-          onCancel: null,
-          cancelLabel: null,
-          onSubmit: null,
-          submitLabel: null,
+          title: '',
+          message: '',
+          cancelLabel: '',
+          submitLabel: '',
+          onCancel: () => {},
+          onSubmit: () => {},
         },
       };
     },
@@ -116,22 +116,43 @@
     methods: {
       ...mapActions('assessmentItem', ['updateAssessmentItems']),
       openDialog({
-        title = null,
-        message = null,
-        cancelLabel = null,
-        submitLabel = null,
-        onCancel = null,
-        onSubmit = null,
+        title = '',
+        message = '',
+        cancelLabel = '',
+        submitLabel = '',
+        onCancel = () => {},
+        onSubmit = () => {},
       } = {}) {
-        Object.assign(this.dialog, {
+        this.dialog = {
+          open: true,
           title,
           message,
           cancelLabel,
           submitLabel,
-          onCancel,
-          onSubmit,
-        });
-        this.dialog.open = true;
+          onCancel: () => {
+            if (typeof onCancel === 'function') {
+              onCancel();
+            }
+            this.closeDialog();
+          },
+          onSubmit: () => {
+            if (typeof onSubmit === 'function') {
+              onSubmit();
+            }
+            this.closeDialog();
+          },
+        };
+      },
+      closeDialog() {
+        this.dialog = {
+          open: false,
+          title: '',
+          message: '',
+          cancelLabel: '',
+          submitLabel: '',
+          onCancel: () => {},
+          onSubmit: () => {},
+        };
       },
     },
     $trs: {
