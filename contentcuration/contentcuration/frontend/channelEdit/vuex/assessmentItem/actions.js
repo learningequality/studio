@@ -32,7 +32,14 @@ export function updateAssessmentItems(context, assessmentItems) {
   }
   return Promise.all(
     assessmentItems.map(assessmentItem => {
-      return AssessmentItem.put(assessmentItem).then(assessment_id => {
+      // API accepts answers and hints as strings
+      const stringifiedAssessmentItem = {
+        ...assessmentItem,
+        answers: JSON.stringify(assessmentItem.answers || []),
+        hints: JSON.stringify(assessmentItem.hints || []),
+      };
+
+      return AssessmentItem.put(stringifiedAssessmentItem).then(assessment_id => {
         context.commit('ADD_ASSESSMENTITEM', {
           ...assessmentItem,
           assessment_id,
