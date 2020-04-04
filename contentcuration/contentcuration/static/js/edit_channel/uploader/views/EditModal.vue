@@ -283,9 +283,14 @@
             .then(nodes => {
               let loadFilePromise = vm.loadFiles({ ids: nodes.flatMap(n => n.files) });
               let relatedResourcesPromises = ids.map(nodeId => vm.loadRelatedResources(nodeId));
+              let assessmentItemsPromises = ids.map(nodeId => vm.loadNodeAssessmentItems(nodeId));
 
               // Add other related model load actions here
-              Promise.all([loadFilePromise, ...relatedResourcesPromises]).then(() => {
+              Promise.all([
+                loadFilePromise,
+                ...relatedResourcesPromises,
+                ...assessmentItemsPromises,
+              ]).then(() => {
                 vm.loading = false;
               });
             })
@@ -316,6 +321,7 @@
         'sanitizeContentNodes',
       ]),
       ...mapActions('file', ['loadFiles']),
+      ...mapActions('assessmentItem', ['loadNodeAssessmentItems']),
       ...mapMutations('contentNode', { enableValidation: 'ENABLE_VALIDATION_ON_NODES' }),
       closeModal() {
         this.promptUploading = false;

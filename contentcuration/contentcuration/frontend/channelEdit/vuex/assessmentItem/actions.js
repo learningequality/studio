@@ -1,6 +1,13 @@
 import { sanitizeAssessmentItems } from '../../utils';
 import { AssessmentItem } from 'shared/data/resources';
 
+/**
+ * Load all assessment items belonging to a content node.
+ */
+export function loadNodeAssessmentItems(context, nodeId) {
+  return loadAssessmentItems(context, { contentnode: nodeId });
+}
+
 export function loadAssessmentItems(context, params = {}) {
   return AssessmentItem.where(params).then(assesmentItems => {
     context.commit('ADD_ASSESSMENTITEMS', assesmentItems);
