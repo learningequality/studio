@@ -22,5 +22,5 @@ export function ADD_ASSESSMENTITEMS(state, assessmentItems = []) {
 }
 
 export function REMOVE_ASSESSMENTITEM(state, assessmentItem) {
-  Vue.delete(state.assessmentItemsMap[assessmentItem.contentnode], assessmentItem.id);
+  Vue.delete(state.assessmentItemsMap[assessmentItem.contentnode], assessmentItem.assessment_id);
 }
