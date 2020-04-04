@@ -1,4 +1,3 @@
-import { sanitizeAssessmentItems } from '../../utils';
 import { AssessmentItem } from 'shared/data/resources';
 
 /**
@@ -31,13 +30,15 @@ export function updateAssessmentItems(context, assessmentItems) {
   if (!Array.isArray(assessmentItems)) {
     throw TypeError('assessmentItems must be an array of assessmentItems');
   }
-  // Keep all assessment items in vuex state
-  context.commit('ADD_ASSESSMENTITEMS', assessmentItems);
-  // Only commit assessment items that pass sanitization
   return Promise.all(
-    sanitizeAssessmentItems(assessmentItems).map(assessmentItem =>
-      AssessmentItem.put(assessmentItem)
-    )
+    assessmentItems.map(assessmentItem => {
+      return AssessmentItem.put(assessmentItem).then(assessment_id => {
+        context.commit('ADD_ASSESSMENTITEM', {
+          ...assessmentItem,
+          assessment_id,
+        });
+      });
+    })
   );
 }
 
