@@ -26,14 +26,18 @@ export function ADD_ASSESSMENTITEM(state, assessmentItem) {
   answers.sort((answer1, answer2) => (answer1.order > answer2.order ? 1 : -1));
   hints.sort((hint1, hint2) => (hint1.order > hint2.order ? 1 : -1));
 
-  state.assessmentItemsMap[assessmentItem.contentnode] = mergeMapItem(
-    state.assessmentItemsMap[assessmentItem.contentnode] || {},
-    {
-      ...assessmentItem,
-      answers,
-      hints,
-    },
-    'assessment_id'
+  Vue.set(
+    state.assessmentItemsMap,
+    assessmentItem.contentnode,
+    mergeMapItem(
+      state.assessmentItemsMap[assessmentItem.contentnode] || {},
+      {
+        ...assessmentItem,
+        answers,
+        hints,
+      },
+      'assessment_id'
+    )
   );
 }
 
