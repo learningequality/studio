@@ -30,8 +30,8 @@ export function loadTree(context, channel_id) {
   });
 }
 
-export function loadChildren(context, { parent, channel_id }) {
-  return Tree.where({ parent, channel_id }).then(nodes => {
+export function loadChildren(context, { parent, channel_id, ...params }) {
+  return Tree.where({ parent, channel_id, ...params }).then(nodes => {
     return loadContentNodes(context, { ids: nodes.map(node => node.id) });
   });
 }
