@@ -2,7 +2,7 @@
 
   <div>
     <VBtn
-      v-if="$vuetify.breakpoint.smAndDown"
+      v-if="$vuetify.breakpoint.xsOnly"
       color="primary"
       flat
       @click.stop="drawer = true"
@@ -11,119 +11,112 @@
     </VBtn>
     <VNavigationDrawer
       v-model="drawer"
-      :permanent="$vuetify.breakpoint.mdAndUp"
+      :permanent="$vuetify.breakpoint.smAndUp"
       app
       disable-route-watcher
-      clipped
+      :clipped="$vuetify.breakpoint.smAndUp"
       :right="isRTL"
     >
-      <div v-if="$vuetify.breakpoint.smAndDown" style="text-align: right;">
-        <VBtn icon flat>
-          <Icon @click="drawer = false">
-            clear
-          </Icon>
-        </VBtn>
-      </div>
-      <VContainer class="filters">
+      <VContainer class="filters pa-0">
+        <VToolbar color="transparent" flat dense>
+          <ActionLink
+            :text="$tr('clearFilters')"
+            @click="clearFilters"
+          />
+          <VSpacer />
+          <VBtn v-if="$vuetify.breakpoint.xsOnly" icon flat style="text-align: right;">
+            <Icon @click="drawer = false">
+              clear
+            </Icon>
+          </VBtn>
+        </VToolbar>
+        <VForm class="pa-3">
 
-        <!-- Keyword search -->
-        <VTextField
-          :value="keywords"
-          color="primary"
-          :label="$tr('searchLabel')"
-          single-line
-          outline
-          clearable
-          data-test="keywords"
-          @blur="setKeywords"
-        >
-          <template #prepend-inner>
-            <Icon>search</Icon>
-          </template>
-        </VTextField>
+          <!-- Keyword search -->
+          <VTextField
+            v-model="keywordInput"
+            color="primary"
+            :label="$tr('searchLabel')"
+            single-line
+            outline
+            clearable
+            data-test="keywords"
+            autofocus
+            @input="setKeywords"
+          />
 
-        <!-- Show per page -->
-        <VSelect
-          v-model="pageSize"
-          outline
-          :items="pageSizeOptions"
-          :label="$tr('pageSize')"
-        />
+          <!-- Show per page -->
+          <VSelect
+            v-model="pageSize"
+            outline
+            menu-props="offsetY"
+            :items="pageSizeOptions"
+            :label="$tr('pageSize')"
+          />
 
-        <!-- Language -->
-        <LanguageDropdown
-          v-model="language"
-          clearable
-          outline
-        />
+          <!-- Language -->
+          <LanguageDropdown
+            v-model="languages"
+            clearable
+            outline
+            multiple
+          />
 
-        <!-- License (attach to self to keep in notranslate class) -->
-        <VSelect
-          v-model="licenses"
-          :items="licenseOptions"
-          :label="$tr('licenseLabel')"
-          item-value="id"
-          :item-text="licenseText"
-          multiple
-          outline
-          class="licenses"
-          attach=".licenses"
-          @click.stop.prevent
-        />
+          <!-- License (attach to self to keep in notranslate class) -->
+          <VSelect
+            v-model="licenses"
+            :items="licenseOptions"
+            :label="$tr('licenseLabel')"
+            item-value="id"
+            :item-text="licenseText"
+            multiple
+            outline
+            menu-props="offsetY"
+            class="licenses"
+            attach=".licenses"
+            @click.stop.prevent
+          />
 
-        <!-- Formats (attach to self to keep in notranslate class) -->
-        <VSelect
-          v-model="kinds"
-          :items="kindOptions"
-          item-value="kind"
-          :item-text="kindText"
-          :menu-props="{ maxHeight: '400' }"
-          :label="$tr('formatLabel')"
-          class="formats"
-          attach=".formats"
-          multiple
-          outline
-        />
+          <!-- Formats (attach to self to keep in notranslate class) -->
+          <VSelect
+            v-model="kinds"
+            :items="kindOptions"
+            item-value="kind"
+            :item-text="kindText"
+            :label="$tr('formatLabel')"
+            class="formats"
+            attach=".formats"
+            multiple
+            outline
+            menu-props="offsetY"
+          />
 
-        <div class="subheading">
-          {{ $tr('categoryLabel') }}
-        </div>
+          <!-- Starred -->
+          <VCheckbox
+            v-if="loggedIn"
+            v-model="bookmark"
+            color="primary"
+            :label="$tr('starredLabel')"
+          />
 
-        <!-- Starred -->
-        <VCheckbox
-          v-if="loggedIn"
-          v-model="bookmark"
-          color="primary"
-          :label="$tr('starredLabel')"
-        />
-
-        <!-- Published -->
-        <VCheckbox
-          v-model="published"
-          color="primary"
-          :label="$tr('publishedLabel')"
-        />
-
-        <!-- Includes -->
-        <div class="subheading">
-          {{ $tr('includesLabel') }}
-        </div>
-        <VCheckbox
-          v-model="coach"
-          color="primary"
-          :label="$tr('coachLabel')"
-        />
-        <VCheckbox
-          v-model="assessments"
-          color="primary"
-          :label="$tr('assessmentsLabel')"
-        />
-        <VCheckbox
-          v-model="subtitles"
-          color="primary"
-          :label="$tr('subtitlesLabel')"
-        />
-
+          <!-- Includes -->
+          <div class="subheading">
+            {{ $tr('includesLabel') }}
+          </div>
+          <VCheckbox v-model="coach" color="primary">
+            <template #label>
+              {{ $tr('coachLabel') }}
+              <HelpTooltip :text="$tr('coachDescription')" bottom class="pl-2" />
+            </template>
+          </VCheckbox>
+          <VCheckbox v-model="assessments" color="primary">
+            <template #label>
+              {{ $tr('assessmentsLabel') }}
+              <HelpTooltip :text="$tr('exerciseDescription')" bottom class="pl-2" />
+            </template>
+          </VCheckbox>
+          <VCheckbox v-model="subtitles" color="primary" :label="$tr('subtitlesLabel')" />
+        </VForm>
       </VContainer>
     </VNavigationDrawer>
   </div>
@@ -134,6 +127,7 @@
 <script>
 
   import { mapState } from 'vuex';
+  import debounce from 'lodash/debounce';
   import map from 'lodash/map';
   import uniq from 'lodash/uniq';
   import reduce from 'lodash/reduce';
@@ -141,17 +135,24 @@
   import { RouterNames } from '../../constants';
   import { constantsTranslationMixin } from 'shared/mixins';
   import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown';
+  import ActionLink from 'shared/views/ActionLink';
   import Constants from 'edit_channel/constants/index';
+  import HelpTooltip from 'shared/views/HelpTooltip';
+
+  const EXCLUDE_KINDS = ['topic', 'exercise'];
 
   export default {
     name: 'CatalogFilters',
     components: {
       LanguageDropdown,
+      ActionLink,
+      HelpTooltip,
     },
     mixins: [constantsTranslationMixin],
     data() {
       return {
         drawer: false,
+        keywordInput: '',
       };
     },
     computed: {
@@ -162,7 +163,7 @@
         return window.isRTL;
       },
       kindOptions() {
-        return sortBy(Constants.ContentKinds, 'kind');
+        return sortBy(Constants.ContentKinds, 'kind').filter(k => !EXCLUDE_KINDS.includes(k.kind));
       },
       licenseOptions() {
         return sortBy(Constants.Licenses, 'id');
@@ -188,9 +189,6 @@
           0
         );
       },
-      keywords() {
-        return this.$route.query.keywords;
-      },
       pageSize: {
         get() {
           return Number(this.$route.query.page_size) || 25;
@@ -199,12 +197,13 @@
           this.setQueryParam('page_size', value);
         },
       },
-      language: {
+      languages: {
         get() {
-          return this.$route.query.language;
+          let languages = this.$route.query.languages;
+          return languages ? languages.split(',') : [];
         },
         set(value) {
-          this.setQueryParam('language', value);
+          this.setQueryParam('languages', uniq(value).join(','));
         },
       },
       licenses: {
@@ -261,19 +260,16 @@
           this.setQueryParam('bookmark', value);
         },
       },
-      published: {
-        get() {
-          return this.$route.query.published;
-        },
-        set(value) {
-          this.setQueryParam('published', value);
-        },
+      setKeywords() {
+        return debounce(() => {
+          this.setQueryParam('keywords', this.keywordInput);
+        }, 500);
       },
     },
+    beforeMount() {
+      this.keywordInput = this.$route.query.keywords;
+    },
     methods: {
-      setKeywords(event) {
-        this.setQueryParam('keywords', event.target.value);
-      },
       setQueryParam(field, value) {
         let params = this.$route.query;
         if (value) {
@@ -281,7 +277,13 @@
         } else {
           delete params[field];
         }
-        this.$router.push({
+        this.navigate(params);
+      },
+      clearFilters() {
+        this.navigate({});
+      },
+      navigate(params) {
+        this.$router.replace({
           ...this.$route,
           name: RouterNames.CATALOG_LIST,
           query: {
@@ -304,6 +306,7 @@
       },
     },
     $trs: {
+      clearFilters: 'Clear filters',
       searchLabel: 'Keywords',
       coachLabel: 'Coach content',
       assessmentsLabel: 'Assessments',
@@ -312,11 +315,11 @@
       licenseLabel: 'Licenses',
       formatLabel: 'Formats',
       includesLabel: 'Includes',
-      publishedLabel: 'Available to download',
-      categoryLabel: 'Category',
       searchText:
         '{count, plural,\n =0 {Search} \n =1 {Search (# filter)}\n other {Search (# filters)}}',
       pageSize: 'Show per page',
+      coachDescription: 'Coach content is visible to coaches only in Kolibri',
+      exerciseDescription: 'Exercises that have interactive question sets',
     },
   };
 

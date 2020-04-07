@@ -1,17 +1,25 @@
 <template>
 
-  <VCard class="my-3" data-test="channel-card" @click="openChannelLink">
+  <VCard
+    class="my-3 channel"
+    :class="{hideHighlight}"
+    data-test="channel-card"
+    tabindex="0"
+    @click="openChannelLink"
+    @keyup.enter="openChannelLink"
+  >
     <VLayout row wrap>
-      <VFlex xs12 sm3>
-        <VCardTitle>
-          <Thumbnail :src="channel.thumbnail_url" :encoding="channel.thumbnail_encoding" />
-        </VCardTitle>
+      <VFlex sm12 md3 class="pa-3">
+        <Thumbnail
+          :src="channel.thumbnail_url"
+          :encoding="channel.thumbnail_encoding"
+        />
       </VFlex>
-      <VFlex xs12 sm9>
+      <VFlex sm12 md9>
         <VCardTitle>
           <VFlex xs12>
             <VLayout class="grey--text" justify-space-between>
-              <VFlex xs6 sm4>
+              <VFlex sm6 md4>
                 <span v-if="language">
                   {{ language.native_name }}
                 </span>
@@ -19,14 +27,14 @@
                   &nbsp;
                 </span>
               </VFlex>
-              <VFlex xs6 sm4>
+              <VFlex sm6 md4>
                 {{ $tr('resourceCount', {'count': channel.count}) }}
               </VFlex>
               <VFlex v-if="$vuetify.breakpoint.smAndUp" sm4 />
             </VLayout>
           </VFlex>
           <VFlex xs12>
-            <h3 class="headline notranslate" dir="auto">
+            <h3 class="headline notranslate font-weight-bold" dir="auto">
               {{ channel.name }}
             </h3>
           </VFlex>
@@ -78,11 +86,21 @@
         v-if="loggedIn"
         :channelId="channelId"
         :bookmark="channel.bookmark"
+        @mouseenter="hideHighlight = true"
+        @mouseleave="hideHighlight = false"
       />
       &nbsp;
       <VMenu v-if="canEdit || channel.published" offset-y>
         <template v-slot:activator="{ on }">
-          <VBtn icon flat data-test="menu" v-on="on" @click.stop.prevent>
+          <VBtn
+            icon
+            flat
+            data-test="menu"
+            v-on="on"
+            @click.stop.prevent
+            @mouseenter="hideHighlight = true"
+            @mouseleave="hideHighlight = false"
+          >
             <Icon>more_vert</Icon>
           </VBtn>
         </template>
@@ -184,6 +202,7 @@
       return {
         deleteDialog: false,
         tokenDialog: false,
+        hideHighlight: false,
       };
     },
     computed: {
@@ -264,8 +283,9 @@
 
   .v-card {
     width: 100%;
-    .headline {
-      font-weight: bold;
+    cursor: pointer;
+    &:hover:not(.hideHighlight) {
+      background-color: var(--v-grey-lighten4);
     }
   }
 

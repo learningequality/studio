@@ -132,7 +132,10 @@
     created() {
       if (this.loggedIn) {
         this.loadInvitationList();
-      } else {
+      } else if (
+        this.$route.name !== RouterNames.CATALOG_ITEMS &&
+        this.$route.name !== RouterNames.CATALOG_DETAILS
+      ) {
         this.$router.push({
           name: RouterNames.CATALOG_ITEMS,
         });
@@ -153,7 +156,7 @@
       channelSets: 'Collections',
       catalog: 'Public',
       invitations: 'You have {count, plural,\n =1 {# invitation}\n other {# invitations}}',
-      libraryTitle: 'Kolibri Library',
+      libraryTitle: 'Kolibri Content Library',
     },
   };
 

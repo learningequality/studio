@@ -175,7 +175,11 @@
           </VLayout>
         </template>
       </DetailsRow>
-      <VLayout row wrap class="sample-nodes">
+
+      <label class="font-weight-bold body-1" :style="{color: $vuetify.theme.darkGrey}">
+        {{ isChannel? $tr('sampleFromChannelHeading') : $tr('sampleFromTopicHeading') }}
+      </label>
+      <VLayout row wrap class="sample-nodes pt-1">
         <VFlex v-for="node in details.sample_nodes" :key="node.node_id" xs12 sm3>
           <VCard height="100%" flat>
             <Thumbnail :src="node.thumbnail" />
@@ -218,6 +222,10 @@
       nodeID: {
         type: String,
         required: true,
+      },
+      isChannel: {
+        type: Boolean,
+        default: true,
       },
     },
     data() {
@@ -297,15 +305,17 @@
       aggregatorToolTip:
         'Website or org hosting the content collection but not necessarily the creator or copyright holder',
       licensesLabel: 'Licenses',
-      copyrightHoldersLabel: 'Copyright Holders',
+      copyrightHoldersLabel: 'Copyright holders',
       assessmentsIncludedText: 'Assessments',
-      [SCALE_TEXT.VERY_SMALL]: 'Very Small',
+      [SCALE_TEXT.VERY_SMALL]: 'Very small',
       [SCALE_TEXT.SMALL]: 'Small',
       [SCALE_TEXT.AVERAGE]: 'Average',
       [SCALE_TEXT.LARGE]: 'Large',
-      [SCALE_TEXT.VERY_LARGE]: 'Very Large',
+      [SCALE_TEXT.VERY_LARGE]: 'Very large',
       defaultNoItemsText: '---',
       containsContentHeading: 'Contains content from',
+      sampleFromChannelHeading: 'Sample content from this channel',
+      sampleFromTopicHeading: 'Sample content from this topic',
     },
   };
 
@@ -362,12 +372,9 @@
     }
   }
 
-  .sample-nodes {
-    margin-top: 24px;
-    .v-card__text {
-      font-weight: bold;
-      word-break: break-word;
-    }
+  .sample-nodes .v-card__text {
+    font-weight: bold;
+    word-break: break-word;
   }
 
 </style>

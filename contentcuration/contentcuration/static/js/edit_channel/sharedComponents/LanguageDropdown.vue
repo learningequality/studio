@@ -15,6 +15,8 @@
     :rules="rules"
     :required="required"
     :no-data-text="$tr('noDataText')"
+    :search-input.sync="input"
+    @change="input=''"
   />
 
 </template>
@@ -28,11 +30,8 @@
     name: 'LanguageDropdown',
     props: {
       value: {
-        type: String,
+        type: [String, Array],
         required: false,
-        validator: function(value) {
-          return !value || Constants.Languages.map(lang => lang.id).includes(value);
-        },
       },
       required: {
         type: Boolean,
@@ -44,6 +43,11 @@
           return [];
         },
       },
+    },
+    data() {
+      return {
+        input: '',
+      };
     },
     computed: {
       language: {

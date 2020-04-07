@@ -70,6 +70,7 @@ function hasQueryParams(route) {
 router.beforeEach((to, from, next) => {
   if (!hasQueryParams(to) && hasQueryParams(from)) {
     next({
+      replace: true,
       name: to.name,
       query: {
         ...from.query,
@@ -81,7 +82,7 @@ router.beforeEach((to, from, next) => {
       },
     });
   } else {
-    next();
+    next({ replace: true });
   }
 });
 

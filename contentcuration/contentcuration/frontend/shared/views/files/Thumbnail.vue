@@ -1,29 +1,31 @@
 <template>
 
-  <VCard
-    v-if="!thumbnailSrc"
-    data-test="default-image"
-    color="transparent"
-    style="padding: 28% 0;"
-    flat
-  >
-    <VLayout row wrap align-center justify-center style="max-height: 0px;">
-      <div style="position: absolute;">
-        <ContentNodeIcon :kind="kind" :showColor="false" size="64px" :isEmpty="isEmptyTopic" />
-      </div>
-    </VLayout>
-  </VCard>
+  <div :style="{maxWidth: maxWidth + 'px'}">
+    <VCard
+      v-if="!thumbnailSrc"
+      data-test="default-image"
+      color="transparent"
+      style="padding: 28% 0;"
+      flat
+    >
+      <VLayout row wrap align-center justify-center style="max-height: 0px;">
+        <div style="position: absolute;">
+          <ContentNodeIcon :kind="kind" :showColor="false" size="64px" :isEmpty="isEmptyTopic" />
+        </div>
+      </VLayout>
+    </VCard>
 
-  <VLayout v-else column>
-    <ContentNodeIcon v-if="kind" :kind="kind" includeText fillWidth />
-    <VImg
-      data-test="thumbnail-image"
-      :aspect-ratio="aspectRatio"
-      :src="encoding && encoding.base64 || thumbnailSrc"
-      :lazy-src="encoding && encoding.base64 || thumbnailSrc"
-      contain
-    />
-  </VLayout>
+    <VLayout v-else column>
+      <ContentNodeIcon v-if="kind" :kind="kind" includeText fillWidth />
+      <VImg
+        data-test="thumbnail-image"
+        :aspect-ratio="aspectRatio"
+        :src="encoding && encoding.base64 || thumbnailSrc"
+        :lazy-src="encoding && encoding.base64 || thumbnailSrc"
+        contain
+      />
+    </VLayout>
+  </div>
 
 </template>
 
@@ -55,6 +57,10 @@
       isEmpty: {
         type: Boolean,
         default: false,
+      },
+      maxWidth: {
+        type: Number,
+        default: 250,
       },
     },
     computed: {
