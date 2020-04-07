@@ -49,8 +49,8 @@ export function updateAssessmentItems(context, assessmentItems) {
   );
 }
 
-export function deleteAssessmentItem(context, assesmentItemId) {
-  return AssessmentItem.delete(assesmentItemId).then(() => {
-    context.commit('REMOVE_ASSESSMENTITEM', assesmentItemId);
+export function deleteAssessmentItem(context, assesmentItem) {
+  return AssessmentItem.delete(assesmentItem.assessment_id).then(() => {
+    context.commit('REMOVE_ASSESSMENTITEM', assesmentItem);
   });
 }
