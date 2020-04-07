@@ -27,7 +27,7 @@ from contentcuration.viewsets.common import UUIDInFilter
 
 
 class ContentNodeFilter(FilterSet):
-    ids = UUIDInFilter(name=id)
+    ids = UUIDInFilter(name="id")
     channel_root = CharFilter(method="filter_channel_root")
 
     class Meta:
@@ -233,8 +233,10 @@ class ContentNodeViewSet(ValuesViewset):
         thumbnails = File.objects.filter(
             contentnode=OuterRef("id"), preset__thumbnail=True
         )
-        original_channel = Channel.objects.filter(pk=OuterRef('original_channel_id'))
-        original_node = ContentNode.objects.filter(node_id=OuterRef('original_source_node_id')).filter(node_id=F('original_source_node_id'))
+        original_channel = Channel.objects.filter(pk=OuterRef("original_channel_id"))
+        original_node = ContentNode.objects.filter(
+            node_id=OuterRef("original_source_node_id")
+        ).filter(node_id=F("original_source_node_id"))
         queryset = queryset.annotate(
             resource_count=SQCount(descendant_resources, field="content_id"),
             coach_count=SQCount(
