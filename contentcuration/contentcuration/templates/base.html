@@ -72,7 +72,9 @@
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-      <title>Kolibri Studio ({% trans 'Beta' %})</title>
+      <title>
+        {% block title %}{% trans 'Kolibri Studio (Beta)' %}{% endblock title %}
+      </title>
 
         {% if not debug %}
             <script src={% static 'django_js_reverse/js/reverse.js' %}></script>
@@ -114,6 +116,8 @@
           {% if user_preferences %}
           var user_preferences = JSON.parse({{ user_preferences | safe }});
           {% endif %}
+
+          var betaMode = "{{ BETA_MODE }}" === "True";
         </script>
       {% endblock head %}
 
@@ -143,10 +147,6 @@
     {% elif DEPRECATED %}
       <div class="text-center main-banner warning-banner" id="redirect-banner">
         <i class="material-icons">error</i> {% blocktrans %}Contentworkshop.learningequality.org has been deprecated. Please go to <a href="https://studio.learningequality.org">studio.learningequality.org</a> for the latest version of Studio{% endblocktrans %}
-      </div>
-    {% elif BETA_MODE %}
-      <div id="beta-banner" class="text-center info-banner main-banner">
-        <i class="material-icons">build</i> {% url 'issues_settings' as issue_url %}{% blocktrans %}Kolibri Studio is undergoing active development, and during usage you may encounter unexpected behavior or problems. <a href="{{issue_url}}" target="_blank">Please read here</a> on best practices, known issues, and error reporting recommendations. We appreciate your patience and assistance as we work to improve the Kolibri Studio Beta!{% endblocktrans %}
       </div>
     {% endif %}
     {% endblock nav %}

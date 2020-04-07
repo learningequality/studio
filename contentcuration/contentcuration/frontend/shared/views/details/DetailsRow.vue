@@ -4,7 +4,7 @@
     <VFlex xs12 sm5 md4 xl4>
       <label class="font-weight-bold body-1" :style="{color: $vuetify.theme.darkGrey}">
         {{ label }}
-        <HelpTooltip v-if="definition" :text="definition" />
+        <HelpTooltip v-if="definition" :text="definition" bottom />
       </label>
     </VFlex>
     <VFlex xs12 sm7 md8 xl8>

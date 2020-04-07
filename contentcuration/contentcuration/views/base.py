@@ -2,6 +2,7 @@ import json
 import logging
 
 from builtins import str
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.postgres.aggregates import ArrayAgg
 from django.contrib.sites.shortcuts import get_current_site
@@ -33,6 +34,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 
+from .json_dump import json_for_parse_from_data
+from .json_dump import json_for_parse_from_serializer
 from contentcuration.api import activate_channel
 from contentcuration.api import get_staged_diff
 from contentcuration.decorators import browser_is_supported
@@ -50,8 +53,6 @@ from contentcuration.tasks import create_async_task
 from contentcuration.tasks import generatechannelcsv_task
 from contentcuration.utils.messages import get_messages
 
-from .json_dump import json_for_parse_from_data, json_for_parse_from_serializer
-
 PUBLIC_CHANNELS_CACHE_DURATION = 30  # seconds
 
 MESSAGES = "i18n_messages"
@@ -60,7 +61,17 @@ CURRENT_USER = "current_user"
 
 
 @browser_is_supported
+@permission_classes((AllowAny,))
 def base(request):
+    if settings.LIBRARY_MODE:
+        return render(
+            request,
+            "channel_list.html",
+            {
+                MESSAGES: json_for_parse_from_data(get_messages()),
+                'LIBRARY_MODE': settings.LIBRARY_MODE,
+            },
+        )
     return redirect("channels")
 
 

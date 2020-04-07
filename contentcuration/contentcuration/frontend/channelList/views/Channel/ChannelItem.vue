@@ -1,17 +1,25 @@
 <template>
 
-  <VCard class="my-3" data-test="channel-card" @click="openChannelLink">
+  <VCard
+    class="my-3 channel"
+    :class="{hideHighlight}"
+    data-test="channel-card"
+    tabindex="0"
+    @click="openChannelLink"
+    @keyup.enter="openChannelLink"
+  >
     <VLayout row wrap>
-      <VFlex xs12 sm3>
-        <VCardTitle>
-          <Thumbnail :src="channel.thumbnail_url" :encoding="channel.thumbnail_encoding" />
-        </VCardTitle>
+      <VFlex sm12 md3 class="pa-3">
+        <Thumbnail
+          :src="channel.thumbnail_url"
+          :encoding="channel.thumbnail_encoding"
+        />
       </VFlex>
-      <VFlex xs12 sm9>
+      <VFlex sm12 md9>
         <VCardTitle>
           <VFlex xs12>
             <VLayout class="grey--text" justify-space-between>
-              <VFlex xs6 sm4>
+              <VFlex sm6 md4>
                 <span v-if="language">
                   {{ language.native_name }}
                 </span>
@@ -19,40 +27,45 @@
                   &nbsp;
                 </span>
               </VFlex>
-              <VFlex xs6 sm4>
-                {{ $tr('resourceCount', {'count': $formatNumber(channel.count)}) }}
+              <VFlex sm6 md4>
+                {{ $tr('resourceCount', {'count': channel.count}) }}
               </VFlex>
               <VFlex v-if="$vuetify.breakpoint.smAndUp" sm4 />
             </VLayout>
           </VFlex>
           <VFlex xs12>
-            <h3 class="headline notranslate">
+            <h3 class="headline notranslate font-weight-bold" dir="auto">
               {{ channel.name }}
             </h3>
           </VFlex>
           <VFlex xs12 class="notranslate">
-            {{ channel.description }}
+            <p dir="auto">
+              {{ channel.description }}
+            </p>
           </VFlex>
         </VCardTitle>
       </VFlex>
     </VLayout>
     <VCardActions>
+      <!-- Some channels were published before the last_published field was added -->
       <VCardText v-if="channel.published" class="grey--text">
-        {{ $tr(
-          'lastPublished',
-          {
-            'last_published': $formatRelative(
-              channel.last_published,
-              { now: new Date() }
-            )
-          })
-        }}
+        <span v-if="channel.last_published">
+          {{ $tr(
+            'lastPublished',
+            {
+              'last_published': $formatRelative(
+                channel.last_published,
+                { now: new Date() }
+              )
+            })
+          }}
+        </span>
       </VCardText>
       <VCardText v-else class="font-italic grey--text">
         {{ $tr('unpublishedText') }}
       </VCardText>
       <VSpacer />
-      <VTooltip sbottom>
+      <VTooltip v-if="!libraryMode" bottom>
         <template v-slot:activator="{ on }">
           <VBtn
             flat
@@ -63,9 +76,7 @@
             v-on="on"
             @click.stop
           >
-            <VIcon class="notranslate">
-              info
-            </VIcon>
+            <Icon>info</Icon>
           </VBtn>
         </template>
         <span>{{ $tr('details') }}</span>
@@ -75,14 +86,22 @@
         v-if="loggedIn"
         :channelId="channelId"
         :bookmark="channel.bookmark"
+        @mouseenter="hideHighlight = true"
+        @mouseleave="hideHighlight = false"
       />
       &nbsp;
       <VMenu v-if="canEdit || channel.published" offset-y>
         <template v-slot:activator="{ on }">
-          <VBtn icon flat data-test="menu" v-on="on" @click.stop.prevent>
-            <VIcon class="notranslate">
-              more_vert
-            </VIcon>
+          <VBtn
+            icon
+            flat
+            data-test="menu"
+            v-on="on"
+            @click.stop.prevent
+            @mouseenter="hideHighlight = true"
+            @mouseleave="hideHighlight = false"
+          >
+            <Icon>more_vert</Icon>
           </VBtn>
         </template>
         <VList>
@@ -93,27 +112,31 @@
             @click.stop
           >
             <VListTileAction>
-              <VIcon class="notranslate">
-                edit
-              </VIcon>
+              <Icon>edit</Icon>
             </VListTileAction>
             <VListTileTitle>{{ $tr('editChannel') }}</VListTileTitle>
           </VListTile>
           <VListTile v-if="channel.published" @click.stop="tokenDialog=true">
             <VListTileAction>
-              <VIcon class="notranslate">
-                content_copy
-              </VIcon>
+              <Icon>content_copy</Icon>
             </VListTileAction>
             <VListTileTitle>{{ $tr('copyToken') }}</VListTileTitle>
           </VListTile>
           <VListTile v-if="canEdit" @click.stop="deleteDialog=true">
             <VListTileAction>
-              <VIcon class="notranslate">
-                delete
-              </VIcon>
+              <Icon>delete</Icon>
             </VListTileAction>
             <VListTileTitle>{{ $tr('deleteChannel') }}</VListTileTitle>
+          </VListTile>
+          <VListTile
+            v-if="libraryMode && channel.published"
+            :href="demoServerLink"
+            target="_blank"
+          >
+            <VListTileAction>
+              <Icon>launch</Icon>
+            </VListTileAction>
+            <VListTileTitle>{{ $tr('viewContent') }}</VListTileTitle>
           </VListTile>
         </VList>
       </VMenu>
@@ -179,6 +202,7 @@
       return {
         deleteDialog: false,
         tokenDialog: false,
+        hideHighlight: false,
       };
     },
     computed: {
@@ -195,6 +219,7 @@
       channelEditLink() {
         return {
           name: RouterNames.CHANNEL_EDIT,
+          query: this.$route.query,
           params: {
             channelId: this.channelId,
           },
@@ -203,6 +228,7 @@
       channelDetailsLink() {
         return {
           name: this.detailsRouteName,
+          query: this.$route.query,
           params: {
             channelId: this.channelId,
           },
@@ -210,6 +236,12 @@
       },
       canEdit() {
         return this.allowEdit && this.channel.edit && !this.channel.ricecooker_version;
+      },
+      libraryMode() {
+        return window.libraryMode;
+      },
+      demoServerLink() {
+        return `https://kolibridemo.learningequality.org/en/learn/#/topics/${this.channelId}`;
       },
     },
     methods: {
@@ -223,7 +255,7 @@
         // TODO: if we decide to make channel edit page accessible
         // without an account, update this to be a :to computed property
         // to take advantage of the router more
-        if (this.loggedIn) {
+        if (this.loggedIn && !this.libraryMode) {
           window.location = window.Urls.channel(this.channelId);
         } else {
           this.$router.push(this.channelDetailsLink);
@@ -235,6 +267,7 @@
       unpublishedText: 'Unpublished',
       lastPublished: 'Published {last_published}',
       details: 'Details',
+      viewContent: 'View channel content',
       editChannel: 'Edit channel',
       copyToken: 'Copy channel token',
       deleteChannel: 'Delete channel',
@@ -250,8 +283,9 @@
 
   .v-card {
     width: 100%;
-    .headline {
-      font-weight: bold;
+    cursor: pointer;
+    &:hover:not(.hideHighlight) {
+      background-color: var(--v-grey-lighten4);
     }
   }
 

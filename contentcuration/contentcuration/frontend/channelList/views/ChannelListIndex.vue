@@ -1,7 +1,22 @@
 <template>
 
   <VApp>
-    <AppBar>
+    <VToolbar
+      v-if="libraryMode"
+      color="primary"
+      :clipped-left="!isRTL"
+      :clipped-right="isRTL"
+      app
+    >
+      <VToolbarSideIcon>
+        <VImg maxHeight="35" contain :src="require('shared/images/kolibri-logo.svg')" />
+      </VToolbarSideIcon>
+
+      <VToolbarTitle class="white--text notranslate">
+        {{ $tr('libraryTitle') }}
+      </VToolbarTitle>
+    </VToolbar>
+    <AppBar v-else>
       <template v-if="loggedIn" #tabs show-arrows>
         <VTab
           v-for="listType in lists"
@@ -33,7 +48,7 @@
       </template>
     </AppBar>
     <VContent>
-      <VContainer fluid>
+      <VContainer fluid class="main-container">
         <VLayout row wrap justify-center>
           <VFlex xs12 sm10 md8 lg6>
             <VCard v-if="invitationList.length" v-show="isChannelList">
@@ -78,6 +93,12 @@
       ...mapState({
         loggedIn: state => state.session.loggedIn,
       }),
+      isRTL() {
+        return window.isRTL;
+      },
+      libraryMode() {
+        return window.libraryMode;
+      },
       ...mapGetters('channelList', ['invitations']),
       lists() {
         return Object.values(ListTypes).filter(l => l !== 'public');
@@ -111,7 +132,10 @@
     created() {
       if (this.loggedIn) {
         this.loadInvitationList();
-      } else {
+      } else if (
+        this.$route.name !== RouterNames.CATALOG_ITEMS &&
+        this.$route.name !== RouterNames.CATALOG_DETAILS
+      ) {
         this.$router.push({
           name: RouterNames.CATALOG_ITEMS,
         });
@@ -132,6 +156,7 @@
       channelSets: 'Collections',
       catalog: 'Public',
       invitations: 'You have {count, plural,\n =1 {# invitation}\n other {# invitations}}',
+      libraryTitle: 'Kolibri Content Library',
     },
   };
 
@@ -169,6 +194,11 @@
   .v-tooltip__content {
     max-width: 200px;
     text-align: center;
+  }
+
+  .main-container {
+    height: calc(100vh - 64px);
+    overflow: auto;
   }
 
 </style>

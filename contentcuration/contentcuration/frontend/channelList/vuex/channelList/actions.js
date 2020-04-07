@@ -4,6 +4,7 @@ import { Channel } from 'shared/data/resources';
 export function searchCatalog(context, params) {
   params.page_size = params.page_size || 25;
   params.public = true;
+  params.published = true;
   let promise;
   if (context.rootState.session.loggedIn) {
     promise = Channel.requestCollection(params);

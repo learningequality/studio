@@ -63,4 +63,27 @@ const router = new VueRouter({
   ],
 });
 
+function hasQueryParams(route) {
+  return !!Object.keys(route.query).length;
+}
+
+router.beforeEach((to, from, next) => {
+  if (!hasQueryParams(to) && hasQueryParams(from)) {
+    next({
+      replace: true,
+      name: to.name,
+      query: {
+        ...from.query,
+        // Getting NavigationDuplicated for any query,
+        // so just get a unique string to make it always unique
+        query_id: Math.random()
+          .toString(36)
+          .substring(7),
+      },
+    });
+  } else {
+    next({ replace: true });
+  }
+});
+
 export default router;

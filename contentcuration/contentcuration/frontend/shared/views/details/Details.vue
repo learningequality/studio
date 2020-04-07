@@ -24,7 +24,7 @@
             <template v-slot:items="props">
               <td>
                 <ContentNodeIcon :kind="props.item.kind_id" />
-                <span class="text">{{ translateConstant(props.item.kind_id) }}</span>
+                <span class="text px-2">{{ translateConstant(props.item.kind_id) }}</span>
               </td>
               <td>{{ $formatNumber(props.item.count) }}</td>
               <td v-if="$vuetify.breakpoint.smAndUp"></td>
@@ -152,31 +152,41 @@
             v-for="channel in details.original_channels"
             :key="channel.id"
             class="preview-row"
+            align-center
+            row
           >
-            <VImg :src="channel.thumbnail" contain max-width="200" :aspect-ratio="16/9" />
-            <VFlex>
-              <VLayout align-center fill-height>
-                <VBtn
-                  :href="`/channels/${channel.id}/view`"
-                  target="_blank"
-                  flat
-                  color="primary"
-                  large
-                  class="notranslate"
-                >
-                  {{ channel.name }}
-                </VBtn>
-              </VLayout>
+            <VFlex style="max-width: 200px">
+              <Thumbnail :src="channel.thumbnail" />
             </VFlex>
+            <VFlex v-if="libraryMode" class="notranslate subheading font-weight-bold px-4">
+              {{ channel.name }}
+            </VFlex>
+            <VBtn
+              v-else
+              :href="`/channels/${channel.id}/view`"
+              target="_blank"
+              flat
+              color="primary"
+              large
+              class="notranslate"
+            >
+              {{ channel.name }}
+            </VBtn>
           </VLayout>
         </template>
       </DetailsRow>
-      <VLayout row wrap class="sample-nodes">
+
+      <label class="font-weight-bold body-1" :style="{color: $vuetify.theme.darkGrey}">
+        {{ isChannel? $tr('sampleFromChannelHeading') : $tr('sampleFromTopicHeading') }}
+      </label>
+      <VLayout row wrap class="sample-nodes pt-1">
         <VFlex v-for="node in details.sample_nodes" :key="node.node_id" xs12 sm3>
           <VCard height="100%" flat>
-            <VImg :src="node.thumbnail" :aspect-ratio="16/9" />
+            <Thumbnail :src="node.thumbnail" />
             <VCardText class="notranslate">
-              {{ node.title }}
+              <p dir="auto">
+                {{ node.title }}
+              </p>
             </VCardText>
           </VCard>
         </VFlex>
@@ -195,6 +205,7 @@
   import LoadingText from 'shared/views/LoadingText';
   import ExpandableList from 'shared/views/ExpandableList';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
+  import Thumbnail from 'shared/views/files/Thumbnail';
   import client from 'shared/client';
 
   export default {
@@ -204,12 +215,17 @@
       ContentNodeIcon,
       ExpandableList,
       DetailsRow,
+      Thumbnail,
     },
     mixins: [fileSizeMixin, constantsTranslationMixin],
     props: {
       nodeID: {
         type: String,
         required: true,
+      },
+      isChannel: {
+        type: Boolean,
+        default: true,
       },
     },
     data() {
@@ -220,6 +236,9 @@
       };
     },
     computed: {
+      libraryMode() {
+        return window.libraryMode;
+      },
       sizeText() {
         let size = (this.details && this.details.resource_size) || 0;
         const sizeIndex = Math.max(
@@ -286,15 +305,17 @@
       aggregatorToolTip:
         'Website or org hosting the content collection but not necessarily the creator or copyright holder',
       licensesLabel: 'Licenses',
-      copyrightHoldersLabel: 'Copyright Holders',
+      copyrightHoldersLabel: 'Copyright holders',
       assessmentsIncludedText: 'Assessments',
-      [SCALE_TEXT.VERY_SMALL]: 'Very Small',
+      [SCALE_TEXT.VERY_SMALL]: 'Very small',
       [SCALE_TEXT.SMALL]: 'Small',
       [SCALE_TEXT.AVERAGE]: 'Average',
       [SCALE_TEXT.LARGE]: 'Large',
-      [SCALE_TEXT.VERY_LARGE]: 'Very Large',
+      [SCALE_TEXT.VERY_LARGE]: 'Very large',
       defaultNoItemsText: '---',
       containsContentHeading: 'Contains content from',
+      sampleFromChannelHeading: 'Sample content from this channel',
+      sampleFromTopicHeading: 'Sample content from this topic',
     },
   };
 
@@ -351,12 +372,9 @@
     }
   }
 
-  .sample-nodes {
-    margin-top: 24px;
-    .v-card__text {
-      font-weight: bold;
-      word-break: break-word;
-    }
+  .sample-nodes .v-card__text {
+    font-weight: bold;
+    word-break: break-word;
   }
 
 </style>

@@ -11,20 +11,13 @@
     transition="dialog-bottom-transition"
   >
     <VCard class="channel-wrapper">
-      <VToolbar
-        flat
-        :dark="Boolean(dominantColor)"
-        fixed
-        :color="dominantColor"
-        class="notranslate"
-      >
+      <VToolbar dark fixed :color="dominantColor">
         <VToolbarItems>
-          <VBtn flat icon :to="backLink" replace>
-            <VIcon>clear</VIcon>
+          <VBtn flat icon :to="backLink" replace exact>
+            <Icon>clear</Icon>
           </VBtn>
         </VToolbarItems>
-        <VSpacer />
-        <VToolbarTitle v-if="channel">
+        <VToolbarTitle v-if="channel" class="notranslate">
           {{ channel.name }}
         </VToolbarTitle>
       </VToolbar>
@@ -35,16 +28,10 @@
             <VSpacer />
             <VMenu offset-y>
               <template v-slot:activator="{ on }">
-                <VBtn
-                  color="primary"
-                  flat
-                  v-on="on"
-                >
+                <VBtn :color="dominantColor" dark v-on="on">
                   {{ $tr('downloadButton') }}
                   &nbsp;
-                  <VIcon class="notranslate">
-                    arrow_drop_down
-                  </VIcon>
+                  <Icon>arrow_drop_down</Icon>
                 </VBtn>
               </template>
               <VList>
@@ -64,10 +51,10 @@
               <Thumbnail :src="channel.thumbnail_url" :encoding="channel.thumbnail_encoding" />
             </div>
             <br>
-            <h1 class="notranslate">
+            <h1 class="notranslate" dir="auto">
               {{ channel.name }}
             </h1>
-            <p class="notranslate">
+            <p class="notranslate" dir="auto">
               {{ channel.description }}
             </p>
             <br>
@@ -131,7 +118,7 @@
       return {
         loading: true,
         loadError: false,
-        dominantColor: '',
+        dominantColor: 'primary',
       };
     },
     computed: {
@@ -218,11 +205,11 @@
     },
     $trs: {
       downloadButton: 'Download channel report',
-      downloadDetailedPDF: 'Download Detailed PDF',
+      downloadDetailedPDF: 'Download detailed PDF',
       downloadPDF: 'Download PDF',
       downloadCSV: 'Download CSV',
       downloadPPT: 'Download PPT',
-      tokenHeading: 'Channel Token',
+      tokenHeading: 'Channel token',
       publishedHeading: 'Published date',
       primaryLanguageHeading: 'Primary language',
       unpublishedText: 'Unpublished',
