@@ -3,7 +3,7 @@
   <div>
     <CatalogFilters />
     <VContainer fluid>
-      <LoadingText v-if="loading" absolute />
+      <LoadingText v-if="loading" />
       <VLayout v-else grid wrap class="list-wrapper">
         <VFlex xs12>
           <p class="title">
