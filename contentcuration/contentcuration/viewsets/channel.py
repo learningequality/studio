@@ -59,7 +59,7 @@ class ChannelFilter(FilterSet):
     published = BooleanFilter(method="filter_published")
     ids = CharFilter(method="filter_ids")
     keywords = CharFilter(method="filter_keywords")
-    language = CharFilter(method="filter_language")
+    languages = CharFilter(method="filter_languages")
     licenses = CharFilter(method="filter_licenses")
     kinds = CharFilter(method="filter_kinds")
     coach = BooleanFilter(method="filter_coach")
@@ -92,15 +92,16 @@ class ChannelFilter(FilterSet):
             | Q(keyword_match_count__gt=0)
         )
 
-    def filter_language(self, queryset, name, value):
+    def filter_languages(self, queryset, name, value):
+        languages = value.split(",")
         language_query = (
-            self.main_tree_query.filter(language_id=value)
+            self.main_tree_query.filter(language_id__in=languages)
             .values("content_id")
             .distinct()
         )
         return queryset.annotate(
             language_count=SQCount(language_query, field="content_id")
-        ).filter(Q(language_id=value) | Q(language_count__gt=0))
+        ).filter(Q(language_id__in=languages) | Q(language_count__gt=0))
 
     def filter_licenses(self, queryset, name, value):
         license_query = (
