@@ -132,7 +132,10 @@
     created() {
       if (this.loggedIn) {
         this.loadInvitationList();
-      } else {
+      } else if (
+        this.$route.name !== RouterNames.CATALOG_ITEMS &&
+        this.$route.name !== RouterNames.CATALOG_DETAILS
+      ) {
         this.$router.push({
           name: RouterNames.CATALOG_ITEMS,
         });
