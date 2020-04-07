@@ -1,5 +1,5 @@
 import { AssessmentItemTypes } from '../../../constants';
-import { ADD_ASSESSMENTITEM, ADD_ASSESSMENTITEMS, REMOVE_ASSESSMENTITEM } from '../mutations';
+import { ADD_ASSESSMENTITEM, ADD_ASSESSMENTITEMS, DELETE_ASSESSMENTITEM } from '../mutations';
 
 describe('assessmentItem mutations', () => {
   let state;
@@ -346,9 +346,9 @@ describe('assessmentItem mutations', () => {
     });
   });
 
-  describe('REMOVE_ASSESSMENTITEM', () => {
+  describe('DELETE_ASSESSMENTITEM', () => {
     it('removes an assessment item', () => {
-      REMOVE_ASSESSMENTITEM(state, {
+      DELETE_ASSESSMENTITEM(state, {
         assessment_id: 'assessment-id-3',
         contentnode: 'content-node-id-2',
         type: AssessmentItemTypes.SINGLE_SELECTION,

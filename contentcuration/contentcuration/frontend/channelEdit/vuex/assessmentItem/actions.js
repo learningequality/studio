@@ -51,6 +51,6 @@ export function updateAssessmentItems(context, assessmentItems) {
 
 export function deleteAssessmentItem(context, assesmentItem) {
   return AssessmentItem.delete(assesmentItem.assessment_id).then(() => {
-    context.commit('REMOVE_ASSESSMENTITEM', assesmentItem);
+    context.commit('DELETE_ASSESSMENTITEM', assesmentItem);
   });
 }
