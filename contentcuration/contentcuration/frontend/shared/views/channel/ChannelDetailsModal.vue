@@ -11,18 +11,12 @@
     transition="dialog-bottom-transition"
   >
     <VCard class="channel-wrapper">
-      <VToolbar
-        flat
-        :dark="Boolean(dominantColor)"
-        fixed
-        :color="dominantColor"
-      >
+      <VToolbar dark fixed :color="dominantColor">
         <VToolbarItems>
           <VBtn flat icon :to="backLink" replace exact>
             <Icon>clear</Icon>
           </VBtn>
         </VToolbarItems>
-        <VSpacer />
         <VToolbarTitle v-if="channel" class="notranslate">
           {{ channel.name }}
         </VToolbarTitle>
@@ -34,11 +28,7 @@
             <VSpacer />
             <VMenu offset-y>
               <template v-slot:activator="{ on }">
-                <VBtn
-                  color="primary"
-                  flat
-                  v-on="on"
-                >
+                <VBtn :color="dominantColor" dark v-on="on">
                   {{ $tr('downloadButton') }}
                   &nbsp;
                   <Icon>arrow_drop_down</Icon>
@@ -128,7 +118,7 @@
       return {
         loading: true,
         loadError: false,
-        dominantColor: '',
+        dominantColor: 'primary',
       };
     },
     computed: {
@@ -215,11 +205,11 @@
     },
     $trs: {
       downloadButton: 'Download channel report',
-      downloadDetailedPDF: 'Download Detailed PDF',
+      downloadDetailedPDF: 'Download detailed PDF',
       downloadPDF: 'Download PDF',
       downloadCSV: 'Download CSV',
       downloadPPT: 'Download PPT',
-      tokenHeading: 'Channel Token',
+      tokenHeading: 'Channel token',
       publishedHeading: 'Published date',
       primaryLanguageHeading: 'Primary language',
       unpublishedText: 'Unpublished',
