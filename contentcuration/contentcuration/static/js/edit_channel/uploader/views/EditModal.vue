@@ -172,14 +172,14 @@
   import flatten from 'lodash/flatten';
   import { mapActions, mapGetters, mapMutations } from 'vuex';
   import { TabNames } from '../constants';
-  import { fileSizeMixin } from 'shared/mixins';
   import EditList from './EditList';
   import EditView from './EditView';
+  import { fileSizeMixin } from 'shared/mixins';
+  import FileStorage from 'shared/views/files/FileStorage';
   import MessageDialog from 'shared/views/MessageDialog';
   import Alert from 'shared/views/Alert';
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
-  import Uploader from 'frontend/channelEdit/views/files/Uploader';
-  import FileStorage from 'frontend/channelEdit/views/files/FileStorage';
+  import Uploader from 'shared/views/files/Uploader';
   import FileUploadDefault from 'frontend/channelEdit/views/files/FileUploadDefault';
   import LoadingText from 'shared/views/LoadingText';
   import { RouterNames } from 'frontend/channelEdit/constants';
@@ -221,7 +221,7 @@
     computed: {
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodes', 'getContentNodeIsValid']),
       ...mapGetters('currentChannel', ['canEdit']),
-      ...mapGetters('file', ['getTotalSize', 'getUploadsInProgress']),
+      ...mapGetters('file', ['getTotalSize', 'contentNodesAreUploading']),
       multipleNodes() {
         // Only hide drawer when editing a single item
         return this.nodeIds.length > 1;
@@ -366,7 +366,7 @@
         } else {
           this.enableValidation(this.nodeIds);
           // Catch uploads in progress and invalid nodes
-          if (this.getUploadsInProgress(this.nodes.flatMap(n => n.files)).length) {
+          if (this.contentNodesAreUploading(this.nodeIds)) {
             this.promptUploading = true;
           } else if (this.invalidNodes.length) {
             this.selected = [this.invalidNodes[0]];

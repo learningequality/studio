@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
 import FileUploadDefault from '../FileUploadDefault';
-import Uploader from '../Uploader';
+import Uploader from 'shared/views/files/Uploader';
 
 function makeWrapper() {
   return mount(FileUploadDefault, {

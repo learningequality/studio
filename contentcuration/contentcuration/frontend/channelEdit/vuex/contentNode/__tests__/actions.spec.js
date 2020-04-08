@@ -1,7 +1,7 @@
 import contentNode from '../index';
 import currentChannel from '../../currentChannel/index';
 import file from '../../file/index';
-import { ContentNode, Tree, File } from 'shared/data/resources';
+import { ContentNode, Tree } from 'shared/data/resources';
 import storeFactory from 'shared/vuex/baseStore';
 
 jest.mock('../../currentChannel/index');
@@ -127,52 +127,6 @@ describe('contentNode actions', () => {
       });
       return store.dispatch('contentNode/deleteContentNode', id).then(() => {
         expect(store.getters['contentNode/getContentNode'](id)).toBeUndefined();
-      });
-    });
-  });
-  describe('addFiles action', () => {
-    it('should call ContentNode.update', () => {
-      const updateSpy = jest.spyOn(ContentNode, 'update');
-      store.commit('contentNode/ADD_CONTENTNODE', {
-        id,
-        title: 'test',
-        files: [],
-      });
-      return store.dispatch('contentNode/addFiles', { id, files: [] }).then(() => {
-        expect(updateSpy).toHaveBeenCalledWith(id, { files: [] });
-        updateSpy.mockRestore();
-      });
-    });
-    it('should remove the files with matching presets', () => {
-      let testFile = { id: 'testing', preset: { id: 'document', multi_language: false } };
-      let replacementFile = { id: 'testfile', preset: { id: 'document', multi_language: false } };
-      store.commit('file/ADD_FILES', [testFile, replacementFile]);
-      store.commit('contentNode/ADD_CONTENTNODE', {
-        id,
-        title: 'test',
-        files: [testFile.id],
-      });
-      const deleteSpy = jest.spyOn(File, 'delete');
-      return store.dispatch('contentNode/addFiles', { id, files: [replacementFile] }).then(() => {
-        expect(store.getters['contentNode/getContentNode'](id).files).toEqual([replacementFile.id]);
-        expect(deleteSpy).toHaveBeenCalledWith(testFile.id);
-        deleteSpy.mockRestore();
-      });
-    });
-  });
-  describe('removeFiles action', () => {
-    it('should call File.delete and remove file', () => {
-      const deleteSpy = jest.spyOn(File, 'delete');
-      let testFile = { id: 'delete-me' };
-      store.commit('contentNode/ADD_CONTENTNODE', {
-        id,
-        title: 'test',
-        files: [testFile.id, 'other-file'],
-      });
-      return store.dispatch('contentNode/removeFiles', { id, files: [testFile] }).then(() => {
-        expect(store.getters['contentNode/getContentNode'](id).files).toEqual(['other-file']);
-        expect(deleteSpy).toHaveBeenCalledWith(testFile.id);
-        deleteSpy.mockRestore();
       });
     });
   });

@@ -79,20 +79,16 @@
       };
     },
     computed: {
-      ...mapGetters('file', ['getFile', 'getFiles']),
+      ...mapGetters('file', ['getContentNodeFileById']),
       ...mapGetters('contentNode', ['getContentNode']),
       node() {
         return this.getContentNode(this.nodeId);
       },
       file() {
-        return this.getFile(this.fileId);
+        return this.getContentNodeFileById(this.nodeId, this.fileId);
       },
       nodeTitle() {
         return this.node && this.node.title;
-      },
-      supplementaryFileIds() {
-        let files = this.node ? this.getFiles(this.node.files) : [];
-        return files.filter(f => f.preset.supplementary).map(f => f.id);
       },
       isPreviewable() {
         return Boolean(availablePreviewFormats[this.file.file_format]);

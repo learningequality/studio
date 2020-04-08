@@ -1,10 +1,10 @@
 import { mount } from '@vue/test-utils';
 import Uploader from '../Uploader';
-import store from '../../../store';
+import storeFactory from 'shared/vuex/baseStore';
 
 function makeWrapper(propsData = {}) {
   return mount(Uploader, {
-    store,
+    store: storeFactory(),
     propsData,
     computed: {
       availableSpace() {
@@ -12,11 +12,6 @@ function makeWrapper(propsData = {}) {
       },
       maxFileSize() {
         return 100;
-      },
-      getFile() {
-        return () => {
-          return {};
-        };
       },
     },
   });

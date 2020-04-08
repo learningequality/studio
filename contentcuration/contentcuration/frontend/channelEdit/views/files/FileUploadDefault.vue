@@ -38,8 +38,8 @@
 <script>
 
   import uniq from 'lodash/uniq';
-  import FileStorage from './FileStorage';
-  import Uploader from './Uploader';
+  import FileStorage from 'shared/views/files/FileStorage';
+  import Uploader from 'shared/views/files/Uploader';
   import { FormatPresetsList } from 'shared/leUtils/FormatPresets';
 
   const acceptedFiles = uniq(

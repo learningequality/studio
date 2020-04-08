@@ -38,29 +38,6 @@ describe('file store', () => {
       expect(file.id).toEqual('testfile');
       expect(file.preset.id).toBe('document');
     });
-    it('getUploadsInProgress', () => {
-      let uploadingFile = { id: 'test', progress: 0, preset: 'document_thumbnail' };
-      store.commit('file/ADD_FILE', uploadingFile);
-      expect(store.getters['file/getUploadsInProgress'](['test'])[0].id).toBe(uploadingFile.id);
-    });
-    it('getProgress', () => {
-      let uploadingFile = {
-        id: 'test',
-        progress: 0,
-        preset: 'document_thumbnail',
-        file_size: 100,
-      };
-      let uploadingFile2 = {
-        id: 'test2',
-        progress: 100,
-        preset: 'epub',
-        file_size: 100,
-      };
-      store.commit('file/ADD_FILES', [uploadingFile, uploadingFile2]);
-      let progress = store.getters['file/getProgress'](['test', 'test2']);
-      expect(progress.total).toBe(200);
-      expect(progress.uploaded).toBe(100);
-    });
     it('getTotalSize', () => {
       let file = {
         id: 'test',

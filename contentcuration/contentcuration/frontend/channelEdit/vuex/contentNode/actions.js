@@ -4,7 +4,7 @@ import { sanitizeFiles } from '../file/utils';
 import { NOVALUE } from 'shared/constants';
 import client from 'shared/client';
 import { MOVE_POSITIONS } from 'shared/data/constants';
-import { ContentNode, Tree, File } from 'shared/data/resources';
+import { ContentNode, Tree } from 'shared/data/resources';
 
 export function loadContentNodes(context, params = {}) {
   return ContentNode.where(params).then(contentNodes => {
@@ -318,48 +318,6 @@ export function removeTags(context, { ids, tags }) {
     context.commit('SET_TAGS', { id, tags: newTags });
     return ContentNode.update(id, { tags: newTags });
   });
-}
-
-export function addFiles(context, { id, files }) {
-  let node = context.state.contentNodesMap[id];
-  let currentFiles = context.rootGetters['file/getFiles'](node.files);
-  let newFiles = currentFiles.map(file => {
-    // Replace files with matching preset and language
-    let match = files.find(
-      f =>
-        f.preset.id === file.preset.id &&
-        (!file.preset.multi_language || file.language.id === f.language.id)
-    );
-    if (match) {
-      File.delete(file.id);
-      return match.id;
-    }
-    return file.id;
-  });
-
-  // Add new files
-  files.forEach(file => {
-    if (!newFiles.includes(file.id)) newFiles.push(file.id);
-  });
-
-  // Set contentnode on new files
-  newFiles.forEach(file => {
-    context.dispatch('file/updateFile', { id: file, contentnode: id }, { root: true });
-  });
-
-  context.commit('SET_FILES', { id, files: newFiles });
-  return ContentNode.update(id, { files: newFiles });
-}
-
-export function removeFiles(context, { id, files }) {
-  let currentFiles = context.state.contentNodesMap[id].files;
-  let newFiles = currentFiles.filter(fileID => {
-    return !files.find(f => f.id === fileID);
-  });
-  files.forEach(file => File.delete(file.id));
-
-  context.commit('SET_FILES', { id, files: newFiles });
-  return ContentNode.update(id, { files: newFiles });
 }
 
 export function deleteContentNode(context, contentNodeId) {

@@ -1,4 +1,5 @@
 import { mapGetters } from 'vuex';
+import { fileErrors } from './constants';
 import Languages from 'shared/leUtils/Languages';
 import { createTranslator } from 'shared/i18n/utils';
 
@@ -25,14 +26,15 @@ const stringMap = {
 };
 
 export default function bytesForHumans(bytes) {
+  bytes = bytes || 0;
   const unit = [ONE_TB, ONE_GB, ONE_MB, ONE_KB].find(x => bytes >= x) || ONE_B;
-  return sizeStrings.$tr(stringMap[unit], { n: Math.floor(bytes / unit) });
+  return sizeStrings.$tr(stringMap[unit], { n: Math.round(bytes / unit) });
 }
 
 export const fileSizeMixin = {
   methods: {
     formatFileSize(size) {
-      return bytesForHumans(size || 0);
+      return bytesForHumans(size);
     },
   },
 };
@@ -46,19 +48,31 @@ const statusStrings = createTranslator('StatusStrings', {
 export const fileStatusMixin = {
   mixins: [fileSizeMixin],
   computed: {
-    ...mapGetters('file', ['getStatusMessage', 'getProgress']),
+    ...mapGetters('file', ['getFileUpload']),
   },
   methods: {
-    statusMessage(fileIDs) {
-      let errorMessage = this.getStatusMessage(fileIDs);
+    statusMessage(checksum) {
+      const errorMessage = this.errorMessage(checksum);
       if (errorMessage) {
         return errorMessage;
       }
-      let progress = this.getProgress(fileIDs);
-      if (progress.total) {
-        return this.sizeStrings('uploadFileSize')
-          .replace('{uploaded}', this.formatFileSize(progress.uploaded))
-          .replace('{total}', this.formatFileSize(progress.total));
+      const file = this.getFileUpload(checksum);
+      if (file.total) {
+        return statusStrings.$tr('uploadFileSize', {
+          uploaded: bytesForHumans(file.loaded),
+          total: bytesForHumans(file.total),
+        });
+      }
+    },
+    errorMessage(checksum) {
+      const file = this.getFileUpload(checksum);
+      if (!file) {
+        return;
+      }
+      if (file.error === fileErrors.NO_STORAGE) {
+        return statusStrings.$tr('noStorageError');
+      } else if (file.error === fileErrors.UPLOAD_FAILED) {
+        return statusStrings.$tr('uploadFailedError');
       }
     },
   },

@@ -101,20 +101,20 @@ describe('fileUpload', () => {
       uploadItem.vm.$emit('selected');
       expect(wrapper.vm.selected).toBe('file-1');
     });
-    it('emitted remove event should trigger remove file from node', () => {
-      let removeFiles = jest.fn();
+    it('emitted remove event should trigger delete file', () => {
+      let deleteFile = jest.fn();
       wrapper.setData({ selected: 'file-1' });
-      wrapper.setMethods({ removeFiles });
+      wrapper.setMethods({ deleteFile });
       uploadItem.vm.$emit('remove', 'file-1');
-      expect(removeFiles).toHaveBeenCalled();
-      expect(removeFiles.mock.calls[0][0].files[0]).toBe('file-1');
+      expect(deleteFile).toHaveBeenCalled();
+      expect(deleteFile.mock.calls[0][0].files[0]).toBe('file-1');
     });
-    it('emitted uploading event should trigger add file to node', () => {
-      let addFiles = jest.fn();
-      wrapper.setMethods({ addFiles });
+    it('emitted uploading event should trigger create file', () => {
+      let createFile = jest.fn();
+      wrapper.setMethods({ createFile });
       uploadItem.vm.$emit('uploading', 'test');
-      expect(addFiles).toHaveBeenCalled();
-      expect(addFiles.mock.calls[0][0].files[0]).toBe('test');
+      expect(createFile).toHaveBeenCalled();
+      expect(createFile.mock.calls[0][0].files[0]).toBe('test');
     });
   });
 });

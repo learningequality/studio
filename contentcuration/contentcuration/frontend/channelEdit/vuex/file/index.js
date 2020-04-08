@@ -7,11 +7,18 @@ export default {
   namespaced: true,
   state: () => {
     return {
+      // We maintain a map for each top level object
+      // that can reference files - so far we implement
+      // contentnode and assessmentitem maps
       // Unlike other maps, this is a nested map
-      // the top level key is the content node id
-      // then assessent ids are used as keys in
+      // the top level key is the top level id
+      // then file ids are used as keys in
       // the subsidiary maps
-      fileMap: {},
+      contentNodeFileMap: {},
+      assessmentItemFileMap: {},
+      // A map for tracking file upload info
+      // keyed by file checksum
+      fileUploadsMap: {},
     };
   },
   getters,

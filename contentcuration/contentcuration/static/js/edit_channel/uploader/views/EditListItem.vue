@@ -30,11 +30,38 @@
     </VListTileContent>
     <VSpacer />
     <VListTileAction class="status-indicator mr-1">
-      <FileStatus :fileIDs="node.files">
-        <Icon v-if="!nodeIsValid" color="red" class="error-icon">
-          error
+      <div>
+        <div v-if="!uploads.length">
+          <Icon v-if="!nodeIsValid" color="red" class="error-icon">
+            error
+          </Icon>
+        </div>
+        <VTooltip v-else-if="hasErrors" top>
+          <template v-slot:activator="{ on }">
+            <Icon color="red" :large="large" v-on="on">
+              error
+            </Icon>
+          </template>
+          <span>{{ statusMessage(fileIDs) }}</span>
+        </VTooltip>
+        <Icon
+          v-else-if="progress >= 100"
+          :large="large"
+          color="greenSuccess"
+          data-test="done"
+        >
+          check_circle
         </Icon>
-      </FileStatus>
+        <VProgressCircular
+          v-else
+          :size="large? 60 : 20"
+          :width="large? 8: 4"
+          :value="progress"
+          color="greenSuccess"
+          rotate="270"
+          data-test="progress"
+        />
+      </div>
     </VListTileAction>
     <VListTileAction v-if="canRemove">
       <VBtn icon flat class="remove-item" @click.stop="removeNode">
@@ -50,7 +77,6 @@
 
   import { mapActions, mapGetters } from 'vuex';
   import { fileSizeMixin, fileStatusMixin } from 'shared/mixins';
-  import FileStatus from 'frontend/channelEdit/views/files/FileStatus';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import { RouterNames } from 'frontend/channelEdit/constants';
 
@@ -58,7 +84,6 @@
     name: 'EditListItem',
     components: {
       ContentNodeIcon,
-      FileStatus,
     },
     mixins: [fileSizeMixin, fileStatusMixin],
     props: {

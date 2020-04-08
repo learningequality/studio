@@ -92,13 +92,13 @@
       };
     },
     computed: {
-      ...mapGetters('file', ['getFiles']),
+      ...mapGetters('file', ['getContentNodeFiles']),
       ...mapGetters('contentNode', ['getContentNode']),
       node() {
         return this.getContentNode(this.nodeId);
       },
       files() {
-        return this.getFiles(this.node.files);
+        return this.getContentNodeFiles(this.nodeId);
       },
       presets() {
         return FormatPresetsList.filter(p => p.kind_id === this.node.kind);
@@ -128,17 +128,21 @@
       this.selectFirstFile();
     },
     methods: {
-      ...mapActions('contentNode', ['addFiles', 'removeFiles']),
+      ...mapActions('file', ['createFile', 'deleteFile']),
       selectFirstFile() {
         let firstFile = sortBy(this.files, f => f.preset.order)[0];
         this.selected = firstFile && firstFile.id;
       },
-      handleUploading(file) {
-        this.selected = file.id;
-        this.addFiles({ id: this.nodeId, files: [file] });
+      handleUploading(fileUpload) {
+        this.createFile({
+          contentnode: this.nodeId,
+          ...fileUpload,
+        }).then(id => {
+          this.selected = id;
+        });
       },
       handleRemoveFile(file) {
-        this.removeFiles({ id: this.nodeId, files: [file] });
+        this.deleteFile(file);
         if (file.id === this.selected) {
           this.selectFirstFile();
         }

@@ -1,23 +1,13 @@
 <template>
 
-  <div class="uploader">
-    <slot :openFileDialog="openFileDialog">
-      <div
-        style="border: 4px solid transparent;"
-        :style="{
-          backgroundColor: highlightDropzone? $vuetify.theme.primaryBackground : 'transparent',
-          borderColor: highlightDropzone? $vuetify.theme.primary : borderColor,
-          width: fill? '100%' : 'unset',
-          height: fill? '100%' : 'unset',
-        }"
-        data-test="dropzone"
-        @dragenter.prevent="enter"
-        @dragover.prevent="over"
-        @dragleave.prevent="leave"
-        @drop.prevent="drop"
-      >
-        <slot name="dropzone"></slot>
-      </div>
+  <div>
+    <slot :openFileDialog="openFileDialog" :handleFiles="handleFiles">
+      <FileDropzone
+        v-if="allowDrop"
+        :disabled="readonly"
+        @dropped="handleFiles"
+        @click="openFileDialog"
+      />
     </slot>
     <input
       v-if="!readonly"
@@ -69,10 +59,11 @@
   import partition from 'lodash/partition';
   import uniq from 'lodash/uniq';
 
-  import { fileSizeMixin } from 'shared/mixins';
-  import Alert from 'shared/views/Alert.vue';
   import FileStorage from './FileStorage';
-  import { fileErrors, MAX_FILE_SIZE } from 'shared/views/files/constants';
+  import FileDropzone from './FileDropzone';
+  import { MAX_FILE_SIZE } from 'shared/constants';
+  import { fileSizeMixin } from 'shared/mixins';
+  import Alert from 'shared/views/Alert';
   import { FormatPresetsList } from 'shared/leUtils/FormatPresets';
 
   export default {
@@ -80,6 +71,7 @@
     components: {
       Alert,
       FileStorage,
+      FileDropzone,
     },
     mixins: [fileSizeMixin],
     props: {
@@ -91,33 +83,23 @@
         type: String,
         required: false,
       },
-      allowMultiple: {
-        type: Boolean,
-        default: false,
-      },
       allowDrop: {
         type: Boolean,
         default: true,
       },
-      borderColor: {
-        type: String,
-        default: 'transparent',
-      },
-      fill: {
+      allowMultiple: {
         type: Boolean,
         default: false,
       },
     },
     data() {
       return {
-        highlight: false,
         unsupportedFiles: [],
         tooLargeFiles: [],
         totalUploadSize: 0,
       };
     },
     computed: {
-      ...mapGetters('file', ['getFiles']),
       ...mapGetters(['availableSpace']),
       acceptedFiles() {
         return FormatPresetsList.filter(
@@ -137,46 +119,16 @@
           extensionCount: this.acceptedExtensions.length,
         });
       },
-      highlightDropzone() {
-        return this.highlight && !this.readonly && this.allowDrop;
-      },
       maxFileSize() {
         return MAX_FILE_SIZE;
       },
     },
     methods: {
-      // Add in once global store is properly set up
-      ...mapActions('file', ['uploadFile', 'updateFile', 'createFile']),
-      enter() {
-        this.highlight = true;
-      },
-      over() {
-        this.highlight = true;
-      },
-      leave() {
-        this.highlight = false;
-      },
-      drop(e) {
-        this.highlight = false;
-        if (this.allowDrop) this.handleFiles(e.dataTransfer.files);
-      },
+      ...mapActions('file', ['uploadFile']),
       openFileDialog() {
         if (!this.readonly) {
           this.$refs.fileUpload.click();
         }
-      },
-      setError(id, type) {
-        let message = this.$tr('uploadFailedError');
-        if (type === fileErrors.TOO_LARGE) {
-          message = this.$tr('tooLargeError', { size: this.formatFileSize(MAX_FILE_SIZE) });
-        } else if (type === fileErrors.WRONG_TYPE) {
-          message = this.$tr('wrongTypeError', { filetypes: this.acceptedExtensions.join(', ') });
-        } else if (type === fileErrors.NO_STORAGE) {
-          message = this.$tr('noStorageError');
-        } else {
-          type = fileErrors.UPLOAD_FAILED;
-        }
-        this.updateFile({ id, error: { type, message } });
       },
       validateFiles(files) {
         // Get unsupported file types
@@ -211,37 +163,31 @@
           } else if (this.tooLargeFiles.length) {
             this.$refs.toolargefiles.prompt();
           }
-          this.handleUploads(files).then(uploadedFiles => {
-            this.$emit('uploading', uploadedFiles);
+          this.handleUploads(files).then(fileUploadObjects => {
+            if (fileUploadObjects.length) {
+              this.$emit(
+                'uploading',
+                this.allowMultiple ? fileUploadObjects : fileUploadObjects[0]
+              );
+            }
           });
         }
       },
       handleUploads(files) {
         return new Promise(resolve => {
-          let promises = [];
-          [...files].forEach(file => {
-            promises.push(
-              new Promise(fileResolve => {
-                this.createFile({ file, presetId: this.presetID }).then(id => {
-                  fileResolve(id);
-                  this.uploadFile({ id, file }).catch(error => {
-                    this.setError(id, error);
-                  });
-                });
-              })
-            );
+          const promises = [...files].map(file => {
+            // Catch any errors from file uploads and just
+            // return null for the fileUploadObject if so
+            this.uploadFile({ file }).catch(() => null);
           });
-          Promise.all(promises).then(ids => {
-            resolve(this.getFiles(ids));
+          Promise.all(promises).then(fileUploadObject => {
+            // Filter out any null values here
+            resolve(fileUploadObject.filter(c => c));
           });
         });
       },
     },
     $trs: {
-      noStorageError: 'Out of storage',
-      wrongTypeError: 'Invalid file type (must be {filetypes})',
-      tooLargeError: 'File too large. Must be under {size}',
-      uploadFailedError: 'Upload failed',
       unsupportedFilesHeader: 'Unsupported files',
       unsupportedFilesText:
         '{count, plural,\n =1 {File}\n other {# files}} will not be uploaded.\n' +

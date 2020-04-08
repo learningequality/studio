@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
 import SupplementaryItem from '../supplementaryLists/SupplementaryItem';
-import Uploader from '../Uploader';
 import store from '../../../store';
+import Uploader from 'shared/views/files/Uploader';
 
 function makeWrapper(props = {}) {
   return mount(SupplementaryItem, {
@@ -19,11 +19,9 @@ function makeWrapper(props = {}) {
           language: {
             id: 'en',
           },
+          uploading: Boolean(props.progress),
           ...props,
         };
-      },
-      getUploadsInProgress() {
-        return () => (props.progress ? [1] : []);
       },
     },
   });

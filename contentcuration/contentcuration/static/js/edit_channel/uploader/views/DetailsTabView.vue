@@ -201,7 +201,7 @@
           </h1>
           <!-- Thumbnail -->
           <div style="width:250px;">
-            <Thumbnail
+            <ContentNodeThumbnail
               v-model="thumbnail"
               :nodeId="firstNode.id"
               :encoding="thumbnailEncoding"
@@ -268,6 +268,7 @@
   import intersection from 'lodash/intersection';
   import uniq from 'lodash/uniq';
   import { mapGetters, mapActions } from 'vuex';
+  import ContentNodeThumbnail from 'frontend/channelEdit/views/files/thumbnails/ContentNodeThumbnail';
   import Licenses from 'shared/leUtils/Licenses';
   import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown';
   import HelpTooltip from 'edit_channel/sharedComponents/HelpTooltip';
@@ -277,7 +278,6 @@
   import FileUpload from 'frontend/channelEdit/views/files/FileUpload';
   import ActionLink from 'edit_channel/sharedComponents/ActionLink';
   import SubtitlesList from 'frontend/channelEdit/views/files/supplementaryLists/SubtitlesList';
-  import Thumbnail from 'frontend/channelEdit/views/files/thumbnails/Thumbnail';
 
   // Define an object to act as the place holder for non unique values.
   const nonUniqueValue = {};
@@ -330,7 +330,7 @@
       FileUpload,
       ActionLink,
       SubtitlesList,
-      Thumbnail,
+      ContentNodeThumbnail,
     },
     props: {
       viewOnly: {
@@ -358,7 +358,7 @@
         'tags',
       ]),
       ...mapGetters('currentChannel', ['currentChannel']),
-      ...mapGetters('file', ['getFiles']),
+      ...mapGetters('file', ['getContentNodeFiles']),
       nodes() {
         return this.getContentNodes(this.nodeIds);
       },
@@ -444,9 +444,7 @@
           return this.nodeFiles.find(f => f.preset.thumbnail);
         },
         set(file) {
-          file
-            ? this.addFiles({ id: this.firstNode.id, files: [file] })
-            : this.removeFiles({ id: this.firstNode.id, files: [this.thumbnail] });
+          file ? this.createFile(file) : this.deleteFile(this.thumbnail);
         },
       },
       thumbnailEncoding: generateGetterSetter('thumbnail_encoding'),
@@ -496,7 +494,7 @@
         ];
       },
       nodeFiles() {
-        return (this.firstNode && this.getFiles(this.firstNode.files)) || [];
+        return (this.firstNode && this.getContentNodeFiles(this.firstNode.id)) || [];
       },
       videoSelected() {
         return this.oneSelected && this.firstNode.kind === 'video';
@@ -518,13 +516,8 @@
       this.$nextTick(this.handleValidation);
     },
     methods: {
-      ...mapActions('contentNode', [
-        'updateContentNodes',
-        'addTags',
-        'removeTags',
-        'addFiles',
-        'removeFiles',
-      ]),
+      ...mapActions('contentNode', ['updateContentNodes', 'addTags', 'removeTags']),
+      ...mapActions('file', ['createFile', 'deleteFile']),
       update(payload) {
         this.updateContentNodes({ ids: this.nodeIds, ...payload });
       },

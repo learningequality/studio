@@ -1,6 +1,6 @@
 <template>
 
-  <Uploader :readonly="viewOnly" :presetID="preset.id" @uploading="handleUploading">
+  <Uploader :readonly="viewOnly" :presetID="preset.id">
     <template #default="{openFileDialog}">
       <VListTile
         data-test="list-item"
@@ -33,7 +33,7 @@
             />
           </VListTileTitle>
           <VListTileSubTitle v-if="file && (file.error || uploading)" data-test="status">
-            <FileStatusText :fileIds="[file.id]" :readonly="viewOnly" @open="openFileDialog" />
+            <FileStatusText :checksum="file.checksum" :readonly="viewOnly" @open="openFileDialog" />
           </VListTileSubTitle>
           <VListTileSubTitle v-else-if="file">
             {{ formatFileSize(file.file_size) }}
@@ -62,9 +62,8 @@
 
 <script>
 
-  import { mapGetters } from 'vuex';
-  import Uploader from './Uploader';
   import FileStatusText from './FileStatusText';
+  import Uploader from 'shared/views/files/Uploader';
   import { constantsTranslationMixin, fileSizeMixin, fileStatusMixin } from 'shared/mixins';
   import ActionLink from 'edit_channel/sharedComponents/ActionLink';
 
@@ -103,18 +102,8 @@
       },
     },
     computed: {
-      ...mapGetters('file', ['getProgress']),
       uploading() {
-        if (this.file) {
-          let progress = this.getProgress([this.file.id]);
-          return progress.total !== progress.uploaded;
-        }
-        return false;
-      },
-    },
-    methods: {
-      handleUploading(files) {
-        if (files.length) this.$emit('uploading', files[0]);
+        return this.file && this.file.progress >= 1;
       },
     },
     $trs: {

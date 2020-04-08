@@ -22,7 +22,7 @@ function makeWrapper(props = {}) {
       },
     },
     computed: {
-      getFile() {
+      getContentNodeFileById() {
         return () => {
           return {
             ...testFile,

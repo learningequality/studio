@@ -1,20 +1,13 @@
 import { mount } from '@vue/test-utils';
 import FileUploadItem from '../FileUploadItem';
-import Uploader from '../Uploader';
 import store from '../../../store';
+import Uploader from 'shared/views/files/Uploader';
 
 const testFile = { id: 'test' };
 function makeWrapper(props = {}, file = {}) {
   return mount(FileUploadItem, {
     store,
     attachToDocument: true,
-    computed: {
-      getFile() {
-        return () => {
-          return file;
-        };
-      },
-    },
     propsData: {
       file:
         file === null

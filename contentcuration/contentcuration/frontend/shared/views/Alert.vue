@@ -46,14 +46,6 @@
         value: false,
       };
     },
-    data() {
-      if (this.messageId) {
-        return {
-          dontShowAgain: window.localStorage.getItem(`dont_show_messages_${this.messageId}`),
-        };
-      }
-      return {};
-    },
     computed: {
       open: {
         get() {

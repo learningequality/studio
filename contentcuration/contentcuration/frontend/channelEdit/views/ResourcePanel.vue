@@ -226,12 +226,12 @@
     },
     computed: {
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodes']),
-      ...mapGetters('file', ['getFiles', 'getTotalSize']),
+      ...mapGetters('file', ['getContentNodeFiles', 'getTotalSize']),
       node() {
         return this.getContentNode(this.nodeId);
       },
       files() {
-        return sortBy(this.getFiles(this.node.files), f => f.preset.order);
+        return sortBy(this.getContentNodeFiles(this.nodeId), f => f.preset.order);
       },
       fileSize() {
         return this.getTotalSize(this.node.files);
