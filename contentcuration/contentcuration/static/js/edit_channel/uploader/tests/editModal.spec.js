@@ -3,17 +3,9 @@ import { modes } from '../constants';
 import EditModal from './../views/EditModal';
 import EditList from './../views/EditList';
 import { localStore, mockFunctions, generateNode, DEFAULT_TOPIC, DEFAULT_TOPIC2 } from './data.js';
-import Uploader from 'frontend/channelEdit/views/files/Uploader';
-import State from 'edit_channel/state';
+import Uploader from 'shared/views/files/Uploader';
 
 const testNodes = [DEFAULT_TOPIC, DEFAULT_TOPIC2];
-State.preferences = {};
-State.currentNode = {
-  id: 'test-root',
-  metadata: {
-    max_sort_order: 0,
-  },
-};
 
 function makeWrapper(props = {}) {
   let wrapper = mount(EditModal, {

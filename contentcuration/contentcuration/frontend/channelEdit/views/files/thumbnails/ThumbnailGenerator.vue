@@ -20,7 +20,7 @@
   import max from 'lodash/max';
   import pdfJSLib from 'pdfjs-dist';
   import Alert from 'shared/views/Alert';
-  import Uploader from 'frontend/channelEdit/views/files/Uploader';
+  import Uploader from 'shared/views/files/Uploader';
 
   const MAX_AUDIO_SAMPLE_SIZE = 64000;
 

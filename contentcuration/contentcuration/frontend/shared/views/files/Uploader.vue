@@ -1,7 +1,24 @@
 <template>
 
-  <div>
-    <slot :openFileDialog="openFileDialog" :handleFiles="handleFiles"></slot>
+  <div class="uploader">
+    <slot :openFileDialog="openFileDialog">
+      <div
+        style="border: 4px solid transparent;"
+        :style="{
+          backgroundColor: highlightDropzone? $vuetify.theme.primaryBackground : 'transparent',
+          borderColor: highlightDropzone? $vuetify.theme.primary : borderColor,
+          width: fill? '100%' : 'unset',
+          height: fill? '100%' : 'unset',
+        }"
+        data-test="dropzone"
+        @dragenter.prevent="enter"
+        @dragover.prevent="over"
+        @dragleave.prevent="leave"
+        @drop.prevent="drop"
+      >
+        <slot name="dropzone"></slot>
+      </div>
+    </slot>
     <input
       v-if="!readonly"
       ref="fileUpload"
@@ -52,13 +69,11 @@
   import partition from 'lodash/partition';
   import uniq from 'lodash/uniq';
 
-  import Alert from 'shared/views/Alert';
-  import { fileErrors, MAX_FILE_SIZE } from './constants';
   import { fileSizeMixin } from 'shared/mixins';
-  import FileStorage from 'frontend/channelEdit/views/files/FileStorage';
+  import Alert from 'shared/views/Alert.vue';
+  import FileStorage from './FileStorage';
+  import { fileErrors, MAX_FILE_SIZE } from 'shared/views/files/constants';
   import { FormatPresetsList } from 'shared/leUtils/FormatPresets';
-
-  import State from 'edit_channel/state';
 
   export default {
     name: 'Uploader',
@@ -80,9 +95,22 @@
         type: Boolean,
         default: false,
       },
+      allowDrop: {
+        type: Boolean,
+        default: true,
+      },
+      borderColor: {
+        type: String,
+        default: 'transparent',
+      },
+      fill: {
+        type: Boolean,
+        default: false,
+      },
     },
     data() {
       return {
+        highlight: false,
         unsupportedFiles: [],
         tooLargeFiles: [],
         totalUploadSize: 0,
@@ -90,6 +118,7 @@
     },
     computed: {
       ...mapGetters('file', ['getFiles']),
+      ...mapGetters(['availableSpace']),
       acceptedFiles() {
         return FormatPresetsList.filter(
           fp => fp.display && (this.presetID ? this.presetID === fp.id : !fp.supplementary)
@@ -108,15 +137,29 @@
           extensionCount: this.acceptedExtensions.length,
         });
       },
-      availableSpace() {
-        return State.current_user.get('available_space');
+      highlightDropzone() {
+        return this.highlight && !this.readonly && this.allowDrop;
       },
       maxFileSize() {
         return MAX_FILE_SIZE;
       },
     },
     methods: {
+      // Add in once global store is properly set up
       ...mapActions('file', ['uploadFile', 'updateFile', 'createFile']),
+      enter() {
+        this.highlight = true;
+      },
+      over() {
+        this.highlight = true;
+      },
+      leave() {
+        this.highlight = false;
+      },
+      drop(e) {
+        this.highlight = false;
+        if (this.allowDrop) this.handleFiles(e.dataTransfer.files);
+      },
       openFileDialog() {
         if (!this.readonly) {
           this.$refs.fileUpload.click();

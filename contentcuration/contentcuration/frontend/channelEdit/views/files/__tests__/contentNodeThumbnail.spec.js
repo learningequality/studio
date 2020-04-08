@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
-import Thumbnail from '../thumbnails/Thumbnail';
-import Uploader from '../Uploader';
+import ContentNodeThumbnail from '../thumbnails/ContentNodeThumbnail';
 import store from '../../../store';
+import Uploader from 'shared/views/files/Uploader';
 import IconButton from 'shared/views/IconButton';
 
 const testThumbnail = {
@@ -28,7 +28,7 @@ const testDocument = {
 };
 
 function makeWrapper(props = {}, progress) {
-  return mount(Thumbnail, {
+  return mount(ContentNodeThumbnail, {
     store,
     attachToDocument: true,
     propsData: props,
@@ -42,7 +42,7 @@ function makeWrapper(props = {}, progress) {
       uploading() {
         return progress;
       },
-      getFiles() {
+      getContentNodeFiles() {
         return () => {
           return [testThumbnail, testDocument];
         };

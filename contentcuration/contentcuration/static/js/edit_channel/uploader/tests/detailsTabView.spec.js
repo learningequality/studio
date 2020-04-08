@@ -11,14 +11,10 @@ import {
   DEFAULT_EXERCISE2,
 } from './data.js';
 import { LicensesList } from 'shared/leUtils/Licenses';
-import State from 'edit_channel/state';
 
 Vue.use(Vuetify);
 
 document.body.setAttribute('data-app', true); // Vuetify prints a warning without this
-State.current_channel = {
-  id: 'test-channel',
-};
 
 const testNodes = [DEFAULT_TOPIC, DEFAULT_VIDEO, DEFAULT_EXERCISE, DEFAULT_EXERCISE2];
 localStore.commit('edit_modal/RESET_STATE');

@@ -31,9 +31,8 @@
 
 <script>
 
-  import { ASPECT_RATIO } from './constants';
+  import { ASPECT_RATIO } from 'shared/constants';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
-  import FormatPresets from 'shared/leUtils/FormatPresets';
 
   export default {
     name: 'Thumbnail',
@@ -67,9 +66,6 @@
     computed: {
       isEmptyTopic() {
         return this.kind === 'topic' && this.isEmpty;
-      },
-      preset() {
-        return FormatPresets.get(this.presetId);
       },
       thumbnailSrc() {
         return this.src || (!this.kind && require('shared/images/kolibri_placeholder.png'));
