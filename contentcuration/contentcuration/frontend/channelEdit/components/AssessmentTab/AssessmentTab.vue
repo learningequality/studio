@@ -13,10 +13,13 @@
 
     <AssessmentEditor
       ref="assessmentEditor"
-      v-model="assessmentItems"
+      :items="assessmentItems"
       :nodeId="nodeId"
       :itemsValidation="assessmentItemsValidation"
       :openDialog="openDialog"
+      @addItem="onAddAssessmentItem"
+      @updateItem="onUpdateAssessmentItem"
+      @deleteItem="onDeleteAssessmentItem"
     />
 
     <DialogBox
@@ -85,13 +88,8 @@
         'getAssessmentItemsAreValid',
         'getInvalidAssessmentItemsCount',
       ]),
-      assessmentItems: {
-        get() {
-          return this.getAssessmentItems(this.nodeId);
-        },
-        set(value) {
-          this.updateAssessmentItems(value);
-        },
+      assessmentItems() {
+        return this.getAssessmentItems(this.nodeId);
       },
       areAssessmentItemsValid() {
         return this.getAssessmentItemsAreValid(this.nodeId);
@@ -110,7 +108,20 @@
       },
     },
     methods: {
-      ...mapActions('assessmentItem', ['updateAssessmentItems']),
+      ...mapActions('assessmentItem', [
+        'addAssessmentItem',
+        'updateAssessmentItem',
+        'deleteAssessmentItem',
+      ]),
+      onAddAssessmentItem(item) {
+        this.addAssessmentItem(item);
+      },
+      onUpdateAssessmentItem(item) {
+        this.updateAssessmentItem(item);
+      },
+      onDeleteAssessmentItem(item) {
+        this.deleteAssessmentItem(item);
+      },
       openDialog({
         title = '',
         message = '',

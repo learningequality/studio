@@ -1,7 +1,7 @@
 <template>
 
   <div>
-    <template v-if="items && items.length">
+    <template v-if="sortedItems && sortedItems.length">
       <VCheckbox
         v-model="displayAnswersPreview"
         label="Show answers"
@@ -10,25 +10,25 @@
       />
 
       <VCard
-        v-for="(_, itemIdx) in items"
-        :key="itemIdx"
+        v-for="(item, idx) in sortedItems"
+        :key="idx"
         pa-1
-        :class="itemClasses(itemIdx)"
+        :class="itemClasses(item)"
         data-test="item"
-        @click="onItemClick($event, itemIdx)"
+        @click="onItemClick($event, item)"
       >
         <VCardText>
           <VLayout align-start>
             <VFlex xs1 mt-2>
-              {{ itemOrder(itemIdx) }}
+              {{ idx + 1 }}
             </VFlex>
 
             <VFlex
-              v-if="!isItemOpen(itemIdx)"
+              v-if="!isItemActive(item)"
               xs10
             >
               <AssessmentItemPreview
-                :item="items[itemIdx]"
+                :item="item"
                 :detailed="displayAnswersPreview"
               />
             </VFlex>
@@ -38,12 +38,12 @@
               xs10
             >
               <AssessmentItemEditor
-                :item="items[itemIdx]"
-                :errors="itemErrors(itemIdx)"
+                :item="item"
+                :errors="itemErrors(idx)"
                 :openDialog="openDialog"
                 data-test="editor"
-                @update="updateItem($event, itemIdx)"
-                @close="closeOpenItem"
+                @update="onItemUpdate"
+                @close="closeActiveItem"
               />
             </VFlex>
 
@@ -51,7 +51,7 @@
 
             <VLayout align-center class="toolbar">
               <VFlex
-                v-if="!isItemOpen(itemIdx) && !isItemValid(itemIdx)"
+                v-if="!isItemActive(item) && !isItemValid(item)"
                 mr-2
               >
                 <template v-if="$vuetify.breakpoint.lgAndUp">
@@ -75,25 +75,25 @@
 
               <VFlex>
                 <AssessmentItemToolbar
-                  :iconActionsConfig="toolbarIconActions(itemIdx)"
+                  :iconActionsConfig="itemToolbarIconActions(item)"
                   :displayMenu="true"
-                  :menuActionsConfig="toolbarMenuActions"
-                  :canMoveUp="!isItemFirst(itemIdx)"
-                  :canMoveDown="!isItemLast(itemIdx)"
+                  :menuActionsConfig="itemToolbarMenuActions"
+                  :canMoveUp="!isItemFirst(item)"
+                  :canMoveDown="!isItemLast(item)"
                   :collapse="!$vuetify.breakpoint.mdAndUp"
                   :itemLabel="$tr('toolbarItemLabel')"
-                  @click="onToolbarClick($event, itemIdx)"
+                  @click="onItemToolbarClick($event, item)"
                 />
               </VFlex>
             </VLayout>
           </VLayout>
 
-          <VLayout v-if="isItemOpen(itemIdx)" justify-end>
+          <VLayout v-if="isItemActive(item)" justify-end>
             <VBtn
               flat
               class="close-item-btn mr-0"
               data-test="closeBtn"
-              @click="closeOpenItem"
+              @click="closeActiveItem"
             >
               {{ $tr('closeBtnLabel') }}
             </VBtn>
@@ -110,7 +110,7 @@
       color="primary"
       class="mt-4 ml-0"
       data-test="newQuestionBtn"
-      @click="addNewItem"
+      @click="addItem"
     >
       {{ $tr('newQuestionBtnLabel') }}
     </VBtn>
@@ -125,16 +125,16 @@
   import AssessmentItemToolbar from '../AssessmentItemToolbar';
   import AssessmentItemEditor from '../AssessmentItemEditor/AssessmentItemEditor';
   import AssessmentItemPreview from '../AssessmentItemPreview/AssessmentItemPreview';
-  import { insertAfter, insertBefore, swapElements } from 'shared/utils';
 
-  const orderAssessmentItems = items => {
-    return items.map((item, itemIdx) => {
-      return {
-        ...item,
-        order: itemIdx,
-      };
-    });
-  };
+  function areItemsEqual(item1, item2) {
+    if (!item1 || !item2) {
+      return false;
+    }
+    if (item1.assessment_id !== undefined && item2.assessment_id !== undefined) {
+      return item1.assessment_id === item2.assessment_id;
+    }
+    return item1.order === item2.order;
+  }
 
   export default {
     name: 'AssessmentEditor',
@@ -143,34 +143,11 @@
       AssessmentItemEditor,
       AssessmentItemPreview,
     },
-    model: {
-      prop: 'items',
-      event: 'update',
-    },
     props: {
       nodeId: {
         type: String,
         required: true,
       },
-      /**
-       * An array of assessment items:
-       * [
-       *   // an assessment item as retrieved from API
-       *   {
-       *     question
-       *     type
-       *     order
-       *     answers
-       *     hints
-       *     ...
-       *   },
-       *   {
-       *     question
-       *     ...
-       *   },
-       *   ...
-       * ]
-       */
       items: {
         type: Array,
       },
@@ -207,91 +184,100 @@
     },
     data() {
       return {
-        openItemIdx: null,
+        activeItem: null,
         displayAnswersPreview: false,
-        toolbarMenuActions: [
+        itemToolbarMenuActions: [
           AssessmentItemToolbarActions.ADD_ITEM_ABOVE,
           AssessmentItemToolbarActions.ADD_ITEM_BELOW,
           AssessmentItemToolbarActions.DELETE_ITEM,
         ],
       };
     },
+    computed: {
+      sortedItems() {
+        if (!this.items) {
+          return [];
+        }
+
+        return [...this.items].sort((item1, item2) => (item1.order > item2.order ? 1 : -1));
+      },
+      firstItem() {
+        return this.sortedItems.length ? this.sortedItems[0] : null;
+      },
+      lastItem() {
+        return this.sortedItems.length ? this.sortedItems[this.sortedItems.length - 1] : null;
+      },
+    },
     methods: {
       /**
        * @public
        */
       reset() {
-        this.closeOpenItem();
+        this.closeActiveItem();
         this.displayAnswersPreview = false;
       },
-      openItem(itemIdx) {
-        this.openItemIdx = itemIdx;
+      itemIdx(item) {
+        return this.sortedItems.findIndex(i => areItemsEqual(i, item));
       },
-      closeOpenItem() {
-        this.openItemIdx = null;
+      openItem(item) {
+        this.activeItem = item;
       },
-      isItemOpen(itemIdx) {
-        return this.openItemIdx === itemIdx;
+      closeActiveItem() {
+        this.activeItem = null;
       },
-      isItemFirst(itemIdx) {
-        return itemIdx === 0;
+      isItemActive(item) {
+        return areItemsEqual(this.activeItem, item);
       },
-      isItemLast(itemIdx) {
-        return itemIdx === this.items.length - 1;
+      isItemFirst(item) {
+        return areItemsEqual(this.firstItem, item);
+      },
+      isItemLast(item) {
+        return areItemsEqual(this.lastItem, item);
       },
       itemErrors(itemIdx) {
         if (!this.itemsValidation || !this.itemsValidation[itemIdx]) {
           return [];
         }
-
         return this.itemsValidation[itemIdx];
       },
       isItemValid(itemIdx) {
         return this.itemErrors(itemIdx).length === 0;
       },
-      itemOrder(itemIdx) {
-        if (!this.items[itemIdx] || this.items[itemIdx].order === undefined) {
-          return 1;
-        }
-
-        return this.items[itemIdx].order + 1;
-      },
-      itemClasses(itemIdx) {
+      itemClasses(item) {
         const classes = ['item'];
 
-        if (!this.isItemOpen(itemIdx)) {
+        if (!this.isItemActive(item)) {
           classes.push('closed');
         }
 
         return classes;
       },
-      toolbarIconActions(itemIdx) {
+      itemToolbarIconActions(item) {
         const actions = [
           [AssessmentItemToolbarActions.MOVE_ITEM_UP, { collapse: true }],
           [AssessmentItemToolbarActions.MOVE_ITEM_DOWN, { collapse: true }],
         ];
 
-        if (!this.isItemOpen(itemIdx)) {
+        if (!this.isItemActive(item)) {
           actions.unshift([AssessmentItemToolbarActions.EDIT_ITEM, { collapse: false }]);
         }
 
         return actions;
       },
-      editItem(itemIdx) {
-        this.openItem(itemIdx);
+      onItemUpdate(item) {
+        this.$emit('updateItem', item);
       },
-      updateItem(newItem, itemIdx) {
-        const item = { ...newItem };
-
-        const newItems = [...this.items];
-        newItems[itemIdx] = item;
-
-        this.$emit('update', newItems);
-      },
-      addNewItem({ before, after }) {
-        let newItems = [];
-        if (this.items) {
-          newItems = [...this.items];
+      /**
+       * @param {Object} before A new item should be added before this item.
+       * @param {Object} after A new item should be added after this item.
+       */
+      addItem({ before, after }) {
+        let order = this.items.length;
+        if (before) {
+          order = Math.max(0, before.order);
+        }
+        if (after) {
+          order = Math.min(this.items.length, after.order + 1);
         }
 
         const newItem = {
@@ -300,62 +286,90 @@
           type: AssessmentItemTypes.SINGLE_SELECTION,
           answers: [],
           hints: [],
+          order,
           isNew: true,
         };
 
-        if (after !== undefined) {
-          newItems = insertAfter(newItems, after, newItem);
-        } else if (before !== undefined) {
-          newItems = insertBefore(newItems, before, newItem);
-        } else {
-          newItems.push(newItem);
+        this.$emit('addItem', newItem);
+        this.openItem(newItem);
+
+        this.items.forEach(item => {
+          if ((before && item.order >= before.order) || (after && item.order > after.order)) {
+            this.$emit('updateItem', {
+              ...item,
+              order: item.order + 1,
+            });
+          }
+        });
+      },
+      deleteItem(itemToDelete) {
+        let itemToOpen = null;
+        this.items.forEach(item => {
+          if (item.order > itemToDelete.order) {
+            const updatedItem = {
+              ...item,
+              order: item.order - 1,
+            };
+            this.$emit('updateItem', updatedItem);
+
+            if (this.activeItem && this.activeItem.order - 1 === updatedItem.order) {
+              itemToOpen = updatedItem;
+            }
+          }
+        });
+
+        if (this.isItemActive(itemToDelete)) {
+          this.closeActiveItem();
         }
+        this.$emit('deleteItem', itemToDelete);
 
-        newItems = orderAssessmentItems(newItems);
-
-        this.$emit('update', newItems);
-
-        if (after !== undefined) {
-          this.openItem(after + 1);
-        } else if (before !== undefined) {
-          this.openItem(before);
-        } else {
-          this.openItem(newItems.length - 1);
+        if (this.itemToOpen) {
+          this.openItem(itemToOpen);
         }
       },
-      deleteItem(itemIdx) {
-        let newItems = [...this.items];
+      swapItems(firstItem, secondItem) {
+        const firstUpdatedItem = {
+          ...firstItem,
+          order: secondItem.order,
+        };
+        const secondUpdatedItem = {
+          ...secondItem,
+          order: firstItem.order,
+        };
 
-        newItems.splice(itemIdx, 1);
-        newItems = orderAssessmentItems(newItems);
+        let itemToOpen = null;
+        if (this.isItemActive(firstItem)) {
+          itemToOpen = firstUpdatedItem;
+        }
+        if (this.isItemActive(secondItem)) {
+          itemToOpen = secondUpdatedItem;
+        }
 
-        this.$emit('update', newItems);
+        this.$emit('updateItem', firstUpdatedItem);
+        this.$emit('updateItem', secondUpdatedItem);
 
-        if (this.openItemIdx === itemIdx) {
-          this.closeOpenItem();
-        } else if (this.openItemIdx > itemIdx) {
-          this.openItem(this.openItemIdx - 1);
+        if (this.itemToOpen !== null) {
+          this.openItem(itemToOpen);
         }
       },
-      swapItems(firstItemIdx, secondItemIdx) {
-        let newItems = [...this.items];
-
-        newItems = swapElements(newItems, firstItemIdx, secondItemIdx);
-        newItems = orderAssessmentItems(newItems);
-
-        this.$emit('update', newItems);
-
-        if (this.openItemIdx === firstItemIdx) {
-          this.openItem(secondItemIdx);
+      moveItemUp(item) {
+        if (this.isItemFirst(item)) {
           return;
         }
-        if (this.openItemIdx === secondItemIdx) {
-          this.openItem(firstItemIdx);
+
+        const previousItem = this.sortedItems[this.itemIdx(item) - 1];
+        this.swapItems(item, previousItem);
+      },
+      moveItemDown(item) {
+        if (this.isItemLast(item)) {
           return;
         }
+
+        const nextItem = this.sortedItems[this.itemIdx(item) + 1];
+        this.swapItems(item, nextItem);
       },
-      onItemClick(event, itemIdx) {
-        if (this.isItemOpen(itemIdx)) {
+      onItemClick(event, item) {
+        if (this.isItemActive(item)) {
           return;
         }
 
@@ -367,12 +381,12 @@
           return;
         }
 
-        this.editItem(itemIdx);
+        this.openItem(item);
       },
-      onToolbarClick(action, itemIdx) {
+      onItemToolbarClick(action, item) {
         switch (action) {
           case AssessmentItemToolbarActions.EDIT_ITEM:
-            this.editItem(itemIdx);
+            this.openItem(item);
             break;
 
           case AssessmentItemToolbarActions.DELETE_ITEM:
@@ -381,37 +395,29 @@
                 title: this.$tr('dialogTitle'),
                 message: this.$tr('dialogMessage'),
                 submitLabel: this.$tr('dialogSubmitBtnLabel'),
-                onSubmit: () => this.deleteItem(itemIdx),
+                onSubmit: () => this.deleteItem(item),
                 onCancel: this.rerenderKindSelect,
               });
             } else {
-              this.deleteItem(itemIdx);
+              this.deleteItem(item);
             }
 
             break;
 
           case AssessmentItemToolbarActions.ADD_ITEM_ABOVE:
-            this.addNewItem({ before: itemIdx });
+            this.addItem({ before: item });
             break;
 
           case AssessmentItemToolbarActions.ADD_ITEM_BELOW:
-            this.addNewItem({ after: itemIdx });
+            this.addItem({ after: item });
             break;
 
           case AssessmentItemToolbarActions.MOVE_ITEM_UP:
-            if (this.isItemFirst(itemIdx)) {
-              break;
-            }
-
-            this.swapItems(itemIdx, itemIdx - 1);
+            this.moveItemUp(item);
             break;
 
           case AssessmentItemToolbarActions.MOVE_ITEM_DOWN:
-            if (this.isItemLast(itemIdx)) {
-              break;
-            }
-
-            this.swapItems(itemIdx, itemIdx + 1);
+            this.moveItemDown(item);
             break;
         }
       },
