@@ -69,33 +69,31 @@ def get_upload_url(request):
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
 def temp_file_upload(request):
-    filename = write_file_to_storage(request.FILES['file'])
+    filename = write_file_to_storage(request.FILES["file"])
     return HttpResponse(generate_storage_url(filename))
 
 
-@require_http_methods(['GET'])
+@require_http_methods(["GET"])
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
 def create_thumbnail(request, channel_id, filename):
     task_info = {
-        'user': request.user,
-        'metadata': {
-            'affects': {
-                'channels': [channel_id]
-            }
-        }
+        "user": request.user,
+        "metadata": {"affects": {"channels": [channel_id]}},
     }
-    task_args = {'filename': filename}
+    task_args = {"filename": filename}
 
-    task, task_info = create_async_task('generate-thumbnail', task_info, task_args)
+    task, task_info = create_async_task("generate-thumbnail", task_info, task_args)
     return HttpResponse(JSONRenderer().render(TaskSerializer(task_info).data))
 
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
 def file_upload(request):
-    if request.method != 'POST':
-        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+    if request.method != "POST":
+        return HttpResponseBadRequest(
+            "Only POST requests are allowed on this endpoint."
+        )
 
     # Implement logic for switching out files without saving it yet
     filename, ext = os.path.splitext(list(request.FILES.values())[0]._name)
@@ -110,17 +108,21 @@ def file_upload(request):
         checksum=checksum,
         file_format_id=ext[1:].lower(),
         original_filename=list(request.FILES.values())[0]._name,
-        preset_id=request.META.get('HTTP_PRESET'),
-        language_id=request.META.get('HTTP_LANGUAGE'),
+        preset_id=request.META.get("HTTP_PRESET"),
+        language_id=request.META.get("HTTP_LANGUAGE"),
         uploaded_by=request.user,
     )
     file_object.save()
 
-    return HttpResponse(json.dumps({
-        "success": True,
-        "filename": str(file_object),
-        "file": JSONRenderer().render(FileSerializer(file_object).data)
-    }))
+    return HttpResponse(
+        json.dumps(
+            {
+                "success": True,
+                "filename": str(file_object),
+                "file": JSONRenderer().render(FileSerializer(file_object).data),
+            }
+        )
+    )
 
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
@@ -128,8 +130,10 @@ def file_upload(request):
 def generate_thumbnail(request, contentnode_id):
     logging.debug("Entering the generate_thumbnail endpoint")
 
-    if request.method != 'POST':
-        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+    if request.method != "POST":
+        return HttpResponseBadRequest(
+            "Only POST requests are allowed on this endpoint."
+        )
 
     node = ContentNode.objects.get(pk=contentnode_id)
 
@@ -142,20 +146,28 @@ def generate_thumbnail(request, contentnode_id):
             thumbnail_object.delete()
         raise e
 
-    return HttpResponse(json.dumps({
-        "success": True,
-        "file": JSONRenderer().render(FileSerializer(thumbnail_object).data).decode('utf-8'),
-        "path": generate_storage_url(str(thumbnail_object)),
-        "encoding": get_thumbnail_encoding(str(thumbnail_object)),
-    }))
+    return HttpResponse(
+        json.dumps(
+            {
+                "success": True,
+                "file": JSONRenderer()
+                .render(FileSerializer(thumbnail_object).data)
+                .decode("utf-8"),
+                "path": generate_storage_url(str(thumbnail_object)),
+                "encoding": get_thumbnail_encoding(str(thumbnail_object)),
+            }
+        )
+    )
 
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
 def thumbnail_upload(request):
     # Used for channels
-    if request.method != 'POST':
-        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+    if request.method != "POST":
+        return HttpResponseBadRequest(
+            "Only POST requests are allowed on this endpoint."
+        )
 
     fobj = list(request.FILES.values())[0]
     checksum = get_hash(DjFile(fobj))
@@ -163,52 +175,68 @@ def thumbnail_upload(request):
 
     formatted_filename = write_file_to_storage(fobj)
 
-    return HttpResponse(json.dumps({
-        "success": True,
-        "formatted_filename": formatted_filename,
-        "file": None,
-        "path": generate_storage_url(formatted_filename),
-        "encoding": get_thumbnail_encoding(formatted_filename),
-    }))
+    return HttpResponse(
+        json.dumps(
+            {
+                "success": True,
+                "formatted_filename": formatted_filename,
+                "file": None,
+                "path": generate_storage_url(formatted_filename),
+                "encoding": get_thumbnail_encoding(formatted_filename),
+            }
+        )
+    )
 
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
 def image_upload(request):
     # Used for content nodes
-    if request.method != 'POST':
-        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+    if request.method != "POST":
+        return HttpResponseBadRequest(
+            "Only POST requests are allowed on this endpoint."
+        )
 
     fobj = list(request.FILES.values())[0]
-    name, ext = os.path.splitext(fobj._name)  # gets file extension without leading period
+    name, ext = os.path.splitext(
+        fobj._name
+    )  # gets file extension without leading period
     checksum = get_hash(DjFile(fobj))
     request.user.check_space(fobj._size, checksum)
 
     file_object = File(
-        contentnode_id=request.META.get('HTTP_NODE'),
+        contentnode_id=request.META.get("HTTP_NODE"),
         original_filename=name,
-        preset_id=request.META.get('HTTP_PRESET'),
+        preset_id=request.META.get("HTTP_PRESET"),
         file_on_disk=DjFile(list(request.FILES.values())[0]),
         file_format_id=ext[1:].lower(),
-        uploaded_by=request.user
+        uploaded_by=request.user,
     )
     file_object.save()
-    return HttpResponse(json.dumps({
-        "success": True,
-        "file": JSONRenderer().render(FileSerializer(file_object).data).decode('utf-8'),
-        "path": generate_storage_url(str(file_object)),
-        "encoding": get_thumbnail_encoding(str(file_object)),
-    }))
+    return HttpResponse(
+        json.dumps(
+            {
+                "success": True,
+                "file": JSONRenderer()
+                .render(FileSerializer(file_object).data)
+                .decode("utf-8"),
+                "path": generate_storage_url(str(file_object)),
+                "encoding": get_thumbnail_encoding(str(file_object)),
+            }
+        )
+    )
 
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
 def exercise_image_upload(request):
-    if request.method != 'POST':
-        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+    if request.method != "POST":
+        return HttpResponseBadRequest(
+            "Only POST requests are allowed on this endpoint."
+        )
 
     fobj = list(request.FILES.values())[0]
-    assessment_item_id = request.POST.get('assessment_item_id', None)
+    assessment_item_id = request.POST.get("assessment_item_id", None)
     name, ext = os.path.splitext(fobj._name)
     get_hash(DjFile(fobj))
     file_object = File(
@@ -218,29 +246,36 @@ def exercise_image_upload(request):
         assessment_item_id=assessment_item_id,
     )
     file_object.save()
-    return HttpResponse(json.dumps({
-        "success": True,
-        "formatted_filename": exercises.CONTENT_STORAGE_FORMAT.format(str(file_object)),
-        "file_id": file_object.pk,
-        "path": generate_storage_url(str(file_object)),
-    }))
+    return HttpResponse(
+        json.dumps(
+            {
+                "success": True,
+                "formatted_filename": exercises.CONTENT_STORAGE_FORMAT.format(
+                    str(file_object)
+                ),
+                "file_id": file_object.pk,
+                "path": generate_storage_url(str(file_object)),
+            }
+        )
+    )
 
 
 def subtitle_upload(request):
     # File will be converted to VTT format
     ext = file_formats.VTT
-    language_id = request.META.get('HTTP_LANGUAGE')
+    language_id = request.META.get("HTTP_LANGUAGE")
     content_file = list(request.FILES.values())[0]
 
     with NamedTemporaryFile() as temp_file:
         try:
-            converter = build_subtitle_converter(content_file.read().decode('utf-8'))
+            converter = build_subtitle_converter(content_file.read().decode("utf-8"))
             convert_language_code = language_id
 
             # We're making the assumption here that language the user selected is truly the caption
             # file's language if it's unknown
-            if len(converter.get_language_codes()) == 1 \
-                    and converter.has_language(LANGUAGE_CODE_UNKNOWN):
+            if len(converter.get_language_codes()) == 1 and converter.has_language(
+                LANGUAGE_CODE_UNKNOWN
+            ):
                 converter.replace_unknown_language(language_id)
 
             # determine if the request language exists by another code, otherwise we can't continue
@@ -252,7 +287,8 @@ def subtitle_upload(request):
                         break
                 else:
                     return HttpResponseBadRequest(
-                        "Language '{}' not present in subtitle file".format(language_id))
+                        "Language '{}' not present in subtitle file".format(language_id)
+                    )
 
             converter.write(temp_file.name, convert_language_code)
         except InvalidSubtitleFormatError as ex:
@@ -271,33 +307,43 @@ def subtitle_upload(request):
             checksum=checksum,
             file_format_id=ext,
             original_filename=list(request.FILES.values())[0]._name,
-            preset_id=request.META.get('HTTP_PRESET'),
+            preset_id=request.META.get("HTTP_PRESET"),
             language_id=language_id,
             uploaded_by=request.user,
         )
         file_object.save()
 
-    return HttpResponse(json.dumps({
-        "success": True,
-        "filename": str(file_object),
-        "file": JSONRenderer().render(FileSerializer(file_object).data).decode('utf-8')
-    }))
+    return HttpResponse(
+        json.dumps(
+            {
+                "success": True,
+                "filename": str(file_object),
+                "file": JSONRenderer()
+                .render(FileSerializer(file_object).data)
+                .decode("utf-8"),
+            }
+        )
+    )
 
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
 def multilanguage_file_upload(request):
-    if request.method != 'POST':
-        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+    if request.method != "POST":
+        return HttpResponseBadRequest(
+            "Only POST requests are allowed on this endpoint."
+        )
 
-    if not request.META.get('HTTP_LANGUAGE'):
+    if not request.META.get("HTTP_LANGUAGE"):
         return HttpResponseBadRequest("Language is required")
 
-    preset_id = request.META.get('HTTP_PRESET')
+    preset_id = request.META.get("HTTP_PRESET")
     if preset_id == format_presets.VIDEO_SUBTITLE:
         return subtitle_upload(request)
     else:
-        return HttpResponseBadRequest("Unsupported preset" if preset_id else "Preset is required")
+        return HttpResponseBadRequest(
+            "Unsupported preset" if preset_id else "Preset is required"
+        )
 
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
@@ -311,8 +357,10 @@ def debug_serve_file(request, path):
 
     if not default_storage.exists(filepath):
         raise Http404("The object requested does not exist.")
-    with default_storage.open(filepath, 'rb') as fobj:
-        response = HttpResponse(FileWrapper(fobj), content_type="application/octet-stream")
+    with default_storage.open(filepath, "rb") as fobj:
+        response = HttpResponse(
+            FileWrapper(fobj), content_type="application/octet-stream"
+        )
         return response
 
 
