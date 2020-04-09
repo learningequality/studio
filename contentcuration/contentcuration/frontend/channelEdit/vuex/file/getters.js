@@ -7,7 +7,7 @@ export function getFileUpload(state) {
     const fileUpload = state.fileUploadsMap[checksum];
     if (fileUpload) {
       const progressCalc = fileUpload.loaded / fileUpload.total;
-      const progress = isFinite(progressCalc) && !isNaN(progressCalc) ? progressCalc : undefined
+      const progress = isFinite(progressCalc) && !isNaN(progressCalc) ? progressCalc : undefined;
       return {
         ...fileUpload,
         progress: progress,
@@ -53,16 +53,16 @@ export function getContentNodeFiles(state) {
 
 export function contentNodesAreUploading(state) {
   return contentNodeIds => {
-    return flatMap(contentNodeIds
-      , contentNodeId => getContentNodeFiles(state)(contentNodeId))
-      .some(file => file.uploading);
+    return flatMap(contentNodeIds, contentNodeId => getContentNodeFiles(state)(contentNodeId)).some(
+      file => file.uploading
+    );
   };
 }
 
 export function contentNodesTotalSize(state) {
   return contentNodeIds => {
-    return flatMap(contentNodeIds
-      , contentNodeId => getContentNodeFiles(state)(contentNodeId))
-      .reduce((sum, f) => sum + f.file_size, 0);
+    return flatMap(contentNodeIds, contentNodeId =>
+      getContentNodeFiles(state)(contentNodeId)
+    ).reduce((sum, f) => sum + f.file_size, 0);
   };
 }

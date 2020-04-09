@@ -21,7 +21,7 @@
           <InfoModal v-if="selectedLicense" :header="translate(selectedLicense)">
             <template v-slot:content>
               <p class="license-info">
-                {{ translateDescription(selectedLicense)}}
+                {{ translateDescription(selectedLicense) }}
               </p>
             </template>
             <template v-if="selectedLicense.license_url" v-slot:extra-button>
@@ -69,9 +69,7 @@
     components: {
       InfoModal,
     },
-    filters: {
-
-    },
+    filters: {},
     mixins: [constantsTranslationMixin],
     props: {
       value: {

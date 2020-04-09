@@ -1,6 +1,10 @@
 <template>
 
-  <Uploader :readonly="viewOnly" :presetID="preset.id" @uploading="file => $emit('uploading', file)">
+  <Uploader
+    :readonly="viewOnly"
+    :presetID="preset.id"
+    @uploading="file => $emit('uploading', file)"
+  >
     <template #default="{openFileDialog}">
       <VListTile
         data-test="list-item"

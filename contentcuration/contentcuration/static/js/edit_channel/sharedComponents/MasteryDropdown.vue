@@ -167,7 +167,10 @@
         },
       },
       masteryCriteria() {
-        return MasteryModelsList.map(model => ({ text: this.translateConstant(model), value: model }));
+        return MasteryModelsList.map(model => ({
+          text: this.translateConstant(model),
+          value: model,
+        }));
       },
       showMofN() {
         return this.masteryModel === 'm_of_n';

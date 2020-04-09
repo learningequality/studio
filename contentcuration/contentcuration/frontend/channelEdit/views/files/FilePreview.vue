@@ -49,9 +49,10 @@
   import ActionLink from 'edit_channel/sharedComponents/ActionLink';
 
   const availablePreviewFormats = fromPairs(
-    flatMap(FormatPresetsList.filter(f => f.display && !f.supplementary)
-      , f => f.allowed_formats)
-      .map(allowedFormat => [allowedFormat, allowedFormat])
+    flatMap(
+      FormatPresetsList.filter(f => f.display && !f.supplementary),
+      f => f.allowed_formats
+    ).map(allowedFormat => [allowedFormat, allowedFormat])
   );
 
   export default {

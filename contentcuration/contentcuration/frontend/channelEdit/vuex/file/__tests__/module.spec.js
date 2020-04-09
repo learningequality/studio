@@ -83,7 +83,12 @@ describe('file store', () => {
     });
     describe('createFile action', () => {
       it('should add a new file with an id and other fields set', () => {
-        const payload = { original_filename: 'abc.pdf', file_size: 100, contentnode, file_format: 'pdf' };
+        const payload = {
+          original_filename: 'abc.pdf',
+          file_size: 100,
+          contentnode,
+          file_format: 'pdf',
+        };
         return store.dispatch('file/createFile', payload).then(newId => {
           const file = store.getters['file/getContentNodeFileById'](contentnode, newId);
           expect(file).not.toBeUndefined();

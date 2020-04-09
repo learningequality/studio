@@ -45,7 +45,9 @@
     data() {
       return {
         value: false,
-        dontShowAgain: this.messageId ? Boolean(window.localStorage.getItem(`dont_show_messages_${this.messageId}`)) : false,
+        dontShowAgain: this.messageId
+          ? Boolean(window.localStorage.getItem(`dont_show_messages_${this.messageId}`))
+          : false,
       };
     },
     computed: {

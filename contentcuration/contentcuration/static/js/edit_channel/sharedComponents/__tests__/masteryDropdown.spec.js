@@ -1,4 +1,3 @@
-import _ from 'underscore';
 import { mount } from '@vue/test-utils';
 import MasteryDropdown from '../MasteryDropdown.vue';
 import InfoModal from '../InfoModal.vue';
