@@ -61,7 +61,9 @@
       },
       drop(e) {
         this.highlight = false;
-        if (!this.disabled) this.$emit('dropped', e.dataTransfer.files);
+        if (!this.disabled) {
+          this.$emit('dropped', e.dataTransfer.files);
+        }
       },
     },
   };

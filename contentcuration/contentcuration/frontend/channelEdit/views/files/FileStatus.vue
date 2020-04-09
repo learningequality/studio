@@ -10,7 +10,7 @@
       <span>{{ statusMessage(checksum) }}</span>
     </VTooltip>
     <Icon
-      v-else-if="progress >= 100"
+      v-else-if="progress >= 1"
       :large="large"
       color="greenSuccess"
       data-test="done"

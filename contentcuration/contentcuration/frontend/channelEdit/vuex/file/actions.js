@@ -22,7 +22,7 @@ export function loadFile(context, id) {
     });
 }
 
-export function createFile(context, { file }) {
+export function createFile(context, file) {
   const newFile = generateFileData({
     ...file,
     preset:
@@ -31,10 +31,8 @@ export function createFile(context, { file }) {
         ftype => ftype.allowed_formats.includes(file.file_format) && ftype.display
       ),
   });
-  return File.put({
-    ...newFile,
-    uploaded_by: context.rootGetters.currentUserId,
-  }).then(id => {
+  newFile.uploaded_by = context.rootGetters.currentUserId;
+  return File.put(newFile).then(id => {
     context.commit('ADD_FILE', { id, ...newFile });
     // If we do not yet have a file_on_disk attribute for this file
     // we need to watch the file upload until one is added, then update

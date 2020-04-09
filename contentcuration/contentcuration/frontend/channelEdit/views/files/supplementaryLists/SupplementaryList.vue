@@ -5,7 +5,6 @@
       v-for="file in files"
       :key="file.id"
       :file="file"
-      :languageId="file.language.id"
       :presetID="presetID"
       :readonly="readonly"
       @uploading="newFile => replace(file, newFile)"
@@ -113,18 +112,19 @@
     },
     methods: {
       ...mapActions('file', ['createFile', 'deleteFile']),
-      add(files) {
-        Promise.all(files.map(this.makeFile)).then(() => this.reset);
+      add(file) {
+        this.makeFile(file).then(() => this.reset);
       },
       makeFile(file) {
         return this.createFile({
           ...file,
-          language: this.selectedLanguage,
+          language: file.language || this.selectedLanguage,
           preset: this.presetID,
           contentnode: this.nodeId,
         });
       },
       replace(oldFile, newFile) {
+        newFile.language = oldFile.language;
         return Promise.all([this.makeFile(newFile), this.deleteFile(oldFile)]);
       },
       reset() {

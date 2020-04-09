@@ -45,13 +45,16 @@
         return this.getFileUpload(this.checksum);
       },
       uploading() {
-        return this.file.progress < 1;
+        return this.file && this.file.uploading;
       },
       message() {
         return this.statusMessage(this.checksum);
       },
+      invalidFile() {
+        return this.file && this.file.error;
+      },
       showSelectFile() {
-        return !this.readonly && this.file.error !== fileErrors.NO_STORAGE;
+        return !this.readonly && this.file && this.file.error !== fileErrors.NO_STORAGE;
       },
     },
     $trs: {

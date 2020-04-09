@@ -14,8 +14,8 @@ export default {
       // the top level key is the top level id
       // then file ids are used as keys in
       // the subsidiary maps
-      contentNodeFileMap: {},
-      assessmentItemFileMap: {},
+      contentNodeFilesMap: {},
+      assessmentItemFilesMap: {},
       // A map for tracking file upload info
       // keyed by file checksum
       fileUploadsMap: {},

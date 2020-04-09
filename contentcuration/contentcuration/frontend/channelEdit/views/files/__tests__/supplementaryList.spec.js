@@ -64,22 +64,21 @@ describe('supplementaryList', () => {
       wrapper.setMethods({ createFile });
 
       let listItem = wrapper.find(SupplementaryItem);
-      let replacementFile = { id: 'replacementFile', language: 'en-PT' };
+      let replacementFile = { id: 'replacementFile' };
       listItem.vm.$emit('uploading', replacementFile);
-
       expect(createFile).toHaveBeenCalled();
       expect(createFile.mock.calls[0][0].id).toBe(replacementFile.id);
-      expect(createFile.mock.calls[0][0].language).toBe('en-PT');
+      expect(createFile.mock.calls[0][0].language.id).toBe('en');
     });
     it('emitted uploading event from Uploader should call createFile', () => {
       let uploadFile = { id: 'filetest' };
-      let createFile = jest.fn();
+      let createFile = jest.fn(() => Promise.resolve());
       let uploader = wrapper.find(Uploader);
 
       wrapper.setMethods({ createFile });
       wrapper.setData({ selectedLanguage: 'en-PT' });
 
-      uploader.vm.$emit('uploading', [uploadFile]);
+      uploader.vm.$emit('uploading', uploadFile);
 
       expect(createFile).toHaveBeenCalled();
       expect(createFile.mock.calls[0][0].id).toBe(uploadFile.id);

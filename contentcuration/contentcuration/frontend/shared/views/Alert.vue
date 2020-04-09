@@ -1,6 +1,7 @@
 <template>
 
-  <PrimaryDialog v-model="open" :header="header" :text="text">
+  <PrimaryDialog v-model="open" :title="header">
+    {{ text }}
     <slot></slot>
     <VCheckbox
       v-if="messageId"
@@ -8,7 +9,7 @@
       color="primary"
       :label="$tr('dontShowAgain')"
     />
-    <template v-slot:buttons>
+    <template v-slot:actions>
       <VSpacer />
       <VBtn depressed color="primary" @click="close">
         {{ $tr('closeButtonLabel') }}
@@ -44,6 +45,7 @@
     data() {
       return {
         value: false,
+        dontShowAgain: this.messageId ? Boolean(window.localStorage.getItem(`dont_show_messages_${this.messageId}`)) : false,
       };
     },
     computed: {

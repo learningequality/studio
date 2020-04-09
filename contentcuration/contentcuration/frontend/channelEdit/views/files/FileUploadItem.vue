@@ -1,6 +1,6 @@
 <template>
 
-  <Uploader :readonly="viewOnly" :presetID="preset.id">
+  <Uploader :readonly="viewOnly" :presetID="preset.id" @uploading="file => $emit('uploading', file)">
     <template #default="{openFileDialog}">
       <VListTile
         data-test="list-item"
@@ -17,7 +17,7 @@
           />
         </VListTileAction>
         <VListTileContent>
-          <VListTileSubTitle>{{ preset.id | translate }}</VListTileSubTitle>
+          <VListTileSubTitle>{{ translateConstant(preset.id) }}</VListTileSubTitle>
           <VListTileTitle>
             <span v-if="file && viewOnly" class="notranslate">
               {{ file.original_filename }}
@@ -73,11 +73,6 @@
       Uploader,
       ActionLink,
       FileStatusText,
-    },
-    filters: {
-      translate(text) {
-        return this.translateConstant(text);
-      },
     },
     mixins: [constantsTranslationMixin, fileSizeMixin, fileStatusMixin],
     props: {

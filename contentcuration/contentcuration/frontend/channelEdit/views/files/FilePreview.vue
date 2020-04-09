@@ -42,14 +42,15 @@
 <script>
 
   import fromPairs from 'lodash/fromPairs';
+  import flatMap from 'lodash/flatMap';
   import { mapGetters } from 'vuex';
   import ContentRenderer from './ContentRenderer';
   import { FormatPresetsList } from 'shared/leUtils/FormatPresets';
   import ActionLink from 'edit_channel/sharedComponents/ActionLink';
 
   const availablePreviewFormats = fromPairs(
-    FormatPresetsList.filter(f => f.display && !f.supplementary)
-      .flatMap(f => f.allowed_formats)
+    flatMap(FormatPresetsList.filter(f => f.display && !f.supplementary)
+      , f => f.allowed_formats)
       .map(allowedFormat => [allowedFormat, allowedFormat])
   );
 

@@ -334,9 +334,9 @@
       handleUploading(fileUpload) {
         this.lastThumbnail = this.value;
         this.$emit('input', {
-          ...fileUpload,
           preset: this.thumbnailPresetID,
           contentnode: this.nodeId,
+          ...fileUpload,
         });
         this.startCropping();
         this.generating = false;

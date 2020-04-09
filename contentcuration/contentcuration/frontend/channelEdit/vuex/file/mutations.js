@@ -6,15 +6,15 @@ export function ADD_FILE(state, file) {
     return;
   }
   if (file.assessment_item) {
-    state.assessmentItemFileMap[file.assessment_item] = mergeMapItem(
-      state.assessmentItemFileMap[file.assessment_item] || {},
+    state.assessmentItemFilesMap[file.assessment_item] = mergeMapItem(
+      state.assessmentItemFilesMap[file.assessment_item] || {},
       file
     );
     return;
   }
   if (file.contentnode) {
-    state.contentNodeFileMap[file.contentnode] = mergeMapItem(
-      state.contentNodeFileMap[file.contentnode] || {},
+    state.contentNodeFilesMap[file.contentnode] = mergeMapItem(
+      state.contentNodeFilesMap[file.contentnode] || {},
       file
     );
     return;
@@ -32,11 +32,11 @@ export function REMOVE_FILE(state, file) {
     return;
   }
   if (file.assessment_item) {
-    Vue.delete(state.assessmentItemFileMap[file.assessment_item], file.id);
+    Vue.delete(state.assessmentItemFilesMap[file.assessment_item], file.id);
     return;
   }
   if (file.contentnode) {
-    Vue.delete(state.contentNodeFileMap[file.contentnode], file.id);
+    Vue.delete(state.contentNodeFilesMap[file.contentnode], file.id);
     return;
   }
 }

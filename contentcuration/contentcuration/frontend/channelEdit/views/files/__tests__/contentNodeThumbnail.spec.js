@@ -102,7 +102,7 @@ describe('thumbnail', () => {
       expect(wrapper.emitted('input')[0][0]).toEqual(null);
     });
     it('should emit input event with file data when Uploader uploading event is fired', () => {
-      wrapper.find(Uploader).vm.$emit('uploading', [{ id: 'testfile' }]);
+      wrapper.find(Uploader).vm.$emit('uploading', { id: 'testfile' });
       expect(wrapper.emitted('input')[0][0].id).toBe('testfile');
     });
   });

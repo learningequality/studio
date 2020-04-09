@@ -1,9 +1,11 @@
 import { mount } from '@vue/test-utils';
 import FileUploadDefault from '../FileUploadDefault';
 import Uploader from 'shared/views/files/Uploader';
+import storeFactory from 'shared/vuex/baseStore';
 
 function makeWrapper() {
   return mount(FileUploadDefault, {
+    store: storeFactory(),
     attachToDocument: true,
     props: {
       parentTitle: 'root',
@@ -22,7 +24,10 @@ function makeWrapper() {
 describe('fileUploadDefault', () => {
   it('Uploader emitted an uploading event', () => {
     let wrapper = makeWrapper();
-    wrapper.find(Uploader).vm.$emit('uploading', 'test');
-    expect(wrapper.emitted('uploading')[0][0]).toBe('test');
+    const file = {
+      checksum: 'test',
+    };
+    wrapper.find(Uploader).vm.$emit('uploading', [file]);
+    expect(wrapper.emitted('uploading')[0][0]).toEqual([file]);
   });
 });

@@ -51,6 +51,11 @@ function makeWrapper(files) {
         return files;
       },
     },
+    methods: {
+      createFile() {
+        return Promise.resolve();
+      },
+    },
     stubs: {
       FilePreview: true,
     },
@@ -105,16 +110,19 @@ describe('fileUpload', () => {
       let deleteFile = jest.fn();
       wrapper.setData({ selected: 'file-1' });
       wrapper.setMethods({ deleteFile });
-      uploadItem.vm.$emit('remove', 'file-1');
+      uploadItem.vm.$emit('remove', testFiles[0]);
       expect(deleteFile).toHaveBeenCalled();
-      expect(deleteFile.mock.calls[0][0].files[0]).toBe('file-1');
+      expect(deleteFile.mock.calls[0][0]).toBe(testFiles[0]);
     });
     it('emitted uploading event should trigger create file', () => {
-      let createFile = jest.fn();
+      let createFile = jest.fn(() => Promise.resolve());
       wrapper.setMethods({ createFile });
-      uploadItem.vm.$emit('uploading', 'test');
+      uploadItem.vm.$emit('uploading', testFiles[1]);
       expect(createFile).toHaveBeenCalled();
-      expect(createFile.mock.calls[0][0].files[0]).toBe('test');
+      expect(createFile.mock.calls[0][0]).toEqual({
+        ...testFiles[1],
+        contentnode: 'testnode',
+      });
     });
   });
 });

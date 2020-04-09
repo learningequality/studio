@@ -58,6 +58,7 @@
   import last from 'lodash/last';
   import partition from 'lodash/partition';
   import uniq from 'lodash/uniq';
+  import flatMap from 'lodash/flatMap';
 
   import FileStorage from './FileStorage';
   import FileDropzone from './FileDropzone';
@@ -107,10 +108,10 @@
         );
       },
       acceptedMimetypes() {
-        return this.acceptedFiles.flatMap(f => f.associated_mimetypes).join(',');
+        return flatMap(this.acceptedFiles, f => f.associated_mimetypes).join(',');
       },
       acceptedExtensions() {
-        return uniq(this.acceptedFiles.flatMap(f => f.allowed_formats));
+        return uniq(flatMap(this.acceptedFiles, f => f.allowed_formats));
       },
       unsupportedFilesText() {
         return this.$tr('unsupportedFilesText', {

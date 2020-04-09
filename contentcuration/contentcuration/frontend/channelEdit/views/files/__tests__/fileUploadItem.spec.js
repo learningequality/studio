@@ -63,9 +63,12 @@ describe('fileUploadItem', () => {
     beforeEach(() => {
       wrapper = makeWrapper();
     });
-    it('Uploader emitted uploading event should get emitted with the first file item in the list', () => {
-      wrapper.find(Uploader).vm.$emit('uploading', ['file-1', 'file-2']);
-      expect(wrapper.emitted('uploading')[0][0]).toBe('file-1');
+    it('Uploader emitted uploading event should get emitted with emitted file', () => {
+      const file = {
+        checksum: 'file-1',
+      };
+      wrapper.find(Uploader).vm.$emit('uploading', file);
+      expect(wrapper.emitted('uploading')[0][0]).toBe(file);
     });
     it('selecting the item should emit a selected event', () => {
       wrapper.find('[data-test="list-item"]').trigger('click');

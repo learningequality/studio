@@ -170,6 +170,7 @@
 <script>
 
   import flatten from 'lodash/flatten';
+  import flatMap from 'lodash/flatMap';
   import { mapActions, mapGetters, mapMutations } from 'vuex';
   import { TabNames } from '../constants';
   import EditList from './EditList';
@@ -281,7 +282,7 @@
 
           vm.loadContentNodes({ ids })
             .then(nodes => {
-              let loadFilePromise = vm.loadFiles({ ids: nodes.flatMap(n => n.files) });
+              let loadFilePromise = vm.loadFiles({ ids: flatMap(nodes, n => n.files) });
               let relatedResourcesPromises = ids.map(nodeId => vm.loadRelatedResources(nodeId));
               let assessmentItemsPromises = ids.map(nodeId => vm.loadNodeAssessmentItems(nodeId));
 

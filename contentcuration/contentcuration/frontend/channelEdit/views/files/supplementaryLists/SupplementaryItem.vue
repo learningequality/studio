@@ -4,12 +4,13 @@
     :key="file.id"
     :presetID="presetID"
     :readonly="readonly"
+    @uploading="newFile => $emit('uploading', newFile)"
   >
     <template #default="{openFileDialog}">
       <VListTile @click="!readonly && !uploading && openFileDialog()">
         <VListTileContent>
           <VListTileTitle>
-            <span v-if="readonly || uploading">
+            <span v-if="readonly || file.uploading">
               {{ file.original_filename }}
             </span>
             <FileStatusText
