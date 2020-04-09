@@ -42,7 +42,7 @@ export const fileSizeMixin = {
 const statusStrings = createTranslator('StatusStrings', {
   uploadFileSize: '{uploaded} of {total}',
   uploadFailedError: 'Upload failed',
-  noStorageHeader: 'Not enough space',
+  noStorageError: 'Not enough space',
 });
 
 export const fileStatusMixin = {
@@ -79,6 +79,39 @@ export const fileStatusMixin = {
 };
 
 export const constantStrings = createTranslator('ConstantStrings', {
+  do_all: '100% Correct',
+  num_correct_in_a_row_10: '10 in a row',
+  num_correct_in_a_row_2: '2 in a row',
+  num_correct_in_a_row_3: '3 in a row',
+  num_correct_in_a_row_5: '5 in a row',
+  m_of_n: 'M of N...',
+  do_all_description:
+    'Learner must answer all questions in the exercise correctly (not recommended for long exercises)',
+  num_correct_in_a_row_10_description: 'Learner must answer ten questions in a row correctly',
+  num_correct_in_a_row_2_description: 'Learner must answer two questions in a row correctly',
+  num_correct_in_a_row_3_description: 'Learner must answer three questions in a row correctly',
+  num_correct_in_a_row_5_description: 'Learner must answer five questions in a row correctly',
+  m_of_n_description:
+    'Learner must answer M questions correctly from the last N questions answered (e.g. 3 out of 5 means learners need to answer 3 questions correctly out of the 5 most recently answered questions)',
+  input_question: 'Input Question',
+  multiple_selection: 'Multiple Selection',
+  single_selection: 'Single Selection',
+  perseus_question: 'Perseus Question',
+  true_false: 'True/False',
+  unknown_question: 'Unknown Question Type',
+  mp4: 'MP4 Video',
+  vtt: 'VTT Subtitle',
+  mp3: 'MP3 Audio',
+  pdf: 'PDF Document',
+  epub: 'EPub Document',
+  jpg: 'JPG Image',
+  jpeg: 'JPEG Image',
+  png: 'PNG Image',
+  gif: 'GIF Image',
+  json: 'JSON',
+  svg: 'SVG Image',
+  perseus: 'Perseus Exercise',
+  zip: 'HTML5 Zip',
   topic: 'Topic',
   video: 'Video',
   audio: 'Audio',
@@ -89,7 +122,6 @@ export const constantStrings = createTranslator('ConstantStrings', {
   slideshow: 'Slideshow',
   coach: 'Coaches',
   learner: 'Anyone',
-  zip: 'HTML5 Zip',
   high_res_video: 'High Resolution',
   low_res_video: 'Low Resolution',
   video_subtitle: 'Subtitle',

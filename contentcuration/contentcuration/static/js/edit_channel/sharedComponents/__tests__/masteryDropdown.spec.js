@@ -35,8 +35,8 @@ describe('masteryDropdown', () => {
   });
 
   describe('on load', () => {
-    it('all mastery options should be an option to select', () => {
-      _.each(MasteryModels, model => {
+    MasteryModels.forEach(model => {
+      it(`${model} mastery option should be an option to select`, () => {
         expect(wrapper.find('.v-list').text()).toContain(constantStrings.$tr(model));
       });
     });
@@ -47,7 +47,7 @@ describe('masteryDropdown', () => {
         expect(wrapper.find({ ref: 'mValue' }).exists()).toBe(model === 'm_of_n');
         expect(wrapper.find({ ref: 'nValue' }).exists()).toBe(model === 'm_of_n');
       }
-      _.each(MasteryModels, test);
+      MasteryModels.forEach(test);
     });
     it('should render correct mValue and nValue props', () => {
       wrapper.setProps({ value: { mastery_model: 'm_of_n', m: 10, n: 20 } });

@@ -135,14 +135,12 @@
   import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown';
   import ActionLink from 'shared/views/ActionLink';
   import HelpTooltip from 'shared/views/HelpTooltip';
-  import ContentKinds from 'shared/leUtils/ContentKinds';
+  import { ContentKindsList } from 'shared/leUtils/ContentKinds';
   import { LicensesList } from 'shared/leUtils/Licenses';
 
-  const FILTERED_KINDS = new Set(ContentKinds);
+  const excludedKinds = new Set(['topic', 'exercise']);
 
-  ['topic', 'exercise'].forEach(kind => {
-    FILTERED_KINDS.delete(kind);
-  });
+  const includedKinds = ContentKindsList.filter(kind => !excludedKinds.has(kind));
 
   export default {
     name: 'CatalogFilters',
@@ -166,7 +164,7 @@
         return window.isRTL;
       },
       kindOptions() {
-        return FILTERED_KINDS;
+        return includedKinds;
       },
       licenseOptions() {
         return LicensesList;

@@ -8,9 +8,7 @@
         :items="masteryCriteria"
         :label="$tr('labelText')"
         color="primary"
-        :itemText="translateConstant"
         :placeholder="placeholder"
-        itemValue="id"
         :required="required"
         :readonly="readonly"
         :disabled="disabled"
@@ -28,15 +26,15 @@
               <div class="mastery-table">
                 <VLayout
                   v-for="criteria in masteryCriteria"
-                  :key="criteria.id"
+                  :key="criteria.value"
                   row
                   class="mastery-row"
                 >
                   <VFlex xs3 class="mastery-label text-right">
-                    {{ translateConstant(criteria.id) }}
+                    {{ translateConstant(criteria.value) }}
                   </VFlex>
                   <VFlex xs9>
-                    {{ translateConstant(criteria.id + '_description') }}
+                    {{ translateConstant(criteria.value + '_description') }}
                   </VFlex>
                 </VLayout>
               </div>
@@ -91,7 +89,7 @@
 
 <script>
 
-  import MasteryModels from 'shared/leUtils/MasteryModels';
+  import MasteryModels, { MasteryModelsList } from 'shared/leUtils/MasteryModels';
   import InfoModal from 'edit_channel/sharedComponents/InfoModal.vue';
   import { constantsTranslationMixin } from 'shared/mixins';
 
@@ -169,7 +167,7 @@
         },
       },
       masteryCriteria() {
-        return MasteryModels;
+        return MasteryModelsList.map(model => ({ text: this.translateConstant(model), value: model }));
       },
       showMofN() {
         return this.masteryModel === 'm_of_n';

@@ -21,7 +21,7 @@
           <InfoModal v-if="selectedLicense" :header="translate(selectedLicense)">
             <template v-slot:content>
               <p class="license-info">
-                {{ selectedLicense | translateDescription }}
+                {{ translateDescription(selectedLicense)}}
               </p>
             </template>
             <template v-if="selectedLicense.license_url" v-slot:extra-button>
@@ -70,9 +70,7 @@
       InfoModal,
     },
     filters: {
-      translateDescription(item) {
-        return this.translateConstant(item.license_name + '_description');
-      },
+
     },
     mixins: [constantsTranslationMixin],
     props: {
@@ -153,6 +151,9 @@
     methods: {
       translate(item) {
         return this.translateConstant(item.license_name);
+      },
+      translateDescription(item) {
+        return this.translateConstant(item.license_name + '_description');
       },
     },
     $trs: {

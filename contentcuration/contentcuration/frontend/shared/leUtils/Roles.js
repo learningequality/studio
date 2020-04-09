@@ -1,4 +1,9 @@
 // Constant values for Roles sorted by value
-const Roles = new Set(['coach', 'learner']);
+const Roles = new Set([
+  "coach",
+  "learner",
+]);
 
 export default Roles;
+
+export const RolesList = Array.from(Roles);

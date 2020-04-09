@@ -91,7 +91,7 @@ def generate_constants_map_file(
 
     output += "]);\n\n"
     output += "export default {}Map\n\n".format(constant_name)
-    output += "export const {}List = Array.from({}Map.values());".format(
+    output += "export const {}List = Array.from({}Map.values());\n".format(
         constant_name, constant_name
     )
 
@@ -114,7 +114,10 @@ def generate_constants_set_file(
         cast_value = json.dumps(mapper(constant) if mapper is not None else constant)
         output += "{},\n".format(cast_value)
 
-    output += "]);\n\n export default {};\n\n".format(constant_name)
+    output += "]);\n\nexport default {};\n\n".format(constant_name)
+    output += "export const {}List = Array.from({});\n".format(
+        constant_name, constant_name
+    )
 
     with open(os.path.join(constants_path, constant_name + ".js"), "w") as f:
         f.write(output)

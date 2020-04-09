@@ -21,13 +21,13 @@
             <div class="role-table">
               <VLayout v-for="roleOption in roles" :key="roleOption" row>
                 <VFlex xs3 text-right class="role-label">
-                  {{ translateConstant(roleOption) }}
-                  <VIcon v-if="roleIcon(roleOption)" color="primary">
-                    {{ roleIcon(roleOption) }}
+                  {{ roleOption.text }}
+                  <VIcon v-if="roleIcon(roleOption.value)" color="primary">
+                    {{ roleIcon(roleOption.value) }}
                   </VIcon>
                 </VFlex>
                 <VFlex xs9>
-                  {{ $tr(roleOption) }}
+                  {{ $tr(roleOption.value) }}
                 </VFlex>
               </VLayout>
             </div>
@@ -35,16 +35,16 @@
         </InfoModal>
       </template>
       <template v-slot:selection="{ item, index }">
-        <VIcon v-if="roleIcon(item)" color="primary">
-          {{ roleIcon(item) }}
+        <VIcon v-if="roleIcon(item.value)" color="primary">
+          {{ roleIcon(item.value) }}
         </VIcon>
-        {{ translateConstant(item) }}
+        {{ item.text }}
       </template>
       <template v-slot:item="{ item, index }">
-        <VIcon v-if="roleIcon(item)">
-          {{ roleIcon(item) }}
+        <VIcon v-if="roleIcon(item.value)">
+          {{ roleIcon(item.value) }}
         </VIcon>
-        {{ translateConstant(item) }}
+        {{ item.text }}
       </template>
     </VSelect>
   </VLayout>
@@ -53,7 +53,7 @@
 
 <script>
 
-  import Roles from 'shared/leUtils/Roles';
+  import Roles, { RolesList } from 'shared/leUtils/Roles';
   import InfoModal from 'edit_channel/sharedComponents/InfoModal.vue';
   import { constantsTranslationMixin } from 'shared/mixins';
 
@@ -100,7 +100,7 @@
         },
       },
       roles() {
-        return Roles;
+        return RolesList.map(role => ({ text: this.translateConstant(role), value: role }));
       },
       rules() {
         return this.required ? [v => !!v || this.$tr('visibilityRequired')] : [];

@@ -26,7 +26,7 @@ describe('visibilityDropdown', () => {
 
   describe('on load', () => {
     it('all visibility options should be an option to select', () => {
-      _.each(Roles, role => {
+      Roles.forEach(role => {
         expect(wrapper.find('.v-list').text()).toContain(constantStrings.$tr(role));
       });
     });
