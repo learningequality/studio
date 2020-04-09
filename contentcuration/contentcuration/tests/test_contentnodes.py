@@ -195,9 +195,7 @@ class NodeOperationsTestCase(BaseTestCase):
             channel = channels[i]
             prev_channel = channels[i - 1]
 
-            prev_channel.main_tree._set_original_fields()
             prev_channel.main_tree.changed = False
-            assert prev_channel.main_tree.get_changed_fields() == []
             prev_channel.main_tree.save()
             prev_channel.main_tree.refresh_from_db()
             assert prev_channel.main_tree.changed is False
@@ -319,9 +317,6 @@ class NodeOperationsAPITestCase(BaseAPITestCase):
 
         # simulate a clean, right-after-publish state to ensure it is marked as change
         self.channel.main_tree.changed = False
-
-        changed_fields = self.channel.main_tree.get_changed_fields()
-        assert changed_fields == []
 
         self.channel.editors.add(self.user)
         self.channel.main_tree.save()

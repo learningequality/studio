@@ -4,10 +4,11 @@ from builtins import next
 from le_utils.constants import content_kinds
 
 
-def record_channel_stats(channel, original_channel):  # noqa: C901
+def record_channel_stats(channel, original_values):  # noqa: C901
     """
     :param channel: The channel the current action is being performed on.
-    :param original_channel: The dict of `channel` attributes before the action was performed.
+    :param original_values: The dict of `channel` attribute values before the action was performed
+    if they have changed
     """
     action_attributes = dict(channel_id=channel.id, content_type='Channel')
     # TODO: Determine the user_id when a human creates a channel
@@ -47,8 +48,8 @@ def record_channel_stats(channel, original_channel):  # noqa: C901
             # chef_tree only exists on ricecooker uploads
             # channel's main_tree differs from original_channel's on ricecooker uploads
             # channel's version differs from original_channel's on publish calls
-            elif not channel.chef_tree and channel.main_tree_id == original_channel["main_tree_id"] \
-                    and channel.version == original_channel["version"]:
+            elif not channel.chef_tree and "main_tree_id" in original_values \
+                    and "version" in original_values:
                 action_attributes['action'] = 'Update'
                 action_attributes['action_type'] = 'Metadata'
     else:
@@ -63,12 +64,12 @@ def record_channel_stats(channel, original_channel):  # noqa: C901
             action_attributes['channel_num_resources'] = 0
             action_attributes['channel_num_nodes'] = 0
 
-        if original_channel is None:
+        if original_values is None:
             if channel.name:
                 action_attributes['action'] = 'Create'
         elif channel.deleted:
             action_attributes['action'] = 'Delete'
-        elif channel.version == original_channel["version"]:
+        elif "version" in original_values:
             action_attributes['action'] = 'Update'
             action_attributes['action_type'] = 'Metadata'
 

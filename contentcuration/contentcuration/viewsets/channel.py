@@ -75,8 +75,6 @@ class ChannelFilter(FilterSet):
     coach = BooleanFilter(method="filter_coach")
     assessments = BooleanFilter(method="filter_assessments")
     subtitles = BooleanFilter(method="filter_subtitles")
-    bookmark = BooleanFilter(method="filter_bookmark")
-    published = BooleanFilter(method="filter_published")
 
     def __init__(self, *args, **kwargs):
         super(ChannelFilter, self).__init__(*args, **kwargs)

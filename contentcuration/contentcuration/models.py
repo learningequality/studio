@@ -38,6 +38,7 @@ from django.db.models.query_utils import DeferredAttribute
 from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.translation import ugettext as _
+from model_utils import FieldTracker
 from le_utils import proquint
 from le_utils.constants import content_kinds
 from le_utils.constants import exercises
@@ -138,13 +139,16 @@ class User(AbstractBaseUser, PermissionsMixin):
             raise PermissionDenied("Cannot edit content")
         return True
 
-    def can_view(self, channel_id):
-        channel = Channel.objects.filter(pk=channel_id).first()
+    def can_view_channel(self, channel):
         if channel and channel.public:
             return True
         if not self.is_admin and channel and not channel.editors.filter(pk=self.pk).exists() and not channel.viewers.filter(pk=self.pk).exists():
             raise PermissionDenied("Cannot view content")
         return True
+
+    def can_view(self, channel_id):
+        channel = Channel.objects.filter(pk=channel_id).first()
+        return self.can_view_channel(channel)
 
     def can_view_channels(self, channels):
         channels_user_has_perms_for = channels.filter(Q(editors__id__contains=self.id) | Q(viewers__id__contains=self.id) | Q(public=True))
@@ -647,19 +651,21 @@ class Channel(models.Model):
         blank=True,
     )
 
-    def _as_dict(self):
-        opts = self._meta
-        data = {}
-        for f in opts.concrete_fields:
-            data[f.name] = f.value_from_object(self)
-            if f.is_relation:
-                # For relations, also set the DB column so that we can reference
-                # the foreign key by _id
-                data[f.column] = data[f.name]
-        return data
-
-    def _set_original_fields(self):
-        self._original_fields = self._as_dict()
+    _field_updates = FieldTracker(fields=[
+        # Field to watch for changes
+        "description",
+        "language_id",
+        "thumbnail",
+        "name",
+        "thumbnail_encoding",
+        # watch these fields for changes
+        # but exclude them from setting changed
+        # on the main tree
+        "deleted",
+        "public",
+        "main_tree_id",
+        "version",
+    ])
 
     @classmethod
     def get_all_channels(cls):
@@ -682,13 +688,6 @@ class Channel(models.Model):
             .aggregate(resource_size=Sum('file_size'))
         cache.set(self.resource_size_key(), files['resource_size'] or 0, None)
         return files['resource_size'] or 0
-
-    @classmethod
-    def from_db(cls, db, field_names, values):
-        instance = super(Channel, cls).from_db(db, field_names, values)
-        # customization to store the original field values on the instance
-        instance._set_original_fields()
-        return instance
 
     def on_create(self):
         record_channel_stats(self, None)
@@ -722,30 +721,38 @@ class Channel(models.Model):
             delete_public_channel_cache_keys()
 
     def on_update(self):
-        record_channel_stats(self, self._original_fields)
-        # Check if original thumbnail is no longer referenced
-        if self.thumbnail != self._original_fields["thumbnail"] and self._original_fields["thumbnail"] and 'static' not in self._original_fields["thumbnail"]:
-            filename, ext = os.path.splitext(self._original_fields["thumbnail"])
-            delete_empty_file_reference(filename, ext[1:])
+        original_values = self._field_updates.changed()
+        record_channel_stats(self, original_values)
 
-        fields_to_check = ['description', 'language_id', 'thumbnail', 'name', 'thumbnail_encoding', 'deleted']
-        changed = any([f for f in fields_to_check if getattr(self, f) != self._original_fields[f]])
+        blacklist = set([
+            "public",
+            "main_tree_id",
+            "version",
+        ])
 
-        if changed:
+        if self.main_tree and original_values and any((True for field in original_values if field not in blacklist)):
             # Changing channel metadata should also mark main_tree as changed
             self.main_tree.changed = True
 
-            # Delete db if channel has been deleted and mark as unpublished
-            if not self._original_fields["deleted"] and self.deleted:
-                self.pending_editors.all().delete()
-                export_db_storage_path = os.path.join(settings.DB_ROOT, "{channel_id}.sqlite3".format(channel_id=self.id))
-                if default_storage.exists(export_db_storage_path):
-                    default_storage.delete(export_db_storage_path)
+        # Check if original thumbnail is no longer referenced
+        if "thumbnail" in original_values and original_values["thumbnail"] and 'static' not in original_values["thumbnail"]:
+            filename, ext = os.path.splitext(original_values["thumbnail"])
+            delete_empty_file_reference(filename, ext[1:])
+
+        # Delete db if channel has been deleted and mark as unpublished
+        if "deleted" in original_values and not original_values["deleted"]:
+            self.pending_editors.all().delete()
+            export_db_storage_path = os.path.join(settings.DB_ROOT, "{channel_id}.sqlite3".format(channel_id=self.id))
+            if default_storage.exists(export_db_storage_path):
+                default_storage.delete(export_db_storage_path)
+                if self.main_tree:
                     self.main_tree.published = False
+
+        if self.main_tree and self.main_tree._field_updates.changed():
             self.main_tree.save()
 
         # if this change affects the public channel list, clear the channel cache
-        if self.public or self._original_fields["public"] != self.public:
+        if "public" in original_values:
             delete_public_channel_cache_keys()
 
     def save(self, *args, **kwargs):
@@ -755,8 +762,6 @@ class Channel(models.Model):
             self.on_update()
 
         super(Channel, self).save(*args, **kwargs)
-        # Update the _original_fields after save
-        self._set_original_fields()
 
     def get_thumbnail(self):
         return get_channel_thumbnail(self)
@@ -982,52 +987,16 @@ class ContentNode(MPTTModel, models.Model):
 
     objects = CustomContentNodeTreeManager()
 
+    # Track all updates and ignore a blacklist of attributes
+    # when we check for changes
+    _field_updates = FieldTracker()
+
     @raise_if_unsaved
     def get_root(self):
         # Only topics can be root nodes
         if not self.parent and self.kind_id != content_kinds.TOPIC:
             return self
         return super(ContentNode, self).get_root()
-
-    def _as_dict(self):
-        opts = self._meta
-        data = {}
-        for f in opts.concrete_fields:
-            data[f.name] = f.value_from_object(self)
-            if f.is_relation:
-                # For relations, also set the DB column so that we can reference
-                # the foreign key by _id
-                data[f.column] = data[f.name]
-        return data
-
-    def _set_original_fields(self):
-        self._original_fields = self._as_dict()
-
-    @classmethod
-    def from_db(cls, db, field_names, values):
-        instance = super(ContentNode, cls).from_db(db, field_names, values)
-        # customization to store the original field values on the instance
-        instance._set_original_fields()
-        return instance
-
-    def get_changed_fields(self):
-        opts = self._meta
-        mptt_opts = self._mptt_meta
-        # If this is a new object, then all its fields are changed!
-        if self._state.adding:
-            return [f.name for f in opts.concrete_fields]
-        # Ignore fields that are used for dirty tracking, and also mptt fields, as changes to these are tracked in mptt manager methods.
-        blacklist = set([
-            'changed',
-            'modified',
-            'publishing',
-            mptt_opts.tree_id_attr,
-            mptt_opts.left_attr,
-            mptt_opts.right_attr,
-            mptt_opts.level_attr,
-            mptt_opts.parent_attr,
-        ])
-        return [f.name for f in opts.concrete_fields if f.name not in blacklist and self._original_fields[f.name] != f.value_from_object(self)]
 
     def get_tree_data(self, levels=float('inf')):
         """
@@ -1245,7 +1214,20 @@ class ContentNode(MPTTModel, models.Model):
         self.changed = True
 
     def on_update(self):
-        self.changed = self.changed or len(self.get_changed_fields()) > 0
+        mptt_opts = self._mptt_meta
+        # Ignore fields that are used for dirty tracking, and also mptt fields, as changes to these are tracked in mptt manager methods.
+        blacklist = set([
+            'changed',
+            'modified',
+            'publishing',
+            mptt_opts.tree_id_attr,
+            mptt_opts.left_attr,
+            mptt_opts.right_attr,
+            mptt_opts.level_attr,
+            mptt_opts.parent_attr,
+        ])
+        original_values = self._field_updates.changed()
+        self.changed = self.changed or any((True for field in original_values if field not in blacklist))
 
     def save(self, *args, **kwargs):
         if self._state.adding:
@@ -1276,8 +1258,19 @@ class ContentNode(MPTTModel, models.Model):
                 super(ContentNode, self).save(*args, **kwargs)
         else:
             super(ContentNode, self).save(*args, **kwargs)
-        # Update the _original_fields after save
-        self._set_original_fields()
+
+    # Copied from MPTT
+    save.alters_data = True
+
+    def delete(self, *args, **kwargs):
+        parent = self.parent or self._field_updates.changed('parent')
+        if parent:
+            parent.changed = True
+            parent.save()
+        return super(ContentNode, self).delete(*args, **kwargs)
+
+    # Copied from MPTT
+    delete.alters_data = True
 
     class Meta:
         verbose_name = _("Topic")
