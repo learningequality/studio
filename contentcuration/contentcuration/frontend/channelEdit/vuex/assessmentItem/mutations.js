@@ -2,6 +2,10 @@ import Vue from 'vue';
 import { mergeMapItem } from 'shared/vuex/utils';
 
 export function ADD_ASSESSMENTITEM(state, assessmentItem) {
+  UPDATE_ASSESSMENTITEM(state, assessmentItem);
+}
+
+export function UPDATE_ASSESSMENTITEM(state, assessmentItem) {
   if (!assessmentItem.assessment_id) {
     throw ReferenceError('assessment_id must be defined to update an assessment item');
   }
@@ -39,12 +43,6 @@ export function ADD_ASSESSMENTITEM(state, assessmentItem) {
       'assessment_id'
     )
   );
-}
-
-export function ADD_ASSESSMENTITEMS(state, assessmentItems = []) {
-  assessmentItems.forEach(assessmentItem => {
-    ADD_ASSESSMENTITEM(state, assessmentItem);
-  });
 }
 
 export function DELETE_ASSESSMENTITEM(state, assessmentItem) {
