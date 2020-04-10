@@ -33,7 +33,7 @@
         type: [String, Array],
         required: false,
         validator: function(value) {
-          return !value || Languages[value];
+          return !value || Languages.has(value);
         },
       },
       required: {

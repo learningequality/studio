@@ -55,7 +55,7 @@ describe('utils', () => {
       expect(sanitizeFiles(testFiles)).toEqual([{ id: 'test' }]);
     });
     it('should take out uploading files', () => {
-      let testFiles = [{ progress: 50 }, { id: 'test' }];
+      let testFiles = [{ progress: 0.5 }, { id: 'test' }];
       expect(sanitizeFiles(testFiles)).toEqual([{ id: 'test' }]);
     });
   });

@@ -31,21 +31,21 @@
     <VSpacer />
     <VListTileAction class="status-indicator mr-1">
       <div>
-        <div v-if="!uploads.length">
+        <div v-if="!uploadingFiles.length">
           <Icon v-if="!nodeIsValid" color="red" class="error-icon">
             error
           </Icon>
         </div>
-        <VTooltip v-else-if="hasErrors" top>
+        <VTooltip v-else-if="erroredFiles.length" top>
           <template v-slot:activator="{ on }">
             <Icon color="red" :large="large" v-on="on">
               error
             </Icon>
           </template>
-          <span>{{ statusMessage(fileIDs) }}</span>
+          <span>{{ errorMessage(erroredFiles[0].checksum) }}</span>
         </VTooltip>
         <Icon
-          v-else-if="progress >= 100"
+          v-else-if="progress >= 1"
           :large="large"
           color="greenSuccess"
           data-test="done"
@@ -56,7 +56,7 @@
           v-else
           :size="large? 60 : 20"
           :width="large? 8: 4"
-          :value="progress"
+          :value="progress * 100"
           color="greenSuccess"
           rotate="270"
           data-test="progress"
@@ -99,6 +99,7 @@
     computed: {
       ...mapGetters('currentChannel', ['canEdit']),
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodeIsValid']),
+      ...mapGetters('file', ['getContentNodeFiles']),
       selected: {
         get() {
           return this.value;
@@ -112,6 +113,9 @@
       },
       nodeIsValid() {
         return !this.canEdit || this.getContentNodeIsValid(this.nodeId);
+      },
+      files() {
+        return this.getContentNodeFiles(this.nodeId);
       },
       backgroundColor() {
         if (this.selected.includes(this.nodeId)) {
@@ -133,6 +137,17 @@
           (this.$route.name === RouterNames.ADD_TOPICS ||
             this.$route.name === RouterNames.UPLOAD_FILES ||
             this.$route.name === RouterNames.ADD_EXERCISE)
+        );
+      },
+      uploadingFiles() {
+        return this.files.filter(f => f.uploading || f.progress);
+      },
+      erroredFiles() {
+        return this.files.filter(f => f.error);
+      },
+      progress() {
+        return (
+          this.uploadingFiles.reduce((sum, f) => f.progress + sum, 0) / this.uploadingFiles.length
         );
       },
     },

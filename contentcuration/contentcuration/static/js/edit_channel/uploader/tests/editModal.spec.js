@@ -145,7 +145,7 @@ describe.skip('editModal', () => {
       expect(mockFunctions.saveNodes).toHaveBeenCalled();
     });
     it('should catch uploads in progress', () => {
-      localStore.commit('edit_modal/UPDATE_NODE', { files: [{ progress: 50 }] });
+      localStore.commit('edit_modal/UPDATE_NODE', { files: [{ progress: 0.5, uploading: true }] });
       wrapper.find('[data-test="close"]').trigger('click');
       expect(mockFunctions.saveNodes).not.toHaveBeenCalled();
       expect(wrapper.find({ ref: 'uploadsprompt' }).isVisible()).toBe(true);

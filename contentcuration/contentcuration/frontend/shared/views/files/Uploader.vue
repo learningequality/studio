@@ -175,16 +175,13 @@
         }
       },
       handleUploads(files) {
-        return new Promise(resolve => {
-          const promises = [...files].map(file => {
-            // Catch any errors from file uploads and just
-            // return null for the fileUploadObject if so
-            this.uploadFile({ file }).catch(() => null);
-          });
-          Promise.all(promises).then(fileUploadObject => {
-            // Filter out any null values here
-            resolve(fileUploadObject.filter(c => c));
-          });
+        // Catch any errors from file uploads and just
+        // return null for the fileUploadObject if so
+        return Promise.all(
+          [...files].map(file => this.uploadFile({ file }).catch(() => null))
+        ).then(fileUploadObject => {
+          // Filter out any null values here
+          return fileUploadObject.filter(c => c);
         });
       },
     },

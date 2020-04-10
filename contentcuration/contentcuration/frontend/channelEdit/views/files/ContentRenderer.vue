@@ -6,7 +6,7 @@
         {{ $tr('noFileText') }}
       </VLayout>
     </VCard>
-    <VCard v-else-if="uploading || file.error" color="grey lighten-4" flat>
+    <VCard v-else-if="file.uploading || file.error" color="grey lighten-4" flat>
       <VLayout align-center justify-center fill-height data-test="progress">
         <FileStatus :checksum="file.checksum" large />
       </VLayout>
@@ -109,9 +109,6 @@
       },
       src() {
         return this.file && this.file.url;
-      },
-      uploading() {
-        return this.file.progress !== undefined;
       },
     },
     watch: {

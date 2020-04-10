@@ -40,7 +40,7 @@ function makeWrapper(props = {}, progress) {
         };
       },
       uploading() {
-        return progress;
+        return progress < 1;
       },
       getContentNodeFiles() {
         return () => {
@@ -88,7 +88,7 @@ describe('thumbnail', () => {
   });
   describe('upload workflow', () => {
     beforeEach(() => {
-      wrapper = makeWrapper({ value: testThumbnail }, 50);
+      wrapper = makeWrapper({ value: testThumbnail }, 0.5);
     });
     it('progress should be shown during upload', () => {
       expect(wrapper.find('[data-test="progress"]').exists()).toBe(true);

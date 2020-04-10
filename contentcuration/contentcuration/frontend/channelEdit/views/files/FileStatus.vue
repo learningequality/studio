@@ -21,7 +21,7 @@
       v-else
       :size="large? 60 : 20"
       :width="large? 8: 4"
-      :value="progress"
+      :value="progress * 100"
       color="greenSuccess"
       rotate="270"
       data-test="progress"
