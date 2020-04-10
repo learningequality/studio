@@ -228,12 +228,8 @@
       this.targetNodeId = this.currentLocationId || this.rootId;
     },
     methods: {
-      ...mapActions('contentNode', [
-        'createContentNode',
-        'loadChildren',
-        'moveContentNodes',
-        'moveContentNodesToClipboard',
-      ]),
+      ...mapActions('contentNode', ['createContentNode', 'loadChildren', 'moveContentNodes']),
+      ...mapActions('clipboard', ['copyAll']),
       ...mapMutations('contentNode', { setMoveNodes: 'SET_MOVE_NODES' }),
       isDisabled(node) {
         return this.moveNodeIds.includes(node.id);
@@ -270,7 +266,8 @@
         });
       },
       moveToClipboard() {
-        this.moveContentNodesToClipboard(this.moveNodeIds).then(() => {
+        // Clipboard only holds references to copies, so we cannot "move" a node to the clipboard
+        this.copyAll(this.moveNodeIds).then(() => {
           this.$router.push(this.closeLink);
           this.$store.dispatch('showSnackbar', { text: this.$tr('movedToClipboardMessage') });
         });

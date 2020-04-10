@@ -1,5 +1,6 @@
 import template from './vuex/template';
 import assessmentItem from './vuex/assessmentItem';
+import clipboard from './vuex/clipboard';
 import contentNode from './vuex/contentNode';
 import currentChannel from './vuex/currentChannel';
 import importFromChannels from './vuex/importFromChannels';
@@ -25,6 +26,7 @@ const store = storeFactory({
     task,
     template,
     assessmentItem,
+    clipboard,
     contentNode,
     currentChannel,
     importFromChannels,

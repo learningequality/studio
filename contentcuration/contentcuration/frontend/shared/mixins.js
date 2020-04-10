@@ -1,7 +1,7 @@
 import { mapGetters } from 'vuex';
 import { fileErrors } from './constants';
 import Languages from 'shared/leUtils/Languages';
-import { createTranslator } from 'shared/i18n/utils';
+import { createTranslator } from 'shared/i18n';
 
 const sizeStrings = createTranslator('BytesForHumansStrings', {
   fileSizeInBytes: '{n, number, integer} B',
@@ -159,6 +159,10 @@ export const constantStrings = createTranslator('ConstantStrings', {
     'Public Domain work has been identified as being free of known restrictions under copyright law, including all related and neighboring rights.',
   'Special Permissions_description':
     'Special Permissions is a custom license to use when the current licenses do not apply to the content. The owner of this license is responsible for creating a description of what this license entails.',
+
+  // global copy strings
+  firstCopy: '{title} (copy)',
+  nthCopy: '{title} (copy {n, number, integer})',
 });
 
 export const constantsTranslationMixin = {

@@ -25,19 +25,8 @@ export function getContentNode(state) {
 }
 
 export function getTreeNode(state) {
-  return function(contentNodeId) {
-    return state.treeNodesMap[contentNodeId];
-  };
-}
-export function getContentNodes(state) {
-  return function(contentNodeIds) {
-    return sorted(contentNodeIds.map(id => getContentNode(state)(id)).filter(node => node));
-  };
-}
-
-export function getContentNodeChildren(state) {
-  return function(contentNodeId) {
-    return getContentNodes(state)(getTreeNodeChildren(state)(contentNodeId).map(node => node.id));
+  return function(treeNodeId) {
+    return state.treeNodesMap[treeNodeId];
   };
 }
 
@@ -46,6 +35,27 @@ export function getTreeNodeChildren(state) {
     return sorted(
       Object.values(state.treeNodesMap).filter(contentNode => contentNode.parent === treeNodeId)
     );
+  };
+}
+
+export function getTreeNodeDescendants(state, getters) {
+  return function(treeNodeId) {
+    return getters.getTreeNodeChildren(treeNodeId).reduce((descendants, treeNode) => {
+      descendants.push(treeNode, ...getters.getTreeNodeDescendants(treeNode.id));
+      return descendants;
+    }, []);
+  };
+}
+
+export function getContentNodes(state, getters) {
+  return function(contentNodeIds) {
+    return sorted(contentNodeIds.map(id => getters.getContentNode(id)).filter(node => node));
+  };
+}
+
+export function getContentNodeChildren(state, getters) {
+  return function(contentNodeId) {
+    return getters.getContentNodes(getters.getTreeNodeChildren(contentNodeId).map(node => node.id));
   };
 }
 

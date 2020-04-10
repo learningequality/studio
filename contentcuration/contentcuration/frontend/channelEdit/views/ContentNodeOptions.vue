@@ -15,10 +15,10 @@
     <VListTile v-if="canEdit" @click.stop="setMoveNodes([nodeId])">
       <VListTileTitle>{{ $tr('move') }}</VListTileTitle>
     </VListTile>
-    <VListTile v-if="canEdit" @click.stop>
+    <VListTile v-if="canEdit" @click="makeACopy">
       <VListTileTitle>{{ $tr('makeACopy') }}</VListTileTitle>
     </VListTile>
-    <VListTile @click.stop>
+    <VListTile @click="copyToClipboard">
       <VListTileTitle>{{ $tr('copyToClipboard') }}</VListTileTitle>
     </VListTile>
     <VListTile v-if="canEdit" @click="removeItem">
@@ -32,6 +32,8 @@
 
   import { mapActions, mapGetters, mapMutations } from 'vuex';
   import { RouterNames } from '../constants';
+  import translator from '../translator';
+  import { RELATIVE_TREE_POSITIONS } from 'shared/data/constants';
 
   export default {
     name: 'ContentNodeOptions',
@@ -72,9 +74,13 @@
           },
         };
       },
+      deepCopy() {
+        return this.node.kind === 'topic';
+      },
     },
     methods: {
-      ...mapActions('contentNode', ['createContentNode', 'moveContentNodes']),
+      ...mapActions('contentNode', ['createContentNode', 'moveContentNodes', 'copyContentNode']),
+      ...mapActions('clipboard', ['copy']),
       ...mapMutations('contentNode', { setMoveNodes: 'SET_MOVE_NODES' }),
       newTopicNode() {
         let nodeData = {
@@ -96,6 +102,30 @@
         this.moveContentNodes({ ids: [this.nodeId], parent: this.trashId }).then(() => {
           this.$store.dispatch('showSnackbar', { text: this.$tr('removedItemsMessage') });
           this.$emit('removed');
+        });
+      },
+      makeACopy() {
+        this.$store.dispatch('showSnackbar', {
+          text: translator.$tr(this.deepCopy ? 'creatingCopies' : 'creatingCopy'),
+        });
+
+        this.copyContentNode({
+          id: this.nodeId,
+          target: this.nodeId,
+          position: RELATIVE_TREE_POSITIONS.RIGHT,
+          deep: this.deepCopy,
+        }).then(results => {
+          const multiple = this.deepCopy ? results.length > 1 : false;
+          this.$store.dispatch('showSnackbar', {
+            text: translator.$tr(multiple ? 'copyCreated' : 'copiesCreated'),
+          });
+        });
+      },
+      copyToClipboard() {
+        this.copy({ id: this.nodeId, deep: this.deepCopy }).then(() => {
+          this.$store.dispatch('showSnackbar', {
+            text: translator.$tr(`sentToClipboard`),
+          });
         });
       },
     },

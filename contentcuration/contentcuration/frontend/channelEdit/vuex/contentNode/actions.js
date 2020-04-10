@@ -2,8 +2,8 @@ import difference from 'lodash/difference';
 import union from 'lodash/union';
 import { NOVALUE } from 'shared/constants';
 import client from 'shared/client';
-import { MOVE_POSITIONS } from 'shared/data/constants';
-import { ContentNode, Tree } from 'shared/data/resources';
+import { RELATIVE_TREE_POSITIONS } from 'shared/data/constants';
+import { ContentNode, Tree, promiseChunk } from 'shared/data/resources';
 
 /**
  * @param context
@@ -63,6 +63,14 @@ export function loadTree(context, params) {
     return nodes;
   });
 }
+
+export function loadTreeNode(context, id) {
+  return Tree.get(id).then(node => {
+    context.commit('ADD_TREENODE', node);
+    return node;
+  });
+}
+
 export function loadChannelTree(context, channel_id) {
   return context.dispatch('loadTree', { channel_id });
 }
@@ -74,8 +82,8 @@ export function loadTrashTree(context, channelId) {
 }
 
 export function loadClipboardTree(context) {
-  const tree_id = context.rootState.session.currentUser.clipboard_root_id;
-  return tree_id ? context.dispatch('loadTree', { tree_id }) : Promise.reject();
+  const tree_id = context.rootGetters['clipboardRootId'];
+  return tree_id ? context.dispatch('loadTree', { tree_id }) : Promise.resolve([]);
 }
 
 export function loadChildren(context, { parent, channel_id }) {
@@ -250,7 +258,7 @@ export function createContentNode(context, { parent, kind = 'topic', ...payload 
       context.dispatch('file/updateFile', { id: file, contentnode: id }, { root: true });
     });
 
-    return Tree.move(id, parent, MOVE_POSITIONS.LAST_CHILD).then(treeNode => {
+    return Tree.move(id, parent, RELATIVE_TREE_POSITIONS.LAST_CHILD).then(treeNode => {
       context.commit('ADD_CONTENTNODE', {
         id,
         ...contentNodeData,
@@ -386,23 +394,69 @@ export function deleteContentNodes(context, contentNodeIds) {
   );
 }
 
-export function copyContentNodes(context, contentNodeIds) {
-  // TODO: Implement copy nodes endpoint
-  return new Promise(resolve => resolve(context, contentNodeIds));
+export function copyContentNode(context, { id, target, position = 'last-child', deep = false }) {
+  return ContentNode.copy(id, target, position, deep).then(results => {
+    const { treeNodes, nodes } = results;
+    context.commit('ADD_CONTENTNODES', nodes);
+    context.commit('ADD_TREENODES', treeNodes);
+
+    return promiseChunk(nodes, 10, chunk => {
+      const treeNodeMap = chunk.reduce((treeNodeMap, node) => {
+        const treeNode = context.getters.getTreeNode(node.id);
+        if (treeNode.source_id in treeNodeMap) {
+          // I don't think this should happen
+          throw new Error('Not implemented');
+        }
+
+        treeNodeMap[treeNode.source_id] = treeNode;
+        return treeNodeMap;
+      }, {});
+
+      const contentnodes = Object.keys(treeNodeMap);
+      const updater = fileOrAssessment => {
+        return {
+          contentnode: treeNodeMap[fileOrAssessment.contentnode].id,
+        };
+      };
+
+      return Promise.all([
+        context.dispatch(
+          'assessmentItem/copyAssessmentItems',
+          {
+            params: { contentnodes },
+            updater,
+          },
+          { root: true }
+        ),
+        context.dispatch(
+          'file/copyFiles',
+          {
+            params: { contentnodes },
+            updater,
+          },
+          { root: true }
+        ),
+      ]);
+    }).then(() => nodes);
+  });
+}
+
+export function copyContentNodes(context, { ids, parent: target }) {
+  const position = RELATIVE_TREE_POSITIONS.LAST_CHILD;
+  return promiseChunk(ids, 10, chunk => {
+    return Promise.all(
+      chunk.map(id => context.dispatch('copyContentNode', { id, target, position }))
+    );
+  });
 }
 
 export function moveContentNodes(context, { ids, parent }) {
   return Promise.all(
     ids.map(id => {
-      return Tree.move(id, parent, MOVE_POSITIONS.LAST_CHILD).then(treeNode => {
+      return Tree.move(id, parent, RELATIVE_TREE_POSITIONS.LAST_CHILD).then(treeNode => {
         context.commit('UPDATE_TREENODE', treeNode);
         return id;
       });
     })
   );
-}
-
-export function moveContentNodesToClipboard(context, contentNodeIds) {
-  // TODO: Implement move to clipboard action
-  return new Promise(resolve => resolve(context, contentNodeIds));
 }

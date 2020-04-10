@@ -1,4 +1,4 @@
-import { AssessmentItem } from 'shared/data/resources';
+import { AssessmentItem, uuid4, resolveUpdater } from 'shared/data/resources';
 
 /**
  * Load all assessment items belonging to a content node.
@@ -18,9 +18,9 @@ export function loadAssessmentItems(context, params = {}) {
 
 export function loadAssessmentItem(context, id) {
   return AssessmentItem.get(id)
-    .then(assesmentItem => {
-      context.commit('ADD_ASSESSMENTITEM', assesmentItem);
-      return assesmentItem;
+    .then(assessmentItem => {
+      context.commit('ADD_ASSESSMENTITEM', assessmentItem);
+      return assessmentItem;
     })
     .catch(() => {
       return;
@@ -57,6 +57,43 @@ export function updateAssessmentItem(context, assessmentItem) {
     hints: JSON.stringify(assessmentItem.hints || []),
   };
   return AssessmentItem.put(stringifiedAssessmentItem);
+}
+
+export function copyAssessmentItems(context, { params, updater }) {
+  let itemMap = {};
+  updater = resolveUpdater(updater);
+  return AssessmentItem.where(params)
+    .then(assessmentItems => {
+      if (!assessmentItems.length) {
+        return [];
+      }
+
+      return AssessmentItem.bulkCopy(assessmentItems, assessmentItem => {
+        const id = uuid4();
+        itemMap[assessmentItem.id] = id;
+        return item => ({ ...updater(item), id });
+      });
+    })
+    .then(newAssessmentItems => {
+      if (!newAssessmentItems.length) {
+        return [];
+      }
+
+      context.commit('ADD_ASSESSMENTITEMS', newAssessmentItems);
+
+      return context
+        .dispatch('file/copyFiles', {
+          params: {
+            assessment_items: Object.keys(itemMap),
+          },
+          updater: file => {
+            return {
+              assessment_item: itemMap[file.assessment_item],
+            };
+          },
+        })
+        .then(() => newAssessmentItems);
+    });
 }
 
 export function deleteAssessmentItem(context, assesmentItem) {
