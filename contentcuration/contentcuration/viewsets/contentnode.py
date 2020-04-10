@@ -1,7 +1,10 @@
+import copy
 import json
+import uuid
 
 from django.conf import settings
 from django.core.cache import cache
+from django.db import transaction
 from django.db.models import Exists
 from django.db.models import F
 from django.db.models import OuterRef
@@ -11,10 +14,13 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
 from le_utils.constants import content_kinds
 from le_utils.constants import roles
+from rest_framework.serializers import empty
 from rest_framework.serializers import PrimaryKeyRelatedField
+from rest_framework.serializers import ValidationError
 
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
+from contentcuration.models import ContentTag
 from contentcuration.models import File
 from contentcuration.models import generate_storage_url
 from contentcuration.models import PrerequisiteContentRelationship
@@ -24,6 +30,12 @@ from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.common import NotNullArrayAgg
 from contentcuration.viewsets.common import SQCount
 from contentcuration.viewsets.common import UUIDInFilter
+from contentcuration.viewsets.sync.constants import CONTENTNODE
+from contentcuration.viewsets.sync.constants import DELETED
+from contentcuration.viewsets.sync.constants import UPDATED
+
+
+ORPHAN_TREE_ID_CACHE_KEY = "orphan_tree_id_cache_key"
 
 
 class ContentNodeFilter(FilterSet):
@@ -162,7 +174,30 @@ def clean_content_tags(item):
     return filter(lambda x: x is not None, tags)
 
 
-ORPHAN_TREE_ID_CACHE_KEY = "orphan_tree_id_cache_key"
+def copy_tags(from_node, to_channel_id, to_node):
+    from_channel_id = from_node.get_channel().id
+
+    from_query = ContentTag.objects.filter(channel_id=to_channel_id)
+    to_query = ContentTag.objects.filter(channel_id=from_channel_id)
+
+    create_query = from_query.values("tag_name").difference(to_query.values("tag_name"))
+    new_tags = [ContentTag(channel_id=to_channel_id, tag_name=tag_name) for tag_name in create_query]
+    ContentTag.objects.bulk_create(new_tags)
+
+    tag_ids = to_query.filter(tag_name__in=from_node.tags.values("tag_name"))
+    new_throughs = [
+        ContentNode.tags.through(contentnode_id=to_node.id, contenttag_id=tag_id)
+        for tag_id in tag_ids
+    ]
+    ContentNode.tags.through.objects.bulk_create(new_throughs)
+
+
+copy_ignore_fields = {
+    "tags",
+    "total_count",
+    "resource_count",
+    "coach_count",
+}
 
 
 class ContentNodeViewSet(ValuesViewset):
@@ -268,14 +303,14 @@ class ContentNodeViewSet(ValuesViewset):
         if ORPHAN_TREE_ID_CACHE_KEY not in cache:
             tree_id = (
                 ContentNode.objects.filter(id=settings.ORPHANAGE_ROOT_ID)
-                .values_list("tree_id", flat=True)
-                .get()
+                    .values_list("tree_id", flat=True)
+                    .get()
             )
             # No reason for this to change so can cache for a long time
             cache.set(ORPHAN_TREE_ID_CACHE_KEY, 24 * 60 * 60)
         else:
             tree_id = cache.get(ORPHAN_TREE_ID_CACHE_KEY)
-        # Creating a new node, by default put it in the orphanage on initial creation.
+            # Creating a new node, by default put it in the orphanage on initial creation.
         serializer.save(
             tree_id=tree_id,
             parent_id=settings.ORPHANAGE_ROOT_ID,
@@ -283,3 +318,85 @@ class ContentNodeViewSet(ValuesViewset):
             rght=2,
             level=1,
         )
+
+    def copy(self, pk, user=None, from_key=None, **mods):
+        delete_response = [
+            dict(
+                key=pk,
+                table=CONTENTNODE,
+                type=DELETED,
+            ),
+        ]
+
+        try:
+            with transaction.atomic():
+                try:
+                    source = ContentNode.objects.get(pk=from_key)
+                except ContentNode.DoesNotExist:
+                    error = ValidationError("Copy source node does not exist")
+                    return str(error), delete_response
+
+                if ContentNode.objects.filter(pk=pk).exists():
+                    raise ValidationError("Copy pk already exists")
+
+                # clone the model (in-memory) and update the fields on the cloned model
+                new_node = copy.copy(source)
+                new_node.pk = pk
+                new_node.published = False
+                new_node.changed = True
+                new_node.cloned_source = source
+                new_node.node_id = uuid.uuid4().hex
+                new_node.source_node_id = source.node_id
+                new_node.freeze_authoring_data = not Channel.objects.filter(
+                    pk=source.original_channel_id, editors=user).exists()
+
+                new_node.tree_id = get_orphan_tree_id()
+                new_node.parent_id = settings.ORPHANAGE_ROOT_ID
+                new_node.lft = 1
+                new_node.rght = 2
+                new_node.level = 1
+
+                # There might be some legacy nodes that don't have these, so ensure they are added
+                if not new_node.original_channel_id or not new_node.original_source_node_id:
+                    original_node = source.get_original_node()
+                    original_channel = original_node.get_channel()
+                    new_node.original_channel_id = original_channel.id if original_channel else None
+                    new_node.original_source_node_id = original_node.node_id
+
+                new_node.source_channel_id = mods.pop("source_channel_id", None)
+                if not new_node.source_channel_id:
+                    source_channel = source.get_channel()
+                    new_node.source_channel_id = source_channel.id if source_channel else None
+
+                new_node.save(force_insert=True)
+
+                # because we don't know the tree yet, and tag data model currently uses channel,
+                # we can't copy them unless we were given the new channel
+                channel_id = mods.pop("channel_id", None)
+                if channel_id:
+                    copy_tags(source, channel_id, new_node)
+
+                # Remove these because we do not want to define any mod operations on them during copy
+                def clean_copy_data(data):
+                    return {
+                        key: empty if key in copy_ignore_fields else value
+                        for key, value in data.items()
+                    }
+
+                # Creating a new node, by default put it in the orphanage on initial creation.
+                serializer = ContentNodeSerializer(instance=new_node, data=clean_copy_data(mods),
+                                                   partial=True)
+                serializer.is_valid(raise_exception=True)
+                node, _ = serializer.save()
+                node.save()
+
+                return None, [
+                    dict(
+                        key=pk,
+                        table=CONTENTNODE,
+                        type=UPDATED,
+                        mods=clean_copy_data(serializer.validated_data)
+                    ),
+                ]
+        except ValidationError as e:
+            return str(e), None

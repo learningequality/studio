@@ -1,19 +1,28 @@
+import copy
 import re
 
 from django.core.files.storage import default_storage
+from django.db import transaction
+from django.db.models import ObjectDoesNotExist
+from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
 from django_s3_storage.storage import S3Error
 from le_utils.constants import exercises
 from le_utils.constants import format_presets
+from rest_framework.serializers import ValidationError
 
 from contentcuration.models import AssessmentItem
+from contentcuration.models import ContentNode
 from contentcuration.models import File
 from contentcuration.models import generate_object_storage_name
-from contentcuration.viewsets.base import ValuesViewset
-from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import BulkListSerializer
+from contentcuration.viewsets.base import BulkModelSerializer
+from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.common import NotNullArrayAgg
+from contentcuration.viewsets.sync.constants import ASSESSMENTITEM
+from contentcuration.viewsets.sync.constants import CREATED
+from contentcuration.viewsets.sync.constants import DELETED
 
 
 exercise_image_filename_regex = re.compile(
@@ -24,9 +33,18 @@ exercise_image_filename_regex = re.compile(
 
 
 class AssessmentItemFilter(FilterSet):
+    ids = CharFilter(method="filter_ids")
+    contentnodes = CharFilter(method="filter_contentnodes")
+
+    def filter_ids(self, queryset, name, value):
+        return queryset.filter(assessment_id__in=value.split(","))
+
+    def filter_contentnodes(self, queryset, name, value):
+        return queryset.filter(contentnode_id__in=value.split(","))
+
     class Meta:
         model = AssessmentItem
-        fields = ("contentnode",)
+        fields = ("ids", "contentnodes", "contentnode",)
 
 
 def get_filenames_from_assessment(assessment_item):
@@ -142,3 +160,49 @@ class AssessmentItemViewSet(ValuesViewset):
     def annotate_queryset(self, queryset):
         queryset = queryset.annotate(file_ids=NotNullArrayAgg("files__id"))
         return queryset
+
+    def copy(self, pk, user=None, from_key=None, **mods):
+        try:
+            item = AssessmentItem.objects.get(assessment_id=from_key)
+        except AssessmentItem.DoesNotExist:
+            error = ValidationError("Copy assessment item source does not exist")
+            return str(error), None
+
+        if AssessmentItem.objects.filter(assessment_id=pk).exists():
+            error = ValidationError("Copy pk already exists")
+            return str(error), None
+
+        try:
+            contentnode_id = mods.pop("contentnode", None)
+
+            if not contentnode_id:
+                raise ValidationError("Field `contentnode` is required")
+
+            contentnode = ContentNode.objects.get(pk=contentnode_id)
+
+            with transaction.atomic():
+                new_item = copy.copy(item)
+                new_item.assessment_id = pk
+                new_item.contentnode = contentnode
+                new_item.save()
+
+        except (ObjectDoesNotExist, ValidationError) as e:
+            e = e if isinstance(e, ValidationError) else ValidationError(e)
+
+            # if contentnode doesn't exist
+            return str(e), [
+                dict(
+                    key=pk,
+                    table=ASSESSMENTITEM,
+                    type=DELETED,
+                )
+            ]
+
+        return None, [
+            dict(
+                key=pk,
+                table=ASSESSMENTITEM,
+                type=CREATED,
+                obj=AssessmentItemSerializer(instance=new_item)
+            )
+        ]
