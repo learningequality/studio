@@ -3,9 +3,11 @@
   <MessageLayout
     :header="$tr('accountCreatedTitle')"
   >
-    <VBtn color="primary" large :to="{name: 'Main'}">
-      {{ $tr('goToLoginButton') }}
-    </VBtn>
+    <template #back>
+      <VBtn color="primary" :to="{name: 'Main'}" large>
+        {{ $tr('continueToSignIn') }}
+      </VBtn>
+    </template>
   </MessageLayout>
 
 </template>
@@ -13,7 +15,7 @@
 
 <script>
 
-  import MessageLayout from '../components/MessageLayout';
+  import MessageLayout from '../../components/MessageLayout';
 
   export default {
     name: 'AccountCreated',
@@ -22,7 +24,7 @@
     },
     $trs: {
       accountCreatedTitle: 'Account successfully created',
-      goToLoginButton: 'Continue to sign in',
+      continueToSignIn: 'Continue to sign in',
     },
   };
 

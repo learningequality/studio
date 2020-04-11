@@ -28,6 +28,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from contentcuration.forms import RegistrationForm
 from contentcuration.models import Channel
+from contentcuration.models import DoesNotExist
 from contentcuration.models import Invitation
 from contentcuration.models import User
 from contentcuration.statistics import record_user_registration_stats
@@ -176,23 +177,6 @@ class UserRegistrationView(RegistrationView):
         record_user_registration_stats(user)
 
 
-def custom_password_reset(request, **kwargs):
-    email_context = {'site': get_current_site(request), 'domain': request.META.get('HTTP_ORIGIN') or "https://{}".format(
-        request.get_host() or Site.objects.get_current().domain)}
-    return password_reset(request, extra_email_context=email_context, **kwargs)
-
-
-def new_user_redirect(request, user_id):
-    user = User.objects.get(pk=user_id)
-    if user.is_active:
-        return redirect(reverse_lazy("channels"))
-    djangologout(request)
-    request.session["email"] = user.email
-    request.session["freeze_email"] = True
-
-    return redirect(reverse_lazy("registration_register"))
-
-
 class UserActivationView(ActivationView):
 
     def get(self, *args, **kwargs):
@@ -203,6 +187,7 @@ class UserActivationView(ActivationView):
         response = super(UserActivationView, self).get(*args, **kwargs)
         if response.status_code == 302:
             return response
+
         return redirect('/accounts/#/activation-expired')
 
     def get_success_url(self, user):
@@ -221,3 +206,37 @@ class UserActivationView(ActivationView):
             send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [settings.REGISTRATION_INFORMATION_EMAIL])
 
         return user
+
+
+def request_activation_link(request):
+    if request.method != 'POST':
+        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+    data = json.loads(request.body)
+    try:
+        user = User.objects.get(email=data['email'])
+        registration_view = UserRegistrationView()
+        registration_view.request = request
+        registration_view.send_activation_email(user)
+    except DoesNotExist:
+        pass
+    return HttpResponse()  # Return success no matter what so people can't try to look up emails
+
+
+def custom_password_reset(request, **kwargs):
+    email_context = {
+        'site': get_current_site(request),
+        'domain': request.META.get('HTTP_ORIGIN') or "https://{}".format(
+            request.get_host() or Site.objects.get_current().domain)
+    }
+    return password_reset(request, extra_email_context=email_context, **kwargs)
+
+
+def new_user_redirect(request, user_id):
+    user = User.objects.get(pk=user_id)
+    if user.is_active:
+        return redirect(reverse_lazy("channels"))
+    djangologout(request)
+    request.session["email"] = user.email
+    request.session["freeze_email"] = True
+
+    return redirect(reverse_lazy("registration_register"))

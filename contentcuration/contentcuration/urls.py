@@ -267,6 +267,7 @@ urlpatterns += [
     url(r'^accounts/login/$', registration_views.login, name='login'),
     url(r'^accounts/logout/$', registration_views.logout, name='logout'),
     url(r'^accounts/policies/$', registration_views.policies, name='policies'),
+    url(r'^accounts/request_activation_link/$', registration_views.request_activation_link, name='request_activation_link'),
     url(r"^accounts/$", views.accounts, name="accounts"),
     url(
         r'^accounts/password/reset/$',
@@ -279,12 +280,12 @@ urlpatterns += [
         auth_views.password_reset_confirm,
         {'post_reset_redirect': reverse_lazy('auth_password_reset_complete'), 'set_password_form': ResetPasswordForm},
         name='auth_password_reset_confirm'),
-    url(r'^accounts/register/$', registration_views.UserRegistrationView.as_view(), name='register'),
-    url(r'^accounts/', include('registration.backends.hmac.urls')),
+    # url(r'^accounts/register/$', registration_views.UserRegistrationView.as_view(), name='register'),
+    # url(r'^accounts/', include('registration.backends.hmac.urls')),
     url(r'^activate/(?P<activation_key>[-:\w]+)/$', registration_views.UserActivationView.as_view(), name='registration_activate'),
     url(r'^api/send_invitation_email/$', registration_views.send_invitation_email, name='send_invitation_email'),
-    url(r'^new/accept_invitation/(?P<user_id>[^/]+)/', registration_views.new_user_redirect, name="accept_invitation_and_registration"),
-    url(r'^new/finish_registration/(?P<user_id>[^/]+)/$', registration_views.new_user_redirect, name="reset_password_registration"),
+    # url(r'^new/accept_invitation/(?P<user_id>[^/]+)/', registration_views.new_user_redirect, name="accept_invitation_and_registration"),
+    # url(r'^new/finish_registration/(?P<user_id>[^/]+)/$', registration_views.new_user_redirect, name="reset_password_registration"),
 ]
 
 # Add settings endpoints

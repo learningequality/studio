@@ -17,10 +17,6 @@
       <VBtn block color="primary" large @click="submit">
         {{ $tr('submitButton') }}
       </VBtn>
-      <ActionLink
-        :text="$tr('backToLoginLink')"
-        :to="{name: 'Main'}"
-      />
     </VForm>
   </MessageLayout>
 
@@ -28,15 +24,13 @@
 
 <script>
 
-  import MessageLayout from '../components/MessageLayout';
-  import PasswordField from '../components/PasswordField';
-  import ActionLink from 'shared/views/ActionLink';
+  import MessageLayout from '../../components/MessageLayout';
+  import PasswordField from '../../components/PasswordField';
 
   export default {
     name: 'ResetPassword',
     components: {
       MessageLayout,
-      ActionLink,
       PasswordField,
     },
     data() {
@@ -66,7 +60,6 @@
       passwordConfirmLabel: 'Confirm password',
       passwordMatchMessage: "Passwords don't match",
       submitButton: 'Submit',
-      backToLoginLink: 'Back to sign in',
     },
   };
 

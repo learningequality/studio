@@ -10,5 +10,19 @@ export default {
         },
       });
     },
+    sendActivationLink(context, email) {
+      return client.post(window.Urls.request_activation_link(), { email });
+    },
+    sendPasswordResetLink(context, email) {
+      return client.post(
+        window.Urls.auth_password_reset(),
+        { email },
+        {
+          headers: {
+            'Content-type': 'application/form-url-encode',
+          },
+        }
+      );
+    },
   },
 };

@@ -1,15 +1,18 @@
 import VueRouter from 'vue-router';
 import Main from './pages/Main';
 import Create from './pages/Create';
-import ActivationSent from './pages/ActivationSent';
-import ForgotPassword from './pages/ForgotPassword';
-import PasswordInstructionsSent from './pages/PasswordInstructionsSent';
-import AccountCreated from './pages/AccountCreated';
-import ActivationExpired from './pages/ActivationExpired';
-import AccountNotActivated from './pages/AccountNotActivated';
-import ResetPassword from './pages/ResetPassword';
-import ResetPasswordSuccess from './pages/ResetPasswordSuccess';
-import Policy from './pages/Policy';
+
+import ActivationSent from './pages/activateAccount/ActivationSent';
+import AccountCreated from './pages/activateAccount/AccountCreated';
+import ActivationExpired from './pages/activateAccount/ActivationExpired';
+import RequestNewActivationLink from './pages/activateAccount/RequestNewActivationLink';
+import AccountNotActivated from './pages/activateAccount/AccountNotActivated';
+import ActivationLinkReSent from './pages/activateAccount/ActivationLinkReSent';
+
+import ForgotPassword from './pages/resetPassword/ForgotPassword';
+import PasswordInstructionsSent from './pages/resetPassword//PasswordInstructionsSent';
+import ResetPassword from './pages/resetPassword//ResetPassword';
+import ResetPasswordSuccess from './pages/resetPassword//ResetPasswordSuccess';
 
 function pageRoute(path, component) {
   return {
@@ -29,7 +32,8 @@ const router = new VueRouter({
     pageRoute('/account-created', AccountCreated),
     pageRoute('/account-not-active', AccountNotActivated),
     pageRoute('/activation-expired', ActivationExpired),
-    pageRoute('/policy', Policy),
+    pageRoute('/request-activation-link', RequestNewActivationLink),
+    pageRoute('/activation-resent', ActivationLinkReSent),
 
     // Forgot password routes
     pageRoute('/forgot-password', ForgotPassword),

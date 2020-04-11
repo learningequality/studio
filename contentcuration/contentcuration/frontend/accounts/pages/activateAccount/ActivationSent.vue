@@ -3,32 +3,24 @@
   <MessageLayout
     :header="$tr('header')"
     :text="$tr('text')"
-  >
-    <ActionLink
-      :to="{ name: 'Main' }"
-      :text="$tr('back')"
-    />
-  </MessageLayout>
+  />
 
 </template>
 
 
 <script>
 
-  import MessageLayout from '../components/MessageLayout';
-  import ActionLink from 'shared/views/ActionLink';
+  import MessageLayout from '../../components/MessageLayout';
 
   export default {
     name: 'ActivationSent',
     components: {
       MessageLayout,
-      ActionLink,
     },
     $trs: {
       header: 'Activation link sent',
       text:
         'Thanks for registering! To finish creating your account, please check your email for an activation link.',
-      back: 'Back to sign in',
     },
   };
 

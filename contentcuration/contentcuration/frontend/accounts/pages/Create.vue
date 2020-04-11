@@ -318,8 +318,7 @@
         return [() => !!this.form.source.length || this.$tr('fieldRequiredMessage')];
       },
       policyLink() {
-        let path = this.$router.resolve({ name: 'Policy' });
-        return `${window.Urls.policies()}${path.href}`;
+        return window.Urls.policies();
       },
     },
     methods: {

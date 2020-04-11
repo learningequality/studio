@@ -6,7 +6,7 @@
 {% load render_bundle from webpack_loader %}
 
 {% block css_bundle %}
-	{% render_bundle_css 'accounts' %}
+	{% render_bundle_css 'policies' %}
 {% endblock css_bundle %}
 
 
@@ -25,5 +25,5 @@
 {% endblock content %}
 
 {% block js_bundle %}
-	{% render_bundle 'accounts' 'js' %}
+	{% render_bundle 'policies' 'js' %}
 {% endblock js_bundle %}

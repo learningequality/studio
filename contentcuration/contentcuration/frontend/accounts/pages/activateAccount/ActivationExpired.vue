@@ -4,7 +4,7 @@
     :header="$tr('activationExpiredTitle')"
     :text="$tr('activationExpiredText')"
   >
-    <VBtn color="primary" large :to="{name: 'Main'}">
+    <VBtn color="primary" large :to="{name: 'RequestNewActivationLink'}" class="mb-4">
       {{ $tr('requestNewLink') }}
     </VBtn>
   </MessageLayout>
@@ -14,7 +14,7 @@
 
 <script>
 
-  import MessageLayout from '../components/MessageLayout';
+  import MessageLayout from '../../components/MessageLayout';
 
   export default {
     name: 'ActivationExpired',
@@ -22,9 +22,9 @@
       MessageLayout,
     },
     $trs: {
-      activationExpiredTitle: 'Activation link expired',
-      activationExpiredText: 'This activation link has been used already or has expired.',
-      requestNewLink: 'Try signing in',
+      activationExpiredTitle: 'Activation failed',
+      activationExpiredText: 'This activation link has been used already or is invalid.',
+      requestNewLink: 'Request a new activation link',
     },
   };
 

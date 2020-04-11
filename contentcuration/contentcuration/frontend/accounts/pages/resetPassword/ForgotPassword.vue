@@ -17,8 +17,8 @@
 
 <script>
 
-  import MessageLayout from '../components/MessageLayout';
-  import EmailField from '../components/EmailField';
+  import MessageLayout from '../../components/MessageLayout';
+  import EmailField from '../../components/EmailField';
 
   export default {
     name: 'ForgotPassword',
