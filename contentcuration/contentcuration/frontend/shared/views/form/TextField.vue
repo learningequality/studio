@@ -3,11 +3,11 @@
   <VTextField
     v-model="field"
     outline
-    required
+    :required="required"
     :rules="rules"
-    :label="label || $tr('passwordLabel')"
+    :label="label"
     validate-on-blur
-    type="password"
+    v-bind="$attrs"
   />
 
 </template>
@@ -16,7 +16,7 @@
 <script>
 
   export default {
-    name: 'PasswordField',
+    name: 'TextField',
     props: {
       value: {
         type: String,
@@ -30,7 +30,11 @@
       },
       label: {
         type: String,
-        required: false,
+        required: true,
+      },
+      required: {
+        type: Boolean,
+        default: true,
       },
     },
     computed: {
@@ -47,7 +51,6 @@
       },
     },
     $trs: {
-      passwordLabel: 'Password',
       fieldRequiredMessage: 'Field is required',
     },
   };

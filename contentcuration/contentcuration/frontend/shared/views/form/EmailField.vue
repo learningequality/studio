@@ -4,7 +4,7 @@
     v-model="email"
     outline
     :label="$tr('emailLabel')"
-    required
+    :required="required"
     :rules="emailRules"
     validate-on-blur
     v-bind="$attrs"
@@ -21,6 +21,10 @@
       value: {
         type: String,
         default: '',
+      },
+      required: {
+        type: Boolean,
+        default: true,
       },
     },
     computed: {

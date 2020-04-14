@@ -22,8 +22,8 @@
 <script>
 
   import { mapActions } from 'vuex';
-  import EmailField from '../../components/EmailField';
   import MessageLayout from '../../components/MessageLayout';
+  import EmailField from 'shared/views/form/EmailField';
 
   export default {
     name: 'RequestNewActivationLink',

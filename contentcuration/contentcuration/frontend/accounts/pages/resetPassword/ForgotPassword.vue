@@ -4,9 +4,9 @@
     :header="$tr('forgotPasswordTitle')"
     :text="$tr('forgotPasswordPrompt')"
   >
-    <VForm ref="form" lazy-validation style="max-width: 400px; margin: 0 auto;">
-      <EmailField v-model="email" />
-      <VBtn block color="primary" large @click="submit">
+    <VForm ref="form" lazy-validation @submit.prevent="submit">
+      <EmailField v-model="email" autofocus />
+      <VBtn block color="primary" large type="submit">
         {{ $tr('submitButton') }}
       </VBtn>
     </VForm>
@@ -17,8 +17,9 @@
 
 <script>
 
+  import { mapActions } from 'vuex';
   import MessageLayout from '../../components/MessageLayout';
-  import EmailField from '../../components/EmailField';
+  import EmailField from 'shared/views/form/EmailField';
 
   export default {
     name: 'ForgotPassword',
@@ -32,10 +33,13 @@
       };
     },
     methods: {
+      ...mapActions('account', ['sendPasswordResetLink']),
       submit() {
         if (this.$refs.form.validate()) {
-          this.$router.push({
-            name: 'PasswordInstructionsSent',
+          this.sendPasswordResetLink(this.email).then(() => {
+            this.$router.push({
+              name: 'PasswordInstructionsSent',
+            });
           });
         }
       },

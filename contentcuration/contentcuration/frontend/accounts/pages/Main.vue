@@ -48,14 +48,12 @@
 <script>
 
   import { mapActions } from 'vuex';
-  import EmailField from '../components/EmailField';
-  import PasswordField from '../components/PasswordField';
-  import ActionLink from 'shared/views/ActionLink';
+  import EmailField from 'shared/views/form/EmailField';
+  import PasswordField from 'shared/views/form/PasswordField';
 
   export default {
     name: 'Main',
     components: {
-      ActionLink,
       EmailField,
       PasswordField,
     },

@@ -163,11 +163,10 @@
 
   import { mapActions } from 'vuex';
   import { uses, sources } from '../constants';
-  import TextField from '../components/TextField';
-  import EmailField from '../components/EmailField';
-  import PasswordField from '../components/PasswordField';
-  import TextArea from '../components/TextArea';
-  import ActionLink from 'shared/views/ActionLink';
+  import TextField from 'shared/views/form/TextField';
+  import EmailField from 'shared/views/form/EmailField';
+  import PasswordField from 'shared/views/form/PasswordField';
+  import TextArea from 'shared/views/form/TextArea';
   import CountryField from 'shared/views/form/CountryField';
   import ImmersiveModalLayout from 'shared/layouts/ImmersiveModalLayout';
 
@@ -175,7 +174,6 @@
     name: 'Create',
     components: {
       ImmersiveModalLayout,
-      ActionLink,
       TextField,
       EmailField,
       PasswordField,
@@ -189,20 +187,20 @@
         showPolicies: false,
         emailErrors: [],
         form: {
-          first_name: 'Test',
-          last_name: 'User',
-          email: 'a@b.com',
-          password1: 'a',
-          password2: 'a',
-          uses: ['tagging'],
+          first_name: '',
+          last_name: '',
+          email: '',
+          password1: '',
+          password2: '',
+          uses: [],
           storage: '',
           other_use: '',
-          locations: ['Philippines'],
-          source: 'demo',
+          locations: [],
+          source: '',
           organization: '',
           conference: '',
           other_source: '',
-          accepted_policy: true,
+          accepted_policy: false,
         },
       };
     },
@@ -320,6 +318,9 @@
       policyLink() {
         return window.Urls.policies();
       },
+    },
+    beforeMount() {
+      this.form.email = this.$route.query.email || '';
     },
     methods: {
       ...mapActions('account', ['register']),

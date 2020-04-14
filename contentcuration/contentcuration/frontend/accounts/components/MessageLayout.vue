@@ -26,13 +26,8 @@
 
 <script>
 
-  import ActionLink from 'shared/views/ActionLink';
-
   export default {
     name: 'MessageLayout',
-    components: {
-      ActionLink,
-    },
     props: {
       header: {
         type: String,
