@@ -123,6 +123,9 @@ spec:
         image: {{ .Values.studioApp.imageName }}
         command:
         - make
+        {{- if not .Values.productionIngress }}
+        - setup
+        {{- end }}
         - prodceleryworkers
         volumeMounts:
         {{ include "studio.pvc.gcs-creds" . | nindent 10 }}
