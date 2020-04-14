@@ -49,7 +49,7 @@ http {
         # Don't allow access to the `/content/` path so that
         # we don't leak which channels are available for download
         
-        rewrite ^/content(/*)$ /
+        rewrite ^/content(/*)$ /;
 
         # Map `/content/*` to the storage bucket
         location ~ ^/content/(.+)$ {
