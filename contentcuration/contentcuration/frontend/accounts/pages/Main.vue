@@ -18,9 +18,7 @@
         <h2 class="text-xs-center primary--text">
           {{ $tr('kolibriStudio') }}
         </h2>
-        <VAlert type="error" outline icon="error" class="mt-4" :value="loginFailed">
-          {{ $tr('loginFailed') }}
-        </VAlert>
+        <Banner :value="loginFailed" :text="$tr('loginFailed')" error />
         <VForm ref="form" lazy-validation class="py-4" @submit.prevent="submit">
           <EmailField v-model="credentials.username" autofocus />
           <PasswordField v-model="credentials.password" :label="$tr('passwordLabel')" />
@@ -50,12 +48,14 @@
   import { mapActions } from 'vuex';
   import EmailField from 'shared/views/form/EmailField';
   import PasswordField from 'shared/views/form/PasswordField';
+  import Banner from 'shared/views/Banner';
 
   export default {
     name: 'Main',
     components: {
       EmailField,
       PasswordField,
+      Banner,
     },
     data() {
       return {

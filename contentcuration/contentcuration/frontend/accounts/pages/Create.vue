@@ -15,12 +15,11 @@
     <h2 class="text-xs-center mb-4 primary--text">
       {{ $tr('createAnAccountTitle') }}
     </h2>
-    <VAlert type="error" icon="error" :value="!valid" outline>
-      {{ registrationFailed? $tr('registrationFailed') : $tr('errorsMessage') }}
-    </VAlert>
     <VLayout justify-center class="px-4">
-
       <VForm ref="form" v-model="valid" lazy-validation @submit.prevent="submit">
+        <Banner :value="!valid" error>
+          {{ registrationFailed? $tr('registrationFailed') : $tr('errorsMessage') }}
+        </Banner>
 
         <!-- Basic information -->
         <h1 class="font-weight-bold subheading my-2">
@@ -169,6 +168,7 @@
   import TextArea from 'shared/views/form/TextArea';
   import CountryField from 'shared/views/form/CountryField';
   import ImmersiveModalLayout from 'shared/layouts/ImmersiveModalLayout';
+  import Banner from 'shared/views/Banner';
 
   export default {
     name: 'Create',
@@ -179,6 +179,7 @@
       PasswordField,
       TextArea,
       CountryField,
+      Banner,
     },
     data() {
       return {
