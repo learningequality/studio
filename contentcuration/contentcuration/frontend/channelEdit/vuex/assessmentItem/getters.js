@@ -1,5 +1,5 @@
 import sortBy from 'lodash/sortBy';
-import { validateAssessmentItem } from './utils';
+import { validateAssessmentItem } from '../../utils';
 
 function sorted(items) {
   return sortBy(items, ['order']);

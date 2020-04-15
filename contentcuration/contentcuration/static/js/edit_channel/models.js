@@ -227,7 +227,7 @@ var UserCollection = BasePageableCollection.extend({
   send_custom_email: function(subject, message) {
     return mail_helper.send_custom_email(this.pluck('email'), subject, message);
   },
-  url: window.Urls.get_users(),
+  // url: window.Urls.get_users(),
 });
 
 var InvitationModel = BaseModel.extend({
@@ -897,7 +897,7 @@ var ChannelCollection = BasePageableCollection.extend({
   model: ChannelModel,
   list_name: 'channel-list',
   model_name: 'ChannelCollection',
-  url: window.Urls.get_channels(),
+  // url: window.Urls.get_channels(),
 });
 
 var TagModel = BaseModel.extend({

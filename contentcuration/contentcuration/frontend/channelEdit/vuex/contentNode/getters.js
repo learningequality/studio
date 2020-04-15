@@ -5,6 +5,7 @@ import uniqBy from 'lodash/uniqBy';
 
 import { validateNodeFiles } from '../file/utils';
 import { validateNodeDetails } from './utils';
+import { isSuccessor } from 'shared/utils';
 
 function sorted(nodes) {
   return sortBy(nodes, ['sort_order']);
@@ -62,6 +63,37 @@ export function getContentNodeAncestors(state) {
   };
 }
 
+/**
+ * Returns an array of all parent nodes of a node.
+ * Parent nodes are sorted from the immmediate parent
+ * to the most distant parent.
+ */
+export function getContentNodeParents(state) {
+  return function(contentNodeId) {
+    const getParentId = nodeId => {
+      const treeNode = Object.values(state.treeNodesMap).find(
+        contentNode => contentNode.id === nodeId
+      );
+
+      if (!treeNode || !treeNode.parent) {
+        return null;
+      }
+
+      return treeNode.parent;
+    };
+
+    const parents = [];
+    let parentId = getParentId(contentNodeId);
+
+    while (parentId !== null) {
+      parents.push(getContentNode(state)(parentId));
+      parentId = getParentId(parentId);
+    }
+
+    return parents;
+  };
+}
+
 export function getContentNodeIsValid(state, getters, rootState, rootGetters) {
   return function(contentNodeId) {
     const contentNode = state.contentNodesMap[contentNodeId];
@@ -92,6 +124,113 @@ export function getContentNodeFilesAreValid(state, getters, rootState, rootGette
       }
     }
     return true;
+  };
+}
+
+function getStepDetail(state, contentNodeId) {
+  const stepDetail = {
+    id: contentNodeId,
+    title: '',
+    kind: '',
+    parentTitle: '',
+  };
+
+  const node = getContentNode(state)(contentNodeId);
+
+  if (!node) {
+    return stepDetail;
+  }
+
+  stepDetail.title = node.title;
+  stepDetail.kind = node.kind;
+
+  const parentNodeId = state.treeNodesMap[contentNodeId].parent;
+
+  if (parentNodeId) {
+    const parentNode = getContentNode(state)(parentNodeId);
+    stepDetail.parentTitle = parentNode.title;
+  }
+
+  return stepDetail;
+}
+
+function getImmediatePreviousStepsIds(state) {
+  return function(contentNodeId) {
+    return state.nextStepsMap
+      .filter(([, nextStepId]) => nextStepId === contentNodeId)
+      .map(([targetId]) => targetId);
+  };
+}
+
+function getImmediateNextStepsIds(state) {
+  return function(contentNodeId) {
+    return state.nextStepsMap
+      .filter(([targetId]) => targetId === contentNodeId)
+      .map(([, nextStepId]) => nextStepId);
+  };
+}
+
+/**
+ * Return a list of immediate previous steps of a node
+ * where a step has following interface:
+ * { id, title, kind, parentTitle }
+ */
+export function getImmediatePreviousStepsList(state) {
+  return function(contentNodeId) {
+    return getImmediatePreviousStepsIds(state)(contentNodeId).map(stepId =>
+      getStepDetail(state, stepId)
+    );
+  };
+}
+
+/**
+ * Return a list of immediate next steps of a node
+ * where a step has following interface:
+ * { id, title, kind, parentTitle }
+ */
+export function getImmediateNextStepsList(state) {
+  return function(contentNodeId) {
+    return getImmediateNextStepsIds(state)(contentNodeId).map(stepId =>
+      getStepDetail(state, stepId)
+    );
+  };
+}
+
+/**
+ * Return count of immediate previous and next steps
+ * of a node.
+ */
+export function getImmediateRelatedResourcesCount(state) {
+  return function(contentNodeId) {
+    const previousStepsCount = getImmediatePreviousStepsIds(state)(contentNodeId).length;
+    const nextStepsCount = getImmediateNextStepsIds(state)(contentNodeId).length;
+
+    return previousStepsCount + nextStepsCount;
+  };
+}
+
+/**
+ * Does a node belongs to next steps of a root node?
+ */
+export function isNextStep(state) {
+  return function({ rootNodeId, nodeId }) {
+    return isSuccessor({
+      rootVertex: rootNodeId,
+      vertexToCheck: nodeId,
+      graph: state.nextStepsMap,
+    });
+  };
+}
+
+/**
+ * Does a node belongs to previous steps of a root node?
+ */
+export function isPreviousStep(state) {
+  return function({ rootNodeId, nodeId }) {
+    return isNextStep(state)({
+      rootNodeId: nodeId,
+      nodeId: rootNodeId,
+    });
   };
 }
 

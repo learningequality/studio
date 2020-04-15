@@ -38,15 +38,15 @@
             </VChip>
           </VTab>
 
-          <!-- Prerequisites tab -->
+          <!-- Related resources tab -->
           <VTab
-            v-if="showPrerequisitesTab"
-            ref="prerequisitetab"
-            :href="`#${tabs.PREREQUISITES}`"
+            v-if="showRelatedResourcesTab"
+            ref="related-resources-tab"
+            :href="`#${tabs.RELATED}`"
           >
-            {{ $tr(tabs.PREREQUISITES) }}
-            <VChip v-if="firstNode.prerequisite.length" color="gray" dark>
-              {{ firstNode.prerequisite.length }}
+            {{ $tr(tabs.RELATED) }}
+            <VChip color="gray" dark>
+              {{ relatedResourcesCount }}
             </VChip>
           </VTab>
         </VTabs>
@@ -61,15 +61,14 @@
             <DetailsTabView :viewOnly="!canEdit" :nodeIds="nodeIds" />
           </VTabItem>
           <VTabItem :key="tabs.QUESTIONS" ref="questionwindow" :value="tabs.QUESTIONS" lazy>
-            <AssessmentView />
+            <AssessmentTab />
           </VTabItem>
           <VTabItem
-            :key="tabs.PREREQUISITES"
-            ref="prerequisiteswindow"
-            :value="tabs.PREREQUISITES"
+            :key="tabs.RELATED"
+            :value="tabs.RELATED"
             lazy
           >
-            Prerequisites
+            <RelatedResourcesTab :nodeId="nodeIds[0]" />
           </VTabItem>
         </VTabsItems>
       </VFlex>
@@ -81,15 +80,18 @@
 <script>
 
   import { mapGetters } from 'vuex';
+
   import { TabNames } from '../constants';
   import DetailsTabView from './DetailsTabView';
-  import AssessmentView from './AssessmentView';
+  import AssessmentTab from 'frontend/channelEdit/components/AssessmentTab/AssessmentTab';
+  import RelatedResourcesTab from 'frontend/channelEdit/components/RelatedResourcesTab/RelatedResourcesTab';
 
   export default {
     name: 'EditView',
     components: {
       DetailsTabView,
-      AssessmentView,
+      AssessmentTab,
+      RelatedResourcesTab,
     },
     props: {
       isClipboard: {
@@ -99,6 +101,10 @@
       nodeIds: {
         type: Array,
         default: () => [],
+      },
+      tab: {
+        type: String,
+        default: TabNames.DETAILS,
       },
     },
     data() {
@@ -111,6 +117,7 @@
         'getContentNodes',
         'getContentNodeDetailsAreValid',
         'getContentNodeFilesAreValid',
+        'getImmediateRelatedResourcesCount',
       ]),
       ...mapGetters('currentChannel', ['canEdit']),
       firstNode() {
@@ -132,7 +139,7 @@
       showQuestionsTab() {
         return this.oneSelected && this.firstNode && this.firstNode.kind === 'exercise';
       },
-      showPrerequisitesTab() {
+      showRelatedResourcesTab() {
         return (
           this.oneSelected && !this.isClipboard && this.firstNode && this.firstNode.kind !== 'topic'
         );
@@ -154,17 +161,41 @@
       assessmentItemsCount() {
         return 0;
       },
+      relatedResourcesCount() {
+        if (!this.oneSelected) {
+          return;
+        }
+
+        return this.getImmediateRelatedResourcesCount(this.firstNode.id);
+      },
     },
     watch: {
       nodeIds() {
         this.$refs.editview.scrollTop = 0;
       },
+      currentTab(newValue, oldValue) {
+        if (newValue === oldValue) {
+          return;
+        }
+
+        this.$router
+          .push({
+            params: {
+              ...this.$route.params,
+              tab: newValue,
+            },
+          })
+          .catch(() => {}); // https://github.com/quasarframework/quasar/issues/5672
+      },
+    },
+    created() {
+      this.currentTab = this.tab ? this.tab : TabNames.DETAILS;
     },
     $trs: {
       [TabNames.DETAILS]: 'Details',
       [TabNames.PREVIEW]: 'Preview',
       [TabNames.QUESTIONS]: 'Questions',
-      [TabNames.PREREQUISITES]: 'Prerequisites',
+      [TabNames.RELATED]: 'Related',
       noItemsToEditText: 'Please select an item or items to edit',
       noItemsToViewText: 'Please select an item or items to view',
       invalidFieldsToolTip: 'Invalid fields detected',

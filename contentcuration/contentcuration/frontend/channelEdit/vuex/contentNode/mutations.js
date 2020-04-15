@@ -1,5 +1,6 @@
 import Vue from 'vue';
 import { mergeMapItem } from 'shared/vuex/utils';
+import { removeDuplicatePairs } from 'shared/utils';
 
 export function ADD_CONTENTNODE(state, contentNode) {
   state.contentNodesMap = mergeMapItem(state.contentNodesMap, contentNode);
@@ -94,4 +95,109 @@ export function UPDATE_TREENODE(state, { id, ...payload } = {}) {
     ...state.treeNodesMap[id],
     ...payload,
   };
+}
+
+/**
+ * Saves the complete chain of previous/next steps (pre/post-requisites)
+ * of a node to next steps map.
+ * @param {String} nodeId Id of a node for which
+ * @param {Object} prerequisite_mapping Prerequsite mapping as retrieved from API
+ *                                      Data format example: {
+ *                                        'id-chemistry': {
+ *                                          'id-integrals': {
+ *                                             'id-math': {}
+ *                                           },
+ *                                           'id-reading': {}
+ *                                        }
+ *                                      }
+ * @param {Object} postrequisite_mapping Postrequisite mapping as retrieved from API
+ *                                       Check `prerequisite_mapping` to see data format
+ */
+export function SAVE_NEXT_STEPS(
+  state,
+  { nodeId, prerequisite_mapping = {}, postrequisite_mapping = {} } = {}
+) {
+  if (!nodeId) {
+    throw ReferenceError('node id must be defined to save its next steps');
+  }
+
+  /**
+   * Example:
+   * Converts {
+   *  'id-1': {
+   *    'id-2': {
+   *      'id-3': {},
+   *      'id-4': {}
+   *     }
+   *   }
+   * }
+   * to
+   * [
+   *   ['id-1', 'id-2'],
+   *   ['id-2', 'id-3'],
+   *   ['id-2', 'id-4']
+   * ]
+   */
+  const deepToPlain = ({ stepKey, steps, accumulator = [] }) => {
+    if (!Object.keys(steps) || !Object.keys(steps).length) {
+      return accumulator;
+    }
+
+    Object.keys(steps).forEach(key => {
+      accumulator.push([stepKey, key]);
+
+      deepToPlain({
+        stepKey: key,
+        steps: steps[key],
+        accumulator,
+      });
+    });
+  };
+
+  const plainPreviousSteps = [];
+  const plainNextSteps = [];
+  deepToPlain({
+    stepKey: nodeId,
+    steps: prerequisite_mapping,
+    accumulator: plainPreviousSteps,
+  });
+  deepToPlain({
+    stepKey: nodeId,
+    steps: postrequisite_mapping,
+    accumulator: plainNextSteps,
+  });
+
+  const nextStepsMap = [
+    ...state.nextStepsMap,
+    ...plainNextSteps,
+    // swap keys with values to convert
+    // "target:previous" format to "target:next" format
+    ...plainPreviousSteps.map(([step, previousStep]) => [previousStep, step]),
+  ];
+
+  state.nextStepsMap = removeDuplicatePairs(nextStepsMap);
+}
+
+/**
+ * Remove an entry from next steps map.
+ */
+export function REMOVE_PREVIOUS_STEP(state, { targetId, previousStepId }) {
+  state.nextStepsMap = state.nextStepsMap.filter(entry => {
+    return !(entry[0] === previousStepId && entry[1] === targetId);
+  });
+}
+
+/**
+ * Add an entry to next steps map.
+ */
+export function ADD_PREVIOUS_STEP(state, { targetId, previousStepId }) {
+  if (
+    state.nextStepsMap.find(entry => {
+      return entry[0] === previousStepId && entry[1] === targetId;
+    })
+  ) {
+    return;
+  }
+
+  state.nextStepsMap = [...state.nextStepsMap, [previousStepId, targetId]];
 }

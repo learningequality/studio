@@ -1,22 +1,29 @@
 import Vue from 'vue';
 import vuetifyIcons from 'vuetify/lib/components/Vuetify/mixins/icons';
-import viewOnlyIcon from '../views/icons/viewOnlyIcon';
 import collapseAllIcon from '../views/icons/collapseAllIcon';
+import lightBulbIcon from '../views/icons/lightBulbIcon';
+import viewOnlyIcon from '../views/icons/viewOnlyIcon';
 import Icon from 'shared/views/Icon';
 
 Vue.component(Icon.name, Icon);
 
 const customIcons = {
-  view_only: {
-    component: viewOnlyIcon,
-    props: {
-      iconName: 'view_only',
-    },
-  },
   collapse_all: {
     component: collapseAllIcon,
     props: {
       iconName: 'collapse_all',
+    },
+  },
+  light_bulb: {
+    component: lightBulbIcon,
+    props: {
+      iconsName: 'light_bulb',
+    },
+  },
+  view_only: {
+    component: viewOnlyIcon,
+    props: {
+      iconName: 'view_only',
     },
   },
 };

@@ -1,3 +1,4 @@
+import translator from './translator';
 import { fileErrors } from 'shared/views/files/constants';
 
 export const RouterNames = {
@@ -14,6 +15,8 @@ export const RouterNames = {
   ADD_EXERCISE: 'ADD_EXERCISE',
   UPLOAD_FILES: 'UPLOAD_FILES',
   TRASH: 'TRASH',
+  ADD_PREVIOUS_STEPS: 'ADD_PREVIOUS_STEPS',
+  ADD_NEXT_STEPS: 'ADD_NEXT_STEPS',
 };
 
 export const viewModes = {
@@ -40,4 +43,20 @@ export const AssessmentItemTypes = {
   MULTIPLE_SELECTION: 'multiple_selection',
   TRUE_FALSE: 'true_false',
   INPUT_QUESTION: 'input_question',
+};
+
+export const AssessmentItemToolbarActions = {
+  EDIT_ITEM: 'EDIT_ITEM',
+  MOVE_ITEM_UP: 'MOVE_ITEM_UP',
+  MOVE_ITEM_DOWN: 'MOVE_ITEM_DOWN',
+  DELETE_ITEM: 'DELETE_ITEM',
+  ADD_ITEM_ABOVE: 'ADD_ITEM_ABOVE',
+  ADD_ITEM_BELOW: 'ADD_ITEM_BELOW',
+};
+
+export const AssessmentItemTypeLabels = {
+  [AssessmentItemTypes.SINGLE_SELECTION]: translator.translate('questionTypeSingleSelection'),
+  [AssessmentItemTypes.MULTIPLE_SELECTION]: translator.translate('questionTypeMultipleSelection'),
+  [AssessmentItemTypes.TRUE_FALSE]: translator.translate('questionTypeTrueFalse'),
+  [AssessmentItemTypes.INPUT_QUESTION]: translator.translate('questionTypeInput'),
 };

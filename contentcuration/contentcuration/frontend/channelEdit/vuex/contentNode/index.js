@@ -23,6 +23,20 @@ export default {
         - Adding component for every move option (too many instances of move modal everywhere)
       */
       moveNodes: [],
+
+      /**
+       * A map of nodes ids where keys are target ids
+       * and values are ids of their next steps
+       *
+       * E.g. Reading -> Math -> Integrals -> Physics
+       * would be represented here as
+       * [
+       *   ['id-reading', 'id-math'],
+       *   ['id-math', 'id-integrals'],
+       *   ['id-integrals', 'id-physics']
+       * ]
+       */
+      nextStepsMap: [],
     };
   },
   getters,
