@@ -18,8 +18,6 @@ from django.conf import settings
 from django.conf.urls import include
 from django.conf.urls import url
 from django.contrib import admin
-from django.contrib.auth import views as auth_views
-from django.core.urlresolvers import reverse_lazy
 from django.db.models import Q
 from rest_framework import permissions
 from rest_framework import routers
@@ -38,8 +36,6 @@ import contentcuration.views.settings as settings_views
 import contentcuration.views.users as registration_views
 import contentcuration.views.zip as zip_views
 from contentcuration.celery import app
-from contentcuration.forms import ForgotPasswordForm
-from contentcuration.forms import ResetPasswordForm
 from contentcuration.models import Channel
 from contentcuration.models import ContentKind
 from contentcuration.models import ContentTag
@@ -269,23 +265,12 @@ urlpatterns += [
     url(r'^accounts/policies/$', registration_views.policies, name='policies'),
     url(r'^accounts/request_activation_link/$', registration_views.request_activation_link, name='request_activation_link'),
     url(r"^accounts/$", views.accounts, name="accounts"),
-    url(
-        r'^accounts/password/reset/$',
-        registration_views.custom_password_reset,
-        {'post_reset_redirect': reverse_lazy('auth_password_reset_done'),
-         'email_template_name': 'registration/password_reset_email.txt', 'password_reset_form': ForgotPasswordForm},
-        name='auth_password_reset'
-    ),
+    url(r'^accounts/password/reset/$', registration_views.UserPasswordResetView.as_view(), name='auth_password_reset'),
     url(r'^accounts/password/reset/confirm/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',
-        auth_views.password_reset_confirm,
-        {'post_reset_redirect': reverse_lazy('auth_password_reset_complete'), 'set_password_form': ResetPasswordForm},
-        name='auth_password_reset_confirm'),
-    # url(r'^accounts/register/$', registration_views.UserRegistrationView.as_view(), name='register'),
-    # url(r'^accounts/', include('registration.backends.hmac.urls')),
+        registration_views.UserPasswordResetConfirmView.as_view(), name='auth_password_reset_confirm'),
+    url(r'^accounts/register/$', registration_views.UserRegistrationView.as_view(), name='register'),
     url(r'^activate/(?P<activation_key>[-:\w]+)/$', registration_views.UserActivationView.as_view(), name='registration_activate'),
     url(r'^api/send_invitation_email/$', registration_views.send_invitation_email, name='send_invitation_email'),
-    # url(r'^new/accept_invitation/(?P<user_id>[^/]+)/', registration_views.new_user_redirect, name="accept_invitation_and_registration"),
-    # url(r'^new/finish_registration/(?P<user_id>[^/]+)/$', registration_views.new_user_redirect, name="reset_password_registration"),
 ]
 
 # Add settings endpoints

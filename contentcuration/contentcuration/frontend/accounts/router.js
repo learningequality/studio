@@ -10,9 +10,10 @@ import AccountNotActivated from './pages/activateAccount/AccountNotActivated';
 import ActivationLinkReSent from './pages/activateAccount/ActivationLinkReSent';
 
 import ForgotPassword from './pages/resetPassword/ForgotPassword';
-import PasswordInstructionsSent from './pages/resetPassword//PasswordInstructionsSent';
+import PasswordInstructionsSent from './pages/resetPassword/PasswordInstructionsSent';
 import ResetPassword from './pages/resetPassword//ResetPassword';
-import ResetPasswordSuccess from './pages/resetPassword//ResetPasswordSuccess';
+import ResetPasswordSuccess from './pages/resetPassword/ResetPasswordSuccess';
+import ResetLinkExpired from './pages/resetPassword/ResetLinkExpired';
 
 function pageRoute(path, component) {
   return {
@@ -40,6 +41,7 @@ const router = new VueRouter({
     pageRoute('/reset-password', ResetPassword),
     pageRoute('/password-reset-sent', PasswordInstructionsSent),
     pageRoute('/password-reset-success', ResetPasswordSuccess),
+    pageRoute('/reset-expired', ResetLinkExpired),
     {
       path: '*',
       redirect: '/',

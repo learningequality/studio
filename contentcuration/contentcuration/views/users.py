@@ -4,7 +4,8 @@ from django.conf import settings
 from django.contrib.auth import authenticate
 from django.contrib.auth import login as djangologin
 from django.contrib.auth import logout as djangologout
-from django.contrib.auth.views import password_reset
+from django.contrib.auth.views import PasswordResetConfirmView
+from django.contrib.auth.views import PasswordResetView
 from django.contrib.sites.models import Site
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.exceptions import ObjectDoesNotExist
@@ -16,7 +17,10 @@ from django.http import HttpResponseForbidden
 from django.shortcuts import redirect
 from django.shortcuts import render
 from django.template.loader import render_to_string
+from django.utils.decorators import method_decorator
 from django.utils.translation import ugettext as _
+from django.views.decorators.cache import never_cache
+from django.views.decorators.debug import sensitive_post_parameters
 from registration.backends.hmac.views import ActivationView
 from registration.backends.hmac.views import RegistrationView
 from rest_framework.authentication import BasicAuthentication
@@ -26,9 +30,9 @@ from rest_framework.decorators import authentication_classes
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
 
+from contentcuration.forms import ForgotPasswordForm
 from contentcuration.forms import RegistrationForm
 from contentcuration.models import Channel
-from contentcuration.models import DoesNotExist
 from contentcuration.models import Invitation
 from contentcuration.models import User
 from contentcuration.statistics import record_user_registration_stats
@@ -148,6 +152,7 @@ class UserRegistrationView(RegistrationView):
     email_subject_template = 'registration/activation_email_subject.txt'
     email_html_template = 'registration/activation_email.html'
     template_name = 'registration/registration_information_form.html'
+    http_method_names = ['post']
 
     def post(self, request):
         form = self.form_class(json.loads(request.body))
@@ -208,6 +213,58 @@ class UserActivationView(ActivationView):
         return user
 
 
+class UserPasswordResetView(PasswordResetView):
+    form_class = ForgotPasswordForm
+    http_method_names = ['post']
+
+    def post(self, request):
+        protocol = 'https' if request.is_secure() else 'http'
+        site = request.get_host() or Site.objects.get_current().domain
+        email_context = {
+            'site': get_current_site(request),
+            'domain': request.META.get('HTTP_ORIGIN') or "{}://{}".format(protocol, site)
+        }
+        form = self.form_class(json.loads(request.body))
+        if form.is_valid():
+            form.save(
+                use_https=request.is_secure(),
+                request=request,
+                extra_email_context=email_context,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                email_template_name='registration/password_reset_email.txt',
+                subject_template_name='registration/password_reset_subject.txt',
+            )
+        return HttpResponse()
+
+
+class UserPasswordResetConfirmView(PasswordResetConfirmView):
+    http_method_names = ['get', 'post']
+
+    @method_decorator(sensitive_post_parameters())
+    @method_decorator(never_cache)
+    def dispatch(self, request, *args, **kwargs):
+        response = super(UserPasswordResetConfirmView, self).dispatch(request, *args, **kwargs)
+
+        if request.method == 'POST':
+            return self.post(request, *args, **kwargs)
+
+        # Token is valid, redirect to password reset page
+        if response.status_code == 302:
+            return redirect('/accounts/#/reset-password?uidb64={}&token={}'.format(kwargs['uidb64'], kwargs['token']))
+
+        return redirect('/accounts/#/reset-expired')
+
+    def get_success_url(self):
+        return '/accounts/#/password-reset-success'
+
+    def post(self, request, *args, **kwargs):
+        form = self.form_class(self.user, request.POST.dict())
+
+        if form.is_valid():
+            return self.form_valid(form)
+        return HttpResponseForbidden()
+
+
 def request_activation_link(request):
     if request.method != 'POST':
         return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
@@ -217,18 +274,9 @@ def request_activation_link(request):
         registration_view = UserRegistrationView()
         registration_view.request = request
         registration_view.send_activation_email(user)
-    except DoesNotExist:
+    except User.DoesNotExist:
         pass
     return HttpResponse()  # Return success no matter what so people can't try to look up emails
-
-
-def custom_password_reset(request, **kwargs):
-    email_context = {
-        'site': get_current_site(request),
-        'domain': request.META.get('HTTP_ORIGIN') or "https://{}".format(
-            request.get_host() or Site.objects.get_current().domain)
-    }
-    return password_reset(request, extra_email_context=email_context, **kwargs)
 
 
 def new_user_redirect(request, user_id):

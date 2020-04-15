@@ -5,11 +5,8 @@ import pycountry
 from builtins import object
 from django import forms
 from django.conf import settings
-from django.contrib.auth import password_validation
-from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.forms import PasswordResetForm
-from django.contrib.auth.forms import SetPasswordForm
 from django.contrib.auth.forms import UserChangeForm
 from django.contrib.auth.forms import UserCreationForm
 from django.core import signing
@@ -366,7 +363,7 @@ class AccountSettingsForm(PasswordChangeForm):
 
 
 class ForgotPasswordForm(PasswordResetForm):
-    email = forms.EmailField(label=_("Email"), max_length=254, widget=forms.TextInput(attrs={"dir": "auto"}))
+    email = forms.EmailField(max_length=254)
 
     def save(self, request=None, extra_email_context=None, **kwargs):
         """
@@ -374,34 +371,33 @@ class ForgotPasswordForm(PasswordResetForm):
         user.
         """
         email = self.cleaned_data["email"]
+        inactive_user = User.objects.filter(email=email, is_active=False).first()
 
-        users = User.objects.filter(email=email)
-        inactive_users = users.filter(is_active=False)
-        if inactive_users.exists() and inactive_users.count() == users.count():  # all matches are inactive
-            for user in inactive_users:
-                if not user.password:
-                    context = {
-                        'site': extra_email_context.get('site'),
-                        'user': user,
-                        'domain': extra_email_context.get('domain'),
-                    }
-                    subject = render_to_string('registration/password_reset_subject.txt', context)
-                    subject = ''.join(subject.splitlines())
-                    message = render_to_string('registration/registration_needed_email.txt', context)
-                    user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )
-                else:
-                    activation_key = self.get_activation_key(user)
-                    context = {
-                        'activation_key': activation_key,
-                        'expiration_days': settings.ACCOUNT_ACTIVATION_DAYS,
-                        'site': extra_email_context.get('site'),
-                        'user': user,
-                        'domain': extra_email_context.get('domain'),
-                    }
-                    subject = render_to_string('registration/password_reset_subject.txt', context)
-                    subject = ''.join(subject.splitlines())
-                    message = render_to_string('registration/activation_needed_email.txt', context)
-                    user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )
+        if inactive_user:
+            # For users who were invited but hadn't registered yet
+            if not inactive_user.password:
+                context = {
+                    'site': extra_email_context.get('site'),
+                    'user': inactive_user,
+                    'domain': extra_email_context.get('domain'),
+                }
+                subject = render_to_string('registration/password_reset_subject.txt', context)
+                subject = ''.join(subject.splitlines())
+                message = render_to_string('registration/registration_needed_email.txt', context)
+                inactive_user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )
+            else:
+                activation_key = self.get_activation_key(inactive_user)
+                context = {
+                    'activation_key': activation_key,
+                    'expiration_days': settings.ACCOUNT_ACTIVATION_DAYS,
+                    'site': extra_email_context.get('site'),
+                    'user': inactive_user,
+                    'domain': extra_email_context.get('domain'),
+                }
+                subject = render_to_string('registration/password_reset_subject.txt', context)
+                subject = ''.join(subject.splitlines())
+                message = render_to_string('registration/activation_needed_email.txt', context)
+                inactive_user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )
         else:
             super(ForgotPasswordForm, self).save(request=request, extra_email_context=extra_email_context, **kwargs)
 
@@ -413,21 +409,6 @@ class ForgotPasswordForm(PasswordResetForm):
             obj=getattr(user, user.USERNAME_FIELD),
             salt=REGISTRATION_SALT
         )
-
-
-class ResetPasswordForm(SetPasswordForm):
-    new_password1 = forms.CharField(label=_("New password"),
-                                    widget=forms.PasswordInput(attrs={"dir": "auto"}),
-                                    strip=False,
-                                    help_text=password_validation.password_validators_help_text_html())
-    new_password2 = forms.CharField(label=_("New password confirmation"),
-                                    strip=False,
-                                    widget=forms.PasswordInput(attrs={"dir": "auto"}))
-
-
-class LoginForm(AuthenticationForm):
-    username = forms.CharField(max_length=254, widget=forms.TextInput(attrs={"dir": "auto"}))
-    password = forms.CharField(label=_("Password"), strip=False, widget=forms.PasswordInput(attrs={"dir": "auto"}))
 
 
 class IssueReportForm(forms.Form, ExtraFormMixin):
