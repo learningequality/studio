@@ -8,7 +8,7 @@
       :clipped-right="isRTL"
       app
     >
-      <VToolbarSideIcon>
+      <VToolbarSideIcon href="/">
         <VImg maxHeight="35" contain :src="require('shared/images/kolibri-logo.svg')" />
       </VToolbarSideIcon>
 
