@@ -11,6 +11,7 @@
     :required="required"
     :rules="rules"
     :search-input.sync="searchInput"
+    :no-data-text="$tr('noCountriesFound')"
     @change="searchInput=''"
   />
 
@@ -61,12 +62,13 @@
         });
       },
       rules() {
-        return [v => !!v || this.$tr('locationRequiredMessage')];
+        return [v => !this.required || !!v.length || this.$tr('locationRequiredMessage')];
       },
     },
     $trs: {
       locationLabel: 'Select all that apply',
       locationRequiredMessage: 'Field is required',
+      noCountriesFound: 'No countries found',
     },
   };
 

@@ -79,7 +79,7 @@
 
 
         <!-- Location -->
-        <VInput required :rules="locationRules" class="mt-2" />
+        <VInput required :rules="locationRules" class="mt-4" />
         <h1 class="font-weight-bold subheading my-2">
           {{ $tr('locationLabel') }}*
         </h1>
@@ -96,6 +96,7 @@
           item-text="label"
           item-value="id"
           outline
+          menu-props="offsetY"
           :label="$tr('sourcePlaceholder')"
         />
         <TextArea

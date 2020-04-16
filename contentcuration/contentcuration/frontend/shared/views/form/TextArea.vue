@@ -21,7 +21,7 @@
     props: {
       value: {
         type: String,
-        required: false,
+        default: '',
       },
       additionalRules: {
         type: Array,
@@ -48,7 +48,9 @@
         },
       },
       rules() {
-        return [v => !!v.trim() || this.$tr('fieldRequiredMessage')].concat(this.additionalRules);
+        return [v => !this.required || !!v.trim() || this.$tr('fieldRequiredMessage')].concat(
+          this.additionalRules
+        );
       },
     },
     $trs: {

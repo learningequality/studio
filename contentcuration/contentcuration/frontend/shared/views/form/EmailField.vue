@@ -39,7 +39,7 @@
       emailRules() {
         // TODO: fix checking if email exists
         return [
-          v => !!v || this.$tr('emailRequiredMessage'),
+          v => !this.required || !!v || this.$tr('emailRequiredMessage'),
           v => /.+@.+\..+/.test(v) || this.$tr('validEmailMessage'),
         ];
       },
