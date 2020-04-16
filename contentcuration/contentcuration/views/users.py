@@ -278,14 +278,3 @@ def request_activation_link(request):
     except User.DoesNotExist:
         pass
     return HttpResponse()  # Return success no matter what so people can't try to look up emails
-
-
-def new_user_redirect(request, user_id):
-    user = User.objects.get(pk=user_id)
-    if user.is_active:
-        return redirect(reverse_lazy("channels"))
-    djangologout(request)
-    request.session["email"] = user.email
-    request.session["freeze_email"] = True
-
-    return redirect(reverse_lazy("registration_register"))
