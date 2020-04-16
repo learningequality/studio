@@ -49,7 +49,7 @@
           <VSelect
             v-model="pageSize"
             outline
-            menu-props="offsetY"
+            :menu-props="menuProps"
             :items="pageSizeOptions"
             :label="$tr('pageSize')"
           />
@@ -72,7 +72,7 @@
             :item-text="licenseText"
             multiple
             outline
-            menu-props="offsetY"
+            :menu-props="menuProps"
             class="licenses"
             attach=".licenses"
             @click.stop.prevent
@@ -89,7 +89,7 @@
             attach=".formats"
             multiple
             outline
-            menu-props="offsetY"
+            :menu-props="menuProps"
           />
 
           <!-- Starred -->
@@ -165,6 +165,9 @@
       },
       libraryMode() {
         return window.libraryMode;
+      },
+      menuProps() {
+        return { offsetY: true, maxHeight: 270 };
       },
       kindOptions() {
         return sortBy(Constants.ContentKinds, 'kind').filter(k => !EXCLUDE_KINDS.includes(k.kind));
