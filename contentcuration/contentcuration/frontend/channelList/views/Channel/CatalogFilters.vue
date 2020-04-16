@@ -64,6 +64,7 @@
 
           <!-- License (attach to self to keep in notranslate class) -->
           <VSelect
+            v-if="!libraryMode"
             v-model="licenses"
             :items="licenseOptions"
             :label="$tr('licenseLabel')"
@@ -161,6 +162,9 @@
       }),
       isRTL() {
         return window.isRTL;
+      },
+      libraryMode() {
+        return window.libraryMode;
       },
       kindOptions() {
         return sortBy(Constants.ContentKinds, 'kind').filter(k => !EXCLUDE_KINDS.includes(k.kind));
