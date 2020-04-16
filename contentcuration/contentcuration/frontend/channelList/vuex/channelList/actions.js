@@ -2,7 +2,7 @@ import client from 'shared/client';
 import { Channel } from 'shared/data/resources';
 
 export function searchCatalog(context, params) {
-  params.page_size = params.page_size || 25;
+  params.page_size = params.page_size || 100;
   params.public = true;
   params.published = true;
   let promise;

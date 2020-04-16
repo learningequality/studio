@@ -1,6 +1,7 @@
 <template>
 
   <VPagination
+    v-if="totalPages > 1"
     v-model="page"
     color="primary"
     class="notranslate"

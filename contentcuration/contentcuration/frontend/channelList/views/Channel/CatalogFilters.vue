@@ -45,15 +45,6 @@
             @input="setKeywords"
           />
 
-          <!-- Show per page -->
-          <VSelect
-            v-model="pageSize"
-            outline
-            :menu-props="menuProps"
-            :items="pageSizeOptions"
-            :label="$tr('pageSize')"
-          />
-
           <!-- Language -->
           <LanguageDropdown
             v-model="languages"
@@ -175,9 +166,6 @@
       licenseOptions() {
         return sortBy(Constants.Licenses, 'id');
       },
-      pageSizeOptions() {
-        return [5, 10, 25, 50];
-      },
       filtersCount() {
         let fields = [
           this.keywords,
@@ -195,14 +183,6 @@
           },
           0
         );
-      },
-      pageSize: {
-        get() {
-          return Number(this.$route.query.page_size) || 25;
-        },
-        set(value) {
-          this.setQueryParam('page_size', value);
-        },
       },
       languages: {
         get() {
@@ -324,7 +304,6 @@
       includesLabel: 'Includes',
       searchText:
         '{count, plural,\n =0 {Search} \n =1 {Search (# filter)}\n other {Search (# filters)}}',
-      pageSize: 'Show per page',
       coachDescription: 'Coach content is visible to coaches only in Kolibri',
       exerciseDescription: 'Exercises that have interactive question sets',
     },
