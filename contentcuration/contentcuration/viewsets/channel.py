@@ -400,4 +400,4 @@ class CatalogViewSet(ChannelViewSet):
             ),
         )
 
-        return queryset.order_by("-priority", "name")
+        return queryset.order_by("name")
