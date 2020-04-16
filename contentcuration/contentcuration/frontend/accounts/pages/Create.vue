@@ -342,7 +342,7 @@
       submit() {
         this.clean();
         if (this.$refs.form.validate()) {
-          this.register({
+          return this.register({
             ...this.form,
             uses: this.form.uses.join('|'),
             locations: this.form.locations.join('|'),
@@ -361,6 +361,7 @@
               }
             });
         }
+        return Promise.resolve();
       },
     },
     $trs: {

@@ -9,6 +9,7 @@
       lazy-validation
       @submit.prevent="requestActivationLink"
     >
+      <Banner :text="$tr('activationRequestFailed')" :value="error" error />
       <EmailField v-model="email" autofocus />
       <VBtn color="primary" large type="submit" block>
         {{ $tr('submitButton') }}
@@ -24,25 +25,33 @@
   import { mapActions } from 'vuex';
   import MessageLayout from '../../components/MessageLayout';
   import EmailField from 'shared/views/form/EmailField';
+  import Banner from 'shared/views/Banner';
 
   export default {
     name: 'RequestNewActivationLink',
     components: {
       MessageLayout,
       EmailField,
+      Banner,
     },
     data() {
       return {
         email: '',
+        error: false,
       };
     },
     methods: {
       ...mapActions('account', ['sendActivationLink']),
       requestActivationLink() {
+        this.error = false;
         if (this.$refs.form.validate()) {
-          this.sendActivationLink(this.email).then(() => {
-            this.$router.replace({ name: 'ActivationLinkReSent' });
-          });
+          this.sendActivationLink(this.email)
+            .then(() => {
+              this.$router.replace({ name: 'ActivationLinkReSent' });
+            })
+            .catch(() => {
+              this.error = true;
+            });
         }
       },
     },
@@ -50,6 +59,7 @@
       activationExpiredTitle: 'Activation failed',
       activationExpiredText: 'This activation link has been used already or is invalid.',
       submitButton: 'Submit',
+      activationRequestFailed: 'Failed to send a new activation link. Please try again.',
     },
   };
 

@@ -25,14 +25,13 @@ export default {
       );
     },
     setPassword(context, { uidb64, token, new_password1, new_password2 }) {
-      let data = new FormData();
-
-      data.append('new_password1', new_password1);
-      data.append('new_password2', new_password2);
-
+      let data = {
+        new_password1,
+        new_password2,
+      };
       return client.post(window.Urls.auth_password_reset_confirm(uidb64, token), data, {
         headers: {
-          'Content-type': undefined,
+          'Content-type': 'application/form-url-encode',
         },
       });
     },

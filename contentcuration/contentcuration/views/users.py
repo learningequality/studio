@@ -124,12 +124,13 @@ def login(request):
         if user.is_active:
             djangologin(request, user)
             return redirect(reverse_lazy("channels"))
-        else:
-            # Return a 'disabled account' error message
-            return HttpResponseBadRequest(status=405)
-    else:
-        # Return an 'invalid login' error message.
-        return HttpResponseForbidden()
+
+    user = User.objects.filter(email__iexact=username, is_active=False).first()
+    if user and user.check_password(password):
+        return HttpResponseBadRequest(status=405, reason="Account hasn't been activated")
+
+    # Return an 'invalid login' error message.
+    return HttpResponseForbidden()
 
 
 def logout(request):
@@ -258,7 +259,7 @@ class UserPasswordResetConfirmView(PasswordResetConfirmView):
         return '/accounts/#/password-reset-success'
 
     def post(self, request, *args, **kwargs):
-        form = self.form_class(self.user, request.POST.dict())
+        form = self.form_class(self.user, json.loads(request.body))
 
         if form.is_valid():
             return self.form_valid(form)

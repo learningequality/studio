@@ -20,8 +20,8 @@
         </h2>
         <Banner :value="loginFailed" :text="$tr('loginFailed')" error />
         <VForm ref="form" lazy-validation class="py-4" @submit.prevent="submit">
-          <EmailField v-model="credentials.username" autofocus />
-          <PasswordField v-model="credentials.password" :label="$tr('passwordLabel')" />
+          <EmailField v-model="username" autofocus />
+          <PasswordField v-model="password" :label="$tr('passwordLabel')" />
           <p>
             <ActionLink :to="{name: 'ForgotPassword' }" :text="$tr('forgotPasswordLink')" />
           </p>
@@ -59,10 +59,8 @@
     },
     data() {
       return {
-        credentials: {
-          username: '',
-          password: '',
-        },
+        username: '',
+        password: '',
         loginFailed: false,
       };
     },
@@ -70,7 +68,11 @@
       ...mapActions(['login']),
       submit() {
         if (this.$refs.form.validate()) {
-          this.login(this.credentials)
+          let credentials = {
+            username: this.username,
+            password: this.password,
+          };
+          return this.login(credentials)
             .then(() => {
               let params = new URLSearchParams(window.location.href.split('?')[1]);
               window.location = '/' + (params.get('next') || 'channels');
@@ -82,6 +84,7 @@
               this.loginFailed = true;
             });
         }
+        return Promise.resolve();
       },
     },
     $trs: {

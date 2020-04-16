@@ -5,13 +5,14 @@
     :text="$tr('resetPasswordPrompt')"
   >
     <VForm ref="form" lazy-validation @submit.prevent="submit">
+      <Banner :text="$tr('resetPasswordFailed')" :value="error" error />
       <PasswordField
-        v-model="form.new_password1"
+        v-model="new_password1"
         :label="$tr('passwordLabel')"
         autofocus
       />
       <PasswordField
-        v-model="form.new_password2"
+        v-model="new_password2"
         :label="$tr('passwordConfirmLabel')"
         :additionalRules="passwordConfirmRules"
       />
@@ -28,40 +29,46 @@
   import { mapActions } from 'vuex';
   import MessageLayout from '../../components/MessageLayout';
   import PasswordField from 'shared/views/form/PasswordField';
+  import Banner from 'shared/views/Banner';
 
   export default {
     name: 'ResetPassword',
     components: {
       MessageLayout,
       PasswordField,
+      Banner,
     },
     data() {
       return {
-        form: {
-          new_password1: '',
-          new_password2: '',
-        },
+        new_password1: '',
+        new_password2: '',
+        error: false,
       };
     },
     computed: {
       passwordConfirmRules() {
-        return [v => this.form.new_password1 === v || this.$tr('passwordMatchMessage')];
+        return [v => this.new_password1 === v || this.$tr('passwordMatchMessage')];
       },
     },
     methods: {
       ...mapActions('account', ['setPassword']),
       submit() {
+        this.error = false;
         if (this.$refs.form.validate()) {
           let payload = {
             ...this.$route.query,
-            ...this.form,
+            new_password1: this.new_password1,
+            new_password2: this.new_password2,
           };
-
-          this.setPassword(payload).then(() => {
-            this.$router.push({
-              name: 'ResetPasswordSuccess',
+          this.setPassword(payload)
+            .then(() => {
+              this.$router.push({
+                name: 'ResetPasswordSuccess',
+              });
+            })
+            .catch(() => {
+              this.error = true;
             });
-          });
         }
       },
     },
@@ -72,6 +79,7 @@
       passwordConfirmLabel: 'Confirm password',
       passwordMatchMessage: "Passwords don't match",
       submitButton: 'Submit',
+      resetPasswordFailed: 'Failed to reset password. Please try again.',
     },
   };
 
