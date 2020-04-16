@@ -1,9 +1,7 @@
 from django.conf import settings
 from django.db.models import BooleanField
 from django.db.models import IntegerField
-from django.db.models import Max
 from django.db.models import OuterRef
-from django.db.models import Prefetch
 from django.db.models import Q
 from django.db.models import Subquery
 from django.db.models import Value
@@ -52,6 +50,13 @@ class CatalogListPagination(PageNumberPagination):
         )
 
 
+primary_token_subquery = Subquery(
+    SecretToken.objects.filter(channels=OuterRef("id"), is_primary=True)
+    .values("token")
+    .order_by("-token")[:1]
+)
+
+
 class ChannelFilter(FilterSet):
     edit = BooleanFilter(method="filter_edit")
     view = BooleanFilter(method="filter_view")
@@ -75,7 +80,7 @@ class ChannelFilter(FilterSet):
         )
 
     def filter_keywords(self, queryset, name, value):
-        # Wait until we show more metadata on cards to add this back in
+        # TODO: Wait until we show more metadata on cards to add this back in
         # keywords_query = self.main_tree_query.filter(
         #     Q(tags__tag_name__icontains=value)
         #     | Q(author__icontains=value)
@@ -84,7 +89,7 @@ class ChannelFilter(FilterSet):
         # )
         return queryset.annotate(
             # keyword_match_count=SQCount(keywords_query, field="content_id"),
-            primary_token=Max("secret_tokens__token"),
+            primary_token=primary_token_subquery,
         ).filter(
             Q(name__icontains=value)
             | Q(description__icontains=value)
@@ -96,7 +101,7 @@ class ChannelFilter(FilterSet):
     def filter_languages(self, queryset, name, value):
         languages = value.split(",")
 
-        # Wait until we show more metadata on cards to add this back in
+        # TODO: Wait until we show more metadata on cards to add this back in
         # language_query = (
         #     self.main_tree_query.filter(language_id__in=languages)
         #     .values("content_id")
@@ -223,7 +228,9 @@ class ChannelSerializer(BulkModelSerializer):
     def create(self, validated_data):
         bookmark = validated_data.pop("bookmark", None)
         content_defaults = validated_data.pop("content_defaults", {})
-        validated_data["content_defaults"] = self.fields["content_defaults"].create(content_defaults)
+        validated_data["content_defaults"] = self.fields["content_defaults"].create(
+            content_defaults
+        )
         if "request" in self.context:
             user_id = self.context["request"].user.id
             # This has been newly created so add the current user as an editor
@@ -236,7 +243,9 @@ class ChannelSerializer(BulkModelSerializer):
         bookmark = validated_data.pop("bookmark", None)
         content_defaults = validated_data.pop("content_defaults", None)
         if content_defaults is not None:
-            validated_data["content_defaults"] = self.fields["content_defaults"].update(instance.content_defaults, content_defaults)
+            validated_data["content_defaults"] = self.fields["content_defaults"].update(
+                instance.content_defaults, content_defaults
+            )
         if "request" in self.context:
             user_id = self.context["request"].user.id
             # We could possibly do this in bulk later in the process,
@@ -255,7 +264,7 @@ class ChannelSerializer(BulkModelSerializer):
 
 
 def get_thumbnail_url(item):
-    return item.get('thumbnail') and generate_storage_url(item["thumbnail"])
+    return item.get("thumbnail") and generate_storage_url(item["thumbnail"])
 
 
 class ChannelViewSet(ValuesViewset):
@@ -274,7 +283,6 @@ class ChannelViewSet(ValuesViewset):
         "thumbnail_encoding",
         "language",
         "primary_token",
-        "count",
         "modified",
         "count",
         "view",
@@ -349,17 +357,8 @@ class ChannelViewSet(ValuesViewset):
 
         return queryset.order_by("-priority", "name")
 
-    def prefetch_queryset(self, queryset):
-        prefetch_secret_token = Prefetch(
-            "secret_tokens", queryset=SecretToken.objects.filter(is_primary=True)
-        )
-        queryset = queryset.select_related("language", "main_tree").prefetch_related(
-            prefetch_secret_token
-        )
-        return queryset
-
     def annotate_queryset(self, queryset):
-        queryset = queryset.annotate(primary_token=Max("secret_tokens__token"))
+        queryset = queryset.annotate(primary_token=primary_token_subquery)
         channel_main_tree_nodes = ContentNode.objects.filter(
             tree_id=OuterRef("main_tree__tree_id")
         )
@@ -383,7 +382,12 @@ class ChannelViewSet(ValuesViewset):
         return queryset
 
 
-@method_decorator(cache_page(settings.PUBLIC_CHANNELS_CACHE_DURATION, key_prefix='public_catalog_list'), name="dispatch")
+@method_decorator(
+    cache_page(
+        settings.PUBLIC_CHANNELS_CACHE_DURATION, key_prefix="public_catalog_list"
+    ),
+    name="dispatch",
+)
 @method_decorator(cache_no_user_data, name="dispatch")
 class CatalogViewSet(ChannelViewSet):
     pagination_class = CatalogListPagination
@@ -391,18 +395,9 @@ class CatalogViewSet(ChannelViewSet):
 
     def get_queryset(self):
         queryset = Channel.objects.filter(deleted=False, public=True).annotate(
-            edit=Value(
-                False,
-                BooleanField(),
-            ),
-            view=Value(
-                False,
-                BooleanField(),
-            ),
-            bookmark=Value(
-                False,
-                BooleanField(),
-            ),
+            edit=Value(False, BooleanField()),
+            view=Value(False, BooleanField()),
+            bookmark=Value(False, BooleanField()),
         )
 
         return queryset.order_by("name")
