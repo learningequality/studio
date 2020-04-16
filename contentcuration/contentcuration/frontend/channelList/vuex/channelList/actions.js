@@ -1,5 +1,6 @@
 import client from 'shared/client';
 import { Channel } from 'shared/data/resources';
+import tracker from 'shared/analytics/tracker';
 
 export function searchCatalog(context, params) {
   params.page_size = params.page_size || 100;
@@ -15,6 +16,14 @@ export function searchCatalog(context, params) {
     context.commit('SET_PAGE', pageData);
     // Put channel data in our global channels map
     context.commit('channel/ADD_CHANNELS', pageData.results, { root: true });
+
+    // Track search and # of results
+    delete params['public'];
+    delete params['published'];
+    tracker.track('Public channel list', 'Search', {
+      resultCount: pageData.count,
+      search: params,
+    });
   });
 }
 
