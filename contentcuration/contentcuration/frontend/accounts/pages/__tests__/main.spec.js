@@ -69,4 +69,11 @@ describe('main', () => {
     await wrapper.vm.submit();
     expect(wrapper.vm.loginFailed).toBe(true);
   });
+  it('should navigate to next url if next query param is set', async () => {
+    window.location.assign = jest.fn();
+    const testUrl = '/testnext/';
+    router.push(`/account/?next=${testUrl}`);
+    await wrapper.vm.submit();
+    expect(window.location.assign.mock.calls[0][0]).toBe(testUrl);
+  });
 });

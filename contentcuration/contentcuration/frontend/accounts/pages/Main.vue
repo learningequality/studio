@@ -75,7 +75,7 @@
           return this.login(credentials)
             .then(() => {
               let params = new URLSearchParams(window.location.href.split('?')[1]);
-              window.location = '/' + (params.get('next') || 'channels');
+              window.location.assign(params.get('next') || '/channels');
             })
             .catch(err => {
               if (err.response.status === 405) {
