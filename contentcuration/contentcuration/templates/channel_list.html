@@ -9,9 +9,13 @@
 	{% render_bundle_css 'channel_list' %}
 {% endblock css_bundle %}
 
-{% if LIBRARY_MODE %}
-	{% block title %}{% trans 'Kolibri Content Library' %}{% endblock title %}
-{% endif %}
+
+{% block title %}
+	{% if LIBRARY_MODE %}{% trans 'Kolibri Content Library' %}
+	{% else %}{% trans 'Kolibri Studio (Beta)' %}
+	{% endif %}
+{% endblock title %}
+
 
 {% block content %}
 	<script>
