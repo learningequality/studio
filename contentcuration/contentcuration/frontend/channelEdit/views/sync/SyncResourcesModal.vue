@@ -209,7 +209,7 @@
 </script>
 
 
-<style lang="less">
+<style lang="less" scoped>
 
   // counteract the effect of the VCardText that is wrapping the VList component
   .v-card /deep/ .v-card__text {

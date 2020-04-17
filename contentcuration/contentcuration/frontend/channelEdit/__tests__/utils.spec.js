@@ -4,7 +4,6 @@ import {
   sanitizeAssessmentItemHints,
   sanitizeAssessmentItem,
   validateAssessmentItem,
-  sanitizeAssessmentItems,
   getCorrectAnswersIndices,
   mapCorrectAnswers,
   updateAnswersToQuestionType,
@@ -353,66 +352,6 @@ describe('channelEdit utils', () => {
 
         expect(validateAssessmentItem(assessmentItem)).toEqual([]);
       });
-    });
-  });
-
-  describe('sanitizeAssessmentItems', () => {
-    it('sanitizes questions/answers/hints texts and removes empty questions/answers/hints', () => {
-      const assessmentItems = [
-        {
-          order: 0,
-          question: ' Question 1 text ',
-          answers: [
-            { answer: ' Answer 1', order: 1, correct: false },
-            { answer: '', order: 2, correct: true },
-            { answer: 'Answer 3 ', order: 3, correct: true },
-          ],
-          hints: [
-            { hint: ' ', order: 1 },
-            { hint: '', order: 2 },
-            { hint: ' Hint 3', order: 3 },
-          ],
-        },
-        {
-          order: 1,
-          question: ' ',
-          answers: [{ answer: '', order: 1, correct: true }],
-          hints: [
-            { hint: ' ', order: 1 },
-            { hint: '', order: 2 },
-          ],
-        },
-        {
-          order: 2,
-          question: '',
-          answers: [],
-          hints: [],
-        },
-        {
-          order: 3,
-          question: ' Question 4 text ',
-          answers: [{ answer: '', order: 2, correct: true }],
-          hints: [],
-        },
-      ];
-
-      expect(sanitizeAssessmentItems(assessmentItems)).toEqual([
-        {
-          order: 0,
-          question: 'Question 1 text',
-          answers: [
-            { answer: 'Answer 1', order: 1, correct: false },
-            { answer: 'Answer 3', order: 2, correct: true },
-          ],
-          hints: [{ hint: 'Hint 3', order: 1 }],
-        },
-        {
-          order: 1,
-          question: 'Question 4 text',
-          answers: [],
-          hints: [],
-        },
-      ]);
     });
   });
 

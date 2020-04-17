@@ -10,43 +10,57 @@ import AssessmentEditor from './AssessmentEditor';
 jest.mock('shared/views/MarkdownEditor/MarkdownEditor/MarkdownEditor.vue');
 jest.mock('shared/views/MarkdownEditor/MarkdownViewer/MarkdownViewer.vue');
 
-const ITEMS = [
-  {
-    question: 'Question 1',
-    type: AssessmentItemTypes.INPUT_QUESTION,
-    order: 0,
-    answers: [
-      { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-      { answer: 'Peanut butter', correct: true, order: 2 },
-    ],
-    hints: [],
-  },
-  {
-    question: 'Question 2',
-    type: AssessmentItemTypes.SINGLE_SELECTION,
-    order: 1,
-    answers: [
-      { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-      { answer: 'Peanut butter', correct: true, order: 2 },
-    ],
-    hints: [
-      { hint: "It's not healthy", order: 1 },
-      { hint: 'Tasty!', order: 2 },
-    ],
-  },
-  {
-    question: 'Question 3',
-    type: AssessmentItemTypes.MULTIPLE_SELECTION,
-    order: 2,
-    answers: [
-      { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-      { answer: 'Peanut butter', correct: false, order: 2 },
-      { answer: 'Jelly', correct: true, order: 3 },
-    ],
-    hints: [],
-  },
-];
+const NODE_ID = 'node-id';
+const ITEM1 = {
+  'assessment-id': 'question-1',
+  question: 'Question 1',
+  type: AssessmentItemTypes.INPUT_QUESTION,
+  order: 0,
+  answers: [
+    { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+    { answer: 'Peanut butter', correct: true, order: 2 },
+  ],
+  hints: [],
+};
+const ITEM2 = {
+  'assessment-id': 'question-2',
+  question: 'Question 2',
+  type: AssessmentItemTypes.SINGLE_SELECTION,
+  order: 1,
+  answers: [
+    { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+    { answer: 'Peanut butter', correct: true, order: 2 },
+  ],
+  hints: [
+    { hint: "It's not healthy", order: 1 },
+    { hint: 'Tasty!', order: 2 },
+  ],
+};
+const ITEM3 = {
+  'assessment-id': 'question-3',
+  question: 'Question 3',
+  type: AssessmentItemTypes.MULTIPLE_SELECTION,
+  order: 2,
+  answers: [
+    { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+    { answer: 'Peanut butter', correct: false, order: 2 },
+    { answer: 'Jelly', correct: true, order: 3 },
+  ],
+  hints: [],
+};
+const ITEM4 = {
+  'assessment-id': 'question-4',
+  question: 'Question 4',
+  type: AssessmentItemTypes.TRUE_FALSE,
+  order: 3,
+  answers: [
+    { answer: 'True', correct: false, order: 1 },
+    { answer: 'False', correct: true, order: 2 },
+  ],
+  hints: [],
+};
 
+const ITEMS = [ITEM1, ITEM2, ITEM3, ITEM4];
 const ITEMS_VALIDATION = [
   [],
   [ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS],
@@ -66,6 +80,10 @@ const getItems = wrapper => {
 
 const isItemOpen = assessmentItemWrapper => {
   return assessmentItemWrapper.contains('[data-test="editor"]');
+};
+
+const isAnswersPreviewVisible = assessmentItemWrapper => {
+  return assessmentItemWrapper.contains('[data-test="item-answers-preview"]');
 };
 
 const clickNewQuestionBtn = wrapper => {
@@ -121,6 +139,7 @@ describe('AssessmentEditor', () => {
   beforeEach(() => {
     wrapper = mount(AssessmentEditor, {
       propsData: {
+        nodeId: NODE_ID,
         items: ITEMS,
         itemsValidation: ITEMS_VALIDATION,
       },
@@ -139,6 +158,7 @@ describe('AssessmentEditor', () => {
     beforeEach(() => {
       wrapper = mount(AssessmentEditor, {
         propsData: {
+          nodeId: NODE_ID,
           items: [],
         },
       });
@@ -156,11 +176,12 @@ describe('AssessmentEditor', () => {
   it('renders all items', () => {
     const items = getItems(wrapper);
 
-    expect(items.length).toBe(3);
+    expect(items.length).toBe(4);
 
-    expect(items.at(0).html()).toContain('Question 1');
-    expect(items.at(1).html()).toContain('Question 2');
-    expect(items.at(2).html()).toContain('Question 3');
+    expect(items.at(0).html()).toContain(ITEM1.question);
+    expect(items.at(1).html()).toContain(ITEM2.question);
+    expect(items.at(2).html()).toContain(ITEM3.question);
+    expect(items.at(3).html()).toContain(ITEM4.question);
   });
 
   it('renders items as closed', () => {
@@ -169,6 +190,7 @@ describe('AssessmentEditor', () => {
     expect(isItemOpen(items.at(0))).toBe(false);
     expect(isItemOpen(items.at(1))).toBe(false);
     expect(isItemOpen(items.at(2))).toBe(false);
+    expect(isItemOpen(items.at(3))).toBe(false);
   });
 
   it("renders 'Show answers' checkbox", () => {
@@ -178,15 +200,10 @@ describe('AssessmentEditor', () => {
   it("doesn't render answers preview by default", () => {
     const items = getItems(wrapper);
 
-    expect(items.at(0).html()).not.toContain('Mayonnaise (I mean you can, but...)');
-    expect(items.at(0).html()).not.toContain('Peanut butter');
-
-    expect(items.at(1).html()).not.toContain('Mayonnaise (I mean you can, but...)');
-    expect(items.at(1).html()).not.toContain('Peanut butter');
-
-    expect(items.at(2).html()).not.toContain('Mayonnaise (I mean you can, but...)');
-    expect(items.at(2).html()).not.toContain('Peanut butter');
-    expect(items.at(2).html()).not.toContain('Jelly');
+    expect(isAnswersPreviewVisible(items.at(0))).toBe(false);
+    expect(isAnswersPreviewVisible(items.at(1))).toBe(false);
+    expect(isAnswersPreviewVisible(items.at(2))).toBe(false);
+    expect(isAnswersPreviewVisible(items.at(3))).toBe(false);
   });
 
   it('renders answers preview on show answers click', () => {
@@ -194,15 +211,10 @@ describe('AssessmentEditor', () => {
 
     const items = getItems(wrapper);
 
-    expect(items.at(0).html()).toContain('Mayonnaise (I mean you can, but...)');
-    expect(items.at(0).html()).toContain('Peanut butter');
-
-    expect(items.at(1).html()).toContain('Mayonnaise (I mean you can, but...)');
-    expect(items.at(1).html()).toContain('Peanut butter');
-
-    expect(items.at(2).html()).toContain('Mayonnaise (I mean you can, but...)');
-    expect(items.at(2).html()).toContain('Peanut butter');
-    expect(items.at(2).html()).toContain('Jelly');
+    expect(isAnswersPreviewVisible(items.at(0))).toBe(true);
+    expect(isAnswersPreviewVisible(items.at(1))).toBe(true);
+    expect(isAnswersPreviewVisible(items.at(2))).toBe(true);
+    expect(isAnswersPreviewVisible(items.at(3))).toBe(true);
   });
 
   it('opens an item on item click', () => {
@@ -212,6 +224,7 @@ describe('AssessmentEditor', () => {
     expect(isItemOpen(items.at(0))).toBe(false);
     expect(isItemOpen(items.at(1))).toBe(true);
     expect(isItemOpen(items.at(2))).toBe(false);
+    expect(isItemOpen(items.at(3))).toBe(false);
   });
 
   it('opens an item on toolbar edit icon click', () => {
@@ -221,6 +234,7 @@ describe('AssessmentEditor', () => {
     expect(isItemOpen(items.at(0))).toBe(false);
     expect(isItemOpen(items.at(1))).toBe(true);
     expect(isItemOpen(items.at(2))).toBe(false);
+    expect(isItemOpen(items.at(3))).toBe(false);
   });
 
   it('closes an item on close button click', () => {
@@ -234,282 +248,168 @@ describe('AssessmentEditor', () => {
     expect(isItemOpen(items.at(1))).toBe(false);
   });
 
-  it('emits update event with updated assessment items on item "Delete" click', () => {
-    const items = getItems(wrapper);
+  describe('on "Delete" click', () => {
+    beforeEach(() => {
+      const items = getItems(wrapper);
+      clickDelete(items.at(1));
+    });
 
-    clickDelete(items.at(1));
+    it('emits delete item event with a correct item', () => {
+      expect(wrapper.emitted().deleteItem).toBeTruthy();
+      expect(wrapper.emitted().deleteItem.length).toBe(1);
+      expect(wrapper.emitted().deleteItem[0][0]).toEqual(ITEM2);
+    });
 
-    expect(wrapper.emitted().update).toBeTruthy();
-    const lastUpdate = wrapper.emitted().update.length - 1;
-    expect(wrapper.emitted().update[lastUpdate][0]).toEqual([
-      {
-        question: 'Question 1',
-        type: AssessmentItemTypes.INPUT_QUESTION,
-        order: 0,
-        answers: [
-          { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-          { answer: 'Peanut butter', correct: true, order: 2 },
-        ],
-        hints: [],
-      },
-      {
-        question: 'Question 3',
-        type: AssessmentItemTypes.MULTIPLE_SELECTION,
+    it('emits update item events with updated order of items after the deleted item', () => {
+      expect(wrapper.emitted().updateItem).toBeTruthy();
+      expect(wrapper.emitted().updateItem.length).toBe(2);
+      expect(wrapper.emitted().updateItem[0][0]).toEqual({
+        ...ITEM3,
         order: 1,
-        answers: [
-          { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-          { answer: 'Peanut butter', correct: false, order: 2 },
-          { answer: 'Jelly', correct: true, order: 3 },
-        ],
-        hints: [],
-      },
-    ]);
+      });
+
+      expect(wrapper.emitted().updateItem).toBeTruthy();
+      expect(wrapper.emitted().updateItem.length).toBe(2);
+      expect(wrapper.emitted().updateItem[1][0]).toEqual({
+        ...ITEM4,
+        order: 2,
+      });
+    });
   });
 
-  it('emits update event with updated assessment items on item "Add question above" click', () => {
-    const items = getItems(wrapper);
+  describe('on "Add question above" click', () => {
+    beforeEach(() => {
+      const items = getItems(wrapper);
+      clickAddQuestionAbove(items.at(1));
+    });
 
-    clickAddQuestionAbove(items.at(1));
-
-    expect(wrapper.emitted().update).toBeTruthy();
-    const lastUpdate = wrapper.emitted().update.length - 1;
-    expect(wrapper.emitted().update[lastUpdate][0]).toEqual([
-      {
-        question: 'Question 1',
-        type: AssessmentItemTypes.INPUT_QUESTION,
-        order: 0,
-        answers: [
-          { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-          { answer: 'Peanut butter', correct: true, order: 2 },
-        ],
-        hints: [],
-      },
-      {
+    it('emits add item event with a new item with a correct order', () => {
+      expect(wrapper.emitted().addItem).toBeTruthy();
+      expect(wrapper.emitted().addItem.length).toBe(1);
+      expect(wrapper.emitted().addItem[0][0]).toEqual({
+        contentnode: NODE_ID,
         question: '',
         type: AssessmentItemTypes.SINGLE_SELECTION,
-        order: 1,
         answers: [],
         hints: [],
+        order: 1,
         isNew: true,
-      },
-      {
-        question: 'Question 2',
-        type: AssessmentItemTypes.SINGLE_SELECTION,
+      });
+    });
+
+    it('emits update item events with updated order of items below the new item', () => {
+      expect(wrapper.emitted().updateItem).toBeTruthy();
+      expect(wrapper.emitted().updateItem.length).toBe(3);
+
+      expect(wrapper.emitted().updateItem[0][0]).toEqual({
+        ...ITEM2,
         order: 2,
-        answers: [
-          { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-          { answer: 'Peanut butter', correct: true, order: 2 },
-        ],
-        hints: [
-          { hint: "It's not healthy", order: 1 },
-          { hint: 'Tasty!', order: 2 },
-        ],
-      },
-      {
-        question: 'Question 3',
-        type: AssessmentItemTypes.MULTIPLE_SELECTION,
+      });
+      expect(wrapper.emitted().updateItem[1][0]).toEqual({
+        ...ITEM3,
         order: 3,
-        answers: [
-          { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-          { answer: 'Peanut butter', correct: false, order: 2 },
-          { answer: 'Jelly', correct: true, order: 3 },
-        ],
-        hints: [],
-      },
-    ]);
+      });
+      expect(wrapper.emitted().updateItem[2][0]).toEqual({
+        ...ITEM4,
+        order: 4,
+      });
+    });
   });
 
-  it('emits update event with updated assessment items on item "Add question below" click', () => {
-    const items = getItems(wrapper);
+  describe('on "Add question below" click', () => {
+    beforeEach(() => {
+      const items = getItems(wrapper);
+      clickAddQuestionBelow(items.at(1));
+    });
 
-    clickAddQuestionBelow(items.at(1));
-
-    expect(wrapper.emitted().update).toBeTruthy();
-    const lastUpdate = wrapper.emitted().update.length - 1;
-    expect(wrapper.emitted().update[lastUpdate][0]).toEqual([
-      {
-        question: 'Question 1',
-        type: AssessmentItemTypes.INPUT_QUESTION,
-        order: 0,
-        answers: [
-          { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-          { answer: 'Peanut butter', correct: true, order: 2 },
-        ],
-        hints: [],
-      },
-      {
-        question: 'Question 2',
-        type: AssessmentItemTypes.SINGLE_SELECTION,
-        order: 1,
-        answers: [
-          { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-          { answer: 'Peanut butter', correct: true, order: 2 },
-        ],
-        hints: [
-          { hint: "It's not healthy", order: 1 },
-          { hint: 'Tasty!', order: 2 },
-        ],
-      },
-      {
+    it('emits add item event with a new item with a correct order', () => {
+      expect(wrapper.emitted().addItem).toBeTruthy();
+      expect(wrapper.emitted().addItem.length).toBe(1);
+      expect(wrapper.emitted().addItem[0][0]).toEqual({
+        contentnode: NODE_ID,
         question: '',
         type: AssessmentItemTypes.SINGLE_SELECTION,
-        order: 2,
         answers: [],
         hints: [],
+        order: 2,
         isNew: true,
-      },
-      {
-        question: 'Question 3',
-        type: AssessmentItemTypes.MULTIPLE_SELECTION,
+      });
+    });
+
+    it('emits update item events with updated order of items below the new item', () => {
+      expect(wrapper.emitted().updateItem).toBeTruthy();
+      expect(wrapper.emitted().updateItem.length).toBe(2);
+
+      expect(wrapper.emitted().updateItem[0][0]).toEqual({
+        ...ITEM3,
         order: 3,
-        answers: [
-          { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-          { answer: 'Peanut butter', correct: false, order: 2 },
-          { answer: 'Jelly', correct: true, order: 3 },
-        ],
-        hints: [],
-      },
-    ]);
+      });
+      expect(wrapper.emitted().updateItem[1][0]).toEqual({
+        ...ITEM4,
+        order: 4,
+      });
+    });
   });
 
-  it('emits update event with updated assessment items on item "Move up" click', () => {
-    const items = getItems(wrapper);
+  describe('on "Move up" click', () => {
+    beforeEach(() => {
+      const items = getItems(wrapper);
+      clickMoveUp(items.at(1));
+    });
 
-    clickMoveUp(items.at(1));
+    it('emits update item events with updated order of affected items', () => {
+      expect(wrapper.emitted().updateItem).toBeTruthy();
+      expect(wrapper.emitted().updateItem.length).toBe(2);
 
-    expect(wrapper.emitted().update).toBeTruthy();
-    const lastUpdate = wrapper.emitted().update.length - 1;
-    expect(wrapper.emitted().update[lastUpdate][0]).toEqual([
-      {
-        question: 'Question 2',
-        type: AssessmentItemTypes.SINGLE_SELECTION,
+      expect(wrapper.emitted().updateItem[0][0]).toEqual({
+        ...ITEM2,
         order: 0,
-        answers: [
-          { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-          { answer: 'Peanut butter', correct: true, order: 2 },
-        ],
-        hints: [
-          { hint: "It's not healthy", order: 1 },
-          { hint: 'Tasty!', order: 2 },
-        ],
-      },
-      {
-        question: 'Question 1',
-        type: AssessmentItemTypes.INPUT_QUESTION,
+      });
+      expect(wrapper.emitted().updateItem[1][0]).toEqual({
+        ...ITEM1,
         order: 1,
-        answers: [
-          { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-          { answer: 'Peanut butter', correct: true, order: 2 },
-        ],
-        hints: [],
-      },
-      {
-        question: 'Question 3',
-        type: AssessmentItemTypes.MULTIPLE_SELECTION,
-        order: 2,
-        answers: [
-          { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-          { answer: 'Peanut butter', correct: false, order: 2 },
-          { answer: 'Jelly', correct: true, order: 3 },
-        ],
-        hints: [],
-      },
-    ]);
+      });
+    });
   });
 
-  it('emits update event with updated assessment items on item "Move down" click', () => {
-    const items = getItems(wrapper);
+  describe('on "Move down" click', () => {
+    beforeEach(() => {
+      const items = getItems(wrapper);
+      clickMoveDown(items.at(1));
+    });
 
-    clickMoveDown(items.at(1));
+    it('emits update item events with updated order of affected items', () => {
+      expect(wrapper.emitted().updateItem).toBeTruthy();
+      expect(wrapper.emitted().updateItem.length).toBe(2);
 
-    expect(wrapper.emitted().update).toBeTruthy();
-    const lastUpdate = wrapper.emitted().update.length - 1;
-    expect(wrapper.emitted().update[lastUpdate][0]).toEqual([
-      {
-        question: 'Question 1',
-        type: AssessmentItemTypes.INPUT_QUESTION,
-        order: 0,
-        answers: [
-          { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-          { answer: 'Peanut butter', correct: true, order: 2 },
-        ],
-        hints: [],
-      },
-      {
-        question: 'Question 3',
-        type: AssessmentItemTypes.MULTIPLE_SELECTION,
-        order: 1,
-        answers: [
-          { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-          { answer: 'Peanut butter', correct: false, order: 2 },
-          { answer: 'Jelly', correct: true, order: 3 },
-        ],
-        hints: [],
-      },
-      {
-        question: 'Question 2',
-        type: AssessmentItemTypes.SINGLE_SELECTION,
+      expect(wrapper.emitted().updateItem[0][0]).toEqual({
+        ...ITEM2,
         order: 2,
-        answers: [
-          { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-          { answer: 'Peanut butter', correct: true, order: 2 },
-        ],
-        hints: [
-          { hint: "It's not healthy", order: 1 },
-          { hint: 'Tasty!', order: 2 },
-        ],
-      },
-    ]);
+      });
+      expect(wrapper.emitted().updateItem[1][0]).toEqual({
+        ...ITEM3,
+        order: 1,
+      });
+    });
   });
 
-  it('emits update event with updated assessment items on new question button click', () => {
-    clickNewQuestionBtn(wrapper);
+  describe('on "Add new question" click', () => {
+    beforeEach(() => {
+      clickNewQuestionBtn(wrapper);
+    });
 
-    expect(wrapper.emitted().update).toBeTruthy();
-    const lastUpdate = wrapper.emitted().update.length - 1;
-    expect(wrapper.emitted().update[lastUpdate][0]).toEqual([
-      {
-        question: 'Question 1',
-        type: AssessmentItemTypes.INPUT_QUESTION,
-        order: 0,
-        answers: [
-          { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-          { answer: 'Peanut butter', correct: true, order: 2 },
-        ],
-        hints: [],
-      },
-      {
-        question: 'Question 2',
-        type: AssessmentItemTypes.SINGLE_SELECTION,
-        order: 1,
-        answers: [
-          { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-          { answer: 'Peanut butter', correct: true, order: 2 },
-        ],
-        hints: [
-          { hint: "It's not healthy", order: 1 },
-          { hint: 'Tasty!', order: 2 },
-        ],
-      },
-      {
-        question: 'Question 3',
-        type: AssessmentItemTypes.MULTIPLE_SELECTION,
-        order: 2,
-        answers: [
-          { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-          { answer: 'Peanut butter', correct: false, order: 2 },
-          { answer: 'Jelly', correct: true, order: 3 },
-        ],
-        hints: [],
-      },
-      {
+    it('emits add item event with a new item with a correct order', () => {
+      expect(wrapper.emitted().addItem).toBeTruthy();
+      expect(wrapper.emitted().addItem.length).toBe(1);
+      expect(wrapper.emitted().addItem[0][0]).toEqual({
+        contentnode: NODE_ID,
         question: '',
         type: AssessmentItemTypes.SINGLE_SELECTION,
-        order: 3,
         answers: [],
         hints: [],
+        order: 4,
         isNew: true,
-      },
-    ]);
+      });
+    });
   });
 });

@@ -29,24 +29,24 @@ class AssessmentItemFilter(FilterSet):
         fields = ("contentnode",)
 
 
-def get_filenames_from_assessment(validated_data):
+def get_filenames_from_assessment(assessment_item):
     # Get unique checksums in the assessment item text fields markdown
     # Coerce to a string, for Python 2, as the stored data is in unicode, and otherwise
     # the unicode char in the placeholder will not match
     return set(
         exercise_image_filename_regex.findall(
             str(
-                validated_data["question"]
-                + validated_data["answers"]
-                + validated_data["hints"]
+                assessment_item.question
+                + assessment_item.answers
+                + assessment_item.hints
             )
         )
     )
 
 
 class AssessmentListSerializer(BulkListSerializer):
-    def set_files(self, all_objects, all_validated_data):
-        all_filenames = map(get_filenames_from_assessment, all_validated_data)
+    def set_files(self, all_objects):
+        all_filenames = [get_filenames_from_assessment(obj) for obj in all_objects]
         files_to_delete = File.objects.none()
         files_to_create = []
         for aitem, filenames in zip(all_objects, all_filenames):
@@ -80,14 +80,14 @@ class AssessmentListSerializer(BulkListSerializer):
 
     def create(self, validated_data):
         all_objects = super(AssessmentListSerializer, self).create(validated_data)
-        self.set_files(all_objects, validated_data)
+        self.set_files(all_objects)
         return all_objects
 
     def update(self, queryset, all_validated_data):
         all_objects = super(AssessmentListSerializer, self).update(
             queryset, all_validated_data
         )
-        self.set_files(all_objects, all_validated_data)
+        self.set_files(all_objects)
         return all_objects
 
 
