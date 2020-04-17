@@ -13,3 +13,14 @@ const ContentKinds = new Set([
 export default ContentKinds;
 
 export const ContentKindsList = Array.from(ContentKinds);
+
+export const ContentKindsNames = {
+  AUDIO: 'audio',
+  DOCUMENT: 'document',
+  EXERCISE: 'exercise',
+  H5P: 'h5p',
+  HTML5: 'html5',
+  SLIDESHOW: 'slideshow',
+  TOPIC: 'topic',
+  VIDEO: 'video',
+};

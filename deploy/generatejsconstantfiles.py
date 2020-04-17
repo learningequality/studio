@@ -75,6 +75,11 @@ def generate_constants_map_file(
         constant_name, "value" if mapper is None else sort_by
     )
     output += "const {}".format(constant_name) + "Map = new Map([\n"
+    # Collect output for constant names too
+    names_output = "export const {}Names =".format(constant_name)
+    names_output += " {\n"
+    # Don't generate this unless ids are strings
+    generate_names_constants = True
     for constant in sorted(
         constant_list, key=lambda x: x if mapper is None else getattr(x, sort_by)
     ):
@@ -89,11 +94,20 @@ def generate_constants_map_file(
             output += json.dumps(constant)
         output += ",\n"
 
+        generate_names_constants = generate_names_constants and type(constant.id) is str
+        if generate_names_constants:
+            # Replace "-" with "_" to ensure we get keys that don't need to be wrapped in strings
+            names_output += "  {}: '{}',\n".format(constant.id.upper().replace("-", "_"), constant.id)
+
     output += "]);\n\n"
     output += "export default {}Map\n\n".format(constant_name)
     output += "export const {}List = Array.from({}Map.values());\n".format(
         constant_name, constant_name
     )
+    if generate_names_constants:
+        output += "\n"
+        output += names_output
+        output += "};\n"
 
     with open(os.path.join(constants_path, constant_name + ".js"), "w") as f:
         f.write(output)
@@ -107,17 +121,33 @@ def generate_constants_set_file(
         constant_name, "value" if mapper is None else sort_by
     )
     output += "const {} = new Set([\n".format(constant_name)
+    # Collect output for constant names too
+    names_output = "export const {}Names =".format(constant_name)
+    names_output += " {\n"
+    # Don't generate this unless ids are strings
+    generate_names_constants = True
     for constant in sorted(
         constant_list, key=lambda x: x if mapper is None else getattr(x, sort_by)
     ):
         output += "  "
-        cast_value = json.dumps(mapper(constant) if mapper is not None else constant)
+        value = mapper(constant) if mapper is not None else constant
+        cast_value = json.dumps(value)
         output += "{},\n".format(cast_value)
+
+        generate_names_constants = generate_names_constants and type(value) is str
+        if generate_names_constants:
+            # Replace "-" with "_" to ensure we get keys that don't need to be wrapped in strings
+            names_output += "  {}: {},\n".format(value.upper().replace("-", "_"), cast_value)
 
     output += "]);\n\nexport default {};\n\n".format(constant_name)
     output += "export const {}List = Array.from({});\n".format(
         constant_name, constant_name
     )
+
+    if generate_names_constants:
+        output += "\n"
+        output += names_output
+        output += "};\n"
 
     with open(os.path.join(constants_path, constant_name + ".js"), "w") as f:
         f.write(output)

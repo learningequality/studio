@@ -125,7 +125,7 @@ const FormatPresetsMap = new Map([
       order: 4,
       kind_id: 'exercise',
       allowed_formats: ['svg', 'json', 'graphie'],
-      associated_mimetypes: ['.graphie', 'application/json', 'image/svg'],
+      associated_mimetypes: ['application/json', '.graphie', 'image/svg'],
     },
   ],
   [
@@ -141,7 +141,7 @@ const FormatPresetsMap = new Map([
       order: 3,
       kind_id: 'exercise',
       allowed_formats: ['png', 'jpg', 'jpeg', 'gif', 'svg'],
-      associated_mimetypes: ['image/jpeg', 'image/png', 'image/svg', 'image/gif'],
+      associated_mimetypes: ['image/jpeg', 'image/svg', 'image/gif', 'image/png'],
     },
   ],
   [
@@ -389,3 +389,30 @@ const FormatPresetsMap = new Map([
 export default FormatPresetsMap;
 
 export const FormatPresetsList = Array.from(FormatPresetsMap.values());
+
+export const FormatPresetsNames = {
+  AUDIO: 'audio',
+  AUDIO_THUMBNAIL: 'audio_thumbnail',
+  CHANNEL_THUMBNAIL: 'channel_thumbnail',
+  DOCUMENT: 'document',
+  DOCUMENT_THUMBNAIL: 'document_thumbnail',
+  EPUB: 'epub',
+  EXERCISE: 'exercise',
+  EXERCISE_GRAPHIE: 'exercise_graphie',
+  EXERCISE_IMAGE: 'exercise_image',
+  EXERCISE_THUMBNAIL: 'exercise_thumbnail',
+  H5P: 'h5p',
+  H5P_THUMBNAIL: 'h5p_thumbnail',
+  HIGH_RES_VIDEO: 'high_res_video',
+  HTML5_DEPENDENCY: 'html5_dependency',
+  HTML5_THUMBNAIL: 'html5_thumbnail',
+  HTML5_ZIP: 'html5_zip',
+  LOW_RES_VIDEO: 'low_res_video',
+  SLIDESHOW_IMAGE: 'slideshow_image',
+  SLIDESHOW_MANIFEST: 'slideshow_manifest',
+  SLIDESHOW_THUMBNAIL: 'slideshow_thumbnail',
+  TOPIC_THUMBNAIL: 'topic_thumbnail',
+  VIDEO_DEPENDENCY: 'video_dependency',
+  VIDEO_SUBTITLE: 'video_subtitle',
+  VIDEO_THUMBNAIL: 'video_thumbnail',
+};

@@ -4,3 +4,8 @@ const Roles = new Set(['coach', 'learner']);
 export default Roles;
 
 export const RolesList = Array.from(Roles);
+
+export const RolesNames = {
+  COACH: 'coach',
+  LEARNER: 'learner',
+};
