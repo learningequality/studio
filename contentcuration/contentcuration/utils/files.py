@@ -279,7 +279,11 @@ def get_thumbnail_encoding(filename, dimension=THUMBNAIL_WIDTH):
             image.save(outbuffer, image_format)
         return "data:image/{};base64,{}".format(ext[1:], base64.b64encode(outbuffer.getvalue()).decode('utf-8'))
     finally:
-        inbuffer.close()
+        # Try to close the inbuffer if it has been created
+        try:
+            inbuffer.close()
+        except UnboundLocalError:
+            pass
         outbuffer.close()
 
 

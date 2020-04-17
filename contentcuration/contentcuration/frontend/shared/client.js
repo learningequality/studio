@@ -4,7 +4,6 @@ import qs from 'qs';
 const client = axios.create({
   xsrfCookieName: 'csrftoken',
   xsrfHeaderName: 'X-CSRFToken',
-  timeout: 2000,
   paramsSerializer: function(params) {
     // Do custom querystring stingifying to comma separate array params
     return qs.stringify(params, { arrayFormat: 'comma' });

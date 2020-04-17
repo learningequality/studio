@@ -9,6 +9,13 @@
 	{% render_bundle_css 'channel_list' %}
 {% endblock css_bundle %}
 
+{% if LIBRARY_MODE %}
+	{% block title %}{% trans 'Kolibri Content Library' %}{% endblock title %}
+{% endif %}
+
 {% block content %}
+	<script>
+		var libraryMode = "{{ LIBRARY_MODE }}" === "True";
+	</script>
 	{% render_bundle 'channel_list' 'js' %}
 {% endblock content %}

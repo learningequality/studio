@@ -81,7 +81,10 @@ class TreeViewSet(GenericViewSet):
             raise MissingRequiredParamsException(
                 "channel_id query parameter is required but was missing from the request"
             )
-        root = get_object_or_404(ContentNode, channel_main=channel_id)
+        if request.query_params.get("trash"):
+            root = get_object_or_404(ContentNode, channel_trash=channel_id)
+        else:
+            root = get_object_or_404(ContentNode, channel_main=channel_id)
 
         def map_data(item):
             item["sort_order"] = item.pop("lft")

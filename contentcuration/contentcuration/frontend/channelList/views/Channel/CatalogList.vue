@@ -76,6 +76,7 @@
     watch: {
       $route(to, from) {
         if (!isEqual(to.query, from.query) && to.name === RouterNames.CATALOG_ITEMS) {
+          this.loading = true;
           this.debouncedSearch();
         }
       },
@@ -87,7 +88,11 @@
       ...mapActions('channelList', ['searchCatalog']),
       loadCatalog() {
         this.loading = true;
-        return this.searchCatalog(this.$route.query)
+        let params = {
+          ...this.$route.query,
+        };
+        delete params['query_id'];
+        return this.searchCatalog(params)
           .then(() => {
             this.loading = false;
           })

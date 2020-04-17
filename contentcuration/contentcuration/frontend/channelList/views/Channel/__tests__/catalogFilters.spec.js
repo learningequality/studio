@@ -7,27 +7,27 @@ import CatalogFilters from '../CatalogFilters.vue';
 Vue.use(VueRouter);
 const router = new VueRouter();
 
-function makeWrapper(setQueryStub) {
-  const wrapper = mount(CatalogFilters, { router, store });
-  wrapper.setMethods({
-    setQueryParam: setQueryStub,
+function makeWrapper(computed) {
+  const wrapper = mount(CatalogFilters, {
+    router,
+    store,
+    computed,
   });
   return wrapper;
 }
 
 describe('catalogFilters', () => {
-  let wrapper;
-  let setQueryStub = jest.fn();
-  beforeEach(() => {
-    setQueryStub.mockReset();
-    wrapper = makeWrapper(setQueryStub);
-  });
   it('should set params when keywords change', () => {
-    let searchWord = 'test';
+    let setKeywordsMock = jest.fn();
+    let setKeywords = () => {
+      return () => {
+        setKeywordsMock();
+      };
+    };
+    let wrapper = makeWrapper({ setKeywords });
     let keywords = wrapper.find('[data-test="keywords"]');
-    keywords.element.value = searchWord;
+    keywords.element.value = 'test';
     keywords.trigger('input');
-    keywords.trigger('blur');
-    expect(setQueryStub).toHaveBeenCalledWith('keywords', searchWord);
+    expect(setKeywordsMock).toHaveBeenCalled();
   });
 });
