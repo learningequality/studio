@@ -141,33 +141,6 @@ export function validateAssessmentItem(assessmentItem) {
 }
 
 /**
- * Sanitize assessment items
- * - sanitize each assessment item
- * - remove all empty assessment items (an assessment item is considered
- *   empty if there is no question text, no answers and no hints)
- *
- * @param {Array} assessmentItems Assessment items
- * @returns {Array} Sanitized assessment items
- */
-export function sanitizeAssessmentItems(assessmentItems) {
-  return assessmentItems
-    .map(item => sanitizeAssessmentItem(item, true))
-    .filter(item => {
-      const hasQuestion = item.question.length > 0;
-      const hasAnswers = item.answers.length > 0;
-      const hasHints = item.hints.length > 0;
-
-      return hasQuestion || hasAnswers || hasHints;
-    })
-    .map((item, itemIdx) => {
-      return {
-        ...item,
-        order: itemIdx,
-      };
-    });
-}
-
-/**
  * Get correct answer index/indices out of an array of answer objects.
  * @param {String} questionType single/multiple selection, true/false, input question
  * @param {Array} answers An array of answer objects { answer: ..., correct: ..., ...}
