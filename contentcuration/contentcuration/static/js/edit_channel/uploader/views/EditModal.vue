@@ -222,7 +222,7 @@
     computed: {
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodes', 'getContentNodeIsValid']),
       ...mapGetters('currentChannel', ['canEdit']),
-      ...mapGetters('file', ['getTotalSize', 'contentNodesAreUploading']),
+      ...mapGetters('file', ['contentNodesTotalSize', 'contentNodesAreUploading']),
       multipleNodes() {
         // Only hide drawer when editing a single item
         return this.nodeIds.length > 1;
@@ -233,9 +233,11 @@
       uploadMode() {
         return this.canEdit && this.$route.name === RouterNames.UPLOAD_FILES;
       },
+      /* eslint-disable kolibri/vue-no-unused-properties */
       createExerciseMode() {
         return this.canEdit && this.$route.name === RouterNames.ADD_EXERCISE;
       },
+      /* eslint-enable */
       editMode() {
         return this.canEdit && this.$route.name === RouterNames.CONTENTNODE_DETAILS;
       },
@@ -252,7 +254,7 @@
         return this.getContentNodes(this.nodeIds);
       },
       totalFileSize() {
-        return this.getTotalSize(flatten(this.nodes.map(n => n.files || [])));
+        return this.contentNodesTotalSize(this.nodeIds);
       },
       modalTitle() {
         return this.canEdit ? this.$tr('editingDetailsHeader') : this.$tr('viewingDetailsHeader');
