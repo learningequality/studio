@@ -19,7 +19,7 @@
             <p>{{ $tr('visibilityDescription') }}</p>
             <VDivider />
             <div class="role-table">
-              <VLayout v-for="roleOption in roles" :key="roleOption" row>
+              <VLayout v-for="roleOption in roles" :key="roleOption.value" row>
                 <VFlex xs3 text-right class="role-label">
                   {{ roleOption.text }}
                   <VIcon v-if="roleIcon(roleOption.value)" color="primary">

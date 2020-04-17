@@ -45,7 +45,7 @@ export function getContentNodeFileById(state) {
 
 export function getContentNodeFiles(state) {
   return function(contentNodeId) {
-    return Object.values(state.contentNodeFilesMap[contentNodeId])
+    return Object.values(state.contentNodeFilesMap[contentNodeId] || {})
       .map(file => parseFileObject(state, file))
       .filter(f => f);
   };

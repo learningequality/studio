@@ -117,9 +117,9 @@ export function getContentNodeFilesAreValid(state, getters, rootState, rootGette
   return function(contentNodeId) {
     const contentNode = state.contentNodesMap[contentNodeId];
     if (contentNode) {
-      let files = rootGetters['file/getFiles'](contentNode.files);
+      let files = rootGetters['file/getContentNodeFiles'](contentNode.id);
       if (files.length) {
-        // Don't count errros before files have loaded
+        // Don't count errors before files have loaded
         return !validateNodeFiles(files).length;
       }
     }

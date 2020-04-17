@@ -24,7 +24,6 @@
       <ContentRenderer
         :fileId="fileId"
         :fullscreen="fullscreen"
-        :supplementaryFileIds="supplementaryFileIds"
       />
       <p v-if="!fullscreen" class="mt-2">
         <ActionLink

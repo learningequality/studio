@@ -226,7 +226,7 @@
     },
     computed: {
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodes']),
-      ...mapGetters('file', ['getContentNodeFiles', 'getTotalSize']),
+      ...mapGetters('file', ['getContentNodeFiles', 'contentNodesTotalSize']),
       node() {
         return this.getContentNode(this.nodeId);
       },
@@ -234,7 +234,7 @@
         return sortBy(this.getContentNodeFiles(this.nodeId), f => f.preset.order);
       },
       fileSize() {
-        return this.getTotalSize(this.node.files);
+        return this.contentNodesTotalSize([this.nodeId]);
       },
       isTopic() {
         return this.node.kind === 'topic';
